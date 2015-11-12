@@ -540,7 +540,7 @@ end subroutine fft
           DATA(I+1)=TEMPI
         endif
         M=N/2
-1       IF ((M>=2).AND.(J>M)) THEN
+1       IF ((M>=2).and.(J>M)) THEN
           J=J-M
           M=M/2
         GO TO 1

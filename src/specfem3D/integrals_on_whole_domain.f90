@@ -34,27 +34,49 @@
 
   use specfem_par
 
+  use shared_parameters, only: COUPLE_WITH_EXTERNAL_CODE, EXTERNAL_CODE_TYPE
+
   implicit none
 
   ! local parameters
   double precision :: weightpt, jacobianpt
-  double precision :: integr_volloc, integr_bounloc
+
+  double precision, dimension(3) :: integr_volloc, integr_bounloc
+  double precision, dimension(3,NGLLSQUARE*num_abs_boundary_faces) :: f_integrand_bounloc
+  double precision, dimension(3,NGLOB_AB) :: f_integrand_volloc
 
   real(kind=CUSTOM_REAL) :: xixpt,xiypt,xizpt,etaxpt,etaypt,etazpt,gammaxpt,gammaypt,gammazpt
 
-  integer :: ier,i,j,k,ispec,iglob,igll,iface
+  integer :: ier,iint,i,j,k,ispec,iglob,igll,iface
 
-  allocate(f_integrand(NGLOB_AB), stat=ier) !! Maybe to modify in the case of Surf_or_vol_integral == 1
 
+!
 !-----------------------------------------------------------------------------
+!
 
-  ! NOTE : 'f_integrand' have to be defined at all 'iglob'
+  ! NOTE : 'f_integrandloc' have to be defined at all 'iglob'
   ! (all the points of the surface, or all the point of the volume)
 
-  integr_volloc  = 0.d0
-  integr_bounloc = 0.d0
+  if ( RECIPROCITY_AND_KH_INTEGRAL ) then
+
+    allocate(f_integrand_KH(3,NGLLSQUARE*num_abs_boundary_faces), stat=ier)
+
+    call integrand_for_computing_Kirchoff_Helmholtz_integral()
+
+    do iint = 1,3
+      f_integrand_bounloc(iint,:) = f_integrand_KH(iint,:)
+    enddo
+
+  endif
+
+  do iint = 1,3
+    integr_volloc(iint)  = 0.d0
+    integr_bounloc(iint) = 0.d0
+  enddo
 
   if ( (Surf_or_vol_integral == 2) .or. (Surf_or_vol_integral == 3) ) then
+
+    allocate(integral_vol(3), stat=ier)
 
     ! calculates volume of all elements in mesh
     do ispec = 1, NSPEC_AB
@@ -87,14 +109,14 @@
 
             iglob = ibool(i,j,k,ispec)
 
-            integr_volloc = integr_volloc + ( weightpt * jacobianpt * f_integrand(iglob) )
+            integr_volloc(:)  = integr_volloc(:) + ( weightpt * jacobianpt * f_integrand_volloc(:,iglob) )
 
           enddo
         enddo
       enddo
     enddo
 
-    call sum_all_dp(integr_volloc,integral_vol)
+    call sum_all_1Darray_dp(integr_volloc, integral_vol, 3)
 
   endif
 
@@ -103,6 +125,8 @@
 !
 
   if ( (Surf_or_vol_integral == 1) .or. (Surf_or_vol_integral == 3) ) then
+
+    allocate(integral_boun(3), stat=ier)
 
     ! calculates integral on all the surface of the whole domain
 
@@ -121,7 +145,8 @@
 
           iglob = ibool(i,j,k,ispec)
 
-          integr_bounloc = integr_bounloc + ( free_surface_jacobian2Dw(igll,iface) * f_integrand(iglob) )
+!!          integr_bounloc(:) = integr_bounloc(:) + (free_surface_jacobian2Dw(igll,iface) * f_integrand_bounloc(:,iglob))
+          integr_bounloc(:) = integr_bounloc(:) + (free_surface_jacobian2Dw(igll,iface) * f_integrand_bounloc(:,igll*iface))
 
         enddo
       enddo
@@ -142,54 +167,171 @@
 
           iglob = ibool(i,j,k,ispec)
 
-          integr_bounloc = integr_bounloc + ( abs_boundary_jacobian2Dw(igll,iface) * f_integrand(iglob) )
+!!          integr_bounloc(:) = integr_bounloc(:) + (abs_boundary_jacobian2Dw(igll,iface) * f_integrand_bounloc(:,iglob))
+          integr_bounloc(:) = integr_bounloc(:) + (abs_boundary_jacobian2Dw(igll,iface) * f_integrand_bounloc(:,igll*iface))
 
         enddo
       enddo
     endif
 
-    call sum_all_dp(integr_bounloc,integral_boun)
+    call sum_all_1Darray_dp(integr_bounloc, integral_boun, 3)
 
   endif
 
-  deallocate(f_integrand)
+  if ( RECIPROCITY_AND_KH_INTEGRAL ) deallocate(f_integrand_KH)
 
   end subroutine surface_or_volume_integral_on_whole_domain
 
 !
 !-------------------------------------------------------------------------------------------------
 !
-
+!--- CD CD : Subroutine not validated yet
+!
+!
   subroutine integrand_for_computing_Kirchoff_Helmholtz_integral()
 
   use constants
 
   use specfem_par
 
+  use shared_parameters
+
   implicit none
 
   ! local parameters
-  integer :: ier
+  integer :: itau
 
-  allocate(f_integrand(NGLOB_AB), stat=ier) !! Could maybe be allocated just on the surface points
+!!  integer :: i, iglob, iint
 
-!
+  double precision, dimension(3,NGLLSQUARE*num_abs_boundary_faces) :: convol_displsem_tractaxisem
+  double precision, dimension(3,NGLLSQUARE*num_abs_boundary_faces) :: convol_tractsem_displaxisem
+
+  convol_displsem_tractaxisem(:,:) = 0.d0
+  convol_tractsem_displaxisem(:,:) = 0.d0
+
 !---
-!
+!---
 
-  if (old_DSM_coupling_from_Vadim) then
+  if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then
 
-  else
+    if (old_DSM_coupling_from_Vadim) then
+
+    else
       !! for 2D light version
+    endif
+
+  else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
+
+    call read_axisem_disp_file(num_abs_boundary_faces*NGLLSQUARE)
+    call read_specfem_tract_file(NGLLSQUARE*num_abs_boundary_faces)
+    call read_specfem_disp_file(NGLLSQUARE*num_abs_boundary_faces)
+
+!!!-- ci-dessous : en cours de modification
+
+    do itau = 1, it
+      if ( it > itau .and. (it - itau <= NSTEP) ) then
+
+        convol_displsem_tractaxisem(:,:) = convol_displsem_tractaxisem(:,:) + &
+                                           Displ_specfem_time(:,:, itau) * Tract_axisem_time(:,:, it - itau) * dt
+
+        convol_tractsem_displaxisem(:,:) = convol_tractsem_displaxisem(:,:) + &
+                                           Tract_specfem_time(:,:, itau) * Displ_axisem_time(:,:, it - itau) * dt
+
+      endif
+    enddo
+
+    f_integrand_KH(:,:) = convol_displsem_tractaxisem(:,:) - convol_tractsem_displaxisem(:,:)
+
   endif
 
-! TO COMPLETE
-
-!
 !---
-!
-
-  deallocate(f_integrand)
+!---
 
   end subroutine integrand_for_computing_Kirchoff_Helmholtz_integral
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine read_axisem_disp_file(nb)
+
+  use constants
+
+  use specfem_par, only: it, Displ_axisem_time, RECIPROCITY_AND_KH_INTEGRAL
+
+  implicit none
+
+  ! argument
+  integer nb
+
+  ! local parameters
+  real(kind=CUSTOM_REAL) :: Displ_axisem(3,nb)
+
+  read(IIN_displ_axisem) Displ_axisem
+
+  if (RECIPROCITY_AND_KH_INTEGRAL) Displ_axisem_time(:,:,it) = Displ_axisem(:,:)
+
+  end subroutine read_axisem_disp_file
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine read_specfem_disp_file(nb)
+
+  use constants
+
+  use specfem_par, only: it, Displ_specfem_time, RECIPROCITY_AND_KH_INTEGRAL, num_abs_boundary_faces
+
+  implicit none
+
+  ! argument
+  integer nb
+
+  ! local parameters
+  integer iface, igll
+  real(kind=CUSTOM_REAL) :: Displ_specfem(3,nb)
+
+  do iface=1,num_abs_boundary_faces
+    do igll = 1,NGLLSQUARE
+
+      read(238) Displ_specfem(1,igll*iface), Displ_specfem(3,igll*iface), Displ_specfem(3,igll*iface)
+
+    enddo
+  enddo
+
+  if (RECIPROCITY_AND_KH_INTEGRAL)  Displ_specfem_time(:,:,it) = Displ_specfem(:,:)
+
+  end subroutine read_specfem_disp_file
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine read_specfem_tract_file(nb)
+
+  use constants
+
+  use specfem_par, only: it, Tract_specfem_time, RECIPROCITY_AND_KH_INTEGRAL, num_abs_boundary_faces
+
+  implicit none
+
+  ! argument
+  integer nb
+
+  ! local parameters
+  integer iface, igll
+  real(kind=CUSTOM_REAL) :: Tract_specfem(3,nb)
+
+  do iface=1,num_abs_boundary_faces
+    do igll = 1,NGLLSQUARE
+
+      read(237) Tract_specfem(1,igll*iface), Tract_specfem(3,igll*iface), Tract_specfem(3,igll*iface)
+
+    enddo
+  enddo
+
+  if (RECIPROCITY_AND_KH_INTEGRAL)  Tract_specfem_time(:,:,it) = Tract_specfem(:,:)
+
+  end subroutine read_specfem_tract_file
 

@@ -19,6 +19,7 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
+!=========================================================================================
 module data_mesh
 
   use global_parameters
@@ -81,8 +82,11 @@ module data_mesh
   integer, allocatable          :: central_is_iz_to_globiel(:,:)
 contains
 
+!-----------------------------------------------------------------------------------------
 subroutine empty_data_mesh
   deallocate(rcom, scom, zcom, thetacom)
 end subroutine empty_data_mesh
+!-----------------------------------------------------------------------------------------
 
 end module data_mesh
+!=========================================================================================

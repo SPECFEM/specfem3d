@@ -53,8 +53,8 @@
   logical :: INCREASE_CFL_FOR_LDDRK
   double precision :: RATIO_BY_WHICH_TO_INCREASE_IT
 
-! read from a single processor (the master) and then use MPI to broadcast to others
-! to avoid an I/O bottleneck in the case of very large runs
+  ! read from a single processor (the master) and then use MPI to broadcast to others
+  ! to avoid an I/O bottleneck in the case of very large runs
   if(myrank == 0) then
 
   ! opens file Par_file
@@ -246,6 +246,8 @@
   if (ier /= 0) stop 'Error reading Par_file parameter TRACTION_PATH'
   call read_value_logical(MESH_A_CHUNK_OF_THE_EARTH, 'MESH_A_CHUNK_OF_THE_EARTH', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter MESH_A_CHUNK_OF_THE_EARTH'
+  call read_value_logical(RECIPROCITY_AND_KH_INTEGRAL, 'RECIPROCITY_AND_KH_INTEGRAL', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter RECIPROCITY_AND_KH_INTEGRAL'
 
   ! for simultaneous runs from the same batch job
   call read_value_integer(NUMBER_OF_SIMULTANEOUS_RUNS, 'NUMBER_OF_SIMULTANEOUS_RUNS', ier)
@@ -267,6 +269,10 @@
 
     if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_FK) &
          stop 'Error: coupling with F-K not implemented yet, but see work by Ping et al. (GJI 2014, GRL 2015)'
+
+    if ((EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_AXISEM) .and. RECIPROCITY_AND_KH_INTEGRAL) &
+         stop 'Error: the use of reciprocity and Kirchhoff-Helmholtz integral is only available for coupling with AxiSEM'
+
   endif
 
 ! see if we are running several independent runs in parallel
@@ -580,6 +586,7 @@
     call bcast_all_singlei_world(EXTERNAL_CODE_TYPE)
     call bcast_all_string_world(TRACTION_PATH)
     call bcast_all_singlel_world(MESH_A_CHUNK_OF_THE_EARTH)
+    call bcast_all_singlel_world(RECIPROCITY_AND_KH_INTEGRAL)
     call bcast_all_singlei_world(NUMBER_OF_SIMULTANEOUS_RUNS)
     call bcast_all_singlel_world(BROADCAST_SAME_MESH_AND_MODEL)
     call bcast_all_singlel_world(USE_FAILSAFE_MECHANISM)

@@ -19,11 +19,9 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
+!=========================================================================================
 !> General variables pertaining to process identification
-!===================
 module data_proc
-!===================
-!
 
   implicit none
   public
@@ -34,6 +32,5 @@ module data_proc
   logical          :: lpr                !< last processor logical flag, for write stdout
   character(len=8) :: procstrg           !< String containing mynum to include in writes
 
-!=======================
 end module data_proc
-!=======================
+!=========================================================================================

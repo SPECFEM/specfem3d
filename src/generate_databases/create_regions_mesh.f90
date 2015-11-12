@@ -131,7 +131,7 @@
                                   elmnts_ext_mesh,nelmnts_ext_mesh)
     endif
     ! at this point (xyz)store_dummy are still open
-    if (.NOT. PARALLEL_FAULT) then
+    if (.not. PARALLEL_FAULT) then
       call fault_setup (ibool,nnodes_ext_mesh,nodes_coords_ext_mesh, &
                         xstore,ystore,zstore,nspec,nglob,myrank)
     endif
@@ -155,7 +155,7 @@
 
 
   !SURENDRA (setting up parallel fault)
-  if (PARALLEL_FAULT .AND. ANY_FAULT) then
+  if (PARALLEL_FAULT .and. ANY_FAULT) then
     call synchronize_all()
     !at this point (xyz)store_dummy are still open
     call fault_setup (ibool,nnodes_ext_mesh,nodes_coords_ext_mesh, &

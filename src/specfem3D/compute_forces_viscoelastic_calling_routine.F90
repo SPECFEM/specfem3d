@@ -304,7 +304,7 @@ end subroutine compute_forces_viscoelastic
 
 ! elastic solver for backward/reconstructed wavefields
 
-subroutine compute_forces_viscoelastic_bpwf()
+subroutine compute_forces_viscoelastic_backward()
 
   use specfem_par
   use specfem_par_acoustic
@@ -321,7 +321,7 @@ subroutine compute_forces_viscoelastic_bpwf()
 
   ! checks
   if (SIMULATION_TYPE /= 3) &
-    call exit_MPI(myrank,'error calling compute_forces_viscoelastic_bpwf() with wrong SIMULATION_TYPE')
+    call exit_MPI(myrank,'error calling compute_forces_viscoelastic_backward() with wrong SIMULATION_TYPE')
 
   ! distinguishes two runs: for points on MPI interfaces, and points within the partitions
   do iphase=1,2
@@ -376,7 +376,7 @@ subroutine compute_forces_viscoelastic_bpwf()
 
 ! adds elastic absorbing boundary term to acceleration (Stacey conditions)
     if (STACEY_ABSORBING_CONDITIONS) then
-      call compute_stacey_viscoelastic_bpwf(NSPEC_AB, &
+      call compute_stacey_viscoelastic_backward(NSPEC_AB, &
                        ibool,ispec_is_inner,phase_is_inner, &
                        abs_boundary_ijk,abs_boundary_ispec, &
                        num_abs_boundary_faces, &
@@ -411,7 +411,7 @@ subroutine compute_forces_viscoelastic_bpwf()
     endif
 
 ! adds source term (single-force/moment-tensor solution)
-    call compute_add_sources_viscoelastic_bpwf( NSPEC_AB,NGLOB_AB, &
+    call compute_add_sources_viscoelastic_backward( NSPEC_AB,NGLOB_AB, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
                         hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
@@ -449,7 +449,7 @@ subroutine compute_forces_viscoelastic_bpwf()
 
 ! updates acceleration with ocean load term
   if (APPROXIMATE_OCEAN_LOAD) then
-    call compute_coupling_ocean_bpwf(NSPEC_AB,NGLOB_AB, &
+    call compute_coupling_ocean_backward(NSPEC_AB,NGLOB_AB, &
                                      ibool,rmassx,rmassy,rmassz, &
                                      rmass_ocean_load, &
                                      free_surface_normal,free_surface_ijk,free_surface_ispec, &
@@ -478,7 +478,7 @@ subroutine compute_forces_viscoelastic_bpwf()
   ! adjoint simulations
   b_veloc(:,:) = b_veloc(:,:) + b_deltatover2*b_accel(:,:)
 
-end subroutine compute_forces_viscoelastic_bpwf
+end subroutine compute_forces_viscoelastic_backward
 
 !
 !-------------------------------------------------------------------------------------------------

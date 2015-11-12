@@ -90,29 +90,55 @@ subroutine def_rot_matrix_DG(srccolat,srclon,rot_mat,trans_rot_mat)
   end subroutine def_rot_matrix_DG
 
 
-    subroutine rotate_box(r,th,ph,trans_rot_mat)
-      use global_parameters, only : CUSTOM_REAL
+!--------------------------------------------------
 
-      real(kind=CUSTOM_REAL)    trans_rot_mat(3,3)
-      real(kind=CUSTOM_REAL)   ,intent(inout) :: r,th,ph
-      real(kind=CUSTOM_REAL)    :: x_vec(3), x_vec_rot(3), r_r,smallval_dble
+subroutine def_rot_azi_chunk(rot,trot,azi)
+
+  use global_parameters, only : CUSTOM_REAL
+  real(kind=CUSTOM_REAL)                  :: azi
+  real(kind=CUSTOM_REAL), dimension(3,3)  :: rot,trot
+
+  rot(1,1)=cos(azi)
+  rot(1,2)=-1.0*sin(azi) !sin(azi)
+  rot(1,3)=0._CUSTOM_REAL
+
+  rot(2,1)=sin(azi) !-sin(azi)
+  rot(2,2)=cos(azi)
+  rot(2,3)=0._CUSTOM_REAL
+
+  rot(3,1)=0._CUSTOM_REAL
+  rot(3,2)=0._CUSTOM_REAL
+  rot(3,3)=1._CUSTOM_REAL
+
+  trot=transpose(rot)
+
+end subroutine def_rot_azi_chunk
+
+!----------------------------------------------------
+
+  subroutine rotate_box(r,th,ph,trans_rot_mat)
+    use global_parameters, only : CUSTOM_REAL
+
+    real(kind=CUSTOM_REAL)    trans_rot_mat(3,3)
+    real(kind=CUSTOM_REAL)   ,intent(inout) :: r,th,ph
+    real(kind=CUSTOM_REAL)    :: x_vec(3), x_vec_rot(3), r_r,smallval_dble
 
 
-      smallval_dble=0.d0 !! 1e-11  ! a quoi sert ce truc? ! VM VM
-      !! verifier l'effet que ca peut avoir de le mettre a zero
+    smallval_dble=0.d0 !! 1e-11  ! a quoi sert ce truc? ! VM VM
+    !! verifier l'effet que ca peut avoir de le mettre a zero
 
-      x_vec(1) = r * dsin(th) * dcos(ph)
-      x_vec(2) = r * dsin(th) * dsin(ph)
-      x_vec(3) = r * dcos(th)
+    x_vec(1) = r * dsin(th) * dcos(ph)
+    x_vec(2) = r * dsin(th) * dsin(ph)
+    x_vec(3) = r * dcos(th)
 
-      x_vec_rot = matmul(trans_rot_mat,x_vec)
+    x_vec_rot = matmul(trans_rot_mat,x_vec)
 
-      !write(23,*) x_vec
-      !write(23,*) x_vec_rot
+    !write(23,*) x_vec
+    !write(23,*) x_vec_rot
 
-      r_r = dsqrt(x_vec_rot(1)**2 + x_vec_rot(2)**2 + x_vec_rot(3)**2 )
-      th = dacos((x_vec_rot(3)  + smallval_dble )/ ( r_r + smallval_dble) )
-      ph = atan2(x_vec_rot(2),x_vec_rot(1))
+    r_r = dsqrt(x_vec_rot(1)**2 + x_vec_rot(2)**2 + x_vec_rot(3)**2 )
+    th = dacos((x_vec_rot(3)  + smallval_dble )/ ( r_r + smallval_dble) )
+    ph = atan2(x_vec_rot(2),x_vec_rot(1))
 
   end subroutine rotate_box
 

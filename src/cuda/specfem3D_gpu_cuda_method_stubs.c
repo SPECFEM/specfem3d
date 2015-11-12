@@ -477,6 +477,10 @@ void FC_FUNC_(prepare_fields_gravity_device,
                                              realw* h_wgll_cube,
                                              int* ACOUSTIC_SIMULATION,
                                              realw* rhostore) {}
+void FC_FUNC_(prepare_fault_device,
+              PREPARE_FAULT_DEVICE)(long* Mesh_pointer,
+            		            int* KELVIN_VOIGT_DAMPING,
+                                    realw* Kelvin_Voigt_eta){}
 
 void FC_FUNC_(prepare_seismogram_fields,
               PREPARE_SEISMOGRAM_FIELDS)(long* Mesh_pointer,int* nrec_local, double* nu, double* hxir, double* hetar, double* hgammar) {}
@@ -699,4 +703,111 @@ void FC_FUNC_(transfer_station_ac_from_device,
                                                 int* ispec_selected_rec,
                                                 int* ispec_selected_source,
                                                 int* h_ibool) {}
+
+
+void FC_FUNC_(transfer_station_ac_from_device,
+              TRANSFER_STATION_AC_FROM_DEVICE)(realw* potential_acoustic,
+                                                realw* potential_dot_acoustic,
+                                                realw* potential_dot_dot_acoustic,
+                                                realw* b_potential_acoustic,
+                                                realw* b_potential_dot_acoustic,
+                                                realw* b_potential_dot_dot_acoustic,
+                                                long* Mesh_pointer_f,
+                                                int* number_receiver_global,
+                                                int* ispec_selected_rec,
+                                                int* ispec_selected_source,
+                                                int* h_ibool) {}
+
+//fault_solver_dynamics.cu
+void FC_FUNC_(initialize_fault_solver,
+              INITIALIZE_FAULT_SOLVER)(long** Fault_solver,
+                                       int* num_of_faults,
+                                       realw* v_healing,
+                                       realw* v_rupt){}
+
+void FC_FUNC_(transfer_todevice_fault_data,
+              TRANSFER_TODEVICE_FAULT_DATA)(long* Fault_pointer,
+                      int* fault_index,
+                      int* NSPEC_AB,
+                      int* NGLOB_AB,
+                      realw* D,
+                      realw* T0,
+                      realw* T,
+                      realw* B,
+                      realw* R,
+                      realw* V0,
+                      realw* Z,
+                      realw* invM1,
+                      realw* invM2,
+                      int* ibulk1,
+                      int* ibulk2){}
+
+void FC_FUNC_(transfer_todevice_swf_data,
+              TRANSFER_TODEVICE_SWF_DATA)(long* Fault_pointer,
+                           int *NGLOB_AB,
+                           realw* Dc,
+                           realw* mus,
+                           realw* mud,
+                           realw* T,
+                           realw* C
+                           realw* theta) {}
+
+void FC_FUNC_(transfer_todevice_rsf_data,
+              TRANSFER_TODEVICE_RSF_DATA)(long* Fault_pointer,
+                      int *NGLOB_AB,
+                      realw* V0,
+                      realw* f0,
+                      realw* V_init,
+                      realw* a,
+                      realw* b,
+                      realw* L,
+                      realw* theta,
+                      realw* T,
+                      realw* C,
+                      realw* fw,
+                      realw* Vw){}
+
+void FC_FUNC_(transfer_tohost_fault_data,
+              TRANSFER_TOHOST_FAULT_DATA)(long* Fault_pointer,
+                      int* fault_index,
+                      int* NSPEC_AB,
+                      int* NGLOB_AB,
+                      realw* D,
+                      realw* V,
+                      realw* T) {}
+
+void FC_FUNC_(transfer_tohost_swf_data,
+              TRANSFER_TOHOST_SWF_DATA)(long* Fault_pointer,
+                       int *NGLOB_AB,
+                       realw* Dc,
+                       realw* mus,
+                       realw* mud,
+                       realw* T,
+                       realw* C,
+                       realw* theta)
+
+
+void FC_FUNC_(transfer_tohost_rsf_data,
+              TRANSFER_TOHOST_RSF_DATA)(long* Fault_pointer,
+                       int *NGLOB_AB,
+                       realw* V0,
+                       realw* f0,
+                       realw* V_init,
+                       realw* a,
+                       realw* b,
+                       realw* L,
+                       realw* theta,
+                       realw* T,
+                       realw* C,
+                       realw* fw,
+                       realw* Vw) {}
+
+
+
+
+void FC_FUNC_(fault_solver_gpu,
+              FAULT_SOLVER_GPU)(long** Mesh_pointer,
+                                long** Fault_pointer,
+                                realw* dt,
+                                int* myrank) {}
 

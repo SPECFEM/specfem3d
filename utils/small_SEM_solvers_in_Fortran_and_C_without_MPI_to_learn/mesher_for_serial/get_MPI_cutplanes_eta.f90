@@ -67,9 +67,8 @@
   character(len=150) prname
 
 ! arrays for sorting routine
-  integer, dimension(:), allocatable :: ind,ninseg,iglob,locval,iwork
+  integer, dimension(:), allocatable :: ninseg,iglob,locval
   logical, dimension(:), allocatable :: ifseg
-  double precision, dimension(:), allocatable :: work
   integer, dimension(:), allocatable :: ibool_selected
   double precision, dimension(:), allocatable :: xstore_selected,ystore_selected,zstore_selected
 
@@ -81,13 +80,10 @@
     allocate(xstore_selected(NGLOB2DMAX_XY))
     allocate(ystore_selected(NGLOB2DMAX_XY))
     allocate(zstore_selected(NGLOB2DMAX_XY))
-    allocate(ind(NGLOB2DMAX_XY))
     allocate(ninseg(NGLOB2DMAX_XY))
     allocate(iglob(NGLOB2DMAX_XY))
     allocate(locval(NGLOB2DMAX_XY))
     allocate(ifseg(NGLOB2DMAX_XY))
-    allocate(iwork(NGLOB2DMAX_XY))
-    allocate(work(NGLOB2DMAX_XY))
   endif
 
 ! theoretical number of surface elements in the buffers
@@ -140,7 +136,7 @@
 
   if (USE_MESH_COLORING_INNER_OUTER) then
     call sort_array_coordinates(npoin2D_eta,xstore_selected,ystore_selected,zstore_selected, &
-            ibool_selected,iglob,locval,ifseg,nglob,ind,ninseg,iwork,work)
+            ibool_selected,iglob,locval,ifseg,nglob,ninseg)
 
     do ipoin2D=1,npoin2D_eta
         write(10,*) ibool_selected(ipoin2D)
@@ -203,7 +199,7 @@
 
   if (USE_MESH_COLORING_INNER_OUTER) then
     call sort_array_coordinates(npoin2D_eta,xstore_selected,ystore_selected,zstore_selected, &
-            ibool_selected,iglob,locval,ifseg,nglob,ind,ninseg,iwork,work)
+            ibool_selected,iglob,locval,ifseg,nglob,ninseg)
 
     do ipoin2D=1,npoin2D_eta
         write(10,*) ibool_selected(ipoin2D)
@@ -227,13 +223,10 @@
     deallocate(xstore_selected)
     deallocate(ystore_selected)
     deallocate(zstore_selected)
-    deallocate(ind)
     deallocate(ninseg)
     deallocate(iglob)
     deallocate(locval)
     deallocate(ifseg)
-    deallocate(iwork)
-    deallocate(work)
   endif
 
   end subroutine get_MPI_cutplanes_eta

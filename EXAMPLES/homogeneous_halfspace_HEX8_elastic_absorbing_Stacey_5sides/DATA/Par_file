@@ -96,7 +96,7 @@ SAVE_MESH_FILES                 = .false.
 LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI
 
 # interval at which we output time step info and max of norm of displacement
-NTSTEP_BETWEEN_OUTPUT_INFO      = 100
+NTSTEP_BETWEEN_OUTPUT_INFO      = 500
 
 # interval in time steps for writing of seismograms
 NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
@@ -127,7 +127,7 @@ USE_RICKER_TIME_FUNCTION        = .false.
 SAVE_SEISMOGRAMS_DISPLACEMENT   = .true.
 SAVE_SEISMOGRAMS_VELOCITY       = .false.
 SAVE_SEISMOGRAMS_ACCELERATION   = .false.
-SAVE_SEISMOGRAMS_PRESSURE       = .false.  # currently implemented in acoustic (i.e. fluid) elements only
+SAVE_SEISMOGRAMS_PRESSURE       = .false.   # currently implemented in acoustic (i.e. fluid) elements only
 
 # save seismograms in binary or ASCII format (binary is smaller but may not be portable between machines)
 USE_BINARY_FOR_SEISMOGRAMS      = .false.
@@ -192,7 +192,8 @@ PRINT_SOURCE_TIME_FUNCTION      = .false.
 COUPLE_WITH_EXTERNAL_CODE       = .false.
 EXTERNAL_CODE_TYPE              = 1   # 1 = DSM, 2 = AxiSEM, 3 = FK
 TRACTION_PATH                   = ./DATA/DSM_tractions_for_specfem3D/
-MESH_A_CHUNK_OF_THE_EARTH       = .true.
+MESH_A_CHUNK_OF_THE_EARTH       = .false.
+RECIPROCITY_AND_KH_INTEGRAL     = .false.
 
 # Dimitri Komatitsch, July 2014, CNRS Marseille, France:
 # added the ability to run several calculations (several earthquakes)

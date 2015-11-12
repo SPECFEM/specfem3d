@@ -507,6 +507,32 @@
            action='read',form='unformatted',iostat=ier)
       write(*,*) 'OPENING ', dsmname(1:len_trim(dsmname))//'sol_axisem'
 
+      !! CD CD add this :
+      if (RECIPROCITY_AND_KH_INTEGRAL) then
+
+        allocate(Displ_axisem_time(3,NGLLSQUARE*num_abs_boundary_faces,NSTEP))
+        allocate(Tract_axisem_time(3,NGLLSQUARE*num_abs_boundary_faces,NSTEP))
+        allocate(Tract_specfem_time(3,NGLLSQUARE*num_abs_boundary_faces,NSTEP))
+        allocate(Displ_specfem_time(3,NGLLSQUARE*num_abs_boundary_faces,NSTEP))
+
+        if (.not. SAVE_RUN_BOUN_FOR_KH_INTEGRAL) then
+        !! We only read Specfem Tract and Displ, and Axisem Displ (Axisem Tract is read in compute_stacey_visco...)
+        !! This is only for KH integral
+        !! The unit numbers are here temporary
+          open(unit=IIN_displ_axisem,file=dsmname(1:len_trim(dsmname))//'axisem_displ_for_int_KH', &
+            status='old',action='read',form='unformatted',iostat=ier)
+
+          open(unit=237,file=dsmname(1:len_trim(dsmname))//'specfem_displ_for_int_KH', &
+            status='old',action='read',form='unformatted',iostat=ier)
+
+          open(unit=238,file=dsmname(1:len_trim(dsmname))//'specfem_tract_for_int_KH', &
+            status='old',action='read',form='unformatted',iostat=ier)
+
+          write(*,*) 'OPENING ', dsmname(1:len_trim(dsmname))//'axisem_displ_for_int_KH, and the specfem disp and tract'
+        endif
+
+      endif
+
     endif
 
   else
@@ -515,7 +541,15 @@
     allocate(Veloc_axisem(1,1))
     allocate(Tract_axisem(1,1))
   endif
-  !! CD CD
+
+  !! CD CD add this :
+  !! We perform a first run of Specfem to save displacement and tractions of Specfem for the computation of KH integral
+  !! The displ, tract, and veloc of Axisem have also to be stored
+  if (SAVE_RUN_BOUN_FOR_KH_INTEGRAL) then
+    open(unit=237,file=dsmname(1:len_trim(dsmname))//'specfem_displ_for_int_KH',form='unformatted')
+    open(unit=238,file=dsmname(1:len_trim(dsmname))//'specfem_tract_for_int_KH',form='unformatted')
+    write(*,*) 'OPENING ', dsmname(1:len_trim(dsmname))//'specfem_displ_for_int_KH, and the specfem tract to SAVE IT'
+  endif
 
   if (num_abs_boundary_faces > 0) then
     if (I_should_read_the_database) then

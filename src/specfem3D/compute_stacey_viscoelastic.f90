@@ -41,7 +41,10 @@
 
   use constants
 
-  use specfem_par, only: it_dsm, Veloc_dsm_boundary, Tract_dsm_boundary, Veloc_axisem, Tract_axisem
+  use specfem_par, only: it_dsm, Veloc_dsm_boundary, Tract_dsm_boundary, Veloc_axisem, Tract_axisem, &
+                         RECIPROCITY_AND_KH_INTEGRAL, Tract_axisem_time
+
+  use specfem_par_elastic, only: displ
 
   use shared_parameters, only: COUPLE_WITH_EXTERNAL_CODE, EXTERNAL_CODE_TYPE
 
@@ -104,6 +107,9 @@
 
       if (phase_is_inner .eqv. .false.) then
         call read_axisem_file(Veloc_axisem,Tract_axisem,num_abs_boundary_faces*NGLLSQUARE)
+
+        !! CD CD add this
+        if (RECIPROCITY_AND_KH_INTEGRAL) Tract_axisem_time(:,:,it) = Tract_axisem(:,:)
       endif
 
     endif
@@ -202,6 +208,14 @@
             b_absorb_field(3,igll,iface) = tz*jacobianw
           endif !adjoint
 
+          !! CD CD add this
+          if (SAVE_RUN_BOUN_FOR_KH_INTEGRAL) then
+
+              write(237) b_absorb_field(1,igll,iface), b_absorb_field(2,igll,iface), b_absorb_field(3,igll,iface)
+              write(238) displ(1,iglob), displ(2,iglob), displ(3,iglob)
+
+          endif
+
         enddo
       endif ! ispec_is_elastic
     endif ! ispec_is_inner
@@ -232,7 +246,7 @@
 
 ! absorbing boundary term for elastic media (Stacey conditions)
 
-  subroutine compute_stacey_viscoelastic_bpwf(NSPEC_AB, &
+  subroutine compute_stacey_viscoelastic_backward(NSPEC_AB, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         abs_boundary_ijk,abs_boundary_ispec, &
                         num_abs_boundary_faces, &
@@ -273,7 +287,7 @@
 
   ! checks
   if (SIMULATION_TYPE /= 3) &
-    call exit_MPI(myrank,'error calling routine compute_stacey_viscoelastic_bpwf() with wrong SIMULATION_TYPE')
+    call exit_MPI(myrank,'error calling routine compute_stacey_viscoelastic_backward() with wrong SIMULATION_TYPE')
 
   ! checks if anything to do
   if (num_abs_boundary_faces == 0) return
@@ -310,7 +324,7 @@
     endif ! ispec_is_inner
   enddo
 
-  end subroutine compute_stacey_viscoelastic_bpwf
+  end subroutine compute_stacey_viscoelastic_backward
 
 !=============================================================================
 !

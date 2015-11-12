@@ -422,9 +422,12 @@
   character(len=MAX_STRING_LEN) :: plot_file
   integer :: ier
 
+  ! time scheme
   if (.not. USE_LDDRK) then
+    ! Newmark time scheme, only single update needed
     NSTAGE_TIME_SCHEME = 1
   else
+    ! LDDRK time scheme with 6-stages
     NSTAGE_TIME_SCHEME = 6
   endif
 
@@ -1337,11 +1340,13 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
   use specfem_par_movie
+  use fault_solver_dynamic , only : Kelvin_Voigt_eta,SIMULATION_TYPE_DYN
 
   implicit none
 
   ! local parameters
   real :: free_mb,used_mb,total_mb
+
 
   ! GPU_MODE now defined in Par_file
   if (myrank == 0) then
@@ -1483,6 +1488,11 @@
     call prepare_fields_gravity_device(Mesh_pointer,GRAVITY, &
                                 minus_deriv_gravity,minus_g,wgll_cube,&
                                 ACOUSTIC_SIMULATION,rhostore)
+  endif
+
+  ! prepares kelvin_voigt_damping around the fault
+  if (SIMULATION_TYPE_DYN) then
+    call prepare_fault_device(Mesh_pointer,allocated(Kelvin_Voigt_eta),Kelvin_Voigt_eta)
   endif
 
   ! synchronizes processes

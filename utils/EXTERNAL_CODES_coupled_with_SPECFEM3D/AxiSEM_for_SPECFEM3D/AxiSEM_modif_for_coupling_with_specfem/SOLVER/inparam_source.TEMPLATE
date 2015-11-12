@@ -2,7 +2,7 @@
 # monopoles:   mrr, explosion, mtt_p_mpp, vertforce
 # dipoles:     mtr, mpr, thetaforce, phiforce
 # quadrupoles: mtp, mtt_m_mpp
-SOURCE_TYPE       explosion
+SOURCE_TYPE       mrr
 
 # depth of the source in kilometer
 SOURCE_DEPTH      100.0

@@ -20,11 +20,14 @@
         read(10,'(a)') input_point_file_cart
         read(10,*) nbproc
         read(10,*) lat_src,lon_src
-        read(10,*) lat_mesh,lon_mesh
+        read(10,*) lat_mesh,lon_mesh,azi_rot !! VM VM add azimuth rotation
         close(10)
 
-
         !! hardcoded the input file name
+        input_displ_name(1)='displacement_us' !! CD CD add this
+        input_displ_name(2)='displacement_up'
+        input_displ_name(3)='displacement_uz'
+
         input_veloc_name(1)='velocityfiel_us'
         input_veloc_name(2)='velocityfiel_up'
         input_veloc_name(3)='velocityfiel_uz'
@@ -37,6 +40,10 @@
         input_stress_name(6)='stress_Sg23_sol'
 
         !! hardcoded the output file name
+        output_displ_name(1)='displ_out_u1' !! CD CD add this
+        output_displ_name(2)='displ_out_u2'
+        output_displ_name(3)='displ_out_u3'
+
         output_veloc_name(1)='velocityoutp_u1'
         output_veloc_name(2)='velocityoutp_u2'
         output_veloc_name(3)='velocityoutp_u3'
@@ -60,6 +67,10 @@
         meshlon = lon_mesh * pi / 180.
         meshcolat =  (90. - lat_mesh) * pi / 180.
         call def_rot_matrix_DG(meshcolat,meshlon,rot_mat_mesh,trans_rot_mat_mesh)
+
+        !! VM VM add rot azi
+        azi_rot = azi_rot * pi / 180.
+        call def_rot_azi_chunk(rot_azi_chunk,trans_rot_azi_chunk,azi_rot)
 
         !! permutation matrix
         mat(1,1)=0.
@@ -123,7 +134,7 @@
       end subroutine read_inputs
 
       subroutine read_info_simu(nsim_to_send)
-        use global_parameters, only :nsim,simdir,src_type,ntime,working_axisem_dir,dtt
+        use global_parameters, only :Mij,nsim,simdir,src_type,ntime,working_axisem_dir,dtt,magnitude
         integer iostat,ioerr,isim,nsim_to_send
         character(len=256)  :: keyword, keyvalue, line
         character(len=100),allocatable, dimension(:)      :: bkgrndmodel, rot_rec
@@ -136,12 +147,12 @@
         real, allocatable, dimension(:)     :: dt_strain, dt_snap, nt_snap, &
                                          srccolat_tmp, srclon_tmp, src_depth_tmp
         real, allocatable, dimension(:)     :: shift_fact_tmp
-        real, allocatable, dimension(:)     :: magnitude
+        !real, allocatable, dimension(:)     :: magnitude
         integer             :: i_param_post=500
         logical  use_netcdf
         real tshift
         character(len=12)                   :: src_file_type
-
+        character(len=100)    :: junk
 
         working_axisem_dir='./'
         open(unit=i_param_post, file='inparam_basic', status='old', action='read', &
@@ -166,6 +177,28 @@
                  simdir(2) = "MXX_P_MYY/"
                  simdir(3) = "MXZ_MYZ/"
                  simdir(4) = "MXY_MXX_M_MYY/"
+
+                 !! read CMTSOLUTION
+                 write(6,*)'  reading CMTSOLUTION file....'
+                 open(unit=20000,file='CMTSOLUTION',POSITION='REWIND',status='old')
+                 read(20000,*) junk
+                 read(20000,*) junk
+                 read(20000,*) junk
+                 read(20000,*) junk
+                 read(20000,*) junk
+                 read(20000,*) junk
+                 read(20000,*) junk
+                 read(20000,*) junk, Mij(1) !Mrr
+                 read(20000,*) junk, Mij(2) !Mtt
+                 read(20000,*) junk, Mij(3) !Mpp
+                 read(20000,*) junk, Mij(4) !Mrt
+                 read(20000,*) junk, Mij(5) !Mrp
+                 read(20000,*) junk, Mij(6) !Mtp
+                 close(20000)
+
+                 Mij = Mij / 1.E7 ! CMTSOLUTION given in dyn-cm
+
+
               else if (keyvalue == 'force') then
                  write(6,*) 'postprocessing for "force" simulation needs work!'
                  stop 2
@@ -228,6 +261,9 @@
         enddo
 
         dtt= dt_strain(1)
+        open(666,file='info_for_specefm.txt')
+        write(666,*) dt_strain(1)
+        close(666)
 
       end subroutine read_info_simu
   end module reading_inputs

@@ -19,6 +19,7 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
+!=========================================================================================
 !> Core of the spectral method.
 module splib
 
@@ -32,17 +33,17 @@ module splib
 
   contains
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> This routine reorders array vin(n) in increasing order and
 !! outputs array vout(n).
 pure subroutine order(vin,vout,n)
 
-  integer, intent(in)            :: n
-  real(kind=dp)    , intent(in)   :: vin(n)
-  real(kind=dp)    , intent(out)  :: vout(n)
-  integer                        :: rankmax
-  integer , dimension (n)        :: rank
-  integer                        :: i, j
+  integer, intent(in)        :: n
+  real(kind=dp), intent(in)  :: vin(n)
+  real(kind=dp), intent(out) :: vout(n)
+  integer                    :: rankmax
+  integer, dimension (n)     :: rank
+  integer                    :: i, j
 
   rankmax = 1
 
@@ -60,24 +61,24 @@ pure subroutine order(vin,vout,n)
   enddo
 
 end subroutine order
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> Applies more robust formula to return
 !! value of the derivative of the i-th Lagrangian interpolant
 !! defined over the weighted GLL points computed at these
 !! weighted GLL points.
 subroutine lag_interp_deriv_wgl(dl,xi,i,N)
 
-  integer, intent(in)           :: N, i
+  integer, intent(in)   :: N, i
   real(dp), intent(in)  :: xi(0:N)
   real(dp), intent(out) :: dl(0:N)
-  real(kind=dp)           :: mn_xi_i, mnprime_xi_i
-  real(kind=dp)           :: mnprimeprime_xi_i
-  real(kind=dp)           :: mn_xi_j, mnprime_xi_j
-  real(kind=dp)           :: mnprimeprime_xi_j
-  real(kind=dp)           :: DN
-  integer                       :: j
+  real(kind=dp)         :: mn_xi_i, mnprime_xi_i
+  real(kind=dp)         :: mnprimeprime_xi_i
+  real(kind=dp)         :: mn_xi_j, mnprime_xi_j
+  real(kind=dp)         :: mnprimeprime_xi_j
+  real(kind=dp)         :: DN
+  integer               :: j
 
   if ( i > N ) stop
   DN = dble(N)
@@ -126,9 +127,9 @@ subroutine lag_interp_deriv_wgl(dl,xi,i,N)
   endif
 
 end subroutine lag_interp_deriv_wgl
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> Compute the value of the derivative of the j-th Lagrange polynomial
 !! of order N defined by the N+1 GLL points xi evaluated at these very
 !! same N+1 GLL points.
@@ -138,14 +139,13 @@ pure subroutine hn_jprime(xi,j,N,dhj)
   integer,intent(in)    :: j
   integer               :: i
   real(dp), intent(out) :: dhj(0:N)
-  real(kind=dp)           :: DX,D2X
-  real(kind=dp)           :: VN (0:N), QN(0:N)
+  real(kind=dp)         :: DX,D2X
+  real(kind=dp)         :: VN (0:N), QN(0:N)
   real(dp), intent(in)  :: xi(0:N)
 
   dhj(:) = 0d0
   VN(:)= 0d0
   QN(:)= 0d0
-
 
   do i = 0, N
      call valepo(N, xi(i), VN(i), DX, D2X)
@@ -155,16 +155,16 @@ pure subroutine hn_jprime(xi,j,N,dhj)
   call delegl(N, xi, VN, QN, dhj)
 
 end subroutine hn_jprime
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> computes the nodes relative to the legendre gauss-lobatto formula
 pure subroutine zelegl(n,et,vn)
 
-  integer, intent(in)    :: n !< Order of the formula
+  integer, intent(in)    :: n       !< Order of the formula
   real(dp), intent(out)  :: ET(0:n) ! Vector of the nodes
   real(dp), intent(out)  :: VN(0:n) ! Values of the Legendre polynomial at the nodes
-  real(kind=dp)            :: sn, x, c, etx, dy, d2y, y
+  real(kind=dp)          :: sn, x, c, etx, dy, d2y, y
   integer                :: i, n2, it
 
   if (n  ==  0) return
@@ -201,16 +201,15 @@ pure subroutine zelegl(n,et,vn)
   enddo
 
 end subroutine zelegl
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> computes the nodes relative to the legendre gauss-lobatto formula
 pure subroutine zelegl2(n,et)
 
-  implicit real(kind=dp)     (a-h,o-z)
   integer, intent(in)    :: n !< Order of the formula
   real(dp), intent(out)  :: ET(0:n) ! Vector of the nodes
-  real(kind=dp)            :: sn, x, c, etx, dy, d2y, y
+  real(kind=dp)          :: sn, x, c, etx, dy, d2y, y
   integer                :: i, n2, it
 
   if (n  ==  0) return
@@ -243,9 +242,9 @@ pure subroutine zelegl2(n,et)
   return
 
 end subroutine zelegl2
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !>   Computes the nodes relative to the modified legendre gauss-lobatto
 !!   FORMULA along the s-axis
 !!   Relies on computing the eigenvalues of tridiagonal matrix.
@@ -291,9 +290,9 @@ pure subroutine zemngl2(n,et)
   ET(1:n-1) = e(1:n-1)
 
 end subroutine zemngl2
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> This routines returns the eigenvalues of the tridiagonal matrix
 !! which diagonal and subdiagonal coefficients are contained in d(1:n) and
 !! e(2:n) respectively. e(1) is free. The eigenvalues are returned in array d
@@ -351,9 +350,9 @@ pure subroutine tqli(d,e,n)
   enddo
 
 end subroutine tqli
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> L2 norm of a and b
 pure real(kind=dp)     function pythag(a,b)
 
@@ -377,9 +376,9 @@ pure real(kind=dp)     function pythag(a,b)
   endif
 
 end function pythag
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !>  computes the derivative of a polynomial at the legendre gauss-lobatto
 !!  nodes from the values of the polynomial attained at the same points
 pure subroutine delegl(n,et,vn,qn,dqn)
@@ -414,9 +413,9 @@ pure subroutine delegl(n,et,vn,qn,dqn)
     dqn(n) = dqn(n) + c * qn(n)
 
 end subroutine delegl
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> computes the value of the legendre polynomial of degree n
 !! and its first and second derivatives at a given point
 pure subroutine valepo(n,x,y,dy,d2y)
@@ -458,9 +457,9 @@ pure subroutine valepo(n,x,y,dy,d2y)
   enddo
 
 end subroutine valepo
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> This routine computes the N+1 weights associated with the
 !! Gauss-Lobatto-Legendre quadrature formula of order N.
 pure subroutine get_welegl(N,xi,wt)
@@ -481,9 +480,9 @@ pure subroutine get_welegl(N,xi,wt)
   enddo
 
 end subroutine get_welegl
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> This routine computes the N+1 weights associated with the
 !! Gauss-Lobatto-Legendre quadrature formula of order N that one
 !! to apply for elements having a non-zero intersection with the
@@ -524,9 +523,9 @@ pure subroutine get_welegl_axial(N,xi,wt,iflag)
   endif
 
 end subroutine get_welegl_axial
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !>   Computes the value of the "cylindrical" polynomial
 !!   m_n = (l_n + l_{n+1})/(1+x) of degree n
 !!   and its first and second derivatives at a given point
@@ -534,16 +533,14 @@ end subroutine get_welegl_axial
 !!   implemented after bernardi et al., page 57, eq. (iii.1.10)
 pure subroutine vamnpo(n,x,y,dy,d2y)
 
-  implicit real(kind=dp)     (a-h,o-z)
   integer, intent(in)   :: n   !< degree of the polynomial
   real(dp), intent(in)  :: x   !< point in which the computation is performed
   real(dp), intent(out) :: y   !< value of the polynomial in x
   real(dp), intent(out) :: dy  !< value of the first derivative in x
   real(dp), intent(out) :: d2y !< value of the second derivative in x
-  real(kind=dp)           :: yp, dyp, d2yp, c1
-  real(kind=dp)           :: ym, dym, d2ym
+  real(kind=dp)         :: yp, dyp, d2yp, c1
+  real(kind=dp)         :: ym, dym, d2ym
   integer               :: i
-
 
    y   = 1.d0
    dy  = 0.d0
@@ -578,9 +575,9 @@ pure subroutine vamnpo(n,x,y,dy,d2y)
   enddo
 
 end subroutine vamnpo
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> This routine computes the Lagrange interpolated value y at point x
 !! associated to the function defined by the n values ya at n distinct points
 !! xa. dy is the estimate of the error made on the interpolation.
@@ -590,8 +587,7 @@ pure subroutine polint(xa,ya,n,x,y,dy)
   real(dp), intent(in)  :: x, xa(n), ya(n)
   real(dp), intent(out) :: dy, y
   integer               :: i, m, ns
-  real(kind=dp)           :: den, dif, dift, ho, hp, w, c(n), d(n)
-
+  real(kind=dp)         :: den, dif, dift, ho, hp, w, c(n), d(n)
 
   ns=1
   dif=abs(x-xa(1))
@@ -632,6 +628,7 @@ pure subroutine polint(xa,ya,n,x,y,dy)
   enddo
 
 end subroutine polint
-!----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 
 end module splib
+!=========================================================================================

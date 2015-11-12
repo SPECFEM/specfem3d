@@ -127,7 +127,7 @@
 !=====================================================================
 ! for acoustic solver for back propagation wave field
 
-  subroutine compute_stacey_acoustic_bpwf(NSPEC_AB, &
+  subroutine compute_stacey_acoustic_backward(NSPEC_AB, &
                             ibool,ispec_is_inner,phase_is_inner, &
                             abs_boundary_ijk,abs_boundary_ispec, &
                             num_abs_boundary_faces,ispec_is_acoustic,&
@@ -209,7 +209,7 @@
     endif ! ispec_is_inner
   enddo ! num_abs_boundary_faces
 
-  end subroutine compute_stacey_acoustic_bpwf
+  end subroutine compute_stacey_acoustic_backward
 !
 !=====================================================================
 ! for acoustic solver on GPU

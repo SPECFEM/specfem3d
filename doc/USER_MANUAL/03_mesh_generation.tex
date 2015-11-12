@@ -121,6 +121,7 @@ turned on. It should be between 1 and 9000. In case no attenuation
 information is available, it can be set to zero. You can either specify a single Q value,
 in which case it will be assumed to be pure shear attenuation $Q_{\mu}$, or two
 separate values for bulk and shear attenuation, $Q_{\kappa}$ and $Q_{\mu}$ respectively.
+Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp. To convert one to the other see doc/note\_on\_Qkappa\_versus\_Qp.pdf and utils/attenuation/conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90.
 
 Please note that your Vp- and Vs-speeds are given for a reference frequency. To change
 this reference frequency, you change the value of \texttt{ATTENUATION\_f0\_REFERENCE}
@@ -288,8 +289,8 @@ with no \texttt{Qmu} attenuation, both set \texttt{ATTENUATION} to
 \texttt{.false.} in the \texttt{Par\_file} and set \texttt{Qmu} to
 9999 here. If you want a model with no \texttt{Qkappa} attenuation,
 both set \texttt{FULL\_ATTENUATION\_SOLID} to \texttt{.false.} in
-the \texttt{Par\_file} and set \texttt{Qkappa} to 9999 here. %%magnoni
-
+the \texttt{Par\_file} and set \texttt{Qkappa} to 9999 here.
+Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp. To convert one to the other see doc/note\_on\_Qkappa\_versus\_Qp.pdf and utils/attenuation/conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90.
 
 \item For tomographic velocity models, please read Chapter \ref{cha:-Changing-the}
 and Section \ref{sec:Using-tomographic} `Using external tomographic
@@ -628,13 +629,17 @@ also need to provide additional information by setting up the next
 three parameters.
 %
 \item [{\texttt{NDOUBLINGS}}] The number of horizontal doubling layers.
-Must be set to \texttt{1} or \texttt{2} if \texttt{USE\_REGULAR\_MESH}
-is set to \texttt{.true.}.
+Must be set at least to \texttt{1} if \texttt{USE\_REGULAR\_MESH} is set to \texttt{.true.}.
+Multiple mesh doublings can be chosen, for which each an \texttt{NZ\_DOUBLING\_**} entry must be given.
+By default, we only provide two possible entries in the \texttt{Mesh\_Par\_file}.
+For higher numbers of doubling layers, additional entries must be added.
 \item [{\texttt{NZ\_DOUBLING\_1}}] The position of the first doubling layer
 (only interpreted if \texttt{USE\_REGULAR\_MESH} is set to \texttt{.true.}).
 \item [{\texttt{NZ\_DOUBLING\_2}}] The position of the second doubling
 layer (only interpreted if \texttt{USE\_REGULAR\_MESH} is set to \texttt{.true.}
-and if \texttt{NDOUBLINGS} is set to \texttt{2}).
+and if \texttt{NDOUBLINGS} is set to \texttt{2}). Doubling layers must be at least \texttt{2} layers apart.
+The layer count starts from the bottom layer.
+More entries must be listed by the user if \texttt{NDOUBLINGS} is larger than \texttt{2}.
 \item [{\texttt{CREATE\_ABAQUS\_FILES}}] Set this flag to \texttt{.true.}
 to save Abaqus FEA \urlwithparentheses{www.simulia.com} mesh files
 for subsequent viewing. Turning the flag on generates files in the

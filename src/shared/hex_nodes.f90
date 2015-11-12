@@ -31,8 +31,8 @@
 
   implicit none
 
-  integer :: NGNOD
-  integer, dimension(NGNOD) :: iaddx,iaddy,iaddz
+  integer,intent(in) :: NGNOD
+  integer, dimension(NGNOD),intent(out) :: iaddx,iaddy,iaddz
 
 ! define the topology of the hexahedral elements
 
@@ -91,8 +91,8 @@
 
   implicit none
 
-  integer :: NGNOD
-  integer, dimension(NGNOD) :: iaddx,iaddy,iaddz
+  integer,intent(in) :: NGNOD
+  integer, dimension(NGNOD),intent(inout) :: iaddx,iaddy,iaddz
 
 ! define the topology of the hexahedral elements
 

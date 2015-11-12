@@ -676,9 +676,9 @@ endif !jpampuero
 
         iglob=ibool(i,1,k,ispec)
         NotInRuptureRegion = abs(zstore(iglob))>RuptureDepth &
-                        .OR. abs(xstore(iglob))>RuptureHalfLength
+                        .or. abs(xstore(iglob))>RuptureHalfLength
         InNucleationRegion = abs(xstore(iglob)-HypoX)<=NucleationHalfSizeX &
-                           .AND. abs(zstore(iglob)-HypoZ)<=NucleationHalfSizeZ
+                           .and. abs(zstore(iglob)-HypoZ)<=NucleationHalfSizeZ
 
         if  ( NotInRuptureRegion ) then
           FaultMuS(i,k,ispec2D) = BarrierStrength
@@ -1459,7 +1459,7 @@ endif !jpampuero
 
       !skip element if its center is not in rupture region
       ! iglob=ibool(3,1,3,ispec)
-      ! if (-zstore(iglob)>RuptureDepth .OR. abs(xstore(iglob))>RuptureHalfLength) cycle
+      ! if (-zstore(iglob)>RuptureDepth .or. abs(xstore(iglob))>RuptureHalfLength) cycle
 
       j=1
       do k=nkmin_eta(1,ispec2D),NGLLZ
@@ -1740,7 +1740,7 @@ endif !jpampuero
         j=1
        !skip element if its center is not in rupture region
         iglob=ibool(3,j,3,ispec)
-        if (-zstore(iglob)>RuptureDepth .OR. abs(xstore(iglob))>RuptureHalfLength) cycle
+        if (-zstore(iglob)>RuptureDepth .or. abs(xstore(iglob))>RuptureHalfLength) cycle
 
         do k=1,NGLLZ-1,2 ! watch out: do not repeat a node
         do i=1,NGLLX-1,2 ! assuming NGLL=5

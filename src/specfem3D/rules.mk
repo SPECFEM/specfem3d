@@ -195,6 +195,7 @@ cuda_specfem3D_OBJECTS = \
 	$O/transfer_fields_cuda.cuda.o \
 	$O/update_displacement_cuda.cuda.o \
 	$O/write_seismograms_cuda.cuda.o \
+	$O/fault_solver_dynamics.cuda.o \
 	$(EMPTY_MACRO)
 
 cuda_specfem3D_STUBS = \
@@ -328,7 +329,7 @@ $O/create_color_image.spec.o: $O/specfem3D_par.spec.o
 $O/detect_mesh_surfaces.spec.o: $O/specfem3D_par.spec.o
 $O/fault_solver_common.spec.o: $O/specfem3D_par.spec.o
 $O/gravity_perturbation.spec.o: $O/specfem3D_par.spec.o
-$O/integrals_on_whole_domain.spec.o: $O/specfem3D_par.spec.o
+$O/integrals_on_whole_domain.spec.o: $O/specfem3D_par.spec.o $O/shared_par.shared_module.o
 $O/locate_source.spec.o: $O/specfem3D_par.spec.o
 $O/locate_receivers.spec.o: $O/specfem3D_par.spec.o
 $O/pml_par.spec.o: $O/specfem3D_par.spec.o

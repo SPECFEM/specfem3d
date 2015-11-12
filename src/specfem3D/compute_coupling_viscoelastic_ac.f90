@@ -250,7 +250,7 @@ end subroutine compute_coupling_viscoelastic_ac
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine compute_coupling_ocean_bpwf(NSPEC_AB,NGLOB_AB, &
+  subroutine compute_coupling_ocean_backward(NSPEC_AB,NGLOB_AB, &
                                     ibool,rmassx,rmassy,rmassz,rmass_ocean_load, &
                                     free_surface_normal,free_surface_ijk,free_surface_ispec, &
                                     num_free_surface_faces,SIMULATION_TYPE, &
@@ -339,6 +339,6 @@ end subroutine compute_coupling_viscoelastic_ac
     enddo ! igll
   enddo ! iface
 
-  end subroutine compute_coupling_ocean_bpwf
+  end subroutine compute_coupling_ocean_backward
 
 

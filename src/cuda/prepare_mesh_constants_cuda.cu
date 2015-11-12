@@ -349,7 +349,8 @@ void FC_FUNC_(prepare_constants_device,
 
   // gravity flag initialization
   mp->gravity = 0;
-
+  // Kelvin_voigt initialization
+  mp->Kelvin_Voigt_damping = 0;
   // JC JC here we will need to add GPU support for the new C-PML routines
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
@@ -1353,6 +1354,37 @@ void FC_FUNC_(prepare_seismogram_fields,
 }
 */
 
+
+
+
+
+/* ----------------------------------------------------------------------------------------------- */
+
+// FAULT simulations
+
+/* ----------------------------------------------------------------------------------------------- */
+
+extern "C"
+void FC_FUNC_(prepare_fault_device,
+              PREPARE_FAULT_DEVICE)(long* Mesh_pointer,
+                            int* KELVIN_VOIGT_DAMPING,
+//                            int* testtrue,
+                                realw* Kelvin_Voigt_eta)
+{
+
+  TRACE("prepare_fault_device");
+
+  Mesh* mp = (Mesh*)(*Mesh_pointer);
+  mp -> Kelvin_Voigt_damping = *KELVIN_VOIGT_DAMPING ;
+  if (mp-> Kelvin_Voigt_damping ){
+//    if(*testtrue) printf("\ntesttrue!\n");
+//    if(! (*KELVIN_VOIGT_DAMPING)) printf("\nKV test pass!\n");
+//    printf("myrank = %d , size of damping = %6d, isAllocated? = %d\n",mp->myrank,sizeof(Kelvin_Voigt_eta),mp -> Kelvin_Voigt_damping);
+    copy_todevice_realw((void**)&mp->d_Kelvin_Voigt_eta,Kelvin_Voigt_eta,mp-> NSPEC_AB);
+}
+}
+
+
 /* ----------------------------------------------------------------------------------------------- */
 
 // cleanup
@@ -1605,3 +1637,5 @@ TRACE("prepare_cleanup_device");
   // mesh pointer - not needed anymore
   free(mp);
 }
+
+

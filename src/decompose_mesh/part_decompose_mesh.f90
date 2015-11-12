@@ -29,6 +29,8 @@ module part_decompose_mesh
 
   use constants,only: MAX_STRING_LEN,NGNOD2D_FOUR_CORNERS,NGNOD_EIGHT_CORNERS
 
+  use shared_parameters, only: MESH_A_CHUNK_OF_THE_EARTH
+
   implicit none
 
 ! useful kind types for short integer (4 bytes) and long integers (8 bytes)
@@ -53,9 +55,7 @@ contains
   ! Creating dual graph (adjacency is defined by 'ncommonnodes' between two elements).
   !-----------------------------------------------
   subroutine mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, elmnts,&
-                                    xadj, adjncy, &
-                                    nnodes_elmnts, nodes_elmnts, &
-                                    max_neighbour, ncommonnodes, NGNOD)
+                                    xadj, adjncy, nnodes_elmnts, nodes_elmnts, max_neighbour, ncommonnodes, NGNOD)
 
     implicit none
     integer, intent(in)  :: nspec
@@ -252,7 +252,6 @@ contains
     num_parts(:) = 0
     size_glob2loc_nodes = 0
 
-
     do num_node = 0, nnodes-1
        do el = 0, nnodes_elmnts(num_node)-1
           parts_node(part(nodes_elmnts(el+nsize*num_node))) = 1
@@ -269,7 +268,6 @@ contains
 
        enddo
     enddo
-
 
   end subroutine build_glob2loc_nodes
 
@@ -323,7 +321,7 @@ contains
     num_interface = 0
     num_edge = 0
 
-! determines acoustic/elastic elements based upon given vs velocities
+! determines acoustic/elastic elements based upon given Vs velocities
 ! and counts same elements for each interface
     do num_part = 0, nparts-1
        do num_part_bis = num_part+1, nparts-1
@@ -369,8 +367,7 @@ contains
                       do num_node = 0, NGNOD_EIGHT_CORNERS-1
                          do num_node_bis = 0, NGNOD_EIGHT_CORNERS-1
                             if (elmnts(el*NGNOD+num_node) == elmnts(adjncy(el_adj)*NGNOD+num_node_bis)) then
-                               tab_interfaces(tab_size_interfaces(num_interface)*7 &
-                                              +num_edge*7+3+ncommon_nodes) &
+                               tab_interfaces(tab_size_interfaces(num_interface)*7+num_edge*7+3+ncommon_nodes) &
                                     = elmnts(el*NGNOD+num_node)
                                ncommon_nodes = ncommon_nodes + 1
                             endif
@@ -797,7 +794,8 @@ contains
              write(IIN_database) glob2loc_elmnts(i)+1,num_modele(1,i+1),num_modele(2,i+1),(loc_nodes(k)+1, k=0,NGNOD-1)
 
              ! writes out to file Numglob2loc_elmn.txt
-             if (COUPLE_WITH_EXTERNAL_CODE) write(124,*) i+1,glob2loc_elmnts(i)+1,iproc !! To verify for NOBU version
+             if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) write(124,*) i+1,glob2loc_elmnts(i)+1,iproc
+
           endif
        enddo
     endif

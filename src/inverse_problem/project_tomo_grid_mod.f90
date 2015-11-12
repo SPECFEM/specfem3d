@@ -4161,7 +4161,7 @@ end subroutine Find_xix_eta_gamma
 
                    valeur_integration(igll,jgll,kgll,index_grid)=valeur
                    indice_integration(igll,jgll,kgll,index_grid)=1
-                   !if (i==1 .And. j==1) then
+                   !if (i==1 .and. j==1) then
                    !    write(*,*) myrank, k,index_grid,valeur
                    !    write(*,*) dat_to_project(1,1,1,ispec)
                    !endif

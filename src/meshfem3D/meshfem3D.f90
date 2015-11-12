@@ -28,19 +28,11 @@
 ! United States and French Government Sponsorship Acknowledged.
 !
 
-  subroutine meshfem3D
+  subroutine meshfem3D()
 
-  use constants
-
-  use shared_parameters
-
-  use readParFile,only: read_mesh_parameter_file
-
-  use createRegMesh
+  use meshfem3D_par
 
   implicit none
-
-  include "constants_meshfem3D.h"
 
 !=============================================================================!
 !                                                                             !
@@ -239,125 +231,28 @@
 !    parallelized on 128 processors using Connection Machine Fortran
 !
 
-! number of spectral elements in each block
-  integer nspec,npointot
+! local parameters
+  integer :: iprocnum
+  integer :: iproc_xi,iproc_eta
+  integer :: ier
 
-! meshing parameters
-  double precision, dimension(:), allocatable :: rns
+  ! interface parameters
+  integer :: ilayer
 
-! auxiliary variables to generate the mesh
-  integer ix,iy,ir
-
-  double precision xin,etan
-  double precision x_current,y_current
-
-  double precision, dimension(:,:,:), allocatable :: xgrid,ygrid,zgrid
-
-  integer, dimension(:,:,:,:), allocatable :: ibool
-
-! arrays with the mesh in double precision
-  double precision, dimension(:,:,:,:), allocatable :: xstore,ystore,zstore
-
-! proc numbers for MPI
-  integer myrank,sizeprocs,ier
-  integer iprocnum,npx,npy
-
-! for loop on all the slices
-  integer iproc_xi,iproc_eta
-  integer, dimension(:,:), allocatable :: addressing
-
-! use integer array to store topography values
-  integer icornerlat,icornerlong
-  double precision lat,long
-  double precision long_corner,lat_corner,ratio_xi,ratio_eta
-
-! timer MPI
+  ! timer MPI
   double precision, external :: wtime
-  double precision time_start,tCPU
-
-! addressing for all the slices
-  integer, dimension(:), allocatable :: iproc_xi_slice,iproc_eta_slice
-
-! parameters read from mesh parameter file
-  integer NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA
-
-  double precision UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX
-  double precision Z_DEPTH_BLOCK
-  double precision LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
-
-  logical USE_REGULAR_MESH
-
-! Mesh files for visualization
-  logical CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES
-
-! CPML
-  double precision :: THICKNESS_OF_X_PML,THICKNESS_OF_Y_PML,THICKNESS_OF_Z_PML
-
-! doublings parameters
-  integer NDOUBLINGS
-  integer, dimension(2) :: ner_doublings
-
-! parameters deduced from parameters read from file
-  integer NEX_PER_PROC_XI,NEX_PER_PROC_ETA
-  integer NER
-
-! this for all the regions
-  integer NSPEC_AB,NGLOB_AB
-  integer NSPEC2D_A_XI,NSPEC2D_B_XI, &
-          NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
-          NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
-          NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-          NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX
-
-  double precision min_elevation,max_elevation
-
-! interfaces parameters
-  logical SUPPRESS_UTM_PROJECTION_BOTTOM,SUPPRESS_UTM_PROJECTION_TOP
-  integer ilayer,interface_current
-  integer number_of_interfaces,number_of_layers
-  integer max_npx_interface,max_npy_interface
-  integer npx_interface_bottom,npy_interface_bottom
-  integer npx_interface_top,npy_interface_top
-  double precision z_interface_bottom,z_interface_top
-  double precision orig_x_interface_bottom,orig_y_interface_bottom
-  double precision orig_x_interface_top,orig_y_interface_top
-  double precision spacing_x_interface_bottom,spacing_y_interface_bottom
-  double precision spacing_x_interface_top,spacing_y_interface_top
-  character(len=MAX_STRING_LEN) :: INTERFACES_FILE,interface_top_file
-  integer, dimension(:), allocatable :: ner_layer
-  double precision, dimension(:,:),allocatable :: interface_bottom,interface_top
-
-! to compute the coordinate transformation
-  integer :: ioffset
-  double precision :: gamma
-
-! subregions parameters
-  integer NSUBREGIONS
-!  definition of the different regions of the model in the mesh (nx,ny,nz)
-!  #1 #2 : nx_begining,nx_end
-!  #3 #4 : ny_begining,ny_end
-!  #5 #6 : nz_begining,nz_end
-!     #7 : material number
-  integer, dimension(:,:), pointer :: subregions
-
-! material properties
-  integer NMATERIALS
-! first dimension  : material_id
-! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id
-  double precision , dimension(:,:), pointer :: material_properties
-
-  logical :: BROADCAST_AFTER_READ
+  double precision :: time_start,tCPU
 
 ! ************** PROGRAM STARTS HERE **************
 
-! sizeprocs returns number of processes started (should be equal to NPROC).
-! myrank is the rank of each process, between 0 and NPROC-1.
-! as usual in MPI, process 0 is in charge of coordinating everything
-! and also takes care of the main output
+  ! sizeprocs returns number of processes started (should be equal to NPROC).
+  ! myrank is the rank of each process, between 0 and NPROC-1.
+  ! as usual in MPI, process 0 is in charge of coordinating everything
+  ! and also takes care of the main output
   call world_size(sizeprocs)
   call world_rank(myrank)
 
-! open main output file, only written to by process 0
+  ! open main output file, only written to by process 0
   if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) then
     open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_meshfem3D.txt',status='unknown',iostat=ier)
     if (ier /= 0) then
@@ -366,7 +261,7 @@
     endif
   endif
 
-! get MPI starting time
+  ! get MPI starting time
   time_start = wtime()
 
   if (myrank == 0) then
@@ -378,16 +273,20 @@
     call flush_IMAIN()
   endif
 
-! read the parameter file (DATA/Par_file)
+  ! read the parameter file (DATA/Par_file)
   BROADCAST_AFTER_READ = .true.
   call read_parameter_file(myrank,BROADCAST_AFTER_READ)
 
-! if meshing a chunk of the Earth, call a specific internal mesher designed specifically for that
-  if (COUPLE_WITH_EXTERNAL_CODE .and. MESH_A_CHUNK_OF_THE_EARTH) then
+  ! make sure everybody is synchronized
+  call synchronize_all()
+
+  ! if meshing a chunk of the Earth, call a specific internal mesher designed specifically for that
+  ! CD CD change this to have also the possibility to use a chunk without coupling
+  if (MESH_A_CHUNK_OF_THE_EARTH) then
     ! user output
     if (myrank == 0) then
       write(IMAIN,*)
-      write(IMAIN,*) 'creating chunk of the earth Mesh'
+      write(IMAIN,*) 'creating chunk of the Earth mesh'
       write(IMAIN,*)
       call flush_IMAIN()
     endif
@@ -409,92 +308,39 @@
       stop 'Bad number of nodes per hexahedron : NGNOD must be equal to 8 or 27'
     endif
 
+    ! make sure everybody is synchronized
+    call synchronize_all()
   endif
 
-! make sure everybody is synchronized
-  call synchronize_all()
+  ! read the mesh parameter file (Data/meshfem3D_files/Mesh_Par_file)
+  ! nullify(subregions,material_properties)
+  call read_mesh_parameter_file()
 
-! read the mesh parameter file (Data/meshfem3D_files/Mesh_Par_file)
-! nullify(subregions,material_properties)
-  call read_mesh_parameter_file(LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
-                                UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
-                                NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE, &
-                                LOCAL_PATH,SUPPRESS_UTM_PROJECTION,&
-                                INTERFACES_FILE,NSUBREGIONS,subregions,NMATERIALS,material_properties, &
-                                CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
-                                USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
-                                THICKNESS_OF_X_PML,THICKNESS_OF_Y_PML,THICKNESS_OF_Z_PML)
+  ! get interface data from external file to count the spectral elements along Z
+  call get_interfaces_mesh_count()
 
-  if (sizeprocs == 1 .and. (NPROC_XI /= 1 .or. NPROC_ETA /= 1)) &
-    stop 'Error: must have NPROC_XI = NPROC_ETA = 1 for a serial run'
-
-! make sure everybody is synchronized
-  call synchronize_all()
-
-! get interface data from external file to count the spectral elements along Z
-  if (myrank == 0) then
-    write(IMAIN,*) 'Reading interface data from file ',trim(MF_IN_DATA_FILES)//trim(INTERFACES_FILE), &
-                   ' to count the spectral elements'
-    call flush_IMAIN()
-  endif
-
-  open(unit=IIN,file=trim(MF_IN_DATA_FILES)//trim(INTERFACES_FILE),status='old',iostat=ier)
-  if (ier /= 0) then
-    print *,'Error opening interface file: ',trim(MF_IN_DATA_FILES)//trim(INTERFACES_FILE)
-    stop 'Error opening interface file'
-  endif
-
-  max_npx_interface  = -1
-  max_npy_interface  = -1
-
-! read number of interfaces
-  call read_value_integer_mesh(IIN,DONT_IGNORE_JUNK,number_of_interfaces,'NINTERFACES', ier)
-  if (ier /= 0) stop 'Error reading interface parameter for NINTERFACES'
-
-  if (number_of_interfaces < 1) stop 'Error not enough interfaces (minimum is 1, for topography)'
-
-! loop on all the interfaces
-  do interface_current = 1,number_of_interfaces
-    call read_interface_parameters(IIN,SUPPRESS_UTM_PROJECTION_BOTTOM,interface_top_file, &
-                                   npx_interface_bottom,npy_interface_bottom,&
-                                   orig_x_interface_bottom,orig_y_interface_bottom,&
-                                   spacing_x_interface_bottom,spacing_y_interface_bottom,ier)
-    if (ier /= 0) then
-      print *,'Error reading interface parameters: interface ',interface_current
-      stop 'Error reading interface parameters for interfaces'
-    endif
-
-    max_npx_interface = max(npx_interface_bottom,max_npx_interface)
-    max_npy_interface = max(npy_interface_bottom,max_npy_interface)
-
-    if ((max_npx_interface < 2) .or.(max_npy_interface < 2)) then
-      print *,'Error interface ',interface_current,': has not enough interface points (minimum is 2x2)'
-      stop 'Error not enough interface points (minimum is 2x2)'
-    endif
-  enddo
-
-  ! define number of layers
-  number_of_layers = number_of_interfaces ! - 1
-  allocate(ner_layer(number_of_layers),stat=ier)
-  if (ier /= 0) stop 'Error allocating array ner_layer'
-
-! loop on all the layers
-  do ilayer = 1,number_of_layers
-
-! read number of spectral elements in vertical direction in this layer
-    call read_value_integer_mesh(IIN,DONT_IGNORE_JUNK,ner_layer(ilayer),'NER_LAYER', ier)
-    if (ier /= 0) stop 'Error reading interface parameter for NER_LAYER'
-
-    if (ner_layer(ilayer) < 1) stop 'not enough spectral elements along Z in layer (minimum is 1)'
-
-  enddo
-
-  close(IIN)
-
-! compute total number of spectral elements in vertical direction
+  ! compute total number of spectral elements in vertical direction
   NER = sum(ner_layer)
 
-! compute other parameters based upon values read
+  ! checks if regions and vertical layers from interfaces file match
+  if (maxval(subregions(:,6)) /= NER) then
+    print *,'Error invalid total number of element layers in vertical direction!'
+    print *,'from interface file, total layers = ',NER
+    print *,'should be equal to maximum layer NZ_END specified in regions:', maxval(subregions(:,6))
+    stop 'Error invalid total number of vertical layers'
+  endif
+
+  ! checks irregular grid entries
+  if (.not. USE_REGULAR_MESH) then
+    if (maxval(ner_doublings(:)) == NER) then
+      print *,'Error invalid doubling layer NZ index too close to surface layer ',NER
+      print *,'Please decrease maximum doubling layer index NZ_DOUBLING'
+      stop 'Error invalid doubling layer index too close to surface layer'
+    endif
+  endif
+
+
+  ! compute other parameters based upon values read
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
                           NPROC,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
                           NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
@@ -503,7 +349,7 @@
                           NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,&
                           USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
-! check that the code is running with the requested nb of processes
+  ! check that the code is running with the requested nb of processes
   if (sizeprocs /= NPROC) then
     if (myrank == 0) then
       write(IMAIN,*) 'Error: number of processors supposed to run on: ',NPROC
@@ -516,7 +362,7 @@
     call exit_MPI(myrank,'wrong number of MPI processes')
   endif
 
-! dynamic allocation of mesh arrays
+  ! dynamic allocation of mesh arrays
   allocate(rns(0:2*NER),stat=ier)
   if (ier /= 0) stop 'Error allocating array rns'
 
@@ -534,7 +380,7 @@
   allocate(iproc_eta_slice(0:NPROC-1),stat=ier)
   if (ier /= 0) stop 'Error allocating array iproc_eta_slice'
 
-! clear arrays
+  ! clear arrays
   xgrid(:,:,:) = 0.d0
   ygrid(:,:,:) = 0.d0
   zgrid(:,:,:) = 0.d0
@@ -542,15 +388,16 @@
   iproc_xi_slice(:) = 0
   iproc_eta_slice(:) = 0
 
-! create global slice addressing for solver
+  ! create global slice addressing for solver
   if (myrank == 0) then
-    write(IMAIN,*) 'creating global slice addressing'
+    write(IMAIN,*)
+    write(IMAIN,*) 'Creating global slice addressing'
     write(IMAIN,*)
     call flush_IMAIN()
   endif
 
-  do iproc_eta=0,NPROC_ETA-1
-    do iproc_xi=0,NPROC_XI-1
+  do iproc_eta = 0,NPROC_ETA-1
+    do iproc_xi = 0,NPROC_XI-1
       iprocnum = iproc_eta * NPROC_XI + iproc_xi
       iproc_xi_slice(iprocnum) = iproc_xi
       iproc_eta_slice(iprocnum) = iproc_eta
@@ -577,6 +424,7 @@
     write(IMAIN,*) 'There are ',NEX_XI,' elements along xi'
     write(IMAIN,*) 'There are ',NEX_ETA,' elements along eta'
     write(IMAIN,*) 'There are ',NER,' elements along Z'
+    write(IMAIN,*)
     do ilayer = 1,number_of_layers
        write(IMAIN,*) 'There are ',ner_layer(ilayer),' spectral elements along Z in layer ',ilayer
     enddo
@@ -620,6 +468,11 @@
 
     if (mod(NEX_PER_PROC_XI,8) /= 0) call exit_MPI(myrank,'NEX_PER_PROC_XI must be a multiple of 8')
     if (mod(NEX_PER_PROC_ETA,8) /= 0) call exit_MPI(myrank,'NEX_PER_PROC_ETA must be a multiple of 8')
+
+    if (mod(NEX_PER_PROC_XI, 2**NDOUBLINGS * 2) /= 0 ) &
+      call exit_MPI(myrank,'NEX_PER_PROC_XI must be a multiple of 2 * 2**NDOUBLINGS')
+    if (mod(NEX_PER_PROC_ETA, 2**NDOUBLINGS * 2) /= 0 ) &
+      call exit_MPI(myrank,'NEX_PER_PROC_ETA must be a multiple of 2 * 2**NDOUBLINGS')
   endif
 
   if (myrank == 0) then
@@ -664,232 +517,48 @@
     call flush_IMAIN()
   endif
 
-! get addressing for this process
-  iproc_xi = iproc_xi_slice(myrank)
-  iproc_eta = iproc_eta_slice(myrank)
+  ! get addressing for this process
+  iproc_xi_current = iproc_xi_slice(myrank)
+  iproc_eta_current = iproc_eta_slice(myrank)
 
-! number of elements in each slice
-  npx = 2*NEX_PER_PROC_XI
-  npy = 2*NEX_PER_PROC_ETA
+  ! number of elements in each slice
+  npx_element_steps = 2*NEX_PER_PROC_XI
+  npy_element_steps = 2*NEX_PER_PROC_ETA
   ner_layer(:) = 2 * ner_layer(:)
-  min_elevation = +HUGEVAL
-  max_elevation = -HUGEVAL
 
-  if (myrank == 0) then
-    write(IMAIN,*)
-    write(IMAIN,*) 'Reading interface data from file ',trim(MF_IN_DATA_FILES)//trim(INTERFACES_FILE)
-    write(IMAIN,*)
-    call flush_IMAIN()
-  endif
+  !min_elevation = +HUGEVAL
+  !max_elevation = -HUGEVAL
 
-  open(unit=IIN,file=trim(MF_IN_DATA_FILES)//trim(INTERFACES_FILE),status='old',iostat=ier)
-  if (ier /= 0) stop 'Error opening interfaces file'
-
-  allocate(interface_bottom(max_npx_interface,max_npy_interface),stat=ier)
-  if (ier /= 0) stop 'Error allocating array interface_bottom'
-  allocate(interface_top(max_npx_interface,max_npy_interface),stat=ier)
-  if (ier /= 0) stop 'Error allocating array interface_top'
-
-  ! read number of interfaces
-  call read_value_integer_mesh(IIN,DONT_IGNORE_JUNK,number_of_interfaces,'NINTERFACES', ier)
-
-  SUPPRESS_UTM_PROJECTION_BOTTOM = SUPPRESS_UTM_PROJECTION
-  npx_interface_bottom = 2
-  npy_interface_bottom = 2
-  orig_x_interface_bottom = UTM_X_MIN
-  orig_y_interface_bottom = UTM_Y_MIN
-  spacing_x_interface_bottom = UTM_X_MAX - UTM_X_MIN
-  spacing_y_interface_bottom = UTM_Y_MAX - UTM_Y_MIN
-  interface_bottom(:,:) = - dabs(Z_DEPTH_BLOCK)
-
-  ! loop on all the layers
-  do ilayer = 1,number_of_layers
-
-    ! read top interface
-    call read_interface_parameters(IIN,SUPPRESS_UTM_PROJECTION_TOP,interface_top_file,&
-                                   npx_interface_top,npy_interface_top,&
-                                   orig_x_interface_top,orig_y_interface_top,&
-                                   spacing_x_interface_top,spacing_y_interface_top,ier)
-
-    !npoints_interface_top = npx_interface_top * npy_interface
-    ! loop on all the points describing this interface
-    open(unit=45,file=trim(MF_IN_DATA_FILES)//trim(interface_top_file),status='old',iostat=ier)
-    if (ier /= 0) stop 'Error opening interface_top file'
-    do iy=1,npy_interface_top
-      do ix=1,npx_interface_top
-        call read_value_dble_precision_mesh(45,DONT_IGNORE_JUNK,interface_top(ix,iy),'Z_INTERFACE_TOP',ier)
-      enddo
-    enddo
-    close(45)
-
-    ! compute the offset of this layer in terms of number of spectral elements below along Z
-    if (ilayer > 1) then
-       ioffset = sum(ner_layer(1:ilayer-1))
-    else
-       ioffset = 0
-    endif
-
-    !--- definition of the mesh
-
-    do iy=0,npy
-      do ix=0,npx
-
-!   define the mesh points on the top and the bottom
-        xin=dble(ix)/dble(npx)
-        x_current = UTM_X_MIN + (dble(iproc_xi)+xin)*(UTM_X_MAX-UTM_X_MIN)/dble(NPROC_XI)
-
-        etan=dble(iy)/dble(npy)
-        y_current = UTM_Y_MIN + (dble(iproc_eta)+etan)*(UTM_Y_MAX-UTM_Y_MIN)/dble(NPROC_ETA)
-
-! get bottom interface value
-! project x and y in UTM back to long/lat since topo file is in long/lat
-        call utm_geo(long,lat,x_current,y_current,UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION_BOTTOM)
-
-! get coordinate of corner in bathy/topo model
-        icornerlong = int((long - orig_x_interface_bottom) / spacing_x_interface_bottom) + 1
-        icornerlat = int((lat - orig_y_interface_bottom) / spacing_y_interface_bottom) + 1
-
-! avoid edge effects and extend with identical point if outside model
-        if (icornerlong < 1) icornerlong = 1
-        if (icornerlong > npx_interface_bottom-1) icornerlong = npx_interface_bottom-1
-        if (icornerlat < 1) icornerlat = 1
-        if (icornerlat > npy_interface_bottom-1) icornerlat = npy_interface_bottom-1
-
-! compute coordinates of corner
-        long_corner = orig_x_interface_bottom + (icornerlong-1)*spacing_x_interface_bottom
-        lat_corner = orig_y_interface_bottom + (icornerlat-1)*spacing_y_interface_bottom
-
-! compute ratio for interpolation
-        ratio_xi = (long - long_corner) / spacing_x_interface_bottom
-        ratio_eta = (lat - lat_corner) / spacing_y_interface_bottom
-
-! avoid edge effects
-        if (ratio_xi < 0.) ratio_xi = 0.
-        if (ratio_xi > 1.) ratio_xi = 1.
-        if (ratio_eta < 0.) ratio_eta = 0.
-        if (ratio_eta > 1.) ratio_eta = 1.
-
-! interpolate elevation at current point
-        z_interface_bottom = &
-              interface_bottom(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
-              interface_bottom(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
-              interface_bottom(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
-              interface_bottom(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
-
-! get top interface value
-! project x and y in UTM back to long/lat since topo file is in long/lat
-        call utm_geo(long,lat,x_current,y_current,UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION_TOP)
-
-! get coordinate of corner in bathy/topo model
-        icornerlong = int((long - orig_x_interface_top) / spacing_x_interface_top) + 1
-        icornerlat = int((lat - orig_y_interface_top) / spacing_y_interface_top) + 1
-
-! avoid edge effects and extend with identical point if outside model
-        if (icornerlong < 1) icornerlong = 1
-        if (icornerlong > npx_interface_top-1) icornerlong = npx_interface_top-1
-        if (icornerlat < 1) icornerlat = 1
-        if (icornerlat > npy_interface_top-1) icornerlat = npy_interface_top-1
-
-! compute coordinates of corner
-        long_corner = orig_x_interface_top + (icornerlong-1)*spacing_x_interface_top
-        lat_corner = orig_y_interface_top + (icornerlat-1)*spacing_y_interface_top
-
-! compute ratio for interpolation
-        ratio_xi = (long - long_corner) / spacing_x_interface_top
-        ratio_eta = (lat - lat_corner) / spacing_y_interface_top
-
-! avoid edge effects
-        if (ratio_xi < 0.) ratio_xi = 0.
-        if (ratio_xi > 1.) ratio_xi = 1.
-        if (ratio_eta < 0.) ratio_eta = 0.
-        if (ratio_eta > 1.) ratio_eta = 1.
-
-! interpolate elevation at current point
-        z_interface_top = &
-             interface_top(icornerlong,icornerlat)*(1.-ratio_xi)*(1.-ratio_eta) + &
-             interface_top(icornerlong+1,icornerlat)*ratio_xi*(1.-ratio_eta) + &
-             interface_top(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
-             interface_top(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
-
-        do ir = 0,ner_layer(ilayer)
-          ! linear interpolation between bottom and top
-          gamma = dble(ir) / dble(ner_layer(ilayer))
-
-          ! coordinates of the grid points
-          xgrid(ir + ioffset,ix,iy) = x_current
-          ygrid(ir + ioffset,ix,iy) = y_current
-          zgrid(ir + ioffset,ix,iy) = gamma*z_interface_top + (1.d0 - gamma)*z_interface_bottom
-        enddo
-
-      enddo
-    enddo
-
-    ! the top interface becomes the bottom interface before switching to the next layer
-    SUPPRESS_UTM_PROJECTION_BOTTOM = SUPPRESS_UTM_PROJECTION_TOP
-    npx_interface_bottom = npx_interface_top
-    npy_interface_bottom = npy_interface_top
-    orig_x_interface_bottom = orig_x_interface_top
-    orig_y_interface_bottom = orig_y_interface_top
-    spacing_x_interface_bottom = spacing_x_interface_top
-    spacing_y_interface_bottom = spacing_y_interface_top
-    interface_bottom(:,:) = interface_top(:,:)
-
-  enddo
-
+  ! user output
   if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '**************************'
-    write(IMAIN,*) 'creating mesh in the model'
+    write(IMAIN,*) 'Creating interfaces'
     write(IMAIN,*) '**************************'
     write(IMAIN,*)
     call flush_IMAIN()
   endif
 
-! assign theoretical number of elements
-  nspec = NSPEC_AB
+  ! creates mesh interfaces
+  call create_interfaces_mesh()
 
-! compute maximum number of points
-  npointot = nspec * NGLLCUBE_M
-
-! make sure everybody is synchronized
-  call synchronize_all()
-
-! use dynamic allocation to allocate memory for arrays
-  allocate(ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),stat=ier)
-  if (ier /= 0) stop 'Error allocating array ibool'
-  allocate(xstore(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),stat=ier)
-  if (ier /= 0) stop 'Error allocating array xstore'
-  allocate(ystore(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),stat=ier)
-  if (ier /= 0) stop 'Error allocating array ystore'
-  allocate(zstore(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),stat=ier)
-  ! exit if there is not enough memory to allocate all the arrays
-  if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
-
-  call create_regions_mesh(xgrid,ygrid,zgrid,ibool, &
-                           xstore,ystore,zstore,iproc_xi,iproc_eta,addressing,nspec, &
-                           NGLOB_AB,npointot, &
-                           NEX_PER_PROC_XI,NEX_PER_PROC_ETA,NER, &
-                           NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-                           NPROC_XI,NPROC_ETA, &
-                           NSUBREGIONS,subregions,NMATERIALS,material_properties, &
-                           myrank, sizeprocs, &
-                           LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK,&
-                           CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
-                           USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
-                           ADIOS_ENABLED, ADIOS_FOR_DATABASES, &
-                           THICKNESS_OF_X_PML,THICKNESS_OF_Y_PML,THICKNESS_OF_Z_PML)
-
+  ! user output
   if (myrank == 0) then
-! compare to exact theoretical value (bottom is always flat)
-    write(IMAIN,*) '            exact area: ',(UTM_Y_MAX-UTM_Y_MIN)*(UTM_X_MAX-UTM_X_MIN)
+    write(IMAIN,*)
+    write(IMAIN,*) '**************************'
+    write(IMAIN,*) 'Creating mesh in the model'
+    write(IMAIN,*) '**************************'
+    write(IMAIN,*)
     call flush_IMAIN()
   endif
 
-! make sure everybody is synchronized
+  ! creates mesh element points
+  call create_meshfem_mesh()
+
+  ! make sure everybody is synchronized
   call synchronize_all()
 
-!--- print number of points and elements in the mesh
-
+  !--- print number of points and elements in the mesh
   if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) 'Repartition of elements:'
@@ -899,10 +568,10 @@
     write(IMAIN,*) 'total number of points in mesh slice 0: ',NGLOB_AB
     write(IMAIN,*)
     write(IMAIN,*) 'total number of elements in entire mesh: ',NSPEC_AB*NPROC
-! the float() statements here are for the case of more than 2 Gigapoints per mesh, in which
-! case and integer(kind=4) counter would overflow and display an incorrect negative value;
-! converting it to float fixes the problem (but then prints some extra decimals equal to zero).
-! Another option would be to declare the sum as integer(kind=8) and then print it.
+    ! the float() statements here are for the case of more than 2 Gigapoints per mesh, in which
+    ! case and integer(kind=4) counter would overflow and display an incorrect negative value;
+    ! converting it to float fixes the problem (but then prints some extra decimals equal to zero).
+    ! Another option would be to declare the sum as integer(kind=8) and then print it.
     write(IMAIN,*) 'approximate total number of points in entire mesh (with duplicates on MPI edges): ', &
                                              dble(NGLOB_AB)*dble(NPROC)
     write(IMAIN,*) 'approximate total number of DOFs in entire mesh (with duplicates on MPI edges): ', &
@@ -920,7 +589,7 @@
     call flush_IMAIN()
   endif   ! end of section executed by main process only
 
-! elapsed time since beginning of mesh generation
+  ! elapsed time since beginning of mesh generation
   if (myrank == 0) then
     tCPU = wtime() - time_start
     write(IMAIN,*)
@@ -935,7 +604,7 @@
     close(IMAIN)
   endif
 
-! synchronize all the processes to make sure everybody has finished
+  ! synchronize all the processes to make sure everybody has finished
   call synchronize_all()
 
   end subroutine meshfem3D

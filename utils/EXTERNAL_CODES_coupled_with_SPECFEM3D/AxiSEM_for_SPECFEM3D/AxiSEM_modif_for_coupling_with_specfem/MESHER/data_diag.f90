@@ -19,9 +19,8 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
-!===================
+!=========================================================================================
 module data_diag
-!===================
 
   implicit none
   public
@@ -33,6 +32,5 @@ module data_diag
   character(len=200)    :: diagpath
   integer               :: lfdiag
 
-!===================
 end module data_diag
-!===================
+!=========================================================================================

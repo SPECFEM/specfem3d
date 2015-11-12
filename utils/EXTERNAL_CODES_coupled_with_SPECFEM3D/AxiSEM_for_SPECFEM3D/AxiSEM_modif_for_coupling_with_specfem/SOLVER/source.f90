@@ -19,6 +19,7 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
+!=========================================================================================
 module source
 
   use global_parameters
@@ -27,6 +28,7 @@ module source
   use data_time
   use data_proc
   use data_io
+  use commun, only: pcheck
 
   implicit none
 
@@ -34,19 +36,20 @@ module source
   private
 contains
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine read_sourceparams
 
-  use commun, only       : pcheck
+  use utlity, only       : to_lower
+
   real(kind=realkind)   :: srclat
   character(len=256)    :: keyword, keyvalue, line
   character(len=512)    :: errmsg
   integer               :: iinparam_source=500, ioerr
 
 
-  if (verbose > 1) write(6,'(A)', advance='no') '    Reading inparam_source...'
+  if (verbose > 1.and.lpr) write(6,'(A)', advance='no') '    Reading inparam_source...'
   open(unit=iinparam_source, file='inparam_source', status='old', action='read',  iostat=ioerr)
-  if (ioerr /= 0) stop 'Check input file ''inparam_source''! Is it still there?'
+  call pcheck(ioerr /= 0, 'Check input file ''inparam_source''! Is it still there?')
 
   do
     read(iinparam_source, fmt='(a256)', iostat=ioerr) line
@@ -59,6 +62,7 @@ subroutine read_sourceparams
 
     case('SOURCE_TYPE')
         read(keyvalue, *) src_type(2)
+        src_type(2) = to_lower(src_type(2))
         select case(src_type(2))
         case('mrr', 'explosion', 'mtt_p_mpp', 'mpp_p_mtt', 'vertforce')
             src_type(1) = 'monopole'
@@ -104,10 +108,10 @@ subroutine read_sourceparams
      rot_src = .true.
 
      if (rec_file_type=='database') then
-       write(6,'(a,/,a)') &
+       write(errmsg,'(a,/,a)') &
           'For the database function, the source should be at the northpole.', &
           'All rotation is done in postprocessing.'
-       stop
+       call pcheck(.true., errmsg)
      endif
   else
      rot_src = .false.
@@ -134,13 +138,13 @@ subroutine read_sourceparams
 14 format(a28,a13)
 
 end subroutine read_sourceparams
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine compute_stf
-  use nc_routines, only: nc_dump_stf
-
-  integer :: i
+  use nc_routines, only   : nc_dump_stf
+  character(len=512)     :: errmsg
+  integer                :: i
 
   allocate(stf(1:niter))
   dt_src_shift = 10000000.
@@ -156,29 +160,26 @@ subroutine compute_stf
     call gauss_d
   case('gauss_2')
     call gauss_dd
+  case('errorf')
+    call errorf
   case('quheavi')
      !call quasiheavi
      call delta_src ! done inside the delta routine now
   case default
-     write(6,*)' source time function non existant:', stf_type
-     stop
+     write(errmsg,*)' source time function non existant:', stf_type
+     call pcheck(.true., errmsg)
   end select
 
-   if (dt_src_shift < 1000000.) then
-      if ( abs(nint(dt_src_shift / deltat) - dt_src_shift / deltat) < 0.01 * deltat ) then
-         it_src_shift = dt_src_shift / deltat
-         ! time shift in the Fourier domain (used in post processing/kerner... eventually)
-         ! timeshift_fourier(0:nomega) = exp(cmplx(0.,1.) *omega(0:nomega)*dt_src_shift)
-      else
-         if (lpr) write(6,'(a,/,a,3f7.4)') &
+  write(errmsg, '("ERROR: source time shift not defined! ", F15.4)') dt_src_shift
+  call pcheck(dt_src_shift > 1000000., errmsg)
+
+  write(errmsg, *) & !'(a,/,a,2(f7.4))') &
                 'Problem with discrete source shift: not a multiplicative of deltat...', &
-                'source shift, deltat', dt_src_shift, deltat, dt_src_shift/deltat
-         stop
-      endif
-   else
-      if (lpr) write(6,*) ' ERROR: source time shift not defined!', dt_src_shift
-      stop
-   endif
+                'source shift, deltat: ', dt_src_shift, deltat !, dt_src_shift/deltat
+  call pcheck(abs(nint(dt_src_shift / deltat) - dt_src_shift / deltat) > 0.01 * deltat, errmsg)
+
+  ! time shift in the Fourier domain (used in post processing/kerner... eventually)
+  ! timeshift_fourier(0:nomega) = exp(cmplx(0.,1.) *omega(0:nomega)*dt_src_shift)
 
    if (use_netcdf.and.(mynum==0)) call nc_dump_stf(stf(1:niter))
 
@@ -199,38 +200,40 @@ subroutine compute_stf
    endif
 
 end subroutine compute_stf
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> These *_t routines are needed by the symplectic time integration schemes.
 !! Eventually there should be only one type, point- or array-wise.
 subroutine compute_stf_t(nstf_t,t,stf_t)
 
-  integer, intent(in)           :: nstf_t
-  real(kind=dp)   , intent(in)  :: t(1:nstf_t)
-  real(kind=dp)   , intent(out) :: stf_t(1:nstf_t)
+  integer, intent(in)        :: nstf_t
+  real(kind=dp), intent(in)  :: t(1:nstf_t)
+  real(kind=dp), intent(out) :: stf_t(1:nstf_t)
 
 
   select case(stf_type)
   case('dirac_0')
-    call delta_src_t(nstf_t,t,stf_t)
+    call delta_src_t(nstf_t, t, stf_t)
   case('gauss_0')
-    call gauss_t(nstf_t,t,stf_t)
+    call gauss_t(nstf_t, t, stf_t)
   case('gauss_1')
-    call gauss_d_t(nstf_t,t,stf_t)
+    call gauss_d_t(nstf_t, t, stf_t)
   case('gauss_2')
-    call gauss_dd_t(nstf_t,t,stf_t)
+    call gauss_dd_t(nstf_t, t, stf_t)
+  case('errorf')
+    call errorf_t(nstf_t, t, stf_t)
   case('quheavi')
-    call quasiheavi_t(nstf_t,stf_t)
+    call quasiheavi_t(nstf_t, stf_t)
   case default
      write(6,*)' source time function non existant:', stf_type
      stop
   end select
 
 end subroutine compute_stf_t
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine compute_src
 
   use data_mesh
@@ -242,6 +245,7 @@ subroutine compute_src
   real(kind=realkind), allocatable :: point_source(:,:,:)
   integer                          :: ipol,jpol,ielem,k
   real(kind=dp)                    :: s,z,r,theta
+  character(len=256)               :: errmsg
 
   allocate(source_term(0:npol,0:npol,1:nel_solid,1:3))
   source_term = 0.
@@ -268,7 +272,6 @@ subroutine compute_src
 
      select case (src_type(2))
      case('vertforce')
-
         if (lpr) write(6,*) '  ...vertical single force'
         allocate(point_source(0:npol,0:npol,1:nel_solid))
         call define_bodyforce(point_source,iel_src2,ipol_src2,jpol_src2)
@@ -276,7 +279,6 @@ subroutine compute_src
         deallocate(point_source)
 
      case default
-
         if (lpr) write(6,*) '  ...moment tensor elements for ', src_type(2)
         call define_moment_tensor(iel_src2, ipol_src2, jpol_src2, source_term)
         source_term = source_term / (two * pi)
@@ -288,8 +290,7 @@ subroutine compute_src
      if (lpr) write(6,*) '  computing DIPOLE Source with...'
 
      select case(src_type(2))
-     case ('xforce','yforce')
-
+     case ('thetaforce', 'phiforce')
         if (lpr) write(6,*) '  ...horizontal single ', src_type(2)
         allocate(point_source(0:npol,0:npol,1:nel_solid))
         call define_bodyforce(point_source, iel_src2, ipol_src2, jpol_src2)
@@ -297,7 +298,6 @@ subroutine compute_src
         deallocate(point_source)
 
      case default
-
         if (lpr) write(6,*) '  ...moment tensor elements for ', src_type(2)
         call define_moment_tensor(iel_src2, ipol_src2, jpol_src2, source_term)
         source_term = source_term / pi
@@ -312,9 +312,9 @@ subroutine compute_src
      source_term = source_term / pi
 
   case default
-     write(6,*) 'we only support monopoles, dipoles, quadrupoles, and not ',src_type(1)
-     call flush(6)
-     stop
+     write(errmsg,*) 'we only support monopoles, dipoles, quadrupoles, and not ',src_type(1)
+     ! Will stop the program
+     call pcheck(.true., errmsg)
 
   end select poletype
 
@@ -396,9 +396,9 @@ subroutine compute_src
   endif
 
 end subroutine compute_src
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine find_srcloc(iel_src2, ipol_src2, jpol_src2)
 
   use data_mesh
@@ -408,26 +408,31 @@ subroutine find_srcloc(iel_src2, ipol_src2, jpol_src2)
   integer, intent(out) :: iel_src2, ipol_src2, jpol_src2
   real(kind=dp)        :: s, z, r, theta, mydzsrc, zsrcout, dzsrc
   integer              :: ielem, ipol, jpol, count_src_procs
+  character(len=256)   :: errmsg
 
   ! find depth that is closest to desired value zsrc
 
   dzsrc = 10.d0 * router
+
+  write(errmsg, "('Source depth: ', F10.2, ' is bigger than model radius: ', F10.2)") zsrc, router
+  call pcheck(zsrc > router, errmsg)
 
   ! Only allow sources in the solid region, fixated to northern axis.
   do ielem = 1, nel_solid
      do ipol = 0, npol
         do jpol = 0, npol
            call compute_coordinates(s, z, r, theta, ielsolid(ielem), ipol, jpol)
-           if (s == zero .and. abs(z-zsrc) < dzsrc .and. z >= zero) then
+           if (abs(s)>smallval_dble .or. z<smallval_dble) cycle
+           if (dabs(z-zsrc) < dzsrc) then
               zsrcout = z
-              dzsrc = abs(z - zsrc)
+              dzsrc = dabs(zsrcout - zsrc)
               iel_src = ielem
               ipol_src = ipol
               jpol_src = jpol
               iel_src2 = ielem
               ipol_src2 = ipol
               jpol_src2 = jpol
-           else if (s == zero .and. abs(z-zsrc) == dzsrc .and. z >= zero) then
+           else if (dabs(z-zsrc) == dzsrc) then
               if (verbose > 1) write(69,15) ielem,ipol,jpol,z/1000.
               iel_src2 = ielem
               ipol_src2 = ipol
@@ -437,6 +442,7 @@ subroutine find_srcloc(iel_src2, ipol_src2, jpol_src2)
      enddo
   enddo
 15 format('  found a second point with same distance:', i6, i3, i3, 1pe13.3)
+
 
   ! Make sure only closest processor has source
   mydzsrc = dzsrc
@@ -472,16 +478,16 @@ subroutine find_srcloc(iel_src2, ipol_src2, jpol_src2)
   if (have_src) then
      if (ipol_src /= 0) then
         write(6,'(a,/,a,i7,i2,i2)') &
-              'PROBLEM: Source should be on axis, i.e. ipol_src=0, but:', &
-              'Source location: ielem,ipol,jpol: ', &
+              'ERROR: Source should be on axis, i.e. ipol_src=0, but:', &
+              'Source location: ielem, ipol, jpol: ', &
               ielsolid(iel_src), ipol_src, jpol_src
         stop
      endif
 
      if (thetacoord(ipol_src, jpol_src, ielsolid(iel_src)) /= zero) then
         write(6,'(a,/,i7,2i2,/,a,3e10.2)') &
-                'PROBLEM: Source should be on the axis, hence theta = 0, but:', &
-                'Source indices ielem,ipol,jpol:', &
+                'ERROR: Source should be on the axis, hence theta = 0, but:', &
+                'Source indices ielem, ipol, jpol:', &
                 ielsolid(iel_src), ipol_src, jpol_src, &
                 's,r,theta', scoord(ipol_src,jpol_src,ielsolid(iel_src)), &
                 rcoord(ipol_src,jpol_src,ielsolid(iel_src)), &
@@ -493,6 +499,9 @@ subroutine find_srcloc(iel_src2, ipol_src2, jpol_src2)
      write(6,*) '    depth asked for [km]:', (router - zsrc) / 1000.d0
      write(6,*) '    depth offered   [km]:', (router - zsrcout) / 1000.d0
      write(6,*) '    difference      [km]:', dzsrc / 1000.d0
+     if (verbose>1) then
+         write(6,*) '    source element      : ', iel_src, ielsolid(iel_src)
+     endif
 
      if (verbose > 1) then
         write(69,*) '  ',procstrg,' found it:'
@@ -520,9 +529,9 @@ subroutine find_srcloc(iel_src2, ipol_src2, jpol_src2)
   endif
 
 end subroutine find_srcloc
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine gauss
 
   integer               :: i
@@ -536,14 +545,13 @@ subroutine gauss
   stf = stf * magnitude * decay / t_0 / dsqrt(pi)
 
 end subroutine gauss
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine gauss_d
 
   integer               :: i
   real(kind=realkind)   :: t
-
 
   do i=1, niter
      t = dble(i) * deltat
@@ -557,9 +565,9 @@ subroutine gauss_d
   stf = stf / ( decay / t_0 * sqrt(two) * exp(-half) ) * magnitude
 
 end subroutine gauss_d
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine gauss_dd
 
   integer               :: i
@@ -579,25 +587,83 @@ subroutine gauss_dd
   stf = stf / ( two * ((decay / t_0)**2) * exp(-three / two) ) * magnitude
 
 end subroutine gauss_dd
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
-!! approximate discrete dirac
+!-----------------------------------------------------------------------------------------
+subroutine errorf
+
+  integer               :: i
+  real(kind=realkind)   :: t
+
+  do i=1, niter
+     t = dble(i) * deltat
+     stf(i) = erf(decay / t_0 * (t - shift_fact))*0.5 + 0.5
+  enddo
+
+  dt_src_shift = shift_fact ! Taken from Gauss
+
+  stf = stf * magnitude
+
+end subroutine errorf
+!-----------------------------------------------------------------------------------------
+
+!-----------------------------------------------------------------------------------------
+!> Calculates the error function, coefficients taken from Numerical Recipes
+!! @TODO: ERF is an intrinsic in Fortran2008. Compiler support is unclear still,
+!!        so we will keep that in here for a while.
+function erf(x)
+
+  real(kind=dp), intent(in)        :: x
+  real(kind=dp)                    :: erfcc, erf
+  real(kind=dp)                    :: polyval
+  real(kind=dp)                    :: t,z
+  integer                          :: icoeff
+  integer, parameter               :: ncoeff = 10
+  real(kind=dp), dimension(ncoeff) :: coeffs =                         &
+      [-1.26551223,  1.00002368, 0.37409196,  0.09678418, -0.18628806, &
+        0.27886807, -1.13520398, 1.48851587, -0.82215223,  0.17087277]
+
+  z = abs(x)
+  t = 1.0 / (1.0 + 0.5 * z)
+
+  polyval = coeffs(ncoeff)
+  do icoeff = ncoeff-1, 1, -1
+      polyval = t * polyval + coeffs(icoeff)
+  enddo
+
+  erfcc = t * exp(-z * z + polyval)
+
+  if (x < 0.0) erfcc = 2.0 - erfcc
+  erf = 1 - erfcc
+
+end function erf
+!-----------------------------------------------------------------------------------------
+
+!-----------------------------------------------------------------------------------------
+!> approximate discrete dirac
 subroutine delta_src
-  integer :: i,j
-  real(kind=dp)    :: a,integral
-  character(len=6) :: dirac_approx(6)
-  real(kind=dp)   ,allocatable :: signal(:),timetmp(:),int_stf(:)
+!@TODO disrecete hidden treasures do not work with symplectic schemes
+  integer                   :: i,j
+  real(kind=dp)             :: a, integral
+  character(len=6)          :: dirac_approx(6)
+  real(kind=dp),allocatable :: signal(:), timetmp(:), int_stf(:)
 
   if (lpr) write(6,*)'Discrete Dirac choice: ',discrete_choice
-  allocate(signal(1:niter),timetmp(1:niter),int_stf(1:niter))
-  stf(1:niter) = zero;
-  a=discrete_dirac_halfwidth
-  if (lpr) write(6,*)'Half-width of discrete Dirac [s]: ',a
+  allocate(signal(1:niter))
+  allocate(timetmp(1:niter))
+  allocate(int_stf(1:niter))
+
+  stf = 0
+  a = discrete_dirac_halfwidth
+
+  if (lpr) write(6,*) 'Half-width of discrete Dirac [s]: ', a
 
   dirac_approx = ['cauchy','caulor','sincfc','gaussi','triang','1dirac']
-  do j=1,6
-     signal = 0.
+  !@TODO: there is no userinterface for this atm, so only gaussi and 1dirac are
+  !       actually used
+
+  do j=1, 6
+     signal = 0
      if (lpr .and. trim(discrete_choice)==trim(dirac_approx(j))) &
               write(6,*)' Approximation type:',trim(dirac_approx(j))
      if (lpr.and.diagfiles) then
@@ -607,45 +673,50 @@ subroutine delta_src
      do i=1,niter
         t=dble(i)*deltat
         timetmp(i) = t
-      if (dirac_approx(j)=='cauchy') then ! Cauchy phi function
-         signal(i) = 1./a * exp(-abs((t-shift_fact_discrete_dirac)/a))
-         dt_src_shift = shift_fact_discrete_dirac
+        if (dirac_approx(j)=='cauchy') then ! Cauchy phi function
+           signal(i) = 1./a * exp(-abs((t - shift_fact_discrete_dirac) / a))
+           dt_src_shift = shift_fact_discrete_dirac
 
-      else if (dirac_approx(j)=='caulor') then ! Cauchy Lorentz distribution
-         signal(i) = 1./pi *a/ (a**2 + (t-shift_fact_discrete_dirac)**2)
-         dt_src_shift = shift_fact_discrete_dirac
+        else if (dirac_approx(j)=='caulor') then ! Cauchy Lorentz distribution
+           signal(i) = 1. / pi * a / (a**2 + (t - shift_fact_discrete_dirac)**2)
+           dt_src_shift = shift_fact_discrete_dirac
 
-      else if (dirac_approx(j)=='sincfc') then ! sinc function
-         if (t==shift_fact_discrete_dirac) t=0.00001+shift_fact_discrete_dirac
-         signal(i) = 1./(a*pi) * ( sin((-shift_fact_discrete_dirac+t)/a)/((-shift_fact_discrete_dirac+t)/a)  )
-         dt_src_shift = shift_fact_discrete_dirac
+        else if (dirac_approx(j)=='sincfc') then ! sinc function
+           !@TODO: is this because of division by zero? what about putting signal
+           !       to 1? (MvD)
+           if (t==shift_fact_discrete_dirac) t = 0.00001 + shift_fact_discrete_dirac
 
-      else if (dirac_approx(j)=='gaussi') then ! Gaussian
-         signal(i) = 1./(a*sqrt(pi)) * exp(-((t-shift_fact_discrete_dirac)/a)**2)
-         dt_src_shift = shift_fact_discrete_dirac
+           signal(i) = 1. / (a * pi) * sin((-shift_fact_discrete_dirac + t) / a) &
+                            / ((-shift_fact_discrete_dirac + t) / a)
+           dt_src_shift = shift_fact_discrete_dirac
 
-      else if (dirac_approx(j)=='triang') then ! triangular
-         if (abs(t-shift_fact_discrete_dirac)<=a/2.) then
-            signal(i) = 2./a - 4./a**2 *abs(t-shift_fact_discrete_dirac)
-         else
-            signal(i) = 0.
-         endif
-         dt_src_shift = shift_fact_discrete_dirac
+        else if (dirac_approx(j)=='gaussi') then ! Gaussian
+           signal(i) = 1. / (a * sqrt(pi)) * exp(-((t - shift_fact_discrete_dirac) / a)**2)
+           dt_src_shift = shift_fact_discrete_dirac
 
-      else if (dirac_approx(j)=='1dirac') then ! old Dirac, 1 non-zero point
-         if (i==int(shift_fact_discrete_dirac/deltat)) then
-            signal(i) = 1.
-            dt_src_shift = real(i)*deltat
-         endif
-      else
-         write(6,*)'do not know discrete Dirac ',trim(dirac_approx(j))
-         stop
-      endif
+        else if (dirac_approx(j)=='triang') then ! triangular
+           if (abs(t-shift_fact_discrete_dirac) <= a / 2.) then
+              signal(i) = 2. / a - 4. / a**2 * abs(t - shift_fact_discrete_dirac)
+           else
+              signal(i) = 0.
+           endif
+           dt_src_shift = shift_fact_discrete_dirac
 
-        if (lpr.and.diagfiles)   write(60,*)t,magnitude*signal(i)
+        else if (dirac_approx(j)=='1dirac') then ! old Dirac, 1 non-zero point
+           if (i==int(shift_fact_discrete_dirac / deltat)) then
+              signal(i) = 1.
+              dt_src_shift = real(i) * deltat
+           endif
+        else
+           write(6,*)'do not know discrete Dirac ', trim(dirac_approx(j))
+           stop
+        endif
+
+        if (lpr.and.diagfiles) write(60,*) t, magnitude * signal(i)
      enddo
 
-     if (lpr.and.diagfiles)  close(60)
+     if (lpr.and.diagfiles) close(60)
+
      if (trim(discrete_choice)==trim(dirac_approx(j)) ) then
         if (lpr) write(6,*)'  dirac type and max amp before:',trim(dirac_approx(j)),maxval(signal)
         integral = sum(signal)*deltat
@@ -664,34 +735,39 @@ subroutine delta_src
 
   stf = stf * magnitude
 
+  ! Integrate STF over time for Heaviside function
+  int_stf = 0
+  signal = 0
+  do i=1, niter
+     if (i>1) signal(i) = int_stf(i-1)
+     int_stf(i) = signal(i) + stf(i) * deltat
+  enddo
+
   if (lpr.and.diagfiles)  then
      open(unit=61,file=infopath(1:lfinfo)//'/discrete_chosen_dirac_'//trim(discrete_choice)//'.dat')
      open(unit=62,file=infopath(1:lfinfo)//'/discrete_chosen_heavi_'//trim(discrete_choice)//'.dat')
-     int_stf(1:niter)=0.
-     signal(:)=0.
-     do i=1,niter
-       write(61,*)timetmp(i),stf(i)
-       if (i>1) signal(i)=int_stf(i-1)
-       int_stf(i) = signal(i) + stf(i)*deltat
-       write(62,*)timetmp(i),int_stf(i)
-    enddo
-    close(61); close(62)
+     do i=1, niter
+        write(61,*) timetmp(i), stf(i)
+        write(62,*) timetmp(i), int_stf(i)
+     enddo
+     close(61)
+     close(62)
   endif
 
   ! Quasi-Heaviside
-  if ( trim(stf_type)=='quheavi') stf=int_stf
+  if (trim(stf_type)=='quheavi') stf = int_stf
 
   deallocate(timetmp,signal,int_stf)
 
 end subroutine delta_src
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine gauss_t(nstf_t,t,stf_t)
 
   integer, intent(in)           :: nstf_t
-  real(kind=dp)   , intent(in)  :: t(nstf_t)
-  real(kind=dp)   , intent(out) :: stf_t(nstf_t)
+  real(kind=dp), intent(in)     :: t(nstf_t)
+  real(kind=dp), intent(out)    :: stf_t(nstf_t)
   integer                       :: i
 
   do i=1,nstf_t
@@ -701,68 +777,65 @@ subroutine gauss_t(nstf_t,t,stf_t)
   stf_t = stf_t * magnitude * decay / ( t_0 * sqrt(pi) )
 
 end subroutine gauss_t
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine gauss_d_t(nstf_t,t,stf_t)
 
   integer, intent(in)              :: nstf_t
-  real(kind=dp)   , intent(in)     :: t(nstf_t)
-  real(kind=dp)   , intent(out)    :: stf_t(nstf_t)
+  real(kind=dp), intent(in)        :: t(nstf_t)
+  real(kind=dp), intent(out)       :: stf_t(nstf_t)
   integer                          :: i
 
   do i=1,nstf_t
-     stf_t(i) = -two*(decay/t_0)**2*(t(i)-shift_fact) * &
-          dexp(-( (decay/t_0*(t(i)-shift_fact))**2) )
+     stf_t(i) = -two * (decay / t_0)**2 * (t(i) - shift_fact) &
+                    * dexp(- (decay / t_0 * (t(i) - shift_fact))**2 )
   enddo
-  dt_src_shift=shift_fact
-  stf_t=stf_t/( decay/t_0*dsqrt(two)*dexp(-half) )*magnitude
+  dt_src_shift = shift_fact
+  stf_t = stf_t / (decay / t_0 * dsqrt(two) * dexp(-half)) * magnitude
 
 end subroutine gauss_d_t
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
-subroutine gauss_dd_t(nstf_t,t,stf_t)
+!-----------------------------------------------------------------------------------------
+subroutine gauss_dd_t(nstf_t, t, stf_t)
 
   integer, intent(in)              :: nstf_t
-  real(kind=dp)   , intent(in)  :: t(nstf_t)
-  real(kind=dp)   , intent(out) :: stf_t(nstf_t)
+  real(kind=dp), intent(in)        :: t(nstf_t)
+  real(kind=dp), intent(out)       :: stf_t(nstf_t)
+  integer                          :: i
+
+  !@TODO: seems like there are a few factors of decay / t_0 to much (MvD)
+  do i=1, nstf_t
+     stf_t(i) = (decay / t_0)**2 &
+                    * (two * (decay / t_0)**2 * (t(i) - shift_fact)**2 - 1) &
+                    * dexp(-(decay / t_0 * (t(i) - shift_fact))**2)
+  enddo
+  dt_src_shift = shift_fact
+  stf_t = stf_t / (two * ((decay / t_0)**2) * exp(-three / two)) * magnitude
+
+end subroutine gauss_dd_t
+!-----------------------------------------------------------------------------------------
+
+!-----------------------------------------------------------------------------------------
+subroutine errorf_t(nstf_t, t, stf_t)
+
+  integer, intent(in)              :: nstf_t
+  real(kind=dp), intent(in)        :: t(nstf_t)
+  real(kind=dp), intent(out)       :: stf_t(nstf_t)
   integer                          :: i
 
   do i=1,nstf_t
-     stf_t(i) = (decay/t_0)**2 *(two*(decay/t_0)**2 *(t(i)- &
-                 shift_fact)**2-1)*&
-                 dexp(-( (decay/t_0*(t(i)-shift_fact))**2) )
+     stf_t(i) = erf(decay / t_0 * (t(i) - shift_fact)) * 0.5 + 0.5
   enddo
-  dt_src_shift=shift_fact
-  stf_t=stf_t/( two*((decay/t_0)**2)*exp(-three/two) )*magnitude
+  dt_src_shift = shift_fact
+  stf_t = stf_t * magnitude
 
-end subroutine gauss_dd_t
-!=============================================================================
+end subroutine errorf_t
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
-subroutine wtcoef(f, f1, f2, f3, f4, wt)
-  implicit none
-
-  real(kind=dp)   , intent(in) ::  f,f1,f2,f3,f4
-  real(kind=dp)   , intent(out)::  wt
-
-  if (f3>f4) stop 'wtcoef: f3>f4 '
-  if (f1>f2) stop 'wtcoef: f1>f2 '
-  if (f<=f3.and.f>=f2) then
-     wt=1.0
-  else if (f>f4.or.f<f1 ) then
-     wt=0.0
-  else if (f>f3.and.f<=f4) then
-     wt=0.5*(1.0+cos(pi*(f-f3)/(f4-f3)))
-  else if (f>=f1.and.f<f2) then
-     wt=0.5*(1.0+cos(pi*(f-f2)/(f2-f1)))
-  endif
-end subroutine wtcoef
-!=============================================================================
-
-!-----------------------------------------------------------------------------
-subroutine delta_src_t(nstf_t, t,stf_t)
+!-----------------------------------------------------------------------------------------
+pure subroutine delta_src_t(nstf_t, t,stf_t)
 
   integer, intent(in)             :: nstf_t
   real(kind=dp), intent(in)       :: t(nstf_t)
@@ -777,22 +850,22 @@ subroutine delta_src_t(nstf_t, t,stf_t)
      stf_t = (1. - (t - t(1)) / deltat) * magnitude / deltat
 
 end subroutine delta_src_t
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
-subroutine quasiheavi_t(nstf_t,stf_t)
+!-----------------------------------------------------------------------------------------
+subroutine quasiheavi_t(nstf_t, stf_t)
 
   integer, intent(in)           :: nstf_t
-  real(kind=dp)   , intent(out) :: stf_t(nstf_t)
+  real(kind=dp), intent(out)    :: stf_t(nstf_t)
 
-  stf_t = 0.
+  stf_t = 0
   stf_t(seis_it:nstf_t) = magnitude
   dt_src_shift = seis_it
 
 end subroutine quasiheavi_t
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine define_bodyforce(f, iel_src2, ipol_src2, jpol_src2)
 
   use data_mesh
@@ -802,7 +875,6 @@ subroutine define_bodyforce(f, iel_src2, ipol_src2, jpol_src2)
   real(kind=realkind), intent(out) :: f(0:npol,0:npol,nel_solid)
   integer, intent(in)              :: iel_src2, ipol_src2, jpol_src2
   integer                          :: liel_src, lipol_src, ljpol_src, ipol, jpol, i
-  real(kind=dp)                    :: s, z, r, theta
   character(len=16)                :: fmt1
   integer                          :: nsrcelem
 
@@ -814,12 +886,6 @@ subroutine define_bodyforce(f, iel_src2, ipol_src2, jpol_src2)
      f(ipol_src, jpol_src, iel_src) = one
      f(ipol_src2, jpol_src2, iel_src2) = one
   endif
-
-  ! check whether Lamb or wot
-  call compute_coordinates(s, z, r, theta, ielsolid(iel_src), ipol_src, jpol_src)
-  if ( abs(z-router) < smallval * router .and. lpr) &
-       write(6,*)"  ...actually Lamb's Problem"
-  call flush(6)
 
   ! assembly
   call pdistsum_solid_1D(f)
@@ -854,16 +920,15 @@ subroutine define_bodyforce(f, iel_src2, ipol_src2, jpol_src2)
   endif ! have_src
 
 end subroutine define_bodyforce
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> Defines the moment tensor elements for the given source type in all
 !! elements having non-zero source contributions,
 !! using pointwise derivatives of arbitrary scalar functions.
 subroutine define_moment_tensor(iel_src2, ipol_src2, jpol_src2, source_term)
 
   use data_mesh
-  use data_spec, only : shp_deri_k
 
   use apply_masks
   use utlity
@@ -879,7 +944,6 @@ subroutine define_moment_tensor(iel_src2, ipol_src2, jpol_src2, source_term)
   real(kind=realkind), allocatable :: ds(:), dz(:)
 
   integer                          :: ielem, ipol, jpol, i, nsrcelem, nsrcelem_glob
-  real(kind=dp)                    :: s, z, r, theta, r1, r2
   character(len=16)                :: fmt1
 
   liel_src = iel_src
@@ -1111,6 +1175,7 @@ subroutine define_moment_tensor(iel_src2, ipol_src2, jpol_src2, source_term)
   endif ! have_src
 
 end subroutine define_moment_tensor
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
 end module source
+!=========================================================================================

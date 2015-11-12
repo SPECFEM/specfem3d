@@ -1,7 +1,9 @@
 module writing_mod
 
   contains
-  subroutine write_veloc3D(ivx,ivy,ivz)
+
+  subroutine write_veloc_or_displ_3D(ivx,ivy,ivz)
+
     use global_parameters,only : nbrec,data_rec
     integer ivx,ivy,ivz
 !!$    write(ivx) data_rec(:,1)
@@ -15,7 +17,7 @@ module writing_mod
 
     !write(*,*) ' write veloc ',data_rec(10,3)
 
-  end subroutine write_veloc3D
+  end subroutine write_veloc_or_displ_3D
 
   subroutine write_stress3D(isxx,isyy,iszz,isxy,isxz,isyz)
     use global_parameters,only :nbrec,stress_rec,SINGLE_REAL,mat,tmat,strain_rec

@@ -325,7 +325,7 @@ end subroutine compute_forces_acoustic
 ! therefore not be consistent with the basis functions.
 
 
-subroutine compute_forces_acoustic_bpwf()
+subroutine compute_forces_acoustic_backward()
 
   use specfem_par
   use specfem_par_acoustic
@@ -340,7 +340,7 @@ subroutine compute_forces_acoustic_bpwf()
 
   ! checks
   if (SIMULATION_TYPE /= 3) &
-    call exit_MPI(myrank,'error calling compute_forces_acoustic_bpwf() with wrong SIMULATION_TYPE')
+    call exit_MPI(myrank,'error calling compute_forces_acoustic_backward() with wrong SIMULATION_TYPE')
 
   ! adjoint simulations
   call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_ADJOINT,STACEY_INSTEAD_OF_FREE_SURFACE, &
@@ -383,7 +383,7 @@ subroutine compute_forces_acoustic_bpwf()
 
     ! ! Stacey absorbing boundary conditions
     if (STACEY_ABSORBING_CONDITIONS) then
-       call compute_stacey_acoustic_bpwf(NSPEC_AB, &
+       call compute_stacey_acoustic_backward(NSPEC_AB, &
                             ibool,ispec_is_inner,phase_is_inner, &
                             abs_boundary_ijk,abs_boundary_ispec, &
                             num_abs_boundary_faces,ispec_is_acoustic,&
@@ -415,7 +415,7 @@ subroutine compute_forces_acoustic_bpwf()
     endif
 
     ! sources
-    call compute_add_sources_acoustic_bpwf(NSPEC_AB, &
+    call compute_add_sources_acoustic_backward(NSPEC_AB, &
                                   ibool,ispec_is_inner,phase_is_inner, &
                                   NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
                                   hdur,hdur_gaussian,tshift_src,dt,t0, &
@@ -476,7 +476,7 @@ subroutine compute_forces_acoustic_bpwf()
                       ibool,free_surface_ijk,free_surface_ispec, &
                       num_free_surface_faces,ispec_is_acoustic)
 
-end subroutine compute_forces_acoustic_bpwf
+end subroutine compute_forces_acoustic_backward
 !
 !-------------------------------------------------------------------------------------------------
 !

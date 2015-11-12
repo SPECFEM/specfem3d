@@ -1,0 +1,15 @@
+#!/bin/bash
+
+./interpol_process_src.sh 03 2 1890
+./interpol_process_src.sh 09 2 1358
+./interpol_process_src.sh 10 2 2178
+./interpol_process_src.sh 11 2 2487
+./interpol_process_src.sh 14 2 1271
+./interpol_process_src.sh 15 2 3167
+./interpol_process_src.sh 24 2 2890
+./interpol_process_src.sh 33 2 2619
+./interpol_process_src.sh 34 2 1155
+./interpol_process_src.sh 37 2 2338
+./interpol_process_src.sh 42 2 3072
+./interpol_process_src.sh 45 2 2828
+

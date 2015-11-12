@@ -711,7 +711,7 @@
   double precision :: THETA(5)
 
   ! checks number of standard linear solids
-  if (N_SLS < 2 .OR. N_SLS > 5) then
+  if (N_SLS < 2 .or. N_SLS > 5) then
      stop 'N_SLS must be greater than 1 or less than 6'
   endif
 
@@ -912,14 +912,14 @@
     !print *,'allocated attenuation arrays: q storage size = ',Qtmp,AM_S%Q_resolution,AM_S%Q_max
   endif
 
-  if (Qmu < 0.0d0 .OR. Qmu > AM_S%Q_max) then
+  if (Qmu < 0.0d0 .or. Qmu > AM_S%Q_max) then
     print *,'Error attenuation_storage()'
     print *,'Attenuation Value out of Range: ', Qmu
     print *,'Attenuation Value out of Range: Min, Max ', 0, AM_S%Q_max
     stop 'Attenuation Value out of Range'
   endif
 
-  if (rw > 0 .AND. Qmu <= ZERO_TOL) then
+  if (rw > 0 .and. Qmu <= ZERO_TOL) then
     Qmu = 0.0d0;
     tau_eps(:) = 0.0d0;
     return
@@ -1007,7 +1007,7 @@
   exp1 = log10(f1)
   exp2 = log10(f2)
 
-!  if (f2 < f1 .OR. Q_real < 0.0d0 .OR. n < 1) then
+!  if (f2 < f1 .or. Q_real < 0.0d0 .or. n < 1) then
 !     call exit_MPI(0, 'frequencies flipped or Q less than zero or N_SLS < 0')
 !  endif
 
@@ -1345,9 +1345,9 @@
      write(*,*)'evals: ',func_evals
   endif
 
-  do while (func_evals < maxfun .AND. itercount < maxiter)
+  do while (func_evals < maxfun .and. itercount < maxiter)
 
-     if (max_size_simplex(v,n) <= tolx .AND. &
+     if (max_size_simplex(v,n) <= tolx .and. &
           max_value(fv,n+1) <= tolf) then
         goto 666
      endif

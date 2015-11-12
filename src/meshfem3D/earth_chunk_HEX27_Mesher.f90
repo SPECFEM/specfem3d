@@ -712,7 +712,7 @@
   enddo
 
   ! on identifie les points semblables et on les numerote
-  call get_global1(nspec,xp,yp,zp,iglob,loc,ifseg,nglob,npointot,NGNOD,UTM_X_MIN,UTM_X_MAX)
+  call get_global(npointot,xp,yp,zp,iglob,loc,ifseg,nglob,UTM_X_MIN,UTM_X_MAX)
 
   deallocate(xp,yp,zp)
   allocate(xp(nglob),yp(nglob),zp(nglob))

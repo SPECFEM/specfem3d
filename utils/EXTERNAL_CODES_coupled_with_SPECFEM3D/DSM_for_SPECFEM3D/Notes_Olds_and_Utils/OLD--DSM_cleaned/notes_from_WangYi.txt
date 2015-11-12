@@ -1,6 +1,0 @@
-           I have finished the modification for precise evaluating the model parameters at Gauss /Simpson quadrature points in Takeuchi's DSM routine.
-         But there is not apparent difference between the modified computation synthetics and the 'insufficient linear interpolation' computtation synthetics.
-         I think the reason for this result is that Takeuchi's original routine use dense spacing for the Simpson quadrature formula,( ns =128 sections for Simpson quadrature between each 2 DSM grids ).
-         Furthermore, the model parameter in every layer nearly approximate to either the piecewise linear function or order 3 polynomial, So this simple linear interpolation is still available.
-         PS: I use ns = 32 for the  Gauss quadrature in integration_points_for_submatrices.h file. I think this value is precise enough for gauss quadrature.
-

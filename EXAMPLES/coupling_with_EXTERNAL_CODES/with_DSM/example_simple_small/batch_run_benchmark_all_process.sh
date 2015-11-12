@@ -10,7 +10,7 @@
 #MSUB -q standard
 #MSUB -e Benchmark_SPECFEM3D_DSM_HEX8_newtest_32p_run.e
 #MSUB -o Benchmark_SPECFEM3D_DSM_HEX8_newtest_32p_run.o
-#MSUB -A ra2410
+#MSUB -A gen7165
 
 set -x
 cd ${BRIDGE_MSUB_PWD}

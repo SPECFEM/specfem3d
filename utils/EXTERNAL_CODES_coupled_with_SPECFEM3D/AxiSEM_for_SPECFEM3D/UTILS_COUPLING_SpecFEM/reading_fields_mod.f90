@@ -106,8 +106,9 @@
 
 
         !write(*,*)  iunit
-        write(*,*) src_type
-        call compute_prefactor(src_type(isim,1),src_type(isim,2))
+        write(*,*) ' src_type(:,1) ', myrank, src_type(:,1)
+        write(*,*) ' src_type(:,2) ', myrank, src_type(:,2)
+        call compute_prefactor(src_type(isim,1),src_type(isim,2),isim)
 
         if (myrank == 0) then
           write(fichier,'(a6,a15)') '/Data/',output_veloc_name(1)
@@ -149,12 +150,12 @@
 
         allocate(stack_v(ntime),stalta(ntime))
 
-        !data_rec=0.
+         !data_rec=0.
          Energy_1=0.
          Energy_0=0.
          ! read files
          do itime=1,ntime
-
+            !write(*,*) ' reading field :', itime
             data_rec=0.
             Energy_1=0.
 
@@ -246,11 +247,12 @@
 
            call rotate_back_to_local_cart() ! cartesien local
 
+           call rotate_from_chunk_azimuth() !! VM VM add rotation azimuth chunk
            !if (irecmin < 10 .and. irecmax > 10) write(*,*) '4',data_rec(10,2)
 
            call reduce_mpi_veloc()
            !if (myrank == 0) write(*,*) '5',data_rec(10,2)
-           if (myrank == 0) call write_veloc3D(ivx,ivy,ivz)
+           if (myrank == 0) call write_veloc_or_displ_3D(ivx,ivy,ivz)
 
 
 
@@ -278,6 +280,8 @@
              write(ivx,*) ipick*dtt,stack_v(ipick),stalta(ipick)
          enddo
          close(ivx)
+         deallocate(stack_v,stalta)
+
         endif
 
 
@@ -337,7 +341,7 @@
 
         !write(*,*)  iunit
         !write(*,*) src_type
-        call compute_prefactor(src_type(isim,1),src_type(isim,2))
+        call compute_prefactor(src_type(isim,1),src_type(isim,2),isim)
         if (myrank == 0) then
           write(fichier,'(a6,a15)') '/Data/',output_stress_name(1)
           open(isxx,file= trim(working_axisem_dir)//trim(simdir(isim))//trim(fichier), FORM="UNFORMATTED")
@@ -520,6 +524,8 @@
 
            call rotate_back_to_local_cart_stress() ! cartesien local
 
+           call rotate_from_chunk_azimuth_stress() !! VM VM add rotation azimuth chunk
+
            call reduce_mpi_stress()
 
            !write(*,*) 'appel a write_stress3D'
@@ -543,11 +549,227 @@
 
    end subroutine read_stress_field_and_interpol
 
+!! CD CD ========================================================================
+!! CD CD add this ===============================================================
+
+  subroutine read_displ_field_and_interpol(isim)
+
+  use mpi_mod
+  use global_parameters
+  use post_processing
+  use writing_mod
+
+  real(kind=SINGLE_REAL), allocatable :: data_to_read(:,:,:),stack_v(:),stalta(:)
+  real(kind=SINGLE_REAL) Energy_1,Energy_0,thres
+
+  integer itime,iproc,indx_stored(3),isim,ifield,i
+  integer iux,iuy,iuz
+  integer nlta,nsta
+  integer, allocatable :: iunit(:,:)
+
+  character(len = 4) appmynum
+  character(len = 256) fichier
+
+!
+!---
+!
+
+  nlta  = 100
+  nsta  = 20
+  thres = 0.1
+
+  allocate(iunit(0:nbproc-1,3))
 
 
+  ! unit file
+  i = 150
+  do ifield=1,3
+    do iproc=0, nbproc-1
+      i = i+1
+      iunit(iproc,ifield) = i
+    enddo
+  enddo
+
+  i   = i+1
+  iux = i
+  i   = i+1
+  iuy = i
+  i   = i+1
+  iuz = i
+
+  write(*,*) ' src_type(:,1) ', myrank, src_type(:,1)
+  write(*,*) ' src_type(:,2) ', myrank, src_type(:,2)
+
+  call compute_prefactor(src_type(isim,1),src_type(isim,2),isim)
+
+  if (myrank == 0) then
+    write(fichier,'(a6,a15)') '/Data/',output_displ_name(1)
+    open(iux,file= trim(working_axisem_dir)//trim(simdir(isim))//trim(fichier), FORM="UNFORMATTED")
+
+    write(fichier,'(a6,a15)') '/Data/',output_displ_name(2)
+    open(iuy,file= trim(working_axisem_dir)//trim(simdir(isim))//trim(fichier), FORM="UNFORMATTED")
+
+    write(fichier,'(a6,a15)') '/Data/',output_displ_name(3)
+    open(iuz,file= trim(working_axisem_dir)//trim(simdir(isim))//trim(fichier), FORM="UNFORMATTED")
+
+    write(*,*) 'nbrec to write', nbrec
+    write(*,*) 'nbrec to read ', sum(nb_stored(:))
+    write(*,*) 'nt to write ', ntime
+
+    write(iux) nbrec,ntime
+    write(iuy) nbrec,ntime
+    write(iuz) nbrec,ntime
+
+    data_rec = 0.
+
+    do ifield=1,3
+      write(*,*) ifield
+      if (trim(src_type(isim,1))=='monopole' .and. ifield==2) then
+        write(*,*) 'monopole => not up'
+        cycle
+      endif
+
+      ! open files
+      do iproc=0, nbproc-1
+
+        call define_io_appendix(appmynum,iproc)
+        write(fichier,'(a6,a15,a1)') '/Data/',input_displ_name(ifield),'_'
+        open(unit=iunit(iproc,ifield), file=trim(working_axisem_dir)//trim(simdir(isim))//trim(fichier) &
+                   //appmynum//'.bindat', FORM="UNFORMATTED", STATUS="UNKNOWN", POSITION="REWIND")
+      enddo
+    enddo
+  endif
+
+  allocate(stack_v(ntime),stalta(ntime))
+
+  Energy_1 = 0.
+  Energy_0 = 0.
+
+  ! read files
+  do itime=1,ntime
+
+    data_rec    = 0.
+    Energy_1    = 0.
+
+    indx_stored = 1
+
+    ifield      = 1 !! ====> us
+
+    if (myrank == 0) then
+
+      do iproc=0, nbproc-1
+        if (nb_stored(iproc) > 0) then
+
+          allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
+          read(iunit(iproc,ifield))  data_to_read(ibeg:iend,ibeg:iend,:)
+          data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
+                  = data_to_read(ibeg:iend,ibeg:iend,:)
+          indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
+          Energy_1 = Energy_1 + sum(data_to_read(ibeg:iend,ibeg:iend,:)**2)
+          deallocate(data_to_read)
+
+        endif
+      enddo
+
+    endif
+
+    call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
+    call interpol_field(ifield)
+
+    if (.not.(trim(src_type(isim,1)) == 'monopole')) then
+
+      ifield = 2 !! ====> up
+
+      if (myrank == 0) then
+        do iproc = 0,nbproc-1
+          if (nb_stored(iproc) > 0) then
+
+            allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
+            read(iunit(iproc,ifield))  data_to_read(ibeg:iend,ibeg:iend,:)
+            data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
+                    = data_to_read(ibeg:iend,ibeg:iend,:)
+            indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
+            Energy_1 = Energy_1 + sum(data_to_read(ibeg:iend,ibeg:iend,:)**2)
+            deallocate(data_to_read)
+
+          endif
+        enddo
+
+      endif
+
+      call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
+      call interpol_field(ifield)
+
+    endif
+
+    ifield = 3 !! ====> uz
+
+    if (myrank == 0) then
+      do iproc=0, nbproc-1
+        if (nb_stored(iproc) > 0) then
+
+          allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
+          read(iunit(iproc,ifield))  data_to_read(ibeg:iend,ibeg:iend,:)
+          data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
+                  = data_to_read(ibeg:iend,ibeg:iend,:)
+          indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
+          Energy_1 = Energy_1 + sum(data_to_read(ibeg:iend,ibeg:iend,:)**2)
+          deallocate(data_to_read)
+
+        endif
+      enddo
+
+      stack_v(itime) = Energy_1
+
+    endif
+
+    call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
+    call interpol_field(ifield)
+
+    call  compute_3D_cyl()
+
+    call rotate2cartesian_with_source_in_pole()
+    call rotate_back_source() ! cartesien dans le repere terrestre global
+    call rotate_back_to_local_cart() ! cartesien local
+    call rotate_from_chunk_azimuth() !! VM VM add rotation azimuth chunk
+
+    call reduce_mpi_veloc()
+
+    if (myrank == 0) call write_veloc_or_displ_3D(iux,iuy,iuz)
+
+  enddo ! pas de temps
+
+  if (myrank ==0) then
+
+    ! close files
+    do ifield=1,3
+      do iproc=0, nbproc-1
+        close(iunit(iproc,ifield))
+      enddo
+    enddo
+    close(iux)
+    close(iuy)
+    close(iuz)
+
+!!         call substalta(stack_v, nsta, nlta, stalta,ntime)
+!!         call pick(stalta,ntime,ipick,thres)
+!!         open(iux,file='pick_guess.txt')
+!!         write(iux,*) ipick,ipick*dtt
+!!         close(iux)
+!!         open(iux,file='StaLta.txt')
+!!         do ipick=1,ntime
+!!             write(iux,*) ipick*dtt,stack_v(ipick),stalta(ipick)
+!!         enddo
+!!         close(iux)
+    deallocate(stack_v,stalta)
+
+  endif
 
 
+  end subroutine read_displ_field_and_interpol
 
+!================================================================================
+!================================================================================
 
 
       !-----------------------------------------------------------------------------

@@ -415,7 +415,7 @@
 !=====================================================================
 ! for acoustic solver for back propagation wave field
 
-  subroutine compute_add_sources_acoustic_bpwf(NSPEC_AB, &
+  subroutine compute_add_sources_acoustic_backward(NSPEC_AB, &
                                   ibool,ispec_is_inner,phase_is_inner, &
                                   NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
                                   hdur,hdur_gaussian,tshift_src,dt,t0, &
@@ -600,7 +600,7 @@
     if (myrank == 0) write(IOSTF,*) time_source,stf_used_total_all
   endif
 
-  end subroutine compute_add_sources_acoustic_bpwf
+  end subroutine compute_add_sources_acoustic_backward
 
 !
 !=====================================================================

@@ -175,7 +175,7 @@
   endif
 
   ! Stacey absorbing conditions (adds C*deltat/2 contribution to the mass matrices on Stacey edges)
-  if (STACEY_ABSORBING_CONDITIONS)call create_mass_matrices_Stacey(nglob,nspec,ibool)
+  if (STACEY_ABSORBING_CONDITIONS) call create_mass_matrices_Stacey(nglob,nspec,ibool)
 
   ! ocean load mass matrix
   call create_mass_matrices_ocean_load(nglob,nspec,ibool)
