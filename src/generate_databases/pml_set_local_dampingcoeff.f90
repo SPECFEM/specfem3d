@@ -59,8 +59,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
   real(kind=CUSTOM_REAL) :: pml_damping_profile_l,dist,vp
   real(kind=CUSTOM_REAL) :: xoriginleft,xoriginright,yoriginfront,yoriginback,zoriginbottom,zorigintop
   real(kind=CUSTOM_REAL) :: abscissa_in_PML_x,abscissa_in_PML_y,abscissa_in_PML_z
-  real(kind=CUSTOM_REAL) :: d_x,d_y,d_z,k_x,k_y,k_z,alpha_x,alpha_y,alpha_z,beta_x,beta_y,beta_z, &
-                            meanval_1
+  real(kind=CUSTOM_REAL) :: d_x,d_y,d_z,k_x,k_y,k_z,alpha_x,alpha_y,alpha_z,beta_x,beta_y,beta_z
   real(kind=CUSTOM_REAL) :: x_min,x_min_all,y_min,y_min_all,z_min,z_min_all,&
                             x_max,x_max_all,y_max,y_max_all,z_max,z_max_all,&
                             x_origin,y_origin,z_origin
@@ -75,6 +74,24 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                             CPML_width_z_top_max_all,CPML_width_z_bottom_max_all,&
                             vp_max,vp_max_all
 
+! for robust parameter separation of PML damping parameter
+  real(kind=CUSTOM_REAL) :: maximum_for_dx, maximum_for_dy, maximum_for_dz
+  real(kind=CUSTOM_REAL) :: maximum_for_dx_all, maximum_for_dy_all,maximum_for_dz_all
+  real(kind=CUSTOM_REAL) :: minimum_for_dx, minimum_for_dy, minimum_for_dz
+  real(kind=CUSTOM_REAL) :: minimum_for_dx_all, minimum_for_dy_all,minimum_for_dz_all
+  real(kind=CUSTOM_REAL) :: second_minimum_for_dx,second_minimum_for_dy,second_minimum_for_dz
+  real(kind=CUSTOM_REAL) :: second_minimum_for_dx_all,second_minimum_for_dy_all,second_minimum_for_dz_all
+  real(kind=CUSTOM_REAL) :: maximum_for_d_all,second_minimum_for_d_all,const_for_tune_d_profile
+  real(kind=CUSTOM_REAL) :: minimum_for_alphax, minimum_for_alphay,minimum_for_alphaz
+  real(kind=CUSTOM_REAL) :: minimum_for_alphax_all, minimum_for_alphay_all,minimum_for_alphaz_all
+  real(kind=CUSTOM_REAL) :: maximum_for_alphax, maximum_for_alphay,maximum_for_alphaz
+  real(kind=CUSTOM_REAL) :: maximum_for_alphax_all, maximum_for_alphay_all,maximum_for_alphaz_all
+  real(kind=CUSTOM_REAL) :: second_minimum_for_alphax,second_minimum_for_alphay,second_minimum_for_alphaz
+  real(kind=CUSTOM_REAL) :: second_minimum_for_alphax_all,second_minimum_for_alphay_all,second_minimum_for_alphaz_all
+  real(kind=CUSTOM_REAL) :: maximum_for_alpha_all,second_minimum_for_alpha_all,const_for_tune_alpha_profile
+  real(kind=CUSTOM_REAL) :: minidistance_required_between_parameter, &
+                            const_for_separation_two, const_for_separation_four, maxtemp, mintemp             
+! for robust parameter separation of PML damping parameter
 
   ! checks number of PML elements
   if (count(is_CPML(:)) /= NSPEC_CPML) then
@@ -1362,6 +1379,189 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
     enddo
   enddo !ispec_CPML
 
+! for robust parameter separation of PML damping parameter
+  minimum_for_dx = minval(d_store_x)
+  minimum_for_dy = minval(d_store_y)
+  minimum_for_dz = minval(d_store_z)
+  maximum_for_dx = maxval(d_store_x)
+  maximum_for_dy = maxval(d_store_y)
+  maximum_for_dz = maxval(d_store_z)
+  minimum_for_alphax = minval(alpha_store_x)
+  minimum_for_alphay = minval(alpha_store_y)
+  minimum_for_alphaz = minval(alpha_store_z)
+  maximum_for_alphax = maxval(alpha_store_x)
+  maximum_for_alphay = maxval(alpha_store_y)
+  maximum_for_alphaz = maxval(alpha_store_z)
+
+  if (CUSTOM_REAL == SIZE_REAL) then
+    minimum_for_dx_all = sngl(HUGEVAL)
+    minimum_for_dy_all = sngl(HUGEVAL)
+    minimum_for_dz_all = sngl(HUGEVAL)
+    maximum_for_dx_all = - sngl(HUGEVAL)
+    maximum_for_dy_all = - sngl(HUGEVAL)
+    maximum_for_dz_all = - sngl(HUGEVAL)
+    minimum_for_alphax_all = sngl(HUGEVAL)
+    minimum_for_alphay_all = sngl(HUGEVAL)
+    minimum_for_alphaz_all = sngl(HUGEVAL)
+  else
+    minimum_for_dx_all = HUGEVAL
+    minimum_for_dy_all = HUGEVAL
+    minimum_for_dz_all = HUGEVAL
+    maximum_for_dx_all = - HUGEVAL
+    maximum_for_dy_all = - HUGEVAL
+    maximum_for_dz_all = - HUGEVAL
+    minimum_for_alphax_all = HUGEVAL
+    minimum_for_alphay_all = HUGEVAL
+    minimum_for_alphaz_all = HUGEVAL
+    maximum_for_alphax_all = - HUGEVAL
+    maximum_for_alphay_all = - HUGEVAL
+    maximum_for_alphaz_all = - HUGEVAL
+  endif
+  call min_all_all_cr(minimum_for_dx,minimum_for_dx_all)
+  call min_all_all_cr(minimum_for_dy,minimum_for_dy_all)
+  call min_all_all_cr(minimum_for_dz,minimum_for_dz_all)
+  call min_all_all_cr(minimum_for_alphax,minimum_for_alphax_all)
+  call min_all_all_cr(minimum_for_alphay,minimum_for_alphay_all)
+  call min_all_all_cr(minimum_for_alphaz,minimum_for_alphaz_all)
+
+  call max_all_all_cr(maximum_for_dx,maximum_for_dx_all)
+  call max_all_all_cr(maximum_for_dy,maximum_for_dy_all)
+  call max_all_all_cr(maximum_for_dz,maximum_for_dz_all)
+
+  call max_all_all_cr(maximum_for_alphax,maximum_for_alphax_all)
+  call max_all_all_cr(maximum_for_alphay,maximum_for_alphay_all)
+  call max_all_all_cr(maximum_for_alphaz,maximum_for_alphaz_all)
+
+  if(minimum_for_dx_all < ZERO) stop "there is error in dx profile"
+  if(minimum_for_dy_all < ZERO) stop "there is error in dy profile"
+  if(minimum_for_dz_all < ZERO) stop "there is error in dz profile"
+  if(minimum_for_alphax_all < ZERO) stop "there is error in alphax profile"
+  if(minimum_for_alphay_all < ZERO) stop "there is error in alphay profile"
+  if(minimum_for_alphaz_all < ZERO) stop "there is error in alphaz profile"
+
+  if (CUSTOM_REAL == SIZE_REAL) then
+    second_minimum_for_dx = sngl(HUGEVAL)
+    second_minimum_for_dy = sngl(HUGEVAL)
+    second_minimum_for_dz = sngl(HUGEVAL)
+    second_minimum_for_alphax = sngl(HUGEVAL)
+    second_minimum_for_alphay = sngl(HUGEVAL)
+    second_minimum_for_alphaz = sngl(HUGEVAL)
+  else
+    second_minimum_for_dx = HUGEVAL
+    second_minimum_for_dy = HUGEVAL
+    second_minimum_for_dz = HUGEVAL
+    second_minimum_for_alphax = HUGEVAL
+    second_minimum_for_alphay = HUGEVAL
+    second_minimum_for_alphaz = HUGEVAL
+  endif
+
+  do ispec_CPML = 1,nspec_cpml
+    ispec = CPML_to_spec(ispec_CPML)
+    do k = 1,NGLLZ
+      do j = 1,NGLLY
+        do i = 1,NGLLX
+          iglob = ibool(i,j,k,ispec)
+          if(d_store_x(i,j,k,ispec_CPML) == minimum_for_dx_all .or. &
+             xstore(iglob) == xoriginleft .or. xstore(iglob) == xoriginright) then
+          elseif(second_minimum_for_dx >= d_store_x(i,j,k,ispec_CPML)) then
+            second_minimum_for_dx = d_store_x(i,j,k,ispec_CPML)
+          endif
+
+          if(d_store_y(i,j,k,ispec_CPML) == minimum_for_dy_all .or. &
+             ystore(iglob) == yoriginfront .or. ystore(iglob) == yoriginback) then
+          elseif(second_minimum_for_dy >= d_store_y(i,j,k,ispec_CPML)) then
+            second_minimum_for_dy = d_store_y(i,j,k,ispec_CPML)
+          endif
+
+          if (PML_INSTEAD_OF_FREE_SURFACE) then
+            if(d_store_z(i,j,k,ispec_CPML) == minimum_for_dz_all .or. &
+               zstore(iglob) == zorigintop .or. zstore(iglob) == zoriginbottom) then
+            elseif(second_minimum_for_dz >= d_store_z(i,j,k,ispec_CPML)) then
+              second_minimum_for_dz = d_store_z(i,j,k,ispec_CPML)
+            endif
+          else
+            if(d_store_z(i,j,k,ispec_CPML) == minimum_for_dz_all .or. &
+               zstore(iglob) == zoriginbottom) then
+            elseif(second_minimum_for_dz >= d_store_z(i,j,k,ispec_CPML)) then
+              second_minimum_for_dz = d_store_z(i,j,k,ispec_CPML)
+            endif
+          endif
+
+          if(alpha_store_x(i,j,k,ispec_CPML) == minimum_for_alphax_all .or. &
+             xstore(iglob) == x_max_all .or. xstore(iglob) == x_min_all) then
+          elseif(second_minimum_for_alphax >= alpha_store_x(i,j,k,ispec_CPML)) then
+            second_minimum_for_alphax = alpha_store_x(i,j,k,ispec_CPML)
+          endif
+
+          if(alpha_store_y(i,j,k,ispec_CPML) == minimum_for_alphay_all .or. &
+             ystore(iglob) == y_max_all .or. ystore(iglob) == y_min_all) then
+          elseif(second_minimum_for_alphay >= alpha_store_y(i,j,k,ispec_CPML)) then
+            second_minimum_for_alphay = alpha_store_y(i,j,k,ispec_CPML)
+          endif
+
+          if(alpha_store_z(i,j,k,ispec_CPML) == minimum_for_alphaz_all .or. &
+             zstore(iglob) == z_max_all .or. zstore(iglob) == z_min_all) then
+          elseif(second_minimum_for_alphaz >= alpha_store_z(i,j,k,ispec_CPML)) then
+            second_minimum_for_alphaz = alpha_store_z(i,j,k,ispec_CPML)
+          endif
+
+        enddo
+      enddo
+    enddo
+  enddo
+
+  if (CUSTOM_REAL == SIZE_REAL) then
+    second_minimum_for_dx_all = sngl(HUGEVAL)
+    second_minimum_for_dy_all = sngl(HUGEVAL)
+    second_minimum_for_dz_all = sngl(HUGEVAL)
+    second_minimum_for_alphax_all = sngl(HUGEVAL)
+    second_minimum_for_alphay_all = sngl(HUGEVAL)
+    second_minimum_for_alphaz_all = sngl(HUGEVAL)
+  else
+    second_minimum_for_dx_all = HUGEVAL
+    second_minimum_for_dy_all = HUGEVAL
+    second_minimum_for_dz_all = HUGEVAL
+    second_minimum_for_alphax_all = HUGEVAL
+    second_minimum_for_alphay_all = HUGEVAL
+    second_minimum_for_alphaz_all = HUGEVAL
+  endif
+  call min_all_all_cr(second_minimum_for_dx,second_minimum_for_dx_all)
+  call min_all_all_cr(second_minimum_for_dy,second_minimum_for_dy_all)
+  call min_all_all_cr(second_minimum_for_dz,second_minimum_for_dz_all)
+  call min_all_all_cr(second_minimum_for_alphax,second_minimum_for_alphax_all)
+  call min_all_all_cr(second_minimum_for_alphay,second_minimum_for_alphay_all)
+  call min_all_all_cr(second_minimum_for_alphaz,second_minimum_for_alphaz_all)
+
+  if(second_minimum_for_dx_all < minimum_for_dx_all) &
+    stop "there is error in dectection of second_minimum_for_dx_all in dx profile"
+  if(second_minimum_for_dy_all < minimum_for_dy_all) &
+    stop "there is error in dectection of second_minimum_for_dy_all in dy profile"
+  if(second_minimum_for_dz_all < minimum_for_dz_all) &
+    stop "there is error in dectection of second_minimum_for_dz_all in dz profile"
+  if(second_minimum_for_alphax_all < minimum_for_alphax_all) &
+    stop "there is error in dectection of second_minimum_for_alphax_all in alphax profile"
+  if(second_minimum_for_alphay_all < minimum_for_alphay_all) &
+    stop "there is error in dectection of second_minimum_for_alphay_all in alphay profile"
+  if(second_minimum_for_alphaz_all < minimum_for_alphaz_all) &
+    stop "there is error in dectection of second_minimum_for_alphaz_all in alphaz profile"
+
+  second_minimum_for_alpha_all = min(second_minimum_for_alphax_all,second_minimum_for_alphay_all,&
+                                     second_minimum_for_alphaz_all)
+  maximum_for_alpha_all = max(maximum_for_alphax_all,maximum_for_alphay_all,maximum_for_alphaz_all)
+  const_for_tune_alpha_profile = second_minimum_for_alpha_all / maximum_for_alpha_all
+
+  second_minimum_for_d_all = min(second_minimum_for_dx_all,second_minimum_for_dy_all,&
+                                 second_minimum_for_dz_all)
+  maximum_for_d_all = max(maximum_for_dx_all,maximum_for_dy_all,maximum_for_dz_all)
+  const_for_tune_d_profile = second_minimum_for_d_all / maximum_for_d_all
+
+  minidistance_required_between_parameter = min(const_for_tune_d_profile, const_for_tune_alpha_profile) * &
+                                            min(maximum_for_alpha_all, maximum_for_d_all) / 8._CUSTOM_REAL
+  const_for_separation_two = minidistance_required_between_parameter * 2._CUSTOM_REAL
+  const_for_separation_four = minidistance_required_between_parameter * 4._CUSTOM_REAL
+  print *, 'minidistance_required_between_parameter', minidistance_required_between_parameter
+! for robust parameter separation of PML damping parameter
+
   do ispec_CPML = 1,nspec_cpml
     do k = 1,NGLLZ
       do j = 1,NGLLY
@@ -1376,22 +1576,34 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
             d_y = d_store_y(i,j,k,ispec_CPML)
             alpha_y = alpha_store_y(i,j,k,ispec_CPML)
 
-            call seperate_two_changeable_value(alpha_x,alpha_y,ALPHA_MAX_PML_y)
-
-            if (abs(alpha_x - alpha_y) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
-              stop 'there is error in seperation of alpha_x, alpha_y'
-            endif
-
+            if (abs(alpha_x - alpha_y) < minidistance_required_between_parameter) then  
+              call seperate_two_changeable_value(alpha_x,alpha_y,const_for_separation_two)  
+            endif  
+ 
             beta_x = alpha_x + d_x / K_x
             beta_y = alpha_y + d_y / K_y
 
-            call seperate_two_value_with_one_changeable(beta_x,alpha_y,ALPHA_MAX_PML_y)
-            call seperate_two_value_with_one_changeable(beta_y,alpha_x,ALPHA_MAX_PML_y)
+            if (abs(beta_x - alpha_y) < minidistance_required_between_parameter) then  
+              call seperate_two_value_with_one_changeable(beta_x,alpha_y,const_for_separation_two,&
+                                                          const_for_separation_four)  
+            endif  
 
-            if (abs(beta_x - alpha_y) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
-                abs(beta_y - alpha_x) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
-              stop 'there is error in seperation of beta_x and alpha_y, beta_y and alpha_x'
-            endif
+            if (abs(beta_y - alpha_x) < minidistance_required_between_parameter) then  
+              call seperate_two_value_with_one_changeable(beta_y,alpha_x,const_for_separation_two,&
+                                                          const_for_separation_four)  
+            endif  
+
+            if (abs(alpha_x - alpha_y) < minidistance_required_between_parameter) then  
+              stop 'there is error in seperation of alpha_x, alpha_y'  
+            endif  
+
+            if (abs(beta_x - alpha_y) < minidistance_required_between_parameter) then   
+              stop 'there is error in seperation of beta_x and alpha_y'  
+            endif  
+
+            if (abs(beta_y - alpha_x) < minidistance_required_between_parameter) then  
+              stop 'there is error in seperation of beta_y and alpha_x'  
+            endif  
 
             d_x = (beta_x - alpha_x) * K_x
             d_y = (beta_y - alpha_y) * K_y
@@ -1412,22 +1624,34 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
             d_z = d_store_z(i,j,k,ispec_CPML)
             alpha_z = alpha_store_z(i,j,k,ispec_CPML)
 
-            call seperate_two_changeable_value(alpha_x,alpha_z,ALPHA_MAX_PML_y)
-
-            if (abs(alpha_x - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
-              stop 'there is error in seperation of alpha_x, alpha_z'
-            endif
+            if (abs(alpha_x - alpha_z) < minidistance_required_between_parameter) then     
+              call seperate_two_changeable_value(alpha_x,alpha_z,const_for_separation_two)     
+            endif     
 
             beta_x = alpha_x + d_x / K_x
             beta_z = alpha_z + d_z / K_z
 
-            call seperate_two_value_with_one_changeable(beta_x,alpha_z,ALPHA_MAX_PML_y)
-            call seperate_two_value_with_one_changeable(beta_z,alpha_x,ALPHA_MAX_PML_y)
-
-            if (abs(beta_x - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
-                abs(beta_z - alpha_x) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
-              stop 'there is error in seperation of beta_x and alpha_z, beta_z and alpha_z'
+            if (abs(beta_x - alpha_z) < minidistance_required_between_parameter) then    
+              call seperate_two_value_with_one_changeable(beta_x,alpha_z,const_for_separation_two,&    
+                                                          const_for_separation_four)    
             endif
+
+            if (abs(beta_z - alpha_x) < minidistance_required_between_parameter) then    
+              call seperate_two_value_with_one_changeable(beta_z,alpha_x,const_for_separation_two,&    
+                                                          const_for_separation_four)     
+            endif
+
+            if (abs(alpha_x - alpha_z) < minidistance_required_between_parameter) then     
+              stop 'there is error in seperation of alpha_x, alpha_z'     
+            endif     
+
+            if (abs(beta_x - alpha_z) < minidistance_required_between_parameter) then    
+              stop 'there is error in seperation of beta_x and alpha_z'    
+            endif    
+
+            if (abs(beta_z - alpha_x) < minidistance_required_between_parameter) then    
+              stop 'there is error in seperation of beta_z and alpha_z'    
+            endif    
 
             d_x = (beta_x - alpha_x) * K_x
             d_z = (beta_z - alpha_z) * K_z
@@ -1446,23 +1670,35 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
             K_z = K_store_z(i,j,k,ispec_CPML)
             d_z = d_store_z(i,j,k,ispec_CPML)
-            alpha_z = alpha_store_z(i,j,k,ispec_CPML)
+            alpha_z = alpha_store_z(i,j,k,ispec_CPML)            
 
-            call seperate_two_changeable_value(alpha_y,alpha_z,ALPHA_MAX_PML_y)
-
-            if (abs(alpha_y - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
-              stop 'there is error in seperation of alpha_y, alpha_z'
-            endif
+            if (abs(alpha_y - alpha_z) < minidistance_required_between_parameter) then    
+              call seperate_two_changeable_value(alpha_y,alpha_z,const_for_separation_two)    
+            endif    
 
             beta_y = alpha_y + d_y / K_y
             beta_z = alpha_z + d_z / K_z
 
-            call seperate_two_value_with_one_changeable(beta_y,alpha_z,ALPHA_MAX_PML_y)
-            call seperate_two_value_with_one_changeable(beta_z,alpha_y,ALPHA_MAX_PML_y)
+            if (abs(beta_y - alpha_z) < minidistance_required_between_parameter) then    
+              call seperate_two_value_with_one_changeable(beta_y,alpha_z,const_for_separation_two,&
+                                                          const_for_separation_four)    
+            endif
 
-            if (abs(beta_y - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
-                abs(beta_z - alpha_y) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
-              stop 'there is error in seperation of beta_y and alpha_z, beta_z and alpha_y'
+            if (abs(beta_z - alpha_y) < minidistance_required_between_parameter) then    
+              call seperate_two_value_with_one_changeable(beta_z,alpha_y,const_for_separation_two,&
+                                                          const_for_separation_four)    
+            endif
+
+            if (abs(alpha_y - alpha_z) < minidistance_required_between_parameter) then
+              stop 'there is error in seperation of alpha_y, alpha_z'
+            endif
+
+            if (abs(beta_y - alpha_z) < minidistance_required_between_parameter) then
+              stop 'there is error in seperation of beta_y and alpha_z'
+            endif
+
+            if (abs(beta_z - alpha_y) < minidistance_required_between_parameter) then
+              stop 'there is error in seperation of beta_z and alpha_y'
             endif
 
             d_y = (beta_y - alpha_y) * K_y
@@ -1488,130 +1724,194 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
             d_z = d_store_z(i,j,k,ispec_CPML)
             alpha_z = alpha_store_z(i,j,k,ispec_CPML)
 
-            if (alpha_x == alpha_y .and. alpha_y == alpha_z) then
-              meanval_1 = (alpha_x + alpha_y + alpha_z) / 3.0_CUSTOM_REAL + 0.011_CUSTOM_REAL * ALPHA_MAX_PML_y
-              alpha_x = meanval_1 - 0.01_CUSTOM_REAL * ALPHA_MAX_PML_y
-              alpha_y = meanval_1
-              alpha_z = meanval_1 + 0.01_CUSTOM_REAL * ALPHA_MAX_PML_y
-
-              if (abs(alpha_x - alpha_y) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
-                  abs(alpha_y - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
-                  abs(alpha_x - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
-                stop 'error in seperation of alpha_x, alpha_y, alpha_z in case alpha_x == alpha_y .and. alpha_y == alpha_z'
+            if (abs(alpha_x - alpha_y) < minidistance_required_between_parameter) then
+              if(alpha_x > alpha_y)then
+                alpha_x = alpha_y + const_for_separation_two
+              else
+                alpha_y = alpha_x + const_for_separation_two
               endif
-
-            else if (alpha_x == alpha_y .and. alpha_y /= alpha_z) then
-              call seperate_three_changeable_value_with_two_equal(alpha_x,alpha_y,alpha_z,ALPHA_MAX_PML_y)
-
-              if (abs(alpha_x - alpha_y) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
-                  abs(alpha_y - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
-                  abs(alpha_x - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
-                stop 'error in seperation of alpha_x, alpha_y, alpha_z in case alpha_x == alpha_y .and. alpha_y /= alpha_z'
+              maxtemp = max(alpha_x, alpha_y)
+              mintemp = min(alpha_x, alpha_y)
+              if(alpha_z > maxtemp)then
+                 if(abs(alpha_z - maxtemp) < minidistance_required_between_parameter)then
+                   alpha_z = maxtemp + const_for_separation_two
+                 endif
+              elseif(alpha_z < mintemp)then
+                 if(abs(alpha_z - mintemp) < minidistance_required_between_parameter)then
+                   if(alpha_x > alpha_y)then
+                     alpha_x = alpha_z + const_for_separation_four
+                     alpha_y = alpha_z + const_for_separation_two
+                   else
+                     alpha_y = alpha_z + const_for_separation_four
+                     alpha_x = alpha_z + const_for_separation_two
+                   endif  
+                 endif
+              else   
+                 if(alpha_x > alpha_y)then
+                   alpha_x = alpha_y + const_for_separation_four
+                   alpha_z = alpha_y + const_for_separation_two
+                 else
+                   alpha_y = alpha_x + const_for_separation_four
+                   alpha_z = alpha_x + const_for_separation_two
+                 endif                              
               endif
-
-            else if (alpha_y == alpha_z .and. alpha_x /= alpha_y) then
-              call seperate_three_changeable_value_with_two_equal(alpha_y,alpha_z,alpha_x,ALPHA_MAX_PML_y)
-
-              if (abs(alpha_x - alpha_y) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
-                  abs(alpha_y - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
-                  abs(alpha_x - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
-                stop 'error in seperation of alpha_x, alpha_y, alpha_z in case alpha_y == alpha_z .and. alpha_x /= alpha_y'
-              endif
-
-            else if (alpha_x == alpha_z .and. alpha_y /= alpha_z) then
-              call seperate_three_changeable_value_with_two_equal(alpha_x,alpha_z,alpha_y,ALPHA_MAX_PML_y)
-
-              if (abs(alpha_x - alpha_y) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
-                  abs(alpha_y - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or.&
-                  abs(alpha_x - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
-                stop 'error in seperation of alpha_x, alpha_y, alpha_z in case alpha_x == alpha_z .and. alpha_y /= alpha_z'
-              endif
-
-            else if (alpha_x > alpha_y .and. alpha_y > alpha_z) then
-              call seperate_three_sequential_changeable_value(alpha_x,alpha_y,alpha_z,ALPHA_MAX_PML_y)
-
-              if (abs(alpha_x - alpha_y) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
-                  abs(alpha_y - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
-                  abs(alpha_x - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
-                stop 'error in seperation of alpha_x, alpha_y, alpha_z in case alpha_x > alpha_y .and. alpha_y > alpha_z'
-              endif
-
-            else if (alpha_x > alpha_z .and. alpha_z > alpha_y) then
-              call seperate_three_sequential_changeable_value(alpha_x,alpha_z,alpha_y,ALPHA_MAX_PML_y)
-
-              if (abs(alpha_x - alpha_y) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
-                  abs(alpha_y - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
-                  abs(alpha_x - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
-                stop 'error in seperation of alpha_x, alpha_y, alpha_z in case alpha_x > alpha_z .and. alpha_z > alpha_y'
-              endif
-
-            else if (alpha_y > alpha_z .and. alpha_z > alpha_x) then
-              call seperate_three_sequential_changeable_value(alpha_y,alpha_z,alpha_x,ALPHA_MAX_PML_y)
-
-              if(abs(alpha_x - alpha_y) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
-                 abs(alpha_y - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
-                 abs(alpha_x - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
-                stop 'error in seperation of alpha_x, alpha_y, alpha_z in case alpha_y > alpha_z .and. alpha_z > alpha_x'
-              endif
-
-            else if (alpha_y > alpha_x .and. alpha_x > alpha_z) then
-              call seperate_three_sequential_changeable_value(alpha_y,alpha_x,alpha_z,ALPHA_MAX_PML_y)
-
-              if (abs(alpha_x - alpha_y) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
-                  abs(alpha_y - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
-                  abs(alpha_x - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
-                stop 'error in seperation of alpha_x, alpha_y, alpha_z in case alpha_y > alpha_x .and. alpha_x > alpha_z'
-              endif
-
-            else if (alpha_z > alpha_x .and. alpha_x > alpha_y) then
-              call seperate_three_sequential_changeable_value(alpha_z,alpha_x,alpha_y,ALPHA_MAX_PML_y)
-
-              if (abs(alpha_x - alpha_y) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
-                  abs(alpha_y - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
-                  abs(alpha_x - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
-                stop 'error in seperation of alpha_x, alpha_y, alpha_z in case alpha_z > alpha_x .and. alpha_x > alpha_y'
-              endif
-
-            else if (alpha_z > alpha_y .and. alpha_y > alpha_x) then
-              call seperate_three_sequential_changeable_value(alpha_z,alpha_y,alpha_x,ALPHA_MAX_PML_y)
-
-              if (abs(alpha_x - alpha_y) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y.or.&
-                  abs(alpha_y - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y.or.&
-                  abs(alpha_x - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
-                stop 'error in seperation of alpha_x, alpha_y, alpha_z in case alpha_z > alpha_y .and. alpha_y > alpha_x'
-              endif
-
-            else
-              stop 'there is error in alpha division'
             endif
 
-            if (abs(alpha_x - alpha_y) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
-                abs(alpha_y - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
-                abs(alpha_x - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
-              stop 'there is error in seperation of alpha_x, alpha_y, alpha_z '
+            if (abs(alpha_x - alpha_z) < minidistance_required_between_parameter) then
+              if(alpha_x > alpha_z)then
+                alpha_x = alpha_z + const_for_separation_two
+              else
+                alpha_z = alpha_x + const_for_separation_two
+              endif
+              maxtemp = max(alpha_x, alpha_z)
+              mintemp = min(alpha_x, alpha_z)
+              if(alpha_y > maxtemp)then
+                 if(abs(alpha_y - maxtemp) < minidistance_required_between_parameter)then
+                   alpha_y = maxtemp + const_for_separation_two
+                 endif
+              elseif(alpha_y < mintemp)then
+                 if(abs(alpha_y - mintemp) < minidistance_required_between_parameter)then
+                   if(alpha_x > alpha_z)then
+                     alpha_x = alpha_y + const_for_separation_four
+                     alpha_z = alpha_y + const_for_separation_two
+                   else
+                     alpha_z = alpha_y + const_for_separation_four
+                     alpha_x = alpha_y + const_for_separation_two
+                   endif  
+                 endif
+              else   
+                 if(alpha_x > alpha_z)then
+                   alpha_x = alpha_z + const_for_separation_four
+                   alpha_y = alpha_z + const_for_separation_two
+                 else
+                   alpha_z = alpha_x + const_for_separation_four
+                   alpha_y = alpha_x + const_for_separation_two
+                 endif                              
+              endif
+            endif
+
+            if (abs(alpha_y - alpha_z) < minidistance_required_between_parameter) then
+              if(alpha_y > alpha_z)then
+                alpha_y = alpha_z + const_for_separation_two
+              else
+                alpha_z = alpha_y + const_for_separation_two
+              endif
+              maxtemp = max(alpha_y, alpha_z)
+              mintemp = min(alpha_y, alpha_z)
+              if(alpha_x > maxtemp)then
+                 if(abs(alpha_x - maxtemp) < minidistance_required_between_parameter)then
+                   alpha_x = maxtemp + const_for_separation_two
+                 endif
+              elseif(alpha_x < mintemp)then
+                 if(abs(alpha_x - mintemp) < minidistance_required_between_parameter)then
+                   if(alpha_y > alpha_z)then
+                     alpha_y = alpha_x + const_for_separation_four
+                     alpha_z = alpha_x + const_for_separation_two
+                   else
+                     alpha_z = alpha_x + const_for_separation_four
+                     alpha_y = alpha_x + const_for_separation_two
+                   endif  
+                 endif
+              else   
+                 if(alpha_y > alpha_z)then
+                   alpha_y = alpha_z + const_for_separation_four
+                   alpha_x = alpha_z + const_for_separation_two
+                 else
+                   alpha_z = alpha_y + const_for_separation_four
+                   alpha_x = alpha_y + const_for_separation_two
+                 endif                              
+              endif
+            endif
+
+            if (abs(alpha_x - alpha_y) < minidistance_required_between_parameter .or. &
+                abs(alpha_y - alpha_z) < minidistance_required_between_parameter .or. &
+                abs(alpha_x - alpha_z) < minidistance_required_between_parameter) then
+              stop 'error in seperation of alpha_x, alpha_y, alpha_z'
             endif
 
             beta_x = alpha_x + d_x / K_x
-            beta_y = alpha_y + d_y / K_y
-            beta_z = alpha_z + d_z / K_z
-
-            call seperate_betai_alphaj_alphak(beta_x,alpha_y,alpha_z,ALPHA_MAX_PML_y)
-            call seperate_betai_alphaj_alphak(beta_y,alpha_z,alpha_x,ALPHA_MAX_PML_y)
-            call seperate_betai_alphaj_alphak(beta_z,alpha_x,alpha_y,ALPHA_MAX_PML_y)
-
-            if (abs(beta_x - alpha_y) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
-                abs(beta_x - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
-              stop 'there is error in seperation of beta_x, alpha_y,alpha_z '
+            maxtemp = max(alpha_y, alpha_z)
+            mintemp = min(alpha_y, alpha_z)
+            if(beta_x > maxtemp)then
+               if(abs(beta_x- maxtemp) < minidistance_required_between_parameter)then
+                 beta_x = maxtemp + const_for_separation_two
+               endif
+            elseif(beta_x < mintemp)then
+               if(abs(beta_x - mintemp) < minidistance_required_between_parameter)then
+                 if(alpha_y > alpha_z)then
+                   beta_x = alpha_y + const_for_separation_two
+                 else
+                   beta_x = alpha_z + const_for_separation_two
+                 endif  
+               endif
+            else   
+               if(alpha_y > alpha_z)then
+                 beta_x = alpha_y + const_for_separation_two
+               else
+                 beta_x = alpha_z + const_for_separation_two
+               endif                              
             endif
 
-            if (abs(beta_y - alpha_x) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y .or. &
-                abs(beta_y - alpha_z) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
+            beta_y = alpha_y + d_y / K_y
+
+            maxtemp = max(alpha_x, alpha_z)
+            mintemp = min(alpha_x, alpha_z)
+            if(beta_y > maxtemp)then
+               if(abs(beta_y - maxtemp) < minidistance_required_between_parameter)then
+                 beta_y = maxtemp + const_for_separation_two
+               endif
+            elseif(beta_y < mintemp)then
+               if(abs(beta_y - mintemp) < minidistance_required_between_parameter)then
+                 if(alpha_x > alpha_z)then
+                   beta_y = alpha_x + const_for_separation_two
+                 else
+                   beta_y = alpha_z + const_for_separation_two
+                 endif  
+               endif
+            else   
+               if(alpha_x > alpha_z)then
+                 beta_y = alpha_x + const_for_separation_two
+               else
+                 beta_y = alpha_z + const_for_separation_two
+               endif                              
+            endif
+
+            beta_z = alpha_z + d_z / K_z
+            maxtemp = max(alpha_x, alpha_y)
+            mintemp = min(alpha_x, alpha_y)
+            if(beta_z > maxtemp)then
+               if(abs(beta_z - maxtemp) < minidistance_required_between_parameter)then
+                 beta_z = maxtemp + const_for_separation_two
+               endif
+            elseif(beta_z < mintemp)then
+               if(abs(beta_z - mintemp) < minidistance_required_between_parameter)then
+                 if(alpha_x > alpha_y)then
+                   beta_z = alpha_x + const_for_separation_two
+                 else
+                   beta_z = alpha_y + const_for_separation_two
+                 endif  
+               endif
+            else   
+               if(alpha_x > alpha_y)then
+                 beta_z = alpha_x + const_for_separation_two
+               else
+                 beta_z = alpha_y + const_for_separation_two
+               endif                              
+            endif
+
+            if (abs(beta_x - alpha_y) < minidistance_required_between_parameter .or. &
+                abs(beta_x - alpha_z) < minidistance_required_between_parameter) then
+              stop 'there is error in seperation of beta_x,alpha_y,alpha_z '
+            endif
+
+            if (abs(beta_y - alpha_x) < minidistance_required_between_parameter .or. &
+                abs(beta_y - alpha_z) < minidistance_required_between_parameter) then
               stop 'there is error in seperation of beta_y, alpha_x,alpha_z '
             endif
 
-            if (abs(beta_z - alpha_x) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y.or. &
-                abs(beta_z - alpha_y) < const_for_tune_pml_damping_profile * ALPHA_MAX_PML_y) then
-              stop 'there is error in seperation of beta_z, alpha_x,alpha_y '
+            if (abs(beta_z - alpha_x) < minidistance_required_between_parameter .or. &
+                abs(beta_z - alpha_y) < minidistance_required_between_parameter) then
+              stop 'there is error in seperation of beta_z,alpha_x,alpha_y '
             endif
 
             d_x = (beta_x - alpha_x) * K_x
@@ -1776,238 +2076,30 @@ function pml_damping_profile_l(myrank,iglob,dist,vp,delta)
 
 end function pml_damping_profile_l
 
-subroutine seperate_two_changeable_value(value_a,value_b,ALPHA_MAX_PML_y)
-
-  use generate_databases_par, only: CUSTOM_REAL,TWO
+subroutine seperate_two_changeable_value(value_a,value_b,const_for_separation_two)
+  use generate_databases_par, only: CUSTOM_REAL
   implicit none
-  real(kind=CUSTOM_REAL), intent(in) :: ALPHA_MAX_PML_y
+  real(kind=CUSTOM_REAL), intent(in) :: const_for_separation_two
   real(kind=CUSTOM_REAL) :: value_a,value_b
-  real(kind=CUSTOM_REAL), parameter :: const_for_sepertation = 0.009_CUSTOM_REAL
-  real(kind=CUSTOM_REAL), parameter :: const_for_sepertation_two = 0.01_CUSTOM_REAL
-  if (abs(value_a - value_b) < const_for_sepertation * ALPHA_MAX_PML_y) then
-     if(value_a >= value_b) then
-        value_a = (value_a + value_b) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
-     else
-        value_b = (value_a + value_b) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
-     endif
+  if(value_a >= value_b) then
+     value_a = value_b + const_for_separation_two
+  else
+     value_b = value_a + const_for_separation_two
   endif
 
 end subroutine seperate_two_changeable_value
 
-subroutine seperate_three_changeable_value_with_two_equal(value_a,value_b,value_c,ALPHA_MAX_PML_y)
-
-  use generate_databases_par, only: CUSTOM_REAL,TWO
+subroutine seperate_two_value_with_one_changeable(value_a,value_b,const_for_separation_two,&
+                                                  const_for_separation_four)
+  use generate_databases_par, only: CUSTOM_REAL
   implicit none
-  real(kind=CUSTOM_REAL), intent(in) :: ALPHA_MAX_PML_y
-  real(kind=CUSTOM_REAL) :: value_a,value_b,value_c
-  real(kind=CUSTOM_REAL), parameter :: const_for_sepertation = 0.009_CUSTOM_REAL
-  real(kind=CUSTOM_REAL), parameter :: const_for_sepertation_two = 0.01_CUSTOM_REAL
-
-  if (value_a /= value_b) then
-    stop 'value_a should be equal to value_b'
-  endif
-
-  value_a = value_b + const_for_sepertation_two * ALPHA_MAX_PML_y
-
-  if (abs(value_b - value_c) < const_for_sepertation * ALPHA_MAX_PML_y) then
-    if (value_b >= value_c) then
-      value_b = (value_b + value_c) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
-      value_a = value_b + const_for_sepertation_two * ALPHA_MAX_PML_y
-    else
-      value_c = (value_b + value_c) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
-      value_a = value_c + const_for_sepertation_two * ALPHA_MAX_PML_y
-    endif
-  endif
-
-end subroutine seperate_three_changeable_value_with_two_equal
-
-subroutine seperate_two_value_with_one_changeable(value_a,value_b,ALPHA_MAX_PML_y)
-
-  use generate_databases_par, only: CUSTOM_REAL,TWO
-  implicit none
-  real(kind=CUSTOM_REAL), intent(in) :: ALPHA_MAX_PML_y,value_b
+  real(kind=CUSTOM_REAL), intent(in) :: value_b, const_for_separation_two, const_for_separation_four
   real(kind=CUSTOM_REAL) :: value_a
-  real(kind=CUSTOM_REAL), parameter :: const_for_sepertation = 0.009_CUSTOM_REAL
-  real(kind=CUSTOM_REAL), parameter :: const_for_sepertation_two = 0.01_CUSTOM_REAL
-  real(kind=CUSTOM_REAL), parameter :: const_for_sepertation_three = 0.015_CUSTOM_REAL
 
-  if (abs(value_a - value_b) < const_for_sepertation * ALPHA_MAX_PML_y) then
-    if (value_a >= value_b) then
-      value_a = (value_a + value_b) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
-    else
-      value_a = (value_a + value_b) / TWO + const_for_sepertation_three * ALPHA_MAX_PML_y
-    endif
+  if (value_a >= value_b) then
+    value_a = value_b + const_for_separation_two
+  else
+    value_a = value_b + const_for_separation_four
   endif
 
 end subroutine seperate_two_value_with_one_changeable
-
-subroutine seperate_three_sequential_changeable_value(value_max,value_mean,value_min,ALPHA_MAX_PML_y)
-
-  use generate_databases_par, only: CUSTOM_REAL,TWO
-  implicit none
-  real(kind=CUSTOM_REAL), intent(in) :: ALPHA_MAX_PML_y
-  real(kind=CUSTOM_REAL) :: value_max,value_mean,value_min
-  real(kind=CUSTOM_REAL), parameter :: const_for_sepertation = 0.009_CUSTOM_REAL
-  real(kind=CUSTOM_REAL), parameter :: const_for_sepertation_two = 0.01_CUSTOM_REAL
-  real(kind=CUSTOM_REAL), parameter :: const_for_sepertation_three = 0.015_CUSTOM_REAL
-
-  if (.not. (value_max > value_mean .and. value_mean > value_min)) then
-    stop 'It should be value_max > value_mean and value_mean > value_min'
-  endif
-
-  if (abs(value_max - value_mean) >= const_for_sepertation * ALPHA_MAX_PML_y .and. &
-      abs(value_mean - value_min) >= const_for_sepertation * ALPHA_MAX_PML_y) then
-    ! To facilitate error check, we left the above if sentence, but leave no operation inside purposely
-  else if (abs(value_max - value_mean) < const_for_sepertation * ALPHA_MAX_PML_y .and. &
-           abs(value_mean - value_min) >= const_for_sepertation * ALPHA_MAX_PML_y) then
-    value_max = (value_max + value_mean) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
-  else if (abs(value_max - value_mean) >= const_for_sepertation * ALPHA_MAX_PML_y .and. &
-           abs(value_mean - value_min) < const_for_sepertation * ALPHA_MAX_PML_y) then
-    value_mean = (value_mean + value_min) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
-    if (abs(value_max - value_mean) < const_for_sepertation * ALPHA_MAX_PML_y) then
-      if (max(value_max,value_mean) == value_max) then
-        value_max = (value_max + value_mean) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
-      else if (max(value_max,value_mean) == value_mean) then
-           value_mean = (value_mean + value_max) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
-      endif
-    endif
-  else if (abs(value_max - value_mean) < const_for_sepertation * ALPHA_MAX_PML_y .and. &
-           abs(value_mean - value_min) < const_for_sepertation * ALPHA_MAX_PML_y) then
-    value_mean = (value_mean + value_min) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
-
-    if (abs(value_max - value_min) < const_for_sepertation * ALPHA_MAX_PML_y) then
-      if (max(value_max,value_min) == value_max) then
-        value_max = (value_max + value_min) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
-      else if (max(value_max,value_min) == value_min) then
-        value_max = (value_max + value_min) / TWO + const_for_sepertation_three * ALPHA_MAX_PML_y
-      endif
-    endif
-
-    if (abs(value_max - value_mean) < const_for_sepertation * ALPHA_MAX_PML_y) then
-      if (max(value_max,value_mean) == value_max) then
-        value_max = (value_max + value_mean) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
-      else if (max(value_max,value_mean) == value_mean) then
-        value_max = (value_max + value_mean) / TWO + const_for_sepertation_three * ALPHA_MAX_PML_y
-      endif
-    endif
-
-  endif
-end subroutine seperate_three_sequential_changeable_value
-
-subroutine seperate_three_sequential_value_with_only_meanvalue_changeable(value_max,value_mean,value_min,ALPHA_MAX_PML_y)
-
-  use generate_databases_par, only: CUSTOM_REAL,TWO
-  implicit none
-  real(kind=CUSTOM_REAL), intent(in) :: ALPHA_MAX_PML_y,value_max,value_min
-  real(kind=CUSTOM_REAL) :: value_mean
-  real(kind=CUSTOM_REAL), parameter :: const_for_sepertation = 0.009_CUSTOM_REAL
-  real(kind=CUSTOM_REAL), parameter :: const_for_sepertation_two = 0.01_CUSTOM_REAL
-  real(kind=CUSTOM_REAL), parameter :: const_for_sepertation_three = 0.015_CUSTOM_REAL
-
-  if (.not. (value_max > value_mean .and. value_mean > value_min)) then
-    stop 'It should be value_max > value_mean and value_mean > value_min'
-  endif
-
-  if (abs(value_max - value_min) < const_for_sepertation * ALPHA_MAX_PML_y ) then
-    stop 'It should be abs(value_max - value_mean) >= 0.009_CUSTOM_REAL * ALPHA_MAX_PML_y'
-  endif
-
-  if (abs(value_max - value_mean) >= const_for_sepertation * ALPHA_MAX_PML_y .and. &
-      abs(value_mean - value_min) >= const_for_sepertation * ALPHA_MAX_PML_y) then
-    ! To facilitate error check, we left the above if sentence, but leave no operation inside purposely
-  else if (abs(value_max - value_mean) < const_for_sepertation * ALPHA_MAX_PML_y .and. &
-           abs(value_mean - value_min) >= const_for_sepertation * ALPHA_MAX_PML_y) then
-    value_mean = (value_max + value_mean) / TWO + const_for_sepertation_three * ALPHA_MAX_PML_y
-  else if (abs(value_max - value_mean) >= const_for_sepertation * ALPHA_MAX_PML_y .and. &
-           abs(value_mean - value_min) < const_for_sepertation * ALPHA_MAX_PML_y) then
-    value_mean = (value_min + value_mean) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
-    if (abs(value_max - value_mean) < const_for_sepertation * ALPHA_MAX_PML_y) then
-      if (value_mean >= value_max) then
-        value_mean = (value_mean + value_max) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
-      else
-        value_mean = (value_mean + value_max) / TWO + const_for_sepertation_three * ALPHA_MAX_PML_y
-      endif
-    endif
-  else if (abs(value_max - value_mean) < const_for_sepertation * ALPHA_MAX_PML_y .and. &
-           abs(value_mean - value_min) < const_for_sepertation * ALPHA_MAX_PML_y) then
-    value_mean = (value_min + value_mean) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
-    if (abs(value_max - value_mean) < const_for_sepertation * ALPHA_MAX_PML_y) then
-      if (value_mean >= value_max) then
-        value_mean = (value_mean + value_max) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
-      else
-        value_mean = (value_mean + value_max) / TWO + const_for_sepertation_three * ALPHA_MAX_PML_y
-      endif
-    endif
-  endif
-end subroutine seperate_three_sequential_value_with_only_meanvalue_changeable
-
-subroutine seperate_three_sequential_value_with_only_minvalue_changeable(value_max,value_mean,value_min,ALPHA_MAX_PML_y)
-
-  use generate_databases_par, only: CUSTOM_REAL,TWO
-  implicit none
-  real(kind=CUSTOM_REAL), intent(in) :: ALPHA_MAX_PML_y,value_max,value_mean
-  real(kind=CUSTOM_REAL) :: value_min
-  real(kind=CUSTOM_REAL), parameter :: const_for_sepertation = 0.009_CUSTOM_REAL
-  real(kind=CUSTOM_REAL), parameter :: const_for_sepertation_two = 0.01_CUSTOM_REAL
-  real(kind=CUSTOM_REAL), parameter :: const_for_sepertation_three = 0.015_CUSTOM_REAL
-
-  if (.not. (value_max > value_mean .and. value_mean > value_min)) then
-    stop 'It should be value_max > value_mean and value_mean > value_min'
-  endif
-
-  if (abs(value_max - value_mean) < const_for_sepertation * ALPHA_MAX_PML_y) then
-    stop 'It should be abs(value_max - value_mean) >= 0.009_CUSTOM_REAL * ALPHA_MAX_PML_y'
-  endif
-
-  if (abs(value_mean - value_min) < const_for_sepertation * ALPHA_MAX_PML_y) then
-    value_min = (value_mean + value_min) / TWO + const_for_sepertation_three * ALPHA_MAX_PML_y
-  endif
-
-  if (abs(value_max - value_min) < const_for_sepertation * ALPHA_MAX_PML_y) then
-    if (value_min >= value_max) then
-      value_min = (value_min + value_max) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
-    else
-      value_min = (value_min + value_max) / TWO + const_for_sepertation_three * ALPHA_MAX_PML_y
-    endif
-  endif
-end subroutine seperate_three_sequential_value_with_only_minvalue_changeable
-
-subroutine seperate_betai_alphaj_alphak(beta_x,alpha_y,alpha_z,ALPHA_MAX_PML_y)
-
-  use generate_databases_par, only: CUSTOM_REAL,TWO
-  implicit none
-  real(kind=CUSTOM_REAL) :: beta_x,alpha_y,alpha_z,ALPHA_MAX_PML_y
-  real(kind=CUSTOM_REAL), parameter :: const_for_sepertation = 0.009_CUSTOM_REAL
-  real(kind=CUSTOM_REAL), parameter :: const_for_sepertation_two = 0.01_CUSTOM_REAL
-  real(kind=CUSTOM_REAL), parameter :: const_for_sepertation_three = 0.015_CUSTOM_REAL
-
-  if (beta_x == alpha_y) then
-    beta_x = beta_x + const_for_sepertation_two * ALPHA_MAX_PML_y
-    call seperate_two_value_with_one_changeable(beta_x,alpha_z,ALPHA_MAX_PML_y)
-  else if (beta_x == alpha_z) then
-    beta_x = beta_x + const_for_sepertation_two * ALPHA_MAX_PML_y
-    call seperate_two_value_with_one_changeable(beta_x,alpha_y,ALPHA_MAX_PML_y)
-  else if (beta_x > alpha_y .and. alpha_y > alpha_z) then
-    if (abs(beta_x - alpha_y) < const_for_sepertation * ALPHA_MAX_PML_y) then
-      beta_x = (beta_x + alpha_y) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
-    endif
-  else if (beta_x > alpha_z .and. alpha_z > alpha_y) then
-    if (abs(beta_x - alpha_z) < const_for_sepertation * ALPHA_MAX_PML_y) then
-      beta_x = (beta_x + alpha_z) / TWO + const_for_sepertation_two * ALPHA_MAX_PML_y
-    endif
-  else if (alpha_z > beta_x .and. beta_x > alpha_y) then
-    call seperate_three_sequential_value_with_only_meanvalue_changeable &
-                  (alpha_z,beta_x,alpha_y,ALPHA_MAX_PML_y)
-  else if (alpha_z > alpha_y .and. alpha_y > beta_x) then
-    call seperate_three_sequential_value_with_only_minvalue_changeable &
-                  (alpha_z,alpha_y,beta_x,ALPHA_MAX_PML_y)
-  else if (alpha_y > beta_x .and. beta_x > alpha_z) then
-    call seperate_three_sequential_value_with_only_meanvalue_changeable &
-                  (alpha_y,beta_x,alpha_z,ALPHA_MAX_PML_y)
-  else if (alpha_y > alpha_z .and. alpha_z > beta_x) then
-    call seperate_three_sequential_value_with_only_minvalue_changeable &
-                  (alpha_y,alpha_z,beta_x,ALPHA_MAX_PML_y)
-  endif
-end subroutine seperate_betai_alphaj_alphak
-
-
