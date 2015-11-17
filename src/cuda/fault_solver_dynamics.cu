@@ -25,7 +25,6 @@ void FC_FUNC_(initialize_fault_solver,
 // copies integer array from CPU host to GPU device
 void copy_todevice_realw_test(void** d_array_addr_ptr,realw* h_array,int size)
 {
-//  TRACE("  copy_todevice_realw");
 
     // allocates memory on GPU
     cudaMalloc((void**)d_array_addr_ptr,size*sizeof(realw));
@@ -36,18 +35,13 @@ void copy_todevice_realw_test(void** d_array_addr_ptr,realw* h_array,int size)
 
 void copy_tohost_realw_test(void** d_array_addr_ptr,realw* h_array,int size)
 {
-//  TRACE("  copy_todevice_realw");
 
-    // allocates memory on GPU
-//  cudaMalloc((void**)d_array_addr_ptr,size*sizeof(realw));
     // copies values onto GPU
     cudaMemcpy(h_array, (realw*) *d_array_addr_ptr,size*sizeof(realw),cudaMemcpyDeviceToHost);
 }
 // copies integer array from CPU host to GPU device
 void copy_todevice_int_test(void** d_array_addr_ptr,int* h_array,int size)
 {
-//  TRACE("  copy_todevice_realw");
-
     // allocates memory on GPU
     cudaMalloc((void**)d_array_addr_ptr,size*sizeof(int));
     // copies values onto GPU
@@ -57,8 +51,6 @@ void copy_todevice_int_test(void** d_array_addr_ptr,int* h_array,int size)
 
 void copy_tohost_int_test(void** d_array_addr_ptr,int* h_array,int size)
 {
-//  TRACE("  copy_todevice_realw");
-
     // allocates memory on GPU
     cudaMemcpy(h_array,(realw*) *d_array_addr_ptr,size*sizeof(int),cudaMemcpyDeviceToHost);
 }
@@ -66,12 +58,8 @@ void copy_tohost_int_test(void** d_array_addr_ptr,int* h_array,int size)
 
 void allocate_cuda_memory_test(void** d_array_addr_ptr,int size)
 {
-//  TRACE("  copy_todevice_realw");
-
     // allocates memory on GPU
     cudaMalloc((void**)d_array_addr_ptr,size*sizeof(int));
-    // copies values onto GPU
-    //  cudaMemcpy((realw*) *d_array_addr_ptr,h_array,size*sizeof(int),cudaMemcpyHostToDevice);
 }
 
 extern "C"
@@ -370,7 +358,6 @@ __device__ __forceinline__ double  asinh_slatec(realw x)
     if (nterms == 0)
     {
         nterms = inits(asnhcs, 39, 0.1E0*d1mach_3);
-//nterms = 39;
         sqeps = sqrt(d1mach_3);
         xmax = 1.E0/sqeps;
     }
@@ -503,8 +490,7 @@ __device__ __forceinline__ double rtsafe(realw x1,realw x2,realw xacc,realw tSti
 
 
 
-__device__ __forceinline__ realw update_state_rsf(          // realw* a,
-// realw* b,
+__device__ __forceinline__ realw update_state_rsf( 
     realw Ll,
     realw theta,
     realw Vslip,
@@ -527,8 +513,7 @@ __device__ __forceinline__ realw update_state_rsf(          // realw* a,
     return theta_r;
 }
 
-__device__ __forceinline__ realw update_state_swf(          // realw* a,
-// realw* b,
+__device__ __forceinline__ realw update_state_swf(    
     realw  Dx,
     realw  Dy,
     realw* D_slip,
