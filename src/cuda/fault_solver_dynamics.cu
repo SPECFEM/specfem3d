@@ -490,7 +490,7 @@ __device__ __forceinline__ double rtsafe(realw x1,realw x2,realw xacc,realw tSti
 
 
 
-__device__ __forceinline__ realw update_state_rsf( 
+__device__ __forceinline__ realw update_state_rsf(
     realw Ll,
     realw theta,
     realw Vslip,
@@ -513,7 +513,7 @@ __device__ __forceinline__ realw update_state_rsf(
     return theta_r;
 }
 
-__device__ __forceinline__ realw update_state_swf(    
+__device__ __forceinline__ realw update_state_swf(
     realw  Dx,
     realw  Dy,
     realw* D_slip,
