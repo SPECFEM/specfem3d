@@ -523,7 +523,6 @@ __device__ __forceinline__ realw update_state_swf(
 {
     realw theta_r;
    theta_r = theta_old + sqrt((Dx-D_slip[index*3])*(Dx-D_slip[index*3])+(Dy-D_slip[index*3+1])*(Dy-D_slip[index*3+1]));
-//    printf("Dx,%f,%f,%f\n",Dx,Dy,theta_r);
     return theta_r;
 }
 
@@ -536,7 +535,6 @@ __device__ __forceinline__ realw swf_mu(realw Dcl,
     realw mul,tmp;
     tmp = MIN(thetal/Dcl,1.00);
     mul = musl - (musl - mudl)*tmp;
-    //printf("mus:%f,mud=%f,theta=%f,Dcl=%f,tmp=%f\n",musl,mudl,thetal,Dcl,mul);
     return mul;
 }
 
@@ -610,15 +608,6 @@ __global__  void compute_dynamic_fault_cuda_swf(
     realw* mud,
     realw* Coh,
     realw* RT,
-    /*    realw* a,
-        realw* b,
-        realw* L,
-        realw* f0,
-        realw* V0,
-        realw* V_init,
-        realw* theta,
-        realw* Vw,
-        realw* fw,*/
     realw* V_slip,
     realw* D_slip,
     int* ibulk1,
@@ -635,7 +624,6 @@ __global__  void compute_dynamic_fault_cuda_swf(
     realw strength;
     realw mul;
     realw thetaold;
-//   realw Vf_oldl,Vf_newl,Vf_tmp;
     realw Tnew;
 
 
@@ -643,10 +631,7 @@ __global__  void compute_dynamic_fault_cuda_swf(
     if(tx>=NGLOB_AB) return;
 
 
-//    Vf_oldl = sqrt(V_slip[3*tx]*V_slip[3*tx]+V_slip[3*tx+1]*V_slip[3*tx+1]);
     Zl = Z[tx];
-//    al = a[tx];
-//    bl = b[tx];
     thetal = theta[tx];
     mudl = mud[tx];
     musl = mus[tx];
