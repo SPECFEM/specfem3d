@@ -34,17 +34,6 @@
 #include "config.h"
 typedef float realw;
 
-typedef struct fault_ {
-
-  // mesh resolution
-  int NSPEC_AB;
-  int NGLOB_AB;
-
-  realw *T0, *T, *B, *V, *D;
-  realw *R, *invM1, *invM2, *Z ;
-  int *ibulk1,*ibulk2;
-}Fault ;
-
 typedef struct swf_type_{
   int kind;
   int healing ;
@@ -56,15 +45,26 @@ typedef struct rsf_type_{
   realw *V0,*f0,*L,*V_init,*a,*b,*theta,*T,*C,*fw,*Vw;
 }Rsf_type;
 
+typedef struct fault_ {
+
+  // mesh resolution
+  int NSPEC_AB;
+  int NGLOB_AB;
+
+  realw *T0, *T, *B, *V, *D;
+  realw *R, *invM1, *invM2, *Z ;
+  int *ibulk1,*ibulk2;
+  Swf_type swf;
+  Rsf_type rsf;
+
+}Fault ;
 
 typedef struct fault_solver_dynamics_{
   Fault* faults;
   realw v_healing;
   realw v_rupt;
-        int NTOUT,NSNAP;
-        int Nbfaults;
-        Swf_type swf;
-        Rsf_type rsf;
+  int NTOUT,NSNAP;
+  int Nbfaults;
   int RATE_AND_STATE;
 }Fault_solver_dynamics;
 
