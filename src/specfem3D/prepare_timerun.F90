@@ -1340,8 +1340,8 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
   use specfem_par_movie
-  use fault_solver_dynamic , only : Kelvin_Voigt_eta,SIMULATION_TYPE_DYN
-
+  use fault_solver_dynamic
+ 
   implicit none
 
   ! local parameters

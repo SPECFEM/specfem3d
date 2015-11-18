@@ -1563,7 +1563,8 @@ integer :: it,ifault
 
 do ifault=1,Nfaults
 
-call transfer_tohost_fault_data(Fault_pointer,ifault-1,faults(ifault)%nspec,faults(ifault)%nglob,faults(ifault)%D,faults(ifault)%V,faults(ifault)%T)
+call transfer_tohost_fault_data(Fault_pointer,ifault-1,faults(ifault)%nspec,&
+faults(ifault)%nglob,faults(ifault)%D,faults(ifault)%V,faults(ifault)%T)
 
 call gather_dataXZ(faults(ifault))
 
