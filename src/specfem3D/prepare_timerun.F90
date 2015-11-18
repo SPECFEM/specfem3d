@@ -1492,7 +1492,9 @@
 
   ! prepares kelvin_voigt_damping around the fault
   if (SIMULATION_TYPE_DYN) then
+    call Transfer_faultdata_GPU()
     call prepare_fault_device(Mesh_pointer,allocated(Kelvin_Voigt_eta),Kelvin_Voigt_eta)
+    call rsf_GPU_init()
   endif
 
   ! synchronizes processes
