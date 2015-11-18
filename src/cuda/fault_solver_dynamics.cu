@@ -518,7 +518,7 @@ __device__ __forceinline__ realw update_state_rsf(
 }
 
 
-__device__ __forceinline__ realw update_state_swf(         
+__device__ __forceinline__ realw update_state_swf(
     realw  Dx,
     realw  Dy,
     realw* D_slip,

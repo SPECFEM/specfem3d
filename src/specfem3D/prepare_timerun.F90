@@ -1341,7 +1341,7 @@
   use specfem_par_poroelastic
   use specfem_par_movie
   use fault_solver_dynamic
- 
+
   implicit none
 
   ! local parameters

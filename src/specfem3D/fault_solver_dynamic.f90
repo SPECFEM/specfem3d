@@ -796,7 +796,7 @@ subroutine rsf_GPU_init()
     call transfer_todevice_rsf_data(Fault_pointer,faults(ifault)%nglob,ifault-1 &
     ,f%V0,f%f0,f%V_init,f%a,f%b,f%L,f%theta,f%T,f%C,f%fw,f%Vw)
     ! ifault - 1 because in C language, array index start from 0
-   elseif(associated(g)) then  ! slip weakening friction simulation
+   else if(associated(g)) then  ! slip weakening friction simulation
     call transfer_todevice_swf_data(Fault_pointer,faults(ifault)%nglob,ifault-1 &
     ,g%Dc,g%mus,g%mud,g%T,g%C,g%theta)
    endif
