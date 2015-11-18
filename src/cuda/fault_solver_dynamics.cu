@@ -58,6 +58,7 @@ void copy_tohost_int_test(void** d_array_addr_ptr,int* h_array,int size)
 
 void allocate_cuda_memory_test(void** d_array_addr_ptr,int size)
 {
+
     // allocates memory on GPU
     cudaMalloc((void**)d_array_addr_ptr,size*sizeof(int));
 }
@@ -82,7 +83,7 @@ void FC_FUNC_(transfer_todevice_fault_data,
                                            )
 {
     Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
-    Fault* Flt = Fsolver->faults;
+    Fault* Flt = &(Fsolver->faults[*fault_index]);
     Flt->NSPEC_AB=*NSPEC_AB;
     Flt->NGLOB_AB=*NGLOB_AB;
     if(*NGLOB_AB>0)
@@ -98,8 +99,6 @@ void FC_FUNC_(transfer_todevice_fault_data,
         copy_todevice_realw_test((void **)&(Flt->invM1),invM1,*NGLOB_AB);
         copy_todevice_realw_test((void **)&(Flt->invM2),invM2,*NGLOB_AB);
         copy_todevice_realw_test((void **)&(Flt->T),T,(*NGLOB_AB)*3);
-
-
     }
 
 }
@@ -116,7 +115,7 @@ void FC_FUNC_(transfer_tohost_fault_data,
                         )
 {
     Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
-    Fault* Flt = Fsolver->faults;
+    Fault* Flt = &(Fsolver->faults[*fault_index]);
     if(*NGLOB_AB>0)
     {
         copy_tohost_realw_test((void **)&(Flt->V),V,(*NGLOB_AB)*3);
@@ -130,6 +129,7 @@ void FC_FUNC_(transfer_tohost_fault_data,
 extern "C"
 void FC_FUNC_(transfer_todevice_rsf_data,
               TRANSFER_TODEVICE_RSF_DATA)(long* Fault_pointer,
+                           int* fault_index,
                            int *NGLOB_AB,
                            realw* V0,
                            realw* f0,
@@ -145,7 +145,7 @@ void FC_FUNC_(transfer_todevice_rsf_data,
 {
 
     Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
-    Rsf_type* Rsf  = &(Fsolver-> rsf);
+    Rsf_type* Rsf  = &((Fsolver->faults[*fault_index]).rsf);
     if(*NGLOB_AB>0)
     {
         copy_todevice_realw_test((void **)&(Rsf->V0),V0,*NGLOB_AB);
@@ -166,6 +166,7 @@ extern "C"
 void FC_FUNC_(transfer_todevice_swf_data,
               TRANSFER_TODEVICE_SWF_DATA)(long* Fault_pointer,
                            int *NGLOB_AB,
+                           int *fault_index,
                            realw* Dc,
                            realw* mus,
                            realw* mud,
@@ -176,7 +177,7 @@ void FC_FUNC_(transfer_todevice_swf_data,
 {
 
     Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
-    Swf_type* Swf  = &(Fsolver-> swf);
+    Swf_type* Swf  = &((Fsolver->faults[*fault_index]).swf);
     if(*NGLOB_AB>0)
     {
         copy_todevice_realw_test((void **)&(Swf->Dc),Dc,*NGLOB_AB);
@@ -192,6 +193,7 @@ extern "C"
 void FC_FUNC_(transfer_tohost_rsf_data,
               TRANSFER_TOHOST_RSF_DATA)(long* Fault_pointer,
                        int *NGLOB_AB,
+                       int *fault_index,
                        realw* V0,
                        realw* f0,
                        realw* V_init,
@@ -206,7 +208,7 @@ void FC_FUNC_(transfer_tohost_rsf_data,
 {
 
     Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
-    Rsf_type* Rsf  = &(Fsolver-> rsf);
+    Rsf_type* Rsf  = &((Fsolver->faults[*fault_index]).rsf);
     if(*NGLOB_AB>0)
     {
         copy_tohost_realw_test((void **)&(Rsf->V0),V0,*NGLOB_AB);
@@ -228,6 +230,7 @@ extern "C"
 void FC_FUNC_(transfer_tohost_swf_data,
               TRANSFER_TOHOST_SWF_DATA)(long* Fault_pointer,
                        int *NGLOB_AB,
+                       int *fault_index,
                        realw* Dc,
                        realw* mus,
                        realw* mud,
@@ -237,7 +240,7 @@ void FC_FUNC_(transfer_tohost_swf_data,
 {
 
     Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
-    Swf_type *Swf = &(Fsolver -> swf);
+    Swf_type *Swf = &((Fsolver -> faults[*fault_index]).swf);
     if(*NGLOB_AB>0)
     {
         copy_tohost_realw_test((void **)&(Swf->Dc),Dc,*NGLOB_AB);
@@ -358,6 +361,7 @@ __device__ __forceinline__ double  asinh_slatec(realw x)
     if (nterms == 0)
     {
         nterms = inits(asnhcs, 39, 0.1E0*d1mach_3);
+//nterms = 39;
         sqeps = sqrt(d1mach_3);
         xmax = 1.E0/sqeps;
     }
@@ -490,7 +494,7 @@ __device__ __forceinline__ double rtsafe(realw x1,realw x2,realw xacc,realw tSti
 
 
 
-__device__ __forceinline__ realw update_state_rsf( 
+__device__ __forceinline__ realw update_state_rsf(
     realw Ll,
     realw theta,
     realw Vslip,
@@ -513,7 +517,7 @@ __device__ __forceinline__ realw update_state_rsf(
     return theta_r;
 }
 
-__device__ __forceinline__ realw update_state_swf(    
+__device__ __forceinline__ realw update_state_swf(         
     realw  Dx,
     realw  Dy,
     realw* D_slip,
@@ -627,11 +631,12 @@ __global__  void compute_dynamic_fault_cuda_swf(
     realw Tnew;
 
 
-    tx = blockDim.x * blockIdx.x + threadIdx.x;  //calculate thread id
+    tx = blockDim.x * blockIdx.x + threadIdx.x;  /*calculate thread id*/
     if(tx>=NGLOB_AB) return;
 
 
     Zl = Z[tx];
+
     thetal = theta[tx];
     mudl = mud[tx];
     musl = mus[tx];
@@ -657,7 +662,7 @@ __global__  void compute_dynamic_fault_cuda_swf(
     Ty = Zl*(Vy + 0.50*dt*Ay);
     Tz = Zl*(Vz + 0.50*dt*Az);
 
-//rotate to fault frame
+    /*rotate to fault frame*/
     Tx = Tx + T0xl;
     Ty = Ty + T0yl;
     Tz = Tz + T0zl;
@@ -715,22 +720,22 @@ __global__  void compute_dynamic_fault_cuda_swf(
 
 
 __global__  void compute_dynamic_fault_cuda(
-    realw* Displ, //this is a mesh vector
+    realw* Displ, /*mesh quantities*/
     realw* Veloc,
     realw* MxAccel,
     int NGLOB_AB,
-    realw* invM1,  // this is a fault vector
+    realw* invM1,  /* fault quantities*/
     realw* invM2,
     realw* B,
     realw* Z,
     realw* R,
     realw* T0,
-    realw* T,     //for output
+    realw* T,
     realw* a,
     realw* b,
     realw* L,
     realw* f0,
-    realw* V0,
+    realw* V0,    /*frictional quantities*/
     realw* V_init,
     realw* theta,
     realw* Vw,
@@ -754,7 +759,7 @@ __global__  void compute_dynamic_fault_cuda(
     realw Tnew;
 
 
-    tx = blockDim.x * blockIdx.x + threadIdx.x;  //calculate thread id
+    tx = blockDim.x * blockIdx.x + threadIdx.x;  /*calculate thread id*/
     if(tx>=NGLOB_AB) return;
 
 
@@ -791,7 +796,7 @@ __global__  void compute_dynamic_fault_cuda(
     Ty = Ztmp*(Vy + 0.50*dt*Ay);
     Tz = Ztmp*(Vz + 0.50*dt*Az);
 
-//rotate to fault frame
+    /*rotate back to fault frame*/
     Tx = Tx + T0xl;
     Ty = Ty + T0yl;
     Tz = Tz + T0zl;
@@ -867,14 +872,14 @@ void FC_FUNC_(fault_solver_gpu,
 {
     Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
     Fault* Flt = Fsolver->faults;
-    Rsf_type* rsf = &(Fsolver->rsf);
-    Swf_type* swf = &(Fsolver->swf);
     Mesh*  mp = (Mesh*)(*Mesh_pointer);
     int num_of_block;
 
     for(int ifault = 0; ifault < (Fsolver->Nbfaults); ifault++)
     {
-        Flt = &(Fsolver->faults[ifault]); //this is a dirty implementation
+        Flt = &(Fsolver->faults[ifault]);
+        Rsf_type* rsf = &(Flt->rsf);
+        Swf_type* swf = &(Flt->swf);
         if(Flt->NGLOB_AB>0)
         {
             num_of_block = (int) (Flt->NGLOB_AB/128)+1;
@@ -882,17 +887,17 @@ void FC_FUNC_(fault_solver_gpu,
             {
                 compute_dynamic_fault_cuda<<<num_of_block,128>>>(
 
-                    mp->d_displ, //this is a mesh vector
+                    mp->d_displ,
                     mp->d_veloc,
                     mp->d_accel,
                     Flt->NGLOB_AB,
-                    Flt->invM1,  // this is a fault vector
+                    Flt->invM1,
                     Flt->invM2,
                     Flt->B,
                     Flt->Z,
                     Flt->R,
                     Flt->T0,
-                    Flt->T,     //for output
+                    Flt->T,
                     rsf->a,
                     rsf->b,
                     rsf->L,
@@ -911,14 +916,13 @@ void FC_FUNC_(fault_solver_gpu,
             }
             else
             {
-                printf("start slip weakening simulation!\n");
                 compute_dynamic_fault_cuda_swf<<<num_of_block,128>>>(
 
-                    mp->d_displ, //this is a mesh vector
+                    mp->d_displ,
                     mp->d_veloc,
                     mp->d_accel,
                     Flt->NGLOB_AB,
-                    Flt->invM1,  // this is a fault vector
+                    Flt->invM1,
                     Flt->invM2,
                     Flt->B,
                     Flt->Z,
