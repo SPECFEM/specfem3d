@@ -778,16 +778,29 @@ function swf_mu(f) result(mu)
 
 end function swf_mu
 
+
 !=====================================================================
 subroutine rsf_GPU_init()
 
    use specfem_par, only : Fault_pointer
    implicit none
    type(rsf_type),pointer :: f
-   f => faults(1)%rsf
-   if (associated(f)) then
-   call transfer_todevice_rsf_data(Fault_pointer,faults(1)%nglob,f%V0,f%f0,f%V_init,f%a,f%b,f%L,f%theta,f%T,f%C,f%fw,f%Vw)
+   type(swf_type),pointer :: g
+   integer :: ifault
+
+   do ifault = 1,Nfaults
+   f => faults(ifault)%rsf
+   g => faults(ifault)%swf
+
+   if (associated(f)) then  ! rate and state friction simulation
+    call transfer_todevice_rsf_data(Fault_pointer,faults(ifault)%nglob,ifault-1 &
+    ,f%V0,f%f0,f%V_init,f%a,f%b,f%L,f%theta,f%T,f%C,f%fw,f%Vw)
+    ! ifault - 1 because in C language, array index start from 0
+   elseif(associated(g)) then  ! slip weakening friction simulation
+    call transfer_todevice_swf_data(Fault_pointer,faults(ifault)%nglob,ifault-1 &
+    ,g%Dc,g%mus,g%mud,g%T,g%C,g%theta)
    endif
+   enddo
 
 end subroutine rsf_GPU_init
 
@@ -1546,12 +1559,17 @@ subroutine synchronize_GPU(it)
 
 use specfem_par,only: Fault_pointer,myrank
 
-integer :: it
+integer :: it,ifault
 
-call transfer_tohost_fault_data(Fault_pointer,0,faults(1)%nspec,faults(1)%nglob,faults(1)%D,faults(1)%V,faults(1)%T)
+do ifault=1,Nfaults
 
-call gather_dataXZ(faults(1))
-if(myrank == 0 )call write_dataXZ(faults(1)%dataXZ_all,it,1)
+call transfer_tohost_fault_data(Fault_pointer,ifault-1,faults(ifault)%nspec,faults(ifault)%nglob,faults(ifault)%D,faults(ifault)%V,faults(ifault)%T)
+
+call gather_dataXZ(faults(ifault))
+
+if(myrank == 0 )call write_dataXZ(faults(ifault)%dataXZ_all,it,ifault)
+
+enddo
 
 end subroutine synchronize_GPU
 
