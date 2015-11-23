@@ -395,7 +395,7 @@ __device__ __forceinline__ double  asinh_slatec(realw x)
 }
 
 __device__ __forceinline__ void funcd(double x,double *fn,double *df,realw tStick,realw Seff,
-                                      realw Z,realw f0,realw V0,realw a,realw b,realw L,realw theta,int statelaw)
+                                      realw Z,realw f0,realw V0,realw a,realw b,realw L,realw theta,realw cohesion,int statelaw)
 {
     /*real(kind=CUSTOM_REAL) :: tStick,Seff,Z,f0,V0,a,b,L,theta
     double precision :: arg,fn,df,x
@@ -411,7 +411,7 @@ __device__ __forceinline__ void funcd(double x,double *fn,double *df,realw tStic
         arg = exp(theta/a)/2.0E0/V0;
     }
     xarg = x*arg;
-    *fn = tStick - Z*x - a*Seff*asinh_slatec(xarg);
+    *fn = tStick - Z*x - a*Seff*asinh_slatec(xarg) - cohesion;
     *df = -Z - a*Seff/sqrt(1.0E0 + pow((x*arg),2.0))*arg;
 }
 
@@ -428,13 +428,13 @@ will be chosen to be one-tenth machine precision.
 ! eta    requested accuracy of series.*/
 
 __device__ __forceinline__ double rtsafe(realw x1,realw x2,realw xacc,realw tStick,realw Seff,realw Z,
-        realw f0,realw V0,realw a,realw b,realw L,realw theta,int statelaw)
+        realw f0,realw V0,realw a,realw b,realw L,realw theta,realw cohesion,int statelaw)
 {
     const int  MAXIT=200;
     int j;
     double   df,dx,dxold,f,fh,fl,temp,xh,xl,rtsafe;
-    funcd((double)x1,&fl,&df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw);
-    funcd((double)x2,&fh,&df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw);
+    funcd((double)x1,&fl,&df,tStick,Seff,Z,f0,V0,a,b,L,theta,cohesion,statelaw);
+    funcd((double)x2,&fh,&df,tStick,Seff,Z,f0,V0,a,b,L,theta,cohesion,statelaw);
     if ((fl>0. && fh>0.) || (fl<0. && fh<0.) ) return -1.0;
     if (fl==0.)
     {
@@ -459,7 +459,7 @@ __device__ __forceinline__ double rtsafe(realw x1,realw x2,realw xacc,realw tSti
     rtsafe=0.5E0*(x1+x2);
     dxold=fabsf(x2-x1);
     dx=dxold;
-    funcd(rtsafe,&f,&df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw);
+    funcd(rtsafe,&f,&df,tStick,Seff,Z,f0,V0,a,b,L,theta,cohesion,statelaw);
     for( j=1; j<MAXIT; j++)
     {
         if (((rtsafe-xh)*df-f)*((rtsafe-xl)*df-f)>0 || fabsf(2.0F*f)>fabsf(dxold*df))
@@ -478,7 +478,7 @@ __device__ __forceinline__ double rtsafe(realw x1,realw x2,realw xacc,realw tSti
             if (temp==rtsafe) return rtsafe;
         }
         if (fabsf(dx)<xacc) return rtsafe;
-        funcd(rtsafe,&f,&df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw);
+        funcd(rtsafe,&f,&df,tStick,Seff,Z,f0,V0,a,b,L,theta,cohesion,statelaw);
         if (f<0.)
         {
             xl=rtsafe;
@@ -732,6 +732,7 @@ __global__  void compute_dynamic_fault_cuda(
     realw* R,
     realw* T0,
     realw* T,
+    realw* Coh,
     realw* a,
     realw* b,
     realw* L,
@@ -758,6 +759,7 @@ __global__  void compute_dynamic_fault_cuda(
     realw Vf_oldl,Vf_newl,Vf_tmp;
     realw Ztmp;
     realw Tnew;
+    realw Cohl;
 
 
     tx = blockDim.x * blockIdx.x + threadIdx.x;  /*calculate thread id*/
@@ -776,6 +778,7 @@ __global__  void compute_dynamic_fault_cuda(
     fwl = fw[tx];
     V0l = V0[tx];
     V_initl=V_init[tx];
+    Cohl = Coh[tx];
 
     T0xl = T0[tx*3];
     T0yl = T0[tx*3+1];
@@ -808,7 +811,7 @@ __global__  void compute_dynamic_fault_cuda(
 
     thetal = update_state_rsf(Ll ,thetaold , Vf_oldl, dt );
 
-    Vf_newl = (realw)rtsafe(0.0E0, Vf_oldl+5.0E0, 1.0E-5, Tstick, -Tz, Zl, f0l, V0l, al, bl, Ll, thetal, 1);
+    Vf_newl = (realw)rtsafe(0.0E0, Vf_oldl+5.0E0, 1.0E-5, Tstick, -Tz, Zl, f0l, V0l, al, bl, Ll, thetal, Cohl, 1);
 
 
 
@@ -818,7 +821,7 @@ __global__  void compute_dynamic_fault_cuda(
 
     theta[tx] = thetal;
 
-    Vf_newl = (realw)rtsafe(0.0E0, Vf_oldl+5.0E0, 1.0E-5, Tstick, -Tz, Zl, f0l, V0l, al, bl, Ll, thetal, 1);
+    Vf_newl = (realw)rtsafe(0.0E0, Vf_oldl+5.0E0, 1.0E-5, Tstick, -Tz, Zl, f0l, V0l, al, bl, Ll, thetal, Cohl, 1);
 
     Tstick = MAX(Tstick,1.0E0);
 
@@ -899,6 +902,7 @@ void FC_FUNC_(fault_solver_gpu,
                     Flt->R,
                     Flt->T0,
                     Flt->T,
+                    rsf->C,   /**rate and state friction quantities*/
                     rsf->a,
                     rsf->b,
                     rsf->L,
