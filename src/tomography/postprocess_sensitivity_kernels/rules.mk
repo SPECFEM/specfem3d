@@ -105,7 +105,11 @@ xclip_sem_SHARED_OBJECTS = \
 	$(EMPTY_MACRO)
 
 ${E}/xclip_sem: $(xclip_sem_OBJECTS) $(xclip_sem_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
+	@echo ""
+	@echo "building xclip_sem"
+	@echo ""
 	${FCLINK} -o $@ $+ $(MPILIBS)
+	@echo ""
 
 
 ##
@@ -125,7 +129,11 @@ xcombine_sem_SHARED_OBJECTS = \
 	$(EMPTY_MACRO)
 
 ${E}/xcombine_sem: $(xcombine_sem_OBJECTS) $(xcombine_sem_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
+	@echo ""
+	@echo "building xcombine_sem"
+	@echo ""
 	${FCLINK} -o $@ $+ $(MPILIBS)
+	@echo ""
 
 
 ##
@@ -156,7 +164,11 @@ xsmooth_sem_SHARED_OBJECTS = \
 $O/smooth_sem.postprocess.o: $O/specfem3D_par.spec.o $O/postprocess_par.postprocess_module.o
 
 ${E}/xsmooth_sem: $(xsmooth_sem_OBJECTS) $(xsmooth_sem_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
+	@echo ""
+	@echo "building xsmooth_sem"
+	@echo ""
 	${FCLINK} -o $@ $+ $(MPILIBS)
+	@echo ""
 
 
 #######################################

@@ -66,10 +66,18 @@ convert_skewness_to_angle: xconvert_skewness_to_angle
 xconvert_skewness_to_angle: $E/xconvert_skewness_to_angle
 
 $E/xcheck_mesh_quality: $O/check_mesh_quality.check.o $O/shared_par.shared_module.o
+	@echo ""
+	@echo "building xcheck_mesh_quality"
+	@echo ""
 	${FCLINK} -o  $E/xcheck_mesh_quality $O/check_mesh_quality.check.o $O/shared_par.shared_module.o
+	@echo ""
 
 $E/xconvert_skewness_to_angle: $O/convert_skewness_to_angle.check.o $O/shared_par.shared_module.o
+	@echo ""
+	@echo "building xconvert_skewness_to_angle"
+	@echo ""
 	${FCLINK} -o  $E/xconvert_skewness_to_angle $O/convert_skewness_to_angle.check.o $O/shared_par.shared_module.o
+	@echo ""
 
 #######################################
 

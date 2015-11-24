@@ -81,7 +81,11 @@ ${SCOTCH_DIR}/include/scotchf.h: xscotch
 
 # rules for the pure Fortran version
 $E/xdecompose_mesh: ${SCOTCH_DIR}/include/scotchf.h $(decompose_mesh_SHARED_OBJECTS) $(decompose_mesh_OBJECTS) $(COND_MPI_OBJECTS)
+	@echo ""
+	@echo "building xdecompose_mesh"
+	@echo ""
 	${FCLINK} -o  $E/xdecompose_mesh $(decompose_mesh_SHARED_OBJECTS) $(decompose_mesh_OBJECTS) $(SCOTCH_LIBS) $(COND_MPI_OBJECTS)
+	@echo ""
 
 # scotch
 $E/xscotch:

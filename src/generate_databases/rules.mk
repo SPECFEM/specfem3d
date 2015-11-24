@@ -179,7 +179,11 @@ xgenerate_databases: $E/xgenerate_databases
 
 # rules for the pure Fortran version
 $E/xgenerate_databases: $(XGENERATE_DATABASES_OBJECTS)
+	@echo ""
+	@echo "building xgenerate_databases"
+	@echo ""
 	${FCLINK} -o ${E}/xgenerate_databases $(XGENERATE_DATABASES_OBJECTS) $(MPILIBS)
+	@echo ""
 
 
 

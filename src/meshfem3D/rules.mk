@@ -133,7 +133,11 @@ xmeshfem3D: $E/xmeshfem3D
 
 # rules for the pure Fortran version
 $E/xmeshfem3D: $(XMESHFEM_OBJECTS)
+	@echo ""
+	@echo "building xmeshfem3D"
+	@echo ""
 	${FCLINK} -o ${E}/xmeshfem3D $(XMESHFEM_OBJECTS) $(MPILIBS)
+	@echo ""
 
 
 
