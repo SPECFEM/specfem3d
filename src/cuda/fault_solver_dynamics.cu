@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
+#include <assert.h>
 #define MIN(a,b) (a)>(b)?(b):(a)
 #define MAX(a,b) (a)>(b)?(a):(b)
 extern "C"
@@ -129,8 +130,8 @@ void FC_FUNC_(transfer_tohost_fault_data,
 extern "C"
 void FC_FUNC_(transfer_todevice_rsf_data,
               TRANSFER_TODEVICE_RSF_DATA)(long* Fault_pointer,
-                           int* fault_index,
                            int *NGLOB_AB,
+                           int* fault_index,
                            realw* V0,
                            realw* f0,
                            realw* V_init,
@@ -760,6 +761,7 @@ __global__  void compute_dynamic_fault_cuda(
     realw Ztmp;
     realw Tnew;
     realw Cohl;
+    realw netTstick;
 
 
     tx = blockDim.x * blockIdx.x + threadIdx.x;  /*calculate thread id*/
@@ -807,13 +809,15 @@ __global__  void compute_dynamic_fault_cuda(
 
     Tstick = sqrt(Tx * Tx + Ty * Ty);
 
+    netTstick = Tstick - Cohl; /** add cohesion into simulation*/
+
+    netTstick = MAX(netTstick, 0.0E0);  /** prevent Tstick from being negative */
+
     thetaold = thetal;
 
     thetal = update_state_rsf(Ll ,thetaold , Vf_oldl, dt );
 
-    Vf_newl = (realw)rtsafe(0.0E0, Vf_oldl+5.0E0, 1.0E-5, Tstick, -Tz, Zl, f0l, V0l, al, bl, Ll, thetal, Cohl, 1);
-
-
+    Vf_newl = (realw)rtsafe(0.0E0, Vf_oldl+5.0E0, 1.0E-5, netTstick, -Tz, Zl, f0l, V0l, al, bl, Ll, thetal, 0.0, 1);
 
     Vf_tmp = 0.5E0*(Vf_oldl + Vf_newl);
 
@@ -821,12 +825,18 @@ __global__  void compute_dynamic_fault_cuda(
 
     theta[tx] = thetal;
 
-    Vf_newl = (realw)rtsafe(0.0E0, Vf_oldl+5.0E0, 1.0E-5, Tstick, -Tz, Zl, f0l, V0l, al, bl, Ll, thetal, Cohl, 1);
+    
+
+    Vf_newl = (realw)rtsafe(0.0E0, Vf_oldl+5.0E0, 1.0E-5, netTstick, -Tz, Zl, f0l, V0l, al, bl, Ll, thetal, 0.0, 1);
+
+    assert(Vf_newl > -1.0E-6);      /** Double precisio to single precision conversion may cause an error of about 1e-6*/
+
+    Vf_newl = MAX(Vf_newl,0.0E0);
 
     Tstick = MAX(Tstick,1.0E0);
 
-
     Tnew = Tstick - Zl*Vf_newl;
+
 
     Tx = Tnew * Tx/Tstick;
     Ty = Tnew * Ty/Tstick;
