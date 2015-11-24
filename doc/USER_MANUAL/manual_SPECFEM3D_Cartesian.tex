@@ -8,22 +8,62 @@
 %% DK DK \usepackage[latin1]{inputenc}
 \usepackage[letterpaper]{geometry}
 \geometry{verbose,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in}
+
+% table of contents and numbering
+\usepackage{tocbibind}
 \setcounter{secnumdepth}{3}
 \setcounter{tocdepth}{3}
+
 \usepackage{babel}
 \usepackage{float}
 \usepackage{textcomp}
-\usepackage{url}
 \usepackage{amsmath}
 \usepackage{amssymb}
-\usepackage{graphicx}
+
+\IfFileExists{url.sty}{\usepackage{url}}
+                      {\newcommand{\url}{\texttt}}
+
+% biblio
 \usepackage[authoryear]{natbib}
-\usepackage[unicode=true,pdfusetitle,
- bookmarks=true,bookmarksnumbered=true,bookmarksopen=false,
- breaklinks=false,pdfborder={0 0 0},backref=section,colorlinks=false,pdfpagemode=None]
- {hyperref}
+% biblio GJI
+\bibliographystyle{abbrvnat}
+
+% fonts
+\usepackage{times}
+
+% figures
+\usepackage{graphicx}
+
+% we are running pdflatex, so convert .eps files to .pdf
+%\usepackage[dvips]{epsfig}
+
+% colors to show the corrections
+\usepackage[dvipsnames,usenames]{xcolor}
+\definecolor{light-gray}{rgb}{0.7,0.7,0.7}
+\definecolor{dark-gray}{rgb}{0.1,0.1,0.3}
+\definecolor{light-blue}{rgb}{0.7,0.7,0.9}
+\definecolor{dark-blue}{rgb}{0.2,0.2,0.5}
+
+% hyperlinks to sections and references
+\usepackage[pdftex]{hyperref}
+% more options
 \hypersetup{
- pdftex,pdfstartview=FitH,pdfpagelayout=SinglePage}
+  bookmarks=true,
+  bookmarksnumbered=true,
+  pdfpagemode=UseNone,
+  pdfstartview=FitH,
+  pdfpagelayout=SinglePage,
+  pdfborder={0 0 0},
+  colorlinks=true,      % color links
+  citecolor=dark-gray,  % citation links
+  filecolor=dark-gray,  % file links
+  linkcolor=dark-gray,  % internal link (rgb values)
+  urlcolor=dark-blue    % external weblinks
+}
+
+% create thumbnails
+%\usepackage[pdftex]{thumbpdf}
+
 \usepackage{breakurl}
 
 \makeatletter
@@ -53,22 +93,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
 %\renewcommand{\baselinestretch}{1.5}
 
-% figures
-%\usepackage[dvips]{epsfig}
-
-
-
-
-% fonts
-\usepackage{times}
-
 % hyperlinks to sections and references
-
-
 \newcommand{\urlwithparentheses}[1]{(\url{#1})}
-
-% biblio GJI
-\bibliographystyle{abbrvnat}
 
 \newcommand{\nexxi}{\mbox{\texttt{NEX\_XI\/}}}
 \newcommand{\nexeta}{\mbox{\texttt{NEX\_ETA\/}}}
@@ -78,7 +104,6 @@
 \newcommand{\eg}{e.g.,}
 
 % colors for the text
-\usepackage[dvipsnames,usenames]{xcolor}
 \newcommand{\red}[1]{\textbf{\textcolor{Red}{#1}}}
 
 % some of Dimitri's aliases for math symbols
@@ -119,11 +144,9 @@
 \newcommand{\pv}{\ ,}
 \newcommand{\pp}{\ .}
 
-\usepackage{babel}
-
 \makeatother
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Start of document.
 
 \begin{document}
 
@@ -146,7 +169,7 @@
 and ETH Z\"urich (Switzerland)\\
 Version 3.0}
 
-
+% date of last edit
 \date{\today}
 
 \maketitle
@@ -210,8 +233,7 @@ Version 3.0}
 %% REFERENCES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\addcontentsline{toc}{chapter}{References} \bibliography{bibliography}
-
+\bibliography{bibliography}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% APPENDIX
@@ -227,5 +249,7 @@ Version 3.0}
 \include{C_troubleshooting}
 
 \include{D_license}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \end{document}
