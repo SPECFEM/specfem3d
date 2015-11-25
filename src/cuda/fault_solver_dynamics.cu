@@ -825,7 +825,7 @@ __global__  void compute_dynamic_fault_cuda(
 
     theta[tx] = thetal;
 
-    
+
 
     Vf_newl = (realw)rtsafe(0.0E0, Vf_oldl+5.0E0, 1.0E-5, netTstick, -Tz, Zl, f0l, V0l, al, bl, Ll, thetal, 0.0, 1);
 
