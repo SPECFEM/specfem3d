@@ -804,3 +804,13 @@ void FC_FUNC_(fault_solver_gpu,
                                 realw* dt,
                                 int* myrank) {}
 
+
+void FC_FUNC_(transfer_sync_accel_to_device,
+              TRANSFER_ASMBL_ACCEL_TO_DEVICE)(long* Mesh_pointer, 
+                                              realw* accel,
+                                              realw* buffer_recv_vector_ext_mesh,
+                                              const int* num_interfaces_ext_mesh,
+                                              const int* max_nibool_interfaces_ext_mesh,
+                                              const int* nibool_interfaces_ext_mesh,
+                                              const int* ibool_interfaces_ext_mesh,
+                                              const int* FORWARD_OR_ADJOINT) {}

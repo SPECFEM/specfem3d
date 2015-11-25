@@ -658,7 +658,6 @@ subroutine compute_forces_viscoelastic_GPU()
   ! check
   if (PML_CONDITIONS) &
     call exit_MPI(myrank,'PML conditions not yet implemented for routine compute_forces_viscoelastic_GPU()')
-
   ! distinguishes two runs: for points on MPI interfaces, and points within the partitions
   do iphase=1,2
 
@@ -813,7 +812,35 @@ subroutine compute_forces_viscoelastic_GPU()
     ! if (SIMULATION_TYPE_DYN) call bc_dynflt_set3d_all(accel,veloc,displ)
     ! if (SIMULATION_TYPE_KIN) call bc_kinflt_set_all(accel,veloc,displ)
     call fault_solver_gpu(Mesh_pointer,Fault_pointer,deltat,myrank)  ! GPU fault solver
+    call transfer_boundary_from_device_a(Mesh_pointer,nspec_outer_elastic)
+    ! transfer data from mp->d_boundary to mp->h_boundary
+    call sync_copy_from_device(Mesh_pointer,iphase,buffer_send_vector_ext_mesh)
+    ! transfer data from mp->h_boundary to send_buffer
+    call assemble_MPI_vector_send_cuda(NPROC, &
+                  buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
+                  num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                  nibool_interfaces_ext_mesh,&
+                  my_neighbours_ext_mesh, &
+                  request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
+
+      ! transfers mpi buffers onto GPU
+    call transfer_boundary_to_device(NPROC,Mesh_pointer,buffer_recv_vector_ext_mesh, &
+                  num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+                  request_recv_vector_ext_mesh)
+      ! waits for send/receive requests to be completed and assembles values
+    call synchronize_MPI_vector_write_cuda(NPROC,NGLOB_AB,accel, Mesh_pointer,&
+                      buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh,&
+                      max_nibool_interfaces_ext_mesh, &
+                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+                      request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
+                      1)
+
+
+
     if((mod(it,500)==0) .and. (it /= 0))  call synchronize_GPU(it)  ! output results every 500 steps
+
+
+
 
 
     ! transfers acceleration back to GPU
