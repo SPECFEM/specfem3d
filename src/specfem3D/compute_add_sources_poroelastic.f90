@@ -126,11 +126,7 @@
               ! the source is applied to both solid and fluid phase: bulk source.
 
               ! distinguish between single and double precision for reals
-              if (CUSTOM_REAL == SIZE_REAL) then
-                stf_used = sngl(stf)
-              else
-                stf_used = stf
-              endif
+              stf_used = real(stf,kind=CUSTOM_REAL)
 
               do k=1,NGLLZ
                 do j=1,NGLLY
@@ -160,11 +156,7 @@
               stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
 
               !     distinguish between single and double precision for reals
-              if (CUSTOM_REAL == SIZE_REAL) then
-                stf_used = sngl(stf)
-              else
-                stf_used = stf
-              endif
+              stf_used = real(stf,kind=CUSTOM_REAL)
 
               !     add source array
               do k=1,NGLLZ
@@ -365,11 +357,7 @@
                ! note: time step is now at NSTEP-it
 
                ! distinguish between single and double precision for reals
-               if (CUSTOM_REAL == SIZE_REAL) then
-                 stf_used = sngl(stf)
-               else
-                 stf_used = stf
-               endif
+               stf_used = real(stf,kind=CUSTOM_REAL)
 
                do k=1,NGLLZ
                  do j=1,NGLLY
@@ -401,11 +389,7 @@
               stf = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
 
               ! distinguish between single and double precision for reals
-              if (CUSTOM_REAL == SIZE_REAL) then
-                stf_used = sngl(stf)
-              else
-                stf_used = stf
-              endif
+              stf_used = real(stf,kind=CUSTOM_REAL)
 
               !  add source array
               do k=1,NGLLZ

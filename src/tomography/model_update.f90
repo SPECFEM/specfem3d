@@ -866,13 +866,8 @@ subroutine save_new_databases()
             !  print *, 'jacobianl', jacobianl
             !endif
 
-            if (CUSTOM_REAL == SIZE_REAL) then
-              rmass_new(iglob) = rmass_new(iglob) + &
-                      sngl( dble(jacobianl) * weight * dble(rhostore_new(i,j,k,ispec)) )
-            else
-              rmass_new(iglob) = rmass_new(iglob) + &
-                      jacobianl * weight * rhostore_new(i,j,k,ispec)
-            endif
+            rmass_new(iglob) = rmass_new(iglob) + &
+                      real( dble(jacobianl) * weight * dble(rhostore_new(i,j,k,ispec)) ,kind=CUSTOM_REAL)
           enddo
         enddo
       enddo

@@ -432,11 +432,7 @@
   endif
 
   ! distinguish between single and double precision for reals
-  if (CUSTOM_REAL == SIZE_REAL) then
-    deltat = sngl(DT)
-  else
-    deltat = DT
-  endif
+  deltat = real(DT,kind=CUSTOM_REAL)
   deltatover2 = deltat/2._CUSTOM_REAL
   deltatsqover2 = deltat*deltat/2._CUSTOM_REAL
 
@@ -444,11 +440,7 @@
   if (SIMULATION_TYPE == 3) then
     ! backward/reconstructed wavefields: time stepping is in time-reversed sense
     ! (negative time increments)
-    if (CUSTOM_REAL == SIZE_REAL) then
-      b_deltat = - sngl(DT)
-    else
-      b_deltat = - DT
-    endif
+    b_deltat = - real(DT,kind=CUSTOM_REAL)
     b_deltatover2 = b_deltat/2._CUSTOM_REAL
     b_deltatsqover2 = b_deltat*b_deltat/2._CUSTOM_REAL
   endif
@@ -573,11 +565,8 @@
               f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
 
     ! determines alphaval,betaval,gammaval for runge-kutta scheme
-    if (CUSTOM_REAL == SIZE_REAL) then
-      tau_sigma(:) = sngl(tau_sigma_dble(:))
-    else
-      tau_sigma(:) = tau_sigma_dble(:)
-    endif
+    tau_sigma(:) = real(tau_sigma_dble(:),kind=CUSTOM_REAL)
+
     call get_attenuation_memory_values(tau_sigma,deltat,alphaval,betaval,gammaval)
 
     ! shifts shear moduli

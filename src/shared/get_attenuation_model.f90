@@ -235,11 +235,8 @@
   endif
 
   ! determines inverse of tau_sigma
-  if (CUSTOM_REAL == SIZE_REAL) then
-    tau_sigma(:) = sngl(tau_sigma_dble(:))
-  else
-    tau_sigma(:) = tau_sigma_dble(:)
-  endif
+  tau_sigma(:) = real(tau_sigma_dble(:),kind=CUSTOM_REAL)
+
   ! precalculates the negative inverse of tau_sigma
   tauinv(:) = - 1._CUSTOM_REAL / tau_sigma(:)
 

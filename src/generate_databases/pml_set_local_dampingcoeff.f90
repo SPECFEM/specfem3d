@@ -155,23 +155,13 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
   z_min = minval(zstore(:))
   z_max = maxval(zstore(:))
 
-  if (CUSTOM_REAL == SIZE_REAL) then
-    x_min_all = HUGEVAL
-    y_min_all = HUGEVAL
-    z_min_all = HUGEVAL
+  x_min_all = HUGEVAL
+  y_min_all = HUGEVAL
+  z_min_all = HUGEVAL
 
-    x_max_all = - HUGEVAL
-    y_max_all = - HUGEVAL
-    z_max_all = - HUGEVAL
-  else
-    x_min_all = HUGEVAL
-    y_min_all = HUGEVAL
-    z_min_all = HUGEVAL
-
-    x_max_all = - HUGEVAL
-    y_max_all = - HUGEVAL
-    z_max_all = - HUGEVAL
-  endif
+  x_max_all = - HUGEVAL
+  y_max_all = - HUGEVAL
+  z_max_all = - HUGEVAL
 
   call min_all_all_cr(x_min,x_min_all)
   call min_all_all_cr(y_min,y_min_all)
@@ -1393,30 +1383,19 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
   maximum_for_alphay = maxval(alpha_store_y)
   maximum_for_alphaz = maxval(alpha_store_z)
 
-  if (CUSTOM_REAL == SIZE_REAL) then
-    minimum_for_dx_all = sngl(HUGEVAL)
-    minimum_for_dy_all = sngl(HUGEVAL)
-    minimum_for_dz_all = sngl(HUGEVAL)
-    maximum_for_dx_all = - sngl(HUGEVAL)
-    maximum_for_dy_all = - sngl(HUGEVAL)
-    maximum_for_dz_all = - sngl(HUGEVAL)
-    minimum_for_alphax_all = sngl(HUGEVAL)
-    minimum_for_alphay_all = sngl(HUGEVAL)
-    minimum_for_alphaz_all = sngl(HUGEVAL)
-  else
-    minimum_for_dx_all = HUGEVAL
-    minimum_for_dy_all = HUGEVAL
-    minimum_for_dz_all = HUGEVAL
-    maximum_for_dx_all = - HUGEVAL
-    maximum_for_dy_all = - HUGEVAL
-    maximum_for_dz_all = - HUGEVAL
-    minimum_for_alphax_all = HUGEVAL
-    minimum_for_alphay_all = HUGEVAL
-    minimum_for_alphaz_all = HUGEVAL
-    maximum_for_alphax_all = - HUGEVAL
-    maximum_for_alphay_all = - HUGEVAL
-    maximum_for_alphaz_all = - HUGEVAL
-  endif
+  minimum_for_dx_all = HUGEVAL
+  minimum_for_dy_all = HUGEVAL
+  minimum_for_dz_all = HUGEVAL
+  maximum_for_dx_all = - HUGEVAL
+  maximum_for_dy_all = - HUGEVAL
+  maximum_for_dz_all = - HUGEVAL
+  minimum_for_alphax_all = HUGEVAL
+  minimum_for_alphay_all = HUGEVAL
+  minimum_for_alphaz_all = HUGEVAL
+  maximum_for_alphax_all = - HUGEVAL
+  maximum_for_alphay_all = - HUGEVAL
+  maximum_for_alphaz_all = - HUGEVAL
+
   call min_all_all_cr(minimum_for_dx,minimum_for_dx_all)
   call min_all_all_cr(minimum_for_dy,minimum_for_dy_all)
   call min_all_all_cr(minimum_for_dz,minimum_for_dz_all)
@@ -1439,21 +1418,12 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
   if(minimum_for_alphay_all < ZERO) stop "there is error in alphay profile"
   if(minimum_for_alphaz_all < ZERO) stop "there is error in alphaz profile"
 
-  if (CUSTOM_REAL == SIZE_REAL) then
-    second_minimum_for_dx = sngl(HUGEVAL)
-    second_minimum_for_dy = sngl(HUGEVAL)
-    second_minimum_for_dz = sngl(HUGEVAL)
-    second_minimum_for_alphax = sngl(HUGEVAL)
-    second_minimum_for_alphay = sngl(HUGEVAL)
-    second_minimum_for_alphaz = sngl(HUGEVAL)
-  else
-    second_minimum_for_dx = HUGEVAL
-    second_minimum_for_dy = HUGEVAL
-    second_minimum_for_dz = HUGEVAL
-    second_minimum_for_alphax = HUGEVAL
-    second_minimum_for_alphay = HUGEVAL
-    second_minimum_for_alphaz = HUGEVAL
-  endif
+  second_minimum_for_dx = HUGEVAL
+  second_minimum_for_dy = HUGEVAL
+  second_minimum_for_dz = HUGEVAL
+  second_minimum_for_alphax = HUGEVAL
+  second_minimum_for_alphay = HUGEVAL
+  second_minimum_for_alphaz = HUGEVAL
 
   do ispec_CPML = 1,nspec_cpml
     ispec = CPML_to_spec(ispec_CPML)
@@ -1510,21 +1480,13 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
     enddo
   enddo
 
-  if (CUSTOM_REAL == SIZE_REAL) then
-    second_minimum_for_dx_all = sngl(HUGEVAL)
-    second_minimum_for_dy_all = sngl(HUGEVAL)
-    second_minimum_for_dz_all = sngl(HUGEVAL)
-    second_minimum_for_alphax_all = sngl(HUGEVAL)
-    second_minimum_for_alphay_all = sngl(HUGEVAL)
-    second_minimum_for_alphaz_all = sngl(HUGEVAL)
-  else
-    second_minimum_for_dx_all = HUGEVAL
-    second_minimum_for_dy_all = HUGEVAL
-    second_minimum_for_dz_all = HUGEVAL
-    second_minimum_for_alphax_all = HUGEVAL
-    second_minimum_for_alphay_all = HUGEVAL
-    second_minimum_for_alphaz_all = HUGEVAL
-  endif
+  second_minimum_for_dx_all = HUGEVAL
+  second_minimum_for_dy_all = HUGEVAL
+  second_minimum_for_dz_all = HUGEVAL
+  second_minimum_for_alphax_all = HUGEVAL
+  second_minimum_for_alphay_all = HUGEVAL
+  second_minimum_for_alphaz_all = HUGEVAL
+
   call min_all_all_cr(second_minimum_for_dx,second_minimum_for_dx_all)
   call min_all_all_cr(second_minimum_for_dy,second_minimum_for_dy_all)
   call min_all_all_cr(second_minimum_for_dz,second_minimum_for_dz_all)

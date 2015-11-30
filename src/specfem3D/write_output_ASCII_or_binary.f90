@@ -92,22 +92,14 @@
       ! forward simulation
       if (SIMULATION_TYPE == 1) then
         ! distinguish between single and double precision for reals
-        if (CUSTOM_REAL == SIZE_REAL) then
-          time_t = sngl( dble(isample-1)*DT - t0 )
-        else
-          time_t = dble(isample-1)*DT - t0
-        endif
+        time_t = real( dble(isample-1)*DT - t0 ,kind=CUSTOM_REAL)
       endif
 
       ! adjoint simulation: backward/reconstructed wavefields
       if (SIMULATION_TYPE == 3) then
         ! distinguish between single and double precision for reals
         ! note: compare time_t with time used for source term
-        if (CUSTOM_REAL == SIZE_REAL) then
-          time_t = sngl( dble(NSTEP-isample)*DT - t0 )
-        else
-          time_t = dble(NSTEP-isample)*DT - t0
-        endif
+        time_t = real( dble(NSTEP-isample)*DT - t0 ,kind=CUSTOM_REAL)
       endif
 
       if (USE_BINARY_FOR_SEISMOGRAMS) then

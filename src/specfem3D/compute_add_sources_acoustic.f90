@@ -218,11 +218,7 @@
               if(USE_SOURCE_ENCODING) stf = stf * pm1_source_encoding(isource)
 
               ! distinguishes between single and double precision for reals
-              if (CUSTOM_REAL == SIZE_REAL) then
-                stf_used = sngl(stf)
-              else
-                stf_used = stf
-              endif
+              stf_used = real(stf,kind=CUSTOM_REAL)
 
               ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
               ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
@@ -560,11 +556,7 @@
               if(USE_SOURCE_ENCODING) stf = stf * pm1_source_encoding(isource)
 
               ! distinguishes between single and double precision for reals
-              if (CUSTOM_REAL == SIZE_REAL) then
-                stf_used = sngl(stf)
-              else
-                stf_used = stf
-              endif
+              stf_used = real(stf,kind=CUSTOM_REAL)
 
               ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
               ! the sign is negative because pressure p = - Chi_dot_dot therefore we need

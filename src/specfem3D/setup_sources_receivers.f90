@@ -675,11 +675,7 @@
           enddo
 
           ! distinguish between single and double precision for reals
-          if (CUSTOM_REAL == SIZE_REAL) then
-            sourcearray(:,:,:,:) = sngl(sourcearrayd(:,:,:,:))
-          else
-            sourcearray(:,:,:,:) = sourcearrayd(:,:,:,:)
-          endif
+          sourcearray(:,:,:,:) = real(sourcearrayd(:,:,:,:),kind=CUSTOM_REAL)
 
         else ! use of CMTSOLUTION files
 

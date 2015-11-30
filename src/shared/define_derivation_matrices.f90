@@ -59,96 +59,47 @@
   call zwgljd(yigll,wygll,NGLLY,GAUSSALPHA,GAUSSBETA)
   call zwgljd(zigll,wzgll,NGLLZ,GAUSSALPHA,GAUSSBETA)
 
-! distinguish between single and double precision for reals
-  if (CUSTOM_REAL == SIZE_REAL) then
-
 ! calculate derivatives of the Lagrange polynomials
 ! and precalculate some products in double precision
 ! hprime(i,j) = h'_j(xigll_i) by definition of the derivation matrix
   do i1=1,NGLLX
     do i2=1,NGLLX
-      hprime_xx(i2,i1) = sngl(lagrange_deriv_GLL(i1-1,i2-1,xigll,NGLLX))
-      hprimewgll_xx(i2,i1) = sngl(lagrange_deriv_GLL(i1-1,i2-1,xigll,NGLLX)*wxgll(i2))
+      hprime_xx(i2,i1) = real(lagrange_deriv_GLL(i1-1,i2-1,xigll,NGLLX),kind=CUSTOM_REAL)
+      hprimewgll_xx(i2,i1) = real(lagrange_deriv_GLL(i1-1,i2-1,xigll,NGLLX)*wxgll(i2),kind=CUSTOM_REAL)
     enddo
   enddo
 
   do j1=1,NGLLY
     do j2=1,NGLLY
-      hprime_yy(j2,j1) = sngl(lagrange_deriv_GLL(j1-1,j2-1,yigll,NGLLY))
-      hprimewgll_yy(j2,j1) = sngl(lagrange_deriv_GLL(j1-1,j2-1,yigll,NGLLY)*wygll(j2))
+      hprime_yy(j2,j1) = real(lagrange_deriv_GLL(j1-1,j2-1,yigll,NGLLY),kind=CUSTOM_REAL)
+      hprimewgll_yy(j2,j1) = real(lagrange_deriv_GLL(j1-1,j2-1,yigll,NGLLY)*wygll(j2),kind=CUSTOM_REAL)
     enddo
   enddo
 
   do k1=1,NGLLZ
     do k2=1,NGLLZ
-      hprime_zz(k2,k1) = sngl(lagrange_deriv_GLL(k1-1,k2-1,zigll,NGLLZ))
-      hprimewgll_zz(k2,k1) = sngl(lagrange_deriv_GLL(k1-1,k2-1,zigll,NGLLZ)*wzgll(k2))
+      hprime_zz(k2,k1) = real(lagrange_deriv_GLL(k1-1,k2-1,zigll,NGLLZ),kind=CUSTOM_REAL)
+      hprimewgll_zz(k2,k1) = real(lagrange_deriv_GLL(k1-1,k2-1,zigll,NGLLZ)*wzgll(k2),kind=CUSTOM_REAL)
     enddo
   enddo
 
   do i=1,NGLLX
     do j=1,NGLLY
-      wgllwgll_xy(i,j) = sngl(wxgll(i)*wygll(j))
+      wgllwgll_xy(i,j) = real(wxgll(i)*wygll(j),kind=CUSTOM_REAL)
     enddo
   enddo
 
   do i=1,NGLLX
     do k=1,NGLLZ
-      wgllwgll_xz(i,k) = sngl(wxgll(i)*wzgll(k))
+      wgllwgll_xz(i,k) = real(wxgll(i)*wzgll(k),kind=CUSTOM_REAL)
     enddo
   enddo
 
   do j=1,NGLLY
     do k=1,NGLLZ
-      wgllwgll_yz(j,k) = sngl(wygll(j)*wzgll(k))
+      wgllwgll_yz(j,k) = real(wygll(j)*wzgll(k),kind=CUSTOM_REAL)
     enddo
   enddo
-
-  else  ! double precision version
-
-! calculate derivatives of the Lagrange polynomials
-! and precalculate some products in double precision
-! hprime(i,j) = h'_j(xigll_i) by definition of the derivation matrix
-  do i1=1,NGLLX
-    do i2=1,NGLLX
-      hprime_xx(i2,i1) = lagrange_deriv_GLL(i1-1,i2-1,xigll,NGLLX)
-      hprimewgll_xx(i2,i1) = lagrange_deriv_GLL(i1-1,i2-1,xigll,NGLLX)*wxgll(i2)
-    enddo
-  enddo
-
-  do j1=1,NGLLY
-    do j2=1,NGLLY
-      hprime_yy(j2,j1) = lagrange_deriv_GLL(j1-1,j2-1,yigll,NGLLY)
-      hprimewgll_yy(j2,j1) = lagrange_deriv_GLL(j1-1,j2-1,yigll,NGLLY)*wygll(j2)
-    enddo
-  enddo
-
-  do k1=1,NGLLZ
-    do k2=1,NGLLZ
-      hprime_zz(k2,k1) = lagrange_deriv_GLL(k1-1,k2-1,zigll,NGLLZ)
-      hprimewgll_zz(k2,k1) = lagrange_deriv_GLL(k1-1,k2-1,zigll,NGLLZ)*wzgll(k2)
-    enddo
-  enddo
-
-  do i=1,NGLLX
-    do j=1,NGLLY
-      wgllwgll_xy(i,j) = wxgll(i)*wygll(j)
-    enddo
-  enddo
-
-  do i=1,NGLLX
-    do k=1,NGLLZ
-      wgllwgll_xz(i,k) = wxgll(i)*wzgll(k)
-    enddo
-  enddo
-
-  do j=1,NGLLY
-    do k=1,NGLLZ
-      wgllwgll_yz(j,k) = wygll(j)*wzgll(k)
-    enddo
-  enddo
-
-  endif
 
   end subroutine define_derivation_matrices
 

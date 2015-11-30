@@ -149,11 +149,7 @@
 
               ! add the tilted force source array
               ! distinguish between single and double precision for reals
-              if (CUSTOM_REAL == SIZE_REAL) then
-                stf_used = sngl(stf)
-              else
-                stf_used = stf
-              endif
+              stf_used = real(stf,kind=CUSTOM_REAL)
 
               do k=1,NGLLZ
                 do j=1,NGLLY
@@ -173,11 +169,7 @@
               endif
 
               !     distinguish between single and double precision for reals
-              if (CUSTOM_REAL == SIZE_REAL) then
-                stf_used = sngl(stf)
-              else
-                stf_used = stf
-              endif
+              stf_used = real(stf,kind=CUSTOM_REAL)
 
               !     add source array
               do k=1,NGLLZ
@@ -513,11 +505,7 @@
 
               ! add the tilted force source array
               ! distinguish between single and double precision for reals
-              if (CUSTOM_REAL == SIZE_REAL) then
-                stf_used = sngl(stf)
-              else
-                stf_used = stf
-              endif
+              stf_used = real(stf,kind=CUSTOM_REAL)
 
               do k=1,NGLLZ
                 do j=1,NGLLY
@@ -541,11 +529,7 @@
               endif
 
               ! distinguish between single and double precision for reals
-              if (CUSTOM_REAL == SIZE_REAL) then
-                stf_used = sngl(stf)
-              else
-                stf_used = stf
-              endif
+              stf_used = real(stf,kind=CUSTOM_REAL)
 
               !  add source array
               do k=1,NGLLZ

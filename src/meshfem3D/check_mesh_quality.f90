@@ -144,11 +144,7 @@
      if (equiangle_skewness > equiangle_skewness_max) ispec_max_skewness = ispec
 
      if (CREATE_VTK_FILES) then
-        if (CUSTOM_REAL == SIZE_REAL) then
-          tmp1(ispec) = sngl(equiangle_skewness)
-        else
-          tmp1(ispec) = equiangle_skewness
-        endif
+       tmp1(ispec) = real(equiangle_skewness,kind=CUSTOM_REAL)
      endif
 
      ! compute minimum and maximum of quality numbers
