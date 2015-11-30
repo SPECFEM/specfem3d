@@ -188,3 +188,6 @@ $O/%.postprocess_module.o: $S/%.f90 ${SETUP}/constants_tomography.h $O/shared_pa
 $O/%.postprocess.o: $S/%.f90 ${SETUP}/constants_tomography.h $O/postprocess_par.postprocess_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
+$O/%.postprocess.o: $S/%.F90 ${SETUP}/constants_tomography.h $O/postprocess_par.postprocess_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
