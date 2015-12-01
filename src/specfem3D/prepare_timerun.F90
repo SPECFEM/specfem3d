@@ -42,6 +42,7 @@
 
   ! local parameters
   double precision :: tCPU
+  double precision, external :: wtime
 
   ! get MPI starting time
   time_start = wtime()

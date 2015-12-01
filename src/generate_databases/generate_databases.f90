@@ -194,6 +194,10 @@
 
   implicit none
 
+  ! local parameters
+  ! timing
+  double precision, external :: wtime
+
 ! sizeprocs returns number of processes started (should be equal to NPROC).
 ! myrank is the rank of each process, between 0 and NPROC-1.
 ! as usual in MPI, process 0 is in charge of coordinating everything

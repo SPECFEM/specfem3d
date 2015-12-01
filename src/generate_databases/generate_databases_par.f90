@@ -66,7 +66,6 @@
   integer, dimension(:,:), allocatable :: itopo_bathy
 
 ! timer MPI
-  double precision, external :: wtime
   double precision :: time_start,tCPU
 
 ! memory size that will be needed by the solver

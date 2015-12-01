@@ -162,7 +162,6 @@ module specfem_par
   integer :: myrank, sizeprocs
 
 ! timer MPI
-  double precision, external :: wtime
   double precision :: time_start
 
 ! parameters for a force source located exactly at a grid point

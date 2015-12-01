@@ -43,7 +43,8 @@
   integer, dimension(:), allocatable :: integer_mask_ibool_exact_undo
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: buffer_for_disk
   character(len=MAX_STRING_LEN) outputname
-
+  ! timing
+  double precision, external :: wtime
 
   !----  create a Gnuplot script to display the energy curve in log scale
   if (OUTPUT_ENERGY .and. myrank == 0) then

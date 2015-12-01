@@ -27,8 +27,7 @@
 
   module image_PNM_par
 
-  use constants,only: CUSTOM_REAL,IMAIN
-  use specfem_par,only: myrank,NPROC,it
+  use constants,only: CUSTOM_REAL
 
   ! ----------------------------------------------
   ! USER PARAMETER
@@ -99,11 +98,14 @@
   subroutine write_PNM_initialize()
 
   use image_PNM_par
+
   use specfem_par,only: NGLOB_AB,NSPEC_AB,NPROC,ibool,xstore,ystore,zstore,&
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
-                        ibool_interfaces_ext_mesh !,prname
-  use constants,only: HUGEVAL,NGLLX,NGLLY,NGLLZ
+                        ibool_interfaces_ext_mesh,myrank
+
+  use constants,only: HUGEVAL,NGLLX,NGLLY,NGLLZ,IMAIN
+
   implicit none
   ! local parameters
   ! image sizes
@@ -457,10 +459,12 @@
 !=============================================================
 
 
-  subroutine write_PNM_vp_background
+  subroutine write_PNM_vp_background()
 
   use image_PNM_par
-  use specfem_par,only:myrank,NPROC
+
+  use specfem_par,only: myrank,NPROC
+
   implicit none
   ! local parameters
   real(kind=CUSTOM_REAL) :: vp
@@ -509,7 +513,7 @@
 
 !================================================================
 
-  subroutine write_PNM_create_image
+  subroutine write_PNM_create_image()
 
 ! creates color PNM image
 
@@ -517,8 +521,10 @@
 !! DK DK Jan 2013: we should switch to using the JPEG library directly, as already implemented in SPECFEM2D
 
   use image_PNM_par
+
   use constants,only: NDIM
-  use specfem_par,only: NPROC
+  use specfem_par,only: NPROC,it,myrank
+
   implicit none
 
   ! local parameters
@@ -597,12 +603,14 @@
 ! display a given field as a red and blue color image
 ! to display the snapshots : display image*.gif
 ! when compiling with Intel ifort, use " -assume byterecl " option to create binary PNM images
+
   use constants,only: HUGEVAL,TINYVAL,CUSTOM_REAL,OUTPUT_FILES,MAX_STRING_LEN
+
   use image_PNM_par,only: BINARY_FILE,VP_BACKGROUND,&
                         POWER_DISPLAY_COLOR
   implicit none
 
-  integer :: NX,NY,it
+  integer,intent(in) :: NX,NY,it
   real(kind=CUSTOM_REAL) :: cutsnaps
 
   integer, dimension(NX,NY) :: iglob_image_color_2D
@@ -798,9 +806,11 @@
   subroutine get_iglob_vp(iglob,ispec,vp)
 
   use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
+
   use specfem_par,only: mustore,kappastore,rhostore,ibool,myrank
   use specfem_par_acoustic,only: ACOUSTIC_SIMULATION
   use specfem_par_elastic,only: ELASTIC_SIMULATION,rho_vp
+
   implicit none
 
   integer,intent(in) :: iglob,ispec
