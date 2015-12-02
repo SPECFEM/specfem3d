@@ -11,5 +11,5 @@ You have to configure the package with the additional CUDA option:
 
 Once the compilation is successful, the examples run on GPUs when setting the flag GPU_MODE to .true. in DATA/Par_file.
 
-Daniel.
+Daniel. 
 
