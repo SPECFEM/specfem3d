@@ -5,4 +5,4 @@ $FC filtre_traces.f90 filters.f90 -o filtre_traces.x
 $FC create_interface.f90 -o create_interface.x
 $FC stalta.f90 -o stalta.x
 $FC pick_list_stalta.f90 -o pick_list_stalta.x
-$FC create_model.f90 -o create_model.x
+#$FC create_model.f90 -o create_model.x
