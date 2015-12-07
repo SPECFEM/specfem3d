@@ -1,7 +1,7 @@
 program create_movie_slice
 
   implicit none
-  include '../../../setup/constants.h'
+  include '../../../../setup/constants.h'
 
   character(len=256) indir,outdir,name_file,local_data_file
   character(len=256) local_file,filename,prname,prname_lp
