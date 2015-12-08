@@ -13,7 +13,7 @@ NPROC=4
 
 # setup default example
 rm -rf DATA
-ln -s examples/homogeneous_halfspace/DATA DATA
+ln -s EXAMPLES/homogeneous_halfspace/DATA DATA
 
 rm -rf OUTPUT_FILES
 
