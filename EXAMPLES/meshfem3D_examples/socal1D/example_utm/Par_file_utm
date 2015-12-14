@@ -193,7 +193,7 @@ COUPLE_WITH_EXTERNAL_CODE       = .false.
 EXTERNAL_CODE_TYPE              = 1   # 1 = DSM, 2 = AxiSEM, 3 = FK
 TRACTION_PATH                   = ./DATA/DSM_tractions_for_specfem3D/
 MESH_A_CHUNK_OF_THE_EARTH       = .false.
-RECIPROCITY_AND_KH_INTEGRAL     = .false.
+CUT_SOLUTION_FOR_VISU     = .false.
 
 # Dimitri Komatitsch, July 2014, CNRS Marseille, France:
 # added the ability to run several calculations (several earthquakes)
