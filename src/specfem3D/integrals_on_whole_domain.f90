@@ -57,7 +57,7 @@
   ! NOTE : 'f_integrandloc' have to be defined at all 'iglob'
   ! (all the points of the surface, or all the point of the volume)
 
-  if ( RECIPROCITY_AND_KH_INTEGRAL ) then
+  if ( CUT_SOLUTION_FOR_VISU ) then
 
     allocate(f_integrand_KH(3,NGLLSQUARE*num_abs_boundary_faces), stat=ier)
 
@@ -178,7 +178,7 @@
 
   endif
 
-  if ( RECIPROCITY_AND_KH_INTEGRAL ) deallocate(f_integrand_KH)
+  if ( CUT_SOLUTION_FOR_VISU ) deallocate(f_integrand_KH)
 
   end subroutine surface_or_volume_integral_on_whole_domain
 
@@ -257,7 +257,7 @@
 
   use constants
 
-  use specfem_par, only: it, Displ_axisem_time, RECIPROCITY_AND_KH_INTEGRAL
+  use specfem_par, only: it, Displ_axisem_time, CUT_SOLUTION_FOR_VISU
 
   implicit none
 
@@ -269,7 +269,7 @@
 
   read(IIN_displ_axisem) Displ_axisem
 
-  if (RECIPROCITY_AND_KH_INTEGRAL) Displ_axisem_time(:,:,it) = Displ_axisem(:,:)
+  if (CUT_SOLUTION_FOR_VISU) Displ_axisem_time(:,:,it) = Displ_axisem(:,:)
 
   end subroutine read_axisem_disp_file
 
@@ -281,7 +281,7 @@
 
   use constants
 
-  use specfem_par, only: it, Displ_specfem_time, RECIPROCITY_AND_KH_INTEGRAL, num_abs_boundary_faces
+  use specfem_par, only: it, Displ_specfem_time, CUT_SOLUTION_FOR_VISU, num_abs_boundary_faces
 
   implicit none
 
@@ -300,7 +300,7 @@
     enddo
   enddo
 
-  if (RECIPROCITY_AND_KH_INTEGRAL)  Displ_specfem_time(:,:,it) = Displ_specfem(:,:)
+  if (CUT_SOLUTION_FOR_VISU)  Displ_specfem_time(:,:,it) = Displ_specfem(:,:)
 
   end subroutine read_specfem_disp_file
 
@@ -312,7 +312,7 @@
 
   use constants
 
-  use specfem_par, only: it, Tract_specfem_time, RECIPROCITY_AND_KH_INTEGRAL, num_abs_boundary_faces
+  use specfem_par, only: it, Tract_specfem_time, CUT_SOLUTION_FOR_VISU, num_abs_boundary_faces
 
   implicit none
 
@@ -331,7 +331,7 @@
     enddo
   enddo
 
-  if (RECIPROCITY_AND_KH_INTEGRAL)  Tract_specfem_time(:,:,it) = Tract_specfem(:,:)
+  if (CUT_SOLUTION_FOR_VISU)  Tract_specfem_time(:,:,it) = Tract_specfem(:,:)
 
   end subroutine read_specfem_tract_file
 

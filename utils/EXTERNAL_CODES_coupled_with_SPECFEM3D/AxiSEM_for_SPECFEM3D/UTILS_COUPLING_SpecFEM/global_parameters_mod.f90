@@ -2,8 +2,10 @@
 
 
     character(len=256) working_axisem_dir,input_field_name
-    character(len=256) input_displ_name(3),input_veloc_name(3),input_stress_name(6)
-    character(len=256) output_displ_name(3),output_veloc_name(3),output_stress_name(6)
+    character(len=256) input_veloc_name(3), output_veloc_name(3), input_stress_name(6), output_stress_name(6)
+
+    character(len=256) input_displ_name(3), output_displ_name(3), input_deriv_name(9), output_deriv_name(9)
+
     character(len=256) output_field_name,input_point_file,input_point_file_cart
     integer, parameter :: CUSTOM_REAL=8,SINGLE_REAL=4
     real(kind=CUSTOM_REAL) lat_src,lon_src,lat_mesh,lon_mesh,azi_rot,dtt
@@ -20,8 +22,10 @@
     real(kind=SINGLE_REAL), allocatable :: data_read(:,:,:),data_rec(:,:),stress_rec(:,:),stress_to_write(:,:)
     real(kind=SINGLE_REAL), allocatable :: strain_rec(:,:)
 
+    real(kind=SINGLE_REAL), allocatable :: deriv_rec(:,:) !! CD CD
+
     !! work arrays
-    real(kind=SINGLE_REAL), allocatable :: data_reduce(:,:),stress_reduce(:,:)
+    real(kind=SINGLE_REAL), allocatable :: data_reduce(:,:),stress_reduce(:,:),deriv_reduce(:,:)
 
     !! input box point
     integer nbrec
@@ -57,5 +61,8 @@
 
     !! mpi
     integer irecmin, irecmax
+
+    !! if the expand_2D_3D and reformat are used for KH integral and reciprocity  
+    logical :: recip_KH_integral
 
   end module global_parameters

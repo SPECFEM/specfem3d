@@ -7,20 +7,27 @@ program re_format_outputs_files
   INTEGER myrank,nbproc,ierr
   integer, dimension(MPI_STATUS_SIZE) :: statut
   integer, parameter :: etq=100
-  character(len=500) output_displ_name(3),output_veloc_name(3),output_stress_name(6),output_name
+  character(len=500) output_veloc_name(3),output_stress_name(6),output_name
+
+  character(len=500) output_displ_name(3),output_deriv_name(9)
+
   character(len=500) input_field_name,output_field_name,input_point_file
   character(len=500), allocatable :: working_axisem_dir(:)
   character(len=500) fichier,input_point_file_cart,meshdirectory
   character(len=500) incident_field,incident_field_tmp,tmp_file,prname,LOCAL_PATH,TRACT_PATH
+
+  character(len=256)  :: simtwordtmp, simtvaluetmp, simutypevalue, line
+  integer ioerr
+
   integer iti,a,nb_dump_samples,nbrec,irec,i,ntime,itime,n0,n00
   real, allocatable :: data_time(:,:),data_rec(:,:,:),data_rec0(:,:,:),data_tmp(:,:),data_tmp_to_send(:,:)
-  real, allocatable :: ur(:,:),vr(:,:),tr(:,:)
+  real, allocatable :: ur(:,:),vr(:,:),tr(:,:), dur1(:,:),dur2(:,:),dur3(:,:)
   real nvx,nvy,nvz
   double precision, allocatable :: field_interp(:),field_to_write(:,:,:)
   double precision, allocatable :: field_to_write_all(:,:),buffer_to_write(:),buffer_to_send(:),buffer_to_recv(:)
-  double precision, allocatable :: buffer_to_store_d(:,:), buffer_to_store_v(:,:)
+  double precision, allocatable :: buffer_to_store_dd(:,:), buffer_to_store_v(:,:)
   double complex, allocatable :: zpad(:),padi(:)
-  double precision, allocatable :: sinc_tab_displ(:),sinc_tab_veloc(:),sinc_tab_stress(:)
+  double precision, allocatable :: sinc_tab_displ_and_deriv(:),sinc_tab_veloc(:),sinc_tab_stress(:)
   real, allocatable :: xp(:),yp(:),zp(:)
   integer, allocatable :: igll_glob(:),jgll_glob(:),kgll_glob(:), inum_glob(:),iboun_gll(:)
   integer, allocatable :: nb_received(:),shift(:),nb_received_sv(:),shift_sv(:)
@@ -34,7 +41,9 @@ program re_format_outputs_files
   integer itmin, itmax
   integer irank, nrec_to_store,irec0, nb_point
   double precision lat_src,lon_src,lat_mesh,lon_mesh,azi_rot
-  integer, allocatable ::  ivx(:),ivy(:),ivz(:),isxx(:),isyy(:),iszz(:),isxy(:),isxz(:),isyz(:)
+  integer, allocatable :: ivx(:),ivy(:),ivz(:), isxx(:),isyy(:),iszz(:),isxy(:),isxz(:),isyz(:), iux(:),iuy(:),iuz(:)
+  integer, allocatable :: idu1d1(:),idu1d2(:),idu1d3(:),idu2d1(:),idu2d2(:),idu2d3(:),idu3d1(:),idu3d2(:),idu3d3(:)
+
   integer*8 iirec
   integer*8 icomp, nbproc0,ntime_interp
   integer ntime_to_store,it,iti0
@@ -57,6 +66,9 @@ program re_format_outputs_files
        IND_FACE2REC(:,:,:),NUM_BOUNDARY_BY_PROC(:),&
        irec_glob(:,:)
   real, allocatable ::  abs_boundary_normal(:,:,:)
+
+  logical :: recip_KH_integral
+
 
   call MPI_INIT(ierr)
   call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ierr)
@@ -86,6 +98,20 @@ program re_format_outputs_files
 
      !-----------------------------------  GENERAL INPUT ----------------------------------
 
+     open(unit=500, file='inparam_basic', status='old', action='read', iostat=ioerr)
+
+     do
+       read(500, fmt='(a256)', iostat=ioerr) line
+       if (ioerr < 0) exit
+       if (len(trim(line)) < 1 .or. line(1:1) == '#') cycle
+
+       read(line,*) simtwordtmp, simtvaluetmp
+       if (simtwordtmp == 'SIMULATION_TYPE') simutypevalue = simtvaluetmp
+     enddo
+
+     close(500)
+     write(*,*) '--- Lecture simutypevalue OK ---', simutypevalue
+
      open(10,file='../expand_2D_3D.par')
      read(10,'(a)') input_point_file      !! meshfem3D bounday points (geographic)
      read(10,'(a)') input_point_file_cart !! meshfem3D boundary points (cartessian)
@@ -93,6 +119,7 @@ program re_format_outputs_files
      read(10,*) lat_src,lon_src           !! axisem source position
      read(10,*) lat_mesh,lon_mesh,azi_rot  !! mesh center position
      !! VM VM add azimuth rotation
+     read(10,*) recip_KH_integral
      read(10,*) nsim                      !! AxiSEM simus
      read(10,*) nSpecfem_proc             !! number of specfem procs
      read(10,'(a)') meshdirectory         !! mesfem3D results
@@ -124,6 +151,7 @@ program re_format_outputs_files
      read(10,*) tmin,tmax
      close(10)
      dtt=1./frq_min
+
      !---------------------- lecture des tables de correspondances Specfem glob and loc ---------
 
      open(90,file=trim(meshdirectory)//'/flags_boundary.txt')  ! table de correspondance ispec2D <-> ispec
@@ -283,107 +311,210 @@ program re_format_outputs_files
 
      ! -----  AxiSEM stuff ---------------------------------------------------------------------
 
+     if (.not. recip_KH_integral) then 
 
-     allocate(working_axisem_dir(nsim))
+       allocate(working_axisem_dir(nsim))
 
-     if (nsim == 1) then
-        working_axisem_dir(1)="./"
-     else
-        working_axisem_dir(1) = "MZZ/"
-        working_axisem_dir(2) = "MXX_P_MYY/"
-        working_axisem_dir(3) = "MXZ_MYZ/"
-        working_axisem_dir(4) = "MXY_MXX_M_MYY/"
+       if (nsim == 1) then
+         if (simutypevalue == 'single') working_axisem_dir(1) = "./"
+         if (simutypevalue == 'force')  working_axisem_dir(1) = "PX/"
+       elseif (nsim == 2) then
+         working_axisem_dir(1) = "PZ/"
+         working_axisem_dir(2) = "PX/"
+       else
+         working_axisem_dir(1) = "MZZ/"
+         working_axisem_dir(2) = "MXX_P_MYY/"
+         working_axisem_dir(3) = "MXZ_MYZ/"
+         working_axisem_dir(4) = "MXY_MXX_M_MYY/"
+       endif
+
+       !open(10,file=trim( working_axisem_dir(1))//'Data/strain_info.dat0000')
+       !read(10,*) nb_dump_samples
+       !read(10,*) dt,i
+       !close(10)
+       open(10,file='info_for_specefm.txt')
+       read(10,*) dt
+       close(10)
+
+       output_veloc_name(1)='velocityoutp_u1'
+       output_veloc_name(2)='velocityoutp_u2'
+       output_veloc_name(3)='velocityoutp_u3'
+
+       output_stress_name(1)='stress_Sg11_out'
+       output_stress_name(2)='stress_Sg22_out'
+       output_stress_name(3)='stress_Sg33_out'
+       output_stress_name(4)='stress_Sg12_out'
+       output_stress_name(5)='stress_Sg13_out'
+       output_stress_name(6)='stress_Sg23_out'
+
+       iunit=6666
+       allocate(ivx(nsim),ivy(nsim),ivz(nsim))
+       allocate(isxx(nsim),isyy(nsim),iszz(nsim))
+       allocate(isxy(nsim),isxz(nsim),isyz(nsim))
+
+!!       write(*,*) working_axisem_dir(1), nsim, simutypevalue
+
+       do isim=1,nsim
+
+         ivx(isim)=next_iunit(iunit)
+         ivy(isim)=next_iunit(iunit)
+         ivz(isim)=next_iunit(iunit)
+         isxx(isim)=next_iunit(iunit)
+         isyy(isim)=next_iunit(iunit)
+         iszz(isim)=next_iunit(iunit)
+         isxy(isim)=next_iunit(iunit)
+         isxz(isim)=next_iunit(iunit)
+         isyz(isim)=next_iunit(iunit)
+
+         write(fichier,'(a6,a15)') '/Data/',output_veloc_name(1)
+         open(ivx(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
+         write(fichier,'(a6,a15)') '/Data/',output_veloc_name(2)
+         open(ivy(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
+         write(fichier,'(a6,a15)') '/Data/',output_veloc_name(3)
+
+         open(ivz(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
+         write(fichier,'(a6,a15)') '/Data/',output_stress_name(1)
+         open(isxx(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
+         write(fichier,'(a6,a15)') '/Data/',output_stress_name(2)
+         open(isyy(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
+         write(fichier,'(a6,a15)') '/Data/',output_stress_name(3)
+         open(iszz(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
+         write(fichier,'(a6,a15)') '/Data/',output_stress_name(4)
+         open(isxy(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
+         write(fichier,'(a6,a15)') '/Data/',output_stress_name(5)
+         open(isxz(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
+         write(fichier,'(a6,a15)') '/Data/',output_stress_name(6)
+         open(isyz(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
+ 
+         write(*,*) 'openning ', trim(working_axisem_dir(isim))//trim(fichier)
+
+       enddo
+
+       do isim=1,nsim
+         read(ivx(isim))  nbrec,ntime
+         read(ivy(isim))  nbrec,ntime
+         read(ivz(isim))  nbrec,ntime
+         read(isxx(isim)) nbrec,ntime
+         read(isyy(isim)) nbrec,ntime
+         read(iszz(isim)) nbrec,ntime
+         read(isxy(isim)) nbrec,ntime
+         read(isxz(isim)) nbrec,ntime
+         read(isyz(isim)) nbrec,ntime
+       enddo
+
+       write(*,*) ' time step ', dtt
+       write(*,*) 'READING OK',ntime,nbrec
+
+     else !! CD CD for KH
+
+       nsim = 1
+       write(*,*) 'With reciprocity and KH integral, nsim have always to be 1'
+       allocate(working_axisem_dir(nsim))
+
+       if (simutypevalue == 'single') working_axisem_dir(1) = "./"
+       if (simutypevalue == 'force')  working_axisem_dir(1) = "PX/"
+
+       open(10,file='info_for_specefm.txt')
+       read(10,*) dt
+       close(10)
+
+       output_displ_name(1)='displ_out_u1'
+       output_displ_name(2)='displ_out_u2'
+       output_displ_name(3)='displ_out_u3'
+
+       output_deriv_name(1)='deriv_out_du1d1' !! CD CD add this
+       output_deriv_name(2)='deriv_out_du1d2'
+       output_deriv_name(3)='deriv_out_du1d3'
+       output_deriv_name(4)='deriv_out_du2d1'
+       output_deriv_name(5)='deriv_out_du2d2'
+       output_deriv_name(6)='deriv_out_du2d3'
+       output_deriv_name(7)='deriv_out_du3d1'
+       output_deriv_name(8)='deriv_out_du3d2'
+       output_deriv_name(9)='deriv_out_du3d3'
+
+       iunit=6666
+
+       allocate(iux(nsim),iuy(nsim),iuz(nsim))
+
+       allocate(idu1d1(nsim),idu1d2(nsim),idu1d3(nsim))
+       allocate(idu2d1(nsim),idu2d2(nsim),idu2d3(nsim))
+       allocate(idu3d1(nsim),idu3d2(nsim),idu3d3(nsim))
+
+!!       write(*,*) working_axisem_dir(1), nsim, simutypevalue
+
+       do isim=1,nsim
+
+         iux(isim)=next_iunit(iunit)
+         iuy(isim)=next_iunit(iunit)
+         iuz(isim)=next_iunit(iunit)
+
+         idu1d1(isim)=next_iunit(iunit)
+         idu1d2(isim)=next_iunit(iunit)
+         idu1d3(isim)=next_iunit(iunit)
+         idu2d1(isim)=next_iunit(iunit)
+         idu2d2(isim)=next_iunit(iunit)
+         idu2d3(isim)=next_iunit(iunit)
+         idu3d1(isim)=next_iunit(iunit)
+         idu3d2(isim)=next_iunit(iunit)
+         idu3d3(isim)=next_iunit(iunit)
+ 
+ 
+         write(fichier,'(a6,a15)') '/Data/',output_displ_name(1)
+         open(iux(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
+         write(fichier,'(a6,a15)') '/Data/',output_displ_name(2)
+         open(iuy(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
+         write(fichier,'(a6,a15)') '/Data/',output_displ_name(3)
+         open(iuz(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
+
+         write(fichier,'(a6,a15)') '/Data/',output_deriv_name(1)
+         open(idu1d1(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
+         write(fichier,'(a6,a15)') '/Data/',output_deriv_name(2)
+         open(idu1d2(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
+         write(fichier,'(a6,a15)') '/Data/',output_deriv_name(3)
+         open(idu1d3(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
+         write(fichier,'(a6,a15)') '/Data/',output_deriv_name(4)
+         open(idu2d1(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
+         write(fichier,'(a6,a15)') '/Data/',output_deriv_name(5)
+         open(idu2d2(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
+         write(fichier,'(a6,a15)') '/Data/',output_deriv_name(6)
+         open(idu2d3(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
+         write(fichier,'(a6,a15)') '/Data/',output_deriv_name(7)
+         open(idu3d1(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
+         write(fichier,'(a6,a15)') '/Data/',output_deriv_name(8)
+         open(idu3d2(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
+         write(fichier,'(a6,a15)') '/Data/',output_deriv_name(9)
+         open(idu3d3(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
+
+         write(*,*) 'openning ', trim(working_axisem_dir(isim))//trim(fichier)
+
+       enddo
+
+       do isim=1,nsim
+
+         read(iux(isim))  nbrec,ntime
+         read(iuy(isim))  nbrec,ntime
+         read(iuz(isim))  nbrec,ntime
+
+         read(idu1d1(isim)) nbrec,ntime
+         read(idu1d2(isim)) nbrec,ntime
+         read(idu1d3(isim)) nbrec,ntime
+         read(idu2d1(isim)) nbrec,ntime
+         read(idu2d2(isim)) nbrec,ntime
+         read(idu2d3(isim)) nbrec,ntime
+         read(idu3d1(isim)) nbrec,ntime
+         read(idu3d2(isim)) nbrec,ntime
+         read(idu3d3(isim)) nbrec,ntime
+ 
+       enddo
+
+       write(*,*) ' time step ', dtt
+       write(*,*) 'READING OK',ntime,nbrec
+
      endif
-
-     !open(10,file=trim( working_axisem_dir(1))//'Data/strain_info.dat0000')
-     !read(10,*) nb_dump_samples
-     !read(10,*) dt,i
-     !close(10)
-     open(10,file='info_for_specefm.txt')
-     read(10,*) dt
-     close(10)
-
-     output_displ_name(1)='displ_out_u1'
-     output_displ_name(2)='displ_out_u2'
-     output_displ_name(3)='displ_out_u3'
-
-     output_veloc_name(1)='velocityoutp_u1'
-     output_veloc_name(2)='velocityoutp_u2'
-     output_veloc_name(3)='velocityoutp_u3'
-
-     output_stress_name(1)='stress_Sg11_out'
-     output_stress_name(2)='stress_Sg22_out'
-     output_stress_name(3)='stress_Sg33_out'
-     output_stress_name(4)='stress_Sg12_out'
-     output_stress_name(5)='stress_Sg13_out'
-     output_stress_name(6)='stress_Sg23_out'
-
-     iunit=6666
-     allocate(ivx(nsim),ivy(nsim),ivz(nsim))
-     allocate(isxx(nsim),isyy(nsim),iszz(nsim))
-     allocate(isxy(nsim),isxz(nsim),isyz(nsim))
-
-
-     do isim=1,nsim
-
-        ivx(isim)=next_iunit(iunit)
-        ivy(isim)=next_iunit(iunit)
-        ivz(isim)=next_iunit(iunit)
-        isxx(isim)=next_iunit(iunit)
-        isyy(isim)=next_iunit(iunit)
-        iszz(isim)=next_iunit(iunit)
-        isxy(isim)=next_iunit(iunit)
-        isxz(isim)=next_iunit(iunit)
-        isyz(isim)=next_iunit(iunit)
-
-        write(fichier,'(a6,a15)') '/Data/',output_displ_name(1)
-        open(ivx(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
-        write(fichier,'(a6,a15)') '/Data/',output_displ_name(2)
-        open(ivy(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
-        write(fichier,'(a6,a15)') '/Data/',output_displ_name(3)
-        open(ivz(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
-
-        write(fichier,'(a6,a15)') '/Data/',output_veloc_name(1)
-        open(ivx(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
-        write(fichier,'(a6,a15)') '/Data/',output_veloc_name(2)
-        open(ivy(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
-        write(fichier,'(a6,a15)') '/Data/',output_veloc_name(3)
-        open(ivz(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
-        write(fichier,'(a6,a15)') '/Data/',output_stress_name(1)
-        open(isxx(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
-        write(fichier,'(a6,a15)') '/Data/',output_stress_name(2)
-        open(isyy(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
-        write(fichier,'(a6,a15)') '/Data/',output_stress_name(3)
-        open(iszz(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
-        write(fichier,'(a6,a15)') '/Data/',output_stress_name(4)
-        open(isxy(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
-        write(fichier,'(a6,a15)') '/Data/',output_stress_name(5)
-        open(isxz(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
-        write(fichier,'(a6,a15)') '/Data/',output_stress_name(6)
-        open(isyz(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
-        write(*,*) 'openning ', trim(working_axisem_dir(isim))//trim(fichier)
-     enddo
-
-     do isim=1,nsim
-        read(ivx(isim))  nbrec,ntime
-        read(ivy(isim))  nbrec,ntime
-        read(ivz(isim))  nbrec,ntime
-        read(isxx(isim)) nbrec,ntime
-        read(isyy(isim)) nbrec,ntime
-        read(iszz(isim)) nbrec,ntime
-        read(isxy(isim)) nbrec,ntime
-        read(isxz(isim)) nbrec,ntime
-        read(isyz(isim)) nbrec,ntime
-     enddo
-
-
-     write(*,*) ' time step ', dtt
-     write(*,*) 'READING OK',ntime,nbrec
 
   endif  !! if (myrank==0)
 
 !###########################################  END SERIAL PROCESS ##################
-
 
 
   call mpi_bcast(ntime,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
@@ -410,23 +541,28 @@ program re_format_outputs_files
   call mpi_bcast(LOCAL_PATH,500,MPI_CHARACTER,0,MPI_COMM_WORLD,ierr)
   call mpi_bcast(TRACT_PATH,500,MPI_CHARACTER,0,MPI_COMM_WORLD,ierr)
 
+  call mpi_bcast(recip_KH_integral,1,MPI_LOGICAL,0,MPI_COMM_WORLD,ierr)
+
   ! not usefull ??
   if (myrank > 0) then
-      allocate(working_axisem_dir(nsim))
+    allocate(working_axisem_dir(nsim))
 
-      if (nsim == 1) then
-        working_axisem_dir(1)="./"
-      else
-        working_axisem_dir(1) = "MZZ/"
-        working_axisem_dir(2) = "MXX_P_MYY/"
-        working_axisem_dir(3) = "MXZ_MYZ/"
-        working_axisem_dir(4) = "MXY_MXX_M_MYY/"
-     endif
+    if (nsim == 1) then
+      if (simutypevalue == 'single') working_axisem_dir(1) = "./"
+      if (simutypevalue == 'force')  working_axisem_dir(1) = "PX/"
+    elseif (nsim == 2) then
+      working_axisem_dir(1) = "PZ/"
+      working_axisem_dir(2) = "PX/"
+    else
+      working_axisem_dir(1) = "MZZ/"
+      working_axisem_dir(2) = "MXX_P_MYY/"
+      working_axisem_dir(3) = "MXZ_MYZ/"
+      working_axisem_dir(4) = "MXY_MXX_M_MYY/"
+    endif
   endif
 
   itmin=tmin / dtt
   itmax=tmax / dtt
-
 
   IF (MOD(itmax - itmin + 1,2) > 0) ITMIN=ITMIN+1
   ntime_interp = itmax - itmin + 1
@@ -437,11 +573,19 @@ program re_format_outputs_files
   write(*,*) ' nb ',itmax - itmin + 1
   write(*,*) ' ntime_interp ',ntime_interp
 
+  if (.not. recip_KH_integral) then 
 
+    allocate(data_rec(9,ntime,nrec_by_proc(myrank+1)))
+    allocate(data_rec0(1,nbrec,9),data_tmp(nbrec,9))
+    allocate(data_tmp_to_send(9,nbrec))
 
-  allocate(data_rec(9,ntime,nrec_by_proc(myrank+1)))
-  allocate(data_rec0(1,nbrec,9),data_tmp(nbrec,9))
-  allocate(data_tmp_to_send(9,nbrec))
+  else
+
+    allocate(data_rec(12,ntime,nrec_by_proc(myrank+1)))
+    allocate(data_rec0(1,nbrec,12),data_tmp(nbrec,12))
+    allocate(data_tmp_to_send(12,nbrec))
+
+  endif
 
   call create_name_database(prname,myrank,LOCAL_PATH)
   write(*,*) prname(1:len_trim(prname))//'absorb_dsm'
@@ -463,245 +607,458 @@ program re_format_outputs_files
 
 ! ################################ reading and scatter the data  ################################
 
-  allocate(irec_glob(NGLLSQUARE*MAX_MUN_ABS_BOUNDARY_FACES,nSpecfem_proc))
-  allocate(ur(3,nrec_by_proc(myrank+1)),vr(3,nrec_by_proc(myrank+1)),tr(3, nrec_by_proc(myrank+1)))
+  if (.not. recip_KH_integral) then 
 
-  do itime=1,ntime
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Case of classic coupling !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!
 
-    if (myrank==0) then
-       if (mod(itime,100)==0) write(*,*) 'reading ', itime, ' / ',ntime
-       data_rec0=0.
+     allocate(irec_glob(NGLLSQUARE*MAX_MUN_ABS_BOUNDARY_FACES,nSpecfem_proc))
+     allocate(vr(3,nrec_by_proc(myrank+1)),tr(3, nrec_by_proc(myrank+1)))
 
-       do isim=1,nsim
+     do itime=1,ntime
 
-         read(ivx(isim))  data_tmp(:,1)
-         read(ivy(isim))  data_tmp(:,2)
-         read(ivz(isim))  data_tmp(:,3)
-         read(isxx(isim)) data_tmp(:,4)
-         read(isyy(isim)) data_tmp(:,5)
-         read(iszz(isim)) data_tmp(:,6)
-         read(isxy(isim)) data_tmp(:,7)
-         read(isxz(isim)) data_tmp(:,8)
-         read(isyz(isim)) data_tmp(:,9)
+        if (myrank==0) then
+           if (mod(itime,100)==0) write(*,*) 'reading ', itime, ' / ',ntime
+           data_rec0=0.
 
-         data_rec0(1,:,:)= data_rec0(1,:,:)+data_tmp(:,:)
+           do isim=1,nsim
 
-       enddo
-       !write(*,*) itime,data_rec0(1,100,3)
-    endif
+              read(ivx(isim))  data_tmp(:,1)
+              read(ivy(isim))  data_tmp(:,2)
+              read(ivz(isim))  data_tmp(:,3)
+              read(isxx(isim)) data_tmp(:,4)
+              read(isyy(isim)) data_tmp(:,5)
+              read(iszz(isim)) data_tmp(:,6)
+              read(isxy(isim)) data_tmp(:,7)
+              read(isxz(isim)) data_tmp(:,8)
+              read(isyz(isim)) data_tmp(:,9)
 
+              data_rec0(1,:,:)= data_rec0(1,:,:)+data_tmp(:,:)
 
-    !!scatter the data into the rigth MPI partition
-    do icomp =1, 9
-
-        if (myrank == 0) then
-
-           irank=0
-           kk=0
-           do iface=1,num_boundary_by_proc(irank+1)
-              do igll=1,NGLLSQUARE
-                 kk=kk+1
-                 irec=ind_face2rec(iface,igll,irank+1)
-                 irec_glob(kk,irank+1)=irec
-                 if( irec == 0) then
-                    write(*,*) ' irec ', irec,iface,igll,irank+1
-                    stop
-                 endif
-                 data_rec(icomp,itime,kk)=data_rec0(1,irec,icomp)
-              enddo
            enddo
-
-           !if (icomp==3) write(*,*) itime,data_rec(icomp,itime,100),data_rec0(1,100,icomp)
-
-          do irank=1,nbproc-1
-             kk=0
-             do iface=1,num_boundary_by_proc(irank+1)
-                do igll=1,NGLLSQUARE
-                   kk=kk+1
-                   irec=ind_face2rec(iface,igll,irank+1)
-                   irec_glob(kk,irank+1)=irec
-                   if( irec == 0) then
-                      write(*,*) ' irec ', irec,iface,igll,irank+1
-                      stop
-                   endif
-                   data_tmp_to_send(icomp,kk) = data_rec0(1,irec,icomp)
-                enddo
-             enddo
-             call mpi_send(data_tmp_to_send(icomp,1:kk),nrec_by_proc(irank+1),MPI_REAL,irank,etq,MPI_COMM_WORLD,ierr)
-          enddo
-
-        else
-           call mpi_recv(data_rec(icomp,itime,:),nrec_by_proc(myrank+1),MPI_REAL,0,etq,MPI_COMM_WORLD,statut,ierr)
-!!$           if (myrank==1) write(*,*) itime,data_rec(3,itime,100)
+           !write(*,*) itime,data_rec0(1,100,3)
         endif
 
-     enddo  !! icomp
-  enddo     !! itime
-  call mpi_bcast(irec_glob,NGLLSQUARE*MAX_MUN_ABS_BOUNDARY_FACES*nSpecfem_proc,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+
+        !!scatter the data into the rigth MPI partition
+        do icomp =1, 9
+
+           if (myrank == 0) then
+
+              irank=0
+              kk=0
+              do iface=1,num_boundary_by_proc(irank+1)
+                 do igll=1,NGLLSQUARE
+                    kk=kk+1
+                    irec=ind_face2rec(iface,igll,irank+1)
+                    irec_glob(kk,irank+1)=irec
+                    if( irec == 0) then
+                       write(*,*) ' irec ', irec,iface,igll,irank+1
+                       stop
+                    endif
+                    data_rec(icomp,itime,kk)=data_rec0(1,irec,icomp)
+                 enddo
+              enddo
+
+              !if (icomp==3) write(*,*) itime,data_rec(icomp,itime,100),data_rec0(1,100,icomp)
+
+              do irank=1,nbproc-1
+                 kk=0
+                 do iface=1,num_boundary_by_proc(irank+1)
+                    do igll=1,NGLLSQUARE
+                       kk=kk+1
+                       irec=ind_face2rec(iface,igll,irank+1)
+                       irec_glob(kk,irank+1)=irec
+                       if( irec == 0) then
+                          write(*,*) ' irec ', irec,iface,igll,irank+1
+                          stop
+                       endif
+                       data_tmp_to_send(icomp,kk) = data_rec0(1,irec,icomp)
+                    enddo
+                 enddo
+                 call mpi_send(data_tmp_to_send(icomp,1:kk),nrec_by_proc(irank+1),MPI_REAL,irank,etq,MPI_COMM_WORLD,ierr)
+              enddo
+
+           else
+              call mpi_recv(data_rec(icomp,itime,:),nrec_by_proc(myrank+1),MPI_REAL,0,etq,MPI_COMM_WORLD,statut,ierr)
+!!$           if (myrank==1) write(*,*) itime,data_rec(3,itime,100)
+           endif
+
+        enddo  !! icomp
+     enddo     !! itime
+     call mpi_bcast(irec_glob,NGLLSQUARE*MAX_MUN_ABS_BOUNDARY_FACES*nSpecfem_proc,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
 !!!
 
 
-  if (myrank == 0) then
-     do isim=1,nsim
-        close(ivx(isim))
-        close(ivy(isim))
-        close(ivz(isim))
-        close(isxx(isim))
-        close(isyy(isim))
-        close(iszz(isim))
-        close(isxy(isim))
-        close(isxz(isim))
-        close(isyz(isim))
-     enddo
-  endif
+     if (myrank == 0) then
+        do isim=1,nsim
+           close(ivx(isim))
+           close(ivy(isim))
+           close(ivz(isim))
+           close(isxx(isim))
+           close(isyy(isim))
+           close(iszz(isim))
+           close(isxy(isim))
+           close(isxz(isim))
+           close(isyz(isim))
+        enddo
+     endif
 
-!################################################################# MPI INTERPOLATION ############################
-
-
-  nrec_to_store = nrec_by_proc(myrank+1)
-  allocate(buffer_to_store_v(9,nrec_to_store))
-  allocate(buffer_to_store_d(9,nrec_to_store))
-  allocate(sinc_tab_displ(ntime),sinc_tab_veloc(ntime),sinc_tab_stress(ntime))
-  irecmin=1
-  irecmax=nrec_to_store
-  ntime_to_store = (itmax - itmin + 1) / 2
+     !############################ MPI INTERPOLATION ########################
 
 
-  call create_name_database(prname,myrank,TRACT_PATH)
-  write(*,*) TRACT_PATH,prname,myrank
+     nrec_to_store = nrec_by_proc(myrank+1)
+     allocate(buffer_to_store_v(9,nrec_to_store))
+     allocate(sinc_tab_veloc(ntime),sinc_tab_stress(ntime))
+     irecmin=1
+     irecmax=nrec_to_store
+     ntime_to_store = (itmax - itmin + 1) / 2
 
-  open(28,file=prname(1:len_trim(prname))//'sol_axisem',status='unknown',&
-             action='write',form='unformatted',iostat=ier)
-  if (ier /= 0) write(*,*) 'error opening', prname(1:len_trim(prname))//'sol_axisem'
 
-  open(29,file=prname(1:len_trim(prname))//'axisem_displ_for_int_KH',status='unknown',&
-             action='write',form='unformatted',iostat=ier)
-  if (ier /= 0) write(*,*) 'error opening', prname(1:len_trim(prname))//'axisem_displ_for_int_KH'
+     call create_name_database(prname,myrank,TRACT_PATH)
+     write(*,*) TRACT_PATH,prname,myrank
 
-  if (nrec_to_store >= 100) then
-    do i=1,ntime
-       write(399,*) (i-1)*dt,data_rec(3,i,100)
-    enddo
-  endif
+     open(28,file=prname(1:len_trim(prname))//'sol_axisem',status='unknown',&
+          action='write',form='unformatted',iostat=ier)
+     if (ier /= 0) write(*,*) 'error opening', prname(1:len_trim(prname))//'sol_axisem'
 
-  close(399)
+     if (nrec_to_store >= 100) then
+        do i=1,ntime
+           write(399,*) (i-1)*dt,data_rec(3,i,100)
+        enddo
+     endif
 
-  ntnew=ntime_interp
+     close(399)
 
-  if (myrank==0) write(*,*) 'time step ', dtt,ntnew
+     ntnew=ntime_interp
 
-  tt=-dtt
-  do itnew=1,ntnew
-     !write(*,*) itnew,ntnew
-     tt=tt+dtt
-     current_time_step = tmin + (itnew-1)*dtt !+ 0.5*dtt
-     !current_time_step_half = current_time_step - 0.5*dtt
+     if (myrank==0) write(*,*) 'time step ', dtt,ntnew
 
-     sinc_tab_displ(:)      = 0.d0
-     sinc_tab_veloc(:)      = 0.d0
-     buffer_to_store_v(:,:) = 0.d0
-     buffer_to_store_d(:,:) = 0.d0
-     !sinc_tab_stress(:)=0.d0
+     tt=-dtt
+     do itnew=1,ntnew
+        !write(*,*) itnew,ntnew
+        tt=tt+dtt
+        current_time_step = tmin + (itnew-1)*dtt !+ 0.5*dtt
+        !current_time_step_half = current_time_step - 0.5*dtt
 
-     call compute_sinc(sinc_tab_displ,current_time_step,ntime,dt)
-     call compute_sinc(sinc_tab_veloc,current_time_step,ntime,dt)
-     !call compute_sinc(sinc_tab_stress,current_time_step,ntime,dt)
+        sinc_tab_veloc(:)      = 0.d0
+        buffer_to_store_v(:,:) = 0.d0
+        !sinc_tab_stress(:)=0.d0
 
-     if (myrank == 0 .and. mod(itnew,100)==0) write(*,*) myrank, tt,itnew,ntnew
+        call compute_sinc(sinc_tab_veloc,current_time_step,ntime,dt)
+        !call compute_sinc(sinc_tab_stress,current_time_step,ntime,dt)
 
-     do irec0=irecmin, irecmax
+        if (myrank == 0 .and. mod(itnew,100)==0) write(*,*) myrank, tt,itnew,ntnew
 
-        do is = 1, ntime
+        do irec0=irecmin, irecmax
 
-           buffer_to_store_d(1,irec0)=buffer_to_store_d(1,irec0) + sinc_tab_displ(is) * dble(data_rec(1,is,irec0))
-           buffer_to_store_d(2,irec0)=buffer_to_store_d(2,irec0) + sinc_tab_displ(is) * dble(data_rec(2,is,irec0))
-           buffer_to_store_d(3,irec0)=buffer_to_store_d(3,irec0) + sinc_tab_displ(is) * dble(data_rec(3,is,irec0))
-           buffer_to_store_d(4,irec0)=buffer_to_store_d(4,irec0) + sinc_tab_displ(is) * dble(data_rec(4,is,irec0))
-           buffer_to_store_d(5,irec0)=buffer_to_store_d(5,irec0) + sinc_tab_displ(is) * dble(data_rec(5,is,irec0))
-           buffer_to_store_d(6,irec0)=buffer_to_store_d(6,irec0) + sinc_tab_displ(is) * dble(data_rec(6,is,irec0))
-           buffer_to_store_d(7,irec0)=buffer_to_store_d(7,irec0) + sinc_tab_displ(is) * dble(data_rec(7,is,irec0))
-           buffer_to_store_d(8,irec0)=buffer_to_store_d(8,irec0) + sinc_tab_displ(is) * dble(data_rec(8,is,irec0))
-           buffer_to_store_d(9,irec0)=buffer_to_store_d(9,irec0) + sinc_tab_displ(is) * dble(data_rec(9,is,irec0))
+           do is = 1, ntime
 
-           buffer_to_store_v(1,irec0)=buffer_to_store_v(1,irec0) + sinc_tab_veloc(is) * dble(data_rec(1,is,irec0))
-           buffer_to_store_v(2,irec0)=buffer_to_store_v(2,irec0) + sinc_tab_veloc(is) * dble(data_rec(2,is,irec0))
-           buffer_to_store_v(3,irec0)=buffer_to_store_v(3,irec0) + sinc_tab_veloc(is) * dble(data_rec(3,is,irec0))
-           buffer_to_store_v(4,irec0)=buffer_to_store_v(4,irec0) + sinc_tab_veloc(is) * dble(data_rec(4,is,irec0))
-           buffer_to_store_v(5,irec0)=buffer_to_store_v(5,irec0) + sinc_tab_veloc(is) * dble(data_rec(5,is,irec0))
-           buffer_to_store_v(6,irec0)=buffer_to_store_v(6,irec0) + sinc_tab_veloc(is) * dble(data_rec(6,is,irec0))
-           buffer_to_store_v(7,irec0)=buffer_to_store_v(7,irec0) + sinc_tab_veloc(is) * dble(data_rec(7,is,irec0))
-           buffer_to_store_v(8,irec0)=buffer_to_store_v(8,irec0) + sinc_tab_veloc(is) * dble(data_rec(8,is,irec0))
-           buffer_to_store_v(9,irec0)=buffer_to_store_v(9,irec0) + sinc_tab_veloc(is) * dble(data_rec(9,is,irec0))
+              buffer_to_store_v(1,irec0)=buffer_to_store_v(1,irec0) + sinc_tab_veloc(is) * dble(data_rec(1,is,irec0))
+              buffer_to_store_v(2,irec0)=buffer_to_store_v(2,irec0) + sinc_tab_veloc(is) * dble(data_rec(2,is,irec0))
+              buffer_to_store_v(3,irec0)=buffer_to_store_v(3,irec0) + sinc_tab_veloc(is) * dble(data_rec(3,is,irec0))
+              buffer_to_store_v(4,irec0)=buffer_to_store_v(4,irec0) + sinc_tab_veloc(is) * dble(data_rec(4,is,irec0))
+              buffer_to_store_v(5,irec0)=buffer_to_store_v(5,irec0) + sinc_tab_veloc(is) * dble(data_rec(5,is,irec0))
+              buffer_to_store_v(6,irec0)=buffer_to_store_v(6,irec0) + sinc_tab_veloc(is) * dble(data_rec(6,is,irec0))
+              buffer_to_store_v(7,irec0)=buffer_to_store_v(7,irec0) + sinc_tab_veloc(is) * dble(data_rec(7,is,irec0))
+              buffer_to_store_v(8,irec0)=buffer_to_store_v(8,irec0) + sinc_tab_veloc(is) * dble(data_rec(8,is,irec0))
+              buffer_to_store_v(9,irec0)=buffer_to_store_v(9,irec0) + sinc_tab_veloc(is) * dble(data_rec(9,is,irec0))
+
+           enddo
+
+           !call interpol_sinc(data_rec(:,irec0,1),buffer_to_store(irec0,1),current_time_step,ntime,dt,sinc_tab_veloc)
+           !call interpol_sinc(data_rec(:,irec0,2),buffer_to_store(irec0,2),current_time_step,ntime,dt,sinc_tab_veloc)
+           !call interpol_sinc(data_rec(:,irec0,3),buffer_to_store(irec0,3),current_time_step,ntime,dt,sinc_tab_veloc)
+
+           if (irec0==100) write(499,*)  current_time_step, buffer_to_store_v(3,irec0)
+
+           !call interpol_sinc(data_rec(:,irec0,4),buffer_to_store(irec0,4),current_time_step,ntime,dt,sinc_tab_stress!)
+           !call interpol_sinc(data_rec(:,irec0,5),buffer_to_store(irec0,5),current_time_step,ntime,dt,sinc_tab_stress)
+           !call interpol_sinc(data_rec(:,irec0,6),buffer_to_store(irec0,6),current_time_step,ntime,dt,sinc_tab_stress)
+           !call interpol_sinc(data_rec(:,irec0,7),buffer_to_store(irec0,7),current_time_step,ntime,dt,sinc_tab_stress)
+           !call interpol_sinc(data_rec(:,irec0,8),buffer_to_store(irec0,8),current_time_step,ntime,dt,sinc_tab_stress)
+           !call interpol_sinc(data_rec(:,irec0,9),buffer_to_store(irec0,9),current_time_step,ntime,dt,sinc_tab_stress)
+
+           ! compute traction
+
+           irec =irec_glob(irec0,myrank+1)
+
+           if (irec == 0 ) then
+              write(*,*) myrank , irec0, irec
+              stop
+           endif
+
+           iface=ind_rec2face(1,irec,myrank+1)
+           igll =ind_rec2face(2,irec,myrank+1)
+
+           nvx=abs_boundary_normal(1,igll,iface)
+           nvy=abs_boundary_normal(2,igll,iface)
+           nvz=abs_boundary_normal(3,igll,iface)
+
+           !!
+           if (myrank==0) then
+
+           endif
+           !!
+
+           vr(1,irec0) = buffer_to_store_v(1,irec0)
+           vr(2,irec0) = buffer_to_store_v(2,irec0)
+           vr(3,irec0) = buffer_to_store_v(3,irec0)
+
+           tr(1,irec0) = buffer_to_store_v(4,irec0)*nvx + buffer_to_store_v(7,irec0) * nvy + buffer_to_store_v(8,irec0) * nvz
+           tr(2,irec0) = buffer_to_store_v(7,irec0)*nvx + buffer_to_store_v(5,irec0) * nvy + buffer_to_store_v(9,irec0) * nvz
+           tr(3,irec0) = buffer_to_store_v(8,irec0)*nvx + buffer_to_store_v(9,irec0) * nvy + buffer_to_store_v(6,irec0) * nvz
 
         enddo
 
-        !call interpol_sinc(data_rec(:,irec0,1),buffer_to_store(irec0,1),current_time_step,ntime,dt,sinc_tab_veloc)
-        !call interpol_sinc(data_rec(:,irec0,2),buffer_to_store(irec0,2),current_time_step,ntime,dt,sinc_tab_veloc)
-        !call interpol_sinc(data_rec(:,irec0,3),buffer_to_store(irec0,3),current_time_step,ntime,dt,sinc_tab_veloc)
+        write(28) vr,tr
 
-        if (irec0==100) write(499,*)  current_time_step, buffer_to_store_v(3,irec0)
+     enddo
 
-        !call interpol_sinc(data_rec(:,irec0,4),buffer_to_store(irec0,4),current_time_step,ntime,dt,sinc_tab_stress!)
-        !call interpol_sinc(data_rec(:,irec0,5),buffer_to_store(irec0,5),current_time_step,ntime,dt,sinc_tab_stress)
-        !call interpol_sinc(data_rec(:,irec0,6),buffer_to_store(irec0,6),current_time_step,ntime,dt,sinc_tab_stress)
-        !call interpol_sinc(data_rec(:,irec0,7),buffer_to_store(irec0,7),current_time_step,ntime,dt,sinc_tab_stress)
-        !call interpol_sinc(data_rec(:,irec0,8),buffer_to_store(irec0,8),current_time_step,ntime,dt,sinc_tab_stress)
-        !call interpol_sinc(data_rec(:,irec0,9),buffer_to_store(irec0,9),current_time_step,ntime,dt,sinc_tab_stress)
+     close(28)
+     close(499)
 
-        ! compute traction
+     write(*,*) 'nbrec ', myrank, irecmax-irecmin+1, ntime_interp
+     call MPI_Barrier(MPI_COMM_WORLD,ierr)
+     write(*,*) myrank,ierr
+     call MPI_FINALIZE(ierr)
+     write(*,*) myrank,ierr
+     stop
+
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Case of recip & KH !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!
+
+  else 
+
+    allocate(irec_glob(NGLLSQUARE*MAX_MUN_ABS_BOUNDARY_FACES,nSpecfem_proc))
+    allocate(ur(3,nrec_by_proc(myrank+1)))
+    allocate(dur1(3,nrec_by_proc(myrank+1)), dur2(3, nrec_by_proc(myrank+1)), dur3(3, nrec_by_proc(myrank+1)))
+
+    do itime=1,ntime
+
+      if (myrank == 0) then
+
+        if (mod(itime,100)==0) write(*,*) 'reading ', itime, ' / ', ntime
+
+        data_rec0 = 0.
+
+        do isim=1,nsim
+
+          read(iux(isim)) data_tmp(:,1)
+          read(iuy(isim)) data_tmp(:,2)
+          read(iuz(isim)) data_tmp(:,3)
+
+          read(idu1d1(isim)) data_tmp(:,4)
+          read(idu1d2(isim)) data_tmp(:,5)
+          read(idu1d3(isim)) data_tmp(:,6)
+          read(idu2d1(isim)) data_tmp(:,7)
+          read(idu2d2(isim)) data_tmp(:,8)
+          read(idu2d3(isim)) data_tmp(:,9)
+          read(idu3d1(isim)) data_tmp(:,10)
+          read(idu3d2(isim)) data_tmp(:,11)
+          read(idu3d3(isim)) data_tmp(:,12)
+
+          data_rec0(1,:,:)= data_rec0(1,:,:)+data_tmp(:,:)
+
+        enddo
+      endif
+
+      !! scatter the data into the rigth MPI partition
+      do icomp =1, 12
+
+        if (myrank == 0) then
+
+          irank = 0
+          kk    = 0
+
+          do iface=1,num_boundary_by_proc(irank+1)
+            do igll=1,NGLLSQUARE
+
+              kk                    = kk+1
+              irec                  = ind_face2rec(iface,igll,irank+1)
+              irec_glob(kk,irank+1) = irec
+
+              if( irec == 0) then
+                write(*,*) ' irec ', irec,iface,igll,irank+1
+                stop
+              endif
+
+              data_rec(icomp,itime,kk)=data_rec0(1,irec,icomp)
+
+            enddo
+          enddo
+
+          do irank=1,nbproc-1
+
+            kk = 0
+             
+            do iface=1,num_boundary_by_proc(irank+1)
+              do igll=1,NGLLSQUARE
+             
+                kk                    = kk+1
+                irec                  = ind_face2rec(iface,igll,irank+1)
+                irec_glob(kk,irank+1) = irec
+       
+                if( irec == 0) then
+                  write(*,*) ' irec ', irec,iface,igll,irank+1
+                  stop
+                endif
+    
+                data_tmp_to_send(icomp,kk) = data_rec0(1,irec,icomp)
+              enddo
+            enddo
+
+            call mpi_send(data_tmp_to_send(icomp,1:kk),nrec_by_proc(irank+1),MPI_REAL,irank,etq,MPI_COMM_WORLD,ierr)
+
+          enddo
+
+        else
+          
+          call mpi_recv(data_rec(icomp,itime,:),nrec_by_proc(myrank+1),MPI_REAL,0,etq,MPI_COMM_WORLD,statut,ierr)
+
+        endif
+
+      enddo  !! icomp
+    enddo    !! itime
+
+    call mpi_bcast(irec_glob,NGLLSQUARE*MAX_MUN_ABS_BOUNDARY_FACES*nSpecfem_proc,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+
+    if (myrank == 0) then
+      do isim=1,nsim
+
+        close(iux(isim))
+        close(iuy(isim)) 
+        close(iuz(isim))
+
+        close(idu1d1(isim))
+        close(idu1d2(isim))
+        close(idu1d3(isim))
+        close(idu2d1(isim))
+        close(idu2d2(isim))
+        close(idu2d3(isim))
+        close(idu3d1(isim))
+        close(idu3d2(isim))
+        close(idu3d3(isim))
+
+      enddo
+    endif
+
+    !######################### MPI INTERPOLATION #########################
+
+    nrec_to_store = nrec_by_proc(myrank+1)
+
+    allocate(buffer_to_store_dd(12,nrec_to_store))
+    allocate(sinc_tab_displ_and_deriv(ntime))
+
+    irecmin        = 1
+    irecmax        = nrec_to_store
+    ntime_to_store = (itmax - itmin + 1) / 2
+
+    call create_name_database(prname,myrank,TRACT_PATH)
+    write(*,*) TRACT_PATH,prname,myrank
+
+    open(29,file=prname(1:len_trim(prname))//'axisem_displ_for_int_KH',status='unknown',&
+            action='write',form='unformatted',iostat=ier)
+    if (ier /= 0) write(*,*) 'error opening', prname(1:len_trim(prname))//'axisem_displ_for_int_KH'
+
+    open(30,file=prname(1:len_trim(prname))//'axisem_Du_for_int_KH',status='unknown',&
+            action='write',form='unformatted',iostat=ier)
+    if (ier /= 0) write(*,*) 'error opening', prname(1:len_trim(prname))//'axisem_Du_for_int_KH'
+
+    if (nrec_to_store >= 100) then
+      do i=1,ntime
+        write(399,*) (i-1)*dt,data_rec(3,i,100)
+      enddo
+    endif
+
+    close(399)
+
+    ntnew = ntime_interp
+
+    if (myrank == 0) write(*,*) 'time step ', dtt,ntnew
+
+    tt = -dtt
+    do itnew=1,ntnew
+
+      tt = tt + dtt
+      current_time_step = tmin + (itnew-1)*dtt !+ 0.5*dtt
+
+      sinc_tab_displ_and_deriv(:) = 0.d0
+      buffer_to_store_dd(:,:) = 0.d0
+
+      call compute_sinc(sinc_tab_displ_and_deriv,current_time_step,ntime,dt)
+
+      if (myrank == 0 .and. mod(itnew,100)==0) write(*,*) myrank, tt,itnew,ntnew
+
+      do irec0=irecmin, irecmax
+
+        do is = 1, ntime
+
+          buffer_to_store_dd(1,irec0)  = buffer_to_store_dd(1,irec0)  + sinc_tab_displ_and_deriv(is)*dble(data_rec(1,is,irec0))
+          buffer_to_store_dd(2,irec0)  = buffer_to_store_dd(2,irec0)  + sinc_tab_displ_and_deriv(is)*dble(data_rec(2,is,irec0))
+          buffer_to_store_dd(3,irec0)  = buffer_to_store_dd(3,irec0)  + sinc_tab_displ_and_deriv(is)*dble(data_rec(3,is,irec0))
+
+          buffer_to_store_dd(4,irec0)  = buffer_to_store_dd(4,irec0)  + sinc_tab_displ_and_deriv(is)*dble(data_rec(4,is,irec0))
+          buffer_to_store_dd(5,irec0)  = buffer_to_store_dd(5,irec0)  + sinc_tab_displ_and_deriv(is)*dble(data_rec(5,is,irec0))
+          buffer_to_store_dd(6,irec0)  = buffer_to_store_dd(6,irec0)  + sinc_tab_displ_and_deriv(is)*dble(data_rec(6,is,irec0))
+          buffer_to_store_dd(7,irec0)  = buffer_to_store_dd(7,irec0)  + sinc_tab_displ_and_deriv(is)*dble(data_rec(7,is,irec0))
+          buffer_to_store_dd(8,irec0)  = buffer_to_store_dd(8,irec0)  + sinc_tab_displ_and_deriv(is)*dble(data_rec(8,is,irec0))
+          buffer_to_store_dd(9,irec0)  = buffer_to_store_dd(9,irec0)  + sinc_tab_displ_and_deriv(is)*dble(data_rec(9,is,irec0))
+          buffer_to_store_dd(10,irec0) = buffer_to_store_dd(10,irec0) + sinc_tab_displ_and_deriv(is)*dble(data_rec(10,is,irec0))
+          buffer_to_store_dd(11,irec0) = buffer_to_store_dd(11,irec0) + sinc_tab_displ_and_deriv(is)*dble(data_rec(11,is,irec0))
+          buffer_to_store_dd(12,irec0) = buffer_to_store_dd(12,irec0) + sinc_tab_displ_and_deriv(is)*dble(data_rec(12,is,irec0))
+
+        enddo
+
+        if (irec0==100) write(499,*)  current_time_step, buffer_to_store_dd(3,irec0)
 
         irec =irec_glob(irec0,myrank+1)
 
         if (irec == 0 ) then
-           write(*,*) myrank , irec0, irec
-           stop
+          write(*,*) myrank , irec0, irec
+          stop
         endif
 
-        iface=ind_rec2face(1,irec,myrank+1)
-        igll =ind_rec2face(2,irec,myrank+1)
+        ur(1,irec0) = buffer_to_store_dd(1,irec0)
+        ur(2,irec0) = buffer_to_store_dd(2,irec0)
+        ur(3,irec0) = buffer_to_store_dd(3,irec0)
 
-        nvx=abs_boundary_normal(1,igll,iface)
-        nvy=abs_boundary_normal(2,igll,iface)
-        nvz=abs_boundary_normal(3,igll,iface)
+        dur1(1,irec0) = buffer_to_store_dd(4,irec0)
+        dur1(2,irec0) = buffer_to_store_dd(5,irec0)
+        dur1(3,irec0) = buffer_to_store_dd(6,irec0)
 
-        !!
-        if (myrank==0) then
+        dur2(1,irec0) = buffer_to_store_dd(7,irec0)
+        dur2(2,irec0) = buffer_to_store_dd(8,irec0)
+        dur2(3,irec0) = buffer_to_store_dd(9,irec0)
 
-        endif
-        !!
-
-        ur(1,irec0) = buffer_to_store_d(1,irec0)
-        ur(2,irec0) = buffer_to_store_d(2,irec0)
-        ur(3,irec0) = buffer_to_store_d(3,irec0)
-
-        vr(1,irec0) = buffer_to_store_v(1,irec0)
-        vr(2,irec0) = buffer_to_store_v(2,irec0)
-        vr(3,irec0) = buffer_to_store_v(3,irec0)
-        tr(1,irec0) = buffer_to_store_v(4,irec0)*nvx + buffer_to_store_v(7,irec0) * nvy + buffer_to_store_v(8,irec0) * nvz
-        tr(2,irec0) = buffer_to_store_v(7,irec0)*nvx + buffer_to_store_v(5,irec0) * nvy + buffer_to_store_v(9,irec0) * nvz
-        tr(3,irec0) = buffer_to_store_v(8,irec0)*nvx + buffer_to_store_v(9,irec0) * nvy + buffer_to_store_v(6,irec0) * nvz
-
-     enddo
-
-     write(29) ur
-     write(28) vr,tr
-
-  enddo
-
-  close(28)
-  close(29)
-  close(499)
-
-!####################################### ENDING ############################
+        dur3(1,irec0) = buffer_to_store_dd(10,irec0)
+        dur3(2,irec0) = buffer_to_store_dd(11,irec0)
+        dur3(3,irec0) = buffer_to_store_dd(12,irec0)
 
 
-  write(*,*) 'nbrec ', myrank, irecmax-irecmin+1, ntime_interp
-  call MPI_Barrier(MPI_COMM_WORLD,ierr)
-  write(*,*) myrank,ierr
-  call MPI_FINALIZE(ierr)
-  write(*,*) myrank,ierr
-  stop
+      enddo
 
+      write(29) ur
+
+      write(30) dur1, dur2, dur3
+
+    enddo
+
+    close(29)
+    close(30)
+
+    close(499)
+
+    write(*,*) 'nbrec ', myrank, irecmax-irecmin+1, ntime_interp
+    call MPI_Barrier(MPI_COMM_WORLD,ierr)
+    write(*,*) myrank,ierr
+    call MPI_FINALIZE(ierr)
+    write(*,*) myrank,ierr
+    stop
+
+  endif !! if (.not. recip_KH_integral)
 
 end program re_format_outputs_files
 

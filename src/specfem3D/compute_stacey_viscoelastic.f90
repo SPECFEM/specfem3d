@@ -42,7 +42,7 @@
   use constants
 
   use specfem_par, only: it_dsm, Veloc_dsm_boundary, Tract_dsm_boundary, Veloc_axisem, Tract_axisem, &
-                         RECIPROCITY_AND_KH_INTEGRAL, Tract_axisem_time
+                         CUT_SOLUTION_FOR_VISU, Tract_axisem_time
 
   use specfem_par_elastic, only: displ
 
@@ -109,7 +109,7 @@
         call read_axisem_file(Veloc_axisem,Tract_axisem,num_abs_boundary_faces*NGLLSQUARE)
 
         !! CD CD add this
-        if (RECIPROCITY_AND_KH_INTEGRAL) Tract_axisem_time(:,:,it) = Tract_axisem(:,:)
+        if (CUT_SOLUTION_FOR_VISU) Tract_axisem_time(:,:,it) = Tract_axisem(:,:)
       endif
 
     endif

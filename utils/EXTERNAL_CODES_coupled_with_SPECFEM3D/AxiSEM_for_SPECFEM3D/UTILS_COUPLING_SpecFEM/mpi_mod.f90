@@ -49,7 +49,7 @@ contains
 
    if (myrank >  0) then
       allocate(reciever_geogr(3,nbrec),reciever_sph(3,nbrec),reciever_cyl(3,nbrec),reciever_interp_value(nbrec))
-      allocate(data_rec(nbrec,3),stress_rec(nbrec,6),stress_to_write(nbrec,6),strain_rec(nbrec,6))
+      allocate(data_rec(nbrec,3),stress_rec(nbrec,6),stress_to_write(nbrec,6),strain_rec(nbrec,6),deriv_rec(nbrec,9))
       allocate(f1(nbrec),f2(nbrec),phi(nbrec))
       allocate(scoor(ibeg:iend,ibeg:iend,nel),zcoor(ibeg:iend,ibeg:iend,nel))
       allocate(data_read(ibeg:iend,ibeg:iend,nel))
@@ -59,7 +59,7 @@ contains
       allocate(src_type(nsim,2))
       allocate(depth_ele(nel))
    endif
-   allocate(stress_reduce(nbrec,6),data_reduce(nbrec,3))
+   allocate(stress_reduce(nbrec,6),deriv_reduce(nbrec,9),data_reduce(nbrec,3))
 
 
   end subroutine alloc_all_mpi
@@ -93,7 +93,10 @@ contains
     call mpi_bcast(rec2elm,nbrec,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
 
     ! character
-     call mpi_bcast(src_type,10*2*nsim,MPI_CHARACTER,0,MPI_COMM_WORLD,ierr)
+    call mpi_bcast(src_type,10*2*nsim,MPI_CHARACTER,0,MPI_COMM_WORLD,ierr)
+
+    ! logical 
+    call mpi_bcast(recip_KH_integral,1,MPI_LOGICAL,0,MPI_COMM_WORLD,ierr)
 
   end subroutine bcast_all_mpi
 
@@ -122,6 +125,13 @@ contains
     data_rec(:,:)=data_reduce(:,:)
 
   end subroutine reduce_mpi_veloc
+
+  subroutine reduce_mpi_deriv()
+
+    call mpi_reduce(deriv_rec,deriv_reduce,nbrec*9,MPI_REAL,MPI_SUM,0,MPI_COMM_WORLD,ierr)
+    deriv_rec(:,:)=deriv_reduce(:,:)
+
+  end subroutine reduce_mpi_deriv
 
   subroutine reduce_mpi_stress()
 
