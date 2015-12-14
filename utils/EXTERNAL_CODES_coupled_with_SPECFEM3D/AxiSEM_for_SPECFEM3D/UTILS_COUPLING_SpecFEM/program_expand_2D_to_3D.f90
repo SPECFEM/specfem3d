@@ -49,7 +49,7 @@
 
   do isim=1,nsim  !! do to : mettre en memoire la solution sous echantillonnee et la resampler avant de l'ecrire
 
-    if (.not. recip_KH_integral) then 
+    if (.not. recip_KH_integral) then
 
       ! interpolation of the velocity field in each point
       call read_veloc_field_and_interpol(isim)

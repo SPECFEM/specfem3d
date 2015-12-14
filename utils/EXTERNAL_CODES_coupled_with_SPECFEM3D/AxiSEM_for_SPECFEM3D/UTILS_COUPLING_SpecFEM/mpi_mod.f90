@@ -95,7 +95,7 @@ contains
     ! character
     call mpi_bcast(src_type,10*2*nsim,MPI_CHARACTER,0,MPI_COMM_WORLD,ierr)
 
-    ! logical 
+    ! logical
     call mpi_bcast(recip_KH_integral,1,MPI_LOGICAL,0,MPI_COMM_WORLD,ierr)
 
   end subroutine bcast_all_mpi

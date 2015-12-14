@@ -576,7 +576,7 @@
 !
 
 !!  open(unit=500, file='inparam_source', status='old', action='read')
-!!  read(500,'(a256)') sourcetypeword, sourcetypevalue 
+!!  read(500,'(a256)') sourcetypeword, sourcetypevalue
 !!  if (sourcetypeword /= 'SOURCE_TYPE') stop 'Wrong read of inparam_source in reading_fields_mod'
 !!  close(500)
 
@@ -933,13 +933,13 @@
 
     call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
 
-    call interpol_field(indx_tmp) 
+    call interpol_field(indx_tmp)
     deriv_rec(:,1) = data_rec(:,indx_tmp)
     data_rec(:,:)  = 0.
 
     if (.not.(trim(src_type(isim,1)) == 'monopole')) then
 
-      ifield = 2 !! ====> 2nd derivative of us  
+      ifield = 2 !! ====> 2nd derivative of us
 
       if (myrank == 0) then
         do iproc = 0,nbproc-1
@@ -959,7 +959,7 @@
 
       call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
 
-      call interpol_field(indx_tmp) 
+      call interpol_field(indx_tmp)
       deriv_rec(:,2) = data_rec(:,indx_tmp)
       data_rec(:,:)  = 0.
 
@@ -984,7 +984,7 @@
 
     call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
 
-    call interpol_field(indx_tmp) 
+    call interpol_field(indx_tmp)
     deriv_rec(:,3) = data_rec(:,indx_tmp)
     data_rec(:,:)  = 0.
 
@@ -1014,7 +1014,7 @@
 
       call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
 
-      call interpol_field(indx_tmp) 
+      call interpol_field(indx_tmp)
       deriv_rec(:,4) = data_rec(:,indx_tmp)
       data_rec(:,:)  = 0.
 
@@ -1041,7 +1041,7 @@
 
     call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
 
-    call interpol_field(indx_tmp) 
+    call interpol_field(indx_tmp)
     deriv_rec(:,5) = data_rec(:,indx_tmp)
     data_rec(:,:)  = 0.
 
@@ -1066,7 +1066,7 @@
 
       call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
 
-      call interpol_field(indx_tmp) 
+      call interpol_field(indx_tmp)
       deriv_rec(:,6) = data_rec(:,indx_tmp)
       data_rec(:,:)  = 0.
 
@@ -1095,7 +1095,7 @@
 
     call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
 
-    call interpol_field(indx_tmp) 
+    call interpol_field(indx_tmp)
     deriv_rec(:,7) = data_rec(:,indx_tmp)
     data_rec(:,:)  = 0.
 
@@ -1120,7 +1120,7 @@
 
       call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
 
-      call interpol_field(indx_tmp) 
+      call interpol_field(indx_tmp)
       deriv_rec(:,8) = data_rec(:,indx_tmp)
       data_rec(:,:)  = 0.
 
@@ -1145,7 +1145,7 @@
 
     call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
 
-    call interpol_field(indx_tmp) 
+    call interpol_field(indx_tmp)
     deriv_rec(:,9) = data_rec(:,indx_tmp)
     data_rec(:,:)  = 0.
 

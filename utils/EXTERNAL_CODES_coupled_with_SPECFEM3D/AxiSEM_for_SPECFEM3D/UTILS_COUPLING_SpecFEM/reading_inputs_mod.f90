@@ -183,7 +183,7 @@
       character(len=12)  :: src_file_type
       character(len=100) :: junk
 
-      !! CAUTION : this parameter is HARDCODED, if you change (add line for example) expand_2D_3D.par ==> 
+      !! CAUTION : this parameter is HARDCODED, if you change (add line for example) expand_2D_3D.par ==>
       !!           you have to CHANGE ALSO this parameter
       integer, parameter :: line_before_nsimtmp = 6
 
@@ -247,20 +247,20 @@
 
             if (recip_KH_integral) nsimtmp = 1
 
-            if (nsimtmp == 2) then 
+            if (nsimtmp == 2) then
               nsim = 2
               allocate(simdir(nsim))
               simdir(1) = "PZ/" !! Vertical force
               simdir(2) = "PX/" !! Horizontal force
-            elseif (nsimtmp == 1) then 
+            else if (nsimtmp == 1) then
               nsim = 1
               allocate(simdir(nsim))
               simdir(1) = "PX/" !! We only interested in the horizontal force
               write(*,*) 'We only interested in the horizontal force !!'
-            else 
+            else
               write(*,*) 'NSIM INCORRECTLY CONFIGURED in expand_2D_3D.par, NSIM = ', nsimtmp
               stop
-            endif 
+            endif
 
           endif
         end select
