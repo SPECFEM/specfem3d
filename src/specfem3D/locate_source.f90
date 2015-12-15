@@ -357,7 +357,7 @@
         !kmin = 1
         !kmax = NGLLZ
         !! VM VM exclude edges to ensure this point is not shared with other elements
-        !! unless a error location on source can occurs with FORCE POINTSOURCE 
+        !! unless a error location on source can occurs with FORCE POINTSOURCE
         imin = 2
         imax = NGLLX - 1
 
