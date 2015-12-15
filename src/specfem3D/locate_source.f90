@@ -348,15 +348,24 @@
 
       ! define the interval in which we look for points
       if (USE_FORCE_POINT_SOURCE) then
-        imin = 1
-        imax = NGLLX
+        !imin = 1
+        !imax = NGLLX
 
-        jmin = 1
-        jmax = NGLLY
+        !jmin = 1
+        !jmax = NGLLY
 
-        kmin = 1
-        kmax = NGLLZ
+        !kmin = 1
+        !kmax = NGLLZ
+        !! VM VM exclude edges to ensure this point is not shared with other elements
+        !! unless a error location on source can occurs with FORCE POINTSOURCE 
+        imin = 2
+        imax = NGLLX - 1
 
+        jmin = 2
+        jmax = NGLLY - 1
+
+        kmin = 2
+        kmax = NGLLZ - 1
       else
         ! loop only on points inside the element
         ! exclude edges to ensure this point is not shared with other elements
