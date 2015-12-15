@@ -1616,8 +1616,8 @@ subroutine compute_stress_cp(u, v, chi, istrain)
   real(kind=realkind)             :: grad_flu(0:npol,0:npol,nel_fluid,2)
 
   !! CD CD add this ==> for the calculation fo derivatives one by one
-  real(kind=realkind)             :: D_us(0:npol,0:npol,nel_solid,3) ! = dus/ds, dus/dp, dus/dz 
-  real(kind=realkind)             :: D_up(0:npol,0:npol,nel_solid,3) ! = dup/ds, dup/dp, dup/dz 
+  real(kind=realkind)             :: D_us(0:npol,0:npol,nel_solid,3) ! = dus/ds, dus/dp, dus/dz
+  real(kind=realkind)             :: D_up(0:npol,0:npol,nel_solid,3) ! = dup/ds, dup/dp, dup/dz
   real(kind=realkind)             :: D_uz(0:npol,0:npol,nel_solid,3) ! = duz/ds, duz/dp, duz/dz
   real(kind=realkind)             :: grad_sol_tmp(0:npol,0:npol,nel_solid,2)
   real(kind=realkind)             :: s_tmp(0:npol,0:npol,nel_solid)
@@ -1701,24 +1701,24 @@ subroutine compute_stress_cp(u, v, chi, istrain)
 
     if (storage_for_recip_KH_integral) then
 
-      call axisym_gradient_solid(u(:,:,:,1), grad_sol_tmp)  
+      call axisym_gradient_solid(u(:,:,:,1), grad_sol_tmp)
 
       D_us(:,:,:,1) = grad_sol_tmp(:,:,:,1) !! dus/ds
       D_us(:,:,:,3) = grad_sol_tmp(:,:,:,2) !! dus/dz
 
-      call axisym_gradient_solid(u(:,:,:,3), grad_sol_tmp) 
+      call axisym_gradient_solid(u(:,:,:,3), grad_sol_tmp)
 
-      D_uz(:,:,:,1) = grad_sol_tmp(:,:,:,1) !! duz/ds 
+      D_uz(:,:,:,1) = grad_sol_tmp(:,:,:,1) !! duz/ds
       D_uz(:,:,:,3) = grad_sol_tmp(:,:,:,2) !! duz/dz
 
 !---
 
       D_up(:,:,:,2) = strain(:,:,:,2) !! (dup/dp)/s + us/s
 
-      D_us(:,:,:,2) = 0. !! (dus/dp)/s 
+      D_us(:,:,:,2) = 0. !! (dus/dp)/s
       D_up(:,:,:,3) = 0. !! dup/dz
       D_uz(:,:,:,2) = 0. !! (duz/dp)/s
-      D_up(:,:,:,1) = 0. !! (dup/ds) - up/s 
+      D_up(:,:,:,1) = 0. !! (dup/ds) - up/s
 
       call dump_field_1d_cp(D_us(:,:,:,1),'/pgrad_cyl_Dus_1', appisnap, nel_solid)
       call dump_field_1d_cp(D_us(:,:,:,3),'/pgrad_cyl_Dus_3', appisnap, nel_solid)
@@ -1764,7 +1764,7 @@ subroutine compute_stress_cp(u, v, chi, istrain)
     strain(:,:,:,5)=grad_sol(:,:,:,1) / two_rk
 
     buff_solid = two_rk * f_over_s_solid(u(:,:,:,2))
-    
+
     strain(:,:,:,2)= buff_solid
 
     strain(:,:,:,3)=grad_sol(:,:,:,2) - grad_sol_save
@@ -1804,19 +1804,19 @@ subroutine compute_stress_cp(u, v, chi, istrain)
 
     if (storage_for_recip_KH_integral) then
 
-      call axisym_gradient_solid(u(:,:,:,1)+u(:,:,:,2), grad_sol_tmp)  
+      call axisym_gradient_solid(u(:,:,:,1)+u(:,:,:,2), grad_sol_tmp)
 
       D_us(:,:,:,1) = grad_sol_tmp(:,:,:,1) !! dus/ds
       D_us(:,:,:,3) = grad_sol_tmp(:,:,:,2) !! dus/dz
 
-      call axisym_gradient_solid(u(:,:,:,1)-u(:,:,:,2), grad_sol_tmp) 
+      call axisym_gradient_solid(u(:,:,:,1)-u(:,:,:,2), grad_sol_tmp)
 
       D_up(:,:,:,1) = grad_sol_tmp(:,:,:,1) - f_over_s_solid(u(:,:,:,1)-u(:,:,:,2)) !! (dup/ds) - up/s
       D_up(:,:,:,3) = grad_sol_tmp(:,:,:,2) !! dup/dz
 
-      call axisym_gradient_solid(u(:,:,:,3), grad_sol_tmp) 
+      call axisym_gradient_solid(u(:,:,:,3), grad_sol_tmp)
 
-      D_uz(:,:,:,1) = grad_sol_tmp(:,:,:,1) !! duz/ds 
+      D_uz(:,:,:,1) = grad_sol_tmp(:,:,:,1) !! duz/ds
       D_uz(:,:,:,3) = grad_sol_tmp(:,:,:,2) !! duz/dz
 
 
@@ -1886,7 +1886,7 @@ subroutine compute_stress_cp(u, v, chi, istrain)
     strain(:,:,:,5)= grad_sol(:,:,:,1) / two_rk
 
     buff_solid = f_over_s_solid(u(:,:,:,1) - two_rk * u(:,:,:,2))
-    
+
     strain(:,:,:,2)= buff_solid
 
     strain(:,:,:,3)=grad_sol(:,:,:,2) - grad_sol_save
@@ -1906,7 +1906,7 @@ subroutine compute_stress_cp(u, v, chi, istrain)
       iel0=ielsolid(iel)
       do j=0,npol
         do i=0,npol
-        
+
           l=lambda_cp(i,j,iel0)
           m=mu_cp(i,j,iel0)
 
@@ -2053,7 +2053,7 @@ end subroutine compute_stress_cp
 !!-!!     call dump_field_1d_cp(- f_over_s_solid(u(:,:,:,3)) - grad_sol(:,:,:,2) / two_rk, &
 !!-!!                        '/strain_dzup_sol',appisnap, nel_solid) !E23
 !!-!!
-!!-!!     
+!!-!!
 !!-!!
 !!-!!     !! VM VM add displ dump
 !!-!!     call dump_field_1d_cp(u(:,:,:,1),'/displacement_us', appisnap, nel_solid)
