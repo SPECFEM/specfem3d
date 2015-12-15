@@ -128,7 +128,7 @@ end module constants
   integer :: EXTERNAL_CODE_TYPE
   character(len=MAX_STRING_LEN) :: TRACTION_PATH
   logical :: MESH_A_CHUNK_OF_THE_EARTH
-  logical :: RECIPROCITY_AND_KH_INTEGRAL
+  logical :: CUT_SOLUTION_FOR_VISU
 
   ! GPU simulations
   logical :: GPU_MODE
