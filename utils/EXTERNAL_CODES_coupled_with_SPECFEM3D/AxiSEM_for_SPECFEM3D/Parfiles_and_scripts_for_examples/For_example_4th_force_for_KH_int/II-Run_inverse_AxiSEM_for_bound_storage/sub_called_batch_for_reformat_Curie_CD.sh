@@ -3,13 +3,13 @@
 
 #             ------------ BACTH AND SPECIFIC CLUSTER DIRECTIVES  ------
 
-#MSUB -r Reformat_for_AxiSEM_32p         # Nom du job
-#MSUB -n 32
-#MSUB -N 2
-#MSUB -T 8000
+#MSUB -r Reformat_for_AxiSEM_224p         # Nom du job
+#MSUB -n 224
+#MSUB -N 14
+#MSUB -T 3600
 #MSUB -q standard
-#MSUB -e reformat_for_AxiSEM_32_run.e
-#MSUB -o reformat_for_AxiSEM_32_run.o
+#MSUB -e reformat_for_AxiSEM_224p_run.e
+#MSUB -o reformat_for_AxiSEM_224p_run.o
 #MSUB -A gen7165
 
 set -x
@@ -22,8 +22,8 @@ cd ${BRIDGE_MSUB_PWD}
 declare -i NPROC NPROC_MINUS_ONE CPUS CHOICE MIDDLE
 
 # NUMBER OF MPI PROCESSES
-NPROC=32
-CPUS=32
+NPROC=224
+CPUS=224
 
 # MPIRUN COMMAND
 MPIRUN=ccc_mprun

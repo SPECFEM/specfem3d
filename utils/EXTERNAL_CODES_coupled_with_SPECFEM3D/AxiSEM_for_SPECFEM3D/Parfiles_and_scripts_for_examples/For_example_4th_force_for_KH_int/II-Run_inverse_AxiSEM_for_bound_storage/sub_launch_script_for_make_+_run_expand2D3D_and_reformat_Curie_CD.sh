@@ -1,13 +1,5 @@
 #!/bin/bash
 
-current_dir=$(pwd)
-
-cd ../../../../../EXAMPLES/coupling_with_EXTERNAL_CODES/with_AxiSEM/example_4th_force_for_KH_int/DATA/
-mkdir AxiSEM_tractions_tmp
-
-cd ${current_dir}
-
-
 dir_for_run=$(pwd)/$1
 
 ####

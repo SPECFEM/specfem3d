@@ -167,7 +167,7 @@ nc_routines.o: clocks.o commun.o data_io.o data_mesh.o data_proc.o \
 nc_snapshots.o: data_io.o data_mesh.o data_proc.o data_source.o \
 	global_parameters.o nc_helpers.o Makefile ../make_axisem.macros 
 parameters.o: attenuation.o commun.o data_comm.o data_io.o data_mesh.o \
-	data_proc.o data_source.o data_time.o global_parameters.o \
+	data_proc.o data_source.o data_time.o global_parameters.o coupling_mod.o \
 	nc_helpers.o nc_routines.o utlity.o Makefile ../make_axisem.macros 
 time_evol_wave.o: apply_masks.o attenuation.o clocks.o commun.o data_io.o \
 	data_matr.o data_mesh.o data_pointwise.o data_proc.o data_source.o \

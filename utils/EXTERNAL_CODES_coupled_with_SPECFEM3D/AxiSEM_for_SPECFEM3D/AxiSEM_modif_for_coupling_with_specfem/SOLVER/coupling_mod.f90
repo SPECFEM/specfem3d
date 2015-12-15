@@ -33,6 +33,8 @@ module coupling_mod
   real(kind=realkind), dimension(:,:,:), allocatable :: buff_to_dump
   real(kind=dp), dimension(:,:,:), allocatable :: lambda_cp,mu_cp,rho_cp
 
+  logical :: storage_for_recip_KH_integral
+
 ! END SHARED (SB)
 !==================================================
 

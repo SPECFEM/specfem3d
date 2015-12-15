@@ -32,6 +32,7 @@ module parameters
     use data_io
     use utlity
     use commun
+    use coupling_mod
 
     implicit none
 
@@ -467,6 +468,9 @@ subroutine read_inparam_advanced
          case('INFO_DIR')
              infopath = keyvalue
 
+         case('RECIP_KH_INTEGRAL')
+             read(keyvalue, *) storage_for_recip_KH_integral
+
          case('DIAGNOSTIC_FILE_OUTPUT')
              read(keyvalue,*) diagfiles
 
@@ -629,6 +633,7 @@ subroutine read_inparam_advanced
   call broadcast_log(dump_vtk, 0)
   call broadcast_log(use_netcdf, 0)
   call broadcast_log(checkpointing, 0)
+  call broadcast_log(storage_for_recip_KH_integral, 0)
   call broadcast_int(nc_dumpbuffersize, 0)
   call broadcast_log(nc_chunk_time_traces, 0)
 

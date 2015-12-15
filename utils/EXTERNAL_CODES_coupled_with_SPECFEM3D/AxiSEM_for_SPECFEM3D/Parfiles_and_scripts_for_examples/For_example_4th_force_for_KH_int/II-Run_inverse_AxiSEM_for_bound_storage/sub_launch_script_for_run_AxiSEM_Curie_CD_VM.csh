@@ -158,11 +158,22 @@ if ( $multisrc == 'true' ) then
 
     else if ( $simtype == 'force' ) then
         set srcapp   = ( PZ PX )
-        set srctype  = ( "vertforce" "thetaforce" )
+
+        set forcetype = `grep "^SOURCE_TYPE" $srcfile |awk '{print $2}'`
+        if ( $forcetype == 'thetaforce' ) then
+            set srctype  = ( "vertforce" "thetaforce" )
+        else if ( $forcetype == 'phiforce' ) then
+            set srctype  = ( "vertforce" "phiforce" )
+        endif
+
         # TODO hardcoded for testing. need to define an input file for force sources!
-        set srcdepth = '0.0'
-        set srclat   = '90.0'
-        set srclon   = '0.0'
+##        set srcdepth = '0.0'
+##        set srclat   = '90.0'
+##        set srclon   = '0.0'
+        set srcdepth = `grep "^SOURCE_DEPTH" $srcfile  |awk '{print $2}'`
+        set srclat   = `grep "^SOURCE_LAT" $srcfile  |awk '{print $2}'`
+        set srclon   = `grep "^SOURCE_LON" $srcfile  |awk '{print $2}'`
+        set srcampl  = `grep "^SOURCE_AMPLITUDE" $srcfile  |awk '{print $2}'`
 
     else
         echo " ERROR: Unrecognized source type" $srctype
@@ -213,7 +224,11 @@ foreach isim  (${srcapp})
         echo 'SOURCE_DEPTH' $srcdepth     >> $srcfile.$isim
         echo 'SOURCE_LAT'   $srclat       >> $srcfile.$isim
         echo 'SOURCE_LON'   $srclon       >> $srcfile.$isim
-        echo 'SOURCE_AMPLITUDE  1.E20'    >> $srcfile.$isim
+        if ( $simtype == 'moment' ) then
+            echo 'SOURCE_AMPLITUDE  1.E20'    >> $srcfile.$isim
+        else if ( $simtype == 'force' ) then
+            echo 'SOURCE_AMPLITUDE' $srcampl    >> $srcfile.$isim
+        endif
 
         mkdir $isim
         cd $isim

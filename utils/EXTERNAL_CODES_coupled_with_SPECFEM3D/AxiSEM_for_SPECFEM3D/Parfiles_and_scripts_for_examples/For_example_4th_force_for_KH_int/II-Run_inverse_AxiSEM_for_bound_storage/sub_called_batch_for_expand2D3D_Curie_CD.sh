@@ -3,13 +3,13 @@
 
 #             ------------ BACTH AND SPECIFIC CLUSTER DIRECTIVES  ------
 
-#MSUB -r Interface_expand_2D_3D_160p        # Nom du job
+#MSUB -r Interface_expand_2D_3D        # Nom du job
 #MSUB -n 160
 #MSUB -N 10
-#MSUB -T 7200
+#MSUB -T 3000
 #MSUB -q standard
-#MSUB -e interface_expand_2D_3D_160_run.e
-#MSUB -o interface_expand_2D_3D_160_run.o
+#MSUB -e interface_expand_2D_3D_run.e
+#MSUB -o interface_expand_2D_3D_run.o
 #MSUB -A gen7165
 
 set -x
@@ -34,8 +34,9 @@ OPTION=
 ### Define relative path
 UTILS_COUPLING=../../../UTILS_COUPLING_SpecFEM
 
-### Copy meshes file in result dir
+### Copy meshes and params files in result dir
 cp ../input_box* .
+cp ../inparam_advanced ../inparam_basic ../inparam_source ../inparam_hetero .
 
 # do not change
 NPROC_MINUS_ONE="$NPROC-1"

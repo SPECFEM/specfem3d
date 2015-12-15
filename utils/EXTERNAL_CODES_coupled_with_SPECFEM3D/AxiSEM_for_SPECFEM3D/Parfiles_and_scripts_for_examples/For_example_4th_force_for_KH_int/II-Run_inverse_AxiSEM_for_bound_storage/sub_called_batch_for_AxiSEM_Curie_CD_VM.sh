@@ -3,13 +3,13 @@
 
 #             ------------ BACTH AND SPECIFIC CLUSTER DIRECTIVES  ------
 
-#MSUB -r Test_AxiSEM_for_SPECFEM3D_32p        # Nom du job
+#MSUB -r Test_Axi_inv_vert           # Nom du job
 #MSUB -n 32
 #MSUB -N 2
-#MSUB -T 9999
+#MSUB -T 3000
 #MSUB -q standard
-#MSUB -e AxiSEM_for_SPECFEM3D_32_run.e
-#MSUB -o AxiSEM_for_SPECFEM3D_32_run.o
+#MSUB -e AxiSEM_inv_KH_run.e
+#MSUB -o AxiSEM_inv_KH_run.o
 #MSUB -A gen7165
 
 set -x

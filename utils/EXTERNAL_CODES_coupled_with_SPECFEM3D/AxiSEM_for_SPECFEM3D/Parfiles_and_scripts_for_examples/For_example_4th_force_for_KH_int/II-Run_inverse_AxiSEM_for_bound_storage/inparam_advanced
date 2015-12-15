@@ -28,7 +28,7 @@ SOURCE_PERIOD       10.0
 # 'quheavi': Heaviside function
 # 'dirac_0': Dirac delta function
 #            This should be used to convolve arbitrary STFs in Postprocessing 
-SOURCE_FUNCTION     gauss_0
+SOURCE_FUNCTION    gauss_0
 
 # Time integration scheme, allowed:
 # newmark2:  default, well tested
@@ -46,6 +46,9 @@ TIME_SCHEME     newmark2
 # OUTPUT PATHS
 DATA_DIR        "./Data"
 INFO_DIR        "./Info"
+
+################# For coupling using reciprocity and KH integral ###############
+RECIP_KH_INTEGRAL   true
 
 
 ######################## NetCDF output #########################################
@@ -115,7 +118,7 @@ XDMF_GLL_J       '3 0 2 4'
 # 1: errors plus some information (default)
 # 2: extra stories for spare time
 # 3: every single detail of netcdf IO
-VERBOSITY               1
+VERBOSITY               2
 
 # Extra diagnostic file output? (default: false)
 # Prints VTK files of the actual velocity model (including lateral heterogenei-

@@ -11,7 +11,7 @@ SOURCE_DEPTH       0.0
 SOURCE_LAT         90.0
 
 # longitude of the source in degree
-SOURCE_LON          0.0
+SOURCE_LON         0.0
 
 # Amplitude of the source
 # units: - moment tensor: Nm
