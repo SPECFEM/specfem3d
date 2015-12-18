@@ -28,7 +28,7 @@
 ! XSMOOTH_SEM
 !
 ! USAGE
-!   mpirun -np NPROC bin/xsmooth_sem SIGMA_H SIGMA_V KERNEL_NAME INPUT_DIR OUPUT_DIR
+!   mpirun -np NPROC bin/xsmooth_sem SIGMA_H SIGMA_V KERNEL_NAME INPUT_DIR OUPUT_DIR USE_GPU
 !
 !
 ! COMMAND LINE ARGUMENTS
@@ -37,6 +37,7 @@
 !   KERNEL_NAME            - kernel name, e.g. alpha_kernel
 !   INPUT_DIR              - directory from which kernels are read
 !   OUTPUT_DIR             - directory to which smoothed kernels are written
+!   USE_GPU                - use GPUs for computation
 !
 ! DESCRIPTION
 !   Smooths kernels by convolution with a Gaussian. Writes the resulting
@@ -70,22 +71,23 @@ program smooth_sem
 
   implicit none
 
-  integer, parameter :: NARGS = 5
+  integer, parameter :: NARGS = 6
 
   ! data must be of dimension: (NGLLX,NGLLY,NGLLZ,NSPEC_AB)
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: dat,dat_smooth
-  !real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: dummy ! for jacobian read
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: dummy ! for jacobian read
   integer :: NSPEC_N, NGLOB_N
 
   integer :: i,iglob,ier,ispec2,ispec,inum
   integer :: icounter,num_slices
-  integer :: iproc
+  integer :: iproc,ncuda_devices
+  integer(kind=8) :: Container
 
   integer,parameter :: MAX_NODE_LIST = 300
   integer :: node_list(MAX_NODE_LIST)
   logical :: do_include_slice
 
-  character(len=MAX_STRING_LEN) :: arg(5)
+  character(len=MAX_STRING_LEN) :: arg(6)
   character(len=MAX_STRING_LEN) :: kernel_name, input_dir, output_dir
   character(len=MAX_STRING_LEN) :: prname_lp
   character(len=MAX_STRING_LEN*2) :: local_data_file
@@ -94,6 +96,7 @@ program smooth_sem
   character(len=MAX_STRING_LEN) :: kernel_names(MAX_KERNEL_NAMES)
   character(len=MAX_STRING_LEN) :: kernel_names_comma_delimited
   integer :: nker
+  real t1,t2
 
   ! smoothing parameters
   character(len=MAX_STRING_LEN*2) :: ks_file
@@ -109,7 +112,7 @@ program smooth_sem
   real(kind=CUSTOM_REAL) :: max_old,max_new,max_old_all,max_new_all
   real(kind=CUSTOM_REAL) :: min_old,min_new,min_old_all,min_new_all
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: exp_val !,factor
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: exp_val,factor
 
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: tk, bk
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: xl, yl, zl
@@ -136,7 +139,7 @@ program smooth_sem
   real(kind=CUSTOM_REAL) :: z_min,z_max
   real(kind=CUSTOM_REAL) :: dim_x,dim_y,dim_z
 
-  logical :: BROADCAST_AFTER_READ
+  logical :: BROADCAST_AFTER_READ, USE_GPU, USE_QUADRATURE_RULE
 
 #ifdef FORCE_VECTORIZATION
   integer :: ijk
@@ -148,13 +151,16 @@ program smooth_sem
   call world_size(sizeprocs)
   call world_rank(myrank)
 
+  USE_QUADRATURE_RULE = .false.
+
   if (myrank == 0) print *,"Running XSMOOTH_SEM"
   call synchronize_all()
+  call cpu_time(t1)
 
   ! parse command line arguments
   if (command_argument_count() /= NARGS) then
     if (myrank == 0) then
-        print *,'USAGE:  mpirun -np NPROC bin/xsmooth_sem SIGMA_H SIGMA_V KERNEL_NAME INPUT_DIR OUPUT_DIR'
+        print *,'USAGE:  mpirun -np NPROC bin/xsmooth_sem SIGMA_H SIGMA_V KERNEL_NAME INPUT_DIR OUPUT_DIR GPU_MODE'
       stop 'Please check command line arguments'
     endif
   endif
@@ -169,9 +175,15 @@ program smooth_sem
   kernel_names_comma_delimited = arg(3)
   input_dir= arg(4)
   output_dir = arg(5)
+  read(arg(6),*) USE_GPU
 
   call parse_kernel_names(kernel_names_comma_delimited,kernel_names,nker)
   kernel_name = kernel_names(1)
+
+  if (USE_GPU) then 
+    call initialize_cuda_device(myrank,ncuda_devices)
+    USE_QUADRATURE_RULE=.true. 
+  endif
 
   if (nker > 1) then
     if (myrank == 0) then
@@ -222,6 +234,7 @@ program smooth_sem
     print *,'  smoothing scalelengths horizontal, vertical: ',sigma_h*sqrt(8.0),sigma_v*sqrt(8.0)
     print *,'  input dir : ',trim(input_dir)
     print *,'  output dir: ',trim(output_dir)
+    print *,"  GPU_MODE: ", USE_GPU
     print *
   endif
 
@@ -538,18 +551,20 @@ program smooth_sem
   !  endif
   !enddo
 
-  ! for jacobian and weights (not used by default)
+  ! for jacobian and weights 
   ! GLL points weights
-  !call zwgljd(xigll,wxgll,NGLLX,GAUSSALPHA,GAUSSBETA)
-  !call zwgljd(yigll,wygll,NGLLY,GAUSSALPHA,GAUSSBETA)
-  !call zwgljd(zigll,wzgll,NGLLZ,GAUSSALPHA,GAUSSBETA)
-  !do k=1,NGLLZ
-  !  do j=1,NGLLY
-  !    do i=1,NGLLX
-  !      wgll_cube(i,j,k) = wxgll(i)*wygll(j)*wzgll(k)
-  !    enddo
-  !  enddo
-  !enddo
+  if (USE_QUADRATURE_RULE) then
+    call zwgljd(xigll,wxgll,NGLLX,GAUSSALPHA,GAUSSBETA)
+    call zwgljd(yigll,wygll,NGLLY,GAUSSALPHA,GAUSSBETA)
+    call zwgljd(zigll,wzgll,NGLLZ,GAUSSALPHA,GAUSSBETA)
+    do k=1,NGLLZ
+      do j=1,NGLLY
+        do i=1,NGLLX
+          wgll_cube(i,j,k) = wxgll(i)*wygll(j)*wzgll(k)
+        enddo
+      enddo
+    enddo
+  endif
 
   ! loops over slices
   ! each process reads in his own neighbor slices and gaussian filters the values
@@ -559,6 +574,15 @@ program smooth_sem
 
   tk = 0.0_CUSTOM_REAL
   bk = 0.0_CUSTOM_REAL
+
+  ! GPU setup
+  if (USE_GPU) then
+    call prepare_GPU(Container,xl,yl,zl,sigma_h2_inv,sigma_v2_inv,sigma_h3_sq,sigma_v3_sq,NSPEC_AB,nker,wgll_cube)
+
+    ! synchronizes all processes
+    call synchronize_all()
+  endif
+
 
   do inum = 1,num_slices
 
@@ -570,28 +594,6 @@ program smooth_sem
     call create_name_database(prname,iproc,LOCAL_PATH)
     prname_lp = prname(1:len_trim(prname))//'external_mesh.bin'
 
-    ! gets number of elements and global points for this partition
-    open(unit=IIN,file=trim(prname_lp),status='old',action='read',form='unformatted',iostat=ier)
-    if (ier /= 0) then
-      print *,'Error could not open database file: ',trim(prname_lp)
-      call exit_mpi(myrank, 'Error reading neighbors external mesh file')
-    endif
-    read(IIN) NSPEC_N
-    read(IIN) NGLOB_N
-    close(IIN)
-
-    ! allocates arrays
-    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
-    if (ier /= 0) stop 'Error allocating array ibool'
-    allocate(xstore(NGLOB_N),ystore(NGLOB_N),zstore(NGLOB_N),stat=ier)
-    if (ier /= 0) stop 'Error allocating array xstore etc.'
-
-    ! jacobian not used by default
-    !allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
-    !if (ier /= 0) stop 'Error allocating array jacobian'
-    !allocate(dummy(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
-    !if (ier /= 0) stop 'Error allocating array dummy'
-
     ! gets number of point locations
     open(unit=IIN,file=trim(prname_lp),status='old',action='read',form='unformatted',iostat=ier)
     if (ier /= 0) then
@@ -601,6 +603,20 @@ program smooth_sem
     read(IIN) NSPEC_N
     read(IIN) NGLOB_N
 
+
+    ! allocates arrays
+    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
+    if (ier /= 0) stop 'Error allocating array ibool'
+    allocate(xstore(NGLOB_N),ystore(NGLOB_N),zstore(NGLOB_N),stat=ier)
+    if (ier /= 0) stop 'Error allocating array xstore etc.'
+
+    if (USE_QUADRATURE_RULE) then
+      allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
+      if (ier /= 0) stop 'Error allocating array jacobian'
+      allocate(dummy(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
+      if (ier /= 0) stop 'Error allocating array dummy'
+    endif
+
     ! ibool file
     read(IIN) ibool
 
@@ -609,18 +625,19 @@ program smooth_sem
     read(IIN) ystore
     read(IIN) zstore
 
-    ! gets jacobian (but jacobian not used by default)
+    if (USE_QUADRATURE_RULE) then
     ! reads in jacobian
-    !read(IIN) dummy ! xix
-    !read(IIN) dummy ! xiy
-    !read(IIN) dummy ! xiz
-    !read(IIN) dummy ! etax
-    !read(IIN) dummy ! etay
-    !read(IIN) dummy ! etaz
-    !read(IIN) dummy ! gammax
-    !read(IIN) dummy ! gammay
-    !read(IIN) dummy ! gammaz
-    !read(IIN) jacobian
+      read(IIN) dummy ! xix
+      read(IIN) dummy ! xiy
+      read(IIN) dummy ! xiz
+      read(IIN) dummy ! etax
+      read(IIN) dummy ! etay
+      read(IIN) dummy ! etaz
+      read(IIN) dummy ! gammax
+      read(IIN) dummy ! gammay
+      read(IIN) dummy ! gammaz
+      read(IIN) jacobian
+    endif
 
     close(IIN)
 
@@ -678,69 +695,78 @@ program smooth_sem
 
     ! finds closest elements for smoothing
     !if (myrank==0) print *, '  start looping over elements and points for smoothing ...'
+    if (USE_GPU) then
+      call compute_smooth(Container,jacobian,xx,yy,zz,dat,NSPEC_N)
+    else
+      ! loop over elements to be smoothed in the current slice
+      do ispec = 1, NSPEC_AB
 
-    ! loop over elements to be smoothed in the current slice
-    do ispec = 1, NSPEC_AB
+        ! element center position
+        center_x0 = cx0(ispec)
+        center_y0 = cy0(ispec)
+        center_z0 = cz0(ispec)
 
-      ! element center position
-      center_x0 = cx0(ispec)
-      center_y0 = cy0(ispec)
-      center_z0 = cz0(ispec)
+        ! --- only double loop over the elements in the search radius ---
+        do ispec2 = 1, NSPEC_N
 
-      ! --- only double loop over the elements in the search radius ---
-      do ispec2 = 1, NSPEC_N
+          ! search element center position
+          center_x = cx(ispec2)
+          center_y = cy(ispec2)
+          center_z = cz(ispec2)
 
-        ! search element center position
-        center_x = cx(ispec2)
-        center_y = cy(ispec2)
-        center_z = cz(ispec2)
+          ! calculates horizontal and vertical distance between two element centers
+          ! (squared distances)
+          call get_distance_vec(dist_h,dist_v,center_x0,center_y0,center_z0,center_x,center_y,center_z)
 
-        ! calculates horizontal and vertical distance between two element centers
-        ! (squared distances)
-        call get_distance_vec(dist_h,dist_v,center_x0,center_y0,center_z0,center_x,center_y,center_z)
+          ! checks distance between centers of elements
+          if (dist_h > sigma_h3_sq .or. dist_v > sigma_v3_sq) cycle
 
-        ! checks distance between centers of elements
-        if (dist_h > sigma_h3_sq .or. dist_v > sigma_v3_sq) cycle
+          ! integration factors
+          if (USE_QUADRATURE_RULE) then
+            factor(:,:,:) = jacobian(:,:,:,ispec2) * wgll_cube(:,:,:)
+          endif
 
-        ! integration factors
-        !factor(:,:,:) = jacobian(:,:,:,ispec2) * wgll_cube(:,:,:)
-        !factor(:,:,:) = 1.0_CUSTOM_REAL
+          ! loop over GLL points of the elements in current slice (ispec)
+          DO_LOOP_IJK
 
-        ! loop over GLL points of the elements in current slice (ispec)
-        DO_LOOP_IJK
+            ! reference location
+            ! current point (i,j,k,ispec) location, cartesian coordinates
+            x0 = xl(INDEX_IJK,ispec)
+            y0 = yl(INDEX_IJK,ispec)
+            z0 = zl(INDEX_IJK,ispec)
 
-          ! reference location
-          ! current point (i,j,k,ispec) location, cartesian coordinates
-          x0 = xl(INDEX_IJK,ispec)
-          y0 = yl(INDEX_IJK,ispec)
-          z0 = zl(INDEX_IJK,ispec)
+            ! calculate weights based on gaussian smoothing
+            call smoothing_weights_vec(x0,y0,z0,sigma_h2_inv,sigma_v2_inv,exp_val,&
+                                       xx(:,:,:,ispec2),yy(:,:,:,ispec2),zz(:,:,:,ispec2))
 
-          ! calculate weights based on gaussian smoothing
-          call smoothing_weights_vec(x0,y0,z0,sigma_h2_inv,sigma_v2_inv,exp_val,&
-                                     xx(:,:,:,ispec2),yy(:,:,:,ispec2),zz(:,:,:,ispec2))
+            ! adds GLL integration weights
+            if (USE_QUADRATURE_RULE) then
+              exp_val(:,:,:) = exp_val(:,:,:) * factor(:,:,:)
+            endif
 
-          ! adds GLL integration weights
-          !exp_val(:,:,:) = exp_val(:,:,:) * factor(:,:,:)
+            ! adds contribution of element ispec2 to smoothed kernel values
+            tk(INDEX_IJK,ispec) = tk(INDEX_IJK,ispec) + sum(exp_val(:,:,:) * dat(:,:,:,ispec2))
 
-          ! adds contribution of element ispec2 to smoothed kernel values
-          tk(INDEX_IJK,ispec) = tk(INDEX_IJK,ispec) + sum(exp_val(:,:,:) * dat(:,:,:,ispec2))
+            ! normalization, integrated values of gaussian smoothing function
+            bk(INDEX_IJK,ispec) = bk(INDEX_IJK,ispec) + sum(exp_val(:,:,:))
 
-          ! normalization, integrated values of gaussian smoothing function
-          bk(INDEX_IJK,ispec) = bk(INDEX_IJK,ispec) + sum(exp_val(:,:,:))
+          ENDDO_LOOP_IJK
 
-        ENDDO_LOOP_IJK
+        enddo ! ispec2
+      enddo ! ispec
 
-      enddo ! ispec2
-    enddo ! ispec
+    endif ! GPU_MODE
 
     ! frees arrays
     deallocate(dat)
     deallocate(xx,yy,zz)
     deallocate(cx,cy,cz)
 
-    ! jacobian not used by default
-    !deallocate(jacobian)
-    !deallocate(dummy)
+    if (USE_QUADRATURE_RULE) then
+      deallocate(jacobian)
+      deallocate(dummy)
+    endif
+
   enddo ! iproc
 
   ! normalizes/scaling factor
@@ -753,28 +779,34 @@ program smooth_sem
   if (ier /= 0) stop 'Error allocating array dat_smooth'
 
   dat_smooth(:,:,:,:) = 0.0_CUSTOM_REAL
-  do ispec = 1, NSPEC_AB
 
-    DO_LOOP_IJK
+  if (USE_GPU) then
+    call get_smooth(Container,dat_smooth)
+  else
+    do ispec = 1, NSPEC_AB
 
-      ! checks the normalization criterion
-      !if (abs(bk(i,j,k,ispec) - norm) > 1.e-4) then
-      !  print *, 'Problem norm here --- ', ispec, i, j, k, bk(i,j,k,ispec), norm
-      !endif
-      if (abs(bk(INDEX_IJK,ispec)) < 1.e-18) then
+      DO_LOOP_IJK
+
+        ! checks the normalization criterion
+        !if (abs(bk(i,j,k,ispec) - norm) > 1.e-4) then
+        !  print *, 'Problem norm here --- ', ispec, i, j, k, bk(i,j,k,ispec), norm
+        !endif
+        if (abs(bk(INDEX_IJK,ispec)) < 1.e-18) then
 #ifdef FORCE_VECTORIZATION
-        print *, 'Problem norm here --- ', ispec, ijk, bk(INDEX_IJK,ispec), norm
+          print *, 'Problem norm here --- ', ispec, ijk, bk(INDEX_IJK,ispec), norm
 #else
-        print *, 'Problem norm here --- ', ispec, i, j, k, bk(i,j,k,ispec), norm
+          print *, 'Problem norm here --- ', ispec, i, j, k, bk(i,j,k,ispec), norm
 #endif
-      endif
+        endif
 
-      ! normalizes smoothed kernel values by integral value of gaussian weighting
-      dat_smooth(INDEX_IJK,ispec) = tk(INDEX_IJK,ispec) / bk(INDEX_IJK,ispec)
+        ! normalizes smoothed kernel values by integral value of gaussian weighting
+        dat_smooth(INDEX_IJK,ispec) = tk(INDEX_IJK,ispec) / bk(INDEX_IJK,ispec)
 
-    ENDDO_LOOP_IJK
+      ENDDO_LOOP_IJK
 
-  enddo !  ispec
+    enddo !  ispec
+
+  endif ! GPU_MODE
 
   ! frees memory
   deallocate(tk,bk)
@@ -814,6 +846,15 @@ program smooth_sem
     print *,'Maximum data value after smoothing  = ', max_new_all
     print *,''
     close(IMAIN)
+  endif
+
+
+  call cpu_time(t2)
+
+  if (USE_GPU) then
+    print *,'Computation time with GPU:',t2-t1
+  else
+    print *,'Computation time with CPU:',t2-t1
   endif
 
   ! stop all the processes and exit
@@ -897,4 +938,3 @@ program smooth_sem
   end subroutine get_distance_vec
 
 end program smooth_sem
-
