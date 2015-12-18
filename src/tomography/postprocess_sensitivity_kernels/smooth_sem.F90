@@ -180,9 +180,9 @@ program smooth_sem
   call parse_kernel_names(kernel_names_comma_delimited,kernel_names,nker)
   kernel_name = kernel_names(1)
 
-  if (USE_GPU) then 
+  if (USE_GPU) then
     call initialize_cuda_device(myrank,ncuda_devices)
-    USE_QUADRATURE_RULE=.true. 
+    USE_QUADRATURE_RULE=.true.
   endif
 
   if (nker > 1) then
@@ -551,7 +551,7 @@ program smooth_sem
   !  endif
   !enddo
 
-  ! for jacobian and weights 
+  ! for jacobian and weights
   ! GLL points weights
   if (USE_QUADRATURE_RULE) then
     call zwgljd(xigll,wxgll,NGLLX,GAUSSALPHA,GAUSSBETA)

@@ -181,7 +181,7 @@ dim3 threads(NGLL3,1,1);
 for (int i=0;i<sp->nker;i++)
 {
 copy_todevice_realw((void**)&d_data_other,&data_other[NGLL3*(*nspec_other)*i],NGLL3*(*nspec_other));
- 
+
 process_smooth<<<grid,threads>>>(sp->x_me,
                                  sp->y_me,
                                  sp->z_me,
