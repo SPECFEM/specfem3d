@@ -1045,18 +1045,18 @@
       velocity_x(:,:,:,ispec) = veloc_element(1,:,:,:)
       velocity_y(:,:,:,ispec) = veloc_element(2,:,:,:)
       velocity_z(:,:,:,ispec) = veloc_element(3,:,:,:)
-   
 
-    
- 
+
+
+
    enddo
 
-   if ( .not. ELASTIC_SIMULATION .and. .not. POROELASTIC_SIMULATION) then  
+   if ( .not. ELASTIC_SIMULATION .and. .not. POROELASTIC_SIMULATION) then
      allocate(pressure_loc(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
      do ispec=1,NSPEC_AB
        DO_LOOP_IJK
         iglob = ibool(INDEX_IJK,ispec)
-        pressure_loc(INDEX_IJK,ispec) = - potential_dot_dot_acoustic(iglob)              
+        pressure_loc(INDEX_IJK,ispec) = - potential_dot_dot_acoustic(iglob)
        ENDDO_LOOP_IJK
      enddo
      write(outputname,"('/proc',i6.6,'_pressure_it',i6.6,'.bin')")myrank,it
