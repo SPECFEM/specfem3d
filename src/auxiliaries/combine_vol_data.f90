@@ -361,6 +361,9 @@
     if (filename(1:9) == 'curl_X_it' .or. filename(1:9) == 'curl_Y_it' .or. filename(1:9) == 'curl_Z_it') then
       data_array_name = trim(filename(1:6)) ! "curl_X",..
     endif
+    if (filename(1:11) == 'pressure_it' ) then
+      data_array_name = trim(filename(1:8)) ! "pressure"
+    endif
 
     write(IOVTK,'(a,i12)') "POINT_DATA ",npp
     write(IOVTK,'(a)') "SCALARS "//trim(data_array_name)//" float"

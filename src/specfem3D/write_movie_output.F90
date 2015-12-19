@@ -27,6 +27,8 @@
 !
 ! United States and French Government Sponsorship Acknowledged.
 
+#include "config.fh"
+
   subroutine write_movie_output()
 
   use specfem_par
@@ -1003,11 +1005,11 @@
   use specfem_par_movie
   implicit none
 
-  real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable:: veloc_element
+  real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable::veloc_element,pressure_loc
   ! divergence and curl only in the global nodes
   real(kind=CUSTOM_REAL),dimension(:),allocatable:: div_glob,curl_glob
   integer,dimension(:),allocatable :: valency
-  integer :: ispec,ier
+  integer :: ispec,ier,i,j,k,iglob
   character(len=3) :: channel
   character(len=1) :: compx,compy,compz
   character(len=MAX_STRING_LEN) :: outputname
@@ -1034,7 +1036,6 @@
     ! uses div as temporary array to store velocity on all gll points
     do ispec=1,NSPEC_AB
       if (.not. ispec_is_acoustic(ispec)) cycle
-
       ! calculates velocity
       call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                         potential_dot_acoustic, veloc_element,&
@@ -1044,9 +1045,29 @@
       velocity_x(:,:,:,ispec) = veloc_element(1,:,:,:)
       velocity_y(:,:,:,ispec) = veloc_element(2,:,:,:)
       velocity_z(:,:,:,ispec) = veloc_element(3,:,:,:)
-    enddo
+   
 
-    deallocate(veloc_element)
+    
+ 
+   enddo
+
+   if ( .not. ELASTIC_SIMULATION .and. .not. POROELASTIC_SIMULATION) then  
+     allocate(pressure_loc(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+     do ispec=1,NSPEC_AB
+       DO_LOOP_IJK
+        iglob = ibool(INDEX_IJK,ispec)
+        pressure_loc(INDEX_IJK,ispec) = - potential_dot_dot_acoustic(iglob)              
+       ENDDO_LOOP_IJK
+     enddo
+     write(outputname,"('/proc',i6.6,'_pressure_it',i6.6,'.bin')")myrank,it
+     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
+     if (ier /= 0) stop 'error opening file movie output pressure'
+     write(27) pressure_loc
+     close(27)
+     deallocate(pressure_loc)
+   endif
+
+   deallocate(veloc_element)
 
   endif ! acoustic
 
