@@ -64,7 +64,9 @@ utilizing Legendre basis functions and a perfectly diagonal mass matrix,
 include \citet{CoJoTo93}, \citet{Kom97}, \citet{FaMaPaQu97}, \citet{CaGa97},
 \citet{KoVi98} and \citet{KoTr99}, whereas applications involving
 Chebyshev basis functions and a non-diagonal mass matrix include \citet{SePr94},
-\citet{PrCaSe94} and \citet{SePrPr95}.\\
+\citet{PrCaSe94} and \citet{SePrPr95}.
+In the Legendre version that we use in SPECFEM the mass matrix is purposely slightly inexact but diagonal (but can be made exact if needed, see \cite{Teu15}),
+while in the Chebyshev version it is exact but non diagonal.\\
 
 
 All SPECFEM3D software is written in Fortran2003 with full portability
