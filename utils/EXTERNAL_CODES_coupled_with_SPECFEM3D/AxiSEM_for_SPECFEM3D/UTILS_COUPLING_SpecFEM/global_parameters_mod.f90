@@ -64,7 +64,7 @@
     !! mpi
     integer irecmin, irecmax
 
-    !! if the expand_2D_3D and reformat are used for KH integral and reciprocity  
+    !! if the expand_2D_3D and reformat are used for KH integral and reciprocity
     logical :: recip_KH_integral
     integer Xk_force
 

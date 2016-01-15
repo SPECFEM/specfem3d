@@ -25,16 +25,16 @@ module writing_mod
 
 
 !!$    write(idu1d1,'(2x, 7e20.10)') deriv_rec(1,1), deriv_rec(2,1), deriv_rec(3,1), &
-!!$                                  deriv_rec(4,1), deriv_rec(5,1), deriv_rec(6,1), deriv_rec(7,1) 
+!!$                                  deriv_rec(4,1), deriv_rec(5,1), deriv_rec(6,1), deriv_rec(7,1)
 !!$
 !!$    write(idu1d2,'(2x, 7e20.10)') deriv_rec(1,2), deriv_rec(2,2), deriv_rec(3,2), &
-!!$                                  deriv_rec(4,2), deriv_rec(5,2), deriv_rec(6,2), deriv_rec(7,2) 
+!!$                                  deriv_rec(4,2), deriv_rec(5,2), deriv_rec(6,2), deriv_rec(7,2)
 !!$
 !!$    write(idu1d3,'(2x, 7e20.10)') deriv_rec(1,3), deriv_rec(2,3), deriv_rec(3,3), &
-!!$                                  deriv_rec(4,3), deriv_rec(5,3), deriv_rec(6,3), deriv_rec(7,3) 
+!!$                                  deriv_rec(4,3), deriv_rec(5,3), deriv_rec(6,3), deriv_rec(7,3)
 !!$
 !!$    write(idu2d1,'(2x, 7e20.10)') deriv_rec(1,4), deriv_rec(2,4), deriv_rec(3,4), &
-!!$                                  deriv_rec(4,4), deriv_rec(5,4), deriv_rec(6,4), deriv_rec(7,4) 
+!!$                                  deriv_rec(4,4), deriv_rec(5,4), deriv_rec(6,4), deriv_rec(7,4)
 !!$
 !!$    write(idu2d2,'(2x, 7e20.10)') deriv_rec(1,5), deriv_rec(2,5), deriv_rec(3,5), &
 !!$                                  deriv_rec(4,5), deriv_rec(5,5), deriv_rec(6,5), deriv_rec(7,5)
@@ -73,13 +73,13 @@ module writing_mod
 
 
 !!$    write(ivx,'(2x, 7e20.10)') data_rec(1,1), data_rec(2,1), data_rec(3,1), &
-!!$                               data_rec(4,1), data_rec(5,1), data_rec(6,1), data_rec(7,1) 
+!!$                               data_rec(4,1), data_rec(5,1), data_rec(6,1), data_rec(7,1)
 !!$
 !!$    write(ivy,'(2x, 7e20.10)') data_rec(1,2), data_rec(2,2), data_rec(3,2), &
-!!$                               data_rec(4,2), data_rec(5,2), data_rec(6,2), data_rec(7,2) 
+!!$                               data_rec(4,2), data_rec(5,2), data_rec(6,2), data_rec(7,2)
 !!$
 !!$    write(ivz,'(2x, 7e20.10)') data_rec(1,3), data_rec(2,3), data_rec(3,3), &
-!!$                               data_rec(4,3), data_rec(5,3), data_rec(6,3), data_rec(7,3) 
+!!$                               data_rec(4,3), data_rec(5,3), data_rec(6,3), data_rec(7,3)
 !!$
 !!$    !write(*,*) ' write veloc ',data_rec(10,3)
 
@@ -165,16 +165,16 @@ module writing_mod
 
 
 !!$    write(isxx,'(2x, 7e20.10)') stress_rec(1,1), stress_rec(2,1), stress_rec(3,1), &
-!!$                                  stress_rec(4,1), stress_rec(5,1), stress_rec(6,1), stress_rec(7,1) 
+!!$                                  stress_rec(4,1), stress_rec(5,1), stress_rec(6,1), stress_rec(7,1)
 !!$
 !!$    write(isyy,'(2x, 7e20.10)') stress_rec(1,2), stress_rec(2,2), stress_rec(3,2), &
-!!$                                  stress_rec(4,2), stress_rec(5,2), stress_rec(6,2), stress_rec(7,2) 
+!!$                                  stress_rec(4,2), stress_rec(5,2), stress_rec(6,2), stress_rec(7,2)
 !!$
 !!$    write(iszz,'(2x, 7e20.10)') stress_rec(1,3), stress_rec(2,3), stress_rec(3,3), &
-!!$                                  stress_rec(4,3), stress_rec(5,3), stress_rec(6,3), stress_rec(7,3) 
+!!$                                  stress_rec(4,3), stress_rec(5,3), stress_rec(6,3), stress_rec(7,3)
 !!$
 !!$    write(isxy,'(2x, 7e20.10)') stress_rec(1,4), stress_rec(2,4), stress_rec(3,4), &
-!!$                                  stress_rec(4,4), stress_rec(5,4), stress_rec(6,4), stress_rec(7,4) 
+!!$                                  stress_rec(4,4), stress_rec(5,4), stress_rec(6,4), stress_rec(7,4)
 !!$
 !!$    write(isxz,'(2x, 7e20.10)') stress_rec(1,5), stress_rec(2,5), stress_rec(3,5), &
 !!$                                  stress_rec(4,5), stress_rec(5,5), stress_rec(6,5), stress_rec(7,5)

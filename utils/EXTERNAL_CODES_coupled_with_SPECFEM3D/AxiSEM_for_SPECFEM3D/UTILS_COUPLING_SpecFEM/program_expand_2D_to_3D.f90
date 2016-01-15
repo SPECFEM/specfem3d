@@ -47,7 +47,7 @@
 !---
 !
 
-  if (.not. recip_KH_integral) then 
+  if (.not. recip_KH_integral) then
 
     do isim=1,nsim  !! do to : mettre en memoire la solution sous echantillonnee et la resampler avant de l'ecrire
 

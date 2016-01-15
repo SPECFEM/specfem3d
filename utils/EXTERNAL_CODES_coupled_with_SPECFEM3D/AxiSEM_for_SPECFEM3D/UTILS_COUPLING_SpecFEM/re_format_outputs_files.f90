@@ -314,7 +314,7 @@ program re_format_outputs_files
 
      ! -----  AxiSEM stuff ---------------------------------------------------------------------
 
-     if (.not. recip_KH_integral) then 
+     if (.not. recip_KH_integral) then
 
        allocate(working_axisem_dir(nsim))
 
@@ -322,7 +322,7 @@ program re_format_outputs_files
          working_axisem_dir(1) = "./"
 !!         if (simutypevalue == 'single') working_axisem_dir(1) = "./"
 !!         if (simutypevalue == 'force')  working_axisem_dir(1) = "PX/"
-       elseif (nsim == 2) then
+       else if (nsim == 2) then
          working_axisem_dir(1) = "PZ/"
          working_axisem_dir(2) = "PX/"
        else
@@ -389,7 +389,7 @@ program re_format_outputs_files
          open(isxz(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
          write(fichier,'(a6,a15)') '/Data/',output_stress_name(6)
          open(isyz(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
- 
+
          write(*,*) 'openning ', trim(working_axisem_dir(isim))//trim(fichier)
 
        enddo
@@ -462,8 +462,8 @@ program re_format_outputs_files
          idu3d1(isim)=next_iunit(iunit)
          idu3d2(isim)=next_iunit(iunit)
          idu3d3(isim)=next_iunit(iunit)
- 
- 
+
+
          write(fichier,'(a15)') output_displ_name(1)
          open(iux(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
          write(fichier,'(a15)') output_displ_name(2)
@@ -509,7 +509,7 @@ program re_format_outputs_files
          read(idu3d1(isim)) nbrec,ntime
          read(idu3d2(isim)) nbrec,ntime
          read(idu3d3(isim)) nbrec,ntime
- 
+
        enddo
 
        write(*,*) ' time step ', dtt
@@ -556,7 +556,7 @@ program re_format_outputs_files
       working_axisem_dir(1) = "./"
 !!      if (simutypevalue == 'single') working_axisem_dir(1) = "./"
 !!      if (simutypevalue == 'force')  working_axisem_dir(1) = "PX/"
-    elseif (nsim == 2) then
+    else if (nsim == 2) then
       working_axisem_dir(1) = "PZ/"
       working_axisem_dir(2) = "PX/"
     else
@@ -579,7 +579,7 @@ program re_format_outputs_files
   write(*,*) ' nb ',itmax - itmin + 1
   write(*,*) ' ntime_interp ',ntime_interp
 
-  if (.not. recip_KH_integral) then 
+  if (.not. recip_KH_integral) then
 
     allocate(data_rec(9,ntime,nrec_by_proc(myrank+1)))
     allocate(data_rec0(1,nbrec,9),data_tmp(nbrec,9))
@@ -613,7 +613,7 @@ program re_format_outputs_files
 
 ! ################################ reading and scatter the data  ################################
 
-  if (.not. recip_KH_integral) then 
+  if (.not. recip_KH_integral) then
 
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Case of classic coupling !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -836,7 +836,7 @@ program re_format_outputs_files
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Case of recip & KH !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
 
-  else 
+  else
 
     allocate(irec_glob(NGLLSQUARE*MAX_MUN_ABS_BOUNDARY_FACES,nSpecfem_proc))
     allocate(ur(3,nrec_by_proc(myrank+1)))
@@ -899,19 +899,19 @@ program re_format_outputs_files
           do irank=1,nbproc-1
 
             kk = 0
-             
+
             do iface=1,num_boundary_by_proc(irank+1)
               do igll=1,NGLLSQUARE
-             
+
                 kk                    = kk+1
                 irec                  = ind_face2rec(iface,igll,irank+1)
                 irec_glob(kk,irank+1) = irec
-       
+
                 if( irec == 0) then
                   write(*,*) ' irec ', irec,iface,igll,irank+1
                   stop
                 endif
-    
+
                 data_tmp_to_send(icomp,kk) = data_rec0(1,irec,icomp)
               enddo
             enddo
@@ -921,7 +921,7 @@ program re_format_outputs_files
           enddo
 
         else
-          
+
           call mpi_recv(data_rec(icomp,itime,:),nrec_by_proc(myrank+1),MPI_REAL,0,etq,MPI_COMM_WORLD,statut,ierr)
 
         endif
@@ -935,7 +935,7 @@ program re_format_outputs_files
       do isim=1,nsim
 
         close(iux(isim))
-        close(iuy(isim)) 
+        close(iuy(isim))
         close(iuz(isim))
 
         close(idu1d1(isim))

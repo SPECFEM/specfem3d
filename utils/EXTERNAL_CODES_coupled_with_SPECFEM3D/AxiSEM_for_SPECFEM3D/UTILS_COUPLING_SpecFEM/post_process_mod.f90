@@ -376,12 +376,12 @@
 
         do irec=irecmin,irecmax
 
-          deriv_rec(irec,1) = f1(irec) * deriv_rec(irec,1) 
+          deriv_rec(irec,1) = f1(irec) * deriv_rec(irec,1)
           deriv_rec(irec,2) = f2(irec) * deriv_rec(irec,2)
           deriv_rec(irec,3) = f1(irec) * deriv_rec(irec,3)
 
-          deriv_rec(irec,4) = f2(irec) * deriv_rec(irec,4) 
-          deriv_rec(irec,5) = f1(irec) * deriv_rec(irec,5) 
+          deriv_rec(irec,4) = f2(irec) * deriv_rec(irec,4)
+          deriv_rec(irec,5) = f1(irec) * deriv_rec(irec,5)
           deriv_rec(irec,6) = f2(irec) * deriv_rec(irec,6)
 
           deriv_rec(irec,7) = f1(irec) * deriv_rec(irec,7)
