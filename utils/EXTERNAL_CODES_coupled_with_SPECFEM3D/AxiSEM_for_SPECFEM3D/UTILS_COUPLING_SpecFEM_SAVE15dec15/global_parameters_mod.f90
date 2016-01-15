@@ -24,8 +24,6 @@
 
     real(kind=SINGLE_REAL), allocatable :: deriv_rec(:,:) !! CD CD
 
-    real(kind=SINGLE_REAL), allocatable :: data_tmpKH_rec(:,:,:), deriv_tmpKH_rec(:,:,:) !! CD CD
-
     !! work arrays
     real(kind=SINGLE_REAL), allocatable :: data_reduce(:,:),stress_reduce(:,:),deriv_reduce(:,:)
 
@@ -64,8 +62,7 @@
     !! mpi
     integer irecmin, irecmax
 
-    !! if the expand_2D_3D and reformat are used for KH integral and reciprocity  
+    !! if the expand_2D_3D and reformat are used for KH integral and reciprocity
     logical :: recip_KH_integral
-    integer Xk_force
 
   end module global_parameters

@@ -123,8 +123,6 @@
       allocate(up(nbrec))
       allocate(reciever_geogr(3,nbrec),reciever_sph(3,nbrec),reciever_cyl(3,nbrec),reciever_interp_value(nbrec))
       allocate(data_rec(nbrec,3),stress_rec(nbrec,6),stress_to_write(nbrec,6),strain_rec(nbrec,6),deriv_rec(nbrec,9))
-      allocate(data_tmpKH_rec(nbrec,3,nsim), deriv_tmpKH_rec(nbrec,9,nsim))
-
       stress_rec=0.
       data_rec=0.
       allocate(f1(nbrec),f2(nbrec),phi(nbrec))
@@ -162,7 +160,7 @@
       subroutine read_info_simu(nsim_to_send)
 
       use global_parameters, only: Mij,nsim,simdir,src_type,ntime,working_axisem_dir, &
-                                   dtt,magnitude,recip_KH_integral,Xk_force
+                                   dtt,magnitude,recip_KH_integral
 
       character(len=256)  :: keyword, keyvalue, line
       character(len=100),allocatable, dimension(:) :: bkgrndmodel, rot_rec
@@ -187,91 +185,86 @@
 
       !! CAUTION : this parameter is HARDCODED, if you change (add line for example) expand_2D_3D.par ==>
       !!           you have to CHANGE ALSO this parameter
-      integer, parameter :: linestoskip_expandpar = 5
+      integer, parameter :: line_before_nsimtmp = 6
 
       working_axisem_dir='./'
-      if (.not. recip_KH_integral) &
-          open(unit=i_param_post, file='inparam_basic', status='old', action='read', iostat=ioerr)
+      open(unit=i_param_post, file='inparam_basic', status='old', action='read', iostat=ioerr)
 
+      !! We read again expand_2D_3D.par, because we need to know the value of nsimtmp in the case of the reciprocity
       open(20,file='../expand_2D_3D.par')
-      do i = 1, linestoskip_expandpar
+      do i = 1, line_before_nsimtmp
         read(20,*)
       enddo
-      read(20,*) recip_KH_integral
       read(20,*) nsimtmp
-      read(20,*) Xk_force
       close(20)
 
-      if (.not. recip_KH_integral) then
+      do
+        read(i_param_post, fmt='(a256)', iostat=ioerr) line
+        if (ioerr < 0) exit
+        if (len(trim(line)) < 1 .or. line(1:1) == '#') cycle
 
-        do
-          read(i_param_post, fmt='(a256)', iostat=ioerr) line
-          if (ioerr < 0) exit
-          if (len(trim(line)) < 1 .or. line(1:1) == '#') cycle
+        read(line,*) keyword, keyvalue
 
-          read(line,*) keyword, keyvalue
+        select case(trim(keyword))
+        case('SIMULATION_TYPE')
 
-          select case(trim(keyword))
-          case('SIMULATION_TYPE')
+          if (keyvalue == 'single') then
+            nsim = 1
+            if (nsimtmp /= nsim) stop 'NSIM INCORRECTLY CONFIGURED in expand_2D_3D.par'
+            allocate(simdir(nsim))
+            simdir(1) = "./"
 
-            if (keyvalue == 'single') then
-              nsim = 1
-              if (nsimtmp /= nsim) stop 'NSIM INCORRECTLY CONFIGURED in expand_2D_3D.par'
-              allocate(simdir(nsim))
-              simdir(1) = "./"
+          else if (keyvalue == 'moment') then
+            nsim = 4
+            if (nsimtmp /= nsim) stop 'NSIM INCORRECTLY CONFIGURED in expand_2D_3D.par'
+            allocate(simdir(nsim))
+            simdir(1) = "MZZ/"
+            simdir(2) = "MXX_P_MYY/"
+            simdir(3) = "MXZ_MYZ/"
+            simdir(4) = "MXY_MXX_M_MYY/"
 
-            else if (keyvalue == 'moment') then
-              nsim = 4
-              if (nsimtmp /= nsim) stop 'NSIM INCORRECTLY CONFIGURED in expand_2D_3D.par'
-              allocate(simdir(nsim))
-              simdir(1) = "MZZ/"
-              simdir(2) = "MXX_P_MYY/"
-              simdir(3) = "MXZ_MYZ/"
-              simdir(4) = "MXY_MXX_M_MYY/"
+            !! read CMTSOLUTION
+            write(6,*)'  reading CMTSOLUTION file....'
+            open(unit=20000,file='CMTSOLUTION',POSITION='REWIND',status='old')
+            read(20000,*) junk
+            read(20000,*) junk
+            read(20000,*) junk
+            read(20000,*) junk
+            read(20000,*) junk
+            read(20000,*) junk
+            read(20000,*) junk
+            read(20000,*) junk, Mij(1) !Mrr
+            read(20000,*) junk, Mij(2) !Mtt
+            read(20000,*) junk, Mij(3) !Mpp
+            read(20000,*) junk, Mij(4) !Mrt
+            read(20000,*) junk, Mij(5) !Mrp
+            read(20000,*) junk, Mij(6) !Mtp
+            close(20000)
 
-              !! read CMTSOLUTION
-              write(6,*)'  reading CMTSOLUTION file....'
-              open(unit=20000,file='CMTSOLUTION',POSITION='REWIND',status='old')
-              read(20000,*) junk
-              read(20000,*) junk
-              read(20000,*) junk
-              read(20000,*) junk
-              read(20000,*) junk
-              read(20000,*) junk
-              read(20000,*) junk
-              read(20000,*) junk, Mij(1) !Mrr
-              read(20000,*) junk, Mij(2) !Mtt
-              read(20000,*) junk, Mij(3) !Mpp
-              read(20000,*) junk, Mij(4) !Mrt
-              read(20000,*) junk, Mij(5) !Mrp
-              read(20000,*) junk, Mij(6) !Mtp
-              close(20000)
+            Mij = Mij / 1.E7 ! CMTSOLUTION given in dyn-cm
 
-              Mij = Mij / 1.E7 ! CMTSOLUTION given in dyn-cm
+          else if (keyvalue == 'force') then
 
-            else if (keyvalue == 'force') then
+            if (recip_KH_integral) nsimtmp = 1
 
+            if (nsimtmp == 2) then
               nsim = 2
-              if (nsimtmp /= nsim) stop 'NSIM INCORRECTLY CONFIGURED in expand_2D_3D.par'
               allocate(simdir(nsim))
               simdir(1) = "PZ/" !! Vertical force
               simdir(2) = "PX/" !! Horizontal force
-
-
+            else if (nsimtmp == 1) then
+              nsim = 1
+              allocate(simdir(nsim))
+              simdir(1) = "PX/" !! We only interested in the horizontal force
+              write(*,*) 'We only interested in the horizontal force !!'
+            else
+              write(*,*) 'NSIM INCORRECTLY CONFIGURED in expand_2D_3D.par, NSIM = ', nsimtmp
+              stop
             endif
-          end select
-        enddo
 
-      else
-
-        nsim = 3
-        if (nsimtmp /= nsim) stop 'NSIM INCORRECTLY CONFIGURED in expand_2D_3D.par'
-        allocate(simdir(nsim))
-        simdir(1) = "ThetaF/"
-        simdir(2) = "PhiF/"
-        simdir(3) = "VertF/"
-
-      endif
+          endif
+        end select
+      enddo
 
       nsim_to_send=nsim
       !open(10,file=trim(working_axisem_dir)//trim(simdir(1))//'nb_rec_to_read.par')

@@ -553,7 +553,7 @@
 !! CD CD ========================================================================
 !! CD CD add this ===============================================================
 
-  subroutine displ_read_recombine_interpol_rotate()
+  subroutine read_displ_field_and_interpol(isim)
 
   use mpi_mod
   use global_parameters
@@ -563,11 +563,10 @@
   real(kind=SINGLE_REAL), allocatable :: data_to_read(:,:,:),stack_v(:),stalta(:)
   real(kind=SINGLE_REAL) Energy_1,Energy_0,thres
 
-  integer itime,iproc,indx_stored(3),isim,ifield,i,j
-  integer nlta,nsta
-
+  integer itime,iproc,indx_stored(3),isim,ifield,i
   integer iux,iuy,iuz
-  integer, allocatable :: iunit(:,:,:)
+  integer nlta,nsta
+  integer, allocatable :: iunit(:,:)
 
   character(len = 4)   :: appmynum
   character(len = 256) :: fichier, sourcetypeword, sourcetypevalue
@@ -577,7 +576,7 @@
 !
 
 !!  open(unit=500, file='inparam_source', status='old', action='read')
-!!  read(500,'(a256)') sourcetypeword, sourcetypevalue 
+!!  read(500,'(a256)') sourcetypeword, sourcetypevalue
 !!  if (sourcetypeword /= 'SOURCE_TYPE') stop 'Wrong read of inparam_source in reading_fields_mod'
 !!  close(500)
 
@@ -585,68 +584,66 @@
   nsta  = 20
   thres = 0.1
 
-  allocate(iunit(0:nbproc-1,3,nsim))
+  allocate(iunit(0:nbproc-1,3))
 
-  j   = 20
-  iux = j+1
-  iuy = j+2
-  iuz = j+3
+
+  ! unit file
+  i = 150
+  do ifield=1,3
+    do iproc=0, nbproc-1
+      i = i+1
+      iunit(iproc,ifield) = i
+    enddo
+  enddo
+
+  i   = i+1
+  iux = i
+  i   = i+1
+  iuy = i
+  i   = i+1
+  iuz = i
 
   write(*,*) ' src_type(:,1) ', myrank, src_type(:,1)
   write(*,*) ' src_type(:,2) ', myrank, src_type(:,2)
 
-  i = 150
-  do isim=1,nsim
-
-    ! unit file
-    do ifield=1,3
-      do iproc=0, nbproc-1
-        i = i+1
-        iunit(iproc,ifield,isim) = i
-      enddo
-    enddo
-
-    if (myrank == 0) then
-
-      write(*,*) 'nbrec to write', nbrec
-      write(*,*) 'nbrec to read ', sum(nb_stored(:))
-      write(*,*) 'nt to write ', ntime
-
-      data_rec = 0.
-
-      do ifield=1,3
-        write(*,*) ifield
-        if (trim(src_type(isim,1))=='monopole' .and. ifield==2) then
-          write(*,*) 'monopole => not up'
-          cycle
-        endif
-
-        ! open files
-        do iproc=0, nbproc-1
-
-          call define_io_appendix(appmynum,iproc)
-          write(fichier,'(a6,a15,a1)') '/Data/',input_displ_name(ifield),'_'
-          open(unit=iunit(iproc,ifield,isim), file=trim(working_axisem_dir)//trim(simdir(isim))//trim(fichier) &
-                   //appmynum//'.bindat', FORM="UNFORMATTED", STATUS="UNKNOWN", POSITION="REWIND")
-        enddo
-      enddo
-    endif
-
-  enddo
+  call compute_prefactor(src_type(isim,1),src_type(isim,2),isim)
 
   if (myrank == 0) then
+    write(fichier,'(a6,a15)') '/Data/',output_displ_name(1)
+    open(iux,file= trim(working_axisem_dir)//trim(simdir(isim))//trim(fichier), FORM="UNFORMATTED")
 
-    write(fichier,'(a15)') output_displ_name(1)
-    open(iux,file= trim(working_axisem_dir)//trim(fichier), FORM="UNFORMATTED")
-    write(fichier,'(a15)') output_displ_name(2)
-    open(iuy,file= trim(working_axisem_dir)//trim(fichier), FORM="UNFORMATTED")
-    write(fichier,'(a15)') output_displ_name(3)
-    open(iuz,file= trim(working_axisem_dir)//trim(fichier), FORM="UNFORMATTED")
+    write(fichier,'(a6,a15)') '/Data/',output_displ_name(2)
+    open(iuy,file= trim(working_axisem_dir)//trim(simdir(isim))//trim(fichier), FORM="UNFORMATTED")
+
+    write(fichier,'(a6,a15)') '/Data/',output_displ_name(3)
+    open(iuz,file= trim(working_axisem_dir)//trim(simdir(isim))//trim(fichier), FORM="UNFORMATTED")
+
+    write(*,*) 'nbrec to write', nbrec
+    write(*,*) 'nbrec to read ', sum(nb_stored(:))
+    write(*,*) 'nt to write ', ntime
 
     write(iux) nbrec,ntime
     write(iuy) nbrec,ntime
     write(iuz) nbrec,ntime
 
+    data_rec = 0.
+
+    do ifield=1,3
+      write(*,*) ifield
+      if (trim(src_type(isim,1))=='monopole' .and. ifield==2) then
+        write(*,*) 'monopole => not up'
+        cycle
+      endif
+
+      ! open files
+      do iproc=0, nbproc-1
+
+        call define_io_appendix(appmynum,iproc)
+        write(fichier,'(a6,a15,a1)') '/Data/',input_displ_name(ifield),'_'
+        open(unit=iunit(iproc,ifield), file=trim(working_axisem_dir)//trim(simdir(isim))//trim(fichier) &
+                   //appmynum//'.bindat', FORM="UNFORMATTED", STATUS="UNKNOWN", POSITION="REWIND")
+      enddo
+    enddo
   endif
 
   allocate(stack_v(ntime),stalta(ntime))
@@ -657,155 +654,132 @@
   ! read files
   do itime=1,ntime
 
-    do isim=1,nsim
+    data_rec    = 0.
+    Energy_1    = 0.
 
-      call compute_prefactor(src_type(isim,1),src_type(isim,2),isim)
+    indx_stored = 1
 
-      data_rec    = 0.
-      Energy_1    = 0.
+    ifield      = 1 !! ====> us
 
-      indx_stored = 1
+    if (myrank == 0) then
 
-      ifield      = 1 !! ====> us
+      do iproc=0, nbproc-1
+        if (nb_stored(iproc) > 0) then
 
-      if (myrank == 0) then
+          allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
+          read(iunit(iproc,ifield))  data_to_read(ibeg:iend,ibeg:iend,:)
+          data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
+                  = data_to_read(ibeg:iend,ibeg:iend,:)
+          indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
+          Energy_1 = Energy_1 + sum(data_to_read(ibeg:iend,ibeg:iend,:)**2)
+          deallocate(data_to_read)
 
-        do iproc=0, nbproc-1
-          if (nb_stored(iproc) > 0) then
-
-            allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
-            read(iunit(iproc,ifield,isim))  data_to_read(ibeg:iend,ibeg:iend,:)
-            data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
-                    = data_to_read(ibeg:iend,ibeg:iend,:)
-            indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
-            Energy_1 = Energy_1 + sum(data_to_read(ibeg:iend,ibeg:iend,:)**2)
-            deallocate(data_to_read)
-
-          endif
-        enddo
-
-      endif
-
-      call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
-      call interpol_field(ifield)
-
-      if (.not.(trim(src_type(isim,1)) == 'monopole')) then
-
-        ifield = 2 !! ====> up
-
-        if (myrank == 0) then
-          do iproc = 0,nbproc-1
-            if (nb_stored(iproc) > 0) then
-
-              allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
-              read(iunit(iproc,ifield,isim))  data_to_read(ibeg:iend,ibeg:iend,:)
-              data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
-                      = data_to_read(ibeg:iend,ibeg:iend,:)
-              indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
-              Energy_1 = Energy_1 + sum(data_to_read(ibeg:iend,ibeg:iend,:)**2)
-              deallocate(data_to_read)
-  
-            endif
-          enddo
-  
         endif
-  
-        call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
-        call interpol_field(ifield)
-  
-      endif
-  
-      ifield = 3 !! ====> uz
-  
+      enddo
+
+    endif
+
+    call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
+    call interpol_field(ifield)
+
+    if (.not.(trim(src_type(isim,1)) == 'monopole')) then
+
+      ifield = 2 !! ====> up
+
       if (myrank == 0) then
-        do iproc=0, nbproc-1
+        do iproc = 0,nbproc-1
           if (nb_stored(iproc) > 0) then
-  
+
             allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
-            read(iunit(iproc,ifield,isim))  data_to_read(ibeg:iend,ibeg:iend,:)
+            read(iunit(iproc,ifield))  data_to_read(ibeg:iend,ibeg:iend,:)
             data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
                     = data_to_read(ibeg:iend,ibeg:iend,:)
             indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
             Energy_1 = Energy_1 + sum(data_to_read(ibeg:iend,ibeg:iend,:)**2)
             deallocate(data_to_read)
- 
+
           endif
         enddo
-
-        stack_v(itime) = Energy_1
 
       endif
 
       call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
       call interpol_field(ifield)
 
-!
-!----------------------------------------------------------------------------
-!
+    endif
 
-      call compute_3D_cyl()
-      call rotate2cartesian_with_source_in_pole()
+    ifield = 3 !! ====> uz
 
-      data_tmpKH_rec(:,:,isim) = data_rec(:,:)
-      data_rec = 0.
+    if (myrank == 0) then
+      do iproc=0, nbproc-1
+        if (nb_stored(iproc) > 0) then
 
-    enddo ! isim
+          allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
+          read(iunit(iproc,ifield))  data_to_read(ibeg:iend,ibeg:iend,:)
+          data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
+                  = data_to_read(ibeg:iend,ibeg:iend,:)
+          indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
+          Energy_1 = Energy_1 + sum(data_to_read(ibeg:iend,ibeg:iend,:)**2)
+          deallocate(data_to_read)
 
-!
-!----------------------------------------------------------------------------
-!
+        endif
+      enddo
 
-    call recombine_displ_cyl_to_Xk_force()
+      stack_v(itime) = Energy_1
 
-!
-!----------------------------------------------------------------------------
-!
-  
+    endif
+
+    call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
+    call interpol_field(ifield)
+
+    call  compute_3D_cyl()
+
+    call rotate2cartesian_with_source_in_pole()
     call rotate_back_source() ! cartesien dans le repere terrestre global
     call rotate_back_to_local_cart() ! cartesien local
-    call rotate_from_chunk_azimuth() ! rotation azimuth chunk
+    call rotate_from_chunk_azimuth() !! VM VM add rotation azimuth chunk
 
     call reduce_mpi_veloc()
 
     if (myrank == 0) call write_veloc_or_displ_3D(iux,iuy,iuz)
 
-!
-!----------------------------------------------------------------------------
-!
-
   enddo ! pas de temps
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   if (myrank ==0) then
 
     ! close files
-    do isim=1,nsim
-      do ifield=1,3
-        do iproc=0, nbproc-1
-          close(iunit(iproc,ifield,isim))
-        enddo
+    do ifield=1,3
+      do iproc=0, nbproc-1
+        close(iunit(iproc,ifield))
       enddo
     enddo
-
     close(iux)
     close(iuy)
     close(iuz)
 
-
+!!         call substalta(stack_v, nsta, nlta, stalta,ntime)
+!!         call pick(stalta,ntime,ipick,thres)
+!!         open(iux,file='pick_guess.txt')
+!!         write(iux,*) ipick,ipick*dtt
+!!         close(iux)
+!!         open(iux,file='StaLta.txt')
+!!         do ipick=1,ntime
+!!             write(iux,*) ipick*dtt,stack_v(ipick),stalta(ipick)
+!!         enddo
+!!         close(iux)
     deallocate(stack_v,stalta)
 
   endif
 
 
-  end subroutine displ_read_recombine_interpol_rotate
+  end subroutine read_displ_field_and_interpol
 
 
 !! CD CD ========================================================================
 !! CD CD add this ===============================================================
 
-  subroutine pderiv_read_recombine_interpol_rotate()
-             
+  subroutine read_partialderivatives_field_and_interpol(isim)
+
   use mpi_mod
   use global_parameters
   use post_processing
@@ -815,10 +789,9 @@
   real(kind=SINGLE_REAL) Energy_1,Energy_0,thres
 
   integer itime,iproc,indx_stored(9),isim,ifield, i, j
-  integer nlta, nsta, indx_tmp
-
   integer idu1d1,idu1d2,idu1d3,idu2d1,idu2d2,idu2d3,idu3d1,idu3d2,idu3d3
-  integer, allocatable :: iunit(:,:,:)
+  integer nlta, nsta, indx_tmp
+  integer, allocatable :: iunit(:,:)
 
   character(len = 4)   :: appmynum
   character(len = 256) :: fichier, sourcetypeword, sourcetypevalue
@@ -833,91 +806,68 @@
   nsta     = 20
   thres    = 0.1
 
-  allocate(iunit(0:nbproc-1,9,nsim))
+  allocate(iunit(0:nbproc-1,9))
 
+  ! unit file
+  i = 150
+  do ifield=1,9
+    do iproc=0, nbproc-1
+      i = i+1
+      iunit(iproc,ifield) = i
+    enddo
+  enddo
 
-  j      = 20
-  idu1d1 = j+1
-  idu1d2 = j+2
-  idu1d3 = j+3
-  idu2d1 = j+4
-  idu2d2 = j+5
-  idu2d3 = j+6
-  idu3d1 = j+7
-  idu3d2 = j+8
-  idu3d3 = j+9
+  i      = i+1
+  idu1d1 = i
+  i      = i+1
+  idu1d2 = i
+  i      = i+1
+  idu1d3 = i
+  i      = i+1
+  idu2d1 = i
+  i      = i+1
+  idu2d2 = i
+  i      = i+1
+  idu2d3 = i
+  i      = i+1
+  idu3d1 = i
+  i      = i+1
+  idu3d2 = i
+  i      = i+1
+  idu3d3 = i
 
   write(*,*) ' src_type(:,1) ', myrank, src_type(:,1)
   write(*,*) ' src_type(:,2) ', myrank, src_type(:,2)
 
-  ! unit file
-  i = 150
-  do isim=1,nsim 
-
-    do ifield=1,9
-      do iproc=0, nbproc-1
-        i = i+1
-        iunit(iproc,ifield,isim) = i
-      enddo
-    enddo
-
-    if (myrank == 0) then
-
-      write(*,*) 'nbrec to write', nbrec
-      write(*,*) 'nbrec to read ', sum(nb_stored(:))
-      write(*,*) 'nt to write ', ntime
-
-      ! We use here data_rec as a temporary variable, to calculate deriv_rec
-      data_rec  = 0.
-      deriv_rec = 0.
-
-      do ifield=1,9
-        write(*,*) ifield
-        if (trim(src_type(isim,1))=='monopole' .and. &
-            ((ifield==2) .or. (ifield==4) .or. (ifield==6) .or. (ifield==8)) ) then
-            write(*,*) 'monopole => not up'
-          cycle
-        endif
-
-        ! open files
-        do iproc=0, nbproc-1
-
-          call define_io_appendix(appmynum,iproc)
-          write(fichier,'(a6,a15,a1)') '/Data/',input_deriv_name(ifield),'_'
-          open(unit=iunit(iproc,ifield,isim), file=trim(working_axisem_dir)//trim(simdir(isim))//trim(fichier) &
-                   //appmynum//'.bindat', FORM="UNFORMATTED", STATUS="UNKNOWN", POSITION="REWIND")
-        enddo
-      enddo
-    endif
-
-  enddo
-
-!
-!---
-!
+  call compute_prefactor(src_type(isim,1),src_type(isim,2),isim)
 
   if (myrank == 0) then
 
-    write(fichier,'(a15)') output_deriv_name(1)
-    open(idu1d1,file= trim(working_axisem_dir)//trim(fichier), FORM="UNFORMATTED")
-    write(fichier,'(a15)') output_deriv_name(2)
-    open(idu1d2,file= trim(working_axisem_dir)//trim(fichier), FORM="UNFORMATTED")
-    write(fichier,'(a15)') output_deriv_name(3)
-    open(idu1d3,file= trim(working_axisem_dir)//trim(fichier), FORM="UNFORMATTED")
+    write(fichier,'(a6,a15)') '/Data/',output_deriv_name(1)
+    open(idu1d1,file= trim(working_axisem_dir)//trim(simdir(isim))//trim(fichier), FORM="UNFORMATTED")
+    write(fichier,'(a6,a15)') '/Data/',output_deriv_name(2)
+    open(idu1d2,file= trim(working_axisem_dir)//trim(simdir(isim))//trim(fichier), FORM="UNFORMATTED")
+    write(fichier,'(a6,a15)') '/Data/',output_deriv_name(3)
+    open(idu1d3,file= trim(working_axisem_dir)//trim(simdir(isim))//trim(fichier), FORM="UNFORMATTED")
 
-    write(fichier,'(a15)') output_deriv_name(4)
-    open(idu2d1,file= trim(working_axisem_dir)//trim(fichier), FORM="UNFORMATTED")
-    write(fichier,'(a15)') output_deriv_name(5)
-    open(idu2d2,file= trim(working_axisem_dir)//trim(fichier), FORM="UNFORMATTED")
-    write(fichier,'(a15)') output_deriv_name(6)
-    open(idu2d3,file= trim(working_axisem_dir)//trim(fichier), FORM="UNFORMATTED")
+    write(fichier,'(a6,a15)') '/Data/',output_deriv_name(4)
+    open(idu2d1,file= trim(working_axisem_dir)//trim(simdir(isim))//trim(fichier), FORM="UNFORMATTED")
+    write(fichier,'(a6,a15)') '/Data/',output_deriv_name(5)
+    open(idu2d2,file= trim(working_axisem_dir)//trim(simdir(isim))//trim(fichier), FORM="UNFORMATTED")
+    write(fichier,'(a6,a15)') '/Data/',output_deriv_name(6)
+    open(idu2d3,file= trim(working_axisem_dir)//trim(simdir(isim))//trim(fichier), FORM="UNFORMATTED")
 
-    write(fichier,'(a15)') output_deriv_name(7)
-    open(idu3d1,file= trim(working_axisem_dir)//trim(fichier), FORM="UNFORMATTED")
-    write(fichier,'(a15)') output_deriv_name(8)
-    open(idu3d2,file= trim(working_axisem_dir)//trim(fichier), FORM="UNFORMATTED")
-    write(fichier,'(a15)') output_deriv_name(9)
-    open(idu3d3,file= trim(working_axisem_dir)//trim(fichier), FORM="UNFORMATTED")
+    write(fichier,'(a6,a15)') '/Data/',output_deriv_name(7)
+    open(idu3d1,file= trim(working_axisem_dir)//trim(simdir(isim))//trim(fichier), FORM="UNFORMATTED")
+    write(fichier,'(a6,a15)') '/Data/',output_deriv_name(8)
+    open(idu3d2,file= trim(working_axisem_dir)//trim(simdir(isim))//trim(fichier), FORM="UNFORMATTED")
+    write(fichier,'(a6,a15)') '/Data/',output_deriv_name(9)
+    open(idu3d3,file= trim(working_axisem_dir)//trim(simdir(isim))//trim(fichier), FORM="UNFORMATTED")
+
+
+    write(*,*) 'nbrec to write', nbrec
+    write(*,*) 'nbrec to read ', sum(nb_stored(:))
+    write(*,*) 'nt to write ', ntime
 
     write(idu1d1) nbrec,ntime
     write(idu1d2) nbrec,ntime
@@ -929,289 +879,315 @@
     write(idu3d2) nbrec,ntime
     write(idu3d3) nbrec,ntime
 
+    ! We use here data_rec as a temporary variable, to calculate deriv_rec
+    data_rec = 0.
+
+    do ifield=1,9
+      write(*,*) ifield
+      if (trim(src_type(isim,1))=='monopole' .and. &
+          ((ifield==2) .or. (ifield==4) .or. (ifield==6) .or. (ifield==8)) ) then
+        write(*,*) 'monopole => not up'
+        cycle
+      endif
+
+      ! open files
+      do iproc=0, nbproc-1
+
+        call define_io_appendix(appmynum,iproc)
+        write(fichier,'(a6,a15,a1)') '/Data/',input_deriv_name(ifield),'_'
+        open(unit=iunit(iproc,ifield), file=trim(working_axisem_dir)//trim(simdir(isim))//trim(fichier) &
+                   //appmynum//'.bindat', FORM="UNFORMATTED", STATUS="UNKNOWN", POSITION="REWIND")
+      enddo
+    enddo
   endif
 
-!
-!--- Boucle en temps
-!
-
+  ! read files
   do itime=1,ntime
 
-    do isim=1,nsim 
-
-      call compute_prefactor(src_type(isim,1),src_type(isim,2),isim)
-
-      data_rec    = 0.
-      deriv_rec   = 0.
-      indx_stored = 1
+    data_rec    = 0.
+    deriv_rec   = 0.
+    indx_stored = 1
 
 !
 !-- derivatives of us -------------------------------------------------------
 !
 
-      ifield      = 1 !! ====> 1st derivative of us
+    ifield      = 1 !! ====> 1st derivative of us
 
-      if (myrank == 0) then
+    if (myrank == 0) then
 
-        do iproc=0, nbproc-1
-          if (nb_stored(iproc) > 0) then
+      do iproc=0, nbproc-1
+        if (nb_stored(iproc) > 0) then
 
-            allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
-            read(iunit(iproc,ifield,isim)) data_to_read(ibeg:iend,ibeg:iend,:)
-            data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
-                    = data_to_read(ibeg:iend,ibeg:iend,:)
-            indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
-            deallocate(data_to_read)
-  
-          endif
-        enddo
-
-      endif
-
-      call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
-
-      call interpol_field(indx_tmp) 
-      deriv_rec(:,1) = data_rec(:,indx_tmp)
-      data_rec(:,:)  = 0.
-
-      if (.not.(trim(src_type(isim,1)) == 'monopole')) then
-
-        ifield = 2 !! ====> 2nd derivative of us  
-
-        if (myrank == 0) then
-          do iproc = 0,nbproc-1
-            if (nb_stored(iproc) > 0) then
-
-              allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
-              read(iunit(iproc,ifield,isim))  data_to_read(ibeg:iend,ibeg:iend,:)
-              data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
-                      = data_to_read(ibeg:iend,ibeg:iend,:)
-              indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
-              deallocate(data_to_read)
-
-            endif
-          enddo
+          allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
+          read(iunit(iproc,ifield)) data_to_read(ibeg:iend,ibeg:iend,:)
+          data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
+                  = data_to_read(ibeg:iend,ibeg:iend,:)
+          indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
+          deallocate(data_to_read)
 
         endif
+      enddo
 
-        call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
+    endif
 
-        call interpol_field(indx_tmp) 
-        deriv_rec(:,2) = data_rec(:,indx_tmp)
-        data_rec(:,:)  = 0.
+    call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
 
-      endif
+    call interpol_field(indx_tmp)
+    deriv_rec(:,1) = data_rec(:,indx_tmp)
+    data_rec(:,:)  = 0.
 
-      ifield = 3 !! ====> 3rd derivative of us
+    if (.not.(trim(src_type(isim,1)) == 'monopole')) then
 
-      if (myrank == 0) then
-        do iproc=0, nbproc-1
-          if (nb_stored(iproc) > 0) then
-
-            allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
-            read(iunit(iproc,ifield,isim))  data_to_read(ibeg:iend,ibeg:iend,:)
-            data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
-                    = data_to_read(ibeg:iend,ibeg:iend,:)
-            indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
-            deallocate(data_to_read)
-
-          endif
-        enddo
-      endif
-
-      call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
-
-      call interpol_field(indx_tmp) 
-      deriv_rec(:,3) = data_rec(:,indx_tmp)
-      data_rec(:,:)  = 0.
-
-
-!
-!-- derivatives of up -------------------------------------------------------
-!
-
-      if (.not.(trim(src_type(isim,1)) == 'monopole')) then
-  
-        ifield = 4 !! ====> 1st derivative of up
-
-        if (myrank == 0) then
-          do iproc=0, nbproc-1
-            if (nb_stored(iproc) > 0) then
-
-              allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
-              read(iunit(iproc,ifield,isim)) data_to_read(ibeg:iend,ibeg:iend,:)
-              data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
-                      = data_to_read(ibeg:iend,ibeg:iend,:)
-              indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
-              deallocate(data_to_read)
-  
-            endif
-          enddo
-        endif
-
-        call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
-  
-        call interpol_field(indx_tmp) 
-        deriv_rec(:,4) = data_rec(:,indx_tmp)
-        data_rec(:,:)  = 0.
-  
-      endif  
-
-
-      ifield = 5 !! ====> 2nd derivative of up
+      ifield = 2 !! ====> 2nd derivative of us
 
       if (myrank == 0) then
         do iproc = 0,nbproc-1
           if (nb_stored(iproc) > 0) then
 
             allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
-            read(iunit(iproc,ifield,isim))  data_to_read(ibeg:iend,ibeg:iend,:)
+            read(iunit(iproc,ifield))  data_to_read(ibeg:iend,ibeg:iend,:)
             data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
                     = data_to_read(ibeg:iend,ibeg:iend,:)
             indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
             deallocate(data_to_read)
-  
+
           endif
         enddo
-  
+
       endif
 
       call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
 
-      call interpol_field(indx_tmp) 
-      deriv_rec(:,5) = data_rec(:,indx_tmp)
+      call interpol_field(indx_tmp)
+      deriv_rec(:,2) = data_rec(:,indx_tmp)
       data_rec(:,:)  = 0.
-  
-      if (.not.(trim(src_type(isim,1)) == 'monopole')) then
-  
-        ifield = 6 !! ====> 3rd derivative of up
-  
-        if (myrank == 0) then
-          do iproc=0, nbproc-1
-            if (nb_stored(iproc) > 0) then
-  
-              allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
-              read(iunit(iproc,ifield,isim))  data_to_read(ibeg:iend,ibeg:iend,:)
-              data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
-                      = data_to_read(ibeg:iend,ibeg:iend,:)
-              indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
-              deallocate(data_to_read)
-  
-            endif
-          enddo
+
+    endif
+
+    ifield = 3 !! ====> 3rd derivative of us
+
+    if (myrank == 0) then
+      do iproc=0, nbproc-1
+        if (nb_stored(iproc) > 0) then
+
+          allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
+          read(iunit(iproc,ifield))  data_to_read(ibeg:iend,ibeg:iend,:)
+          data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
+                  = data_to_read(ibeg:iend,ibeg:iend,:)
+          indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
+          deallocate(data_to_read)
+
         endif
+      enddo
+    endif
 
-        call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
+    call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
 
-        call interpol_field(indx_tmp) 
-        deriv_rec(:,6) = data_rec(:,indx_tmp)
-        data_rec(:,:)  = 0.
+    call interpol_field(indx_tmp)
+    deriv_rec(:,3) = data_rec(:,indx_tmp)
+    data_rec(:,:)  = 0.
 
+
+!
+!-- derivatives of up -------------------------------------------------------
+!
+
+    if (.not.(trim(src_type(isim,1)) == 'monopole')) then
+
+      ifield = 4 !! ====> 1st derivative of up
+
+      if (myrank == 0) then
+        do iproc=0, nbproc-1
+          if (nb_stored(iproc) > 0) then
+
+            allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
+            read(iunit(iproc,ifield)) data_to_read(ibeg:iend,ibeg:iend,:)
+            data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
+                    = data_to_read(ibeg:iend,ibeg:iend,:)
+            indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
+            deallocate(data_to_read)
+
+          endif
+        enddo
       endif
+
+      call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
+
+      call interpol_field(indx_tmp)
+      deriv_rec(:,4) = data_rec(:,indx_tmp)
+      data_rec(:,:)  = 0.
+
+    endif
+
+
+    ifield = 5 !! ====> 2nd derivative of up
+
+    if (myrank == 0) then
+      do iproc = 0,nbproc-1
+        if (nb_stored(iproc) > 0) then
+
+          allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
+          read(iunit(iproc,ifield))  data_to_read(ibeg:iend,ibeg:iend,:)
+          data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
+                  = data_to_read(ibeg:iend,ibeg:iend,:)
+          indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
+          deallocate(data_to_read)
+
+        endif
+      enddo
+
+    endif
+
+    call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
+
+    call interpol_field(indx_tmp)
+    deriv_rec(:,5) = data_rec(:,indx_tmp)
+    data_rec(:,:)  = 0.
+
+    if (.not.(trim(src_type(isim,1)) == 'monopole')) then
+
+      ifield = 6 !! ====> 3rd derivative of up
+
+      if (myrank == 0) then
+        do iproc=0, nbproc-1
+          if (nb_stored(iproc) > 0) then
+
+            allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
+            read(iunit(iproc,ifield))  data_to_read(ibeg:iend,ibeg:iend,:)
+            data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
+                    = data_to_read(ibeg:iend,ibeg:iend,:)
+            indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
+            deallocate(data_to_read)
+
+          endif
+        enddo
+      endif
+
+      call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
+
+      call interpol_field(indx_tmp)
+      deriv_rec(:,6) = data_rec(:,indx_tmp)
+      data_rec(:,:)  = 0.
+
+    endif
 
 !
 !-- derivatives of uz -------------------------------------------------------
 !
 
-      ifield = 7 !! ====> 1st derivative of uz
+    ifield = 7 !! ====> 1st derivative of uz
 
-      if (myrank == 0) then
-        do iproc=0, nbproc-1
-          if (nb_stored(iproc) > 0) then
-  
-            allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
-            read(iunit(iproc,ifield,isim)) data_to_read(ibeg:iend,ibeg:iend,:)
-            data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
-                    = data_to_read(ibeg:iend,ibeg:iend,:)
-            indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
-            deallocate(data_to_read)
-  
-          endif
-        enddo
-      endif
-  
-      call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
-  
-      call interpol_field(indx_tmp) 
-      deriv_rec(:,7) = data_rec(:,indx_tmp)
-      data_rec(:,:)  = 0.
+    if (myrank == 0) then
+      do iproc=0, nbproc-1
+        if (nb_stored(iproc) > 0) then
 
-      if (.not.(trim(src_type(isim,1)) == 'monopole')) then
+          allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
+          read(iunit(iproc,ifield)) data_to_read(ibeg:iend,ibeg:iend,:)
+          data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
+                  = data_to_read(ibeg:iend,ibeg:iend,:)
+          indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
+          deallocate(data_to_read)
 
-        ifield = 8 !! ====> 2nd derivative of uz
-
-        if (myrank == 0) then
-          do iproc = 0,nbproc-1
-            if (nb_stored(iproc) > 0) then
-  
-              allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
-              read(iunit(iproc,ifield,isim))  data_to_read(ibeg:iend,ibeg:iend,:)
-              data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
-                      = data_to_read(ibeg:iend,ibeg:iend,:)
-              indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
-              deallocate(data_to_read)
-  
-            endif
-          enddo
         endif
-  
-        call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
-  
-        call interpol_field(indx_tmp) 
-        deriv_rec(:,8) = data_rec(:,indx_tmp)
-        data_rec(:,:)  = 0.
-  
-      endif
-  
-      ifield = 9 !! ====> 3rd derivative of uz
-  
+      enddo
+    endif
+
+    call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
+
+    call interpol_field(indx_tmp)
+    deriv_rec(:,7) = data_rec(:,indx_tmp)
+    data_rec(:,:)  = 0.
+
+    if (.not.(trim(src_type(isim,1)) == 'monopole')) then
+
+      ifield = 8 !! ====> 2nd derivative of uz
+
       if (myrank == 0) then
-        do iproc=0, nbproc-1
+        do iproc = 0,nbproc-1
           if (nb_stored(iproc) > 0) then
-  
+
             allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
-            read(iunit(iproc,ifield,isim))  data_to_read(ibeg:iend,ibeg:iend,:)
+            read(iunit(iproc,ifield))  data_to_read(ibeg:iend,ibeg:iend,:)
             data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
                     = data_to_read(ibeg:iend,ibeg:iend,:)
             indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
             deallocate(data_to_read)
-  
+
           endif
         enddo
       endif
 
       call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
-  
-      call interpol_field(indx_tmp) 
-      deriv_rec(:,9) = data_rec(:,indx_tmp)
+
+      call interpol_field(indx_tmp)
+      deriv_rec(:,8) = data_rec(:,indx_tmp)
       data_rec(:,:)  = 0.
 
+    endif
+
+    ifield = 9 !! ====> 3rd derivative of uz
+
+    if (myrank == 0) then
+      do iproc=0, nbproc-1
+        if (nb_stored(iproc) > 0) then
+
+          allocate(data_to_read(ibeg:iend,ibeg:iend, nb_stored(iproc)))
+          read(iunit(iproc,ifield))  data_to_read(ibeg:iend,ibeg:iend,:)
+          data_read(ibeg:iend, ibeg:iend, indx_stored(ifield):indx_stored(ifield)+nb_stored(iproc)-1) &
+                  = data_to_read(ibeg:iend,ibeg:iend,:)
+          indx_stored(ifield)=indx_stored(ifield)+nb_stored(iproc)
+          deallocate(data_to_read)
+
+        endif
+      enddo
+    endif
+
+    call mpi_bcast(data_read,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_REAL,0,MPI_COMM_WORLD,ierr)
+
+    call interpol_field(indx_tmp)
+    deriv_rec(:,9) = data_rec(:,indx_tmp)
+    data_rec(:,:)  = 0.
+
 !
 !----------------------------------------------------------------------------
 !
 
-      call compute_deriv_3D_cyl()
-      call rotate2cartesian_with_source_in_pole_deriv()
+!!    do j = 1,3
+!!      ! For j = 1, we calculate the rotation for the derivatives with respect to s, of (us, up, uz)
+!!      ! For j = 2, we calculate the rotation for the derivatives with respect to p, of (us, up, uz)
+!!      ! For j = 3, we calculate the rotation for the derivatives with respect to z, of (us, up, uz)
+!!
+!!      data_rec(:,1) = deriv_rec(:,j)
+!!      data_rec(:,2) = deriv_rec(:,3 + j)
+!!      data_rec(:,3) = deriv_rec(:,6 + j)
+!!
+!!      call compute_3D_cyl()
+!!      call rotate2cartesian_with_source_in_pole()
+!!      call rotate_back_source() ! cartesien dans le repere terrestre global
+!!      call rotate_back_to_local_cart() ! cartesien local
+!!      call rotate_from_chunk_azimuth() ! rotation azimuth chunk
+!!
+!!!
+!!!---
+!!!
+!!
+!!      deriv_rec(:,j)     = data_rec(:,1)
+!!      deriv_rec(:,3 + j) = data_rec(:,2)
+!!      deriv_rec(:,6 + j) = data_rec(:,3)
+!!
+!!      data_rec = 0.
+!!    enddo
 
-      deriv_tmpKH_rec(:,:,isim) = deriv_rec(:,:)
-      data_rec  = 0.
-      deriv_rec = 0.
+    call  compute_deriv_3D_cyl()
 
-    enddo ! fin boucle sur isim
-
-!
-!----------------------------------------------------------------------------
-!
-
-    call recombine_deriv_cyl_to_Xk_force()
-
-!
-!----------------------------------------------------------------------------
-!
+    call rotate2cartesian_with_source_in_pole_deriv()
 
     call rotate_back_source_deriv() ! cartesien dans le repere tereste global
+
     call rotate_back_to_local_cart_deriv() ! cartesien local
-    call rotate_from_chunk_azimuth_deriv() ! rotation azimuth chunk
+
+    call rotate_from_chunk_azimuth_deriv() !! VM VM add rotation azimuth chunk
 
     call reduce_mpi_deriv()
 
@@ -1228,14 +1204,11 @@
   if (myrank == 0) then
 
     ! close files
-    do isim=1,nsim
-      do ifield=1,9
-        do iproc=0, nbproc-1
-          close(iunit(iproc,ifield,isim))
-        enddo
+    do ifield=1,9
+      do iproc=0, nbproc-1
+        close(iunit(iproc,ifield))
       enddo
     enddo
-
     close(idu1d1)
     close(idu1d2)
     close(idu1d3)
@@ -1249,119 +1222,7 @@
   endif
 
 
-  end subroutine pderiv_read_recombine_interpol_rotate
-
-!
-!=================================================================================================================!
-!
-!
-!=================================================================================================================!
-!
-
-  subroutine recombine_displ_cyl_to_Xk_force()
-
-  use mpi_mod
-  use global_parameters
-  use post_processing
-  use writing_mod
-
-  data_rec  = 0.
-
-  if (Xk_force == 1) then !! We recombine to obtain displ resulting from an X force source
-
-    data_rec(:,:) = (cos(lat_mesh)*cos(lon_mesh))*data_tmpKH_rec(:,:,2) + &
-                    (cos(lat_mesh)*sin(lon_mesh))*data_tmpKH_rec(:,:,1) + &
-                    (-sin(lat_mesh))*data_tmpKH_rec(:,:,3)
-
-  elseif (Xk_force == 2) then !! We recombine to obtain displ resulting from an Y force source
-
-    data_rec(:,:) = (-sin(lon_mesh))*data_tmpKH_rec(:,:,2) + &
-                    ( cos(lon_mesh))*data_tmpKH_rec(:,:,1)
-
-  elseif (Xk_force == 3) then !! We recombine to obtain displ resulting from an Z force source
-
-    data_rec(:,:) = (sin(lat_mesh)*cos(lon_mesh))*data_tmpKH_rec(:,:,2) + &
-                    (sin(lat_mesh)*sin(lon_mesh))*data_tmpKH_rec(:,:,1) + &
-                    (cos(lat_mesh))*data_tmpKH_rec(:,:,3)
-
-  endif
-
-!!  if (Xk_force == 1) then !! We recombine to obtain displ resulting from an X force source
-!!
-!!    data_rec(:,:) =  (-sin(lon_mesh)*cos(lat_mesh) )*data_tmpKH_rec(:,:,2) + &
-!!                     ( cos(lon_mesh)*cos(lat_mesh) )*data_tmpKH_rec(:,:,1)
-!!
-!!  elseif (Xk_force == 2) then !! We recombine to obtain displ resulting from an Y force source
-!!
-!!    data_rec(:,:) = (-sin(lat_mesh)*cos(lon_mesh))*data_tmpKH_rec(:,:,2) + &
-!!                    (-sin(lat_mesh)*sin(lon_mesh))*data_tmpKH_rec(:,:,1) + &
-!!                    (cos(lat_mesh))*data_tmpKH_rec(:,:,3)
-!!
-!!  elseif (Xk_force == 3) then !! We recombine to obtain displ resulting from an Z force source
-!!
-!!    data_rec(:,:) = ( cos(lat_mesh)*cos(lon_mesh) )*data_tmpKH_rec(:,:,2) + &
-!!                    ( cos(lat_mesh)*sin(lon_mesh) )*data_tmpKH_rec(:,:,1) + &
-!!                    (sin(lat_mesh))*data_tmpKH_rec(:,:,3)
-!!
-!!  endif
-
-  end subroutine recombine_displ_cyl_to_Xk_force
-
-!
-!=================================================================================================================!
-!
-!=================================================================================================================!
-!
-
-  subroutine recombine_deriv_cyl_to_Xk_force()
-
-  use mpi_mod
-  use global_parameters
-  use post_processing
-  use writing_mod
-
-  deriv_rec = 0.
-
-  if (Xk_force == 1) then !! We recombine to obtain displ resulting from an X force source
-
-    deriv_rec(:,:) = cos(lat_mesh)*cos(lon_mesh)*deriv_tmpKH_rec(:,:,2) + &
-                     cos(lat_mesh)*sin(lon_mesh)*deriv_tmpKH_rec(:,:,1) + &
-                    -sin(lat_mesh)*deriv_tmpKH_rec(:,:,3)
-
-  elseif (Xk_force == 2) then !! We recombine to obtain displ resulting from an Y force source
-
-    deriv_rec(:,:) = -sin(lon_mesh)*deriv_tmpKH_rec(:,:,2) + &
-                      cos(lon_mesh)*deriv_tmpKH_rec(:,:,1)
-
-  elseif (Xk_force == 3) then !! We recombine to obtain displ resulting from an Z force source
-
-    deriv_rec(:,:) = sin(lat_mesh)*cos(lon_mesh)*deriv_tmpKH_rec(:,:,2) + &
-                     sin(lat_mesh)*sin(lon_mesh)*deriv_tmpKH_rec(:,:,1) + &
-                     cos(lat_mesh)*deriv_tmpKH_rec(:,:,3)
-
-  endif
-
-!!  if (Xk_force == 1) then !! We recombine to obtain displ resulting from an X force source
-!!
-!!    deriv_rec(:,:) = (-sin(lon_mesh)*cos(lat_mesh) )*deriv_tmpKH_rec(:,:,2) + &
-!!                     ( cos(lon_mesh)*cos(lat_mesh) )*deriv_tmpKH_rec(:,:,1)
-!!
-!!  elseif (Xk_force == 2) then !! We recombine to obtain displ resulting from an Y force source
-!!
-!!    deriv_rec(:,:) = (-sin(lat_mesh)*cos(lon_mesh) )*deriv_tmpKH_rec(:,:,2) + &
-!!                     (-sin(lat_mesh)*sin(lon_mesh) )*deriv_tmpKH_rec(:,:,1) + &
-!!                     (cos(lat_mesh))*deriv_tmpKH_rec(:,:,3)
-!!
-!!  elseif (Xk_force == 3) then !! We recombine to obtain displ resulting from an Z force source
-!!
-!!    deriv_rec(:,:) = ( cos(lat_mesh)*cos(lon_mesh) )*deriv_tmpKH_rec(:,:,2) + &
-!!                     ( cos(lat_mesh)*sin(lon_mesh) )*deriv_tmpKH_rec(:,:,1) + &
-!!                     (sin(lat_mesh))*deriv_tmpKH_rec(:,:,3)
-!!
-!!  endif
-
-  end subroutine recombine_deriv_cyl_to_Xk_force
-
+  end subroutine read_partialderivatives_field_and_interpol
 
 !================================================================================
 !================================================================================

@@ -68,7 +68,6 @@ program re_format_outputs_files
   real, allocatable ::  abs_boundary_normal(:,:,:)
 
   logical :: recip_KH_integral
-  integer Xk_force
 
 
   call MPI_INIT(ierr)
@@ -99,19 +98,19 @@ program re_format_outputs_files
 
      !-----------------------------------  GENERAL INPUT ----------------------------------
 
-!!     open(unit=500, file='inparam_basic', status='old', action='read', iostat=ioerr)
-!!
-!!     do
-!!       read(500, fmt='(a256)', iostat=ioerr) line
-!!       if (ioerr < 0) exit
-!!       if (len(trim(line)) < 1 .or. line(1:1) == '#') cycle
-!!
-!!       read(line,*) simtwordtmp, simtvaluetmp
-!!       if (simtwordtmp == 'SIMULATION_TYPE') simutypevalue = simtvaluetmp
-!!     enddo
+     open(unit=500, file='inparam_basic', status='old', action='read', iostat=ioerr)
 
-!!     close(500)
-!!     write(*,*) '--- Lecture simutypevalue OK ---', simutypevalue
+     do
+       read(500, fmt='(a256)', iostat=ioerr) line
+       if (ioerr < 0) exit
+       if (len(trim(line)) < 1 .or. line(1:1) == '#') cycle
+
+       read(line,*) simtwordtmp, simtvaluetmp
+       if (simtwordtmp == 'SIMULATION_TYPE') simutypevalue = simtvaluetmp
+     enddo
+
+     close(500)
+     write(*,*) '--- Lecture simutypevalue OK ---', simutypevalue
 
      open(10,file='../expand_2D_3D.par')
      read(10,'(a)') input_point_file      !! meshfem3D bounday points (geographic)
@@ -122,7 +121,6 @@ program re_format_outputs_files
      !! VM VM add azimuth rotation
      read(10,*) recip_KH_integral
      read(10,*) nsim                      !! AxiSEM simus
-     read(10,*) Xk_force                  !! The Xk force source (X, Y, or Z) we simulate for KH and recip
      read(10,*) nSpecfem_proc             !! number of specfem procs
      read(10,'(a)') meshdirectory         !! mesfem3D results
      read(10,'(a)') LOCAL_PATH            !! specfem DATABASE PATH
@@ -147,7 +145,6 @@ program re_format_outputs_files
      enddo
      close(10)
 
-     if (recip_KH_integral) nsim = 1 !! We simulate Xk forces one by one
 
      open(10,file='../reformat.par')
      read(10,*) frq_min
@@ -314,15 +311,14 @@ program re_format_outputs_files
 
      ! -----  AxiSEM stuff ---------------------------------------------------------------------
 
-     if (.not. recip_KH_integral) then 
+     if (.not. recip_KH_integral) then
 
        allocate(working_axisem_dir(nsim))
 
        if (nsim == 1) then
-         working_axisem_dir(1) = "./"
-!!         if (simutypevalue == 'single') working_axisem_dir(1) = "./"
-!!         if (simutypevalue == 'force')  working_axisem_dir(1) = "PX/"
-       elseif (nsim == 2) then
+         if (simutypevalue == 'single') working_axisem_dir(1) = "./"
+         if (simutypevalue == 'force')  working_axisem_dir(1) = "PX/"
+       else if (nsim == 2) then
          working_axisem_dir(1) = "PZ/"
          working_axisem_dir(2) = "PX/"
        else
@@ -389,7 +385,7 @@ program re_format_outputs_files
          open(isxz(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
          write(fichier,'(a6,a15)') '/Data/',output_stress_name(6)
          open(isyz(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
- 
+
          write(*,*) 'openning ', trim(working_axisem_dir(isim))//trim(fichier)
 
        enddo
@@ -411,13 +407,12 @@ program re_format_outputs_files
 
      else !! CD CD for KH
 
-       nsim = 1 !! We simulate Xk forces one by one
+       nsim = 1
        write(*,*) 'With reciprocity and KH integral, nsim have always to be 1'
        allocate(working_axisem_dir(nsim))
 
-       working_axisem_dir(1) = "./"
-!!       if (simutypevalue == 'single') working_axisem_dir(1) = "./"
-!!       if (simutypevalue == 'force')  working_axisem_dir(1) = "PX/"
+       if (simutypevalue == 'single') working_axisem_dir(1) = "./"
+       if (simutypevalue == 'force')  working_axisem_dir(1) = "PX/"
 
        open(10,file='info_for_specefm.txt')
        read(10,*) dt
@@ -462,32 +457,32 @@ program re_format_outputs_files
          idu3d1(isim)=next_iunit(iunit)
          idu3d2(isim)=next_iunit(iunit)
          idu3d3(isim)=next_iunit(iunit)
- 
- 
-         write(fichier,'(a15)') output_displ_name(1)
+
+
+         write(fichier,'(a6,a15)') '/Data/',output_displ_name(1)
          open(iux(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
-         write(fichier,'(a15)') output_displ_name(2)
+         write(fichier,'(a6,a15)') '/Data/',output_displ_name(2)
          open(iuy(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
-         write(fichier,'(a15)') output_displ_name(3)
+         write(fichier,'(a6,a15)') '/Data/',output_displ_name(3)
          open(iuz(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
 
-         write(fichier,'(a15)') output_deriv_name(1)
+         write(fichier,'(a6,a15)') '/Data/',output_deriv_name(1)
          open(idu1d1(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
-         write(fichier,'(a15)') output_deriv_name(2)
+         write(fichier,'(a6,a15)') '/Data/',output_deriv_name(2)
          open(idu1d2(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
-         write(fichier,'(a15)') output_deriv_name(3)
+         write(fichier,'(a6,a15)') '/Data/',output_deriv_name(3)
          open(idu1d3(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
-         write(fichier,'(a15)') output_deriv_name(4)
+         write(fichier,'(a6,a15)') '/Data/',output_deriv_name(4)
          open(idu2d1(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
-         write(fichier,'(a15)') output_deriv_name(5)
+         write(fichier,'(a6,a15)') '/Data/',output_deriv_name(5)
          open(idu2d2(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
-         write(fichier,'(a15)') output_deriv_name(6)
+         write(fichier,'(a6,a15)') '/Data/',output_deriv_name(6)
          open(idu2d3(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
-         write(fichier,'(a15)') output_deriv_name(7)
+         write(fichier,'(a6,a15)') '/Data/',output_deriv_name(7)
          open(idu3d1(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
-         write(fichier,'(a15)') output_deriv_name(8)
+         write(fichier,'(a6,a15)') '/Data/',output_deriv_name(8)
          open(idu3d2(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
-         write(fichier,'(a15)') output_deriv_name(9)
+         write(fichier,'(a6,a15)') '/Data/',output_deriv_name(9)
          open(idu3d3(isim),file= trim(working_axisem_dir(isim))//trim(fichier), FORM="UNFORMATTED")
 
          write(*,*) 'openning ', trim(working_axisem_dir(isim))//trim(fichier)
@@ -509,7 +504,7 @@ program re_format_outputs_files
          read(idu3d1(isim)) nbrec,ntime
          read(idu3d2(isim)) nbrec,ntime
          read(idu3d3(isim)) nbrec,ntime
- 
+
        enddo
 
        write(*,*) ' time step ', dtt
@@ -553,10 +548,9 @@ program re_format_outputs_files
     allocate(working_axisem_dir(nsim))
 
     if (nsim == 1) then
-      working_axisem_dir(1) = "./"
-!!      if (simutypevalue == 'single') working_axisem_dir(1) = "./"
-!!      if (simutypevalue == 'force')  working_axisem_dir(1) = "PX/"
-    elseif (nsim == 2) then
+      if (simutypevalue == 'single') working_axisem_dir(1) = "./"
+      if (simutypevalue == 'force')  working_axisem_dir(1) = "PX/"
+    else if (nsim == 2) then
       working_axisem_dir(1) = "PZ/"
       working_axisem_dir(2) = "PX/"
     else
@@ -579,7 +573,7 @@ program re_format_outputs_files
   write(*,*) ' nb ',itmax - itmin + 1
   write(*,*) ' ntime_interp ',ntime_interp
 
-  if (.not. recip_KH_integral) then 
+  if (.not. recip_KH_integral) then
 
     allocate(data_rec(9,ntime,nrec_by_proc(myrank+1)))
     allocate(data_rec0(1,nbrec,9),data_tmp(nbrec,9))
@@ -613,7 +607,7 @@ program re_format_outputs_files
 
 ! ################################ reading and scatter the data  ################################
 
-  if (.not. recip_KH_integral) then 
+  if (.not. recip_KH_integral) then
 
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Case of classic coupling !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -836,7 +830,7 @@ program re_format_outputs_files
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Case of recip & KH !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
 
-  else 
+  else
 
     allocate(irec_glob(NGLLSQUARE*MAX_MUN_ABS_BOUNDARY_FACES,nSpecfem_proc))
     allocate(ur(3,nrec_by_proc(myrank+1)))
@@ -899,19 +893,19 @@ program re_format_outputs_files
           do irank=1,nbproc-1
 
             kk = 0
-             
+
             do iface=1,num_boundary_by_proc(irank+1)
               do igll=1,NGLLSQUARE
-             
+
                 kk                    = kk+1
                 irec                  = ind_face2rec(iface,igll,irank+1)
                 irec_glob(kk,irank+1) = irec
-       
+
                 if( irec == 0) then
                   write(*,*) ' irec ', irec,iface,igll,irank+1
                   stop
                 endif
-    
+
                 data_tmp_to_send(icomp,kk) = data_rec0(1,irec,icomp)
               enddo
             enddo
@@ -921,7 +915,7 @@ program re_format_outputs_files
           enddo
 
         else
-          
+
           call mpi_recv(data_rec(icomp,itime,:),nrec_by_proc(myrank+1),MPI_REAL,0,etq,MPI_COMM_WORLD,statut,ierr)
 
         endif
@@ -935,7 +929,7 @@ program re_format_outputs_files
       do isim=1,nsim
 
         close(iux(isim))
-        close(iuy(isim)) 
+        close(iuy(isim))
         close(iuz(isim))
 
         close(idu1d1(isim))

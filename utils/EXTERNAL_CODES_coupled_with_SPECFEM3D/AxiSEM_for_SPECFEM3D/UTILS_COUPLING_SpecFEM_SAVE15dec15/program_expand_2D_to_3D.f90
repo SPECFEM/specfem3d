@@ -47,27 +47,28 @@
 !---
 !
 
-  if (.not. recip_KH_integral) then 
+  do isim=1,nsim  !! do to : mettre en memoire la solution sous echantillonnee et la resampler avant de l'ecrire
 
-    do isim=1,nsim  !! do to : mettre en memoire la solution sous echantillonnee et la resampler avant de l'ecrire
+    if (.not. recip_KH_integral) then
 
       ! interpolation of the velocity field in each point
       call read_veloc_field_and_interpol(isim)
       ! interpolation of the stress in each point
       call read_stress_field_and_interpol(isim)
 
-    enddo
+    else
 
-  else
+!!      ! interpolation of the stress in each point
+!!      call read_stress_field_and_interpol(isim)
 
-    call displ_read_recombine_interpol_rotate()
-    call pderiv_read_recombine_interpol_rotate()
+      ! interpolation of the displacement field in each point
+      call read_displ_field_and_interpol(isim)
+      ! interpolation of the partial derivatives (one by one) field in each point
+      call read_partialderivatives_field_and_interpol(isim)
 
-  endif
+    endif
 
-!
-!---
-!
+  enddo
 
   call finalize_mpi()
 

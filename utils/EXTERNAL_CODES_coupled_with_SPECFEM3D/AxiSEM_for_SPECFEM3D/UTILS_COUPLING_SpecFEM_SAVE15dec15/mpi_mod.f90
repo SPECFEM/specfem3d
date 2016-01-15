@@ -26,7 +26,6 @@ contains
 
   subroutine alloc_all_mpi()
 
-   integer :: ier
 
    if (myrank == 0 ) then
       write(*,*) 'INISDE ALLOC MPI '
@@ -51,9 +50,6 @@ contains
    if (myrank >  0) then
       allocate(reciever_geogr(3,nbrec),reciever_sph(3,nbrec),reciever_cyl(3,nbrec),reciever_interp_value(nbrec))
       allocate(data_rec(nbrec,3),stress_rec(nbrec,6),stress_to_write(nbrec,6),strain_rec(nbrec,6),deriv_rec(nbrec,9))
-
-      allocate(data_tmpKH_rec(nbrec,3,nsim), deriv_tmpKH_rec(nbrec,9,nsim))
-
       allocate(f1(nbrec),f2(nbrec),phi(nbrec))
       allocate(scoor(ibeg:iend,ibeg:iend,nel),zcoor(ibeg:iend,ibeg:iend,nel))
       allocate(data_read(ibeg:iend,ibeg:iend,nel))
@@ -83,9 +79,6 @@ contains
     call mpi_bcast(Mij,6,MPI_REAL,0,MPI_COMM_WORLD,ierr)
     call mpi_bcast(magnitude,nsim,MPI_REAL,0,MPI_COMM_WORLD,ierr)
 
-    call mpi_bcast(lat_mesh,1,MPI_REAL,0,MPI_COMM_WORLD,ierr)
-    call mpi_bcast(lon_mesh,1,MPI_REAL,0,MPI_COMM_WORLD,ierr)
-
     ! double
     call mpi_bcast(scoor,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
     call mpi_bcast(zcoor,(iend-ibeg+1)*(iend-ibeg+1)*nel,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
@@ -98,12 +91,11 @@ contains
 
     ! integer
     call mpi_bcast(rec2elm,nbrec,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
-    call mpi_bcast(Xk_force,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr) !! CD CD
 
     ! character
     call mpi_bcast(src_type,10*2*nsim,MPI_CHARACTER,0,MPI_COMM_WORLD,ierr)
 
-    ! logical 
+    ! logical
     call mpi_bcast(recip_KH_integral,1,MPI_LOGICAL,0,MPI_COMM_WORLD,ierr)
 
   end subroutine bcast_all_mpi
