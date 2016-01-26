@@ -263,6 +263,10 @@
        EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_AXISEM .and. &
        EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_FK) stop 'Error incorrect value of EXTERNAL_CODE_TYPE read'
 
+    if ( (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM .or. EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) .and. &
+         (.not. MESH_A_CHUNK_OF_THE_EARTH) ) stop 'Error, coupling with DSM or axiSEM only works with a Earth chunk mesh'
+
+
     if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_FK .and. MESH_A_CHUNK_OF_THE_EARTH) &
          stop 'Error: coupling with F-K is for models with a flat surface (Earth flattening), &
                      &thus turn MESH_A_CHUNK_OF_THE_EARTH off'
