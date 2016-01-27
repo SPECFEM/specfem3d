@@ -29,7 +29,7 @@ module part_decompose_mesh
 
   use constants,only: MAX_STRING_LEN,NGNOD2D_FOUR_CORNERS,NGNOD_EIGHT_CORNERS
 
-  use shared_parameters, only: MESH_A_CHUNK_OF_THE_EARTH
+  use shared_parameters, only: COUPLE_WITH_EXTERNAL_CODE, MESH_A_CHUNK_OF_THE_EARTH
 
   implicit none
 
@@ -737,9 +737,10 @@ contains
   subroutine write_partition_database(IIN_database, iproc, nspec_local, nspec, elmnts, &
                                       glob2loc_elmnts, glob2loc_nodes_nparts, &
                                       glob2loc_nodes_parts, glob2loc_nodes, &
-                                      part, num_modele, NGNOD, num_phase, COUPLE_WITH_EXTERNAL_CODE)
+                                      part, num_modele, NGNOD, num_phase)
 
     implicit none
+
     integer, intent(in)  :: IIN_database
     integer, intent(in)  :: iproc
     integer, intent(inout)  :: nspec_local
@@ -757,7 +758,6 @@ contains
     integer, dimension(2,nspec)  :: num_modele
 
     integer, intent(in)  :: num_phase
-    logical, intent(in) :: COUPLE_WITH_EXTERNAL_CODE
 
     ! local parameters
     integer  :: i,j,k

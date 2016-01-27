@@ -1035,7 +1035,6 @@ module decompose_mesh
     if (ier /= 0) stop 'Error allocating array my_nb_interfaces'
 
     if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) open(124,file='Numglob2loc_elmn.txt')
-    !! To verify for NOBU version ==> all about 'Numglob2loc_elmn.txt' is unchanged at the moment
 
     ! writes out Database file for each partition
     do ipart = 0, nparts-1
@@ -1058,7 +1057,7 @@ module decompose_mesh
 
        call write_partition_database(IIN_database, ipart, nspec_local, nspec, elmnts, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
-                                  glob2loc_nodes_parts, glob2loc_nodes, part, mat, NGNOD, 1, COUPLE_WITH_EXTERNAL_CODE)
+                                  glob2loc_nodes_parts, glob2loc_nodes, part, mat, NGNOD, 1)
 
        !debug
        !print *, ipart,": nspec_local=",nspec_local, " nnodes_local=", nnodes_loc
@@ -1077,7 +1076,7 @@ module decompose_mesh
        write(IIN_database) nspec_local
        call write_partition_database(IIN_database, ipart, nspec_local, nspec, elmnts, &
                                   glob2loc_elmnts, glob2loc_nodes_nparts, &
-                                  glob2loc_nodes_parts, glob2loc_nodes, part, mat, NGNOD, 2, COUPLE_WITH_EXTERNAL_CODE)
+                                  glob2loc_nodes_parts, glob2loc_nodes, part, mat, NGNOD, 2)
 
        ! writes out absorbing/free-surface boundaries
        call write_boundaries_database(IIN_database, ipart, nspec, nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, &
