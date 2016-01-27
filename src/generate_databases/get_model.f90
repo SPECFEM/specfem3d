@@ -74,7 +74,7 @@
   ispec_is_poroelastic(:) = .false.
 
   ! prepares tomographic models if needed for elements with undefined material definitions
-  if ( (nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO) .and. & 
+  if ( (nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO) .and. &
        (.not. (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH)) ) call model_tomography_broadcast(myrank)
 
 
@@ -369,7 +369,7 @@
   call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
 
   ! deallocates tomographic arrays
-  if ( (nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO) .and. & 
+  if ( (nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO) .and. &
        (.not. (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH)) ) call deallocate_tomography_files()
 
   end subroutine get_model
@@ -499,7 +499,7 @@
     !        be able to superimpose a model onto the default one:
 
     ! material values determined by mesh properties
-    if (.not. (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) ) then 
+    if (.not. (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) ) then
       call model_default(materials_ext_mesh,nmat_ext_mesh, &
                          undef_mat_prop,nundefMat_ext_mesh, &
                          imaterial_id,imaterial_def, &
