@@ -33,7 +33,8 @@
     IMODEL_SALTON_TROUGH,IMODEL_TOMO,IMODEL_USER_EXTERNAL,IMODEL_IPATI,IMODEL_IPATI_WATER, &
     IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC, &
     nspec => NSPEC_AB,ibool,mat_ext_mesh, &
-    materials_ext_mesh,nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh,ANISOTROPY,COUPLE_WITH_EXTERNAL_CODE, &
+    materials_ext_mesh,nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh, &
+    ANISOTROPY,COUPLE_WITH_EXTERNAL_CODE,MESH_A_CHUNK_OF_THE_EARTH, &
     NGLLX,NGLLY,NGLLZ, &
     FOUR_THIRDS,TWO,IMAIN
 
@@ -73,9 +74,9 @@
   ispec_is_poroelastic(:) = .false.
 
   ! prepares tomographic models if needed for elements with undefined material definitions
-  if ((nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO) .and. (.not. COUPLE_WITH_EXTERNAL_CODE)) then
-    call model_tomography_broadcast(myrank)
-  endif
+  if ( (nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO) .and. & 
+       (.not. (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH)) ) call model_tomography_broadcast(myrank)
+
 
   ! prepares external model values if needed
   select case (IMODEL)
@@ -87,7 +88,7 @@
 
 !! VM VM for coupling with DSM
 !! find the # layer where the middle of the element is located
-  if (COUPLE_WITH_EXTERNAL_CODE) then
+  if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) then
 
     if ((NGLLX == 5) .and. (NGLLY == 5) .and. (NGLLZ == 5)) then
       ! gets xyz coordinates of GLL point
@@ -112,7 +113,7 @@
   ! each spectral element in input mesh
   do ispec = 1, nspec
 
-    if (COUPLE_WITH_EXTERNAL_CODE) then
+    if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) then
       iglob = ibool(3,3,3,ispec)
       xmesh = xstore_dummy(iglob)
       ymesh = ystore_dummy(iglob)
@@ -179,7 +180,8 @@
 
           !! VM VM for coupling with DSM
           !! find the # layer where the middle of the element is located
-          if (COUPLE_WITH_EXTERNAL_CODE .and. (i==3 .and. j==3 .and. k==3)) call FindLayer(xmesh,ymesh,zmesh)
+          if ( (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) .and. &
+               (i==3 .and. j==3 .and. k==3) ) call FindLayer(xmesh,ymesh,zmesh)
 
           ! material index 1: associated material number
           ! 1 = acoustic, 2 = elastic, 3 = poroelastic, -1 = undefined tomographic
@@ -367,9 +369,8 @@
   call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
 
   ! deallocates tomographic arrays
-  if ((nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO) .and. (.not. COUPLE_WITH_EXTERNAL_CODE)) then
-    call deallocate_tomography_files()
-  endif
+  if ( (nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO) .and. & 
+       (.not. (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH)) ) call deallocate_tomography_files()
 
   end subroutine get_model
 
@@ -393,7 +394,9 @@
     IMODEL_DEFAULT,IMODEL_GLL,IMODEL_1D_PREM,IMODEL_1D_CASCADIA,IMODEL_1D_SOCAL, &
     IMODEL_SALTON_TROUGH,IMODEL_TOMO,IMODEL_USER_EXTERNAL,IMODEL_IPATI,IMODEL_IPATI_WATER, &
     IMODEL_1D_PREM_PB,IMODEL_GLL, IMODEL_SEP, &
-    IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,ATTENUATION_COMP_MAXIMUM,COUPLE_WITH_EXTERNAL_CODE
+    IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,ATTENUATION_COMP_MAXIMUM, &
+    COUPLE_WITH_EXTERNAL_CODE,MESH_A_CHUNK_OF_THE_EARTH
+
 
   use create_regions_mesh_ext_par
   implicit none
@@ -496,13 +499,15 @@
     !        be able to superimpose a model onto the default one:
 
     ! material values determined by mesh properties
-    if (.not. COUPLE_WITH_EXTERNAL_CODE) call model_default(materials_ext_mesh,nmat_ext_mesh, &
-                                                    undef_mat_prop,nundefMat_ext_mesh, &
-                                                    imaterial_id,imaterial_def, &
-                                                    xmesh,ymesh,zmesh,rho,vp,vs, &
-                                                    iflag_aniso,qkappa_atten,qmu_atten,idomain_id, &
-                                                    rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
-                                                    phi,tort,kxx,kxy,kxz,kyy,kyz,kzz)
+    if (.not. (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) ) then 
+      call model_default(materials_ext_mesh,nmat_ext_mesh, &
+                         undef_mat_prop,nundefMat_ext_mesh, &
+                         imaterial_id,imaterial_def, &
+                         xmesh,ymesh,zmesh,rho,vp,vs, &
+                         iflag_aniso,qkappa_atten,qmu_atten,idomain_id, &
+                         rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
+                         phi,tort,kxx,kxy,kxz,kyy,kyz,kzz)
+    endif
 
     ! user model from external routine
     ! adds/gets velocity model as specified in model_external_values.f90

@@ -37,7 +37,7 @@
 
   use generate_databases_par, only: STACEY_INSTEAD_OF_FREE_SURFACE, PML_INSTEAD_OF_FREE_SURFACE, NGNOD2D, &
     STACEY_ABSORBING_CONDITIONS,PML_CONDITIONS,COUPLE_WITH_EXTERNAL_CODE, &
-    NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,IMAIN, EXTERNAL_CODE_TYPE
+    NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,IMAIN, EXTERNAL_CODE_TYPE, MESH_A_CHUNK_OF_THE_EARTH
 
   use constants, only: EXTERNAL_CODE_IS_DSM
 
@@ -94,7 +94,7 @@
   character(len=27) namefile
 
   ! sets flag in array iboun for elements with an absorbing boundary faces
-  if (COUPLE_WITH_EXTERNAL_CODE) then
+  if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) then
 
     ! allocate temporary flag array
     allocate(iboun(6,nspec), &
@@ -141,7 +141,7 @@
                             iface)
 
     !! CD CD !! For coupling with DSM
-    if (COUPLE_WITH_EXTERNAL_CODE) iboun(iface,ispec) = .true.
+    if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
     !! CD CD
 
     ! ijk indices of GLL points for face id
@@ -218,7 +218,7 @@
                               iface)
 
     !! CD CD !! For coupling with DSM
-    if (COUPLE_WITH_EXTERNAL_CODE) iboun(iface,ispec) = .true.
+    if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
     !! CD CD
 
     ! ijk indices of GLL points on face
@@ -284,7 +284,7 @@
                               iface)
 
     !! CD CD !! For coupling with DSM
-    if (COUPLE_WITH_EXTERNAL_CODE) iboun(iface,ispec) = .true.
+    if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
     !! CD CD
 
     ! ijk indices of GLL points on face
@@ -350,7 +350,7 @@
                               iface)
 
     !! CD CD !! For coupling with DSM
-    if (COUPLE_WITH_EXTERNAL_CODE) iboun(iface,ispec) = .true.
+    if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
     !! CD CD
 
     ! ijk indices of GLL points on face
@@ -416,7 +416,7 @@
                               iface)
 
     !! CD CD !! For coupling with DSM
-    if (COUPLE_WITH_EXTERNAL_CODE) iboun(iface,ispec) = .true.
+    if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
     !! CD CD
 
     ! ijk indices of GLL points on face
@@ -485,7 +485,7 @@
                               iface)
 
     !! CD CD !! For coupling with DSM
-    if (COUPLE_WITH_EXTERNAL_CODE) iboun(iface,ispec) = .true.
+    if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
     !! CD CD
 
     ! ijk indices of GLL points on face

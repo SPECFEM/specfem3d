@@ -41,7 +41,7 @@
     SIMULATION_TYPE,SAVE_FORWARD,mask_ibool_interior_domain, &
     nglob_interface_PML_acoustic,points_interface_PML_acoustic,&
     nglob_interface_PML_elastic,points_interface_PML_elastic, &
-    STACEY_ABSORBING_CONDITIONS, COUPLE_WITH_EXTERNAL_CODE, &
+    STACEY_ABSORBING_CONDITIONS, COUPLE_WITH_EXTERNAL_CODE,MESH_A_CHUNK_OF_THE_EARTH, &
     NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT,USE_MESH_COLORING_GPU
   use create_regions_mesh_ext_par
 
@@ -317,7 +317,7 @@
   close(IOUT)
 
   ! stores arrays in binary files
-  if (SAVE_MESH_FILES .or. COUPLE_WITH_EXTERNAL_CODE) then
+  if (SAVE_MESH_FILES .or. COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) then
     call save_arrays_solver_files(nspec,nglob,ibool)
   endif
 
@@ -364,7 +364,8 @@
 !
   subroutine save_arrays_solver_files(nspec,nglob,ibool)
 
-  use generate_databases_par, only: myrank,COUPLE_WITH_EXTERNAL_CODE,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT,FOUR_THIRDS
+  use generate_databases_par, only: myrank,COUPLE_WITH_EXTERNAL_CODE,MESH_A_CHUNK_OF_THE_EARTH, &
+                                    NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT,FOUR_THIRDS
   use create_regions_mesh_ext_par
 
   implicit none
@@ -570,7 +571,7 @@
   endif  !if (DEBUG)
 
   !! CD CD !! For coupling with DSM
-  if (COUPLE_WITH_EXTERNAL_CODE) then
+  if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) then
     !if (num_abs_boundary_faces > 0) then
     filename = prname(1:len_trim(prname))//'absorb_dsm'
     open(IOUT,file=filename(1:len_trim(filename)),status='unknown',form='unformatted',iostat=ier)
@@ -588,7 +589,7 @@
     write(IOUT) ispec_is_elastic
     close(IOUT)
 
-  endif !  if (COUPLE_WITH_EXTERNAL_CODE)
+  endif !  if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH)
   !! CD CD
 
   if (DEBUG) then  !! CD CD

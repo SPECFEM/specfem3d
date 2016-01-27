@@ -75,7 +75,7 @@
 
   use constants
 
-  use generate_databases_par, only: COUPLE_WITH_EXTERNAL_CODE
+  use generate_databases_par, only: COUPLE_WITH_EXTERNAL_CODE, MESH_A_CHUNK_OF_THE_EARTH
 
   implicit none
 
@@ -91,7 +91,7 @@
 !
 ! ADD YOUR MODEL HERE
 !
-  if (COUPLE_WITH_EXTERNAL_CODE) call read_external_model_coupling()
+  if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) call read_external_model_for_coupling_or_chunk()
 
 !---
 
@@ -126,11 +126,11 @@
 !-------------------------------------------------------------------------------------------------
 !
 !
-  subroutine read_external_model_coupling()
+  subroutine read_external_model_for_coupling_or_chunk()
 !
   use external_model !! VM VM custom subroutine for coupling with DSM
 !
-   implicit none
+  implicit none
 !
 !---
 !
@@ -169,7 +169,7 @@
 
 !---
 !
-  end subroutine read_external_model_coupling
+  end subroutine read_external_model_for_coupling_or_chunk
 !
 !-------------------------------------------------------------------------------------------------
 !
@@ -178,7 +178,8 @@
 
 ! given a GLL point, returns super-imposed velocity model values
 
-  use generate_databases_par,only: nspec => NSPEC_AB,ibool,HUGEVAL,TINYVAL,IDOMAIN_ELASTIC,COUPLE_WITH_EXTERNAL_CODE
+  use generate_databases_par,only: nspec => NSPEC_AB,ibool,HUGEVAL,TINYVAL,IDOMAIN_ELASTIC, & 
+                                            COUPLE_WITH_EXTERNAL_CODE,MESH_A_CHUNK_OF_THE_EARTH
 
   use create_regions_mesh_ext_par
 
@@ -218,8 +219,10 @@
   y = ymesh
   z = zmesh
 
-  if (COUPLE_WITH_EXTERNAL_CODE) then
+  if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) then
+
     call  model_1D(x,y,z,rho,vp,vs,radius)
+
   else
     ! note: z coordinate will be negative below surface
     !          convention is z-axis points up
