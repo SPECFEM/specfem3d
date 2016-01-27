@@ -420,7 +420,7 @@
 
     use constants,only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC, NGLLX, NGLLY, NGLLZ, NDIM, ZERO,&
          EXTERNAL_CODE_IS_AXISEM, EXTERNAL_CODE_IS_DSM
-    use shared_parameters, only: EXTERNAL_CODE_TYPE, COUPLE_WITH_EXTERNAL_CODE, NGNOD
+    use shared_parameters, only: EXTERNAL_CODE_TYPE, COUPLE_WITH_EXTERNAL_CODE, MESH_A_CHUNK_OF_THE_EARTH, NGNOD
 
     implicit none
 
@@ -500,7 +500,7 @@
 
 1000 format(3f30.10)
 
-    if (COUPLE_WITH_EXTERNAL_CODE) then
+    if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) then
       z_bottom=minval(zgrid(:,:,:,:))
     else
       z_bottom=0.
