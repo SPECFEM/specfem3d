@@ -1503,7 +1503,7 @@ end subroutine find_layer_in_axisem_model
   deallocate(iwork)
   deallocate(work)
 
-  end subroutine get_global1
+  end subroutine getglob_for_chunk
 
 
 ! -----------------------------------
