@@ -102,7 +102,7 @@
         ! adjoint wavefield case
         if (SIMULATION_TYPE /= 1 .and. (.not. backward_simulation)) then
           ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
-          ! adjoint definition: \partial_t^2 \bfs^\dagger=-\frac{1}{\rho}\bfnabla\phi^\dagger
+          ! adjoint definition: \partial_t^2 \bfs^\dagger = - \frac{1}{\rho} \bfnabla\phi^\dagger
           displ_x = - displ_x
           displ_y = - displ_y
           displ_z = - displ_z

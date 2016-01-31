@@ -60,35 +60,35 @@
   if (NGNOD2D == 4) then
 
     ! generate the 2D shape functions and their derivatives (4 nodes)
-    do i=1,NGLLA
+    do i = 1,NGLLA
 
-      xi=xigll(i)
+      xi = xigll(i)
 
-      do j=1,NGLLB
+      do j = 1,NGLLB
 
-        eta=yigll(j)
+        eta = yigll(j)
 
         ! map coordinates to [0,1]
-        xi_map = (xi + 1.) / 2.
-        eta_map = (eta + 1.) / 2.
+        xi_map = 0.5d0 * (xi + 1.d0)
+        eta_map = 0.5d0 * (eta + 1.)
 
         ! corner nodes
-        shape2D(1,i,j) = (1 - xi_map)*(1 - eta_map)
-        shape2D(2,i,j) = xi_map*(1 - eta_map)
+        shape2D(1,i,j) = (1.d0 - xi_map)*(1.d0 - eta_map)
+        shape2D(2,i,j) = xi_map*(1.d0 - eta_map)
         shape2D(3,i,j) = xi_map*eta_map
-        shape2D(4,i,j) = (1 - xi_map)*eta_map
+        shape2D(4,i,j) = (1.d0 - xi_map)*eta_map
 
-        dershape2D(1,1,i,j) = (eta - 1.) / 4.
-        dershape2D(2,1,i,j) = (xi - 1.) / 4.
+        dershape2D(1,1,i,j) = 0.25d0 * (eta - 1.d0)
+        dershape2D(2,1,i,j) = 0.25d0 * (xi - 1.d0)
 
-        dershape2D(1,2,i,j) = (1. - eta) / 4.
-        dershape2D(2,2,i,j) = (-1. - xi) / 4.
+        dershape2D(1,2,i,j) = 0.25d0 * (1.d0 - eta)
+        dershape2D(2,2,i,j) = 0.25d0 * (-1.d0 - xi)
 
-        dershape2D(1,3,i,j) = (1. + eta) / 4.
-        dershape2D(2,3,i,j) = (1. + xi) / 4.
+        dershape2D(1,3,i,j) = 0.25d0 * (1.d0 + eta)
+        dershape2D(2,3,i,j) = 0.25d0 * (1.d0 + xi)
 
-        dershape2D(1,4,i,j) = (- 1. - eta) / 4.
-        dershape2D(2,4,i,j) = (1. - xi) / 4.
+        dershape2D(1,4,i,j) = 0.25d0 * (- 1.d0 - eta)
+        dershape2D(2,4,i,j) = 0.25d0 * (1.d0 - xi)
 
       enddo
     enddo
@@ -102,19 +102,19 @@
   endif
 
 ! check the 2D shape functions
-  do i=1,NGLLA
-    do j=1,NGLLB
+  do i = 1,NGLLA
+    do j = 1,NGLLB
 
-      sumshape=ZERO
+      sumshape = ZERO
 
-      sumdershapexi=ZERO
-      sumdershapeeta=ZERO
+      sumdershapexi = ZERO
+      sumdershapeeta = ZERO
 
-      do ia=1,NGNOD2D
-        sumshape=sumshape+shape2D(ia,i,j)
+      do ia = 1,NGNOD2D
+        sumshape = sumshape + shape2D(ia,i,j)
 
-        sumdershapexi=sumdershapexi+dershape2D(1,ia,i,j)
-        sumdershapeeta=sumdershapeeta+dershape2D(2,ia,i,j)
+        sumdershapexi = sumdershapexi + dershape2D(1,ia,i,j)
+        sumdershapeeta = sumdershapeeta + dershape2D(2,ia,i,j)
       enddo
 
 !   the sum of the shape functions should be 1
@@ -165,70 +165,70 @@
   if (NGNOD2D /= 9) stop 'surface elements should have 9 control nodes'
 
   ! generate the 2D shape functions and their derivatives (9 nodes)
-  do i=1,NGLLA
+  do i = 1,NGLLA
 
-    xi=xigll(i)
+    xi = xigll(i)
 
-    l1xi=HALF*xi*(xi-ONE)
-    l2xi=ONE-xi**2
-    l3xi=HALF*xi*(xi+ONE)
+    l1xi = HALF*xi*(xi - ONE)
+    l2xi = ONE - xi**2
+    l3xi = HALF*xi*(xi + ONE)
 
-    l1pxi=xi-HALF
-    l2pxi=-TWO*xi
-    l3pxi=xi+HALF
+    l1pxi = xi - HALF
+    l2pxi = -TWO * xi
+    l3pxi = xi + HALF
 
-    do j=1,NGLLB
+    do j = 1,NGLLB
 
-      eta=yigll(j)
+      eta = yigll(j)
 
-      l1eta=HALF*eta*(eta-ONE)
-      l2eta=ONE-eta**2
-      l3eta=HALF*eta*(eta+ONE)
+      l1eta = HALF*eta*(eta - ONE)
+      l2eta = ONE - eta**2
+      l3eta = HALF*eta*(eta + ONE)
 
-      l1peta=eta-HALF
-      l2peta=-TWO*eta
-      l3peta=eta+HALF
+      l1peta = eta - HALF
+      l2peta = -TWO * eta
+      l3peta = eta + HALF
 
 !   corner nodes
 
-      shape2D(1,i,j)=l1xi*l1eta
-      shape2D(2,i,j)=l3xi*l1eta
-      shape2D(3,i,j)=l3xi*l3eta
-      shape2D(4,i,j)=l1xi*l3eta
+      shape2D(1,i,j) = l1xi*l1eta
+      shape2D(2,i,j) = l3xi*l1eta
+      shape2D(3,i,j) = l3xi*l3eta
+      shape2D(4,i,j) = l1xi*l3eta
 
-      dershape2D(1,1,i,j)=l1pxi*l1eta
-      dershape2D(1,2,i,j)=l3pxi*l1eta
-      dershape2D(1,3,i,j)=l3pxi*l3eta
-      dershape2D(1,4,i,j)=l1pxi*l3eta
+      dershape2D(1,1,i,j) = l1pxi*l1eta
+      dershape2D(1,2,i,j) = l3pxi*l1eta
+      dershape2D(1,3,i,j) = l3pxi*l3eta
+      dershape2D(1,4,i,j) = l1pxi*l3eta
 
-      dershape2D(2,1,i,j)=l1xi*l1peta
-      dershape2D(2,2,i,j)=l3xi*l1peta
-      dershape2D(2,3,i,j)=l3xi*l3peta
-      dershape2D(2,4,i,j)=l1xi*l3peta
+      dershape2D(2,1,i,j) = l1xi*l1peta
+      dershape2D(2,2,i,j) = l3xi*l1peta
+      dershape2D(2,3,i,j) = l3xi*l3peta
+      dershape2D(2,4,i,j) = l1xi*l3peta
 
 !   midside nodes
 
-      shape2D(5,i,j)=l2xi*l1eta
-      shape2D(6,i,j)=l3xi*l2eta
-      shape2D(7,i,j)=l2xi*l3eta
-      shape2D(8,i,j)=l1xi*l2eta
+      shape2D(5,i,j) = l2xi*l1eta
+      shape2D(6,i,j) = l3xi*l2eta
+      shape2D(7,i,j) = l2xi*l3eta
+      shape2D(8,i,j) = l1xi*l2eta
 
-      dershape2D(1,5,i,j)=l2pxi*l1eta
-      dershape2D(1,6,i,j)=l3pxi*l2eta
-      dershape2D(1,7,i,j)=l2pxi*l3eta
-      dershape2D(1,8,i,j)=l1pxi*l2eta
+      dershape2D(1,5,i,j) = l2pxi*l1eta
+      dershape2D(1,6,i,j) = l3pxi*l2eta
+      dershape2D(1,7,i,j) = l2pxi*l3eta
+      dershape2D(1,8,i,j) = l1pxi*l2eta
 
-      dershape2D(2,5,i,j)=l2xi*l1peta
-      dershape2D(2,6,i,j)=l3xi*l2peta
-      dershape2D(2,7,i,j)=l2xi*l3peta
-      dershape2D(2,8,i,j)=l1xi*l2peta
+      dershape2D(2,5,i,j) = l2xi*l1peta
+      dershape2D(2,6,i,j) = l3xi*l2peta
+      dershape2D(2,7,i,j) = l2xi*l3peta
+      dershape2D(2,8,i,j) = l1xi*l2peta
 
 !   center node
 
-      shape2D(9,i,j)=l2xi*l2eta
+      shape2D(9,i,j) = l2xi*l2eta
 
-      dershape2D(1,9,i,j)=l2pxi*l2eta
-      dershape2D(2,9,i,j)=l2xi*l2peta
+      dershape2D(1,9,i,j) = l2pxi*l2eta
+      dershape2D(2,9,i,j) = l2xi*l2peta
 
     enddo
   enddo

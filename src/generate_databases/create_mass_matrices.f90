@@ -335,7 +335,7 @@
   deltatover2 = real(0.5d0*deltat,kind=CUSTOM_REAL)
 
   ! adds contributions to mass matrix to stabilize Stacey conditions
-  do iface=1,num_abs_boundary_faces
+  do iface = 1,num_abs_boundary_faces
 
     ispec = abs_boundary_ispec(iface)
 

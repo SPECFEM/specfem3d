@@ -74,7 +74,7 @@
   if (num_abs_boundary_faces == 0) return
 
   ! absorbs absorbing-boundary surface using Sommerfeld condition (vanishing field in the outer-space)
-  do iface=1,num_abs_boundary_faces
+  do iface = 1,num_abs_boundary_faces
 
     ispec = abs_boundary_ispec(iface)
 
@@ -179,7 +179,7 @@
   endif !adjoint
 
   ! absorbs absorbing-boundary surface using Sommerfeld condition (vanishing field in the outer-space)
-  do iface=1,num_abs_boundary_faces
+  do iface = 1,num_abs_boundary_faces
 
     ispec = abs_boundary_ispec(iface)
 

@@ -200,8 +200,8 @@
 
   if (iboun(1,ispec)) then
 
-    ispecb1=ispecb1+1
-    ibelm_xmin(ispecb1)=ispec
+    ispecb1 = ispecb1+1
+    ibelm_xmin(ispecb1) = ispec
 
 !   specify the 4 nodes for the 2-D boundary element
     xelm(1)=xstore(1,1,1,ispec)
@@ -226,8 +226,8 @@
 
   if (iboun(2,ispec)) then
 
-    ispecb2=ispecb2+1
-    ibelm_xmax(ispecb2)=ispec
+    ispecb2 = ispecb2+1
+    ibelm_xmax(ispecb2) = ispec
 
 !   specify the 4 nodes for the 2-D boundary element
     xelm(1)=xstore(NGLLX_M,1,1,ispec)
@@ -252,8 +252,8 @@
 
   if (iboun(3,ispec)) then
 
-    ispecb3=ispecb3+1
-    ibelm_ymin(ispecb3)=ispec
+    ispecb3 = ispecb3+1
+    ibelm_ymin(ispecb3) = ispec
 
 !   specify the 4 nodes for the 2-D boundary element
     xelm(1)=xstore(1,1,1,ispec)
@@ -278,8 +278,8 @@
 
   if (iboun(4,ispec)) then
 
-    ispecb4=ispecb4+1
-    ibelm_ymax(ispecb4)=ispec
+    ispecb4 = ispecb4+1
+    ibelm_ymax(ispecb4) = ispec
 
 !   specify the 4 nodes for the 2-D boundary element
     xelm(1)=xstore(1,NGLLY_M,1,ispec)
@@ -304,8 +304,8 @@
 
   if (iboun(5,ispec)) then
 
-    ispecb5=ispecb5+1
-    ibelm_bottom(ispecb5)=ispec
+    ispecb5 = ispecb5+1
+    ibelm_bottom(ispecb5) = ispec
 
     xelm(1)=xstore(1,1,1,ispec)
     yelm(1)=ystore(1,1,1,ispec)
@@ -329,8 +329,8 @@
 
   if (iboun(6,ispec)) then
 
-    ispecb6=ispecb6+1
-    ibelm_top(ispecb6)=ispec
+    ispecb6 = ispecb6+1
+    ibelm_top(ispecb6) = ispec
 
     xelm(1)=xstore(1,1,NGLLZ_M,ispec)
     yelm(1)=ystore(1,1,NGLLZ_M,ispec)
@@ -389,28 +389,28 @@
   double precision xxi,xeta,yxi,yeta,zxi,zeta
   double precision unx,uny,unz,jacobian
 
-  do j=1,NGLLB
+  do j = 1,NGLLB
     do i=1,NGLLA
-      xxi=ZERO
-      xeta=ZERO
-      yxi=ZERO
-      yeta=ZERO
-      zxi=ZERO
-      zeta=ZERO
-      do ia=1,NGNOD2D_FOUR_CORNERS
-        xxi=xxi+dershape2D(1,ia,i,j)*xelm(ia)
-        xeta=xeta+dershape2D(2,ia,i,j)*xelm(ia)
-        yxi=yxi+dershape2D(1,ia,i,j)*yelm(ia)
-        yeta=yeta+dershape2D(2,ia,i,j)*yelm(ia)
-        zxi=zxi+dershape2D(1,ia,i,j)*zelm(ia)
-        zeta=zeta+dershape2D(2,ia,i,j)*zelm(ia)
+      xxi = ZERO
+      xeta = ZERO
+      yxi = ZERO
+      yeta = ZERO
+      zxi = ZERO
+      zeta = ZERO
+      do ia = 1,NGNOD2D_FOUR_CORNERS
+        xxi = xxi+dershape2D(1,ia,i,j)*xelm(ia)
+        xeta = xeta+dershape2D(2,ia,i,j)*xelm(ia)
+        yxi = yxi+dershape2D(1,ia,i,j)*yelm(ia)
+        yeta = yeta+dershape2D(2,ia,i,j)*yelm(ia)
+        zxi = zxi+dershape2D(1,ia,i,j)*zelm(ia)
+        zeta = zeta+dershape2D(2,ia,i,j)*zelm(ia)
       enddo
 
       !   calculate the unnormalized normal to the boundary
-      unx=yxi*zeta-yeta*zxi
-      uny=zxi*xeta-zeta*xxi
-      unz=xxi*yeta-xeta*yxi
-      jacobian=dsqrt(unx**2+uny**2+unz**2)
+      unx = yxi*zeta-yeta*zxi
+      uny = zxi*xeta-zeta*xxi
+      unz = xxi*yeta-xeta*yxi
+      jacobian = dsqrt(unx**2+uny**2+unz**2)
       if (jacobian == ZERO) call exit_MPI(myrank,'2D Jacobian undefined')
 
       !   normalize normal vector and store surface jacobian

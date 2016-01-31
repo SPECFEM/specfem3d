@@ -586,7 +586,7 @@
   ! initializes arrays for point coordinates
   if (it == NTSTEP_BETWEEN_FRAMES) then
     ipoin = 0
-    do iface=1,num_free_surface_faces
+    do iface = 1,num_free_surface_faces
       ispec = free_surface_ispec(iface)
       ! high_resolution
       if (USE_HIGHRES_FOR_MOVIES) then
@@ -629,7 +629,7 @@
 
   ! outputs values on free surface
   ipoin = 0
-  do iface=1,num_free_surface_faces
+  do iface = 1,num_free_surface_faces
     ispec = free_surface_ispec(iface)
 
     if (ispec_is_acoustic(ispec)) then
@@ -786,7 +786,7 @@
 
   ! outputs values on free surface
   ipoin = 0
-  do iface=1,num_free_surface_faces
+  do iface = 1,num_free_surface_faces
     ispec = free_surface_ispec(iface)
 
     if (ispec_is_acoustic(ispec)) then

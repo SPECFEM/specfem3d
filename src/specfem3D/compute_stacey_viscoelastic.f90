@@ -122,7 +122,7 @@
   if (num_abs_boundary_faces == 0) return
 
   ! absorbs absorbing-boundary surface using Stacey condition (Clayton & Enquist)
-  do iface=1,num_abs_boundary_faces
+  do iface = 1,num_abs_boundary_faces
 
     ispec = abs_boundary_ispec(iface)
 
@@ -300,7 +300,7 @@
   endif
 
   ! absorbs absorbing-boundary surface using Stacey condition (Clayton & Enquist)
-  do iface=1,num_abs_boundary_faces
+  do iface = 1,num_abs_boundary_faces
 
     ispec = abs_boundary_ispec(iface)
 
@@ -346,7 +346,7 @@
   real(kind=CUSTOM_REAL) :: dsm_boundary_tmp(3,Ntime_step_dsm,NGLLX,NGLLY)
 
   it_dsm = 1
-  do iface=1,num_abs_boundary_faces
+  do iface = 1,num_abs_boundary_faces
 
     igll = 0
     do j=1,NGLLY

@@ -154,7 +154,7 @@
 
     if (num_abs_boundary_faces > 0) then
 
-      do iface=1,num_abs_boundary_faces
+      do iface = 1,num_abs_boundary_faces
 
         ispec = abs_boundary_ispec(iface)
 
@@ -292,7 +292,7 @@
   integer iface, igll
   real(kind=CUSTOM_REAL) :: Displ_specfem(3,nb)
 
-  do iface=1,num_abs_boundary_faces
+  do iface = 1,num_abs_boundary_faces
     do igll = 1,NGLLSQUARE
 
       read(238) Displ_specfem(1,igll*iface), Displ_specfem(3,igll*iface), Displ_specfem(3,igll*iface)
@@ -323,7 +323,7 @@
   integer iface, igll
   real(kind=CUSTOM_REAL) :: Tract_specfem(3,nb)
 
-  do iface=1,num_abs_boundary_faces
+  do iface = 1,num_abs_boundary_faces
     do igll = 1,NGLLSQUARE
 
       read(237) Tract_specfem(1,igll*iface), Tract_specfem(3,igll*iface), Tract_specfem(3,igll*iface)

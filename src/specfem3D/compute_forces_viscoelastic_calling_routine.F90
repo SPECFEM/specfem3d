@@ -127,7 +127,7 @@ subroutine compute_forces_viscoelastic()
     if (ACOUSTIC_SIMULATION) then
       if (num_coupling_ac_el_faces > 0) then
         if (SIMULATION_TYPE == 1) then
-          ! forward definition: pressure=-potential_dot_dot
+          ! forward definition: pressure = - potential_dot_dot
           call compute_coupling_viscoelastic_ac(NSPEC_AB,NGLOB_AB, &
                        ibool,accel,potential_dot_dot_acoustic, &
                        num_coupling_ac_el_faces, &
@@ -240,7 +240,7 @@ subroutine compute_forces_viscoelastic()
 
   ! C-PML boundary
   if (PML_CONDITIONS) then
-    do iface=1,num_abs_boundary_faces
+    do iface = 1,num_abs_boundary_faces
       ispec = abs_boundary_ispec(iface)
 !!! It is better to move this into do iphase=1,2 loop
 !!!        if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
@@ -389,7 +389,7 @@ subroutine compute_forces_viscoelastic_backward()
 ! acoustic coupling
     if (ACOUSTIC_SIMULATION) then
       if (num_coupling_ac_el_faces > 0) then
-        ! adjoint simulations
+        ! backward simulations
         call compute_coupling_viscoelastic_ac(NSPEC_ADJOINT,NGLOB_ADJOINT, &
                       ibool,b_accel,b_potential_dot_dot_acoustic, &
                       num_coupling_ac_el_faces, &
