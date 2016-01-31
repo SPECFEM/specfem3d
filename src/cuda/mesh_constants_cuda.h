@@ -95,7 +95,9 @@
 //#define ENABLE_VERY_SLOW_ERROR_CHECKING
 
 // maximum function
-#define MAX(x,y)                    (((x) < (y)) ? (y) : (x))
+#define MAX(x,y)     (((x) < (y)) ? (y) : (x))
+// minimum function
+#define MIN(a,b)     (((a) > (b)) ? (b) : (a))
 
 /* ----------------------------------------------------------------------------------------------- */
 

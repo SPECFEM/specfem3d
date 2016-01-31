@@ -1,11 +1,40 @@
+/*
+ !=====================================================================
+ !
+ !               S p e c f e m 3 D  V e r s i o n  3 . 0
+ !               ---------------------------------------
+ !
+ !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+ !                        Princeton University, USA
+ !                and CNRS / University of Marseille, France
+ !                 (there are currently many more authors!)
+ ! (c) Princeton University and CNRS / University of Marseille, July 2012
+ !
+ ! This program is free software; you can redistribute it and/or modify
+ ! it under the terms of the GNU General Public License as published by
+ ! the Free Software Foundation; either version 2 of the License, or
+ ! (at your option) any later version.
+ !
+ ! This program is distributed in the hope that it will be useful,
+ ! but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ! GNU General Public License for more details.
+ !
+ ! You should have received a copy of the GNU General Public License along
+ ! with this program; if not, write to the Free Software Foundation, Inc.,
+ ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ !
+ !=====================================================================
+ */
+
 #include "fault_struct_cuda.h"
 #include "mesh_constants_cuda.h"
-#include <stdio.h>
-#include <cuda.h>
-#include <cuda_runtime.h>
+
+// asserts
 #include <assert.h>
-#define MIN(a,b) (a)>(b)?(b):(a)
-#define MAX(a,b) (a)>(b)?(a):(b)
+
+/* ----------------------------------------------------------------------------------------------- */
+
 extern "C"
 void FC_FUNC_(initialize_fault_solver,
               INITIALIZE_FAULT_SOLVER)(long* Fault_solver,
@@ -23,6 +52,8 @@ void FC_FUNC_(initialize_fault_solver,
     *Fault_solver = (long) Fdyn;
 }
 
+/* ----------------------------------------------------------------------------------------------- */
+
 // copies integer array from CPU host to GPU device
 void copy_todevice_realw_test(void** d_array_addr_ptr,realw* h_array,int size)
 {
@@ -33,6 +64,7 @@ void copy_todevice_realw_test(void** d_array_addr_ptr,realw* h_array,int size)
     cudaMemcpy((realw*) *d_array_addr_ptr,h_array,size*sizeof(realw),cudaMemcpyHostToDevice);
 }
 
+/* ----------------------------------------------------------------------------------------------- */
 
 void copy_tohost_realw_test(void** d_array_addr_ptr,realw* h_array,int size)
 {
@@ -40,6 +72,9 @@ void copy_tohost_realw_test(void** d_array_addr_ptr,realw* h_array,int size)
     // copies values onto GPU
     cudaMemcpy(h_array, (realw*) *d_array_addr_ptr,size*sizeof(realw),cudaMemcpyDeviceToHost);
 }
+
+/* ----------------------------------------------------------------------------------------------- */
+
 // copies integer array from CPU host to GPU device
 void copy_todevice_int_test(void** d_array_addr_ptr,int* h_array,int size)
 {
@@ -49,6 +84,7 @@ void copy_todevice_int_test(void** d_array_addr_ptr,int* h_array,int size)
     cudaMemcpy((realw*) *d_array_addr_ptr,h_array,size*sizeof(int),cudaMemcpyHostToDevice);
 }
 
+/* ----------------------------------------------------------------------------------------------- */
 
 void copy_tohost_int_test(void** d_array_addr_ptr,int* h_array,int size)
 {
@@ -56,6 +92,7 @@ void copy_tohost_int_test(void** d_array_addr_ptr,int* h_array,int size)
     cudaMemcpy(h_array,(realw*) *d_array_addr_ptr,size*sizeof(int),cudaMemcpyDeviceToHost);
 }
 
+/* ----------------------------------------------------------------------------------------------- */
 
 void allocate_cuda_memory_test(void** d_array_addr_ptr,int size)
 {
@@ -63,6 +100,8 @@ void allocate_cuda_memory_test(void** d_array_addr_ptr,int size)
     // allocates memory on GPU
     cudaMalloc((void**)d_array_addr_ptr,size*sizeof(int));
 }
+
+/* ----------------------------------------------------------------------------------------------- */
 
 extern "C"
 void FC_FUNC_(transfer_todevice_fault_data,
@@ -104,6 +143,8 @@ void FC_FUNC_(transfer_todevice_fault_data,
 
 }
 
+/* ----------------------------------------------------------------------------------------------- */
+
 extern "C"
 void FC_FUNC_(transfer_tohost_fault_data,
               TRANSFER_TOHOST_FAULT_DATA)(long* Fault_pointer,
@@ -126,6 +167,7 @@ void FC_FUNC_(transfer_tohost_fault_data,
 
 }
 
+/* ----------------------------------------------------------------------------------------------- */
 
 extern "C"
 void FC_FUNC_(transfer_todevice_rsf_data,
@@ -163,6 +205,8 @@ void FC_FUNC_(transfer_todevice_rsf_data,
     }
 }
 
+/* ----------------------------------------------------------------------------------------------- */
+
 extern "C"
 void FC_FUNC_(transfer_todevice_swf_data,
               TRANSFER_TODEVICE_SWF_DATA)(long* Fault_pointer,
@@ -189,6 +233,8 @@ void FC_FUNC_(transfer_todevice_swf_data,
         copy_todevice_realw_test((void **)&(Swf->theta),theta,*NGLOB_AB);
     }
 }
+
+/* ----------------------------------------------------------------------------------------------- */
 
 extern "C"
 void FC_FUNC_(transfer_tohost_rsf_data,
@@ -226,6 +272,7 @@ void FC_FUNC_(transfer_tohost_rsf_data,
     }
 }
 
+/* ----------------------------------------------------------------------------------------------- */
 
 extern "C"
 void FC_FUNC_(transfer_tohost_swf_data,
@@ -253,6 +300,8 @@ void FC_FUNC_(transfer_tohost_swf_data,
 
     }
 }
+
+/* ----------------------------------------------------------------------------------------------- */
 
 __device__ __forceinline__ double csevl(const double x,const double* cs,int n)
 
@@ -284,6 +333,8 @@ __device__ __forceinline__ double csevl(const double x,const double* cs,int n)
     return result;
 }
 
+/* ----------------------------------------------------------------------------------------------- */
+
 __device__ __forceinline__ int  inits(const double* os,int nos,double eta)
 {
     int i, ii;
@@ -308,7 +359,7 @@ __device__ __forceinline__ int  inits(const double* os,int nos,double eta)
 
 }
 
-
+/* ----------------------------------------------------------------------------------------------- */
 
 __device__ __forceinline__ double  asinh_slatec(realw x)
 {
@@ -395,6 +446,8 @@ __device__ __forceinline__ double  asinh_slatec(realw x)
 
 }
 
+/* ----------------------------------------------------------------------------------------------- */
+
 __device__ __forceinline__ void funcd(double x,double *fn,double *df,realw tStick,realw Seff,
                                       realw Z,realw f0,realw V0,realw a,realw b,realw L,realw theta,realw cohesion,int statelaw)
 {
@@ -416,6 +469,7 @@ __device__ __forceinline__ void funcd(double x,double *fn,double *df,realw tStic
     *df = -Z - a*Seff/sqrt(1.0E0 + pow((x*arg),2.0))*arg;
 }
 
+/* ----------------------------------------------------------------------------------------------- */
 
 /*// April 1977 version.  W. Fullerton, C3, Los Alamos Scientific Lab.
 //
@@ -492,8 +546,7 @@ __device__ __forceinline__ double rtsafe(realw x1,realw x2,realw xacc,realw tSti
     return -2.0;
 }
 
-
-
+/* ----------------------------------------------------------------------------------------------- */
 
 __device__ __forceinline__ realw update_state_rsf(
     realw Ll,
@@ -518,6 +571,7 @@ __device__ __forceinline__ realw update_state_rsf(
     return theta_r;
 }
 
+/* ----------------------------------------------------------------------------------------------- */
 
 __device__ __forceinline__ realw update_state_swf(
     realw  Dx,
@@ -532,6 +586,8 @@ __device__ __forceinline__ realw update_state_swf(
     return theta_r;
 }
 
+/* ----------------------------------------------------------------------------------------------- */
+
 __device__ __forceinline__ realw swf_mu(realw Dcl,
                                         realw musl,
                                         realw mudl,
@@ -543,6 +599,8 @@ __device__ __forceinline__ realw swf_mu(realw Dcl,
     mul = musl - (musl - mudl)*tmp;
     return mul;
 }
+
+/* ----------------------------------------------------------------------------------------------- */
 
 __device__ __forceinline__ void rotate(realw* R,
 
@@ -578,6 +636,7 @@ __device__ __forceinline__ void rotate(realw* R,
     }
 }
 
+/* ----------------------------------------------------------------------------------------------- */
 
 __device__ __forceinline__ void get_jump(const realw* Vector,realw* Dx, realw* Dy, realw* Dz,int index1,int index2)
 {
@@ -587,6 +646,8 @@ __device__ __forceinline__ void get_jump(const realw* Vector,realw* Dx, realw* D
     return;
 }
 
+/* ----------------------------------------------------------------------------------------------- */
+
 __device__ __forceinline__ void get_weighted_jump(const realw* Vector,const realw Weigh1,const realw Weigh2, realw* Dx, realw* Dy, realw* Dz, int index1, int index2)
 {
     *Dx = Vector[3*index2] * Weigh2 - Vector[3*index1] * Weigh1;
@@ -595,6 +656,8 @@ __device__ __forceinline__ void get_weighted_jump(const realw* Vector,const real
     return;
 
 }
+
+/* ----------------------------------------------------------------------------------------------- */
 
 __global__  void compute_dynamic_fault_cuda_swf(
     realw* Displ, //this is a mesh vector
@@ -626,7 +689,8 @@ __global__  void compute_dynamic_fault_cuda_swf(
     realw Dx,Dy,Dz,Vx,Vy,Vz,Ax,Ay,Az;
     realw Tx,Ty,Tz,T0xl,T0yl,T0zl;
     realw Tstick;
-    realw Zl,mudl,musl,Dcl,thetal,Cohl,RTl;
+    realw Zl,mudl,musl,Dcl,thetal,Cohl;
+    //realw RTl;
     realw strength;
     realw mul;
     realw thetaold;
@@ -644,7 +708,7 @@ __global__  void compute_dynamic_fault_cuda_swf(
     musl = mus[tx];
     Dcl = Dc[tx];
     Cohl = Coh[tx];
-    RTl = RT[tx];
+    //RTl = RT[tx];
     T0xl = T0[tx*3];
     T0yl = T0[tx*3+1];
     T0zl = T0[tx*3+2];
@@ -720,6 +784,7 @@ __global__  void compute_dynamic_fault_cuda_swf(
 
 }
 
+/* ----------------------------------------------------------------------------------------------- */
 
 __global__  void compute_dynamic_fault_cuda(
     realw* Displ, /*mesh quantities*/
@@ -755,7 +820,8 @@ __global__  void compute_dynamic_fault_cuda(
     realw Dx,Dy,Dz,Vx,Vy,Vz,Ax,Ay,Az;
     realw Tx,Ty,Tz,T0xl,T0yl,T0zl;
     realw Tstick;
-    realw Zl,al,bl,Ll,f0l,V0l,V_initl,thetal,Vwl,fwl;
+    realw Zl,al,bl,Ll,f0l,V0l,thetal;
+    //realw V_initl,Vwl,fwl;
     realw thetaold;
     realw Vf_oldl,Vf_newl,Vf_tmp;
     realw Ztmp;
@@ -776,10 +842,10 @@ __global__  void compute_dynamic_fault_cuda(
     thetal = theta[tx];
     f0l = f0[tx];
     Ll = L[tx];
-    Vwl = Vw[tx];
-    fwl = fw[tx];
+    //Vwl = Vw[tx];
+    //fwl = fw[tx];
     V0l = V0[tx];
-    V_initl=V_init[tx];
+    //V_initl=V_init[tx];
     Cohl = Coh[tx];
 
     T0xl = T0[tx*3];
@@ -873,8 +939,7 @@ __global__  void compute_dynamic_fault_cuda(
 
 }
 
-
-
+/* ----------------------------------------------------------------------------------------------- */
 
 
 extern "C"
@@ -961,7 +1026,4 @@ void FC_FUNC_(fault_solver_gpu,
         }
     }
 }
-
-
-
 

@@ -30,8 +30,10 @@
 // mesh pointer wrapper structure
 
 /* ----------------------------------------------------------------------------------------------- */
+
 #include "stdlib.h"
 #include "config.h"
+
 typedef float realw;
 
 typedef struct swf_type_{
