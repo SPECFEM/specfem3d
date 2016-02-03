@@ -26,13 +26,9 @@
 !=====================================================================
 
 ! read an external mesh file and display statistics about mesh quality;
-! and create an OpenDX file showing a given range of elements or a single element
+! and create an OpenDX or ParaView file showing a given range of elements or a single element
 
-! Dimitri Komatitsch, University of Pau, France, March 2009 and CNRS, Marseille, France, June 2015.
-
-!! DK DK
-!! DK DK this routine could be improved by computing the mean in addition to min and max of ratios
-!! DK DK
+! Dimitri Komatitsch, University of Pau, France, March 2009 and CNRS, Marseille, France, June 2015 and February 2016.
 
   program check_mesh_quality
 
@@ -60,7 +56,7 @@
   integer, dimension(:,:), allocatable :: ibool
 
   integer :: i,ispec,iread,iformat,ispec_min_edge_length,ispec_max_edge_length, &
-             ispec_begin,ispec_end,ispec_to_output,ier
+             ispec_begin,ispec_end,ier
 
   double precision :: xtmp,ytmp,ztmp
   integer :: n1,n2,n3,n4,n5,n6,n7,n8
@@ -69,20 +65,22 @@
   double precision :: equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio
   double precision :: equiangle_skewness_min,edge_aspect_ratio_min,diagonal_aspect_ratio_min
   double precision :: equiangle_skewness_max,edge_aspect_ratio_max,diagonal_aspect_ratio_max
-  double precision :: skewness_AVS_DX_min,skewness_AVS_DX_max,distance_min,distance_max
-  double precision :: distmin,distmax
+  double precision :: skewness_AVS_DX_min,skewness_AVS_DX_max,distance_min,distance_max,distance_mean
+  double precision :: distmin,distmax,distmean,min_of_distmean,max_of_distmean
 
 ! for stability
   double precision :: stability
 
 ! for histogram
   integer, parameter :: NCLASS = 20
-  integer classes_skewness(0:NCLASS-1)
+  integer, dimension(0:NCLASS-1) :: classes_of_histogram_skewness,classes_of_histogram_meansize
   integer :: iclass
   double precision :: current_percent,total_percent
-! to export elements that have a certain skewness range to OpenDX
+
+! to export elements that have a certain range to OpenDX or ParaView
   integer :: ntotspecAVS_DX
-  logical :: USE_OPENDX
+  integer :: iparaview_opendx
+  logical :: USE_OPENDX_OR_PARAVIEW,USE_OPENDX_FORMAT_FOR_FILES,DISPLAY_HISTOGRAM_DISTMEAN
 
   if (NGNOD /= 8) then
     print *,'error: check_mesh_quality only supports NGNOD == 8 for now'
@@ -90,45 +88,49 @@
   endif
 
   print *
-  print *,'1 = output elements above a certain skewness threshold in OpenDX format'
-  print *,'2 = output a given element in OpenDX format'
-  print *,'3 = do not output any OpenDX file'
+  print *,'This program will produce histograms of mesh quality.'
+  print *
+  print *,'1 = also output elements above a certain skewness threshold in OpenDX or ParaView format in addition to the histograms'
+  print *,'2 = do not output any OpenDX nor ParaView file, only create the histograms'
   print *
   print *,'enter value:'
   read(5,*) iformat
 
-  if (iformat < 1 .or. iformat > 3) stop 'exiting...'
+  if (iformat < 1 .or. iformat > 2) stop 'input error, exiting...'
 
-  if (iformat == 1 .or. iformat == 2) then
-    USE_OPENDX = .true.
+  if (iformat == 1) then
+    USE_OPENDX_OR_PARAVIEW = .true.
+    print *
+    print *,'1 = use OpenDX format for output files'
+    print *,'2 = use ParaView format for output files'
+    print *
+    print *,'enter value:'
+    read(5,*) iparaview_opendx
+    if (iparaview_opendx < 1 .or. iparaview_opendx > 2) stop 'input error, exiting...'
+    if (iparaview_opendx == 1) then
+      USE_OPENDX_FORMAT_FOR_FILES = .true.
+    else
+      USE_OPENDX_FORMAT_FOR_FILES = .false.
+      stop 'DK DK stopping for now: ParaView format not implemented yet, Vadim will add it soon'
+    endif
   else
-    USE_OPENDX = .false.
+    USE_OPENDX_OR_PARAVIEW = .false.
   endif
 
-  if (USE_OPENDX) then
+  if (USE_OPENDX_OR_PARAVIEW) then
+    ! read range of skewness used for elements
+    print *,'enter minimum skewness for OpenDX (between 0. and 0.99):'
+    read(5,*) skewness_AVS_DX_min
+    if (skewness_AVS_DX_min < 0.d0) skewness_AVS_DX_min = 0.d0
+    if (skewness_AVS_DX_min > 0.99999d0) skewness_AVS_DX_min = 0.99999d0
 
-    if (iformat == 1) then
+    !!!!!!!!  print *,'enter maximum skewness for OpenDX (between 0. and 1.):'
+    !!!!!!!!!!!!!  read(5,*) skewness_AVS_DX_max
+    skewness_AVS_DX_max = 0.99999d0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    if (skewness_AVS_DX_max < 0.d0) skewness_AVS_DX_max = 0.d0
+    if (skewness_AVS_DX_max > 0.99999d0) skewness_AVS_DX_max = 0.99999d0
 
-      ! read range of skewness used for elements
-      print *,'enter minimum skewness for OpenDX (between 0. and 0.99):'
-      read(5,*) skewness_AVS_DX_min
-      if (skewness_AVS_DX_min < 0.d0) skewness_AVS_DX_min = 0.d0
-      if (skewness_AVS_DX_min > 0.99999d0) skewness_AVS_DX_min = 0.99999d0
-
-      !!!!!!!!  print *,'enter maximum skewness for OpenDX (between 0. and 1.):'
-      !!!!!!!!!!!!!  read(5,*) skewness_AVS_DX_max
-      skewness_AVS_DX_max = 0.99999d0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      if (skewness_AVS_DX_max < 0.d0) skewness_AVS_DX_max = 0.d0
-      if (skewness_AVS_DX_max > 0.99999d0) skewness_AVS_DX_max = 0.99999d0
-
-      if (skewness_AVS_DX_min > skewness_AVS_DX_max) stop 'incorrect skewness range'
-
-    else
-      print *,'enter the element number to output in OpenDX format between 1 and ',NSPEC
-      read(5,*) ispec_to_output
-      if (ispec_to_output < 1 .or. ispec_to_output > NSPEC) stop 'incorrect element number to output'
-    endif
-
+    if (skewness_AVS_DX_min > skewness_AVS_DX_max) stop 'incorrect skewness range'
   endif
 
 ! read the mesh
@@ -229,11 +231,15 @@
   edge_aspect_ratio_min = + HUGEVAL
   diagonal_aspect_ratio_min = + HUGEVAL
   distance_min = + HUGEVAL
+  min_of_distmean = + HUGEVAL
 
   equiangle_skewness_max = - HUGEVAL
   edge_aspect_ratio_max = - HUGEVAL
   diagonal_aspect_ratio_max = - HUGEVAL
   distance_max = - HUGEVAL
+  max_of_distmean = - HUGEVAL
+
+  distance_mean = ZERO
 
   ispec_min_edge_length = -1
   ispec_max_edge_length = -1
@@ -244,7 +250,7 @@
     if (mod(ispec,100000) == 0) print *,'processed ',ispec,' elements out of ',NSPEC
 
     call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,delta_t, &
-               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
+               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
 
 ! store element number in which the edge of minimum or maximum length is located
     if (distmin < distance_min) ispec_min_edge_length = ispec
@@ -261,8 +267,25 @@
     diagonal_aspect_ratio_max = max(diagonal_aspect_ratio_max,diagonal_aspect_ratio)
     distance_max = max(distance_max,distmax)
 
+    distance_mean = distance_mean + distmean
+    min_of_distmean = min(min_of_distmean,distmean)
+    max_of_distmean = max(max_of_distmean,distmean)
+
   enddo
+
+! compute the mean distance
+  distance_mean = distance_mean / dble(NSPEC)
+
   print *,'done processing ',NSPEC,' elements out of ',NSPEC
+
+  DISPLAY_HISTOGRAM_DISTMEAN = .true.
+  if(abs(max_of_distmean - min_of_distmean) < 1.d-3*distmean) then
+    print *
+    print *,'Your input mesh seems to be perfect, i.e. all mean distances are equal;'
+    print *,'Will thus not display any histogram of mean distance in the mesh, since it would lead to division by zero.'
+    print *
+    DISPLAY_HISTOGRAM_DISTMEAN = .false.
+  endif
 
   print *
   print *,'------------'
@@ -276,7 +299,7 @@
 
   print *
   print *,'minimum length of an edge in the whole mesh (m) = ',distance_min,' in element ',ispec_min_edge_length
-  print *
+  print *,'mean length of an edge in the whole mesh (m) = ',distance_mean
   print *,'maximum length of an edge in the whole mesh (m) = ',distance_max,' in element ',ispec_max_edge_length
   print *
   print *,'max equiangle skewness = ',equiangle_skewness_max
@@ -295,57 +318,54 @@
   print *
 
 ! create statistics about mesh quality
-  print *,'creating histogram of mesh quality'
 
-! erase histogram of skewness
-  classes_skewness(:) = 0
+!---------------------------------------------------------------
+
+  print *
+  print *,'creating histogram of mesh quality'
+  print *
+
+! erase histograms
+  classes_of_histogram_skewness(:) = 0
+  classes_of_histogram_meansize(:) = 0
 
 ! loop on all the elements
   do ispec = 1,NSPEC
-
     call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,delta_t, &
-               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
+               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
 
 ! store skewness in histogram
     iclass = int(equiangle_skewness * dble(NCLASS))
     if (iclass < 0) iclass = 0
     if (iclass > NCLASS-1) iclass = NCLASS-1
-    classes_skewness(iclass) = classes_skewness(iclass) + 1
+    classes_of_histogram_skewness(iclass) = classes_of_histogram_skewness(iclass) + 1
+
+! store mean size in histogram
+    if(DISPLAY_HISTOGRAM_DISTMEAN) then
+      iclass = int(((distmean - min_of_distmean) / (max_of_distmean - min_of_distmean)) * dble(NCLASS))
+      if (iclass < 0) iclass = 0
+      if (iclass > NCLASS-1) iclass = NCLASS-1
+      classes_of_histogram_meansize(iclass) = classes_of_histogram_meansize(iclass) + 1
+    endif
 
   enddo
 
-! create histogram of skewness and save in Gnuplot file
+!---------------------------------------------------------------
+
+! create histogram of skewness and save it in a Gnuplot file
   print *
   print *,'histogram of skewness (0. good - 1. bad):'
   print *
   total_percent = 0.
-  open(unit=14,file='mesh_quality_histogram.txt',status='unknown')
+  open(unit=14,file='mesh_quality_histogram_skewness.txt',status='unknown')
   do iclass = 0,NCLASS-1
-    current_percent = 100.*dble(classes_skewness(iclass))/dble(NSPEC)
+    current_percent = 100.*dble(classes_of_histogram_skewness(iclass))/dble(NSPEC)
     total_percent = total_percent + current_percent
-    print *,real(iclass/dble(NCLASS)),' - ',real((iclass+1)/dble(NCLASS)),classes_skewness(iclass),' ',sngl(current_percent),' %'
+    print *,real(iclass/dble(NCLASS)),' - ',real((iclass+1)/dble(NCLASS)),classes_of_histogram_skewness(iclass),' ', &
+               sngl(current_percent),' %'
     write(14,*) 0.5*(real(iclass/dble(NCLASS)) + real((iclass+1)/dble(NCLASS))),' ',sngl(current_percent)
   enddo
   close(14)
-
-! create script for Gnuplot histogram file
-  open(unit=14,file='plot_mesh_quality_histogram.gnu',status='unknown')
-  write(14,*) 'set term wxt'
-  write(14,*) '#set term gif'
-  write(14,*) '#set output "mesh_quality_histogram.gif"'
-  write(14,*)
-  write(14,*) 'set xrange [0:1]'
-  write(14,*) 'set xtics 0,0.1,1'
-  write(14,*) 'set boxwidth ',1./real(NCLASS)
-  write(14,*) 'set xlabel "Skewness range"'
-  write(14,*) 'set ylabel "Percentage of elements (%)"'
-  write(14,*) 'plot "mesh_quality_histogram.txt" with boxes'
-  write(14,*) 'pause -1 "hit any key..."'
-  close(14)
-
-  print *
-  print *,'total number of elements = ',NSPEC
-  print *
 
 ! display warning if maximum skewness is too high
   if (equiangle_skewness_max > 0.85d0) then
@@ -371,17 +391,71 @@
     stop 'total percentage should be 100%'
   endif
 
+!---------------------------------------------------------------
+
+  if(DISPLAY_HISTOGRAM_DISTMEAN) then
+
+! create histogram of mean distance and save it in a Gnuplot file
+  print *
+  print *,'histogram of mean element size:'
+  print *
+  total_percent = 0.
+  open(unit=14,file='mesh_quality_histogram_meansize.txt',status='unknown')
+  do iclass = 0,NCLASS-1
+    current_percent = 100.*dble(classes_of_histogram_meansize(iclass))/dble(NSPEC)
+    total_percent = total_percent + current_percent
+    print *,real(iclass/dble(NCLASS) * (max_of_distmean - min_of_distmean) + min_of_distmean),' - ', &
+            real((iclass+1)/dble(NCLASS) * (max_of_distmean - min_of_distmean) + min_of_distmean), &
+            classes_of_histogram_meansize(iclass),' ',sngl(current_percent),' %'
+    write(14,*) sngl(0.5d0*(dble(iclass/dble(NCLASS)) + dble((iclass+1)/dble(NCLASS))) &
+                 * (max_of_distmean - min_of_distmean) + min_of_distmean),' ',sngl(current_percent)
+  enddo
+  close(14)
+
+  if (total_percent < 99.9d0 .or. total_percent > 100.1d0) then
+    print *,'total percentage = ',total_percent,' %'
+    stop 'total percentage should be 100%'
+  endif
+
+  endif
+
+!---------------------------------------------------------------
+
+! create script for Gnuplot histogram files
+  open(unit=14,file='plot_mesh_quality_histograms.gnu',status='unknown')
+  write(14,*) 'set term wxt'
+  write(14,*) '#set term gif'
+
+  if(DISPLAY_HISTOGRAM_DISTMEAN) then
+    write(14,*) '#set output "mesh_quality_histogram_meansize.gif"'
+    write(14,*) 'set xrange [',sngl(min_of_distmean),':',sngl(max_of_distmean),']'
+    write(14,*) 'set boxwidth ',sngl((max_of_distmean - min_of_distmean)/dble(NCLASS))
+    write(14,*) 'set xlabel "Range of mean size of element"'
+    write(14,*) 'set ylabel "Percentage of elements (%)"'
+    write(14,*) 'plot "mesh_quality_histogram_meansize.txt" with boxes'
+    write(14,*) 'pause -1 "hit any key..."'
+  endif
+
+  write(14,*) '#set output "mesh_quality_histogram_skewness.gif"'
+  write(14,*) 'set xrange [0:1]'
+  write(14,*) 'set xtics 0,0.1,1'
+  write(14,*) 'set boxwidth ',sngl(1.d0/dble(NCLASS))
+  write(14,*) 'set xlabel "Range of skewness"'
+  write(14,*) 'set ylabel "Percentage of elements (%)"'
+  write(14,*) 'plot "mesh_quality_histogram_skewness.txt" with boxes'
+  write(14,*) 'pause -1 "hit any key..."'
+
+  close(14)
+
+!---------------------------------------------------------------
+
 ! ************* create OpenDX file with elements in a certain range of skewness
 
-  if (USE_OPENDX) then
+  if (USE_OPENDX_OR_PARAVIEW) then
 
   print *
-  if (iformat == 1) then
-    print *,'creating OpenDX file with subset of elements in skewness range'
-    print *,'between ',skewness_AVS_DX_min,' and ',skewness_AVS_DX_max
-  else
-    print *,'creating OpenDX file with element #',ispec_to_output
-  endif
+  print *,'creating OpenDX file with subset of elements in skewness range'
+  print *,'between ',skewness_AVS_DX_min,' and ',skewness_AVS_DX_max
   print *
 
 ! ************* count number of elements in skewness range *************
@@ -395,7 +469,7 @@
   do ispec = 1,NSPEC
 
     call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,delta_t, &
-               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
+               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
 
 ! check if element belongs to requested skewness range
     if (equiangle_skewness >= skewness_AVS_DX_min .and. equiangle_skewness <= skewness_AVS_DX_max) &
@@ -433,29 +507,23 @@
   write(11,*) 'object 2 class array type int rank 1 shape ',NGNOD,' items ',ntotspecAVS_DX,' data follows'
 
 ! loop on all the elements
-  if (iformat == 1) then
-    ispec_begin = 1
-    ispec_end = NSPEC
-  else
-    ispec_begin = ispec_to_output
-    ispec_end = ispec_to_output
-  endif
+  ispec_begin = 1
+  ispec_end = NSPEC
 
   do ispec = ispec_begin,ispec_end
 
     call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,delta_t, &
-               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
+               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
 
 ! check if element needs to be output
-    if (iformat == 2 .or. (iformat == 1 .and. &
-       equiangle_skewness >= skewness_AVS_DX_min .and. equiangle_skewness <= skewness_AVS_DX_max)) then
+    if (iformat == 1 .and. equiangle_skewness >= skewness_AVS_DX_min .and. equiangle_skewness <= skewness_AVS_DX_max) then
 ! point order in OpenDX in 2D is 1,4,2,3 *not* 1,2,3,4 as in AVS
 ! point order in OpenDX in 3D is 4,1,8,5,3,2,7,6, *not* 1,2,3,4,5,6,7,8 as in AVS
 ! in the case of OpenDX, node numbers start at zero
       write(11,"(i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9)") &
             ibool(4,ispec)-1, ibool(1,ispec)-1, ibool(8,ispec)-1, ibool(5,ispec)-1, &
             ibool(3,ispec)-1, ibool(2,ispec)-1, ibool(7,ispec)-1, ibool(6,ispec)-1
-      if (iformat == 1) print *,'element ',ispec,' belongs to the range and has skewness = ',sngl(equiangle_skewness)
+!     print *,'element ',ispec,' belongs to the range and has skewness = ',sngl(equiangle_skewness)
     endif
 
   enddo
@@ -471,12 +539,11 @@
   do ispec = ispec_begin,ispec_end
 
     call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,delta_t, &
-               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
+               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
 
 ! check if element needs to be output
-    if (iformat == 2 .or. (iformat == 1 .and. &
-       equiangle_skewness >= skewness_AVS_DX_min .and. equiangle_skewness <= skewness_AVS_DX_max)) &
-    write(11,*) sngl(equiangle_skewness)
+    if (iformat == 1 .and. equiangle_skewness >= skewness_AVS_DX_min .and. equiangle_skewness <= skewness_AVS_DX_max) &
+      write(11,*) sngl(equiangle_skewness)
 
   enddo
 
@@ -493,6 +560,8 @@
 
   endif
 
+  print *
+
   end program check_mesh_quality
 
 !
@@ -502,7 +571,7 @@
 ! create mesh quality data for a given 3D spectral element
 
   subroutine create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,delta_t, &
-               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax)
+               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
 
   use constants
 
@@ -522,8 +591,10 @@
   double precision :: vectorA_x,vectorA_y,vectorA_z
   double precision :: vectorB_x,vectorB_y,vectorB_z
   double precision :: norm_A,norm_B,angle_vectors
-  double precision :: distmin,distmax,dist,dist1,dist2,dist3,dist4
+  double precision :: distmin,distmax,distmean,dist,dist1,dist2,dist3,dist4
   double precision :: equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio
+
+  integer :: count_contributions
 
 ! for stability
   double precision :: stability,VP_MAX,delta_t
@@ -612,6 +683,8 @@
 ! and compute edge aspect ratio using the corners of the element
      distmin = + HUGEVAL
      distmax = - HUGEVAL
+     distmean = ZERO
+     count_contributions = 0
      equiangle_skewness = - HUGEVAL
 
      do iface = 1,6
@@ -656,8 +729,14 @@
          distmin = min(distmin,dist)
          distmax = max(distmax,dist)
 
+         count_contributions = count_contributions + 1
+         distmean = distmean + dist
+
        enddo
      enddo
+
+! compute the mean distance
+   distmean = distmean / count_contributions
 
 ! compute edge aspect ratio
    edge_aspect_ratio = distmax / distmin
