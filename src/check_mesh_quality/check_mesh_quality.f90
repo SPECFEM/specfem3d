@@ -55,17 +55,18 @@
 
   integer, dimension(:,:), allocatable :: ibool
 
-  integer :: i,ispec,iread,iformat,ispec_min_edge_length,ispec_max_edge_length, &
+  integer :: i,ispec,iread,iformat,iabove_or_below,ispec_min_edge_length,ispec_max_edge_length, &
              ispec_begin,ispec_end,ier
 
   double precision :: xtmp,ytmp,ztmp
   integer :: n1,n2,n3,n4,n5,n6,n7,n8
 
 ! for quality of mesh
-  double precision :: equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio
+  double precision :: equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,value_to_use
   double precision :: equiangle_skewness_min,edge_aspect_ratio_min,diagonal_aspect_ratio_min
   double precision :: equiangle_skewness_max,edge_aspect_ratio_max,diagonal_aspect_ratio_max
-  double precision :: skewness_AVS_DX_min,skewness_AVS_DX_max,distance_min,distance_max,distance_mean
+  double precision :: threshold_AVS_DX_min,threshold_AVS_DX_max,threshold_AVS_DX_size_to_use
+  double precision :: distance_min,distance_max,distance_mean
   double precision :: distmin,distmax,distmean,min_of_distmean,max_of_distmean
 
 ! for stability
@@ -80,7 +81,7 @@
 ! to export elements that have a certain range to OpenDX or ParaView
   integer :: ntotspecAVS_DX
   integer :: iparaview_opendx
-  logical :: USE_OPENDX_OR_PARAVIEW,USE_OPENDX_FORMAT_FOR_FILES,DISPLAY_HISTOGRAM_DISTMEAN
+  logical :: USE_OPENDX_FORMAT_FOR_FILES,DISPLAY_HISTOGRAM_DISTMEAN
 
   if (NGNOD /= 8) then
     print *,'error: check_mesh_quality only supports NGNOD == 8 for now'
@@ -90,16 +91,52 @@
   print *
   print *,'This program will produce histograms of mesh quality.'
   print *
-  print *,'1 = also output elements above a certain skewness threshold in OpenDX or ParaView format in addition to the histograms'
-  print *,'2 = do not output any OpenDX nor ParaView file, only create the histograms'
+  print *,'1 = also output elements above a certain skewness threshold in OpenDX or ParaView format in addition to histograms'
+  print *,'2 = also output elements above or below a certain element size in OpenDX or ParaView format in addition to histograms'
+  print *,'3 = do not output any OpenDX nor ParaView file, only create histograms'
   print *
   print *,'enter value:'
   read(5,*) iformat
 
-  if (iformat < 1 .or. iformat > 2) stop 'input error, exiting...'
+  if (iformat < 1 .or. iformat > 3) stop 'input error, exiting...'
 
-  if (iformat == 1) then
-    USE_OPENDX_OR_PARAVIEW = .true.
+  if (iformat /= 3) then
+
+    if(iformat == 1) then
+
+      ! ask the user to imput the range of skewness to use to select the elements
+      print *,'enter skewness threshold (between 0. and 0.99) above which all elements will be displayed:'
+      print *,'   (beware, entering 0. will display the whole mesh, since all elements will be above that)'
+      read(5,*) threshold_AVS_DX_min
+      if (threshold_AVS_DX_min < 0.d0) threshold_AVS_DX_min = 0.d0
+      if (threshold_AVS_DX_min > 0.99999d0) threshold_AVS_DX_min = 0.99999d0
+
+      !!!!!!!!  print *,'enter maximum skewness threshold (between 0. and 1.):'
+      !!!!!!!!!!!!!  read(5,*) threshold_AVS_DX_max
+      threshold_AVS_DX_max = 0.99999d0 ! we impose to display all elements above the threshold instead
+      if (threshold_AVS_DX_max < 0.d0) threshold_AVS_DX_max = 0.d0
+      if (threshold_AVS_DX_max > 0.99999d0) threshold_AVS_DX_max = 0.99999d0
+
+    else if(iformat == 2) then
+
+      print *
+      print *,'1 = output elements ABOVE a certain element size'
+      print *,'2 = output elements BELOW a certain element size'
+      print *
+      print *,'enter value:'
+      read(5,*) iabove_or_below
+
+      if (iabove_or_below < 1 .or. iabove_or_below > 2) stop 'input error, exiting...'
+
+      ! ask the user to imput the range of size to use to select the elements
+      print *,'enter the threshold element size to use:'
+      read(5,*) threshold_AVS_DX_size_to_use
+      if (threshold_AVS_DX_size_to_use < ZERO) stop 'input error, exiting...'
+
+    else
+      stop 'error: incorrect value to use was entered'
+    endif
+
     print *
     print *,'1 = use OpenDX format for output files'
     print *,'2 = use ParaView format for output files'
@@ -111,26 +148,8 @@
       USE_OPENDX_FORMAT_FOR_FILES = .true.
     else
       USE_OPENDX_FORMAT_FOR_FILES = .false.
-      stop 'DK DK stopping for now: ParaView format not implemented yet, Vadim will add it soon'
+      stop 'DK DK stopping for now: ParaView format not implemented yet, only OpenDX'
     endif
-  else
-    USE_OPENDX_OR_PARAVIEW = .false.
-  endif
-
-  if (USE_OPENDX_OR_PARAVIEW) then
-    ! read range of skewness used for elements
-    print *,'enter minimum skewness for OpenDX (between 0. and 0.99):'
-    read(5,*) skewness_AVS_DX_min
-    if (skewness_AVS_DX_min < 0.d0) skewness_AVS_DX_min = 0.d0
-    if (skewness_AVS_DX_min > 0.99999d0) skewness_AVS_DX_min = 0.99999d0
-
-    !!!!!!!!  print *,'enter maximum skewness for OpenDX (between 0. and 1.):'
-    !!!!!!!!!!!!!  read(5,*) skewness_AVS_DX_max
-    skewness_AVS_DX_max = 0.99999d0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    if (skewness_AVS_DX_max < 0.d0) skewness_AVS_DX_max = 0.d0
-    if (skewness_AVS_DX_max > 0.99999d0) skewness_AVS_DX_max = 0.99999d0
-
-    if (skewness_AVS_DX_min > skewness_AVS_DX_max) stop 'incorrect skewness range'
   endif
 
 ! read the mesh
@@ -317,9 +336,21 @@
 ! print *,'min diagonal aspect ratio = ',diagonal_aspect_ratio_min
   print *
 
-! create statistics about mesh quality
+  if(iformat == 2) then
+    if (iabove_or_below == 1) then
+! output elements ABOVE a certain element size
+      threshold_AVS_DX_min = threshold_AVS_DX_size_to_use
+      threshold_AVS_DX_max = distance_max
+    else
+! output elements BELOW a certain element size
+      threshold_AVS_DX_min = distance_min
+      threshold_AVS_DX_max = threshold_AVS_DX_size_to_use
+    endif
+  endif
 
 !---------------------------------------------------------------
+
+! create statistics about mesh quality
 
   print *
   print *,'creating histogram of mesh quality'
@@ -378,11 +409,11 @@
     print *
   else if (equiangle_skewness_max > 0.75d0) then
     print *
-    print *,'******************************************************'
-    print *,'******************************************************'
-    print *,' WARNING, mesh is not very good (max skewness > 0.75)'
-    print *,'******************************************************'
-    print *,'******************************************************'
+    print *,'******************************************************************'
+    print *,'******************************************************************'
+    print *,' WARNING, mesh is maybe not fully optimized (max skewness > 0.75)'
+    print *,'******************************************************************'
+    print *,'******************************************************************'
     print *
   endif
 
@@ -449,44 +480,46 @@
 
 !---------------------------------------------------------------
 
-! ************* create OpenDX file with elements in a certain range of skewness
+! ************* create OpenDX file with elements in a certain selected range
 
-  if (USE_OPENDX_OR_PARAVIEW) then
+  if (iformat /= 3) then
 
   print *
-  print *,'creating OpenDX file with subset of elements in skewness range'
-  print *,'between ',skewness_AVS_DX_min,' and ',skewness_AVS_DX_max
+  print *,'creating OpenDX file with subset of elements in selected range'
+  print *,'between ',threshold_AVS_DX_min,' and ',threshold_AVS_DX_max
   print *
 
-! ************* count number of elements in skewness range *************
+  if (threshold_AVS_DX_min > threshold_AVS_DX_max) stop 'error: incorrect display range selected'
 
-! erase number of elements belonging to skewness range for AVS_DX
+! ************* count number of elements in selected range *************
+
+! erase number of elements belonging to selected range for AVS_DX
   ntotspecAVS_DX = 0
 
 ! loop on all the elements
-  if (iformat == 1) then
-
   do ispec = 1,NSPEC
 
     call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
 
-! check if element belongs to requested skewness range
-    if (equiangle_skewness >= skewness_AVS_DX_min .and. equiangle_skewness <= skewness_AVS_DX_max) &
-        ntotspecAVS_DX = ntotspecAVS_DX + 1
+    if(iformat == 1) then
+      value_to_use = equiangle_skewness
+    else if(iformat == 2) then
+      value_to_use = distmean
+    else
+      stop 'error: incorrect value to use was entered'
+    endif
+
+! check if element belongs to selected range
+    if (value_to_use >= threshold_AVS_DX_min .and. value_to_use <= threshold_AVS_DX_max) ntotspecAVS_DX = ntotspecAVS_DX + 1
 
   enddo
 
-  else
-! outputing a single element
-    ntotspecAVS_DX = 1
-  endif
-
   if (ntotspecAVS_DX == 0) then
-    stop 'no elements in skewness range, no file created'
-  else if (iformat == 1) then
+    stop 'no elements in selected range, no file created'
+  else
     print *
-    print *,'there are ',ntotspecAVS_DX,' elements in AVS or DX skewness range ',skewness_AVS_DX_min,skewness_AVS_DX_max
+    print *,'there are ',ntotspecAVS_DX,' elements in AVS or DX selected range ',threshold_AVS_DX_min,threshold_AVS_DX_max
     print *
   endif
 
@@ -515,15 +548,23 @@
     call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
 
+    if(iformat == 1) then
+      value_to_use = equiangle_skewness
+    else if(iformat == 2) then
+      value_to_use = distmean
+    else
+      stop 'error: incorrect value to use was entered'
+    endif
+
 ! check if element needs to be output
-    if (iformat == 1 .and. equiangle_skewness >= skewness_AVS_DX_min .and. equiangle_skewness <= skewness_AVS_DX_max) then
+    if (value_to_use >= threshold_AVS_DX_min .and. value_to_use <= threshold_AVS_DX_max) then
 ! point order in OpenDX in 2D is 1,4,2,3 *not* 1,2,3,4 as in AVS
 ! point order in OpenDX in 3D is 4,1,8,5,3,2,7,6, *not* 1,2,3,4,5,6,7,8 as in AVS
 ! in the case of OpenDX, node numbers start at zero
       write(11,"(i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9)") &
             ibool(4,ispec)-1, ibool(1,ispec)-1, ibool(8,ispec)-1, ibool(5,ispec)-1, &
             ibool(3,ispec)-1, ibool(2,ispec)-1, ibool(7,ispec)-1, ibool(6,ispec)-1
-!     print *,'element ',ispec,' belongs to the range and has skewness = ',sngl(equiangle_skewness)
+!     print *,'element ',ispec,' belongs to the range'
     endif
 
   enddo
@@ -541,9 +582,16 @@
     call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
 
+    if(iformat == 1) then
+      value_to_use = equiangle_skewness
+    else if(iformat == 2) then
+      value_to_use = distmean
+    else
+      stop 'error: incorrect value to use was entered'
+    endif
+
 ! check if element needs to be output
-    if (iformat == 1 .and. equiangle_skewness >= skewness_AVS_DX_min .and. equiangle_skewness <= skewness_AVS_DX_max) &
-      write(11,*) sngl(equiangle_skewness)
+    if (value_to_use >= threshold_AVS_DX_min .and. value_to_use <= threshold_AVS_DX_max) write(11,*) sngl(value_to_use)
 
   enddo
 
