@@ -26,7 +26,7 @@
 !=====================================================================
 
 ! read an external mesh file and display statistics about mesh quality;
-! and create an OpenDX or ParaView file showing a given range of elements or a single element
+! and create an OpenDX file showing a given range of elements or a single element
 
 ! Dimitri Komatitsch, University of Pau, France, March 2009 and CNRS, Marseille, France, June 2015 and February 2016.
 
@@ -73,15 +73,14 @@
   double precision :: stability
 
 ! for histogram
-  integer, parameter :: NCLASS = 20
+  integer, parameter :: NCLASS = 40
   integer, dimension(0:NCLASS-1) :: classes_of_histogram_skewness,classes_of_histogram_meansize
   integer :: iclass
   double precision :: current_percent,total_percent
 
-! to export elements that have a certain range to OpenDX or ParaView
+! to export elements that have a certain range to OpenDX
   integer :: ntotspecAVS_DX
-  integer :: iparaview_opendx
-  logical :: USE_OPENDX_FORMAT_FOR_FILES,DISPLAY_HISTOGRAM_DISTMEAN
+  logical :: DISPLAY_HISTOGRAM_DISTMEAN
 
   if (NGNOD /= 8) then
     print *,'error: check_mesh_quality only supports NGNOD == 8 for now'
@@ -91,9 +90,9 @@
   print *
   print *,'This program will produce histograms of mesh quality.'
   print *
-  print *,'1 = also output elements above a certain skewness threshold in OpenDX or ParaView format in addition to histograms'
-  print *,'2 = also output elements above or below a certain element size in OpenDX or ParaView format in addition to histograms'
-  print *,'3 = do not output any OpenDX nor ParaView file, only create histograms'
+  print *,'1 = also output elements above a certain skewness threshold in OpenDX format in addition to histograms'
+  print *,'2 = also output elements above or below a certain element size in OpenDX format in addition to histograms'
+  print *,'3 = do not output any OpenDX file, only create histograms'
   print *
   print *,'enter value:'
   read(5,*) iformat
@@ -137,19 +136,6 @@
       stop 'error: incorrect value to use was entered'
     endif
 
-    print *
-    print *,'1 = use OpenDX format for output files'
-    print *,'2 = use ParaView format for output files'
-    print *
-    print *,'enter value:'
-    read(5,*) iparaview_opendx
-    if (iparaview_opendx < 1 .or. iparaview_opendx > 2) stop 'input error, exiting...'
-    if (iparaview_opendx == 1) then
-      USE_OPENDX_FORMAT_FOR_FILES = .true.
-    else
-      USE_OPENDX_FORMAT_FOR_FILES = .false.
-      stop 'DK DK stopping for now: ParaView format not implemented yet, only OpenDX'
-    endif
   endif
 
 ! read the mesh
