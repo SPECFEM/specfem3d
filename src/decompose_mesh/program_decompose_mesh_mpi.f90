@@ -11,7 +11,6 @@ program decompose_mesh_mpi
 ! Vadim Monteiller (monteiller@lma.cnrs-mrs.fr) February 2016
 !
 !
-  use mpi
   use module_mesh
   use module_database
   use module_partition
