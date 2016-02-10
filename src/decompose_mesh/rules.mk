@@ -119,7 +119,7 @@ $E/xdecompose_mesh_paral: $(decompose_mesh_SHARED_OBJECTS) $(decompose_mesh_para
 	@echo ""
 	@echo "building xdecompose_mesh_paral"
 	@echo ""
-	${FCLINK} -o  $E/xdecompose_mesh_paral $(decompose_mesh_SHARED_OBJECTS) $(decompose_mesh_paral_OBJECTS) $(SCOTCH_LIBS) $(COND_MPI_OBJECTS)
+	${FCLINK} -o  $E/xdecompose_mesh_paral $(decompose_mesh_SHARED_OBJECTS) $(decompose_mesh_paral_OBJECTS) $(COND_MPI_OBJECTS)
 	@echo ""
 
 #######################################
