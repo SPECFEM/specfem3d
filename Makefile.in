@@ -243,6 +243,7 @@ SUBDIRS = \
 # default targets for the pure Fortran version
 DEFAULT = \
 	xdecompose_mesh \
+	xdecompose_mesh_paral \
 	xmeshfem3D \
 	xgenerate_databases \
 	xspecfem3D \
