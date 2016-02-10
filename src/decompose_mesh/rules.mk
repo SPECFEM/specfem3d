@@ -132,7 +132,7 @@ $O/decompose_mesh.dec.o: $O/part_decompose_mesh.dec.o $O/fault_scotch.dec.o ${SC
 $O/program_decompose_mesh.dec.o: $O/decompose_mesh.dec.o $O/shared_par.shared_module.o $(COND_MPI_OBJECTS)
 $O/program_decompose_mesh_mpi.mpidec.o: $O/shared_par.shared_module.o $(COND_MPI_OBJECTS)
 $O/module_database.dec.o : $O/shared_par.shared_module.o
-$O/module_partition.dec.o : $O/shared_par.shared_module.o $O/fault_scotch.dec.o
+$O/module_partition.dec.o : $O/shared_par.shared_module.o $O/fault_scotch.dec.o $O/module_qsort.dec.o
 $O/module_mesh.dec.o : $O/shared_par.shared_module.o $O/fault_scotch.dec.o
 
 #######################################
