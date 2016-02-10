@@ -114,7 +114,7 @@ else
 	@echo "Not using bundled Scotch"
 endif
 
-# parallel verison of decompose_mesh
+# parallel version of decompose_mesh
 $E/xdecompose_mesh_paral: $(decompose_mesh_SHARED_OBJECTS) $(decompose_mesh_paral_OBJECTS) $(COND_MPI_OBJECTS)
 	@echo ""
 	@echo "building xdecompose_mesh_paral"
