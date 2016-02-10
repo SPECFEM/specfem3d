@@ -454,8 +454,23 @@ end module my_mpi
 !-------------------------------------------------------------------------------------------------
 !
 
-!  subroutine bcast_all_ch_array(buffer,ndim,countval)
-!  end subroutine bcast_all_ch_array
+  subroutine bcast_all_ch_array(buffer,countval)
+
+    use my_mpi
+    use constants,only: MAX_STRING_LEN
+
+    implicit none
+
+    integer :: countval
+
+    character(len=MAX_STRING_LEN), dimension(MAX_STRING_LEN*countval) :: buffer
+ 
+    integer :: ier
+
+    call MPI_BCAST(buffer,MAX_STRING_LEN*countval,MPI_CHARACTER,0,MPI_COMM_WORLD,ier)
+
+
+  end subroutine bcast_all_ch_array
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -468,8 +483,17 @@ end module my_mpi
 !-------------------------------------------------------------------------------------------------
 !
 
-!  subroutine bcast_all_l(buffer, countval)
-!  end subroutine bcast_all_l
+  subroutine bcast_all_l_array(buffer, countval)
+ 
+    use my_mpi
+    implicit none
+    integer    :: countval
+    logical, dimension(countval) :: buffer
+    integer :: ier
+
+    call MPI_BCAST(buffer,countval,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+ 
+  end subroutine bcast_all_l_array
 
 !
 !---- broadcast using the communicator to send the mesh and model to other simultaneous runs
@@ -1358,6 +1382,25 @@ end module my_mpi
 
   end subroutine gather_all_i
 
+  subroutine all_gather_all_i(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
+
+  use my_mpi
+
+  implicit none
+
+  integer :: sendcnt, recvcount, NPROC
+  integer, dimension(sendcnt) :: sendbuf
+  integer, dimension(recvcount,0:NPROC-1) :: recvbuf
+
+  integer :: ier
+
+  call MPI_ALLGATHER(sendbuf,sendcnt,MPI_INTEGER, &
+                  recvbuf,recvcount,MPI_INTEGER, &
+                  my_local_mpi_comm_world,ier)
+
+end subroutine all_gather_all_i
+  
+
 !
 !-------------------------------------------------------------------------------------------------
 !
@@ -1427,6 +1470,23 @@ end module my_mpi
 
   end subroutine gather_all_dp
 
+  subroutine all_gather_all_dp(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
+
+  use my_mpi
+
+  implicit none
+
+  integer :: sendcnt, recvcount, NPROC
+  double precision, dimension(sendcnt) :: sendbuf
+  double precision, dimension(recvcount,0:NPROC-1) :: recvbuf
+
+  integer :: ier
+
+  call MPI_ALLGATHER(sendbuf,sendcnt,MPI_DOUBLE_PRECISION, &
+                  recvbuf,recvcount,MPI_DOUBLE_PRECISION, &
+                  my_local_mpi_comm_world,ier)
+  
+  end subroutine all_gather_all_dp
 !
 !-------------------------------------------------------------------------------------------------
 !
