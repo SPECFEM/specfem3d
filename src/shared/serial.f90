@@ -169,7 +169,7 @@
 
     character(len=MAX_STRING_LEN), dimension(MAX_STRING_LEN*countval) :: buffer
     character(len=MAX_STRING_LEN) :: unused_ch
-    
+
     unused_ch=buffer(1)
 
   end subroutine bcast_all_ch_array
@@ -1155,30 +1155,30 @@
 !
 
   subroutine bcast_all_l_array(buffer, countval)
- 
-  
+
+
     implicit none
     integer    :: countval
     logical, dimension(countval) :: buffer
     logical :: unused_l
-   
+
     unused_l = buffer(1)
-   
- 
+
+
   end subroutine bcast_all_l_array
 
   subroutine all_gather_all_i(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
-    
-   
-    
+
+
+
     implicit none
-    
+
     integer :: sendcnt, recvcount, NPROC
     integer, dimension(sendcnt) :: sendbuf
     integer, dimension(recvcount,0:NPROC-1) :: recvbuf
-    
+
     recvbuf(:,0) = sendbuf(:)
-    
-    
-    
+
+
+
   end subroutine all_gather_all_i

@@ -8,9 +8,9 @@ module module_mesh
   integer,               dimension(:,:),        allocatable  :: elmnts, elmnts_glob
   integer,               dimension(:,:),        allocatable  :: mat
 
-  ! vertices 
+  ! vertices
   integer                                                    :: nnodes, nnodes_glob
-  double precision,      dimension(:,:),         allocatable :: nodes_coords, nodes_coords_glob 
+  double precision,      dimension(:,:),         allocatable :: nodes_coords, nodes_coords_glob
 
   ! boundaries
   integer                                                    :: ispec2D
@@ -35,21 +35,21 @@ module module_mesh
   integer,              dimension(:,:),          allocatable :: nodes_ibelm_moho
 
 
-  ! material properties 
+  ! material properties
   integer                                                    :: count_def_mat,count_undef_mat,imat
   integer,               dimension(:),           allocatable :: num_material
   double precision ,     dimension(:,:),         allocatable :: mat_prop
   character(len=MAX_STRING_LEN), dimension(:,:), allocatable :: undef_mat_prop
 
-  ! elements load 
+  ! elements load
   double precision,      dimension(:),           allocatable :: load_elmnts
 
   !! acoustic-elastic-poroelastic as well as CPML load balancing:
   !! we define here the relative cost of all types of spectral elements used in the code.
-  double precision, parameter :: ACOUSTIC_LOAD     = 1.d0   
-  double precision, parameter :: ELASTIC_LOAD      = 4.1d0     
+  double precision, parameter :: ACOUSTIC_LOAD     = 1.d0
+  double precision, parameter :: ELASTIC_LOAD      = 4.1d0
   double precision, parameter :: VISCOELASTIC_LOAD = 5.9d0
-  double precision, parameter :: POROELASTIC_LOAD  = 8.1d0 
+  double precision, parameter :: POROELASTIC_LOAD  = 8.1d0
 
 
   ! default mesh file directory
@@ -58,16 +58,16 @@ module module_mesh
   ! useful kind types for short integer (4 bytes) and long integers (8 bytes)
   integer, parameter :: short = 4, long = 8
 
-contains 
+contains
 
   !----------------------------------------------------------------------------------------------
   ! reads in mesh files
   !----------------------------------------------------------------------------------------------
   subroutine read_mesh_files()
 
-    
+
     implicit none
-    
+
     character(len=MAX_STRING_LEN)                            :: line
     logical                                                  :: use_poroelastic_file
     integer(long)                                            :: nspec_long
@@ -80,7 +80,7 @@ contains
     double precision :: rhos,rhof,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,eta,mufr
 
     localpath_name='./MESH'
-    
+
     ! reads node coordinates
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file',&
          status='old', form='formatted', iostat = ier)
@@ -95,14 +95,14 @@ contains
     do inode = 1, nnodes_glob
        ! format: #id_node #x_coordinate #y_coordinate #z_coordinate
        read(98,*) num_node, nodes_coords_glob(1,num_node), nodes_coords_glob(2,num_node), nodes_coords_glob(3,num_node)
-       if (mod(inode,100000)==0) then 
+       if (mod(inode,100000)==0) then
           write(27,'(2i10)') num_node/100000, nnodes_glob/100000
-       end if
+       endif
     enddo
     close(98)
     write(27,*) 'total number of nodes: '
     write(27,*) '  nnodes = ', nnodes_glob
-    
+
     ! reads mesh elements indexing
     !(CUBIT calls this the connectivity, guess in the sense that it connects with the points index in
     ! the global coordinate file "nodes_coords_file"; it doesn't tell you which point is connected with others)
@@ -110,24 +110,24 @@ contains
          status='old', form='formatted',iostat=ier)
     if (ier /= 0) stop 'Error opening mesh_file'
     read(98,*) nspec_long
-    
+
     ! debug check size limit
     if (nspec_long > 2147483646) then
        print *,'size exceeds integer 4-byte limit: ',nspec_long
        print *,'bit size fortran: ',bit_size(nspec)
        stop 'Error number of elements too large'
     endif
-    
+
     ! sets number of elements (integer 4-byte)
     nspec_glob = nspec_long
-      
+
     if (nspec_glob < 1) stop 'Error: nspec < 1'
     allocate(elmnts_glob(NGNOD,nspec_glob),stat=ier)
     if (ier /= 0) stop 'Error allocating array elmnts'
     do ispec = 1, nspec_glob
        ! format: # element_id  #id_node1 ... #id_node8
        !      or # element_id  #id_node1 ... #id_node27
-       
+
        ! note: be aware that here we can have different node ordering for a cube element;
        !          the ordering from Cubit files might not be consistent for multiple volumes, or uneven, unstructured grids
        !
@@ -136,25 +136,25 @@ contains
        !             point 1 = (0,0,0), point 2 = (0,1,0), point 3 = (1,1,0), point 4 = (1,0,0)
        !          then top (positive z-direction) of element
        !             point 5 = (0,0,1), point 6 = (0,1,1), point 7 = (1,1,1), point 8 = (1,0,1)
-         
+
        read(98,*,iostat=ier) num_elmnt,(elmnts_glob(inode,num_elmnt), inode=1,NGNOD)
-       
+
        if (ier /= 0) then
           print *,'Error while attempting to read ',NGNOD,'element data values from the mesh file'
           if (NGNOD == 8) print *,'check if your mesh file is indeed composed of HEX8 elements'
           if (NGNOD == 27) print *,'check if your mesh file is indeed composed of HEX27 elements'
           stop 'Error reading element data from the mesh file'
        endif
-       
+
        if ((num_elmnt > nspec_glob) .or. (num_elmnt < 1))  stop "Error : Invalid mesh_file"
        if (mod(ispec,100000)==0) then
           write(27,'(2i10)') ispec/100000, nspec_glob/100000
-       end if       
+       endif
     enddo
     close(98)
     write(27,*) 'total number of spectral elements:'
     write(27,*) '  nspec = ', nspec_glob
-    
+
     ! reads material associations
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/materials_file', &
          status='old', form='formatted',iostat=ier)
@@ -169,7 +169,7 @@ contains
        if ((num_mat > nspec_glob) .or. (num_mat < 1)) stop "Error : Invalid materials_file"
     enddo
     close(98)
-    
+
     ! gets materials id associations
     allocate(num_material(1:nspec_glob),stat=ier)
     if (ier /= 0) stop 'Error allocating array num_material'
@@ -200,7 +200,7 @@ contains
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_velocity_file',&
          status='old', form='formatted',iostat=ier)
     if (ier /= 0) stop 'Error opening nummaterial_velocity_file'
-    
+
     ! counts materials (defined/undefined)
     write(27,*) 'materials:'
     ier = 0
@@ -208,14 +208,14 @@ contains
        ! note: format #material_domain_id #material_id #...
        read(98,'(A)',iostat=ier) line
        if (ier /= 0) exit
-       
+
        ! skip empty/comment lines
        if (len_trim(line) == 0) cycle
        if (line(1:1) == '#' .or. line(1:1) == '!') cycle
-       
+
        read(line,*,iostat=ier) idummy,num_mat
        if (ier /= 0) exit
-       
+
        write(27,*) '  num_mat = ',num_mat
        ! checks non-zero material id
        if (num_mat == 0) stop 'Error in nummaterial_velocity_file: material id 0 found. Material ids must be non-zero.'
@@ -228,7 +228,7 @@ contains
        endif
     enddo
     write(27,*) '  defined = ',count_def_mat, 'undefined = ',count_undef_mat
-    
+
     ! check with material flags
     ! defined materials
     if (count_def_mat > 0 .and. maxval(mat(1,:)) > count_def_mat) then
@@ -240,7 +240,7 @@ contains
     allocate(mat_prop(16,count_def_mat),stat=ier)
     if (ier /= 0) stop 'Error allocating array mat_prop'
     mat_prop(:,:) = 0.d0
-    
+
     ! undefined materials
     if (count_undef_mat > 0 .and. minval(mat(1,:)) < -count_undef_mat) then
        print *,'Error material definitions:'
@@ -251,11 +251,11 @@ contains
     allocate(undef_mat_prop(6,count_undef_mat),stat=ier)
     if (ier /= 0) stop 'Error allocating array undef_mat_prop'
     undef_mat_prop(:,:) = ''
-    
+
     ! reads in defined material properties
     rewind(98,iostat=ier)
     if (ier /= 0) stop 'Error rewinding nummaterial_velocity_file'
-    
+
     ! modif to read poro parameters, added if loop on idomain_id
     ! note: format of nummaterial_poroelastic_file located in MESH must be
     !
@@ -281,7 +281,7 @@ contains
        write(27,*) '  poroelastic material file found'
     endif
     ier = 0
-    
+
     ! note: entries in nummaterial_velocity_file can be an unsorted list of all
     !          defined materials (material_id > 0) and undefined materials (material_id < 0)
     do imat=1,count_def_mat
@@ -294,37 +294,37 @@ contains
        do while (num_mat < 0 .and. ier == 0)
           read(98,'(A)',iostat=ier) line
           if (ier /= 0) exit
-          
+
           ! skip empty/comment lines
           if (len_trim(line) == 0) cycle
           if (line(1:1) == '#' .or. line(1:1) == '!') cycle
-          
+
           read(line,*) idomain_id,num_mat
        enddo
        if (ier /= 0) stop 'Error reading in defined materials in nummaterial_velocity_file'
-       
+
        ! reads in defined material properties
        read(line,*) idomain_id,num_mat,rho,vp,vs,qkappa,qmu,aniso_flag
-       
+
        ! sanity check: Q factor cannot be equal to zero, thus convert to 9999 to indicate no attenuation
        ! if users have used 0 to indicate that instead
        if (qkappa <= 0.000001) qkappa = 9999.
        if (qmu <= 0.000001) qmu = 9999.
-       
+
        ! checks material_id bounds
        if (num_mat < 1 .or. num_mat > count_def_mat) &
             stop "Error in nummaterial_velocity_file: material id invalid for defined materials."
-       
+
        if (idomain_id == 1 .or. idomain_id == 2) then ! material is elastic or acoustic
-          
+
           ! check that the S-wave velocity is zero if the material is acoustic
           if (idomain_id == 1 .and. vs >= 0.0001) &
                stop 'Error in nummaterial_velocity_file: acoustic material defined with a non-zero shear-wave velocity Vs.'
-          
+
           ! check that the S-wave velocity is not zero if the material is elastic
           if (idomain_id == 2 .and. vs <= 0.0001) &
                stop 'Error in nummaterial_velocity_file: (visco)elastic material defined with a zero shear-wave velocity Vs.'
-          
+
           mat_prop(1,num_mat) = rho
           mat_prop(2,num_mat) = vp
           mat_prop(3,num_mat) = vs
@@ -332,12 +332,12 @@ contains
           mat_prop(5,num_mat) = aniso_flag
           mat_prop(6,num_mat) = idomain_id
           mat_prop(7,num_mat) = qkappa  ! this one is not stored next to qmu for historical reasons, because it was added later
-          
+
        else if (idomain_id == 3) then ! material is poroelastic
-          
+
           if (use_poroelastic_file .eqv. .false.) &
                stop 'Error in nummaterial_velocity_file: poroelastic material requires nummaterial_poroelastic_file'
-          
+
           read(97,*) rhos,rhof,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,eta,mufr
           mat_prop(1,num_mat) = rhos
           mat_prop(2,num_mat) = rhof
@@ -355,18 +355,18 @@ contains
           mat_prop(14,num_mat) = kappaf
           mat_prop(15,num_mat) = kappafr
           mat_prop(16,num_mat) = mufr
-          
+
        else
           stop 'Error in nummaterial_velocity_file: idomain_id must be 1, 2 or 3 for acoustic, elastic or poroelastic domains'
-          
+
        endif ! of if (idomain_id == ...)
-       
+
     enddo
-    
+
     ! back to the beginning of the file
     rewind(98,iostat=ier)
     if (ier /= 0) stop 'Error rewinding nummaterial_velocity_file'
-    
+
     ! reads in undefined material properties
     do imat=1,count_undef_mat
        !  undefined materials: have to be listed in decreasing order of material_id (start with -1, -2, etc...)
@@ -384,19 +384,19 @@ contains
        do while (num_mat >= 0 .and. ier == 0)
           read(98,'(A)',iostat=ier) line
           if (ier /= 0) exit
-          
+
           ! skip empty/comment lines
           if (len_trim(line) == 0) cycle
           if (line(1:1) == '#' .or. line(1:1) == '!') cycle
-          
+
           read(line,*) idomain_id,num_mat
        enddo
        if (ier /= 0) stop 'Error reading in undefined materials in nummaterial_velocity_file'
-       
+
        ! checks if interface or tomography definition
        read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat)
        read(undef_mat_prop(1,imat),*) num_mat
-       
+
        if (trim(undef_mat_prop(2,imat)) == 'interface') then
           ! line will have 5 arguments, e.g.: 2 -1 interface 1 2
           read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
@@ -411,7 +411,7 @@ contains
           print *,'Error invalid type for undefined materials: ',trim(undef_mat_prop(2,imat))
           stop 'Error in nummaterial_velocity_file: invalid line in for undefined material'
        endif
-       
+
        ! checks material_id
        if (trim(undef_mat_prop(2,imat)) == 'interface' .or. trim(undef_mat_prop(2,imat)) == 'tomography') then
           if (num_mat /= -imat) then
@@ -425,7 +425,7 @@ contains
           if (-num_mat > count_undef_mat)  &
                stop 'Error in nummaterial_velocity_file: Negative material id exceeds bounds for undefined materials.'
        endif
-       
+
        ! checks interface: flag_down/flag_up
        if (trim(undef_mat_prop(2,imat)) == 'interface') then
           ! flag_down
@@ -451,7 +451,7 @@ contains
                   stop "Error in nummaterial_velocity_file: invalid flag_up in interface definition"
           endif
        endif
-       
+
        ! checks domain id
        if (trim(undef_mat_prop(2,imat)) == 'tomography') then
           ! poroelastic domains not supported yet
@@ -468,7 +468,7 @@ contains
     enddo
     if (use_poroelastic_file) close(97)
     close(98)
-    
+
     do ispec=1,nspec_glob
        ! get material_id
        num_mat = mat(1,ispec)
@@ -493,7 +493,7 @@ contains
           mat(2,ispec) = 0
        endif
     enddo
-    
+
     ! reads in absorbing boundary files
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_xmin', &
          status='old', form='formatted',iostat=ier)
@@ -506,7 +506,7 @@ contains
     else
        read(98,*) nspec2D_xmin
     endif
-    
+
     ! an array of size 0 is a valid object in Fortran 90, i.e. the array is then considered as allocated
     ! and can thus for instance be used as an argument in a call to a subroutine without giving any error
     ! even when full range and pointer checking is used in the compiler options;
@@ -529,7 +529,7 @@ contains
     close(98)
     write(27,*) 'absorbing boundaries:'
     write(27,*) '  nspec2D_xmin = ', nspec2D_xmin
-    
+
     ! reads in absorbing boundary files
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_xmax', &
          status='old', form='formatted',iostat=ier)
@@ -567,7 +567,7 @@ contains
     enddo
     close(98)
     write(27,*) '  nspec2D_ymin = ', nspec2D_ymin
-    
+
     ! reads in absorbing boundary files
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_ymax', &
          status='old', form='formatted',iostat=ier)
@@ -586,7 +586,7 @@ contains
     enddo
     close(98)
     write(27,*) '  nspec2D_ymax = ', nspec2D_ymax
-    
+
     ! reads in absorbing boundary files
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_bottom', &
          status='old', form='formatted',iostat=ier)
@@ -605,7 +605,7 @@ contains
     enddo
     close(98)
     write(27,*) '  nspec2D_bottom = ', nspec2D_bottom
-    
+
     ! reads in free_surface boundary files
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/free_or_absorbing_surface_file_zmax', &
          status='old', form='formatted',iostat=ier)
@@ -624,13 +624,13 @@ contains
     enddo
     close(98)
     write(27,*) '  nspec2D_top = ', nspec2D_top
-    
+
     ! an array of size 0 is a valid object in Fortran 90, i.e. the array is then considered as allocated
     ! and can thus for instance be used as an argument in a call to a subroutine without giving any error
     ! even when full range and pointer checking is used in the compiler options;
     ! thus here the idea is that if some of the absorbing files do not exist because there are no absorbing
     ! conditions for this mesh then the array is created nonetheless, but with a dummy size of 0
-    
+
     ! reads in absorbing_cpml boundary file
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_cpml_file', &
          status='old', form='formatted',iostat=ier)
@@ -643,11 +643,11 @@ contains
     else
        read(98,*) nspec_cpml
     endif
-    
+
     ! sanity check
     if (PML_CONDITIONS .and. nspec_cpml <= 0) &
          stop 'Error: PML_CONDITIONS is set to true but nspec_cpml <= 0 in file absorbing_cpml_file'
-    
+
     ! C-PML spectral elements global indexing
     allocate(cpml_to_spec(nspec_cpml),stat=ier)
     if (ier /= 0) stop 'Error allocating array CPML_to_spec'
@@ -670,7 +670,7 @@ contains
     enddo
     close(98)
     if (nspec_cpml > 0) write(27,*)  '  nspec_cpml = ', nspec_cpml
-    
+
     ! sets mask of C-PML elements for all elements in this partition
     allocate(is_cpml(nspec_glob),stat=ier)
     if (ier /= 0) stop 'Error allocating array is_CPML'
@@ -680,7 +680,7 @@ contains
           is_cpml(cpml_to_spec(ispec_cpml)) = .true.
        endif
     enddo
-    
+
     ! reads in moho_surface boundary files (optional)
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/moho_surface_file', &
          status='old', form='formatted',iostat=ier)
@@ -699,33 +699,33 @@ contains
     enddo
     close(98)
     if (nspec2D_moho > 0) write(27,*) '  nspec2D_moho = ', nspec2D_moho
-    
+
     call read_fault_files(localpath_name)
     if (ANY_FAULT) then
        call save_nodes_coords(nodes_coords,nnodes)
        call close_faults(nodes_coords,nnodes)
     endif
-    
+
   end subroutine read_mesh_files
 
   !--------------------------------------------------
   ! interface to loading : sets weights for acoustic/elastic/poroelastic elements to account for different
   !               expensive calculations in specfem simulations
-  !--------------------------------------------------  
+  !--------------------------------------------------
   subroutine compute_load_elemnts()
     !!
-    !! calling subroutine to fill load_elmnts array contains the element weight to 
-    !! be considered in mesh decomposition in order to obtain a good load inbalance 
-    !! 
+    !! calling subroutine to fill load_elmnts array contains the element weight to
+    !! be considered in mesh decomposition in order to obtain a good load inbalance
+    !!
     implicit none
 
     allocate(load_elmnts(nspec_glob))
     call  acoustic_elastic_poro_load (load_elmnts,nspec_glob,count_def_mat,count_undef_mat, &
                                     num_material,mat_prop,undef_mat_prop,ATTENUATION)
-        
+
   end subroutine compute_load_elemnts
 
- 
+
 end module module_mesh
 
 
@@ -763,13 +763,13 @@ subroutine acoustic_elastic_poro_load (elmnts_load,nspec,count_def_mat,count_und
   double precision,              dimension(1:nspec),              intent(out) :: elmnts_load
 
 
-  ! local parameters 
+  ! local parameters
   logical, dimension(:), allocatable  :: is_acoustic, is_elastic, is_poroelastic
   integer  :: i,el,idomain_id
 
 
-  allocate(is_acoustic(-count_undef_mat:count_def_mat)) 
-  allocate(is_elastic(-count_undef_mat:count_def_mat)) 
+  allocate(is_acoustic(-count_undef_mat:count_def_mat))
+  allocate(is_elastic(-count_undef_mat:count_def_mat))
   allocate(is_poroelastic(-count_undef_mat:count_def_mat))
 
   ! initializes flags
@@ -807,7 +807,7 @@ subroutine acoustic_elastic_poro_load (elmnts_load,nspec,count_def_mat,count_und
         is_elastic(-i) = .true.
      endif
   enddo
-  
+
 
   ! sets weights for elements
   do el = 0, nspec-1
@@ -834,11 +834,11 @@ subroutine acoustic_elastic_poro_load (elmnts_load,nspec,count_def_mat,count_und
         endif
      endif
   enddo
-  
+
 end subroutine acoustic_elastic_poro_load
 
 
- 
+
 
 
 

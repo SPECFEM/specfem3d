@@ -45,31 +45,31 @@ subroutine Partition(A, Id, marker)
      do
         if (A(j) <= x) exit
         j = j-1
-     end do
+     enddo
      i = i+1
      do
         if (A(i) >= x) exit
         i = i+1
-     end do
+     enddo
      if (i < j) then
         ! exchange A(i) and A(j)
         temp = A(i)
         A(i) = A(j)
         A(j) = temp
 
-        !! add by VM 
-        itmp  = Id(i) 
+        !! add by VM
+        itmp  = Id(i)
         Id(i) = Id(j)
         Id(j) = itmp
 
-     elseif (i == j) then
+     else if (i == j) then
         marker = i+1
         return
      else
         marker = i
         return
      endif
-  end do
+  enddo
 
 end subroutine Partition
 

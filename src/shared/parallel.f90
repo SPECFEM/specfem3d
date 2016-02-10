@@ -464,7 +464,7 @@ end module my_mpi
     integer :: countval
 
     character(len=MAX_STRING_LEN), dimension(MAX_STRING_LEN*countval) :: buffer
- 
+
     integer :: ier
 
     call MPI_BCAST(buffer,MAX_STRING_LEN*countval,MPI_CHARACTER,0,MPI_COMM_WORLD,ier)
@@ -484,7 +484,7 @@ end module my_mpi
 !
 
   subroutine bcast_all_l_array(buffer, countval)
- 
+
     use my_mpi
     implicit none
     integer    :: countval
@@ -492,7 +492,7 @@ end module my_mpi
     integer :: ier
 
     call MPI_BCAST(buffer,countval,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
- 
+
   end subroutine bcast_all_l_array
 
 !
@@ -1399,7 +1399,7 @@ end module my_mpi
                   my_local_mpi_comm_world,ier)
 
 end subroutine all_gather_all_i
-  
+
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -1485,7 +1485,7 @@ end subroutine all_gather_all_i
   call MPI_ALLGATHER(sendbuf,sendcnt,MPI_DOUBLE_PRECISION, &
                   recvbuf,recvcount,MPI_DOUBLE_PRECISION, &
                   my_local_mpi_comm_world,ier)
-  
+
   end subroutine all_gather_all_dp
 !
 !-------------------------------------------------------------------------------------------------

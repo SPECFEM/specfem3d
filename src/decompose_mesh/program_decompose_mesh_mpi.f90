@@ -1,10 +1,10 @@
 program decompose_mesh_mpi
 !
 !   parallel Heuristic mesh decomposer
-! 
-! the decomposition is made in the 3 cartesion direction given a 
+!
+! the decomposition is made in the 3 cartesion direction given a
 ! desired number of partition in each direction. The domain should be
-! a box. 
+! a box.
 !
 !
 !
@@ -15,15 +15,15 @@ program decompose_mesh_mpi
   use module_database
   use module_partition
 
-  implicit none 
+  implicit none
 
   ! proc numbers for MPI
   integer             :: myrank,sizeprocs
   logical, parameter  :: BROADCAST_AFTER_READ=.true.
-  
+
   ! number of proc in each direction
   integer             :: npart_1, npart_2, npart_3
- 
+
   ! mpi initialization
   call init_mpi()
   call world_size(sizeprocs)
@@ -32,9 +32,9 @@ program decompose_mesh_mpi
   ! 1/ read Par_file
   call read_parameter_file(myrank, BROADCAST_AFTER_READ)
 
-  ! 2/ read mesh  
-  if (myrank==0) then 
-     
+  ! 2/ read mesh
+  if (myrank==0) then
+
      print *, '         parallel Heuristic mesh decomposer '
      print *
      print *
@@ -51,7 +51,7 @@ program decompose_mesh_mpi
      print *, '      npart1 = number of partitons in x direction '
      print *, '      npart2 = number of partitons in y direction '
      print *, '      npart3 = number of partitons in z direction '
-     print *, '      nparts **MUST BE** = npart1* npart2*npart3' 
+     print *, '      nparts **MUST BE** = npart1* npart2*npart3'
      print *
      print *
      print *, '      input_directory = directory containing mesh files mesh_file,nodes_coords_file,.. = MESH'
@@ -59,14 +59,14 @@ program decompose_mesh_mpi
      print *
      print *
 
-     open(27,file=trim(LOCAL_PATH)//'/../output_paralell_decomp.txt') 
+     open(27,file=trim(LOCAL_PATH)//'/../output_paralell_decomp.txt')
      write(27,*) ' READING MESH FILES '
      call read_mesh_files()
-     write(27,*) ' COMPUTE COMPUTATIONAL LOAD of EACH ELEMENT' 
+     write(27,*) ' COMPUTE COMPUTATIONAL LOAD of EACH ELEMENT'
      call compute_load_elemnts()
      write(27,*) ' READING Npart in each cartesian drection '
      call read_tmp_in_file(npart_1, npart_2, npart_3)
-  end if
+  endif
 
   call bcast_all_singlei(npart_1)
   call bcast_all_singlei(npart_2)
@@ -76,13 +76,13 @@ program decompose_mesh_mpi
   if (myrank==0) then
      write(27,*) ' DECOMPOSING MESH '
      call decompose_mesh(elmnts_glob, nodes_coords_glob, load_elmnts, nspec_glob, nnodes_glob, npart_1, npart_2, npart_3)
-  end if
-  
+  endif
+
   call bcast_all_singlei(nspec_glob)
   if (myrank > 0) allocate(ipart(nspec_glob))
   call bcast_all_i(ipart, nspec_glob)
   call send_partition_mesh_to_all(myrank, ipart, npart_1*npart_2*npart_3)
-  call send_mesh_to_all(myrank) 
+  call send_mesh_to_all(myrank)
 
   ! 4/ write partitionned mesh in one file per proc
   call prepare_database(myrank, elmnts, nspec)
@@ -94,9 +94,9 @@ program decompose_mesh_mpi
        nspec2D_ymax, nspec2D_bottom, nspec2D_top, nspec_cpml, nspec2D_moho)
 
   if (myrank==0) then
-     write(27,*) ' END OF MESH DECOMPOSER ' 
+     write(27,*) ' END OF MESH DECOMPOSER '
      close(27)
-  end if
+  endif
 
   ! mpi finish
   call finalize_mpi()
@@ -114,13 +114,13 @@ end program decompose_mesh_mpi
 subroutine send_partition_mesh_to_all(myrank, ipart, npart)
 
 !
-!  this should take a long time because we 
-!  use send from master to each other 
+!  this should take a long time because we
+!  use send from master to each other
 !  in sequential way
 !
-  
+
   use module_mesh
-  use module_database 
+  use module_database
 
   implicit none
   integer,                               intent(in) :: myrank, npart
@@ -131,7 +131,7 @@ subroutine send_partition_mesh_to_all(myrank, ipart, npart)
   integer                                           :: irank
   integer                                           :: ivertex, inode, inode_loc
   logical                                           :: not_stored
-  integer,           dimension(:),     allocatable  :: nE_irank,  nnodes_in_partition    
+  integer,           dimension(:),     allocatable  :: nE_irank,  nnodes_in_partition
   integer,           dimension(:,:),   allocatable  :: buffer_to_send
   integer,           dimension(:),     allocatable  :: buffer_to_send1
   integer,           dimension(:),     allocatable  :: buffer_to_send2
@@ -142,7 +142,7 @@ subroutine send_partition_mesh_to_all(myrank, ipart, npart)
   logical,           dimension(:),     allocatable  :: stored_node
    integer,           dimension(1)                  :: nE_loc_for_shut_up_compiler
 
-  ! glob dimension 
+  ! glob dimension
   call bcast_all_singlei(nspec_glob)
   call bcast_all_singlei(nnodes_glob)
   call bcast_all_singlei(count_def_mat)
@@ -166,30 +166,30 @@ subroutine send_partition_mesh_to_all(myrank, ipart, npart)
      do iE=1,nE
         do inode=1,NGNOD
            ivertex = elmnts_glob(inode,iE)
-           nelmnts_by_node_glob(ivertex) = nelmnts_by_node_glob(ivertex) + 1 
-        end do
-     end do
-     
+           nelmnts_by_node_glob(ivertex) = nelmnts_by_node_glob(ivertex) + 1
+        enddo
+     enddo
+
      ! compute elments by node table
      max_elmnts_by_node = maxval(nelmnts_by_node_glob)
      nelmnts_by_node_glob(:)=0
      allocate(elmnts_by_node_glob(max_elmnts_by_node, nnodes_glob))  !!
      elmnts_by_node_glob(:,:)=-1
-     do iE=1,nE  
+     do iE=1,nE
         do inode=1,NGNOD
            ivertex = elmnts_glob(inode,iE)
            nelmnts_by_node_glob(ivertex) = nelmnts_by_node_glob(ivertex) + 1
            elmnts_by_node_glob(nelmnts_by_node_glob(ivertex),ivertex) = iE
-        end do
-     end do
-  end if
+        enddo
+     enddo
+  endif
   call bcast_all_singlei(max_elmnts_by_node)
 
   ! count the number of nodes in each partition
   allocate(nnodes_in_partition(npart))
   allocate(stored_node(npart))
   nnodes_in_partition(:)=0
-  if (myrank == 0 ) then 
+  if (myrank == 0 ) then
      do inode = 1, nnodes_glob
         stored_node(:)=.false.
         do kE = 1, nelmnts_by_node_glob(inode)
@@ -197,20 +197,20 @@ subroutine send_partition_mesh_to_all(myrank, ipart, npart)
            do irank = 0, npart -1
               if (ipart(iE) == irank +1 .and. .not. stored_node(irank+1)) then
                  nnodes_in_partition(irank+1) =  nnodes_in_partition(irank+1) + 1
-                 stored_node(irank+1) = .true. 
-              end if
-           end do
-        end do
-     end do
-  end if
-  call bcast_all_i(nnodes_in_partition, npart) 
+                 stored_node(irank+1) = .true.
+              endif
+           enddo
+        enddo
+     enddo
+  endif
+  call bcast_all_i(nnodes_in_partition, npart)
   nnodes = nnodes_in_partition(myrank+1)
 
-  ! splitted dual mesh, not really distribued because of use glob numbering 
+  ! splitted dual mesh, not really distribued because of use glob numbering
   allocate(elmnts_by_node(max_elmnts_by_node,nnodes), nelmnts_by_node(nnodes))
   elmnts_by_node(:,:)=-1
-  
-  ! global to local numbering 
+
+  ! global to local numbering
   allocate(loc2glob_nodes(nnodes), glob2loc_nodes(nnodes_glob))
   allocate(nodes_coords(3,nnodes))
   nnodes_loc = nnodes
@@ -218,7 +218,7 @@ subroutine send_partition_mesh_to_all(myrank, ipart, npart)
   loc2glob_nodes(:)=-1
 
   if (myrank == 0) then
-     irank = 0 
+     irank = 0
      inode_loc = 0
      do inode = 1, nnodes_glob
         not_stored=.true.
@@ -232,10 +232,10 @@ subroutine send_partition_mesh_to_all(myrank, ipart, npart)
               loc2glob_nodes(inode_loc) = inode
               nodes_coords(:,inode_loc) = nodes_coords_glob(:,inode)
               not_stored=.false.
-           end if
-        end do
-     end do
-     
+           endif
+        enddo
+     enddo
+
      do irank = 1, npart - 1
 
         allocate(buffer_to_send(max_elmnts_by_node,nnodes_in_partition(irank+1)))
@@ -256,11 +256,11 @@ subroutine send_partition_mesh_to_all(myrank, ipart, npart)
                  buffer_to_send3(inode) = inode_loc
                  dp_buffer_to_send(:,inode_loc) = nodes_coords_glob(:,inode)
                  not_stored=.false.
-              end if
-           end do
-        end do        
-     
-        
+              endif
+           enddo
+        enddo
+
+
         call send_i(buffer_to_send,  max_elmnts_by_node*nnodes_in_partition(irank+1), irank, irank + 9997)
         call send_i(buffer_to_send1, nnodes_in_partition(irank+1), irank, irank + 9987)
         call send_i(buffer_to_send2, nnodes_in_partition(irank+1), irank, irank + 9977)
@@ -273,7 +273,7 @@ subroutine send_partition_mesh_to_all(myrank, ipart, npart)
         deallocate(buffer_to_send3)
         deallocate(dp_buffer_to_send)
 
-     end do
+     enddo
 
   else
 
@@ -283,20 +283,20 @@ subroutine send_partition_mesh_to_all(myrank, ipart, npart)
      call recv_i(glob2loc_nodes, nnodes_glob, 0, myrank  + 9967)
      call recv_dp(nodes_coords, 3*nnodes, 0, myrank + 9998)
 
-  end if
-  
+  endif
 
 
- 
+
+
  !!----------------------------- COMPUTE LOC2GLOB_ELMNT and GLOB2LOC_ELMNT -------------------------
-  ! count element in my partition 
+  ! count element in my partition
   nE_loc=0
   do iE=1,nE !! loop on all element in partition
      if (ipart(iE) == myrank +1 ) then
         nE_loc = nE_loc + 1
-     end if
-  end do
-  
+     endif
+  enddo
+
   allocate(loc2glob_elmnt(nE_loc), glob2loc_elmnt(nE))
   glob2loc_elmnt(:)=-1
 
@@ -307,26 +307,26 @@ subroutine send_partition_mesh_to_all(myrank, ipart, npart)
         iE_loc = iE_loc + 1
         loc2glob_elmnt(iE_loc) = iE
         glob2loc_elmnt(iE) = iE_loc
-     end if
-  end do
+     endif
+  enddo
   allocate(nE_irank(npart))
   nE_irank(:)=0
   nE_loc_for_shut_up_compiler(1) = nE_loc
   call all_gather_all_i(nE_loc_for_shut_up_compiler, 1, nE_irank, 1, npart)
- 
+
   nspec=nE_loc !! global varailble to be saved
   allocate(elmnts(NGNOD,nE_loc))
   if ( myrank == 0 ) then
 
-     irank = 0 
+     irank = 0
      iE_loc=0
 
      do iE = 1, nE
         if (ipart(iE) == irank +1 ) then
            iE_loc = iE_loc + 1
            elmnts(1:NGNOD,iE_loc) = elmnts_glob(1:NGNOD, iE)
-        end if
-     end do
+        endif
+     enddo
 
      do irank = 1, npart - 1
         allocate(buffer_to_send(NGNOD, nE_irank(irank+1)))
@@ -335,21 +335,21 @@ subroutine send_partition_mesh_to_all(myrank, ipart, npart)
            if (ipart(iE) == irank +1 ) then
               iE_loc = iE_loc + 1
               buffer_to_send(1:NGNOD,iE_loc) = elmnts_glob(1:NGNOD, iE)
-           end if
-        end do
-      
+           endif
+        enddo
+
         call send_i(buffer_to_send, NGNOD*nE_irank(irank+1), irank, irank + 9999)
         deallocate(buffer_to_send)
-     end do
+     enddo
 
   else
      call recv_i(elmnts, NGNOD*nE_loc, 0, myrank  + 9999)
-  end if
-     
-  if (myrank == 0 ) then 
+  endif
+
+  if (myrank == 0 ) then
      deallocate(nodes_coords_glob)
      deallocate(nelmnts_by_node_glob)
-  end if
+  endif
 
 end subroutine send_partition_mesh_to_all
 
@@ -368,19 +368,19 @@ end subroutine send_partition_mesh_to_all
 subroutine send_mesh_to_all(myrank)
 
   use module_mesh
- 
+
 
   integer,               intent(in) :: myrank
   integer                           :: ier
-  
+
 
   if (myrank > 0) then
      allocate(elmnts_glob(NGNOD,nspec_glob),stat=ier)
      if (ier /= 0)then
         write(*,*) 'Error ', myrank, NGNOD,nspec_glob
         stop 'Error allocating array elmnts'
-     end if
-   
+     endif
+
      allocate(mat(2,nspec_glob),stat=ier)
      if (ier /= 0) stop 'Error allocating array mat'
 
@@ -428,7 +428,7 @@ subroutine send_mesh_to_all(myrank)
      ! C-PML regions (see below)
      allocate(cpml_regions(nspec_cpml),stat=ier)
      if (ier /= 0) stop 'Error allocating array CPML_regions'
-     
+
       allocate(is_cpml(nspec_glob),stat=ier)
       if (ier /= 0) stop 'Error allocating array is_CPML'
 
@@ -436,9 +436,9 @@ subroutine send_mesh_to_all(myrank)
       if (ier /= 0) stop 'Error allocating array ibelm_moho'
       allocate(nodes_ibelm_moho(NGNOD2D,nspec2D_moho),stat=ier)
       if (ier /= 0) stop 'Error allocating array nodes_ibelm_moho'
-     
-  end if
- 
+
+  endif
+
   call bcast_all_dp(mat_prop,16*count_def_mat)
   call bcast_all_i(elmnts_glob, NGNOD*nspec_glob)
   call bcast_all_i(mat, 2*nspec_glob)
@@ -461,7 +461,7 @@ subroutine send_mesh_to_all(myrank)
   call bcast_all_i(cpml_regions, nspec_cpml)
   call bcast_all_ch_array(undef_mat_prop,6*count_undef_mat)
   call bcast_all_l_array(is_cpml, nspec_glob)
-  
+
 
 end subroutine send_mesh_to_all
 
@@ -476,13 +476,13 @@ subroutine read_tmp_in_file(npart_1,npart_2,npart_3)
   integer,               intent(inout) :: npart_1,npart_2,npart_3
   character(len=512)                   :: arg(3)
   integer                              :: i
- 
+
   do i=1,3
      call get_command_argument(i,arg(i))
-  end do
+  enddo
 
   read(arg(1),*) npart_1
   read(arg(2),*) npart_2
   read(arg(3),*) npart_3
-  
+
 end subroutine read_tmp_in_file

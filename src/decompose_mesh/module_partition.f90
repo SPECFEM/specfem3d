@@ -5,34 +5,34 @@ module module_partition
 
   integer                                                  :: nE
   integer,             dimension(:),  allocatable          :: ipart
-  
-contains 
-  
+
+contains
+
   !--------------------------------------------
-  ! Heuristic mesh decompsition 
+  ! Heuristic mesh decompsition
   !---------------------------------------------
-  
+
   !
-  !  decomposition is made using a distance criteria from 
+  !  decomposition is made using a distance criteria from
   !  a given face of a computational box domain taking
   !  into account load of each element.
-  ! 
+  !
   !
   !
   subroutine decompose_mesh(elmnts, nodes_coords, load_elmnts,  nspec, nnodes, npart_1, npart_2, npart_3)
 
     implicit none
 
-    ! input mesh 
+    ! input mesh
     integer,                                     intent(in) :: nspec, nnodes
     double precision,    dimension(3,nnodes),    intent(in) :: nodes_coords
     double precision,    dimension(nspec),       intent(in) :: load_elmnts
     integer,             dimension(NGNOD,nspec), intent(in) :: elmnts
-    
-    ! partition 
+
+    ! partition
     integer,                                     intent(in) :: npart_1, npart_2, npart_3
 
-    ! local 
+    ! local
     double precision                                        :: xmin, xmax, ymin, ymax, zmin, zmax
     double precision,    dimension(3)                       :: ref_point
     double precision,    dimension(:,:), allocatable        :: elmnts_center
@@ -47,7 +47,7 @@ contains
     integer                                                 :: nE_1, nE_2, nE_3
     integer                                                 :: kpart_2, kpart_3, p1, p2, p3
     integer                                                 :: i, iE, idir, num_original_element
-    ! 
+    !
 
     nE=nspec
     allocate(ipart(nE))
@@ -65,14 +65,14 @@ contains
     ref_point(1) = xmin
     ref_point(2) = ymin
     ref_point(3) = zmin
-    write(27,*) 
+    write(27,*)
     WRITE(27,*) ' xmin, ymin, zmin ', xmin, ymin, zmin
     write(27,*) ' sizes, nspec, nnodes ',  nspec, nnodes
     allocate(elmnts_center(3,nE))
     write(27,*)
     call compute_elmnts_center(elmnts_center, elmnts, nodes_coords, nspec, nnodes)
-    
-    ! partition in direction 1 on the whole mesh 
+
+    ! partition in direction 1 on the whole mesh
     idir=1
     nE_1=nE
     allocate(sum_load_1(nE_1),cri_load_1(nE_1))
@@ -82,8 +82,8 @@ contains
     load_elmnts_1(:)=load_elmnts(:)
     do i=1,nE
        old_num_1(i)=i
-    end do
-    
+    enddo
+
 
     call compute_partition(ipart_1, nEipart_1, npart_1, sum_load_1, cri_load_1, &
          load_elmnts_1, elmnts_center_1, iperm_1, nE_1, ref_point, idir)
@@ -92,55 +92,55 @@ contains
 
     ! partition of all obtained slice in direction 2
     do kpart_2 = 1, npart_1
-       
+
        idir = 2
        nE_2 = nEipart_1(kpart_2)
        allocate(sum_load_2(nE_2), cri_load_2(nE_2))
        allocate(load_elmnts_2(nE_2), elmnts_center_2(3,nE_2))
        allocate(ipart_2(nE_2), nEipart_2(npart_2), iperm_2(nE_2), old_num_2(nE_2))
-       
+
        call extract_partition(load_elmnts_2, elmnts_center_2, old_num_2, nE_2, &
             ipart_1, load_elmnts_1, elmnts_center_1, old_num_1, kpart_2, nE_1)
 
        call compute_partition(ipart_2, nEipart_2, npart_2, sum_load_2, cri_load_2, &
             load_elmnts_2, elmnts_center_2, iperm_2, nE_2, ref_point, idir)
-       
+
        ! partition of all remained slice in direction 3
        do kpart_3 = 1, npart_2
           idir = 3
           nE_3 = nEipart_2(kpart_3)
-          
+
           allocate(sum_load_3(nE_3), cri_load_3(nE_3))
           allocate(load_elmnts_3(nE_3), elmnts_center_3(3,nE_3))
           allocate(ipart_3(nE_3), nEipart_3(npart_3), iperm_3(nE_3), old_num_3(nE_3))
 
           call extract_partition(load_elmnts_3, elmnts_center_3, old_num_3, nE_3, &
                ipart_2, load_elmnts_2, elmnts_center_2, old_num_2, kpart_3, nE_2)
-          
+
           call compute_partition(ipart_3, nEipart_3, npart_3, sum_load_3, cri_load_3,  &
                load_elmnts_3, elmnts_center_3, iperm_3, nE_3, ref_point, idir)
-         
+
           do iE=1, nE_3
              p1 = kpart_2
              p2 = kpart_3
              p3 = ipart_3(iE)
              num_original_element = old_num_3(iE)
              ipart(num_original_element) = p1 + npart_1*(p2-1) + npart_1*npart_2*(p3-1)
-          end do
+          enddo
 
           deallocate(load_elmnts_3, elmnts_center_3)
           deallocate(sum_load_3, cri_load_3)
           deallocate(ipart_3,nEipart_3, iperm_3, old_num_3)
 
-       end do
+       enddo
 
        deallocate(load_elmnts_2, elmnts_center_2)
        deallocate(sum_load_2, cri_load_2)
        deallocate(ipart_2, nEipart_2, iperm_2, old_num_2)
-    end do
-   
-    write(27,*) 'made partition in 2nd and 3th direction', npart_2, npart_3 
-   
+    enddo
+
+    write(27,*) 'made partition in 2nd and 3th direction', npart_2, npart_3
+
     deallocate(sum_load_1, cri_load_1)
     deallocate(ipart_1, nEipart_1)
     deallocate(iperm_1, old_num_1)
@@ -148,13 +148,13 @@ contains
   end subroutine decompose_mesh
 
   !---------
-  ! compute partition in one direction 
+  ! compute partition in one direction
   !---------
   subroutine compute_partition(ipart_tmp, nEipart_tmp, npart_tmp, sum_load_tmp, cri_load_perm, &
        load_elmnts_tmp, elmnts_center_tmp, iperm_tmp, nE_tmp, ref_point, idir)
-    
+
     implicit none
-    
+
     integer,                                  intent(in)    :: nE_tmp, npart_tmp, idir
     double precision,    dimension(3) ,       intent(in)    :: ref_point
     double precision,    dimension(nE_tmp),   intent(in)    :: load_elmnts_tmp
@@ -169,16 +169,16 @@ contains
     ! initialise permutation
     do i=1,nE_tmp
        iperm_tmp(i)=i
-    end do
-    
-    
+    enddo
+
+
     call compute_criteria(cri_load_perm, elmnts_center_tmp, nE_tmp, ref_point, idir)
 
     call QsortC(cri_load_perm,  iperm_tmp)
 
     call compute_sum_load(sum_load_tmp, load_elmnts_tmp, iperm_tmp, nE_tmp)
 
-   
+
     nEipart_tmp(:)=0
     load_by_part = floor(sum_load_tmp(nE_tmp) / real(npart_tmp,8)) + 1
 
@@ -188,8 +188,8 @@ contains
        k = iperm_tmp(i)
        ipart_tmp(k) = int(floor(sum_load_tmp(i) / Load_by_part)) + 1  !! must have the smaller closest integer + 1
        nEipart_tmp(ipart_tmp(k)) = nEipart_tmp(ipart_tmp(k)) + 1      !! (sum_load_tmp is not sorted)
-    end do
-    
+    enddo
+
   end subroutine compute_partition
 
   !----------
@@ -199,29 +199,29 @@ contains
        ipart_0, load_elmnts_0, elmnts_center_0, old_num_0, kpart_0, nE_0)
 
     implicit none
-    
+
     integer,                                   intent(in)     :: nE_0, nE_1, kpart_0
-    integer,              dimension(nE_0),     intent(in)     :: ipart_0, old_num_0 
+    integer,              dimension(nE_0),     intent(in)     :: ipart_0, old_num_0
     double precision,     dimension(3,nE_0),   intent(in)     :: elmnts_center_0
     double precision,     dimension(nE_0),     intent(in)     :: load_elmnts_0
-    integer,              dimension(nE_1),     intent(inout)  :: old_num_1 
+    integer,              dimension(nE_1),     intent(inout)  :: old_num_1
     double precision,     dimension(3,nE_1),   intent(inout)  :: elmnts_center_1
     double precision,     dimension(nE_1),     intent(inout)  :: load_elmnts_1
 
-    integer                                                   :: i, k 
+    integer                                                   :: i, k
 
-    k = 0 
+    k = 0
     do i = 1, nE_0
-       if (ipart_0(i) == kpart_0) then 
+       if (ipart_0(i) == kpart_0) then
           k = k + 1
           elmnts_center_1(1,k) = elmnts_center_0(1,i)
           elmnts_center_1(2,k) = elmnts_center_0(2,i)
           elmnts_center_1(3,k) = elmnts_center_0(3,i)
           load_elmnts_1(k) = load_elmnts_0(i)
           old_num_1(k) = old_num_0(i)
-       end if
-    end do
-    
+       endif
+    enddo
+
   end subroutine extract_partition
 
 
@@ -231,28 +231,28 @@ contains
   subroutine compute_criteria(cri_load_perm, elmnts_center_tmp, nE_tmp, ref_point, idir)
 
     implicit none
-    
+
     integer,                                  intent(in)    :: nE_tmp, idir
     double precision,    dimension(3),        intent(in)    :: ref_point
     double precision,    dimension(3,nE_tmp), intent(in)    :: elmnts_center_tmp
     double precision,    dimension(nE_tmp),   intent(inout) :: cri_load_perm
 
     integer                                                 :: i
-     
+
     do i=1, nE_tmp
        cri_load_perm(i) = abs( elmnts_center_tmp(idir,i) - ref_point(idir) )
-    end do
-    
+    enddo
+
   end subroutine compute_criteria
 
 
   !---------
-  ! compute sum load of partition  
+  ! compute sum load of partition
   !---------
   subroutine compute_sum_load(sum_load, load_elmnts, iperm_tmp, nE_tmp)
 
     implicit none
-                        
+
     integer,                                  intent(in)    :: nE_tmp
     integer,             dimension(nE_tmp),   intent(in)    :: iperm_tmp
     double precision,    dimension(nE_tmp),   intent(in)    :: load_elmnts
@@ -266,36 +266,36 @@ contains
     do i=2, nE_tmp
        k = iperm_tmp(i)
        sum_load(i) = sum_load(i-1) + load_elmnts(k)
-    end do
+    enddo
 
   end subroutine compute_sum_load
 
   !-----------
-  ! compute the center of each elements 
+  ! compute the center of each elements
   !-----------
   subroutine compute_elmnts_center(elmnts_center, elmnts, nodes_coords, nspec, nnodes)
-    
+
     implicit none
 
-    ! input mesh 
+    ! input mesh
     integer,                                     intent(in)    :: nspec, nnodes
     double precision,    dimension(3,nnodes),    intent(in)    :: nodes_coords
     integer,             dimension(NGNOD,nspec), intent(in)    :: elmnts
     double precision,    dimension(3,nspec),     intent(inout) :: elmnts_center
     ! local parameters
     integer                                                    :: iE, i
-    
+
     elmnts_center(:,:) = 0.d0
     do iE =1, nE
        do i = 1, NGNOD
           elmnts_center(1,iE) = elmnts_center(1,iE) + nodes_coords(1,elmnts(i,iE))
           elmnts_center(2,iE) = elmnts_center(2,iE) + nodes_coords(2,elmnts(i,iE))
           elmnts_center(3,iE) = elmnts_center(3,iE) + nodes_coords(3,elmnts(i,iE))
-       end do
+       enddo
        elmnts_center(1,iE) = elmnts_center(1,iE) / real(NGNOD,8)
        elmnts_center(2,iE) = elmnts_center(2,iE) / real(NGNOD,8)
        elmnts_center(3,iE) = elmnts_center(3,iE) / real(NGNOD,8)
-    end do
+    enddo
 
   end subroutine compute_elmnts_center
 

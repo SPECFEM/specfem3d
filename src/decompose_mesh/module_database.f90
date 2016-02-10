@@ -1,13 +1,13 @@
 module module_database
-  
+
   use shared_parameters, only: NGNOD, NGNOD2D, LOCAL_PATH, MSL=>MAX_STRING_LEN
- 
+
   integer                                     :: nE_loc
   integer, dimension(:),  allocatable         :: loc2glob_elmnt
   integer, dimension(:),  allocatable         :: glob2loc_elmnt
-  
+
   integer                                     :: nnodes_loc
-  integer, dimension(:),  allocatable         :: loc2glob_nodes 
+  integer, dimension(:),  allocatable         :: loc2glob_nodes
   integer, dimension(:),  allocatable         :: glob2loc_nodes
 
   integer                                     :: size_adjancy
@@ -30,11 +30,11 @@ contains
 !----------------------------------
 
   subroutine prepare_database(myrank,  elmnts, nE)
-    
+
     implicit none
     integer,                         intent(in) :: myrank , nE
     integer,   dimension(NGNOD,nE),  intent(in) :: elmnts
-    
+
     call compute_adjcy_table(myrank,  elmnts, nE)
     if (myrank == 0) write(27,*) ' COMPUTE ADJACENY '
     allocate(node_loc(NGNOD2D))
@@ -56,23 +56,23 @@ contains
 
     implicit none
 
-    integer,                                              intent(in)  :: myrank 
-    integer,                                              intent(in)  :: nnodes, nE 
+    integer,                                              intent(in)  :: myrank
+    integer,                                              intent(in)  :: nnodes, nE
     integer,                                              intent(in)  :: count_def_mat
     integer,                                              intent(in)  :: count_undef_mat
     integer,                                              intent(in)  :: nspec2D_xmin, nspec2D_xmax
     integer,                                              intent(in)  :: nspec2D_ymin, nspec2D_ymax
     integer,                                              intent(in)  :: nspec2D_bottom, nspec2D_top
-    integer,                                              intent(in)  :: nspec_cpml, nspec2D_moho 
+    integer,                                              intent(in)  :: nspec_cpml, nspec2D_moho
     integer,            dimension(nE),                    intent(in)  :: ipart
     integer,            dimension(NGNOD,nE),              intent(in)  :: elmnts_glob
     integer,            dimension(NGNOD,nE_loc),          intent(in)  :: elmnts
-    integer,            dimension(2,nE),                  intent(in)  :: num_modele 
+    integer,            dimension(2,nE),                  intent(in)  :: num_modele
     integer,            dimension(nspec2D_xmin),          intent(in)  :: ibelm_xmin
-    integer,            dimension(nspec2D_xmax),          intent(in)  :: ibelm_xmax 
+    integer,            dimension(nspec2D_xmax),          intent(in)  :: ibelm_xmax
     integer,            dimension(nspec2D_ymin),          intent(in)  :: ibelm_ymin
-    integer,            dimension(nspec2D_ymax),          intent(in)  :: ibelm_ymax 
-    integer,            dimension(nspec2D_bottom),        intent(in)  :: ibelm_bottom 
+    integer,            dimension(nspec2D_ymax),          intent(in)  :: ibelm_ymax
+    integer,            dimension(nspec2D_bottom),        intent(in)  :: ibelm_bottom
     integer,            dimension(nspec2D_top),           intent(in)  :: ibelm_top
     integer,            dimension(nspec2D_moho),          intent(in)  :: ibelm_moho
     integer,            dimension(NGNOD2D,nspec2D_xmin),  intent(in)  :: nodes_ibelm_xmin
@@ -85,20 +85,20 @@ contains
     integer,            dimension(nspec_cpml),            intent(in)  :: cpml_to_spec, cpml_regions
     double precision,   dimension(16,count_def_mat),      intent(in)  :: mat_prop
     character(len=MSL), dimension(6,count_undef_mat),     intent(in)  :: undef_mat_prop
-    double precision,   dimension(3,nnodes),              intent(in)  :: nodes_coords 
-    logical,            dimension(nE),                    intent(in)  :: is_cpml  
-    
-    character(len=20)                                                 :: prname     
+    double precision,   dimension(3,nnodes),              intent(in)  :: nodes_coords
+    logical,            dimension(nE),                    intent(in)  :: is_cpml
+
+    character(len=20)                                                 :: prname
     integer                                                           :: i1, i2, in1, in2
     integer                                                           :: inode, i, k
     integer                                                           :: islice, kE
-    integer                                                           :: iE, iE_loc, iE_n 
+    integer                                                           :: iE, iE_loc, iE_n
     integer                                                           :: nspec_cpml_local
     integer                                                           :: loc_nspec2D_moho
     integer                                                           :: npart, nb_stored_slice
     integer                                                           :: MAX_ELEMENT_B_PARTITION
     integer                                                           :: INUM_NEIGH_PART
-    integer,            dimension(:),       allocatable               :: islice_neigh, istored, liste_comm_nodes    
+    integer,            dimension(:),       allocatable               :: islice_neigh, istored, liste_comm_nodes
     integer,            dimension(:),       allocatable               :: num_element_in_boundary_partition
     integer,            dimension(:),       allocatable               :: ie_bnd_stored, loc_elmnt
     integer,            dimension(:,:,:),   allocatable               :: my_interfaces_ext_mesh
@@ -121,7 +121,7 @@ contains
     do inode = 1, nnodes_loc
        k = inode !loc2glob_nodes(inode)
        write(IIN_database) inode,nodes_coords(1,k),nodes_coords(2,k),nodes_coords(3,k)
-    end do
+    enddo
 
     ! write material properties in my partition -----
     write(IIN_database)  count_def_mat,count_undef_mat
@@ -130,7 +130,7 @@ contains
     enddo
     do i = 1, count_undef_mat
        write(IIN_database) undef_mat_prop(1:6,i)
-    end do
+    enddo
 
     ! write element connectivity in my partition -----
     write(IIN_database) nE_loc
@@ -139,10 +139,10 @@ contains
        iE = iE_loc ! loc2glob_elmnt(iE_loc)
        do inode =1, NGNOD
           loc_elmnt(inode) = glob2loc_nodes(elmnts(inode, iE))
-       end do
+       enddo
        iE = loc2glob_elmnt(iE_loc)
        write(IIN_database) iE_loc, num_modele(1:2,iE), loc_elmnt(1:NGNOD)
-    end do
+    enddo
 
     ! counnt element boundary in my partition -----
     call count_my_boundary(myrank, ipart, ibelm_xmin,   nspec2D_xmin,   nE, 1)
@@ -159,11 +159,11 @@ contains
     call write_my_boundary(myrank, ipart, ibelm_ymax,   nodes_ibelm_ymax,   nspec2D_ymax,   nE)
     call write_my_boundary(myrank, ipart, ibelm_bottom, nodes_ibelm_bottom, nspec2D_bottom, nE)
     call write_my_boundary(myrank, ipart, ibelm_top,    nodes_ibelm_top,    nspec2D_top,    nE)
-    
+
     ! write CPML elements  -----
     ! writes number of C-PML elements in the global mesh
     write(IIN_database) nspec_cpml
-    
+
     if (nspec_cpml > 0) then
 
        ! writes number of C-PML elements in this partition
@@ -200,9 +200,9 @@ contains
              if (is_CPML(i)) ncp=ncp+1
           endif
        enddo
-       !write(*,*) 'CPML ', myrank, ncp, nspec_cpml_local, nspec_cpml 
+       !write(*,*) 'CPML ', myrank, ncp, nspec_cpml_local, nspec_cpml
     endif
-    
+
 
     ! write MPI interfaces  -----
     npart=maxval(ipart(:))
@@ -213,23 +213,23 @@ contains
     num_element_in_boundary_partition(:)=0
     nb_stored_slice=0
     do iE = 1, nE  !! loop over all elements
-       if (ipart(iE) == myrank+1) then  !! in my partition 
+       if (ipart(iE) == myrank+1) then  !! in my partition
           iE_loc = glob2loc_elmnt(iE)
           !write(*,*) myrank, iE_loc
           do i = id_adjcy(iE_loc-1)+1,  id_adjcy(iE_loc)    !! loop on all my neigbhours
-             iE_n = adjcy(i) 
+             iE_n = adjcy(i)
              k = 0
-             if (ipart(iE_n) .ne. myrank+1) then      !! it's not my element
+             if (ipart(iE_n) /= myrank+1) then      !! it's not my element
                 if (istored(ipart(iE_n)) == 0 ) then
                    nb_stored_slice = nb_stored_slice + 1
                    istored(ipart(iE_n)) =  nb_stored_slice
                    islice_neigh(nb_stored_slice) = ipart(iE_n) !!istored(ipart(iE_n))
-                end if
+                endif
                 num_element_in_boundary_partition(ipart(iE_n)) =  num_element_in_boundary_partition(ipart(iE_n)) + 1
-             end if
-          end do
-       end if
-    end do
+             endif
+          enddo
+       endif
+    enddo
 
     max_element_b_partition = maxval(num_element_in_boundary_partition)
     !write(*,*) myrank, max_element_b_partition,nb_stored_slice
@@ -238,14 +238,14 @@ contains
     ie_bnd_stored(:)=0
     my_interfaces_ext_mesh(:,:,:)=-99
     do iE = 1, nE  !! loop over all elements
-       if (ipart(iE) == myrank+1) then !! in my partition 
+       if (ipart(iE) == myrank+1) then !! in my partition
           iE_loc = glob2loc_elmnt(iE)
           do i = id_adjcy(iE_loc-1)+1,  id_adjcy(iE_loc)    !! loop on all my neigbhours
-             iE_n = adjcy(i) 
+             iE_n = adjcy(i)
              k = 0
              inum_neigh_part = istored(ipart(iE_n))
-             liste_comm_nodes(:) =  -1 
-             if (ipart(iE_n) .ne. myrank+1) then    !! it's not my element 
+             liste_comm_nodes(:) =  -1
+             if (ipart(iE_n) /= myrank+1) then    !! it's not my element
                 do i1 = 1, NGNOD                    !! loop over edges on my element
                    in1 = elmnts(i1,iE_loc)
                    do i2 = 1, NGNOD                 !! loop over edges on my neighbour element
@@ -253,31 +253,31 @@ contains
                       if (in1 == in2 ) then         !! it's common edge
                          k = k + 1
                          liste_comm_nodes(k) = glob2loc_nodes(in1)  !! store it in local numbering
-                      end if
-                   end do
-                end do
-             end if  !! on doit inclure ce if dessous ?
-             if (k > 0)  then    
+                      endif
+                   enddo
+                enddo
+             endif  !! on doit inclure ce if dessous ?
+             if (k > 0)  then
                 ie_bnd_stored(inum_neigh_part) = ie_bnd_stored(inum_neigh_part) + 1
                 kE = ie_bnd_stored(inum_neigh_part)
                 my_interfaces_ext_mesh(1,kE ,inum_neigh_part) = glob2loc_elmnt(iE)
-                my_interfaces_ext_mesh(2,kE ,inum_neigh_part) = k 
+                my_interfaces_ext_mesh(2,kE ,inum_neigh_part) = k
                 my_interfaces_ext_mesh(3:6,kE ,inum_neigh_part) = liste_comm_nodes(1:NGNOD2D)
-             end if
-          end do
-       end if
-    end do
-  
+             endif
+          enddo
+       endif
+    enddo
+
     write(IIN_database) nb_stored_slice, max_element_b_partition
     do islice = 1, nb_stored_slice
        !write(27,*) 'ii ' , myrank, islice_neigh(islice)-1, num_element_in_boundary_partition(islice_neigh(islice))
        write(IIN_database) islice_neigh(islice)-1, num_element_in_boundary_partition(islice_neigh(islice))
        do iE = 1, num_element_in_boundary_partition(islice_neigh(islice))
           write(IIN_database)  my_interfaces_ext_mesh(1:6, iE, islice)
-       end do
-    end do
+       enddo
+    enddo
 
-    ! write MOHO 
+    ! write MOHO
     ! optional moho
     loc_nspec2D_moho = 0
     do i=1,nspec2D_moho
@@ -290,13 +290,13 @@ contains
 
        ! format: #surface_id, #number of elements
        write(IIN_database) 7, loc_nspec2D_moho
-       
+
        ! outputs element index and element node indices
        ! note: assumes that element indices in ibelm_* arrays are in the range from 1 to nspec
        !          (this is assigned by CUBIT, if this changes the following indexing must be changed as well)
        !          while glob2loc_elmnts(.) is shifted from 0 to nspec-1  thus
        !          we need to have the arg of glob2loc_elmnts start at 0 ==> glob2loc_nodes(ibelm_** -1)
-       
+
        ! optional moho
        do i=1,nspec2D_moho
           if (ipart(ibelm_moho(i)) == myrank+1) then
@@ -306,9 +306,9 @@ contains
              write(IIN_database) glob2loc_elmnt(ibelm_moho(i)), node_loc(1:NGNOD2D)
           endif
        enddo
-    end if
+    endif
     close(IIN_database)
-    
+
   end subroutine write_database
 
 !----------------------------------
@@ -326,12 +326,12 @@ contains
     integer,   dimension(nspec2D),             intent(in) :: ibelm
 
     integer ::  i, nspec2D_loc, iE
-    
+
     nspec2D_loc = 0
     do i=1, nspec2D
        iE=ibelm(i)
        if (ipart(iE) == myrank +1) nspec2D_loc = nspec2D_loc + 1
-    end do
+    enddo
     write(IIN_database) iflag, nspec2D_loc
 
   end subroutine count_my_boundary
@@ -351,28 +351,28 @@ contains
     integer,   dimension(NGNOD2D,nspec2D),     intent(in) :: nodes_ibelm
 
     integer :: i,  iE, iE_loc, inode
-   
+
     do i=1, nspec2D
        iE=ibelm(i)
        iE_loc=glob2loc_elmnt(iE)
        do inode = 1, NGNOD2D
           node_loc(inode) = glob2loc_nodes(nodes_ibelm(inode, i))
-       end do
-       if (ipart(iE) == myrank +1) write(IIN_database) iE_loc, node_loc(1:NGNOD2D) 
-    end do
-    
+       enddo
+       if (ipart(iE) == myrank +1) write(IIN_database) iE_loc, node_loc(1:NGNOD2D)
+    enddo
+
   end subroutine write_my_boundary
 
 !----------------------------------
 !
-!  distributed adjancy table 
+!  distributed adjancy table
 !
 !----------------------------------
 
   subroutine compute_adjcy_table(myrank,  elmnts, nE)
-    
+
     implicit none
-  
+
     integer,                         intent(in) :: myrank , nE
     integer,   dimension(NGNOD,nE),  intent(in) :: elmnts
     integer,   parameter                        :: NGNOD_EIGHT_CORNERS=8
@@ -384,10 +384,10 @@ contains
     integer                                     :: max_element_to_store
     integer,   dimension(:),        allocatable :: stored_elements
     integer,   dimension(:),        allocatable :: nb_neigh
-    
+
 
     !! --------------- COMPUTE ADJACENY TABLE ------------------------------------------
-    max_element_to_store = 8 * max_elmnts_by_node  ! over estimate the number of 
+    max_element_to_store = 8 * max_elmnts_by_node  ! over estimate the number of
                                                    ! neighbors element
     ! evalute the size of the adjacency table
     allocate(stored_elements(max_element_to_store))
@@ -397,19 +397,19 @@ contains
        nb_element_stored = 0
        stored_elements(:)=0
        do inode = 1, NGNOD_EIGHT_CORNERS  !! loop only on the corner of the element
-          ivertex = elmnts(inode,iE_loc)  
+          ivertex = elmnts(inode,iE_loc)
           ivertex_local=glob2loc_nodes(ivertex)
           do kE = 1, nelmnts_by_node(ivertex_local)  !! loop on all ivertex connected elements
              New_element = elmnts_by_node(kE,ivertex_local)
              call store_new_element(New_element, nb_element_stored, stored_elements)
-          end do
-       end do
+          enddo
+       enddo
        nb_neigh(iE_loc) = nb_element_stored  !! number of neighbour of iE_loc element
-    end do
+    enddo
     size_adjancy = sum(nb_neigh(:))
 
     allocate(adjcy(size_adjancy),id_adjcy(0:nE_loc))
-    id_adjcy(0) = 0  
+    id_adjcy(0) = 0
     do iE_loc=1, nE_loc !! loop on all element in partition
        iE = loc2glob_elmnt(iE_loc)
        nb_element_stored = 0
@@ -420,12 +420,12 @@ contains
           do kE = 1, nelmnts_by_node(ivertex_local)  !! loop on all ivertex connected elements
              New_element = elmnts_by_node(kE,ivertex_local)
              call store_new_element(New_element, nb_element_stored, stored_elements)
-          end do
-       end do
+          enddo
+       enddo
        id_adjcy(iE_loc) = id_adjcy(iE_loc-1) + nb_element_stored  !! number of neighbour of iE_loc element
        adjcy(id_adjcy(iE_loc-1)+1:id_adjcy(iE_loc))=stored_elements(1:nb_element_stored)
-    end do
-    
+    enddo
+
     ! deallocate temporary arrays to save memmory
     deallocate(nelmnts_by_node, stored_elements, nb_neigh, elmnts_by_node)
 
@@ -435,7 +435,7 @@ contains
 
 !----------------------------------
 !
-! store new item in array 
+! store new item in array
 !
 !----------------------------------
 
@@ -447,7 +447,7 @@ contains
     integer                              :: i
     do i=1,nb
        if (new_indx == indx(i)) return
-    end do
+    enddo
     nb = nb + 1
     indx(nb) = new_indx
 
