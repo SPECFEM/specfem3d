@@ -20,7 +20,7 @@
 !*                # To be compiled with : gfortran        **
 !*                  scotch_example_2.f90                  **
 !*                  -L/scotch/lib/path/ -lscotch          **
-!*                  -lscotcherr -lz -lpthread -lrt        **
+!*                  -lscotcherr -lz -lpthread             **
 !*                                                        **
 !234567*****************************************************
 
