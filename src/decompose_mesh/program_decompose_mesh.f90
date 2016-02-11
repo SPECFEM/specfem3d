@@ -25,7 +25,7 @@
 !
 !=====================================================================
 
-program pre_meshfem3D
+program xdecompose_mesh
 
   use constants, only: MAX_STRING_LEN
   use decompose_mesh,only: nparts,localpath_name, outputpath_name, &
@@ -84,5 +84,5 @@ program pre_meshfem3D
 ! writes out database files
   call write_mesh_databases()
 
-end program pre_meshfem3D
+end program xdecompose_mesh
 
