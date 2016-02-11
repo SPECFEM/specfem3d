@@ -39,7 +39,7 @@ $(decompose_mesh_OBJECTS): S = ${S_TOP}/src/decompose_mesh
 decompose_mesh_TARGETS = \
 	$E/xscotch \
 	$E/xdecompose_mesh \
-	$E/xdecompose_mesh_paral \
+	$E/xdecompose_mesh_mpi \
 	$(EMPTY_MACRO)
 
 decompose_mesh_OBJECTS = \
@@ -49,7 +49,7 @@ decompose_mesh_OBJECTS = \
 	$O/program_decompose_mesh.dec.o \
 	$(EMPTY_MACRO)
 
-decompose_mesh_paral_OBJECTS = \
+decompose_mesh_mpi_OBJECTS = \
 	$O/fault_scotch.dec.o \
 	$O/module_qsort.dec.o \
 	$O/module_database.dec.o \
@@ -84,7 +84,7 @@ decompose_mesh_SHARED_OBJECTS = \
 ####
 
 dec: $(decompose_mesh_TARGETS)
-mpidec : xdecompose_mesh_paral
+mpidec : xdecompose_mesh_mpi
 
 decompose_mesh: xdecompose_mesh
 xdecompose_mesh: $E/xdecompose_mesh
@@ -92,8 +92,8 @@ xdecompose_mesh: $E/xdecompose_mesh
 scotch: xscotch
 xscotch: $E/xscotch
 
-decompose_mesh_paral: xdecompose_mesh_paral
-xdecompose_mesh_paral: $E/xdecompose_mesh_paral
+decompose_mesh_mpi: xdecompose_mesh_mpi
+xdecompose_mesh_mpi: $E/xdecompose_mesh_mpi
 
 ${SCOTCH_DIR}/include/scotchf.h: xscotch
 
@@ -115,11 +115,11 @@ else
 endif
 
 # parallel version of decompose_mesh
-$E/xdecompose_mesh_paral: $(decompose_mesh_SHARED_OBJECTS) $(decompose_mesh_paral_OBJECTS) $(COND_MPI_OBJECTS)
+$E/xdecompose_mesh_mpi: $(decompose_mesh_SHARED_OBJECTS) $(decompose_mesh_mpi_OBJECTS) $(COND_MPI_OBJECTS)
 	@echo ""
-	@echo "building xdecompose_mesh_paral"
+	@echo "building xdecompose_mesh_mpi"
 	@echo ""
-	${FCLINK} -o  $E/xdecompose_mesh_paral $(decompose_mesh_SHARED_OBJECTS) $(decompose_mesh_paral_OBJECTS) $(COND_MPI_OBJECTS)
+	${FCLINK} -o  $E/xdecompose_mesh_mpi $(decompose_mesh_SHARED_OBJECTS) $(decompose_mesh_mpi_OBJECTS) $(COND_MPI_OBJECTS)
 	@echo ""
 
 #######################################

@@ -10,7 +10,7 @@ module module_database
   integer, dimension(:),  allocatable         :: loc2glob_nodes
   integer, dimension(:),  allocatable         :: glob2loc_nodes
 
-  integer                                     :: size_adjancy
+  integer                                     :: size_adjacency
   integer, dimension(:),  allocatable         :: adjcy, id_adjcy
 
   integer                                     :: max_elmnts_by_node
@@ -25,7 +25,7 @@ contains
 
 !----------------------------------
 !
-!  set upt the arrays for database
+!  set up the arrays for database
 !
 !----------------------------------
 
@@ -36,7 +36,7 @@ contains
     integer,   dimension(NGNOD,nE),  intent(in) :: elmnts
 
     call compute_adjcy_table(myrank,  elmnts, nE)
-    if (myrank == 0) write(27,*) ' COMPUTE ADJACENY '
+    if (myrank == 0) write(27,*) ' COMPUTE ADJACENCY '
     allocate(node_loc(NGNOD2D))
 
   end subroutine prepare_database
@@ -313,7 +313,7 @@ contains
 
 !----------------------------------
 !
-!  count elements in boudary
+!  count elements in boundary
 !
 !----------------------------------
 
@@ -338,7 +338,7 @@ contains
 
 !----------------------------------
 !
-!  write elements in boudary
+!  write elements in boundary
 !
 !----------------------------------
 
@@ -365,7 +365,7 @@ contains
 
 !----------------------------------
 !
-!  distributed adjancy table
+!  distributed adjacency table
 !
 !----------------------------------
 
@@ -386,7 +386,7 @@ contains
     integer,   dimension(:),        allocatable :: nb_neigh
 
 
-    !! --------------- COMPUTE ADJACENY TABLE ------------------------------------------
+    !! --------------- COMPUTE ADJACENCY TABLE ------------------------------------------
     max_element_to_store = 8 * max_elmnts_by_node  ! over estimate the number of
                                                    ! neighbors element
     ! evalute the size of the adjacency table
@@ -406,9 +406,9 @@ contains
        enddo
        nb_neigh(iE_loc) = nb_element_stored  !! number of neighbour of iE_loc element
     enddo
-    size_adjancy = sum(nb_neigh(:))
+    size_adjacency = sum(nb_neigh(:))
 
-    allocate(adjcy(size_adjancy),id_adjcy(0:nE_loc))
+    allocate(adjcy(size_adjacency),id_adjcy(0:nE_loc))
     id_adjcy(0) = 0
     do iE_loc=1, nE_loc !! loop on all element in partition
        iE = loc2glob_elmnt(iE_loc)
