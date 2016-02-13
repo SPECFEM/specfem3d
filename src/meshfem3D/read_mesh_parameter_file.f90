@@ -31,7 +31,7 @@
     UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
     NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE, &
     LOCAL_PATH,SUPPRESS_UTM_PROJECTION,&
-    INTERFACES_FILE,NSUBREGIONS,subregions,NMATERIALS,material_properties,&
+    INTERFACES_FILE,CAVITY_FILE,NSUBREGIONS,subregions,NMATERIALS,material_properties,&
     CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
     USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
     THICKNESS_OF_X_PML,THICKNESS_OF_Y_PML,THICKNESS_OF_Z_PML, &
@@ -88,6 +88,8 @@
   if (ier /= 0) stop 'Error reading Mesh parameter SUPPRESS_UTM_PROJECTION'
   call read_value_string_mesh(IIN,IGNORE_JUNK,INTERFACES_FILE, 'INTERFACES_FILE', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter INTERFACES_FILE'
+  call read_value_string_mesh(IIN,IGNORE_JUNK,CAVITY_FILE, 'CAVITY_FILE', ier)   
+    if (ier /= 0) stop 'Error reading Mesh parameter CAVITY_FILE'
   call read_value_integer_mesh(IIN,IGNORE_JUNK,NEX_XI, 'NEX_XI', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter NEX_XI'
   call read_value_integer_mesh(IIN,IGNORE_JUNK,NEX_ETA, 'NEX_ETA', ier)

@@ -111,8 +111,10 @@ module meshfem3D_par
   integer :: max_npx_interface,max_npy_interface
 
   character(len=MAX_STRING_LEN) :: INTERFACES_FILE
-
   integer, dimension(:), allocatable :: ner_layer
+
+! cavity parameters
+  character(len=MAX_STRING_LEN) :: CAVITY_FILE
 
 ! subregions parameters
   integer :: NSUBREGIONS
