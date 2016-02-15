@@ -2020,9 +2020,10 @@ function pml_damping_profile_l(myrank,iglob,dist,vp,delta)
   if (NPOWER >= 1) then
      ! In INRIA research report section 6.1:  http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
      ! pml_damping_profile_l = - ((NPOWER + 1) * vp * log(CPML_Rcoef) / (TWO * delta)) * dist**(NPOWER)
-     ! due to tests it is more accurate to use following definition in case NPOWER = 1 defined in constants.h.in
+     ! based on tests it is more accurate to use the following definition when NPOWER = 1 as defined in constants.h.in
     if(CUSTOM_REAL == SIZE_REAL) then
-      pml_damping_profile_l = - ((NPOWER + 1.d0) * dble(vp) * log(CPML_Rcoef) / (TWO * dble(delta))) * dble(dist)**(1.2d0 * NPOWER)
+      pml_damping_profile_l = - sngl(((NPOWER + 1.d0) * dble(vp) * log(CPML_Rcoef) / &
+                                          (TWO * dble(delta))) * dble(dist)**(1.2d0 * NPOWER))
     else
       pml_damping_profile_l = - ((NPOWER + 1.d0) * vp * log(CPML_Rcoef) / (TWO * delta)) * dist**(1.2d0 * NPOWER)
     endif
