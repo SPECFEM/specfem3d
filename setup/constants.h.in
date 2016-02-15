@@ -248,11 +248,11 @@
 !!-----------------------------------------------------------
 
 ! power (exponent) used for the PML damping profile
-  real(kind=CUSTOM_REAL), parameter :: NPOWER = 1._CUSTOM_REAL
+  double precision, parameter :: NPOWER = 1.d0
 
 ! C-PML theoretical reflection coefficient
 ! (INRIA research report section 6.1:  http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf)
-  real(kind=CUSTOM_REAL), parameter :: CPML_Rcoef = 0.001_CUSTOM_REAL
+  double precision, parameter :: CPML_Rcoef = 0.001d0
 
 ! flags for the seven CPML regions
   integer, parameter :: CPML_X_ONLY = 1
@@ -263,8 +263,8 @@
   integer, parameter :: CPML_YZ_ONLY = 6
   integer, parameter :: CPML_XYZ = 7
 
-  ! tolerance to automatically detect where the PMLs are in the case of the internal mesher
-  real(kind=CUSTOM_REAL), parameter :: SMALL_PERCENTAGE_TOLERANCE = 1.005_CUSTOM_REAL
+! tolerance to automatically detect where the PMLs are in the case of the internal mesher
+  double precision, parameter :: SMALL_PERCENTAGE_TOLERANCE = 1.005d0
 
 
 !!-----------------------------------------------------------

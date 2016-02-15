@@ -2006,7 +2006,7 @@ function pml_damping_profile_l(myrank,iglob,dist,vp,delta)
   !   vp:    P-velocity
   !   delta: thickness of the C-PML layer
 
-  use generate_databases_par, only: CUSTOM_REAL,NPOWER,CPML_Rcoef,TWO
+  use generate_databases_par, only: CUSTOM_REAL,SIZE_REAL,NPOWER,CPML_Rcoef,TWO
 
   implicit none
 
@@ -2021,8 +2021,11 @@ function pml_damping_profile_l(myrank,iglob,dist,vp,delta)
      ! In INRIA research report section 6.1:  http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
      ! pml_damping_profile_l = - ((NPOWER + 1) * vp * log(CPML_Rcoef) / (TWO * delta)) * dist**(NPOWER)
      ! due to tests it is more accurate to use following definition in case NPOWER = 1 defined in constants.h.in
-    pml_damping_profile_l = - ((NPOWER + 1) * vp * log(CPML_Rcoef) / (TWO * delta)) &
-                            * dist**(1.2_CUSTOM_REAL * NPOWER)
+    if(CUSTOM_REAL == SIZE_REAL) then
+      pml_damping_profile_l = - ((NPOWER + 1.d0) * dble(vp) * log(CPML_Rcoef) / (TWO * dble(delta))) * dble(dist)**(1.2d0 * NPOWER)
+    else
+      pml_damping_profile_l = - ((NPOWER + 1.d0) * vp * log(CPML_Rcoef) / (TWO * delta)) * dist**(1.2d0 * NPOWER)
+    endif
   else
     call exit_mpi(myrank,'C-PML error: NPOWER must be greater than or equal to 1')
   endif
