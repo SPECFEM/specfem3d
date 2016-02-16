@@ -40,10 +40,10 @@
     CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
     USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
     ADIOS_ENABLED, ADIOS_FOR_DATABASES, &
-    nspec_CPML,is_CPML,CPML_to_spec,CPML_regions
+    nspec_CPML,is_CPML,CPML_to_spec,CPML_regions,CAVITY_FILE
 
   ! create the different regions of the mesh
-  use constants,only: MAX_STRING_LEN,NGNOD_EIGHT_CORNERS,IMAIN,IOVTK,CUSTOM_REAL
+  use constants,only: MF_IN_DATA_FILES,MAX_STRING_LEN,NGNOD_EIGHT_CORNERS,IMAIN,IOVTK,CUSTOM_REAL
 
   use constants_meshfem3D,only: NSPEC_DOUBLING_SUPERBRICK,NGLOB_DOUBLING_SUPERBRICK, &
     IFLAG_BASEMENT_TOPO,IFLAG_ONE_LAYER_TOPOGRAPHY, &
@@ -113,6 +113,21 @@
   integer, dimension(NGNOD_EIGHT_CORNERS,NSPEC_DOUBLING_SUPERBRICK) :: ibool_superbrick
   double precision, dimension(NGLOB_DOUBLING_SUPERBRICK) :: x_superbrick,y_superbrick,z_superbrick
 
+  !-------------------------------cavity----------------------------------------
+  character(len=MAX_STRING_LEN) :: filename
+  integer :: i_spec,i_node,inode,istat
+  integer :: nspec_old,nglob_old
+  integer :: ios,ncavity
+  double precision :: x0,x1,y0,y1,z0,z1,xmid,ymid,zmid
+  double precision :: cavity_x0,cavity_x1,cavity_y0,cavity_y1,cavity_z0,cavity_z1
+  logical,allocatable :: iselmt(:),isnode(:)
+  logical,allocatable :: iboun_old(:,:)
+  logical, dimension(:,:), allocatable :: iMPIcut_xi_old,iMPIcut_eta_old
+  integer,allocatable :: ibool_old(:,:,:,:),ispec_material_id_old(:)
+  integer,allocatable :: ispec_new(:),inode_new(:)
+  double precision,allocatable :: nodes_coords_old(:,:)
+  !-------------------------------cavity----------------------------------------
+  
   ! **************
 
   ! create the name for the database of the current slide and region
@@ -523,6 +538,167 @@
     print *,'Error ibool: maximum value ',maxval(ibool(:,:,:,:)) ,'should be ',nglob
     call exit_MPI(myrank,'incorrect global ibool numbering')
   endif
+
+!-------------------------------begin cavity------------------------------------
+  ncavity=0 ! default
+  ! read cavity file
+  filename=trim(MF_IN_DATA_FILES)//trim(CAVITY_FILE)
+  open(111,file=filename,action='read',status='old',iostat=ios)
+  if(ios.ne.0)then
+    if (myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*)'WARNING: cavity file "'//trim(filename)//'" cannot be opened! &
+      &No cavity will be added!'
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+  endif
+
+  read(111,*,iostat=istat) ! skip one line
+
+  ! check if the file is blank
+  if(istat.ne.0)then
+    ! blank file
+    ncavity=0
+  else
+    read(111,*)ncavity
+    if(ncavity.eq.1)then
+      read(111,*) ! skip one line
+      !read cavity range
+      read(111,*)cavity_x0,cavity_x1,cavity_y0,cavity_y1,cavity_z0,cavity_z1
+    elseif(ncavity.gt.1)then
+      if (myrank == 0) then
+        write(IMAIN,*)
+        write(IMAIN,*)'WARNING: more than 1 cavity not supported! No cavity will be added!'
+        write(IMAIN,*)
+        call flush_IMAIN()
+      endif
+    endif
+  endif
+  close(111)
+ 
+  ! add cavity if necessary
+  if(ncavity.eq.1)then
+    if (myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*) 'creating cavity'
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+    allocate(iselmt(nspec),isnode(nglob))
+    iselmt=.true.
+    isnode=.false.
+
+    do i_spec=1,nspec
+      ! find mid point of the spectral element
+      x0=xstore(1,1,1,i_spec)
+      y0=ystore(1,1,1,i_spec)
+      z0=zstore(1,1,1,i_spec)
+
+      x1=xstore(NGLLX_M,NGLLY_M,NGLLZ_M,i_spec)
+      y1=ystore(NGLLX_M,NGLLY_M,NGLLZ_M,i_spec)
+      z1=zstore(NGLLX_M,NGLLY_M,NGLLZ_M,i_spec)
+
+      xmid=0.5d0*(x0+x1)
+      ymid=0.5d0*(y0+y1)
+      zmid=0.5d0*(z0+z1)
+
+      if((xmid.ge.cavity_x0 .and. xmid.le.cavity_x1) .and. &
+         (ymid.ge.cavity_y0 .and. ymid.le.cavity_y1) .and. &
+         (zmid.ge.cavity_z0 .and. zmid.le.cavity_z1))then
+         ! deactivate spectral element
+         iselmt(i_spec)=.false.
+      else ! intact
+         ! activate nodes
+        do k = 1,NGLLZ_M
+          do j = 1,NGLLY_M
+            do i = 1,NGLLX_M
+              isnode(ibool(i,j,k,i_spec)) = .true.
+            enddo
+          enddo
+        enddo
+      endif
+    enddo
+
+    nspec_old=nspec
+    nglob_old=nglob
+    nspec=count(iselmt)
+    nglob=count(isnode)
+
+    allocate(ispec_new(nspec_old))
+    ispec_new=-1
+    ispec=0
+
+    do i_spec=1,nspec_old
+      if(iselmt(i_spec))then
+        ispec=ispec+1
+        ispec_new(i_spec)=ispec
+      endif
+    enddo
+    if(ispec.ne.nspec)call exit_MPI(myrank,'ERROR: new number of spectral elements mismatch!')
+
+    allocate(inode_new(nglob_old))
+    inode_new=-1
+    inode=0
+    do i_node=1,nglob_old
+      if(isnode(i_node))then
+        inode=inode+1
+        inode_new(i_node)=inode
+      endif
+    enddo
+    if(inode.ne.nglob)call exit_MPI(myrank,'ERROR: new number of spectral elements mismatch!')
+    allocate(nodes_coords_old(nglob_old,3))
+    allocate(ispec_material_id_old(nspec_old))
+    allocate(ibool_old(NGLLX_M,NGLLY_M,NGLLZ_M,nspec_old))
+    allocate(iboun_old(6,nspec_old))
+    allocate(iMPIcut_xi_old(2,nspec_old),iMPIcut_eta_old(2,nspec_old))
+
+    nodes_coords_old=nodes_coords
+    ispec_material_id_old=ispec_material_id
+    ibool_old=ibool
+    iboun_old=iboun
+    iMPIcut_xi_old=iMPIcut_xi
+    iMPIcut_eta_old=iMPIcut_eta
+
+    deallocate(nodes_coords)
+    deallocate(ispec_material_id)
+    deallocate(ibool)
+    deallocate(iboun)
+    deallocate(iMPIcut_xi,iMPIcut_eta)
+
+    allocate(nodes_coords(nglob,3))
+    allocate(ispec_material_id(nspec))
+    allocate(ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec))
+    allocate(iboun(6,nspec))
+    allocate(iMPIcut_xi(2,nspec),iMPIcut_eta(2,nspec))
+
+    ! new specs
+    do i_spec=1,nspec_old
+      if(iselmt(i_spec))then
+        ispec_material_id(ispec_new(i_spec))=ispec_material_id_old(i_spec)
+        iboun(:,ispec_new(i_spec))=iboun_old(:,i_spec)
+        iMPIcut_xi(:,ispec_new(i_spec))=iMPIcut_xi_old(:,i_spec)
+        iMPIcut_eta(:,ispec_new(i_spec))=iMPIcut_eta_old(:,i_spec)
+
+        ! activate nodes
+        do k = 1,NGLLZ_M
+          do j = 1,NGLLY_M
+            do i = 1,NGLLX_M
+              ibool(i,j,k,ispec_new(i_spec))=inode_new(ibool_old(i,j,k,i_spec))
+            enddo
+          enddo
+        enddo
+      endif
+    enddo
+
+    ! new coordinates
+    do i_node=1,nglob_old
+      if(isnode(i_node))then
+        nodes_coords(inode_new(i_node),:)=nodes_coords_old(i_node,:)
+      endif
+    enddo
+  endif ! nacavity.eq.0
+!----------------------------------end cavity-----------------------------------
 
   !--- Initialize ADIOS and setup the buffer size
   if (ADIOS_ENABLED) then

@@ -114,6 +114,9 @@ module meshfem3D_par
 
   integer, dimension(:), allocatable :: ner_layer
 
+! cavity parameters
+  character(len=MAX_STRING_LEN) :: CAVITY_FILE
+
 ! subregions parameters
   integer :: NSUBREGIONS
 !  definition of the different regions of the model in the mesh (nx,ny,nz)
