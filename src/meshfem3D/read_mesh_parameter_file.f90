@@ -88,7 +88,7 @@
   if (ier /= 0) stop 'Error reading Mesh parameter SUPPRESS_UTM_PROJECTION'
   call read_value_string_mesh(IIN,IGNORE_JUNK,INTERFACES_FILE, 'INTERFACES_FILE', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter INTERFACES_FILE'
-  call read_value_string_mesh(IIN,IGNORE_JUNK,CAVITY_FILE, 'CAVITY_FILE', ier)   
+  call read_value_string_mesh(IIN,IGNORE_JUNK,CAVITY_FILE, 'CAVITY_FILE', ier)
     if (ier /= 0) stop 'Error reading Mesh parameter CAVITY_FILE'
   call read_value_integer_mesh(IIN,IGNORE_JUNK,NEX_XI, 'NEX_XI', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter NEX_XI'

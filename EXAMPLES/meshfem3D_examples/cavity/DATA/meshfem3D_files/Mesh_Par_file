@@ -1,9 +1,9 @@
 
 # coordinates of mesh block in latitude/longitude and depth in km
 LATITUDE_MIN                    = 0.d0
-LATITUDE_MAX                    = 144.00 
+LATITUDE_MAX                    = 144.00
 LONGITUDE_MIN                   = 0.d0
-LONGITUDE_MAX                   = 288.00 
+LONGITUDE_MAX                   = 288.00
 DEPTH_BLOCK_KM                  = 0.0705d0
 UTM_PROJECTION_ZONE             = 11
 SUPPRESS_UTM_PROJECTION         = .true.

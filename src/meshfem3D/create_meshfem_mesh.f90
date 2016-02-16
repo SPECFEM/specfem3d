@@ -127,7 +127,7 @@
   integer,allocatable :: ispec_new(:),inode_new(:)
   double precision,allocatable :: nodes_coords_old(:,:)
   !-------------------------------cavity----------------------------------------
-  
+
   ! **************
 
   ! create the name for the database of the current slide and region
@@ -544,7 +544,7 @@
   ! read cavity file
   filename=trim(MF_IN_DATA_FILES)//trim(CAVITY_FILE)
   open(111,file=filename,action='read',status='old',iostat=ios)
-  if(ios.ne.0)then
+  if(ios/=0)then
     if (myrank == 0) then
       write(IMAIN,*)
       write(IMAIN,*)'WARNING: cavity file "'//trim(filename)//'" cannot be opened! &
@@ -557,16 +557,16 @@
   read(111,*,iostat=istat) ! skip one line
 
   ! check if the file is blank
-  if(istat.ne.0)then
+  if(istat/=0)then
     ! blank file
     ncavity=0
   else
     read(111,*)ncavity
-    if(ncavity.eq.1)then
+    if(ncavity==1)then
       read(111,*) ! skip one line
       !read cavity range
       read(111,*)cavity_x0,cavity_x1,cavity_y0,cavity_y1,cavity_z0,cavity_z1
-    elseif(ncavity.gt.1)then
+    else if(ncavity>1)then
       if (myrank == 0) then
         write(IMAIN,*)
         write(IMAIN,*)'WARNING: more than 1 cavity not supported! No cavity will be added!'
@@ -576,9 +576,9 @@
     endif
   endif
   close(111)
- 
+
   ! add cavity if necessary
-  if(ncavity.eq.1)then
+  if(ncavity==1)then
     if (myrank == 0) then
       write(IMAIN,*)
       write(IMAIN,*) 'creating cavity'
@@ -603,9 +603,9 @@
       ymid=0.5d0*(y0+y1)
       zmid=0.5d0*(z0+z1)
 
-      if((xmid.ge.cavity_x0 .and. xmid.le.cavity_x1) .and. &
-         (ymid.ge.cavity_y0 .and. ymid.le.cavity_y1) .and. &
-         (zmid.ge.cavity_z0 .and. zmid.le.cavity_z1))then
+      if((xmid>=cavity_x0 .and. xmid<=cavity_x1) .and. &
+         (ymid>=cavity_y0 .and. ymid<=cavity_y1) .and. &
+         (zmid>=cavity_z0 .and. zmid<=cavity_z1))then
          ! deactivate spectral element
          iselmt(i_spec)=.false.
       else ! intact
@@ -635,7 +635,7 @@
         ispec_new(i_spec)=ispec
       endif
     enddo
-    if(ispec.ne.nspec)call exit_MPI(myrank,'ERROR: new number of spectral elements mismatch!')
+    if(ispec/=nspec)call exit_MPI(myrank,'ERROR: new number of spectral elements mismatch!')
 
     allocate(inode_new(nglob_old))
     inode_new=-1
@@ -646,7 +646,7 @@
         inode_new(i_node)=inode
       endif
     enddo
-    if(inode.ne.nglob)call exit_MPI(myrank,'ERROR: new number of spectral elements mismatch!')
+    if(inode/=nglob)call exit_MPI(myrank,'ERROR: new number of spectral elements mismatch!')
     allocate(nodes_coords_old(nglob_old,3))
     allocate(ispec_material_id_old(nspec_old))
     allocate(ibool_old(NGLLX_M,NGLLY_M,NGLLZ_M,nspec_old))
@@ -697,7 +697,7 @@
         nodes_coords(inode_new(i_node),:)=nodes_coords_old(i_node,:)
       endif
     enddo
-  endif ! nacavity.eq.0
+  endif ! nacavity==0
 !----------------------------------end cavity-----------------------------------
 
   !--- Initialize ADIOS and setup the buffer size
