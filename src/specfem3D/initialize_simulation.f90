@@ -325,7 +325,7 @@
 
     if (STACEY_INSTEAD_OF_FREE_SURFACE .NEQV. ABSORB_FREE_SURFACE_VAL) then
       write(IMAIN,*) 'STACEY_INSTEAD_OF_FREE_SURFACE:',STACEY_INSTEAD_OF_FREE_SURFACE,ABSORB_FREE_SURFACE_VAL
-      call exit_MPI(myrank,'error in compiled parameters STACEY_INSTEAD_OF_FREE_SURFACE, please recompile solver')
+      call exit_MPI(myrank,'it seems you have changed STACEY_INSTEAD_OF_FREE_SURFACE, you need to rerun xgenerate_databases')
     endif
   endif
   call synchronize_all()
