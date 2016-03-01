@@ -167,10 +167,11 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt)
     bc%v_kin_t1 = 0e0_CUSTOM_REAL
     bc%v_kin_t2 = 0e0_CUSTOM_REAL
 
-    call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt,7,iflt)
-    call init_dataXZ(bc%dataXZ,bc%nglob)
-
   endif
+
+    call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt,7,iflt)
+    call init_dataXZ(bc%dataXZ,bc)
+
 
 end subroutine init_one_fault
 
@@ -201,7 +202,7 @@ end subroutine BC_KINFLT_set_all
 !
 subroutine BC_KINFLT_set_single(bc,MxA,V,D,iflt)
 
-  use specfem_par, only:it,NSTEP
+  use specfem_par, only:it,NSTEP,myrank
 
   real(kind=CUSTOM_REAL), intent(inout) :: MxA(:,:)
   type(bc_dynandkinflt_type), intent(inout) :: bc
@@ -252,7 +253,7 @@ subroutine BC_KINFLT_set_single(bc,MxA,V,D,iflt)
       !Temporal : just for snapshots file names kin_dt=0.1 , dt=0.0001
       !snapshot(100=itime).. : itime=kin_it*(kin_dt/dt)
       itime = bc%kin_it*nint(bc%kin_dt/bc%dt)
-      call load_vslip_snapshots(bc%dataXZ,itime,iflt)
+      call load_vslip_snapshots(bc%dataXZ,itime,iflt,myrank)
 !     loading slip rates
       bc%v_kin_t2(1,:)=bc%dataXZ%v1
       bc%v_kin_t2(2,:)=bc%dataXZ%v2
@@ -302,7 +303,7 @@ subroutine BC_KINFLT_set_single(bc,MxA,V,D,iflt)
     ! write dataT every NTOUT time steps or at the end of simulation
     if (mod(it,NTOUT) == 0 .or. it==NSTEP) call SCEC_write_dataT(bc%dataT)
     ! write dataXZ every NSNAP time steps
-    ! if (mod(it,NSNAP) == 0) call write_dataXZ(bc,it,iflt)
+    if (mod(it,NSNAP) == 0) call write_dataXZ(bc%dataXZ,it,iflt)
 
   endif
 
@@ -310,24 +311,60 @@ end subroutine BC_KINFLT_set_single
 
 !===============================================================
 
-subroutine init_dataXZ(dataXZ,nglob)
+subroutine init_dataXZ(dataXZ,bc)
+
+  use specfem_par, only : NPROC,myrank
 
   type(dataXZ_type), intent(inout) :: dataXZ
-  integer, intent(in) :: nglob
+  type(bc_dynandkinflt_type) :: bc
 
-  allocate(dataXZ%v1(nglob))
-  allocate(dataXZ%v2(nglob))
-  allocate(dataXZ%xcoord(nglob))
-  allocate(dataXZ%ycoord(nglob))
-  allocate(dataXZ%zcoord(nglob))
 
-  dataXZ%v1= 0e0_CUSTOM_REAL
-  dataXZ%v2= 0e0_CUSTOM_REAL
-  dataXZ%xcoord= 0e0_CUSTOM_REAL
-  dataXZ%ycoord= 0e0_CUSTOM_REAL
-  dataXZ%zcoord= 0e0_CUSTOM_REAL
 
+ if(bc%nglob > 0) then
+
+
+    dataXZ%d1 => bc%d(1,:)
+    dataXZ%d2 => bc%d(2,:)
+    dataXZ%v1 => bc%v(1,:)
+    dataXZ%v2 => bc%v(2,:)
+    dataXZ%t1 => bc%t(1,:)
+    dataXZ%t2 => bc%t(2,:)
+    dataXZ%t3 => bc%t(3,:)
+  allocate(dataXZ%xcoord(bc%nglob))
+  allocate(dataXZ%ycoord(bc%nglob))
+  allocate(dataXZ%zcoord(bc%nglob))
+!
+ endif
 end subroutine init_dataXZ
+
+!===============================================================
+subroutine write_dataXZ(dataXZ,itime,iflt)
+
+  use specfem_par,only: myrank
+
+  type(dataXZ_type), intent(in) :: dataXZ
+  integer, intent(in) :: itime,iflt
+
+  character(len=70) :: filename
+
+  write(filename,"('../OUTPUT_FILES/Proc',I0,'Snapshot',I0,'_F',I0,'.bin')") myrank,itime,iflt
+
+  open(unit=IOUT, file= trim(filename), status='unknown', form='unformatted',action='write')
+
+  write(IOUT) dataXZ%xcoord
+  write(IOUT) dataXZ%ycoord
+  write(IOUT) dataXZ%zcoord
+  write(IOUT) dataXZ%d1
+  write(IOUT) dataXZ%d2
+  write(IOUT) dataXZ%v1
+  write(IOUT) dataXZ%v2
+  write(IOUT) dataXZ%t1
+  write(IOUT) dataXZ%t2
+  write(IOUT) dataXZ%t3
+  close(IOUT)
+
+end subroutine write_dataXZ
+
 
 !---------------------------------------------------------------
 !LOAD_VSLIP_SNAPSHOTS(v,dataXZ,itime,coord,npoin,nglob,iflt)
@@ -340,32 +377,41 @@ end subroutine init_dataXZ
 !          iflt : number of faults.
 
 !   OUTPUT v : slip rate on receivers.
+subroutine load_vslip_snapshots(dataXZ,itime,iflt,myrank)
 
-subroutine load_vslip_snapshots(dataXZ,itime,iflt)
-
-  use specfem_par, only: OUTPUT_FILES
   integer, intent(in) :: itime,iflt
   type(dataXZ_type), intent(inout) :: dataXZ
-  character(len=MAX_STRING_LEN) :: filename
-  integer :: IIN_BIN,ier,IOUT
-
+  character(len=70) :: filename
+  integer :: IIN_BIN,ier,IOUT,myrank
   IIN_BIN=101
   IOUT = 102
 
-  write(filename,"(a,I0,'_F',I0,'.bin')") trim(OUTPUT_FILES)//'/Snapshot',itime,iflt
-  print *, trim(filename)
+  write(filename,"('../INPUT_FILES/Proc',I0,'Snapshot',I0,'_F',I0,'.bin')") myrank,itime,iflt
+  print*, trim(filename)
 
-  open(unit=IIN_BIN, file= trim(filename), status='old', form='formatted',&
+!  open(unit=IIN_BIN, file= trim(filename), status='old', form='formatted',&
+!       action='read',iostat=ier)
+ open(unit=IIN_BIN, file= trim(filename), status='old', form='unformatted',&
        action='read',iostat=ier)
+
+  
 !  COMPILERS WRITE BINARY OUTPUTS IN DIFFERENT FORMATS !!!!!!!!!!
 !  open(unit=IIN_BIN, file= trim(filename), status='old', form='unformatted',&
 !        action='read',iostat=ier)
-!  if (ier /= 0) stop 'Snapshots have been found'
+!  if( ier /= 0 ) stop 'Snapshots have been found'
 
-  read(IIN_BIN,"(5F24.15)") dataXZ%xcoord,dataXZ%ycoord,dataXZ%zcoord,dataXZ%v1,dataXZ%v2
-
+!   read(IIN_BIN,"(5F24.15)") dataXZ%xcoord,dataXZ%ycoord,dataXZ%zcoord,dataXZ%v1,dataXZ%v2
+  write(IMAIN,*) 'Load vslip file for kinematic rupture simulation!'
+!  write(IMAIN,*)   max(abs(dataXZ
+  read(IIN_BIN)   dataXZ%xcoord
+  read(IIN_BIN)   dataXZ%ycoord
+  read(IIN_BIN)   dataXZ%zcoord
+  read(IIN_BIN)   dataXZ%v1
+  read(IIN_BIN)   dataXZ%v2
   close(IIN_BIN)
 
 end subroutine load_vslip_snapshots
+
+
 
 end module fault_solver_kinematic
