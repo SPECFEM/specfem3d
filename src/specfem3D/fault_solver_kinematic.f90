@@ -313,7 +313,6 @@ end subroutine BC_KINFLT_set_single
 
 subroutine init_dataXZ(dataXZ,bc)
 
-  use specfem_par, only : NPROC,myrank
 
   type(dataXZ_type), intent(inout) :: dataXZ
   type(bc_dynandkinflt_type) :: bc
