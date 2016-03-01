@@ -386,14 +386,14 @@ subroutine load_vslip_snapshots(dataXZ,itime,iflt,myrank)
   IOUT = 102
 
   write(filename,"('../INPUT_FILES/Proc',I0,'Snapshot',I0,'_F',I0,'.bin')") myrank,itime,iflt
-  print*, trim(filename)
+  print *, trim(filename)
 
 !  open(unit=IIN_BIN, file= trim(filename), status='old', form='formatted',&
 !       action='read',iostat=ier)
  open(unit=IIN_BIN, file= trim(filename), status='old', form='unformatted',&
        action='read',iostat=ier)
 
-  
+
 !  COMPILERS WRITE BINARY OUTPUTS IN DIFFERENT FORMATS !!!!!!!!!!
 !  open(unit=IIN_BIN, file= trim(filename), status='old', form='unformatted',&
 !        action='read',iostat=ier)
