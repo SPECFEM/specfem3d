@@ -18,29 +18,38 @@
 %
 % Jean-Paul Ampuero	ampuero@erdw.ethz.ch 
 % 19/01/2011: modified by Percy Galvez percy.galvez@sed.ethz.ch 
-%
-% WARNING : Works only for single precision snapshot files.
+% 02/03/2015: modified by Kangchen Bai kbai@caltech.edu
+% WARNING : By default using double precision. Have to specify 'single' if
+% otherwise.
 
-function d = FSEM3D_snapshot(isnap,DATA_DIR,fault)
+function d = FSEM3D_snapshot(isnap,DATA_DIR,fault,precision)
 
 NDAT = 14; 
 
-if nargin<2, DATA_DIR = '.'; end
-if nargin<3, fault = 1; end
+if nargin<2, DATA_DIR = '.', precision = 'double'; end
+if nargin<3, fault = 1, precision = 'double'; end
+if nargin<4, precision = 'double'; end
+
+len = 8;
+
+if strcmp(precision,'single') , len = 4; end
 
 BinFile = sprintf('%s/Snapshot%u_F%u.bin',DATA_DIR,isnap,fault);
 
 if ~exist(BinFile,'file'), error(sprintf('File %s does not exist',BinFile)), end
 fid=fopen(BinFile);
-BinRead = fread(fid,[1,inf],'single')' ;
+%BinRead = fread(fid,[1,inf],'single')' ;
+%fclose(fid);
+for ii = 1:1:NDAT
+    number = fread(fid,1,'int');
+    number
+    N = number/len;
+    BinRead(:,ii) = fread(fid,N,precision);
+    number = fread(fid,1,'int');
+end
 fclose(fid);
 
-BinRead = reshape( BinRead(:),length(BinRead)/NDAT, NDAT);
-BinRead = BinRead(2:end-1,:);
 
-% Reorder fault nodes (lexicographic z,x)
-%[LOC,IND] = sortrows( BinRead(:,[1 3]) );
-%BinRead = BinRead(IND,:);
 
 d.X  = BinRead(:,1)/1e3; % in km
 d.Y  = BinRead(:,2)/1e3; % in km

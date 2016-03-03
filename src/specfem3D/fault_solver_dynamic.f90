@@ -152,7 +152,8 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
   Nfaults = nbfaults
   allocate( faults(nbfaults) )
   dt = real(DTglobal)
-  read(IIN_PAR,nml=RUPTURE_SWITCHES,end=110)
+  read(IIN_PAR,nml=RUPTURE_SWITCHES,end=110,iostat=ier)
+  if(ier/=0) write(*,*) 'RUPTURE_SWITCHES not found in Par_file_faults'
   do iflt=1,nbfaults
     read(IIN_PAR,nml=BEGIN_FAULT,end=100)
     call init_one_fault(faults(iflt),IIN_BIN,IIN_PAR,dt,nt,iflt,myrank)
@@ -349,14 +350,14 @@ subroutine init_2d_distribution(a,coord,iin,n)
 
   real(kind=CUSTOM_REAL) :: b(size(a))
   character(len=MAX_STRING_LEN) :: shapeval
-  real(kind=CUSTOM_REAL) :: val,valh, xc, yc, zc, r, l, lx,ly,lz
+  real(kind=CUSTOM_REAL) :: val,valh, xc, yc, zc, r, rc, l, lx,ly,lz
   real(kind=CUSTOM_REAL) :: r1(size(a))
   real(kind=CUSTOM_REAL) :: tmp1(size(a)),tmp2(size(a)),tmp3(size(a))
 
   integer :: i
   real(kind=CUSTOM_REAL) :: SMALLVAL
 
-  NAMELIST / DIST2D / shapeval, val,valh, xc, yc, zc, r, l, lx,ly,lz
+  NAMELIST / DIST2D / shapeval, val,valh, xc, yc, zc, r, rc, l, lx,ly,lz
 
   SMALLVAL = 1.e-10_CUSTOM_REAL
 
@@ -374,6 +375,7 @@ subroutine init_2d_distribution(a,coord,iin,n)
     lx = 0e0_CUSTOM_REAL
     ly = 0e0_CUSTOM_REAL
     lz = 0e0_CUSTOM_REAL
+    rc = 0e0_CUSTOM_REAL
 
     read(iin,DIST2D)
 
@@ -416,6 +418,19 @@ subroutine init_2d_distribution(a,coord,iin,n)
       tmp1 = r - sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2)
       tmp2 = (lz/2._CUSTOM_REAL)-abs(coord(3,:)-zc)+SMALLVAL
       b = heaviside( tmp1 ) * heaviside( tmp2 ) * val
+
+    case ('cylindertaper')
+      r1=sqrt(((coord(1,:)-xc)**2 + (coord(3,:)-zc)**2 ));
+      where(r1<rc)
+        where(r1<r)
+         b=val;
+        elsewhere
+        b=0.5e0_CUSTOM_REAL*val*(1e0_CUSTOM_REAL+cos(PI*(r1-r)/(rc-r)))
+        endwhere
+      elsewhere
+        b=0._CUSTOM_REAL
+      endwhere
+
 
     case ('rectangle')
       tmp1 = (lx/2._CUSTOM_REAL)-abs(coord(1,:)-xc)+SMALLVAL
