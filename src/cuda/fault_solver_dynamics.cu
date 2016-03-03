@@ -962,7 +962,7 @@ void FC_FUNC_(fault_solver_gpu,
         if(Flt->NGLOB_AB>0)
         {
             num_of_block = (int) (Flt->NGLOB_AB/128)+1;
-            if(rsf->a != NULL) // this is dirty implementation
+            if(false) // this is dirty implementation
             {
                 compute_dynamic_fault_cuda<<<num_of_block,128>>>(
 

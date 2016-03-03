@@ -814,7 +814,7 @@ subroutine compute_forces_viscoelastic_GPU()
     call fault_solver_gpu(Mesh_pointer,Fault_pointer,deltat,myrank)  ! GPU fault solver
     call transfer_boundary_from_device_a(Mesh_pointer,nspec_outer_elastic)
     ! transfer data from mp->d_boundary to mp->h_boundary
-    call sync_copy_from_device(Mesh_pointer,iphase,buffer_send_vector_ext_mesh)
+    call sync_copy_from_device(Mesh_pointer,2,buffer_send_vector_ext_mesh)
     ! transfer data from mp->h_boundary to send_buffer
     call assemble_MPI_vector_send_cuda(NPROC, &
                   buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
