@@ -37,19 +37,22 @@
 ! to determine if it belongs to a CPML layer
   integer, parameter :: NGNOD = 8
 
+! we are in 3D
+  integer, parameter :: NDIM = 3
+
 ! number of PML layers to add on each side of the mesh
   integer :: NUMBER_OF_PML_LAYERS_TO_ADD
 
-! size of each PML element to add when they are added on the Xmin or Xmax faces
-  double precision :: SIZE_OF_X_ELEMENT_TO_ADD
+! size of each PML element to add when they are added on the Xmin and Xmax faces, Ymin and Ymax faces, Zmin and/or Zmax faces
+  double precision :: SIZE_OF_X_ELEMENT_TO_ADD,SIZE_OF_Y_ELEMENT_TO_ADD,SIZE_OF_Z_ELEMENT_TO_ADD
 
-  integer :: nspec,npoin,npoin_new,nspec_new,count_elem_faces_to_extend_xmin,iextend
-  integer :: ispec,ipoin
+  integer :: nspec,npoin,npoin_new,nspec_new,count_elem_faces_to_extend,iextend,iextend1,iextend2,factor
+  integer :: ispec,ipoin,iloop_on_X_Y_Z_faces,iloop_on_min_face_then_max_face
   integer :: ipoin_read,ispec_loop
-  integer :: i1,i2,i3,i4,i5,i6,i7,i8,elem_counter,ibool_counter,ia
+  integer :: i1,i2,i3,i4,i5,i6,i7,i8,elem_counter,ibool_counter,ia,iflag
   integer :: p1,p2,p3,p4
 
-  double precision, dimension(:), allocatable :: x,y,z,xnew,ynew,znew
+  double precision, dimension(:), allocatable :: x,y,z,x_new,y_new,z_new
 
   integer, dimension(:), allocatable :: imaterial,imaterial_new
 
@@ -57,7 +60,7 @@
 
   double precision :: xread,yread,zread,xmin,xmax,ymin,ymax,zmin,zmax,limit,xsize,ysize,zsize
 
-! logical :: ALSO_ADD_ON_THE_TOP_SURFACE
+  logical :: ALSO_ADD_ON_THE_TOP_SURFACE
   logical :: need_to_extend_this_element
 
   double precision, parameter :: SMALL_RELATIVE_VALUE = 1.d-5
@@ -72,29 +75,74 @@
   print *,'mesh is fine as long as it has flat outer faces, parallel to the axes.'
   print *
 
-!! DK DK to Vadim: il faudra que tu remettes ca mais je l'enleve pour l'instant car dans mon exemple
-!! DK DK to Vadim: je ne fais que le cas Xmin pour l'instant
-! print *,'1 = use a free surface at the top of the mesh (most classical option)'
-! print *,'2 = use a CPML absorbing layer at the top of the mesh (less classical option)'
-! print *,'3 = exit'
-! read(*,*) iflag
-! if(iflag /= 1 .and. iflag /= 2) stop 'exiting...'
-! if(iflag == 1) then
-!   ALSO_ADD_ON_THE_TOP_SURFACE = .false.
-! else
-!   ALSO_ADD_ON_THE_TOP_SURFACE = .true.
-! endif
-! print *
-
-  print *,'enter the X size (in meters) of each CPML element to add on the Xmin and Xmax faces:'
-  read(*,*) SIZE_OF_X_ELEMENT_TO_ADD
-  if(SIZE_OF_X_ELEMENT_TO_ADD <= 0.d0) stop 'NUMBER_OF_PML_LAYERS_TO_ADD must be > 0'
-  print *
-
   print *,'enter the number of PML layers to add on each side of the mesh (usually 3, can also be 4):'
-  read(*,*) NUMBER_OF_PML_LAYERS_TO_ADD
+! read(*,*) NUMBER_OF_PML_LAYERS_TO_ADD
+  NUMBER_OF_PML_LAYERS_TO_ADD = 3 !!!!!!!!!!!!!!! 333333333333333333333
   if(NUMBER_OF_PML_LAYERS_TO_ADD < 1) stop 'NUMBER_OF_PML_LAYERS_TO_ADD must be >= 1'
   print *
+
+  print *,'1 = use a free surface at the top of the mesh i.e. do not add a CPML layer at the top (most classical option)'
+  print *,'2 = add a CPML absorbing layer at the top of the mesh (less classical option)'
+  print *,'3 = exit'
+! read(*,*) iflag
+  iflag = 1 !!!!!!!!!!!!!!! 333333333333333333333
+  if(iflag /= 1 .and. iflag /= 2) stop 'exiting...'
+  if(iflag == 1) then
+    ALSO_ADD_ON_THE_TOP_SURFACE = .false.
+  else
+    ALSO_ADD_ON_THE_TOP_SURFACE = .true.
+  endif
+  print *
+
+  print *,'enter the X size (in meters) of each CPML element to add on the Xmin and Xmax faces:'
+! read(*,*) SIZE_OF_X_ELEMENT_TO_ADD
+  SIZE_OF_X_ELEMENT_TO_ADD = 3000.d0 !!!!!!!!!!!!!!! 333333333333333333333
+  if(SIZE_OF_X_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_X_ELEMENT_TO_ADD must be > 0'
+  print *
+
+  print *,'enter the Y size (in meters) of each CPML element to add on the Ymin and Ymax faces:'
+! read(*,*) SIZE_OF_Y_ELEMENT_TO_ADD
+  SIZE_OF_Y_ELEMENT_TO_ADD = 2000.d0 !!!!!!!!!!!!!!! 333333333333333333333
+  if(SIZE_OF_Y_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_Y_ELEMENT_TO_ADD must be > 0'
+  print *
+
+  print *,'enter the Z size (in meters) of each CPML element to add on the Zmin and/or Zmax faces:'
+! read(*,*) SIZE_OF_Z_ELEMENT_TO_ADD
+  SIZE_OF_Z_ELEMENT_TO_ADD = 1000.d0 !!!!!!!!!!!!!!! 333333333333333333333
+  if(SIZE_OF_Z_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_Z_ELEMENT_TO_ADD must be > 0'
+  print *
+
+! we need to extend/extrude the existing mesh by adding CPML elements
+! along the X faces, then along the Y faces, then along the Z faces.
+! By far the easiest way of doing this is to read the existing file, add X faces to it, save it to disk again,
+! then read the existing file again, add Y faces to it, save it to disk again,
+! and then read the existing file again, add Z faces to it, save it to disk again.
+! By doing so, the growing size of the faces is handled automatically (i.e., when adding elements along the Y faces,
+! the code will automatically take into account the face that the size of these faces has grown in the previous step
+! when the elements along the X faces were added.
+! The only (small) drawback to this is that mesh files are read from disk and written to disk three times instead of only once.
+
+! loop on the three sets of faces to first add CPML elements along X, then along Y, then along Z
+  do iloop_on_X_Y_Z_faces = 1,NDIM
+
+    do iloop_on_min_face_then_max_face = 1,2  ! 1 is min face and 2 is max face (Xmin then Xmax, Ymin then Ymax, or Zmin then Zmax)
+
+! do not add a CPML layer on the top surface if the user asked not to
+      if(iloop_on_X_Y_Z_faces == 3 .and. iloop_on_min_face_then_max_face == 2 .and. .not. ALSO_ADD_ON_THE_TOP_SURFACE) cycle
+
+    print *
+    print *,'********************************************************************'
+    if(iloop_on_X_Y_Z_faces == 1) then
+      print *,'adding CPML elements along one of the two X faces of the existing mesh'
+    else if(iloop_on_X_Y_Z_faces == 2) then
+      print *,'adding CPML elements along one of the two Y faces of the existing mesh'
+    else if(iloop_on_X_Y_Z_faces == 3) then
+      print *,'adding CPML elements along one of the two Z faces of the existing mesh'
+    else
+      stop 'wrong index in loop on faces'
+    endif
+    print *,'********************************************************************'
+    print *
 
 ! open SPECFEM3D_Cartesian mesh file to read the points
   open(unit=23,file='nodes_coords_file',status='old',action='read')
@@ -140,51 +188,92 @@
   open(unit=23,file='mesh_file',status='old',action='read')
   read(23,*) nspec
 
-  count_elem_faces_to_extend_xmin = 0
+  count_elem_faces_to_extend = 0
 
 ! loop on the whole mesh
   do ispec_loop = 1,nspec
 
     read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
 
+    if(iloop_on_X_Y_Z_faces == 1) then
+
+      if(iloop_on_min_face_then_max_face == 1) then ! Xmin face
+
 ! detect elements belonging to the Xmin face
     limit = xmin + xsize * SMALL_RELATIVE_VALUE
 
 ! test face 1 (bottom)
     if(x(i1) < limit .and. x(i2) < limit .and. x(i3) < limit .and. x(i4) < limit) &
-      count_elem_faces_to_extend_xmin = count_elem_faces_to_extend_xmin + 1
+      count_elem_faces_to_extend = count_elem_faces_to_extend + 1
 
 ! test face 2 (top)
     if(x(i5) < limit .and. x(i6) < limit .and. x(i7) < limit .and. x(i8) < limit) &
-      count_elem_faces_to_extend_xmin = count_elem_faces_to_extend_xmin + 1
+      count_elem_faces_to_extend = count_elem_faces_to_extend + 1
 
 ! test face 3 (left)
     if(x(i1) < limit .and. x(i4) < limit .and. x(i5) < limit .and. x(i8) < limit) &
-      count_elem_faces_to_extend_xmin = count_elem_faces_to_extend_xmin + 1
+      count_elem_faces_to_extend = count_elem_faces_to_extend + 1
 
 ! test face 4 (right)
     if(x(i2) < limit .and. x(i3) < limit .and. x(i7) < limit .and. x(i6) < limit) &
-      count_elem_faces_to_extend_xmin = count_elem_faces_to_extend_xmin + 1
+      count_elem_faces_to_extend = count_elem_faces_to_extend + 1
 
 ! test face 5 (front)
     if(x(i1) < limit .and. x(i2) < limit .and. x(i6) < limit .and. x(i5) < limit) &
-      count_elem_faces_to_extend_xmin = count_elem_faces_to_extend_xmin + 1
+      count_elem_faces_to_extend = count_elem_faces_to_extend + 1
 
 ! test face 6 (back)
     if(x(i4) < limit .and. x(i3) < limit .and. x(i7) < limit .and. x(i8) < limit) &
-      count_elem_faces_to_extend_xmin = count_elem_faces_to_extend_xmin + 1
+      count_elem_faces_to_extend = count_elem_faces_to_extend + 1
+
+      else ! Xmax face
+
+! detect elements belonging to the Xmax face
+    limit = xmax - xsize * SMALL_RELATIVE_VALUE
+
+! test face 1 (bottom)
+    if(x(i1) > limit .and. x(i2) > limit .and. x(i3) > limit .and. x(i4) > limit) &
+      count_elem_faces_to_extend = count_elem_faces_to_extend + 1
+
+! test face 2 (top)
+    if(x(i5) > limit .and. x(i6) > limit .and. x(i7) > limit .and. x(i8) > limit) &
+      count_elem_faces_to_extend = count_elem_faces_to_extend + 1
+
+! test face 3 (left)
+    if(x(i1) > limit .and. x(i4) > limit .and. x(i5) > limit .and. x(i8) > limit) &
+      count_elem_faces_to_extend = count_elem_faces_to_extend + 1
+
+! test face 4 (right)
+    if(x(i2) > limit .and. x(i3) > limit .and. x(i7) > limit .and. x(i6) > limit) &
+      count_elem_faces_to_extend = count_elem_faces_to_extend + 1
+
+! test face 5 (front)
+    if(x(i1) > limit .and. x(i2) > limit .and. x(i6) > limit .and. x(i5) > limit) &
+      count_elem_faces_to_extend = count_elem_faces_to_extend + 1
+
+! test face 6 (back)
+    if(x(i4) > limit .and. x(i3) > limit .and. x(i7) > limit .and. x(i8) > limit) &
+      count_elem_faces_to_extend = count_elem_faces_to_extend + 1
+
+      endif
+
+    else if(iloop_on_X_Y_Z_faces == 2) then
+    else if(iloop_on_X_Y_Z_faces == 3) then
+    else
+      stop 'wrong index in loop on faces'
+    endif
 
   enddo
 
   close(23)
 
   print *,'Total number of elements in the mesh before extension = ',nspec
-  print *,'Number of element faces to extend  = ',count_elem_faces_to_extend_xmin
+  print *,'Number of element faces to extend  = ',count_elem_faces_to_extend
 ! we will add NUMBER_OF_PML_LAYERS_TO_ADD to each of the element faces detected that need to be extended
-  nspec_new = nspec + count_elem_faces_to_extend_xmin * NUMBER_OF_PML_LAYERS_TO_ADD
+  nspec_new = nspec + count_elem_faces_to_extend * NUMBER_OF_PML_LAYERS_TO_ADD
 ! and each of these elements will have NGNOD points
 ! (some of them shared with other elements, but we do not care because they will be removed automatically by xdecompose_mesh)
-  npoin_new = npoin + count_elem_faces_to_extend_xmin * NUMBER_OF_PML_LAYERS_TO_ADD * NGNOD
+  npoin_new = npoin + count_elem_faces_to_extend * NUMBER_OF_PML_LAYERS_TO_ADD * NGNOD
   print *,'Total number of elements in the mesh after extension = ',nspec_new
   print *
 
@@ -231,14 +320,14 @@
   close(23)
 
 ! allocate a new set of points, with multiples
-  allocate(xnew(npoin_new))
-  allocate(ynew(npoin_new))
-  allocate(znew(npoin_new))
+  allocate(x_new(npoin_new))
+  allocate(y_new(npoin_new))
+  allocate(z_new(npoin_new))
 
 ! copy the original points into the new set
-  xnew(1:npoin) = x(1:npoin)
-  ynew(1:npoin) = y(1:npoin)
-  znew(1:npoin) = z(1:npoin)
+  x_new(1:npoin) = x(1:npoin)
+  y_new(1:npoin) = y(1:npoin)
+  z_new(1:npoin) = z(1:npoin)
 
 ! allocate a new set of elements, i.e. a new ibool()
   allocate(ibool_new(NGNOD,nspec_new))
@@ -264,11 +353,15 @@
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
 
-! detect elements belonging to the Xmin face
-    limit = xmin + xsize * SMALL_RELATIVE_VALUE
-
 ! reset flag
     need_to_extend_this_element = .false.
+
+    if(iloop_on_X_Y_Z_faces == 1) then
+
+      if(iloop_on_min_face_then_max_face == 1) then ! Xmin face
+
+! detect elements belonging to the Xmin face
+    limit = xmin + xsize * SMALL_RELATIVE_VALUE
 
 ! test face 1 (bottom)
     if(x(i1) < limit .and. x(i2) < limit .and. x(i3) < limit .and. x(i4) < limit) then
@@ -324,9 +417,76 @@
       p4 = i8
     endif
 
+      else ! Xmax face
+
+! detect elements belonging to the Xmax face
+    limit = xmax - xsize * SMALL_RELATIVE_VALUE
+
+! test face 1 (bottom)
+    if(x(i1) > limit .and. x(i2) > limit .and. x(i3) > limit .and. x(i4) > limit) then
+      need_to_extend_this_element = .true.
+      p1 = i1
+      p2 = i2
+      p3 = i3
+      p4 = i4
+    endif
+
+! test face 2 (top)
+    if(x(i5) > limit .and. x(i6) > limit .and. x(i7) > limit .and. x(i8) > limit) then
+      need_to_extend_this_element = .true.
+      p1 = i5
+      p2 = i6
+      p3 = i7
+      p4 = i8
+    endif
+
+! test face 3 (left)
+    if(x(i1) > limit .and. x(i4) > limit .and. x(i5) > limit .and. x(i8) > limit) then
+      need_to_extend_this_element = .true.
+      p1 = i1
+      p2 = i4
+      p3 = i5
+      p4 = i8
+    endif
+
+! test face 4 (right)
+    if(x(i2) > limit .and. x(i3) > limit .and. x(i7) > limit .and. x(i6) > limit) then
+      need_to_extend_this_element = .true.
+      p1 = i2
+      p2 = i3
+      p3 = i7
+      p4 = i6
+    endif
+
+! test face 5 (front)
+    if(x(i1) > limit .and. x(i2) > limit .and. x(i6) > limit .and. x(i5) > limit) then
+      need_to_extend_this_element = .true.
+      p1 = i1
+      p2 = i2
+      p3 = i6
+      p4 = i5
+    endif
+
+! test face 6 (back)
+    if(x(i4) > limit .and. x(i3) > limit .and. x(i7) > limit .and. x(i8) > limit) then
+      need_to_extend_this_element = .true.
+      p1 = i4
+      p2 = i3
+      p3 = i7
+      p4 = i8
+    endif
+
+      endif
+
+    else if(iloop_on_X_Y_Z_faces == 2) then
+    else if(iloop_on_X_Y_Z_faces == 3) then
+    else
+      stop 'wrong index in loop on faces'
+    endif
+
     if(need_to_extend_this_element) then
 
-! create the NUMBER_OF_PML_LAYERS_TO_ADD new elements, to the left of the face found because we are on Xmin
+! create the NUMBER_OF_PML_LAYERS_TO_ADD new elements
 
 ! very important remark: it is OK to create duplicates of the mesh points in the loop below (i.e. not to tell the code
 ! that many of these points created are in fact shared between adjacent elements) because "xdecompose_mesh" will remove
@@ -340,65 +500,81 @@
         ! use the same material property for the extended elements as for the element being extended
         imaterial_new(elem_counter) = imaterial(ispec)
 
+    if(iloop_on_X_Y_Z_faces == 1) then  ! Xmin or Xmax
+
+! we use iextend for the first 4 points if we are on Xmin, to avoid a negative Jacobian (mirror symmetry of the element)
+! on Xmax we use (iextend-1) instead
+      if(iloop_on_min_face_then_max_face == 1) then ! Xmin face
+        factor = -1
+        iextend1 = iextend
+        iextend2 = (iextend-1)
+      else ! Xmax face
+        factor = +1
+        iextend1 = (iextend-1)
+        iextend2 = iextend
+      endif
+
         ! create a new point
         ibool_counter = ibool_counter + 1
         ibool_new(1,elem_counter) = ibool_counter
-! we use iextend for the first 4 points because we are on Xmin, to avoid a negative Jacobian (mirror symmetry of the element)
-! on Xmax here we would use (iextend-1) instead
-        xnew(ibool_counter) = x(p1) - SIZE_OF_X_ELEMENT_TO_ADD*iextend
-        ynew(ibool_counter) = y(p1)
-        znew(ibool_counter) = z(p1)
+        x_new(ibool_counter) = x(p1) + factor*SIZE_OF_X_ELEMENT_TO_ADD*iextend1
+        y_new(ibool_counter) = y(p1)
+        z_new(ibool_counter) = z(p1)
 
         ! create a new point
         ibool_counter = ibool_counter + 1
         ibool_new(2,elem_counter) = ibool_counter
-        xnew(ibool_counter) = x(p2) - SIZE_OF_X_ELEMENT_TO_ADD*iextend
-        ynew(ibool_counter) = y(p2)
-        znew(ibool_counter) = z(p2)
+        x_new(ibool_counter) = x(p2) + factor*SIZE_OF_X_ELEMENT_TO_ADD*iextend1
+        y_new(ibool_counter) = y(p2)
+        z_new(ibool_counter) = z(p2)
 
         ! create a new point
         ibool_counter = ibool_counter + 1
         ibool_new(3,elem_counter) = ibool_counter
-        xnew(ibool_counter) = x(p3) - SIZE_OF_X_ELEMENT_TO_ADD*iextend
-        ynew(ibool_counter) = y(p3)
-        znew(ibool_counter) = z(p3)
+        x_new(ibool_counter) = x(p3) + factor*SIZE_OF_X_ELEMENT_TO_ADD*iextend1
+        y_new(ibool_counter) = y(p3)
+        z_new(ibool_counter) = z(p3)
 
         ! create a new point
         ibool_counter = ibool_counter + 1
         ibool_new(4,elem_counter) = ibool_counter
-        xnew(ibool_counter) = x(p4) - SIZE_OF_X_ELEMENT_TO_ADD*iextend
-        ynew(ibool_counter) = y(p4)
-        znew(ibool_counter) = z(p4)
+        x_new(ibool_counter) = x(p4) + factor*SIZE_OF_X_ELEMENT_TO_ADD*iextend1
+        y_new(ibool_counter) = y(p4)
+        z_new(ibool_counter) = z(p4)
 
         ! create a new point
         ibool_counter = ibool_counter + 1
         ibool_new(5,elem_counter) = ibool_counter
-! we use (iextend-1) for the last 4 points because we are on Xmin, to avoid a negative Jacobian (mirror symmetry of the element)
-! on Xmax here we would use iextend instead
-        xnew(ibool_counter) = x(p1) - SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-        ynew(ibool_counter) = y(p1)
-        znew(ibool_counter) = z(p1)
+        x_new(ibool_counter) = x(p1) + factor*SIZE_OF_X_ELEMENT_TO_ADD*iextend2
+        y_new(ibool_counter) = y(p1)
+        z_new(ibool_counter) = z(p1)
 
         ! create a new point
         ibool_counter = ibool_counter + 1
         ibool_new(6,elem_counter) = ibool_counter
-        xnew(ibool_counter) = x(p2) - SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-        ynew(ibool_counter) = y(p2)
-        znew(ibool_counter) = z(p2)
+        x_new(ibool_counter) = x(p2) + factor*SIZE_OF_X_ELEMENT_TO_ADD*iextend2
+        y_new(ibool_counter) = y(p2)
+        z_new(ibool_counter) = z(p2)
 
         ! create a new point
         ibool_counter = ibool_counter + 1
         ibool_new(7,elem_counter) = ibool_counter
-        xnew(ibool_counter) = x(p3) - SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-        ynew(ibool_counter) = y(p3)
-        znew(ibool_counter) = z(p3)
+        x_new(ibool_counter) = x(p3) + factor*SIZE_OF_X_ELEMENT_TO_ADD*iextend2
+        y_new(ibool_counter) = y(p3)
+        z_new(ibool_counter) = z(p3)
 
         ! create a new point
         ibool_counter = ibool_counter + 1
         ibool_new(8,elem_counter) = ibool_counter
-        xnew(ibool_counter) = x(p4) - SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-        ynew(ibool_counter) = y(p4)
-        znew(ibool_counter) = z(p4)
+        x_new(ibool_counter) = x(p4) + factor*SIZE_OF_X_ELEMENT_TO_ADD*iextend2
+        y_new(ibool_counter) = y(p4)
+        z_new(ibool_counter) = z(p4)
+
+    else if(iloop_on_X_Y_Z_faces == 2) then
+    else if(iloop_on_X_Y_Z_faces == 3) then
+    else
+      stop 'wrong index in loop on faces'
+    endif
 
       enddo
     endif
@@ -409,7 +585,7 @@
   open(unit=23,file='nodes_coords_file',status='old',action='write')
   write(23,*) npoin_new
   do ipoin = 1,npoin_new
-    write(23,*) ipoin,sngl(xnew(ipoin)),sngl(ynew(ipoin)),sngl(znew(ipoin))
+    write(23,*) ipoin,sngl(x_new(ipoin)),sngl(y_new(ipoin)),sngl(z_new(ipoin))
   enddo
   close(23)
 
@@ -429,6 +605,18 @@
     write(23,*) ispec,imaterial_new(ispec)
   enddo
   close(23)
+
+  deallocate(x,y,z)
+  deallocate(x_new,y_new,z_new)
+  deallocate(ibool)
+  deallocate(ibool_new)
+  deallocate(imaterial)
+  deallocate(imaterial_new)
+
+    enddo ! of iloop_on_min_face_then_max_face loop on Xmin then Xmax, or Ymin then Ymax, or Zmin then Zmax
+
+! end of loop on the three sets of faces to first add CPML elements along X, then along Y, then along Z
+  enddo
 
   end program add_CPML_layers_to_a_given_mesh
 
