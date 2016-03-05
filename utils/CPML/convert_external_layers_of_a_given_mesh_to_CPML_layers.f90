@@ -301,7 +301,7 @@
       endif
 
 ! test face 3 (left)
-      if(x(i1) < limit .and. x(i4) < limit .and. x(i5) < limit .and. x(i8) < limit) then
+      if(x(i1) < limit .and. x(i4) < limit .and. x(i8) < limit .and. x(i5) < limit) then
         if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
@@ -366,7 +366,7 @@
         write(24,*) ispec,i5,i6,i7,i8
 
 ! test face 3 (left)
-      if(x(i1) < limit .and. x(i4) < limit .and. x(i5) < limit .and. x(i8) < limit) &
+      if(x(i1) < limit .and. x(i4) < limit .and. x(i8) < limit .and. x(i5) < limit) &
         write(24,*) ispec,i1,i5,i8,i4
 
 ! test face 4 (right)
@@ -428,7 +428,7 @@
       endif
 
 ! test face 3 (left)
-      if(x(i1) > limit .and. x(i4) > limit .and. x(i5) > limit .and. x(i8) > limit) then
+      if(x(i1) > limit .and. x(i4) > limit .and. x(i8) > limit .and. x(i5) > limit) then
         if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
@@ -493,7 +493,7 @@
         write(24,*) ispec,i5,i6,i7,i8
 
 ! test face 3 (left)
-      if(x(i1) > limit .and. x(i4) > limit .and. x(i5) > limit .and. x(i8) > limit) &
+      if(x(i1) > limit .and. x(i4) > limit .and. x(i8) > limit .and. x(i5) > limit) &
         write(24,*) ispec,i1,i5,i8,i4
 
 ! test face 4 (right)
@@ -555,7 +555,7 @@
       endif
 
 ! test face 3 (left)
-      if(y(i1) < limit .and. y(i4) < limit .and. y(i5) < limit .and. y(i8) < limit) then
+      if(y(i1) < limit .and. y(i4) < limit .and. y(i8) < limit .and. y(i5) < limit) then
         if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
@@ -620,7 +620,7 @@
         write(24,*) ispec,i5,i6,i7,i8
 
 ! test face 3 (left)
-      if(y(i1) < limit .and. y(i4) < limit .and. y(i5) < limit .and. y(i8) < limit) &
+      if(y(i1) < limit .and. y(i4) < limit .and. y(i8) < limit .and. y(i5) < limit) &
         write(24,*) ispec,i1,i5,i8,i4
 
 ! test face 4 (right)
@@ -682,7 +682,7 @@
       endif
 
 ! test face 3 (left)
-      if(y(i1) > limit .and. y(i4) > limit .and. y(i5) > limit .and. y(i8) > limit) then
+      if(y(i1) > limit .and. y(i4) > limit .and. y(i8) > limit .and. y(i5) > limit) then
         if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
@@ -747,7 +747,7 @@
         write(24,*) ispec,i5,i6,i7,i8
 
 ! test face 3 (left)
-      if(y(i1) > limit .and. y(i4) > limit .and. y(i5) > limit .and. y(i8) > limit) &
+      if(y(i1) > limit .and. y(i4) > limit .and. y(i8) > limit .and. y(i5) > limit) &
         write(24,*) ispec,i1,i5,i8,i4
 
 ! test face 4 (right)
@@ -809,7 +809,7 @@
       endif
 
 ! test face 3 (left)
-      if(z(i1) < limit .and. z(i4) < limit .and. z(i5) < limit .and. z(i8) < limit) then
+      if(z(i1) < limit .and. z(i4) < limit .and. z(i8) < limit .and. z(i5) < limit) then
         if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
@@ -874,7 +874,7 @@
         write(24,*) ispec,i5,i6,i7,i8
 
 ! test face 3 (left)
-      if(z(i1) < limit .and. z(i4) < limit .and. z(i5) < limit .and. z(i8) < limit) &
+      if(z(i1) < limit .and. z(i4) < limit .and. z(i8) < limit .and. z(i5) < limit) &
         write(24,*) ispec,i1,i5,i8,i4
 
 ! test face 4 (right)

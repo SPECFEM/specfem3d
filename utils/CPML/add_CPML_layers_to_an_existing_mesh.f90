@@ -228,7 +228,7 @@
       count_elem_faces_to_extend = count_elem_faces_to_extend + 1
 
 ! test face 3 (left)
-    if(coord_to_use(i1) < limit .and. coord_to_use(i4) < limit .and. coord_to_use(i5) < limit .and. coord_to_use(i8) < limit) &
+    if(coord_to_use(i1) < limit .and. coord_to_use(i4) < limit .and. coord_to_use(i8) < limit .and. coord_to_use(i5) < limit) &
       count_elem_faces_to_extend = count_elem_faces_to_extend + 1
 
 ! test face 4 (right)
@@ -257,7 +257,7 @@
       count_elem_faces_to_extend = count_elem_faces_to_extend + 1
 
 ! test face 3 (left)
-    if(coord_to_use(i1) > limit .and. coord_to_use(i4) > limit .and. coord_to_use(i5) > limit .and. coord_to_use(i8) > limit) &
+    if(coord_to_use(i1) > limit .and. coord_to_use(i4) > limit .and. coord_to_use(i8) > limit .and. coord_to_use(i5) > limit) &
       count_elem_faces_to_extend = count_elem_faces_to_extend + 1
 
 ! test face 4 (right)
@@ -395,8 +395,8 @@
       need_to_extend_this_element = .true.
       p1 = i1
       p2 = i4
-      p3 = i5
-      p4 = i8
+      p3 = i8
+      p4 = i5
     endif
 
 ! test face 4 (right)
@@ -454,8 +454,8 @@
       need_to_extend_this_element = .true.
       p1 = i1
       p2 = i4
-      p3 = i5
-      p4 = i8
+      p3 = i8
+      p4 = i5
     endif
 
 ! test face 4 (right)
