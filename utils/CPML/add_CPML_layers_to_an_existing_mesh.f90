@@ -46,19 +46,23 @@
 ! size of each PML element to add when they are added on the Xmin and Xmax faces, Ymin and Ymax faces, Zmin and/or Zmax faces
   double precision :: SIZE_OF_X_ELEMENT_TO_ADD,SIZE_OF_Y_ELEMENT_TO_ADD,SIZE_OF_Z_ELEMENT_TO_ADD
 
-  integer :: nspec,npoin,npoin_new,nspec_new,count_elem_faces_to_extend,iextend,iextend1,iextend2,factor
+  integer :: nspec,npoin,npoin_new,nspec_new,count_elem_faces_to_extend,iextend,iextend1,iextend2
+  integer :: factor_x,factor_y,factor_z
   integer :: ispec,ipoin,iloop_on_X_Y_Z_faces,iloop_on_min_face_then_max_face
   integer :: ipoin_read,ispec_loop
   integer :: i1,i2,i3,i4,i5,i6,i7,i8,elem_counter,ibool_counter,ia,iflag
   integer :: p1,p2,p3,p4
 
-  double precision, dimension(:), allocatable :: x,y,z,x_new,y_new,z_new
+  double precision, dimension(:), allocatable, target :: x,y,z
+  double precision, dimension(:), allocatable :: x_new,y_new,z_new
+  double precision, dimension(:), pointer :: coord_to_use
 
   integer, dimension(:), allocatable :: imaterial,imaterial_new
 
   integer, dimension(:,:), allocatable :: ibool,ibool_new
 
   double precision :: xread,yread,zread,xmin,xmax,ymin,ymax,zmin,zmax,limit,xsize,ysize,zsize
+  double precision :: value_min,value_max,value_size
 
   logical :: ALSO_ADD_ON_THE_TOP_SURFACE
   logical :: need_to_extend_this_element
@@ -76,16 +80,14 @@
   print *
 
   print *,'enter the number of PML layers to add on each side of the mesh (usually 3, can also be 4):'
-! read(*,*) NUMBER_OF_PML_LAYERS_TO_ADD
-  NUMBER_OF_PML_LAYERS_TO_ADD = 3 !!!!!!!!!!!!!!! 333333333333333333333
+  read(*,*) NUMBER_OF_PML_LAYERS_TO_ADD
   if(NUMBER_OF_PML_LAYERS_TO_ADD < 1) stop 'NUMBER_OF_PML_LAYERS_TO_ADD must be >= 1'
   print *
 
   print *,'1 = use a free surface at the top of the mesh i.e. do not add a CPML layer at the top (most classical option)'
   print *,'2 = add a CPML absorbing layer at the top of the mesh (less classical option)'
   print *,'3 = exit'
-! read(*,*) iflag
-  iflag = 1 !!!!!!!!!!!!!!! 333333333333333333333
+  read(*,*) iflag
   if(iflag /= 1 .and. iflag /= 2) stop 'exiting...'
   if(iflag == 1) then
     ALSO_ADD_ON_THE_TOP_SURFACE = .false.
@@ -95,20 +97,17 @@
   print *
 
   print *,'enter the X size (in meters) of each CPML element to add on the Xmin and Xmax faces:'
-! read(*,*) SIZE_OF_X_ELEMENT_TO_ADD
-  SIZE_OF_X_ELEMENT_TO_ADD = 3000.d0 !!!!!!!!!!!!!!! 333333333333333333333
+  read(*,*) SIZE_OF_X_ELEMENT_TO_ADD
   if(SIZE_OF_X_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_X_ELEMENT_TO_ADD must be > 0'
   print *
 
   print *,'enter the Y size (in meters) of each CPML element to add on the Ymin and Ymax faces:'
-! read(*,*) SIZE_OF_Y_ELEMENT_TO_ADD
-  SIZE_OF_Y_ELEMENT_TO_ADD = 2000.d0 !!!!!!!!!!!!!!! 333333333333333333333
+  read(*,*) SIZE_OF_Y_ELEMENT_TO_ADD
   if(SIZE_OF_Y_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_Y_ELEMENT_TO_ADD must be > 0'
   print *
 
   print *,'enter the Z size (in meters) of each CPML element to add on the Zmin and/or Zmax faces:'
-! read(*,*) SIZE_OF_Z_ELEMENT_TO_ADD
-  SIZE_OF_Z_ELEMENT_TO_ADD = 1000.d0 !!!!!!!!!!!!!!! 333333333333333333333
+  read(*,*) SIZE_OF_Z_ELEMENT_TO_ADD
   if(SIZE_OF_Z_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_Z_ELEMENT_TO_ADD must be > 0'
   print *
 
@@ -120,7 +119,7 @@
 ! By doing so, the growing size of the faces is handled automatically (i.e., when adding elements along the Y faces,
 ! the code will automatically take into account the face that the size of these faces has grown in the previous step
 ! when the elements along the X faces were added.
-! The only (small) drawback to this is that mesh files are read from disk and written to disk three times instead of only once.
+! The only drawback to this is that mesh files are read from disk and written to disk six times instead of only once.
 
 ! loop on the three sets of faces to first add CPML elements along X, then along Y, then along Z
   do iloop_on_X_Y_Z_faces = 1,NDIM
@@ -129,6 +128,7 @@
 
 ! do not add a CPML layer on the top surface if the user asked not to
       if(iloop_on_X_Y_Z_faces == 3 .and. iloop_on_min_face_then_max_face == 2 .and. .not. ALSO_ADD_ON_THE_TOP_SURFACE) cycle
+      if(iloop_on_X_Y_Z_faces == 3) cycle   !!!!!!!!!!!!!!!! DK DK debug 3333333333333
 
     print *
     print *,'********************************************************************'
@@ -190,78 +190,89 @@
 
   count_elem_faces_to_extend = 0
 
+    if(iloop_on_X_Y_Z_faces == 1) then ! Xmin or Xmax face
+      value_min = xmin
+      value_max = xmax
+      value_size = xsize
+      coord_to_use => x  ! make coordinate array to use point to array x()
+    else if(iloop_on_X_Y_Z_faces == 2) then ! Ymin or Ymax face
+      value_min = ymin
+      value_max = ymax
+      value_size = ysize
+      coord_to_use => y  ! make coordinate array to use point to array y()
+    else if(iloop_on_X_Y_Z_faces == 3) then ! Zmin or Zmax face
+      value_min = zmin
+      value_max = zmax
+      value_size = zsize
+      coord_to_use => z  ! make coordinate array to use point to array z()
+    else
+      stop 'wrong index in loop on faces'
+    endif
+
 ! loop on the whole mesh
   do ispec_loop = 1,nspec
 
     read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
 
-    if(iloop_on_X_Y_Z_faces == 1) then
+      if(iloop_on_min_face_then_max_face == 1) then ! min face
 
-      if(iloop_on_min_face_then_max_face == 1) then ! Xmin face
-
-! detect elements belonging to the Xmin face
-    limit = xmin + xsize * SMALL_RELATIVE_VALUE
+! detect elements belonging to the min face
+    limit = value_min + value_size * SMALL_RELATIVE_VALUE
 
 ! test face 1 (bottom)
-    if(x(i1) < limit .and. x(i2) < limit .and. x(i3) < limit .and. x(i4) < limit) &
+    if(coord_to_use(i1) < limit .and. coord_to_use(i2) < limit .and. coord_to_use(i3) < limit .and. coord_to_use(i4) < limit) &
       count_elem_faces_to_extend = count_elem_faces_to_extend + 1
 
 ! test face 2 (top)
-    if(x(i5) < limit .and. x(i6) < limit .and. x(i7) < limit .and. x(i8) < limit) &
+    if(coord_to_use(i5) < limit .and. coord_to_use(i6) < limit .and. coord_to_use(i7) < limit .and. coord_to_use(i8) < limit) &
       count_elem_faces_to_extend = count_elem_faces_to_extend + 1
 
 ! test face 3 (left)
-    if(x(i1) < limit .and. x(i4) < limit .and. x(i5) < limit .and. x(i8) < limit) &
+    if(coord_to_use(i1) < limit .and. coord_to_use(i4) < limit .and. coord_to_use(i5) < limit .and. coord_to_use(i8) < limit) &
       count_elem_faces_to_extend = count_elem_faces_to_extend + 1
 
 ! test face 4 (right)
-    if(x(i2) < limit .and. x(i3) < limit .and. x(i7) < limit .and. x(i6) < limit) &
+    if(coord_to_use(i2) < limit .and. coord_to_use(i3) < limit .and. coord_to_use(i7) < limit .and. coord_to_use(i6) < limit) &
       count_elem_faces_to_extend = count_elem_faces_to_extend + 1
 
 ! test face 5 (front)
-    if(x(i1) < limit .and. x(i2) < limit .and. x(i6) < limit .and. x(i5) < limit) &
+    if(coord_to_use(i1) < limit .and. coord_to_use(i2) < limit .and. coord_to_use(i6) < limit .and. coord_to_use(i5) < limit) &
       count_elem_faces_to_extend = count_elem_faces_to_extend + 1
 
 ! test face 6 (back)
-    if(x(i4) < limit .and. x(i3) < limit .and. x(i7) < limit .and. x(i8) < limit) &
+    if(coord_to_use(i4) < limit .and. coord_to_use(i3) < limit .and. coord_to_use(i7) < limit .and. coord_to_use(i8) < limit) &
       count_elem_faces_to_extend = count_elem_faces_to_extend + 1
 
-      else ! Xmax face
+      else ! max face
 
-! detect elements belonging to the Xmax face
-    limit = xmax - xsize * SMALL_RELATIVE_VALUE
+! detect elements belonging to the max face
+    limit = value_max - value_size * SMALL_RELATIVE_VALUE
 
 ! test face 1 (bottom)
-    if(x(i1) > limit .and. x(i2) > limit .and. x(i3) > limit .and. x(i4) > limit) &
+    if(coord_to_use(i1) > limit .and. coord_to_use(i2) > limit .and. coord_to_use(i3) > limit .and. coord_to_use(i4) > limit) &
       count_elem_faces_to_extend = count_elem_faces_to_extend + 1
 
 ! test face 2 (top)
-    if(x(i5) > limit .and. x(i6) > limit .and. x(i7) > limit .and. x(i8) > limit) &
+    if(coord_to_use(i5) > limit .and. coord_to_use(i6) > limit .and. coord_to_use(i7) > limit .and. coord_to_use(i8) > limit) &
       count_elem_faces_to_extend = count_elem_faces_to_extend + 1
 
 ! test face 3 (left)
-    if(x(i1) > limit .and. x(i4) > limit .and. x(i5) > limit .and. x(i8) > limit) &
+    if(coord_to_use(i1) > limit .and. coord_to_use(i4) > limit .and. coord_to_use(i5) > limit .and. coord_to_use(i8) > limit) &
       count_elem_faces_to_extend = count_elem_faces_to_extend + 1
 
 ! test face 4 (right)
-    if(x(i2) > limit .and. x(i3) > limit .and. x(i7) > limit .and. x(i6) > limit) &
+    if(coord_to_use(i2) > limit .and. coord_to_use(i3) > limit .and. coord_to_use(i7) > limit .and. coord_to_use(i6) > limit) &
       count_elem_faces_to_extend = count_elem_faces_to_extend + 1
 
 ! test face 5 (front)
-    if(x(i1) > limit .and. x(i2) > limit .and. x(i6) > limit .and. x(i5) > limit) &
+    if(coord_to_use(i1) > limit .and. coord_to_use(i2) > limit .and. coord_to_use(i6) > limit .and. coord_to_use(i5) > limit) &
       count_elem_faces_to_extend = count_elem_faces_to_extend + 1
 
 ! test face 6 (back)
-    if(x(i4) > limit .and. x(i3) > limit .and. x(i7) > limit .and. x(i8) > limit) &
+    if(coord_to_use(i4) > limit .and. coord_to_use(i3) > limit .and. coord_to_use(i7) > limit .and. coord_to_use(i8) > limit) &
       count_elem_faces_to_extend = count_elem_faces_to_extend + 1
 
       endif
-
-    else if(iloop_on_X_Y_Z_faces == 2) then
-    else if(iloop_on_X_Y_Z_faces == 3) then
-    else
-      stop 'wrong index in loop on faces'
-    endif
 
   enddo
 
@@ -356,15 +367,13 @@
 ! reset flag
     need_to_extend_this_element = .false.
 
-    if(iloop_on_X_Y_Z_faces == 1) then
+      if(iloop_on_min_face_then_max_face == 1) then ! min face
 
-      if(iloop_on_min_face_then_max_face == 1) then ! Xmin face
-
-! detect elements belonging to the Xmin face
-    limit = xmin + xsize * SMALL_RELATIVE_VALUE
+! detect elements belonging to the min face
+    limit = value_min + value_size * SMALL_RELATIVE_VALUE
 
 ! test face 1 (bottom)
-    if(x(i1) < limit .and. x(i2) < limit .and. x(i3) < limit .and. x(i4) < limit) then
+    if(coord_to_use(i1) < limit .and. coord_to_use(i2) < limit .and. coord_to_use(i3) < limit .and. coord_to_use(i4) < limit) then
       need_to_extend_this_element = .true.
       p1 = i1
       p2 = i2
@@ -373,7 +382,7 @@
     endif
 
 ! test face 2 (top)
-    if(x(i5) < limit .and. x(i6) < limit .and. x(i7) < limit .and. x(i8) < limit) then
+    if(coord_to_use(i5) < limit .and. coord_to_use(i6) < limit .and. coord_to_use(i7) < limit .and. coord_to_use(i8) < limit) then
       need_to_extend_this_element = .true.
       p1 = i5
       p2 = i6
@@ -382,7 +391,7 @@
     endif
 
 ! test face 3 (left)
-    if(x(i1) < limit .and. x(i4) < limit .and. x(i5) < limit .and. x(i8) < limit) then
+    if(coord_to_use(i1) < limit .and. coord_to_use(i4) < limit .and. coord_to_use(i5) < limit .and. coord_to_use(i8) < limit) then
       need_to_extend_this_element = .true.
       p1 = i1
       p2 = i4
@@ -391,7 +400,7 @@
     endif
 
 ! test face 4 (right)
-    if(x(i2) < limit .and. x(i3) < limit .and. x(i7) < limit .and. x(i6) < limit) then
+    if(coord_to_use(i2) < limit .and. coord_to_use(i3) < limit .and. coord_to_use(i7) < limit .and. coord_to_use(i6) < limit) then
       need_to_extend_this_element = .true.
       p1 = i2
       p2 = i3
@@ -400,7 +409,7 @@
     endif
 
 ! test face 5 (front)
-    if(x(i1) < limit .and. x(i2) < limit .and. x(i6) < limit .and. x(i5) < limit) then
+    if(coord_to_use(i1) < limit .and. coord_to_use(i2) < limit .and. coord_to_use(i6) < limit .and. coord_to_use(i5) < limit) then
       need_to_extend_this_element = .true.
       p1 = i1
       p2 = i2
@@ -409,7 +418,7 @@
     endif
 
 ! test face 6 (back)
-    if(x(i4) < limit .and. x(i3) < limit .and. x(i7) < limit .and. x(i8) < limit) then
+    if(coord_to_use(i4) < limit .and. coord_to_use(i3) < limit .and. coord_to_use(i7) < limit .and. coord_to_use(i8) < limit) then
       need_to_extend_this_element = .true.
       p1 = i4
       p2 = i3
@@ -417,13 +426,13 @@
       p4 = i8
     endif
 
-      else ! Xmax face
+      else ! max face
 
-! detect elements belonging to the Xmax face
-    limit = xmax - xsize * SMALL_RELATIVE_VALUE
+! detect elements belonging to the max face
+    limit = value_max - value_size * SMALL_RELATIVE_VALUE
 
 ! test face 1 (bottom)
-    if(x(i1) > limit .and. x(i2) > limit .and. x(i3) > limit .and. x(i4) > limit) then
+    if(coord_to_use(i1) > limit .and. coord_to_use(i2) > limit .and. coord_to_use(i3) > limit .and. coord_to_use(i4) > limit) then
       need_to_extend_this_element = .true.
       p1 = i1
       p2 = i2
@@ -432,7 +441,7 @@
     endif
 
 ! test face 2 (top)
-    if(x(i5) > limit .and. x(i6) > limit .and. x(i7) > limit .and. x(i8) > limit) then
+    if(coord_to_use(i5) > limit .and. coord_to_use(i6) > limit .and. coord_to_use(i7) > limit .and. coord_to_use(i8) > limit) then
       need_to_extend_this_element = .true.
       p1 = i5
       p2 = i6
@@ -441,7 +450,7 @@
     endif
 
 ! test face 3 (left)
-    if(x(i1) > limit .and. x(i4) > limit .and. x(i5) > limit .and. x(i8) > limit) then
+    if(coord_to_use(i1) > limit .and. coord_to_use(i4) > limit .and. coord_to_use(i5) > limit .and. coord_to_use(i8) > limit) then
       need_to_extend_this_element = .true.
       p1 = i1
       p2 = i4
@@ -450,7 +459,7 @@
     endif
 
 ! test face 4 (right)
-    if(x(i2) > limit .and. x(i3) > limit .and. x(i7) > limit .and. x(i6) > limit) then
+    if(coord_to_use(i2) > limit .and. coord_to_use(i3) > limit .and. coord_to_use(i7) > limit .and. coord_to_use(i6) > limit) then
       need_to_extend_this_element = .true.
       p1 = i2
       p2 = i3
@@ -459,7 +468,7 @@
     endif
 
 ! test face 5 (front)
-    if(x(i1) > limit .and. x(i2) > limit .and. x(i6) > limit .and. x(i5) > limit) then
+    if(coord_to_use(i1) > limit .and. coord_to_use(i2) > limit .and. coord_to_use(i6) > limit .and. coord_to_use(i5) > limit) then
       need_to_extend_this_element = .true.
       p1 = i1
       p2 = i2
@@ -468,7 +477,7 @@
     endif
 
 ! test face 6 (back)
-    if(x(i4) > limit .and. x(i3) > limit .and. x(i7) > limit .and. x(i8) > limit) then
+    if(coord_to_use(i4) > limit .and. coord_to_use(i3) > limit .and. coord_to_use(i7) > limit .and. coord_to_use(i8) > limit) then
       need_to_extend_this_element = .true.
       p1 = i4
       p2 = i3
@@ -477,12 +486,6 @@
     endif
 
       endif
-
-    else if(iloop_on_X_Y_Z_faces == 2) then
-    else if(iloop_on_X_Y_Z_faces == 3) then
-    else
-      stop 'wrong index in loop on faces'
-    endif
 
     if(need_to_extend_this_element) then
 
@@ -492,6 +495,32 @@
 ! that many of these points created are in fact shared between adjacent elements) because "xdecompose_mesh" will remove
 ! them automatically later on, thus no need to remove them here; this makes this PML mesh extrusion code much simpler to write.
 
+      factor_x = 0
+      factor_y = 0
+      factor_z = 0
+
+    if(iloop_on_X_Y_Z_faces == 1) then  ! Xmin or Xmax
+      if(iloop_on_min_face_then_max_face == 1) then ! min face
+        factor_x = -1
+      else ! max face
+        factor_x = +1
+      endif
+    else if(iloop_on_X_Y_Z_faces == 2) then
+      if(iloop_on_min_face_then_max_face == 1) then ! min face
+        factor_y = -1
+      else ! max face
+        factor_y = +1
+      endif
+    else if(iloop_on_X_Y_Z_faces == 3) then
+      if(iloop_on_min_face_then_max_face == 1) then ! min face
+        factor_z = -1
+      else ! max face
+        factor_z = +1
+      endif
+    else
+      stop 'wrong index in loop on faces'
+    endif
+
       do iextend = 1,NUMBER_OF_PML_LAYERS_TO_ADD
 
         ! create a new element
@@ -500,81 +529,81 @@
         ! use the same material property for the extended elements as for the element being extended
         imaterial_new(elem_counter) = imaterial(ispec)
 
-    if(iloop_on_X_Y_Z_faces == 1) then  ! Xmin or Xmax
-
-! we use iextend for the first 4 points if we are on Xmin, to avoid a negative Jacobian (mirror symmetry of the element)
-! on Xmax we use (iextend-1) instead
-      if(iloop_on_min_face_then_max_face == 1) then ! Xmin face
-        factor = -1
-        iextend1 = iextend
-        iextend2 = (iextend-1)
-      else ! Xmax face
-        factor = +1
-        iextend1 = (iextend-1)
-        iextend2 = iextend
-      endif
+! we use iextend for the first 4 points if we are on a min face, to avoid a negative Jacobian (mirror symmetry of the element)
+! on a max face we use (iextend-1) instead
+        if(iloop_on_min_face_then_max_face == 1) then ! min face
+    if(iloop_on_X_Y_Z_faces == 1 .or. iloop_on_X_Y_Z_faces == 3) then  ! Xmin or Xmax, or Zmin or Zmax
+          iextend1 = iextend
+          iextend2 = (iextend-1)
+    else  ! Ymin or Ymax    !!!!!!!!!!! DK DK 333333333333 to debug
+          iextend1 = (iextend-1)
+          iextend2 = iextend
+    endif
+        else ! max face
+    if(iloop_on_X_Y_Z_faces == 1 .or. iloop_on_X_Y_Z_faces == 3) then  ! Xmin or Xmax, or Zmin or Zmax
+          iextend1 = (iextend-1)
+          iextend2 = iextend
+    else  ! Ymin or Ymax    !!!!!!!!!!! DK DK 333333333333 to debug
+          iextend1 = iextend
+          iextend2 = (iextend-1)
+    endif
+        endif
 
         ! create a new point
         ibool_counter = ibool_counter + 1
         ibool_new(1,elem_counter) = ibool_counter
-        x_new(ibool_counter) = x(p1) + factor*SIZE_OF_X_ELEMENT_TO_ADD*iextend1
-        y_new(ibool_counter) = y(p1)
-        z_new(ibool_counter) = z(p1)
+        x_new(ibool_counter) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend1
+        y_new(ibool_counter) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend1
+        z_new(ibool_counter) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend1
 
         ! create a new point
         ibool_counter = ibool_counter + 1
         ibool_new(2,elem_counter) = ibool_counter
-        x_new(ibool_counter) = x(p2) + factor*SIZE_OF_X_ELEMENT_TO_ADD*iextend1
-        y_new(ibool_counter) = y(p2)
-        z_new(ibool_counter) = z(p2)
+        x_new(ibool_counter) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend1
+        y_new(ibool_counter) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend1
+        z_new(ibool_counter) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend1
 
         ! create a new point
         ibool_counter = ibool_counter + 1
         ibool_new(3,elem_counter) = ibool_counter
-        x_new(ibool_counter) = x(p3) + factor*SIZE_OF_X_ELEMENT_TO_ADD*iextend1
-        y_new(ibool_counter) = y(p3)
-        z_new(ibool_counter) = z(p3)
+        x_new(ibool_counter) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend1
+        y_new(ibool_counter) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend1
+        z_new(ibool_counter) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend1
 
         ! create a new point
         ibool_counter = ibool_counter + 1
         ibool_new(4,elem_counter) = ibool_counter
-        x_new(ibool_counter) = x(p4) + factor*SIZE_OF_X_ELEMENT_TO_ADD*iextend1
-        y_new(ibool_counter) = y(p4)
-        z_new(ibool_counter) = z(p4)
+        x_new(ibool_counter) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend1
+        y_new(ibool_counter) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend1
+        z_new(ibool_counter) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend1
 
         ! create a new point
         ibool_counter = ibool_counter + 1
         ibool_new(5,elem_counter) = ibool_counter
-        x_new(ibool_counter) = x(p1) + factor*SIZE_OF_X_ELEMENT_TO_ADD*iextend2
-        y_new(ibool_counter) = y(p1)
-        z_new(ibool_counter) = z(p1)
+        x_new(ibool_counter) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend2
+        y_new(ibool_counter) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend2
+        z_new(ibool_counter) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend2
 
         ! create a new point
         ibool_counter = ibool_counter + 1
         ibool_new(6,elem_counter) = ibool_counter
-        x_new(ibool_counter) = x(p2) + factor*SIZE_OF_X_ELEMENT_TO_ADD*iextend2
-        y_new(ibool_counter) = y(p2)
-        z_new(ibool_counter) = z(p2)
+        x_new(ibool_counter) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend2
+        y_new(ibool_counter) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend2
+        z_new(ibool_counter) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend2
 
         ! create a new point
         ibool_counter = ibool_counter + 1
         ibool_new(7,elem_counter) = ibool_counter
-        x_new(ibool_counter) = x(p3) + factor*SIZE_OF_X_ELEMENT_TO_ADD*iextend2
-        y_new(ibool_counter) = y(p3)
-        z_new(ibool_counter) = z(p3)
+        x_new(ibool_counter) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend2
+        y_new(ibool_counter) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend2
+        z_new(ibool_counter) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend2
 
         ! create a new point
         ibool_counter = ibool_counter + 1
         ibool_new(8,elem_counter) = ibool_counter
-        x_new(ibool_counter) = x(p4) + factor*SIZE_OF_X_ELEMENT_TO_ADD*iextend2
-        y_new(ibool_counter) = y(p4)
-        z_new(ibool_counter) = z(p4)
-
-    else if(iloop_on_X_Y_Z_faces == 2) then
-    else if(iloop_on_X_Y_Z_faces == 3) then
-    else
-      stop 'wrong index in loop on faces'
-    endif
+        x_new(ibool_counter) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend2
+        y_new(ibool_counter) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend2
+        z_new(ibool_counter) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend2
 
       enddo
     endif
