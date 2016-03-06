@@ -27,7 +27,7 @@
 
   program add_CPML_layers_to_a_given_mesh
 
-! Dimitri Komatitsch, CNRS Marseille, France, February 2016
+! Dimitri Komatitsch, CNRS Marseille, France, March 2016
 
 ! add PML layers around an existing mesh (i.e. create new elements and new points)
 
@@ -128,7 +128,6 @@
 
 ! do not add a CPML layer on the top surface if the user asked not to
       if(iloop_on_X_Y_Z_faces == 3 .and. iloop_on_min_face_then_max_face == 2 .and. .not. ALSO_ADD_ON_THE_TOP_SURFACE) cycle
-      if(iloop_on_X_Y_Z_faces == 3) cycle   !!!!!!!!!!!!!!!! DK DK debug 3333333333333
 
     print *
     print *,'********************************************************************'
@@ -495,9 +494,9 @@
 ! that many of these points created are in fact shared between adjacent elements) because "xdecompose_mesh" will remove
 ! them automatically later on, thus no need to remove them here; this makes this PML mesh extrusion code much simpler to write.
 
-      factor_x = 0
-      factor_y = 0
-      factor_z = 0
+    factor_x = 0
+    factor_y = 0
+    factor_z = 0
 
     if(iloop_on_X_Y_Z_faces == 1) then  ! Xmin or Xmax
       if(iloop_on_min_face_then_max_face == 1) then ! min face
@@ -532,21 +531,21 @@
 ! we use iextend for the first 4 points if we are on a min face, to avoid a negative Jacobian (mirror symmetry of the element)
 ! on a max face we use (iextend-1) instead
         if(iloop_on_min_face_then_max_face == 1) then ! min face
-    if(iloop_on_X_Y_Z_faces == 1 .or. iloop_on_X_Y_Z_faces == 3) then  ! Xmin or Xmax, or Zmin or Zmax
-          iextend1 = iextend
-          iextend2 = (iextend-1)
-    else  ! Ymin or Ymax    !!!!!!!!!!! DK DK 333333333333 to debug
-          iextend1 = (iextend-1)
-          iextend2 = iextend
-    endif
+          if(iloop_on_X_Y_Z_faces == 1) then  ! Xmin or Xmax
+            iextend1 = iextend
+            iextend2 = (iextend-1)
+          else  ! Ymin or Ymax, or Zmin or Zmax
+            iextend1 = (iextend-1)
+            iextend2 = iextend
+          endif
         else ! max face
-    if(iloop_on_X_Y_Z_faces == 1 .or. iloop_on_X_Y_Z_faces == 3) then  ! Xmin or Xmax, or Zmin or Zmax
-          iextend1 = (iextend-1)
-          iextend2 = iextend
-    else  ! Ymin or Ymax    !!!!!!!!!!! DK DK 333333333333 to debug
-          iextend1 = iextend
-          iextend2 = (iextend-1)
-    endif
+          if(iloop_on_X_Y_Z_faces == 1) then  ! Xmin or Xmax
+            iextend1 = (iextend-1)
+            iextend2 = iextend
+          else  ! Ymin or Ymax, or Zmin or Zmax
+            iextend1 = iextend
+            iextend2 = (iextend-1)
+          endif
         endif
 
         ! create a new point
@@ -648,4 +647,3 @@
   enddo
 
   end program add_CPML_layers_to_a_given_mesh
-
