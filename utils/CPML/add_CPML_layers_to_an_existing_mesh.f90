@@ -33,8 +33,7 @@
 
   implicit none
 
-! this is for HEX8; the code below also works for HEX27, it then just uses the first 8 points of an element
-! to determine if it belongs to a CPML layer
+! this code is for HEX8 only for now
   integer, parameter :: NGNOD = 8
 
 ! we are in 3D
