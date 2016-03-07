@@ -39,13 +39,16 @@
 ! we are in 3D
   integer, parameter :: NDIM = 3
 
+! number of GLL points in each direction, to check for negative Jacobians
+  integer, parameter :: NGLLX = 5,NGLLY = NGLLX,NGLLZ = NGLLX
+
 ! number of PML layers to add on each side of the mesh
   integer :: NUMBER_OF_PML_LAYERS_TO_ADD
 
 ! size of each PML element to add when they are added on the Xmin and Xmax faces, Ymin and Ymax faces, Zmin and/or Zmax faces
   double precision :: SIZE_OF_X_ELEMENT_TO_ADD,SIZE_OF_Y_ELEMENT_TO_ADD,SIZE_OF_Z_ELEMENT_TO_ADD
 
-  integer :: nspec,npoin,npoin_new,nspec_new,count_elem_faces_to_extend,iextend,iextend1,iextend2
+  integer :: nspec,npoin,npoin_new,nspec_new,count_elem_faces_to_extend,iextend
   integer :: factor_x,factor_y,factor_z
   integer :: ispec,ipoin,iloop_on_X_Y_Z_faces,iloop_on_min_face_then_max_face
   integer :: ipoin_read,ispec_loop
@@ -60,11 +63,20 @@
 
   integer, dimension(:,:), allocatable :: ibool,ibool_new
 
+! Gauss-Lobatto-Legendre points of integration, to check for negative Jacobians
+  double precision xigll(NGLLX)
+  double precision yigll(NGLLY)
+  double precision zigll(NGLLZ)
+
+! 3D shape function derivatives, to check for negative Jacobians
+  double precision dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
+
+  double precision, dimension(NGNOD) :: xelm,yelm,zelm
+
   double precision :: xread,yread,zread,xmin,xmax,ymin,ymax,zmin,zmax,limit,xsize,ysize,zsize
   double precision :: value_min,value_max,value_size
 
-  logical :: ALSO_ADD_ON_THE_TOP_SURFACE
-  logical :: need_to_extend_this_element
+  logical :: ALSO_ADD_ON_THE_TOP_SURFACE,need_to_extend_this_element,found_a_negative_Jacobian1,found_a_negative_Jacobian2
 
   double precision, parameter :: SMALL_RELATIVE_VALUE = 1.d-5
 
@@ -109,6 +121,12 @@
   read(*,*) SIZE_OF_Z_ELEMENT_TO_ADD
   if(SIZE_OF_Z_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_Z_ELEMENT_TO_ADD must be > 0'
   print *
+
+! hardwire GLL point location values to avoid having to link with a long library to compute them
+  xigll(:) = (/ -1.d0 , -0.654653670707977d0 , 0.d0 , 0.654653670707977d0 , 1.d0 /)
+
+! compute the derivatives of the 3D shape functions for a 8-node element
+  call get_shape3D(dershape3D,xigll,yigll,zigll,NGNOD,NGLLX,NGLLY,NGLLZ,NDIM)
 
 ! we need to extend/extrude the existing mesh by adding CPML elements
 ! along the X faces, then along the Y faces, then along the Z faces.
@@ -527,81 +545,155 @@
         ! use the same material property for the extended elements as for the element being extended
         imaterial_new(elem_counter) = imaterial(ispec)
 
-! we use iextend for the first 4 points if we are on a min face, to avoid a negative Jacobian (mirror symmetry of the element)
-! on a max face we use (iextend-1) instead
-        if(iloop_on_min_face_then_max_face == 1) then ! min face
-          if(iloop_on_X_Y_Z_faces == 1) then  ! Xmin or Xmax
-            iextend1 = iextend
-            iextend2 = (iextend-1)
-          else  ! Ymin or Ymax, or Zmin or Zmax
-            iextend1 = (iextend-1)
-            iextend2 = iextend
-          endif
-        else ! max face
-          if(iloop_on_X_Y_Z_faces == 1) then  ! Xmin or Xmax
-            iextend1 = (iextend-1)
-            iextend2 = iextend
-          else  ! Ymin or Ymax, or Zmin or Zmax
-            iextend1 = iextend
-            iextend2 = (iextend-1)
-          endif
-        endif
-
         ! create a new point
         ibool_counter = ibool_counter + 1
         ibool_new(1,elem_counter) = ibool_counter
-        x_new(ibool_counter) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend1
-        y_new(ibool_counter) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend1
-        z_new(ibool_counter) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend1
+        x_new(ibool_counter) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+        y_new(ibool_counter) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+        z_new(ibool_counter) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
         ! create a new point
         ibool_counter = ibool_counter + 1
         ibool_new(2,elem_counter) = ibool_counter
-        x_new(ibool_counter) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend1
-        y_new(ibool_counter) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend1
-        z_new(ibool_counter) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend1
+        x_new(ibool_counter) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+        y_new(ibool_counter) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+        z_new(ibool_counter) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
         ! create a new point
         ibool_counter = ibool_counter + 1
         ibool_new(3,elem_counter) = ibool_counter
-        x_new(ibool_counter) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend1
-        y_new(ibool_counter) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend1
-        z_new(ibool_counter) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend1
+        x_new(ibool_counter) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+        y_new(ibool_counter) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+        z_new(ibool_counter) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
         ! create a new point
         ibool_counter = ibool_counter + 1
         ibool_new(4,elem_counter) = ibool_counter
-        x_new(ibool_counter) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend1
-        y_new(ibool_counter) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend1
-        z_new(ibool_counter) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend1
+        x_new(ibool_counter) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+        y_new(ibool_counter) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+        z_new(ibool_counter) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
         ! create a new point
         ibool_counter = ibool_counter + 1
         ibool_new(5,elem_counter) = ibool_counter
-        x_new(ibool_counter) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend2
-        y_new(ibool_counter) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend2
-        z_new(ibool_counter) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend2
+        x_new(ibool_counter) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+        y_new(ibool_counter) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+        z_new(ibool_counter) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
         ! create a new point
         ibool_counter = ibool_counter + 1
         ibool_new(6,elem_counter) = ibool_counter
-        x_new(ibool_counter) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend2
-        y_new(ibool_counter) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend2
-        z_new(ibool_counter) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend2
+        x_new(ibool_counter) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+        y_new(ibool_counter) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+        z_new(ibool_counter) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
         ! create a new point
         ibool_counter = ibool_counter + 1
         ibool_new(7,elem_counter) = ibool_counter
-        x_new(ibool_counter) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend2
-        y_new(ibool_counter) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend2
-        z_new(ibool_counter) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend2
+        x_new(ibool_counter) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+        y_new(ibool_counter) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+        z_new(ibool_counter) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
         ! create a new point
         ibool_counter = ibool_counter + 1
         ibool_new(8,elem_counter) = ibool_counter
-        x_new(ibool_counter) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend2
-        y_new(ibool_counter) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend2
-        z_new(ibool_counter) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend2
+        x_new(ibool_counter) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+        y_new(ibool_counter) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+        z_new(ibool_counter) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+
+! now we need to test if the element created is flipped i.e. it has a negative Jacobian,
+! and if so we will use the mirrored version of that element, which will then have a positive Jacobian
+
+! check the element for a negative Jacobian
+      xelm(1) = x_new(ibool_new(1,elem_counter))
+      xelm(2) = x_new(ibool_new(2,elem_counter))
+      xelm(3) = x_new(ibool_new(3,elem_counter))
+      xelm(4) = x_new(ibool_new(4,elem_counter))
+      xelm(5) = x_new(ibool_new(5,elem_counter))
+      xelm(6) = x_new(ibool_new(6,elem_counter))
+      xelm(7) = x_new(ibool_new(7,elem_counter))
+      xelm(8) = x_new(ibool_new(8,elem_counter))
+
+      yelm(1) = y_new(ibool_new(1,elem_counter))
+      yelm(2) = y_new(ibool_new(2,elem_counter))
+      yelm(3) = y_new(ibool_new(3,elem_counter))
+      yelm(4) = y_new(ibool_new(4,elem_counter))
+      yelm(5) = y_new(ibool_new(5,elem_counter))
+      yelm(6) = y_new(ibool_new(6,elem_counter))
+      yelm(7) = y_new(ibool_new(7,elem_counter))
+      yelm(8) = y_new(ibool_new(8,elem_counter))
+
+      zelm(1) = z_new(ibool_new(1,elem_counter))
+      zelm(2) = z_new(ibool_new(2,elem_counter))
+      zelm(3) = z_new(ibool_new(3,elem_counter))
+      zelm(4) = z_new(ibool_new(4,elem_counter))
+      zelm(5) = z_new(ibool_new(5,elem_counter))
+      zelm(6) = z_new(ibool_new(6,elem_counter))
+      zelm(7) = z_new(ibool_new(7,elem_counter))
+      zelm(8) = z_new(ibool_new(8,elem_counter))
+
+      call calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian1,NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
+
+! check the mirrored (i.e. flipped/swapped) element for a negative Jacobian
+! either this one or the non-mirrored one above should be OK, and thus we will select it
+      xelm(1) = x_new(ibool_new(5,elem_counter))
+      xelm(2) = x_new(ibool_new(6,elem_counter))
+      xelm(3) = x_new(ibool_new(7,elem_counter))
+      xelm(4) = x_new(ibool_new(8,elem_counter))
+      xelm(5) = x_new(ibool_new(1,elem_counter))
+      xelm(6) = x_new(ibool_new(2,elem_counter))
+      xelm(7) = x_new(ibool_new(3,elem_counter))
+      xelm(8) = x_new(ibool_new(4,elem_counter))
+
+      yelm(1) = y_new(ibool_new(5,elem_counter))
+      yelm(2) = y_new(ibool_new(6,elem_counter))
+      yelm(3) = y_new(ibool_new(7,elem_counter))
+      yelm(4) = y_new(ibool_new(8,elem_counter))
+      yelm(5) = y_new(ibool_new(1,elem_counter))
+      yelm(6) = y_new(ibool_new(2,elem_counter))
+      yelm(7) = y_new(ibool_new(3,elem_counter))
+      yelm(8) = y_new(ibool_new(4,elem_counter))
+
+      zelm(1) = z_new(ibool_new(5,elem_counter))
+      zelm(2) = z_new(ibool_new(6,elem_counter))
+      zelm(3) = z_new(ibool_new(7,elem_counter))
+      zelm(4) = z_new(ibool_new(8,elem_counter))
+      zelm(5) = z_new(ibool_new(1,elem_counter))
+      zelm(6) = z_new(ibool_new(2,elem_counter))
+      zelm(7) = z_new(ibool_new(3,elem_counter))
+      zelm(8) = z_new(ibool_new(4,elem_counter))
+
+      call calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian2,NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
+
+! this should never happen, it is just a safety test
+      if(found_a_negative_jacobian1 .and. found_a_negative_jacobian2) &
+        stop 'error: found a negative Jacobian that could not be fixed'
+
+! this should also never happen, it is just a second safety test
+      if(.not. found_a_negative_jacobian1 .and. .not. found_a_negative_jacobian2) &
+        stop 'strange error: both the element created and its mirrored version have a positive Jacobian!'
+
+! if we have found that the original element has a negative Jacobian and its mirrored element is fine,
+! swap the points so that we use that mirrored element in the final mesh saved to disk instead of the original one
+      if(found_a_negative_jacobian1) then
+        i1 = ibool_new(5,elem_counter)
+        i2 = ibool_new(6,elem_counter)
+        i3 = ibool_new(7,elem_counter)
+        i4 = ibool_new(8,elem_counter)
+        i5 = ibool_new(1,elem_counter)
+        i6 = ibool_new(2,elem_counter)
+        i7 = ibool_new(3,elem_counter)
+        i8 = ibool_new(4,elem_counter)
+
+        ibool_new(1,elem_counter) = i1
+        ibool_new(2,elem_counter) = i2
+        ibool_new(3,elem_counter) = i3
+        ibool_new(4,elem_counter) = i4
+        ibool_new(5,elem_counter) = i5
+        ibool_new(6,elem_counter) = i6
+        ibool_new(7,elem_counter) = i7
+        ibool_new(8,elem_counter) = i8
+      endif
 
       enddo
     endif
@@ -646,3 +738,161 @@
   enddo
 
   end program add_CPML_layers_to_a_given_mesh
+
+!
+!=====================================================================
+!
+
+  subroutine calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian,NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
+
+  implicit none
+
+  integer :: NDIM,NGNOD,NGLLX,NGLLY,NGLLZ
+
+  logical :: found_a_negative_jacobian
+
+  double precision, dimension(NGNOD) :: xelm,yelm,zelm
+  double precision dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
+
+  integer i,j,k,ia
+  double precision xxi,xeta,xgamma,yxi,yeta,ygamma,zxi,zeta,zgamma
+  double precision jacobian
+
+  double precision, parameter :: ZERO = 0.d0
+
+  found_a_negative_jacobian = .false.
+
+! do k=1,NGLLZ
+!   do j=1,NGLLY
+!     do i=1,NGLLX
+! for this CPML mesh extrusion routine it is sufficient to test the 8 corners of each element to reduce the cost
+! because we just want to detect if the element is flipped or not, and if so flip it back
+! do k=1,NGLLZ,NGLLZ-1
+!   do j=1,NGLLY,NGLLY-1
+!     do i=1,NGLLX,NGLLX-1
+! it is even sufficient to test a single corner
+  do k=1,1
+    do j=1,1
+      do i=1,1
+
+      xxi = ZERO
+      xeta = ZERO
+      xgamma = ZERO
+      yxi = ZERO
+      yeta = ZERO
+      ygamma = ZERO
+      zxi = ZERO
+      zeta = ZERO
+      zgamma = ZERO
+
+      do ia=1,NGNOD
+        xxi = xxi + dershape3D(1,ia,i,j,k)*xelm(ia)
+        xeta = xeta + dershape3D(2,ia,i,j,k)*xelm(ia)
+        xgamma = xgamma + dershape3D(3,ia,i,j,k)*xelm(ia)
+
+        yxi = yxi + dershape3D(1,ia,i,j,k)*yelm(ia)
+        yeta = yeta + dershape3D(2,ia,i,j,k)*yelm(ia)
+        ygamma = ygamma + dershape3D(3,ia,i,j,k)*yelm(ia)
+
+        zxi = zxi + dershape3D(1,ia,i,j,k)*zelm(ia)
+        zeta = zeta + dershape3D(2,ia,i,j,k)*zelm(ia)
+        zgamma = zgamma + dershape3D(3,ia,i,j,k)*zelm(ia)
+      enddo
+
+      jacobian = xxi*(yeta*zgamma-ygamma*zeta) - xeta*(yxi*zgamma-ygamma*zxi) + xgamma*(yxi*zeta-yeta*zxi)
+
+! check that the Jacobian transform is invertible, i.e. that the Jacobian never becomes negative or null
+      if (jacobian <= ZERO) found_a_negative_jacobian = .true.
+
+      enddo
+    enddo
+  enddo
+
+  end subroutine calc_jacobian
+
+!
+!=====================================================================
+!
+
+! 3D shape functions for 8-node element
+
+  subroutine get_shape3D(dershape3D,xigll,yigll,zigll,NGNOD,NGLLX,NGLLY,NGLLZ,NDIM)
+
+  implicit none
+
+  integer NGNOD,NGLLX,NGLLY,NGLLZ,NDIM
+
+! Gauss-Lobatto-Legendre points of integration
+  double precision xigll(NGLLX)
+  double precision yigll(NGLLY)
+  double precision zigll(NGLLZ)
+
+! 3D shape functions and their derivatives
+  double precision dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
+
+  integer i,j,k
+
+! location of the nodes of the 3D hexahedra elements
+  double precision xi,eta,gamma
+  double precision ra1,ra2,rb1,rb2,rc1,rc2
+
+  double precision, parameter :: ONE = 1.d0
+  double precision, parameter :: ONE_EIGHTH = 0.125d0
+
+! check that the parameter file is correct
+  if (NGNOD /= 8) stop 'volume elements should have 8 control nodes'
+
+! ***
+! *** create 3D shape functions and jacobian
+! ***
+
+  do i=1,NGLLX
+    do j=1,NGLLY
+      do k=1,NGLLZ
+
+        xi = xigll(i)
+        eta = yigll(j)
+        gamma = zigll(k)
+
+          ra1 = ONE + xi
+          ra2 = ONE - xi
+
+          rb1 = ONE + eta
+          rb2 = ONE - eta
+
+          rc1 = ONE + gamma
+          rc2 = ONE - gamma
+
+          dershape3D(1,1,i,j,k) = - ONE_EIGHTH*rb2*rc2
+          dershape3D(1,2,i,j,k) = ONE_EIGHTH*rb2*rc2
+          dershape3D(1,3,i,j,k) = ONE_EIGHTH*rb1*rc2
+          dershape3D(1,4,i,j,k) = - ONE_EIGHTH*rb1*rc2
+          dershape3D(1,5,i,j,k) = - ONE_EIGHTH*rb2*rc1
+          dershape3D(1,6,i,j,k) = ONE_EIGHTH*rb2*rc1
+          dershape3D(1,7,i,j,k) = ONE_EIGHTH*rb1*rc1
+          dershape3D(1,8,i,j,k) = - ONE_EIGHTH*rb1*rc1
+
+          dershape3D(2,1,i,j,k) = - ONE_EIGHTH*ra2*rc2
+          dershape3D(2,2,i,j,k) = - ONE_EIGHTH*ra1*rc2
+          dershape3D(2,3,i,j,k) = ONE_EIGHTH*ra1*rc2
+          dershape3D(2,4,i,j,k) = ONE_EIGHTH*ra2*rc2
+          dershape3D(2,5,i,j,k) = - ONE_EIGHTH*ra2*rc1
+          dershape3D(2,6,i,j,k) = - ONE_EIGHTH*ra1*rc1
+          dershape3D(2,7,i,j,k) = ONE_EIGHTH*ra1*rc1
+          dershape3D(2,8,i,j,k) = ONE_EIGHTH*ra2*rc1
+
+          dershape3D(3,1,i,j,k) = - ONE_EIGHTH*ra2*rb2
+          dershape3D(3,2,i,j,k) = - ONE_EIGHTH*ra1*rb2
+          dershape3D(3,3,i,j,k) = - ONE_EIGHTH*ra1*rb1
+          dershape3D(3,4,i,j,k) = - ONE_EIGHTH*ra2*rb1
+          dershape3D(3,5,i,j,k) = ONE_EIGHTH*ra2*rb2
+          dershape3D(3,6,i,j,k) = ONE_EIGHTH*ra1*rb2
+          dershape3D(3,7,i,j,k) = ONE_EIGHTH*ra1*rb1
+          dershape3D(3,8,i,j,k) = ONE_EIGHTH*ra2*rb1
+
+      enddo
+    enddo
+  enddo
+
+  end subroutine get_shape3D
+
