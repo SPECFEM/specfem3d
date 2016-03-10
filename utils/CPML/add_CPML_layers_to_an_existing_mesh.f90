@@ -128,15 +128,61 @@
 ! compute the derivatives of the 3D shape functions for a 8-node element
   call get_shape3D(dershape3D,xigll,yigll,zigll,NGNOD,NGLLX,NGLLY,NGLLZ,NDIM)
 
+! open SPECFEM3D_Cartesian mesh file to read the points
+  open(unit=23,file='nodes_coords_file',status='old',action='read')
+  read(23,*) npoin
+  allocate(x(npoin))
+  allocate(y(npoin))
+  allocate(z(npoin))
+  do ipoin = 1,npoin
+    read(23,*) ipoin_read,xread,yread,zread
+    x(ipoin_read) = xread
+    y(ipoin_read) = yread
+    z(ipoin_read) = zread
+  enddo
+  close(23)
+
+! ************* read mesh elements *************
+
+! open SPECFEM3D_Cartesian topology file to read the mesh elements
+  open(unit=23,file='mesh_file',status='old',action='read')
+  read(23,*) nspec
+  allocate(ibool(NGNOD,nspec))
+
+! loop on the whole mesh
+  do ispec_loop = 1,nspec
+
+    read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
+
+! store the ibool() array read
+    ibool(1,ispec) = i1
+    ibool(2,ispec) = i2
+    ibool(3,ispec) = i3
+    ibool(4,ispec) = i4
+    ibool(5,ispec) = i5
+    ibool(6,ispec) = i6
+    ibool(7,ispec) = i7
+    ibool(8,ispec) = i8
+
+  enddo
+
+  close(23)
+
+  print *,'Total number of elements in the mesh read = ',nspec
+
+! read the materials file
+  allocate(imaterial(nspec))
+  open(unit=23,file='materials_file',status='old',action='read')
+! loop on the whole mesh
+  do ispec_loop = 1,nspec
+    read(23,*) ispec,i1
+! store the imaterial() array read
+    imaterial(ispec) = i1
+  enddo
+  close(23)
+
 ! we need to extend/extrude the existing mesh by adding CPML elements
 ! along the X faces, then along the Y faces, then along the Z faces.
-! By far the easiest way of doing this is to read the existing file, add X faces to it, save it to disk again,
-! then read the existing file again, add Y faces to it, save it to disk again,
-! and then read the existing file again, add Z faces to it, save it to disk again.
-! By doing so, the growing size of the faces is handled automatically (i.e., when adding elements along the Y faces,
-! the code will automatically take into account the face that the size of these faces has grown in the previous step
-! when the elements along the X faces were added.
-! The only drawback to this is that mesh files are read from disk and written to disk six times instead of only once.
 
 ! loop on the three sets of faces to first add CPML elements along X, then along Y, then along Z
   do iloop_on_X_Y_Z_faces = 1,NDIM
@@ -159,20 +205,6 @@
     endif
     print *,'********************************************************************'
     print *
-
-! open SPECFEM3D_Cartesian mesh file to read the points
-  open(unit=23,file='nodes_coords_file',status='old',action='read')
-  read(23,*) npoin
-  allocate(x(npoin))
-  allocate(y(npoin))
-  allocate(z(npoin))
-  do ipoin = 1,npoin
-    read(23,*) ipoin_read,xread,yread,zread
-    x(ipoin_read) = xread
-    y(ipoin_read) = yread
-    z(ipoin_read) = zread
-  enddo
-  close(23)
 
 ! compute the min and max values of each coordinate
   xmin = minval(x)
@@ -198,12 +230,6 @@
   print *,'Size of the mesh read along Z = ',zsize
   print *
 
-! ************* read mesh elements and generate CPML flags *************
-
-! open SPECFEM3D_Cartesian topology file to read the mesh elements
-  open(unit=23,file='mesh_file',status='old',action='read')
-  read(23,*) nspec
-
   count_elem_faces_to_extend = 0
 
     if(iloop_on_X_Y_Z_faces == 1) then ! Xmin or Xmax face
@@ -225,10 +251,19 @@
       stop 'wrong index in loop on faces'
     endif
 
-! loop on the whole mesh
-  do ispec_loop = 1,nspec
+  if(minval(ibool) /= 1) stop 'error in minval(ibool)'
 
-    read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
+! loop on the whole mesh
+  do ispec = 1,nspec
+
+    i1 = ibool(1,ispec)
+    i2 = ibool(2,ispec)
+    i3 = ibool(3,ispec)
+    i4 = ibool(4,ispec)
+    i5 = ibool(5,ispec)
+    i6 = ibool(6,ispec)
+    i7 = ibool(7,ispec)
+    i8 = ibool(8,ispec)
 
       if(iloop_on_min_face_then_max_face == 1) then ! min face
 
@@ -292,8 +327,6 @@
 
   enddo
 
-  close(23)
-
   print *,'Total number of elements in the mesh before extension = ',nspec
   print *,'Number of element faces to extend  = ',count_elem_faces_to_extend
 ! we will add NUMBER_OF_PML_LAYERS_TO_ADD to each of the element faces detected that need to be extended
@@ -304,47 +337,20 @@
   print *,'Total number of elements in the mesh after extension = ',nspec_new
   print *
 
+! allocate a new set of elements, i.e. a new ibool()
 ! allocate arrays with the right size of the future extended mesh
-  allocate(imaterial(nspec_new))
-  allocate(ibool(NGNOD,nspec_new))
+  allocate(imaterial_new(nspec_new))
+  allocate(ibool_new(NGNOD,nspec_new))
 
 ! clear the arrays
-  imaterial(:) = 0
-  ibool(:,:) = 0
+  imaterial_new(:) = 0
+  ibool_new(:,:) = 0
 
-! now that the ibool array has been allocated with the right future size, read and store the topology of the original mesh
-! open SPECFEM3D_Cartesian topology file to read the mesh elements
-  open(unit=23,file='mesh_file',status='old',action='read')
-  read(23,*) nspec
+! copy the original arrays into the first part i.e. the non-extended part of the new ones
+  ibool_new(:,1:nspec) = ibool(:,1:nspec)
+  imaterial_new(1:nspec) = imaterial(1:nspec)
 
-! loop on the whole mesh
-  do ispec_loop = 1,nspec
-
-    read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
-
-! store the ibool() array read
-    ibool(1,ispec) = i1
-    ibool(2,ispec) = i2
-    ibool(3,ispec) = i3
-    ibool(4,ispec) = i4
-    ibool(5,ispec) = i5
-    ibool(6,ispec) = i6
-    ibool(7,ispec) = i7
-    ibool(8,ispec) = i8
-
-  enddo
-
-  close(23)
-
-! read the materials file
-  open(unit=23,file='materials_file',status='old',action='read')
-! loop on the whole mesh
-  do ispec_loop = 1,nspec
-    read(23,*) ispec,i1
-! store the imaterial() array read
-    imaterial(ispec) = i1
-  enddo
-  close(23)
+  if(minval(ibool) /= 1) stop 'error in minval(ibool)'
 
 ! allocate a new set of points, with multiples
   allocate(x_new(npoin_new))
@@ -355,14 +361,6 @@
   x_new(1:npoin) = x(1:npoin)
   y_new(1:npoin) = y(1:npoin)
   z_new(1:npoin) = z(1:npoin)
-
-! allocate a new set of elements, i.e. a new ibool()
-  allocate(ibool_new(NGNOD,nspec_new))
-  allocate(imaterial_new(nspec_new))
-
-! copy the original elements into the new set
-  ibool_new(:,:) = ibool(:,:)
-  imaterial_new(:) = imaterial(:)
 
 ! position after which to start to create the new elements
   elem_counter = nspec
@@ -700,42 +698,68 @@
 
   enddo
 
+  if(minval(ibool_new) /= 1) stop 'error in minval(ibool_new)'
+
+! deallocate the original arrays
+  deallocate(x,y,z)
+  deallocate(ibool)
+  deallocate(imaterial)
+
+! reallocate them with the new size
+  allocate(x(npoin_new))
+  allocate(y(npoin_new))
+  allocate(z(npoin_new))
+  allocate(imaterial(nspec_new))
+  allocate(ibool(NGNOD,nspec_new))
+
+! make the new ones become the old ones, to prepare for the next iteration of the two nested loops we are in,
+! i.e. to make sure the next loop will extend the mesh from the new arrays rather than from the old ones
+  x(:) = x_new(:)
+  y(:) = y_new(:)
+  z(:) = z_new(:)
+  imaterial(:) = imaterial_new(:)
+  ibool(:,:) = ibool_new(:,:)
+
+! the new number of elements and points becomes the old one, for the same reason
+  nspec = nspec_new
+  npoin = npoin_new
+
+! deallocate the new ones, to make sure they can be allocated again in the next iteration of the nested loops we are in
+  deallocate(x_new,y_new,z_new)
+  deallocate(ibool_new)
+  deallocate(imaterial_new)
+
+  if(minval(ibool) /= 1) stop 'error in minval(ibool)'
+
+    enddo ! of iloop_on_min_face_then_max_face loop on Xmin then Xmax, or Ymin then Ymax, or Zmin then Zmax
+
+! end of loop on the three sets of faces to first add CPML elements along X, then along Y, then along Z
+  enddo
+
 ! write the new points (overwrite the old file)
   open(unit=23,file='nodes_coords_file',status='old',action='write')
-  write(23,*) npoin_new
-  do ipoin = 1,npoin_new
-    write(23,*) ipoin,sngl(x_new(ipoin)),sngl(y_new(ipoin)),sngl(z_new(ipoin))
+  write(23,*) npoin
+  do ipoin = 1,npoin
+    write(23,*) ipoin,sngl(x(ipoin)),sngl(y(ipoin)),sngl(z(ipoin))
   enddo
   close(23)
 
 ! write the new mesh elements (overwrite the old file)
   open(unit=23,file='mesh_file',status='old',action='write')
-  write(23,*) nspec_new
+  write(23,*) nspec
 ! loop on the whole mesh
-  do ispec = 1,nspec_new
-    write(23,"(i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9)") ispec,(ibool_new(ia,ispec), ia = 1,NGNOD)
+  do ispec = 1,nspec
+    write(23,"(i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9)") ispec,(ibool(ia,ispec), ia = 1,NGNOD)
   enddo
   close(23)
 
 ! write the new material properties (overwrite the old file)
   open(unit=23,file='materials_file',status='old',action='write')
 ! loop on the whole mesh
-  do ispec = 1,nspec_new
-    write(23,*) ispec,imaterial_new(ispec)
+  do ispec = 1,nspec
+    write(23,*) ispec,imaterial(ispec)
   enddo
   close(23)
-
-  deallocate(x,y,z)
-  deallocate(x_new,y_new,z_new)
-  deallocate(ibool)
-  deallocate(ibool_new)
-  deallocate(imaterial)
-  deallocate(imaterial_new)
-
-    enddo ! of iloop_on_min_face_then_max_face loop on Xmin then Xmax, or Ymin then Ymax, or Zmin then Zmax
-
-! end of loop on the three sets of faces to first add CPML elements along X, then along Y, then along Z
-  enddo
 
   end program add_CPML_layers_to_a_given_mesh
 
