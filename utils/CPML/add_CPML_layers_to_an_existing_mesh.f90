@@ -47,6 +47,8 @@
 
 ! size of each PML element to add when they are added on the Xmin and Xmax faces, Ymin and Ymax faces, Zmin and/or Zmax faces
   double precision :: SIZE_OF_X_ELEMENT_TO_ADD,SIZE_OF_Y_ELEMENT_TO_ADD,SIZE_OF_Z_ELEMENT_TO_ADD
+  double precision :: SIZE_OF_XMIN_ELEMENT_TO_ADD,SIZE_OF_YMIN_ELEMENT_TO_ADD,SIZE_OF_ZMIN_ELEMENT_TO_ADD
+  double precision :: SIZE_OF_XMAX_ELEMENT_TO_ADD,SIZE_OF_YMAX_ELEMENT_TO_ADD,SIZE_OF_ZMAX_ELEMENT_TO_ADD
 
   integer :: nspec,npoin,npoin_new,nspec_new,count_elem_faces_to_extend,iextend
   integer :: factor_x,factor_y,factor_z
@@ -107,20 +109,37 @@
   endif
   print *
 
-  print *,'enter the X size (in meters) of each CPML element to add on the Xmin and Xmax faces:'
-  read(*,*) SIZE_OF_X_ELEMENT_TO_ADD
-  if(SIZE_OF_X_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_X_ELEMENT_TO_ADD must be > 0'
+  print *,'enter the X size (in meters) of each CPML element to add on the Xmin face:'
+  read(*,*) SIZE_OF_XMIN_ELEMENT_TO_ADD
+  if(SIZE_OF_XMIN_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_XMIN_ELEMENT_TO_ADD must be > 0'
   print *
 
-  print *,'enter the Y size (in meters) of each CPML element to add on the Ymin and Ymax faces:'
-  read(*,*) SIZE_OF_Y_ELEMENT_TO_ADD
-  if(SIZE_OF_Y_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_Y_ELEMENT_TO_ADD must be > 0'
+  print *,'enter the X size (in meters) of each CPML element to add on the Xmax face:'
+  read(*,*) SIZE_OF_XMAX_ELEMENT_TO_ADD
+  if(SIZE_OF_XMAX_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_XMAX_ELEMENT_TO_ADD must be > 0'
   print *
 
-  print *,'enter the Z size (in meters) of each CPML element to add on the Zmin and/or Zmax faces:'
-  read(*,*) SIZE_OF_Z_ELEMENT_TO_ADD
-  if(SIZE_OF_Z_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_Z_ELEMENT_TO_ADD must be > 0'
+  print *,'enter the Y size (in meters) of each CPML element to add on the Ymin faces:'
+  read(*,*) SIZE_OF_YMIN_ELEMENT_TO_ADD
+  if(SIZE_OF_YMIN_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_YMIN_ELEMENT_TO_ADD must be > 0'
   print *
+
+  print *,'enter the Y size (in meters) of each CPML element to add on the Ymax faces:'
+  read(*,*) SIZE_OF_YMAX_ELEMENT_TO_ADD
+  if(SIZE_OF_YMAX_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_YMAX_ELEMENT_TO_ADD must be > 0'
+  print *
+
+  print *,'enter the Z size (in meters) of each CPML element to add on the Zmin faces:'
+  read(*,*) SIZE_OF_ZMIN_ELEMENT_TO_ADD
+  if(SIZE_OF_ZMIN_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_ZMIN_ELEMENT_TO_ADD must be > 0'
+  print *
+
+  if(ALSO_ADD_ON_THE_TOP_SURFACE) then
+    print *,'enter the Z size (in meters) of each CPML element to add on the Zmax faces:'
+    read(*,*) SIZE_OF_ZMAX_ELEMENT_TO_ADD
+    if(SIZE_OF_ZMAX_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_ZMAX_ELEMENT_TO_ADD must be > 0'
+    print *
+  endif
 
 ! hardwire GLL point location values to avoid having to link with a long library to compute them
   xigll(:) = (/ -1.d0 , -0.654653670707977d0 , 0.d0 , 0.654653670707977d0 , 1.d0 /)
@@ -513,23 +532,33 @@
     factor_y = 0
     factor_z = 0
 
+    SIZE_OF_X_ELEMENT_TO_ADD = 0.d0
+    SIZE_OF_Y_ELEMENT_TO_ADD = 0.d0
+    SIZE_OF_Z_ELEMENT_TO_ADD = 0.d0
+
     if(iloop_on_X_Y_Z_faces == 1) then  ! Xmin or Xmax
       if(iloop_on_min_face_then_max_face == 1) then ! min face
         factor_x = -1
+        SIZE_OF_X_ELEMENT_TO_ADD = SIZE_OF_XMIN_ELEMENT_TO_ADD
       else ! max face
         factor_x = +1
+        SIZE_OF_X_ELEMENT_TO_ADD = SIZE_OF_XMAX_ELEMENT_TO_ADD
       endif
     else if(iloop_on_X_Y_Z_faces == 2) then
       if(iloop_on_min_face_then_max_face == 1) then ! min face
         factor_y = -1
+        SIZE_OF_Y_ELEMENT_TO_ADD = SIZE_OF_YMIN_ELEMENT_TO_ADD
       else ! max face
         factor_y = +1
+        SIZE_OF_Y_ELEMENT_TO_ADD = SIZE_OF_YMAX_ELEMENT_TO_ADD
       endif
     else if(iloop_on_X_Y_Z_faces == 3) then
       if(iloop_on_min_face_then_max_face == 1) then ! min face
         factor_z = -1
+        SIZE_OF_Z_ELEMENT_TO_ADD = SIZE_OF_ZMIN_ELEMENT_TO_ADD
       else ! max face
         factor_z = +1
+        SIZE_OF_Z_ELEMENT_TO_ADD = SIZE_OF_ZMAX_ELEMENT_TO_ADD
       endif
     else
       stop 'wrong index in loop on faces'
