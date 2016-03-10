@@ -54,7 +54,7 @@
   integer :: factor_x,factor_y,factor_z
   integer :: ispec,ipoin,iloop_on_X_Y_Z_faces,iloop_on_min_face_then_max_face
   integer :: ipoin_read,ispec_loop
-  integer :: i1,i2,i3,i4,i5,i6,i7,i8,elem_counter,ibool_counter,ia,iflag
+  integer :: i1,i2,i3,i4,i5,i6,i7,i8,elem_counter,ibool_counter,ia,iflag,iformat
   integer :: p1,p2,p3,p4
 
   double precision, dimension(:), allocatable, target :: x,y,z
@@ -91,6 +91,12 @@
   print *,'The mesh does not need to be structured nor regular, any non-structured'
   print *,'mesh is fine as long as it has flat outer faces, parallel to the axes.'
   print *
+
+  print *,'1 = read the mesh files in ASCII format (that is the standard case)'
+  print *,'2 = read the mesh files in binary format'
+  print *,'3 = exit'
+  read(*,*) iformat
+  if(iformat /= 1 .and. iformat /= 2) stop 'exiting...'
 
   print *,'enter the number of PML layers to add on each side of the mesh (usually 3, can also be 4):'
   read(*,*) NUMBER_OF_PML_LAYERS_TO_ADD
@@ -148,42 +154,60 @@
   call get_shape3D(dershape3D,xigll,yigll,zigll,NGNOD,NGLLX,NGLLY,NGLLZ,NDIM)
 
 ! open SPECFEM3D_Cartesian mesh file to read the points
-  open(unit=23,file='nodes_coords_file',status='old',action='read')
-  read(23,*) npoin
+  if(iformat == 1) then
+    open(unit=23,file='nodes_coords_file',status='old',action='read')
+    read(23,*) npoin
+  else
+    open(unit=23,file='nodes_coords_file.bin',form='unformatted',status='old',action='read')
+    read(23) npoin
+  endif
   allocate(x(npoin))
   allocate(y(npoin))
   allocate(z(npoin))
-  do ipoin = 1,npoin
-    read(23,*) ipoin_read,xread,yread,zread
-    x(ipoin_read) = xread
-    y(ipoin_read) = yread
-    z(ipoin_read) = zread
-  enddo
+  if(iformat == 1) then
+    do ipoin = 1,npoin
+      read(23,*) ipoin_read,xread,yread,zread
+      x(ipoin_read) = xread
+      y(ipoin_read) = yread
+      z(ipoin_read) = zread
+    enddo
+  else
+    read(23) x
+    read(23) y
+    read(23) z
+  endif
   close(23)
 
 ! ************* read mesh elements *************
 
 ! open SPECFEM3D_Cartesian topology file to read the mesh elements
-  open(unit=23,file='mesh_file',status='old',action='read')
-  read(23,*) nspec
+  if(iformat == 1) then
+    open(unit=23,file='mesh_file',status='old',action='read')
+    read(23,*) nspec
+  else
+    open(unit=23,file='mesh_file.bin',form='unformatted',status='old',action='read')
+    read(23) nspec
+  endif
+
   allocate(ibool(NGNOD,nspec))
 
 ! loop on the whole mesh
-  do ispec_loop = 1,nspec
-
-    read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
-
+  if(iformat == 1) then
+    do ispec_loop = 1,nspec
+      read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
 ! store the ibool() array read
-    ibool(1,ispec) = i1
-    ibool(2,ispec) = i2
-    ibool(3,ispec) = i3
-    ibool(4,ispec) = i4
-    ibool(5,ispec) = i5
-    ibool(6,ispec) = i6
-    ibool(7,ispec) = i7
-    ibool(8,ispec) = i8
-
-  enddo
+      ibool(1,ispec) = i1
+      ibool(2,ispec) = i2
+      ibool(3,ispec) = i3
+      ibool(4,ispec) = i4
+      ibool(5,ispec) = i5
+      ibool(6,ispec) = i6
+      ibool(7,ispec) = i7
+      ibool(8,ispec) = i8
+    enddo
+  else
+    read(23) ibool
+  endif
 
   close(23)
 
@@ -191,13 +215,21 @@
 
 ! read the materials file
   allocate(imaterial(nspec))
-  open(unit=23,file='materials_file',status='old',action='read')
+  if(iformat == 1) then
+    open(unit=23,file='materials_file',status='old',action='read')
+  else
+    open(unit=23,file='materials_file.bin',form='unformatted',status='old',action='read')
+  endif
 ! loop on the whole mesh
-  do ispec_loop = 1,nspec
-    read(23,*) ispec,i1
+  if(iformat == 1) then
+    do ispec_loop = 1,nspec
+      read(23,*) ispec,i1
 ! store the imaterial() array read
-    imaterial(ispec) = i1
-  enddo
+      imaterial(ispec) = i1
+    enddo
+  else
+    read(23) imaterial
+  endif
   close(23)
 
 ! we need to extend/extrude the existing mesh by adding CPML elements
@@ -765,6 +797,8 @@
 ! end of loop on the three sets of faces to first add CPML elements along X, then along Y, then along Z
   enddo
 
+  if(iformat == 1) then ! write the output in ASCII format
+
 ! write the new points (overwrite the old file)
   open(unit=23,file='nodes_coords_file',status='old',action='write')
   write(23,*) npoin
@@ -789,6 +823,29 @@
     write(23,*) ispec,imaterial(ispec)
   enddo
   close(23)
+
+  else ! write the output in binary format
+
+! write the new points in binary format
+  open(unit=23,file='nodes_coords_file.bin',form='unformatted',status='unknown',action='write')
+  write(23) npoin
+  write(23) x
+  write(23) y
+  write(23) z
+  close(23)
+
+! write the new mesh elements in binary format
+  open(unit=23,file='mesh_file.bin',form='unformatted',status='unknown',action='write')
+  write(23) nspec
+  write(23) ibool
+  close(23)
+
+! write the new material properties in binary format
+  open(unit=23,file='materials_file.bin',form='unformatted',status='unknown',action='write')
+  write(23) imaterial
+  close(23)
+
+  endif
 
   end program add_CPML_layers_to_a_given_mesh
 
