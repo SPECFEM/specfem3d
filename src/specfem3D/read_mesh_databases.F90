@@ -206,8 +206,7 @@
              c66store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
     if (ier /= 0) stop 'Error allocating array c11store etc.'
 
-    ! note: currently, they need to be defined, as they are used in the routine arguments
-    !          for compute_forces_viscoelastic_Deville()
+    ! note: currently, they need to be defined, as they are used in some subroutine arguments
     allocate(R_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
              R_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
              R_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
@@ -227,7 +226,7 @@
              epsilondev_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)
     if (ier /= 0) stop 'Error allocating array R_trace etc.'
 
-    ! note: needed for argument of deville routine
+    ! note: needed for some subroutine arguments
     allocate(epsilon_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if (ier /= 0) stop 'Error allocating array epsilon_trace_over_3'
 
@@ -1139,7 +1138,7 @@
              b_epsilondev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
              b_epsilondev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
              b_epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),stat=ier)
-    if (ier /= 0) stop 'Error allocating array b_epsilon_dev_xx etc.'
+    if (ier /= 0) stop 'Error allocating array b_epsilondev_xx etc.'
     ! needed for kernel computations
     allocate(b_epsilon_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if (ier /= 0) stop 'Error allocating array b_epsilon_trace_over_3'

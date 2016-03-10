@@ -90,18 +90,7 @@ subroutine compute_forces_acoustic()
     endif
 
     ! acoustic pressure term
-    if (USE_DEVILLE_PRODUCTS) then
-      ! uses Deville (2002) optimizations
-      call compute_forces_acoustic_Dev(iphase,NSPEC_AB,NGLOB_AB, &
-                        potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
-                        wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D, &
-                        rhostore,jacobian,ibool, &
-                        num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
-                        phase_ispec_inner_acoustic,.false.)
-    else
-      call compute_forces_acoustic_noDev(iphase,NSPEC_AB,NGLOB_AB, &
+    call compute_forces_acoustic_noDev(iphase,NSPEC_AB,NGLOB_AB, &
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
@@ -110,7 +99,6 @@ subroutine compute_forces_acoustic()
                         rhostore,jacobian,ibool, &
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
                         phase_ispec_inner_acoustic,.false.)
-    endif
 
     ! Stacey absorbing boundary conditions
     if (STACEY_ABSORBING_CONDITIONS) then
@@ -359,18 +347,7 @@ subroutine compute_forces_acoustic_backward()
     endif
 
     ! adjoint simulations
-    if (USE_DEVILLE_PRODUCTS) then
-      ! uses Deville (2002) optimizations
-      call compute_forces_acoustic_Dev(iphase,NSPEC_ADJOINT,NGLOB_ADJOINT, &
-                      b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
-                      xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                      hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
-                      wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D, &
-                      rhostore,jacobian,ibool, &
-                      num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
-                      phase_ispec_inner_acoustic,.true.)
-    else
-      call compute_forces_acoustic_noDev(iphase,NSPEC_ADJOINT,NGLOB_ADJOINT, &
+    call compute_forces_acoustic_noDev(iphase,NSPEC_ADJOINT,NGLOB_ADJOINT, &
                       b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
                       xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                       hprime_xx,hprime_yy,hprime_zz, &
@@ -379,9 +356,8 @@ subroutine compute_forces_acoustic_backward()
                       rhostore,jacobian,ibool, &
                       num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
                       phase_ispec_inner_acoustic,.true.)
-    endif
 
-    ! ! Stacey absorbing boundary conditions
+    ! Stacey absorbing boundary conditions
     if (STACEY_ABSORBING_CONDITIONS) then
        call compute_stacey_acoustic_backward(NSPEC_AB, &
                             ibool,ispec_is_inner,phase_is_inner, &

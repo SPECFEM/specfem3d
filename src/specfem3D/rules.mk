@@ -65,9 +65,7 @@ specfem3D_OBJECTS = \
 	$O/compute_coupling_poroelastic_el.spec.o \
 	$O/compute_forces_acoustic_calling_routine.spec.o \
 	$O/compute_forces_acoustic_noDev.spec.o \
-	$O/compute_forces_acoustic_Dev.spec.o \
 	$O/compute_forces_viscoelastic_calling_routine.spec.o \
-	$O/compute_forces_viscoelastic_Dev.spec.o \
 	$O/compute_forces_viscoelastic_noDev.spec.o \
 	$O/compute_element_att_memory.spec.o \
 	$O/compute_forces_poro_fluid_part.spec.o \
@@ -346,7 +344,6 @@ $O/write_seismograms.spec.o: $O/specfem3D_par.spec.o
 $O/compute_coupling_acoustic_el.spec.o: $O/shared_par.shared_module.o $O/pml_par.spec.o
 $O/compute_coupling_viscoelastic_ac.spec.o: $O/shared_par.shared_module.o $O/pml_par.spec.o
 $O/compute_forces_acoustic_calling_routine.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
-$O/compute_forces_acoustic_Dev.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
 $O/compute_forces_acoustic_noDev.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
 $O/compute_total_energy.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
 $O/pml_allocate_arrays.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
@@ -358,7 +355,6 @@ $O/update_displacement_scheme.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
 $O/update_displacement_LDDRK.spec.o: $O/specfem3D_par.spec.o
 $O/fault_solver_dynamic.spec.o: $O/specfem3D_par.spec.o $O/fault_solver_common.spec.o
 $O/fault_solver_kinematic.spec.o: $O/specfem3D_par.spec.o $O/fault_solver_common.spec.o
-$O/compute_forces_viscoelastic_Dev.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o
 $O/compute_forces_viscoelastic_noDev.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o
 $O/compute_element_att_memory.spec.o: $O/specfem3D_par.spec.o
 $O/compute_forces_viscoelastic_calling_routine.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o

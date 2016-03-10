@@ -252,14 +252,6 @@
   if (SIMULATION_TYPE /= 1 .and. SIMULATION_TYPE /= 2 .and. SIMULATION_TYPE /= 3) &
     call exit_mpi(myrank,'SIMULATION_TYPE can only be 1, 2, or 3')
 
-  ! check that optimized routines from Deville et al. (2002) can be used
-  if (USE_DEVILLE_PRODUCTS) then
-    if (NGLLX /= NGLLY .and. NGLLX /= NGLLZ) &
-      stop 'Deville et al. (2002) routines can only be used if NGLLX = NGLLY = NGLLZ'
-    if (NGLLX /= 5 .and. NGLLX /= 6 .and. NGLLX /= 7) &
-      stop 'Deville et al. (2002) routines can only be used if NGLLX = NGLLY = NGLLZ = 5, 6 or 7'
-  endif
-
   ! gravity only on GPU supported
   if (.not. GPU_MODE .and. GRAVITY) &
     stop 'GRAVITY only supported in GPU mode'
