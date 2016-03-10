@@ -51,7 +51,8 @@
 
   logical :: ALSO_ADD_ON_THE_TOP_SURFACE,already_found_a_face
 
-  real :: THICKNESS_OF_X_PML,THICKNESS_OF_Y_PML,THICKNESS_OF_Z_PML
+  real :: THICKNESS_OF_XMIN_PML,THICKNESS_OF_YMIN_PML,THICKNESS_OF_ZMIN_PML
+  real :: THICKNESS_OF_XMAX_PML,THICKNESS_OF_YMAX_PML,THICKNESS_OF_ZMAX_PML
 
 ! to make sure coordinate roundoff problems do not occur, use a tolerance of 0.5%
   real, parameter :: SMALL_PERCENTAGE_TOLERANCE = 1.005
@@ -129,31 +130,57 @@
   print *
 
   print *,'What is the exact thickness of the PML layer that you want'
-  print *,'on the Xmin and Xmax faces of your mesh? (it needs to correspond exactly'
+  print *,'on the Xmin face of your mesh? (it needs to correspond exactly'
   print *,'to the flat layers you created in your input CUBIT mesh, as mentioned in'
   print *,'the comment printed above; if you think you have roundoff issues or very'
   print *,'slightly varying thickness, give 2% or 5% more here, but never less'
-  read(*,*) THICKNESS_OF_X_PML
-  if(THICKNESS_OF_X_PML <= 0) stop 'negative thickness is not allowed; exiting...'
-  if(THICKNESS_OF_X_PML > 0.30*(xmax - xmin)) &
+  read(*,*) THICKNESS_OF_XMIN_PML
+  if(THICKNESS_OF_XMIN_PML <= 0) stop 'negative thickness is not allowed; exiting...'
+  if(THICKNESS_OF_XMIN_PML > 0.30*(xmax - xmin)) &
     stop 'thickness of each CPML layer greater than 30% of the size of the mesh is not a good idea; exiting...'
   print *
 
   print *,'What is the exact thickness of the PML layer that you want'
-  print *,'on the Ymin and Ymax faces of your mesh?'
-  read(*,*) THICKNESS_OF_Y_PML
-  if(THICKNESS_OF_Y_PML <= 0) stop 'negative thickness is not allowed; exiting...'
-  if(THICKNESS_OF_Y_PML > 0.30*(ymax - ymin)) &
+  print *,'on the Xmax face of your mesh?'
+  read(*,*) THICKNESS_OF_XMAX_PML
+  if(THICKNESS_OF_XMAX_PML <= 0) stop 'negative thickness is not allowed; exiting...'
+  if(THICKNESS_OF_XMAX_PML > 0.30*(xmax - xmin)) &
     stop 'thickness of each CPML layer greater than 30% of the size of the mesh is not a good idea; exiting...'
   print *
 
   print *,'What is the exact thickness of the PML layer that you want'
-  print *,'on the Zmin and Zmax faces of your mesh?'
-  read(*,*) THICKNESS_OF_Z_PML
-  if(THICKNESS_OF_Z_PML <= 0) stop 'negative thickness is not allowed; exiting...'
-  if(THICKNESS_OF_Z_PML > 0.30*(zmax - zmin)) &
+  print *,'on the Ymin face of your mesh?'
+  read(*,*) THICKNESS_OF_YMIN_PML
+  if(THICKNESS_OF_YMIN_PML <= 0) stop 'negative thickness is not allowed; exiting...'
+  if(THICKNESS_OF_YMIN_PML > 0.30*(ymax - ymin)) &
     stop 'thickness of each CPML layer greater than 30% of the size of the mesh is not a good idea; exiting...'
   print *
+
+  print *,'What is the exact thickness of the PML layer that you want'
+  print *,'on the Ymax face of your mesh?'
+  read(*,*) THICKNESS_OF_YMAX_PML
+  if(THICKNESS_OF_YMAX_PML <= 0) stop 'negative thickness is not allowed; exiting...'
+  if(THICKNESS_OF_YMAX_PML > 0.30*(ymax - ymin)) &
+    stop 'thickness of each CPML layer greater than 30% of the size of the mesh is not a good idea; exiting...'
+  print *
+
+  print *,'What is the exact thickness of the PML layer that you want'
+  print *,'on the Zmin face of your mesh?'
+  read(*,*) THICKNESS_OF_ZMIN_PML
+  if(THICKNESS_OF_ZMIN_PML <= 0) stop 'negative thickness is not allowed; exiting...'
+  if(THICKNESS_OF_ZMIN_PML > 0.30*(zmax - zmin)) &
+    stop 'thickness of each CPML layer greater than 30% of the size of the mesh is not a good idea; exiting...'
+  print *
+
+  if(ALSO_ADD_ON_THE_TOP_SURFACE) then
+    print *,'What is the exact thickness of the PML layer that you want'
+    print *,'on the Zmax face of your mesh?'
+    read(*,*) THICKNESS_OF_ZMAX_PML
+    if(THICKNESS_OF_ZMAX_PML <= 0) stop 'negative thickness is not allowed; exiting...'
+    if(THICKNESS_OF_ZMAX_PML > 0.30*(zmax - zmin)) &
+      stop 'thickness of each CPML layer greater than 30% of the size of the mesh is not a good idea; exiting...'
+    print *
+  endif
 
 ! ************* read mesh elements and generate CPML flags *************
 
@@ -175,33 +202,33 @@
     read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
 
 ! Xmin CPML
-    limit = xmin + THICKNESS_OF_X_PML * SMALL_PERCENTAGE_TOLERANCE
+    limit = xmin + THICKNESS_OF_XMIN_PML * SMALL_PERCENTAGE_TOLERANCE
     if(x(i1) < limit .and. x(i2) < limit .and. x(i3) < limit .and. x(i4) < limit .and. &
        x(i5) < limit .and. x(i6) < limit .and. x(i7) < limit .and. x(i8) < limit) is_X_CPML(ispec) = .true.
 
 ! Xmax CPML
-    limit = xmax - THICKNESS_OF_X_PML * SMALL_PERCENTAGE_TOLERANCE
+    limit = xmax - THICKNESS_OF_XMAX_PML * SMALL_PERCENTAGE_TOLERANCE
     if(x(i1) > limit .and. x(i2) > limit .and. x(i3) > limit .and. x(i4) > limit .and. &
        x(i5) > limit .and. x(i6) > limit .and. x(i7) > limit .and. x(i8) > limit) is_X_CPML(ispec) = .true.
 
 ! Ymin CPML
-    limit = ymin + THICKNESS_OF_Y_PML * SMALL_PERCENTAGE_TOLERANCE
+    limit = ymin + THICKNESS_OF_YMIN_PML * SMALL_PERCENTAGE_TOLERANCE
     if(y(i1) < limit .and. y(i2) < limit .and. y(i3) < limit .and. y(i4) < limit .and. &
        y(i5) < limit .and. y(i6) < limit .and. y(i7) < limit .and. y(i8) < limit) is_Y_CPML(ispec) = .true.
 
 ! Ymax CPML
-    limit = ymax - THICKNESS_OF_Y_PML * SMALL_PERCENTAGE_TOLERANCE
+    limit = ymax - THICKNESS_OF_YMAX_PML * SMALL_PERCENTAGE_TOLERANCE
     if(y(i1) > limit .and. y(i2) > limit .and. y(i3) > limit .and. y(i4) > limit .and. &
        y(i5) > limit .and. y(i6) > limit .and. y(i7) > limit .and. y(i8) > limit) is_Y_CPML(ispec) = .true.
 
 ! Zmin CPML
-    limit = zmin + THICKNESS_OF_Z_PML * SMALL_PERCENTAGE_TOLERANCE
+    limit = zmin + THICKNESS_OF_ZMIN_PML * SMALL_PERCENTAGE_TOLERANCE
     if(z(i1) < limit .and. z(i2) < limit .and. z(i3) < limit .and. z(i4) < limit .and. &
        z(i5) < limit .and. z(i6) < limit .and. z(i7) < limit .and. z(i8) < limit) is_Z_CPML(ispec) = .true.
 
 ! Zmax CPML
   if(ALSO_ADD_ON_THE_TOP_SURFACE) then
-    limit = zmax - THICKNESS_OF_Z_PML * SMALL_PERCENTAGE_TOLERANCE
+    limit = zmax - THICKNESS_OF_ZMAX_PML * SMALL_PERCENTAGE_TOLERANCE
     if(z(i1) > limit .and. z(i2) > limit .and. z(i3) > limit .and. z(i4) > limit .and. &
        z(i5) > limit .and. z(i6) > limit .and. z(i7) > limit .and. z(i8) > limit) is_Z_CPML(ispec) = .true.
   endif

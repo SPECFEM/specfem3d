@@ -847,6 +847,18 @@
 
   endif
 
+! output information for the next code (xconvert_external_layers_of_a_given_mesh_to_CPML_layers)
+  print *
+  print *,'Here are the values to use as input in the next code, xconvert_external_layers_of_a_given_mesh_to_CPML_layers:'
+  print *
+  print *,'THICKNESS_OF_XMIN_PML = ',sngl(SIZE_OF_XMIN_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD)
+  print *,'THICKNESS_OF_XMAX_PML = ',sngl(SIZE_OF_XMAX_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD)
+  print *,'THICKNESS_OF_YMIN_PML = ',sngl(SIZE_OF_YMIN_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD)
+  print *,'THICKNESS_OF_YMAX_PML = ',sngl(SIZE_OF_YMAX_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD)
+  print *,'THICKNESS_OF_ZMIN_PML = ',sngl(SIZE_OF_ZMIN_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD)
+  print *,'THICKNESS_OF_ZMAX_PML = ',sngl(SIZE_OF_ZMAX_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD)
+  print *
+
   end program add_CPML_layers_to_a_given_mesh
 
 !
