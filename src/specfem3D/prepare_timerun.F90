@@ -74,9 +74,8 @@
   call prepare_timerun_gravity()
 
   ! ZN I do not use if(USE_LDDRK) call prepare_timerun_lddrk()
-  ! ZN in order to avoid the error of using unallocated array.
-  ! ZN since R_**_lddrk are dummy variables in subroutine compute_forces_viscoelastic_Dev and
-  ! ZN in compute_forces_viscoelastic_noDev
+  ! ZN in order to avoid the error of using unallocated arrays later on in the code,
+  ! ZN since R_**_lddrk are arguments in subroutine compute_forces_viscoelastic
   call prepare_timerun_lddrk()
 
   ! prepares C-PML arrays
@@ -790,8 +789,7 @@
     endif
 
     if (ATTENUATION) then
-      ! note: currently, they need to be defined, as they are used in the routine arguments
-      !          for compute_forces_viscoelastic_Deville()
+      ! note: currently, they need to be defined, as they are used in some subroutine arguments
       allocate(R_xx_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
                R_yy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
                R_xy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
@@ -1686,7 +1684,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-! OpenMP version uses "special" compute_forces_viscoelastic_Dev routine
+! OpenMP version uses "special" compute_forces_viscoelastic routine
 ! we need to set num_elem_colors_elastic arrays
 
 #ifdef OPENMP_MODE
@@ -1713,7 +1711,7 @@
       call flush_IMAIN()
     endif
 
-    ! allocate cfe_Dev_openmp local arrays for OpenMP version
+    ! allocate cfe_openmp local arrays for OpenMP version
 !! DK DK July 2014: I do not know who wrote the OpenMP version, but it is currently broken
 !! DK DK July 2014: because the arrays below are undeclared; I therefore need to comment them out
 !! DK DK July 2014: for now and put a stop statement instead

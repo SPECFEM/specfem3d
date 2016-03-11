@@ -1164,8 +1164,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 
 end subroutine compute_forces_viscoelastic_noDev
 
-! following the compute_forces_viscoelastic_Dev.F90, put the code used for computation of strain in parent
-! element in a subroutine.
+! put the code used for computation of strain in parent element in a subroutine.
 ! The concept of parent element can be found in
 ! O.C.Zienkiewicz, R.L.Taylor & J.Z. Zhu, The finite element method its basis and fundamentals 6th ed.,
 ! Elsevier Press (2005) ! pages 141

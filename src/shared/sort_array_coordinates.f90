@@ -25,10 +25,9 @@
 !
 !=====================================================================
 
-! subroutines to sort MPI buffers to assemble between chunks
+! subroutines to sort indexing arrays based on geometrical coordinates instead of based on topology (because that is much faster)
 
-  subroutine sort_array_coordinates(npointot,x,y,z,ibool,iglob,locval,ifseg, &
-                                    nglob,ninseg,xtol)
+  subroutine sort_array_coordinates(npointot,x,y,z,ibool,iglob,locval,ifseg,nglob,ninseg,xtol)
 
 ! this routine MUST be in double precision to avoid sensitivity
 ! to roundoff errors in the coordinates of the points
@@ -67,19 +66,15 @@
     ioff = 1
     do iseg=1,nseg
       if (j == 1) then
-
+        ! sort on X
         call heap_sort_multi(ninseg(iseg), x(ioff), y(ioff), z(ioff), ibool(ioff), locval(ioff))
-
       else if (j == 2) then
-
+        ! then sort on Y for a sublist of given constant X
         call heap_sort_multi(ninseg(iseg), y(ioff), x(ioff), z(ioff), ibool(ioff), locval(ioff))
-
       else
-
+        ! then sort on Z for a sublist of given constant X and Y
         call heap_sort_multi(ninseg(iseg), z(ioff), x(ioff), y(ioff), ibool(ioff), locval(ioff))
-
       endif
-
       ioff = ioff + ninseg(iseg)
     enddo
 
@@ -113,6 +108,7 @@
   ! assign global node numbers (now sorted lexicographically)
   ig = 0
   do i=1,npointot
+    ! eliminate the multiples by using a single (new) point number for all the points that have the same X Y Z after sorting
     if (ifseg(i)) ig = ig + 1
     iglob(locval(i)) = ig
   enddo

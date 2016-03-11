@@ -674,8 +674,7 @@ subroutine read_mesh_databases_adios()
             c66store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
     if (ier /= 0) stop 'error allocating array c11store etc.'
 
-    ! note: currently, they need to be defined, as they are used in the
-    !       routine arguments for compute_forces_viscoelastic_Deville()
+    ! note: currently, they need to be defined, as they are used in some subroutine arguments
     allocate(R_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
             R_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
             R_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
@@ -695,7 +694,7 @@ subroutine read_mesh_databases_adios()
              epsilondev_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)
     if (ier /= 0) stop 'error allocating array R_trace etc.'
 
-    ! note: needed for argument of deville routine
+    ! note: needed for some subroutine arguments
     allocate(epsilon_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if (ier /= 0) stop 'error allocating array epsilon_trace_over_3'
 

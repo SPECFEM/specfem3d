@@ -70,13 +70,7 @@ subroutine compute_forces_viscoelastic()
     endif
 
 ! elastic term
-    if (USE_DEVILLE_PRODUCTS) then
-      ! uses Deville (2002) optimizations
-      call compute_forces_viscoelastic_Dev_sim1(iphase)
-
-    else
-      ! no optimizations used
-      call compute_forces_viscoelastic_noDev(iphase,NSPEC_AB,NGLOB_AB, &
+    call compute_forces_viscoelastic_noDev(iphase,NSPEC_AB,NGLOB_AB, &
                         displ,veloc,accel, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
@@ -105,9 +99,6 @@ subroutine compute_forces_viscoelastic()
                         ispec2D_moho_top,ispec2D_moho_bot, &
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
                         phase_ispec_inner_elastic,.false.)
-
-    endif
-
 
 ! adds elastic absorbing boundary term to acceleration (Stacey conditions)
     if (STACEY_ABSORBING_CONDITIONS) then
@@ -335,14 +326,8 @@ subroutine compute_forces_viscoelastic_backward()
 
 
 ! elastic term
-    if (USE_DEVILLE_PRODUCTS) then
-      ! adjoint simulations: backward/reconstructed wavefield
-      call compute_forces_viscoelastic_Dev_sim3(iphase)
-
-    else
-      ! no optimizations used
-      ! adjoint simulations: backward/reconstructed wavefield
-      call compute_forces_viscoelastic_noDev(iphase,NSPEC_AB,NGLOB_AB, &
+    ! adjoint simulations: backward/reconstructed wavefield
+    call compute_forces_viscoelastic_noDev(iphase,NSPEC_AB,NGLOB_AB, &
                         b_displ,b_veloc,b_accel, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
@@ -371,8 +356,6 @@ subroutine compute_forces_viscoelastic_backward()
                         ispec2D_moho_top,ispec2D_moho_bot, &
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
                         phase_ispec_inner_elastic,.true.)
-    endif
-
 
 ! adds elastic absorbing boundary term to acceleration (Stacey conditions)
     if (STACEY_ABSORBING_CONDITIONS) then
@@ -483,160 +466,6 @@ end subroutine compute_forces_viscoelastic_backward
 !
 !-------------------------------------------------------------------------------------------------
 !
-
-! distributes routines according to chosen NGLLX in constants.h
-
-!daniel: note -- i put it here rather than in compute_forces_viscoelastic_Dev.f90 because compiler complains that:
-! " The storage extent of the dummy argument exceeds that of the actual argument. "
-
-subroutine compute_forces_viscoelastic_Dev_sim1(iphase)
-
-! forward simulations
-
-  use specfem_par
-  use specfem_par_elastic
-  use specfem_par_acoustic
-
-  implicit none
-
-  integer,intent(in) :: iphase
-
-  select case (NGLLX)
-
-  case (5,6,7)
-
-!----------------------------------------------------------------------------------------------
-
-! OpenMP routine flag for testing & benchmarking forward runs only
-! configure additional flag, e.g.: FLAGS_CHECK="-O3 -DOPENMP_MODE -openmp"
-
-!----------------------------------------------------------------------------------------------
-#ifdef OPENMP_MODE
-    print *,iphase !! DK DK this dummy statement just to avoid a warning by the compiler about "iphase" being unused
-    stop 'OpenMP support has been discontinued for now'
-!! DK DK Jan 2013: beware, that OpenMP version is not maintained / supported and thus probably does not work
-!   call compute_forces_viscoelastic_Dev_openmp(iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
-!          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-!          hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
-!          wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-!          kappastore,mustore,jacobian,ibool, &
-!          ATTENUATION,deltat, &
-!          one_minus_sum_beta,factor_common, &
-!          one_minus_sum_beta_kappa,factor_common_kappa, &
-!          alphaval,betaval,gammaval, &
-!          NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa, &
-!          R_xx,R_yy,R_xy,R_xz,R_yz, &
-!          R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
-!          epsilondev_xx,epsilondev_yy,epsilondev_xy, &
-!          epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &
-!          epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
-!          ANISOTROPY,NSPEC_ANISO, &
-!          c11store,c12store,c13store,c14store,c15store,c16store,&
-!          c22store,c23store,c24store,c25store,c26store,c33store,&
-!          c34store,c35store,c36store,c44store,c45store,c46store,&
-!          c55store,c56store,c66store, &
-!          SIMULATION_TYPE, COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
-!          NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT,&
-!          is_moho_top,is_moho_bot, &
-!          dsdx_top,dsdx_bot, &
-!          ispec2D_moho_top,ispec2D_moho_bot, &
-!          num_phase_ispec_elastic,&
-!          phase_ispec_inner_elastic,&
-!          num_colors_outer_elastic,num_colors_inner_elastic)
-#else
-    call compute_forces_viscoelastic_Dev(iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
-             xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-             hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
-             wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D, &
-             kappastore,mustore,jacobian,ibool, &
-             ATTENUATION,deltat,PML_CONDITIONS, &
-             one_minus_sum_beta,factor_common, &
-             one_minus_sum_beta_kappa,factor_common_kappa, &
-             alphaval,betaval,gammaval, &
-             NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa, &
-             R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
-             epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &
-             epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
-             ANISOTROPY,NSPEC_ANISO, &
-             c11store,c12store,c13store,c14store,c15store,c16store,&
-             c22store,c23store,c24store,c25store,c26store,c33store,&
-             c34store,c35store,c36store,c44store,c45store,c46store,&
-             c55store,c56store,c66store, &
-             SIMULATION_TYPE, COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
-             NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT,&
-             is_moho_top,is_moho_bot, &
-             dsdx_top,dsdx_bot, &
-             ispec2D_moho_top,ispec2D_moho_bot, &
-             num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic,&
-             phase_ispec_inner_elastic,.false.)
-#endif
-
-  case default
-
-    stop 'error no Deville routine available for chosen NGLLX'
-
-  end select
-
-end subroutine compute_forces_viscoelastic_Dev_sim1
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-
-subroutine compute_forces_viscoelastic_Dev_sim3(iphase)
-
-! uses backward/reconstructed displacement and acceleration arrays
-
-  use specfem_par
-  use specfem_par_elastic
-  use specfem_par_acoustic
-
-  implicit none
-
-  integer,intent(in) :: iphase
-
-  select case (NGLLX)
-
-  case (5,6,7)
-    call compute_forces_viscoelastic_Dev(iphase, NSPEC_AB,NGLOB_AB, &
-                  b_displ,b_veloc,b_accel, &
-                  xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                  hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
-                  wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D, &
-                  kappastore,mustore,jacobian,ibool, &
-                  ATTENUATION,deltat,PML_CONDITIONS, &
-                  one_minus_sum_beta,factor_common, &
-                  one_minus_sum_beta_kappa,factor_common_kappa, &
-                  b_alphaval,b_betaval,b_gammaval, &
-                  NSPEC_ATTENUATION_AB, NSPEC_ATTENUATION_AB_kappa, &
-                  b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
-                  b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
-                  b_epsilondev_xz,b_epsilondev_yz,b_epsilon_trace_over_3, &
-                  ANISOTROPY,NSPEC_ANISO, &
-                  c11store,c12store,c13store,c14store,c15store,c16store,&
-                  c22store,c23store,c24store,c25store,c26store,c33store,&
-                  c34store,c35store,c36store,c44store,c45store,c46store,&
-                  c55store,c56store,c66store, &
-                  SIMULATION_TYPE, COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY,&
-                  NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT,&
-                  is_moho_top,is_moho_bot, &
-                  b_dsdx_top,b_dsdx_bot, &
-                  ispec2D_moho_top,ispec2D_moho_bot, &
-                  num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic,&
-                  phase_ispec_inner_elastic,.true.)
-
-  case default
-
-    stop 'error no Deville routine available for chosen NGLLX'
-
-  end select
-
-
-end subroutine compute_forces_viscoelastic_Dev_sim3
-
-!
-!=====================================================================
 
 ! elastic solver
 
