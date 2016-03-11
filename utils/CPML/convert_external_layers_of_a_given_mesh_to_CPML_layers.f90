@@ -43,23 +43,23 @@
   integer :: ipoin_read,ispec_loop,iflag,iformat
   integer :: i1,i2,i3,i4,i5,i6,i7,i8,number_of_CPML_elements,count_faces_found
 
-  real, dimension(:), allocatable :: x,y,z
+  double precision, dimension(:), allocatable :: x,y,z
 
   logical, dimension(:), allocatable :: is_X_CPML,is_Y_CPML,is_Z_CPML
 
-  real :: xread,yread,zread,xmin,xmax,ymin,ymax,zmin,zmax,limit,size_of_model
+  double precision :: xread,yread,zread,xmin,xmax,ymin,ymax,zmin,zmax,limit,size_of_model
 
   logical :: ALSO_ADD_ON_THE_TOP_SURFACE,already_found_a_face
 
-  real :: THICKNESS_OF_XMIN_PML,THICKNESS_OF_YMIN_PML,THICKNESS_OF_ZMIN_PML
-  real :: THICKNESS_OF_XMAX_PML,THICKNESS_OF_YMAX_PML,THICKNESS_OF_ZMAX_PML
+  double precision :: THICKNESS_OF_XMIN_PML,THICKNESS_OF_YMIN_PML,THICKNESS_OF_ZMIN_PML
+  double precision :: THICKNESS_OF_XMAX_PML,THICKNESS_OF_YMAX_PML,THICKNESS_OF_ZMAX_PML
 
   integer, dimension(:,:), allocatable :: ibool
 
 ! to make sure coordinate roundoff problems do not occur, use a tolerance of 0.5%
-  real, parameter :: SMALL_PERCENTAGE_TOLERANCE = 1.005
+  double precision, parameter :: SMALL_PERCENTAGE_TOLERANCE = 1.005d0
 
-  real, parameter :: SMALL_RELATIVE_VALUE = 0.5e-3
+  double precision, parameter :: SMALL_RELATIVE_VALUE = 0.5d-3
 
 ! flags for the seven CPML regions
   integer, parameter :: CPML_X_ONLY = 1
@@ -97,6 +97,7 @@
   read(*,*) iformat
   if(iformat /= 1 .and. iformat /= 2) stop 'exiting...'
 
+  print *
   print *,'1 = use a free surface at the top of the mesh (most classical option)'
   print *,'2 = use a CPML absorbing layer at the top of the mesh (less classical option)'
   print *,'3 = exit'
@@ -243,8 +244,6 @@
 
   close(23)
 
-  print *,'Total number of elements in the mesh read = ',nspec
-
 ! loop on the whole mesh
   do ispec = 1,nspec
 
@@ -291,13 +290,16 @@
 
   enddo
 
-  print *,'Total number of elements in the mesh = ',nspec
+  print *,'Total number of elements in the mesh read = ',nspec
   print *
   print *,'Found ',count(is_X_CPML),' X_CPML elements'
   print *,'Found ',count(is_Y_CPML),' Y_CPML elements'
   print *,'Found ',count(is_Z_CPML),' Z_CPML elements'
   if(ALSO_ADD_ON_THE_TOP_SURFACE) print *,'    (also converted the top surface from free surface to CPML)'
   print *
+
+  if(count(is_X_CPML) == 0 .or. count(is_Y_CPML) == 0 .or. count(is_Z_CPML) == 0) &
+    stop 'error: no CPML elements detected on at least one of the sides!'
 
   number_of_CPML_elements = 0
   do ispec=1,nspec
