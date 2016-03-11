@@ -40,7 +40,7 @@
 
   integer :: nspec,npoin
   integer :: ispec,ipoin
-  integer :: ipoin_read,ispec_loop,iflag
+  integer :: ipoin_read,ispec_loop,iflag,iformat
   integer :: i1,i2,i3,i4,i5,i6,i7,i8,number_of_CPML_elements,count_faces_found
 
   real, dimension(:), allocatable :: x,y,z
@@ -53,6 +53,8 @@
 
   real :: THICKNESS_OF_XMIN_PML,THICKNESS_OF_YMIN_PML,THICKNESS_OF_ZMIN_PML
   real :: THICKNESS_OF_XMAX_PML,THICKNESS_OF_YMAX_PML,THICKNESS_OF_ZMAX_PML
+
+  integer, dimension(:,:), allocatable :: ibool
 
 ! to make sure coordinate roundoff problems do not occur, use a tolerance of 0.5%
   real, parameter :: SMALL_PERCENTAGE_TOLERANCE = 1.005
@@ -88,6 +90,13 @@
   print *,'However this is not implemented yet.'
   print *
 
+  print *,'1 = read the mesh files in ASCII format (that is the standard case)'
+  print *,'2 = read the mesh files in binary format (that is much faster, if your mesh is available in that format)'
+  print *,'  (if not, you can run xconvert_mesh_files_from_ASCII_to_binary)'
+  print *,'3 = exit'
+  read(*,*) iformat
+  if(iformat /= 1 .and. iformat /= 2) stop 'exiting...'
+
   print *,'1 = use a free surface at the top of the mesh (most classical option)'
   print *,'2 = use a CPML absorbing layer at the top of the mesh (less classical option)'
   print *,'3 = exit'
@@ -101,18 +110,29 @@
   print *
 
 ! open SPECFEM3D_Cartesian mesh file to read the points
+  if(iformat == 1) then
     open(unit=23,file='nodes_coords_file',status='old',action='read')
     read(23,*) npoin
-    allocate(x(npoin))
-    allocate(y(npoin))
-    allocate(z(npoin))
+  else
+    open(unit=23,file='nodes_coords_file.bin',form='unformatted',status='old',action='read')
+    read(23) npoin
+  endif
+  allocate(x(npoin))
+  allocate(y(npoin))
+  allocate(z(npoin))
+  if(iformat == 1) then
     do ipoin = 1,npoin
       read(23,*) ipoin_read,xread,yread,zread
       x(ipoin_read) = xread
       y(ipoin_read) = yread
       z(ipoin_read) = zread
     enddo
-    close(23)
+  else
+    read(23) x
+    read(23) y
+    read(23) z
+  endif
+  close(23)
 
 ! compute the min and max values of each coordinate
    xmin = minval(x)
@@ -185,8 +205,13 @@
 ! ************* read mesh elements and generate CPML flags *************
 
 ! open SPECFEM3D_Cartesian topology file to read the mesh elements
-  open(unit=23,file='mesh_file',status='old',action='read')
-  read(23,*) nspec
+  if(iformat == 1) then
+    open(unit=23,file='mesh_file',status='old',action='read')
+    read(23,*) nspec
+  else
+    open(unit=23,file='mesh_file.bin',form='unformatted',status='old',action='read')
+    read(23) nspec
+  endif
 
   allocate(is_X_CPML(nspec))
   allocate(is_Y_CPML(nspec))
@@ -196,10 +221,41 @@
   is_Y_CPML(:) = .false.
   is_Z_CPML(:) = .false.
 
-! loop on the whole mesh
-  do ispec_loop = 1,nspec
+  allocate(ibool(NGNOD,nspec))
 
-    read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
+! loop on the whole mesh
+  if(iformat == 1) then
+    do ispec_loop = 1,nspec
+      read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
+! store the ibool() array read
+      ibool(1,ispec) = i1
+      ibool(2,ispec) = i2
+      ibool(3,ispec) = i3
+      ibool(4,ispec) = i4
+      ibool(5,ispec) = i5
+      ibool(6,ispec) = i6
+      ibool(7,ispec) = i7
+      ibool(8,ispec) = i8
+    enddo
+  else
+    read(23) ibool
+  endif
+
+  close(23)
+
+  print *,'Total number of elements in the mesh read = ',nspec
+
+! loop on the whole mesh
+  do ispec = 1,nspec
+
+    i1 = ibool(1,ispec)
+    i2 = ibool(2,ispec)
+    i3 = ibool(3,ispec)
+    i4 = ibool(4,ispec)
+    i5 = ibool(5,ispec)
+    i6 = ibool(6,ispec)
+    i7 = ibool(7,ispec)
+    i8 = ibool(8,ispec)
 
 ! Xmin CPML
     limit = xmin + THICKNESS_OF_XMIN_PML * SMALL_PERCENTAGE_TOLERANCE
@@ -234,8 +290,6 @@
   endif
 
   enddo
-
-  close(23)
 
   print *,'Total number of elements in the mesh = ',nspec
   print *
@@ -301,14 +355,17 @@
   size_of_model = xmax - xmin
   limit = xmin + SMALL_RELATIVE_VALUE*size_of_model
 
-! open SPECFEM3D_Cartesian topology file to read the mesh elements
-  open(unit=23,file='mesh_file',status='old',action='read')
-  read(23,*) nspec
-
 ! loop on the whole mesh
-  do ispec_loop = 1,nspec
+  do ispec = 1,nspec
 
-    read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
+    i1 = ibool(1,ispec)
+    i2 = ibool(2,ispec)
+    i3 = ibool(3,ispec)
+    i4 = ibool(4,ispec)
+    i5 = ibool(5,ispec)
+    i6 = ibool(6,ispec)
+    i7 = ibool(7,ispec)
+    i8 = ibool(8,ispec)
 
     if(is_X_CPML(ispec)) then
 
@@ -359,25 +416,27 @@
 
   enddo
 
-  close(23)
-
   print *,'found ',count_faces_found,' full faces on PML face Xmin'
 
 !-----------------------------
 
 ! open SPECFEM3D_Cartesian topology file to read the mesh elements
-  open(unit=23,file='mesh_file',status='old',action='read')
   open(unit=24,file='absorbing_surface_file_xmin',status='unknown',action='write')
-
-  read(23,*) nspec
 
 ! write the total number of face elements
   write(24,*) count_faces_found
 
 ! loop on the whole mesh
-  do ispec_loop = 1,nspec
+  do ispec = 1,nspec
 
-    read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
+    i1 = ibool(1,ispec)
+    i2 = ibool(2,ispec)
+    i3 = ibool(3,ispec)
+    i4 = ibool(4,ispec)
+    i5 = ibool(5,ispec)
+    i6 = ibool(6,ispec)
+    i7 = ibool(7,ispec)
+    i8 = ibool(8,ispec)
 
     if(is_X_CPML(ispec)) then
 
@@ -412,7 +471,6 @@
 
   enddo
 
-  close(23)
   close(24)
 
   print *,'CPML file "absorbing_surface_file_xmin" has been successfully created'
@@ -428,14 +486,17 @@
   size_of_model = xmax - xmin
   limit = xmax - SMALL_RELATIVE_VALUE*size_of_model
 
-! open SPECFEM3D_Cartesian topology file to read the mesh elements
-  open(unit=23,file='mesh_file',status='old',action='read')
-  read(23,*) nspec
-
 ! loop on the whole mesh
-  do ispec_loop = 1,nspec
+  do ispec = 1,nspec
 
-    read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
+    i1 = ibool(1,ispec)
+    i2 = ibool(2,ispec)
+    i3 = ibool(3,ispec)
+    i4 = ibool(4,ispec)
+    i5 = ibool(5,ispec)
+    i6 = ibool(6,ispec)
+    i7 = ibool(7,ispec)
+    i8 = ibool(8,ispec)
 
     if(is_X_CPML(ispec)) then
 
@@ -486,25 +547,26 @@
 
   enddo
 
-  close(23)
-
   print *,'found ',count_faces_found,' full faces on PML face Xmax'
 
 !-----------------------------
 
-! open SPECFEM3D_Cartesian topology file to read the mesh elements
-  open(unit=23,file='mesh_file',status='old',action='read')
   open(unit=24,file='absorbing_surface_file_xmax',status='unknown',action='write')
-
-  read(23,*) nspec
 
 ! write the total number of face elements
   write(24,*) count_faces_found
 
 ! loop on the whole mesh
-  do ispec_loop = 1,nspec
+  do ispec = 1,nspec
 
-    read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
+    i1 = ibool(1,ispec)
+    i2 = ibool(2,ispec)
+    i3 = ibool(3,ispec)
+    i4 = ibool(4,ispec)
+    i5 = ibool(5,ispec)
+    i6 = ibool(6,ispec)
+    i7 = ibool(7,ispec)
+    i8 = ibool(8,ispec)
 
     if(is_X_CPML(ispec)) then
 
@@ -539,7 +601,6 @@
 
   enddo
 
-  close(23)
   close(24)
 
   print *,'CPML file "absorbing_surface_file_xmax" has been successfully created'
@@ -555,14 +616,17 @@
   size_of_model = ymax - ymin
   limit = ymin + SMALL_RELATIVE_VALUE*size_of_model
 
-! open SPECFEM3D_Cartesian topology file to read the mesh elements
-  open(unit=23,file='mesh_file',status='old',action='read')
-  read(23,*) nspec
-
 ! loop on the whole mesh
-  do ispec_loop = 1,nspec
+  do ispec = 1,nspec
 
-    read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
+    i1 = ibool(1,ispec)
+    i2 = ibool(2,ispec)
+    i3 = ibool(3,ispec)
+    i4 = ibool(4,ispec)
+    i5 = ibool(5,ispec)
+    i6 = ibool(6,ispec)
+    i7 = ibool(7,ispec)
+    i8 = ibool(8,ispec)
 
     if(is_Y_CPML(ispec)) then
 
@@ -613,25 +677,26 @@
 
   enddo
 
-  close(23)
-
   print *,'found ',count_faces_found,' full faces on PML face Ymin'
 
 !-----------------------------
 
-! open SPECFEM3D_Cartesian topology file to read the mesh elements
-  open(unit=23,file='mesh_file',status='old',action='read')
   open(unit=24,file='absorbing_surface_file_ymin',status='unknown',action='write')
-
-  read(23,*) nspec
 
 ! write the total number of face elements
   write(24,*) count_faces_found
 
 ! loop on the whole mesh
-  do ispec_loop = 1,nspec
+  do ispec = 1,nspec
 
-    read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
+    i1 = ibool(1,ispec)
+    i2 = ibool(2,ispec)
+    i3 = ibool(3,ispec)
+    i4 = ibool(4,ispec)
+    i5 = ibool(5,ispec)
+    i6 = ibool(6,ispec)
+    i7 = ibool(7,ispec)
+    i8 = ibool(8,ispec)
 
     if(is_Y_CPML(ispec)) then
 
@@ -666,7 +731,6 @@
 
   enddo
 
-  close(23)
   close(24)
 
   print *,'CPML file "absorbing_surface_file_ymin" has been successfully created'
@@ -682,14 +746,17 @@
   size_of_model = ymax - ymin
   limit = ymax - SMALL_RELATIVE_VALUE*size_of_model
 
-! open SPECFEM3D_Cartesian topology file to read the mesh elements
-  open(unit=23,file='mesh_file',status='old',action='read')
-  read(23,*) nspec
-
 ! loop on the whole mesh
-  do ispec_loop = 1,nspec
+  do ispec = 1,nspec
 
-    read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
+    i1 = ibool(1,ispec)
+    i2 = ibool(2,ispec)
+    i3 = ibool(3,ispec)
+    i4 = ibool(4,ispec)
+    i5 = ibool(5,ispec)
+    i6 = ibool(6,ispec)
+    i7 = ibool(7,ispec)
+    i8 = ibool(8,ispec)
 
     if(is_Y_CPML(ispec)) then
 
@@ -740,25 +807,26 @@
 
   enddo
 
-  close(23)
-
   print *,'found ',count_faces_found,' full faces on PML face Ymax'
 
 !-----------------------------
 
-! open SPECFEM3D_Cartesian topology file to read the mesh elements
-  open(unit=23,file='mesh_file',status='old',action='read')
   open(unit=24,file='absorbing_surface_file_ymax',status='unknown',action='write')
-
-  read(23,*) nspec
 
 ! write the total number of face elements
   write(24,*) count_faces_found
 
 ! loop on the whole mesh
-  do ispec_loop = 1,nspec
+  do ispec = 1,nspec
 
-    read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
+    i1 = ibool(1,ispec)
+    i2 = ibool(2,ispec)
+    i3 = ibool(3,ispec)
+    i4 = ibool(4,ispec)
+    i5 = ibool(5,ispec)
+    i6 = ibool(6,ispec)
+    i7 = ibool(7,ispec)
+    i8 = ibool(8,ispec)
 
     if(is_Y_CPML(ispec)) then
 
@@ -793,7 +861,6 @@
 
   enddo
 
-  close(23)
   close(24)
 
   print *,'CPML file "absorbing_surface_file_ymax" has been successfully created'
@@ -809,14 +876,17 @@
   size_of_model = zmax - zmin
   limit = zmin + SMALL_RELATIVE_VALUE*size_of_model
 
-! open SPECFEM3D_Cartesian topology file to read the mesh elements
-  open(unit=23,file='mesh_file',status='old',action='read')
-  read(23,*) nspec
-
 ! loop on the whole mesh
-  do ispec_loop = 1,nspec
+  do ispec = 1,nspec
 
-    read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
+    i1 = ibool(1,ispec)
+    i2 = ibool(2,ispec)
+    i3 = ibool(3,ispec)
+    i4 = ibool(4,ispec)
+    i5 = ibool(5,ispec)
+    i6 = ibool(6,ispec)
+    i7 = ibool(7,ispec)
+    i8 = ibool(8,ispec)
 
     if(is_Z_CPML(ispec)) then
 
@@ -867,25 +937,26 @@
 
   enddo
 
-  close(23)
-
   print *,'found ',count_faces_found,' full faces on PML face Zmin'
 
 !-----------------------------
 
-! open SPECFEM3D_Cartesian topology file to read the mesh elements
-  open(unit=23,file='mesh_file',status='old',action='read')
   open(unit=24,file='absorbing_surface_file_bottom',status='unknown',action='write')
-
-  read(23,*) nspec
 
 ! write the total number of face elements
   write(24,*) count_faces_found
 
 ! loop on the whole mesh
-  do ispec_loop = 1,nspec
+  do ispec = 1,nspec
 
-    read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
+    i1 = ibool(1,ispec)
+    i2 = ibool(2,ispec)
+    i3 = ibool(3,ispec)
+    i4 = ibool(4,ispec)
+    i5 = ibool(5,ispec)
+    i6 = ibool(6,ispec)
+    i7 = ibool(7,ispec)
+    i8 = ibool(8,ispec)
 
     if(is_Z_CPML(ispec)) then
 
@@ -920,7 +991,6 @@
 
   enddo
 
-  close(23)
   close(24)
 
   print *,'CPML file "absorbing_surface_file_bottom" has been successfully created'

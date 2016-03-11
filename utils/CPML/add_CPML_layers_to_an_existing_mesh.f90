@@ -93,7 +93,8 @@
   print *
 
   print *,'1 = read the mesh files in ASCII format (that is the standard case)'
-  print *,'2 = read the mesh files in binary format'
+  print *,'2 = read the mesh files in binary format (that is much faster, if your mesh is available in that format)'
+  print *,'  (if not, you can run xconvert_mesh_files_from_ASCII_to_binary)'
   print *,'3 = exit'
   read(*,*) iformat
   if(iformat /= 1 .and. iformat /= 2) stop 'exiting...'
