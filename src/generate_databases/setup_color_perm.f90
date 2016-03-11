@@ -404,8 +404,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine setup_permutation(myrank,nspec,nglob,ibool,ANISOTROPY,perm, &
-                               SAVE_MESH_FILES)
+  subroutine setup_permutation(myrank,nspec,nglob,ibool,ANISOTROPY,perm,SAVE_MESH_FILES)
 
   use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,IMAIN, &
     PML_CONDITIONS,is_CPML,CPML_to_spec,NSPEC_CPML,ATTENUATION

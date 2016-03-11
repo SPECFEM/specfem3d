@@ -87,7 +87,7 @@
   end select
 
 !! VM VM for coupling with DSM
-!! find the # layer where the middle of the element is located
+!! find the layer in which the middle of the element is located
   if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) then
 
     if ((NGLLX == 5) .and. (NGLLY == 5) .and. (NGLLZ == 5)) then
@@ -179,7 +179,7 @@
           zmesh = zstore_dummy(iglob)
 
           !! VM VM for coupling with DSM
-          !! find the # layer where the middle of the element is located
+          !! find the layer in which the middle of the element is located
           if ( (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) .and. &
                (i==3 .and. j==3 .and. k==3) ) call FindLayer(xmesh,ymesh,zmesh)
 
@@ -396,7 +396,6 @@
     IMODEL_1D_PREM_PB,IMODEL_GLL, IMODEL_SEP, &
     IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,ATTENUATION_COMP_MAXIMUM, &
     COUPLE_WITH_EXTERNAL_CODE,MESH_A_CHUNK_OF_THE_EARTH
-
 
   use create_regions_mesh_ext_par
   implicit none

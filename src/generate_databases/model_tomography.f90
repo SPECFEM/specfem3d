@@ -617,8 +617,6 @@ end subroutine init_tomography_files
   double precision :: spac_x,spac_y,spac_z
   double precision :: gamma_interp_x,gamma_interp_y
   double precision :: gamma_interp_z1,gamma_interp_z2,gamma_interp_z3,gamma_interp_z4
-  ! unused
-  !double precision :: gamma_interp_z5,gamma_interp_z6,gamma_interp_z7,gamma_interp_z8
 
   real(kind=CUSTOM_REAL) :: vp1,vp2,vp3,vp4,vp5,vp6,vp7,vp8
   real(kind=CUSTOM_REAL) :: vs1,vs2,vs3,vs4,vs5,vs6,vs7,vs8
@@ -764,12 +762,6 @@ end subroutine init_tomography_files
      gamma_interp_z4 = 0.d0
   endif
 
-  ! not used any further
-  !gamma_interp_z5 = 1.d0 - gamma_interp_z1
-  !gamma_interp_z6 = 1.d0 - gamma_interp_z2
-  !gamma_interp_z7 = 1.d0 - gamma_interp_z3
-  !gamma_interp_z8 = 1.d0 - gamma_interp_z4
-
   ! Vp
   vp1 = vp_tomography(imat,p0+1)
   vp2 = vp_tomography(imat,p1+1)
@@ -913,8 +905,6 @@ end subroutine init_tomography_files
   end function interpolate_trilinear
 
   end subroutine model_tomography
-
-
 
 !
 !-------------------------------------------------------------------------------------------------
