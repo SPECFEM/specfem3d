@@ -75,7 +75,7 @@
 
   use constants
 
-  use generate_databases_par, only: COUPLE_WITH_EXTERNAL_CODE, MESH_A_CHUNK_OF_THE_EARTH
+  use generate_databases_par, only: COUPLE_WITH_EXTERNAL_CODE,MESH_A_CHUNK_OF_THE_EARTH
 
   implicit none
 

@@ -39,8 +39,7 @@ subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
 
   use adios_read_mod
 
-  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,IMAIN, &
-    ATTENUATION,FULL_ATTENUATION_SOLID
+  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,IMAIN,ATTENUATION,FULL_ATTENUATION_SOLID
 
   use create_regions_mesh_ext_par
 
