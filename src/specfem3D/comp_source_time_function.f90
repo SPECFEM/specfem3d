@@ -45,13 +45,12 @@
 
   double precision function comp_source_time_function_gauss(t,hdur)
 
-  use constants, only : PI !, SOURCE_DECAY_MIMIC_TRIANGLE
+  use constants, only : PI
 
   implicit none
 
   double precision, intent(in) :: t,hdur
   double precision :: hdur_decay,a
-  ! double precision,parameter :: SOURCE_DECAY_STRONG = 2.0d0/SOURCE_DECAY_MIMIC_TRIANGLE
 
   ! note: hdur given is hdur_gaussian = hdur/SOURCE_DECAY_MIMIC_TRIANGLE
   !           and SOURCE_DECAY_MIMIC_TRIANGLE ~ 1.68
@@ -76,13 +75,12 @@
 
   double precision function comp_source_time_function_dgau(t,hdur)
 
-  use constants, only : PI !, SOURCE_DECAY_MIMIC_TRIANGLE
+  use constants, only : PI
 
   implicit none
 
   double precision, intent(in) :: t,hdur
   double precision :: hdur_decay,a
-  ! double precision,parameter :: SOURCE_DECAY_STRONG = 2.0d0/SOURCE_DECAY_MIMIC_TRIANGLE
 
   ! note: hdur given is hdur_gaussian = hdur/SOURCE_DECAY_MIMIC_TRIANGLE
   !           and SOURCE_DECAY_MIMIC_TRIANGLE ~ 1.68
@@ -107,13 +105,12 @@
 
   double precision function comp_source_time_function_d2gau(t,hdur)
 
-  use constants, only : PI !, SOURCE_DECAY_MIMIC_TRIANGLE
+  use constants, only : PI
 
   implicit none
 
   double precision, intent(in) :: t,hdur
   double precision :: hdur_decay,a
-  ! double precision,parameter :: SOURCE_DECAY_STRONG = 2.0d0/SOURCE_DECAY_MIMIC_TRIANGLE
 
   ! note: hdur given is hdur_gaussian = hdur/SOURCE_DECAY_MIMIC_TRIANGLE
   !           and SOURCE_DECAY_MIMIC_TRIANGLE ~ 1.68
@@ -199,4 +196,3 @@
   comp_source_time_function_d2rck = -2.d0*a * (3.d0 - 12.d0*a*t*t + 4.d0*a**2*t*t*t*t) * exp( -a*t*t )
 
   end function comp_source_time_function_d2rck
-

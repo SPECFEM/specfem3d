@@ -114,7 +114,6 @@
   double precision, external :: wtime
   double precision :: time_start,tCPU
 
-
   ! sources
   integer,intent(inout) :: ispec_selected_source(NSOURCES)
   integer :: ngather, ns, ne, ig, is, ng
@@ -357,7 +356,7 @@
         !kmin = 1
         !kmax = NGLLZ
         !! VM VM exclude edges to ensure this point is not shared with other elements
-        !! unless a error location on source can occurs with FORCE POINTSOURCE
+        !! otherwise a error location on source can occur in the case of a force point source (FORCESOLUTION)
         imin = 2
         imax = NGLLX - 1
 
@@ -888,7 +887,7 @@
             write(IMAIN,*) 'Source time function is a Heaviside, convolve later'
             write(IMAIN,*)
           endif
-          write(IMAIN,*) '  half duration: ', hdur(isource),' seconds'
+          write(IMAIN,*) '  half duration: ',hdur(isource),' seconds'
 
           if (COUPLE_WITH_EXTERNAL_CODE) then !! To verify for NOBU version
             write(IMAIN,*)

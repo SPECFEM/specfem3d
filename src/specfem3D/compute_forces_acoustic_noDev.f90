@@ -163,7 +163,6 @@
                 temp1l_new = temp1l_new + potential_acoustic_new(iglob)*hp1
 
                 !!! can merge these loops because NGLLX = NGLLY = NGLLZ
-
                 hp2 = hprime_yy(j,l)
                 iglob = ibool(i,l,k,ispec)
                 temp2l_old = temp2l_old + potential_acoustic_old(iglob)*hp2

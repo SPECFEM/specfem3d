@@ -222,7 +222,6 @@ subroutine compute_forces_acoustic()
             potential_dot_acoustic(iglob) = 0.0
             potential_acoustic(iglob) = 0.0
             if (ELASTIC_SIMULATION) then
-              !potential_dot_dot_acoustic_old(iglob) = 0.0
               potential_acoustic_old(iglob) = 0.0
             endif
           enddo

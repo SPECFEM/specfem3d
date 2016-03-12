@@ -49,7 +49,7 @@ subroutine compute_interpolated_dva(displ,veloc,accel,NGLOB_AB, &
   ! receiver information
   double precision,intent(in) :: xi_r,eta_r,gamma_r
 
-  ! receiver lagrange interpolators
+  ! receiver Lagrange interpolators
   double precision,dimension(NGLLX),intent(in) :: hxir
   double precision,dimension(NGLLY),intent(in) :: hetar
   double precision,dimension(NGLLZ),intent(in) :: hgammar
@@ -150,7 +150,7 @@ subroutine compute_interpolated_dva_acoust(displ_element,veloc_element,accel_ele
 
   ! receiver information
   double precision,intent(in) :: xi_r,eta_r,gamma_r
-  ! lagrange interpolators
+  ! Lagrange interpolators
   double precision,dimension(NGLLX),intent(in) :: hxir
   double precision,dimension(NGLLY),intent(in) :: hetar
   double precision,dimension(NGLLZ),intent(in) :: hgammar

@@ -67,7 +67,7 @@
     close(IOUT_ENERGY)
   endif
 
-  !! CD CD add this (temp) :
+  !! CD CD add this (temporary) :
   if (CUT_SOLUTION_FOR_VISU) open(unit=158,file='KH_integral',status='unknown')
 
   ! open the file in which we will store the energy curve

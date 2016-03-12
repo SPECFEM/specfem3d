@@ -52,6 +52,7 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
   ! local parameters
   integer :: i,j,k,iglob,CPML_region_local
   integer :: singularity_type_4, singularity_type_5
+
   real(kind=CUSTOM_REAL) :: wgllcube,rhol,jacobianl
   real(kind=CUSTOM_REAL) :: alpha_x,alpha_y,alpha_z,d_x,d_y,d_z,kappa_x,kappa_y,kappa_z
   real(kind=CUSTOM_REAL) :: coef0_x,coef1_x,coef2_x,coef0_y,coef1_y,coef2_y,coef0_z,coef1_z,coef2_z
@@ -93,8 +94,7 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
                A_0, A_1, A_2, A_3, A_4, A_5, &
                coef0_x, coef1_x, coef2_x, &
                coef0_y, coef1_y, coef2_y, &
-               coef0_z, coef1_z, coef2_z, &
-               singularity_type_4, singularity_type_5)
+               coef0_z, coef1_z, coef2_z,singularity_type_4, singularity_type_5)
 
         ! updates memory variables
         rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) = coef0_x * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) &
@@ -175,6 +175,7 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
   ! local parameters
   integer :: i,j,k,iglob,CPML_region_local
   integer :: singularity_type_4, singularity_type_5
+
   real(kind=CUSTOM_REAL) :: wgllcube,kappal_inv,jacobianl
   real(kind=CUSTOM_REAL) :: alpha_x,alpha_y,alpha_z,d_x,d_y,d_z,kappa_x,kappa_y,kappa_z
   real(kind=CUSTOM_REAL) :: coef0_x,coef1_x,coef2_x,coef0_y,coef1_y,coef2_y,coef0_z,coef1_z,coef2_z
@@ -216,8 +217,7 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
                A_0, A_1, A_2, A_3, A_4, A_5, &
                coef0_x, coef1_x, coef2_x, &
                coef0_y, coef1_y, coef2_y, &
-               coef0_z, coef1_z, coef2_z, &
-               singularity_type_4, singularity_type_5)
+               coef0_z, coef1_z, coef2_z,singularity_type_4, singularity_type_5)
 
         ! updates memory variables
         rmemory_potential_acoustic(i,j,k,ispec_CPML,1) = coef0_x * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
@@ -1024,7 +1024,7 @@ end subroutine l_parameter_computation
 !
 !=====================================================================
 !
-Subroutine compute_convolution_coef(bb, deltat, coef0, coef1, coef2, singularity_type, time_nplus1, time_n)
+subroutine compute_convolution_coef(bb,deltat,coef0,coef1,coef2, singularity_type, time_nplus1, time_n)
 
   use constants, only: CUSTOM_REAL
 

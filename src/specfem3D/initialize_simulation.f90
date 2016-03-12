@@ -430,8 +430,7 @@
   if (SAVE_MOHO_MESH) stop 'GPU mode does not support SAVE_MOHO_MESH yet'
 
   if (ATTENUATION) then
-    if (N_SLS /= 3) &
-      stop 'GPU mode does not support N_SLS /= 3 yet'
+    if (N_SLS /= 3) stop 'GPU mode does not support N_SLS /= 3 yet'
   endif
 
   if (POROELASTIC_SIMULATION) stop 'poroelastic simulations on GPUs not supported yet'

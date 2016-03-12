@@ -157,10 +157,9 @@
 !--------------------------------------------------------------------------------------------------------------
 !
 
-
   subroutine update_displacement_elastic()
 
-! updates elastic wavefields
+  ! updates elastic wavefields
 
   use specfem_par
   use specfem_par_elastic

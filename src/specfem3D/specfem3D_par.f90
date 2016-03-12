@@ -80,7 +80,7 @@ module specfem_par
   integer, dimension(:), allocatable :: free_surface_ispec
   integer :: num_free_surface_faces
 
-! for couple with external code : DSM and AxiSEM (add by VM) for the moment
+! for couple with external code : DSM and AxiSEM (added by VM) for the moment
   integer :: it_dsm
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: Veloc_dsm_boundary, Tract_dsm_boundary
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: Veloc_axisem, Tract_axisem
@@ -218,7 +218,6 @@ module specfem_par
   ! for surface or volume integral on whole domain
   double precision, dimension(:), allocatable   :: integral_vol, integral_boun
   double precision, dimension(:,:), allocatable :: f_integrand_KH
-
 
 ! ADJOINT parameters
 

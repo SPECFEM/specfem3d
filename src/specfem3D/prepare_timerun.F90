@@ -288,7 +288,7 @@
         rmassy(:) = rmass(:)
         rmassz(:) = rmass(:)
       else
-        ! adds boundary contributions for newmark scheme
+        ! adds boundary contributions for Newmark scheme
         rmassx(:) = rmass(:) + rmassx(:)
         rmassy(:) = rmass(:) + rmassy(:)
         rmassz(:) = rmass(:) + rmassz(:)
@@ -609,7 +609,7 @@
       write(IMAIN,*) "  central period (s)     : ",sngl(1.0/f_c_source), &
                     " frequency: ",sngl(f_c_source)
       if (FULL_ATTENUATION_SOLID) then
-        write(IMAIN,*) "  using full attenuation (Q_kappa & Q_mu)"
+        write(IMAIN,*) "  using full attenuation (Q_kappa and Q_mu)"
       endif
       write(IMAIN,*)
       call flush_IMAIN()
@@ -871,7 +871,7 @@
   if (SIMULATION_TYPE /= 1) &
     stop 'Error C-PML for adjoint simulations not supported yet'
   if (GPU_MODE) &
-    stop 'Error C-PML only supported in CPU mode'
+    stop 'Error C-PML only supported in CPU mode for now'
 
   ! total number of pml elements
   call sum_all_i(NSPEC_CPML,NSPEC_CPML_GLOBAL)
@@ -1347,7 +1347,7 @@
   call memory_eval_gpu()
 
   ! prepares general fields on GPU
-  !! JC JC here we will need to add GPU support for the C-PML routines
+  ! add GPU support for the C-PML routines
   call prepare_constants_device(Mesh_pointer, &
                                 NGLLX, NSPEC_AB, NGLOB_AB, &
                                 xix, xiy, xiz, etax,etay,etaz, gammax, gammay, gammaz, &
@@ -1395,7 +1395,7 @@
   endif
 
   ! prepares fields on GPU for elastic simulations
-  !! JC JC here we will need to add GPU support for the C-PML routines
+  ! add GPU support for the C-PML routines
   if (ELASTIC_SIMULATION) then
     call prepare_fields_elastic_device(Mesh_pointer, &
                                 rmassx,rmassy,rmassz, &
@@ -1478,7 +1478,7 @@
                                 ACOUSTIC_SIMULATION,rhostore)
   endif
 
-  ! prepares kelvin_voigt_damping around the fault
+  ! prepares Kelvin-Voigt damping around the fault
   if (SIMULATION_TYPE_DYN) then
     call Transfer_faultdata_GPU()
     call prepare_fault_device(Mesh_pointer,allocated(Kelvin_Voigt_eta),Kelvin_Voigt_eta)
@@ -1606,7 +1606,7 @@
       ! d_station_seismo_field
       memory_size = memory_size + 3.d0 * NGLL3 * nrec_local * dble(CUSTOM_REAL)
 
-      if (STACEY_ABSORBING_CONDITIONS) then
+      if (STACEY_ABSORBING_CONDITIONS .or. PML_CONDITIONS) then
         ! d_rho_vp,..
         memory_size = memory_size + 2.d0 * NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
       endif

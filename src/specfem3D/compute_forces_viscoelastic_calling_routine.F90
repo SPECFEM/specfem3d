@@ -630,8 +630,8 @@ subroutine compute_forces_viscoelastic_GPU()
 
   enddo
 
-!Percy , Fault boundary term B*tau is added to the assembled forces
-!        which at this point are stored in the array 'accel'
+  !Percy , Fault boundary term B*tau is added to the assembled forces
+  !        which at this point are stored in the array 'accel'
   if (SIMULATION_TYPE_DYN .or. SIMULATION_TYPE_KIN) then
     ! transfers wavefields to the CPU
     ! call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc,accel, Mesh_pointer)

@@ -1005,7 +1005,7 @@
   use specfem_par_movie
   implicit none
 
-  real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable::veloc_element,pressure_loc
+  real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable :: veloc_element,pressure_loc
   ! divergence and curl only in the global nodes
   real(kind=CUSTOM_REAL),dimension(:),allocatable:: div_glob,curl_glob
   integer,dimension(:),allocatable :: valency
@@ -1045,10 +1045,6 @@
       velocity_x(:,:,:,ispec) = veloc_element(1,:,:,:)
       velocity_y(:,:,:,ispec) = veloc_element(2,:,:,:)
       velocity_z(:,:,:,ispec) = veloc_element(3,:,:,:)
-
-
-
-
    enddo
 
    if ( .not. ELASTIC_SIMULATION .and. .not. POROELASTIC_SIMULATION) then
