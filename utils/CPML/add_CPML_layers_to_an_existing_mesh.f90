@@ -940,6 +940,7 @@
 ! output information for the next code (xconvert_external_layers_of_a_given_mesh_to_CPML_layers)
   print *
   print *,'Here are the values to use as input in the next code, xconvert_external_layers_of_a_given_mesh_to_CPML_layers:'
+  print *,'  (also saved in file values_to_use_for_convert_external_layers_of_a_given_mesh_to_CPML_layers.txt)'
   print *
   print *,'THICKNESS_OF_XMIN_PML = ',sngl(SIZE_OF_XMIN_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD)
   print *,'THICKNESS_OF_XMAX_PML = ',sngl(SIZE_OF_XMAX_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD)
@@ -949,6 +950,21 @@
   if(ALSO_ADD_ON_THE_TOP_SURFACE) &
       print *,'THICKNESS_OF_ZMAX_PML = ',sngl(SIZE_OF_ZMAX_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD)
   print *
+
+! save the thickness values to a text file
+  open(unit=23,file='values_to_use_for_convert_external_layers_of_a_given_mesh_to_CPML_layers.txt',status='unknown',action='write')
+  write(23,*) SIZE_OF_XMIN_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD
+  write(23,*) SIZE_OF_XMAX_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD
+  write(23,*) SIZE_OF_YMIN_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD
+  write(23,*) SIZE_OF_YMAX_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD
+  write(23,*) SIZE_OF_ZMIN_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD
+  if(ALSO_ADD_ON_THE_TOP_SURFACE) then
+    write(23,*) SIZE_OF_ZMAX_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD
+  else
+! convention (negative value) to say that this Zmax absorbing edge is turned off
+    write(23,*) -1
+  endif
+  close(23)
 
   end program add_CPML_layers_to_a_given_mesh
 

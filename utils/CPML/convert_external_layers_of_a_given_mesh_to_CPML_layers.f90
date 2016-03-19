@@ -40,7 +40,7 @@
 
   integer :: nspec,npoin
   integer :: ispec,ipoin
-  integer :: ipoin_read,ispec_loop,iflag,iformat
+  integer :: ipoin_read,ispec_loop,iflag,iformat,iread
   integer :: i1,i2,i3,i4,i5,i6,i7,i8,number_of_CPML_elements,count_faces_found
 
   double precision, dimension(:), allocatable :: x,y,z
@@ -110,6 +110,12 @@
   endif
   print *
 
+  print *,'1 = enter the CPML thickness values to create manually'
+  print *,'2 = read them from a file created by the previous code, xconvert_external_layers_of_a_given_mesh_to_CPML_layers'
+  print *,'3 = exit'
+  read(*,*) iread
+  if(iread /= 1 .and. iread /= 2) stop 'exiting...'
+
 ! open SPECFEM3D_Cartesian mesh file to read the points
   if(iformat == 1) then
     open(unit=23,file='nodes_coords_file',status='old',action='read')
@@ -149,6 +155,25 @@
   print *,'Ymin and Ymax of the mesh read = ',ymin,ymax
   print *,'Zmin and Zmax of the mesh read = ',zmin,zmax
   print *
+
+  if(iread == 2) then
+
+! read the thickness values from an existing text file
+  open(unit=23,file='values_to_use_for_convert_external_layers_of_a_given_mesh_to_CPML_layers.txt',status='old',action='read')
+  read(23,*) THICKNESS_OF_XMIN_PML
+  read(23,*) THICKNESS_OF_XMAX_PML
+  read(23,*) THICKNESS_OF_YMIN_PML
+  read(23,*) THICKNESS_OF_YMAX_PML
+  read(23,*) THICKNESS_OF_ZMIN_PML
+  read(23,*) THICKNESS_OF_ZMAX_PML
+  close(23)
+! check convention (negative value) that says that this Zmax absorbing edge is turned off
+  if(ALSO_ADD_ON_THE_TOP_SURFACE .and. THICKNESS_OF_ZMAX_PML <= 0) &
+    stop 'negative thickness is not allowed; ALSO_ADD_ON_THE_TOP_SURFACE is maybe inconsistent with the previous code; exiting...'
+  if(.not. ALSO_ADD_ON_THE_TOP_SURFACE .and. THICKNESS_OF_ZMAX_PML > 0) &
+    stop 'ALSO_ADD_ON_THE_TOP_SURFACE seems inconsistent with the previous code; exiting...'
+
+  else
 
   print *,'What is the exact thickness of the PML layer that you want'
   print *,'on the Xmin face of your mesh? (it needs to correspond exactly'
@@ -201,6 +226,8 @@
     if(THICKNESS_OF_ZMAX_PML > 0.30*(zmax - zmin)) &
       stop 'thickness of each CPML layer greater than 30% of the size of the mesh is not a good idea; exiting...'
     print *
+  endif
+
   endif
 
 ! ************* read mesh elements and generate CPML flags *************
