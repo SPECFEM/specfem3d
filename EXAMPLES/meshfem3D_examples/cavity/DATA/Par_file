@@ -192,7 +192,8 @@ PRINT_SOURCE_TIME_FUNCTION      = .false.
 COUPLE_WITH_EXTERNAL_CODE       = .false.
 EXTERNAL_CODE_TYPE              = 1   # 1 = DSM, 2 = AxiSEM, 3 = FK
 TRACTION_PATH                   = ./DATA/DSM_tractions_for_specfem3D/
-MESH_A_CHUNK_OF_THE_EARTH       = .true.
+MESH_A_CHUNK_OF_THE_EARTH       = .false.
+CUT_SOLUTION_FOR_VISU           = .false.
 
 # Dimitri Komatitsch, July 2014, CNRS Marseille, France:
 # added the ability to run several calculations (several earthquakes)
@@ -209,9 +210,9 @@ MESH_A_CHUNK_OF_THE_EARTH       = .true.
 # When that option is on, of course the number of processor cores used to start
 # the code in the batch system must be a multiple of NUMBER_OF_SIMULTANEOUS_RUNS,
 # all the individual runs must use the same number of processor cores,
-# which as usual is in the Par_file,
+# which as usual is NPROC in the Par_file,
 # and thus the total number of processor cores to request from the batch system
-# should be NUMBER_OF_SIMULTANEOUS_RUNS * num_procs.
+# should be NUMBER_OF_SIMULTANEOUS_RUNS * NPROC.
 # All the runs to perform must be placed in directories called run0001, run0002, run0003 and so on
 # (with exactly four digits).
 #
@@ -242,7 +243,7 @@ NUMBER_OF_SIMULTANEOUS_RUNS     = 1
 BROADCAST_SAME_MESH_AND_MODEL   = .false.
 
 # if one or a few of these simultaneous runs fail, kill all the runs or let the others finish using a fail-safe mechanism
-# (in most cases, should be set to true)
+# (in most cases, should be set to false)
 USE_FAILSAFE_MECHANISM          = .false.
 
 # set to true to use GPUs
