@@ -258,6 +258,9 @@
   if (ier /= 0) stop 'Error reading Par_file parameter USE_FAILSAFE_MECHANISM'
 
 ! check the type of external code to couple with, if any
+  if (MESH_A_CHUNK_OF_THE_EARTH .and. .not. COUPLE_WITH_EXTERNAL_CODE) &
+    stop 'MESH_A_CHUNK_OF_THE_EARTH only available with COUPLE_WITH_EXTERNAL_CODE for now, easy to change but not done yet'
+
   if (COUPLE_WITH_EXTERNAL_CODE) then
     if (EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_DSM .and. &
        EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_AXISEM .and. &
