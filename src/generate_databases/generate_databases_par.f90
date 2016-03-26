@@ -144,6 +144,9 @@
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: K_store_x, K_store_y, K_store_z
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: alpha_store_x,alpha_store_y,alpha_store_z
 
+  ! minimum distance between parameters of CPML to avoid the singularities
+  real(kind=CUSTOM_REAL) :: min_distance_between_CPML_parameter
+
   ! array recording the points on interface shared by PML and interior computational domain
   logical, dimension(:), allocatable :: mask_ibool_interior_domain
   integer :: nglob_interface_PML_acoustic,nglob_interface_PML_elastic

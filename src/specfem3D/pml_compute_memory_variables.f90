@@ -372,7 +372,7 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
 
   use pml_par, only: NSPEC_CPML,CPML_regions,k_store_x,k_store_y,k_store_z,&
                      d_store_x,d_store_y,d_store_z,&
-                     alpha_store_x,alpha_store_y,alpha_store_z !,&
+                     alpha_store_x,alpha_store_y,alpha_store_z
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS, &
                        CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
@@ -531,7 +531,7 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
 
   use specfem_par, only: NGLOB_AB,it,deltat
   use pml_par,only : CPML_regions,k_store_x,k_store_y,k_store_z,d_store_x,d_store_y,d_store_z,&
-                     alpha_store_x,alpha_store_y,alpha_store_z,displ_old,displ_new
+                     alpha_store_x,alpha_store_y,alpha_store_z,PML_displ_old,PML_displ_new
   use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,&
                        CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
@@ -569,30 +569,37 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
                                            singularity_type_2)
   ! displ_x
   rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) = coef0_1 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) + &
-                                                  coef1_1 * displ_new(1,iglob) + coef2_1 * displ_old(1,iglob)
+                                                  coef1_1 * PML_displ_new(1,i,j,k,ispec_CPML) + &
+                                                  coef2_1 * PML_displ_old(1,i,j,k,ispec_CPML)
 
   rmemory_coupling_ac_el_displ(1,i,j,k,iface,2) = coef0_2 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,2) + &
-                                                  coef1_2 * displ_new(1,iglob) + coef2_2 * displ_old(1,iglob)
+                                                  coef1_2 * PML_displ_new(1,i,j,k,ispec_CPML) + &
+                                                  coef2_2 * PML_displ_old(1,i,j,k,ispec_CPML)
 
   displ_x = A_12 * displ(1,iglob) + A_13 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) + &
                                     A_14 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,2)
 
   ! displ_y
   rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) = coef0_1 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) + &
-                                                  coef1_1 * displ_new(2,iglob) + coef2_1 * displ_old(2,iglob)
+                                                  coef1_1 * PML_displ_new(2,i,j,k,ispec_CPML) + &
+                                                  coef2_1 * PML_displ_old(2,i,j,k,ispec_CPML)
 
   rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) = coef0_2 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,2) + &
-                                                  coef1_2 * displ_new(2,iglob) + coef2_2 * displ_old(2,iglob)
+                                                  coef1_2 * PML_displ_new(2,i,j,k,ispec_CPML) + &
+                                                  coef2_2 * PML_displ_old(2,i,j,k,ispec_CPML)
 
   displ_y = A_12 * displ(2,iglob) + A_13 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) + &
                                     A_14 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,2)
 
   ! displ_z
   rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) = coef0_1 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) + &
-                                                  coef1_1 * displ_new(3,iglob) + coef2_1 * displ_old(3,iglob)
+                                                  coef1_1 * PML_displ_new(3,i,j,k,ispec_CPML) + &
+                                                  coef2_1 * PML_displ_old(3,i,j,k,ispec_CPML)
 
   rmemory_coupling_ac_el_displ(3,i,j,k,iface,2) = coef0_2 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,2) + &
-                                                  coef1_2 * displ_new(3,iglob) + coef2_2 * displ_old(3,iglob)
+                                                  coef1_2 * PML_displ_new(3,i,j,k,ispec_CPML) + &
+                                                  coef2_2 * PML_displ_old(3,i,j,k,ispec_CPML)
+
 
   displ_z = A_12 * displ(3,iglob) + A_13 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) + &
                                     A_14 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,2)
@@ -602,8 +609,8 @@ end subroutine pml_compute_memory_variables_acoustic_elastic
 !=====================================================================
 !
 subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k,&
-                                                         pressure,potential_acoustic,potential_acoustic_old,&
-                                                         potential_dot_acoustic,potential_dot_dot_acoustic, &
+                                                         pressure,potential_acoustic,&
+                                                         potential_dot_acoustic,potential_dot_dot_acoustic,&
                                                          num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential)
   ! calculates C-PML elastic memory variables and computes stress sigma
 
@@ -614,7 +621,8 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
 
   use specfem_par, only: NGLOB_AB,it,deltat
   use pml_par,only : CPML_regions,k_store_x,k_store_y,k_store_z,d_store_x,d_store_y,d_store_z,&
-                     alpha_store_x,alpha_store_y,alpha_store_z,potential_acoustic_new
+                     alpha_store_x,alpha_store_y,alpha_store_z,&
+                     PML_potential_acoustic_old,PML_potential_acoustic_new
   use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,&
                        CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
@@ -622,7 +630,7 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
 
   integer, intent(in) :: ispec_CPML,iface,iglob,num_coupling_ac_el_faces
   real(kind=CUSTOM_REAL),intent(out) :: pressure
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB), intent(in) :: potential_acoustic,potential_acoustic_old, &
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB), intent(in) :: potential_acoustic, &
                                                              potential_dot_acoustic,potential_dot_dot_acoustic
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2) :: &
                                     rmemory_coupling_el_ac_potential
@@ -663,12 +671,12 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
                singularity_type_1, singularity_type_2)
 
   rmemory_coupling_el_ac_potential(i,j,k,iface,1) = coef0_1 * rmemory_coupling_el_ac_potential(i,j,k,iface,1) + &
-                                                    coef1_1 * potential_acoustic_new(iglob) + &
-                                                    coef2_1 * potential_acoustic_old(iglob)
+                                                    coef1_1 * PML_potential_acoustic_new(i,j,k,ispec_CPML) + &
+                                                    coef2_1 * PML_potential_acoustic_old(i,j,k,ispec_CPML)
 
   rmemory_coupling_el_ac_potential(i,j,k,iface,2) = coef0_2 * rmemory_coupling_el_ac_potential(i,j,k,iface,2) + &
-                                                    coef1_2 * potential_acoustic_new(iglob) + &
-                                                    coef2_2 * potential_acoustic_old(iglob)
+                                                    coef1_2 * PML_potential_acoustic_new(i,j,k,ispec_CPML) + &
+                                                    coef2_2 * PML_potential_acoustic_old(i,j,k,ispec_CPML)
 
   pressure = A_0 * potential_dot_dot_acoustic(iglob) + A_1 * potential_dot_acoustic(iglob)  + A_2 * potential_acoustic(iglob) &
            + A_3 * rmemory_coupling_el_ac_potential(i,j,k,iface,1) + A_4 * rmemory_coupling_el_ac_potential(i,j,k,iface,2)
@@ -685,6 +693,7 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
 
   use constants, only: CUSTOM_REAL,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,&
                        CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
+  use pml_par, only: min_distance_between_CPML_parameter
 
   implicit none
 
@@ -752,8 +761,9 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
      bar_A_0 = kappa_x * kappa_y / kappa_z
      A_0 = bar_A_0
 
-    if (abs(alpha_x-alpha_y) >= 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) >= 1.e-5_CUSTOM_REAL &
-       .and. abs(alpha_y-beta_z) >= 1.e-5_CUSTOM_REAL) then
+    if (abs(alpha_x-alpha_y) >= min_distance_between_CPML_parameter .and. &
+        abs(alpha_x-beta_z) >= min_distance_between_CPML_parameter .and. &
+        abs(alpha_y-beta_z) >= min_distance_between_CPML_parameter) then
       !----------------A1,2,3-------------------------
       bar_A_1 = - bar_A_0 * (alpha_x - alpha_z) * (alpha_x - beta_x) * (alpha_x - beta_y) / &
                 ((alpha_x-alpha_y) * (alpha_x-beta_z))
@@ -773,8 +783,9 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       call compute_convolution_coef(alpha_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
       call compute_convolution_coef(beta_z, deltat, coef0_3, coef1_3, coef2_3, singularity_type_3, time_nplus1,time_n)
 
-    else if (abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) >= 1.e-5_CUSTOM_REAL &
-          .and. abs(alpha_y-beta_z) >= 1.e-5_CUSTOM_REAL) then
+    else if (abs(alpha_x-alpha_y) < min_distance_between_CPML_parameter .and. &
+             abs(alpha_x-beta_z) >= min_distance_between_CPML_parameter .and. &
+             abs(alpha_y-beta_z) >= min_distance_between_CPML_parameter) then
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_x,alpha_y)
 
@@ -806,8 +817,9 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       call compute_convolution_coef(a_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
       call compute_convolution_coef(beta_z, deltat, coef0_3, coef1_3, coef2_3, singularity_type_3, time_nplus1,time_n)
 
-    else if (abs(alpha_x-alpha_y) >= 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) < 1.e-5_CUSTOM_REAL &
-          .and. abs(alpha_y-beta_z) >= 1.e-5_CUSTOM_REAL) then
+    else if (abs(alpha_x-alpha_y) >= min_distance_between_CPML_parameter .and. &
+             abs(alpha_x-beta_z) < min_distance_between_CPML_parameter .and. &
+             abs(alpha_y-beta_z) >= min_distance_between_CPML_parameter) then
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_x,beta_z)
 
@@ -838,8 +850,9 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       call compute_convolution_coef(alpha_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
       call compute_convolution_coef(beta_z, deltat, coef0_3, coef1_3, coef2_3, singularity_type_3, time_nplus1,time_n)
 
-    else if (abs(alpha_x-alpha_y) >= 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) >= 1.e-5_CUSTOM_REAL &
-          .and. abs(alpha_y-beta_z) < 1.e-5_CUSTOM_REAL) then
+    else if (abs(alpha_x-alpha_y) >= min_distance_between_CPML_parameter .and. &
+             abs(alpha_x-beta_z) >= min_distance_between_CPML_parameter .and. &
+             abs(alpha_y-beta_z) < min_distance_between_CPML_parameter) then
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_y,beta_z)
 
@@ -870,17 +883,21 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       call compute_convolution_coef(a_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
       call compute_convolution_coef(beta_z, deltat, coef0_3, coef1_3, coef2_3, singularity_type_3, time_nplus1,time_n)
 
-    else if ((abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) < 1.e-5_CUSTOM_REAL &
-             .and. abs(alpha_y-beta_z) < 1.e-5_CUSTOM_REAL) .or.&
+    else if ((abs(alpha_x-alpha_y) < min_distance_between_CPML_parameter .and. &
+              abs(alpha_x-beta_z) < min_distance_between_CPML_parameter .and. &
+              abs(alpha_y-beta_z) < min_distance_between_CPML_parameter) .or.&
 
-             (abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) < 1.e-5_CUSTOM_REAL &
-             .and. abs(alpha_y-beta_z) < 1.e-5_CUSTOM_REAL) .or.&
+             (abs(alpha_x-alpha_y) < min_distance_between_CPML_parameter .and. &
+              abs(alpha_x-beta_z) < min_distance_between_CPML_parameter .and. &
+              abs(alpha_y-beta_z) < min_distance_between_CPML_parameter) .or.&
 
-             (abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) < 1.e-5_CUSTOM_REAL &
-             .and. abs(alpha_y-beta_z) < 1.e-5_CUSTOM_REAL) .or.&
+             (abs(alpha_x-alpha_y) < min_distance_between_CPML_parameter .and. &
+              abs(alpha_x-beta_z) < min_distance_between_CPML_parameter .and. &
+              abs(alpha_y-beta_z) < min_distance_between_CPML_parameter) .or.&
 
-             (abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL .and. abs(alpha_x-beta_z) < 1.e-5_CUSTOM_REAL &
-             .and. abs(alpha_y-beta_z) < 1.e-5_CUSTOM_REAL)) then
+             (abs(alpha_x-alpha_y) < min_distance_between_CPML_parameter .and. &
+              abs(alpha_x-beta_z) < min_distance_between_CPML_parameter .and. &
+              abs(alpha_y-beta_z) < min_distance_between_CPML_parameter)) then
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_x,alpha_y,beta_z)
 
@@ -915,7 +932,7 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
      bar_A_0 = kappa_y / kappa_z
      A_0 = bar_A_0
 
-    if (abs(alpha_y-beta_z) >= 1.e-5_CUSTOM_REAL) then
+    if (abs(alpha_y-beta_z) >= min_distance_between_CPML_parameter) then
      !----------------A1,2,3-------------------------
 
       beta_x = alpha_x + d_x / kappa_x
@@ -939,7 +956,7 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       call compute_convolution_coef(alpha_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
       call compute_convolution_coef(beta_z, deltat, coef0_3, coef1_3, coef2_3, singularity_type_3, time_nplus1,time_n)
 
-    else if (abs(alpha_y-beta_z) < 1.e-5_CUSTOM_REAL) then
+    else if (abs(alpha_y-beta_z) < min_distance_between_CPML_parameter) then
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_y,beta_z)
 
@@ -972,7 +989,7 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
      bar_A_0 = kappa_x / kappa_z
      A_0 = bar_A_0
 
-    if (abs(alpha_x-beta_z) >= 1.e-5_CUSTOM_REAL) then
+    if (abs(alpha_x-beta_z) >= min_distance_between_CPML_parameter) then
      !----------------A1,2,3-------------------------
 
       beta_x = alpha_x + d_x / kappa_x
@@ -996,7 +1013,7 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       call compute_convolution_coef(alpha_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
       call compute_convolution_coef(beta_z, deltat, coef0_3, coef1_3, coef2_3, singularity_type_3, time_nplus1,time_n)
 
-    else if (abs(alpha_x-beta_z) < 1.e-5_CUSTOM_REAL) then
+    else if (abs(alpha_x-beta_z) < min_distance_between_CPML_parameter) then
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_x,beta_z)
 
@@ -1030,7 +1047,7 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
      bar_A_0 = kappa_x * kappa_y
      A_0 = bar_A_0
 
-    if (abs(alpha_x-alpha_y) >= 1.e-5_CUSTOM_REAL) then
+    if (abs(alpha_x-alpha_y) >= min_distance_between_CPML_parameter) then
      !----------------A1,2,3-------------------------
       beta_x = alpha_x + d_x / kappa_x
       beta_y = alpha_y + d_y / kappa_y
@@ -1053,7 +1070,7 @@ subroutine lijk_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_x,kappa_y
       call compute_convolution_coef(alpha_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
       call compute_convolution_coef(beta_z, deltat, coef0_3, coef1_3, coef2_3, singularity_type_3, time_nplus1,time_n)
 
-    else if (abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL) then
+    else if (abs(alpha_x-alpha_y) < min_distance_between_CPML_parameter) then
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_x,alpha_y)
 
@@ -1374,6 +1391,7 @@ subroutine lxy_interface_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_
 
   use constants, only: CUSTOM_REAL,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,&
                        CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
+  use pml_par, only: min_distance_between_CPML_parameter
 
   implicit none
 
@@ -1417,7 +1435,7 @@ subroutine lxy_interface_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_
      bar_A_0 = kappa_x * kappa_y
      A_0 = bar_A_0
 
-    if (abs(alpha_x-alpha_y) >= 1.e-5_CUSTOM_REAL) then
+    if (abs(alpha_x-alpha_y) >= min_distance_between_CPML_parameter) then
      !----------------A1,2-------------------------
 
       bar_A_1 = - bar_A_0 * (alpha_x - beta_x) * (alpha_x - beta_y) / &
@@ -1433,7 +1451,7 @@ subroutine lxy_interface_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_
       call compute_convolution_coef(alpha_x, deltat, coef0_1, coef1_1, coef2_1, 0, time_nplus1,time_n)
       call compute_convolution_coef(alpha_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
 
-    else if (abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL) then
+    else if (abs(alpha_x-alpha_y) < min_distance_between_CPML_parameter) then
       !----------------A1,2-------------------------
       alpha_0 = max(alpha_x,alpha_y)
 
@@ -1496,7 +1514,7 @@ subroutine lxy_interface_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_
      bar_A_0 = kappa_x * kappa_y
      A_0 = bar_A_0
 
-    if (abs(alpha_x-alpha_y) >= 1.e-5_CUSTOM_REAL) then
+    if (abs(alpha_x-alpha_y) >= min_distance_between_CPML_parameter) then
      !----------------A1,2,3-------------------------
 
       bar_A_1 = - bar_A_0 * (alpha_x - beta_x) * (alpha_x - beta_y) / &
@@ -1512,7 +1530,7 @@ subroutine lxy_interface_parameter_computation(timeval,deltat,kappa_x,d_x,alpha_
       call compute_convolution_coef(alpha_x, deltat, coef0_1, coef1_1, coef2_1, 0, time_nplus1,time_n)
       call compute_convolution_coef(alpha_y, deltat, coef0_2, coef1_2, coef2_2, singularity_type_2, time_nplus1,time_n)
 
-    else if (abs(alpha_x-alpha_y) < 1.e-5_CUSTOM_REAL) then
+    else if (abs(alpha_x-alpha_y) < min_distance_between_CPML_parameter) then
       !----------------A1,2,3-------------------------
       alpha_0 = max(alpha_x,alpha_y)
 

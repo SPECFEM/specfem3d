@@ -376,11 +376,13 @@
       read(27) CPML_width_x
       read(27) CPML_width_y
       read(27) CPML_width_z
+      read(27) min_distance_between_CPML_parameter
     endif
     call bcast_all_i_for_database(NSPEC_CPML, 1)
     call bcast_all_cr_for_database(CPML_width_x, 1)
     call bcast_all_cr_for_database(CPML_width_y, 1)
     call bcast_all_cr_for_database(CPML_width_z, 1)
+    call bcast_all_cr_for_database(min_distance_between_CPML_parameter, 1)
 
     allocate(is_CPML(NSPEC_AB),stat=ier)
     if (ier /= 0) stop 'Error allocating array is_CPML'

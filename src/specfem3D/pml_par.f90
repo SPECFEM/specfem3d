@@ -63,15 +63,18 @@ module pml_par
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: K_store_x, K_store_y, K_store_z
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: alpha_store_x,alpha_store_y,alpha_store_z
 
+  ! minimum distance between parameters of CPML to avoid the singularities
+  real(kind=CUSTOM_REAL) :: min_distance_between_CPML_parameter
+
   ! store the field of displ + (1-2 * \theta)/2*deltat * veloc + (1-\theta)/2*deltat**2 * accel
   ! for second order convolution scheme
   ! where displ, veloc, accel are defined at n-1 time step
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: displ_old
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: PML_displ_old
   real(kind=CUSTOM_REAL), parameter :: theta = 1.0_CUSTOM_REAL/8.0_CUSTOM_REAL
 
   ! store the field of displ + (1-2 * \theta)/2*deltat * veloc for second order convolution scheme
   ! where displ is defined at n time step, while veloc is predicted veloc at "n" time step
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: displ_new
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: PML_displ_new
 
   ! derivatives of ux, uy and uz with respect to x, y and z
   ! in PML_du* computation displ at "n" time step is used
@@ -92,13 +95,13 @@ module pml_par
   !store the field of
   !potential_acoustic + (1-2 * \theta)/2*deltat * potential_dot_acoustic + (1-\theta)/2*deltat**2 * potential_dot_dot_acoustic
   !where potential_acoustic, potential_dot_acoustic, potential_dot_dot_acoustic are defined at "n-1" time step
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_acoustic_old
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: PML_potential_acoustic_old
 
   !store the field of
   !potential_acoustic + (1-2 * \theta)/2*deltat * potential_dot_acoustic
   !potential_acoustic is defined at "n" time step,
   !and potential_dot_acoustic is predicted potential_dot_acoustic at "n" time step
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_acoustic_new
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: PML_potential_acoustic_new
 
   ! C-PML memory variables
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_dux_dxl_x,rmemory_dux_dyl_x,rmemory_dux_dzl_x

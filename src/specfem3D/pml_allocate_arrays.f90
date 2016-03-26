@@ -30,7 +30,7 @@
   subroutine pml_allocate_arrays()
 
   use pml_par
-  use specfem_par, only: NSPEC_AB,NGLOB_AB,PML_CONDITIONS,SIMULATION_TYPE,SAVE_FORWARD,NSTEP,myrank,prname !
+  use specfem_par, only: NSPEC_AB,PML_CONDITIONS,SIMULATION_TYPE,SAVE_FORWARD,NSTEP,myrank,prname !
   use constants, only: NDIM,NGLLX,NGLLY,NGLLZ
   use specfem_par_acoustic, only: ACOUSTIC_SIMULATION,num_coupling_ac_el_faces
   use specfem_par_elastic, only: ELASTIC_SIMULATION
@@ -62,9 +62,11 @@
 
   if (ELASTIC_SIMULATION) then
     ! store the displ field at n-1 time step
-    allocate(displ_old(3,NGLOB_AB),stat=ier)
-    if (ier /= 0) stop 'error allocating displ_old array'
-    allocate(displ_new(3,NGLOB_AB),stat=ier)
+    allocate(PML_displ_old(3,NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+    if (ier /= 0) stop 'error allocating PML_displ_old array'
+    ! store the displ field at n time step
+    allocate(PML_displ_new(3,NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+    if (ier /= 0) stop 'error allocating PML_displ_new array'
     if (ier /= 0) stop 'error allocating displ_new array'
     ! stores derivatives of ux, uy and uz with respect to x, y and z
     allocate(PML_dux_dxl(NGLLX,NGLLY,NGLLZ),stat=ier)
@@ -180,11 +182,12 @@
   endif
 
   if (ACOUSTIC_SIMULATION) then
-    ! store the potential acoustic field at n-1 time step
-    allocate(potential_acoustic_old(NGLOB_AB),stat=ier)
-    if (ier /= 0) stop 'error allocating potential_acoustic_old array'
-    allocate(potential_acoustic_new(NGLOB_AB),stat=ier)
-    if (ier /= 0) stop 'error allocating potential_acoustic_new array'
+    ! store the potential acoustic field at n-1 time step for CMPL
+    allocate(PML_potential_acoustic_old(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+    if (ier /= 0) stop 'error allocating PML_potential_acoustic_old array'
+    ! store the potential acoustic field at n time step for CMPL
+    allocate(PML_potential_acoustic_new(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+    if (ier /= 0) stop 'error allocating PML_potential_acoustic_new array'
 
     ! store the potential acoustic field at n-1 time step
 !    allocate(potential_dot_dot_acoustic_old(NGLOB_AB),stat=ier)
@@ -224,8 +227,8 @@
   CPML_type(:) = 0
 
   if (ELASTIC_SIMULATION) then
-    displ_old(:,:) = 0._CUSTOM_REAL
-    displ_new(:,:) = 0._CUSTOM_REAL
+    PML_displ_old(:,:,:,:,:) = 0._CUSTOM_REAL
+    PML_displ_new(:,:,:,:,:) = 0._CUSTOM_REAL
 
     PML_dux_dxl(:,:,:) = 0._CUSTOM_REAL
     PML_dux_dyl(:,:,:) = 0._CUSTOM_REAL
@@ -286,8 +289,9 @@
   endif
 
   if (ACOUSTIC_SIMULATION) then
-    potential_acoustic_old(:) = 0._CUSTOM_REAL
-    potential_acoustic_new(:) = 0._CUSTOM_REAL
+    PML_potential_acoustic_old(:,:,:,:) = 0._CUSTOM_REAL
+    PML_potential_acoustic_new(:,:,:,:) = 0._CUSTOM_REAL
+
 !    potential_dot_dot_acoustic_old(:) = 0._CUSTOM_REAL
 
     rmemory_dpotential_dxl(:,:,:,:,:) = 0._CUSTOM_REAL
@@ -421,8 +425,8 @@
   if (.not. allocated(CPML_type)) allocate(CPML_type(1))
 
   if (ELASTIC_SIMULATION) then
-    if (.not. allocated(displ_old)) allocate(displ_old(3,1))
-    if (.not. allocated(displ_new)) allocate(displ_new(3,1))
+    if (.not. allocated(PML_displ_old)) allocate(PML_displ_old(3,1,1,1,1))
+    if (.not. allocated(PML_displ_new)) allocate(PML_displ_new(3,1,1,1,1))
 
     if (.not. allocated(PML_dux_dxl)) allocate(PML_dux_dxl(1,1,1))
     if (.not. allocated(PML_dux_dyl)) allocate(PML_dux_dyl(1,1,1))
@@ -480,9 +484,8 @@
   endif
 
   if (ACOUSTIC_SIMULATION) then
-    if (.not. allocated(potential_acoustic_old)) allocate(potential_acoustic_old(1))
-    if (.not. allocated(potential_acoustic_new)) allocate(potential_acoustic_new(1))
-    !if (.not. allocated(potential_dot_dot_acoustic_old)) allocate(potential_dot_dot_acoustic_old(1))
+    if (.not. allocated(PML_potential_acoustic_old)) allocate(PML_potential_acoustic_old(1,1,1,1))
+    if (.not. allocated(PML_potential_acoustic_new)) allocate(PML_potential_acoustic_new(1,1,1,1))
 
     if (.not. allocated(rmemory_dpotential_dxl)) allocate(rmemory_dpotential_dxl(1,1,1,1,3))
     if (.not. allocated(rmemory_dpotential_dyl)) allocate(rmemory_dpotential_dyl(1,1,1,1,3))
@@ -539,8 +542,9 @@
   deallocate(CPML_type)
 
   if (ELASTIC_SIMULATION) then
-    deallocate(displ_old)
-    deallocate(displ_new)
+    deallocate(PML_displ_old)
+    deallocate(PML_displ_new)
+
     deallocate(PML_dux_dxl)
     deallocate(PML_dux_dyl)
     deallocate(PML_dux_dzl)
@@ -594,8 +598,9 @@
   endif
 
   if (ACOUSTIC_SIMULATION) then
-    deallocate(potential_acoustic_old)
-    deallocate(potential_acoustic_new)
+    deallocate(PML_potential_acoustic_old)
+    deallocate(PML_potential_acoustic_new)
+
     deallocate(rmemory_dpotential_dxl)
     deallocate(rmemory_dpotential_dyl)
     deallocate(rmemory_dpotential_dzl)

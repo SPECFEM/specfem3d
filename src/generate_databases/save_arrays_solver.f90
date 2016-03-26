@@ -33,7 +33,7 @@
                     SAVE_MESH_FILES,ANISOTROPY)
 
   use generate_databases_par, only: nspec_cpml,CPML_width_x,CPML_width_y,CPML_width_z,CPML_to_spec,&
-    CPML_regions,is_CPML,nspec_cpml_tot, &
+    CPML_regions,is_CPML,min_distance_between_CPML_parameter,nspec_cpml_tot, &
     d_store_x,d_store_y,d_store_z,k_store_x,k_store_y,k_store_z,&
     alpha_store_x,alpha_store_y,alpha_store_z, &
     nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
@@ -142,6 +142,7 @@
     write(IOUT) CPML_width_x
     write(IOUT) CPML_width_y
     write(IOUT) CPML_width_z
+    write(IOUT) min_distance_between_CPML_parameter
     if (nspec_cpml > 0) then
       write(IOUT) CPML_regions
       write(IOUT) CPML_to_spec

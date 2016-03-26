@@ -58,12 +58,14 @@ subroutine compute_forces_acoustic()
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
-  use pml_par,only: is_CPML,nglob_interface_PML_acoustic,&
-                    b_PML_potential,b_reclen_PML_potential,potential_acoustic_old ! potential_dot_dot_acoustic_old
+  use pml_par,only: is_CPML,spec_to_CPML,nglob_interface_PML_acoustic,&
+                    b_PML_potential,b_reclen_PML_potential,&
+                    PML_potential_acoustic_old,PML_potential_acoustic_new
+
   implicit none
 
   ! local parameters
-  integer:: iphase,iface,ispec,iglob,igll,i,j,k
+  integer:: iphase,iface,ispec,iglob,igll,i,j,k,ispec_CPML
   logical:: phase_is_inner
 
   ! enforces free surface (zeroes potentials at free surface)
@@ -210,6 +212,7 @@ subroutine compute_forces_acoustic()
 !!!   if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
         if (ispec_is_acoustic(ispec) .and. is_CPML(ispec)) then
           ! reference gll points on boundary face
+          ispec_CPML = spec_to_CPML(ispec)
           do igll = 1,NGLLSQUARE
             ! gets local indices for GLL point
             i = abs_boundary_ijk(1,igll,iface)
@@ -218,11 +221,12 @@ subroutine compute_forces_acoustic()
 
             iglob=ibool(i,j,k,ispec)
 
-            potential_dot_dot_acoustic(iglob) = 0.0
-            potential_dot_acoustic(iglob) = 0.0
-            potential_acoustic(iglob) = 0.0
+            potential_dot_dot_acoustic(iglob) = 0._CUSTOM_REAL
+            potential_dot_acoustic(iglob) = 0._CUSTOM_REAL
+            potential_acoustic(iglob) = 0._CUSTOM_REAL
             if (ELASTIC_SIMULATION) then
-              potential_acoustic_old(iglob) = 0.0
+              PML_potential_acoustic_old(i,j,k,ispec_CPML) = 0._CUSTOM_REAL
+              PML_potential_acoustic_new(i,j,k,ispec_CPML) = 0._CUSTOM_REAL
             endif
           enddo
         endif ! ispec_is_acoustic

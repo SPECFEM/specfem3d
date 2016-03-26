@@ -41,7 +41,7 @@ subroutine compute_forces_viscoelastic()
 
   integer:: iphase
   logical:: phase_is_inner
-  integer:: iface,ispec,igll,i,j,k,iglob
+  integer:: iface,ispec,igll,i,j,k,iglob,ispec_CPML
 
 
   ! kbai added the following two synchronizations to ensure that the displacement and velocity values
@@ -237,6 +237,7 @@ subroutine compute_forces_viscoelastic()
 !!!        if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
       if (ispec_is_elastic(ispec) .and. is_CPML(ispec)) then
         ! reference gll points on boundary face
+        ispec_CPML = spec_to_CPML(ispec)
         do igll = 1,NGLLSQUARE
           ! gets local indices for GLL point
           i = abs_boundary_ijk(1,igll,iface)
@@ -245,10 +246,11 @@ subroutine compute_forces_viscoelastic()
 
           iglob=ibool(i,j,k,ispec)
 
-          accel(:,iglob) = 0.0
-          veloc(:,iglob) = 0.0
-          displ(:,iglob) = 0.0
-          displ_old(:,iglob) = 0.0
+          accel(:,iglob) = 0._CUSTOM_REAL
+          veloc(:,iglob) = 0._CUSTOM_REAL
+          displ(:,iglob) = 0._CUSTOM_REAL
+          PML_displ_old(:,i,j,k,ispec_CPML) = 0._CUSTOM_REAL
+          PML_displ_new(:,i,j,k,ispec_CPML) = 0._CUSTOM_REAL
 
         enddo
       endif ! ispec_is_elastic
