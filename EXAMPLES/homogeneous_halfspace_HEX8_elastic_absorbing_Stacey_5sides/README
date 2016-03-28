@@ -11,7 +11,6 @@ step-by-step tutorial (short version -- use pre-saved mesh files):
 
 1. check that all software is available (or that modules are loaded):
 	openmpi: > which mpirun
-        scotch:  > which gout
 
 2. from the directory SPECFEM3D/examples/homogeneous_halfspace/
 
@@ -32,7 +31,6 @@ step-by-step tutorial (long version -- generate MESH with GEOCUBIT):
 1. check that all software is available (or that modules are loaded):
 	openmpi: > which mpirun
         cubit:   > which cubit
-        scotch:  > which gout
         python:  > which python
      optional:
         gnuplot: > which gnuplot
@@ -53,8 +51,8 @@ step-by-step tutorial (long version -- generate MESH with GEOCUBIT):
      > cd SPECFEM3D
      > ./configure FC=ifort MPIFC=mpif90
 
-     If successful, this will generate the files in src/shared/:
-     Makefile, constants.h, and precision.h, among others
+     If successful, this will generate the files in setup/:
+     config.h, constants.h, precision.h, among others
 
      note: If SCOTCH is installed separately, then the same compiler
            used for SCOTCH must be used for SPECFEM3D (ifort, gfortran, pgf90)
@@ -83,28 +81,38 @@ step-by-step tutorial (long version -- generate MESH with GEOCUBIT):
      > which GEOCUBIT.py
      > make_mesh.sh
    
-     if everything goes fine, this creates the ten mesh files in subdirectory MESH/:
-        absorbing_surface_file_bottom
-        absorbing_surface_file_xmax
-        absorbing_surface_file_xmin
-        absorbing_surface_file_ymax
-        absorbing_surface_file_ymin
-        free_or_absorbing_surface_file_zmax
-        materials_file
-        mesh_file
-        nodes_coords_file
-        nummaterial_velocity_file
+     if everything goes fine, this creates the ten mesh files in subdirectory MESH/
+     to be safe, check the number of lines in the files
+     > wc *
 
-     (there will also be several local files generated)
-     the mesh can be viewed using either cubit or paraview:
+   1297    6481   27390 absorbing_surface_file_bottom
+    577    2881   14458 absorbing_surface_file_xmin
+    577    2881   14532 absorbing_surface_file_ymax
+    577    2881   14606 absorbing_surface_file_ymin
+      6      65     285 blocks.dat
+   1297    6481   33707 free_or_absorbing_surface_file_zmax
+  20736   41472  456192 materials_file
+  20737  186625 1045034 mesh_file
+  23274   93093 1722213 nodes_coords_file
+     35     146    1269 nummaterial_velocity_file
+   3526   12330 1622480 TOTALMESH_MERGED.e
+     16      49     862 TOTALMESH_MERGED.xml
+  72655  355385 4953028 total
 
-     > claro &
-     then open TOTALMESH_MERGED.cub
-     optional: type "draw block all" in the cubit command line window
+     the mesh can be viewed using paraview:
 
      > paraview &
      then open TOTALMESH_MERGED.e
      (click "Apply", then select "Surface With Edges" in the toolbar)
+
+     there will also be several files generated locally
+     the mesh can also be viewed using trelis:
+
+     > cd ..
+     > trelis &
+     then open tmp_nomerging.cub
+     (if you don't see anything, you may need to zoom out)
+     optional (if >1 slice): type "draw block all" in the trelis command line window
 
 6. decompose mesh files:
 
@@ -157,9 +165,9 @@ step-by-step tutorial (long version -- generate MESH with GEOCUBIT):
            and you can track the progress with the timestamp files
            generated in OUTPUT_FILES/
 
-   - when the job is complete, you should have 3 sets (semd,semv,sema)
-     of 12 (ls -1 *semd | wc) seismogram files in the directory OUTPUT_FILES,
-     as well as 51 timestamp****** files
+   - when the job is complete, you should have 12 (ls -1 *semd | wc)
+     displacement seismogram files in the directory OUTPUT_FILES,
+     as well as 11 timestamp****** files
 
 9. check with 6 reference seismograms in
       SPECFEM3D/EXAMPLES/homogeneous_halfspace/REF_SEIS/
