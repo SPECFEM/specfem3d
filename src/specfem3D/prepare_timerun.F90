@@ -602,14 +602,13 @@
     ! user output
     if (myrank == 0) then
       write(IMAIN,*)
-      write(IMAIN,*) "attenuation: "
-      write(IMAIN,*) "  reference period (s)   : ",sngl(1.0/ATTENUATION_f0_REFERENCE), &
-                    " frequency: ",sngl(ATTENUATION_f0_REFERENCE)
-      write(IMAIN,*) "  period band min/max (s): ",sngl(MIN_ATTENUATION_PERIOD),sngl(MAX_ATTENUATION_PERIOD)
-      write(IMAIN,*) "  central period (s)     : ",sngl(1.0/f_c_source), &
-                    " frequency: ",sngl(f_c_source)
+      write(IMAIN,*) "Attenuation:"
+      write(IMAIN,*) "  Reference frequency (Hz):",sngl(ATTENUATION_f0_REFERENCE)," period (s):",sngl(1.0/ATTENUATION_f0_REFERENCE)
+      write(IMAIN,*) "  Frequency band min/max (Hz):",sngl(1.0/MAX_ATTENUATION_PERIOD),sngl(1.0/MIN_ATTENUATION_PERIOD)
+      write(IMAIN,*) "  Period band min/max (s):",sngl(MIN_ATTENUATION_PERIOD),sngl(MAX_ATTENUATION_PERIOD)
+      write(IMAIN,*) "  Logarithmic central frequency (Hz):",sngl(f_c_source)," period (s):",sngl(1.0/f_c_source)
       if (FULL_ATTENUATION_SOLID) then
-        write(IMAIN,*) "  using full attenuation (Q_kappa and Q_mu)"
+        write(IMAIN,*) "  using attenuation having both Q_kappa and Q_mu"
       endif
       write(IMAIN,*)
       call flush_IMAIN()
