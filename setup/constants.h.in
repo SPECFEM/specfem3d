@@ -383,10 +383,6 @@
   integer, parameter :: ATTENUATION_COMP_RESOLUTION = 1
   integer, parameter :: ATTENUATION_COMP_MAXIMUM    = 9000
 
-! reference frequency for target velocity values in velocity model
-! arbitrarily set to typical resolution of model (3 sec)
-  double precision, parameter :: ATTENUATION_f0_REFERENCE = 0.3d0
-
 ! define flag for regions for anisotropy
   integer, parameter :: IANISOTROPY_MODEL1 = 1
   integer, parameter :: IANISOTROPY_MODEL2 = 2

@@ -51,12 +51,16 @@ FULL_ATTENUATION_SOLID          = .false.
 ANISOTROPY                      = .false.
 GRAVITY                         = .false.
 
-# path for external tomographic models files
-TOMOGRAPHY_PATH                 = ./DATA/tomo_files/
+# reference frequency for target velocity values in the velocity model
+# set here to a typical value for regional seismology / regional models (dominant period of 3 seconds, i.e. frequency of 1/3 Hz)
+ATTENUATION_f0_REFERENCE        = 0.33333d0
 
-# Olsen's constant for Q_mu = constant * v_s attenuation rule
+# Olsen's constant for Q_mu = constant * V_s attenuation rule
 USE_OLSEN_ATTENUATION           = .false.
 OLSEN_ATTENUATION_RATIO         = 0.05
+
+# path for external tomographic models files
+TOMOGRAPHY_PATH                 = ./DATA/tomo_files/
 
 # C-PML boundary conditions for a regional simulation
 PML_CONDITIONS                  = .false.

@@ -86,7 +86,7 @@ end module constants
 
   ! attenuation
   logical :: USE_OLSEN_ATTENUATION
-  double precision :: OLSEN_ATTENUATION_RATIO
+  double precision :: OLSEN_ATTENUATION_RATIO,ATTENUATION_f0_REFERENCE
 
   ! absorbing boundaries
   logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE

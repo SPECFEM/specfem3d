@@ -50,7 +50,7 @@
       ANISOTROPY,NPROC,APPROXIMATE_OCEAN_LOAD,OLSEN_ATTENUATION_RATIO,         &
       ATTENUATION,USE_OLSEN_ATTENUATION,                                       &
       nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho,                            &
-      ADIOS_FOR_MESH,IMAIN,SAVE_MOHO_MESH
+      ADIOS_FOR_MESH,IMAIN,SAVE_MOHO_MESH,ATTENUATION_f0_REFERENCE
 
   use create_regions_mesh_ext_par
   use fault_generate_databases, only: fault_read_input,fault_setup, &
@@ -336,7 +336,7 @@
     endif
     call get_attenuation_model(myrank,nspec,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
                                mustore,rho_vs,kappastore,rho_vp,qkappa_attenuation_store,qmu_attenuation_store, &
-                               ispec_is_elastic,min_resolved_period,prname,FULL_ATTENUATION_SOLID)
+                               ispec_is_elastic,min_resolved_period,prname,FULL_ATTENUATION_SOLID,ATTENUATION_f0_REFERENCE)
   endif
 
   ! cleanup

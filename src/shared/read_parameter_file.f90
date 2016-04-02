@@ -129,13 +129,17 @@
   call read_value_logical(GRAVITY, 'GRAVITY', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter GRAVITY'
 
-  call read_value_string(TOMOGRAPHY_PATH, 'TOMOGRAPHY_PATH', ier)
-  if (ier /= 0) stop 'Error reading Par_file parameter TOMOGRAPHY_PATH'
+  call read_value_double_precision(ATTENUATION_f0_REFERENCE, 'ATTENUATION_f0_REFERENCE', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter ATTENUATION_f0_REFERENCE'
 
   call read_value_logical(USE_OLSEN_ATTENUATION, 'USE_OLSEN_ATTENUATION', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter USE_OLSEN_ATTENUATION'
   call read_value_double_precision(OLSEN_ATTENUATION_RATIO, 'OLSEN_ATTENUATION_RATIO', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter OLSEN_ATTENUATION_RATIO'
+
+  call read_value_string(TOMOGRAPHY_PATH, 'TOMOGRAPHY_PATH', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter TOMOGRAPHY_PATH'
+
   call read_value_logical(PML_CONDITIONS, 'PML_CONDITIONS', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter PML_CONDITIONS'
   call read_value_logical(PML_INSTEAD_OF_FREE_SURFACE, 'PML_INSTEAD_OF_FREE_SURFACE', ier)
@@ -549,9 +553,10 @@
     call bcast_all_singlel_world(FULL_ATTENUATION_SOLID)
     call bcast_all_singlel_world(ANISOTROPY)
     call bcast_all_singlel_world(GRAVITY)
-    call bcast_all_string_world(TOMOGRAPHY_PATH)
+    call bcast_all_singledp_world(ATTENUATION_f0_REFERENCE)
     call bcast_all_singlel_world(USE_OLSEN_ATTENUATION)
     call bcast_all_singledp_world(OLSEN_ATTENUATION_RATIO)
+    call bcast_all_string_world(TOMOGRAPHY_PATH)
     call bcast_all_singlel_world(PML_CONDITIONS)
     call bcast_all_singlel_world(PML_INSTEAD_OF_FREE_SURFACE)
     call bcast_all_singledp_world(f0_FOR_PML)

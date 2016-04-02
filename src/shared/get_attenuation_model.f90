@@ -126,7 +126,7 @@
 
   subroutine get_attenuation_model(myrank,nspec,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
                                   mustore,rho_vs,kappastore,rho_vp,qkappa_attenuation_store,qmu_attenuation_store, &
-                                  ispec_is_elastic,min_resolved_period,prname,FULL_ATTENUATION_SOLID)
+                                  ispec_is_elastic,min_resolved_period,prname,FULL_ATTENUATION_SOLID,ATTENUATION_f0_REFERENCE)
 
 ! precalculates attenuation arrays and stores arrays into files
 
@@ -134,7 +134,7 @@
 
   implicit none
 
-  double precision,intent(in) :: OLSEN_ATTENUATION_RATIO
+  double precision,intent(in) :: OLSEN_ATTENUATION_RATIO,ATTENUATION_f0_REFERENCE
   integer,intent(in) :: myrank,nspec
   logical,intent(in) :: USE_OLSEN_ATTENUATION
 
@@ -353,7 +353,7 @@
                                        f_c_source,tau_sigma_dble, &
                                        beta_dble,one_minus_sum_beta_dble,factor_scale_dble, &
                                        Q_kappa,beta_dble_kappa,one_minus_sum_beta_dble_kappa,factor_scale_dble_kappa, &
-                                       FULL_ATTENUATION_SOLID)
+                                       FULL_ATTENUATION_SOLID,ATTENUATION_f0_REFERENCE)
 
           ! shear attenuation
           ! stores factor for unrelaxed parameter
@@ -518,7 +518,7 @@
                                      f_c_source,tau_sigma, &
                                      beta,one_minus_sum_beta,factor_scale, &
                                      Q_kappa,beta_kappa,one_minus_sum_beta_kappa,factor_scale_kappa, &
-                                     FULL_ATTENUATION_SOLID)
+                                     FULL_ATTENUATION_SOLID,ATTENUATION_f0_REFERENCE)
 
 ! returns: attenuation mechanisms beta,one_minus_sum_beta,factor_scale
 
@@ -534,7 +534,7 @@
   implicit none
 
   integer:: myrank
-  double precision :: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD
+  double precision :: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD,ATTENUATION_f0_REFERENCE
   double precision :: f_c_source,Q_mu,Q_kappa
   double precision, dimension(N_SLS) :: tau_sigma
   double precision, dimension(N_SLS) :: beta,beta_kappa
@@ -553,7 +553,7 @@
   call get_attenuation_property_values(tau_sigma,tau_eps,beta,one_minus_sum_beta)
 
   ! determines the "scale factor"
-  call get_attenuation_scale_factor(myrank,f_c_source,tau_eps,tau_sigma,Q_mu,factor_scale)
+  call get_attenuation_scale_factor(myrank,f_c_source,tau_eps,tau_sigma,Q_mu,factor_scale,ATTENUATION_f0_REFERENCE)
 
   if (FULL_ATTENUATION_SOLID) then
     ! determines tau_eps for Q_kappa
@@ -564,7 +564,7 @@
     call get_attenuation_property_values(tau_sigma,tau_eps_kappa,beta_kappa,one_minus_sum_beta_kappa)
 
     ! determines the "scale factor"
-    call get_attenuation_scale_factor(myrank,f_c_source,tau_eps_kappa,tau_sigma,Q_kappa,factor_scale_kappa)
+    call get_attenuation_scale_factor(myrank,f_c_source,tau_eps_kappa,tau_sigma,Q_kappa,factor_scale_kappa,ATTENUATION_f0_REFERENCE)
   endif
 
   end subroutine get_attenuation_factors
@@ -612,7 +612,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine get_attenuation_scale_factor(myrank, f_c_source, tau_eps, tau_sigma, Q_val, scale_factor)
+  subroutine get_attenuation_scale_factor(myrank,f_c_source,tau_eps,tau_sigma,Q_val,scale_factor,ATTENUATION_f0_REFERENCE)
 
 ! returns: physical dispersion scaling factor scale_factor
 
@@ -621,6 +621,7 @@
   implicit none
 
   integer :: myrank
+  double precision, intent(in) :: ATTENUATION_f0_REFERENCE
   double precision :: scale_factor, Q_val, f_c_source
   ! strain and stress relaxation times
   double precision, dimension(N_SLS) :: tau_eps, tau_sigma
