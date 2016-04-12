@@ -59,9 +59,9 @@
       endif
 
       if (ACOUSTIC_SIMULATION) then
-        write(IOUT) potential_acoustic
-        write(IOUT) potential_dot_acoustic
-        write(IOUT) potential_dot_dot_acoustic
+        write(IOUT) minus_int_int_pressure
+        write(IOUT) minus_int_pressure
+        write(IOUT) minus_pressure
       endif
 
       if (ELASTIC_SIMULATION) then

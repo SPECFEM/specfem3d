@@ -234,14 +234,14 @@
       ! as in Komatitsch and Tromp, Geophysical Journal International, vol. 150, p. 303-318 (2002).
       ! This permits acoustic-elastic coupling based on a non-iterative time scheme.
       ! Displacement is then: u = grad(Chi) / rho
-      ! Velocity is then: v = grad(Chi_dot) / rho (Chi_dot being the time derivative of Chi)
-      ! and pressure is: p = - Chi_dot_dot  (Chi_dot_dot being the time second derivative of Chi).
+      ! Velocity is then: v = grad(minus_int_pressure) / rho (minus_int_pressure being the time derivative of Chi)
+      ! and pressure is: p = - minus_pressure  (minus_pressure being the time second derivative of Chi).
 
       do k=1,NGLLZ
         do j=1,NGLLY
           do i=1,NGLLX
             iglob = ibool(i,j,k,ispec)
-            dummyx_loc(i,j,k) = potential_dot_acoustic(iglob)
+            dummyx_loc(i,j,k) = minus_int_pressure(iglob)
           enddo
         enddo
       enddo
@@ -291,13 +291,13 @@
             kappal = kappastore(i,j,k,ispec)
             cpl = sqrt(kappal / rhol)
 
-            ! Velocity is v = grad(Chi_dot) / rho (Chi_dot being the time derivative of Chi)
+            ! Velocity is v = grad(minus_int_pressure) / rho (minus_int_pressure being the time derivative of Chi)
             vx = duxdxl / rhol
             vy = duxdyl / rhol
             vz = duxdzl / rhol
 
-            ! pressure is p = - Chi_dot_dot  (Chi_dot_dot being the time second derivative of Chi)
-            pressure = - potential_dot_dot_acoustic(iglob)
+            ! pressure is p = - minus_pressure  (minus_pressure being the time second derivative of Chi)
+            pressure = - minus_pressure(iglob)
 
             integration_weight = wxgll(i)*wygll(j)*wzgll(k)*jacobianl
 

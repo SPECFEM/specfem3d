@@ -470,7 +470,7 @@
 
         endif ! ANISOTROPY
 
-        ! gets associated normal on GLL point
+        ! gets associated normal at GLL point
         ! (note convention: pointing outwards of poroelastic element)
         nx = coupling_el_po_normal(1,igll,iface)
         ny = coupling_el_po_normal(2,igll,iface)

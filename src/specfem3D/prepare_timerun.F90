@@ -374,11 +374,11 @@
 
   ! initialize acoustic arrays to zero
   if (ACOUSTIC_SIMULATION) then
-    potential_acoustic(:) = 0._CUSTOM_REAL
-    potential_dot_acoustic(:) = 0._CUSTOM_REAL
-    potential_dot_dot_acoustic(:) = 0._CUSTOM_REAL
+    minus_int_int_pressure(:) = 0._CUSTOM_REAL
+    minus_int_pressure(:) = 0._CUSTOM_REAL
+    minus_pressure(:) = 0._CUSTOM_REAL
     ! put negligible initial value to avoid very slow underflow trapping
-    if (FIX_UNDERFLOW_PROBLEM) potential_acoustic(:) = VERYSMALLVAL
+    if (FIX_UNDERFLOW_PROBLEM) minus_int_int_pressure(:) = VERYSMALLVAL
   endif
 
   ! initialize elastic arrays to zero/verysmallvall
@@ -763,15 +763,15 @@
   endif
 
   if (ACOUSTIC_SIMULATION) then
-    allocate(potential_acoustic_lddrk(NGLOB_AB_LDDRK),stat=ier)
-    if (ier /= 0) stop 'Error allocating array potential_acoustic_lddrk'
-    allocate(potential_dot_acoustic_lddrk(NGLOB_AB_LDDRK),stat=ier)
-    if (ier /= 0) stop 'Error allocating array potential_dot_acoustic_lddrk'
-    potential_acoustic_lddrk(:) = 0._CUSTOM_REAL
-    potential_dot_acoustic_lddrk(:) = 0._CUSTOM_REAL
+    allocate(minus_int_int_pressure_lddrk(NGLOB_AB_LDDRK),stat=ier)
+    if (ier /= 0) stop 'Error allocating array minus_int_int_pressure_lddrk'
+    allocate(minus_int_pressure_lddrk(NGLOB_AB_LDDRK),stat=ier)
+    if (ier /= 0) stop 'Error allocating array minus_int_pressure_lddrk'
+    minus_int_int_pressure_lddrk(:) = 0._CUSTOM_REAL
+    minus_int_pressure_lddrk(:) = 0._CUSTOM_REAL
     if (FIX_UNDERFLOW_PROBLEM) then
-      potential_acoustic_lddrk(:) = VERYSMALLVAL
-      potential_dot_acoustic_lddrk(:) = VERYSMALLVAL
+      minus_int_int_pressure_lddrk(:) = VERYSMALLVAL
+      minus_int_pressure_lddrk(:) = VERYSMALLVAL
     endif
   endif
 
@@ -1036,11 +1036,11 @@
       if (APPROXIMATE_HESS_KL) &
         hess_ac_kl(:,:,:,:)   = 0._CUSTOM_REAL
 
-      ! reconstructed/backward acoustic potentials
-      b_potential_acoustic = 0._CUSTOM_REAL
-      b_potential_dot_acoustic = 0._CUSTOM_REAL
-      b_potential_dot_dot_acoustic = 0._CUSTOM_REAL
-      if (FIX_UNDERFLOW_PROBLEM) b_potential_acoustic = VERYSMALLVAL
+      ! reconstructed/backward acoustic scalars
+      b_minus_int_int_pressure = 0._CUSTOM_REAL
+      b_minus_int_pressure = 0._CUSTOM_REAL
+      b_minus_pressure = 0._CUSTOM_REAL
+      if (FIX_UNDERFLOW_PROBLEM) b_minus_int_int_pressure = VERYSMALLVAL
 
     endif
 
@@ -1124,27 +1124,27 @@
       ! acoustic domains
       if (ACOUSTIC_SIMULATION) then
         ! allocates wavefield
-        allocate(b_absorb_potential(NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
-        if (ier /= 0) stop 'error allocating array b_absorb_potential'
+        allocate(b_absorb_minus_int_int_pressure(NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+        if (ier /= 0) stop 'error allocating array b_absorb_minus_int_int_pressure'
 
         ! size of single record
-        b_reclen_potential = CUSTOM_REAL * NGLLSQUARE * num_abs_boundary_faces
+        b_reclen_minus_int_int_pressure = CUSTOM_REAL * NGLLSQUARE * num_abs_boundary_faces
 
-        ! check integer size limit: size of b_reclen_potential must fit onto an 4-byte integer
+        ! check integer size limit: size of b_reclen_minus_int_int_pressure must fit onto an 4-byte integer
         if (num_abs_boundary_faces > 2147483646 / (CUSTOM_REAL * NGLLSQUARE)) then
-          print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_potential
+          print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_minus_int_int_pressure
           print *,'  ',CUSTOM_REAL, NGLLSQUARE, num_abs_boundary_faces
-          print *,'bit size fortran: ',bit_size(b_reclen_potential)
-          call exit_MPI(myrank,"error b_reclen_potential integer limit")
+          print *,'bit size fortran: ',bit_size(b_reclen_minus_int_int_pressure)
+          call exit_MPI(myrank,"error b_reclen_minus_int_int_pressure integer limit")
         endif
 
         ! total file size (two lines to implicitly convert to 8-byte integers)
-        filesize = b_reclen_potential
+        filesize = b_reclen_minus_int_int_pressure
         filesize = filesize*NSTEP
 
         ! debug check size limit
-        !if (NSTEP > 2147483646 / b_reclen_potential) then
-        !  print *,'file size needed exceeds integer 4-byte limit: ',b_reclen_potential,NSTEP
+        !if (NSTEP > 2147483646 / b_reclen_minus_int_int_pressure) then
+        !  print *,'file size needed exceeds integer 4-byte limit: ',b_reclen_minus_int_int_pressure,NSTEP
         !  print *,'  ',CUSTOM_REAL, NGLLSQUARE, num_abs_boundary_faces,NSTEP
         !  print *,'file size fortran: ',filesize
         !  print *,'file bit size fortran: ',bit_size(filesize)
@@ -1152,13 +1152,13 @@
 
         if (SIMULATION_TYPE == 3) then
           ! opens existing files
-          call open_file_abs_r(IOABS_AC,trim(prname)//'absorb_potential.bin', &
-                              len_trim(trim(prname)//'absorb_potential.bin'), &
+          call open_file_abs_r(IOABS_AC,trim(prname)//'absorb_minus_int_int_pressure.bin', &
+                              len_trim(trim(prname)//'absorb_minus_int_int_pressure.bin'), &
                               filesize)
         else
           ! opens new file
-          call open_file_abs_w(IOABS_AC,trim(prname)//'absorb_potential.bin', &
-                              len_trim(trim(prname)//'absorb_potential.bin'), &
+          call open_file_abs_w(IOABS_AC,trim(prname)//'absorb_minus_int_int_pressure.bin', &
+                              len_trim(trim(prname)//'absorb_minus_int_int_pressure.bin'), &
                               filesize)
         endif
       endif
@@ -1214,8 +1214,8 @@
       endif
 
       if (ACOUSTIC_SIMULATION) then
-        allocate(b_absorb_potential(NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
-        if (ier /= 0) stop 'error allocating array b_absorb_potential'
+        allocate(b_absorb_minus_int_int_pressure(NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+        if (ier /= 0) stop 'error allocating array b_absorb_minus_int_int_pressure'
       endif
 
       if (POROELASTIC_SIMULATION) then
@@ -1233,8 +1233,8 @@
     endif
 
     if (ACOUSTIC_SIMULATION) then
-      allocate(b_absorb_potential(NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
-      if (ier /= 0) stop 'error allocating array b_absorb_potential'
+      allocate(b_absorb_minus_int_int_pressure(NGLLSQUARE,b_num_abs_boundary_faces),stat=ier)
+      if (ier /= 0) stop 'error allocating array b_absorb_minus_int_int_pressure'
     endif
 
     if (POROELASTIC_SIMULATION) then
@@ -1380,7 +1380,7 @@
                                 ispec_is_acoustic, &
                                 NOISE_TOMOGRAPHY,num_free_surface_faces, &
                                 free_surface_ispec,free_surface_ijk, &
-                                b_reclen_potential,b_absorb_potential, &
+                                b_reclen_minus_int_int_pressure,b_absorb_minus_int_int_pressure, &
                                 ELASTIC_SIMULATION, num_coupling_ac_el_faces, &
                                 coupling_ac_el_ispec,coupling_ac_el_ijk, &
                                 coupling_ac_el_normal,coupling_ac_el_jacobian2Dw, &
@@ -1491,11 +1491,11 @@
 
   ! puts acoustic initial fields onto GPU
   if (ACOUSTIC_SIMULATION) then
-    call transfer_fields_ac_to_device(NGLOB_AB,potential_acoustic, &
-                                      potential_dot_acoustic,potential_dot_dot_acoustic,Mesh_pointer)
+    call transfer_fields_ac_to_device(NGLOB_AB,minus_int_int_pressure, &
+                                      minus_int_pressure,minus_pressure,Mesh_pointer)
     if (SIMULATION_TYPE == 3) &
-      call transfer_b_fields_ac_to_device(NGLOB_AB,b_potential_acoustic, &
-                                          b_potential_dot_acoustic,b_potential_dot_dot_acoustic,Mesh_pointer)
+      call transfer_b_fields_ac_to_device(NGLOB_AB,b_minus_int_int_pressure, &
+                                          b_minus_int_pressure,b_minus_pressure,Mesh_pointer)
   endif
 
   ! puts elastic initial fields onto GPU
@@ -1576,7 +1576,7 @@
 
     ! acoustic simulations
     if (ACOUSTIC_SIMULATION) then
-      ! d_potential_acoustic,d_potential_dot_acoustic,d_potential_dot_dot_acoustic
+      ! d_minus_int_int_pressure,d_minus_int_pressure,d_minus_pressure
       memory_size = memory_size + 3.d0 * NGLOB_AB * dble(CUSTOM_REAL)
       ! d_rmass_acoustic
       memory_size = memory_size + NGLOB_AB * dble(CUSTOM_REAL)

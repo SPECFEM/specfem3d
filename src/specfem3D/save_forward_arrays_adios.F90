@@ -108,11 +108,11 @@ subroutine save_forward_arrays_adios()
   if (ACOUSTIC_SIMULATION) then
     local_dim = nglob_wmax
     call define_adios_global_array1D(group, groupsize, local_dim, "", &
-                                     STRINGIFY_VAR(potential_acoustic))
+                                     STRINGIFY_VAR(minus_int_int_pressure))
     call define_adios_global_array1D(group, groupsize, local_dim, "", &
-                                     STRINGIFY_VAR(potential_dot_acoustic))
+                                     STRINGIFY_VAR(minus_int_pressure))
     call define_adios_global_array1D(group, groupsize, local_dim, "", &
-                                     STRINGIFY_VAR(potential_dot_dot_acoustic))
+                                     STRINGIFY_VAR(minus_pressure))
   endif
   if (ELASTIC_SIMULATION) then
     local_dim = NDIM * nglob_wmax
@@ -197,11 +197,11 @@ subroutine save_forward_arrays_adios()
   if (ACOUSTIC_SIMULATION) then
     local_dim = nglob_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(potential_acoustic))
+                                     STRINGIFY_VAR(minus_int_int_pressure))
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(potential_dot_acoustic))
+                                     STRINGIFY_VAR(minus_int_pressure))
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(potential_dot_dot_acoustic))
+                                     STRINGIFY_VAR(minus_pressure))
   endif
   if (ELASTIC_SIMULATION) then
     local_dim = NDIM * nglob_wmax

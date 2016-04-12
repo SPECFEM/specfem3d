@@ -116,16 +116,16 @@
   ! all processes will have acoustic_simulation set if any flag is .true.
   call any_all_l( ANY(ispec_is_acoustic), ACOUSTIC_SIMULATION )
   if (ACOUSTIC_SIMULATION) then
-    ! potentials
-    allocate(potential_acoustic(NGLOB_AB),stat=ier)
-    if (ier /= 0) stop 'Error allocating array potential_acoustic'
-    allocate(potential_dot_acoustic(NGLOB_AB),stat=ier)
-    if (ier /= 0) stop 'Error allocating array potential_dot_acoustic'
-    allocate(potential_dot_dot_acoustic(NGLOB_AB),stat=ier)
-    if (ier /= 0) stop 'Error allocating array potential_dot_dot_acoustic'
+    ! scalars
+    allocate(minus_int_int_pressure(NGLOB_AB),stat=ier)
+    if (ier /= 0) stop 'Error allocating array minus_int_int_pressure'
+    allocate(minus_int_pressure(NGLOB_AB),stat=ier)
+    if (ier /= 0) stop 'Error allocating array minus_int_pressure'
+    allocate(minus_pressure(NGLOB_AB),stat=ier)
+    if (ier /= 0) stop 'Error allocating array minus_pressure'
     if (SIMULATION_TYPE /= 1) then
-      allocate(potential_acoustic_adj_coupling(NGLOB_AB),stat=ier)
-      if (ier /= 0) stop 'Error allocating array potential_acoustic_adj_coupling'
+      allocate(minus_int_int_pressure_adj_coupling(NGLOB_AB),stat=ier)
+      if (ier /= 0) stop 'Error allocating array minus_int_int_pressure_adj_coupling'
     endif
     ! mass matrix, density
     allocate(rmass_acoustic(NGLOB_AB),stat=ier)
@@ -1168,11 +1168,11 @@
   ! allocates adjoint arrays for acoustic simulations
   if (ACOUSTIC_SIMULATION .and. SIMULATION_TYPE == 3) then
 
-    ! backward potentials
-    allocate(b_potential_acoustic(NGLOB_ADJOINT), &
-             b_potential_dot_acoustic(NGLOB_ADJOINT), &
-             b_potential_dot_dot_acoustic(NGLOB_ADJOINT),stat=ier)
-    if (ier /= 0) stop 'Error allocating array b_potential_acoustic etc.'
+    ! backward scalars
+    allocate(b_minus_int_int_pressure(NGLOB_ADJOINT), &
+             b_minus_int_pressure(NGLOB_ADJOINT), &
+             b_minus_pressure(NGLOB_ADJOINT),stat=ier)
+    if (ier /= 0) stop 'Error allocating array b_minus_int_int_pressure etc.'
 
     ! kernels
     allocate(rho_ac_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
@@ -1200,11 +1200,11 @@
 
   else
 
-    ! backward potentials
-    allocate(b_potential_acoustic(1), &
-             b_potential_dot_acoustic(1), &
-             b_potential_dot_dot_acoustic(1),stat=ier)
-    if (ier /= 0) stop 'Error allocating dummy array b_potential_acoustic etc.'
+    ! backward scalars
+    allocate(b_minus_int_int_pressure(1), &
+             b_minus_int_pressure(1), &
+             b_minus_pressure(1),stat=ier)
+    if (ier /= 0) stop 'Error allocating dummy array b_minus_int_int_pressure etc.'
 
     ! kernels
     allocate(rho_ac_kl(1,1,1,1), &

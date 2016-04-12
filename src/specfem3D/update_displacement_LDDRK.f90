@@ -38,8 +38,8 @@
   implicit none
 
   if (ACOUSTIC_SIMULATION) then
-    potential_dot_dot_acoustic = 0._CUSTOM_REAL
-    if (FIX_UNDERFLOW_PROBLEM) potential_dot_dot_acoustic = VERYSMALLVAL
+    minus_pressure = 0._CUSTOM_REAL
+    if (FIX_UNDERFLOW_PROBLEM) minus_pressure = VERYSMALLVAL
   endif
 
   if (ELASTIC_SIMULATION) then
@@ -71,7 +71,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine update_potential_dot_acoustic_lddrk()
+  subroutine update_minus_int_pressure_lddrk()
 
 ! updates acceleration, velocity and displacement in acoustic region (outer core)
 
@@ -88,19 +88,19 @@
 
   ! forward wavefields
   call update_acoustic_lddrk(NGLOB_AB,NGLOB_AB_LDDRK,&
-                             potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
-                             potential_acoustic_lddrk,potential_dot_acoustic_lddrk, &
+                             minus_int_int_pressure,minus_int_pressure,minus_pressure, &
+                             minus_int_int_pressure_lddrk,minus_int_pressure_lddrk, &
                              deltat,alpha,beta)
 
-  end subroutine update_potential_dot_acoustic_lddrk
+  end subroutine update_minus_int_pressure_lddrk
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
   subroutine update_acoustic_lddrk(NGLOB,NGLOB_LDDRK,&
-                                   potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
-                                   potential_acoustic_lddrk,potential_dot_acoustic_lddrk, &
+                                   minus_int_int_pressure,minus_int_pressure,minus_pressure, &
+                                   minus_int_int_pressure_lddrk,minus_int_pressure_lddrk, &
                                    deltat,alpha,beta)
 
   use constants,only: CUSTOM_REAL
@@ -111,9 +111,9 @@
 
   ! wavefields
   real(kind=CUSTOM_REAL), dimension(NGLOB),intent(inout) :: &
-            potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic
+            minus_int_int_pressure,minus_int_pressure,minus_pressure
   real(kind=CUSTOM_REAL), dimension(NGLOB_LDDRK),intent(inout) :: &
-            potential_acoustic_lddrk,potential_dot_acoustic_lddrk
+            minus_int_int_pressure_lddrk,minus_int_pressure_lddrk
 
   real(kind=CUSTOM_REAL),intent(in) :: deltat
   ! Runge-Kutta coefficients
@@ -128,11 +128,11 @@
 
   do i = 1,NGLOB
     ! low-memory Runge-Kutta: intermediate storage wavefields
-    potential_dot_acoustic_lddrk(i) = alpha * potential_dot_acoustic_lddrk(i) + deltat * potential_dot_dot_acoustic(i)
-    potential_acoustic_lddrk(i) = alpha * potential_acoustic_lddrk(i) + deltat * potential_dot_acoustic(i)
+    minus_int_pressure_lddrk(i) = alpha * minus_int_pressure_lddrk(i) + deltat * minus_pressure(i)
+    minus_int_int_pressure_lddrk(i) = alpha * minus_int_int_pressure_lddrk(i) + deltat * minus_int_pressure(i)
     ! updates wavefields
-    potential_dot_acoustic(i) = potential_dot_acoustic(i) + beta * potential_dot_acoustic_lddrk(i)
-    potential_acoustic(i) = potential_acoustic(i) + beta * potential_acoustic_lddrk(i)
+    minus_int_pressure(i) = minus_int_pressure(i) + beta * minus_int_pressure_lddrk(i)
+    minus_int_int_pressure(i) = minus_int_int_pressure(i) + beta * minus_int_int_pressure_lddrk(i)
   enddo
 
   end subroutine update_acoustic_lddrk

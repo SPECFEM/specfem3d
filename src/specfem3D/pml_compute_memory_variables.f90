@@ -350,10 +350,10 @@ end subroutine pml_compute_memory_variables_elastic
 !=====================================================================
 !
 subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,temp3,&
-                                                 rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl, &
-                                                 PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl,&
-                                                 PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old,&
-                                                 PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new)
+                 rmemory_dminus_int_int_pressure_dxl,rmemory_dminus_int_int_pressure_dyl,rmemory_dminus_int_int_pressure_dzl, &
+                 PML_dminus_int_int_pressure_dxl,PML_dminus_int_int_pressure_dyl,PML_dminus_int_int_pressure_dzl,&
+                 PML_dminus_int_int_pressure_dxl_old,PML_dminus_int_int_pressure_dyl_old,PML_dminus_int_int_pressure_dzl_old,&
+                 PML_dminus_int_int_pressure_dxl_new,PML_dminus_int_int_pressure_dyl_new,PML_dminus_int_int_pressure_dzl_new)
   ! calculates C-PML elastic memory variables and computes stress sigma
 
   ! second-order accurate convolution term calculation from equation (21) of
@@ -377,28 +377,28 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ), intent(out) :: temp1,temp2,temp3
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),intent(inout) :: &
-    rmemory_dpotential_dxl, rmemory_dpotential_dyl, rmemory_dpotential_dzl
+    rmemory_dminus_int_int_pressure_dxl, rmemory_dminus_int_int_pressure_dyl, rmemory_dminus_int_int_pressure_dzl
 
-  ! derivatives of potential with respect to x, y and z
-  ! in computation potential_acoustic at "n" time step is used
+  ! derivatives of scalar with respect to x, y and z
+  ! in computation minus_int_int_pressure at "n" time step is used
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ),intent(in) :: &
-    PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl
+    PML_dminus_int_int_pressure_dxl,PML_dminus_int_int_pressure_dyl,PML_dminus_int_int_pressure_dzl
 
-  ! in computation of PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old
-  ! we replace potential_acoustic with potential_acoustic_old
+  ! in computation of PML_dminus_int_int_pressure_dxl_old,PML_dminus_int_int_pressure_dyl_old,PML_dminus_int_int_pressure_dzl_old
+  ! we replace minus_int_int_pressure with minus_int_int_pressure_old
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ),intent(in) :: &
-    PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old
+    PML_dminus_int_int_pressure_dxl_old,PML_dminus_int_int_pressure_dyl_old,PML_dminus_int_int_pressure_dzl_old
 
-  ! we replace potential_acoustic at "n" time step with
-  ! we replace potential_acoustic with potential_acoustic_old with potential_acoustic_new
+  ! we replace minus_int_int_pressure at "n" time step with
+  ! we replace minus_int_int_pressure with minus_int_int_pressure_old with minus_int_int_pressure_new
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ),intent(in) :: &
-    PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new
+    PML_dminus_int_int_pressure_dxl_new,PML_dminus_int_int_pressure_dyl_new,PML_dminus_int_int_pressure_dzl_new
 
   ! local parameters
   integer :: i,j,k
   real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
   real(kind=CUSTOM_REAL) :: rho_invl_jacob
-  real(kind=CUSTOM_REAL) :: dpotentialdxl,dpotentialdyl,dpotentialdzl
+  real(kind=CUSTOM_REAL) :: dminus_int_int_pressuredxl,dminus_int_int_pressuredyl,dminus_int_int_pressuredzl
   real(kind=CUSTOM_REAL) :: A6,A7,A8,A9      ! L231
   real(kind=CUSTOM_REAL) :: A10,A11,A12,A13  ! L132
   real(kind=CUSTOM_REAL) :: A14,A15,A16,A17  ! L123
@@ -431,14 +431,17 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
                                         coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,&
                                         coef0_3,coef1_3,coef2_3)
 
-        rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) + &
-                coef1_1 * PML_dpotential_dxl_new(i,j,k) + coef2_1 * PML_dpotential_dxl_old(i,j,k)
+        rmemory_dminus_int_int_pressure_dxl(i,j,k,ispec_CPML,1) = &
+                coef0_1 * rmemory_dminus_int_int_pressure_dxl(i,j,k,ispec_CPML,1) + &
+                coef1_1 * PML_dminus_int_int_pressure_dxl_new(i,j,k) + coef2_1 * PML_dminus_int_int_pressure_dxl_old(i,j,k)
 
-        rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) + &
-                coef1_2 * PML_dpotential_dxl_new(i,j,k) + coef2_2 * PML_dpotential_dxl_old(i,j,k)
+        rmemory_dminus_int_int_pressure_dxl(i,j,k,ispec_CPML,2) = &
+                coef0_2 * rmemory_dminus_int_int_pressure_dxl(i,j,k,ispec_CPML,2) + &
+                coef1_2 * PML_dminus_int_int_pressure_dxl_new(i,j,k) + coef2_2 * PML_dminus_int_int_pressure_dxl_old(i,j,k)
 
-        rmemory_dpotential_dxl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,3) + &
-                coef1_3 * PML_dpotential_dxl_new(i,j,k) + coef2_3 * PML_dpotential_dxl_old(i,j,k)
+        rmemory_dminus_int_int_pressure_dxl(i,j,k,ispec_CPML,3) = &
+                coef0_3 * rmemory_dminus_int_int_pressure_dxl(i,j,k,ispec_CPML,3) + &
+                coef1_3 * PML_dminus_int_int_pressure_dxl_new(i,j,k) + coef2_3 * PML_dminus_int_int_pressure_dxl_old(i,j,k)
 
         !---------------------- A10,A11,A12,A13 --------------------------
         call lijk_parameter_computation(deltat,&
@@ -447,14 +450,17 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
                                         coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,&
                                         coef0_3,coef1_3,coef2_3)
 
-        rmemory_dpotential_dyl(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,1) + &
-                coef1_1 * PML_dpotential_dyl_new(i,j,k) + coef2_1 * PML_dpotential_dyl_old(i,j,k)
+        rmemory_dminus_int_int_pressure_dyl(i,j,k,ispec_CPML,1) = &
+                coef0_1 * rmemory_dminus_int_int_pressure_dyl(i,j,k,ispec_CPML,1) + &
+                coef1_1 * PML_dminus_int_int_pressure_dyl_new(i,j,k) + coef2_1 * PML_dminus_int_int_pressure_dyl_old(i,j,k)
 
-        rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) + &
-                coef1_2 * PML_dpotential_dyl_new(i,j,k) + coef2_2 * PML_dpotential_dyl_old(i,j,k)
+        rmemory_dminus_int_int_pressure_dyl(i,j,k,ispec_CPML,2) = &
+                coef0_2 * rmemory_dminus_int_int_pressure_dyl(i,j,k,ispec_CPML,2) + &
+                coef1_2 * PML_dminus_int_int_pressure_dyl_new(i,j,k) + coef2_2 * PML_dminus_int_int_pressure_dyl_old(i,j,k)
 
-        rmemory_dpotential_dyl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,3) + &
-                coef1_3 * PML_dpotential_dyl_new(i,j,k) + coef2_3 * PML_dpotential_dyl_old(i,j,k)
+        rmemory_dminus_int_int_pressure_dyl(i,j,k,ispec_CPML,3) = &
+                coef0_3 * rmemory_dminus_int_int_pressure_dyl(i,j,k,ispec_CPML,3) + &
+                coef1_3 * PML_dminus_int_int_pressure_dyl_new(i,j,k) + coef2_3 * PML_dminus_int_int_pressure_dyl_old(i,j,k)
 
         !---------------------- A14,A15,A16,A17 --------------------------
         call lijk_parameter_computation(deltat,&
@@ -463,28 +469,31 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
                                         coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,&
                                         coef0_3,coef1_3,coef2_3)
 
-        rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) + &
-                coef1_1 * PML_dpotential_dzl_new(i,j,k) + coef2_1 * PML_dpotential_dzl_old(i,j,k)
+        rmemory_dminus_int_int_pressure_dzl(i,j,k,ispec_CPML,1) = &
+                coef0_1 * rmemory_dminus_int_int_pressure_dzl(i,j,k,ispec_CPML,1) + &
+                coef1_1 * PML_dminus_int_int_pressure_dzl_new(i,j,k) + coef2_1 * PML_dminus_int_int_pressure_dzl_old(i,j,k)
 
-        rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) = coef0_2 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) + &
-                coef1_2 * PML_dpotential_dzl_new(i,j,k) + coef2_2 * PML_dpotential_dzl_old(i,j,k)
+        rmemory_dminus_int_int_pressure_dzl(i,j,k,ispec_CPML,2) = &
+                coef0_2 * rmemory_dminus_int_int_pressure_dzl(i,j,k,ispec_CPML,2) + &
+                coef1_2 * PML_dminus_int_int_pressure_dzl_new(i,j,k) + coef2_2 * PML_dminus_int_int_pressure_dzl_old(i,j,k)
 
-        rmemory_dpotential_dzl(i,j,k,ispec_CPML,3) = coef0_3 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,3) + &
-                coef1_3 * PML_dpotential_dzl_new(i,j,k) + coef2_3 * PML_dpotential_dzl_old(i,j,k)
+        rmemory_dminus_int_int_pressure_dzl(i,j,k,ispec_CPML,3) = &
+                coef0_3 * rmemory_dminus_int_int_pressure_dzl(i,j,k,ispec_CPML,3) + &
+                coef1_3 * PML_dminus_int_int_pressure_dzl_new(i,j,k) + coef2_3 * PML_dminus_int_int_pressure_dzl_old(i,j,k)
 
         ! derivatives
-        dpotentialdxl = A6 * PML_dpotential_dxl(i,j,k)  + &
-                        A7 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) + &
-                        A8 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,2) + &
-                        A9 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,3)
-        dpotentialdyl = A10 * PML_dpotential_dyl(i,j,k) + &
-                        A11 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,1) + &
-                        A12 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,2) + &
-                        A13 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,3)
-        dpotentialdzl = A14 * PML_dpotential_dzl(i,j,k) + &
-                        A15 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) + &
-                        A16 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) + &
-                        A17 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,3)
+        dminus_int_int_pressuredxl = A6 * PML_dminus_int_int_pressure_dxl(i,j,k)  + &
+                        A7 * rmemory_dminus_int_int_pressure_dxl(i,j,k,ispec_CPML,1) + &
+                        A8 * rmemory_dminus_int_int_pressure_dxl(i,j,k,ispec_CPML,2) + &
+                        A9 * rmemory_dminus_int_int_pressure_dxl(i,j,k,ispec_CPML,3)
+        dminus_int_int_pressuredyl = A10 * PML_dminus_int_int_pressure_dyl(i,j,k) + &
+                        A11 * rmemory_dminus_int_int_pressure_dyl(i,j,k,ispec_CPML,1) + &
+                        A12 * rmemory_dminus_int_int_pressure_dyl(i,j,k,ispec_CPML,2) + &
+                        A13 * rmemory_dminus_int_int_pressure_dyl(i,j,k,ispec_CPML,3)
+        dminus_int_int_pressuredzl = A14 * PML_dminus_int_int_pressure_dzl(i,j,k) + &
+                        A15 * rmemory_dminus_int_int_pressure_dzl(i,j,k,ispec_CPML,1) + &
+                        A16 * rmemory_dminus_int_int_pressure_dzl(i,j,k,ispec_CPML,2) + &
+                        A17 * rmemory_dminus_int_int_pressure_dzl(i,j,k,ispec_CPML,3)
 
         xixl = xix(i,j,k,ispec)
         xiyl = xiy(i,j,k,ispec)
@@ -499,9 +508,12 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
         jacobianl = jacobian(i,j,k,ispec)
         rho_invl_jacob = jacobianl / rhostore(i,j,k,ispec)
 
-        temp1(i,j,k) = rho_invl_jacob * (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
-        temp2(i,j,k) = rho_invl_jacob * (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
-        temp3(i,j,k) = rho_invl_jacob * (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
+        temp1(i,j,k) = rho_invl_jacob * &
+          (xixl*dminus_int_int_pressuredxl + xiyl*dminus_int_int_pressuredyl + xizl*dminus_int_int_pressuredzl)
+        temp2(i,j,k) = rho_invl_jacob * &
+          (etaxl*dminus_int_int_pressuredxl + etayl*dminus_int_int_pressuredyl + etazl*dminus_int_int_pressuredzl)
+        temp3(i,j,k) = rho_invl_jacob * &
+          (gammaxl*dminus_int_int_pressuredxl + gammayl*dminus_int_int_pressuredyl + gammazl*dminus_int_int_pressuredzl)
       enddo
     enddo
   enddo
@@ -597,9 +609,9 @@ end subroutine pml_compute_memory_variables_acoustic_elastic
 !=====================================================================
 !
 subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k,&
-                                                         pressure,potential_acoustic,&
-                                                         potential_dot_acoustic,potential_dot_dot_acoustic,&
-                                                         num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential)
+                                                         pressure,minus_int_int_pressure,&
+                                                         minus_int_pressure,minus_pressure,&
+                                                         num_coupling_ac_el_faces,rmemory_coupling_el_ac_minus_int_int_pressure)
   ! calculates C-PML elastic memory variables and computes stress sigma
 
   ! second-order accurate convolution term calculation from equation (21) of
@@ -610,7 +622,7 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
   use specfem_par, only: NGLOB_AB,deltat
   use pml_par,only : CPML_regions,k_store_x,k_store_y,k_store_z,d_store_x,d_store_y,d_store_z,&
                      alpha_store_x,alpha_store_y,alpha_store_z,&
-                     PML_potential_acoustic_old,PML_potential_acoustic_new
+                     PML_minus_int_int_pressure_old,PML_minus_int_int_pressure_new
   use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,&
                        CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
@@ -618,10 +630,10 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
 
   integer, intent(in) :: ispec_CPML,iface,iglob,num_coupling_ac_el_faces
   real(kind=CUSTOM_REAL),intent(out) :: pressure
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB), intent(in) :: potential_acoustic, &
-                                                             potential_dot_acoustic,potential_dot_dot_acoustic
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB), intent(in) :: minus_int_int_pressure, &
+                                                             minus_int_pressure,minus_pressure
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2) :: &
-                                    rmemory_coupling_el_ac_potential
+                                    rmemory_coupling_el_ac_minus_int_int_pressure
 
   ! local parameters
   integer :: i,j,k,CPML_region_local
@@ -654,22 +666,26 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
                coef0_2,coef1_2,coef2_2, &
                coef0_3,coef1_3,coef2_3)
 
-  rmemory_coupling_el_ac_potential(i,j,k,iface,1) = coef0_1 * rmemory_coupling_el_ac_potential(i,j,k,iface,1) + &
-                                                    coef1_1 * PML_potential_acoustic_new(i,j,k,ispec_CPML) + &
-                                                    coef2_1 * PML_potential_acoustic_old(i,j,k,ispec_CPML)
+  rmemory_coupling_el_ac_minus_int_int_pressure(i,j,k,iface,1) = &
+                  coef0_1 * rmemory_coupling_el_ac_minus_int_int_pressure(i,j,k,iface,1) + &
+                  coef1_1 * PML_minus_int_int_pressure_new(i,j,k,ispec_CPML) + &
+                  coef2_1 * PML_minus_int_int_pressure_old(i,j,k,ispec_CPML)
 
-  rmemory_coupling_el_ac_potential(i,j,k,iface,2) = coef0_2 * rmemory_coupling_el_ac_potential(i,j,k,iface,2) + &
-                                                    coef1_2 * PML_potential_acoustic_new(i,j,k,ispec_CPML) + &
-                                                    coef2_2 * PML_potential_acoustic_old(i,j,k,ispec_CPML)
+  rmemory_coupling_el_ac_minus_int_int_pressure(i,j,k,iface,2) = &
+                  coef0_2 * rmemory_coupling_el_ac_minus_int_int_pressure(i,j,k,iface,2) + &
+                  coef1_2 * PML_minus_int_int_pressure_new(i,j,k,ispec_CPML) + &
+                  coef2_2 * PML_minus_int_int_pressure_old(i,j,k,ispec_CPML)
 
-  pressure = A_0 * potential_dot_dot_acoustic(iglob) + A_1 * potential_dot_acoustic(iglob)  + A_2 * potential_acoustic(iglob) &
-           + A_3 * rmemory_coupling_el_ac_potential(i,j,k,iface,1) + A_4 * rmemory_coupling_el_ac_potential(i,j,k,iface,2)
-
+  pressure = A_0 * minus_pressure(iglob) + A_1 * minus_int_pressure(iglob)  + A_2 * minus_int_int_pressure(iglob) &
+           + A_3 * rmemory_coupling_el_ac_minus_int_int_pressure(i,j,k,iface,1) &
+           + A_4 * rmemory_coupling_el_ac_minus_int_int_pressure(i,j,k,iface,2)
 
 end subroutine pml_compute_memory_variables_elastic_acoustic
+
 !
 !=====================================================================
 !
+
 subroutine lijk_parameter_computation(deltat,kappa_x,d_x,alpha_x,kappa_y,d_y,alpha_y,kappa_z,d_z,alpha_z, &
                                       CPML_region_local,index_ijk,A_0,A_1,A_2,A_3,&
                                       coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,&

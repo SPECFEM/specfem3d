@@ -35,7 +35,7 @@
 
 /* ----------------------------------------------------------------------------------------------- */
 
-__global__ void compute_add_sources_acoustic_kernel(realw* potential_dot_dot_acoustic,
+__global__ void compute_add_sources_acoustic_kernel(realw* minus_pressure,
                                                     int* d_ibool,
                                                     int* ispec_is_inner,
                                                     int phase_is_inner,
@@ -69,11 +69,11 @@ __global__ void compute_add_sources_acoustic_kernel(realw* potential_dot_dot_aco
         stf = (realw) stf_pre_compute[isource];
         kappal = kappastore[INDEX4(NGLLX,NGLLX,NGLLX,i,j,k,ispec)];
 
-        atomicAdd(&potential_dot_dot_acoustic[iglob],
+        atomicAdd(&minus_pressure[iglob],
                   -sourcearrays[INDEX5(NSOURCES,NDIM,NGLLX,NGLLX,isource, 0,i,j,k)]*stf/kappal);
 
         // debug: without atomic operation
-        //      potential_dot_dot_acoustic[iglob] +=
+        //      minus_pressure[iglob] +=
         //                -sourcearrays[INDEX5(NSOURCES, 3, 5, 5,isource, 0, i,j,k)]*stf/kappal;
       }
     }
@@ -110,7 +110,7 @@ void FC_FUNC_(compute_add_sources_ac_cuda,
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(5,5,5);
 
-  compute_add_sources_acoustic_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_dot_dot_acoustic,
+  compute_add_sources_acoustic_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_minus_pressure,
                                                                               mp->d_ibool,
                                                                               mp->d_ispec_is_inner,
                                                                               phase_is_inner,
@@ -157,7 +157,7 @@ void FC_FUNC_(compute_add_sources_ac_s3_cuda,
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(5,5,5);
 
-  compute_add_sources_acoustic_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_dot_dot_acoustic,
+  compute_add_sources_acoustic_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_minus_pressure,
                                                                               mp->d_ibool,
                                                                               mp->d_ispec_is_inner,
                                                                               phase_is_inner,
@@ -182,7 +182,7 @@ void FC_FUNC_(compute_add_sources_ac_s3_cuda,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-__global__ void add_sources_ac_SIM_TYPE_2_OR_3_kernel(realw* potential_dot_dot_acoustic,
+__global__ void add_sources_ac_SIM_TYPE_2_OR_3_kernel(realw* minus_pressure,
                                                       int nrec,
                                                       realw* adj_sourcearrays,
                                                       int* d_ibool,
@@ -214,7 +214,7 @@ __global__ void add_sources_ac_SIM_TYPE_2_OR_3_kernel(realw* potential_dot_dot_a
 
         //kappal = kappastore[INDEX4(5,5,5,i,j,k,ispec)];
 
-        //potential_dot_dot_acoustic[iglob] += adj_sourcearrays[INDEX6(nadj_rec_local,NTSTEP_BETWEEN_ADJSRC,3,5,5,
+        //minus_pressure[iglob] += adj_sourcearrays[INDEX6(nadj_rec_local,NTSTEP_BETWEEN_ADJSRC,3,5,5,
         //                                            pre_computed_irec_local_index[irec],
         //                                            pre_computed_index,
         //                                            0,
@@ -228,7 +228,7 @@ __global__ void add_sources_ac_SIM_TYPE_2_OR_3_kernel(realw* potential_dot_dot_a
         //          the idea is to have e.g. a pressure source, where all 3 components would be the same
         realw stf = adj_sourcearrays[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,0,irec_local)]; // / kappal
 
-        atomicAdd(&potential_dot_dot_acoustic[iglob],stf);
+        atomicAdd(&minus_pressure[iglob],stf);
 
                   //+adj_sourcearrays[INDEX6(nadj_rec_local,NTSTEP_BETWEEN_ADJSRC,3,5,5,
                   //                         pre_computed_irec_local_index[irec],pre_computed_index-1,
@@ -321,7 +321,7 @@ void FC_FUNC_(add_sources_ac_sim_2_or_3_cuda,
                                     (mp->nadj_rec_local)*3*NGLL3*sizeof(realw),cudaMemcpyHostToDevice),99099);
 
   // launches cuda kernel for acoustic adjoint sources
-  add_sources_ac_SIM_TYPE_2_OR_3_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_dot_dot_acoustic,
+  add_sources_ac_SIM_TYPE_2_OR_3_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_minus_pressure,
                                                                                 *nrec,
                                                                                 mp->d_adj_sourcearrays,
                                                                                 mp->d_ibool,

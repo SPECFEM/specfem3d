@@ -29,14 +29,14 @@
 
   subroutine compute_coupling_acoustic_po(NSPEC_AB,NGLOB_AB, &
                         ibool,displs_poroelastic,displw_poroelastic, &
-                        potential_dot_dot_acoustic, &
+                        minus_pressure, &
                         num_coupling_ac_po_faces, &
                         coupling_ac_po_ispec,coupling_ac_po_ijk, &
                         coupling_ac_po_normal, &
                         coupling_ac_po_jacobian2Dw, &
                         ispec_is_inner,phase_is_inner)
 
-! returns the updated pressure array: potential_dot_dot_acoustic
+! returns the updated pressure array: minus_pressure
 
   use constants
 
@@ -46,7 +46,7 @@
 
 ! displacement and pressure
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displs_poroelastic,displw_poroelastic
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: minus_pressure
 
 ! global indexing
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
@@ -92,7 +92,7 @@
         displ_y = displs_poroelastic(2,iglob) + displw_poroelastic(2,iglob)
         displ_z = displs_poroelastic(3,iglob) + displw_poroelastic(3,iglob)
 
-        ! gets associated normal on GLL point
+        ! gets associated normal at GLL point
         ! (note convention: pointing outwards of acoustic element)
         nx = coupling_ac_po_normal(1,igll,iface)
         ny = coupling_ac_po_normal(2,igll,iface)
@@ -107,14 +107,14 @@
 
         ! continuity of pressure and normal displacement on global point
         !
-        ! note: Newmark time scheme together with definition of scalar potential:
-        !          pressure = - chi_dot_dot
+        ! note: Newmark time scheme together with definition of scalar:
+        !          pressure = - minus_pressure
         !          requires that this coupling term uses the updated displacement at time step [t+delta_t],
         !          which is done at the very beginning of the time loop
         !          (see e.g. Chaljub & Vilotte, Nissen-Meyer thesis...)
         !          it also means you have to calculate and update this here first before
         !          calculating the coupling on the elastic side for the acceleration...
-        potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) + jacobianw*displ_n
+        minus_pressure(iglob) = minus_pressure(iglob) + jacobianw*displ_n
 
       enddo ! igll
 

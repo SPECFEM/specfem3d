@@ -31,16 +31,16 @@
 ! explicit Newmark time scheme with acoustic & elastic domains:
 ! (see e.g. Hughes, 1987; Chaljub et al., 2003)
 !
-! chi(t+delta_t) = chi(t) + delta_t chi_dot(t) + 1/2 delta_t**2 chi_dot_dot(t)
-! chi_dot(t+delta_t) = chi_dot(t) + 1/2 delta_t chi_dot_dot(t) + 1/2 delta_t chi_dot_dot(t+delta_t)
-! chi_dot_dot(t+delta_t) = 1/M_acoustic( -K_acoustic chi(t+delta) + B_acoustic u(t+delta_t) + f(t+delta_t) )
+! minus_int_int_pressure(t+delta_t) = minus_int_int_pressure(t) + delta_t minus_int_pressure(t) + 1/2 delta_t**2 minus_pressure(t)
+! minus_int_pressure(t+delta_t) = minus_int_pressure(t) + 1/2 delta_t minus_pressure(t) + 1/2 delta_t minus_pressure(t+delta_t)
+! minus_pressure(t+delta_t) = 1/M_acoustic( -K_acoustic minus_int_int_pressure(t+delta) + B_acoustic u(t+delta_t) + f(t+delta_t) )
 !
 ! u(t+delta_t) = u(t) + delta_t  v(t) + 1/2  delta_t**2 a(t)
 ! v(t+delta_t) = v(t) + 1/2 delta_t a(t) + 1/2 delta_t a(t+delta_t)
-! a(t+delta_t) = 1/M_elastic ( -K_elastic u(t+delta) + B_elastic chi_dot_dot(t+delta_t) + f( t+delta_t) )
+! a(t+delta_t) = 1/M_elastic ( -K_elastic u(t+delta) + B_elastic minus_pressure(t+delta_t) + f( t+delta_t) )
 !
 ! where
-!   chi, chi_dot, chi_dot_dot are acoustic (fluid) potentials ( dotted with respect to time)
+!   minus_int_int_pressure, minus_int_pressure, minus_pressure are acoustic (fluid) scalars ( dotted with respect to time)
 !   u, v, a are displacement,velocity & acceleration
 !   M is mass matrix, K stiffness matrix and B boundary term for acoustic/elastic domains
 !   f denotes a source term (acoustic/elastic)
@@ -48,14 +48,14 @@
 ! note that this stage calculates the predictor terms
 !
 !   for
-!   potential chi_dot(t+delta) requires + 1/2 delta_t chi_dot_dot(t+delta_t)
-!                                   at a later stage (corrector) once where chi_dot_dot(t+delta) is calculated
+!   scalar minus_int_pressure(t+delta) requires + 1/2 delta_t minus_pressure(t+delta_t)
+!                                   at a later stage (corrector) once where minus_pressure(t+delta) is calculated
 !   and similar,
 !   velocity v(t+delta_t) requires  + 1/2 delta_t a(t+delta_t)
 !                                   at a later stage once where a(t+delta) is calculated
 ! also:
-!   boundary term B_elastic requires chi_dot_dot(t+delta)
-!                                   thus chi_dot_dot has to be updated first before the elastic boundary term is considered
+!   boundary term B_elastic requires minus_pressure(t+delta)
+!                                   thus minus_pressure has to be updated first before the elastic boundary term is considered
 
   use specfem_par
   use specfem_par_acoustic
@@ -90,7 +90,7 @@
 
   subroutine update_displacement_acoustic()
 
-! updates acoustic potentials
+! updates acoustic scalars
 
   use specfem_par
   use specfem_par_acoustic
@@ -105,7 +105,7 @@
 
   if (.not. GPU_MODE) then
     ! wavefields on CPU
-    ! updates (forward) acoustic potentials
+    ! updates (forward) acoustic scalars
     if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
        do ispec_cpml=1,NSPEC_CPML
           ispec = CPML_to_spec(ispec_cpml)
@@ -113,20 +113,20 @@
              do j = 1, NGLLY
                 do k = 1, NGLLZ
                    iglob = ibool(i,j,k,ispec)
-                   PML_potential_acoustic_old(i,j,k,ispec_cpml) = potential_acoustic(iglob) &
-                       + deltatover2 * (1._CUSTOM_REAL - 2.0_CUSTOM_REAL*theta) * potential_dot_acoustic(iglob) &
-                       + deltatsqover2 * (1._CUSTOM_REAL - theta) * potential_dot_dot_acoustic(iglob)
+                   PML_minus_int_int_pressure_old(i,j,k,ispec_cpml) = minus_int_int_pressure(iglob) &
+                       + deltatover2 * (1._CUSTOM_REAL - 2.0_CUSTOM_REAL*theta) * minus_int_pressure(iglob) &
+                       + deltatsqover2 * (1._CUSTOM_REAL - theta) * minus_pressure(iglob)
                 enddo
              enddo
           enddo
        enddo
     endif
-    potential_acoustic(:) = potential_acoustic(:) + &
-                            deltat * potential_dot_acoustic(:) + &
-                            deltatsqover2 * potential_dot_dot_acoustic(:)
-    potential_dot_acoustic(:) = potential_dot_acoustic(:) + &
-                                deltatover2 * potential_dot_dot_acoustic(:)
-    potential_dot_dot_acoustic(:) = 0._CUSTOM_REAL
+    minus_int_int_pressure(:) = minus_int_int_pressure(:) + &
+                            deltat * minus_int_pressure(:) + &
+                            deltatsqover2 * minus_pressure(:)
+    minus_int_pressure(:) = minus_int_pressure(:) + &
+                                deltatover2 * minus_pressure(:)
+    minus_pressure(:) = 0._CUSTOM_REAL
 
     if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
       do ispec_cpml=1,NSPEC_CPML
@@ -135,8 +135,8 @@
             do j = 1, NGLLY
                do k = 1, NGLLZ
                   iglob = ibool(i,j,k,ispec)
-                  PML_potential_acoustic_new(i,j,k,ispec_cpml) = potential_acoustic(iglob) &
-                       + deltatover2 * (1._CUSTOM_REAL - 2.0_CUSTOM_REAL*theta) * potential_dot_acoustic(iglob)
+                  PML_minus_int_int_pressure_new(i,j,k,ispec_cpml) = minus_int_int_pressure(iglob) &
+                       + deltatover2 * (1._CUSTOM_REAL - 2.0_CUSTOM_REAL*theta) * minus_int_pressure(iglob)
                enddo
             enddo
          enddo
@@ -148,16 +148,16 @@
       ! updates acoustic backward/reconstructed fields
       if (PML_CONDITIONS) then
         if (nglob_interface_PML_acoustic > 0) then
-          call read_potential_on_pml_interface(b_potential_dot_dot_acoustic,b_potential_dot_acoustic,b_potential_acoustic,&
-                                               nglob_interface_PML_acoustic,b_PML_potential,b_reclen_PML_potential)
+          call read_pressure_scalar_on_pml_interface(b_minus_pressure,b_minus_int_pressure,b_minus_int_int_pressure,&
+                           nglob_interface_PML_acoustic,b_PML_minus_int_int_pressure,b_reclen_PML_minus_int_int_pressure)
         endif
       endif
-      b_potential_acoustic(:) = b_potential_acoustic(:) + &
-                                b_deltat * b_potential_dot_acoustic(:) + &
-                                b_deltatsqover2 * b_potential_dot_dot_acoustic(:)
-      b_potential_dot_acoustic(:) = b_potential_dot_acoustic(:) + &
-                                    b_deltatover2 * b_potential_dot_dot_acoustic(:)
-      b_potential_dot_dot_acoustic(:) = 0._CUSTOM_REAL
+      b_minus_int_int_pressure(:) = b_minus_int_int_pressure(:) + &
+                                b_deltat * b_minus_int_pressure(:) + &
+                                b_deltatsqover2 * b_minus_pressure(:)
+      b_minus_int_pressure(:) = b_minus_int_pressure(:) + &
+                                    b_deltatover2 * b_minus_pressure(:)
+      b_minus_pressure(:) = 0._CUSTOM_REAL
     endif
 
   else
@@ -169,7 +169,7 @@
       endif
     endif
 
-    ! updates acoustic potentials
+    ! updates acoustic scalars
     call it_update_displacement_ac_cuda(Mesh_pointer,deltat,deltatsqover2,deltatover2,b_deltat,b_deltatsqover2,b_deltatover2)
   endif ! GPU_MODE
 

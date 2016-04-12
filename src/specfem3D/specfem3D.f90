@@ -311,7 +311,7 @@
 !    parallelized on 128 processors using Connection Machine Fortran
 !
 
-! in case of an acoustic medium, a potential Chi of (density * displacement) is used as in Chaljub and Valette,
+! in case of an acoustic medium, a scalar related to grad(density * displacement) is used as in Chaljub and Valette,
 ! Geophysical Journal International, vol. 158, p. 131-141 (2004) and *NOT* a velocity potential
 ! as in Komatitsch and Tromp, Geophysical Journal International, vol. 150, p. 303-318 (2002).
 !
@@ -319,19 +319,19 @@
 ! Displacement is then:
 !     u = grad(Chi) / rho
 ! Velocity is then:
-!     v = grad(Chi_dot) / rho
-! (Chi_dot being the time derivative of Chi)
+!     v = grad(minus_int_pressure) / rho
+! (minus_int_pressure being the time derivative of Chi)
 ! and pressure is:
-!     p = - Chi_dot_dot
-! (Chi_dot_dot being the time second derivative of Chi).
+!     p = - minus_pressure
+! (minus_pressure being the time second derivative of Chi).
 !
 ! The source in an acoustic element is a pressure source.
 !
 ! First-order acoustic-acoustic discontinuities are also handled automatically
-! because pressure is continuous at such an interface, therefore Chi_dot_dot
+! because pressure is continuous at such an interface, therefore minus_pressure
 ! is continuous, therefore Chi is also continuous, which is consistent with
 ! the spectral-element basis functions and with the assembling process.
-! This is the reason why a simple displacement potential u = grad(Chi) would
+! This is the reason why a simple displacement potential u would
 ! not work because it would be discontinuous at such an interface and would
 ! therefore not be consistent with the basis functions.
 

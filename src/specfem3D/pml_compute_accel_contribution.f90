@@ -143,8 +143,8 @@ end subroutine pml_compute_accel_contribution_elastic
 !
 !=====================================================================
 !
-subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_acoustic,&
-                                                   potential_dot_acoustic,rmemory_potential_acoustic)
+subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,minus_int_int_pressure,&
+                                                   minus_int_pressure,rmemory_minus_int_int_pressure)
 
   ! calculates contribution from each C-PML element to update acceleration to the global mesh
 
@@ -156,16 +156,16 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
   use specfem_par, only: NGLOB_AB,deltat,wgll_cube,jacobian,ibool,kappastore
   use pml_par, only: CPML_regions,NSPEC_CPML,d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z,&
                      alpha_store_x, alpha_store_y, alpha_store_z, &
-                     NSPEC_CPML,potential_dot_dot_acoustic_CPML,&
-                     PML_potential_acoustic_old,PML_potential_acoustic_new
+                     NSPEC_CPML,minus_pressure_CPML,&
+                     PML_minus_int_int_pressure_old,PML_minus_int_int_pressure_new
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
                        CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
   implicit none
 
   integer, intent(in) :: ispec,ispec_CPML
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB), intent(in) :: potential_acoustic,potential_dot_acoustic
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3) :: rmemory_potential_acoustic
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB), intent(in) :: minus_int_int_pressure,minus_int_pressure
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3) :: rmemory_minus_int_int_pressure
 
 
   ! local parameters
@@ -211,24 +211,24 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
                coef0_z, coef1_z, coef2_z)
 
         ! updates memory variables
-        rmemory_potential_acoustic(i,j,k,ispec_CPML,1) = coef0_x * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
-                + coef1_x * PML_potential_acoustic_new(i,j,k,ispec_CPML) &
-                + coef2_x * PML_potential_acoustic_old(i,j,k,ispec_CPML)
+        rmemory_minus_int_int_pressure(i,j,k,ispec_CPML,1) = coef0_x * rmemory_minus_int_int_pressure(i,j,k,ispec_CPML,1) &
+                + coef1_x * PML_minus_int_int_pressure_new(i,j,k,ispec_CPML) &
+                + coef2_x * PML_minus_int_int_pressure_old(i,j,k,ispec_CPML)
 
-        rmemory_potential_acoustic(i,j,k,ispec_CPML,2) = coef0_y * rmemory_potential_acoustic(i,j,k,ispec_CPML,2) &
-                + coef1_y * PML_potential_acoustic_new(i,j,k,ispec_CPML) &
-                + coef2_y * PML_potential_acoustic_old(i,j,k,ispec_CPML)
+        rmemory_minus_int_int_pressure(i,j,k,ispec_CPML,2) = coef0_y * rmemory_minus_int_int_pressure(i,j,k,ispec_CPML,2) &
+                + coef1_y * PML_minus_int_int_pressure_new(i,j,k,ispec_CPML) &
+                + coef2_y * PML_minus_int_int_pressure_old(i,j,k,ispec_CPML)
 
-        rmemory_potential_acoustic(i,j,k,ispec_CPML,3) = coef0_z * rmemory_potential_acoustic(i,j,k,ispec_CPML,3) &
-                + coef1_z * PML_potential_acoustic_new(i,j,k,ispec_CPML) &
-                + coef2_z * PML_potential_acoustic_old(i,j,k,ispec_CPML)
+        rmemory_minus_int_int_pressure(i,j,k,ispec_CPML,3) = coef0_z * rmemory_minus_int_int_pressure(i,j,k,ispec_CPML,3) &
+                + coef1_z * PML_minus_int_int_pressure_new(i,j,k,ispec_CPML) &
+                + coef2_z * PML_minus_int_int_pressure_old(i,j,k,ispec_CPML)
 
-        ! updates pml potential
-        potential_dot_dot_acoustic_CPML(i,j,k) =  wgllcube * kappal_inv * jacobianl * &
-                  ( A_1 * potential_dot_acoustic(iglob) + A_2 * potential_acoustic(iglob) &
-                  + A_3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
-                  + A_4 * rmemory_potential_acoustic(i,j,k,ispec_CPML,2) &
-                  + A_5 * rmemory_potential_acoustic(i,j,k,ispec_CPML,3) &
+        ! updates pml scalar
+        minus_pressure_CPML(i,j,k) =  wgllcube * kappal_inv * jacobianl * &
+                  ( A_1 * minus_int_pressure(iglob) + A_2 * minus_int_int_pressure(iglob) &
+                  + A_3 * rmemory_minus_int_int_pressure(i,j,k,ispec_CPML,1) &
+                  + A_4 * rmemory_minus_int_int_pressure(i,j,k,ispec_CPML,2) &
+                  + A_5 * rmemory_minus_int_int_pressure(i,j,k,ispec_CPML,3) &
                   )
       enddo
     enddo
@@ -319,42 +319,42 @@ end subroutine read_field_on_pml_interface
 !
 !=====================================================================
 !
-subroutine save_potential_on_pml_interface(potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic,&
-                                           nglob_interface_PML_acoustic,b_PML_potential,b_reclen_PML_potential)
+subroutine save_pressure_scalar_on_pml_interface(minus_int_int_pressure,minus_int_pressure,minus_pressure,&
+                  nglob_interface_PML_acoustic,b_PML_minus_int_int_pressure,b_reclen_PML_minus_int_int_pressure)
 
   use specfem_par, only: NGLOB_AB,it
   use constants, only: CUSTOM_REAL
   implicit none
 
-  integer, intent(in) :: nglob_interface_PML_acoustic,b_reclen_PML_potential
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB), intent(in) :: potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic
-  real(kind=CUSTOM_REAL), dimension(3,nglob_interface_PML_acoustic) :: b_PML_potential
+  integer, intent(in) :: nglob_interface_PML_acoustic,b_reclen_PML_minus_int_int_pressure
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB), intent(in) :: minus_int_int_pressure,minus_int_pressure,minus_pressure
+  real(kind=CUSTOM_REAL), dimension(3,nglob_interface_PML_acoustic) :: b_PML_minus_int_int_pressure
 
   integer :: iglob
 
   do iglob = 1, nglob_interface_PML_acoustic
-    b_PML_potential(1,iglob) = potential_acoustic(iglob)
-    b_PML_potential(2,iglob) = potential_dot_acoustic(iglob)
-    b_PML_potential(3,iglob) = potential_dot_dot_acoustic(iglob)
+    b_PML_minus_int_int_pressure(1,iglob) = minus_int_int_pressure(iglob)
+    b_PML_minus_int_int_pressure(2,iglob) = minus_int_pressure(iglob)
+    b_PML_minus_int_int_pressure(3,iglob) = minus_pressure(iglob)
   enddo
 
-  call write_abs(1,b_PML_potential,b_reclen_PML_potential,it)
+  call write_abs(1,b_PML_minus_int_int_pressure,b_reclen_PML_minus_int_int_pressure,it)
 
-end subroutine save_potential_on_pml_interface
+end subroutine save_pressure_scalar_on_pml_interface
 !
 !=====================================================================
 !
-subroutine read_potential_on_pml_interface(b_potential_dot_dot_acoustic,b_potential_dot_acoustic,b_potential_acoustic,&
-                                           nglob_interface_PML_acoustic,b_PML_potential,b_reclen_PML_potential)
+subroutine read_pressure_scalar_on_pml_interface(b_minus_pressure,b_minus_int_pressure,b_minus_int_int_pressure,&
+                  nglob_interface_PML_acoustic,b_PML_minus_int_int_pressure,b_reclen_PML_minus_int_int_pressure)
 
   use specfem_par, only: NGLOB_AB,ibool,NSTEP,it
   use pml_par, only: NSPEC_CPML,CPML_to_spec
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
   implicit none
 
-  integer, intent(in) :: nglob_interface_PML_acoustic,b_reclen_PML_potential
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: b_potential_dot_dot_acoustic,b_potential_dot_acoustic,b_potential_acoustic
-  real(kind=CUSTOM_REAL), dimension(3,nglob_interface_PML_acoustic) :: b_PML_potential
+  integer, intent(in) :: nglob_interface_PML_acoustic,b_reclen_PML_minus_int_int_pressure
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: b_minus_pressure,b_minus_int_pressure,b_minus_int_int_pressure
+  real(kind=CUSTOM_REAL), dimension(3,nglob_interface_PML_acoustic) :: b_PML_minus_int_int_pressure
 
   integer :: iglob,ispec,ispec_pml,i,j,k
 
@@ -364,23 +364,23 @@ subroutine read_potential_on_pml_interface(b_potential_dot_dot_acoustic,b_potent
       do j = 1, NGLLY
         do k = 1, NGLLZ
           iglob = ibool(i,j,k,ispec)
-          b_potential_acoustic(iglob) = 0._CUSTOM_REAL
-          b_potential_dot_acoustic(iglob) = 0._CUSTOM_REAL
-          b_potential_dot_dot_acoustic(iglob) = 0._CUSTOM_REAL
+          b_minus_int_int_pressure(iglob) = 0._CUSTOM_REAL
+          b_minus_int_pressure(iglob) = 0._CUSTOM_REAL
+          b_minus_pressure(iglob) = 0._CUSTOM_REAL
         enddo
       enddo
     enddo
   enddo
 
-  call read_abs(1,b_PML_potential,b_reclen_PML_potential,NSTEP-it+1)
+  call read_abs(1,b_PML_minus_int_int_pressure,b_reclen_PML_minus_int_int_pressure,NSTEP-it+1)
 
   do iglob = 1, nglob_interface_PML_acoustic
-    b_potential_acoustic(iglob) = b_PML_potential(1,iglob)
-    b_potential_dot_acoustic(iglob) = b_PML_potential(2,iglob)
-    b_potential_dot_dot_acoustic(iglob) = b_PML_potential(3,iglob)
+    b_minus_int_int_pressure(iglob) = b_PML_minus_int_int_pressure(1,iglob)
+    b_minus_int_pressure(iglob) = b_PML_minus_int_int_pressure(2,iglob)
+    b_minus_pressure(iglob) = b_PML_minus_int_int_pressure(3,iglob)
   enddo
 
-end subroutine read_potential_on_pml_interface
+end subroutine read_pressure_scalar_on_pml_interface
 !
 !=====================================================================
 !

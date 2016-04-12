@@ -28,7 +28,7 @@
 ! for acoustic solver
 
   subroutine compute_coupling_acoustic_el(NSPEC_AB,NGLOB_AB, &
-                        ibool,displ,potential_dot_dot_acoustic, &
+                        ibool,displ,minus_pressure, &
                         num_coupling_ac_el_faces, &
                         coupling_ac_el_ispec,coupling_ac_el_ijk, &
                         coupling_ac_el_normal, &
@@ -36,7 +36,7 @@
                         ispec_is_inner,phase_is_inner,&
                         PML_CONDITIONS,SIMULATION_TYPE,backward_simulation)
 
-! returns the updated pressure array: potential_dot_dot_acoustic
+! returns the updated pressure array: minus_pressure
 
   use constants,only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,NGLLSQUARE
   use pml_par, only: NSPEC_CPML,spec_to_CPML,is_CPML,rmemory_coupling_ac_el_displ
@@ -47,7 +47,7 @@
 
 ! displacement and pressure
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(in) :: displ
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(inout) :: potential_dot_dot_acoustic
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(inout) :: minus_pressure
   integer,intent(in) :: SIMULATION_TYPE
   logical,intent(in) :: backward_simulation
 
@@ -100,7 +100,7 @@
 
         ! adjoint wavefield case
         if (SIMULATION_TYPE /= 1 .and. (.not. backward_simulation)) then
-          ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
+          ! handles adjoint runs coupling between adjoint pressure and adjoint elastic wavefield
           ! adjoint definition: \partial_t^2 \bfs^\dagger = - \frac{1}{\rho} \bfnabla\phi^\dagger
           displ_x = - displ_x
           displ_y = - displ_y
@@ -124,7 +124,7 @@
           endif
         endif
 
-        ! gets associated normal on GLL point
+        ! gets associated normal at GLL point
         ! (note convention: pointing outwards of acoustic element)
         nx = coupling_ac_el_normal(1,igll,iface)
         ny = coupling_ac_el_normal(2,igll,iface)
@@ -139,14 +139,14 @@
 
         ! continuity of pressure and normal displacement on global point
         !
-        ! note: Newmark time scheme together with definition of scalar potential:
-        !          pressure = - chi_dot_dot
+        ! note: Newmark time scheme together with definition of scalar:
+        !          pressure = - minus_pressure
         !          requires that this coupling term uses the updated displacement at time step [t+delta_t],
         !          which is done at the very beginning of the time loop
         !          (see e.g. Chaljub & Vilotte, Nissen-Meyer thesis...)
         !          it also means you have to calculate and update this here first before
         !          calculating the coupling on the elastic side for the acceleration...
-        potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) + jacobianw*displ_n
+        minus_pressure(iglob) = minus_pressure(iglob) + jacobianw*displ_n
 
       enddo ! igll
 
