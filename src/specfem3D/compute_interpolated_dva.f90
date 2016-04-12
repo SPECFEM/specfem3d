@@ -123,7 +123,7 @@ end subroutine compute_interpolated_dva
 !
 
 subroutine compute_interpolated_dva_acoust(displ_element,veloc_element,accel_element, &
-                        potential_dot_dot_acoustic,potential_acoustic,NGLOB_AB, &
+                        minus_pressure,minus_int_int_pressure,NGLOB_AB, &
                         ispec,NSPEC_AB,ibool, &
                         xi_r,eta_r,gamma_r, &
                         hxir,hetar,hgammar, &
@@ -142,7 +142,7 @@ subroutine compute_interpolated_dva_acoust(displ_element,veloc_element,accel_ele
 
   integer,intent(in) :: NSPEC_AB,NGLOB_AB
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ),intent(in) :: displ_element,veloc_element,accel_element
-  real(kind=CUSTOM_REAL),dimension(NGLOB_AB),intent(in) :: potential_dot_dot_acoustic,potential_acoustic
+  real(kind=CUSTOM_REAL),dimension(NGLOB_AB),intent(in) :: minus_pressure,minus_int_int_pressure
 
   integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
 
@@ -199,12 +199,12 @@ subroutine compute_interpolated_dva_acoust(displ_element,veloc_element,accel_ele
     if(USE_TRICK_FOR_BETTER_PRESSURE) then
       ! use a trick to increase accuracy of pressure seismograms in fluid (acoustic) elements:
       ! use the second derivative of the source for the source time function instead of the source itself,
-      ! and then record -potential_acoustic() as pressure seismograms instead of -potential_dot_dot_acoustic();
+      ! and then record -minus_int_int_pressure() as pressure seismograms instead of -minus_pressure();
       ! this is mathematically equivalent, but numerically significantly more accurate because in the explicit
       ! Newmark time scheme acceleration is accurate at zeroth order while displacement is accurate at second order,
-      ! thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
+      ! thus in fluid elements minus_pressure() is accurate at zeroth order while minus_int_int_pressure()
       ! is accurate at second order and thus contains significantly less numerical noise.
-      pd = - potential_acoustic(iglob)
+      pd = - minus_int_int_pressure(iglob)
       ! that trick is not implemented for the calculation of displacement, velocity nor acceleration seismograms
       ! in acoustic elements yet; to do so we would need to recompute them using the second integral in time of the
       ! current formulas in that case. Same remark for recording stations located in solid (elastic/viscoelastic) elements
@@ -220,7 +220,7 @@ subroutine compute_interpolated_dva_acoust(displ_element,veloc_element,accel_ele
       ayd = ZERO
       azd = ZERO
     else
-      pd = - potential_dot_dot_acoustic(iglob) ! this is the standard expression
+      pd = - minus_pressure(iglob) ! this is the standard expression
     endif
 
   else
@@ -254,12 +254,12 @@ subroutine compute_interpolated_dva_acoust(displ_element,veloc_element,accel_ele
           if(USE_TRICK_FOR_BETTER_PRESSURE) then
             ! use a trick to increase accuracy of pressure seismograms in fluid (acoustic) elements:
             ! use the second derivative of the source for the source time function instead of the source itself,
-            ! and then record -potential_acoustic() as pressure seismograms instead of -potential_dot_dot_acoustic();
+            ! and then record -minus_int_int_pressure() as pressure seismograms instead of -minus_pressure();
             ! this is mathematically equivalent, but numerically significantly more accurate because in the explicit
             ! Newmark time scheme acceleration is accurate at zeroth order while displacement is accurate at second order,
-            ! thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
+            ! thus in fluid elements minus_pressure() is accurate at zeroth order while minus_int_int_pressure()
             ! is accurate at second order and thus contains significantly less numerical noise.
-            pd = pd - hlagrange*potential_acoustic(iglob)
+            pd = pd - hlagrange*minus_int_int_pressure(iglob)
             ! that trick is not implemented for the calculation of displacement, velocity nor acceleration seismograms
             ! in acoustic elements yet; to do so we would need to recompute them using the second integral in time of the
             ! current formulas in that case. Same remark for recording stations located in solid (elastic/viscoelastic) elements
@@ -275,7 +275,7 @@ subroutine compute_interpolated_dva_acoust(displ_element,veloc_element,accel_ele
             ayd = ZERO
             azd = ZERO
           else
-            pd = pd - hlagrange*potential_dot_dot_acoustic(iglob)
+            pd = pd - hlagrange*minus_pressure(iglob)
           endif
 
         enddo

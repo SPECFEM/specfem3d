@@ -182,43 +182,43 @@
   endif
 
   if (ACOUSTIC_SIMULATION) then
-    ! store the potential acoustic field at n-1 time step for CMPL
-    allocate(PML_potential_acoustic_old(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-    if (ier /= 0) stop 'error allocating PML_potential_acoustic_old array'
-    ! store the potential acoustic field at n time step for CMPL
-    allocate(PML_potential_acoustic_new(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
-    if (ier /= 0) stop 'error allocating PML_potential_acoustic_new array'
+    ! store the scalar acoustic field at n-1 time step for CMPL
+    allocate(PML_minus_int_int_pressure_old(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+    if (ier /= 0) stop 'error allocating PML_minus_int_int_pressure_old array'
+    ! store the scalar acoustic field at n time step for CMPL
+    allocate(PML_minus_int_int_pressure_new(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+    if (ier /= 0) stop 'error allocating PML_minus_int_int_pressure_new array'
 
-    ! store the potential acoustic field at n-1 time step
-!    allocate(potential_dot_dot_acoustic_old(NGLOB_AB),stat=ier)
-!    if (ier /= 0) stop 'error allocating potential_dot_dot_acoustic_old array'
+    ! store the scalar acoustic field at n-1 time step
+!    allocate(minus_pressure_old(NGLOB_AB),stat=ier)
+!    if (ier /= 0) stop 'error allocating minus_pressure_old array'
 
     ! stores C-PML memory variables
-    allocate(rmemory_dpotential_dxl(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),stat=ier)
-    if (ier /= 0) stop 'error allocating rmemory_dpotential_dxl array'
-    allocate(rmemory_dpotential_dyl(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),stat=ier)
-    if (ier /= 0) stop 'error allocating rmemory_dpotential_dyl array'
-    allocate(rmemory_dpotential_dzl(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),stat=ier)
-    if (ier /= 0) stop 'error allocating rmemory_dpotential_dzl array'
+    allocate(rmemory_dminus_int_int_pressure_dxl(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),stat=ier)
+    if (ier /= 0) stop 'error allocating rmemory_dminus_int_int_pressure_dxl array'
+    allocate(rmemory_dminus_int_int_pressure_dyl(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),stat=ier)
+    if (ier /= 0) stop 'error allocating rmemory_dminus_int_int_pressure_dyl array'
+    allocate(rmemory_dminus_int_int_pressure_dzl(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),stat=ier)
+    if (ier /= 0) stop 'error allocating rmemory_dminus_int_int_pressure_dzl array'
 
-    ! stores C-PML memory variables needed for potential
-    allocate(rmemory_potential_acoustic(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),stat=ier)
-    if (ier /= 0) stop 'error allocating rmemory_potential_acoustic array'
+    ! stores C-PML memory variables needed for pressure
+    allocate(rmemory_minus_int_int_pressure(NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3),stat=ier)
+    if (ier /= 0) stop 'error allocating rmemory_minus_int_int_pressure array'
 
-    ! stores C-PML contribution to update the second derivative of the potential to the global mesh
-    allocate(potential_dot_dot_acoustic_CPML(NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) stop 'error allocating potential_dot_dot_acoustic_CPML array'
+    ! stores C-PML contribution to update the second derivative of the scalar to the global mesh
+    allocate(minus_pressure_CPML(NGLLX,NGLLY,NGLLZ),stat=ier)
+    if (ier /= 0) stop 'error allocating minus_pressure_CPML array'
   endif
 
   ! stores C-PML contribution on elastic/acoustic interface
   if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION) then
     allocate(rmemory_coupling_ac_el_displ(3,NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2),stat=ier)
     if (ier /= 0) stop 'error allocating rmemory_coupling_ac_el_displ array'
-    allocate(rmemory_coupling_el_ac_potential_dot_dot(NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2),stat=ier)
-    if (ier /= 0) stop 'error allocating rmemory_coupling_el_ac_potential_dot_dot array'
+    allocate(rmemory_coupling_el_ac_minus_pressure(NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2),stat=ier)
+    if (ier /= 0) stop 'error allocating rmemory_coupling_el_ac_minus_pressure array'
     if (SIMULATION_TYPE == 3) then
-      allocate(rmemory_coupling_el_ac_potential(NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2),stat=ier)
-      if (ier /= 0) stop 'error allocating rmemory_coupling_el_ac_potential array'
+      allocate(rmemory_coupling_el_ac_minus_int_int_pressure(NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2),stat=ier)
+      if (ier /= 0) stop 'error allocating rmemory_coupling_el_ac_minus_int_int_pressure array'
     endif
   endif
 
@@ -289,27 +289,27 @@
   endif
 
   if (ACOUSTIC_SIMULATION) then
-    PML_potential_acoustic_old(:,:,:,:) = 0._CUSTOM_REAL
-    PML_potential_acoustic_new(:,:,:,:) = 0._CUSTOM_REAL
+    PML_minus_int_int_pressure_old(:,:,:,:) = 0._CUSTOM_REAL
+    PML_minus_int_int_pressure_new(:,:,:,:) = 0._CUSTOM_REAL
 
-!    potential_dot_dot_acoustic_old(:) = 0._CUSTOM_REAL
+!    minus_pressure_old(:) = 0._CUSTOM_REAL
 
-    rmemory_dpotential_dxl(:,:,:,:,:) = 0._CUSTOM_REAL
-    rmemory_dpotential_dyl(:,:,:,:,:) = 0._CUSTOM_REAL
-    rmemory_dpotential_dzl(:,:,:,:,:) = 0._CUSTOM_REAL
+    rmemory_dminus_int_int_pressure_dxl(:,:,:,:,:) = 0._CUSTOM_REAL
+    rmemory_dminus_int_int_pressure_dyl(:,:,:,:,:) = 0._CUSTOM_REAL
+    rmemory_dminus_int_int_pressure_dzl(:,:,:,:,:) = 0._CUSTOM_REAL
 
-    rmemory_potential_acoustic(:,:,:,:,:) = 0._CUSTOM_REAL
-    potential_dot_dot_acoustic_CPML(:,:,:) = 0._CUSTOM_REAL
+    rmemory_minus_int_int_pressure(:,:,:,:,:) = 0._CUSTOM_REAL
+    minus_pressure_CPML(:,:,:) = 0._CUSTOM_REAL
   endif
 
   if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION) then
     rmemory_coupling_ac_el_displ(:,:,:,:,:,:) = 0._CUSTOM_REAL
-    rmemory_coupling_el_ac_potential_dot_dot(:,:,:,:,:) = 0._CUSTOM_REAL
+    rmemory_coupling_el_ac_minus_pressure(:,:,:,:,:) = 0._CUSTOM_REAL
   endif
 
   if (SIMULATION_TYPE == 3) then
     if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION) then
-      rmemory_coupling_el_ac_potential(:,:,:,:,:) = 0._CUSTOM_REAL
+      rmemory_coupling_el_ac_minus_int_int_pressure(:,:,:,:,:) = 0._CUSTOM_REAL
     endif
   endif
 
@@ -369,38 +369,38 @@
       b_nglob_interface_PML_acoustic = nglob_interface_PML_acoustic
 
       ! allocates wavefield
-      allocate(b_PML_potential(3,b_nglob_interface_PML_acoustic),stat=ier)
-      if (ier /= 0) stop 'error allocating array b_PML_potential'
+      allocate(b_PML_minus_int_int_pressure(3,b_nglob_interface_PML_acoustic),stat=ier)
+      if (ier /= 0) stop 'error allocating array b_PML_minus_int_int_pressure'
 
       ! size of single record
-      b_reclen_PML_potential = CUSTOM_REAL * nglob_interface_PML_acoustic
+      b_reclen_PML_minus_int_int_pressure = CUSTOM_REAL * nglob_interface_PML_acoustic
 
       ! check integer size limit: size of b_reclen_PML_field must fit onto an 4-byte integer
       if (nglob_interface_PML_acoustic > 2147483646 / (CUSTOM_REAL)) then
-        print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_PML_potential
+        print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_PML_minus_int_int_pressure
         print *,'  ',CUSTOM_REAL, nglob_interface_PML_acoustic
-        print *,'bit size fortran: ',bit_size(b_reclen_PML_potential)
-        call exit_MPI(myrank,"error b_reclen_PML_potential integer limit")
+        print *,'bit size fortran: ',bit_size(b_reclen_PML_minus_int_int_pressure)
+        call exit_MPI(myrank,"error b_reclen_PML_minus_int_int_pressure integer limit")
       endif
 
       ! total file size
-      filesize = b_reclen_PML_potential
+      filesize = b_reclen_PML_minus_int_int_pressure
       filesize = filesize*NSTEP
 
       if (SIMULATION_TYPE == 3) then
-        call open_file_abs_r(1,trim(prname)//'absorb_PML_potential.bin', &
-                            len_trim(trim(prname)//'absorb_PML_potential.bin'), &
+        call open_file_abs_r(1,trim(prname)//'absorb_PML_minus_int_int_pressure.bin', &
+                            len_trim(trim(prname)//'absorb_PML_minus_int_int_pressure.bin'), &
                             filesize)
 
       else
-        call open_file_abs_w(1,trim(prname)//'absorb_PML_potential.bin', &
-                            len_trim(trim(prname)//'absorb_PML_potential.bin'), &
+        call open_file_abs_w(1,trim(prname)//'absorb_PML_minus_int_int_pressure.bin', &
+                            len_trim(trim(prname)//'absorb_PML_minus_int_int_pressure.bin'), &
                             filesize)
       endif
     else
       ! needs dummy array
-      allocate(b_PML_potential(3,1),stat=ier)
-      if (ier /= 0) stop 'error allocating array b_PML_potential'
+      allocate(b_PML_minus_int_int_pressure(3,1),stat=ier)
+      if (ier /= 0) stop 'error allocating array b_PML_minus_int_int_pressure'
     endif
   endif
 
@@ -484,24 +484,25 @@
   endif
 
   if (ACOUSTIC_SIMULATION) then
-    if (.not. allocated(PML_potential_acoustic_old)) allocate(PML_potential_acoustic_old(1,1,1,1))
-    if (.not. allocated(PML_potential_acoustic_new)) allocate(PML_potential_acoustic_new(1,1,1,1))
+    if (.not. allocated(PML_minus_int_int_pressure_old)) allocate(PML_minus_int_int_pressure_old(1,1,1,1))
+    if (.not. allocated(PML_minus_int_int_pressure_new)) allocate(PML_minus_int_int_pressure_new(1,1,1,1))
 
-    if (.not. allocated(rmemory_dpotential_dxl)) allocate(rmemory_dpotential_dxl(1,1,1,1,3))
-    if (.not. allocated(rmemory_dpotential_dyl)) allocate(rmemory_dpotential_dyl(1,1,1,1,3))
-    if (.not. allocated(rmemory_dpotential_dzl)) allocate(rmemory_dpotential_dzl(1,1,1,1,3))
-    if (.not. allocated(rmemory_potential_acoustic)) allocate(rmemory_potential_acoustic(1,1,1,1,3))
-    if (.not. allocated(potential_dot_dot_acoustic_CPML)) allocate(potential_dot_dot_acoustic_CPML(1,1,1))
+    if (.not. allocated(rmemory_dminus_int_int_pressure_dxl)) allocate(rmemory_dminus_int_int_pressure_dxl(1,1,1,1,3))
+    if (.not. allocated(rmemory_dminus_int_int_pressure_dyl)) allocate(rmemory_dminus_int_int_pressure_dyl(1,1,1,1,3))
+    if (.not. allocated(rmemory_dminus_int_int_pressure_dzl)) allocate(rmemory_dminus_int_int_pressure_dzl(1,1,1,1,3))
+    if (.not. allocated(rmemory_minus_int_int_pressure)) allocate(rmemory_minus_int_int_pressure(1,1,1,1,3))
+    if (.not. allocated(minus_pressure_CPML)) allocate(minus_pressure_CPML(1,1,1))
 
     ! allocates wavefield
-    if (.not. allocated(b_PML_potential)) allocate(b_PML_potential(3,1))
+    if (.not. allocated(b_PML_minus_int_int_pressure)) allocate(b_PML_minus_int_int_pressure(3,1))
   endif
 
   if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION) then
     if (.not. allocated(rmemory_coupling_ac_el_displ)) allocate(rmemory_coupling_ac_el_displ(3,1,1,1,1,2))
-    if (.not. allocated(rmemory_coupling_el_ac_potential_dot_dot)) allocate(rmemory_coupling_el_ac_potential_dot_dot(1,1,1,1,2))
+    if (.not. allocated(rmemory_coupling_el_ac_minus_pressure)) allocate(rmemory_coupling_el_ac_minus_pressure(1,1,1,1,2))
     if (SIMULATION_TYPE == 3) then
-      if (.not. allocated(rmemory_coupling_el_ac_potential)) allocate(rmemory_coupling_el_ac_potential(1,1,1,1,2))
+      if (.not. allocated(rmemory_coupling_el_ac_minus_int_int_pressure)) &
+        allocate(rmemory_coupling_el_ac_minus_int_int_pressure(1,1,1,1,2))
     endif
   endif
 
@@ -598,20 +599,20 @@
   endif
 
   if (ACOUSTIC_SIMULATION) then
-    deallocate(PML_potential_acoustic_old)
-    deallocate(PML_potential_acoustic_new)
+    deallocate(PML_minus_int_int_pressure_old)
+    deallocate(PML_minus_int_int_pressure_new)
 
-    deallocate(rmemory_dpotential_dxl)
-    deallocate(rmemory_dpotential_dyl)
-    deallocate(rmemory_dpotential_dzl)
-    deallocate(rmemory_potential_acoustic)
-    deallocate(potential_dot_dot_acoustic_CPML)
+    deallocate(rmemory_dminus_int_int_pressure_dxl)
+    deallocate(rmemory_dminus_int_int_pressure_dyl)
+    deallocate(rmemory_dminus_int_int_pressure_dzl)
+    deallocate(rmemory_minus_int_int_pressure)
+    deallocate(minus_pressure_CPML)
   endif
 
   if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION) then
     deallocate(rmemory_coupling_ac_el_displ)
-    deallocate(rmemory_coupling_el_ac_potential_dot_dot)
-    if (SIMULATION_TYPE == 3) deallocate(rmemory_coupling_el_ac_potential)
+    deallocate(rmemory_coupling_el_ac_minus_pressure)
+    if (SIMULATION_TYPE == 3) deallocate(rmemory_coupling_el_ac_minus_int_int_pressure)
   endif
 
   end subroutine pml_cleanup

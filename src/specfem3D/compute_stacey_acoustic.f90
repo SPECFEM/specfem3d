@@ -28,12 +28,12 @@
 ! for acoustic solver
 
   subroutine compute_stacey_acoustic(NSPEC_AB,NGLOB_AB, &
-                            potential_dot_dot_acoustic,potential_dot_acoustic, &
+                            minus_pressure,minus_int_pressure, &
                             ibool,ispec_is_inner,phase_is_inner, &
                             abs_boundary_jacobian2Dw,abs_boundary_ijk,abs_boundary_ispec, &
                             num_abs_boundary_faces,rhostore,kappastore,ispec_is_acoustic,&
-                            SIMULATION_TYPE,SAVE_FORWARD,it,b_reclen_potential, &
-                            b_absorb_potential,b_num_abs_boundary_faces)
+                            SIMULATION_TYPE,SAVE_FORWARD,it,b_reclen_minus_int_int_pressure, &
+                            b_absorb_minus_int_int_pressure,b_num_abs_boundary_faces)
 
   use constants
 
@@ -41,9 +41,9 @@
 
   integer :: NSPEC_AB,NGLOB_AB
 
-! potentials
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic,&
-                                                 potential_dot_acoustic
+! scalars
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: minus_pressure,&
+                                                 minus_int_pressure
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
 
 ! communication overlap
@@ -61,8 +61,8 @@
 
 ! adjoint simulations
   integer:: SIMULATION_TYPE,it
-  integer:: b_num_abs_boundary_faces,b_reclen_potential
-  real(kind=CUSTOM_REAL),dimension(NGLLSQUARE,b_num_abs_boundary_faces):: b_absorb_potential
+  integer:: b_num_abs_boundary_faces,b_reclen_minus_int_int_pressure
+  real(kind=CUSTOM_REAL),dimension(NGLLSQUARE,b_num_abs_boundary_faces):: b_absorb_minus_int_int_pressure
   logical:: SAVE_FORWARD
 
 ! local parameters
@@ -101,12 +101,12 @@
           jacobianw = abs_boundary_jacobian2Dw(igll,iface)
 
           ! Sommerfeld condition
-          absorbl = potential_dot_acoustic(iglob) * jacobianw / cpl / rhol
-          potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) - absorbl
+          absorbl = minus_int_pressure(iglob) * jacobianw / cpl / rhol
+          minus_pressure(iglob) = minus_pressure(iglob) - absorbl
 
           ! adjoint simulations
           if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
-            b_absorb_potential(igll,iface) = absorbl
+            b_absorb_minus_int_int_pressure(igll,iface) = absorbl
           endif !adjoint
 
          enddo
@@ -118,7 +118,7 @@
   if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
     ! writes out absorbing boundary value only when second phase is running
     if (phase_is_inner .eqv. .true.) then
-      call write_abs(IOABS_AC,b_absorb_potential,b_reclen_potential,it)
+      call write_abs(IOABS_AC,b_absorb_minus_int_int_pressure,b_reclen_minus_int_int_pressure,it)
     endif
   endif
 
@@ -132,8 +132,8 @@
                             abs_boundary_ijk,abs_boundary_ispec, &
                             num_abs_boundary_faces,ispec_is_acoustic,&
                             SIMULATION_TYPE,NSTEP,it,NGLOB_ADJOINT, &
-                            b_potential_dot_dot_acoustic,b_reclen_potential, &
-                            b_absorb_potential,b_num_abs_boundary_faces)
+                            b_minus_pressure,b_reclen_minus_int_int_pressure, &
+                            b_absorb_minus_int_int_pressure,b_num_abs_boundary_faces)
 
   use constants
 
@@ -141,7 +141,7 @@
 
   integer :: NSPEC_AB
 
-! potentials
+! scalars
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
 
 ! communication overlap
@@ -158,9 +158,9 @@
 ! adjoint simulations
   integer:: SIMULATION_TYPE
   integer:: NSTEP,it,NGLOB_ADJOINT
-  integer:: b_num_abs_boundary_faces,b_reclen_potential
-  real(kind=CUSTOM_REAL),dimension(NGLOB_ADJOINT) :: b_potential_dot_dot_acoustic
-  real(kind=CUSTOM_REAL),dimension(NGLLSQUARE,b_num_abs_boundary_faces):: b_absorb_potential
+  integer:: b_num_abs_boundary_faces,b_reclen_minus_int_int_pressure
+  real(kind=CUSTOM_REAL),dimension(NGLOB_ADJOINT) :: b_minus_pressure
+  real(kind=CUSTOM_REAL),dimension(NGLLSQUARE,b_num_abs_boundary_faces):: b_absorb_minus_int_int_pressure
 
 ! local parameters
   integer :: ispec,iglob,i,j,k,iface,igll
@@ -174,7 +174,7 @@
     ! reads in absorbing boundary array when first phase is running
     if (phase_is_inner .eqv. .false.) then
       ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
-      call read_abs(IOABS_AC,b_absorb_potential,b_reclen_potential,NSTEP-it+1)
+      call read_abs(IOABS_AC,b_absorb_minus_int_int_pressure,b_reclen_minus_int_int_pressure,NSTEP-it+1)
     endif
   endif !adjoint
 
@@ -200,8 +200,8 @@
 
           ! adjoint simulations
           if (SIMULATION_TYPE == 3) then
-            b_potential_dot_dot_acoustic(iglob) = b_potential_dot_dot_acoustic(iglob) &
-                                                - b_absorb_potential(igll,iface)
+            b_minus_pressure(iglob) = b_minus_pressure(iglob) &
+                                                - b_absorb_minus_int_int_pressure(igll,iface)
           endif !adjoint
 
         enddo
@@ -216,14 +216,14 @@
 
   subroutine compute_stacey_acoustic_GPU(phase_is_inner,num_abs_boundary_faces,&
                             SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
-                            b_reclen_potential,b_absorb_potential, &
+                            b_reclen_minus_int_int_pressure,b_absorb_minus_int_int_pressure, &
                             b_num_abs_boundary_faces,Mesh_pointer)
 
   use constants
 
   implicit none
 
-! potentials
+! scalars
 
 ! communication overlap
   logical :: phase_is_inner
@@ -234,8 +234,8 @@
 ! adjoint simulations
   integer:: SIMULATION_TYPE
   integer:: NSTEP,it
-  integer:: b_num_abs_boundary_faces,b_reclen_potential
-  real(kind=CUSTOM_REAL),dimension(NGLLSQUARE,b_num_abs_boundary_faces):: b_absorb_potential
+  integer:: b_num_abs_boundary_faces,b_reclen_minus_int_int_pressure
+  real(kind=CUSTOM_REAL),dimension(NGLLSQUARE,b_num_abs_boundary_faces):: b_absorb_minus_int_int_pressure
   logical:: SAVE_FORWARD
 
   ! GPU_MODE variables
@@ -249,18 +249,18 @@
     ! reads in absorbing boundary array when first phase is running
     if (phase_is_inner .eqv. .false.) then
       ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
-      call read_abs(IOABS_AC,b_absorb_potential,b_reclen_potential,NSTEP-it+1)
+      call read_abs(IOABS_AC,b_absorb_minus_int_int_pressure,b_reclen_minus_int_int_pressure,NSTEP-it+1)
     endif
   endif !adjoint
 
   ! absorbs absorbing-boundary surface using Sommerfeld condition (vanishing field in the outer-space)
-  call compute_stacey_acoustic_cuda(Mesh_pointer, phase_is_inner,b_absorb_potential)
+  call compute_stacey_acoustic_cuda(Mesh_pointer, phase_is_inner,b_absorb_minus_int_int_pressure)
 
   ! adjoint simulations: stores absorbed wavefield part
   if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
     ! writes out absorbing boundary value only when second phase is running
     if (phase_is_inner .eqv. .true.) then
-      call write_abs(IOABS_AC,b_absorb_potential,b_reclen_potential,it)
+      call write_abs(IOABS_AC,b_absorb_minus_int_int_pressure,b_reclen_minus_int_int_pressure,it)
     endif
   endif
 

@@ -322,10 +322,10 @@
   ! to store forward wave fields
   if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
 
-    ! acoustic potentials
+    ! acoustic scalars
     if (ACOUSTIC_SIMULATION) &
-      call transfer_fields_ac_from_device(NGLOB_AB,potential_acoustic, &
-                                          potential_dot_acoustic, potential_dot_dot_acoustic, &
+      call transfer_fields_ac_from_device(NGLOB_AB,minus_int_int_pressure, &
+                                          minus_int_pressure, minus_pressure, &
                                           Mesh_pointer)
 
     ! elastic wavefield
@@ -346,8 +346,8 @@
     ! acoustic domains
     if (ACOUSTIC_SIMULATION) then
       ! only in case needed...
-      !call transfer_b_fields_ac_from_device(NGLOB_AB,b_potential_acoustic, &
-      !                      b_potential_dot_acoustic, b_potential_dot_dot_acoustic, Mesh_pointer)
+      !call transfer_b_fields_ac_from_device(NGLOB_AB,b_minus_int_int_pressure, &
+      !                      b_minus_int_pressure, b_minus_pressure, Mesh_pointer)
 
       ! acoustic kernels
       call transfer_kernels_ac_to_host(Mesh_pointer,rho_ac_kl,kappa_ac_kl,NSPEC_AB)
@@ -428,9 +428,9 @@
     endif
 
     if (ACOUSTIC_SIMULATION) then
-      read(IIN) b_potential_acoustic
-      read(IIN) b_potential_dot_acoustic
-      read(IIN) b_potential_dot_dot_acoustic
+      read(IIN) b_minus_int_int_pressure
+      read(IIN) b_minus_int_pressure
+      read(IIN) b_minus_pressure
     endif
 
     ! elastic wavefields
@@ -471,9 +471,9 @@
   if (GPU_MODE) then
     if (ACOUSTIC_SIMULATION) then
     ! transfers fields onto GPU
-      call transfer_b_fields_ac_to_device(NGLOB_AB,b_potential_acoustic, &
-                                          b_potential_dot_acoustic,      &
-                                          b_potential_dot_dot_acoustic,  &
+      call transfer_b_fields_ac_to_device(NGLOB_AB,b_minus_int_int_pressure, &
+                                          b_minus_int_pressure,      &
+                                          b_minus_pressure,  &
                                           Mesh_pointer)
     endif
     ! elastic wavefields

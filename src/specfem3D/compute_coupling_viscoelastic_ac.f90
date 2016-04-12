@@ -28,7 +28,7 @@
 ! for elastic solver
 
   subroutine compute_coupling_viscoelastic_ac(NSPEC_AB,NGLOB_AB, &
-                        ibool,accel,potential_dot_dot_acoustic, &
+                        ibool,accel,minus_pressure, &
                         num_coupling_ac_el_faces, &
                         coupling_ac_el_ispec,coupling_ac_el_ijk, &
                         coupling_ac_el_normal, &
@@ -36,12 +36,12 @@
                         ispec_is_inner,phase_is_inner,&
                         PML_CONDITIONS,&
                         SIMULATION_TYPE,backward_simulation,&
-                        potential_acoustic,potential_dot_acoustic)
+                        minus_int_int_pressure,minus_int_pressure)
 
 ! returns the updated acceleration array: accel
 
   use constants,only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,NGLLSQUARE
-  use pml_par,only : rmemory_coupling_el_ac_potential_dot_dot,is_CPML,spec_to_CPML,NSPEC_CPML
+  use pml_par,only : rmemory_coupling_el_ac_minus_pressure,is_CPML,spec_to_CPML,NSPEC_CPML
 
   implicit none
 
@@ -50,7 +50,7 @@
 
 ! displacement and pressure
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB),intent(inout) :: accel
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(in) :: potential_dot_dot_acoustic,potential_dot_acoustic,potential_acoustic
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(in) :: minus_pressure,minus_int_pressure,minus_int_int_pressure
 
 ! global indexing
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
@@ -98,12 +98,11 @@
         iglob = ibool(i,j,k,ispec)
 
         ! acoustic pressure on global point
-        pressure = - potential_dot_dot_acoustic(iglob)
+        pressure = - minus_pressure(iglob)
 
         ! adjoint wavefield case
         if (SIMULATION_TYPE /= 1 .and. (.not. backward_simulation)) then
-          ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
-          ! adjoint definition: pressure^\dagger = potential^\dagger
+          ! handles adjoint runs coupling between adjoint pressure and adjoint elastic wavefield
           pressure = - pressure
         endif
 
@@ -113,23 +112,23 @@
             if (SIMULATION_TYPE == 1) then
               ispec_CPML = spec_to_CPML(ispec)
               call pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k,&
-                                              pressure,potential_acoustic,&
-                                              potential_dot_acoustic,potential_dot_dot_acoustic, &
-                                              num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential_dot_dot)
+                                              pressure,minus_int_int_pressure,&
+                                              minus_int_pressure,minus_pressure, &
+                                              num_coupling_ac_el_faces,rmemory_coupling_el_ac_minus_pressure)
               pressure = - pressure
             endif
 
             if (SIMULATION_TYPE == 3) then
               ispec_CPML = spec_to_CPML(ispec)
               call pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k,&
-                                              pressure,potential_acoustic,&
-                                              potential_dot_acoustic,potential_dot_dot_acoustic,&
-                                              num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential_dot_dot)
+                                              pressure,minus_int_int_pressure,&
+                                              minus_int_pressure,minus_pressure,&
+                                              num_coupling_ac_el_faces,rmemory_coupling_el_ac_minus_pressure)
             endif
           endif
         endif
 
-        ! gets associated normal on GLL point
+        ! gets associated normal at GLL point
         ! (note convention: pointing outwards of acoustic element)
         nx = coupling_ac_el_normal(1,igll,iface)
         ny = coupling_ac_el_normal(2,igll,iface)
@@ -141,9 +140,9 @@
 
         ! continuity of displacement and pressure on global point
         !
-        ! note: Newmark time scheme together with definition of scalar potential:
-        !          pressure = - chi_dot_dot
-        !          requires that this coupling term uses the *UPDATED* pressure (chi_dot_dot), i.e.
+        ! note: Newmark time scheme together with definition of scalar:
+        !          pressure = - minus_pressure
+        !          requires that this coupling term uses the *UPDATED* pressure (minus_pressure), i.e.
         !          pressure at time step [t + delta_t]
         !          (see e.g. Chaljub & Vilotte, Nissen-Meyer thesis...)
         !          it means you have to calculate and update the acoustic pressure first before

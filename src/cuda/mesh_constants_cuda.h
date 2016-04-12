@@ -194,7 +194,7 @@
 
 /* ----------------------------------------------------------------------------------------------- */
 
-// cuda kernel block size for updating displacements/potential (newmark time scheme)
+// cuda kernel block size for updating displacements/minus_int_int_pressure (newmark time scheme)
 // current hardware: 128 is slightly faster than 256 ( ~ 4%)
 #define BLOCKSIZE_KERNEL1 128
 #define BLOCKSIZE_KERNEL3 128
@@ -339,7 +339,7 @@ typedef struct mesh_ {
   float* recv_buffer;
 
   int size_mpi_buffer;
-  int size_mpi_buffer_potential;
+  int size_mpi_buffer_minus_int_int_pressure;
 
   // mpi interfaces
   int num_interfaces_ext_mesh;
@@ -528,10 +528,10 @@ typedef struct mesh_ {
   // ------------------------------------------------------------------ //
   // acoustic wavefield
   // ------------------------------------------------------------------ //
-  // potential and first and second time derivative
-  realw* d_potential_acoustic; realw* d_potential_dot_acoustic; realw* d_potential_dot_dot_acoustic;
+  // minus_int_int_pressure and first and second time derivative
+  realw* d_minus_int_int_pressure_acoustic; realw* d_minus_int_int_pressure_dot_acoustic; realw* d_minus_int_int_pressure_dot_dot_acoustic;
   // backward/reconstructed wavefield
-  realw* d_b_potential_acoustic; realw* d_b_potential_dot_acoustic; realw* d_b_potential_dot_dot_acoustic;
+  realw* d_b_minus_int_int_pressure_acoustic; realw* d_b_minus_int_int_pressure_dot_acoustic; realw* d_b_minus_int_int_pressure_dot_dot_acoustic;
 
   // acoustic domain parameters
   int* d_ispec_is_acoustic;
@@ -549,15 +549,15 @@ typedef struct mesh_ {
   realw* d_rmass_acoustic;
 
   // mpi buffer
-  realw* d_send_potential_dot_dot_buffer;
-  realw* d_b_send_potential_dot_dot_buffer;
+  realw* d_send_minus_int_int_pressure_dot_dot_buffer;
+  realw* d_b_send_minus_int_int_pressure_dot_dot_buffer;
 
-  realw* d_b_absorb_potential;
-  int d_b_reclen_potential;
+  realw* d_b_absorb_minus_int_int_pressure;
+  int d_b_reclen_minus_int_int_pressure;
 
   // for writing seismograms
-  realw* d_station_seismo_potential;
-  realw* h_station_seismo_potential;
+  realw* d_station_seismo_minus_int_int_pressure;
+  realw* h_station_seismo_minus_int_int_pressure;
 
   // sensitivity kernels
   realw* d_rho_ac_kl;

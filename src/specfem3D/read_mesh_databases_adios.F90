@@ -586,16 +586,16 @@ subroutine read_mesh_databases_adios()
   ! Allocate arrays with previously read values |
   !---------------------------------------------'
   if (ACOUSTIC_SIMULATION) then
-    ! potentials
-    allocate(potential_acoustic(NGLOB_AB),stat=ier)
-    if (ier /= 0) stop 'error allocating array potential_acoustic'
-    allocate(potential_dot_acoustic(NGLOB_AB),stat=ier)
-    if (ier /= 0) stop 'error allocating array potential_dot_acoustic'
-    allocate(potential_dot_dot_acoustic(NGLOB_AB),stat=ier)
-    if (ier /= 0) stop 'error allocating array potential_dot_dot_acoustic'
+    ! scalars
+    allocate(minus_int_int_pressure(NGLOB_AB),stat=ier)
+    if (ier /= 0) stop 'error allocating array minus_int_int_pressure'
+    allocate(minus_int_pressure(NGLOB_AB),stat=ier)
+    if (ier /= 0) stop 'error allocating array minus_int_pressure'
+    allocate(minus_pressure(NGLOB_AB),stat=ier)
+    if (ier /= 0) stop 'error allocating array minus_pressure'
     if (SIMULATION_TYPE /= 1) then
-      allocate(potential_acoustic_adj_coupling(NGLOB_AB),stat=ier)
-      if (ier /= 0) stop 'error allocating array potential_acoustic_adj_coupling'
+      allocate(minus_int_int_pressure_adj_coupling(NGLOB_AB),stat=ier)
+      if (ier /= 0) stop 'error allocating array minus_int_int_pressure_adj_coupling'
     endif
     ! mass matrix, density
     allocate(rmass_acoustic(NGLOB_AB),stat=ier)

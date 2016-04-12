@@ -118,9 +118,9 @@ subroutine compute_forces_viscoelastic()
     if (ACOUSTIC_SIMULATION) then
       if (num_coupling_ac_el_faces > 0) then
         if (SIMULATION_TYPE == 1) then
-          ! forward definition: pressure = - potential_dot_dot
+          ! forward definition: pressure = - minus_pressure
           call compute_coupling_viscoelastic_ac(NSPEC_AB,NGLOB_AB, &
-                       ibool,accel,potential_dot_dot_acoustic, &
+                       ibool,accel,minus_pressure, &
                        num_coupling_ac_el_faces, &
                        coupling_ac_el_ispec,coupling_ac_el_ijk, &
                        coupling_ac_el_normal, &
@@ -128,14 +128,13 @@ subroutine compute_forces_viscoelastic()
                        ispec_is_inner,phase_is_inner,&
                        PML_CONDITIONS,&
                        SIMULATION_TYPE,.false., &
-                       potential_acoustic,potential_dot_acoustic)
+                       minus_int_int_pressure,minus_int_pressure)
 
 
         else
-          ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
-          ! adjoint definition: pressure^\dagger = potential^\dagger
+          ! handles adjoint runs coupling between adjoint pressure and adjoint elastic wavefield
           call compute_coupling_viscoelastic_ac(NSPEC_AB,NGLOB_AB, &
-                              ibool,accel,potential_acoustic, &
+                              ibool,accel,minus_int_int_pressure, &
                               num_coupling_ac_el_faces, &
                               coupling_ac_el_ispec,coupling_ac_el_ijk, &
                               coupling_ac_el_normal, &
@@ -143,7 +142,7 @@ subroutine compute_forces_viscoelastic()
                               ispec_is_inner,phase_is_inner,&
                               PML_CONDITIONS,&
                               SIMULATION_TYPE,.false., &
-                              potential_acoustic,potential_dot_acoustic)
+                              minus_int_int_pressure,minus_int_pressure)
 
         endif
 
@@ -264,13 +263,13 @@ subroutine compute_forces_viscoelastic()
 !
 ! u(t+delta_t) = u(t) + delta_t  v(t) + 1/2  delta_t**2 a(t)
 ! v(t+delta_t) = v(t) + 1/2 delta_t a(t) + 1/2 delta_t a(t+delta_t)
-! a(t+delta_t) = 1/M_elastic ( -K_elastic u(t+delta) + B_elastic chi_dot_dot(t+delta_t) + f( t+delta_t))
+! a(t+delta_t) = 1/M_elastic ( -K_elastic u(t+delta) + B_elastic minus_pressure(t+delta_t) + f( t+delta_t))
 !
 ! where
 !   u, v, a are displacement,velocity & acceleration
 !   M is mass matrix, K stiffness matrix and B boundary term for acoustic/elastic domains
 !   f denotes a source term (acoustic/elastic)
-!   chi_dot_dot is acoustic (fluid) potential ( dotted twice with respect to time)
+!   minus_pressure is acoustic (fluid) scalar
 !
 ! corrector:
 !   updates the velocity term which requires a(t+delta)
@@ -376,7 +375,7 @@ subroutine compute_forces_viscoelastic_backward()
       if (num_coupling_ac_el_faces > 0) then
         ! backward simulations
         call compute_coupling_viscoelastic_ac(NSPEC_ADJOINT,NGLOB_ADJOINT, &
-                      ibool,b_accel,b_potential_dot_dot_acoustic, &
+                      ibool,b_accel,b_minus_pressure, &
                       num_coupling_ac_el_faces, &
                       coupling_ac_el_ispec,coupling_ac_el_ijk, &
                       coupling_ac_el_normal, &
@@ -384,7 +383,7 @@ subroutine compute_forces_viscoelastic_backward()
                       ispec_is_inner,phase_is_inner,&
                       PML_CONDITIONS,&
                       SIMULATION_TYPE,.true., &
-                      potential_acoustic,potential_dot_acoustic)
+                      minus_int_int_pressure,minus_int_pressure)
 
       endif ! num_coupling_ac_el_faces
     endif
@@ -450,13 +449,13 @@ subroutine compute_forces_viscoelastic_backward()
 !
 ! u(t+delta_t) = u(t) + delta_t  v(t) + 1/2  delta_t**2 a(t)
 ! v(t+delta_t) = v(t) + 1/2 delta_t a(t) + 1/2 delta_t a(t+delta_t)
-! a(t+delta_t) = 1/M_elastic ( -K_elastic u(t+delta) + B_elastic chi_dot_dot(t+delta_t) + f( t+delta_t))
+! a(t+delta_t) = 1/M_elastic ( -K_elastic u(t+delta) + B_elastic minus_pressure(t+delta_t) + f( t+delta_t))
 !
 ! where
 !   u, v, a are displacement,velocity & acceleration
 !   M is mass matrix, K stiffness matrix and B boundary term for acoustic/elastic domains
 !   f denotes a source term (acoustic/elastic)
-!   chi_dot_dot is acoustic (fluid) potential ( dotted twice with respect to time)
+!   minus_pressure is acoustic (fluid) scalar
 !
 ! corrector:
 !   updates the velocity term which requires a(t+delta)
@@ -692,13 +691,13 @@ subroutine compute_forces_viscoelastic_GPU()
     !
     ! u(t+delta_t) = u(t) + delta_t  v(t) + 1/2  delta_t**2 a(t)
     ! v(t+delta_t) = v(t) + 1/2 delta_t a(t) + 1/2 delta_t a(t+delta_t)
-    ! a(t+delta_t) = 1/M_elastic ( -K_elastic u(t+delta) + B_elastic chi_dot_dot(t+delta_t) + f( t+delta_t))
+    ! a(t+delta_t) = 1/M_elastic ( -K_elastic u(t+delta) + B_elastic minus_pressure(t+delta_t) + f( t+delta_t))
     !
     ! where
     !   u, v, a are displacement,velocity & acceleration
     !   M is mass matrix, K stiffness matrix and B boundary term for acoustic/elastic domains
     !   f denotes a source term (acoustic/elastic)
-    !   chi_dot_dot is acoustic (fluid) potential ( dotted twice with respect to time)
+    !   minus_pressure is acoustic (fluid) scalar
     !
     ! corrector:
     ! updates the velocity term which requires a(t+delta)

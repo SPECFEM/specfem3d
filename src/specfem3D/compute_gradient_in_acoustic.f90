@@ -31,7 +31,7 @@
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         ibool,rhostore,GRAVITY)
 
-! calculates gradient of given acoustic scalar (potential) field on all GLL points in one, single element
+! calculates gradient of given acoustic scalar field at all GLL points in one element
 ! note:
 !   displacement s = (rho)^{-1} \del \chi
 !   velocity     v = (rho)^{-1} \del \ddot \chi
@@ -114,7 +114,7 @@
           rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
         endif
 
-        ! derivatives of acoustic scalar potential field on GLL points
+        ! derivatives of acoustic scalar field at GLL points
         vector_field_element(1,i,j,k) = (temp1l*xixl + temp2l*etaxl + temp3l*gammaxl) * rho_invl
         vector_field_element(2,i,j,k) = (temp1l*xiyl + temp2l*etayl + temp3l*gammayl) * rho_invl
         vector_field_element(3,i,j,k) = (temp1l*xizl + temp2l*etazl + temp3l*gammazl) * rho_invl

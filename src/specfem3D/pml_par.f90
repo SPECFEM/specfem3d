@@ -93,15 +93,15 @@ module pml_par
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: PML_duz_dxl_new,PML_duz_dyl_new,PML_duz_dzl_new
 
   !store the field of
-  !potential_acoustic + (1-2 * \theta)/2*deltat * potential_dot_acoustic + (1-\theta)/2*deltat**2 * potential_dot_dot_acoustic
-  !where potential_acoustic, potential_dot_acoustic, potential_dot_dot_acoustic are defined at "n-1" time step
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: PML_potential_acoustic_old
+  !minus_int_int_pressure + (1-2 * \theta)/2*deltat * minus_int_pressure + (1-\theta)/2*deltat**2 * minus_pressure
+  !where minus_int_int_pressure, minus_int_pressure, minus_pressure are defined at "n-1" time step
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: PML_minus_int_int_pressure_old
 
   !store the field of
-  !potential_acoustic + (1-2 * \theta)/2*deltat * potential_dot_acoustic
-  !potential_acoustic is defined at "n" time step,
-  !and potential_dot_acoustic is predicted potential_dot_acoustic at "n" time step
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: PML_potential_acoustic_new
+  !minus_int_int_pressure + (1-2 * \theta)/2*deltat * minus_int_pressure
+  !minus_int_int_pressure is defined at "n" time step,
+  !and minus_int_pressure is predicted minus_int_pressure at "n" time step
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: PML_minus_int_int_pressure_new
 
   ! C-PML memory variables
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_dux_dxl_x,rmemory_dux_dyl_x,rmemory_dux_dzl_x
@@ -117,30 +117,30 @@ module pml_par
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_duz_dxl_z,rmemory_duz_dyl_z,rmemory_duz_dzl_z
 
   !store the field accel at time step n-1 for second order convolution scheme
-!  real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_dot_dot_acoustic_old
+!  real(kind=CUSTOM_REAL), dimension(:), allocatable :: minus_pressure_old
 
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_dpotential_dxl
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_dpotential_dyl
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_dpotential_dzl
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_dminus_int_int_pressure_dxl
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_dminus_int_int_pressure_dyl
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_dminus_int_int_pressure_dzl
 
   ! C-PML memory variable needed for displacement
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:,:), allocatable :: rmemory_displ_elastic
 
-  ! C-PML memory variable needed for potential
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_potential_acoustic
+  ! C-PML memory variable needed for pressure
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_minus_int_int_pressure
 
   ! C-PML contribution to update acceleration to the global mesh
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: accel_elastic_CPML
 
-  ! C-PML contribution to update the second derivative of the potential to the global mesh
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: potential_dot_dot_acoustic_CPML
+  ! C-PML contribution to update the second derivative of the scalar to the global mesh
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: minus_pressure_CPML
 
   ! C-PML contribution to update displacement on elastic/acoustic interface
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:,:), allocatable :: rmemory_coupling_ac_el_displ
 
   ! C-PML contribution to update displacement on elastic/acoustic interface
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_coupling_el_ac_potential
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_coupling_el_ac_potential_dot_dot
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_coupling_el_ac_minus_int_int_pressure
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_coupling_el_ac_minus_pressure
 
   ! --------------------------------------------------------------------------------------------
   ! for adjoint tomography
@@ -149,7 +149,7 @@ module pml_par
   integer :: nglob_interface_PML_acoustic,nglob_interface_PML_elastic
   integer, dimension(:), allocatable :: points_interface_PML_acoustic, points_interface_PML_elastic
 
-  integer :: b_reclen_PML_field,b_reclen_PML_potential
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_PML_field,b_PML_potential
+  integer :: b_reclen_PML_field,b_reclen_PML_minus_int_int_pressure
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_PML_field,b_PML_minus_int_int_pressure
 
 end module pml_par

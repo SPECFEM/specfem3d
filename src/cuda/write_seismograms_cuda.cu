@@ -367,8 +367,8 @@ TRACE("transfer_station_el_from_device");
 __global__ void transfer_stations_fields_acoustic_from_device_kernel(int* number_receiver_global,
                                                                      int* ispec_selected_rec,
                                                                      int* d_ibool,
-                                                                     realw* station_seismo_potential,
-                                                                     realw* desired_potential) {
+                                                                     realw* station_seismo_minus_int_int_pressure,
+                                                                     realw* desired_minus_int_int_pressure) {
 
   int blockID = blockIdx.x + blockIdx.y*gridDim.x;
   int nodeID = threadIdx.x + blockID*blockDim.x;
@@ -378,16 +378,16 @@ __global__ void transfer_stations_fields_acoustic_from_device_kernel(int* number
 
   int iglob = d_ibool[threadIdx.x + NGLL3_PADDED*ispec]-1;
 
-  //if (threadIdx.x == 0) printf("node acoustic: %i %i %i %i %i %e \n",blockID,nodeID,irec,ispec,iglob,desired_potential[iglob]);
+  //if (threadIdx.x == 0) printf("node acoustic: %i %i %i %i %i %e \n",blockID,nodeID,irec,ispec,iglob,desired_minus_int_int_pressure[iglob]);
 
-  station_seismo_potential[nodeID] = desired_potential[iglob];
+  station_seismo_minus_int_int_pressure[nodeID] = desired_minus_int_int_pressure[iglob];
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
 void transfer_field_acoustic_from_device(Mesh* mp,
-                                         realw* d_potential,
-                                         realw* h_potential,
+                                         realw* d_minus_int_int_pressure,
+                                         realw* h_minus_int_int_pressure,
                                          int* number_receiver_global,
                                          int* d_ispec_selected,
                                          int* h_ispec_selected,
@@ -413,8 +413,8 @@ TRACE("transfer_field_acoustic_from_device");
   transfer_stations_fields_acoustic_from_device_kernel<<<grid,threads>>>(mp->d_number_receiver_global,
                                                                          d_ispec_selected,
                                                                          mp->d_ibool,
-                                                                         mp->d_station_seismo_potential,
-                                                                         d_potential);
+                                                                         mp->d_station_seismo_minus_int_int_pressure,
+                                                                         d_minus_int_int_pressure);
 
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
@@ -422,7 +422,7 @@ TRACE("transfer_field_acoustic_from_device");
 #endif
 
   // (cudaMemcpy implicitly synchronizes all other cuda operations)
-  print_CUDA_error_if_any(cudaMemcpy(mp->h_station_seismo_potential,mp->d_station_seismo_potential,
+  print_CUDA_error_if_any(cudaMemcpy(mp->h_station_seismo_minus_int_int_pressure,mp->d_station_seismo_minus_int_int_pressure,
                                      mp->nrec_local*NGLL3*sizeof(realw),cudaMemcpyDeviceToHost),55000);
 
   //printf("copy local receivers: %i \n",mp->nrec_local);
@@ -432,15 +432,15 @@ TRACE("transfer_field_acoustic_from_device");
     ispec = h_ispec_selected[irec]-1;
 
     // copy element values
-    // note: iglob may vary and can be irregularly accessing the h_potential array
+    // note: iglob may vary and can be irregularly accessing the h_minus_int_int_pressure array
     for(j=0; j < NGLL3; j++){
       iglob = h_ibool[j+NGLL3*ispec]-1;
-      h_potential[iglob] = mp->h_station_seismo_potential[j+irec_local*NGLL3];
+      h_minus_int_int_pressure[iglob] = mp->h_station_seismo_minus_int_int_pressure[j+irec_local*NGLL3];
     }
 
     // copy each station element's points to working array
     // note: this works if iglob values would be all aligned...
-    //memcpy(&(h_potential[iglob]),&(mp->h_station_seismo_potential[irec_local*NGLL3]),NGLL3*sizeof(realw));
+    //memcpy(&(h_minus_int_int_pressure[iglob]),&(mp->h_station_seismo_minus_int_int_pressure[irec_local*NGLL3]),NGLL3*sizeof(realw));
 
   }
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
@@ -452,12 +452,12 @@ TRACE("transfer_field_acoustic_from_device");
 
 extern "C"
 void FC_FUNC_(transfer_station_ac_from_device,
-              TRANSFER_STATION_AC_FROM_DEVICE)(realw* potential_acoustic,
-                                                realw* potential_dot_acoustic,
-                                                realw* potential_dot_dot_acoustic,
-                                                realw* b_potential_acoustic,
-                                                realw* b_potential_dot_acoustic,
-                                                realw* b_potential_dot_dot_acoustic,
+              TRANSFER_STATION_AC_FROM_DEVICE)(realw* minus_int_int_pressure,
+                                                realw* minus_int_pressure,
+                                                realw* minus_pressure,
+                                                realw* b_minus_int_int_pressure,
+                                                realw* b_minus_int_pressure,
+                                                realw* b_minus_pressure,
                                                 long* Mesh_pointer_f,
                                                 int* number_receiver_global,
                                                 int* ispec_selected_rec,
@@ -473,35 +473,35 @@ TRACE("transfer_station_ac_from_device");
   if (mp->nrec_local == 0) return;
 
   if (mp->simulation_type == 1) {
-    transfer_field_acoustic_from_device(mp,mp->d_potential_acoustic,potential_acoustic,
+    transfer_field_acoustic_from_device(mp,mp->d_minus_int_int_pressure,minus_int_int_pressure,
                                         number_receiver_global,
                                         mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
-    transfer_field_acoustic_from_device(mp,mp->d_potential_dot_acoustic,potential_dot_acoustic,
+    transfer_field_acoustic_from_device(mp,mp->d_minus_int_pressure,minus_int_pressure,
                                         number_receiver_global,
                                         mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
-    transfer_field_acoustic_from_device(mp,mp->d_potential_dot_dot_acoustic,potential_dot_dot_acoustic,
+    transfer_field_acoustic_from_device(mp,mp->d_minus_pressure,minus_pressure,
                                         number_receiver_global,
                                         mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
   }
   else if (mp->simulation_type == 2) {
-    transfer_field_acoustic_from_device(mp,mp->d_potential_acoustic,potential_acoustic,
+    transfer_field_acoustic_from_device(mp,mp->d_minus_int_int_pressure,minus_int_int_pressure,
                                         number_receiver_global,
                                         mp->d_ispec_selected_source, ispec_selected_source, h_ibool);
-    transfer_field_acoustic_from_device(mp,mp->d_potential_dot_acoustic,potential_dot_acoustic,
+    transfer_field_acoustic_from_device(mp,mp->d_minus_int_pressure,minus_int_pressure,
                                         number_receiver_global,
                                         mp->d_ispec_selected_source, ispec_selected_source, h_ibool);
-    transfer_field_acoustic_from_device(mp,mp->d_potential_dot_dot_acoustic,potential_dot_dot_acoustic,
+    transfer_field_acoustic_from_device(mp,mp->d_minus_pressure,minus_pressure,
                                         number_receiver_global,
                                         mp->d_ispec_selected_source, ispec_selected_source, h_ibool);
   }
   else if (mp->simulation_type == 3) {
-    transfer_field_acoustic_from_device(mp,mp->d_b_potential_acoustic,b_potential_acoustic,
+    transfer_field_acoustic_from_device(mp,mp->d_b_minus_int_int_pressure,b_minus_int_int_pressure,
                                         number_receiver_global,
                                         mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
-    transfer_field_acoustic_from_device(mp,mp->d_b_potential_dot_acoustic,b_potential_dot_acoustic,
+    transfer_field_acoustic_from_device(mp,mp->d_b_minus_int_pressure,b_minus_int_pressure,
                                         number_receiver_global,
                                         mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
-    transfer_field_acoustic_from_device(mp,mp->d_b_potential_dot_dot_acoustic,b_potential_dot_dot_acoustic,
+    transfer_field_acoustic_from_device(mp,mp->d_b_minus_pressure,b_minus_pressure,
                                         number_receiver_global,
                                         mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
   }

@@ -495,7 +495,7 @@ void FC_FUNC_(get_norm_acoustic_from_device,
    realw* h_array;
    h_array = (realw*)calloc(mp->NGLOB_AB,sizeof(realw));
 
-   print_CUDA_error_if_any(cudaMemcpy(h_array,mp->d_potential_dot_dot_acoustic,
+   print_CUDA_error_if_any(cudaMemcpy(h_array,mp->d_minus_pressure,
    sizeof(realw)*(mp->NGLOB_AB),cudaMemcpyDeviceToHost),131);
 
    // finds maximum value in array
@@ -513,7 +513,7 @@ void FC_FUNC_(get_norm_acoustic_from_device,
    dim3 grid(1,1);
    dim3 threads(1,1,1);
 
-   get_maximum_kernel<<<grid,threads>>>(mp->d_potential_dot_dot_acoustic,
+   get_maximum_kernel<<<grid,threads>>>(mp->d_minus_pressure,
    mp->NGLOB_AB,
    d_max);
    print_CUDA_error_if_any(cudaMemcpy(&max,d_max, sizeof(realw), cudaMemcpyDeviceToHost),222);
@@ -547,9 +547,9 @@ void FC_FUNC_(get_norm_acoustic_from_device,
 
 
   if (*sim_type == 1){
-    get_maximum_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_dot_dot_acoustic,size,d_max);
+    get_maximum_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_minus_pressure,size,d_max);
   }else if (*sim_type == 3){
-    get_maximum_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_dot_dot_acoustic,size,d_max);
+    get_maximum_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_minus_pressure,size,d_max);
   }
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
@@ -589,14 +589,14 @@ void FC_FUNC_(get_norm_acoustic_from_device,
    //      precision vector x
    int incr = 1;
    int imax = 0;
-   imax = cublasIsamax(mp->NGLOB_AB,(realw*)mp->d_potential_dot_dot_acoustic, incr);
+   imax = cublasIsamax(mp->NGLOB_AB,(realw*)mp->d_minus_pressure, incr);
    status= cublasGetError();
    if (status != CUBLAS_STATUS_SUCCESS) {
    fprintf (stderr, "!!!! CUBLAS error in cublasIsamax\n");
    exit(1);
    }
 
-   print_CUDA_error_if_any(cudaMemcpy(&max,&(mp->d_potential_dot_dot_acoustic[imax]),
+   print_CUDA_error_if_any(cudaMemcpy(&max,&(mp->d_minus_pressure[imax]),
                       sizeof(realw), cudaMemcpyDeviceToHost),222);
 
    printf("maximum %i %i %f \n",mp->NGLOB_AB,imax,max);

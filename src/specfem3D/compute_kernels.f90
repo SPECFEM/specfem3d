@@ -213,14 +213,14 @@
 
       ! backward fields: displacement vector
       call compute_gradient_in_acoustic(ispec,NSPEC_ADJOINT,NGLOB_ADJOINT, &
-                      b_potential_acoustic, b_displ_elm,&
+                      b_minus_int_int_pressure, b_displ_elm,&
                       hprime_xx,hprime_yy,hprime_zz, &
                       xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                       ibool,rhostore,GRAVITY)
       ! adjoint fields: acceleration vector
       ! new expression (\partial_t^2\bfs^\dagger=-\frac{1}{\rho}\bfnabla\phi^\dagger)
       call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                      potential_acoustic, accel_elm,&
+                      minus_int_int_pressure, accel_elm,&
                       hprime_xx,hprime_yy,hprime_zz, &
                       xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                       ibool,rhostore,GRAVITY)
@@ -242,8 +242,8 @@
             kappal = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
             kappa_ac_kl(i,j,k,ispec) = kappa_ac_kl(i,j,k,ispec) &
                                   + deltat * kappal  &
-                                  * potential_acoustic(iglob) &
-                                  * b_potential_dot_dot_acoustic(iglob)
+                                  * minus_int_int_pressure(iglob) &
+                                  * b_minus_pressure(iglob)
 
           enddo
         enddo
@@ -394,14 +394,14 @@
 
       ! adjoint fields: acceleration vector
       call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                      potential_dot_dot_acoustic, accel_elm,&
+                      minus_pressure, accel_elm,&
                       hprime_xx,hprime_yy,hprime_zz, &
                       xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                       ibool,rhostore,GRAVITY)
 
       ! adjoint fields: acceleration vector
       call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                      b_potential_dot_dot_acoustic, b_accel_elm,&
+                      b_minus_pressure, b_accel_elm,&
                       hprime_xx,hprime_yy,hprime_zz, &
                       xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                       ibool,rhostore,GRAVITY)

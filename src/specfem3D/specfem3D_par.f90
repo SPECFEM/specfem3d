@@ -382,10 +382,9 @@ module specfem_par_acoustic
   use constants,only: CUSTOM_REAL
   implicit none
 
-! potential
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_acoustic,potential_dot_acoustic, &
-                                    potential_dot_dot_acoustic
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_acoustic_adj_coupling
+! pressure
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: minus_int_int_pressure,minus_int_pressure,minus_pressure
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: minus_int_int_pressure_adj_coupling
 
 ! mass matrix
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_acoustic
@@ -419,9 +418,9 @@ module specfem_par_acoustic
 
 ! ADJOINT acoustic
 
-  ! (backward/reconstructed) wavefield potentials
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: b_potential_acoustic, &
-                        b_potential_dot_acoustic,b_potential_dot_dot_acoustic
+  ! (backward/reconstructed) wavefield scalars
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: b_minus_int_int_pressure, &
+                        b_minus_int_pressure,b_minus_pressure
   ! kernels
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_ac_kl, kappa_ac_kl, &
     rhop_ac_kl, alpha_ac_kl
@@ -430,8 +429,8 @@ module specfem_par_acoustic
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: hess_ac_kl
 
   ! absorbing stacey wavefield parts
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_absorb_potential
-  integer :: b_reclen_potential
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_absorb_minus_int_int_pressure
+  integer :: b_reclen_minus_int_int_pressure
 
   ! for assembling backward field
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_buffer_send_scalar_ext_mesh
@@ -440,7 +439,7 @@ module specfem_par_acoustic
   integer, dimension(:), allocatable :: b_request_recv_scalar_ext_mesh
 
   ! LDDRK time scheme
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_acoustic_lddrk,potential_dot_acoustic_lddrk
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: minus_int_int_pressure_lddrk,minus_int_pressure_lddrk
 
 end module specfem_par_acoustic
 

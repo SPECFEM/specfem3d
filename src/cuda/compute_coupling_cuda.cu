@@ -36,7 +36,7 @@
 /* ----------------------------------------------------------------------------------------------- */
 
 __global__ void compute_coupling_acoustic_el_kernel(realw* displ,
-                                                    realw* potential_dot_dot_acoustic,
+                                                    realw* minus_pressure,
                                                     int num_coupling_ac_el_faces,
                                                     int* coupling_ac_el_ispec,
                                                     int* coupling_ac_el_ijk,
@@ -76,7 +76,7 @@ __global__ void compute_coupling_acoustic_el_kernel(realw* displ,
       displ_y = displ[iglob*3+1] ; // (2,iglob)
       displ_z = displ[iglob*3+2] ; // (3,iglob)
 
-      // gets associated normal on GLL point
+      // gets associated normal at GLL point
       nx = coupling_ac_el_normal[INDEX3(NDIM,NGLL2,0,igll,iface)]; // (1,igll,iface)
       ny = coupling_ac_el_normal[INDEX3(NDIM,NGLL2,1,igll,iface)]; // (2,igll,iface)
       nz = coupling_ac_el_normal[INDEX3(NDIM,NGLL2,2,igll,iface)]; // (3,igll,iface)
@@ -90,14 +90,14 @@ __global__ void compute_coupling_acoustic_el_kernel(realw* displ,
 
       // continuity of pressure and normal displacement on global point
 
-      // note: Newmark time scheme together with definition of scalar potential:
-      //          pressure = - chi_dot_dot
+      // note: Newmark time scheme together with definition of acoustic scalar:
+      //          pressure = - minus_pressure
       //          requires that this coupling term uses the updated displacement at time step [t+delta_t],
       //          which is done at the very beginning of the time loop
       //          (see e.g. Chaljub & Vilotte, Nissen-Meyer thesis...)
       //          it also means you have to calculate and update this here first before
       //          calculating the coupling on the elastic side for the acceleration...
-      atomicAdd(&potential_dot_dot_acoustic[iglob],+ jacobianw*displ_n);
+      atomicAdd(&minus_pressure[iglob],+ jacobianw*displ_n);
 
     }
   //  }
@@ -129,7 +129,7 @@ void FC_FUNC_(compute_coupling_ac_el_cuda,
 
   // launches GPU kernel
   compute_coupling_acoustic_el_kernel<<<grid,threads>>>(mp->d_displ,
-                                                       mp->d_potential_dot_dot_acoustic,
+                                                       mp->d_minus_pressure,
                                                        num_coupling_ac_el_faces,
                                                        mp->d_coupling_ac_el_ispec,
                                                        mp->d_coupling_ac_el_ijk,
@@ -142,7 +142,7 @@ void FC_FUNC_(compute_coupling_ac_el_cuda,
   //  adjoint simulations
   if (mp->simulation_type == 3){
     compute_coupling_acoustic_el_kernel<<<grid,threads>>>(mp->d_b_displ,
-                                                          mp->d_b_potential_dot_dot_acoustic,
+                                                          mp->d_b_minus_pressure,
                                                           num_coupling_ac_el_faces,
                                                           mp->d_coupling_ac_el_ispec,
                                                           mp->d_coupling_ac_el_ijk,
@@ -168,7 +168,7 @@ void FC_FUNC_(compute_coupling_ac_el_cuda,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-__global__ void compute_coupling_elastic_ac_kernel(realw* potential_dot_dot_acoustic,
+__global__ void compute_coupling_elastic_ac_kernel(realw* minus_pressure,
                                                     realw* accel,
                                                     int num_coupling_ac_el_faces,
                                                     int* coupling_ac_el_ispec,
@@ -209,7 +209,7 @@ __global__ void compute_coupling_elastic_ac_kernel(realw* potential_dot_dot_acou
 
       iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)] - 1;
 
-      // gets associated normal on GLL point
+      // gets associated normal at GLL point
       // note: normal points away from acoustic element
       nx = coupling_ac_el_normal[INDEX3(NDIM,NGLL2,0,igll,iface)]; // (1,igll,iface)
       ny = coupling_ac_el_normal[INDEX3(NDIM,NGLL2,1,igll,iface)]; // (2,igll,iface)
@@ -223,33 +223,33 @@ __global__ void compute_coupling_elastic_ac_kernel(realw* potential_dot_dot_acou
         // takes density (from acoustic? element)
         rhol = rhostore[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)];
 
-        // note: uses potential chi such that displacement s = grad(chi),
+        // note: uses acoustic scalar such that displacement s = grad(chi),
         //         pressure becomes: p = - kappa ( div( s ) ) = rho ( - dot_dot_chi + g * s )
         //  g only acting in negative z-direction
 
         // daniel: TODO - check gravity and coupling would be displ * nz  correct?
-        pressure = rhol*( - potential_dot_dot_acoustic[iglob]
+        pressure = rhol*( - minus_pressure[iglob]
                          + minus_g[iglob] * displ[iglob*3+2] );
 
         //daniel: TODO - check gravity and coupling
-        //pressure = - potential_dot_dot_acoustic[iglob] ;
+        //pressure = - minus_pressure[iglob] ;
         //if (iface == 128 && igll == 5){
-        //  printf("coupling acoustic: %f %f \n",potential_dot_dot_acoustic[iglob],
+        //  printf("coupling acoustic: %f %f \n",minus_pressure[iglob],
         //             minus_g[iglob] * displ[iglob*3+2]);
         //}
 
       }else{
-        // no gravity: uses potential chi such that displacement s = 1/rho grad(chi)
+        // no gravity: uses acoustic scalar such that displacement s = 1/rho grad(chi)
         //                  pressure p = - kappa ( div( s )) then becomes: p = - dot_dot_chi
         //                  ( multiplied with factor 1/kappa due to setup of equation of motion )
-        pressure = - potential_dot_dot_acoustic[iglob];
+        pressure = - minus_pressure[iglob];
       }
 
       // continuity of displacement and pressure on global point
       //
-      // note: Newmark time scheme together with definition of scalar potential:
-      //          pressure = - chi_dot_dot
-      //          requires that this coupling term uses the *UPDATED* pressure (chi_dot_dot), i.e.
+      // note: Newmark time scheme together with definition of acoustic scalar:
+      //          pressure = - minus_pressure
+      //          requires that this coupling term uses the *UPDATED* pressure (minus_pressure), i.e.
       //          pressure at time step [t + delta_t]
       //          (see e.g. Chaljub & Vilotte, Nissen-Meyer thesis...)
       //          it means you have to calculate and update the acoustic pressure first before
@@ -286,7 +286,7 @@ void FC_FUNC_(compute_coupling_el_ac_cuda,
   dim3 threads(blocksize,1,1);
 
   // launches GPU kernel
-  compute_coupling_elastic_ac_kernel<<<grid,threads>>>(mp->d_potential_dot_dot_acoustic,
+  compute_coupling_elastic_ac_kernel<<<grid,threads>>>(mp->d_minus_pressure,
                                                        mp->d_accel,
                                                        num_coupling_ac_el_faces,
                                                        mp->d_coupling_ac_el_ispec,
@@ -303,7 +303,7 @@ void FC_FUNC_(compute_coupling_el_ac_cuda,
 
   //  adjoint simulations
   if (mp->simulation_type == 3){
-    compute_coupling_elastic_ac_kernel<<<grid,threads>>>(mp->d_b_potential_dot_dot_acoustic,
+    compute_coupling_elastic_ac_kernel<<<grid,threads>>>(mp->d_b_minus_pressure,
                                                          mp->d_b_accel,
                                                          num_coupling_ac_el_faces,
                                                          mp->d_coupling_ac_el_ispec,
@@ -432,7 +432,7 @@ void FC_FUNC_(compute_coupling_ocean_cuda,
                                                                            mp->d_free_surface_normal,
                                                                            mp->d_ibool,
                                                                            mp->d_updated_dof_ocean_load);
-  // for backward/reconstructed potentials
+  // for backward/reconstructed scalars
   if (mp->simulation_type == 3) {
     // re-initializes array
     print_CUDA_error_if_any(cudaMemset(mp->d_updated_dof_ocean_load,0,

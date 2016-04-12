@@ -27,7 +27,7 @@
 
 ! for acoustic solver
 
-  subroutine compute_add_sources_acoustic(NSPEC_AB,NGLOB_AB,potential_dot_dot_acoustic, &
+  subroutine compute_add_sources_acoustic(NSPEC_AB,NGLOB_AB,minus_pressure, &
                                   ibool,ispec_is_inner,phase_is_inner, &
                                   NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
                                   hdur,hdur_gaussian,tshift_src,dt,t0, &
@@ -49,7 +49,7 @@
   integer :: NSPEC_AB,NGLOB_AB
 
 ! displacement and acceleration
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: minus_pressure
 
 ! arrays with mesh parameters per slice
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
@@ -138,10 +138,10 @@
               if (USE_RICKER_TIME_FUNCTION) then
 ! use a trick to increase accuracy of pressure seismograms in fluid (acoustic) elements:
 ! use the second derivative of the source for the source time function instead of the source itself,
-! and then record -potential_acoustic() as pressure seismograms instead of -potential_dot_dot_acoustic();
+! and then record -minus_int_int_pressure() as pressure seismograms instead of -minus_pressure();
 ! this is mathematically equivalent, but numerically significantly more accurate because in the explicit
 ! Newmark time scheme acceleration is accurate at zeroth order while displacement is accurate at second order,
-! thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
+! thus in fluid elements minus_pressure() is accurate at zeroth order while minus_int_int_pressure()
 ! is accurate at second order and thus contains significantly less numerical noise.
                 if(USE_TRICK_FOR_BETTER_PRESSURE) then
                   stf_used = comp_source_time_function_d2rck(time_source_dble,f0)
@@ -152,10 +152,10 @@
                 ! use a very small duration of 5*DT to mimic a Dirac in time
 ! use a trick to increase accuracy of pressure seismograms in fluid (acoustic) elements:
 ! use the second derivative of the source for the source time function instead of the source itself,
-! and then record -potential_acoustic() as pressure seismograms instead of -potential_dot_dot_acoustic();
+! and then record -minus_int_int_pressure() as pressure seismograms instead of -minus_pressure();
 ! this is mathematically equivalent, but numerically significantly more accurate because in the explicit
 ! Newmark time scheme acceleration is accurate at zeroth order while displacement is accurate at second order,
-! thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
+! thus in fluid elements minus_pressure() is accurate at zeroth order while minus_int_int_pressure()
 ! is accurate at second order and thus contains significantly less numerical noise.
                 if(USE_TRICK_FOR_BETTER_PRESSURE) then
                   stf_used = comp_source_time_function_d2gau(time_source_dble,5.d0*DT)
@@ -165,8 +165,8 @@
               endif
 
               ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
-              ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
-              ! to add minus the source to Chi_dot_dot to get plus the source in pressure:
+              ! the sign is negative because pressure p = - minus_pressure therefore we need
+              ! to add minus the source to minus_pressure to get plus the source in pressure:
 
               ! acoustic source for pressure gets divided by kappa
               ! source contribution
@@ -174,7 +174,7 @@
                 do j=1,NGLLY
                   do i=1,NGLLX
                     iglob = ibool(i,j,k,ispec)
-                    potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
+                    minus_pressure(iglob) = minus_pressure(iglob) &
                             - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
                   enddo
                 enddo
@@ -185,10 +185,10 @@
               if (USE_RICKER_TIME_FUNCTION) then
 ! use a trick to increase accuracy of pressure seismograms in fluid (acoustic) elements:
 ! use the second derivative of the source for the source time function instead of the source itself,
-! and then record -potential_acoustic() as pressure seismograms instead of -potential_dot_dot_acoustic();
+! and then record -minus_int_int_pressure() as pressure seismograms instead of -minus_pressure();
 ! this is mathematically equivalent, but numerically significantly more accurate because in the explicit
 ! Newmark time scheme acceleration is accurate at zeroth order while displacement is accurate at second order,
-! thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
+! thus in fluid elements minus_pressure() is accurate at zeroth order while minus_int_int_pressure()
 ! is accurate at second order and thus contains significantly less numerical noise.
                 if(USE_TRICK_FOR_BETTER_PRESSURE) then
                   stf = comp_source_time_function_d2rck(time_source_dble,hdur(isource))
@@ -199,10 +199,10 @@
                 ! Gaussian source time
 ! use a trick to increase accuracy of pressure seismograms in fluid (acoustic) elements:
 ! use the second derivative of the source for the source time function instead of the source itself,
-! and then record -potential_acoustic() as pressure seismograms instead of -potential_dot_dot_acoustic();
+! and then record -minus_int_int_pressure() as pressure seismograms instead of -minus_pressure();
 ! this is mathematically equivalent, but numerically significantly more accurate because in the explicit
 ! Newmark time scheme acceleration is accurate at zeroth order while displacement is accurate at second order,
-! thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
+! thus in fluid elements minus_pressure() is accurate at zeroth order while minus_int_int_pressure()
 ! is accurate at second order and thus contains significantly less numerical noise.
                 if(USE_TRICK_FOR_BETTER_PRESSURE) then
                   stf = comp_source_time_function_d2gau(time_source_dble,hdur_gaussian(isource))
@@ -221,8 +221,8 @@
               stf_used = real(stf,kind=CUSTOM_REAL)
 
               ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
-              ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
-              ! to add minus the source to Chi_dot_dot to get plus the source in pressure
+              ! the sign is negative because pressure p = - minus_pressure therefore we need
+              ! to add minus the source to minus_pressure to get plus the source in pressure
 
               ! add source array
               do k=1,NGLLZ
@@ -231,7 +231,7 @@
                     ! adds source contribution
                     ! note: acoustic source for pressure gets divided by kappa
                     iglob = ibool(i,j,k,ispec)
-                    potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
+                    minus_pressure(iglob) = minus_pressure(iglob) &
                             - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
                   enddo
                 enddo
@@ -248,19 +248,19 @@
   endif
 
 ! NOTE: adjoint sources and backward wavefield timing:
-!             idea is to start with the backward field b_potential,.. at time (T)
+!             idea is to start with the backward field b_minus_int_int_pressure,.. at time (T)
 !             and convolve with the adjoint field at time (T-t)
 !
 ! backward/reconstructed wavefields:
-!       time for b_potential( it ) would correspond to (NSTEP - it - 1)*DT - t0
-!       if we read in saved wavefields b_potential() before Newmark time scheme
+!       time for b_minus_int_int_pressure( it ) would correspond to (NSTEP - it - 1)*DT - t0
+!       if we read in saved wavefields b_minus_int_int_pressure() before Newmark time scheme
 !       (see sources for simulation_type 1 and seismograms)
 !       since at the beginning of the time loop, the numerical Newmark time scheme updates
-!       the wavefields, that is b_potential( it=1) would correspond to time (NSTEP -1 - 1)*DT - t0
+!       the wavefields, that is b_minus_int_int_pressure( it=1) would correspond to time (NSTEP -1 - 1)*DT - t0
 !
-!       b_potential is now read in after Newmark time scheme:
+!       b_minus_int_int_pressure is now read in after Newmark time scheme:
 !       we read the backward/reconstructed wavefield at the end of the first time loop,
-!       such that b_potential(it=1) corresponds to -t0 + (NSTEP-1)*DT.
+!       such that b_minus_int_int_pressure(it=1) corresponds to -t0 + (NSTEP-1)*DT.
 !       assuming that until that end the backward/reconstructed wavefield and adjoint fields
 !       have a zero contribution to adjoint kernels.
 !       thus the correct indexing is NSTEP - it + 1, instead of NSTEP - it
@@ -383,7 +383,7 @@
                       !
                       ! note: we take the first component of the adj_sourcearrays
                       !          the idea is to have e.g. a pressure source, where all 3 components would be the same
-                      potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
+                      minus_pressure(iglob) = minus_pressure(iglob) &
                                  + adj_sourcearrays(irec_local, &
                                                     NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC), &
                                                     1,i,j,k)
@@ -417,7 +417,7 @@
                                   hdur,hdur_gaussian,tshift_src,dt,t0, &
                                   sourcearrays,kappastore,ispec_is_acoustic,&
                                   SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
-                                  b_potential_dot_dot_acoustic)
+                                  b_minus_pressure)
 
   use constants
   use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
@@ -451,7 +451,7 @@
 
 !adjoint simulations
   integer:: SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT
-  real(kind=CUSTOM_REAL),dimension(NGLOB_ADJOINT):: b_potential_dot_dot_acoustic
+  real(kind=CUSTOM_REAL),dimension(NGLOB_ADJOINT):: b_minus_pressure
 
 ! local parameters
   double precision :: f0
@@ -469,19 +469,19 @@
   endif
 
 ! NOTE: adjoint sources and backward wavefield timing:
-!             idea is to start with the backward field b_potential,.. at time (T)
+!             idea is to start with the backward field b_minus_int_int_pressure,.. at time (T)
 !             and convolve with the adjoint field at time (T-t)
 !
 ! backward/reconstructed wavefields:
-!       time for b_potential( it ) would correspond to (NSTEP - it - 1)*DT - t0
-!       if we read in saved wavefields b_potential() before Newmark time scheme
+!       time for b_minus_int_int_pressure( it ) would correspond to (NSTEP - it - 1)*DT - t0
+!       if we read in saved wavefields b_minus_int_int_pressure() before Newmark time scheme
 !       (see sources for simulation_type 1 and seismograms)
 !       since at the beginning of the time loop, the numerical Newmark time scheme updates
-!       the wavefields, that is b_potential( it=1) would correspond to time (NSTEP -1 - 1)*DT - t0
+!       the wavefields, that is b_minus_int_int_pressure( it=1) would correspond to time (NSTEP -1 - 1)*DT - t0
 !
-!       b_potential is now read in after Newmark time scheme:
+!       b_minus_int_int_pressure is now read in after Newmark time scheme:
 !       we read the backward/reconstructed wavefield at the end of the first time loop,
-!       such that b_potential(it=1) corresponds to -t0 + (NSTEP-1)*DT.
+!       such that b_minus_int_int_pressure(it=1) corresponds to -t0 + (NSTEP-1)*DT.
 !       assuming that until that end the backward/reconstructed wavefield and adjoint fields
 !       have a zero contribution to adjoint kernels.
 !       thus the correct indexing is NSTEP - it + 1, instead of NSTEP - it
@@ -492,8 +492,8 @@
 !       adjoint source traces which start at -t0 and end at time (NSTEP-1)*DT - t0
 !       for step it=1: (NSTEP -it + 1)*DT - t0 for backward wavefields corresponds to time T
 
-! note:  b_potential() is read in after Newmark time scheme, thus
-!           b_potential(it=1) corresponds to -t0 + (NSTEP-1)*DT.
+! note:  b_minus_int_int_pressure() is read in after Newmark time scheme, thus
+!           b_minus_int_int_pressure(it=1) corresponds to -t0 + (NSTEP-1)*DT.
 !           thus indexing is NSTEP - it , instead of NSTEP - it - 1
 
 ! adjoint simulations
@@ -524,8 +524,8 @@
               endif
 
               ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
-              ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
-              ! to add minus the source to Chi_dot_dot to get plus the source in pressure:
+              ! the sign is negative because pressure p = - minus_pressure therefore we need
+              ! to add minus the source to minus_pressure to get plus the source in pressure:
 
               ! acoustic source for pressure gets divided by kappa
               ! source contribution
@@ -533,7 +533,7 @@
                 do j=1,NGLLY
                   do i=1,NGLLX
                     iglob = ibool(i,j,k,ispec)
-                    b_potential_dot_dot_acoustic(iglob) = b_potential_dot_dot_acoustic(iglob) &
+                    b_minus_pressure(iglob) = b_minus_pressure(iglob) &
                             - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
                   enddo
                 enddo
@@ -559,8 +559,8 @@
               stf_used = real(stf,kind=CUSTOM_REAL)
 
               ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
-              ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
-              ! to add minus the source to Chi_dot_dot to get plus the source in pressure
+              ! the sign is negative because pressure p = - minus_pressure therefore we need
+              ! to add minus the source to minus_pressure to get plus the source in pressure
 
               !     add source array
               do k=1,NGLLZ
@@ -569,7 +569,7 @@
                     ! adds source contribution
                     ! note: acoustic source for pressure gets divided by kappa
                     iglob = ibool(i,j,k,ispec)
-                    b_potential_dot_dot_acoustic(iglob) = b_potential_dot_dot_acoustic(iglob) &
+                    b_minus_pressure(iglob) = b_minus_pressure(iglob) &
                             - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
                   enddo
                 enddo
@@ -699,19 +699,19 @@
   endif
 
 ! NOTE: adjoint sources and backward wavefield timing:
-!             idea is to start with the backward field b_potential,.. at time (T)
+!             idea is to start with the backward field b_minus_int_int_pressure,.. at time (T)
 !             and convolve with the adjoint field at time (T-t)
 !
 ! backward/reconstructed wavefields:
-!       time for b_potential( it ) would correspond to (NSTEP - it - 1)*DT - t0
-!       if we read in saved wavefields b_potential() before Newmark time scheme
+!       time for b_minus_int_int_pressure( it ) would correspond to (NSTEP - it - 1)*DT - t0
+!       if we read in saved wavefields b_minus_int_int_pressure() before Newmark time scheme
 !       (see sources for simulation_type 1 and seismograms)
 !       since at the beginning of the time loop, the numerical Newmark time scheme updates
-!       the wavefields, that is b_potential( it=1) would correspond to time (NSTEP -1 - 1)*DT - t0
+!       the wavefields, that is b_minus_int_int_pressure( it=1) would correspond to time (NSTEP -1 - 1)*DT - t0
 !
-!       b_potential is now read in after Newmark time scheme:
+!       b_minus_int_int_pressure is now read in after Newmark time scheme:
 !       we read the backward/reconstructed wavefield at the end of the first time loop,
-!       such that b_potential(it=1) corresponds to -t0 + (NSTEP-1)*DT.
+!       such that b_minus_int_int_pressure(it=1) corresponds to -t0 + (NSTEP-1)*DT.
 !       assuming that until that end the backward/reconstructed wavefield and adjoint fields
 !       have a zero contribution to adjoint kernels.
 !       thus the correct indexing is NSTEP - it + 1, instead of NSTEP - it
@@ -824,8 +824,8 @@
     endif ! nadj_rec_local > 0
   endif
 
-! note:  b_potential() is read in after Newmark time scheme, thus
-!           b_potential(it=1) corresponds to -t0 + (NSTEP-1)*DT.
+! note:  b_minus_int_int_pressure() is read in after Newmark time scheme, thus
+!           b_minus_int_int_pressure(it=1) corresponds to -t0 + (NSTEP-1)*DT.
 !           thus indexing is NSTEP - it , instead of NSTEP - it - 1
 
 ! adjoint simulations

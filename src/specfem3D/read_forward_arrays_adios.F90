@@ -51,9 +51,9 @@ subroutine read_forward_arrays_adios()
   integer(kind=8), pointer :: sel => null()
   integer(kind=8), dimension(1) :: start, count_ad
 
-  integer :: local_dim_potential_acoustic,            &
-             local_dim_potential_dot_acoustic,        &
-             local_dim_potential_dot_dot_acoustic,    &
+  integer :: local_dim_minus_int_int_pressure,            &
+             local_dim_minus_int_pressure,        &
+             local_dim_minus_pressure,    &
              local_dim_displ,                         &
              local_dim_veloc,                         &
              local_dim_accel,                         &
@@ -96,12 +96,12 @@ subroutine read_forward_arrays_adios()
   ! Get the 'chunks' sizes |
   !------------------------'
   if (ACOUSTIC_SIMULATION) then
-    call adios_get_scalar(handle, "potential_acoustic/local_dim",&
-                          local_dim_potential_acoustic,ier)
-    call adios_get_scalar(handle, "potential_dot_acoustic/local_dim",&
-                          local_dim_potential_dot_acoustic,ier)
-    call adios_get_scalar(handle, "potential_dot_dot_acoustic/local_dim",&
-                          local_dim_potential_dot_dot_acoustic,ier)
+    call adios_get_scalar(handle, "minus_int_int_pressure/local_dim",&
+                          local_dim_minus_int_int_pressure,ier)
+    call adios_get_scalar(handle, "minus_int_pressure/local_dim",&
+                          local_dim_minus_int_pressure,ier)
+    call adios_get_scalar(handle, "minus_pressure/local_dim",&
+                          local_dim_minus_pressure,ier)
   endif
   if (ELASTIC_SIMULATION) then
     call adios_get_scalar(handle, "displ/local_dim",&
@@ -158,29 +158,29 @@ subroutine read_forward_arrays_adios()
   ! Read arrays from forward_arrays.bp |
   !-----------------------------------'
   if (ACOUSTIC_SIMULATION) then
-    start(1) = local_dim_potential_acoustic * myrank
+    start(1) = local_dim_minus_int_int_pressure * myrank
     count_ad(1) = NGLOB_ADJOINT
     sel_num = sel_num+1
     sel => selections(sel_num)
     call adios_selection_boundingbox (sel , 1, start, count_ad)
-    call adios_schedule_read(handle, sel, "potential_acoustic/array", 0, 1, &
-                             b_potential_acoustic, ier)
+    call adios_schedule_read(handle, sel, "minus_int_int_pressure/array", 0, 1, &
+                             b_minus_int_int_pressure, ier)
 
-    start(1) = local_dim_potential_dot_acoustic * myrank
+    start(1) = local_dim_minus_int_pressure * myrank
     count_ad(1) = NGLOB_ADJOINT
     sel_num = sel_num+1
     sel => selections(sel_num)
     call adios_selection_boundingbox (sel , 1, start, count_ad)
-    call adios_schedule_read(handle, sel, "potential_dot_acoustic/array", 0, 1, &
-                             b_potential_dot_acoustic, ier)
+    call adios_schedule_read(handle, sel, "minus_int_pressure/array", 0, 1, &
+                             b_minus_int_pressure, ier)
 
-    start(1) = local_dim_potential_dot_dot_acoustic * myrank
+    start(1) = local_dim_minus_pressure * myrank
     count_ad(1) = NGLOB_ADJOINT
     sel_num = sel_num+1
     sel => selections(sel_num)
     call adios_selection_boundingbox (sel , 1, start, count_ad)
-    call adios_schedule_read(handle, sel, "potential_dot_dot_acoustic/array", 0, 1, &
-                             b_potential_dot_dot_acoustic, ier)
+    call adios_schedule_read(handle, sel, "minus_pressure/array", 0, 1, &
+                             b_minus_pressure, ier)
 
   endif
 

@@ -74,7 +74,7 @@
   ! acoustic arrays
   call any_all_l( ANY(ispec_is_acoustic), ACOUSTIC_SIMULATION )
   if (ACOUSTIC_SIMULATION) then
-    ! potential_acoustic, potentical_dot_acoustic, potential_dot_dot_acoustic
+    ! minus_int_int_pressure, minus_int_pressure, minus_pressure
     memory_size = memory_size + 3.d0*NGLOB_AB*dble(CUSTOM_REAL)
     ! rmass_acoustic
     memory_size = memory_size + NGLOB_AB*dble(CUSTOM_REAL)
@@ -113,19 +113,19 @@
      ! rmemory_duz_dxl_z,rmemory_duz_dyl_z,rmemory_duz_dzl_z
      memory_size = memory_size + 21.d0*3.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
 
-     ! rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl
+     ! rmemory_dminus_int_int_pressure_dxl,rmemory_dminus_int_int_pressure_dyl,rmemory_dminus_int_int_pressure_dzl
      memory_size = memory_size + 3.d0*3.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
 
      ! rmemory_displ_elastic
      memory_size = memory_size + 3.d0*dble(NDIM)*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
 
-     ! rmemory_potential_acoustic
+     ! rmemory_minus_int_int_pressure
      memory_size = memory_size + 3.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
 
      ! accel_elastic_CPML
      memory_size = memory_size + dble(NDIM)*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
 
-     ! second derivative of the potential
+     ! second derivative of the acoustic scalar
      memory_size = memory_size + dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)
   endif
 

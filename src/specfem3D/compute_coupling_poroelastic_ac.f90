@@ -30,7 +30,7 @@
 
   subroutine compute_coupling_poroelastic_ac(NSPEC_AB,NGLOB_AB, &
                         ibool,accels_poroelastic,accelw_poroelastic, &
-                        potential_dot_dot_acoustic, &
+                        minus_pressure, &
                         num_coupling_ac_po_faces, &
                         coupling_ac_po_ispec,coupling_ac_po_ijk, &
                         coupling_ac_po_normal, &
@@ -48,7 +48,7 @@
 
 ! displacement and pressure
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: accels_poroelastic,accelw_poroelastic
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: minus_pressure
 
 ! global indexing
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
@@ -104,9 +104,9 @@
         rhol_bar = (1._CUSTOM_REAL-phil)*rhol_s + phil*rhol_f
 
         ! acoustic pressure on global point
-        pressure = - potential_dot_dot_acoustic(iglob)
+        pressure = - minus_pressure(iglob)
 
-        ! gets associated normal on GLL point
+        ! gets associated normal at GLL point
         ! (note convention: pointing outwards of acoustic element)
         nx = coupling_ac_po_normal(1,igll,iface)
         ny = coupling_ac_po_normal(2,igll,iface)
@@ -118,9 +118,9 @@
 
         ! continuity of displacement and pressure on global point
         !
-        ! note: Newmark time scheme together with definition of scalar potential:
-        !          pressure = - chi_dot_dot
-        !          requires that this coupling term uses the *UPDATED* pressure (chi_dot_dot), i.e.
+        ! note: Newmark time scheme together with definition of scalar:
+        !          pressure = - minus_pressure
+        !          requires that this coupling term uses the *UPDATED* pressure (minus_pressure), i.e.
         !          pressure at time step [t + delta_t]
         !          (see e.g. Chaljub & Vilotte, Nissen-Meyer thesis...)
         !          it means you have to calculate and update the acoustic pressure first before

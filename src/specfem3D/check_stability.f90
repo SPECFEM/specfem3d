@@ -106,7 +106,7 @@
       ! way 2: just get maximum of field from GPU
       call get_norm_acoustic_from_device(Usolidnormp,Mesh_pointer,1)
     else
-      Usolidnormp = maxval(abs(potential_dot_dot_acoustic(:)))
+      Usolidnormp = maxval(abs(minus_pressure(:)))
     endif
 
     ! compute the maximum of the maxima for all the slices using an MPI reduction
@@ -148,7 +148,7 @@
       if (GPU_MODE) then
         call get_norm_acoustic_from_device(b_Usolidnormp,Mesh_pointer,3)
       else
-        b_Usolidnormp = maxval(abs(b_potential_dot_dot_acoustic(:)))
+        b_Usolidnormp = maxval(abs(b_minus_pressure(:)))
       endif
       ! compute max of all slices
       call max_all_cr(b_Usolidnormp,b_Usolidnormp_all)

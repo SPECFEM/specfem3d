@@ -147,9 +147,9 @@ void FC_FUNC_(update_displacement_cuda,
 // KERNEL 1
 /* ----------------------------------------------------------------------------------------------- */
 
-__global__ void UpdatePotential_kernel(realw* potential_acoustic,
-                                       realw* potential_dot_acoustic,
-                                       realw* potential_dot_dot_acoustic,
+__global__ void Updateminus_int_int_pressure_kernel(realw* minus_int_int_pressure,
+                                       realw* minus_int_pressure,
+                                       realw* minus_pressure,
                                        int size,
                                        realw deltat,
                                        realw deltatsqover2,
@@ -160,14 +160,14 @@ __global__ void UpdatePotential_kernel(realw* potential_acoustic,
   // because of block and grid sizing problems, there is a small
   // amount of buffer at the end of the calculation
   if (id < size) {
-    potential_acoustic[id] = potential_acoustic[id]
-                            + deltat*potential_dot_acoustic[id]
-                            + deltatsqover2*potential_dot_dot_acoustic[id];
+    minus_int_int_pressure[id] = minus_int_int_pressure[id]
+                            + deltat*minus_int_pressure[id]
+                            + deltatsqover2*minus_pressure[id];
 
-    potential_dot_acoustic[id] = potential_dot_acoustic[id]
-                                + deltatover2*potential_dot_dot_acoustic[id];
+    minus_int_pressure[id] = minus_int_pressure[id]
+                                + deltatover2*minus_pressure[id];
 
-    potential_dot_dot_acoustic[id] = 0.0f;
+    minus_pressure[id] = 0.0f;
   }
 
 // -----------------
@@ -223,9 +223,9 @@ void FC_FUNC_(it_update_displacement_ac_cuda,
     start_timing_cuda(&start,&stop);
   }
 
-  UpdatePotential_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_acoustic,
-                                                                 mp->d_potential_dot_acoustic,
-                                                                 mp->d_potential_dot_dot_acoustic,
+  Updateminus_int_int_pressure_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_minus_int_int_pressure,
+                                                                 mp->d_minus_int_pressure,
+                                                                 mp->d_minus_pressure,
                                                                  size,deltat,deltatsqover2,deltatover2);
 
   // backward/reconstructed wavefields
@@ -234,16 +234,16 @@ void FC_FUNC_(it_update_displacement_ac_cuda,
     realw b_deltatsqover2 = *b_deltatsqover2_F;
     realw b_deltatover2 = *b_deltatover2_F;
 
-    UpdatePotential_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_acoustic,
-                                                                  mp->d_b_potential_dot_acoustic,
-                                                                  mp->d_b_potential_dot_dot_acoustic,
+    Updateminus_int_int_pressure_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_minus_int_int_pressure,
+                                                                  mp->d_b_minus_int_pressure,
+                                                                  mp->d_b_minus_pressure,
                                                                   size,b_deltat,b_deltatsqover2,b_deltatover2);
   }
 
   // Cuda timing
   if (CUDA_TIMING_UPDATE ){
     realw flops,time;
-    stop_timing_cuda(&start,&stop,"UpdatePotential_kernel",&time);
+    stop_timing_cuda(&start,&stop,"Updateminus_int_int_pressure_kernel",&time);
     // time in seconds
     time = time / 1000.;
     // performance
@@ -452,7 +452,7 @@ void FC_FUNC_(kernel_3_b_cuda,
 /* ----------------------------------------------------------------------------------------------- */
 
 
-__global__ void kernel_3_a_acoustic_cuda_device(realw* potential_dot_dot_acoustic,
+__global__ void kernel_3_a_acoustic_cuda_device(realw* minus_pressure,
                                                 int size,
                                                 realw* rmass_acoustic) {
 
@@ -462,14 +462,14 @@ __global__ void kernel_3_a_acoustic_cuda_device(realw* potential_dot_dot_acousti
   // amount of buffer at the end of the calculation
   if (id < size) {
     // multiplies pressure with the inverse of the mass matrix
-    potential_dot_dot_acoustic[id] = potential_dot_dot_acoustic[id]*rmass_acoustic[id];
+    minus_pressure[id] = minus_pressure[id]*rmass_acoustic[id];
   }
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
-__global__ void kernel_3_b_acoustic_cuda_device(realw* potential_dot_acoustic,
-                                                realw* potential_dot_dot_acoustic,
+__global__ void kernel_3_b_acoustic_cuda_device(realw* minus_int_pressure,
+                                                realw* minus_pressure,
                                                 int size,
                                                 realw deltatover2,
                                                 realw* rmass_acoustic) {
@@ -479,7 +479,7 @@ __global__ void kernel_3_b_acoustic_cuda_device(realw* potential_dot_acoustic,
   // amount of buffer at the end of the calculation
   if (id < size) {
     // Newmark time scheme: corrector term
-    potential_dot_acoustic[id] = potential_dot_acoustic[id] + deltatover2*potential_dot_dot_acoustic[id];
+    minus_int_pressure[id] = minus_int_pressure[id] + deltatover2*minus_pressure[id];
   }
 }
 
@@ -504,12 +504,12 @@ TRACE("kernel_3_a_acoustic_cuda");
   dim3 grid(num_blocks_x,num_blocks_y);
   dim3 threads(blocksize,1,1);
 
-  kernel_3_a_acoustic_cuda_device<<< grid, threads>>>(mp->d_potential_dot_dot_acoustic,
+  kernel_3_a_acoustic_cuda_device<<< grid, threads>>>(mp->d_minus_pressure,
                                                      size,
                                                      mp->d_rmass_acoustic);
 
   if (mp->simulation_type == 3) {
-   kernel_3_a_acoustic_cuda_device<<< grid, threads>>>(mp->d_b_potential_dot_dot_acoustic,
+   kernel_3_a_acoustic_cuda_device<<< grid, threads>>>(mp->d_b_minus_pressure,
                                                        size,
                                                        mp->d_rmass_acoustic);
   }
@@ -545,16 +545,16 @@ TRACE("kernel_3_b_acoustic_cuda");
 
   realw deltatover2 = *deltatover2_F;
 
-  kernel_3_b_acoustic_cuda_device<<< grid, threads>>>(mp->d_potential_dot_acoustic,
-                                                      mp->d_potential_dot_dot_acoustic,
+  kernel_3_b_acoustic_cuda_device<<< grid, threads>>>(mp->d_minus_int_pressure,
+                                                      mp->d_minus_pressure,
                                                       size, deltatover2,
                                                       mp->d_rmass_acoustic);
 
   if (mp->simulation_type == 3) {
     realw b_deltatover2 = *b_deltatover2_F;
 
-    kernel_3_b_acoustic_cuda_device<<< grid, threads>>>(mp->d_b_potential_dot_acoustic,
-                                                        mp->d_b_potential_dot_dot_acoustic,
+    kernel_3_b_acoustic_cuda_device<<< grid, threads>>>(mp->d_b_minus_int_pressure,
+                                                        mp->d_b_minus_pressure,
                                                         size, b_deltatover2,
                                                         mp->d_rmass_acoustic);
   }

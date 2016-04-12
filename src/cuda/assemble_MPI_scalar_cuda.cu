@@ -36,8 +36,8 @@
 
 // prepares a device array with with all inter-element edge-nodes -- this
 // is followed by a memcpy and MPI operations
-__global__ void prepare_boundary_potential_on_device(realw* d_potential_dot_dot_acoustic,
-                                                     realw* d_send_potential_dot_dot_buffer,
+__global__ void prepare_boundary_minus_int_int_pressure_on_device(realw* d_minus_pressure,
+                                                     realw* d_send_minus_pressure_buffer,
                                                      const int num_interfaces_ext_mesh,
                                                      const int max_nibool_interfaces_ext_mesh,
                                                      const int* d_nibool_interfaces_ext_mesh,
@@ -54,7 +54,7 @@ __global__ void prepare_boundary_potential_on_device(realw* d_potential_dot_dot_
       // global index in wavefield
       iglob = d_ibool_interfaces_ext_mesh[ientry] - 1;
 
-      d_send_potential_dot_dot_buffer[ientry] = d_potential_dot_dot_acoustic[iglob];
+      d_send_minus_pressure_buffer[ientry] = d_minus_pressure[iglob];
     }
   }
 
@@ -67,8 +67,8 @@ __global__ void prepare_boundary_potential_on_device(realw* d_potential_dot_dot_
 extern "C"
 void FC_FUNC_(transfer_boun_pot_from_device,
               TRANSFER_BOUN_POT_FROM_DEVICE)(long* Mesh_pointer,
-                                             realw* potential_dot_dot_acoustic,
-                                             realw* send_potential_dot_dot_buffer,
+                                             realw* minus_pressure,
+                                             realw* send_minus_pressure_buffer,
                                              const int* FORWARD_OR_ADJOINT){
 
 TRACE("transfer_boun_pot_from_device");
@@ -76,7 +76,7 @@ TRACE("transfer_boun_pot_from_device");
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
   // checks if anything to do
-  if (mp->size_mpi_buffer_potential > 0){
+  if (mp->size_mpi_buffer_minus_int_int_pressure > 0){
 
     int blocksize = BLOCKSIZE_TRANSFER;
     int size_padded = ((int)ceil(((double)(mp->max_nibool_interfaces_ext_mesh))/((double)blocksize)))*blocksize;
@@ -88,8 +88,8 @@ TRACE("transfer_boun_pot_from_device");
     dim3 threads(blocksize,1,1);
 
     if (*FORWARD_OR_ADJOINT == 1) {
-      prepare_boundary_potential_on_device<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_dot_dot_acoustic,
-                                                                                   mp->d_send_potential_dot_dot_buffer,
+      prepare_boundary_minus_int_int_pressure_on_device<<<grid,threads,0,mp->compute_stream>>>(mp->d_minus_pressure,
+                                                                                   mp->d_send_minus_pressure_buffer,
                                                                                    mp->num_interfaces_ext_mesh,
                                                                                    mp->max_nibool_interfaces_ext_mesh,
                                                                                    mp->d_nibool_interfaces_ext_mesh,
@@ -101,13 +101,13 @@ TRACE("transfer_boun_pot_from_device");
       // (cudaMemcpy implicitly synchronizes all other cuda operations)
       cudaStreamSynchronize(mp->compute_stream);
 
-      print_CUDA_error_if_any(cudaMemcpy(send_potential_dot_dot_buffer,mp->d_send_potential_dot_dot_buffer,
-                                         mp->size_mpi_buffer_potential*sizeof(realw),cudaMemcpyDeviceToHost),98000);
+      print_CUDA_error_if_any(cudaMemcpy(send_minus_pressure_buffer,mp->d_send_minus_pressure_buffer,
+                                         mp->size_mpi_buffer_minus_int_int_pressure*sizeof(realw),cudaMemcpyDeviceToHost),98000);
     }
     else if (*FORWARD_OR_ADJOINT == 3) {
       // backward/reconstructed wavefield buffer
-      prepare_boundary_potential_on_device<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_dot_dot_acoustic,
-                                                                                   mp->d_b_send_potential_dot_dot_buffer,
+      prepare_boundary_minus_int_int_pressure_on_device<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_minus_pressure,
+                                                                                   mp->d_b_send_minus_pressure_buffer,
                                                                                    mp->num_interfaces_ext_mesh,
                                                                                    mp->max_nibool_interfaces_ext_mesh,
                                                                                    mp->d_nibool_interfaces_ext_mesh,
@@ -119,13 +119,13 @@ TRACE("transfer_boun_pot_from_device");
       // (cudaMemcpy implicitly synchronizes all other cuda operations)
       cudaStreamSynchronize(mp->compute_stream);
 
-      print_CUDA_error_if_any(cudaMemcpy(send_potential_dot_dot_buffer,mp->d_b_send_potential_dot_dot_buffer,
-                                         mp->size_mpi_buffer_potential*sizeof(realw),cudaMemcpyDeviceToHost),98000);
+      print_CUDA_error_if_any(cudaMemcpy(send_minus_pressure_buffer,mp->d_b_send_minus_pressure_buffer,
+                                         mp->size_mpi_buffer_minus_int_int_pressure*sizeof(realw),cudaMemcpyDeviceToHost),98000);
     }
   }
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("after prepare_boundary_potential_on_device");
+  exit_on_cuda_error("after prepare_boundary_minus_int_int_pressure_on_device");
 #endif
 
 
@@ -148,8 +148,8 @@ TRACE("transfer_boun_pot_from_device");
 /* ----------------------------------------------------------------------------------------------- */
 
 
-__global__ void assemble_boundary_potential_on_device(realw* d_potential_dot_dot_acoustic,
-                                                      realw* d_send_potential_dot_dot_buffer,
+__global__ void assemble_boundary_minus_int_int_pressure_on_device(realw* d_minus_pressure,
+                                                      realw* d_send_minus_pressure_buffer,
                                                       const int num_interfaces_ext_mesh,
                                                       const int max_nibool_interfaces_ext_mesh,
                                                       const int* d_nibool_interfaces_ext_mesh,
@@ -167,10 +167,10 @@ __global__ void assemble_boundary_potential_on_device(realw* d_potential_dot_dot
       iglob = d_ibool_interfaces_ext_mesh[ientry] - 1;
 
       // for testing atomic operations against not atomic operations (0.1ms vs. 0.04 ms)
-      // d_potential_dot_dot_acoustic[3*(d_ibool_interfaces_ext_mesh[id+max_nibool_interfaces_ext_mesh*iinterface]-1)] +=
-      // d_send_potential_dot_dot_buffer[3*(id + max_nibool_interfaces_ext_mesh*iinterface)];
+      // d_minus_pressure[3*(d_ibool_interfaces_ext_mesh[id+max_nibool_interfaces_ext_mesh*iinterface]-1)] +=
+      // d_send_minus_pressure_buffer[3*(id + max_nibool_interfaces_ext_mesh*iinterface)];
 
-      atomicAdd(&d_potential_dot_dot_acoustic[iglob],d_send_potential_dot_dot_buffer[ientry]);
+      atomicAdd(&d_minus_pressure[iglob],d_send_minus_pressure_buffer[ientry]);
     }
   }
   // ! This step is done via previous function transfer_and_assemble...
@@ -188,7 +188,7 @@ __global__ void assemble_boundary_potential_on_device(realw* d_potential_dot_dot
 extern "C"
 void FC_FUNC_(transfer_asmbl_pot_to_device,
               TRANSFER_ASMBL_POT_TO_DEVICE)(long* Mesh_pointer,
-                                            realw* potential_dot_dot_acoustic,
+                                            realw* minus_pressure,
                                             realw* buffer_recv_scalar_ext_mesh,
                                             const int* FORWARD_OR_ADJOINT) {
 
@@ -201,7 +201,7 @@ TRACE("transfer_asmbl_pot_to_device");
   //start_timing_cuda(&start,&stop);
 
   // checks if anything to do
-  if (mp->size_mpi_buffer_potential > 0){
+  if (mp->size_mpi_buffer_minus_int_int_pressure > 0){
 
     // assembles on GPU
     int blocksize = BLOCKSIZE_TRANSFER;
@@ -218,12 +218,12 @@ TRACE("transfer_asmbl_pot_to_device");
 
     if (*FORWARD_OR_ADJOINT == 1) {
       // copies buffer onto GPU
-      print_CUDA_error_if_any(cudaMemcpy(mp->d_send_potential_dot_dot_buffer, buffer_recv_scalar_ext_mesh,
-                                         mp->size_mpi_buffer_potential*sizeof(realw), cudaMemcpyHostToDevice),98010);
+      print_CUDA_error_if_any(cudaMemcpy(mp->d_send_minus_pressure_buffer, buffer_recv_scalar_ext_mesh,
+                                         mp->size_mpi_buffer_minus_int_int_pressure*sizeof(realw), cudaMemcpyHostToDevice),98010);
 
       //assemble forward field
-      assemble_boundary_potential_on_device<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_dot_dot_acoustic,
-                                                                                    mp->d_send_potential_dot_dot_buffer,
+      assemble_boundary_minus_int_int_pressure_on_device<<<grid,threads,0,mp->compute_stream>>>(mp->d_minus_pressure,
+                                                                                    mp->d_send_minus_pressure_buffer,
                                                                                     mp->num_interfaces_ext_mesh,
                                                                                     mp->max_nibool_interfaces_ext_mesh,
                                                                                     mp->d_nibool_interfaces_ext_mesh,
@@ -231,12 +231,12 @@ TRACE("transfer_asmbl_pot_to_device");
     }
     else if (*FORWARD_OR_ADJOINT == 3) {
       // copies buffer onto GPU
-      print_CUDA_error_if_any(cudaMemcpy(mp->d_b_send_potential_dot_dot_buffer, buffer_recv_scalar_ext_mesh,
-                                         mp->size_mpi_buffer_potential*sizeof(realw), cudaMemcpyHostToDevice),98011);
+      print_CUDA_error_if_any(cudaMemcpy(mp->d_b_send_minus_pressure_buffer, buffer_recv_scalar_ext_mesh,
+                                         mp->size_mpi_buffer_minus_int_int_pressure*sizeof(realw), cudaMemcpyHostToDevice),98011);
 
       //assemble reconstructed/backward field
-      assemble_boundary_potential_on_device<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_dot_dot_acoustic,
-                                                                                    mp->d_b_send_potential_dot_dot_buffer,
+      assemble_boundary_minus_int_int_pressure_on_device<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_minus_pressure,
+                                                                                    mp->d_b_send_minus_pressure_buffer,
                                                                                     mp->num_interfaces_ext_mesh,
                                                                                     mp->max_nibool_interfaces_ext_mesh,
                                                                                     mp->d_nibool_interfaces_ext_mesh,
@@ -245,7 +245,7 @@ TRACE("transfer_asmbl_pot_to_device");
   }
 
   // Cuda timing
-  //stop_timing_cuda(&start,&stop,"assemble_boundary_potential_on_device");
+  //stop_timing_cuda(&start,&stop,"assemble_boundary_minus_int_int_pressure_on_device");
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   exit_on_cuda_error("transfer_asmbl_pot_to_device");

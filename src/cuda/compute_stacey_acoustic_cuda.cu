@@ -31,8 +31,8 @@
 
 /* ----------------------------------------------------------------------------------------------- */
 
-__global__ void compute_stacey_acoustic_kernel(realw* potential_dot_acoustic,
-                                               realw* potential_dot_dot_acoustic,
+__global__ void compute_stacey_acoustic_kernel(realw* minus_int_pressure,
+                                               realw* minus_pressure,
                                                int* abs_boundary_ispec,
                                                int* abs_boundary_ijk,
                                                realw* abs_boundary_jacobian2Dw,
@@ -45,9 +45,9 @@ __global__ void compute_stacey_acoustic_kernel(realw* potential_dot_acoustic,
                                                int SIMULATION_TYPE,
                                                int SAVE_FORWARD,
                                                int num_abs_boundary_faces,
-                                               realw* b_potential_dot_acoustic,
-                                               realw* b_potential_dot_dot_acoustic,
-                                               realw* b_absorb_potential,
+                                               realw* b_minus_int_pressure,
+                                               realw* b_minus_pressure,
+                                               realw* b_absorb_minus_int_int_pressure,
                                                int gravity) {
 
   int igll = threadIdx.x;
@@ -85,26 +85,26 @@ __global__ void compute_stacey_acoustic_kernel(realw* potential_dot_acoustic,
       // velocity
       if (gravity ){
         // daniel: TODO - check gravity and stacey condition here...
-        // uses a potential definition of: s = grad(chi)
-        vel = potential_dot_acoustic[iglob] / rhol ;
+        // uses a scalar definition of: s = grad(chi)
+        vel = minus_int_pressure[iglob] / rhol ;
       }else{
-        // uses a potential definition of: s = 1/rho grad(chi)
-        vel = potential_dot_acoustic[iglob] / rhol;
+        // uses a scalar definition of: s = 1/rho grad(chi)
+        vel = minus_int_pressure[iglob] / rhol;
       }
 
       // gets associated, weighted jacobian
       jacobianw = abs_boundary_jacobian2Dw[INDEX2(NGLL2,igll,iface)];
 
       // Sommerfeld condition
-      atomicAdd(&potential_dot_dot_acoustic[iglob],-vel*jacobianw/cpl);
+      atomicAdd(&minus_pressure[iglob],-vel*jacobianw/cpl);
 
       // adjoint simulations
       if (SIMULATION_TYPE == 3){
         // Sommerfeld condition
-        atomicAdd(&b_potential_dot_dot_acoustic[iglob],-b_absorb_potential[INDEX2(NGLL2,igll,iface)]);
+        atomicAdd(&b_minus_pressure[iglob],-b_absorb_minus_int_int_pressure[INDEX2(NGLL2,igll,iface)]);
       }else if (SIMULATION_TYPE == 1 && SAVE_FORWARD ){
         // saves boundary values
-        b_absorb_potential[INDEX2(NGLL2,igll,iface)] = vel*jacobianw/cpl;
+        b_absorb_minus_int_int_pressure[INDEX2(NGLL2,igll,iface)] = vel*jacobianw/cpl;
       }
     }
 //  }
@@ -117,7 +117,7 @@ extern "C"
 void FC_FUNC_(compute_stacey_acoustic_cuda,
               COMPUTE_STACEY_ACOUSTIC_CUDA)(long* Mesh_pointer,
                                             int* phase_is_innerf,
-                                            realw* h_b_absorb_potential) {
+                                            realw* h_b_absorb_minus_int_int_pressure) {
 TRACE("compute_stacey_acoustic_cuda");
   //double start_time = get_time();
 
@@ -145,12 +145,12 @@ TRACE("compute_stacey_acoustic_cuda");
   //  adjoint simulations: reads in absorbing boundary
   if (mp->simulation_type == 3){
     // copies array to GPU
-    print_CUDA_error_if_any(cudaMemcpy(mp->d_b_absorb_potential,h_b_absorb_potential,
-                                       mp->d_b_reclen_potential,cudaMemcpyHostToDevice),7700);
+    print_CUDA_error_if_any(cudaMemcpy(mp->d_b_absorb_minus_int_int_pressure,h_b_absorb_minus_int_int_pressure,
+                                       mp->d_b_reclen_minus_int_int_pressure,cudaMemcpyHostToDevice),7700);
   }
 
-  compute_stacey_acoustic_kernel<<<grid,threads>>>(mp->d_potential_dot_acoustic,
-                                                   mp->d_potential_dot_dot_acoustic,
+  compute_stacey_acoustic_kernel<<<grid,threads>>>(mp->d_minus_int_pressure,
+                                                   mp->d_minus_pressure,
                                                    mp->d_abs_boundary_ispec,
                                                    mp->d_abs_boundary_ijk,
                                                    mp->d_abs_boundary_jacobian2Dw,
@@ -163,17 +163,17 @@ TRACE("compute_stacey_acoustic_cuda");
                                                    mp->simulation_type,
                                                    mp->save_forward,
                                                    mp->d_num_abs_boundary_faces,
-                                                   mp->d_b_potential_dot_acoustic,
-                                                   mp->d_b_potential_dot_dot_acoustic,
-                                                   mp->d_b_absorb_potential,
+                                                   mp->d_b_minus_int_pressure,
+                                                   mp->d_b_minus_pressure,
+                                                   mp->d_b_absorb_minus_int_int_pressure,
                                                    mp->gravity);
 
   //  adjoint simulations: stores absorbed wavefield part
   if (mp->simulation_type == 1 && mp->save_forward ){
     // (cudaMemcpy implicitly synchronizes all other cuda operations)
     // copies array to CPU
-    print_CUDA_error_if_any(cudaMemcpy(h_b_absorb_potential,mp->d_b_absorb_potential,
-                                       mp->d_b_reclen_potential,cudaMemcpyDeviceToHost),7701);
+    print_CUDA_error_if_any(cudaMemcpy(h_b_absorb_minus_int_int_pressure,mp->d_b_absorb_minus_int_int_pressure,
+                                       mp->d_b_reclen_minus_int_int_pressure,cudaMemcpyDeviceToHost),7701);
   }
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
