@@ -327,9 +327,6 @@
                 endif
               endif
 
-              ! debug
-              !print *,'Qs,Qp:',Q_s,Q_p,'vs,vp:',vs_val,vp_val,'L:',L_val,'crit=',Q_s - L_val * Q_p
-              !print *,'Qmu,Qkappa:',Q_mu,Q_kappa,'Q_s,Q_p:',Q_s,1./(L_val/Q_mu + (1.0 - L_val)/Q_kappa),'Qp scaled:',Q_p
             else
               ! takes Q set in (CUBIT) mesh
               Q_kappa = qkappa_attenuation_store(i,j,k,ispec)
@@ -489,8 +486,6 @@
 
   ! determines min/max periods for attenuation band based on minimum resolved period of mesh
   min_period = 0.99 * min_resolved_period ! uses a small margin
-  ! debug for comparison with fix values from above
-  !min_resolved_period = 0.943
   call get_attenuation_periods(min_period,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
 
   !  sets up stress relaxation times tau_sigma,
@@ -500,12 +495,6 @@
   ! sets up central frequency
   ! logarithmic mean of frequency interval of absorption band
   call get_attenuation_source_freq(f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
-
-  ! debug
-  !f_c_source = 0.141421d0
-  !tau_sigma(1) =  7.957747154594766669788441504352d0
-  !tau_sigma(2) =  1.125395395196382652969191440206d0
-  !tau_sigma(3) =  0.159154943091895345608222100964d0
 
   end subroutine get_attenuation_constants
 
@@ -904,9 +893,6 @@
              AM_S%Qmu_storage(Qtmp),stat=ier)
     if (ier /= 0) stop 'error allocating arrays for attenuation storage'
     AM_S%Qmu_storage(:) = -1
-
-    ! debug
-    !print *,'allocated attenuation arrays: q storage size = ',Qtmp,AM_S%Q_resolution,AM_S%Q_max
   endif
 
   if (Qmu < 0.0d0 .or. Qmu > AM_S%Q_max) then
