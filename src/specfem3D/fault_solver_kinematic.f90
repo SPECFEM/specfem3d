@@ -399,6 +399,7 @@ subroutine load_vslip_snapshots(dataXZ,itime,iflt,myrank)
 !        action='read',iostat=ier)
 !  if( ier /= 0 ) stop 'Snapshots have been found'
 
+  if(ier == 0) then
 !   read(IIN_BIN,"(5F24.15)") dataXZ%xcoord,dataXZ%ycoord,dataXZ%zcoord,dataXZ%v1,dataXZ%v2
   write(IMAIN,*) 'Load vslip file for kinematic rupture simulation!'
 !  write(IMAIN,*)   max(abs(dataXZ
@@ -408,6 +409,12 @@ subroutine load_vslip_snapshots(dataXZ,itime,iflt,myrank)
   read(IIN_BIN)   dataXZ%v1
   read(IIN_BIN)   dataXZ%v2
   close(IIN_BIN)
+  else
+      ! if file not found, set slip velocity to zero
+    dataXZ%v1 = 0e0_CUSTOM_REAL
+    dataXZ%v2 = 0e0_CUSTOM_REAL
+  endif
+
 
 end subroutine load_vslip_snapshots
 
