@@ -1,5 +1,11 @@
 #!/usr/bin/perl
 
+#
+# script to beautify a source code (in Fortran + C + CUDA), remove extra white spaces,
+# and convert accented letters to non-accented to maximize portability.
+#
+# Dimitri Komatitsch, CNRS Marseille, France, 2015.
+#
 
 ################
 ################ run this script from the root directory of the package
