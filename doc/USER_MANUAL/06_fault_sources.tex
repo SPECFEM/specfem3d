@@ -22,9 +22,9 @@ Currently faults can only be run with \texttt{xdecompose\_mesh} and
 To facilitate the mesh generation with split nodes in CUBIT, we need
 to separate the two fault surfaces by a small distance, effectively
 creating a tiny opening of the fault (Figure \ref{fig:examples.splitnodes},
-\ref{fig:examples.splitnodes-surfacetrace}). Note that the opening distance 
-should not be too small especially in single precision simulations 
-(For example, if your fault is at $y=y_0$ plane, then the opening distance 
+\ref{fig:examples.splitnodes-surfacetrace}). Note that the opening distance
+should not be too small especially in single precision simulations
+(For example, if your fault is at $y=y_0$ plane, then the opening distance
 should be at least $10^{-6}y_0$ since single precision can ensure precision
 within only 7 digits). Note that only the interior
 of the fault must be opened, its edges must remain closed (except
