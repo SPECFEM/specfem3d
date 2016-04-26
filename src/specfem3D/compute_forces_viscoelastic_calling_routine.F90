@@ -643,28 +643,28 @@ subroutine compute_forces_viscoelastic_GPU()
     ! if (SIMULATION_TYPE_DYN) call bc_dynflt_set3d_all(accel,veloc,displ)
     ! if (SIMULATION_TYPE_KIN) call bc_kinflt_set_all(accel,veloc,displ)
     call fault_solver_gpu(Mesh_pointer,Fault_pointer,deltat,myrank)  ! GPU fault solver
-    call transfer_boundary_from_device_a(Mesh_pointer,nspec_outer_elastic)
+    !call transfer_boundary_from_device_a(Mesh_pointer,nspec_outer_elastic)
     ! transfer data from mp->d_boundary to mp->h_boundary
-    call sync_copy_from_device(Mesh_pointer,2,buffer_send_vector_ext_mesh)
+    !call sync_copy_from_device(Mesh_pointer,2,buffer_send_vector_ext_mesh)
     ! transfer data from mp->h_boundary to send_buffer
-    call assemble_MPI_vector_send_cuda(NPROC, &
-                  buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
-                  num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                  nibool_interfaces_ext_mesh,&
-                  my_neighbours_ext_mesh, &
-                  request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
+    !call assemble_MPI_vector_send_cuda(NPROC, &
+    !              buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
+    !              num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+    !              nibool_interfaces_ext_mesh,&
+    !              my_neighbours_ext_mesh, &
+    !              request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
 
       ! transfers mpi buffers onto GPU
-    call transfer_boundary_to_device(NPROC,Mesh_pointer,buffer_recv_vector_ext_mesh, &
-                  num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                  request_recv_vector_ext_mesh)
+    !call transfer_boundary_to_device(NPROC,Mesh_pointer,buffer_recv_vector_ext_mesh, &
+    !              num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+    !              request_recv_vector_ext_mesh)
       ! waits for send/receive requests to be completed and assembles values
-    call synchronize_MPI_vector_write_cuda(NPROC,NGLOB_AB,accel, Mesh_pointer,&
-                      buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh,&
-                      max_nibool_interfaces_ext_mesh, &
-                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                      request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
-                      1)
+    !call synchronize_MPI_vector_write_cuda(NPROC,NGLOB_AB,accel, Mesh_pointer,&
+    !                  buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh,&
+    !                  max_nibool_interfaces_ext_mesh, &
+    !                  nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+    !                  request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
+    !                  1)
 
 
 
