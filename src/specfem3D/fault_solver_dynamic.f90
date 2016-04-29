@@ -191,6 +191,8 @@ subroutine transfer_faultdata_GPU()
    integer :: ifault,nspec,nglob
 
    call initialize_fault_solver(Fault_pointer,Nfaults,V_HEALING,V_RUPT)
+   call initialize_fault_data(Fault_pointer,faults(1)%dataT%iglob, faults(1)%dataT%npoin, 500)
+
    do ifault = 1,Nfaults
 
     nspec = faults(ifault)%nspec
@@ -215,6 +217,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
 
   real(kind=CUSTOM_REAL) :: S1,S2,S3,Sigma(6)
   integer :: n1,n2,n3
+  logical :: LOAD_STRESSDROP = .false.
 
   NAMELIST / INIT_STRESS / S1,S2,S3,n1,n2,n3
   NAMELIST /STRESS_TENSOR / Sigma
@@ -243,12 +246,18 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
     bc%T0(1,:) = S1
     bc%T0(2,:) = S2
     bc%T0(3,:) = S3
+
+    if(LOAD_STRESSDROP) then
+        call make_frictional_stress
+        call load_stress_drop
+    endif
+ 
     call init_2d_distribution(bc%T0(1,:),bc%coord,IIN_PAR,n1)
     call init_2d_distribution(bc%T0(2,:),bc%coord,IIN_PAR,n2)
     call init_2d_distribution(bc%T0(3,:),bc%coord,IIN_PAR,n3)
     call init_fault_traction(bc,Sigma) !added the fault traction caused by a regional stress field
 
-    bc%T = bc%T0
+   bc%T = bc%T0
 
     !WARNING : Quick and dirty free surface condition at z=0
     !  do k=1,bc%nglob
@@ -336,6 +345,38 @@ subroutine TPV16_init
   enddo
 
 end subroutine TPV16_init
+
+subroutine make_frictional_stress
+    real(kind=CUSTOM_REAL),dimension(bc%nglob) :: T1tmp, T2tmp
+    !T1tmp=sign(abs(bc%T0(3,:)*0.3*abs(bc%T0(1,:))/sqrt(bc%T0(1,:)*bc%T0(1,:)+bc%T0(2,:)*bc%T0(2,:))),bc%T0(1,:))
+    !T2tmp=sign(abs(bc%T0(3,:)*0.3*abs(bc%T0(2,:))/sqrt(bc%T0(1,:)*bc%T0(1,:)+bc%T0(2,:)*bc%T0(2,:))),bc%T0(2,:))
+    T1tmp = 0e0_CUSTOM_REAL
+    T2tmp = -bc%T0(3,:)*0.3
+bc%T0(1,:)=T1tmp
+bc%T0(2,:)=T2tmp
+end  subroutine make_frictional_stress
+
+subroutine load_stress_drop   !added by kangchen this is specially made for Balochistan Simulation
+
+   use specfem_par, only:prname
+
+   real(kind=CUSTOM_REAL),dimension(bc%nglob) :: T1tmp, T2tmp
+   character(len=70) :: filename
+   integer :: IIN_STR,ier 
+   filename = prname(1:len_trim(prname))//'fault_prestr.bin'
+   write(*,*) prname,bc%nglob 
+   open(unit=IIN_STR,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
+   read(IIN_STR) T1tmp
+   read(IIN_STR) T2tmp
+   close(IIN_STR)
+!   write(*,*) prname,bc%nglob,'successful' 
+
+   bc%T0(1,:)=bc%T0(1,:)-T1tmp
+   bc%T0(2,:)=bc%T0(2,:)-T2tmp
+
+
+end subroutine load_stress_drop
+
 
 end subroutine init_one_fault
 
@@ -1580,8 +1621,10 @@ do ifault=1,Nfaults
 
 call transfer_tohost_fault_data(Fault_pointer,ifault-1,faults(ifault)%nspec,&
 faults(ifault)%nglob,faults(ifault)%D,faults(ifault)%V,faults(ifault)%T)
+call transfer_tohost_datat(Fault_pointer, faults(ifault)%dataT%dat, it)
 
 call gather_dataXZ(faults(ifault))
+call SCEC_write_dataT(faults(ifault)%dataT)
 
 if(myrank == 0 )call write_dataXZ(faults(ifault)%dataXZ_all,it,ifault)
 

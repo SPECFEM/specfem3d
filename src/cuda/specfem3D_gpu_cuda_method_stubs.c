@@ -714,6 +714,12 @@ void FC_FUNC_(initialize_fault_solver,
                                        realw* v_healing,
                                        realw* v_rupt){}
 
+void FC_FUNC_(initialize_fault_data,
+				INITIALIZE_FAULT_DATA)(long* Fault_solver,
+										int* iglob,
+										int* num_of_records,
+										int* nt){}
+
 void FC_FUNC_(transfer_todevice_fault_data,
               TRANSFER_TODEVICE_FAULT_DATA)(long* Fault_pointer,
                       int* fault_index,
@@ -814,3 +820,9 @@ void FC_FUNC_(transfer_sync_accel_to_device,
                                               const int* nibool_interfaces_ext_mesh,
                                               const int* ibool_interfaces_ext_mesh,
                                               const int* FORWARD_OR_ADJOINT) {}
+
+void FC_FUNC_(transfer_tohost_datat,
+              TRANSFER_TOHOST_DATAT)(long* Fault_pointer,
+                         realw* h_dataT,
+						 int* it){}
+

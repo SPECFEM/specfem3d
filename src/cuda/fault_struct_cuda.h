@@ -61,8 +61,16 @@ typedef struct fault_ {
 
 }Fault ;
 
+typedef struct fault_data_{
+	int NRECORD;
+	int NT;
+	int* iglob;	//record the global index of the station
+	realw* dataT;	//data pointer to the array
+}Fault_data;
+
 typedef struct fault_solver_dynamics_{
   Fault* faults;
+  Fault_data* output_dataT;
   realw v_healing;
   realw v_rupt;
   int NTOUT,NSNAP;

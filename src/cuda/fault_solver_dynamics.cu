@@ -52,6 +52,33 @@ void FC_FUNC_(initialize_fault_solver,
     *Fault_solver = (long) Fdyn;
 }
 
+extern "C" 
+void FC_FUNC_(initialize_fault_data,
+				INITIALIZE_FAULT_DATA)(long* Fault_solver,
+										int* iglob,
+										int* num_of_records,
+										int* nt)
+{
+
+	Fault_data *fault_data_recorder = (Fault_data*)malloc(sizeof(Fault_data));
+	fault_data_recorder->NRECORD = *num_of_records;
+	fault_data_recorder->NT = *nt;
+	int recordlength = 7;	//store 7 different quantities
+
+	print_CUDA_error_if_any(cudaMalloc((void**)&(fault_data_recorder->iglob), fault_data_recorder->NRECORD*sizeof(int)),60001);
+	
+	print_CUDA_error_if_any(cudaMemcpy(fault_data_recorder->iglob, iglob, fault_data_recorder->NRECORD*sizeof(int), cudaMemcpyHostToDevice),60002);
+
+	print_CUDA_error_if_any(cudaMalloc((void**)&(fault_data_recorder->dataT), recordlength*fault_data_recorder->NRECORD*fault_data_recorder->NT*sizeof(realw)),60003);
+
+	Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_solver);
+
+	Fsolver->output_dataT = fault_data_recorder;
+
+
+}
+											
+
 /* ----------------------------------------------------------------------------------------------- */
 
 // copies integer array from CPU host to GPU device
@@ -168,7 +195,26 @@ void FC_FUNC_(transfer_tohost_fault_data,
 }
 
 /* ----------------------------------------------------------------------------------------------- */
+extern "C"
+void FC_FUNC_(transfer_tohost_datat,
+              TRANSFER_TOHOST_DATAT)(long* Fault_pointer,
+                         realw* h_dataT,
+						 int* it
+                        )
+{
+    Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
+    if(Fsolver->output_dataT->NRECORD > 0)
+    {
 
+
+        copy_tohost_realw_test((void **)&(Fsolver->output_dataT->dataT),h_dataT + (*it -Fsolver->output_dataT->NT) * Fsolver->output_dataT->NRECORD*7
+				,Fsolver->output_dataT->NRECORD*7*Fsolver->output_dataT->NT);
+
+
+    }
+
+}
+/*-------------------------------------------------------------------------------------------------*/
 extern "C"
 void FC_FUNC_(transfer_todevice_rsf_data,
               TRANSFER_TODEVICE_RSF_DATA)(long* Fault_pointer,
@@ -940,6 +986,35 @@ __global__  void compute_dynamic_fault_cuda(
 }
 
 /* ----------------------------------------------------------------------------------------------- */
+__global__ void store_dataT(realw* store_dataT,
+						realw* V_slip,
+						realw* D_slip,
+						realw* T,
+						int* iglob,
+						int istep,
+						int n_record,
+						int nt
+						)
+{
+	int tx = blockDim.x * blockIdx.x + threadIdx.x;  /*calculate thread id*/
+	if(tx>=n_record) return;
+	int it = (istep - 1)%nt ;
+	int irec = iglob[tx];
+
+	store_dataT[it*n_record*7 + tx*7 + 0] = D_slip[3*irec + 0];
+	store_dataT[it*n_record*7 + tx*7 + 1] = V_slip[3*irec + 0];
+	store_dataT[it*n_record*7 + tx*7 + 2] = T[3*irec + 0];
+	store_dataT[it*n_record*7 + tx*7 + 3] = -D_slip[3*irec + 1];
+	store_dataT[it*n_record*7 + tx*7 + 4] = -V_slip[3*irec + 1];
+	store_dataT[it*n_record*7 + tx*7 + 5] = -T[3*irec + 1];
+	store_dataT[it*n_record*7 + tx*7 + 6] = T[3*irec + 2];
+}
+
+
+
+
+
+
 
 
 extern "C"
@@ -947,13 +1022,16 @@ void FC_FUNC_(fault_solver_gpu,
               FAULT_SOLVER_GPU)(long* Mesh_pointer,
                                 long* Fault_pointer,
                                 realw* dt,
-                                int* myrank)
+                                int* myrank,
+								int* it)
+
 {
     Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
     Fault* Flt = Fsolver->faults;
     Mesh*  mp = (Mesh*)(*Mesh_pointer);
     int num_of_block;
 
+	int num_of_block2;
     for(int ifault = 0; ifault < (Fsolver->Nbfaults); ifault++)
     {
         Flt = &(Fsolver->faults[ifault]);
@@ -962,6 +1040,7 @@ void FC_FUNC_(fault_solver_gpu,
         if(Flt->NGLOB_AB>0)
         {
             num_of_block = (int) (Flt->NGLOB_AB/128)+1;
+			num_of_block2 = (int) (Fsolver->output_dataT->NRECORD/128)+1;
             if(false) // this is dirty implementation
             {
                 compute_dynamic_fault_cuda<<<num_of_block,128>>>(
@@ -1021,6 +1100,16 @@ void FC_FUNC_(fault_solver_gpu,
                     Flt->ibulk2,
                     *dt,
                     *myrank);
+
+				store_dataT<<<num_of_block2,128>>>(
+						Fsolver->output_dataT->dataT,
+						Flt->V,
+						Flt->D,
+						Flt->T,
+						Fsolver->output_dataT->iglob,
+						*it,
+						Fsolver->output_dataT->NRECORD,
+						Fsolver->output_dataT->NT);
 
             }
         }
