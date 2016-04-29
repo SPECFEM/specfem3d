@@ -251,7 +251,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
         call make_frictional_stress
         call load_stress_drop
     endif
- 
+
     call init_2d_distribution(bc%T0(1,:),bc%coord,IIN_PAR,n1)
     call init_2d_distribution(bc%T0(2,:),bc%coord,IIN_PAR,n2)
     call init_2d_distribution(bc%T0(3,:),bc%coord,IIN_PAR,n3)
@@ -362,14 +362,14 @@ subroutine load_stress_drop   !added by kangchen this is specially made for Balo
 
    real(kind=CUSTOM_REAL),dimension(bc%nglob) :: T1tmp, T2tmp
    character(len=70) :: filename
-   integer :: IIN_STR,ier 
+   integer :: IIN_STR,ier
    filename = prname(1:len_trim(prname))//'fault_prestr.bin'
-   write(*,*) prname,bc%nglob 
+   write(*,*) prname,bc%nglob
    open(unit=IIN_STR,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
    read(IIN_STR) T1tmp
    read(IIN_STR) T2tmp
    close(IIN_STR)
-!   write(*,*) prname,bc%nglob,'successful' 
+!   write(*,*) prname,bc%nglob,'successful'
 
    bc%T0(1,:)=bc%T0(1,:)-T1tmp
    bc%T0(2,:)=bc%T0(2,:)-T2tmp

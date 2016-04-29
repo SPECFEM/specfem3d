@@ -715,10 +715,10 @@ void FC_FUNC_(initialize_fault_solver,
                                        realw* v_rupt){}
 
 void FC_FUNC_(initialize_fault_data,
-				INITIALIZE_FAULT_DATA)(long* Fault_solver,
-										int* iglob,
-										int* num_of_records,
-										int* nt){}
+        INITIALIZE_FAULT_DATA)(long* Fault_solver,
+                    int* iglob,
+                    int* num_of_records,
+                    int* nt){}
 
 void FC_FUNC_(transfer_todevice_fault_data,
               TRANSFER_TODEVICE_FAULT_DATA)(long* Fault_pointer,
@@ -824,5 +824,5 @@ void FC_FUNC_(transfer_sync_accel_to_device,
 void FC_FUNC_(transfer_tohost_datat,
               TRANSFER_TOHOST_DATAT)(long* Fault_pointer,
                          realw* h_dataT,
-						 int* it){}
+             int* it){}
 
