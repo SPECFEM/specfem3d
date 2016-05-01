@@ -419,7 +419,10 @@
                                      xgrid,ygrid,zgrid)
 
     use constants,only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC, NGLLX, NGLLY, NGLLZ, NDIM, ZERO
-    use shared_parameters, only: NGNOD
+
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_save_databases_4.F90"
+#endif
 
     implicit none
 
