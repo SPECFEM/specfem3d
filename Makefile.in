@@ -237,7 +237,6 @@ SUBDIRS = \
 	specfem3D \
 	tomography/postprocess_sensitivity_kernels \
 	tomography \
-	inverse_problem \
 	$(EMPTY_MACRO)
 
 # default targets for the pure Fortran version
@@ -252,7 +251,7 @@ DEFAULT = \
 
 default: $(DEFAULT)
 
-all: default aux check_mesh postprocess tomography inverse_problem
+all: default aux check_mesh postprocess tomography
 
 backup:
 	cp -rp src setup DATA/Par_file* Makefile bak
@@ -328,13 +327,6 @@ help:
 	@echo "    xmodel_update"
 	@echo "    xsum_kernels"
 	@echo "    xsum_preconditioned_kernels"
-	@echo ""
-	@echo "- inverse problem: [make inverse_problem]"
-	@echo "    xprogram01_add_model_iso"
-	@echo "    xprogram02_model_update"
-	@echo "    xprogram03_smooth_sem"
-	@echo "    xprogram04_sum_kernels"
-	@echo "    xprogram05_sum_preconditioned_kernels"
 	@echo ""
 	@echo "for unit testing:"
 	@echo "    tests"
