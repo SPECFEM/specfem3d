@@ -42,9 +42,6 @@ meshfem3D_TARGETS = \
 
 meshfem3D_OBJECTS = \
 	$O/check_mesh_quality.mesh.o \
-	$O/earth_chunk_HEX8_Mesher.mesh.o \
-	$O/earth_chunk_HEX27_Mesher.mesh.o \
-	$O/earth_chunk_all_Utils.mesh.o \
 	$O/compute_parameters.mesh.o \
 	$O/create_meshfem_mesh.mesh.o \
 	$O/create_CPML_regions.mesh.o \
@@ -171,6 +168,9 @@ $O/adios_helpers.shared_adios.o: \
 ####
 
 $O/%.mesh.o: $S/%.f90 $O/shared_par.shared_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+$O/%.mesh.o: $S/%.F90 $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 

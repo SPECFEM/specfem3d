@@ -192,13 +192,6 @@ SAVE_MOHO_MESH                  = .false.
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .false.
 
-# to couple with an external code (such as DSM, AxiSEM, or FK)
-COUPLE_WITH_EXTERNAL_CODE       = .false.
-EXTERNAL_CODE_TYPE              = 1   # 1 = DSM, 2 = AxiSEM, 3 = FK
-TRACTION_PATH                   = ./DATA/DSM_tractions_for_specfem3D/
-MESH_A_CHUNK_OF_THE_EARTH       = .false.
-CUT_SOLUTION_FOR_VISU           = .false.
-
 # Dimitri Komatitsch, July 2014, CNRS Marseille, France:
 # added the ability to run several calculations (several earthquakes)
 # in an embarrassingly-parallel fashion from within the same run;

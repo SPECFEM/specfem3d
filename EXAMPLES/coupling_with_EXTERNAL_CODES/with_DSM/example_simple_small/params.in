@@ -1,9 +1,0 @@
-BIN=${HOME_SPECFEM3D}/utils/EXTERNAL_CODES_coupled_with_SPECFEM3D/DSM_for_SPECFEM3D/bin
-BINSEM=${HOME_SPECFEM3D}/bin
-SCRIPTS=${HOME_SPECFEM3D}/utils/EXTERNAL_CODES_coupled_with_SPECFEM3D/DSM_for_SPECFEM3D/shells
-DSM_tractions=$(pwd)/DSM_tractions/
-OUT=$DSM_tractions
-REP=Tract/
-IN_DSM=$(pwd)/input_dsm
-MESH=$(pwd)/MESH
-MODELE_1D=iasp91_dsm

@@ -67,8 +67,9 @@
     close(IOUT_ENERGY)
   endif
 
-  !! CD CD add this (temporary) :
-  if (CUT_SOLUTION_FOR_VISU) open(unit=158,file='KH_integral',status='unknown')
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_iterate_time_1.F90"
+#endif
 
   ! open the file in which we will store the energy curve
   if (OUTPUT_ENERGY .and. myrank == 0) &
@@ -269,15 +270,9 @@
       call it_update_vtkwindow()
     endif
 
-    !! CD CD add this : under validation option
-    if (CUT_SOLUTION_FOR_VISU) then
-      if (.not. SAVE_RUN_BOUN_FOR_KH_INTEGRAL) then
-
-        call surface_or_volume_integral_on_whole_domain()
-        write(158,*) it*DT, integral_boun(1), integral_boun(2), integral_boun(3)
-
-      endif
-    endif
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_iterate_time_2.F90"
+#endif
 
   !
   !---- end of time iteration loop
@@ -290,12 +285,9 @@
 
   call it_print_elapsed_time()
 
-  !! CD CD ad this :
-  if (CUT_SOLUTION_FOR_VISU) then
-    close(158)
-    close(237)
-    close(238)
-  endif
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_iterate_time_3.F90"
+#endif
 
   ! Transfer fields from GPU card to host for further analysis
   if (GPU_MODE) call it_transfer_from_GPU()

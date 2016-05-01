@@ -1,6 +1,0 @@
-#!/bin/bash
-
-mv MESH/model_1D.in .
-rm -rf MESH/.recdepth MESH/*
-mv model_1D.in MESH/
-rm -rf *~ Tract/ OUTPUT_FILES/ DSM_tractions/ xmin_gll_for_dsm_0000* *.out fort.* DATA/DSM_tractions_for_specfem3D/

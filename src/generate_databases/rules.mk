@@ -258,9 +258,14 @@ $O/adios_helpers.shared_adios.o: \
 $O/%.gen.o: $S/%.f90 $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
+$O/%.gen.o: $S/%.F90 $O/shared_par.shared_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
 $O/%.mpi_gen.o: $S/%.f90 $O/shared_par.shared_module.o
 	${MPIFCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
+$O/%.mpi_gen.o: $S/%.F90 $O/shared_par.shared_module.o
+	${MPIFCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 $O/%.genc.o: $S/%.c
 	${CC} ${CFLAGS} -c -o $@ $<

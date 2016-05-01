@@ -123,13 +123,6 @@ end module constants
   logical :: ANISOTROPIC_KL,SAVE_TRANSVERSE_KL,APPROXIMATE_HESS_KL,SAVE_MOHO_MESH
   integer :: NTSTEP_BETWEEN_OUTPUT_ENERGY
 
-  ! external code coupling (DSM, AxiSEM)
-  logical :: COUPLE_WITH_EXTERNAL_CODE
-  integer :: EXTERNAL_CODE_TYPE
-  character(len=MAX_STRING_LEN) :: TRACTION_PATH
-  logical :: MESH_A_CHUNK_OF_THE_EARTH
-  logical :: CUT_SOLUTION_FOR_VISU
-
   ! GPU simulations
   logical :: GPU_MODE
 

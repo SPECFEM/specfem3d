@@ -174,8 +174,8 @@ subroutine compute_forces_viscoelastic()
                         ispec_is_inner,phase_is_inner)
     endif
 
-    !! CD CD !! For coupling with DSM
-    if (.not. COUPLE_WITH_EXTERNAL_CODE) then
+    !! CD CD
+#ifndef DEBUG_COUPLED
       ! adds source term (single-force/moment-tensor solution)
       call compute_add_sources_viscoelastic(NSPEC_AB,NGLOB_AB,accel, &
                                             ibool,ispec_is_inner,phase_is_inner, &
@@ -185,7 +185,7 @@ subroutine compute_forces_viscoelastic()
                                             nrec,islice_selected_rec,ispec_selected_rec, &
                                             nadj_rec_local,adj_sourcearrays, &
                                             NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY)
-    endif
+#endif
     !! CD CD
 
     ! assemble all the contributions between slices using MPI
@@ -532,8 +532,7 @@ subroutine compute_forces_viscoelastic_GPU()
       call compute_stacey_viscoelastic_GPU(phase_is_inner,num_abs_boundary_faces, &
                                            SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
                                            b_num_abs_boundary_faces,b_reclen_field,b_absorb_field, &
-                                           Mesh_pointer, &
-                                           it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary,COUPLE_WITH_EXTERNAL_CODE)
+                                           Mesh_pointer)
     endif
 
     ! acoustic coupling

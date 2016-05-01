@@ -1,7 +1,0 @@
-0/ create directory 'Sismo_specfem' to put the specfem seismos in there ; and 'Sismo_axisem' to put the axisem seismos
-1/ compile rotation_specfem_solution.f90
-2/ update rotate_one_sismo.sh 
-    station coordinate (STATIONS_Axisem)
-    must be the same number used in specfem
-3/ run rotate_one_sismo.sh
-4/ check the result with matlab Check_one_station.m or with Gnuplot !! : the scripts compare_gnuplot_and_makepdf.sh + allgn.plt, are made for make comparison using Gnuplot ==> check it and modify if you want to use it
