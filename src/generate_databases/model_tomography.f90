@@ -129,7 +129,7 @@
 
   use constants, only: MAX_STRING_LEN,IIN,IMAIN
 
-  use generate_databases_par, only: TOMOGRAPHY_PATH,undef_mat_prop,nundefMat_ext_mesh,IMODEL,COUPLE_WITH_EXTERNAL_CODE
+  use generate_databases_par, only: TOMOGRAPHY_PATH,undef_mat_prop,nundefMat_ext_mesh,IMODEL
 
   use model_tomography_par
 
@@ -189,12 +189,6 @@
       tomo_filename = TOMOGRAPHY_PATH(1:len_trim(TOMOGRAPHY_PATH)) // trim(filename)
     else
       tomo_filename = TOMOGRAPHY_PATH(1:len_trim(TOMOGRAPHY_PATH)) // '/' // trim(filename)
-    endif
-
-    !! WANGYI test for the benchmark of hybrid DSM-SPECFEM3D coupling
-    if (COUPLE_WITH_EXTERNAL_CODE) then
-       write(*,*) 'iundef', iundef  ! add by WANGYI for test
-       write(*,*) 'tomo_filename', tomo_filename ! add by WANGYI for test
     endif
 
     ! opens file for reading
@@ -617,8 +611,6 @@ end subroutine init_tomography_files
   double precision :: spac_x,spac_y,spac_z
   double precision :: gamma_interp_x,gamma_interp_y
   double precision :: gamma_interp_z1,gamma_interp_z2,gamma_interp_z3,gamma_interp_z4
-  ! unused
-  !double precision :: gamma_interp_z5,gamma_interp_z6,gamma_interp_z7,gamma_interp_z8
 
   real(kind=CUSTOM_REAL) :: vp1,vp2,vp3,vp4,vp5,vp6,vp7,vp8
   real(kind=CUSTOM_REAL) :: vs1,vs2,vs3,vs4,vs5,vs6,vs7,vs8
@@ -764,12 +756,6 @@ end subroutine init_tomography_files
      gamma_interp_z4 = 0.d0
   endif
 
-  ! not used any further
-  !gamma_interp_z5 = 1.d0 - gamma_interp_z1
-  !gamma_interp_z6 = 1.d0 - gamma_interp_z2
-  !gamma_interp_z7 = 1.d0 - gamma_interp_z3
-  !gamma_interp_z8 = 1.d0 - gamma_interp_z4
-
   ! Vp
   vp1 = vp_tomography(imat,p0+1)
   vp2 = vp_tomography(imat,p1+1)
@@ -913,8 +899,6 @@ end subroutine init_tomography_files
   end function interpolate_trilinear
 
   end subroutine model_tomography
-
-
 
 !
 !-------------------------------------------------------------------------------------------------

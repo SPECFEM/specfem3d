@@ -50,7 +50,7 @@ subroutine compute_forces_poroelastic()
     endif
 
 
-    if (.NOT. GPU_MODE) then
+    if (.not. GPU_MODE) then
 
       ! solid phase
       call compute_forces_poro_solid_part( iphase, &

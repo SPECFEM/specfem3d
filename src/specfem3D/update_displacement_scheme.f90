@@ -98,15 +98,28 @@
 
   implicit none
 
+  !local prameters
+  integer :: ispec_cpml,ispec,i,j,k,iglob
+
   ! Newmark time marching
 
   if (.not. GPU_MODE) then
     ! wavefields on CPU
     ! updates (forward) acoustic potentials
     if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-      potential_acoustic_old(:) = potential_acoustic(:) + &
-                                  deltatover2 * (1._CUSTOM_REAL - 2._CUSTOM_REAL * theta) * potential_dot_acoustic(:) + &
-                                  deltatsqover2 * (1._CUSTOM_REAL - theta) * potential_dot_dot_acoustic(:)
+       do ispec_cpml=1,NSPEC_CPML
+          ispec = CPML_to_spec(ispec_cpml)
+          do i = 1, NGLLX
+             do j = 1, NGLLY
+                do k = 1, NGLLZ
+                   iglob = ibool(i,j,k,ispec)
+                   PML_potential_acoustic_old(i,j,k,ispec_cpml) = potential_acoustic(iglob) &
+                       + deltatover2 * (1._CUSTOM_REAL - 2.0_CUSTOM_REAL*theta) * potential_dot_acoustic(iglob) &
+                       + deltatsqover2 * (1._CUSTOM_REAL - theta) * potential_dot_dot_acoustic(iglob)
+                enddo
+             enddo
+          enddo
+       enddo
     endif
     potential_acoustic(:) = potential_acoustic(:) + &
                             deltat * potential_dot_acoustic(:) + &
@@ -116,8 +129,18 @@
     potential_dot_dot_acoustic(:) = 0._CUSTOM_REAL
 
     if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-      potential_acoustic_new(:) = potential_acoustic(:) + &
-                                  deltatover2 * (1._CUSTOM_REAL - 2._CUSTOM_REAL * theta) * potential_dot_acoustic(:)
+      do ispec_cpml=1,NSPEC_CPML
+         ispec = CPML_to_spec(ispec_cpml)
+         do i = 1, NGLLX
+            do j = 1, NGLLY
+               do k = 1, NGLLZ
+                  iglob = ibool(i,j,k,ispec)
+                  PML_potential_acoustic_new(i,j,k,ispec_cpml) = potential_acoustic(iglob) &
+                       + deltatover2 * (1._CUSTOM_REAL - 2.0_CUSTOM_REAL*theta) * potential_dot_acoustic(iglob)
+               enddo
+            enddo
+         enddo
+      enddo
     endif
 
     ! adjoint simulations
@@ -157,16 +180,18 @@
 !--------------------------------------------------------------------------------------------------------------
 !
 
-
   subroutine update_displacement_elastic()
 
-! updates elastic wavefields
+  ! updates elastic wavefields
 
   use specfem_par
   use specfem_par_elastic
   use pml_par
 
   implicit none
+
+  ! local parameters
+  integer :: ispec_cpml,ispec,i,j,k,iglob
 
   ! Newmark time marching
 
@@ -175,17 +200,39 @@
 
     ! updates elastic displacement and velocity
     if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-      displ_old(:,:) = displ(:,:) + &
-                       deltatover2 * (1._CUSTOM_REAL - 2._CUSTOM_REAL*theta) * veloc(:,:) + &
-                       deltatsqover2 * (1._CUSTOM_REAL - theta) * accel(:,:)
+        do ispec_cpml=1,NSPEC_CPML
+           ispec = CPML_to_spec(ispec_cpml)
+           do k = 1, NGLLZ
+              do j = 1, NGLLY
+                 do i = 1, NGLLX
+                    iglob = ibool(i,j,k,ispec)
+                    PML_displ_old(:,i,j,k,ispec_cpml)=displ(:,iglob) &
+                        + deltatover2 * (1._CUSTOM_REAL - 2._CUSTOM_REAL*theta) * veloc(:,iglob) &
+                        + deltatsqover2 * (1._CUSTOM_REAL - theta) * accel(:,iglob)
+
+                 enddo
+              enddo
+           enddo
+        enddo
     endif
     displ(:,:) = displ(:,:) + deltat * veloc(:,:) + deltatsqover2 * accel(:,:)
     veloc(:,:) = veloc(:,:) + deltatover2 * accel(:,:)
     if (SIMULATION_TYPE /= 1) accel_adj_coupling(:,:) = accel(:,:)
     accel(:,:) = 0._CUSTOM_REAL
     if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-      displ_new(:,:) = displ(:,:) &
-                       + deltatover2 * (1._CUSTOM_REAL - theta) * veloc(:,:)
+        do ispec_cpml=1,NSPEC_CPML
+           ispec = CPML_to_spec(ispec_cpml)
+           do k = 1, NGLLZ
+              do j = 1, NGLLY
+                 do i = 1, NGLLX
+                    iglob = ibool(i,j,k,ispec)
+                    PML_displ_new(:,i,j,k,ispec_cpml) = displ(:,iglob)&
+                        + deltatover2 * (1._CUSTOM_REAL - 2.0_CUSTOM_REAL*theta) * veloc(:,iglob)
+
+                 enddo
+              enddo
+           enddo
+        enddo
     endif
 
     ! adjoint simulations

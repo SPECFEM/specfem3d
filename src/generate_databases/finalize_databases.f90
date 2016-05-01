@@ -31,9 +31,12 @@
 ! checks user input parameters
 
   use generate_databases_par
+
   implicit none
 
   integer :: i
+  ! timing
+  double precision, external :: wtime
 
 ! print number of points and elements in the mesh
   call sum_all_i(NSPEC_AB,nspec_total)

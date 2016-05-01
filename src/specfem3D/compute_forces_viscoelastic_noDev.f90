@@ -77,7 +77,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                      rmemory_duy_dxl_y,rmemory_duy_dzl_y,rmemory_duz_dyl_y,rmemory_dux_dyl_y, &
                      rmemory_dux_dxl_z,rmemory_duy_dyl_z,rmemory_duz_dzl_z, &
                      rmemory_duz_dxl_z,rmemory_duz_dyl_z,rmemory_duy_dzl_z,rmemory_dux_dzl_z, &
-                     rmemory_displ_elastic,displ_old,displ_new
+                     rmemory_displ_elastic,PML_displ_old,PML_displ_new
 
   implicit none
 
@@ -291,16 +291,16 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
         ! we only use the stored value on edge of PML interface.
         ! Thus no compuation need to do in PML region in this case.
         if (.not. backward_simulation) then
+          ispec_CPML = spec_to_CPML(ispec)
           do k=1,NGLLZ
             do j=1,NGLLY
               do i=1,NGLLX
-                iglob = ibool(i,j,k,ispec)
-                dummyx_loc_att(i,j,k) = displ_old(1,iglob)
-                dummyy_loc_att(i,j,k) = displ_old(2,iglob)
-                dummyz_loc_att(i,j,k) = displ_old(3,iglob)
-                dummyx_loc_att_new(i,j,k) = displ_new(1,iglob)
-                dummyy_loc_att_new(i,j,k) = displ_new(2,iglob)
-                dummyz_loc_att_new(i,j,k) = displ_new(3,iglob)
+                 dummyx_loc_att(i,j,k) = PML_displ_old(1,i,j,k,ispec_CPML)
+                 dummyy_loc_att(i,j,k) = PML_displ_old(2,i,j,k,ispec_CPML)
+                 dummyz_loc_att(i,j,k) = PML_displ_old(3,i,j,k,ispec_CPML)
+                 dummyx_loc_att_new(i,j,k) = PML_displ_new(1,i,j,k,ispec_CPML)
+                 dummyy_loc_att_new(i,j,k) = PML_displ_new(2,i,j,k,ispec_CPML)
+                 dummyz_loc_att_new(i,j,k) = PML_displ_new(3,i,j,k,ispec_CPML)
               enddo
             enddo
           enddo
@@ -1164,8 +1164,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 
 end subroutine compute_forces_viscoelastic_noDev
 
-! following the compute_forces_viscoelastic_Dev.F90, put the code used for computation of strain in parent
-! element in a subroutine.
+! put the code used for computation of strain in parent element in a subroutine.
 ! The concept of parent element can be found in
 ! O.C.Zienkiewicz, R.L.Taylor & J.Z. Zhu, The finite element method its basis and fundamentals 6th ed.,
 ! Elsevier Press (2005) ! pages 141

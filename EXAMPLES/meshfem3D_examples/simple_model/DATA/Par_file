@@ -51,6 +51,10 @@ FULL_ATTENUATION_SOLID          = .false.
 ANISOTROPY                      = .false.
 GRAVITY                         = .false.
 
+# reference frequency for target velocity values in the velocity model
+# set here to a typical value for regional seismology / regional models (dominant period of 3 seconds, i.e. frequency of 1/3 Hz)
+ATTENUATION_f0_REFERENCE        = 0.33333d0
+
 # path for external tomographic models files
 TOMOGRAPHY_PATH                 = ./DATA/tomo_files/
 
@@ -90,10 +94,10 @@ NTSTEP_BETWEEN_FRAMES           = 200
 HDUR_MOVIE                      = 0.0
 
 # save AVS or OpenDX mesh files to check the mesh
-SAVE_MESH_FILES                 = .false.
+SAVE_MESH_FILES                 = .true.
 
 # path to store the local database file on each node
-LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI
+LOCAL_PATH                      = ./DATABASES_MPI
 
 # interval at which we output time step info and max of norm of displacement
 NTSTEP_BETWEEN_OUTPUT_INFO      = 100
@@ -186,13 +190,7 @@ APPROXIMATE_HESS_KL             = .false.
 SAVE_MOHO_MESH                  = .false.
 
 # print source time function
-PRINT_SOURCE_TIME_FUNCTION      = .false.
-
-# to couple with an external code (such as DSM, AxiSEM, or FK)
-COUPLE_WITH_EXTERNAL_CODE       = .false.
-EXTERNAL_CODE_TYPE              = 1   # 1 = DSM, 2 = AxiSEM, 3 = FK
-TRACTION_PATH                   = ./DATA/DSM_tractions_for_specfem3D/
-MESH_A_CHUNK_OF_THE_EARTH       = .true.
+PRINT_SOURCE_TIME_FUNCTION      = .true.
 
 # Dimitri Komatitsch, July 2014, CNRS Marseille, France:
 # added the ability to run several calculations (several earthquakes)

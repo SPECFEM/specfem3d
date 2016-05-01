@@ -163,19 +163,39 @@ xcreate_movie_shakemap_AVS_DX_GMT: $E/xcreate_movie_shakemap_AVS_DX_GMT
 
 
 $E/xconvolve_source_timefunction: $O/convolve_source_timefunction.aux.o $O/shared_par.shared_module.o
+	@echo ""
+	@echo "building xconvolve_source_timefunction"
+	@echo ""
 	${FCCOMPILE_CHECK} -o  ${E}/xconvolve_source_timefunction $O/convolve_source_timefunction.aux.o $O/shared_par.shared_module.o
+	@echo ""
 
 $E/xdetect_duplicates_stations_file: $O/detect_duplicates_stations_file.aux.o $O/shared_par.shared_module.o
+	@echo ""
+	@echo "building xdetect_duplicates_stations_file"
+	@echo ""
 	${FCCOMPILE_CHECK} -o  ${E}/xdetect_duplicates_stations_file $O/detect_duplicates_stations_file.aux.o $O/shared_par.shared_module.o
+	@echo ""
 
 $E/xcombine_surf_data: $(combine_surf_data_auxiliaries_OBJECTS) $(combine_surf_data_auxiliaries_SHARED_OBJECTS)
+	@echo ""
+	@echo "building xcombine_surf_data"
+	@echo ""
 	${FCLINK} -o $@ $+
+	@echo ""
 
 $E/xcombine_vol_data: $(combine_vol_data_auxiliaries_OBJECTS) $(combine_vol_data_auxiliaries_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
+	@echo ""
+	@echo "building xcombine_vol_data"
+	@echo ""
 	${FCLINK} -o $@ $+ $(MPILIBS)
+	@echo ""
 
 $E/xcreate_movie_shakemap_AVS_DX_GMT: $(create_movie_shakemap_AVS_DX_GMT_auxiliaries_OBJECTS) $(create_movie_shakemap_AVS_DX_GMT_auxiliaries_SHARED_OBJECTS)
+	@echo ""
+	@echo "building xcreate_movie_shakemap_AVS_DX_GMT"
+	@echo ""
 	${FCLINK} -o $@ $+
+	@echo ""
 
 
 

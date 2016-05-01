@@ -96,11 +96,7 @@
   enddo
 
 ! distinguish between single and double precision for reals
-  if (CUSTOM_REAL == SIZE_REAL) then
-    sourcearray(:,:,:,:) = sngl(sourcearrayd(:,:,:,:))
-  else
-    sourcearray(:,:,:,:) = sourcearrayd(:,:,:,:)
-  endif
+  sourcearray(:,:,:,:) = real(sourcearrayd(:,:,:,:),kind=CUSTOM_REAL)
 
   end subroutine compute_arrays_source
 
@@ -235,11 +231,7 @@ end subroutine compute_arrays_adjoint_source
   enddo
 
 ! distinguish between single and double precision for reals
-  if (CUSTOM_REAL == SIZE_REAL) then
-    sourcearray(:,:,:,:) = sngl(sourcearrayd(:,:,:,:))
-  else
-    sourcearray(:,:,:,:) = sourcearrayd(:,:,:,:)
-  endif
+  sourcearray(:,:,:,:) = real(sourcearrayd(:,:,:,:),kind=CUSTOM_REAL)
 
   end subroutine compute_arrays_source_acoustic
 

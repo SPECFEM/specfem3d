@@ -43,6 +43,8 @@
   integer, dimension(:), allocatable :: integer_mask_ibool_exact_undo
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: buffer_for_disk
   character(len=MAX_STRING_LEN) outputname
+  ! timing
+  double precision, external :: wtime
 
   !----  create a Gnuplot script to display the energy curve in log scale
   if (OUTPUT_ENERGY .and. myrank == 0) then
@@ -64,6 +66,10 @@
     write(IOUT_ENERGY,*) 'pause -1 "Hit any key..."'
     close(IOUT_ENERGY)
   endif
+
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_iterate_time_1.F90"
+#endif
 
   ! open the file in which we will store the energy curve
   if (OUTPUT_ENERGY .and. myrank == 0) &
@@ -177,7 +183,7 @@
     endif
 
     ! updates wavefields using Newmark time scheme
-    if(.not. USE_LDDRK) call update_displacement_scheme()
+    if (.not. USE_LDDRK) call update_displacement_scheme()
 
     ! calculates stiffness term
     if (.not. GPU_MODE) then
@@ -204,10 +210,10 @@
         ! backward/reconstructed wavefields
         ! acoustic solver
         ! (needs to be done after elastic one)
-        if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_bpwf()
+        if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_backward()
         ! elastic solver
         ! (needs to be done first, before poroelastic one)
-        if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_bpwf()
+        if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_backward()
 
       else
         ! forward simulations
@@ -264,15 +270,24 @@
       call it_update_vtkwindow()
     endif
 
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_iterate_time_2.F90"
+#endif
+
   !
   !---- end of time iteration loop
   !
   enddo   ! end of main time loop
 
+
   ! close the huge file that contains a dump of all the time steps to disk
   if (EXACT_UNDOING_TO_DISK) close(IFILE_FOR_EXACT_UNDOING)
 
   call it_print_elapsed_time()
+
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_iterate_time_3.F90"
+#endif
 
   ! Transfer fields from GPU card to host for further analysis
   if (GPU_MODE) call it_transfer_from_GPU()

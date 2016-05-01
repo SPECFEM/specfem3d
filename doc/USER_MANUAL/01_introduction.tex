@@ -10,6 +10,14 @@ with optimized efficiency because of its tensorized basis functions
 \citep{WiStBuGh10,AcKo11}. In particular, it can accurately handle
 very distorted mesh elements \citep{OlSe11}.\\
 
+\red{In fluids, when gravity is turned off, SPECFEM3D uses the classical
+linearized Euler equation; thus if you have sharp local variations of
+density in the fluid (highly heterogeneous fluids
+in terms of density) or if density becomes extremely small in some
+regions of your model (e.g. for upper-atmosphere studies), before using
+the code please make sure the linearized Euler equation is a valid
+approximation in the case you want to study, and/or see if you should turn gravity on.
+For more details on that see e.g. \cite{COA2011}.}\\
 
 It has very good accuracy and convergence properties \citep{MaPa89,SePr94,DeFiMu02,Coh02,DeSe07,SeOl08,AiWa09,AiWa10,MeStTh12}.
 The spectral element approach admits spectral rates of convergence
@@ -56,7 +64,9 @@ utilizing Legendre basis functions and a perfectly diagonal mass matrix,
 include \citet{CoJoTo93}, \citet{Kom97}, \citet{FaMaPaQu97}, \citet{CaGa97},
 \citet{KoVi98} and \citet{KoTr99}, whereas applications involving
 Chebyshev basis functions and a non-diagonal mass matrix include \citet{SePr94},
-\citet{PrCaSe94} and \citet{SePrPr95}.\\
+\citet{PrCaSe94} and \citet{SePrPr95}.
+In the Legendre version that we use in SPECFEM the mass matrix is purposely slightly inexact but diagonal (but can be made exact if needed, see \cite{Teu15}),
+while in the Chebyshev version it is exact but non diagonal.\\
 
 
 All SPECFEM3D software is written in Fortran2003 with full portability
@@ -115,6 +125,30 @@ MPI for much better performance for medium or large runs, please cite
 at least one of these six articles, in which results of non blocking
 MPI runs are presented: \citet{PeKoLuMaLeCaLeMaLiBlNiBaTr11,KoErGoMi10,KoViCh10,Kom11,CaKoLaTiMiLeSnTr08,MaKoBlLe08}.\\
 
+If you use the C-PML absorbing layer capabilities of the code, please cite at least one article
+written by the developers of the package, for instance:
+%
+\begin{itemize}
+\item \cite{XiKoMaMa14},
+\item \cite{XiMaCrKoMa16}.
+\end{itemize}
+%
+If you use the attenuation (anelastic/viscoelastic) capabilities of the code, please cite at least one article
+written by the developers of the package, for instance:
+%
+\begin{itemize}
+\item \cite{BlKoChLoXi16}.
+\end{itemize}
+%
+If you use the kernel capabilities of the code, please cite at least one article
+written by the developers of the package, for instance:
+%
+\begin{itemize}
+\item \cite{TrKoLi08},
+\item \cite{PeKoLuMaLeCaLeMaLiBlNiBaTr11},
+\item \cite{LiTr06},
+\item \cite{MoLuTr09}.
+\end{itemize}
 
 \noindent If you work on geophysical applications, you may be interested
 in citing some of these application articles as well, among others:

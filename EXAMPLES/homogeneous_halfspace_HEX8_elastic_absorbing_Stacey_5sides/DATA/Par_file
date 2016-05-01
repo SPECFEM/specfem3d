@@ -51,12 +51,16 @@ FULL_ATTENUATION_SOLID          = .false.
 ANISOTROPY                      = .false.
 GRAVITY                         = .false.
 
-# path for external tomographic models files
-TOMOGRAPHY_PATH                 = ./DATA/tomo_files/
+# reference frequency for target velocity values in the velocity model
+# set here to a typical value for regional seismology / regional models (dominant period of 3 seconds, i.e. frequency of 1/3 Hz)
+ATTENUATION_f0_REFERENCE        = 0.33333d0
 
-# Olsen's constant for Q_mu = constant * v_s attenuation rule
+# Olsen's constant for Q_mu = constant * V_s attenuation rule
 USE_OLSEN_ATTENUATION           = .false.
 OLSEN_ATTENUATION_RATIO         = 0.05
+
+# path for external tomographic models files
+TOMOGRAPHY_PATH                 = ./DATA/tomo_files/
 
 # C-PML boundary conditions for a regional simulation
 PML_CONDITIONS                  = .false.
@@ -90,13 +94,13 @@ NTSTEP_BETWEEN_FRAMES           = 200
 HDUR_MOVIE                      = 0.0
 
 # save AVS or OpenDX mesh files to check the mesh
-SAVE_MESH_FILES                 = .false.
+SAVE_MESH_FILES                 = .true.
 
 # path to store the local database file on each node
 LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI
 
 # interval at which we output time step info and max of norm of displacement
-NTSTEP_BETWEEN_OUTPUT_INFO      = 100
+NTSTEP_BETWEEN_OUTPUT_INFO      = 500
 
 # interval in time steps for writing of seismograms
 NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
@@ -127,7 +131,7 @@ USE_RICKER_TIME_FUNCTION        = .false.
 SAVE_SEISMOGRAMS_DISPLACEMENT   = .true.
 SAVE_SEISMOGRAMS_VELOCITY       = .false.
 SAVE_SEISMOGRAMS_ACCELERATION   = .false.
-SAVE_SEISMOGRAMS_PRESSURE       = .false.  # currently implemented in acoustic (i.e. fluid) elements only
+SAVE_SEISMOGRAMS_PRESSURE       = .false.   # currently implemented in acoustic (i.e. fluid) elements only
 
 # save seismograms in binary or ASCII format (binary is smaller but may not be portable between machines)
 USE_BINARY_FOR_SEISMOGRAMS      = .false.
@@ -187,12 +191,6 @@ SAVE_MOHO_MESH                  = .false.
 
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .false.
-
-# to couple with an external code (such as DSM, AxiSEM, or FK)
-COUPLE_WITH_EXTERNAL_CODE       = .false.
-EXTERNAL_CODE_TYPE              = 1   # 1 = DSM, 2 = AxiSEM, 3 = FK
-TRACTION_PATH                   = ./DATA/DSM_tractions_for_specfem3D/
-MESH_A_CHUNK_OF_THE_EARTH       = .true.
 
 # Dimitri Komatitsch, July 2014, CNRS Marseille, France:
 # added the ability to run several calculations (several earthquakes)

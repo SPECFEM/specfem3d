@@ -247,6 +247,50 @@ __global__ void assemble_boundary_accel_on_device(realw* d_accel, realw* d_send_
 }
 
 
+
+__global__ void synchronize_boundary_accel_on_device(realw* d_accel, realw* d_send_accel_buffer,
+                                                  const int num_interfaces_ext_mesh,
+                                                  const int max_nibool_interfaces_ext_mesh,
+                                                  const int* d_nibool_interfaces_ext_mesh,
+                                                  const int* d_ibool_interfaces_ext_mesh) {
+
+  //int bx = blockIdx.y*gridDim.x+blockIdx.x;
+  //int tx = threadIdx.x;
+  int id = threadIdx.x + blockIdx.x*blockDim.x + blockIdx.y*gridDim.x*blockDim.x;
+  // printf("inside the synchronization!\n");
+
+  int ientry,iglob;
+
+  for( int iinterface=0; iinterface < num_interfaces_ext_mesh; iinterface++) {
+    if (id < d_nibool_interfaces_ext_mesh[iinterface]) {
+
+      // entry in interface array
+      ientry = id + max_nibool_interfaces_ext_mesh*iinterface;
+      // global index in wavefield
+      iglob = d_ibool_interfaces_ext_mesh[ientry] - 1;
+
+      // for testing atomic operations against not atomic operations (0.1ms vs. 0.04 ms)
+      // d_accel[3*(iglob)] += d_send_accel_buffer[3*(ientry)];
+      // d_accel[3*(iglob)+1] += d_send_accel_buffer[3*(ientry)+1];
+      // d_accel[3*(iglob)+2] += d_send_accel_buffer[3*(ientry)+2];
+        //    printf("\n1:%f,2:%f,max:%f\n",d_accel[3*iglob],d_send_accel_buffer[3*ientry],fmax(d_accel[3*iglob],d_send_accel_buffer[3*ientry]));
+
+
+      d_accel[3*iglob]  = fmax(d_accel[3*iglob],d_send_accel_buffer[3*ientry]);
+      d_accel[3*iglob+1]= fmax(d_accel[3*iglob + 1],d_send_accel_buffer[3*ientry + 1]);
+      d_accel[3*iglob+2]= fmax(d_accel[3*iglob + 2],d_send_accel_buffer[3*ientry + 2]);
+    }
+  }
+  // ! This step is done via previous function transfer_and_assemble...
+  // ! do iinterface = 1, num_interfaces_ext_mesh
+  // !   do ipoin = 1, nibool_interfaces_ext_mesh(iinterface)
+  // !     array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) = &
+  // !          array_val(:,ibool_interfaces_ext_mesh(ipoin,iinterface)) + buffer_recv_vector_ext_mesh(:,ipoin,iinterface)
+  // !   enddo
+  // ! enddo
+}
+
+
 /* ----------------------------------------------------------------------------------------------- */
 
 // FORWARD_OR_ADJOINT == 1 for accel, and == 3 for b_accel
@@ -306,6 +350,91 @@ TRACE("\ttransfer_asmbl_accel_to_device");
     else if (*FORWARD_OR_ADJOINT == 3) {
       //assemble adjoint accel
       assemble_boundary_accel_on_device<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_accel, mp->d_b_send_accel_buffer,
+                                                                               mp->num_interfaces_ext_mesh,
+                                                                               mp->max_nibool_interfaces_ext_mesh,
+                                                                               mp->d_nibool_interfaces_ext_mesh,
+                                                                               mp->d_ibool_interfaces_ext_mesh);
+    }
+
+    // cudaEventRecord( stop, 0);
+    // cudaEventSynchronize( stop );
+    // cudaEventElapsedTime( &time, start, stop );
+    // cudaEventDestroy( start );
+    // cudaEventDestroy( stop );
+    // printf("Boundary Assemble Kernel Execution Time: %f ms\n",time);
+  }
+
+#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
+  //double end_time = get_time();
+  //printf("Elapsed time: %e\n",end_time-start_time);
+  exit_on_cuda_error("transfer_asmbl_accel_to_device");
+#endif
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
+
+
+/* ----------------------------------------------------------------------------------------------- */
+
+// FORWARD_OR_ADJOINT == 1 for accel, and == 3 for b_accel
+// This sync function is for FAULT_SOLVER
+extern "C"
+void FC_FUNC_(transfer_sync_accel_to_device,
+              TRANSFER_ASMBL_ACCEL_TO_DEVICE)(long* Mesh_pointer, realw* accel,
+                                              realw* buffer_recv_vector_ext_mesh,
+                                              const int* num_interfaces_ext_mesh,
+                                              const int* max_nibool_interfaces_ext_mesh,
+                                              const int* nibool_interfaces_ext_mesh,
+                                              const int* ibool_interfaces_ext_mesh,
+                                              const int* FORWARD_OR_ADJOINT) {
+TRACE("\ttransfer_sync_accel_to_device");
+
+  Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
+
+  if (mp->size_mpi_buffer > 0){
+
+    //daniel: todo - check if this copy is only needed for adjoint simulation, otherwise it is called asynchronously?
+    if (*FORWARD_OR_ADJOINT == 1){
+      // Wait until previous copy stream finishes. We assemble while other compute kernels execute.
+      cudaStreamSynchronize(mp->copy_stream);
+    }
+    else if (*FORWARD_OR_ADJOINT == 3){
+      // explicitly synchronizes
+      // (cudaMemcpy implicitly synchronizes all other cuda operations)
+      synchronize_cuda();
+
+      print_CUDA_error_if_any(cudaMemcpy(mp->d_b_send_accel_buffer, buffer_recv_vector_ext_mesh,
+                              mp->size_mpi_buffer*sizeof(realw),cudaMemcpyHostToDevice),97001);
+    }
+
+    int blocksize = BLOCKSIZE_TRANSFER;
+    int size_padded = ((int)ceil(((double)mp->max_nibool_interfaces_ext_mesh)/((double)blocksize)))*blocksize;
+
+    int num_blocks_x, num_blocks_y;
+    get_blocks_xy(size_padded/blocksize,&num_blocks_x,&num_blocks_y);
+
+    dim3 grid(num_blocks_x,num_blocks_y);
+    dim3 threads(blocksize,1,1);
+
+    //double start_time = get_time();
+    // cudaEvent_t start, stop;
+    // realw time;
+    // cudaEventCreate(&start);
+    // cudaEventCreate(&stop);
+    // cudaEventRecord( start, 0);
+
+    if (*FORWARD_OR_ADJOINT == 1) {
+      //assemble forward accel
+      synchronize_boundary_accel_on_device<<<grid,threads,0,mp->compute_stream>>>(mp->d_accel, mp->d_send_accel_buffer,
+                                                                               mp->num_interfaces_ext_mesh,
+                                                                               mp->max_nibool_interfaces_ext_mesh,
+                                                                               mp->d_nibool_interfaces_ext_mesh,
+                                                                               mp->d_ibool_interfaces_ext_mesh);
+    }
+    else if (*FORWARD_OR_ADJOINT == 3) {
+      //assemble adjoint accel
+      synchronize_boundary_accel_on_device<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_accel, mp->d_b_send_accel_buffer,
                                                                                mp->num_interfaces_ext_mesh,
                                                                                mp->max_nibool_interfaces_ext_mesh,
                                                                                mp->d_nibool_interfaces_ext_mesh,

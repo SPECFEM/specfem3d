@@ -39,6 +39,7 @@ $(decompose_mesh_OBJECTS): S = ${S_TOP}/src/decompose_mesh
 decompose_mesh_TARGETS = \
 	$E/xscotch \
 	$E/xdecompose_mesh \
+	$E/xdecompose_mesh_mpi \
 	$(EMPTY_MACRO)
 
 decompose_mesh_OBJECTS = \
@@ -48,10 +49,23 @@ decompose_mesh_OBJECTS = \
 	$O/program_decompose_mesh.dec.o \
 	$(EMPTY_MACRO)
 
+decompose_mesh_mpi_OBJECTS = \
+	$O/fault_scotch.dec.o \
+	$O/module_qsort.dec.o \
+	$O/module_database.dec.o \
+	$O/module_mesh.dec.o \
+	$O/module_partition.dec.o \
+	$O/program_decompose_mesh_mpi.mpidec.o \
+	$(EMPTY_MACRO)
+
 decompose_mesh_MODULES = \
 	$(FC_MODDIR)/decompose_mesh.$(FC_MODEXT) \
 	$(FC_MODDIR)/fault_scotch.$(FC_MODEXT) \
 	$(FC_MODDIR)/part_decompose_mesh.$(FC_MODEXT) \
+	$(FC_MODDIR)/module_qsort.$(FC_MODEXT) \
+	$(FC_MODDIR)/module_database.$(FC_MODEXT) \
+	$(FC_MODDIR)/module_mesh.$(FC_MODEXT) \
+	$(FC_MODDIR)/module_partition.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 
 decompose_mesh_SHARED_OBJECTS = \
@@ -70,6 +84,7 @@ decompose_mesh_SHARED_OBJECTS = \
 ####
 
 dec: $(decompose_mesh_TARGETS)
+mpidec : xdecompose_mesh_mpi
 
 decompose_mesh: xdecompose_mesh
 xdecompose_mesh: $E/xdecompose_mesh
@@ -77,11 +92,18 @@ xdecompose_mesh: $E/xdecompose_mesh
 scotch: xscotch
 xscotch: $E/xscotch
 
+decompose_mesh_mpi: xdecompose_mesh_mpi
+xdecompose_mesh_mpi: $E/xdecompose_mesh_mpi
+
 ${SCOTCH_DIR}/include/scotchf.h: xscotch
 
 # rules for the pure Fortran version
 $E/xdecompose_mesh: ${SCOTCH_DIR}/include/scotchf.h $(decompose_mesh_SHARED_OBJECTS) $(decompose_mesh_OBJECTS) $(COND_MPI_OBJECTS)
+	@echo ""
+	@echo "building xdecompose_mesh"
+	@echo ""
 	${FCLINK} -o  $E/xdecompose_mesh $(decompose_mesh_SHARED_OBJECTS) $(decompose_mesh_OBJECTS) $(SCOTCH_LIBS) $(COND_MPI_OBJECTS)
+	@echo ""
 
 # scotch
 $E/xscotch:
@@ -92,7 +114,13 @@ else
 	@echo "Not using bundled Scotch"
 endif
 
-
+# parallel version of decompose_mesh
+$E/xdecompose_mesh_mpi: $(decompose_mesh_SHARED_OBJECTS) $(decompose_mesh_mpi_OBJECTS) $(COND_MPI_OBJECTS)
+	@echo ""
+	@echo "building xdecompose_mesh_mpi"
+	@echo ""
+	${FCLINK} -o  $E/xdecompose_mesh_mpi $(decompose_mesh_SHARED_OBJECTS) $(decompose_mesh_mpi_OBJECTS) $(COND_MPI_OBJECTS)
+	@echo ""
 
 #######################################
 
@@ -102,7 +130,10 @@ endif
 
 $O/decompose_mesh.dec.o: $O/part_decompose_mesh.dec.o $O/fault_scotch.dec.o ${SCOTCH_DIR}/include/scotchf.h $O/shared_par.shared_module.o $(COND_MPI_OBJECTS)
 $O/program_decompose_mesh.dec.o: $O/decompose_mesh.dec.o $O/shared_par.shared_module.o $(COND_MPI_OBJECTS)
-
+$O/program_decompose_mesh_mpi.mpidec.o: $O/shared_par.shared_module.o $O/module_mesh.dec.o $O/module_database.dec.o $O/module_partition.dec.o $(COND_MPI_OBJECTS)
+$O/module_database.dec.o : $O/shared_par.shared_module.o
+$O/module_partition.dec.o : $O/shared_par.shared_module.o $O/fault_scotch.dec.o $O/module_qsort.dec.o
+$O/module_mesh.dec.o : $O/shared_par.shared_module.o $O/fault_scotch.dec.o
 
 #######################################
 
@@ -116,5 +147,5 @@ $O/%.dec.o: $S/%.f90 $O/shared_par.shared_module.o
 $O/%.dec.o: $S/%.F90 $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(SCOTCH_INC) -c -o $@ $<
 
-
-
+$O/%.mpidec.o: $S/%.f90 $O/shared_par.shared_module.o
+	${MPIFCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<

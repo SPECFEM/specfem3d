@@ -1,33 +1,37 @@
 
 # coordinates of mesh block in latitude/longitude and depth in km
-LATITUDE_MIN = 1600.000000
-LATITUDE_MAX = 2400.000000
-LONGITUDE_MIN = 0.000000
-LONGITUDE_MAX = 10000.000000
-DEPTH_BLOCK_KM = 5.000000
+LATITUDE_MIN                    = 1600.000000
+LATITUDE_MAX                    = 2400.000000
+LONGITUDE_MIN                   = 0.000000
+LONGITUDE_MAX                   = 10000.000000
+DEPTH_BLOCK_KM                  = 5.000000
 UTM_PROJECTION_ZONE             = 11
 SUPPRESS_UTM_PROJECTION         = .true.
 
 # file that contains the interfaces of the model / mesh
 INTERFACES_FILE                 = interfaces.dat
 
+# file that contains the cavity
+CAVITY_FILE                     = no_cavity.dat
+
 # number of elements at the surface along edges of the mesh at the surface
 # (must be 8 * multiple of NPROC below if mesh is not regular and contains mesh doublings)
 # (must be multiple of NPROC below if mesh is regular)
-NEX_XI = 100
-NEX_ETA = 4
+NEX_XI                          = 100
+NEX_ETA                         = 4
 
 # number of MPI processors along xi and eta (can be different)
-NPROC_XI = 5
-NPROC_ETA = 1
+NPROC_XI                        = 5
+NPROC_ETA                       = 1
 
 # Regular/irregular mesh
 USE_REGULAR_MESH                = .true.
-# Only for irregular meshes, number of doubling layers (1 or 2) and their position
+# Only for irregular meshes, number of doubling layers and their position
 NDOUBLINGS                      = 1
-# NZ_DOUGLING_1 is the parameter to set up if there is only one doubling layer
-NZ_DOUGLING_1                   = 11
-NZ_DOUGLING_2                   = 0
+# NZ_DOUBLING_1 is the parameter to set up if there is only one doubling layer
+# (more doubling entries can be added if needed to match NDOUBLINGS value)
+NZ_DOUBLING_1                   = 11
+NZ_DOUBLING_2                   = 0
 
 # create mesh files for visualisation or further checking
 CREATE_ABAQUS_FILES             = .false.
@@ -51,8 +55,6 @@ NMATERIALS                      = 2
 #     domain_id        : 1=acoustic / 2=elastic
 1 1000 2500    0 50.0  0  1
 2 2000 4500 2500 40.0  0  2
-#1  1100  1600  0    50.0  0  1
-#2  1200  1500  750  40.0  0  2
 # number of regions
 NREGIONS                        = 2
 # define the different regions of the model as :

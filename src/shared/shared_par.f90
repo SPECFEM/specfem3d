@@ -86,7 +86,7 @@ end module constants
 
   ! attenuation
   logical :: USE_OLSEN_ATTENUATION
-  double precision :: OLSEN_ATTENUATION_RATIO
+  double precision :: OLSEN_ATTENUATION_RATIO,ATTENUATION_f0_REFERENCE
 
   ! absorbing boundaries
   logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE
@@ -122,12 +122,6 @@ end module constants
   logical :: USE_TRICK_FOR_BETTER_PRESSURE,USE_SOURCE_ENCODING,OUTPUT_ENERGY
   logical :: ANISOTROPIC_KL,SAVE_TRANSVERSE_KL,APPROXIMATE_HESS_KL,SAVE_MOHO_MESH
   integer :: NTSTEP_BETWEEN_OUTPUT_ENERGY
-
-  ! external code coupling (DSM)
-  logical :: COUPLE_WITH_EXTERNAL_CODE
-  integer :: EXTERNAL_CODE_TYPE
-  character(len=MAX_STRING_LEN) :: TRACTION_PATH
-  logical :: MESH_A_CHUNK_OF_THE_EARTH
 
   ! GPU simulations
   logical :: GPU_MODE

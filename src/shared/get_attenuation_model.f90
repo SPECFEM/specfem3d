@@ -126,7 +126,7 @@
 
   subroutine get_attenuation_model(myrank,nspec,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
                                   mustore,rho_vs,kappastore,rho_vp,qkappa_attenuation_store,qmu_attenuation_store, &
-                                  ispec_is_elastic,min_resolved_period,prname,FULL_ATTENUATION_SOLID)
+                                  ispec_is_elastic,min_resolved_period,prname,FULL_ATTENUATION_SOLID,ATTENUATION_f0_REFERENCE)
 
 ! precalculates attenuation arrays and stores arrays into files
 
@@ -134,7 +134,7 @@
 
   implicit none
 
-  double precision,intent(in) :: OLSEN_ATTENUATION_RATIO
+  double precision,intent(in) :: OLSEN_ATTENUATION_RATIO,ATTENUATION_f0_REFERENCE
   integer,intent(in) :: myrank,nspec
   logical,intent(in) :: USE_OLSEN_ATTENUATION
 
@@ -216,30 +216,26 @@
   ! user output
   if (myrank == 0) then
     write(IMAIN,*)
-    write(IMAIN,*) "attenuation: "
-    write(IMAIN,*) "  reference period (s)   : ",sngl(1.0/ATTENUATION_f0_REFERENCE), &
-      " frequency: ",sngl(ATTENUATION_f0_REFERENCE)
-    write(IMAIN,*) "  period band min/max (s): ",sngl(MIN_ATTENUATION_PERIOD),sngl(MAX_ATTENUATION_PERIOD)
-    write(IMAIN,*) "  central period (s)     : ",sngl(1.0/f_c_source), &
-      " frequency: ",sngl(f_c_source)
+    write(IMAIN,*) "Attenuation:"
+    write(IMAIN,*) "  Reference frequency (Hz):",sngl(ATTENUATION_f0_REFERENCE)," period (s):",sngl(1.0/ATTENUATION_f0_REFERENCE)
+    write(IMAIN,*) "  Frequency band min/max (Hz):",sngl(1.0/MAX_ATTENUATION_PERIOD),sngl(1.0/MIN_ATTENUATION_PERIOD)
+    write(IMAIN,*) "  Period band min/max (s):",sngl(MIN_ATTENUATION_PERIOD),sngl(MAX_ATTENUATION_PERIOD)
+    write(IMAIN,*) "  Logarithmic central frequency (Hz):",sngl(f_c_source)," period (s):",sngl(1.0/f_c_source)
     if (FULL_ATTENUATION_SOLID) then
-      write(IMAIN,*) "  using full attenuation (Q_kappa & Q_mu)"
+      write(IMAIN,*) "  using attenuation having both Q_kappa and Q_mu"
     endif
     if (USE_OLSEN_ATTENUATION) then
       write(IMAIN,*) "  using Olsen scaling with attenuation ratio Qmu/vs = ",sngl(OLSEN_ATTENUATION_RATIO)
       if (FULL_ATTENUATION_SOLID .and. USE_ANDERSON_CRITERIA) then
-        write(IMAIN,*) "  using Anderson & Hart criteria for ratio Qs/Qp"
+        write(IMAIN,*) "  using Anderson and Hart criteria for ratio Qs/Qp"
       endif
     endif
     call flush_IMAIN()
   endif
 
   ! determines inverse of tau_sigma
-  if (CUSTOM_REAL == SIZE_REAL) then
-    tau_sigma(:) = sngl(tau_sigma_dble(:))
-  else
-    tau_sigma(:) = tau_sigma_dble(:)
-  endif
+  tau_sigma(:) = real(tau_sigma_dble(:),kind=CUSTOM_REAL)
+
   ! precalculates the negative inverse of tau_sigma
   tauinv(:) = - 1._CUSTOM_REAL / tau_sigma(:)
 
@@ -331,9 +327,6 @@
                 endif
               endif
 
-              ! debug
-              !print *,'Qs,Qp:',Q_s,Q_p,'vs,vp:',vs_val,vp_val,'L:',L_val,'crit=',Q_s - L_val * Q_p
-              !print *,'Qmu,Qkappa:',Q_mu,Q_kappa,'Q_s,Q_p:',Q_s,1./(L_val/Q_mu + (1.0 - L_val)/Q_kappa),'Qp scaled:',Q_p
             else
               ! takes Q set in (CUBIT) mesh
               Q_kappa = qkappa_attenuation_store(i,j,k,ispec)
@@ -357,7 +350,7 @@
                                        f_c_source,tau_sigma_dble, &
                                        beta_dble,one_minus_sum_beta_dble,factor_scale_dble, &
                                        Q_kappa,beta_dble_kappa,one_minus_sum_beta_dble_kappa,factor_scale_dble_kappa, &
-                                       FULL_ATTENUATION_SOLID)
+                                       FULL_ATTENUATION_SOLID,ATTENUATION_f0_REFERENCE)
 
           ! shear attenuation
           ! stores factor for unrelaxed parameter
@@ -493,8 +486,6 @@
 
   ! determines min/max periods for attenuation band based on minimum resolved period of mesh
   min_period = 0.99 * min_resolved_period ! uses a small margin
-  ! debug for comparison with fix values from above
-  !min_resolved_period = 0.943
   call get_attenuation_periods(min_period,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
 
   !  sets up stress relaxation times tau_sigma,
@@ -504,12 +495,6 @@
   ! sets up central frequency
   ! logarithmic mean of frequency interval of absorption band
   call get_attenuation_source_freq(f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
-
-  ! debug
-  !f_c_source = 0.141421d0
-  !tau_sigma(1) =  7.957747154594766669788441504352d0
-  !tau_sigma(2) =  1.125395395196382652969191440206d0
-  !tau_sigma(3) =  0.159154943091895345608222100964d0
 
   end subroutine get_attenuation_constants
 
@@ -522,7 +507,7 @@
                                      f_c_source,tau_sigma, &
                                      beta,one_minus_sum_beta,factor_scale, &
                                      Q_kappa,beta_kappa,one_minus_sum_beta_kappa,factor_scale_kappa, &
-                                     FULL_ATTENUATION_SOLID)
+                                     FULL_ATTENUATION_SOLID,ATTENUATION_f0_REFERENCE)
 
 ! returns: attenuation mechanisms beta,one_minus_sum_beta,factor_scale
 
@@ -538,7 +523,7 @@
   implicit none
 
   integer:: myrank
-  double precision :: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD
+  double precision :: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD,ATTENUATION_f0_REFERENCE
   double precision :: f_c_source,Q_mu,Q_kappa
   double precision, dimension(N_SLS) :: tau_sigma
   double precision, dimension(N_SLS) :: beta,beta_kappa
@@ -557,7 +542,7 @@
   call get_attenuation_property_values(tau_sigma,tau_eps,beta,one_minus_sum_beta)
 
   ! determines the "scale factor"
-  call get_attenuation_scale_factor(myrank,f_c_source,tau_eps,tau_sigma,Q_mu,factor_scale)
+  call get_attenuation_scale_factor(myrank,f_c_source,tau_eps,tau_sigma,Q_mu,factor_scale,ATTENUATION_f0_REFERENCE)
 
   if (FULL_ATTENUATION_SOLID) then
     ! determines tau_eps for Q_kappa
@@ -568,7 +553,7 @@
     call get_attenuation_property_values(tau_sigma,tau_eps_kappa,beta_kappa,one_minus_sum_beta_kappa)
 
     ! determines the "scale factor"
-    call get_attenuation_scale_factor(myrank,f_c_source,tau_eps_kappa,tau_sigma,Q_kappa,factor_scale_kappa)
+    call get_attenuation_scale_factor(myrank,f_c_source,tau_eps_kappa,tau_sigma,Q_kappa,factor_scale_kappa,ATTENUATION_f0_REFERENCE)
   endif
 
   end subroutine get_attenuation_factors
@@ -616,7 +601,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine get_attenuation_scale_factor(myrank, f_c_source, tau_eps, tau_sigma, Q_val, scale_factor)
+  subroutine get_attenuation_scale_factor(myrank,f_c_source,tau_eps,tau_sigma,Q_val,scale_factor,ATTENUATION_f0_REFERENCE)
 
 ! returns: physical dispersion scaling factor scale_factor
 
@@ -625,6 +610,7 @@
   implicit none
 
   integer :: myrank
+  double precision, intent(in) :: ATTENUATION_f0_REFERENCE
   double precision :: scale_factor, Q_val, f_c_source
   ! strain and stress relaxation times
   double precision, dimension(N_SLS) :: tau_eps, tau_sigma
@@ -711,7 +697,7 @@
   double precision :: THETA(5)
 
   ! checks number of standard linear solids
-  if (N_SLS < 2 .OR. N_SLS > 5) then
+  if (N_SLS < 2 .or. N_SLS > 5) then
      stop 'N_SLS must be greater than 1 or less than 6'
   endif
 
@@ -907,19 +893,16 @@
              AM_S%Qmu_storage(Qtmp),stat=ier)
     if (ier /= 0) stop 'error allocating arrays for attenuation storage'
     AM_S%Qmu_storage(:) = -1
-
-    ! debug
-    !print *,'allocated attenuation arrays: q storage size = ',Qtmp,AM_S%Q_resolution,AM_S%Q_max
   endif
 
-  if (Qmu < 0.0d0 .OR. Qmu > AM_S%Q_max) then
+  if (Qmu < 0.0d0 .or. Qmu > AM_S%Q_max) then
     print *,'Error attenuation_storage()'
     print *,'Attenuation Value out of Range: ', Qmu
     print *,'Attenuation Value out of Range: Min, Max ', 0, AM_S%Q_max
     stop 'Attenuation Value out of Range'
   endif
 
-  if (rw > 0 .AND. Qmu <= ZERO_TOL) then
+  if (rw > 0 .and. Qmu <= ZERO_TOL) then
     Qmu = 0.0d0;
     tau_eps(:) = 0.0d0;
     return
@@ -1007,7 +990,7 @@
   exp1 = log10(f1)
   exp2 = log10(f2)
 
-!  if (f2 < f1 .OR. Q_real < 0.0d0 .OR. n < 1) then
+!  if (f2 < f1 .or. Q_real < 0.0d0 .or. n < 1) then
 !     call exit_MPI(0, 'frequencies flipped or Q less than zero or N_SLS < 0')
 !  endif
 
@@ -1345,9 +1328,9 @@
      write(*,*)'evals: ',func_evals
   endif
 
-  do while (func_evals < maxfun .AND. itercount < maxiter)
+  do while (func_evals < maxfun .and. itercount < maxiter)
 
-     if (max_size_simplex(v,n) <= tolx .AND. &
+     if (max_size_simplex(v,n) <= tolx .and. &
           max_value(fv,n+1) <= tolf) then
         goto 666
      endif

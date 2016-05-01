@@ -39,7 +39,6 @@
 ! returns the updated pressure array: potential_dot_dot_acoustic
 
   use constants,only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,NGLLSQUARE
-
   use pml_par, only: NSPEC_CPML,spec_to_CPML,is_CPML,rmemory_coupling_ac_el_displ
 
   implicit none
@@ -102,7 +101,7 @@
         ! adjoint wavefield case
         if (SIMULATION_TYPE /= 1 .and. (.not. backward_simulation)) then
           ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
-          ! adjoint definition: \partial_t^2 \bfs^\dagger=-\frac{1}{\rho}\bfnabla\phi^\dagger
+          ! adjoint definition: \partial_t^2 \bfs^\dagger = - \frac{1}{\rho} \bfnabla\phi^\dagger
           displ_x = - displ_x
           displ_y = - displ_y
           displ_z = - displ_z

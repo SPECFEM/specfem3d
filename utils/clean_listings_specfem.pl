@@ -1,5 +1,11 @@
 #!/usr/bin/perl
 
+#
+# script to beautify a source code (in Fortran + C + CUDA), remove extra white spaces,
+# and convert accented letters to non-accented to maximize portability.
+#
+# Dimitri Komatitsch, CNRS Marseille, France, 2015.
+#
 
 ################
 ################ run this script from the root directory of the package
@@ -105,8 +111,15 @@
       $line =~ s#\.eq\.#==#ogi;
       $line =~ s#\.ne\.#/=#ogi;
 
+# switch to lowercase for comparison operators
+      $line =~ s#\.and\.#\.and\.#ogi;
+      $line =~ s#\.or\.#\.or\.#ogi;
+      $line =~ s#\.not\.#\.not\.#ogi;
+      $line =~ s#\.true\.#\.true\.#ogi;
+      $line =~ s#\.false\.#\.false\.#ogi;
+
 #
-# known problem: does the changes also in constant strings, and not only
+# known problem: makes the changes also in constant strings, and not only
 # in the code (which is dangerous, but really easier to program...)
 #
 # DK DK this could be dangerous if these words appear in strings or print statements

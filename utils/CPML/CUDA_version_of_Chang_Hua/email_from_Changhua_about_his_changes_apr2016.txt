@@ -1,0 +1,77 @@
+
+Subject: RE: remove the unneeded part of PML code in stage of specfem3d in case singularities exist.
+From: "Zhang, Chang-Hua"
+Date: 11/04/2016 03:20
+To: Dimitri Komatitsch, Zhinan, Vadim Monteiller, Rene Matzen, Daniel Peter
+
+Dimitri,
+
+I should make it clear that, in my CPU version, I have not considered the removal of the cpml profile function singularity, that is, these cpml profile functions are still calculated as before. What I have done are 1)  define the cmpl memory functions only on the cpml regions, rather than the whole region; 2) In order to be consistent in the anisotropic and isotropic cases, I have done some changes, for example, I have changed
+In pml_compute_memory_variables.f90, you changed
+
+          sigma_xx = lambdalplus2mul*duxdxl_x + lambdal*duydyl_x + lambdal*duzdzl_x
+          sigma_yx = mul*duxdyl_x + mul*duydxl_x
+          sigma_zx = mul*duzdxl_x + mul*duxdzl_x
+
+           sigma_xy = mul*duxdyl_y + mul*duydxl_y
+           sigma_yy = lambdal*duxdxl_y + lambdalplus2mul*duydyl_y + lambdal*duzdzl_y
+           sigma_zy = mul*duzdyl_y + mul*duydzl_y
+
+          sigma_xz = mul*duzdxl_z + mul*duxdzl_z
+          sigma_yz = mul*duzdyl_z + mul*duydzl_z
+          sigma_zz = lambdal*duxdxl_z + lambdal*duydyl_z + lambdalplus2mul*duzdzl_z
+
+ to
+
+          sigma_xx = lambdalplus2mul*duxdxl_x + lambdal*duydyl_x + lambdal*duzdzl_x
+          sigma_xy = mul*duxdyl_x + mul*duydxl_x
+          sigma_xz = mul*duzdxl_x + mul*duxdzl_x
+
+          sigma_yy = lambdal*duxdxl_y + lambdalplus2mul*duydyl_y + lambdal*duzdzl_y
+          sigma_yx = mul*duxdyl_y + mul*duydxl_y
+          sigma_yz = mul*duzdyl_y + mul*duydzl_y
+
+          sigma_zx = mul*duzdxl_z + mul*duxdzl_z
+          sigma_zy = mul*duzdyl_z + mul*duydzl_z
+          sigma_zz = lambdal*duxdxl_z + lambdal*duydyl_z + lambdalplus2mul*duzdzl_z
+
+We can see the calculation of the no-symmetric off-diagonal stress components is different than the original one. These changes are necessary in order to be consistent with the anisotropic case. (see my note I send to Zhinan).
+
+However, if we consider the removal of the profile singularity, we can further reduce the number of cpml memory functions, which I have considered that in cuda version.
+
+Again, the taper function is the one I used for taper absorption boundary condition in case cpml is intrinsically unstable.  I have tested and it works. It is better than Stacey one in the sense that the absorption effect can be improved by using larger taper thickness. If you guys think it is a worth option, you can keep it, but need some work to make it an integrated part of the program.
+
+Hope this can clarify some confusions if you have.
+
+Best Regards,
+
+Chang-hua
+
+________________________________________
+From: Dimitri Komatitsch
+Sent: Sunday, April 10, 2016 11:03 AM
+Subject: Re: remove the unneeded part of PML code in stage of specfem3d in case singularities exist.
+
+Hi Zhinan, Hi all,
+
+Thank you very much, this is a very important contribution I think.
+Thank you also very much to Chang-Hua for the code simplification.
+
+If I understand correctly, the 3D PML code is now entirely cleaned (in
+Fortran; for now we have purposely not included the CUDA changes), and
+if so I can go ahead and optimize it for speed?
+Zhinan could you please confirm me that? If so, starting in a week or so
+I will start optimizing it for speed, without changing the PML algorithm.
+
+Then, once the code is optimized for speed, we will port it to CUDA
+again (let me thus cc Daniel Peter). Vadim will take one full week of
+CUDA training in May and should thus be able to develop in CUDA after that.
+
+PS: once we are done with this we could also make the same
+simplifications in the 2D version of SPECFEM.
+
+Thanks,
+Best wishes,
+
+Dimitri.
+

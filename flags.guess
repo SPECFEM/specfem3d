@@ -17,7 +17,7 @@
 ###########################################################################################################################
 ###########################################################################################################################
 
-# You can add -DFORCE_VECTORIZATION to the options below (for all compilers, except for IBM for which the syntax is -WF,-DFORCE_VECTORIZATION )
+# You can add -DFORCE_VECTORIZATION to the options below (for all compilers, except for IBM for which the syntax is -WF,-DFORCE_VECTORIZATION)
 # to speed up the code in the fluid (acoustic) parts (only; FORCE_VECTORIZATION support for elastic parts has been discontinued in the source code).
 # This works fine if (and only if) your computer always allocates a contiguous memory block for each allocatable array;
 # this is the case for most machines and most compilers, but not all. For more details see https://github.com/geodynamics/specfem3d/issues/81 .
@@ -69,7 +69,6 @@ case $my_FC in
         OPT_FFLAGS="-O3 -Onoaggress -Oipa0 -hfp2 -Ovector3 -Oscalar3 -Ocache2 -Ounroll2 -Ofusion2"
         # -Oaggress -Oipa4 would make it even more aggressive
         DEBUG_FFLAGS="-eC -eD -ec -en -eI -ea -g -G0"
-        #
         ;;
     pgf95|*/pgf95|pgf90|*/pgf90|pgfortran|*/pgfortran)
         #
@@ -88,9 +87,12 @@ case $my_FC in
         # parallel file systems like SFS 3.2 / Lustre 1.8. If omitted
         # I/O throughput lingers at 2.5 MB/s, with it it can increase to ~44 MB/s
         # However it does not make much of a difference on NFS mounted volumes or with SFS 3.1.1 / Lustre 1.6.7.1 
-        DEF_FFLAGS="-xHost -fpe0 -ftz -assume buffered_io -assume byterecl -align sequence -vec-report0 -std03 -diag-disable 6477 -implicitnone -gen-interfaces -warn all" # -mcmodel=medium -shared-intel
+        #
+        # optimization report: "-vec-report0" is old and will be replaced by "-qopt-report0 -qopt-report-phase=vec" for v >=15.0
+        DEF_FFLAGS="-xHost -fpe0 -ftz -assume buffered_io -assume byterecl -align sequence -std03 -diag-disable 6477 -implicitnone -gen-interfaces -warn all" # -mcmodel=medium -shared-intel
         OPT_FFLAGS="-O3 -check nobounds"
         DEBUG_FFLAGS="-check all -debug -g -O0 -fp-stack-check -traceback -ftrapuv"
+        #
         ;;
     gfortran|*/gfortran|f95|*/f95)
         #
@@ -187,6 +189,7 @@ case $my_FC in
         # The -qstrict option prevents some minor differences of results between xlf and
         # other compilers. There is a small decrease in performance, but generally
         # it is small or negligible compared to other issues like slow I/O.
+        #
         DEF_FFLAGS="-qassert=contig -qhot -q64 -qtune=auto -qarch=auto -qcache=auto -qfree=f90 -qsuffix=f=f90 -qhalt=w -qlanglvl=2003std -g -qsuppress=1518-234 -qsuppress=1518-317 -qsuppress=1518-318 -qsuppress=1500-036"
         OPT_FFLAGS="-O4 -qstrict"
         # Options -qreport -qsource -qlist create a *.lst file containing detailed information about vectorization.
@@ -221,6 +224,11 @@ case $build_os in
         ;;
 esac
 
+# If you wish, set CFLAGS here instead of on the command-line.
+# This will then be persistent across calls to configure.
+# If you don't set it, then the default value will be determined by autoconf.
+#DEF_CFLAGS="-g -O3"
+
 if test "x$FLAGS_CHECK" = "x"; then
     if test "x$COND_DEBUG_TRUE" = "x"; then
         FLAGS_CHECK="$DEF_FFLAGS $DEBUG_FFLAGS"
@@ -239,6 +247,11 @@ echo MPIFC=\"$MPIFC\" | sed 's/\$/\\\$/g'
 echo MPILIBS=\"$MPILIBS\" | sed 's/\$/\\\$/g'
 echo FLAGS_CHECK=\"$FLAGS_CHECK\" | sed 's/\$/\\\$/g'
 echo FCENV=\"$FCENV\" | sed 's/\$/\\\$/g'
+if [ -n "${DEF_CFLAGS+set}" -a -z "${CFLAGS+set}" ]; then
+# We only set this if it's set in this file and the user hasn't
+# overridden it on the command-line.
+echo CFLAGS=\"$DEF_CFLAGS\" | sed 's/\$/\\\$/g'
+fi
 
 # Added by IDRIS: set to default values if not passed as arguments
 if [ "X${AR}" == "X" ]; then AR="ar"; fi

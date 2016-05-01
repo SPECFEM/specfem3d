@@ -230,10 +230,10 @@ subroutine iso3d_dpzhao_model(radius,theta,phi,vp,vs,dvp,dvs,rho,found_crust,JP3
   IF(HE<=H1)                   THEN
      LAY = 1
      found_crust = .true.
-  ELSE IF(HE>H1.AND.HE<=H2) THEN
+  ELSE IF(HE>H1.and.HE<=H2) THEN
      LAY = 2
      found_crust = .true.
-  ELSE IF(HE>H2.AND.HE<=H3) THEN
+  ELSE IF(HE>H2.and.HE<=H3) THEN
      LAY = 3
   ELSE
      LAY = 4
@@ -948,12 +948,12 @@ END subroutine iso3d_dpzhao_model
         CALL LIMIT(JP3DM_V%RRN(1),JP3DM_V%RRN(63),R)
         DO 1 I = 1,50
            I1     = I+1
-           IF(P>=JP3DM_V%PN(I).AND.P<JP3DM_V%PN(I1)) GO TO 11
+           IF(P>=JP3DM_V%PN(I).and.P<JP3DM_V%PN(I1)) GO TO 11
 1          CONTINUE
 11         CONTINUE
            DO 2 J = 1,62
               J1     = J+1
-              IF(R>=JP3DM_V%RRN(J).AND.R<JP3DM_V%RRN(J1)) GO TO 22
+              IF(R>=JP3DM_V%RRN(J).and.R<JP3DM_V%RRN(J1)) GO TO 22
 2             CONTINUE
 22            CONTINUE
               PF    = (P-JP3DM_V%PN(I))/(JP3DM_V%PN(I1)-JP3DM_V%PN(I))
@@ -1250,7 +1250,7 @@ END subroutine iso3d_dpzhao_model
       K1     = K+1
       H1     = JP3DM_V%DEPJ(K)
       H2     = JP3DM_V%DEPJ(K1)
-      IF(H>=H1.AND.H<H2) GO TO 3
+      IF(H>=H1.and.H<H2) GO TO 3
 2     CONTINUE
 3     CONTINUE
       H12    = (H-H1)/(H2-H1)

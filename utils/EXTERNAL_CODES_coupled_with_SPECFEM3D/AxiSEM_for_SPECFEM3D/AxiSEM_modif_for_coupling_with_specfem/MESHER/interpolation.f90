@@ -24,6 +24,8 @@
 !    http://flibs.sourceforge.net/robust_interp.f90
 !    and has been adapted for descending order arrays.
 !
+
+!=========================================================================================
 module interpolation
 
     use global_parameters, only: sp, dp
@@ -42,6 +44,7 @@ module interpolation
 
 contains
 
+!-----------------------------------------------------------------------------------------
 function interpolation_object( x, y, extrapolation )
     type(interpolation_data)        :: interpolation_object
     real(kind=dp), intent(in)       :: x(:)
@@ -62,18 +65,14 @@ function interpolation_object( x, y, extrapolation )
         deallocate(interpolation_object%y )
     endif
 
-    !
     ! Set the extrapolation method
-    !
     interpolation_object%extrapolation = extrapolation_none
     if ( extrapolation == extrapolation_constant .or. &
          extrapolation == extrapolation_linear        ) then
         interpolation_object%extrapolation = extrapolation
     endif
 
-    !
     ! Enough data? If not, simply return
-    !
     if ( size(x) < 2 .or. size(y) < size(x) ) then
         print *, 'ERROR: interpolation_object: Not enough data'
         print *, 'X: ', x
@@ -81,9 +80,7 @@ function interpolation_object( x, y, extrapolation )
         return
     endif
 
-    !
     ! Data sorted?
-    !
     success = .true.
 
     do i = 2,size(x)
@@ -98,9 +95,7 @@ function interpolation_object( x, y, extrapolation )
         return
     endif
 
-    !
     ! Copy the data
-    !
     n = size(x)
     allocate( interpolation_object%x(n), &
               interpolation_object%y(n), stat = ierr )
@@ -109,9 +104,7 @@ function interpolation_object( x, y, extrapolation )
         return
     endif
 
-    !
     ! We allow array y to be larger than x, so take care of that
-    !
     interpolation_object%x(1:n) = x(1:n)
     interpolation_object%y(1:n) = y(1:n)
 
@@ -119,7 +112,9 @@ function interpolation_object( x, y, extrapolation )
 
 
 end function interpolation_object
+!-----------------------------------------------------------------------------------------
 
+!-----------------------------------------------------------------------------------------
 subroutine interpolate( object, xp, estimate, success )
 
     type(interpolation_data)        :: object
@@ -141,9 +136,7 @@ subroutine interpolate( object, xp, estimate, success )
         return
     endif
 
-    !
     ! Check extrapolation
-    !
     nd = size(object%x)
 
     if ( object%extrapolation == extrapolation_none ) then
@@ -171,11 +164,8 @@ subroutine interpolate( object, xp, estimate, success )
         endif
     endif
 
-    !
     ! Search for the interval that contains xp
-    ! (Linear extrapolation is taken care of
-    ! automatically)
-    !
+    ! (Linear extrapolation is taken care of automatically)
     idx = nd - 1
 
     do i = 2,nd - 1
@@ -197,31 +187,7 @@ subroutine interpolate( object, xp, estimate, success )
     success  = .true.
 
 end subroutine interpolate
-
-!real function simple_interpolate( x, y, xp )
-!
-!    real, dimension(:), intent(in) :: x
-!    real, dimension(:), intent(in)  :: y
-!    real, intent(in)                :: xp
-!
-!    integer                         :: i
-!    integer                         :: idx
-!
-!    !
-!    ! Search for the interval that contains xp
-!    !
-!    idx = size(x) - 1
-!
-!    do i = 2,size(x)-1
-!        if ( xp < x(i) ) then
-!            idx = i - 1
-!            exit
-!        endif
-!    enddo
-!
-!    simple_interpolate = y(idx) + (xp - x(idx)) * (y(idx+1) - y(idx)) / &
-!                      (x(idx+1) -  x(idx))
-!
-!end function simple_interpolate
+!-----------------------------------------------------------------------------------------
 
 end module interpolation
+!=========================================================================================

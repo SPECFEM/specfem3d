@@ -9,4 +9,5 @@ cp SOLVER/inparam_basic.TEMPLATE SOLVER/inparam_basic
 cp SOLVER/inparam_advanced.TEMPLATE SOLVER/inparam_advanced
 cp SOLVER/STATIONS.TEMPLATE SOLVER/STATIONS
 cp SOLVER/inparam_source.TEMPLATE SOLVER/inparam_source
+cp SOLVER/inparam_hetero.TEMPLATE SOLVER/inparam_hetero
 cp SOLVER/CMTSOLUTION.TEMPLATE SOLVER/CMTSOLUTION

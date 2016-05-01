@@ -1448,7 +1448,7 @@ subroutine save_arrays_solver_files_adios(nspec,nglob,ibool, nspec_wmax, &
 
   local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
 
-  ! wave speeds & density
+  ! wave speeds and density
   call define_adios_global_array1D(group, groupsize, local_dim, &
                                    "", "vp", vp_tmp)
   call define_adios_global_array1D(group, groupsize, local_dim, &
@@ -1480,7 +1480,7 @@ subroutine save_arrays_solver_files_adios(nspec,nglob,ibool, nspec_wmax, &
   call adios_write(handle, STRINGIFY_VAR(nglob), ier)
 
   local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
-  ! wave speeds & density
+  ! wave speeds and density
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                    "vp", vp_tmp)
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &

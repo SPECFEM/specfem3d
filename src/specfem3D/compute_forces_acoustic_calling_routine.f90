@@ -58,12 +58,14 @@ subroutine compute_forces_acoustic()
   use specfem_par_acoustic
   use specfem_par_elastic
   use specfem_par_poroelastic
-  use pml_par,only: is_CPML,nglob_interface_PML_acoustic,&
-                    b_PML_potential,b_reclen_PML_potential,potential_acoustic_old ! potential_dot_dot_acoustic_old
+  use pml_par,only: is_CPML,spec_to_CPML,nglob_interface_PML_acoustic,&
+                    b_PML_potential,b_reclen_PML_potential,&
+                    PML_potential_acoustic_old,PML_potential_acoustic_new
+
   implicit none
 
   ! local parameters
-  integer:: iphase,iface,ispec,iglob,igll,i,j,k
+  integer:: iphase,iface,ispec,iglob,igll,i,j,k,ispec_CPML
   logical:: phase_is_inner
 
   ! enforces free surface (zeroes potentials at free surface)
@@ -90,18 +92,7 @@ subroutine compute_forces_acoustic()
     endif
 
     ! acoustic pressure term
-    if (USE_DEVILLE_PRODUCTS) then
-      ! uses Deville (2002) optimizations
-      call compute_forces_acoustic_Dev(iphase,NSPEC_AB,NGLOB_AB, &
-                        potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
-                        wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D, &
-                        rhostore,jacobian,ibool, &
-                        num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
-                        phase_ispec_inner_acoustic,.false.)
-    else
-      call compute_forces_acoustic_noDev(iphase,NSPEC_AB,NGLOB_AB, &
+    call compute_forces_acoustic_noDev(iphase,NSPEC_AB,NGLOB_AB, &
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
@@ -110,9 +101,8 @@ subroutine compute_forces_acoustic()
                         rhostore,jacobian,ibool, &
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
                         phase_ispec_inner_acoustic,.false.)
-    endif
 
-    ! ! Stacey absorbing boundary conditions
+    ! Stacey absorbing boundary conditions
     if (STACEY_ABSORBING_CONDITIONS) then
       call compute_stacey_acoustic(NSPEC_AB,NGLOB_AB, &
                         potential_dot_dot_acoustic,potential_dot_acoustic, &
@@ -216,12 +206,13 @@ subroutine compute_forces_acoustic()
 
 ! C-PML boundary
   if (PML_CONDITIONS) then
-    do iface=1,num_abs_boundary_faces
+    do iface = 1,num_abs_boundary_faces
       ispec = abs_boundary_ispec(iface)
 !!! It is better to move this into do iphase=1,2 loop
 !!!   if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
         if (ispec_is_acoustic(ispec) .and. is_CPML(ispec)) then
           ! reference gll points on boundary face
+          ispec_CPML = spec_to_CPML(ispec)
           do igll = 1,NGLLSQUARE
             ! gets local indices for GLL point
             i = abs_boundary_ijk(1,igll,iface)
@@ -230,12 +221,12 @@ subroutine compute_forces_acoustic()
 
             iglob=ibool(i,j,k,ispec)
 
-            potential_dot_dot_acoustic(iglob) = 0.0
-            potential_dot_acoustic(iglob) = 0.0
-            potential_acoustic(iglob) = 0.0
+            potential_dot_dot_acoustic(iglob) = 0._CUSTOM_REAL
+            potential_dot_acoustic(iglob) = 0._CUSTOM_REAL
+            potential_acoustic(iglob) = 0._CUSTOM_REAL
             if (ELASTIC_SIMULATION) then
-              !potential_dot_dot_acoustic_old(iglob) = 0.0
-              potential_acoustic_old(iglob) = 0.0
+              PML_potential_acoustic_old(i,j,k,ispec_CPML) = 0._CUSTOM_REAL
+              PML_potential_acoustic_new(i,j,k,ispec_CPML) = 0._CUSTOM_REAL
             endif
           enddo
         endif ! ispec_is_acoustic
@@ -325,7 +316,7 @@ end subroutine compute_forces_acoustic
 ! therefore not be consistent with the basis functions.
 
 
-subroutine compute_forces_acoustic_bpwf()
+subroutine compute_forces_acoustic_backward()
 
   use specfem_par
   use specfem_par_acoustic
@@ -340,7 +331,7 @@ subroutine compute_forces_acoustic_bpwf()
 
   ! checks
   if (SIMULATION_TYPE /= 3) &
-    call exit_MPI(myrank,'error calling compute_forces_acoustic_bpwf() with wrong SIMULATION_TYPE')
+    call exit_MPI(myrank,'error calling compute_forces_acoustic_backward() with wrong SIMULATION_TYPE')
 
   ! adjoint simulations
   call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_ADJOINT,STACEY_INSTEAD_OF_FREE_SURFACE, &
@@ -359,18 +350,7 @@ subroutine compute_forces_acoustic_bpwf()
     endif
 
     ! adjoint simulations
-    if (USE_DEVILLE_PRODUCTS) then
-      ! uses Deville (2002) optimizations
-      call compute_forces_acoustic_Dev(iphase,NSPEC_ADJOINT,NGLOB_ADJOINT, &
-                      b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
-                      xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                      hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
-                      wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D, &
-                      rhostore,jacobian,ibool, &
-                      num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
-                      phase_ispec_inner_acoustic,.true.)
-    else
-      call compute_forces_acoustic_noDev(iphase,NSPEC_ADJOINT,NGLOB_ADJOINT, &
+    call compute_forces_acoustic_noDev(iphase,NSPEC_ADJOINT,NGLOB_ADJOINT, &
                       b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
                       xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                       hprime_xx,hprime_yy,hprime_zz, &
@@ -379,11 +359,10 @@ subroutine compute_forces_acoustic_bpwf()
                       rhostore,jacobian,ibool, &
                       num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
                       phase_ispec_inner_acoustic,.true.)
-    endif
 
-    ! ! Stacey absorbing boundary conditions
+    ! Stacey absorbing boundary conditions
     if (STACEY_ABSORBING_CONDITIONS) then
-       call compute_stacey_acoustic_bpwf(NSPEC_AB, &
+       call compute_stacey_acoustic_backward(NSPEC_AB, &
                             ibool,ispec_is_inner,phase_is_inner, &
                             abs_boundary_ijk,abs_boundary_ispec, &
                             num_abs_boundary_faces,ispec_is_acoustic,&
@@ -415,7 +394,7 @@ subroutine compute_forces_acoustic_bpwf()
     endif
 
     ! sources
-    call compute_add_sources_acoustic_bpwf(NSPEC_AB, &
+    call compute_add_sources_acoustic_backward(NSPEC_AB, &
                                   ibool,ispec_is_inner,phase_is_inner, &
                                   NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
                                   hdur,hdur_gaussian,tshift_src,dt,t0, &
@@ -476,7 +455,7 @@ subroutine compute_forces_acoustic_bpwf()
                       ibool,free_surface_ijk,free_surface_ispec, &
                       num_free_surface_faces,ispec_is_acoustic)
 
-end subroutine compute_forces_acoustic_bpwf
+end subroutine compute_forces_acoustic_backward
 !
 !-------------------------------------------------------------------------------------------------
 !

@@ -23,16 +23,22 @@ NPROC_ETA                       = 1
 
 # Regular/irregular mesh
 USE_REGULAR_MESH                = .false.
-# Only for irregular meshes, number of doubling layers (1 or 2) and their position
+# Only for irregular meshes, number of doubling layers and their position
 NDOUBLINGS                      = 2
-# NZ_DOUGLING_1 is the parameter to set up if there is only one doubling layer
-NZ_DOUGLING_1                   = 20
-NZ_DOUGLING_2                   = 23
+# NZ_DOUBLING_1 is the parameter to set up if there is only one doubling layer
+# (more doubling entries can be added if needed to match NDOUBLINGS value)
+NZ_DOUBLING_1                   = 20
+NZ_DOUBLING_2                   = 23
 
 # create mesh files for visualisation or further checking
 CREATE_ABAQUS_FILES             = .true.
 CREATE_DX_FILES                 = .true.
 CREATE_VTK_FILES                = .false.
+
+# CPML perfectly matched absorbing layers
+THICKNESS_OF_X_PML              = 12.3d0
+THICKNESS_OF_Y_PML              = 12.3d0
+THICKNESS_OF_Z_PML              = 12.3d0
 
 # path to store the databases files
 LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI
@@ -55,4 +61,5 @@ NREGIONS                        = 4
 1              24            1               24             1         17       1
 1              24            1               24             18        20       2
 1              24            1               24             21        23       3
-1              24            1               24             24        26
+1              24            1               24             24        26       4
+

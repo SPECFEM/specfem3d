@@ -140,7 +140,11 @@ xadd_model_iso_OBJECTS = \
 $O/add_model_iso.tomo.o: $O/specfem3D_par.spec.o $O/tomography_par.tomo_module.o
 
 ${E}/xadd_model_iso: $(xadd_model_iso_OBJECTS) $(xadd_model_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
+	@echo ""
+	@echo "building xadd_model_iso"
+	@echo ""
 	${FCLINK} -o $@ $+ $(MPILIBS)
+	@echo ""
 
 
 ##
@@ -210,7 +214,11 @@ $O/model_update.tomo.o: $O/specfem3D_par.spec.o $O/tomography_par.tomo_module.o
 $O/save_external_bin_m_up.tomo.o: $O/specfem3D_par.spec.o
 
 ${E}/xmodel_update: $(xmodel_update_OBJECTS) $(xmodel_update_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
+	@echo ""
+	@echo "building xmodel_update"
+	@echo ""
 	${FCLINK} -o $@ $+ $(MPILIBS)
+	@echo ""
 
 
 ##
@@ -229,7 +237,11 @@ xsum_kernels_SHARED_OBJECTS = \
 	$(EMPTY_MACRO)
 
 ${E}/xsum_kernels: $(xsum_kernels_OBJECTS) $(xsum_kernels_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
+	@echo ""
+	@echo "building xsum_kernels"
+	@echo ""
 	${FCLINK} -o $@ $+ $(MPILIBS)
+	@echo ""
 
 
 ##
@@ -243,7 +255,11 @@ xsum_preconditioned_kernels_OBJECTS = \
 xsum_preconditioned_kernels_SHARED_OBJECTS = $(xsum_kernels_SHARED_OBJECTS)
 
 ${E}/xsum_preconditioned_kernels: $(xsum_preconditioned_kernels_OBJECTS) $(xsum_preconditioned_kernels_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
+	@echo ""
+	@echo "building xsum_preconditioned_kernels"
+	@echo ""
 	${FCLINK} -o $@ $+ $(MPILIBS)
+	@echo ""
 
 
 #######################################

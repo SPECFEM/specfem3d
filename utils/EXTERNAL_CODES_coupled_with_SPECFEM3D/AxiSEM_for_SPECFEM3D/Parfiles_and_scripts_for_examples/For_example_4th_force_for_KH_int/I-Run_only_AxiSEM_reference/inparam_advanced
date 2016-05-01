@@ -1,0 +1,225 @@
+
+############### TIME PARAMETERS ################################################
+
+# seismogram sampling period in seconds
+# Select 0.0, for SAMPLING_PERIOD==TIME_STEP (default: 0.0)
+# important consideration: aliasing in case of dirac/heaviside sources
+SAMPLING_PERIOD     0.0 
+
+# Choose desired simulation time step
+# set to 0.0 for mesher's suggestion (default)
+TIME_STEP           0.0
+
+# Source period [s]. Put to 0.0 to use mesh resolution (mesh_params.h)
+SOURCE_PERIOD       10.0
+
+# Source time function (default: errorf)
+# The source time function is defined in this code as the moment function. So
+# for displacement seismograms that can be compared to measurements of an earthquake
+# 'errorf' should be used. 
+# For a 'flat' source time function, that can be convolved with an arbitrary one in 
+# postprocessing, 'dirac_0' should be selected
+#
+# Allowed values
+# 'errorf' : Error function (integral of gauss_0) with dominant period SOURCE_PERIOD
+# 'gauss_0': Gaussian with dominant period SOURCE_PERIOD
+# 'gauss_1': 1st derivative of gauss_0
+# 'gauss_2': 2nd derivative of gauss_0
+# 'quheavi': Heaviside function
+# 'dirac_0': Dirac delta function
+#            This should be used to convolve arbitrary STFs in Postprocessing 
+SOURCE_FUNCTION     gauss_0
+
+# Time integration scheme, allowed:
+# newmark2:  default, well tested
+# symplec4:  well tested, should be used when propagating waves for more then 100
+#            wavelenghts
+# ML_SO4m5:  experimental
+# ML_SO6m7:  experimental
+# KL_O8m17:  experimental
+# SS_35o10:  experimental
+
+TIME_SCHEME     newmark2
+
+
+##################### OUTPUT OPTIONS ###########################################
+# OUTPUT PATHS
+DATA_DIR        "./Data"
+INFO_DIR        "./Info"
+
+
+######################## NetCDF output #########################################
+# Use NetCDF for output  (default false)
+# Enabling this option will put all seismograms and wavefields into one file
+# axisem_output.nc4 in the $DATA directory. Postprocessing will automatically
+# read and process this file.
+USE_NETCDF          false
+
+# Do Checkpointing for the NetCDF seismogram output. Will save the seismograms 
+# every 5% of the total runtime to have at least something, should the solver
+# run crash. However, this affects performance slightly, so you might want to
+# turn it of for runs on safe systems.
+CHECKPOINTING       true
+
+# Size of buffer for wavefield dumps. This is only used for the kernel wavefield
+# output. Determines, how many time steps should be held in memory by each 
+# processor. Increase, if disk access is too frequent, however, for short period
+# meshes (<10s) running on few cores, setting a value above 256 can require >>10GB of
+# memory per CPU. When using CHUNK_TIME_TRACES and many cores, a value larger
+# then the number of strain samples might be appropriate.
+# Default value: 128
+NETCDF_DUMP_BUFFER  128
+
+# Chunking of the kernel wavefields: Default is snapshots to write to contiguous
+# regions on the drive. When running on many cores and using collective IO, it
+# might be useful to write time traces directly and avoid the rechunking
+# (fieldtransfom) usually done in postprocessing. 
+# Default: false
+CHUNK_TIME_TRACES   false
+
+# Level of compression of wavefield data (0: off, 9:highest, default: 5)
+# deflation can not be used with collective IO
+DEFLATE_LEVEL       5
+
+####################### Wavefield output #######################################
+# Only relevant, if SAVE_SNAPSHOTS == true in inparam_basic 
+# Time interval between snapshots (default: 20)
+SNAPSHOT_DT          20.
+
+# XDMF wavefield snapshots  (default: xdmf)
+# options for values: xdmf, vtk, both
+# vtk:  3D wavefield plots generated in postprocessing (large files for high 
+#       frequencies)
+# xdmf: 2D wavefield without postprocessing (optimized for high frequencies)
+SNAPSHOTS_FORMAT     xdmf  
+
+# limit the region to plot in the xdmf files
+# radius in km
+XDMF_RMIN        0.
+XDMF_RMAX        7000.
+
+# minimal and maximal colatitude to be plotted
+XDMF_COLAT_MIN   0.
+XDMF_COLAT_MAX   180.
+
+# GLL Points to be plotted in each element in the region
+# number (first digit) and indices of gll points in i direction in [0, npol]
+XDMF_GLL_I       '3 0 2 4'
+# number and indices of gll points in j direction in [0, npol]
+XDMF_GLL_J       '3 0 2 4'
+
+
+######################## DEBUGGING #############################################
+# Set verbosity of the code, allowed values:
+# 0: only errors
+# 1: errors plus some information (default)
+# 2: extra stories for spare time
+# 3: every single detail of netcdf IO
+VERBOSITY               1
+
+# Extra diagnostic file output? (default: false)
+# Prints VTK files of the actual velocity model (including lateral heterogenei-
+# ties), several ASCII files about the Mesh and Seismograms at certain special
+# points, like the epicenter, antipode and equator. Not needed for 
+# postprocessing, takes several megabytes and produces around 10 files per CPU.
+DIAGNOSTIC_FILE_OUTPUT false
+
+# Do mesh tests? Only necessary for debugging
+MESH_TEST           false
+
+
+
+######################## SENSITIVITY KERNELS ###################################
+# Save necessary wavefields for Kernel calculation or Instaseis databases
+# N.b. Kernel calculation needs Axisem Kerner (sold separately)
+KERNEL_WAVEFIELDS   true 
+
+# different modes of dumping wavefields for kernel:
+#  - fullfields: strain and velocity at a subset of local GLL points (see below)
+#  - displ_only: displacement at all global points
+#  - strain_only: strain at a subset of local GLL points (see below)
+KERNEL_DUMPTYPE  coupling_box 
+
+# Samples per period
+KERNEL_SPP          8
+
+# source vicinity in wavefields? 
+# igno
+# mask  (default)
+# anal 
+KERNEL_SOURCE       mask
+
+# GLL points to save, starting and ending GLL point index 
+# (overwritten with 0 and npol for dumptype displ_only)
+KERNEL_IBEG         0
+KERNEL_IEND         4
+KERNEL_JBEG         0
+KERNEL_JEND         4
+
+# minimal and maximal colatitude in degree for kernel wavefields
+# (only for dumptype displ_only)
+KERNEL_COLAT_MIN   0.
+KERNEL_COLAT_MAX   180.
+
+# minimal and maximal radius in km for kernel wavefields
+# (only for dumptype displ_only)
+KERNEL_RMIN        0.
+KERNEL_RMAX        7000.
+
+######################## ATTENUATION ###########################################
+# number of standard linear solids (default: 5)
+NR_LIN_SOLIDS       5
+
+# minimum frequency in attenuation band [Hz] (default: 0.001)
+F_MIN               0.001
+# maximum frequency in attenuation band [Hz] (default: 1.0)
+# must be considered carefully for high-frequency simulations
+F_MAX               1.0
+
+# reference frequency of the background model for the seismic velocities [Hz]
+# (default: 1.0)
+F_REFERENCE         1.0
+
+# reference frequency for power law Q = Q_0 * (f / f_0)^alpha, where Q_0 is
+# taken from background model # [Hz] (default: 1.0)
+QPL_F_REFERENCE     1.0
+
+# exponent alpha for power law Q = Q_0 * (f / f_0)^alpha (default: 0.0)
+QPL_ALPHA           0.0
+
+# use correction of the coefficients for small values of Q (default: true)
+SMALL_Q_CORRECTION  true
+
+# Number of frequencies at which the exact Q is sampled in the 
+# minimization (default: 100)
+NR_F_SAMPLE         100
+
+# use frequency weighting to force better fit of Q at higher frequencies
+# (default: true)
+FREQ_WEIGHT         true
+
+# maximum number of iteration in the simulated annealing (default: 100000)
+MAXINT_SA           100000
+
+# starting 'temperature' for the stress relaxation frequencies (default: 0.1)
+TSTART_SR           0.1
+
+# starting 'temperature' for the amplitude coefficients (default: 0.1)
+TSTART_AMP          0.1
+
+# temperature decay rate (default: 0.99995)
+T_DECAY             0.99995
+
+# fix the frequencies log spaced in the attenuation band (default: false)
+FIX_FREQ            false
+
+# dump memory vars to vtk (not optimized, only meant for testing, not with cg)
+# (default: false)
+DUMP_VTK            false
+
+# use coarse grained memory variables (ONLY for npol = 4) (default: true)
+COARSE_GRAINED      true
+
+######################## FOR THE INCLINED ######################################
+# Save global kinetic/potential energy? generally not needed
+SAVE_ENERGY         .false.

@@ -11,11 +11,14 @@ SUPPRESS_UTM_PROJECTION         = .true.
 # file that contains the interfaces of the model / mesh
 INTERFACES_FILE                 = example_interfaces.dat
 
+# file that contains the cavity
+CAVITY_FILE                     = no_cavity.dat
+
 # number of elements at the surface along edges of the mesh at the surface
 # (must be 8 * multiple of NPROC below if mesh is not regular and contains mesh doublings)
 # (must be multiple of NPROC below if mesh is regular)
-NEX_XI                          = 648  # 648
-NEX_ETA                         = 720  # 720
+NEX_XI                          = 648
+NEX_ETA                         = 720
 
 # number of MPI processors along xi and eta (can be different)
 NPROC_XI                        = 9
@@ -23,11 +26,12 @@ NPROC_ETA                       = 45
 
 # Regular/irregular mesh
 USE_REGULAR_MESH                = .false.
-# Only for irregular meshes, number of doubling layers (1 or 2) and their position
+# Only for irregular meshes, number of doubling layers and their position
 NDOUBLINGS                      = 2
-# NZ_DOUGLING_1 is the parameter to set up if there is only one doubling layer
-NZ_DOUGLING_1                   = 147
-NZ_DOUGLING_2                   = 145
+# NZ_DOUBLING_1 is the parameter to set up if there is only one doubling layer
+# (more doubling entries can be added if needed to match NDOUBLINGS value)
+NZ_DOUBLING_1                   = 147
+NZ_DOUBLING_2                   = 145
 
 # create mesh files for visualisation or further checking
 CREATE_ABAQUS_FILES             = .false.

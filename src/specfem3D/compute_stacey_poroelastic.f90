@@ -100,7 +100,7 @@
 
 
   ! absorbs absorbing-boundary surface using Stacey condition (Clayton & Enquist)
-  do iface=1,num_abs_boundary_faces
+  do iface = 1,num_abs_boundary_faces
 
     ispec = abs_boundary_ispec(iface)
 

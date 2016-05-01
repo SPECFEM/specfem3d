@@ -40,10 +40,13 @@
 
   implicit none
 
-  double precision :: tCPU,t_remain,t_total
   integer :: ihours,iminutes,iseconds,int_tCPU, &
              ihours_remain,iminutes_remain,iseconds_remain,int_t_remain, &
              ihours_total,iminutes_total,iseconds_total,int_t_total
+  ! timing
+  double precision :: t_remain,t_total
+  double precision :: tCPU
+  double precision, external :: wtime
 
   ! maximum of the norm of the displacement
   real(kind=CUSTOM_REAL) Usolidnorm,Usolidnorm_all ! elastic
@@ -417,6 +420,7 @@
   integer :: ihours,iminutes,iseconds,int_tCPU
   ! timing
   double precision :: tCPU
+  double precision, external :: wtime
 
   if (myrank == 0) then
     ! elapsed time since beginning of the simulation

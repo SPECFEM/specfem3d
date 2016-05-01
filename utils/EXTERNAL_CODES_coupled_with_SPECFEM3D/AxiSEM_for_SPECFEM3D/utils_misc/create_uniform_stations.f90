@@ -2,6 +2,7 @@ program create_uniform_sations
 
    implicit none
    character(len=1) code
+   character(len=2) net
    character(len=250) par_file
    real dx,dy,z,xmin,ymin
    integer nx,ny
@@ -18,6 +19,7 @@ program create_uniform_sations
    write(*,*) ' xmin, ymin  !: (real) coordinate of the first station (m)'
    write(*,*) ' z           !: (real) depth of all staions (m) '
    write(*,*) ' code        !: (character(len=1)) first letter for station name '
+   write(*,*) ' net         !: (character(len=2)) network name '
    write(*,*)
    write(*,*) ' give Parameter file name ? '
 
@@ -29,6 +31,7 @@ program create_uniform_sations
    read(10,*) xmin,ymin
    read(10,*) z
    read(10,'(a)') code
+   read(10,'(a)') net
    close(10)
 
    open(10,file='station_list.txt')
@@ -43,7 +46,7 @@ program create_uniform_sations
       k =  k + 1
       xc = xc + dx
        write(name_sta,'(a,i4.4)') code,k
-       write(10,'(a5,4f20.5)') name_sta,xc,yc,zc,zc
+       write(10,'(a5,2x,a2,2x,4f20.5)') name_sta,net,xc,yc,zc,zc
      enddo
    enddo
    close(10)

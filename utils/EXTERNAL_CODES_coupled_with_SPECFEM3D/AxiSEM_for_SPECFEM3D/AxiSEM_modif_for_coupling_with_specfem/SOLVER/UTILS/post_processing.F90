@@ -19,22 +19,22 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
-!-----------------------------------------------------------------------------
+!=========================================================================================
 module data_all
 
   implicit none
   public
 
-  integer, parameter, private         :: sp = selected_real_kind(6, 37)
-  integer, parameter, private         :: dp = selected_real_kind(15, 307)
-  integer, parameter         :: qp = selected_real_kind(33, 4931)
+  integer, parameter, private       :: sp = selected_real_kind(6, 37)
+  integer, parameter, private       :: dp = selected_real_kind(15, 307)
+  integer, parameter                :: qp = selected_real_kind(33, 4931)
   logical                           :: rot_src_rec_true
   character(len=100)                :: stf_file, rot_rec_file, filename, fname
 
-  character(len=7),allocatable, dimension(:)        :: stf_type
-  character(len=040),allocatable, dimension(:)      :: recname
-  character(len=100),allocatable, dimension(:,:)    :: outname, outname2, rec_full_name
-  character(len=10),allocatable, dimension(:,:)     :: src_type
+  character(len=7), allocatable, dimension(:)       :: stf_type
+  character(len=040), allocatable, dimension(:)     :: recname
+  character(len=100), allocatable, dimension(:,:)   :: outname, outname2, rec_full_name
+  character(len=10), allocatable, dimension(:,:)    :: src_type
   integer                                           :: nrec, nt_seis
 
   character(len=1),dimension(3)       :: reccomp
@@ -54,8 +54,9 @@ module data_all
   logical                             :: load_snaps
   logical                             :: negative_time
   logical                             :: detailed_output
-  character(len=12)                   :: src_file_type
+  character(len=16)                   :: simtype
   logical                             :: use_netcdf
+  character(len=4), parameter         :: seistype = 'disp'
 
   ! discrete dirac sources
   real                                :: shift_fact
@@ -65,16 +66,19 @@ module data_all
   real                                :: srccolat, srclon, src_depth
   character(len=7)                    :: conv_stf
   character(len=100)                  :: outdir
-  character(len=4)                    :: seistype
 
   real, allocatable                   :: period_final(:)
-  real, allocatable                   :: trans_rot_mat(:,:,:)
+  real, allocatable                   :: trans_rot_mat(:,:)
   real, allocatable                   :: colat(:,:), lon(:,:)
 
-end module data_all
-!=============================================================================
+  integer                             :: nelem
+  integer                             :: nel_fluid
+  integer                             :: nproc_mesh
 
-!-----------------------------------------------------------------------------
+end module data_all
+!=========================================================================================
+
+!=========================================================================================
 module global_par
 
   integer, parameter         :: sp = selected_real_kind(6, 37)
@@ -93,9 +97,9 @@ module global_par
   real, parameter             :: decay = 3.5d0
   real, parameter             :: shift_fact1 = 1.5d0
 end module global_par
-!=============================================================================
+!=========================================================================================
 
-!-----------------------------------------------------------------------------
+!=========================================================================================
 program post_processing_seis
 
   use data_all
@@ -105,6 +109,7 @@ program post_processing_seis
   double precision     :: arg1
   type(ncparamtype)    :: ncparams
   real(4), allocatable :: nc_seis(:,:,:,:)
+  real(kind=dp), allocatable :: tmp_write(:,:)
 
   call read_input
   if (use_netcdf) call nc_open(ncparams, nsim, simdir)
@@ -277,7 +282,7 @@ program post_processing_seis
   ! define time series
   allocate(time(nt_seis), seis(nt_seis,3))
   do iseis=1, nt_seis
-     time(iseis) = iseis * dt_seis
+     time(iseis) = (iseis - 1) * dt_seis
   enddo
   allocate(seis_sglcomp(nt_seis,3))
 
@@ -300,8 +305,8 @@ program post_processing_seis
                             //trim(recname(i))//'_'//seistype//'_post_'&
                             //trim(src_type(isim,2))
 
-        write(6,*) 'outname: ', i, trim(outname(i,isim))
-        write(6,*) 'outname2: ', isim, trim(outname2(i,isim))
+        !write(6,*) 'outname: ', i, trim(outname(i,isim))
+        !write(6,*) 'outname2: ', isim, trim(outname2(i,isim))
      enddo
   enddo
 
@@ -336,10 +341,8 @@ program post_processing_seis
             seis_sglcomp(:,:) = nc_seis(:,:,i,isim)
         else
             ! load seismograms from all directories
-            open(unit=60,file = trim(simdir(isim))//'/Data/'//trim(recname(i))//'_'&
-                                //seistype//'.dat')
-            write(6,*) 'opened ', trim(simdir(isim))//'/Data/'//trim(recname(i))//'_'&
-                        //seistype//'.dat'
+            open(unit=60,file = trim(simdir(isim))//'/Data/'//trim(recname(i))//'_disp.dat')
+            write(6,*) 'opened ', trim(simdir(isim))//'/Data/'//trim(recname(i))//'_disp.dat'
 
             if (src_type(isim,1) == 'monopole') then
                do iseis=1, nt_seis
@@ -389,7 +392,7 @@ program post_processing_seis
      ! convolve with a source time function
      if (conv_period > 0.)  then
         write(6,*) 'conv period:', conv_stf
-        call convolve_with_stf(conv_period, dt_seis, nt_seis, src_type(1,1), conv_stf,&
+        call convolve_with_stf(conv_period, dt_seis, nt_seis, conv_stf,&
                                outdir, seis, seis_fil)
      else
         seis_fil = seis
@@ -407,13 +410,16 @@ program post_processing_seis
      open(unit=50, file=trim(outname(i,1))//'_'//reccomp(1)//'.dat', status='new')
      open(unit=51, file=trim(outname(i,1))//'_'//reccomp(2)//'.dat', status='new')
      open(unit=52, file=trim(outname(i,1))//'_'//reccomp(3)//'.dat', status='new')
+     if (.not.allocated(tmp_write)) allocate(tmp_write(2, nt_seis))
      if (negative_time) then
         write(6,*)' writing seismograms into joint directory: negative time'
-        do it=1, nt_seis
-           write(50,*) time(it) - shift_fact - tshift, seis_fil(it,1)
-           write(51,*) time(it) - shift_fact - tshift, seis_fil(it,2)
-           write(52,*) time(it) - shift_fact - tshift, seis_fil(it,3)
-        enddo
+        tmp_write(1,:) = time - shift_fact - tshift
+        tmp_write(2,:) = seis_fil(:,1)
+        write(50,'(2ES16.7)') tmp_write
+        tmp_write(2,:) = seis_fil(:,2)
+        write(51,'(2ES16.7)') tmp_write
+        tmp_write(2,:) = seis_fil(:,3)
+        write(52,'(2ES16.7)') tmp_write
      else
         write(6,*)' writing seismograms into joint directory: zero time'
         do it=ishift+1, nt_seis
@@ -479,9 +485,9 @@ program post_processing_seis
 21 format(a100)
 
 end program post_processing_seis
-!=============================================================================
+!=========================================================================================
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine read_input
 
   use data_all
@@ -545,7 +551,7 @@ subroutine read_input
   rec_comp_sys    = 'enz'
   conv_period     = 0.
   conv_stf        = 'gauss_0'
-  seistype        = 'disp'
+  !seistype        = 'disp'
   load_snaps      = .false.
   outdir          = './Data_Postprocessing'
   negative_time   = .true.
@@ -574,8 +580,10 @@ subroutine read_input
        read(keyvalue, *) conv_period
     case('CONV_STF')
        read(keyvalue, *) conv_stf
-    case('SEISTYPE')
-       seistype = keyvalue
+    ! Removing this option since velocity seismograms
+    ! are not produced in the solver
+    !case('SEISTYPE')
+    !   seistype = keyvalue
     case('LOAD_SNAPS')
        read(keyvalue, *) load_snaps
     case('DATA_DIR')
@@ -610,7 +618,7 @@ subroutine read_input
      read(99,*) src_type(isim,1)
      read(99,*) src_type(isim,2)
      read(99,*) stf_type(isim)
-     read(99,*) src_file_type
+     read(99,*) simtype
      read(99,*) period_tmp(isim)
      read(99,*) src_depth_tmp(isim)
      read(99,*) srccolat_tmp(isim)
@@ -633,6 +641,9 @@ subroutine read_input
      read(99,*)
      read(99,*)
      read(99,*) use_netcdf
+     read(99,*) nelem
+     read(99,*) nel_fluid
+     read(99,*) nproc_mesh
      close(99)
 
      if (src_type(isim,2)=='thetaforce' .or.  src_type(isim,2)=='phiforce') then
@@ -644,7 +655,7 @@ subroutine read_input
      write(6,*) 'Simulations: ',isim,trim(simdir(isim))
      write(6,*) '  source type:',src_type(isim,1),' ',src_type(isim,2)
      write(6,*) '  source time function:',stf_type(isim)
-     write(6,*) '  source file type:',src_file_type
+     write(6,*) '  simulation  type:', simtype
      write(6,*) '  magnitude:',magnitude(isim)
      write(6,*) '  receivers:',nrec_tmp(isim)
      write(6,*) '  source period:',period_tmp(isim)
@@ -687,7 +698,6 @@ subroutine read_input
      stop 2
   endif
 
-
   srclon = srclon_tmp(1)
   srccolat = srccolat_tmp(1)
   src_depth = src_depth_tmp(1)
@@ -711,20 +721,21 @@ subroutine read_input
   ! @TODO: make lokal variables for reading and checking, global vars non array
 
 end subroutine read_input
-!--------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 
-!--------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine compute_radiation_prefactor(mij_prefact, npts, nsim, longit)
 
   use data_all, only : src_type, magnitude, mij, rot_mat
-  use data_all, only : trans_rot_mat, src_file_type, srccolat, srclon, outdir
+  use data_all, only : trans_rot_mat, simtype, srccolat, srclon, outdir
   use global_par
 
   implicit none
 
   real, dimension(1:npts,1:nsim,1:3), intent(out)   :: mij_prefact
   real, dimension(1:npts), intent(in)               :: longit
-  integer, intent(in)   :: npts, nsim
+  integer, intent(in)                               :: npts, nsim
+
   real, dimension(6)    :: Mij_scale
   character(len=100)    :: junk, fmtstring
   character(len=256)    :: keyword, keyvalue, line
@@ -734,28 +745,28 @@ subroutine compute_radiation_prefactor(mij_prefact, npts, nsim, longit)
   ! This is the rotation matrix of Nissen-Meyer, Dahlen, Fournier, GJI 2007
   ! to rotate xyz coordinates
 
-  if (.not. allocated(trans_rot_mat)) allocate(trans_rot_mat(3,3,nsim))
+  if (.not. allocated(trans_rot_mat)) allocate(trans_rot_mat(3,3))
 
-  do isim=1,nsim
-     rot_mat(1,1) = cos(srccolat) * cos(srclon)
-     rot_mat(2,2) = cos(srclon)
-     rot_mat(3,3) = cos(srccolat)
-     rot_mat(2,1) = cos(srccolat) * sin(srclon)
-     rot_mat(3,1) = -sin(srccolat)
-     rot_mat(3,2) = 0.d0
-     rot_mat(1,2) = -sin(srclon)
-     rot_mat(1,3) = sin(srccolat) * cos(srclon)
-     rot_mat(2,3) = sin(srccolat) * sin(srclon)
-     do i=1,3
-        do j=1,3
-           if (abs(rot_mat(i,j)) < epsi_real) rot_mat(i,j) = 0.0
-        enddo
+  rot_mat(1,1) = cos(srccolat) * cos(srclon)
+  rot_mat(2,2) = cos(srclon)
+  rot_mat(3,3) = cos(srccolat)
+  rot_mat(2,1) = cos(srccolat) * sin(srclon)
+  rot_mat(3,1) = -sin(srccolat)
+  rot_mat(3,2) = 0.d0
+  rot_mat(1,2) = -sin(srclon)
+  rot_mat(1,3) = sin(srccolat) * cos(srclon)
+  rot_mat(2,3) = sin(srccolat) * sin(srclon)
+
+  do i=1,3
+     do j=1,3
+        if (abs(rot_mat(i,j)) < epsi_real) rot_mat(i,j) = 0.0
      enddo
-     trans_rot_mat(:,:,isim) = transpose(rot_mat)
   enddo
 
-  select case(src_file_type)
-  case('cmtsolut')
+  trans_rot_mat(:,:) = transpose(rot_mat)
+
+  select case(simtype)
+  case('moment')
      write(6,*)'  reading CMTSOLUTION file....'
      open(unit=20000,file='CMTSOLUTION',POSITION='REWIND',status='old')
      read(20000,*) junk
@@ -775,8 +786,7 @@ subroutine compute_radiation_prefactor(mij_prefact, npts, nsim, longit)
 
      Mij = Mij / 1.E7 ! CMTSOLUTION given in dyn-cm
 
-  !else if (src_file_type=='sourceparams') then
-  case('sourceparams')
+  case('single')
      iinparam_source = 1132
      open(unit=iinparam_source, file='inparam_source', status='old', action='read', iostat=ioerr)
      if (ioerr /= 0) stop 'Check input file ''inparam_source''! Is it still there?'
@@ -797,8 +807,8 @@ subroutine compute_radiation_prefactor(mij_prefact, npts, nsim, longit)
      case('mrr')
          Mij(1) =  amplitude
      case('mtt_p_mpp')
-         Mij(2) =  amplitude !/ 2
-         Mij(3) =  amplitude !/ 2
+         Mij(2) =  amplitude
+         Mij(3) =  amplitude
      case('mtr', 'mrt')
          Mij(4) =  amplitude
      case('mpr', 'mrp')
@@ -806,25 +816,20 @@ subroutine compute_radiation_prefactor(mij_prefact, npts, nsim, longit)
      case('mtp', 'mpt')
          Mij(6) =  amplitude
      case('mtt_m_mpp')
-         Mij(2) =  amplitude !/ 2
-         Mij(3) = -amplitude !/ 2
+         Mij(2) =  amplitude
+         Mij(3) = -amplitude
      case('explosion')
-         Mij(1) =  amplitude !/ 3
-         Mij(2) =  amplitude !/ 3
-         Mij(3) =  amplitude !/ 3
+         Mij(1) =  amplitude
+         Mij(2) =  amplitude
+         Mij(3) =  amplitude
      case default
          write(6,*) 'unknown source type: ', src_type(1,2)
      end select
 
-     !Mij = amplitude ! The whole tensor is set to amplitude. That's okay, since later only the terms
-                     ! are used, which are nonzero for this simulation.
-
   case default
-  !  else
-     write(6,*)'unknown source file type!',src_file_type
+     write(6,*)'unknown simulation type!', simtype
      stop
   end select
-  !endif
 
   fmtstring = '(6(E12.5))'
   write(6,*) 'Original moment tensor: (Mrr, Mtt, Mpp, Mrt, Mrp, Mtp)'
@@ -894,9 +899,9 @@ subroutine compute_radiation_prefactor(mij_prefact, npts, nsim, longit)
                 maxval(mij_prefact(:,isim,2)), maxval(mij_prefact(:,isim,3))
   enddo ! isim
 end subroutine compute_radiation_prefactor
-!------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 
-!------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine sum_individual_wavefields(field_sum, field_in, n, mij_prefact)
 
   implicit none
@@ -911,19 +916,18 @@ subroutine sum_individual_wavefields(field_sum, field_in, n, mij_prefact)
   field_sum(:,3) = field_sum(:,3) + mij_prefact(3) * field_in(:,3)
 
 end subroutine sum_individual_wavefields
-!--------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 
-!--------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine rotate_receiver_comp(isim, rec_comp_sys, srccolat, srclon, th_rot, ph_rot, &
                                 th_orig, ph_orig, nt, seis)
 
   use data_all,     only : nsim, trans_rot_mat
   use global_par
   implicit none
-  !include '../mesh_params.h'
 
   character(len=3)      :: rec_comp_sys
-  real, intent(in)      :: th_rot, ph_rot ! coordinates in the rotated (src at pole) system
+  real, intent(in)      :: th_rot, ph_rot   ! coordinates in the rotated (src at pole) system
   real, intent(in)      :: th_orig, ph_orig ! coordinates in the unrotated (actual src) system
   real, intent(in)      :: srccolat, srclon ! orginal source coordinates
   integer, intent(in)   :: nt,isim
@@ -932,14 +936,14 @@ subroutine rotate_receiver_comp(isim, rec_comp_sys, srccolat, srclon, th_rot, ph
   integer               :: i
 
   write(6,*) 'ROTATIONS'
-  write(6,*) th_orig*180./pi, ph_orig*180./pi
-  write(6,*) th_rot*180./pi, ph_rot*180./pi
+  write(6,*) th_orig * 180. / pi, ph_orig * 180. / pi
+  write(6,*) th_rot * 180. / pi, ph_rot * 180. / pi
 
   ! Need to consider *local* spherical geometry in the first place,
   ! THEN rotate the source-receiver frame to the north pole in the solver.
-  ! E.g., consider the difference between source-projected and spherical coordinates for a source
-  ! away from the north pole: they are not the same, but in the framework below would
-  ! be identified as the same.
+  ! E.g., consider the difference between source-projected and spherical
+  ! coordinates for a source  away from the north pole: they are not the same,
+  ! but in the framework below would  be identified as the same.
 
   ! Source projected frame: transform to spherical without any further rotations
   if (rec_comp_sys=='src') then
@@ -954,8 +958,8 @@ subroutine rotate_receiver_comp(isim, rec_comp_sys, srccolat, srclon, th_rot, ph
      seis_tmp(:,3) = seis(:,3)
 
      ! Rotate to the original (i.e. real src-rec coordinate-based) u_xyz
-     if (srccolat>epsi_real .or. srclon>epsi_real) then
-        rot=transpose(trans_rot_mat(:,:,isim))
+     if (srccolat > epsi_real .or. srclon > epsi_real) then
+        rot = transpose(trans_rot_mat(:,:))
         do i=1,nt
            seisvec = seis_tmp(i,:)
            seis_tmp(i,:) = matmul(rot,seisvec)
@@ -1003,12 +1007,11 @@ subroutine rotate_receiver_comp(isim, rec_comp_sys, srccolat, srclon, th_rot, ph
   endif
 
 end subroutine rotate_receiver_comp
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 
-
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !! convolve seismograms computed for dirac delta with a Gaussian
-subroutine convolve_with_stf(t_0, dt, nt, src_type, stf, outdir, seis, seis_fil)
+subroutine convolve_with_stf(t_0, dt, nt, stf, outdir, seis, seis_fil)
 
   use data_all,     only: stf_type
   use global_par,   only: pi, decay, shift_fact1, dp
@@ -1023,7 +1026,6 @@ subroutine convolve_with_stf(t_0, dt, nt, src_type, stf, outdir, seis, seis_fil)
   real, intent(in)               :: seis(nt,3)
   real, intent(out)              :: seis_fil(nt,3)
   real                           :: src_array(nt), temp_expo, alpha
-  character(len=7), intent(in)   :: src_type
   character(len=7), intent(in)   :: stf
   character(len=4)               :: appidur, appirec
 
@@ -1080,9 +1082,9 @@ subroutine convolve_with_stf(t_0, dt, nt, src_type, stf, outdir, seis, seis_fil)
   close(55)
 
 end subroutine convolve_with_stf
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine save_google_earth_kml(srccolat1, srclon1, srcdepth, Mij, per, rcvcolat, &
                                  rcvlon, reccomp, src_type, nsim, &
                                  num_rec_glob, outdir, receiver_name)
@@ -1214,9 +1216,9 @@ subroutine save_google_earth_kml(srccolat1, srclon1, srcdepth, Mij, per, rcvcola
 23 format(a5,1pe14.2)
 
 end subroutine save_google_earth_kml
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine define_io_appendix(app,iproc)
 ! Defines the 4 digit character string appended to any
 ! data or io file related to process myid.
@@ -1227,16 +1229,14 @@ subroutine define_io_appendix(app,iproc)
   write(app,"(I4.4)") iproc
 
 end subroutine define_io_appendix
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine compute_3d_wavefields
 
   use data_all
   use global_par
   implicit none
-
-  include '../mesh_params.h'
 
   integer                               :: iproc, npts, npts_top, npts_bot, npts_meri, &
                                            nphi, snapskip, snap1, snap2
@@ -1911,9 +1911,9 @@ subroutine compute_3d_wavefields
   enddo
 
 end subroutine compute_3d_wavefields
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine construct_surface_cubed_sphere(npts_surf, npts, rsurf, ind_proc_surf, &
                                           ind_pts_surf, nptstot, coord1, kpts, &
                                           dphi, phi0, in_or_out, n, xsurf, ysurf, &
@@ -1946,8 +1946,7 @@ subroutine construct_surface_cubed_sphere(npts_surf, npts, rsurf, ind_proc_surf,
     double precision, allocatable,dimension(:,:,:,:) :: x_el,y_el,z_el
     double precision :: dang,C,D,re,ri,teta,tksi,tr,Xe,Ye,delta
     integer :: npol_cs,ii,iii,izone,nang,nelt,nr,nrpol,iel,nel_surf,jj,ipol,jpol,kpol,j,i
-    double precision ::  dist,th,dr,r,xc,yc,zc,ph
-    double precision ,allocatable :: r_ref(:), th_ref(:)
+    double precision ::  dist,r_ref,th_ref,th,dr,r,xc,yc,zc,ph
 
     write(6,*)'computing cubed sphere for surface at r=',rsurf
     write(6,*)'pts surf,total:',npts_surf,npts
@@ -2077,11 +2076,6 @@ subroutine construct_surface_cubed_sphere(npts_surf, npts, rsurf, ind_proc_surf,
       ysurf = 0
       zsurf = 0
       iii = 0
-      allocate(r_ref(npts_surf))
-      allocate(th_ref(npts_surf))
-      call get_r_theta( coord1(ind_proc_surf(:)*npts + ind_pts_surf(:), 1), &
-                        coord1(ind_proc_surf(:)*npts + ind_pts_surf(:), 2), &
-                        r_ref, th_ref, nptstot)
       write(6,*)'constructing 1d array for surface coordinates...'
       do iel = 1, nel_surf
          if ( mod(iel,floor(nel_surf/10.))==0  ) then
@@ -2114,19 +2108,17 @@ subroutine construct_surface_cubed_sphere(npts_surf, npts, rsurf, ind_proc_surf,
             zsurf(iii+4) = zcol(0,npol_cs,0,iel)
 
             ! determine the corresponding point in the D-shape domain
-            do jj = 1, 4
-               call xyz2rthetaphi( r, th, azi_phi_surf(iii+jj), &
-                                   xsurf(iii+jj), ysurf(iii+jj), zsurf(iii+jj) )
-               dist = 2.d0 * pi
-               dist = minval(abs(th-th_ref))
-               i = minloc(abs(th-th_ref),1)
-               azi_ind_surf(iii+jj) = ind_proc_surf(i)*npts + ind_pts_surf(i)
-               !do i = 1, npts_surf
-               !   if (abs(th-th_ref) < dist) then
-               !      dist = abs(th-th_ref)
-               !      azi_ind_surf(iii+jj) = ind_proc_surf(i)*npts + ind_pts_surf(i)
-               !   endif
-               !enddo
+            do jj=1,4
+               call xyz2rthetaphi(r,th, azi_phi_surf(iii+jj),xsurf(iii+jj),ysurf(iii+jj),zsurf(iii+jj))
+               dist=2.d0*pi
+               do i=1,npts_surf
+                  call get_r_theta(coord1(ind_proc_surf(i)*npts+ind_pts_surf(i),1), &
+                       coord1(ind_proc_surf(i)*npts+ind_pts_surf(i),2),r_ref,th_ref)
+                  if (abs(th-th_ref)< dist) then
+                     dist=abs(th-th_ref)
+                     azi_ind_surf(iii+jj)=ind_proc_surf(i)*npts+ind_pts_surf(i)
+                  endif
+               enddo
             enddo
 
             iii = iii + 4
@@ -2142,9 +2134,9 @@ subroutine construct_surface_cubed_sphere(npts_surf, npts, rsurf, ind_proc_surf,
       deallocate(xcol,ycol,zcol,x_el,y_el,z_el)
 
 end subroutine construct_surface_cubed_sphere
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine sphi2xy(x,y,s,phi,n)
   integer, intent(in) :: n
   real, dimension(1:n), intent(out) :: x,y
@@ -2155,9 +2147,9 @@ subroutine sphi2xy(x,y,s,phi,n)
   y(1:n)=s(1:n)*sin(phi)
 
 end subroutine sphi2xy
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine write_VTK_bin_scal(x,y,z,u1,rows,nelem_disk,filename1)
   use data_all
   implicit none
@@ -2296,9 +2288,9 @@ subroutine write_VTK_bin_scal_topology(x,y,z,u1,elems,filename)
    close(100)
   write(6,*)'...saved ',trim(filename)//'.vtk'
 end subroutine write_vtk_bin_scal_topology
-!-------------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 
-!-------------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine rthetaphi2xyz(x,y,z,r,theta,phi)
   real, intent(out) :: x,y,z
   real, intent(in) :: r,theta,phi
@@ -2388,9 +2380,9 @@ real function prem(r0,param)
   endif
 
 end function prem
-!-------------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 
-!-------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine xyz2rthetaphi(r,theta,phi,x,y,z)
   use global_par
   ! Alex2TNM:
@@ -2422,21 +2414,20 @@ subroutine xyz2rthetaphi(r,theta,phi,x,y,z)
     endif
   endif
 end subroutine xyz2rthetaphi
-!--------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 
-!-------------------------------------------------------------------------
-subroutine get_r_theta(s, z, r, th, npts)
+!-----------------------------------------------------------------------------------------
+subroutine get_r_theta(s,z,r,th)
   use global_par
-  integer, intent(in)        :: npts
-  real(kind=dp), intent(in)  :: s(npts), z(npts)
-  real(kind=dp), intent(out) :: r(npts), th(npts)
+  double precision, intent(in)  :: s, z
+  double precision, intent(out) :: r, th
 
   th = datan(s / (z + epsi))
 
-  where( 0.d0 > th ) th = pi + th
-  where (th == zero .and. z < 0.d0) th = pi
+  if ( 0.d0 > th ) th = pi + th
+  if (th == zero .and. z < 0.d0) th = pi
 
   r = dsqrt(s**2 + z**2)
 
 end subroutine get_r_theta
-!==========================================================================
+!-----------------------------------------------------------------------------------------

@@ -19,6 +19,7 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
+!=========================================================================================
 module data_numbering
 
  implicit none
@@ -27,9 +28,10 @@ module data_numbering
  integer, dimension(:), allocatable :: iglob
  integer, dimension(:), allocatable :: iglob_fluid
  integer, dimension(:), allocatable :: iglob_solid
- integer :: nglob
- integer :: nglobglob
- integer :: nglobflob
- integer :: nglobslob
+ integer                            :: nglob
+ integer                            :: nglobglob
+ integer                            :: nglobflob
+ integer                            :: nglobslob
 
 end module data_numbering
+!=========================================================================================

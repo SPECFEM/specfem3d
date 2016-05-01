@@ -200,7 +200,7 @@
     iface_selected = 1
 
     ! loops over all free surface faces
-    do iface=1,num_free_surface_faces
+    do iface = 1,num_free_surface_faces
       ispec = free_surface_ispec(iface)
 
       ! exclude elements that are too far from target
@@ -361,7 +361,7 @@
     distmin = HUGEVAL
 
     ! loops over all free surface faces
-    do iface=1,num_free_surface_faces
+    do iface = 1,num_free_surface_faces
       ispec = free_surface_ispec(iface)
 
       ! excludes elements that are too far from target

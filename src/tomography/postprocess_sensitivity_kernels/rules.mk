@@ -27,30 +27,30 @@
 
 ## compilation directories
 S := ${S_TOP}/src/tomography/postprocess_sensitivity_kernels
-$(postprocess_OBJECTS): S := ${S_TOP}/src/tomography/postprocess_sensitivity_kernels
+$(tomography/postprocess_sensitivity_kernels_OBJECTS): S := ${S_TOP}/src/tomography/postprocess_sensitivity_kernels
 
 #######################################
 
-postprocess_MODULES = \
-	$(FC_MODDIR)/postprocess_par.$(FC_MODEXT) \
-	$(EMPTY_MACRO)
-
-postprocess_TARGETS = \
+tomography/postprocess_sensitivity_kernels_TARGETS = \
 	$E/xclip_sem \
 	$E/xcombine_sem \
 	$E/xsmooth_sem \
 	$(EMPTY_MACRO)
 
-postprocess_OBJECTS = \
+tomography/postprocess_sensitivity_kernels_OBJECTS = \
 	$(xclip_sem_OBJECTS) \
 	$(xcombine_sem_OBJECTS) \
 	$(xsmooth_sem_OBJECTS) \
 	$(EMPTY_MACRO)
 
-postprocess_SHARED_OBJECTS = \
+tomography/postprocess_sensitivity_kernels_SHARED_OBJECTS = \
 	$(xclip_sem_SHARED_OBJECTS) \
 	$(xcombine_sem_SHARED_OBJECTS) \
 	$(xsmooth_sem_SHARED_OBJECTS) \
+	$(EMPTY_MACRO)
+
+tomography/postprocess_sensitivity_kernels_MODULES = \
+	$(FC_MODDIR)/postprocess_par.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 
 ####
@@ -60,8 +60,11 @@ postprocess_SHARED_OBJECTS = \
 .PHONY: postprocess
 
 
-postprocess: $(postprocess_TARGETS)
+postprocess: $(tomography/postprocess_sensitivity_kernels_TARGETS)
 
+postprocess_sensitivity_kernels: postprocess
+
+tomography/postprocess_sensitivity_kernels: postprocess
 
 ### single targets
 
@@ -102,7 +105,11 @@ xclip_sem_SHARED_OBJECTS = \
 	$(EMPTY_MACRO)
 
 ${E}/xclip_sem: $(xclip_sem_OBJECTS) $(xclip_sem_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
+	@echo ""
+	@echo "building xclip_sem"
+	@echo ""
 	${FCLINK} -o $@ $+ $(MPILIBS)
+	@echo ""
 
 
 ##
@@ -122,7 +129,11 @@ xcombine_sem_SHARED_OBJECTS = \
 	$(EMPTY_MACRO)
 
 ${E}/xcombine_sem: $(xcombine_sem_OBJECTS) $(xcombine_sem_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
+	@echo ""
+	@echo "building xcombine_sem"
+	@echo ""
 	${FCLINK} -o $@ $+ $(MPILIBS)
+	@echo ""
 
 
 ##
@@ -149,12 +160,46 @@ xsmooth_sem_SHARED_OBJECTS = \
 	$O/write_VTK_data.shared.o \
 	$(EMPTY_MACRO)
 
+cuda_smooth_sem_STUBS = \
+	$O/smooth_sem_cuda_stubs.postprocess.o \
+	$(EMPTY_MACRO)
+
+cuda_smooth_sem_OBJECTS = \
+	$O/smooth_cuda.postprocess.cuda.o \
+	$O/check_fields_cuda.cuda.o \
+	$O/initialize_cuda.cuda.o \
+	$(EMPTY_MACRO)
+
+cuda_smooth_sem_DEVICE_OBJ = \
+	$O/cuda_device_smooth_obj.o \
+	$(EMPTY_MACRO)
+
+ifeq ($(CUDA),yes)
+## cuda version
+xsmooth_sem_OBJECTS += $(cuda_smooth_sem_OBJECTS)
+ifeq ($(CUDA_PLUS),yes)
+xsmooth_sem_OBJECTS += $(cuda_smooth_sem_DEVICE_OBJ)
+endif
+## libs
+xsmooth_sem_LIBS = $(MPILIBS) $(CUDA_LINK)
+INFO_CUDA_SEM="building xsmooth_sem with CUDA support"
+else
+## non-cuda version
+xsmooth_sem_OBJECTS += $(cuda_smooth_sem_STUBS)
+## libs
+xsmooth_sem_LIBS = $(MPILIBS)
+INFO_CUDA_SEM="building xsmooth_sem without CUDA support"
+endif
+
 # extra dependencies
 $O/smooth_sem.postprocess.o: $O/specfem3D_par.spec.o $O/postprocess_par.postprocess_module.o
 
 ${E}/xsmooth_sem: $(xsmooth_sem_OBJECTS) $(xsmooth_sem_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
-	${FCLINK} -o $@ $+ $(MPILIBS)
-
+	@echo ""
+	@echo $(INFO_CUDA_SEM)
+	@echo ""
+	${FCLINK} -o $@ $+ $(xsmooth_sem_LIBS)
+	@echo ""
 
 #######################################
 
@@ -173,3 +218,17 @@ $O/%.postprocess_module.o: $S/%.f90 ${SETUP}/constants_tomography.h $O/shared_pa
 $O/%.postprocess.o: $S/%.f90 ${SETUP}/constants_tomography.h $O/postprocess_par.postprocess_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
+$O/%.postprocess.o: $S/%.F90 ${SETUP}/constants_tomography.h $O/postprocess_par.postprocess_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+$O/%.postprocess.o: $S/%.c ${SETUP}/config.h
+	${CC} -c $(CPPFLAGS) $(CFLAGS) $(MPI_INCLUDES) -o $@ $<
+
+###
+### CUDA
+###
+$O/%.postprocess.cuda.o: $S/%.cu ${SETUP}/config.h $S/smooth_cuda.h
+	${NVCC} -c $< -o $@ $(NVCC_FLAGS)
+
+$(cuda_smooth_sem_DEVICE_OBJ): $(cuda_smooth_sem_OBJECTS)
+	${NVCCLINK} -o $(cuda_smooth_sem_DEVICE_OBJ) $(cuda_smooth_sem_OBJECTS)

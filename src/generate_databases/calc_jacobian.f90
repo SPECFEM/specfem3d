@@ -94,7 +94,7 @@
                  xgamma*(yxi*zeta-yeta*zxi)
 
 ! check that the Jacobian transform is invertible, i.e. that the Jacobian never becomes negative or null
-      if (jacobian <= ZERO) call exit_MPI(myrank,'error: negative or null 3D Jacobian found')
+      if (jacobian <= ZERO) call exit_MPI(myrank,'Error negative or null 3D Jacobian found')
 
 !     invert the relation (Fletcher p. 50 vol. 2)
       xix = (yeta*zgamma-ygamma*zeta) / jacobian
@@ -115,29 +115,16 @@
 !     save the derivatives and the jacobian
 
 ! distinguish between single and double precision for reals
-      if (CUSTOM_REAL == SIZE_REAL) then
-        xixstore(i,j,k,ispec) = sngl(xix)
-        xiystore(i,j,k,ispec) = sngl(xiy)
-        xizstore(i,j,k,ispec) = sngl(xiz)
-        etaxstore(i,j,k,ispec) = sngl(etax)
-        etaystore(i,j,k,ispec) = sngl(etay)
-        etazstore(i,j,k,ispec) = sngl(etaz)
-        gammaxstore(i,j,k,ispec) = sngl(gammax)
-        gammaystore(i,j,k,ispec) = sngl(gammay)
-        gammazstore(i,j,k,ispec) = sngl(gammaz)
-        jacobianstore(i,j,k,ispec) = sngl(jacobian)
-      else
-        xixstore(i,j,k,ispec) = xix
-        xiystore(i,j,k,ispec) = xiy
-        xizstore(i,j,k,ispec) = xiz
-        etaxstore(i,j,k,ispec) = etax
-        etaystore(i,j,k,ispec) = etay
-        etazstore(i,j,k,ispec) = etaz
-        gammaxstore(i,j,k,ispec) = gammax
-        gammaystore(i,j,k,ispec) = gammay
-        gammazstore(i,j,k,ispec) = gammaz
-        jacobianstore(i,j,k,ispec) = jacobian
-      endif
+      xixstore(i,j,k,ispec) = real(xix,kind=CUSTOM_REAL)
+      xiystore(i,j,k,ispec) = real(xiy,kind=CUSTOM_REAL)
+      xizstore(i,j,k,ispec) = real(xiz,kind=CUSTOM_REAL)
+      etaxstore(i,j,k,ispec) = real(etax,kind=CUSTOM_REAL)
+      etaystore(i,j,k,ispec) = real(etay,kind=CUSTOM_REAL)
+      etazstore(i,j,k,ispec) = real(etaz,kind=CUSTOM_REAL)
+      gammaxstore(i,j,k,ispec) = real(gammax,kind=CUSTOM_REAL)
+      gammaystore(i,j,k,ispec) = real(gammay,kind=CUSTOM_REAL)
+      gammazstore(i,j,k,ispec) = real(gammaz,kind=CUSTOM_REAL)
+      jacobianstore(i,j,k,ispec) = real(jacobian,kind=CUSTOM_REAL)
 
       xstore(i,j,k,ispec) = xmesh
       ystore(i,j,k,ispec) = ymesh

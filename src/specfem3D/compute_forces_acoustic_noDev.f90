@@ -43,11 +43,10 @@
 !     p = - Chi_dot_dot
 !
   use specfem_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,PML_CONDITIONS
-
   use pml_par, only: is_CPML, spec_to_CPML, NSPEC_CPML, &
                      potential_dot_dot_acoustic_CPML,rmemory_dpotential_dxl,rmemory_dpotential_dyl,&
                      rmemory_dpotential_dzl,rmemory_potential_acoustic, &
-                     potential_acoustic_old,potential_acoustic_new
+                     PML_potential_acoustic_old,PML_potential_acoustic_new
 
   implicit none
 
@@ -148,6 +147,7 @@
             ! do not merge this second line with the first using an ".and." statement
             ! because array is_CPML() is unallocated when PML_CONDITIONS is false
             if (is_CPML(ispec)) then
+              ispec_CPML = spec_to_CPML(ispec)
               temp1l_old = 0._CUSTOM_REAL
               temp2l_old = 0._CUSTOM_REAL
               temp3l_old = 0._CUSTOM_REAL
@@ -159,21 +159,20 @@
               do l=1,NGLLX
                 hp1 = hprime_xx(i,l)
                 iglob = ibool(l,j,k,ispec)
-                temp1l_old = temp1l_old + potential_acoustic_old(iglob)*hp1
-                temp1l_new = temp1l_new + potential_acoustic_new(iglob)*hp1
+                temp1l_old = temp1l_old + PML_potential_acoustic_old(l,j,k,ispec_CPML)*hp1
+                temp1l_new = temp1l_new + PML_potential_acoustic_new(l,j,k,ispec_CPML)*hp1
 
                 !!! can merge these loops because NGLLX = NGLLY = NGLLZ
-
                 hp2 = hprime_yy(j,l)
                 iglob = ibool(i,l,k,ispec)
-                temp2l_old = temp2l_old + potential_acoustic_old(iglob)*hp2
-                temp2l_new = temp2l_new + potential_acoustic_new(iglob)*hp2
+                temp2l_old = temp2l_old + PML_potential_acoustic_old(i,l,k,ispec_CPML)*hp2
+                temp2l_new = temp2l_new + PML_potential_acoustic_new(i,l,k,ispec_CPML)*hp2
 
                 !!! can merge these loops because NGLLX = NGLLY = NGLLZ
                 hp3 = hprime_zz(k,l)
                 iglob = ibool(i,j,l,ispec)
-                temp3l_old = temp3l_old + potential_acoustic_old(iglob)*hp3
-                temp3l_new = temp3l_new + potential_acoustic_new(iglob)*hp3
+                temp3l_old = temp3l_old + PML_potential_acoustic_old(i,j,l,ispec_CPML)*hp3
+                temp3l_new = temp3l_new + PML_potential_acoustic_new(i,j,l,ispec_CPML)*hp3
               enddo
             endif
           endif

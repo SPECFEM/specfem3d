@@ -41,7 +41,7 @@ subroutine compute_forces_viscoelastic()
 
   integer:: iphase
   logical:: phase_is_inner
-  integer:: iface,ispec,igll,i,j,k,iglob
+  integer:: iface,ispec,igll,i,j,k,iglob,ispec_CPML
 
 
   ! kbai added the following two synchronizations to ensure that the displacement and velocity values
@@ -70,13 +70,7 @@ subroutine compute_forces_viscoelastic()
     endif
 
 ! elastic term
-    if (USE_DEVILLE_PRODUCTS) then
-      ! uses Deville (2002) optimizations
-      call compute_forces_viscoelastic_Dev_sim1(iphase)
-
-    else
-      ! no optimizations used
-      call compute_forces_viscoelastic_noDev(iphase,NSPEC_AB,NGLOB_AB, &
+    call compute_forces_viscoelastic_noDev(iphase,NSPEC_AB,NGLOB_AB, &
                         displ,veloc,accel, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
@@ -106,9 +100,6 @@ subroutine compute_forces_viscoelastic()
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
                         phase_ispec_inner_elastic,.false.)
 
-    endif
-
-
 ! adds elastic absorbing boundary term to acceleration (Stacey conditions)
     if (STACEY_ABSORBING_CONDITIONS) then
       call compute_stacey_viscoelastic(NSPEC_AB,NGLOB_AB,accel, &
@@ -127,7 +118,7 @@ subroutine compute_forces_viscoelastic()
     if (ACOUSTIC_SIMULATION) then
       if (num_coupling_ac_el_faces > 0) then
         if (SIMULATION_TYPE == 1) then
-          ! forward definition: pressure=-potential_dot_dot
+          ! forward definition: pressure = - potential_dot_dot
           call compute_coupling_viscoelastic_ac(NSPEC_AB,NGLOB_AB, &
                        ibool,accel,potential_dot_dot_acoustic, &
                        num_coupling_ac_el_faces, &
@@ -183,8 +174,8 @@ subroutine compute_forces_viscoelastic()
                         ispec_is_inner,phase_is_inner)
     endif
 
-    !! CD CD !! For coupling with DSM
-    if (.not. COUPLE_WITH_EXTERNAL_CODE) then
+    !! CD CD
+#ifndef DEBUG_COUPLED
       ! adds source term (single-force/moment-tensor solution)
       call compute_add_sources_viscoelastic(NSPEC_AB,NGLOB_AB,accel, &
                                             ibool,ispec_is_inner,phase_is_inner, &
@@ -194,7 +185,7 @@ subroutine compute_forces_viscoelastic()
                                             nrec,islice_selected_rec,ispec_selected_rec, &
                                             nadj_rec_local,adj_sourcearrays, &
                                             NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY)
-    endif
+#endif
     !! CD CD
 
     ! assemble all the contributions between slices using MPI
@@ -240,12 +231,13 @@ subroutine compute_forces_viscoelastic()
 
   ! C-PML boundary
   if (PML_CONDITIONS) then
-    do iface=1,num_abs_boundary_faces
+    do iface = 1,num_abs_boundary_faces
       ispec = abs_boundary_ispec(iface)
 !!! It is better to move this into do iphase=1,2 loop
 !!!        if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
       if (ispec_is_elastic(ispec) .and. is_CPML(ispec)) then
         ! reference gll points on boundary face
+        ispec_CPML = spec_to_CPML(ispec)
         do igll = 1,NGLLSQUARE
           ! gets local indices for GLL point
           i = abs_boundary_ijk(1,igll,iface)
@@ -254,10 +246,11 @@ subroutine compute_forces_viscoelastic()
 
           iglob=ibool(i,j,k,ispec)
 
-          accel(:,iglob) = 0.0
-          veloc(:,iglob) = 0.0
-          displ(:,iglob) = 0.0
-          displ_old(:,iglob) = 0.0
+          accel(:,iglob) = 0._CUSTOM_REAL
+          veloc(:,iglob) = 0._CUSTOM_REAL
+          displ(:,iglob) = 0._CUSTOM_REAL
+          PML_displ_old(:,i,j,k,ispec_CPML) = 0._CUSTOM_REAL
+          PML_displ_new(:,i,j,k,ispec_CPML) = 0._CUSTOM_REAL
 
         enddo
       endif ! ispec_is_elastic
@@ -304,7 +297,7 @@ end subroutine compute_forces_viscoelastic
 
 ! elastic solver for backward/reconstructed wavefields
 
-subroutine compute_forces_viscoelastic_bpwf()
+subroutine compute_forces_viscoelastic_backward()
 
   use specfem_par
   use specfem_par_acoustic
@@ -321,7 +314,7 @@ subroutine compute_forces_viscoelastic_bpwf()
 
   ! checks
   if (SIMULATION_TYPE /= 3) &
-    call exit_MPI(myrank,'error calling compute_forces_viscoelastic_bpwf() with wrong SIMULATION_TYPE')
+    call exit_MPI(myrank,'error calling compute_forces_viscoelastic_backward() with wrong SIMULATION_TYPE')
 
   ! distinguishes two runs: for points on MPI interfaces, and points within the partitions
   do iphase=1,2
@@ -335,14 +328,8 @@ subroutine compute_forces_viscoelastic_bpwf()
 
 
 ! elastic term
-    if (USE_DEVILLE_PRODUCTS) then
-      ! adjoint simulations: backward/reconstructed wavefield
-      call compute_forces_viscoelastic_Dev_sim3(iphase)
-
-    else
-      ! no optimizations used
-      ! adjoint simulations: backward/reconstructed wavefield
-      call compute_forces_viscoelastic_noDev(iphase,NSPEC_AB,NGLOB_AB, &
+    ! adjoint simulations: backward/reconstructed wavefield
+    call compute_forces_viscoelastic_noDev(iphase,NSPEC_AB,NGLOB_AB, &
                         b_displ,b_veloc,b_accel, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
@@ -371,12 +358,10 @@ subroutine compute_forces_viscoelastic_bpwf()
                         ispec2D_moho_top,ispec2D_moho_bot, &
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
                         phase_ispec_inner_elastic,.true.)
-    endif
-
 
 ! adds elastic absorbing boundary term to acceleration (Stacey conditions)
     if (STACEY_ABSORBING_CONDITIONS) then
-      call compute_stacey_viscoelastic_bpwf(NSPEC_AB, &
+      call compute_stacey_viscoelastic_backward(NSPEC_AB, &
                        ibool,ispec_is_inner,phase_is_inner, &
                        abs_boundary_ijk,abs_boundary_ispec, &
                        num_abs_boundary_faces, &
@@ -389,7 +374,7 @@ subroutine compute_forces_viscoelastic_bpwf()
 ! acoustic coupling
     if (ACOUSTIC_SIMULATION) then
       if (num_coupling_ac_el_faces > 0) then
-        ! adjoint simulations
+        ! backward simulations
         call compute_coupling_viscoelastic_ac(NSPEC_ADJOINT,NGLOB_ADJOINT, &
                       ibool,b_accel,b_potential_dot_dot_acoustic, &
                       num_coupling_ac_el_faces, &
@@ -411,7 +396,7 @@ subroutine compute_forces_viscoelastic_bpwf()
     endif
 
 ! adds source term (single-force/moment-tensor solution)
-    call compute_add_sources_viscoelastic_bpwf( NSPEC_AB,NGLOB_AB, &
+    call compute_add_sources_viscoelastic_backward( NSPEC_AB,NGLOB_AB, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
                         hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
@@ -449,7 +434,7 @@ subroutine compute_forces_viscoelastic_bpwf()
 
 ! updates acceleration with ocean load term
   if (APPROXIMATE_OCEAN_LOAD) then
-    call compute_coupling_ocean_bpwf(NSPEC_AB,NGLOB_AB, &
+    call compute_coupling_ocean_backward(NSPEC_AB,NGLOB_AB, &
                                      ibool,rmassx,rmassy,rmassz, &
                                      rmass_ocean_load, &
                                      free_surface_normal,free_surface_ijk,free_surface_ispec, &
@@ -478,165 +463,11 @@ subroutine compute_forces_viscoelastic_bpwf()
   ! adjoint simulations
   b_veloc(:,:) = b_veloc(:,:) + b_deltatover2*b_accel(:,:)
 
-end subroutine compute_forces_viscoelastic_bpwf
+end subroutine compute_forces_viscoelastic_backward
 
 !
 !-------------------------------------------------------------------------------------------------
 !
-
-! distributes routines according to chosen NGLLX in constants.h
-
-!daniel: note -- i put it here rather than in compute_forces_viscoelastic_Dev.f90 because compiler complains that:
-! " The storage extent of the dummy argument exceeds that of the actual argument. "
-
-subroutine compute_forces_viscoelastic_Dev_sim1(iphase)
-
-! forward simulations
-
-  use specfem_par
-  use specfem_par_elastic
-  use specfem_par_acoustic
-
-  implicit none
-
-  integer,intent(in) :: iphase
-
-  select case (NGLLX)
-
-  case (5,6,7)
-
-!----------------------------------------------------------------------------------------------
-
-! OpenMP routine flag for testing & benchmarking forward runs only
-! configure additional flag, e.g.: FLAGS_CHECK="-O3 -DOPENMP_MODE -openmp"
-
-!----------------------------------------------------------------------------------------------
-#ifdef OPENMP_MODE
-    print *,iphase !! DK DK this dummy statement just to avoid a warning by the compiler about "iphase" being unused
-    stop 'OpenMP support has been discontinued for now'
-!! DK DK Jan 2013: beware, that OpenMP version is not maintained / supported and thus probably does not work
-!   call compute_forces_viscoelastic_Dev_openmp(iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
-!          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-!          hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
-!          wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-!          kappastore,mustore,jacobian,ibool, &
-!          ATTENUATION,deltat, &
-!          one_minus_sum_beta,factor_common, &
-!          one_minus_sum_beta_kappa,factor_common_kappa, &
-!          alphaval,betaval,gammaval, &
-!          NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa, &
-!          R_xx,R_yy,R_xy,R_xz,R_yz, &
-!          R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
-!          epsilondev_xx,epsilondev_yy,epsilondev_xy, &
-!          epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &
-!          epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
-!          ANISOTROPY,NSPEC_ANISO, &
-!          c11store,c12store,c13store,c14store,c15store,c16store,&
-!          c22store,c23store,c24store,c25store,c26store,c33store,&
-!          c34store,c35store,c36store,c44store,c45store,c46store,&
-!          c55store,c56store,c66store, &
-!          SIMULATION_TYPE, COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
-!          NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT,&
-!          is_moho_top,is_moho_bot, &
-!          dsdx_top,dsdx_bot, &
-!          ispec2D_moho_top,ispec2D_moho_bot, &
-!          num_phase_ispec_elastic,&
-!          phase_ispec_inner_elastic,&
-!          num_colors_outer_elastic,num_colors_inner_elastic)
-#else
-    call compute_forces_viscoelastic_Dev(iphase, NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
-             xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-             hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
-             wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D, &
-             kappastore,mustore,jacobian,ibool, &
-             ATTENUATION,deltat,PML_CONDITIONS, &
-             one_minus_sum_beta,factor_common, &
-             one_minus_sum_beta_kappa,factor_common_kappa, &
-             alphaval,betaval,gammaval, &
-             NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa, &
-             R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
-             epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &
-             epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
-             ANISOTROPY,NSPEC_ANISO, &
-             c11store,c12store,c13store,c14store,c15store,c16store,&
-             c22store,c23store,c24store,c25store,c26store,c33store,&
-             c34store,c35store,c36store,c44store,c45store,c46store,&
-             c55store,c56store,c66store, &
-             SIMULATION_TYPE, COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
-             NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT,&
-             is_moho_top,is_moho_bot, &
-             dsdx_top,dsdx_bot, &
-             ispec2D_moho_top,ispec2D_moho_bot, &
-             num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic,&
-             phase_ispec_inner_elastic,.false.)
-#endif
-
-  case default
-
-    stop 'error no Deville routine available for chosen NGLLX'
-
-  end select
-
-end subroutine compute_forces_viscoelastic_Dev_sim1
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-
-subroutine compute_forces_viscoelastic_Dev_sim3(iphase)
-
-! uses backward/reconstructed displacement and acceleration arrays
-
-  use specfem_par
-  use specfem_par_elastic
-  use specfem_par_acoustic
-
-  implicit none
-
-  integer,intent(in) :: iphase
-
-  select case (NGLLX)
-
-  case (5,6,7)
-    call compute_forces_viscoelastic_Dev(iphase, NSPEC_AB,NGLOB_AB, &
-                  b_displ,b_veloc,b_accel, &
-                  xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                  hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
-                  wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D, &
-                  kappastore,mustore,jacobian,ibool, &
-                  ATTENUATION,deltat,PML_CONDITIONS, &
-                  one_minus_sum_beta,factor_common, &
-                  one_minus_sum_beta_kappa,factor_common_kappa, &
-                  b_alphaval,b_betaval,b_gammaval, &
-                  NSPEC_ATTENUATION_AB, NSPEC_ATTENUATION_AB_kappa, &
-                  b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
-                  b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
-                  b_epsilondev_xz,b_epsilondev_yz,b_epsilon_trace_over_3, &
-                  ANISOTROPY,NSPEC_ANISO, &
-                  c11store,c12store,c13store,c14store,c15store,c16store,&
-                  c22store,c23store,c24store,c25store,c26store,c33store,&
-                  c34store,c35store,c36store,c44store,c45store,c46store,&
-                  c55store,c56store,c66store, &
-                  SIMULATION_TYPE, COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY,&
-                  NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT,&
-                  is_moho_top,is_moho_bot, &
-                  b_dsdx_top,b_dsdx_bot, &
-                  ispec2D_moho_top,ispec2D_moho_bot, &
-                  num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic,&
-                  phase_ispec_inner_elastic,.true.)
-
-  case default
-
-    stop 'error no Deville routine available for chosen NGLLX'
-
-  end select
-
-
-end subroutine compute_forces_viscoelastic_Dev_sim3
-
-!
-!=====================================================================
 
 ! elastic solver
 
@@ -647,7 +478,7 @@ subroutine compute_forces_viscoelastic_GPU()
   use specfem_par_elastic
   use specfem_par_poroelastic
   use pml_par
-  use fault_solver_dynamic, only : bc_dynflt_set3d_all,SIMULATION_TYPE_DYN
+  use fault_solver_dynamic, only : bc_dynflt_set3d_all,SIMULATION_TYPE_DYN,synchronize_GPU
   use fault_solver_kinematic, only : bc_kinflt_set_all,SIMULATION_TYPE_KIN
 
   implicit none
@@ -658,7 +489,6 @@ subroutine compute_forces_viscoelastic_GPU()
   ! check
   if (PML_CONDITIONS) &
     call exit_MPI(myrank,'PML conditions not yet implemented for routine compute_forces_viscoelastic_GPU()')
-
   ! distinguishes two runs: for points on MPI interfaces, and points within the partitions
   do iphase=1,2
 
@@ -702,8 +532,7 @@ subroutine compute_forces_viscoelastic_GPU()
       call compute_stacey_viscoelastic_GPU(phase_is_inner,num_abs_boundary_faces, &
                                            SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
                                            b_num_abs_boundary_faces,b_reclen_field,b_absorb_field, &
-                                           Mesh_pointer, &
-                                           it_dsm,Veloc_dsm_boundary,Tract_dsm_boundary,COUPLE_WITH_EXTERNAL_CODE)
+                                           Mesh_pointer)
     endif
 
     ! acoustic coupling
@@ -802,18 +631,51 @@ subroutine compute_forces_viscoelastic_GPU()
 
   enddo
 
-!Percy , Fault boundary term B*tau is added to the assembled forces
-!        which at this point are stored in the array 'accel'
+  !Percy , Fault boundary term B*tau is added to the assembled forces
+  !        which at this point are stored in the array 'accel'
   if (SIMULATION_TYPE_DYN .or. SIMULATION_TYPE_KIN) then
     ! transfers wavefields to the CPU
-    call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc,accel, Mesh_pointer)
+    ! call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc,accel, Mesh_pointer)
+    ! will remove later if GPU fault solver is fully tested
 
     ! adds dynamic source
-    if (SIMULATION_TYPE_DYN) call bc_dynflt_set3d_all(accel,veloc,displ)
-    if (SIMULATION_TYPE_KIN) call bc_kinflt_set_all(accel,veloc,displ)
+    ! if (SIMULATION_TYPE_DYN) call bc_dynflt_set3d_all(accel,veloc,displ)
+    ! if (SIMULATION_TYPE_KIN) call bc_kinflt_set_all(accel,veloc,displ)
+    call fault_solver_gpu(Mesh_pointer,Fault_pointer,deltat,myrank)  ! GPU fault solver
+    !call transfer_boundary_from_device_a(Mesh_pointer,nspec_outer_elastic)
+    ! transfer data from mp->d_boundary to mp->h_boundary
+    !call sync_copy_from_device(Mesh_pointer,2,buffer_send_vector_ext_mesh)
+    ! transfer data from mp->h_boundary to send_buffer
+    !call assemble_MPI_vector_send_cuda(NPROC, &
+    !              buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
+    !              num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+    !              nibool_interfaces_ext_mesh,&
+    !              my_neighbours_ext_mesh, &
+    !              request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
+
+      ! transfers mpi buffers onto GPU
+    !call transfer_boundary_to_device(NPROC,Mesh_pointer,buffer_recv_vector_ext_mesh, &
+    !              num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
+    !              request_recv_vector_ext_mesh)
+      ! waits for send/receive requests to be completed and assembles values
+    !call synchronize_MPI_vector_write_cuda(NPROC,NGLOB_AB,accel, Mesh_pointer,&
+    !                  buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh,&
+    !                  max_nibool_interfaces_ext_mesh, &
+    !                  nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+    !                  request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
+    !                  1)
+
+
+
+    if((mod(it,500)==0) .and. (it /= 0))  call synchronize_GPU(it)  ! output results every 500 steps
+
+
+
+
 
     ! transfers acceleration back to GPU
-    call transfer_accel_to_device(NDIM*NGLOB_AB,accel, Mesh_pointer)
+    ! call transfer_accel_to_device(NDIM*NGLOB_AB,accel, Mesh_pointer)
+    ! will remove later if GPU fault solver is fully tested
   endif
 
  ! multiplies with inverse of mass matrix (note: rmass has been inverted already)

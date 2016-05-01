@@ -128,7 +128,7 @@ subroutine initialize_fault (bc,IIN_BIN)
   integer :: ij,k,e
 
   read(IIN_BIN) bc%nspec,bc%nglob
-  if (.NOT.PARALLEL_FAULT .and. bc%nspec==0) return
+  if (.not.PARALLEL_FAULT .and. bc%nspec==0) return
   if (bc%nspec>0) then
 
     allocate(bc%ibulk1(bc%nglob))
@@ -475,7 +475,7 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
     dataT%ndat = ndat
     dataT%nt = NT
     dataT%dt = DT
-    allocate(dataT%dat(dataT%ndat,dataT%nt,dataT%npoin))
+    allocate(dataT%dat(dataT%ndat,dataT%npoin,dataT%nt))
     dataT%dat = 0e0_CUSTOM_REAL
     allocate(dataT%longFieldNames(dataT%ndat))
     dataT%longFieldNames(1) = "horizontal right-lateral slip (m)"
@@ -502,13 +502,13 @@ subroutine store_dataT(dataT,d,v,t,itime)
 
   do i=1,dataT%npoin
     k = dataT%iglob(i)
-    dataT%dat(1,itime,i) = d(1,k)
-    dataT%dat(2,itime,i) = v(1,k)
-    dataT%dat(3,itime,i) = t(1,k)/1.0e6_CUSTOM_REAL
-    dataT%dat(4,itime,i) = -d(2,k)
-    dataT%dat(5,itime,i) = -v(2,k)
-    dataT%dat(6,itime,i) = -t(2,k)/1.0e6_CUSTOM_REAL
-    dataT%dat(7,itime,i) = t(3,k)/1.0e6_CUSTOM_REAL
+    dataT%dat(1,i,itime) = d(1,k)
+    dataT%dat(2,i,itime) = v(1,k)
+    dataT%dat(3,i,itime) = t(1,k)/1.0e6_CUSTOM_REAL
+    dataT%dat(4,i,itime) = -d(2,k)
+    dataT%dat(5,i,itime) = -v(2,k)
+    dataT%dat(6,i,itime) = -t(2,k)/1.0e6_CUSTOM_REAL
+    dataT%dat(7,i,itime) = t(3,k)/1.0e6_CUSTOM_REAL
   enddo
 
 end subroutine store_dataT
@@ -550,7 +550,7 @@ subroutine SCEC_write_dataT(dataT)
     write(IOUT,*) "# t " // trim(dataT%shortFieldNames)
     write(IOUT,*) "#"
     do k=1,dataT%nt
-      write(IOUT,my_fmt) k*dataT%dt, dataT%dat(:,k,i)
+      write(IOUT,my_fmt) k*dataT%dt, dataT%dat(:,i,k)
     enddo
     close(IOUT)
   enddo

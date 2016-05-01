@@ -99,11 +99,9 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   integer, intent(in) :: nspec_CPML
   integer, dimension(nspec_CPML), intent(in) :: CPML_to_spec,CPML_regions
   logical, dimension(nspec), intent(in) :: is_CPML
+  integer :: nspec_CPML_total
 
   integer :: i,ispec,ier
-  ! dummy_nspec_cpml is used here to match the read instructions
-  ! in generate_databases/read_partition_files.f90
-  integer :: dummy_nspec_cpml
 
   ! name of the database files
   character(len=MAX_STRING_LEN) :: LOCAL_PATH
@@ -246,6 +244,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   ! debug
   !print *,'undef_matpropl: ',trim(undef_matpropl)
 
+  ! Boundaries
   call safe_alloc(nodes_ibelm_xmin, ngnod2d, nspec2d_xmin, "nodes_ibelm_xmin")
   call safe_alloc(nodes_ibelm_xmax, ngnod2d, nspec2d_xmax, "nodes_ibelm_xmax")
   call safe_alloc(nodes_ibelm_ymin, ngnod2d, nspec2d_ymin, "nodes_ibelm_ymin")
@@ -302,11 +301,13 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
     nodes_ibelm_top(4, i) = ibool(1,NGLLY_M,NGLLZ_M,ibelm_top(i))
   enddo
 
-  ! JC JC todo: implement C-PML code in internal mesher
-  ! dummy_nspec_cpml is used here to match the read instructions
-  ! in generate_databases/read_partition_files.f90
-  dummy_nspec_cpml = 0
+  ! CPML
+  call sum_all_i(nspec_CPML,nspec_CPML_total)
+  call synchronize_all()
+  call bcast_all_singlei(nspec_CPML_total)
+  call synchronize_all()
 
+  ! MPI interfaces
   nb_interfaces = 0
   nspec_interfaces_max = 0
   if (NPROC_XI >= 2 .or. NPROC_ETA >= 2) then

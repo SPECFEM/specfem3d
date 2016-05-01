@@ -74,13 +74,8 @@
                        weight = wxgll(i)*wygll(j)*wzgll(k)
                        jacobianl = jacobianstore(i,j,k,ispec)
 
-                       if (CUSTOM_REAL == SIZE_REAL) then
-                          rmass(iglob) = rmass(iglob) + &
-                               sngl( dble(jacobianl) * weight * dble(rhostore(i,j,k,ispec)) )
-                       else
-                          rmass(iglob) = rmass(iglob) + &
-                               jacobianl * weight * rhostore(i,j,k,ispec)
-                       endif
+                       rmass(iglob) = rmass(iglob) + &
+                               real( dble(jacobianl) * weight * dble(rhostore(i,j,k,ispec)),kind=CUSTOM_REAL)
                     enddo
                  enddo
               enddo
@@ -104,19 +99,14 @@
               do k=1,NGLLZ
                  do j=1,NGLLY
                     do i=1,NGLLX
-                       iglob = ibool(i,j,k,ispec)
+                      iglob = ibool(i,j,k,ispec)
 
-                       weight = wxgll(i)*wygll(j)*wzgll(k)
-                       jacobianl = jacobianstore(i,j,k,ispec)
+                      weight = wxgll(i)*wygll(j)*wzgll(k)
+                      jacobianl = jacobianstore(i,j,k,ispec)
 
-                       ! distinguish between single and double precision for reals
-                       if (CUSTOM_REAL == SIZE_REAL) then
-                          rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
-                               sngl( dble(jacobianl) * weight / dble(kappastore(i,j,k,ispec)) )
-                       else
-                          rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
-                               jacobianl * weight / kappastore(i,j,k,ispec)
-                       endif
+                      ! distinguish between single and double precision for reals
+                      rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                               real( dble(jacobianl) * weight / dble(kappastore(i,j,k,ispec)) ,kind=CUSTOM_REAL)
                     enddo
                  enddo
               enddo
@@ -150,23 +140,14 @@
               tort = tortstore(i,j,k,ispec)
               rho_bar = (1._CUSTOM_REAL-phi)*rho_s + phi*rho_f
 
-              if (CUSTOM_REAL == SIZE_REAL) then
-                ! for the solid mass matrix
-                rmass_solid_poroelastic(iglob) = rmass_solid_poroelastic(iglob) + &
-                    sngl( dble(jacobianl) * weight * dble(rho_bar - phi*rho_f/tort) )
+              ! for the solid mass matrix
+              rmass_solid_poroelastic(iglob) = rmass_solid_poroelastic(iglob) + &
+                    real( dble(jacobianl) * weight * dble(rho_bar - phi*rho_f/tort) ,kind=CUSTOM_REAL)
 
-                ! for the fluid mass matrix
-                rmass_fluid_poroelastic(iglob) = rmass_fluid_poroelastic(iglob) + &
-                    sngl( dble(jacobianl) * weight * dble(rho_bar*rho_f*tort - &
-                                                phi*rho_f*rho_f)/dble(rho_bar*phi) )
-              else
-                rmass_solid_poroelastic(iglob) = rmass_solid_poroelastic(iglob) + &
-                    jacobianl * weight * (rho_bar - phi*rho_f/tort)
-
-                rmass_fluid_poroelastic(iglob) = rmass_fluid_poroelastic(iglob) + &
-                    jacobianl * weight * (rho_bar*rho_f*tort - &
-                                                phi*rho_f*rho_f) / (rho_bar*phi)
-              endif
+              ! for the fluid mass matrix
+              rmass_fluid_poroelastic(iglob) = rmass_fluid_poroelastic(iglob) + &
+                    real( dble(jacobianl) * weight * dble(rho_bar*rho_f*tort - &
+                                                phi*rho_f*rho_f)/dble(rho_bar*phi) ,kind=CUSTOM_REAL)
             enddo
           enddo
         enddo
@@ -175,7 +156,7 @@
   endif
 
   ! Stacey absorbing conditions (adds C*deltat/2 contribution to the mass matrices on Stacey edges)
-  if (STACEY_ABSORBING_CONDITIONS)call create_mass_matrices_Stacey(nglob,nspec,ibool)
+  if (STACEY_ABSORBING_CONDITIONS) call create_mass_matrices_Stacey(nglob,nspec,ibool)
 
   ! ocean load mass matrix
   call create_mass_matrices_ocean_load(nglob,nspec,ibool)
@@ -280,11 +261,7 @@
                    * dble(RHO_APPROXIMATE_OCEAN_LOAD) * height_oceans
 
           ! distinguish between single and double precision for reals
-          if (CUSTOM_REAL == SIZE_REAL) then
-            rmass_ocean_load(iglobnum) = rmass_ocean_load(iglobnum) + sngl(weight)
-          else
-            rmass_ocean_load(iglobnum) = rmass_ocean_load(iglobnum) + weight
-          endif
+          rmass_ocean_load(iglobnum) = rmass_ocean_load(iglobnum) + real(weight,kind=CUSTOM_REAL)
 
         enddo ! igll
       endif ! ispec_is_elastic
@@ -354,16 +331,11 @@
   endif
 
   ! use the non-dimensional time step to make the mass matrix correction
-  if (CUSTOM_REAL == SIZE_REAL) then
-    deltat = sngl(DT)
-    deltatover2 = sngl(0.5d0*deltat)
-  else
-    deltat = DT
-    deltatover2 = 0.5d0*deltat
-  endif
+  deltat = real(DT,kind=CUSTOM_REAL)
+  deltatover2 = real(0.5d0*deltat,kind=CUSTOM_REAL)
 
   ! adds contributions to mass matrix to stabilize Stacey conditions
-  do iface=1,num_abs_boundary_faces
+  do iface = 1,num_abs_boundary_faces
 
     ispec = abs_boundary_ispec(iface)
 
@@ -452,11 +424,7 @@
   integer :: ispec,iglob,i,j,k,ispec_CPML
 
   ! use the non-dimensional time step to make the mass matrix correction
-  if (CUSTOM_REAL == SIZE_REAL) then
-     deltat = sngl(DT)
-  else
-     deltat = DT
-  endif
+  deltat = real(DT,kind=CUSTOM_REAL)
 
   ! loops over physical mesh elements
   do ispec=1,nspec
@@ -470,13 +438,8 @@
                  weight = wxgll(i)*wygll(j)*wzgll(k)
                  jacobianl = jacobianstore(i,j,k,ispec)
 
-                 if (CUSTOM_REAL == SIZE_REAL) then
-                    rmass(iglob) = rmass(iglob) + &
-                         sngl( dble(jacobianl) * weight * dble(mat_coef) )
-                 else
-                    rmass(iglob) = rmass(iglob) + &
-                         jacobianl * weight * mat_coef
-                 endif
+                 rmass(iglob) = rmass(iglob) + &
+                         real( dble(jacobianl) * weight * dble(mat_coef) ,kind=CUSTOM_REAL)
               enddo
            enddo
         enddo
@@ -499,15 +462,10 @@
                     weight = wxgll(i)*wygll(j)*wzgll(k)
                     jacobianl = jacobianstore(i,j,k,ispec)
 
-                    if (CUSTOM_REAL == SIZE_REAL) then
-                       rmass(iglob) = rmass(iglob) + &
-                            sngl( dble(jacobianl) * weight * dble(mat_coef) * &
-                            (dble(K_store_x(i,j,k,ispec_CPML)) + dble(d_store_x(i,j,k,ispec_CPML)) * deltat / 2.d0) )
-                    else
-                       rmass(iglob) = rmass(iglob) + &
-                            jacobianl * weight * mat_coef * &
-                            (K_store_x(i,j,k,ispec_CPML) + d_store_x(i,j,k,ispec_CPML) * deltat / 2.d0)
-                    endif
+                    rmass(iglob) = rmass(iglob) + &
+                      real( dble(jacobianl) * weight * dble(mat_coef) * &
+                           (dble(K_store_x(i,j,k,ispec_CPML)) &
+                           + dble(d_store_x(i,j,k,ispec_CPML)) * deltat / 2.d0) ,kind=CUSTOM_REAL)
                  enddo
               enddo
            enddo
@@ -523,15 +481,10 @@
                     weight = wxgll(i)*wygll(j)*wzgll(k)
                     jacobianl = jacobianstore(i,j,k,ispec)
 
-                    if (CUSTOM_REAL == SIZE_REAL) then
-                       rmass(iglob) = rmass(iglob) + &
-                            sngl( dble(jacobianl) * weight * dble(mat_coef) * &
-                            (dble(K_store_y(i,j,k,ispec_CPML)) + dble(d_store_y(i,j,k,ispec_CPML)) * deltat / 2.d0) )
-                    else
-                       rmass(iglob) = rmass(iglob) + &
-                            jacobianl * weight * mat_coef * &
-                            (K_store_y(i,j,k,ispec_CPML) + d_store_y(i,j,k,ispec_CPML) * deltat / 2.d0)
-                    endif
+                    rmass(iglob) = rmass(iglob) + &
+                        real( dble(jacobianl) * weight * dble(mat_coef) * &
+                             (dble(K_store_y(i,j,k,ispec_CPML)) &
+                             + dble(d_store_y(i,j,k,ispec_CPML)) * deltat / 2.d0) ,kind=CUSTOM_REAL)
                  enddo
               enddo
            enddo
@@ -547,15 +500,10 @@
                     weight = wxgll(i)*wygll(j)*wzgll(k)
                     jacobianl = jacobianstore(i,j,k,ispec)
 
-                    if (CUSTOM_REAL == SIZE_REAL) then
-                       rmass(iglob) = rmass(iglob) + &
-                            sngl( dble(jacobianl) * weight * dble(mat_coef) * &
-                            (dble(K_store_z(i,j,k,ispec_CPML)) + dble(d_store_z(i,j,k,ispec_CPML)) * deltat / 2.d0) )
-                    else
-                       rmass(iglob) = rmass(iglob) + &
-                            jacobianl * weight * mat_coef * &
-                            (K_store_z(i,j,k,ispec_CPML) + d_store_z(i,j,k,ispec_CPML) * deltat / 2.d0)
-                    endif
+                    rmass(iglob) = rmass(iglob) + &
+                        real( dble(jacobianl) * weight * dble(mat_coef) * &
+                        (dble(K_store_z(i,j,k,ispec_CPML)) + dble(d_store_z(i,j,k,ispec_CPML)) &
+                        * deltat / 2.d0) ,kind=CUSTOM_REAL)
                  enddo
               enddo
            enddo
@@ -571,19 +519,12 @@
                     weight = wxgll(i)*wygll(j)*wzgll(k)
                     jacobianl = jacobianstore(i,j,k,ispec)
 
-                    if (CUSTOM_REAL == SIZE_REAL) then
-                       rmass(iglob) = rmass(iglob) + &
-                            sngl( dble(jacobianl) * weight * dble(mat_coef) * &
-                            (dble(K_store_x(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML)) + &
-                            (dble(d_store_x(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML)) + &
-                            dble(d_store_y(i,j,k,ispec_CPML)) * dble(K_store_x(i,j,k,ispec_CPML))) * deltat / 2.d0) )
-                    else
-                       rmass(iglob) = rmass(iglob) + &
-                            jacobianl * weight * mat_coef * &
-                            (K_store_x(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) + &
-                            (d_store_x(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) + &
-                            d_store_y(i,j,k,ispec_CPML) * K_store_x(i,j,k,ispec_CPML)) * deltat / 2.d0)
-                    endif
+                    rmass(iglob) = rmass(iglob) + &
+                      real( dble(jacobianl) * weight * dble(mat_coef) * &
+                          (dble(K_store_x(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML)) + &
+                          (dble(d_store_x(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML)) + &
+                           dble(d_store_y(i,j,k,ispec_CPML)) * dble(K_store_x(i,j,k,ispec_CPML))) &
+                           * deltat / 2.d0) ,kind=CUSTOM_REAL)
                  enddo
               enddo
            enddo
@@ -599,19 +540,12 @@
                     weight = wxgll(i)*wygll(j)*wzgll(k)
                     jacobianl = jacobianstore(i,j,k,ispec)
 
-                    if (CUSTOM_REAL == SIZE_REAL) then
-                       rmass(iglob) = rmass(iglob) + &
-                            sngl( dble(jacobianl) * weight * dble(mat_coef) * &
+                    rmass(iglob) = rmass(iglob) + &
+                            real( dble(jacobianl) * weight * dble(mat_coef) * &
                             (dble(K_store_x(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
                             (dble(d_store_x(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
-                            dble(d_store_z(i,j,k,ispec_CPML)) * dble(K_store_x(i,j,k,ispec_CPML))) * deltat / 2.d0) )
-                    else
-                       rmass(iglob) = rmass(iglob) + &
-                            jacobianl * weight * mat_coef * &
-                            (K_store_x(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
-                            (d_store_x(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
-                            d_store_z(i,j,k,ispec_CPML) * K_store_x(i,j,k,ispec_CPML)) * deltat / 2.d0)
-                    endif
+                            dble(d_store_z(i,j,k,ispec_CPML)) * dble(K_store_x(i,j,k,ispec_CPML))) &
+                            * deltat / 2.d0) ,kind=CUSTOM_REAL)
                  enddo
               enddo
            enddo
@@ -627,19 +561,12 @@
                     weight = wxgll(i)*wygll(j)*wzgll(k)
                     jacobianl = jacobianstore(i,j,k,ispec)
 
-                    if (CUSTOM_REAL == SIZE_REAL) then
-                       rmass(iglob) = rmass(iglob) + &
-                            sngl( dble(jacobianl) * weight * dble(mat_coef) * &
-                            (dble(K_store_y(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
-                            (dble(d_store_y(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
-                            dble(d_store_z(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML))) * deltat / 2.d0) )
-                    else
-                       rmass(iglob) = rmass(iglob) + &
-                            jacobianl * weight * mat_coef * &
-                            (K_store_y(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
-                            (d_store_y(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
-                            d_store_z(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML)) * deltat / 2.d0)
-                    endif
+                    rmass(iglob) = rmass(iglob) + &
+                        real( dble(jacobianl) * weight * dble(mat_coef) * &
+                             (dble(K_store_y(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
+                             (dble(d_store_y(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
+                              dble(d_store_z(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML))) &
+                              * deltat / 2.d0) ,kind=CUSTOM_REAL)
                  enddo
               enddo
            enddo
@@ -655,25 +582,15 @@
                     weight = wxgll(i)*wygll(j)*wzgll(k)
                     jacobianl = jacobianstore(i,j,k,ispec)
 
-                    if (CUSTOM_REAL == SIZE_REAL) then
-                       rmass(iglob) = rmass(iglob) + &
-                            sngl( dble(jacobianl) * weight * dble(mat_coef) * &
+                    rmass(iglob) = rmass(iglob) + &
+                        real( dble(jacobianl) * weight * dble(mat_coef) * &
                             (dble(K_store_x(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML)) * &
                             dble(K_store_z(i,j,k,ispec_CPML)) + (dble(d_store_x(i,j,k,ispec_CPML)) * &
                             dble(K_store_y(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
                             dble(d_store_y(i,j,k,ispec_CPML)) * dble(K_store_x(i,j,k,ispec_CPML)) * &
                             dble(K_store_z(i,j,k,ispec_CPML)) + dble(d_store_z(i,j,k,ispec_CPML)) * &
                             dble(K_store_x(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML))) * &
-                            deltat / 2.d0) )
-                    else
-                       rmass(iglob) = rmass(iglob) + &
-                            jacobianl * weight * mat_coef * &
-                            (K_store_x(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
-                            (d_store_x(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
-                            d_store_y(i,j,k,ispec_CPML) * K_store_x(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
-                            d_store_z(i,j,k,ispec_CPML) * K_store_x(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML)) * &
-                            deltat / 2.0)
-                    endif
+                            deltat / 2.d0) ,kind=CUSTOM_REAL)
                  enddo
               enddo
            enddo
@@ -710,11 +627,7 @@
   integer :: ispec,iglob,i,j,k,ispec_CPML
 
   ! use the non-dimensional time step to make the mass matrix correction
-  if (CUSTOM_REAL == SIZE_REAL) then
-     deltat = sngl(DT)
-  else
-     deltat = DT
-  endif
+  deltat = real(DT,kind=CUSTOM_REAL)
 
   ! loops over physical mesh elements
   do ispec=1,nspec
@@ -728,13 +641,8 @@
                  weight = wxgll(i)*wygll(j)*wzgll(k)
                  jacobianl = jacobianstore(i,j,k,ispec)
 
-                 if (CUSTOM_REAL == SIZE_REAL) then
-                    rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
-                         sngl( dble(jacobianl) * weight * dble(mat_coef) )
-                 else
-                    rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
-                         jacobianl * weight * mat_coef
-                 endif
+                 rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                         real( dble(jacobianl) * weight * dble(mat_coef) ,kind=CUSTOM_REAL)
               enddo
            enddo
         enddo
@@ -757,15 +665,10 @@
                     weight = wxgll(i)*wygll(j)*wzgll(k)
                     jacobianl = jacobianstore(i,j,k,ispec)
 
-                    if (CUSTOM_REAL == SIZE_REAL) then
-                       rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
-                            sngl( dble(jacobianl) * weight * dble(mat_coef) * &
-                            (dble(K_store_x(i,j,k,ispec_CPML)) + dble(d_store_x(i,j,k,ispec_CPML)) * deltat / 2.d0) )
-                    else
-                       rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
-                            jacobianl * weight * mat_coef * &
-                            (K_store_x(i,j,k,ispec_CPML) + d_store_x(i,j,k,ispec_CPML) * deltat / 2.d0)
-                    endif
+                    rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                        real( dble(jacobianl) * weight * dble(mat_coef) * &
+                            (dble(K_store_x(i,j,k,ispec_CPML)) + dble(d_store_x(i,j,k,ispec_CPML)) &
+                            * deltat / 2.d0) ,kind=CUSTOM_REAL)
                  enddo
               enddo
            enddo
@@ -781,15 +684,10 @@
                     weight = wxgll(i)*wygll(j)*wzgll(k)
                     jacobianl = jacobianstore(i,j,k,ispec)
 
-                    if (CUSTOM_REAL == SIZE_REAL) then
-                       rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
-                            sngl( dble(jacobianl) * weight * dble(mat_coef) * &
-                            (dble(K_store_y(i,j,k,ispec_CPML)) + dble(d_store_y(i,j,k,ispec_CPML)) * deltat / 2.d0) )
-                    else
-                       rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
-                            jacobianl * weight * mat_coef * &
-                            (K_store_y(i,j,k,ispec_CPML) + d_store_y(i,j,k,ispec_CPML) * deltat / 2.d0)
-                    endif
+                    rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                        real( dble(jacobianl) * weight * dble(mat_coef) * &
+                            (dble(K_store_y(i,j,k,ispec_CPML)) + dble(d_store_y(i,j,k,ispec_CPML)) &
+                            * deltat / 2.d0) ,kind=CUSTOM_REAL)
                  enddo
               enddo
            enddo
@@ -805,15 +703,10 @@
                     weight = wxgll(i)*wygll(j)*wzgll(k)
                     jacobianl = jacobianstore(i,j,k,ispec)
 
-                    if (CUSTOM_REAL == SIZE_REAL) then
-                       rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
-                            sngl( dble(jacobianl) * weight * dble(mat_coef) * &
-                            (dble(K_store_z(i,j,k,ispec_CPML)) + dble(d_store_z(i,j,k,ispec_CPML)) * deltat / 2.d0) )
-                    else
-                       rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
-                            jacobianl * weight * mat_coef * &
-                            (K_store_z(i,j,k,ispec_CPML) + d_store_z(i,j,k,ispec_CPML) * deltat / 2.d0)
-                    endif
+                    rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                        real( dble(jacobianl) * weight * dble(mat_coef) * &
+                            (dble(K_store_z(i,j,k,ispec_CPML)) + dble(d_store_z(i,j,k,ispec_CPML)) &
+                            * deltat / 2.d0) ,kind=CUSTOM_REAL)
                  enddo
               enddo
            enddo
@@ -829,19 +722,12 @@
                     weight = wxgll(i)*wygll(j)*wzgll(k)
                     jacobianl = jacobianstore(i,j,k,ispec)
 
-                    if (CUSTOM_REAL == SIZE_REAL) then
-                       rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
-                            sngl( dble(jacobianl) * weight * dble(mat_coef) * &
+                    rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                        real( dble(jacobianl) * weight * dble(mat_coef) * &
                             (dble(K_store_x(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML)) + &
                             (dble(d_store_x(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML)) + &
-                            dble(d_store_y(i,j,k,ispec_CPML)) * dble(K_store_x(i,j,k,ispec_CPML))) * deltat / 2.d0) )
-                    else
-                       rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
-                            jacobianl * weight * mat_coef * &
-                            (K_store_x(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) + &
-                            (d_store_x(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) + &
-                            d_store_y(i,j,k,ispec_CPML) * K_store_x(i,j,k,ispec_CPML)) * deltat / 2.d0)
-                    endif
+                            dble(d_store_y(i,j,k,ispec_CPML)) * dble(K_store_x(i,j,k,ispec_CPML))) &
+                            * deltat / 2.d0) ,kind=CUSTOM_REAL)
                  enddo
               enddo
            enddo
@@ -857,19 +743,12 @@
                     weight = wxgll(i)*wygll(j)*wzgll(k)
                     jacobianl = jacobianstore(i,j,k,ispec)
 
-                    if (CUSTOM_REAL == SIZE_REAL) then
-                       rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
-                            sngl( dble(jacobianl) * weight * dble(mat_coef) * &
+                    rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                        real( dble(jacobianl) * weight * dble(mat_coef) * &
                             (dble(K_store_x(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
                             (dble(d_store_x(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
-                            dble(d_store_z(i,j,k,ispec_CPML)) * dble(K_store_x(i,j,k,ispec_CPML))) * deltat / 2.d0) )
-                    else
-                       rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
-                            jacobianl * weight * mat_coef * &
-                            (K_store_x(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
-                            (d_store_x(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
-                            d_store_z(i,j,k,ispec_CPML) * K_store_x(i,j,k,ispec_CPML)) * deltat / 2.d0)
-                    endif
+                            dble(d_store_z(i,j,k,ispec_CPML)) * dble(K_store_x(i,j,k,ispec_CPML))) &
+                            * deltat / 2.d0) ,kind=CUSTOM_REAL)
                  enddo
               enddo
            enddo
@@ -885,19 +764,12 @@
                     weight = wxgll(i)*wygll(j)*wzgll(k)
                     jacobianl = jacobianstore(i,j,k,ispec)
 
-                    if (CUSTOM_REAL == SIZE_REAL) then
-                       rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
-                            sngl( dble(jacobianl) * weight * dble(mat_coef) * &
+                    rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                        real( dble(jacobianl) * weight * dble(mat_coef) * &
                             (dble(K_store_y(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
                             (dble(d_store_y(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
-                            dble(d_store_z(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML))) * deltat / 2.d0) )
-                    else
-                       rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
-                            jacobianl * weight * mat_coef * &
-                            (K_store_y(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
-                            (d_store_y(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
-                            d_store_z(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML)) * deltat / 2.d0)
-                    endif
+                            dble(d_store_z(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML))) &
+                            * deltat / 2.d0) ,kind=CUSTOM_REAL)
                  enddo
               enddo
            enddo
@@ -913,25 +785,15 @@
                     weight = wxgll(i)*wygll(j)*wzgll(k)
                     jacobianl = jacobianstore(i,j,k,ispec)
 
-                    if (CUSTOM_REAL == SIZE_REAL) then
-                       rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
-                            sngl( dble(jacobianl) * weight * dble(mat_coef) * &
+                    rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
+                        real( dble(jacobianl) * weight * dble(mat_coef) * &
                             (dble(K_store_x(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML)) * &
                             dble(K_store_z(i,j,k,ispec_CPML)) + (dble(d_store_x(i,j,k,ispec_CPML)) * &
                             dble(K_store_y(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
                             dble(d_store_y(i,j,k,ispec_CPML)) * dble(K_store_x(i,j,k,ispec_CPML)) * &
                             dble(K_store_z(i,j,k,ispec_CPML)) + dble(d_store_z(i,j,k,ispec_CPML)) * &
                             dble(K_store_y(i,j,k,ispec_CPML)) * dble(K_store_x(i,j,k,ispec_CPML))) * &
-                            deltat / 2.d0) )
-                    else
-                       rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
-                            jacobianl * weight * mat_coef * &
-                            (K_store_x(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
-                            (d_store_x(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
-                            d_store_y(i,j,k,ispec_CPML) * K_store_x(i,j,k,ispec_CPML) * K_store_z(i,j,k,ispec_CPML) + &
-                            d_store_z(i,j,k,ispec_CPML) * K_store_y(i,j,k,ispec_CPML) * K_store_x(i,j,k,ispec_CPML)) * &
-                            deltat / 2.d0)
-                    endif
+                            deltat / 2.d0) ,kind=CUSTOM_REAL)
                  enddo
               enddo
            enddo

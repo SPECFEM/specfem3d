@@ -42,6 +42,7 @@
 
   ! local parameters
   double precision :: tCPU
+  double precision, external :: wtime
 
   ! get MPI starting time
   time_start = wtime()
@@ -73,9 +74,8 @@
   call prepare_timerun_gravity()
 
   ! ZN I do not use if(USE_LDDRK) call prepare_timerun_lddrk()
-  ! ZN in order to avoid the error of using unallocated array.
-  ! ZN since R_**_lddrk are dummy variables in subroutine compute_forces_viscoelastic_Dev and
-  ! ZN in compute_forces_viscoelastic_noDev
+  ! ZN in order to avoid the error of using unallocated arrays later on in the code,
+  ! ZN since R_**_lddrk are arguments in subroutine compute_forces_viscoelastic
   call prepare_timerun_lddrk()
 
   ! prepares C-PML arrays
@@ -288,7 +288,7 @@
         rmassy(:) = rmass(:)
         rmassz(:) = rmass(:)
       else
-        ! adds boundary contributions for newmark scheme
+        ! adds boundary contributions for Newmark scheme
         rmassx(:) = rmass(:) + rmassx(:)
         rmassy(:) = rmass(:) + rmassy(:)
         rmassz(:) = rmass(:) + rmassz(:)
@@ -422,18 +422,17 @@
   character(len=MAX_STRING_LEN) :: plot_file
   integer :: ier
 
+  ! time scheme
   if (.not. USE_LDDRK) then
+    ! Newmark time scheme, only single update needed
     NSTAGE_TIME_SCHEME = 1
   else
+    ! LDDRK time scheme with 6-stages
     NSTAGE_TIME_SCHEME = 6
   endif
 
   ! distinguish between single and double precision for reals
-  if (CUSTOM_REAL == SIZE_REAL) then
-    deltat = sngl(DT)
-  else
-    deltat = DT
-  endif
+  deltat = real(DT,kind=CUSTOM_REAL)
   deltatover2 = deltat/2._CUSTOM_REAL
   deltatsqover2 = deltat*deltat/2._CUSTOM_REAL
 
@@ -441,11 +440,7 @@
   if (SIMULATION_TYPE == 3) then
     ! backward/reconstructed wavefields: time stepping is in time-reversed sense
     ! (negative time increments)
-    if (CUSTOM_REAL == SIZE_REAL) then
-      b_deltat = - sngl(DT)
-    else
-      b_deltat = - DT
-    endif
+    b_deltat = - real(DT,kind=CUSTOM_REAL)
     b_deltatover2 = b_deltat/2._CUSTOM_REAL
     b_deltatsqover2 = b_deltat*b_deltat/2._CUSTOM_REAL
   endif
@@ -570,11 +565,8 @@
               f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
 
     ! determines alphaval,betaval,gammaval for runge-kutta scheme
-    if (CUSTOM_REAL == SIZE_REAL) then
-      tau_sigma(:) = sngl(tau_sigma_dble(:))
-    else
-      tau_sigma(:) = tau_sigma_dble(:)
-    endif
+    tau_sigma(:) = real(tau_sigma_dble(:),kind=CUSTOM_REAL)
+
     call get_attenuation_memory_values(tau_sigma,deltat,alphaval,betaval,gammaval)
 
     ! shifts shear moduli
@@ -610,14 +602,13 @@
     ! user output
     if (myrank == 0) then
       write(IMAIN,*)
-      write(IMAIN,*) "attenuation: "
-      write(IMAIN,*) "  reference period (s)   : ",sngl(1.0/ATTENUATION_f0_REFERENCE), &
-                    " frequency: ",sngl(ATTENUATION_f0_REFERENCE)
-      write(IMAIN,*) "  period band min/max (s): ",sngl(MIN_ATTENUATION_PERIOD),sngl(MAX_ATTENUATION_PERIOD)
-      write(IMAIN,*) "  central period (s)     : ",sngl(1.0/f_c_source), &
-                    " frequency: ",sngl(f_c_source)
+      write(IMAIN,*) "Attenuation:"
+      write(IMAIN,*) "  Reference frequency (Hz):",sngl(ATTENUATION_f0_REFERENCE)," period (s):",sngl(1.0/ATTENUATION_f0_REFERENCE)
+      write(IMAIN,*) "  Frequency band min/max (Hz):",sngl(1.0/MAX_ATTENUATION_PERIOD),sngl(1.0/MIN_ATTENUATION_PERIOD)
+      write(IMAIN,*) "  Period band min/max (s):",sngl(MIN_ATTENUATION_PERIOD),sngl(MAX_ATTENUATION_PERIOD)
+      write(IMAIN,*) "  Logarithmic central frequency (Hz):",sngl(f_c_source)," period (s):",sngl(1.0/f_c_source)
       if (FULL_ATTENUATION_SOLID) then
-        write(IMAIN,*) "  using full attenuation (Q_kappa & Q_mu)"
+        write(IMAIN,*) "  using attenuation having both Q_kappa and Q_mu"
       endif
       write(IMAIN,*)
       call flush_IMAIN()
@@ -797,8 +788,7 @@
     endif
 
     if (ATTENUATION) then
-      ! note: currently, they need to be defined, as they are used in the routine arguments
-      !          for compute_forces_viscoelastic_Deville()
+      ! note: currently, they need to be defined, as they are used in some subroutine arguments
       allocate(R_xx_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
                R_yy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
                R_xy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
@@ -880,7 +870,7 @@
   if (SIMULATION_TYPE /= 1) &
     stop 'Error C-PML for adjoint simulations not supported yet'
   if (GPU_MODE) &
-    stop 'Error C-PML only supported in CPU mode'
+    stop 'Error C-PML only supported in CPU mode for now'
 
   ! total number of pml elements
   call sum_all_i(NSPEC_CPML,NSPEC_CPML_GLOBAL)
@@ -1337,11 +1327,13 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
   use specfem_par_movie
+  use fault_solver_dynamic
 
   implicit none
 
   ! local parameters
   real :: free_mb,used_mb,total_mb
+
 
   ! GPU_MODE now defined in Par_file
   if (myrank == 0) then
@@ -1354,7 +1346,7 @@
   call memory_eval_gpu()
 
   ! prepares general fields on GPU
-  !! JC JC here we will need to add GPU support for the C-PML routines
+  ! add GPU support for the C-PML routines
   call prepare_constants_device(Mesh_pointer, &
                                 NGLLX, NSPEC_AB, NGLOB_AB, &
                                 xix, xiy, xiz, etax,etay,etaz, gammax, gammay, gammaz, &
@@ -1402,7 +1394,7 @@
   endif
 
   ! prepares fields on GPU for elastic simulations
-  !! JC JC here we will need to add GPU support for the C-PML routines
+  ! add GPU support for the C-PML routines
   if (ELASTIC_SIMULATION) then
     call prepare_fields_elastic_device(Mesh_pointer, &
                                 rmassx,rmassy,rmassz, &
@@ -1483,6 +1475,13 @@
     call prepare_fields_gravity_device(Mesh_pointer,GRAVITY, &
                                 minus_deriv_gravity,minus_g,wgll_cube,&
                                 ACOUSTIC_SIMULATION,rhostore)
+  endif
+
+  ! prepares Kelvin-Voigt damping around the fault
+  if (SIMULATION_TYPE_DYN) then
+    call Transfer_faultdata_GPU()
+    call prepare_fault_device(Mesh_pointer,allocated(Kelvin_Voigt_eta),Kelvin_Voigt_eta)
+    call rsf_GPU_init()
   endif
 
   ! synchronizes processes
@@ -1606,7 +1605,7 @@
       ! d_station_seismo_field
       memory_size = memory_size + 3.d0 * NGLL3 * nrec_local * dble(CUSTOM_REAL)
 
-      if (STACEY_ABSORBING_CONDITIONS) then
+      if (STACEY_ABSORBING_CONDITIONS .or. PML_CONDITIONS) then
         ! d_rho_vp,..
         memory_size = memory_size + 2.d0 * NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
       endif
@@ -1684,7 +1683,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-! OpenMP version uses "special" compute_forces_viscoelastic_Dev routine
+! OpenMP version uses "special" compute_forces_viscoelastic routine
 ! we need to set num_elem_colors_elastic arrays
 
 #ifdef OPENMP_MODE
@@ -1711,7 +1710,7 @@
       call flush_IMAIN()
     endif
 
-    ! allocate cfe_Dev_openmp local arrays for OpenMP version
+    ! allocate cfe_openmp local arrays for OpenMP version
 !! DK DK July 2014: I do not know who wrote the OpenMP version, but it is currently broken
 !! DK DK July 2014: because the arrays below are undeclared; I therefore need to comment them out
 !! DK DK July 2014: for now and put a stop statement instead

@@ -41,9 +41,8 @@
 ! returns the updated acceleration array: accel
 
   use constants,only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,NGLLSQUARE
+  use pml_par,only : rmemory_coupling_el_ac_potential_dot_dot,is_CPML,spec_to_CPML,NSPEC_CPML
 
-  use pml_par,only : rmemory_coupling_el_ac_potential_dot_dot,is_CPML,spec_to_CPML,&
-                     potential_acoustic_old,NSPEC_CPML
   implicit none
 
   integer,intent(in) :: NSPEC_AB,NGLOB_AB,SIMULATION_TYPE
@@ -114,7 +113,7 @@
             if (SIMULATION_TYPE == 1) then
               ispec_CPML = spec_to_CPML(ispec)
               call pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k,&
-                                              pressure,potential_acoustic,potential_acoustic_old,&
+                                              pressure,potential_acoustic,&
                                               potential_dot_acoustic,potential_dot_dot_acoustic, &
                                               num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential_dot_dot)
               pressure = - pressure
@@ -123,7 +122,7 @@
             if (SIMULATION_TYPE == 3) then
               ispec_CPML = spec_to_CPML(ispec)
               call pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k,&
-                                              pressure,potential_acoustic,potential_acoustic_old,&
+                                              pressure,potential_acoustic,&
                                               potential_dot_acoustic,potential_dot_dot_acoustic,&
                                               num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential_dot_dot)
             endif
@@ -250,7 +249,7 @@ end subroutine compute_coupling_viscoelastic_ac
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine compute_coupling_ocean_bpwf(NSPEC_AB,NGLOB_AB, &
+  subroutine compute_coupling_ocean_backward(NSPEC_AB,NGLOB_AB, &
                                     ibool,rmassx,rmassy,rmassz,rmass_ocean_load, &
                                     free_surface_normal,free_surface_ijk,free_surface_ispec, &
                                     num_free_surface_faces,SIMULATION_TYPE, &
@@ -339,6 +338,6 @@ end subroutine compute_coupling_viscoelastic_ac
     enddo ! igll
   enddo ! iface
 
-  end subroutine compute_coupling_ocean_bpwf
+  end subroutine compute_coupling_ocean_backward
 
 

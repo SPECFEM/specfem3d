@@ -717,11 +717,11 @@ contains
       logical :: recompute
       real(kdkind)    :: average
 
-!!$      If (.False.) Then
-!!$         If ((l < 1) .Or. (l > tp%n)) Then
+!!$      If (.false.) Then
+!!$         If ((l < 1) .or. (l > tp%n)) Then
 !!$            Stop 'illegal L value in build_tree_for_range'
 !!$         endif
-!!$         If ((u < 1) .Or. (u > tp%n)) Then
+!!$         If ((u < 1) .or. (u > tp%n)) Then
 !!$            Stop 'illegal u value in build_tree_for_range'
 !!$         endif
 !!$         If (u < l) Then

@@ -1,0 +1,19 @@
+
+Dimitri Komatitsch, March 2016:
+
+It turned out to be too complex (for now) to change the SPECFEM3D source code to read binary mesh files directly because the mesh files are read by many routines, thus many routines would need to change; thus instead I have added the attached file, which converts back from binary to ASCII
+
+Thus the way to use them for now is:
+
+1/ convert from ASCII to binary
+
+2/ run add_PML...
+
+3/ run convert_external...
+
+4/ convert the final result from binary back to ASCII.
+
+Probably sufficient for now. In the future if needed we can change the different routines in SPECFEM3D to read binary directly instead of ASCII.
+
+You can type "make all" with the Makefile provided.
+

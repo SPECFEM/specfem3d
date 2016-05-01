@@ -19,9 +19,8 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
-!========================
+!=========================================================================================
 module get_model
-!========================
 
   use global_parameters
   use data_mesh
@@ -37,7 +36,7 @@ module get_model
   private
   contains
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> First define array ieldom that specifically appoints a respective domain
 !! between discontinuities for each element (to avoid issues very close to
 !! discontinuities).
@@ -77,13 +76,13 @@ module get_model
 !!    and coarsening layers.
 !!    On-the-fly verification of respective radial averages:
 !!       xmgrace timestep_rad.dat or xmgrace period_rad.dat
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine read_model(rho, lambda, mu, xi_ani, phi_ani, eta_ani, &
-                          fa_ani_theta, fa_ani_phi, Q_mu, Q_kappa)
+                          fa_ani_theta, fa_ani_phi, Q_mu_1d, Q_kappa_1d)
 
-  use commun, ONLY : barrier
+  use commun, only : barrier
   use lateral_heterogeneities
-  use data_source, ONLY : rot_src
+  use data_source, only : rot_src
   use data_mesh, only: npol, nelem, nel_solid, ielsolid
   use nc_routines, only: nc_dump_elastic_parameters
 
@@ -92,21 +91,14 @@ subroutine read_model(rho, lambda, mu, xi_ani, phi_ani, eta_ani, &
   real(kind=dp), dimension(0:npol,0:npol,nelem), intent(out) :: xi_ani, phi_ani, eta_ani
   real(kind=dp), dimension(0:npol,0:npol,nelem), intent(out) :: fa_ani_theta, fa_ani_phi
 
-  real(kind=realkind), dimension(nel_solid), intent(out), optional :: Q_mu, Q_kappa
+  real(kind=realkind), dimension(nel_solid), intent(out), optional :: Q_mu_1d, Q_kappa_1d
 
+  real(kind=dp), dimension(0:npol,0:npol,nelem) :: Q_mu, Q_kappa
   real(kind=dp)    :: s,z,r,theta,r1
   real(kind=dp)    :: vphtmp, vpvtmp, vshtmp, vsvtmp
   integer :: iel,ipol,jpol,iidom,ieldom(nelem),domcount(ndisc),iel_count
   logical :: foundit
   character(len=100) :: modelstring
-
-  if (make_homo ) then
-       write(6,*)'  '
-       write(6,*)'ERROR: homogeneous AND anisotropic model does not make '
-       write(6,*)'       sense, check input file'
-       write(6,*)'  '
-       stop
-  endif
 
   ! Set elastic parameters to crazy values to later check if all have been filled
   rho(0:npol,0:npol,1:nelem) = -1.E30
@@ -225,7 +217,7 @@ subroutine read_model(rho, lambda, mu, xi_ani, phi_ani, eta_ani, &
      ! write out for later snaps
      if (do_mesh_tests) then
         do ipol=ibeg, iend
-           do jpol=ibeg, iend
+           do jpol=jbeg, jend
               call compute_coordinates(s,z,r,theta,iel,ipol,jpol)
               write(60000+mynum,14)r,theta,rho(ipol,jpol,iel),&
                  sqrt( (lambda(ipol,jpol,iel)+2.*mu(ipol,jpol,iel))/rho(ipol,jpol,iel)), &
@@ -244,8 +236,8 @@ subroutine read_model(rho, lambda, mu, xi_ani, phi_ani, eta_ani, &
       do iel=1, nel_solid
           iidom = ieldom(ielsolid(iel))
           call compute_coordinates(s, z, r, theta, ielsolid(iel), npol/2 - 1, npol/2 - 1)
-          Q_mu(iel) = velocity(r, 'Qmu', iidom, modelstring, lfbkgrdmodel)
-          Q_kappa(iel) = velocity(r, 'Qka', iidom, modelstring, lfbkgrdmodel)
+          Q_mu_1d(iel) = velocity(r, 'Qmu', iidom, modelstring, lfbkgrdmodel)
+          Q_kappa_1d(iel) = velocity(r, 'Qka', iidom, modelstring, lfbkgrdmodel)
       enddo
   endif
 
@@ -263,15 +255,26 @@ subroutine read_model(rho, lambda, mu, xi_ani, phi_ani, eta_ani, &
 
       if (anel_true) then
          call plot_model_vtk(rho, lambda, mu, xi_ani, phi_ani, eta_ani, fa_ani_theta, &
-                             fa_ani_phi, Q_mu, Q_kappa)
+                             fa_ani_phi, Q_mu_1d, Q_kappa_1d)
       else
          call plot_model_vtk(rho, lambda, mu, xi_ani, phi_ani, eta_ani, fa_ani_theta, &
-                                 fa_ani_phi)
+                             fa_ani_phi)
       endif
   endif
 
   if (use_netcdf) then
       if (anel_true) then
+          do iel = 1, nelem     ! iel
+             do ipol=0,npol     ! ipol
+                do jpol=0,npol  ! jpol
+                   iidom = ieldom(iel)
+                   call compute_coordinates(s, z, r, theta, iel, ipol, jpol)
+                   Q_mu(ipol,jpol,iel)    = velocity(r, 'Qmu', iidom, modelstring, lfbkgrdmodel)
+                   Q_kappa(ipol,jpol,iel) = velocity(r, 'Qka', iidom, modelstring, lfbkgrdmodel)
+                enddo          ! jpol
+             enddo             ! ipol
+          enddo                ! iel
+
           call nc_dump_elastic_parameters(rho, lambda, mu, xi_ani, phi_ani, eta_ani, &
                                           fa_ani_theta, fa_ani_phi, Q_mu, Q_kappa)
       else
@@ -330,129 +333,9 @@ subroutine read_model(rho, lambda, mu, xi_ani, phi_ani, eta_ani, &
   call compute_coordinates(s, z, vsmaxr, theta, vsmaxloc(3),&
                            vsmaxloc(1), vsmaxloc(2))
 end subroutine read_model
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
-!> file-based, step-wise model in terms of domains separated by disconts.
-!! format:
-!! ndisc
-!! r vp vs rho
-!subroutine arbitr_sub_solar_arr(s,z,v_p,v_s,rho,bkgrdmodel2)
-!
-!  use data_mesh
-!  real(kind=dp)   , intent(in) :: s(0:npol,0:npol,1:nelem),z(0:npol,0:npol,1:nelem)
-!  character(len=100), intent(in) :: bkgrdmodel2
-!  real(kind=dp)   , dimension(:,:,:), intent(out) :: rho(0:npol,0:npol,1:nelem)
-!  real(kind=dp)   , dimension(:,:,:), intent(out) :: v_s(0:npol,0:npol,1:nelem)
-!  real(kind=dp)   , dimension(:,:,:), intent(out) :: v_p(0:npol,0:npol,1:nelem)
-!  real(kind=dp)   , allocatable, dimension(:) :: disconttmp,rhotmp,vstmp,vptmp
-!  integer :: ndisctmp,i,ind(2),ipol,jpol,iel
-!  logical :: bkgrdmodelfile_exists
-!  real(kind=dp)    :: w(2),wsum,r0
-!
-!  ! Does the file bkgrdmodel".bm" exist?
-!  !@TODO: Change to new name convention scheme. Should start in the MESHER.
-!  inquire(file=bkgrdmodel2(1:index(bkgrdmodel2,' ')-1)//'.bm', &
-!          exist=bkgrdmodelfile_exists)
-!  if (bkgrdmodelfile_exists) then
-!      open(unit=77,file=bkgrdmodel2(1:index(bkgrdmodel2,' ')-1)//'.bm')
-!      read(77,*)ndisctmp
-!      allocate(disconttmp(1:ndisctmp))
-!      allocate(vptmp(1:ndisctmp),vstmp(1:ndisctmp),rhotmp(1:ndisctmp))
-!      do i=1, ndisctmp
-!          read(77,*)disconttmp(i),rhotmp(i),vptmp(i),vstmp(i)
-!      enddo
-!      close(77)
-!      do iel=1,nelem
-!          do jpol=0,npol
-!              do ipol=0,npol
-!                  r0 = dsqrt(s(ipol,jpol,iel)**2 +z(ipol,jpol,iel)**2 )
-!                  call interp_vel(r0,disconttmp(1:ndisctmp),ndisctmp,ind,w,wsum)
-!                  rho(ipol,jpol,iel)=sum(w*rhotmp(ind))*wsum
-!                  v_p(ipol,jpol,iel)=(w(1)*vptmp(ind(1))+w(2)*vptmp(ind(2)))*wsum
-!                  v_s(ipol,jpol,iel)=sum(w*vstmp(ind))*wsum
-!              enddo
-!          enddo
-!      enddo
-!      deallocate(disconttmp,vstmp,vptmp,rhotmp)
-!  else
-!      write(6,*)'Background model file', &
-!                trim(bkgrdmodel2)//'.bm','does not exist!!!'
-!      stop
-!  endif
-!
-!end subroutine arbitr_sub_solar_arr
-!!=============================================================================
-!
-!!-----------------------------------------------------------------------------
-!!> Calculate interpolation parameters w to interpolate velocity at radius r0
-!!! from a model defined at positions r(1:n)
-!subroutine interp_vel(r0,r,n,ind,w,wsum)
-!
-!  integer, intent(in)           :: n      !< number of supporting points
-!  real(kind=dp)   , intent(in)  :: r(1:n) !< supporting points in depth
-!  real(kind=dp)   , intent(in)  :: r0     !< Target depth
-!  integer, intent(out)          :: ind(2) !< Indizes of supporting points
-!                                          !! between which r0 is found
-!  real(kind=dp)   , intent(out) :: w(2),wsum !< Weighting factors
-!  integer                       :: i,p
-!  real(kind=dp)                 :: dr1,dr2
-!
-!  p = 1
-!
-!  i = minloc(dabs(r-r0),1)
-!
-!  if (r0>0.d0) then
-!     if ((r(i)-r0)/r0> 1.d-8) then ! closest discont. at larger radius
-!        ind(1)=i
-!        ind(2)=i+1
-!        dr1=r(ind(1))-r0
-!        dr2=r0-r(ind(2))
-!     else if ((r0-r(i))/r0> 1.d-8) then  ! closest discont. at smaller radius
-!        if (r0>maxval(r)) then ! for round-off errors where mesh is above surface
-!           ind(1)=i
-!           ind(2)=i
-!           dr1=1.d0
-!           dr2=1.d0
-!        else
-!           ind(1)=i-1
-!           ind(2)=i
-!           dr1=r(ind(1))-r0
-!           dr2=r0-r(ind(2))
-!        endif
-!     else if (dabs((r(i)-r0)/r0)< 1.d-8) then ! closest discont identical
-!        ind(1)=i
-!        ind(2)=i
-!        dr1=1.d0
-!        dr2=1.d0
-!     else
-!        write(6,*)'problem with round-off errors in interpolating......'
-!        write(6,*)'r0,r(i),i',r0,r(i),abs((r(i)-r0)/r0),i
-!        stop
-!     endif
-!  else !r0=0
-!     if (r(i)==0.d0) then ! center of the sun
-!        ind(1)=i
-!        ind(2)=i
-!        dr1=1.d0
-!        dr2=1.d0
-!     else
-!        ind(1)=i
-!        ind(2)=i+1
-!        dr1=r(ind(1))-r0
-!        dr2=r0-r(ind(2))
-!     endif
-!  endif
-!
-!  ! inverse distance weighting
-!  w(1) = (dr1)**(-p)
-!  w(2) = (dr2)**(-p)
-!  wsum = 1.d0 / sum(w)
-!
-!end subroutine interp_vel
-!=============================================================================
-
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine check_mesh_discontinuities(ieldom,domcount)
 
   use data_mesh, only: ndisc, npol, nelem
@@ -529,9 +412,9 @@ subroutine check_mesh_discontinuities(ieldom,domcount)
   enddo
 
 end subroutine check_mesh_discontinuities
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine check_elastic_discontinuities(ieldom,domcount,lambda,mu,rho)
 
   use data_mesh, only : ndisc, nelem
@@ -762,16 +645,16 @@ subroutine check_elastic_discontinuities(ieldom,domcount,lambda,mu,rho)
 13 format(a7,1pe12.4,i7,3(1pe13.3))
 
 end subroutine check_elastic_discontinuities
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> Do sanity checks on background model:
 !! - no invalid (negative) values on lambda, mu, rho
 !! - no lateral heterogeneities, unless it is a lathet model
 !! - no insane variations of model parameters within one cell.
 subroutine check_background_model(lambda,mu,rho)
 
-  use data_mesh, ONLY : eltype, coarsing
+  use data_mesh, only : eltype, coarsing
   use data_mesh, only : npol, nelem
 
   real(kind=dp)   , intent(in)  :: rho(0:npol,0:npol,nelem)
@@ -959,18 +842,18 @@ subroutine check_background_model(lambda,mu,rho)
   deallocate(maxdiffrho, maxdifflam, maxdiffmu)
 
 end subroutine check_background_model
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> Resolution test: Insert radial sine function with wavenumbers according to
 !! actual wavelengths, compute numerical and analytical integrals for various
 !! setups by changing the wavenumber by source period and seismic velocities.
 subroutine test_mesh_model_resolution(lambda,mu,rho)
 
-  use def_grid,  ONLY : massmatrix,massmatrix_dble
-  use data_time, ONLY : period
-  use data_mesh, ONLY : eltype, coarsing, north, axis
-  use commun, ONLY : psum_dble,broadcast_int,broadcast_dble
+  use def_grid,  only : massmatrix,massmatrix_dble
+  use data_time, only : period
+  use data_mesh, only : eltype, coarsing, north, axis
+  use commun, only : psum_dble,broadcast_int,broadcast_dble
 
 
   real(kind=dp)   , intent(in)  :: rho(0:npol,0:npol,nelem)
@@ -1221,9 +1104,9 @@ subroutine test_mesh_model_resolution(lambda,mu,rho)
   deallocate(mass)
 
 end subroutine test_mesh_model_resolution
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 !> Write scalar values into a binary VTK files
 subroutine write_VTK_bin_scal(x,y,z,u1,elems,filename)
   implicit none
@@ -1498,8 +1381,7 @@ subroutine plot_model_vtk(rho, lambda, mu, xi_ani, phi_ani, eta_ani, &
   endif
 
 end subroutine plot_model_vtk
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!========================
 end module get_model
-!========================
+!=========================================================================================

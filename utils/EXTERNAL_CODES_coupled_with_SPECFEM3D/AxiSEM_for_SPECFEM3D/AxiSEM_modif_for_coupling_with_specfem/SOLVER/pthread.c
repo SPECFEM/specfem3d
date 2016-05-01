@@ -26,7 +26,7 @@
 // compare https://computing.llnl.gov/tutorials/pthreads/
 
 // careful with global variable, this only works if the calling programm is not threaded!
-pthread_t thread;
+pthread_t thread = (pthread_t) 0;
 
 // stub - so c knows what the function looks like
 extern void __nc_routines_MOD_nc_dump_strain_to_disk();
@@ -51,7 +51,8 @@ void c_spawn_dumpthread(int* val){
 // wait for the IO thread to finish, to be called from fortran
 // global thead variable allows to come back to the thread
 void c_wait_for_io() {
-   void *status;
-   pthread_join(thread, &status);
+   if (thread != (pthread_t) 0){
+       pthread_join(thread, NULL);
+   }
 }
 

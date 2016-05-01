@@ -2,6 +2,10 @@
 
     contains
 
+!
+!=================================================================================================================!
+!
+
       subroutine connect_points()
         use global_parameters
         use interp_mod
@@ -41,12 +45,13 @@
         ele_candidate=-1
         rec2elm=-1
         ! CONNECTION POINT <-> MESH-----------------------------------------------------------
-        do irec=1,nbrec
+        do irec=1,nbrec  !! loop over points
+           if (mod(irec,100) == 0 ) write(*,*) irec,nbrec,NEL, 'connect'
            scur=reciever_cyl(1,irec)
            zcur=reciever_cyl(3,irec)
-           do iel = 1, NEL
+           do iel = 1, NEL  !! loop over all selected elements
 
-              ! element
+              ! initial bounding box element
               smin=1d40
               smax=-1d40
               zmin=smin
@@ -121,6 +126,10 @@
 
       end subroutine connect_points
 
+!
+!=================================================================================================================!
+!
+
       subroutine check_rec2elm()
         use global_parameters
         integer irec,forgot_point
@@ -133,9 +142,10 @@
         if (forgot_point > 0) write(*,*) 'forgot ', forgot_point,' points'
       end subroutine check_rec2elm
 
-      !---------------------------------------------------------------------------------------
+!
+!=================================================================================================================!
+!
 
-      !----------------------------------------------------------------------------------------
       subroutine sort_real_array(r,i)
         use global_parameters
         !implicit none
@@ -159,6 +169,10 @@
         enddo
 
       end subroutine sort_real_array
+
+!
+!=================================================================================================================!
+!
 
       subroutine interpol_field(ifield)
 
@@ -204,6 +218,10 @@
 
       end subroutine interpol_field
 
+!
+!=================================================================================================================!
+!
+
       subroutine interpol_stress(ifield)
 
         use global_parameters
@@ -239,61 +257,77 @@
 
       end subroutine interpol_stress
 
-      subroutine compute_prefactor(src_type,Mcomp)
-        use global_parameters , only : SINGLE_REAL,f1,f2,phi,nbrec
+!
+!=================================================================================================================!
+!
+
+      subroutine compute_prefactor(src_type,Mcomp,isim)
+
+        use global_parameters , only : Mij,SINGLE_REAL,f1,f2,phi,nbrec,magnitude
+
         !real(kind=SINGLE_REAL) f1,f2,phi
         character(len=10) src_type,Mcomp
-        integer irec
+        integer irec,isim
+        real, dimension(6) :: Mij_scale
 
+        Mij_scale = Mij / magnitude(isim)
 
         select case (trim(src_type))
-        case('monopole')
-           f1=1.
-           f2=0.
+!---
+          case('monopole')
+            select case (trim(Mcomp))
 
-        case('dipole')
+              case ('mrr')
+                f1=Mij_scale(1)
+                f2=0.
+              case ('mtt_p_mpp')
+                f1=Mij_scale(2) + Mij_scale(3)
+                f2=0.
+              case default
+                f1=1.
+                f2=0.
 
-           select case (trim(Mcomp))
-           case('mtr')
-              do irec=1,nbrec
-                 f1(irec)=cos(phi(irec))
-                 f2(irec)=-sin(phi(irec))
-              enddo
-           case ('thetaforce')
-              do irec=1,nbrec
-                 f1(irec)=cos(phi(irec))
-                 f2(irec)=-sin(phi(irec))
-              enddo
-           case('mpr')
-              do irec=1,nbrec
-                 f1(irec)=sin(phi(irec))
-                 f2(irec)=cos(phi(irec))
-              enddo
-           case('phiforce')
-              do irec=1,nbrec
-                 f1(irec)=sin(phi(irec))
-                 f2(irec)=cos(phi(irec))
-              enddo
-           end select
+            end select
 
-        case('quadpole')
-           select case (trim(Mcomp))
-           case ('mtt_m_mpp')
-              do irec=1,nbrec
-                 f1(irec)=cos(2.*phi(irec))
-                 f2(irec)=-sin(2.*phi(irec))
-              enddo
-           case('mtp')
-              do irec=1,nbrec
-                 f1(irec)=sin(2*phi(irec))
-                 f2(irec)=cos(2*phi(irec))
-              enddo
-           end select
+          case('dipole')
+            select case (trim(Mcomp))
 
+              case('mtr', 'mrt', 'mpr', 'mrp')
+                do irec=1,nbrec
+                  f1(irec)= Mij_scale(4) *cos(phi(irec)) + Mij_scale(5) *sin(phi(irec))
+                  f2(irec)=-Mij_scale(4) *sin(phi(irec)) + Mij_scale(5) *cos(phi(irec))
+                enddo
+              case ('thetaforce')
+                do irec=1,nbrec
+                  f1(irec)=cos(phi(irec))
+                  f2(irec)=-sin(phi(irec))
+                enddo
+              case('phiforce')
+                do irec=1,nbrec
+                  f1(irec)=sin(phi(irec))
+                  f2(irec)=cos(phi(irec))
+                enddo
+
+            end select
+
+          case('quadpole')
+            select case (trim(Mcomp))
+
+              case ('mtp', 'mpt', 'mtt_m_mpp')
+                do irec=1,nbrec
+                  f1(irec)= (Mij_scale(2) - Mij_scale(3)) * cos(2.*phi(irec)) + 2.*Mij_scale(6) * sin(2.*phi(irec))
+                  f2(irec)= (Mij_scale(3) - Mij_scale(2)) * sin(2.*phi(irec)) + 2.*Mij_scale(6) * cos(2.*phi(irec))
+                enddo
+
+            end select
+!---
         end select
 
       end subroutine compute_prefactor
 
+!
+!=================================================================================================================!
+!
 
       subroutine compute_3D_cyl()
         use global_parameters
@@ -308,6 +342,10 @@
         enddo
 
       end subroutine compute_3D_cyl
+
+!
+!=================================================================================================================!
+!
 
       subroutine compute_stress_3D_cyl()
         use global_parameters
@@ -326,6 +364,37 @@
 
       end subroutine compute_stress_3D_cyl
 
+!
+!=================================================================================================================!
+!
+
+      subroutine compute_deriv_3D_cyl()
+
+        use global_parameters
+
+        integer irec
+
+        do irec=irecmin,irecmax
+
+          deriv_rec(irec,1) = f1(irec) * deriv_rec(irec,1)
+          deriv_rec(irec,2) = f2(irec) * deriv_rec(irec,2)
+          deriv_rec(irec,3) = f1(irec) * deriv_rec(irec,3)
+
+          deriv_rec(irec,4) = f2(irec) * deriv_rec(irec,4)
+          deriv_rec(irec,5) = f1(irec) * deriv_rec(irec,5)
+          deriv_rec(irec,6) = f2(irec) * deriv_rec(irec,6)
+
+          deriv_rec(irec,7) = f1(irec) * deriv_rec(irec,7)
+          deriv_rec(irec,8) = f2(irec) * deriv_rec(irec,8)
+          deriv_rec(irec,9) = f1(irec) * deriv_rec(irec,9)
+
+        enddo
+
+      end subroutine compute_deriv_3D_cyl
+
+!
+!=================================================================================================================!
+!
 
       subroutine rotate2cartesian_with_source_in_pole_stress()
         use global_parameters
@@ -397,6 +466,88 @@
 
       end subroutine rotate2cartesian_with_source_in_pole_stress
 
+!
+!=================================================================================================================!
+!
+
+      subroutine rotate2cartesian_with_source_in_pole_deriv()
+        use global_parameters
+
+        integer irec,i,j,k
+        real(kind=SINGLE_REAL) tmp(6,6),tmp1(3,3),B(3,3),st(3,3)
+
+        ! compute B*st*Bt
+        do irec=irecmin,irecmax
+
+           ! rotation matrix
+           B(1,1)=  cos(phi(irec))
+           B(1,2)= - sin(phi(irec))
+           B(1,3)= 0.
+
+           B(2,1)=  sin(phi(irec))
+           B(2,2)=  cos(phi(irec))
+           B(2,3)=  0.
+
+           B(3,1)= 0.
+           B(3,2)= 0.
+           B(3,3)= 1.
+
+
+           st(1,1) = deriv_rec(irec,1)
+           st(1,2) = deriv_rec(irec,2)
+           st(1,3) = deriv_rec(irec,3)
+
+           st(2,1) = deriv_rec(irec,4)
+           st(2,2) = deriv_rec(irec,5)
+           st(2,3) = deriv_rec(irec,6)
+
+           st(3,1) = deriv_rec(irec,7)
+           st(3,2) = deriv_rec(irec,8)
+           st(3,3) = deriv_rec(irec,9)
+
+
+           ! st*Bt
+           tmp=0.
+           do j=1,3
+              do i=1,3
+                 do k=1,3
+                    tmp(i,j)=tmp(i,j)+st(i,k)*B(j,k)
+                 enddo
+              enddo
+           enddo
+
+           ! B*st*Bt
+           tmp1=0.
+           do j=1,3
+              do i=1,3
+                 do k=1,3
+                    tmp1(i,j)=tmp1(i,j)+B(i,k)*tmp(k,j)
+                 enddo
+              enddo
+           enddo
+
+           ! deriv in cartesian coordinates
+
+           deriv_rec(irec,1) = tmp1(1,1)
+           deriv_rec(irec,2) = tmp1(1,2)
+           deriv_rec(irec,3) = tmp1(1,3)
+
+           deriv_rec(irec,4) = tmp1(2,1)
+           deriv_rec(irec,5) = tmp1(2,2)
+           deriv_rec(irec,6) = tmp1(2,3)
+
+           deriv_rec(irec,7) = tmp1(3,1)
+           deriv_rec(irec,8) = tmp1(3,2)
+           deriv_rec(irec,9) = tmp1(3,3)
+
+        enddo
+
+      end subroutine rotate2cartesian_with_source_in_pole_deriv
+
+!
+!=================================================================================================================!
+!
+
 !!$      subroutine rotate_back_source()
 !!$        use global_parameters
 !!$
@@ -417,6 +568,10 @@
 !!$
 !!$
 !!$      end subroutine rotate_back_source
+
+!
+!=================================================================================================================!
+!
 
      subroutine rotate_back_source()
         use global_parameters
@@ -452,7 +607,9 @@
 
       end subroutine rotate_back_source
 
-
+!
+!=================================================================================================================!
+!
 
      subroutine rotate_back_to_local_cart()
         use global_parameters
@@ -488,6 +645,47 @@
 
       end subroutine rotate_back_to_local_cart
 
+!
+!=================================================================================================================!
+!
+
+      subroutine rotate_from_chunk_azimuth()
+        use global_parameters
+
+        integer irec,i,j,k
+        real(kind=SINGLE_REAL) tmp(3),veloc(3)
+
+        do irec=irecmin,irecmax
+
+           ! veloc in non rotated by azi coordinates
+           veloc(1)=data_rec(irec,1)
+           veloc(2)=data_rec(irec,2)
+           veloc(3)=data_rec(irec,3)
+
+
+           !
+           ! Rt*veloc
+           tmp=0.
+           do i=1,3
+              do k=1,3
+                 tmp(i)=tmp(i)+veloc(k)*rot_azi_chunk(i,k)
+              enddo
+           enddo
+
+           ! valocity in cartesian with azi rotation
+           data_rec(irec,1)=tmp(1)
+           data_rec(irec,2)=tmp(2)
+           data_rec(irec,3)=tmp(3)
+
+
+        enddo
+
+
+      end subroutine rotate_from_chunk_azimuth
+
+!
+!=================================================================================================================!
+!
 
       subroutine rotate_back_source_stress()
         use global_parameters
@@ -544,6 +742,72 @@
 
       end subroutine rotate_back_source_stress
 
+!
+!=================================================================================================================!
+!
+
+      subroutine rotate_back_source_deriv()
+        use global_parameters
+
+        integer irec,i,j,k
+        real(kind=SINGLE_REAL) tmp(3,3),tmp1(3,3),st(3,3)
+
+        do irec=irecmin,irecmax
+
+           st(1,1) = deriv_rec(irec,1)
+           st(1,2) = deriv_rec(irec,2)
+           st(1,3) = deriv_rec(irec,3)
+
+           st(2,1) = deriv_rec(irec,4)
+           st(2,2) = deriv_rec(irec,5)
+           st(2,3) = deriv_rec(irec,6)
+
+           st(3,1) = deriv_rec(irec,7)
+           st(3,2) = deriv_rec(irec,8)
+           st(3,3) = deriv_rec(irec,9)
+
+           !
+           ! 1 -> tmp =st*Rt
+           tmp=0.
+           do j=1,3
+              do i=1,3
+                 do k=1,3
+                    tmp(i,j)=tmp(i,j)+st(i,k)*trans_rot_mat(k,j)
+                 enddo
+              enddo
+           enddo
+
+           ! R*(st*Rt) =R*tmp
+           tmp1=0.
+           do j=1,3
+              do i=1,3
+                 do k=1,3
+                    tmp1(i,j)=tmp1(i,j)+tmp(k,j)*rot_mat(i,k)
+                 enddo
+              enddo
+           enddo
+
+           deriv_rec(irec,1) = tmp1(1,1)
+           deriv_rec(irec,2) = tmp1(1,2)
+           deriv_rec(irec,3) = tmp1(1,3)
+
+           deriv_rec(irec,4) = tmp1(2,1)
+           deriv_rec(irec,5) = tmp1(2,2)
+           deriv_rec(irec,6) = tmp1(2,3)
+
+           deriv_rec(irec,7) = tmp1(3,1)
+           deriv_rec(irec,8) = tmp1(3,2)
+           deriv_rec(irec,9) = tmp1(3,3)
+
+        enddo
+
+
+      end subroutine rotate_back_source_deriv
+
+!
+!=================================================================================================================!
+!
+
       subroutine rotate_back_to_local_cart_stress()
         use global_parameters
 
@@ -599,6 +863,197 @@
 
       end subroutine rotate_back_to_local_cart_stress
 
+!
+!=================================================================================================================!
+!
+
+      subroutine rotate_back_to_local_cart_deriv()
+        use global_parameters
+
+        integer irec,i,j,k
+        real(kind=SINGLE_REAL) tmp(3,3),tmp1(3,3),st(3,3)
+
+        do irec=irecmin,irecmax
+
+           st(1,1) = deriv_rec(irec,1)
+           st(1,2) = deriv_rec(irec,2)
+           st(1,3) = deriv_rec(irec,3)
+
+           st(2,1) = deriv_rec(irec,4)
+           st(2,2) = deriv_rec(irec,5)
+           st(2,3) = deriv_rec(irec,6)
+
+           st(3,1) = deriv_rec(irec,7)
+           st(3,2) = deriv_rec(irec,8)
+           st(3,3) = deriv_rec(irec,9)
+
+           !
+           ! st*R
+           tmp=0.
+           do j=1,3
+              do i=1,3
+                 do k=1,3
+                    tmp(i,j)=tmp(i,j)+st(i,k)*rot_mat_mesh(k,j)
+                 enddo
+              enddo
+           enddo
+
+           ! Rt*st*R
+           tmp1=0.
+           do j=1,3
+              do i=1,3
+                 do k=1,3
+                    tmp1(i,j)=tmp1(i,j)+trans_rot_mat_mesh(i,k)*tmp(k,j)
+                 enddo
+              enddo
+           enddo
+
+           deriv_rec(irec,1) = tmp1(1,1)
+           deriv_rec(irec,2) = tmp1(1,2)
+           deriv_rec(irec,3) = tmp1(1,3)
+
+           deriv_rec(irec,4) = tmp1(2,1)
+           deriv_rec(irec,5) = tmp1(2,2)
+           deriv_rec(irec,6) = tmp1(2,3)
+
+           deriv_rec(irec,7) = tmp1(3,1)
+           deriv_rec(irec,8) = tmp1(3,2)
+           deriv_rec(irec,9) = tmp1(3,3)
+
+        enddo
+
+
+      end subroutine rotate_back_to_local_cart_deriv
+
+!
+!=================================================================================================================!
+!
+
+      subroutine rotate_from_chunk_azimuth_stress  !! VM VM add azi rot
+        use global_parameters
+
+        integer irec,i,j,k
+        real(kind=SINGLE_REAL) tmp(3,3),tmp1(3,3),st(3,3)
+
+        do irec=irecmin,irecmax
+
+            ! stress in cylindical coordinates
+           st(1,1)=stress_rec(irec,1)
+           st(1,2)=stress_rec(irec,4)
+           st(1,3)=stress_rec(irec,5)
+
+           st(2,1)=stress_rec(irec,4)
+           st(2,2)=stress_rec(irec,2)
+           st(2,3)=stress_rec(irec,6)
+
+           st(3,1)=stress_rec(irec,5)
+           st(3,2)=stress_rec(irec,6)
+           st(3,3)=stress_rec(irec,3)
+
+           !
+           ! st*R
+           tmp=0.
+           do j=1,3
+              do i=1,3
+                 do k=1,3
+                    !tmp(i,j)=tmp(i,j)+st(i,k)*rot_azi_chunk(k,j)
+                    tmp(i,j)=tmp(i,j)+st(i,k)*trans_rot_azi_chunk(k,j)
+                 enddo
+              enddo
+           enddo
+
+           ! Rt*st*R
+           tmp1=0.
+           do j=1,3
+              do i=1,3
+                 do k=1,3
+                    !tmp1(i,j)=tmp1(i,j)+trans_rot_azi_chunk(i,k)*tmp(k,j)
+                    tmp1(i,j)=tmp1(i,j)+rot_azi_chunk(i,k)*tmp(k,j)
+                 enddo
+              enddo
+           enddo
+
+           ! stress in cartesian
+           stress_rec(irec,1)=tmp1(1,1)
+           stress_rec(irec,2)=tmp1(2,2)
+           stress_rec(irec,3)=tmp1(3,3)
+           stress_rec(irec,4)=tmp1(1,2)
+           stress_rec(irec,5)=tmp1(1,3)
+           stress_rec(irec,6)=tmp1(2,3)
+
+        enddo
+      end subroutine rotate_from_chunk_azimuth_stress
+
+!
+!=================================================================================================================!
+!
+
+
+!=================================================================================================================!
+!
+
+      subroutine rotate_from_chunk_azimuth_deriv  !! VM VM add azi rot
+        use global_parameters
+
+        integer irec,i,j,k
+        real(kind=SINGLE_REAL) tmp(3,3),tmp1(3,3),st(3,3)
+
+        do irec=irecmin,irecmax
+
+           st(1,1) = deriv_rec(irec,1)
+           st(1,2) = deriv_rec(irec,2)
+           st(1,3) = deriv_rec(irec,3)
+
+           st(2,1) = deriv_rec(irec,4)
+           st(2,2) = deriv_rec(irec,5)
+           st(2,3) = deriv_rec(irec,6)
+
+           st(3,1) = deriv_rec(irec,7)
+           st(3,2) = deriv_rec(irec,8)
+           st(3,3) = deriv_rec(irec,9)
+
+           !
+           ! st*R
+           tmp=0.
+           do j=1,3
+              do i=1,3
+                 do k=1,3
+                    !tmp(i,j)=tmp(i,j)+st(i,k)*rot_azi_chunk(k,j)
+                    tmp(i,j)=tmp(i,j)+st(i,k)*trans_rot_azi_chunk(k,j)
+                 enddo
+              enddo
+           enddo
+
+           ! Rt*st*R
+           tmp1=0.
+           do j=1,3
+              do i=1,3
+                 do k=1,3
+                    !tmp1(i,j)=tmp1(i,j)+trans_rot_azi_chunk(i,k)*tmp(k,j)
+                    tmp1(i,j)=tmp1(i,j)+rot_azi_chunk(i,k)*tmp(k,j)
+                 enddo
+              enddo
+           enddo
+
+           deriv_rec(irec,1) = tmp1(1,1)
+           deriv_rec(irec,2) = tmp1(1,2)
+           deriv_rec(irec,3) = tmp1(1,3)
+
+           deriv_rec(irec,4) = tmp1(2,1)
+           deriv_rec(irec,5) = tmp1(2,2)
+           deriv_rec(irec,6) = tmp1(2,3)
+
+           deriv_rec(irec,7) = tmp1(3,1)
+           deriv_rec(irec,8) = tmp1(3,2)
+           deriv_rec(irec,9) = tmp1(3,3)
+
+
+        enddo
+      end subroutine rotate_from_chunk_azimuth_deriv
+
+!
+!=================================================================================================================!
+!
 
       subroutine rotate2cartesian_with_source_in_pole()
         use global_parameters
@@ -643,6 +1098,9 @@
         enddo
       end subroutine rotate2cartesian_with_source_in_pole
 
+!
+!=================================================================================================================!
+!
 
     end module post_processing
 

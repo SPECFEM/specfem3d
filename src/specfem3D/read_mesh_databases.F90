@@ -206,8 +206,7 @@
              c66store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
     if (ier /= 0) stop 'Error allocating array c11store etc.'
 
-    ! note: currently, they need to be defined, as they are used in the routine arguments
-    !          for compute_forces_viscoelastic_Deville()
+    ! note: currently, they need to be defined, as they are used in some subroutine arguments
     allocate(R_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
              R_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
              R_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
@@ -227,7 +226,7 @@
              epsilondev_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)
     if (ier /= 0) stop 'Error allocating array R_trace etc.'
 
-    ! note: needed for argument of deville routine
+    ! note: needed for some subroutine arguments
     allocate(epsilon_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if (ier /= 0) stop 'Error allocating array epsilon_trace_over_3'
 
@@ -377,11 +376,13 @@
       read(27) CPML_width_x
       read(27) CPML_width_y
       read(27) CPML_width_z
+      read(27) min_distance_between_CPML_parameter
     endif
     call bcast_all_i_for_database(NSPEC_CPML, 1)
     call bcast_all_cr_for_database(CPML_width_x, 1)
     call bcast_all_cr_for_database(CPML_width_y, 1)
     call bcast_all_cr_for_database(CPML_width_z, 1)
+    call bcast_all_cr_for_database(min_distance_between_CPML_parameter, 1)
 
     allocate(is_CPML(NSPEC_AB),stat=ier)
     if (ier /= 0) stop 'Error allocating array is_CPML'
@@ -483,39 +484,9 @@
            abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
   if (ier /= 0) stop 'Error allocating array abs_boundary_ispec etc.'
 
-  !!!! VM VM & CD CD !! For coupling with external codes
-  if (COUPLE_WITH_EXTERNAL_CODE) then
-
-    if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then
-
-      allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)) !! CD CD : cf for deallocate
-      allocate(Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
-      if (old_DSM_coupling_from_Vadim) then
-        open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'vel.bin',status='old', &
-             action='read',form='unformatted',iostat=ier)
-        open(unit=IIN_tract_dsm,file=dsmname(1:len_trim(dsmname))//'tract.bin',status='old', &
-             action='read',form='unformatted',iostat=ier)
-      else
-        !! To verify for NOBU version (normally, remains empty)
-      endif
-
-    else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
-
-      allocate(Veloc_axisem(3,NGLLSQUARE*num_abs_boundary_faces))
-      allocate(Tract_axisem(3,NGLLSQUARE*num_abs_boundary_faces))
-      open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'sol_axisem',status='old', &
-           action='read',form='unformatted',iostat=ier)
-      write(*,*) 'OPENING ', dsmname(1:len_trim(dsmname))//'sol_axisem'
-
-    endif
-
-  else
-    allocate(Veloc_dsm_boundary(1,1,1,1))
-    allocate(Tract_dsm_boundary(1,1,1,1))
-    allocate(Veloc_axisem(1,1))
-    allocate(Tract_axisem(1,1))
-  endif
-  !! CD CD
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_read_mesh_databases.F90"
+#endif
 
   if (num_abs_boundary_faces > 0) then
     if (I_should_read_the_database) then
@@ -1105,7 +1076,7 @@
              b_epsilondev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
              b_epsilondev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
              b_epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),stat=ier)
-    if (ier /= 0) stop 'Error allocating array b_epsilon_dev_xx etc.'
+    if (ier /= 0) stop 'Error allocating array b_epsilondev_xx etc.'
     ! needed for kernel computations
     allocate(b_epsilon_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
     if (ier /= 0) stop 'Error allocating array b_epsilon_trace_over_3'

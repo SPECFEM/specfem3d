@@ -1292,7 +1292,7 @@
   enddo
   enddo
 
-  call get_global(nspec,xp,yp,zp,ibool,locval,ifseg,nglob,npointot)
+  call get_global(npointot,xp,yp,zp,ibool,locval,ifseg,nglob)
 
   deallocate(xp,stat=ier); if(ier /= 0) stop 'error in deallocate'
   deallocate(yp,stat=ier); if(ier /= 0) stop 'error in deallocate'

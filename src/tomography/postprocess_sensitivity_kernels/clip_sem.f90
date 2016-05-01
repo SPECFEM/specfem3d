@@ -98,13 +98,15 @@ program clip_sem
     if (myrank == 0) then
       print *, 'USAGE: mpirun -np NPROC bin/xclip_sem MIN_VAL MAX_VAL KERNEL_NAMES INPUT_FILE OUTPUT_DIR'
     endif
+    stop 'Error wrong number of arguments'
+    call synchronize_all()
   endif
-  call synchronize_all()
 
   ! parse command line arguments
   do i = 1, NARGS
     call get_command_argument(i,arg(i), status=ier)
   enddo
+  call synchronize_all()
 
   read(arg(1),*) min_val
   read(arg(2),*) max_val
@@ -163,7 +165,10 @@ program clip_sem
       read(IIN) sem_array
       close(IIN)
 
-     if (myrank==0) write(*,*) 'clipping array: ',trim(kernel_names(iker))
+     if (myrank==0) then
+        write(*,*) 'clipping array: ',trim(kernel_names(iker))
+        write(*,*) '  min/max values = ',min_val,max_val
+     endif
 
      ! apply thresholds
       do ispec=1,NSPEC
@@ -179,7 +184,7 @@ program clip_sem
 
       ! write clipped array
       kernel_name = trim(kernel_names(iker))//'_clip'
-      write(filename,'(a,i6.6,a)') trim(input_dir)//'/proc',myrank,'_'//trim(kernel_name)//'.bin'
+      write(filename,'(a,i6.6,a)') trim(output_dir)//'/proc',myrank,'_'//trim(kernel_name)//'.bin'
 
       open(IOUT,file=trim(filename),status='unknown',form='unformatted',action='write',iostat=ier)
       if (ier /= 0) then

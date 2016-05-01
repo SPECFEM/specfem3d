@@ -212,7 +212,7 @@
    else
       RESULT = ZERO
       if (Y >= XBIG) then
-         if (jintval /= 2 .OR. Y >= XMAX) goto 300
+         if (jintval /= 2 .or. Y >= XMAX) goto 300
          if (Y >= XHUGE) then
             RESULT = SQRPI / Y
             goto 300

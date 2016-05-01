@@ -1,0 +1,11 @@
+input_box.txt 
+input_box_sem_cart.txt 
+32                          # number of AxiSEM mpi processes used in solver  
+90. 0.                      # source position (lat lon)  
+0.  60.                     # chunk center (lat lon)    
+1                           # number of axisem simus depends on moment tensor used  
+32                                                           # number of Specfem3D MPI processes  
+/ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d/EXAMPLES/coupling_with_EXTERNAL_CODES/with_AxiSEM/example_1st_for_validation/MESH
+/ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d/EXAMPLES/coupling_with_EXTERNAL_CODES/with_AxiSEM/example_1st_for_validation/OUTPUT_FILES/DATABASES_MPI
+/ccc/scratch/cont003/gen7165/durochtc/Codes/SPECFEM3Ds/specfem3d/EXAMPLES/coupling_with_EXTERNAL_CODES/with_AxiSEM/example_1st_for_validation/DATA/AxiSEM_tractions/1
+

@@ -113,6 +113,7 @@
   if (.not. GPU_MODE .or. (GPU_MODE .and. (.not. USE_CUDA_SEISMOGRAMS))) then
 
     do irec_local = 1,nrec_local
+
       ! initializes wavefield values
       dxd = ZERO
       dyd = ZERO

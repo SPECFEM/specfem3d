@@ -72,10 +72,6 @@
   integer, parameter :: NGLLY = NGLLX
   integer, parameter :: NGLLZ = NGLLX
 
-! use inlined products of Deville et al. (2002) to speedup the calculations to compute internal forces
-! Deville routines only implemented for NGLLX = NGLLY = NGLLZ = 5, 6 or 7
-  logical, parameter :: USE_DEVILLE_PRODUCTS = .true.
-
 !!-----------------------------------------------------------
 !!
 !! I/O output
@@ -166,26 +162,6 @@
 
 !!-----------------------------------------------------------
 !!
-!! For coupling with DSM
-!!
-!!-----------------------------------------------------------
-
-! add support for AXISEM and FK as external codes, not only DSM
-  integer, parameter :: EXTERNAL_CODE_IS_DSM    = 1
-  integer, parameter :: EXTERNAL_CODE_IS_AXISEM = 2
-  integer, parameter :: EXTERNAL_CODE_IS_FK     = 3
-
-! Big storage version of coupling with DSM (will always set to .false. after the light storage version will be validated)
-  logical, parameter :: old_DSM_coupling_from_Vadim = .true.
-
-! for subroutine compute_vol_or_surf_integral_on_whole_domain
-  integer, parameter :: Surf_or_vol_integral    = 1  !!! 1 = Surface integral, 2 = Volume, 3 = Both
-
-! some old tests (currently unstable; do not remove them though, we might fix this one day)
-  integer, parameter :: IIN_veloc_dsm = 51, IIN_tract_dsm = 52, Ntime_step_dsm = 100
-
-!!-----------------------------------------------------------
-!!
 !! source/receiver setup
 !!
 !!-----------------------------------------------------------
@@ -244,11 +220,11 @@
 !!-----------------------------------------------------------
 
 ! power (exponent) used for the PML damping profile
-  real(kind=CUSTOM_REAL), parameter :: NPOWER = 1._CUSTOM_REAL
+  double precision, parameter :: NPOWER = 1.d0
 
 ! C-PML theoretical reflection coefficient
 ! (INRIA research report section 6.1:  http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf)
-  real(kind=CUSTOM_REAL), parameter :: CPML_Rcoef = 0.001_CUSTOM_REAL
+  double precision, parameter :: CPML_Rcoef = 0.001d0
 
 ! flags for the seven CPML regions
   integer, parameter :: CPML_X_ONLY = 1
@@ -259,8 +235,8 @@
   integer, parameter :: CPML_YZ_ONLY = 6
   integer, parameter :: CPML_XYZ = 7
 
-  ! tolerance to automatically detect where the PMLs are in the case of the internal mesher
-  real(kind=CUSTOM_REAL), parameter :: SMALL_PERCENTAGE_TOLERANCE = 1.005_CUSTOM_REAL
+! tolerance to automatically detect where the PMLs are in the case of the internal mesher
+  double precision, parameter :: SMALL_PERCENTAGE_TOLERANCE = 1.005d0
 
 
 !!-----------------------------------------------------------
@@ -382,10 +358,6 @@
 ! ATTENUATION_COMP_MAXIMUM:    Maximum Q Value
   integer, parameter :: ATTENUATION_COMP_RESOLUTION = 1
   integer, parameter :: ATTENUATION_COMP_MAXIMUM    = 9000
-
-! reference frequency for target velocity values in velocity model
-! arbitrarily set to typical resolution of model (3 sec)
-  double precision, parameter :: ATTENUATION_f0_REFERENCE = 0.3d0
 
 ! define flag for regions for anisotropy
   integer, parameter :: IANISOTROPY_MODEL1 = 1

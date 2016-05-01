@@ -33,11 +33,11 @@
 
   include "constants_meshfem3D.h"
 
-  integer ispec,nspec
+  integer,intent(in) :: ispec,nspec
 
-  double precision, dimension(NGNOD_EIGHT_CORNERS) :: xelm,yelm,zelm
+  double precision, dimension(NGNOD_EIGHT_CORNERS),intent(in) :: xelm,yelm,zelm
 
-  double precision, dimension(NGLLX_M,NGLLY_M,NGLLZ_M,nspec) :: xstore,ystore,zstore
+  double precision, dimension(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),intent(inout) :: xstore,ystore,zstore
 
   xstore(1,1,1,ispec) = xelm(1)
   ystore(1,1,1,ispec) = yelm(1)

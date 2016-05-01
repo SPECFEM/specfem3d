@@ -19,6 +19,7 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
+!=========================================================================================
 module test_bkgrdmodel
 
   use data_gllmesh
@@ -44,17 +45,18 @@ subroutine bkgrdmodel_testing
   real(kind=dp), dimension(:,:,:), allocatable   :: h, hmin2
   real(kind=dp), dimension(:,:),   allocatable   :: crit, crit_max
   real(kind=dp), dimension(:),     allocatable   :: hmin, hmax
-  real(kind=dp), dimension(:,:,:), allocatable   :: v_p, v_s, rho
-  integer               :: iel, ipol, jpol, ntoobig, ntoosmall, j
-  real(kind=dp)         :: s1, z1, s2, z2, h1, h2, r, velo, velo_max, theta
+  integer                                        :: iel, ipol, jpol, ntoobig, ntoosmall
+  real(kind=dp)                                  :: s1, z1, s2, z2, h1, h2, r
+  real(kind=dp)                                  :: velo, velo_max, theta
 
   ! vtk
-  real(kind=sp), dimension(:,:), allocatable        :: mesh2
-  real(kind=sp), dimension(:), allocatable          :: vp1, vs1, h_real, rho1
-  real(kind=sp), dimension(:), allocatable          :: Qmu, Qka
-  real(kind=sp), allocatable                        :: x(:), y(:), z(:)
-  character(len=200)                                :: fname
-  integer                                           :: npts_vtk, ct
+  real(kind=sp), dimension(:,:), allocatable     :: mesh2
+  real(kind=sp), dimension(:),   allocatable     :: vp1, vs1, h_real, rho1
+  real(kind=sp), dimension(:),   allocatable     :: Qmu, Qka
+  real(kind=sp), dimension(:),   allocatable     :: eltype_vtk
+  real(kind=sp), dimension(:),   allocatable     :: x, y, z
+  character(len=200)                             :: fname
+  integer                                        :: npts_vtk, ct
 
   allocate(crit(0:npol,0:npol))
   crit(:,:) = 0.d0
@@ -73,10 +75,10 @@ subroutine bkgrdmodel_testing
   hmax(:) = 0.d0
 
   allocate(h_real(neltot))
+  allocate(eltype_vtk(neltot))
 
   ntoobig = 0
   ntoosmall = 0
-  j = 0
 
   ! vtk preparations
   if (dump_mesh_vtk) then
@@ -96,7 +98,7 @@ subroutine bkgrdmodel_testing
 
   ! find smallest/largest grid spacing
   !$omp parallel shared(hmin2, h, npol, router, hmax, hmin, x, y, z, vp1, vs1, rho1, &
-  !$omp                 Qmu, Qka, mesh2, bkgrdmodel, v_p, v_s, rho, period) &
+  !$omp                 Qmu, Qka, mesh2, bkgrdmodel, rho, period) &
   !$omp          private(s1, z1, r, h1, s2, z2, h2, iel, jpol, ipol, velo, velo_max,  &
   !$omp                  crit, crit_max, theta, ct)
   !$omp do
@@ -175,7 +177,7 @@ subroutine bkgrdmodel_testing
   !$omp end single
   !$omp do
   do iel = 1, neltot
-     do jpol = 0, npol
+     do jpol = npol, 0, -1
         do ipol = 0,npol
            s1 = sgll(ipol,jpol,iel)
            z1 = zgll(ipol,jpol,iel)
@@ -232,7 +234,7 @@ subroutine bkgrdmodel_testing
 
      ! avoid concurrent write access to dt in case of omp
      !$omp atomic
-     dt = min(dt, real(courant * hmin(iel)))
+     dt = min(dt, real(courant * hmin(iel), kind=dp))
 
      ! multiplication by .9999 to avoid floting point precision issues
      if (hmin(iel) < (dt / courant) * .9999) then
@@ -331,6 +333,31 @@ subroutine bkgrdmodel_testing
     fname = trim(diagpath)//'/mesh_rho'
     call write_VTK_bin_scal(x, y, z, rho1, npts_vtk/4, fname)
     deallocate(rho1)
+  endif
+
+
+  if (dump_mesh_vtk) then
+    eltype_vtk = -2
+    do iel = 1, neltot
+       if (eltypeg(iel) == 'curved') then
+          eltype_vtk(iel) = 0
+       else if (eltypeg(iel) == 'linear') then
+          eltype_vtk(iel) = 1
+       else if (eltypeg(iel) == 'semino') then
+          eltype_vtk(iel) = 2
+       else if (eltypeg(iel) == 'semiso') then
+          eltype_vtk(iel) = 3
+       else
+          eltype_vtk(iel) = -1
+       endif
+    enddo
+    fname = trim(diagpath)//'/mesh_eltype'
+    call write_VTK_bin_scal_old(eltype_vtk, mesh2, neltot, fname)
+  endif
+
+  if (dump_mesh_vtk) then
+    fname = trim(diagpath)//'/mesh_hmax'
+    call write_VTK_bin_scal_old(h_real, mesh2, neltot, fname)
   endif
 
 
@@ -632,136 +659,5 @@ subroutine write_VTK_bin_scal(x,y,z,u1,elems,filename)
 end subroutine write_VTK_bin_scal
 !-----------------------------------------------------------------------------------------
 
-!!-----------------------------------------------------------------------------------------
-!subroutine arbitr_sub_solar_arr(s, z, v_p, v_s, rho, bkgrdmodel2)
-!!
-!! file-based, step-wise model in terms of domains separated by disconts.
-!! format:
-!! ndisc
-!! r vp vs rho
-!! ...
-!
-!  use background_models, only: interp_vel
-!
-!  real(kind=dp)   , intent(in)    :: s(0:npol,0:npol,1:neltot), z(0:npol,0:npol,1:neltot)
-!  character(len=100), intent(in)  :: bkgrdmodel2
-!  real(kind=dp)   , dimension(:,:,:), intent(out) :: rho(0:npol,0:npol,1:neltot)
-!  real(kind=dp)   , dimension(:,:,:), intent(out) :: v_s(0:npol,0:npol,1:neltot)
-!  real(kind=dp)   , dimension(:,:,:), intent(out) :: v_p(0:npol,0:npol,1:neltot)
-!  real(kind=dp)   , allocatable, dimension(:)     :: disconttmp, rhotmp, vstmp, vptmp
-!  integer             :: ndisctmp, i, ndisctmp2, ind(2), ipol, jpol, iel
-!  logical             :: bkgrdmodelfile_exists
-!  real(kind=dp)       :: w(2), wsum, r0
-!
-!  ! Does the file bkgrdmodel".bm" exist?
-!  !inquire(file=bkgrdmodel2(1:index(bkgrdmodel2,' ')-1)//'.bm', &
-!  !        exist=bkgrdmodelfile_exists)
-!  !if (bkgrdmodelfile_exists) then
-!  !   open(unit=77,file=bkgrdmodel2(1:index(bkgrdmodel2,' ')-1)//'.bm')
-!  !   read(77,*)ndisctmp
-!  !   allocate(disconttmp(1:ndisctmp))
-!  !   allocate(vptmp(1:ndisctmp),vstmp(1:ndisctmp),rhotmp(1:ndisctmp))
-!  !   do i=1, ndisctmp
-!  !      read(77,*)disconttmp(i),rhotmp(i),vptmp(i),vstmp(i)
-!  !   enddo
-!  !   close(77)
-!
-!  allocate(disconttmp(nlayer))
-!  allocate(vptmp(nlayer))
-!  allocate(vstmp(nlayer))
-!  allocate(rhotmp(nlayer))
-!  ndisctmp   = nlayer
-!  disconttmp = radius_layer
-!  vptmp      = vp_layer
-!  vstmp      = vs_layer
-!  rhotmp     = rho_layer
-!
-!     do iel=1,neltot
-!        do jpol=0,npol
-!           do ipol=0,npol
-!              r0 = dsqrt(s(ipol,jpol,iel)**2 +z(ipol,jpol,iel)**2 )
-!              call interp_vel(r0,disconttmp(1:ndisctmp),ndisctmp,ind,w,wsum)
-!              rho(ipol,jpol,iel)=sum(w*rhotmp(ind))*wsum
-!              v_p(ipol,jpol,iel)=(w(1)*vptmp(ind(1))+w(2)*vptmp(ind(2)))*wsum
-!              v_s(ipol,jpol,iel)=sum(w*vstmp(ind))*wsum
-!           enddo
-!        enddo
-!     enddo
-!  !   deallocate(disconttmp,vstmp,vptmp,rhotmp)
-!  !else
-!  !   write(6,*)'Background model file', &
-!  !        bkgrdmodel2(1:index(bkgrdmodel2,' ')-1)//'.bm','does not exist!!!'
-!  !   stop
-!  !endif
-!
-!end subroutine arbitr_sub_solar_arr
-!!-----------------------------------------------------------------------------------------
-
-!!-----------------------------------------------------------------------------------------
-!subroutine interp_vel(r0, r, n, ind, w, wsum)
-!
-!  implicit none
-!  integer, intent(in)           :: n
-!  real(kind=dp)   , intent(in)  :: r0, r(1:n)
-!  integer, intent(out)          :: ind(2)
-!  real(kind=dp)   , intent(out) :: w(2),wsum
-!  integer                       :: i, p
-!  real(kind=dp)                 :: dr1, dr2
-!
-!  p = 1
-!
-!  i = minloc(dabs(r-r0),1)
-!  print '(F10.1)', r
-!  print *, 'r0=',r0, ', i=', i
-!
-!  if (r0>0.d0) then
-!     if ((r(i)-r0)/r0> 1.d-8) then ! closest discont. at larger radius
-!        ind(1)=i
-!        ind(2)=i+1
-!        dr1=r(ind(1))-r0
-!        dr2=r0-r(ind(2))
-!     else if ((r0-r(i))/r0> 1.d-8) then  ! closest discont. at smaller radius
-!        if (r0>maxval(r)) then ! for round-off errors where mesh is above surface
-!           ind(1)=i
-!           ind(2)=i
-!           dr1=1.d0
-!           dr2=1.d0
-!        else
-!           ind(1)=i-1
-!           ind(2)=i
-!           dr1=r(ind(1))-r0
-!           dr2=r0-r(ind(2))
-!         endif
-!     else if (dabs((r(i)-r0)/r0)< 1.d-8) then ! closest discont identical
-!        ind(1)=i
-!        ind(2)=i
-!        dr1=1.d0
-!        dr2=1.d0
-!     else
-!        write(6,*)'problem with round-off errors in interpolating......'
-!        write(6,*)'r0,r(i),i',r0,r(i),abs((r(i)-r0)/r0),i
-!        stop
-!     endif
-!  else !r0=0
-!     if (r(i)==0.d0) then ! center of the sun
-!        ind(1)=i
-!        ind(2)=i
-!        dr1=1.d0
-!        dr2=1.d0
-!     else
-!        ind(1)=i
-!        ind(2)=i+1
-!        dr1=r(ind(1))-r0
-!        dr2=r0-r(ind(2))
-!     endif
-!  endif
-!
-!  ! inverse distance weighting
-!  w(1)=(dr1)**(-p)
-!  w(2)=(dr2)**(-p)
-!  wsum=1.d0/sum(w)
-!
-!end subroutine interp_vel
-!!-----------------------------------------------------------------------------------------
-
 end module test_bkgrdmodel
+!=========================================================================================

@@ -761,18 +761,28 @@ class mesh(object,mesh_tools):
         nodecoord=open(nodecoord_name,'w')
         print 'Writing '+nodecoord_name+'.....'
         node_list=cubit.parse_cubit_list('node','all')
+        # number of nodes
         num_nodes=len(node_list)
         print '  number of nodes:',str(num_nodes)
         nodecoord.write('%10i\n' % num_nodes)
-        #
+        # coordinates
         for node in node_list:
             x,y,z=cubit.get_nodal_coordinates(node)
+            # min/max
             self.xmin,self.xmax=self.get_extreme(x,self.xmin,self.xmax)
             self.ymin,self.ymax=self.get_extreme(y,self.ymin,self.ymax)
             self.zmin,self.zmax=self.get_extreme(z,self.zmin,self.zmax)
-            txt=('%10i %20f %20f %20f\n') % (node,x,y,z)
+            if abs(x) < 1.0 and abs(y) < 1.0 and abs(z) < 1.0:
+                # avoids problem w/ fixed floating point formatting for very small values
+                txt=('%10i %20e %20e %20e\n') % (node,x,y,z)
+            else:
+                # standard float format
+                txt=('%10i %20f %20f %20f\n') % (node,x,y,z)
             nodecoord.write(txt)
         nodecoord.close()
+        print '  x-coordinate min/max:',str(self.xmin),str(self.xmax)
+        print '  y-coordinate min/max:',str(self.ymin),str(self.ymax)
+        print '  z-coordinate min/max:',str(self.zmin),str(self.zmax)
         print 'Ok'
 
     def free_write(self,freename=None):

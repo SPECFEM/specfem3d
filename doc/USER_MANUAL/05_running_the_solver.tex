@@ -323,3 +323,15 @@ All the runs to perform must be placed in directories called \texttt{run0001}, \
 and you must create a link from the root directory of the code
 to the first copy of the executable programs by typing \texttt{ln -s run0001/bin bin}.
 
+
+\section{Note on the viscoelastic model used}
+
+\noindent
+The model used is a constant $Q$, thus with no dependence on frequency ($Q(f)$ = constant).
+See e.g. \cite{BlKoChLoXi16}. \\
+
+\noindent
+However in practice for technical reasons it is approximated based on the sum of different Generalized Zener body mechanisms
+and thus the code outputs the band in which the approximation is very good, outside of that range it can be less accurate.
+The logarithmic center of that frequency band is the \texttt{ATTENUATION\_f0} parameter defined (in Hz) in input file \texttt{DATA/Par\_file}.
+

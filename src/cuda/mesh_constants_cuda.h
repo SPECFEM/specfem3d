@@ -95,7 +95,9 @@
 //#define ENABLE_VERY_SLOW_ERROR_CHECKING
 
 // maximum function
-#define MAX(x,y)                    (((x) < (y)) ? (y) : (x))
+#define MAX(x,y)     (((x) < (y)) ? (y) : (x))
+// minimum function
+#define MIN(a,b)     (((a) > (b)) ? (b) : (a))
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -573,6 +575,9 @@ typedef struct mesh_ {
   // gravity
   realw* d_minus_deriv_gravity;
   realw* d_minus_g;
+  // FAULT
+  int Kelvin_Voigt_damping;
+  realw* d_Kelvin_Voigt_eta;
 
 } Mesh;
 

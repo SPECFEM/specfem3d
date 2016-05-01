@@ -1,0 +1,6 @@
+v2.0.2-1808-g40f6-dirty GIT_VERSION
+durochtc USER_NAME
+curie91 HOST_NAME
+FFLAGS = -O3 #-march=native -fopenmp
+CFLAGS = -O3 #-march=native
+LDFLAGS = -O3 #-march=native -fopenmp

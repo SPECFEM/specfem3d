@@ -1,0 +1,940 @@
+!=====================================================================
+!
+!               S p e c f e m 3 D  V e r s i o n  3 . 0
+!               ---------------------------------------
+!
+!     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
+!                        Princeton University, USA
+!                and CNRS / University of Marseille, France
+!                 (there are currently many more authors!)
+! (c) Princeton University and CNRS / University of Marseille, July 2012
+!
+! This program is free software; you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation; either version 2 of the License, or
+! (at your option) any later version.
+!
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+!
+! You should have received a copy of the GNU General Public License along
+! with this program; if not, write to the Free Software Foundation, Inc.,
+! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+!
+!=====================================================================
+
+! XSMOOTH_SEM
+!
+! USAGE
+!   mpirun -np NPROC bin/xsmooth_sem SIGMA_H SIGMA_V KERNEL_NAME INPUT_DIR OUPUT_DIR USE_GPU
+!
+!
+! COMMAND LINE ARGUMENTS
+!   SIGMA_H                - horizontal smoothing radius
+!   SIGMA_V                - vertical smoothing radius
+!   KERNEL_NAME            - kernel name, e.g. alpha_kernel
+!   INPUT_DIR              - directory from which kernels are read
+!   OUTPUT_DIR             - directory to which smoothed kernels are written
+!   USE_GPU                - use GPUs for computation
+!
+! DESCRIPTION
+!   Smooths kernels by convolution with a Gaussian. Writes the resulting
+!   smoothed kernels to OUTPUT_DIR.
+!
+!   Files written to OUTPUT_DIR have the suffix 'smooth' appended,
+!   e.g. proc***alpha_kernel.bin becomes proc***alpha_kernel_smooth.bin
+!
+!   This program's primary use case is to smooth kernels. It can be used though on
+!   any scalar field of dimension (NGLLX,NGLLY,NGLLZ,NSPEC).
+!
+!   This is a parrallel program -- it must be invoked with mpirun or other
+!   appropriate utility.  Operations are performed in embarassingly-parallel
+!   fashion.
+
+#include "config.fh"
+
+program smooth_sem
+
+  use postprocess_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,NGLLSQUARE, &
+    MAX_STRING_LEN,IIN,IOUT, &
+    GAUSSALPHA,GAUSSBETA,PI,TWO_PI, &
+    MAX_KERNEL_NAMES
+
+  use specfem_par
+  use specfem_par_elastic,only: ELASTIC_SIMULATION,ispec_is_elastic,rho_vp,rho_vs,min_resolved_period
+  use specfem_par_acoustic,only: ACOUSTIC_SIMULATION,ispec_is_acoustic
+  use specfem_par_poroelastic,only: POROELASTIC_SIMULATION,ispec_is_poroelastic,rho_vpI,rho_vpII,rho_vsI, &
+    phistore,tortstore,rhoarraystore
+  use specfem_par_movie
+
+  implicit none
+
+  integer, parameter :: NARGS = 6
+
+  ! data must be of dimension: (NGLLX,NGLLY,NGLLZ,NSPEC_AB)
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: dat,dat_smooth
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: dummy ! for jacobian read
+  integer :: NSPEC_N, NGLOB_N
+
+  integer :: i,iglob,ier,ispec2,ispec,inum
+  integer :: icounter,num_slices
+  integer :: iproc,ncuda_devices
+  integer(kind=8) :: Container
+
+  integer,parameter :: MAX_NODE_LIST = 300
+  integer :: node_list(MAX_NODE_LIST)
+  logical :: do_include_slice
+
+  character(len=MAX_STRING_LEN) :: arg(6)
+  character(len=MAX_STRING_LEN) :: kernel_name, input_dir, output_dir
+  character(len=MAX_STRING_LEN) :: prname_lp
+  character(len=MAX_STRING_LEN*2) :: local_data_file
+
+
+  character(len=MAX_STRING_LEN) :: kernel_names(MAX_KERNEL_NAMES)
+  character(len=MAX_STRING_LEN) :: kernel_names_comma_delimited
+  integer :: nker
+  real t1,t2
+
+  ! smoothing parameters
+  character(len=MAX_STRING_LEN*2) :: ks_file
+
+  real(kind=CUSTOM_REAL) :: sigma_h, sigma_h2, sigma_h3, sigma_v, sigma_v2, sigma_v3
+  real(kind=CUSTOM_REAL) :: sigma_h2_inv,sigma_v2_inv
+  real(kind=CUSTOM_REAL) :: sigma_h3_sq,sigma_v3_sq
+
+  real(kind=CUSTOM_REAL) :: x0, y0, z0, norm, norm_h, norm_v
+  real(kind=CUSTOM_REAL) :: center_x0, center_y0, center_z0
+  real(kind=CUSTOM_REAL) :: center_x, center_y, center_z
+
+  real(kind=CUSTOM_REAL) :: max_old,max_new,max_old_all,max_new_all
+  real(kind=CUSTOM_REAL) :: min_old,min_new,min_old_all,min_new_all
+
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: exp_val,factor
+
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: tk, bk
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: xl, yl, zl
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: xx, yy, zz
+
+  real(kind=CUSTOM_REAL), dimension(:),allocatable :: cx0, cy0, cz0
+  real(kind=CUSTOM_REAL), dimension(:),allocatable :: cx, cy, cz
+
+  real(kind=CUSTOM_REAL) :: dist_h,dist_v
+  real(kind=CUSTOM_REAL) :: element_size
+
+  real(kind=CUSTOM_REAL) :: distance_min_glob,distance_max_glob
+  real(kind=CUSTOM_REAL) :: elemsize_min_glob,elemsize_max_glob
+  real(kind=CUSTOM_REAL) :: x_min_glob,x_max_glob
+  real(kind=CUSTOM_REAL) :: y_min_glob,y_max_glob
+  real(kind=CUSTOM_REAL) :: z_min_glob,z_max_glob
+
+  ! reference slice
+  real(kind=CUSTOM_REAL) :: x_min_ref,x_max_ref
+  real(kind=CUSTOM_REAL) :: y_min_ref,y_max_ref
+  real(kind=CUSTOM_REAL) :: z_min_ref,z_max_ref
+  real(kind=CUSTOM_REAL) :: x_min,x_max
+  real(kind=CUSTOM_REAL) :: y_min,y_max
+  real(kind=CUSTOM_REAL) :: z_min,z_max
+  real(kind=CUSTOM_REAL) :: dim_x,dim_y,dim_z
+
+  logical :: BROADCAST_AFTER_READ, USE_GPU, USE_QUADRATURE_RULE
+
+#ifdef FORCE_VECTORIZATION
+  integer :: ijk
+#else
+  integer :: j,k
+#endif
+
+  call init_mpi()
+  call world_size(sizeprocs)
+  call world_rank(myrank)
+
+  USE_QUADRATURE_RULE = .false.
+
+  if (myrank == 0) print *,"Running XSMOOTH_SEM"
+  call synchronize_all()
+  call cpu_time(t1)
+
+  ! parse command line arguments
+  if (command_argument_count() /= NARGS) then
+    if (myrank == 0) then
+        print *,'USAGE:  mpirun -np NPROC bin/xsmooth_sem SIGMA_H SIGMA_V KERNEL_NAME INPUT_DIR OUPUT_DIR GPU_MODE'
+      stop 'Please check command line arguments'
+    endif
+  endif
+  call synchronize_all()
+
+  do i = 1, NARGS
+    call get_command_argument(i,arg(i), status=ier)
+  enddo
+
+  read(arg(1),*) sigma_h
+  read(arg(2),*) sigma_v
+  kernel_names_comma_delimited = arg(3)
+  input_dir= arg(4)
+  output_dir = arg(5)
+  read(arg(6),*) USE_GPU
+
+  call parse_kernel_names(kernel_names_comma_delimited,kernel_names,nker)
+  kernel_name = kernel_names(1)
+
+  if (USE_GPU) then
+    call initialize_cuda_device(myrank,ncuda_devices)
+    USE_QUADRATURE_RULE=.true.
+  endif
+
+  if (nker > 1) then
+    if (myrank == 0) then
+      ! The machinery for reading multiple names from the command line is in place,
+      ! but the smoothing routines themselves have not yet been modified to work
+      !  on multiple arrays.
+      if (myrank == 0) then
+        print *,'Smoothing only first name in list: ',trim(kernel_name)
+        print *,''
+      endif
+    endif
+  endif
+  call synchronize_all()
+
+  ! check smoothing radii
+  sigma_h2 = 2.0 * sigma_h ** 2  ! factor two for gaussian distribution with standard variance sigma
+  sigma_v2 = 2.0 * sigma_v ** 2
+
+  if (sigma_h2 < 1.e-18) stop 'Error sigma_h2 zero, must non-zero'
+  if (sigma_v2 < 1.e-18) stop 'Error sigma_v2 zero, must non-zero'
+
+  ! adds margin to search radius
+  element_size = max(sigma_h,sigma_v) * 0.5
+
+  ! search radius
+  sigma_h3 = 3.0  * sigma_h + element_size
+  sigma_v3 = 3.0  * sigma_v + element_size
+
+  ! helper variables
+  sigma_h2_inv = 1.0_CUSTOM_REAL / sigma_h2
+  sigma_v2_inv = 1.0_CUSTOM_REAL / sigma_v2
+
+  sigma_h3_sq = sigma_h3 * sigma_h3
+  sigma_v3_sq = sigma_v3 * sigma_v3
+
+  ! theoretic normal value
+  ! (see integral over -inf to +inf of exp[- x*x/(2*sigma) ] = sigma * sqrt(2*pi) )
+  ! note: smoothing is using a gaussian (ellipsoid for sigma_h /= sigma_v),
+  norm_h = real(2.0*PI*sigma_h**2,kind=CUSTOM_REAL)
+  norm_v = real(sqrt(2.0*PI) * sigma_v,kind=CUSTOM_REAL)
+  norm   = norm_h * norm_v
+
+  ! user output
+  if (myrank == 0) then
+    print *,'command line arguments:'
+    print *,'  smoothing sigma_h , sigma_v                : ',sigma_h,sigma_v
+    ! scalelength: approximately S ~ sigma * sqrt(8.0) for a gaussian smoothing
+    print *,'  smoothing scalelengths horizontal, vertical: ',sigma_h*sqrt(8.0),sigma_v*sqrt(8.0)
+    print *,'  input dir : ',trim(input_dir)
+    print *,'  output dir: ',trim(output_dir)
+    print *,"  GPU_MODE: ", USE_GPU
+    print *
+  endif
+
+  ! reads the parameter file
+  BROADCAST_AFTER_READ = .true.
+  call read_parameter_file(myrank,BROADCAST_AFTER_READ)
+
+  if (ADIOS_ENABLED) stop 'Flag ADIOS_ENABLED not supported yet for smoothing, please rerun program...'
+
+  ! check that the code is running with the requested nb of processes
+  if (sizeprocs /= NPROC) then
+    if (myrank == 0) then
+      print *,'Error number of processors supposed to run on: ',NPROC
+      print *,'Error number of MPI processors actually run on: ',sizeprocs
+      print *,''
+      print *,'Please rerun with: mpirun -np ',NPROC,' bin/xsmooth_sem .. '
+    endif
+    call exit_MPI(myrank,'Error wrong number of MPI processes')
+  endif
+
+  ! read the value of NSPEC_AB and NGLOB_AB because we need it to define some array sizes below
+  call read_mesh_for_init()
+
+  ! allocate arrays for storing the databases
+  allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           xix(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           xiy(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           xiz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           etax(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           etay(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           etaz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           gammax(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           gammay(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) stop 'Error allocating arrays for databases'
+
+  ! mesh node locations
+  allocate(xstore(NGLOB_AB), &
+           ystore(NGLOB_AB), &
+           zstore(NGLOB_AB),stat=ier)
+  if (ier /= 0) stop 'Error allocating arrays for mesh nodes'
+
+  ! material properties
+  allocate(kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) stop 'Error allocating arrays for material properties'
+
+  ! material flags
+  allocate(ispec_is_acoustic(NSPEC_AB), &
+           ispec_is_elastic(NSPEC_AB), &
+           ispec_is_poroelastic(NSPEC_AB),stat=ier)
+  if (ier /= 0) stop 'Error allocating arrays for material flags'
+  ispec_is_acoustic(:) = .false.
+  ispec_is_elastic(:) = .false.
+  ispec_is_poroelastic(:) = .false.
+
+  ! reads in external mesh
+  call read_mesh_databases()
+
+  ! gets mesh dimensions
+  call check_mesh_distances(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
+                            x_min_glob,x_max_glob,y_min_glob,y_max_glob,z_min_glob,z_max_glob, &
+                            elemsize_min_glob,elemsize_max_glob, &
+                            distance_min_glob,distance_max_glob)
+
+  ! outputs infos
+  if (myrank == 0) then
+    print *,'mesh dimensions:'
+    print *,'  Xmin and Xmax of the model = ',x_min_glob,x_max_glob
+    print *,'  Ymin and Ymax of the model = ',y_min_glob,y_max_glob
+    print *,'  Zmin and Zmax of the model = ',z_min_glob,z_max_glob
+    print *,''
+    print *,'  Max GLL point distance = ',distance_max_glob
+    print *,'  Min GLL point distance = ',distance_min_glob
+    print *,'  Max/min ratio = ',distance_max_glob/distance_min_glob
+    print *,''
+    print *,'  Max element size = ',elemsize_max_glob
+    print *,'  Min element size = ',elemsize_min_glob
+    print *,'  Max/min ratio = ',elemsize_max_glob/elemsize_min_glob
+    print *,''
+  endif
+
+  if (ELASTIC_SIMULATION) then
+    call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
+                               ibool,xstore,ystore,zstore, &
+                               kappastore,mustore,rho_vp,rho_vs, &
+                               DT,model_speed_max,min_resolved_period, &
+                               LOCAL_PATH,SAVE_MESH_FILES)
+
+  else if (POROELASTIC_SIMULATION) then
+    allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    rho_vp = 0.0_CUSTOM_REAL
+    rho_vs = 0.0_CUSTOM_REAL
+    call check_mesh_resolution_poro(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
+                                    DT,model_speed_max,min_resolved_period, &
+                                    phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI, &
+                                    LOCAL_PATH,SAVE_MESH_FILES)
+    deallocate(rho_vp,rho_vs)
+  else if (ACOUSTIC_SIMULATION) then
+    allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) stop 'Error allocating array rho_vp'
+    allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) stop 'Error allocating array rho_vs'
+    rho_vp = sqrt( kappastore / rhostore ) * rhostore
+    rho_vs = 0.0_CUSTOM_REAL
+    call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
+                               ibool,xstore,ystore,zstore, &
+                               kappastore,mustore,rho_vp,rho_vs, &
+                               DT,model_speed_max,min_resolved_period, &
+                               LOCAL_PATH,SAVE_MESH_FILES)
+    deallocate(rho_vp,rho_vs)
+  endif
+
+  ! for smoothing, we use cell centers to find and locate nearby elements
+  !
+  ! sets the location of the center of the elements and local points
+  allocate(xl(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           yl(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           zl(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           cx0(NSPEC_AB), &
+           cy0(NSPEC_AB), &
+           cz0(NSPEC_AB),stat=ier)
+  if (ier /= 0) stop 'Error allocating array xl etc.'
+
+  ! sets element center location
+  do ispec = 1, nspec_AB
+
+    DO_LOOP_IJK
+
+      iglob = ibool(INDEX_IJK,ispec)
+      xl(INDEX_IJK,ispec) = xstore(iglob)
+      yl(INDEX_IJK,ispec) = ystore(iglob)
+      zl(INDEX_IJK,ispec) = zstore(iglob)
+
+    ENDDO_LOOP_IJK
+
+    cx0(ispec) = (xl(1,1,1,ispec) + xl(NGLLX,NGLLY,NGLLZ,ispec)) * 0.5_CUSTOM_REAL
+    cy0(ispec) = (yl(1,1,1,ispec) + yl(NGLLX,NGLLY,NGLLZ,ispec)) * 0.5_CUSTOM_REAL
+    cz0(ispec) = (zl(1,1,1,ispec) + zl(NGLLX,NGLLY,NGLLZ,ispec)) * 0.5_CUSTOM_REAL
+  enddo
+
+  ! reference slice dimension
+  x_min_ref = minval(xstore)
+  x_max_ref = maxval(xstore)
+  y_min_ref = minval(ystore)
+  y_max_ref = maxval(ystore)
+  z_min_ref = minval(zstore)
+  z_max_ref = maxval(zstore)
+
+  dim_x = abs(x_max_ref - x_min_ref)
+  dim_y = abs(y_max_ref - y_min_ref)
+  dim_z = abs(z_max_ref - z_min_ref)
+
+  ! user output
+  if (myrank == 0) then
+    print *,'smoothing:'
+    print *,'  single slice dimensions in x/y/z-direction: ',dim_x,' / ',dim_y,' / ',dim_z
+    print *,'  gaussian search radius horizontal =',sigma_h3,' vertical =',sigma_v3
+    print *,''
+  endif
+
+  ! checks if gaussian support exceeds slice dimensions
+  if (sigma_h3 >= dim_x .or. sigma_h3 >= dim_y .or. sigma_v3 >= dim_z) then
+    ! gaussian support is likely larger than the direct neighbour and has support in a much wider area
+    ! user output
+    if (myrank == 0) then
+      print *,'  using large gaussian with respect to slice dimension for smoothing'
+      print *,''
+    endif
+  endif
+
+  ! frees memory
+  deallocate(xstore,ystore,zstore)
+  deallocate(xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
+  deallocate(ibool)
+  deallocate(jacobian)
+
+  call synchronize_all()
+
+  ! initializes node list
+  node_list(:) = -1
+
+  ! adds this partition itself first
+  icounter = 1
+  node_list(icounter) = myrank
+
+  ! sets up slices to process
+  do iproc = 0,NPROC-1
+    ! skip own process slice, has already been added
+    if (iproc == myrank) cycle
+
+    ! checks if slice is a direct neighbour
+    do_include_slice = .false.
+    do i = 1,num_interfaces_ext_mesh
+      if (iproc == my_neighbours_ext_mesh(i)) then
+        ! found a neighbour slice
+        do_include_slice = .true.
+        exit
+      endif
+    enddo
+
+    if( .not. do_include_slice) then
+      ! note: gaussian support might be larger than closest neighbour slices
+      !       we add all slices close enough to still have an influence
+
+      ! checks distances to this slice
+      ! reads in slice mesh
+      ! neighbor database file
+      call create_name_database(prname,iproc,LOCAL_PATH)
+      prname_lp = prname(1:len_trim(prname))//'external_mesh.bin'
+
+      ! gets number of elements and global points for this partition
+      open(unit=IIN,file=trim(prname_lp),status='old',action='read',form='unformatted',iostat=ier)
+      if (ier /= 0) then
+        print *,'Error could not open database file: ',trim(prname_lp)
+        call exit_mpi(myrank, 'Error reading neighbors external mesh file')
+      endif
+      read(IIN) NSPEC_N
+      read(IIN) NGLOB_N
+      close(IIN)
+
+      ! allocates mesh arrays
+      allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
+      if (ier /= 0) stop 'Error allocating array ibool'
+      allocate(xstore(NGLOB_N),ystore(NGLOB_N),zstore(NGLOB_N),stat=ier)
+      if (ier /= 0) stop 'Error allocating array xstore etc.'
+
+      ! gets number of point locations and mesh
+      open(unit=IIN,file=trim(prname_lp),status='old',action='read',form='unformatted',iostat=ier)
+      if (ier /= 0) then
+        print *,'Error: could not open database file: ',trim(prname_lp)
+        call exit_mpi(myrank, 'Error reading neighbors external mesh file')
+      endif
+      read(IIN) NSPEC_N
+      read(IIN) NGLOB_N
+
+      ! ibool file
+      read(IIN) ibool
+
+      ! global point arrays
+      read(IIN) xstore
+      read(IIN) ystore
+      read(IIN) zstore
+      close(IIN)
+
+      ! determines min/max values of slice mesh
+      x_min = minval(xstore)
+      x_max = maxval(xstore)
+      y_min = minval(ystore)
+      y_max = maxval(ystore)
+      z_min = minval(zstore)
+      z_max = maxval(zstore)
+
+      ! slice dimensions
+      dim_x = abs(x_max - x_min)
+      dim_y = abs(y_max - y_min)
+      dim_z = abs(z_max - z_min)
+
+      ! frees memory
+      deallocate(ibool)
+      deallocate(xstore,ystore,zstore)
+
+      ! re-evalutes distances between slices
+      ! checks if edges are within search radius from reference slice
+      ! note: for slices with irregular shapes (e.g. from scotch decomposition), this assumes a box slice shape
+      !       and might add slices even if further separated; a conservative approach
+      if ((x_min < x_max_ref + sigma_h3 .and. x_max > x_min_ref - sigma_h3) &
+          .and. (y_min < y_max_ref + sigma_h3 .and. y_max > y_min_ref - sigma_h3) &
+          .and. (z_min < z_max_ref + sigma_v3 .and. z_max > z_min_ref - sigma_v3)) then
+        do_include_slice = .true.
+      endif
+
+      ! debug output
+      !if (do_include_slice) then
+      !  print *,'reference rank ',myrank,' with slice to include: ',do_include_slice,iproc
+      !  print *,'reference slice min max x/y/z = ',x_min_ref,x_max_ref,'/',y_min_ref,y_max_ref,'/',z_min_ref,z_max_ref
+      !  print *,'  current slice min max x/y/z = ',x_min,x_max,'/',y_min,y_max,'/',z_min,z_max
+      !  print *,''
+      !endif
+    endif
+
+    ! adds to smoothing list neighbors
+    if (do_include_slice) then
+      icounter = icounter + 1
+
+      ! checks bounds
+      if (icounter > MAX_NODE_LIST) stop 'Error number of interfaces exceeds MAX_NODE_LIST'
+
+      ! adds slice to smoothing list
+      node_list(icounter) = iproc
+    endif
+  enddo
+  ! set total number of slices to loop over
+  num_slices = icounter
+
+  ! synchronizes
+  call synchronize_all()
+
+  ! user output
+  if (myrank == 0) then
+    print *,'slices:',num_slices
+    print *,'  rank ',myrank,'  has smoothing slices:'
+    print *,node_list(1:num_slices)
+    print *,''
+  endif
+
+  !do i=0,sizeprocs-1
+  !  if (myrank == i) then
+  !    print *,'rank:',myrank,'  smoothing slices'
+  !    print *,node_list(1:num_slices)
+  !    print *
+  !  endif
+  !enddo
+
+  ! for jacobian and weights
+  ! GLL points weights
+  if (USE_QUADRATURE_RULE) then
+    call zwgljd(xigll,wxgll,NGLLX,GAUSSALPHA,GAUSSBETA)
+    call zwgljd(yigll,wygll,NGLLY,GAUSSALPHA,GAUSSBETA)
+    call zwgljd(zigll,wzgll,NGLLZ,GAUSSALPHA,GAUSSBETA)
+    do k=1,NGLLZ
+      do j=1,NGLLY
+        do i=1,NGLLX
+          wgll_cube(i,j,k) = wxgll(i)*wygll(j)*wzgll(k)
+        enddo
+      enddo
+    enddo
+  endif
+
+  ! loops over slices
+  ! each process reads in his own neighbor slices and gaussian filters the values
+  allocate(tk(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+           bk(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) stop 'Error allocating array tk and bk'
+
+  tk = 0.0_CUSTOM_REAL
+  bk = 0.0_CUSTOM_REAL
+
+  ! GPU setup
+  if (USE_GPU) then
+    call prepare_GPU(Container,xl,yl,zl,sigma_h2_inv,sigma_v2_inv,sigma_h3_sq,sigma_v3_sq,NSPEC_AB,nker,wgll_cube)
+
+    ! synchronizes all processes
+    call synchronize_all()
+  endif
+
+
+  do inum = 1,num_slices
+
+    iproc = node_list(inum)
+
+    if (myrank == 0) print *,'  reading slice:',iproc
+
+    ! neighbor database file
+    call create_name_database(prname,iproc,LOCAL_PATH)
+    prname_lp = prname(1:len_trim(prname))//'external_mesh.bin'
+
+    ! gets number of point locations
+    open(unit=IIN,file=trim(prname_lp),status='old',action='read',form='unformatted',iostat=ier)
+    if (ier /= 0) then
+      print *,'Error: could not open database file: ',trim(prname_lp)
+      call exit_mpi(myrank, 'Error reading neighbors external mesh file')
+    endif
+    read(IIN) NSPEC_N
+    read(IIN) NGLOB_N
+
+
+    ! allocates arrays
+    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
+    if (ier /= 0) stop 'Error allocating array ibool'
+    allocate(xstore(NGLOB_N),ystore(NGLOB_N),zstore(NGLOB_N),stat=ier)
+    if (ier /= 0) stop 'Error allocating array xstore etc.'
+
+    if (USE_QUADRATURE_RULE) then
+      allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
+      if (ier /= 0) stop 'Error allocating array jacobian'
+      allocate(dummy(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
+      if (ier /= 0) stop 'Error allocating array dummy'
+    endif
+
+    ! ibool file
+    read(IIN) ibool
+
+    ! global point arrays
+    read(IIN) xstore
+    read(IIN) ystore
+    read(IIN) zstore
+
+    if (USE_QUADRATURE_RULE) then
+    ! reads in jacobian
+      read(IIN) dummy ! xix
+      read(IIN) dummy ! xiy
+      read(IIN) dummy ! xiz
+      read(IIN) dummy ! etax
+      read(IIN) dummy ! etay
+      read(IIN) dummy ! etaz
+      read(IIN) dummy ! gammax
+      read(IIN) dummy ! gammay
+      read(IIN) dummy ! gammaz
+      read(IIN) jacobian
+    endif
+
+    close(IIN)
+
+    ! get the location of the center of the elements and local points
+    allocate(xx(NGLLX,NGLLY,NGLLZ,NSPEC_N), &
+             yy(NGLLX,NGLLY,NGLLZ,NSPEC_N), &
+             zz(NGLLX,NGLLY,NGLLZ,NSPEC_N), &
+             cx(NSPEC_N), &
+             cy(NSPEC_N), &
+             cz(NSPEC_N),stat=ier)
+    if (ier /= 0) stop 'Error allocating array xx etc.'
+
+    ! sets element center location
+    do ispec = 1, NSPEC_N
+
+      DO_LOOP_IJK
+
+        iglob = ibool(INDEX_IJK,ispec)
+        xx(INDEX_IJK,ispec) = xstore(iglob)
+        yy(INDEX_IJK,ispec) = ystore(iglob)
+        zz(INDEX_IJK,ispec) = zstore(iglob)
+
+      ENDDO_LOOP_IJK
+
+      ! calculate element center location
+      cx(ispec) = (xx(1,1,1,ispec) + xx(NGLLX,NGLLY,NGLLZ,ispec)) * 0.5_CUSTOM_REAL
+      cy(ispec) = (yy(1,1,1,ispec) + yy(NGLLX,NGLLY,NGLLZ,ispec)) * 0.5_CUSTOM_REAL
+      cz(ispec) = (zz(1,1,1,ispec) + zz(NGLLX,NGLLY,NGLLZ,ispec)) * 0.5_CUSTOM_REAL
+    enddo
+
+    deallocate(xstore,ystore,zstore)
+    deallocate(ibool)
+
+    ! data file
+    write(prname,'(a,i6.6,a)') trim(input_dir)//'proc',iproc,'_'
+    local_data_file = trim(prname) // trim(kernel_name) // '.bin'
+
+    open(unit = IIN,file = trim(local_data_file),status='old',action='read',form ='unformatted',iostat=ier)
+    if (ier /= 0) then
+      print *,'Error opening data file: ',trim(local_data_file)
+      stop 'Error opening data file'
+    endif
+
+    allocate(dat(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
+    if (ier /= 0) stop 'Error allocating dat array'
+
+    read(IIN) dat
+    close(IIN)
+
+    ! statistics
+    if (iproc == myrank) then
+      min_old = minval(dat(:,:,:,:))
+      max_old = maxval(dat(:,:,:,:))
+    endif
+
+    ! finds closest elements for smoothing
+    !if (myrank==0) print *, '  start looping over elements and points for smoothing ...'
+    if (USE_GPU) then
+      call compute_smooth(Container,jacobian,xx,yy,zz,dat,NSPEC_N)
+    else
+      ! loop over elements to be smoothed in the current slice
+      do ispec = 1, NSPEC_AB
+
+        ! element center position
+        center_x0 = cx0(ispec)
+        center_y0 = cy0(ispec)
+        center_z0 = cz0(ispec)
+
+        ! --- only double loop over the elements in the search radius ---
+        do ispec2 = 1, NSPEC_N
+
+          ! search element center position
+          center_x = cx(ispec2)
+          center_y = cy(ispec2)
+          center_z = cz(ispec2)
+
+          ! calculates horizontal and vertical distance between two element centers
+          ! (squared distances)
+          call get_distance_vec(dist_h,dist_v,center_x0,center_y0,center_z0,center_x,center_y,center_z)
+
+          ! checks distance between centers of elements
+          if (dist_h > sigma_h3_sq .or. dist_v > sigma_v3_sq) cycle
+
+          ! integration factors
+          if (USE_QUADRATURE_RULE) then
+            factor(:,:,:) = jacobian(:,:,:,ispec2) * wgll_cube(:,:,:)
+          endif
+
+          ! loop over GLL points of the elements in current slice (ispec)
+          DO_LOOP_IJK
+
+            ! reference location
+            ! current point (i,j,k,ispec) location, cartesian coordinates
+            x0 = xl(INDEX_IJK,ispec)
+            y0 = yl(INDEX_IJK,ispec)
+            z0 = zl(INDEX_IJK,ispec)
+
+            ! calculate weights based on gaussian smoothing
+            call smoothing_weights_vec(x0,y0,z0,sigma_h2_inv,sigma_v2_inv,exp_val,&
+                                       xx(:,:,:,ispec2),yy(:,:,:,ispec2),zz(:,:,:,ispec2))
+
+            ! adds GLL integration weights
+            if (USE_QUADRATURE_RULE) then
+              exp_val(:,:,:) = exp_val(:,:,:) * factor(:,:,:)
+            endif
+
+            ! adds contribution of element ispec2 to smoothed kernel values
+            tk(INDEX_IJK,ispec) = tk(INDEX_IJK,ispec) + sum(exp_val(:,:,:) * dat(:,:,:,ispec2))
+
+            ! normalization, integrated values of gaussian smoothing function
+            bk(INDEX_IJK,ispec) = bk(INDEX_IJK,ispec) + sum(exp_val(:,:,:))
+
+          ENDDO_LOOP_IJK
+
+        enddo ! ispec2
+      enddo ! ispec
+
+    endif ! GPU_MODE
+
+    ! frees arrays
+    deallocate(dat)
+    deallocate(xx,yy,zz)
+    deallocate(cx,cy,cz)
+
+    if (USE_QUADRATURE_RULE) then
+      deallocate(jacobian)
+      deallocate(dummy)
+    endif
+
+  enddo ! iproc
+
+  ! normalizes/scaling factor
+  if (myrank == 0) then
+    print *,''
+    print *,'Scaling values: min/max = ',minval(bk),maxval(bk)
+  endif
+
+  allocate(dat_smooth(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) stop 'Error allocating array dat_smooth'
+
+  dat_smooth(:,:,:,:) = 0.0_CUSTOM_REAL
+
+  if (USE_GPU) then
+    call get_smooth(Container,dat_smooth)
+  else
+    do ispec = 1, NSPEC_AB
+
+      DO_LOOP_IJK
+
+        ! checks the normalization criterion
+        !if (abs(bk(i,j,k,ispec) - norm) > 1.e-4) then
+        !  print *, 'Problem norm here --- ', ispec, i, j, k, bk(i,j,k,ispec), norm
+        !endif
+        if (abs(bk(INDEX_IJK,ispec)) < 1.e-18) then
+#ifdef FORCE_VECTORIZATION
+          print *, 'Problem norm here --- ', ispec, ijk, bk(INDEX_IJK,ispec), norm
+#else
+          print *, 'Problem norm here --- ', ispec, i, j, k, bk(i,j,k,ispec), norm
+#endif
+        endif
+
+        ! normalizes smoothed kernel values by integral value of gaussian weighting
+        dat_smooth(INDEX_IJK,ispec) = tk(INDEX_IJK,ispec) / bk(INDEX_IJK,ispec)
+
+      ENDDO_LOOP_IJK
+
+    enddo !  ispec
+
+  endif ! GPU_MODE
+
+  ! frees memory
+  deallocate(tk,bk)
+
+  ! statistics
+  min_new = minval(dat_smooth(:,:,:,:))
+  max_new = maxval(dat_smooth(:,:,:,:))
+
+  ! file output
+  ! smoothed kernel file name
+  write(ks_file,'(a,i6.6,a)') trim(output_dir)//'/proc',myrank,'_'//trim(kernel_name)//'_smooth.bin'
+
+  open(IOUT,file=trim(ks_file),status='unknown',form='unformatted',iostat=ier)
+  if (ier /= 0) stop 'Error opening smoothed kernel file'
+  write(IOUT) dat_smooth(:,:,:,:)
+  close(IOUT)
+  if (myrank == 0) print *,'written: ',trim(ks_file)
+
+  ! frees memory
+  deallocate(dat_smooth)
+
+  ! synchronizes
+  call synchronize_all()
+
+  ! the min/maximum value for the smoothed kernel
+  call min_all_cr(min_old, min_old_all)
+  call min_all_cr(min_new, min_new_all)
+  call max_all_cr(max_old, max_old_all)
+  call max_all_cr(max_new,max_new_all)
+
+  if (myrank == 0) then
+    print *,''
+    print *,'Minimum data value before smoothing = ', min_old_all
+    print *,'Minimum data value after smoothing  = ', min_new_all
+    print *,''
+    print *,'Maximum data value before smoothing = ', max_old_all
+    print *,'Maximum data value after smoothing  = ', max_new_all
+    print *,''
+    close(IMAIN)
+  endif
+
+
+  call cpu_time(t2)
+
+  if (USE_GPU) then
+    print *,'Computation time with GPU:',t2-t1
+  else
+    print *,'Computation time with CPU:',t2-t1
+  endif
+
+  ! stop all the processes and exit
+  call finalize_mpi()
+
+  contains
+!
+! -----------------------------------------------------------------------------
+!
+  subroutine smoothing_weights_vec(x0,y0,z0,sigma_h2_inv,sigma_v2_inv,exp_val,&
+                              xx_elem,yy_elem,zz_elem)
+
+  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
+  implicit none
+
+  real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ),intent(out) :: exp_val
+  real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ),intent(in) :: xx_elem, yy_elem, zz_elem
+  real(kind=CUSTOM_REAL),intent(in) :: x0,y0,z0,sigma_h2_inv,sigma_v2_inv
+
+  ! local parameters
+  real(kind=CUSTOM_REAL) :: dist_h_sq,dist_v_sq
+  real(kind=CUSTOM_REAL) :: val
+  real(kind=CUSTOM_REAL) :: x1,y1,z1
+
+#ifdef FORCE_VECTORIZATION
+  integer :: ijk
+#else
+  integer :: i,j,k
+#endif
+
+  DO_LOOP_IJK
+
+    ! point in second slice
+    x1 = xx_elem(INDEX_IJK)
+    y1 = yy_elem(INDEX_IJK)
+    z1 = zz_elem(INDEX_IJK)
+
+    ! gets vertical and horizontal distance
+    ! vertical distance (squared)
+    dist_v_sq = (z0-z1)*(z0-z1)
+
+    ! horizontal distance (squared)
+    dist_h_sq = (x0-x1)*(x0-x1) + (y0-y1)*(y0-y1)
+
+    ! Gaussian function
+    val = exp(- dist_h_sq * sigma_h2_inv - dist_v_sq * sigma_v2_inv)
+
+    ! stores values in element array
+    exp_val(INDEX_IJK) = val
+
+  ENDDO_LOOP_IJK
+
+  end subroutine smoothing_weights_vec
+
+!
+! -----------------------------------------------------------------------------
+!
+
+  subroutine get_distance_vec(dist_h,dist_v,x0,y0,z0,x1,y1,z1)
+
+! returns vector lengths as distances in radial and horizontal direction
+! only for flat earth with z in vertical direction
+
+  use constants,only: CUSTOM_REAL
+
+  implicit none
+
+  real(kind=CUSTOM_REAL),intent(out) :: dist_h,dist_v
+  real(kind=CUSTOM_REAL),intent(in) :: x0,y0,z0,x1,y1,z1
+
+  ! vertical distance
+  !dist_v = sqrt( (z0-z1)*(z0-z1) )
+  ! squared (to avoid costly square-root
+  dist_v = (z0-z1)*(z0-z1)
+
+  ! horizontal distance
+  !dist_h = sqrt( (x0-x1)*(x0-x1) + (y0-y1)*(y0-y1) )
+  ! squared
+  dist_h = (x0-x1)*(x0-x1) + (y0-y1)*(y0-y1)
+
+  end subroutine get_distance_vec
+
+end program smooth_sem

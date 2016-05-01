@@ -19,27 +19,34 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
-!===============
+!=========================================================================================
 module commpi
-!===============
 
   ! Wrapper routines to invoke the MPI library.
   ! This routine is the sole place for parallel interactions.
 
   use global_parameters
   use data_proc
-  use data_mesh,        only : gvec_solid, gvec_fluid
-  use data_io,          only : verbose
   use linked_list
 
   ! in case you have problems with the mpi module, you might try to use the
   ! include below, in which case you will have to specify the location in the
   ! Makefile or copy to the build directory!
-#ifndef serial
+  ! This usually happens when the MPI library was built with a different version
+  ! of the same compiler and the modules are incompatible.
+# ifndef serial
+# ifndef include_mpi
   use mpi
-#endif
+# endif
+# endif
   implicit none
-  !include 'mpif.h'
+
+  ! This preprocessor flag allows to include mpi instead of using the module.
+  ! This makes it compiler-version independent, but leads to an invalid entry
+  ! 'mpif.h' in the Makefile, when using makemake.pl
+# ifdef include_mpi
+  include 'mpif.h'
+# endif
 
   public :: ppsum, ppsum_int, ppsum_dble
   public :: ppmin, ppmax, ppmax_int
@@ -53,21 +60,32 @@ module commpi
 
 contains
 
-!----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine ppcheck(test, errmsg)
-  ! Routine that checks if an  error has occured at all ranks, at some ranks, or
-  ! not at all. The message is only printed once if the error occured on all
-  ! ranks, otherwise each processor spits its message stdout
-  ! newlines in the error message can be achieved using '\n'
-  ! IMPORTANT: As this routine contains a barrier, it needs to be allways called
-  !            on ALL ranks
+!< Routine that checks if an  error has occured at all ranks, at some ranks, or
+!! not at all. The message is only printed once if the error occured on all
+!! ranks, otherwise each processor spits its message stdout
+!! newlines in the error message can be achieved using '\n'
+!! IMPORTANT: As this routine contains a barrier, it needs to be allways called
+!!            on ALL ranks
 
   logical, intent(in)            :: test
   character(len=*), intent(in)   :: errmsg
 
-  integer :: err, errsum, ierror
+  integer                        :: err, errsum, ierror
 
-#ifndef serial
+#ifdef serial
+  ! Normally, this routine should not be called directly, but only over pcheck
+  ! in commun.F90. pcheck should then defer serial runs from going here.
+  ! Nevertheless, to be sure, there is another handling of the serial mode here.
+  if (test) then
+     print '(/,a,/,/,a,/)', 'ERROR in serial mode, error message:', &
+                                trim(parse_nl(errmsg))
+     stop
+  endif
+
+#else
+
   if (test) then
      err = 1
   else
@@ -91,11 +109,11 @@ subroutine ppcheck(test, errmsg)
 #endif
 
 end subroutine
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
-function parse_nl(str)
-  ! returns the input string with all '\n' in it converted to newlines
+!-----------------------------------------------------------------------------------------
+pure function parse_nl(str)
+!< returns the input string with all '\n' in it converted to newlines
 
   character(len=*), intent(in)  :: str
   character(len=len(str))       :: parse_nl
@@ -110,12 +128,12 @@ function parse_nl(str)
   enddo
 
 end function
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine ppinit
-  ! Start message-passing interface, assigning the total number of processors
-  ! nproc and each processor with its local number mynum=0,...,nproc-1.
+!< Start message-passing interface, assigning the total number of processors
+!! nproc and each processor with its local number mynum=0,...,nproc-1.
 
   use data_comm, only: mpi_realkind
   integer :: ierror
@@ -132,10 +150,11 @@ subroutine ppinit
 #endif
 
 end subroutine ppinit
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine ppend
+!< Calls MPI_FINALIZE
   integer :: ierror
 
 #ifndef serial
@@ -143,9 +162,9 @@ subroutine ppend
 #endif
 
 end subroutine ppend
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine pbroadcast_char(input_char,input_proc)
 
   integer, intent(in)           :: input_proc
@@ -160,9 +179,9 @@ subroutine pbroadcast_char(input_char,input_proc)
 #endif
 
 end subroutine pbroadcast_char
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine pbroadcast_log(input_log,input_proc)
 
   integer, intent(in)    :: input_proc
@@ -175,9 +194,9 @@ subroutine pbroadcast_log(input_log,input_proc)
 #endif
 
 end subroutine pbroadcast_log
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine pbroadcast_int(input_int,input_proc)
 
   integer, intent(in)    :: input_proc
@@ -190,9 +209,9 @@ subroutine pbroadcast_int(input_int,input_proc)
 #endif
 
 end subroutine pbroadcast_int
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine pbroadcast_int_arr(input_int, input_proc)
 
   integer, intent(in)    :: input_proc
@@ -200,14 +219,15 @@ subroutine pbroadcast_int_arr(input_int, input_proc)
   integer                :: ierror
 
 #ifndef serial
-  call mpi_bcast(input_int, size(input_int), MPI_INTEGER, input_proc, MPI_COMM_WORLD, ierror)
+  call mpi_bcast(input_int, size(input_int), MPI_INTEGER, input_proc, MPI_COMM_WORLD, &
+                 ierror)
   call mpi_barrier(MPI_COMM_WORLD, ierror)
 #endif
 
 end subroutine pbroadcast_int_arr
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine pbroadcast_dble(input_dble,input_proc)
 
   integer, intent(in)             :: input_proc
@@ -221,9 +241,9 @@ subroutine pbroadcast_dble(input_dble,input_proc)
 #endif
 
 end subroutine pbroadcast_dble
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 real(kind=dp) function ppmin(scal)
 
   real(kind=dp)    :: scal
@@ -240,9 +260,9 @@ real(kind=dp) function ppmin(scal)
   ppmin = buff2
 
 end function ppmin
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 real(kind=dp) function ppmax(scal)
 
   real(kind=dp)    :: scal
@@ -258,9 +278,9 @@ real(kind=dp) function ppmax(scal)
   ppmax = buff2
 
 end function ppmax
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 integer function ppmax_int(scal)
 
   integer :: scal
@@ -276,9 +296,9 @@ integer function ppmax_int(scal)
   ppmax_int = buff2
 
 end function ppmax_int
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 real(kind=realkind) function ppsum(scal)
 
   use data_comm, only: mpi_realkind
@@ -296,9 +316,9 @@ real(kind=realkind) function ppsum(scal)
   ppsum = buff2
 
 end function ppsum
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 real(kind=dp) function ppsum_dble(scal)
 
   real(kind=dp)    :: scal
@@ -315,9 +335,9 @@ real(kind=dp) function ppsum_dble(scal)
   ppsum_dble = buff2
 
 end function ppsum_dble
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 integer function ppsum_int(scal)
 
   integer :: scal
@@ -334,9 +354,9 @@ integer function ppsum_int(scal)
   ppsum_int = buff2
 
 end function ppsum_int
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine pbarrier
   integer :: ierror
 
@@ -345,9 +365,9 @@ subroutine pbarrier
 #endif
 
 end subroutine pbarrier
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine feed_buffer_solid(vec, nc)
 
   use data_comm
@@ -382,14 +402,14 @@ subroutine feed_buffer_solid(vec, nc)
 #endif
 
 end subroutine feed_buffer_solid
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine send_recv_buffers_solid(nc)
-  ! Solid asynchronous communication pattern with one message per proc-proc pair.
-  ! for a nc-component field gvec. The arrays to map global numbers along
-  ! processor-processor boundaries are determined in the mesher, routine pdb.f90
-  ! (consulation thereof to be avoided if at all possible...)
+!< Solid asynchronous communication pattern with one message per proc-proc pair.
+!! for a nc-component field gvec. The arrays to map global numbers along
+!! processor-processor boundaries are determined in the mesher, routine pdb.f90
+!! (consulation thereof to be avoided if at all possible...)
 
   use data_comm
 
@@ -397,7 +417,6 @@ subroutine send_recv_buffers_solid(nc)
 
 #ifndef serial
   integer               :: imsg, sizeb, ipdes, ipsrc
-  integer               :: ic, ip, ipg
   integer               :: msgnum, msgnum1
   integer               :: sizemsg_solid
   integer               :: ierror
@@ -428,9 +447,9 @@ subroutine send_recv_buffers_solid(nc)
 #endif
 
 end subroutine send_recv_buffers_solid
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine extract_from_buffer_solid(vec,nc)
 
   use data_mesh,        only: npol, gvec_solid, igloc_solid
@@ -440,13 +459,13 @@ subroutine extract_from_buffer_solid(vec,nc)
 
   real(kind=realkind), intent(inout) :: vec(0:,0:,:,:)
   integer, intent(in)   :: nc
+#ifndef serial
   integer               :: imsg, ipg, ip, ipol, jpol, iel, ipt
   integer               :: sizemsg_solid
   integer               :: recv_status(MPI_STATUS_SIZE, sizerecv_solid)
   integer               :: send_status(MPI_STATUS_SIZE, sizesend_solid)
   integer               :: ierror
 
-#ifndef serial
   ! wait until all receiving communication is done
   iclockmpiws = tick()
   call MPI_WAITALL(sizerecv_solid, recv_request_solid, recv_status, ierror)
@@ -479,20 +498,20 @@ subroutine extract_from_buffer_solid(vec,nc)
 #endif
 
 end subroutine extract_from_buffer_solid
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine feed_buffer_fluid(f)
-  ! Fluid asynchronous communication pattern with one message per proc-proc pair
-  ! for a single-component field gvec. The arrays to map global numbers along
-  ! processor-processor boundaries are determined in the mesher, routine pdb.f90
-  ! (consulation thereof to be avoided if at all possible...)
+!< Fluid asynchronous communication pattern with one message per proc-proc pair
+!! for a single-component field gvec. The arrays to map global numbers along
+!! processor-processor boundaries are determined in the mesher, routine pdb.f90
+!! (consulation thereof to be avoided if at all possible...)
 
   use data_mesh, only: npol, gvec_fluid, igloc_fluid
   use data_comm
 
-#ifndef serial
   real(kind=realkind), intent(in) :: f(0:,0:,:)
+#ifndef serial
   integer                         :: imsg, ipg, ip, ipol, jpol, iel, ipt
   integer                         :: sizemsg_fluid
 
@@ -519,24 +538,22 @@ subroutine feed_buffer_fluid(f)
 #endif
 
 end subroutine feed_buffer_fluid
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine send_recv_buffers_fluid
-  ! Fluid asynchronous communication pattern with one message per proc-proc pair
-  ! for a single-component field gvec. The arrays to map global numbers along
-  ! processor-processor boundaries are determined in the mesher, routine pdb.f90
-  ! (consulation thereof to be avoided if at all possible...)
+!< Fluid asynchronous communication pattern with one message per proc-proc pair
+!! for a single-component field gvec. The arrays to map global numbers along
+!! processor-processor boundaries are determined in the mesher, routine pdb.f90
+!! (consulation thereof to be avoided if at all possible...)
 
   use data_comm
 
 #ifndef serial
-  integer               :: imsg, ipg, ip, sizeb, ipdes, ipsrc
+  integer               :: imsg, sizeb, ipdes, ipsrc
   integer               :: msgnum, msgnum1
   integer               :: sizemsg_fluid
   integer               :: ierror
-  integer               :: recv_status(MPI_STATUS_SIZE, sizerecv_fluid)
-  integer               :: send_status(MPI_STATUS_SIZE, sizesend_fluid)
 
   ! Send stuff around
   call buffs_all_fluid%resetcurrent()
@@ -564,22 +581,22 @@ subroutine send_recv_buffers_fluid
 #endif
 
 end subroutine send_recv_buffers_fluid
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!-----------------------------------------------------------------------------
+!-----------------------------------------------------------------------------------------
 subroutine extract_from_buffer_fluid(f)
-  ! Fluid asynchronous communication pattern with one message per proc-proc pair
-  ! for a single-component field gvec. The arrays to map global numbers along
-  ! processor-processor boundaries are determined in the mesher, routine pdb.f90
-  ! (consulation thereof to be avoided if at all possible...)
+!< Fluid asynchronous communication pattern with one message per proc-proc pair
+!! for a single-component field gvec. The arrays to map global numbers along
+!! processor-processor boundaries are determined in the mesher, routine pdb.f90
+!! (consulation thereof to be avoided if at all possible...)
 
   use data_mesh, only: npol, gvec_fluid, igloc_fluid
   use data_time, only: idmpiwf, iclockmpiwf
   use clocks_mod
   use data_comm
 
-#ifndef serial
   real(kind=realkind), intent(inout) :: f(0:,0:,:)
+#ifndef serial
   integer               :: imsg, ipg, ip, ipol, jpol, iel, ipt
   integer               :: sizemsg_fluid
   integer               :: ierror
@@ -618,8 +635,7 @@ subroutine extract_from_buffer_fluid(f)
 #endif
 
 end subroutine extract_from_buffer_fluid
-!=============================================================================
+!-----------------------------------------------------------------------------------------
 
-!===================
 end module commpi
-!===================
+!=========================================================================================

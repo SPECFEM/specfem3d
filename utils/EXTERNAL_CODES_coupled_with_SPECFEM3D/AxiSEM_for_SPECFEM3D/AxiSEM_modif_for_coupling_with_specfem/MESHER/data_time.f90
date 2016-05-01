@@ -19,6 +19,7 @@
 !    along with AxiSEM.  If not, see <http://www.gnu.org/licenses/>.
 !
 
+!=========================================================================================
 !> Various variables around timing
 module data_time
 
@@ -42,3 +43,4 @@ use global_parameters
   integer             :: iclock14, idold14
 
 end module data_time
+!=========================================================================================

@@ -13,7 +13,7 @@ NPROC=4
 
 # setup default example
 rm -rf DATA
-ln -s examples/meshfem3D_examples/simple_model/DATA DATA
+ln -s EXAMPLES/meshfem3D_examples/simple_model/DATA DATA
 
 rm -rf OUTPUT_FILES
 

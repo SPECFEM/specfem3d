@@ -58,18 +58,30 @@ print MAKEFILE "\n\n";
 # Define common macros
 #
 print MAKEFILE "ifeq (\$(strip \$(USE_NETCDF)),true)\n";
-print MAKEFILE "   FFLAGS += -Dunc\n";
-print MAKEFILE "   LIBS = -L \$(strip \$(NETCDF_PATH))/lib -lnetcdff -Wl,-rpath,\$(strip \$(NETCDF_PATH))/lib\n";
-print MAKEFILE "   INCLUDE = -I \$(strip \$(NETCDF_PATH))/include\n";
+print MAKEFILE "   FFLAGS += -Denable_netcdf\n";
+print MAKEFILE "   ifeq (\$(strip \$(USE_PAR_NETCDF)),true)\n";
+print MAKEFILE "       FFLAGS += -Denable_parallel_netcdf\n";
+print MAKEFILE "   endif\n";
+print MAKEFILE "\n";
+print MAKEFILE "   ifdef NETCDF_PATH\n";
+print MAKEFILE "       LIBS = -L \$(strip \$(NETCDF_PATH))/lib -lnetcdff -Wl,-rpath,\$(strip \$(NETCDF_PATH))/lib\n";
+print MAKEFILE "       INCLUDE = -I \$(strip \$(NETCDF_PATH))/include\n";
+print MAKEFILE "   else\n";
+print MAKEFILE "       LIBS = -lnetcdff\n";
+print MAKEFILE "       INCLUDE = -I /usr/include\n";
+print MAKEFILE "   endif\n";
 print MAKEFILE "else\n";
 print MAKEFILE "   LIBS = \n";
-print MAKEFILE "   INCLUDE =\n";
+print MAKEFILE "   INCLUDE = \n";
 print MAKEFILE "endif\n\n";
 
-
 print MAKEFILE "ifeq (\$(strip \$(SERIAL)),true)\n";
-print MAKEFILE "    FFLAGS += -Dserial\n";
-print MAKEFILE "    LDFLAGS += -pthread\n";
+print MAKEFILE "   FFLAGS += -Dserial\n";
+print MAKEFILE "   LDFLAGS += -pthread\n";
+print MAKEFILE "endif\n";
+
+print MAKEFILE "ifeq (\$(strip \$(INCLUDE_MPI)),true)\n";
+print MAKEFILE "    FFLAGS += -Dinclude_mpi\n";
 print MAKEFILE "endif\n";
 
 print MAKEFILE "\n\n";
@@ -77,11 +89,21 @@ print MAKEFILE "# cancel m2c implicit rule \n";
 print MAKEFILE "%.o : %.mod \n ";
 print MAKEFILE "\n\n";
 
+# Activate Solver specific lines
+print MAKEFILE "# SOLVER specific code\n";
+print MAKEFILE "FFLAGS += -Dsolver\n \n";
+
 #
 # make
 #
-print MAKEFILE "all: \$(PROG) utils\n\n";
+print MAKEFILE "all: \$(PROG) utils \n\n";
+
 print MAKEFILE "\$(PROG): \$(OBJS)\n";
+print MAKEFILE "    ifeq (\$(strip \$(SERIAL)),true)\n";
+print MAKEFILE "        ifeq (\$(strip \$(USE_PAR_NETCDF)),true)\n";
+print MAKEFILE "          \$(error SERIAL and USE_PAR_NETCDF cannot be true at the same time)\n";
+print MAKEFILE "        endif\n";
+print MAKEFILE "    endif\n";
 print MAKEFILE "\t\$(", &LanguageCompiler($ARGV[1], @srcs);
 print MAKEFILE ") \$(LDFLAGS) -o \$@ \$(OBJS) \$(LIBS)\n\n";
 #
@@ -109,6 +131,7 @@ print MAKEFILE "\t\$(FC) \$(FFLAGS) -c \$(INCLUDE) \$<\n\n";
 # Dependency listings
 #
 &MakeDependsf90($ARGV[1]);
+
 &MakeDepends("*.f *.F", '^\s*include\s+["\']([^"\']+)["\']');
 &MakeDepends("*.c",     '^\s*#\s*include\s+["\']([^"\']+)["\']');
 
@@ -244,7 +267,7 @@ sub MakeDependsf90 {
    foreach $file (<*.f90 *.F90>) {
       open(FILE, $file);
       while (<FILE>) {
-         /^\s*include\s+["\']([^"\']+)["\']/i && push(@incs,$1);
+        #/^\s*include\s+["\']([^"\']+)["\']/i && push(@incs,$1);
          /^\s*use\s+([^\s,!]+)/i && push(@modules, &toLower($1));
          }
       ($objfile = $file) =~ s/\.(f|F)90$/.o/;

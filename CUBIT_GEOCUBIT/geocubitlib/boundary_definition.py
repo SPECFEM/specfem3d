@@ -454,8 +454,12 @@ def select_bottom_curve(lc):
         center_point = cubit.get_center_point("curve", l)
         z.append(center_point[2])
     result=zip(z,lc)
-    result.sort()
-    return result[0][1]
+    # takes line number from first entry
+    curve=0
+    if len(result) > 0:
+        result.sort()
+        curve=result[0][1]
+    return curve
 
 
 def get_ordered_node_surf(lsurface,icurve):
@@ -464,7 +468,9 @@ def get_ordered_node_surf(lsurface,icurve):
     #
     if not isinstance(icurve,str):
         icurvestr=str(icurve)
+    # initializes
     orient_nodes_surf=[]
+    nodes_curve=[]
     #
     #get the nodes on a surface, I don't use the method get_surface_nodes since it has different behavior in cubit12.2 and cubit13.2+
     k=cubit.get_id_from_name('sl')
@@ -486,6 +492,10 @@ def get_ordered_node_surf(lsurface,icurve):
         print 'initializing group n1'
     cubit.cmd("group 'n1' add node in curve "+icurvestr)
     x=cubit.get_bounding_box('curve', icurve)
+    # checks if anything to do
+    if len(x) == 0:
+        return nodes_curve,orient_nodes_surf
+    # gets nodes
     if x[2]>x[5]:
         idx=0
     else:

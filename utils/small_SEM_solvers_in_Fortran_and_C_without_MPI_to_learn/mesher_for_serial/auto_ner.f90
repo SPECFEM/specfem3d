@@ -114,7 +114,7 @@
          S_VELOCITY_MIN
     MIN_ATTENUATION_PERIOD = TMP
 
-    if(N_SLS < 2 .OR. N_SLS > 5) then
+    if(N_SLS < 2 .or. N_SLS > 5) then
        call exit_MPI_without_rank('N_SLS must be greater than 1 or less than 6')
     endif
 
