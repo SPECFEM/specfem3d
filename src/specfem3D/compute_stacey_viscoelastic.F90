@@ -45,8 +45,6 @@
     include "../../../add_to_compute_stacey_viscoelastic_9.F90"
 #endif
 
-  use specfem_par_elastic, only: displ
-
   implicit none
 
   integer :: NSPEC_AB,NGLOB_AB
