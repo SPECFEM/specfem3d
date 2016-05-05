@@ -31,7 +31,7 @@
 #######################################
 
 FC = @FC@
-FCFLAGS = @FCFLAGS@
+FCFLAGS = @FCFLAGS@ ${DEBUG_COUPLED_FLAG}
 MPIFC = @MPIFC@
 MPILIBS = @MPILIBS@
 
