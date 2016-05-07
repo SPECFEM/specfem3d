@@ -50,6 +50,10 @@
                         USE_RICKER_TIME_FUNCTION,SU_FORMAT, &
                         USE_LDDRK,istage
 
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_compute_add_sources_viscoelastic_1.F90"
+#endif
+
   implicit none
 
   integer :: NSPEC_AB,NGLOB_AB
@@ -106,7 +110,7 @@
   double precision :: hxir(NGLLX),hpxir(NGLLX),hetar(NGLLY),hpetar(NGLLY),hgammar(NGLLZ),hpgammar(NGLLZ)
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_compute_add_sources_viscoelastic.F90"
+    include "../../../add_to_compute_add_sources_viscoelastic_2.F90"
 #endif
 
 ! plotting source time function
@@ -412,6 +416,10 @@
                         nsources_local,USE_FORCE_POINT_SOURCE, &
                         USE_RICKER_TIME_FUNCTION
 
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_compute_add_sources_viscoelastic_1.F90"
+#endif
+
   implicit none
 
   integer :: NSPEC_AB,NGLOB_AB
@@ -445,7 +453,7 @@
   integer :: isource,iglob,i,j,k,ispec
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_compute_add_sources_viscoelastic.F90"
+    include "../../../add_to_compute_add_sources_viscoelastic_2.F90"
 #endif
 
 ! plotting source time function
@@ -602,6 +610,10 @@
                         nsources_local,USE_FORCE_POINT_SOURCE, &
                         USE_RICKER_TIME_FUNCTION,SU_FORMAT
 
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_compute_add_sources_viscoelastic_1.F90"
+#endif
+
   implicit none
 
   integer :: NSPEC_AB
@@ -653,7 +665,7 @@
   double precision :: hxir(NGLLX),hpxir(NGLLX),hetar(NGLLY),hpetar(NGLLY),hgammar(NGLLZ),hpgammar(NGLLZ)
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_compute_add_sources_viscoelastic.F90"
+    include "../../../add_to_compute_add_sources_viscoelastic_2.F90"
 #endif
 
 ! plotting source time function

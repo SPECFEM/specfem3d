@@ -273,6 +273,10 @@
 
   use constants
 
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_compute_stacey_viscoelastic_10.F90"
+#endif
+
   implicit none
 
 ! communication overlap
