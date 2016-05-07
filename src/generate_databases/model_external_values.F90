@@ -75,6 +75,10 @@
 
   use constants
 
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_model_external_values_4.F90"
+#endif
+
   implicit none
 
   integer :: myrank
@@ -142,6 +146,10 @@
   use generate_databases_par,only: nspec => NSPEC_AB,ibool,HUGEVAL,TINYVAL,IDOMAIN_ELASTIC
 
   use create_regions_mesh_ext_par
+
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_model_external_values_4.F90"
+#endif
 
 !  use external_model
 

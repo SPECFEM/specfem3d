@@ -41,6 +41,10 @@
 
   use create_regions_mesh_ext_par
 
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_get_absorbing_boundary_5.F90"
+#endif
+
   implicit none
 
 ! number of spectral elements in each block

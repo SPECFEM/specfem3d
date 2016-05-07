@@ -737,6 +737,10 @@ contains
                                       glob2loc_nodes_parts, glob2loc_nodes, &
                                       part, num_modele, NGNOD, num_phase)
 
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_part_decompose_mesh_1.F90"
+#endif
+
     implicit none
 
     integer, intent(in)  :: IIN_database
@@ -792,7 +796,7 @@ contains
              write(IIN_database) glob2loc_elmnts(i)+1,num_modele(1,i+1),num_modele(2,i+1),(loc_nodes(k)+1, k=0,NGNOD-1)
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_part_decompose_mesh.F90"
+    include "../../../add_to_part_decompose_mesh_2.F90"
 #endif
 
           endif

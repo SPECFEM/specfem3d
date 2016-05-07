@@ -44,6 +44,10 @@
     STACEY_ABSORBING_CONDITIONS,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT,USE_MESH_COLORING_GPU
   use create_regions_mesh_ext_par
 
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_save_arrays_solver_3.F90"
+#endif
+
   implicit none
 
   integer :: nspec,nglob
@@ -367,6 +371,10 @@
 
   use generate_databases_par, only: myrank,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT,FOUR_THIRDS
   use create_regions_mesh_ext_par
+
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_save_arrays_solver_3.F90"
+#endif
 
   implicit none
 
