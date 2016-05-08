@@ -69,7 +69,10 @@
     call flush_IMAIN()
   endif
 
-! open parameter file Mesh_Par_file
+  ! note: please be careful that the order of reading in parameters here
+  !       must match the order of appearance in the Mesh_Par_file
+  !
+  ! open parameter file Mesh_Par_file
   call open_parameter_file_mesh(filename)
 
   call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,LATITUDE_MIN, 'LATITUDE_MIN', ier)
@@ -89,7 +92,8 @@
   call read_value_string_mesh(IIN,IGNORE_JUNK,INTERFACES_FILE, 'INTERFACES_FILE', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter INTERFACES_FILE'
   call read_value_string_mesh(IIN,IGNORE_JUNK,CAVITY_FILE, 'CAVITY_FILE', ier)
-    if (ier /= 0) stop 'Error reading Mesh parameter CAVITY_FILE'
+  if (ier /= 0) stop 'Error reading Mesh parameter CAVITY_FILE'
+
   call read_value_integer_mesh(IIN,IGNORE_JUNK,NEX_XI, 'NEX_XI', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter NEX_XI'
   call read_value_integer_mesh(IIN,IGNORE_JUNK,NEX_ETA, 'NEX_ETA', ier)
@@ -101,7 +105,6 @@
 
   call read_value_logical_mesh(IIN,IGNORE_JUNK,USE_REGULAR_MESH, 'USE_REGULAR_MESH', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter USE_REGULAR_MESH'
-
   call read_value_integer_mesh(IIN,IGNORE_JUNK,NDOUBLINGS, 'NDOUBLINGS', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter NDOUBLINGS'
 
@@ -146,6 +149,10 @@
   call read_value_logical_mesh(IIN,IGNORE_JUNK,CREATE_VTK_FILES, 'CREATE_VTK_FILES', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter CREATE_VTK_FILES'
 
+  ! file in which we store the databases
+  call read_value_string_mesh(IIN,IGNORE_JUNK,LOCAL_PATH, 'LOCAL_PATH', ier)
+  if (ier /= 0) stop 'Error reading Mesh parameter LOCAL_PATH'
+
   ! CPML thickness
   call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,THICKNESS_OF_X_PML, 'THICKNESS_OF_X_PML', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter THICKNESS_OF_X_PML'
@@ -153,10 +160,6 @@
   if (ier /= 0) stop 'Error reading Mesh parameter THICKNESS_OF_Y_PML'
   call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,THICKNESS_OF_Z_PML, 'THICKNESS_OF_Z_PML', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter THICKNESS_OF_Z_PML'
-
-  ! file in which we store the databases
-  call read_value_string_mesh(IIN,IGNORE_JUNK,LOCAL_PATH, 'LOCAL_PATH', ier)
-  if (ier /= 0) stop 'Error reading Mesh parameter LOCAL_PATH'
 
   ! read number of materials
   call read_value_integer_mesh(IIN,IGNORE_JUNK,NMATERIALS, 'NMATERIALS', ier)
