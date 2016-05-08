@@ -78,7 +78,7 @@ program smooth_sem
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: dummy ! for jacobian read
   integer :: NSPEC_N, NGLOB_N
 
-  integer :: i,iglob,ier,ispec2,ispec,inum
+  integer :: i,j,k,iglob,ier,ispec2,ispec,inum
   integer :: icounter,num_slices
   integer :: iproc,ncuda_devices
   integer(kind=8) :: Container
@@ -143,8 +143,6 @@ program smooth_sem
 
 #ifdef FORCE_VECTORIZATION
   integer :: ijk
-#else
-  integer :: j,k
 #endif
 
   call init_mpi()
