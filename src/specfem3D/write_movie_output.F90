@@ -1009,10 +1009,16 @@
   ! divergence and curl only in the global nodes
   real(kind=CUSTOM_REAL),dimension(:),allocatable:: div_glob,curl_glob
   integer,dimension(:),allocatable :: valency
-  integer :: ispec,ier,i,j,k,iglob
+  integer :: ispec,ier,iglob
   character(len=3) :: channel
   character(len=1) :: compx,compy,compz
   character(len=MAX_STRING_LEN) :: outputname
+
+#ifdef FORCE_VECTORIZATION
+  integer :: ijk
+#else
+  integer :: i,j,k
+#endif
 
   ! gets component characters: X/Y/Z or E/N/Z
   call write_channel_name(1,channel)
@@ -1049,12 +1055,16 @@
 
    if ( .not. ELASTIC_SIMULATION .and. .not. POROELASTIC_SIMULATION) then
      allocate(pressure_loc(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+
      do ispec=1,NSPEC_AB
+
        DO_LOOP_IJK
         iglob = ibool(INDEX_IJK,ispec)
         pressure_loc(INDEX_IJK,ispec) = - potential_dot_dot_acoustic(iglob)
        ENDDO_LOOP_IJK
+
      enddo
+
      write(outputname,"('/proc',i6.6,'_pressure_it',i6.6,'.bin')")myrank,it
      open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
      if (ier /= 0) stop 'error opening file movie output pressure'
@@ -1091,6 +1101,7 @@
     if (ier /= 0) stop 'error opening file div_glob'
     write(27) div_glob
     close(27)
+
     write(outputname,"('/proc',i6.6,'_curl_glob_it',i6.6,'.bin')") myrank,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
     if (ier /= 0) stop 'error opening file curl_glob'
@@ -1108,6 +1119,7 @@
              curl_glob(NGLOB_AB), &
              valency(NGLOB_AB), stat=ier)
     if (ier /= 0) stop 'error allocating arrays for movie div and curl'
+
     ! calculates divergence and curl of velocity field
     call wmo_movie_div_curl(NSPEC_AB,NGLOB_AB,velocs_poroelastic, &
                             div_glob,curl_glob,valency, &
@@ -1134,11 +1146,13 @@
     if (ier /= 0) stop 'error opening file curl_x_it '
     write(27) curl_x
     close(27)
+
     write(outputname,"('/proc',i6.6,'_curl_',a1,'_it',i6.6,'.bin')") myrank,compy,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
     if (ier /= 0) stop 'error opening file curl_y_it'
     write(27) curl_y
     close(27)
+
     write(outputname,"('/proc',i6.6,'_curl_',a1,'_it',i6.6,'.bin')") myrank,compz,it
     open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
     if (ier /= 0) stop 'error opening file curl_z_it'
