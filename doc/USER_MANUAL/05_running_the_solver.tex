@@ -241,6 +241,55 @@ the region given in the \texttt{Par\_file} (between \texttt{LATITUDE\_MIN}
 and \texttt{LATITUDE\_MAX} and between \texttt{LONGITUDE\_MIN} and
 \texttt{LONGITUDE\_MAX}). The filtered file is called \texttt{DATA/STATIONS\_FILTERED}.
 
+Elevation and burial are generally applicable to geographical regions.
+Burial is measured down from the top surface. For other problems in other
+fields (ultrasonic testing, medical imaging etc...),
+it may be confusing. We generally follow either of the following
+procedures for those kind of problems:
+
+Procedure 1:\\
+============\\
+
+- Always put the origin on the top of the model.\\
+
+- Let's say you want to place two receivers at (x1,y1,z1) and
+(x2,y2,z2). Your STATIONS file should look like:\\
+
+BONE  GR  y1  x1  0.00  -z1\\
+BONE  GR  y2  x2  0.00  -z2\\
+
+Depending on the geometry of the models it may not work in some cases.\\
+
+Procedure 2: (less recommended)\\
+============\\
+
+- Open setup/constants.h.in file and change the line
+logical, parameter :: USE\_SOURCES\_RECEIVERS\_Z = .false.\\
+\\
+to\\
+\\
+logical, parameter :: USE\_SOURCES\_RECEIVERS\_Z = .true.\\
+\\
+configure the package and compile.\\
+
+- Let's say you want to place two receivers at (x1,y1,z1) and
+(x2,y2,z2). Your STATIONS file should look like:\\
+\\
+BONE  GR  y1  x1  0.00  z1\\
+BONE  GR  y2  x2  0.00  z2\\
+\\
+The option set to .true. in 1 will discard the elevation and set
+burial as the $z$ coordinate.\\
+\\
+Third column is Y and Fourth is X due to the latitude/longitude convention.\\
+\\
+You can replace the station name "BONE" with any word of length less
+than 32, and the network name "GR" with any word of length less than
+8.\\
+\\
+You can always plot OUTPUT\_FILES/sr.vtk file in ParaView to check the
+source/receiver locations after your simulation.\\
+
 Solver output is provided in the \texttt{OUTPUT\_FILES} directory
 in the \texttt{output\_solver.txt} file. Output can be directed to
 the screen instead by uncommenting a line in \texttt{constants.h}:
