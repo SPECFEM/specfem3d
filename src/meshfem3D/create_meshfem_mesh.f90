@@ -115,7 +115,7 @@
 
   !-------------------------------cavity----------------------------------------
   character(len=MAX_STRING_LEN) :: filename
-  integer :: i_spec,i_node,inode,istat
+  integer :: i_spec,i_node,inode
   integer :: nspec_old,nglob_old
   integer :: ios,ncavity
   double precision :: x0,x1,y0,y1,z0,z1,xmid,ymid,zmid
@@ -123,6 +123,7 @@
   logical,allocatable :: iselmt(:),isnode(:)
   logical,allocatable :: iboun_old(:,:)
   logical, dimension(:,:), allocatable :: iMPIcut_xi_old,iMPIcut_eta_old
+  logical :: cavity_file_exists
   integer,allocatable :: ibool_old(:,:,:,:),ispec_material_id_old(:)
   integer,allocatable :: ispec_new(:),inode_new(:)
   double precision,allocatable :: nodes_coords_old(:,:)
@@ -540,76 +541,103 @@
   endif
 
 !-------------------------------begin cavity------------------------------------
-  ncavity=0 ! default
+  ! default
+  ncavity = 0
+
   ! read cavity file
-  filename=trim(MF_IN_DATA_FILES)//trim(CAVITY_FILE)
+  filename = trim(MF_IN_DATA_FILES)//trim(CAVITY_FILE)
   open(111,file=filename,action='read',status='old',iostat=ios)
-  if(ios/=0)then
+  if (ios /= 0) then
+    cavity_file_exists = .false.
     if (myrank == 0) then
       write(IMAIN,*)
-      write(IMAIN,*)'WARNING: cavity file "'//trim(filename)//'" cannot be opened! &
-      &No cavity will be added!'
+      write(IMAIN,*)'File "'//trim(filename)//'" not found: assume no cavity'
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+  else
+    cavity_file_exists = .true.
+    if (myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*) 'Using cavity file: ',trim(filename)
       write(IMAIN,*)
       call flush_IMAIN()
     endif
   endif
 
-  read(111,*,iostat=istat) ! skip one line
-
   ! check if the file is blank
-  if(istat/=0)then
-    ! blank file
-    ncavity=0
-  else
-    read(111,*)ncavity
-    if(ncavity==1)then
-      read(111,*) ! skip one line
+  if (cavity_file_exists) then
+    ! skip one comment line
+    read(111,*)
+    read(111,*) ncavity
+
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) 'cavity:'
+      write(IMAIN,*) '  number of cavities = ',ncavity
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+
+    ! checks that only 1 entry, more not supported yet...
+    if (ncavity > 1) then
+      stop 'Error: only 1 cavity supported so far! Please check your cavity file...'
+    endif
+
+    ! reads in cavity dimensions
+    if (ncavity == 1) then
+      ! skip one comment line
+      read(111,*)
       !read cavity range
-      read(111,*)cavity_x0,cavity_x1,cavity_y0,cavity_y1,cavity_z0,cavity_z1
-    else if(ncavity>1)then
+      read(111,*) cavity_x0,cavity_x1,cavity_y0,cavity_y1,cavity_z0,cavity_z1
+
+      ! user output
       if (myrank == 0) then
-        write(IMAIN,*)
-        write(IMAIN,*)'WARNING: more than 1 cavity not supported! No cavity will be added!'
+        write(IMAIN,*)'  cavity range: x min / max = ',cavity_x0,cavity_x1
+        write(IMAIN,*)'                y min / max = ',cavity_y0,cavity_y1
+        write(IMAIN,*)'                z min / max = ',cavity_z0,cavity_z1
         write(IMAIN,*)
         call flush_IMAIN()
       endif
     endif
+    ! closes cavity file
+    close(111)
   endif
-  close(111)
 
   ! add cavity if necessary
-  if(ncavity==1)then
+  if (ncavity == 1) then
+    ! user output
     if (myrank == 0) then
-      write(IMAIN,*)
-      write(IMAIN,*) 'creating cavity'
-      write(IMAIN,*)
+      write(IMAIN,*) '  creating cavity'
       call flush_IMAIN()
     endif
+
     allocate(iselmt(nspec),isnode(nglob))
-    iselmt=.true.
-    isnode=.false.
+    iselmt(:) = .true.
+    isnode(:) = .false.
 
     do i_spec=1,nspec
       ! find mid point of the spectral element
-      x0=xstore(1,1,1,i_spec)
-      y0=ystore(1,1,1,i_spec)
-      z0=zstore(1,1,1,i_spec)
+      x0 = xstore(1,1,1,i_spec)
+      y0 = ystore(1,1,1,i_spec)
+      z0 = zstore(1,1,1,i_spec)
 
-      x1=xstore(NGLLX_M,NGLLY_M,NGLLZ_M,i_spec)
-      y1=ystore(NGLLX_M,NGLLY_M,NGLLZ_M,i_spec)
-      z1=zstore(NGLLX_M,NGLLY_M,NGLLZ_M,i_spec)
+      x1 = xstore(NGLLX_M,NGLLY_M,NGLLZ_M,i_spec)
+      y1 = ystore(NGLLX_M,NGLLY_M,NGLLZ_M,i_spec)
+      z1 = zstore(NGLLX_M,NGLLY_M,NGLLZ_M,i_spec)
 
-      xmid=0.5d0*(x0+x1)
-      ymid=0.5d0*(y0+y1)
-      zmid=0.5d0*(z0+z1)
+      xmid = 0.5d0*(x0+x1)
+      ymid = 0.5d0*(y0+y1)
+      zmid = 0.5d0*(z0+z1)
 
       if((xmid>=cavity_x0 .and. xmid<=cavity_x1) .and. &
          (ymid>=cavity_y0 .and. ymid<=cavity_y1) .and. &
          (zmid>=cavity_z0 .and. zmid<=cavity_z1))then
-         ! deactivate spectral element
-         iselmt(i_spec)=.false.
-      else ! intact
-         ! activate nodes
+        ! deactivate spectral element
+        iselmt(i_spec)=.false.
+      else
+        ! intact
+        ! activate nodes
         do k = 1,NGLLZ_M
           do j = 1,NGLLY_M
             do i = 1,NGLLX_M
@@ -620,33 +648,35 @@
       endif
     enddo
 
-    nspec_old=nspec
-    nglob_old=nglob
-    nspec=count(iselmt)
-    nglob=count(isnode)
+    nspec_old = nspec
+    nglob_old = nglob
+    nspec = count(iselmt)
+    nglob = count(isnode)
 
     allocate(ispec_new(nspec_old))
-    ispec_new=-1
-    ispec=0
+    ispec_new(:) = -1
 
-    do i_spec=1,nspec_old
+    ispec = 0
+    do i_spec = 1,nspec_old
       if(iselmt(i_spec))then
-        ispec=ispec+1
-        ispec_new(i_spec)=ispec
+        ispec = ispec + 1
+        ispec_new(i_spec) = ispec
       endif
     enddo
-    if(ispec/=nspec)call exit_MPI(myrank,'ERROR: new number of spectral elements mismatch!')
+    if(ispec /= nspec) call exit_MPI(myrank,'ERROR: new number of spectral elements mismatch!')
 
     allocate(inode_new(nglob_old))
-    inode_new=-1
-    inode=0
-    do i_node=1,nglob_old
+    inode_new(:) = -1
+
+    inode = 0
+    do i_node = 1,nglob_old
       if(isnode(i_node))then
-        inode=inode+1
-        inode_new(i_node)=inode
+        inode = inode + 1
+        inode_new(i_node) = inode
       endif
     enddo
     if(inode/=nglob)call exit_MPI(myrank,'ERROR: new number of spectral elements mismatch!')
+
     allocate(nodes_coords_old(nglob_old,3))
     allocate(ispec_material_id_old(nspec_old))
     allocate(ibool_old(NGLLX_M,NGLLY_M,NGLLZ_M,nspec_old))
@@ -697,7 +727,15 @@
         nodes_coords(inode_new(i_node),:)=nodes_coords_old(i_node,:)
       endif
     enddo
+
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) '  cavity setup done'
+      call flush_IMAIN()
+    endif
+
   endif ! nacavity==0
+
 !----------------------------------end cavity-----------------------------------
 
   !--- Initialize ADIOS and setup the buffer size
@@ -710,6 +748,7 @@
 
   ! user output
   if (myrank == 0) then
+    write(IMAIN,*)
     write(IMAIN,*) 'saving mesh files'
     write(IMAIN,*)
     call flush_IMAIN()
