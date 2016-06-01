@@ -363,6 +363,8 @@ endef
 
 $(foreach dir, $(SUBDIRS), $(eval $(call shortcut,$(dir))))
 
+# testing
+test : tests
 
 # Other old shortcuts
 bak: backup
@@ -370,5 +372,6 @@ mesh : $E/xmeshfem3D
 gen : $E/xgenerate_databases
 spec : $E/xspecfem3D
 dec : $E/xdecompose_mesh
+
 .PHONY: bak mesh gen spec dec
 
