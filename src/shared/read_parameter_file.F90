@@ -241,6 +241,12 @@
   call read_value_logical(PRINT_SOURCE_TIME_FUNCTION, 'PRINT_SOURCE_TIME_FUNCTION', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter PRINT_SOURCE_TIME_FUNCTION'
 
+  !! VM VM add possibility of external source file
+  call read_value_logical(EXTERNAL_STF, 'EXTERNAL_SOURCE_FILE', ier)
+  !! VM VM to be consistent with external source file option turned to on
+  if (EXTERNAL_STF)  USE_RICKER_TIME_FUNCTION=.false.
+     
+
 #ifdef DEBUG_COUPLED
     include "../../../add_to_read_parameter_file_1.F90"
 #endif
@@ -320,10 +326,14 @@
     enddo
     close(21)
 
-    if (mod(icounter,NLINES_PER_FORCESOLUTION_SOURCE) /= 0) &
-      stop 'Error total number of lines in FORCESOLUTION file should be a multiple of NLINES_PER_FORCESOLUTION_SOURCE'
-
-    NSOURCES = icounter / NLINES_PER_FORCESOLUTION_SOURCE
+    if (.not. EXTERNAL_STF) then
+       if (mod(icounter,NLINES_PER_FORCESOLUTION_SOURCE) /= 0) &
+            stop 'Error total number of lines in FORCESOLUTION file should be a multiple of NLINES_PER_FORCESOLUTION_SOURCE'
+       NSOURCES = icounter / NLINES_PER_FORCESOLUTION_SOURCE
+    else !! VM VM in case of EXTERNAL_STF we have to read one additional line per source (the name of external source file) 
+       NSOURCES = icounter / (NLINES_PER_FORCESOLUTION_SOURCE+1)
+    end if
+    
     if (NSOURCES < 1) stop 'Error need at least one source in FORCESOLUTION file'
 
   else
@@ -348,10 +358,14 @@
       if (ier == 0) icounter = icounter + 1
     enddo
     close(21)
-
-    if (mod(icounter,NLINES_PER_CMTSOLUTION_SOURCE) /= 0) &
-      stop 'Error total number of lines in CMTSOLUTION file should be a multiple of NLINES_PER_CMTSOLUTION_SOURCE'
-
+    if (.not. EXTERNAL_STF) then
+       if (mod(icounter,NLINES_PER_CMTSOLUTION_SOURCE) /= 0) &
+            stop 'Error total number of lines in CMTSOLUTION file should be a multiple of NLINES_PER_CMTSOLUTION_SOURCE'
+    else
+       !! VM VM in case of EXTERNAL_STF we have to read one additional line per source (the name of external source file) 
+       NSOURCES = icounter / (NLINES_PER_FORCESOLUTION_SOURCE+1)
+    end if
+       
     NSOURCES = icounter / NLINES_PER_CMTSOLUTION_SOURCE
     if (NSOURCES < 1) stop 'Error need at least one source in CMTSOLUTION file'
 
@@ -581,6 +595,7 @@
     call bcast_all_singledp_world(minval_hdur)
     call bcast_all_string_world(FORCESOLUTION)
     call bcast_all_string_world(CMTSOLUTION)
+    call bcast_all_singlel_world(EXTERNAL_STF)
 
   endif ! of if(BROADCAST_AFTER_READ) then
 

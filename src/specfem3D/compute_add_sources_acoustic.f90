@@ -42,7 +42,7 @@
                         station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
                         pm1_source_encoding,nsources_local,USE_FORCE_POINT_SOURCE, &
                         USE_RICKER_TIME_FUNCTION,SU_FORMAT,USE_TRICK_FOR_BETTER_PRESSURE,USE_SOURCE_ENCODING, &
-                        USE_LDDRK,istage
+                        USE_LDDRK,istage,EXTERNAL_STF,user_source_time_function
 
   implicit none
 
@@ -103,6 +103,10 @@
   !equivalence (i2head,i4head,r4head)    ! share the same 240-byte-memory
   double precision :: hxir(NGLLX), hpxir(NGLLX), hetar(NGLLY), hpetar(NGLLY),hgammar(NGLLZ), hpgammar(NGLLZ)
 
+! VM VM to know if we used the source in this domain 
+  integer :: source_is_in_this_domain,source_is_in_this_domain_all
+
+  source_is_in_this_domain=0
 ! plotting source time function
   if (PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner) then
     ! initializes total
@@ -123,7 +127,7 @@
         if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
 
           if (ispec_is_acoustic(ispec)) then
-
+             source_is_in_this_domain=1
             if (USE_LDDRK) then
               time_source_dble = dble(it-1)*DT+dble(C_LDDRK(istage))*DT-t0-tshift_src(isource)
             else
@@ -163,6 +167,11 @@
                   stf_used = comp_source_time_function_gauss(time_source_dble,5.d0*DT)
                 endif
               endif
+
+              !! VM VM use external source time function 
+              if (EXTERNAL_STF) then
+                 stf_used = user_source_time_function(it, isource)
+              end if
 
               ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
               ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
@@ -216,6 +225,11 @@
 
               ! source encoding
               if(USE_SOURCE_ENCODING) stf = stf * pm1_source_encoding(isource)
+
+              !! VM VM add external source time function 
+              if (EXTERNAL_STF) then
+                 stf = user_source_time_function(it, isource)
+              end if
 
               ! distinguishes between single and double precision for reals
               stf_used = real(stf,kind=CUSTOM_REAL)
@@ -398,8 +412,10 @@
     endif ! nadj_rec_local > 0
   endif
 
+  call sum_all_i( source_is_in_this_domain, source_is_in_this_domain_all)
+  call bcast_all_singlei(source_is_in_this_domain_all)  
   ! master prints out source time function to file
-  if (PRINT_SOURCE_TIME_FUNCTION .and. phase_is_inner) then
+  if (PRINT_SOURCE_TIME_FUNCTION .and. source_is_in_this_domain_all > 0) then
     time_source = (it-1)*DT - t0
     call sum_all_cr(stf_used_total,stf_used_total_all)
     if (myrank == 0) write(IOSTF,*) time_source,stf_used_total_all
@@ -610,7 +626,8 @@
                         xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
                         station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
                         nsources_local,USE_FORCE_POINT_SOURCE, &
-                        USE_RICKER_TIME_FUNCTION,SU_FORMAT
+                        USE_RICKER_TIME_FUNCTION,SU_FORMAT,&
+                        EXTERNAL_STF,user_source_time_function
   implicit none
 
   integer :: NSPEC_AB
@@ -689,6 +706,10 @@
             stf_pre_compute(isource) = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
           endif
         endif
+        !! VM VM add external source time function 
+        if (EXTERNAL_STF) then
+           stf_pre_compute(isource) = user_source_time_function(it, isource)
+        end if
       enddo
       stf_used_total = stf_used_total + sum(stf_pre_compute(:))
       ! only implements SIMTYPE=1 and NOISE_TOM=0

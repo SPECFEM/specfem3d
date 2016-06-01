@@ -118,6 +118,7 @@ module specfem_par
   ! for acoustic sources: takes +/- 1 sign, depending on sign(Mxx)[ = sign(Myy) = sign(Mzz)
   ! since they have to equal in the acoustic setting]
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: pm1_source_encoding
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: user_source_time_function
 
 ! receiver information
   character(len=MAX_STRING_LEN) :: rec_filename,filtered_rec_filename,dummystring

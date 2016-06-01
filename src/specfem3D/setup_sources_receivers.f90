@@ -123,6 +123,9 @@
     allocate(pm1_source_encoding(1),stat=ier)
   endif
   if (ier /= 0) stop 'error allocating arrays for sources'
+  
+  allocate(user_source_time_function(NSTEP, NSOURCES),stat=ier)
+  if (ier /= 0) stop 'error allocating arrays for force point sources'
 
 ! locate sources in the mesh
 !
