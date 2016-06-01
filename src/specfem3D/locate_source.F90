@@ -43,7 +43,8 @@
 
   use specfem_par,only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION, &
       UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
-      factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP
+      factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP,&
+      user_source_time_function
 
   implicit none
 
@@ -192,22 +193,25 @@
     if (myrank == 0) then
       ! only master process reads in FORCESOLUTION file
       call get_force(tshift_src,hdur,lat,long,depth,NSOURCES,min_tshift_src_original,factor_force_source, &
-                     comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP)
+                     comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP,&
+                     user_source_time_function)
     endif
     ! broadcasts specific point force infos
     call bcast_all_dp(factor_force_source,NSOURCES)
     call bcast_all_dp(comp_dir_vect_source_E,NSOURCES)
     call bcast_all_dp(comp_dir_vect_source_N,NSOURCES)
     call bcast_all_dp(comp_dir_vect_source_Z_UP,NSOURCES)
+    call bcast_all_cr(user_source_time_function,NSOURCES*NSTEP)
   else
     ! CMT moment tensors
     if (myrank == 0) then
       ! only master process reads in CMTSOLUTION file
       call get_cmt(yr,jda,ho,mi,sec,tshift_src,hdur,lat,long,depth,moment_tensor, &
-                   DT,NSOURCES,min_tshift_src_original)
+                   DT,NSOURCES,min_tshift_src_original,user_source_time_function)
     endif
     ! broadcasts specific moment tensor infos
     call bcast_all_dp(moment_tensor,6*NSOURCES)
+    call bcast_all_cr(user_source_time_function,NSOURCES*NSTEP)
   endif
 
   ! broadcasts general source information read on the master to the nodes

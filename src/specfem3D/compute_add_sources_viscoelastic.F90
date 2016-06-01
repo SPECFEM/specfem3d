@@ -48,7 +48,7 @@
                         nrec_local,number_receiver_global, &
                         nsources_local,USE_FORCE_POINT_SOURCE, &
                         USE_RICKER_TIME_FUNCTION,SU_FORMAT, &
-                        USE_LDDRK,istage
+                        USE_LDDRK,istage,EXTERNAL_STF
 
 #ifdef DEBUG_COUPLED
     include "../../../add_to_compute_add_sources_viscoelastic_1.F90"
@@ -151,6 +151,11 @@
                 !! ADDED BY FS FS -> use actual value of hdur_gaussian as half duration
               endif
 
+              !! VM VM add external source time function 
+              if (EXTERNAL_STF) then
+                 stf = user_source_time_function(it, isource)
+              end if
+
               ! add the tilted force source array
               ! distinguish between single and double precision for reals
               stf_used = real(stf,kind=CUSTOM_REAL)
@@ -171,6 +176,11 @@
               else
                 stf = comp_source_time_function(time_source_dble,hdur_gaussian(isource))
               endif
+              
+              !! VM VM add external source time function 
+              if (EXTERNAL_STF) then
+                 stf = user_source_time_function(it, isource)
+              end if
 
               !     distinguish between single and double precision for reals
               stf_used = real(stf,kind=CUSTOM_REAL)

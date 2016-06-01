@@ -26,10 +26,10 @@
 !=====================================================================
 
   subroutine get_force(tshift_force,hdur,lat,long,depth,NSOURCES,min_tshift_force_original,factor_force_source, &
-                      comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP)
+                      comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP,user_source_time_function)
 
   use constants,only: IIN,IN_DATA_FILES,MAX_STRING_LEN,TINYVAL,mygroup
-  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS
+  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,EXTERNAL_STF,NSTEP,DT
 
   implicit none
 
@@ -42,11 +42,14 @@
   double precision, dimension(NSOURCES), intent(out) :: comp_dir_vect_source_E
   double precision, dimension(NSOURCES), intent(out) :: comp_dir_vect_source_N
   double precision, dimension(NSOURCES), intent(out) :: comp_dir_vect_source_Z_UP
+  real(kind=CUSTOM_REAL), dimension(NSTEP, NSOURCES), intent(out) :: user_source_time_function
 
   ! local variables below
   integer :: isource,dummyval
   double precision :: t_shift(NSOURCES)
   double precision :: length
+  double precision :: time_source,dt_source
+  double precision, parameter :: dt_tol=1e-10
   character(len=7) :: dummy
   character(len=MAX_STRING_LEN) :: string
   character(len=MAX_STRING_LEN) :: FORCESOLUTION,path_to_add
@@ -137,6 +140,33 @@
     read(IIN,"(a)") string
     read(string(32:len_trim(string)),*) comp_dir_vect_source_Z_UP(isource)
 
+    !! VM VM READ  USER EXTERNAL SOURCE IF NEED
+    if (EXTERNAL_STF)  then
+
+       read(IIN,"(a)") string
+       open(27, file=trim(string),iostat=ier)
+       if (ier /= 0) then
+          print *,'Error could not open external source file: ',trim(string)
+          call exit_mpi(myrank,'Error opening external source file')
+       endif
+       i=1
+       read(27,*,err=99) time_source_old, user_source_time_function(i,isource)
+       do i=2, NSTEP
+          read(27,*,err=99) time_soure, user_source_time_function(i,isource)
+          dt_source =  time_soure - time_source_old
+          time_source_old = time_source
+          !! check if the time steps corresponds to the simulation time step
+          if (abs(dt_source - DT) > dt_tol ) then
+             print *,'Error in time step in external source file ', trim(string)
+             print *, ' simutation time step ', DT
+             print *, ' source time function read time step ', dt_source 
+             call exit_mpi(myrank,'Error time step external source file')
+          end if
+       end do
+       
+       close(27)
+    end if
+    
   enddo
 
   close(IIN)

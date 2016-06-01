@@ -42,7 +42,7 @@
                         station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
                         pm1_source_encoding,nsources_local,USE_FORCE_POINT_SOURCE, &
                         USE_RICKER_TIME_FUNCTION,SU_FORMAT,USE_TRICK_FOR_BETTER_PRESSURE,USE_SOURCE_ENCODING, &
-                        USE_LDDRK,istage
+                        USE_LDDRK,istage,EXTERNAL_STF
 
   implicit none
 
@@ -164,6 +164,11 @@
                 endif
               endif
 
+              !! VM VM use external source time function 
+              if (EXTERNAL_STF) then
+                 stf_used = user_source_time_function(it, isource)
+              end if
+
               ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
               ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
               ! to add minus the source to Chi_dot_dot to get plus the source in pressure:
@@ -216,6 +221,11 @@
 
               ! source encoding
               if(USE_SOURCE_ENCODING) stf = stf * pm1_source_encoding(isource)
+
+              !! VM VM add external source time function 
+              if (EXTERNAL_STF) then
+                 stf = user_source_time_function(it, isource)
+              end if
 
               ! distinguishes between single and double precision for reals
               stf_used = real(stf,kind=CUSTOM_REAL)
