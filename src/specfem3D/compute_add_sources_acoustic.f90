@@ -103,7 +103,7 @@
   !equivalence (i2head,i4head,r4head)    ! share the same 240-byte-memory
   double precision :: hxir(NGLLX), hpxir(NGLLX), hetar(NGLLY), hpetar(NGLLY),hgammar(NGLLZ), hpgammar(NGLLZ)
 
-! VM VM to know if we used the source in this domain 
+! VM VM to know if we used the source in this domain
   integer :: source_is_in_this_domain,source_is_in_this_domain_all
 
   source_is_in_this_domain=0
@@ -168,10 +168,10 @@
                 endif
               endif
 
-              !! VM VM use external source time function 
+              !! VM VM use external source time function
               if (EXTERNAL_STF) then
                  stf_used = user_source_time_function(it, isource)
-              end if
+              endif
 
               ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
               ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
@@ -226,10 +226,10 @@
               ! source encoding
               if(USE_SOURCE_ENCODING) stf = stf * pm1_source_encoding(isource)
 
-              !! VM VM add external source time function 
+              !! VM VM add external source time function
               if (EXTERNAL_STF) then
                  stf = user_source_time_function(it, isource)
-              end if
+              endif
 
               ! distinguishes between single and double precision for reals
               stf_used = real(stf,kind=CUSTOM_REAL)
@@ -413,7 +413,7 @@
   endif
 
   call sum_all_i( source_is_in_this_domain, source_is_in_this_domain_all)
-  call bcast_all_singlei(source_is_in_this_domain_all)  
+  call bcast_all_singlei(source_is_in_this_domain_all)
   ! master prints out source time function to file
   if (PRINT_SOURCE_TIME_FUNCTION .and. source_is_in_this_domain_all > 0) then
     time_source = (it-1)*DT - t0
@@ -706,10 +706,10 @@
             stf_pre_compute(isource) = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
           endif
         endif
-        !! VM VM add external source time function 
+        !! VM VM add external source time function
         if (EXTERNAL_STF) then
            stf_pre_compute(isource) = user_source_time_function(it, isource)
-        end if
+        endif
       enddo
       stf_used_total = stf_used_total + sum(stf_pre_compute(:))
       ! only implements SIMTYPE=1 and NOISE_TOM=0

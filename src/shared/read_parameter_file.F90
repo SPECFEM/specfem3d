@@ -245,7 +245,7 @@
   call read_value_logical(EXTERNAL_STF, 'EXTERNAL_SOURCE_FILE', ier)
   !! VM VM to be consistent with external source file option turned to on
   if (EXTERNAL_STF)  USE_RICKER_TIME_FUNCTION=.false.
-     
+
 
 #ifdef DEBUG_COUPLED
     include "../../../add_to_read_parameter_file_1.F90"
@@ -330,10 +330,10 @@
        if (mod(icounter,NLINES_PER_FORCESOLUTION_SOURCE) /= 0) &
             stop 'Error total number of lines in FORCESOLUTION file should be a multiple of NLINES_PER_FORCESOLUTION_SOURCE'
        NSOURCES = icounter / NLINES_PER_FORCESOLUTION_SOURCE
-    else !! VM VM in case of EXTERNAL_STF we have to read one additional line per source (the name of external source file) 
+    else !! VM VM in case of EXTERNAL_STF we have to read one additional line per source (the name of external source file)
        NSOURCES = icounter / (NLINES_PER_FORCESOLUTION_SOURCE+1)
-    end if
-    
+    endif
+
     if (NSOURCES < 1) stop 'Error need at least one source in FORCESOLUTION file'
 
   else
@@ -362,10 +362,10 @@
        if (mod(icounter,NLINES_PER_CMTSOLUTION_SOURCE) /= 0) &
             stop 'Error total number of lines in CMTSOLUTION file should be a multiple of NLINES_PER_CMTSOLUTION_SOURCE'
     else
-       !! VM VM in case of EXTERNAL_STF we have to read one additional line per source (the name of external source file) 
+       !! VM VM in case of EXTERNAL_STF we have to read one additional line per source (the name of external source file)
        NSOURCES = icounter / (NLINES_PER_FORCESOLUTION_SOURCE+1)
-    end if
-       
+    endif
+
     NSOURCES = icounter / NLINES_PER_CMTSOLUTION_SOURCE
     if (NSOURCES < 1) stop 'Error need at least one source in CMTSOLUTION file'
 

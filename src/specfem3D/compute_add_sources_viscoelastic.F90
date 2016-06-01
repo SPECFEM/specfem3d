@@ -109,9 +109,9 @@
   !equivalence (i2head,i4head,r4head)    ! share the same 240-byte-memory
   double precision :: hxir(NGLLX),hpxir(NGLLX),hetar(NGLLY),hpetar(NGLLY),hgammar(NGLLZ),hpgammar(NGLLZ)
 
-  ! VM VM to know if we used the source in this domain 
+  ! VM VM to know if we used the source in this domain
   integer :: source_is_in_this_domain,source_is_in_this_domain_all
-  
+
 
 #ifdef DEBUG_COUPLED
     include "../../../add_to_compute_add_sources_viscoelastic_2.F90"
@@ -134,7 +134,7 @@
           ispec = ispec_selected_source(isource)
           !write(*,*) myrank, it, ispec, ispec_is_inner(ispec), phase_is_inner
           if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
-             
+
              if (ispec_is_elastic(ispec)) then
                 source_is_in_this_domain=1
                 if (USE_LDDRK) then
@@ -144,26 +144,26 @@
                 endif
 
                 if (USE_FORCE_POINT_SOURCE) then
-                   
+
                    if (USE_RICKER_TIME_FUNCTION) then
                       stf = comp_source_time_function_rickr(time_source_dble,hdur(isource))
                    else
                       ! stf = comp_source_time_function_gauss(time_source_dble,5.d0*DT)
                       !! COMMENTED BY FS FS -> do no longer use hard-coded hdur_gaussian = 5*DT, but actual value of hdur_gaussian
-                      
+
                       stf = comp_source_time_function_gauss(time_source_dble,hdur_gaussian(isource))
                       !! ADDED BY FS FS -> use actual value of hdur_gaussian as half duration
                    endif
-                   
-                   !! VM VM add external source time function 
+
+                   !! VM VM add external source time function
                    if (EXTERNAL_STF) then
                       stf = user_source_time_function(it, isource)
-                   end if
-                   
+                   endif
+
                    ! add the tilted force source array
                    ! distinguish between single and double precision for reals
                    stf_used = real(stf,kind=CUSTOM_REAL)
-                   
+
                    do k=1,NGLLZ
                       do j=1,NGLLY
                          do i=1,NGLLX
@@ -172,23 +172,23 @@
                          enddo
                       enddo
                    enddo
-                   
+
                 else
-                   
+
                    if (USE_RICKER_TIME_FUNCTION) then
                       stf = comp_source_time_function_rickr(time_source_dble,hdur(isource))
                    else
                       stf = comp_source_time_function(time_source_dble,hdur_gaussian(isource))
                    endif
-                   
-                   !! VM VM add external source time function 
+
+                   !! VM VM add external source time function
                    if (EXTERNAL_STF) then
                       stf = user_source_time_function(it, isource)
-                   end if
-                   
+                   endif
+
                    !     distinguish between single and double precision for reals
                    stf_used = real(stf,kind=CUSTOM_REAL)
-                   
+
                    !     add source array
                    do k=1,NGLLZ
                       do j=1,NGLLY
@@ -198,17 +198,17 @@
                          enddo
                       enddo
                    enddo
-                   
+
                 endif ! USE_FORCE_POINT_SOURCE
-                
+
                 stf_used_total = stf_used_total + stf_used
-                
+
              endif ! ispec_is_elastic
           endif ! ispec_is_inner
        endif ! myrank
     enddo ! NSOURCES
  endif ! forward
- 
+
 ! NOTE: adjoint sources and backward wavefield timing:
 !             idea is to start with the backward field b_displ,.. at time (T)
 !             and convolve with the adjoint field at time (T-t)
@@ -372,7 +372,7 @@
   call sum_all_i(source_is_in_this_domain, source_is_in_this_domain_all)
   call bcast_all_singlei(source_is_in_this_domain_all)
   !write(*,*) myrank, it, phase_is_inner, source_is_in_this_domain_all
-  !if (phase_is_inner) write(*,*) myrank, it,source_is_in_this_domain, source_is_in_this_domain_all 
+  !if (phase_is_inner) write(*,*) myrank, it,source_is_in_this_domain, source_is_in_this_domain_all
   ! master prints out source time function to file
   if (PRINT_SOURCE_TIME_FUNCTION .and. source_is_in_this_domain_all > 0 ) then
     time_source = (it-1)*DT - t0
@@ -713,10 +713,10 @@
             stf_pre_compute(isource) = comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
           endif
         endif
-        !! VM VM add external source time function 
+        !! VM VM add external source time function
         if (EXTERNAL_STF) then
            stf_pre_compute(isource) = user_source_time_function(it, isource)
-        end if
+        endif
       enddo
       ! only implements SIMTYPE=1 and NOISE_TOM=0
       ! write(*,*) "fortran dt = ", dt
