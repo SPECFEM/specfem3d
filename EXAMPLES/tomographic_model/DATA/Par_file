@@ -308,13 +308,13 @@ ADIOS_FOR_FORWARD_ARRAYS        = .false.
 ADIOS_FOR_KERNELS               = .false.
 
 
-# use external source time function. 
+# use external source time function.
 # if .true. you must add a file with your source time function and the file name
-# path relative to lauching directory at the end of CMTSOLUTION or FORCESOURCE file 
-# (with multiple sources, one file per source is required). 
-# This file must have 2 columns  : 
-#     current_time, amplitude   
+# path relative to lauching directory at the end of CMTSOLUTION or FORCESOURCE file
+# (with multiple sources, one file per source is required).
+# This file must have 2 columns  :
+#     current_time, amplitude
 # The time step **MUST** be the same as used for simulation.
-# be sure when this option is .false. to remove the name of stf file in 
-# CMTSOLUTION or FORCESOURCE 
+# be sure when this option is .false. to remove the name of stf file in
+# CMTSOLUTION or FORCESOURCE
 EXTERNAL_SOURCE_FILE            = .false.

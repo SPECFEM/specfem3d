@@ -337,14 +337,14 @@
           if (abs(dt_source - DT) > dt_tol ) then
              print *,'Error in time step in external source file ', trim(string)
              print *, ' simutation time step ', DT
-             print *, ' source time function read time step ', dt_source 
+             print *, ' source time function read time step ', dt_source
              stop
-          end if
-       end do
+          endif
+       enddo
 
        close(27)
-    end if
-    
+    endif
+
 
   enddo
 
