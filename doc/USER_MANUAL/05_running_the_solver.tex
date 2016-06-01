@@ -207,6 +207,16 @@ duration} would be hdur1, hdur2, hdur3 for the sources 1, 2, 3 respectively.}
 {\small \label{fig:source_timing} }
 \end{figure}
 
+\vspace{1cm}
+
+ In addition to inbuild source time function, the solver can also use an external source time function defined by the user. This option can be  
+activated by setting   \texttt{EXTERNAL\_SOURCE\_FILE} to true in \texttt{Par\_File} and by adding the name of the file
+containing the source time function at the end of \texttt{FORCESOLUTION} or \texttt{CMTSOLUTION} files. The source time function file must 
+contain 2 columns with the current time and the amplitude of the soure function. The time step must be the same as used for the 
+simulation. Note  when the  \texttt{EXTERNAL\_SOURCE\_FILE} is set to false then the line with the external source time function file must not appear in 
+the files  \texttt{FORCESOLUTION} and \texttt{CMTSOLUTION} otherwise the solver will exit with an error.
+
+\vspace{1cm}
 
 The solver can calculate seismograms at any number of stations for
 basically the same numerical cost, so the user is encouraged to include

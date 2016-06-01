@@ -28,7 +28,7 @@
   subroutine get_cmt(yr,jda,ho,mi,sec,tshift_cmt,hdur,lat,long,depth,moment_tensor,&
                     DT,NSOURCES,min_tshift_cmt_original,user_source_time_function)
 
-  use constants,only: IIN,IN_DATA_FILES,MAX_STRING_LEN,mygroup
+  use constants,only: IIN,IN_DATA_FILES,MAX_STRING_LEN,mygroup,CUSTOM_REAL
   use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,EXTERNAL_STF,NSTEP
 
   implicit none
@@ -48,8 +48,8 @@
   integer :: mo,da,julian_day,isource
   integer :: i,itype,istart,iend,ier
   double precision :: t_shift(NSOURCES)
-  double precision :: time_source,dt_source
-  double precision, parameter :: dt_tol=1e-10
+  double precision :: time_source_old,time_source,dt_source
+  double precision, parameter :: dt_tol=1e-6
   !character(len=5) :: datasource
   character(len=256) :: string
   character(len=MAX_STRING_LEN) :: CMTSOLUTION,path_to_add
@@ -325,20 +325,20 @@
        open(27, file=trim(string),iostat=ier)
        if (ier /= 0) then
           print *,'Error could not open external source file: ',trim(string)
-          call exit_mpi(myrank,'Error opening external source file')
+          stop
        endif
        i=1
        read(27,*,err=99) time_source_old, user_source_time_function(i,isource)
        do i=2, NSTEP
-          read(27,*,err=99) time_soure, user_source_time_function(i,isource)
-          dt_source =  time_soure - time_source_old
+          read(27,*,err=99) time_source, user_source_time_function(i,isource)
+          dt_source =  time_source - time_source_old
           time_source_old = time_source
           !! check if the time steps corresponds to the simulation time step
           if (abs(dt_source - DT) > dt_tol ) then
              print *,'Error in time step in external source file ', trim(string)
              print *, ' simutation time step ', DT
              print *, ' source time function read time step ', dt_source 
-             call exit_mpi(myrank,'Error time step external source file')
+             stop
           end if
        end do
 
