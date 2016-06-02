@@ -73,7 +73,7 @@ end module constants
 
   ! VM VM number of time step for external source time function
   integer :: NSTEP_STF
-  
+
   ! LDD Runge-Kutta time scheme
   logical :: USE_LDDRK
 

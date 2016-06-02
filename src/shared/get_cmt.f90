@@ -44,8 +44,8 @@
   double precision, dimension(NSOURCES), intent(out) :: tshift_cmt,hdur,lat,long,depth
   double precision, dimension(6,NSOURCES), intent(out) :: moment_tensor
   !! VM VM use NSTEP_STF, NSOURCES_STF which are always rigth :
-  !! in case of EXTERNAL_STF, it's equal to NSTEP,NSOURCES 
-  !! when .not.  EXTERNAL_STF it' equal to 1,1. 
+  !! in case of EXTERNAL_STF, it's equal to NSTEP,NSOURCES
+  !! when .not.  EXTERNAL_STF it' equal to 1,1.
   real(kind=CUSTOM_REAL), dimension(NSTEP_STF, NSOURCES_STF), intent(out) :: user_source_time_function
 
   ! local variables below
