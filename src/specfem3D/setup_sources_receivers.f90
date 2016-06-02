@@ -124,8 +124,17 @@
   endif
   if (ier /= 0) stop 'error allocating arrays for sources'
 
-  allocate(user_source_time_function(NSTEP, NSOURCES),stat=ier)
-  if (ier /= 0) stop 'error allocating arrays for force point sources'
+  !! VM VM set the size of user_source_time_function
+  if (EXTERNAL_STF) then 
+     NSTEP_STF=NSTEP
+     NSOURCES_STF=NSOURCES
+  else !! We don't need the array user_source_time_function : use a small dummy array
+     NSTEP_STF=1
+     NSOURCES_STF=1
+  end if
+  !! allocate the array contains the user defined source time function 
+  allocate(user_source_time_function(1, 1),stat=ier)
+  if (ier /= 0) stop 'error allocating arrays for user sources time function'
 
 ! locate sources in the mesh
 !

@@ -29,7 +29,8 @@
                       comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP,user_source_time_function)
 
   use constants,only: IIN,IN_DATA_FILES,MAX_STRING_LEN,TINYVAL,mygroup,CUSTOM_REAL
-  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,EXTERNAL_STF,NSTEP,DT
+  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,EXTERNAL_STF,NSTEP,DT,&
+                                             NSTEP_STF, NSOURCES_STF
 
   implicit none
 
@@ -42,7 +43,10 @@
   double precision, dimension(NSOURCES), intent(out) :: comp_dir_vect_source_E
   double precision, dimension(NSOURCES), intent(out) :: comp_dir_vect_source_N
   double precision, dimension(NSOURCES), intent(out) :: comp_dir_vect_source_Z_UP
-  real(kind=CUSTOM_REAL), dimension(NSTEP, NSOURCES), intent(out) :: user_source_time_function
+  !! VM VM use NSTEP_STF, NSOURCES_STF which are always rigth :
+  !! in case of EXTERNAL_STF, it's equal to NSTEP,NSOURCES 
+  !! when .not.  EXTERNAL_STF it' equal to 1,1. 
+  real(kind=CUSTOM_REAL), dimension(NSTEP_STF, NSOURCES_STF), intent(out) :: user_source_time_function
 
   ! local variables below
   integer :: i,isource,dummyval

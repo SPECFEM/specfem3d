@@ -29,7 +29,8 @@
                     DT,NSOURCES,min_tshift_cmt_original,user_source_time_function)
 
   use constants,only: IIN,IN_DATA_FILES,MAX_STRING_LEN,mygroup,CUSTOM_REAL
-  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,EXTERNAL_STF,NSTEP
+  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,EXTERNAL_STF,NSTEP,&
+                                             NSTEP_STF, NSOURCES_STF
 
   implicit none
 
@@ -42,7 +43,10 @@
   double precision, intent(out) :: sec,min_tshift_cmt_original
   double precision, dimension(NSOURCES), intent(out) :: tshift_cmt,hdur,lat,long,depth
   double precision, dimension(6,NSOURCES), intent(out) :: moment_tensor
-  real(kind=CUSTOM_REAL), dimension(NSTEP, NSOURCES), intent(out) :: user_source_time_function
+  !! VM VM use NSTEP_STF, NSOURCES_STF which are always rigth :
+  !! in case of EXTERNAL_STF, it's equal to NSTEP,NSOURCES 
+  !! when .not.  EXTERNAL_STF it' equal to 1,1. 
+  real(kind=CUSTOM_REAL), dimension(NSTEP_STF, NSOURCES_STF), intent(out) :: user_source_time_function
 
   ! local variables below
   integer :: mo,da,julian_day,isource

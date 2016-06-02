@@ -71,6 +71,9 @@ end module constants
   integer :: NSTEP
   double precision :: DT
 
+  ! VM VM number of time step for external source time function
+  integer :: NSTEP_STF
+  
   ! LDD Runge-Kutta time scheme
   logical :: USE_LDDRK
 
@@ -119,7 +122,7 @@ end module constants
   logical :: USE_FORCE_POINT_SOURCE
   logical :: USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
 
-  !! VM VM add external source
+  !! VM VM add external source time function
   logical ::  EXTERNAL_STF
 
   logical :: USE_TRICK_FOR_BETTER_PRESSURE,USE_SOURCE_ENCODING,OUTPUT_ENERGY
@@ -163,6 +166,9 @@ include "../../../add_to_shared_par.F90"
 !! DK DK that are missing in this code but implemented in the other and that could thus be cut and pasted one day
   integer :: it_begin,it_end
   integer :: seismo_offset,seismo_current
+
+  !! VM VM number of source for external source time function
+  integer :: NSOURCES_STF
 
   end module shared_compute_parameters
 
