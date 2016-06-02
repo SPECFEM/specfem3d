@@ -133,7 +133,7 @@
      NSOURCES_STF=1
   end if
   !! allocate the array contains the user defined source time function 
-  allocate(user_source_time_function(1, 1),stat=ier)
+  allocate(user_source_time_function(NSTEP_STF, NSOURCES_STF),stat=ier)
   if (ier /= 0) stop 'error allocating arrays for user sources time function'
 
 ! locate sources in the mesh
