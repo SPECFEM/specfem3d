@@ -449,7 +449,7 @@
              abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
           enddo
        enddo
-    end if
+    endif
 
   enddo
 
@@ -457,7 +457,7 @@
   ijk_face(:,:,:) = 0
   normal_face(:,:,:) = 0.0_CUSTOM_REAL
   jacobian2Dw_face(:,:) = 0.0_CUSTOM_REAL
-  
+
 
   do ispec2D = 1, NSPEC2D_TOP
     ! sets element
@@ -507,12 +507,12 @@
     ! stores surface infos
     if (STACEY_ABSORBING_CONDITIONS) then
        if (.not. STACEY_INSTEAD_OF_FREE_SURFACE) then
-        
+
           ! stores free surface
           ! sets face infos
           ifree = ifree + 1
           free_surface_ispec(ifree) = ispec
-          
+
           ! gll points -- assuming NGLLX = NGLLY = NGLLZ
           igllfree = 0
           do j=1,NGLLY
@@ -523,8 +523,8 @@
                 free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
              enddo
           enddo
-       
-       
+
+
        else
 
           if (.not. BOTTOM_FREE_SURFACE) then
@@ -543,7 +543,7 @@
              free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
            enddo
          enddo
-         end if
+         endif
          ! adds face infos to absorbing boundary surface
          iabsval = iabsval + 1
          abs_boundary_ispec(iabsval) = ispec
@@ -558,7 +558,7 @@
              abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
            enddo
          enddo
-       end if 
+       endif
 
     else if (PML_CONDITIONS) then
        if (.not. PML_INSTEAD_OF_FREE_SURFACE) then

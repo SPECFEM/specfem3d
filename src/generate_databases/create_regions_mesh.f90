@@ -503,10 +503,10 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
   num_free_surface_faces = nspec2D_top
 
    ! add bottom surface to free surface condition
-  if (BOTTOM_FREE_SURFACE)  then 
+  if (BOTTOM_FREE_SURFACE)  then
      num_free_surface_faces = num_free_surface_faces + nspec2D_bottom
      if (STACEY_INSTEAD_OF_FREE_SURFACE)  num_free_surface_faces = num_free_surface_faces - nspec2D_top
-  end if
+  endif
   ! allocates arrays to store info for each face (assumes NGLLX=NGLLY=NGLLZ)
   allocate( free_surface_ispec(num_free_surface_faces), &
             free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces), &
