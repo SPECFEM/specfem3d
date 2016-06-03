@@ -523,11 +523,11 @@
                 free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
              enddo
           enddo
-       end if
        
-    else
+       
+       else
 
-       if (.not. BOTTOM_FREE_SURFACE) then
+          if (.not. BOTTOM_FREE_SURFACE) then
          ! stores free surface and adds it also to absorbing boundaries
          ! sets face infos
          ifree = ifree + 1
@@ -558,7 +558,7 @@
              abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
            enddo
          enddo
-       endif
+       end if 
 
     else if (PML_CONDITIONS) then
        if (.not. PML_INSTEAD_OF_FREE_SURFACE) then

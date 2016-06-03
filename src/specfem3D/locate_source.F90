@@ -201,7 +201,7 @@
     call bcast_all_dp(comp_dir_vect_source_E,NSOURCES)
     call bcast_all_dp(comp_dir_vect_source_N,NSOURCES)
     call bcast_all_dp(comp_dir_vect_source_Z_UP,NSOURCES)
-    call bcast_all_cr(user_source_time_function,NSOURCES*NSTEP)
+    call bcast_all_cr(user_source_time_function,NSOURCES_STF*NSTEP_STF)
   else
     ! CMT moment tensors
     if (myrank == 0) then
@@ -211,7 +211,7 @@
     endif
     ! broadcasts specific moment tensor infos
     call bcast_all_dp(moment_tensor,6*NSOURCES)
-    call bcast_all_cr(user_source_time_function,NSOURCES*NSTEP)
+    call bcast_all_cr(user_source_time_function,NSOURCES_STF*NSTEP_STF)
   endif
 
   ! broadcasts general source information read on the master to the nodes
