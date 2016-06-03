@@ -44,7 +44,7 @@
   use specfem_par,only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION, &
       UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
       factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP,&
-      user_source_time_function,NSTEP,NSTEP_STF,NSOURCES_STF
+      user_source_time_function,NSTEP_STF,NSOURCES_STF
 
   implicit none
 
