@@ -96,6 +96,8 @@ end module constants
   double precision :: f0_FOR_PML
 
   logical :: STACEY_ABSORBING_CONDITIONS,STACEY_INSTEAD_OF_FREE_SURFACE
+  ! To use bottom free surface instead of absorbing stacey condition
+  logical :: BOTTOM_FREE_SURFACE
 
   ! for simultaneous runs from the same batch job
   integer :: NUMBER_OF_SIMULTANEOUS_RUNS

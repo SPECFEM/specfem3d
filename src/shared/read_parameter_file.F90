@@ -150,6 +150,8 @@
   if (ier /= 0) stop 'Error reading Par_file parameter STACEY_ABSORBING_CONDITIONS'
   call read_value_logical(STACEY_INSTEAD_OF_FREE_SURFACE, 'STACEY_INSTEAD_OF_FREE_SURFACE', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter STACEY_INSTEAD_OF_FREE_SURFACE'
+  call read_value_logical(BOTTOM_FREE_SURFACE, 'BOTTOM_FREE_SURFACE', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter BOTTOM_FREE_SURFACE'
   call read_value_logical(CREATE_SHAKEMAP, 'CREATE_SHAKEMAP', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter CREATE_SHAKEMAP'
   call read_value_logical(MOVIE_SURFACE, 'MOVIE_SURFACE', ier)
@@ -596,6 +598,7 @@
     call bcast_all_string_world(FORCESOLUTION)
     call bcast_all_string_world(CMTSOLUTION)
     call bcast_all_singlel_world(EXTERNAL_STF)
+    call bcast_all_singlel_world(BOTTOM_FREE_SURFACE)
 
   endif ! of if(BROADCAST_AFTER_READ) then
 

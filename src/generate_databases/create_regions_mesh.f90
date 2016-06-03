@@ -385,7 +385,7 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
                         nspec2D_bottom,nspec2D_top,ANISOTROPY)
 
   use generate_databases_par, only: STACEY_INSTEAD_OF_FREE_SURFACE,PML_INSTEAD_OF_FREE_SURFACE, &
-    NGNOD,NGNOD2D,NDIM,NDIM2D,NGLLX,NGLLY,NGLLZ,NGLLSQUARE
+    NGNOD,NGNOD2D,NDIM,NDIM2D,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,BOTTOM_FREE_SURFACE
   use create_regions_mesh_ext_par
 
   implicit none
@@ -488,6 +488,10 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
   if (STACEY_INSTEAD_OF_FREE_SURFACE .or. PML_INSTEAD_OF_FREE_SURFACE) then
      num_abs_boundary_faces = num_abs_boundary_faces + nspec2D_top
   endif
+
+  ! subtract bottom surface from Stacey condition when free surface
+  if (BOTTOM_FREE_SURFACE)  num_abs_boundary_faces = num_abs_boundary_faces -  nspec2D_bottom
+
   ! allocates arrays to store info for each face (assumes NGLLX=NGLLY=NGLLZ)
   allocate( abs_boundary_ispec(num_abs_boundary_faces), &
             abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces), &
@@ -498,6 +502,11 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
   ! free surface faces
   num_free_surface_faces = nspec2D_top
 
+   ! add bottom surface to free surface condition
+  if (BOTTOM_FREE_SURFACE)  then 
+     num_free_surface_faces = num_free_surface_faces + nspec2D_bottom
+     if (STACEY_INSTEAD_OF_FREE_SURFACE)  num_free_surface_faces = num_free_surface_faces - nspec2D_top
+  end if
   ! allocates arrays to store info for each face (assumes NGLLX=NGLLY=NGLLZ)
   allocate( free_surface_ispec(num_free_surface_faces), &
             free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces), &

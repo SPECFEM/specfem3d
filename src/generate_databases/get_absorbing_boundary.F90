@@ -37,7 +37,7 @@
 
   use generate_databases_par, only: STACEY_INSTEAD_OF_FREE_SURFACE, PML_INSTEAD_OF_FREE_SURFACE, NGNOD2D, &
     STACEY_ABSORBING_CONDITIONS,PML_CONDITIONS, &
-    NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,IMAIN
+    NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,IMAIN,BOTTOM_FREE_SURFACE
 
   use create_regions_mesh_ext_par
 
@@ -93,6 +93,8 @@
 
   ! abs face counter
   iabsval = 0
+  ! free surface face counter
+  ifree = 0
 
   ! xmin
   ijk_face(:,:,:) = 0
@@ -416,20 +418,38 @@
       enddo
     enddo
 
-    ! sets face infos
-    iabsval = iabsval + 1
-    abs_boundary_ispec(iabsval) = ispec
+    if (BOTTOM_FREE_SURFACE) then ! use bottom free surface instead of absorbing Stacey condition
+       ! stores free surface
+       ! sets face infos
+       ifree = ifree + 1
+       free_surface_ispec(ifree) = ispec
 
-    ! gll points -- assuming NGLLX = NGLLY = NGLLZ
-    igll = 0
-    do j=1,NGLLY
-      do i=1,NGLLX
-        igll = igll+1
-        abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
-        abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
-        abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
-      enddo
-    enddo
+       ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+       igllfree = 0
+       do j=1,NGLLY
+          do i=1,NGLLX
+             igllfree = igllfree+1
+             free_surface_ijk(:,igllfree,ifree) = ijk_face(:,i,j)
+             free_surface_jacobian2Dw(igllfree,ifree) = jacobian2Dw_face(i,j)
+             free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
+          enddo
+       enddo
+    else
+       ! sets face infos
+       iabsval = iabsval + 1
+       abs_boundary_ispec(iabsval) = ispec
+
+       ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+       igll = 0
+       do j=1,NGLLY
+          do i=1,NGLLX
+             igll = igll+1
+             abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
+             abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
+             abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
+          enddo
+       enddo
+    end if
 
   enddo
 
@@ -437,8 +457,7 @@
   ijk_face(:,:,:) = 0
   normal_face(:,:,:) = 0.0_CUSTOM_REAL
   jacobian2Dw_face(:,:) = 0.0_CUSTOM_REAL
-  ! free surface face counter
-  ifree = 0
+  
 
   do ispec2D = 1, NSPEC2D_TOP
     ! sets element
@@ -488,24 +507,27 @@
     ! stores surface infos
     if (STACEY_ABSORBING_CONDITIONS) then
        if (.not. STACEY_INSTEAD_OF_FREE_SURFACE) then
-         ! stores free surface
-         ! sets face infos
-         ifree = ifree + 1
-         free_surface_ispec(ifree) = ispec
+        
+          ! stores free surface
+          ! sets face infos
+          ifree = ifree + 1
+          free_surface_ispec(ifree) = ispec
+          
+          ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+          igllfree = 0
+          do j=1,NGLLY
+             do i=1,NGLLX
+                igllfree = igllfree+1
+                free_surface_ijk(:,igllfree,ifree) = ijk_face(:,i,j)
+                free_surface_jacobian2Dw(igllfree,ifree) = jacobian2Dw_face(i,j)
+                free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
+             enddo
+          enddo
+       end if
+       
+    else
 
-         ! gll points -- assuming NGLLX = NGLLY = NGLLZ
-         igllfree = 0
-         do j=1,NGLLY
-           do i=1,NGLLX
-             igllfree = igllfree+1
-             free_surface_ijk(:,igllfree,ifree) = ijk_face(:,i,j)
-             free_surface_jacobian2Dw(igllfree,ifree) = jacobian2Dw_face(i,j)
-             free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
-           enddo
-         enddo
-
-       else
-
+       if (.not. BOTTOM_FREE_SURFACE) then
          ! stores free surface and adds it also to absorbing boundaries
          ! sets face infos
          ifree = ifree + 1
@@ -521,7 +543,7 @@
              free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
            enddo
          enddo
-
+         end if
          ! adds face infos to absorbing boundary surface
          iabsval = iabsval + 1
          abs_boundary_ispec(iabsval) = ispec
