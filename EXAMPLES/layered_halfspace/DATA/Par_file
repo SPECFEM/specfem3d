@@ -318,3 +318,10 @@ ADIOS_FOR_KERNELS               = .false.
 # be sure when this option is .false. to remove the name of stf file in
 # CMTSOLUTION or FORCESOURCE
 EXTERNAL_SOURCE_FILE            = .false.
+#
+# When STACEY_ABSORBING_CONDITIONS is set to .true. :
+# absorbing conditions are defined in xmin, xmax, ymin, ymax and zmin 
+# this option BOTTOM_FREE_SURFACE can be set to .true. to 
+# make zmin free surface instead of absorbing condition
+#
+BOTTOM_FREE_SURFACE             = .false.
