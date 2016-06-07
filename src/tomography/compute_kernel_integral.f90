@@ -26,7 +26,7 @@
 !=====================================================================
 
 
-subroutine compute_kernel_integral_iso()
+  subroutine compute_kernel_integral_iso()
 
 ! computes volume element associated with points and calculates kernel integral
 
@@ -218,13 +218,13 @@ subroutine compute_kernel_integral_iso()
   ! frees memory
   deallocate(jacobian)
 
-end subroutine compute_kernel_integral_iso
+  end subroutine compute_kernel_integral_iso
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine compute_kernel_integral_tiso()
+  subroutine compute_kernel_integral_tiso()
 
 ! computes volume element associated with points
 
@@ -451,14 +451,14 @@ subroutine compute_kernel_integral_tiso()
   ! frees memory
   deallocate(jacobian)
 
-end subroutine compute_kernel_integral_tiso
+  end subroutine compute_kernel_integral_tiso
 
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine compute_kernel_integral_tiso_iso()
+  subroutine compute_kernel_integral_tiso_iso()
 
 ! computes volume element associated with points
 
@@ -671,13 +671,13 @@ subroutine compute_kernel_integral_tiso_iso()
   ! frees memory
   deallocate(jacobian)
 
-end subroutine compute_kernel_integral_tiso_iso
+  end subroutine compute_kernel_integral_tiso_iso
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine compute_jacobian(jacobian)
+  subroutine compute_jacobian(jacobian)
 
 ! computes volume element associated with points
 
@@ -730,5 +730,5 @@ subroutine compute_jacobian(jacobian)
 
   close(IIN)
 
-end subroutine compute_jacobian
+  end subroutine compute_jacobian
 

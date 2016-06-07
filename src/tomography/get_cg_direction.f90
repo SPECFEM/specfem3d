@@ -26,7 +26,7 @@
 !=====================================================================
 
 
-subroutine get_cg_direction_tiso()
+  subroutine get_cg_direction_tiso()
 
 ! calculates TI gradient based on a conjugate gradient method
 !
@@ -475,5 +475,5 @@ subroutine get_cg_direction_tiso()
   endif
   call synchronize_all()
 
-end subroutine get_cg_direction_tiso
+  end subroutine get_cg_direction_tiso
 

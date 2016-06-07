@@ -775,7 +775,7 @@ module decompose_mesh
   ! checks valence of nodes
   !----------------------------------------------------------------------------------------------
 
-  subroutine check_valence
+  subroutine check_valence()
 
     implicit none
 

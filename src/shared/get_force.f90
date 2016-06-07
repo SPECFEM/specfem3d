@@ -184,7 +184,7 @@
     min_tshift_force_original = minval(t_shift)
   endif
 
-  do isource=1,NSOURCES
+  do isource = 1,NSOURCES
     ! checks half-duration
     ! half-duration is the dominant frequency of the source
     ! point forces use a Ricker source time function
