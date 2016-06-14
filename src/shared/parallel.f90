@@ -1382,6 +1382,10 @@ end module my_mpi
 
   end subroutine gather_all_i
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
   subroutine all_gather_all_i(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
 
   use my_mpi
@@ -1395,11 +1399,10 @@ end module my_mpi
   integer :: ier
 
   call MPI_ALLGATHER(sendbuf,sendcnt,MPI_INTEGER, &
-                  recvbuf,recvcount,MPI_INTEGER, &
-                  my_local_mpi_comm_world,ier)
+                     recvbuf,recvcount,MPI_INTEGER, &
+                     my_local_mpi_comm_world,ier)
 
-end subroutine all_gather_all_i
-
+  end subroutine all_gather_all_i
 
 !
 !-------------------------------------------------------------------------------------------------

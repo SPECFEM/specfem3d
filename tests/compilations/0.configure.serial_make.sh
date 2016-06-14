@@ -31,10 +31,15 @@ fi
 # default all compilation
 make clean >> $testdir/results.log 2>&1
 
+# checks exit code
+if [[ $? -ne 0 ]]; then
+  echo >> $testdir/results.log
+  echo "compilation failed, please check..." >> $testdir/results.log
+  exit 1
+fi
+
 # parallel make
 make -j 4 all >> $testdir/results.log 2>&1
-
-echo "" >> $testdir/results.log
 
 # checks exit code
 if [[ $? -ne 0 ]]; then
@@ -43,5 +48,6 @@ if [[ $? -ne 0 ]]; then
   exit 1
 fi
 
+echo "" >> $testdir/results.log
 echo "successful compilation" >> $testdir/results.log
 
