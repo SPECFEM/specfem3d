@@ -1118,6 +1118,7 @@ def export2SPECFEM3D(path_exporting_mesh_SPECFEM3D='.',hex27=False,cpml=False,cp
     #print sem_mesh.block_mat
     #print sem_mesh.block_flag
     #
+    print "#export2SPECFEM3D: path = ",path_exporting_mesh_SPECFEM3D
     sem_mesh.write(path=path_exporting_mesh_SPECFEM3D)
     print 'END SPECFEM3D exporting process......'
     if cpml:

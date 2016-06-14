@@ -27,7 +27,21 @@ except ImportError:
     print ""
     sys.exit("Import cubit failed")
 
+print sys.path
+
 cubit.init([""])
+
+# gets version string
+cubit_version = cubit.get_version()
+print "version: ",cubit_version
+
+# extracts major number
+v = cubit_version.split('.')
+cubit_version_major = int(v[0])
+print "major version number: ",cubit_version_major
+
+# current work directory
+cubit.cmd('pwd')
 
 # Creating the volumes
 cubit.cmd('reset')
@@ -63,6 +77,9 @@ print ""
 
 ##
 from geocubitlib import boundary_definition
+
+# avoids assigning empty blocks
+cubit.cmd('set duplicate block elements on')
 
 # bounding faces
 boundary_definition.entities=['face']
@@ -118,7 +135,7 @@ else:
     # Export to SPECFEM3D format
     # note: exportlib-commands will overwrite material properties
     exportlib.collect(outdir='MESH/')
-    exportlib.e2SEM('MESH/')
+    exportlib.e2SEM(outdir='MESH/')
     # Define material properties
     print "#### DEFINE MATERIAL PROPERTIES #######################"
     # elastic material

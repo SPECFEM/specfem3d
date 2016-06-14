@@ -559,13 +559,15 @@ def collect(cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,cpuy=1,cubfiles=False
     if add_sea:
         block=1001
         add_sea_layer(block=block)
+    print "#collect: output outdir = ",outdir
 
     outdir2='/'.join(x for x in outfilename.split('/')[:-1])
     if outdir2 == '': 
         outdir2=outdir+'/'
     else:
         outdir2=outdir+'/'+outdir2+'/'    
-    
+
+    print "#collect: output outdir2 = ",outdir2
     import os
     try:
         os.makedirs(outdir2)
@@ -641,6 +643,7 @@ def e2SEM(files=False,listblock=None,listflag=None,outdir='.',cpml=False,cpml_si
         cubit.cmd("block "+str(ib)+" attribute index 1 "+ str(iflag)            )
     #
     import cubit2specfem3d
+    print "#e2SEM: output dir = ",outdir
     cubit2specfem3d.export2SPECFEM3D(outdir,cpml=cpml,cpml_size=cpml_size,top_absorbing=top_absorbing,hex27=hex27)
 
 def invert_dict(d):
