@@ -421,7 +421,7 @@ i.e. ideally non-deformed cubes obtained by `extrusion' of regular surface mesh 
 outer edges of the computational domain without PML; by doing so, the PMLs obtained will be far more stable
 in time (PML being weakly unstable from a mathematical point of view, very deformed mesh elements
 inside the PMLs can trigger instabilities much more quickly). \red{We have two utilities in directory utils/CPML that do that automatically
-and that are very fast}. To stabilize PMLs it also helps to add a transition layer of geometrically-regular non-PML elements, in which attenuation is also 
+and that are very fast}. To stabilize PMLs it also helps to add a transition layer of geometrically-regular non-PML elements, in which attenuation is also
 turned off (i.e. $Q_\kappa = Q_\mu = 9999$ in that layer), as in the red layer of Figure~\ref{fig:mesh_extrusion}.
 Our tools in directory utils/CPML implement that transition layer automatically.
 
