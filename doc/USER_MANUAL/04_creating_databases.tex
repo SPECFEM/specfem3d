@@ -415,7 +415,10 @@ such as CUBIT/TRELIS or similar), try to have elements inside the PML as regular
 i.e. ideally non-deformed cubes obtained by `extrusion' of regular surface mesh elements meshing the
 outer edges of the computational domain without PML; by doing so, the PMLs obtained will be far more stable
 in time (PML being weakly unstable from a mathematical point of view, very deformed mesh elements
-inside the PMLs can trigger instabilities much more quickly).
+inside the PMLs can trigger instabilities much more quickly). \red{We have two utilities in directory utils/CPML that do that automatically
+and that are very fast}. To stabilize PMLs it also helps to add a transition layer of geometrically-regular non-PML elements, in which attenuation is also 
+turned off (i.e. $Q_\kappa = Q_\mu = 9999$ in that layer), as in the red layer of Figure~\ref{fig:mesh_extrusion}.
+Our tools in directory utils/CPML implement that transition layer automatically.
 
 If you use PML and an external tomographic velocity and density model,
 you should be careful because mathematically a PML cannot handle heterogeneities
@@ -436,20 +439,24 @@ from its values along the inner PML edge.
 %%
 \begin{figure}[htbp]
 \noindent \begin{centering}
+\includegraphics[width=4.5in]{figures/how_to_use_a_transition_mesh_layer_to_stabilize_PML.png}
+\par\end{centering}
+\caption{Mesh extrusion for PML (green elements) and a non-PML stabilization layer (red elements).}
+\label{fig:mesh_extrusion}
+\end{figure}
+%%
+
+%%
+\begin{figure}[htbp]
+\noindent \begin{centering}
 \includegraphics[width=6in]{figures/how_to_use_PML_when_a_tomographic_velocity_model_is_used.png}
 \par\end{centering}
-
 \caption{How to modify your external 3D velocity and density model in order
 to use PML. Such a modification is not needed when using Stacey absorbing
 boundary conditions (but such conditions are significantly less efficient).}
-
-
 \label{fig:modify_external_velocity_model_to_use_PML}
 \end{figure}
-
-
 %%
-
 
 
 \section{Choosing the time step \texttt{DT}}\label{sec:Choosing-the-Time-Step}
