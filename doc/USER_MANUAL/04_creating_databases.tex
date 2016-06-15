@@ -190,6 +190,11 @@ In almost all cases it is much better to use CPML absorbing layers
 \item [{\texttt{STACEY\_INSTEAD\_OF\_FREE\_SURFACE}}] Set to \texttt{.true.}
 to turn on absorbing boundary conditions on the top surface which
 by default constitutes a free surface of the model.
+\item [{\texttt{BOTTOM\_FREE\_SURFACE}}]
+When STACEY\_ABSORBING\_CONDITIONS is set to .true. :
+absorbing conditions are defined in xmin, xmax, ymin, ymax and zmin
+this option BOTTOM\_FREE\_SURFACE can be set to .true. to
+make zmin free surface instead of absorbing condition.
 \item [{\texttt{CREATE\_SHAKEMAP}}] Set this flag to \texttt{.true.} to
 create a ShakeMap\textregistered{}, i.e., a peak ground velocity map
 of the maximum absolute value of the two horizontal components of
