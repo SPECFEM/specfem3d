@@ -923,6 +923,9 @@ module decompose_mesh
        stop 'Error : MAIN : Cannot initialize strategy'
     endif
 
+    ! resets SCOTCH random number generator to produce deterministic partitions
+    call scotchfrandomReset()
+
     !call scotchfstratgraphmap (scotchstrat(1), trim(scotch_strategy), ier)
     ! if (ier /= 0) then
     !   stop 'Error : MAIN : Cannot build strategy'
