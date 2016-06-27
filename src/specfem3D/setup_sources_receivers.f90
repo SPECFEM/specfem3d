@@ -206,7 +206,7 @@
   !! VM VM for external source the time will begin with simulation
   if (EXTERNAL_STF) then
      t0=0.d0
-  end if
+  endif
   ! checks if user set USER_T0 to fix simulation start time
   ! note: USER_T0 has to be positive
   if (USER_T0 > 0.d0) then
