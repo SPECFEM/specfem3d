@@ -15,7 +15,7 @@ available in the
 
 - PDF manual located in directory: [doc/USER_MANUAL](doc/USER_MANUAL)
 
-- HTML manual (latest version): [specfem3d.readthedocs.org](http://specfem3d.readthedocs.org/)
+- HTML manual (latest version): [specfem3d.readthedocs.io](http://specfem3d.readthedocs.io/)
 
 
 ## Development
