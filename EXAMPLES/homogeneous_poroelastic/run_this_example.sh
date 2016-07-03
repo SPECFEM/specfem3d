@@ -61,7 +61,7 @@ if [[ $? -ne 0 ]]; then exit 1; fi
 if [ "$NPROC" -eq 1 ]; then
   # This is a serial simulation
   echo
-  echo "  running solver..."q
+  echo "  running solver..."
   echo
   ./bin/xspecfem3D
 else
