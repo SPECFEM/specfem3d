@@ -1,0 +1,212 @@
+# Travis configuration
+#
+# Note: building Fortran code is not supported (yet): see https://docs.travis-ci.com/user/language-specific/
+#       this is using C as a base and installs gfortran in the test environment
+
+language: c
+
+sudo: required
+
+os: linux
+compiler: gcc
+
+env:
+  global:
+    - FC=gfortran
+    - MPIFC=mpif90
+    - CC=gcc
+    - OMP_NUM_THREADS=2
+    - WORKDIR=`pwd`
+
+  matrix:
+    # for test cases, we use
+    #   TEST    - flags used for configuration
+    #   TESTCOV - determines whether or not (0/1) code coverage flags are used
+
+    # run debug
+    - TEST="--enable-debug" TESTCOV=0 TESTMAKE=0
+
+    # run debug & double precision
+    - TEST="--enable-double-precision --enable-debug" TESTCOV=0 TESTMAKE=0
+
+    # run vectorization & mpi, using code coverage flags
+    - TEST="--enable-vectorization --with-mpi" TESTCOV=1 TESTMAKE=0
+
+    # run default test with make tests
+    - TEST="" TESTCOV=0 TESTMAKE=1
+
+    # run example 2 (acoustic)
+    - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=2
+
+    # run example 3 (poroelastic)
+    - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=3
+
+    # run example 4 (internal mesher)
+    - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=4
+
+    # run serial example
+    - TEST="--enable-vectorization --without-mpi" TESTCOV=0 TESTMAKE=5
+
+
+before_install:
+  # informations on git
+  - |
+    git --version
+    git rev-parse --verify HEAD
+    git branch -a
+
+  # checks if changes occurred in folders src/ or setup/
+  - |
+    echo "request: Branch($TRAVIS_BRANCH) Pull Request($TRAVIS_PULL_REQUEST) Tag($TRAVIS_TAG)"
+    echo "commit : Commit($TRAVIS_COMMIT) Range($TRAVIS_COMMIT_RANGE)"
+
+  # recommended for MPI projects to unset CC: see https://docs.travis-ci.com/user/languages/c
+  #- test -n $CC && unset CC
+
+  # updates repository
+  - sudo apt-get update
+
+install:
+  # fortran/openMPI compiler
+  - sudo apt-get install gfortran libgomp1 openmpi-bin libopenmpi-dev
+
+  # python script needs numpy
+  - sudo apt-get install -qq python-numpy #python-scipy
+
+  # version infos
+  - echo "compiler versions:" ${FC} ${MPIFC} ${CC}
+  - ${FC} --version
+  - ${MPIFC} --version
+  - ${CC} --version
+
+script:
+  ###########################################################
+  # setup
+  ###########################################################
+  # info
+  - |
+    echo $TRAVIS_BUILD_DIR
+    echo $WORKDIR
+    echo "configuration test:" ${TEST} ${TESTFLAGS}
+
+  # bash function for checking seismogram output with reference solutions
+  - |
+    my_test(){
+      echo "testing seismograms:"
+      ln -s $WORKDIR/utils/compare_seismogram_correlations.py
+      ./compare_seismogram_correlations.py OUTPUT_FILES/ REF_SEIS/
+      if [[ $? -ne 0 ]]; then exit 1; fi
+      ./compare_seismogram_correlations.py OUTPUT_FILES/ REF_SEIS/ | grep min/max | cut -d \| -f 3 | awk '{print "correlation:",$1; if ($1 < 0.9 ){print $1,"failed"; exit 1;}else{ print $1,"good"; exit 0;}}'
+      if [[ $? -ne 0 ]]; then exit 1; fi
+      rm -rf OUTPUT_FILES/
+    }
+
+  ###########################################################
+  # configuration & compilation
+  ###########################################################
+  # configuration
+  - |
+    if [ "$TESTCOV" == "1" ]; then
+      ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TEST} FLAGS_CHECK="-fprofile-arcs -ftest-coverage -O0"
+    else
+      ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TEST}
+    fi
+
+  # we output to console
+  - sed -i "s:IMAIN .*:IMAIN = ISTANDARD_OUTPUT:" setup/constants.h
+
+  # compilation
+  - make clean; make -j4 all
+
+  ###########################################################
+  # test examples
+  ###########################################################
+  # testing internal mesher example (short & quick for all configuration)
+  - |
+    if [ "$TESTMAKE" == "1" ]; then
+      # runs default tests
+      make tests
+    else
+      # default
+      dir=EXAMPLES/homogeneous_halfspace_HEX8_elastic_absorbing_Stacey_5sides/
+      if [ "$TESTMAKE" == "2" ]; then
+        dir=EXAMPLES/homogeneous_acoustic/
+      elif [ "$TESTMAKE" == "3" ]; then
+        dir=EXAMPLES/homogeneous_poroelastic/
+      elif [ "$TESTMAKE" == "4" ]; then
+        dir=EXAMPLES/meshfem3D_examples/simple_model/
+      elif [ "$TESTMAKE" == "5" ]; then
+        dir=EXAMPLES/homogeneous_acoustic/
+      fi
+      echo "##########################################################"
+      echo "test directory: $dir"
+      echo "##########################################################"
+      cd $dir
+      # limit time steps for testing
+      sed -i "s:^NSTEP .*:NSTEP    = 100:" DATA/Par_file
+      sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 10:" DATA/Par_file
+      # serial example
+      if [ "$TESTMAKE" == "5" ]; then
+        sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
+      fi
+      ./run_this_example.sh
+      my_test
+      cd $WORKDIR
+    fi
+  # additional testing for coverage
+  - |
+    if [ "$TESTCOV" == "1" ]; then
+      cd EXAMPLES/homogeneous_acoustic/
+      sed -i "s:^NSTEP .*:NSTEP    = 100:" DATA/Par_file
+      sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 10:" DATA/Par_file
+      ./run_this_example.sh
+      my_test
+      cd $WORKDIR
+    fi
+
+  # additional testing for coverage
+  - |
+    if [ "$TESTCOV" == "1" ]; then
+      cd EXAMPLES/homogeneous_poroelastic/
+      sed -i "s:^NSTEP .*:NSTEP    = 100:" DATA/Par_file
+      sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 10:" DATA/Par_file
+      ./run_this_example.sh
+      my_test
+      cd $WORKDIR
+    fi
+
+  # additional testing for coverage
+  - |
+    if [ "$TESTCOV" == "1" ]; then
+      cd EXAMPLES/meshfem3D_examples/simple_model/
+      sed -i "s:^NSTEP .*:NSTEP    = 100:" DATA/Par_file
+      sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 10:" DATA/Par_file
+      ./run_this_example.sh
+      my_test
+      cd $WORKDIR
+    fi
+
+  # done
+  - echo `pwd`
+
+after_success:
+  ###########################################################
+  # code coverage
+  ###########################################################
+  - |
+    if [ "$TESTCOV" == "1" ]; then
+      gcov --version
+      echo `pwd`
+      ls -al obj/
+    fi
+
+  # produces coverage reports (done manually because of different naming for source & object files)
+  - |
+    if [ "$TESTCOV" == "1" ]; then
+      find obj/ -iname '*.o' | sort | awk '{print "gcov -o obj/ "$1;}'
+      # executes gcov-commands
+      find obj/ -iname '*.o' | sort | awk '{print "gcov -o obj/ "$1;}' | sh
+    fi
+
+  # code coverage: see example https://github.com/codecov/example-fortran/blob/master/.travis.yml
+  - if [ "$TESTCOV" == "1" ]; then bash <(curl -s https://codecov.io/bash) -X gcov; fi
