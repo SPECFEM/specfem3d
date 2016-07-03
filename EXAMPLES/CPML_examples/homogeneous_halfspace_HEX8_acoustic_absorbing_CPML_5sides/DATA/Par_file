@@ -87,6 +87,8 @@ OLSEN_ATTENUATION_RATIO         = 0.05
 #-----------------------------------------------------------
 
 # C-PML boundary conditions for a regional simulation
+# (if set to .false., and STACEY_ABSORBING_CONDITIONS is also set to .false., you get a free surface instead
+# in the case of elastic or viscoelastic mesh elements, and a rigid surface in the case of acoustic (fluid) elements
 PML_CONDITIONS                  = .true.
 
 # C-PML top surface
@@ -100,10 +102,18 @@ f0_FOR_PML                      = 0.05555
 # ROTATE_PML_ANGLE              = 0.
 
 # absorbing boundary conditions for a regional simulation
+# (if set to .false., and PML_CONDITIONS is also set to .false., you get a free surface instead
+# in the case of elastic or viscoelastic mesh elements, and a rigid surface in the case of acoustic (fluid) elements
 STACEY_ABSORBING_CONDITIONS     = .false.
 
 # absorbing top surface (defined in mesh as 'free_surface_file')
 STACEY_INSTEAD_OF_FREE_SURFACE  = .false.
+
+# When STACEY_ABSORBING_CONDITIONS is set to .true. :
+# absorbing conditions are defined in xmin, xmax, ymin, ymax and zmin
+# this option BOTTOM_FREE_SURFACE can be set to .true. to
+# make zmin free surface instead of absorbing condition
+BOTTOM_FREE_SURFACE             = .false.
 
 #-----------------------------------------------------------
 #
@@ -318,10 +328,4 @@ ADIOS_FOR_KERNELS               = .false.
 # be sure when this option is .false. to remove the name of stf file in
 # CMTSOLUTION or FORCESOURCE
 EXTERNAL_SOURCE_FILE            = .false.
-#
-# When STACEY_ABSORBING_CONDITIONS is set to .true. :
-# absorbing conditions are defined in xmin, xmax, ymin, ymax and zmin
-# this option BOTTOM_FREE_SURFACE can be set to .true. to
-# make zmin free surface instead of absorbing condition
-#
-BOTTOM_FREE_SURFACE             = .false.
+
