@@ -845,8 +845,10 @@
     endif
   endif
 
+  ! safety stop
   if (POROELASTIC_SIMULATION) then
-    stop 'LDDRK has not been implemented for POROELASTIC_SIMULATION'
+    if (USE_LDDRK) &
+      stop 'LDDRK has not been implemented for POROELASTIC_SIMULATION'
   endif
 
   end subroutine prepare_timerun_lddrk
