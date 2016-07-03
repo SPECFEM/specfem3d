@@ -207,14 +207,18 @@ def plot_correlations(out_dir,ref_dir):
         # least square test
         norm = np.linalg.norm
         sqrt = np.sqrt
+
         # normalized by power in reference solution
         fac_norm = norm(ref)
         # or normalized by power in (ref*syn)
         #fac_norm = sqrt(norm(ref)*norm(syn))
+
         if fac_norm > 0.0:
             err = norm(ref-syn)/fac_norm
         else:
             err = norm(ref-syn)
+
+        #debug
         #print('norm syn = %e norm ref = %e' % (norm(syn),fac_norm))
 
         # correlation test
@@ -222,13 +226,22 @@ def plot_correlations(out_dir,ref_dir):
         if fac_norm > 0.0:
             corr_mat = np.corrcoef(ref, syn)
         else:
-            corr_mat = np.cov(ref-syn)
+            if norm(ref-syn) > 0.0:
+                corr_mat = np.cov(ref-syn)
+            else:
+                # both zero traces
+                print("** warning: comparing zero traces")
+                corr_mat = 1.0
         corr = np.min(corr_mat)
         
         # time shift
-        # total length
-        shift = get_cross_correlation_timeshift(ref,syn,dt)
-        
+        if fac_norm > 0.0:
+          # shift (in s) by cross correlation
+          shift = get_cross_correlation_timeshift(ref,syn,dt)
+        else:
+          # no correlation with zero trace
+          shift = 0.0
+
         # correlation in moving window
         if USE_SUB_WINDOW_CORR:
             # moves window through seismogram
@@ -263,13 +276,24 @@ def plot_correlations(out_dir,ref_dir):
         # counter
         n += 1
 
+
+    # check if any comparison done
+    if n == 0:
+        # values indicating failure
+        corr_min = 0.0
+        err_max = 1.e9
+        shift_max = 1.e9
+
     # print min(coor) max(err)
     print("|---------------------------------------------------------------------------|")
     print("|%30s| %13.5f| %13.5le| %13.5le|" % ('min/max', corr_min, err_max, shift_max))
 
     # output summary
     print("\nsummary:")
-    print("%d seismograms compared" % n)
+    print("%d seismograms compared\n" % n)
+    if n == 0:
+        print("\nno seismograms found for comparison!\n\n")
+
     print("correlations: values 1.0 perfect, < %.1f poor correlation" % TOL_CORR)
     if corr_min < TOL_CORR:
         print("              poor correlation seismograms found")
