@@ -20,6 +20,8 @@ available in the
 
 ## Development
 
+[![Build Status](https://travis-ci.org/geodynamics/specfem3d.svg?branch=devel)](https://travis-ci.org/geodynamics/specfem3d) [![codecov](https://codecov.io/gh/geodynamics/specfem3d/branch/devel/graph/badge.svg)](https://codecov.io/gh/geodynamics/specfem3d)
+
 Development is hosted on GitHub in the
 [geodynamics/specfem3d repository](https://github.com/geodynamics/specfem3d).
 
