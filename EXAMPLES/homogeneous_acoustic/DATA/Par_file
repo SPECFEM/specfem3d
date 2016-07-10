@@ -22,8 +22,8 @@ SUPPRESS_UTM_PROJECTION         = .true.
 NPROC                           = 4
 
 # time step parameters
-NSTEP                           = 5000
-DT                              = 0.05
+NSTEP                           = 1000
+DT                              = 0.1136
 
 #-----------------------------------------------------------
 #
@@ -104,7 +104,7 @@ f0_FOR_PML                      = 0.05555
 # absorbing boundary conditions for a regional simulation
 # (if set to .false., and PML_CONDITIONS is also set to .false., you get a free surface instead
 # in the case of elastic or viscoelastic mesh elements, and a rigid surface in the case of acoustic (fluid) elements
-STACEY_ABSORBING_CONDITIONS     = .false.
+STACEY_ABSORBING_CONDITIONS     = .true.
 
 # absorbing top surface (defined in mesh as 'free_surface_file')
 STACEY_INSTEAD_OF_FREE_SURFACE  = .false.
@@ -134,13 +134,13 @@ NTSTEP_BETWEEN_FRAMES           = 200
 HDUR_MOVIE                      = 0.0
 
 # save AVS or OpenDX mesh files to check the mesh
-SAVE_MESH_FILES                 = .false.
+SAVE_MESH_FILES                 = .true.
 
 # path to store the local database file on each node
 LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI
 
 # interval at which we output time step info and max of norm of displacement
-NTSTEP_BETWEEN_OUTPUT_INFO      = 1000
+NTSTEP_BETWEEN_OUTPUT_INFO      = 100
 
 #-----------------------------------------------------------
 #
@@ -166,7 +166,7 @@ USE_FORCE_POINT_SOURCE          = .false.
 USE_RICKER_TIME_FUNCTION        = .false.
 
 # print source time function
-PRINT_SOURCE_TIME_FUNCTION      = .false.
+PRINT_SOURCE_TIME_FUNCTION      = .true.
 
 #-----------------------------------------------------------
 #
@@ -179,10 +179,10 @@ NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
 
 # decide if we save displacement, velocity, acceleration and/or pressure in forward runs (they can be set to true simultaneously)
 # currently pressure seismograms are implemented in acoustic (i.e. fluid) elements only
-SAVE_SEISMOGRAMS_DISPLACEMENT   = .true.
-SAVE_SEISMOGRAMS_VELOCITY       = .true.
-SAVE_SEISMOGRAMS_ACCELERATION   = .true.
-SAVE_SEISMOGRAMS_PRESSURE       = .false.   # currently implemented in acoustic (i.e. fluid) elements only
+SAVE_SEISMOGRAMS_DISPLACEMENT   = .false.
+SAVE_SEISMOGRAMS_VELOCITY       = .false.
+SAVE_SEISMOGRAMS_ACCELERATION   = .false.
+SAVE_SEISMOGRAMS_PRESSURE       = .true.   # currently implemented in acoustic (i.e. fluid) elements only
 
 # save seismograms in binary or ASCII format (binary is smaller but may not be portable between machines)
 USE_BINARY_FOR_SEISMOGRAMS      = .false.
@@ -204,7 +204,7 @@ SAVE_ALL_SEISMOS_IN_ONE_FILE    = .false.
 # Newmark time scheme acceleration is accurate at zeroth order while displacement is accurate at second order,
 # thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
 # is accurate at second order and thus contains significantly less numerical noise.
-USE_TRICK_FOR_BETTER_PRESSURE   = .false.
+USE_TRICK_FOR_BETTER_PRESSURE   = .true.
 
 #-----------------------------------------------------------
 #
