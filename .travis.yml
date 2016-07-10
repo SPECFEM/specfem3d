@@ -23,20 +23,20 @@ env:
     #   TEST    - flags used for configuration
     #   TESTCOV - determines whether or not (0/1) code coverage flags are used
 
-    # run debug
-    - TEST="--enable-debug" TESTCOV=0 TESTMAKE=0
-
-    # run debug & double precision
-    - TEST="--enable-double-precision --enable-debug" TESTCOV=0 TESTMAKE=0
-
-    # run vectorization & mpi, using code coverage flags
-    - TEST="--enable-vectorization --with-mpi" TESTCOV=1 TESTMAKE=0
-
     # run default test with make tests
-    - TEST="" TESTCOV=0 TESTMAKE=1
+    - TEST="" TESTCOV=0 TESTMAKE=0
+
+    # run default example (elastic)
+    - TEST="" TESTCOV=0 TESTMAKE=-1
+
+    # run debug (elastic)
+    - TEST="--enable-debug" TESTCOV=0 TESTMAKE=1
+
+    # run coverage (using code coverage flags)
+    - TEST="--enable-vectorization --with-mpi" TESTCOV=1 TESTMAKE=1
 
     # run example 2 (acoustic)
-    - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=2
+    - TEST="--enable-vectorization" TESTCOV=0 TESTMAKE=2
 
     # run example 3 (poroelastic)
     - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=3
@@ -44,8 +44,11 @@ env:
     # run example 4 (internal mesher)
     - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=4
 
-    # run serial example
+    # run serial example (acoustic)
     - TEST="--enable-vectorization --without-mpi" TESTCOV=0 TESTMAKE=5
+
+    # run debug & double precision (acoustic)
+    - TEST="--enable-double-precision --enable-debug" TESTCOV=0 TESTMAKE=6
 
 
 before_install:
@@ -123,66 +126,72 @@ script:
   ###########################################################
   # testing internal mesher example (short & quick for all configuration)
   - |
-    if [ "$TESTMAKE" == "1" ]; then
+    if [ "$TESTMAKE" == "0" ]; then
       # runs default tests
       make tests
     else
-      # default
-      dir=EXAMPLES/homogeneous_halfspace_HEX8_elastic_absorbing_Stacey_5sides/
-      if [ "$TESTMAKE" == "2" ]; then
-        dir=EXAMPLES/homogeneous_acoustic/
-      elif [ "$TESTMAKE" == "3" ]; then
-        dir=EXAMPLES/homogeneous_poroelastic/
-      elif [ "$TESTMAKE" == "4" ]; then
-        dir=EXAMPLES/meshfem3D_examples/simple_model/
-      elif [ "$TESTMAKE" == "5" ]; then
-        dir=EXAMPLES/homogeneous_acoustic/
-      fi
+      # example directory
+      case "$TESTMAKE" in
+      1) dir=EXAMPLES/homogeneous_halfspace_HEX8_elastic_absorbing_Stacey_5sides/ ;;
+      2) dir=EXAMPLES/homogeneous_acoustic/ ;;
+      3) dir=EXAMPLES/homogeneous_poroelastic/ ;;
+      4) dir=EXAMPLES/meshfem3D_examples/simple_model/ ;;
+      5|6) dir=EXAMPLES/homogeneous_acoustic/ ;;
+      *) dir=EXAMPLES/homogeneous_halfspace/ ;;
+      esac
       echo "##########################################################"
       echo "test directory: $dir"
       echo "##########################################################"
       cd $dir
       # limit time steps for testing
       sed -i "s:^NSTEP .*:NSTEP    = 100:" DATA/Par_file
+      # shortens output interval to avoid timeouts
       sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 10:" DATA/Par_file
+      # acoustic example
+      if [ "$TESTMAKE" == "2" ]; then
+        sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
+        sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 100:" DATA/Par_file
+      fi
       # serial example
       if [ "$TESTMAKE" == "5" ]; then
         sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
+        sed -i "s:^NSTEP .*:NSTEP    = 200:" DATA/Par_file
+        sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 20:" DATA/Par_file
       fi
+      # debug+double precision example
+      if [ "$TESTMAKE" == "6" ]; then
+        sed -i "s:^NSTEP .*:NSTEP    = 200:" DATA/Par_file
+        sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 20:" DATA/Par_file
+      fi
+      # default script
       ./run_this_example.sh
       my_test
       cd $WORKDIR
     fi
-  # additional testing for coverage
+  # additional run for coverage
   - |
     if [ "$TESTCOV" == "1" ]; then
       cd EXAMPLES/homogeneous_acoustic/
-      sed -i "s:^NSTEP .*:NSTEP    = 100:" DATA/Par_file
-      sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 10:" DATA/Par_file
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
       ./run_this_example.sh
-      my_test
       cd $WORKDIR
     fi
 
-  # additional testing for coverage
+  # additional run for coverage
   - |
     if [ "$TESTCOV" == "1" ]; then
       cd EXAMPLES/homogeneous_poroelastic/
-      sed -i "s:^NSTEP .*:NSTEP    = 100:" DATA/Par_file
-      sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 10:" DATA/Par_file
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
       ./run_this_example.sh
-      my_test
       cd $WORKDIR
     fi
 
-  # additional testing for coverage
+  # additional run for coverage
   - |
     if [ "$TESTCOV" == "1" ]; then
       cd EXAMPLES/meshfem3D_examples/simple_model/
-      sed -i "s:^NSTEP .*:NSTEP    = 100:" DATA/Par_file
-      sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 10:" DATA/Par_file
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
       ./run_this_example.sh
-      my_test
       cd $WORKDIR
     fi
 
