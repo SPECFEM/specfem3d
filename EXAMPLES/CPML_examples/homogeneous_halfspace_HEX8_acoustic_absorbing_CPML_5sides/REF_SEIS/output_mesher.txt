@@ -17,7 +17,7 @@
  Surface shape functions defined by NGNOD2D =            4  control nodes
  Beware! Curvature (i.e. HEX27 elements) is not handled by our internal mesher
 
- velocity model:   default 
+ velocity model:   default
 
 
  suppressing UTM projection
@@ -44,7 +44,7 @@
  defined materials    :            1
  undefined materials  :            0
  total number of spectral elements:        20736
- absorbing boundaries: 
+ absorbing boundaries:
    xmin,xmax :          576         576
    ymin,ymax :          576         576
    bottom,top:         1296        1296
@@ -55,16 +55,16 @@
    minimum memory used so far     :    18.5136795     MB per process
    minimum total memory requested :    83.938347816467285      MB per process
 
- create regions: 
+ create regions:
 
-   ...allocating arrays 
+   ...allocating arrays
  File DATA/Par_file_faults not found: assume no faults
-   ...setting up jacobian 
+   ...setting up jacobian
    ...indexing global points
-   ...preparing MPI interfaces 
+   ...preparing MPI interfaces
       total MPI interface points:        38220
       total assembled MPI interface points:       37700
-   ...setting up absorbing boundaries 
+   ...setting up absorbing boundaries
       absorbing boundary:
       total number of free faces =         1296
       total number of faces =         3600
@@ -79,34 +79,34 @@
                80  % time remaining:   6.1226890482230542E-008 s
                90  % time remaining:   3.0659384783914196E-008 s
               100  % time remaining:   2.3580660390239741E-010 s
-   ...detecting acoustic-elastic-poroelastic surfaces 
+   ...detecting acoustic-elastic-poroelastic surfaces
       total acoustic elements   :       20736
       total elastic elements    :           0
       total poroelastic elements:           0
-   ...element inner/outer separation 
+   ...element inner/outer separation
       for overlapping of communications with calculations:
       percentage of   edge elements    10.8024673     %
       percentage of volume elements    89.1975327     %
-   ...element mesh coloring 
+   ...element mesh coloring
       use coloring =  F
-   ...external binary models 
-      no external binary model used 
-   ...creating C-PML damping profiles 
+   ...external binary models
+      no external binary model used
+   ...creating C-PML damping profiles
 
  Boundary values of X-/Y-/Z-regions
-   0.00000000       67000.0000    
-   67000.0000       134000.000    
-  -60000.0000       0.00000000    
+   0.00000000       67000.0000
+   67000.0000       134000.000
+  -60000.0000       0.00000000
 
- Origins of right/left X-surface C-PML   122833.336       11166.6670    
- Origins of front/back Y-surface C-PML   122833.336       11166.6670    
- Origin of bottom Z-surface C-PML  -48750.0000    
+ Origins of right/left X-surface C-PML   122833.336       11166.6670
+ Origins of front/back Y-surface C-PML   122833.336       11166.6670
+ Origin of bottom Z-surface C-PML  -48750.0000
 
- CPML_width_x:    11166.6670    
- CPML_width_y:    11166.6670    
- CPML_width_z:    11250.0000    
+ CPML_width_x:    11166.6670
+ CPML_width_y:    11166.6670
+ CPML_width_z:    11250.0000
 
-   ...creating mass matrix 
+   ...creating mass matrix
    ...saving databases
    ...checking mesh resolution
 
@@ -132,32 +132,32 @@
 
 
  ********
- Model: P velocity min,max =    2800.00024       2800.00024    
- Model: S velocity min,max =    0.00000000       0.00000000    
+ Model: P velocity min,max =    2800.00024       2800.00024
+ Model: S velocity min,max =    0.00000000       0.00000000
  ********
 
  *********************************************
  *** Verification of simulation parameters ***
  *********************************************
 
- *** Xmin and Xmax of the model =    0.00000000       134000.000    
- *** Ymin and Ymax of the model =    0.00000000       134000.000    
- *** Zmin and Zmax of the model =   -60000.0000       0.00000000    
+ *** Xmin and Xmax of the model =    0.00000000       134000.000
+ *** Ymin and Ymax of the model =    0.00000000       134000.000
+ *** Zmin and Zmax of the model =   -60000.0000       0.00000000
 
- *** Max GLL point distance =    1227.47656    
- *** Min GLL point distance =    642.726562    
- *** Max/min ratio =    1.90979588    
+ *** Max GLL point distance =    1227.47656
+ *** Min GLL point distance =    642.726562
+ *** Max/min ratio =    1.90979588
 
- *** Max element size =    3750.00000    
- *** Min element size =    3722.21875    
- *** Max/min ratio =    1.00746357    
+ *** Max element size =    3750.00000
+ *** Min element size =    3722.21875
+ *** Max/min ratio =    1.00746357
 
- *** Minimum period resolved =    1.67410707    
- *** Maximum suggested time step =   0.114772588    
+ *** Minimum period resolved =    1.67410707
+ *** Maximum suggested time step =   0.114772588
 
  Elapsed time for checking mesh resolution in seconds =    7.3831081390380859E-003
 
- min and max of topography included in mesh in m is    0.0000000000000000          0.0000000000000000     
+ min and max of topography included in mesh in m is    0.0000000000000000          0.0000000000000000
 
 
  Repartition of elements:
@@ -167,8 +167,8 @@
  total number of points in mesh slice 0:       346385
 
  total number of elements in entire mesh:        20736
- approximate total number of points in entire mesh (with duplicates on MPI edges):    1385540.0000000000     
- approximate total number of DOFs in entire mesh (with duplicates on MPI edges):    4156620.0000000000     
+ approximate total number of points in entire mesh (with duplicates on MPI edges):    1385540.0000000000
+ approximate total number of DOFs in entire mesh (with duplicates on MPI edges):    4156620.0000000000
 
  total number of time steps in the solver will be:         1000
 
@@ -177,7 +177,7 @@
  smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
 
- Elapsed time for mesh generation and buffer creation in seconds =   0.74529004096984863     
+ Elapsed time for mesh generation and buffer creation in seconds =   0.74529004096984863
  End of mesh generation
 
  done
