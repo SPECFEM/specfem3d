@@ -840,7 +840,6 @@
         ! source type
         write(IMAIN,*) 'source located in slice ',islice_selected_source(isource)
         write(IMAIN,*) '               in element ',ispec_selected_source(isource)
-
         if (idomain(isource) == IDOMAIN_ACOUSTIC) then
           write(IMAIN,*) '               in acoustic domain'
         else if (idomain(isource) == IDOMAIN_ELASTIC) then

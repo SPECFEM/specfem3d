@@ -39,6 +39,10 @@
 
   use constants
 
+  use specfem_par_acoustic,only: ispec_is_acoustic
+  use specfem_par_elastic,only: ispec_is_elastic
+  use specfem_par_poroelastic,only:ispec_is_poroelastic
+
   implicit none
 
   integer :: myrank
@@ -145,6 +149,9 @@
   ! SU_FORMAT parameters
   double precision :: llat,llon,lele,lbur
   logical :: SU_station_file_exists
+
+  ! domains
+  integer, dimension(:),allocatable :: idomain,idomain_all
 
   ! get MPI starting time
   time_start = wtime()
@@ -266,8 +273,11 @@
            x_found(nrec), &
            y_found(nrec), &
            z_found(nrec), &
-           final_distance(nrec), &
-           ispec_selected_rec_all(nrec), &
+           final_distance(nrec),stat=ier)
+  if (ier /= 0) stop 'Error allocating arrays for locating receivers'
+
+  ! for mpi collection
+  allocate(ispec_selected_rec_all(nrec), &
            xi_receiver_all(nrec), &
            eta_receiver_all(nrec), &
            gamma_receiver_all(nrec), &
@@ -276,10 +286,13 @@
            z_found_all(nrec), &
            final_distance_all(nrec), &
            nu_all(3,3,nrec),stat=ier)
-  if (ier /= 0) stop 'error allocating arrays for locating receivers'
+  if (ier /= 0) stop 'Error allocating arrays for mpi locating receivers'
+
+  allocate(idomain(nrec),idomain_all(nrec),stat=ier)
+  if (ier /= 0) stop 'Error allocating idomain arrays'
 
   ! loop on all the stations
-  do irec=1,nrec
+  do irec = 1,nrec
 
     read(IIN,*,iostat=ier) station_name(irec),network_name(irec), &
                            stlat(irec),stlon(irec),stele(irec),stbur(irec)
@@ -308,8 +321,8 @@
     xloc = stutm_x(irec)
     yloc = stutm_y(irec)
     call get_topo_elevation_free(xloc,yloc,loc_ele,loc_distmin, &
-                                NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-                                num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+                                 NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
+                                 num_free_surface_faces,free_surface_ispec,free_surface_ijk)
     altitude_rec(1) = loc_ele
     distmin_ele(1) = loc_distmin
 
@@ -486,6 +499,17 @@
       iy_initial_guess(irec) = 1
       iz_initial_guess(irec) = 1
       final_distance(irec) = HUGEVAL
+    endif
+
+    ! sets whether acoustic (1) or elastic (2)
+    if (ispec_is_acoustic( ispec_selected_rec(irec) )) then
+      idomain(irec) = IDOMAIN_ACOUSTIC
+    else if (ispec_is_elastic( ispec_selected_rec(irec) )) then
+      idomain(irec) = IDOMAIN_ELASTIC
+    else if (ispec_is_poroelastic( ispec_selected_rec(irec) )) then
+      idomain(irec) = IDOMAIN_POROELASTIC
+    else
+      idomain(irec) = 0
     endif
 
     ! get normal to the face of the hexaedra if receiver is on the surface
@@ -772,8 +796,10 @@
 
   ! synchronize all the processes to make sure all the estimates are available
   call synchronize_all()
+
   ! for MPI version, gather information from all the nodes
-  if (myrank/=0) then ! gather information from other processors (one at a time)
+  if (myrank /= 0) then
+    ! gather information from other processors (one at a time)
     call send_i(ispec_selected_rec, nrec,0,0)
     call send_dp(xi_receiver,       nrec,0,1)
     call send_dp(eta_receiver,      nrec,0,2)
@@ -783,9 +809,12 @@
     call send_dp(y_found,           nrec,0,6)
     call send_dp(z_found,           nrec,0,7)
     call send_dp(nu,            3*3*nrec,0,8)
+    call send_i(idomain,            nrec,0,9)
+
   else
+    ! master collects
     islice_selected_rec(:) = 0
-    do iprocloop=1,NPROC-1
+    do iprocloop = 1,NPROC-1
       call recv_i(ispec_selected_rec_all, nrec,iprocloop,0)
       call recv_dp(xi_receiver_all,       nrec,iprocloop,1)
       call recv_dp(eta_receiver_all,      nrec,iprocloop,2)
@@ -795,7 +824,10 @@
       call recv_dp(y_found_all,           nrec,iprocloop,6)
       call recv_dp(z_found_all,           nrec,iprocloop,7)
       call recv_dp(nu_all,            3*3*nrec,iprocloop,8)
-      do irec=1,nrec
+      call recv_i(idomain_all,            nrec,iprocloop,9)
+
+      ! determines final locations
+      do irec = 1,nrec
         if (final_distance_all(irec) < final_distance(irec)) then
           final_distance(irec) = final_distance_all(irec)
           islice_selected_rec(irec) = iprocloop
@@ -807,6 +839,7 @@
           y_found(irec) = y_found_all(irec)
           z_found(irec) = z_found_all(irec)
           nu(:,:,irec) = nu_all(:,:,irec)
+          idomain(irec) = idomain_all(irec)
         endif
       enddo
     enddo
@@ -815,7 +848,7 @@
   ! this is executed by main process only
   if (myrank == 0) then
 
-    do irec=1,nrec
+    do irec = 1,nrec
 
       ! checks stations location
       if (final_distance(irec) == HUGEVAL) then
@@ -826,65 +859,79 @@
       ! limits user output if too many receivers
       if (nrec < 1000 .and. (.not. SU_FORMAT )) then
 
-      write(IMAIN,*)
-      write(IMAIN,*) 'station # ',irec,'    ',trim(network_name(irec)),'    ',trim(station_name(irec))
+        ! receiver info
+        write(IMAIN,*)
+        write(IMAIN,*) 'station # ',irec,'    ',trim(network_name(irec)),'    ',trim(station_name(irec))
 
-      write(IMAIN,*) '     original latitude: ',sngl(stlat(irec))
-      write(IMAIN,*) '     original longitude: ',sngl(stlon(irec))
-      if (SUPPRESS_UTM_PROJECTION) then
-        write(IMAIN,*) '     original x: ',sngl(stutm_x(irec))
-        write(IMAIN,*) '     original y: ',sngl(stutm_y(irec))
-      else
-        write(IMAIN,*) '     original UTM x: ',sngl(stutm_x(irec))
-        write(IMAIN,*) '     original UTM y: ',sngl(stutm_y(irec))
-      endif
-      if (USE_SOURCES_RECEIVERS_Z) then
-        write(IMAIN,*) '     original z: ',sngl(stbur(irec))
-      else
-        write(IMAIN,*) '     original depth: ',sngl(stbur(irec)),' m'
-      endif
-      write(IMAIN,*) '     horizontal distance: ',sngl(horiz_dist(irec))
-      write(IMAIN,*) '     target x, y, z: ',sngl(x_target(irec)),sngl(y_target(irec)),sngl(z_target(irec))
+        ! location info
+        write(IMAIN,*) '     original latitude: ',sngl(stlat(irec))
+        write(IMAIN,*) '     original longitude: ',sngl(stlon(irec))
+        if (SUPPRESS_UTM_PROJECTION) then
+          write(IMAIN,*) '     original x: ',sngl(stutm_x(irec))
+          write(IMAIN,*) '     original y: ',sngl(stutm_y(irec))
+        else
+          write(IMAIN,*) '     original UTM x: ',sngl(stutm_x(irec))
+          write(IMAIN,*) '     original UTM y: ',sngl(stutm_y(irec))
+        endif
+        if (USE_SOURCES_RECEIVERS_Z) then
+          write(IMAIN,*) '     original z: ',sngl(stbur(irec))
+        else
+          write(IMAIN,*) '     original depth: ',sngl(stbur(irec)),' m'
+        endif
+        write(IMAIN,*) '     horizontal distance: ',sngl(horiz_dist(irec))
+        write(IMAIN,*) '     target x, y, z: ',sngl(x_target(irec)),sngl(y_target(irec)),sngl(z_target(irec))
 
-      write(IMAIN,*) '     closest estimate found: ',sngl(final_distance(irec)),' m away'
-      write(IMAIN,*) '     in slice ',islice_selected_rec(irec),' in element ',ispec_selected_rec(irec)
-      if (FASTER_RECEIVERS_POINTS_ONLY) then
-        write(IMAIN,*) '     in point i,j,k = ',nint(xi_receiver(irec)), &
-                                       nint(eta_receiver(irec)), &
-                                       nint(gamma_receiver(irec))
-        write(IMAIN,*) '     nu1 = ',nu(1,:,irec)
-        write(IMAIN,*) '     nu2 = ',nu(2,:,irec)
-        write(IMAIN,*) '     nu3 = ',nu(3,:,irec)
-      else
-        write(IMAIN,*) '     at coordinates: '
-        write(IMAIN,*) '     xi    = ',xi_receiver(irec)
-        write(IMAIN,*) '     eta   = ',eta_receiver(irec)
-        write(IMAIN,*) '     gamma = ',gamma_receiver(irec)
-      endif
-      if (SUPPRESS_UTM_PROJECTION) then
-        write(IMAIN,*) '     x: ',x_found(irec)
-        write(IMAIN,*) '     y: ',y_found(irec)
-      else
-        write(IMAIN,*) '     UTM x: ',x_found(irec)
-        write(IMAIN,*) '     UTM y: ',y_found(irec)
-      endif
-      if (USE_SOURCES_RECEIVERS_Z) then
-        write(IMAIN,*) '     z: ',z_found(irec)
-      else
-        write(IMAIN,*) '     depth: ',dabs(z_found(irec) - elevation(irec)),' m'
-        write(IMAIN,*) '     z: ',z_found(irec)
-      endif
-      write(IMAIN,*)
+        write(IMAIN,*) '     closest estimate found: ',sngl(final_distance(irec)),' m away'
+        write(IMAIN,*)
 
-      ! add warning if estimate is poor
-      ! (usually means receiver outside the mesh given by the user)
-      if (final_distance(irec) > 3000.d0) then
-        write(IMAIN,*) '*******************************************************'
-        write(IMAIN,*) '***** WARNING: receiver location estimate is poor *****'
-        write(IMAIN,*) '*******************************************************'
-      endif
+        write(IMAIN,*) '     receiver located in slice ',islice_selected_rec(irec)
+        write(IMAIN,*) '                      in element ',ispec_selected_rec(irec)
+        if (idomain(irec) == IDOMAIN_ACOUSTIC) then
+          write(IMAIN,*) '                      in acoustic domain'
+        else if (idomain(irec) == IDOMAIN_ELASTIC) then
+          write(IMAIN,*) '                      in elastic domain'
+        else if (idomain(irec) == IDOMAIN_POROELASTIC) then
+          write(IMAIN,*) '                      in poroelastic domain'
+        else
+          write(IMAIN,*) '                      in unknown domain'
+        endif
+        if (FASTER_RECEIVERS_POINTS_ONLY) then
+          write(IMAIN,*) '     at point i,j,k = ',nint(xi_receiver(irec)), &
+                                                  nint(eta_receiver(irec)), &
+                                                  nint(gamma_receiver(irec))
+          write(IMAIN,*) '     nu1 = ',nu(1,:,irec)
+          write(IMAIN,*) '     nu2 = ',nu(2,:,irec)
+          write(IMAIN,*) '     nu3 = ',nu(3,:,irec)
+        else
+          write(IMAIN,*) '     at coordinates: '
+          write(IMAIN,*) '     xi    = ',xi_receiver(irec)
+          write(IMAIN,*) '     eta   = ',eta_receiver(irec)
+          write(IMAIN,*) '     gamma = ',gamma_receiver(irec)
+        endif
+        if (SUPPRESS_UTM_PROJECTION) then
+          write(IMAIN,*) '     x: ',x_found(irec)
+          write(IMAIN,*) '     y: ',y_found(irec)
+        else
+          write(IMAIN,*) '     UTM x: ',x_found(irec)
+          write(IMAIN,*) '     UTM y: ',y_found(irec)
+        endif
+        if (USE_SOURCES_RECEIVERS_Z) then
+          write(IMAIN,*) '     z: ',z_found(irec)
+        else
+          write(IMAIN,*) '     depth: ',dabs(z_found(irec) - elevation(irec)),' m'
+          write(IMAIN,*) '     z: ',z_found(irec)
+        endif
+        write(IMAIN,*)
 
-      write(IMAIN,*)
+        ! add warning if estimate is poor
+        ! (usually means receiver outside the mesh given by the user)
+        if (final_distance(irec) > 3000.d0) then
+          write(IMAIN,*) '*******************************************************'
+          write(IMAIN,*) '***** WARNING: receiver location estimate is poor *****'
+          write(IMAIN,*) '*******************************************************'
+        endif
+
+        write(IMAIN,*)
       endif
 
     enddo

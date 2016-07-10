@@ -37,9 +37,9 @@ shared_TARGETS = \
 
 
 shared_OBJECTS = \
+	$O/shared_par.shared_module.o \
 	$O/assemble_MPI_scalar.shared.o \
 	$O/check_mesh_resolution.shared.o \
-	$O/shared_par.shared_module.o \
 	$O/create_name_database.shared.o \
 	$O/define_derivation_matrices.shared.o \
 	$O/detect_surface.shared.o \
