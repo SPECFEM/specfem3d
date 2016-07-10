@@ -116,6 +116,9 @@ def plot_correlations(out_dir,ref_dir):
     syn_time = np.loadtxt(syn_file)[:, 0]
     dt = syn_time[1] - syn_time[0]
     print "  time step: size = ",dt
+    # start time
+    dt_start = syn_time[0]
+
     # warning
     if dt <= 0.0:
         print "warning: invalid time step size for file ",files[0]
@@ -193,6 +196,9 @@ def plot_correlations(out_dir,ref_dir):
         # time step size in reference file
         ref_time = np.loadtxt(ref_file)[:, 0]
         dt_ref = ref_time[1] - ref_time[0]
+        # start time
+        dt_ref_start = ref_time[0]
+
         # mismatch warning
         if abs(dt - dt_ref)/dt > 1.e-5:
           print("** warning: mismatch of time step size in both files syn/ref = %e / %e" %(dt,dt_ref))
@@ -258,6 +264,9 @@ def plot_correlations(out_dir,ref_dir):
                 # cross-correlation array
                 shift_w = get_cross_correlation_timeshift(x,y,dt)
                 if abs(shift) < abs(shift_w): shift = shift_w
+
+        # adding shift in start times
+        shift += (dt_ref_start - dt_start)
 
         # statistics
         corr_min = min(corr, corr_min)
