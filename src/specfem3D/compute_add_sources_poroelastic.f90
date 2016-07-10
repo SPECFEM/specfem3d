@@ -84,8 +84,7 @@
   real(kind=CUSTOM_REAL),dimension(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearrays
 
 ! local parameters
-! double precision :: f0
-  double precision :: stf
+  double precision :: stf,f0
   real(kind=CUSTOM_REAL),dimension(:,:,:,:,:),allocatable:: adj_sourcearray
   real(kind=CUSTOM_REAL) stf_used,stf_used_total_all,time_source
   integer :: isource,iglob,i,j,k,ispec
@@ -113,10 +112,14 @@
 
           if (ispec_is_poroelastic(ispec)) then
 
+            ! determines source time function value
             if (USE_FORCE_POINT_SOURCE) then
 
+              ! f0 has been stored in the hdur() array in the case of FORCESOLUTION, to use the same array as for CMTSOLUTION
+              f0 = hdur(isource)
+
               if (USE_RICKER_TIME_FUNCTION) then
-                stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+                stf = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),f0)
               else
                 ! use a very small duration of 5*DT to mimic a Dirac in time
                 stf = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),5.d0*DT)
@@ -184,6 +187,7 @@
 
             endif ! USE_FORCE_POINT_SOURCE
 
+            ! for file output
             stf_used_total = stf_used_total + stf_used
 
           endif ! ispec_is_poroelastic
@@ -343,41 +347,45 @@
 
           if (ispec_is_poroelastic(ispec)) then
 
+            ! determines source time function value
             if (USE_FORCE_POINT_SOURCE) then
 
-               if (USE_RICKER_TIME_FUNCTION) then
-                 stf = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
-               else
-                 ! use a very small duration of 5*DT to mimic a Dirac in time
-                 stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(isource),5.d0*DT)
-               endif
+              ! f0 has been stored in the hdur() array in the case of FORCESOLUTION, to use the same array as for CMTSOLUTION
+              f0 = hdur(isource)
 
-               ! add the tilted force source array
-               ! the source is applied to both solid and fluid phase: bulk source
-               ! note: time step is now at NSTEP-it
+              if (USE_RICKER_TIME_FUNCTION) then
+                stf = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),f0)
+              else
+                ! use a very small duration of 5*DT to mimic a Dirac in time
+                stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(isource),5.d0*DT)
+              endif
 
-               ! distinguish between single and double precision for reals
-               stf_used = real(stf,kind=CUSTOM_REAL)
+              ! add the tilted force source array
+              ! the source is applied to both solid and fluid phase: bulk source
+              ! note: time step is now at NSTEP-it
 
-               do k=1,NGLLZ
-                 do j=1,NGLLY
-                   do i=1,NGLLX
-                     iglob = ibool(i,j,k,ispec)
-                     ! get poroelastic parameters of current local GLL
-                     phil = phistore(i,j,k,ispec)
-                     tortl = tortstore(i,j,k,ispec)
-                     rhol_s = rhoarraystore(1,i,j,k,ispec)
-                     rhol_f = rhoarraystore(2,i,j,k,ispec)
-                     rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
-                     ! solid phase
-                     b_accels(:,iglob) = b_accels(:,iglob)  + &
-                             (1._CUSTOM_REAL - phil/tortl) * sourcearrays(isource,:,i,j,k) * stf_used
-                     ! fluid phase
-                     b_accelw(:,iglob) = b_accelw(:,iglob)  + &
-                             (1._CUSTOM_REAL - rhol_f/rhol_bar) * sourcearrays(isource,:,i,j,k) * stf_used
-                   enddo
-                 enddo
-               enddo
+              ! distinguish between single and double precision for reals
+              stf_used = real(stf,kind=CUSTOM_REAL)
+
+              do k=1,NGLLZ
+                do j=1,NGLLY
+                  do i=1,NGLLX
+                    iglob = ibool(i,j,k,ispec)
+                    ! get poroelastic parameters of current local GLL
+                    phil = phistore(i,j,k,ispec)
+                    tortl = tortstore(i,j,k,ispec)
+                    rhol_s = rhoarraystore(1,i,j,k,ispec)
+                    rhol_f = rhoarraystore(2,i,j,k,ispec)
+                    rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
+                    ! solid phase
+                    b_accels(:,iglob) = b_accels(:,iglob)  + &
+                            (1._CUSTOM_REAL - phil/tortl) * sourcearrays(isource,:,i,j,k) * stf_used
+                    ! fluid phase
+                    b_accelw(:,iglob) = b_accelw(:,iglob)  + &
+                            (1._CUSTOM_REAL - rhol_f/rhol_bar) * sourcearrays(isource,:,i,j,k) * stf_used
+                  enddo
+                enddo
+              enddo
 
             else
 

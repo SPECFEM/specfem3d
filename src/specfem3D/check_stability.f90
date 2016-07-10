@@ -97,6 +97,11 @@
     !if (Usolidnorm > STABILITY_THRESHOLD .or. Usolidnorm < 0.0_CUSTOM_REAL) &
     !  call exit_MPI(myrank,'single forward simulation became unstable and blew up')
 
+    ! checks first entry for Not-a-Number (NaN) value
+    if (displ(1,1) /= displ(1,1)) then
+      call exit_MPI(myrank,'forward simulation became unstable in elastic domain and blew up')
+    endif
+
     ! compute the maximum of the maxima for all the slices using an MPI reduction
     call max_all_cr(Usolidnorm,Usolidnorm_all)
   endif
@@ -109,6 +114,15 @@
       Usolidnormp = maxval(abs(potential_dot_dot_acoustic(:)))
     endif
 
+    ! debug
+    !if (myrank == 0) print *,'norm p = ',Usolidnormp,maxval(potential_dot_dot_acoustic(:)),potential_dot_dot_acoustic(1)
+    ! note for gfortran compiler: only potential_dot_dot(.) entry returns NaN, maxval(..) and maxval(abs(..)) return 0.0
+
+    ! checks first entry for Not-a-Number (NaN) value
+    if (potential_dot_dot_acoustic(1) /= potential_dot_dot_acoustic(1)) then
+      call exit_MPI(myrank,'forward simulation became unstable in acoustic domain and blew up')
+    endif
+
     ! compute the maximum of the maxima for all the slices using an MPI reduction
     call max_all_cr(Usolidnormp,Usolidnormp_all)
   endif
@@ -118,6 +132,11 @@
                              displs_poroelastic(3,:)**2))
     Usolidnormw = maxval(sqrt(displw_poroelastic(1,:)**2 + displw_poroelastic(2,:)**2 + &
                              displw_poroelastic(3,:)**2))
+
+    ! checks first entry for Not-a-Number (NaN) value
+    if (displs_poroelastic(1,1) /= displs_poroelastic(1,1)) then
+      call exit_MPI(myrank,'forward simulation became unstable in poroelastic domain and blew up')
+    endif
 
     ! compute the maximum of the maxima for all the slices using an MPI reduction
     call max_all_cr(Usolidnorms,Usolidnorms_all)

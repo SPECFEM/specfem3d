@@ -127,13 +127,16 @@
         if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
 
           if (ispec_is_acoustic(ispec)) then
-             source_is_in_this_domain=1
+            source_is_in_this_domain = 1
+
+            ! current time
             if (USE_LDDRK) then
               time_source_dble = dble(it-1)*DT+dble(C_LDDRK(istage))*DT-t0-tshift_src(isource)
             else
               time_source_dble = dble(it-1)*DT-t0-tshift_src(isource)
             endif
 
+            ! determines source time function value
             if (USE_FORCE_POINT_SOURCE) then
 
               ! f0 has been stored in the hdur() array in the case of FORCESOLUTION, to use the same array as for CMTSOLUTION
@@ -148,9 +151,9 @@
 ! thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
 ! is accurate at second order and thus contains significantly less numerical noise.
                 if(USE_TRICK_FOR_BETTER_PRESSURE) then
-                  stf_used = comp_source_time_function_d2rck(time_source_dble,f0)
+                  stf = comp_source_time_function_d2rck(time_source_dble,f0)
                 else
-                  stf_used = comp_source_time_function_rickr(time_source_dble,f0)
+                  stf = comp_source_time_function_rickr(time_source_dble,f0)
                 endif
               else
                 ! use a very small duration of 5*DT to mimic a Dirac in time
@@ -162,35 +165,14 @@
 ! thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
 ! is accurate at second order and thus contains significantly less numerical noise.
                 if(USE_TRICK_FOR_BETTER_PRESSURE) then
-                  stf_used = comp_source_time_function_d2gau(time_source_dble,5.d0*DT)
+                  stf = comp_source_time_function_d2gau(time_source_dble,5.d0*DT)
                 else
-                  stf_used = comp_source_time_function_gauss(time_source_dble,5.d0*DT)
+                  stf = comp_source_time_function_gauss(time_source_dble,5.d0*DT)
                 endif
               endif
 
-              !! VM VM use external source time function
-              if (EXTERNAL_STF) then
-                 stf_used = user_source_time_function(it, isource)
-              endif
-
-              ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
-              ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
-              ! to add minus the source to Chi_dot_dot to get plus the source in pressure:
-
-              ! acoustic source for pressure gets divided by kappa
-              ! source contribution
-              do k=1,NGLLZ
-                do j=1,NGLLY
-                  do i=1,NGLLX
-                    iglob = ibool(i,j,k,ispec)
-                    potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
-                            - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
-                  enddo
-                enddo
-              enddo
-
             else
-
+              ! moment-tensor
               if (USE_RICKER_TIME_FUNCTION) then
 ! use a trick to increase accuracy of pressure seismograms in fluid (acoustic) elements:
 ! use the second derivative of the source for the source time function instead of the source itself,
@@ -226,33 +208,34 @@
               ! source encoding
               if(USE_SOURCE_ENCODING) stf = stf * pm1_source_encoding(isource)
 
-              !! VM VM add external source time function
-              if (EXTERNAL_STF) then
-                 stf = user_source_time_function(it, isource)
-              endif
-
-              ! distinguishes between single and double precision for reals
-              stf_used = real(stf,kind=CUSTOM_REAL)
-
-              ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
-              ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
-              ! to add minus the source to Chi_dot_dot to get plus the source in pressure
-
-              ! add source array
-              do k=1,NGLLZ
-                do j=1,NGLLY
-                  do i=1,NGLLX
-                    ! adds source contribution
-                    ! note: acoustic source for pressure gets divided by kappa
-                    iglob = ibool(i,j,k,ispec)
-                    potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
-                            - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
-                  enddo
-                enddo
-              enddo
-
             endif ! USE_FORCE_POINT_SOURCE
 
+            !! VM VM add external source time function
+            if (EXTERNAL_STF) then
+              stf = user_source_time_function(it, isource)
+            endif
+
+            ! distinguishes between single and double precision for reals
+            stf_used = real(stf,kind=CUSTOM_REAL)
+
+            ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
+            ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
+            ! to add minus the source to Chi_dot_dot to get plus the source in pressure
+
+            ! adds source array
+            do k=1,NGLLZ
+              do j=1,NGLLY
+                do i=1,NGLLX
+                  ! adds source contribution
+                  ! note: acoustic source for pressure gets divided by kappa
+                  iglob = ibool(i,j,k,ispec)
+                  potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
+                          - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
+                enddo
+              enddo
+            enddo
+
+            ! for file output
             stf_used_total = stf_used_total + stf_used
 
           endif ! ispec_is_acoustic
@@ -470,8 +453,7 @@
   real(kind=CUSTOM_REAL),dimension(NGLOB_ADJOINT):: b_potential_dot_dot_acoustic
 
 ! local parameters
-  double precision :: f0
-  double precision :: stf
+  double precision :: stf,f0
   real(kind=CUSTOM_REAL) stf_used,stf_used_total_all,time_source
   integer :: isource,iglob,ispec,i,j,k
 

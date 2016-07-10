@@ -46,10 +46,6 @@ specfem3D_OBJECTS = \
 	$O/shared_par.shared_module.o \
 	$O/assemble_MPI_vector.spec.o \
 	$O/check_stability.spec.o \
-	$O/fault_solver_common.spec.o \
-	$O/fault_solver_dynamic.spec.o \
-	$O/fault_solver_kinematic.spec.o \
-	$O/gravity_perturbation.spec.o \
 	$O/comp_source_time_function.spec.o \
 	$O/compute_add_sources_acoustic.spec.o \
 	$O/compute_add_sources_viscoelastic.spec.o \
@@ -82,7 +78,13 @@ specfem3D_OBJECTS = \
 	$O/calendar.spec.o \
 	$O/create_color_image.spec.o \
 	$O/detect_mesh_surfaces.spec.o \
+	$O/fault_solver_common.spec.o \
+	$O/fault_solver_dynamic.spec.o \
+	$O/fault_solver_kinematic.spec.o \
 	$O/finalize_simulation.spec.o \
+	$O/get_cmt.spec.o \
+	$O/get_force.spec.o \
+	$O/gravity_perturbation.spec.o \
 	$O/initialize_simulation.spec.o \
 	$O/iterate_time.spec.o \
 	$O/locate_receivers.spec.o \
@@ -97,6 +99,7 @@ specfem3D_OBJECTS = \
 	$O/pml_par.spec.o \
 	$O/prepare_timerun.spec.o \
 	$O/program_specfem3D.spec.o \
+	$O/read_external_stf.spec.o \
 	$O/read_mesh_databases.spec.o \
 	$O/save_adjoint_kernels.spec.o \
 	$O/setup_GLL_points.spec.o \
@@ -121,9 +124,7 @@ specfem3D_SHARED_OBJECTS = \
 	$O/exit_mpi.shared.o \
 	$O/force_ftz.cc.o \
 	$O/get_attenuation_model.shared.o \
-	$O/get_cmt.shared.o \
 	$O/get_element_face.shared.o \
-	$O/get_force.shared.o \
 	$O/get_jacobian_boundaries.shared.o \
 	$O/get_shape3D.shared.o \
 	$O/gll_library.shared.o \

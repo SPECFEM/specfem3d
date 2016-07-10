@@ -90,7 +90,7 @@
     adj_sourcearrays
 
 ! local parameters
-  double precision :: stf
+  double precision :: stf,f0
   real(kind=CUSTOM_REAL),dimension(:,:,:,:,:),allocatable:: adj_sourcearray
   real(kind=CUSTOM_REAL) stf_used,stf_used_total_all,time_source
   double precision :: time_source_dble
@@ -122,92 +122,84 @@
     ! initializes total
     stf_used_total = 0.0_CUSTOM_REAL
   endif
-  source_is_in_this_domain=0
+  source_is_in_this_domain = 0
+
   ! forward simulations
   if (SIMULATION_TYPE == 1 .and. NOISE_TOMOGRAPHY == 0 .and. nsources_local > 0) then
 
     do isource = 1,NSOURCES
 
       !   add the source (only if this proc carries the source)
-       if (myrank == islice_selected_source(isource)) then
+      if (myrank == islice_selected_source(isource)) then
 
-          ispec = ispec_selected_source(isource)
-          !write(*,*) myrank, it, ispec, ispec_is_inner(ispec), phase_is_inner
-          if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
+        ispec = ispec_selected_source(isource)
+        !write(*,*) myrank, it, ispec, ispec_is_inner(ispec), phase_is_inner
 
-             if (ispec_is_elastic(ispec)) then
-                source_is_in_this_domain=1
-                if (USE_LDDRK) then
-                   time_source_dble = dble(it-1)*DT+dble(C_LDDRK(istage))*DT-t0-tshift_src(isource)
-                else
-                   time_source_dble = dble(it-1)*DT-t0-tshift_src(isource)
-                endif
+        if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
 
-                if (USE_FORCE_POINT_SOURCE) then
+          if (ispec_is_elastic(ispec)) then
+            source_is_in_this_domain = 1
 
-                   if (USE_RICKER_TIME_FUNCTION) then
-                      stf = comp_source_time_function_rickr(time_source_dble,hdur(isource))
-                   else
-                      ! stf = comp_source_time_function_gauss(time_source_dble,5.d0*DT)
-                      !! COMMENTED BY FS FS -> do no longer use hard-coded hdur_gaussian = 5*DT, but actual value of hdur_gaussian
+            ! current time
+            if (USE_LDDRK) then
+              time_source_dble = dble(it-1)*DT+dble(C_LDDRK(istage))*DT-t0-tshift_src(isource)
+            else
+              time_source_dble = dble(it-1)*DT-t0-tshift_src(isource)
+            endif
 
-                      stf = comp_source_time_function_gauss(time_source_dble,hdur_gaussian(isource))
-                      !! ADDED BY FS FS -> use actual value of hdur_gaussian as half duration
-                   endif
+            ! determines source time function value
+            if (USE_FORCE_POINT_SOURCE) then
+              ! single point force
+              ! f0 has been stored in the hdur() array in the case of FORCESOLUTION,
+              ! to use the same array as for CMTSOLUTION
+              f0 = hdur(isource)
 
-                   !! VM VM add external source time function
-                   if (EXTERNAL_STF) then
-                      stf = user_source_time_function(it, isource)
-                   endif
+              if (USE_RICKER_TIME_FUNCTION) then
+                stf = comp_source_time_function_rickr(time_source_dble,f0)
+              else
+                ! stf = comp_source_time_function_gauss(time_source_dble,5.d0*DT)
+                !! COMMENTED BY FS FS -> do no longer use hard-coded hdur_gaussian = 5*DT, but actual value of hdur_gaussian
 
-                   ! add the tilted force source array
-                   ! distinguish between single and double precision for reals
-                   stf_used = real(stf,kind=CUSTOM_REAL)
+                stf = comp_source_time_function_gauss(time_source_dble,hdur_gaussian(isource))
+                !! ADDED BY FS FS -> use actual value of hdur_gaussian as half duration
+              endif
 
-                   do k=1,NGLLZ
-                      do j=1,NGLLY
-                         do i=1,NGLLX
-                            iglob = ibool(i,j,k,ispec)
-                            accel(:,iglob) = accel(:,iglob) + sourcearrays(isource,:,i,j,k)*stf_used
-                         enddo
-                      enddo
-                   enddo
+            else
+              ! moment-tensor
+              if (USE_RICKER_TIME_FUNCTION) then
+                stf = comp_source_time_function_rickr(time_source_dble,hdur(isource))
+              else
+                stf = comp_source_time_function(time_source_dble,hdur_gaussian(isource))
+              endif
 
-                else
+            endif ! USE_FORCE_POINT_SOURCE
 
-                   if (USE_RICKER_TIME_FUNCTION) then
-                      stf = comp_source_time_function_rickr(time_source_dble,hdur(isource))
-                   else
-                      stf = comp_source_time_function(time_source_dble,hdur_gaussian(isource))
-                   endif
+            !! VM VM add external source time function
+            if (EXTERNAL_STF) then
+              stf = user_source_time_function(it, isource)
+            endif
 
-                   !! VM VM add external source time function
-                   if (EXTERNAL_STF) then
-                      stf = user_source_time_function(it, isource)
-                   endif
+            ! distinguishes between single and double precision for reals
+            stf_used = real(stf,kind=CUSTOM_REAL)
 
-                   !     distinguish between single and double precision for reals
-                   stf_used = real(stf,kind=CUSTOM_REAL)
+            ! adds source array
+            do k=1,NGLLZ
+              do j=1,NGLLY
+                do i=1,NGLLX
+                  iglob = ibool(i,j,k,ispec)
+                  accel(:,iglob) = accel(:,iglob) + sourcearrays(isource,:,i,j,k)*stf_used
+                enddo
+              enddo
+            enddo
 
-                   !     add source array
-                   do k=1,NGLLZ
-                      do j=1,NGLLY
-                         do i=1,NGLLX
-                            iglob = ibool(i,j,k,ispec)
-                            accel(:,iglob) = accel(:,iglob) + sourcearrays(isource,:,i,j,k)*stf_used
-                         enddo
-                      enddo
-                   enddo
+            ! for file output
+            stf_used_total = stf_used_total + stf_used
 
-                endif ! USE_FORCE_POINT_SOURCE
-
-                stf_used_total = stf_used_total + stf_used
-
-             endif ! ispec_is_elastic
-          endif ! ispec_is_inner
-       endif ! myrank
+          endif ! ispec_is_elastic
+        endif ! ispec_is_inner
+      endif ! myrank
     enddo ! NSOURCES
- endif ! forward
+  endif ! forward
 
 ! NOTE: adjoint sources and backward wavefield timing:
 !             idea is to start with the backward field b_displ,.. at time (T)
@@ -466,7 +458,7 @@
   integer :: NOISE_TOMOGRAPHY
 
 ! local parameters
-  double precision :: stf
+  double precision :: stf,f0
   real(kind=CUSTOM_REAL) stf_used,stf_used_total_all,time_source
   integer :: isource,iglob,i,j,k,ispec
 
@@ -519,31 +511,22 @@
 
           if (ispec_is_elastic(ispec)) then
 
+            ! determines source time function value
             if (USE_FORCE_POINT_SOURCE) then
+              ! single point source
+              ! f0 has been stored in the hdur() array in the case of FORCESOLUTION, to use the same array as for CMTSOLUTION
+              f0 = hdur(isource)
 
               if (USE_RICKER_TIME_FUNCTION) then
-                stf = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+                stf = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),f0)
               else
                 ! use a very small duration of 5*DT to mimic a Dirac in time
                 stf = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),5.d0*DT)
                 !! FS FS  does it also here make sense to replace 5.d0*DT by hdur_gaussian(isource) ? looks like it
               endif
 
-              ! add the tilted force source array
-              ! distinguish between single and double precision for reals
-              stf_used = real(stf,kind=CUSTOM_REAL)
-
-              do k=1,NGLLZ
-                do j=1,NGLLY
-                  do i=1,NGLLX
-                    iglob = ibool(i,j,k,ispec)
-                    b_accel(:,iglob) = b_accel(:,iglob) + sourcearrays(isource,:,i,j,k) * stf_used
-                  enddo
-                enddo
-              enddo
-
             else
-
+              ! moment-tensor
               ! see note above: time step corresponds now to NSTEP-it
               ! (also compare to it-1 for forward simulation)
               if (USE_RICKER_TIME_FUNCTION) then
@@ -553,21 +536,22 @@
                 stf = comp_source_time_function( &
                                dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
               endif
-
-              ! distinguish between single and double precision for reals
-              stf_used = real(stf,kind=CUSTOM_REAL)
-
-              !  add source array
-              do k=1,NGLLZ
-                do j=1,NGLLY
-                  do i=1,NGLLX
-                    iglob = ibool(i,j,k,ispec_selected_source(isource))
-                    b_accel(:,iglob) = b_accel(:,iglob) + sourcearrays(isource,:,i,j,k)*stf_used
-                  enddo
-                enddo
-              enddo
             endif ! USE_FORCE_POINT_SOURCE
 
+            ! distinguishes between single and double precision for reals
+            stf_used = real(stf,kind=CUSTOM_REAL)
+
+            ! adds source
+            do k=1,NGLLZ
+              do j=1,NGLLY
+                do i=1,NGLLX
+                  iglob = ibool(i,j,k,ispec)
+                  b_accel(:,iglob) = b_accel(:,iglob) + sourcearrays(isource,:,i,j,k) * stf_used
+                enddo
+              enddo
+            enddo
+
+            ! for file output
             stf_used_total = stf_used_total + stf_used
 
           endif ! elastic
@@ -652,7 +636,7 @@
 
   logical, dimension(NSPEC_AB) :: ispec_is_elastic
 
-!adjoint simulations
+  ! adjoint simulations
   integer:: SIMULATION_TYPE,NSTEP
   integer(kind=8) :: Mesh_pointer
   integer:: nrec
@@ -663,15 +647,16 @@
   real(kind=CUSTOM_REAL),dimension(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ):: &
     adj_sourcearrays
 
-! local parameters
+  ! local parameters
   real(kind=CUSTOM_REAL),dimension(:,:,:,:,:),allocatable:: adj_sourcearray
   real(kind=CUSTOM_REAL) stf_used_total_all,time_source
+  double precision :: f0
   ! for GPU_MODE
   double precision, dimension(NSOURCES) :: stf_pre_compute
   integer :: isource,i,j,k
   integer :: irec_local,irec, ier
 
-! adjoint sources in SU format
+  ! adjoint sources in SU format
   integer :: it_start,it_end
   real(kind=CUSTOM_REAL) :: adj_temp(NSTEP)
   real(kind=CUSTOM_REAL) :: adj_src(NTSTEP_BETWEEN_READ_ADJSRC,NDIM)
@@ -699,13 +684,17 @@
       do isource = 1,NSOURCES
         ! precomputes source time function factor
         if (USE_FORCE_POINT_SOURCE) then
+          ! f0 has been stored in the hdur() array in the case of FORCESOLUTION, to use the same array as for CMTSOLUTION
+          f0 = hdur(isource)
+
           if (USE_RICKER_TIME_FUNCTION) then
-            stf_pre_compute(isource) = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
+            stf_pre_compute(isource) = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),f0)
           else
             ! use a very small duration of 5*DT to mimic a Dirac in time
             stf_pre_compute(isource) = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),5.d0*DT)
             !! FS FS  does it also here make sense to replace 5.d0*DT by hdur_gaussian(isource) ? looks like it
           endif
+
         else
           if (USE_RICKER_TIME_FUNCTION) then
             stf_pre_compute(isource) = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
@@ -713,6 +702,7 @@
             stf_pre_compute(isource) = comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
           endif
         endif
+
         !! VM VM add external source time function
         if (EXTERNAL_STF) then
            stf_pre_compute(isource) = user_source_time_function(it, isource)
@@ -870,13 +860,17 @@
       do isource = 1,NSOURCES
         ! precomputes source time function factors
         if (USE_FORCE_POINT_SOURCE) then
+          ! f0 has been stored in the hdur() array in the case of FORCESOLUTION, to use the same array as for CMTSOLUTION
+          f0 = hdur(isource)
+
           if (USE_RICKER_TIME_FUNCTION) then
-            stf_pre_compute(isource) = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
+            stf_pre_compute(isource) = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),f0)
           else
             ! use a very small duration of 5*DT to mimic a Dirac in time
             stf_pre_compute(isource) = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),5.d0*DT)
             !! FS FS  does it also here make sense to replace 5.d0*DT by hdur_gaussian(isource) ? looks like it
           endif
+
         else
           if (USE_RICKER_TIME_FUNCTION) then
             stf_pre_compute(isource) = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))

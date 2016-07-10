@@ -29,8 +29,7 @@
                     DT,NSOURCES,min_tshift_cmt_original,user_source_time_function)
 
   use constants,only: IIN,IN_DATA_FILES,MAX_STRING_LEN,mygroup,CUSTOM_REAL
-  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,EXTERNAL_STF,NSTEP,&
-                                             NSTEP_STF, NSOURCES_STF
+  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,EXTERNAL_STF,NSTEP_STF,NSOURCES_STF
 
   implicit none
 
@@ -52,11 +51,8 @@
   integer :: mo,da,julian_day,isource
   integer :: i,itype,istart,iend,ier
   double precision :: t_shift(NSOURCES)
-  double precision :: time_source_old,time_source,dt_source
-  double precision, parameter :: dt_tol=1e-6
-  !character(len=5) :: datasource
   character(len=256) :: string
-  character(len=MAX_STRING_LEN) :: CMTSOLUTION,path_to_add
+  character(len=MAX_STRING_LEN) :: CMTSOLUTION,path_to_add,external_stf_filename
 
   ! initializes
   lat(:) = 0.d0
@@ -87,7 +83,7 @@
   endif
 
 ! read source number isource
-  do isource=1,NSOURCES
+  do isource = 1,NSOURCES
 
     ! initializes
     yr = 0
@@ -322,33 +318,15 @@
     ! replace with very short error function
     if (hdur(isource) < 5. * DT) hdur(isource) = 5. * DT
 
-    !! VM VM READ  USER EXTERNAL SOURCE IF NEED
+    ! reads USER EXTERNAL SOURCE if needed
     if (EXTERNAL_STF)  then
+      ! gets external STF file name
+      read(IIN,"(a)") string
+      external_stf_filename = trim(string)
 
-       read(IIN,"(a)") string
-       open(27, file=trim(string),iostat=ier)
-       if (ier /= 0) then
-          print *,'Error could not open external source file: ',trim(string)
-          stop
-       endif
-       i=1
-       read(27,*,err=99) time_source_old, user_source_time_function(i,isource)
-       do i=2, NSTEP
-          read(27,*,err=99) time_source, user_source_time_function(i,isource)
-          dt_source =  time_source - time_source_old
-          time_source_old = time_source
-          !! check if the time steps corresponds to the simulation time step
-          if (abs(dt_source - DT) > dt_tol ) then
-             print *,'Error in time step in external source file ', trim(string)
-             print *, ' simutation time step ', DT
-             print *, ' source time function read time step ', dt_source
-             stop
-          endif
-       enddo
-
-       close(27)
+      ! reads in stf values
+      call read_external_stf(isource,user_source_time_function,external_stf_filename)
     endif
-
 
   enddo
 
@@ -373,11 +351,6 @@
   ! therefore 1 dyne.cm = 1e-7 Newton.m
   !
   moment_tensor(:,:) = moment_tensor(:,:) * 1.d-7
-
-  return
-  99 continue
-  write(*,*) 'problem when reading  external source time file :', trim(string)
-  stop
 
   contains
 

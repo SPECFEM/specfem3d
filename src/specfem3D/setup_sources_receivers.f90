@@ -126,11 +126,11 @@
 
   !! VM VM set the size of user_source_time_function
   if (EXTERNAL_STF) then
-     NSTEP_STF=NSTEP
-     NSOURCES_STF=NSOURCES
+     NSTEP_STF = NSTEP
+     NSOURCES_STF = NSOURCES
   else !! We don't need the array user_source_time_function : use a small dummy array
-     NSTEP_STF=1
-     NSOURCES_STF=1
+     NSTEP_STF = 1
+     NSOURCES_STF = 1
   endif
   !! allocate the array contains the user defined source time function
   allocate(user_source_time_function(NSTEP_STF, NSOURCES_STF),stat=ier)
@@ -205,8 +205,16 @@
 
   !! VM VM for external source the time will begin with simulation
   if (EXTERNAL_STF) then
-     t0=0.d0
+    t0 = 0.d0
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) 'External STF:'
+      write(IMAIN,*) '  simulation start time set to zero: ', t0
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
   endif
+
   ! checks if user set USER_T0 to fix simulation start time
   ! note: USER_T0 has to be positive
   if (USER_T0 > 0.d0) then
@@ -623,7 +631,7 @@
 
   double precision, dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrayd
   double precision :: hlagrange
-  double precision :: norm
+  double precision :: norm,comp_x,comp_y,comp_z
 
   ! forward simulations
   if (SIMULATION_TYPE == 1  .or. SIMULATION_TYPE == 3) then
@@ -669,6 +677,7 @@
 
                 ! elastic source
                 if (ispec_is_elastic(ispec)) then
+                  ! length of component vector
                   norm = sqrt( comp_dir_vect_source_E(isource)**2 &
                              + comp_dir_vect_source_N(isource)**2 &
                              + comp_dir_vect_source_Z_UP(isource)**2 )
@@ -678,12 +687,17 @@
                     call exit_MPI(myrank,'error force point source: component vector has (almost) zero norm')
                   endif
 
+                  ! normalizes given component vector
+                  comp_x = comp_dir_vect_source_E(isource)/norm
+                  comp_y = comp_dir_vect_source_N(isource)/norm
+                  comp_z = comp_dir_vect_source_Z_UP(isource)/norm
+
                   ! we use an tilted force defined by its magnitude and the projections
                   ! of an arbitrary (non-unitary) direction vector on the E/N/Z_UP basis
                   sourcearrayd(:,i,j,k) = factor_force_source(isource) * hlagrange * &
-                                          ( nu_source(1,:,isource) * comp_dir_vect_source_E(isource) + &
-                                            nu_source(2,:,isource) * comp_dir_vect_source_N(isource) + &
-                                            nu_source(3,:,isource) * comp_dir_vect_source_Z_UP(isource) ) / norm
+                                          ( nu_source(1,:,isource) * comp_x + &
+                                            nu_source(2,:,isource) * comp_y + &
+                                            nu_source(3,:,isource) * comp_z )
 
                 endif
               enddo
@@ -709,7 +723,7 @@
             ! scalar moment of moment tensor values read in from CMTSOLUTION
             ! note: M0 by Dahlen and Tromp, eq. 5.91
             factor_source = 1.0/sqrt(2.0) * sqrt( Mxx(isource)**2 + Myy(isource)**2 + Mzz(isource)**2 &
-                 + 2*( Myz(isource)**2 + Mxz(isource)**2 + Mxy(isource)**2) )
+                                                  + 2*( Myz(isource)**2 + Mxz(isource)**2 + Mxy(isource)**2) )
 
             ! scales source such that it would be equivalent to explosion source moment tensor,
             ! where Mxx=Myy=Mzz, others Mxy,.. = zero, in equivalent elastic media
@@ -722,7 +736,7 @@
             !   Geophysics, 74 (6), WCC177-WCC188.)
             if (USE_SOURCE_ENCODING) pm1_source_encoding(isource) = sign(1.0d0,Mxx(isource))
 
-            ! source array interpolated on all element gll points (only used for non point sources)
+            ! source array interpolated on all element gll points
             call compute_arrays_source_acoustic(sourcearray,hxis,hetas,hgammas,factor_source)
           endif
 
