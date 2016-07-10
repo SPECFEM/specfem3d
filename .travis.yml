@@ -143,8 +143,8 @@ script:
       4) dir=EXAMPLES/meshfem3D_examples/simple_model/ ;;
       5|6) dir=EXAMPLES/homogeneous_acoustic/ ;;
       7) dir=EXAMPLES/homogeneous_halfspace/ ;;
-      8) dir=CPML_examples/homogeneous_halfspace_HEX8_acoustic_absorbing_CPML_5sides/ ;;
-      9) dir=CPML_examples/homogeneous_halfspace_HEX8_elastic_absorbing_CPML_5sides/ ;;
+      8) dir=EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_acoustic_absorbing_CPML_5sides/ ;;
+      9) dir=EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_elastic_absorbing_CPML_5sides/ ;;
       *) dir=EXAMPLES/homogeneous_halfspace/ ;;
       esac
       echo "##########################################################"
