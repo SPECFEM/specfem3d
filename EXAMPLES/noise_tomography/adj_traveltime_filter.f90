@@ -277,9 +277,13 @@ program adj_traveltime
     Norm_adj_temp = - DOT_PRODUCT(adj_temp(:),adj_temp(:)) * dt
 
     !!!! choose which one to use !!!!
-    ! normal adjoint sources
-    adj_temp(:) = adj_temp(:) / Norm_adj_temp
-
+    ! normalized adjoint sources
+    if (abs(Norm_adj_temp) > 1.e-24) then
+      adj_temp(:) = adj_temp(:) / Norm_adj_temp
+    else
+      ! zero trace
+      adj_temp(:) = 0.d0
+    endif
     ! ray density map DeltaT=+1
     !adj_temp(:) = adj_temp(:) / Norm_adj_temp
 
