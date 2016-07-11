@@ -21,6 +21,7 @@ echo "directory: `pwd`" >> $testdir/results.log
 echo "checking if supplement binaries exist" >> $testdir/results.log
 exec=( xcombine_surf_data \
        xcombine_vol_data \
+       xcombine_vol_data_vtk \
        xconvolve_source_timefunction \
        xcreate_movie_shakemap_AVS_DX_GMT \
        xcheck_mesh_quality \

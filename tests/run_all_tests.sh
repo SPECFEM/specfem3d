@@ -17,17 +17,13 @@ dir=`pwd`
 
 # changes to subdirectory tests/ if called in root directory SPECFEM3D/
 currentdir=`basename $dir`
-#echo "current directory: $currentdir"
+echo "current directory: $currentdir"
 if [ "$currentdir" == "SPECFEM3D" ]; then
 cd tests/
 dir=`pwd`
 fi
 
-# running tests
-echo "main directory: $dir"
-echo "all tests starting: `date`"
-
-# sub-directories
+# default sub-directories
 tests=( compilations \
         decompose_mesh \
         meshfem3D \
@@ -37,6 +33,32 @@ tests=( compilations \
         tomography \
       )
 
+# running tests
+echo "main directory: $dir"
+echo
+date
+if [ "$1" != "" ]; then
+
+# specified test directory
+echo "test $1 starting"
+# runs all bash scripts in specified test-subdirectory
+./run_tests.sh $1
+
+# checks exit code
+if [[ $? -ne 0 ]]; then
+  dir=`basename $testdir`
+  echo "ERROR"
+  echo "ERROR test failed, please check file results.log in tests/$dir"
+  echo "ERROR"
+  exit 1
+fi
+
+# all test directories
+echo
+echo "test completed"
+
+else
+echo "all tests starting"
 # loops over subdirectories
 for testdir in ${tests[@]};
 do
@@ -63,8 +85,10 @@ do
   fi
 
 done
-
 echo
 echo "all tests completed"
+fi
+
+echo
 date
 echo

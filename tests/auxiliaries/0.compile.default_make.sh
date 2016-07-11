@@ -40,6 +40,7 @@ echo "" >> $testdir/results.log
 
 # checks executable availability
 exec=( xcombine_vol_data \
+       xcombine_vol_data_vtk \
        xcombine_surf_data \
        xcreate_movie_shakemap_AVS_DX_GMT \
       )

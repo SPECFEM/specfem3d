@@ -19,8 +19,12 @@ step() {
 }
 
 try() {
+  # starts timer
+  timer_start
   # runs command
   "$@"
+  # stops timer
+  timer_stop
   # Check if command failed and update $STEP_OK if so.
   local EXIT_CODE=$?
   if [[ $EXIT_CODE -ne 0 ]]; then
@@ -34,6 +38,32 @@ next() {
   [[ $STEP_OK -eq 0 ]]  && echo "[  $(tput setaf 2)OK$(tput sgr0)  ]" || echo "[$(tput setaf 1)FAILED$(tput sgr0)]"
   #echo
   return $STEP_OK
+}
+
+timer_start(){
+  t_start=`date +'%s'`
+  trap '[ -n "$(jobs -pr)" ] && kill $(jobs -pr)' INT QUIT TERM EXIT
+  # progress bar
+  while true; do
+    echo -n "."
+    sleep 30.0
+  done &
+  timer_PID=$!
+}
+
+timer_stop(){
+  # saves previous return code
+  local exit_code=$?
+  # stop background process
+  kill $timer_PID
+  # get time difference (in s)
+  local t_end=`date +'%s'`
+  local diff=$(($t_end - $t_start))
+  # output nice time format info
+  local lapsed_time=`date -u -r $diff +'%-Hh %-Mm %-Ss'`
+  echo -n " ($lapsed_time) "
+  # return with previous exit code
+  return $exit_code
 }
 
 #############################################################
@@ -86,7 +116,7 @@ else
 
   for file in ./*.sh
   do
-    if [[ "$file" == *run_tests.sh* ]]; then
+    if [[ "$file" == *run_tests.sh* ]] || [[ "$file" == *run_this_example*  ]]; then
       # skips this run script
       :
     else
@@ -95,7 +125,7 @@ else
       next
 
       # checks exit code
-      if [[ $? -ne 0 ]]; then exit 1; fi
+      if [[ $? -ne 0 ]]; then echo "***** results.log ******"; cat results.log; exit 1; fi
 
       echo >> results.log
     fi
