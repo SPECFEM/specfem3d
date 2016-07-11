@@ -26,13 +26,6 @@
 !=====================================================================
 
   module combine_vtk
-    !-------------------------------------------------------------
-    ! USER PARAMETER
-
-    ! outputs as VTK ASCII file
-    logical,parameter :: USE_VTK_OUTPUT = .true.
-
-    !-------------------------------------------------------------
 
     ! global point data
     real,dimension(:),allocatable :: total_dat
@@ -100,6 +93,7 @@
   integer(kind=8) :: value_handle, mesh_handle
   integer :: ibool_offset, x_global_offset
 
+  ! mpi initialization
   call init_mpi()
   call world_size(sizeprocs)
   if (sizeprocs /= 1) then
@@ -143,20 +137,21 @@
   print *, 'Slice list: '
   print *, node_list(1:num_node)
 
-  if (USE_VTK_OUTPUT) then
-    mesh_file = trim(outdir) // '/' // trim(filename)//'.vtk'
-    open(IOVTK,file=mesh_file(1:len_trim(mesh_file)),status='unknown',iostat=ier)
-    if (ier /= 0) stop 'error opening vtk output file'
+#ifdef USE_VTK_INSTEAD_OF_MESH
+  ! VTK
+  mesh_file = trim(outdir) // '/' // trim(filename)//'.vtk'
+  open(IOVTK,file=mesh_file(1:len_trim(mesh_file)),status='unknown',iostat=ier)
+  if (ier /= 0) stop 'error opening vtk output file'
 
-    write(IOVTK,'(a)') '# vtk DataFile Version 3.1'
-    write(IOVTK,'(a)') 'material model VTK file'
-    write(IOVTK,'(a)') 'ASCII'
-    write(IOVTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
-  else
+  write(IOVTK,'(a)') '# vtk DataFile Version 3.1'
+  write(IOVTK,'(a)') 'material model VTK file'
+  write(IOVTK,'(a)') 'ASCII'
+  write(IOVTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
+#else
     ! open paraview output mesh file
     mesh_file = trim(outdir) // '/' // trim(filename)//'.mesh'
     call open_file_create(trim(mesh_file)//char(0))
-  endif
+#endif
 
   ! counts total number of points (all slices)
   npp = 0
@@ -269,7 +264,10 @@
 
   enddo  ! all slices for points
 
-  if (USE_VTK_OUTPUT) write(IOVTK,*) ""
+#ifdef USE_VTK_INSTEAD_OF_MESH
+  ! VTK
+  write(IOVTK,*) ""
+#endif
 
   if (np /=  npp) stop 'Error: Number of total points are not consistent'
   print *, 'Total number of points: ', np
@@ -330,7 +328,10 @@
 
   enddo ! num_node
 
-  if (USE_VTK_OUTPUT) write(IOVTK,*) ""
+#ifdef USE_VTK_INSTEAD_OF_MESH
+  ! VTK
+  write(IOVTK,*) ""
+#endif
 
   ! checks with total number of elements
   if (ne /= nee) then
@@ -339,44 +340,47 @@
   endif
   print *, 'Total number of elements: ', ne
 
-  if (USE_VTK_OUTPUT) then
-    ! type: hexahedrons
-    write(IOVTK,'(a,i12)') "CELL_TYPES ",nee
-    write(IOVTK,'(6i12)') (12,it=1,nee)
-    write(IOVTK,*) ""
+#ifdef USE_VTK_INSTEAD_OF_MESH
+  ! VTK
+  ! type: hexahedrons
+  write(IOVTK,'(a,i12)') "CELL_TYPES ",nee
+  write(IOVTK,'(6i12)') (12,it=1,nee)
+  write(IOVTK,*) ""
 
-    ! point data values
-    ! data array name
-    data_array_name = trim(filename)
-    ! movie snapshot files: uses a common short name (like "velocity_X","div","curl_X",..)
-    ! note: changing the data array name for each timestep creates problems in paraview
-    !       when reading in a bunch of these vtk-files and animating the wavefield
-    ! velocity_X_it002000.bin,..,velocity_Y_it**.bin,velocity_Z_it**.bin
-    if (filename(1:13) == 'velocity_X_it' .or. filename(1:13) == 'velocity_Y_it' .or. filename(1:13) == 'velocity_Z_it') then
-      data_array_name = trim(filename(1:10)) ! "velocity_X",..
-    endif
-    if (filename(1:6) == 'div_it') then
-      data_array_name = trim(filename(1:3)) ! "div"
-    endif
-    if (filename(1:9) == 'curl_X_it' .or. filename(1:9) == 'curl_Y_it' .or. filename(1:9) == 'curl_Z_it') then
-      data_array_name = trim(filename(1:6)) ! "curl_X",..
-    endif
-    if (filename(1:11) == 'pressure_it' ) then
-      data_array_name = trim(filename(1:8)) ! "pressure"
-    endif
-
-    write(IOVTK,'(a,i12)') "POINT_DATA ",npp
-    write(IOVTK,'(a)') "SCALARS "//trim(data_array_name)//" float"
-    write(IOVTK,'(a)') "LOOKUP_TABLE default"
-    do it = 1,npp
-        write(IOVTK,*) total_dat(it)
-    enddo
-    write(IOVTK,*) ""
-    close(IOVTK)
-  else
-    ! close mesh file
-    call close_file()
+  ! point data values
+  ! data array name
+  data_array_name = trim(filename)
+  ! movie snapshot files: uses a common short name (like "velocity_X","div","curl_X",..)
+  ! note: changing the data array name for each timestep creates problems in paraview
+  !       when reading in a bunch of these vtk-files and animating the wavefield
+  ! velocity_X_it002000.bin,..,velocity_Y_it**.bin,velocity_Z_it**.bin
+  if (filename(1:13) == 'velocity_X_it' .or. filename(1:13) == 'velocity_Y_it' .or. filename(1:13) == 'velocity_Z_it') then
+    data_array_name = trim(filename(1:10)) ! "velocity_X",..
   endif
+  if (filename(1:6) == 'div_it') then
+    data_array_name = trim(filename(1:3)) ! "div"
+  endif
+  if (filename(1:9) == 'curl_X_it' .or. filename(1:9) == 'curl_Y_it' .or. filename(1:9) == 'curl_Z_it') then
+    data_array_name = trim(filename(1:6)) ! "curl_X",..
+  endif
+  if (filename(1:11) == 'pressure_it' ) then
+    data_array_name = trim(filename(1:8)) ! "pressure"
+  endif
+
+  write(IOVTK,'(a,i12)') "POINT_DATA ",npp
+  write(IOVTK,'(a)') "SCALARS "//trim(data_array_name)//" float"
+  write(IOVTK,'(a)') "LOOKUP_TABLE default"
+  do it = 1,npp
+      write(IOVTK,*) total_dat(it)
+  enddo
+  write(IOVTK,*) ""
+  close(IOVTK)
+#else
+  ! close mesh file
+  call close_file()
+  ! to avoid compiler warning
+  data_array_name = ''
+#endif
 
   if (ADIOS_FOR_MESH) then
     call clean_adios(mesh_handle, value_handle)
@@ -540,15 +544,18 @@
 
   ! writes out total number of points
   if (it == 1) then
-    if (USE_VTK_OUTPUT) then
-      write(IOVTK, '(a,i12,a)') 'POINTS ', npp, ' float'
-      ! creates array to hold point data
-      allocate(total_dat(npp),stat=ier)
-      if (ier /= 0) stop 'error allocating total dat array'
-      total_dat(:) = 0.0
-    else
-      call write_integer(npp)
-    endif
+#ifdef USE_VTK_INSTEAD_OF_MESH
+    ! VTK
+    write(IOVTK, '(a,i12,a)') 'POINTS ', npp, ' float'
+    ! creates array to hold point data
+    allocate(total_dat(npp),stat=ier)
+    if (ier /= 0) stop 'error allocating total dat array'
+    total_dat(:) = 0.0
+#else
+    call write_integer(npp)
+    ! to avoid compiler warning
+    iglob1 = np
+#endif
   endif
 
   ! writes our corner point locations
@@ -571,31 +578,33 @@
       x = xstore(iglob1)
       y = ystore(iglob1)
       z = zstore(iglob1)
-      if (USE_VTK_OUTPUT) then
-        write(IOVTK,'(3e18.6)') x,y,z
-        total_dat(np+numpoin) = dat(1,1,1,ispec)
-      else
-        call write_real(x)
-        call write_real(y)
-        call write_real(z)
-        call write_real(dat(1,1,1,ispec))
-      endif
-        mask_ibool(iglob1) = .true.
+#ifdef USE_VTK_INSTEAD_OF_MESH
+      ! VTK
+      write(IOVTK,'(3e18.6)') x,y,z
+      total_dat(np+numpoin) = dat(1,1,1,ispec)
+#else
+      call write_real(x)
+      call write_real(y)
+      call write_real(z)
+      call write_real(dat(1,1,1,ispec))
+#endif
+      mask_ibool(iglob1) = .true.
     endif
     if (.not. mask_ibool(iglob2)) then
       numpoin = numpoin + 1
       x = xstore(iglob2)
       y = ystore(iglob2)
       z = zstore(iglob2)
-      if (USE_VTK_OUTPUT) then
-        write(IOVTK,'(3e18.6)') x,y,z
-        total_dat(np+numpoin) = dat(NGLLX,1,1,ispec)
-      else
-        call write_real(x)
-        call write_real(y)
-        call write_real(z)
-        call write_real(dat(NGLLX,1,1,ispec))
-      endif
+#ifdef USE_VTK_INSTEAD_OF_MESH
+      ! VTK
+      write(IOVTK,'(3e18.6)') x,y,z
+      total_dat(np+numpoin) = dat(NGLLX,1,1,ispec)
+#else
+      call write_real(x)
+      call write_real(y)
+      call write_real(z)
+      call write_real(dat(NGLLX,1,1,ispec))
+#endif
       mask_ibool(iglob2) = .true.
     endif
     if (.not. mask_ibool(iglob3)) then
@@ -603,15 +612,16 @@
       x = xstore(iglob3)
       y = ystore(iglob3)
       z = zstore(iglob3)
-      if (USE_VTK_OUTPUT) then
-        write(IOVTK,'(3e18.6)') x,y,z
-        total_dat(np+numpoin) = dat(NGLLX,NGLLY,1,ispec)
-      else
-        call write_real(x)
-        call write_real(y)
-        call write_real(z)
-        call write_real(dat(NGLLX,NGLLY,1,ispec))
-      endif
+#ifdef USE_VTK_INSTEAD_OF_MESH
+      ! VTK
+      write(IOVTK,'(3e18.6)') x,y,z
+      total_dat(np+numpoin) = dat(NGLLX,NGLLY,1,ispec)
+#else
+      call write_real(x)
+      call write_real(y)
+      call write_real(z)
+      call write_real(dat(NGLLX,NGLLY,1,ispec))
+#endif
       mask_ibool(iglob3) = .true.
     endif
     if (.not. mask_ibool(iglob4)) then
@@ -619,15 +629,16 @@
       x = xstore(iglob4)
       y = ystore(iglob4)
       z = zstore(iglob4)
-      if (USE_VTK_OUTPUT) then
-        write(IOVTK,'(3e18.6)') x,y,z
-        total_dat(np+numpoin) = dat(1,NGLLY,1,ispec)
-      else
-        call write_real(x)
-        call write_real(y)
-        call write_real(z)
-        call write_real(dat(1,NGLLY,1,ispec))
-      endif
+#ifdef USE_VTK_INSTEAD_OF_MESH
+      ! VTK
+      write(IOVTK,'(3e18.6)') x,y,z
+      total_dat(np+numpoin) = dat(1,NGLLY,1,ispec)
+#else
+      call write_real(x)
+      call write_real(y)
+      call write_real(z)
+      call write_real(dat(1,NGLLY,1,ispec))
+#endif
       mask_ibool(iglob4) = .true.
     endif
     if (.not. mask_ibool(iglob5)) then
@@ -635,15 +646,16 @@
       x = xstore(iglob5)
       y = ystore(iglob5)
       z = zstore(iglob5)
-      if (USE_VTK_OUTPUT) then
-        write(IOVTK,'(3e18.6)') x,y,z
-        total_dat(np+numpoin) = dat(1,1,NGLLZ,ispec)
-      else
-        call write_real(x)
-        call write_real(y)
-        call write_real(z)
-        call write_real(dat(1,1,NGLLZ,ispec))
-      endif
+#ifdef USE_VTK_INSTEAD_OF_MESH
+      ! VTK
+      write(IOVTK,'(3e18.6)') x,y,z
+      total_dat(np+numpoin) = dat(1,1,NGLLZ,ispec)
+#else
+      call write_real(x)
+      call write_real(y)
+      call write_real(z)
+      call write_real(dat(1,1,NGLLZ,ispec))
+#endif
       mask_ibool(iglob5) = .true.
     endif
     if (.not. mask_ibool(iglob6)) then
@@ -651,15 +663,16 @@
       x = xstore(iglob6)
       y = ystore(iglob6)
       z = zstore(iglob6)
-      if (USE_VTK_OUTPUT) then
-        write(IOVTK,'(3e18.6)') x,y,z
-        total_dat(np+numpoin) = dat(NGLLX,1,NGLLZ,ispec)
-      else
-        call write_real(x)
-        call write_real(y)
-        call write_real(z)
-        call write_real(dat(NGLLX,1,NGLLZ,ispec))
-      endif
+#ifdef USE_VTK_INSTEAD_OF_MESH
+      ! VTK
+      write(IOVTK,'(3e18.6)') x,y,z
+      total_dat(np+numpoin) = dat(NGLLX,1,NGLLZ,ispec)
+#else
+      call write_real(x)
+      call write_real(y)
+      call write_real(z)
+      call write_real(dat(NGLLX,1,NGLLZ,ispec))
+#endif
       mask_ibool(iglob6) = .true.
     endif
     if (.not. mask_ibool(iglob7)) then
@@ -667,15 +680,16 @@
       x = xstore(iglob7)
       y = ystore(iglob7)
       z = zstore(iglob7)
-      if (USE_VTK_OUTPUT) then
-        write(IOVTK,'(3e18.6)') x,y,z
-        total_dat(np+numpoin) = dat(NGLLX,NGLLY,NGLLZ,ispec)
-      else
-        call write_real(x)
-        call write_real(y)
-        call write_real(z)
-        call write_real(dat(NGLLX,NGLLY,NGLLZ,ispec))
-      endif
+#ifdef USE_VTK_INSTEAD_OF_MESH
+      ! VTK
+      write(IOVTK,'(3e18.6)') x,y,z
+      total_dat(np+numpoin) = dat(NGLLX,NGLLY,NGLLZ,ispec)
+#else
+      call write_real(x)
+      call write_real(y)
+      call write_real(z)
+      call write_real(dat(NGLLX,NGLLY,NGLLZ,ispec))
+#endif
       mask_ibool(iglob7) = .true.
     endif
     if (.not. mask_ibool(iglob8)) then
@@ -683,15 +697,16 @@
       x = xstore(iglob8)
       y = ystore(iglob8)
       z = zstore(iglob8)
-      if (USE_VTK_OUTPUT) then
-        write(IOVTK,'(3e18.6)') x,y,z
-        total_dat(np+numpoin) = dat(1,NGLLY,NGLLZ,ispec)
-      else
-        call write_real(x)
-        call write_real(y)
-        call write_real(z)
-        call write_real(dat(1,NGLLY,NGLLZ,ispec))
-      endif
+#ifdef USE_VTK_INSTEAD_OF_MESH
+      ! VTK
+      write(IOVTK,'(3e18.6)') x,y,z
+      total_dat(np+numpoin) = dat(1,NGLLY,NGLLZ,ispec)
+#else
+      call write_real(x)
+      call write_real(y)
+      call write_real(z)
+      call write_real(dat(1,NGLLY,NGLLZ,ispec))
+#endif
       mask_ibool(iglob8) = .true.
     endif
   enddo ! ispec
@@ -723,15 +738,18 @@
 
   ! writes out total number of points
   if (it == 1) then
-    if (USE_VTK_OUTPUT) then
-      write(IOVTK, '(a,i12,a)') 'POINTS ', npp, ' float'
-      ! creates array to hold point data
-      allocate(total_dat(npp),stat=ier)
-      if (ier /= 0) stop 'error allocating total dat array'
-      total_dat(:) = 0.0
-    else
-      call write_integer(npp)
-    endif
+#ifdef USE_VTK_INSTEAD_OF_MESH
+    ! VTK
+    write(IOVTK, '(a,i12,a)') 'POINTS ', npp, ' float'
+    ! creates array to hold point data
+    allocate(total_dat(npp),stat=ier)
+    if (ier /= 0) stop 'error allocating total dat array'
+    total_dat(:) = 0.0
+#else
+    call write_integer(npp)
+    ! to avoid compiler warning
+    iglob = np
+#endif
   endif
 
   ! writes out point locations and values
@@ -750,15 +768,16 @@
             x = xstore(iglob)
             y = ystore(iglob)
             z = zstore(iglob)
-            if (USE_VTK_OUTPUT) then
-              write(IOVTK,'(3e18.6)') x,y,z
-              total_dat(np+numpoin) = dat(i,j,k,ispec)
-            else
-              call write_real(x)
-              call write_real(y)
-              call write_real(z)
-              call write_real(dat(i,j,k,ispec))
-            endif
+#ifdef USE_VTK_INSTEAD_OF_MESH
+            ! VTK
+            write(IOVTK,'(3e18.6)') x,y,z
+            total_dat(np+numpoin) = dat(i,j,k,ispec)
+#else
+            call write_real(x)
+            call write_real(y)
+            call write_real(z)
+            call write_real(dat(i,j,k,ispec))
+#endif
             mask_ibool(iglob) = .true.
           endif
         enddo ! i
@@ -792,12 +811,13 @@
 
   ! outputs total number of elements for all slices
   if (it == 1) then
-    if (USE_VTK_OUTPUT) then
-      ! note: indices for vtk start at 0
-      write(IOVTK,'(a,i12,i12)') "CELLS ",nee,nee*9
-    else
-      call write_integer(nee)
-    endif
+#ifdef USE_VTK_INSTEAD_OF_MESH
+    ! VTK
+    ! note: indices for vtk start at 0
+    write(IOVTK,'(a,i12,i12)') "CELLS ",nee,nee*9
+#else
+    call write_integer(nee)
+#endif
   endif
 
   ! writes out element indices
@@ -871,18 +891,19 @@
     n7 = num_ibool(iglob7) -1 + np
     n8 = num_ibool(iglob8) -1 + np
 
-    if (USE_VTK_OUTPUT) then
-      write(IOVTK,'(9i12)') 8,n1,n2,n3,n4,n5,n6,n7,n8
-    else
-      call write_integer(n1)
-      call write_integer(n2)
-      call write_integer(n3)
-      call write_integer(n4)
-      call write_integer(n5)
-      call write_integer(n6)
-      call write_integer(n7)
-      call write_integer(n8)
-    endif
+#ifdef USE_VTK_INSTEAD_OF_MESH
+    ! VTK
+    write(IOVTK,'(9i12)') 8,n1,n2,n3,n4,n5,n6,n7,n8
+#else
+    call write_integer(n1)
+    call write_integer(n2)
+    call write_integer(n3)
+    call write_integer(n4)
+    call write_integer(n5)
+    call write_integer(n6)
+    call write_integer(n7)
+    call write_integer(n8)
+#endif
 
   enddo
 
@@ -919,13 +940,14 @@
 
   ! outputs total number of elements for all slices
   if (it == 1) then
-    if (USE_VTK_OUTPUT) then
-      ! note: indices for vtk start at 0
-      write(IOVTK,'(a,i12,i12)') "CELLS ",nee,nee*9
-    else
-      !nee = nelement * num_node
-      call write_integer(nee)
-    endif
+#ifdef USE_VTK_INSTEAD_OF_MESH
+    ! VTK
+    ! note: indices for vtk start at 0
+    write(IOVTK,'(a,i12,i12)') "CELLS ",nee,nee*9
+#else
+    !nee = nelement * num_node
+    call write_integer(nee)
+#endif
   endif
 
   ! sets numbering num_ibool respecting mask
@@ -973,18 +995,19 @@
           n7 = num_ibool(iglob7)+np-1
           n8 = num_ibool(iglob8)+np-1
 
-          if (USE_VTK_OUTPUT) then
-            write(IOVTK,'(9i12)') 8,n1,n2,n3,n4,n5,n6,n7,n8
-          else
-            call write_integer(n1)
-            call write_integer(n2)
-            call write_integer(n3)
-            call write_integer(n4)
-            call write_integer(n5)
-            call write_integer(n6)
-            call write_integer(n7)
-            call write_integer(n8)
-          endif
+#ifdef USE_VTK_INSTEAD_OF_MESH
+          ! VTK
+          write(IOVTK,'(9i12)') 8,n1,n2,n3,n4,n5,n6,n7,n8
+#else
+          call write_integer(n1)
+          call write_integer(n2)
+          call write_integer(n3)
+          call write_integer(n4)
+          call write_integer(n5)
+          call write_integer(n6)
+          call write_integer(n7)
+          call write_integer(n8)
+#endif
         enddo
       enddo
     enddo

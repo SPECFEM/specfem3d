@@ -116,7 +116,7 @@ xadd_model_OBJECTS = \
 	$(EMPTY_MACRO)
 
 xadd_model_SHARED_OBJECTS = \
-	$O/specfem3D_par.spec.o \
+	$O/specfem3D_par.spec_module.o \
 	$O/pml_par.spec.o \
 	$O/read_mesh_databases.spec.o \
 	$O/shared_par.shared_module.o \
@@ -137,7 +137,7 @@ xadd_model_iso_OBJECTS = \
 	$(EMPTY_MACRO)
 
 # extra dependencies
-$O/add_model_iso.tomo.o: $O/specfem3D_par.spec.o $O/tomography_par.tomo_module.o
+$O/add_model_iso.tomo.o: $O/specfem3D_par.spec_module.o $O/tomography_par.tomo_module.o
 
 ${E}/xadd_model_iso: $(xadd_model_iso_OBJECTS) $(xadd_model_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
 	@echo ""
@@ -163,7 +163,7 @@ xmodel_update_OBJECTS = \
 	$(EMPTY_MACRO)
 
 xmodel_update_SHARED_OBJECTS = \
-	$O/specfem3D_par.spec.o \
+	$O/specfem3D_par.spec_module.o \
 	$O/pml_par.spec.o \
 	$O/initialize_simulation.spec.o \
 	$O/read_mesh_databases.spec.o \
@@ -210,8 +210,8 @@ xmodel_update_SHARED_OBJECTS += $(adios_model_update_SHARED_STUBS)
 endif
 
 # extra dependencies
-$O/model_update.tomo.o: $O/specfem3D_par.spec.o $O/tomography_par.tomo_module.o
-$O/save_external_bin_m_up.tomo.o: $O/specfem3D_par.spec.o
+$O/model_update.tomo.o: $O/specfem3D_par.spec_module.o $O/tomography_par.tomo_module.o
+$O/save_external_bin_m_up.tomo.o: $O/specfem3D_par.spec_module.o
 
 ${E}/xmodel_update: $(xmodel_update_OBJECTS) $(xmodel_update_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
 	@echo ""

@@ -32,6 +32,7 @@
 
 FC = @FC@
 FCFLAGS = @FCFLAGS@ ${DEBUG_COUPLED_FLAG}
+FC_DEFINE = @FC_DEFINE@
 MPIFC = @MPIFC@
 MPILIBS = @MPILIBS@
 
@@ -301,6 +302,7 @@ help:
 	@echo ""
 	@echo "    xcombine_surf_data"
 	@echo "    xcombine_vol_data"
+	@echo "    xcombine_vol_data_vtk"
 	@echo "    xconvolve_source_timefunction"
 	@echo "    xcreate_movie_shakemap_AVS_DX_GMT"
 	@echo ""
@@ -311,6 +313,7 @@ help:
 	@echo "- auxiliary executables: [make aux]"
 	@echo "    xcombine_surf_data"
 	@echo "    xcombine_vol_data"
+	@echo "    xcombine_vol_data_vtk"
 	@echo "    xconvolve_source_timefunction"
 	@echo "    xcreate_movie_shakemap_AVS_DX_GMT"
 	@echo ""
