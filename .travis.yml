@@ -56,6 +56,9 @@ env:
     # run PML example (elastic)
     - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=9
 
+    # run noise example
+    - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=10
+
 before_install:
   # informations on git
   - |
@@ -131,26 +134,36 @@ script:
   ###########################################################
   # testing internal mesher example (short & quick for all configuration)
   - |
+    # chooses example directory
+    case "$TESTMAKE" in
+    0) dir=./ ;;
+    1) dir=EXAMPLES/homogeneous_halfspace_HEX8_elastic_absorbing_Stacey_5sides/ ;;
+    2) dir=EXAMPLES/homogeneous_acoustic/ ;;
+    3) dir=EXAMPLES/homogeneous_poroelastic/ ;;
+    4) dir=EXAMPLES/meshfem3D_examples/simple_model/ ;;
+    5) dir=EXAMPLES/homogeneous_acoustic/ ;;
+    6) dir=EXAMPLES/homogeneous_acoustic/ ;;
+    7) dir=EXAMPLES/homogeneous_halfspace/ ;;
+    8) dir=EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_acoustic_absorbing_CPML_5sides/ ;;
+    9) dir=EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_elastic_absorbing_CPML_5sides/ ;;
+    10) dir=EXAMPLES/noise_tomography/ ;;
+    *) dir=EXAMPLES/homogeneous_halfspace/ ;;
+    esac
+    # runs test
+    echo "##########################################################"
+    echo "test directory: $dir"
+    echo "##########################################################"
+    cd $dir
     if [ "$TESTMAKE" == "0" ]; then
       # runs default tests
       make tests
+    elif [ "$TESTMAKE" == "10" ]; then
+      # noise example
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step1
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step2
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step3
+      ./run_this_example.sh
     else
-      # example directory
-      case "$TESTMAKE" in
-      1) dir=EXAMPLES/homogeneous_halfspace_HEX8_elastic_absorbing_Stacey_5sides/ ;;
-      2) dir=EXAMPLES/homogeneous_acoustic/ ;;
-      3) dir=EXAMPLES/homogeneous_poroelastic/ ;;
-      4) dir=EXAMPLES/meshfem3D_examples/simple_model/ ;;
-      5|6) dir=EXAMPLES/homogeneous_acoustic/ ;;
-      7) dir=EXAMPLES/homogeneous_halfspace/ ;;
-      8) dir=EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_acoustic_absorbing_CPML_5sides/ ;;
-      9) dir=EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_elastic_absorbing_CPML_5sides/ ;;
-      *) dir=EXAMPLES/homogeneous_halfspace/ ;;
-      esac
-      echo "##########################################################"
-      echo "test directory: $dir"
-      echo "##########################################################"
-      cd $dir
       # limit time steps for testing
       sed -i "s:^NSTEP .*:NSTEP    = 100:" DATA/Par_file
       # shortens output interval to avoid timeouts
@@ -181,9 +194,16 @@ script:
         sed -i "s:^NSTEP .*:NSTEP    = 500:" DATA/Par_file
         sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 50:" DATA/Par_file
       fi
+      # coverage run
+      if [ "$TESTCOV" == "1" ]; then
+        sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+      fi
       # default script
       ./run_this_example.sh
-      my_test
+      # seismogram comparison
+      if [ "$TESTCOV" == "0" ]; then
+        my_test
+      fi
       cd $WORKDIR
     fi
   # additional run for coverage
@@ -227,6 +247,17 @@ script:
     if [ "$TESTCOV" == "1" ]; then
       cd EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_elastic_absorbing_CPML_5sides/
       sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+      ./run_this_example.sh
+      cd $WORKDIR
+    fi
+
+  # additional run for coverage
+  - |
+    if [ "$TESTCOV" == "1" ]; then
+      cd EXAMPLES/noise_tomography/
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step1
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step2
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step3
       ./run_this_example.sh
       cd $WORKDIR
     fi
