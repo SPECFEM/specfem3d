@@ -28,6 +28,13 @@
 !----
 !---- locate_receivers finds the correct position of the receivers
 !----
+
+! Comment from Chang-Hua Zhang, July 2016:
+! I have found that the SU_FORMAT receiver locating method is not accurate
+! for some receivers if receivers are located on a topography surface.
+! I have not figured out why.
+! See also https://github.com/geodynamics/specfem3d/issues/781
+
   subroutine locate_receivers(ibool,myrank,NSPEC_AB,NGLOB_AB,NGNOD, &
                  xstore,ystore,zstore,xigll,yigll,zigll,rec_filename, &
                  nrec,islice_selected_rec,ispec_selected_rec, &
