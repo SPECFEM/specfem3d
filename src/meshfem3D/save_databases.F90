@@ -99,7 +99,9 @@
 
   integer :: ndef,nundef
   integer :: mat_id,domain_id
-  integer,dimension(2,nspec) :: material_index
+  ! there was a potential bug here if nspec is big
+  !integer,dimension(2,nspec) :: material_index
+  integer,dimension(:,:),allocatable :: material_index
   character(len=MAX_STRING_LEN), dimension(6,1) :: undef_mat_prop
 
   !------------------------------------------------------------------
@@ -113,6 +115,8 @@
 
   ! assignes material index
   ! format: (1,ispec) = #material_id , (2,ispec) = #material_definition
+  allocate(material_index(2,nspec),stat=ier)
+  if (ier /= 0) stop 'Error allocating array material_index'
   material_index (:,:) = 0
   do ispec = 1, nspec
     ! material id
@@ -406,6 +410,7 @@
   endif
 
   close(IIN_database)
+  deallocate(material_index)
 
   end subroutine save_databases
 
