@@ -786,61 +786,62 @@
       veloc_lddrk(:,:) = VERYSMALLVAL
     endif
 
-    if (ATTENUATION) then
-      ! note: currently, they need to be defined, as they are used in some subroutine arguments
-      allocate(R_xx_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
-               R_yy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
-               R_xy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
-               R_xz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
-               R_yz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS),stat=ier)
+    ! note: currently, they need to be defined, as they are used in some subroutine arguments
+    allocate(R_xx_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+             R_yy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+             R_xy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+             R_xz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+             R_yz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS),stat=ier)
+    if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
+
+    allocate(R_trace_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa_LDDRK,N_SLS))
+    if (ier /= 0) stop 'Error allocating array R_trace_lddrk etc.'
+
+    if (SIMULATION_TYPE == 3) then
+      allocate(b_R_xx_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+               b_R_yy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+               b_R_xy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+               b_R_xz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+               b_R_yz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS),stat=ier)
       if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
 
+      allocate(b_R_trace_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa_LDDRK,N_SLS))
+      if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
+    endif
+
+    ! initializes
+    if (ATTENUATION) then
       R_xx_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
       R_yy_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
       R_xy_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
       R_xz_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
       R_yz_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+      R_trace_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
       if (FIX_UNDERFLOW_PROBLEM) then
         R_xx_lddrk(:,:,:,:,:) = VERYSMALLVAL
         R_yy_lddrk(:,:,:,:,:) = VERYSMALLVAL
         R_xy_lddrk(:,:,:,:,:) = VERYSMALLVAL
         R_xz_lddrk(:,:,:,:,:) = VERYSMALLVAL
         R_yz_lddrk(:,:,:,:,:) = VERYSMALLVAL
+        R_trace_lddrk(:,:,:,:,:) = VERYSMALLVAL
       endif
 
-      allocate(R_trace_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa_LDDRK,N_SLS))
-      if (ier /= 0) stop 'Error allocating array R_trace_lddrk etc.'
-      R_trace_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
-      if (FIX_UNDERFLOW_PROBLEM) R_trace_lddrk(:,:,:,:,:) = VERYSMALLVAL
-
       if (SIMULATION_TYPE == 3) then
-        allocate(b_R_xx_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
-                 b_R_yy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
-                 b_R_xy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
-                 b_R_xz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
-                 b_R_yz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS),stat=ier)
-        if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
-
         b_R_xx_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
         b_R_yy_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
         b_R_xy_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
         b_R_xz_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
         b_R_yz_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+        b_R_trace_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
         if (FIX_UNDERFLOW_PROBLEM) then
           b_R_xx_lddrk(:,:,:,:,:) = VERYSMALLVAL
           b_R_yy_lddrk(:,:,:,:,:) = VERYSMALLVAL
           b_R_xy_lddrk(:,:,:,:,:) = VERYSMALLVAL
           b_R_xz_lddrk(:,:,:,:,:) = VERYSMALLVAL
           b_R_yz_lddrk(:,:,:,:,:) = VERYSMALLVAL
+          b_R_trace_lddrk(:,:,:,:,:) = VERYSMALLVAL
         endif
-
-        allocate(b_R_trace_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa_LDDRK,N_SLS))
-        if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
-        b_R_trace_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
-        if (FIX_UNDERFLOW_PROBLEM) b_R_trace_lddrk(:,:,:,:,:) = VERYSMALLVAL
-
       endif
-
     endif
   endif
 

@@ -342,7 +342,7 @@ subroutine compute_forces_viscoelastic_backward()
                         b_alphaval,b_betaval,b_gammaval, &
                         NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa, &
                         b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
-                        NSPEC_ATTENUATION_AB_LDDRK,NSPEC_ATTENUATION_AB_kappa,R_trace_lddrk, &
+                        NSPEC_ATTENUATION_AB_LDDRK,NSPEC_ATTENUATION_AB_kappa,b_R_trace_lddrk, &
                         b_R_xx_lddrk,b_R_yy_lddrk,b_R_xy_lddrk,b_R_xz_lddrk,b_R_yz_lddrk, &
                         b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
                         b_epsilondev_xz,b_epsilondev_yz,b_epsilon_trace_over_3, &
