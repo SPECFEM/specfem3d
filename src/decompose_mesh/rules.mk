@@ -39,12 +39,10 @@ $(decompose_mesh_OBJECTS): S = ${S_TOP}/src/decompose_mesh
 decompose_mesh_TARGETS = \
 	$E/xscotch \
 	$E/xdecompose_mesh \
-	$E/xdecompose_mesh_mpi \
 	$(EMPTY_MACRO)
 
 decompose_mesh_OBJECTS = \
 	$(xdecompose_mesh_OBJECTS) \
-	$(xdecompose_mesh_mpi_OBJECTS) \
 	$(EMPTY_MACRO)
 
 decompose_mesh_MODULES = \
@@ -73,16 +71,15 @@ decompose_mesh_SHARED_OBJECTS = \
 ####
 
 dec: $(decompose_mesh_TARGETS)
-mpidec : xdecompose_mesh_mpi
 
 decompose_mesh: xdecompose_mesh
 xdecompose_mesh: $E/xdecompose_mesh
 
-scotch: xscotch
-xscotch: $E/xscotch
-
 decompose_mesh_mpi: xdecompose_mesh_mpi
 xdecompose_mesh_mpi: $E/xdecompose_mesh_mpi
+
+scotch: xscotch
+xscotch: $E/xscotch
 
 ${SCOTCH_DIR}/include/scotchf.h: xscotch
 
@@ -137,6 +134,16 @@ xdecompose_mesh_mpi_OBJECTS = \
 	$O/program_decompose_mesh_mpi.mpidec.o \
 	$(EMPTY_MACRO)
 
+# conditional target, needs mpi
+ifeq ($(MPI),yes)
+decompose_mesh_TARGETS += \
+	$E/xdecompose_mesh_mpi \
+	$(EMPTY_MACRO)
+decompose_mesh_OBJECTS += \
+	$(xdecompose_mesh_mpi_OBJECTS) \
+	$(EMPTY_MACRO)
+endif
+
 # parallel version of decompose_mesh
 $E/xdecompose_mesh_mpi: $(decompose_mesh_SHARED_OBJECTS) $(xdecompose_mesh_mpi_OBJECTS) $(COND_MPI_OBJECTS)
 	@echo ""
@@ -144,6 +151,7 @@ $E/xdecompose_mesh_mpi: $(decompose_mesh_SHARED_OBJECTS) $(xdecompose_mesh_mpi_O
 	@echo ""
 	${FCLINK} -o  $E/xdecompose_mesh_mpi $(decompose_mesh_SHARED_OBJECTS) $(xdecompose_mesh_mpi_OBJECTS) $(COND_MPI_OBJECTS)
 	@echo ""
+
 
 #######################################
 

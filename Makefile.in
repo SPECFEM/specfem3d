@@ -243,12 +243,14 @@ SUBDIRS = \
 # default targets for the pure Fortran version
 DEFAULT = \
 	xdecompose_mesh \
-	xdecompose_mesh_mpi \
 	xmeshfem3D \
 	xgenerate_databases \
 	xspecfem3D \
 	$(EMPTY_MACRO)
 
+ifeq ($(MPI),yes)
+DEFAULT += $E/xdecompose_mesh_mpi
+endif
 
 default: $(DEFAULT)
 
