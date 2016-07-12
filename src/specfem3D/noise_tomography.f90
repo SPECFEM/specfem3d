@@ -49,7 +49,7 @@ module user_noise_distribution
 !daniel: TODO -- setting USE_PIERO_DISTRIBUTION = .true. will produce errors
 !            when using with the default example in "example/noise_tomography/"
 !            i left it here so that Max can run his example without changing this every time...
-  logical,parameter :: USE_PIERO_DISTRIBUTION = .true.
+  logical,parameter :: USE_PIERO_DISTRIBUTION = .false.
 
 contains
 
@@ -161,12 +161,21 @@ contains
   lon_cn = (3.89)*PI/180
   lat_cn = (45.113)*PI/180
 
-  if (xcoord >= 0) then
-    lon=asin(ycoord/(sqrt(xcoord**2+ycoord**2)))
+  if (abs(xcoord) > 1.e-24 .or. abs(ycoord) > 1.e-24) then
+    if (xcoord >= 0) then
+      lon=asin(ycoord/(sqrt(xcoord**2+ycoord**2)))
+    else
+      lon=(PI-(asin(ycoord/(sqrt(xcoord**2+ycoord**2)))))
+    endif
   else
-    lon=(PI-(asin(ycoord/(sqrt(xcoord**2+ycoord**2)))))
+    lon=0.0
   endif
-  colat=atan(sqrt(xcoord**2+ycoord**2)/zcoord)
+
+  if (abs(zcoord) > 1.e-24) then
+    colat=atan(sqrt(xcoord**2+ycoord**2)/zcoord)
+  else
+    colat=0.0
+  endif
   lat=(PI/2)-colat
 
   !PB CALCULATE THE DISTANCE BETWEEN CENTER OF NOISE REGION AND EACH
@@ -216,7 +225,6 @@ contains
   !*****************************************************************************************************************
 
   end subroutine noise_distribution_dir_non_uni
-
 
 end module user_noise_distribution
 
@@ -314,8 +322,8 @@ end module user_noise_distribution
 
     ! checks if surface element belongs to elastic domain
     if (ispec_is_acoustic(ispec)) then
-      print *,'error noise simulation: element',ispec,'is acoustic'
-      stop 'error: noise for acoustic elements not implemented yet!'
+      print *,'Error noise simulation: element',ispec,'is acoustic'
+      call exit_MPI(myrank,'Error: noise for acoustic elements not implemented yet!')
     endif
 
     do igll = 1, NGLLSQUARE
