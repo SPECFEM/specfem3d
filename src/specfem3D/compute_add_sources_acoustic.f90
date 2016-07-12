@@ -236,7 +236,7 @@
             enddo
 
             ! for file output
-            stf_used_total = stf_used_total + stf_used
+            if (PRINT_SOURCE_TIME_FUNCTION) stf_used_total = stf_used_total + stf_used
 
           endif ! ispec_is_acoustic
         endif ! ispec_is_inner
@@ -575,7 +575,7 @@
 
             endif ! USE_FORCE_POINT_SOURCE
 
-            stf_used_total = stf_used_total + stf_used
+            if (PRINT_SOURCE_TIME_FUNCTION) stf_used_total = stf_used_total + stf_used
 
           endif ! ispec_is_elastic
         endif ! ispec_is_inner
@@ -693,7 +693,7 @@
            stf_pre_compute(isource) = user_source_time_function(it, isource)
         endif
       enddo
-      stf_used_total = stf_used_total + sum(stf_pre_compute(:))
+      if (PRINT_SOURCE_TIME_FUNCTION) stf_used_total = stf_used_total + sum(stf_pre_compute(:))
       ! only implements SIMTYPE=1 and NOISE_TOM=0
       ! write(*,*) "fortran dt = ", dt
       ! change dt -> DT
@@ -853,7 +853,7 @@
           endif
         endif
       enddo
-      stf_used_total = stf_used_total + sum(stf_pre_compute(:))
+      if (PRINT_SOURCE_TIME_FUNCTION) stf_used_total = stf_used_total + sum(stf_pre_compute(:))
       ! only implements SIMTYPE=3
       call compute_add_sources_ac_s3_cuda(Mesh_pointer,phase_is_inner,NSOURCES,stf_pre_compute)
     endif

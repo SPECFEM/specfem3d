@@ -188,7 +188,7 @@
             endif ! USE_FORCE_POINT_SOURCE
 
             ! for file output
-            stf_used_total = stf_used_total + stf_used
+            if (PRINT_SOURCE_TIME_FUNCTION) stf_used_total = stf_used_total + stf_used
 
           endif ! ispec_is_poroelastic
         endif ! ispec_is_inner
@@ -424,7 +424,7 @@
               enddo
             endif ! USE_FORCE_POINT_SOURCE
 
-            stf_used_total = stf_used_total + stf_used
+            if (PRINT_SOURCE_TIME_FUNCTION) stf_used_total = stf_used_total + stf_used
 
           endif ! elastic
         endif ! phase_inner

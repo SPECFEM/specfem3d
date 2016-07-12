@@ -193,7 +193,7 @@
             enddo
 
             ! for file output
-            stf_used_total = stf_used_total + stf_used
+            if (PRINT_SOURCE_TIME_FUNCTION) stf_used_total = stf_used_total + stf_used
 
           endif ! ispec_is_elastic
         endif ! ispec_is_inner
@@ -552,7 +552,7 @@
             enddo
 
             ! for file output
-            stf_used_total = stf_used_total + stf_used
+            if (PRINT_SOURCE_TIME_FUNCTION) stf_used_total = stf_used_total + stf_used
 
           endif ! elastic
         endif ! phase_inner
