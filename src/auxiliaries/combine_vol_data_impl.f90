@@ -25,6 +25,20 @@
 !
 !=====================================================================
 
+
+module combine_vtk_par
+
+    ! global point data
+    real,dimension(:),allocatable :: total_dat
+
+    ! maximum number of slices
+    integer,parameter :: MAX_NUM_NODES = 600
+
+end module combine_vtk_par
+
+!=============================================================================
+
+
 module combine_vol_data_mod
   implicit none
 contains

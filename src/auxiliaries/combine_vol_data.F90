@@ -25,19 +25,6 @@
 !
 !=====================================================================
 
-  module combine_vtk
-
-    ! global point data
-    real,dimension(:),allocatable :: total_dat
-
-    ! maximum number of slices
-    integer,parameter :: MAX_NUM_NODES = 600
-
-  end module combine_vtk
-
-!
-!-------------------------------------------------------------------------------------------------
-!
 
   program combine_vol_data
 
@@ -58,7 +45,7 @@
   use combine_vol_data_mod
   use combine_vol_data_adios_mod
 
-  use combine_vtk
+  use combine_vtk_par
   implicit none
 
   ! data must be of dimension: (NGLLX,NGLLY,NGLLZ,NSPEC_AB)
@@ -403,7 +390,7 @@
 
   use constants
 
-  use combine_vtk
+  use combine_vtk_par
   use combine_vol_data_adios_mod
 
   implicit none
@@ -526,7 +513,7 @@
 
 ! writes out locations of spectral element corners only
   use constants
-  use combine_vtk
+  use combine_vtk_par
   implicit none
 
   integer,intent(in) :: NSPEC_AB,NGLOB_AB
@@ -722,7 +709,7 @@
 
 ! writes out locations of all GLL points of spectral elements
   use constants
-  use combine_vtk
+  use combine_vtk_par
   implicit none
 
   integer,intent(in) :: NSPEC_AB,NGLOB_AB
@@ -795,7 +782,7 @@
                                       np,nelement,it,nee,numpoin)
 
   use constants
-  use combine_vtk
+  use combine_vtk_par
   implicit none
 
   integer,intent(in) :: NSPEC_AB,NGLOB_AB
@@ -924,7 +911,7 @@
 
 ! writes out indices of elements given by GLL points
   use constants
-  use combine_vtk
+  use combine_vtk_par
   implicit none
 
   integer,intent(in):: NSPEC_AB,NGLOB_AB
