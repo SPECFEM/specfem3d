@@ -294,6 +294,8 @@ endif
 ### Module dependencies
 ###
 
+# Version file
+$O/initialize_simulation.spec.o: ${SETUP}/version.fh
 
 ## pml
 $O/compute_coupling_acoustic_el.spec.o: $O/pml_par.spec.o

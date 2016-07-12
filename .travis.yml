@@ -206,6 +206,7 @@ script:
       fi
       cd $WORKDIR
     fi
+
   # additional run for coverage
   - |
     if [ "$TESTCOV" == "1" ]; then

@@ -194,6 +194,8 @@
 
   implicit none
 
+  include 'version.fh'
+
   ! local parameters
   ! timing
   double precision, external :: wtime
@@ -217,6 +219,8 @@
     write(IMAIN,*) '******************************************'
     write(IMAIN,*) '*** Specfem3D MPI Mesher - f90 version ***'
     write(IMAIN,*) '******************************************'
+    write(IMAIN,*)
+    write(IMAIN,*) 'Version: ', git_version
     write(IMAIN,*)
     call flush_IMAIN()
   endif

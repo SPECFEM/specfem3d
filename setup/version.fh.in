@@ -1,0 +1,2 @@
+! This file is only used if building from tarballs.
+character(len=*), parameter :: git_version = "@PACKAGE_VERSION@"

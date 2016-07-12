@@ -193,6 +193,9 @@ $E/xgenerate_databases: $(XGENERATE_DATABASES_OBJECTS)
 ### Module dependencies
 ###
 
+# Version file
+$O/generate_databases.gen.o: ${SETUP}/version.fh
+
 $O/calc_jacobian.gen.o: $O/generate_databases_par.gen.o
 $O/create_mass_matrices.gen.o: $O/generate_databases_par.gen.o
 $O/fault_generate_databases.gen.o: $O/generate_databases_par.gen.o

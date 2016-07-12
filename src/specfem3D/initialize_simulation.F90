@@ -38,6 +38,8 @@
 
   implicit none
 
+  include 'version.fh'
+
   integer :: ier
   logical :: BROADCAST_AFTER_READ
 
@@ -64,6 +66,7 @@
     write(IMAIN,*) '**** Specfem 3-D Solver - MPI version f90 ****'
     write(IMAIN,*) '**********************************************'
     write(IMAIN,*)
+    write(IMAIN,*) 'Version: ', git_version
     write(IMAIN,*)
     if (FIX_UNDERFLOW_PROBLEM) write(IMAIN,*) 'Fixing slow underflow trapping problem using small initial field'
     write(IMAIN,*)
