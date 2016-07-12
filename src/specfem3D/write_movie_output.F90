@@ -61,22 +61,14 @@
     endif
   endif
 
-  ! saves MOVIE on the SURFACE
-  if (MOVIE_SURFACE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
-    if (MOVIE_TYPE == 1) then
-      call wmo_movie_surface_output_o()
-    else if (MOVIE_TYPE == 2) then
-      call wmo_create_movie_surface_em()
-    endif
-  endif
-
   ! computes SHAKING INTENSITY MAP
   if (CREATE_SHAKEMAP) then
-    if (MOVIE_TYPE == 1) then
-      call wmo_create_shakemap_o()
-    else if (MOVIE_TYPE == 2) then
-      call wmo_create_shakemap_em()
-    endif
+    call wmo_create_shakemap()
+  endif
+
+  ! saves MOVIE on the SURFACE
+  if (MOVIE_SURFACE .and. mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
+    call wmo_movie_surface_output()
   endif
 
   ! saves MOVIE in full 3D MESH
@@ -95,261 +87,12 @@
 
 !================================================================
 
-  subroutine wmo_create_shakemap_em()
+  subroutine wmo_movie_surface_output()
 
-! creation of shapemap file
+! output of moviedata files
 
-  use specfem_par
-  use specfem_par_elastic
-  use specfem_par_acoustic
-  use specfem_par_movie
-  implicit none
-
-  real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable:: &
-    displ_element,veloc_element,accel_element
-  real(kind=CUSTOM_REAL),dimension(1):: dummy
-  integer :: ipoin,ispec,iglob,ispec2D,ier
-
-  ! allocate array for single elements
-  allocate(displ_element(NDIM,NGLLX,NGLLY,NGLLZ), &
-           veloc_element(NDIM,NGLLX,NGLLY,NGLLZ), &
-           accel_element(NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
-  if (ier /= 0) stop 'error allocating arrays for movie elements'
-
-! initializes arrays for point coordinates
-  if (it == 1) then
-    store_val_ux_external_mesh(:) = -HUGEVAL
-    store_val_uy_external_mesh(:) = -HUGEVAL
-    store_val_uz_external_mesh(:) = -HUGEVAL
-    do ispec2D = 1,nfaces_surface_ext_mesh
-      if (USE_HIGHRES_FOR_MOVIES) then
-        do ipoin = 1, NGLLX*NGLLY
-          iglob = faces_surface_ext_mesh(ipoin,ispec2D)
-          ! x,y,z coordinates
-          store_val_x_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = xstore(iglob)
-          store_val_y_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = ystore(iglob)
-          store_val_z_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = zstore(iglob)
-        enddo
-      else
-        do ipoin = 1, 4
-          iglob = faces_surface_ext_mesh(ipoin,ispec2D)
-          ! x,y,z coordinates
-          store_val_x_external_mesh(NGNOD2D_FOUR_CORNERS*(ispec2D-1)+ipoin) = xstore(iglob)
-          store_val_y_external_mesh(NGNOD2D_FOUR_CORNERS*(ispec2D-1)+ipoin) = ystore(iglob)
-          store_val_z_external_mesh(NGNOD2D_FOUR_CORNERS*(ispec2D-1)+ipoin) = zstore(iglob)
-        enddo
-      endif
-    enddo
-  endif
-
-! stores displacement, velocity and acceleration amplitudes
-  do ispec2D = 1,nfaces_surface_ext_mesh
-    ispec = faces_surface_ext_mesh_ispec(ispec2D)
-
-    if (ispec_is_acoustic(ispec)) then
-      ! displacement vector
-      call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                          potential_acoustic, displ_element,&
-                          hprime_xx,hprime_yy,hprime_zz, &
-                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore,GRAVITY)
-      ! velocity vector
-      call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                          potential_dot_acoustic, veloc_element,&
-                          hprime_xx,hprime_yy,hprime_zz, &
-                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore,GRAVITY)
-      ! accel ?
-      call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                          potential_dot_dot_acoustic, accel_element,&
-                          hprime_xx,hprime_yy,hprime_zz, &
-                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore,GRAVITY)
-    endif
-
-    ! high-resolution
-    if (USE_HIGHRES_FOR_MOVIES) then
-      do ipoin = 1, NGLLX*NGLLY
-        iglob = faces_surface_ext_mesh(ipoin,ispec2D)
-
-        ! saves norm of displacement,velocity and acceleration vector
-        if (ispec_is_elastic(ispec)) then
-          ! norm of displacement
-          store_val_ux_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = &
-               max(store_val_ux_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin), &
-               sqrt(displ(1,iglob)**2 + displ(2,iglob)**2 + displ(3,iglob)**2))
-          ! norm of velocity
-          store_val_uy_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = &
-               max(store_val_uy_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin), &
-               sqrt(veloc(1,iglob)**2 + veloc(2,iglob)**2 + veloc(3,iglob)**2))
-          ! norm of acceleration
-          store_val_uz_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = &
-               max(store_val_uz_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin), &
-               sqrt(accel(1,iglob)**2 + accel(2,iglob)**2 + accel(3,iglob)**2))
-        endif
-
-        ! acoustic domains
-        if (ispec_is_acoustic(ispec)) then
-          ! sets velocity vector with maximum norm of wavefield values
-          call wmo_get_max_vector(ispec,ispec2D,iglob,ipoin, &
-                                  displ_element,veloc_element,accel_element, &
-                                  NGLLX*NGLLY)
-        endif
-
-      enddo
-    else
-      ! low-resolution: only corner points are output
-      do ipoin = 1, 4
-        iglob = faces_surface_ext_mesh(ipoin,ispec2D)
-        ! saves norm of displacement,velocity and acceleration vector
-        if (ispec_is_elastic(ispec)) then
-          ! norm of displacement
-          store_val_ux_external_mesh(NGNOD2D_FOUR_CORNERS*(ispec2D-1)+ipoin) = &
-                max(store_val_ux_external_mesh(NGNOD2D_FOUR_CORNERS*(ispec2D-1)+ipoin), &
-                sqrt(displ(1,iglob)**2 + displ(2,iglob)**2 + displ(3,iglob)**2))
-          ! norm of velocity
-          store_val_uy_external_mesh(NGNOD2D_FOUR_CORNERS*(ispec2D-1)+ipoin) = &
-                max(store_val_uy_external_mesh(NGNOD2D_FOUR_CORNERS*(ispec2D-1)+ipoin), &
-                sqrt(veloc(1,iglob)**2 + veloc(2,iglob)**2 + veloc(3,iglob)**2))
-          ! norm of acceleration
-          store_val_uz_external_mesh(NGNOD2D_FOUR_CORNERS*(ispec2D-1)+ipoin) = &
-                max(store_val_uz_external_mesh(NGNOD2D_FOUR_CORNERS*(ispec2D-1)+ipoin), &
-                sqrt(accel(1,iglob)**2 + accel(2,iglob)**2 + accel(3,iglob)**2))
-        endif
-
-        ! acoustic domains
-        if (ispec_is_acoustic(ispec)) then
-          ! sets velocity vector with maximum norm of wavefield values
-          call wmo_get_max_vector(ispec,ispec2D,iglob,ipoin, &
-                                  displ_element,veloc_element,accel_element, &
-                                  NGNOD2D_FOUR_CORNERS)
-        endif
-      enddo
-    endif
-  enddo
-
-! finalizes shakemap: master process collects all info
-  if (it == NSTEP) then
-    ! master collects data
-    if (myrank == 0) then
-      call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_ext_mesh_points,&
-           store_val_x_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           nfaces_surface_glob_em_points,NPROC)
-      call gatherv_all_cr(store_val_y_external_mesh,nfaces_surface_ext_mesh_points,&
-           store_val_y_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           nfaces_surface_glob_em_points,NPROC)
-      call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_ext_mesh_points,&
-           store_val_z_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           nfaces_surface_glob_em_points,NPROC)
-      call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_ext_mesh_points,&
-           store_val_ux_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           nfaces_surface_glob_em_points,NPROC)
-      call gatherv_all_cr(store_val_uy_external_mesh,nfaces_surface_ext_mesh_points,&
-           store_val_uy_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           nfaces_surface_glob_em_points,NPROC)
-      call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_ext_mesh_points,&
-           store_val_uz_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           nfaces_surface_glob_em_points,NPROC)
-    else
-      ! all other process just send
-      call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_ext_mesh_points,&
-           dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           1,NPROC)
-      call gatherv_all_cr(store_val_y_external_mesh,nfaces_surface_ext_mesh_points,&
-           dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           1,NPROC)
-      call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_ext_mesh_points,&
-           dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           1,NPROC)
-      call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_ext_mesh_points,&
-           dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           1,NPROC)
-      call gatherv_all_cr(store_val_uy_external_mesh,nfaces_surface_ext_mesh_points,&
-           dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           1,NPROC)
-      call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_ext_mesh_points,&
-           dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           1,NPROC)
-    endif
-
-! creates shakemap file
-    if (myrank == 0) then
-      open(unit=IOUT,file=trim(OUTPUT_FILES)//'/shakingdata',status='unknown',form='unformatted',iostat=ier)
-      if (ier /= 0) stop 'error opening file shakingdata'
-      write(IOUT) store_val_x_all_external_mesh   ! x coordinates
-      write(IOUT) store_val_y_all_external_mesh   ! y coordinates
-      write(IOUT) store_val_z_all_external_mesh   ! z coordinates
-      write(IOUT) store_val_ux_all_external_mesh  ! norm of displacement vector
-      write(IOUT) store_val_uy_all_external_mesh  ! norm of velocity vector
-      write(IOUT) store_val_uz_all_external_mesh  ! norm of acceleration vector
-      close(IOUT)
-    endif
-  endif
-
-  deallocate(displ_element,veloc_element,accel_element)
-
-  end subroutine wmo_create_shakemap_em
-
-!================================================================
-
-  subroutine wmo_get_max_vector(ispec,ispec2D,iglob,ipoin, &
-                                displ_element,veloc_element,accel_element, &
-                                narraydim)
-
-  ! put into this separate routine to make compilation faster
-
-  use specfem_par,only: NDIM,ibool
-  use specfem_par_movie
-  implicit none
-
-  integer,intent(in) :: ispec,ispec2D,iglob,ipoin,narraydim
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: &
-    displ_element,veloc_element,accel_element
-
-  ! local parameters
-  integer :: i,j,k
-  logical :: is_done
-
-  is_done = .false.
-
-  ! loops over all gll points from this element
-  do k=1,NGLLZ
-    do j=1,NGLLY
-      do i=1,NGLLX
-        if (iglob == ibool(i,j,k,ispec)) then
-          ! norm of displacement
-          store_val_ux_external_mesh(narraydim*(ispec2D-1)+ipoin) = &
-            max(store_val_ux_external_mesh(narraydim*(ispec2D-1)+ipoin), &
-                sqrt(displ_element(1,i,j,k)**2 &
-                   + displ_element(2,i,j,k)**2 &
-                   + displ_element(3,i,j,k)**2))
-          ! norm of velocity
-          store_val_uy_external_mesh(narraydim*(ispec2D-1)+ipoin) = &
-            max(store_val_uy_external_mesh(narraydim*(ispec2D-1)+ipoin), &
-                sqrt(veloc_element(1,i,j,k)**2 &
-                   + veloc_element(2,i,j,k)**2 &
-                   + veloc_element(3,i,j,k)**2))
-          ! norm of acceleration
-          store_val_uz_external_mesh(narraydim*(ispec2D-1)+ipoin) = &
-            max(store_val_uz_external_mesh(narraydim*(ispec2D-1)+ipoin), &
-                sqrt(accel_element(1,i,j,k)**2 &
-                   + accel_element(2,i,j,k)**2 &
-                   + accel_element(3,i,j,k)**2))
-          ! not really needed, but could be used to check...
-          is_done = .true.
-          return
-        endif
-      enddo
-    enddo
-  enddo
-
-  end subroutine wmo_get_max_vector
-
-!================================================================
-
-  subroutine wmo_create_movie_surface_em()
-
-! creation of moviedata files
+! option MOVIE_TYPE == 1: only at top, free surface
+!        MOVIE_TYPE == 2: for all external, outer mesh surfaces
 
   use specfem_par
   use specfem_par_elastic
@@ -357,43 +100,26 @@
   use specfem_par_movie
   implicit none
 
-  real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable:: val_element
+  ! temporary array for single elements
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: val_element
   real(kind=CUSTOM_REAL),dimension(1):: dummy
-  integer :: ispec2D,ispec,ipoin,iglob,ier
+  integer :: ispec2D,ispec,ipoin,iglob,ier,ia
   character(len=MAX_STRING_LEN) :: outputname
+  integer :: npoin_elem
 
-  ! allocate array for single elements
-  allocate( val_element(NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
-  if (ier /= 0) stop 'error allocating arrays for movie elements'
-
-! initializes arrays for point coordinates
-  if (it == NTSTEP_BETWEEN_FRAMES) then
-    do ispec2D = 1,nfaces_surface_ext_mesh
-      if (USE_HIGHRES_FOR_MOVIES) then
-        do ipoin = 1, NGLLX*NGLLY
-          iglob = faces_surface_ext_mesh(ipoin,ispec2D)
-          ! x,y,z coordinates
-          store_val_x_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = xstore(iglob)
-          store_val_y_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = ystore(iglob)
-          store_val_z_external_mesh(NGLLX*NGLLY*(ispec2D-1)+ipoin) = zstore(iglob)
-        enddo
-      else
-        do ipoin = 1, 4
-          iglob = faces_surface_ext_mesh(ipoin,ispec2D)
-          ! x,y,z coordinates
-          store_val_x_external_mesh(NGNOD2D_FOUR_CORNERS*(ispec2D-1)+ipoin) = xstore(iglob)
-          store_val_y_external_mesh(NGNOD2D_FOUR_CORNERS*(ispec2D-1)+ipoin) = ystore(iglob)
-          store_val_z_external_mesh(NGNOD2D_FOUR_CORNERS*(ispec2D-1)+ipoin) = zstore(iglob)
-        enddo
-      endif
-    enddo
+  ! surface points for single face
+  if (USE_HIGHRES_FOR_MOVIES) then
+    npoin_elem = NGLLX*NGLLY
+  else
+    npoin_elem = NGNOD2D_FOUR_CORNERS
   endif
 
-! saves surface velocities
-  do ispec2D = 1,nfaces_surface_ext_mesh
-    ispec = faces_surface_ext_mesh_ispec(ispec2D)
+  ! saves surface velocities
+  do ispec2D = 1,nfaces_surface
+    ispec = faces_surface_ispec(ispec2D)
 
     if (ispec_is_acoustic(ispec)) then
+      ! acoustic elements
       if (SAVE_DISPLACEMENT) then
         ! displacement vector
         call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
@@ -409,387 +135,150 @@
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
       endif
-    endif
 
-    if (USE_HIGHRES_FOR_MOVIES) then
-      ! all GLL points on a face
-      do ipoin = 1, NGLLX*NGLLY
-        iglob = faces_surface_ext_mesh(ipoin,ispec2D)
+      ! all surface element points
+      do ipoin = 1, npoin_elem
+        ia = npoin_elem * (ispec2D - 1) + ipoin
+        iglob = faces_surface_ibool(ipoin,ispec2D)
         ! puts displ/velocity values into storage array
-        call wmo_get_vel_vector(ispec,ispec2D,ipoin,iglob, &
-                                val_element, &
-                                NGLLX*NGLLY)
+        call wmo_get_vel_vector(ispec,iglob,ia,val_element)
       enddo
-    else
-      ! only corner points
-      do ipoin = 1, 4
-        iglob = faces_surface_ext_mesh(ipoin,ispec2D)
-        ! puts displ/velocity values into storage array
-        call wmo_get_vel_vector(ispec,ispec2D,ipoin,iglob, &
-                                val_element, &
-                                NGNOD2D_FOUR_CORNERS)
+
+    else if (ispec_is_elastic(ispec)) then
+      ! elastic elements
+      ! all surface element points
+      do ipoin = 1, npoin_elem
+        ia = npoin_elem * (ispec2D - 1) + ipoin
+        iglob = faces_surface_ibool(ipoin,ispec2D)
+
+        if (SAVE_DISPLACEMENT) then
+          ! velocity x,y,z-components
+          store_val_ux(ia) = displ(1,iglob)
+          store_val_uy(ia) = displ(2,iglob)
+          store_val_uz(ia) = displ(3,iglob)
+        else
+          ! velocity x,y,z-components
+          store_val_ux(ia) = veloc(1,iglob)
+          store_val_uy(ia) = veloc(2,iglob)
+          store_val_uz(ia) = veloc(3,iglob)
+        endif
       enddo
     endif
   enddo
 
-! master process collects all info
-  ! collects locations only once
-  if (it == NTSTEP_BETWEEN_FRAMES) then
-    ! master collects all
-    if (myrank == 0) then
-      call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_ext_mesh_points,&
-         store_val_x_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-         nfaces_surface_glob_em_points,NPROC)
-      call gatherv_all_cr(store_val_y_external_mesh,nfaces_surface_ext_mesh_points,&
-         store_val_y_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-         nfaces_surface_glob_em_points,NPROC)
-      call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_ext_mesh_points,&
-         store_val_z_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-         nfaces_surface_glob_em_points,NPROC)
-    else
-      ! slaves just send
-      call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_ext_mesh_points,&
-         dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-         1,NPROC)
-      call gatherv_all_cr(store_val_y_external_mesh,nfaces_surface_ext_mesh_points,&
-         dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-         1,NPROC)
-      call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_ext_mesh_points,&
-         dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-         1,NPROC)
-    endif
-  endif
-
-  ! updates/gathers velocity field (high-res or low-res)
+  ! updates/gathers velocity field
   if (myrank == 0) then
-    call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_ext_mesh_points,&
-         store_val_ux_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-         nfaces_surface_glob_em_points,NPROC)
-    call gatherv_all_cr(store_val_uy_external_mesh,nfaces_surface_ext_mesh_points,&
-         store_val_uy_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-         nfaces_surface_glob_em_points,NPROC)
-    call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_ext_mesh_points,&
-         store_val_uz_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-         nfaces_surface_glob_em_points,NPROC)
+    call gatherv_all_cr(store_val_ux,nfaces_surface_points,&
+         store_val_ux_all,nfaces_perproc_surface,faces_surface_offset,&
+         nfaces_surface_glob_points,NPROC)
+    call gatherv_all_cr(store_val_uy,nfaces_surface_points,&
+         store_val_uy_all,nfaces_perproc_surface,faces_surface_offset,&
+         nfaces_surface_glob_points,NPROC)
+    call gatherv_all_cr(store_val_uz,nfaces_surface_points,&
+         store_val_uz_all,nfaces_perproc_surface,faces_surface_offset,&
+         nfaces_surface_glob_points,NPROC)
   else
     !slaves
-    call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_ext_mesh_points,&
-         dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
+    call gatherv_all_cr(store_val_ux,nfaces_surface_points,&
+         dummy,nfaces_perproc_surface,faces_surface_offset,&
          1,NPROC)
-    call gatherv_all_cr(store_val_uy_external_mesh,nfaces_surface_ext_mesh_points,&
-         dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
+    call gatherv_all_cr(store_val_uy,nfaces_surface_points,&
+         dummy,nfaces_perproc_surface,faces_surface_offset,&
          1,NPROC)
-    call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_ext_mesh_points,&
-         dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
+    call gatherv_all_cr(store_val_uz,nfaces_surface_points,&
+         dummy,nfaces_perproc_surface,faces_surface_offset,&
          1,NPROC)
   endif
 
-! file output
+  ! file output
   if (myrank == 0) then
     write(outputname,"('/moviedata',i6.6)") it
     open(unit=IOUT,file=trim(OUTPUT_FILES)//outputname,status='unknown',form='unformatted',iostat=ier)
     if (ier /= 0) stop 'error opening file moviedata'
-    write(IOUT) store_val_x_all_external_mesh   ! x coordinate
-    write(IOUT) store_val_y_all_external_mesh   ! y coordinate
-    write(IOUT) store_val_z_all_external_mesh   ! z coordinate
-    write(IOUT) store_val_ux_all_external_mesh  ! velocity x-component
-    write(IOUT) store_val_uy_all_external_mesh  ! velocity y-component
-    write(IOUT) store_val_uz_all_external_mesh  ! velocity z-component
+    write(IOUT) store_val_x_all   ! x coordinate
+    write(IOUT) store_val_y_all   ! y coordinate
+    write(IOUT) store_val_z_all   ! z coordinate
+    write(IOUT) store_val_ux_all  ! velocity x-component
+    write(IOUT) store_val_uy_all  ! velocity y-component
+    write(IOUT) store_val_uz_all  ! velocity z-component
     close(IOUT)
   endif
 
-  deallocate(val_element)
-
-  end subroutine wmo_create_movie_surface_em
+  end subroutine wmo_movie_surface_output
 
 !================================================================
 
-  subroutine wmo_get_vel_vector(ispec,ispec2D, &
-                                ipoin,iglob, &
-                                val_element, &
-                                narraydim)
+  subroutine wmo_get_vel_vector(ispec,iglob,ia,val_element)
 
   ! put into this separate routine to make compilation faster
 
-  use specfem_par,only: NDIM,ibool,SAVE_DISPLACEMENT
-  use specfem_par_elastic,only: displ,veloc,ispec_is_elastic
-  use specfem_par_acoustic,only: ispec_is_acoustic
-  use specfem_par_movie
+  use constants,only: NDIM,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL
+
+  use specfem_par,only: ibool
+  use specfem_par_movie,only: store_val_ux,store_val_uy,store_val_uz
+
   implicit none
 
-  integer,intent(in) :: ispec,ispec2D,ipoin,iglob
-  integer,intent(in) :: narraydim
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: val_element
+  integer,intent(in) :: ispec,iglob,ia
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ),intent(in) :: val_element
 
   ! local parameters
   integer :: i,j,k
-  logical :: is_done
 
-  ! elastic displacement/velocity
-  if (ispec_is_elastic(ispec)) then
-    if (SAVE_DISPLACEMENT) then
-      ! velocity x,y,z-components
-      store_val_ux_external_mesh(narraydim*(ispec2D-1)+ipoin) = displ(1,iglob)
-      store_val_uy_external_mesh(narraydim*(ispec2D-1)+ipoin) = displ(2,iglob)
-      store_val_uz_external_mesh(narraydim*(ispec2D-1)+ipoin) = displ(3,iglob)
-    else
-      ! velocity x,y,z-components
-      store_val_ux_external_mesh(narraydim*(ispec2D-1)+ipoin) = veloc(1,iglob)
-      store_val_uy_external_mesh(narraydim*(ispec2D-1)+ipoin) = veloc(2,iglob)
-      store_val_uz_external_mesh(narraydim*(ispec2D-1)+ipoin) = veloc(3,iglob)
-    endif
-  endif
+  do k=1,NGLLZ
+    do j=1,NGLLY
+      do i=1,NGLLX
+        if (iglob == ibool(i,j,k,ispec)) then
+          store_val_ux(ia) = val_element(1,i,j,k)
+          store_val_uy(ia) = val_element(2,i,j,k)
+          store_val_uz(ia) = val_element(3,i,j,k)
 
-  ! acoustic pressure potential
-  if (ispec_is_acoustic(ispec)) then
-    is_done = .false.
-    do k=1,NGLLZ
-      do j=1,NGLLY
-        do i=1,NGLLX
-          if (iglob == ibool(i,j,k,ispec)) then
-            store_val_ux_external_mesh(narraydim*(ispec2D-1)+ipoin) = val_element(1,i,j,k)
-            store_val_uy_external_mesh(narraydim*(ispec2D-1)+ipoin) = val_element(2,i,j,k)
-            store_val_uz_external_mesh(narraydim*(ispec2D-1)+ipoin) = val_element(3,i,j,k)
-            is_done = .true.
-            return
-          endif
-        enddo
+          ! point found, we are done
+          return
+        endif
       enddo
     enddo
-  endif
+  enddo
 
   end subroutine wmo_get_vel_vector
 
-
-!=====================================================================
-
-  subroutine wmo_movie_surface_output_o()
-
-  ! outputs moviedata files
-
-  use specfem_par
-  use specfem_par_elastic
-  use specfem_par_acoustic
-  use specfem_par_movie
-  implicit none
-
-  real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable:: val_element
-  real(kind=CUSTOM_REAL),dimension(1) :: dummy
-  integer :: ispec,ipoin,iglob,i,j,k,ier
-  integer :: imin,imax,jmin,jmax,kmin,kmax,iface,igll,iloc
-  character(len=MAX_STRING_LEN) :: outputname
-
-  ! allocate array for single elements
-  allocate(val_element(NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
-  if (ier /= 0) stop 'error allocating arrays for movie elements'
-
-  ! initializes arrays for point coordinates
-  if (it == NTSTEP_BETWEEN_FRAMES) then
-    ipoin = 0
-    do iface = 1,num_free_surface_faces
-      ispec = free_surface_ispec(iface)
-      ! high_resolution
-      if (USE_HIGHRES_FOR_MOVIES) then
-        do igll = 1, NGLLSQUARE
-          ipoin = ipoin + 1
-          i = free_surface_ijk(1,igll,iface)
-          j = free_surface_ijk(2,igll,iface)
-          k = free_surface_ijk(3,igll,iface)
-          iglob = ibool(i,j,k,ispec)
-          ! coordinates
-          store_val_x_external_mesh(ipoin) = xstore(iglob)
-          store_val_y_external_mesh(ipoin) = ystore(iglob)
-          store_val_z_external_mesh(ipoin) = zstore(iglob)
-        enddo
-      else
-        imin = minval(free_surface_ijk(1,:,iface))
-        imax = maxval(free_surface_ijk(1,:,iface))
-        jmin = minval(free_surface_ijk(2,:,iface))
-        jmax = maxval(free_surface_ijk(2,:,iface))
-        kmin = minval(free_surface_ijk(3,:,iface))
-        kmax = maxval(free_surface_ijk(3,:,iface))
-        do iloc = 1, NGNOD2D_FOUR_CORNERS
-          ipoin = ipoin + 1
-          ! corner points
-          if (imin == imax) then
-            iglob = ibool(imin,iorderi(iloc),iorderj(iloc),ispec)
-          else if (jmin == jmax) then
-            iglob = ibool(iorderi(iloc),jmin,iorderj(iloc),ispec)
-          else
-            iglob = ibool(iorderi(iloc),iorderj(iloc),kmin,ispec)
-          endif
-          ! coordinates
-          store_val_x_external_mesh(ipoin) = xstore(iglob)
-          store_val_y_external_mesh(ipoin) = ystore(iglob)
-          store_val_z_external_mesh(ipoin) = zstore(iglob)
-        enddo
-      endif
-    enddo
-  endif
-
-  ! outputs values on free surface
-  ipoin = 0
-  do iface = 1,num_free_surface_faces
-    ispec = free_surface_ispec(iface)
-
-    if (ispec_is_acoustic(ispec)) then
-      if (SAVE_DISPLACEMENT) then
-        ! displacement vector
-        call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-             potential_acoustic, val_element,&
-             hprime_xx,hprime_yy,hprime_zz, &
-             xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-             ibool,rhostore,GRAVITY)
-      else
-        ! velocity vector
-        call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-             potential_dot_acoustic, val_element,&
-             hprime_xx,hprime_yy,hprime_zz, &
-             xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-             ibool,rhostore,GRAVITY)
-      endif
-    endif
-
-    ! high_resolution
-    if (USE_HIGHRES_FOR_MOVIES) then
-      do igll = 1, NGLLSQUARE
-        ipoin = ipoin + 1
-        i = free_surface_ijk(1,igll,iface)
-        j = free_surface_ijk(2,igll,iface)
-        k = free_surface_ijk(3,igll,iface)
-        iglob = ibool(i,j,k,ispec)
-
-        ! puts displ/velocity values into storage array
-        call wmo_get_vel_vector(ispec,0, &
-                                ipoin,iglob, &
-                                val_element, &
-                                0)
-      enddo
-    else
-      imin = minval(free_surface_ijk(1,:,iface))
-      imax = maxval(free_surface_ijk(1,:,iface))
-      jmin = minval(free_surface_ijk(2,:,iface))
-      jmax = maxval(free_surface_ijk(2,:,iface))
-      kmin = minval(free_surface_ijk(3,:,iface))
-      kmax = maxval(free_surface_ijk(3,:,iface))
-      do iloc = 1, NGNOD2D_FOUR_CORNERS
-        ipoin = ipoin + 1
-        ! corner points
-        if (imin == imax) then
-          iglob = ibool(imin,iorderi(iloc),iorderj(iloc),ispec)
-        else if (jmin == jmax) then
-          iglob = ibool(iorderi(iloc),jmin,iorderj(iloc),ispec)
-        else
-          iglob = ibool(iorderi(iloc),iorderj(iloc),kmin,ispec)
-        endif
-
-        ! puts displ/velocity values into storage array
-        call wmo_get_vel_vector(ispec,0, &
-                                ipoin,iglob, &
-                                val_element, &
-                                0)
-      enddo ! iloc
-    endif
-  enddo ! iface
-
-  ! master process collects all info
-  if (it == NTSTEP_BETWEEN_FRAMES) then
-    ! master collects
-    if (myrank == 0) then
-      call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_ext_mesh_points,&
-           store_val_x_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           nfaces_surface_glob_em_points,NPROC)
-      call gatherv_all_cr(store_val_y_external_mesh,nfaces_surface_ext_mesh_points,&
-           store_val_y_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           nfaces_surface_glob_em_points,NPROC)
-      call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_ext_mesh_points,&
-           store_val_z_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           nfaces_surface_glob_em_points,NPROC)
-    else
-      call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_ext_mesh_points,&
-           dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           1,NPROC)
-      call gatherv_all_cr(store_val_y_external_mesh,nfaces_surface_ext_mesh_points,&
-           dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           1,NPROC)
-      call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_ext_mesh_points,&
-           dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           1,NPROC)
-    endif
-  endif
-
-  ! master collects wavefield
-  if (myrank == 0) then
-    call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_ext_mesh_points,&
-         store_val_ux_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-         nfaces_surface_glob_em_points,NPROC)
-    call gatherv_all_cr(store_val_uy_external_mesh,nfaces_surface_ext_mesh_points,&
-         store_val_uy_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-         nfaces_surface_glob_em_points,NPROC)
-    call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_ext_mesh_points,&
-         store_val_uz_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-         nfaces_surface_glob_em_points,NPROC)
-  else
-    call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_ext_mesh_points,&
-         dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-         1,NPROC)
-    call gatherv_all_cr(store_val_uy_external_mesh,nfaces_surface_ext_mesh_points,&
-         dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-         1,NPROC)
-    call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_ext_mesh_points,&
-         dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-         1,NPROC)
-  endif
-
-  ! file output: note that values are only stored on free surface
-  if (myrank == 0) then
-    write(outputname,"('/moviedata',i6.6)") it
-    open(unit=IOUT,file=trim(OUTPUT_FILES)//outputname,status='unknown',form='unformatted',iostat=ier)
-    if (ier /= 0) stop 'error opening file moviedata'
-    write(IOUT) store_val_x_all_external_mesh   ! x coordinate
-    write(IOUT) store_val_y_all_external_mesh   ! y coordinate
-    write(IOUT) store_val_z_all_external_mesh   ! z coordinate
-    write(IOUT) store_val_ux_all_external_mesh  ! velocity x-component
-    write(IOUT) store_val_uy_all_external_mesh  ! velocity y-component
-    write(IOUT) store_val_uz_all_external_mesh  ! velocity z-component
-    close(IOUT)
-  endif
-
-  deallocate(val_element)
-
-  end subroutine wmo_movie_surface_output_o
-
 !================================================================
 
-  subroutine wmo_create_shakemap_o()
+  subroutine wmo_create_shakemap()
 
-! outputs shakemap file
+! creation of shapemap file
+!
+! option MOVIE_TYPE == 1: uses horizontal peak-ground values, only at top, free surface
+!        MOVIE_TYPE == 2: uses norm of vector as peak-ground, for all external, outer mesh surfaces
 
   use specfem_par
   use specfem_par_elastic
   use specfem_par_acoustic
   use specfem_par_movie
-
   implicit none
-  real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable:: &
-    displ_element,veloc_element,accel_element
-  real(kind=CUSTOM_REAL),dimension(1):: dummy
-  integer :: ipoin,ispec,iglob
-  integer :: imin,imax,jmin,jmax,kmin,kmax,iface,igll,iloc
-  integer :: i,j,k,ier
 
-  ! allocate array for single elements
-  allocate(displ_element(NDIM,NGLLX,NGLLY,NGLLZ), &
-           veloc_element(NDIM,NGLLX,NGLLY,NGLLZ), &
-           accel_element(NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
-  if (ier /= 0) stop 'error allocating arrays for movie elements'
+  ! temporary array for single elements
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: displ_element,veloc_element,accel_element
+  integer :: ipoin,ispec,iglob,ispec2D,ia
+  integer :: npoin_elem
 
-  ! outputs values on free surface
-  ipoin = 0
-  do iface = 1,num_free_surface_faces
-    ispec = free_surface_ispec(iface)
+  ! note: shakemap arrays are initialized to zero after allocation
+
+  ! surface points for single face
+  if (USE_HIGHRES_FOR_MOVIES) then
+    npoin_elem = NGLLX*NGLLY
+  else
+    npoin_elem = NGNOD2D_FOUR_CORNERS
+  endif
+
+  ! determines displacement, velocity and acceleration maximum amplitudes
+  do ispec2D = 1,nfaces_surface
+    ispec = faces_surface_ispec(ispec2D)
 
     if (ispec_is_acoustic(ispec)) then
+      ! acoustic elements
+
+      ! computes displ/veloc/accel for local element
       ! displacement vector
       call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
                           potential_acoustic, displ_element,&
@@ -808,146 +297,64 @@
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
-    endif
 
-    ! save all points for high resolution, or only four corners for low resolution
-    if (USE_HIGHRES_FOR_MOVIES) then
-      do igll = 1, NGLLSQUARE
-        ipoin = ipoin + 1
-        i = free_surface_ijk(1,igll,iface)
-        j = free_surface_ijk(2,igll,iface)
-        k = free_surface_ijk(3,igll,iface)
-        iglob = ibool(i,j,k,ispec)
-        store_val_x_external_mesh(ipoin) = xstore(iglob)
-        store_val_y_external_mesh(ipoin) = ystore(iglob)
-        store_val_z_external_mesh(ipoin) = zstore(iglob)
-        ! todo: are we only interested in the absolute maximum of horizontal (E,N) components?
-        if (ispec_is_elastic( ispec)) then
+      ! all surface element points
+      do ipoin = 1, npoin_elem
+        ia = npoin_elem * (ispec2D - 1) + ipoin
+        iglob = faces_surface_ibool(ipoin,ispec2D)
+
+        if (MOVIE_TYPE == 1) then
+          ! only top surface
+          ! horizontal peak-ground value
+          call wmo_get_max_vector_top(ispec,iglob,ia,displ_element,veloc_element,accel_element)
+        else
+          ! all outer surfaces
+          ! norm of particle displ/veloc/accel vector
+          call wmo_get_max_vector_norm(ispec,iglob,ia,displ_element,veloc_element,accel_element)
+        endif
+      enddo
+
+    else if (ispec_is_elastic(ispec)) then
+      ! elastic elements
+      ! all surface element points
+      do ipoin = 1, npoin_elem
+        ia = npoin_elem * (ispec2D - 1) + ipoin
+        iglob = faces_surface_ibool(ipoin,ispec2D)
+
+        if (MOVIE_TYPE == 1) then
+          ! only top surface, using horizontal peak-ground value
           ! horizontal displacement
-          store_val_ux_external_mesh(ipoin) = max(store_val_ux_external_mesh(ipoin),&
-                                                abs(displ(1,iglob)),abs(displ(2,iglob)))
+          shakemap_ux(ia) = max(shakemap_ux(ia),abs(displ(1,iglob)),abs(displ(2,iglob)))
           ! horizontal velocity
-          store_val_uy_external_mesh(ipoin) = max(store_val_uy_external_mesh(ipoin),&
-                                                abs(veloc(1,iglob)),abs(veloc(2,iglob)))
+          shakemap_uy(ia) = max(shakemap_uy(ia),abs(veloc(1,iglob)),abs(veloc(2,iglob)))
           ! horizontal acceleration
-          store_val_uz_external_mesh(ipoin) = max(store_val_uz_external_mesh(ipoin),&
-                                                abs(accel(1,iglob)),abs(accel(2,iglob)))
+          shakemap_uz(ia) = max(shakemap_uz(ia),abs(accel(1,iglob)),abs(accel(2,iglob)))
+        else
+          ! all outer surfaces, using norm of particle displ/veloc/accel vector
+          ! saves norm of displacement,velocity and acceleration vector
+          ! norm of displacement
+          shakemap_ux(ia) = max(shakemap_ux(ia),sqrt(displ(1,iglob)**2 + displ(2,iglob)**2 + displ(3,iglob)**2))
+          ! norm of velocity
+          shakemap_uy(ia) = max(shakemap_uy(ia),sqrt(veloc(1,iglob)**2 + veloc(2,iglob)**2 + veloc(3,iglob)**2))
+          ! norm of acceleration
+          shakemap_uz(ia) = max(shakemap_uz(ia),sqrt(accel(1,iglob)**2 + accel(2,iglob)**2 + accel(3,iglob)**2))
         endif
-
-        ! acoustic domains
-        if (ispec_is_acoustic(ispec)) then
-          ! stores maximum values
-          call wmo_get_max_vector_o(ispec,iglob,ipoin,displ_element,veloc_element,accel_element)
-        endif
-
       enddo
     else
-      imin = minval( free_surface_ijk(1,:,iface) )
-      imax = maxval( free_surface_ijk(1,:,iface) )
-      jmin = minval( free_surface_ijk(2,:,iface) )
-      jmax = maxval( free_surface_ijk(2,:,iface) )
-      kmin = minval( free_surface_ijk(3,:,iface) )
-      kmax = maxval( free_surface_ijk(3,:,iface) )
-      do iloc = 1, NGNOD2D_FOUR_CORNERS
-        ipoin = ipoin + 1
-        ! corner points
-        if (imin == imax) then
-          iglob = ibool(imin,iorderi(iloc),iorderj(iloc),ispec)
-        else if (jmin == jmax) then
-          iglob = ibool(iorderi(iloc),jmin,iorderj(iloc),ispec)
-        else
-          iglob = ibool(iorderi(iloc),iorderj(iloc),kmin,ispec)
-        endif
-        ! coordinates
-        store_val_x_external_mesh(ipoin) = xstore(iglob)
-        store_val_y_external_mesh(ipoin) = ystore(iglob)
-        store_val_z_external_mesh(ipoin) = zstore(iglob)
-        ! todo: are we only interested in the absolute maximum of horizontal (E,N) components?
-        if (ispec_is_elastic( ispec)) then
-          store_val_ux_external_mesh(ipoin) = max(store_val_ux_external_mesh(ipoin),&
-                                                  abs(displ(1,iglob)),abs(displ(2,iglob)))
-          store_val_uy_external_mesh(ipoin) = max(store_val_uy_external_mesh(ipoin),&
-                                                  abs(veloc(1,iglob)),abs(veloc(2,iglob)))
-          store_val_uz_external_mesh(ipoin) = max(store_val_uz_external_mesh(ipoin),&
-                                                  abs(accel(1,iglob)),abs(accel(2,iglob)))
-        endif
+      ! other element types not supported yet
+      call exit_MPI(myrank,'Invalid element for shakemap, only acoustic or elastic elements are supported for now')
+    endif
 
-        ! acoustic domains
-        if (ispec_is_acoustic(ispec)) then
-          ! stores maximum values
-          call wmo_get_max_vector_o(ispec,iglob,ipoin,displ_element,veloc_element,accel_element)
-        endif
-
-      enddo
-    endif ! USE_HIGHRES_FOR_MOVIES
   enddo
 
   ! saves shakemap only at the end of the simulation
-  if (it == NSTEP) then
-    ! master collects
-    if (myrank == 0) then
-      call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_ext_mesh_points,&
-           store_val_x_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           nfaces_surface_glob_em_points,NPROC)
-      call gatherv_all_cr(store_val_y_external_mesh,nfaces_surface_ext_mesh_points,&
-           store_val_y_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           nfaces_surface_glob_em_points,NPROC)
-      call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_ext_mesh_points,&
-           store_val_z_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           nfaces_surface_glob_em_points,NPROC)
-      call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_ext_mesh_points,&
-           store_val_ux_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           nfaces_surface_glob_em_points,NPROC)
-      call gatherv_all_cr(store_val_uy_external_mesh,nfaces_surface_ext_mesh_points,&
-           store_val_uy_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           nfaces_surface_glob_em_points,NPROC)
-      call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_ext_mesh_points,&
-           store_val_uz_all_external_mesh,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           nfaces_surface_glob_em_points,NPROC)
-    else
-      call gatherv_all_cr(store_val_x_external_mesh,nfaces_surface_ext_mesh_points,&
-           dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           1,NPROC)
-      call gatherv_all_cr(store_val_y_external_mesh,nfaces_surface_ext_mesh_points,&
-           dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           1,NPROC)
-      call gatherv_all_cr(store_val_z_external_mesh,nfaces_surface_ext_mesh_points,&
-           dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           1,NPROC)
-      call gatherv_all_cr(store_val_ux_external_mesh,nfaces_surface_ext_mesh_points,&
-           dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           1,NPROC)
-      call gatherv_all_cr(store_val_uy_external_mesh,nfaces_surface_ext_mesh_points,&
-           dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           1,NPROC)
-      call gatherv_all_cr(store_val_uz_external_mesh,nfaces_surface_ext_mesh_points,&
-           dummy,nfaces_perproc_surface_ext_mesh,faces_surface_offset_ext_mesh,&
-           1,NPROC)
-    endif
+  if (it == NSTEP) call wmo_save_shakemap()
 
-    ! creates shakemap file: note that values are only stored on free surface
-    if (myrank == 0) then
-      open(unit=IOUT,file=trim(OUTPUT_FILES)//'/shakingdata',status='unknown',form='unformatted',iostat=ier)
-      if (ier /= 0) stop 'error opening file shakingdata'
-      write(IOUT) store_val_x_all_external_mesh   ! x coordinates
-      write(IOUT) store_val_y_all_external_mesh   ! y coordinates
-      write(IOUT) store_val_z_all_external_mesh   ! z coordinates
-      write(IOUT) store_val_ux_all_external_mesh  ! norm of displacement vector
-      write(IOUT) store_val_uy_all_external_mesh  ! norm of velocity vector
-      write(IOUT) store_val_uz_all_external_mesh  ! norm of acceleration vector
-      close(IOUT)
-    endif
-
-  endif ! NTSTEP
-
-  deallocate(displ_element,veloc_element,accel_element)
-
-  end subroutine wmo_create_shakemap_o
-
+  end subroutine wmo_create_shakemap
 
 !================================================================
 
-  subroutine wmo_get_max_vector_o(ispec,iglob,ipoin,displ_element,veloc_element,accel_element)
+  subroutine wmo_get_max_vector_top(ispec,iglob,ia,displ_element,veloc_element,accel_element)
 
   ! put into this separate routine to make compilation faster
 
@@ -955,16 +362,11 @@
   use specfem_par_movie
   implicit none
 
-  integer,intent(in) :: ispec,iglob,ipoin
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: &
-    displ_element,veloc_element,accel_element
+  integer,intent(in) :: ispec,iglob,ia
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ),intent(in) :: displ_element,veloc_element,accel_element
 
   ! local parameters
   integer :: i,j,k
-  logical :: is_done
-
-  ! velocity vector
-  is_done = .false.
 
   ! loops over all gll points from this element
   do k=1,NGLLZ
@@ -974,23 +376,122 @@
         if (iglob == ibool(i,j,k,ispec)) then
 
           ! horizontal displacement
-          store_val_ux_external_mesh(ipoin) = max(store_val_ux_external_mesh(ipoin),&
-                                        abs(displ_element(1,i,j,k)),abs(displ_element(2,i,j,k)))
+          shakemap_ux(ia) = max(shakemap_ux(ia),abs(displ_element(1,i,j,k)),abs(displ_element(2,i,j,k)))
           ! horizontal velocity
-          store_val_uy_external_mesh(ipoin) = max(store_val_uy_external_mesh(ipoin),&
-                                        abs(veloc_element(1,i,j,k)),abs(veloc_element(2,i,j,k)))
+          shakemap_uy(ia) = max(shakemap_uy(ia),abs(veloc_element(1,i,j,k)),abs(veloc_element(2,i,j,k)))
           ! horizontal acceleration
-          store_val_uz_external_mesh(ipoin) = max(store_val_uz_external_mesh(ipoin),&
-                                        abs(accel_element(1,i,j,k)),abs(accel_element(2,i,j,k)))
+          shakemap_uz(ia) = max(shakemap_uz(ia),abs(accel_element(1,i,j,k)),abs(accel_element(2,i,j,k)))
 
-          is_done = .true.
+          ! point found, we are done
           return
         endif
       enddo
     enddo
   enddo
 
-  end subroutine wmo_get_max_vector_o
+  end subroutine wmo_get_max_vector_top
+
+!================================================================
+
+  subroutine wmo_get_max_vector_norm(ispec,iglob,ia, &
+                                        displ_element,veloc_element,accel_element)
+
+  ! put into this separate routine to make compilation faster
+
+  use specfem_par,only: NDIM,ibool
+  use specfem_par_movie
+  implicit none
+
+  integer,intent(in) :: ispec,iglob,ia
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ),intent(in) :: displ_element,veloc_element,accel_element
+
+  ! local parameters
+  integer :: i,j,k
+
+  ! loops over all gll points from this element
+  do k=1,NGLLZ
+    do j=1,NGLLY
+      do i=1,NGLLX
+        if (iglob == ibool(i,j,k,ispec)) then
+          ! norm of displacement
+          shakemap_ux(ia) = max(shakemap_ux(ia), &
+                sqrt(displ_element(1,i,j,k)**2 &
+                   + displ_element(2,i,j,k)**2 &
+                   + displ_element(3,i,j,k)**2))
+          ! norm of velocity
+          shakemap_uy(ia) = max(shakemap_uy(ia), &
+                sqrt(veloc_element(1,i,j,k)**2 &
+                   + veloc_element(2,i,j,k)**2 &
+                   + veloc_element(3,i,j,k)**2))
+          ! norm of acceleration
+          shakemap_uz(ia) = max(shakemap_uz(ia), &
+                sqrt(accel_element(1,i,j,k)**2 &
+                   + accel_element(2,i,j,k)**2 &
+                   + accel_element(3,i,j,k)**2))
+
+          ! point found, we are done
+          return
+        endif
+      enddo
+    enddo
+  enddo
+
+  end subroutine wmo_get_max_vector_norm
+
+
+!================================================================
+
+  subroutine wmo_save_shakemap()
+
+  use specfem_par
+  use specfem_par_movie
+
+  implicit none
+
+  ! local parameters
+  integer :: ier
+  real(kind=CUSTOM_REAL),dimension(1):: dummy
+
+  ! master collects
+  if (myrank == 0) then
+    ! shakemaps
+    call gatherv_all_cr(shakemap_ux,nfaces_surface_points,&
+         shakemap_ux_all,nfaces_perproc_surface,faces_surface_offset,&
+         nfaces_surface_glob_points,NPROC)
+    call gatherv_all_cr(shakemap_uy,nfaces_surface_points,&
+         shakemap_uy_all,nfaces_perproc_surface,faces_surface_offset,&
+         nfaces_surface_glob_points,NPROC)
+    call gatherv_all_cr(shakemap_uz,nfaces_surface_points,&
+         shakemap_uz_all,nfaces_perproc_surface,faces_surface_offset,&
+         nfaces_surface_glob_points,NPROC)
+  else
+    ! shakemaps
+    call gatherv_all_cr(shakemap_ux,nfaces_surface_points,&
+         dummy,nfaces_perproc_surface,faces_surface_offset,&
+         1,NPROC)
+    call gatherv_all_cr(shakemap_uy,nfaces_surface_points,&
+         dummy,nfaces_perproc_surface,faces_surface_offset,&
+         1,NPROC)
+    call gatherv_all_cr(shakemap_uz,nfaces_surface_points,&
+         dummy,nfaces_perproc_surface,faces_surface_offset,&
+         1,NPROC)
+  endif
+
+  ! creates shakemap file
+  if (myrank == 0) then
+    open(unit=IOUT,file=trim(OUTPUT_FILES)//'/shakingdata',status='unknown',form='unformatted',iostat=ier)
+    if (ier /= 0) stop 'error opening file shakingdata'
+    write(IOUT) store_val_x_all   ! x coordinates
+    write(IOUT) store_val_y_all   ! y coordinates
+    write(IOUT) store_val_z_all   ! z coordinates
+    write(IOUT) shakemap_ux_all  ! norm of displacement vector
+    write(IOUT) shakemap_uy_all  ! norm of velocity vector
+    write(IOUT) shakemap_uz_all  ! norm of acceleration vector
+    close(IOUT)
+  endif
+
+  end subroutine wmo_save_shakemap
+
 
 !=====================================================================
 

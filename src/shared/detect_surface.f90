@@ -28,7 +28,7 @@
   subroutine detect_surface(NPROC,nglob,nspec,ibool,&
                             ispec_is_surface_external_mesh, &
                             iglob_is_surface_external_mesh, &
-                            nfaces_surface_ext_mesh, &
+                            nfaces_surface, &
                             num_interfaces_ext_mesh, &
                             max_nibool_interfaces_ext_mesh, &
                             nibool_interfaces_ext_mesh, &
@@ -38,7 +38,7 @@
 ! detects surface (points/elements) of model based upon valence
 !
 ! returns: ispec_is_surface_external_mesh, iglob_is_surface_external_mesh
-!               and nfaces_surface_ext_mesh
+!               and nfaces_surface
 
   use constants
 
@@ -51,7 +51,7 @@
 ! surface
   logical, dimension(nspec) :: ispec_is_surface_external_mesh
   logical, dimension(nglob) :: iglob_is_surface_external_mesh
-  integer :: nfaces_surface_ext_mesh
+  integer :: nfaces_surface
 
 ! MPI partitions
   integer :: num_interfaces_ext_mesh
@@ -120,31 +120,31 @@
   enddo ! nspec
 
 ! counts faces for external-mesh movies and shakemaps
-  nfaces_surface_ext_mesh = 0
+  nfaces_surface = 0
   do ispec = 1, nspec
     iglob = ibool(2,2,1,ispec)
     if (iglob_is_surface_external_mesh(iglob)) then
-      nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
+      nfaces_surface = nfaces_surface + 1
     endif
     iglob = ibool(2,2,NGLLZ,ispec)
     if (iglob_is_surface_external_mesh(iglob)) then
-      nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
+      nfaces_surface = nfaces_surface + 1
     endif
     iglob = ibool(2,1,2,ispec)
     if (iglob_is_surface_external_mesh(iglob)) then
-      nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
+      nfaces_surface = nfaces_surface + 1
     endif
     iglob = ibool(2,NGLLY,2,ispec)
     if (iglob_is_surface_external_mesh(iglob)) then
-      nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
+      nfaces_surface = nfaces_surface + 1
     endif
     iglob = ibool(1,2,2,ispec)
     if (iglob_is_surface_external_mesh(iglob)) then
-      nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
+      nfaces_surface = nfaces_surface + 1
     endif
     iglob = ibool(NGLLX,2,2,ispec)
     if (iglob_is_surface_external_mesh(iglob)) then
-      nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
+      nfaces_surface = nfaces_surface + 1
     endif
   enddo
 
@@ -211,7 +211,7 @@
   subroutine detect_surface_cross_section(NPROC,nglob,nspec,ibool,&
                             ispec_is_surface_external_mesh, &
                             iglob_is_surface_external_mesh, &
-                            nfaces_surface_ext_mesh, &
+                            nfaces_surface, &
                             num_interfaces_ext_mesh, &
                             max_nibool_interfaces_ext_mesh, &
                             nibool_interfaces_ext_mesh, &
@@ -227,7 +227,7 @@
 !         (this is only a quick & dirty cross-section implementation, no sophisticated interpolation of points considered...)
 !
 ! returns: ispec_is_surface_external_mesh, iglob_is_surface_external_mesh
-!               and nfaces_surface_ext_mesh
+!               and nfaces_surface
 
   use constants
 
@@ -240,7 +240,7 @@
 ! surface
   logical, dimension(nspec) :: ispec_is_surface_external_mesh
   logical, dimension(nglob) :: iglob_is_surface_external_mesh
-  integer :: nfaces_surface_ext_mesh
+  integer :: nfaces_surface
 
 ! MPI partitions
   integer :: num_interfaces_ext_mesh
@@ -300,7 +300,7 @@
 ! initialize surface indices
   ispec_is_surface_external_mesh(:) = .false.
   iglob_is_surface_external_mesh(:) = .false.
-  nfaces_surface_ext_mesh  = 0
+  nfaces_surface  = 0
   valence_external_mesh(:) = 0
 
 ! sets valence value to one corresponding to process rank  for points on cross-sections
@@ -489,32 +489,32 @@
   enddo
 
 ! counts faces for external-mesh movies and shakemaps
-  nfaces_surface_ext_mesh = 0
+  nfaces_surface = 0
   do ispec = 1, nspec
     if (ispec_is_surface_external_mesh(ispec)) then
       ! zmin face
       if (iglob_is_surface_external_mesh(ibool(2,2,1,ispec))) then
-        nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
+        nfaces_surface = nfaces_surface + 1
       endif
       ! zmax
       if (iglob_is_surface_external_mesh(ibool(2,2,NGLLZ,ispec))) then
-        nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
+        nfaces_surface = nfaces_surface + 1
       endif
       ! ymin
       if (iglob_is_surface_external_mesh(ibool(2,1,2,ispec))) then
-        nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
+        nfaces_surface = nfaces_surface + 1
       endif
       ! ymax
       if (iglob_is_surface_external_mesh(ibool(2,NGLLY,2,ispec))) then
-        nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
+        nfaces_surface = nfaces_surface + 1
       endif
       !xmin
       if (iglob_is_surface_external_mesh(ibool(1,2,2,ispec))) then
-        nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
+        nfaces_surface = nfaces_surface + 1
       endif
       !xmax
       if (iglob_is_surface_external_mesh(ibool(NGLLX,2,2,ispec))) then
-        nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
+        nfaces_surface = nfaces_surface + 1
       endif
     endif
   enddo

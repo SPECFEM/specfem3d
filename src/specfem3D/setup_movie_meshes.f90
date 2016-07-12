@@ -33,252 +33,221 @@
 
   use specfem_par
   use specfem_par_movie
+
   implicit none
 
-  integer :: i,j,k,ispec,iglob,ier
-  integer :: ipoin,nfaces_org
+  ! face corner indices
+  integer,dimension(NGNOD2D_FOUR_CORNERS),parameter :: iorderi = (/ 1,NGLLX,NGLLX,1 /)
+  integer,dimension(NGNOD2D_FOUR_CORNERS),parameter :: iorderj = (/ 1,1,NGLLY,NGLLY /)
+  integer :: i,j,k,iglob,ispec,ispec2D,ia,ier
+  integer :: iface,ipoin,imin,imax,jmin,jmax,kmin,kmax
   character(len=MAX_STRING_LEN) :: filename
+  integer :: nfaces_m,npoin,npoin_elem
+  real(kind=CUSTOM_REAL),dimension(1):: dummy
 
-! initializes mesh arrays for movies and shakemaps
-  allocate(nfaces_perproc_surface_ext_mesh(NPROC), &
-           faces_surface_offset_ext_mesh(NPROC),stat=ier)
-  if (ier /= 0) stop 'error allocating array for movie faces'
-
-  nfaces_org = nfaces_surface_ext_mesh
-  if (nfaces_surface_ext_mesh == 0) then
-    ! dummy arrays
-    if (USE_HIGHRES_FOR_MOVIES) then
-      allocate(faces_surface_ext_mesh(NGLLX*NGLLY,1), &
-               store_val_x_external_mesh(NGLLX*NGLLY*1), &
-               store_val_y_external_mesh(NGLLX*NGLLY*1), &
-               store_val_z_external_mesh(NGLLX*NGLLY*1), &
-               store_val_ux_external_mesh(NGLLX*NGLLY*1), &
-               store_val_uy_external_mesh(NGLLX*NGLLY*1), &
-               store_val_uz_external_mesh(NGLLX*NGLLY*1),stat=ier)
-      if (ier /= 0) stop 'error allocating dummy arrays for highres movie'
-    else
-      allocate(faces_surface_ext_mesh(NGNOD2D_FOUR_CORNERS,1), &
-               store_val_x_external_mesh(NGNOD2D_FOUR_CORNERS*1), &
-               store_val_y_external_mesh(NGNOD2D_FOUR_CORNERS*1), &
-               store_val_z_external_mesh(NGNOD2D_FOUR_CORNERS*1), &
-               store_val_ux_external_mesh(NGNOD2D_FOUR_CORNERS*1), &
-               store_val_uy_external_mesh(NGNOD2D_FOUR_CORNERS*1), &
-               store_val_uz_external_mesh(NGNOD2D_FOUR_CORNERS*1),stat=ier)
-      if (ier /= 0) stop 'error allocating dummy arrays for lowres movie'
-    endif
+  ! number of points per element surface
+  if (USE_HIGHRES_FOR_MOVIES) then
+    npoin_elem = NGLLX*NGLLY
   else
-    if (USE_HIGHRES_FOR_MOVIES) then
-      allocate(faces_surface_ext_mesh(NGLLX*NGLLY,nfaces_surface_ext_mesh), &
-               store_val_x_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh), &
-               store_val_y_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh), &
-               store_val_z_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh), &
-               store_val_ux_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh), &
-               store_val_uy_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh), &
-               store_val_uz_external_mesh(NGLLX*NGLLY*nfaces_surface_ext_mesh),stat=ier)
-      if (ier /= 0) stop 'error allocating arrays for highres movie'
-    else
-      allocate(faces_surface_ext_mesh(NGNOD2D_FOUR_CORNERS,nfaces_surface_ext_mesh), &
-               store_val_x_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh), &
-               store_val_y_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh), &
-               store_val_z_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh), &
-               store_val_ux_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh), &
-               store_val_uy_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh), &
-               store_val_uz_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_ext_mesh),stat=ier)
-      if (ier /= 0) stop 'error allocating arrays for lowres movie'
-    endif
+    npoin_elem = NGNOD2D_FOUR_CORNERS
   endif
-  store_val_ux_external_mesh(:) = 0._CUSTOM_REAL
-  store_val_uy_external_mesh(:) = 0._CUSTOM_REAL
-  store_val_uz_external_mesh(:) = 0._CUSTOM_REAL
+
+  ! number of faces on surface
+  if (nfaces_surface == 0) then
+    ! dummy arrays
+    nfaces_m = 1
+  else
+    nfaces_m = nfaces_surface
+  endif
+
+  ! total number of surface points
+  npoin = npoin_elem * nfaces_m
+
+  ! surface elements
+  allocate(faces_surface_ispec(nfaces_m), &
+           faces_surface_ibool(npoin_elem,nfaces_m),stat=ier)
+  if (ier /= 0) stop 'error allocating array faces_surface_ispec'
+  faces_surface_ispec(:) = 0
+  faces_surface_ibool(:,:) = 0
+
+  ! point locations
+  allocate(store_val_x(npoin), &
+           store_val_y(npoin), &
+           store_val_z(npoin),stat=ier)
+  if (ier /= 0) stop 'error allocating location arrays for highres movie'
+
+  ! surface movie data
+  if (MOVIE_SURFACE) then
+    allocate(store_val_ux(npoin), &
+             store_val_uy(npoin), &
+             store_val_uz(npoin),stat=ier)
+    if (ier /= 0) stop 'error allocating arrays for highres movie'
+  endif
+
+  ! shakemap data
+  if (CREATE_SHAKEMAP) then
+    allocate(shakemap_ux(npoin), &
+             shakemap_uy(npoin), &
+             shakemap_uz(npoin),stat=ier)
+    if (ier /= 0) stop 'error allocating arrays for highres shakemap'
+    ! initializes shakemap values
+    shakemap_ux(:) = 0._CUSTOM_REAL
+    shakemap_uy(:) = 0._CUSTOM_REAL
+    shakemap_uz(:) = 0._CUSTOM_REAL
+  endif
 
   ! number of surface faces for all partitions together
-  call sum_all_i(nfaces_surface_ext_mesh,nfaces_surface_glob_ext_mesh)
+  call sum_all_i(nfaces_surface,nfaces_surface_glob_ext_mesh)
 
   ! arrays used for collected/gathered fields
   if (myrank == 0) then
-    if (USE_HIGHRES_FOR_MOVIES) then
-      allocate(store_val_x_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh), &
-               store_val_y_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh), &
-               store_val_z_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh), &
-               store_val_ux_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh), &
-               store_val_uy_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh), &
-               store_val_uz_all_external_mesh(NGLLX*NGLLY*nfaces_surface_glob_ext_mesh),stat=ier)
+    ! all point locations
+    allocate(store_val_x_all(npoin_elem*nfaces_surface_glob_ext_mesh), &
+             store_val_y_all(npoin_elem*nfaces_surface_glob_ext_mesh), &
+             store_val_z_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
+    if (ier /= 0) stop 'error allocating arrays for highres movie'
+
+    ! surface movie
+    if (MOVIE_SURFACE) then
+      allocate(store_val_ux_all(npoin_elem*nfaces_surface_glob_ext_mesh), &
+               store_val_uy_all(npoin_elem*nfaces_surface_glob_ext_mesh), &
+               store_val_uz_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
       if (ier /= 0) stop 'error allocating arrays for highres movie'
-    else
-      allocate(store_val_x_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_glob_ext_mesh), &
-               store_val_y_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_glob_ext_mesh), &
-               store_val_z_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_glob_ext_mesh), &
-               store_val_ux_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_glob_ext_mesh), &
-               store_val_uy_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_glob_ext_mesh), &
-               store_val_uz_all_external_mesh(NGNOD2D_FOUR_CORNERS*nfaces_surface_glob_ext_mesh),stat=ier)
-      if (ier /= 0) stop 'error allocating arrays for lowres movie'
+    endif
+
+    ! shakemap
+    if (CREATE_SHAKEMAP) then
+      allocate(shakemap_ux_all(npoin_elem*nfaces_surface_glob_ext_mesh), &
+               shakemap_uy_all(npoin_elem*nfaces_surface_glob_ext_mesh), &
+               shakemap_uz_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
+      if (ier /= 0) stop 'error allocating arrays for highres movie'
     endif
   endif
-  call gather_all_singlei(nfaces_surface_ext_mesh,nfaces_perproc_surface_ext_mesh,NPROC)
+
+  ! arrays for collecting movies and shakemaps
+  allocate(nfaces_perproc_surface(NPROC), &
+           faces_surface_offset(NPROC),stat=ier)
+  if (ier /= 0) stop 'error allocating array for movie faces'
+
+  ! number of faces per slice
+  call gather_all_singlei(nfaces_surface,nfaces_perproc_surface,NPROC)
 
   ! array offsets
-  faces_surface_offset_ext_mesh(1) = 0
+  faces_surface_offset(1) = 0
   do i = 2, NPROC
-    faces_surface_offset_ext_mesh(i) = sum(nfaces_perproc_surface_ext_mesh(1:i-1))
+    faces_surface_offset(i) = sum(nfaces_perproc_surface(1:i-1))
   enddo
-  if (USE_HIGHRES_FOR_MOVIES) then
-    faces_surface_offset_ext_mesh(:) = faces_surface_offset_ext_mesh(:)*NGLLX*NGLLY
-  else
-    faces_surface_offset_ext_mesh(:) = faces_surface_offset_ext_mesh(:)*NGNOD2D_FOUR_CORNERS
-  endif
+  faces_surface_offset(:) = faces_surface_offset(:)*npoin_elem
 
-! stores global indices of GLL points on the surface to array faces_surface_ext_mesh
-  if (MOVIE_TYPE == 2) then
+  ! determines surface elements and indexes for movie/shakemap
+  ! stores global indices of GLL points on the surface to array faces_surface_ibool
+  select case (MOVIE_TYPE)
+  case (1)
+    ! only for top, free surface
+    ! check
+    if (num_free_surface_faces /= nfaces_surface) then
+      print *,'Error: rank ',myrank,'has invalid num_free_surface_faces and nfaces_surface values for surface movie'
+      print *,'  num_free_surface_faces = ',num_free_surface_faces,'nfaces_surface = ',nfaces_surface
+      stop 'Error num_free_surface_faces and nfaces_surface for surface MOVIE_TYPE == 1'
+    endif
 
-    allocate( faces_surface_ext_mesh_ispec(nfaces_surface_ext_mesh),stat=ier)
-    if (ier /= 0) stop 'error allocating array faces_surface_ext_mesh_ispec'
+    ! determines movie indexing for all faces on top, free surface
+    do iface = 1,num_free_surface_faces
+      ispec = free_surface_ispec(iface)
 
-    ! stores global indices
-    nfaces_surface_ext_mesh = 0
-    do ispec = 1, NSPEC_AB
+      ! copies element addressing for movie surface
+      faces_surface_ispec(iface) = ispec
 
-      if (ispec_is_surface_external_mesh(ispec)) then
-
-        ! zmin face
-        iglob = ibool(2,2,1,ispec)
-        if (iglob_is_surface_external_mesh(iglob)) then
-          nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
-          faces_surface_ext_mesh_ispec(nfaces_surface_ext_mesh) = ispec
-          if (USE_HIGHRES_FOR_MOVIES) then
-            ipoin =0
-            do j = NGLLY, 1, -1
-              do i = 1, NGLLX
-                ipoin = ipoin+1
-                faces_surface_ext_mesh(ipoin,nfaces_surface_ext_mesh) = ibool(i,j,1,ispec)
-              enddo
-            enddo
+      ! high_resolution
+      if (USE_HIGHRES_FOR_MOVIES) then
+        do ipoin = 1, npoin_elem
+          i = free_surface_ijk(1,ipoin,iface)
+          j = free_surface_ijk(2,ipoin,iface)
+          k = free_surface_ijk(3,ipoin,iface)
+          iglob = ibool(i,j,k,ispec)
+          ! sets indices
+          faces_surface_ibool(ipoin,iface) = iglob
+        enddo
+      else
+        imin = minval(free_surface_ijk(1,:,iface))
+        imax = maxval(free_surface_ijk(1,:,iface))
+        jmin = minval(free_surface_ijk(2,:,iface))
+        jmax = maxval(free_surface_ijk(2,:,iface))
+        kmin = minval(free_surface_ijk(3,:,iface))
+        kmax = maxval(free_surface_ijk(3,:,iface))
+        do ipoin = 1,npoin_elem
+          ! corner points
+          if (imin == imax) then
+            iglob = ibool(imin,iorderi(ipoin),iorderj(ipoin),ispec)
+          else if (jmin == jmax) then
+            iglob = ibool(iorderi(ipoin),jmin,iorderj(ipoin),ispec)
           else
-            faces_surface_ext_mesh(1,nfaces_surface_ext_mesh) = ibool(1,1,1,ispec)
-            faces_surface_ext_mesh(2,nfaces_surface_ext_mesh) = ibool(1,NGLLY,1,ispec)
-            faces_surface_ext_mesh(3,nfaces_surface_ext_mesh) = ibool(NGLLX,NGLLY,1,ispec)
-            faces_surface_ext_mesh(4,nfaces_surface_ext_mesh) = ibool(NGLLX,1,1,ispec)
+            iglob = ibool(iorderi(ipoin),iorderj(ipoin),kmin,ispec)
           endif
-        endif
-        ! zmax face
-        iglob = ibool(2,2,NGLLZ,ispec)
-        if (iglob_is_surface_external_mesh(iglob)) then
-          nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
-          faces_surface_ext_mesh_ispec(nfaces_surface_ext_mesh) = ispec
-          if (USE_HIGHRES_FOR_MOVIES) then
-            ipoin =0
-            do j = 1, NGLLY
-              do i = 1, NGLLX
-                ipoin = ipoin+1
-                faces_surface_ext_mesh(ipoin,nfaces_surface_ext_mesh) = ibool(i,j,NGLLZ,ispec)
-              enddo
-            enddo
-          else
-            faces_surface_ext_mesh(1,nfaces_surface_ext_mesh) = ibool(1,1,NGLLZ,ispec)
-            faces_surface_ext_mesh(2,nfaces_surface_ext_mesh) = ibool(NGLLX,1,NGLLZ,ispec)
-            faces_surface_ext_mesh(3,nfaces_surface_ext_mesh) = ibool(NGLLX,NGLLY,NGLLZ,ispec)
-            faces_surface_ext_mesh(4,nfaces_surface_ext_mesh) = ibool(1,NGLLY,NGLLZ,ispec)
-          endif
-        endif
-        ! ymin face
-        iglob = ibool(2,1,2,ispec)
-        if (iglob_is_surface_external_mesh(iglob)) then
-          nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
-          faces_surface_ext_mesh_ispec(nfaces_surface_ext_mesh) = ispec
-          if (USE_HIGHRES_FOR_MOVIES) then
-            ipoin =0
-            do k = 1, NGLLZ
-              do i = 1, NGLLX
-                ipoin = ipoin+1
-                faces_surface_ext_mesh(ipoin,nfaces_surface_ext_mesh) = ibool(i,1,k,ispec)
-              enddo
-            enddo
-          else
-            faces_surface_ext_mesh(1,nfaces_surface_ext_mesh) = ibool(1,1,1,ispec)
-            faces_surface_ext_mesh(2,nfaces_surface_ext_mesh) = ibool(NGLLX,1,1,ispec)
-            faces_surface_ext_mesh(3,nfaces_surface_ext_mesh) = ibool(NGLLX,1,NGLLZ,ispec)
-            faces_surface_ext_mesh(4,nfaces_surface_ext_mesh) = ibool(1,1,NGLLZ,ispec)
-          endif
-        endif
-        ! ymax face
-        iglob = ibool(2,NGLLY,2,ispec)
-        if (iglob_is_surface_external_mesh(iglob)) then
-          nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
-          faces_surface_ext_mesh_ispec(nfaces_surface_ext_mesh) = ispec
-          if (USE_HIGHRES_FOR_MOVIES) then
-            ipoin =0
-            do k = 1, NGLLZ
-              do i = NGLLX, 1, -1
-                ipoin = ipoin+1
-                faces_surface_ext_mesh(ipoin,nfaces_surface_ext_mesh) = ibool(i,NGLLY,k,ispec)
-              enddo
-            enddo
-          else
-            faces_surface_ext_mesh(1,nfaces_surface_ext_mesh) = ibool(NGLLX,NGLLY,1,ispec)
-            faces_surface_ext_mesh(2,nfaces_surface_ext_mesh) = ibool(1,NGLLY,1,ispec)
-            faces_surface_ext_mesh(3,nfaces_surface_ext_mesh) = ibool(1,NGLLY,NGLLZ,ispec)
-            faces_surface_ext_mesh(4,nfaces_surface_ext_mesh) = ibool(NGLLX,NGLLY,NGLLZ,ispec)
-          endif
-        endif
-        ! xmin face
-        iglob = ibool(1,2,2,ispec)
-        if (iglob_is_surface_external_mesh(iglob)) then
-          nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
-          faces_surface_ext_mesh_ispec(nfaces_surface_ext_mesh) = ispec
-          if (USE_HIGHRES_FOR_MOVIES) then
-            ipoin =0
-            do k = 1, NGLLZ
-              do j = NGLLY, 1, -1
-                ipoin = ipoin+1
-                faces_surface_ext_mesh(ipoin,nfaces_surface_ext_mesh) = ibool(1,j,k,ispec)
-              enddo
-            enddo
-          else
-            faces_surface_ext_mesh(1,nfaces_surface_ext_mesh) = ibool(1,NGLLY,1,ispec)
-            faces_surface_ext_mesh(2,nfaces_surface_ext_mesh) = ibool(1,1,1,ispec)
-            faces_surface_ext_mesh(3,nfaces_surface_ext_mesh) = ibool(1,1,NGLLZ,ispec)
-            faces_surface_ext_mesh(4,nfaces_surface_ext_mesh) = ibool(1,NGLLY,NGLLZ,ispec)
-          endif
-        endif
-        ! xmax face
-        iglob = ibool(NGLLX,2,2,ispec)
-        if (iglob_is_surface_external_mesh(iglob)) then
-          nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
-          faces_surface_ext_mesh_ispec(nfaces_surface_ext_mesh) = ispec
-          if (USE_HIGHRES_FOR_MOVIES) then
-            ipoin =0
-            do k = 1, NGLLZ
-              do j = 1, NGLLY
-                ipoin = ipoin+1
-                faces_surface_ext_mesh(ipoin,nfaces_surface_ext_mesh) = ibool(NGLLX,j,k,ispec)
-              enddo
-            enddo
-          else
-            faces_surface_ext_mesh(1,nfaces_surface_ext_mesh) = ibool(NGLLX,1,1,ispec)
-            faces_surface_ext_mesh(2,nfaces_surface_ext_mesh) = ibool(NGLLX,NGLLY,1,ispec)
-            faces_surface_ext_mesh(3,nfaces_surface_ext_mesh) = ibool(NGLLX,NGLLY,NGLLZ,ispec)
-            faces_surface_ext_mesh(4,nfaces_surface_ext_mesh) = ibool(NGLLX,1,NGLLZ,ispec)
-          endif
-        endif
+          ! sets indices
+          faces_surface_ibool(ipoin,iface) = iglob
+        enddo
       endif
-    enddo ! NSPEC_AB
+    enddo
+
+  case (2)
+    ! all external, outer surfaces
+    ! face counter
+    iface = 0
+    ! for all mesh elements touching an external, outer surface
+    do ispec = 1, NSPEC_AB
+      if (ispec_is_surface_external_mesh(ispec)) then
+        ! determines indexing for all faces on a outer surface
+        call setup_movie_face_indices(ispec,iface)
+      endif
+    enddo
 
     ! checks number of faces
-    if (nfaces_surface_ext_mesh /= nfaces_org) then
-      print *,'error number of movie faces: ',nfaces_surface_ext_mesh,nfaces_org
-      call exit_mpi(myrank,'error number of faces')
+    if (iface /= nfaces_surface) then
+      print *,'Error: number of movie faces found ',iface,'should be',nfaces_surface
+      call exit_mpi(myrank,'Error number of faces')
     endif
-  endif ! MOVIE_TYPE == 2
+
+  case default
+    ! not recognized type
+    call exit_MPI(myrank,'Invalid MOVIE_TYPE value for surface movie and/or shakemap, must be 1 or 2')
+
+  end select
 
   ! user output
   if (myrank == 0) then
+    write(IMAIN,*) 'mesh surfaces:'
+    write(IMAIN,*) '  high-resolution  = ',USE_HIGHRES_FOR_MOVIES
+    write(IMAIN,*) '  nfaces per slice = ',nfaces_perproc_surface(:)
+    write(IMAIN,*)
+    write(IMAIN,*) '  total number of surface faces is ',nfaces_surface_glob_ext_mesh
+    write(IMAIN,*)
     if (PLOT_CROSS_SECTIONS) then
-      write(IMAIN,*) 'movie cross-sections:'
-    else
-      write(IMAIN,*) 'movie surface:'
+      write(IMAIN,*) '  used on cross-sections'
+      write(IMAIN,*)
     endif
-    write(IMAIN,*) '  nfaces_surface_ext_mesh:',nfaces_surface_ext_mesh
-    write(IMAIN,*) '  nfaces_perproc_surface_ext_mesh:',nfaces_perproc_surface_ext_mesh
-    write(IMAIN,*) '  nfaces_surface_glob_ext_mesh:',nfaces_surface_glob_ext_mesh
+    ! shakemaps
+    if (CREATE_SHAKEMAP) then
+      write(IMAIN,*) 'shakemap:'
+      if (MOVIE_TYPE == 1) then
+        write(IMAIN,*) '  movie type 1: horizontal peak-ground values'
+      else if (MOVIE_TYPE == 2) then
+        write(IMAIN,*) '  movie type 2: maximum length of particle vector'
+      endif
+      write(IMAIN,*)
+    endif
+    ! surface movie
+    if (MOVIE_SURFACE) then
+      write(IMAIN,*) 'surface movies:'
+      if (SAVE_DISPLACEMENT) then
+        write(IMAIN,*) '  saving: particle displacements'
+      else
+        write(IMAIN,*) '  saving: particle velocities'
+      endif
+      write(IMAIN,*) '  number of steps between frames = ',NTSTEP_BETWEEN_FRAMES
+      write(IMAIN,*)
+    endif
+    call flush_IMAIN()
 
     ! updates number of surface elements in an include file for the movies
     if (nfaces_surface_glob_ext_mesh > 0) then
@@ -294,21 +263,204 @@
       write(IOUT,*)
       close(IOUT)
     endif
-
   endif
 
   ! for gathering movie data
-  if (USE_HIGHRES_FOR_MOVIES) then
-    ! hi-res movies output all gll points on surface
-    nfaces_perproc_surface_ext_mesh(:) = nfaces_perproc_surface_ext_mesh(:)*NGLLX*NGLLY
-    nfaces_surface_ext_mesh_points = nfaces_surface_ext_mesh*NGLLX*NGLLY
-    nfaces_surface_glob_em_points = nfaces_surface_glob_ext_mesh*NGLLX*NGLLY
+  ! all gll points on surface
+  nfaces_perproc_surface(:) = nfaces_perproc_surface(:) * npoin_elem
+  nfaces_surface_points = nfaces_surface * npoin_elem
+  nfaces_surface_glob_points = nfaces_surface_glob_ext_mesh * npoin_elem
+
+  ! sets surface point locations
+  do ispec2D = 1,nfaces_surface
+    do ipoin = 1,npoin_elem
+      iglob = faces_surface_ibool(ipoin,ispec2D)
+      ia = npoin_elem * (ispec2D - 1) + ipoin
+      ! x,y,z point coordinates
+      store_val_x(ia) = xstore(iglob)
+      store_val_y(ia) = ystore(iglob)
+      store_val_z(ia) = zstore(iglob)
+    enddo
+  enddo
+  ! master process collects all info
+  ! collects locations only once
+  ! master collects all
+  if (myrank == 0) then
+    call gatherv_all_cr(store_val_x,nfaces_surface_points,&
+       store_val_x_all,nfaces_perproc_surface,faces_surface_offset,&
+       nfaces_surface_glob_points,NPROC)
+    call gatherv_all_cr(store_val_y,nfaces_surface_points,&
+       store_val_y_all,nfaces_perproc_surface,faces_surface_offset,&
+       nfaces_surface_glob_points,NPROC)
+    call gatherv_all_cr(store_val_z,nfaces_surface_points,&
+       store_val_z_all,nfaces_perproc_surface,faces_surface_offset,&
+       nfaces_surface_glob_points,NPROC)
   else
-    ! low-res movies only output at element corners
-    nfaces_perproc_surface_ext_mesh(:) = nfaces_perproc_surface_ext_mesh(:)*NGNOD2D_FOUR_CORNERS
-    nfaces_surface_ext_mesh_points = nfaces_surface_ext_mesh*NGNOD2D_FOUR_CORNERS
-    nfaces_surface_glob_em_points = nfaces_surface_glob_ext_mesh*NGNOD2D_FOUR_CORNERS
+    ! slaves just send
+    call gatherv_all_cr(store_val_x,nfaces_surface_points,&
+       dummy,nfaces_perproc_surface,faces_surface_offset,&
+       1,NPROC)
+    call gatherv_all_cr(store_val_y,nfaces_surface_points,&
+       dummy,nfaces_perproc_surface,faces_surface_offset,&
+       1,NPROC)
+    call gatherv_all_cr(store_val_z,nfaces_surface_points,&
+       dummy,nfaces_perproc_surface,faces_surface_offset,&
+       1,NPROC)
   endif
 
   end subroutine setup_movie_meshes
 
+!================================================================
+
+  subroutine setup_movie_face_indices(ispec,iface)
+
+! sets up arrays faces_surface_ibool,faces_surface_ispec
+
+  use constants,only: NGLLX,NGLLY,NGLLZ
+  use specfem_par,only: USE_HIGHRES_FOR_MOVIES,ibool,iglob_is_surface_external_mesh
+
+  use specfem_par_movie,only: faces_surface_ibool,faces_surface_ispec
+
+  implicit none
+
+  integer,intent(in) :: ispec
+  integer,intent(inout) :: iface
+
+  ! local parameters
+  integer :: iglob,i,j,k,ipoin
+
+  ! checks if interior point on element surface is on an external mesh surface
+
+  ! zmin face
+  iglob = ibool(2,2,1,ispec)
+  if (iglob_is_surface_external_mesh(iglob)) then
+    iface = iface + 1
+    faces_surface_ispec(iface) = ispec
+    if (USE_HIGHRES_FOR_MOVIES) then
+      ipoin = 0
+      do j = NGLLY, 1, -1
+        do i = 1, NGLLX
+          ipoin = ipoin+1
+          faces_surface_ibool(ipoin,iface) = ibool(i,j,1,ispec)
+        enddo
+      enddo
+    else
+      ! only corners
+      faces_surface_ibool(1,iface) = ibool(1,1,1,ispec)
+      faces_surface_ibool(2,iface) = ibool(1,NGLLY,1,ispec)
+      faces_surface_ibool(3,iface) = ibool(NGLLX,NGLLY,1,ispec)
+      faces_surface_ibool(4,iface) = ibool(NGLLX,1,1,ispec)
+    endif
+  endif
+
+  ! zmax face
+  iglob = ibool(2,2,NGLLZ,ispec)
+  if (iglob_is_surface_external_mesh(iglob)) then
+    iface = iface + 1
+    faces_surface_ispec(iface) = ispec
+    if (USE_HIGHRES_FOR_MOVIES) then
+      ipoin = 0
+      do j = 1, NGLLY
+        do i = 1, NGLLX
+          ipoin = ipoin+1
+          faces_surface_ibool(ipoin,iface) = ibool(i,j,NGLLZ,ispec)
+        enddo
+      enddo
+    else
+      ! only corners
+      faces_surface_ibool(1,iface) = ibool(1,1,NGLLZ,ispec)
+      faces_surface_ibool(2,iface) = ibool(NGLLX,1,NGLLZ,ispec)
+      faces_surface_ibool(3,iface) = ibool(NGLLX,NGLLY,NGLLZ,ispec)
+      faces_surface_ibool(4,iface) = ibool(1,NGLLY,NGLLZ,ispec)
+    endif
+  endif
+
+  ! ymin face
+  iglob = ibool(2,1,2,ispec)
+  if (iglob_is_surface_external_mesh(iglob)) then
+    iface = iface + 1
+    faces_surface_ispec(iface) = ispec
+    if (USE_HIGHRES_FOR_MOVIES) then
+      ipoin = 0
+      do k = 1, NGLLZ
+        do i = 1, NGLLX
+          ipoin = ipoin+1
+          faces_surface_ibool(ipoin,iface) = ibool(i,1,k,ispec)
+        enddo
+      enddo
+    else
+      ! only corners
+      faces_surface_ibool(1,iface) = ibool(1,1,1,ispec)
+      faces_surface_ibool(2,iface) = ibool(NGLLX,1,1,ispec)
+      faces_surface_ibool(3,iface) = ibool(NGLLX,1,NGLLZ,ispec)
+      faces_surface_ibool(4,iface) = ibool(1,1,NGLLZ,ispec)
+    endif
+  endif
+
+  ! ymax face
+  iglob = ibool(2,NGLLY,2,ispec)
+  if (iglob_is_surface_external_mesh(iglob)) then
+    iface = iface + 1
+    faces_surface_ispec(iface) = ispec
+    if (USE_HIGHRES_FOR_MOVIES) then
+      ipoin = 0
+      do k = 1, NGLLZ
+        do i = NGLLX, 1, -1
+          ipoin = ipoin+1
+          faces_surface_ibool(ipoin,iface) = ibool(i,NGLLY,k,ispec)
+        enddo
+      enddo
+    else
+      ! only corners
+      faces_surface_ibool(1,iface) = ibool(NGLLX,NGLLY,1,ispec)
+      faces_surface_ibool(2,iface) = ibool(1,NGLLY,1,ispec)
+      faces_surface_ibool(3,iface) = ibool(1,NGLLY,NGLLZ,ispec)
+      faces_surface_ibool(4,iface) = ibool(NGLLX,NGLLY,NGLLZ,ispec)
+    endif
+  endif
+
+  ! xmin face
+  iglob = ibool(1,2,2,ispec)
+  if (iglob_is_surface_external_mesh(iglob)) then
+    iface = iface + 1
+    faces_surface_ispec(iface) = ispec
+    if (USE_HIGHRES_FOR_MOVIES) then
+      ipoin = 0
+      do k = 1, NGLLZ
+        do j = NGLLY, 1, -1
+          ipoin = ipoin+1
+          faces_surface_ibool(ipoin,iface) = ibool(1,j,k,ispec)
+        enddo
+      enddo
+    else
+      ! only corners
+      faces_surface_ibool(1,iface) = ibool(1,NGLLY,1,ispec)
+      faces_surface_ibool(2,iface) = ibool(1,1,1,ispec)
+      faces_surface_ibool(3,iface) = ibool(1,1,NGLLZ,ispec)
+      faces_surface_ibool(4,iface) = ibool(1,NGLLY,NGLLZ,ispec)
+    endif
+  endif
+
+  ! xmax face
+  iglob = ibool(NGLLX,2,2,ispec)
+  if (iglob_is_surface_external_mesh(iglob)) then
+    iface = iface + 1
+    faces_surface_ispec(iface) = ispec
+    if (USE_HIGHRES_FOR_MOVIES) then
+      ipoin = 0
+      do k = 1, NGLLZ
+        do j = 1, NGLLY
+          ipoin = ipoin+1
+          faces_surface_ibool(ipoin,iface) = ibool(NGLLX,j,k,ispec)
+        enddo
+      enddo
+    else
+      ! only corners
+      faces_surface_ibool(1,iface) = ibool(NGLLX,1,1,ispec)
+      faces_surface_ibool(2,iface) = ibool(NGLLX,NGLLY,1,ispec)
+      faces_surface_ibool(3,iface) = ibool(NGLLX,NGLLY,NGLLZ,ispec)
+      faces_surface_ibool(4,iface) = ibool(NGLLX,1,NGLLZ,ispec)
+    endif
+  endif
+
+  end subroutine setup_movie_face_indices

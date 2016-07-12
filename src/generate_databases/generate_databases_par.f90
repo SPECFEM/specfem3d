@@ -163,7 +163,7 @@
   double precision :: nglob_total
 
   logical,dimension(:),allocatable :: ispec_is_surface_external_mesh,iglob_is_surface_external_mesh
-  integer :: nfaces_surface_ext_mesh,nfaces_surface_glob_ext_mesh
+  integer :: nfaces_surface,nfaces_surface_glob_ext_mesh
 
   end module generate_databases_par
 

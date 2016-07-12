@@ -534,25 +534,35 @@ module specfem_par_movie
 
   implicit none
 
-! to save full 3D snapshot of velocity (movie volume
+  ! to save full 3D snapshot of velocity (movie volume
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: div, curl_x, curl_y, curl_z
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: velocity_x,velocity_y,velocity_z
 
-! shakemovies and movie surface
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_x_external_mesh
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_y_external_mesh
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_z_external_mesh
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_x_all_external_mesh
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_y_all_external_mesh
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_z_all_external_mesh
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_ux_external_mesh
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_uy_external_mesh
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_uz_external_mesh
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_ux_all_external_mesh
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_uy_all_external_mesh
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_uz_all_external_mesh
+  ! surface point locations
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_x
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_y
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_z
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_x_all
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_y_all
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_z_all
 
-! movie volume
+  ! movie data
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_ux
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_uy
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_uz
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_ux_all
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_uy_all
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_uz_all
+
+  ! shakemovie data
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: shakemap_ux
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: shakemap_uy
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: shakemap_uz
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: shakemap_ux_all
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: shakemap_uy_all
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: shakemap_uz_all
+
+  ! movie volume
   real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl
 
   real(kind=CUSTOM_REAL) hp1,hp2,hp3
@@ -561,17 +571,15 @@ module specfem_par_movie
   real(kind=CUSTOM_REAL) tempy1l,tempy2l,tempy3l
   real(kind=CUSTOM_REAL) tempz1l,tempz2l,tempz3l
 
-! for storing surface of external mesh
-  integer,dimension(:),allocatable :: nfaces_perproc_surface_ext_mesh
-  integer,dimension(:),allocatable :: faces_surface_offset_ext_mesh
-  integer,dimension(:,:),allocatable :: faces_surface_ext_mesh
-  integer,dimension(:),allocatable :: faces_surface_ext_mesh_ispec
-  integer :: nfaces_surface_ext_mesh,nfaces_surface_ext_mesh_points
-  integer :: nfaces_surface_glob_ext_mesh,nfaces_surface_glob_em_points
-  ! face corner indices
-  integer :: iorderi(NGNOD2D_FOUR_CORNERS),iorderj(NGNOD2D_FOUR_CORNERS)
+  ! for storing surface of external mesh
+  integer,dimension(:),allocatable :: nfaces_perproc_surface
+  integer,dimension(:),allocatable :: faces_surface_offset
+  integer,dimension(:,:),allocatable :: faces_surface_ibool
+  integer,dimension(:),allocatable :: faces_surface_ispec
+  integer :: nfaces_surface,nfaces_surface_points
+  integer :: nfaces_surface_glob_ext_mesh,nfaces_surface_glob_points
 
-! movie parameters
+  ! movie parameters
   logical :: MOVIE_SIMULATION
 
 end module specfem_par_movie

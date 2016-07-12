@@ -69,25 +69,28 @@ by the simulation, but for a finite source one would keep all the
 \texttt{half durations} as prescribed by the finite source model and
 set \texttt{HDUR\_MOVIE} = 0.0.
 
-\subsection{Movie Surface}
+\subsection{Movie Surface and Shakemaps}
 
 When running \texttt{xspecfem3D} with the \texttt{MOVIE\_SURFACE}
 flag turned on, the code outputs \texttt{moviedata??????} files in
 the \texttt{OUTPUT\_FILES} directory. There are several flags in the
 main parameter file \texttt{Par\_file} that control the output of
-these movie data files (see section \ref{cha:Main-Parameter} for
-details):
-\texttt{\small NTSTEP\_BETWEEN\_FRAMES} to set the
-timesteps between frames,
-\texttt{\small SAVE\_DISPLACEMENT}
-to save displacement instead of velocity,
-\texttt{\small USE\_HIGHRES\_FOR\_MOVIES}
-to save values at all GLL point instead of element edges. In order
-to output additionally shakemaps, you would set the parameter
-\texttt{\small CREATE\_SHAKEMAP}
-to \texttt{\small .true.}.
+these movie data files, please see section \ref{cha:Main-Parameter} for
+more details. Especially, the following parameters affect the output:
+\begin{itemize}
+\item \texttt{\small SAVE\_DISPLACEMENT}: to save displacement instead of velocity,
+\item \texttt{\small NTSTEP\_BETWEEN\_FRAMES}: to set the timesteps between frames,
+\item \texttt{\small USE\_HIGHRES\_FOR\_MOVIES}: to save values at all GLL point instead of element edges.
+\end{itemize}
 
-The files are in a fairly complicated binary format, but there is
+You can also output shakemaps independant of the \texttt{MOVIE\_SURFACE} flag. Shakemaps show the peak-ground values of the simulation. For creating shakemaps (at the end of the simulation), you would set the parameter
+\texttt{\small CREATE\_SHAKEMAP} to \texttt{\small .true.}.
+For shakemaps, both the parameters \texttt{\small MOVIE\_TYPE} and \texttt{\small USE\_HIGHRES\_FOR\_MOVIES} affect the output. The following setting has an additional affect:
+\begin{itemize}
+\item \texttt{\small MOVIE\_TYPE}: if set to $1$, the horizontal peak-ground values of displacement/velocity/acceleration are output. if set to $2$, the maximum length of the particle displacement/velocity/acceleration vector is output. Please be aware that these peak-ground values can differ from each other.
+\end{itemize}
+
+The movie and shakemap output files are in a custom binary format, but there is
 a program provided to convert the output into more user friendly formats:
 \begin{description}
 \item [{\texttt{xcreate\_movie\_shakemap\_AVS\_DX\_GMT}}]
@@ -119,7 +122,6 @@ parameters.
 showing movie snapshots of vertical velocity components at different times.}
 \label{fig:movie.surf}
 \end{figure}
-
 
 \end{description}
 The \texttt{SPECFEM3D Cartesian} code is running in near real-time
