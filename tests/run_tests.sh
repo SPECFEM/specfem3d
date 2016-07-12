@@ -60,10 +60,17 @@ timer_stop(){
   local t_end=`date +'%s'`
   local diff=$(($t_end - $t_start))
   # output nice time format info
-  local lapsed_time=`date -u -r $diff +'%-Hh %-Mm %-Ss'`
+  local lapsed_time=$(convertsecs $diff)
   echo -n " ($lapsed_time) "
   # return with previous exit code
   return $exit_code
+}
+
+convertsecs() {
+  h=$(($1/3600))
+  m=$((($1/60)%60))
+  s=$(($1%60))
+  printf "%02dh %02dm %02ds\n" $h $m $s
 }
 
 #############################################################
