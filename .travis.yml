@@ -191,7 +191,7 @@ script:
       fi
       # PML example (acoustic)
       if [ "$TESTMAKE" == "8" ]; then
-        sed -i "s:^NSTEP .*:NSTEP    = 500:" DATA/Par_file
+        sed -i "s:^NSTEP .*:NSTEP    = 200:" DATA/Par_file
         sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 50:" DATA/Par_file
       fi
       # coverage run
