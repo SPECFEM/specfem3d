@@ -322,6 +322,7 @@
 
   ! stores arrays in binary files
   if (SAVE_MESH_FILES) call save_arrays_solver_files(nspec,nglob,ibool)
+
 #ifdef DEBUG_COUPLED
     include "../../../add_to_save_arrays_solver_1.F90"
 #endif
@@ -390,7 +391,7 @@
   integer :: j,inum
   character(len=MAX_STRING_LEN) :: filename
 
-  logical,parameter :: DEBUG = .false.
+  logical,parameter :: SAVE_MESH_FILES_ADDITIONAL = .true.
 
   if (myrank == 0) then
     write(IMAIN,*) '     saving mesh files for AVS, OpenDX, Paraview'
@@ -502,11 +503,11 @@
   deallocate(v_tmp)
 
   ! additional VTK file output
-  if (DEBUG) then
+  if (SAVE_MESH_FILES_ADDITIONAL) then
     ! user output
     call synchronize_all()
     if (myrank == 0) then
-      write(IMAIN,*) '     saving debugging mesh files'
+      write(IMAIN,*) '     saving additonal mesh files with surface/coupling points'
       call flush_IMAIN()
     endif
 
@@ -576,13 +577,6 @@
 
       deallocate(iglob_tmp,v_tmp_i)
     endif !if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION )
-  endif  !if (DEBUG)
-
-#ifdef DEBUG_COUPLED
-    include "../../../add_to_save_arrays_solver_2.F90"
-#endif
-
-  if (DEBUG) then  !! CD CD
 
     ! acoustic-poroelastic domains
     if (ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION) then
@@ -668,6 +662,11 @@
       deallocate(v_tmp_i,iglob_tmp)
     endif !if (ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION
 
-  endif ! DEBUG
+  endif  !if (SAVE_MESH_FILES_ADDITIONAL)
+
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_save_arrays_solver_2.F90"
+#endif
+
 
   end subroutine save_arrays_solver_files
