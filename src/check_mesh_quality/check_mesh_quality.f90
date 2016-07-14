@@ -374,7 +374,7 @@
   print *,'histogram of skewness (0. good - 1. bad):'
   print *
   total_percent = 0.
-  open(unit=14,file='mesh_quality_histogram_skewness.txt',status='unknown')
+  open(unit=14,file='OUTPUT_FILES/mesh_quality_histogram_skewness.txt',status='unknown')
   do iclass = 0,NCLASS-1
     current_percent = 100.*dble(classes_of_histogram_skewness(iclass))/dble(NSPEC)
     total_percent = total_percent + current_percent
@@ -417,7 +417,7 @@
   print *,'histogram of mean element size:'
   print *
   total_percent = 0.
-  open(unit=14,file='mesh_quality_histogram_meansize.txt',status='unknown')
+  open(unit=14,file='OUTPUT_FILES/mesh_quality_histogram_meansize.txt',status='unknown')
   do iclass = 0,NCLASS-1
     current_percent = 100.*dble(classes_of_histogram_meansize(iclass))/dble(NSPEC)
     total_percent = total_percent + current_percent
@@ -439,7 +439,7 @@
 !---------------------------------------------------------------
 
 ! create script for Gnuplot histogram files
-  open(unit=14,file='plot_mesh_quality_histograms.gnu',status='unknown')
+  open(unit=14,file='OUTPUT_FILES/plot_mesh_quality_histograms.gnu',status='unknown')
   write(14,*) 'set term wxt'
   write(14,*) '#set term gif'
 
@@ -509,7 +509,7 @@
     print *
   endif
 
-  open(unit=11,file='DX_mesh_quality.dx',status='unknown')
+  open(unit=11,file='OUTPUT_FILES/DX_mesh_quality.dx',status='unknown')
 
 ! ************* generate points ******************
 
