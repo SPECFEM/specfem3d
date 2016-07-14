@@ -156,7 +156,7 @@ module decompose_mesh
     integer(long) :: nspec_long
     integer :: inode
     logical :: file_found
-    
+
     ! reads node coordinates
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file',&
           status='old', form='formatted', iostat = ier)
