@@ -50,6 +50,7 @@
 
   ! local parameters
   real(kind=CUSTOM_REAL) :: vpmin,vpmax,vsmin,vsmax,vpmin_glob,vpmax_glob,vsmin_glob,vsmax_glob
+  real(kind=CUSTOM_REAL) :: poissonmin,poissonmax,poissonmin_glob,poissonmax_glob
   real(kind=CUSTOM_REAL) :: distance_min,distance_max,distance_min_glob,distance_max_glob
   real(kind=CUSTOM_REAL) :: elemsize_min,elemsize_max,elemsize_min_glob,elemsize_max_glob
   real(kind=CUSTOM_REAL) :: x_min,x_max,x_min_glob,x_max_glob
@@ -103,6 +104,9 @@
 
   vsmin_glob = HUGEVAL
   vsmax_glob = -HUGEVAL
+
+  poissonmin_glob = HUGEVAL
+  poissonmax_glob = -HUGEVAL
 
   distance_min_glob = HUGEVAL
   distance_max_glob = -HUGEVAL
@@ -177,7 +181,8 @@
   do ispec=1,NSPEC_AB
 
     ! determines minimum/maximum velocities within this element
-    call get_vpvs_minmax(vpmin,vpmax,vsmin,vsmax,ispec,has_vs_zero, &
+    call get_vpvs_minmax(vpmin,vpmax,vsmin,vsmax,poissonmin,poissonmax, &
+                         ispec,has_vs_zero, &
                          NSPEC_AB,kappastore,mustore,rho_vp,rho_vs)
 
     ! min/max for whole cpu partition
@@ -186,6 +191,9 @@
 
     vsmin_glob = min(vsmin_glob, vsmin)
     vsmax_glob = max(vsmax_glob, vsmax)
+
+    poissonmin_glob = min(poissonmin_glob,poissonmin)
+    poissonmax_glob = max(poissonmax_glob,poissonmax)
 
     ! computes minimum and maximum size of this grid cell
     call get_elem_minmaxsize(elemsize_min,elemsize_max,ispec, &
@@ -261,12 +269,31 @@
   call min_all_cr(vsmin,vsmin_glob)
   call max_all_cr(vsmax,vsmax_glob)
 
+  ! Poisson's ratio
+  poissonmin = poissonmin_glob
+  poissonmax = poissonmax_glob
+  call min_all_cr(poissonmin,poissonmin_glob)
+  call max_all_cr(poissonmax,poissonmax_glob)
+
   ! outputs infos
   if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '********'
     write(IMAIN,*) 'Model: P velocity min,max = ',vpmin_glob,vpmax_glob
     write(IMAIN,*) 'Model: S velocity min,max = ',vsmin_glob,vsmax_glob
+    write(IMAIN,*)
+    write(IMAIN,*) 'Model: Poisson''s ratio min,max = ',poissonmin_glob,poissonmax_glob
+    ! Poisson's ratio must be between -1 and +1/2
+    if (.not. has_vs_zero) then
+      if (poissonmin_glob < -1.d0 .or. poissonmax_glob > 0.5d0) then
+        write(IMAIN,*)
+        write(IMAIN,*) '       Warning: Poisson''s ratio for the solid is out of range (-1 and +1/2)'
+        write(IMAIN,*) '                Please be aware that numerical solution is likely inaccurate'
+        write(IMAIN,*)
+        ! well let user decide what to do with it..
+        !stop 'Poisson''s ratio for the solid phase out of range'
+      endif
+    endif
     write(IMAIN,*) '********'
     write(IMAIN,*)
     call flush_IMAIN()
@@ -823,7 +850,8 @@
 !
 
 
-  subroutine get_vpvs_minmax(vpmin,vpmax,vsmin,vsmax,ispec,has_vs_zero, &
+  subroutine get_vpvs_minmax(vpmin,vpmax,vsmin,vsmax,poissonmin,poissonmax, &
+                             ispec,has_vs_zero, &
                              NSPEC_AB,kappastore,mustore,rho_vp,rho_vs)
 
 ! calculates the min/max size of the specified element (ispec) for acoustic / elastic domains
@@ -832,7 +860,7 @@
 
   implicit none
 
-  real(kind=CUSTOM_REAL) :: vpmin,vpmax,vsmin,vsmax
+  real(kind=CUSTOM_REAL),intent(out) :: vpmin,vpmax,vsmin,vsmax,poissonmin,poissonmax
 
   integer :: ispec
   logical :: has_vs_zero
@@ -842,7 +870,7 @@
     kappastore,mustore,rho_vp,rho_vs
 
   ! local parameters
-  real(kind=CUSTOM_REAL) :: vp,vs
+  real(kind=CUSTOM_REAL) :: vp,vs,poisson
   integer :: i,j,k
   integer :: incrx,incry,incrz
 
@@ -855,6 +883,8 @@
   vpmax = -HUGEVAL
   vsmin = HUGEVAL
   vsmax = -HUGEVAL
+  poissonmin = HUGEVAL
+  poissonmax = -HUGEVAL
 
   ! looping increments
   if (MIDPOINT_CHECK_ONLY) then
@@ -899,6 +929,26 @@
         endif
         if (vs > vsmax) vsmax = vs
 
+        ! Poisson solid: for poisson solid, the lame parameters lambda == mu,
+        !                and vp/vs = sqrt(3) => vp = sqrt(3) * vs ~ 1.73 * vs and Poisson's ratio == 0.25 (1/4)
+        if (has_vs_zero) then
+          ! poisson ratio makes no sense for fluid
+          poisson = 1.0_CUSTOM_REAL
+        else
+          ! Poisson's ratio for vp & vs: \nu = 1/2 \frac{(vp/vs)^2 - 2}{(vp/vs)^2 - 1} = \frac{vp^2 - 2 vs^2}{2 vp^2 - 2 vs^2}
+          if (vp > TINYVAL) then
+            poisson = (vp*vp - 2.0_CUSTOM_REAL * vs*vs) / (2.0_CUSTOM_REAL * (vp*vp - vs*vs))
+
+            ! Poisson's ratio for kappa & mu: \nu = 1/2 (3 kappa - 2 mu)/(3 kappa + mu)
+            !poisson = 0.5d0 * (3.d0*kappa - 2.d0*mu)/(3.d0*kappa + mu)
+          else
+            ! vp not defined
+            poisson = 1.0_CUSTOM_REAL
+          endif
+        endif
+        ! min/max
+        if (poisson < poissonmin) poissonmin = poisson
+        if (poisson > poissonmax) poissonmax = poisson
       enddo
     enddo
   enddo
