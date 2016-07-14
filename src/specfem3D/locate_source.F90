@@ -909,7 +909,7 @@
 
               t0_ricker = 1.2d0/f0
               write(IMAIN,*) '  t0_ricker = ',t0_ricker
-              write(IMAIN,*) '  Ricker frequency: ',hdur(isource),' seconds**(-1)'
+              write(IMAIN,*) '  Ricker frequency: ',hdur(isource),' Hz'
             else
               if (idomain(isource) == IDOMAIN_ACOUSTIC) then
                 write(IMAIN,*) '  Gaussian half duration: ',5.d0*DT,' seconds'
@@ -922,13 +922,17 @@
             write(IMAIN,*)
           else
             ! moment-tensor
-            ! add message if source is a Heaviside
-            if (hdur(isource) <= 5.*DT) then
-              write(IMAIN,*)
-              write(IMAIN,*) '  Source time function is a Heaviside, convolve later'
-              write(IMAIN,*)
+            if (USE_RICKER_TIME_FUNCTION) then
+              write(IMAIN,*) '  Ricker frequency: ',hdur(isource),' Hz'
+            else
+              ! add message if source is a Heaviside
+              if (hdur(isource) <= 5.*DT) then
+                write(IMAIN,*)
+                write(IMAIN,*) '  Source time function is a Heaviside, convolve later'
+                write(IMAIN,*)
+              endif
+              write(IMAIN,*) '  half duration: ',hdur(isource),' seconds'
             endif
-            write(IMAIN,*) '  half duration: ',hdur(isource),' seconds'
           endif
         endif
         write(IMAIN,*) '  time shift: ',tshift_src(isource),' seconds'

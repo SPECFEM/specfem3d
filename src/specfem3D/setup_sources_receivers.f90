@@ -116,14 +116,6 @@
     if (ier /= 0) stop 'error allocating arrays for force point sources'
   endif
 
-  ! for source encoding (acoustic sources only so far)
-  if(USE_SOURCE_ENCODING) then
-    allocate(pm1_source_encoding(NSOURCES),stat=ier)
-  else
-    allocate(pm1_source_encoding(1),stat=ier)
-  endif
-  if (ier /= 0) stop 'error allocating arrays for sources'
-
   !! VM VM set the size of user_source_time_function
   if (EXTERNAL_STF) then
      NSTEP_STF = NSTEP
@@ -633,6 +625,18 @@
   double precision :: hlagrange
   double precision :: norm,comp_x,comp_y,comp_z
 
+  logical :: does_source_encoding
+
+  ! for source encoding (acoustic sources only so far)
+  if(USE_SOURCE_ENCODING) then
+    allocate(pm1_source_encoding(NSOURCES),stat=ier)
+  else
+    allocate(pm1_source_encoding(1),stat=ier)
+  endif
+  if (ier /= 0) stop 'error allocating arrays for sources'
+  pm1_source_encoding(:) = 1._CUSTOM_REAL
+  does_source_encoding = .false.
+
   ! forward simulations
   if (SIMULATION_TYPE == 1  .or. SIMULATION_TYPE == 3) then
     allocate(sourcearray(NDIM,NGLLX,NGLLY,NGLLZ), &
@@ -734,7 +738,10 @@
             ! determines factor +/-1 depending on sign of moment tensor
             ! (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources,
             !   Geophysics, 74 (6), WCC177-WCC188.)
-            if (USE_SOURCE_ENCODING) pm1_source_encoding(isource) = sign(1.0d0,Mxx(isource))
+            if (USE_SOURCE_ENCODING) then
+              pm1_source_encoding(isource) = sign(1.0d0,Mxx(isource))
+              does_source_encoding = .true.
+            endif
 
             ! source array interpolated on all element gll points
             call compute_arrays_source_acoustic(sourcearray,hxis,hetas,hgammas,factor_source)
@@ -854,6 +861,21 @@
     NTSTEP_BETWEEN_READ_ADJSRC = 0
     allocate(adj_sourcearrays(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
     if (ier /= 0) stop 'error allocating dummy array adj_sourcearrays'
+  endif
+
+  ! user info
+  if (USE_SOURCE_ENCODING) then
+    if (myrank == 0) then
+      write(IMAIN,*) ''
+      write(IMAIN,*) 'using source encoding:'
+      if (does_source_encoding) then
+        write(IMAIN,*) '  sources have been encoded'
+      else
+        write(IMAIN,*) '  source encoding has no effect (only supported for acoustic sources)'
+      endif
+      write(IMAIN,*) ''
+      call flush_IMAIN()
+    endif
   endif
 
   end subroutine setup_sources_precompute_arrays

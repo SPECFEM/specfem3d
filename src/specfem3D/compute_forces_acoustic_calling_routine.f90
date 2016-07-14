@@ -164,7 +164,6 @@ subroutine compute_forces_acoustic()
     call compute_add_sources_acoustic(NSPEC_AB,NGLOB_AB,potential_dot_dot_acoustic, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                        hdur,hdur_gaussian,tshift_src,dt,t0, &
                         sourcearrays,kappastore,ispec_is_acoustic,&
                         SIMULATION_TYPE,NSTEP, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
@@ -397,7 +396,6 @@ subroutine compute_forces_acoustic_backward()
     call compute_add_sources_acoustic_backward(NSPEC_AB, &
                                   ibool,ispec_is_inner,phase_is_inner, &
                                   NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                                  hdur,hdur_gaussian,tshift_src,dt,t0, &
                                   sourcearrays,kappastore,ispec_is_acoustic,&
                                   SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                                   b_potential_dot_dot_acoustic)
@@ -530,7 +528,6 @@ subroutine compute_forces_acoustic_GPU()
     ! sources
     call compute_add_sources_acoustic_GPU(NSPEC_AB,ispec_is_inner,phase_is_inner, &
                                   NSOURCES,myrank,it,&
-                                  hdur,hdur_gaussian,tshift_src,dt,t0, &
                                   ispec_is_acoustic,SIMULATION_TYPE,NSTEP, &
                                   nrec,islice_selected_rec,ispec_selected_rec, &
                                   nadj_rec_local,adj_sourcearrays, &

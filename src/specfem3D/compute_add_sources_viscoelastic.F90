@@ -30,7 +30,7 @@
   subroutine compute_add_sources_viscoelastic(NSPEC_AB,NGLOB_AB,accel, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                        hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
+                        sourcearrays, &
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
                         nadj_rec_local,adj_sourcearrays, &
@@ -46,9 +46,9 @@
                         normal_x_noise,normal_y_noise,normal_z_noise, &
                         mask_noise,noise_surface_movie, &
                         nrec_local,number_receiver_global, &
-                        nsources_local,USE_FORCE_POINT_SOURCE, &
-                        USE_RICKER_TIME_FUNCTION,SU_FORMAT, &
-                        USE_LDDRK,istage,EXTERNAL_STF,user_source_time_function
+                        nsources_local,tshift_src,dt,t0,SU_FORMAT, &
+                        USE_LDDRK,istage, &
+                        EXTERNAL_STF,user_source_time_function
 
 #ifdef DEBUG_COUPLED
     include "../../../add_to_compute_add_sources_viscoelastic_1.F90"
@@ -71,11 +71,7 @@
 ! source
   integer :: NSOURCES,myrank,it
   integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
-  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_src
-  double precision :: dt,t0
   real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
-
-  double precision, external :: comp_source_time_function,comp_source_time_function_gauss,comp_source_time_function_rickr
 
   logical, dimension(NSPEC_AB) :: ispec_is_elastic
 
@@ -90,10 +86,12 @@
     adj_sourcearrays
 
 ! local parameters
-  double precision :: stf,f0
   real(kind=CUSTOM_REAL),dimension(:,:,:,:,:),allocatable:: adj_sourcearray
   real(kind=CUSTOM_REAL) stf_used,stf_used_total_all,time_source
-  double precision :: time_source_dble
+
+  double precision :: stf,time_source_dble
+  double precision,external :: get_stf_viscoelastic
+
   integer :: isource,iglob,i,j,k,ispec
   integer :: irec_local,irec, ier
 
@@ -112,7 +110,6 @@
   ! VM VM to know if we used the source in this domain
   integer :: source_is_in_this_domain,source_is_in_this_domain_all
 
-
 #ifdef DEBUG_COUPLED
     include "../../../add_to_compute_add_sources_viscoelastic_2.F90"
 #endif
@@ -121,8 +118,8 @@
   if (PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner) then
     ! initializes total
     stf_used_total = 0.0_CUSTOM_REAL
+    source_is_in_this_domain = 0
   endif
-  source_is_in_this_domain = 0
 
   ! forward simulations
   if (SIMULATION_TYPE == 1 .and. NOISE_TOMOGRAPHY == 0 .and. nsources_local > 0) then
@@ -138,41 +135,15 @@
         if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
 
           if (ispec_is_elastic(ispec)) then
-            source_is_in_this_domain = 1
-
             ! current time
             if (USE_LDDRK) then
-              time_source_dble = dble(it-1)*DT+dble(C_LDDRK(istage))*DT-t0-tshift_src(isource)
+              time_source_dble = dble(it-1)*DT + dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
             else
-              time_source_dble = dble(it-1)*DT-t0-tshift_src(isource)
+              time_source_dble = dble(it-1)*DT - t0 - tshift_src(isource)
             endif
 
             ! determines source time function value
-            if (USE_FORCE_POINT_SOURCE) then
-              ! single point force
-              ! f0 has been stored in the hdur() array in the case of FORCESOLUTION,
-              ! to use the same array as for CMTSOLUTION
-              f0 = hdur(isource)
-
-              if (USE_RICKER_TIME_FUNCTION) then
-                stf = comp_source_time_function_rickr(time_source_dble,f0)
-              else
-                ! stf = comp_source_time_function_gauss(time_source_dble,5.d0*DT)
-                !! COMMENTED BY FS FS -> do no longer use hard-coded hdur_gaussian = 5*DT, but actual value of hdur_gaussian
-
-                stf = comp_source_time_function_gauss(time_source_dble,hdur_gaussian(isource))
-                !! ADDED BY FS FS -> use actual value of hdur_gaussian as half duration
-              endif
-
-            else
-              ! moment-tensor
-              if (USE_RICKER_TIME_FUNCTION) then
-                stf = comp_source_time_function_rickr(time_source_dble,hdur(isource))
-              else
-                stf = comp_source_time_function(time_source_dble,hdur_gaussian(isource))
-              endif
-
-            endif ! USE_FORCE_POINT_SOURCE
+            stf = get_stf_viscoelastic(time_source_dble,isource)
 
             !! VM VM add external source time function
             if (EXTERNAL_STF) then
@@ -193,7 +164,10 @@
             enddo
 
             ! for file output
-            if (PRINT_SOURCE_TIME_FUNCTION) stf_used_total = stf_used_total + stf_used
+            if (PRINT_SOURCE_TIME_FUNCTION) then
+              stf_used_total = stf_used_total + stf_used
+              source_is_in_this_domain = 1
+            endif
 
           endif ! ispec_is_elastic
         endif ! ispec_is_inner
@@ -361,15 +335,17 @@
     endif ! nadj_rec_local
   endif !adjoint
 
-  call sum_all_i(source_is_in_this_domain, source_is_in_this_domain_all)
-  call bcast_all_singlei(source_is_in_this_domain_all)
-  !write(*,*) myrank, it, phase_is_inner, source_is_in_this_domain_all
-  !if (phase_is_inner) write(*,*) myrank, it,source_is_in_this_domain, source_is_in_this_domain_all
   ! master prints out source time function to file
-  if (PRINT_SOURCE_TIME_FUNCTION .and. source_is_in_this_domain_all > 0 ) then
-    time_source = (it-1)*DT - t0
-    call sum_all_cr(stf_used_total,stf_used_total_all)
-    if (myrank == 0) write(IOSTF,*) time_source,stf_used_total_all
+  if (PRINT_SOURCE_TIME_FUNCTION) then
+    call sum_all_i(source_is_in_this_domain, source_is_in_this_domain_all)
+    call bcast_all_singlei(source_is_in_this_domain_all)
+    !write(*,*) myrank, it, phase_is_inner, source_is_in_this_domain_all
+    !if (phase_is_inner) write(*,*) myrank, it,source_is_in_this_domain, source_is_in_this_domain_all
+    if (source_is_in_this_domain_all > 0 ) then
+      time_source = (it-1)*DT - t0
+      call sum_all_cr(stf_used_total,stf_used_total_all)
+      if (myrank == 0) write(IOSTF,*) time_source,stf_used_total_all
+    endif
   endif
 
   ! for noise simulations
@@ -413,7 +389,7 @@
   subroutine compute_add_sources_viscoelastic_backward( NSPEC_AB,NGLOB_AB, &
                         ibool,ispec_is_inner,phase_is_inner, &
                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                        hdur,hdur_gaussian,tshift_src,dt,t0,sourcearrays, &
+                        sourcearrays, &
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                         b_accel,NOISE_TOMOGRAPHY)
 
@@ -423,8 +399,9 @@
                         free_surface_ijk,free_surface_jacobian2Dw, &
                         normal_x_noise,normal_y_noise,normal_z_noise, &
                         mask_noise,noise_surface_movie, &
-                        nsources_local,USE_FORCE_POINT_SOURCE, &
-                        USE_RICKER_TIME_FUNCTION
+                        nsources_local,tshift_src,dt,t0, &
+                        USE_LDDRK,istage, &
+                        EXTERNAL_STF,user_source_time_function
 
 #ifdef DEBUG_COUPLED
     include "../../../add_to_compute_add_sources_viscoelastic_1.F90"
@@ -444,11 +421,7 @@
 ! source
   integer :: NSOURCES,myrank,it
   integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
-  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_src
-  double precision :: dt,t0
   real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
-
-  double precision, external :: comp_source_time_function,comp_source_time_function_gauss,comp_source_time_function_rickr
 
   logical, dimension(NSPEC_AB) :: ispec_is_elastic
 
@@ -458,8 +431,11 @@
   integer :: NOISE_TOMOGRAPHY
 
 ! local parameters
-  double precision :: stf,f0
   real(kind=CUSTOM_REAL) stf_used,stf_used_total_all,time_source
+
+  double precision :: stf,time_source_dble
+  double precision,external :: get_stf_viscoelastic
+
   integer :: isource,iglob,i,j,k,ispec
 
 #ifdef DEBUG_COUPLED
@@ -510,33 +486,21 @@
         if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
 
           if (ispec_is_elastic(ispec)) then
+            ! current time
+            if (USE_LDDRK) then
+              time_source_dble = dble(NSTEP-it)*DT - dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+            else
+              time_source_dble = dble(NSTEP-it)*DT - t0 - tshift_src(isource)
+            endif
 
             ! determines source time function value
-            if (USE_FORCE_POINT_SOURCE) then
-              ! single point source
-              ! f0 has been stored in the hdur() array in the case of FORCESOLUTION, to use the same array as for CMTSOLUTION
-              f0 = hdur(isource)
+            stf = get_stf_viscoelastic(time_source_dble,isource)
 
-              if (USE_RICKER_TIME_FUNCTION) then
-                stf = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),f0)
-              else
-                ! use a very small duration of 5*DT to mimic a Dirac in time
-                stf = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),5.d0*DT)
-                !! FS FS  does it also here make sense to replace 5.d0*DT by hdur_gaussian(isource) ? looks like it
-              endif
-
-            else
-              ! moment-tensor
-              ! see note above: time step corresponds now to NSTEP-it
-              ! (also compare to it-1 for forward simulation)
-              if (USE_RICKER_TIME_FUNCTION) then
-                stf = comp_source_time_function_rickr( &
-                               dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
-              else
-                stf = comp_source_time_function( &
-                               dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
-              endif
-            endif ! USE_FORCE_POINT_SOURCE
+            !! VM VM add external source time function
+            if (EXTERNAL_STF) then
+              ! time-reversed
+              stf = user_source_time_function(NSTEP-it+1, isource)
+            endif
 
             ! distinguishes between single and double precision for reals
             stf_used = real(stf,kind=CUSTOM_REAL)
@@ -562,7 +526,7 @@
 
   ! master prints out source time function to file
   if (PRINT_SOURCE_TIME_FUNCTION .and. phase_is_inner) then
-    time_source = (it-1)*DT - t0
+    time_source = (NSTEP-it)*DT - t0
     call sum_all_cr(stf_used_total,stf_used_total_all)
     if (myrank == 0) write(IOSTF,*) time_source,stf_used_total_all
   endif
@@ -595,7 +559,6 @@
 
   subroutine compute_add_sources_viscoelastic_GPU(NSPEC_AB, &
                         ispec_is_inner,phase_is_inner,NSOURCES,myrank,it,&
-                        hdur,hdur_gaussian,tshift_src,dt,t0, &
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
                         nadj_rec_local,adj_sourcearrays, &
@@ -609,8 +572,8 @@
                         num_free_surface_faces, &
                         irec_master_noise,noise_surface_movie, &
                         nrec_local,number_receiver_global, &
-                        nsources_local,USE_FORCE_POINT_SOURCE, &
-                        USE_RICKER_TIME_FUNCTION,SU_FORMAT,&
+                        nsources_local,tshift_src,dt,t0,SU_FORMAT,&
+                        USE_LDDRK,istage, &
                         EXTERNAL_STF,user_source_time_function
 
 #ifdef DEBUG_COUPLED
@@ -629,10 +592,6 @@
 
 ! source
   integer :: NSOURCES,myrank,it
-  double precision, dimension(NSOURCES) :: hdur,hdur_gaussian,tshift_src
-  double precision :: dt,t0
-
-  double precision, external :: comp_source_time_function,comp_source_time_function_gauss,comp_source_time_function_rickr
 
   logical, dimension(NSPEC_AB) :: ispec_is_elastic
 
@@ -650,9 +609,13 @@
   ! local parameters
   real(kind=CUSTOM_REAL),dimension(:,:,:,:,:),allocatable:: adj_sourcearray
   real(kind=CUSTOM_REAL) stf_used_total_all,time_source
-  double precision :: f0
+
+  double precision :: stf,time_source_dble
+  double precision,external :: get_stf_viscoelastic
+
   ! for GPU_MODE
   double precision, dimension(NSOURCES) :: stf_pre_compute
+
   integer :: isource,i,j,k
   integer :: irec_local,irec, ier
 
@@ -680,34 +643,30 @@
 
   ! forward simulations
   if (SIMULATION_TYPE == 1 .and. NOISE_TOMOGRAPHY == 0 .and. nsources_local > 0) then
+
     if (NSOURCES > 0) then
       do isource = 1,NSOURCES
-        ! precomputes source time function factor
-        if (USE_FORCE_POINT_SOURCE) then
-          ! f0 has been stored in the hdur() array in the case of FORCESOLUTION, to use the same array as for CMTSOLUTION
-          f0 = hdur(isource)
-
-          if (USE_RICKER_TIME_FUNCTION) then
-            stf_pre_compute(isource) = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),f0)
-          else
-            ! use a very small duration of 5*DT to mimic a Dirac in time
-            stf_pre_compute(isource) = comp_source_time_function_gauss(dble(it-1)*DT-t0-tshift_src(isource),5.d0*DT)
-            !! FS FS  does it also here make sense to replace 5.d0*DT by hdur_gaussian(isource) ? looks like it
-          endif
-
+        ! current time
+        if (USE_LDDRK) then
+          time_source_dble = dble(it-1)*DT + dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
         else
-          if (USE_RICKER_TIME_FUNCTION) then
-            stf_pre_compute(isource) = comp_source_time_function_rickr(dble(it-1)*DT-t0-tshift_src(isource),hdur(isource))
-          else
-            stf_pre_compute(isource) = comp_source_time_function(dble(it-1)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
-          endif
+          time_source_dble = dble(it-1)*DT - t0 - tshift_src(isource)
         endif
+
+        ! determines source time function value
+        stf = get_stf_viscoelastic(time_source_dble,isource)
 
         !! VM VM add external source time function
         if (EXTERNAL_STF) then
-           stf_pre_compute(isource) = user_source_time_function(it, isource)
+           stf = user_source_time_function(it, isource)
         endif
+
+        ! stores precomputed source time function factor
+        stf_pre_compute(isource) = stf
       enddo
+
+      if (PRINT_SOURCE_TIME_FUNCTION) stf_used_total = stf_used_total + sum(stf_pre_compute(:))
+
       ! only implements SIMTYPE=1 and NOISE_TOM=0
       ! write(*,*) "fortran dt = ", dt
       ! change dt -> DT
@@ -856,29 +815,30 @@
 
 ! adjoint simulations
   if (SIMULATION_TYPE == 3 .and. NOISE_TOMOGRAPHY == 0 .and. nsources_local > 0) then
+
     if (NSOURCES > 0) then
       do isource = 1,NSOURCES
-        ! precomputes source time function factors
-        if (USE_FORCE_POINT_SOURCE) then
-          ! f0 has been stored in the hdur() array in the case of FORCESOLUTION, to use the same array as for CMTSOLUTION
-          f0 = hdur(isource)
-
-          if (USE_RICKER_TIME_FUNCTION) then
-            stf_pre_compute(isource) = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),f0)
-          else
-            ! use a very small duration of 5*DT to mimic a Dirac in time
-            stf_pre_compute(isource) = comp_source_time_function_gauss(dble(NSTEP-it)*DT-t0-tshift_src(isource),5.d0*DT)
-            !! FS FS  does it also here make sense to replace 5.d0*DT by hdur_gaussian(isource) ? looks like it
-          endif
-
+        ! current time
+        if (USE_LDDRK) then
+          time_source_dble = dble(NSTEP-it)*DT - dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
         else
-          if (USE_RICKER_TIME_FUNCTION) then
-            stf_pre_compute(isource) = comp_source_time_function_rickr(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur(isource))
-          else
-            stf_pre_compute(isource) = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(isource),hdur_gaussian(isource))
-          endif
+          time_source_dble = dble(NSTEP-it)*DT - t0 - tshift_src(isource)
         endif
+
+        ! determines source time function value
+        stf = get_stf_viscoelastic(time_source_dble,isource)
+
+        !! VM VM add external source time function
+        if (EXTERNAL_STF) then
+           stf = user_source_time_function(NSTEP-it+1, isource)
+        endif
+
+        ! stores precomputed source time function factor
+        stf_pre_compute(isource) = stf
       enddo
+
+      if (PRINT_SOURCE_TIME_FUNCTION) stf_used_total = stf_used_total + sum(stf_pre_compute(:))
+
       ! only implements SIMTYPE=3
       call compute_add_sources_el_s3_cuda(Mesh_pointer,stf_pre_compute,NSOURCES,phase_is_inner)
     endif
@@ -925,3 +885,65 @@
   endif
 
   end subroutine compute_add_sources_viscoelastic_GPU
+
+
+!
+!=====================================================================
+!
+
+  double precision function get_stf_viscoelastic(time_source_dble,isource)
+
+! returns source time function value for specified time
+
+  use specfem_par,only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION, &
+    !USE_SOURCE_ENCODING,pm1_source_encoding, &
+    hdur,hdur_gaussian !,DT
+
+  implicit none
+
+  double precision,intent(in) :: time_source_dble
+  integer,intent(in) :: isource
+
+  ! local parameters
+  double precision :: stf
+
+  double precision, external :: comp_source_time_function,comp_source_time_function_rickr, &
+    comp_source_time_function_gauss
+
+  ! determines source time function value
+  if (USE_FORCE_POINT_SOURCE) then
+    ! single point force
+    if (USE_RICKER_TIME_FUNCTION) then
+      ! Ricker
+      ! f0 has been stored in the hdur() array in the case of FORCESOLUTION,
+      ! to use the same array as for CMTSOLUTION
+      stf = comp_source_time_function_rickr(time_source_dble,hdur(isource))
+    else
+      ! Gaussian
+      ! stf = comp_source_time_function_gauss(time_source_dble,5.d0*DT)
+      !! COMMENTED BY FS FS -> do no longer use hard-coded hdur_gaussian = 5*DT, but actual value of hdur_gaussian
+
+      stf = comp_source_time_function_gauss(time_source_dble,hdur_gaussian(isource))
+      !! ADDED BY FS FS -> use actual value of hdur_gaussian as half duration
+    endif
+  else
+    ! moment-tensor
+    if (USE_RICKER_TIME_FUNCTION) then
+      ! Ricker
+      stf = comp_source_time_function_rickr(time_source_dble,hdur(isource))
+    else
+      ! Heaviside
+      stf = comp_source_time_function(time_source_dble,hdur_gaussian(isource))
+    endif
+
+    ! source encoding
+    ! not supported yet for viscoelastic elements... sign of moment-tensor needs to be determined prior to running simulation
+    !if(USE_SOURCE_ENCODING) stf = stf * pm1_source_encoding(isource)
+
+  endif ! USE_FORCE_POINT_SOURCE
+
+  ! return value
+  get_stf_viscoelastic = stf
+
+  end function get_stf_viscoelastic
+
