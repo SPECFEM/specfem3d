@@ -155,7 +155,8 @@ module decompose_mesh
     logical :: use_poroelastic_file
     integer(long) :: nspec_long
     integer :: inode
-
+    logical :: file_found
+    
     ! reads node coordinates
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file',&
           status='old', form='formatted', iostat = ier)
@@ -163,7 +164,9 @@ module decompose_mesh
       print *,'could not open file:',localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file'
       stop 'Error opening file nodes_coords_file'
     endif
+
     read(98,*) nnodes
+
     if (nnodes < 1) stop 'Error: nnodes < 1'
     allocate(nodes_coords(3,nnodes),stat=ier)
     if (ier /= 0) stop 'Error allocating array nodes_coords'
@@ -181,6 +184,7 @@ module decompose_mesh
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/mesh_file', &
           status='old', form='formatted',iostat=ier)
     if (ier /= 0) stop 'Error opening mesh_file'
+
     read(98,*) nspec_long
 
     ! debug check size limit
@@ -229,8 +233,10 @@ module decompose_mesh
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/materials_file', &
           status='old', form='formatted',iostat=ier)
     if (ier /= 0) stop 'Error opening materials_file'
+
     allocate(mat(2,nspec),stat=ier)
     if (ier /= 0) stop 'Error allocating array mat'
+
     mat(:,:) = 0
     do ispec = 1, nspec
       ! format: #id_element #flag
@@ -339,6 +345,7 @@ module decompose_mesh
     if (ier /= 0) then
       use_poroelastic_file = .false.
       !stop 'Error opening nummaterial_poroelastic_file'
+      print *, '  no poroelastic material file found'
     else
       use_poroelastic_file = .true.
       print *, '  poroelastic material file found'
@@ -566,6 +573,7 @@ module decompose_mesh
 ! even when STACEY_ABSORBING_CONDITIONS is false
     if (ier /= 0) then
       nspec2D_xmin = 0
+      print *, '  no absorbing_surface_file_xmin file found'
     else
       read(98,*) nspec2D_xmin
     endif
@@ -598,6 +606,7 @@ module decompose_mesh
           status='old', form='formatted',iostat=ier)
     if (ier /= 0) then
       nspec2D_xmax = 0
+      print *, '  no absorbing_surface_file_xmax file found'
     else
       read(98,*) nspec2D_xmax
     endif
@@ -617,6 +626,7 @@ module decompose_mesh
           status='old', form='formatted',iostat=ier)
     if (ier /= 0) then
       nspec2D_ymin = 0
+      print *, '  no absorbing_surface_file_ymin file found'
     else
       read(98,*) nspec2D_ymin
     endif
@@ -636,6 +646,7 @@ module decompose_mesh
           status='old', form='formatted',iostat=ier)
     if (ier /= 0) then
       nspec2D_ymax = 0
+      print *, '  no absorbing_surface_file_ymax file found'
     else
       read(98,*) nspec2D_ymax
     endif
@@ -655,6 +666,7 @@ module decompose_mesh
           status='old', form='formatted',iostat=ier)
     if (ier /= 0) then
       nspec2D_bottom = 0
+      print *, '  no absorbing_surface_file_bottom file found'
     else
       read(98,*) nspec2D_bottom
     endif
@@ -670,10 +682,24 @@ module decompose_mesh
     print *, '  nspec2D_bottom = ', nspec2D_bottom
 
   ! reads in free_surface boundary files
+    file_found = .false.
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/free_or_absorbing_surface_file_zmax', &
           status='old', form='formatted',iostat=ier)
     if (ier /= 0) then
+      ! checks with old naming format (version 2.0 format) to be back-compatible
+      open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/free_surface_file', &
+          status='old', form='formatted',iostat=ier)
+      if (ier == 0) then
+        file_found = .true.
+        print *, '  Note: free_surface_file name is deprecated!'
+        print *, '        Please use new name: free_or_absorbing_surface_file_zmax'
+      endif
+    else
+      file_found = .true.
+    endif
+    if (.not. file_found) then
       nspec2D_top = 0
+      print *, '  no free_or_absorbing_surface_file_zmax file found'
     else
       read(98,*) nspec2D_top
     endif
@@ -701,8 +727,12 @@ module decompose_mesh
     if (ier /= 0 .and. PML_CONDITIONS) &
         stop 'Error: PML_CONDITIONS is set to true but file absorbing_cpml_file does not exist'
 ! if the file does not exist or if there are no PML_CONDITIONS then define the number of CPML elements as zero
-    if (ier /= 0 .or. .not. PML_CONDITIONS) then
-       nspec_cpml = 0
+    ! note: in case there is a cpml file, we will read it in and let the user decide when running an actual simulation
+    !       if he wants to use cpml elements or not... otherwise he will need to re-run the whole meshing part when
+    !       switching PML_CONDITIONS
+    if (ier /= 0) then
+      nspec_cpml = 0
+      print *, '  no absorbing_cpml_file file found'
     else
        read(98,*) nspec_cpml
     endif
@@ -749,6 +779,7 @@ module decompose_mesh
           status='old', form='formatted',iostat=ier)
     if (ier /= 0) then
       nspec2D_moho = 0
+      print *, '  no moho_surface_file file found'
     else
       read(98,*) nspec2D_moho
     endif
