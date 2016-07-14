@@ -152,9 +152,9 @@
   print *
 
   if (SAVE_DISPLACEMENT) then
-    print *,'Vertical displacement will be shown in movie'
+    print *,'Displacement will be shown in movie'
   else
-    print *,'Vertical velocity will be shown in movie'
+    print *,'Velocity will be shown in movie'
   endif
   print *
 
@@ -230,7 +230,11 @@
   else
     print *
     print *,'movie data:'
-    print *,'1= norm of velocity  2=velocity x-comp 3=velocity y-comp 4=velocity z-comp'
+    if (SAVE_DISPLACEMENT) then
+      print *,'1= norm of displacement  2=displacement x-comp 3=displacement y-comp 4=displacement z-comp'
+    else
+      print *,'1= norm of velocity  2=velocity x-comp 3=velocity y-comp 4=velocity z-comp'
+    endif
     print *
     read(5,*) inorm
     if (inorm < 1 .or. inorm > 4) stop 'incorrect value of inorm'
