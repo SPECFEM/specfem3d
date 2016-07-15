@@ -79,7 +79,6 @@ ATTENUATION_f0_REFERENCE        = 0.33333d0
 USE_OLSEN_ATTENUATION           = .false.
 OLSEN_ATTENUATION_RATIO         = 0.05
 
-
 #-----------------------------------------------------------
 #
 # Absorbing boundary conditions
@@ -165,8 +164,23 @@ USE_FORCE_POINT_SOURCE          = .true.
 # to represent a (tilted) FORCESOLUTION force point source or a CMTSOLUTION moment-tensor source.
 USE_RICKER_TIME_FUNCTION        = .true.
 
+# use external source time function.
+# if .true. you must add a file with your source time function and the file name
+# path relative to lauching directory at the end of CMTSOLUTION or FORCESOURCE file
+# (with multiple sources, one file per source is required).
+# This file must have 2 columns  :
+#     current_time, amplitude
+# The time step **MUST** be the same as used for simulation.
+# be sure when this option is .false. to remove the name of stf file in
+# CMTSOLUTION or FORCESOURCE
+EXTERNAL_SOURCE_FILE            = .false.
+
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .false.
+
+# (for acoustic simulations only) determines source encoding factor +/-1 depending on sign of moment tensor
+# (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources, Geophysics, 74 (6), WCC177-WCC188.)
+USE_SOURCE_ENCODING             = .false.
 
 #-----------------------------------------------------------
 #
@@ -205,16 +219,6 @@ SAVE_ALL_SEISMOS_IN_ONE_FILE    = .false.
 # thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
 # is accurate at second order and thus contains significantly less numerical noise.
 USE_TRICK_FOR_BETTER_PRESSURE   = .false.
-
-#-----------------------------------------------------------
-#
-# Source encoding
-#
-#-----------------------------------------------------------
-
-# determines source encoding factor +/-1 depending on sign of moment tensor
-# (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources, Geophysics, 74 (6), WCC177-WCC188.)
-USE_SOURCE_ENCODING             = .false.
 
 #-----------------------------------------------------------
 #
@@ -316,16 +320,4 @@ ADIOS_FOR_DATABASES             = .false.
 ADIOS_FOR_MESH                  = .false.
 ADIOS_FOR_FORWARD_ARRAYS        = .false.
 ADIOS_FOR_KERNELS               = .false.
-
-
-# use external source time function.
-# if .true. you must add a file with your source time function and the file name
-# path relative to lauching directory at the end of CMTSOLUTION or FORCESOURCE file
-# (with multiple sources, one file per source is required).
-# This file must have 2 columns  :
-#     current_time, amplitude
-# The time step **MUST** be the same as used for simulation.
-# be sure when this option is .false. to remove the name of stf file in
-# CMTSOLUTION or FORCESOURCE
-EXTERNAL_SOURCE_FILE            = .false.
 
