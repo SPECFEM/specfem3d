@@ -28,7 +28,7 @@
 ! for acoustic solver
 
   subroutine compute_add_sources_acoustic(NSPEC_AB,NGLOB_AB,potential_dot_dot_acoustic, &
-                                  ibool,ispec_is_inner,phase_is_inner, &
+                                  ibool, &
                                   NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
                                   sourcearrays,kappastore,ispec_is_acoustic,&
                                   SIMULATION_TYPE,NSTEP, &
@@ -36,8 +36,7 @@
                                   nadj_rec_local,adj_sourcearrays,NTSTEP_BETWEEN_READ_ADJSRC)
 
   use constants
-  use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
-                        xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
+  use specfem_par,only: xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
                         station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
                         nsources_local,tshift_src,DT,t0,SU_FORMAT, &
                         USE_LDDRK,istage, &
@@ -55,10 +54,6 @@
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: kappastore
-
-! communication overlap
-  logical, dimension(NSPEC_AB) :: ispec_is_inner
-  logical :: phase_is_inner
 
 ! source
   integer :: NSOURCES,myrank,it
@@ -79,7 +74,7 @@
 
 ! local parameters
   real(kind=CUSTOM_REAL),dimension(:,:,:,:,:),allocatable:: adj_sourcearray
-  real(kind=CUSTOM_REAL) stf_used,stf_used_total_all,time_source
+  real(kind=CUSTOM_REAL) stf_used
 
   double precision :: stf,time_source_dble
   double precision,external :: get_stf_acoustic
@@ -99,16 +94,6 @@
   !equivalence (i2head,i4head,r4head)    ! share the same 240-byte-memory
   double precision :: hxir(NGLLX), hpxir(NGLLX), hetar(NGLLY), hpetar(NGLLY),hgammar(NGLLZ), hpgammar(NGLLZ)
 
-! VM VM to know if we used the source in this domain
-  integer :: source_is_in_this_domain,source_is_in_this_domain_all
-
-! plotting source time function
-  if (PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner) then
-    ! initializes total
-    stf_used_total = 0.0_CUSTOM_REAL
-    source_is_in_this_domain = 0
-  endif
-
 ! forward simulations
   if (SIMULATION_TYPE == 1 .and. nsources_local > 0) then
 
@@ -120,52 +105,43 @@
 
         ispec = ispec_selected_source(isource)
 
-        if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
+        if (ispec_is_acoustic(ispec)) then
+          ! current time
+          if (USE_LDDRK) then
+            time_source_dble = dble(it-1)*DT + dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+          else
+            time_source_dble = dble(it-1)*DT - t0 - tshift_src(isource)
+          endif
 
-          if (ispec_is_acoustic(ispec)) then
-            ! current time
-            if (USE_LDDRK) then
-              time_source_dble = dble(it-1)*DT + dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
-            else
-              time_source_dble = dble(it-1)*DT - t0 - tshift_src(isource)
-            endif
+          ! determines source time function value
+          stf = get_stf_acoustic(time_source_dble,isource)
 
-            ! determines source time function value
-            stf = get_stf_acoustic(time_source_dble,isource)
+          !! VM VM add external source time function
+          if (EXTERNAL_STF) then
+            stf = user_source_time_function(it, isource)
+          endif
 
-            !! VM VM add external source time function
-            if (EXTERNAL_STF) then
-              stf = user_source_time_function(it, isource)
-            endif
+          ! distinguishes between single and double precision for reals
+          stf_used = real(stf,kind=CUSTOM_REAL)
 
-            ! distinguishes between single and double precision for reals
-            stf_used = real(stf,kind=CUSTOM_REAL)
+          ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
+          ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
+          ! to add minus the source to Chi_dot_dot to get plus the source in pressure
 
-            ! beware, for acoustic medium, source is: pressure divided by Kappa of the fluid
-            ! the sign is negative because pressure p = - Chi_dot_dot therefore we need
-            ! to add minus the source to Chi_dot_dot to get plus the source in pressure
-
-            ! adds source array
-            do k=1,NGLLZ
-              do j=1,NGLLY
-                do i=1,NGLLX
-                  ! adds source contribution
-                  ! note: acoustic source for pressure gets divided by kappa
-                  iglob = ibool(i,j,k,ispec)
-                  potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
-                          - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
-                enddo
+          ! adds source array
+          do k=1,NGLLZ
+            do j=1,NGLLY
+              do i=1,NGLLX
+                ! adds source contribution
+                ! note: acoustic source for pressure gets divided by kappa
+                iglob = ibool(i,j,k,ispec)
+                potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
+                        - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
               enddo
             enddo
+          enddo
 
-            ! for file output
-            if (PRINT_SOURCE_TIME_FUNCTION) then
-              stf_used_total = stf_used_total + stf_used
-              source_is_in_this_domain = 1
-            endif
-
-          endif ! ispec_is_acoustic
-        endif ! ispec_is_inner
+        endif ! ispec_is_acoustic
       endif ! myrank
     enddo ! NSOURCES
   endif
@@ -215,7 +191,7 @@
       ! we first do calculations for the boudaries, and then start communication
       ! with other partitions while we calculate for the inner part
       ! this must be done carefully, otherwise the adjoint sources may be added twice
-      if (ibool_read_adj_arrays .and. (.not. phase_is_inner)) then
+      if (ibool_read_adj_arrays) then
 
         ! allocates temporary source array
         allocate(adj_sourcearray(NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
@@ -293,43 +269,29 @@
             ! adds source array
             ispec = ispec_selected_rec(irec)
             if (ispec_is_acoustic(ispec)) then
-
-              ! checks if element is in phase_is_inner run
-              if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
-                do k = 1,NGLLZ
-                  do j = 1,NGLLY
-                    do i = 1,NGLLX
-                      iglob = ibool(i,j,k,ispec)
-                      ! beware, for acoustic medium, a pressure source would be taking the negative
-                      ! and divide by Kappa of the fluid;
-                      ! this would have to be done when constructing the adjoint source.
-                      !
-                      ! note: we take the first component of the adj_sourcearrays
-                      !          the idea is to have e.g. a pressure source, where all 3 components would be the same
-                      potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
-                                 + adj_sourcearrays(irec_local, &
-                                                    NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC), &
-                                                    1,i,j,k)
-                    enddo
+              do k = 1,NGLLZ
+                do j = 1,NGLLY
+                  do i = 1,NGLLX
+                    iglob = ibool(i,j,k,ispec)
+                    ! beware, for acoustic medium, a pressure source would be taking the negative
+                    ! and divide by Kappa of the fluid;
+                    ! this would have to be done when constructing the adjoint source.
+                    !
+                    ! note: we take the first component of the adj_sourcearrays
+                    !          the idea is to have e.g. a pressure source, where all 3 components would be the same
+                    potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
+                               + adj_sourcearrays(irec_local, &
+                                                  NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC), &
+                                                  1,i,j,k)
                   enddo
                 enddo
-              endif ! phase_is_inner
+              enddo
             endif
+
           endif
         enddo ! nrec
       endif ! it
     endif ! nadj_rec_local > 0
-  endif
-
-  ! master prints out source time function to file
-  if (PRINT_SOURCE_TIME_FUNCTION) then
-    call sum_all_i( source_is_in_this_domain, source_is_in_this_domain_all)
-    call bcast_all_singlei(source_is_in_this_domain_all)
-    if (source_is_in_this_domain_all > 0) then
-      time_source = (it-1)*DT - t0
-      call sum_all_cr(stf_used_total,stf_used_total_all)
-      if (myrank == 0) write(IOSTF,*) time_source,stf_used_total_all
-    endif
   endif
 
   end subroutine compute_add_sources_acoustic
@@ -339,15 +301,14 @@
 ! for acoustic solver for back propagation wave field
 
   subroutine compute_add_sources_acoustic_backward(NSPEC_AB, &
-                                  ibool,ispec_is_inner,phase_is_inner, &
+                                  ibool, &
                                   NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
                                   sourcearrays,kappastore,ispec_is_acoustic,&
                                   SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                                   b_potential_dot_dot_acoustic)
 
   use constants
-  use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
-                        nsources_local,tshift_src,DT,t0, &
+  use specfem_par,only: nsources_local,tshift_src,DT,t0, &
                         USE_LDDRK,istage, &
                         EXTERNAL_STF,user_source_time_function
 
@@ -359,10 +320,6 @@
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: kappastore
-
-! communication overlap
-  logical, dimension(NSPEC_AB) :: ispec_is_inner
-  logical :: phase_is_inner
 
 ! source
   integer :: NSOURCES,myrank,it
@@ -376,7 +333,7 @@
   real(kind=CUSTOM_REAL),dimension(NGLOB_ADJOINT):: b_potential_dot_dot_acoustic
 
 ! local parameters
-  real(kind=CUSTOM_REAL) stf_used,stf_used_total_all,time_source
+  real(kind=CUSTOM_REAL) stf_used
 
   double precision :: stf,time_source_dble
   double precision, external :: get_stf_acoustic
@@ -386,11 +343,6 @@
   ! checks if anything to do
   if (SIMULATION_TYPE /= 3) return
 
-! plotting source time function
-  if (PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner) then
-    ! initializes total
-    stf_used_total = 0.0_CUSTOM_REAL
-  endif
 
 ! NOTE: adjoint sources and backward wavefield timing:
 !             idea is to start with the backward field b_potential,.. at time (T)
@@ -431,55 +383,42 @@
 
         ispec = ispec_selected_source(isource)
 
-        if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
+        if (ispec_is_acoustic(ispec)) then
+          ! current time
+          if (USE_LDDRK) then
+            time_source_dble = dble(NSTEP-it)*DT - dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+          else
+            time_source_dble = dble(NSTEP-it)*DT - t0 - tshift_src(isource)
+          endif
 
-          if (ispec_is_acoustic(ispec)) then
-            ! current time
-            if (USE_LDDRK) then
-              time_source_dble = dble(NSTEP-it)*DT - dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
-            else
-              time_source_dble = dble(NSTEP-it)*DT - t0 - tshift_src(isource)
-            endif
+          ! determines source time function value
+          stf = get_stf_acoustic(time_source_dble,isource)
 
-            ! determines source time function value
-            stf = get_stf_acoustic(time_source_dble,isource)
+          !! VM VM add external source time function
+          if (EXTERNAL_STF) then
+            ! time-reversed
+            stf = user_source_time_function(NSTEP-it+1, isource)
+          endif
 
-            !! VM VM add external source time function
-            if (EXTERNAL_STF) then
-              ! time-reversed
-              stf = user_source_time_function(NSTEP-it+1, isource)
-            endif
+          ! distinguishes between single and double precision for reals
+          stf_used = real(stf,kind=CUSTOM_REAL)
 
-            ! distinguishes between single and double precision for reals
-            stf_used = real(stf,kind=CUSTOM_REAL)
-
-            ! add source array
-            do k=1,NGLLZ
-              do j=1,NGLLY
-                do i=1,NGLLX
-                  ! adds source contribution
-                  ! note: acoustic source for pressure gets divided by kappa
-                  iglob = ibool(i,j,k,ispec)
-                  b_potential_dot_dot_acoustic(iglob) = b_potential_dot_dot_acoustic(iglob) &
-                          - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
-                enddo
+          ! add source array
+          do k=1,NGLLZ
+            do j=1,NGLLY
+              do i=1,NGLLX
+                ! adds source contribution
+                ! note: acoustic source for pressure gets divided by kappa
+                iglob = ibool(i,j,k,ispec)
+                b_potential_dot_dot_acoustic(iglob) = b_potential_dot_dot_acoustic(iglob) &
+                        - sourcearrays(isource,1,i,j,k) * stf_used / kappastore(i,j,k,ispec)
               enddo
             enddo
+          enddo
 
-            ! for file output
-            if (PRINT_SOURCE_TIME_FUNCTION) stf_used_total = stf_used_total + stf_used
-
-          endif ! ispec_is_elastic
-        endif ! ispec_is_inner
+        endif ! ispec_is_acoustic
       endif ! myrank
     enddo ! NSOURCES
-  endif
-
-  ! master prints out source time function to file
-  if (PRINT_SOURCE_TIME_FUNCTION .and. phase_is_inner) then
-    time_source = (NSTEP-it)*DT - t0
-    call sum_all_cr(stf_used_total,stf_used_total_all)
-    if (myrank == 0) write(IOSTF,*) time_source,stf_used_total_all
   endif
 
   end subroutine compute_add_sources_acoustic_backward
@@ -487,7 +426,7 @@
 !
 !=====================================================================
 ! for acoustic solver on GPU
-  subroutine compute_add_sources_acoustic_GPU(NSPEC_AB,ispec_is_inner,phase_is_inner, &
+  subroutine compute_add_sources_acoustic_GPU(NSPEC_AB, &
                                   NSOURCES,myrank,it,&
                                   ispec_is_acoustic,SIMULATION_TYPE,NSTEP, &
                                   nrec,islice_selected_rec,ispec_selected_rec, &
@@ -495,8 +434,7 @@
                                   NTSTEP_BETWEEN_READ_ADJSRC,Mesh_pointer )
 
   use constants
-  use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
-                        xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
+  use specfem_par,only: xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
                         station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
                         nsources_local,tshift_src,DT,t0,SU_FORMAT,&
                         USE_LDDRK,istage, &
@@ -509,10 +447,6 @@
 ! displacement and acceleration
 
 ! arrays with mesh parameters per slice
-
-! communication overlap
-  logical, dimension(NSPEC_AB) :: ispec_is_inner
-  logical :: phase_is_inner
 
 ! source
   integer :: NSOURCES,myrank,it
@@ -531,7 +465,6 @@
 
 ! local parameters
   real(kind=CUSTOM_REAL),dimension(:,:,:,:,:),allocatable:: adj_sourcearray
-  real(kind=CUSTOM_REAL) stf_used_total_all,time_source
 
   double precision :: stf,time_source_dble
   double precision, external :: get_stf_acoustic
@@ -552,12 +485,6 @@
   real(kind=4)    :: r4head(nheader/4)  ! 4-byte-real
   !equivalence (i2head,i4head,r4head)    ! share the same 240-byte-memory
   double precision :: hxir(NGLLX), hpxir(NGLLX), hetar(NGLLY), hpetar(NGLLY),hgammar(NGLLZ), hpgammar(NGLLZ)
-
-! plotting source time function
-  if (PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner) then
-    ! initializes total
-    stf_used_total = 0.0_CUSTOM_REAL
-  endif
 
 ! forward simulations
   if (SIMULATION_TYPE == 1 .and. nsources_local > 0) then
@@ -583,12 +510,10 @@
         stf_pre_compute(isource) = stf
       enddo
 
-      if (PRINT_SOURCE_TIME_FUNCTION) stf_used_total = stf_used_total + sum(stf_pre_compute(:))
-
       ! only implements SIMTYPE=1 and NOISE_TOM=0
       ! write(*,*) "fortran dt = ", dt
       ! change dt -> DT
-      call compute_add_sources_ac_cuda(Mesh_pointer,phase_is_inner,NSOURCES,stf_pre_compute)
+      call compute_add_sources_ac_cuda(Mesh_pointer,NSOURCES,stf_pre_compute)
     endif
   endif
 
@@ -637,7 +562,7 @@
       ! we first do calculations for the boudaries, and then start communication
       ! with other partitions while we calculate for the inner part
       ! this must be done carefully, otherwise the adjoint sources may be added twice
-      if (ibool_read_adj_arrays .and. (.not. phase_is_inner)) then
+      if (ibool_read_adj_arrays) then
 
         ! allocates temporary source array
         allocate(adj_sourcearray(NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
@@ -707,8 +632,8 @@
       if (it < NSTEP) then
         ! receivers act as sources
         ! on GPU
-        call add_sources_ac_sim_2_or_3_cuda(Mesh_pointer,adj_sourcearrays,phase_is_inner, &
-                                           ispec_is_inner,ispec_is_acoustic, &
+        call add_sources_ac_sim_2_or_3_cuda(Mesh_pointer,adj_sourcearrays, &
+                                           ispec_is_acoustic, &
                                            ispec_selected_rec, &
                                            nrec, &
                                            NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC), &
@@ -746,18 +671,9 @@
         stf_pre_compute(isource) = stf
       enddo
 
-      if (PRINT_SOURCE_TIME_FUNCTION) stf_used_total = stf_used_total + sum(stf_pre_compute(:))
-
       ! only implements SIMTYPE=3
-      call compute_add_sources_ac_s3_cuda(Mesh_pointer,phase_is_inner,NSOURCES,stf_pre_compute)
+      call compute_add_sources_ac_s3_cuda(Mesh_pointer,NSOURCES,stf_pre_compute)
     endif
-  endif
-
-  ! master prints out source time function to file
-  if (PRINT_SOURCE_TIME_FUNCTION .and. phase_is_inner) then
-    time_source = (it-1)*DT - t0
-    call sum_all_cr(stf_used_total,stf_used_total_all)
-    if (myrank == 0) write(IOSTF,*) time_source,stf_used_total_all
   endif
 
   end subroutine compute_add_sources_acoustic_GPU

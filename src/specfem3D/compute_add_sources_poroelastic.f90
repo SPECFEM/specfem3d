@@ -30,7 +30,7 @@
   subroutine compute_add_sources_poroelastic(NSPEC_AB,NGLOB_AB, &
                                              accels,accelw,&
                                              rhoarraystore,phistore,tortstore,&
-                                             ibool,ispec_is_inner,phase_is_inner, &
+                                             ibool, &
                                              NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
                                              sourcearrays, &
                                              ispec_is_poroelastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
@@ -39,8 +39,7 @@
                                              NTSTEP_BETWEEN_READ_ADJSRC)
 
   use constants
-  use specfem_par,only: PRINT_SOURCE_TIME_FUNCTION,stf_used_total, &
-                        xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
+  use specfem_par,only: xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
                         station_name,network_name,adj_source_file, &
                         USE_FORCE_POINT_SOURCE, &
                         tshift_src,dt,t0, &
@@ -59,10 +58,6 @@
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
         phistore,tortstore
   real(kind=CUSTOM_REAL), dimension(2,NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rhoarraystore
-
-! communication overlap
-  logical, dimension(NSPEC_AB) :: ispec_is_inner
-  logical :: phase_is_inner
 
 ! source
   integer :: NSOURCES,myrank,it
@@ -83,7 +78,7 @@
 
 ! local parameters
   real(kind=CUSTOM_REAL),dimension(:,:,:,:,:),allocatable:: adj_sourcearray
-  real(kind=CUSTOM_REAL) stf_used,stf_used_total_all,time_source
+  real(kind=CUSTOM_REAL) stf_used
 
   double precision :: stf,time_source_dble
   double precision,external :: get_stf_poroelastic
@@ -92,12 +87,6 @@
   integer :: irec_local,irec
   real(kind=CUSTOM_REAL) :: phil,tortl,rhol_s,rhol_f,rhol_bar
   real(kind=CUSTOM_REAL) :: fac_s,fac_w
-
-! plotting source time function
-  if (PRINT_SOURCE_TIME_FUNCTION .and. .not. phase_is_inner) then
-    ! initializes total
-    stf_used_total = 0.0_CUSTOM_REAL
-  endif
 
 ! forward simulations
   if (SIMULATION_TYPE == 1) then
@@ -109,68 +98,62 @@
 
         ispec = ispec_selected_source(isource)
 
-        if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
+        if (ispec_is_poroelastic(ispec)) then
+          ! current time
+          if (USE_LDDRK) then
+            time_source_dble = dble(it-1)*DT + dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+          else
+            time_source_dble = dble(it-1)*DT - t0 - tshift_src(isource)
+          endif
 
-          if (ispec_is_poroelastic(ispec)) then
-            ! current time
-            if (USE_LDDRK) then
-              time_source_dble = dble(it-1)*DT + dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
-            else
-              time_source_dble = dble(it-1)*DT - t0 - tshift_src(isource)
-            endif
+          ! determines source time function value
+          stf = get_stf_poroelastic(time_source_dble,isource)
 
-            ! determines source time function value
-            stf = get_stf_poroelastic(time_source_dble,isource)
+          !! VM VM add external source time function
+          if (EXTERNAL_STF) then
+            stf = user_source_time_function(it, isource)
+          endif
 
-            !! VM VM add external source time function
-            if (EXTERNAL_STF) then
-              stf = user_source_time_function(it, isource)
-            endif
+          ! distinguishes between single and double precision for reals
+          stf_used = real(stf,kind=CUSTOM_REAL)
 
-            ! distinguishes between single and double precision for reals
-            stf_used = real(stf,kind=CUSTOM_REAL)
+          ! adds source array
+          do k=1,NGLLZ
+            do j=1,NGLLY
+              do i=1,NGLLX
+                iglob = ibool(i,j,k,ispec)
+                ! get poroelastic parameters of current local GLL
+                phil = phistore(i,j,k,ispec)
+                tortl = tortstore(i,j,k,ispec)
+                rhol_s = rhoarraystore(1,i,j,k,ispec)
+                rhol_f = rhoarraystore(2,i,j,k,ispec)
+                rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
 
-            ! adds source array
-            do k=1,NGLLZ
-              do j=1,NGLLY
-                do i=1,NGLLX
-                  iglob = ibool(i,j,k,ispec)
-                  ! get poroelastic parameters of current local GLL
-                  phil = phistore(i,j,k,ispec)
-                  tortl = tortstore(i,j,k,ispec)
-                  rhol_s = rhoarraystore(1,i,j,k,ispec)
-                  rhol_f = rhoarraystore(2,i,j,k,ispec)
-                  rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
+                ! we distinguish between a single force which can be applied both in fluid and solid
+                ! and a moment-tensor source which only makes sense for a solid
+                if (USE_FORCE_POINT_SOURCE) then
+                  ! single point force
+                  ! the source is applied to both solid and fluid phase: bulk source.
+                  fac_s = 1._CUSTOM_REAL - phil/tortl
+                  fac_w = 1._CUSTOM_REAL - rhol_f/rhol_bar
+                else
+                  ! moment-tensor source can only be in solid phase
+                  ! source in the solid phase only
+                  fac_s = 1._CUSTOM_REAL
+                  fac_w = - rhol_f/rhol_bar
+                endif
 
-                  ! we distinguish between a single force which can be applied both in fluid and solid
-                  ! and a moment-tensor source which only makes sense for a solid
-                  if (USE_FORCE_POINT_SOURCE) then
-                    ! single point force
-                    ! the source is applied to both solid and fluid phase: bulk source.
-                    fac_s = 1._CUSTOM_REAL - phil/tortl
-                    fac_w = 1._CUSTOM_REAL - rhol_f/rhol_bar
-                  else
-                    ! moment-tensor source can only be in solid phase
-                    ! source in the solid phase only
-                    fac_s = 1._CUSTOM_REAL
-                    fac_w = - rhol_f/rhol_bar
-                  endif
-
-                  ! solid phase
-                  accels(:,iglob) = accels(:,iglob) &
-                               + fac_s * sourcearrays(isource,:,i,j,k)*stf_used
-                  ! fluid phase
-                  accelw(:,iglob) = accelw(:,iglob) &
-                               + fac_w * sourcearrays(isource,:,i,j,k)*stf_used
-                enddo
+                ! solid phase
+                accels(:,iglob) = accels(:,iglob) &
+                             + fac_s * sourcearrays(isource,:,i,j,k)*stf_used
+                ! fluid phase
+                accelw(:,iglob) = accelw(:,iglob) &
+                             + fac_w * sourcearrays(isource,:,i,j,k)*stf_used
               enddo
             enddo
+          enddo
 
-            ! for file output
-            if (PRINT_SOURCE_TIME_FUNCTION) stf_used_total = stf_used_total + stf_used
-
-          endif ! ispec_is_poroelastic
-        endif ! ispec_is_inner
+        endif ! ispec_is_poroelastic
       endif ! myrank
 
     enddo ! NSOURCES
@@ -224,7 +207,7 @@
       ! with other partitions while calculate for the inner part
       ! this must be done carefully, otherwise the adjoint sources may be added
       ! twice
-      if (ibool_read_adj_arrays .and. (.not. phase_is_inner)) then
+      if (ibool_read_adj_arrays) then
 
         ! allocates temporary source array
         allocate(adj_sourcearray(NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
@@ -266,40 +249,34 @@
 
             ispec = ispec_selected_rec(irec)
             if (ispec_is_poroelastic(ispec)) then
+              ! adds source array
+              do k = 1,NGLLZ
+                do j = 1,NGLLY
+                  do i = 1,NGLLX
+                    iglob = ibool(i,j,k,ispec_selected_rec(irec))
+                    ! get poroelastic parameters of current local GLL
+                    phil = phistore(i,j,k,ispec_selected_rec(irec))
+                    rhol_s = rhoarraystore(1,i,j,k,ispec_selected_rec(irec))
+                    rhol_f = rhoarraystore(2,i,j,k,ispec_selected_rec(irec))
+                    rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
 
-              ! checks if element is in phase_is_inner run
-              if (ispec_is_inner(ispec_selected_rec(irec)) .eqv. phase_is_inner) then
+                    ! adjoint source is in the solid phase only since this is the only measurement
+                    ! available
 
-                ! adds source array
-                do k = 1,NGLLZ
-                  do j = 1,NGLLY
-                    do i = 1,NGLLX
-                      iglob = ibool(i,j,k,ispec_selected_rec(irec))
-                      ! get poroelastic parameters of current local GLL
-                      phil = phistore(i,j,k,ispec_selected_rec(irec))
-                      rhol_s = rhoarraystore(1,i,j,k,ispec_selected_rec(irec))
-                      rhol_f = rhoarraystore(2,i,j,k,ispec_selected_rec(irec))
-                      rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
-
-                      ! adjoint source is in the solid phase only since this is the only measurement
-                      ! available
-
-                      ! solid phase
-                      accels(:,iglob) = accels(:,iglob)  &
-                           + adj_sourcearrays(irec_local, &
-                              NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC), &
-                              :,i,j,k)
-                      !
-                      ! fluid phase
-                      accelw(:,iglob) = accelw(:,iglob)  &
-                           - rhol_f/rhol_bar * adj_sourcearrays(irec_local, &
-                              NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC), &
-                              :,i,j,k)
-                    enddo
+                    ! solid phase
+                    accels(:,iglob) = accels(:,iglob)  &
+                         + adj_sourcearrays(irec_local, &
+                            NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC), &
+                            :,i,j,k)
+                    !
+                    ! fluid phase
+                    accelw(:,iglob) = accelw(:,iglob)  &
+                         - rhol_f/rhol_bar * adj_sourcearrays(irec_local, &
+                            NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC), &
+                            :,i,j,k)
                   enddo
                 enddo
-
-              endif ! phase_is_inner
+              enddo
             endif ! ispec_is_poroelastic
           endif
         enddo ! nrec
@@ -323,81 +300,69 @@
 
         ispec = ispec_selected_source(isource)
 
-        if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
+        if (ispec_is_poroelastic(ispec)) then
+          ! note: time step is now at NSTEP-it
+          ! current time
+          if (USE_LDDRK) then
+            time_source_dble = dble(NSTEP-it)*DT - dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+          else
+            time_source_dble = dble(NSTEP-it)*DT - t0 - tshift_src(isource)
+          endif
 
-          if (ispec_is_poroelastic(ispec)) then
-            ! note: time step is now at NSTEP-it
-            ! current time
-            if (USE_LDDRK) then
-              time_source_dble = dble(NSTEP-it)*DT - dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
-            else
-              time_source_dble = dble(NSTEP-it)*DT - t0 - tshift_src(isource)
-            endif
+          ! determines source time function value
+          stf = get_stf_poroelastic(time_source_dble,isource)
 
-            ! determines source time function value
-            stf = get_stf_poroelastic(time_source_dble,isource)
+          !! VM VM add external source time function
+          if (EXTERNAL_STF) then
+            ! time-reversed
+            stf = user_source_time_function(NSTEP-it+1, isource)
+          endif
 
-            !! VM VM add external source time function
-            if (EXTERNAL_STF) then
-              ! time-reversed
-              stf = user_source_time_function(NSTEP-it+1, isource)
-            endif
+          ! distinguishes between single and double precision for reals
+          stf_used = real(stf,kind=CUSTOM_REAL)
 
-            ! distinguishes between single and double precision for reals
-            stf_used = real(stf,kind=CUSTOM_REAL)
-
-            !  add source array
-            do k=1,NGLLZ
-              do j=1,NGLLY
-                do i=1,NGLLX
-                  iglob = ibool(i,j,k,ispec)
-                  ! get poroelastic parameters of current local GLL
-                  phil = phistore(i,j,k,ispec)
-                  tortl = tortstore(i,j,k,ispec)
-                  rhol_s = rhoarraystore(1,i,j,k,ispec)
-                  rhol_f = rhoarraystore(2,i,j,k,ispec)
-                  rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
+          !  add source array
+          do k=1,NGLLZ
+            do j=1,NGLLY
+              do i=1,NGLLX
+                iglob = ibool(i,j,k,ispec)
+                ! get poroelastic parameters of current local GLL
+                phil = phistore(i,j,k,ispec)
+                tortl = tortstore(i,j,k,ispec)
+                rhol_s = rhoarraystore(1,i,j,k,ispec)
+                rhol_f = rhoarraystore(2,i,j,k,ispec)
+                rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
 
 
-                  ! we distinguish between a single force which can be applied both in fluid and solid
-                  ! and a moment-tensor source which only makes sense for a solid
-                  if (USE_FORCE_POINT_SOURCE) then
-                    ! single point force
-                    ! the source is applied to both solid and fluid phase: bulk source.
-                    fac_s = 1._CUSTOM_REAL - phil/tortl
-                    fac_w = 1._CUSTOM_REAL - rhol_f/rhol_bar
-                  else
-                    ! moment-tensor source can only be in solid phase
-                    ! source in the solid phase only
-                    fac_s = 1._CUSTOM_REAL
-                    fac_w = - rhol_f/rhol_bar
-                  endif
+                ! we distinguish between a single force which can be applied both in fluid and solid
+                ! and a moment-tensor source which only makes sense for a solid
+                if (USE_FORCE_POINT_SOURCE) then
+                  ! single point force
+                  ! the source is applied to both solid and fluid phase: bulk source.
+                  fac_s = 1._CUSTOM_REAL - phil/tortl
+                  fac_w = 1._CUSTOM_REAL - rhol_f/rhol_bar
+                else
+                  ! moment-tensor source can only be in solid phase
+                  ! source in the solid phase only
+                  fac_s = 1._CUSTOM_REAL
+                  fac_w = - rhol_f/rhol_bar
+                endif
 
-                  ! solid phase
-                  b_accels(:,iglob) = b_accels(:,iglob) &
-                               + fac_s * sourcearrays(isource,:,i,j,k)*stf_used
-                  ! fluid phase
-                  b_accelw(:,iglob) = b_accelw(:,iglob) &
-                               + fac_w * sourcearrays(isource,:,i,j,k)*stf_used
-                enddo
+                ! solid phase
+                b_accels(:,iglob) = b_accels(:,iglob) &
+                             + fac_s * sourcearrays(isource,:,i,j,k)*stf_used
+                ! fluid phase
+                b_accelw(:,iglob) = b_accelw(:,iglob) &
+                             + fac_w * sourcearrays(isource,:,i,j,k)*stf_used
               enddo
             enddo
+          enddo
 
-            if (PRINT_SOURCE_TIME_FUNCTION) stf_used_total = stf_used_total + stf_used
-
-          endif ! elastic
-        endif ! phase_inner
+        endif ! poroelastic
       endif ! myrank
 
     enddo ! NSOURCES
   endif ! adjoint
-
-  ! master prints out source time function to file
-  if (PRINT_SOURCE_TIME_FUNCTION .and. phase_is_inner) then
-    time_source = (it-1)*DT - t0
-    call sum_all_cr(stf_used_total,stf_used_total_all)
-    if (myrank == 0) write(IOSTF,*) time_source,stf_used_total_all
-  endif
 
   end subroutine compute_add_sources_poroelastic
 

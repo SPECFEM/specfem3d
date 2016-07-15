@@ -114,11 +114,6 @@
     endif
   endif
 
-  ! closing source time function file
-  if (PRINT_SOURCE_TIME_FUNCTION .and. myrank == 0) then
-    close(IOSTF)
-  endif
-
   ! stacey absorbing fields will be reconstructed for adjoint simulations
   ! using snapshot files of wavefields
   if (STACEY_ABSORBING_CONDITIONS) then

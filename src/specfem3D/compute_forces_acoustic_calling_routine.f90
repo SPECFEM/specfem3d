@@ -161,13 +161,18 @@ subroutine compute_forces_acoustic()
     endif
 
     ! sources
-    call compute_add_sources_acoustic(NSPEC_AB,NGLOB_AB,potential_dot_dot_acoustic, &
-                        ibool,ispec_is_inner,phase_is_inner, &
-                        NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                        sourcearrays,kappastore,ispec_is_acoustic,&
-                        SIMULATION_TYPE,NSTEP, &
-                        nrec,islice_selected_rec,ispec_selected_rec, &
-                        nadj_rec_local,adj_sourcearrays,NTSTEP_BETWEEN_READ_ADJSRC)
+    if (phase_is_inner .eqv. .false.) then
+      ! note: we will add all source contributions in the first pass, when phase_is_inner == .false.
+      !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
+      !
+      call compute_add_sources_acoustic(NSPEC_AB,NGLOB_AB,potential_dot_dot_acoustic, &
+                          ibool, &
+                          NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
+                          sourcearrays,kappastore,ispec_is_acoustic,&
+                          SIMULATION_TYPE,NSTEP, &
+                          nrec,islice_selected_rec,ispec_selected_rec, &
+                          nadj_rec_local,adj_sourcearrays,NTSTEP_BETWEEN_READ_ADJSRC)
+    endif
 
     ! assemble all the contributions between slices using MPI
     if (phase_is_inner .eqv. .false.) then
@@ -393,12 +398,17 @@ subroutine compute_forces_acoustic_backward()
     endif
 
     ! sources
-    call compute_add_sources_acoustic_backward(NSPEC_AB, &
-                                  ibool,ispec_is_inner,phase_is_inner, &
-                                  NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                                  sourcearrays,kappastore,ispec_is_acoustic,&
-                                  SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
-                                  b_potential_dot_dot_acoustic)
+    if (phase_is_inner .eqv. .false.) then
+      ! note: we will add all source contributions in the first pass, when phase_is_inner == .false.
+      !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
+      !
+      call compute_add_sources_acoustic_backward(NSPEC_AB, &
+                                    ibool, &
+                                    NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
+                                    sourcearrays,kappastore,ispec_is_acoustic,&
+                                    SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
+                                    b_potential_dot_dot_acoustic)
+    endif
 
     ! assemble all the contributions between slices using MPI
     if (phase_is_inner .eqv. .false.) then
@@ -526,12 +536,17 @@ subroutine compute_forces_acoustic_GPU()
     endif
 
     ! sources
-    call compute_add_sources_acoustic_GPU(NSPEC_AB,ispec_is_inner,phase_is_inner, &
-                                  NSOURCES,myrank,it,&
-                                  ispec_is_acoustic,SIMULATION_TYPE,NSTEP, &
-                                  nrec,islice_selected_rec,ispec_selected_rec, &
-                                  nadj_rec_local,adj_sourcearrays, &
-                                  NTSTEP_BETWEEN_READ_ADJSRC,Mesh_pointer)
+    if (phase_is_inner .eqv. .false.) then
+      ! note: we will add all source contributions in the first pass, when phase_is_inner == .false.
+      !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
+      !
+      call compute_add_sources_acoustic_GPU(NSPEC_AB, &
+                                    NSOURCES,myrank,it,&
+                                    ispec_is_acoustic,SIMULATION_TYPE,NSTEP, &
+                                    nrec,islice_selected_rec,ispec_selected_rec, &
+                                    nadj_rec_local,adj_sourcearrays, &
+                                    NTSTEP_BETWEEN_READ_ADJSRC,Mesh_pointer)
+    endif
 
     ! assemble all the contributions between slices using MPI
     if (phase_is_inner .eqv. .false.) then

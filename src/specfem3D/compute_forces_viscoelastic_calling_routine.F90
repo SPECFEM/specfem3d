@@ -176,15 +176,20 @@ subroutine compute_forces_viscoelastic()
 
     !! CD CD
 #ifndef DEBUG_COUPLED
+    if (phase_is_inner .eqv. .false.) then
+      ! note: we will add all source contributions in the first pass, when phase_is_inner == .false.
+      !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
+      !
       ! adds source term (single-force/moment-tensor solution)
       call compute_add_sources_viscoelastic(NSPEC_AB,NGLOB_AB,accel, &
-                                            ibool,ispec_is_inner,phase_is_inner, &
+                                            ibool, &
                                             NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
                                             sourcearrays, &
                                             ispec_is_elastic,SIMULATION_TYPE,NSTEP, &
                                             nrec,islice_selected_rec,ispec_selected_rec, &
                                             nadj_rec_local,adj_sourcearrays, &
                                             NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY)
+    endif
 #endif
     !! CD CD
 
@@ -396,12 +401,16 @@ subroutine compute_forces_viscoelastic_backward()
     endif
 
 ! adds source term (single-force/moment-tensor solution)
-    call compute_add_sources_viscoelastic_backward( NSPEC_AB,NGLOB_AB, &
-                        ibool,ispec_is_inner,phase_is_inner, &
-                        NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                        sourcearrays, &
-                        ispec_is_elastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
-                        b_accel,NOISE_TOMOGRAPHY)
+    if (phase_is_inner .eqv. .false.) then
+      ! note: we will add all source contributions in the first pass, when phase_is_inner == .false.
+      !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
+      call compute_add_sources_viscoelastic_backward( NSPEC_AB,NGLOB_AB, &
+                          ibool, &
+                          NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
+                          sourcearrays, &
+                          ispec_is_elastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
+                          b_accel,NOISE_TOMOGRAPHY)
+    endif
 
     ! assemble all the contributions between slices using MPI
     if (phase_is_inner .eqv. .false.) then
@@ -578,13 +587,17 @@ subroutine compute_forces_viscoelastic_GPU()
     endif
 
     ! adds source term (single-force/moment-tensor solution)
-    call compute_add_sources_viscoelastic_GPU(NSPEC_AB, &
-                        ispec_is_inner,phase_is_inner,NSOURCES,myrank,it,&
-                        ispec_is_elastic,SIMULATION_TYPE,NSTEP, &
-                        nrec,islice_selected_rec,ispec_selected_rec, &
-                        nadj_rec_local,adj_sourcearrays, &
-                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
-                        Mesh_pointer)
+    if (phase_is_inner .eqv. .false.) then
+      ! note: we will add all source contributions in the first pass, when phase_is_inner == .false.
+      !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
+      call compute_add_sources_viscoelastic_GPU(NSPEC_AB, &
+                          NSOURCES,myrank,it,&
+                          ispec_is_elastic,SIMULATION_TYPE,NSTEP, &
+                          nrec,islice_selected_rec,ispec_selected_rec, &
+                          nadj_rec_local,adj_sourcearrays, &
+                          NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
+                          Mesh_pointer)
+    endif
 
     ! assemble all the contributions between slices using MPI
     if (phase_is_inner .eqv. .false.) then

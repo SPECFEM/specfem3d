@@ -418,7 +418,6 @@
   implicit none
 
   ! local parameters
-  character(len=MAX_STRING_LEN) :: plot_file
   integer :: ier
 
   ! time scheme
@@ -461,18 +460,6 @@
     seismograms_v(:,:,:) = 0._CUSTOM_REAL
     seismograms_a(:,:,:) = 0._CUSTOM_REAL
     seismograms_p(:,:,:) = 0._CUSTOM_REAL
-  endif
-
-  ! opens source time function file
-  if (PRINT_SOURCE_TIME_FUNCTION .and. myrank == 0) then
-    ! print the source-time function
-    if (NSOURCES == 1) then
-      plot_file = '/plot_source_time_function.txt'
-    else
-      write(plot_file,"('/plot_source_time_function',i7.7,'.txt')") NSOURCES
-    endif
-    open(unit=IOSTF,file=trim(OUTPUT_FILES)//plot_file,status='unknown',iostat=ier)
-    if (ier /= 0) call exit_mpi(myrank,'error opening plot_source_time_function file')
   endif
 
   end subroutine prepare_timerun_constants

@@ -270,6 +270,9 @@
   ! checks if source is in an acoustic element and exactly on the free surface because pressure is zero there
   call setup_sources_check_acoustic()
 
+  ! prints source time functions to output files
+  if (PRINT_SOURCE_TIME_FUNCTION) call print_stf_file()
+
   end subroutine setup_sources
 
 !
@@ -1128,3 +1131,147 @@
   endif
 
   end subroutine setup_sources_receivers_VTKfile
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine print_stf_file()
+
+  use specfem_par
+  use specfem_par_acoustic,only: ispec_is_acoustic
+  use specfem_par_elastic,only: ispec_is_elastic
+  use specfem_par_poroelastic,only: ispec_is_poroelastic
+
+  implicit none
+
+  ! local parameters
+  real(kind=CUSTOM_REAL) :: stf_used,time_source
+  real(kind=CUSTOM_REAL),dimension(NSTEP) :: source_time_function
+
+  double precision :: stf,time_source_dble
+  double precision,external :: get_stf_acoustic,get_stf_viscoelastic,get_stf_poroelastic
+
+  integer :: isource,ispec,ier
+  character(len=MAX_STRING_LEN) :: plot_file
+
+  ! check
+  if (SIMULATION_TYPE /= 1 .and. SIMULATION_TYPE /= 2 .and. SIMULATION_TYPE /= 3) &
+    stop 'unrecognized SIMULATION_TYPE value in printing stf file'
+
+  if (myrank == 0) then
+    write(IMAIN,*)
+    write(IMAIN,*) 'printing the source-time function'
+    call flush_IMAIN()
+  endif
+
+  ! note: the source time function will be output for each source separately,
+  !       instead of summing up all stf from single source contributions
+
+  ! source contributions
+  do isource = 1,NSOURCES
+
+    ! initializes
+    source_time_function(:) = 0._CUSTOM_REAL
+
+    ! adds the source contribution (only if this proc carries the source)
+    if (myrank == islice_selected_source(isource)) then
+
+      ! time loop
+      do it = 1,NSTEP
+        ! current source time
+        if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 2) then
+          if (USE_LDDRK) then
+            time_source_dble = dble(it-1)*DT + dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+          else
+            time_source_dble = dble(it-1)*DT - t0 - tshift_src(isource)
+          endif
+        else
+          ! backward simulation (SIMULATION_TYPE == 3)
+          if (USE_LDDRK) then
+            time_source_dble = dble(NSTEP-1)*DT - dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+          else
+            time_source_dble = dble(NSTEP-1)*DT - t0 - tshift_src(isource)
+          endif
+        endif
+
+
+        ispec = ispec_selected_source(isource)
+
+        ! determines source time function value
+        if (ispec_is_acoustic(ispec)) then
+          stf = get_stf_acoustic(time_source_dble,isource)
+        else if (ispec_is_elastic(ispec)) then
+          stf = get_stf_viscoelastic(time_source_dble,isource)
+        else if (ispec_is_poroelastic(ispec)) then
+          stf = get_stf_poroelastic(time_source_dble,isource)
+        else
+          call exit_MPI(myrank,'Invalid source element type, please check your mesh...')
+        endif
+
+        !! VM VM add external source time function
+        if (EXTERNAL_STF) then
+          stf = user_source_time_function(it, isource)
+        endif
+
+        ! distinguishes between single and double precision for reals
+        stf_used = real(stf,kind=CUSTOM_REAL)
+
+        ! for file output
+        source_time_function(it) = stf_used
+      enddo
+    endif
+
+    ! master collects stf
+    if (islice_selected_source(isource) /= 0) then
+      if (myrank == 0) then
+        ! master collects
+        call recvv_cr(source_time_function,NSTEP,islice_selected_source(isource),0)
+      else if (myrank == islice_selected_source(isource)) then
+        ! slave sends to master
+        call sendv_cr(source_time_function,NSTEP,0,0)
+      endif
+    endif
+
+    ! master prints out to file
+    if (myrank == 0) then
+      ! opens source time function file
+      if (NSOURCES == 1) then
+        plot_file = '/plot_source_time_function.txt'
+      else if (isource < 10) then
+        write(plot_file,"('/plot_source_time_function',i1,'.txt')") isource
+      else if (isource < 100) then
+        write(plot_file,"('/plot_source_time_function',i2,'.txt')") isource
+      else
+        write(plot_file,"('/plot_source_time_functionA',i7.7,'.txt')") isource
+      endif
+      open(unit=IOSTF,file=trim(OUTPUT_FILES)//trim(plot_file),status='unknown',iostat=ier)
+      if (ier /= 0) call exit_mpi(myrank,'Error opening plot_source_time_function file')
+
+      do it = 1,NSTEP
+        ! overall time, note that t_shift_src will start at zero for simulation
+        if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 2) then
+          if (USE_LDDRK) then
+            time_source = dble(it-1)*DT + dble(C_LDDRK(istage))*DT - t0
+          else
+            time_source = dble(it-1)*DT - t0
+          endif
+        else
+          ! backward simulation (SIMULATION_TYPE == 3)
+          if (USE_LDDRK) then
+            time_source = dble(NSTEP-1)*DT - dble(C_LDDRK(istage))*DT - t0
+          else
+            time_source = dble(NSTEP-1)*DT - t0
+          endif
+        endif
+
+        ! file output
+        write(IOSTF,*) time_source,source_time_function(it)
+      enddo
+      close(IOSTF)
+    endif
+
+  enddo ! NSOURCES
+
+  end subroutine print_stf_file
+

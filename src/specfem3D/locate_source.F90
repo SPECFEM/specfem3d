@@ -41,7 +41,7 @@
 
   use constants
 
-  use specfem_par,only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION, &
+  use specfem_par,only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION, &
       UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
       factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP,&
       user_source_time_function,NSTEP_STF,NSOURCES_STF,EXTERNAL_STF, &
@@ -1043,11 +1043,6 @@
       write(IMAIN,*) '*************************************'
       write(IMAIN,*)
       call flush_IMAIN()
-    endif
-
-    if (PRINT_SOURCE_TIME_FUNCTION) then
-      write(IMAIN,*)
-      write(IMAIN,*) 'printing the source-time function'
     endif
 
     ! display maximum error in location estimate
