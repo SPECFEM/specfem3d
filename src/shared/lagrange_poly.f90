@@ -32,36 +32,55 @@
 
   implicit none
 
-  integer, intent(in) :: NGLL
-  double precision, intent(in) :: xi,xigll(NGLL)
-  double precision, intent(out) :: h(NGLL),hprime(NGLL)
+  double precision,intent(in) :: xi
 
-  integer dgr,i,j
-  double precision prod1,prod2
+  integer,intent(in) :: NGLL
+  double precision,dimension(NGLL),intent(in) :: xigll
+  double precision,dimension(NGLL),intent(out) :: h,hprime
 
-  do dgr=1,NGLL
+  ! local parameters
+  integer :: dgr,i,j
+  double precision :: prod1,prod2,prod3
+  double precision :: prod2_inv
+  double precision :: sum
+  double precision :: x0,x
+
+! note: this routine is hit pretty hard by the mesher, optimizing the loops here will be beneficial
+
+  do dgr = 1,NGLL
 
     prod1 = 1.0d0
     prod2 = 1.0d0
-    do i=1,NGLL
-      if (i /= dgr) then
-        prod1 = prod1*(xi-xigll(i))
-        prod2 = prod2*(xigll(dgr)-xigll(i))
-      endif
-    enddo
-    h(dgr)=prod1/prod2
 
-    hprime(dgr)=0.0d0
-    do i=1,NGLL
+    ! lagrangian interpolants
+    x0 = xigll(dgr)
+    do i = 1,NGLL
       if (i /= dgr) then
-        prod1=1.0d0
-        do j=1,NGLL
-          if (j /= dgr .and. j /= i) prod1 = prod1*(xi-xigll(j))
-        enddo
-        hprime(dgr) = hprime(dgr)+prod1
+        x = xigll(i)
+        prod1 = prod1*(xi-x)
+        prod2 = prod2*(x0-x)
       endif
     enddo
-    hprime(dgr) = hprime(dgr)/prod2
+
+    ! takes inverse to avoid additional divisions
+    ! (multiplications are cheaper than divisions)
+    prod2_inv = 1.d0/prod2
+
+    h(dgr) = prod1 * prod2_inv
+
+    ! first derivatives
+    sum = 0.0d0
+    do i = 1,NGLL
+      if (i /= dgr) then
+        prod3 = 1.0d0
+        do j = 1,NGLL
+          if (j /= dgr .and. j /= i) prod3 = prod3*(xi-xigll(j))
+        enddo
+        sum = sum + prod3
+      endif
+    enddo
+
+    hprime(dgr) = sum * prod2_inv
 
   enddo
 
@@ -74,7 +93,7 @@
 ! subroutine to compute the derivative of the Lagrange interpolants
 ! at the GLL points at any given GLL point
 
-  double precision function lagrange_deriv_GLL(I,j,ZGLL,NZ)
+  double precision function lagrange_deriv_GLL(i,j,ZGLL,NZ)
 
 !------------------------------------------------------------------------
 !
@@ -86,18 +105,19 @@
 
   implicit none
 
-  integer i,j,nz
-  double precision zgll(0:nz-1)
+  integer :: i,j,nz
+  double precision :: zgll(0:nz-1)
 
-  integer degpoly
+  ! local parameters
+  integer :: degpoly
 
   double precision, external :: pnleg,pndleg
 
   degpoly = nz - 1
   if (i == 0 .and. j == 0) then
-    lagrange_deriv_GLL = - dble(degpoly)*(dble(degpoly)+1.d0) / 4.d0
+    lagrange_deriv_GLL = - dble(degpoly)*(dble(degpoly)+1.d0) * 0.25d0  ! / 4.d0
   else if (i == degpoly .and. j == degpoly) then
-    lagrange_deriv_GLL = dble(degpoly)*(dble(degpoly)+1.d0) / 4.d0
+    lagrange_deriv_GLL = dble(degpoly)*(dble(degpoly)+1.d0) * 0.25d0  ! / 4.d0
   else if (i == j) then
     lagrange_deriv_GLL = 0.d0
   else
