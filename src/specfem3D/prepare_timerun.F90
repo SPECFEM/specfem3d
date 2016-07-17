@@ -590,7 +590,7 @@
       write(IMAIN,*)
       write(IMAIN,*) "Attenuation:"
       write(IMAIN,*) "Attenuation:"
-      write(IMAIN,*) "The code uses a constant Q quality factor," 
+      write(IMAIN,*) "The code uses a constant Q quality factor,"
       write(IMAIN,*) "but approximated based on a series of Zener standard linear solids (SLS)."
       write(IMAIN,*) "The approximation is performed in the following frequency band:"
       write(IMAIN,*) "  Reference frequency (Hz):",sngl(ATTENUATION_f0_REFERENCE)," period (s):",sngl(1.0/ATTENUATION_f0_REFERENCE)
