@@ -150,6 +150,8 @@ Please note that your Vp- and Vs-speeds are given for a reference frequency. To 
 this reference frequency, you change the value of \texttt{ATTENUATION\_f0\_REFERENCE}
 in the main constants file \texttt{constants.h} found in subdirectory
 \texttt{src/shared/}.
+The code uses a constant $Q$ quality factor, write(IMAIN,*) "but approximated based on a series of Zener standard linear solids (SLS).
+The approximation is thus performed in a given frequency band determined based on that \texttt{ATTENUATION\_f0\_REFERENCE} reference frequency.
 \item [{anisotropic\_flag}] Flag describing the anisotropic model to use
 in case an anisotropic simulation should be conducted. See the file
 \texttt{model\_aniso.f90} in subdirectory \texttt{src/generate\_databases/}

@@ -217,6 +217,9 @@
   if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) "Attenuation:"
+    write(IMAIN,*) "The code uses a constant Q quality factor,"
+    write(IMAIN,*) "but approximated based on a series of Zener standard linear solids (SLS)."
+    write(IMAIN,*) "The approximation is performed in the following frequency band:"
     write(IMAIN,*) "  Reference frequency (Hz):",sngl(ATTENUATION_f0_REFERENCE)," period (s):",sngl(1.0/ATTENUATION_f0_REFERENCE)
     write(IMAIN,*) "  Frequency band min/max (Hz):",sngl(1.0/MAX_ATTENUATION_PERIOD),sngl(1.0/MIN_ATTENUATION_PERIOD)
     write(IMAIN,*) "  Period band min/max (s):",sngl(MIN_ATTENUATION_PERIOD),sngl(MAX_ATTENUATION_PERIOD)
