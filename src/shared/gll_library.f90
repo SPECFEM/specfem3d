@@ -465,7 +465,7 @@
   double precision z(np),w(np)
   double precision alpha,beta
 
-  ! local paraeters
+  ! local parameters
   integer n,np1,np2,i
   double precision p,pd,pm1,pdm1,pm2,pdm2
   double precision apb,dnp1,dnp2,fac1,fac2,fac3,fnorm,rcoef
