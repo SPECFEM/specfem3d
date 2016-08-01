@@ -1174,7 +1174,7 @@
     ! initializes
     source_time_function(:) = 0._CUSTOM_REAL
 
-    ! adds the source contribution (only if this proc carries the source)
+    ! compute the source contribution (only if this proc carries the source)
     if (myrank == islice_selected_source(isource)) then
 
       ! time loop
@@ -1195,7 +1195,6 @@
           endif
         endif
 
-
         ispec = ispec_selected_source(isource)
 
         ! determines source time function value
@@ -1210,9 +1209,7 @@
         endif
 
         !! VM VM add external source time function
-        if (EXTERNAL_STF) then
-          stf = user_source_time_function(it, isource)
-        endif
+        if (EXTERNAL_STF) stf = user_source_time_function(it, isource)
 
         ! distinguishes between single and double precision for reals
         stf_used = real(stf,kind=CUSTOM_REAL)
@@ -1222,7 +1219,7 @@
       enddo
     endif
 
-    ! master collects stf
+    ! master collects stf (if it does not already have it, i.e. if this source is not on the master)
     if (islice_selected_source(isource) /= 0) then
       if (myrank == 0) then
         ! master collects
@@ -1268,8 +1265,10 @@
         ! file output
         write(IOSTF,*) time_source,source_time_function(it)
       enddo
+
       close(IOSTF)
-    endif
+
+    endif ! of if (myrank == 0) then
 
   enddo ! NSOURCES
 
