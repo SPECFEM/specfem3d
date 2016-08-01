@@ -313,7 +313,7 @@
 
       if (it < 100) then
         write(IMAIN,*) '************************************************************'
-        write(IMAIN,*) '**** BEWARE: the above time estimates are not reliable'
+        write(IMAIN,*) '**** BEWARE: the above time estimates are not very reliable'
         write(IMAIN,*) '**** because fewer than 100 iterations have been performed'
         write(IMAIN,*) '************************************************************'
       endif
@@ -392,7 +392,7 @@
     if (it < 100) then
       write(IOUT,*)
       write(IOUT,*) '************************************************************'
-      write(IOUT,*) '**** BEWARE: the above time estimates are not reliable'
+      write(IOUT,*) '**** BEWARE: the above time estimates are not very reliable'
       write(IOUT,*) '**** because fewer than 100 iterations have been performed'
       write(IOUT,*) '************************************************************'
     endif
