@@ -179,7 +179,7 @@
   ! sets surface flag for element
   ispec_is_surface_external_mesh(ispec) = .true.
 
-  ! sets flags for all gll points on this face
+  ! sets flags for all GLL points on this face
   if (k == 1 .or. k == NGLLZ) then
     do jj = 1, NGLLY
       do ii = 1, NGLLX
@@ -555,7 +555,7 @@
   ! initialize element flag
   has_face = .false.
 
-  ! sets flags for all gll points on a face and makes sure it's not inside the element
+  ! sets flags for all GLL points on a face and makes sure it's not inside the element
   ! zmin & zmax face
   if ((k == 1 .or. k == NGLLZ) .and. valence_external_mesh(ibool(3,3,k,ispec)) >= 1) then
     has_face = .true.

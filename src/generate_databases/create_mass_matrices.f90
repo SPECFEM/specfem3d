@@ -341,7 +341,7 @@
 
     ! elastic elements
     if (ispec_is_elastic(ispec)) then
-      ! reference gll points on boundary face
+      ! reference GLL points on boundary face
       do igll = 1,NGLLSQUARE
         ! gets local indices for GLL point
         i = abs_boundary_ijk(1,igll,iface)
@@ -376,7 +376,7 @@
     ! acoustic element
     if (ispec_is_acoustic(ispec)) then
 
-      ! reference gll points on boundary face
+      ! reference GLL points on boundary face
       do igll = 1,NGLLSQUARE
         ! gets local indices for GLL point
         i = abs_boundary_ijk(1,igll,iface)

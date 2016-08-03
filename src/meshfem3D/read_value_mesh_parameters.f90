@@ -146,9 +146,6 @@
   call read_next_line(iunit,ignore_junk,string_read,ier)
   if (ier /= 0) return
 
-  ! debug
-  !print *,'doubling line: ',trim(string_read),' index: ',index(string_read,trim(name))
-
   ! checks if line contains name string
   if (index(string_read,trim(name)) > 0) then
 

@@ -61,7 +61,7 @@
 
   integer :: imaterial_id,imaterial_def
 
-  ! gll point location
+  ! GLL point location
   double precision :: xmesh,ymesh,zmesh
   integer :: iglob
 
@@ -102,7 +102,7 @@
     include "../../../add_to_get_model_2.F90"
 #endif
 
-    ! loops over all gll points in element
+    ! loops over all GLL points in element
     do k = 1, NGLLZ
       do j = 1, NGLLY
         do i = 1, NGLLX

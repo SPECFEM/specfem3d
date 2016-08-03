@@ -371,7 +371,7 @@ end subroutine write_dataXZ
 !   INPUT  itime : iteration time
 !          coord : Receivers coordinates
 !          npoin : number of Receivers.
-!          nglob : number of gll points along the fault.
+!          nglob : number of GLL points along the fault.
 !          dataXZ : slip rate .
 !          iflt : number of faults.
 

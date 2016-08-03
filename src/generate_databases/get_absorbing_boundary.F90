@@ -154,7 +154,7 @@
     iabsval = iabsval + 1
     abs_boundary_ispec(iabsval) = ispec
 
-    ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+    ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
     igll = 0
     do j=1,NGLLZ
       do i=1,NGLLX
@@ -224,7 +224,7 @@
     iabsval = iabsval + 1
     abs_boundary_ispec(iabsval) = ispec
 
-    ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+    ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
     igll = 0
     do j=1,NGLLZ
       do i=1,NGLLX
@@ -290,7 +290,7 @@
     iabsval = iabsval + 1
     abs_boundary_ispec(iabsval) = ispec
 
-    ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+    ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
     igll = 0
     do j=1,NGLLZ
       do i=1,NGLLY
@@ -356,7 +356,7 @@
     iabsval = iabsval + 1
     abs_boundary_ispec(iabsval) = ispec
 
-    ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+    ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
     igll = 0
     do j=1,NGLLY
       do i=1,NGLLX
@@ -424,7 +424,7 @@
        ifree = ifree + 1
        free_surface_ispec(ifree) = ispec
 
-       ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+       ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
        igllfree = 0
        do j=1,NGLLY
           do i=1,NGLLX
@@ -439,7 +439,7 @@
        iabsval = iabsval + 1
        abs_boundary_ispec(iabsval) = ispec
 
-       ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+       ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
        igll = 0
        do j=1,NGLLY
           do i=1,NGLLX
@@ -513,7 +513,7 @@
           ifree = ifree + 1
           free_surface_ispec(ifree) = ispec
 
-          ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+          ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
           igllfree = 0
           do j=1,NGLLY
              do i=1,NGLLX
@@ -533,7 +533,7 @@
          ifree = ifree + 1
          free_surface_ispec(ifree) = ispec
 
-         ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+         ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
          igllfree = 0
          do j=1,NGLLY
            do i=1,NGLLX
@@ -548,7 +548,7 @@
          iabsval = iabsval + 1
          abs_boundary_ispec(iabsval) = ispec
 
-         ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+         ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
          igll = 0
          do j=1,NGLLY
            do i=1,NGLLX
@@ -567,7 +567,7 @@
          ifree = ifree + 1
          free_surface_ispec(ifree) = ispec
 
-         ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+         ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
          igllfree = 0
          do j=1,NGLLY
            do i=1,NGLLX
@@ -585,7 +585,7 @@
          ifree = ifree + 1
          free_surface_ispec(ifree) = ispec
 
-         ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+         ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
          igllfree = 0
          do j=1,NGLLY
            do i=1,NGLLX
@@ -600,7 +600,7 @@
          iabsval = iabsval + 1
          abs_boundary_ispec(iabsval) = ispec
 
-         ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+         ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
          igll = 0
          do j=1,NGLLY
            do i=1,NGLLX
@@ -618,7 +618,7 @@
       ifree = ifree + 1
       free_surface_ispec(ifree) = ispec
 
-      ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+      ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
       igllfree = 0
       do j=1,NGLLY
        do i=1,NGLLX

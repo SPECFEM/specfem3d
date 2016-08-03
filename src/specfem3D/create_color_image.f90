@@ -37,7 +37,7 @@
   !   type = 2 : displ/velocity y-component
   !   type = 3 : displ/velocity z-component
   !   type = 4 : displ/velocity norm
-  integer,parameter:: IMAGE_TYPE = 3 ! 4
+  integer,parameter:: IMAGE_TYPE = 3
 
   ! cross-section surface
   ! cross-section origin point
@@ -46,19 +46,19 @@
   real(kind=CUSTOM_REAL),parameter:: section_zorg = -100.0 ! 0.0
 
   ! cross-section surface normal
-  real(kind=CUSTOM_REAL),parameter:: section_nx = 0.0 !1.0
-  real(kind=CUSTOM_REAL),parameter:: section_ny = 0.0 !0.0
-  real(kind=CUSTOM_REAL),parameter:: section_nz = 1.0 !0.0
+  real(kind=CUSTOM_REAL),parameter:: section_nx = 0.0
+  real(kind=CUSTOM_REAL),parameter:: section_ny = 0.0
+  real(kind=CUSTOM_REAL),parameter:: section_nz = 1.0
 
   ! cross-section (in-plane) horizontal-direction
-  real(kind=CUSTOM_REAL),parameter:: section_hdirx = 1.0 ! 0.0
-  real(kind=CUSTOM_REAL),parameter:: section_hdiry = 0.0 !1.0
-  real(kind=CUSTOM_REAL),parameter:: section_hdirz = 0.0 ! 0.0
+  real(kind=CUSTOM_REAL),parameter:: section_hdirx = 1.0
+  real(kind=CUSTOM_REAL),parameter:: section_hdiry = 0.0
+  real(kind=CUSTOM_REAL),parameter:: section_hdirz = 0.0
 
   ! cross-section (in-plane) vertical-direction
-  real(kind=CUSTOM_REAL),parameter:: section_vdirx = 0.0 ! 0.0
-  real(kind=CUSTOM_REAL),parameter:: section_vdiry = 1.0 ! 0.0
-  real(kind=CUSTOM_REAL),parameter:: section_vdirz = 0.0 ! 1.0
+  real(kind=CUSTOM_REAL),parameter:: section_vdirx = 0.0
+  real(kind=CUSTOM_REAL),parameter:: section_vdiry = 1.0
+  real(kind=CUSTOM_REAL),parameter:: section_vdirz = 0.0
 
   ! non linear display to enhance small amplitudes in color images
   real(kind=CUSTOM_REAL), parameter :: POWER_DISPLAY_COLOR = 0.30_CUSTOM_REAL
@@ -540,7 +540,7 @@
     j = ceiling(real(num_pixel_loc(k)) / real(NX_IMAGE_color))
     i = num_pixel_loc(k) - (j-1)*NX_IMAGE_color
 
-    ! global point and element indices of gll point in this pixel
+    ! global point and element indices of GLL point in this pixel
     iglob = iglob_image_color(i,j)
     ispec = ispec_image_color(i,j)
 

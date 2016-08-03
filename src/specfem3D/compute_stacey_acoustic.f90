@@ -82,7 +82,7 @@
 
       if (ispec_is_acoustic(ispec)) then
 
-        ! reference gll points on boundary face
+        ! reference GLL points on boundary face
         do igll = 1,NGLLSQUARE
 
           ! gets local indices for GLL point
@@ -187,7 +187,7 @@
 
       if (ispec_is_acoustic(ispec)) then
 
-        ! reference gll points on boundary face
+        ! reference GLL points on boundary face
         do igll = 1,NGLLSQUARE
 
           ! gets local indices for GLL point

@@ -368,7 +368,7 @@
   ! local parameters
   integer :: i,j,k
 
-  ! loops over all gll points from this element
+  ! loops over all GLL points from this element
   do k=1,NGLLZ
     do j=1,NGLLY
       do i=1,NGLLX
@@ -408,7 +408,7 @@
   ! local parameters
   integer :: i,j,k
 
-  ! loops over all gll points from this element
+  ! loops over all GLL points from this element
   do k=1,NGLLZ
     do j=1,NGLLY
       do i=1,NGLLX
@@ -536,7 +536,7 @@
     allocate(veloc_element(NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
     if (ier /= 0) stop 'error allocating arrays for movie elements'
 
-    ! uses div as temporary array to store velocity on all gll points
+    ! uses div as temporary array to store velocity on all GLL points
     do ispec=1,NSPEC_AB
       if (.not. ispec_is_acoustic(ispec)) cycle
       ! calculates velocity

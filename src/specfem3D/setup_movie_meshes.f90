@@ -266,7 +266,7 @@
   endif
 
   ! for gathering movie data
-  ! all gll points on surface
+  ! all GLL points on surface
   nfaces_perproc_surface(:) = nfaces_perproc_surface(:) * npoin_elem
   nfaces_surface_points = nfaces_surface * npoin_elem
   nfaces_surface_glob_points = nfaces_surface_glob_ext_mesh * npoin_elem

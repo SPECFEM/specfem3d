@@ -317,7 +317,7 @@
             igll = 0
             do j=1,NGLLY
               do i=1,NGLLX
-                ! adds all gll points on this face
+                ! adds all GLL points on this face
                 igll = igll + 1
 
                 ! do we need to store local i,j,k,ispec info? or only global indices iglob?
@@ -495,7 +495,7 @@
           igll = 0
           do j=1,NGLLY
             do i=1,NGLLX
-              ! adds all gll points on this face
+              ! adds all GLL points on this face
               igll = igll + 1
 
               ! we need to store local i,j,k,ispec info
@@ -688,7 +688,7 @@
                   igll = 0
                   do j=1,NGLLY
                     do i=1,NGLLX
-                      ! adds all gll points on this face
+                      ! adds all GLL points on this face
                       igll = igll + 1
 
                       ! we need to store local i,j,k,ispec info

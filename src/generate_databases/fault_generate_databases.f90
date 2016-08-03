@@ -192,7 +192,7 @@ subroutine fault_setup(ibool,nnodes_ext_mesh,nodes_coords_ext_mesh, &
     !NOTE: the small fault opening in *_dummy does not affect this subroutine (see get_element_face_id)
     call setup_iface(fault_db(iflt),nnodes_ext_mesh,nodes_coords_ext_mesh,nspec,nglob,ibool)
 
-    ! saving gll indices for each fault face, needed for ibulks
+    ! saving GLL indices for each fault face, needed for ibulks
     call setup_ijk(fault_db(iflt))
 
     ! ibools = mapping from local indices on the fault (GLL index, element index)
@@ -523,7 +523,7 @@ end subroutine close_fault
     igll = 0
     do j=1,NGLLY
       do i=1,NGLLX
-        ! adds all gll points on that face
+        ! adds all GLL points on that face
         igll = igll + 1
         ! stores weighted jacobian and normals
         fdb%jacobian2Dw(igll,ispec_flt) = jacobian2Dw_face(i,j)

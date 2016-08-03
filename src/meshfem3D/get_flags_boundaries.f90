@@ -96,9 +96,6 @@
   if (NEX_ETA * NGLLY_M > 100000) &
     TOLERANCE_METERS = min( TOLERANCE_METERS, dy / (NEX_ETA * NGLLY_M) )
 
-  ! debug
-  !print *,'flags boundary: TOLERANCE_METERS = ',TOLERANCE_METERS,dx,dy,NEX_XI,NEX_ETA,NGLLX_M,NGLLY_M
-
 ! ****************************************************
 !     determine if the element falls on a boundary
 ! ****************************************************

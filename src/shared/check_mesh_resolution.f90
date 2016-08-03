@@ -71,7 +71,7 @@
 
   ! empirical choice for distorted elements to estimate time step and period resolved:
   ! Courant number for time step estimate
-  real(kind=CUSTOM_REAL),parameter :: COURANT_SUGGESTED = 0.5 !! DK DK now that Stacey has been fixed, 0.3 is too low
+  real(kind=CUSTOM_REAL),parameter :: COURANT_SUGGESTED = 0.5
   ! number of points per minimum wavelength for minimum period estimate
   real(kind=CUSTOM_REAL),parameter :: NPTS_PER_WAVELENGTH = 5
 
@@ -177,7 +177,7 @@
     call flush_IMAIN()
   endif
 
-  ! checks Courant number & minimum resolved period for each grid cell
+  ! checks Courant number and minimum resolved period for each grid cell
   do ispec=1,NSPEC_AB
 
     ! determines minimum/maximum velocities within this element
@@ -517,7 +517,7 @@
 
   ! empirical choice for distorted elements to estimate time step and period resolved:
   ! Courant number for time step estimate
-  real(kind=CUSTOM_REAL),parameter :: COURANT_SUGGESTED = 0.5 !! DK DK now that Stacey has been fixed, 0.3 is too low
+  real(kind=CUSTOM_REAL),parameter :: COURANT_SUGGESTED = 0.5
   ! number of points per minimum wavelength for minimum period estimate
   real(kind=CUSTOM_REAL),parameter :: NPTS_PER_WAVELENGTH = 5
 
@@ -578,7 +578,7 @@
     tmp2(:) = 0.0
   endif
 
-  ! checks Courant number & minimum resolved period for each grid cell
+  ! checks Courant number and minimum resolved period for each grid cell
   do ispec=1,NSPEC_AB
 
     ! determines minimum/maximum velocities within this element
@@ -893,13 +893,13 @@
     incry = NGLLY/2
     incrz = NGLLZ/2
   else
-    ! all gll points
+    ! all GLL points
     incrx = 1
     incry = 1
     incrz = 1
   endif
 
-  ! loops over gll points
+  ! loops over GLL points
   ! (avoids temporary 3d arrays)
   do k=1,NGLLZ,incrz
     do j=1,NGLLY,incry
@@ -1131,7 +1131,7 @@
 
 ! checks the mesh sizes
 !
-! returns: global dimensions, element size and gll point distances
+! returns: global dimensions, element size and GLL point distances
 
   use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,HUGEVAL
 

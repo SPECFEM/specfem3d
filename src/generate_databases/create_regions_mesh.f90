@@ -974,7 +974,7 @@ subroutine crm_ext_setup_indexing(ibool, &
           is_moho_bot(ispec) = .true.
           ibelm_moho_bot(ispec2D) = ispec
 
-          ! stores on surface gll points (assuming NGLLX = NGLLY = NGLLZ)
+          ! stores on surface GLL points (assuming NGLLX = NGLLY = NGLLZ)
           igll = 0
           do j=1,NGLLZ
             do i=1,NGLLX
@@ -998,7 +998,7 @@ subroutine crm_ext_setup_indexing(ibool, &
           is_moho_top(ispec) = .true.
           ibelm_moho_top(ispec2D) = ispec
 
-          ! gll points
+          ! GLL points
           igll = 0
           do j=1,NGLLZ
             do i=1,NGLLX

@@ -411,7 +411,7 @@
 
     ! VTK file output
     if (ATTENUATION) then
-      ! saves attenuation flag assigned on each gll point into a vtk file
+      ! saves attenuation flag assigned on each GLL point into a vtk file
       filename = prname(1:len_trim(prname))//'attenuation'
       call write_VTK_data_gll_cr(nspec,nglob, &
                           xstore_dummy,ystore_dummy,zstore_dummy,ibool, &

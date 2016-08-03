@@ -166,7 +166,7 @@
 
 !=============================================================
 
-! external mesh routine for saving vtk files for custom_real values on all gll points
+! external mesh routine for saving vtk files for custom_real values on all GLL points
 
   subroutine write_VTK_data_gll_cr(nspec,nglob, &
             xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
@@ -182,7 +182,7 @@
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
   real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
 
-! gll data values array
+! GLL data values array
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: gll_data
 
 ! masking arrays (takes first data value assigned on a global point, ignores any data values later on for the same global point)
@@ -258,7 +258,7 @@
 
 !=============================================================
 
-! external mesh routine for saving vtk files for integer values on all gll points
+! external mesh routine for saving vtk files for integer values on all GLL points
 
   subroutine write_VTK_data_gll_i(nspec,nglob, &
             xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
@@ -274,7 +274,7 @@
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
   real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
 
-! gll data values array
+! GLL data values array
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: gll_data
 
 ! masking arrays (takes first data value assigned on a global point, ignores any data values later on for the same global point)
@@ -365,7 +365,7 @@
 ! global coordinates
   real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
 
-! gll data values array
+! GLL data values array
   integer :: num_points_globalindices
   integer, dimension(num_points_globalindices) :: points_globalindices
 

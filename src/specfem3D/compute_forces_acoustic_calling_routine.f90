@@ -215,7 +215,7 @@ subroutine compute_forces_acoustic()
 !!! It is better to move this into do iphase=1,2 loop
 !!!   if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
         if (ispec_is_acoustic(ispec) .and. is_CPML(ispec)) then
-          ! reference gll points on boundary face
+          ! reference GLL points on boundary face
           ispec_CPML = spec_to_CPML(ispec)
           do igll = 1,NGLLSQUARE
             ! gets local indices for GLL point

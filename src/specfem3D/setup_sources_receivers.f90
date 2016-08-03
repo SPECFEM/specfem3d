@@ -746,7 +746,7 @@
               does_source_encoding = .true.
             endif
 
-            ! source array interpolated on all element gll points
+            ! source array interpolated on all element GLL points
             call compute_arrays_source_acoustic(sourcearray,hxis,hetas,hgammas,factor_source)
           endif
 

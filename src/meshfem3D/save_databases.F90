@@ -59,7 +59,7 @@
   integer ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
   double precision :: nodes_coords(nglob,3)
 
-  !! VM VM add all gll points for Axisem coupling
+  !! VM VM add all GLL points for Axisem coupling
   double precision, dimension(NGLLX_M,NGLLY_M,NGLLZ_M,nspec) :: xstore, ystore, zstore
 
   integer ispec_material_id(nspec)
@@ -211,7 +211,7 @@
     endif
   enddo
 
-  ! spectral-elements
+  ! spectral elements
   write(IIN_database) nspec
   do ispec=1,nspec
       write(IIN_database) ispec,material_index(1,ispec),material_index(2,ispec), &
@@ -396,7 +396,7 @@
 
   else
 
-    ! only 1 single slice, no mpi interfaces
+    ! only one slice, no MPI interfaces
     write(IIN_database) 0,0
 
     !! VM VM add outputs as CUBIT
@@ -448,7 +448,7 @@
     integer :: ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
     double precision :: nodes_coords(nglob,3)
 
-    !! VM VM add all gll points for Axisem coupling
+    !! VM VM add all GLL points for Axisem coupling
     double precision, dimension(NGLLX_M,NGLLY_M,NGLLZ_M,nspec) :: xgrid, ygrid, zgrid
 
     integer :: ispec_material_id(nspec)

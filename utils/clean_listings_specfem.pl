@@ -130,6 +130,9 @@
       $line =~ s#enddo_LOOP_IJK#ENDDO_LOOP_IJK#ogi;
       $line =~ s#print\*#print \*#ogi;
 
+# always use upper case for GLL when used as a word
+      $line =~ s# gll # GLL #og;
+
       print FILEF90 "$line\n";
 
       }
