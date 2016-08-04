@@ -746,9 +746,9 @@ contains
     call store_dataT(bc%dataT,bc%D,bc%V,bc%T,it)
     if (RATE_AND_STATE) then
       if (bc%rsf%StateLaw==1) then
-        bc%dataT%dat(8,it,:) = log10(theta_new(bc%dataT%iglob))
+        bc%dataT%dat(8,:,it) = log10(theta_new(bc%dataT%iglob))
       else
-        bc%dataT%dat(8,it,:) = theta_new(bc%dataT%iglob)
+        bc%dataT%dat(8,:,it) = theta_new(bc%dataT%iglob)
       endif
     endif
 
