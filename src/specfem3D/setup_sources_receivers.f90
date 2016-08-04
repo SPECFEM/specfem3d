@@ -102,7 +102,7 @@
            gamma_source(NSOURCES), &
            tshift_src(NSOURCES), &
            hdur(NSOURCES), &
-           hdur_gaussian(NSOURCES), &
+           hdur_Gaussian(NSOURCES), &
            utm_x_source(NSOURCES), &
            utm_y_source(NSOURCES), &
            nu_source(3,3,NSOURCES), stat=ier)
@@ -155,15 +155,15 @@
     endif
   endif
 
-  ! convert the half duration for triangle STF to the one for gaussian STF
-  hdur_gaussian(:) = hdur(:)/SOURCE_DECAY_MIMIC_TRIANGLE
+  ! convert the half duration for triangle STF to the one for Gaussian STF
+  hdur_Gaussian(:) = hdur(:)/SOURCE_DECAY_MIMIC_TRIANGLE
 
   ! define t0 as the earliest start time
   ! note: an earlier start time also reduces numerical noise due to a
   !          non-zero offset at the beginning of the source time function
   t0 = - 2.0d0 * minval(tshift_src(:) - hdur(:))   ! - 1.5d0 * minval(tshift_src-hdur)
 
-  ! uses an earlier start time if source is acoustic with a gaussian source time function
+  ! uses an earlier start time if source is acoustic with a Gaussian source time function
   t0_acoustic = 0.0d0
   do isource = 1,NSOURCES
     if (myrank == islice_selected_source(isource)) then
@@ -182,7 +182,7 @@
 
   ! point force sources will start depending on the frequency given by hdur
   !if (USE_FORCE_POINT_SOURCE .or. USE_RICKER_TIME_FUNCTION) then
-!! COMMENTED BY FS FS -> account for the case USE_FORCE_POINT_SOURCE but NOT using a ricker (i.e. using a gaussian),
+!! COMMENTED BY FS FS -> account for the case USE_FORCE_POINT_SOURCE but NOT using a ricker (i.e. using a Gaussian),
 ! in this case the above defined t0 = - 2.0d0 * minval(tshift_src(:) - hdur(:)) is correct
 ! (analogous to using error function in case of moment tensor sources). You only need to be aware that hdur=0
 ! then has a different behaviour for point forces (compared with moment tensor sources):
@@ -190,7 +190,7 @@
   if (USE_RICKER_TIME_FUNCTION) then !! ADDED BY FS FS
     ! note: point force sources will give the dominant frequency in hdur,
     !       thus the main period is 1/hdur.
-    !       also, these sources use a Ricker source time function instead of a gaussian.
+    !       also, these sources use a Ricker source time function instead of a Gaussian.
     !       for a Ricker source time function, a start time ~1.2 * dominant_period is a good choice
     t0 = - 1.2d0 * minval(tshift_src(:) - 1.0d0/hdur(:))
   endif
@@ -842,7 +842,7 @@
         if (.not. SU_FORMAT) then
           print *,'with endings : ', '**.'//comp(1)//'.adj',' ','**.'//comp(2)//'.adj',' ','**.'//comp(3)//'.adj'
         endif
-        print *,''
+        print *
         call exit_MPI(myrank,'no adjoint traces found, please check adjoint sources in directory SEM/')
       endif
     endif
@@ -869,14 +869,14 @@
   ! user info
   if (USE_SOURCE_ENCODING) then
     if (myrank == 0) then
-      write(IMAIN,*) ''
+      write(IMAIN,*)
       write(IMAIN,*) 'using source encoding:'
       if (does_source_encoding) then
         write(IMAIN,*) '  sources have been encoded'
       else
         write(IMAIN,*) '  source encoding has no effect (only supported for acoustic sources)'
       endif
-      write(IMAIN,*) ''
+      write(IMAIN,*)
       call flush_IMAIN()
     endif
   endif

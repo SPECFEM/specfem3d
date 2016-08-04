@@ -52,7 +52,7 @@
   double precision, intent(in) :: t,hdur
   double precision :: hdur_decay,a
 
-  ! note: hdur given is hdur_gaussian = hdur/SOURCE_DECAY_MIMIC_TRIANGLE
+  ! note: hdur given is hdur_Gaussian = hdur/SOURCE_DECAY_MIMIC_TRIANGLE
   !           and SOURCE_DECAY_MIMIC_TRIANGLE ~ 1.68
   hdur_decay = hdur
 
@@ -82,7 +82,7 @@
   double precision, intent(in) :: t,hdur
   double precision :: hdur_decay,a
 
-  ! note: hdur given is hdur_gaussian = hdur/SOURCE_DECAY_MIMIC_TRIANGLE
+  ! note: hdur given is hdur_Gaussian = hdur/SOURCE_DECAY_MIMIC_TRIANGLE
   !           and SOURCE_DECAY_MIMIC_TRIANGLE ~ 1.68
   hdur_decay = hdur
 
@@ -112,7 +112,7 @@
   double precision, intent(in) :: t,hdur
   double precision :: hdur_decay,a
 
-  ! note: hdur given is hdur_gaussian = hdur/SOURCE_DECAY_MIMIC_TRIANGLE
+  ! note: hdur given is hdur_Gaussian = hdur/SOURCE_DECAY_MIMIC_TRIANGLE
   !           and SOURCE_DECAY_MIMIC_TRIANGLE ~ 1.68
   hdur_decay = hdur
 

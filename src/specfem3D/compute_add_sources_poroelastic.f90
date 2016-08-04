@@ -375,7 +375,7 @@
 ! returns source time function value for specified time
 
   use specfem_par,only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION, &
-    hdur,hdur_gaussian,DT
+    hdur,hdur_Gaussian,DT
 
   implicit none
 
@@ -409,7 +409,7 @@
     else
       ! Gaussian
       ! since the source is a bulk source (applied to both fluid and solid parts)
-      stf = comp_source_time_function_gauss(time_source_dble,hdur_gaussian(isource))
+      stf = comp_source_time_function_gauss(time_source_dble,hdur_Gaussian(isource))
     endif
   endif ! USE_FORCE_POINT_SOURCE
 

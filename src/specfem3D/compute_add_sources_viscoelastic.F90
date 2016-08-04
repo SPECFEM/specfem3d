@@ -805,7 +805,7 @@
 
   use specfem_par,only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION, &
     !USE_SOURCE_ENCODING,pm1_source_encoding, &
-    hdur,hdur_gaussian !,DT
+    hdur,hdur_Gaussian !,DT
 
   implicit none
 
@@ -829,10 +829,10 @@
     else
       ! Gaussian
       ! stf = comp_source_time_function_gauss(time_source_dble,5.d0*DT)
-      !! COMMENTED BY FS FS -> do no longer use hard-coded hdur_gaussian = 5*DT, but actual value of hdur_gaussian
+      !! COMMENTED BY FS FS -> do no longer use hard-coded hdur_Gaussian = 5*DT, but actual value of hdur_Gaussian
 
-      stf = comp_source_time_function_gauss(time_source_dble,hdur_gaussian(isource))
-      !! ADDED BY FS FS -> use actual value of hdur_gaussian as half duration
+      stf = comp_source_time_function_gauss(time_source_dble,hdur_Gaussian(isource))
+      !! ADDED BY FS FS -> use actual value of hdur_Gaussian as half duration
     endif
   else
     ! moment-tensor
@@ -841,7 +841,7 @@
       stf = comp_source_time_function_rickr(time_source_dble,hdur(isource))
     else
       ! Heaviside
-      stf = comp_source_time_function(time_source_dble,hdur_gaussian(isource))
+      stf = comp_source_time_function(time_source_dble,hdur_Gaussian(isource))
     endif
 
     ! source encoding
