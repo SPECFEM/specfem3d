@@ -110,12 +110,12 @@ program sum_kernels
   ! checks if number of MPI process as specified
   if (sizeprocs /= NPROC) then
     if (myrank == 0) then
-      print *,''
+      print *
       print *,'Error: run xsum_kernels with the same number of MPI processes '
       print *,'       as specified in Par_file by NPROC when slices were created'
-      print *,''
+      print *
       print *,'for example: mpirun -np ',NPROC,' ./xsum_kernels ...'
-      print *,''
+      print *
     endif
     call synchronize_all()
     stop 'Error total number of slices'

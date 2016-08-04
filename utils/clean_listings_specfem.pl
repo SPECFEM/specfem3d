@@ -128,10 +128,20 @@
       $line =~ s#elseif#else if#ogi;
       $line =~ s#use\s*::\s*mpi#use mpi#ogi;
       $line =~ s#enddo_LOOP_IJK#ENDDO_LOOP_IJK#ogi;
-      $line =~ s#print\*#print \*#ogi;
+      $line =~ s#print\s*\*#print \*#ogi;
+
+      $line =~ s#spectral-elements#spectral elements#ogi;
+
+      $line =~ s#gaussian#Gaussian#ogi;
+
+# do not use null strings, which are not part of the Fortran standard (and the IBM xlf compiler rejects them for instance)
+      $line =~ s#print\s*\*\s*,\s*''#print \*#ogi;
+      $line =~ s#write\s*\(\s*\*\s*,\s*\*\s*\)\s*''#print \*#ogi;
+      $line =~ s#write\s*\(\s*IMAIN\s*,\s*\*\s*\)\s*''#write(IMAIN,\*)#ogi;
+      $line =~ s#write\s*\(\s*IOUT\s*,\s*\*\s*\)\s*''#write(IOUT,\*)#ogi;
 
 # always use upper case for GLL when used as a word
-      $line =~ s# gll # GLL #og;
+      $line =~ s# gll # GLL #ogi;
 
       print FILEF90 "$line\n";
 
