@@ -1,8 +1,0 @@
-#!/bin/sh
-
-
-for i in `seq 2 9`
-do
-    ssh rc00$i $1;
-done
-
