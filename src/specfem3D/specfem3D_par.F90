@@ -277,8 +277,7 @@ module specfem_par_elastic
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: &
     alphaval,betaval,gammaval
 
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: &
-    R_trace,R_xx,R_yy,R_xy,R_xz,R_yz
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: R_trace,R_xx,R_yy,R_xy,R_xz,R_yz
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
     epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: epsilon_trace_over_3
@@ -516,7 +515,6 @@ module specfem_par_poroelastic
   integer, dimension(:), allocatable :: b_request_recv_vector_ext_meshs
   integer, dimension(:), allocatable :: b_request_recv_vector_ext_meshw
 
-
 end module specfem_par_poroelastic
 
 !=====================================================================
@@ -526,11 +524,6 @@ module specfem_par_movie
 ! parameter module for movies/shakemovies
 
   use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NGNOD2D_FOUR_CORNERS
-
-!  use shared_parameters,only: &
-!    NTSTEP_BETWEEN_FRAMES, &
-!    CREATE_SHAKEMAP,MOVIE_SURFACE,MOVIE_VOLUME,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES, &
-!    MOVIE_TYPE,HDUR_MOVIE
 
   implicit none
 

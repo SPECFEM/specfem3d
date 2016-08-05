@@ -76,7 +76,7 @@
 
   ! prepares tomographic models if needed for elements with undefined material definitions
 #ifndef DEBUG_COUPLED
-  if ( (nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO) ) call model_tomography_broadcast(myrank)
+  if (nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO) call model_tomography_broadcast(myrank)
 #endif
 
   ! prepares external model values if needed
@@ -424,7 +424,7 @@
   ! selects chosen velocity model
   select case (IMODEL)
 
-  case (IMODEL_DEFAULT,IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER, IMODEL_SEP )
+  case (IMODEL_DEFAULT,IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER, IMODEL_SEP)
     ! material values determined by mesh properties
     call model_default(materials_ext_mesh,nmat_ext_mesh, &
                        undef_mat_prop,nundefMat_ext_mesh, &
@@ -435,11 +435,11 @@
                        rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
                        phi,tort,kxx,kxy,kxz,kyy,kyz,kzz)
 
-  case (IMODEL_1D_PREM )
+  case (IMODEL_1D_PREM)
     ! 1D model profile from PREM
     call model_1D_prem_iso(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
 
-  case (IMODEL_1D_PREM_PB )
+  case (IMODEL_1D_PREM_PB)
     ! 1D model profile from PREM modified by Piero
     imaterial_PB = abs(imaterial_id)
     call model_1D_PREM_routine_PB(xmesh,ymesh,zmesh,rho,vp,vs,imaterial_PB)
@@ -448,19 +448,19 @@
     iundef = - imaterial_id    ! iundef must be positive
     read(undef_mat_prop(6,iundef),*) idomain_id
 
-  case (IMODEL_1D_CASCADIA )
+  case (IMODEL_1D_CASCADIA)
     ! 1D model profile for Cascadia region
     call model_1D_cascadia(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
 
-  case (IMODEL_1D_SOCAL )
+  case (IMODEL_1D_SOCAL)
     ! 1D model profile for Southern California
     call model_1D_socal(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
 
-  case (IMODEL_SALTON_TROUGH )
+  case (IMODEL_SALTON_TROUGH)
     ! gets model values from tomography file
     call model_salton_trough(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
 
-  case (IMODEL_TOMO )
+  case (IMODEL_TOMO)
     ! gets model values from tomography file
     call model_tomography(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten,imaterial_id,has_tomo_value)
 
@@ -471,7 +471,7 @@
       stop 'Error tomo model not found for material'
     endif
 
-  case (IMODEL_USER_EXTERNAL )
+  case (IMODEL_USER_EXTERNAL)
 
     ! Florian Schumacher, Germany, June 2015
     ! FS FS: added call to model_default here, before calling model_external_values in order to
