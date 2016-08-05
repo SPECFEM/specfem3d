@@ -169,7 +169,7 @@
                     kappal_fr + 4._CUSTOM_REAL*mul_fr/3._CUSTOM_REAL
           C_biot = kappal_s*(kappal_s - kappal_fr)/(D_biot - kappal_fr)
           M_biot = kappal_s*kappal_s/(D_biot - kappal_fr)
-          !The RHS has the form : div T -phi/c div T_f + phi/ceta_fk^-1.partial t w
+          !The RHS has the form : div T -phi/c div T_f + phi/ceta_f_k^-1.partial t w
           !where T = G:grad u_s + C_biot div w I
           !and T_f = C_biot div u_s I + M_biot div w I
           mul_G = mul_fr
