@@ -179,7 +179,7 @@ program test_smooth
   ! all points outside d^2 (dtrsh2) are set to zero.
   dtrsh2 = (1.5*gamma)**2
 
-  ! EXAMPLE gaussian smoothing function for one point
+  ! EXAMPLE Gaussian smoothing function for one point
   ! (1) find the closest gridpoint to the target point
   xtar = 0.25*LENGTH
   ztar = 0.25*HEIGHT
@@ -194,7 +194,7 @@ program test_smooth
   xcen = x(igaus)
   zcen = z(igaus)
 
-  ! (2) compute the example gaussian
+  ! (2) compute the example Gaussian
   k_gaus_global_ex(:) = 0.
   do iglob = 1,NGLOB
      dist2 = (xcen - x(iglob))**2 + (zcen - z(iglob))**2

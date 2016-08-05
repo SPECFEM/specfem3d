@@ -226,7 +226,7 @@ program wave2d_cmap
   ! Gaussian half-width controlling the smoothing (m)
   dtrsh2 = (3.*SIGMA)**2  ! all points outside d^2 are set to zero
 
-  ! EXAMPLE gaussian smoothing function for one point
+  ! EXAMPLE Gaussian smoothing function for one point
   ! find the closest gridpoint to the target point
   xtar = 0.7*LENGTH
   ztar = 0.5*HEIGHT

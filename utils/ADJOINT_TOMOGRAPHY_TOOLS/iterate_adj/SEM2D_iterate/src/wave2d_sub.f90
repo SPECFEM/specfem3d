@@ -84,8 +84,8 @@ contains
     write(12,*) 'GAMMA_SMOOTH_MODEL',GAMMA_SMOOTH_MODEL
     if(HIGH_RES_SMOOTHING) write(12,*) 'HIGH_RES_SMOOTHING 1'
     if(.not. HIGH_RES_SMOOTHING) write(12,*) 'HIGH_RES_SMOOTHING 0'
-    if(EXAMPLE_GAUSSIAN) write(12,*) 'EXAMPLE_GAUSSIAN 1'
-    if(.not. EXAMPLE_GAUSSIAN) write(12,*) 'EXAMPLE_GAUSSIAN 0'
+    if(EXAMPLE_Gaussian) write(12,*) 'EXAMPLE_Gaussian 1'
+    if(.not. EXAMPLE_Gaussian) write(12,*) 'EXAMPLE_Gaussian 0'
     write(12,*) 'IKER',IKER
     write(12,*) 'IAMP_VEL',IAMP_VEL
     write(12,*) 'ISURFACE',ISURFACE
@@ -317,7 +317,7 @@ contains
   ! parameters for source time function
   ! the non-zero Gaussian is needed for plotting the source time function (perl)
   alpha = decay_rate/hdur
-  fgaus = 1.0d-8                  ! fraction of amplitude at edge of gaussian
+  fgaus = 1.0d-8                  ! fraction of amplitude at edge of Gaussian
   dgaus = sqrt(-log(fgaus)) / alpha
 
   if(ISRC_TIME==1) then ! Ricker
@@ -858,9 +858,9 @@ contains
   ! All points outside d^2 (dtrsh2) are set to zero.
   dtrsh2 = (1.5*gamma)**2
 
-  if(EXAMPLE_GAUSSIAN) then
+  if(EXAMPLE_Gaussian) then
 
-     ! EXAMPLE global gaussian smoothing function for one point
+     ! EXAMPLE global Gaussian smoothing function for one point
      ! (1) find the closest gridpoint to the target point
      xtar = 0.25*LENGTH
      ztar = 0.25*HEIGHT
@@ -875,7 +875,7 @@ contains
      xcen = x(igaus)
      zcen = z(igaus)
 
-     ! (2) compute the example gaussian
+     ! (2) compute the example Gaussian
      gaus_global_ex(:) = 0.0
      do iglob = 1,NGLOB
         dist2 = (xcen - x(iglob))**2 + (zcen - z(iglob))**2
@@ -943,7 +943,7 @@ contains
 
    ! write smooth-related functions to file
    ! (We can also write gaus_int_global(iglob) to file if desired.)
-   if(EXAMPLE_GAUSSIAN) then
+   if(EXAMPLE_Gaussian) then
       open(unit=19,file='fun_smooth.dat',status='unknown')
       if(HIGH_RES_SMOOTHING) then
          do iglob = 1,NGLOB

@@ -109,7 +109,7 @@ program random_model
   endif
 
 
-! adds a gaussian perturbation in the middle of the model
+! adds a Gaussian perturbation in the middle of the model
   if( .true. ) then
     ! initializes perturbations
     random(:,:,:,:) = 0.0
@@ -118,20 +118,20 @@ program random_model
     lambda = 0.5 * 2000.0    ! dominant wavelength: 0.5 s from source, 2000 m/s vp
     sigma_h = 0.25*lambda/sqrt(8.0) ! such that scalelength becomes 1/4 of dominant wavelenght
     sigma_v = 0.25*lambda/sqrt(8.0)
-    ! factor two for gaussian distribution with standard variance sigma
+    ! factor two for Gaussian distribution with standard variance sigma
     sigma_h2 = 2.0 * sigma_h * sigma_h
     sigma_v2 = 2.0 * sigma_v * sigma_v
-    ! scalelength: approximately S ~ sigma * sqrt(8.0) for a gaussian smoothing
+    ! scalelength: approximately S ~ sigma * sqrt(8.0) for a Gaussian smoothing
     if(myrank == 0 )print *,"  scalelengths horizontal,vertical (m): ",sigma_h*sqrt(8.0),sigma_v*sqrt(8.0)
 
     ! theoretic normal value
     ! (see integral over -inf to +inf of exp[- x*x/(2*sigma) ] = sigma * sqrt(2*pi) )
-    ! note: smoothing is using a gaussian (ellipsoid for sigma_h /= sigma_v),
+    ! note: smoothing is using a Gaussian (ellipsoid for sigma_h /= sigma_v),
     !norm_h = 2.0*PI*sigma_h**2
     !norm_v = sqrt(2.0*PI) * sigma_v
     !norm   = norm_h * norm_v
 
-    ! sets gaussian perturbation into the middle of model:
+    ! sets Gaussian perturbation into the middle of model:
     ! dimension (Width x Length x Depth) : 2640.0 m x 2640.0 m x 1.44 km
     do ispec = 1,nspec
       do k=1,NGLLZ
@@ -147,7 +147,7 @@ program random_model
             dist_v = sqrt( (-500.0 - z)*(-500.0 - z) )
             ! horizontal distance to center: at 1320 x 1320 m
             dist_h = sqrt( (1320.0 - x)*(1320.0 -x) + (1320.0 - y)*(1320.0 - y) )
-            ! gaussian function:  values between [0,1]
+            ! Gaussian function:  values between [0,1]
             random(i,j,k,ispec) = exp( - (dist_h*dist_h) / sigma_h2 - (dist_v*dist_v) / sigma_v2 )
 
             !if(myrank == 0 )print *,random(i,j,k,ispec),x,y,z,dist_v,dist_h

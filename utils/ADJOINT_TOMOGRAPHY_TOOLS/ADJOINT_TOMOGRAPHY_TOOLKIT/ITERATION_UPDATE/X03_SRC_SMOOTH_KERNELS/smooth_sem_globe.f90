@@ -9,8 +9,8 @@
 !   ./smooth_sem_globe 160 10 bulk_c_kernel OUTPUT_SUM/ topo/
 !
 ! where:
-!   sigma_h                - gaussian width for horizontal smoothing (in km)
-!   sigma_v                - gaussian width for vertical smoothing (in km)
+!   sigma_h                - Gaussian width for horizontal smoothing (in km)
+!   sigma_v                - Gaussian width for vertical smoothing (in km)
 !   kernel_file_name  - takes file with this kernel name,
 !                                     e.g. "bulk_c_kernel"
 !   scratch_file_dir     - directory containing kernel files,
@@ -157,7 +157,7 @@ program smooth_sem_globe
   sigma_v = sigma_v * 1000.0 ! m
   if (global_code) sigma_v = sigma_v / R_EARTH ! scale
 
-  sigma_h2 = 2.0 * sigma_h ** 2  ! factor two for gaussian distribution with standard variance sigma
+  sigma_h2 = 2.0 * sigma_h ** 2  ! factor two for Gaussian distribution with standard variance sigma
   sigma_v2 = 2.0 * sigma_v ** 2
 
   ! search radius
@@ -167,7 +167,7 @@ program smooth_sem_globe
   ! theoretic normal value
   ! (see integral over -inf to +inf of exp[- x*x/(2*sigma) ] = sigma * sqrt(2*pi) )
 
-! note: smoothing is using a gaussian (ellipsoid for sigma_h /= sigma_v),
+! note: smoothing is using a Gaussian (ellipsoid for sigma_h /= sigma_v),
 !          but in spherical coordinates, we use horizontal distance as epicentral distance
 !          and vertical distance as radial distance?
 
@@ -425,7 +425,7 @@ program smooth_sem_globe
               y0 = yl(i,j,k,ispec)
               z0 = zl(i,j,k,ispec)
 
-              ! calculate weights based on gaussian smoothing
+              ! calculate weights based on Gaussian smoothing
               call smoothing_weights_vec(x0,y0,z0,ispec2,sigma_h2,sigma_v2,exp_val,&
                       xx(:,:,:,ispec2),yy(:,:,:,ispec2),zz(:,:,:,ispec2))
 
@@ -435,7 +435,7 @@ program smooth_sem_globe
               ! adds contribution of element ispec2 to smoothed kernel values
               tk(i,j,k,ispec) = tk(i,j,k,ispec) + sum(exp_val(:,:,:) * kernel(:,:,:,ispec2))
 
-              ! normalization, integrated values of gaussian smoothing function
+              ! normalization, integrated values of Gaussian smoothing function
               bk(i,j,k,ispec) = bk(i,j,k,ispec) + sum(exp_val(:,:,:))
 
               ! checks number
@@ -473,7 +473,7 @@ program smooth_sem_globe
             !call exit_mpi(myrank, 'Error computing Gaussian function on the grid')
           endif
 
-          ! normalizes smoothed kernel values by integral value of gaussian weighting
+          ! normalizes smoothed kernel values by integral value of Gaussian weighting
           kernel_smooth(i,j,k,ispec) = tk(i,j,k,ispec) / bk(i,j,k,ispec)
 
 
@@ -545,7 +545,7 @@ end program smooth_sem_globe
   !          +(zz(:,:,:,ispec2)-z0)**2 )/(2*sigma2) )*factor(:,:,:)
 
   ! from basin code smoothing:
-  ! gaussian function
+  ! Gaussian function
   !exp_val(:,:,:) = exp( -(xx(:,:,:,ispec2)-x0)**2/(sigma_h2) &
   !                      -(yy(:,:,:,ispec2)-y0)**2/(sigma_h2) &
   !                      -(zz(:,:,:,ispec2)-z0)**2/(sigma_v2) ) * factor(:,:,:)
@@ -560,7 +560,7 @@ end program smooth_sem_globe
         call get_distance_vec(dist_h,dist_v,x0,y0,z0, &
             xx_elem(ii,jj,kk),yy_elem(ii,jj,kk),zz_elem(ii,jj,kk))
 
-        ! gaussian function
+        ! Gaussian function
         exp_val(ii,jj,kk) = exp( - (dist_h*dist_h)/sigma_h2 &
                                   - (dist_v*dist_v)/sigma_v2 )    ! * factor(ii,jj,kk)
 

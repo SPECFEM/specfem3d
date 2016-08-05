@@ -2052,7 +2052,7 @@ itest = 0
         !dtrsh2 = (3.*sigma)**2  ! all points outside d^2 are set to zero
         dtrsh2 = (9./8.)*gamma**2
 
-        ! EXAMPLE gaussian smoothing function for one point
+        ! EXAMPLE Gaussian smoothing function for one point
         ! find the closest gridpoint to the target point
         xtar = 0.5*LENGTH
         ztar = 0.5*HEIGHT

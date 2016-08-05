@@ -81,7 +81,7 @@ contains
   ! parameters for source time function
   ! the non-zero Gaussian is needed for plotting the source time function (perl)
   alpha = decay_rate/hdur
-  fgaus = 1.d-8                  ! fraction of amplitude at edge of gaussian
+  fgaus = 1.d-8                  ! fraction of amplitude at edge of Gaussian
   dgaus = sqrt(-log(fgaus)) / alpha
 
   if(ISRC_TIME==1) then ! Ricker
