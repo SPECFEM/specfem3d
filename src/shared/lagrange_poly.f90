@@ -141,8 +141,9 @@
 !
 !  Compute the value of the Lagrangian interpolant L through
 !  the NZ Gauss-Lobatto Legendre points ZGLL at point Z
-! See Nissen-Meyer et al., 2007, A two-dimensional spectral-element method for computing
-! spherical-earth seismograms - I. Moment-tensor source, Geophysical Journal International, p. 1087 eq. (A19)
+!  See Nissen-Meyer et al., 2007, A two-dimensional spectral-element method for computing
+!  spherical-earth seismograms - I. Moment-tensor source, Geophysical Journal International, p. 1087 eq. (A19)
+!  !! Warning !! There is a minus sign missing in that paper (-1.d0)**(N+1)*(1.d0-Z)*PNDLEG(Z,N) / ALFAN
 !
 !-------------------------------------------------------------
 
