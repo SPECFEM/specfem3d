@@ -38,19 +38,19 @@
     read(5,*) val1,val2,val3,val4,val5
 
     it = it + 1
-    if(t0 + (it-1)*dt >= 0 .or. ALSO_OUTPUT_NEGATIVE_TIMES) write(*,*) sngl(t0 + (it-1)*dt),sngl(val1)
+    if (t0 + (it-1)*dt >= 0 .or. ALSO_OUTPUT_NEGATIVE_TIMES) write(*,*) sngl(t0 + (it-1)*dt),sngl(val1)
 
     it = it + 1
-    if(t0 + (it-1)*dt >= 0 .or. ALSO_OUTPUT_NEGATIVE_TIMES) write(*,*) sngl(t0 + (it-1)*dt),sngl(val2)
+    if (t0 + (it-1)*dt >= 0 .or. ALSO_OUTPUT_NEGATIVE_TIMES) write(*,*) sngl(t0 + (it-1)*dt),sngl(val2)
 
     it = it + 1
-    if(t0 + (it-1)*dt >= 0 .or. ALSO_OUTPUT_NEGATIVE_TIMES) write(*,*) sngl(t0 + (it-1)*dt),sngl(val3)
+    if (t0 + (it-1)*dt >= 0 .or. ALSO_OUTPUT_NEGATIVE_TIMES) write(*,*) sngl(t0 + (it-1)*dt),sngl(val3)
 
     it = it + 1
-    if(t0 + (it-1)*dt >= 0 .or. ALSO_OUTPUT_NEGATIVE_TIMES) write(*,*) sngl(t0 + (it-1)*dt),sngl(val4)
+    if (t0 + (it-1)*dt >= 0 .or. ALSO_OUTPUT_NEGATIVE_TIMES) write(*,*) sngl(t0 + (it-1)*dt),sngl(val4)
 
     it = it + 1
-    if(t0 + (it-1)*dt >= 0 .or. ALSO_OUTPUT_NEGATIVE_TIMES) write(*,*) sngl(t0 + (it-1)*dt),sngl(val5)
+    if (t0 + (it-1)*dt >= 0 .or. ALSO_OUTPUT_NEGATIVE_TIMES) write(*,*) sngl(t0 + (it-1)*dt),sngl(val5)
 
   enddo
 

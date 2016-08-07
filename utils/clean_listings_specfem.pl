@@ -83,9 +83,8 @@
 # read and clean all Fortran files in the current directory and subdirectories
 #
 
-#     @objects = `ls *.f90 *.F90 *.h *.h.in *.fh */*.f90 */*.F90 */*.h */*.h.in */*.fh */*/*.f90 */*/*.F90 */*/*.h */*/*.h.in */*/*.fh */*/*/*.f90 */*/*/*.F90 */*/*/*.h */*/*/*.h.in */*/*/*.fh`;
 # when using this "find" command from Perl we need to use \\ instead of \ below otherwise Perl tries to interpret it
-      @objects = `find . -name '.git' -prune -o -name 'm4' -prune -o -path './utils/ADJOINT_TOMOGRAPHY_TOOLS/flexwin' -prune -o -type f -regextype posix-extended -regex '.*\\.(fh|f90|F90|h|h\\.in)' -print`;
+      @objects = `find . -name '.git' -prune -o -name 'm4' -prune -o -path './utils/ADJOINT_TOMOGRAPHY_TOOLS/flexwin' -prune -o -type f -regextype posix-extended -regex '.*\\.(fh|f90|F90|h\\.in)' -print`;
 
       foreach $name (@objects) {
             chop $name;
@@ -123,13 +122,34 @@
 # in the code (which is dangerous, but really easier to program...)
 #
 # DK DK this could be dangerous if these words appear in strings or print statements
+      $line =~ s#if\s*\(#if \(#ogi;
+      $line =~ s#\)\s*then#\) then#ogi;
       $line =~ s#end\s*if#endif#ogi;
       $line =~ s#end\s*do#enddo#ogi;
-      $line =~ s# go\s*to # goto #ogi;
       $line =~ s#elseif#else if#ogi;
+
+# force lowercase keywords
+      $line =~ s#subroutine#subroutine#ogi;
+      $line =~ s#end\s*subroutine#end subroutine#ogi;
+      $line =~ s#function#function#ogi;
+      $line =~ s#end\s*function#end function#ogi;
+      $line =~ s#continue#continue#ogi;
+      $line =~ s#implicit none#implicit none#ogi;
+      $line =~ s#implicit#implicit#ogi;
+
+      $line =~ s# go\s*to # goto #ogi;
+
       $line =~ s#use\s*::\s*mpi#use mpi#ogi;
-      $line =~ s#enddo_LOOP_IJK#ENDDO_LOOP_IJK#ogi;
+
       $line =~ s#print\s*\*#print \*#ogi;
+
+      $line =~ s#NOISE_SOURCE_TIME_FUNCTION_TYPE#noise_source_time_function_type#ogi;
+
+# do not move this before the above line in which we change the keyword "function"
+      $line =~ s#use_ricker_time_function#USE_RICKER_TIME_FUNCTION#ogi;
+      $line =~ s#print_source_time_function#PRINT_SOURCE_TIME_FUNCTION#ogi;
+
+      $line =~ s#enddo_LOOP_IJK#ENDDO_LOOP_IJK#ogi;
 
       $line =~ s#spectral-elements#spectral elements#ogi;
 
@@ -138,8 +158,8 @@
 # do not use null strings, which are not part of the Fortran standard (and the IBM xlf compiler rejects them for instance)
       $line =~ s#print\s*\*\s*,\s*''#print \*#ogi;
       $line =~ s#write\s*\(\s*\*\s*,\s*\*\s*\)\s*''#print \*#ogi;
-      $line =~ s#write\s*\(\s*IMAIN\s*,\s*\*\s*\)\s*''#write(IMAIN,\*)#ogi;
-      $line =~ s#write\s*\(\s*IOUT\s*,\s*\*\s*\)\s*''#write(IOUT,\*)#ogi;
+      $line =~ s#write\s*\(\s*IMAIN\s*,\s*\*\s*\)\s*''#write\(IMAIN,\*\)#ogi;
+      $line =~ s#write\s*\(\s*IOUT\s*,\s*\*\s*\)\s*''#write\(IOUT,\*\)#ogi;
 
 # always use upper case for GLL when used as a word
       $line =~ s# gll # GLL #ogi;

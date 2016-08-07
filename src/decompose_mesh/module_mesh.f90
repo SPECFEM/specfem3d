@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
 module module_mesh
 
   use shared_parameters
@@ -759,7 +758,7 @@ end module module_mesh
 
 
 
-!-----------------------------  OTHERS SUBROUTINES -------------------------------------------------------
+!-----------------------------  other subroutines -------------------------------------------------------
 
   !--------------------------------------------------
   ! loading : sets weights for acoustic/elastic/poroelastic elements to account for different

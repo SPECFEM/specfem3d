@@ -846,7 +846,7 @@
 
     ! source encoding
     ! not supported yet for viscoelastic elements... sign of moment-tensor needs to be determined prior to running simulation
-    !if(USE_SOURCE_ENCODING) stf = stf * pm1_source_encoding(isource)
+    !if (USE_SOURCE_ENCODING) stf = stf * pm1_source_encoding(isource)
 
   endif ! USE_FORCE_POINT_SOURCE
 

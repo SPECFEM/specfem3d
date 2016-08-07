@@ -66,7 +66,7 @@ program subspace_hessian
   read(12,*) ismooth
   close(12)
 
-  if(ismooth == 1) then
+  if (ismooth == 1) then
      kernel_name1 = 'mu_kernel_smooth'
      kernel_name2 = 'kappa_kernel_smooth'
   else
@@ -99,7 +99,7 @@ program subspace_hessian
 !!$  open(unit=20,file=trim(win_file),status='old',iostat=ios)
 !!$  do i=1,nsrc
 !!$     read(20,*) nwin_vec(i)
-!!$     if(myrank==0) write(*,*) nwin_vec(i)
+!!$     if (myrank==0) write(*,*) nwin_vec(i)
 !!$  enddo
 !!$  close(20)
 

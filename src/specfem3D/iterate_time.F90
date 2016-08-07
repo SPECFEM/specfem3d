@@ -218,7 +218,7 @@
       else
         ! forward simulations
         do istage = 1, NSTAGE_TIME_SCHEME
-          if(USE_LDDRK) call update_displ_lddrk()
+          if (USE_LDDRK) call update_displ_lddrk()
           ! 1. acoustic domain
           if (ACOUSTIC_SIMULATION) call compute_forces_acoustic()
           ! 2. elastic domain

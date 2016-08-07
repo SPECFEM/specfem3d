@@ -436,7 +436,7 @@ program smooth_sem
       endif
     enddo
 
-    if( .not. do_include_slice) then
+    if ( .not. do_include_slice) then
       ! note: Gaussian support might be larger than closest neighbour slices
       !       we add all slices close enough to still have an influence
 

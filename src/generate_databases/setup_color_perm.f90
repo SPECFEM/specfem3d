@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
   subroutine setup_color_perm(myrank,nspec,nglob,ibool,ANISOTROPY,SAVE_MESH_FILES)
 
 ! sets up mesh coloring and permutes elements
@@ -602,7 +601,7 @@
   call permute_elements_real(kappastore,temp_array_real,perm,nspec)
   call permute_elements_real(mustore,temp_array_real,perm,nspec)
 
-  if(ATTENUATION) then
+  if (ATTENUATION) then
      call permute_elements_real(qmu_attenuation_store,temp_array_real,perm,nspec)
      call permute_elements_real(qkappa_attenuation_store,temp_array_real,perm,nspec)
   endif

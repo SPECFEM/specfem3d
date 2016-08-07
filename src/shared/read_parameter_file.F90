@@ -56,7 +56,7 @@
 
   ! read from a single processor (the master) and then use MPI to broadcast to others
   ! to avoid an I/O bottleneck in the case of very large runs
-  if(myrank == 0) then
+  if (myrank == 0) then
 
     ! opens file Par_file
     call open_parameter_file(ier)
@@ -430,11 +430,11 @@
         stop 'Error for IPATI model, please set USE_RICKER_TIME_FUNCTION to .true. in Par_file and recompile solver'
     endif
 
-  endif ! of if(myrank == 0) then
+  endif ! of if (myrank == 0) then
 
 ! read from a single processor (the master) and then use MPI to broadcast to others
 ! to avoid an I/O bottleneck in the case of very large runs
-  if(BROADCAST_AFTER_READ) then
+  if (BROADCAST_AFTER_READ) then
 
     call bcast_all_singlei_world(NPROC)
     call bcast_all_singlei_world(SIMULATION_TYPE)
@@ -516,7 +516,7 @@
     call bcast_all_string_world(FORCESOLUTION)
     call bcast_all_string_world(CMTSOLUTION)
 
-  endif ! of if(BROADCAST_AFTER_READ) then
+  endif ! of if (BROADCAST_AFTER_READ) then
 
   end subroutine read_parameter_file
 

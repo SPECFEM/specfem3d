@@ -132,9 +132,9 @@ contains
     do i = n_left, n_right, 1
       cc = 0
       do j = 1, nlen
-        if((j+i) > 1 .and. (j+i) < nlen) cc = cc + dzr_win(j) * dzr2_win(j+i)
+        if ((j+i) > 1 .and. (j+i) < nlen) cc = cc + dzr_win(j) * dzr2_win(j+i)
       enddo
-      if( cc > cc_max) then
+      if ( cc > cc_max) then
         cc_max = cc
         ishift = i
         endif
@@ -143,13 +143,13 @@ contains
 
     !===================================================
     ! if you want a MTM measurement, then go here
-    if(IKER==3 .or. IKER==4) then
+    if (IKER==3 .or. IKER==4) then
 
     ! apply time shift to observed seismogram
     write(*,*) 'shift obs seismogram by ', tshift_xc, 'seconds, irec = ', irec
     do i = 1, nlen
       dzr3_win(i) = 0
-      if( (ishift+i) > 1 .and. (ishift+i) < nlen ) dzr3_win(i) = dzr2_win(i+ishift)
+      if ( (ishift+i) > 1 .and. (ishift+i) < nlen ) dzr3_win(i) = dzr2_win(i+ishift)
       dzr30_win(i) = dzr3_win(i)
     enddo
 
@@ -211,11 +211,11 @@ contains
       ampmax = 0
       ampmax_unw = 0
       do i = 1, fnum
-        if( abs(wseis(i)) > ampmax) then
+        if ( abs(wseis(i)) > ampmax) then
           ampmax =  abs(wseis(i))
           i_amp_max = i
         endif
-        if( abs(wseis1(i)) > ampmax_unw) then
+        if ( abs(wseis1(i)) > ampmax_unw) then
           ampmax_unw =  abs(wseis1(i))
           i_amp_max_unw = i
         endif
@@ -237,15 +237,15 @@ contains
         bot_mtm(i) = bot_mtm(i) +  wseis(i) * conjg(wseis(i))
 
         ! calculate transfer function for single taper measurement using water level
-        if(abs(wseis(i))  >  abs(wtr_use))  trans(i) = wseis3(i) / wseis(i)
-        if(abs(wseis(i))  <=  abs(wtr_use))  trans(i) = wseis3(i) / (wseis(i)+wtr_use)
+        if (abs(wseis(i))  >  abs(wtr_use))  trans(i) = wseis3(i) / wseis(i)
+        if (abs(wseis(i))  <=  abs(wtr_use))  trans(i) = wseis3(i) / (wseis(i)+wtr_use)
 
         ! determine i_right values using the power in the un-tapered synthetic
-        if(abs(wseis1(i)) <= abs(wtr_use_unw) .and. i_right_stop == 0 .and. i > i_amp_max_unw) then
+        if (abs(wseis1(i)) <= abs(wtr_use_unw) .and. i_right_stop == 0 .and. i > i_amp_max_unw) then
           i_right_stop = 1
           i_right = i
         endif
-        if(abs(wseis1(i))  >=  10*abs(wtr_use_unw) .and. i_right_stop == 1 .and. i > i_amp_max_unw) then
+        if (abs(wseis1(i))  >=  10*abs(wtr_use_unw) .and. i_right_stop == 1 .and. i > i_amp_max_unw) then
           i_right_stop = 0
           i_right = i
         endif
@@ -272,7 +272,7 @@ contains
     ! find water level for multi taper measurement
     ampmax = 0
     do i = 1, fnum
-      if( abs(bot_mtm(i)) > ampmax) then
+      if ( abs(bot_mtm(i)) > ampmax) then
         ampmax =  abs(bot_mtm(i))
         i_amp_max = i
       endif
@@ -281,8 +281,8 @@ contains
 
     ! calculate transfer function using water level
     do i = 1, fnum
-      if(abs(bot_mtm(i)) > abs(wtr_use)) trans_mtm(i) = top_mtm(i) / bot_mtm(i)
-      if(abs(bot_mtm(i)) <= abs(wtr_use)) trans_mtm(i) = top_mtm(i) / (bot_mtm(i)+wtr_use)
+      if (abs(bot_mtm(i)) > abs(wtr_use)) trans_mtm(i) = top_mtm(i) / bot_mtm(i)
+      if (abs(bot_mtm(i)) <= abs(wtr_use)) trans_mtm(i) = top_mtm(i) / (bot_mtm(i)+wtr_use)
     enddo
 
     !=======================================================
@@ -367,7 +367,7 @@ contains
     ! definition of Dahlen and Baig (2002), Eq. 3,17,18 : dlnA = Aobs/Asyn - 1
     dlna = sqrt( (DT * sum( datt(:) * datt(:) )) / (DT * sum( synt(:) * synt(:) )) ) - 1.
 
-    if(0==1) then
+    if (0==1) then
       print *
       print *, 'cross-correlation measurments:'
       print *, '   dT = ', tshift_xc
@@ -378,7 +378,7 @@ contains
     endif
 
     ! additional files for checking (measure_socal_adj.m)
-    if(0==1) then
+    if (0==1) then
       ! time domain : time, data-disp, syn-disp, syn-vel, syn-accel
       open(29,file='syn_time.dat')
       do i = 1,nlen
@@ -398,7 +398,7 @@ contains
     !     create MTM adjoint sources
     !==================================================================
 
-    if(IKER==3 .or. IKER==4) then
+    if (IKER==3 .or. IKER==4) then
 
        pw_adj(:,:) = 0.      ;  qw_adj(:,:) = 0.
        pt_adj(:,:) = 0.      ;  qt_adj(:,:) = 0.
@@ -517,62 +517,62 @@ contains
 
       i1 = istart - 1 + i
 
-      if(ipick==0) then
+      if (ipick==0) then
         adj_syn(i1,icomp,irec) = ( syn(i1,icomp,irec) -  data(i1,icomp,irec) ) * time_window(i) * meas_pert
 
-      else if(ipick==1) then
+      else if (ipick==1) then
         ! meas_pert = 1.0 for most runs
         adj_syn(i1,icomp,irec) = -tshift_xc * ft_bar_t(i) * time_window(i) * meas_pert
 
-      else if(ipick==2) then
+      else if (ipick==2) then
         adj_syn(i1,icomp,irec) = -dlna * fa_bar_t(i) * time_window(i) * meas_pert
 
-      else if(ipick==3) then
+      else if (ipick==3) then
         adj_syn(i1,icomp,irec) = fp(i) * time_window(i)
 
-      else if(ipick==4) then
+      else if (ipick==4) then
         adj_syn(i1,icomp,irec) = fq(i) * time_window(i)
 
-      else if(ipick==5) then
+      else if (ipick==5) then
         adj_syn(i1,icomp,irec) = ft_bar_t(i) * time_window(i)
 
-      else if(ipick==6) then
+      else if (ipick==6) then
         adj_syn(i1,icomp,irec) = fa_bar_t(i) * time_window(i)
       endif
 
     enddo
 
-    ! (1) COMPUTE MISFIT FUNCTION (currently only for waveform, xc-tt, xc-lnA)
+    ! (1) COMPUTE MISFIT function (currently only for waveform, xc-tt, xc-lnA)
     ! (2) COMPUTE MEASUREMENT VECTOR
 
     imeasure = imeasure + 1    ! global counter variable
 
-      if(ipick==0) then
+      if (ipick==0) then
 
         chi(ievent,irec,icomp,1) = 0.5 * sum( adj_syn(:,icomp,irec)**2 ) * DT
         measure_vec(imeasure)    = chi(ievent,irec,icomp,1)
 
-      else if(ipick==1) then
+      else if (ipick==1) then
         chi(ievent,irec,icomp,1) = 0.5 * (tshift_xc * meas_pert)**2
         measure_vec(imeasure)    = tshift_xc * meas_pert
 
-      else if(ipick==2) then
+      else if (ipick==2) then
         chi(ievent,irec,icomp,1) = 0.5 * (dlna * meas_pert)**2
         measure_vec(imeasure)    = dlna * meas_pert
 
-      else if(ipick==3) then
+      else if (ipick==3) then
         chi(ievent,irec,icomp,1) = 0.
         measure_vec(imeasure)    = 0.
 
-      else if(ipick==4) then
+      else if (ipick==4) then
         chi(ievent,irec,icomp,1) = 0.
         measure_vec(imeasure)    = 0.
 
-      else if(ipick==5) then
+      else if (ipick==5) then
         chi(ievent,irec,icomp,1) = 0.
         measure_vec(imeasure)    = 0.
 
-      else if(ipick==6) then
+      else if (ipick==6) then
         chi(ievent,irec,icomp,1) = 0.
         measure_vec(imeasure)    = 0.
 
@@ -601,7 +601,7 @@ contains
       integer :: l,iblock,nblock,i,lbhalf,j,lx
 
       zign=zzign
-      if(zign >= 0.) then
+      if (zign >= 0.) then
         zign=1.
       else
         zign=-1.
@@ -629,21 +629,21 @@ contains
     2 continue
       do 3 i=2,n
       ii=i
-      if(k < m(i)) go to 4
+      if (k < m(i)) goto 4
     3 k=k-m(i)
     4 k=k+m(ii)
       k=0
       do 7 j=1,lx
-      if(k < j) go to 5
+      if (k < j) goto 5
       hold=xi(j)
       xi(j)=xi(k+1)
       xi(k+1)=hold
     5 do 6 i=1,n
       ii=i
-      if(k < m(i)) go to 7
+      if (k < m(i)) goto 7
     6 k=k-m(i)
     7 k=k+m(ii)
-      if(zign > 0.) go to 9
+      if (zign > 0.) goto 9
       flx=flx*dt
       do 8 i=1,lx
     8 xi(i)=xi(i)/flx
@@ -713,16 +713,16 @@ contains
       data m/0,31,59,90,120,151,181,212,243,273,304,334/
       integer :: ny, nm, nd, mm
 
-      if(.not.(nm==1))goto 23220
+      if (.not.(nm==1))goto 23220
       nm=0
 23220 continue
       mm=nm
-      if(.not.(mm==0))goto 23222
+      if (.not.(mm==0))goto 23222
       return
 23222 continue
       nm=0
       nd=nd+m(mm)
-      if(.not.(mod(ny,4) == 0 .and. mm > 2))goto 23224
+      if (.not.(mod(ny,4) == 0 .and. mm > 2))goto 23224
       nd=nd+1
 23224 continue
       return
@@ -764,7 +764,7 @@ contains
 
       r2 = sqrt(2.)
 
-      if(nt < 2) return
+      if (nt < 2) return
       nxi=mod(nt,2)
       lh=(nt/2)+nxi
       lp1=nt+1
@@ -774,7 +774,7 @@ contains
       do 10 i=1,lh
         a(i)=com*(i-hn)**2
    10   w(i)=0.5*dble(i*(nt-i))
-      if(nxi == 0) then
+      if (nxi == 0) then
         asav=a(lh)-w(lh)
         a(lh)=a(lh)+w(lh)
         rbd=1./(a(lh)+w(lh-1))
@@ -793,12 +793,12 @@ contains
       call tsturm(nt,lh,a,a(lh+1),w,neven,v,ndim,w(lh+1),0)
       do 20 i=1,neven
         k=2*i-1
-        if(nxi == 1) v(lh,k)=r2*v(lh,k)
+        if (nxi == 1) v(lh,k)=r2*v(lh,k)
           do 20 j=1,lh
    20     v(lp1-j,k)=v(j,k)
-      if(nodd <= 0) goto 34
+      if (nodd <= 0) goto 34
 !  Do the odd tapers
-      if(nxi == 0) then
+      if (nxi == 0) then
         a(lh)=asav*rbd
       else
         a(nt)=asav*rbd
@@ -807,7 +807,7 @@ contains
       call tsturm(nt,lh-nxi,a,a(lh+1),w,nodd,v,ndim,w(lh+1),1)
       do 30 i=1,nodd
         k=2*i
-        if(nxi == 1) v(lh,k)=0.
+        if (nxi == 1) v(lh,k)=0.
           do 30 j=1,lh
    30     v(lp1-j,k)=-v(j,k)
    34 ntot=neven+nodd
@@ -826,7 +826,7 @@ contains
         vmax=abs(v(1,m))
         kmax=1
         do 40 kk=2,lh
-          if(abs(v(kk,m)) <= vmax) goto 40
+          if (abs(v(kk,m)) <= vmax) goto 40
           kmax=kk
           vmax=abs(v(kk,m))
    40     continue
@@ -868,35 +868,35 @@ contains
 
       !-------------------------
 
-      if(n <= 0.or.nev <= 0) return
+      if (n <= 0.or.nev <= 0) return
       umeps=1.-epsi
       do 5 i=1,nev
     5 ev(i)=-1.
       u=1.
       do 1000 ik=1,nev
-      if(ik > 1) u=ev(ik-1)*umeps
+      if (ik > 1) u=ev(ik-1)*umeps
       el=min(ev(ik),u)
    10 elam=0.5*(u+el)
-      if(abs(u-el) <= epsi1) goto 35
+      if (abs(u-el) <= epsi1) goto 35
       iag=0
       q=a(1)-elam
-      if(q >= 0.) iag=iag+1
+      if (q >= 0.) iag=iag+1
       do 15 i=2,n
-      if(q == 0.) x=abs(b(i-1))/epsi
-      if(q /= 0.) x=w(i-1)/q
+      if (q == 0.) x=abs(b(i-1))/epsi
+      if (q /= 0.) x=w(i-1)/q
       q=a(i)-elam-x
-      if(q >= 0.) iag=iag+1
-      if(iag > nev) goto 20
+      if (q >= 0.) iag=iag+1
+      if (iag > nev) goto 20
    15 continue
-      if(iag >= ik) go to 20
+      if (iag >= ik) goto 20
       u=elam
-      go to 10
-   20 if(iag == ik) go to 30
+      goto 10
+   20 if (iag == ik) goto 30
       m=ik+1
       do 25 i=m,iag
    25 ev(i)=elam
       el=elam
-      go to 10
+      goto 10
    30 el=elam
       call root(u,el,elam,a,b,w,n,ik)
    35 ev(ik)=elam
@@ -936,30 +936,30 @@ contains
       !----------------------
 
     5 elam=0.5*(u+el)
-   10 if(abs(u-el) <= 1.5*epsi1) return
+   10 if (abs(u-el) <= 1.5*epsi1) return
       an=a(1)-elam
       b=0.
       bn=-1./an
       iag=0
-      if(an >= 0.) iag=iag+1
+      if (an >= 0.) iag=iag+1
       do 20 i=2,n
-      if(an == 0.) x=abs(bb(i-1))/epsi
-      if(an /= 0.) x=w(i-1)/an
+      if (an == 0.) x=abs(bb(i-1))/epsi
+      if (an /= 0.) x=w(i-1)/an
       an=a(i)-elam-x
-      if(an == 0.) an=epsi
+      if (an == 0.) an=epsi
       bm=b
       b=bn
       bn=((a(i)-elam)*b-bm*x-1.)/an
-      if(an >= 0.) iag=iag+1
+      if (an >= 0.) iag=iag+1
    20 continue
-      if(iag == ik) goto 25
+      if (iag == ik) goto 25
       u=elam
       goto 30
    25 el=elam
    30 del=1./bn
-      if(abs(del) <= epsi1) del=sign(epsi1,del)
+      if (abs(del) <= epsi1) del=sign(epsi1,del)
       elam=elam-del
-      if(elam >= u.or.elam <= el) goto 5
+      if (elam >= u.or.elam <= el) goto 5
       goto 10
 
   end subroutine root

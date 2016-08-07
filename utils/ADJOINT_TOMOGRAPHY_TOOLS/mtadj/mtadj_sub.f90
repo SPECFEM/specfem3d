@@ -339,9 +339,9 @@ contains
        wtr_amp_bot = ampmax_bot * (wtr ** 2)
     endif
     do i = 1, nf
-      if(abs(bot_fdm(i)) > abs(wtr_amp_bot)) then
+      if (abs(bot_fdm(i)) > abs(wtr_amp_bot)) then
          trans_fdm(i) = top_fdm(i) /  bot_fdm(i)
-      else if(abs(bot_fdm(i)) < abs(wtr_amp_bot)) then
+      else if (abs(bot_fdm(i)) < abs(wtr_amp_bot)) then
          trans_fdm(i) = top_fdm(i) / (bot_fdm(i)+wtr_amp_bot)
       endif
     enddo
@@ -412,7 +412,7 @@ contains
     f_pmax = df * i_pmax
     T_pmax = 1./ f_pmax
     wlen = dt*nlen
-    if( ncycle_in_window * T_pmax > wlen ) then
+    if ( ncycle_in_window * T_pmax > wlen ) then
        use_window = .false.
        print *, 'rejecting window [', tstart, tend, ']'
        if (DEBUG) print *, ' wlen > ncycle * t_pmax= ', wlen, T_pmax

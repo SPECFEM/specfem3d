@@ -34,16 +34,16 @@
   radius2=r0-depth+ddep
   upper=.false.
   lower=.false.
-  if(radius > rcmb.and.radius < r670) then
+  if (radius > rcmb.and.radius < r670) then
   lower=.true.
-  else if(radius >= r670.and.radius < rmoho) then
+  else if (radius >= r670.and.radius < rmoho) then
   upper=.true.
   endif
   upper_650=.false.
   lower_650=.false.
-  if(radius > rcmb.and.radius < r650) then
+  if (radius > rcmb.and.radius < r650) then
   lower_650=.true.
-  else if(radius >= r650.and.radius < rmoho) then
+  else if (radius >= r650.and.radius < rmoho) then
   upper_650=.true.
   endif
   do iker=1,nker
@@ -51,11 +51,11 @@
   dvercof(iker)=0.
   enddo
 
-  if(string(1:16) == 'WDC+SPC_U4L8CHEB') then
+  if (string(1:16) == 'WDC+SPC_U4L8CHEB') then
   nupper=5
   nlower=9
   nskip=2
-  if(upper) then
+  if (upper) then
     u=(radius+radius-rmoho-r670)/(rmoho-r670)
     u2=(radius2+radius2-rmoho-r670)/(rmoho-r670)
 !          write(6,"('upper mantle:',2f10.3)") u,u2
@@ -67,7 +67,7 @@
     do i=1+nskip,nskip+nupper
       dvercof(i)=(chebyshev2(i-nskip)-chebyshev(i-nskip))/ddep
     enddo
-  else if(lower) then
+  else if (lower) then
     u=(radius+radius-r670-rcmb)/(r670-rcmb)
     u2=(radius2+radius2-r670-rcmb)/(r670-rcmb)
 !          write(6,"('lower mantle:',2f10.3)") u,u2
@@ -81,7 +81,7 @@
                     chebyshev(i-nskip-nupper))/ddep
     enddo
   endif
-  else if(string(1:13) == 'WDC+SHSVWM20A') then
+  else if (string(1:13) == 'WDC+SHSVWM20A') then
   nspl=20
   splpts(1)=0.
   splpts(2)=50.
@@ -109,8 +109,8 @@
     dvercof(i)=dvercof(i-20)
   enddo
   vercof(1)=1.
-  else if(string(1:16) == 'WDC+XBS_362_U6L8') then
-  if(upper) then
+  else if (string(1:16) == 'WDC+XBS_362_U6L8') then
+  if (upper) then
    nspl=6
    splpts(1)=24.4
    splpts(2)=100.
@@ -119,7 +119,7 @@
    splpts(5)=500.
    splpts(6)=670.
    call vbspl(depth,nspl,splpts,vercof(2),dvercof(2))
-  else if(lower) then
+  else if (lower) then
  nspl=8
    splpts(1)=670.
    splpts(2)=820.
@@ -134,8 +134,8 @@
   vercof(1)=1.
 !        vercof(16)=1.
 !        vercof(17)=1.
-!      else if(string(1:21) == 'WDC+ANI_362_U6L8_TOPO') then
-!        if(upper) then
+!      else if (string(1:21) == 'WDC+ANI_362_U6L8_TOPO') then
+!        if (upper) then
 !         nspl=6
 !         splpts(1)=24.4
 !         splpts(2)=100.
@@ -148,7 +148,7 @@
 !          vercof(i)=vercof(i-14)
 !          dvercof(i)=dvercof(i-14)
 !         enddo
-!     else if(lower) then
+!     else if (lower) then
 !      nspl=8
 !         splpts(1)=670.
 !         splpts(2)=820.
@@ -165,12 +165,12 @@
 !        vercof(23)=1.
 !        vercof(24)=1.
 !        vercof(25)=1.
-  else if( &
+  else if ( &
        (string(1:lstr) == 'WDC+ANI_362_U6L8'.and.lstr == 16) &
        .or. &
            (string(1:lstr) == 'WDC+ANI_362_U6L8_TOPO'.and.lstr == 21) &
        ) then
-  if(upper) then
+  if (upper) then
    nspl=6
    splpts(1)=24.4
    splpts(2)=100.
@@ -183,7 +183,7 @@
     vercof(i)=vercof(i-14)
     dvercof(i)=dvercof(i-14)
    enddo
-  else if(lower) then
+  else if (lower) then
  nspl=8
    splpts(1)=670.
    splpts(2)=820.
@@ -198,8 +198,8 @@
   vercof(1)=1.
   vercof(22)=1.
   vercof(23)=1.
-  else if(string(1:lstr) == 'WDC+WM_362_U6L8'.and.lstr == 15) then
-  if(upper) then
+  else if (string(1:lstr) == 'WDC+WM_362_U6L8'.and.lstr == 15) then
+  if (upper) then
    nspl=6
    splpts(1)=24.4
    splpts(2)=100.
@@ -212,7 +212,7 @@
     vercof(i)=vercof(i-14)
     dvercof(i)=dvercof(i-14)
    enddo
-  else if(lower) then
+  else if (lower) then
  nspl=8
    splpts(1)=670.
    splpts(2)=820.
@@ -232,12 +232,12 @@
   vercof(30)=1.
   vercof(31)=1.
   vercof(32)=1.
-  else if( &
+  else if ( &
      (string(1:lstr) == 'WDC+ANI_362_U6L8_650'.and.lstr == 20) &
      .or. &
          (string(1:lstr) == 'WDC+ANI_362_U6L8_TOPO_650'.and.lstr == 25) &
      ) then
-  if(upper_650) then
+  if (upper_650) then
    nspl=6
    splpts(1)=24.4
    splpts(2)=100.
@@ -250,7 +250,7 @@
     vercof(i)=vercof(i-14)
     dvercof(i)=dvercof(i-14)
    enddo
-  else if(lower_650) then
+  else if (lower_650) then
  nspl=8
    splpts(1)=650.
    splpts(2)=820.
@@ -265,9 +265,9 @@
   vercof(1)=1.
   vercof(22)=1.
   vercof(23)=1.
-  else if(string(1:lstr) == 'WDC+WM_362_U6L8_650' &
+  else if (string(1:lstr) == 'WDC+WM_362_U6L8_650' &
        .and.lstr == 19) then
-  if(upper_650) then
+  if (upper_650) then
    nspl=6
    splpts(1)=24.4
    splpts(2)=100.
@@ -280,7 +280,7 @@
     vercof(i)=vercof(i-14)
     dvercof(i)=dvercof(i-14)
    enddo
-  else if(lower_650) then
+  else if (lower_650) then
  nspl=8
    splpts(1)=650.
    splpts(2)=820.
@@ -300,8 +300,8 @@
   vercof(30)=1.
   vercof(31)=1.
   vercof(32)=1.
-  else if(string(1:lstr) == 'WDC+U8L8_650'.and.lstr == 12) then
-  if(upper_650) then
+  else if (string(1:lstr) == 'WDC+U8L8_650'.and.lstr == 12) then
+  if (upper_650) then
    nspl=8
    splpts(1)=24.4
    splpts(2)=75.
@@ -316,7 +316,7 @@
     vercof(i)=vercof(i-16)
     dvercof(i)=dvercof(i-16)
    enddo
-  else if(lower_650) then
+  else if (lower_650) then
  nspl=8
    splpts(1)=650.
    splpts(2)=820.
@@ -336,8 +336,8 @@
   vercof(34)=1.
   vercof(35)=1.
   vercof(36)=1.
-  else if(string(1:lstr) == 'WDC+U8L8_670'.and.lstr == 12) then
-  if(upper) then
+  else if (string(1:lstr) == 'WDC+U8L8_670'.and.lstr == 12) then
+  if (upper) then
    nspl=8
    splpts(1)=24.4
    splpts(2)=75.
@@ -352,7 +352,7 @@
     vercof(i)=vercof(i-16)
     dvercof(i)=dvercof(i-16)
    enddo
-  else if(lower) then
+  else if (lower) then
  nspl=8
    splpts(1)=670.
    splpts(2)=820.
@@ -372,12 +372,12 @@
   vercof(34)=1.
   vercof(35)=1.
   vercof(36)=1.
-  else if( &
+  else if ( &
       (string(1:lstr) == 'WDC+U8L8_I1D_650'.and.lstr == 16) &
       .or. &
       (string(1:lstr) == 'WDC+U8L8_I3D_650'.and.lstr == 16) &
       ) then
-  if(upper_650) then
+  if (upper_650) then
    nspl=8
    splpts(1)=24.4
    splpts(2)=75.
@@ -408,7 +408,7 @@
     vercof(i)=vercof(i-47)
     dvercof(i)=dvercof(i-47)
    enddo
-  else if(lower_650) then
+  else if (lower_650) then
  nspl=8
    splpts(1)=650.
    splpts(2)=820.
@@ -428,9 +428,9 @@
   vercof(34)=1.
   vercof(35)=1.
   vercof(36)=1.
-  else if((string(1:lstr) == 'WDC+I1D_650'.and.lstr == 11).or. &
+  else if ((string(1:lstr) == 'WDC+I1D_650'.and.lstr == 11).or. &
           (string(1:lstr) == 'WDC+I3D_650'.and.lstr == 11)) then
-  if(upper_650) then
+  if (upper_650) then
    nspl=8
    splpts(1)=24.4
    splpts(2)=75.
@@ -461,7 +461,7 @@
     vercof(i)=vercof(i-83)
     dvercof(i)=dvercof(i-83)
    enddo
-  else if(lower_650) then
+  else if (lower_650) then
  nspl=8
    splpts(1)=650.
    splpts(2)=820.
@@ -497,8 +497,8 @@
   vercof(34)=1.
   vercof(35)=1.
   vercof(36)=1.
-  else if(string(1:lstr) == 'V16A4_V7A4'.and.lstr == 10) then
-  if(upper_650) then
+  else if (string(1:lstr) == 'V16A4_V7A4'.and.lstr == 10) then
+  if (upper_650) then
    nspl=8
    splpts(1)=24.4
    splpts(2)=75.
@@ -521,7 +521,7 @@
     vercof(i)=vercof(i-29)
     dvercof(i)=dvercof(i-29)
    enddo
-  else if(lower_650) then
+  else if (lower_650) then
  nspl=8
    splpts(1)=650.
    splpts(2)=820.
@@ -563,7 +563,7 @@
    1.00196657023780,1.0015515913133,1.0012554932754,1.0010368069141, &
    1.00087070107920,1.0007415648034 /
 
-  if(kmax > 13)then
+  if (kmax > 13) then
    write(*,"(' kmax exceeds the limit in chebyfun')")
    stop
   endif
@@ -645,13 +645,13 @@
     xlaspl,xlospl,xraspl,ixlspl,coef, &
     hsplfile,refmodel,kernstri,desckern)
 
-  if(nhorpar <= maxhpa) then
+  if (nhorpar <= maxhpa) then
   numhpa=nhorpar
   else
   ierror=ierror+1
   endif
 
-  if(nmodkern <= maxker) then
+  if (nmodkern <= maxker) then
   numker=nmodkern
   else
   ierror=ierror+1
@@ -662,7 +662,7 @@
   dskker(i)=desckern(i)
   do j=1,ncoefhor(ihpakern(i))
     coe(j,i)=coef(j,i)
-!          if(j == 1) then
+!          if (j == 1) then
 !            write(6,"(e12.4)") coe(j,i)
 !          endif
   enddo
@@ -672,7 +672,7 @@
   numcoe(i)=ncoefhor(i)
   lmxhpa(i)=lmaxhor(i)
   itypehpa(i)=ityphpar(i)
-  if(itypehpa(i) == 2) then
+  if (itypehpa(i) == 2) then
     do j=1,ncoefhor(i)
       itpspl(j,i)=ixlspl(j,i)
       xlatspl(j,i)=xlaspl(j,i)
@@ -693,11 +693,11 @@
   enddo
   ivarkern(i)=0
   do k=1,numvar
-    if(string(1:j) == varstr(k)(1:j)) then
+    if (string(1:j) == varstr(k)(1:j)) then
       ivarkern(i)=k
     endif
   enddo
-  if(ivarkern(i) == 0) then
+  if (ivarkern(i) == 0) then
     numvar=numvar+1
     varstr(numvar)=string(1:j)
     ivarkern(i)=numvar
@@ -748,44 +748,44 @@
   integer :: ncoef,i,ihor,ifst,ilst,ifst1,ios,lstr,nmodkern,idummy,nhorpar,lmax
 
   open(lu,file=filename,iostat=ios)
-  if(ios /= 0) then
+  if (ios /= 0) then
   stop 'error opening 3-d model'
   endif
   do while (ios == 0)
   read(lu,"(a)",iostat=ios) string
   lstr=len_trim(string)
-  if(ios == 0) then
-    if(string(1:16) == 'REFERENCE MODEL:') then
+  if (ios == 0) then
+    if (string(1:16) == 'REFERENCE MODEL:') then
       substr=string(17:lstr)
       ifst=1
       ilst=len_trim(substr)
       do while (substr(ifst:ifst) == ' '.and.ifst < ilst)
         ifst=ifst+1
       enddo
-      if(ilst-ifst <= 0) then
+      if (ilst-ifst <= 0) then
         stop 'error reading model 1'
       else
         refmodel=substr(ifst:ilst)
       endif
-    else if(string(1:11) == 'KERNEL SET:') then
+    else if (string(1:11) == 'KERNEL SET:') then
       substr=string(12:len_trim(string))
       ifst=1
       ilst=len_trim(substr)
       do while (substr(ifst:ifst) == ' '.and.ifst < ilst)
         ifst=ifst+1
       enddo
-      if(ilst-ifst <= 0) then
+      if (ilst-ifst <= 0) then
         stop 'error reading model 2'
       else
         kernstri=substr(ifst:ilst)
       endif
-    else if(string(1:25) == 'RADIAL STRUCTURE KERNELS:') then
+    else if (string(1:25) == 'RADIAL STRUCTURE KERNELS:') then
       substr=string(26:len_trim(string))
       read(substr,*,iostat=ierror) nmodkern
-      if(ierror /= 0) then
+      if (ierror /= 0) then
         stop 'error reading model 3'
       endif
-    else if(string(1:4) == 'DESC'.and.string(9:9) == ':') then
+    else if (string(1:4) == 'DESC'.and.string(9:9) == ':') then
       read(string(5:8),"(i4)") idummy
       substr=string(10:len_trim(string))
       ifst=1
@@ -793,33 +793,33 @@
       do while (substr(ifst:ifst) == ' '.and.ifst < ilst)
         ifst=ifst+1
       enddo
-      if(ilst-ifst <= 0) then
+      if (ilst-ifst <= 0) then
         stop 'error reading model 4'
       else
         desckern(idummy)=substr(ifst:ilst)
       endif
-    else if(string(1:29) == 'HORIZONTAL PARAMETERIZATIONS:') then
+    else if (string(1:29) == 'HORIZONTAL PARAMETERIZATIONS:') then
       substr=string(30:len_trim(string))
       read(substr,*,iostat=ierror) nhorpar
-      if(ierror /= 0) then
+      if (ierror /= 0) then
         stop 'error reading model 5'
       endif
-    else if(string(1:4) == 'HPAR'.and.string(9:9) == ':') then
+    else if (string(1:4) == 'HPAR'.and.string(9:9) == ':') then
       read(string(5:8),"(i4)") idummy
       ifst=10
       ilst=len_trim(string)
       do while (string(ifst:ifst) == ' '.and.ifst < ilst)
         ifst=ifst+1
       enddo
-      if(ilst-ifst <= 0) then
+      if (ilst-ifst <= 0) then
         stop 'error reading model 6'
-      else if(string(ifst:ifst+19) == 'SPHERICAL HARMONICS,') then
+      else if (string(ifst:ifst+19) == 'SPHERICAL HARMONICS,') then
         substr=string(20+ifst:len_trim(string))
         read(substr,*) lmax
         ityphpar(idummy)=1
         lmaxhor(idummy)=lmax
         ncoefhor(idummy)=(lmax+1)**2
-      else if(string(ifst:ifst+17) == 'SPHERICAL SPLINES,') then
+      else if (string(ifst:ifst+17) == 'SPHERICAL SPLINES,') then
         ifst1=ifst+18
         ifst=len_trim(string)
         ilst=len_trim(string)
@@ -840,7 +840,7 @@
              xlospl(i,idummy),xraspl(i,idummy)
         enddo
       endif
-    else if(string(1:4) == 'STRU'.and.string(9:9) == ':') then
+    else if (string(1:4) == 'STRU'.and.string(9:9) == ':') then
       read(string(5:8),"(i4)") idummy
       substr=string(10:len_trim(string))
       read(substr,*) ihor
@@ -903,19 +903,19 @@
 ! -------------------------------------
 
   lu=1                    ! --- log unit: input 3-D model
-  if(THREE_D_MODEL  ==  THREE_D_MODEL_S362ANI) then
+  if (THREE_D_MODEL  ==  THREE_D_MODEL_S362ANI) then
     modeldef='DATA/s362ani/S362ANI'
-  else if(THREE_D_MODEL  ==  THREE_D_MODEL_S362WMANI) then
+  else if (THREE_D_MODEL  ==  THREE_D_MODEL_S362WMANI) then
     modeldef='DATA/s362ani/S362WMANI'
-  else if(THREE_D_MODEL  ==  THREE_D_MODEL_S362ANI_PREM) then
+  else if (THREE_D_MODEL  ==  THREE_D_MODEL_S362ANI_PREM) then
     modeldef='DATA/s362ani/S362ANI_PREM'
-  else if(THREE_D_MODEL  ==  THREE_D_MODEL_S29EA) then
+  else if (THREE_D_MODEL  ==  THREE_D_MODEL_S29EA) then
     modeldef='DATA/s362ani/S2.9EA'
   else
     stop 'unknown 3D model in read_model_s362ani'
   endif
   inquire(file=modeldef,exist=exists)
-  if(exists) then
+  if (exists) then
     call gt3dmodl(lu,modeldef, &
         maxhpa,maxker,maxcoe, &
         numhpa,numker,numcoe,lmxhpa, &
@@ -929,12 +929,12 @@
 
 !         --- check arrays
 
-  if(numker > maxker) stop 'numker > maxker'
+  if (numker > maxker) stop 'numker > maxker'
   do ihpa=1,numhpa
-    if(itypehpa(ihpa) == 1) then
-      if(lmxhpa(ihpa) > maxl) stop 'lmxhpa(ihpa) > maxl'
-    else if(itypehpa(ihpa) == 2) then
-      if(numcoe(ihpa) > maxcoe) stop 'numcoe(ihpa) > maxcoe'
+    if (itypehpa(ihpa) == 1) then
+      if (lmxhpa(ihpa) > maxl) stop 'lmxhpa(ihpa) > maxl'
+    else if (itypehpa(ihpa) == 2) then
+      if (numcoe(ihpa) > maxcoe) stop 'numcoe(ihpa) > maxcoe'
     else
       stop 'problem with itypehpa'
     endif
@@ -970,22 +970,22 @@
   ncon=0
 
   do iver=1,nver
-  if(xlat > verlat(iver)-2.*verrad(iver)) then
-    if(xlat < verlat(iver)+2.*verrad(iver)) then
+  if (xlat > verlat(iver)-2.*verrad(iver)) then
+    if (xlat < verlat(iver)+2.*verrad(iver)) then
       ver8=xrad*(verlat(iver))
       xla8=xrad*(xlat)
       dd=sin(ver8)*sin(xla8)
       dd=dd+cos(ver8)*cos(xla8)* cos(xrad*(xlon-verlon(iver)))
       dd=acos(dd)/xrad
-      if(dd > (verrad(iver))*2.d0) then
+      if (dd > (verrad(iver))*2.d0) then
       else
         ncon=ncon+1
         icon(ncon)=iver
         rn=dd/(verrad(iver))
         dr=rn-1.d0
-        if(rn <= 1.d0) then
+        if (rn <= 1.d0) then
           con(ncon)=(0.75d0*rn-1.5d0)*(rn**2)+1.d0
-        else if(rn > 1.d0) then
+        else if (rn > 1.d0) then
           con(ncon)=((-0.25d0*dr+0.75d0)*dr-0.75d0)*dr+0.25d0
         else
           con(ncon)=0.
@@ -1068,7 +1068,7 @@
 
   depth=6371.0-xrad
   call evradker (depth,kerstr,numker,vercof,vercofd,ierror)
-  if(ierror /= 0) stop 'ierror evradker'
+  if (ierror /= 0) stop 'ierror evradker'
 
 ! --- loop over sv and sh (sv=0,sh=1)
 
@@ -1079,10 +1079,10 @@
   y=90.0-xcolat
   x=xlon
   do ihpa=1,numhpa
-      if(itypehpa(ihpa) == 1) then
+      if (itypehpa(ihpa) == 1) then
         lmax=lmxhpa(ihpa)
         call ylm(y,x,lmax,ylmcof(1,ihpa),wk1,wk2,wk3)
-      else if(itypehpa(ihpa) == 2) then
+      else if (itypehpa(ihpa) == 2) then
         numcof=numcoe(ihpa)
         call splcon(y,x,numcof,xlaspl(1,ihpa), &
               xlospl(1,ihpa),radspl(1,ihpa), &
@@ -1103,30 +1103,30 @@
       isel=0
       lstr=len_trim(varstr(ivarkern(iker)))
       vstr=(varstr(ivarkern(iker)))
-      if(ieval == 1) then
-        if(vstr(1:lstr) == 'UM (SH+SV)*0.5,'.or. &
+      if (ieval == 1) then
+        if (vstr(1:lstr) == 'UM (SH+SV)*0.5,'.or. &
                  vstr(1:lstr) == 'LM (SH+SV)*0.5,'.or. &
                  vstr(1:lstr) == 'EA (SH+SV)*0.5,') then
           isel=1
       endif
-      else if(ieval == 2) then
-        if(vstr(1:lstr) == 'UM SH-SV,'.or. &
+      else if (ieval == 2) then
+        if (vstr(1:lstr) == 'UM SH-SV,'.or. &
                        vstr(1:lstr) == 'LM SH-SV,'.or. &
                        vstr(1:lstr) == 'EA SH-SV,') then
           isel=1
         endif
       endif
 
-      if(isel == 1) then
-        if(vercof(iker) /= 0.) then
-            if(itypehpa(ihpakern(iker)) == 1) then
+      if (isel == 1) then
+        if (vercof(iker) /= 0.) then
+            if (itypehpa(ihpakern(iker)) == 1) then
           ihpa=ihpakern(iker)
               nylm=(lmxhpa(ihpakern(iker))+1)**2
               do i=1,nylm
                 value=value+vercof(iker)*ylmcof(i,ihpa) &
                           *coe(i,iker)
               enddo
-            else if(itypehpa(ihpakern(iker)) == 2) then
+            else if (itypehpa(ihpakern(iker)) == 2) then
           ihpa=ihpakern(iker)
               do i=1,nconpt(ihpa)
                 iver=iconpt(i,ihpa)
@@ -1146,9 +1146,9 @@
 
 !       --- evaluate perturbations in vsh and vsv
 
-  if(ish == 1) then
+  if (ish == 1) then
     vsh3drel=valu(1)+0.5*valu(2)
-  else if(ish == 0) then
+  else if (ish == 0) then
     vsv3drel=valu(1)-0.5*valu(2)
   else
     stop 'something wrong'
@@ -1230,10 +1230,10 @@
   y=90.0-xcolat
   x=xlon
   do ihpa=1,numhpa
-      if(itypehpa(ihpa) == 1) then
+      if (itypehpa(ihpa) == 1) then
         lmax=lmxhpa(ihpa)
         call ylm(y,x,lmax,ylmcof(1,ihpa),wk1,wk2,wk3)
-      else if(itypehpa(ihpa) == 2) then
+      else if (itypehpa(ihpa) == 2) then
         numcof=numcoe(ihpa)
         call splcon(y,x,numcof,xlaspl(1,ihpa), &
               xlospl(1,ihpa),radspl(1,ihpa), &
@@ -1254,24 +1254,24 @@
       isel=0
       lstr=len_trim(varstr(ivarkern(iker)))
       vstr=(varstr(ivarkern(iker)))
-      if(ieval == 1) then
-        if(vstr(1:lstr) == 'Topo 400,') then
+      if (ieval == 1) then
+        if (vstr(1:lstr) == 'Topo 400,') then
           isel=1
       endif
-      else if(ieval == 2) then
-        if(vstr(1:lstr) == 'Topo 670,') then
+      else if (ieval == 2) then
+        if (vstr(1:lstr) == 'Topo 670,') then
           isel=1
         endif
       endif
 
-      if(isel == 1) then
-            if(itypehpa(ihpakern(iker)) == 1) then
+      if (isel == 1) then
+            if (itypehpa(ihpakern(iker)) == 1) then
           ihpa=ihpakern(iker)
               nylm=(lmxhpa(ihpakern(iker))+1)**2
               do i=1,nylm
                 value=value+ylmcof(i,ihpa)*coe(i,iker)
               enddo
-            else if(itypehpa(ihpakern(iker)) == 2) then
+            else if (itypehpa(ihpakern(iker)) == 2) then
           ihpa=ihpakern(iker)
               do i=1,nconpt(ihpa)
                 iver=iconpt(i,ihpa)
@@ -1324,15 +1324,15 @@
   ik=1
   do while(interval == 0.and.ik < np)
   ik=ik+1
-  if(x >= xarr(ik-1).and.x <= xarr(ik)) interval=ik-1
+  if (x >= xarr(ik-1).and.x <= xarr(ik)) interval=ik-1
   enddo
-  if(x > xarr(np)) then
+  if (x > xarr(np)) then
   interval=np
   endif
 
-  if(interval == 0) then
+  if (interval == 0) then
 !        write(6,"('low value:',2f10.3)") x,xarr(1)
-  else if(interval > 0.and.interval < np) then
+  else if (interval > 0.and.interval < np) then
 !        write(6,"('bracket:',i5,3f10.3)") interval,xarr(interval),x,xarr(interval+1)
   else
 !        write(6,"('high value:',2f10.3)") xarr(np),x
@@ -1341,7 +1341,7 @@
   do ib=1,np
   val=0.
   vald=0.
-  if(ib == 1) then
+  if (ib == 1) then
 
     r1=(x-xarr(1))/(xarr(2)-xarr(1))
     r2=(xarr(3)-x)/(xarr(3)-xarr(1))
@@ -1363,14 +1363,14 @@
    r12d=-1./(xarr(3)-xarr(2))
    r13d=-1./(xarr(2)-xarr(1))
 
-    if(interval == ib.or.interval == 0) then
-         if(iflag == 0) then
+    if (interval == ib.or.interval == 0) then
+         if (iflag == 0) then
            val=r1*r4*r10 + r2*r5*r10 + r2*r6*r11 +r13**3
            vald=r1d*r4*r10+r1*r4d*r10+r1*r4*r10d
            vald=vald+r2d*r5*r10+r2*r5d*r10+r2*r5*r10d
            vald=vald+r2d*r6*r11+r2*r6d*r11+r2*r6*r11d
            vald=vald+3.*r13d*r13**2
-         else if(iflag == 1) then
+         else if (iflag == 1) then
            val=0.6667*(r1*r4*r10 + r2*r5*r10 + r2*r6*r11 &
                     + 1.5*r13**3)
            vald=r1d*r4*r10+r1*r4d*r10+r1*r4*r10d
@@ -1379,11 +1379,11 @@
            vald=vald+4.5*r13d*r13**2
            vald=0.6667*vald
          endif
-    else if(interval == ib+1) then
-         if(iflag == 0) then
+    else if (interval == ib+1) then
+         if (iflag == 0) then
            val=r2*r6*r12
            vald=r2d*r6*r12+r2*r6d*r12+r2*r6*r12d
-         else if(iflag == 1) then
+         else if (iflag == 1) then
            val=0.6667*r2*r6*r12
            vald=0.6667*(r2d*r6*r12+r2*r6d*r12+r2*r6*r12d)
          endif
@@ -1391,7 +1391,7 @@
       val=0.
     endif
 
-  else if(ib == 2) then
+  else if (ib == 2) then
 
     rr1=(x-xarr(1))/(xarr(2)-xarr(1))
     rr2=(xarr(3)-x)/(xarr(3)-xarr(1))
@@ -1435,12 +1435,12 @@
    r11d=1./(xarr(ib+1)-xarr(ib))
    r12d=-1./(xarr(ib+2)-xarr(ib+1))
 
-    if(interval == ib-1.or.interval == 0) then
+    if (interval == ib-1.or.interval == 0) then
          val=r1*r3*r8 + r1*r4*r9 + r2*r5*r9
          vald=r1d*r3*r8+r1*r3d*r8+r1*r3*r8d
          vald=vald+r1d*r4*r9+r1*r4d*r9+r1*r4*r9d
          vald=vald+r2d*r5*r9+r2*r5d*r9+r2*r5*r9d
-         if(iflag == 1) then
+         if (iflag == 1) then
            val=val+0.3333*(rr1*rr4*rr10 + rr2*rr5*rr10 + &
                      rr2*rr6*rr11)
            vald=vald+0.3333*(rr1d*rr4*rr10+rr1*rr4d*rr10+ &
@@ -1450,23 +1450,23 @@
            vald=vald+0.3333*(rr2d*rr6*rr11+rr2*rr6d*rr11+ &
                     rr2*rr6*rr11d)
          endif
-    else if(interval == ib) then
+    else if (interval == ib) then
          val=r1*r4*r10 + r2*r5*r10 + r2*r6*r11
          vald=r1d*r4*r10+r1*r4d*r10+r1*r4*r10d
          vald=vald+r2d*r5*r10+r2*r5d*r10+r2*r5*r10d
          vald=vald+r2d*r6*r11+r2*r6d*r11+r2*r6*r11d
-         if(iflag == 1) then
+         if (iflag == 1) then
            val=val+0.3333*rr2*rr6*rr12
            vald=vald+0.3333*(rr2d*rr6*rr12+rr2*rr6d*rr12+ &
                     rr2*rr6*rr12d)
          endif
-    else if(interval == ib+1) then
+    else if (interval == ib+1) then
          val=r2*r6*r12
          vald=r2d*r6*r12+r2*r6d*r12+r2*r6*r12d
     else
          val=0.
     endif
-  else if(ib == np-1) then
+  else if (ib == np-1) then
 
     rr1=(x-xarr(np-2))/(xarr(np)-xarr(np-2))
     rr2=(xarr(np)-x)/(xarr(np)-xarr(np-1))
@@ -1510,25 +1510,25 @@
    r10d=-1./(xarr(ib+1)-xarr(ib))
    r11d=1./(xarr(ib+1)-xarr(ib))
 
-    if(interval == ib-2) then
+    if (interval == ib-2) then
          val=r1*r3*r7
          vald=r1d*r3*r7+r1*r3d*r7+r1*r3*r7d
-    else if(interval == ib-1) then
+    else if (interval == ib-1) then
          val=r1*r3*r8 + r1*r4*r9 + r2*r5*r9
          vald=r1d*r3*r8+r1*r3d*r8+r1*r3*r8d
          vald=vald+r1d*r4*r9+r1*r4d*r9+r1*r4*r9d
          vald=vald+r2d*r5*r9+r2*r5d*r9+r2*r5*r9d
-         if(iflag == 1) then
+         if (iflag == 1) then
            val=val+0.3333*rr1*rr3*rr7
            vald=vald+0.3333*(rr1d*rr3*rr7+rr1*rr3d*rr7+ &
                     rr1*rr3*rr7d)
          endif
-    else if(interval == ib.or.interval == np) then
+    else if (interval == ib.or.interval == np) then
          val=r1*r4*r10 + r2*r5*r10 + r2*r6*r11
          vald=r1d*r4*r10+r1*r4d*r10+r1*r4*r10d
          vald=vald+r2d*r5*r10+r2*r5d*r10+r2*r5*r10d
          vald=vald+r2d*r6*r11+r2*r6d*r11+r2*r6*r11d
-         if(iflag == 1) then
+         if (iflag == 1) then
            val=val+0.3333*(rr1*rr3*rr8 + rr1*rr4*rr9 + &
                      rr2*rr5*rr9)
            vald=vald+0.3333*(rr1d*rr3*rr8+rr1*rr3d*rr8+ &
@@ -1541,7 +1541,7 @@
     else
       val=0.
     endif
-  else if(ib == np) then
+  else if (ib == np) then
 
     r1=(x-xarr(np-2))/(xarr(np)-xarr(np-2))
     r2=(xarr(np)-x)/(xarr(np)-xarr(np-1))
@@ -1563,22 +1563,22 @@
     r9d=1./(xarr(np)-xarr(np-1))
     r13d=1./(xarr(np)-xarr(np-1))
 
-    if(interval == np-2) then
-         if(iflag == 0) then
+    if (interval == np-2) then
+         if (iflag == 0) then
            val=r1*r3*r7
            vald=r1d*r3*r7+r1*r3d*r7+r1*r3*r7d
-         else if(iflag == 1) then
+         else if (iflag == 1) then
            val=0.6667*r1*r3*r7
            vald=0.6667*(r1d*r3*r7+r1*r3d*r7+r1*r3*r7d)
          endif
-    else if(interval == np-1.or.interval == np) then
-         if(iflag == 0) then
+    else if (interval == np-1.or.interval == np) then
+         if (iflag == 0) then
            val=r1*r3*r8 + r1*r4*r9 + r2*r5*r9 + r13**3
            vald=r1d*r3*r8+r1*r3d*r8+r1*r3*r8d
            vald=vald+r1d*r4*r9+r1*r4d*r9+r1*r4*r9d
            vald=vald+r2d*r5*r9+r2*r5d*r9+r2*r5*r9d
            vald=vald+3.*r13d*r13**2
-         else if(iflag == 1) then
+         else if (iflag == 1) then
            val=0.6667*(r1*r3*r8 + r1*r4*r9 + r2*r5*r9 + &
                      1.5*r13**3)
            vald=r1d*r3*r8+r1*r3d*r8+r1*r3*r8d
@@ -1618,20 +1618,20 @@
    r11d=1./(xarr(ib+1)-xarr(ib))
    r12d=-1./(xarr(ib+2)-xarr(ib+1))
 
-    if(interval == ib-2) then
+    if (interval == ib-2) then
          val=r1*r3*r7
          vald=r1d*r3*r7+r1*r3d*r7+r1*r3*r7d
-    else if(interval == ib-1) then
+    else if (interval == ib-1) then
          val=r1*r3*r8 + r1*r4*r9 + r2*r5*r9
          vald=r1d*r3*r8+r1*r3d*r8+r1*r3*r8d
          vald=vald+r1d*r4*r9+r1*r4d*r9+r1*r4*r9d
          vald=vald+r2d*r5*r9+r2*r5d*r9+r2*r5*r9d
-    else if(interval == ib) then
+    else if (interval == ib) then
          val=r1*r4*r10 + r2*r5*r10 + r2*r6*r11
          vald=r1d*r4*r10+r1*r4d*r10+r1*r4*r10d
          vald=vald+r2d*r5*r10+r2*r5d*r10+r2*r5*r10d
          vald=vald+r2d*r6*r11+r2*r6d*r11+r2*r6*r11d
-    else if(interval == ib+1) then
+    else if (interval == ib+1) then
          val=r2*r6*r12
          vald=r2d*r6*r12+r2*r6d*r12+r2*r6*r12d
     else
@@ -1683,7 +1683,7 @@
     TEMP=FAC*CMPLX(WK1(IM),0.)
     IND=IND+1
     Y(IND)=REAL(TEMP)
-    IF(IM == 1) GOTO 20
+    if (IM == 1) goto 20
     IND=IND+1
     Y(IND)=AIMAG(TEMP)
  20 FAC=FAC*DFAC
@@ -1729,15 +1729,15 @@
     XP(I)=0.
   enddo
 
-  IF(L > 1.and.ABS(THETA) > 1.E-5) GO TO 3
+  if (L > 1.and.ABS(THETA) > 1.E-5) goto 3
   X(1)=FCT
-  IF(L == 0) RETURN
+  if (L == 0) RETURN
   X(1)=CT*FCT
   X(2)=-ST*FCT/DSFL3
   XP(1)=-ST*FCT
   XP(2)=-.5D0*CT*FCT*DSFL3
-  IF(ABS(THETA) < 1.E-5) XCOSEC(2)=XP(2)
-  IF(ABS(THETA) >= 1.E-5) XCOSEC(2)=X(2)/ST
+  if (ABS(THETA) < 1.E-5) XCOSEC(2)=XP(2)
+  if (ABS(THETA) >= 1.E-5) XCOSEC(2)=X(2)/ST
   RETURN
 
  3 X1=1.D0
@@ -1762,7 +1762,7 @@
   XCOSEC(2)=X(2)*COSEC
   XP(2)=-XP(2)/SFL3
   SUM=SUM+2.D0*X(2)*X(2)
-  IF(SUM-COMPAR > SMALL) RETURN
+  if (SUM-COMPAR > SMALL) RETURN
   X1=X3
   X2=-X2/DSQRT(dble(L*(L+1)))
 
@@ -1773,7 +1773,7 @@
     XM=K
     X3=-(2.D0*COT*(XM-1.D0)*X2+F2*X1)/F1
     SUM=SUM+2.D0*X3*X3
-    IF(SUM-COMPAR > SMALL.and.I /= LP1) RETURN
+    if (SUM-COMPAR > SMALL.and.I /= LP1) RETURN
     X(I)=X3
     XCOSEC(I)=X(I)*COSEC
     X1=X2

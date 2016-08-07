@@ -55,8 +55,8 @@
   utm_y_eval_copy = utm_y_eval
 
 ! make sure we stay inside Hauksson's grid
-  if(utm_x_eval_copy < UTM_X_ORIG_HAUKSSON) utm_x_eval_copy = UTM_X_ORIG_HAUKSSON
-  if(utm_y_eval_copy < UTM_Y_ORIG_HAUKSSON) utm_y_eval_copy = UTM_Y_ORIG_HAUKSSON
+  if (utm_x_eval_copy < UTM_X_ORIG_HAUKSSON) utm_x_eval_copy = UTM_X_ORIG_HAUKSSON
+  if (utm_y_eval_copy < UTM_Y_ORIG_HAUKSSON) utm_y_eval_copy = UTM_Y_ORIG_HAUKSSON
 
 ! determine spacing and cell for linear interpolation
   spacing_x = (utm_x_eval_copy - UTM_X_ORIG_HAUKSSON) / SPACING_UTM_X_HAUKSSON
@@ -69,28 +69,28 @@
   gamma_interp_y = spacing_y - int(spacing_y)
 
 ! suppress edge effects for points outside of Hauksson's model
-  if(icell_interp_x < 1) then
+  if (icell_interp_x < 1) then
     icell_interp_x = 1
     gamma_interp_x = 0.d0
   endif
-  if(icell_interp_x > NGRID_NEW_HAUKSSON-1) then
+  if (icell_interp_x > NGRID_NEW_HAUKSSON-1) then
     icell_interp_x = NGRID_NEW_HAUKSSON-1
     gamma_interp_x = 1.d0
   endif
 
-  if(icell_interp_y < 1) then
+  if (icell_interp_y < 1) then
     icell_interp_y = 1
     gamma_interp_y = 0.d0
   endif
-  if(icell_interp_y > NGRID_NEW_HAUKSSON-1) then
+  if (icell_interp_y > NGRID_NEW_HAUKSSON-1) then
     icell_interp_y = NGRID_NEW_HAUKSSON-1
     gamma_interp_y = 1.d0
   endif
 
 ! make sure interpolation makes sense
-  if(gamma_interp_x < -0.001d0 .or. gamma_interp_x > 1.001d0) &
+  if (gamma_interp_x < -0.001d0 .or. gamma_interp_x > 1.001d0) &
         stop 'interpolation in x is incorrect in Hauksson'
-  if(gamma_interp_y < -0.001d0 .or. gamma_interp_y > 1.001d0) &
+  if (gamma_interp_y < -0.001d0 .or. gamma_interp_y > 1.001d0) &
         stop 'interpolation in y is incorrect in Hauksson'
 
 ! interpolate Hauksson's model at right location using bilinear interpolation
@@ -121,17 +121,17 @@
   enddo
 
 ! choose right values depending on depth of target point
-  if(z_eval >= Z_HAUKSSON_LAYER_1) then
+  if (z_eval >= Z_HAUKSSON_LAYER_1) then
     vp_final = vp_interp(1)
     vs_final = vs_interp(1)
     return
 
-  else if(z_eval <= Z_HAUKSSON_LAYER_8) then
+  else if (z_eval <= Z_HAUKSSON_LAYER_8) then
     vp_final = vp_interp(8)
     vs_final = vs_interp(8)
     return
 
-  else if(z_eval >= Z_HAUKSSON_LAYER_2) then
+  else if (z_eval >= Z_HAUKSSON_LAYER_2) then
     vp_upper = vp_interp(1)
     vs_upper = vs_interp(1)
     z_upper = Z_HAUKSSON_LAYER_1
@@ -140,7 +140,7 @@
     vs_lower = vs_interp(2)
     z_lower = Z_HAUKSSON_LAYER_2
 
-  else if(z_eval >= Z_HAUKSSON_LAYER_3) then
+  else if (z_eval >= Z_HAUKSSON_LAYER_3) then
     vp_upper = vp_interp(2)
     vs_upper = vs_interp(2)
     z_upper = Z_HAUKSSON_LAYER_2
@@ -149,7 +149,7 @@
     vs_lower = vs_interp(3)
     z_lower = Z_HAUKSSON_LAYER_3
 
-  else if(z_eval >= Z_HAUKSSON_LAYER_4) then
+  else if (z_eval >= Z_HAUKSSON_LAYER_4) then
     vp_upper = vp_interp(3)
     vs_upper = vs_interp(3)
     z_upper = Z_HAUKSSON_LAYER_3
@@ -158,7 +158,7 @@
     vs_lower = vs_interp(4)
     z_lower = Z_HAUKSSON_LAYER_4
 
-  else if(z_eval >= Z_HAUKSSON_LAYER_5) then
+  else if (z_eval >= Z_HAUKSSON_LAYER_5) then
     vp_upper = vp_interp(4)
     vs_upper = vs_interp(4)
     z_upper = Z_HAUKSSON_LAYER_4
@@ -167,7 +167,7 @@
     vs_lower = vs_interp(5)
     z_lower = Z_HAUKSSON_LAYER_5
 
- else if(z_eval >= Z_HAUKSSON_LAYER_6) then
+ else if (z_eval >= Z_HAUKSSON_LAYER_6) then
     vp_upper = vp_interp(5)
     vs_upper = vs_interp(5)
     z_upper = Z_HAUKSSON_LAYER_5
@@ -176,7 +176,7 @@
     vs_lower = vs_interp(6)
     z_lower = Z_HAUKSSON_LAYER_6
 
-  else if(z_eval >= Z_HAUKSSON_LAYER_7) then
+  else if (z_eval >= Z_HAUKSSON_LAYER_7) then
     vp_upper = vp_interp(6)
     vs_upper = vs_interp(6)
     z_upper = Z_HAUKSSON_LAYER_6
@@ -185,7 +185,7 @@
     vs_lower = vs_interp(7)
     z_lower = Z_HAUKSSON_LAYER_7
 
-!  else if(z_eval >= Z_HAUKSSON_LAYER_8) then
+!  else if (z_eval >= Z_HAUKSSON_LAYER_8) then
 !    vp_upper = vp_interp(7)
 !    vs_upper = vs_interp(7)
 !    z_upper = Z_HAUKSSON_LAYER_7
@@ -195,7 +195,7 @@
 !    z_lower = Z_HAUKSSON_LAYER_8
 
   else
-    if(.not. MOHO_MAP_LUPEI) then
+    if (.not. MOHO_MAP_LUPEI) then
       vp_upper = vp_interp(7)
       vs_upper = vs_interp(7)
       z_upper = Z_HAUKSSON_LAYER_7
@@ -218,7 +218,7 @@
 
     gamma_interp_z = (z_eval - z_lower) / (z_upper - z_lower)
 
-    if(gamma_interp_z < -0.001d0 .or. gamma_interp_z > 1.001d0) &
+    if (gamma_interp_z < -0.001d0 .or. gamma_interp_z > 1.001d0) &
         stop 'interpolation in z is incorrect in Hauksson'
 
     vp_final = vp_upper * gamma_interp_z + vp_lower * (1.-gamma_interp_z)

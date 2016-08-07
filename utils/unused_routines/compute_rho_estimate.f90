@@ -40,8 +40,8 @@
   rho = 0.33d0 * vp + 1280.d0
 
 ! make sure density estimate is reasonable
-  if(rho > DENSITY_MAX) rho = DENSITY_MAX
-  if(rho < DENSITY_MIN) rho = DENSITY_MIN
+  if (rho > DENSITY_MAX) rho = DENSITY_MAX
+  if (rho < DENSITY_MIN) rho = DENSITY_MIN
 
   end subroutine compute_rho_estimate
 

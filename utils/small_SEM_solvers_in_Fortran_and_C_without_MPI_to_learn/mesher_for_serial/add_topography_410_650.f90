@@ -107,26 +107,26 @@
     topo650 = -dble(topo650out) / R_EARTH_KM
 
     gamma = 0.d0
-    if(r >= R400/R_EARTH .and. r <= R220/R_EARTH) then
+    if (r >= R400/R_EARTH .and. r <= R220/R_EARTH) then
 ! stretching between R220 and R400
       gamma = (R220/R_EARTH - r) / (R220/R_EARTH - R400/R_EARTH)
       xelm(ia) = xelm(ia)*(ONE + gamma * topo410 / r)
       yelm(ia) = yelm(ia)*(ONE + gamma * topo410 / r)
       zelm(ia) = zelm(ia)*(ONE + gamma * topo410 / r)
-    else if(r>= R771/R_EARTH .and. r <= R670/R_EARTH) then
+    else if (r>= R771/R_EARTH .and. r <= R670/R_EARTH) then
 ! stretching between R771 and R670
       gamma = (r - R771/R_EARTH) / (R670/R_EARTH - R771/R_EARTH)
       xelm(ia) = xelm(ia)*(ONE + gamma * topo650 / r)
       yelm(ia) = yelm(ia)*(ONE + gamma * topo650 / r)
       zelm(ia) = zelm(ia)*(ONE + gamma * topo650 / r)
-    else if(r > R670/R_EARTH .and. r < R400/R_EARTH) then
+    else if (r > R670/R_EARTH .and. r < R400/R_EARTH) then
 ! stretching between R670 and R400
       gamma = (R400/R_EARTH - r) / (R400/R_EARTH - R670/R_EARTH)
       xelm(ia) = xelm(ia)*(ONE + (topo410 + gamma * (topo650 - topo410)) / r)
       yelm(ia) = yelm(ia)*(ONE + (topo410 + gamma * (topo650 - topo410)) / r)
       zelm(ia) = zelm(ia)*(ONE + (topo410 + gamma * (topo650 - topo410)) / r)
     endif
-    if(gamma < -0.0001 .or. gamma > 1.0001) call exit_MPI(myrank,'incorrect value of gamma for 410-650 topography')
+    if (gamma < -0.0001 .or. gamma > 1.0001) call exit_MPI(myrank,'incorrect value of gamma for 410-650 topography')
 
   enddo
 

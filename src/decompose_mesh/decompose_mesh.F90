@@ -824,7 +824,7 @@ module decompose_mesh
 
     print *, 'node valence:  min = ',minval(used_nodes_elmnts(:)),' max = ', maxval(used_nodes_elmnts(:))
 
-    if(minval(used_nodes_elmnts(:)) <= 0) &
+    if (minval(used_nodes_elmnts(:)) <= 0) &
         stop 'Error: found some unused nodes (weird, but not necessarily fatal; your mesher may have created extra nodes).'
 
     ! max number of elements that contain the same node

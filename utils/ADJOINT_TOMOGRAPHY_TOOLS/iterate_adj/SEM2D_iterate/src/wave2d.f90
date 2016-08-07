@@ -316,7 +316,7 @@ program wave2d
         open(19,file='INPUT/events_xyt_pert.dat',status='unknown')
         do ievent = 1,nevent
            read(19,*) temp1,temp2,temp3
-           !if(ievent==5) then
+           !if (ievent==5) then
            !   temp1 = -1.599978278510d3
            !   temp2 = -6.502537573573d2
            !   temp3 = 7.975610515441d-2
@@ -1919,7 +1919,7 @@ program wave2d
 
      ! factors for balancing the model norm term
      ! NOTE: we ignore parts of the model norm that do not participate in the inversion
-     if     ( INV_STRUCT_BETA == 1 .and. INV_SOURCE_T == 0 .and. INV_SOURCE_X == 0 ) then   ! structure
+     if ( INV_STRUCT_BETA == 1 .and. INV_SOURCE_T == 0 .and. INV_SOURCE_X == 0 ) then   ! structure
         fac_str = 1.00
      else if ( INV_STRUCT_BETA == 0 .and. INV_SOURCE_T == 1 .and. INV_SOURCE_X == 0 ) then   ! origin time
         fac_ts = 1.00
@@ -3395,7 +3395,7 @@ program wave2d
            endif
 
            !-----------------------------------------------------
-           ! COMPUTE THE GRADIENT OF THE MISFIT FUNCTION, if the present model is not
+           ! COMPUTE THE GRADIENT OF THE MISFIT function, if the present model is not
            ! a test model or if the CG polynomial is a cubic function
 
            if ( itest==0 .or. POLY_ORDER==3 ) then

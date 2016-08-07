@@ -75,7 +75,7 @@ contains
 !!$       ! KEY: assemble omega vector
 !!$       wvec(:) = 0.
 !!$       do j = 1,npt
-!!$          if(j > npt/2) then
+!!$          if (j > npt/2) then
 !!$             wvec(j) = dw*(j-npt-1)   ! negative frequencies in second half
 !!$          else
 !!$             wvec(j) = dw*(j-1)       ! positive frequencies in first half
@@ -320,9 +320,9 @@ contains
           do i = n_left, n_right, 1
              cc = 0.
              do j = 1, nlen
-                if((j+i) > 1 .and. (j+i) < nlen) cc = cc + dzr_win(j) * dzr2_win(j+i)   ! cross-correlation
+                if ((j+i) > 1 .and. (j+i) < nlen) cc = cc + dzr_win(j) * dzr2_win(j+i)   ! cross-correlation
              enddo
-             if( cc > cc_max) then
+             if ( cc > cc_max) then
                 cc_max = cc
                 ishift = i
              endif
@@ -393,7 +393,7 @@ contains
           ! cross-correlation amplitude adjoint source
           ! You have TWO OPTIONS: measure the amplitudes based on DISPLACEMENT or VELOCITY
           ! Default option has been IAMP_VEL = 0
-          if(IAMP_VEL == 0) then     ! DISPLACEMENT
+          if (IAMP_VEL == 0) then     ! DISPLACEMENT
              fa_bar_t(:) = syn_displ(:) / Mnorm
              dlnA = dlnAd
           else                        ! VELOCITY
@@ -405,7 +405,7 @@ contains
           ! for now, we do not allow perturbations for the amplitude measurement
           dlnA_pert = dlnA
 
-          if(0==1) then
+          if (0==1) then
              !print *
              print *, 'cross-correlation measurments:'
              print *, '       dT = ', tshift_xc
@@ -419,7 +419,7 @@ contains
           endif
 
           ! additional files for checking (measure_socal_adj.m)
-          if(WRITE_SEISMO_RECONSTRUCT) then
+          if (WRITE_SEISMO_RECONSTRUCT) then
              ! time domain : time, data-disp, syn-disp, syn-vel, syn-accel
              write(filename,'(a,i5.5,a)') 'syn_time_', irec, '.dat'
              open(29,file=filename,status='unknown')
@@ -432,7 +432,7 @@ contains
              write(filename,'(a,i5.5,a)') 'xcorr_time_', irec, '.dat'
              open(39,file=filename,status='unknown')
              do i = 1,nlen
-                if(IAMP_VEL == 0) then
+                if (IAMP_VEL == 0) then
                    write(39,'(6e18.8)') ft_bar_t(i), ft_t(i), fa_bar_t(i), fa_t(i), &
                       -syn_accel(i)/Nnorm, -dlnAv*(-syn_accel(i)/Nnorm)
                 else
@@ -443,7 +443,7 @@ contains
              close(39)
           endif
 
-          !if(irec==4) stop 'testing'
+          !if (irec==4) stop 'testing'
 
 !!$          !===================================================
 !!$          ! MULTITAPER MEASUREMENTS
@@ -452,7 +452,7 @@ contains
 !!$          dtau_mtm = 0.
 !!$          dlnA_mtm = 0.
 !!$
-!!$          if(IKER==3 .or. IKER==4) then     ! multitaper measurements
+!!$          if (IKER==3 .or. IKER==4) then     ! multitaper measurements
 !!$
 !!$             ! calculate frequency step and number of frequencies
 !!$             df = 1./(npt*DT)
@@ -462,7 +462,7 @@ contains
 !!$             ! KEY: assemble omega vector
 !!$             wvec(:) = 0.
 !!$             do j = 1,npt
-!!$                if(j > npt/2) then
+!!$                if (j > npt/2) then
 !!$                   wvec(j) = dw*(j-npt-1)   ! negative frequencies in second half
 !!$                else
 !!$                   wvec(j) = dw*(j-1)       ! positive frequencies in first half
@@ -479,7 +479,7 @@ contains
 !!$             print *, ' shift observed seismogram by (s) : ', tshift_xc
 !!$             do i = 1, nlen
 !!$                dzr3_win(i) = 0.
-!!$                if( (ishift+i) > 1 .and. (ishift+i) < nlen ) dzr3_win(i) = dzr2_win(i+ishift)
+!!$                if ( (ishift+i) > 1 .and. (ishift+i) < nlen ) dzr3_win(i) = dzr2_win(i+ishift)
 !!$                dzr30_win(i) = dzr3_win(i)
 !!$             enddo
 !!$
@@ -532,11 +532,11 @@ contains
 !!$                ampmax = 0.
 !!$                ampmax_unw = 0.
 !!$                do i = 1, fnum   ! loop over frequencies
-!!$                   if( abs(wseis(i)) > ampmax) then              ! syn, single-tapered
+!!$                   if ( abs(wseis(i)) > ampmax) then              ! syn, single-tapered
 !!$                      ampmax = abs(wseis(i))
 !!$                      i_amp_max = i
 !!$                   endif
-!!$                   if( abs(wseis_syn(i)) > ampmax_unw) then      ! syn
+!!$                   if ( abs(wseis_syn(i)) > ampmax_unw) then      ! syn
 !!$                      ampmax_unw =  abs(wseis_syn(i))
 !!$                      i_amp_max_unw = i
 !!$                   endif
@@ -552,11 +552,11 @@ contains
 !!$                i_right = fnum
 !!$                i_right_stop = 0
 !!$                do i = 1,fnum             ! loop over frequencies
-!!$                   if(i > i_amp_max_unw .and. abs(wseis_syn(i)) <= abs(wtr_use_unw) .and. i_right_stop == 0) then
+!!$                   if (i > i_amp_max_unw .and. abs(wseis_syn(i)) <= abs(wtr_use_unw) .and. i_right_stop == 0) then
 !!$                      i_right_stop = 1
 !!$                      i_right = i
 !!$                   endif
-!!$                   if(i > i_amp_max_unw .and. abs(wseis_syn(i)) >= 10.*abs(wtr_use_unw) .and. i_right_stop == 1) then
+!!$                   if (i > i_amp_max_unw .and. abs(wseis_syn(i)) >= 10.*abs(wtr_use_unw) .and. i_right_stop == 1) then
 !!$                      i_right_stop = 0
 !!$                      i_right = i
 !!$                   endif
@@ -572,8 +572,8 @@ contains
 !!$
 !!$                   ! calculate transfer function for single taper measurement using water level
 !!$                   ! CHT: trans IS NEVER USED HERE
-!!$                   !if(abs(wseis(i)) >  abs(wtr_use)) trans(i) = wseis3(i) / wseis(i)
-!!$                   !if(abs(wseis(i)) <= abs(wtr_use)) trans(i) = wseis3(i) / (wseis(i)+wtr_use)
+!!$                   !if (abs(wseis(i)) >  abs(wtr_use)) trans(i) = wseis3(i) / wseis(i)
+!!$                   !if (abs(wseis(i)) <= abs(wtr_use)) trans(i) = wseis3(i) / (wseis(i)+wtr_use)
 !!$
 !!$                enddo  ! frequencies: i = 1,fnum
 !!$
@@ -591,7 +591,7 @@ contains
 !!$             ! find water level for multi-taper measurement
 !!$             ampmax = 0.
 !!$             do i = 1, fnum
-!!$                if( abs(bot_mtm(i)) > ampmax) then
+!!$                if ( abs(bot_mtm(i)) > ampmax) then
 !!$                   ampmax =  abs(bot_mtm(i))
 !!$                   i_amp_max = i
 !!$                endif
@@ -601,11 +601,11 @@ contains
 !!$
 !!$             ! calculate transfer function using water level
 !!$             !do i = 1, fnum
-!!$             !  if(abs(bot_mtm(i)) >  abs(wtr_use)) trans_mtm(i) = top_mtm(i) / bot_mtm(i)
-!!$             !  if(abs(bot_mtm(i)) <= abs(wtr_use)) trans_mtm(i) = top_mtm(i) / (bot_mtm(i)+wtr_use)
+!!$             !  if (abs(bot_mtm(i)) >  abs(wtr_use)) trans_mtm(i) = top_mtm(i) / bot_mtm(i)
+!!$             !  if (abs(bot_mtm(i)) <= abs(wtr_use)) trans_mtm(i) = top_mtm(i) / (bot_mtm(i)+wtr_use)
 !!$             !enddo
 !!$             do i = 1, fnum
-!!$                if(abs(bot_mtm(i)) <= abs(wtr_use)) bot_mtm(i) = bot_mtm(i) + wtr_use
+!!$                if (abs(bot_mtm(i)) <= abs(wtr_use)) bot_mtm(i) = bot_mtm(i) + wtr_use
 !!$             enddo
 !!$             trans_mtm(1:fnum) = top_mtm(1:fnum) / bot_mtm(1:fnum)
 !!$
@@ -648,7 +648,7 @@ contains
 !!$             wp_taper(:) = w_taper(:) / Ffac
 !!$             wq_taper(:) = w_taper(:) / Ffac
 !!$
-!!$             if(WRITE_MTM_FILES) then
+!!$             if (WRITE_MTM_FILES) then
 !!$                ! write transfer function to file
 !!$                write(filename,'(a,i5.5,a)') 'transfer_freq_', irec, '.dat'
 !!$                open(91,file=filename,status='unknown')
@@ -672,7 +672,7 @@ contains
 !!$             dlnA_mtm = sum( dlnA_w(1:i_right) ) / i_right
 !!$
 !!$             ! reconstruct data (wseis_rec) from synthetics (wseis_syn) using the transfer function (trans_mtm)
-!!$             if(WRITE_SEISMO_RECONSTRUCT) then
+!!$             if (WRITE_SEISMO_RECONSTRUCT) then
 !!$
 !!$                ! Reconstruct mtm fit seismograms : syn*tran
 !!$                ! d(w) = s(w) T(w) exp[-i w dT]
@@ -727,7 +727,7 @@ contains
 !!$             ! We do this by taking a function, s(t) and its time derivative,
 !!$             ! and then computing fourier transforms.
 !!$
-!!$             if(0==1) then
+!!$             if (0==1) then
 !!$
 !!$                ! create complex synthetic seismogram and complex data seismogram
 !!$                wseis_syn(:) = cmplx(0.,0.)
@@ -747,7 +747,7 @@ contains
 !!$                print *, FORWARD_FFT
 !!$                print *, '-----------------------------'
 !!$
-!!$                if(1==1) then    ! check Fourier convention
+!!$                if (1==1) then    ! check Fourier convention
 !!$
 !!$                   ! check convention -- s_d(w)*iw should give velocity
 !!$                   do i = 1,i_right   ! KEY: do not go too high frequency
@@ -798,7 +798,7 @@ contains
 !!$             !==================================================================
 !!$             ! MULTITAPER ADJOINT SOURCES
 !!$
-!!$             !if(IKER==3 .or. IKER==4) then
+!!$             !if (IKER==3 .or. IKER==4) then
 !!$
 !!$             pw_adj(:,:) = 0.      ;  qw_adj(:,:) = 0.
 !!$             pt_adj(:,:) = 0.      ;  qt_adj(:,:) = 0.
@@ -862,7 +862,7 @@ contains
 !!$                dtemp(:) = qwc_adj(:)
 !!$
 !!$                ! EXTRA OUTPUT : IFFT into the time domain : pj(w) --> pj(t) and qj(w) --> qj(t)
-!!$                if(WRITE_MTM_FILES) then
+!!$                if (WRITE_MTM_FILES) then
 !!$                   call fftinv(lnpt,pwc_adj,REVERSE_FFT,DT,pt_adj(:,ictaper))
 !!$                   call fftinv(lnpt,qwc_adj,REVERSE_FFT,DT,qt_adj(:,ictaper))
 !!$                endif
@@ -887,7 +887,7 @@ contains
 !!$
 !!$             enddo
 !!$
-!!$             if(WRITE_MTM_FILES) then
+!!$             if (WRITE_MTM_FILES) then
 !!$                ! write banana-doughnut adjoint sources to file
 !!$                write(filename,'(a,i5.5,a)') 'test_fadj_t_', irec, '.dat'
 !!$                open(21,file=filename,status='unknown')
@@ -944,38 +944,38 @@ contains
              i1 = istart1 - 1 + i
 
 !!$             ! store the reconstructed data: d'(w) = T(w) s(w)
-!!$             if(WRITE_SEISMO_RECONSTRUCT) then
-!!$                if(IKER==4 .or. IKER==4) data_recon(i1,icomp,irec) = tseis_recon(i)
+!!$             if (WRITE_SEISMO_RECONSTRUCT) then
+!!$                if (IKER==4 .or. IKER==4) data_recon(i1,icomp,irec) = tseis_recon(i)
 !!$             endif
 
-             if(IKER==0) then
+             if (IKER==0) then
                 adj_syn(i1,icomp,irec) = ( syn(i1,icomp,irec) -  data(i1,icomp,irec) ) * time_window(i)
 
-             else if(IKER==1) then
+             else if (IKER==1) then
                 adj_syn(i1,icomp,irec) = ft_t(i) * time_window(i)
 
-             else if(IKER==2) then
+             else if (IKER==2) then
                 adj_syn(i1,icomp,irec) = fa_t(i) * time_window(i)
 
-             else if(IKER==3) then
+             else if (IKER==3) then
                 stop 'Multitaper measurements NOT an option'
                 !adj_syn(i1,icomp,irec) = fp(i) * time_window(i)
 
-             else if(IKER==4) then
+             else if (IKER==4) then
                 stop 'Multitaper measurements NOT an option'
                 !adj_syn(i1,icomp,irec) = fq(i) * time_window(i)
 
-             else if(IKER==5) then
+             else if (IKER==5) then
                 adj_syn(i1,icomp,irec) = ft_bar_t(i) * time_window(i)
 
-             else if(IKER==6) then
+             else if (IKER==6) then
                 adj_syn(i1,icomp,irec) = fa_bar_t(i) * time_window(i)
              endif
 
           enddo
 
           ! (1) COMPUTE MEASUREMENT VECTOR
-          ! (2) COMPUTE MISFIT FUNCTION (currently only for waveform, xc-tt, xc-lnA)
+          ! (2) COMPUTE MISFIT function (currently only for waveform, xc-tt, xc-lnA)
           ! IKER: (0) waveform
           !       (1) traveltime, cross-correlation, misfit
           !       (2) amplitude, cross-correlation, misfit
@@ -1000,20 +1000,20 @@ contains
 
          ! NOTE THAT THE FACTOR OF 0.5 IS NOT INCLUDED HERE
 
-          if(IKER==0) then
+          if (IKER==0) then
              ! crude integration of the waveform difference
              chi_data(ievent,irec,icomp,1) = DT*sum( adj_syn(:,icomp,irec)**2 ) / cov_data(imeasure)
 
-          else if(IKER==1) then
+          else if (IKER==1) then
              chi_data(ievent,irec,icomp,1) = (tshift_xc_pert )**2 / cov_data(imeasure)
 
-          else if(IKER==2) then
+          else if (IKER==2) then
              chi_data(ievent,irec,icomp,1) = (dlnA_pert)**2 / cov_data(imeasure)
 
-!!$          else if(IKER==3) then
+!!$          else if (IKER==3) then
 !!$             chi_data(ievent,irec,icomp,1) = 2.*dw*sum( wp_taper(1:i_right) * (dtau_w(1:i_right)**2) )
 !!$
-!!$          else if(IKER==4) then
+!!$          else if (IKER==4) then
 !!$             chi_data(ievent,irec,icomp,1) = 2.*dw*sum( wq_taper(1:i_right) * (dlnA_w(1:i_right)**2) )
 
           endif
@@ -1045,7 +1045,7 @@ contains
 !!$      integer :: l,iblock,nblock,i,lbhalf,j,lx
 !!$
 !!$      ! sign must be +1. or -1.
-!!$      if(zign >= 0.) then
+!!$      if (zign >= 0.) then
 !!$        zign = 1.
 !!$      else
 !!$        zign = -1.
@@ -1078,23 +1078,23 @@ contains
 !!$
 !!$      do 3 i=2,n
 !!$      ii = i
-!!$      if(k < m(i)) go to 4
+!!$      if (k < m(i)) goto 4
 !!$    3 k = k-m(i)
 !!$    4 k = k+m(ii)
 !!$      k = 0
 !!$      do 7 j=1,lx
-!!$      if(k < j) go to 5
+!!$      if (k < j) goto 5
 !!$      hold = xi(j)
 !!$      xi(j) = xi(k+1)
 !!$      xi(k+1) = hold
 !!$    5 do 6 i=1,n
 !!$      ii = i
-!!$      if(k < m(i)) go to 7
+!!$      if (k < m(i)) goto 7
 !!$    6 k = k-m(i)
 !!$    7 k = k+m(ii)
 !!$
 !!$      ! final steps deal with dt factors
-!!$      if(zign > 0.) then       ! FORWARD FFT
+!!$      if (zign > 0.) then       ! FORWARD FFT
 !!$         do i = 1,lx
 !!$            xi(i) = xi(i)*dt   ! multiplication by dt
 !!$         enddo
@@ -1194,7 +1194,7 @@ contains
 !!$
 !!$      r2 = sqrt(2.)
 !!$
-!!$      if(nt < 2) return
+!!$      if (nt < 2) return
 !!$      nxi=mod(nt,2)
 !!$      lh=(nt/2)+nxi
 !!$      lp1=nt+1
@@ -1204,7 +1204,7 @@ contains
 !!$      do 10 i=1,lh
 !!$        a(i)=com*(i-hn)**2
 !!$   10   w(i)=0.5*dble(i*(nt-i))
-!!$      if(nxi == 0) then
+!!$      if (nxi == 0) then
 !!$        asav=a(lh)-w(lh)
 !!$        a(lh)=a(lh)+w(lh)
 !!$        rbd=1./(a(lh)+w(lh-1))
@@ -1223,12 +1223,12 @@ contains
 !!$      call tsturm(nt,lh,a,a(lh+1),w,neven,v,ndim,w(lh+1),0)
 !!$      do 20 i=1,neven
 !!$        k=2*i-1
-!!$        if(nxi == 1) v(lh,k)=r2*v(lh,k)
+!!$        if (nxi == 1) v(lh,k)=r2*v(lh,k)
 !!$          do 20 j=1,lh
 !!$   20     v(lp1-j,k)=v(j,k)
-!!$      if(nodd <= 0) goto 34
+!!$      if (nodd <= 0) goto 34
 !!$!  Do the odd tapers
-!!$      if(nxi == 0) then
+!!$      if (nxi == 0) then
 !!$        a(lh)=asav*rbd
 !!$      else
 !!$        a(nt)=asav*rbd
@@ -1237,7 +1237,7 @@ contains
 !!$      call tsturm(nt,lh-nxi,a,a(lh+1),w,nodd,v,ndim,w(lh+1),1)
 !!$      do 30 i=1,nodd
 !!$        k=2*i
-!!$        if(nxi == 1) v(lh,k)=0.
+!!$        if (nxi == 1) v(lh,k)=0.
 !!$          do 30 j=1,lh
 !!$   30     v(lp1-j,k)=-v(j,k)
 !!$   34 ntot=neven+nodd
@@ -1256,7 +1256,7 @@ contains
 !!$        vmax=abs(v(1,m))
 !!$        kmax=1
 !!$        do 40 kk=2,lh
-!!$          if(abs(v(kk,m)) <= vmax) goto 40
+!!$          if (abs(v(kk,m)) <= vmax) goto 40
 !!$          kmax=kk
 !!$          vmax=abs(v(kk,m))
 !!$   40     continue
@@ -1298,35 +1298,35 @@ contains
 !!$
 !!$      !-------------------------
 !!$
-!!$      if(n <= 0.or.nev <= 0) return
+!!$      if (n <= 0.or.nev <= 0) return
 !!$      umeps=1.-epsi
 !!$      do 5 i=1,nev
 !!$    5 ev(i)=-1.
 !!$      u=1.
 !!$      do 1000 ik=1,nev
-!!$      if(ik > 1) u=ev(ik-1)*umeps
+!!$      if (ik > 1) u=ev(ik-1)*umeps
 !!$      el=min(ev(ik),u)
 !!$   10 elam=0.5*(u+el)
-!!$      if(abs(u-el) <= epsi1) goto 35
+!!$      if (abs(u-el) <= epsi1) goto 35
 !!$      iag=0
 !!$      q=a(1)-elam
-!!$      if(q >= 0.) iag=iag+1
+!!$      if (q >= 0.) iag=iag+1
 !!$      do 15 i=2,n
-!!$      if(q == 0.) x=abs(b(i-1))/epsi
-!!$      if(q /= 0.) x=w(i-1)/q
+!!$      if (q == 0.) x=abs(b(i-1))/epsi
+!!$      if (q /= 0.) x=w(i-1)/q
 !!$      q=a(i)-elam-x
-!!$      if(q >= 0.) iag=iag+1
-!!$      if(iag > nev) goto 20
+!!$      if (q >= 0.) iag=iag+1
+!!$      if (iag > nev) goto 20
 !!$   15 continue
-!!$      if(iag >= ik) go to 20
+!!$      if (iag >= ik) goto 20
 !!$      u=elam
-!!$      go to 10
-!!$   20 if(iag == ik) go to 30
+!!$      goto 10
+!!$   20 if (iag == ik) goto 30
 !!$      m=ik+1
 !!$      do 25 i=m,iag
 !!$   25 ev(i)=elam
 !!$      el=elam
-!!$      go to 10
+!!$      goto 10
 !!$   30 el=elam
 !!$      call root(u,el,elam,a,b,w,n,ik)
 !!$   35 ev(ik)=elam
@@ -1366,30 +1366,30 @@ contains
 !!$      !----------------------
 !!$
 !!$    5 elam=0.5*(u+el)
-!!$   10 if(abs(u-el) <= 1.5*epsi1) return
+!!$   10 if (abs(u-el) <= 1.5*epsi1) return
 !!$      an=a(1)-elam
 !!$      b=0.
 !!$      bn=-1./an
 !!$      iag=0
-!!$      if(an >= 0.) iag=iag+1
+!!$      if (an >= 0.) iag=iag+1
 !!$      do 20 i=2,n
-!!$      if(an == 0.) x=abs(bb(i-1))/epsi
-!!$      if(an /= 0.) x=w(i-1)/an
+!!$      if (an == 0.) x=abs(bb(i-1))/epsi
+!!$      if (an /= 0.) x=w(i-1)/an
 !!$      an=a(i)-elam-x
-!!$      if(an == 0.) an=epsi
+!!$      if (an == 0.) an=epsi
 !!$      bm=b
 !!$      b=bn
 !!$      bn=((a(i)-elam)*b-bm*x-1.)/an
-!!$      if(an >= 0.) iag=iag+1
+!!$      if (an >= 0.) iag=iag+1
 !!$   20 continue
-!!$      if(iag == ik) goto 25
+!!$      if (iag == ik) goto 25
 !!$      u=elam
 !!$      goto 30
 !!$   25 el=elam
 !!$   30 del=1./bn
-!!$      if(abs(del) <= epsi1) del=sign(epsi1,del)
+!!$      if (abs(del) <= epsi1) del=sign(epsi1,del)
 !!$      elam=elam-del
-!!$      if(elam >= u.or.elam <= el) goto 5
+!!$      if (elam >= u.or.elam <= el) goto 5
 !!$      goto 10
 !!$
 !!$  end subroutine root

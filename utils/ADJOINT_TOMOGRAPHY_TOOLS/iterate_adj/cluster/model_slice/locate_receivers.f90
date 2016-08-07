@@ -135,7 +135,7 @@
   time_start = 0.d0
 #endif
 
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '********************'
     write(IMAIN,*) ' locating receivers'
@@ -146,7 +146,7 @@
 ! define topology of the control element
   call usual_hex_nodes(iaddx,iaddy,iaddz)
 
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '*****************************************************************'
     write(IMAIN,'(1x,a,a,a)') 'reading receiver information from ', trim(rec_filename), ' file'
@@ -158,7 +158,7 @@
   if (ios /= 0) call exit_mpi(myrank,'error opening file '//trim(rec_filename))
   read(1,*) nrec_dummy
 
-  if(nrec_dummy /= nrec) call exit_MPI(myrank,'problem with number of receivers')
+  if (nrec_dummy /= nrec) call exit_MPI(myrank,'problem with number of receivers')
 
 ! allocate memory for arrays using number of stations
   allocate(stlat(nrec))
@@ -206,7 +206,7 @@
     horiz_dist(irec) = dsqrt((stutm_y(irec)-utm_y_source)**2 + (stutm_x(irec)-utm_x_source)**2) / 1000.
 
 ! print some information about stations
-    if(myrank == 0) &
+    if (myrank == 0) &
         write(IMAIN,*) 'Station #',irec,': ',station_name(irec)(1:len_trim(station_name(irec))), &
                        '.',network_name(irec)(1:len_trim(network_name(irec))), &
                        '    horizontal distance:  ',sngl(horiz_dist(irec)),' km'
@@ -232,17 +232,17 @@
 
 ! compute elevation of topography at the receiver location
 ! we assume that receivers are always at the surface i.e. not buried
-  if(TOPOGRAPHY) then
+  if (TOPOGRAPHY) then
 
 ! get coordinate of corner in bathy/topo model
     icornerlong = int((stlon(irec) - ORIG_LONG_TOPO) / DEGREES_PER_CELL_TOPO) + 1
     icornerlat = int((stlat(irec) - ORIG_LAT_TOPO) / DEGREES_PER_CELL_TOPO) + 1
 
 ! avoid edge effects and extend with identical point if outside model
-    if(icornerlong < 1) icornerlong = 1
-    if(icornerlong > NX_TOPO-1) icornerlong = NX_TOPO-1
-    if(icornerlat < 1) icornerlat = 1
-    if(icornerlat > NY_TOPO-1) icornerlat = NY_TOPO-1
+    if (icornerlong < 1) icornerlong = 1
+    if (icornerlong > NX_TOPO-1) icornerlong = NX_TOPO-1
+    if (icornerlat < 1) icornerlat = 1
+    if (icornerlat > NY_TOPO-1) icornerlat = NY_TOPO-1
 
 ! compute coordinates of corner
     long_corner = ORIG_LONG_TOPO + (icornerlong-1)*DEGREES_PER_CELL_TOPO
@@ -253,10 +253,10 @@
     ratio_eta = (stlat(irec) - lat_corner) / DEGREES_PER_CELL_TOPO
 
 ! avoid edge effects
-    if(ratio_xi < 0.) ratio_xi = 0.
-    if(ratio_xi > 1.) ratio_xi = 1.
-    if(ratio_eta < 0.) ratio_eta = 0.
-    if(ratio_eta > 1.) ratio_eta = 1.
+    if (ratio_xi < 0.) ratio_xi = 0.
+    if (ratio_xi > 1.) ratio_xi = 1.
+    if (ratio_eta < 0.) ratio_eta = 0.
+    if (ratio_eta > 1.) ratio_eta = 1.
 
 ! interpolate elevation at current point
     elevation = &
@@ -295,7 +295,7 @@
                         +(z_target(irec)-dble(zstore(iglob)))**2)
 
 !           keep this point if it is closer to the receiver
-            if(dist < distmin) then
+            if (dist < distmin) then
               distmin = dist
               ispec_selected_rec(irec) = ispec
               ix_initial_guess(irec) = i
@@ -335,31 +335,31 @@
 
   do ia=1,NGNOD
 
-    if(iaddx(ia) == 0) then
+    if (iaddx(ia) == 0) then
       iax = 1
-    else if(iaddx(ia) == 1) then
+    else if (iaddx(ia) == 1) then
       iax = (NGLLX+1)/2
-    else if(iaddx(ia) == 2) then
+    else if (iaddx(ia) == 2) then
       iax = NGLLX
     else
       call exit_MPI(myrank,'incorrect value of iaddx')
     endif
 
-    if(iaddy(ia) == 0) then
+    if (iaddy(ia) == 0) then
       iay = 1
-    else if(iaddy(ia) == 1) then
+    else if (iaddy(ia) == 1) then
       iay = (NGLLY+1)/2
-    else if(iaddy(ia) == 2) then
+    else if (iaddy(ia) == 2) then
       iay = NGLLY
     else
       call exit_MPI(myrank,'incorrect value of iaddy')
     endif
 
-    if(iaddz(ia) == 0) then
+    if (iaddz(ia) == 0) then
       iaz = 1
-    else if(iaddz(ia) == 1) then
+    else if (iaddz(ia) == 1) then
       iaz = (NGLLZ+1)/2
-    else if(iaddz(ia) == 2) then
+    else if (iaddz(ia) == 2) then
       iaz = NGLLZ
     else
       call exit_MPI(myrank,'incorrect value of iaddz')
@@ -464,17 +464,17 @@
 #endif
 
 ! this is executed by main process only
-  if(myrank == 0) then
+  if (myrank == 0) then
 
 ! check that the gather operation went well
-  if(any(ispec_selected_rec_all(:,:) == -1)) call exit_MPI(myrank,'gather operation failed for receivers')
+  if (any(ispec_selected_rec_all(:,:) == -1)) call exit_MPI(myrank,'gather operation failed for receivers')
 
 ! MPI loop on all the results to determine the best slice
   islice_selected_rec(:) = -1
   do irec = 1,nrec
   distmin = HUGEVAL
   do iprocloop = 0,NPROC-1
-    if(final_distance_all(irec,iprocloop) < distmin) then
+    if (final_distance_all(irec,iprocloop) < distmin) then
       distmin = final_distance_all(irec,iprocloop)
       islice_selected_rec(irec) = iprocloop
       ispec_selected_rec(irec) = ispec_selected_rec_all(irec,iprocloop)
@@ -494,14 +494,14 @@
     write(IMAIN,*)
     write(IMAIN,*) 'station # ',irec,'    ',station_name(irec),network_name(irec)
 
-    if(final_distance(irec) == HUGEVAL) call exit_MPI(myrank,'error locating receiver')
+    if (final_distance(irec) == HUGEVAL) call exit_MPI(myrank,'error locating receiver')
 
     write(IMAIN,*) '     original latitude: ',sngl(stlat(irec))
     write(IMAIN,*) '    original longitude: ',sngl(stlon(irec))
     write(IMAIN,*) '        original UTM x: ',sngl(stutm_x(irec))
     write(IMAIN,*) '        original UTM y: ',sngl(stutm_y(irec))
     write(IMAIN,*) '   horizontal distance: ',sngl(horiz_dist(irec))
-    if(TOPOGRAPHY) write(IMAIN,*) '  topography elevation: ',sngl(elevation(irec))
+    if (TOPOGRAPHY) write(IMAIN,*) '  topography elevation: ',sngl(elevation(irec))
     write(IMAIN,*) '   target x, y, z: ',sngl(x_target(irec)),sngl(y_target(irec)),sngl(z_target(irec))
 
     write(IMAIN,*) 'closest estimate found: ',sngl(final_distance(irec)),' m away'
@@ -510,7 +510,7 @@
 
 ! add warning if estimate is poor
 ! (usually means receiver outside the mesh given by the user)
-    if(final_distance(irec) > 3000.d0) then
+    if (final_distance(irec) > 3000.d0) then
       write(IMAIN,*) '*******************************************************'
       write(IMAIN,*) '***** WARNING: receiver location estimate is poor *****'
       write(IMAIN,*) '*******************************************************'
@@ -528,7 +528,7 @@
 
 ! add warning if estimate is poor
 ! (usually means receiver outside the mesh given by the user)
-    if(final_distance_max > 1000.d0) then
+    if (final_distance_max > 1000.d0) then
       write(IMAIN,*)
       write(IMAIN,*) '************************************************************'
       write(IMAIN,*) '************************************************************'
@@ -632,7 +632,7 @@
   read(IIN, *) nrec
   do irec = 1, nrec
     read(IIN, *) station_name, network_name, stlat, stlon, stele, stbur
-    if(stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
+    if (stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
           nrec_filtered = nrec_filtered + 1
   enddo
   close(IIN)
@@ -644,7 +644,7 @@
     write(IOUT,*) nrec_filtered
     do irec = 1,nrec
       read(IIN,*) station_name,network_name,stlat,stlon,stele,stbur
-      if(stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
+      if (stlat >= LATITUDE_MIN .and. stlat <= LATITUDE_MAX .and. stlon >= LONGITUDE_MIN .and. stlon <= LONGITUDE_MAX) &
             write(IOUT,*) station_name,' ',network_name,' ',sngl(stlat),' ',sngl(stlon), ' ',sngl(stele), ' ',sngl(stbur)
     enddo
     close(IIN)

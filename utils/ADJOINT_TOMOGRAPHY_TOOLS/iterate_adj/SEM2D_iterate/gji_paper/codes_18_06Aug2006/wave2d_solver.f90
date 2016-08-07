@@ -112,7 +112,7 @@ contains
 
     ! estimate the time step
     dh = HEIGHT/dble((NGLLZ-1)*NEZ)
-    if(dh > LENGTH/dble((NGLLX-1)*NEX)) dh = LENGTH/dble((NGLLX-1)*NEX)
+    if (dh > LENGTH/dble((NGLLX-1)*NEX)) dh = LENGTH/dble((NGLLX-1)*NEX)
     c = sqrt((INCOMPRESSIBILITY+FOUR_THIRDS*RIGIDITY)/DENSITY)
     time_step = 0.2*dh/c
     print *
@@ -132,13 +132,13 @@ contains
     do iglob = 1,NGLOB
        rho_global(iglob)   = DENSITY
        kappa_global(iglob) = INCOMPRESSIBILITY
-       if(ISURFACE==0) then
+       if (ISURFACE==0) then
           mu_global(iglob) = RIGIDITY
        else
           ! KEY: this means that the S velocity will be the surface wave phase velocity (m/s)
           mu_global(iglob) = DENSITY*(c_glob(iglob))**2
-          !if(ihomo==1) mu_global(iglob) = DENSITY*c0**2
-          !if(ihomo==0) mu_global(iglob) = DENSITY*(c_glob(iglob))**2
+          !if (ihomo==1) mu_global(iglob) = DENSITY*c0**2
+          !if (ihomo==0) mu_global(iglob) = DENSITY*(c_glob(iglob))**2
        endif
     enddo
 
@@ -160,7 +160,7 @@ contains
 !!$       iglob = ibool(NGLLX/2,NGLLZ/2,ispec)
 !!$       do j = 1,NGLLZ
 !!$          do i = 1,NGLLX
-!!$             if(z(iglob) >= 0) then
+!!$             if (z(iglob) >= 0) then
 !!$                ! crust
 !!$                rho(i,j,ispec) = DENSITY
 !!$                kappa(i,j,ispec) = INCOMPRESSIBILITY
@@ -239,8 +239,8 @@ contains
 
     !--------------------------------------
 
-    if(NCOMP==3) fm = '(9e12.3)'
-    if(NCOMP==1) fm = '(3e12.3)'
+    if (NCOMP==3) fm = '(9e12.3)'
+    if (NCOMP==1) fm = '(3e12.3)'
 
     ! test of input arguments
     if (solver_type /= 1 .and. solver_type /= 2 .and. solver_type /= 3) then
@@ -280,7 +280,7 @@ contains
     ! gridpoints per wavelength estimation
     print *
     print *, 'space step (km):', sngl(dh/1000.)
-    if(ISURFACE) then
+    if (ISURFACE) then
        print *, 'wavelength-min (km):', sngl(2*hdur*cmin/1000.)
        print *, 'wavelength-max (km):', sngl(2*hdur*cmax/1000.)
        print *, 'number of gridpoints per wavelength for S:'
@@ -359,7 +359,7 @@ contains
           endif
        enddo
 
- if(NCOMP==1) then    ! SH, or surface waves only
+ if (NCOMP==1) then    ! SH, or surface waves only
 
        !
        !   INTEGRATION OVER SPECTRAL ELEMENTS
@@ -408,7 +408,7 @@ contains
                 dsydzl = tempy1l*dxidzl + tempy2l*dgammadzl
 
                 ! save spatial gradient for (point) source perturbations
-                if(solver_type == 3 .and. ispec == ispec_src(1)) then
+                if (solver_type == 3 .and. ispec == ispec_src(1)) then
                    displ_grad(i,j,1) = dsydxl
                    displ_grad(i,j,2) = dsydzl
                 endif
@@ -509,13 +509,13 @@ contains
        ! sections need to be adjusted as well
 
        do ibb = 1,NABSORB  ! index of grid boundary
-          if(ibb == 1) then
+          if (ibb == 1) then
              i = 1
-          else if(ibb == 2) then
+          else if (ibb == 2) then
              i = NGLLX
-          else if(ibb == 3) then
+          else if (ibb == 3) then
              i = 1
-          else if(ibb == 4) then
+          else if (ibb == 4) then
              i = NGLLZ
           endif
 
@@ -937,7 +937,7 @@ endif  ! NCOMP
        do i = 1,NGLOB
           accel(:,i) = accel(:,i)/mass_global(i)
 
-          if(solver_type == 3) &
+          if (solver_type == 3) &
              b_accel(:,i) = b_accel(:,i)/mass_global(i)
        enddo
 
@@ -966,7 +966,7 @@ endif  ! NCOMP
 
                ! equivalent to using closest gridpoint -- OLD METHOD
                !hlagrange = 0.
-               !if(iglob == rglob(irec)) hlagrange = 1.
+               !if (iglob == rglob(irec)) hlagrange = 1.
 
                ramp(itime,:,irec) = ramp(itime,:,irec) + displ(:,iglob)*hlagrange
              enddo
@@ -1019,7 +1019,7 @@ endif  ! NCOMP
          enddo  ! isrc
 
 
-         if(solver_type==3) then
+         if (solver_type==3) then
 
            ! CALCULATE SIX KERNELS -- notice the time integration
            do iglob = 1, NGLOB
@@ -1102,7 +1102,7 @@ endif  ! NCOMP
           !!xtemp = x(iglob)/LENGTH ; ztemp = z(iglob)/LENGTH
           !xtemp = x(iglob)/1000. ; ztemp = z(iglob)/1000.
 
-          if(WRITE_SNAPSHOTS) then      ! wavefield snapshots
+          if (WRITE_SNAPSHOTS) then      ! wavefield snapshots
              open(unit=11, file=trim(filename1), status='unknown', iostat=ios)
              if (ios /= 0) stop 'Error writing snapshot to disk'
              do iglob = 1, NGLOB
@@ -1112,7 +1112,7 @@ endif  ! NCOMP
              close(11)
           endif
 
-          if(WRITE_KERNELS) then        ! kernel snapshots
+          if (WRITE_KERNELS) then        ! kernel snapshots
           if (solver_type == 3) then
              open(unit=11, file=trim(filename2), status='unknown', iostat=ios)
              if (ios /= 0) stop 'Error writing snapshot to disk'
@@ -1129,7 +1129,7 @@ endif  ! NCOMP
 
                 xtemp = x_lon(iglob) ; ztemp = z_lat(iglob)
 
-                if(ISURFACE==0) then
+                if (ISURFACE==0) then
                    ! six kernels into two files
                    write(11,'(5e16.6)') sngl(xtemp), sngl(ztemp), sngl(rho_kernel(iglob)), &
                               sngl(mu_kernel(iglob)), sngl(kappa_kernel(iglob))
@@ -1151,7 +1151,7 @@ endif  ! NCOMP
 
     enddo ! end time loop
 
-    if(solver_type == 3) deallocate(stf_for)
+    if (solver_type == 3) deallocate(stf_for)
 
   end subroutine solver
 !---------------------------------------------

@@ -173,7 +173,7 @@
         iglob7=ibool(NGLLX,NGLLY,NGLLZ,ispec)
         iglob8=ibool(1,NGLLY,NGLLZ,ispec)
 
-        if(.not. mask_ibool(iglob1)) then
+        if (.not. mask_ibool(iglob1)) then
           numpoin = numpoin + 1
           read(25,*) njunk, x, y, z
           call write_real(x)
@@ -182,7 +182,7 @@
           call write_real(dat(1,1,1,ispec))
           mask_ibool(iglob1) = .true.
         endif
-        if(.not. mask_ibool(iglob2)) then
+        if (.not. mask_ibool(iglob2)) then
           numpoin = numpoin + 1
           read(25,*) njunk, x, y, z
           call write_real(x)
@@ -191,7 +191,7 @@
           call write_real(dat(NGLLX,1,1,ispec))
           mask_ibool(iglob2) = .true.
         endif
-        if(.not. mask_ibool(iglob3)) then
+        if (.not. mask_ibool(iglob3)) then
           numpoin = numpoin + 1
           read(25,*) njunk, x, y, z
           call write_real(x)
@@ -200,7 +200,7 @@
           call write_real(dat(NGLLX,NGLLY,1,ispec))
           mask_ibool(iglob3) = .true.
         endif
-        if(.not. mask_ibool(iglob4)) then
+        if (.not. mask_ibool(iglob4)) then
           numpoin = numpoin + 1
           read(25,*) njunk, x, y, z
           call write_real(x)
@@ -209,7 +209,7 @@
           call write_real(dat(1,NGLLY,1,ispec))
           mask_ibool(iglob4) = .true.
         endif
-        if(.not. mask_ibool(iglob5)) then
+        if (.not. mask_ibool(iglob5)) then
           numpoin = numpoin + 1
           read(25,*) njunk, x, y, z
           call write_real(x)
@@ -218,7 +218,7 @@
           call write_real(dat(1,1,NGLLZ,ispec))
           mask_ibool(iglob5) = .true.
         endif
-        if(.not. mask_ibool(iglob6)) then
+        if (.not. mask_ibool(iglob6)) then
           numpoin = numpoin + 1
           read(25,*) njunk, x, y, z
           call write_real(x)
@@ -227,7 +227,7 @@
           call write_real(dat(NGLLX,1,NGLLZ,ispec))
           mask_ibool(iglob6) = .true.
         endif
-        if(.not. mask_ibool(iglob7)) then
+        if (.not. mask_ibool(iglob7)) then
           numpoin = numpoin + 1
           read(25,*) njunk, x, y, z
           call write_real(x)
@@ -236,7 +236,7 @@
           call write_real(dat(NGLLX,NGLLY,NGLLZ,ispec))
           mask_ibool(iglob7) = .true.
         endif
-        if(.not. mask_ibool(iglob8)) then
+        if (.not. mask_ibool(iglob8)) then
           numpoin = numpoin + 1
           read(25,*) njunk, x, y, z
           call write_real(x)
@@ -286,7 +286,7 @@
           do j = 1, NGLLY
             do i = 1, NGLLX
               iglob = ibool(i,j,k,ispec)
-              if(.not. mask_ibool(iglob)) then
+              if (.not. mask_ibool(iglob)) then
                 numpoin = numpoin + 1
                 x = xstore(iglob)
                 y = ystore(iglob)
@@ -377,7 +377,7 @@
           do j = 1, NGLLY
             do i = 1, NGLLX
               iglob = ibool(i,j,k,ispec)
-              if(.not. mask_ibool(iglob)) then
+              if (.not. mask_ibool(iglob)) then
                 numpoin = numpoin + 1
                 num_ibool(iglob) = numpoin
                 mask_ibool(iglob) = .true.

@@ -49,7 +49,7 @@
   double precision f1,f2,f3,f4,rm,rn,t,c,a,e1,u,rlat1,dlat1,c1,t1,rn1,r1,d
   double precision rx_save,ry_save,rlon_save,rlat_save
 
-  if(SUPPRESS_UTM_PROJECTION) then
+  if (SUPPRESS_UTM_PROJECTION) then
     if (iway == ILONGLAT2UTM) then
       rx = rlon
       ry = rlat

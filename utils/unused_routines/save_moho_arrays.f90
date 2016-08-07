@@ -183,7 +183,7 @@
         iglob = ibool(i,j,k,ispec)
 
         ! checks if point on surface
-        if( iglob_is_surface(iglob) > 0 ) then
+        if ( iglob_is_surface(iglob) > 0 ) then
           counter = counter+1
 
           ! reference corner coordinates
@@ -194,7 +194,7 @@
       enddo
 
       ! stores moho informations
-      if( counter == NGNOD2D ) then
+      if ( counter == NGNOD2D ) then
 
         ! gets face GLL points i,j,k indices from element face
         call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLY)
@@ -235,10 +235,10 @@
         ispec2D = iglob_is_surface(iglob_midpoint)
 
         ! sets face infos for bottom (normal points away from element)
-        if( idirect == 1 ) then
+        if ( idirect == 1 ) then
 
           ! checks validity
-          if( is_moho_bot( ispec) .eqv. .true. ) then
+          if ( is_moho_bot( ispec) .eqv. .true. ) then
             print *,'error: moho surface geometry bottom'
             print *,'  does not allow for mulitple element faces in kernel computation'
             call exit_mpi(myrank,'error moho bottom elements')
@@ -259,10 +259,10 @@
           enddo
 
         ! sets face infos for top element
-        else if( idirect == 2 ) then
+        else if ( idirect == 2 ) then
 
           ! checks validity
-          if( is_moho_top( ispec) .eqv. .true. ) then
+          if ( is_moho_top( ispec) .eqv. .true. ) then
             print *,'error: moho surface geometry top'
             print *,'  does not allow for mulitple element faces kernel computation'
             call exit_mpi(myrank,'error moho top elements')
@@ -289,7 +289,7 @@
     enddo ! iface
 
     ! checks validity of top/bottom distinction
-    if( is_moho_top(ispec) .and. is_moho_bot(ispec) ) then
+    if ( is_moho_top(ispec) .and. is_moho_bot(ispec) ) then
       print *,'error: moho surface elements confusing'
       print *,'  element:',ispec,'has top and bottom surface'
       call exit_mpi(myrank,'error moho surface element')
@@ -302,7 +302,7 @@
   call sum_all_i( imoho_top, imoho_top_all )
   call sum_all_i( imoho_bot, imoho_bot_all )
   call sum_all_i( NSPEC2D_MOHO, imoho_all )
-  if( myrank == 0 ) then
+  if ( myrank == 0 ) then
     write(IMAIN,*) '********'
     write(IMAIN,*) 'Moho surface:'
     write(IMAIN,*) '    total surface elements: ',imoho_all

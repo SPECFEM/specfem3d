@@ -101,7 +101,7 @@
 
   if (iformat /= 3) then
 
-    if(iformat == 1) then
+    if (iformat == 1) then
 
       ! ask the user to imput the range of skewness to use to select the elements
       print *,'enter skewness threshold (between 0. and 0.99) above which all elements will be displayed:'
@@ -116,7 +116,7 @@
       if (threshold_AVS_DX_max < 0.d0) threshold_AVS_DX_max = 0.d0
       if (threshold_AVS_DX_max > 0.99999d0) threshold_AVS_DX_max = 0.99999d0
 
-    else if(iformat == 2) then
+    else if (iformat == 2) then
 
       print *
       print *,'1 = output elements ABOVE a certain element size'
@@ -284,7 +284,7 @@
   print *,'done processing ',NSPEC,' elements out of ',NSPEC
 
   DISPLAY_HISTOGRAM_DISTMEAN = .true.
-  if(abs(max_of_distmean - min_of_distmean) < 1.d-3*distmean) then
+  if (abs(max_of_distmean - min_of_distmean) < 1.d-3*distmean) then
     print *
     print *,'Your input mesh seems to be perfect, i.e. all mean distances are equal;'
     print *,'Will thus not display any histogram of mean distance in the mesh, since it would lead to division by zero.'
@@ -322,7 +322,7 @@
 ! print *,'min diagonal aspect ratio = ',diagonal_aspect_ratio_min
   print *
 
-  if(iformat == 2) then
+  if (iformat == 2) then
     if (iabove_or_below == 1) then
 ! output elements ABOVE a certain element size
       threshold_AVS_DX_min = threshold_AVS_DX_size_to_use
@@ -358,7 +358,7 @@
     classes_of_histogram_skewness(iclass) = classes_of_histogram_skewness(iclass) + 1
 
 ! store mean size in histogram
-    if(DISPLAY_HISTOGRAM_DISTMEAN) then
+    if (DISPLAY_HISTOGRAM_DISTMEAN) then
       iclass = int(((distmean - min_of_distmean) / (max_of_distmean - min_of_distmean)) * dble(NCLASS))
       if (iclass < 0) iclass = 0
       if (iclass > NCLASS-1) iclass = NCLASS-1
@@ -410,7 +410,7 @@
 
 !---------------------------------------------------------------
 
-  if(DISPLAY_HISTOGRAM_DISTMEAN) then
+  if (DISPLAY_HISTOGRAM_DISTMEAN) then
 
 ! create histogram of mean distance and save it in a Gnuplot file
   print *
@@ -443,7 +443,7 @@
   write(14,*) 'set term wxt'
   write(14,*) '#set term gif'
 
-  if(DISPLAY_HISTOGRAM_DISTMEAN) then
+  if (DISPLAY_HISTOGRAM_DISTMEAN) then
     write(14,*) '#set output "mesh_quality_histogram_meansize.gif"'
     write(14,*) 'set xrange [',sngl(min_of_distmean),':',sngl(max_of_distmean),']'
     write(14,*) 'set boxwidth ',sngl((max_of_distmean - min_of_distmean)/dble(NCLASS))
@@ -488,9 +488,9 @@
     call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
 
-    if(iformat == 1) then
+    if (iformat == 1) then
       value_to_use = equiangle_skewness
-    else if(iformat == 2) then
+    else if (iformat == 2) then
       value_to_use = distmean
     else
       stop 'error: incorrect value to use was entered'
@@ -534,9 +534,9 @@
     call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
 
-    if(iformat == 1) then
+    if (iformat == 1) then
       value_to_use = equiangle_skewness
-    else if(iformat == 2) then
+    else if (iformat == 2) then
       value_to_use = distmean
     else
       stop 'error: incorrect value to use was entered'
@@ -568,9 +568,9 @@
     call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
 
-    if(iformat == 1) then
+    if (iformat == 1) then
       value_to_use = equiangle_skewness
-    else if(iformat == 2) then
+    else if (iformat == 2) then
       value_to_use = distmean
     else
       stop 'error: incorrect value to use was entered'
@@ -739,7 +739,7 @@
          norm_B = sqrt(vectorB_x**2 + vectorB_y**2 + vectorB_z**2)
 
 ! sanity check
-         if(norm_A <= ZERO .or. norm_B <= ZERO) then
+         if (norm_A <= ZERO .or. norm_B <= ZERO) then
            print *,'error detected in element ',ispec,' out of ',NSPEC
            print *,'error: negative of null norm found, norm_A, norm_B = ',norm_A, norm_B
            stop 'error in the norm found'
@@ -749,7 +749,7 @@
          argument_of_arccos = (vectorA_x*vectorB_x + vectorA_y*vectorB_y + vectorA_z*vectorB_z) / (norm_A * norm_B)
 
 ! compute equiangle skewness
-         if(abs(argument_of_arccos) <= 0.9999999d0) then
+         if (abs(argument_of_arccos) <= 0.9999999d0) then
            angle_vectors = dacos(argument_of_arccos)
            equiangle_skewness = max(equiangle_skewness,dabs(2.d0 * angle_vectors - PI) / PI)
          else

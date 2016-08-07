@@ -51,12 +51,12 @@ subroutine model_jp1d(myrank,x,rho,vp,vs,Qkappa,Qmu,idoubling, &
 ! check flags to make sure we correctly honor the discontinuities
 ! we use strict inequalities since r has been slighly changed in mesher
 
-  if(check_doubling_flag) then
+  if (check_doubling_flag) then
 
 !--- inner core
 !
-  if(r >= 0.d0 .and. r < RICB) then
-    if(idoubling /= IFLAG_INNER_CORE_NORMAL .and. &
+  if (r >= 0.d0 .and. r < RICB) then
+    if (idoubling /= IFLAG_INNER_CORE_NORMAL .and. &
        idoubling /= IFLAG_MIDDLE_CENTRAL_CUBE .and. &
        idoubling /= IFLAG_BOTTOM_CENTRAL_CUBE .and. &
        idoubling /= IFLAG_TOP_CENTRAL_CUBE .and. &
@@ -65,34 +65,34 @@ subroutine model_jp1d(myrank,x,rho,vp,vs,Qkappa,Qmu,idoubling, &
 !
 !--- outer core
 !
-  else if(r > RICB .and. r < RCMB) then
-    if(idoubling /= IFLAG_OUTER_CORE_NORMAL) &
+  else if (r > RICB .and. r < RCMB) then
+    if (idoubling /= IFLAG_OUTER_CORE_NORMAL) &
       call exit_MPI(myrank,'wrong doubling flag for outer core point')
 !
 !--- D" at the base of the mantle
 !
-  else if(r > RCMB .and. r < RTOPDDOUBLEPRIME) then
-    if(idoubling /= IFLAG_MANTLE_NORMAL) &
+  else if (r > RCMB .and. r < RTOPDDOUBLEPRIME) then
+    if (idoubling /= IFLAG_MANTLE_NORMAL) &
       call exit_MPI(myrank,'wrong doubling flag for D" point')
 !
 !--- mantle: from top of D" to d670
 !
-  else if(r > RTOPDDOUBLEPRIME .and. r < R670) then
-    if(idoubling /= IFLAG_MANTLE_NORMAL) &
+  else if (r > RTOPDDOUBLEPRIME .and. r < R670) then
+    if (idoubling /= IFLAG_MANTLE_NORMAL) &
       call exit_MPI(myrank,'wrong doubling flag for top D" -> d670 point')
 
 !
 !--- mantle: from d670 to d220
 !
-  else if(r > R670 .and. r < R220) then
-    if(idoubling /= IFLAG_670_220) &
+  else if (r > R670 .and. r < R220) then
+    if (idoubling /= IFLAG_670_220) &
       call exit_MPI(myrank,'wrong doubling flag for d670 -> d220 point')
 
 !
 !--- mantle and crust: from d220 to MOHO and then to surface
 !
-  else if(r > R220) then
-    if(idoubling /= IFLAG_220_80 .and. idoubling /= IFLAG_80_MOHO .and. idoubling /= IFLAG_CRUST) &
+  else if (r > R220) then
+    if (idoubling /= IFLAG_220_80 .and. idoubling /= IFLAG_80_MOHO .and. idoubling /= IFLAG_CRUST) &
       call exit_MPI(myrank,'wrong doubling flag for d220 -> Moho -> surface point')
 
   endif
@@ -130,13 +130,13 @@ subroutine model_jp1d(myrank,x,rho,vp,vs,Qkappa,Qmu,idoubling, &
 !
 !--- mantle: from top of D" to d670
 !
-  else if(r > RTOPDDOUBLEPRIME .and. r <= R771) then
+  else if (r > RTOPDDOUBLEPRIME .and. r <= R771) then
      rho=7.9565d0-6.4761d0*x+5.5283d0*x*x-3.0807d0*x*x*x
      vp=-355.58324*x**4 + 1002.03178*x**3 - 1057.3873425*x**2 + 487.0891011*x - 68.520645
      vs=-243.33862*x**4 + 668.06411*x**3 - 685.20113*x**2 + 308.04893*x - 43.737642
      Qmu=312.0d0
      Qkappa=57827.0d0
-  else if(r > R771 .and. r <= R670) then
+  else if (r > R771 .and. r <= R670) then
      rho=7.9565d0-6.4761d0*x+5.5283d0*x*x-3.0807d0*x*x*x
      vp=-174.468866*x**2 + 286.37769*x - 106.034798
      vs=-81.0865*x*x + 129.67095*x - 45.268933
@@ -145,42 +145,42 @@ subroutine model_jp1d(myrank,x,rho,vp,vs,Qkappa,Qmu,idoubling, &
 !
 !--- mantle: above d670
 !
-  else if(r > R670 .and. r <= 5871000.d0) then
+  else if (r > R670 .and. r <= 5871000.d0) then
      vp=-300.510146*x*x  + 511.17372648*x - 206.265832
      vs=-139.78275*x*x + 233.3097462*x - 91.0129372
      rho=3.3d0 + (vs-4.4d0)*0.7d0
      Qmu=143.0d0
      Qkappa=57827.0d0
 
-  else if(r > 5871000.d0 .and. r <= R400) then
+  else if (r > 5871000.d0 .and. r <= R400) then
      vp=-601.0202917*x*x + 1063.3823*x - 459.9388738
      vs=-145.2465705*x*x + 243.2807524*x - 95.561877
      rho=3.3d0 + (vs - 4.4d0)*0.7d0
      Qmu=143.0d0
      Qkappa=57827.0d0
 
-  else if(r > R400 .and. r <= R220) then
+  else if (r > R400 .and. r <= R220) then
      vp=25.042512155*x*x - 68.8367583*x + 51.4120272
      vs=15.540158021*x*x - 40.2087657*x + 28.9578929
      rho=3.3d0 + (vs - 4.4d0)*0.7d0
      Qmu=143.0d0
      Qkappa=57827.0d0
 
-  else if(r > R220 .and. r <= R80) then
+  else if (r > R220 .and. r <= R80) then
      vp=27.0989608 - 19.473338*x
      vs=13.920596 - 9.6309917*x
      rho=3.3d0 + (vs - 4.4d0)*0.7d0
      Qmu=80.0d0
      Qkappa=57827.0d0
 
-  else if(r > R80 .and. r <= RMOHO) then
+  else if (r > R80 .and. r <= RMOHO) then
      vp=26.7663028 - 19.13645*x
      vs=13.4601434 - 9.164683*x
      rho=3.3d0 + (vs - 4.4d0)*0.7d0
      Qmu=600.0d0
      Qkappa=57827.0d0
 
-  else if(r > RMOHO .and. r <= RMIDDLE_CRUST) then
+  else if (r > RMOHO .and. r <= RMIDDLE_CRUST) then
      rho=2.9d0
      vp = 6.7d0
      vs = 3.8d0

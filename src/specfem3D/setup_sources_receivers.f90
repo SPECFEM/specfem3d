@@ -631,7 +631,7 @@
   logical :: does_source_encoding
 
   ! for source encoding (acoustic sources only so far)
-  if(USE_SOURCE_ENCODING) then
+  if (USE_SOURCE_ENCODING) then
     allocate(pm1_source_encoding(NSOURCES),stat=ier)
   else
     allocate(pm1_source_encoding(1),stat=ier)

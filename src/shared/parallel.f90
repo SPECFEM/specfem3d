@@ -153,7 +153,7 @@ end module my_mpi
   call MPI_COMM_RANK(MPI_COMM_WORLD,my_global_rank,ier)
 
   ! write a stamp file to disk to let the user know that the run failed
-  if(NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
+  if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
     ! notifies which run directory failed
     write(filename,"('run',i4.4,'_failed')") mygroup + 1
     inquire(file=trim(filename), exist=run_file_exists)
@@ -184,7 +184,7 @@ end module my_mpi
   ! in case of a large number of simultaneous runs, if one fails we may want that one to just call MPI_FINALIZE() and wait
   ! until all the others are finished instead of calling MPI_ABORT(), which would instead kill all the runs,
   ! including all the successful ones
-  if(USE_FAILSAFE_MECHANISM .and. NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
+  if (USE_FAILSAFE_MECHANISM .and. NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
     ! do NOT remove the barrier here, it is critical in order to let other runs finish before calling MPI_FINALIZE
     call MPI_BARRIER(MPI_COMM_WORLD,ier)
     call MPI_FINALIZE(ier)

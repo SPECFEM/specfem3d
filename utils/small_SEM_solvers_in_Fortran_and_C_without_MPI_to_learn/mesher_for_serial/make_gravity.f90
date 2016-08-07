@@ -142,7 +142,7 @@
   rspl(1)=r(1)
   gspl(1)=g(1)
   do i=2,NR
-    if(r(i)/=r(i-1)) then
+    if (r(i)/=r(i-1)) then
       nspl=nspl+1
       rspl(nspl)=r(i)
       gspl(nspl)=g(i)

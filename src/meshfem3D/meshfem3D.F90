@@ -479,7 +479,7 @@
     else
       write(IMAIN,*) 'using UTM projection in region ',UTM_PROJECTION_ZONE
     endif
-     if(PML_CONDITIONS) then
+     if (PML_CONDITIONS) then
        write(IMAIN,*)
        write(IMAIN,*) 'PML thickness in X direction = ',THICKNESS_OF_X_PML,'m'
        write(IMAIN,*) 'PML thickness in Y direction = ',THICKNESS_OF_Y_PML,'m'

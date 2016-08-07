@@ -368,7 +368,7 @@
   !  else if (param=='v_s') then
   !     prem_sub=vs_prem*1000.
   !  else
-  !     write(6,*)'ERROR IN PREM_SUB FUNCTION:',param,'NOT AN OPTION'
+  !     write(6,*)'Error in PREM_SUB function:',param,' not an option'
   !     stop
 
   end subroutine model_1D_PREM_routine_PB

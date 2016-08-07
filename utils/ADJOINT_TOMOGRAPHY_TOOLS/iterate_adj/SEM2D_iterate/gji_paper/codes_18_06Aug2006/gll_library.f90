@@ -177,7 +177,7 @@
   pd = 0.d0
   jmin = 0
   do j=1,np
-   if(j == 1) then
+   if (j == 1) then
       x = dcos((2.d0*(dble(j)-1.d0)+1.d0)*dth)
    else
       x1 = dcos((2.d0*(dble(j)-1.d0)+1.d0)*dth)
@@ -193,7 +193,7 @@
       enddo
       delx = -p/(pd-recsum*p)
       x    = x+delx
-      if(abs(delx) < eps) goto 31
+      if (abs(delx) < eps) goto 31
    enddo
  31      continue
    xjac(np-j+1) = x
@@ -202,12 +202,12 @@
   do i=1,np
    xmin = 2.d0
    do j=i,np
-      if(xjac(j) < xmin) then
+      if (xjac(j) < xmin) then
          xmin = xjac(j)
          jmin = j
       endif
    enddo
-   if(jmin /= i) then
+   if (jmin /= i) then
       swap = xjac(i)
       xjac(i) = xjac(jmin)
       xjac(jmin) = swap
@@ -278,7 +278,7 @@
 !------------------------------------------------------------------------
 !
 
-  double precision FUNCTION PNDLEG (Z,N)
+  double precision function PNDLEG (Z,N)
 
 !------------------------------------------------------------------------
 !
@@ -318,7 +318,7 @@
 !------------------------------------------------------------------------
 !
 
-  double precision FUNCTION PNLEG (Z,N)
+  double precision function PNLEG (Z,N)
 
 !------------------------------------------------------------------------
 !

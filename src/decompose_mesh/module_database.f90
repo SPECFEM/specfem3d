@@ -285,7 +285,7 @@ contains
                    enddo
                 enddo
              endif  !! on doit inclure ce if dessous ?
-             if (k > 0)  then
+             if (k > 0) then
                 ie_bnd_stored(inum_neigh_part) = ie_bnd_stored(inum_neigh_part) + 1
                 kE = ie_bnd_stored(inum_neigh_part)
                 my_interfaces_ext_mesh(1,kE ,inum_neigh_part) = glob2loc_elmnt(iE)

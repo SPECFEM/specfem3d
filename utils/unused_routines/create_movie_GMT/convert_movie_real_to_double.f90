@@ -112,7 +112,7 @@ program convert_movie_real_to_double
       NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
       NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB)
 
-  if(USE_HIGHRES_FOR_MOVIES) then
+  if (USE_HIGHRES_FOR_MOVIES) then
     ilocnum = NGLLSQUARE*NEX_PER_PROC_XI*NEX_PER_PROC_ETA
   else
     ilocnum = NGNOD2D_AVS_DX*NEX_PER_PROC_XI*NEX_PER_PROC_ETA
@@ -121,12 +121,12 @@ program convert_movie_real_to_double
   allocate(store_val_double(ilocnum,0:NPROC-1))
   print *, 'data = ', ilocnum*NPROC*8/1024/1024,'  MB'
 
-   if(it1 == -1) then
+   if (it1 == -1) then
      plot_shaking_map = .true.
      nframes = 1
      it1 = 1
      inorm = it2
-     if(inorm < 1 .or. inorm > 3) stop 'incorrect value of inorm'
+     if (inorm < 1 .or. inorm > 3) stop 'incorrect value of inorm'
      it2 = 1
   else
      plot_shaking_map = .false.
@@ -141,12 +141,12 @@ program convert_movie_real_to_double
      enddo
      print *
      print *,'total number of frames will be ',nframes
-     if(nframes == 0) stop 'null number of frames'
+     if (nframes == 0) stop 'null number of frames'
      max_all_frames = -100.0
   endif
 
  ! define the total number of elements at the surface
-  if(USE_HIGHRES_FOR_MOVIES) then
+  if (USE_HIGHRES_FOR_MOVIES) then
      nspectot_AVS_max = NEX_XI * NEX_ETA * (NGLLX-1) * (NGLLY-1)
   else
      nspectot_AVS_max = NEX_XI * NEX_ETA
@@ -160,7 +160,7 @@ program convert_movie_real_to_double
      iframe = iframe + 1
      ivalue = it * NTSTEP_BETWEEN_FRAMES
      print *, 'ivalue = ' ,ivalue
-     if(plot_shaking_map) then
+     if (plot_shaking_map) then
         print *,'reading shaking map snapshot'
      else
         print *,'reading snapshot frame ',it,' out of ',NSTEP/NTSTEP_BETWEEN_FRAMES
@@ -168,7 +168,7 @@ program convert_movie_real_to_double
      print *
 
      ! read all the elements from the same file
-     if(plot_shaking_map) then
+     if (plot_shaking_map) then
         write(outputname,"('/shakingdata')")
      else
         write(outputname,"('/moviedata',i6.6)") ivalue

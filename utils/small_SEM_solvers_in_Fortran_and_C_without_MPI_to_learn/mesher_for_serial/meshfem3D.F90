@@ -561,7 +561,7 @@
   call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', 'OUTPUT_FILES')
 
 ! open main output file, only written to by process 0
-  if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
+  if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
     open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_mesher.txt',status='unknown')
 
 ! get MPI starting time
@@ -571,7 +571,7 @@
   time_start = 0
 #endif
 
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '****************************'
     write(IMAIN,*) '*** Specfem3D MPI Mesher ***'
@@ -613,7 +613,7 @@
           DIFF_NSPEC1D_RADIAL,DIFF_NSPEC2D_XI,DIFF_NSPEC2D_ETA,&
           WRITE_SEISMOGRAMS_BY_MASTER,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_LARGE_FILE,.false.)
 
-    if(err_occurred() /= 0) then
+    if (err_occurred() /= 0) then
           call exit_MPI(myrank,'an error occurred while reading the parameter file')
     endif
 
@@ -793,7 +793,7 @@
 
 ! check that the code is running with the requested number of processes
 #ifdef USE_MPI
-  if(sizeprocs /= NPROCTOT) then
+  if (sizeprocs /= NPROCTOT) then
     print *,'myrank,sizeprocs,NPROCTOT = ',myrank,sizeprocs,NPROCTOT
     call exit_MPI(myrank,'wrong number of MPI processes')
   endif
@@ -811,7 +811,7 @@
   iproc_eta_slice(:) = 0
 
 ! loop on all the chunks to create global slice addressing for solver
-  if(myrank == 0) then
+  if (myrank == 0) then
     open(unit=IOUT,file='../DATABASES_FOR_SOLVER/addressing.txt',status='unknown')
     write(IMAIN,*) 'creating global slice addressing'
     write(IMAIN,*)
@@ -824,13 +824,13 @@
         ichunk_slice(iprocnum) = ichunk
         iproc_xi_slice(iprocnum) = iproc_xi
         iproc_eta_slice(iprocnum) = iproc_eta
-        if(myrank == 0) write(IOUT,*) iprocnum
-        if(myrank == 0) write(IOUT,*) iproc_xi
-        if(myrank == 0) write(IOUT,*) iproc_eta
+        if (myrank == 0) write(IOUT,*) iprocnum
+        if (myrank == 0) write(IOUT,*) iproc_xi
+        if (myrank == 0) write(IOUT,*) iproc_eta
       enddo
     enddo
   enddo
-  if(myrank == 0) close(IOUT)
+  if (myrank == 0) close(IOUT)
 
 ! this for the different counters (which are now different if the superbrick is cut in the outer core)
   do iregion=1,MAX_NUM_REGIONS
@@ -896,7 +896,7 @@
     endif
   endif
 
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) 'This is process ',myrank
     write(IMAIN,*) 'There are ',sizeprocs,' MPI processes'
     write(IMAIN,*) 'Processes are numbered from 0 to ',sizeprocs-1
@@ -921,74 +921,74 @@
     write(IMAIN,*)
   endif
 
-  if(myrank == 0) then
+  if (myrank == 0) then
 
   write(IMAIN,*)
-  if(ELLIPTICITY) then
+  if (ELLIPTICITY) then
     write(IMAIN,*) 'incorporating ellipticity'
   else
     write(IMAIN,*) 'no ellipticity'
   endif
 
   write(IMAIN,*)
-  if(TOPOGRAPHY) then
+  if (TOPOGRAPHY) then
     write(IMAIN,*) 'incorporating surface topography'
   else
     write(IMAIN,*) 'no surface topography'
   endif
 
   write(IMAIN,*)
-  if(ISOTROPIC_3D_MANTLE) then
+  if (ISOTROPIC_3D_MANTLE) then
     write(IMAIN,*) 'incorporating 3-D lateral variations'
   else
     write(IMAIN,*) 'no 3-D lateral variations'
   endif
 
   write(IMAIN,*)
-  if(CRUSTAL) then
+  if (CRUSTAL) then
     write(IMAIN,*) 'incorporating crustal variations'
   else
     write(IMAIN,*) 'no crustal variations'
   endif
 
   write(IMAIN,*)
-  if(ONE_CRUST) then
+  if (ONE_CRUST) then
     write(IMAIN,*) 'using one layer only in PREM crust'
   else
     write(IMAIN,*) 'using unmodified 1D crustal model with two layers'
   endif
 
   write(IMAIN,*)
-  if(GRAVITY) then
+  if (GRAVITY) then
     write(IMAIN,*) 'incorporating self-gravitation (Cowling approximation)'
   else
     write(IMAIN,*) 'no self-gravitation'
   endif
 
   write(IMAIN,*)
-  if(ROTATION) then
+  if (ROTATION) then
     write(IMAIN,*) 'incorporating rotation'
   else
     write(IMAIN,*) 'no rotation'
   endif
 
   write(IMAIN,*)
-  if(TRANSVERSE_ISOTROPY) then
+  if (TRANSVERSE_ISOTROPY) then
     write(IMAIN,*) 'incorporating anisotropy'
   else
     write(IMAIN,*) 'no anisotropy'
   endif
 
   write(IMAIN,*)
-  if(ATTENUATION) then
+  if (ATTENUATION) then
     write(IMAIN,*) 'incorporating attenuation using ',N_SLS,' standard linear solids'
-    if(ATTENUATION_3D) write(IMAIN,*)'using 3D attenuation'
+    if (ATTENUATION_3D) write(IMAIN,*)'using 3D attenuation'
   else
     write(IMAIN,*) 'no attenuation'
   endif
 
   write(IMAIN,*)
-  if(OCEANS) then
+  if (OCEANS) then
     write(IMAIN,*) 'incorporating the oceans using equivalent load'
   else
     write(IMAIN,*) 'no oceans'
@@ -997,13 +997,13 @@
   write(IMAIN,*)
 
   endif
-  if(ELLIPTICITY) call make_ellipticity(nspl,rspl,espl,espl2,ONE_CRUST)
+  if (ELLIPTICITY) call make_ellipticity(nspl,rspl,espl,espl2,ONE_CRUST)
 
-  if(ISOTROPIC_3D_MANTLE) then
-    if(THREE_D_MODEL /= 0) call read_smooth_moho
-    if(THREE_D_MODEL == THREE_D_MODEL_S20RTS) then
+  if (ISOTROPIC_3D_MANTLE) then
+    if (THREE_D_MODEL /= 0) call read_smooth_moho
+    if (THREE_D_MODEL == THREE_D_MODEL_S20RTS) then
 ! the variables read are declared and stored in structure D3MM_V
-      if(myrank == 0) call read_mantle_model(D3MM_V)
+      if (myrank == 0) call read_mantle_model(D3MM_V)
 ! broadcast the information read on the master to the nodes
 #ifdef USE_MPI
       call MPI_BCAST(D3MM_V%dvs_a,(NK+1)*(NS+1)*(NS+1),MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
@@ -1014,9 +1014,9 @@
       call MPI_BCAST(D3MM_V%qq0,(NK+1)*(NK+1),MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
       call MPI_BCAST(D3MM_V%qq,3*(NK+1)*(NK+1),MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
 #endif
-   else if(THREE_D_MODEL == THREE_D_MODEL_SEA99_JP3D) then
+   else if (THREE_D_MODEL == THREE_D_MODEL_SEA99_JP3D) then
 ! the variables read are declared and stored in structure SEA99M_V and JP3DM_V
-      if(myrank == 0) then
+      if (myrank == 0) then
          call read_sea99_s_model(SEA99M_V)
          call read_iso3d_dpzhao_model(JP3DM_V)
       endif
@@ -1089,9 +1089,9 @@
       call MPI_BCAST(JP3DM_V%RA,29,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
       call MPI_BCAST(JP3DM_V%DEPJ,29,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
 #endif
-   else if(THREE_D_MODEL == THREE_D_MODEL_SEA99) then
+   else if (THREE_D_MODEL == THREE_D_MODEL_SEA99) then
 ! the variables read are declared and stored in structure SEA99M_V
-      if(myrank == 0) call read_sea99_s_model(SEA99M_V)
+      if (myrank == 0) call read_sea99_s_model(SEA99M_V)
 ! broadcast the information read on the master to the nodes
 ! SEA99M_V
 #ifdef USE_MPI
@@ -1106,9 +1106,9 @@
       call MPI_BCAST(SEA99M_V%sea99_vs,100*100*100,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
       call MPI_BCAST(SEA99M_V%sea99_depth,100,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
 #endif
-   else if(THREE_D_MODEL == THREE_D_MODEL_JP3D) then
+   else if (THREE_D_MODEL == THREE_D_MODEL_JP3D) then
 ! the variables read are declared and stored in structure JP3DM_V
-      if(myrank == 0) call read_iso3d_dpzhao_model(JP3DM_V)
+      if (myrank == 0) call read_iso3d_dpzhao_model(JP3DM_V)
 ! JP3DM_V
 #ifdef USE_MPI
       call MPI_BCAST(JP3DM_V%NPA,1,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
@@ -1166,9 +1166,9 @@
       call MPI_BCAST(JP3DM_V%RA,29,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
       call MPI_BCAST(JP3DM_V%DEPJ,29,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
 #endif
-   else if(THREE_D_MODEL == THREE_D_MODEL_S362ANI .or. THREE_D_MODEL == THREE_D_MODEL_S362WMANI &
+   else if (THREE_D_MODEL == THREE_D_MODEL_S362ANI .or. THREE_D_MODEL == THREE_D_MODEL_S362WMANI &
            .or. THREE_D_MODEL == THREE_D_MODEL_S362ANI_PREM .or. THREE_D_MODEL == THREE_D_MODEL_S29EA) then
-      if(myrank == 0) call read_model_s362ani(THREE_D_MODEL,THREE_D_MODEL_S362ANI,THREE_D_MODEL_S362WMANI, &
+      if (myrank == 0) call read_model_s362ani(THREE_D_MODEL,THREE_D_MODEL_S362ANI,THREE_D_MODEL_S362WMANI, &
                               THREE_D_MODEL_S362ANI_PREM,THREE_D_MODEL_S29EA, &
                               numker,numhpa,ihpa,lmxhpa,itypehpa,ihpakern,numcoe,ivarkern,itpspl, &
                               xlaspl,xlospl,radspl,coe,hsplfl,dskker,kerstr,varstr,refmdl)
@@ -1200,9 +1200,9 @@
     endif
   endif
 
-  if(ANISOTROPIC_3D_MANTLE) then
+  if (ANISOTROPIC_3D_MANTLE) then
 ! the variables read are declared and stored in structure AMM_V
-    if(myrank == 0) call read_aniso_mantle_model(AMM_V)
+    if (myrank == 0) call read_aniso_mantle_model(AMM_V)
 ! broadcast the information read on the master to the nodes
 #ifdef USE_MPI
     call MPI_BCAST(AMM_V%npar1,1,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
@@ -1211,9 +1211,9 @@
 #endif
   endif
 
-  if(CRUSTAL) then
+  if (CRUSTAL) then
 ! the variables read are declared and stored in structure CM_V
-    if(myrank == 0) call read_crustal_model(CM_V)
+    if (myrank == 0) call read_crustal_model(CM_V)
 ! broadcast the information read on the master to the nodes
 #ifdef USE_MPI
     call MPI_BCAST(CM_V%thlr,NKEYS_CRUST*NLAYERS_CRUST,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
@@ -1225,16 +1225,16 @@
 #endif
   endif
 
-  if(ANISOTROPIC_INNER_CORE) then
-    if(myrank == 0) call read_aniso_inner_core_model
+  if (ANISOTROPIC_INNER_CORE) then
+    if (myrank == 0) call read_aniso_inner_core_model
 !   one should add an MPI_BCAST here if one adds a read_aniso_inner_core_model subroutine
   endif
 
-  if(ATTENUATION .and. ATTENUATION_3D) then
+  if (ATTENUATION .and. ATTENUATION_3D) then
 !! DK DK removed attenuation for MPI + GPU version
-!! DK DK if(myrank == 0) call read_attenuation_model(MIN_ATTENUATION_PERIOD, MAX_ATTENUATION_PERIOD, AM_V)
+!! DK DK if (myrank == 0) call read_attenuation_model(MIN_ATTENUATION_PERIOD, MAX_ATTENUATION_PERIOD, AM_V)
 
-    if(myrank /= 0) allocate(AM_V%Qtau_s(N_SLS))
+    if (myrank /= 0) allocate(AM_V%Qtau_s(N_SLS))
 #ifdef USE_MPI
     call MPI_BCAST(AM_V%min_period,  1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ier)
     call MPI_BCAST(AM_V%max_period,  1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ier)
@@ -1245,10 +1245,10 @@
 #endif
   endif
 
-  if(ATTENUATION .and. .not. ATTENUATION_3D) then
+  if (ATTENUATION .and. .not. ATTENUATION_3D) then
 
 !! DK DK removed attenuation for MPI + GPU version
-!! DK DK      if(myrank == 0) call read_attenuation_model(MIN_ATTENUATION_PERIOD, MAX_ATTENUATION_PERIOD, AM_V)
+!! DK DK      if (myrank == 0) call read_attenuation_model(MIN_ATTENUATION_PERIOD, MAX_ATTENUATION_PERIOD, AM_V)
 
 #ifdef USE_MPI
     call MPI_BCAST(AM_V%min_period, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ier)
@@ -1261,8 +1261,8 @@
   endif
 
 ! read topography and bathymetry file
-  if(TOPOGRAPHY .or. OCEANS) then
-    if(myrank == 0) call read_topo_bathy_file(ibathy_topo)
+  if (TOPOGRAPHY .or. OCEANS) then
+    if (myrank == 0) call read_topo_bathy_file(ibathy_topo)
 ! broadcast the information read on the master to the nodes
 #ifdef USE_MPI
     call MPI_BCAST(ibathy_topo,NX_BATHY*NY_BATHY,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
@@ -1274,7 +1274,7 @@
   iproc_xi = iproc_xi_slice(myrank)
   iproc_eta = iproc_eta_slice(myrank)
 
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) 'Reference radius of the Earth used is ',R_EARTH_KM,' km'
     write(IMAIN,*)
     write(IMAIN,*) 'Central cube is at a radius of ',R_CENTRAL_CUBE/1000.d0,' km'
@@ -1283,7 +1283,7 @@
 ! compute rotation matrix from Euler angles
   ANGULAR_WIDTH_XI_RAD = ANGULAR_WIDTH_XI_IN_DEGREES * PI / 180.d0
   ANGULAR_WIDTH_ETA_RAD = ANGULAR_WIDTH_ETA_IN_DEGREES * PI / 180.d0
-  if(NCHUNKS /= 6) call euler_angles(rotation_matrix,CENTER_LONGITUDE_IN_DEGREES,CENTER_LATITUDE_IN_DEGREES,GAMMA_ROTATION_AZIMUTH)
+  if (NCHUNKS /= 6) call euler_angles(rotation_matrix,CENTER_LONGITUDE_IN_DEGREES,CENTER_LATITUDE_IN_DEGREES,GAMMA_ROTATION_AZIMUTH)
 
 ! volume of the slice
   volume_total = ZERO
@@ -1302,7 +1302,7 @@
 !! DK DK use only the crust_mantle region for the GPU + MPI code
   do iregion_code = 1,1
 
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '*******************************************'
     write(IMAIN,*) 'creating mesh in region ',iregion_code
@@ -1370,10 +1370,10 @@
   enddo
 
 ! store number of anisotropic elements found in the mantle
-  if(nspec_aniso /= 0 .and. iregion_code /= IREGION_CRUST_MANTLE) &
+  if (nspec_aniso /= 0 .and. iregion_code /= IREGION_CRUST_MANTLE) &
     call exit_MPI(myrank,'found anisotropic elements outside of the mantle')
 
-  if(iregion_code == IREGION_CRUST_MANTLE .and. nspec_aniso == 0) &
+  if (iregion_code == IREGION_CRUST_MANTLE .and. nspec_aniso == 0) &
     call exit_MPI(myrank,'found no anisotropic elements in the mantle')
 
 ! use MPI reduction to compute total area and volume
@@ -1386,7 +1386,7 @@
 #endif
 
 ! sum volume over all the regions
-  if(myrank == 0) volume_total = volume_total + volume_total_region
+  if (myrank == 0) volume_total = volume_total + volume_total_region
 
 ! deallocate arrays used for that region
   deallocate(idoubling)
@@ -1404,14 +1404,14 @@
 ! end of loop on all the regions
   enddo
 
-  if(myrank == 0) then
+  if (myrank == 0) then
 ! check volume of chunk
       write(IMAIN,*)
       write(IMAIN,*) 'calculated volume: ',volume_total
-    if(.not. TOPOGRAPHY) then
+    if (.not. TOPOGRAPHY) then
 ! take the central cube into account
 ! it is counted 6 times because of the fictitious elements
-!     if(INCLUDE_CENTRAL_CUBE) then
+!     if (INCLUDE_CENTRAL_CUBE) then
 !       write(IMAIN,*) '     exact volume: ', &
 !         dble(NCHUNKS)*((4.0d0/3.0d0)*PI*(R_UNIT_SPHERE**3)+5.*(2.*(R_CENTRAL_CUBE/R_EARTH)/sqrt(3.))**3)/6.d0
 !     else
@@ -1427,7 +1427,7 @@
 
 !--- print number of points and elements in the mesh for each region
 
-  if(myrank == 0) then
+  if (myrank == 0) then
 
     numelem_crust_mantle = NSPEC(IREGION_CRUST_MANTLE)
     numelem_outer_core = NSPEC(IREGION_OUTER_CORE)
@@ -1458,7 +1458,7 @@
   write(IMAIN,*)
 
 ! write information about precision used for floating-point operations
-  if(CUSTOM_REAL == SIZE_REAL) then
+  if (CUSTOM_REAL == SIZE_REAL) then
     write(IMAIN,*) 'using single precision for the calculations'
   else
     write(IMAIN,*) 'using double precision for the calculations'
@@ -1521,7 +1521,7 @@
   deallocate(iproc_eta_slice)
 
 ! elapsed time since beginning of mesh generation
-  if(myrank == 0) then
+  if (myrank == 0) then
 #ifdef USE_MPI
     tCPU = MPI_WTIME() - time_start
 #else

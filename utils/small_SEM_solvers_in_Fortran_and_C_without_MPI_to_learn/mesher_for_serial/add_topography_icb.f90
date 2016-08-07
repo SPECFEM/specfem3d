@@ -62,14 +62,14 @@
     topoicb = -topoicb / R_EARTH_KM
 
     gamma = 0.0d0
-    if(r > 0.0d0 .and. r <= RICB/R_EARTH) then
+    if (r > 0.0d0 .and. r <= RICB/R_EARTH) then
 ! stretching between center and RICB
       gamma = r/(RICB/R_EARTH)
-    else if(r>= RICB/R_EARTH .and. r <= RCMB/R_EARTH) then
+    else if (r>= RICB/R_EARTH .and. r <= RCMB/R_EARTH) then
 ! stretching between RICB and RCMB
       gamma = (r - RCMB/R_EARTH) / (RICB/R_EARTH - RCMB/R_EARTH)
     endif
-    if(gamma < -0.0001 .or. gamma > 1.0001) call exit_MPI(myrank,'incorrect value of gamma for CMB topography')
+    if (gamma < -0.0001 .or. gamma > 1.0001) call exit_MPI(myrank,'incorrect value of gamma for CMB topography')
 
     xelm(ia) = xelm(ia)*(ONE + gamma * topoicb / r)
     yelm(ia) = yelm(ia)*(ONE + gamma * topoicb / r)

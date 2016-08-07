@@ -90,8 +90,8 @@
 
   ndp=ndis+1
   do 3 nd=1,ndp
-  if(nd == 1) goto 4
-  if(nd == ndp) goto 5
+  if (nd == 1) goto 4
+  if (nd == ndp) goto 5
   j1=kdis(nd-1)+1
   j2=kdis(nd)-2
   goto 6
@@ -100,7 +100,7 @@
   goto 6
     5 j1=kdis(ndis)+1
   j2=n-2
-    6 if((j2+1-j1)>0) goto 11
+    6 if ((j2+1-j1)>0) goto 11
   j2=j2+2
   yy(1)=(y(j2)-y(j1))/(r(j2)-r(j1))
   s1(j1)=yy(1)
@@ -111,7 +111,7 @@
   s3(j2)=yy(3)
   goto 3
    11 a0=0.0d0
-  if(j1 == 1) goto 7
+  if (j1 == 1) goto 7
   h=r(j1+1)-r(j1)
   h2=r(j1+2)-r(j1)
   yy(1)=h*h2*(h2-h)
@@ -122,7 +122,7 @@
  7 b0=0.0d0
  8 b1=b0
 
-  if(j2 > 1000) stop 'error in subroutine deriv for j2'
+  if (j2 > 1000) stop 'error in subroutine deriv for j2'
 
   do i=j1,j2
     h=r(i+1)-r(i)

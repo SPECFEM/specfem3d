@@ -156,7 +156,7 @@ contains
   allocate( faults(nbfaults) )
   dt = real(DTglobal)
   read(IIN_PAR,nml=RUPTURE_SWITCHES,end=110,iostat=ier)
-  if(ier/=0) write(*,*) 'RUPTURE_SWITCHES not found in Par_file_faults'
+  if (ier/=0) write(*,*) 'RUPTURE_SWITCHES not found in Par_file_faults'
   do iflt=1,nbfaults
     read(IIN_PAR,nml=BEGIN_FAULT,end=100)
     call init_one_fault(faults(iflt),IIN_BIN,IIN_PAR,dt,nt,iflt,myrank)
@@ -255,7 +255,7 @@ contains
     bc%T0(2,:) = S2
     bc%T0(3,:) = S3
 
-    if(LOAD_STRESSDROP) then
+    if (LOAD_STRESSDROP) then
         call make_frictional_stress
         call load_stress_drop
     endif
@@ -371,7 +371,7 @@ contains
     bc%T0(1,:)=T1tmp
     bc%T0(2,:)=T2tmp
 
-    end  subroutine make_frictional_stress
+    end subroutine make_frictional_stress
 
     !--------
 
@@ -896,7 +896,7 @@ contains
       call transfer_todevice_rsf_data(Fault_pointer,faults(ifault)%nglob,ifault-1 &
                                       ,f%V0,f%f0,f%V_init,f%a,f%b,f%L,f%theta,f%T,f%C,f%fw,f%Vw)
     ! ifault - 1 because in C language, array index start from 0
-    else if(associated(g)) then
+    else if (associated(g)) then
       ! slip weakening friction simulation
       call transfer_todevice_swf_data(Fault_pointer,faults(ifault)%nglob,ifault-1 &
                                       ,g%Dc,g%mus,g%mud,g%T,g%C,g%theta)
@@ -1009,7 +1009,7 @@ contains
 
   ! WARNING: The line below scratches an earlier initialization of theta through theta_init
   !          We should implement it as an option for the user
-  if(TPV16) then
+  if (TPV16) then
     if (f%stateLaw == 1) then
       f%theta = f%L/f%V0 &
                 * exp( ( f%a * log(TWO*sinh(-sqrt(T0(1,:)**2+T0(2,:)**2)/T0(3,:)/f%a)) &
@@ -1706,7 +1706,7 @@ contains
     call gather_dataXZ(faults(ifault))
     call SCEC_write_dataT(faults(ifault)%dataT)
 
-    if(myrank == 0 )call write_dataXZ(faults(ifault)%dataXZ_all,it,ifault)
+    if (myrank == 0 )call write_dataXZ(faults(ifault)%dataXZ_all,it,ifault)
 
   enddo
 

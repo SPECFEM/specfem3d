@@ -62,7 +62,7 @@ program measure_adj
 
   ! uses weights to balance love and rayleigh measurements
   ! we do a normalization of P_SV, P_SH, Love, Rayleigh with the number of measurement picks
-  if( DO_WEIGHTING ) call setup_weighting(chan)
+  if ( DO_WEIGHTING ) call setup_weighting(chan)
 
   ! input file: MEASUREMENT.WINDOWS
   open(11,file='MEASUREMENT.WINDOWS',status='old',iostat=ios)
@@ -133,7 +133,7 @@ program measure_adj
     ! Access to the kidate, xapiir, and getfil is not simple and not
     ! supported under the current state of the SAC code base.
 
-    if(RUN_BANDPASS) then
+    if (RUN_BANDPASS) then
        call bandpass(data,npts,dt,fstart0,fend0)
        call bandpass(syn,npts,dt,fstart0,fend0)
        if (USE_PHYSICAL_DISPERSION) then
@@ -229,7 +229,7 @@ program measure_adj
          print *, '     period of max data/syn power    :', sngl(T_pmax_dat), sngl(T_pmax_syn)
 
          ! if MT measurement window is rejected by mt_measure_select, then use a CC measurement
-         if(.not. use_trace) then
+         if (.not. use_trace) then
             !stop 'Check why this MT measurement was rejected'
             print *, '   reverting from MT measurement to CC measurement...'
             imeas = imeas0 - 2
@@ -262,7 +262,7 @@ program measure_adj
         ! LQY: what is this section intended to do?
         ! reset imeas == 3 for adjoint sources without time shift and uncertainty scaling
         ! (pure cross-correlation adjoint source for banana-doughnuts)
-        if(imeas == 5 .and. trim(datafile) == trim(synfile) ) then
+        if (imeas == 5 .and. trim(datafile) == trim(synfile) ) then
            print *,'cross-correlation measurement:'
            print *,'  only synthetic file: ',trim(synfile)
            print *,'    without traveltime difference/uncertainty'
@@ -289,18 +289,18 @@ program measure_adj
         print *, '     tr_chi = ', sngl(tr_chi), '  am_chi = ', sngl(am_chi)
 
         ! uses weighting to balance love / rayleigh measurements
-        if( DO_WEIGHTING ) then
+        if ( DO_WEIGHTING ) then
            ipick_type = 0
-           if( tend <= T_surfacewaves ) then
+           if ( tend <= T_surfacewaves ) then
               ! body wave picks
-              if( cmp(1:1) == "Z" ) ipick_type = P_SV_V
-              if( cmp(1:1) == "R" ) ipick_type = P_SV_R
-              if( cmp(1:1) == "T" ) ipick_type = SH_T
+              if ( cmp(1:1) == "Z" ) ipick_type = P_SV_V
+              if ( cmp(1:1) == "R" ) ipick_type = P_SV_R
+              if ( cmp(1:1) == "T" ) ipick_type = SH_T
            else
               ! surface wave picks
-              if( cmp(1:1) == "Z" ) ipick_type = Rayleigh_V
-              if( cmp(1:1) == "R" ) ipick_type = Rayleigh_R
-              if( cmp(1:1) == "T" ) ipick_type = Love_T
+              if ( cmp(1:1) == "Z" ) ipick_type = Rayleigh_V
+              if ( cmp(1:1) == "R" ) ipick_type = Rayleigh_R
+              if ( cmp(1:1) == "T" ) ipick_type = Love_T
            endif
 
           ! LQY: shouldn't chi values be changed accordingly?????
@@ -408,7 +408,7 @@ program measure_adj
 
       ! output the adjoint source (or ray density) as ASCII or SAC format
       print *, 'writing adjoint source to file for the full seismogram'
-      if( DO_RAY_DENSITY_SOURCE ) then
+      if ( DO_RAY_DENSITY_SOURCE ) then
         call dwascii(trim(adj_file_prefix)//'.density.adj',adj_syn_all,nn,tt,dtt)
       else
         call dwascii(trim(adj_file_prefix)//'.adj',adj_syn_all,nn,tt,dtt)

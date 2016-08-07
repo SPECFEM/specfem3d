@@ -79,22 +79,22 @@ program test_smooth
 !!$     iglob3 = ibool(1,NGLLZ,ispec)
 !!$     iglob4 = ibool(NGLLX,NGLLZ,ispec)
 !!$
-!!$      if(.not. mask_ibool(iglob1)) mask_ibool(iglob1) = .true.
-!!$      if(.not. mask_ibool(iglob2)) mask_ibool(iglob2) = .true.
-!!$      if(.not. mask_ibool(iglob3)) mask_ibool(iglob3) = .true.
-!!$      if(.not. mask_ibool(iglob4)) mask_ibool(iglob4) = .true.
+!!$      if (.not. mask_ibool(iglob1)) mask_ibool(iglob1) = .true.
+!!$      if (.not. mask_ibool(iglob2)) mask_ibool(iglob2) = .true.
+!!$      if (.not. mask_ibool(iglob3)) mask_ibool(iglob3) = .true.
+!!$      if (.not. mask_ibool(iglob4)) mask_ibool(iglob4) = .true.
 !!$  enddo
 !!$
 !!$  k = 0
 !!$  ielement_corner(:) = 0
 !!$  do iglob = 1,NGLOB
-!!$      if(mask_ibool(iglob)) then
+!!$      if (mask_ibool(iglob)) then
 !!$         k = k+1
 !!$         ielement_corner(k) = iglob
 !!$      endif
 !!$  enddo
 
-  if(0==1) then
+  if (0==1) then
 
      ! corner points for each element, and centerpoint (in km)
      open(unit=15,file='elements.dat',status='unknown')
@@ -163,7 +163,7 @@ program test_smooth
   close(19)
 
   ! construct local version of the unsmoothed kernel
-  if(itype==1) then
+  if (itype==1) then
      k_rough_local(:,:,:) = 0.
      do ispec = 1,NSPEC
         do j = 1,NGLLZ
@@ -186,7 +186,7 @@ program test_smooth
   dmin = sqrt(LENGTH**2+HEIGHT**2)  ! max possible distance
   do iglob = 1,NGLOB
      d = sqrt((xtar-x(iglob))**2+(ztar-z(iglob))**2)
-     if(d < dmin) then
+     if (d < dmin) then
         igaus = iglob
         dmin = d
      endif
@@ -198,7 +198,7 @@ program test_smooth
   k_gaus_global_ex(:) = 0.
   do iglob = 1,NGLOB
      dist2 = (xcen - x(iglob))**2 + (zcen - z(iglob))**2
-     if(dist2 <= dtrsh2) &
+     if (dist2 <= dtrsh2) &
           k_gaus_global_ex(iglob) = (4./(PI*gamma**2)) * exp(-4.*dist2 / (gamma**2))
   enddo
 
@@ -222,7 +222,7 @@ program test_smooth
      ! (part of the Gaussian may be outside the grid)
      xcen = x(iglob)
      zcen = z(iglob)
-     if(itype==1) then
+     if (itype==1) then
 
         k_gaus_local(:,:,:) = 0.
         do ispec = 1,NSPEC
@@ -230,7 +230,7 @@ program test_smooth
               do i = 1,NGLLX
                  itemp = ibool(i,j,ispec)
                  dist2 = (xcen - x(itemp))**2 + (zcen - z(itemp))**2
-                 if(dist2 <= dtrsh2) then
+                 if (dist2 <= dtrsh2) then
                     k_gaus_local(i,j,ispec) = (4./(PI*gamma**2)) * exp(-4.*dist2 / (gamma**2))
                     !k_gaus_global(itemp) = k_gaus_local(i,j,ispec)
                  endif
@@ -242,7 +242,7 @@ program test_smooth
         k_gaus_global(:) = 0.
         do i = 1,NGLOB
            dist2 = (xcen - x(i))**2 + (zcen - z(i))**2
-           if(dist2 <= dtrsh2) &
+           if (dist2 <= dtrsh2) &
                 k_gaus_global(i) = (4./(PI*gamma**2)) * exp(-4.*dist2 / (gamma**2))
         enddo
      endif
@@ -252,12 +252,12 @@ program test_smooth
      ! and accounts for Gaussians that are partially outside the grid.
      ! (2) Integrate the product of the Gaussian and the rough function.
 
-     if(itype==1) then            ! local integration with local arrays
+     if (itype==1) then            ! local integration with local arrays
 
         k_gaus_int_global(iglob) = sum( k_gaus_local(:,:,:) * da_local(:,:,:) )
         k_smooth_global(iglob) = sum( k_rough_local(:,:,:) * k_gaus_local(:,:,:) * da_local(:,:,:) ) / k_gaus_int_global(iglob)
 
-     else if(itype==2) then        ! local integration with global array
+     else if (itype==2) then        ! local integration with global array
 
         k_temp(:,:,:) = 0.
         do ispec = 1,NSPEC
@@ -281,7 +281,7 @@ program test_smooth
         enddo
         k_smooth_global(iglob) = sum( k_temp(:,:,:) ) / k_gaus_int_global(iglob)
 
-     else if(itype==3) then       ! global integration with global arrays
+     else if (itype==3) then       ! global integration with global arrays
 
         k_gaus_int_global(iglob) = sum( k_gaus_global(:) * da_global(:) )
         k_smooth_global(iglob) = sum( k_rough_global(:) * k_gaus_global(:) * da_global(:) ) / k_gaus_int_global(iglob)

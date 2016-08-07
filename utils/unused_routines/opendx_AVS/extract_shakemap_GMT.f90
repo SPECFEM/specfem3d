@@ -122,7 +122,7 @@
   print *,'Recombining all movie frames to create a movie'
   print *
 
-  if(.not. SAVE_AVS_DX_MOVIE) stop 'movie frames were not saved by the solver'
+  if (.not. SAVE_AVS_DX_MOVIE) stop 'movie frames were not saved by the solver'
 
   print *
   print *,'reading parameter file'
@@ -140,7 +140,7 @@
         SAVE_AVS_DX_MOVIE,SAVE_DISPLACEMENT,NMOVIE,HDUR_MIN_MOVIES,USE_HIGHRES_FOR_MOVIES)
 
 !! DK DK this code is specifically for high-res shake maps
-  if(.not. USE_HIGHRES_FOR_MOVIES) stop 'this code is specifically for high-res shake maps'
+  if (.not. USE_HIGHRES_FOR_MOVIES) stop 'this code is specifically for high-res shake maps'
 
 ! compute other parameters based upon values read
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
@@ -155,7 +155,7 @@
   print *,'There are ',NPROC,' slices numbered from 0 to ',NPROC-1
   print *
 
-  if(SAVE_DISPLACEMENT) then
+  if (SAVE_DISPLACEMENT) then
     print *,'Vertical displacement will be shown in movie'
   else
     print *,'Vertical velocity will be shown in movie'
@@ -180,18 +180,18 @@
 !!!  read(5,*) iformat
 !! DK DK always GMT for shaking map
   iformat = 4
-  if(iformat<1 .or. iformat>4) stop 'exiting...'
-  if(iformat == 1) then
+  if (iformat<1 .or. iformat>4) stop 'exiting...'
+  if (iformat == 1) then
     USE_OPENDX = .true.
     USE_AVS = .false.
     USE_GMT = .false.
     UNIQUE_FILE = .false.
-  else if(iformat == 2) then
+  else if (iformat == 2) then
     USE_OPENDX = .false.
     USE_AVS = .true.
     USE_GMT = .false.
     UNIQUE_FILE = .false.
-  else if(iformat == 3) then
+  else if (iformat == 3) then
     USE_OPENDX = .false.
     USE_AVS = .true.
     USE_GMT = .false.
@@ -203,7 +203,7 @@
     UNIQUE_FILE = .false.
   endif
 
-  if(.not. USE_GMT) then
+  if (.not. USE_GMT) then
     print *
     print *,'scaling to apply to Z to amplify topography (1. to do nothing, 0. to get flat surface):'
     read(5,*) zscaling
@@ -218,9 +218,9 @@
   print *,'enter first time step of movie (e.g. 1, enter -1 for shaking map)'
 !!! DK DK always shaking map  read(5,*) it1
   it1 = -1
-  if(it1 == -1) plot_shaking_map = .true.
+  if (it1 == -1) plot_shaking_map = .true.
 
-  if(.not. plot_shaking_map) then
+  if (.not. plot_shaking_map) then
 
   print *,'enter last time step of movie (e.g. ',NSTEP,')'
   read(5,*) it2
@@ -232,7 +232,7 @@
   print *
   print *,'enter value:'
   read(5,*) inumber
-  if(inumber<1 .or. inumber>2) stop 'exiting...'
+  if (inumber<1 .or. inumber>2) stop 'exiting...'
 
   print *
   print *,'looping from ',it1,' to ',it2,' every ',NMOVIE,' time steps'
@@ -240,11 +240,11 @@
 ! count number of movie frames
   nframes = 0
   do it = it1,it2
-    if(mod(it,NMOVIE) == 0) nframes = nframes + 1
+    if (mod(it,NMOVIE) == 0) nframes = nframes + 1
   enddo
   print *
   print *,'total number of frames will be ',nframes
-  if(nframes == 0) stop 'null number of frames'
+  if (nframes == 0) stop 'null number of frames'
 
   else
 
@@ -255,13 +255,13 @@
   endif
 
   iscaling_shake = 0
-  if(plot_shaking_map) then
+  if (plot_shaking_map) then
     print *
     print *,'norm to display in shaking map:'
     print *,'1=displacement  2=velocity  3=acceleration'
     print *
     read(5,*) inorm
-    if(inorm < 1 .or. inorm > 3) stop 'incorrect value of inorm'
+    if (inorm < 1 .or. inorm > 3) stop 'incorrect value of inorm'
 
     print *
     print *,'apply non-linear scaling to shaking map:'
@@ -269,7 +269,7 @@
     print *
 !! DK DK no scaling    read(5,*) iscaling_shake
     iscaling_shake = 2
-    if(iscaling_shake < 1 .or. iscaling_shake > 2) stop 'incorrect value of iscaling_shake'
+    if (iscaling_shake < 1 .or. iscaling_shake > 2) stop 'incorrect value of iscaling_shake'
   endif
 
 ! define the total number of elements at the surface
@@ -292,8 +292,8 @@
   allocate(ireorder(npointot))
 
   print *
-  if(APPLY_THRESHOLD .and. .not. plot_shaking_map) print *,'Will apply a threshold to amplitude below ',100.*THRESHOLD,' %'
-  if(NONLINEAR_SCALING .and. (.not. plot_shaking_map .or. iscaling_shake == 1)) &
+  if (APPLY_THRESHOLD .and. .not. plot_shaking_map) print *,'Will apply a threshold to amplitude below ',100.*THRESHOLD,' %'
+  if (NONLINEAR_SCALING .and. (.not. plot_shaking_map .or. iscaling_shake == 1)) &
     print *,'Will apply a non linear scaling with coef ',POWER_SCALING
 
 ! define indirect addressing for GMT
@@ -318,12 +318,12 @@
   do it = it1,it2
 
 ! check if time step corresponds to a movie frame
-  if(mod(it,NMOVIE) == 0 .or. plot_shaking_map) then
+  if (mod(it,NMOVIE) == 0 .or. plot_shaking_map) then
 
   iframe = iframe + 1
 
   print *
-  if(plot_shaking_map) then
+  if (plot_shaking_map) then
     print *,'reading shaking map snapshot'
   else
     print *,'reading snapshot time step ',it,' out of ',NSTEP
@@ -331,7 +331,7 @@
   print *
 
 ! read all the elements from the same file
-  if(plot_shaking_map) then
+  if (plot_shaking_map) then
     write(outputname,"('OUTPUT_FILES/shakingdata')")
   else
     write(outputname,"('OUTPUT_FILES/moviedata',i6.6)") it
@@ -382,10 +382,10 @@
 ! show vertical component of displacement or velocity in the movie
 ! or show norm of vector if shaking map
 ! for shaking map, norm of U stored in ux, V in uy and A in uz
-    if(plot_shaking_map) then
-      if(inorm == 1) then
+    if (plot_shaking_map) then
+      if (inorm == 1) then
         field_display(ilocnum+ieoff) = dble(vectorx)
-      else if(inorm == 2) then
+      else if (inorm == 2) then
         field_display(ilocnum+ieoff) = dble(vectory)
       else
         field_display(ilocnum+ieoff) = dble(vectorz)
@@ -427,7 +427,7 @@
   print *
 
 ! apply scaling in all cases for movies
-  if(.not. plot_shaking_map) then
+  if (.not. plot_shaking_map) then
 
 ! make sure range is always symmetric and center is in zero
 ! this assumption works only for fields that can be negative
@@ -444,11 +444,11 @@
   field_display(:) = 2.*field_display(:) - 1.
 
 ! apply threshold to normalized field
-  if(APPLY_THRESHOLD) &
+  if (APPLY_THRESHOLD) &
     where(abs(field_display(:)) <= THRESHOLD) field_display = 0.
 
 ! apply non linear scaling to normalized field if needed
-  if(NONLINEAR_SCALING) then
+  if (NONLINEAR_SCALING) then
     where(field_display(:) >= 0.)
       field_display = field_display ** POWER_SCALING
     elsewhere
@@ -457,7 +457,7 @@
   endif
 
 ! apply non linear scaling to normalized field if needed
-  if(NONLINEAR_SCALING) then
+  if (NONLINEAR_SCALING) then
     where(field_display(:) >= 0.)
       field_display = field_display ** POWER_SCALING
     elsewhere
@@ -474,7 +474,7 @@
 
 ! apply scaling only if selected for shaking map
 
-  else if(NONLINEAR_SCALING .and. iscaling_shake == 1) then
+  else if (NONLINEAR_SCALING .and. iscaling_shake == 1) then
 
 ! normalize field to [0:1]
   field_display(:) = field_display(:) / max_field_current
@@ -489,25 +489,25 @@
 
 !--- ****** create AVS file using sorted list ******
 
-  if(inumber == 1) then
+  if (inumber == 1) then
     ivalue = iframe
   else
     ivalue = it
   endif
 
 ! create file name and open file
-  if(plot_shaking_map) then
+  if (plot_shaking_map) then
 
-  if(USE_OPENDX) then
+  if (USE_OPENDX) then
     write(outputname,"('OUTPUT_FILES/DX_shaking_map.dx')")
     open(unit=11,file=outputname,status='unknown')
     write(11,*) 'object 1 class array type float rank 1 shape 3 items ',nglob,' data follows'
-  else if(USE_AVS) then
-    if(UNIQUE_FILE) stop 'cannot use unique file AVS option for shaking map'
+  else if (USE_AVS) then
+    if (UNIQUE_FILE) stop 'cannot use unique file AVS option for shaking map'
     write(outputname,"('OUTPUT_FILES/AVS_shaking_map.inp')")
     open(unit=11,file=outputname,status='unknown')
     write(11,*) nglob,' ',nspectot_AVS_max,' 1 0 0'
-  else if(USE_GMT) then
+  else if (USE_GMT) then
     write(outputname,"('OUTPUT_FILES/gmt_shaking_map.xyz')")
     open(unit=11,file=outputname,status='unknown')
   else
@@ -516,23 +516,23 @@
 
   else
 
-  if(USE_OPENDX) then
+  if (USE_OPENDX) then
     write(outputname,"('OUTPUT_FILES/DX_movie_',i6.6,'.dx')") ivalue
     open(unit=11,file=outputname,status='unknown')
     write(11,*) 'object 1 class array type float rank 1 shape 3 items ',nglob,' data follows'
-  else if(USE_AVS) then
-    if(UNIQUE_FILE .and. iframe == 1) then
+  else if (USE_AVS) then
+    if (UNIQUE_FILE .and. iframe == 1) then
       open(unit=11,file='OUTPUT_FILES/AVS_movie_all.inp',status='unknown')
       write(11,*) nframes
       write(11,*) 'data'
       write(11,401) 1,1
       write(11,*) nglob,' ',nspectot_AVS_max
-    else if(.not. UNIQUE_FILE) then
+    else if (.not. UNIQUE_FILE) then
       write(outputname,"('OUTPUT_FILES/AVS_movie_',i6.6,'.inp')") ivalue
       open(unit=11,file=outputname,status='unknown')
       write(11,*) nglob,' ',nspectot_AVS_max,' 1 0 0'
     endif
-  else if(USE_GMT) then
+  else if (USE_GMT) then
     write(outputname,"('OUTPUT_FILES/gmt_movie_',i6.6,'.xyz')") ivalue
     open(unit=11,file=outputname,status='unknown')
   else
@@ -554,14 +554,14 @@
 ! four points for each element
   do ilocnum = 1,NGNOD2D_AVS_DX_HIGHRES
     ibool_number = iglob(ilocnum+ieoff)
-    if(.not. mask_point(ibool_number)) then
+    if (.not. mask_point(ibool_number)) then
       ipoin = ipoin + 1
 !! DK DK for GMT map, we ignore Z (flat view from the top)
       utm_x_current = xp_save(ilocnum+ieoff)
       utm_y_current = yp_save(ilocnum+ieoff)
       call utm_geo(long_current,lat_current,utm_x_current,utm_y_current,UTM_PROJECTION_ZONE,IUTM2LONGLAT)
 !! DK DK extract closeup region for L.A. basin
-      if(long_current >= -119.8 .and. long_current <= -117.2 .and. lat_current >= 32.7 .and. lat_current <= 35.3) &
+      if (long_current >= -119.8 .and. long_current <= -117.2 .and. lat_current >= 32.7 .and. lat_current <= 35.3) &
         write(11,*) long_current,lat_current,field_display(ilocnum+ieoff)
     endif
     mask_point(ibool_number) = .true.
@@ -575,7 +575,7 @@
 
 ! if GMT format is used, use regular grid in longitude and latitude
 ! and ignore elevation (flat 2D movie seen from the top)
-  if(USE_GMT) then
+  if (USE_GMT) then
 
    size_slice_xi = (UTM_X_MAX-UTM_X_MIN) / dble(NPROC_XI)
    size_slice_eta = (UTM_Y_MAX-UTM_Y_MIN) / dble(NPROC_ETA)
@@ -597,32 +597,32 @@
        ratio_slice_xi = ratio_xi - int(ratio_xi)
        ratio_slice_eta = ratio_eta - int(ratio_eta)
 
-       if(ratio_slice_xi < 0.) ratio_slice_xi = 0.
-       if(ratio_slice_xi > 0.999) ratio_slice_xi = 0.999
+       if (ratio_slice_xi < 0.) ratio_slice_xi = 0.
+       if (ratio_slice_xi > 0.999) ratio_slice_xi = 0.999
 
-       if(ratio_slice_eta < 0.) ratio_slice_eta = 0.
-       if(ratio_slice_eta > 0.999) ratio_slice_eta = 0.999
+       if (ratio_slice_eta < 0.) ratio_slice_eta = 0.
+       if (ratio_slice_eta > 0.999) ratio_slice_eta = 0.999
 
        ratio_slice_xi = ratio_slice_xi * NEX_PER_PROC_XI
        ratio_slice_eta = ratio_slice_eta * NEX_PER_PROC_ETA
 
 ! define slice number
        islice_x = int(ratio_xi) + 1
-       if(islice_x < 1) islice_x = 1
-       if(islice_x > NPROC_XI) islice_x = NPROC_XI
+       if (islice_x < 1) islice_x = 1
+       if (islice_x > NPROC_XI) islice_x = NPROC_XI
 
        islice_y = int(ratio_eta) + 1
-       if(islice_y < 1) islice_y = 1
-       if(islice_y > NPROC_ETA) islice_y = NPROC_ETA
+       if (islice_y < 1) islice_y = 1
+       if (islice_y > NPROC_ETA) islice_y = NPROC_ETA
 
 ! define element number
        ispec_x = int(ratio_slice_xi) + 1
-       if(ispec_x < 1) ispec_x = 1
-       if(ispec_x > NEX_PER_PROC_XI) ispec_x = NEX_PER_PROC_XI
+       if (ispec_x < 1) ispec_x = 1
+       if (ispec_x > NEX_PER_PROC_XI) ispec_x = NEX_PER_PROC_XI
 
        ispec_y = int(ratio_slice_eta) + 1
-       if(ispec_y < 1) ispec_y = 1
-       if(ispec_y > NEX_PER_PROC_ETA) ispec_y = NEX_PER_PROC_ETA
+       if (ispec_y < 1) ispec_y = 1
+       if (ispec_y > NEX_PER_PROC_ETA) ispec_y = NEX_PER_PROC_ETA
 
 ! get corresponding spectral element
        ispec = ispecGMT_store(ispec_x,ispec_y,islice_x,islice_y)
@@ -640,10 +640,10 @@
        ratio_eta = (utm_y_current - yval(1)) / (yval(4) - yval(1))
 
 ! avoid edge effects
-       if(ratio_xi < 0.) ratio_xi = 0.
-       if(ratio_xi > 1.) ratio_xi = 1.
-       if(ratio_eta < 0.) ratio_eta = 0.
-       if(ratio_eta > 1.) ratio_eta = 1.
+       if (ratio_xi < 0.) ratio_xi = 0.
+       if (ratio_xi > 1.) ratio_xi = 1.
+       if (ratio_eta < 0.) ratio_eta = 0.
+       if (ratio_eta > 1.) ratio_eta = 1.
 
 ! interpolate data value
        dataval_interp = dataval(1)*(1.-ratio_xi)*(1.-ratio_eta) + &
@@ -660,7 +660,7 @@
   else
 
 ! if unique file, output geometry only once
-  if(.not. UNIQUE_FILE .or. iframe == 1) then
+  if (.not. UNIQUE_FILE .or. iframe == 1) then
 
 ! output list of points
   mask_point = .false.
@@ -670,15 +670,15 @@
 ! four points for each element
   do ilocnum = 1,NGNOD2D_AVS_DX_HIGHRES
     ibool_number = iglob(ilocnum+ieoff)
-    if(.not. mask_point(ibool_number)) then
+    if (.not. mask_point(ibool_number)) then
       ipoin = ipoin + 1
       ireorder(ibool_number) = ipoin
-      if(USE_OPENDX) then
+      if (USE_OPENDX) then
         write(11,*) sngl(xp_save(ilocnum+ieoff)),sngl(yp_save(ilocnum+ieoff)),sngl(zp_save(ilocnum+ieoff))
-      else if(USE_AVS) then
+      else if (USE_AVS) then
         write(11,*) ireorder(ibool_number),sngl(xp_save(ilocnum+ieoff)), &
             sngl(yp_save(ilocnum+ieoff)),sngl(zp_save(ilocnum+ieoff))
-      else if(USE_GMT) then
+      else if (USE_GMT) then
         write(11,*) sngl(xp_save(ilocnum+ieoff)),sngl(yp_save(ilocnum+ieoff)),sngl(zp_save(ilocnum+ieoff))
       endif
     endif
@@ -686,7 +686,7 @@
   enddo
   enddo
 
-  if(USE_OPENDX) &
+  if (USE_OPENDX) &
     write(11,*) 'object 2 class array type int rank 1 shape 4 items ',nspectot_AVS_max,' data follows'
 
 ! output list of elements
@@ -697,7 +697,7 @@
     ibool_number2 = iglob(ieoff + 2)
     ibool_number3 = iglob(ieoff + 3)
     ibool_number4 = iglob(ieoff + 4)
-    if(USE_OPENDX) then
+    if (USE_OPENDX) then
 ! point order in OpenDX is 1,4,2,3 *not* 1,2,3,4 as in AVS
       write(11,210) ireorder(ibool_number1)-1,ireorder(ibool_number4)-1,ireorder(ibool_number2)-1,ireorder(ibool_number3)-1
     else
@@ -710,18 +710,18 @@
 
   endif
 
-  if(USE_OPENDX) then
+  if (USE_OPENDX) then
     write(11,*) 'attribute "element type" string "quads"'
     write(11,*) 'attribute "ref" string "positions"'
     write(11,*) 'object 3 class array type float rank 0 items ',nglob,' data follows'
   else
-    if(UNIQUE_FILE) then
-      if(iframe > 1) then
-        if(iframe < 10) then
+    if (UNIQUE_FILE) then
+      if (iframe > 1) then
+        if (iframe < 10) then
           write(11,401) iframe,iframe
-        else if(iframe < 100) then
+        else if (iframe < 100) then
           write(11,402) iframe,iframe
-        else if(iframe < 1000) then
+        else if (iframe < 1000) then
           write(11,403) iframe,iframe
         else
           write(11,404) iframe,iframe
@@ -749,15 +749,15 @@
 ! four points for each element
   do ilocnum = 1,NGNOD2D_AVS_DX_HIGHRES
     ibool_number = iglob(ilocnum+ieoff)
-    if(.not. mask_point(ibool_number)) then
-      if(USE_OPENDX) then
-        if(plot_shaking_map) then
+    if (.not. mask_point(ibool_number)) then
+      if (USE_OPENDX) then
+        if (plot_shaking_map) then
           write(11,*) field_display(ilocnum+ieoff)
         else
           write(11,501) field_display(ilocnum+ieoff)
         endif
       else
-        if(plot_shaking_map) then
+        if (plot_shaking_map) then
           write(11,*) ireorder(ibool_number),field_display(ilocnum+ieoff)
         else
           write(11,502) ireorder(ibool_number),field_display(ilocnum+ieoff)
@@ -772,7 +772,7 @@
  502 format(i6,1x,f7.2)
 
 ! define OpenDX field
-  if(USE_OPENDX) then
+  if (USE_OPENDX) then
     write(11,*) 'attribute "dep" string "positions"'
     write(11,*) 'object "irregular positions irregular connections" class field'
     write(11,*) 'component "positions" value 1'
@@ -784,20 +784,20 @@
 ! end of test for GMT format
   endif
 
-  if(.not. UNIQUE_FILE) close(11)
+  if (.not. UNIQUE_FILE) close(11)
 
 ! end of loop and test on all the time steps for all the movie images
   endif
   enddo
 
-  if(UNIQUE_FILE) close(11)
+  if (UNIQUE_FILE) close(11)
 
   print *
   print *,'done creating movie or shaking map'
   print *
-  if(USE_OPENDX) print *,'DX files are stored in OUTPUT_FILES/DX_*.dx'
-  if(USE_AVS) print *,'AVS files are stored in OUTPUT_FILES/AVS_*.inp'
-  if(USE_GMT) then
+  if (USE_OPENDX) print *,'DX files are stored in OUTPUT_FILES/DX_*.dx'
+  if (USE_AVS) print *,'AVS files are stored in OUTPUT_FILES/AVS_*.inp'
+  if (USE_GMT) then
     print *,'GMT files are stored in OUTPUT_FILES/gmt_*.xyz'
     print *
     print *,'number of points in longitude in GMT grid = ',NEX_XI+1
@@ -871,9 +871,9 @@
 ! sort within each segment
   ioff=1
   do iseg=1,nseg
-    if(j == 1) then
+    if (j == 1) then
       call rank(xp(ioff),ind,ninseg(iseg))
-    else if(j == 2) then
+    else if (j == 2) then
       call rank(yp(ioff),ind,ninseg(iseg))
     else
       call rank(zp(ioff),ind,ninseg(iseg))
@@ -884,24 +884,24 @@
 
 ! check for jumps in current coordinate
 ! compare the coordinates of the points within a small tolerance
-  if(j == 1) then
+  if (j == 1) then
     do i=2,npointot
-      if(dabs(xp(i)-xp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
+      if (dabs(xp(i)-xp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
     enddo
-  else if(j == 2) then
+  else if (j == 2) then
     do i=2,npointot
-      if(dabs(yp(i)-yp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
+      if (dabs(yp(i)-yp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
     enddo
   else
     do i=2,npointot
-      if(dabs(zp(i)-zp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
+      if (dabs(zp(i)-zp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
     enddo
   endif
 
 ! count up number of different segments
   nseg=0
   do i=1,npointot
-    if(ifseg(i)) then
+    if (ifseg(i)) then
       nseg=nseg+1
       ninseg(nseg)=1
     else
@@ -913,7 +913,7 @@
 ! assign global node numbers (now sorted lexicographically)
   ig=0
   do i=1,npointot
-    if(ifseg(i)) ig=ig+1
+    if (ifseg(i)) ig=ig+1
     iglob(loc(i))=ig
   enddo
 
@@ -952,8 +952,8 @@
 
   L=n/2+1
   ir=n
-  100 CONTINUE
-   IF (l>1) THEN
+  100 continue
+   if (l>1) then
       l=l-1
       indx=ind(l)
       q=a(indx)
@@ -969,12 +969,12 @@
    endif
    i=l
    j=l+l
-  200    CONTINUE
-   IF (J <= IR) THEN
-      IF (J<IR) THEN
-         IF ( A(IND(j))<A(IND(j+1)) ) j=j+1
+  200    continue
+   if (J <= IR) then
+      if (J<IR) then
+         if ( A(IND(j))<A(IND(j+1)) ) j=j+1
       endif
-      IF (q<A(IND(j))) THEN
+      if (q<A(IND(j))) then
          IND(I)=IND(J)
          I=J
          J=J+J

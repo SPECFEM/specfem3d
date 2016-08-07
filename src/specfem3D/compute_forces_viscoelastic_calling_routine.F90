@@ -677,13 +677,7 @@ subroutine compute_forces_viscoelastic_GPU()
     !                  request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
     !                  1)
 
-
-
-    if((mod(it,500)==0) .and. (it /= 0))  call synchronize_GPU(it)  ! output results every 500 steps
-
-
-
-
+    if (mod(it,500) == 0 .and. it /= 0) call synchronize_GPU(it)  ! output results every 500 steps
 
     ! transfers acceleration back to GPU
     ! call transfer_accel_to_device(NDIM*NGLOB_AB,accel, Mesh_pointer)

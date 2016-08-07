@@ -57,28 +57,28 @@ program cg_test
   open(unit=24,file='INPUT/volume_total',status='old',iostat=ios)
      read(24,*) dVfac
   close(24)
-  if(myrank==0) write(*,*) dVfac
+  if (myrank==0) write(*,*) dVfac
 
   ! read in the sigma value (fixed) used for the model covariance
   if (myrank == 0) write(*,*) 'reading in sigma_structure'
   open(unit=25,file='INPUT/sigma_structure',status='old',iostat=ios)
      read(25,*) sigma_structure
   close(25)
-  if(myrank==0) write(*,*) sigma_structure
+  if (myrank==0) write(*,*) sigma_structure
 
   ! read in the total number of measurement windows
   if (myrank == 0) write(*,*) 'reading in nwin_tot'
   open(unit=26,file='INPUT/nwin_tot',status='old',iostat=ios)
      read(26,*) nwin_tot
   close(26)
-  if(myrank==0) write(*,*) nwin_tot
+  if (myrank==0) write(*,*) nwin_tot
 
   ! read in the misfit value
   if (myrank == 0) write(*,*) 'reading in misfit function value'
   open(unit=27,file='INPUT/dmisfit',status='old',iostat=ios)
      read(27,*) dmisfit
   close(27)
-  if(myrank==0) write(*,*) dmisfit
+  if (myrank==0) write(*,*) dmisfit
 
   !-----------------------------------------------
 

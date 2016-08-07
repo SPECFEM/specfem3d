@@ -65,11 +65,11 @@ contains
                 dist = sqrt((x_target(irec) - x(iglob))**2 + (z_target(irec) - z(iglob))**2)
 
                 ! keep this point if it is closer to the receiver
-                if(dist < dmin) then
+                if (dist < dmin) then
                    dmin = dist
                    dmin_selected_rec(irec) = dmin
                    iglob_selected_rec(irec) = iglob  ! closest gridpoint
-                   if(i_xi_gamma) then
+                   if (i_xi_gamma) then
                       ispec_selected_rec(irec) = ispec
                       ix_initial_guess(irec) = i
                       iz_initial_guess(irec) = j
@@ -92,7 +92,7 @@ contains
     ! ****************************************
 
     ! if the (xi, gamma) are desired
-    if(i_xi_gamma) then
+    if (i_xi_gamma) then
 
        do irec = 1,nrec
 
@@ -108,16 +108,16 @@ contains
 !!$    ! We could also access the vectors x1,x2,z1,z2 instead.
 !!$    do ia = 1,NGNOD2D    ! (NGNOD2D = 4)
 !!$
-!!$       if(ia==1) then
+!!$       if (ia==1) then
 !!$          iax = 1
 !!$          iaz = 1
-!!$       else if(ia==2) then
+!!$       else if (ia==2) then
 !!$          iax = NGLLX
 !!$          iaz = 1
-!!$       else if(ia==3) then
+!!$       else if (ia==3) then
 !!$          iax = NGLLX
 !!$          iaz = NGLLZ
-!!$       else if(ia==4) then
+!!$       else if (ia==4) then
 !!$          iax = 1
 !!$          iaz = NGLLZ
 !!$       endif
@@ -188,9 +188,9 @@ contains
        ! display information
        do irec=1,nrec
 
-          if(final_distance(irec) == HUGEVAL) stop 'error locating receiver'
+          if (final_distance(irec) == HUGEVAL) stop 'error locating receiver'
 
-          if(0==1) then
+          if (0==1) then
              print *
              print *,                'target point # ', irec
              write(*,'(a,1f18.8)')   '  target x (km)            : ', x_target(irec)/1000.
@@ -211,7 +211,7 @@ contains
 
           ! add warning if estimate is poor
           ! (usually means receiver outside the mesh given by the user)
-          if(final_distance(irec) > 5.) then
+          if (final_distance(irec) > 5.) then
              print *, 'station # ',irec
              print *, '*******************************************************'
              print *, '***** WARNING: receiver location estimate is poor *****'
@@ -276,7 +276,7 @@ contains
     xtemp = 0.5*(1.-    xi)*x1(ispec) + 0.5*(1.+   xi)*x2(ispec)
     ztemp = 0.5*(1.- gamma)*z1(ispec) + 0.5*(1.+gamma)*z2(ispec)
 
-    if(jacob <= 0.) stop '2D Jacobian undefined'
+    if (jacob <= 0.) stop '2D Jacobian undefined'
 
   end subroutine recompute_jacobian_2d
 
@@ -302,7 +302,7 @@ contains
        prod1 = 1.0
        prod2 = 1.0
        do i=1,NGLL
-          if(i /= dgr) then
+          if (i /= dgr) then
              prod1 = prod1*(xi-xigll(i))
              prod2 = prod2*(xigll(dgr)-xigll(i))
           endif
@@ -311,10 +311,10 @@ contains
 
        hprime(dgr)=0.0
        do i=1,NGLL
-          if(i /= dgr) then
+          if (i /= dgr) then
              prod1=1.0
              do j=1,NGLL
-                if(j /= dgr .and. j /= i) prod1 = prod1*(xi-xigll(j))
+                if (j /= dgr .and. j /= i) prod1 = prod1*(xi-xigll(j))
              enddo
              hprime(dgr) = hprime(dgr)+prod1
           endif
@@ -380,14 +380,14 @@ contains
 
     print *, nrec,' input target points into set_glob.f90'
 
-    if(nrec/=0) then
+    if (nrec/=0) then
 
        ! find the closest gridpoint to the target point
        do irec = 1, nrec
           dmin = sqrt(LENGTH**2+HEIGHT**2)  ! max possible distance
           do iglob = 1,NGLOB
              d = sqrt((x_rec(irec)-x(iglob))**2+(z_rec(irec)-z(iglob))**2)
-             if(d < dmin) then
+             if (d < dmin) then
                 dmin  = d
                 rglob(irec) = iglob
              endif
@@ -402,9 +402,9 @@ contains
           itemp = rglob(i)
           iflag = 0
           do j = 1,i
-             if(rglobtemp(j) == itemp) iflag = 1
+             if (rglobtemp(j) == itemp) iflag = 1
           enddo
-          if(iflag==0) then
+          if (iflag==0) then
              k = k+1
              rglobtemp(k) = itemp
           endif
@@ -423,7 +423,7 @@ contains
 !!$             do i = 1,NGLLX
 !!$                iglob = ibool(i,j,ispec)
 !!$                d = sqrt((x_rec(irec)-x(iglob))**2+(z_rec(irec)-z(iglob))**2)
-!!$                if(d < d_min_rec) then
+!!$                if (d < d_min_rec) then
 !!$                  d_min_rec  = d
 !!$                  rglob(irec) = ibool(i,j,ispec)
 !!$                endif
@@ -478,12 +478,12 @@ contains
        !print *, xtar, ztar
 
        ! if target point is not near grid boundary
-       if       ( xtar > (0.    -dcompare) + dmin_trsh   &
+       if ( xtar > (0.    -dcompare) + dmin_trsh   &
             .and. xtar < (LENGTH-dcompare) - dmin_trsh   &
             .and. ztar > (0.    -dcompare) + dmin_trsh   &
             .and. ztar < (HEIGHT+dcompare) - dmin_trsh ) then
 
-          if(.not.(xtar==0. .and. ztar==0.)) then    ! exclude the origin
+          if (.not.(xtar==0. .and. ztar==0.)) then    ! exclude the origin
 
              j = j+1
              !x_rec(j) = xtar
@@ -495,7 +495,7 @@ contains
              !do i=1,ncoast
              !   ! distance from target point to coastal points
              !   d = sqrt((xtar-coast_x(i))**2+(ztar-coast_z(i))**2)
-             !   if(d < dmin) then
+             !   if (d < dmin) then
              !      dmin  = d
              !   endif
              !enddo
@@ -521,7 +521,7 @@ contains
 !!$    j = 0
 !!$    do irec = 1, nrec
 !!$       d = sqrt((x(rglob(irec)) - xcen)**2+(z(rglob(irec)) - zcen)**2)
-!!$       if(d > r) then
+!!$       if (d > r) then
 !!$          j = j+1
 !!$          rglob(j) = rglob(irec)
 !!$       endif
@@ -657,7 +657,7 @@ contains
 
     !---------------------------------------------------
 
-    if(SUPPRESS_UTM_PROJECTION) then
+    if (SUPPRESS_UTM_PROJECTION) then
        if (iway == ILONGLAT2UTM) then
           rx = rlon
           ry = rlat

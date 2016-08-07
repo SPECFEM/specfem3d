@@ -114,7 +114,7 @@
          S_VELOCITY_MIN
     MIN_ATTENUATION_PERIOD = TMP
 
-    if(N_SLS < 2 .or. N_SLS > 5) then
+    if (N_SLS < 2 .or. N_SLS > 5) then
        call exit_MPI_without_rank('N_SLS must be greater than 1 or less than 6')
     endif
 
@@ -181,7 +181,7 @@
     ! Minimum Number of Elements a Region must have
     NER(:)    = 1
     NER(3:5)  = 2
-    if(CASE_3D) then
+    if (CASE_3D) then
        NER(1) = 2
     endif
 
@@ -297,7 +297,7 @@
 !       xi = abs(rcube_test - 981.0d0) / 45.0d0
 !       write(*,'(a,5(f14.4,2x))')'rcube, xi, ximin:-',rcube_test, xi, min_edgemin,max_edgemax,max_aspect_ratio
        deallocate(points)
-       if(xi < ximin) then
+       if (xi < ximin) then
           ximin      = xi
           rcube      = rcube_test
           nex_eta_in = nex_eta
@@ -334,7 +334,7 @@
        surfy = RICB_KM * sin(3 * (PI/4.0d0) - ratio_x * (PI/2.0d0))
 
        dist_cc_icb = sqrt((surfx -x)**2 + (surfy - y)**2)
-       if(ix /= nex_xi/2) then
+       if (ix /= nex_xi/2) then
           dist_cc_icb = dist_cc_icb * 2
        endif
        somme = somme + dist_cc_icb
@@ -485,7 +485,7 @@
     x = xsurf - ratio_y * deltax
     y = ysurf - ratio_y * deltay
 
-    if(ic == 1) then
+    if (ic == 1) then
        temp = x
        x    = y
        y    = temp

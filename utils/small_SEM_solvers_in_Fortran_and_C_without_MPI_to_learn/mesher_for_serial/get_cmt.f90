@@ -111,7 +111,7 @@
 
 ! null half-duration indicates a Heaviside
 ! replace with very short error function
-  if(hdur(isource) < 5. * DT) hdur(isource) = 5. * DT
+  if (hdur(isource) < 5. * DT) hdur(isource) = 5. * DT
 
   enddo
 
@@ -143,7 +143,7 @@
   data mon /0,31,59,90,120,151,181,212,243,273,304,334/
 
   julian_day = da + mon(mo)
-  if(mo>2) julian_day = julian_day + lpyr(yr)
+  if (mo>2) julian_day = julian_day + lpyr(yr)
 
   end function julian_day
 
@@ -158,11 +158,11 @@
 !---- returns 1 if leap year
 !
   lpyr=0
-  if(mod(yr,400) == 0) then
+  if (mod(yr,400) == 0) then
     lpyr=1
-  else if(mod(yr,4) == 0) then
+  else if (mod(yr,4) == 0) then
     lpyr=1
-    if(mod(yr,100) == 0) lpyr=0
+    if (mod(yr,100) == 0) lpyr=0
   endif
 
   end function lpyr
@@ -179,7 +179,7 @@
   integer, external :: lpyr
 
 !---- function lpyr above returns 1 if leap year
-  if(lpyr(yr) == 1) then
+  if (lpyr(yr) == 1) then
     is_leap_year = .true.
   else
     is_leap_year = .false.

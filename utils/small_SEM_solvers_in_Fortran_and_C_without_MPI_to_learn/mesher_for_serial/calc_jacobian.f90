@@ -104,7 +104,7 @@
              xeta*(yxi*zgamma-ygamma*zxi) + &
              xgamma*(yxi*zeta-yeta*zxi)
 
-      if(jacobian <= ZERO) call exit_MPI(myrank,'3D Jacobian undefined')
+      if (jacobian <= ZERO) call exit_MPI(myrank,'3D Jacobian undefined')
 
 ! invert the relation (Fletcher p. 50 vol. 2)
       xix = (yeta*zgamma-ygamma*zeta) / jacobian
@@ -119,8 +119,8 @@
 
 ! save the derivatives and the jacobian
 ! distinguish between single and double precision for reals
-      if(ACTUALLY_STORE_ARRAYS) then
-        if(CUSTOM_REAL == SIZE_REAL) then
+      if (ACTUALLY_STORE_ARRAYS) then
+        if (CUSTOM_REAL == SIZE_REAL) then
           xixstore(i,j,k,ispec) = sngl(xix)
           xiystore(i,j,k,ispec) = sngl(xiy)
           xizstore(i,j,k,ispec) = sngl(xiz)

@@ -49,9 +49,9 @@ integer :: nnode,nelmt,tmp_nnode !,tmp_nelmt
 write(*,'(a)')'writing VTK files...'
 ! Determine the Endianness of the Architecture
 call get_endian(endian)
-if(endian == LE)then
+if (endian == LE) then
   byte_order='LittleEndian'
-else if(endian == BE)then
+else if (endian == BE) then
   byte_order='BigEndian'
 else
   write(*,'(/,a)')'ERROR: illegal endianness!'
@@ -59,7 +59,7 @@ else
 endif
 
 ! vtk element type
-if (out_res==1)then
+if (out_res==1) then
   ! Medium resolution
   ! 20-noded hexahedra
   vtk_etype=25
@@ -88,7 +88,7 @@ out_ext='.vtu'
 ! Open pvd file
 pvd_file=trim(out_path)//'/'// trim(out_head)//'.pvd'
 open(unit=pvd_unit, file=trim(pvd_file), status='replace', action='write', iostat=ios)
-if (ios /= 0)then
+if (ios /= 0) then
   write(*,'(/,a)')'ERROR: output file "'//trim(pvd_file)//'" cannot be opened!'
   stop
 endif
@@ -184,7 +184,7 @@ do i_t=1,t_nstep
 
     off(1)=0; ! 1st offset
     do i=1,plot_nvar
-      if(i < plot_nvar)then
+      if (i < plot_nvar) then
         off(i+1)=off(i)+size_int+bytes(i)
       endif
       bytes(i)=bytes(i)+size_int
@@ -203,7 +203,7 @@ do i_t=1,t_nstep
     vtu_file = trim(out_path) // '/' // trim(out_fname)
     open(unit=vtu_unit, file=trim(vtu_file), action='write', status='replace',iostat=ios)
     !write(*,*)trim(vtu_file),vtu_unit
-    if (ios/=0)then
+    if (ios/=0) then
       write(*,'(/,a)')'ERROR: file '//trim(vtu_file)//' cannot be opened!'
       stop
     endif
@@ -260,7 +260,7 @@ do i_t=1,t_nstep
     write(vtu_unit,'(a)',advance='no')trim(buffer)
     close(vtu_unit)
 
-    if (i_t==1)then
+    if (i_t==1) then
       ! open temporary files to store coordinates
       write(tmp_str,*)i_slice
       call open_file2write('../tmp/tmp_x_slice'//trim(adjustl(tmp_str))//char(0),fd_x)
@@ -303,11 +303,11 @@ do i_t=1,t_nstep
           ! writes out element corners only
           call cvd_write_corners_only(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
           nnode,fd_x,fd_y,fd_z)
-        else if (out_res==1)then
+        else if (out_res==1) then
           ! writes out element corners only
           call cvd_write_hexa20_only(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
           nnode,fd_x,fd_y,fd_z)
-        else if(out_res==2)then
+        else if (out_res==2) then
           ! high resolution, all GLL points
           call cvd_write_GLL_points_only(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,&
           nnode,fd_x,fd_y,fd_z)
@@ -327,7 +327,7 @@ do i_t=1,t_nstep
         ! Read and store connectivity list
 
         ! writes out element corner indices
-        if(out_res==0) then
+        if (out_res==0) then
           ! spectral elements
           call cvd_write_corner_elements(NSPEC_AB,NGLOB_AB,ibool, &
           node_count,nelmt,nnode,fd_con)
@@ -335,7 +335,7 @@ do i_t=1,t_nstep
           ! spectral elements
           call cvd_write_hexa20_elements(NSPEC_AB,NGLOB_AB,ibool, &
           node_count,nelmt,nnode,fd_con)
-        else if(out_res==2)then
+        else if (out_res==2) then
           ! subdivided spectral elements
           call cvd_write_GLL_elements(NSPEC_AB,NGLOB_AB,ibool, &
           node_count,nelmt,nnode,fd_con)
@@ -348,7 +348,7 @@ do i_t=1,t_nstep
         !write(*,*)'  elements:',elmt_count,nelmt
         !write(*,*)'  points : ',node_count,nnode
         !write(*,*)tmp_nnode,node_count
-        if (tmp_nnode/=node_count)then
+        if (tmp_nnode/=node_count) then
           write(*,'(/,a)')'ERROR: inconsistent number of nodes!'
           stop
         endif
@@ -421,8 +421,8 @@ do i_t=1,t_nstep
     ! write data to vtu file
     call write_integer(bytes(5),fd)
 
-    if (out_ncomp>1)then ! vector or tensor data
-      if (i_t==1)then
+    if (out_ncomp>1) then ! vector or tensor data
+      if (i_t==1) then
         allocate(fd_array(out_ncomp))
         allocate(tmp_rvect(out_ncomp))
       endif
@@ -450,7 +450,7 @@ do i_t=1,t_nstep
         read(27) ibool
         close(27)
 
-        if (dat_topo==0)then ! Data from local points
+        if (dat_topo==0) then ! Data from local points
           allocate(dat(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
 
           do i_comp=1,inp_ncomp
@@ -486,7 +486,7 @@ do i_t=1,t_nstep
           ! cleans up memory allocations
           deallocate(dat)
 
-        else if (dat_topo==1)then ! Data from global points
+        else if (dat_topo==1) then ! Data from global points
           allocate(dat_glob(NGLOB_AB))
 
           do i_comp=1,inp_ncomp
@@ -530,7 +530,7 @@ do i_t=1,t_nstep
         node_count = node_count + nnode
 
       enddo  ! i_proc = 1, nproc
-      if (node_count /=  slice_nnode(i_slice))then
+      if (node_count /=  slice_nnode(i_slice)) then
         write(*,'(/,a)')'Error: Number of total points are not consistent'
         stop
       endif
@@ -545,7 +545,7 @@ do i_t=1,t_nstep
         write(tmp_str,*)i_comp
         call open_file2read('../tmp/tmp_data_comp'//trim(adjustl(tmp_str))//char(0),fd_array(i_comp))
       enddo
-      if (out_ncomp==3)then
+      if (out_ncomp==3) then
       ! vector
         do i=1,slice_nnode(i_slice)
           do i_comp=1,out_ncomp
@@ -553,7 +553,7 @@ do i_t=1,t_nstep
             call write_float(tmp_real,fd)
           enddo
         enddo
-      else if (out_ncomp==6)then
+      else if (out_ncomp==6) then
       ! 9-component symmetric tensor
         do i=1,slice_nnode(i_slice)
           do i_comp=1,out_ncomp
@@ -592,7 +592,7 @@ do i_t=1,t_nstep
         read(27) ibool
         close(27)
 
-        if (dat_topo==0)then ! Data from local points
+        if (dat_topo==0) then ! Data from local points
           allocate(tmp_dat(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
           allocate(dat(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
           tmp_dat=0.0
@@ -612,7 +612,7 @@ do i_t=1,t_nstep
             tmp_dat=tmp_dat+real(dat)
             !write(*,*)inp_fname
           enddo
-          if (inp_ncomp==3 .and. out_ncomp==1)then
+          if (inp_ncomp==3 .and. out_ncomp==1) then
             tmp_dat=0.5*tmp_dat ! Equivalent to S-wave potential
           endif
 
@@ -632,7 +632,7 @@ do i_t=1,t_nstep
           endif
           ! cleans up memory allocations
           deallocate(ibool,dat,tmp_dat)
-        else if (dat_topo==1)then ! Data from global points
+        else if (dat_topo==1) then ! Data from global points
           allocate(tmp_dat_glob(NGLOB_AB))
           allocate(dat_glob(NGLOB_AB))
           tmp_dat=0.0
@@ -651,7 +651,7 @@ do i_t=1,t_nstep
             tmp_dat_glob=tmp_dat_glob+real(dat_glob)
             !write(*,*)inp_fname
           enddo
-          if (inp_ncomp==3 .and. out_ncomp==1)then
+          if (inp_ncomp==3 .and. out_ncomp==1) then
             tmp_dat_glob=0.5*tmp_dat_glob ! Equivalent to S-wave potential
           endif
 
@@ -680,7 +680,7 @@ do i_t=1,t_nstep
 
       enddo  ! i_proc = 1, nproc
       call close_file(fd)
-      if (node_count /=  slice_nnode(i_slice))then
+      if (node_count /=  slice_nnode(i_slice)) then
         write(*,'(/,a)')'Error: Number of total points are not consistent'
         stop
         endif
@@ -728,7 +728,7 @@ do i_slice=1,out_nslice
   call delete_file('../tmp/tmp_con_slice'//trim(adjustl(tmp_str))//char(0))
 enddo
 
-if (out_ncomp>1)then
+if (out_ncomp>1) then
   ! free memory
   deallocate(fd_array,tmp_rvect)
   ! delete temporary data files

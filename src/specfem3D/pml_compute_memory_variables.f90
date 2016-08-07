@@ -39,7 +39,7 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
 
   ! second-order accurate convolution term calculation from equation (21) of
   ! Shumin Wang, Robert Lee, and Fernando L. Teixeira,
-  ! Anisotropic-Medium PML for Vector FETD With Modified Basis Functions,
+  ! Anisotropic-medium PML for vector FETD with modified basis functions,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
   use specfem_par, only: deltat,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
@@ -358,7 +358,7 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
 
   ! second-order accurate convolution term calculation from equation (21) of
   ! Shumin Wang, Robert Lee, and Fernando L. Teixeira,
-  ! Anisotropic-Medium PML for Vector FETD With Modified Basis Functions,
+  ! Anisotropic-medium PML for vector FETD with modified basis functions,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
   use specfem_par, only: xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian,&
@@ -517,7 +517,7 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
 
   ! second-order accurate convolution term calculation from equation (21) of
   ! Shumin Wang, Robert Lee, and Fernando L. Teixeira,
-  ! Anisotropic-Medium PML for Vector FETD With Modified Basis Functions,
+  ! Anisotropic-medium PML for vector FETD with modified basis functions,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
   use specfem_par, only: NGLOB_AB,deltat
@@ -604,7 +604,7 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
 
   ! second-order accurate convolution term calculation from equation (21) of
   ! Shumin Wang, Robert Lee, and Fernando L. Teixeira,
-  ! Anisotropic-Medium PML for Vector FETD With Modified Basis Functions,
+  ! Anisotropic-medium PML for vector FETD with modified basis functions,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
   use specfem_par, only: NGLOB_AB,deltat

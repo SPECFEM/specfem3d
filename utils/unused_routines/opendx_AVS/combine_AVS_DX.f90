@@ -143,7 +143,7 @@
         NTSTEP_BETWEEN_OUTPUT_INFO,SUPPRESS_UTM_PROJECTION,MODEL,USE_REGULAR_MESH,SIMULATION_TYPE,SAVE_FORWARD, &
         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY)
 
-  if(.not. SAVE_MESH_FILES) stop 'AVS or DX files were not saved by the mesher'
+  if (.not. SAVE_MESH_FILES) stop 'AVS or DX files were not saved by the mesher'
 
 ! get the base pathname for output files
   call get_value_string(OUTPUT_FILES, 'OUTPUT_FILES', OUTPUT_FILES_PATH(1:len_trim(OUTPUT_FILES_PATH)))
@@ -161,8 +161,8 @@
   print *
   print *,'enter value:'
   read(5,*) iformat
-  if(iformat<1 .or. iformat>2) stop 'exiting...'
-  if(iformat == 1) then
+  if (iformat<1 .or. iformat>2) stop 'exiting...'
+  if (iformat == 1) then
     USE_OPENDX = .true.
   else
     USE_OPENDX = .false.
@@ -175,10 +175,10 @@
   print *
   print *,'enter value:'
   read(5,*) ivalue
-  if(ivalue<1 .or. ivalue>2) stop 'exiting...'
+  if (ivalue<1 .or. ivalue>2) stop 'exiting...'
 
 ! apply scaling to topography if needed
-  if(ivalue == 2) then
+  if (ivalue == 2) then
     print *
     print *,'scaling to apply to Z to amplify topography (1. to do nothing, 0. to get flat surface):'
     read(5,*) zscaling
@@ -195,8 +195,8 @@
   print *
   print *,'enter value:'
   read(5,*) icolor
-  if(icolor<1 .or. icolor >4) stop 'exiting...'
-  if(icolor == 3 .and. ivalue /= 2) stop 'color by elevation of topography is for surface of model only'
+  if (icolor<1 .or. icolor >4) stop 'exiting...'
+  if (icolor == 3 .and. ivalue /= 2) stop 'color by elevation of topography is for surface of model only'
 
   print *
   print *,'1 = material property by doubling flag'
@@ -205,7 +205,7 @@
   print *
   print *,'enter value:'
   read(5,*) imaterial
-  if(imaterial < 1 .or. imaterial > 2) stop 'exiting...'
+  if (imaterial < 1 .or. imaterial > 2) stop 'exiting...'
 
 ! compute other parameters based upon values read
   call compute_parameters(NER,NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA, &
@@ -224,18 +224,18 @@
   print *
   print *,'enter first proc (proc numbers start at 0) = '
   read(5,*) proc_p1
-  if(proc_p1 < 0) proc_p1 = 0
-  if(proc_p1 > NPROC-1) proc_p1 = NPROC-1
+  if (proc_p1 < 0) proc_p1 = 0
+  if (proc_p1 > NPROC-1) proc_p1 = NPROC-1
 
   print *,'enter last proc (enter -1 for all procs) = '
   read(5,*) proc_p2
-  if(proc_p2 == -1) proc_p2 = NPROC-1
-  if(proc_p2 < 0) proc_p2 = 0
-  if(proc_p2 > NPROC-1) proc_p2 = NPROC-1
+  if (proc_p2 == -1) proc_p2 = NPROC-1
+  if (proc_p2 < 0) proc_p2 = 0
+  if (proc_p2 > NPROC-1) proc_p2 = NPROC-1
 
 ! set interval to maximum if user input is not correct
-  if(proc_p1 <= 0) proc_p1 = 0
-  if(proc_p2 < 0) proc_p2 = NPROC - 1
+  if (proc_p1 <= 0) proc_p1 = 0
+  if (proc_p2 < 0) proc_p2 = NPROC - 1
 
 ! set total number of points and elements to zero
   ntotpoin = 0
@@ -246,8 +246,8 @@
   do iproc=0,NPROC-1
     call random_number(random_val)
     ival_color = nint(random_val*NPROC)
-    if(ival_color < 0) ival_color = 0
-    if(ival_color > NPROC-1) ival_color = NPROC-1
+    if (ival_color < 0) ival_color = 0
+    if (ival_color > NPROC-1) ival_color = NPROC-1
     random_colors(iproc) = ival_color
   enddo
 
@@ -259,9 +259,9 @@
 ! create the name for the database of the current slide
   call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
-  if(ivalue == 1) then
+  if (ivalue == 1) then
     open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXpointsfaces.txt',status='old',action='read')
-  else if(ivalue == 2) then
+  else if (ivalue == 2) then
     open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXpointssurface.txt',status='old',action='read')
   endif
 
@@ -270,9 +270,9 @@
   ntotpoin = ntotpoin + npoin
   close(10)
 
-  if(ivalue == 1) then
+  if (ivalue == 1) then
     open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelementsfaces.txt',status='old',action='read')
-  else if(ivalue == 2) then
+  else if (ivalue == 2) then
     open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelementssurface.txt',status='old',action='read')
   endif
 
@@ -292,7 +292,7 @@
   ntotspecAVS_DX = ntotspec
 
 ! use different name for surface and for slices
-  if(USE_OPENDX) then
+  if (USE_OPENDX) then
     open(unit=11,file=trim(OUTPUT_FILES)//'/DX_fullmesh.dx',status='unknown')
     write(11,*) 'object 1 class array type float rank 1 shape 3 items ',ntotpoinAVS_DX,' data follows'
   else
@@ -300,8 +300,8 @@
   endif
 
 ! write AVS or DX header with element data or point data
-  if(.not. USE_OPENDX) then
-    if(ivalue == 2 .and. icolor == 3) then
+  if (.not. USE_OPENDX) then
+    if (ivalue == 2 .and. icolor == 3) then
       write(11,*) ntotpoinAVS_DX,' ',ntotspecAVS_DX,' 1 0 0'
     else
       write(11,*) ntotpoinAVS_DX,' ',ntotspecAVS_DX,' 0 1 0'
@@ -321,9 +321,9 @@
 ! create the name for the database of the current slide
   call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
-  if(ivalue == 1) then
+  if (ivalue == 1) then
     open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXpointsfaces.txt',status='old',action='read')
-  else if(ivalue == 2) then
+  else if (ivalue == 2) then
     open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXpointssurface.txt',status='old',action='read')
   endif
 
@@ -333,14 +333,14 @@
 ! read local points in this slice and output global AVS or DX points
   do ipoin=1,npoin
       read(10,*) numpoin,xval,yval,zval
-      if(numpoin /= ipoin) stop 'incorrect point number'
+      if (numpoin /= ipoin) stop 'incorrect point number'
 ! write to AVS or DX global file with correct offset
-      if(USE_OPENDX) then
+      if (USE_OPENDX) then
         write(11,*) sngl(xval),' ',sngl(yval),' ',sngl(zval*zscaling)
       else
 !!        write(11,*) numpoin + iglobpointoffset,' ',sngl(xval),' ',sngl(yval),' ',sngl(zval*zscaling)
 !! XXX
- if(zval < 0.) then
+ if (zval < 0.) then
         write(11,*) numpoin + iglobpointoffset,' ',sngl(xval),' ',sngl(yval),' ',sngl(zval*zscaling)
 else
         write(11,*) numpoin + iglobpointoffset,' ',sngl(xval),' ',sngl(yval),' ',' 0'
@@ -366,7 +366,7 @@ endif
   iglobelemoffset = 0
   maxdoubling = -1
 
-  if(USE_OPENDX) &
+  if (USE_OPENDX) &
     write(11,*) 'object 2 class array type int rank 1 shape 4 items ',ntotspecAVS_DX,' data follows'
 
 ! loop on the selected range of processors
@@ -377,10 +377,10 @@ endif
 ! create the name for the database of the current slide
   call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
-  if(ivalue == 1) then
+  if (ivalue == 1) then
     open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelementsfaces.txt',status='old',action='read')
     open(unit=12,file=prname(1:len_trim(prname))//'AVS_DXpointsfaces.txt',status='old',action='read')
-  else if(ivalue == 2) then
+  else if (ivalue == 2) then
     open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelementssurface.txt',status='old',action='read')
     open(unit=12,file=prname(1:len_trim(prname))//'AVS_DXpointssurface.txt',status='old',action='read')
   endif
@@ -394,14 +394,14 @@ endif
 ! read local elements in this slice and output global AVS or DX elements
   do ispec=1,nspec
       read(10,*) numelem,idoubling,iglob1,iglob2,iglob3,iglob4
-  if(numelem /= ispec) stop 'incorrect element number'
+  if (numelem /= ispec) stop 'incorrect element number'
 ! compute max of the doubling flag
   maxdoubling = max(maxdoubling,idoubling)
 
 ! assign material property (which can be filtered later in AVS_DX)
-  if(imaterial == 1) then
+  if (imaterial == 1) then
     imatprop = idoubling
-  else if(imaterial == 2) then
+  else if (imaterial == 2) then
     imatprop = iproc
   else
     stop 'invalid code for material property'
@@ -418,7 +418,7 @@ endif
 ! in the case of OpenDX, node numbers start at zero
 ! in the case of AVS, node numbers start at one
 ! point order in OpenDX is 1,4,2,3 *not* 1,2,3,4 as in AVS
-      if(USE_OPENDX) then
+      if (USE_OPENDX) then
         write(11,"(i6,1x,i6,1x,i6,1x,i6)") iglob1-1,iglob4-1,iglob2-1,iglob3-1
       else
         write(11,"(i6,1x,i3,' quad ',i6,1x,i6,1x,i6,1x,i6)") numelem + iglobelemoffset,imatprop,iglob1,iglob2,iglob3,iglob4
@@ -437,10 +437,10 @@ endif
 ! ************* generate data values ******************
 
 ! output AVS or DX header for data
-  if(USE_OPENDX) then
+  if (USE_OPENDX) then
     write(11,*) 'attribute "element type" string "quads"'
     write(11,*) 'attribute "ref" string "positions"'
-    if(ivalue == 2 .and. icolor == 3) then
+    if (ivalue == 2 .and. icolor == 3) then
       write(11,*) 'object 3 class array type float rank 0 items ',ntotpoinAVS_DX,' data follows'
     else
       write(11,*) 'object 3 class array type float rank 0 items ',ntotspecAVS_DX,' data follows'
@@ -453,7 +453,7 @@ endif
 !!!!
 !!!! ###### element data in most cases
 !!!!
-  if(ivalue /= 2 .or. icolor /= 3) then
+  if (ivalue /= 2 .or. icolor /= 3) then
 
 ! set global element and point offsets to zero
   iglobelemoffset = 0
@@ -466,9 +466,9 @@ endif
 ! create the name for the database of the current slide
   call create_serial_name_database(prname,iproc,LOCAL_PATH,NPROC,OUTPUT_FILES)
 
-  if(ivalue == 1) then
+  if (ivalue == 1) then
     open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelementsfaces.txt',status='old',action='read')
-  else if(ivalue == 2) then
+  else if (ivalue == 2) then
     open(unit=10,file=prname(1:len_trim(prname))//'AVS_DXelementssurface.txt',status='old',action='read')
   endif
 
@@ -478,21 +478,21 @@ endif
 ! read local elements in this slice and output global AVS or DX elements
   do ispec=1,nspec
       read(10,*) numelem,idoubling,iglob1,iglob2,iglob3,iglob4
-      if(numelem /= ispec) stop 'incorrect element number'
+      if (numelem /= ispec) stop 'incorrect element number'
 
 ! data is either the slice number or the mesh doubling region flag
-      if(icolor == 1) then
+      if (icolor == 1) then
         val_color = dble(idoubling)
-      else if(icolor == 2) then
+      else if (icolor == 2) then
         val_color = dble(iproc)
-      else if(icolor == 4) then
+      else if (icolor == 4) then
         val_color = dble(random_colors(iproc))
       else
         stop 'incorrect coloring code'
       endif
 
 ! write to AVS or DX global file with correct offset
-      if(USE_OPENDX) then
+      if (USE_OPENDX) then
         write(11,*) sngl(val_color)
       else
         write(11,*) numelem + iglobelemoffset,' ',sngl(val_color)
@@ -529,9 +529,9 @@ endif
 ! read local points in this slice and output global AVS or DX points
   do ipoin=1,npoin
       read(10,*) numpoin,xval,yval,zval
-      if(numpoin /= ipoin) stop 'incorrect point number'
+      if (numpoin /= ipoin) stop 'incorrect point number'
 ! write to AVS or DX global file with correct offset
-      if(USE_OPENDX) then
+      if (USE_OPENDX) then
         write(11,*) sngl(zval)
       else
         write(11,*) numpoin + iglobpointoffset,' ',sngl(zval)
@@ -548,8 +548,8 @@ endif
   endif     ! end test if element data or point data
 
 ! define OpenDX field
-  if(USE_OPENDX) then
-    if(ivalue == 2 .and. icolor == 3) then
+  if (USE_OPENDX) then
+    if (ivalue == 2 .and. icolor == 3) then
       write(11,*) 'attribute "dep" string "positions"'
     else
       write(11,*) 'attribute "dep" string "connections"'
@@ -571,7 +571,7 @@ endif
 ! create an AVS or DX file with the source and the receivers as well
 !
 
-  if(USE_OPENDX) then
+  if (USE_OPENDX) then
 
     print *
     print *,'support for source and station file in OpenDX not added yet'
@@ -621,13 +621,13 @@ endif
     nrec = 0
     do while(ios == 0)
       read(11,"(a)",iostat=ios) dummystring
-      if(ios == 0) nrec = nrec + 1
+      if (ios == 0) nrec = nrec + 1
     enddo
     close(11)
 
     print *,'There are ',nrec,' three-component stations'
     print *
-    if(nrec < 1) stop 'incorrect number of stations read - need at least one'
+    if (nrec < 1) stop 'incorrect number of stations read - need at least one'
 
     allocate(station_name(nrec))
     allocate(network_name(nrec))

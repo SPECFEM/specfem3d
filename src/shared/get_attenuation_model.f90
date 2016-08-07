@@ -1225,7 +1225,7 @@
 !                 4 => report every iteration, total simplex
 !     err       = Output
 !                 0 => Normal exeecution, converged within desired range
-!                 1 => Function Evaluation exceeded limit
+!                 1 => function evaluation exceeded limit
 !                 2 => Iterations exceeded limit
 !
 !     See Matlab fminsearch

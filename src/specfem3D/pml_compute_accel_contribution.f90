@@ -33,7 +33,7 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
 
   ! second-order accurate convolution term calculation from equation (21) of
   ! Shumin Wang, Robert Lee, and Fernando L. Teixeira,
-  ! Anisotropic-Medium PML for Vector FETD With Modified Basis Functions,
+  ! Anisotropic-medium PML for vector FETD with modified basis functions,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
   use specfem_par, only: NGLOB_AB,deltat,wgll_cube,jacobian,ibool,rhostore
@@ -150,7 +150,7 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
 
   ! second-order accurate convolution term calculation from equation (21) of
   ! Shumin Wang, Robert Lee, and Fernando L. Teixeira,
-  ! Anisotropic-Medium PML for Vector FETD With Modified Basis Functions,
+  ! Anisotropic-medium PML for vector FETD with modified basis functions,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
   use specfem_par, only: NGLOB_AB,deltat,wgll_cube,jacobian,ibool,kappastore

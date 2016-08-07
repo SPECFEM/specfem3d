@@ -53,7 +53,7 @@
   double precision sumshape,sumdershapexi,sumdershapeeta,sumdershapegamma
 
 ! check that the parameter file is correct
-  if(NGNOD /= 27) call exit_MPI(myrank,'elements should have 27 control nodes')
+  if (NGNOD /= 27) call exit_MPI(myrank,'elements should have 27 control nodes')
 
 ! generate the 3D shape functions and their derivatives (27 nodes)
   do i=1,NGLLX
@@ -248,16 +248,16 @@
       enddo
 
 !     the sum of the shape functions should be 1
-      if(abs(sumshape-ONE) > TINYVAL) call exit_MPI(myrank,'error in 3D shape functions')
+      if (abs(sumshape-ONE) > TINYVAL) call exit_MPI(myrank,'error in 3D shape functions')
 
 !     the sum of the derivatives of the shape functions should be 0
-      if(abs(sumdershapexi) > TINYVAL) &
+      if (abs(sumdershapexi) > TINYVAL) &
         call exit_MPI(myrank,'error in xi derivatives of 3D shape function')
 
-      if(abs(sumdershapeeta) > TINYVAL) &
+      if (abs(sumdershapeeta) > TINYVAL) &
         call exit_MPI(myrank,'error in eta derivatives of 3D shape function')
 
-      if(abs(sumdershapegamma) > TINYVAL) &
+      if (abs(sumdershapegamma) > TINYVAL) &
         call exit_MPI(myrank,'error in gamma derivatives of 3D shape function')
 
       enddo

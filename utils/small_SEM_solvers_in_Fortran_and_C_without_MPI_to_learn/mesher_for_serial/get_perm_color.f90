@@ -51,7 +51,7 @@
     nglob_GLL_full = nglob
 
 !---- call Charbel Farhat's routines
-    if(myrank == 0) &
+    if (myrank == 0) &
       write(IMAIN,*) 'calling form_elt_connectivity_foelco to perform mesh coloring and inner/outer element splitting'
     call form_elt_connectivity_foelco(mn,mp,nspec,global_corner_number,nglob_GLL_full,ibool,nglob_eight_corners_only)
     do i=1,nspec
@@ -63,7 +63,7 @@
     allocate(np(nglob_eight_corners_only+1))
     count_only = .true.
     total_size_ne = 1
-    if(myrank == 0) write(IMAIN,*) 'calling form_node_connectivity_fonoco to determine the size of the table'
+    if (myrank == 0) write(IMAIN,*) 'calling form_node_connectivity_fonoco to determine the size of the table'
     allocate(ne(total_size_ne))
     call form_node_connectivity_fonoco(mn,mp,ne,np,nglob_eight_corners_only,nspec,count_only,total_size_ne)
     deallocate(ne)
@@ -73,7 +73,7 @@
 
 ! now actually generate the array
     count_only = .false.
-    if(myrank == 0) write(IMAIN,*) 'calling form_node_connectivity_fonoco to actually create the table'
+    if (myrank == 0) write(IMAIN,*) 'calling form_node_connectivity_fonoco to actually create the table'
     call form_node_connectivity_fonoco(mn,mp,ne,np,nglob_eight_corners_only,nspec,count_only,total_size_ne)
     do i=1,nglob_eight_corners_only
       istart = np(i)
@@ -83,7 +83,7 @@
 ! count only, to determine the size needed for the array
     count_only = .true.
     total_size_adj = 1
-    if(myrank == 0) write(IMAIN,*) 'calling create_adjacency_table_adjncy to determine the size of the table'
+    if (myrank == 0) write(IMAIN,*) 'calling create_adjacency_table_adjncy to determine the size of the table'
     allocate(adj(total_size_adj))
     call create_adjacency_table_adjncy(mn,mp,ne,np,adj,xadj,maskel,nspec,nglob_eight_corners_only,&
     count_only,total_size_ne,total_size_adj,.false.)
@@ -94,7 +94,7 @@
 
 ! now actually generate the array
     count_only = .false.
-    if(myrank == 0) write(IMAIN,*) 'calling create_adjacency_table_adjncy again to actually create the table'
+    if (myrank == 0) write(IMAIN,*) 'calling create_adjacency_table_adjncy again to actually create the table'
     call create_adjacency_table_adjncy(mn,mp,ne,np,adj,xadj,maskel,nspec,nglob_eight_corners_only,&
     count_only,total_size_ne,total_size_adj,.false.)
 
@@ -102,7 +102,7 @@
       istart = xadj(i)
       istop = xadj(i+1) - 1
       number_of_neighbors = istop-istart+1
-      if(number_of_neighbors < 1 .or. number_of_neighbors > MAX_NUMBER_OF_NEIGHBORS) stop 'incorrect number of neighbors'
+      if (number_of_neighbors < 1 .or. number_of_neighbors > MAX_NUMBER_OF_NEIGHBORS) stop 'incorrect number of neighbors'
     enddo
 
     deallocate(ne,np)
@@ -110,7 +110,7 @@
     call get_color(adj,xadj,color,nspec,total_size_adj,is_on_a_slice_edge, &
        nb_colors_outer_elements,nb_colors_inner_elements,nspec_outer)
 
-    if(myrank == 0) then
+    if (myrank == 0) then
       write(IMAIN,*) 'number of colors of the graph for inner elements = ',nb_colors_inner_elements
       write(IMAIN,*) 'number of colors of the graph for outer elements = ',nb_colors_outer_elements
       write(IMAIN,*) 'total number of colors of the graph (sum of both) = ', &
@@ -120,11 +120,11 @@
 
     deallocate(adj)
 
-    if(myrank == 0) write(IMAIN,*) 'generating the final colors'
+    if (myrank == 0) write(IMAIN,*) 'generating the final colors'
     first_elem_number_in_this_color(:) = -1
     call get_final_perm(color,perm,first_elem_number_in_this_color,nspec,nb_colors_inner_elements+nb_colors_outer_elements)
 
-    if(myrank == 0) write(IMAIN,*) 'done with mesh coloring and inner/outer element splitting'
+    if (myrank == 0) write(IMAIN,*) 'done with mesh coloring and inner/outer element splitting'
 
   end subroutine get_perm_color
 
@@ -142,7 +142,7 @@ subroutine get_final_perm(color,perm,first_elem_number_in_this_color,nspec,nb_co
   do icolor = 1, nb_color
     first_elem_number_in_this_color(icolor) = counter
     do ielem = 1, nspec
-      if(color(ielem) == icolor) then
+      if (color(ielem) == icolor) then
         perm(ielem) = counter
         counter = counter + 1
       endif
@@ -292,17 +292,17 @@ nglob_GLL_full,ibool,nglob_eight_corners_only)
         do ix = 1,NGLLX,NGLLX-1
 
           inumcorner = inumcorner + 1
-          if(inumcorner > NGNOD_HEXAHEDRA) stop 'corner number too large'
+          if (inumcorner > NGNOD_HEXAHEDRA) stop 'corner number too large'
 
 ! check if this point was already assigned a number previously, otherwise create one and store it
-          if(global_corner_number(ibool(ix,iy,iz,ispec)) == -1) then
+          if (global_corner_number(ibool(ix,iy,iz,ispec)) == -1) then
             nglob_eight_corners_only = nglob_eight_corners_only + 1
             global_corner_number(ibool(ix,iy,iz,ispec)) = nglob_eight_corners_only
           endif
 
           node = global_corner_number(ibool(ix,iy,iz,ispec))
             do k=nsum,ninter-1
-              if(node == mn(k)) goto 200
+              if (node == mn(k)) goto 200
             enddo
 
             mn(ninter) = node
@@ -372,7 +372,7 @@ nspec,count_only,total_size_ne)
 
             do j=mp(ispec),mp(ispec + 1) - 1
                   if (mn(j) == inode) then
-                        if(count_only) then
+                        if (count_only) then
                           total_size_ne = nsum
                         else
                           ne(nsum) = ispec
@@ -454,12 +454,12 @@ nspec,count_only,total_size_ne)
       jstop = np(node + 1) - 1
         do 120 jel=jstart,jstop
             nelem = ne(jel)
-            if(maskel(nelem)) goto 120
+            if (maskel(nelem)) goto 120
             if (face) then
               ! if 2 elements share at least 3 corners, therefore they share a face
               countel(nelem) = countel(nelem) + 1
               if (countel(nelem)>=3) then
-                if(count_only) then
+                if (count_only) then
                   total_size_adj = iad
                 else
                   adj(iad) = nelem
@@ -468,7 +468,7 @@ nspec,count_only,total_size_ne)
                 iad = iad + 1
               endif
             else
-              if(count_only) then
+              if (count_only) then
                 total_size_adj = iad
               else
                 adj(iad) = nelem

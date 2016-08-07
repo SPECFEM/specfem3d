@@ -525,7 +525,7 @@
   call create_name_database(prname,myrank,iregion_code,LOCAL_PATH)
 
 ! Attenuation
-  if(ATTENUATION .and. ATTENUATION_3D) then
+  if (ATTENUATION .and. ATTENUATION_3D) then
     T_c_source = AM_V%QT_c_source
     tau_s(:)   = AM_V%Qtau_s(:)
     allocate(Qmu_store(NGLLX,NGLLY,NGLLZ,nspec))
@@ -573,7 +573,7 @@
   allocate(eta_anisostore(NGLLX,NGLLY,NGLLZ,nspec))
 
 ! Stacey
-  if(NCHUNKS /= 6) then
+  if (NCHUNKS /= 6) then
     nspec_stacey = nspec
   else
     nspec_stacey = 1
@@ -582,7 +582,7 @@
   allocate(rho_vs(NGLLX,NGLLY,NGLLZ,nspec_stacey))
 
   nspec_ani = 1
-  if((ANISOTROPIC_INNER_CORE .and. iregion_code == IREGION_INNER_CORE) .or. &
+  if ((ANISOTROPIC_INNER_CORE .and. iregion_code == IREGION_INNER_CORE) .or. &
      (ANISOTROPIC_3D_MANTLE .and. iregion_code == IREGION_CRUST_MANTLE)) nspec_ani = nspec
 
   allocate(c11store(NGLLX,NGLLY,NGLLZ,nspec_ani))
@@ -651,9 +651,9 @@
   call zwgljd(zigll,wzgll,NGLLZ,GAUSSALPHA,GAUSSBETA)
 
 ! if number of points is odd, the middle abscissa is exactly zero
-  if(mod(NGLLX,2) /= 0) xigll((NGLLX-1)/2+1) = ZERO
-  if(mod(NGLLY,2) /= 0) yigll((NGLLY-1)/2+1) = ZERO
-  if(mod(NGLLZ,2) /= 0) zigll((NGLLZ-1)/2+1) = ZERO
+  if (mod(NGLLX,2) /= 0) xigll((NGLLX-1)/2+1) = ZERO
+  if (mod(NGLLY,2) /= 0) yigll((NGLLY-1)/2+1) = ZERO
+  if (mod(NGLLZ,2) /= 0) zigll((NGLLZ-1)/2+1) = ZERO
 
 ! get the 3-D shape functions
   call get_shape3D(myrank,shape3D,dershape3D,xigll,yigll,zigll)
@@ -665,13 +665,13 @@
   call get_shape2D(myrank,shape2D_top,dershape2D_top,xigll,yigll,NGLLX,NGLLY)
 
 ! define models 1066a and ak135 and ref
-  if(REFERENCE_1D_MODEL == REFERENCE_MODEL_1066A) then
+  if (REFERENCE_1D_MODEL == REFERENCE_MODEL_1066A) then
     call define_model_1066a(CRUSTAL, M1066a_V)
-  else if(REFERENCE_1D_MODEL == REFERENCE_MODEL_AK135) then
+  else if (REFERENCE_1D_MODEL == REFERENCE_MODEL_AK135) then
     call define_model_ak135(CRUSTAL, Mak135_V)
-  else if(REFERENCE_1D_MODEL == REFERENCE_MODEL_REF) then
+  else if (REFERENCE_1D_MODEL == REFERENCE_MODEL_REF) then
     call define_model_ref(Mref_V)
-  else if(REFERENCE_1D_MODEL == REFERENCE_MODEL_SEA1D) then
+  else if (REFERENCE_1D_MODEL == REFERENCE_MODEL_SEA1D) then
     call define_model_sea1d(CRUSTAL, SEA1DM_V)
   endif
 
@@ -696,15 +696,15 @@
   if (.not. ADD_4TH_DOUBLING) NUMBER_OF_MESH_LAYERS = NUMBER_OF_MESH_LAYERS - 1
 
 ! define the first and last layers that define this region
-  if(iregion_code == IREGION_CRUST_MANTLE) then
+  if (iregion_code == IREGION_CRUST_MANTLE) then
     ifirst_region = 1
     ilast_region = 10 + layer_shift
 
-  else if(iregion_code == IREGION_OUTER_CORE) then
+  else if (iregion_code == IREGION_OUTER_CORE) then
     ifirst_region = 11 + layer_shift
     ilast_region = NUMBER_OF_MESH_LAYERS - 1
 
-  else if(iregion_code == IREGION_INNER_CORE) then
+  else if (iregion_code == IREGION_INNER_CORE) then
     ifirst_region = NUMBER_OF_MESH_LAYERS
     ilast_region = NUMBER_OF_MESH_LAYERS
 
@@ -725,7 +725,7 @@
   endif
   allocate (perm_layer(ifirst_region:ilast_region))
   perm_layer = (/ (i, i=ilast_region,ifirst_region,-1) /)
-! if(iregion_code == IREGION_CRUST_MANTLE) then
+! if (iregion_code == IREGION_CRUST_MANTLE) then
 !  cpt=3
 !  perm_layer(1)=first_layer_aniso
 !  perm_layer(2)=last_layer_aniso
@@ -744,7 +744,7 @@
   ystore(:,:,:,:) = 0.d0
   zstore(:,:,:,:) = 0.d0
 
-  if(ipass == 1) ibool(:,:,:,:) = 0
+  if (ipass == 1) ibool(:,:,:,:) = 0
 
 ! initialize boundary arrays
   iboun(:,:) = .false.
@@ -753,33 +753,33 @@
 
 ! store and save the final arrays only in the second pass
 ! therefore in the first pass some arrays can be allocated with a dummy size
-  if(ipass == 1) then
+  if (ipass == 1) then
 
     ACTUALLY_STORE_ARRAYS = .false.
 
-    allocate(xixstore(NGLLX,NGLLY,NGLLZ,1),stat=ier); if(ier /= 0) stop 'error in allocate'
-    allocate(xiystore(NGLLX,NGLLY,NGLLZ,1),stat=ier); if(ier /= 0) stop 'error in allocate'
-    allocate(xizstore(NGLLX,NGLLY,NGLLZ,1),stat=ier); if(ier /= 0) stop 'error in allocate'
-    allocate(etaxstore(NGLLX,NGLLY,NGLLZ,1),stat=ier); if(ier /= 0) stop 'error in allocate'
-    allocate(etaystore(NGLLX,NGLLY,NGLLZ,1),stat=ier); if(ier /= 0) stop 'error in allocate'
-    allocate(etazstore(NGLLX,NGLLY,NGLLZ,1),stat=ier); if(ier /= 0) stop 'error in allocate'
-    allocate(gammaxstore(NGLLX,NGLLY,NGLLZ,1),stat=ier); if(ier /= 0) stop 'error in allocate'
-    allocate(gammaystore(NGLLX,NGLLY,NGLLZ,1),stat=ier); if(ier /= 0) stop 'error in allocate'
-    allocate(gammazstore(NGLLX,NGLLY,NGLLZ,1),stat=ier); if(ier /= 0) stop 'error in allocate'
+    allocate(xixstore(NGLLX,NGLLY,NGLLZ,1),stat=ier); if (ier /= 0) stop 'error in allocate'
+    allocate(xiystore(NGLLX,NGLLY,NGLLZ,1),stat=ier); if (ier /= 0) stop 'error in allocate'
+    allocate(xizstore(NGLLX,NGLLY,NGLLZ,1),stat=ier); if (ier /= 0) stop 'error in allocate'
+    allocate(etaxstore(NGLLX,NGLLY,NGLLZ,1),stat=ier); if (ier /= 0) stop 'error in allocate'
+    allocate(etaystore(NGLLX,NGLLY,NGLLZ,1),stat=ier); if (ier /= 0) stop 'error in allocate'
+    allocate(etazstore(NGLLX,NGLLY,NGLLZ,1),stat=ier); if (ier /= 0) stop 'error in allocate'
+    allocate(gammaxstore(NGLLX,NGLLY,NGLLZ,1),stat=ier); if (ier /= 0) stop 'error in allocate'
+    allocate(gammaystore(NGLLX,NGLLY,NGLLZ,1),stat=ier); if (ier /= 0) stop 'error in allocate'
+    allocate(gammazstore(NGLLX,NGLLY,NGLLZ,1),stat=ier); if (ier /= 0) stop 'error in allocate'
 
   else
 
     ACTUALLY_STORE_ARRAYS = .true.
 
-    allocate(xixstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if(ier /= 0) stop 'error in allocate'
-    allocate(xiystore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if(ier /= 0) stop 'error in allocate'
-    allocate(xizstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if(ier /= 0) stop 'error in allocate'
-    allocate(etaxstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if(ier /= 0) stop 'error in allocate'
-    allocate(etaystore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if(ier /= 0) stop 'error in allocate'
-    allocate(etazstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if(ier /= 0) stop 'error in allocate'
-    allocate(gammaxstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if(ier /= 0) stop 'error in allocate'
-    allocate(gammaystore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if(ier /= 0) stop 'error in allocate'
-    allocate(gammazstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if(ier /= 0) stop 'error in allocate'
+    allocate(xixstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if (ier /= 0) stop 'error in allocate'
+    allocate(xiystore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if (ier /= 0) stop 'error in allocate'
+    allocate(xizstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if (ier /= 0) stop 'error in allocate'
+    allocate(etaxstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if (ier /= 0) stop 'error in allocate'
+    allocate(etaystore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if (ier /= 0) stop 'error in allocate'
+    allocate(etazstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if (ier /= 0) stop 'error in allocate'
+    allocate(gammaxstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if (ier /= 0) stop 'error in allocate'
+    allocate(gammaystore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if (ier /= 0) stop 'error in allocate'
+    allocate(gammazstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if (ier /= 0) stop 'error in allocate'
 
   endif
 
@@ -800,10 +800,10 @@
   rmin = rmins(ilayer)
   rmax = rmaxs(ilayer)
 
-  if(iregion_code == IREGION_CRUST_MANTLE .and. ilayer_loop==3) then
+  if (iregion_code == IREGION_CRUST_MANTLE .and. ilayer_loop==3) then
     FIRST_ELT_NON_ANISO = ispec+1
   endif
-  if(iregion_code == IREGION_CRUST_MANTLE .and. ilayer_loop==(ilast_region-nb_layer_above_aniso+1)) then
+  if (iregion_code == IREGION_CRUST_MANTLE .and. ilayer_loop==(ilast_region-nb_layer_above_aniso+1)) then
     FIRST_ELT_ABOVE_ANISO = ispec+1
   endif
 
@@ -812,7 +812,7 @@
 ! if there is a doubling at the top of this region, we implement it in the last two layers of elements
 ! and therefore we suppress two layers of regular elements here
     USE_ONE_LAYER_SB = .false.
-    if(this_region_has_a_doubling(ilayer)) then
+    if (this_region_has_a_doubling(ilayer)) then
       if (ner(ilayer) == 1) then
         ner_without_doubling = ner_without_doubling - 1
         USE_ONE_LAYER_SB = .true.
@@ -863,7 +863,7 @@
   endif
 ! add one spectral element to the list
      ispec = ispec + 1
-     if(ispec > nspec) call exit_MPI(myrank,'ispec greater than nspec in mesh creation')
+     if (ispec > nspec) call exit_MPI(myrank,'ispec greater than nspec in mesh creation')
 
 ! new get_flag_boundaries
 ! xmin & xmax
@@ -928,14 +928,14 @@
 ! We have imposed that NEX be a multiple of 16 therefore we know that we can always create
 ! these 2 x 2 blocks because NEX_PER_PROC_XI / ratio_sampling_array(ilayer) and
 ! NEX_PER_PROC_ETA / ratio_sampling_array(ilayer) are always divisible by 2.
-    if(this_region_has_a_doubling(ilayer)) then
+    if (this_region_has_a_doubling(ilayer)) then
       if (USE_ONE_LAYER_SB) then
         call define_superbrick_one_layer(x_superbrick,y_superbrick,z_superbrick,ibool_superbrick,iboun_sb)
         nspec_sb = NSPEC_SUPERBRICK_1L
         iz_elem = ner(ilayer)
         step_mult = 2
       else
-        if(iregion_code==IREGION_OUTER_CORE .and. ilayer==ilast_region .and. (CUT_SUPERBRICK_XI .or. CUT_SUPERBRICK_ETA)) then
+        if (iregion_code==IREGION_OUTER_CORE .and. ilayer==ilast_region .and. (CUT_SUPERBRICK_XI .or. CUT_SUPERBRICK_ETA)) then
           nspec_sb = NSPEC_DOUBLING_BASICBRICK
           step_mult = 1
         else
@@ -1040,7 +1040,7 @@
 
 ! add one spectral element to the list
      ispec = ispec + 1
-     if(ispec > nspec) call exit_MPI(myrank,'ispec greater than nspec in mesh creation')
+     if (ispec > nspec) call exit_MPI(myrank,'ispec greater than nspec in mesh creation')
 
 ! new get_flag_boundaries
 ! xmin & xmax
@@ -1108,7 +1108,7 @@
 
 ! define central cube in inner core
 
-  if(INCLUDE_CENTRAL_CUBE .and. iregion_code == IREGION_INNER_CORE) then
+  if (INCLUDE_CENTRAL_CUBE .and. iregion_code == IREGION_INNER_CORE) then
 
 ! create the shape of a regular mesh element in the inner core
   call hex_nodes(iaddx,iaddy,iaddz)
@@ -1139,32 +1139,32 @@
                   xgrid_central_cube,ygrid_central_cube,zgrid_central_cube, &
                   iproc_xi,iproc_eta,NPROC_XI,NPROC_ETA,nx_central_cube,ny_central_cube,nz_central_cube,radius_cube)
 
-          if(ichunk == CHUNK_AB) then
+          if (ichunk == CHUNK_AB) then
             xelm(ia) = - ygrid_central_cube
             yelm(ia) = + xgrid_central_cube
             zelm(ia) = + zgrid_central_cube
 
-          else if(ichunk == CHUNK_AB_ANTIPODE) then
+          else if (ichunk == CHUNK_AB_ANTIPODE) then
             xelm(ia) = - ygrid_central_cube
             yelm(ia) = - xgrid_central_cube
             zelm(ia) = - zgrid_central_cube
 
-          else if(ichunk == CHUNK_AC) then
+          else if (ichunk == CHUNK_AC) then
             xelm(ia) = - ygrid_central_cube
             yelm(ia) = - zgrid_central_cube
             zelm(ia) = + xgrid_central_cube
 
-          else if(ichunk == CHUNK_AC_ANTIPODE) then
+          else if (ichunk == CHUNK_AC_ANTIPODE) then
             xelm(ia) = - ygrid_central_cube
             yelm(ia) = + zgrid_central_cube
             zelm(ia) = - xgrid_central_cube
 
-          else if(ichunk == CHUNK_BC) then
+          else if (ichunk == CHUNK_BC) then
             xelm(ia) = - zgrid_central_cube
             yelm(ia) = + ygrid_central_cube
             zelm(ia) = + xgrid_central_cube
 
-          else if(ichunk == CHUNK_BC_ANTIPODE) then
+          else if (ichunk == CHUNK_BC_ANTIPODE) then
             xelm(ia) = + zgrid_central_cube
             yelm(ia) = - ygrid_central_cube
             zelm(ia) = + xgrid_central_cube
@@ -1177,7 +1177,7 @@
 
 ! add one spectral element to the list
         ispec = ispec + 1
-        if(ispec > nspec) call exit_MPI(myrank,'ispec greater than nspec in central cube creation')
+        if (ispec > nspec) call exit_MPI(myrank,'ispec greater than nspec in central cube creation')
 
 ! new get_flag_boundaries
 ! xmin & xmax
@@ -1214,10 +1214,10 @@
     nz_inf_limit = nz_central_cube
   endif
 
-  if(ichunk == CHUNK_AB .or. ichunk == CHUNK_AB_ANTIPODE) then
-    if(iz == nz_inf_limit) then
+  if (ichunk == CHUNK_AB .or. ichunk == CHUNK_AB_ANTIPODE) then
+    if (iz == nz_inf_limit) then
       idoubling(ispec) = IFLAG_BOTTOM_CENTRAL_CUBE
-    else if(iz == 2*nz_central_cube-2) then
+    else if (iz == 2*nz_central_cube-2) then
       idoubling(ispec) = IFLAG_TOP_CENTRAL_CUBE
     else if (iz > nz_inf_limit .and. iz < 2*nz_central_cube-2) then
       idoubling(ispec) = IFLAG_MIDDLE_CENTRAL_CUBE
@@ -1257,17 +1257,17 @@
 !---
 
 ! check total number of spectral elements created
-  if(ispec /= nspec) call exit_MPI(myrank,'ispec should equal nspec')
+  if (ispec /= nspec) call exit_MPI(myrank,'ispec should equal nspec')
 
 ! only create global addressing and the MPI buffers in the first pass
-  if(ipass == 1) then
+  if (ipass == 1) then
 
 ! allocate memory for arrays
-  allocate(locval(npointot),stat=ier); if(ier /= 0) stop 'error in allocate'
-  allocate(ifseg(npointot),stat=ier); if(ier /= 0) stop 'error in allocate'
-  allocate(xp(npointot),stat=ier); if(ier /= 0) stop 'error in allocate'
-  allocate(yp(npointot),stat=ier); if(ier /= 0) stop 'error in allocate'
-  allocate(zp(npointot),stat=ier); if(ier /= 0) stop 'error in allocate'
+  allocate(locval(npointot),stat=ier); if (ier /= 0) stop 'error in allocate'
+  allocate(ifseg(npointot),stat=ier); if (ier /= 0) stop 'error in allocate'
+  allocate(xp(npointot),stat=ier); if (ier /= 0) stop 'error in allocate'
+  allocate(yp(npointot),stat=ier); if (ier /= 0) stop 'error in allocate'
+  allocate(zp(npointot),stat=ier); if (ier /= 0) stop 'error in allocate'
 
   locval = 0
   ifseg = .false.
@@ -1294,23 +1294,23 @@
 
   call get_global(npointot,xp,yp,zp,ibool,locval,ifseg,nglob)
 
-  deallocate(xp,stat=ier); if(ier /= 0) stop 'error in deallocate'
-  deallocate(yp,stat=ier); if(ier /= 0) stop 'error in deallocate'
-  deallocate(zp,stat=ier); if(ier /= 0) stop 'error in deallocate'
+  deallocate(xp,stat=ier); if (ier /= 0) stop 'error in deallocate'
+  deallocate(yp,stat=ier); if (ier /= 0) stop 'error in deallocate'
+  deallocate(zp,stat=ier); if (ier /= 0) stop 'error in deallocate'
 
 ! check that number of points found equals theoretical value
-  if(nglob /= nglob_theor) then
+  if (nglob /= nglob_theor) then
     write(errmsg,*) 'incorrect total number of points found: myrank,nglob,nglob_theor,ipass,iregion_code = ',&
       myrank,nglob,nglob_theor,ipass,iregion_code
     call exit_MPI(myrank,errmsg)
   endif
 
-  if(minval(ibool) /= 1 .or. maxval(ibool) /= nglob_theor) call exit_MPI(myrank,'incorrect global numbering')
+  if (minval(ibool) /= 1 .or. maxval(ibool) /= nglob_theor) call exit_MPI(myrank,'incorrect global numbering')
 
 ! create a new indirect addressing to reduce cache misses in memory access in the solver
 ! this is *critical* to improve performance in the solver
-  allocate(copy_ibool_ori(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if(ier /= 0) stop 'error in allocate'
-  allocate(mask_ibool(nglob),stat=ier); if(ier /= 0) stop 'error in allocate'
+  allocate(copy_ibool_ori(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if (ier /= 0) stop 'error in allocate'
+  allocate(mask_ibool(nglob),stat=ier); if (ier /= 0) stop 'error in allocate'
 
   mask_ibool(:) = -1
   copy_ibool_ori(:,:,:,:) = ibool(:,:,:,:)
@@ -1320,7 +1320,7 @@
   do k=1,NGLLZ
     do j=1,NGLLY
       do i=1,NGLLX
-        if(mask_ibool(copy_ibool_ori(i,j,k,ispec)) == -1) then
+        if (mask_ibool(copy_ibool_ori(i,j,k,ispec)) == -1) then
 ! create a new point
           inumber = inumber + 1
           ibool(i,j,k,ispec) = inumber
@@ -1334,12 +1334,12 @@
   enddo
   enddo
 
-  deallocate(copy_ibool_ori,stat=ier); if(ier /= 0) stop 'error in deallocate'
-  deallocate(mask_ibool,stat=ier); if(ier /= 0) stop 'error in deallocate'
+  deallocate(copy_ibool_ori,stat=ier); if (ier /= 0) stop 'error in deallocate'
+  deallocate(mask_ibool,stat=ier); if (ier /= 0) stop 'error in deallocate'
 
-  if(minval(ibool) /= 1 .or. maxval(ibool) /= nglob_theor) call exit_MPI(myrank,'incorrect global numbering after sorting')
+  if (minval(ibool) /= 1 .or. maxval(ibool) /= nglob_theor) call exit_MPI(myrank,'incorrect global numbering after sorting')
 
-  allocate(mask_ibool2(nglob),stat=ier); if(ier /= 0) stop 'error in allocate'
+  allocate(mask_ibool2(nglob),stat=ier); if (ier /= 0) stop 'error in allocate'
   mask_ibool2(:) = .false.
 ! create MPI buffers
 ! arrays locval(npointot) and ifseg(npointot) used to save memory
@@ -1363,7 +1363,7 @@
     do k = 1,NGLLZ,NGLLZ-1
       do j  = 1,NGLLY,NGLLY-1
         do i = 1,NGLLX,NGLLX-1
-          if(mask_ibool2(ibool(i,j,k,ispec))) then
+          if (mask_ibool2(ibool(i,j,k,ispec))) then
             is_on_a_slice_edge(ispec) = .true.
             goto 888
           endif
@@ -1374,13 +1374,13 @@
   enddo
 
 ! Stacey
-  if(NCHUNKS /= 6) &
+  if (NCHUNKS /= 6) &
 !!!!!!!!       call get_absorb(myrank,prname,iboun,nspec,nimin,nimax,njmin,njmax,nkmin_xi,nkmin_eta, &
        call get_absorb(myrank,iboun,nspec,nimin,nimax,njmin,njmax,nkmin_xi,nkmin_eta, &
                        NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM)
 
 ! create AVS or DX mesh data for the slices
-  if(SAVE_MESH_FILES) then
+  if (SAVE_MESH_FILES) then
     call write_AVS_DX_global_data(myrank,prname,nspec,ibool,idoubling,xstore,ystore,zstore,locval,ifseg,npointot)
     call write_AVS_DX_global_faces_data(myrank,prname,nspec,iMPIcut_xi,iMPIcut_eta,ibool, &
               idoubling,xstore,ystore,zstore,locval,ifseg,npointot)
@@ -1394,12 +1394,12 @@
               idoubling,xstore,ystore,zstore,locval,ifseg,npointot)
   endif
 
-  deallocate(locval,stat=ier); if(ier /= 0) stop 'error in deallocate'
-  deallocate(ifseg,stat=ier); if(ier /= 0) stop 'error in deallocate'
-  deallocate(mask_ibool2,stat=ier); if(ier /= 0) stop 'error in deallocate'
+  deallocate(locval,stat=ier); if (ier /= 0) stop 'error in deallocate'
+  deallocate(ifseg,stat=ier); if (ier /= 0) stop 'error in deallocate'
+  deallocate(mask_ibool2,stat=ier); if (ier /= 0) stop 'error in deallocate'
 
 ! only create mass matrix and save all the final arrays in the second pass
-  else if(ipass == 2) then
+  else if (ipass == 2) then
 
 ! copy the theoretical number of points for the second pass
   nglob = nglob_theor
@@ -1410,7 +1410,7 @@
 
 !!!! DM DM detection of the edges, coloring and permutation separately
   allocate(perm(nspec))
-  if(USE_MESH_COLORING_INNER_OUTER) then
+  if (USE_MESH_COLORING_INNER_OUTER) then
 
     stop 'USE_MESH_COLORING_INNER_OUTER should not be used in the serial case'
 
@@ -1422,13 +1422,13 @@
 
 !! DK DK for regular C version for CPUs: do not use colors but nonetheless put all the outer elements
 !! DK DK first in order to be able to overlap non-blocking MPI communications with calculations
-!   if(USE_REGULAR_C_CPU_VERSION) then
+!   if (USE_REGULAR_C_CPU_VERSION) then
 
 !   inumber_in_new_list_after_perm = 0
 
 ! first detect and list all the outer elements
 !   do ispec = 1,nspec
-!     if(is_on_a_slice_edge(ispec)) then
+!     if (is_on_a_slice_edge(ispec)) then
 !       inumber_in_new_list_after_perm = inumber_in_new_list_after_perm + 1
 !       perm(ispec) = inumber_in_new_list_after_perm
 !     endif
@@ -1442,7 +1442,7 @@
 !   nspec_outer_min_global = inumber_in_new_list_after_perm
 !   nspec_outer_max_global = inumber_in_new_list_after_perm
 !#endif
-!   if(myrank == 0) then
+!   if (myrank == 0) then
 !     open(unit=99,file='../DATABASES_FOR_SOLVER/values_from_mesher_nspec_outer.h',status='unknown')
 !     write(99,*) '#define NSPEC_OUTER ',nspec_outer_max_global
 !     write(99,*) '// NSPEC_OUTER_min = ',nspec_outer_min_global
@@ -1451,18 +1451,18 @@
 !   endif
 
 ! just in case, test that we have detected outer elements
-!   if(inumber_in_new_list_after_perm <= 0) stop 'fatal error: no outer elements detected!'
+!   if (inumber_in_new_list_after_perm <= 0) stop 'fatal error: no outer elements detected!'
 
 ! then detect and list all the inner elements
 !   do ispec = 1,nspec
-!     if(.not. is_on_a_slice_edge(ispec)) then
+!     if (.not. is_on_a_slice_edge(ispec)) then
 !       inumber_in_new_list_after_perm = inumber_in_new_list_after_perm + 1
 !       perm(ispec) = inumber_in_new_list_after_perm
 !     endif
 !   enddo
 
 ! test that all the elements have been used once and only once
-!   if(inumber_in_new_list_after_perm /= nspec) stop 'fatal error: inumber_in_new_list_after_perm not equal to nspec'
+!   if (inumber_in_new_list_after_perm /= nspec) stop 'fatal error: inumber_in_new_list_after_perm not equal to nspec'
 
 !   else
 
@@ -1503,7 +1503,7 @@
 
 ! check that the sum of all the numbers of elements found in each color is equal
 ! to the total number of elements in the mesh
-    if(sum(number_of_elements_in_this_color) /= nspec) then
+    if (sum(number_of_elements_in_this_color) /= nspec) then
       print *,'nspec = ',nspec
       print *,'total number of elements in all the colors of the mesh = ',sum(number_of_elements_in_this_color)
       stop 'incorrect total number of elements in all the colors of the mesh'
@@ -1511,7 +1511,7 @@
 
 ! check that the sum of all the numbers of elements found in each color for the outer elements is equal
 ! to the total number of outer elements found in the mesh
-    if(sum(number_of_elements_in_this_color(1:nb_colors_outer_elements)) /= nspec_outer) then
+    if (sum(number_of_elements_in_this_color(1:nb_colors_outer_elements)) /= nspec_outer) then
       print *,'nspec_outer = ',nspec_outer
       print *,'total number of elements in all the colors of the mesh for outer elements = ',sum(number_of_elements_in_this_color)
       stop 'incorrect total number of elements in all the colors of the mesh for outer elements'
@@ -1525,7 +1525,7 @@
     nspec_outer_min_global = nspec_outer
     nspec_outer_max_global = nspec_outer
 #endif
-    if(myrank == 0) then
+    if (myrank == 0) then
       open(unit=99,file='../DATABASES_FOR_SOLVER/values_from_mesher_nspec_outer.h',status='unknown')
       write(99,*) '#define NSPEC_OUTER ',nspec_outer_max_global
       write(99,*) '// NSPEC_OUTER_min = ',nspec_outer_min_global
@@ -1655,14 +1655,14 @@
 !             NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX)
 
 ! creating mass matrix in this slice (will be fully assembled in the solver)
-  allocate(rmass(nglob),stat=ier); if(ier /= 0) stop 'error in allocate'
+  allocate(rmass(nglob),stat=ier); if (ier /= 0) stop 'error in allocate'
 
   rmass(:) = 0._CUSTOM_REAL
 
   do ispec=1,nspec
 
 ! suppress fictitious elements in central cube
-  if(idoubling(ispec) == IFLAG_IN_FICTITIOUS_CUBE) cycle
+  if (idoubling(ispec) == IFLAG_IN_FICTITIOUS_CUBE) cycle
 
   do k = 1,NGLLZ
     do j = 1,NGLLY
@@ -1687,10 +1687,10 @@
                         + xizl*(etaxl*gammayl-etayl*gammaxl))
 
 ! definition depends if region is fluid or solid
-  if(iregion_code == IREGION_CRUST_MANTLE .or. iregion_code == IREGION_INNER_CORE) then
+  if (iregion_code == IREGION_CRUST_MANTLE .or. iregion_code == IREGION_INNER_CORE) then
 
 ! distinguish between single and double precision for reals
-    if(CUSTOM_REAL == SIZE_REAL) then
+    if (CUSTOM_REAL == SIZE_REAL) then
       rmass(iglobnum) = rmass(iglobnum) + &
              sngl(dble(rhostore(i,j,k,ispec)) * dble(jacobianl) * weight)
     else
@@ -1698,12 +1698,12 @@
     endif
 
 ! fluid in outer core
-  else if(iregion_code == IREGION_OUTER_CORE) then
+  else if (iregion_code == IREGION_OUTER_CORE) then
 
 ! no anisotropy in the fluid, use kappav
 
 ! distinguish between single and double precision for reals
-    if(CUSTOM_REAL == SIZE_REAL) then
+    if (CUSTOM_REAL == SIZE_REAL) then
       rmass(iglobnum) = rmass(iglobnum) + &
              sngl(dble(jacobianl) * weight * dble(rhostore(i,j,k,ispec)) / dble(kappavstore(i,j,k,ispec)))
     else
@@ -1722,7 +1722,7 @@
 
 ! save the binary files
 ! save ocean load mass matrix as well if oceans
-  if(OCEANS .and. iregion_code == IREGION_CRUST_MANTLE) then
+  if (OCEANS .and. iregion_code == IREGION_CRUST_MANTLE) then
 
 ! adding ocean load mass matrix at the top of the crust for oceans
   nglob_oceans = nglob
@@ -1745,7 +1745,7 @@
         iglobnum=ibool(ix_oceans,iy_oceans,iz_oceans,ispec_oceans)
 
 ! compute local height of oceans
-        if(ISOTROPIC_3D_MANTLE) then
+        if (ISOTROPIC_3D_MANTLE) then
 
 ! get coordinates of current point
           xval = xstore(ix_oceans,iy_oceans,iz_oceans,ispec_oceans)
@@ -1769,7 +1769,7 @@
 
 ! non-dimensionalize the elevation, which is in meters
 ! and suppress positive elevation, which means no oceans
-          if(elevation >= - MINIMUM_THICKNESS_3D_OCEANS) then
+          if (elevation >= - MINIMUM_THICKNESS_3D_OCEANS) then
             height_oceans = 0.d0
           else
             height_oceans = dabs(elevation) / R_EARTH
@@ -1784,7 +1784,7 @@
                    * dble(RHO_OCEANS) * height_oceans
 
 ! distinguish between single and double precision for reals
-        if(CUSTOM_REAL == SIZE_REAL) then
+        if (CUSTOM_REAL == SIZE_REAL) then
           rmass_ocean_load(iglobnum) = rmass_ocean_load(iglobnum) + sngl(weight)
         else
           rmass_ocean_load(iglobnum) = rmass_ocean_load(iglobnum) + weight
@@ -1811,8 +1811,8 @@
                           gammaxstore,gammaystore,gammazstore, &
                           kappavstore,muvstore,ibool,rmass,nspec,nglob,myrank,NPROCTOT,xstore,ystore,zstore)
 
-  deallocate(rmass,stat=ier); if(ier /= 0) stop 'error in deallocate'
-  deallocate(rmass_ocean_load,stat=ier); if(ier /= 0) stop 'error in deallocate'
+  deallocate(rmass,stat=ier); if (ier /= 0) stop 'error in deallocate'
+  deallocate(rmass_ocean_load,stat=ier); if (ier /= 0) stop 'error in deallocate'
 
 ! compute volume, bottom and top area of that part of the slice
   volume_local = ZERO
@@ -1852,9 +1852,9 @@
   endif  ! end of test if first or second pass
 
 ! deallocate these arrays after each pass because they have a different size in each pass to save memory
-  deallocate(xixstore,xiystore,xizstore,stat=ier); if(ier /= 0) stop 'error in deallocate'
-  deallocate(etaxstore,etaystore,etazstore,stat=ier); if(ier /= 0) stop 'error in deallocate'
-  deallocate(gammaxstore,gammaystore,gammazstore,stat=ier); if(ier /= 0) stop 'error in deallocate'
+  deallocate(xixstore,xiystore,xizstore,stat=ier); if (ier /= 0) stop 'error in deallocate'
+  deallocate(etaxstore,etaystore,etazstore,stat=ier); if (ier /= 0) stop 'error in deallocate'
+  deallocate(gammaxstore,gammaystore,gammazstore,stat=ier); if (ier /= 0) stop 'error in deallocate'
 
 ! deallocate arrays
   deallocate(rhostore,kappavstore,kappahstore)

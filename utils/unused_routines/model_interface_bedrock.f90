@@ -60,7 +60,7 @@
 !
 !  allocate(ibedrock(NX_TOPO_ANT,NY_TOPO_ANT))
 
-!  if(myrank == 0) then
+!  if (myrank == 0) then
 !      call read_bedrock_file(ibedrock)
 !  !    write(IMAIN,*)
 !  !    write(IMAIN,*) 'regional bedrock file read ranges in m from ',minval(ibedrock),' to ',maxval(ibedrock)
@@ -141,14 +141,14 @@
 
 !     zmesh = zstore(2,2,2,ispec)
 
-!    ! if(doubling_index == IFLAG_ONE_LAYER_TOPOGRAPHY) then
-!     if(any(ibelm_top == ispec)) then
+!    ! if (doubling_index == IFLAG_ONE_LAYER_TOPOGRAPHY) then
+!     if (any(ibelm_top == ispec)) then
 !     doubling_value_found_for_Piero = IFLAG_ONE_LAYER_TOPOGRAPHY
 
-!     else if(zmesh < Z_23p4km) then
+!     else if (zmesh < Z_23p4km) then
 !        doubling_value_found_for_Piero = IFLAG_MANTLE_BELOW_23p4km
 
-!     else if(zmesh < Z_14km) then
+!     else if (zmesh < Z_14km) then
 !        doubling_value_found_for_Piero = IFLAG_14km_to_23p4km
 
 !     else
@@ -161,7 +161,7 @@
 !         do i = 1, NGLLX
 
 
-!            if(idoubling(ispec) == IFLAG_ONE_LAYER_TOPOGRAPHY .or. &
+!            if (idoubling(ispec) == IFLAG_ONE_LAYER_TOPOGRAPHY .or. &
 !               idoubling(ispec) == IFLAG_BEDROCK_down_to_14km) then
 
 !               ! since we have suppressed UTM projection for Piero Basini, UTMx is the same as long
@@ -174,10 +174,10 @@
 !               icornerlat = int((lat - ORIG_LAT_TOPO) / DEGREES_PER_CELL_TOPO) + 1
 
 !               ! avoid edge effects and extend with identical point if outside model
-!               if(icornerlong < 1) icornerlong = 1
-!               if(icornerlong > NX_TOPO-1) icornerlong = NX_TOPO-1
-!               if(icornerlat < 1) icornerlat = 1
-!               if(icornerlat > NY_TOPO-1) icornerlat = NY_TOPO-1
+!               if (icornerlong < 1) icornerlong = 1
+!               if (icornerlong > NX_TOPO-1) icornerlong = NX_TOPO-1
+!               if (icornerlat < 1) icornerlat = 1
+!               if (icornerlat > NY_TOPO-1) icornerlat = NY_TOPO-1
 
 !               ! compute coordinates of corner
 !               long_corner = ORIG_LONG_TOPO + (icornerlong-1)*DEGREES_PER_CELL_TOPO
@@ -188,10 +188,10 @@
 !               ratio_eta = (lat - lat_corner) / DEGREES_PER_CELL_TOPO
 
 !               ! avoid edge effects
-!               if(ratio_xi < 0.) ratio_xi = 0.
-!               if(ratio_xi > 1.) ratio_xi = 1.
-!               if(ratio_eta < 0.) ratio_eta = 0.
-!               if(ratio_eta > 1.) ratio_eta = 1.
+!               if (ratio_xi < 0.) ratio_xi = 0.
+!               if (ratio_xi > 1.) ratio_xi = 1.
+!               if (ratio_eta < 0.) ratio_eta = 0.
+!               if (ratio_eta > 1.) ratio_eta = 1.
 
 !               ! interpolate elevation at current point
 !               elevation_bedrock = &
@@ -204,7 +204,7 @@
 !               !! DK DK and not in the ice
 !               is_around_a_station = .false.
 !               do istation = 1,NUMBER_OF_STATIONS
-!                  if(sqrt((long - utm_x_station(istation))**2 + (lat - utm_y_station(istation))**2) < RADIUS_TO_EXCLUDE) then
+!                  if (sqrt((long - utm_x_station(istation))**2 + (lat - utm_y_station(istation))**2) < RADIUS_TO_EXCLUDE) then
 !                     is_around_a_station = .true.
 !                     exit
 !                  endif
@@ -213,7 +213,7 @@
 !               ! define elastic parameters in the model
 
 !               ! we are above the bedrock interface i.e. in the ice, and not too close to a station
-!               if(zmesh >= elevation_bedrock .and. .not. is_around_a_station) then
+!               if (zmesh >= elevation_bedrock .and. .not. is_around_a_station) then
 !                  vp = 3800.d0
 !                  vs = 1900.d0
 !                  rho = 900.d0
@@ -227,13 +227,13 @@
 !                  qmu_attenuation_store(i,j,k,ispec) = 9000.0 ! IATTENUATION_BEDROCK
 !               endif
 
-!            else if(idoubling(ispec) == IFLAG_14km_to_23p4km) then
+!            else if (idoubling(ispec) == IFLAG_14km_to_23p4km) then
 !               vp = 6800.d0
 !               vs = 3900.d0
 !               rho = 2900.d0
 !               qmu_attenuation_store(i,j,k,ispec) = 9000.0 ! IATTENUATION_BEDROCK
 
-!            else if(idoubling(ispec) == IFLAG_MANTLE_BELOW_23p4km) then
+!            else if (idoubling(ispec) == IFLAG_MANTLE_BELOW_23p4km) then
 !               vp = 8100.d0
 !               vs = 4480.d0
 !               rho = 3380.d0
@@ -242,7 +242,7 @@
 !            endif
 
 !                 !pll  8/06
-!                     if(CUSTOM_REAL == SIZE_REAL) then
+!                     if (CUSTOM_REAL == SIZE_REAL) then
 !                        rhostore(i,j,k,ispec) = sngl(rho)
 !                        vpstore(i,j,k,ispec) = sngl(vp)
 !                        vsstore(i,j,k,ispec) = sngl(vs)
@@ -340,10 +340,10 @@
 !     icornerlat = int((lat - ORIG_LAT_TOPO_ANT) / DEGREES_PER_CELL_TOPO_ANT) + 1
 
 ! ! avoid edge effects and extend with identical point if outside model
-!     if(icornerlong < 1) icornerlong = 1
-!     if(icornerlong > NX_TOPO_ANT-1) icornerlong = NX_TOPO_ANT-1
-!     if(icornerlat < 1) icornerlat = 1
-!     if(icornerlat > NY_TOPO_ANT-1) icornerlat = NY_TOPO_ANT-1
+!     if (icornerlong < 1) icornerlong = 1
+!     if (icornerlong > NX_TOPO_ANT-1) icornerlong = NX_TOPO_ANT-1
+!     if (icornerlat < 1) icornerlat = 1
+!     if (icornerlat > NY_TOPO_ANT-1) icornerlat = NY_TOPO_ANT-1
 
 ! ! compute coordinates of corner
 !     long_corner = ORIG_LONG_TOPO_ANT + (icornerlong-1)*DEGREES_PER_CELL_TOPO_ANT
@@ -354,10 +354,10 @@
 !     ratio_eta = (lat - lat_corner) / DEGREES_PER_CELL_TOPO_ANT
 
 ! ! avoid edge effects
-!     if(ratio_xi < 0.) ratio_xi = 0.
-!     if(ratio_xi > 1.) ratio_xi = 1.
-!     if(ratio_eta < 0.) ratio_eta = 0.
-!     if(ratio_eta > 1.) ratio_eta = 1.
+!     if (ratio_xi < 0.) ratio_xi = 0.
+!     if (ratio_xi > 1.) ratio_xi = 1.
+!     if (ratio_eta < 0.) ratio_eta = 0.
+!     if (ratio_eta > 1.) ratio_eta = 1.
 
 ! ! interpolate elevation at current point
 !     elevation_bedrock = &
@@ -370,7 +370,7 @@
 ! !! DK DK and not in the ice
 !   is_around_a_station = .false.
 !   do istation = 1,NUMBER_OF_STATIONS
-!     if(sqrt((xstore(i,j,k,ispec) - utm_x_station(istation))**2 + (ystore(i,j,k,ispec) - &
+!     if (sqrt((xstore(i,j,k,ispec) - utm_x_station(istation))**2 + (ystore(i,j,k,ispec) - &
 !          utm_y_station(istation))**2) < RADIUS_TO_EXCLUDE) then
 !       is_around_a_station = .true.
 !       exit
@@ -378,7 +378,7 @@
 !   enddo
 
 ! ! we are above the bedrock interface i.e. in the ice, and not too close to a station
-!   if(zstore(i,j,k,ispec) >= elevation_bedrock .and. .not. is_around_a_station) then
+!   if (zstore(i,j,k,ispec) >= elevation_bedrock .and. .not. is_around_a_station) then
 !      iflag = flag_above
 !      !qmu_attenuation_store(i,j,k,ispec) = 1.0 ! IATTENUATION_ICE
 !      ! we are below the bedrock interface i.e. in the bedrock, or close to a station

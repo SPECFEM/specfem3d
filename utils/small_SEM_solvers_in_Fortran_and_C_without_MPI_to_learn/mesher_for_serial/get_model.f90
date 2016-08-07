@@ -347,17 +347,17 @@
 !      make sure we are within the right shell in PREM to honor discontinuities
 !      use small geometrical tolerance
        r_prem = r
-       if(r <= rmin*1.000001d0) r_prem = rmin*1.000001d0
-       if(r >= rmax*0.999999d0) r_prem = rmax*0.999999d0
+       if (r <= rmin*1.000001d0) r_prem = rmin*1.000001d0
+       if (r >= rmax*0.999999d0) r_prem = rmax*0.999999d0
 
 !      get the anisotropic PREM parameters
-       if(TRANSVERSE_ISOTROPY) then
-         if(REFERENCE_1D_MODEL == REFERENCE_MODEL_PREM) then
+       if (TRANSVERSE_ISOTROPY) then
+         if (REFERENCE_1D_MODEL == REFERENCE_MODEL_PREM) then
            call prem_aniso(myrank,r_prem,rho,vpv,vph,vsv,vsh,eta_aniso, &
            Qkappa,Qmu,idoubling,CRUSTAL,ONE_CRUST,RICB,RCMB,RTOPDDOUBLEPRIME, &
            R600,R670,R220,R771,R400,R80,RMOHO,RMIDDLE_CRUST,ROCEAN)
 
-         else if(REFERENCE_1D_MODEL == REFERENCE_MODEL_REF) then
+         else if (REFERENCE_1D_MODEL == REFERENCE_MODEL_REF) then
            call model_ref(r_prem,rho,vpv,vph,vsv,vsh,eta_aniso,Qkappa,Qmu,iregion_code,CRUSTAL,Mref_V)
 
          else
@@ -366,28 +366,28 @@
 
        else
 
-         if(REFERENCE_1D_MODEL == REFERENCE_MODEL_IASP91) then
+         if (REFERENCE_1D_MODEL == REFERENCE_MODEL_IASP91) then
            call model_iasp91(myrank,r_prem,rho,vp,vs,Qkappa,Qmu,idoubling, &
              ONE_CRUST,.true.,RICB,RCMB,RTOPDDOUBLEPRIME,R771,R670,R400,R220,R120,RMOHO,RMIDDLE_CRUST)
 
-         else if(REFERENCE_1D_MODEL == REFERENCE_MODEL_PREM) then
+         else if (REFERENCE_1D_MODEL == REFERENCE_MODEL_PREM) then
            call prem_iso(myrank,r_prem,rho,drhodr,vp,vs,Qkappa,Qmu,idoubling,CRUSTAL, &
              ONE_CRUST,.true.,RICB,RCMB,RTOPDDOUBLEPRIME, &
              R600,R670,R220,R771,R400,R80,RMOHO,RMIDDLE_CRUST,ROCEAN)
 
-         else if(REFERENCE_1D_MODEL == REFERENCE_MODEL_1066A) then
+         else if (REFERENCE_1D_MODEL == REFERENCE_MODEL_1066A) then
            call model_1066a(r_prem,rho,vp,vs,Qkappa,Qmu,iregion_code,M1066a_V)
 
-         else if(REFERENCE_1D_MODEL == REFERENCE_MODEL_AK135) then
+         else if (REFERENCE_1D_MODEL == REFERENCE_MODEL_AK135) then
            call model_ak135(r_prem,rho,vp,vs,Qkappa,Qmu,iregion_code,Mak135_V)
 
-         else if(REFERENCE_1D_MODEL == REFERENCE_MODEL_REF) then
+         else if (REFERENCE_1D_MODEL == REFERENCE_MODEL_REF) then
            call model_ref(r_prem,rho,vpv,vph,vsv,vsh,eta_aniso,Qkappa,Qmu,iregion_code,CRUSTAL,Mref_V)
-           if(.not. ISOTROPIC_3D_MANTLE) then
+           if (.not. ISOTROPIC_3D_MANTLE) then
              vp = sqrt(((8.d0+4.d0*eta_aniso)*vph*vph + 3.d0*vpv*vpv + (8.d0 - 8.d0*eta_aniso)*vsv*vsv)/15.d0)
              vs = sqrt(((1.d0-2.d0*eta_aniso)*vph*vph + vpv*vpv + 5.d0*vsh*vsh + (6.d0+4.d0*eta_aniso)*vsv*vsv)/15.d0)
            endif
-         else if(REFERENCE_1D_MODEL == REFERENCE_MODEL_JP1D) then
+         else if (REFERENCE_1D_MODEL == REFERENCE_MODEL_JP1D) then
             call model_jp1d(myrank,r_prem,rho,vp,vs,Qkappa,Qmu,idoubling, &
                  .true.,RICB,RCMB,RTOPDDOUBLEPRIME, &
                  R670,R220,R771,R400,R80,RMOHO,RMIDDLE_CRUST)
@@ -396,7 +396,7 @@
             vsv = vs
             vsh = vs
             eta_aniso = 1.d0
-         else if(REFERENCE_1D_MODEL == REFERENCE_MODEL_SEA1D) then
+         else if (REFERENCE_1D_MODEL == REFERENCE_MODEL_SEA1D) then
             call model_sea1d(r_prem,rho,vp,vs,Qkappa,Qmu,iregion_code,SEA1DM_V)
             vpv = vp
             vph = vp
@@ -408,7 +408,7 @@
          endif
 
          ! in the case of s362iso we want to save the anisotropic constants for the Voight average
-         if(.not. (REFERENCE_1D_MODEL == REFERENCE_MODEL_REF .and. ISOTROPIC_3D_MANTLE)) then
+         if (.not. (REFERENCE_1D_MODEL == REFERENCE_MODEL_REF .and. ISOTROPIC_3D_MANTLE)) then
           vpv = vp
           vph = vp
           vsv = vs
@@ -418,11 +418,11 @@
        endif
 
 !      get the 3-D model parameters
-       if(ISOTROPIC_3D_MANTLE) then
-         if(r_prem > RCMB/R_EARTH .and. r_prem < RMOHO/R_EARTH) then
+       if (ISOTROPIC_3D_MANTLE) then
+         if (r_prem > RCMB/R_EARTH .and. r_prem < RMOHO/R_EARTH) then
            call xyz_2_rthetaphi_dble(xmesh,ymesh,zmesh,r_dummy,theta,phi)
            call reduce(theta,phi)
-           if(THREE_D_MODEL == THREE_D_MODEL_S20RTS) then
+           if (THREE_D_MODEL == THREE_D_MODEL_S20RTS) then
 ! s20rts
              dvs = ZERO
              dvp = ZERO
@@ -433,7 +433,7 @@
              vsv=vsv*(1.0d0+dvs)
              vsh=vsh*(1.0d0+dvs)
              rho=rho*(1.0d0+drho)
-           else if(THREE_D_MODEL == THREE_D_MODEL_SEA99_JP3D) then
+           else if (THREE_D_MODEL == THREE_D_MODEL_SEA99_JP3D) then
 ! sea99 + jp3d1994
              dvs = ZERO
              dvp = ZERO
@@ -445,9 +445,9 @@
              vsh=vsh*(1.0d0+dvs)
              rho=rho*(1.0d0+drho)
 ! use Lebedev model as background and add vp & vs perturbation from Zhao 1994 model
-             if(theta>=(PI/2.d0 - LAT_MAX*DEGREES_TO_RADIANS) .and. theta<=(PI/2.d0 - LAT_MIN*DEGREES_TO_RADIANS) &
+             if (theta>=(PI/2.d0 - LAT_MAX*DEGREES_TO_RADIANS) .and. theta<=(PI/2.d0 - LAT_MIN*DEGREES_TO_RADIANS) &
                   .and. phi>=LON_MIN*DEGREES_TO_RADIANS .and. phi<=LON_MAX*DEGREES_TO_RADIANS) then
-                if(r_prem > (R_EARTH - DEP_MAX*1000.d0)/R_EARTH) then
+                if (r_prem > (R_EARTH - DEP_MAX*1000.d0)/R_EARTH) then
                    call iso3d_dpzhao_model(r,theta,phi,vp,vs,dvp,dvs,rho,found_crust,JP3DM_V)
                    vpv=vpv*(1.0d0+dvp)
                    vph=vph*(1.0d0+dvp)
@@ -455,7 +455,7 @@
                    vsh=vsh*(1.0d0+dvs)
                 endif
              endif
-           else if(THREE_D_MODEL == THREE_D_MODEL_SEA99) then
+           else if (THREE_D_MODEL == THREE_D_MODEL_SEA99) then
 ! sea99
              dvs = ZERO
              dvp = ZERO
@@ -466,14 +466,14 @@
              vsv=vsv*(1.0d0+dvs)
              vsh=vsh*(1.0d0+dvs)
              rho=rho*(1.0d0+drho)
-           else if(THREE_D_MODEL == THREE_D_MODEL_JP3D) then
+           else if (THREE_D_MODEL == THREE_D_MODEL_JP3D) then
 ! jp3d1994
              dvs = ZERO
              dvp = ZERO
              drho = ZERO
-             if(theta>=(PI/2.d0 - LAT_MAX*DEGREES_TO_RADIANS) .and. theta<=(PI/2.d0 - LAT_MIN*DEGREES_TO_RADIANS) &
+             if (theta>=(PI/2.d0 - LAT_MAX*DEGREES_TO_RADIANS) .and. theta<=(PI/2.d0 - LAT_MIN*DEGREES_TO_RADIANS) &
                   .and. phi>=LON_MIN*DEGREES_TO_RADIANS .and. phi<=LON_MAX*DEGREES_TO_RADIANS) then
-                if(r_prem > (R_EARTH - DEP_MAX*1000.d0)/R_EARTH) then
+                if (r_prem > (R_EARTH - DEP_MAX*1000.d0)/R_EARTH) then
                    call iso3d_dpzhao_model(r,theta,phi,vp,vs,dvp,dvs,rho,found_crust,JP3DM_V)
                    vpv=vpv*(1.0d0+dvp)
                    vph=vph*(1.0d0+dvp)
@@ -481,7 +481,7 @@
                    vsh=vsh*(1.0d0+dvs)
                 endif
              endif
-           else if(THREE_D_MODEL == THREE_D_MODEL_S362ANI .or. THREE_D_MODEL == THREE_D_MODEL_S362WMANI &
+           else if (THREE_D_MODEL == THREE_D_MODEL_S362ANI .or. THREE_D_MODEL == THREE_D_MODEL_S362WMANI &
                   .or. THREE_D_MODEL == THREE_D_MODEL_S362ANI_PREM .or. THREE_D_MODEL == THREE_D_MODEL_S29EA) then
 ! 3D Harvard models s362ani, s362wmani, s362ani_prem and s2.9ea
              dvpv = 0.
@@ -496,7 +496,7 @@
                           lmxhpa,itypehpa,ihpakern,numcoe,ivarkern, &
                           nconpt,iver,iconpt,conpt,xlaspl,xlospl,radspl, &
                           coe,vercof,vercofd,ylmcof,wk1,wk2,wk3,kerstr,varstr)
-             if(TRANSVERSE_ISOTROPY) then
+             if (TRANSVERSE_ISOTROPY) then
                vpv=vpv*(1.0d0+dble(dvpv))
                vph=vph*(1.0d0+dble(dvph))
                vsv=vsv*(1.0d0+dble(dvsv))
@@ -519,11 +519,11 @@
            endif
 
 ! extend 3-D mantle model above the Moho to the surface before adding the crust
-         else if(r_prem >= RMOHO/R_EARTH) then
+         else if (r_prem >= RMOHO/R_EARTH) then
            call xyz_2_rthetaphi_dble(xmesh,ymesh,zmesh,r_dummy,theta,phi)
            call reduce(theta,phi)
            r_moho = 0.999999d0*RMOHO/R_EARTH
-           if(THREE_D_MODEL == THREE_D_MODEL_S20RTS) then
+           if (THREE_D_MODEL == THREE_D_MODEL_S20RTS) then
 ! s20rts
              dvs = ZERO
              dvp = ZERO
@@ -534,7 +534,7 @@
              vsv=vsv*(1.0d0+dvs)
              vsh=vsh*(1.0d0+dvs)
              rho=rho*(1.0d0+drho)
-           else if(THREE_D_MODEL == THREE_D_MODEL_SEA99_JP3D) then
+           else if (THREE_D_MODEL == THREE_D_MODEL_SEA99_JP3D) then
 ! sea99 + jp3d1994
              dvs = ZERO
              dvp = ZERO
@@ -546,7 +546,7 @@
              vsh=vsh*(1.0d0+dvs)
              rho=rho*(1.0d0+drho)
 ! use Lebedev's model as background and add vp & vs perturbation from Zhao's 1994 model
-             if(theta>=(PI/2.d0 - LAT_MAX*DEGREES_TO_RADIANS) .and. theta<=(PI/2.d0 - LAT_MIN*DEGREES_TO_RADIANS) &
+             if (theta>=(PI/2.d0 - LAT_MAX*DEGREES_TO_RADIANS) .and. theta<=(PI/2.d0 - LAT_MIN*DEGREES_TO_RADIANS) &
                   .and. phi>=LON_MIN*DEGREES_TO_RADIANS .and. phi<=LON_MAX*DEGREES_TO_RADIANS) then
                 call iso3d_dpzhao_model(r_moho,theta,phi,vp,vs,dvp,dvs,rho,found_crust,JP3DM_V)
                 vpv=vpv*(1.0d0+dvp)
@@ -554,7 +554,7 @@
                 vsv=vsv*(1.0d0+dvs)
                 vsh=vsh*(1.0d0+dvs)
              endif
-           else if(THREE_D_MODEL == THREE_D_MODEL_SEA99) then
+           else if (THREE_D_MODEL == THREE_D_MODEL_SEA99) then
 ! sea99
              dvs = ZERO
              dvp = ZERO
@@ -565,12 +565,12 @@
              vsv=vsv*(1.0d0+dvs)
              vsh=vsh*(1.0d0+dvs)
              rho=rho*(1.0d0+drho)
-           else if(THREE_D_MODEL == THREE_D_MODEL_JP3D) then
+           else if (THREE_D_MODEL == THREE_D_MODEL_JP3D) then
 ! jp3d1994
              dvs = ZERO
              dvp = ZERO
              drho = ZERO
-             if(theta>=(PI/2.d0 - LAT_MAX*DEGREES_TO_RADIANS) .and. theta<=(PI/2.d0 - LAT_MIN*DEGREES_TO_RADIANS) &
+             if (theta>=(PI/2.d0 - LAT_MAX*DEGREES_TO_RADIANS) .and. theta<=(PI/2.d0 - LAT_MIN*DEGREES_TO_RADIANS) &
                   .and. phi>=LON_MIN*DEGREES_TO_RADIANS .and. phi<=LON_MAX*DEGREES_TO_RADIANS) then
                 call iso3d_dpzhao_model(r_moho,theta,phi,vp,vs,dvp,dvs,rho,found_crust,JP3DM_V)
                 vpv=vpv*(1.0d0+dvp)
@@ -578,7 +578,7 @@
                 vsv=vsv*(1.0d0+dvs)
                 vsh=vsh*(1.0d0+dvs)
              endif
-           else if(THREE_D_MODEL == THREE_D_MODEL_S362ANI .or. THREE_D_MODEL == THREE_D_MODEL_S362WMANI &
+           else if (THREE_D_MODEL == THREE_D_MODEL_S362ANI .or. THREE_D_MODEL == THREE_D_MODEL_S362WMANI &
                   .or. THREE_D_MODEL == THREE_D_MODEL_S362ANI_PREM .or. THREE_D_MODEL == THREE_D_MODEL_S29EA) then
 ! 3D Harvard models s362ani, s362wmani, s362ani_prem and s2.9ea
              dvpv = 0.
@@ -593,7 +593,7 @@
                           lmxhpa,itypehpa,ihpakern,numcoe,ivarkern, &
                           nconpt,iver,iconpt,conpt,xlaspl,xlospl,radspl, &
                           coe,vercof,vercofd,ylmcof,wk1,wk2,wk3,kerstr,varstr)
-             if(TRANSVERSE_ISOTROPY) then
+             if (TRANSVERSE_ISOTROPY) then
                vpv=vpv*(1.0d0+dble(dvpv))
                vph=vph*(1.0d0+dble(dvph))
                vsv=vsv*(1.0d0+dble(dvsv))
@@ -618,19 +618,19 @@
          endif
        endif
 
-       if(ANISOTROPIC_INNER_CORE .and. iregion_code == IREGION_INNER_CORE) &
+       if (ANISOTROPIC_INNER_CORE .and. iregion_code == IREGION_INNER_CORE) &
            call aniso_inner_core_model(r_prem,c11,c33,c12,c13,c44,REFERENCE_1D_MODEL)
 
-       if(ANISOTROPIC_3D_MANTLE .and. iregion_code == IREGION_CRUST_MANTLE) then
+       if (ANISOTROPIC_3D_MANTLE .and. iregion_code == IREGION_CRUST_MANTLE) then
 
 ! anisotropic model between the Moho and 670 km (change to CMB if desired)
-         if(r_prem < RMOHO/R_EARTH .and. r_prem > R670/R_EARTH) then
+         if (r_prem < RMOHO/R_EARTH .and. r_prem > R670/R_EARTH) then
            call xyz_2_rthetaphi_dble(xmesh,ymesh,zmesh,r_dummy,theta,phi)
            call reduce(theta,phi)
            call aniso_mantle_model(r_prem,theta,phi,rho,c11,c12,c13,c14,c15,c16, &
               c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66,AMM_V)
 ! extend 3-D mantle model above the Moho to the surface before adding the crust
-         else if(r_prem >= RMOHO/R_EARTH) then
+         else if (r_prem >= RMOHO/R_EARTH) then
            call xyz_2_rthetaphi_dble(xmesh,ymesh,zmesh,r_dummy,theta,phi)
            call reduce(theta,phi)
            r_moho = RMOHO/R_EARTH
@@ -663,7 +663,7 @@
        endif
 
 ! This is here to identify how and where to include 3D attenuation
-       if(ATTENUATION .and. ATTENUATION_3D) then
+       if (ATTENUATION .and. ATTENUATION_3D) then
          tau_e(:)   = 0.0d0
          ! Get the value of Qmu (Attenuation) dependedent on
          ! the radius (r_prem) and idoubling flag
@@ -674,23 +674,23 @@
        endif
 
 !      get the 3-D crustal model
-       if(CRUSTAL) then
-          if(r > R_DEEPEST_CRUST) then
+       if (CRUSTAL) then
+          if (r > R_DEEPEST_CRUST) then
              call xyz_2_rthetaphi_dble(xmesh,ymesh,zmesh,r_dummy,theta,phi)
              call reduce(theta,phi)
 
-             if(THREE_D_MODEL == THREE_D_MODEL_SEA99_JP3D .or. THREE_D_MODEL == THREE_D_MODEL_JP3D) then
-                if(theta>=(PI/2.d0 - LAT_MAX*DEGREES_TO_RADIANS) .and. theta<=(PI/2.d0 - LAT_MIN*DEGREES_TO_RADIANS) &
+             if (THREE_D_MODEL == THREE_D_MODEL_SEA99_JP3D .or. THREE_D_MODEL == THREE_D_MODEL_JP3D) then
+                if (theta>=(PI/2.d0 - LAT_MAX*DEGREES_TO_RADIANS) .and. theta<=(PI/2.d0 - LAT_MIN*DEGREES_TO_RADIANS) &
                      .and. phi>=LON_MIN*DEGREES_TO_RADIANS .and. phi<=LON_MAX*DEGREES_TO_RADIANS) then
-                   if(r > (R_EARTH - DEP_MAX*1000.d0)/R_EARTH) then
+                   if (r > (R_EARTH - DEP_MAX*1000.d0)/R_EARTH) then
                       call iso3d_dpzhao_model(r,theta,phi,vpc,vsc,dvp,dvs,rhoc,found_crust,JP3DM_V)
-                      if(found_crust) then
+                      if (found_crust) then
                          vpv=vpc
                          vph=vpc
                          vsv=vsc
                          vsh=vsc
 !                     rho=rhoc
-                         if(ANISOTROPIC_3D_MANTLE .and. iregion_code == IREGION_CRUST_MANTLE) then
+                         if (ANISOTROPIC_3D_MANTLE .and. iregion_code == IREGION_CRUST_MANTLE) then
                             c11 = rho*vpv*vpv
                             c12 = rho*(vpv*vpv-2.*vsv*vsv)
                             c13 = c12
@@ -718,7 +718,7 @@
                 else
                    lat=(PI/2.0d0-theta)*180.0d0/PI
                    lon=phi*180.0d0/PI
-                   if(lon>180.0d0) lon=lon-360.0d0
+                   if (lon>180.0d0) lon=lon-360.0d0
                    call crustal_model(lat,lon,r,vpc,vsc,rhoc,moho,found_crust,CM_V)
                    if (found_crust) then
                       vpv=vpc
@@ -727,7 +727,7 @@
                       vsh=vsc
                       rho=rhoc
                       eta_aniso=1.0d0
-                      if(ANISOTROPIC_3D_MANTLE .and. iregion_code == IREGION_CRUST_MANTLE) then
+                      if (ANISOTROPIC_3D_MANTLE .and. iregion_code == IREGION_CRUST_MANTLE) then
                          c11 = rho*vpv*vpv
                          c12 = rho*(vpv*vpv-2.*vsv*vsv)
                          c13 = c12
@@ -755,7 +755,7 @@
              else
                 lat=(PI/2.0d0-theta)*180.0d0/PI
                 lon=phi*180.0d0/PI
-                if(lon>180.0d0) lon=lon-360.0d0
+                if (lon>180.0d0) lon=lon-360.0d0
                 call crustal_model(lat,lon,r,vpc,vsc,rhoc,moho,found_crust,CM_V)
                 if (found_crust) then
                    vpv=vpc
@@ -763,7 +763,7 @@
                    vsv=vsc
                    vsh=vsc
                    rho=rhoc
-                   if(ANISOTROPIC_3D_MANTLE .and. iregion_code == IREGION_CRUST_MANTLE) then
+                   if (ANISOTROPIC_3D_MANTLE .and. iregion_code == IREGION_CRUST_MANTLE) then
                       c11 = rho*vpv*vpv
                       c12 = rho*(vpv*vpv-2.*vsv*vsv)
                       c13 = c12
@@ -794,7 +794,7 @@
 ! define elastic parameters in the model
 
 ! distinguish between single and double precision for reals
-       if(CUSTOM_REAL == SIZE_REAL) then
+       if (CUSTOM_REAL == SIZE_REAL) then
 
          rhostore(i,j,k,ispec) = sngl(rho)
          kappavstore(i,j,k,ispec) = sngl(rho*(vpv*vpv - 4.d0*vsv*vsv/3.d0))
@@ -803,9 +803,9 @@
          muhstore(i,j,k,ispec) = sngl(rho*vsh*vsh)
          eta_anisostore(i,j,k,ispec) = sngl(eta_aniso)
 
-         if(ABSORBING_CONDITIONS) then
+         if (ABSORBING_CONDITIONS) then
 
-           if(iregion_code == IREGION_OUTER_CORE) then
+           if (iregion_code == IREGION_OUTER_CORE) then
 
 ! we need just vp in the outer core for Stacey conditions
              rho_vp(i,j,k,ispec) = sngl(vph)
@@ -817,7 +817,7 @@
            endif
          endif
 
-         if(ANISOTROPIC_INNER_CORE .and. iregion_code == IREGION_INNER_CORE) then
+         if (ANISOTROPIC_INNER_CORE .and. iregion_code == IREGION_INNER_CORE) then
 
            c11store(i,j,k,ispec) = sngl(c11)
            c33store(i,j,k,ispec) = sngl(c33)
@@ -826,7 +826,7 @@
            c44store(i,j,k,ispec) = sngl(c44)
          endif
 
-         if(ANISOTROPIC_3D_MANTLE .and. iregion_code == IREGION_CRUST_MANTLE) then
+         if (ANISOTROPIC_3D_MANTLE .and. iregion_code == IREGION_CRUST_MANTLE) then
 
            c11store(i,j,k,ispec) = sngl(c11)
            c12store(i,j,k,ispec) = sngl(c12)
@@ -861,8 +861,8 @@
          muhstore(i,j,k,ispec) = rho*vsh*vsh
          eta_anisostore(i,j,k,ispec) = eta_aniso
 
-         if(ABSORBING_CONDITIONS) then
-           if(iregion_code == IREGION_OUTER_CORE) then
+         if (ABSORBING_CONDITIONS) then
+           if (iregion_code == IREGION_OUTER_CORE) then
 ! we need just vp in the outer core for Stacey conditions
              rho_vp(i,j,k,ispec) = vph
              rho_vs(i,j,k,ispec) = 0.d0
@@ -872,7 +872,7 @@
            endif
          endif
 
-         if(ANISOTROPIC_INNER_CORE .and. iregion_code == IREGION_INNER_CORE) then
+         if (ANISOTROPIC_INNER_CORE .and. iregion_code == IREGION_INNER_CORE) then
            c11store(i,j,k,ispec) = c11
            c33store(i,j,k,ispec) = c33
            c12store(i,j,k,ispec) = c12
@@ -880,7 +880,7 @@
            c44store(i,j,k,ispec) = c44
          endif
 
-         if(ANISOTROPIC_3D_MANTLE .and. iregion_code == IREGION_CRUST_MANTLE) then
+         if (ANISOTROPIC_3D_MANTLE .and. iregion_code == IREGION_CRUST_MANTLE) then
            c11store(i,j,k,ispec) = c11
            c12store(i,j,k,ispec) = c12
            c13store(i,j,k,ispec) = c13
@@ -906,7 +906,7 @@
 
        endif
 
-       if(ATTENUATION .and. ATTENUATION_3D) then
+       if (ATTENUATION .and. ATTENUATION_3D) then
           tau_e_store(:,i,j,k,ispec) = tau_e(:)
           Qmu_store(i,j,k,ispec)     = Qmu
        endif

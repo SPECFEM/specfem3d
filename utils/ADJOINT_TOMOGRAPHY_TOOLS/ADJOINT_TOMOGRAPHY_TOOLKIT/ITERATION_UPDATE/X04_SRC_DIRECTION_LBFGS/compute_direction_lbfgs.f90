@@ -165,7 +165,7 @@ subroutine get_ibool
   write(dirname,'(a)') '/scratch/lustre/hejunzhu/2012SHEAR_ATTENUATION_ITERATION_UPDATE/EUROPE_TOPOLOGY_FILE'
   write(filename,'(a,i6.6,a)') trim(dirname)//'/proc',myrank,'_reg1_solver_data_2.bin'
   open(1001,file=trim(filename),status='old',form='unformatted',iostat=ier)
-  if( ier /= 0 ) call exit_mpi(myrank,'error opening solver2 file')
+  if ( ier /= 0 ) call exit_mpi(myrank,'error opening solver2 file')
   read(1001) tmp(1:NGLOB)
   read(1001) tmp(1:NGLOB)
   read(1001) tmp(1:NGLOB)

@@ -312,7 +312,7 @@
 !jpampuero moved this section (used to be right before time loop)
 !jpampuero need some of these during initialization
 ! distinguish whether single or double precision for reals
-  if(CUSTOM_REAL == SIZE_REAL) then
+  if (CUSTOM_REAL == SIZE_REAL) then
     deltat = sngl(DT)
   else
     deltat = DT
@@ -321,10 +321,10 @@
   deltatsqover2 = deltat*deltat/2.
 
 ! open main output file, only written to by process 0
-  if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
+  if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
     open(unit=IMAIN,file='OUTPUT_FILES/output_solver.txt',status='unknown')
 
-  if(myrank == 0) then
+  if (myrank == 0) then
 
   write(IMAIN,*)
   write(IMAIN,*) '**********************************************'
@@ -333,7 +333,7 @@
   write(IMAIN,*)
   write(IMAIN,*)
 
-  if(FIX_UNDERFLOW_PROBLEM) write(IMAIN,*) 'Fixing slow underflow trapping problem using small initial field'
+  if (FIX_UNDERFLOW_PROBLEM) write(IMAIN,*) 'Fixing slow underflow trapping problem using small initial field'
 
   write(IMAIN,*)
   write(IMAIN,*) 'There are ',sizeprocs,' MPI processes'
@@ -356,7 +356,7 @@
   write(IMAIN,*)
 
 ! write information about precision used for floating-point operations
-  if(CUSTOM_REAL == SIZE_REAL) then
+  if (CUSTOM_REAL == SIZE_REAL) then
     write(IMAIN,*) 'using single precision for the calculations'
   else
     write(IMAIN,*) 'using double precision for the calculations'
@@ -368,10 +368,10 @@
   endif
 
 ! check that the code is running with the requested nb of processes
-  if(sizeprocs /= NPROC) call exit_MPI(myrank,'wrong number of MPI processes')
+  if (sizeprocs /= NPROC) call exit_MPI(myrank,'wrong number of MPI processes')
 
 ! check that we have more than 0 and less than 1000 sources
-  if(NSOURCES < 0 .or. NSOURCES > 999) call exit_MPI(myrank,'invalid number of sources')
+  if (NSOURCES < 0 .or. NSOURCES > 999) call exit_MPI(myrank,'invalid number of sources')
 
 ! dynamic allocation of arrays
 
@@ -393,7 +393,7 @@
   open(unit=IIN,file='OUTPUT_FILES/addressing.txt',status='old')
   do iproc = 0,NPROC-1
     read(IIN,*) iproc_read,iproc_xi,iproc_eta
-    if(iproc_read /= iproc) call exit_MPI(myrank,'incorrect slice number read')
+    if (iproc_read /= iproc) call exit_MPI(myrank,'incorrect slice number read')
     addressing(iproc_xi,iproc_eta) = iproc
     iproc_xi_slice(iproc) = iproc_xi
     iproc_eta_slice(iproc) = iproc_eta
@@ -424,7 +424,7 @@
 
 ! check that the number of points in this slice is correct
 
-  if(minval(ibool(:,:,:,:)) /= 1 .or. maxval(ibool(:,:,:,:)) /= NGLOB_AB) &
+  if (minval(ibool(:,:,:,:)) /= 1 .or. maxval(ibool(:,:,:,:)) /= NGLOB_AB) &
       call exit_MPI(myrank,'incorrect global numbering: iboolmax does not equal nglob in crust and mantle')
 
 ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -467,9 +467,9 @@ else
             LAT_MIN,LAT_MAX,LONG_MIN,LONG_MAX,Z_DEPTH_BLOCK,UTM_PROJECTION_ZONE)
   enddo
 
-  if(t_cmt(1) /= 0.) call exit_MPI(myrank,'t_cmt for the first source should be zero')
+  if (t_cmt(1) /= 0.) call exit_MPI(myrank,'t_cmt for the first source should be zero')
   do isource = 2,NSOURCES
-    if(t_cmt(isource) < 0.) call exit_MPI(myrank,'t_cmt should not be less than zero')
+    if (t_cmt(isource) < 0.) call exit_MPI(myrank,'t_cmt should not be less than zero')
   enddo
 endif !jpampuero
 
@@ -477,13 +477,13 @@ endif !jpampuero
   read(IIN,*) nrec
   close(IIN)
 
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) 'Total number of receivers = ',nrec
     write(IMAIN,*)
   endif
 
-  if(nrec < 1) call exit_MPI(myrank,'need at least one receiver')
+  if (nrec < 1) call exit_MPI(myrank,'need at least one receiver')
 
 ! allocate memory for receiver arrays
   allocate(islice_selected_rec(nrec))
@@ -512,7 +512,7 @@ endif !jpampuero
 
 ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*) '******************************************'
     write(IMAIN,*) 'There are ',NEX_XI,' elements along xi'
     write(IMAIN,*) 'There are ',NEX_ETA,' elements along eta'
@@ -631,7 +631,7 @@ endif !jpampuero
 ! Stacey put back
 ! read arrays for Stacey conditions
 
-  if(STACEY_ABS_CONDITIONS) then
+  if (STACEY_ABS_CONDITIONS) then
       open(unit=27,file=prname(1:len_trim(prname))//'nimin.bin',status='unknown',form='unformatted')
       read(27) nimin
       close(27)
@@ -680,7 +680,7 @@ endif !jpampuero
         InNucleationRegion = abs(xstore(iglob)-HypoX)<=NucleationHalfSizeX &
                            .and. abs(zstore(iglob)-HypoZ)<=NucleationHalfSizeZ
 
-        if  ( NotInRuptureRegion ) then
+        if ( NotInRuptureRegion ) then
           FaultMuS(i,k,ispec2D) = BarrierStrength
           FaultMuD(i,k,ispec2D) = BarrierStrength
         else
@@ -717,11 +717,11 @@ endif !jpampuero
   do isource = 1,NSOURCES
 
 !   check that the source slice number is okay
-    if(islice_selected_source(isource) < 0 .or. islice_selected_source(isource) > NPROC-1) &
+    if (islice_selected_source(isource) < 0 .or. islice_selected_source(isource) > NPROC-1) &
       call exit_MPI(myrank,'something is wrong with the source slice number')
 
 !   compute source arrays in source slice
-    if(myrank == islice_selected_source(isource)) then
+    if (myrank == islice_selected_source(isource)) then
       call compute_arrays_source(ispec_selected_source(isource), &
              xi_source(isource),eta_source(isource),gamma_source(isource),sourcearray, &
              Mxx(isource),Myy(isource),Mzz(isource),Mxy(isource),Mxz(isource),Myz(isource), &
@@ -732,7 +732,7 @@ endif !jpampuero
 
   enddo
 
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) 'Total number of samples for seismograms = ',NSTEP
     write(IMAIN,*)
@@ -746,11 +746,11 @@ endif !jpampuero
   do irec = 1,nrec
 
 ! check that the receiver slice number is okay
-  if(islice_selected_rec(irec) < 0 .or. islice_selected_rec(irec) > NPROC-1) &
+  if (islice_selected_rec(irec) < 0 .or. islice_selected_rec(irec) > NPROC-1) &
     call exit_MPI(myrank,'something is wrong with the receiver slice number')
 
 ! write info about that receiver
-  if(myrank == islice_selected_rec(irec)) then
+  if (myrank == islice_selected_rec(irec)) then
 
     nrec_local = nrec_local + 1
 
@@ -770,7 +770,7 @@ endif !jpampuero
   allocate(number_receiver_global(nrec_local))
   irec_local = 0
   do irec = 1,nrec
-    if(myrank == islice_selected_rec(irec)) then
+    if (myrank == islice_selected_rec(irec)) then
       irec_local = irec_local + 1
       number_receiver_global(irec_local) = irec
     endif
@@ -788,10 +788,10 @@ endif !jpampuero
 ! check that the sum of the number of receivers in each slice is nrec
   call MPI_REDUCE(nrec_local,nrec_tot_found,1,MPI_INTEGER,MPI_SUM,0, &
                           MPI_COMM_WORLD,ier)
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) 'found a total of ',nrec_tot_found,' receivers in all the slices'
-    if(nrec_tot_found /= nrec) then
+    if (nrec_tot_found /= nrec) then
       call exit_MPI(myrank,'problem when dispatching the receivers')
     else
       write(IMAIN,*) 'this total is okay'
@@ -802,12 +802,12 @@ endif !jpampuero
   seismograms_d(:,:,:) = 0._CUSTOM_REAL
   seismograms_v(:,:,:) = 0._CUSTOM_REAL
 
-  if(myrank == 0) then
+  if (myrank == 0) then
 
-  if(NSOURCES > 1) write(IMAIN,*) 'Using ',NSOURCES,' point sources'
+  if (NSOURCES > 1) write(IMAIN,*) 'Using ',NSOURCES,' point sources'
 
   write(IMAIN,*)
-  if(ATTENUATION) then
+  if (ATTENUATION) then
     write(IMAIN,*) 'incorporating attenuation using ',N_SLS,' standard linear solids'
   else
     write(IMAIN,*) 'no attenuation'
@@ -821,11 +821,11 @@ endif !jpampuero
   call MPI_BARRIER(MPI_COMM_WORLD,ier)
 
 !jpampuero ABC ==== BEGIN modification of mass matrix for ============================
-!jpampuero ABC     IMPLICIT implementation of absorbing boundaries
+!jpampuero ABC     implicit implementation of absorbing boundaries
 !jpampuero ABC     M --> M+dt/2*C
 !jpampuero ABC     where C is related to the boundary term -C*v
 !jpampuero ABC     NOTE: assumes straight edges
-  if(STACEY_ABS_CONDITIONS) then
+  if (STACEY_ABS_CONDITIONS) then
 
   ! vn=vx*nx+vy*ny+vz*nz
   ! tx=rho_vp(i,j,k,ispec)*vn*nx+rho_vs(i,j,k,ispec)*(vx-vn*nx)
@@ -840,7 +840,7 @@ endif !jpampuero
     do ispec2D=1,nspec2D_xmin
       ispec=ibelm_xmin(ispec2D)
       ! exclude elements that are not on absorbing edges
-      if(nkmin_xi(1,ispec2D) == 0 .or. njmin(1,ispec2D) == 0) cycle
+      if (nkmin_xi(1,ispec2D) == 0 .or. njmin(1,ispec2D) == 0) cycle
       i=1
       do k=nkmin_xi(1,ispec2D),NGLLZ
         do j=njmin(1,ispec2D),njmax(1,ispec2D)
@@ -862,7 +862,7 @@ endif !jpampuero
     do ispec2D=1,nspec2D_xmax
       ispec=ibelm_xmax(ispec2D)
       ! exclude elements that are not on absorbing edges
-      if(nkmin_xi(2,ispec2D) == 0 .or. njmin(2,ispec2D) == 0) cycle
+      if (nkmin_xi(2,ispec2D) == 0 .or. njmin(2,ispec2D) == 0) cycle
       i=NGLLX
       do k=nkmin_xi(2,ispec2D),NGLLZ
         do j=njmin(2,ispec2D),njmax(2,ispec2D)
@@ -883,7 +883,7 @@ endif !jpampuero
     do ispec2D=1,nspec2D_ymax
       ispec=ibelm_ymax(ispec2D)
       ! exclude elements that are not on absorbing edges
-      if(nkmin_eta(2,ispec2D) == 0 .or. nimin(2,ispec2D) == 0) cycle
+      if (nkmin_eta(2,ispec2D) == 0 .or. nimin(2,ispec2D) == 0) cycle
       j=NGLLY
       do k=nkmin_eta(2,ispec2D),NGLLZ
         do i=nimin(2,ispec2D),nimax(2,ispec2D)
@@ -924,10 +924,10 @@ endif !jpampuero
             buffer_send_faces,buffer_received_faces,npoin2D_xi,npoin2D_eta, &
             NPROC_XI,NPROC_ETA,NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NPOIN2DMAX_XY)
 
-  if(myrank == 0) write(IMAIN,*) 'end assembling MPI mass matrix'
+  if (myrank == 0) write(IMAIN,*) 'end assembling MPI mass matrix'
 
 ! check that mass matrix is positive
-  if(minval(rmass) <= 0.) call exit_MPI(myrank,'negative mass matrix term')
+  if (minval(rmass) <= 0.) call exit_MPI(myrank,'negative mass matrix term')
 
 ! for efficiency, invert final mass matrix once and for all in each slice
   rmass = 1.0 / rmass
@@ -935,7 +935,7 @@ endif !jpampuero
 ! if attenuation is on, shift PREM to right frequency
 ! rescale mu in PREM to average frequency for attenuation
 
-  if(ATTENUATION) then
+  if (ATTENUATION) then
 
 ! get and store PREM attenuation model
     do iattenuation = 1,NUM_REGIONS_ATTENUATION
@@ -944,7 +944,7 @@ endif !jpampuero
         tau_sigma_dble,beta_dble,one_minus_sum_beta_dble,factor_scale_dble)
 
 ! distinguish whether single or double precision for reals
-      if(CUSTOM_REAL == SIZE_REAL) then
+      if (CUSTOM_REAL == SIZE_REAL) then
         tau_mu(iattenuation,:) = sngl(tau_mu_dble(:))
         tau_sigma(iattenuation,:) = sngl(tau_sigma_dble(:))
         beta(iattenuation,:) = sngl(beta_dble(:))
@@ -980,17 +980,17 @@ endif !jpampuero
   accel(:,:) = 0._CUSTOM_REAL
 
 ! put negligible initial value to avoid very slow underflow trapping
-  if(FIX_UNDERFLOW_PROBLEM) displ(:,:) = VERYSMALLVAL
+  if (FIX_UNDERFLOW_PROBLEM) displ(:,:) = VERYSMALLVAL
 
 ! synchronize all processes to make sure everybody is ready to start time loop
   call MPI_BARRIER(MPI_COMM_WORLD,ier)
-  if(myrank == 0) write(IMAIN,*) 'All processes are synchronized before time loop'
+  if (myrank == 0) write(IMAIN,*) 'All processes are synchronized before time loop'
 
 !
 !   s t a r t   t i m e   i t e r a t i o n s
 !
 
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '           time step: ',sngl(DT),' s'
     write(IMAIN,*) 'number of time steps: ',NSTEP
@@ -999,7 +999,7 @@ endif !jpampuero
   endif
 
 ! precompute Runge-Kutta coefficients if attenuation
-  if(ATTENUATION) then
+  if (ATTENUATION) then
     tauinv(:,:) = - 1. / tau_sigma(:,:)
     factor_common(:,:) = 2. * beta(:,:) * tauinv(:,:)
     alphaval(:,:) = 1 + deltat*tauinv(:,:) + deltat**2*tauinv(:,:)**2 / 2. + &
@@ -1008,14 +1008,14 @@ endif !jpampuero
     gammaval(:,:) = deltat / 2. + deltat**2*tauinv(:,:) / 6. + deltat**3*tauinv(:,:)**2 / 24.
   endif
 
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) 'Starting time iteration loop...'
     write(IMAIN,*)
   endif
 
 ! create an empty file to monitor the start of the simulation
-  if(myrank == 0) then
+  if (myrank == 0) then
     open(unit=IOUT,file='OUTPUT_FILES/starttimeloop.txt',status='unknown')
     write(IOUT,*) 'starting time loop'
     close(IOUT)
@@ -1025,14 +1025,14 @@ endif !jpampuero
   time_start = MPI_WTIME()
 
 ! clear memory variables if attenuation
-  if(ATTENUATION) then
+  if (ATTENUATION) then
     R_xx(:,:,:,:,:) = 0._CUSTOM_REAL
     R_yy(:,:,:,:,:) = 0._CUSTOM_REAL
     R_xy(:,:,:,:,:) = 0._CUSTOM_REAL
     R_xz(:,:,:,:,:) = 0._CUSTOM_REAL
     R_yz(:,:,:,:,:) = 0._CUSTOM_REAL
 
-    if(FIX_UNDERFLOW_PROBLEM) then
+    if (FIX_UNDERFLOW_PROBLEM) then
       R_xx(:,:,:,:,:) = VERYSMALLVAL
       R_yy(:,:,:,:,:) = VERYSMALLVAL
       R_xy(:,:,:,:,:) = VERYSMALLVAL
@@ -1051,7 +1051,7 @@ endif !jpampuero
 ! compute the maximum of the norm of the displacement
 ! in all the slices using an MPI reduction
 ! and output timestamp file to check that simulation is running fine
-  if(mod(it,ITAFF_TIME_STEPS) == 0 .or. it == 5) then
+  if (mod(it,ITAFF_TIME_STEPS) == 0 .or. it == 5) then
 
 ! compute maximum of norm of displacement in each slice
     Usolidnorm = sqrt(maxval(displ(1,:)**2 + displ(2,:)**2 + displ(3,:)**2))
@@ -1060,7 +1060,7 @@ endif !jpampuero
     call MPI_REDUCE(Usolidnorm,Usolidnorm_all,1,CUSTOM_MPI_TYPE,MPI_MAX,0, &
                           MPI_COMM_WORLD,ier)
 
-    if(myrank == 0) then
+    if (myrank == 0) then
 
       write(IMAIN,*) 'Time step # ',it
       write(IMAIN,*) 'Time: ',sngl((it-1)*DT-hdur(1)),' seconds'
@@ -1089,7 +1089,7 @@ endif !jpampuero
       close(IOUT)
 
 ! check stability of the code, exit if unstable
-      if(Usolidnorm_all > STABILITY_THRESHOLD) call exit_MPI(myrank,'code became unstable and blew up')
+      if (Usolidnorm_all > STABILITY_THRESHOLD) call exit_MPI(myrank,'code became unstable and blew up')
 
     endif
   endif
@@ -1186,7 +1186,7 @@ endif !jpampuero
           duzdyl_plus_duydzl = duzdyl + duydzl
 
 ! precompute terms for attenuation if needed
-  if(ATTENUATION) then
+  if (ATTENUATION) then
 
 ! compute deviatoric strain
     epsilon_trace_over_3 = ONE_THIRD * (duxdxl + duydyl + duzdzl)
@@ -1207,7 +1207,7 @@ endif !jpampuero
     mul = mustore(i,j,k,ispec)
 
 ! use unrelaxed parameters if attenuation
-    if(ATTENUATION) mul = mul * one_minus_sum_beta_use
+    if (ATTENUATION) mul = mul * one_minus_sum_beta_use
 
           lambdalplus2mul = kappal + FOUR_THIRDS * mul
           lambdal = lambdalplus2mul - 2.*mul
@@ -1222,7 +1222,7 @@ endif !jpampuero
           sigma_yz = mul*duzdyl_plus_duydzl
 
 ! subtract memory variables if attenuation
-  if(ATTENUATION) then
+  if (ATTENUATION) then
     do i_sls = 1,N_SLS
       R_xx_val = R_xx(i,j,k,ispec,i_sls)
       R_yy_val = R_yy(i,j,k,ispec,i_sls)
@@ -1303,7 +1303,7 @@ endif !jpampuero
 
 ! update memory variables based upon the Runge-Kutta scheme
 
-  if(ATTENUATION) then
+  if (ATTENUATION) then
 
 ! use Runge-Kutta scheme to march in time
   do i_sls = 1,N_SLS
@@ -1351,7 +1351,7 @@ endif !jpampuero
     enddo
 
 ! save deviatoric strain for Runge-Kutta scheme
-  if(ATTENUATION) then
+  if (ATTENUATION) then
     epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
     epsilondev_yy(:,:,:,ispec) = epsilondev_yy_loc(:,:,:)
     epsilondev_xy(:,:,:,ispec) = epsilondev_xy_loc(:,:,:)
@@ -1364,7 +1364,7 @@ endif !jpampuero
 !jpampuero *********** BEGIN ABSORBING BOUNDARY CONDITIONS ******************
 ! add Stacey conditions
 
-  if(STACEY_ABS_CONDITIONS) then
+  if (STACEY_ABS_CONDITIONS) then
 
 !   xmin
     do ispec2D=1,nspec2D_xmin
@@ -1372,7 +1372,7 @@ endif !jpampuero
       ispec=ibelm_xmin(ispec2D)
 
 ! exclude elements that are not on absorbing edges
-    if(nkmin_xi(1,ispec2D) == 0 .or. njmin(1,ispec2D) == 0) cycle
+    if (nkmin_xi(1,ispec2D) == 0 .or. njmin(1,ispec2D) == 0) cycle
 
       i=1
       do k=nkmin_xi(1,ispec2D),NGLLZ
@@ -1408,7 +1408,7 @@ endif !jpampuero
       ispec=ibelm_xmax(ispec2D)
 
 ! exclude elements that are not on absorbing edges
-    if(nkmin_xi(2,ispec2D) == 0 .or. njmin(2,ispec2D) == 0) cycle
+    if (nkmin_xi(2,ispec2D) == 0 .or. njmin(2,ispec2D) == 0) cycle
 
       i=NGLLX
       do k=nkmin_xi(2,ispec2D),NGLLZ
@@ -1452,7 +1452,7 @@ endif !jpampuero
     do ispec2D=1,nspec2D_ymin
 
       ! exclude elements that are not on absorbing edges
-      if(nkmin_eta(1,ispec2D) == 0 .or. nimin(1,ispec2D) == 0) cycle
+      if (nkmin_eta(1,ispec2D) == 0 .or. nimin(1,ispec2D) == 0) cycle
 
       !ispec = bulk element associated to the ispec2D'th boundary element
       ispec=ibelm_ymin(ispec2D)
@@ -1520,7 +1520,7 @@ endif !jpampuero
     enddo
 
     do ispec2D=1,nspec2D_ymin
-      if(nkmin_eta(1,ispec2D) == 0 .or. nimin(1,ispec2D) == 0) cycle
+      if (nkmin_eta(1,ispec2D) == 0 .or. nimin(1,ispec2D) == 0) cycle
       ispec=ibelm_ymin(ispec2D)
       j=1
       do k=nkmin_eta(1,ispec2D),NGLLZ
@@ -1545,7 +1545,7 @@ endif !jpampuero
       ispec=ibelm_ymax(ispec2D)
 
 ! exclude elements that are not on absorbing edges
-    if(nkmin_eta(2,ispec2D) == 0 .or. nimin(2,ispec2D) == 0) cycle
+    if (nkmin_eta(2,ispec2D) == 0 .or. nimin(2,ispec2D) == 0) cycle
 
       j=NGLLY
       do k=nkmin_eta(2,ispec2D),NGLLZ
@@ -1618,12 +1618,12 @@ endif !jpampuero
   do isource = 1,NSOURCES
 
 !   add the source (only if this proc carries the source)
-    if(myrank == islice_selected_source(isource)) then
+    if (myrank == islice_selected_source(isource)) then
 
       stf = comp_source_time_function(dble(it-1)*DT-hdur(isource)-t_cmt(isource),hdur(isource))
 
 !     distinguish whether single or double precision for reals
-      if(CUSTOM_REAL == SIZE_REAL) then
+      if (CUSTOM_REAL == SIZE_REAL) then
         stf_used = sngl(stf)
       else
         stf_used = stf
@@ -1697,7 +1697,7 @@ endif !jpampuero
 ! store North, East and Vertical components
 
 ! distinguish whether single or double precision for reals
-      if(CUSTOM_REAL == SIZE_REAL) then
+      if (CUSTOM_REAL == SIZE_REAL) then
         seismograms_d(:,irec_local,it) = sngl((nu(:,1,irec)*uxd + nu(:,2,irec)*uyd + nu(:,3,irec)*uzd))
         seismograms_v(:,irec_local,it) = sngl((nu(:,1,irec)*vxd + nu(:,2,irec)*vyd + nu(:,3,irec)*vzd))
       else
@@ -1708,7 +1708,7 @@ endif !jpampuero
   enddo
 
 ! write the current seismograms
-  if(mod(it,NSEIS) == 0) then
+  if (mod(it,NSEIS) == 0) then
       call write_seismograms_d(myrank,seismograms_d,number_receiver_global,station_name, &
            network_name,nrec,nrec_local,it,DT,NSTEP,hdur(1),LOCAL_PATH)
           !network_name,nrec,nrec_local,it,DT,NSTEP,hdur(1),'OUTPUT_FILES') !jpampuero
@@ -1836,7 +1836,7 @@ endif !jpampuero
 !jpampuero === END OUTPUT: time series at selected fault points ===
 
 ! close the main output file
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) 'End of the simulation'
     write(IMAIN,*)

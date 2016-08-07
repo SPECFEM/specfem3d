@@ -211,7 +211,7 @@ program smooth_sem_globe
   enddo
   nums = j
 
-  if( myrank == 0 ) then
+  if ( myrank == 0 ) then
     print *,'slices:',nums
     print *,'  ',islice(:)
     print *
@@ -233,7 +233,7 @@ program smooth_sem_globe
 
   ! point locations
   open(11,file=solver2_file(1),status='old',form='unformatted',iostat=ier)
-  if( ier /= 0 ) call exit_mpi(myrank,'error opening solver2 file')
+  if ( ier /= 0 ) call exit_mpi(myrank,'error opening solver2 file')
 
   read(11) x(1:nglob(1))
   read(11) y(1:nglob(1))
@@ -243,7 +243,7 @@ program smooth_sem_globe
 
   ! jacobian
   open(11,file=solver1_file(1),status='old',form='unformatted',iostat=ier)
-  if( ier /= 0 ) call exit_mpi(myrank,'error opening solver1 file')
+  if ( ier /= 0 ) call exit_mpi(myrank,'error opening solver1 file')
 
   read(11) xix
   read(11) xiy
@@ -312,7 +312,7 @@ program smooth_sem_globe
     ! point locations
     ! given in cartesian coordinates
     open(11,file=solver2_file(iproc),status='old',form='unformatted',iostat=ier)
-    if( ier /= 0 ) call exit_mpi(myrank,'error opening slices: solver2 file')
+    if ( ier /= 0 ) call exit_mpi(myrank,'error opening slices: solver2 file')
 
     read(11) x(1:nglob(iproc))
     read(11) y(1:nglob(iproc))
@@ -321,7 +321,7 @@ program smooth_sem_globe
     close(11)
 
     open(11,file=solver1_file(iproc),status='old',form='unformatted',iostat=ier)
-    if( ier /= 0 ) call exit_mpi(myrank,'error opening slices: solver1 file')
+    if ( ier /= 0 ) call exit_mpi(myrank,'error opening slices: solver1 file')
 
     read(11) xix
     read(11) xiy
@@ -362,7 +362,7 @@ program smooth_sem_globe
 
     ! kernel file
     open(11,file=k_file(iproc),status='old',form='unformatted',iostat=ier)
-    if( ier /= 0 ) call exit_mpi(myrank,'error opening kernel file')
+    if ( ier /= 0 ) call exit_mpi(myrank,'error opening kernel file')
 
     read(11) kernel(:,:,:,1:nspec(iproc))
     close(11)
@@ -439,7 +439,7 @@ program smooth_sem_globe
               bk(i,j,k,ispec) = bk(i,j,k,ispec) + sum(exp_val(:,:,:))
 
               ! checks number
-              !if( isNaN(tk(i,j,k,ispec)) ) then
+              !if ( isNaN(tk(i,j,k,ispec)) ) then
               !  print *,'error tk NaN: ',tk(i,j,k,ispec)
               !  print *,'rank:',myrank
               !  print *,'i,j,k,ispec:',i,j,k,ispec
@@ -478,7 +478,7 @@ program smooth_sem_globe
 
 
           ! checks number
-          if( isNaN(kernel_smooth(i,j,k,ispec)) ) then
+          if ( isNaN(kernel_smooth(i,j,k,ispec)) ) then
             print *,'error kernel_smooth NaN: ',kernel_smooth(i,j,k,ispec)
             print *,'rank:',myrank
             print *,'i,j,k,ispec:',i,j,k,ispec
@@ -494,7 +494,7 @@ program smooth_sem_globe
 
   ! file output
   open(11,file=trim(ks_file),status='unknown',form='unformatted',iostat=ier)
-  if( ier /= 0 ) call exit_mpi(myrank,'error opening smoothed kernel file')
+  if ( ier /= 0 ) call exit_mpi(myrank,'error opening smoothed kernel file')
 
   ! Note: output the following instead of kernel_smooth(:,:,:,1:nspec(1)) to create files of the same sizes
   write(11) kernel_smooth(:,:,:,:)
@@ -566,7 +566,7 @@ end program smooth_sem_globe
 
 
         ! checks number
-        !if( isNaN(exp_val(ii,jj,kk)) ) then
+        !if ( isNaN(exp_val(ii,jj,kk)) ) then
         !  print *,'error exp_val NaN: ',exp_val(ii,jj,kk)
         !  print *,'i,j,k:',ii,jj,kk
         !  print *,'dist_h: ',dist_h,'dist_v:',dist_v
@@ -614,8 +614,8 @@ end program smooth_sem_globe
   ratio = (x0*x1 + y0*y1 + z0*z1)/(r0 * r1)
 
   ! checks boundaries of ratio (due to numerical inaccuracies)
-  if( ratio > 1.0_CUSTOM_REAL ) ratio = 1.0_CUSTOM_REAL
-  if( ratio < -1.0_CUSTOM_REAL ) ratio = -1.0_CUSTOM_REAL
+  if ( ratio > 1.0_CUSTOM_REAL ) ratio = 1.0_CUSTOM_REAL
+  if ( ratio < -1.0_CUSTOM_REAL ) ratio = -1.0_CUSTOM_REAL
 
   theta = acos( ratio )
 

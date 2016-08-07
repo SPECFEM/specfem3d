@@ -162,7 +162,7 @@ program add_model
           alphah1 = 0._CUSTOM_REAL
 
           ! do not use transverse isotropy except if element is between d220 and Moho
-          if(.not. ( idoubling(ispec)== IFLAG_670_220 .or.idoubling(ispec)==IFLAG_220_80 .or. idoubling(ispec)==IFLAG_80_MOHO) ) then
+          if (.not. ( idoubling(ispec)== IFLAG_670_220 .or.idoubling(ispec)==IFLAG_220_80 .or. idoubling(ispec)==IFLAG_80_MOHO) ) then
 
             ! isotropic model update
 
@@ -198,8 +198,8 @@ program add_model
 
             ! eta value : limits updated values for eta range constraint
             eta1 = eta0 * exp( model_deta(i,j,k,ispec) )
-            if( eta1 < LIMIT_ETA_MIN ) eta1 = LIMIT_ETA_MIN
-            if( eta1 > LIMIT_ETA_MAX ) eta1 = LIMIT_ETA_MAX
+            if ( eta1 < LIMIT_ETA_MIN ) eta1 = LIMIT_ETA_MIN
+            if ( eta1 > LIMIT_ETA_MAX ) eta1 = LIMIT_ETA_MAX
 
             ! shear values
             betav1 = betav0 * exp( model_dbetav(i,j,k,ispec) )
@@ -263,7 +263,7 @@ subroutine initialize()
   call MPI_COMM_SIZE(MPI_COMM_WORLD,sizeprocs,ier)
   call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
 
-  if( sizeprocs /= nchunks_val*nproc_xi_val*nproc_eta_val ) then
+  if ( sizeprocs /= nchunks_val*nproc_xi_val*nproc_eta_val ) then
     print *,'sizeprocs:',sizeprocs,nchunks_val,nproc_xi_val,nproc_eta_val
     call exit_mpi(myrank,'error number sizeprocs')
   endif
@@ -333,7 +333,7 @@ subroutine read_parameters()
 
   ! read in parameter information
   read(s_step_fac,*) step_fac
-  !if( abs(step_fac) < 1.e-10) then
+  !if ( abs(step_fac) < 1.e-10) then
   !  print *,'error: step factor ',step_fac
   !  call exit_MPI(myrank,'error step factor')
   !endif
@@ -369,7 +369,7 @@ subroutine read_model()
   ! vpv model
   write(m_file,'(a,i6.6,a)') trim(input_model)//'/proc',myrank,'_reg1_vpv.bin'
   open(12,file=trim(m_file),status='old',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if ( ier /= 0 ) then
     print *,'error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
@@ -379,7 +379,7 @@ subroutine read_model()
   ! vph model
   write(m_file,'(a,i6.6,a)') trim(input_model)//'/proc',myrank,'_reg1_vph.bin'
   open(12,file=trim(m_file),status='old',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if ( ier /= 0 ) then
     print *,'error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
@@ -389,7 +389,7 @@ subroutine read_model()
   ! vsv model
   write(m_file,'(a,i6.6,a)') trim(input_model)//'/proc',myrank,'_reg1_vsv.bin'
   open(12,file=trim(m_file),status='old',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if ( ier /= 0 ) then
     print *,'error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
@@ -399,7 +399,7 @@ subroutine read_model()
   ! vsh model
   write(m_file,'(a,i6.6,a)') trim(input_model)//'/proc',myrank,'_reg1_vsh.bin'
   open(12,file=trim(m_file),status='old',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if ( ier /= 0 ) then
     print *,'error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
@@ -409,7 +409,7 @@ subroutine read_model()
   ! eta model
   write(m_file,'(a,i6.6,a)') trim(input_model)//'/proc',myrank,'_reg1_eta.bin'
   open(12,file=trim(m_file),status='old',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if ( ier /= 0 ) then
     print *,'error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
@@ -419,7 +419,7 @@ subroutine read_model()
   ! rho model
   write(m_file,'(a,i6.6,a)') trim(input_model)//'/proc',myrank,'_reg1_rho.bin'
   open(12,file=trim(m_file),status='old',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if ( ier /= 0 ) then
     print *,'error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
@@ -445,7 +445,7 @@ subroutine read_model()
   call mpi_reduce(minval(model_rho),min_rho,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
   call mpi_reduce(maxval(model_rho),max_rho,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
 
-  if( myrank == 0 ) then
+  if ( myrank == 0 ) then
     print *,'initial models:'
     print *,'  vpv min/max: ',min_vpv,max_vpv
     print *,'  vph min/max: ',min_vph,max_vph
@@ -472,7 +472,7 @@ subroutine read_kernels()
   ! bulk kernel
   write(m_file,'(a,i6.6,a)') trim(input_kernel)//'/proc',myrank,'_reg1_bulk_c_kernel_precond_smooth.bin'
   open(12,file=trim(m_file),status='old',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if ( ier /= 0 ) then
     print *,'error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
@@ -482,7 +482,7 @@ subroutine read_kernels()
   ! betav kernel
   write(m_file,'(a,i6.6,a)') trim(input_kernel)//'/proc',myrank,'_reg1_bulk_betav_kernel_precond_smooth.bin'
   open(12,file=trim(m_file),status='old',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if ( ier /= 0 ) then
     print *,'error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
@@ -492,7 +492,7 @@ subroutine read_kernels()
   ! betah kernel
   write(m_file,'(a,i6.6,a)') trim(input_kernel)//'/proc',myrank,'_reg1_bulk_betah_kernel_precond_smooth.bin'
   open(12,file=trim(m_file),status='old',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if ( ier /= 0 ) then
     print *,'error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
@@ -502,7 +502,7 @@ subroutine read_kernels()
   ! eta kernel
   write(m_file,'(a,i6.6,a)') trim(input_kernel)//'/proc',myrank,'_reg1_eta_kernel_precond_smooth.bin'
   open(12,file=trim(m_file),status='old',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if ( ier /= 0 ) then
     print *,'error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
@@ -523,7 +523,7 @@ subroutine read_kernels()
   call mpi_reduce(minval(kernel_eta),min_eta,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
   call mpi_reduce(maxval(kernel_eta),max_eta,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
 
-  if( myrank == 0 ) then
+  if ( myrank == 0 ) then
     print *,'initial kernels:'
     print *,'  bulk min/max : ',min_bulk,max_bulk
     print *,'  betav min/max: ',min_vsv,max_vsv
@@ -580,7 +580,7 @@ subroutine compute_volume()
   write(m_file,'(a,i6.6,a)') &
       '/tigress-hsm/hejunzhu/2011EUROPE_ITERATION_UPDATE/EUROPE_TOPOLOGY_FILE/proc',myrank,'_reg1_solver_data_2.bin'
   open(11,file=trim(m_file),status='old',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if ( ier /= 0 ) then
     print *,'error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
@@ -595,7 +595,7 @@ subroutine compute_volume()
   write(m_file,'(a,i6.6,a)') &
       '/tigress-hsm/hejunzhu/2011EUROPE_ITERATION_UPDATE/EUROPE_TOPOLOGY_FILE/proc',myrank,'_reg1_solver_data_1.bin'
   open(11,file=trim(m_file),status='old',form='unformatted',iostat=ier)
-  if( ier /= 0 ) then
+  if ( ier /= 0 ) then
     print *,'error opening: ',trim(m_file)
     call exit_mpi(myrank,'file not found')
   endif
@@ -631,7 +631,7 @@ subroutine compute_volume()
                         + xizl*(etaxl*gammayl-etayl*gammaxl))
           jacobian(i,j,k,ispec) = jacobianl
 
-          !if( abs(jacobianl) < 1.e-8 ) then
+          !if ( abs(jacobianl) < 1.e-8 ) then
           !  print *,'rank ',myrank,'jacobian: ',jacobianl,i,j,k,wgll_cube(i,j,k)
           !endif
 
@@ -655,7 +655,7 @@ subroutine compute_volume()
       do j = 1, NGLLY
         do i = 1, NGLLX
           iglob = ibool(i,j,k,ispec)
-          if( iglob == 0 ) then
+          if ( iglob == 0 ) then
             print *,'iglob zero',i,j,k,ispec
             print *
             print *,'ibool:',ispec
@@ -688,7 +688,7 @@ subroutine compute_volume()
           norm_eta = norm_eta + kernel_eta(i,j,k,ispec)*kernel_eta(i,j,k,ispec)
 
           ! checks number
-          if( isNaN(integral_bulk) ) then
+          if ( isNaN(integral_bulk) ) then
             print *,'error NaN: ',integral_bulk
             print *,'rank:',myrank
             print *,'i,j,k,ispec:',i,j,k,ispec
@@ -709,7 +709,7 @@ subroutine compute_volume()
   call mpi_reduce(integral_eta,integral_eta_sum,1,CUSTOM_MPI_TYPE,MPI_SUM,0,MPI_COMM_WORLD,ier)
   call mpi_reduce(volume_glob,volume_glob_sum,1,CUSTOM_MPI_TYPE,MPI_SUM,0,MPI_COMM_WORLD,ier)
 
-  if( myrank == 0 ) then
+  if ( myrank == 0 ) then
     print *,'integral kernels:'
     print *,'  bulk : ',integral_bulk_sum
     print *,'  betav : ',integral_betav_sum
@@ -731,7 +731,7 @@ subroutine compute_volume()
   norm_betah = sqrt(norm_betah_sum)
   norm_eta = sqrt(norm_eta_sum)
 
-  if( myrank == 0 ) then
+  if ( myrank == 0 ) then
     print *,'norm kernels:'
     print *,'  bulk : ',norm_bulk
     print *,'  betav : ',norm_betav
@@ -782,16 +782,16 @@ subroutine get_gradient()
             model_deta(i,j,k,ispec) =  kernel_eta(i,j,k,ispec)
 
             ! determines maximum kernel betav value within given radius
-            if( use_depth_maximum ) then
+            if ( use_depth_maximum ) then
               ! get radius of point
               iglob = ibool(i,j,k,ispec)
               r = sqrt( x(iglob)*x(iglob) + y(iglob)*y(iglob) + z(iglob)*z(iglob) )
 
               ! stores maximum kernel betav value in this depth slice, since betav is most likely dominating
-              if( r < R_top .and. r > R_bottom ) then
+              if ( r < R_top .and. r > R_bottom ) then
                 ! kernel betav value
                 max_vsv = abs( kernel_betav(i,j,k,ispec) )
-                if( max < max_vsv ) then
+                if ( max < max_vsv ) then
                   max = max_vsv
                   depth_max = r
                 endif
@@ -821,7 +821,7 @@ subroutine get_gradient()
   call mpi_reduce(minval(model_deta),min_eta,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
   call mpi_reduce(maxval(model_deta),max_eta,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
 
-  if( myrank == 0 ) then
+  if ( myrank == 0 ) then
     print *,'initial gradients:'
     print *,'  bulk min/max : ',min_bulk,max_bulk
     print *,'  betav min/max: ',min_vsv,max_vsv
@@ -831,7 +831,7 @@ subroutine get_gradient()
   endif
 
   ! determines maximum kernel betav value within given radius
-  if( use_depth_maximum ) then
+  if ( use_depth_maximum ) then
     ! maximum of all processes stored in max_vsv
     call mpi_reduce(max,max_vsv,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
     max = max_vsv
@@ -840,10 +840,10 @@ subroutine get_gradient()
 
   ! determines step length
   ! based on maximum gradient value (either vsv or vsh)
-  if( myrank == 0 ) then
+  if ( myrank == 0 ) then
 
     ! determines maximum kernel betav value within given radius
-    if( use_depth_maximum ) then
+    if ( use_depth_maximum ) then
         print *,'  using depth maximum between 50km and 100km: ',max
         print *,'  approximate depth maximum: ',depth_max
         print *
@@ -886,7 +886,7 @@ subroutine get_gradient()
   norm_betah = sqrt(norm_betah_sum)
   norm_eta = sqrt(norm_eta_sum)
 
-  if( myrank == 0 ) then
+  if ( myrank == 0 ) then
     print *,'norm model updates:'
     print *,'  bulk : ',norm_bulk
     print *,'  betav: ',norm_betav
@@ -915,7 +915,7 @@ subroutine get_gradient()
   call mpi_reduce(minval(model_deta),min_eta,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
   call mpi_reduce(maxval(model_deta),max_eta,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
 
-  if( myrank == 0 ) then
+  if ( myrank == 0 ) then
     print *,'scaled gradients:'
     print *,'  bulk min/max : ',min_bulk,max_bulk
     print *,'  betav min/max: ',min_vsv,max_vsv
@@ -1030,7 +1030,7 @@ subroutine store_new_model()
   close(12)
 
 
-  if( myrank == 0 ) then
+  if ( myrank == 0 ) then
     print *,'new models:'
     print *,'  vpv min/max: ',min_vpv,max_vpv
     print *,'  vph min/max: ',min_vph,max_vph
@@ -1121,7 +1121,7 @@ subroutine store_perturbations()
   call mpi_reduce(maxval(total_model),max_rho,1,CUSTOM_MPI_TYPE,MPI_MAX,0,MPI_COMM_WORLD,ier)
   call mpi_reduce(minval(total_model),min_rho,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)
 
-  if( myrank == 0 ) then
+  if ( myrank == 0 ) then
     print *,'relative update:'
     print *,'  dvpv/vpv min/max: ',min_vpv,max_vpv
     print *,'  dvph/vph min/max: ',min_vph,max_vph

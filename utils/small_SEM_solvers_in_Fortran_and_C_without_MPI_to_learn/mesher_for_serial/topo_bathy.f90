@@ -45,18 +45,18 @@
   double precision xlo
 
   xlo = xlon
-  if(xlon < 0.d0) xlo = xlo + 360.d0
+  if (xlon < 0.d0) xlo = xlo + 360.d0
 
 ! compute number of samples per degree
   samples_per_degree_topo = dble(RESOLUTION_TOPO_FILE) / 60.d0
 
 ! compute offset in data file and avoid edge effects
   iadd1 = 1 + int((90.d0-xlat)/samples_per_degree_topo)
-  if(iadd1 < 1) iadd1 = 1
-  if(iadd1 > NY_BATHY) iadd1 = NY_BATHY
+  if (iadd1 < 1) iadd1 = 1
+  if (iadd1 > NY_BATHY) iadd1 = NY_BATHY
 
   iel1 = int(xlo/samples_per_degree_topo)
-  if(iel1 <= 0 .or. iel1 > NX_BATHY) iel1 = NX_BATHY
+  if (iel1 <= 0 .or. iel1 > NX_BATHY) iel1 = NX_BATHY
 
 ! convert integer value to double precision
   value = dble(ibathy_topo(iel1,iadd1))
@@ -90,11 +90,11 @@
       read(13,*) ibathy_topo(itopo_x,itopo_y)
 
 ! impose maximum height of mountains, to suppress oscillations in Himalaya etc.
-  if(USE_MAXIMUM_HEIGHT_TOPO .and. ibathy_topo(itopo_x,itopo_y) > MAXIMUM_HEIGHT_TOPO) &
+  if (USE_MAXIMUM_HEIGHT_TOPO .and. ibathy_topo(itopo_x,itopo_y) > MAXIMUM_HEIGHT_TOPO) &
     ibathy_topo(itopo_x,itopo_y) = MAXIMUM_HEIGHT_TOPO
 
 ! impose maximum depth of oceans, to suppress oscillations near deep trenches
-  if(USE_MAXIMUM_DEPTH_OCEANS .and. ibathy_topo(itopo_x,itopo_y) < MAXIMUM_DEPTH_OCEANS) &
+  if (USE_MAXIMUM_DEPTH_OCEANS .and. ibathy_topo(itopo_x,itopo_y) < MAXIMUM_DEPTH_OCEANS) &
     ibathy_topo(itopo_x,itopo_y) = MAXIMUM_DEPTH_OCEANS
 
     enddo

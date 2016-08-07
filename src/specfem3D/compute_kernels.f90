@@ -444,7 +444,7 @@
 
 !-------------------------------------------------------------------------------------------------
 !
-! Subroutine to compute the kernels for the 21 elastic coefficients
+! subroutine to compute the kernels for the 21 elastic coefficients
 ! Last modified 19/04/2007
 
 !-------------------------------------------------------------------

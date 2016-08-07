@@ -391,20 +391,16 @@ end subroutine send_partition_mesh_to_all
 !
 !-------------------------------------------------------
 
-
-
 subroutine send_mesh_to_all(myrank)
 
   use module_mesh
 
-
   integer,               intent(in) :: myrank
   integer                           :: ier
 
-
   if (myrank > 0) then
      allocate(elmnts_glob(NGNOD,nspec_glob),stat=ier)
-     if (ier /= 0)then
+     if (ier /= 0) then
         write(*,*) 'Error ', myrank, NGNOD,nspec_glob
         stop 'Error allocating array elmnts'
      endif

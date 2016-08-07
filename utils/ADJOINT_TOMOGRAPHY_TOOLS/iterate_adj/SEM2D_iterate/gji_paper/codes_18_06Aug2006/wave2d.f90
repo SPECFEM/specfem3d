@@ -196,9 +196,9 @@ program wave2d
 
   ! idat=1 means we run simulations for both data and synthetics (two models)
   idat = 0
-  if(IKER <= 4) idat = 1
-  if(ISRC_SPACE==1) FINITE_SOURCE = 0
-  if(ISRC_SPACE/=1) FINITE_SOURCE = 1
+  if (IKER <= 4) idat = 1
+  if (ISRC_SPACE==1) FINITE_SOURCE = 0
+  if (ISRC_SPACE/=1) FINITE_SOURCE = 1
 
 !--------------------------------------
 ! load socal coast and shelf points
@@ -318,7 +318,7 @@ program wave2d
   enddo
   close(15)
 
-  if(0==1) then
+  if (0==1) then
 
     ! corner points for each element, and centerpoint (in km)
     open(unit=15,file='elements.dat',status='unknown')
@@ -419,7 +419,7 @@ program wave2d
 
   t_target = 2*hdur     ! target period for phase velocity map
 
-  if(IMODEL <= 1) then
+  if (IMODEL <= 1) then
 
      ! write lat-lon gridpoints to file
      filename = trim(socal_dir) // 'socal_input.dat'
@@ -455,7 +455,7 @@ program wave2d
 
      c_glob_syn(:) = c0       ! c-maps for synthetics
 
-  else if(IMODEL==2) then   ! checkerboard
+  else if (IMODEL==2) then   ! checkerboard
 
      c0 = 3500.    ! reference phase velocity (m/s) (should be obtained based on hdur)
      !Nfac = 3      ! scalelength of map = N * (wavelength of surface waves for hdur)
@@ -472,7 +472,7 @@ program wave2d
 
      c_glob_syn(:) = c0       ! c-maps for synthetics
 
-  else if(IMODEL==3) then   ! read c-map for synthetics and data for a 'middle' iteration
+  else if (IMODEL==3) then   ! read c-map for synthetics and data for a 'middle' iteration
 
      ! read in phase velocity map for data
      open(unit=16,file=trim(model_dir)//'socal_vel_dat.dat', status='unknown')
@@ -510,7 +510,7 @@ program wave2d
   !c_glob_dat(:) = c_glob_syn(:) * (1. + afac/100.)
 
   ! unperturbed structure
-  if(PERT_STRUCT == 0) c_glob_syn(:) = c_glob_dat(:)
+  if (PERT_STRUCT == 0) c_glob_syn(:) = c_glob_dat(:)
 
   ! write data phase velocity map to file
   file_dat_c = 'socal_vel_dat.dat'
@@ -572,7 +572,7 @@ program wave2d
   quake_file = 'socal_quakes_N025.dat'
   open(55,file=trim(in_dir)//trim(quake_file),status='unknown')
   read(55,*) nevent
-  if(nevent > MAX_EVENT) stop 'nevent > MAX_EVENT (so increase MAX_EVENT)'
+  if (nevent > MAX_EVENT) stop 'nevent > MAX_EVENT (so increase MAX_EVENT)'
   print *, nevent, ' target events (for synthetics)'
   read(55,'(i14,3f14.7)') (socal_events_lab(i),socal_events_lon(i),socal_events_lat(i),socal_events_mag(i),i=1,nevent)
   close(55)
@@ -605,7 +605,7 @@ program wave2d
   call station_filter(nevent, x_eve0_dat, z_eve0_dat, ifilter_eve_dat, SOURCE_GRID_BUFFER)
   !call station_filter(nevent, x_eve, z_eve, dmin_trsh_s, ncoast, coast_x, coast_z)
 
-  if(nevent < 1) stop 'Must have at least one event'
+  if (nevent < 1) stop 'Must have at least one event'
 
   ! allocate variables
   allocate(x_eve_dat(nevent),z_eve_dat(nevent),x_eve_lon_dat(nevent),z_eve_lat_dat(nevent))
@@ -697,9 +697,9 @@ program wave2d
   allocate(ispec_eve(nevent),xi_eve(nevent),gamma_eve(nevent))
   allocate(otime(nevent))
 
-  if(PERT_SOURCE == 1) then  ! source perturbations
+  if (PERT_SOURCE == 1) then  ! source perturbations
 
-    if(1==1) then   ! read in perturbed events from another file
+    if (1==1) then   ! read in perturbed events from another file
 
       open(19,file='/home/store2/carltape/'//trim(out_dir3)//'run_2550/events_xy.dat',status='unknown')
       do ievent = 1,25
@@ -814,7 +814,7 @@ program wave2d
 
 ! get the lat-lon of the TARGET RECEIVERS
 
-if(IREC_SPACE==1) then  ! individual receivers
+if (IREC_SPACE==1) then  ! individual receivers
 
   ! target receiver
   !x_rec0(1) = 3 * LENGTH/4     ; z_rec0(1) = HEIGHT/2
@@ -833,7 +833,7 @@ if(IREC_SPACE==1) then  ! individual receivers
 
   nrec = 3
 
-else if(IREC_SPACE==2) then  ! actual station locations
+else if (IREC_SPACE==2) then  ! actual station locations
 
   ! read in (target) receivers
   recfile = trim(in_dir)//'STATION_149_full'
@@ -845,7 +845,7 @@ else if(IREC_SPACE==2) then  ! actual station locations
   read(88,*) (x_rec_lon0(i),z_rec_lat0(i),i=1,nrec)
   close(88)
 
-else if(IREC_SPACE==4) then ! 'regular' mesh of receivers
+else if (IREC_SPACE==4) then ! 'regular' mesh of receivers
 
    ! calculate mesh spacing
    dx = LENGTH/NMESH_REC
@@ -869,7 +869,7 @@ else
 endif  ! IREC_SPACE
 
   ! make sure that there are fewer target points than the max allowed
-  if(nrec > MAX_SR) then
+  if (nrec > MAX_SR) then
      print *
      print *, ' IREC_SPACE = ', IREC_SPACE
      print *, '       nrec = ', nrec
@@ -891,7 +891,7 @@ endif  ! IREC_SPACE
   !call station_filter(nrec, x_rec, z_rec, dmin_trsh_r, ncoast, coast_x, coast_z)
   !call station_filter_2(nrec, x_rec, z_rec, -1)  ! -1 for left, +1 for right
 
-  if(nrec < 1) stop 'Must have at least one receiver'
+  if (nrec < 1) stop 'Must have at least one receiver'
 
   ! allocate vectors
   allocate(x_rec(nrec),z_rec(nrec),x_rec_lon(nrec),z_rec_lat(nrec))
@@ -1013,7 +1013,7 @@ endif  ! IREC_SPACE
    do xmesh = 0.,LENGTH,dx
       do zmesh = 0.,HEIGHT,dz
          i = i+1
-         if(i > MAX_SR_FAKE) stop 'i > MAX_SR_FAKE so change dx, dz, or MAX_SR_FAKE'
+         if (i > MAX_SR_FAKE) stop 'i > MAX_SR_FAKE so change dx, dz, or MAX_SR_FAKE'
          x_recf0(i) = xmesh
          z_recf0(i) = zmesh
       enddo
@@ -1029,7 +1029,7 @@ endif  ! IREC_SPACE
   ! filter target points (utm-mesh) -- update nrecf
   call station_filter(nrecf, x_recf0, z_recf0, ifilter_recf, STATION_GRID_BUFFER)
 
-  if(nrecf < 1) stop 'Must have at least one fake (adjoint) receiver'
+  if (nrecf < 1) stop 'Must have at least one fake (adjoint) receiver'
 
   ! allocate vectors
   allocate(x_recf(nrecf),z_recf(nrecf),fglob(nrecf))
@@ -1153,7 +1153,7 @@ endif  ! IREC_SPACE
   !enddo
 
   do i = 1,nmod
-    if(i <= nmod_str) then
+    if (i <= nmod_str) then
       m0_vec(i) = c_glob_syn(i)            ! m/s
     else
       m0_vec(i) = m_src_syn(i-nmod_str)    ! xs, zs, t0
@@ -1169,7 +1169,7 @@ endif  ! IREC_SPACE
 
   !------------------
 
-if(ISOURCE_LOG) open(91,file=trim(out_dir2)//'source_vector.log',status='unknown')
+if (ISOURCE_LOG) open(91,file=trim(out_dir2)//'source_vector.log',status='unknown')
 
 itest = 0
 !============================================
@@ -1179,8 +1179,8 @@ itest = 0
 
   imod = (istep - mod(istep,2))/2          ! index into model number
 
-!!$  if( mod(imod,2) == 0 ) then
-!!$  !if(imod <= 1 .or. imod==5 .or. imod==9 .or. imod==13) then
+!!$  if ( mod(imod,2) == 0 ) then
+!!$  !if (imod <= 1 .or. imod==5 .or. imod==9 .or. imod==13) then
 !!$    INV_SOURCE = 1
 !!$    INV_STRUCT = 0
 !!$  else
@@ -1191,8 +1191,8 @@ itest = 0
   irun = irun0 + istep
   print *,'=============================================================='
   print *,'  istep, imod, irun : ', istep, imod, irun
-  if(INV_STRUCT==1) print *, '  inverting for structure parameters'
-  if(INV_SOURCE==1) print *, '  inverting for source parameters'
+  if (INV_STRUCT==1) print *, '  inverting for structure parameters'
+  if (INV_SOURCE==1) print *, '  inverting for source parameters'
   print *,'=============================================================='
 
 !enddo
@@ -1210,14 +1210,14 @@ itest = 0
 
   ! use the reference model or test model (source and structure)
   ! structure is the top portion; source is the bottom portion
-  if(itest==0) then
+  if (itest==0) then
 
      c_glob_syn(:) = m0_vec(1:nmod_str)
      m_src(:)      = m0_vec(nmod_str+1:nmod)
      !m_vel(:) = m0_vel(:)
      !m_src(:) = m0_src(:)
 
-  else if(itest==1) then
+  else if (itest==1) then
      c_glob_syn(:) = mt_vec(1:nmod_str)
      m_src(:)      = mt_vec(nmod_str+1:nmod)
 
@@ -1267,7 +1267,7 @@ itest = 0
 
   ! get the lat-lon of the TARGET RECEIVERS
 
-  if(ISRC_SPACE <= 5) then  ! if you do NOT want a point source from the event list
+  if (ISRC_SPACE <= 5) then  ! if you do NOT want a point source from the event list
 
      x_src_lon0(:) = 0.  ; z_src_lat0(:) = 0.
      x_src0(:) = 0.      ; z_src0(:) = 0.
@@ -1349,7 +1349,7 @@ itest = 0
         do xmesh = xcen-s_radius, xcen+s_radius, dx
            do zmesh = zcen-s_radius, zcen+s_radius, dx
               d = sqrt((xmesh - xcen)**2+(zmesh - zcen)**2)
-              if(d < s_radius) then
+              if (d < s_radius) then
                  i = i+1
                  x_src0(i) = xmesh
                  z_src0(i) = zmesh
@@ -1369,7 +1369,7 @@ itest = 0
 
      ! make sure that there are fewer target points than the max allowed
      ! (this is not ideal, since you might have a file of points that extend far outside the grid)
-     if(nsrc > MAX_SR) then
+     if (nsrc > MAX_SR) then
         print *
         print *, ' ISRC_SPACE = ', ISRC_SPACE
         print *, '       nsrc = ', nsrc
@@ -1389,7 +1389,7 @@ itest = 0
      ! filter target points (utm-mesh) -- update nsrc
      call station_filter(nsrc, x_src0, z_src0, ifilter_src, SOURCE_GRID_BUFFER)
 
-     if(nsrc < 1) stop 'Must have at least one source'
+     if (nsrc < 1) stop 'Must have at least one source'
 
      ! allocate vectors
      allocate(x_src(nsrc),z_src(nsrc),x_src_lon(nsrc),z_src_lat(nsrc))
@@ -1473,7 +1473,7 @@ itest = 0
 
 !!$        ! perturb source location from the previous model
 !!$        ! this only changes the source if INV_SRC = 1
-!!$        if(istep==0) then  ! initial source
+!!$        if (istep==0) then  ! initial source
 !!$
 !!$           x_src(1) = x_eve(ievent)          ! x position, perturbed event
 !!$           z_src(1) = z_eve(ievent)          ! z position, perturbed event
@@ -1504,7 +1504,7 @@ itest = 0
      ! filter target points (utm-mesh) -- update nsrc
      call station_filter(nsrc, x_src, z_src, ifilter_src, SOURCE_GRID_BUFFER)
 
-     if(nsrc /= 1) stop 'Must be a single point source'
+     if (nsrc /= 1) stop 'Must be a single point source'
 
      ! determine the (eta, xi) corresponding to the target points
      ! this UPDATES x_src, z_src; sglob is the index of the closest gridpoint
@@ -1549,7 +1549,7 @@ itest = 0
 
   endif  ! ISRC_SPACE
 
-  if(ISOURCE_LOG) then
+  if (ISOURCE_LOG) then
     ! source log file
     itemp1 = (ievent-1)*3 + 1
     itemp2 = (ievent-1)*3 + 2
@@ -1572,9 +1572,9 @@ itest = 0
 ! source time function FOR DATA AND SYNTHETICS
 
   ! source magnitude (same for data and synthetics)
-  if(NCOMP==3) then
+  if (NCOMP==3) then
      f0(1) = 0.0    ;  f0(2) = FNORM    ; f0(3) = 0.0
-  else if(NCOMP==1) then
+  else if (NCOMP==1) then
      f0(1) = FNORM
   else
      stop 'NCOMP must be 1 or 3'
@@ -1666,13 +1666,13 @@ itest = 0
   file_src_rec = trim(out_dir)//'sr.txt'
   open(12,file=file_src_rec,status='unknown',iostat=ios)
   if (ios /= 0) stop 'Error opening out_dir/sr.txt'
-  if(ISRC_SPACE /= 5) then
+  if (ISRC_SPACE /= 5) then
      write(12,'(a,2f12.6,i10)') ('S ', x_lon(sglob(i)), z_lat(sglob(i)), i, i=1,nsrc)
   else
      ! finite area source
      do i=1,nsrc
         d = sqrt((x(sglob(i)) - xcen)**2+(z(sglob(i)) - zcen)**2)
-        if( d > s_radius-dh) then  ! get outermost sources
+        if ( d > s_radius-dh) then  ! get outermost sources
            write(12,'(a,2f12.6,i10)') 'S ', x_lon(sglob(i)), z_lat(sglob(i)), i
         endif
      enddo
@@ -1682,7 +1682,7 @@ itest = 0
 
   ! plot phase velocity map with source-receiver geometry and source time function
   iopt = 3 + idat
-  if(ISURFACE==1) then
+  if (ISURFACE==1) then
      !filename1 = 'get_model.csh'
      !filename2 = trim(script_dir)//'plot_model.pl'
      !open(19,file=filename1,status='unknown')
@@ -1704,7 +1704,7 @@ itest = 0
   !-----------------------------------------------------
   ! write the current models to file
 
-  if(ifirst == 1) then
+  if (ifirst == 1) then
 
      ! write phase velocity maps to file (data is always the same)
      open(unit=18,file=trim(out_dir1)//file_dat_c,status='unknown')
@@ -1747,12 +1747,12 @@ itest = 0
 !=========================
 ! DATA (forward wavefield)
 
-  if(WRITE_STF_F) call write_seismogram(samp_dat, nsrc, trim(out_dir)//'stffor_dat')
+  if (WRITE_STF_F) call write_seismogram(samp_dat, nsrc, trim(out_dir)//'stffor_dat')
 
   ! compute data for misfit kernels
   allocate(data(NSTEP,NCOMP,nrec))
   data(:,:,:) = 0.0
-  if(IKER <= 4) then
+  if (IKER <= 4) then
 
      ! set velocity field for the data
      c_glob(:) = c_glob_dat
@@ -1768,7 +1768,7 @@ itest = 0
 
      ! write out seismograms at the receivers
      data_tag = 'dat'
-     if(WRITE_SEISMO_F) call write_seismogram(data, nrec, trim(out_dir)//data_tag)
+     if (WRITE_SEISMO_F) call write_seismogram(data, nrec, trim(out_dir)//data_tag)
   endif
 
   !stop 'testing'
@@ -1776,7 +1776,7 @@ itest = 0
 !=========================
 ! SYNTHETICS (forward wavefield)
 
-  if(WRITE_STF_F) call write_seismogram(samp, nsrc, trim(out_dir)//'stffor_syn')
+  if (WRITE_STF_F) call write_seismogram(samp, nsrc, trim(out_dir)//'stffor_syn')
 
   !stop 'testing'
 
@@ -1797,9 +1797,9 @@ itest = 0
   ! write out seismograms at the receivers
   syn_tag = 'syn'
   !syn_tag = 'forward'
-  if(WRITE_SEISMO_F) call write_seismogram(syn, nrec, trim(out_dir)//syn_tag)
+  if (WRITE_SEISMO_F) call write_seismogram(syn, nrec, trim(out_dir)//syn_tag)
 
-  if(WRITE_SPECTRAL_MAP_F) then
+  if (WRITE_SPECTRAL_MAP_F) then
      print *, 'compute and write out forward spectral map '
      call write_spectral_map(syn, nrec, rglob, trim(out_dir)//'spectral_forward',WRITE_SPECTRA_F)
   endif
@@ -1839,22 +1839,22 @@ itest = 0
 
   ! write out adjoint source time function at the receivers
   stfadj_tag = 'stfadj'
-  if(WRITE_STF_A) call write_seismogram(adj_syn, nrec, trim(out_dir)//stfadj_tag)
+  if (WRITE_STF_A) call write_seismogram(adj_syn, nrec, trim(out_dir)//stfadj_tag)
 
   !stop 'testing'
 
   ! OUTPUT ASCII FILES --> SAC FILES (make_sac_files.pl)
   ! (1) data, (2) synthetics, (3) adjoint source time function
 
-!!$  if(WRITE_SEISMO_F) then
+!!$  if (WRITE_SEISMO_F) then
 !!$     filename1 = trim(script_dir)//'make_sac_files.csh'
 !!$     filename2 = 'make_sac_files.pl'
 !!$     open(19,file=filename1,status='unknown')
-!!$         if(IKER <= 4) write(19,'(7a,f12.6)') trim(script_dir)//trim(filename2),' ', &
+!!$         if (IKER <= 4) write(19,'(7a,f12.6)') trim(script_dir)//trim(filename2),' ', &
 !!$             trim(out_dir),' ', trim(data_tag)  ,' ','1', tshift
 !!$                       write(19,'(7a,f12.6)') trim(script_dir)//trim(filename2),' ', &
 !!$             trim(out_dir),' ', trim(syn_tag)   ,' ','1', tshift
-!!$     if(WRITE_STF_A)   write(19,'(7a,f12.6)') trim(script_dir)//trim(filename2),' ', &
+!!$     if (WRITE_STF_A)   write(19,'(7a,f12.6)') trim(script_dir)//trim(filename2),' ', &
 !!$             trim(out_dir),' ', trim(stfadj_tag),' ','1', tshift
 !!$     close(19)
 !!$     call system('chmod 755 scripts/make_sac_files.csh ; scripts/make_sac_files.csh')
@@ -1903,7 +1903,7 @@ itest = 0
   ! we always evaluate the kernels for the present model
   ! we only evaluate the kernel for the test model if itest==1 and POLY_ORDER==3
 
-  if(itest==0 .or. POLY_ORDER==3) then
+  if (itest==0 .or. POLY_ORDER==3) then
     print *
     print *, 'compute the kernel via adjoint wavefield interaction'
     print *
@@ -1955,7 +1955,7 @@ itest = 0
     deallocate(rho_kernel, mu_kernel, kappa_kernel)
 
     ! write out adjoint seismograms at the original sources
-    if(WRITE_SEISMO_A) call write_seismogram(samp, nsrc, trim(out_dir)//'synadj')
+    if (WRITE_SEISMO_A) call write_seismogram(samp, nsrc, trim(out_dir)//'synadj')
 
   endif
 
@@ -2016,26 +2016,26 @@ itest = 0
   close(18)
   deallocate(measure_vec)
 
-  if(ISOURCE_LOG) write(91,'(a12,1f18.8)') ' chi(m) : ', chi_val
+  if (ISOURCE_LOG) write(91,'(a12,1f18.8)') ' chi(m) : ', chi_val
 
   ! stopping criterion needs to be better defined (depends on misfit function --- and DT)
   ! (We needed this for the basic source inversions.)
-  !if(chi_val <= 0.1 .and. itest==0) stop 'DONE: you have minimized chi(m) to chi(m) <= 0.1'
+  !if (chi_val <= 0.1 .and. itest==0) stop 'DONE: you have minimized chi(m) to chi(m) <= 0.1'
 
   print *, ' Written chi values to file'
   print *, ' Now we compute the gradient of the misfit function (using the misfit kernel)'
 
   !-----------------------------------------------------
-  ! COMPUTE THE GRADIENT OF THE MISFIT FUNCTION, if the present model is not
+  ! COMPUTE THE GRADIENT OF THE MISFIT function, if the present model is not
   ! a test model or if the CG polynomial is a cubic function
   ! DO NOT smooth kernel for test model if quadratic polynomial is being used
 
-  if(itest==0 .or. POLY_ORDER==3) then
+  if (itest==0 .or. POLY_ORDER==3) then
 
      print *, ' Computing the gradient of the misfit function for a given model'
      gradient(:) = 0.
 
-     if(INV_STRUCT == 1) then   ! smooth the kernels to remove spurious src-rec effects
+     if (INV_STRUCT == 1) then   ! smooth the kernels to remove spurious src-rec effects
 
         ! summed kernel for all events (NGLOB by 1)
         open(19,file=trim(out_dir1)//'summed_ker.dat',status='unknown')
@@ -2059,7 +2059,7 @@ itest = 0
         dmin = sqrt(LENGTH**2+HEIGHT**2)  ! max possible distance
         do iglob = 1,NGLOB
            d = sqrt((xtar-x(iglob))**2+(ztar-z(iglob))**2)
-           if(d < dmin) then
+           if (d < dmin) then
               igaus = iglob
               dmin = d
            endif
@@ -2069,7 +2069,7 @@ itest = 0
         k_gaus_global_ex(:) = 0.
         do iglob = 1,NGLOB
            dist2 = (xcen - x(iglob))**2 + (zcen - z(iglob))**2
-           if(dist2 <= dtrsh2) &
+           if (dist2 <= dtrsh2) &
                                 !k_gaus_global_ex(iglob) = (1./(2*PI*sigma**2)) * exp(-dist2 / (2.*sigma**2))
                 k_gaus_global_ex(iglob) = (4./(PI*gamma**2)) * exp(-4.*dist2 / (gamma**2))
         enddo
@@ -2085,7 +2085,7 @@ itest = 0
            k_gaus_global(:) = 0.
            do i = 1,NGLOB
               dist2 = (xcen - x(i))**2 + (zcen - z(i))**2
-              if(dist2 <= dtrsh2) &
+              if (dist2 <= dtrsh2) &
                  !k_gaus_global(i) = (1./(2.*PI*sigma**2)) * exp(-dist2 / (2.*sigma**2))
                  k_gaus_global(i) = (4./(PI*gamma**2)) * exp(-4.*dist2 / (gamma**2))
            enddo
@@ -2131,7 +2131,7 @@ itest = 0
         enddo
 
         ! write smooth-related functions to file
-        if(0==1) then
+        if (0==1) then
           file_smooth = 'fun_smooth.dat'
           open(unit=19,file=trim(out_dir1)//file_smooth,status='unknown')
           do iglob = 1,NGLOB
@@ -2155,8 +2155,8 @@ itest = 0
 
      ! KEY: scaling parameter for structure for (joint) inversions
      mfac = 1.0
-     if(istep==0) then
-        if(INV_SOURCE == 1 .and. INV_STRUCT == 1) then
+     if (istep==0) then
+        if (INV_SOURCE == 1 .and. INV_STRUCT == 1) then
            ! scale structure parameters according to source
            m_scale_str = mfac * sqrt( sum(source_gradient(:)*source_gradient(:)) )  &
               / sqrt( sum(k_smooth_global(:)*k_smooth_global(:) *sqrt(da(:))*sqrt(da(:)) ))
@@ -2172,7 +2172,7 @@ itest = 0
      print *, '   mfac = ', mfac
      print *, '   F    = ', m_scale_str
 
-     if(INV_STRUCT == 1) then
+     if (INV_STRUCT == 1) then
         ! KEY: compute gradient in 'irregular block' basis
         ! (special case of local Lagrange polynomial basis)
         do iglob = 1,NGLOB
@@ -2184,10 +2184,10 @@ itest = 0
 
      ! fill the bottom of the model vector with source parameters
      ! (dx,dy,dt) * nevent
-     if(INV_SOURCE == 1) gradient(nmod_str+1:nmod) = source_gradient(:)
+     if (INV_SOURCE == 1) gradient(nmod_str+1:nmod) = source_gradient(:)
 
      ! write gradient vector to file
-     if(0==1) then
+     if (0==1) then
        open(unit=19,file=trim(out_dir1)//'gradient_vec.dat',status='unknown')
        do i = 1,nmod
          write(19,'(1e20.10)') gradient(i)
@@ -2202,7 +2202,7 @@ itest = 0
 
   print *, ' Entering CG algorithm to compute new model or test model'
 
-  if(itest==0) then      ! if the present kernel is for a REAL model
+  if (itest==0) then      ! if the present kernel is for a REAL model
 
      chi_k_val = chi_val
      gk(:) = gradient(:)
@@ -2211,7 +2211,7 @@ itest = 0
      ! looking at perturbations relative to THE LATEST source position
      m0(:) = 0.
 
-     if(INV_STRUCT == 1) then
+     if (INV_STRUCT == 1) then
 
        ! KEY: fractional pert from c0
        do iglob = 1,nmod_str
@@ -2221,7 +2221,7 @@ itest = 0
        enddo
      endif
 
-     if(INV_SOURCE == 1) then
+     if (INV_SOURCE == 1) then
        ! scaled perturbation from initial source
        do i = 1,nmod_src
           m0(nmod_str+i) = (m_src(i) - m_src_syn(i)) / m_scale_src(i)
@@ -2229,7 +2229,7 @@ itest = 0
      endif
 
      ! update search direction
-     if(istep == 0) then
+     if (istep == 0) then
         pk(:) = -gk(:)     ! initial search direction
 
      else
@@ -2240,18 +2240,18 @@ itest = 0
 
      ! test value for line-search to get test model
      !istep_switch = 6
-     !if(istep < istep_switch)  lam_t_val = -2.*chi_k_val / dot_product(gk, pk)    ! quadratic extrapolation
-     !if(istep >= istep_switch) lam_t_val =    -chi_k_val / dot_product(gk, pk)    ! linear extrapolation
+     !if (istep < istep_switch)  lam_t_val = -2.*chi_k_val / dot_product(gk, pk)    ! quadratic extrapolation
+     !if (istep >= istep_switch) lam_t_val =    -chi_k_val / dot_product(gk, pk)    ! linear extrapolation
      lam_t_val = -2.*chi_k_val / dot_product(gk, pk)
      mt(:)     = m0(:) + lam_t_val * pk(:)
      !mt(:)     = m0(:) + lam_t_val * pk(:) / da(:)    ! structure only (g = K da)
      itest     = 1
 
      do i=1,nmod
-       if(i <= nmod_str) then    ! structure
+       if (i <= nmod_str) then    ! structure
 
           ! get the new (test) structure model in terms of fractional perturbation
-          if(INV_STRUCT == 0) then
+          if (INV_STRUCT == 0) then
              mt_vec(i) = c_glob_syn(i)  ! use same structure always
 
           else
@@ -2262,7 +2262,7 @@ itest = 0
 
        else                      ! source
           ! get the new source model in terms of (xs, zs, t0)
-          if(INV_SOURCE == 0) then
+          if (INV_SOURCE == 0) then
              !mt_vec(i) = m0_vec(i)   ! use same source always
              mt_vec(i) = m_src_syn(i - nmod_str)
 
@@ -2284,7 +2284,7 @@ itest = 0
      g0(:) = gk(:)
      p0(:) = pk(:)
 
-  else if(itest==1) then  ! if present kernel is for a test model
+  else if (itest==1) then  ! if present kernel is for a test model
 
      chi_t_val = chi_val
 
@@ -2295,7 +2295,7 @@ itest = 0
      yy2 = chi_t_val
      g1  = dot_product(g0,pk)
 
-     if(POLY_ORDER == 3) then
+     if (POLY_ORDER == 3) then
         ! use cubic polynomial: six values gives an analytical minimum
         ! see Matlab scripts cubic_min_4.m and cubic_min.m
 
@@ -2315,9 +2315,9 @@ itest = 0
 
         ! get the analytical minimum
         qfac = Pb**2 - 3.*Pa*Pc;
-        if(Pa /= 0 .and. qfac >= 0) then
+        if (Pa /= 0 .and. qfac >= 0) then
            xmin = (-Pb + sqrt(qfac)) / (3.*Pa)
-        else if(Pa == 0 .and. Pb /= 0) then
+        else if (Pa == 0 .and. Pb /= 0) then
            xmin = -Pc/(2.*Pb)
         else
            stop 'check the input polynomial'
@@ -2338,7 +2338,7 @@ itest = 0
         Pc = yy1 - Pa*xx1**2 - Pb*xx1
 
         ! get the analytical minimum (the vertex)
-        if(Pa /= 0) then
+        if (Pa /= 0) then
            xmin = -Pb / (2.*Pa)
         else
            stop 'check the input polynomial'
@@ -2358,10 +2358,10 @@ itest = 0
      itest = 0
 
      do i=1,nmod
-       if(i <= nmod_str) then    ! structure
+       if (i <= nmod_str) then    ! structure
 
           ! get the new structure model in terms of fractional perturbation
-          if(INV_STRUCT == 0) then
+          if (INV_STRUCT == 0) then
              m0_vec(i) = c_glob_syn(i)  ! use same structure always
 
           else
@@ -2372,7 +2372,7 @@ itest = 0
 
        else                      ! source
           ! get the new source model in terms of (xs, zs, t0)
-          if(INV_SOURCE == 0) then
+          if (INV_SOURCE == 0) then
              !m0_vec(i) = m0_vec(i)     ! use same source always
              m0_vec(i) = m_src_syn(i - nmod_str)
 
@@ -2396,14 +2396,14 @@ itest = 0
   ! write updated/test model to file (source + structure)
 
   ! write CG vectors to file
-  if(1==1) then
+  if (1==1) then
     open(unit=19,file=trim(out_dir1)//'cg_model_vectors.dat',status='unknown')
     do i = 1,nmod
       write(19,'(4e16.6)') m0(i), mt(i),  m0_vec(i), mt_vec(i)
     enddo
     close(19)
   endif
-  if(0==1) then
+  if (0==1) then
     open(unit=19,file=trim(out_dir1)//'cg_grad_vectors.dat',status='unknown')
     do i = 1,nmod
       write(19,'(5e16.6)') g0(i), gt(i), gk(i), p0(i), pk(i)
@@ -2413,10 +2413,10 @@ itest = 0
 
   ! exit program if model values are unrealistic
   ! NOTE: model parameters must be scaled appropriately
-  if(itest==1) then
-    if( minval(mt) < -10. .or. maxval(mt) > 10. ) stop 'test model is too extreme'
+  if (itest==1) then
+    if ( minval(mt) < -10. .or. maxval(mt) > 10. ) stop 'test model is too extreme'
   else
-    if( minval(m0) < -10. .or. maxval(m0) > 10. ) stop 'updated model is too extreme'
+    if ( minval(m0) < -10. .or. maxval(m0) > 10. ) stop 'updated model is too extreme'
   endif
 
   !====================
@@ -2427,7 +2427,7 @@ itest = 0
 enddo  ! istep
 !==================================
 
-  if(ISOURCE_LOG) close(91)  ! source log file
+  if (ISOURCE_LOG) close(91)  ! source log file
 
   ! deallocate event and receiver variables
 
@@ -2467,7 +2467,7 @@ enddo  ! istep
 !!$  call solver(isolver, nsrc, sglob, samp, nrec, rglob, syn)
 !!$
 !!$  ! write out seismograms at the receivers
-!!$  if(WRITE_SEISMO_F) call write_seismogram(syn, nrec, trim(out_dir)//'forward')
+!!$  if (WRITE_SEISMO_F) call write_seismogram(syn, nrec, trim(out_dir)//'forward')
 !!$
 !!$  print *, 'compute and write out forward spectral map '
 !!$  call write_spectral_map(syn, nrec, rglob, trim(out_dir)//'spectral_forward',WRITE_SPECTRA_F)
@@ -2489,7 +2489,7 @@ enddo  ! istep
 !!$  call solver(isolver, nrecf, fglob, samp, nrec, rglob, syn)
 !!$
 !!$  ! write out adjoint seismograms at the fake receivers
-!!$  if(WRITE_SEISMO_A) call write_seismogram(samp, nrecf, trim(out_dir)//'adjoint')
+!!$  if (WRITE_SEISMO_A) call write_seismogram(samp, nrecf, trim(out_dir)//'adjoint')
 !!$
 !!$  print *, 'compute and write out adjoint spectral map '
 !!$  call write_spectral_map(samp, nrecf, fglob, trim(out_dir)//'spectral_adjoint',WRITE_SPECTRA_A)
@@ -2505,7 +2505,7 @@ enddo  ! istep
 !!$  call solver(isolver, nsrc, sglob, samp, nrec, rglob, syn)
 !!$
 !!$  ! write out adjoint seismograms at the original sources
-!!$  if(WRITE_SEISMO_A) call write_seismogram(samp, nsrc, trim(out_dir)//'adjoint')
+!!$  if (WRITE_SEISMO_A) call write_seismogram(samp, nsrc, trim(out_dir)//'adjoint')
 
 !==================================
 

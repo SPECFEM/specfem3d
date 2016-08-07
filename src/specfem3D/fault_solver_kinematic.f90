@@ -313,27 +313,22 @@ end subroutine BC_KINFLT_set_single
 
 subroutine init_dataXZ(dataXZ,bc)
 
-
   type(dataXZ_type), intent(inout) :: dataXZ
   type(bc_dynandkinflt_type) :: bc
 
-
-
- if(bc%nglob > 0) then
-
-
-    dataXZ%d1 => bc%d(1,:)
-    dataXZ%d2 => bc%d(2,:)
-    dataXZ%v1 => bc%v(1,:)
-    dataXZ%v2 => bc%v(2,:)
-    dataXZ%t1 => bc%t(1,:)
-    dataXZ%t2 => bc%t(2,:)
-    dataXZ%t3 => bc%t(3,:)
-  allocate(dataXZ%xcoord(bc%nglob))
-  allocate(dataXZ%ycoord(bc%nglob))
-  allocate(dataXZ%zcoord(bc%nglob))
-!
+ if (bc%nglob > 0) then
+   dataXZ%d1 => bc%d(1,:)
+   dataXZ%d2 => bc%d(2,:)
+   dataXZ%v1 => bc%v(1,:)
+   dataXZ%v2 => bc%v(2,:)
+   dataXZ%t1 => bc%t(1,:)
+   dataXZ%t2 => bc%t(2,:)
+   dataXZ%t3 => bc%t(3,:)
+   allocate(dataXZ%xcoord(bc%nglob))
+   allocate(dataXZ%ycoord(bc%nglob))
+   allocate(dataXZ%zcoord(bc%nglob))
  endif
+
 end subroutine init_dataXZ
 
 !===============================================================
@@ -397,9 +392,9 @@ subroutine load_vslip_snapshots(dataXZ,itime,iflt,myrank)
 !  COMPILERS WRITE BINARY OUTPUTS IN DIFFERENT FORMATS !!!!!!!!!!
 !  open(unit=IIN_BIN, file= trim(filename), status='old', form='unformatted',&
 !        action='read',iostat=ier)
-!  if( ier /= 0 ) stop 'Snapshots have been found'
+!  if ( ier /= 0 ) stop 'Snapshots have been found'
 
-  if(ier == 0) then
+  if (ier == 0) then
 !   read(IIN_BIN,"(5F24.15)") dataXZ%xcoord,dataXZ%ycoord,dataXZ%zcoord,dataXZ%v1,dataXZ%v2
   write(IMAIN,*) 'Load vslip file for kinematic rupture simulation!'
 !  write(IMAIN,*)   max(abs(dataXZ

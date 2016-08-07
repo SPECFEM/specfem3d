@@ -319,7 +319,7 @@
     if (hdur(isource) < 5. * DT) hdur(isource) = 5. * DT
 
     ! reads USER EXTERNAL SOURCE if needed
-    if (EXTERNAL_STF)  then
+    if (EXTERNAL_STF) then
       ! gets external STF file name
       read(IIN,"(a)") string
       external_stf_filename = trim(string)

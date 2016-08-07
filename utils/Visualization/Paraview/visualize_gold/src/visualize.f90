@@ -74,10 +74,10 @@ else
   stop
 endif
 
-if (out_ncomp > inp_ncomp)then
+if (out_ncomp > inp_ncomp) then
   write(*,'(/,a)')'ERROR: number of components for output cannot be greater than for input!'
   stop
-else if (out_ncomp>1 .and. out_ncomp /= inp_ncomp)then
+else if (out_ncomp>1 .and. out_ncomp /= inp_ncomp) then
   write(*,'(/,a)')'ERROR: not supported components transformation!'
   stop
 endif
@@ -148,10 +148,10 @@ do i_slice=1,out_nslice
 enddo
 write(*,'(a)')'complete!'
 
-if (out_format==0)then
+if (out_format==0) then
   ! VTK files
   call write_vtu()
-else if (out_format==1)then
+else if (out_format==1) then
   ! Ensight Gold files
   call write_ensight()
 else

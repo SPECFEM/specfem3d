@@ -44,7 +44,7 @@
   character(len=256) string
 
   open(unit=1,file='CMTSOLUTION',iostat=ios,status='old')
-  if(ios /= 0) stop 'error opening CMT file '
+  if (ios /= 0) stop 'error opening CMT file '
 
   open(unit=2,file='CMTSOLUTION_latitude',iostat=ios,status='unknown')
   open(unit=3,file='CMTSOLUTION_longitude',iostat=ios,status='unknown')
@@ -71,42 +71,42 @@
 
     read(1,"(a)",iostat=ios) string
 
-    if(ios == 0) then
+    if (ios == 0) then
 
       lstr=len_trim(string)
 
-      if(string(1:10) == 'event name') then
+      if (string(1:10) == 'event name') then
         do iu=2,10
           write(iu,"(a)") string(1:lstr)
         enddo
-      else if(string(1:10) == 'time shift') then
+      else if (string(1:10) == 'time shift') then
         read(string(12:lstr),*) tshift_cmt
         do iu=2,10
           write(iu,"(a)") string(1:lstr)
         enddo
-      else if(string(1:13) == 'half duration') then
+      else if (string(1:13) == 'half duration') then
         read(string(15:lstr),*) hdur
         do iu=2,10
           write(iu,"(a)") string(1:lstr)
         enddo
-      else if(string(1:8) == 'latitude') then
+      else if (string(1:8) == 'latitude') then
         read(string(10:lstr),*) lat
         latp = lat + DDELTA
-        if(latp > 90.0) latp = 180.0 - latp
+        if (latp > 90.0) latp = 180.0 - latp
         write(2,"(a9,5x,f9.4)") string(1:9),latp
         do iu=3,10
           write(iu,"(a)") string(1:lstr)
         enddo
-      else if(string(1:9) == 'longitude') then
+      else if (string(1:9) == 'longitude') then
         read(string(11:lstr),*) long
         write(2,"(a)") string(1:lstr)
         longp = long + DDELTA
-        if(longp > 180.0) longp = longp - 360.0
+        if (longp > 180.0) longp = longp - 360.0
         write(3,"(a10,4x,f9.4)") string(1:10),longp
         do iu=4,10
           write(iu,"(a)") string(1:lstr)
         enddo
-      else if(string(1:5) == 'depth') then
+      else if (string(1:5) == 'depth') then
         read(string(7:lstr),*) depth
         write(2,"(a)") string(1:lstr)
         write(3,"(a)") string(1:lstr)
@@ -114,7 +114,7 @@
         do iu=5,10
           write(iu,"(a)") string(1:lstr)
         enddo
-      else if(string(1:3) == 'Mrr') then
+      else if (string(1:3) == 'Mrr') then
         read(string(5:lstr),*) moment_tensor(1)
         do iu=2,4
           write(iu,"(a)") string(1:lstr)
@@ -125,7 +125,7 @@
         write(8,"(a4,4x,e15.6)") string(1:4),0.0
         write(9,"(a4,4x,e15.6)") string(1:4),0.0
         write(10,"(a4,4x,e15.6)") string(1:4),0.0
-      else if(string(1:3) == 'Mtt') then
+      else if (string(1:3) == 'Mtt') then
         read(string(5:lstr),*) moment_tensor(2)
         do iu=2,4
           write(iu,"(a)") string(1:lstr)
@@ -136,7 +136,7 @@
         write(8,"(a4,4x,e15.6)") string(1:4),0.0
         write(9,"(a4,4x,e15.6)") string(1:4),0.0
         write(10,"(a4,4x,e15.6)") string(1:4),0.0
-      else if(string(1:3) == 'Mpp') then
+      else if (string(1:3) == 'Mpp') then
         read(string(5:lstr),*) moment_tensor(3)
         do iu=2,4
           write(iu,"(a)") string(1:lstr)
@@ -147,7 +147,7 @@
         write(8,"(a4,4x,e15.6)") string(1:4),0.0
         write(9,"(a4,4x,e15.6)") string(1:4),0.0
         write(10,"(a4,4x,e15.6)") string(1:4),0.0
-      else if(string(1:3) == 'Mrt') then
+      else if (string(1:3) == 'Mrt') then
         read(string(5:lstr),*) moment_tensor(4)
         do iu=2,4
           write(iu,"(a)") string(1:lstr)
@@ -158,7 +158,7 @@
         write(8,"(a4,4x,e15.6)") string(1:4),MOMENT
         write(9,"(a4,4x,e15.6)") string(1:4),0.0
         write(10,"(a4,4x,e15.6)") string(1:4),0.0
-      else if(string(1:3) == 'Mrp') then
+      else if (string(1:3) == 'Mrp') then
         read(string(5:lstr),*) moment_tensor(5)
         do iu=2,4
           write(iu,"(a)") string(1:lstr)
@@ -169,7 +169,7 @@
         write(8,"(a4,4x,e15.6)") string(1:4),0.0
         write(9,"(a4,4x,e15.6)") string(1:4),MOMENT
         write(10,"(a4,4x,e15.6)") string(1:4),0.0
-      else if(string(1:3) == 'Mtp') then
+      else if (string(1:3) == 'Mtp') then
         read(string(5:lstr),*) moment_tensor(6)
         do iu=2,4
           write(iu,"(a)") string(1:lstr)
@@ -210,7 +210,7 @@
   data mon /0,31,59,90,120,151,181,212,243,273,304,334/
 
   julian_day=da+mon(mo)
-  if(mo>2) julian_day=julian_day+lpyr(yr)
+  if (mo>2) julian_day=julian_day+lpyr(yr)
 
   end function julian_day
 
@@ -222,11 +222,11 @@
 !---- returns 1 if yr is a leap year
 !
   lpyr=0
-  if(mod(yr,400) == 0) then
+  if (mod(yr,400) == 0) then
     lpyr=1
-  else if(mod(yr,4) == 0) then
+  else if (mod(yr,4) == 0) then
     lpyr=1
-    if(mod(yr,100) == 0) then
+    if (mod(yr,100) == 0) then
       lpyr=0
     endif
   endif

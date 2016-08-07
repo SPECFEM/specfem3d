@@ -14,7 +14,7 @@ program random_model
   real(kind=4),dimension(:), allocatable :: adj
 
   !! input parameters
-  if( iargc() /= 3 ) stop 'Usage: ./xpostprocessing NSTEP DT NPROC'
+  if ( iargc() /= 3 ) stop 'Usage: ./xpostprocessing NSTEP DT NPROC'
   j=1;  call getarg(j, arg); read(arg,*,iostat=ios) NSTEP;   if (ios /= 0) stop 'Error reading NSTEP'
   j=2;  call getarg(j, arg); read(arg,*,iostat=ios)    DT;   if (ios /= 0) stop 'Error reading DT'
   j=3;  call getarg(j, arg); read(arg,*,iostat=ios) NPROC;   if (ios /= 0) stop 'Error reading NPROC'
@@ -40,33 +40,33 @@ program random_model
 
     ! nspec & nglob
     open(unit=IOUT,file='./OUTPUT_FILES/DATABASES_MPI/'//trim(adjustl(prname))//'external_mesh.bin',status='old',action='read',form='unformatted',iostat=ier)
-    if( ier /= 0 ) stop 'error opening database proc######_external_mesh.bin'
+    if ( ier /= 0 ) stop 'error opening database proc######_external_mesh.bin'
     read(IOUT) nspec
     read(IOUT) nglob
     close(IOUT)
 
     ! weights
-    allocate(weights(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if( ier /= 0 ) stop 'error allocating array weights'
+    allocate(weights(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if ( ier /= 0 ) stop 'error allocating array weights'
     open(unit=IOUT,file='./OUTPUT_FILES/DATABASES_MPI/'//trim(adjustl(prname))//'weights_kernel.bin',status='old',action='read',form='unformatted',iostat=ier)
     read(IOUT) weights
     close(IOUT)
 
     ! kernels
-    allocate(krhop(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if( ier /= 0 ) stop 'error allocating array krhop'
+    allocate(krhop(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if ( ier /= 0 ) stop 'error allocating array krhop'
     open(unit=IOUT,file='./OUTPUT_FILES/DATABASES_MPI/'//trim(adjustl(prname))//'rhop_acoustic_kernel.bin',status='old',action='read',form='unformatted',iostat=ier)
     read(IOUT) krhop
     close(IOUT)
 
-    allocate(kalpha(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if( ier /= 0 ) stop 'error allocating array kalpha'
+    allocate(kalpha(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if ( ier /= 0 ) stop 'error allocating array kalpha'
     open(unit=IOUT,file='./OUTPUT_FILES/DATABASES_MPI/'//trim(adjustl(prname))//'alpha_acoustic_kernel.bin',status='old',action='read',form='unformatted',iostat=ier)
     read(IOUT) kalpha
     close(IOUT)
 
-    allocate(kbeta(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if( ier /= 0 ) stop 'error allocating array kbeta'
+    allocate(kbeta(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if ( ier /= 0 ) stop 'error allocating array kbeta'
 
     ! rho
-    allocate(rho(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if( ier /= 0 ) stop 'error allocating array rho'
-    allocate(rho0(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if( ier /= 0 ) stop 'error allocating array rho0'
+    allocate(rho(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if ( ier /= 0 ) stop 'error allocating array rho'
+    allocate(rho0(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if ( ier /= 0 ) stop 'error allocating array rho0'
     open(unit=IOUT,file='./models/target_model/'//trim(adjustl(prname))//'rho.bin',status='old',action='read',form='unformatted')
     read(IOUT) rho
     close(IOUT)
@@ -75,8 +75,8 @@ program random_model
     close(IOUT)
 
     ! vp
-    allocate(vp(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if( ier /= 0 ) stop 'error allocating array vp'
-    allocate(vp0(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if( ier /= 0 ) stop 'error allocating array vp0'
+    allocate(vp(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if ( ier /= 0 ) stop 'error allocating array vp'
+    allocate(vp0(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if ( ier /= 0 ) stop 'error allocating array vp0'
     open(unit=IOUT,file='./models/target_model/'//trim(adjustl(prname))//'vp.bin',status='old',action='read',form='unformatted')
     read(IOUT) vp
     close(IOUT)
@@ -85,8 +85,8 @@ program random_model
     close(IOUT)
 
     ! vs
-    allocate(vs(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if( ier /= 0 ) stop 'error allocating array vs'
-    allocate(vs0(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if( ier /= 0 ) stop 'error allocating array vs0'
+    allocate(vs(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if ( ier /= 0 ) stop 'error allocating array vs'
+    allocate(vs0(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if ( ier /= 0 ) stop 'error allocating array vs0'
 
     ! F dm = S(m+dm) - S(m), we backpropogate syn-dat (see adj_seismogram.f90) => we have to add a minus sign in front of kernels
     MODELSPACE=MODELSPACE + &
@@ -100,7 +100,7 @@ program random_model
     write(procname,"(i4)") myrank
     filename=trim(adjustl(procname))//"_dx_SU"
     open(111,file="./OUTPUT_FILES/SEM/"//trim(adjustl(filename))//".adj",access='direct',recl=240+4*NSTEP,iostat = ios)
-    if( ios /= 0 ) stop 'error opening adjoint trace'
+    if ( ios /= 0 ) stop 'error opening adjoint trace'
     print *,'  ',trim(adjustl(filename))//".adj"
 
     irec=1
@@ -120,7 +120,7 @@ program random_model
 !elastic case
 !    filename=trim(adjustl(procname))//"_dy_SU"
 !    open(111,file="../OUTPUT_FILES/SEM/"//trim(adjustl(filename))//".adj",access='direct',recl=240+4*NSTEP,iostat = ios)
-!    if( ios /= 0 ) stop 'error opening adjoint trace'
+!    if ( ios /= 0 ) stop 'error opening adjoint trace'
 !    print *,'  ',trim(adjustl(filename))//".adj"
 !
 !    irec=1
@@ -138,7 +138,7 @@ program random_model
 !
 !    filename=trim(adjustl(procname))//"_dz_SU"
 !    open(111,file="../OUTPUT_FILES/SEM/"//trim(adjustl(filename))//".adj",access='direct',recl=240+4*NSTEP,iostat = ios)
-!    if( ios /= 0 ) stop 'error opening adjoint trace'
+!    if ( ios /= 0 ) stop 'error opening adjoint trace'
 !    print *,'  ',trim(adjustl(filename))//".adj"
 !
 !    irec=1

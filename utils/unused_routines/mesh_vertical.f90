@@ -58,7 +58,7 @@
   enddo
 
 ! do not use d16km when Moho map is honored
-  if(MOHO_MAP_LUPEI) then
+  if (MOHO_MAP_LUPEI) then
 
 !
 !--- Moho to modified basement surface
@@ -110,11 +110,11 @@
   rn(:) = rn(:) / (Z_SURFACE-Z_DEPTH_BLOCK)
 
 ! check that the mesh that has been generated is correct
-  if(npr /= 2*NER) call exit_MPI(myrank,'incorrect intervals for model')
+  if (npr /= 2*NER) call exit_MPI(myrank,'incorrect intervals for model')
 
 ! check that vertical spacing makes sense
   do ir=0,2*NER-1
-    if(rn(ir+1) < rn(ir)) call exit_MPI(myrank,'incorrect vertical spacing for model')
+    if (rn(ir+1) < rn(ir)) call exit_MPI(myrank,'incorrect vertical spacing for model')
   enddo
 
   end subroutine mesh_vertical

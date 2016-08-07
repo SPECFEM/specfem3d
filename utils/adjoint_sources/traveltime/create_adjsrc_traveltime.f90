@@ -124,12 +124,12 @@ program create_adjsrc_traveltime
 
     ! time window (parabola shaped)
     tw(1:nstep) = 0.
-    if( i == i1 ) open(44,file='plot_time_window.txt',status='unknown')
+    if ( i == i1 ) open(44,file='plot_time_window.txt',status='unknown')
     do j = is, ie
       tw(j) = 1 - (2 * (dble(j) - is)/(ie - is) - 1) ** 2
-      if( i == i1 ) write(44,*) j,tw(j)
+      if ( i == i1 ) write(44,*) j,tw(j)
     enddo
-    if( i == i1 ) close(44)
+    if ( i == i1 ) close(44)
 
     ! calculates velocity (by finite-differences)
     out(:) = 0.0

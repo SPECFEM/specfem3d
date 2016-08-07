@@ -306,7 +306,7 @@ subroutine xcorr_calc(d,s,npts,i1,i2,ishift,cc_max)
     ! cc as a function of i
     cc = 0.
     do j = i1, i2   ! loop over full window length
-      if((j+i)>=1 .and. (j+i)<=npts) cc = cc + s(j)*d(j+i)  ! d is shifted by i
+      if ((j+i)>=1 .and. (j+i)<=npts) cc = cc + s(j)*d(j+i)  ! d is shifted by i
     enddo
     cc = cc/norm
 

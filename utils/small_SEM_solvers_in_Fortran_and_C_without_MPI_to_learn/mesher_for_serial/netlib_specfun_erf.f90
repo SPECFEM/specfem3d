@@ -13,8 +13,8 @@
 !------------------------------------------------------------------
 !
 !   This packet evaluates erf(x) for a real argument x.
-!   It contains one FUNCTION type subprogram: ERF,
-!   and one SUBROUTINE type subprogram, CALERF.  The calling
+!   It contains one function type subprogram: ERF,
+!   and one subroutine type subprogram, CALERF.  The calling
 !   statements for the primary entries are:
 !
 !                   Y = ERF(X)
@@ -28,7 +28,7 @@
 !
 !   where the parameter usage is as follows
 !
-!      Function                     Parameters for CALERF
+!      function                     Parameters for CALERF
 !       call              ARG                  Result          JINT
 !
 !     ERF(ARG)      ANY REAL ARGUMENT         ERF(ARG)          0

@@ -94,7 +94,7 @@ program sem_model_slice
                      +(y(1:npts)-dble(ystore(iglob)))**2 &
                      +(z(1:npts)-dble(zstore(iglob)))**2)
           do ipt=1,npts
-            if(dist(ipt) < distmin(ipt)) then
+            if (dist(ipt) < distmin(ipt)) then
               distmin(ipt)=dist(ipt)
               ispec_min(ipt)=ispec
               ix_min(ipt)=i; iy_min(ipt)=j; iz_min(ipt)=k
@@ -127,7 +127,7 @@ program sem_model_slice
   enddo
   call MPI_REDUCE(in,out,npts,CUSTOM_MPI_2REAL,MPI_MINLOC,0,MPI_COMM_WORLD,ier)
 
-  !  if (myrank == 0)  then
+  !  if (myrank == 0) then
   !   open(33,file='OUTPUT_FILES/out.txt')
   !   do i = 1, npts
   !     write(33,*) i, out(1,i), out(2,i)
@@ -200,10 +200,10 @@ subroutine topo_value(itopo_bathy_basin,x,y,elevation)
   icornerlat = int((lat - ORIG_LAT_TOPO_SOCAL) / DEGREES_PER_CELL_TOPO_SOCAL) + 1
 
   ! avoid edge effects and extend with identical point if outside model
-  if(icornerlong < 1) icornerlong = 1
-  if(icornerlong > NX_TOPO_SOCAL-1) icornerlong = NX_TOPO_SOCAL-1
-  if(icornerlat < 1) icornerlat = 1
-  if(icornerlat > NY_TOPO_SOCAL-1) icornerlat = NY_TOPO_SOCAL-1
+  if (icornerlong < 1) icornerlong = 1
+  if (icornerlong > NX_TOPO_SOCAL-1) icornerlong = NX_TOPO_SOCAL-1
+  if (icornerlat < 1) icornerlat = 1
+  if (icornerlat > NY_TOPO_SOCAL-1) icornerlat = NY_TOPO_SOCAL-1
 
   ! compute coordinates of corner
   long_corner = ORIG_LONG_TOPO_SOCAL + (icornerlong-1)*DEGREES_PER_CELL_TOPO_SOCAL
@@ -214,10 +214,10 @@ subroutine topo_value(itopo_bathy_basin,x,y,elevation)
   ratio_eta = (lat - lat_corner) / DEGREES_PER_CELL_TOPO_SOCAL
 
   ! avoid edge effects
-  if(ratio_xi < 0.) ratio_xi = 0.
-  if(ratio_xi > 1.) ratio_xi = 1.
-  if(ratio_eta < 0.) ratio_eta = 0.
-  if(ratio_eta > 1.) ratio_eta = 1.
+  if (ratio_xi < 0.) ratio_xi = 0.
+  if (ratio_xi > 1.) ratio_xi = 1.
+  if (ratio_eta < 0.) ratio_eta = 0.
+  if (ratio_eta > 1.) ratio_eta = 1.
 
   ! interpolate elevation at current point
   elevation = &

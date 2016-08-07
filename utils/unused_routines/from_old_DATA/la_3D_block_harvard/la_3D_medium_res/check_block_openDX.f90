@@ -45,7 +45,7 @@
   read(27,*) nrecord
   do irecord = 1,nrecord
     read(27,*) ix,iy,iz,i_vp
-    if(ix<0 .or. ix>NX_GOCAD_MR-1 .or. iy<0 .or. iy>NY_GOCAD_MR-1 .or. iz<0 .or. iz>NZ_GOCAD_MR-1) &
+    if (ix<0 .or. ix>NX_GOCAD_MR-1 .or. iy<0 .or. iy>NY_GOCAD_MR-1 .or. iz<0 .or. iz>NZ_GOCAD_MR-1) &
       stop 'wrong array index read in Gocad medium-resolution file'
     vp_block_gocad(ix,iy,iz) = dble(i_vp)
   enddo
@@ -65,7 +65,7 @@
 
 ! exclude points that are undefined
 ! a negative P velocity has been used to flag these points
-        if(vp_block_gocad(ix,iy,iz) < 1.) then
+        if (vp_block_gocad(ix,iy,iz) < 1.) then
           icount_undefined = icount_undefined + 1
           iflag_point(ix,iy,iz) = .false.
 
@@ -92,7 +92,7 @@
       do iz = 0,NZ_GOCAD_MR-2
 
 ! suppress elements that are undefined
-   if(iflag_point(ix,iy,iz) .and. &
+   if (iflag_point(ix,iy,iz) .and. &
       iflag_point(ix+1,iy,iz) .and. &
       iflag_point(ix+1,iy+1,iz) .and. &
       iflag_point(ix,iy+1,iz) .and. &
@@ -134,7 +134,7 @@
     do iy = 0,NY_GOCAD_MR-1
       do iz = 0,NZ_GOCAD_MR-1
 
-    if(iflag_point(ix,iy,iz)) then
+    if (iflag_point(ix,iy,iz)) then
         ipoin = ipoin + 1
 
 ! define Gocad grid, shift of Voxet is taken into account
@@ -158,7 +158,7 @@
       do iz = 0,NZ_GOCAD_MR-2
 
 ! suppress elements that are undefined
-   if(iflag_point(ix,iy,iz) .and. &
+   if (iflag_point(ix,iy,iz) .and. &
       iflag_point(ix+1,iy,iz) .and. &
       iflag_point(ix+1,iy+1,iz) .and. &
       iflag_point(ix,iy+1,iz) .and. &
@@ -196,7 +196,7 @@
   do ix = 0,NX_GOCAD_MR-1
     do iy = 0,NY_GOCAD_MR-1
       do iz = 0,NZ_GOCAD_MR-1
-      if(iflag_point(ix,iy,iz)) then
+      if (iflag_point(ix,iy,iz)) then
         ipoin = ipoin + 1
 
 ! use Vp to color the model
@@ -204,7 +204,7 @@
 
 ! or use Z > 0 and Z < 0 to color the model
         zcoord = ORIG_Z_GOCAD_MR + iz*SPACING_Z_GOCAD_MR
-        if(zcoord <= 0.) then
+        if (zcoord <= 0.) then
           write(11,*) '0'
         else
           write(11,*) '255'

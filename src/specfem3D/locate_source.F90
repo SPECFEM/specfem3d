@@ -892,7 +892,7 @@
             write(IMAIN,*) '  using Gaussian source time function'
           endif
           if (idomain(isource) == IDOMAIN_ACOUSTIC) then
-            if(USE_TRICK_FOR_BETTER_PRESSURE) then
+            if (USE_TRICK_FOR_BETTER_PRESSURE) then
               write(IMAIN,*) '  using trick for better pressure (second derivatives)'
             endif
           endif

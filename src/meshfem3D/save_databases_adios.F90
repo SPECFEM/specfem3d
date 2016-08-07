@@ -475,7 +475,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
       ispec_interface = 1
       do ispec = 1,nspec
         if ((iMPIcut_xi(1,ispec) .eqv. .true.) &
-            .and. (iMPIcut_eta(2,ispec) .eqv. .true.))  then
+            .and. (iMPIcut_eta(2,ispec) .eqv. .true.)) then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 2
           interfaces_mesh(3, ispec_interface, interface_num) &
@@ -496,7 +496,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
       ispec_interface = 1
       do ispec = 1,nspec
         if ((iMPIcut_xi(2,ispec) .eqv. .true.) &
-            .and. (iMPIcut_eta(2,ispec) .eqv. .true.))  then
+            .and. (iMPIcut_eta(2,ispec) .eqv. .true.)) then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 2
           interfaces_mesh(3, ispec_interface, interface_num) &
@@ -517,7 +517,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
       ispec_interface = 1
       do ispec = 1,nspec
         if ((iMPIcut_xi(2,ispec) .eqv. .true.) &
-            .and. (iMPIcut_eta(1,ispec) .eqv. .true.))  then
+            .and. (iMPIcut_eta(1,ispec) .eqv. .true.)) then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 2
           interfaces_mesh(3, ispec_interface, interface_num) &
@@ -538,7 +538,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
       ispec_interface = 1
       do ispec = 1,nspec
         if ((iMPIcut_xi(1,ispec) .eqv. .true.) &
-            .and. (iMPIcut_eta(1,ispec) .eqv. .true.))  then
+            .and. (iMPIcut_eta(1,ispec) .eqv. .true.)) then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 2
           interfaces_mesh(3, ispec_interface, interface_num) &
@@ -625,7 +625,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(nspec2d_top))
 
   call define_adios_scalar(group, groupsize, "", "nspec_cpml_total",nspec_cpml_total)
-  if(nspec_cpml_total>0) call define_adios_scalar(group, groupsize, "", "nspec_cpml",nspec_cpml)
+  if (nspec_cpml_total>0) call define_adios_scalar(group, groupsize, "", "nspec_cpml",nspec_cpml)
 
   call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(nb_interfaces))
   call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(nspec_interfaces_max))
@@ -678,7 +678,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   local_dim = NGNOD2D * nspec2d_top_wmax
   call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(nodes_ibelm_top))
 
-  if(nspec_CPML_total > 0) then
+  if (nspec_CPML_total > 0) then
      local_dim=nspec_CPML
      call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(CPML_to_spec))
      call define_adios_global_array1D(group, groupsize, local_dim, "", STRINGIFY_VAR(CPML_regions))
@@ -729,7 +729,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   call adios_write(handle, STRINGIFY_VAR(nspec2d_top), ier)
 
   call adios_write(handle, "nspec_cpml_total", nspec_cpml_total, ier)
-  if(nspec_CPML_total > 0) call adios_write(handle, "nspec_cpml", nspec_cpml, ier)
+  if (nspec_CPML_total > 0) call adios_write(handle, "nspec_cpml", nspec_cpml, ier)
 
   call adios_write(handle, STRINGIFY_VAR(nb_interfaces), ier)
   call adios_write(handle, STRINGIFY_VAR(nspec_interfaces_max), ier)
@@ -823,7 +823,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   endif
 
   ! CPML
-  if(nspec_CPML_total > 0) then
+  if (nspec_CPML_total > 0) then
      local_dim=nspec_CPML
      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(CPML_to_spec))

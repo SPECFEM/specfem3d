@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
 ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
 ! This file is first implemented for SPECFEM3D_GLOBE, and therefore it follows variables in GLOBAL package.
@@ -156,7 +155,7 @@ contains
   !PB NOT UNIF DISTRIBUTION OF NOISE ON THE SURFACE OF A SPHERE
   !PB lon lat colat ARE IN RADIANS SINCE ARE OBTAINED FROM CARTESIAN COORDINATES
   !PB lon_cn lat_cn (cn = CENTER OF NOISE REGION) IF NOT, MUST BE CONVERTED IN RADIANS
-  !PB lon_cn lat_cn  ARE INSERTED DIRECTLY HERE FOR SIMPLICITY
+  !PB lon_cn lat_cn  are inserted directly here for simplicity
 
   lon_cn = (3.89)*PI/180
   lat_cn = (45.113)*PI/180
