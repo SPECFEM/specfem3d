@@ -71,7 +71,7 @@ program sum_kernels
         close(1002)
 
         ! sum ther kernel
-        if (iker == 6 ) then ! for hessian , sum the absolute value
+        if (iker == 6 ) then ! for Hessian , sum the absolute value
            total_kernel(:,:,:,1:NSPEC)=total_kernel(:,:,:,1:NSPEC) + abs(kernel(:,:,:,1:NSPEC))
         else
            total_kernel(:,:,:,1:NSPEC)=total_kernel(:,:,:,1:NSPEC) + kernel(:,:,:,1:NSPEC)

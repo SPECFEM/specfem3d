@@ -52,9 +52,9 @@
     call compute_kernels_po()
   endif
 
-  ! computes an approximative hessian for preconditioning kernels
+  ! computes an approximative Hessian for preconditioning kernels
   if (APPROXIMATE_HESS_KL) then
-    call compute_kernels_hessian()
+    call compute_kernels_Hessian()
   endif
 
   end subroutine compute_kernels
@@ -364,7 +364,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine compute_kernels_hessian()
+  subroutine compute_kernels_Hessian()
 
   use specfem_par
   use specfem_par_elastic
@@ -411,7 +411,7 @@
           do i = 1, NGLLX
             iglob = ibool(i,j,k,ispec)
 
-            ! approximates hessian
+            ! approximates Hessian
             ! term with adjoint acceleration and backward/reconstructed acceleration
             hess_ac_kl(i,j,k,ispec) =  hess_ac_kl(i,j,k,ispec) &
                + deltat * dot_product(accel_elm(:,i,j,k), b_accel_elm(:,i,j,k))
@@ -428,7 +428,7 @@
           do i = 1, NGLLX
             iglob = ibool(i,j,k,ispec)
 
-            ! approximates hessian
+            ! approximates Hessian
             ! term with adjoint acceleration and backward/reconstructed acceleration
             hess_kl(i,j,k,ispec) =  hess_kl(i,j,k,ispec) &
                + deltat * dot_product(accel(:,iglob), b_accel(:,iglob))
@@ -440,7 +440,7 @@
 
   enddo
 
-  end subroutine compute_kernels_hessian
+  end subroutine compute_kernels_Hessian
 
 !-------------------------------------------------------------------------------------------------
 !

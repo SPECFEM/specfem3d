@@ -422,7 +422,7 @@ subroutine BNDPAS(F1,F2,DELT,D,G,N)
    29 D(I+1)=(A-2.0*B)/A
       G=G*G
     5 FORMAT ('-FILTER GAIN IS ', 9E12.6)
-      RETURN
+      return
 
       ENTRY FILTER(X,N,D,G,IG)
 
@@ -523,6 +523,6 @@ subroutine BNDPAS(F1,F2,DELT,D,G,N)
       endif
       DO 59 I=1,N
    59 X(I)=X(I)/gg
-      RETURN
+      return
 END
 

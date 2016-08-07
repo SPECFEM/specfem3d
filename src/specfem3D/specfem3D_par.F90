@@ -337,7 +337,7 @@ module specfem_par_elastic
   ! anisotropic kernels
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: cijkl_kl
 
-  ! approximate hessian
+  ! approximate Hessian
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: hess_kl
 
   ! topographic (Moho) kernel
@@ -421,7 +421,7 @@ module specfem_par_acoustic
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_ac_kl, kappa_ac_kl, &
     rhop_ac_kl, alpha_ac_kl
 
-  ! approximate hessian
+  ! approximate Hessian
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: hess_ac_kl
 
   ! absorbing stacey wavefield parts

@@ -153,7 +153,7 @@
 
   ! for preconditioner
   if (APPROXIMATE_HESS_KL) then
-    call save_kernels_hessian(adios_handle)
+    call save_kernels_Hessian(adios_handle)
   endif
 
   if (ADIOS_FOR_KERNELS) then
@@ -886,9 +886,9 @@ subroutine save_kernels_acoustic(adios_handle)
 !-------------------------------------------------------------------------------------------------
 !
 
-!> Save hessians
+!> Save Hessians
 
-  subroutine save_kernels_hessian(adios_handle)
+  subroutine save_kernels_Hessian(adios_handle)
 
   use specfem_par
   use specfem_par_elastic
@@ -902,18 +902,18 @@ subroutine save_kernels_acoustic(adios_handle)
 
   ! acoustic domains
   if (ACOUSTIC_SIMULATION) then
-    ! scales approximate hessian
+    ! scales approximate Hessian
     hess_ac_kl(:,:,:,:) = 2._CUSTOM_REAL * hess_ac_kl(:,:,:,:)
   endif
 
   ! elastic domains
   if (ELASTIC_SIMULATION) then
-    ! scales approximate hessian
+    ! scales approximate Hessian
     hess_kl(:,:,:,:) = 2._CUSTOM_REAL * hess_kl(:,:,:,:)
   endif
 
   if (ADIOS_FOR_KERNELS) then
-    call save_kernels_hessian_adios(adios_handle)
+    call save_kernels_Hessian_adios(adios_handle)
   else
     ! acoustic domains
     if (ACOUSTIC_SIMULATION) then
@@ -936,7 +936,7 @@ subroutine save_kernels_acoustic(adios_handle)
     endif
   endif
 
-  end subroutine save_kernels_hessian
+  end subroutine save_kernels_Hessian
 
 !
 !-------------------------------------------------------------------------------------------------

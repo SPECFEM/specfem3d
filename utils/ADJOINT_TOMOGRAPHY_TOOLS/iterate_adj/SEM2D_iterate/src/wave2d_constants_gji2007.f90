@@ -160,7 +160,7 @@ module wave2d_constants
   logical, parameter :: COMPUTE_KERNELS = .true.
 
   ! whether to use the data subspace method, which has a Hessian
-  logical, parameter :: HESSIAN = .false.
+  logical, parameter :: Hessian = .false.
 
   ! stopping criteria
   ! NITERATION  : number of iterations

@@ -126,7 +126,7 @@
       $line =~ s#\)\s*then#\) then#ogi;
       $line =~ s#end\s*if#endif#ogi;
       $line =~ s#end\s*do#enddo#ogi;
-      $line =~ s#elseif#else if#ogi;
+      $line =~ s#else\s*if#else if#ogi;
 
 # force lowercase keywords
       $line =~ s#subroutine#subroutine#ogi;
@@ -136,6 +136,7 @@
       $line =~ s#continue#continue#ogi;
       $line =~ s#implicit none#implicit none#ogi;
       $line =~ s#implicit#implicit#ogi;
+      $line =~ s#return#return#ogi;
 
       $line =~ s# go\s*to # goto #ogi;
 
@@ -148,12 +149,15 @@
 # do not move this before the above line in which we change the keyword "function"
       $line =~ s#use_ricker_time_function#USE_RICKER_TIME_FUNCTION#ogi;
       $line =~ s#print_source_time_function#PRINT_SOURCE_TIME_FUNCTION#ogi;
+      $line =~ s#external_source_time_function#EXTERNAL_SOURCE_TIME_FUNCTION#ogi;
+      $line =~ s#sourceTimeFunction#sourceTimeFunction#ogi;
 
       $line =~ s#enddo_LOOP_IJK#ENDDO_LOOP_IJK#ogi;
 
       $line =~ s#spectral-elements#spectral elements#ogi;
 
       $line =~ s#gaussian#Gaussian#ogi;
+      $line =~ s#hessian#Hessian#ogi;
 
 # do not use null strings, which are not part of the Fortran standard (and the IBM xlf compiler rejects them for instance)
       $line =~ s#print\s*\*\s*,\s*''#print \*#ogi;

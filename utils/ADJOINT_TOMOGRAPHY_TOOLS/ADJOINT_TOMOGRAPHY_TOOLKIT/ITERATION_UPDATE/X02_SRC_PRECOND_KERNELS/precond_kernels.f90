@@ -49,7 +49,7 @@ program precond_kernels
      if (myrank==0) then
         write(*,*) 'READING IN KERNELS:',trim(kernel_name(iker))
         write(*,*) 'KERNEL FILES:',trim(kernel_file)
-        write(*,*) 'HESSIAN FILES:',trim(hess_file)
+        write(*,*) 'Hessian FILES:',trim(hess_file)
      endif
 
      open(unit=1002,file=trim(kernel_file),status='old',form='unformatted')
@@ -67,7 +67,7 @@ program precond_kernels
           call MPI_ABORT(MPI_COMM_WORLD,30,ier)
      endif
 
-     if (myrank==0) write(*,*) 'MAX HESSIAN FOR ALL PROCESSORS:',maxh_all
+     if (myrank==0) write(*,*) 'MAX Hessian FOR ALL PROCESSORS:',maxh_all
 
      ! normalized hess
      hess=hess/maxh_all

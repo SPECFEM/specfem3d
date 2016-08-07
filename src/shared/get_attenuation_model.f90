@@ -1464,7 +1464,7 @@
 !      n  = Input
 !             Length of fv
 !
-!      Returns:
+!      returns:
 !         Xi = max( || fv(1)- fv(i) || ) for i=2:n
 !
 
@@ -1500,7 +1500,7 @@
 !            dimension(n, n+1)
 !     n  = Pseudo Length of n
 !
-!     Returns:
+!     returns:
 !       Xi = max( max( || v(:,1) - v(:,i) || ) ) for i=2:n+1
 !
 

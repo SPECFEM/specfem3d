@@ -156,7 +156,7 @@ subroutine save_kernels_poroelastic_adios(handle)
   call no_adios_err()
 end subroutine save_kernels_poroelastic_adios
 
-subroutine save_kernels_hessian_adios(handle)
+subroutine save_kernels_Hessian_adios(handle)
 
   use adios_manager_mod
 
@@ -168,7 +168,7 @@ subroutine save_kernels_hessian_adios(handle)
   unused_i8 = handle
 
   call no_adios_err()
-end subroutine save_kernels_hessian_adios
+end subroutine save_kernels_Hessian_adios
 
 !------------------------------------------------.
 ! subroutines from save_forward_arrays_adios.F90 |

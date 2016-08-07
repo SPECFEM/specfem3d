@@ -367,7 +367,7 @@
       call transfer_kernels_noise_to_host(Mesh_pointer,sigma_kl,NSPEC_AB)
     endif
 
-    ! approximative hessian for preconditioning kernels
+    ! approximative Hessian for preconditioning kernels
     if (APPROXIMATE_HESS_KL) then
       if (ELASTIC_SIMULATION) call transfer_kernels_hess_el_tohost(Mesh_pointer,hess_kl,NSPEC_AB)
       if (ACOUSTIC_SIMULATION) call transfer_kernels_hess_ac_tohost(Mesh_pointer,hess_ac_kl,NSPEC_AB)

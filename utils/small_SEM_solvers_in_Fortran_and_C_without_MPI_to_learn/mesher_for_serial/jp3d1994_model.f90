@@ -230,10 +230,10 @@ subroutine iso3d_dpzhao_model(radius,theta,phi,vp,vs,dvp,dvs,rho,found_crust,JP3
   if (HE<=H1) then
      LAY = 1
      found_crust = .true.
-  ELSE if (HE>H1.and.HE<=H2) then
+  else if (HE>H1.and.HE<=H2) then
      LAY = 2
      found_crust = .true.
-  ELSE if (HE>H2.and.HE<=H3) then
+  else if (HE>H2.and.HE<=H3) then
      LAY = 3
   ELSE
      LAY = 4
@@ -345,7 +345,7 @@ end subroutine iso3d_dpzhao_model
       READ(2,100)  JP3DM_V%NPB,JP3DM_V%NRB,JP3DM_V%NHB
       CALL PUT1(JP3DM_V%NPB,JP3DM_V%NRB,JP3DM_V%NHB,JP3DM_V%PNB,JP3DM_V%RNB,JP3DM_V%HNB,JP3DM_V%VELBP)
       CALL BLDMAP(JP3DM_V)
-      RETURN
+      return
     end subroutine INPUT1
 
       subroutine PUT1(NPX,NRX,NHX,PNX,RNX,HNX,VELXP)
@@ -455,7 +455,7 @@ end subroutine iso3d_dpzhao_model
 110   FORMAT(5(10F7.2/),F7.2)
 120   FORMAT(6(10F7.2/),3F7.2)
 130   FORMAT(6(10F7.1/),3F7.1)
-      RETURN
+      return
       END
 
       subroutine BLDMAP(JP3DM_V)
@@ -534,7 +534,7 @@ end subroutine iso3d_dpzhao_model
            JP3DM_V%PLA,JP3DM_V%RLA,JP3DM_V%HLA,JP3DM_V%IPLOCA,JP3DM_V%IRLOCA,JP3DM_V%IHLOCA)
       CALL LOCX(JP3DM_V%PNB,JP3DM_V%RNB,JP3DM_V%HNB,JP3DM_V%NPB,JP3DM_V%NRB,JP3DM_V%NHB,MKB, &
            JP3DM_V%PLB,JP3DM_V%RLB,JP3DM_V%HLB,JP3DM_V%IPLOCB,JP3DM_V%IRLOCB,JP3DM_V%IHLOCB)
-      RETURN
+      return
       END
 
       subroutine LOCX(PNX,RNX,HNX,NPX,NRX,NHX,MKX, &
@@ -570,7 +570,7 @@ end subroutine iso3d_dpzhao_model
       if (HNOW>=HNX(IH1))   IH = IH1
       IHLOCX(I)= IH
 30    continue
-      RETURN
+      return
       END
 
       subroutine VEL3(PE,RE,HE,V,LAY,JP3DM_V)
@@ -655,7 +655,7 @@ end subroutine iso3d_dpzhao_model
         if (LAY<=3) then
            CALL PRHF(JP3DM_V%IPLOCA,JP3DM_V%IRLOCA,JP3DM_V%IHLOCA,JP3DM_V%PLA,JP3DM_V%RLA,JP3DM_V%HLA, &
                 JP3DM_V%PNA,JP3DM_V%RNA,JP3DM_V%HNA,MPA,MRA,MHA,MKA,JP3DM_V)
-        ELSE if (LAY==4) then
+        else if (LAY==4) then
            CALL PRHF(JP3DM_V%IPLOCB,JP3DM_V%IRLOCB,JP3DM_V%IHLOCB,JP3DM_V%PLB,JP3DM_V%RLB,JP3DM_V%HLB, &
                 JP3DM_V%PNB,JP3DM_V%RNB,JP3DM_V%HNB,MPB,MRB,MHB,MKB,JP3DM_V)
         ELSE
@@ -671,12 +671,12 @@ end subroutine iso3d_dpzhao_model
         !   calculate velocity
         if (LAY<=3) then
            CALL VABPS(MPA,MRA,MHA,JP3DM_V%VELAP,V,JP3DM_V)
-        ELSE if (LAY==4) then
+        else if (LAY==4) then
            CALL VABPS(MPB,MRB,MHB,JP3DM_V%VELBP,V,JP3DM_V)
         ELSE
         endif
 
-        RETURN
+        return
       end subroutine VEL3
 
       subroutine VABPS(MP,MR,MH,V,VEL,JP3DM_V)
@@ -759,7 +759,7 @@ end subroutine iso3d_dpzhao_model
           + JP3DM_V%WV(3)*V(JP3DM_V%IP,JP3DM_V%JP1,JP3DM_V%KP) + JP3DM_V%WV(4)*V(JP3DM_V%IP1,JP3DM_V%JP1,JP3DM_V%KP) &
           + JP3DM_V%WV(5)*V(JP3DM_V%IP,JP3DM_V%JP,JP3DM_V%KP1) + JP3DM_V%WV(6)*V(JP3DM_V%IP1,JP3DM_V%JP,JP3DM_V%KP1) &
           + JP3DM_V%WV(7)*V(JP3DM_V%IP,JP3DM_V%JP1,JP3DM_V%KP1)+ JP3DM_V%WV(8)*V(JP3DM_V%IP1,JP3DM_V%JP1,JP3DM_V%KP1)
-      RETURN
+      return
       END
 
       subroutine INTMAP(R,IRLOC,NNR,RL,IR)
@@ -767,7 +767,7 @@ end subroutine iso3d_dpzhao_model
       double precision :: R,RL
       IS      = IDNINT(R+RL)
       IR      = IRLOC(IS)
-      RETURN
+      return
       END
 
       subroutine PRHF(IPLOCX,IRLOCX,IHLOCX,PLX,RLX,HLX, &
@@ -866,7 +866,7 @@ end subroutine iso3d_dpzhao_model
       JP3DM_V%PF1   = 1.0-JP3DM_V%PF
       JP3DM_V%RF1   = 1.0-JP3DM_V%RF
       JP3DM_V%HF1   = 1.0-JP3DM_V%HF
-      RETURN
+      return
       END
 
       subroutine HLAY(PE,RE,HE,IJK,JP3DM_V)
@@ -967,15 +967,15 @@ end subroutine iso3d_dpzhao_model
               if (IJK==1) then
                  HE  = WV1*JP3DM_V%DEPA(I,J)  + WV2*JP3DM_V%DEPA(I1,J) &
                       + WV3*JP3DM_V%DEPA(I,J1) + WV4*JP3DM_V%DEPA(I1,J1)
-              ELSE if (IJK==2) then
+              else if (IJK==2) then
                  HE  = WV1*JP3DM_V%DEPB(I,J)  + WV2*JP3DM_V%DEPB(I1,J) &
                       + WV3*JP3DM_V%DEPB(I,J1) + WV4*JP3DM_V%DEPB(I1,J1)
-              ELSE if (IJK==3) then
+              else if (IJK==3) then
                  HE  = WV1*JP3DM_V%DEPC(I,J)  + WV2*JP3DM_V%DEPC(I1,J) &
                       + WV3*JP3DM_V%DEPC(I,J1) + WV4*JP3DM_V%DEPC(I1,J1)
               ELSE
               endif
-              RETURN
+              return
             end subroutine HLAY
 
       subroutine LIMIT(C1,C2,C)
@@ -1063,10 +1063,10 @@ end subroutine iso3d_dpzhao_model
       if (LAY==1) then
         V    = 6.0
         if (IPS==2)    V = 3.5
-      ELSE if (LAY==2) then
+      else if (LAY==2) then
         V    = 6.7
         if (IPS==2)    V = 3.8
-      ELSE if (LAY>=3) then
+      else if (LAY>=3) then
         HM   = 40.0
         if (HE<HM) then
           CALL JPMODEL(IPS,HM,VM,JP3DM_V)
@@ -1076,7 +1076,7 @@ end subroutine iso3d_dpzhao_model
         endif
       ELSE
       endif
-      RETURN
+      return
       END
 
       subroutine INPUTJP(JP3DM_V)
@@ -1170,7 +1170,7 @@ end subroutine iso3d_dpzhao_model
       JP3DM_V%RA(L)   = RA1(L)
       JP3DM_V%DEPJ(L) = 40.0+6325.59*(1.0-RA1(L))
 1     continue
-      RETURN
+      return
       END
 
       subroutine JPMODEL(IPS,H,V,JP3DM_V)
@@ -1259,7 +1259,7 @@ end subroutine iso3d_dpzhao_model
       ELSE
          V   = (JP3DM_V%VS(K1)-JP3DM_V%VS(K))*H12+JP3DM_V%VS(K)
       endif
-      RETURN
+      return
       END
 
 
