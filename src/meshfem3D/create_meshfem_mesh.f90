@@ -631,8 +631,8 @@
       zmid = 0.5d0*(z0+z1)
 
       if ((xmid>=cavity_x0 .and. xmid<=cavity_x1) .and. &
-         (ymid>=cavity_y0 .and. ymid<=cavity_y1) .and. &
-         (zmid>=cavity_z0 .and. zmid<=cavity_z1)) then
+          (ymid>=cavity_y0 .and. ymid<=cavity_y1) .and. &
+          (zmid>=cavity_z0 .and. zmid<=cavity_z1)) then
         ! deactivate spectral element
         iselmt(i_spec)=.false.
       else

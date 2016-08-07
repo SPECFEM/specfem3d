@@ -129,7 +129,7 @@
 
 !----------
 !
-! subroutine calndr() performs calendar calculations using either
+! The subroutine calndr() performs calendar calculations using either
 ! the standard Gregorian calendar or the old Julian calendar.
 ! This subroutine extends the definitions of these calendar systems
 ! to any arbitrary year.  The algorithms in this subroutine

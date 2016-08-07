@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
   module generate_databases_par
 
   use constants,only: NGLLX,NGLLY,NGLLZ,NGLLSQUARE,NDIM,NDIM2D,NGNOD2D_FOUR_CORNERS,N_SLS, &

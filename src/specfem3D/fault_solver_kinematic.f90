@@ -389,7 +389,7 @@ subroutine load_vslip_snapshots(dataXZ,itime,iflt,myrank)
        action='read',iostat=ier)
 
 
-!  COMPILERS WRITE BINARY OUTPUTS IN DIFFERENT FORMATS !!!!!!!!!!
+!  COMPILERS WRITE BINARY OUTPUTS IN DIFFERENT FORMATS!
 !  open(unit=IIN_BIN, file= trim(filename), status='old', form='unformatted',&
 !        action='read',iostat=ier)
 !  if ( ier /= 0 ) stop 'Snapshots have been found'

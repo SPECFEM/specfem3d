@@ -665,11 +665,11 @@ subroutine compute_forces_viscoelastic_GPU()
     !              my_neighbours_ext_mesh, &
     !              request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
 
-      ! transfers mpi buffers onto GPU
+    ! transfers mpi buffers onto GPU
     !call transfer_boundary_to_device(NPROC,Mesh_pointer,buffer_recv_vector_ext_mesh, &
     !              num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
     !              request_recv_vector_ext_mesh)
-      ! waits for send/receive requests to be completed and assembles values
+    ! waits for send/receive requests to be completed and assembles values
     !call synchronize_MPI_vector_write_cuda(NPROC,NGLOB_AB,accel, Mesh_pointer,&
     !                  buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh,&
     !                  max_nibool_interfaces_ext_mesh, &

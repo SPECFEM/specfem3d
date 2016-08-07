@@ -25,17 +25,14 @@
 !
 !=====================================================================
 
-
-! Parallel Heuristic mesh decomposer
+! Parallel heuristic mesh decomposer
 !
-! the decomposition is made in the 3 cartesion direction given a
-! desired number of partition in each direction. The domain should be
-! a box.
+! The decomposition is made in the 3 cartesion direction given a
+! desired number of partition in each direction. The domain should be a box.
 !
 !
 !
 ! Vadim Monteiller (monteiller@lma.cnrs-mrs.fr) February 2016
-
 
 program xdecompose_mesh_mpi
 

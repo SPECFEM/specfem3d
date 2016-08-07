@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
 module module_database
 
   use shared_parameters, only: NGNOD, NGNOD2D, LOCAL_PATH, MSL=>MAX_STRING_LEN
