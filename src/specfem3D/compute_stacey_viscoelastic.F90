@@ -106,9 +106,10 @@
 
           ! gets velocity
           iglob=ibool(i,j,k,ispec)
-          vx=veloc(1,iglob)
-          vy=veloc(2,iglob)
-          vz=veloc(3,iglob)
+
+          vx = veloc(1,iglob)
+          vy = veloc(2,iglob)
+          vz = veloc(3,iglob)
 
 #ifdef DEBUG_COUPLED
     include "../../../add_to_compute_stacey_viscoelastic_2.F90"

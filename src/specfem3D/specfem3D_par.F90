@@ -115,8 +115,8 @@ module specfem_par
   real(kind=CUSTOM_REAL) :: stf_used_total
   integer :: nsources_local
   ! source encoding
-  ! for acoustic sources: takes +/- 1 sign, depending on sign(Mxx)[ = sign(Myy) = sign(Mzz)
-  ! since they have to equal in the acoustic setting]
+  ! for acoustic sources: takes +/- 1 sign, depending on sign(Mxx)
+  ! [ = sign(Myy) = sign(Mzz) since they have to be equal in the acoustic setting]
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: pm1_source_encoding
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: user_source_time_function
 

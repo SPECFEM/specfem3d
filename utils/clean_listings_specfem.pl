@@ -125,6 +125,7 @@
 # DK DK this could be dangerous if these words appear in strings or print statements
       $line =~ s#end\s*if#endif#ogi;
       $line =~ s#end\s*do#enddo#ogi;
+      $line =~ s# go\s*to # goto #ogi;
       $line =~ s#elseif#else if#ogi;
       $line =~ s#use\s*::\s*mpi#use mpi#ogi;
       $line =~ s#enddo_LOOP_IJK#ENDDO_LOOP_IJK#ogi;
