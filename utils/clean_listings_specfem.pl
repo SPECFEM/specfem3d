@@ -82,6 +82,8 @@
 # read and clean all Fortran files in the current directory and subdirectories
 #
 
+use File::Basename;
+
 # when using this "find" command from Perl we need to use \\ instead of \ below otherwise Perl tries to interpret it
       @objects = `find . -name '.git' -prune -o -name 'm4' -prune -o -path './utils/ADJOINT_TOMOGRAPHY_TOOLS/flexwin' -prune -o -type f -regextype posix-extended -regex '.*\\.(fh|f90|F90|h\\.in)' -print`;
 
@@ -94,6 +96,8 @@
 
             open(FILE_INPUT,"<_____temp08_____");
             open(FILEF90,">$f90name");
+
+            $basename_obtained = basename($f90name,@suffixlist);
 
 # open the input f90 file
       while($line = <FILE_INPUT>) {
@@ -159,6 +163,10 @@
       $line =~ s#gaussian#Gaussian#ogi;
       $line =~ s#hessian#Hessian#ogi;
 
+# for spaces around comparisons we exclude that file because it contains print statements that print
+# XML file lines and thus it contains many < and > characters that must not be changed
+      if($basename_obtained ne 'write_output_ASDF.f90') {
+
 # make sure there is one white space on each side of comparison operators
       $line =~ s#\s*<=\s*# <= #ogi;
       $line =~ s#\s*>=\s*# >= #ogi;
@@ -178,8 +186,13 @@
       $line =~ s#<\s*=#<=#ogi;
       $line =~ s#>\s*=#>=#ogi;
 
+      $line =~ s#>\s*&#>&#ogi;
+      $line =~ s#<\s*&#<&#ogi;
+
 # for pointers
       $line =~ s#\s*=\s*>\s*# => #ogi;
+
+      }
 
 # for these ones we make sure that keyword is not the first of the sentence, otherwise we may break existing alignment
       $linewithnospaceatall = $line;
