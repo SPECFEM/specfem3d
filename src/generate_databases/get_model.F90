@@ -196,6 +196,10 @@
             kappastore(i,j,k,ispec) = rho*( vp*vp - FOUR_THIRDS*vs*vs )
             mustore(i,j,k,ispec) = rho*vs*vs
 
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_get_model_5.F90"
+#endif
+
             ! attenuation
             qkappa_attenuation_store(i,j,k,ispec) = qkappa_atten
             qmu_attenuation_store(i,j,k,ispec) = qmu_atten
@@ -378,6 +382,11 @@
     IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,ATTENUATION_COMP_MAXIMUM
 
   use create_regions_mesh_ext_par
+
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_get_model_6.F90"
+#endif
+
   implicit none
 
   integer, intent(in) :: nmat_ext_mesh
@@ -407,6 +416,10 @@
   integer :: iundef,imaterial_PB
   logical :: has_tomo_value
 
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_get_model_7.F90"
+#endif
+
   ! use acoustic domains for simulation
   logical,parameter :: USE_PURE_ACOUSTIC_MOD = .false.
 
@@ -434,6 +447,10 @@
                        iflag_aniso,qkappa_atten,qmu_atten,idomain_id, &
                        rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
                        phi,tort,kxx,kxy,kxz,kyy,kyz,kzz)
+
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_get_model_8.F90"
+#endif
 
   case (IMODEL_1D_PREM)
     ! 1D model profile from PREM

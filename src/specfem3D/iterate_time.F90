@@ -38,6 +38,10 @@
 
   implicit none
 
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_iterate_time_5.F90"
+#endif
+
   ! for EXACT_UNDOING_TO_DISK
   integer :: ispec,iglob,i,j,k,counter,record_length
   integer, dimension(:), allocatable :: integer_mask_ibool_exact_undo
@@ -103,6 +107,10 @@
 
   ! get MPI starting time
   time_start = wtime()
+
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_iterate_time_6.F90"
+#endif
 
   ! *********************************************************
   ! ************* MAIN LOOP OVER THE TIME STEPS *************

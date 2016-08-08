@@ -331,3 +331,6 @@
 
   end subroutine compute_stacey_viscoelastic_GPU
 
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_compute_stacey_viscoelastic_11.F90"
+#endif

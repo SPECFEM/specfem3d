@@ -81,7 +81,7 @@ module specfem_par
   integer :: num_free_surface_faces
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_specfem3D_par.F90"
+    include "../../../add_to_specfem3D_par_1.F90"
 #endif
 
 ! attenuation
@@ -355,6 +355,10 @@ module specfem_par_elastic
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: b_buffer_recv_vector_ext_mesh
   integer, dimension(:), allocatable :: b_request_send_vector_ext_mesh
   integer, dimension(:), allocatable :: b_request_recv_vector_ext_mesh
+
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_specfem3D_par_2.F90"
+#endif
 
   ! LDDRK time scheme
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: displ_lddrk,veloc_lddrk
