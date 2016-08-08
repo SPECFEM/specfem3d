@@ -383,6 +383,10 @@
 
   use create_regions_mesh_ext_par
 
+#ifdef DEBUG_COUPLED
+  include "../../../add_to_get_model_9.F90"
+#endif
+
   implicit none
 
   integer, intent(in) :: nmat_ext_mesh
