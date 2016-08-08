@@ -323,7 +323,7 @@ subroutine xcorr_calc(d,s,npts,i1,i2,ishift,cc_max)
   !    i   i1+i   i2+i  id_left  id_right
   !  -11     9     30      9        30
   !   -5    15     36     15        36
-  !    0    20     41     20        41 <= = ORIGINAL WINDOW
+  !    0    20     41     20        41 <== ORIGINAL WINDOW
   !    5    25     46     25        46
   !   10    31     52     31        52
 
