@@ -141,7 +141,7 @@
   ! model values
   call vx_xyz_interp(uc,vc,wc,vp_st,vs_st,rho_st)
 
-  ! converts to custom real
+  ! converts to CUSTOM_REAL
   vp = vp_st
   vs = vs_st
   rho = rho_st

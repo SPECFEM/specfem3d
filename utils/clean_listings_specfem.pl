@@ -209,6 +209,9 @@ use File::Basename;
 
       $line =~ s#\)call#\) call#ogi;
 
+# enforce upper case
+      $line =~ s#CUSTOM_REAL#CUSTOM_REAL#ogi;
+
 # do not use null strings, which are not part of the Fortran standard (and the IBM xlf compiler rejects them for instance)
       $line =~ s#print\s*\*\s*,\s*''#print \*#ogi;
       $line =~ s#write\s*\(\s*\*\s*,\s*\*\s*\)\s*''#print \*#ogi;
