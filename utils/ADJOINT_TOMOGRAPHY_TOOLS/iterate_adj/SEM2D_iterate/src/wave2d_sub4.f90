@@ -849,11 +849,11 @@ contains
 !!$
 !!$                   ! formulas for Fourier convention FFT --> e^(-iwt)
 !!$                   pwc_adj(i) = cmplx(0.,1./omega) * top_p(i) / bot_p(i)  ! (1/w)i = (-iw)/(-w^2) = -1/(iw)
-!!$                   qwc_adj(i) = cmplx(0.,omega) * pwc_adj(i)              ! d/dt < --> -iw
+!!$                   qwc_adj(i) = cmplx(0.,omega) * pwc_adj(i)              ! d/dt <--> -iw
 !!$
 !!$                   ! formulas for Fourier convention FFT --> e^(iwt)
 !!$                   !pwc_adj(i) = cmplx(0.,-1./omega) * top_p(i) / bot_p(i)  ! (-1/w)i = (iw)/(-w^2) = 1/(iw)
-!!$                   !qwc_adj(i) = cmplx(0.,-omega) * pwc_adj(i)              ! d/dt < --> -iw
+!!$                   !qwc_adj(i) = cmplx(0.,-omega) * pwc_adj(i)              ! d/dt <--> -iw
 !!$
 !!$                enddo
 !!$
