@@ -188,7 +188,7 @@
             xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
             gll_data,prname_file)
 
-! external mesh routine for saving vtk files for custom_real values on all GLL points
+! external mesh routine for saving vtk files for CUSTOM_REAL values on all GLL points
 
   implicit none
 
