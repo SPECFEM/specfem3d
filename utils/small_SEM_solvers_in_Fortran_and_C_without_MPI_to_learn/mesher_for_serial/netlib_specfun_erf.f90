@@ -157,8 +157,8 @@
       enddo
 
       RESULT = X * (XNUM + A(4)) / (XDEN + B(4))
-      if (JINT  /=  0) RESULT = ONE - RESULT
-      if (JINT  ==  2) RESULT = EXP(YSQ) * RESULT
+      if (JINT /= 0) RESULT = ONE - RESULT
+      if (JINT == 2) RESULT = EXP(YSQ) * RESULT
       goto 800
 
 !------------------------------------------------------------------
@@ -174,7 +174,7 @@
       enddo
 
       RESULT = (XNUM + C(8)) / (XDEN + D(8))
-      if (JINT  /=  2) then
+      if (JINT /= 2) then
          YSQ = AINT(Y*SIXTEEN)/SIXTEEN
          DEL = (Y-YSQ)*(Y+YSQ)
          RESULT = EXP(-YSQ*YSQ) * EXP(-DEL) * RESULT

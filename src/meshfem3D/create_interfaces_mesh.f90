@@ -507,7 +507,7 @@
     max_npx_interface = max(npx_interface,max_npx_interface)
     max_npy_interface = max(npy_interface,max_npy_interface)
 
-    if ((max_npx_interface < 2) .or.(max_npy_interface < 2)) then
+    if ((max_npx_interface < 2) .or. (max_npy_interface < 2)) then
       print *,'Error interface ',interface_current,': has not enough interface points (minimum is 2x2)'
       stop 'Error not enough interface points (minimum is 2x2)'
     endif

@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
 !==============================================================================
 !> Read rho, vp, vs from model_values.bp
 !
@@ -60,7 +59,7 @@ subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
   integer :: comm
 
   ! user output
-  if (myrank==0) then
+  if (myrank == 0) then
     write(IMAIN,*) '     using GLL model (ADIOS) from: ',trim(LOCAL_PATH)
   endif
 

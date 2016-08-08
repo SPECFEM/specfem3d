@@ -108,7 +108,7 @@
                  betah_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
                  eta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
                  stat=ier)
-        if (ier /=0) stop 'error allocating arrays alphav_kl,...'
+        if (ier /= 0) stop 'error allocating arrays alphav_kl,...'
 
         ! derived kernels
         ! vp kernel

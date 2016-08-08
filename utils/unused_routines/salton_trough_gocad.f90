@@ -99,7 +99,7 @@ subroutine vx_xyz_interp(uc,vc,wc, vp, vs, rho, vp_array)
 !  print *, 'ixi, ieta, iga = ', ixi, ieta, iga
 
 
-  if (i > 0 .or. i < GOCAD_ST_NU  .or. j > 0 .or. j < GOCAD_ST_NV .or. k > 0 .or. k < GOCAD_ST_NW) then
+  if (i > 0 .or. i < GOCAD_ST_NU .or. j > 0 .or. j < GOCAD_ST_NV .or. k > 0 .or. k < GOCAD_ST_NW) then
     v1 = vp_array(i,j,k)
     v2 = vp_array(i+1,j,k)
     v3 = vp_array(i+1,j+1,k)

@@ -554,7 +554,7 @@ subroutine compute_forces_acoustic_GPU()
       call transfer_boun_pot_from_device(Mesh_pointer, &
                                          potential_dot_dot_acoustic, &
                                          buffer_send_scalar_ext_mesh, &
-                                         1) ! <-- 1 == fwd accel
+                                         1) ! -- 1 == fwd accel
       call assemble_MPI_scalar_send_cuda(NPROC, &
                         buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
@@ -567,7 +567,7 @@ subroutine compute_forces_acoustic_GPU()
         call transfer_boun_pot_from_device(Mesh_pointer, &
                                            b_potential_dot_dot_acoustic, &
                                            b_buffer_send_scalar_ext_mesh,&
-                                           3) ! <-- 3 == adjoint b_accel
+                                           3) ! -- 3 == adjoint b_accel
 
         call assemble_MPI_scalar_send_cuda(NPROC, &
                           b_buffer_send_scalar_ext_mesh,b_buffer_recv_scalar_ext_mesh, &
@@ -662,7 +662,7 @@ subroutine acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB,STACEY_INSTEAD_OF_FRE
   integer :: iface,igll,i,j,k,ispec,iglob
 
   ! checks if free surface became an absorbing boundary
-  if (STACEY_INSTEAD_OF_FREE_SURFACE  .and. .not. BOTTOM_FREE_SURFACE) return
+  if (STACEY_INSTEAD_OF_FREE_SURFACE .and. .not. BOTTOM_FREE_SURFACE) return
 
 ! enforce potentials to be zero at surface
   do iface = 1, num_free_surface_faces

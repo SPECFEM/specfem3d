@@ -293,7 +293,7 @@ contains
 
       !-------------------------
 
-      if (n <= 0.or.nev <= 0) return
+      if (n <= 0 .or. nev <= 0) return
       umeps=1.-epsi
       do 5 i=1,nev
     5 ev(i)=-1.
@@ -384,7 +384,7 @@ contains
    30 del=1./bn
       if (abs(del) <= epsi1) del=sign(epsi1,del)
       elam=elam-del
-      if (elam >= u.or.elam <= el) goto 5
+      if (elam >= u .or. elam <= el) goto 5
       goto 10
 
   end subroutine root
@@ -457,7 +457,7 @@ contains
 !!$!      do i = n_left, n_right
 !!$!        cc = 0
 !!$!        do j = 1, npts
-!!$!          if ((j+i)>1.and.(j+i)<npts) cc = cc + s(j) * d(j+i)
+!!$!          if ((j+i)>1 .and. (j+i) < npts) cc = cc + s(j) * d(j+i)
 !!$!        enddo
 !!$!        if ( cc > cc_max) then
 !!$!          cc_max = cc
@@ -470,7 +470,7 @@ contains
 !!$!     write(*,*)'shift synth seismogram by ', tshift, 'seconds'
 !!$      do i = 1, npts_win
 !!$        s_cor(i) = 0
-!!$        if ( (i1-1+i-ishift) > 1 .and. (i1-1+i-ishift) <npts ) s_cor(i) = s(i1-1+i-ishift)
+!!$        if ( (i1-1+i-ishift) > 1 .and. (i1-1+i-ishift) < npts ) s_cor(i) = s(i1-1+i-ishift)
 !!$      enddo
 !!$
 !!$! DEBUG: output
@@ -529,7 +529,7 @@ contains
 !!$      real function fa1(a1)
 !!$      real a1
 !!$
-!!$      if (abs(a1)<TOL) then
+!!$      if (abs(a1) < TOL) then
 !!$       write(*,*) 'value of a1 close to zero : ', a1
 !!$       stop
 !!$      endif
@@ -546,7 +546,7 @@ contains
 !!$      real function fa2(a2)
 !!$      real a2
 !!$
-!!$      if (abs(a2)<TOL) then
+!!$      if (abs(a2) < TOL) then
 !!$       write(*,*) 'value of a2 close to zero : ', a2
 !!$       stop
 !!$      endif
@@ -604,7 +604,7 @@ contains
 !!$  do i = i_left, i_right
 !!$    cc=0
 !!$    do j = i1, i2
-!!$      if ((j+i)>=1 .and. (j+i)<=npts) cc = cc + s(j)*d(j+i)
+!!$      if ((j+i) >= 1 .and. (j+i) <= npts) cc = cc + s(j)*d(j+i)
 !!$    enddo
 !!$    if (cc > cc_max) then
 !!$      cc_max=cc

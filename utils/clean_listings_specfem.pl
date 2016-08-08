@@ -72,7 +72,6 @@
 # --------------------
 # --------------------
 
-
 #
 #  Clean spaces, tabs and other non-standard or obsolete things in Fortran files
 #
@@ -107,13 +106,14 @@
       $line =~ s#\.ge\.#>=#ogi;
       $line =~ s#\.lt\.#<#ogi;
       $line =~ s#\.gt\.#>#ogi;
-      $line =~ s#\.eq\.#==#ogi;
       $line =~ s#\.ne\.#/=#ogi;
+      $line =~ s#\.eq\.#==#ogi;
 
 # switch to lowercase for comparison operators
       $line =~ s#\.and\.#\.and\.#ogi;
       $line =~ s#\.or\.#\.or\.#ogi;
       $line =~ s#\.not\.#\.not\.#ogi;
+
       $line =~ s#\.true\.#\.true\.#ogi;
       $line =~ s#\.false\.#\.false\.#ogi;
 
@@ -158,6 +158,43 @@
 
       $line =~ s#gaussian#Gaussian#ogi;
       $line =~ s#hessian#Hessian#ogi;
+
+# make sure there is one white space on each side of comparison operators
+      $line =~ s#\s*<=\s*# <= #ogi;
+      $line =~ s#\s*>=\s*# >= #ogi;
+      $line =~ s#\s*<\s*# < #ogi;
+      $line =~ s#\s*/=\s*# /= #ogi;
+
+# for these two we make sure the line is not a comment, because we have some comments that contain ===================== as paragraph delimiters
+# and we also have Doxygen markers in comments that start with !>
+      $linewithnospaceatall = $line;
+      $linewithnospaceatall =~ s# ##ogi;
+      my $first_letter = substr(($linewithnospaceatall),0,1);
+      if($first_letter ne '!') {
+        $line =~ s#\s*>\s*# > #ogi;
+        $line =~ s#\s*==\s*# == #ogi;
+        }
+
+      $line =~ s#<\s*=#<=#ogi;
+      $line =~ s#>\s*=#>=#ogi;
+
+# for pointers
+      $line =~ s#\s*=\s*>\s*# => #ogi;
+
+# for these ones we make sure that keyword is not the first of the sentence, otherwise we may break existing alignment
+      $linewithnospaceatall = $line;
+      $linewithnospaceatall =~ s# ##ogi;
+      my $first_letter = substr(($linewithnospaceatall),0,1);
+      if($first_letter ne '.') {
+        $line =~ s#\s*\.and\.\s*# \.and\. #ogi;
+        $line =~ s#\s*\.or\.\s*# \.or\. #ogi;
+        $line =~ s#\s*\.not\.\s*# \.not\. #ogi;
+        }
+
+# suppress space between parenthesis and .not. (this can happen when testing logical operators)
+      $line =~ s#\( \.not\. #\(\.not\. #ogi;
+
+      $line =~ s#\)call#\) call#ogi;
 
 # do not use null strings, which are not part of the Fortran standard (and the IBM xlf compiler rejects them for instance)
       $line =~ s#print\s*\*\s*,\s*''#print \*#ogi;

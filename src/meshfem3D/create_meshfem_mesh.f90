@@ -630,9 +630,9 @@
       ymid = 0.5d0*(y0+y1)
       zmid = 0.5d0*(z0+z1)
 
-      if ((xmid>=cavity_x0 .and. xmid<=cavity_x1) .and. &
-          (ymid>=cavity_y0 .and. ymid<=cavity_y1) .and. &
-          (zmid>=cavity_z0 .and. zmid<=cavity_z1)) then
+      if ((xmid >= cavity_x0 .and. xmid <= cavity_x1) .and. &
+          (ymid >= cavity_y0 .and. ymid <= cavity_y1) .and. &
+          (zmid >= cavity_z0 .and. zmid <= cavity_z1)) then
         ! deactivate spectral element
         iselmt(i_spec)=.false.
       else
@@ -675,7 +675,7 @@
         inode_new(i_node) = inode
       endif
     enddo
-    if (inode/=nglob)call exit_MPI(myrank,'ERROR: new number of spectral elements mismatch!')
+    if (inode /= nglob) call exit_MPI(myrank,'ERROR: new number of spectral elements mismatch!')
 
     allocate(nodes_coords_old(nglob_old,3))
     allocate(ispec_material_id_old(nspec_old))
@@ -734,7 +734,7 @@
       call flush_IMAIN()
     endif
 
-  endif ! nacavity==0
+  endif ! of if (ncavity == 0)
 
 !----------------------------------end cavity-----------------------------------
 

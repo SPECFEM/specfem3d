@@ -290,7 +290,7 @@ contains
 
       !-------------------------
 
-      if (n <= 0.or.nev <= 0) return
+      if (n <= 0 .or. nev <= 0) return
       umeps=1.-epsi
       do 5 i=1,nev
     5 ev(i)=-1.
@@ -381,7 +381,7 @@ contains
    30 del=1./bn
       if (abs(del) <= epsi1) del=sign(epsi1,del)
       elam=elam-del
-      if (elam >= u.or.elam <= el) goto 5
+      if (elam >= u .or. elam <= el) goto 5
       goto 10
 
   end subroutine root

@@ -20,10 +20,10 @@
 /* Define if err.h */
 #undef HAVE_ERR
 
-/* Define to 1 if you have the <inttypes.h> header file. */
+/* Define to 1 if you have the < inttypes.h > header file. */
 #undef HAVE_INTTYPES_H
 
-/* Define to 1 if you have the <memory.h> header file. */
+/* Define to 1 if you have the < memory.h > header file. */
 #undef HAVE_MEMORY_H
 
 /* Define if you have POSIX threads libraries and header files. */
@@ -32,25 +32,25 @@
 /* defined if Scotch is installed */
 #undef HAVE_SCOTCH
 
-/* Define to 1 if you have the <stdint.h> header file. */
+/* Define to 1 if you have the < stdint.h > header file. */
 #undef HAVE_STDINT_H
 
-/* Define to 1 if you have the <stdlib.h> header file. */
+/* Define to 1 if you have the < stdlib.h > header file. */
 #undef HAVE_STDLIB_H
 
-/* Define to 1 if you have the <strings.h> header file. */
+/* Define to 1 if you have the < strings.h > header file. */
 #undef HAVE_STRINGS_H
 
-/* Define to 1 if you have the <string.h> header file. */
+/* Define to 1 if you have the < string.h > header file. */
 #undef HAVE_STRING_H
 
-/* Define to 1 if you have the <sys/stat.h> header file. */
+/* Define to 1 if you have the < sys/stat.h > header file. */
 #undef HAVE_SYS_STAT_H
 
-/* Define to 1 if you have the <sys/types.h> header file. */
+/* Define to 1 if you have the < sys/types.h > header file. */
 #undef HAVE_SYS_TYPES_H
 
-/* Define to 1 if you have the <unistd.h> header file. */
+/* Define to 1 if you have the < unistd.h > header file. */
 #undef HAVE_UNISTD_H
 
 /* Define if xmmintrin.h */

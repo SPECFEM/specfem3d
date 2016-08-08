@@ -194,13 +194,13 @@
   character(len=2) crustaltype
 
 ! get integer colatitude and longitude of crustal cap
-! -90<lat<90 -180<lon<180
+! -90 < lat < 90 -180 < lon < 180
   if (lat > 90.0d0 .or. lat < -90.0d0 .or. lon > 180.0d0 .or. lon < -180.0d0) &
     stop 'error in latitude/longitude range in crust'
-  if (lat==90.0d0) lat=89.9999d0
-  if (lat==-90.0d0) lat=-89.9999d0
-  if (lon==180.0d0) lon=179.9999d0
-  if (lon==-180.0d0) lon=-179.9999d0
+  if (lat == 90.0d0) lat=89.9999d0
+  if (lat == -90.0d0) lat=-89.9999d0
+  if (lon == 180.0d0) lon=179.9999d0
+  if (lon == -180.0d0) lon=-179.9999d0
 
   call icolat_ilon(lat,lon,icolat,ilon)
   crustaltype=abbreviation(icolat,ilon)
@@ -321,8 +321,8 @@
   ilon=int(1+((180.d0+xlon)/2.d0))
   if (ilon == 181) ilon=1
 
-  if (icolat>90 .or. icolat<1) stop 'error in routine icolat_ilon'
-  if (ilon<1 .or. ilon>180) stop 'error in routine icolat_ilon'
+  if (icolat > 90 .or. icolat < 1) stop 'error in routine icolat_ilon'
+  if (ilon < 1 .or. ilon > 180) stop 'error in routine icolat_ilon'
 
   end subroutine icolat_ilon
 

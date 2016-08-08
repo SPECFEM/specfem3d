@@ -432,7 +432,7 @@ subroutine BNDPAS(F1,F2,DELT,D,G,N)
 !     IG = 1  one pass
 !     ig = 2  two passes
 
-      if (ISW==1) goto 31
+      if (ISW == 1) goto 31
       WRITE (6,6)
     6 FORMAT ('1BNDPAS MUST BE CALLED BEFORE FILTER')
       return
@@ -477,7 +477,7 @@ subroutine BNDPAS(F1,F2,DELT,D,G,N)
    39 X(I)=XE(M)-XE(M2)-D(7)*X(I-1)-D(8)*X(I-2)
 !
 !
-      if (ig==1) goto 3333
+      if (ig == 1) goto 3333
       XM2=X(N)
       XM1=X(N-1)
       XM=X(N-2)
@@ -516,7 +516,7 @@ subroutine BNDPAS(F1,F2,DELT,D,G,N)
       XE(M)=XD(M)-XD(M2)-D(5)*XE(M1)-D(6)*XE(M2)
    49 X(J)=XE(M)-XE(M2)-D(7)*X(J+1)-D(8)*X(J+2)
  3333 continue
-      if (ig==1) then
+      if (ig == 1) then
         gg=sqrt(g)   ! if only pass once, modify gain
       else
         gg=g

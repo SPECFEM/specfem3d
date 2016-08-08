@@ -10,7 +10,7 @@ module globe_parameter
   integer,parameter:: NSPEC=NSPEC_CRUST_MANTLE
   integer,parameter:: NGLOB=NGLOB_CRUST_MANTLE
   integer,parameter:: NKERNEL=4
-  integer,parameter:: m_store=5   ! stored model step 3<=m_store<=7
+  integer,parameter:: m_store=5   ! stored model step 3 <= m_store <= 7
 
   integer:: myrank, sizeprocs,ier
   integer::iker,ispec,i,j,k
@@ -49,14 +49,14 @@ program xcompute_direction_lbfgs
   call getarg(2,s_iter_current)
   read(s_iter_start,*) iter_start
   read(s_iter_current,*) iter_current
-  if (myrank ==0) print *, 'starting iteration for this period band:',iter_start
-  if (myrank ==0) print *, 'current iteration:',iter_current
+  if (myrank == 0) print *, 'starting iteration for this period band:',iter_start
+  if (myrank == 0) print *, 'current iteration:',iter_current
 
   iter_store = iter_current-m_store
   if ( iter_store <= iter_start ) then
         iter_store = iter_start
   endif
-  if (myrank==0) print *, 'stored iteration:',iter_store
+  if (myrank == 0) print *, 'stored iteration:',iter_store
 
 
   kernel_name=(/"reg1_bulk_betah_kernel_precond_smooth","reg1_bulk_betav_kernel_precond_smooth","reg1_eta_kernel_precond_smooth","reg1_bulk_c_kernel_precond_smooth"/)
@@ -142,7 +142,7 @@ program xcompute_direction_lbfgs
      call mpi_allreduce(b_tmp,b_sum,1,CUSTOM_MPI_TYPE,MPI_SUM,MPI_COMM_WORLD,ier)
      b=p(istore)*b_sum
 
-     if (myrank==0) print *,'a,b:',a(istore),b
+     if (myrank == 0) print *,'a,b:',a(istore),b
 
      r_vector=r_vector+model_diff*(a(istore)-b)
 
@@ -224,7 +224,7 @@ subroutine get_model(iter,model)
      write(filename,'(a,i6.6,a)') trim(dirname)//'/proc',myrank,'_'//trim(model_name(iker))//'.bin'
      open(1001,file=trim(filename),status='old',form='unformatted',iostat=ier)
      if ( myrank == 0) print *,'reading model:',trim(filename)
-     if ( ier /=0) then
+     if ( ier /= 0) then
         print *,'error reading:',trim(filename)
         call exit_mpi(myrank,'file not found')
      endif

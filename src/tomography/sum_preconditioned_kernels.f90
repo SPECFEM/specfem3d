@@ -74,7 +74,7 @@ program sum_preconditioned_kernels
   call world_size(sizeprocs)
   call world_rank(myrank)
 
-  if (myrank==0) then
+  if (myrank == 0) then
     write(*,*) 'sum_preconditioned_kernels:'
     write(*,*)
     write(*,*) 'reading kernel list: '
@@ -198,7 +198,7 @@ program sum_preconditioned_kernels
 
   endif
 
-  if (myrank==0) write(*,*) 'done writing all kernels, see directory OUTPUT_SUM/'
+  if (myrank == 0) write(*,*) 'done writing all kernels, see directory OUTPUT_SUM/'
 
   ! stop all the processes, and exit
   call finalize_mpi()
@@ -245,7 +245,7 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker)
   total_kernel = 0._CUSTOM_REAL
   do iker = 1, nker
     ! user output
-    if (myrank==0) then
+    if (myrank == 0) then
       write(*,*) 'reading in event kernel for: ',trim(kernel_name)
       write(*,*) 'and preconditioner         : ','hess_kernel'
       write(*,*) '    ',iker, ' out of ', nker
@@ -347,7 +347,7 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker)
   endif
 
   ! stores summed kernels
-  if (myrank==0) write(*,*) 'writing out summed kernel for: ',trim(kernel_name)
+  if (myrank == 0) write(*,*) 'writing out summed kernel for: ',trim(kernel_name)
 
   ! outputs summed kernel
   write(k_file,'(a,i6.6,a)') 'OUTPUT_SUM/proc',myrank,trim(REG) // trim(kernel_name) // '.bin'
@@ -361,7 +361,7 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker)
 
   ! outputs summed Hessian
   if (USE_HESS_SUM) then
-    if (myrank==0) write(*,*) 'writing out summed kernel for: ','hess_inv_kernel'
+    if (myrank == 0) write(*,*) 'writing out summed kernel for: ','hess_inv_kernel'
     write(k_file,'(a,i6.6,a)') 'OUTPUT_SUM/proc',myrank,trim(REG) // 'hess_inv_kernel' // '.bin'
     open(IOUT,file=trim(k_file),form='unformatted',status='unknown',action='write',iostat=ier)
     if (ier /= 0) then
@@ -372,7 +372,7 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker)
     close(IOUT)
   endif
 
-  if (myrank==0) write(*,*)
+  if (myrank == 0) write(*,*)
 
   ! frees memory
   deallocate(kernel,hess,total_kernel)

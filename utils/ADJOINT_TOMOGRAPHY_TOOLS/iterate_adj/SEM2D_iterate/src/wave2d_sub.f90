@@ -320,13 +320,13 @@ contains
   fgaus = 1.0d-8                  ! fraction of amplitude at edge of Gaussian
   dgaus = sqrt(-log(fgaus)) / alpha
 
-  if (ISRC_TIME==1) then ! Ricker
+  if (ISRC_TIME == 1) then ! Ricker
      amp = -2.0*(alpha**3)/dsqrt(PI)
 
-  else if (ISRC_TIME==2) then ! Gaussian
+  else if (ISRC_TIME == 2) then ! Gaussian
      amp = alpha/dsqrt(PI)
 
-  else if (ISRC_TIME==3) then ! truncated sine
+  else if (ISRC_TIME == 3) then ! truncated sine
      cyc = 3.0
      per = 2.*hdur
      !t1 = -0.50*per
@@ -334,7 +334,7 @@ contains
      t2 = t1 + per*cyc
      amp = alpha**2.0*dsqrt(2.0/PI)*exp(-0.5)
 
-  else if (ISRC_TIME==4) then ! sine
+  else if (ISRC_TIME == 4) then ! sine
      per = 2.0*hdur
      amp = alpha**2.0*dsqrt(2.0/PI)*exp(-0.5)
 
@@ -374,7 +374,7 @@ contains
 
        t = ti(itime) - origin_time  ! time shift
 
-       if (ISRC_TIME==1) then
+       if (ISRC_TIME == 1) then
           ! d/dt[Gaussian] wavelet
           if (t >= -dgaus .and. t <= dgaus) then
              stf = amp*t*exp(-alpha*alpha*t*t)
@@ -382,7 +382,7 @@ contains
              stf = 0.0
           endif
 
-       else if (ISRC_TIME==2) then
+       else if (ISRC_TIME == 2) then
           ! Error function
           ! source_time_function = 0.5*(1.0+erf(decay_rate*t/hdur))
 
@@ -393,7 +393,7 @@ contains
              stf = 0.0
           endif
 
-       else if (ISRC_TIME==3) then
+       else if (ISRC_TIME == 3) then
           ! truncated sine function (duration is cyc*per seconds)
           if (t >= t1 .and. t <= t2) then
              stf = amp*sin(2.0*PI*(t-t1)/per)
@@ -401,7 +401,7 @@ contains
              stf = 0.0
           endif
 
-       else if (ISRC_TIME==4) then
+       else if (ISRC_TIME == 4) then
           ! sine function
           stf = amp*sin(2*PI*t/per)
           !stf = amp/2.*sin(2*PI*t/per) + amp/2.*sin(2*PI*t/(1.1*per))
@@ -468,7 +468,7 @@ contains
     if (ios /= 0) stop 'Error writing snapshot to disk'
     do iglob = 1, NGLOB
        ! DEBUG ARRAY SIZE
-       if (NCOMP==3) then
+       if (NCOMP == 3) then
           write(11,'(5e12.3)') x(iglob)/LENGTH, z(iglob)/LENGTH, &
                   sngl(disp(1,iglob)),sngl(disp(2,iglob)),sngl(disp(3,iglob))
        else
@@ -638,7 +638,7 @@ contains
 !!$             if (w >= wmin_win .and. w <= wmax_win) abs_int = abs_int + abs_val
 !!$
 !!$             if (write_spectra) write(12,'(2e16.6)') w, abs_val
-!!$             !if (write_spectra.and.w/=0.0) write(12,'(2e16.6)') (2*PI)/w, abs_val
+!!$             !if (write_spectra .and. w /= 0.0) write(12,'(2e16.6)') (2*PI)/w, abs_val
 !!$          enddo
 !!$          if (write_spectra) close(12)
 !!$
@@ -1051,7 +1051,7 @@ contains
     mvec(:) = 0.0
 
 !!$    ! if the optional argument is not used, then default the factor of 1
-!!$    if (.not.present(array_fac0)) then
+!!$    if (.not. present(array_fac0)) then
 !!$       array_fac(:,:,:) = 1.
 !!$    else
 !!$       array_fac(:,:,:) = array_fac0(:,:,:)
@@ -1067,7 +1067,7 @@ contains
                 !if (ipar==1) mvec(k) = array1(i,j,ispec) * array_fac(i,j,ispec)  ! alpha
                 !if (ipar==2) mvec(k) = array2(i,j,ispec) * array_fac(i,j,ispec)  ! beta
 
-                if (ipar==1) mvec(k) = array1(i,j,ispec)  ! btype (kappa, alpha, c)
+                if (ipar == 1) mvec(k) = array1(i,j,ispec)  ! btype (kappa, alpha, c)
                 !if (ipar==2) mvec(k) = array2(i,j,ispec)  ! atype (mu, beta, beta
              enddo
           enddo
@@ -1105,7 +1105,7 @@ contains
           do j = 1,NGLLZ
              do i = 1,NGLLX
                 k = k+1
-                if (ipar==1) array1(i,j,ispec) = mvec(k)  ! btype (mu, beta, beta)
+                if (ipar == 1) array1(i,j,ispec) = mvec(k)  ! btype (mu, beta, beta)
                 !if (ipar==2) array2(i,j,ispec) = mvec(k)  ! atype (kappa, alpha, c)
              enddo
           enddo

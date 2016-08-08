@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
   program combine_vol_data
 
 ! puts the output of SPECFEM3D into '***.mesh' format,
@@ -256,7 +255,7 @@
   write(IOVTK,*) ""
 #endif
 
-  if (np /=  npp) stop 'Error: Number of total points are not consistent'
+  if (np /= npp) stop 'Error: Number of total points are not consistent'
   print *, 'Total number of points: ', np
   print *, ' '
 

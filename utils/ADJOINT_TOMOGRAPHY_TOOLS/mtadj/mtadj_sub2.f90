@@ -167,13 +167,13 @@ contains
          smth  =  phi_wt(i+1) + phi_wt(i-1) -  2.0 * phi_wt(i)
          smth1 = (phi_wt(i+1) + TWOPI) + phi_wt(i-1) -  2.0 * phi_wt(i)
          smth2 = (phi_wt(i+1) - TWOPI) + phi_wt(i-1) -  2.0 * phi_wt(i)
-         if (abs(smth1)<abs(smth).and.abs(smth1)<abs(smth2).and. abs(phi_wt(i) - phi_wt(i+1)) > PHASE_STEP) then
+         if (abs(smth1) < abs(smth) .and. abs(smth1) < abs(smth2) .and. abs(phi_wt(i) - phi_wt(i+1)) > PHASE_STEP) then
             if (DEBUG) print *, '2 pi phase correction:', fvec(i), phi_wt(i) - phi_wt(i+1)
             do j = i+1, i_right
                phi_wt(j) = phi_wt(j) + TWOPI
             enddo
          endif
-         if (abs(smth2)<abs(smth).and.abs(smth2)<abs(smth1).and. abs(phi_wt(i) - phi_wt(i+1)) > PHASE_STEP) then
+         if (abs(smth2) < abs(smth) .and. abs(smth2) < abs(smth1) .and. abs(phi_wt(i) - phi_wt(i+1)) > PHASE_STEP) then
             if (DEBUG) print *, '-2 pi phase correction:', fvec(i), phi_wt(i) - phi_wt(i+1)
             do j = i+1, i_right
                phi_wt(j) = phi_wt(j) - TWOPI
@@ -213,7 +213,7 @@ contains
        bot_mtm(:) = cmplx(0.,0.)
 
        do ictaper = 1, ntaper
-          if (ictaper==iom) cycle
+          if (ictaper == iom) cycle
 
           ! apply ictaper'th taper
           datawt(1:nlen) = dataw(1:nlen) * tas(1:nlen,ictaper)

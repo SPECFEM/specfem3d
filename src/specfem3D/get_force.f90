@@ -44,7 +44,7 @@
   double precision, dimension(NSOURCES), intent(out) :: comp_dir_vect_source_Z_UP
   !! VM VM use NSTEP_STF, NSOURCES_STF which are always rigth :
   !! in case of EXTERNAL_STF, it's equal to NSTEP,NSOURCES
-  !! when .not.  EXTERNAL_STF it' equal to 1,1.
+  !! when .not. EXTERNAL_STF it' equal to 1,1.
   real(kind=CUSTOM_REAL), dimension(NSTEP_STF, NSOURCES_STF), intent(out) :: user_source_time_function
 
   ! local variables below

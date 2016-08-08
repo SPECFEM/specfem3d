@@ -414,8 +414,7 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
       ! save the array stored the points on interface between PML and interior
       ! computational domain
       ! -----------------------------------------------------------------------
-      if ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) &
-          .or. SIMULATION_TYPE == 3) then
+      if ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
         call define_adios_scalar(group, groupsize, "", &
                                  STRINGIFY_VAR(nglob_interface_PML_acoustic))
         call define_adios_scalar(group, groupsize, "", &
@@ -896,8 +895,7 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
       ! save the array stored the points on interface between PML and interior
       ! computational domain
       ! -----------------------------------------------------------------------
-      if ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) &
-          .or. SIMULATION_TYPE == 3) then
+      if ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
         call adios_write(handle, &
                          STRINGIFY_VAR(nglob_interface_PML_acoustic), ier)
         call adios_write(handle, &

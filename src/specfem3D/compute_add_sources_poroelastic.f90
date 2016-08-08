@@ -198,7 +198,7 @@
       ! figure out if we need to read in a chunk of the adjoint source at this
       ! timestep
       it_sub_adj = ceiling( dble(it)/dble(NTSTEP_BETWEEN_READ_ADJSRC) ) !chunk_number
-      ibool_read_adj_arrays = (((mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC) == 0)) .and.  (nadj_rec_local > 0))
+      ibool_read_adj_arrays = (((mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC) == 0)) .and. (nadj_rec_local > 0))
 
       ! needs to read in a new chunk/block of the adjoint source
       ! note that for each partition, we divide it into two parts --- boundaries

@@ -143,7 +143,7 @@ contains
 
     !===================================================
     ! if you want a MTM measurement, then go here
-    if (IKER==3 .or. IKER==4) then
+    if (IKER == 3 .or. IKER == 4) then
 
     ! apply time shift to observed seismogram
     write(*,*) 'shift obs seismogram by ', tshift_xc, 'seconds, irec = ', irec
@@ -237,15 +237,15 @@ contains
         bot_mtm(i) = bot_mtm(i) +  wseis(i) * conjg(wseis(i))
 
         ! calculate transfer function for single taper measurement using water level
-        if (abs(wseis(i))  >  abs(wtr_use))  trans(i) = wseis3(i) / wseis(i)
-        if (abs(wseis(i))  <=  abs(wtr_use))  trans(i) = wseis3(i) / (wseis(i)+wtr_use)
+        if (abs(wseis(i)) > abs(wtr_use))  trans(i) = wseis3(i) / wseis(i)
+        if (abs(wseis(i)) <= abs(wtr_use))  trans(i) = wseis3(i) / (wseis(i)+wtr_use)
 
         ! determine i_right values using the power in the un-tapered synthetic
         if (abs(wseis1(i)) <= abs(wtr_use_unw) .and. i_right_stop == 0 .and. i > i_amp_max_unw) then
           i_right_stop = 1
           i_right = i
         endif
-        if (abs(wseis1(i))  >=  10*abs(wtr_use_unw) .and. i_right_stop == 1 .and. i > i_amp_max_unw) then
+        if (abs(wseis1(i)) >= 10*abs(wtr_use_unw) .and. i_right_stop == 1 .and. i > i_amp_max_unw) then
           i_right_stop = 0
           i_right = i
         endif
@@ -333,7 +333,7 @@ contains
     enddo
     close(17)
 
-    endif  ! IKER==3,4
+    endif  ! IKER == 3,4
 
     !==================================================================
     !     compute cross-correlation adjoint sources
@@ -367,7 +367,7 @@ contains
     ! definition of Dahlen and Baig (2002), Eq. 3,17,18 : dlnA = Aobs/Asyn - 1
     dlna = sqrt( (DT * sum( datt(:) * datt(:) )) / (DT * sum( synt(:) * synt(:) )) ) - 1.
 
-    if (0==1) then
+    if (0 == 1) then
       print *
       print *, 'cross-correlation measurments:'
       print *, '   dT = ', tshift_xc
@@ -378,7 +378,7 @@ contains
     endif
 
     ! additional files for checking (measure_socal_adj.m)
-    if (0==1) then
+    if (0 == 1) then
       ! time domain : time, data-disp, syn-disp, syn-vel, syn-accel
       open(29,file='syn_time.dat')
       do i = 1,nlen
@@ -398,7 +398,7 @@ contains
     !     create MTM adjoint sources
     !==================================================================
 
-    if (IKER==3 .or. IKER==4) then
+    if (IKER == 3 .or. IKER == 4) then
 
        pw_adj(:,:) = 0.      ;  qw_adj(:,:) = 0.
        pt_adj(:,:) = 0.      ;  qt_adj(:,:) = 0.
@@ -445,7 +445,7 @@ contains
 
              ! NOTE SIGN
              pwc_adj(i) = cmplx(0,1./omega) * top_p(i) / bot_p(i)  ! (1/w)i = (-iw)/(-w^2)
-             qwc_adj(i) = cmplx(0,omega) * pwc_adj(i)              ! d/dt <--> iw
+             qwc_adj(i) = cmplx(0,omega) * pwc_adj(i)              ! d/dt < -- > iw
 
           enddo
 
@@ -500,7 +500,7 @@ contains
 
        close(18) ; close(19) ; close(20) ; close(21) ; close(22) ; close(23) ; close(24)
 
-    endif  ! if IKER==3,4
+    endif  ! if IKER == 3,4
 
     ! generate a random number to simulate error in the measurement
     ! ppert determines the range over which the perturbed measurement will be
@@ -517,26 +517,26 @@ contains
 
       i1 = istart - 1 + i
 
-      if (ipick==0) then
+      if (ipick == 0) then
         adj_syn(i1,icomp,irec) = ( syn(i1,icomp,irec) -  data(i1,icomp,irec) ) * time_window(i) * meas_pert
 
-      else if (ipick==1) then
+      else if (ipick == 1) then
         ! meas_pert = 1.0 for most runs
         adj_syn(i1,icomp,irec) = -tshift_xc * ft_bar_t(i) * time_window(i) * meas_pert
 
-      else if (ipick==2) then
+      else if (ipick == 2) then
         adj_syn(i1,icomp,irec) = -dlna * fa_bar_t(i) * time_window(i) * meas_pert
 
-      else if (ipick==3) then
+      else if (ipick == 3) then
         adj_syn(i1,icomp,irec) = fp(i) * time_window(i)
 
-      else if (ipick==4) then
+      else if (ipick == 4) then
         adj_syn(i1,icomp,irec) = fq(i) * time_window(i)
 
-      else if (ipick==5) then
+      else if (ipick == 5) then
         adj_syn(i1,icomp,irec) = ft_bar_t(i) * time_window(i)
 
-      else if (ipick==6) then
+      else if (ipick == 6) then
         adj_syn(i1,icomp,irec) = fa_bar_t(i) * time_window(i)
       endif
 
@@ -547,32 +547,32 @@ contains
 
     imeasure = imeasure + 1    ! global counter variable
 
-      if (ipick==0) then
+      if (ipick == 0) then
 
         chi(ievent,irec,icomp,1) = 0.5 * sum( adj_syn(:,icomp,irec)**2 ) * DT
         measure_vec(imeasure)    = chi(ievent,irec,icomp,1)
 
-      else if (ipick==1) then
+      else if (ipick == 1) then
         chi(ievent,irec,icomp,1) = 0.5 * (tshift_xc * meas_pert)**2
         measure_vec(imeasure)    = tshift_xc * meas_pert
 
-      else if (ipick==2) then
+      else if (ipick == 2) then
         chi(ievent,irec,icomp,1) = 0.5 * (dlna * meas_pert)**2
         measure_vec(imeasure)    = dlna * meas_pert
 
-      else if (ipick==3) then
+      else if (ipick == 3) then
         chi(ievent,irec,icomp,1) = 0.
         measure_vec(imeasure)    = 0.
 
-      else if (ipick==4) then
+      else if (ipick == 4) then
         chi(ievent,irec,icomp,1) = 0.
         measure_vec(imeasure)    = 0.
 
-      else if (ipick==5) then
+      else if (ipick == 5) then
         chi(ievent,irec,icomp,1) = 0.
         measure_vec(imeasure)    = 0.
 
-      else if (ipick==6) then
+      else if (ipick == 6) then
         chi(ievent,irec,icomp,1) = 0.
         measure_vec(imeasure)    = 0.
 
@@ -713,16 +713,16 @@ contains
       data m/0,31,59,90,120,151,181,212,243,273,304,334/
       integer :: ny, nm, nd, mm
 
-      if (.not.(nm==1))goto 23220
+      if (.not. (nm == 1))goto 23220
       nm=0
 23220 continue
       mm=nm
-      if (.not.(mm==0))goto 23222
+      if (.not. (mm == 0))goto 23222
       return
 23222 continue
       nm=0
       nd=nd+m(mm)
-      if (.not.(mod(ny,4) == 0 .and. mm > 2))goto 23224
+      if (.not. (mod(ny,4) == 0 .and. mm > 2))goto 23224
       nd=nd+1
 23224 continue
       return
@@ -868,7 +868,7 @@ contains
 
       !-------------------------
 
-      if (n <= 0.or.nev <= 0) return
+      if (n <= 0 .or. nev <= 0) return
       umeps=1.-epsi
       do 5 i=1,nev
     5 ev(i)=-1.
@@ -959,7 +959,7 @@ contains
    30 del=1./bn
       if (abs(del) <= epsi1) del=sign(epsi1,del)
       elam=elam-del
-      if (elam >= u.or.elam <= el) goto 5
+      if (elam >= u .or. elam <= el) goto 5
       goto 10
 
   end subroutine root

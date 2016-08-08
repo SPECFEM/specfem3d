@@ -162,7 +162,7 @@ program add_model
           alphah1 = 0._CUSTOM_REAL
 
           ! do not use transverse isotropy except if element is between d220 and Moho
-          if (.not. ( idoubling(ispec)== IFLAG_670_220 .or.idoubling(ispec)==IFLAG_220_80 .or. idoubling(ispec)==IFLAG_80_MOHO) ) then
+          if (.not. ( idoubling(ispec) == IFLAG_670_220 .or. idoubling(ispec) == IFLAG_220_80 .or. idoubling(ispec) == IFLAG_80_MOHO) ) then
 
             ! isotropic model update
 
@@ -317,7 +317,7 @@ subroutine read_parameters()
   call getarg(2,input_model)
   call getarg(3,input_kernel)
   call getarg(4,output_model)
-!< Hejun Zhu
+! < Hejun Zhu
 
 
 !> Hejun Zhu
@@ -328,7 +328,7 @@ subroutine read_parameters()
       .or. trim(input_kernel) == ''.or. trim(output_model) == '') then
       call exit_MPI(myrank, 'Usage: add model_globe_tiso step_factor input_model input_kernel output_model')
   endif
-!< Hejun Zhu
+! < Hejun Zhu
 
 
   ! read in parameter information
@@ -806,7 +806,7 @@ subroutine get_gradient()
 !> Hejun Zhu
   ! stores model_dbulk, ... arrays
 !  call store_kernel_updates()
-!< Hejun Zhu
+! < Hejun Zhu
 
   ! statistics
   call mpi_reduce(minval(model_dbulk),min_bulk,1,CUSTOM_MPI_TYPE,MPI_MIN,0,MPI_COMM_WORLD,ier)

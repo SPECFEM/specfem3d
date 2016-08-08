@@ -59,7 +59,7 @@ program adj_seismogram
   if ( ios /= 0 ) stop 'error opening file .adj'
 
   irec=1
-  do while(ios==0)
+  do while(ios == 0)
 
      syn(:) = 0.0
      dat(:) = 0.0
@@ -110,7 +110,7 @@ program adj_seismogram
   if ( ios /= 0 ) stop 'error opening file .adj'
 
   irec=1
-  do while(ios==0)
+  do while(ios == 0)
 
      syn(:) = 0.0
      dat(:) = 0.0
@@ -160,7 +160,7 @@ program adj_seismogram
         status='unknown',access='direct',action='write',recl=240+4*NSTEP,iostat = ios)
   if ( ios /= 0 ) stop 'error opening file .adj'
   irec=1
-  do while(ios==0)
+  do while(ios == 0)
 
      syn(:) = 0.0
      dat(:) = 0.0

@@ -543,9 +543,9 @@
         pt2_iz = NGLLZ
       endif
 
-      if (pt0_ix<0 .or.pt0_iy<0 .or. pt0_iz<0 .or. &
-         pt1_ix<0 .or. pt1_iy<0 .or. pt1_iz<0 .or. &
-         pt2_ix<0 .or. pt2_iy<0 .or. pt2_iz<0) then
+      if (pt0_ix < 0 .or. pt0_iy < 0 .or. pt0_iz < 0 .or. &
+         pt1_ix < 0 .or. pt1_iy < 0 .or. pt1_iz < 0 .or. &
+         pt2_ix < 0 .or. pt2_iy < 0 .or. pt2_iz < 0) then
         call exit_mpi(myrank,'error in computing normal for sources.')
       endif
 
@@ -716,7 +716,7 @@
 
   ! number of gather bins
   ngather = NSOURCES/NGATHER_SOURCES
-  if (mod(NSOURCES,NGATHER_SOURCES)/= 0) ngather = ngather+1
+  if (mod(NSOURCES,NGATHER_SOURCES) /= 0) ngather = ngather+1
 
   ! loops over single bin
   do ig = 1, ngather

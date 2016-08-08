@@ -88,7 +88,7 @@ contains
 !
   subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
 
-  use specfem_par, only : nt=>NSTEP
+  use specfem_par, only : nt => NSTEP
 
   implicit none
 
@@ -112,19 +112,19 @@ contains
 
   open(unit=IIN_PAR,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file_faults',status='old',iostat=ier)
   if (ier /= 0) then
-    if (myrank==0) write(IMAIN,*) 'no dynamic faults'
+    if (myrank == 0) write(IMAIN,*) 'no dynamic faults'
     close(IIN_PAR)
     return
   endif
 
   read(IIN_PAR,*) nbfaults
-  if (nbfaults==0) then
-    if (myrank==0) write(IMAIN,*) 'No faults found in file DATA/Par_file_faults'
+  if (nbfaults == 0) then
+    if (myrank == 0) write(IMAIN,*) 'No faults found in file DATA/Par_file_faults'
     return
-  else if (nbfaults==1) then
-    if (myrank==0) write(IMAIN,*) 'There is 1 fault in file DATA/Par_file_faults'
+  else if (nbfaults == 1) then
+    if (myrank == 0) write(IMAIN,*) 'There is 1 fault in file DATA/Par_file_faults'
   else
-    if (myrank==0) write(IMAIN,*) 'There are ', nbfaults, ' faults in file DATA/Par_file_faults'
+    if (myrank == 0) write(IMAIN,*) 'There are ', nbfaults, ' faults in file DATA/Par_file_faults'
   endif
 
   filename = prname(1:len_trim(prname))//'fault_db.bin'
@@ -156,7 +156,7 @@ contains
   allocate( faults(nbfaults) )
   dt = real(DTglobal)
   read(IIN_PAR,nml=RUPTURE_SWITCHES,end=110,iostat=ier)
-  if (ier/=0) write(*,*) 'RUPTURE_SWITCHES not found in Par_file_faults'
+  if (ier /= 0) write(*,*) 'RUPTURE_SWITCHES not found in Par_file_faults'
   do iflt=1,nbfaults
     read(IIN_PAR,nml=BEGIN_FAULT,end=100)
     call init_one_fault(faults(iflt),IIN_BIN,IIN_PAR,dt,nt,iflt,myrank)
@@ -179,10 +179,10 @@ contains
 
   return
 
-100 if (myrank==0) write(IMAIN,*) 'Fatal error: did not find BEGIN_FAULT input block in file DATA/Par_file_faults. Abort.'
+100 if (myrank == 0) write(IMAIN,*) 'Fatal error: did not find BEGIN_FAULT input block in file DATA/Par_file_faults. Abort.'
     stop
 
-110 if (myrank==0) write(IMAIN,*) 'Fatal error: did not find RUPTURE_SWITCHES input block in file DATA/Par_file_faults. Abort.'
+110 if (myrank == 0) write(IMAIN,*) 'Fatal error: did not find RUPTURE_SWITCHES input block in file DATA/Par_file_faults. Abort.'
     stop
   ! WARNING TO DO: should be an MPI abort
 
@@ -232,7 +232,7 @@ contains
 
   call initialize_fault(bc,IIN_BIN)
 
-  if (bc%nspec>0) then
+  if (bc%nspec > 0) then
 
     allocate(bc%T(3,bc%nglob))
     allocate(bc%D(3,bc%nglob))
@@ -287,9 +287,9 @@ contains
   bc%T=bc%T0
   if (RATE_AND_STATE) then
     call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt,8,iflt)
-    if (bc%dataT%npoin>0) then
+    if (bc%dataT%npoin > 0) then
     bc%dataT%longFieldNames(8) = "log10 of state variable (log-seconds)"
-    if (bc%rsf%StateLaw==1) then
+    if (bc%rsf%StateLaw == 1) then
       bc%dataT%shortFieldNames = trim(bc%dataT%shortFieldNames)//" log-theta"
     else
       bc%dataT%shortFieldNames = trim(bc%dataT%shortFieldNames)//" psi"
@@ -305,7 +305,7 @@ contains
     if (bc%nspec > 0) call write_dataXZ(bc%dataXZ,0,iflt)
   else
     call gather_dataXZ(bc)
-    if (myrank==0) call write_dataXZ(bc%dataXZ_all,0,iflt)
+    if (myrank == 0) call write_dataXZ(bc%dataXZ_all,0,iflt)
   endif
 
   contains
@@ -425,7 +425,7 @@ contains
 
   SMALLVAL = 1.e-10_CUSTOM_REAL
 
-  if (n==0) return
+  if (n == 0) return
 
   do i=1,n
     shapeval = ''
@@ -450,7 +450,7 @@ contains
 
     case ('circle-exp')
       r1 = sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2 + (coord(3,:)-zc)**2)
-      where(r1<r)
+      where(r1 < r)
         b = exp(r1**2/(r1**2 - r**2) ) * val + valh
       elsewhere
         b = 0._CUSTOM_REAL
@@ -485,8 +485,8 @@ contains
 
     case ('cylindertaper')
       r1=sqrt(((coord(1,:)-xc)**2 + (coord(3,:)-zc)**2 ));
-      where(r1<rc)
-        where(r1<r)
+      where(r1 < rc)
+        where(r1 < r)
          b=val;
         elsewhere
         b=0.5e0_CUSTOM_REAL*val*(1e0_CUSTOM_REAL+cos(PI*(r1-r)/(rc-r)))
@@ -553,7 +553,7 @@ contains
   real(kind=CUSTOM_REAL), intent(in) :: x
   real(kind=CUSTOM_REAL) :: heaviside
 
-  if (x>=0e0_CUSTOM_REAL) then
+  if (x >= 0e0_CUSTOM_REAL) then
     heaviside = 1e0_CUSTOM_REAL
   else
     heaviside = 0e0_CUSTOM_REAL
@@ -745,7 +745,7 @@ contains
 
     call store_dataT(bc%dataT,bc%D,bc%V,bc%T,it)
     if (RATE_AND_STATE) then
-      if (bc%rsf%StateLaw==1) then
+      if (bc%rsf%StateLaw == 1) then
         bc%dataT%dat(8,:,it) = log10(theta_new(bc%dataT%iglob))
       else
         bc%dataT%dat(8,:,it) = theta_new(bc%dataT%iglob)
@@ -754,7 +754,7 @@ contains
 
     !-- outputs --
     ! write dataT every NTOUT time step or at the end of simulation
-    if (mod(it,NTOUT) == 0 .or. it==NSTEP) call SCEC_write_dataT(bc%dataT)
+    if (mod(it,NTOUT) == 0 .or. it == NSTEP) call SCEC_write_dataT(bc%dataT)
 
   endif
 
@@ -764,7 +764,7 @@ contains
       if (bc%nspec > 0) call write_dataXZ(bc%dataXZ,it,iflt)
     else
       call gather_dataXZ(bc)
-      if (myrank==0) call write_dataXZ(bc%dataXZ_all,it,iflt)
+      if (myrank == 0) call write_dataXZ(bc%dataXZ_all,it,iflt)
     endif
   endif
 
@@ -772,7 +772,7 @@ contains
     if (.not. PARALLEL_FAULT) then
       call SCEC_Write_RuptureTime(bc%dataXZ,iflt)
     else
-      if (myrank==0) call SCEC_Write_RuptureTime(bc%dataXZ_all,iflt)
+      if (myrank == 0) call SCEC_Write_RuptureTime(bc%dataXZ_all,iflt)
     endif
   endif
 
@@ -855,7 +855,7 @@ contains
     npoin = size(vold,2)
     do k=1,npoin
       vnorm = sqrt(vold(1,k)**2 + vold(2,k)**2)
-      if (vnorm<V_HEALING) f%theta(k) = 0e0_CUSTOM_REAL
+      if (vnorm < V_HEALING) f%theta(k) = 0e0_CUSTOM_REAL
     enddo
   endif
 
@@ -1127,17 +1127,17 @@ contains
     do i=1,nglob
       x=coord(1,i)
       z=coord(3,i)
-      c1=abs(x)<W1+w
-      c2=abs(x)>W1
-      c3=abs(z-hypo_z)<W2+w
-      c4=abs(z-hypo_z)>W2
+      c1=abs(x) < W1+w
+      c2=abs(x) > W1
+      c3=abs(z-hypo_z) < W2+w
+      c4=abs(z-hypo_z) > W2
       if ((c1 .and. c2 .and. c3) .or. (c3 .and. c4 .and. c1)) then
 
         if (c1 .and. c2) then
           b11 = w/(abs(x)-W1-w)
           b12 = w/(abs(x)-W1)
           B1 = HALF * (ONE + tanh(b11 + b12))
-        else if (abs(x)<=W1) then
+        else if (abs(x) <= W1) then
           B1 = 1._CUSTOM_REAL
         else
           B1 = 0._CUSTOM_REAL
@@ -1147,7 +1147,7 @@ contains
           b21 = w/(abs(z-hypo_z)-W2-w)
           b22 = w/(abs(z-hypo_z)-W2)
           B2 = HALF * (ONE + tanh(b21 + b22))
-        else if (abs(z-hypo_z)<=W2) then
+        else if (abs(z-hypo_z) <= W2) then
           B2 = 1._CUSTOM_REAL
         else
           B2 = 0._CUSTOM_REAL
@@ -1156,7 +1156,7 @@ contains
         f%a(i) = 0.008 + 0.008 * (ONE - B1*B2)
         f%Vw(i) = 0.1 + 0.9 * (ONE - B1*B2)
 
-      else if (abs(x)<=W1 .and. abs(z-hypo_z)<=W2) then
+      else if (abs(x) <= W1 .and. abs(z-hypo_z) <= W2) then
         f%a(i) = 0.008
         f%Vw(i) = 0.1_CUSTOM_REAL
       else
@@ -1313,7 +1313,7 @@ contains
   if (PARALLEL_FAULT) then
     npoin_all = 0
     call sum_all_i(bc%nglob,npoin_all)
-    if (myrank==0 .and. npoin_all>0) then
+    if (myrank == 0 .and. npoin_all > 0) then
       bc%dataXZ_all%npoin = npoin_all
       allocate(bc%dataXZ_all%xcoord(npoin_all))
       allocate(bc%dataXZ_all%ycoord(npoin_all))
@@ -1394,16 +1394,16 @@ contains
 
     ! process zone time = first time when slip = dc  (break down process)
     ! with linear time interpolation
-    if (dataXZ%tPZ(i)==0e0_CUSTOM_REAL) then
-      if (dold(i)<=dc(i) .and. dnew(i) >= dc(i)) then
+    if (dataXZ%tPZ(i) == 0e0_CUSTOM_REAL) then
+      if (dold(i) <= dc(i) .and. dnew(i) >= dc(i)) then
         dataXZ%tPZ(i) = timeval-dt*(dnew(i)-dc(i))/(dnew(i)-dold(i))
       endif
     endif
 
     ! rupture time = first time when slip velocity = V_RUPT
     ! with linear time interpolation
-    if (dataXZ%tRUP(i)==0e0_CUSTOM_REAL) then
-      if (vold(i)<=V_RUPT .and. vnew(i)>=V_RUPT) dataXZ%tRUP(i)= timeval-dt*(vnew(i)-V_RUPT)/(vnew(i)-vold(i))
+    if (dataXZ%tRUP(i) == 0e0_CUSTOM_REAL) then
+      if (vold(i) <= V_RUPT .and. vnew(i) >= V_RUPT) dataXZ%tRUP(i)= timeval-dt*(vnew(i)-V_RUPT)/(vnew(i)-vold(i))
     endif
 
   enddo
@@ -1642,14 +1642,14 @@ contains
 
   call funcd(dble(x1),fl,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
   call funcd(dble(x2),fh,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
-  if ((fl>0 .and. fh>0) .or. (fl<0 .and. fh<0) ) stop 'root must be bracketed in rtsafe'
-  if (fl==0.) then
+  if ((fl > 0 .and. fh > 0) .or. (fl < 0 .and. fh < 0) ) stop 'root must be bracketed in rtsafe'
+  if (fl == 0.) then
     rtsafe=x2
     return
-  else if (fh==0.) then
+  else if (fh == 0.) then
     rtsafe=x2
     return
-  else if (fl<0) then
+  else if (fl < 0) then
     xl=x1
     xh=x2
   else
@@ -1662,21 +1662,21 @@ contains
   dx=dxold
   call funcd(rtsafe,f,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
   do j=1,MAXIT
-    if (((rtsafe-xh)*df-f)*((rtsafe-xl)*df-f)>0 .or. abs(2.*f)>abs(dxold*df)) then
+    if (((rtsafe-xh)*df-f)*((rtsafe-xl)*df-f) > 0 .or. abs(2.*f) > abs(dxold*df)) then
       dxold=dx
       dx=0.5d0*(xh-xl)
       rtsafe=xl+dx
-      if (xl==rtsafe) return
+      if (xl == rtsafe) return
     else
       dxold=dx
       dx=f/df
       temp=rtsafe
       rtsafe=rtsafe-dx
-      if (temp==rtsafe) return
+      if (temp == rtsafe) return
     endif
-    if (abs(dx)<xacc) return
+    if (abs(dx) < xacc) return
     call funcd(rtsafe,f,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
-    if (f<0.) then
+    if (f < 0.) then
       xl=rtsafe
     else
       xh=rtsafe
@@ -1706,7 +1706,7 @@ contains
     call gather_dataXZ(faults(ifault))
     call SCEC_write_dataT(faults(ifault)%dataT)
 
-    if (myrank == 0 )call write_dataXZ(faults(ifault)%dataXZ_all,it,ifault)
+    if (myrank == 0) call write_dataXZ(faults(ifault)%dataXZ_all,it,ifault)
 
   enddo
 

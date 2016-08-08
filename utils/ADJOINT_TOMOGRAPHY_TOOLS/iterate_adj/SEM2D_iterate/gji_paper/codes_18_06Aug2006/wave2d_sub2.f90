@@ -190,7 +190,7 @@ contains
 
         if (final_distance(irec) == HUGEVAL) stop 'error locating receiver'
 
-        if (0==1) then
+        if (0 == 1) then
            print *
            print *,                'target point # ', irec
            write(*,'(a,1f18.8)')   '  target x (km)            : ', x_target(irec)/1000.
@@ -380,7 +380,7 @@ contains
 
     print *, nrec,' input target points into set_glob.f90'
 
-    if (nrec/=0) then
+    if (nrec /= 0) then
 
        ! find the closest gridpoint to the target point
        do irec = 1, nrec
@@ -404,7 +404,7 @@ contains
           do j = 1,i
              if (rglobtemp(j) == itemp) iflag = 1
           enddo
-          if (iflag==0) then
+          if (iflag == 0) then
              k = k+1
              rglobtemp(k) = itemp
           endif
@@ -577,7 +577,7 @@ contains
   double precision :: xtemp,ztemp
   integer i
 
-  if (iway==ILONLAT2MESH) then  ! lon-lat to mesh coordinates
+  if (iway == ILONLAT2MESH) then  ! lon-lat to mesh coordinates
      do i=1,npt
         call utm_geo(rlon(i),rlat(i),xtemp,ztemp,UTM_PROJECTION_ZONE,ILONGLAT2UTM)
         rx(i) = xtemp - utm_xmin
@@ -785,7 +785,7 @@ contains
         rlon = cmr + (d - f1 + f2)/cos(rlat1)
         dlon = rlon*raddeg
         if (dlon < -180.) dlon = dlon + 360.
-        if (dlon >  180.) dlon = dlon - 360.
+        if (dlon > 180.) dlon = dlon - 360.
       endif
 
     endif

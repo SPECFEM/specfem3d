@@ -62,8 +62,8 @@
 
   if (s >= 1.0d0-tol) s=1.0d0-tol
   lsave=l
-  if (l<0) l=-1-l
-  if (l>0) goto 1
+  if (l < 0) l=-1-l
+  if (l > 0) goto 1
   x(1)=rfpi
   dx(1)=0.0d0
   l=lsave
@@ -78,7 +78,7 @@
   l=lsave
   return
     2 sos=s
-  if (s<tol) s=tol
+  if (s < tol) s=tol
   cot=c/s
   ct=2.0d0*c
   ss=s*s

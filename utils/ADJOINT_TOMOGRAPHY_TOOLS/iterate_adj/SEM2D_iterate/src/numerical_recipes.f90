@@ -13,7 +13,7 @@
 ! this routine uses routine gammp
   double precision gammp
 
-  if (x<0.) then
+  if (x < 0.) then
     erf=-gammp(0.5d0,x**2)
   else
     erf=gammp(0.5d0,x**2)
@@ -29,9 +29,9 @@
 ! this routine uses routines gcf and gser
   double precision gammcf,gamser,gln
 
-  if (x<0.d0 .or. a <= 0.d0) stop 'bad arguments in gammp'
+  if (x < 0.d0 .or. a <= 0.d0) stop 'bad arguments in gammp'
 
-  if (x<a+1.d0) then
+  if (x < a+1.d0) then
     call gser(gamser,a,x,gln)
     gammp=gamser
   else
@@ -66,13 +66,13 @@
     an=-i*(i-a)
     b=b+2.d0
     d=an*d+b
-    if (dabs(d)<FPMIN)d=FPMIN
+    if (dabs(d) < FPMIN)d=FPMIN
     c=b+an/c
-    if (dabs(c)<FPMIN)c=FPMIN
+    if (dabs(c) < FPMIN)c=FPMIN
     d=1.d0/d
     del=d*c
     h=h*del
-    if (dabs(del-1.d0)<EPS) then
+    if (dabs(del-1.d0) < EPS) then
       gammcf=exp(-x+a*log(x)-gln)*h
       return
     endif
@@ -101,7 +101,7 @@
   gln=gammln(a)
 
   if (x <= 0.d0) then
-    if (x<0.d0) stop 'x < 0 in gser'
+    if (x < 0.d0) stop 'x < 0 in gser'
     gamser=0.d0
     return
   endif
@@ -114,7 +114,7 @@
     ap=ap+1.d0
     del=del*x/ap
     sumval=sumval+del
-    if (dabs(del)<dabs(sumval)*EPS) then
+    if (dabs(del) < dabs(sumval)*EPS) then
       gamser=sumval*exp(-x+a*log(x)-gln)
       return
     endif

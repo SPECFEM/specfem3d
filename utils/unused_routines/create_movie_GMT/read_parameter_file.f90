@@ -256,7 +256,7 @@
   if (err_occurred() /= 0) return
 ! computes a default hdur_movie that creates nice looking movies.
 ! Sets HDUR_MOVIE as the minimum period the mesh can resolve for Southern California model
-  if (HDUR_MOVIE <=TINYVAL .and. (MODEL == 'Harvard_LA' .or. MODEL == 'SoCal')) &
+  if (HDUR_MOVIE <= TINYVAL .and. (MODEL == 'Harvard_LA' .or. MODEL == 'SoCal')) &
   HDUR_MOVIE = max(384/NEX_XI*2.4,384/NEX_ETA*2.4)
 
 ! compute the minimum value of hdur in CMTSOLUTION file

@@ -144,7 +144,7 @@
           enddo
 
           if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
-            ! do not merge this second line with the first using an ".and." statement
+            ! do not merge this second line with the first using an .and. statement
             ! because array is_CPML() is unallocated when PML_CONDITIONS is false
             if (is_CPML(ispec)) then
               ispec_CPML = spec_to_CPML(ispec)
@@ -196,7 +196,7 @@
 
           ! stores derivatives of ux, uy and uz with respect to x, y and z
           if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
-            ! do not merge this second line with the first using an ".and." statement
+            ! do not merge this second line with the first using an .and. statement
             ! because array is_CPML() is unallocated when PML_CONDITIONS is false
             if (is_CPML(ispec)) then
               PML_dpotential_dxl(i,j,k) = dpotentialdxl
@@ -225,7 +225,7 @@
     enddo
 
     if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
-      ! do not merge this second line with the first using an ".and." statement
+      ! do not merge this second line with the first using an .and. statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
       if (is_CPML(ispec)) then
         ispec_CPML = spec_to_CPML(ispec)
@@ -272,8 +272,8 @@
       enddo
     enddo
 
-    if (PML_CONDITIONS .and. (.not. backward_simulation)  .and. NSPEC_CPML > 0) then
-      ! do not merge this second line with the first using an ".and." statement
+    if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
+      ! do not merge this second line with the first using an .and. statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
       if (is_CPML(ispec)) then
         do k = 1,NGLLZ

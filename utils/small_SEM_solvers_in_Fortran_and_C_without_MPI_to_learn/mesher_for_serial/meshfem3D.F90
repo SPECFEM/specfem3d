@@ -149,7 +149,7 @@
 !  - Z axis is up
 !
 ! To report bugs or suggest improvements to the code, please send an email
-! to Jeroen Tromp <jtromp AT caltech.edu> and/or use our online
+! to Jeroen Tromp < jtromp AT caltech.edu> and/or use our online
 ! bug tracking system at http://www.geodynamics.org/roundup .
 !
 
@@ -579,7 +579,7 @@
     write(IMAIN,*)
   endif
 
-  if (myrank==0) then
+  if (myrank == 0) then
 ! read the parameter file and compute additional parameters
     call read_compute_parameters(MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD,NER_CRUST, &
           NER_80_MOHO,NER_220_80,NER_400_220,NER_600_400,NER_670_600,NER_771_670, &
@@ -690,7 +690,7 @@
     call MPI_BCAST(DIFF_NSPEC2D_XI,NB_SQUARE_EDGES_ONEDIR*NB_CUT_CASE,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
 #endif
 
-  if (myrank /=0) then
+  if (myrank /= 0) then
 
     MIN_ATTENUATION_PERIOD = bcast_integer(1)
     MAX_ATTENUATION_PERIOD = bcast_integer(2)

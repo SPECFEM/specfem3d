@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
   subroutine compute_forces_poro_fluid_part( iphase, &
                         NSPEC_AB,NGLOB_AB,displw_poroelastic,accelw_poroelastic,&
                         velocw_poroelastic,displs_poroelastic,&
@@ -456,7 +455,7 @@
 
           etal_f = etastore(i,j,k,ispec)
 
-          if (etal_f >0.d0) then
+          if (etal_f > 0.d0) then
 
             permlxx = permstore(1,i,j,k,ispec)
             permlxy = permstore(2,i,j,k,ispec)
@@ -540,7 +539,7 @@
             !   enddo
             ! enddo
 
-          endif ! if (etal_f >0.d0) then
+          endif ! if (etal_f > 0.d0) then
 
         enddo ! second loop over the GLL points
       enddo

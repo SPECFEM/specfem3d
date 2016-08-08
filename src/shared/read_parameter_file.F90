@@ -85,14 +85,14 @@
       call read_value_integer(nproc_eta_old, 'NPROC_ETA', ier)
       if (ier /= 0) then
         print *,'please specify the number of processes in Par_file as:'
-        print *,'NPROC           =    <my_number_of_desired_processes> '
+        print *,'NPROC           = my_number_of_desired_processes'
         stop 'Error reading Par_file parameter NPROC'
       endif
       ! checks if it uses an old Par_file format
       call read_value_integer(nproc_xi_old, 'NPROC_XI', ier)
       if (ier /= 0) then
         print *,'please specify the number of processes in Par_file as:'
-        print *,'NPROC           =    <my_number_of_desired_processes> '
+        print *,'NPROC           = my_number_of_desired_processes'
         stop 'Error reading Par_file parameter NPROC'
       endif
       NPROC = nproc_eta_old * nproc_xi_old

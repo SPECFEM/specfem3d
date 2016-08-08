@@ -179,7 +179,7 @@ subroutine get_color(adj,xadj,color,nspec,total_size_adj,is_on_a_slice_edge, &
   color(:) = 0
   this_color = 0
   nb_already_colored = 0
-  do while(nb_already_colored<nspec_outer)
+  do while(nb_already_colored < nspec_outer)
     this_color = this_color + 1
     do ispec = 1, nspec
       if (is_outer_element(ispec)) then
@@ -199,7 +199,7 @@ subroutine get_color(adj,xadj,color,nspec,total_size_adj,is_on_a_slice_edge, &
   nb_colors_outer_elements = this_color
 
 ! inner elements
-  do while(nb_already_colored<nspec)
+  do while(nb_already_colored < nspec)
     this_color = this_color + 1
     do ispec = 1, nspec
       if (.not. is_outer_element(ispec)) then
@@ -458,7 +458,7 @@ nspec,count_only,total_size_ne)
             if (face) then
               ! if 2 elements share at least 3 corners, therefore they share a face
               countel(nelem) = countel(nelem) + 1
-              if (countel(nelem)>=3) then
+              if (countel(nelem) >= 3) then
                 if (count_only) then
                   total_size_adj = iad
                 else

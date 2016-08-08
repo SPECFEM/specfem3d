@@ -806,10 +806,6 @@
 !     Department of Terrestrial Magnetism / Carnegie Institute of Washington
 !     Univeristy of Rhode Island
 !
-!  <savage@uri.edu>.
-!  <savage13@gps.caltech.edu>
-!  <savage13@dtm.ciw.edu>
-!
 !   It is based upon formulation in the following references:
 !
 !   Dahlen and Tromp, 1998

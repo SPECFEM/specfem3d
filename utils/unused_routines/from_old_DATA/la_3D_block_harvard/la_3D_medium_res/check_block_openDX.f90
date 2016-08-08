@@ -45,7 +45,7 @@
   read(27,*) nrecord
   do irecord = 1,nrecord
     read(27,*) ix,iy,iz,i_vp
-    if (ix<0 .or. ix>NX_GOCAD_MR-1 .or. iy<0 .or. iy>NY_GOCAD_MR-1 .or. iz<0 .or. iz>NZ_GOCAD_MR-1) &
+    if (ix < 0 .or. ix > NX_GOCAD_MR-1 .or. iy < 0 .or. iy > NY_GOCAD_MR-1 .or. iz < 0 .or. iz > NZ_GOCAD_MR-1) &
       stop 'wrong array index read in Gocad medium-resolution file'
     vp_block_gocad(ix,iy,iz) = dble(i_vp)
   enddo

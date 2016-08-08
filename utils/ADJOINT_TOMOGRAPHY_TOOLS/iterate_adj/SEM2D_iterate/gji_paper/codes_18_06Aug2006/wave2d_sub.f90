@@ -84,13 +84,13 @@ contains
   fgaus = 1.d-8                  ! fraction of amplitude at edge of Gaussian
   dgaus = sqrt(-log(fgaus)) / alpha
 
-  if (ISRC_TIME==1) then ! Ricker
+  if (ISRC_TIME == 1) then ! Ricker
      amp = -2.*(alpha**3)/dsqrt(PI)
 
-  else if (ISRC_TIME==2) then ! Gaussian
+  else if (ISRC_TIME == 2) then ! Gaussian
      amp = alpha/dsqrt(PI)
 
-  else if (ISRC_TIME==3) then ! truncated sine
+  else if (ISRC_TIME == 3) then ! truncated sine
      cyc = 3
      per = 2.*hdur
      !t1 = -0.50*per
@@ -98,7 +98,7 @@ contains
      t2 = t1 + per*dble(cyc)
      amp = alpha**2*dsqrt(2./PI)*exp(-0.5d0)
 
-  else if (ISRC_TIME==4) then ! sine
+  else if (ISRC_TIME == 4) then ! sine
      per = 2.*hdur
      amp = alpha**2*dsqrt(2./PI)*exp(-0.5d0)
 
@@ -138,7 +138,7 @@ contains
 
        t = ti(itime) - origin_time  ! time shift
 
-       if (ISRC_TIME==1) then
+       if (ISRC_TIME == 1) then
           ! d/dt[Gaussian] wavelet
           if (t >= -dgaus .and. t <= dgaus) then
              stf = amp*t*exp(-alpha*alpha*t*t)
@@ -146,7 +146,7 @@ contains
              stf = 0.
           endif
 
-       else if (ISRC_TIME==2) then
+       else if (ISRC_TIME == 2) then
           ! Error function
           ! source_time_function = 0.5d0*(1.0d0+erf(decay_rate*t/hdur))
 
@@ -157,7 +157,7 @@ contains
              stf = 0.
           endif
 
-       else if (ISRC_TIME==3) then
+       else if (ISRC_TIME == 3) then
           ! truncated sine function (duration is cyc*per seconds)
           if (t >= t1 .and. t <= t2) then
              stf = amp*sin(2*PI*(t-t1)/per)
@@ -165,7 +165,7 @@ contains
              stf = 0.
           endif
 
-       else if (ISRC_TIME==4) then
+       else if (ISRC_TIME == 4) then
           ! sine function
           stf = amp*sin(2*PI*t/per)
           !stf = amp/2.*sin(2*PI*t/per) + amp/2.*sin(2*PI*t/(1.1*per))
@@ -231,7 +231,7 @@ contains
     open(unit = 11, file = trim(filename), status = 'unknown',iostat=ios)
     if (ios /= 0) stop 'Error writing snapshot to disk'
     do iglob = 1, NGLOB
-       if (NCOMP==3) then
+       if (NCOMP == 3) then
           write(11,'(5e12.3)') x(iglob)/LENGTH, z(iglob)/LENGTH, &
                   sngl(disp(1,iglob)),sngl(disp(2,iglob)),sngl(disp(3,iglob))
        else
@@ -348,7 +348,7 @@ contains
           ! specify input time series
           in(:) = seis(:,icomp,irec)
 
-          if (0==1) then
+          if (0 == 1) then
             ! write input data to file
             write(filename,'(a,a,i5.5,a,i1.1)') trim(seis_name), '_in_', irec, '_', icomp
             open(unit=10, file=filename, status='unknown', iostat=ios)
@@ -381,11 +381,11 @@ contains
              if (w >= wmin_win .and. w <= wmax_win) abs_int = abs_int + abs_val
 
              if (write_spectra) write(12,'(2e16.6)') w, abs_val
-             !if (write_spectra.and.w/=0.) write(12,'(2e16.6)') (2*PI)/w, abs_val
+             !if (write_spectra .and. w /= 0.) write(12,'(2e16.6)') (2*PI)/w, abs_val
           enddo
           if (write_spectra) close(12)
 
-          if (0==1) then
+          if (0 == 1) then
             write(*,'(a,3f12.4)') ' T, s     (min/0/max) :', (2*PI)/wmax_win , 2*hdur        , (2*PI)/wmin_win
             write(*,'(a,3f12.4)') ' f, Hz    (min/0/max) :', wmin_win/(2*PI) , 1/(2*hdur)    , wmax_win/(2*PI)
             write(*,'(a,3f12.4)') ' w, rad/s (min/0/max) :', wmin_win        , 2*PI/(2*hdur) , wmax_win
@@ -513,18 +513,18 @@ contains
 
     do i = 1,NCOMP
 
-       if (IKER==0) then       ! waveform
+       if (IKER == 0) then       ! waveform
 
           adj_syn(:,i,irec) = ( syn(:,i,irec) -  data(:,i,irec) ) * time_window(:)
 
-       else if (IKER==5) then   ! traveltime
+       else if (IKER == 5) then   ! traveltime
 
           ! minus sign is shifted from norm to adj_syn, in comparison with Tromp et al (2005)
           ! thus, norm is ensured to be POSITIVE (N > 0)
           norm = -DT * sum( time_window(:) * syn(:,i,irec) * syn_accel(:,i,irec) )
           if (abs(norm) > EPS) adj_syn(:,i,irec) = -syn_veloc(:,i,irec) * time_window(:) / norm
 
-       else if (IKER==6) then  ! amplitude
+       else if (IKER == 6) then  ! amplitude
 
           ! norm is ensured to be POSITIVE (M > 0)
           norm = DT * sum( time_window(:) * syn(:,i,irec) * syn(:,i,irec) )

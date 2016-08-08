@@ -58,7 +58,7 @@ program sum_kernels
 
   total_kernel=0.
   do iker = 1, nker
-     if (myrank==1) write(*,*) 'reading in event kernel for mu: ', iker, ' out of ', nker
+     if (myrank == 1) write(*,*) 'reading in event kernel for mu: ', iker, ' out of ', nker
      write(k_file,'(a,i6.6,a)') 'INPUT_KERNELS/'//trim(kernel_list(iker))//'/proc',myrank,'_'//trim(kernel_name)//'.bin'
 
      open(12,file=trim(k_file),status='old',form='unformatted')
@@ -69,7 +69,7 @@ program sum_kernels
      total_kernel(:,:,:,1:nspec) = total_kernel(:,:,:,1:nspec) + kernel(:,:,:,1:nspec)
 
   enddo
-  if (myrank==1) write(*,*) 'writing out summed kernel for mu'
+  if (myrank == 1) write(*,*) 'writing out summed kernel for mu'
   write(k_file,'(a,i6.6,a)') 'OUTPUT_SUM/proc',myrank,'_'//trim(kernel_name)//'.bin'
   open(12,file=trim(k_file),form='unformatted')
   write(12) total_kernel(:,:,:,1:nspec)
@@ -97,7 +97,7 @@ program sum_kernels
 !!$  write(12) total_kernel(:,:,:,1:nspec)
 !!$  close(12)
 
-  if (myrank==1) write(*,*) 'done writing all kernels, now finishing...'
+  if (myrank == 1) write(*,*) 'done writing all kernels, now finishing...'
 
   ! stop all the MPI processes, and exit
   call MPI_FINALIZE(ier)

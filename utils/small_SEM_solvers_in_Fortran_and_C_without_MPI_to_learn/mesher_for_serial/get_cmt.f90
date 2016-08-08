@@ -143,7 +143,7 @@
   data mon /0,31,59,90,120,151,181,212,243,273,304,334/
 
   julian_day = da + mon(mo)
-  if (mo>2) julian_day = julian_day + lpyr(yr)
+  if (mo > 2) julian_day = julian_day + lpyr(yr)
 
   end function julian_day
 

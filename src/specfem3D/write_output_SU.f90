@@ -181,7 +181,7 @@
   write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+21) NINT(x_found)           ! receiver location xr
   write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+22) NINT(y_found)           ! receiver location zr
 
-  if (nrec>1) write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+48) dx ! receiver interval
+  if (nrec > 1) write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+48) dx ! receiver interval
 
   ! time steps
   header2(1)=0  ! dummy

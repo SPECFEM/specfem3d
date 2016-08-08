@@ -33,7 +33,7 @@ character(len=80) :: file_head
 !character(len=80),dimension(out_nslice),optional :: server_name, server_exec
 
 ! Write a Ensight Gold SOS file
-if (out_nslice>1) then
+if (out_nslice > 1) then
   open(unit=101, file=trim(out_path)// '/' // trim(out_head)//'.sos', status='replace', action='write', iostat=ios)
 
   write(101,'(a)')'FORMAT'
@@ -111,7 +111,7 @@ character(len=80) :: inp_fname
 integer :: nnode,nelmt
 
 ! Ensight element type
-if (out_res==1) then
+if (out_res == 1) then
   ! Medium resolution
   ! 20-noded hexahedra
   ensight_etype='hexa20'
@@ -245,15 +245,15 @@ do i_proc = 1, nproc
   close(27)
 
   ! writes point coordinates and scalar value to mesh file
-  if (out_res==0) then
+  if (out_res == 0) then
     ! writes out element corners only
     call cvd_write_corners_only(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
     nnode,fd_x,fd_y,fd_z)
-  else if (out_res==1) then
+  else if (out_res == 1) then
     ! writes out element corners only
     call cvd_write_hexa20_only(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
     nnode,fd_x,fd_y,fd_z)
-  else if (out_res==2) then
+  else if (out_res == 2) then
     ! high resolution, all GLL points
     call cvd_write_GLL_points_only(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,&
     nnode,fd_x,fd_y,fd_z)
@@ -275,7 +275,7 @@ call close_file(fd_x)
 call close_file(fd_y)
 call close_file(fd_z)
 
-if (node_count /=  slice_nnode(i_slice)) then
+if (node_count /= slice_nnode(i_slice)) then
   write(*,'(/,a)')'Error: number of total points are not consistent!'
   stop
 endif
@@ -335,15 +335,15 @@ do i_proc = 1, nproc
   close(27)
 
   ! writes out element corner indices
-  if (out_res==0) then
+  if (out_res == 0) then
     ! spectral elements
     call cvd_write_corner_elements(NSPEC_AB,NGLOB_AB,ibool, &
     node_count,nelmt,nnode,fd)
-  else if (out_res==1) then
+  else if (out_res == 1) then
     ! spectral elements
     call cvd_write_hexa20_elements(NSPEC_AB,NGLOB_AB,ibool, &
     node_count,nelmt,nnode,fd)
-  else if (out_res==2) then
+  else if (out_res == 2) then
     ! subdivided spectral elements
     call cvd_write_GLL_elements(NSPEC_AB,NGLOB_AB,ibool, &
     node_count,nelmt,nnode,fd)
@@ -384,11 +384,11 @@ format_str3='(a,a,i'//trim(adjustl(tmp_str))//',a,i'//trim(adjustl(tmp_str))
 write(tmp_str,*)ceiling(log10(real(out_nslice)+1))
 format_str3=trim(format_str3)//',a,i'//trim(adjustl(tmp_str))//',a,i'//trim(adjustl(tmp_str))//')'
 
-if (out_ncomp==1) then
+if (out_ncomp == 1) then
   out_ext='.scl'
-else if (out_ncomp==3) then
+else if (out_ncomp == 3) then
   out_ext='.vec'
-else if (out_ncomp==6) then
+else if (out_ncomp == 6) then
   out_ext='.tns'
 else
   write(*,'(/,a,i5,a)')'ERROR: number of components ',out_ncomp,' not supported!'
@@ -416,7 +416,7 @@ do i_t=1,t_nstep
   !call open_file2write('tmp_val'//char(0),fd_x)
 
 
-  if (out_ncomp>1) then
+  if (out_ncomp > 1) then
     do i_comp=1,out_ncomp
       node_count = 0
       do i_proc = 1, nproc
@@ -448,13 +448,13 @@ do i_t=1,t_nstep
           read(11) dat
 
           ! writes point coordinates and scalar value to mesh file
-          if (out_res==0) then
+          if (out_res == 0) then
             call cvd_write_corners_data(NSPEC_AB,NGLOB_AB,ibool,real(dat), &
             nnode,fd)
-          else if (out_res==1) then
+          else if (out_res == 1) then
             call cvd_write_hexa20_data(NSPEC_AB,NGLOB_AB,ibool,real(dat), &
             nnode,fd)
-          else if (out_res==2) then
+          else if (out_res == 2) then
             call cvd_write_GLL_points_data(NSPEC_AB,NGLOB_AB,ibool,real(dat), &
             nnode,fd)
           else
@@ -463,7 +463,7 @@ do i_t=1,t_nstep
           endif
           ! cleans up memory allocations
           deallocate(dat)
-        else if (dat_topo==1) then
+        else if (dat_topo == 1) then
           allocate(dat_glob(NGLOB_AB))
 
           ! data file
@@ -479,13 +479,13 @@ do i_t=1,t_nstep
           read(11) dat_glob
 
           ! writes point coordinates and scalar value to mesh file
-          if (out_res==0) then
+          if (out_res == 0) then
             call cvd_write_corners_data_glob(NSPEC_AB,NGLOB_AB,ibool,real(dat_glob), &
             nnode,fd)
-          else if (out_res==1) then
+          else if (out_res == 1) then
             call cvd_write_hexa20_data_glob(NSPEC_AB,NGLOB_AB,ibool,real(dat_glob), &
             nnode,fd)
-          else if (out_res==2) then
+          else if (out_res == 2) then
             call cvd_write_GLL_points_data_glob(NSPEC_AB,NGLOB_AB,ibool,real(dat_glob), &
             nnode,fd)
           else
@@ -503,12 +503,12 @@ do i_t=1,t_nstep
         node_count = node_count + nnode
 
       enddo  ! i_proc = 1, nproc
-      if (node_count /=  slice_nnode(i_slice)) then
+      if (node_count /= slice_nnode(i_slice)) then
         write(*,'(/,a)')'Error: Number of total points are not consistent'
         stop
       endif
     enddo
-  else ! if (out_ncomp>1)
+  else ! if (out_ncomp > 1)
     node_count = 0
     do i_proc = 1, nproc
 
@@ -524,7 +524,7 @@ do i_t=1,t_nstep
       read(27) ibool
       close(27)
 
-      if (dat_topo==0) then
+      if (dat_topo == 0) then
         allocate(tmp_dat(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
         allocate(dat(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
         tmp_dat=0.0
@@ -544,18 +544,18 @@ do i_t=1,t_nstep
           tmp_dat=tmp_dat+real(dat)
           !write(*,*)inp_fname
         enddo
-        if (inp_ncomp==3 .and. out_ncomp==1) then
+        if (inp_ncomp == 3 .and. out_ncomp == 1) then
           tmp_dat=0.5*tmp_dat ! Equivalent to S-wave potential
         endif
 
         ! writes point coordinates and scalar value to mesh file
-        if (out_res==0) then
+        if (out_res == 0) then
           call cvd_write_corners_data(NSPEC_AB,NGLOB_AB,ibool,tmp_dat, &
           nnode,fd)
-        else if (out_res==1) then
+        else if (out_res == 1) then
           call cvd_write_hexa20_data(NSPEC_AB,NGLOB_AB,ibool,tmp_dat, &
           nnode,fd)
-        else if (out_res==2) then
+        else if (out_res == 2) then
           call cvd_write_GLL_points_data(NSPEC_AB,NGLOB_AB,ibool,tmp_dat, &
           nnode,fd)
         else
@@ -564,7 +564,7 @@ do i_t=1,t_nstep
         endif
         ! cleans up memory allocations
         deallocate(ibool,dat,tmp_dat)
-      else if (dat_topo==1) then
+      else if (dat_topo == 1) then
         allocate(tmp_dat_glob(NGLOB_AB))
         allocate(dat_glob(NGLOB_AB))
         tmp_dat=0.0
@@ -583,18 +583,18 @@ do i_t=1,t_nstep
           tmp_dat_glob=tmp_dat_glob+real(dat_glob)
           !write(*,*)inp_fname
         enddo
-        if (inp_ncomp==3 .and. out_ncomp==1) then
+        if (inp_ncomp == 3 .and. out_ncomp == 1) then
           tmp_dat_glob=0.5*tmp_dat_glob ! Equivalent to S-wave potential
         endif
 
         ! writes point coordinates and scalar value to mesh file
-        if (out_res==0) then
+        if (out_res == 0) then
           call cvd_write_corners_data_glob(NSPEC_AB,NGLOB_AB,ibool,tmp_dat_glob, &
           nnode,fd)
-        else if (out_res==1) then
+        else if (out_res == 1) then
           call cvd_write_hexa20_data_glob(NSPEC_AB,NGLOB_AB,ibool,tmp_dat_glob, &
           nnode,fd)
-        else if (out_res==2) then
+        else if (out_res == 2) then
           call cvd_write_GLL_points_data_glob(NSPEC_AB,NGLOB_AB,ibool,tmp_dat_glob, &
           nnode,fd)
         else
@@ -613,7 +613,7 @@ do i_t=1,t_nstep
 
     enddo  ! i_proc = 1, nproc
 
-    if (node_count /=  slice_nnode(i_slice)) then
+    if (node_count /= slice_nnode(i_slice)) then
       write(*,'(/,a)')'Error: Number of total points are not consistent'
       stop
     endif
@@ -621,7 +621,7 @@ do i_t=1,t_nstep
     !write(*,*) ' '
 
     call close_file(fd)
-  endif ! if (out_ncomp>1)
+  endif ! if (out_ncomp > 1)
 
   ! Display progress
   write(*,fmt=format_str3,advance='no')CR,' slice: ',i_slice,'/',out_nslice,', time step: ',i_t,'/',t_nstep

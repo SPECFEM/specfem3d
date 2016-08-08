@@ -31,10 +31,10 @@
       do jloop = j-NSIZE,j+NSIZE
         ival = iloop
         jval = jloop
-        if (ival<1) ival = 1
-        if (jval<1) jval = 1
-        if (ival>NGRID_NEW_HAUKSSON) ival = NGRID_NEW_HAUKSSON
-        if (jval>NGRID_NEW_HAUKSSON) jval = NGRID_NEW_HAUKSSON
+        if (ival < 1) ival = 1
+        if (jval < 1) jval = 1
+        if (ival > NGRID_NEW_HAUKSSON) ival = NGRID_NEW_HAUKSSON
+        if (jval > NGRID_NEW_HAUKSSON) jval = NGRID_NEW_HAUKSSON
         meanval = meanval + value_old(ivalue,ival,jval)
       enddo
       enddo

@@ -372,7 +372,7 @@
 
   ! write ONE binary file for all receivers (nrec_local) within one proc
   ! SU format, with 240-byte-header for each trace
-  if ((mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0 .or. it==NSTEP) .and. SU_FORMAT) &
+  if ((mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0 .or. it == NSTEP) .and. SU_FORMAT) &
     call write_output_SU()
 
   end subroutine write_seismograms

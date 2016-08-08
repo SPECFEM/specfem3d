@@ -32,7 +32,7 @@ program random_model
   allocate(adj(NSTEP))
 
   do myrank=0,NPROC-1
-    !!! calculate inner product in model space --- <F* F dm, dm>
+    !!! calculate inner product in model space --- < F* F dm, dm>
     ! processors name
     write(prname,'(a,i6.6,a)') 'proc',myrank,'_'
 
@@ -96,7 +96,7 @@ program random_model
     deallocate(rho,rho0,vp,vp0,vs,vs0,weights,krhop,kalpha,kbeta)
 
 
-    !!! calculate inner product in data space --- <F dm, F dm>
+    !!! calculate inner product in data space --- < F dm, F dm>
     write(procname,"(i4)") myrank
     filename=trim(adjustl(procname))//"_dx_SU"
     open(111,file="./OUTPUT_FILES/SEM/"//trim(adjustl(filename))//".adj",access='direct',recl=240+4*NSTEP,iostat = ios)
@@ -104,7 +104,7 @@ program random_model
     print *,'  ',trim(adjustl(filename))//".adj"
 
     irec=1
-    do while(ios==0)
+    do while(ios == 0)
        adj(:) = 0.0
 
        read(111,rec=irec,iostat=ios) r4head,adj

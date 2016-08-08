@@ -59,7 +59,7 @@
 !=======================================================================!
 !
 ! If you use this code for your own research, please send an email
-! to Jeroen Tromp <jtromp@gps.caltech.edu> for information, and cite:
+! to Jeroen Tromp < jtromp@gps.caltech.edu> for information, and cite:
 !
 ! @article{KoTr99,
 ! author={D. Komatitsch and J. Tromp},
@@ -404,7 +404,7 @@
   iproc_xi = iproc_xi_slice(myrank)
   iproc_eta = iproc_eta_slice(myrank)
 
-  FaultInThisProc = iproc_eta==0 !jpampuero
+  FaultInThisProc = iproc_eta == 0 !jpampuero
 
 ! define maximum size for message buffers
   NPOIN2DMAX_XY = max(NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX)
@@ -429,7 +429,7 @@
 
 ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-if (NSOURCES==0) then !jpampuero
+if (NSOURCES == 0) then !jpampuero
   allocate(hdur(1))
   allocate(utm_x_source(1))
   allocate(utm_y_source(1))
@@ -675,10 +675,10 @@ endif !jpampuero
       do i=1,NGLLX
 
         iglob=ibool(i,1,k,ispec)
-        NotInRuptureRegion = abs(zstore(iglob))>RuptureDepth &
-                        .or. abs(xstore(iglob))>RuptureHalfLength
-        InNucleationRegion = abs(xstore(iglob)-HypoX)<=NucleationHalfSizeX &
-                           .and. abs(zstore(iglob)-HypoZ)<=NucleationHalfSizeZ
+        NotInRuptureRegion = abs(zstore(iglob)) > RuptureDepth &
+                        .or. abs(xstore(iglob)) > RuptureHalfLength
+        InNucleationRegion = abs(xstore(iglob)-HypoX) <= NucleationHalfSizeX &
+                           .and. abs(zstore(iglob)-HypoZ) <= NucleationHalfSizeZ
 
         if ( NotInRuptureRegion ) then
           FaultMuS(i,k,ispec2D) = BarrierStrength
@@ -1496,7 +1496,7 @@ endif !jpampuero
 !          ta = sqrt( txa*txa + tza*tza )
 !          if ( ta>FaultStrength(i,k,ispec2D) ) then
 !            va = sqrt(FaultDVxFree**2+ FaultDVzFree**2)
-!            if ( va<VERYSMALLVAL ) then
+!            if ( va < VERYSMALLVAL ) then
 !              dirx = txa/ta
 !              dirz = tza/ta
 !            else
@@ -1740,7 +1740,7 @@ endif !jpampuero
         j=1
        !skip element if its center is not in rupture region
         iglob=ibool(3,j,3,ispec)
-        if (-zstore(iglob)>RuptureDepth .or. abs(xstore(iglob))>RuptureHalfLength) cycle
+        if (-zstore(iglob) > RuptureDepth .or. abs(xstore(iglob)) > RuptureHalfLength) cycle
 
         do k=1,NGLLZ-1,2 ! watch out: do not repeat a node
         do i=1,NGLLX-1,2 ! assuming NGLL=5

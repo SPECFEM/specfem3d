@@ -319,9 +319,9 @@
   ! checks material domains
   do ispec=1,nspec
     ! checks if domain is set
-    if ((ispec_is_acoustic(ispec) .eqv. .false.) &
-          .and. (ispec_is_elastic(ispec) .eqv. .false.) &
-          .and. (ispec_is_poroelastic(ispec) .eqv. .false.)) then
+    if ((ispec_is_acoustic(ispec) .eqv. .false.) .and. &
+        (ispec_is_elastic(ispec) .eqv. .false.) .and. &
+        (ispec_is_poroelastic(ispec) .eqv. .false.)) then
       print *,'Error material domain not assigned to element:',ispec
       print *,'acoustic: ',ispec_is_acoustic(ispec)
       print *,'elastic: ',ispec_is_elastic(ispec)
@@ -586,7 +586,7 @@
 
   case default
     ! user output
-    if (myrank==0) then
+    if (myrank == 0) then
       write(IMAIN,*) '     no external binary model used '
     endif
   end select

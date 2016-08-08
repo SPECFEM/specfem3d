@@ -491,11 +491,11 @@
   do i=1,6
     do j=i,6
       prod(p)=eps(i)*b_eps(j)
-      if (j>i) then
+      if (j > i) then
         prod(p)=prod(p)+eps(j)*b_eps(i)
-        if (j>3 .and. i<4) prod(p)=prod(p)*2
+        if (j > 3 .and. i < 4) prod(p)=prod(p)*2
       endif
-      if (i>3) prod(p)=prod(p)*4
+      if (i > 3) prod(p)=prod(p)*4
       p=p+1
     enddo
   enddo

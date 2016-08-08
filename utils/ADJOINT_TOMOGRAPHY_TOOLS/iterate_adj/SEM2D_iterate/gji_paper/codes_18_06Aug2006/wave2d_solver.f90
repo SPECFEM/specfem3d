@@ -46,9 +46,9 @@ contains
                 jacobian(i,j,ispec) = (z2(ispec)-z1(ispec))*(x2(ispec)-x1(ispec)) / 4.
 
                 ! set up local to global numbering
-                if ( (i==1).and.(ix>1) ) then
+                if ( (i == 1) .and. (ix > 1) ) then
                    ibool(i,j,ispec) = ibool(NGLLX,j,ispec-1)
-                else if ( (j==1).and.(iz>1) ) then
+                else if ( (j == 1) .and. (iz > 1) ) then
                    ibool(i,j,ispec) = ibool(i,NGLLZ,ispec-NEX)
                 else
                    iglob = iglob + 1
@@ -66,28 +66,28 @@ contains
 
           ! if boundary element
           ! 1,2,3,4 --> left, right, bottom, top
-          if (ix==1) then      ! left boundary
+          if (ix == 1) then      ! left boundary
              nspecb(1) = nspecb(1) + 1
              ibelm(1,nspecb(1)) = ispec
              do j = 1,NGLLZ
                 jacobianb(1,j,nspecb(1))= (z2(ispec)-z1(ispec))/2.
              enddo
           endif
-          if (ix==NEX) then    ! right boundary
+          if (ix == NEX) then    ! right boundary
              nspecb(2) = nspecb(2) + 1
              ibelm(2,nspecb(2)) = ispec
              do j = 1,NGLLZ
                 jacobianb(2,j,nspecb(2))= (z2(ispec)-z1(ispec))/2.
              enddo
           endif
-          if (iz==1) then      ! bottom boundary
+          if (iz == 1) then      ! bottom boundary
              nspecb(3) = nspecb(3) + 1
              ibelm(3,nspecb(3)) = ispec
              do i = 1,NGLLX
                 jacobianb(3,i,nspecb(3))= (x2(ispec)-x1(ispec))/2.
              enddo
           endif
-          if (iz==NEZ) then    ! top boundary
+          if (iz == NEZ) then    ! top boundary
              nspecb(4) = nspecb(4) + 1
              ibelm(4,nspecb(4)) = ispec
              do i = 1,NGLLX
@@ -132,7 +132,7 @@ contains
     do iglob = 1,NGLOB
        rho_global(iglob)   = DENSITY
        kappa_global(iglob) = INCOMPRESSIBILITY
-       if (ISURFACE==0) then
+       if (ISURFACE == 0) then
           mu_global(iglob) = RIGIDITY
        else
           ! KEY: this means that the S velocity will be the surface wave phase velocity (m/s)
@@ -239,8 +239,8 @@ contains
 
     !--------------------------------------
 
-    if (NCOMP==3) fm = '(9e12.3)'
-    if (NCOMP==1) fm = '(3e12.3)'
+    if (NCOMP == 3) fm = '(9e12.3)'
+    if (NCOMP == 1) fm = '(3e12.3)'
 
     ! test of input arguments
     if (solver_type /= 1 .and. solver_type /= 2 .and. solver_type /= 3) then
@@ -359,7 +359,7 @@ contains
           endif
        enddo
 
- if (NCOMP==1) then    ! SH, or surface waves only
+ if (NCOMP == 1) then    ! SH, or surface waves only
 
        !
        !   INTEGRATION OVER SPECTRAL ELEMENTS
@@ -552,7 +552,7 @@ contains
             enddo
           enddo
 
-else  ! NCOMP==3
+else  ! NCOMP == 3
 
        !
        !   INTEGRATION OVER SPECTRAL ELEMENTS
@@ -982,7 +982,7 @@ endif  ! NCOMP
        ! note that samp above is copied to stf_for
        ! we fill the record 'in reverse' so that the max arrival will coincide
        ! with the forward source time function pulse
-       else if (solver_type==2 .or. solver_type==3) then
+       else if (solver_type == 2 .or. solver_type == 3) then
 
          do isrc = 1,nsrc
            temp1 = 0; temp2 = 0. ; temp3 = 0.
@@ -1019,7 +1019,7 @@ endif  ! NCOMP
          enddo  ! isrc
 
 
-         if (solver_type==3) then
+         if (solver_type == 3) then
 
            ! CALCULATE SIX KERNELS -- notice the time integration
            do iglob = 1, NGLOB
@@ -1129,7 +1129,7 @@ endif  ! NCOMP
 
                 xtemp = x_lon(iglob) ; ztemp = z_lat(iglob)
 
-                if (ISURFACE==0) then
+                if (ISURFACE == 0) then
                    ! six kernels into two files
                    write(11,'(5e16.6)') sngl(xtemp), sngl(ztemp), sngl(rho_kernel(iglob)), &
                               sngl(mu_kernel(iglob)), sngl(kappa_kernel(iglob))

@@ -53,7 +53,7 @@ contains
     close(10)
 
     ! list input parameters:
-    write(*,*) '========= INPUTS FROM MEASUREMENT.PAR ============'
+    write(*,*) ' ==  ==  ==  == = INPUTS FROM MEASUREMENT.PAR ==  ==  ==  ==  ==  == '
     if (iker == IKER_WF) then
        write(*,*) 'Adjoint source type: Waveform '
     else if (iker == IKER_CC) then
@@ -274,10 +274,10 @@ contains
     ! corresponding index to wtr_use_unw -> i_right
     i_right = nf;  i_right_stop = 0
     do i = 1,nf
-       if (abs(csynw(i))<=abs(wtr_amp_syn) .and. i_right_stop==0 .and. i>i_pmax ) then
+       if (abs(csynw(i)) <= abs(wtr_amp_syn) .and. i_right_stop == 0 .and. i > i_pmax ) then
           i_right_stop = 1; i_right = i
        endif
-       if (abs(csynw(i))>=10.*abs(wtr_amp_syn) .and. i_right_stop==1 .and. i>i_pmax) then
+       if (abs(csynw(i)) >= 10.*abs(wtr_amp_syn) .and. i_right_stop == 1 .and. i > i_pmax) then
           i_right_stop = 0; i_right = i
        endif
     enddo
@@ -423,7 +423,7 @@ contains
     if ( (f_right-f_left) < df_fd) then
        use_window = .false.
        print *, 'rejecting window [',tstart, tend, ']'
-       print *, '  --> considering CC adjoint source for this window'
+       print *, '  -- > considering CC adjoint source for this window'
        if (DEBUG) print *, 'f_left,f_right = ', f_left, f_right
        return
     endif

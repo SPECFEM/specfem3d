@@ -455,7 +455,7 @@
       ! loops through elements
       do i = 1,num_elem_colors_elastic(icolor)
         ielem = ielem + 1
-        ispec = phase_ispec_inner_elastic(ielem,1) ! 1 <-- first phase, outer elements
+        ispec = phase_ispec_inner_elastic(ielem,1) ! 1 -- first phase, outer elements
         ! reorders elements
         icounter = icounter + 1
         temp_perm_global(ispec) = icounter
@@ -469,7 +469,7 @@
       ! loops through elements
       do i = 1,num_elem_colors_elastic(icolor)
         ielem = ielem + 1
-        ispec = phase_ispec_inner_elastic(ielem,2) ! 2 <-- second phase, inner elements
+        ispec = phase_ispec_inner_elastic(ielem,2) ! 2 -- second phase, inner elements
         ! reorders elements
         icounter = icounter + 1
         temp_perm_global(ispec) = icounter
@@ -488,7 +488,7 @@
       ! loops through elements
       do i = 1,num_elem_colors_acoustic(icolor)
         ielem = ielem + 1
-        ispec = phase_ispec_inner_acoustic(ielem,1) ! 1 <-- first phase, outer elements
+        ispec = phase_ispec_inner_acoustic(ielem,1) ! 1 -- first phase, outer elements
         ! reorders elements
         icounter = icounter + 1
         temp_perm_global(ispec) = icounter
@@ -502,7 +502,7 @@
       ! loops through elements
       do i = 1,num_elem_colors_acoustic(icolor)
         ielem = ielem + 1
-        ispec = phase_ispec_inner_acoustic(ielem,2) ! 2 <-- second phase, inner elements
+        ispec = phase_ispec_inner_acoustic(ielem,2) ! 2 -- second phase, inner elements
         ! reorders elements
         icounter = icounter + 1
         temp_perm_global(ispec) = icounter

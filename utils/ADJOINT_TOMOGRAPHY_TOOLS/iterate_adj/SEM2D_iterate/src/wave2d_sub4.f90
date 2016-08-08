@@ -405,7 +405,7 @@ contains
           ! for now, we do not allow perturbations for the amplitude measurement
           dlnA_pert = dlnA
 
-          if (0==1) then
+          if (0 == 1) then
              !print *
              print *, 'cross-correlation measurments:'
              print *, '       dT = ', tshift_xc
@@ -849,11 +849,11 @@ contains
 !!$
 !!$                   ! formulas for Fourier convention FFT --> e^(-iwt)
 !!$                   pwc_adj(i) = cmplx(0.,1./omega) * top_p(i) / bot_p(i)  ! (1/w)i = (-iw)/(-w^2) = -1/(iw)
-!!$                   qwc_adj(i) = cmplx(0.,omega) * pwc_adj(i)              ! d/dt <--> -iw
+!!$                   qwc_adj(i) = cmplx(0.,omega) * pwc_adj(i)              ! d/dt < --> -iw
 !!$
 !!$                   ! formulas for Fourier convention FFT --> e^(iwt)
 !!$                   !pwc_adj(i) = cmplx(0.,-1./omega) * top_p(i) / bot_p(i)  ! (-1/w)i = (iw)/(-w^2) = 1/(iw)
-!!$                   !qwc_adj(i) = cmplx(0.,-omega) * pwc_adj(i)              ! d/dt <--> -iw
+!!$                   !qwc_adj(i) = cmplx(0.,-omega) * pwc_adj(i)              ! d/dt < --> -iw
 !!$
 !!$                enddo
 !!$
@@ -948,27 +948,27 @@ contains
 !!$                if (IKER==4 .or. IKER==4) data_recon(i1,icomp,irec) = tseis_recon(i)
 !!$             endif
 
-             if (IKER==0) then
+             if (IKER == 0) then
                 adj_syn(i1,icomp,irec) = ( syn(i1,icomp,irec) -  data(i1,icomp,irec) ) * time_window(i)
 
-             else if (IKER==1) then
+             else if (IKER == 1) then
                 adj_syn(i1,icomp,irec) = ft_t(i) * time_window(i)
 
-             else if (IKER==2) then
+             else if (IKER == 2) then
                 adj_syn(i1,icomp,irec) = fa_t(i) * time_window(i)
 
-             else if (IKER==3) then
+             else if (IKER == 3) then
                 stop 'Multitaper measurements NOT an option'
                 !adj_syn(i1,icomp,irec) = fp(i) * time_window(i)
 
-             else if (IKER==4) then
+             else if (IKER == 4) then
                 stop 'Multitaper measurements NOT an option'
                 !adj_syn(i1,icomp,irec) = fq(i) * time_window(i)
 
-             else if (IKER==5) then
+             else if (IKER == 5) then
                 adj_syn(i1,icomp,irec) = ft_bar_t(i) * time_window(i)
 
-             else if (IKER==6) then
+             else if (IKER == 6) then
                 adj_syn(i1,icomp,irec) = fa_bar_t(i) * time_window(i)
              endif
 
@@ -1000,14 +1000,14 @@ contains
 
          ! NOTE THAT THE FACTOR OF 0.5 IS NOT INCLUDED HERE
 
-          if (IKER==0) then
+          if (IKER == 0) then
              ! crude integration of the waveform difference
              chi_data(ievent,irec,icomp,1) = DT*sum( adj_syn(:,icomp,irec)**2 ) / cov_data(imeasure)
 
-          else if (IKER==1) then
+          else if (IKER == 1) then
              chi_data(ievent,irec,icomp,1) = (tshift_xc_pert )**2 / cov_data(imeasure)
 
-          else if (IKER==2) then
+          else if (IKER == 2) then
              chi_data(ievent,irec,icomp,1) = (dlnA_pert)**2 / cov_data(imeasure)
 
 !!$          else if (IKER==3) then
@@ -1298,7 +1298,7 @@ contains
 !!$
 !!$      !-------------------------
 !!$
-!!$      if (n <= 0.or.nev <= 0) return
+!!$      if (n <= 0 .or. nev <= 0) return
 !!$      umeps=1.-epsi
 !!$      do 5 i=1,nev
 !!$    5 ev(i)=-1.
@@ -1389,7 +1389,7 @@ contains
 !!$   30 del=1./bn
 !!$      if (abs(del) <= epsi1) del=sign(epsi1,del)
 !!$      elam=elam-del
-!!$      if (elam >= u.or.elam <= el) goto 5
+!!$      if (elam >= u .or. elam <= el) goto 5
 !!$      goto 10
 !!$
 !!$  end subroutine root

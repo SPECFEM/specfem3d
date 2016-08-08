@@ -320,7 +320,7 @@ subroutine gravity_timeseries()
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: Rg,dotP
   integer :: istat, it_grav
 
-  if (mod(it,ntimgap)==0) then
+  if (mod(it,ntimgap) == 0) then
     it_grav = nint(dble(it)/dble(ntimgap))
     allocate(Rg(NGLOB_AB))
     allocate(dotP(NGLOB_AB))
@@ -371,7 +371,7 @@ subroutine gravity_output()
     close(IOUT)
   enddo
 
-  if (myrank==0) then !left-over stations
+  if (myrank == 0) then ! left-over stations
     do istat=NPROC*nstat_local,nstat
       write(sisname,"(a,I0,a)") trim(OUTPUT_FILES)//'/stat', istat, '.grav'
       open(unit=IOUT,file=sisname,status='replace')

@@ -730,7 +730,7 @@
 !  perm_layer(1)=first_layer_aniso
 !  perm_layer(2)=last_layer_aniso
 !   do i = ilast_region,ifirst_region,-1
-!    if (i/=first_layer_aniso .and. i/=last_layer_aniso) then
+!    if (i /= first_layer_aniso .and. i /= last_layer_aniso) then
 !       perm_layer(cpt) = i
 !      cpt=cpt+1
 !    endif
@@ -800,10 +800,10 @@
   rmin = rmins(ilayer)
   rmax = rmaxs(ilayer)
 
-  if (iregion_code == IREGION_CRUST_MANTLE .and. ilayer_loop==3) then
+  if (iregion_code == IREGION_CRUST_MANTLE .and. ilayer_loop == 3) then
     FIRST_ELT_NON_ANISO = ispec+1
   endif
-  if (iregion_code == IREGION_CRUST_MANTLE .and. ilayer_loop==(ilast_region-nb_layer_above_aniso+1)) then
+  if (iregion_code == IREGION_CRUST_MANTLE .and. ilayer_loop == (ilast_region-nb_layer_above_aniso+1)) then
     FIRST_ELT_ABOVE_ANISO = ispec+1
   endif
 
@@ -935,7 +935,7 @@
         iz_elem = ner(ilayer)
         step_mult = 2
       else
-        if (iregion_code==IREGION_OUTER_CORE .and. ilayer==ilast_region .and. (CUT_SUPERBRICK_XI .or. CUT_SUPERBRICK_ETA)) then
+        if (iregion_code == IREGION_OUTER_CORE .and. ilayer == ilast_region .and. (CUT_SUPERBRICK_XI .or. CUT_SUPERBRICK_ETA)) then
           nspec_sb = NSPEC_DOUBLING_BASICBRICK
           step_mult = 1
         else
@@ -955,20 +955,20 @@
           if (step_mult == 1) then
 ! for xi direction
             if (.not. CUT_SUPERBRICK_XI) then
-              if (mod((ix_elem-1),(2*step_mult*ratio_sampling_array(ilayer)))==0) then
+              if (mod((ix_elem-1),(2*step_mult*ratio_sampling_array(ilayer))) == 0) then
                 case_xi = 1
               else
                 case_xi = 2
               endif
             else
               if (offset_proc_xi == 0) then
-                if (mod((ix_elem-1),(2*step_mult*ratio_sampling_array(ilayer)))==0) then
+                if (mod((ix_elem-1),(2*step_mult*ratio_sampling_array(ilayer))) == 0) then
                   case_xi = 1
                 else
                   case_xi = 2
                 endif
               else
-                if (mod((ix_elem-1),(2*step_mult*ratio_sampling_array(ilayer)))/=0) then
+                if (mod((ix_elem-1),(2*step_mult*ratio_sampling_array(ilayer))) /= 0) then
                   case_xi = 1
                 else
                   case_xi = 2
@@ -977,20 +977,20 @@
             endif
 ! for eta direction
             if (.not. CUT_SUPERBRICK_ETA) then
-              if (mod((iy_elem-1),(2*step_mult*ratio_sampling_array(ilayer)))==0) then
+              if (mod((iy_elem-1),(2*step_mult*ratio_sampling_array(ilayer))) == 0) then
                 case_eta = 1
               else
                 case_eta = 2
               endif
             else
               if (offset_proc_eta == 0) then
-                if (mod((iy_elem-1),(2*step_mult*ratio_sampling_array(ilayer)))==0) then
+                if (mod((iy_elem-1),(2*step_mult*ratio_sampling_array(ilayer))) == 0) then
                   case_eta = 1
                 else
                   case_eta = 2
                 endif
               else
-                if (mod((iy_elem-1),(2*step_mult*ratio_sampling_array(ilayer)))/=0) then
+                if (mod((iy_elem-1),(2*step_mult*ratio_sampling_array(ilayer))) /= 0) then
                   case_eta = 1
                 else
                   case_eta = 2
@@ -1062,10 +1062,10 @@
       if (iproc_eta == NPROC_ETA-1) iboun(4,ispec)= iboun_sb(ispec_superbrick,4)
   endif
 ! zmax only
-  if (ilayer==ifirst_region) then
+  if (ilayer == ifirst_region) then
     iboun(6,ispec)= iboun_sb(ispec_superbrick,6)
   endif
-  if (ilayer==ilast_region .and. iz_elem==1) then
+  if (ilayer == ilast_region .and. iz_elem == 1) then
     iboun(5,ispec)= iboun_sb(ispec_superbrick,5)
   endif
 
@@ -1203,8 +1203,8 @@
 ! only two active central cubes, the four others are fictitious
 
 ! determine where we cut the central cube to share it between CHUNK_AB & CHUNK_AB_ANTIPODE
-! in the case of mod(NPROC_XI,2)/=0, the cut is asymetric and the bigger part is for CHUNK_AB
-  if (mod(NPROC_XI,2)/=0) then
+! in the case of mod(NPROC_XI,2) /= 0, the cut is asymetric and the bigger part is for CHUNK_AB
+  if (mod(NPROC_XI,2) /= 0) then
     if (ichunk == CHUNK_AB) then
       nz_inf_limit = ((nz_central_cube*2)/NPROC_XI)*floor(NPROC_XI/2.d0)
     else if (ichunk == CHUNK_AB_ANTIPODE) then

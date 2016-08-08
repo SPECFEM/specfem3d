@@ -197,8 +197,8 @@ program wave2d
   ! idat=1 means we run simulations for both data and synthetics (two models)
   idat = 0
   if (IKER <= 4) idat = 1
-  if (ISRC_SPACE==1) FINITE_SOURCE = 0
-  if (ISRC_SPACE/=1) FINITE_SOURCE = 1
+  if (ISRC_SPACE == 1) FINITE_SOURCE = 0
+  if (ISRC_SPACE /= 1) FINITE_SOURCE = 1
 
 !--------------------------------------
 ! load socal coast and shelf points
@@ -241,7 +241,7 @@ program wave2d
   ! MAX source perturbations for location (lat-lon) and origin time
   src_pert_dist = 5000.0      ! source spatial perturbation (m)
   src_pert_time = -1.0        ! source temporal perturbation (s)
-                              ! dt0 = dt0_dat - dt0_syn (<0 for delayed synthetics)
+                              ! dt0 = dt0_dat - dt0_syn ( < 0 for delayed synthetics)
   origin_time_dat = tshift    ! data are unperturbed
 
   !src_pert_dist = 0.
@@ -318,7 +318,7 @@ program wave2d
   enddo
   close(15)
 
-  if (0==1) then
+  if (0 == 1) then
 
     ! corner points for each element, and centerpoint (in km)
     open(unit=15,file='elements.dat',status='unknown')
@@ -455,7 +455,7 @@ program wave2d
 
      c_glob_syn(:) = c0       ! c-maps for synthetics
 
-  else if (IMODEL==2) then   ! checkerboard
+  else if (IMODEL == 2) then   ! checkerboard
 
      c0 = 3500.    ! reference phase velocity (m/s) (should be obtained based on hdur)
      !Nfac = 3      ! scalelength of map = N * (wavelength of surface waves for hdur)
@@ -472,7 +472,7 @@ program wave2d
 
      c_glob_syn(:) = c0       ! c-maps for synthetics
 
-  else if (IMODEL==3) then   ! read c-map for synthetics and data for a 'middle' iteration
+  else if (IMODEL == 3) then   ! read c-map for synthetics and data for a 'middle' iteration
 
      ! read in phase velocity map for data
      open(unit=16,file=trim(model_dir)//'socal_vel_dat.dat', status='unknown')
@@ -699,7 +699,7 @@ program wave2d
 
   if (PERT_SOURCE == 1) then  ! source perturbations
 
-    if (1==1) then   ! read in perturbed events from another file
+    if (1 == 1) then   ! read in perturbed events from another file
 
       open(19,file='/home/store2/carltape/'//trim(out_dir3)//'run_2550/events_xy.dat',status='unknown')
       do ievent = 1,25
@@ -814,7 +814,7 @@ program wave2d
 
 ! get the lat-lon of the TARGET RECEIVERS
 
-if (IREC_SPACE==1) then  ! individual receivers
+if (IREC_SPACE == 1) then  ! individual receivers
 
   ! target receiver
   !x_rec0(1) = 3 * LENGTH/4     ; z_rec0(1) = HEIGHT/2
@@ -833,7 +833,7 @@ if (IREC_SPACE==1) then  ! individual receivers
 
   nrec = 3
 
-else if (IREC_SPACE==2) then  ! actual station locations
+else if (IREC_SPACE == 2) then  ! actual station locations
 
   ! read in (target) receivers
   recfile = trim(in_dir)//'STATION_149_full'
@@ -845,7 +845,7 @@ else if (IREC_SPACE==2) then  ! actual station locations
   read(88,*) (x_rec_lon0(i),z_rec_lat0(i),i=1,nrec)
   close(88)
 
-else if (IREC_SPACE==4) then ! 'regular' mesh of receivers
+else if (IREC_SPACE == 4) then ! 'regular' mesh of receivers
 
    ! calculate mesh spacing
    dx = LENGTH/NMESH_REC
@@ -1189,11 +1189,11 @@ itest = 0
 !!$  endif
 
   irun = irun0 + istep
-  print *,'=============================================================='
+  print *,' ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == '
   print *,'  istep, imod, irun : ', istep, imod, irun
-  if (INV_STRUCT==1) print *, '  inverting for structure parameters'
-  if (INV_SOURCE==1) print *, '  inverting for source parameters'
-  print *,'=============================================================='
+  if (INV_STRUCT == 1) print *, '  inverting for structure parameters'
+  if (INV_SOURCE == 1) print *, '  inverting for source parameters'
+  print *,' ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == '
 
 !enddo
 !stop 'itesting'
@@ -1210,14 +1210,14 @@ itest = 0
 
   ! use the reference model or test model (source and structure)
   ! structure is the top portion; source is the bottom portion
-  if (itest==0) then
+  if (itest == 0) then
 
      c_glob_syn(:) = m0_vec(1:nmod_str)
      m_src(:)      = m0_vec(nmod_str+1:nmod)
      !m_vel(:) = m0_vel(:)
      !m_src(:) = m0_src(:)
 
-  else if (itest==1) then
+  else if (itest == 1) then
      c_glob_syn(:) = mt_vec(1:nmod_str)
      m_src(:)      = mt_vec(nmod_str+1:nmod)
 
@@ -1272,7 +1272,7 @@ itest = 0
      x_src_lon0(:) = 0.  ; z_src_lat0(:) = 0.
      x_src0(:) = 0.      ; z_src0(:) = 0.
 
-     if (ISRC_SPACE==1) then  ! point source(s)
+     if (ISRC_SPACE == 1) then  ! point source(s)
 
         !x_src0(1) = LENGTH/4      ; z_src0(1) = HEIGHT/2
         !x_src_lon0(1) = -118.5370     ; z_src_lat0(1) = 34.2130   ! Northridge
@@ -1288,7 +1288,7 @@ itest = 0
         z_src_lat0(1) = z_eve_lat(ievent)
         nsrc = 1
 
-     else if (ISRC_SPACE==2) then  ! finite source segment
+     else if (ISRC_SPACE == 2) then  ! finite source segment
 
         ! specify the target starting point of the fault, the azimuth, and the length
         x_src_lon_i = -119.    ;  z_src_lat_i = 33.   ;   flen   = 100.0d+03  ! short fault
@@ -1316,19 +1316,19 @@ itest = 0
         ! get target fault points in lat-lon
         call mesh_geo(MAX_SR,x_src_lon0,z_src_lat0,x_src0,z_src0,UTM_PROJECTION_ZONE,IUTM2LONGLAT)
 
-     else if (ISRC_SPACE==3) then  ! California continental shelf (OMS)
+     else if (ISRC_SPACE == 3) then  ! California continental shelf (OMS)
 
         x_src_lon0(1:nshelf) = shelf_lon(1:nshelf)
         z_src_lat0(1:nshelf) = shelf_lat(1:nshelf)
         nsrc = nshelf
 
-     else if (ISRC_SPACE==4) then  ! California coastline (OMS)
+     else if (ISRC_SPACE == 4) then  ! California coastline (OMS)
 
         x_src_lon0(1:ncoast) = coast_lon(1:ncoast)
         z_src_lat0(1:ncoast) = coast_lat(1:ncoast)
         nsrc = ncoast
 
-     else if (ISRC_SPACE==5) then  ! finite circular region
+     else if (ISRC_SPACE == 5) then  ! finite circular region
 
         ! lat-lon of the center point
         xcen_lon = -119.0
@@ -1572,9 +1572,9 @@ itest = 0
 ! source time function FOR DATA AND SYNTHETICS
 
   ! source magnitude (same for data and synthetics)
-  if (NCOMP==3) then
+  if (NCOMP == 3) then
      f0(1) = 0.0    ;  f0(2) = FNORM    ; f0(3) = 0.0
-  else if (NCOMP==1) then
+  else if (NCOMP == 1) then
      f0(1) = FNORM
   else
      stop 'NCOMP must be 1 or 3'
@@ -1682,7 +1682,7 @@ itest = 0
 
   ! plot phase velocity map with source-receiver geometry and source time function
   iopt = 3 + idat
-  if (ISURFACE==1) then
+  if (ISURFACE == 1) then
      !filename1 = 'get_model.csh'
      !filename2 = trim(script_dir)//'plot_model.pl'
      !open(19,file=filename1,status='unknown')
@@ -1903,7 +1903,7 @@ itest = 0
   ! we always evaluate the kernels for the present model
   ! we only evaluate the kernel for the test model if itest==1 and POLY_ORDER==3
 
-  if (itest==0 .or. POLY_ORDER==3) then
+  if (itest == 0 .or. POLY_ORDER == 3) then
     print *
     print *, 'compute the kernel via adjoint wavefield interaction'
     print *
@@ -2030,7 +2030,7 @@ itest = 0
   ! a test model or if the CG polynomial is a cubic function
   ! DO NOT smooth kernel for test model if quadratic polynomial is being used
 
-  if (itest==0 .or. POLY_ORDER==3) then
+  if (itest == 0 .or. POLY_ORDER == 3) then
 
      print *, ' Computing the gradient of the misfit function for a given model'
      gradient(:) = 0.
@@ -2131,7 +2131,7 @@ itest = 0
         enddo
 
         ! write smooth-related functions to file
-        if (0==1) then
+        if (0 == 1) then
           file_smooth = 'fun_smooth.dat'
           open(unit=19,file=trim(out_dir1)//file_smooth,status='unknown')
           do iglob = 1,NGLOB
@@ -2155,7 +2155,7 @@ itest = 0
 
      ! KEY: scaling parameter for structure for (joint) inversions
      mfac = 1.0
-     if (istep==0) then
+     if (istep == 0) then
         if (INV_SOURCE == 1 .and. INV_STRUCT == 1) then
            ! scale structure parameters according to source
            m_scale_str = mfac * sqrt( sum(source_gradient(:)*source_gradient(:)) )  &
@@ -2187,7 +2187,7 @@ itest = 0
      if (INV_SOURCE == 1) gradient(nmod_str+1:nmod) = source_gradient(:)
 
      ! write gradient vector to file
-     if (0==1) then
+     if (0 == 1) then
        open(unit=19,file=trim(out_dir1)//'gradient_vec.dat',status='unknown')
        do i = 1,nmod
          write(19,'(1e20.10)') gradient(i)
@@ -2195,14 +2195,14 @@ itest = 0
        close(19)
      endif
 
-  endif  ! itest==0 .or. POLY_ORDER==3
+  endif  ! itest == 0 .or. POLY_ORDER == 3
 
   !====================
   ! update search direction and model
 
   print *, ' Entering CG algorithm to compute new model or test model'
 
-  if (itest==0) then      ! if the present kernel is for a REAL model
+  if (itest == 0) then      ! if the present kernel is for a REAL model
 
      chi_k_val = chi_val
      gk(:) = gradient(:)
@@ -2284,7 +2284,7 @@ itest = 0
      g0(:) = gk(:)
      p0(:) = pk(:)
 
-  else if (itest==1) then  ! if present kernel is for a test model
+  else if (itest == 1) then  ! if present kernel is for a test model
 
      chi_t_val = chi_val
 
@@ -2396,14 +2396,14 @@ itest = 0
   ! write updated/test model to file (source + structure)
 
   ! write CG vectors to file
-  if (1==1) then
+  if (1 == 1) then
     open(unit=19,file=trim(out_dir1)//'cg_model_vectors.dat',status='unknown')
     do i = 1,nmod
       write(19,'(4e16.6)') m0(i), mt(i),  m0_vec(i), mt_vec(i)
     enddo
     close(19)
   endif
-  if (0==1) then
+  if (0 == 1) then
     open(unit=19,file=trim(out_dir1)//'cg_grad_vectors.dat',status='unknown')
     do i = 1,nmod
       write(19,'(5e16.6)') g0(i), gt(i), gk(i), p0(i), pk(i)
@@ -2413,7 +2413,7 @@ itest = 0
 
   ! exit program if model values are unrealistic
   ! NOTE: model parameters must be scaled appropriately
-  if (itest==1) then
+  if (itest == 1) then
     if ( minval(mt) < -10. .or. maxval(mt) > 10. ) stop 'test model is too extreme'
   else
     if ( minval(m0) < -10. .or. maxval(m0) > 10. ) stop 'updated model is too extreme'

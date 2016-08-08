@@ -445,8 +445,8 @@
              vsh=vsh*(1.0d0+dvs)
              rho=rho*(1.0d0+drho)
 ! use Lebedev model as background and add vp & vs perturbation from Zhao 1994 model
-             if (theta>=(PI/2.d0 - LAT_MAX*DEGREES_TO_RADIANS) .and. theta<=(PI/2.d0 - LAT_MIN*DEGREES_TO_RADIANS) &
-                  .and. phi>=LON_MIN*DEGREES_TO_RADIANS .and. phi<=LON_MAX*DEGREES_TO_RADIANS) then
+             if (theta >= (PI/2.d0 - LAT_MAX*DEGREES_TO_RADIANS) .and. theta <= (PI/2.d0 - LAT_MIN*DEGREES_TO_RADIANS) &
+                  .and. phi >= LON_MIN*DEGREES_TO_RADIANS .and. phi <= LON_MAX*DEGREES_TO_RADIANS) then
                 if (r_prem > (R_EARTH - DEP_MAX*1000.d0)/R_EARTH) then
                    call iso3d_dpzhao_model(r,theta,phi,vp,vs,dvp,dvs,rho,found_crust,JP3DM_V)
                    vpv=vpv*(1.0d0+dvp)
@@ -471,8 +471,8 @@
              dvs = ZERO
              dvp = ZERO
              drho = ZERO
-             if (theta>=(PI/2.d0 - LAT_MAX*DEGREES_TO_RADIANS) .and. theta<=(PI/2.d0 - LAT_MIN*DEGREES_TO_RADIANS) &
-                  .and. phi>=LON_MIN*DEGREES_TO_RADIANS .and. phi<=LON_MAX*DEGREES_TO_RADIANS) then
+             if (theta >= (PI/2.d0 - LAT_MAX*DEGREES_TO_RADIANS) .and. theta <= (PI/2.d0 - LAT_MIN*DEGREES_TO_RADIANS) &
+                  .and. phi >= LON_MIN*DEGREES_TO_RADIANS .and. phi <= LON_MAX*DEGREES_TO_RADIANS) then
                 if (r_prem > (R_EARTH - DEP_MAX*1000.d0)/R_EARTH) then
                    call iso3d_dpzhao_model(r,theta,phi,vp,vs,dvp,dvs,rho,found_crust,JP3DM_V)
                    vpv=vpv*(1.0d0+dvp)
@@ -546,8 +546,8 @@
              vsh=vsh*(1.0d0+dvs)
              rho=rho*(1.0d0+drho)
 ! use Lebedev's model as background and add vp & vs perturbation from Zhao's 1994 model
-             if (theta>=(PI/2.d0 - LAT_MAX*DEGREES_TO_RADIANS) .and. theta<=(PI/2.d0 - LAT_MIN*DEGREES_TO_RADIANS) &
-                  .and. phi>=LON_MIN*DEGREES_TO_RADIANS .and. phi<=LON_MAX*DEGREES_TO_RADIANS) then
+             if (theta >= (PI/2.d0 - LAT_MAX*DEGREES_TO_RADIANS) .and. theta <= (PI/2.d0 - LAT_MIN*DEGREES_TO_RADIANS) &
+                  .and. phi >= LON_MIN*DEGREES_TO_RADIANS .and. phi <= LON_MAX*DEGREES_TO_RADIANS) then
                 call iso3d_dpzhao_model(r_moho,theta,phi,vp,vs,dvp,dvs,rho,found_crust,JP3DM_V)
                 vpv=vpv*(1.0d0+dvp)
                 vph=vph*(1.0d0+dvp)
@@ -570,8 +570,8 @@
              dvs = ZERO
              dvp = ZERO
              drho = ZERO
-             if (theta>=(PI/2.d0 - LAT_MAX*DEGREES_TO_RADIANS) .and. theta<=(PI/2.d0 - LAT_MIN*DEGREES_TO_RADIANS) &
-                  .and. phi>=LON_MIN*DEGREES_TO_RADIANS .and. phi<=LON_MAX*DEGREES_TO_RADIANS) then
+             if (theta >= (PI/2.d0 - LAT_MAX*DEGREES_TO_RADIANS) .and. theta <= (PI/2.d0 - LAT_MIN*DEGREES_TO_RADIANS) &
+                  .and. phi >= LON_MIN*DEGREES_TO_RADIANS .and. phi <= LON_MAX*DEGREES_TO_RADIANS) then
                 call iso3d_dpzhao_model(r_moho,theta,phi,vp,vs,dvp,dvs,rho,found_crust,JP3DM_V)
                 vpv=vpv*(1.0d0+dvp)
                 vph=vph*(1.0d0+dvp)
@@ -680,8 +680,8 @@
              call reduce(theta,phi)
 
              if (THREE_D_MODEL == THREE_D_MODEL_SEA99_JP3D .or. THREE_D_MODEL == THREE_D_MODEL_JP3D) then
-                if (theta>=(PI/2.d0 - LAT_MAX*DEGREES_TO_RADIANS) .and. theta<=(PI/2.d0 - LAT_MIN*DEGREES_TO_RADIANS) &
-                     .and. phi>=LON_MIN*DEGREES_TO_RADIANS .and. phi<=LON_MAX*DEGREES_TO_RADIANS) then
+                if (theta >= (PI/2.d0 - LAT_MAX*DEGREES_TO_RADIANS) .and. theta <= (PI/2.d0 - LAT_MIN*DEGREES_TO_RADIANS) &
+                     .and. phi >= LON_MIN*DEGREES_TO_RADIANS .and. phi <= LON_MAX*DEGREES_TO_RADIANS) then
                    if (r > (R_EARTH - DEP_MAX*1000.d0)/R_EARTH) then
                       call iso3d_dpzhao_model(r,theta,phi,vpc,vsc,dvp,dvs,rhoc,found_crust,JP3DM_V)
                       if (found_crust) then
@@ -718,7 +718,7 @@
                 else
                    lat=(PI/2.0d0-theta)*180.0d0/PI
                    lon=phi*180.0d0/PI
-                   if (lon>180.0d0) lon=lon-360.0d0
+                   if (lon > 180.0d0) lon=lon-360.0d0
                    call crustal_model(lat,lon,r,vpc,vsc,rhoc,moho,found_crust,CM_V)
                    if (found_crust) then
                       vpv=vpc
@@ -755,7 +755,7 @@
              else
                 lat=(PI/2.0d0-theta)*180.0d0/PI
                 lon=phi*180.0d0/PI
-                if (lon>180.0d0) lon=lon-360.0d0
+                if (lon > 180.0d0) lon=lon-360.0d0
                 call crustal_model(lat,lon,r,vpc,vsc,rhoc,moho,found_crust,CM_V)
                 if (found_crust) then
                    vpv=vpc

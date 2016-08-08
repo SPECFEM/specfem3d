@@ -107,30 +107,30 @@ contains
                 enddo
              enddo
 
-             if (connectivity >=  ncommonnodes) then
+             if (connectivity >= ncommonnodes) then
 
                 is_neighbour = .false.
 
                 do m = 0, xadj(nodes_elmnts(k+j*nsize))
-                   if (.not.is_neighbour) then
+                   if (.not. is_neighbour) then
                       if (adjncy(nodes_elmnts(k+j*nsize)*sup_neighbour+m) == nodes_elmnts(l+j*nsize)) then
                          is_neighbour = .true.
                       endif
                    endif
                 enddo
-                if (.not.is_neighbour) then
+                if (.not. is_neighbour) then
                    adjncy(nodes_elmnts(k+j*nsize)*sup_neighbour &
                           + xadj(nodes_elmnts(k+j*nsize))) = nodes_elmnts(l+j*nsize)
 
                    xadj(nodes_elmnts(k+j*nsize)) = xadj(nodes_elmnts(k+j*nsize)) + 1
-                   if (xadj(nodes_elmnts(k+j*nsize))>sup_neighbour) &
+                   if (xadj(nodes_elmnts(k+j*nsize)) > sup_neighbour) &
                     stop 'ERROR: too many neighbours per element, error in the mesh or in the code.'
 
                    adjncy(nodes_elmnts(l+j*nsize)*sup_neighbour &
                           + xadj(nodes_elmnts(l+j*nsize))) = nodes_elmnts(k+j*nsize)
 
                    xadj(nodes_elmnts(l+j*nsize)) = xadj(nodes_elmnts(l+j*nsize)) + 1
-                   if (xadj(nodes_elmnts(l+j*nsize))>sup_neighbour) &
+                   if (xadj(nodes_elmnts(l+j*nsize)) > sup_neighbour) &
                     stop 'ERROR: too many neighbours per element, error in the mesh or in the code.'
                 endif
              endif
@@ -576,7 +576,7 @@ contains
     ! note: assumes that element indices in ibelm_* arrays are in the range from 1 to nspec
     !          (this is assigned by CUBIT, if this changes the following indexing must be changed as well)
     !          while glob2loc_elmnts(.) is shifted from 0 to nspec-1  thus
-    !          we need to have the arg of glob2loc_elmnts start at 0 ==> glob2loc_nodes(ibelm_** -1)
+    !          we need to have the arg of glob2loc_elmnts start at 0, and thus we use glob2loc_nodes(ibelm_** -1)
     do i=1,nspec2D_xmin
        if (part(ibelm_xmin(i)) == iproc) then
           do inode = 1,NGNOD2D
@@ -1003,7 +1003,7 @@ contains
     ! note: assumes that element indices in ibelm_* arrays are in the range from 1 to nspec
     !          (this is assigned by CUBIT, if this changes the following indexing must be changed as well)
     !          while glob2loc_elmnts(.) is shifted from 0 to nspec-1  thus
-    !          we need to have the arg of glob2loc_elmnts start at 0 ==> glob2loc_nodes(ibelm_** -1)
+    !          we need to have the arg of glob2loc_elmnts start at 0, and thus we use glob2loc_nodes(ibelm_** -1)
 
     ! optional moho
     do i=1,nspec2D_moho
@@ -1263,7 +1263,7 @@ contains
 
     implicit none
 
-    ! number of (spectral) elements  ( <-> nspec )
+    ! number of spectral elements
     integer, intent(in) :: nspec
 
     ! number of (global) nodes, number or processes

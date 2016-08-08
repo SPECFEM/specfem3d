@@ -142,9 +142,9 @@ contains
                 jacobian(i,j,ispec) = (z2(ispec)-z1(ispec))*(x2(ispec)-x1(ispec)) / 4.
 
                 ! set up local to global numbering
-                if ( (i==1).and.(ix>1) ) then
+                if ( (i == 1) .and. (ix > 1) ) then
                    ibool(i,j,ispec) = ibool(NGLLX,j,ispec-1)
-                else if ( (j==1).and.(iz>1) ) then
+                else if ( (j == 1) .and. (iz > 1) ) then
                    ibool(i,j,ispec) = ibool(i,NGLLZ,ispec-NEX)
                 else
                    iglob = iglob + 1
@@ -162,28 +162,28 @@ contains
 
           ! if boundary element
           ! 1,2,3,4 --> left, right, bottom, top
-          if (ix==1) then      ! left boundary
+          if (ix == 1) then      ! left boundary
              nspecb(1) = nspecb(1) + 1
              ibelm(1,nspecb(1)) = ispec
              do j = 1,NGLLZ
                 jacobianb(1,j,nspecb(1))= (z2(ispec)-z1(ispec))/2.0
              enddo
           endif
-          if (ix==NEX) then    ! right boundary
+          if (ix == NEX) then    ! right boundary
              nspecb(2) = nspecb(2) + 1
              ibelm(2,nspecb(2)) = ispec
              do j = 1,NGLLZ
                 jacobianb(2,j,nspecb(2))= (z2(ispec)-z1(ispec))/2.0
              enddo
           endif
-          if (iz==1) then      ! bottom boundary
+          if (iz == 1) then      ! bottom boundary
              nspecb(3) = nspecb(3) + 1
              ibelm(3,nspecb(3)) = ispec
              do i = 1,NGLLX
                 jacobianb(3,i,nspecb(3))= (x2(ispec)-x1(ispec))/2.0
              enddo
           endif
-          if (iz==NEZ) then    ! top boundary
+          if (iz == NEZ) then    ! top boundary
              nspecb(4) = nspecb(4) + 1
              ibelm(4,nspecb(4)) = ispec
              do i = 1,NGLLX
@@ -319,8 +319,8 @@ contains
 
     print *
     print *, 'setting model properties at a local scale'
-    if (iref==1) print *, ' --> reference model (synthetics), IMODEL_SYN = ', IMODEL_SYN
-    if (iref==0) print *, ' --> target model (data), IMODEL_DAT = ', IMODEL_DAT
+    if (iref == 1) print *, ' -- > reference model (synthetics), IMODEL_SYN = ', IMODEL_SYN
+    if (iref == 0) print *, ' -- > target model (data), IMODEL_DAT = ', IMODEL_DAT
     if (IMODEL_SYN > 3) stop 'IMODEL_SYN must be 0,1,2,3'
     if (IMODEL_DAT > 3) stop 'IMODEL_DAT must be 0,1,2,3'
 
@@ -333,7 +333,7 @@ contains
              iglob = ibool(i,j,ispec)
 
              ! structure for reference model (synthetics)
-             if (iref==1) then
+             if (iref == 1) then
 
                 if (IMODEL_SYN == 0) then      ! homogeneous model
 
@@ -347,7 +347,7 @@ contains
 
                 else if (IMODEL_SYN == 1) then  ! 1D model (body waves)
 
-                   if (ISURFACE==0) then
+                   if (ISURFACE == 0) then
                       call make_1D_model(i,j,ispec,ktemp,mtemp,rtemp)       ! 1D model
                       kappa_syn(i,j,ispec) = ktemp
                       mu_syn(i,j,ispec)    = mtemp
@@ -357,10 +357,10 @@ contains
                    endif
 
                 else if (IMODEL_SYN == 2) then  ! checkerboard model
-                   if (ISURFACE==0) then
+                   if (ISURFACE == 0) then
                       stop 'check model in set_model_property.f90'
 
-                   else if (ISURFACE==1) then
+                   else if (ISURFACE == 1) then
                       ! checkerboard S-wave velocity (= membrane wave phase velocity)
                       ! GLOBALLY defined (not at the elemental level)
                       btemp2 = beta0 * (1.0 + afac/100.0*(sin(x(iglob)*w_scale) * sin(z(iglob)*w_scale)) )
@@ -371,7 +371,7 @@ contains
                    endif
 
                 else if (IMODEL_SYN == 3) then  ! heterogeneous model
-                   if (ISURFACE==0) then
+                   if (ISURFACE == 0) then
                       stop 'check model in set_model_property.f90'
 
                    else
@@ -415,7 +415,7 @@ contains
 
                 else if (IMODEL_DAT == 1) then         ! 1D model (NOT a 1D perturbation)
 
-                   if (ISURFACE==0) then
+                   if (ISURFACE == 0) then
                       call make_1D_model(i,j,ispec,ktemp,mtemp,rtemp)       ! 1D model
 
                    else
@@ -427,7 +427,7 @@ contains
 
                 else if (IMODEL_DAT == 2) then         ! checkerboard perturbation
 
-                   if (ISURFACE==0) then
+                   if (ISURFACE == 0) then
                       stop 'check model in set_model_property.f90'
                    else
                       ! GJI-2007 paper
@@ -445,7 +445,7 @@ contains
 
                 else if (IMODEL_DAT == 3) then         ! heterogeneous perturbation
 
-                   if (ISURFACE==0) then
+                   if (ISURFACE == 0) then
                       stop 'check model in set_model_property.f90'
 
                    else
@@ -603,8 +603,8 @@ contains
 
     !--------------------------------------
 
-    if (NCOMP==3) fm = '(9e12.3)'
-    if (NCOMP==1) fm = '(3e12.3)'
+    if (NCOMP == 3) fm = '(9e12.3)'
+    if (NCOMP == 1) fm = '(3e12.3)'
 
     ! test of input arguments
     if (solver_type /= 1 .and. solver_type /= 2 .and. solver_type /= 3) then
@@ -649,7 +649,7 @@ contains
     ! gridpoints per wavelength estimation -- based on TARGET model (data)
     print *
     print *, 'space step (km):', sngl(dh/1000.0)
-    if (ISURFACE==1) then
+    if (ISURFACE == 1) then
        print *, 'wavelength-min (km):', sngl(2*hdur*beta_min/1000.0)
        print *, 'wavelength-max (km):', sngl(2*hdur*beta_max/1000.0)
        print *, 'number of gridpoints per wavelength for S:'
@@ -780,7 +780,7 @@ contains
        ! displacement gradient at the source element GLL points at each time step
        if (solver_type == 3) displ_grad = 0.0
 
-       if (NCOMP==1) then    ! SH, or surface waves only
+       if (NCOMP == 1) then    ! SH, or surface waves only
 
           !
           !   INTEGRATION OVER SPECTRAL ELEMENTS
@@ -979,7 +979,7 @@ contains
              enddo
           enddo
 
-       else  ! NCOMP==3
+       else  ! NCOMP == 3
 
        ! DEBUG ARRAY SIZES
 
@@ -1467,7 +1467,7 @@ contains
 
                 ! DEBUG ARRAY SIZES
                 ! additional time series for checking
-                if (0==1) then
+                if (0 == 1) then
                    three_source_model(NSTEP-itime+1,icomp,nsrc,4) = temp1
                    three_source_model(NSTEP-itime+1,icomp,nsrc,5) = temp2
                    three_source_model(NSTEP-itime+1,icomp,nsrc,6) = temp3
@@ -1479,7 +1479,7 @@ contains
              enddo  ! icomp
           enddo  ! isrc
 
-          if (solver_type==3) then
+          if (solver_type == 3) then
 
              ! CALCULATE ALL NINE KERNELS
              !   note the TIME INTEGRATION
@@ -1567,8 +1567,8 @@ contains
           if (itime /= 1) tlab = itime
           !if (mod(itime, NSAVE) == 0) then
           if (solver_type == 1) then
-             if (idata==0) write(filename1,'(a,i5.5)') trim(out_dir)//'forward_syn_',tlab
-             if (idata==1) write(filename1,'(a,i5.5)') trim(out_dir)//'forward_dat_',tlab
+             if (idata == 0) write(filename1,'(a,i5.5)') trim(out_dir)//'forward_syn_',tlab
+             if (idata == 1) write(filename1,'(a,i5.5)') trim(out_dir)//'forward_dat_',tlab
           else if (solver_type == 2) then
              write(filename1,'(a,i5.5)') trim(out_dir)//'adjoint_',tlab
           else

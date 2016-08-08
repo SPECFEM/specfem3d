@@ -35,7 +35,7 @@
 !! DK DK
 !! DK DK also, the particular treatment for sub-blocks in Gocad files, e.g.,
 !! DK DK if (IGNORE_OTHER_HEADERS .and. cubit_mesh_file == 'REGOLITE_only_no_fractures_2D_in_meters.inp' &
-!! DK DK                  .and. i == 28429)
+!! DK DK .and. i == 28429)
 !! DK DK is not general at all and should be rewritten
 !! DK DK
 

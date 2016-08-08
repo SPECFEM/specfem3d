@@ -334,8 +334,8 @@
 ! **************
 ! add topography on the Moho *before* adding the 3D crustal model so that the streched
 ! mesh gets assigned the right model values
-  if (THREE_D_MODEL/=0 .and. (idoubling(ispec)==IFLAG_CRUST .or. idoubling(ispec)==IFLAG_220_80 &
-     .or. idoubling(ispec)==IFLAG_80_MOHO)) call moho_stretching(myrank,xelm,yelm,zelm,RMOHO,R220)
+  if (THREE_D_MODEL /= 0 .and. (idoubling(ispec) == IFLAG_CRUST .or. idoubling(ispec) == IFLAG_220_80 &
+     .or. idoubling(ispec) == IFLAG_80_MOHO)) call moho_stretching(myrank,xelm,yelm,zelm,RMOHO,R220)
 
 ! compute values for the Earth model
   call get_model(myrank,iregion_code,nspec, &
@@ -358,8 +358,8 @@
           coe,vercof,vercofd,ylmcof,wk1,wk2,wk3,kerstr,varstr)
 
 ! add topography without the crustal model
-  if (TOPOGRAPHY .and. (idoubling(ispec)==IFLAG_CRUST .or. idoubling(ispec)==IFLAG_220_80 &
-     .or. idoubling(ispec)==IFLAG_80_MOHO)) call add_topography(myrank,xelm,yelm,zelm,ibathy_topo,R220)
+  if (TOPOGRAPHY .and. (idoubling(ispec) == IFLAG_CRUST .or. idoubling(ispec) == IFLAG_220_80 &
+     .or. idoubling(ispec) == IFLAG_80_MOHO)) call add_topography(myrank,xelm,yelm,zelm,ibathy_topo,R220)
 
 ! add topography on 410 km and 650 km discontinuity in model S362ANI
   if (THREE_D_MODEL == THREE_D_MODEL_S362ANI .or. THREE_D_MODEL == THREE_D_MODEL_S362WMANI &
@@ -372,14 +372,14 @@
 
 ! CMB topography
 !  if (THREE_D_MODEL == THREE_D_MODEL_S362ANI .and. (idoubling(ispec)==IFLAG_MANTLE_NORMAL &
-!     .or. idoubling(ispec)==IFLAG_OUTER_CORE_NORMAL)) &
+! .or. idoubling(ispec)==IFLAG_OUTER_CORE_NORMAL)) &
 !           call add_topography_cmb(myrank,xelm,yelm,zelm,RTOPDDOUBLEPRIME,RCMB)
 
 ! ICB topography
 !  if (THREE_D_MODEL == THREE_D_MODEL_S362ANI .and. (idoubling(ispec)==IFLAG_OUTER_CORE_NORMAL &
-!     .or. idoubling(ispec)==IFLAG_INNER_CORE_NORMAL .or. idoubling(ispec)==IFLAG_MIDDLE_CENTRAL_CUBE &
-!     .or. idoubling(ispec)==IFLAG_BOTTOM_CENTRAL_CUBE .or. idoubling(ispec)==IFLAG_TOP_CENTRAL_CUBE &
-!     .or. idoubling(ispec)==IFLAG_IN_FICTITIOUS_CUBE)) &
+! .or. idoubling(ispec)==IFLAG_INNER_CORE_NORMAL .or. idoubling(ispec)==IFLAG_MIDDLE_CENTRAL_CUBE &
+! .or. idoubling(ispec)==IFLAG_BOTTOM_CENTRAL_CUBE .or. idoubling(ispec)==IFLAG_TOP_CENTRAL_CUBE &
+! .or. idoubling(ispec)==IFLAG_IN_FICTITIOUS_CUBE)) &
 !           call add_topography_icb(myrank,xelm,yelm,zelm,RICB,RCMB)
 
 ! make the Earth elliptical

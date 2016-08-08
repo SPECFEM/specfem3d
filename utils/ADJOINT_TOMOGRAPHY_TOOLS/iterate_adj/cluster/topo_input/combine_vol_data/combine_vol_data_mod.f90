@@ -308,7 +308,7 @@
 
   enddo  ! all slices for points
 
- if (np /=  npp) stop 'Error: Number of total points are not consistent'
+ if (np /= npp) stop 'Error: Number of total points are not consistent'
  print *, 'Total number of points: ', np
  print *, ' '
 

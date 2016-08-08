@@ -121,10 +121,10 @@
   nz0 = 34
 
 ! avoid edge effects
-  if (theta==0.0d0) theta=0.000001d0
-  if (theta==180.d0) theta=0.999999d0*theta
-  if (phi==0.0d0) phi=0.000001d0
-  if (phi==360.d0) phi=0.999999d0*phi
+  if (theta == 0.0d0) theta=0.000001d0
+  if (theta == 180.d0) theta=0.999999d0*theta
+  if (phi == 0.0d0) phi=0.000001d0
+  if (phi == 360.d0) phi=0.999999d0*phi
 
 ! dimensionalize
   depth = R_EARTH_KM*(R_UNIT_SPHERE - r)

@@ -707,7 +707,7 @@
     if (HONOR_1D_SPHERICAL_MOHO) then
       if (.not. ONE_CRUST) then
         ! case 1D + two crustal layers
-        if (NER_CRUST<2) NER_CRUST=2
+        if (NER_CRUST < 2) NER_CRUST=2
         if (NEX_MAX*multiplication_factor <= 160) then
           DT = 0.20d0
         else if (NEX_MAX*multiplication_factor <= 256) then
@@ -716,7 +716,7 @@
       endif
     else
       ! case 3D
-      if (NER_CRUST<2) NER_CRUST=2
+      if (NER_CRUST < 2) NER_CRUST=2
       if (NEX_MAX*multiplication_factor <= 160) then
           DT = 0.15d0
       else if (NEX_MAX*multiplication_factor <= 256) then
@@ -731,12 +731,12 @@
     endif
 
 
-    if ( .not. ATTENUATION_RANGE_PREDEFINED ) then
+    if (.not. ATTENUATION_RANGE_PREDEFINED ) then
        call auto_attenuation_periods(ANGULAR_WIDTH_XI_IN_DEGREES, NEX_MAX, &
             MIN_ATTENUATION_PERIOD, MAX_ATTENUATION_PERIOD)
     endif
 
-    if (ANGULAR_WIDTH_XI_IN_DEGREES  < 90.0d0 .or. &
+    if (ANGULAR_WIDTH_XI_IN_DEGREES < 90.0d0 .or. &
        ANGULAR_WIDTH_ETA_IN_DEGREES < 90.0d0 .or. &
        NEX_MAX > 1248) then
 
@@ -784,11 +784,11 @@
     if (HONOR_1D_SPHERICAL_MOHO) then
       if (.not. ONE_CRUST) then
         ! case 1D + two crustal layers
-        if (NER_CRUST<2) NER_CRUST=2
+        if (NER_CRUST < 2) NER_CRUST=2
       endif
     else
       ! case 3D
-      if (NER_CRUST<2) NER_CRUST=2
+      if (NER_CRUST < 2) NER_CRUST=2
     endif
   endif
 
@@ -868,7 +868,7 @@
 ! our implementation of AK135 has not been checked carefully yet
 ! therefore let us doublecheck it carefully one day
 
-! values below corrected by Ying Zhou <yingz@gps.caltech.edu>
+! values below corrected by Ying Zhou < yingz@gps.caltech.edu>
 
 ! AK135 without the 300 meters of mud layer
    ROCEAN = 6368000.d0
@@ -891,7 +891,7 @@
 
   else if (REFERENCE_1D_MODEL == REFERENCE_MODEL_1066A) then
 
-! values below corrected by Ying Zhou <yingz@gps.caltech.edu>
+! values below corrected by Ying Zhou < yingz@gps.caltech.edu>
 
 ! 1066A
    RMOHO = 6360000.d0
@@ -937,7 +937,7 @@
 
   else if (REFERENCE_1D_MODEL == REFERENCE_MODEL_JP1D) then
 
-! values below corrected by Min Chen <mchen@gps.caltech.edu>
+! values below corrected by Min Chen < mchen@gps.caltech.edu>
 
 ! jp1d
     ROCEAN = 6371000.d0
@@ -1093,14 +1093,14 @@
   call close_parameter_file
 !--- check that parameters make sense
 
-  if (OUTPUT_SEISMOS_SAC_ALPHANUM .and. (mod(NTSTEP_BETWEEN_OUTPUT_SEISMOS,5)/=0)) &
+  if (OUTPUT_SEISMOS_SAC_ALPHANUM .and. (mod(NTSTEP_BETWEEN_OUTPUT_SEISMOS,5) /= 0)) &
     stop 'if OUTPUT_SEISMOS_SAC_ALPHANUM = .true. then NTSTEP_BETWEEN_OUTPUT_SEISMOS must be a multiple of 5, check the Par_file'
 
 ! subsets used to save seismograms must not be larger than the whole time series,
 ! otherwise we waste memory
   if (NTSTEP_BETWEEN_OUTPUT_SEISMOS > NSTEP) then
     NTSTEP_BETWEEN_OUTPUT_SEISMOS = NSTEP
-    if (OUTPUT_SEISMOS_SAC_ALPHANUM .and. (mod(NTSTEP_BETWEEN_OUTPUT_SEISMOS,5)/=0)) &
+    if (OUTPUT_SEISMOS_SAC_ALPHANUM .and. (mod(NTSTEP_BETWEEN_OUTPUT_SEISMOS,5) /= 0)) &
       stop 'if OUTPUT_SEISMOS_SAC_ALPHANUM = .true. then modified NTSTEP_BETWEEN_OUTPUT_SEISMOS must be a multiple of 5'
   endif
 
@@ -1141,22 +1141,22 @@
     if (mod(NEX_ETA,8) /= 0) stop 'NEX_ETA must be a multiple of 8'
     if (mod(NEX_XI/4,NPROC_XI) /= 0) stop 'NEX_XI must be a multiple of 4*NPROC_XI'
     if (mod(NEX_ETA/4,NPROC_ETA) /= 0) stop 'NEX_ETA must be a multiple of 4*NPROC_ETA'
-    if (mod(NEX_XI/8,NPROC_XI) /=0) CUT_SUPERBRICK_XI = .true.
-    if (mod(NEX_ETA/8,NPROC_ETA) /=0) CUT_SUPERBRICK_ETA = .true.
+    if (mod(NEX_XI/8,NPROC_XI) /= 0) CUT_SUPERBRICK_XI = .true.
+    if (mod(NEX_ETA/8,NPROC_ETA) /= 0) CUT_SUPERBRICK_ETA = .true.
   else if (SUPPRESS_CRUSTAL_MESH .or. .not. ADD_4TH_DOUBLING) then
     if (mod(NEX_XI,16) /= 0) stop 'NEX_XI must be a multiple of 16'
     if (mod(NEX_ETA,16) /= 0) stop 'NEX_ETA must be a multiple of 16'
     if (mod(NEX_XI/8,NPROC_XI) /= 0) stop 'NEX_XI must be a multiple of 8*NPROC_XI'
     if (mod(NEX_ETA/8,NPROC_ETA) /= 0) stop 'NEX_ETA must be a multiple of 8*NPROC_ETA'
-    if (mod(NEX_XI/16,NPROC_XI) /=0) CUT_SUPERBRICK_XI = .true.
-    if (mod(NEX_ETA/16,NPROC_ETA) /=0) CUT_SUPERBRICK_ETA = .true.
+    if (mod(NEX_XI/16,NPROC_XI) /= 0) CUT_SUPERBRICK_XI = .true.
+    if (mod(NEX_ETA/16,NPROC_ETA) /= 0) CUT_SUPERBRICK_ETA = .true.
   else
     if (mod(NEX_XI,32) /= 0) stop 'NEX_XI must be a multiple of 32'
     if (mod(NEX_ETA,32) /= 0) stop 'NEX_ETA must be a multiple of 32'
     if (mod(NEX_XI/16,NPROC_XI) /= 0) stop 'NEX_XI must be a multiple of 16*NPROC_XI'
     if (mod(NEX_ETA/16,NPROC_ETA) /= 0) stop 'NEX_ETA must be a multiple of 16*NPROC_ETA'
-    if (mod(NEX_XI/32,NPROC_XI) /=0) CUT_SUPERBRICK_XI = .true.
-    if (mod(NEX_ETA/32,NPROC_ETA) /=0) CUT_SUPERBRICK_ETA = .true.
+    if (mod(NEX_XI/32,NPROC_XI) /= 0) CUT_SUPERBRICK_XI = .true.
+    if (mod(NEX_ETA/32,NPROC_ETA) /= 0) CUT_SUPERBRICK_ETA = .true.
   endif
 
 ! check that topology is correct if more than two chunks
@@ -1505,7 +1505,7 @@
 
       NUMBER_OF_MESH_LAYERS = 14
       layer_offset = 1
-      if ((RMIDDLE_CRUST-RMOHO_FICTITIOUS_IN_MESHER)<(R_EARTH-RMIDDLE_CRUST)) then
+      if ((RMIDDLE_CRUST-RMOHO_FICTITIOUS_IN_MESHER) < (R_EARTH-RMIDDLE_CRUST)) then
         ner( 1) = ceiling (NER_CRUST / 2.d0)
         ner( 2) = floor (NER_CRUST / 2.d0)
       else
@@ -1903,7 +1903,7 @@
 
       NUMBER_OF_MESH_LAYERS = 15
       layer_offset = 1
-      if ((RMIDDLE_CRUST-RMOHO_FICTITIOUS_IN_MESHER)<(R_EARTH-RMIDDLE_CRUST)) then
+      if ((RMIDDLE_CRUST-RMOHO_FICTITIOUS_IN_MESHER) < (R_EARTH-RMIDDLE_CRUST)) then
         ner( 1) = ceiling (NER_CRUST / 2.d0)
         ner( 2) = floor (NER_CRUST / 2.d0)
       else

@@ -161,7 +161,7 @@
   print *
   print *,'enter value:'
   read(5,*) iformat
-  if (iformat<1 .or. iformat>2) stop 'exiting...'
+  if (iformat < 1 .or. iformat > 2) stop 'exiting...'
   if (iformat == 1) then
     USE_OPENDX = .true.
   else
@@ -175,7 +175,7 @@
   print *
   print *,'enter value:'
   read(5,*) ivalue
-  if (ivalue<1 .or. ivalue>2) stop 'exiting...'
+  if (ivalue < 1 .or. ivalue > 2) stop 'exiting...'
 
 ! apply scaling to topography if needed
   if (ivalue == 2) then
@@ -195,7 +195,7 @@
   print *
   print *,'enter value:'
   read(5,*) icolor
-  if (icolor<1 .or. icolor >4) stop 'exiting...'
+  if (icolor < 1 .or. icolor > 4) stop 'exiting...'
   if (icolor == 3 .and. ivalue /= 2) stop 'color by elevation of topography is for surface of model only'
 
   print *

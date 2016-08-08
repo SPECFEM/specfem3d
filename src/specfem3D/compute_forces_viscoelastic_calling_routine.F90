@@ -613,7 +613,7 @@ subroutine compute_forces_viscoelastic_GPU()
       if (SIMULATION_TYPE == 3) then
         call transfer_boun_accel_from_device(Mesh_pointer, b_accel,&
                         b_buffer_send_vector_ext_mesh,&
-                        3) ! <-- 3 == adjoint b_accel
+                        3) ! -- 3 == adjoint b_accel
         call assemble_MPI_vector_send_cuda(NPROC, &
                         b_buffer_send_vector_ext_mesh,b_buffer_recv_vector_ext_mesh, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &

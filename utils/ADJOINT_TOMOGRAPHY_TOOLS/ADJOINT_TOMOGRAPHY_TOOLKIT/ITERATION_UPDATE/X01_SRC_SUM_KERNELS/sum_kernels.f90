@@ -50,7 +50,7 @@ program sum_kernels
   endif
   do while ( 1 == 1)
      read(1001,'(a)',iostat=ios) line
-     if ( ios /=0) exit
+     if ( ios /= 0) exit
      nevent=nevent+1
      event_list(nevent)=line
   enddo
@@ -62,7 +62,7 @@ program sum_kernels
 
      do ievent=1,nevent
 
-        if (myrank==0) write(*,*) 'READING IN EVENT KERNEL:',trim(kernel_name(iker)),' FOR ',trim(event_list(ievent))
+        if (myrank == 0) write(*,*) 'READING IN EVENT KERNEL:',trim(kernel_name(iker)),' FOR ',trim(event_list(ievent))
 
         write(kernel_file,'(a,i6.6,a)') trim(input_dir)//'/'//trim(event_list(ievent))//'/KERNEL/'//'proc',myrank,'_'//trim(kernel_name(iker))//'.bin'
 
@@ -78,7 +78,7 @@ program sum_kernels
         endif
 
      enddo
-     if (myrank==0) write(*,*) 'WRITING MISFIT KERNELS:',trim(kernel_name(iker))
+     if (myrank == 0) write(*,*) 'WRITING MISFIT KERNELS:',trim(kernel_name(iker))
      write(kernel_file,'(a,i6.6,a)') trim(output_dir)//'/proc',myrank,'_'//trim(kernel_name(iker))//'.bin'
 
      open(1002,file=trim(kernel_file),form='unformatted')
@@ -86,7 +86,7 @@ program sum_kernels
      close(1002)
   enddo
 
-  if (myrank==0) write(*,*) 'done summing all the kernels'
+  if (myrank == 0) write(*,*) 'done summing all the kernels'
 
   call MPI_FINALIZE(ier)
 

@@ -44,7 +44,7 @@ program convert_nonlinear
         read(11,*,iostat=ios) lon,lat,zv
         if (ios /= 0) exit
         i = i + 1
-        if (i==1) then
+        if (i == 1) then
            zmax = zv
         else if (zmax < zv) then
            zmax = zv

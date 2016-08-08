@@ -102,15 +102,15 @@ subroutine fault_read_input(prname,myrank)
  ! read fault input file
   nb = 0
   open(unit=IIN_PAR,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file_faults',status='old',action='read',iostat=ier)
-  if (ier==0) then
+  if (ier == 0) then
     read(IIN_PAR,*) nb
-    if (myrank==0) write(IMAIN,*) '  ... reading ', nb,' faults from file DATA/Par_file_faults'
+    if (myrank == 0) write(IMAIN,*) '  ... reading ', nb,' faults from file DATA/Par_file_faults'
   else
-    if (myrank==0) write(IMAIN,*) 'File DATA/Par_file_faults not found: assume no faults'
+    if (myrank == 0) write(IMAIN,*) 'File DATA/Par_file_faults not found: assume no faults'
     close(IIN_PAR)
   endif
 
-  ANY_FAULT = (nb>0)
+  ANY_FAULT = (nb > 0)
   if (.not. ANY_FAULT)  return
 
   allocate(fault_db(nb))
@@ -293,7 +293,7 @@ end subroutine setup_ijk
   integer, intent(in) :: nspec ! number of spectral elements in each block
 
   if (fdb%eta > 0.0_CUSTOM_REAL) then
-    if (.not.allocated(Kelvin_Voigt_eta)) then
+    if (.not. allocated(Kelvin_Voigt_eta)) then
       allocate(Kelvin_Voigt_eta(nspec))
       Kelvin_Voigt_eta(:) = 0.0_CUSTOM_REAL
     endif
@@ -548,7 +548,7 @@ subroutine fault_save_arrays_test(prname)
   integer :: nbfaults,iflt,ier
   character(len=MAX_STRING_LEN) :: filename
 
-  if (.not.ANY_FAULT) return
+  if (.not. ANY_FAULT) return
 
 ! saves mesh file proc***_fault_db.txt
   filename = prname(1:len_trim(prname))//'fault_db.txt'
@@ -581,7 +581,7 @@ subroutine save_one_fault_test(f,IOUT)
   write(fmt2,'("(a,",I0,"(x,F0.4))")') NGLLSQUARE+1   ! fmt = (a,(NGLL^2+1)(x,F0.16))
 
   write(IOUT,*) 'NSPEC NGLOB NGLL = ',f%nspec,f%nglob,NGLLX
-  if (f%nspec==0) return
+  if (f%nspec == 0) return
   do e=1,f%nspec
     write(IOUT,*) 'FLT_ELEM = ',e
     write(IOUT,*) 'ISPEC1 ISPEC2 = ',f%ispec1(e),f%ispec2(e)
@@ -626,7 +626,7 @@ subroutine fault_save_arrays(prname)
   character(len=MAX_STRING_LEN) :: filename
   integer :: size_Kelvin_Voigt
 
-  if (.not.ANY_FAULT) return
+  if (.not. ANY_FAULT) return
 
 ! opening Kelvin_voig_eta.bin for each processor
 ! if number of fault elements = 0 then the file is empty
@@ -674,7 +674,7 @@ subroutine save_one_fault_bin(f,IOUT)
   integer, intent(in) :: IOUT
 
   write(IOUT) f%nspec,f%nglob
-  if (f%nspec==0) return
+  if (f%nspec == 0) return
   write(IOUT) f%ibool1
   write(IOUT) f%jacobian2Dw
   write(IOUT) f%normal

@@ -218,7 +218,7 @@
   print *
   print *,'enter value:'
   read(5,*) iformat
-  if (iformat<1 .or. iformat>2) stop 'exiting...'
+  if (iformat < 1 .or. iformat > 2) stop 'exiting...'
   if (iformat == 1) then
     USE_OPENDX = .true.
   else
@@ -233,7 +233,7 @@
   print *
   print *,'enter value:'
   read(5,*) ivalue
-  if (ivalue<1 .or. ivalue>3) stop 'exiting...'
+  if (ivalue < 1 .or. ivalue > 3) stop 'exiting...'
 
 ! warning if surface elevation
   if (ivalue == 3) then
@@ -256,7 +256,7 @@
   print *
   print *,'enter value:'
   read(5,*) icolor
-  if (icolor<1 .or. icolor >9) stop 'exiting...'
+  if (icolor < 1 .or. icolor > 9) stop 'exiting...'
   if ((icolor == 3 .or. icolor == 4) .and. ivalue /= 2) &
     stop 'need chunks only to represent stability or gridpoints per wavelength'
 

@@ -73,14 +73,14 @@ do i_proc = 1, nproc
   read(27) NSPEC_AB
   read(27) NGLOB_AB
   ! gets ibool
-  if (out_res/=2) then
+  if (out_res /= 2) then
     allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
     read(27) ibool
   endif
   close(27)
 
   ! calculates totals
-  if (out_res==2) then
+  if (out_res == 2) then
     ! total number of global points
     node_count = node_count + NGLOB_AB
 
@@ -90,7 +90,7 @@ do i_proc = 1, nproc
     nelement = NSPEC_AB * (NGLLX-1) * (NGLLY-1) * (NGLLZ-1)
     elmt_count = elmt_count + nelement
 
-  else if (out_res==1) then ! Medium resolution
+  else if (out_res == 1) then ! Medium resolution
 
     ! mark element corners (global AVS or DX points)
     allocate(mask_ibool(NGLOB_AB))
@@ -156,7 +156,7 @@ do i_proc = 1, nproc
     ! total number of spectral elements
     elmt_count = elmt_count + NSPEC_AB
     deallocate(mask_ibool)
-  else if (out_res==0) then !
+  else if (out_res == 0) then !
     ! mark element corners (global AVS or DX points)
     allocate(mask_ibool(NGLOB_AB))
     mask_ibool = .false.
@@ -191,7 +191,7 @@ do i_proc = 1, nproc
     write(*,'(/,a)')'ERROR: wrong out_res value!'
     stop
   endif ! out_res
-  if (out_res/=2) then
+  if (out_res /= 2) then
     deallocate(ibool)
   endif
 

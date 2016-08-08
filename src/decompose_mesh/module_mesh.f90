@@ -122,7 +122,7 @@ contains
     do inode = 1, nnodes_glob
        ! format: #id_node #x_coordinate #y_coordinate #z_coordinate
        read(98,*) num_node, nodes_coords_glob(1,num_node), nodes_coords_glob(2,num_node), nodes_coords_glob(3,num_node)
-       if (mod(inode,100000)==0) then
+       if (mod(inode,100000) == 0) then
           write(27,'(2i10)') num_node/100000, nnodes_glob/100000
        endif
     enddo
@@ -174,7 +174,7 @@ contains
        endif
 
        if ((num_elmnt > nspec_glob) .or. (num_elmnt < 1))  stop "Error : Invalid mesh_file"
-       if (mod(ispec,100000)==0) then
+       if (mod(ispec,100000) == 0) then
           write(27,'(2i10)') ispec/100000, nspec_glob/100000
        endif
     enddo
@@ -399,11 +399,11 @@ contains
        !  undefined materials: have to be listed in decreasing order of material_id (start with -1, -2, etc...)
        !  format:
        !   - for interfaces
-       !    #(6) material_domain_id #(1) material_id(<0) #(2) type_name (="interface")
+       !    #(6) material_domain_id #(1) material_id( < 0) #(2) type_name (="interface")
        !     #(3) material_id_for_material_below #(4) material_id_for_material_above
        !        example:     2 -1 interface 1 2
        !   - for tomography models
-       !    #(6) material_domain_id #(1) material_id(<0) #(2) type_name (="tomography")
+       !    #(6) material_domain_id #(1) material_id( < 0) #(2) type_name (="tomography")
        !     #(3) block_name (="elastic") #(4) file_name
        !        example:     2 -1 tomography elastic tomography_model.xyz
        ! reads lines until it reaches a defined material
@@ -703,7 +703,7 @@ contains
     if (ier /= 0) stop 'Error allocating array is_CPML'
     is_cpml(:) = .false.
     do ispec_cpml=1,nspec_cpml
-       if ((cpml_regions(ispec_cpml)>=1) .and. (cpml_regions(ispec_cpml)<=7)) then
+       if ((cpml_regions(ispec_cpml) >= 1) .and. (cpml_regions(ispec_cpml) <= 7)) then
           is_cpml(cpml_to_spec(ispec_cpml)) = .true.
        endif
     enddo

@@ -44,7 +44,7 @@
   double precision, dimension(6,NSOURCES), intent(out) :: moment_tensor
   !! VM VM use NSTEP_STF, NSOURCES_STF which are always rigth :
   !! in case of EXTERNAL_STF, it's equal to NSTEP,NSOURCES
-  !! when .not.  EXTERNAL_STF it' equal to 1,1.
+  !! when .not. EXTERNAL_STF it' equal to 1,1.
   real(kind=CUSTOM_REAL), dimension(NSTEP_STF, NSOURCES_STF), intent(out) :: user_source_time_function
 
   ! local variables below
@@ -495,7 +495,7 @@
   data mon /0,31,59,90,120,151,181,212,243,273,304,334/
 
   julian_day = da + mon(mo)
-  if (mo>2) julian_day = julian_day + lpyr(yr)
+  if (mo > 2) julian_day = julian_day + lpyr(yr)
 
   end function julian_day
 

@@ -223,11 +223,11 @@ contains
     i_right = fnum
     i_right_stop = 0
     do i = 1,fnum
-      if ( abs(syn_dtwo(i)) <= abs(wtr_use_unw) .and. i_right_stop==0 .and. i > i_amp_max_unw ) then
+      if ( abs(syn_dtwo(i)) <= abs(wtr_use_unw) .and. i_right_stop == 0 .and. i > i_amp_max_unw ) then
         i_right_stop = 1  ! power dips below water-level
         i_right = i
       endif
-      if ( abs(syn_dtwo(i)) >= 10.*abs(wtr_use_unw) .and. i_right_stop==1 .and. i > i_amp_max_unw) then
+      if ( abs(syn_dtwo(i)) >= 10.*abs(wtr_use_unw) .and. i_right_stop == 1 .and. i > i_amp_max_unw) then
         i_right_stop = 0  ! power goes above 10*water-level
         i_right = i
       endif
@@ -309,7 +309,7 @@ contains
 
         ! calculate transfer function for single taper measurement using water level
         if (is_mtm /= 1) then
-          if (abs(syn_dtw_ho(i)) >  abs(wtr_use)) trans_w(i) = dat_dtw_ho(i) / syn_dtw_ho(i)
+          if (abs(syn_dtw_ho(i)) > abs(wtr_use)) trans_w(i) = dat_dtw_ho(i) / syn_dtw_ho(i)
           if (abs(syn_dtw_ho(i)) <= abs(wtr_use)) trans_w(i) = dat_dtw_ho(i) / (syn_dtw_ho(i)+wtr_use)
         endif
       enddo
@@ -390,7 +390,7 @@ contains
         bot_mtm(:) = cmplx(0.,0.)
 
         do ictaper = 1, ntaper
-          if (ictaper==iom) cycle
+          if (ictaper == iom) cycle
 
           ! apply ictaper-th taper
           syn_dtw_h(1:nlen) = syn_dtw(1:nlen) * tas(1:nlen,ictaper)
@@ -416,7 +416,7 @@ contains
         ! water level
         ampmax = 0.
         do i = 1, fnum
-          if ( abs(bot_mtm(i))>ampmax) then
+          if ( abs(bot_mtm(i)) > ampmax) then
             ampmax =  abs(bot_mtm(i))
             i_amp_max = i
           endif
@@ -425,8 +425,8 @@ contains
 
         !  calculate transfer function using water level
         do i = 1, fnum
-          if (abs(bot_mtm(i))>abs(wtr_use)) trans_mtm(i) = top_mtm(i) / bot_mtm(i)
-          if (abs(bot_mtm(i))<=abs(wtr_use)) trans_mtm(i) = top_mtm(i) /(bot_mtm(i)+wtr_use)
+          if (abs(bot_mtm(i)) > abs(wtr_use)) trans_mtm(i) = top_mtm(i) / bot_mtm(i)
+          if (abs(bot_mtm(i)) <= abs(wtr_use)) trans_mtm(i) = top_mtm(i) /(bot_mtm(i)+wtr_use)
         enddo
 
         call write_trans(filename,trans_mtm,wvec,fnum,i_right,idf_new,df,tshift,dlnA, &
@@ -595,13 +595,13 @@ contains
     if (istart + nlen > NDIM) stop 'Check istart + nlen and NPT'
 
     ! waveform
-    if (imeas==1 .or. imeas==2) then
+    if (imeas == 1 .or. imeas == 2) then
        print *, '     computing waveform adjoint source'
-    else if (imeas==3 .or. imeas==4) then
+    else if (imeas == 3 .or. imeas == 4) then
        print *, '     computing banana-doughtnut adjoint source'
-    else if (imeas==5 .or. imeas==6) then
+    else if (imeas == 5 .or. imeas == 6) then
        print *, '     computing cross-correlation adjoint source'
-    else if (imeas==7 .or. imeas==8) then
+    else if (imeas == 7 .or. imeas == 8) then
        print *, '     computing multitaper adjoint source'
     endif
 
@@ -624,7 +624,7 @@ contains
     ! ----------------------------------
     ! CROSS CORRELATION ADJOINT SOURCES LQY: does time_window needs to be applied here?
     ! ----------------------------------
-    if ( (imeas >= 3).and.(imeas <= 6) ) then
+    if ( (imeas >= 3) .and. (imeas <= 6) ) then
 
       ! compute synthetic velocity
       if (USE_PHYSICAL_DISPERSION) then
@@ -673,7 +673,7 @@ contains
       ! THIS CHOICE WILL HAVE AN EFFECT ON THE ADJOINT SOURCES
       ipwr_w = 10
       w_taper(:) = 0.
-      do i = i_left, i_right    ! CHT: 1 --> i_left
+      do i = i_left, i_right    ! CHT: 1 -- > i_left
         ! type of filter in the freq domain
         !w_taper(i) = 1.                                       ! boxcar
         !w_taper(i) = 1. - (2.0/nw)**2 * ((i-1) - nw/2.0)**2     ! welch
@@ -683,7 +683,7 @@ contains
       ! compute normalization factor for w_taper
       ! note: 2 is needed for the integration from -inf to inf
       df = 1. /(NPT*dt)
-      ffac = 2.0 * df * sum(w_taper(i_left:i_right) )   ! CHT: 1 --> i_left
+      ffac = 2.0 * df * sum(w_taper(i_left:i_right) )   ! CHT: 1 -- > i_left
       if (DISPLAY_DETAILS) print *, '     f-dom taper normalization factor, ffac = ', sngl(ffac)
 
       ! wp_taper and wq_taper are modified frequency-domain tapers
@@ -826,7 +826,7 @@ contains
        i1 = istart + i -1 ! start index in the full adjoint source array(1:npts)
 
        ! waveform
-       if (imeas==1 .or. imeas==2) then
+       if (imeas == 1 .or. imeas == 2) then
           tr_adj_src(i1) = -dat_dtw(i)/waveform_d2 * time_window(i) ! imeas=1
           ! consider normalizing this by waveform_d2
           am_adj_src(i1) = ( syn_dtw(i) - dat_dtw(i) ) * time_window(i) ! imeas=2
@@ -837,12 +837,12 @@ contains
           endif
 
        ! banana-doughnut kernel adjoint source (no measurement)
-       else if (imeas==3 .or. imeas==4) then
+       else if (imeas == 3 .or. imeas == 4) then
           tr_adj_src(i1) = ft_bar_t(i) * time_window(i)  ! imeas=3
           am_adj_src(i1) = fa_bar_t(i) * time_window(i)  ! imreas=4
 
        ! cross-correlation
-       else if (imeas==5 .or. imeas==6) then
+       else if (imeas == 5 .or. imeas == 6) then
           tr_adj_src(i1) = -(tshift / sigma_dt_cc**2 ) * ft_bar_t(i) * time_window(i)
           am_adj_src(i1) = -(dlnA / sigma_dlnA_cc**2 ) * fa_bar_t(i) * time_window(i)
 
@@ -854,7 +854,7 @@ contains
           endif
 
        ! multitaper
-       else if (imeas==7 .or. imeas==8) then
+       else if (imeas == 7 .or. imeas == 8) then
           tr_adj_src(i1) = fp(i) * time_window(i)
           am_adj_src(i1) = fq(i) * time_window(i)
        endif
@@ -873,34 +873,34 @@ contains
     !window_chi(:) = 0.
 
     ! misfit function value
-    if (is_mtm==1) window_chi(1) = 0.5 * 2.0 * df * sum( (dtau_w(1:i_right))**2 * wp_taper(1:i_right) )
-    if (is_mtm==1) window_chi(2) = 0.5 * 2.0 * df * sum( (dlnA_w(1:i_right))**2 * wq_taper(1:i_right) )
+    if (is_mtm == 1) window_chi(1) = 0.5 * 2.0 * df * sum( (dtau_w(1:i_right))**2 * wp_taper(1:i_right) )
+    if (is_mtm == 1) window_chi(2) = 0.5 * 2.0 * df * sum( (dlnA_w(1:i_right))**2 * wq_taper(1:i_right) )
     window_chi(3) = 0.5 * (tshift/sigma_dt_cc)**2
     window_chi(4) = 0.5 * (dlnA/sigma_dlnA_cc)**2
 
     ! cc/averaged mt measurement (no uncertainty estimates)
-    if (is_mtm==1) window_chi(5)  = sum( dtau_w(1:i_right) * w_taper(1:i_right) ) / sum(w_taper(1:i_right) )
-    if (is_mtm==1) window_chi(6)  = sum( dlnA_w(1:i_right) * w_taper(1:i_right) ) / sum(w_taper(1:i_right) )
+    if (is_mtm == 1) window_chi(5)  = sum( dtau_w(1:i_right) * w_taper(1:i_right) ) / sum(w_taper(1:i_right) )
+    if (is_mtm == 1) window_chi(6)  = sum( dlnA_w(1:i_right) * w_taper(1:i_right) ) / sum(w_taper(1:i_right) )
     window_chi(7) = tshift
     window_chi(8) = dlnA
 
     ! replaces misfit function values
     if ( DO_RAY_DENSITY_SOURCE ) then
       ! uses misfit measurements equal to 1
-      if (is_mtm==1) window_chi(1) = 0.5 * 2.0 * df * sum( (1.0)**2 * wp_taper(1:i_right) )
-      if (is_mtm==1) window_chi(2) = 0.5 * 2.0 * df * sum( (1.0)**2 * wq_taper(1:i_right) )
+      if (is_mtm == 1) window_chi(1) = 0.5 * 2.0 * df * sum( (1.0)**2 * wp_taper(1:i_right) )
+      if (is_mtm == 1) window_chi(2) = 0.5 * 2.0 * df * sum( (1.0)**2 * wq_taper(1:i_right) )
       window_chi(3) = 0.5 * (1.0)**2
       window_chi(4) = 0.5 * (1.0)**2
 
-      if (is_mtm==1) window_chi(5)  = sum( 1.0 * w_taper(1:i_right) ) / sum(w_taper(1:i_right) )
-      if (is_mtm==1) window_chi(6)  = sum( 1.0 * w_taper(1:i_right) ) / sum(w_taper(1:i_right) )
+      if (is_mtm == 1) window_chi(5)  = sum( 1.0 * w_taper(1:i_right) ) / sum(w_taper(1:i_right) )
+      if (is_mtm == 1) window_chi(6)  = sum( 1.0 * w_taper(1:i_right) ) / sum(w_taper(1:i_right) )
       window_chi(7) = 1.0
       window_chi(8) = 1.0
     endif
 
     ! estimated measurement uncertainties
-    if (is_mtm==1) window_chi(9) = sigma_dt
-    if (is_mtm==1) window_chi(10) = sigma_dlnA
+    if (is_mtm == 1) window_chi(9) = sigma_dt
+    if (is_mtm == 1) window_chi(10) = sigma_dlnA
     window_chi(11) = sigma_dt_cc
     window_chi(12) = sigma_dlnA_cc
 
@@ -914,11 +914,11 @@ contains
       tr_chi = 0.5 * waveform_chi
       am_chi = 0.5 * waveform_chi
 
-    else if ( (imeas >= 3).and.(imeas <= 6) ) then  ! cross_correlation
+    else if ( (imeas >= 3) .and. (imeas <= 6) ) then  ! cross_correlation
       tr_chi = window_chi(3)
       am_chi = window_chi(4)
 
-    else if ( (imeas==7).or.(imeas==8) ) then       ! multitaper
+    else if ( (imeas == 7) .or. (imeas == 8) ) then       ! multitaper
       tr_chi = window_chi(1)
       am_chi = window_chi(2)
 
@@ -1350,7 +1350,7 @@ contains
        ! cc as a function of i
        cc = 0.
        do j = i1, i2   ! loop over full window length
-          if ((j+i)>=1 .and. (j+i)<=nlen) cc = cc + syn(j)*data(j+i)  ! d is shifted by i
+          if ((j+i) >= 1 .and. (j+i) <= nlen) cc = cc + syn(j)*data(j+i)  ! d is shifted by i
        enddo
        cc = cc/norm
 
@@ -1358,7 +1358,7 @@ contains
           ! CHT: do not allow time shifts larger than the specified input range
           ! This is an important criterion, since it may pick TSHIFT_MIN or TSHIFT_MAX
           ! if cc_max within the interval occurs on the boundary.
-          if ( (i*dt >= TSHIFT_MIN).and.(i*dt <= TSHIFT_MAX) ) then
+          if ( (i*dt >= TSHIFT_MIN) .and. (i*dt <= TSHIFT_MAX) ) then
              cc_max = cc
              ishift = i
           endif
@@ -1515,7 +1515,7 @@ contains
       phi_wt(i) = atan2( aimag(trans(i)) , real(trans(i)) )
       abs_wt(i) = abs(trans(i))
       fr(i) = df*(i-1)
-      if (mod(i,idf_new)==0 .and. OUTPUT_MEASUREMENT_FILES .and. ioactive) then
+      if (mod(i,idf_new) == 0 .and. OUTPUT_MEASUREMENT_FILES .and. ioactive) then
         write(10,*) fr(i), phi_wt(i)
         write(20,*) fr(i), abs_wt(i)
 ! LQY: should not we apply dlnA from cc before this?
@@ -1532,14 +1532,14 @@ contains
         smth  =  phi_wt(i+1) + phi_wt(i-1) - 2.0 * phi_wt(i)
         smth1 = (phi_wt(i+1) + TWOPI) + phi_wt(i-1) - 2.0 * phi_wt(i)
         smth2 = (phi_wt(i+1) - TWOPI) + phi_wt(i-1) - 2.0 * phi_wt(i)
-        if (abs(smth1)<abs(smth).and.abs(smth1)<abs(smth2).and. abs(phi_wt(i) - phi_wt(i+1)) > PHASE_STEP) then
+        if (abs(smth1) < abs(smth) .and. abs(smth1) < abs(smth2) .and. abs(phi_wt(i) - phi_wt(i+1)) > PHASE_STEP) then
           if (DISPLAY_DETAILS .and. ioactive) &
                print *, '     phase correction : 2 pi', sngl(fr(i)), sngl(phi_wt(i) - phi_wt(i+1))
           do j = i+1, i_right
             phi_wt(j) = phi_wt(j) + TWOPI
           enddo
         endif
-        if (abs(smth2)<abs(smth).and.abs(smth2)<abs(smth1).and. abs(phi_wt(i) - phi_wt(i+1)) > PHASE_STEP) then
+        if (abs(smth2) < abs(smth) .and. abs(smth2) < abs(smth1) .and. abs(phi_wt(i) - phi_wt(i+1)) > PHASE_STEP) then
           if (DISPLAY_DETAILS .and. ioactive) &
                print *, '     phase correction : - 2 pi', sngl(fr(i)), sngl(phi_wt(i) - phi_wt(i+1))
           do j = i+1, i_right
@@ -1553,7 +1553,7 @@ contains
       dlnA_wt(i) = log(abs_wt(i)) + dlnA
       !!dlnA_wt(i) = abs_wt(i) - 1. + dlnA
 
-      if (mod(i,idf_new)==0 .and. OUTPUT_MEASUREMENT_FILES .and. ioactive) then
+      if (mod(i,idf_new) == 0 .and. OUTPUT_MEASUREMENT_FILES .and. ioactive) then
         write(30,*) fr(i), dlnA_wt(i)
         write(40,*) fr(i), phi_wt(i)
         write(50,*) fr(i), dtau_wt(i)
@@ -1722,11 +1722,11 @@ contains
 !!$    cc_max = cc_max_f1f2
 !!$    if (OUTPUT_MEASUREMENT_FILES) then
 !!$      open(10,file=trim(filename)//'.quality')
-!!$      write(10,*) '<--------- F1 ------ F2 ---- tshift -- cc_max --- dlnA -->'
+!!$      write(10,*) ' < --------- F1 ------ F2 ---- tshift -- cc_max --- dlnA -->'
 !!$      write(10,"(a,5F10.5)") 'Before',sngl(F1),sngl(F2),sngl(tshift),sngl(cc_max_f1f2),sngl(dlnA_f1f2)
 !!$    endif
 !!$    if (DISPLAY_DETAILS) then
-!!$      write(*,*) '<--------- F1 ------ F2 ---- tshift -- cc_max --- dlnA -->'
+!!$      write(*,*) ' < --------- F1 ------ F2 ---- tshift -- cc_max --- dlnA -->'
 !!$      write(*,"(a,5F10.5)") 'Before',sngl(F1),sngl(F2),sngl(tshift),sngl(cc_max_f1f2),sngl(dlnA_f1f2)
 !!$    endif
 !!$
@@ -1956,7 +1956,7 @@ contains
         ! for CC kernels, ITAPER must be a single taper (2 or 3)
         if ( ITAPER == 1 ) stop  'Error: Change ITAPER to 2/3 for CC measurements'
         is_mtm0 = ITAPER     ! 2 or 3 for CC adjoint sources
-     else if ( imeas==7 .or. imeas==8 ) then
+     else if ( imeas == 7 .or. imeas == 8 ) then
         is_mtm0 = 1          ! multitaper required for MT adjoint source
      else
         stop 'Error: imeas must by 1-8'

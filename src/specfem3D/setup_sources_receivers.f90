@@ -319,22 +319,22 @@
             izmax = maxval( free_surface_ijk(3,:,iface) )
 
             ! xmin face
-            if (ixmin==1 .and. ixmax==1) then
+            if (ixmin == 1 .and. ixmax == 1) then
               if (xi_source(isource) < -0.99d0) is_on = .true.
             ! xmax face
-            else if (ixmin==NGLLX .and. ixmax==NGLLX) then
+            else if (ixmin == NGLLX .and. ixmax == NGLLX) then
               if (xi_source(isource) > 0.99d0) is_on = .true.
             ! ymin face
-            else if (iymin==1 .and. iymax==1) then
+            else if (iymin == 1 .and. iymax == 1) then
               if (eta_source(isource) < -0.99d0) is_on = .true.
             ! ymax face
-            else if (iymin==NGLLY .and. iymax==NGLLY) then
+            else if (iymin == NGLLY .and. iymax == NGLLY) then
               if (eta_source(isource) > 0.99d0) is_on = .true.
             ! zmin face
-            else if (izmin==1 .and. izmax==1) then
+            else if (izmin == 1 .and. izmax == 1) then
               if (gamma_source(isource) < -0.99d0) is_on = .true.
             ! zmax face
-            else if (izmin==NGLLZ .and. izmax==NGLLZ) then
+            else if (izmin == NGLLZ .and. izmax == NGLLZ) then
               if (gamma_source(isource) > 0.99d0) is_on = .true.
             endif
 
@@ -553,22 +553,22 @@
             izmax = maxval( free_surface_ijk(3,:,iface) )
 
             ! xmin face
-            if (ixmin==1 .and. ixmax==1) then
+            if (ixmin == 1 .and. ixmax == 1) then
               if (xi_receiver(irec) < -0.99d0) is_on = .true.
             ! xmax face
-            else if (ixmin==NGLLX .and. ixmax==NGLLX) then
+            else if (ixmin == NGLLX .and. ixmax == NGLLX) then
               if (xi_receiver(irec) > 0.99d0) is_on = .true.
             ! ymin face
-            else if (iymin==1 .and. iymax==1) then
+            else if (iymin == 1 .and. iymax == 1) then
               if (eta_receiver(irec) < -0.99d0) is_on = .true.
             ! ymax face
-            else if (iymin==NGLLY .and. iymax==NGLLY) then
+            else if (iymin == NGLLY .and. iymax == NGLLY) then
               if (eta_receiver(irec) > 0.99d0) is_on = .true.
             ! zmin face
-            else if (izmin==1 .and. izmax==1) then
+            else if (izmin == 1 .and. izmax == 1) then
               if (gamma_receiver(irec) < -0.99d0) is_on = .true.
             ! zmax face
-            else if (izmin==NGLLZ .and. izmax==NGLLZ) then
+            else if (izmin == NGLLZ .and. izmax == NGLLZ) then
               if (gamma_receiver(irec) > 0.99d0) is_on = .true.
             endif
 
@@ -641,7 +641,7 @@
   does_source_encoding = .false.
 
   ! forward simulations
-  if (SIMULATION_TYPE == 1  .or. SIMULATION_TYPE == 3) then
+  if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
     allocate(sourcearray(NDIM,NGLLX,NGLLY,NGLLZ), &
              sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
     if (ier /= 0) stop 'error allocating array sourcearray'
@@ -1111,18 +1111,19 @@
 
       ! vtk file for receivers only
       write(system_command, &
-  "('awk ',a1,'{if (NR<5) print $0;if (NR==5)print ',a1,'POINTS',i6,' float',a1,';if (NR>5+',i6,')print $0}',a1,' < ',a,' > ',a)")&
+  "('awk ',a1,'{if (NR < 5) print $0;if (NR == 5)print ',a1,'POINTS',i6,' float',a1,';if &
+      &(NR > 5+',i6,')print $0}',a1,' < ',a,' > ',a)")&
       "'",'"',nrec,'"',NSOURCES,"'",trim(filename),trim(filename_new)
 
       ! extracts source locations
       filename_new = trim(OUTPUT_FILES)//'/source.vtk'
 
       write(system_command1, &
-  "('awk ',a1,'{if (NR<5) print $0;if (NR==5)print ',a1,'POINTS',i6,' float',a1,';')") &
+  "('awk ',a1,'{if (NR < 5) print $0;if (NR == 5)print ',a1,'POINTS',i6,' float',a1,';')") &
         "'",'"',NSOURCES,'"'
 
       write(system_command2, &
-  "('if (NR>5 && NR <6+',i6,')print $0}END{print ',a,'}',a1,' < ',a,' > ',a)") &
+  "('if (NR > 5 && NR < 6+',i6,')print $0}END{print ',a,'}',a1,' < ',a,' > ',a)") &
         NSOURCES,'" "',"'",trim(filename),trim(filename_new)
 
       system_command = trim(system_command1)//trim(system_command2)

@@ -94,7 +94,7 @@ program test_smooth
 !!$      endif
 !!$  enddo
 
-  if (0==1) then
+  if (0 == 1) then
 
      ! corner points for each element, and centerpoint (in km)
      open(unit=15,file='elements.dat',status='unknown')
@@ -163,7 +163,7 @@ program test_smooth
   close(19)
 
   ! construct local version of the unsmoothed kernel
-  if (itype==1) then
+  if (itype == 1) then
      k_rough_local(:,:,:) = 0.
      do ispec = 1,NSPEC
         do j = 1,NGLLZ
@@ -222,7 +222,7 @@ program test_smooth
      ! (part of the Gaussian may be outside the grid)
      xcen = x(iglob)
      zcen = z(iglob)
-     if (itype==1) then
+     if (itype == 1) then
 
         k_gaus_local(:,:,:) = 0.
         do ispec = 1,NSPEC
@@ -252,12 +252,12 @@ program test_smooth
      ! and accounts for Gaussians that are partially outside the grid.
      ! (2) Integrate the product of the Gaussian and the rough function.
 
-     if (itype==1) then            ! local integration with local arrays
+     if (itype == 1) then            ! local integration with local arrays
 
         k_gaus_int_global(iglob) = sum( k_gaus_local(:,:,:) * da_local(:,:,:) )
         k_smooth_global(iglob) = sum( k_rough_local(:,:,:) * k_gaus_local(:,:,:) * da_local(:,:,:) ) / k_gaus_int_global(iglob)
 
-     else if (itype==2) then        ! local integration with global array
+     else if (itype == 2) then        ! local integration with global array
 
         k_temp(:,:,:) = 0.
         do ispec = 1,NSPEC
@@ -281,7 +281,7 @@ program test_smooth
         enddo
         k_smooth_global(iglob) = sum( k_temp(:,:,:) ) / k_gaus_int_global(iglob)
 
-     else if (itype==3) then       ! global integration with global arrays
+     else if (itype == 3) then       ! global integration with global arrays
 
         k_gaus_int_global(iglob) = sum( k_gaus_global(:) * da_global(:) )
         k_smooth_global(iglob) = sum( k_rough_global(:) * k_gaus_global(:) * da_global(:) ) / k_gaus_int_global(iglob)

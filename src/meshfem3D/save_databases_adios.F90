@@ -358,17 +358,13 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
     if (interfaces(N)) &
         nspec_interface(N) = count(iMPIcut_eta(2,:) .eqv. .true.)
     if (interfaces(NW)) &
-        nspec_interface(NW) = count((iMPIcut_xi(1,:) .eqv. .true.) &
-            .and. (iMPIcut_eta(2,:) .eqv. .true.))
+        nspec_interface(NW) = count((iMPIcut_xi(1,:) .eqv. .true.) .and. (iMPIcut_eta(2,:) .eqv. .true.))
     if (interfaces(NE)) &
-        nspec_interface(NE) = count((iMPIcut_xi(2,:) .eqv. .true.) &
-            .and. (iMPIcut_eta(2,:) .eqv. .true.))
+        nspec_interface(NE) = count((iMPIcut_xi(2,:) .eqv. .true.) .and. (iMPIcut_eta(2,:) .eqv. .true.))
     if (interfaces(SE)) &
-        nspec_interface(SE) = count((iMPIcut_xi(2,:) .eqv. .true.) &
-            .and. (iMPIcut_eta(1,:) .eqv. .true.))
+        nspec_interface(SE) = count((iMPIcut_xi(2,:) .eqv. .true.) .and. (iMPIcut_eta(1,:) .eqv. .true.))
     if (interfaces(SW)) &
-        nspec_interface(SW) = count((iMPIcut_xi(1,:) .eqv. .true.) &
-            .and. (iMPIcut_eta(1,:) .eqv. .true.))
+        nspec_interface(SW) = count((iMPIcut_xi(1,:) .eqv. .true.) .and. (iMPIcut_eta(1,:) .eqv. .true.))
 
     nspec_interfaces_max = maxval(nspec_interface)
 
@@ -474,8 +470,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
       num_elmnts_mesh(interface_num) = nspec_interface(NW)
       ispec_interface = 1
       do ispec = 1,nspec
-        if ((iMPIcut_xi(1,ispec) .eqv. .true.) &
-            .and. (iMPIcut_eta(2,ispec) .eqv. .true.)) then
+        if ((iMPIcut_xi(1,ispec) .eqv. .true.) .and. (iMPIcut_eta(2,ispec) .eqv. .true.)) then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 2
           interfaces_mesh(3, ispec_interface, interface_num) &
@@ -495,8 +490,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
       num_elmnts_mesh(interface_num) = nspec_interface(NE)
       ispec_interface = 1
       do ispec = 1,nspec
-        if ((iMPIcut_xi(2,ispec) .eqv. .true.) &
-            .and. (iMPIcut_eta(2,ispec) .eqv. .true.)) then
+        if ((iMPIcut_xi(2,ispec) .eqv. .true.) .and. (iMPIcut_eta(2,ispec) .eqv. .true.)) then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 2
           interfaces_mesh(3, ispec_interface, interface_num) &
@@ -516,8 +510,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
       num_elmnts_mesh(interface_num) = nspec_interface(SE)
       ispec_interface = 1
       do ispec = 1,nspec
-        if ((iMPIcut_xi(2,ispec) .eqv. .true.) &
-            .and. (iMPIcut_eta(1,ispec) .eqv. .true.)) then
+        if ((iMPIcut_xi(2,ispec) .eqv. .true.) .and. (iMPIcut_eta(1,ispec) .eqv. .true.)) then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 2
           interfaces_mesh(3, ispec_interface, interface_num) &
@@ -537,8 +530,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
       num_elmnts_mesh(interface_num) = nspec_interface(SW)
       ispec_interface = 1
       do ispec = 1,nspec
-        if ((iMPIcut_xi(1,ispec) .eqv. .true.) &
-            .and. (iMPIcut_eta(1,ispec) .eqv. .true.)) then
+        if ((iMPIcut_xi(1,ispec) .eqv. .true.) .and. (iMPIcut_eta(1,ispec) .eqv. .true.)) then
           interfaces_mesh(1, ispec_interface, interface_num) = ispec
           interfaces_mesh(2, ispec_interface, interface_num) = 2
           interfaces_mesh(3, ispec_interface, interface_num) &
@@ -625,7 +617,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(nspec2d_top))
 
   call define_adios_scalar(group, groupsize, "", "nspec_cpml_total",nspec_cpml_total)
-  if (nspec_cpml_total>0) call define_adios_scalar(group, groupsize, "", "nspec_cpml",nspec_cpml)
+  if (nspec_cpml_total > 0) call define_adios_scalar(group, groupsize, "", "nspec_cpml",nspec_cpml)
 
   call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(nb_interfaces))
   call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(nspec_interfaces_max))

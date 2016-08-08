@@ -51,7 +51,7 @@ endif
 
 open(1001,file=trim(xyz_infile),status='old',iostat=ios)
 i=0
-do while (1==1)
+do while (1 == 1)
         i=i+1
         read(1001,*,iostat=ios) xmesh,ymesh,zmesh
         R_CUT=sqrt(xmesh**2+ymesh**2+zmesh**2)
@@ -72,7 +72,7 @@ npts=i-1
 
 if ( myrank == 0 ) then
         write(*,*) 'Total number of points = ', npts
-        if (npts>NMAXPTS .or. npts < 0) call exit_MPI(myrank,'Npts error...')
+        if (npts > NMAXPTS .or. npts < 0) call exit_MPI(myrank,'Npts error...')
 endif
 
 
@@ -86,7 +86,7 @@ if (ios /= 0) call exit_MPI(myrank,'Error reading value file')
 read(27) vstore(:,:,:,1:NSPEC_CRUST_MANTLE)
 close(27)
 
-if (myrank ==0) write(*,*) 'DONE READING',trim(data_file)
+if (myrank == 0) write(*,*) 'DONE READING',trim(data_file)
 
 ! read topology
 topo_file = trim(prname_topo) // 'solver_data_2' // '.bin'

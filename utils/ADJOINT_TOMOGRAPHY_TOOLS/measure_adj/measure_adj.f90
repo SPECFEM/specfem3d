@@ -332,7 +332,7 @@ program measure_adj
        endif
 
         ! combine adjoint sources from different measurement windows
-       if (mod(imeas,2)==1) then
+       if (mod(imeas,2) == 1) then
           adj_syn_all(:) = adj_syn_all(:) + tr_adj_src(:)   ! imeas = 1,3,5,7
           all_chi = all_chi + tr_chi
        else

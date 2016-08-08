@@ -87,7 +87,7 @@ program clip_sem
   call world_size(sizeprocs)
   call world_rank(myrank)
 
-  if (myrank==0) then
+  if (myrank == 0) then
     write(*,*) 'Running XCLIP_SEM'
     write(*,*)
   endif
@@ -165,7 +165,7 @@ program clip_sem
       read(IIN) sem_array
       close(IIN)
 
-     if (myrank==0) then
+     if (myrank == 0) then
         write(*,*) 'clipping array: ',trim(kernel_names(iker))
         write(*,*) '  min/max values = ',min_val,max_val
      endif
@@ -197,7 +197,7 @@ program clip_sem
   enddo
 
 
-  if (myrank==0) write(*,*) 'done clipping all arrays, see directory: ', trim(output_dir)
+  if (myrank == 0) write(*,*) 'done clipping all arrays, see directory: ', trim(output_dir)
   deallocate(sem_array)
   call finalize_mpi()
 

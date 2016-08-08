@@ -197,7 +197,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
       iglob = ibool(i,j,k,ispec)
 
-      if (CPML_regions(ispec_CPML) == CPML_X_ONLY  .or. CPML_regions(ispec_CPML) == CPML_XY_ONLY .or. &
+      if (CPML_regions(ispec_CPML) == CPML_X_ONLY .or. CPML_regions(ispec_CPML) == CPML_XY_ONLY .or. &
           CPML_regions(ispec_CPML) == CPML_XZ_ONLY .or. CPML_regions(ispec_CPML) == CPML_XYZ) then
         if (xstore(iglob) - x_origin > ZERO) then
           if (xstore(iglob) - x_origin <= CPML_x_right - x_origin) then
@@ -210,7 +210,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
         endif
       endif
 
-      if (CPML_regions(ispec_CPML) == CPML_Y_ONLY  .or. CPML_regions(ispec_CPML) == CPML_XY_ONLY .or. &
+      if (CPML_regions(ispec_CPML) == CPML_Y_ONLY .or. CPML_regions(ispec_CPML) == CPML_XY_ONLY .or. &
           CPML_regions(ispec_CPML) == CPML_YZ_ONLY .or. CPML_regions(ispec_CPML) == CPML_XYZ) then
         if (ystore(iglob) - y_origin > ZERO) then
           if (ystore(iglob) - y_origin <= CPML_y_front - y_origin) then
@@ -224,7 +224,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
       endif
 
       if (CPML_regions(ispec_CPML) == CPML_Z_ONLY .or. CPML_regions(ispec_CPML) == CPML_YZ_ONLY .or. &
-        CPML_regions(ispec_CPML) == CPML_XZ_ONLY .or.  CPML_regions(ispec_CPML) == CPML_XYZ) then
+        CPML_regions(ispec_CPML) == CPML_XZ_ONLY .or. CPML_regions(ispec_CPML) == CPML_XYZ) then
         if (zstore(iglob) - z_origin > ZERO) then
           if (zstore(iglob) - z_origin <= CPML_z_top - z_origin) then
             CPML_z_top = zstore(iglob)
@@ -829,11 +829,11 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                 d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                 alpha_z = ALPHA_MAX_PML_z * (ONE - dist)
 
-                if (d_y < ZERO  .or. K_y < ONE) then
+                if (d_y < ZERO .or. K_y < ONE) then
                   K_y = ONE; d_y = ZERO
                 endif
 
-                if (d_z < ZERO  .or. K_z < ONE) then
+                if (d_z < ZERO .or. K_z < ONE) then
                   K_z = ONE; d_z = ZERO
                 endif
               endif
@@ -956,7 +956,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
             !------------------------------------------------------------------------------
             !---------------------------- XYZ-surface C-PML -------------------------------
             !------------------------------------------------------------------------------
-            if (xstore(iglob) - x_origin > ZERO .and. ystore(iglob) - y_origin>ZERO .and. &
+            if (xstore(iglob) - x_origin > ZERO .and. ystore(iglob) - y_origin > ZERO .and. &
                 zstore(iglob) - z_origin > ZERO) then
               if (PML_INSTEAD_OF_FREE_SURFACE) then
                 ! gets abscissa of current grid point along the damping profile

@@ -209,7 +209,7 @@
 
 ! convert geocentric to geographic colatitude
     colat_corner=PI/2.0d0-datan(1.006760466d0*dcos(theta_corner)/dmax1(TINYVAL,dsin(theta_corner)))
-    if (phi_corner>PI) phi_corner=phi_corner-TWO_PI
+    if (phi_corner > PI) phi_corner=phi_corner-TWO_PI
 
 ! compute real position of the source
     lat = (PI/2.0d0-colat_corner)*180.0d0/PI

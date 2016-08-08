@@ -58,7 +58,7 @@ program xdecompose_mesh_mpi
   call read_parameter_file(myrank, BROADCAST_AFTER_READ)
 
   ! 2/ read mesh
-  if (myrank==0) then
+  if (myrank == 0) then
 
      print *, '         parallel Heuristic mesh decomposer '
      print *
@@ -98,7 +98,7 @@ program xdecompose_mesh_mpi
   call bcast_all_singlei(npart_3)
 
   ! 3/ Heuristic mesh partition
-  if (myrank==0) then
+  if (myrank == 0) then
      write(27,*) ' DECOMPOSING MESH '
      call decompose_mesh(elmnts_glob, nodes_coords_glob, load_elmnts, nspec_glob, nnodes_glob, npart_1, npart_2, npart_3)
   endif
@@ -118,8 +118,8 @@ program xdecompose_mesh_mpi
        nspec_glob, nnodes, nspec2D_xmin, nspec2D_xmax,nspec2D_ymin, &
        nspec2D_ymax, nspec2D_bottom, nspec2D_top, nspec_cpml, nspec2D_moho)
 
-  if (myrank==0) then
-     write(27,*) ' END OF MESH DECOMPOSER '
+  if (myrank == 0) then
+     write(27,*) ' END OF MESH DECOMPOSER'
      close(27)
   endif
 

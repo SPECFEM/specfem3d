@@ -149,7 +149,7 @@
 
       ! loops over all records
       irec=1
-      do while(ios==0)
+      do while(ios == 0)
         ! reads in data
         read(11,rec=irec,iostat=ios) r4head,dat
         if (ios /= 0) cycle

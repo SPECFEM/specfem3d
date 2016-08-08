@@ -150,7 +150,7 @@ subroutine sea99_s_model(radius,theta,phi,dvs,SEA99M_V)
      ddd(i) = dd1 + yyy*xxx
   enddo
   dvs = ddd(1) + (ddd(2)-ddd(1)) * xd1
-  if (dvs>1.d0) dvs=0.0d0
+  if (dvs > 1.d0) dvs=0.0d0
 
 end subroutine sea99_s_model
 

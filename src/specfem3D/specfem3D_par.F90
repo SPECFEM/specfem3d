@@ -55,7 +55,7 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore
 
 ! GPU
-! CUDA mesh pointer<->integer wrapper
+! CUDA mesh pointer to integer wrapper
   integer(kind=8) :: Mesh_pointer
 
   integer(kind=8) :: Fault_pointer

@@ -77,7 +77,7 @@ endif
 if (out_ncomp > inp_ncomp) then
   write(*,'(/,a)')'ERROR: number of components for output cannot be greater than for input!'
   stop
-else if (out_ncomp>1 .and. out_ncomp /= inp_ncomp) then
+else if (out_ncomp > 1 .and. out_ncomp /= inp_ncomp) then
   write(*,'(/,a)')'ERROR: not supported components transformation!'
   stop
 endif
@@ -87,40 +87,40 @@ write(*,'(a)')'-------------------------------'
 !write(*,*)'Number of data slices: ',nproc
 write(*,*)'number of image frames: ',t_nstep
 write(*,*)'input directory:',inp_path
-if (inp_ncomp==1) then
+if (inp_ncomp == 1) then
   write(*,*) 'input data type: SCALAR'
-else if (inp_ncomp==3) then
+else if (inp_ncomp == 3) then
   write(*,*) 'input data type: VECTOR'
-else if (inp_ncomp==6) then
+else if (inp_ncomp == 6) then
   write(*,*) 'input data type: 9C SYMMETRIC TENSOR'
 else
   write(*,'(/,a)')'ERROR: unsupported data type!'
   stop
 endif
 write(*,*)'output directory:',out_path
-if (out_ncomp==1) then
+if (out_ncomp == 1) then
   write(*,*) 'output data type: SCALAR'
-else if (out_ncomp==3) then
+else if (out_ncomp == 3) then
   write(*,*) 'output data type: VECTOR'
-else if (out_ncomp==6) then
+else if (out_ncomp == 6) then
   write(*,*) 'output data type: 9C SYMMETRIC TENSOR'
 else
   write(*,'(/,a)')'ERROR: unsupported data type!'
   stop
 endif
-if (out_format==0) then
+if (out_format == 0) then
   write(*,*)'output format: VTK'
-else if (out_format==1) then
+else if (out_format == 1) then
   write(*,*)'output format: Ensight Gold'
 else
   write(*,'(/,a)')'ERROR: unsupported output format!'
   stop
 endif
-if (out_res==0) then
+if (out_res == 0) then
   write(*,*)'resolution: LOW'
-else if (out_res==1) then
+else if (out_res == 1) then
   write(*,*)'resolution: MEDIUM'
-else if (out_res==2) then
+else if (out_res == 2) then
   write(*,*)'resolution: HIGH'
 else
   write(*,'(/,a)')'ERROR: unsupported resolution!'
@@ -148,10 +148,10 @@ do i_slice=1,out_nslice
 enddo
 write(*,'(a)')'complete!'
 
-if (out_format==0) then
+if (out_format == 0) then
   ! VTK files
   call write_vtu()
-else if (out_format==1) then
+else if (out_format == 1) then
   ! Ensight Gold files
   call write_ensight()
 else

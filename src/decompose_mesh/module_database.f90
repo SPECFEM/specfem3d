@@ -27,7 +27,7 @@
 
 module module_database
 
-  use shared_parameters, only: NGNOD, NGNOD2D, LOCAL_PATH, MSL=>MAX_STRING_LEN
+  use shared_parameters, only: NGNOD, NGNOD2D, LOCAL_PATH, MSL => MAX_STRING_LEN
 
   integer                                     :: nE_loc
   integer, dimension(:),  allocatable         :: loc2glob_elmnt
@@ -322,7 +322,7 @@ contains
        ! note: assumes that element indices in ibelm_* arrays are in the range from 1 to nspec
        !          (this is assigned by CUBIT, if this changes the following indexing must be changed as well)
        !          while glob2loc_elmnts(.) is shifted from 0 to nspec-1  thus
-       !          we need to have the arg of glob2loc_elmnts start at 0 ==> glob2loc_nodes(ibelm_** -1)
+       !          we need to have the arg of glob2loc_elmnts start at 0, and thus we use glob2loc_nodes(ibelm_** -1)
 
        ! optional moho
        do i=1,nspec2D_moho
