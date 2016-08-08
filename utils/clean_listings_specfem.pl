@@ -117,6 +117,8 @@ use File::Basename;
       $line =~ s#\.and\.#\.and\.#ogi;
       $line =~ s#\.or\.#\.or\.#ogi;
       $line =~ s#\.not\.#\.not\.#ogi;
+      $line =~ s#\.eqv\.#\.eqv\.#ogi;
+      $line =~ s#\.neqv\.#\.neqv\.#ogi;
 
       $line =~ s#\.true\.#\.true\.#ogi;
       $line =~ s#\.false\.#\.false\.#ogi;
@@ -168,8 +170,8 @@ use File::Basename;
       if($basename_obtained ne 'write_output_ASDF.f90') {
 
 # make sure there is one white space on each side of comparison operators
-      $line =~ s#\s*<=\s*# <= #ogi;
-      $line =~ s#\s*>=\s*# >= #ogi;
+      $line =~ s#\s*<\s*=\s*# <= #ogi;
+      $line =~ s#\s*>\s*=\s*# >= #ogi;
       $line =~ s#\s*<\s*# < #ogi;
       $line =~ s#\s*/=\s*# /= #ogi;
 
@@ -183,11 +185,22 @@ use File::Basename;
         $line =~ s#\s*==\s*# == #ogi;
         }
 
+# restore operators that may have been split by the above introduction of white spaces
       $line =~ s#<\s*=#<=#ogi;
       $line =~ s#>\s*=#>=#ogi;
+      $line =~ s#=\s*=#==#ogi;
+      $line =~ s#/\s*=#/=#ogi;
 
+# also restore bash file pipes that may appear in some print statements that save bash scripts to disk for future processing
       $line =~ s#>\s*&#>&#ogi;
       $line =~ s#<\s*&#<&#ogi;
+
+# also restore -> and <- that may be used in comments; do this in comments only
+# otherwise comparisons with negative numbers in source code may be affected (e.g. if (a < -100.) then...)
+      if($first_letter eq '!') {
+        $line =~ s#-\s*>#->#ogi;
+        $line =~ s#<\s*-#<-#ogi;
+      }
 
 # for pointers
       $line =~ s#\s*=\s*>\s*# => #ogi;
@@ -202,6 +215,8 @@ use File::Basename;
         $line =~ s#\s*\.and\.\s*# \.and\. #ogi;
         $line =~ s#\s*\.or\.\s*# \.or\. #ogi;
         $line =~ s#\s*\.not\.\s*# \.not\. #ogi;
+        $line =~ s#\s*\.eqv\.\s*# \.eqv\. #ogi;
+        $line =~ s#\s*\.neqv\.\s*# \.neqv\. #ogi;
         }
 
 # suppress space between parenthesis and .not. (this can happen when testing logical operators)
