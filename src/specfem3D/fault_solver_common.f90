@@ -115,7 +115,7 @@ contains
 subroutine initialize_fault (bc,IIN_BIN)
 
   use specfem_par
-  use specfem_par_elastic, only : rmassx !,rmassy,rmassz
+  use specfem_par_elastic, only: rmassx
 
 !! DK DK use type(bc_dynandkinflt_type) instead of class(fault_type) for compatibility with some current compilers
   type(bc_dynandkinflt_type), intent(inout) :: bc
@@ -349,7 +349,7 @@ end subroutine add_BT
 
 subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
 
-  use specfem_par, only : NPROC,myrank
+  use specfem_par, only: NPROC,myrank
 
   integer, intent(in) :: nglob,NT,iflt,ndat
   real(kind=CUSTOM_REAL), intent(in) :: coord(3,nglob),DT

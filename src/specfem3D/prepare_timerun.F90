@@ -34,9 +34,9 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
   use specfem_par_movie
-  use fault_solver_dynamic, only : BC_DYNFLT_init
-  use fault_solver_kinematic, only : BC_KINFLT_init
-  use gravity_perturbation, only : gravity_init
+  use fault_solver_dynamic, only: BC_DYNFLT_init
+  use fault_solver_kinematic, only: BC_KINFLT_init
+  use gravity_perturbation, only: gravity_init
 
   implicit none
 
@@ -865,7 +865,7 @@
   if (GPU_MODE) &
     stop 'Error C-PML only supported in CPU mode for now'
 
-  ! total number of pml elements
+  ! total number of PML elements
   call sum_all_i(NSPEC_CPML,NSPEC_CPML_GLOBAL)
 
   ! user output

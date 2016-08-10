@@ -37,7 +37,7 @@
 
   use constants
 
-  use specfem_par,only: USE_BINARY_FOR_SEISMOGRAMS,SAVE_ALL_SEISMOS_IN_ONE_FILE
+  use specfem_par, only: USE_BINARY_FOR_SEISMOGRAMS,SAVE_ALL_SEISMOS_IN_ONE_FILE
 
   implicit none
 

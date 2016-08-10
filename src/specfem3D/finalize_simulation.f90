@@ -35,7 +35,7 @@
   use specfem_par_acoustic
   use specfem_par_poroelastic
   use pml_par
-  use gravity_perturbation, only : gravity_output, GRAVITY_SIMULATION
+  use gravity_perturbation, only: gravity_output, GRAVITY_SIMULATION
 
   implicit none
 

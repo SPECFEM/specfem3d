@@ -185,7 +185,7 @@
                         b_num_abs_boundary_faces,b_reclen_field,b_absorb_field)
 
   use constants
-  use specfem_par,only: myrank
+  use specfem_par, only: myrank
 
   implicit none
 

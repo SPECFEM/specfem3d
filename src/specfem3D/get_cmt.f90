@@ -28,8 +28,8 @@
   subroutine get_cmt(yr,jda,ho,mi,sec,tshift_cmt,hdur,lat,long,depth,moment_tensor,&
                     DT,NSOURCES,min_tshift_cmt_original,user_source_time_function)
 
-  use constants,only: IIN,IN_DATA_FILES,MAX_STRING_LEN,mygroup,CUSTOM_REAL
-  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,EXTERNAL_STF,NSTEP_STF,NSOURCES_STF
+  use constants, only: IIN,IN_DATA_FILES,MAX_STRING_LEN,mygroup,CUSTOM_REAL
+  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,EXTERNAL_STF,NSTEP_STF,NSOURCES_STF
 
   implicit none
 

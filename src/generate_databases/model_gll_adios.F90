@@ -31,14 +31,14 @@
 ! based on modified GLL mesh output from mesher
 ! used for iterative inversion procedures
 !
-! \param myrank rank of the mpi process
+! \param myrank rank of the MPI process
 ! \param nspec  number of spectral elements in the model
 ! \param LOCAL_PATH path where the '.bp' file is located
 subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
 
   use adios_read_mod
 
-  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,IMAIN,ATTENUATION,FULL_ATTENUATION_SOLID
+  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,IMAIN,ATTENUATION,FULL_ATTENUATION_SOLID
 
   use create_regions_mesh_ext_par
 

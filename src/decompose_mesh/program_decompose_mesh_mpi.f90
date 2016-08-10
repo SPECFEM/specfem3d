@@ -49,7 +49,7 @@ program xdecompose_mesh_mpi
   ! number of proc in each direction
   integer             :: npart_1, npart_2, npart_3
 
-  ! mpi initialization
+  ! MPI initialization
   call init_mpi()
   call world_size(sizeprocs)
   call world_rank(myrank)
@@ -123,7 +123,7 @@ program xdecompose_mesh_mpi
      close(27)
   endif
 
-  ! mpi finish
+  ! MPI finish
   call finalize_mpi()
 
 end program xdecompose_mesh_mpi

@@ -27,7 +27,7 @@
 
 module part_decompose_mesh
 
-  use constants,only: MAX_STRING_LEN,NGNOD2D_FOUR_CORNERS,NGNOD_EIGHT_CORNERS
+  use constants, only: MAX_STRING_LEN,NGNOD2D_FOUR_CORNERS,NGNOD_EIGHT_CORNERS
 
   implicit none
 

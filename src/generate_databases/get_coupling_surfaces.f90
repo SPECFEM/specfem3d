@@ -25,8 +25,7 @@
 !
 !=====================================================================
 
-  subroutine get_coupling_surfaces(myrank, &
-                        nspec,ibool,NPROC, &
+  subroutine get_coupling_surfaces(myrank,nspec,ibool,NPROC, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
                         my_neighbours_ext_mesh)
@@ -34,7 +33,7 @@
 ! determines coupling surface for acoustic-elastic domains
 ! based on ispec_is_acoustic, ispec_is_elastic and ispec_is_poroelastic arrays
 
-  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,IMAIN
+  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,IMAIN
   use create_regions_mesh_ext_par
   implicit none
 

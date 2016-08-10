@@ -316,10 +316,10 @@
 
 ! sets up arrays faces_surface_ibool,faces_surface_ispec
 
-  use constants,only: NGLLX,NGLLY,NGLLZ
-  use specfem_par,only: USE_HIGHRES_FOR_MOVIES,ibool,iglob_is_surface_external_mesh
+  use constants, only: NGLLX,NGLLY,NGLLZ
+  use specfem_par, only: USE_HIGHRES_FOR_MOVIES,ibool,iglob_is_surface_external_mesh
 
-  use specfem_par_movie,only: faces_surface_ibool,faces_surface_ispec
+  use specfem_par_movie, only: faces_surface_ibool,faces_surface_ispec
 
   implicit none
 

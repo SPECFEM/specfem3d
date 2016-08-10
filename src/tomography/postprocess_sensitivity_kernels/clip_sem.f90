@@ -59,9 +59,8 @@
 
 program clip_sem
 
-  use postprocess_par,only: MAX_STRING_LEN,IIN,IOUT, &
-    myrank,sizeprocs,NGLOB,NSPEC,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL, &
-    MAX_KERNEL_NAMES
+  use postprocess_par, only: MAX_STRING_LEN,IIN,IOUT, &
+    myrank,sizeprocs,NGLOB,NSPEC,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,MAX_KERNEL_NAMES
 
   use shared_parameters
 

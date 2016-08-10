@@ -40,8 +40,8 @@
 
 ! returns the updated acceleration array: accel
 
-  use constants,only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,NGLLSQUARE
-  use pml_par,only : rmemory_coupling_el_ac_potential_dot_dot,is_CPML,spec_to_CPML,NSPEC_CPML
+  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,NGLLSQUARE
+  use pml_par, only: rmemory_coupling_el_ac_potential_dot_dot,is_CPML,spec_to_CPML,NSPEC_CPML
 
   implicit none
 

@@ -1314,7 +1314,7 @@ subroutine save_arrays_solver_files_adios(nspec,nglob,ibool, nspec_wmax, &
     call flush_IMAIN()
   endif
 
-  ! gets mpi communicator
+  ! gets MPI communicator
   call world_get_comm(comm)
 
   !-----------------------------------.

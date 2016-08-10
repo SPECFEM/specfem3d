@@ -1140,9 +1140,9 @@
   subroutine print_stf_file()
 
   use specfem_par
-  use specfem_par_acoustic,only: ispec_is_acoustic
-  use specfem_par_elastic,only: ispec_is_elastic
-  use specfem_par_poroelastic,only: ispec_is_poroelastic
+  use specfem_par_acoustic, only: ispec_is_acoustic
+  use specfem_par_elastic, only: ispec_is_elastic
+  use specfem_par_poroelastic, only: ispec_is_poroelastic
 
   implicit none
 

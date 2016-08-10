@@ -147,7 +147,7 @@
 !
 !-------------------------------------------------------------
 
-  use constants,only: TINYVAL
+  use constants, only: TINYVAL
 
   implicit none
 
@@ -192,7 +192,7 @@
 !
 !-------------------------------------------------------------
 
-  use constants,only: TINYVAL
+  use constants, only: TINYVAL
 
   implicit none
 

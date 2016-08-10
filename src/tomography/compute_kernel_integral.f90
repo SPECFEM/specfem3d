@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
   subroutine compute_kernel_integral_iso()
 
 ! computes volume element associated with points and calculates kernel integral
@@ -681,7 +680,7 @@
 
 ! computes volume element associated with points
 
-  use tomography_par,only: CUSTOM_REAL,NSPEC,NGLOB,NGLLX,NGLLY,NGLLZ,IIN,myrank,MAX_STRING_LEN,REG
+  use tomography_par, only: CUSTOM_REAL,NSPEC,NGLOB,NGLLX,NGLLY,NGLLZ,IIN,myrank,MAX_STRING_LEN,REG
 
   implicit none
 

@@ -600,7 +600,7 @@
 
 ! determines number of sources depending on number of lines in source file
 
-  use constants,only: mygroup,IN_DATA_FILES,HUGEVAL,TINYVAL, &
+  use constants, only: mygroup,IN_DATA_FILES,HUGEVAL,TINYVAL, &
     NLINES_PER_CMTSOLUTION_SOURCE,NLINES_PER_FORCESOLUTION_SOURCE
   use shared_parameters
 

@@ -39,7 +39,7 @@
                                              NTSTEP_BETWEEN_READ_ADJSRC)
 
   use constants
-  use specfem_par,only: xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
+  use specfem_par, only: xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver, &
                         station_name,network_name,adj_source_file, &
                         USE_FORCE_POINT_SOURCE, &
                         tshift_src,dt,t0, &
@@ -374,8 +374,7 @@
 
 ! returns source time function value for specified time
 
-  use specfem_par,only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION, &
-    hdur,hdur_Gaussian,DT
+  use specfem_par, only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION,hdur,hdur_Gaussian,DT
 
   implicit none
 

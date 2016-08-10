@@ -521,9 +521,9 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
   use specfem_par, only: NGLOB_AB,deltat
-  use pml_par,only : CPML_regions,k_store_x,k_store_y,k_store_z,d_store_x,d_store_y,d_store_z,&
+  use pml_par, only: CPML_regions,k_store_x,k_store_y,k_store_z,d_store_x,d_store_y,d_store_z, &
                      alpha_store_x,alpha_store_y,alpha_store_z,PML_displ_old,PML_displ_new
-  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,&
+  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ, &
                        CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
   implicit none
@@ -608,10 +608,10 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
   use specfem_par, only: NGLOB_AB,deltat
-  use pml_par,only : CPML_regions,k_store_x,k_store_y,k_store_z,d_store_x,d_store_y,d_store_z,&
-                     alpha_store_x,alpha_store_y,alpha_store_z,&
+  use pml_par, only: CPML_regions,k_store_x,k_store_y,k_store_z,d_store_x,d_store_y,d_store_z, &
+                     alpha_store_x,alpha_store_y,alpha_store_z, &
                      PML_potential_acoustic_old,PML_potential_acoustic_new
-  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,&
+  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ, &
                        CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
   implicit none

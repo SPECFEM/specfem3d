@@ -52,7 +52,7 @@ end module constants
 
 ! holds input parameters given in DATA/Par_file
 
-  use constants,only: MAX_STRING_LEN
+  use constants, only: MAX_STRING_LEN
 
   implicit none
 

@@ -24,13 +24,12 @@
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
 !=====================================================================
-!
 
 !==============================================================================
 !> Reads in Database.bp file
 subroutine read_partition_files_adios()
 
-  use generate_databases_par,only: MAX_STRING_LEN,LOCAL_PATH,IMAIN,myrank, &
+  use generate_databases_par, only: MAX_STRING_LEN,LOCAL_PATH,IMAIN,myrank, &
     NDIM,NGLLX,NGNOD,NGNOD2D,NPROC,NSPEC_AB,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
     nspec2D_top_ext,nspec2D_bottom_ext,nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
     nspec_cpml,nspec_cpml_tot, &
@@ -376,7 +375,7 @@ subroutine read_partition_files_adios()
     call adios_schedule_read(handle, sel, "nodes_ibelm_top/array", 0, 1, nodes_ibelm_top, ier)
   endif
 
-  ! mpi interfaces
+  ! MPI interfaces
   if (num_interfaces_ext_mesh > 0) then
     start(1) = local_dim_neighbours_mesh * myrank
     count(1) = num_interfaces_ext_mesh

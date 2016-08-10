@@ -51,14 +51,11 @@
 !   any scalar field of dimension (NGLLX,NGLLY,NGLLZ,NSPEC).
 !
 !   This is a parrallel program -- it must be invoked with mpirun or other
-!   appropriate utility.  Operations are performed in embarassingly-parallel
-!   fashion.
-
+!   appropriate utility.  Operations are performed in embarassingly-parallel fashion.
 
 program combine_sem
 
-  use postprocess_par,only: MAX_STRING_LEN,MAX_KERNEL_PATHS,IIN, &
-    myrank,sizeprocs,NGLOB,NSPEC
+  use postprocess_par, only: MAX_STRING_LEN,MAX_KERNEL_PATHS,IIN,myrank,sizeprocs,NGLOB,NSPEC
 
   use shared_parameters
 

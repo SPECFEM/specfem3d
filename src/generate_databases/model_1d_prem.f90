@@ -38,7 +38,6 @@
 !
 !--------------------------------------------------------------------------------------------------
 
-
   subroutine model_1D_prem_iso(xmesh,ymesh,zmesh,rho_prem,vp_prem,vs_prem,qmu_atten)
 
 !
@@ -47,7 +46,7 @@
 
 ! given a GLL point, returns super-imposed velocity model values
 
-  use generate_databases_par,only: nspec => NSPEC_AB,ibool,HUGEVAL,R_EARTH
+  use generate_databases_par, only: nspec => NSPEC_AB,ibool,HUGEVAL,R_EARTH
   use create_regions_mesh_ext_par
   implicit none
 
@@ -283,7 +282,6 @@
 
   end subroutine model_1D_prem_iso
 
-
 !
 !-------------------------------------------------------------------------------------------------
 !
@@ -293,7 +291,8 @@
 
   subroutine model_1D_PREM_routine_PB(xloc,yloc,zloc,ro_prem,vp_prem,vs_prem,idom)
 
-  use generate_databases_par,only: CUSTOM_REAL
+  use generate_databases_par, only: CUSTOM_REAL
+
   implicit none
 
   double precision, intent(in) :: xloc,yloc,zloc

@@ -139,7 +139,7 @@
 
 ! get approximate topography elevation at source long/lat coordinates
 
-  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,HUGEVAL,TINYVAL,MIDX,MIDY,MIDZ
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,HUGEVAL,TINYVAL,MIDX,MIDY,MIDZ
 
   implicit none
 
@@ -306,7 +306,7 @@
 
 ! get approximate topography elevation at long/lat coordinates from closest point
 
-  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,HUGEVAL,MIDX,MIDY,MIDZ
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,HUGEVAL,MIDX,MIDY,MIDZ
 
   implicit none
 

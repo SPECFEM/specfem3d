@@ -861,12 +861,11 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-
   subroutine model_attenuation_storage(Qmu, tau_eps, rw)
 
   use constants
 
-  use attenuation_model,only: AM_S
+  use attenuation_model, only: AM_S
 
   implicit none
 
@@ -1047,7 +1046,7 @@
 !   - Inserts necessary parameters into the module attenuation_simplex_variables
 !   - See module for explaination
 
-  use attenuation_model,only: AS_V
+  use attenuation_model, only: AS_V
 
   implicit none
 
@@ -1074,7 +1073,6 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-
   double precision function attenuation_eval(Xin)
 
 !    - Computes the misfit from a set of relaxation paramters
@@ -1095,9 +1093,9 @@
 !
 !    Uses attenuation_simplex_variables to store constant values
 !
-!    See atteunation_simplex_setup
-!
-  use attenuation_model,only: AS_V
+!    See attenuation_simplex_setup
+
+  use attenuation_model, only: AS_V
 
   implicit none
 
@@ -1582,7 +1580,7 @@
 
   subroutine attenuation_simplex_finish()
 
-  use attenuation_model,only: AS_V
+  use attenuation_model, only: AS_V
 
   implicit none
 

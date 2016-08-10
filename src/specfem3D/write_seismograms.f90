@@ -386,8 +386,7 @@
 
   use constants
 
-  use specfem_par,only: &
-          myrank,number_receiver_global,station_name,network_name, &
+  use specfem_par, only: myrank,number_receiver_global,station_name,network_name, &
           nrec,nrec_local,islice_selected_rec, &
           it,DT,NSTEP,t0,SIMULATION_TYPE,WRITE_SEISMOGRAMS_BY_MASTER,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_SEISMOGRAMS
 
@@ -646,7 +645,7 @@
   subroutine write_adj_seismograms_to_file(myrank,seismograms,number_receiver_global, &
                                            nrec_local,it,DT,NSTEP,t0,istore)
 
-  use constants,only: CUSTOM_REAL,NDIM,MAX_STRING_LEN,IOUT,OUTPUT_FILES
+  use constants, only: CUSTOM_REAL,NDIM,MAX_STRING_LEN,IOUT,OUTPUT_FILES
 
   implicit none
 
@@ -731,7 +730,7 @@
 
   subroutine write_adj_seismograms2_to_file(myrank,seismograms,number_receiver_global,nrec_local,it,DT,NSTEP,t0)
 
-  use constants,only: CUSTOM_REAL,NDIM,MAX_STRING_LEN,IOUT,OUTPUT_FILES
+  use constants, only: CUSTOM_REAL,NDIM,MAX_STRING_LEN,IOUT,OUTPUT_FILES
 
   implicit none
   integer :: myrank
@@ -805,7 +804,8 @@
 
   subroutine write_channel_name(iorientation,channel)
 
-  use specfem_par,only: DT,SUPPRESS_UTM_PROJECTION
+  use specfem_par, only: DT,SUPPRESS_UTM_PROJECTION
+
   implicit none
 
   integer :: iorientation

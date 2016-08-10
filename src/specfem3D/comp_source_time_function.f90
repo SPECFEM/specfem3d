@@ -45,7 +45,7 @@
 
   double precision function comp_source_time_function_gauss(t,hdur)
 
-  use constants, only : PI
+  use constants, only: PI
 
   implicit none
 
@@ -75,7 +75,7 @@
 
   double precision function comp_source_time_function_dgau(t,hdur)
 
-  use constants, only : PI
+  use constants, only: PI
 
   implicit none
 
@@ -105,7 +105,7 @@
 
   double precision function comp_source_time_function_d2gau(t,hdur)
 
-  use constants, only : PI
+  use constants, only: PI
 
   implicit none
 
@@ -135,7 +135,7 @@
 
   double precision function comp_source_time_function_rickr(t,f0)
 
-  use constants, only : PI
+  use constants, only: PI
 
   implicit none
 
@@ -161,7 +161,7 @@
 
   double precision function comp_source_time_function_drck(t,f0)
 
-  use constants, only : PI
+  use constants, only: PI
 
   implicit none
 
@@ -182,7 +182,7 @@
 
   double precision function comp_source_time_function_d2rck(t,f0)
 
-  use constants, only : PI
+  use constants, only: PI
 
   implicit none
 

@@ -212,10 +212,10 @@
 
   ! put into this separate routine to make compilation faster
 
-  use constants,only: NDIM,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL
+  use constants, only: NDIM,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL
 
-  use specfem_par,only: ibool
-  use specfem_par_movie,only: store_val_ux,store_val_uy,store_val_uz
+  use specfem_par, only: ibool
+  use specfem_par_movie, only: store_val_ux,store_val_uy,store_val_uz
 
   implicit none
 
@@ -358,7 +358,7 @@
 
   ! put into this separate routine to make compilation faster
 
-  use specfem_par,only: NDIM,ibool
+  use specfem_par, only: NDIM,ibool
   use specfem_par_movie
   implicit none
 
@@ -398,7 +398,7 @@
 
   ! put into this separate routine to make compilation faster
 
-  use specfem_par,only: NDIM,ibool
+  use specfem_par, only: NDIM,ibool
   use specfem_par_movie
   implicit none
 

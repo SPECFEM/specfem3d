@@ -31,7 +31,7 @@
 subroutine read_mesh_for_init_ADIOS(nspec, nglob)
 
   use adios_read_mod
-  use specfem_par, only : myrank, LOCAL_PATH, MAX_STRING_LEN
+  use specfem_par, only: myrank, LOCAL_PATH, MAX_STRING_LEN
 
   implicit none
   ! Paramters

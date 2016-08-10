@@ -33,7 +33,6 @@
 
 module gravity_perturbation
 
-
   use constants
 
   implicit none
@@ -55,12 +54,14 @@ contains
 
 subroutine gravity_init()
 
-  use specfem_par, only : NGLOB_AB, NSTEP, NSPEC_AB, mustore, &
+  use specfem_par, only: NGLOB_AB, NSTEP, NSPEC_AB, mustore, &
        xstore, ystore, zstore, &
        xigll, yigll, zigll, &
        wxgll, wygll, wzgll, &
        NGNOD, ibool, myrank, IMAIN
-  use specfem_par_elastic, only : rho_vs
+
+  use specfem_par_elastic, only: rho_vs
+
   implicit none
 
   integer, parameter :: IIN_G = 367
@@ -187,7 +188,7 @@ end subroutine gravity_init
 subroutine recompute_jacobian_gravity(xelm,yelm,zelm,xi,eta,gamma,jacobian)
 
   use constants
-  use specfem_par, only : NGNOD
+  use specfem_par, only: NGNOD
 
   implicit none
 
@@ -310,8 +311,9 @@ end subroutine recompute_jacobian_gravity
 
 subroutine gravity_timeseries()
 
-  use specfem_par, only : xstore, ystore, zstore, it, NGLOB_AB
-  use specfem_par_elastic, only : displ
+  use specfem_par, only: xstore, ystore, zstore, it, NGLOB_AB
+  use specfem_par_elastic, only: displ
+
   implicit none
 
   real(kind=CUSTOM_REAL) :: G_const = 6.674e-11_CUSTOM_REAL
@@ -352,7 +354,8 @@ end subroutine gravity_timeseries
 
 subroutine gravity_output()
 
-  use specfem_par, only : myrank,NPROC,NSTEP,DT,OUTPUT_FILES
+  use specfem_par, only: myrank,NPROC,NSTEP,DT,OUTPUT_FILES
+
   implicit none
 
   integer :: isample,istat,nstep_grav

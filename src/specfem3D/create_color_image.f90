@@ -27,7 +27,7 @@
 
   module image_PNM_par
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   ! ----------------------------------------------
   ! USER PARAMETER
@@ -99,12 +99,12 @@
 
   use image_PNM_par
 
-  use specfem_par,only: NGLOB_AB,NSPEC_AB,NPROC,ibool,xstore,ystore,zstore,&
+  use specfem_par, only: NGLOB_AB,NSPEC_AB,NPROC,ibool,xstore,ystore,zstore,&
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
                         ibool_interfaces_ext_mesh,myrank
 
-  use constants,only: HUGEVAL,NGLLX,NGLLY,NGLLZ,IMAIN
+  use constants, only: HUGEVAL,NGLLX,NGLLY,NGLLZ,IMAIN
 
   implicit none
   ! local parameters
@@ -458,12 +458,11 @@
 
 !=============================================================
 
-
   subroutine write_PNM_vp_background()
 
   use image_PNM_par
 
-  use specfem_par,only: myrank,NPROC
+  use specfem_par, only: myrank,NPROC
 
   implicit none
   ! local parameters
@@ -522,8 +521,8 @@
 
   use image_PNM_par
 
-  use constants,only: NDIM
-  use specfem_par,only: NPROC,it,myrank
+  use constants, only: NDIM
+  use specfem_par, only: NPROC,it,myrank
 
   implicit none
 
@@ -604,10 +603,10 @@
 ! to display the snapshots : display image*.gif
 ! when compiling with Intel ifort, use " -assume byterecl " option to create binary PNM images
 
-  use constants,only: HUGEVAL,TINYVAL,CUSTOM_REAL,OUTPUT_FILES,MAX_STRING_LEN
+  use constants, only: HUGEVAL,TINYVAL,CUSTOM_REAL,OUTPUT_FILES,MAX_STRING_LEN
 
-  use image_PNM_par,only: BINARY_FILE,VP_BACKGROUND,&
-                        POWER_DISPLAY_COLOR
+  use image_PNM_par, only: BINARY_FILE,VP_BACKGROUND,POWER_DISPLAY_COLOR
+
   implicit none
 
   integer,intent(in) :: NX,NY,it
@@ -805,11 +804,11 @@
 
   subroutine get_iglob_vp(iglob,ispec,vp)
 
-  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
 
-  use specfem_par,only: mustore,kappastore,rhostore,ibool,myrank
-  use specfem_par_acoustic,only: ACOUSTIC_SIMULATION
-  use specfem_par_elastic,only: ELASTIC_SIMULATION,rho_vp
+  use specfem_par, only: mustore,kappastore,rhostore,ibool,myrank
+  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION
+  use specfem_par_elastic, only: ELASTIC_SIMULATION,rho_vp
 
   implicit none
 
@@ -844,13 +843,11 @@
 
   subroutine get_iglob_veloc(iglob,ispec,val_vector)
 
-  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM
-  use specfem_par_acoustic,only: ACOUSTIC_SIMULATION,potential_acoustic,potential_dot_acoustic, &
-                                ispec_is_acoustic, &
-                                b_potential_acoustic,b_potential_dot_acoustic
-  use specfem_par_elastic,only: ELASTIC_SIMULATION,displ,veloc, &
-                                ispec_is_elastic ! ,b_displ,b_veloc
-  use specfem_par,only: NSPEC_AB,NGLOB_AB,hprime_xx,hprime_yy,hprime_zz, &
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM
+  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION,potential_acoustic,potential_dot_acoustic, &
+                                ispec_is_acoustic,b_potential_acoustic,b_potential_dot_acoustic
+  use specfem_par_elastic, only: ELASTIC_SIMULATION,displ,veloc,ispec_is_elastic
+  use specfem_par, only: NSPEC_AB,NGLOB_AB,hprime_xx,hprime_yy,hprime_zz, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         ibool,rhostore,SIMULATION_TYPE,GRAVITY,SAVE_DISPLACEMENT
   implicit none

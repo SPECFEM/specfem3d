@@ -2084,9 +2084,9 @@ subroutine setup_weighting(chan_syn)
   !
   use ma_weighting
 
-  use ma_constants,only: NDIM
-!  use ma_sub,only: get_sacfile_header,drsac1
-  use ma_sub2,only: TOL
+  use ma_constants, only: NDIM
+!  use ma_sub, only: get_sacfile_header,drsac1
+  use ma_sub2, only: TOL
 
   implicit none
   character(len=10),intent(in) :: chan_syn

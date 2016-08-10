@@ -42,8 +42,7 @@
 
 ! compute forces for the solid poroelastic part
 
-  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM, &
-                      ONE_THIRD
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,ONE_THIRD
 
   implicit none
 

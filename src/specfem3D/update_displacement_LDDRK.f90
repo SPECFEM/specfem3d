@@ -103,7 +103,7 @@
                                    potential_acoustic_lddrk,potential_dot_acoustic_lddrk, &
                                    deltat,alpha,beta)
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -183,7 +183,7 @@
   subroutine update_elastic_lddrk(NGLOB,NGLOB_LDDRK,displ,veloc,accel, &
                                   displ_lddrk,veloc_lddrk,deltat,alpha,beta)
 
-  use constants,only: CUSTOM_REAL,NDIM
+  use constants, only: CUSTOM_REAL,NDIM
 
   implicit none
 

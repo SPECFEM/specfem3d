@@ -143,7 +143,7 @@
 
 ! given a GLL point, returns super-imposed velocity model values
 
-  use generate_databases_par,only: nspec => NSPEC_AB,ibool,HUGEVAL,TINYVAL,IDOMAIN_ELASTIC
+  use generate_databases_par, only: nspec => NSPEC_AB,ibool,HUGEVAL,TINYVAL,IDOMAIN_ELASTIC
 
   use create_regions_mesh_ext_par
 

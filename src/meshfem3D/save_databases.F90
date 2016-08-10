@@ -35,7 +35,7 @@
                             nspec_CPML,CPML_to_spec,CPML_regions,is_CPML,&
                             xstore, ystore, zstore)
 
-  use constants,only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC
+  use constants, only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC
 
   implicit none
 
@@ -271,7 +271,7 @@
 
   ! MPI Interfaces
   if (NPROC_XI >= 2 .or. NPROC_ETA >= 2) then
-    ! determines number of mpi interfaces for each slice
+    ! determines number of MPI interfaces for each slice
     nb_interfaces = 4
     interfaces(W:N) = .true.
     interfaces(NW:SW) = .false.
@@ -416,14 +416,14 @@
 
 !---------------------------------------------------------------------------------------------------------------
 
-  !! VM VM add subroutine for saving meshes in case of 1 mpi process
+  !! VM VM add subroutine to save meshes in case of a single MPI process
   subroutine save_output_mesh_files_as_cubit(nspec,nglob, ibool,nodes_coords, ispec_material_id, &
                                      nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                                      NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NMATERIALS,material_properties, &
                                      ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
                                      xgrid,ygrid,zgrid)
 
-    use constants,only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC, NGLLX, NGLLY, NGLLZ, NDIM, ZERO
+    use constants, only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC, NGLLX, NGLLY, NGLLZ, NDIM, ZERO
 
 #ifdef DEBUG_COUPLED
     include "../../../add_to_save_databases_4.F90"

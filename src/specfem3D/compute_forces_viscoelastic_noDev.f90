@@ -58,7 +58,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM, &
                        N_SLS,ONE_THIRD,FOUR_THIRDS, &
                        MAKE_HOOKE_LAW_WEAKLY_NONLINEAR,A,B,C,A_over_4,B_over_2
-  use fault_solver_dynamic, only : Kelvin_Voigt_eta
+  use fault_solver_dynamic, only: Kelvin_Voigt_eta
 
   use specfem_par, only: FULL_ATTENUATION_SOLID,SAVE_MOHO_MESH,USE_LDDRK
 

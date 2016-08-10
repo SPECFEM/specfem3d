@@ -28,8 +28,8 @@
   subroutine get_force(tshift_force,hdur,lat,long,depth,NSOURCES,min_tshift_force_original,factor_force_source, &
                       comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP,user_source_time_function)
 
-  use constants,only: IIN,IN_DATA_FILES,MAX_STRING_LEN,TINYVAL,mygroup,CUSTOM_REAL
-  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,EXTERNAL_STF,NSTEP_STF,NSOURCES_STF
+  use constants, only: IIN,IN_DATA_FILES,MAX_STRING_LEN,TINYVAL,mygroup,CUSTOM_REAL
+  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,EXTERNAL_STF,NSTEP_STF,NSOURCES_STF
 
   implicit none
 

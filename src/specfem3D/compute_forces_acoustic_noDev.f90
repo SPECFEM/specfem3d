@@ -41,8 +41,8 @@
 !
 ! note that pressure is defined as:
 !     p = - Chi_dot_dot
-!
-  use specfem_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,PML_CONDITIONS
+
+  use specfem_par, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,PML_CONDITIONS
   use pml_par, only: is_CPML, spec_to_CPML, NSPEC_CPML, &
                      potential_dot_dot_acoustic_CPML,rmemory_dpotential_dxl,rmemory_dpotential_dyl,&
                      rmemory_dpotential_dzl,rmemory_potential_acoustic, &
@@ -50,7 +50,7 @@
 
   implicit none
 
-  integer,intent(in) :: NSPEC_AB,NGLOB_AB
+  integer, intent(in) :: NSPEC_AB,NGLOB_AB
 
   ! acoustic potentials
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(inout) :: &

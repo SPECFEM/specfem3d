@@ -36,12 +36,9 @@
                                   nadj_rec_local,adj_sourcearrays,NTSTEP_BETWEEN_READ_ADJSRC)
 
   use constants
-  use specfem_par,only: xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
+  use specfem_par, only: xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver, &
                         station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
-                        nsources_local,tshift_src,DT,t0,SU_FORMAT, &
-                        USE_LDDRK,istage, &
-                        EXTERNAL_STF,user_source_time_function
-
+                        nsources_local,tshift_src,DT,t0,SU_FORMAT,USE_LDDRK,istage,EXTERNAL_STF,user_source_time_function
 
   implicit none
 
@@ -298,6 +295,7 @@
 
 !
 !=====================================================================
+
 ! for acoustic solver for back propagation wave field
 
   subroutine compute_add_sources_acoustic_backward(NSPEC_AB, &
@@ -308,9 +306,7 @@
                                   b_potential_dot_dot_acoustic)
 
   use constants
-  use specfem_par,only: nsources_local,tshift_src,DT,t0, &
-                        USE_LDDRK,istage, &
-                        EXTERNAL_STF,user_source_time_function
+  use specfem_par, only: nsources_local,tshift_src,DT,t0,USE_LDDRK,istage,EXTERNAL_STF,user_source_time_function
 
   implicit none
 
@@ -425,7 +421,9 @@
 
 !
 !=====================================================================
+
 ! for acoustic solver on GPU
+
   subroutine compute_add_sources_acoustic_GPU(NSPEC_AB, &
                                   NSOURCES,myrank,it,&
                                   ispec_is_acoustic,SIMULATION_TYPE,NSTEP, &
@@ -434,11 +432,9 @@
                                   NTSTEP_BETWEEN_READ_ADJSRC,Mesh_pointer )
 
   use constants
-  use specfem_par,only: xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
+  use specfem_par, only: xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver, &
                         station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
-                        nsources_local,tshift_src,DT,t0,SU_FORMAT,&
-                        USE_LDDRK,istage, &
-                        EXTERNAL_STF,user_source_time_function
+                        nsources_local,tshift_src,DT,t0,SU_FORMAT,USE_LDDRK,istage,EXTERNAL_STF,user_source_time_function
 
   implicit none
 
@@ -686,9 +682,8 @@
 
 ! returns source time function value for specified time
 
-  use specfem_par,only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION,USE_TRICK_FOR_BETTER_PRESSURE, &
-    USE_SOURCE_ENCODING,pm1_source_encoding, &
-    hdur,hdur_Gaussian,DT
+  use specfem_par, only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION,USE_TRICK_FOR_BETTER_PRESSURE, &
+                         USE_SOURCE_ENCODING,pm1_source_encoding,hdur,hdur_Gaussian,DT
 
   implicit none
 

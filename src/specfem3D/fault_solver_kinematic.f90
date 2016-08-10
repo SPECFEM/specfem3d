@@ -61,7 +61,7 @@ contains
 !
 subroutine BC_KINFLT_init(prname,DTglobal,myrank)
 
-  use specfem_par, only : nt => NSTEP
+  use specfem_par, only: nt => NSTEP
   character(len=MAX_STRING_LEN), intent(in) :: prname ! 'proc***'
   double precision, intent(in) :: DTglobal
   integer, intent(in) :: myrank
@@ -202,7 +202,7 @@ end subroutine BC_KINFLT_set_all
 !
 subroutine BC_KINFLT_set_single(bc,MxA,V,D,iflt)
 
-  use specfem_par, only:it,NSTEP,myrank
+  use specfem_par, only: it,NSTEP,myrank
 
   real(kind=CUSTOM_REAL), intent(inout) :: MxA(:,:)
   type(bc_dynandkinflt_type), intent(inout) :: bc
@@ -334,7 +334,7 @@ end subroutine init_dataXZ
 !===============================================================
 subroutine write_dataXZ(dataXZ,itime,iflt)
 
-  use specfem_par,only: myrank
+  use specfem_par, only: myrank
 
   type(dataXZ_type), intent(in) :: dataXZ
   integer, intent(in) :: itime,iflt

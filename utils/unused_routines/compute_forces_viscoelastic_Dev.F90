@@ -66,7 +66,7 @@
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,NGLLCUBE, &
                        N_SLS,ONE_THIRD,FOUR_THIRDS,m1,m2, &
                        MAKE_HOOKE_LAW_WEAKLY_NONLINEAR,A,B,C,A_over_4,B_over_2
-  use fault_solver_dynamic, only : Kelvin_Voigt_eta
+  use fault_solver_dynamic, only: Kelvin_Voigt_eta
 
   use specfem_par, only: FULL_ATTENUATION_SOLID,SAVE_MOHO_MESH
 
@@ -1301,7 +1301,7 @@
 
 ! 3 different arrays for x/y/z-components, 2-dimensional arrays e.g. (25,5)/(5,25), same B matrix for all 3 component arrays
 
-  use constants,only: CUSTOM_REAL,NGLLX
+  use constants, only: CUSTOM_REAL,NGLLX
 
   implicit none
 
@@ -1328,7 +1328,7 @@
 
 ! 3 different arrays for x/y/z-components, 2-dimensional arrays (25,5)/(5,25), same B matrix for all 3 component arrays
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -1371,7 +1371,7 @@
 
 ! 3 different arrays for x/y/z-components, 2-dimensional arrays (36,6)/(6,36), same B matrix for all 3 component arrays
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -1417,7 +1417,7 @@
 
 ! 3 different arrays for x/y/z-components, 2-dimensional arrays (49,7)/(7,49), same B matrix for all 3 component arrays
 
-  use constants,only: CUSTOM_REAL,NGLLX
+  use constants, only: CUSTOM_REAL,NGLLX
 
   implicit none
 
@@ -1467,7 +1467,7 @@
 
 ! 3 different arrays for x/y/z-components, 2-dimensional arrays e.g. (25,5)/(5,25), same B matrix for all 3 component arrays
 
-  use constants,only: CUSTOM_REAL,NGLLX
+  use constants, only: CUSTOM_REAL,NGLLX
 
   implicit none
 
@@ -1493,7 +1493,7 @@
 
 ! 3 different arrays for x/y/z-components, 2-dimensional arrays (25,5)/(5,25), same B matrix for all 3 component arrays
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -1536,7 +1536,7 @@
 
 ! 3 different arrays for x/y/z-components, 2-dimensional arrays (36,6)/(6,36), same B matrix for all 3 component arrays
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -1582,7 +1582,7 @@
 
 ! 3 different arrays for x/y/z-components, 2-dimensional arrays (49,7)/(7,49), same B matrix for all 3 component arrays
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -1632,7 +1632,7 @@
 
 ! 3 different arrays for x/y/z-components, 3-dimensional arrays e.g. (5,5,5), same B matrix for all 3 component arrays
 
-  use constants,only: CUSTOM_REAL,NGLLX
+  use constants, only: CUSTOM_REAL,NGLLX
 
   implicit none
 
@@ -1658,7 +1658,7 @@
 
 ! 3 different arrays for x/y/z-components, 3-dimensional arrays (5,5,5), same B matrix for all 3 component arrays
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -1703,7 +1703,7 @@
 
 ! 3 different arrays for x/y/z-components, 3-dimensional arrays (6,6,6), same B matrix for all 3 component arrays
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -1751,7 +1751,7 @@
 
 ! 3 different arrays for x/y/z-components, 3-dimensional arrays (7,7,7), same B matrix for all 3 component arrays
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 

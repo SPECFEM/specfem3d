@@ -27,7 +27,7 @@
 
   module generate_databases_par
 
-  use constants,only: NGLLX,NGLLY,NGLLZ,NGLLSQUARE,NDIM,NDIM2D,NGNOD2D_FOUR_CORNERS,N_SLS, &
+  use constants, only: NGLLX,NGLLY,NGLLZ,NGLLSQUARE,NDIM,NDIM2D,NGNOD2D_FOUR_CORNERS,N_SLS, &
     CUSTOM_REAL,SIZE_REAL,SIZE_DOUBLE, &
     IMAIN,IIN,IOUT,ISTANDARD_OUTPUT, &
     ZERO,ONE,TWO,FOUR_THIRDS,PI,HUGEVAL,GAUSSALPHA,GAUSSBETA, &
@@ -172,7 +172,7 @@
 
   module create_regions_mesh_ext_par
 
-  use constants,only: CUSTOM_REAL,MAX_STRING_LEN
+  use constants, only: CUSTOM_REAL,MAX_STRING_LEN
 
 ! global point coordinates
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: xstore_dummy

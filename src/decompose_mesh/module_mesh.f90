@@ -756,8 +756,6 @@ contains
 end module module_mesh
 
 
-
-
 !-----------------------------  other subroutines -------------------------------------------------------
 
   !--------------------------------------------------
@@ -768,7 +766,7 @@ end module module_mesh
 subroutine acoustic_elastic_poro_load (elmnts_load,nspec,count_def_mat,count_undef_mat, &
                                     num_material,mat_prop,undef_mat_prop,ATTENUATION)
 
-  use module_mesh, only : MAX_STRING_LEN, ACOUSTIC_LOAD, ELASTIC_LOAD, VISCOELASTIC_LOAD, POROELASTIC_LOAD
+  use module_mesh, only: MAX_STRING_LEN, ACOUSTIC_LOAD, ELASTIC_LOAD, VISCOELASTIC_LOAD, POROELASTIC_LOAD
   !
   ! note:
   !   acoustic material    = domainID 1  (stored in mat_prop(6,..) )

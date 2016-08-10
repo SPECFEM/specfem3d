@@ -79,7 +79,7 @@
   integer(kind=8) :: value_handle, mesh_handle
   integer :: ibool_offset, x_global_offset
 
-  ! mpi initialization
+  ! MPI initialization
   call init_mpi()
   call world_size(sizeprocs)
   if (sizeprocs /= 1) then

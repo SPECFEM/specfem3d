@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
 !--------------------------------------------------------------------------------------------------
 !
 ! GLL
@@ -38,10 +37,10 @@
 
   subroutine model_gll(myrank,nspec,LOCAL_PATH)
 
-  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,IMAIN,MAX_STRING_LEN, &
+  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,IMAIN,MAX_STRING_LEN, &
     ATTENUATION,FULL_ATTENUATION_SOLID
 
-  use create_regions_mesh_ext_par,only: rhostore,kappastore,mustore,rho_vp,rho_vs, &
+  use create_regions_mesh_ext_par, only: rhostore,kappastore,mustore,rho_vp,rho_vs, &
     qkappa_attenuation_store,qmu_attenuation_store
 
   implicit none

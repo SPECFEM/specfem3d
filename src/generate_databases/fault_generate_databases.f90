@@ -36,7 +36,7 @@
 
 module fault_generate_databases
 
-  use generate_databases_par, only : NGNOD2D,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,NDIM,CUSTOM_REAL,IMAIN
+  use generate_databases_par, only: NGNOD2D,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,NDIM,CUSTOM_REAL,IMAIN
 
   implicit none
   private
@@ -462,7 +462,7 @@ end subroutine close_fault
                                          dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
                                          wgllwgll_xy,wgllwgll_xz,wgllwgll_yz
 
-  use generate_databases_par, only : NGNOD2D
+  use generate_databases_par, only: NGNOD2D
 
   implicit none
   type(fault_db_type), intent(inout) :: fdb

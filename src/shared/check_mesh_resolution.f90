@@ -1133,7 +1133,7 @@
 !
 ! returns: global dimensions, element size and GLL point distances
 
-  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,HUGEVAL
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,HUGEVAL
 
   implicit none
 
@@ -1257,7 +1257,7 @@
 ! calculates the min/max distances between neighboring GLL points within the specified element (ispec);
 ! we purposely do not include the distance along the diagonals of the element, only along its three coordinate axes.
 
-  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,HUGEVAL
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,HUGEVAL
 
   implicit none
 
@@ -1341,7 +1341,7 @@
 ! calculates the min/max size of an edge of the specified element (ispec);
 ! we purposely do not include the distance along the diagonals of the element, only the size of its edges.
 
-  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,HUGEVAL
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,HUGEVAL
 
   implicit none
 

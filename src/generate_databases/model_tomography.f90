@@ -37,7 +37,7 @@
 
   module model_tomography_par
 
-  use constants,only: CUSTOM_REAL,IMODEL_TOMO
+  use constants, only: CUSTOM_REAL,IMODEL_TOMO
 
   implicit none
 

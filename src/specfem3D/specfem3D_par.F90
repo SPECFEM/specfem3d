@@ -265,7 +265,7 @@ module specfem_par_elastic
 
 ! parameter module for elastic solver
 
-  use constants,only: CUSTOM_REAL,N_SLS,NGLLX,NGLLY,NGLLZ
+  use constants, only: CUSTOM_REAL,N_SLS,NGLLX,NGLLY,NGLLZ
 
   implicit none
 
@@ -378,7 +378,7 @@ module specfem_par_acoustic
 
 ! parameter module for acoustic solver
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
   implicit none
 
 ! potential
@@ -449,7 +449,7 @@ module specfem_par_poroelastic
 
 ! parameter module for elastic solver
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
   implicit none
 
 ! mass matrix
@@ -527,7 +527,7 @@ module specfem_par_movie
 
 ! parameter module for movies/shakemovies
 
-  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NGNOD2D_FOUR_CORNERS
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NGNOD2D_FOUR_CORNERS
 
   implicit none
 

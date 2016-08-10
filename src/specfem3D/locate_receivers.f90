@@ -46,9 +46,9 @@
 
   use constants
 
-  use specfem_par_acoustic,only: ispec_is_acoustic
-  use specfem_par_elastic,only: ispec_is_elastic
-  use specfem_par_poroelastic,only:ispec_is_poroelastic
+  use specfem_par_acoustic, only: ispec_is_acoustic
+  use specfem_par_elastic, only: ispec_is_elastic
+  use specfem_par_poroelastic, only: ispec_is_poroelastic
 
   implicit none
 
@@ -285,7 +285,7 @@
            final_distance(nrec),stat=ier)
   if (ier /= 0) stop 'Error allocating arrays for locating receivers'
 
-  ! for mpi collection
+  ! for MPI collection
   allocate(ispec_selected_rec_all(nrec), &
            xi_receiver_all(nrec), &
            eta_receiver_all(nrec), &

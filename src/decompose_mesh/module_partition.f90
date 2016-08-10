@@ -25,10 +25,9 @@
 !
 !=====================================================================
 
-
 module module_partition
 
-  use shared_parameters, only : NGNOD
+  use shared_parameters, only: NGNOD
   use module_qsort
 
   integer                                                  :: nE
@@ -37,15 +36,13 @@ module module_partition
 contains
 
   !--------------------------------------------
-  ! Heuristic mesh decompsition
+  ! Heuristic mesh decomposition
   !---------------------------------------------
 
   !
-  !  decomposition is made using a distance criteria from
+  !  decomposition is made using a distance criterion from
   !  a given face of a computational box domain taking
   !  into account load of each element.
-  !
-  !
   !
   subroutine decompose_mesh(elmnts, nodes_coords, load_elmnts,  nspec, nnodes, npart_1, npart_2, npart_3)
 

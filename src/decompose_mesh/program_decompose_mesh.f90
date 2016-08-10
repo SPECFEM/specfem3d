@@ -28,12 +28,9 @@
 program xdecompose_mesh
 
   use constants, only: MAX_STRING_LEN
-  use decompose_mesh,only: nparts,localpath_name, outputpath_name, &
-                                  read_mesh_files, &
-                                  check_valence, &
-                                  scotch_partitioning, &
-                                  write_mesh_databases, &
-                                  ADIOS_FOR_DATABASES
+
+  use decompose_mesh, only: nparts,localpath_name,outputpath_name,read_mesh_files,check_valence, &
+                                  scotch_partitioning,write_mesh_databases,ADIOS_FOR_DATABASES
 
   implicit none
 

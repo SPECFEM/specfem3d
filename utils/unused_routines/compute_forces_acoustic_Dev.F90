@@ -46,7 +46,7 @@
 ! note that pressure is defined as:
 !     p = - Chi_dot_dot
 !
-  use specfem_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ, &
+  use specfem_par, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ, &
                         m1,m2,NGLLCUBE,PML_CONDITIONS
 
   use pml_par, only: is_CPML, spec_to_CPML, NSPEC_CPML, &
@@ -316,7 +316,7 @@
 
 ! 2-dimensional arrays e.g. (25,5)/(5,25)
 
-  use constants,only: CUSTOM_REAL,NGLLX
+  use constants, only: CUSTOM_REAL,NGLLX
 
   implicit none
 
@@ -342,7 +342,7 @@
 
 ! 2-dimensional arrays (25,5)/(5,25)
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -373,7 +373,7 @@
 
 ! 2-dimensional arrays (36,6)/(6,36)
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -405,7 +405,7 @@
 
 ! 2-dimensional arrays (49,7)/(7,49)
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -439,7 +439,7 @@
 
 ! 3-dimensional arrays e.g. (5,5,5) for A and C
 
-  use constants,only: CUSTOM_REAL,NGLLX
+  use constants, only: CUSTOM_REAL,NGLLX
 
   implicit none
 
@@ -465,7 +465,7 @@
 
 ! 3-dimensional arrays (5,5,5) for A and C
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -498,7 +498,7 @@
 
 ! 3-dimensional arrays (6,6,6) for A and C
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -532,7 +532,7 @@
 
 ! 3-dimensional arrays (6,6,6) for A and C
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 

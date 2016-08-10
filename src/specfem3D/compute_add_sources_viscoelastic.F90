@@ -37,7 +37,7 @@
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY)
 
   use constants
-  use specfem_par,only: xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
+  use specfem_par, only: xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver, &
                         station_name,network_name,adj_source_file, &
                         num_free_surface_faces,free_surface_ispec, &
                         free_surface_ijk,free_surface_jacobian2Dw, &
@@ -353,13 +353,12 @@
                         b_accel,NOISE_TOMOGRAPHY)
 
   use constants
-  use specfem_par,only: num_free_surface_faces,free_surface_ispec, &
+  use specfem_par, only: num_free_surface_faces,free_surface_ispec, &
                         free_surface_ijk,free_surface_jacobian2Dw, &
                         normal_x_noise,normal_y_noise,normal_z_noise, &
                         mask_noise,noise_surface_movie, &
                         nsources_local,tshift_src,dt,t0, &
-                        USE_LDDRK,istage, &
-                        EXTERNAL_STF,user_source_time_function
+                        USE_LDDRK,istage,EXTERNAL_STF,user_source_time_function
 
 #ifdef DEBUG_COUPLED
     include "../../../add_to_compute_add_sources_viscoelastic_1.F90"
@@ -499,14 +498,13 @@
                                                   Mesh_pointer)
 
   use constants
-  use specfem_par,only: xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver,&
+  use specfem_par, only: xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver, &
                         station_name,network_name,adj_source_file, &
                         num_free_surface_faces, &
                         irec_master_noise,noise_surface_movie, &
                         nrec_local,number_receiver_global, &
                         nsources_local,tshift_src,dt,t0,SU_FORMAT,&
-                        USE_LDDRK,istage, &
-                        EXTERNAL_STF,user_source_time_function
+                        USE_LDDRK,istage,EXTERNAL_STF,user_source_time_function
 
 #ifdef DEBUG_COUPLED
     include "../../../add_to_compute_add_sources_viscoelastic_1.F90"
@@ -803,9 +801,7 @@
 
 ! returns source time function value for specified time
 
-  use specfem_par,only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION, &
-    !USE_SOURCE_ENCODING,pm1_source_encoding, &
-    hdur,hdur_Gaussian !,DT
+  use specfem_par, only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION,hdur,hdur_Gaussian
 
   implicit none
 

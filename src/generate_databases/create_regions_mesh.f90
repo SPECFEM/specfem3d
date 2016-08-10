@@ -29,8 +29,7 @@
 
 ! create the different regions of the mesh
 
-  use generate_databases_par, only:                                            &
-      nspec => NSPEC_AB,nglob => NGLOB_AB,                                     &
+  use generate_databases_par, only: nspec => NSPEC_AB,nglob => NGLOB_AB,       &
       ibool,xstore,ystore,zstore,                                              &
       npointot,myrank,LOCAL_PATH,                                              &
       nnodes_ext_mesh,nelmnts_ext_mesh,                                        &
@@ -648,7 +647,7 @@ subroutine crm_ext_setup_indexing(ibool, &
 
 ! creates global indexing array ibool
 
-  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,NDIM
+  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,NDIM
   use create_regions_mesh_ext_par
 
   implicit none
@@ -1091,7 +1090,7 @@ subroutine crm_ext_setup_indexing(ibool, &
 
 ! locates inner and outer elements
 
-  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,IMAIN
+  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,IMAIN
   use create_regions_mesh_ext_par
 
   implicit none

@@ -375,8 +375,7 @@
                               c34,c35,c36,c44,c45,c46,c55,c56,c66, &
                               ANISOTROPY)
 
-  use generate_databases_par,only: IMODEL, &
-    IMODEL_DEFAULT,IMODEL_GLL,IMODEL_1D_PREM,IMODEL_1D_CASCADIA,IMODEL_1D_SOCAL, &
+  use generate_databases_par, only: IMODEL,IMODEL_DEFAULT,IMODEL_GLL,IMODEL_1D_PREM,IMODEL_1D_CASCADIA,IMODEL_1D_SOCAL, &
     IMODEL_SALTON_TROUGH,IMODEL_TOMO,IMODEL_USER_EXTERNAL,IMODEL_IPATI,IMODEL_IPATI_WATER, &
     IMODEL_1D_PREM_PB,IMODEL_GLL, IMODEL_SEP, &
     IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,ATTENUATION_COMP_MAXIMUM
@@ -547,15 +546,13 @@
 
 ! reads in material parameters from external binary files
 
-  use generate_databases_par,only: IMAIN, IMODEL, &
-    IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER, IMODEL_SEP, &
-    ADIOS_FOR_MESH
+  use generate_databases_par, only: IMAIN, IMODEL, IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER, IMODEL_SEP, ADIOS_FOR_MESH
 
   use create_regions_mesh_ext_par
 
-  use model_ipati_adios_mod,only: model_ipati_adios,model_ipati_water_adios
+  use model_ipati_adios_mod, only: model_ipati_adios,model_ipati_water_adios
 
-  use model_sep_mod,only: model_sep
+  use model_sep_mod, only: model_sep
 
   implicit none
 

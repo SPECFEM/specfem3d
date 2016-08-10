@@ -88,7 +88,7 @@ contains
 !
   subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
 
-  use specfem_par, only : nt => NSTEP
+  use specfem_par, only: nt => NSTEP
 
   implicit none
 
@@ -192,7 +192,7 @@ contains
 
   subroutine transfer_faultdata_GPU()
 
-  use specfem_par ,only: Fault_pointer
+  use specfem_par , only: Fault_pointer
 
   implicit none
 
@@ -377,7 +377,7 @@ contains
 
     subroutine load_stress_drop   !added by kangchen this is specially made for Balochistan Simulation
 
-    use specfem_par, only:prname
+    use specfem_par, only: prname
 
     implicit none
 
@@ -879,7 +879,7 @@ contains
 
   subroutine rsf_GPU_init()
 
-  use specfem_par, only : Fault_pointer
+  use specfem_par, only: Fault_pointer
 
   implicit none
 
@@ -1271,7 +1271,7 @@ contains
 
   subroutine init_dataXZ(dataXZ,bc)
 
-  use specfem_par, only : NPROC,myrank
+  use specfem_par, only: NPROC,myrank
 
   implicit none
 
@@ -1356,7 +1356,7 @@ contains
 
   subroutine gather_dataXZ(bc)
 
-  use specfem_par, only : NPROC
+  use specfem_par, only: NPROC
 
   implicit none
 
@@ -1691,7 +1691,7 @@ contains
 
   subroutine synchronize_GPU(it)
 
-  use specfem_par,only: Fault_pointer,myrank
+  use specfem_par, only: Fault_pointer,myrank
 
   implicit none
 

@@ -148,6 +148,8 @@ use File::Basename;
 
       $line =~ s#use\s*::\s*mpi#use mpi#ogi;
 
+      $line =~ s#,\s*only\s*:\s*#, only: #ogi;
+
       $line =~ s#print\s*\*#print \*#ogi;
 
       $line =~ s#NOISE_SOURCE_TIME_FUNCTION_TYPE#noise_source_time_function_type#ogi;
@@ -235,6 +237,10 @@ use File::Basename;
 
 # always use upper case for GLL when used as a word
       $line =~ s# gll # GLL #ogi;
+
+      $line =~ s# mpi # MPI #ogi;
+
+      $line =~ s# pml # PML #ogi;
 
       print FILEF90 "$line\n";
 

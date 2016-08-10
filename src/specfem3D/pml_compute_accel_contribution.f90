@@ -66,7 +66,7 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
         jacobianl = jacobian(i,j,k,ispec)
         wgllcube = wgll_cube(i,j,k)
 
-        ! pml coefficient values
+        ! PML coefficient values
         CPML_region_local = CPML_regions(ispec_CPML)
 
         kappa_x = k_store_x(i,j,k,ispec_CPML)
@@ -113,7 +113,7 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
         rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) = coef0_z * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) &
                 + PML_displ_new(3,i,j,k,ispec_CPML) * coef1_z + PML_displ_old(3,i,j,k,ispec_CPML) * coef2_z
 
-        ! updates pml acceleration
+        ! updates PML acceleration
         accel_elastic_CPML(1,i,j,k) =  wgllcube * rhol * jacobianl * &
              ( A_1 * veloc(1,iglob) + A_2 * displ(1,iglob) + &
                A_3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) + &
@@ -185,7 +185,7 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
         jacobianl = jacobian(i,j,k,ispec)
         kappal_inv = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
 
-        ! pml coefficient values
+        ! PML coefficient values
         CPML_region_local = CPML_regions(ispec_CPML)
 
         kappa_x = k_store_x(i,j,k,ispec_CPML)
@@ -223,7 +223,7 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
                 + coef1_z * PML_potential_acoustic_new(i,j,k,ispec_CPML) &
                 + coef2_z * PML_potential_acoustic_old(i,j,k,ispec_CPML)
 
-        ! updates pml potential
+        ! updates PML potential
         potential_dot_dot_acoustic_CPML(i,j,k) =  wgllcube * kappal_inv * jacobianl * &
                   ( A_1 * potential_dot_acoustic(iglob) + A_2 * potential_acoustic(iglob) &
                   + A_3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &

@@ -43,13 +43,13 @@
     nspec_CPML,is_CPML,CPML_to_spec,CPML_regions,CAVITY_FILE
 
   ! create the different regions of the mesh
-  use constants,only: MF_IN_DATA_FILES,MAX_STRING_LEN,NGNOD_EIGHT_CORNERS,IMAIN,IOVTK,CUSTOM_REAL
+  use constants, only: MF_IN_DATA_FILES,MAX_STRING_LEN,NGNOD_EIGHT_CORNERS,IMAIN,IOVTK,CUSTOM_REAL
 
-  use constants_meshfem3D,only: NSPEC_DOUBLING_SUPERBRICK,NGLOB_DOUBLING_SUPERBRICK, &
+  use constants_meshfem3D, only: NSPEC_DOUBLING_SUPERBRICK,NGLOB_DOUBLING_SUPERBRICK, &
     IFLAG_BASEMENT_TOPO,IFLAG_ONE_LAYER_TOPOGRAPHY, &
     NGLLCUBE_M,NGLLX_M,NGLLY_M,NGLLZ_M
 
-  use adios_manager_mod,only: adios_setup,adios_cleanup
+  use adios_manager_mod, only: adios_setup,adios_cleanup
 
   implicit none
 

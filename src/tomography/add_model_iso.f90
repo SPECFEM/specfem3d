@@ -70,9 +70,10 @@ program add_model
   use tomography_model_iso
   use tomography_kernels_iso
 
-  use specfem_par,only: NPROC
+  use specfem_par, only: NPROC
 
   implicit none
+
   integer :: i,j,k,ispec,ier
   real(kind=CUSTOM_REAL) :: beta1,beta0,rho1,rho0,alpha1,alpha0
   real(kind=CUSTOM_REAL) :: dbetaiso,dbulk
@@ -194,7 +195,6 @@ program add_model
 
 end program add_model
 
-
 !
 !-------------------------------------------------------------------------------------------------
 !
@@ -205,7 +205,7 @@ subroutine initialize()
 
   use tomography_par
 
-  use specfem_par,only: NSPEC_AB,NGLOB_AB,NPROC,ADIOS_ENABLED
+  use specfem_par, only: NSPEC_AB,NGLOB_AB,NPROC,ADIOS_ENABLED
 
   implicit none
 

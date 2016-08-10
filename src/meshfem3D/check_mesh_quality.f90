@@ -39,7 +39,7 @@
                                 CREATE_VTK_FILES,prname)
 
   use constants
-  use shared_parameters,only: NGNOD
+  use shared_parameters, only: NGNOD
 
   implicit none
 

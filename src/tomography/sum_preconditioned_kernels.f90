@@ -48,13 +48,10 @@
 ! output directory: OUTPUT_SUM/
 !    the resulting kernel files will be stored in this directory
 
-
 program sum_preconditioned_kernels
 
-  use tomography_par,only: MAX_STRING_LEN,MAX_KERNEL_PATHS,KERNEL_FILE_LIST,IIN, &
-    myrank,sizeprocs, &
-    NGLOB,NSPEC, &
-    USE_ALPHA_BETA_RHO,USE_ISO_KERNELS
+  use tomography_par, only: MAX_STRING_LEN,MAX_KERNEL_PATHS,KERNEL_FILE_LIST,IIN, &
+                            myrank,sizeprocs,NGLOB,NSPEC,USE_ALPHA_BETA_RHO,USE_ISO_KERNELS
 
   use shared_parameters
 

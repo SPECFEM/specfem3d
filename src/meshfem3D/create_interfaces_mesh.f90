@@ -36,7 +36,7 @@
     number_of_layers,ner_layer,iproc_xi_current,iproc_eta_current,NPROC_XI,NPROC_ETA, &
     xgrid,ygrid,zgrid
 
-  use constants,only: IMAIN,IIN,MF_IN_DATA_FILES,DONT_IGNORE_JUNK,IUTM2LONGLAT,MAX_STRING_LEN,HUGEVAL
+  use constants, only: IMAIN,IIN,MF_IN_DATA_FILES,DONT_IGNORE_JUNK,IUTM2LONGLAT,MAX_STRING_LEN,HUGEVAL
 
   implicit none
 
@@ -454,7 +454,7 @@
     number_of_interfaces,max_npx_interface,max_npy_interface, &
     number_of_layers,ner_layer
 
-  use constants,only: IMAIN,IIN,MF_IN_DATA_FILES,DONT_IGNORE_JUNK,IUTM2LONGLAT,MAX_STRING_LEN
+  use constants, only: IMAIN,IIN,MF_IN_DATA_FILES,DONT_IGNORE_JUNK,IUTM2LONGLAT,MAX_STRING_LEN
 
   implicit none
 

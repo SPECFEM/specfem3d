@@ -36,7 +36,7 @@ contains
 !> Initialize ADIOS and setup the xml output file
 subroutine adios_setup()
 
-  use constants,only : ADIOS_BUFFER_SIZE_IN_MB
+  use constants, only: ADIOS_BUFFER_SIZE_IN_MB
 
   use adios_write_mod, only: adios_init
 

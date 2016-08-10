@@ -38,8 +38,7 @@
 subroutine crm_save_moho_adios()
 
   use adios_helpers_mod
-  use generate_databases_par, only : myrank, sizeprocs, LOCAL_PATH, &
-    NSPEC_AB,NDIM,NGLLSQUARE,ADIOS_TRANSPORT_METHOD
+  use generate_databases_par, only: myrank, sizeprocs, LOCAL_PATH, NSPEC_AB,NDIM,NGLLSQUARE,ADIOS_TRANSPORT_METHOD
   use create_regions_mesh_ext_par
 
   implicit none
@@ -62,7 +61,7 @@ subroutine crm_save_moho_adios()
 
   integer :: comm
 
-  ! gets mpi communicator
+  ! gets MPI communicator
   call world_get_comm(comm)
 
   !-----------------------------------------------------------------.

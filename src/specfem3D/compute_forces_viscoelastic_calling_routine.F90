@@ -34,8 +34,8 @@ subroutine compute_forces_viscoelastic()
   use specfem_par_elastic
   use specfem_par_poroelastic
   use pml_par
-  use fault_solver_dynamic, only : bc_dynflt_set3d_all,SIMULATION_TYPE_DYN
-  use fault_solver_kinematic, only : bc_kinflt_set_all,SIMULATION_TYPE_KIN
+  use fault_solver_dynamic, only: bc_dynflt_set3d_all,SIMULATION_TYPE_DYN
+  use fault_solver_kinematic, only: bc_kinflt_set_all,SIMULATION_TYPE_KIN
 
   implicit none
 
@@ -309,8 +309,8 @@ subroutine compute_forces_viscoelastic_backward()
   use specfem_par_elastic
   use specfem_par_poroelastic
   use pml_par
-  use fault_solver_dynamic, only : bc_dynflt_set3d_all
-  use fault_solver_kinematic, only : bc_kinflt_set_all
+  use fault_solver_dynamic, only: bc_dynflt_set3d_all
+  use fault_solver_kinematic, only: bc_kinflt_set_all
 
   implicit none
 
@@ -487,8 +487,8 @@ subroutine compute_forces_viscoelastic_GPU()
   use specfem_par_elastic
   use specfem_par_poroelastic
   use pml_par
-  use fault_solver_dynamic, only : bc_dynflt_set3d_all,SIMULATION_TYPE_DYN,synchronize_GPU
-  use fault_solver_kinematic, only : bc_kinflt_set_all,SIMULATION_TYPE_KIN
+  use fault_solver_dynamic, only: bc_dynflt_set3d_all,SIMULATION_TYPE_DYN,synchronize_GPU
+  use fault_solver_kinematic, only: bc_kinflt_set_all,SIMULATION_TYPE_KIN
 
   implicit none
 
@@ -522,7 +522,7 @@ subroutine compute_forces_viscoelastic_GPU()
       ! wait for asynchronous copy to finish
       call sync_copy_from_device(Mesh_pointer,iphase,buffer_send_vector_ext_mesh)
 
-      ! sends mpi buffers
+      ! sends MPI buffers
       call assemble_MPI_vector_send_cuda(NPROC, &
                   buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
                   num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
@@ -530,7 +530,7 @@ subroutine compute_forces_viscoelastic_GPU()
                   my_neighbours_ext_mesh, &
                   request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
 
-      ! transfers mpi buffers onto GPU
+      ! transfers MPI buffers onto GPU
       call transfer_boundary_to_device(NPROC,Mesh_pointer,buffer_recv_vector_ext_mesh, &
                   num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                   request_recv_vector_ext_mesh)
@@ -665,7 +665,7 @@ subroutine compute_forces_viscoelastic_GPU()
     !              my_neighbours_ext_mesh, &
     !              request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
 
-    ! transfers mpi buffers onto GPU
+    ! transfers MPI buffers onto GPU
     !call transfer_boundary_to_device(NPROC,Mesh_pointer,buffer_recv_vector_ext_mesh, &
     !              num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
     !              request_recv_vector_ext_mesh)

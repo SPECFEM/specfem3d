@@ -59,20 +59,20 @@
 
   ! computes elastic tensor term
 
-  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM, &
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM, &
        N_SLS,SAVE_MOHO_MESH, &
        ONE_THIRD,FOUR_THIRDS,m1,m2
 
   ! Trying to pass these variables as subroutine arguments ran into
   ! problems, so we reference them from their module, making them
   ! accessible from this subroutine
-  use specfem_par_elastic, only:dummyx_loc,dummyy_loc,dummyz_loc,newtempx1,newtempx2,newtempx3, &
+  use specfem_par_elastic, only: dummyx_loc,dummyy_loc,dummyz_loc,newtempx1,newtempx2,newtempx3, &
        newtempy1,newtempy2,newtempy3,newtempz1,newtempz2,newtempz3, &
        tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3,num_elem_colors_elastic, &
        dummyx_loc_att,dummyy_loc_att,dummyz_loc_att,tempx1_att,tempx2_att,tempx3_att, &
        tempy1_att,tempy2_att,tempy3_att,tempz1_att,tempz2_att,tempz3_att
 
-  use fault_solver_dynamic, only : Kelvin_Voigt_eta
+  use fault_solver_dynamic, only: Kelvin_Voigt_eta
 
   implicit none
 

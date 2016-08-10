@@ -27,8 +27,8 @@
 
 module fault_scotch
 
-  use constants,only: MAX_STRING_LEN, IN_DATA_FILES
-  use shared_parameters,only: NGNOD2D
+  use constants, only: MAX_STRING_LEN, IN_DATA_FILES
+  use shared_parameters, only: NGNOD2D
   implicit none
 
   private

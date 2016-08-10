@@ -25,8 +25,8 @@
 !
 !=====================================================================
 
-! not used, remains here for reference...
-! note: mpi setup is now done in xgenerate_databases
+! not used any more, remains here for reference...
+! note: MPI setup is now done in xgenerate_databases
 
   subroutine get_MPI_cutplanes_eta(myrank,prname,nspec,iMPIcut_eta,ibool, &
                         xstore,ystore,zstore,mask_ibool,npointot, &

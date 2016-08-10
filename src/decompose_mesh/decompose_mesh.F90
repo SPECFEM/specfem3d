@@ -35,14 +35,14 @@ module decompose_mesh
 
   use shared_parameters
 
-  use part_decompose_mesh,only: long,MAX_STRING_LEN,ACOUSTIC_LOAD,nfaces,NGNOD_EIGHT_CORNERS, &
+  use part_decompose_mesh, only: long,MAX_STRING_LEN,ACOUSTIC_LOAD,nfaces,NGNOD_EIGHT_CORNERS, &
     write_interfaces_database,write_moho_surface_database,write_glob2loc_nodes_database, &
     write_material_props_database,write_boundaries_database, &
     write_partition_database,write_cpml_database, &
     acoustic_elastic_poro_load,mesh2dual_ncommonnodes, &
     build_glob2loc_elmnts,build_glob2loc_nodes,build_interfaces,poro_elastic_repartitioning,moho_surface_repartitioning
 
-  use fault_scotch,only: ANY_FAULT,nodes_coords_open,read_fault_files,save_nodes_coords,close_faults, &
+  use fault_scotch, only: ANY_FAULT,nodes_coords_open,read_fault_files,save_nodes_coords,close_faults, &
     fault_repartition,write_fault_database
 
   implicit none
@@ -1038,7 +1038,7 @@ module decompose_mesh
     call build_glob2loc_nodes(nspec, nnodes,nsize, nnodes_elmnts, nodes_elmnts, part, &
          glob2loc_nodes_nparts, glob2loc_nodes_parts, glob2loc_nodes, nparts)
 
-    ! mpi interfaces
+    ! MPI interfaces
     ! acoustic/elastic/poroelastic boundaries will be split into different MPI partitions
     call build_interfaces(nspec, sup_neighbour, part, elmnts, &
                              xadj, adjncy, tab_interfaces, &

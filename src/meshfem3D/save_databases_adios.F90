@@ -44,14 +44,14 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
                                 NMATERIALS,material_properties, &
                                 nspec_CPML,CPML_to_spec,CPML_regions,is_CPML)
 
-  use constants,only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,ADIOS_TRANSPORT_METHOD, &
+  use constants, only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,ADIOS_TRANSPORT_METHOD, &
     NGLLX,NGLLY,NGLLZ
 
-  use adios_helpers_mod,only: define_adios_global_array1d,define_adios_scalar, &
+  use adios_helpers_mod, only: define_adios_global_array1d,define_adios_scalar, &
     write_adios_global_1d_array,write_adios_global_string_1d_array, &
     define_adios_local_string_1d_array
 
-  use safe_alloc_mod,only: safe_alloc,safe_dealloc
+  use safe_alloc_mod, only: safe_alloc,safe_dealloc
 
   implicit none
 
@@ -545,7 +545,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
       interface_num = interface_num +1
     endif
   else
-    ! only single mpi process
+    ! only one MPI process
     call safe_alloc(neighbours_mesh, nb_interfaces, "neighbours_mesh")
     call safe_alloc(num_elmnts_mesh, nb_interfaces, "num_elmnts_mesh")
     call safe_alloc(interfaces_mesh, 6, nspec_interfaces_max, nb_interfaces, "interfaces_mesh")
@@ -555,6 +555,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   ! Get maximum value for each variable used to define a local_dim. |
   ! ADIOS write equally sized chunks for each processor.            |
   !-----------------------------------------------------------------'
+
   ! Filling a temporary array to avoid doing allreduces for each var.
   max_global_values(1) = nglob
   max_global_values(2) = nspec
@@ -827,7 +828,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
                                      STRINGIFY_VAR(is_CPML))
   endif
 
-  ! mpi interfaces
+  ! MPI interfaces
   if (nb_interfaces > 0) then
     local_dim = nb_interfaces_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(neighbours_mesh))

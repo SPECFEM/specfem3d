@@ -57,15 +57,13 @@
 
 program smooth_sem
 
-  use postprocess_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,NGLLSQUARE, &
-    MAX_STRING_LEN,IIN,IOUT, &
-    GAUSSALPHA,GAUSSBETA,PI,TWO_PI, &
-    MAX_KERNEL_NAMES
+  use postprocess_par, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,NGLLSQUARE, &
+    MAX_STRING_LEN,IIN,IOUT,GAUSSALPHA,GAUSSBETA,PI,TWO_PI,MAX_KERNEL_NAMES
 
   use specfem_par
-  use specfem_par_elastic,only: ELASTIC_SIMULATION,ispec_is_elastic,rho_vp,rho_vs,min_resolved_period
-  use specfem_par_acoustic,only: ACOUSTIC_SIMULATION,ispec_is_acoustic
-  use specfem_par_poroelastic,only: POROELASTIC_SIMULATION,ispec_is_poroelastic,rho_vpI,rho_vpII,rho_vsI, &
+  use specfem_par_elastic, only: ELASTIC_SIMULATION,ispec_is_elastic,rho_vp,rho_vs,min_resolved_period
+  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION,ispec_is_acoustic
+  use specfem_par_poroelastic, only: POROELASTIC_SIMULATION,ispec_is_poroelastic,rho_vpI,rho_vpII,rho_vsI, &
     phistore,tortstore,rhoarraystore
   use specfem_par_movie
 
@@ -858,7 +856,8 @@ program smooth_sem
   subroutine smoothing_weights_vec(x0,y0,z0,sigma_h2_inv,sigma_v2_inv,exp_val,&
                               xx_elem,yy_elem,zz_elem)
 
-  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
+
   implicit none
 
   real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ),intent(out) :: exp_val
@@ -907,9 +906,9 @@ program smooth_sem
   subroutine get_distance_vec(dist_h,dist_v,x0,y0,z0,x1,y1,z1)
 
 ! returns vector lengths as distances in radial and horizontal direction
-! only for flat earth with z in vertical direction
+! only for flat Earth with z in vertical direction
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
