@@ -64,8 +64,8 @@
     read(27,rec=irecord) vp_block_gocad_sngl(ix,iy,iz)
 
 ! use only one convention for threshold: vp > 6500. means fictitious
-   if(vp_block_gocad_sngl(ix,iy,iz) < 0.1) vp_block_gocad_sngl(ix,iy,iz) = 6501.
-   if(vp_block_gocad_sngl(ix,iy,iz) > 6499.) vp_block_gocad_sngl(ix,iy,iz) = 6501.
+   if (vp_block_gocad_sngl(ix,iy,iz) < 0.1) vp_block_gocad_sngl(ix,iy,iz) = 6501.
+   if (vp_block_gocad_sngl(ix,iy,iz) > 6499.) vp_block_gocad_sngl(ix,iy,iz) = 6501.
 
 ! invert Y and Z axes back to normal
     vp_block_gocad_sngl_clean(ix,NY_GOCAD_HR-1-iy,NZ_GOCAD_HR-1-iz) = vp_block_gocad_sngl(ix,iy,iz)

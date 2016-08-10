@@ -50,7 +50,7 @@ recursive subroutine QsortC(A,Id)
   integer,          intent(in out), dimension(:) :: Id
   integer :: iq
 
-  if(size(A) > 1) then
+  if (size(A) > 1) then
      call Partition(A, Id, iq)
      call QsortC(A(:iq-1), Id(:iq-1))
      call QsortC(A(iq:), Id(iq:))

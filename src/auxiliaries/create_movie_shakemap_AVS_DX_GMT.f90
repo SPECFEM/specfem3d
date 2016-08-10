@@ -195,7 +195,7 @@
     print *
     print *,'enter value:'
     read(5,*) inumber
-    if (inumber<1 .or. inumber>2) stop 'exiting...'
+    if (inumber < 1 .or. inumber > 2) stop 'exiting...'
     print *
     print *,'looping from ',it1,' to ',it2,' every ',NTSTEP_BETWEEN_FRAMES,' time steps'
     ! count number of movie frames

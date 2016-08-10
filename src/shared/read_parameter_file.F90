@@ -56,7 +56,7 @@
 
   ! read from a single processor (the master) and then use MPI to broadcast to others
   ! to avoid an I/O bottleneck in the case of very large runs
-  if(myrank == 0) then
+  if (myrank == 0) then
 
     ! opens file Par_file
     call open_parameter_file(ier)
@@ -85,14 +85,14 @@
       call read_value_integer(nproc_eta_old, 'NPROC_ETA', ier)
       if (ier /= 0) then
         print *,'please specify the number of processes in Par_file as:'
-        print *,'NPROC           =    <my_number_of_desired_processes> '
+        print *,'NPROC           = my_number_of_desired_processes'
         stop 'Error reading Par_file parameter NPROC'
       endif
       ! checks if it uses an old Par_file format
       call read_value_integer(nproc_xi_old, 'NPROC_XI', ier)
       if (ier /= 0) then
         print *,'please specify the number of processes in Par_file as:'
-        print *,'NPROC           =    <my_number_of_desired_processes> '
+        print *,'NPROC           = my_number_of_desired_processes'
         stop 'Error reading Par_file parameter NPROC'
       endif
       NPROC = nproc_eta_old * nproc_xi_old
@@ -430,11 +430,11 @@
         stop 'Error for IPATI model, please set USE_RICKER_TIME_FUNCTION to .true. in Par_file and recompile solver'
     endif
 
-  endif ! of if(myrank == 0) then
+  endif ! of if (myrank == 0) then
 
 ! read from a single processor (the master) and then use MPI to broadcast to others
 ! to avoid an I/O bottleneck in the case of very large runs
-  if(BROADCAST_AFTER_READ) then
+  if (BROADCAST_AFTER_READ) then
 
     call bcast_all_singlei_world(NPROC)
     call bcast_all_singlei_world(SIMULATION_TYPE)
@@ -516,7 +516,7 @@
     call bcast_all_string_world(FORCESOLUTION)
     call bcast_all_string_world(CMTSOLUTION)
 
-  endif ! of if(BROADCAST_AFTER_READ) then
+  endif ! of if (BROADCAST_AFTER_READ) then
 
   end subroutine read_parameter_file
 

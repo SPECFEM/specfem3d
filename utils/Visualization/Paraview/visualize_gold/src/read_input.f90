@@ -33,14 +33,14 @@ out_path='../output'
 
 ! open file to read
 open(unit=11,file=trim(inp_fname),status='old', action='read',iostat=ios)
-if (ios /= 0)then
+if (ios /= 0) then
   write(*,'(/,a)')'ERROR: input file "'//trim(inp_fname)//'" cannot be opened!'
   stop
 endif
 
 do
   read(11,'(a)',iostat=ios)line ! This will read a line and proceed to next line
-  if (ios/=0)exit
+  if (ios /= 0)exit
 
   ! check for blank and comment line
   if (isblank(line) .or. iscomment(line,'#'))cycle
@@ -48,7 +48,7 @@ do
   ! look for line continuation
   tag=trim(line)
   call last_char(line,tmp_char,ind)
-  if (tmp_char=='&')then
+  if (tmp_char == '&') then
         slen=len(line)
         tag=trim(line(1:ind-1))
         read(11,'(a)',iostat=ios)line ! This will read a line and proceed to next line
@@ -57,7 +57,7 @@ do
 
   call first_token(tag,token)
   ! read input information
-  if (trim(token)=='input:')then
+  if (trim(token) == 'input:') then
     call split_string(tag,',',args,narg)
     inp_path=get_string('path',args,narg)
     dt=get_real('dt',args,narg)
@@ -66,11 +66,11 @@ do
     t_inc=get_integer('step',args,narg)
     t_width=get_integer('width',args,narg)
     inp_ncomp=get_integer('ncomp',args,narg); allocate(inp_head(inp_ncomp))
-    if (inp_ncomp==1)then
+    if (inp_ncomp == 1) then
       inp_head=get_string('head',args,narg)
-    else if (inp_ncomp==3)then ! vector
+    else if (inp_ncomp == 3) then ! vector
       inp_head=get_string_vect('head',inp_ncomp,args,narg)
-    else if (inp_ncomp==6)then ! tensor
+    else if (inp_ncomp == 6) then ! tensor
       inp_head=get_string_vect('head',inp_ncomp,args,narg)
     else
       write(*,'(/,a)')'ERROR: wrong ncomp value in input: line!'
@@ -84,7 +84,7 @@ do
   endif
 
   ! read output information
-  if (trim(token)=='output:')then
+  if (trim(token) == 'output:') then
     call split_string(tag,',',args,narg)
     !out_path=get_string('path',args,narg)
     call seek_string('path',strval,args,narg)
@@ -101,7 +101,7 @@ do
   endif
 
   ! read processor information
-  if (trim(token)=='procinfo:')then
+  if (trim(token) == 'procinfo:') then
     call split_string(tag,',',args,narg)
     proc_head=get_string('head',args,narg)
     proc_width=get_integer('width',args,narg)
@@ -109,7 +109,7 @@ do
     slice_npmax=get_integer('npmax',args,narg)
       allocate(slice_nproc(out_nslice))
       allocate(slice_proc_list(out_nslice,slice_npmax))
-      if (out_format==1 .and. out_nslice>1)then
+      if (out_format == 1 .and. out_nslice > 1) then
         ! allocate memory for server_name and server_exec
         allocate(server_name(out_nslice))
         allocate(server_exec(out_nslice))
@@ -119,26 +119,26 @@ do
   endif
 
   ! read processor list
-  if (trim(token)=='proclist:')then
+  if (trim(token) == 'proclist:') then
     proclist_stat=-1
     call split_string(tag,',',args,narg)
     slice_count1=slice_count1+1
-    if (slice_count1>out_nslice)then
+    if (slice_count1 > out_nslice) then
       write(*,'(/,a)')'ERROR: number of slices exceeds the actual number!'
       stop
     endif
     slice_nproc(slice_count1)=get_integer('np',args,narg)
     proc_mode=get_integer('mode',args,narg)
-    if (proc_mode==0)then
+    if (proc_mode == 0) then
       slice_proc_list(slice_count1,1:slice_nproc(slice_count1)) &
       =get_integer_vect('list',slice_nproc(slice_count1),args,narg)
-    else if (proc_mode==1)then ! Indicial
+    else if (proc_mode == 1) then ! Indicial
       proc_ind=get_integer_vect('list',3,args,narg) ! start, end, step
 
       proc_count=0
       do i_proc=proc_ind(1),proc_ind(2),proc_ind(3)
         proc_count=proc_count+1
-        if (proc_count>slice_npmax)then
+        if (proc_count > slice_npmax) then
           write(*,'(/,a)')'ERROR: number of processors per slice exceeds the maximum number!'
           stop
         endif
@@ -156,12 +156,12 @@ do
   endif
 
   ! read server information
-  if (output_stat==0 .and. out_format==1 .and. out_nslice>1)then
-    if (trim(token)=='server:')then
+  if (output_stat == 0 .and. out_format == 1 .and. out_nslice > 1) then
+    if (trim(token) == 'server:') then
       server_stat=-1
       call split_string(tag,',',args,narg)
       slice_count2=slice_count2+1
-      if (slice_count2>out_nslice)then
+      if (slice_count2 > out_nslice) then
         write(*,'(/,a)')'ERROR: number of slices exceeds the actual number!'
         stop
       endif
@@ -176,50 +176,50 @@ do
 enddo ! do
 
 ! check for proclist: line number
-if (slice_count1<out_nslice)then
+if (slice_count1 < out_nslice) then
   write(*,'(/,a)')'ERROR: number of lines with "proclist:" are less than the number of output slices ',out_nslice
   stop
 endif
 
 ! check for server: line number
-if (out_format==1 .and. out_nslice>1 .and. slice_count2>1 .and. slice_count2<out_nslice)then
+if (out_format == 1 .and. out_nslice > 1 .and. slice_count2 > 1 .and. slice_count2 < out_nslice) then
   write(*,'(/,a)')'ERROR: number of lines with "server:" are less than the number of output slices ',out_nslice
   stop
 endif
 
 ! set same server information if necessary
-if (out_format==1 .and. slice_count2==1 .and. out_nslice>1)then
+if (out_format == 1 .and. slice_count2 == 1 .and. out_nslice > 1) then
   ! set server name and executable for all other
   server_name(2:out_nslice)=server_name(1)
   server_exec(2:out_nslice)=server_exec(1)
 endif
 
 ! check input status
-if (input_stat /= 0)then
+if (input_stat /= 0) then
   write(*,'(/,a)')'ERROR: error reading input information! make sure the line with "input:" token is correct.'
   stop
 endif
 
 ! check output status
-if (output_stat /= 0)then
+if (output_stat /= 0) then
   write(*,'(/,a)')'ERROR: error reading output information! make sure the line with "output:" token is correct.'
   stop
 endif
 
 ! check procinfo status
-if (procinfo_stat /= 0)then
+if (procinfo_stat /= 0) then
   write(*,'(/,a)')'ERROR: error reading processor information! make sure the line with "procinfo:" token is correct.'
   stop
 endif
 
 ! check proclist status
-if (proclist_stat /= 0)then
+if (proclist_stat /= 0) then
   write(*,'(/,a)')'ERROR: error reading processor list! make sure the line/s with "proclist:" token is/are correct.'
   stop
 endif
 
 ! check server status
-if (out_format==1 .and. out_nslice>1 .and. server_stat /= 0)then
+if (out_format == 1 .and. out_nslice > 1 .and. server_stat /= 0) then
   write(*,'(/,a)')'ERROR: error reading server information! make sure the line/s with "server:" token is/are correct.'
   stop
 endif

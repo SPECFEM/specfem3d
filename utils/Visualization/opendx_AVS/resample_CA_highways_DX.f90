@@ -34,10 +34,10 @@
     read(5,*) x(ipoin),y(ipoin)
     xval = x(ipoin)
     yval = y(ipoin)
-    if(xval < xmin) xval = xmin
-    if(xval > xmax) xval = xmax
-    if(yval < ymin) yval = ymin
-    if(yval > ymax) yval = ymax
+    if (xval < xmin) xval = xmin
+    if (xval > xmax) xval = xmax
+    if (yval < ymin) yval = ymin
+    if (yval > ymax) yval = ymax
     write(*,*) xval,yval,izval
   enddo
 
@@ -60,19 +60,19 @@
 ! exclude elements that are outside of clipping box, or wrong data value
  nelemnew = 0
  do ielem=1,nelem
-   if(x(i1(ielem)) < xmin .or. x(i1(ielem)) > xmax .or. y(i1(ielem)) < ymin .or. y(i1(ielem)) > ymax) then
+   if (x(i1(ielem)) < xmin .or. x(i1(ielem)) > xmax .or. y(i1(ielem)) < ymin .or. y(i1(ielem)) > ymax) then
      p1outside = .true.
    else
      p1outside = .false.
    endif
 
-   if(x(i2(ielem)) < xmin .or. x(i2(ielem)) > xmax .or. y(i2(ielem)) < ymin .or. y(i2(ielem)) > ymax) then
+   if (x(i2(ielem)) < xmin .or. x(i2(ielem)) > xmax .or. y(i2(ielem)) < ymin .or. y(i2(ielem)) > ymax) then
      p2outside = .true.
    else
      p2outside = .false.
    endif
 
-  if(.not. p1outside .and. .not. p2outside .and. (dataval(ielem) < 0.1 .or. dataval(ielem) > 254.5)) nelemnew = nelemnew + 1
+  if (.not. p1outside .and. .not. p2outside .and. (dataval(ielem) < 0.1 .or. dataval(ielem) > 254.5)) nelemnew = nelemnew + 1
  enddo
 
  write(*,*) 'object 2 class array type int rank 1 shape 2 items ',nelemnew,' data follows'
@@ -80,19 +80,19 @@
 ! then write elements kept
 ! exclude elements that are outside of clipping box, or wrong data value
  do ielem=1,nelem
-   if(x(i1(ielem)) < xmin .or. x(i1(ielem)) > xmax .or. y(i1(ielem)) < ymin .or. y(i1(ielem)) > ymax) then
+   if (x(i1(ielem)) < xmin .or. x(i1(ielem)) > xmax .or. y(i1(ielem)) < ymin .or. y(i1(ielem)) > ymax) then
      p1outside = .true.
    else
      p1outside = .false.
    endif
 
-   if(x(i2(ielem)) < xmin .or. x(i2(ielem)) > xmax .or. y(i2(ielem)) < ymin .or. y(i2(ielem)) > ymax) then
+   if (x(i2(ielem)) < xmin .or. x(i2(ielem)) > xmax .or. y(i2(ielem)) < ymin .or. y(i2(ielem)) > ymax) then
      p2outside = .true.
    else
      p2outside = .false.
    endif
 
-  if(.not. p1outside .and. .not. p2outside .and. (dataval(ielem) < 0.1 .or. dataval(ielem) > 254.5)) &
+  if (.not. p1outside .and. .not. p2outside .and. (dataval(ielem) < 0.1 .or. dataval(ielem) > 254.5)) &
     write(*,*) i1(ielem),i2(ielem)
  enddo
 
@@ -104,19 +104,19 @@
 ! then write element data for elements kept
 ! exclude elements that are outside of clipping box, or wrong data value
  do ielem=1,nelem
-   if(x(i1(ielem)) < xmin .or. x(i1(ielem)) > xmax .or. y(i1(ielem)) < ymin .or. y(i1(ielem)) > ymax) then
+   if (x(i1(ielem)) < xmin .or. x(i1(ielem)) > xmax .or. y(i1(ielem)) < ymin .or. y(i1(ielem)) > ymax) then
      p1outside = .true.
    else
      p1outside = .false.
    endif
 
-   if(x(i2(ielem)) < xmin .or. x(i2(ielem)) > xmax .or. y(i2(ielem)) < ymin .or. y(i2(ielem)) > ymax) then
+   if (x(i2(ielem)) < xmin .or. x(i2(ielem)) > xmax .or. y(i2(ielem)) < ymin .or. y(i2(ielem)) > ymax) then
      p2outside = .true.
    else
      p2outside = .false.
    endif
 
-  if(.not. p1outside .and. .not. p2outside .and. (dataval(ielem) < 0.1 .or. dataval(ielem) > 254.5)) &
+  if (.not. p1outside .and. .not. p2outside .and. (dataval(ielem) < 0.1 .or. dataval(ielem) > 254.5)) &
     write(*,*) dataval(ielem)
  enddo
 

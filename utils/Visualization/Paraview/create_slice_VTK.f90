@@ -76,7 +76,7 @@
       print *, '   - slice_list:    file containing slice/proc ids '
       print *, '   - filename:    looks for filename.bin must be array of (NGLLX,NGLLY,NGLLZ,nspec)'
       print *, '   - input_dir:    includes proc***_external_mesh.bin and proc****filename.bin '
-      print *, '   - output_dir:    output mesh files go to here '
+      print *, '   - output_dir:    output mesh files goto here '
       print *
       stop ' Reenter command line options'
     endif
@@ -129,12 +129,12 @@
 
     ! ibool file
     allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ibool'
+    if ( ier /= 0 ) stop 'error allocating array ibool'
     read(27) ibool
 
     ! global point arrays
     allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array xstore etc.'
+    if ( ier /= 0 ) stop 'error allocating array xstore etc.'
     read(27) xstore
     read(27) ystore
     read(27) zstore
@@ -152,7 +152,7 @@
       stop
     endif
     allocate(data(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array data'
+    if ( ier /= 0 ) stop 'error allocating array data'
     read(28) data
     close(28)
 
@@ -188,7 +188,7 @@
             xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
             gll_data,prname_file)
 
-! external mesh routine for saving vtk files for custom_real values on all GLL points
+! external mesh routine for saving vtk files for CUSTOM_REAL values on all GLL points
 
   implicit none
 

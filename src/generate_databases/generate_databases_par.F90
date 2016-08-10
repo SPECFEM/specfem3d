@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
   module generate_databases_par
 
   use constants,only: NGLLX,NGLLY,NGLLZ,NGLLSQUARE,NDIM,NDIM2D,NGNOD2D_FOUR_CORNERS,N_SLS, &
@@ -180,6 +179,10 @@
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: ystore_dummy
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: zstore_dummy
   integer :: nglob_dummy
+
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_generate_databases_par.F90"
+#endif
 
 ! Gauss-Lobatto-Legendre points and weights of integration
   double precision, dimension(:), allocatable :: xigll,yigll,zigll,wxgll,wygll,wzgll

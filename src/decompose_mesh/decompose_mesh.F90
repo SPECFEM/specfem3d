@@ -442,11 +442,11 @@ module decompose_mesh
        !  undefined materials: have to be listed in decreasing order of material_id (start with -1, -2, etc...)
        !  format:
        !   - for interfaces
-       !    #(6) material_domain_id #(1) material_id(<0) #(2) type_name (="interface")
+       !    #(6) material_domain_id #(1) material_id( < 0) #(2) type_name (="interface")
        !     #(3) material_id_for_material_below #(4) material_id_for_material_above
        !        example:     2 -1 interface 1 2
        !   - for tomography models
-       !    #(6) material_domain_id #(1) material_id(<0) #(2) type_name (="tomography")
+       !    #(6) material_domain_id #(1) material_id( < 0) #(2) type_name (="tomography")
        !     #(3) block_name (="elastic") #(4) file_name
        !        example:     2 -1 tomography elastic tomography_model.xyz
        ! reads lines until it reaches a defined material
@@ -769,7 +769,7 @@ module decompose_mesh
     if (ier /= 0) stop 'Error allocating array is_CPML'
     is_CPML(:) = .false.
     do ispec_CPML=1,nspec_cpml
-       if ((CPML_regions(ispec_CPML)>=1) .and. (CPML_regions(ispec_CPML)<=7)) then
+       if ((CPML_regions(ispec_CPML) >= 1) .and. (CPML_regions(ispec_CPML) <= 7)) then
           is_CPML(CPML_to_spec(ispec_CPML)) = .true.
        endif
     enddo
@@ -824,7 +824,7 @@ module decompose_mesh
 
     print *, 'node valence:  min = ',minval(used_nodes_elmnts(:)),' max = ', maxval(used_nodes_elmnts(:))
 
-    if(minval(used_nodes_elmnts(:)) <= 0) &
+    if (minval(used_nodes_elmnts(:)) <= 0) &
         stop 'Error: found some unused nodes (weird, but not necessarily fatal; your mesher may have created extra nodes).'
 
     ! max number of elements that contain the same node

@@ -66,7 +66,7 @@ CONTAINS
   integer :: nbfaults, iflt, ier
 
   open(101,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file_faults',status='old',action='read',iostat=ier)
-  if (ier==0) then
+  if (ier == 0) then
     read(101,*) nbfaults
   else
     nbfaults = 0
@@ -74,7 +74,7 @@ CONTAINS
   endif
   close(101)
 
-  ANY_FAULT = (nbfaults>0)
+  ANY_FAULT = (nbfaults > 0)
   if (.not. ANY_FAULT)  return
 
   allocate(faults(nbfaults))
@@ -226,7 +226,7 @@ CONTAINS
       enddo
 
       ! jpa: If the two fault sides have been meshed independently they might not match. Test it here:
-      if (.not.found_it) stop 'Inconsistent fault mesh: corresponding node in the other fault face was not found'
+      if (.not. found_it) stop 'Inconsistent fault mesh: corresponding node in the other fault face was not found'
 
     enddo
   enddo
@@ -497,7 +497,7 @@ CONTAINS
     write(IIN_database) nspec_fault_1
 
    ! if no fault element in this partition, move to next fault
-    if (nspec_fault_1==0) cycle
+    if (nspec_fault_1 == 0) cycle
 
    ! export fault element data, side 1
     do i=1,faults(iflt)%nspec

@@ -42,7 +42,7 @@ program xcompute_direction_cg
 
         open(1001,file=trim(gradient_0_file),status='old',form='unformatted',iostat=ier)
         if (myrank == 0) print *, 'reading gradient0:',trim(gradient_0_file)
-        if ( ier /=0) then
+        if ( ier /= 0) then
                 print *, 'error opening:',trim(gradient_0_file)
                 call exit_mpi(myrank,'file not found')
         endif
@@ -51,7 +51,7 @@ program xcompute_direction_cg
 
         open(1001,file=trim(gradient_1_file),status='old',form='unformatted',iostat=ier)
         if (myrank == 0) print *, 'reading gradient1:',trim(gradient_1_file)
-        if (ier/=0) then
+        if (ier /= 0) then
                 print *, 'error opening:',trim(gradient_1_file)
                 call exit_mpi(myrank,'file not found')
         endif
@@ -102,7 +102,7 @@ program xcompute_direction_cg
 
         open(1001,file=trim(gradient_0_file),status='old',form='unformatted',iostat=ier)
         if (myrank == 0) print *, 'reading gradient0:',trim(gradient_0_file)
-        if ( ier /=0) then
+        if ( ier /= 0) then
                 print *, 'error opening:',trim(gradient_0_file)
                 call exit_mpi(myrank,'file not found')
         endif
@@ -111,7 +111,7 @@ program xcompute_direction_cg
 
         open(1001,file=trim(gradient_1_file),status='old',form='unformatted',iostat=ier)
         if (myrank == 0) print *, 'reading gradient1:',trim(gradient_1_file)
-        if (ier/=0) then
+        if (ier /= 0) then
                 print *, 'error opening:',trim(gradient_1_file)
                 call exit_mpi(myrank,'file not found')
         endif

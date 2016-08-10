@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
 ! routine for saving vtk file holding integer flag on each spectral element
 
   subroutine write_VTK_data_elem_i(nspec,nglob, &
@@ -166,7 +165,7 @@
 
 !=============================================================
 
-! external mesh routine for saving vtk files for custom_real values on all GLL points
+! external mesh routine for saving vtk files for CUSTOM_REAL values on all GLL points
 
   subroutine write_VTK_data_gll_cr(nspec,nglob, &
             xstore_dummy,ystore_dummy,zstore_dummy,ibool, &

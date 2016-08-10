@@ -300,7 +300,7 @@
 ! + NGLLX * NGLLY * NGLLZ * ( 1 + 3) float = 2000 BYTE
 
     if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-      ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
+      ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an " .and. " statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
       if (is_CPML(ispec)) then
         ! In backward_simulation involved in SIMULATION_TYPE == 3,
@@ -324,7 +324,7 @@
     ! at this current time step, to fix attenuation in a consistent way
     if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
       if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-        ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
+        ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an " .and. " statement
         ! because array is_CPML() is unallocated when PML_CONDITIONS is false
         if (.not. is_CPML(ispec)) then
           ! Keeping in mind, currently we implement a PML derived based on elastic wave equation
@@ -379,7 +379,7 @@
 ! + 0 BYTE  (assuming A3_**, hprime_xxT in cache)
 
     if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-      ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
+      ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an " .and. " statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
       if (is_CPML(ispec)) then
         if (.not. backward_simulation) then
@@ -410,7 +410,7 @@
     if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
       ! it is noteworthy here that if ATTENUATION == .true., COMPUTE_AND_STORE_STRAIN == .true.
       if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-        ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
+        ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an " .and. " statement
         ! because array is_CPML() is unallocated when PML_CONDITIONS is false
         if (.not. is_CPML(ispec)) then
           ! temporary variables used for fixing attenuation in a consistent way
@@ -504,7 +504,7 @@
 
       ! stores derivatives of ux, uy and uz with respect to x, y and z
       if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-      ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
+      ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an " .and. " statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
         if (is_CPML(ispec)) then
           ! In backward_simulation involved in SIMULATION_TYPE == 3,
@@ -626,7 +626,7 @@
       if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
             ! temporary variables used for fixing attenuation in a consistent way
         if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-          ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
+          ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an " .and. " statement
           ! because array is_CPML() is unallocated when PML_CONDITIONS is false
           if (.not. is_CPML(ispec)) then
             ! temporary variables used for fixing attenuation in a consistent way
@@ -711,7 +711,7 @@
       ! attenuation
       if (ATTENUATION) then
         if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-          ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
+          ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an " .and. " statement
           ! because array is_CPML() is unallocated when PML_CONDITIONS is false
           if (.not. is_CPML(ispec)) then
             ! use unrelaxed parameters if attenuation
@@ -896,7 +896,7 @@
 !          depending on compilers, it can further decrease the computation time by ~ 30%.
 !          by default, N_SLS = 3, therefore we take steps of 3
         if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-          ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
+          ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an " .and. " statement
           ! because array is_CPML() is unallocated when PML_CONDITIONS is false
           if (.not. is_CPML(ispec)) then
             if (imodulo_N_SLS >= 1) then
@@ -1057,7 +1057,7 @@
     ENDDO_LOOP_IJK
 
     if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-      ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
+      ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an " .and. " statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
       if (is_CPML(ispec)) then
         ! In backward_simulation involved in SIMULATION_TYPE == 3,
@@ -1135,7 +1135,7 @@
       !  update memory variables based upon the Runge-Kutta scheme
       if (ATTENUATION) then
         if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-          ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
+          ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an " .and. " statement
           ! because array is_CPML() is unallocated when PML_CONDITIONS is false
           if (.not. is_CPML(ispec)) then
             ! use Runge-Kutta scheme to march in time
@@ -1240,8 +1240,8 @@
 
     ENDDO_LOOP_IJK
 
-    if (PML_CONDITIONS .and. (.not. backward_simulation)  .and. NSPEC_CPML > 0) then
-      ! do not merge this second line with the first using an ".and." statement
+    if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
+      ! do not merge this second line with the first using an " .and. " statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
       if (is_CPML(ispec)) then
 

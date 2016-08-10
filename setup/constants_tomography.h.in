@@ -103,13 +103,13 @@
 
 !!-----------------------------------------------------------
 !!
-!! Approximate hessian
+!! Approximate Hessian
 !!
 !!-----------------------------------------------------------
-  ! 1 permille of maximum for inverting hessian
+  ! 1 permille of maximum for inverting Hessian
   real(kind=CUSTOM_REAL),parameter :: THRESHOLD_HESS = 1.e-3
 
-  ! sums all hessians before inverting and preconditioning
+  ! sums all Hessians before inverting and preconditioning
   ! by default should be set to .true.
   logical, parameter :: USE_HESS_SUM = .true.
 

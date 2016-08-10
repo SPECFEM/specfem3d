@@ -32,11 +32,11 @@ print *,'aaaa'
 do ielem=1,nelem
 ! locate point in list
 do ipoin = 1,npoin
-if(i1(ielem) == ibool(ipoin)) goto 700
+if (i1(ielem) == ibool(ipoin)) goto 700
 enddo
 700 i1val = ipoin
 do ipoin = 1,npoin
-if(i2(ielem) == ibool(ipoin)) goto 710
+if (i2(ielem) == ibool(ipoin)) goto 710
 enddo
 710 i2val = ipoin
 ! DK DK point number start at 0 in OpenDX

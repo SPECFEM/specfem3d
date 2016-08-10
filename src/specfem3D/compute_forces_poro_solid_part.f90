@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
   subroutine compute_forces_poro_solid_part( iphase, &
                         NSPEC_AB,NGLOB_AB,displs_poroelastic,accels_poroelastic,&
                         displw_poroelastic,velocw_poroelastic,&
@@ -169,7 +168,7 @@
                     kappal_fr + 4._CUSTOM_REAL*mul_fr/3._CUSTOM_REAL
           C_biot = kappal_s*(kappal_s - kappal_fr)/(D_biot - kappal_fr)
           M_biot = kappal_s*kappal_s/(D_biot - kappal_fr)
-          !The RHS has the form : div T -phi/c div T_f + phi/ceta_fk^-1.partial t w
+          !The RHS has the form : div T -phi/c div T_f + phi/ceta_f_k^-1.partial t w
           !where T = G:grad u_s + C_biot div w I
           !and T_f = C_biot div u_s I + M_biot div w I
           mul_G = mul_fr
@@ -447,7 +446,7 @@
 
           etal_f = etastore(i,j,k,ispec)
 
-          if (etal_f >0.d0) then
+          if (etal_f > 0.d0) then
 
             permlxx = permstore(1,i,j,k,ispec)
             permlxy = permstore(2,i,j,k,ispec)
@@ -531,7 +530,7 @@
             !    enddo
             !  enddo
 
-          endif ! if (etal_f >0.d0) then
+          endif ! if (etal_f > 0.d0) then
 
         enddo ! second loop over the GLL points
       enddo

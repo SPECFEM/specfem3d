@@ -806,10 +806,6 @@
 !     Department of Terrestrial Magnetism / Carnegie Institute of Washington
 !     Univeristy of Rhode Island
 !
-!  <savage@uri.edu>.
-!  <savage13@gps.caltech.edu>
-!  <savage13@dtm.ciw.edu>
-!
 !   It is based upon formulation in the following references:
 !
 !   Dahlen and Tromp, 1998
@@ -1225,7 +1221,7 @@
 !                 4 => report every iteration, total simplex
 !     err       = Output
 !                 0 => Normal exeecution, converged within desired range
-!                 1 => Function Evaluation exceeded limit
+!                 1 => function evaluation exceeded limit
 !                 2 => Iterations exceeded limit
 !
 !     See Matlab fminsearch
@@ -1464,7 +1460,7 @@
 !      n  = Input
 !             Length of fv
 !
-!      Returns:
+!      returns:
 !         Xi = max( || fv(1)- fv(i) || ) for i=2:n
 !
 
@@ -1500,7 +1496,7 @@
 !            dimension(n, n+1)
 !     n  = Pseudo Length of n
 !
-!     Returns:
+!     returns:
 !       Xi = max( max( || v(:,1) - v(:,i) || ) ) for i=2:n+1
 !
 

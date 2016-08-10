@@ -630,9 +630,9 @@
       ymid = 0.5d0*(y0+y1)
       zmid = 0.5d0*(z0+z1)
 
-      if((xmid>=cavity_x0 .and. xmid<=cavity_x1) .and. &
-         (ymid>=cavity_y0 .and. ymid<=cavity_y1) .and. &
-         (zmid>=cavity_z0 .and. zmid<=cavity_z1))then
+      if ((xmid >= cavity_x0 .and. xmid <= cavity_x1) .and. &
+          (ymid >= cavity_y0 .and. ymid <= cavity_y1) .and. &
+          (zmid >= cavity_z0 .and. zmid <= cavity_z1)) then
         ! deactivate spectral element
         iselmt(i_spec)=.false.
       else
@@ -658,24 +658,24 @@
 
     ispec = 0
     do i_spec = 1,nspec_old
-      if(iselmt(i_spec))then
+      if (iselmt(i_spec)) then
         ispec = ispec + 1
         ispec_new(i_spec) = ispec
       endif
     enddo
-    if(ispec /= nspec) call exit_MPI(myrank,'ERROR: new number of spectral elements mismatch!')
+    if (ispec /= nspec) call exit_MPI(myrank,'ERROR: new number of spectral elements mismatch!')
 
     allocate(inode_new(nglob_old))
     inode_new(:) = -1
 
     inode = 0
     do i_node = 1,nglob_old
-      if(isnode(i_node))then
+      if (isnode(i_node)) then
         inode = inode + 1
         inode_new(i_node) = inode
       endif
     enddo
-    if(inode/=nglob)call exit_MPI(myrank,'ERROR: new number of spectral elements mismatch!')
+    if (inode /= nglob) call exit_MPI(myrank,'ERROR: new number of spectral elements mismatch!')
 
     allocate(nodes_coords_old(nglob_old,3))
     allocate(ispec_material_id_old(nspec_old))
@@ -704,7 +704,7 @@
 
     ! new specs
     do i_spec=1,nspec_old
-      if(iselmt(i_spec))then
+      if (iselmt(i_spec)) then
         ispec_material_id(ispec_new(i_spec))=ispec_material_id_old(i_spec)
         iboun(:,ispec_new(i_spec))=iboun_old(:,i_spec)
         iMPIcut_xi(:,ispec_new(i_spec))=iMPIcut_xi_old(:,i_spec)
@@ -723,7 +723,7 @@
 
     ! new coordinates
     do i_node=1,nglob_old
-      if(isnode(i_node))then
+      if (isnode(i_node)) then
         nodes_coords(inode_new(i_node),:)=nodes_coords_old(i_node,:)
       endif
     enddo
@@ -734,7 +734,7 @@
       call flush_IMAIN()
     endif
 
-  endif ! nacavity==0
+  endif ! of if (ncavity == 0)
 
 !----------------------------------end cavity-----------------------------------
 

@@ -80,16 +80,16 @@
   enddo
 
 ! make sure we stay in the right region
-  if(iregion_code == IREGION_INNER_CORE .and. i > 180) i = 180
+  if (iregion_code == IREGION_INNER_CORE .and. i > 180) i = 180
 
-  if(iregion_code == IREGION_OUTER_CORE .and. i < 182) i = 182
-  if(iregion_code == IREGION_OUTER_CORE .and. i > 358) i = 358
+  if (iregion_code == IREGION_OUTER_CORE .and. i < 182) i = 182
+  if (iregion_code == IREGION_OUTER_CORE .and. i > 358) i = 358
 
-  if(iregion_code == IREGION_CRUST_MANTLE .and. i < 360) i = 360
-  if(CRUSTAL .and. i > 717) i = 717
+  if (iregion_code == IREGION_CRUST_MANTLE .and. i < 360) i = 360
+  if (CRUSTAL .and. i > 717) i = 717
 
 
-  if(i == 1) then
+  if (i == 1) then
     rho = Mref_V%density_ref(i)
     vpv = Mref_V%vpv_ref(i)
     vph = Mref_V%vph_ref(i)
@@ -116,7 +116,7 @@
 
 ! make sure Vs is zero in the outer core even if roundoff errors on depth
 ! also set fictitious attenuation to a very high value (attenuation is not used in the fluid)
-  if(iregion_code == IREGION_OUTER_CORE) then
+  if (iregion_code == IREGION_OUTER_CORE) then
     vsv = 0.d0
     vsh = 0.d0
     Qkappa = 3000.d0

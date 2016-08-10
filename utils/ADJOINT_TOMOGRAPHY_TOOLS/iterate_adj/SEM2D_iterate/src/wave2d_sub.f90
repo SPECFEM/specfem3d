@@ -43,8 +43,8 @@ contains
     write(12,*) 'ISRC_TIME',ISRC_TIME
     write(12,*) 'hdur',hdur
     write(12,*) 'tshift',tshift
-    if(SRC_TAPER) write(12,*) 'SRC_TAPER 1'
-    if(.not. SRC_TAPER) write(12,*) 'SRC_TAPER 0'
+    if (SRC_TAPER) write(12,*) 'SRC_TAPER 1'
+    if (.not. SRC_TAPER) write(12,*) 'SRC_TAPER 0'
     write(12,*) 'FNORM',FNORM
     write(12,*) 'FOR_X',FOR_X
     write(12,*) 'FOR_Y',FOR_Y
@@ -72,8 +72,8 @@ contains
     write(12,*) 'PRHO',PRHO
     write(12,*) 'IMODEL_SYN',IMODEL_SYN
     write(12,*) 'IMODEL_DAT',IMODEL_DAT
-    if(M0ISMPRIOR) write(12,*) 'M0ISMPRIOR 1'
-    if(.not. M0ISMPRIOR) write(12,*) 'M0ISMPRIOR 0'
+    if (M0ISMPRIOR) write(12,*) 'M0ISMPRIOR 1'
+    if (.not. M0ISMPRIOR) write(12,*) 'M0ISMPRIOR 0'
     write(12,*) 'ISMOOTH_EVENT_KERNEL',ISMOOTH_EVENT_KERNEL
     write(12,*) 'ISMOOTH_MISFIT_KERNEL',ISMOOTH_MISFIT_KERNEL
     write(12,*) 'ISMOOTH_INITIAL_MODEL',ISMOOTH_INITIAL_MODEL
@@ -82,44 +82,44 @@ contains
     write(12,*) 'SIGMA_SMOOTH_MODEL',SIGMA_SMOOTH_MODEL
     write(12,*) 'GAMMA_SMOOTH_KERNEL',GAMMA_SMOOTH_KERNEL
     write(12,*) 'GAMMA_SMOOTH_MODEL',GAMMA_SMOOTH_MODEL
-    if(HIGH_RES_SMOOTHING) write(12,*) 'HIGH_RES_SMOOTHING 1'
-    if(.not. HIGH_RES_SMOOTHING) write(12,*) 'HIGH_RES_SMOOTHING 0'
-    if(EXAMPLE_GAUSSIAN) write(12,*) 'EXAMPLE_GAUSSIAN 1'
-    if(.not. EXAMPLE_GAUSSIAN) write(12,*) 'EXAMPLE_GAUSSIAN 0'
+    if (HIGH_RES_SMOOTHING) write(12,*) 'HIGH_RES_SMOOTHING 1'
+    if (.not. HIGH_RES_SMOOTHING) write(12,*) 'HIGH_RES_SMOOTHING 0'
+    if (EXAMPLE_Gaussian) write(12,*) 'EXAMPLE_Gaussian 1'
+    if (.not. EXAMPLE_Gaussian) write(12,*) 'EXAMPLE_Gaussian 0'
     write(12,*) 'IKER',IKER
     write(12,*) 'IAMP_VEL',IAMP_VEL
     write(12,*) 'ISURFACE',ISURFACE
     write(12,*) 'NCOMP',NCOMP
     write(12,*) 'NABSORB',NABSORB
-    if(WRITE_STF_F) write(12,*) 'WRITE_STF_F 1'
-    if(.not. WRITE_STF_F) write(12,*) 'WRITE_STF_F 0'
-    if(WRITE_SEISMO_F) write(12,*) 'WRITE_SEISMO_F 1'
-    if(.not. WRITE_SEISMO_F) write(12,*) 'WRITE_SEISMO_F 0'
-    if(WRITE_SEISMO_RECONSTRUCT) write(12,*) 'WRITE_SEISMO_RECONSTRUCT 1'
-    if(.not. WRITE_SEISMO_RECONSTRUCT) write(12,*) 'WRITE_SEISMO_RECONSTRUCT 0'
-    if(WRITE_STF_A) write(12,*) 'WRITE_STF_A 1'
-    if(.not. WRITE_STF_A) write(12,*) 'WRITE_STF_A 0'
-    if(WRITE_SEISMO_A) write(12,*) 'WRITE_SEISMO_A 1'
-    if(.not. WRITE_SEISMO_A) write(12,*) 'WRITE_SEISMO_A 0'
+    if (WRITE_STF_F) write(12,*) 'WRITE_STF_F 1'
+    if (.not. WRITE_STF_F) write(12,*) 'WRITE_STF_F 0'
+    if (WRITE_SEISMO_F) write(12,*) 'WRITE_SEISMO_F 1'
+    if (.not. WRITE_SEISMO_F) write(12,*) 'WRITE_SEISMO_F 0'
+    if (WRITE_SEISMO_RECONSTRUCT) write(12,*) 'WRITE_SEISMO_RECONSTRUCT 1'
+    if (.not. WRITE_SEISMO_RECONSTRUCT) write(12,*) 'WRITE_SEISMO_RECONSTRUCT 0'
+    if (WRITE_STF_A) write(12,*) 'WRITE_STF_A 1'
+    if (.not. WRITE_STF_A) write(12,*) 'WRITE_STF_A 0'
+    if (WRITE_SEISMO_A) write(12,*) 'WRITE_SEISMO_A 1'
+    if (.not. WRITE_SEISMO_A) write(12,*) 'WRITE_SEISMO_A 0'
     if (WRITE_KERNELS) write(12,*) 'WRITE_KERNELS 1'
     if (.not. WRITE_KERNELS) write(12,*) 'WRITE_KERNELS 0'
     if (WRITE_KERNEL_SNAPSHOTS) write(12,*) 'WRITE_KERNEL_SNAPSHOTS 1'
     if (.not. WRITE_KERNEL_SNAPSHOTS) write(12,*) 'WRITE_KERNEL_SNAPSHOTS 0'
-    if(WRITE_WAVFIELD_SNAPSHOTS) write(12,*) 'WRITE_WAVFIELD_SNAPSHOTS 1'
-    if(.not. WRITE_WAVFIELD_SNAPSHOTS) write(12,*) 'WRITE_WAVFIELD_SNAPSHOTS 0'
-    if(COMPUTE_KERNELS) write(12,*) 'COMPUTE_KERNELS 1'
-    if(.not. COMPUTE_KERNELS) write(12,*) 'COMPUTE_KERNELS 0'
-    if(READ_IN) write(12,*) 'READ_IN 1'
-    if(.not. READ_IN) write(12,*) 'READ_IN 0'
-    if(READ_SINGLE) write(12,*) 'READ_SINGLE 1'
-    if(.not. READ_SINGLE) write(12,*) 'READ_SINGLE 0'
+    if (WRITE_WAVFIELD_SNAPSHOTS) write(12,*) 'WRITE_WAVFIELD_SNAPSHOTS 1'
+    if (.not. WRITE_WAVFIELD_SNAPSHOTS) write(12,*) 'WRITE_WAVFIELD_SNAPSHOTS 0'
+    if (COMPUTE_KERNELS) write(12,*) 'COMPUTE_KERNELS 1'
+    if (.not. COMPUTE_KERNELS) write(12,*) 'COMPUTE_KERNELS 0'
+    if (READ_IN) write(12,*) 'READ_IN 1'
+    if (.not. READ_IN) write(12,*) 'READ_IN 0'
+    if (READ_SINGLE) write(12,*) 'READ_SINGLE 1'
+    if (.not. READ_SINGLE) write(12,*) 'READ_SINGLE 0'
     write(12,*) 'NITERATION',NITERATION
     write(12,*) 'VAR_RED_MIN',VAR_RED_MIN
     write(12,*) 'SIGMA_DT',SIGMA_DT
     write(12,*) 'SIGMA_DLNA',SIGMA_DLNA
     write(12,*) 'SIGMA_WAVEFORM',SIGMA_WAVEFORM
-    if(ADD_DATA_ERRORS) write(12,*) 'ADD_DATA_ERRORS 1'
-    if(.not. ADD_DATA_ERRORS) write(12,*) 'ADD_DATA_ERRORS 0'
+    if (ADD_DATA_ERRORS) write(12,*) 'ADD_DATA_ERRORS 1'
+    if (.not. ADD_DATA_ERRORS) write(12,*) 'ADD_DATA_ERRORS 0'
     write(12,*) 'POLY_ORDER',POLY_ORDER
     write(12,*) 'PERT_STRUCT_BETA',PERT_STRUCT_BETA
     write(12,*) 'PERT_SOURCE_T',PERT_SOURCE_T
@@ -127,10 +127,10 @@ contains
     write(12,*) 'INV_STRUCT_BETA',INV_STRUCT_BETA
     write(12,*) 'INV_SOURCE_T',INV_SOURCE_T
     write(12,*) 'INV_SOURCE_X',INV_SOURCE_X
-    if(INCLUDE_MODEL_NORM) write(12,*) 'INCLUDE_MODEL_NORM 1'
-    if(.not. INCLUDE_MODEL_NORM) write(12,*) 'INCLUDE_MODEL_NORM 0'
-    if(ISOURCE_LOG) write(12,*) 'ISOURCE_LOG 1'
-    if(.not. ISOURCE_LOG) write(12,*) 'ISOURCE_LOG 0'
+    if (INCLUDE_MODEL_NORM) write(12,*) 'INCLUDE_MODEL_NORM 1'
+    if (.not. INCLUDE_MODEL_NORM) write(12,*) 'INCLUDE_MODEL_NORM 0'
+    if (ISOURCE_LOG) write(12,*) 'ISOURCE_LOG 1'
+    if (.not. ISOURCE_LOG) write(12,*) 'ISOURCE_LOG 0'
     write(12,*) 'NVAR_STRUCT',NVAR_STRUCT
     write(12,*) 'NVAR_SOURCE',NVAR_SOURCE
     write(12,*) 'NVAR',NVAR
@@ -143,8 +143,8 @@ contains
     write(12,*) 'BWAVESPEED',BWAVESPEED
     write(12,*) 'HWIN1',HWIN1
     write(12,*) 'HWIN2',HWIN2
-    if(SUPPRESS_UTM_PROJECTION) write(12,*) 'SUPPRESS_UTM_PROJECTION 1'
-    if(.not. SUPPRESS_UTM_PROJECTION) write(12,*) 'SUPPRESS_UTM_PROJECTION 0'
+    if (SUPPRESS_UTM_PROJECTION) write(12,*) 'SUPPRESS_UTM_PROJECTION 1'
+    if (.not. SUPPRESS_UTM_PROJECTION) write(12,*) 'SUPPRESS_UTM_PROJECTION 0'
     write(12,*) 'ILONGLAT2UTM',ILONGLAT2UTM
     write(12,*) 'IUTM2LONGLAT',IUTM2LONGLAT
     write(12,*) 'ILONLAT2MESH',ILONLAT2MESH
@@ -317,16 +317,16 @@ contains
   ! parameters for source time function
   ! the non-zero Gaussian is needed for plotting the source time function (perl)
   alpha = decay_rate/hdur
-  fgaus = 1.0d-8                  ! fraction of amplitude at edge of gaussian
+  fgaus = 1.0d-8                  ! fraction of amplitude at edge of Gaussian
   dgaus = sqrt(-log(fgaus)) / alpha
 
-  if(ISRC_TIME==1) then ! Ricker
+  if (ISRC_TIME == 1) then ! Ricker
      amp = -2.0*(alpha**3)/dsqrt(PI)
 
-  else if(ISRC_TIME==2) then ! Gaussian
+  else if (ISRC_TIME == 2) then ! Gaussian
      amp = alpha/dsqrt(PI)
 
-  else if(ISRC_TIME==3) then ! truncated sine
+  else if (ISRC_TIME == 3) then ! truncated sine
      cyc = 3.0
      per = 2.*hdur
      !t1 = -0.50*per
@@ -334,11 +334,11 @@ contains
      t2 = t1 + per*cyc
      amp = alpha**2.0*dsqrt(2.0/PI)*exp(-0.5)
 
-  else if(ISRC_TIME==4) then ! sine
+  else if (ISRC_TIME == 4) then ! sine
      per = 2.0*hdur
      amp = alpha**2.0*dsqrt(2.0/PI)*exp(-0.5)
 
-!!$  else if(ISRC_TIME==5) then ! plane wave field
+!!$  else if (ISRC_TIME==5) then ! plane wave field
 !!$
 !!$     amp = alpha**2*dsqrt(2./PI)*exp(-0.5)   ! amplitude
 !!$     az = 25.*PI/180.0                          ! azimuth of vector (from north)
@@ -374,39 +374,39 @@ contains
 
        t = ti(itime) - origin_time  ! time shift
 
-       if(ISRC_TIME==1) then
+       if (ISRC_TIME == 1) then
           ! d/dt[Gaussian] wavelet
-          if(t >= -dgaus .and. t <= dgaus) then
+          if (t >= -dgaus .and. t <= dgaus) then
              stf = amp*t*exp(-alpha*alpha*t*t)
           else
              stf = 0.0
           endif
 
-       else if(ISRC_TIME==2) then
+       else if (ISRC_TIME == 2) then
           ! Error function
           ! source_time_function = 0.5*(1.0+erf(decay_rate*t/hdur))
 
           ! Gaussian (this one causes static offset at stations)
-          if(t >= -dgaus .and. t <= dgaus) then
+          if (t >= -dgaus .and. t <= dgaus) then
              stf = amp*exp(-alpha*alpha*t*t)
           else
              stf = 0.0
           endif
 
-       else if(ISRC_TIME==3) then
+       else if (ISRC_TIME == 3) then
           ! truncated sine function (duration is cyc*per seconds)
-          if(t >= t1 .and. t <= t2) then
+          if (t >= t1 .and. t <= t2) then
              stf = amp*sin(2.0*PI*(t-t1)/per)
           else
              stf = 0.0
           endif
 
-       else if(ISRC_TIME==4) then
+       else if (ISRC_TIME == 4) then
           ! sine function
           stf = amp*sin(2*PI*t/per)
           !stf = amp/2.*sin(2*PI*t/per) + amp/2.*sin(2*PI*t/(1.1*per))
 
-       !else if(ISRC_TIME==5) then
+       !else if (ISRC_TIME==5) then
        !   ! plane wavefield, dependant on source position
        !   tmp = t - d_vec(i)/c_source
        !   !stf = amp*sin( 2*PI/per*tmp )
@@ -422,7 +422,7 @@ contains
 
   ! taper time series
   ! DO WE WANT TO SIMPLY DETREND THE TIME SERIES?
-  if(SRC_TAPER) call taper_series(stf_vec(:),NSTEP)
+  if (SRC_TAPER) call taper_series(stf_vec(:),NSTEP)
 
   end subroutine get_source_time_function
 
@@ -468,7 +468,7 @@ contains
     if (ios /= 0) stop 'Error writing snapshot to disk'
     do iglob = 1, NGLOB
        ! DEBUG ARRAY SIZE
-       if(NCOMP==3) then
+       if (NCOMP == 3) then
           write(11,'(5e12.3)') x(iglob)/LENGTH, z(iglob)/LENGTH, &
                   sngl(disp(1,iglob)),sngl(disp(2,iglob)),sngl(disp(3,iglob))
        else
@@ -604,7 +604,7 @@ contains
 !!$          ! specify input time series
 !!$          in(:) = seis(:,icomp,irec)
 !!$
-!!$          if(0==1) then
+!!$          if (0==1) then
 !!$            ! write input data to file
 !!$            write(filename,'(a,a,i5.5,a,i1.1)') trim(seis_name), '_in_', irec, '_', icomp
 !!$            open(unit=10, file=filename, status='unknown', iostat=ios)
@@ -618,7 +618,7 @@ contains
 !!$          ! KEY: Fourier transform
 !!$          call dfftw_execute(plan)
 !!$
-!!$          if(write_spectra) then
+!!$          if (write_spectra) then
 !!$             write(filename2,'(a,a,i5.5,a,i1.1)') trim(seis_name), '_', irec, '_', icomp
 !!$             open(unit=12, file=filename2, status='unknown', iostat=ios)
 !!$             if (ios /= 0) stop 'Error opening seismogram spectra to write'
@@ -635,14 +635,14 @@ contains
 !!$             !ph_val = atan2(im,re)
 !!$
 !!$             ! if within the frequency band
-!!$             if(w >= wmin_win .and. w <= wmax_win) abs_int = abs_int + abs_val
+!!$             if (w >= wmin_win .and. w <= wmax_win) abs_int = abs_int + abs_val
 !!$
-!!$             if(write_spectra) write(12,'(2e16.6)') w, abs_val
-!!$             !if(write_spectra.and.w/=0.0) write(12,'(2e16.6)') (2*PI)/w, abs_val
+!!$             if (write_spectra) write(12,'(2e16.6)') w, abs_val
+!!$             !if (write_spectra .and. w /= 0.0) write(12,'(2e16.6)') (2*PI)/w, abs_val
 !!$          enddo
-!!$          if(write_spectra) close(12)
+!!$          if (write_spectra) close(12)
 !!$
-!!$          if(0==1) then
+!!$          if (0==1) then
 !!$            write(*,'(a,3f12.4)') ' T, s     (min/0/max) :', (2*PI)/wmax_win , 2*hdur        , (2*PI)/wmin_win
 !!$            write(*,'(a,3f12.4)') ' f, Hz    (min/0/max) :', wmin_win/(2*PI) , 1/(2*hdur)    , wmax_win/(2*PI)
 !!$            write(*,'(a,3f12.4)') ' w, rad/s (min/0/max) :', wmin_win        , 2*PI/(2*hdur) , wmax_win
@@ -752,7 +752,7 @@ contains
 !!$    !---------------------------
 !!$
 !!$    ! calculate velocity and acceleration from syn (traveltime adjoint source only)
-!!$    if(IKER >= 1) then
+!!$    if (IKER >= 1) then
 !!$       do itime = 2, NSTEP-1
 !!$          syn_veloc(itime,:,irec) =  (syn(itime+1,:,irec) - syn(itime-1,:,irec)) / (2 * DT)
 !!$       enddo
@@ -770,18 +770,18 @@ contains
 !!$
 !!$    do i = 1,NCOMP
 !!$
-!!$       if(IKER==0) then       ! waveform
+!!$       if (IKER==0) then       ! waveform
 !!$
 !!$          adj_syn(:,i,irec) = ( syn(:,i,irec) -  data(:,i,irec) ) * time_window(:)
 !!$
-!!$       else if(IKER==5) then   ! traveltime
+!!$       else if (IKER==5) then   ! traveltime
 !!$
 !!$          ! minus sign is shifted from norm to adj_syn, in comparison with Tromp et al (2005)
 !!$          ! thus, norm is ensured to be POSITIVE (N > 0)
 !!$          norm = -DT * sum( time_window(:) * syn(:,i,irec) * syn_accel(:,i,irec) )
 !!$          if (abs(norm) > EPS) adj_syn(:,i,irec) = -syn_veloc(:,i,irec) * time_window(:) / norm
 !!$
-!!$       else if(IKER==6) then  ! amplitude
+!!$       else if (IKER==6) then  ! amplitude
 !!$
 !!$          ! norm is ensured to be POSITIVE (M > 0)
 !!$          norm = DT * sum( time_window(:) * syn(:,i,irec) * syn(:,i,irec) )
@@ -858,16 +858,16 @@ contains
   ! All points outside d^2 (dtrsh2) are set to zero.
   dtrsh2 = (1.5*gamma)**2
 
-  if(EXAMPLE_GAUSSIAN) then
+  if (EXAMPLE_Gaussian) then
 
-     ! EXAMPLE global gaussian smoothing function for one point
+     ! EXAMPLE global Gaussian smoothing function for one point
      ! (1) find the closest gridpoint to the target point
      xtar = 0.25*LENGTH
      ztar = 0.25*HEIGHT
      dmin = sqrt(LENGTH**2+HEIGHT**2)  ! max possible distance
      do iglob = 1,NGLOB
         d = sqrt((xtar-x(iglob))**2+(ztar-z(iglob))**2)
-        if(d < dmin) then
+        if (d < dmin) then
            igaus = iglob
            dmin = d
         endif
@@ -875,11 +875,11 @@ contains
      xcen = x(igaus)
      zcen = z(igaus)
 
-     ! (2) compute the example gaussian
+     ! (2) compute the example Gaussian
      gaus_global_ex(:) = 0.0
      do iglob = 1,NGLOB
         dist2 = (xcen - x(iglob))**2 + (zcen - z(iglob))**2
-        if(dist2 <= dtrsh2) &
+        if (dist2 <= dtrsh2) &
            gaus_global_ex(iglob) = (4./(PI*gamma**2)) * exp(-4.*dist2 / (gamma**2))
      enddo
 
@@ -901,7 +901,7 @@ contains
    !       and accounts for Gaussians that are partially outside the grid.
    ! (4) Integrate the product of the Gaussian and the rough function.
 
-   if(HIGH_RES_SMOOTHING) then
+   if (HIGH_RES_SMOOTHING) then
       ! loop over every GLL point for high-resolution smoothing
       do iglob = 1,NGLOB
          if (mod(iglob,1000) == 0) write(*,*) iglob, ' out of ', NGLOB
@@ -911,7 +911,7 @@ contains
          gaus_global(:) = 0.0
          do i = 1,NGLOB
             dist2 = (xcen - x(i))**2 + (zcen - z(i))**2
-            if(dist2 <= dtrsh2) &
+            if (dist2 <= dtrsh2) &
                  gaus_global(i) = (4./(PI*gamma**2)) * exp(-4.*dist2 / (gamma**2))
          enddo
 
@@ -930,7 +930,7 @@ contains
          gaus_global(:) = 0.0
          do i = 1,NGLOB
             dist2 = (xcen - x(i))**2 + (zcen - z(i))**2
-            if(dist2 <= dtrsh2) &
+            if (dist2 <= dtrsh2) &
                  gaus_global(i) = (4./(PI*gamma**2)) * exp(-4.*dist2 / (gamma**2))
          enddo
 
@@ -943,9 +943,9 @@ contains
 
    ! write smooth-related functions to file
    ! (We can also write gaus_int_global(iglob) to file if desired.)
-   if(EXAMPLE_GAUSSIAN) then
+   if (EXAMPLE_Gaussian) then
       open(unit=19,file='fun_smooth.dat',status='unknown')
-      if(HIGH_RES_SMOOTHING) then
+      if (HIGH_RES_SMOOTHING) then
          do iglob = 1,NGLOB
             write(19,'(8e16.6)') x(iglob), z(iglob), x_lon(iglob), z_lat(iglob), &
                  rough_global(iglob), gaus_global_ex(iglob), &
@@ -1051,7 +1051,7 @@ contains
     mvec(:) = 0.0
 
 !!$    ! if the optional argument is not used, then default the factor of 1
-!!$    if(.not.present(array_fac0)) then
+!!$    if (.not. present(array_fac0)) then
 !!$       array_fac(:,:,:) = 1.
 !!$    else
 !!$       array_fac(:,:,:) = array_fac0(:,:,:)
@@ -1064,11 +1064,11 @@ contains
           do j = 1,NGLLZ
              do i = 1,NGLLX
                 k = k+1
-                !if(ipar==1) mvec(k) = array1(i,j,ispec) * array_fac(i,j,ispec)  ! alpha
-                !if(ipar==2) mvec(k) = array2(i,j,ispec) * array_fac(i,j,ispec)  ! beta
+                !if (ipar==1) mvec(k) = array1(i,j,ispec) * array_fac(i,j,ispec)  ! alpha
+                !if (ipar==2) mvec(k) = array2(i,j,ispec) * array_fac(i,j,ispec)  ! beta
 
-                if(ipar==1) mvec(k) = array1(i,j,ispec)  ! btype (kappa, alpha, c)
-                !if(ipar==2) mvec(k) = array2(i,j,ispec)  ! atype (mu, beta, beta
+                if (ipar == 1) mvec(k) = array1(i,j,ispec)  ! btype (kappa, alpha, c)
+                !if (ipar==2) mvec(k) = array2(i,j,ispec)  ! atype (mu, beta, beta
              enddo
           enddo
        enddo
@@ -1105,8 +1105,8 @@ contains
           do j = 1,NGLLZ
              do i = 1,NGLLX
                 k = k+1
-                if(ipar==1) array1(i,j,ispec) = mvec(k)  ! btype (mu, beta, beta)
-                !if(ipar==2) array2(i,j,ispec) = mvec(k)  ! atype (kappa, alpha, c)
+                if (ipar == 1) array1(i,j,ispec) = mvec(k)  ! btype (mu, beta, beta)
+                !if (ipar==2) array2(i,j,ispec) = mvec(k)  ! atype (kappa, alpha, c)
              enddo
           enddo
        enddo

@@ -613,7 +613,7 @@ subroutine compute_forces_viscoelastic_GPU()
       if (SIMULATION_TYPE == 3) then
         call transfer_boun_accel_from_device(Mesh_pointer, b_accel,&
                         b_buffer_send_vector_ext_mesh,&
-                        3) ! <-- 3 == adjoint b_accel
+                        3) ! -- 3 == adjoint b_accel
         call assemble_MPI_vector_send_cuda(NPROC, &
                         b_buffer_send_vector_ext_mesh,b_buffer_recv_vector_ext_mesh, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
@@ -665,11 +665,11 @@ subroutine compute_forces_viscoelastic_GPU()
     !              my_neighbours_ext_mesh, &
     !              request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
 
-      ! transfers mpi buffers onto GPU
+    ! transfers mpi buffers onto GPU
     !call transfer_boundary_to_device(NPROC,Mesh_pointer,buffer_recv_vector_ext_mesh, &
     !              num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
     !              request_recv_vector_ext_mesh)
-      ! waits for send/receive requests to be completed and assembles values
+    ! waits for send/receive requests to be completed and assembles values
     !call synchronize_MPI_vector_write_cuda(NPROC,NGLOB_AB,accel, Mesh_pointer,&
     !                  buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh,&
     !                  max_nibool_interfaces_ext_mesh, &
@@ -677,13 +677,7 @@ subroutine compute_forces_viscoelastic_GPU()
     !                  request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
     !                  1)
 
-
-
-    if((mod(it,500)==0) .and. (it /= 0))  call synchronize_GPU(it)  ! output results every 500 steps
-
-
-
-
+    if (mod(it,500) == 0 .and. it /= 0) call synchronize_GPU(it)  ! output results every 500 steps
 
     ! transfers acceleration back to GPU
     ! call transfer_accel_to_device(NDIM*NGLOB_AB,accel, Mesh_pointer)

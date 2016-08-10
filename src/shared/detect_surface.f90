@@ -365,8 +365,7 @@
 
             ! considers only points in same process or, if point is shared between two processes,
             ! only with higher process ranks than itself
-            if (valence_external_mesh(iglob) == myrank+1 &
-              .or. valence_external_mesh(iglob) > 2*(myrank+1)) then
+            if (valence_external_mesh(iglob) == myrank+1 .or. valence_external_mesh(iglob) > 2*(myrank+1)) then
               ! sets surface flags for cross section
               call ds_set_cross_section_flags(nspec,ispec_is_surface_external_mesh, &
                                             nglob,iglob_is_surface_external_mesh, &
@@ -727,7 +726,7 @@
 
           ! chooses points close to cross-section
           if (abs((xstore(iglob)-section_xorg)*section_nx + (ystore(iglob)-section_yorg)*section_ny &
-                 + (zstore(iglob)-section_zorg)*section_nz )  < distance) then
+                 + (zstore(iglob)-section_zorg)*section_nz ) < distance) then
             ! sets valence to 1 for points on cross-sections
             valence_external_mesh(iglob) = myrank+1
           endif

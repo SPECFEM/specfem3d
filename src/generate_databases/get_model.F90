@@ -76,7 +76,7 @@
 
   ! prepares tomographic models if needed for elements with undefined material definitions
 #ifndef DEBUG_COUPLED
-  if ( (nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO) ) call model_tomography_broadcast(myrank)
+  if (nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO) call model_tomography_broadcast(myrank)
 #endif
 
   ! prepares external model values if needed
@@ -195,6 +195,10 @@
             ! kappa, mu
             kappastore(i,j,k,ispec) = rho*( vp*vp - FOUR_THIRDS*vs*vs )
             mustore(i,j,k,ispec) = rho*vs*vs
+
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_get_model_5.F90"
+#endif
 
             ! attenuation
             qkappa_attenuation_store(i,j,k,ispec) = qkappa_atten
@@ -319,9 +323,9 @@
   ! checks material domains
   do ispec=1,nspec
     ! checks if domain is set
-    if ((ispec_is_acoustic(ispec) .eqv. .false.) &
-          .and. (ispec_is_elastic(ispec) .eqv. .false.) &
-          .and. (ispec_is_poroelastic(ispec) .eqv. .false.)) then
+    if ((ispec_is_acoustic(ispec) .eqv. .false.) .and. &
+        (ispec_is_elastic(ispec) .eqv. .false.) .and. &
+        (ispec_is_poroelastic(ispec) .eqv. .false.)) then
       print *,'Error material domain not assigned to element:',ispec
       print *,'acoustic: ',ispec_is_acoustic(ispec)
       print *,'elastic: ',ispec_is_elastic(ispec)
@@ -378,6 +382,11 @@
     IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,ATTENUATION_COMP_MAXIMUM
 
   use create_regions_mesh_ext_par
+
+#ifdef DEBUG_COUPLED
+  include "../../../add_to_get_model_9.F90"
+#endif
+
   implicit none
 
   integer, intent(in) :: nmat_ext_mesh
@@ -407,6 +416,10 @@
   integer :: iundef,imaterial_PB
   logical :: has_tomo_value
 
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_get_model_7.F90"
+#endif
+
   ! use acoustic domains for simulation
   logical,parameter :: USE_PURE_ACOUSTIC_MOD = .false.
 
@@ -424,7 +437,7 @@
   ! selects chosen velocity model
   select case (IMODEL)
 
-  case (IMODEL_DEFAULT,IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER, IMODEL_SEP )
+  case (IMODEL_DEFAULT,IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER, IMODEL_SEP)
     ! material values determined by mesh properties
     call model_default(materials_ext_mesh,nmat_ext_mesh, &
                        undef_mat_prop,nundefMat_ext_mesh, &
@@ -435,11 +448,15 @@
                        rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
                        phi,tort,kxx,kxy,kxz,kyy,kyz,kzz)
 
-  case (IMODEL_1D_PREM )
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_get_model_8.F90"
+#endif
+
+  case (IMODEL_1D_PREM)
     ! 1D model profile from PREM
     call model_1D_prem_iso(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
 
-  case (IMODEL_1D_PREM_PB )
+  case (IMODEL_1D_PREM_PB)
     ! 1D model profile from PREM modified by Piero
     imaterial_PB = abs(imaterial_id)
     call model_1D_PREM_routine_PB(xmesh,ymesh,zmesh,rho,vp,vs,imaterial_PB)
@@ -448,19 +465,19 @@
     iundef = - imaterial_id    ! iundef must be positive
     read(undef_mat_prop(6,iundef),*) idomain_id
 
-  case (IMODEL_1D_CASCADIA )
+  case (IMODEL_1D_CASCADIA)
     ! 1D model profile for Cascadia region
     call model_1D_cascadia(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
 
-  case (IMODEL_1D_SOCAL )
+  case (IMODEL_1D_SOCAL)
     ! 1D model profile for Southern California
     call model_1D_socal(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
 
-  case (IMODEL_SALTON_TROUGH )
+  case (IMODEL_SALTON_TROUGH)
     ! gets model values from tomography file
     call model_salton_trough(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
 
-  case (IMODEL_TOMO )
+  case (IMODEL_TOMO)
     ! gets model values from tomography file
     call model_tomography(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten,imaterial_id,has_tomo_value)
 
@@ -471,7 +488,7 @@
       stop 'Error tomo model not found for material'
     endif
 
-  case (IMODEL_USER_EXTERNAL )
+  case (IMODEL_USER_EXTERNAL)
 
     ! Florian Schumacher, Germany, June 2015
     ! FS FS: added call to model_default here, before calling model_external_values in order to
@@ -586,7 +603,7 @@
 
   case default
     ! user output
-    if (myrank==0) then
+    if (myrank == 0) then
       write(IMAIN,*) '     no external binary model used '
     endif
   end select

@@ -35,8 +35,8 @@ contains
   call zwgljd(zigll,wzgll,NGLLZ,GAUSSALPHA,GAUSSBETA)
 
 ! if number of points is odd, the middle abscissa is exactly zero
-  if(mod(NGLLX,2) /= 0) xigll((NGLLX-1)/2+1) = 0.d0
-  if(mod(NGLLZ,2) /= 0) zigll((NGLLZ-1)/2+1) = 0.d0
+  if (mod(NGLLX,2) /= 0) xigll((NGLLX-1)/2+1) = 0.d0
+  if (mod(NGLLZ,2) /= 0) zigll((NGLLZ-1)/2+1) = 0.d0
 
 ! calculate derivatives of the Lagrange polynomials
 ! and precalculate some products in double precision

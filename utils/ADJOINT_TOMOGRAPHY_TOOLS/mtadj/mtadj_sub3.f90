@@ -36,7 +36,7 @@ contains
       integer :: l,iblock,nblock,i,lbhalf,j,lx
 
       ! sign must be +1. or -1.
-      if(zzign >= 0.) then
+      if (zzign >= 0.) then
         zign = 1.
       else
         zign = -1.
@@ -69,23 +69,23 @@ contains
 
       do 3 i=2,n
       ii = i
-      if(k < m(i)) go to 4
+      if (k < m(i)) goto 4
     3 k = k-m(i)
     4 k = k+m(ii)
       k = 0
       do 7 j=1,lx
-      if(k < j) go to 5
+      if (k < j) goto 5
       hold = xi(j)
       xi(j) = xi(k+1)
       xi(k+1) = hold
     5 do 6 i=1,n
       ii = i
-      if(k < m(i)) go to 7
+      if (k < m(i)) goto 7
     6 k = k-m(i)
     7 k = k+m(ii)
 
       ! final steps deal with dt factors
-      if(zign > 0.) then       ! FORWARD FFT
+      if (zign > 0.) then       ! FORWARD FFT
          do i = 1,lx
             xi(i) = xi(i)*dt   ! multiplication by dt
          enddo
@@ -186,7 +186,7 @@ contains
 
       r2 = sqrt(2.)
 
-      if(nt < 2) return
+      if (nt < 2) return
       nxi=mod(nt,2)
       lh=(nt/2)+nxi
       lp1=nt+1
@@ -196,7 +196,7 @@ contains
       do 10 i=1,lh
         a(i)=com*(i-hn)**2
    10   w(i)=0.5*dble(i*(nt-i))
-      if(nxi == 0) then
+      if (nxi == 0) then
         asav=a(lh)-w(lh)
         a(lh)=a(lh)+w(lh)
         rbd=1./(a(lh)+w(lh-1))
@@ -215,12 +215,12 @@ contains
       call tsturm(nt,lh,a,a(lh+1),w,neven,v,ndim,w(lh+1),0)
       do 20 i=1,neven
         k=2*i-1
-        if(nxi == 1) v(lh,k)=r2*v(lh,k)
+        if (nxi == 1) v(lh,k)=r2*v(lh,k)
           do 20 j=1,lh
    20     v(lp1-j,k)=v(j,k)
-      if(nodd <= 0) goto 34
+      if (nodd <= 0) goto 34
 !  Do the odd tapers
-      if(nxi == 0) then
+      if (nxi == 0) then
         a(lh)=asav*rbd
       else
         a(nt)=asav*rbd
@@ -229,7 +229,7 @@ contains
       call tsturm(nt,lh-nxi,a,a(lh+1),w,nodd,v,ndim,w(lh+1),1)
       do 30 i=1,nodd
         k=2*i
-        if(nxi == 1) v(lh,k)=0.
+        if (nxi == 1) v(lh,k)=0.
           do 30 j=1,lh
    30     v(lp1-j,k)=-v(j,k)
    34 ntot=neven+nodd
@@ -248,7 +248,7 @@ contains
         vmax=abs(v(1,m))
         kmax=1
         do 40 kk=2,lh
-          if(abs(v(kk,m)) <= vmax) goto 40
+          if (abs(v(kk,m)) <= vmax) goto 40
           kmax=kk
           vmax=abs(v(kk,m))
    40     continue
@@ -290,35 +290,35 @@ contains
 
       !-------------------------
 
-      if(n <= 0.or.nev <= 0) return
+      if (n <= 0 .or. nev <= 0) return
       umeps=1.-epsi
       do 5 i=1,nev
     5 ev(i)=-1.
       u=1.
       do 1000 ik=1,nev
-      if(ik > 1) u=ev(ik-1)*umeps
+      if (ik > 1) u=ev(ik-1)*umeps
       el=min(ev(ik),u)
    10 elam=0.5*(u+el)
-      if(abs(u-el) <= epsi1) goto 35
+      if (abs(u-el) <= epsi1) goto 35
       iag=0
       q=a(1)-elam
-      if(q >= 0.) iag=iag+1
+      if (q >= 0.) iag=iag+1
       do 15 i=2,n
-      if(q == 0.) x=abs(b(i-1))/epsi
-      if(q /= 0.) x=w(i-1)/q
+      if (q == 0.) x=abs(b(i-1))/epsi
+      if (q /= 0.) x=w(i-1)/q
       q=a(i)-elam-x
-      if(q >= 0.) iag=iag+1
-      if(iag > nev) goto 20
+      if (q >= 0.) iag=iag+1
+      if (iag > nev) goto 20
    15 continue
-      if(iag >= ik) go to 20
+      if (iag >= ik) goto 20
       u=elam
-      go to 10
-   20 if(iag == ik) go to 30
+      goto 10
+   20 if (iag == ik) goto 30
       m=ik+1
       do 25 i=m,iag
    25 ev(i)=elam
       el=elam
-      go to 10
+      goto 10
    30 el=elam
       call root(u,el,elam,a,b,w,n,ik)
    35 ev(ik)=elam
@@ -358,30 +358,30 @@ contains
       !----------------------
 
     5 elam=0.5*(u+el)
-   10 if(abs(u-el) <= 1.5*epsi1) return
+   10 if (abs(u-el) <= 1.5*epsi1) return
       an=a(1)-elam
       b=0.
       bn=-1./an
       iag=0
-      if(an >= 0.) iag=iag+1
+      if (an >= 0.) iag=iag+1
       do 20 i=2,n
-      if(an == 0.) x=abs(bb(i-1))/epsi
-      if(an /= 0.) x=w(i-1)/an
+      if (an == 0.) x=abs(bb(i-1))/epsi
+      if (an /= 0.) x=w(i-1)/an
       an=a(i)-elam-x
-      if(an == 0.) an=epsi
+      if (an == 0.) an=epsi
       bm=b
       b=bn
       bn=((a(i)-elam)*b-bm*x-1.)/an
-      if(an >= 0.) iag=iag+1
+      if (an >= 0.) iag=iag+1
    20 continue
-      if(iag == ik) goto 25
+      if (iag == ik) goto 25
       u=elam
       goto 30
    25 el=elam
    30 del=1./bn
-      if(abs(del) <= epsi1) del=sign(epsi1,del)
+      if (abs(del) <= epsi1) del=sign(epsi1,del)
       elam=elam-del
-      if(elam >= u.or.elam <= el) goto 5
+      if (elam >= u .or. elam <= el) goto 5
       goto 10
 
   end subroutine root
@@ -495,7 +495,7 @@ contains
       an = n
       m1 = an*start+0.5
       m2 = m1 + 1
-      if(m1 > 0) then
+      if (m1 > 0) then
         ang = 3.1415926 / float(m1)
         do i=1, m1
           xi = i
@@ -508,7 +508,7 @@ contains
       m5 = n-m3
       m4 = m5 + 1
 
-      if(m3 > 0) then
+      if (m3 > 0) then
         ang = 3.1415926 / float (m3)
         do i=m4,n
           xi = i-n-1

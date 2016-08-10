@@ -20,8 +20,8 @@ program rotate_adj_src
   call getarg(5,efile)
   call getarg(6,nfile)
 
-  if (trim(bazch)=='' .or. trim(zfile) =='' .or. trim(tfile)=='' .or. &
-             trim(rfile) == '' .or. trim(efile) =='' .or. trim(nfile) =='') then
+  if (trim(bazch) == '' .or. trim(zfile) == '' .or. trim(tfile) == '' .or. &
+             trim(rfile) == '' .or. trim(efile) == '' .or. trim(nfile) == '') then
     stop 'rotate_adj_src baz(radian!) zfile tfile rfile efile nfile'
   endif
 
@@ -52,7 +52,7 @@ program rotate_adj_src
 
   ! check consistency of t0,dt,npts
   if (t_exist .and. r_exist) then
-    if (abs(t0t-t0r)>1.0e-2 .or. abs(dtt-dtr)>1.0e-2 .or. nptst /= nptsr) &
+    if (abs(t0t-t0r) > 1.0e-2 .or. abs(dtt-dtr) > 1.0e-2 .or. nptst /= nptsr) &
                stop 'check t0 and npts'
   endif
   if (t_exist) then

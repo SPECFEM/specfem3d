@@ -53,7 +53,7 @@ contains
     close(10)
 
     ! list input parameters:
-    write(*,*) '========= INPUTS FROM MEASUREMENT.PAR ============'
+    write(*,*) ' ==  ==  ==  == = INPUTS FROM MEASUREMENT.PAR ==  ==  ==  ==  ==  == '
     if (iker == IKER_WF) then
        write(*,*) 'Adjoint source type: Waveform '
     else if (iker == IKER_CC) then
@@ -274,10 +274,10 @@ contains
     ! corresponding index to wtr_use_unw -> i_right
     i_right = nf;  i_right_stop = 0
     do i = 1,nf
-       if (abs(csynw(i))<=abs(wtr_amp_syn) .and. i_right_stop==0 .and. i>i_pmax ) then
+       if (abs(csynw(i)) <= abs(wtr_amp_syn) .and. i_right_stop == 0 .and. i > i_pmax ) then
           i_right_stop = 1; i_right = i
        endif
-       if (abs(csynw(i))>=10.*abs(wtr_amp_syn) .and. i_right_stop==1 .and. i>i_pmax) then
+       if (abs(csynw(i)) >= 10.*abs(wtr_amp_syn) .and. i_right_stop == 1 .and. i > i_pmax) then
           i_right_stop = 0; i_right = i
        endif
     enddo
@@ -339,9 +339,9 @@ contains
        wtr_amp_bot = ampmax_bot * (wtr ** 2)
     endif
     do i = 1, nf
-      if(abs(bot_fdm(i)) > abs(wtr_amp_bot)) then
+      if (abs(bot_fdm(i)) > abs(wtr_amp_bot)) then
          trans_fdm(i) = top_fdm(i) /  bot_fdm(i)
-      else if(abs(bot_fdm(i)) < abs(wtr_amp_bot)) then
+      else if (abs(bot_fdm(i)) < abs(wtr_amp_bot)) then
          trans_fdm(i) = top_fdm(i) / (bot_fdm(i)+wtr_amp_bot)
       endif
     enddo
@@ -412,7 +412,7 @@ contains
     f_pmax = df * i_pmax
     T_pmax = 1./ f_pmax
     wlen = dt*nlen
-    if( ncycle_in_window * T_pmax > wlen ) then
+    if ( ncycle_in_window * T_pmax > wlen ) then
        use_window = .false.
        print *, 'rejecting window [', tstart, tend, ']'
        if (DEBUG) print *, ' wlen > ncycle * t_pmax= ', wlen, T_pmax
@@ -423,7 +423,7 @@ contains
     if ( (f_right-f_left) < df_fd) then
        use_window = .false.
        print *, 'rejecting window [',tstart, tend, ']'
-       print *, '  --> considering CC adjoint source for this window'
+       print *, '  -- > considering CC adjoint source for this window'
        if (DEBUG) print *, 'f_left,f_right = ', f_left, f_right
        return
     endif

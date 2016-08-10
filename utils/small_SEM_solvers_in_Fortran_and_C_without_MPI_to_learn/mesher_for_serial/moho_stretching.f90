@@ -76,14 +76,14 @@
     elevation = -0.25d0*elevation/R_EARTH_KM
 
     gamma = 0.0d0
-    if(r >= RMOHO/R_EARTH) then
+    if (r >= RMOHO/R_EARTH) then
 ! stretching above the Moho
       gamma = (1.0d0 - r) / (1.0d0 - RMOHO/R_EARTH)
-    else if(r>= R220/R_EARTH .and. r< RMOHO/R_EARTH) then
+    else if (r >= R220/R_EARTH .and. r < RMOHO/R_EARTH) then
 ! stretching between R220 and RMOHO
       gamma = (r - R220/R_EARTH) / (RMOHO/R_EARTH - R220/R_EARTH)
     endif
-    if(gamma < -0.0001 .or. gamma > 1.0001) call exit_MPI(myrank,'incorrect value of gamma for Moho topography')
+    if (gamma < -0.0001 .or. gamma > 1.0001) call exit_MPI(myrank,'incorrect value of gamma for Moho topography')
 
     xelm(ia) = xelm(ia)*(ONE + gamma * elevation / r)
     yelm(ia) = yelm(ia)*(ONE + gamma * elevation / r)

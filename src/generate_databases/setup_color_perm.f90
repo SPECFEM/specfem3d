@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
   subroutine setup_color_perm(myrank,nspec,nglob,ibool,ANISOTROPY,SAVE_MESH_FILES)
 
 ! sets up mesh coloring and permutes elements
@@ -456,7 +455,7 @@
       ! loops through elements
       do i = 1,num_elem_colors_elastic(icolor)
         ielem = ielem + 1
-        ispec = phase_ispec_inner_elastic(ielem,1) ! 1 <-- first phase, outer elements
+        ispec = phase_ispec_inner_elastic(ielem,1) ! 1 -- first phase, outer elements
         ! reorders elements
         icounter = icounter + 1
         temp_perm_global(ispec) = icounter
@@ -470,7 +469,7 @@
       ! loops through elements
       do i = 1,num_elem_colors_elastic(icolor)
         ielem = ielem + 1
-        ispec = phase_ispec_inner_elastic(ielem,2) ! 2 <-- second phase, inner elements
+        ispec = phase_ispec_inner_elastic(ielem,2) ! 2 -- second phase, inner elements
         ! reorders elements
         icounter = icounter + 1
         temp_perm_global(ispec) = icounter
@@ -489,7 +488,7 @@
       ! loops through elements
       do i = 1,num_elem_colors_acoustic(icolor)
         ielem = ielem + 1
-        ispec = phase_ispec_inner_acoustic(ielem,1) ! 1 <-- first phase, outer elements
+        ispec = phase_ispec_inner_acoustic(ielem,1) ! 1 -- first phase, outer elements
         ! reorders elements
         icounter = icounter + 1
         temp_perm_global(ispec) = icounter
@@ -503,7 +502,7 @@
       ! loops through elements
       do i = 1,num_elem_colors_acoustic(icolor)
         ielem = ielem + 1
-        ispec = phase_ispec_inner_acoustic(ielem,2) ! 2 <-- second phase, inner elements
+        ispec = phase_ispec_inner_acoustic(ielem,2) ! 2 -- second phase, inner elements
         ! reorders elements
         icounter = icounter + 1
         temp_perm_global(ispec) = icounter
@@ -602,7 +601,7 @@
   call permute_elements_real(kappastore,temp_array_real,perm,nspec)
   call permute_elements_real(mustore,temp_array_real,perm,nspec)
 
-  if(ATTENUATION) then
+  if (ATTENUATION) then
      call permute_elements_real(qmu_attenuation_store,temp_array_real,perm,nspec)
      call permute_elements_real(qkappa_attenuation_store,temp_array_real,perm,nspec)
   endif

@@ -62,7 +62,7 @@
   npoin2D_xi = 1
  350  continue
   read(IIN,*) iboolleft_xi(npoin2D_xi),xdummy,ydummy,zdummy
-  if(iboolleft_xi(npoin2D_xi) > 0) then
+  if (iboolleft_xi(npoin2D_xi) > 0) then
       npoin2D_xi = npoin2D_xi + 1
       goto 350
   endif
@@ -70,7 +70,7 @@
   npoin2D_xi = npoin2D_xi - 1
 ! read nb of points given by the mesher
   read(IIN,*) npoin2D_xi_mesher
-  if(npoin2D_xi > NPOIN2DMAX_XMIN_XMAX .or. npoin2D_xi /= npoin2D_xi_mesher) &
+  if (npoin2D_xi > NPOIN2DMAX_XMIN_XMAX .or. npoin2D_xi /= npoin2D_xi_mesher) &
       call exit_MPI(myrank,'incorrect iboolleft_xi read')
   close(IIN)
 
@@ -79,7 +79,7 @@
   npoin2D_xi = 1
  360  continue
   read(IIN,*) iboolright_xi(npoin2D_xi),xdummy,ydummy,zdummy
-  if(iboolright_xi(npoin2D_xi) > 0) then
+  if (iboolright_xi(npoin2D_xi) > 0) then
       npoin2D_xi = npoin2D_xi + 1
       goto 360
   endif
@@ -87,11 +87,11 @@
   npoin2D_xi = npoin2D_xi - 1
 ! read nb of points given by the mesher
   read(IIN,*) npoin2D_xi_mesher
-  if(npoin2D_xi > NPOIN2DMAX_XMIN_XMAX .or. npoin2D_xi /= npoin2D_xi_mesher) &
+  if (npoin2D_xi > NPOIN2DMAX_XMIN_XMAX .or. npoin2D_xi /= npoin2D_xi_mesher) &
       call exit_MPI(myrank,'incorrect iboolright_xi read')
   close(IIN)
 
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '# of points in MPI buffers along xi npoin2D_xi = ', &
                                 npoin2D_xi
@@ -109,7 +109,7 @@
   npoin2D_eta = 1
  370  continue
   read(IIN,*) iboolleft_eta(npoin2D_eta),xdummy,ydummy,zdummy
-  if(iboolleft_eta(npoin2D_eta) > 0) then
+  if (iboolleft_eta(npoin2D_eta) > 0) then
       npoin2D_eta = npoin2D_eta + 1
       goto 370
   endif
@@ -117,7 +117,7 @@
   npoin2D_eta = npoin2D_eta - 1
 ! read nb of points given by the mesher
   read(IIN,*) npoin2D_eta_mesher
-  if(npoin2D_eta > NPOIN2DMAX_YMIN_YMAX .or. npoin2D_eta /= npoin2D_eta_mesher) &
+  if (npoin2D_eta > NPOIN2DMAX_YMIN_YMAX .or. npoin2D_eta /= npoin2D_eta_mesher) &
       call exit_MPI(myrank,'incorrect iboolleft_eta read')
   close(IIN)
 
@@ -126,7 +126,7 @@
   npoin2D_eta = 1
  380  continue
   read(IIN,*) iboolright_eta(npoin2D_eta),xdummy,ydummy,zdummy
-  if(iboolright_eta(npoin2D_eta) > 0) then
+  if (iboolright_eta(npoin2D_eta) > 0) then
       npoin2D_eta = npoin2D_eta + 1
       goto 380
   endif
@@ -134,11 +134,11 @@
   npoin2D_eta = npoin2D_eta - 1
 ! read nb of points given by the mesher
   read(IIN,*) npoin2D_eta_mesher
-  if(npoin2D_eta > NPOIN2DMAX_YMIN_YMAX .or. npoin2D_eta /= npoin2D_eta_mesher) &
+  if (npoin2D_eta > NPOIN2DMAX_YMIN_YMAX .or. npoin2D_eta /= npoin2D_eta_mesher) &
       call exit_MPI(myrank,'incorrect iboolright_eta read')
   close(IIN)
 
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) '# of points in MPI buffers along eta npoin2D_eta = ', &
                                 npoin2D_eta

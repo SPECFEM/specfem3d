@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
 !--------------------------------------------------------------------------------------------------
 !
 ! IPATI
@@ -57,7 +56,7 @@
   ! -----------------------------------------------------------------------------
 
   ! user output
-  if (myrank==0) then
+  if (myrank == 0) then
     write(IMAIN,*) '     using IPATI model from: ',trim(LOCAL_PATH)
     write(IMAIN,*) '     scaling factor: ',SCALING_FACTOR
   endif
@@ -139,7 +138,7 @@
   ! -----------------------------------------------------------------------------
 
   ! user output
-  if (myrank==0) then
+  if (myrank == 0) then
     write(IMAIN,*) '     using IPATI_WATER model from: ',trim(LOCAL_PATH)
     write(IMAIN,*) '     scaling factor: ',SCALING_FACTOR
   endif

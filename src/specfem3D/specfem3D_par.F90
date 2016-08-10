@@ -55,7 +55,7 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore
 
 ! GPU
-! CUDA mesh pointer<->integer wrapper
+! CUDA mesh pointer to integer wrapper
   integer(kind=8) :: Mesh_pointer
 
   integer(kind=8) :: Fault_pointer
@@ -81,7 +81,7 @@ module specfem_par
   integer :: num_free_surface_faces
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_specfem3D_par.F90"
+    include "../../../add_to_specfem3D_par_1.F90"
 #endif
 
 ! attenuation
@@ -108,15 +108,15 @@ module specfem_par
   double precision, dimension(:,:,:), allocatable :: nu_source
   double precision, dimension(:), allocatable :: Mxx,Myy,Mzz,Mxy,Mxz,Myz
   double precision, dimension(:), allocatable :: xi_source,eta_source,gamma_source
-  double precision, dimension(:), allocatable :: tshift_src,hdur,hdur_gaussian
+  double precision, dimension(:), allocatable :: tshift_src,hdur,hdur_Gaussian
   double precision, dimension(:), allocatable :: utm_x_source,utm_y_source
   double precision, external :: comp_source_time_function
   double precision :: t0
   real(kind=CUSTOM_REAL) :: stf_used_total
   integer :: nsources_local
   ! source encoding
-  ! for acoustic sources: takes +/- 1 sign, depending on sign(Mxx)[ = sign(Myy) = sign(Mzz)
-  ! since they have to equal in the acoustic setting]
+  ! for acoustic sources: takes +/- 1 sign, depending on sign(Mxx)
+  ! [ = sign(Myy) = sign(Mzz) since they have to be equal in the acoustic setting]
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: pm1_source_encoding
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: user_source_time_function
 
@@ -277,8 +277,7 @@ module specfem_par_elastic
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: &
     alphaval,betaval,gammaval
 
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: &
-    R_trace,R_xx,R_yy,R_xy,R_xz,R_yz
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: R_trace,R_xx,R_yy,R_xy,R_xz,R_yz
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
     epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: epsilon_trace_over_3
@@ -338,7 +337,7 @@ module specfem_par_elastic
   ! anisotropic kernels
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: cijkl_kl
 
-  ! approximate hessian
+  ! approximate Hessian
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: hess_kl
 
   ! topographic (Moho) kernel
@@ -356,6 +355,10 @@ module specfem_par_elastic
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: b_buffer_recv_vector_ext_mesh
   integer, dimension(:), allocatable :: b_request_send_vector_ext_mesh
   integer, dimension(:), allocatable :: b_request_recv_vector_ext_mesh
+
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_specfem3D_par_2.F90"
+#endif
 
   ! LDDRK time scheme
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: displ_lddrk,veloc_lddrk
@@ -422,7 +425,7 @@ module specfem_par_acoustic
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_ac_kl, kappa_ac_kl, &
     rhop_ac_kl, alpha_ac_kl
 
-  ! approximate hessian
+  ! approximate Hessian
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: hess_ac_kl
 
   ! absorbing stacey wavefield parts
@@ -516,7 +519,6 @@ module specfem_par_poroelastic
   integer, dimension(:), allocatable :: b_request_recv_vector_ext_meshs
   integer, dimension(:), allocatable :: b_request_recv_vector_ext_meshw
 
-
 end module specfem_par_poroelastic
 
 !=====================================================================
@@ -526,11 +528,6 @@ module specfem_par_movie
 ! parameter module for movies/shakemovies
 
   use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NGNOD2D_FOUR_CORNERS
-
-!  use shared_parameters,only: &
-!    NTSTEP_BETWEEN_FRAMES, &
-!    CREATE_SHAKEMAP,MOVIE_SURFACE,MOVIE_VOLUME,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES, &
-!    MOVIE_TYPE,HDUR_MOVIE
 
   implicit none
 

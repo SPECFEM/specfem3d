@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
 subroutine parse_kernel_names(kernel_names_comma_delimited,kernel_names,nker)
 
   use postprocess_par,only: MAX_STRING_LEN, MAX_KERNEL_NAMES
@@ -144,7 +143,7 @@ subroutine strtok (source_string, delimiter, token)
   ifinish = ibegin
 
   do while (.true.)
-    if ((ifinish <= isource_len) .and.  (index(delimiter,saved_string(ifinish:ifinish)) == 0)) then
+    if ((ifinish <= isource_len) .and. (index(delimiter,saved_string(ifinish:ifinish)) == 0)) then
       ! delimiter is not encountered yet, increases finish index
       ifinish = ifinish + 1
     else

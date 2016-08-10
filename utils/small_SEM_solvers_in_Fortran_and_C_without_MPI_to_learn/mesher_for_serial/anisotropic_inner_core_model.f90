@@ -52,7 +52,7 @@
   double precision c66
   double precision scale_fac
 
-  if(REFERENCE_1D_MODEL == REFERENCE_MODEL_IASP91) then
+  if (REFERENCE_1D_MODEL == REFERENCE_MODEL_IASP91) then
     vp=11.24094d0-4.09689d0*x*x
     vs=3.56454d0-3.45241d0*x*x
     rho=13.0885d0-8.8381d0*x*x
@@ -62,7 +62,7 @@
     vs0=3.56454d0
     rho0=13.0885d0
 
-  else if(REFERENCE_1D_MODEL == REFERENCE_MODEL_PREM) then
+  else if (REFERENCE_1D_MODEL == REFERENCE_MODEL_PREM) then
     vp=11.2622d0-6.3640d0*x*x
     vs=3.6678d0-4.4475d0*x*x
     rho=13.0885d0-8.8381d0*x*x

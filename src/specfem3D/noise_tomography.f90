@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
 ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
 ! This file is first implemented for SPECFEM3D_GLOBE, and therefore it follows variables in GLOBAL package.
@@ -156,7 +155,7 @@ contains
   !PB NOT UNIF DISTRIBUTION OF NOISE ON THE SURFACE OF A SPHERE
   !PB lon lat colat ARE IN RADIANS SINCE ARE OBTAINED FROM CARTESIAN COORDINATES
   !PB lon_cn lat_cn (cn = CENTER OF NOISE REGION) IF NOT, MUST BE CONVERTED IN RADIANS
-  !PB lon_cn lat_cn  ARE INSERTED DIRECTLY HERE FOR SIMPLICITY
+  !PB lon_cn lat_cn are inserted directly here for simplicity
 
   lon_cn = (3.89)*PI/180
   lat_cn = (45.113)*PI/180
@@ -396,24 +395,24 @@ end module user_noise_distribution
   !if (.not. USE_HIGHRES_FOR_MOVIES) &
   !  call exit_mpi(myrank,'Please set USE_HIGHRES_FOR_MOVIES in Par_file to be .true.')
 
-  if (NOISE_TOMOGRAPHY==1) then
-    if (SIMULATION_TYPE/=1) &
+  if (NOISE_TOMOGRAPHY == 1) then
+    if (SIMULATION_TYPE /= 1) &
       call exit_mpi(myrank,'NOISE_TOMOGRAPHY=1 requires SIMULATION_TYPE=1! check Par_file')
 
-  else if (NOISE_TOMOGRAPHY==2) then
-    if (SIMULATION_TYPE/=1) &
+  else if (NOISE_TOMOGRAPHY == 2) then
+    if (SIMULATION_TYPE /= 1) &
       call exit_mpi(myrank,'NOISE_TOMOGRAPHY=2 requires SIMULATION_TYPE=1! check Par_file')
     if (.not. SAVE_FORWARD) &
       call exit_mpi(myrank,'NOISE_TOMOGRAPHY=2 requires SAVE_FORWARD=.true.! check Par_file')
 
-  else if (NOISE_TOMOGRAPHY==3) then
-    if (SIMULATION_TYPE/=3) &
+  else if (NOISE_TOMOGRAPHY == 3) then
+    if (SIMULATION_TYPE /= 3) &
       call exit_mpi(myrank,'NOISE_TOMOGRAPHY=3 requires SIMULATION_TYPE=3! check Par_file')
     if (SAVE_FORWARD) &
       call exit_mpi(myrank,'NOISE_TOMOGRAPHY=3 requires SAVE_FORWARD=.false.! check Par_file')
   endif
 
-  if (NOISE_TOMOGRAPHY/=0) then
+  if (NOISE_TOMOGRAPHY /= 0) then
     ! save/read the surface movie using the same c routine as we do for absorbing boundaries (file ID is 2)
 
     ! size of single record
@@ -435,15 +434,15 @@ end module user_noise_distribution
       filesize = filesize*NSTEP
 
       write(outputname,"('/proc',i6.6,'_surface_movie')") myrank
-      if (NOISE_TOMOGRAPHY==1) &
+      if (NOISE_TOMOGRAPHY == 1) &
         call open_file_abs_w(2,trim(LOCAL_PATH)//trim(outputname), &
            len_trim(trim(LOCAL_PATH)//trim(outputname)), &
            filesize)
-      if (NOISE_TOMOGRAPHY==2) &
+      if (NOISE_TOMOGRAPHY == 2) &
         call open_file_abs_r(2,trim(LOCAL_PATH)//trim(outputname), &
            len_trim(trim(LOCAL_PATH)//trim(outputname)), &
            filesize)
-      if (NOISE_TOMOGRAPHY==3) &
+      if (NOISE_TOMOGRAPHY == 3) &
         call open_file_abs_r(2,trim(LOCAL_PATH)//trim(outputname), &
            len_trim(trim(LOCAL_PATH)//trim(outputname)), &
            filesize)
@@ -859,7 +858,7 @@ end module user_noise_distribution
 
       enddo
 
-    else ! GPU_MODE==1
+    else ! GPU_MODE == 1
       call compute_kernels_strgth_noise_cu(Mesh_pointer,noise_surface_movie,deltat)
     endif ! GPU_MODE
 

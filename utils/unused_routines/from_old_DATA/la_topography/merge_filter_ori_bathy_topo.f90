@@ -36,11 +36,11 @@
     read(13,*) a,b,ic
     ix = nint((b-ORIG_LONG)/DEGREES_PER_CELL_BATHY)
     iy = nint((a-ORIG_LAT)/DEGREES_PER_CELL_BATHY)
-    if(ix < 1) ix = 1
-    if(ix > NX_BATHY) ix = NX_BATHY
-    if(iy < 1) iy = 1
-    if(iy > NY_BATHY) iy = NY_BATHY
-    if(ic <= 0) stop 'incorrect bathy point'
+    if (ix < 1) ix = 1
+    if (ix > NX_BATHY) ix = NX_BATHY
+    if (iy < 1) iy = 1
+    if (iy > NY_BATHY) iy = NY_BATHY
+    if (ic <= 0) stop 'incorrect bathy point'
     ibathy_read(ix,iy) = - ic
   enddo
   close(13)
@@ -50,13 +50,13 @@
 ! remove zeros (spikes) from raw file
   do iy=1,NY_BATHY
     do ix=1,NX_BATHY-1
-      if(ibathy_read(ix,iy) >= 0) ibathy(ix,iy) = ibathy_read(ix+1,iy)
+      if (ibathy_read(ix,iy) >= 0) ibathy(ix,iy) = ibathy_read(ix+1,iy)
     enddo
   enddo
 
   do iy=1,NY_BATHY-1
     do ix=1,NX_BATHY
-      if(ibathy_read(ix,iy) >= 0) ibathy(ix,iy) = ibathy_read(ix,iy+1)
+      if (ibathy_read(ix,iy) >= 0) ibathy(ix,iy) = ibathy_read(ix,iy+1)
     enddo
   enddo
 
@@ -91,32 +91,32 @@
   print *,'interpolating bathy onto topo grid'
   do iy = 1,NY_TOPO
   do ix = 1,NX_TOPO
-    if(itopo(ix,iy) <= 0) then
+    if (itopo(ix,iy) <= 0) then
       rlon = ORIG_LONG + (ix-1)*DEGREES_PER_CELL
       rlat = ORIG_LAT + (iy-1)*DEGREES_PER_CELL
       ixconv = nint((rlon - ORIG_LONG)/DEGREES_PER_CELL_BATHY + 1)
       iyconv = nint((rlat - ORIG_LAT)/DEGREES_PER_CELL_BATHY + 1)
-      if(ixconv < 1) ixconv = 1
-      if(iyconv < 1) iyconv = 1
-      if(ixconv > NX_BATHY) ixconv = NX_BATHY
-      if(iyconv > NY_BATHY) iyconv = NY_BATHY
+      if (ixconv < 1) ixconv = 1
+      if (iyconv < 1) iyconv = 1
+      if (ixconv > NX_BATHY) ixconv = NX_BATHY
+      if (iyconv > NY_BATHY) iyconv = NY_BATHY
       itopo(ix,iy) = ibathy(ixconv,iyconv)
     endif
   enddo
   enddo
 
 ! truncate topo in Sierra Nevada to avoid artefacts
-  if(TRUNCATE_TOPO) then
+  if (TRUNCATE_TOPO) then
     print *,'truncating topo above ',MAX_TOPO
     do iy = 1,NY_TOPO
       do ix = 1,NX_TOPO
-        if(itopo(ix,iy) > MAX_TOPO) itopo(ix,iy) = MAX_TOPO
+        if (itopo(ix,iy) > MAX_TOPO) itopo(ix,iy) = MAX_TOPO
       enddo
     enddo
   endif
 
 ! filter final surface using box filter
-  if(FILTER_USING_BOX) then
+  if (FILTER_USING_BOX) then
     print *,'filtering final surface using box filter'
     do iy = 1,NY_TOPO
       print *,'doing iy = ',iy,' out of ',NY_TOPO
@@ -126,10 +126,10 @@
           do ixbox = ix-SIZE_FILTER_ONE_SIDE,ix+SIZE_FILTER_ONE_SIDE
             ixval = ixbox
             iyval = iybox
-            if(ixval < 1) ixval = 1
-            if(iyval < 1) iyval = 1
-            if(ixval > NX_TOPO) ixval = NX_TOPO
-            if(iyval > NY_TOPO) iyval = NY_TOPO
+            if (ixval < 1) ixval = 1
+            if (iyval < 1) iyval = 1
+            if (ixval > NX_TOPO) ixval = NX_TOPO
+            if (iyval > NY_TOPO) iyval = NY_TOPO
             sumval = sumval + dble(itopo(ixval,iyval))
           enddo
         enddo

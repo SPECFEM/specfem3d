@@ -33,11 +33,9 @@
                         ibool,ispec_is_inner,phase_is_inner, &
                         abs_boundary_normal,abs_boundary_jacobian2Dw, &
                         abs_boundary_ijk,abs_boundary_ispec, &
-                        num_abs_boundary_faces, &
-                        veloc,rho_vp,rho_vs, &
+                        num_abs_boundary_faces,veloc,rho_vp,rho_vs, &
                         ispec_is_elastic,SIMULATION_TYPE,SAVE_FORWARD, &
-                        it, &
-                        b_num_abs_boundary_faces,b_reclen_field,b_absorb_field)
+                        it,b_num_abs_boundary_faces,b_reclen_field,b_absorb_field)
 
   use constants
 
@@ -89,7 +87,7 @@
   ! checks if anything to do
   if (num_abs_boundary_faces == 0) return
 
-  ! absorbs absorbing-boundary surface using Stacey condition (Clayton & Enquist)
+  ! absorbs absorbing-boundary surface using Stacey condition (Clayton and Enquist)
   do iface = 1,num_abs_boundary_faces
 
     ispec = abs_boundary_ispec(iface)
@@ -108,9 +106,10 @@
 
           ! gets velocity
           iglob=ibool(i,j,k,ispec)
-          vx=veloc(1,iglob)
-          vy=veloc(2,iglob)
-          vz=veloc(3,iglob)
+
+          vx = veloc(1,iglob)
+          vy = veloc(2,iglob)
+          vz = veloc(3,iglob)
 
 #ifdef DEBUG_COUPLED
     include "../../../add_to_compute_stacey_viscoelastic_2.F90"
@@ -161,7 +160,6 @@
   if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
     ! writes out absorbing boundary value only when second phase is running
     if (phase_is_inner .eqv. .true.) call write_abs(IOABS,b_absorb_field,b_reclen_field,it)
-
   endif
 
 #ifdef DEBUG_COUPLED
@@ -169,8 +167,10 @@
 #endif
 
   end subroutine compute_stacey_viscoelastic
+
 !
 !=====================================================================
+!
 
 ! for elastic solver
 
@@ -229,7 +229,7 @@
     call read_abs(IOABS,b_absorb_field,b_reclen_field,NSTEP-it+1)
   endif
 
-  ! absorbs absorbing-boundary surface using Stacey condition (Clayton & Enquist)
+  ! absorbs absorbing-boundary surface using Stacey condition (Clayton and Enquist)
   do iface = 1,num_abs_boundary_faces
 
     ispec = abs_boundary_ispec(iface)
@@ -239,6 +239,7 @@
       if (ispec_is_elastic(ispec)) then
         ! reference GLL points on boundary face
         do igll = 1,NGLLSQUARE
+
           ! gets local indices for GLL point
           i = abs_boundary_ijk(1,igll,iface)
           j = abs_boundary_ijk(2,igll,iface)
@@ -262,6 +263,8 @@
 
 !
 !=====================================================================
+!
+
 ! for elastic solver on GPU
 
 ! absorbing boundary term for elastic media (Stacey conditions)
@@ -328,3 +331,6 @@
 
   end subroutine compute_stacey_viscoelastic_GPU
 
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_compute_stacey_viscoelastic_11.F90"
+#endif

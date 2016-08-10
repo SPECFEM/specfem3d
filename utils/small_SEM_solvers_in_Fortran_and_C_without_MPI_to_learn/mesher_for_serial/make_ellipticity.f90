@@ -159,7 +159,7 @@
   rspl(1)=r(1)
   espl(1)=epsilonval(1)
   do i=2,NR
-    if(r(i) /= r(i-1)) then
+    if (r(i) /= r(i-1)) then
       nspl=nspl+1
       rspl(nspl)=r(i)
       espl(nspl)=epsilonval(i)

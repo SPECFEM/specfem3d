@@ -49,7 +49,7 @@ contains
        print *,'Error opening ascii file to read: ',trim(fname)
        stop
     endif
-    do while (1==1)
+    do while (1 == 1)
        read(10,*,iostat=ios) ttemp, dtemp
        if (ios /= 0) exit
        npt=npt+1

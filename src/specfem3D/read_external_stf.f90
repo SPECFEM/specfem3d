@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
   subroutine read_external_stf(isource,user_source_time_function,external_stf_filename)
 
 ! reads in an external source time function file
@@ -39,7 +38,7 @@
   integer,intent(in) :: isource
   !! VM VM use NSTEP_STF, NSOURCES_STF which are always rigth :
   !! in case of EXTERNAL_STF, it's equal to NSTEP,NSOURCES
-  !! when .not.  EXTERNAL_STF it' equal to 1,1.
+  !! when .not. EXTERNAL_STF it' equal to 1,1.
   real(kind=CUSTOM_REAL), dimension(NSTEP_STF, NSOURCES_STF), intent(inout) :: user_source_time_function
 
   character(len=MAX_STRING_LEN),intent(in) :: external_stf_filename

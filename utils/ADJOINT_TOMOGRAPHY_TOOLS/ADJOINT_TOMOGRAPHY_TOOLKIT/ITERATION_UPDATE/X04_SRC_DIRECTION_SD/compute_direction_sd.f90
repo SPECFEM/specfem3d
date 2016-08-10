@@ -24,7 +24,7 @@ program xcompute_direction_sd
   call getarg(1,direction_dir)
   call getarg(2,gradient_dir)
 
-  if (trim(direction_dir) == ''.or. trim(gradient_dir) == '') then
+  if (trim(direction_dir) == '' .or. trim(gradient_dir) == '') then
         call exit_MPI(myrank,'USAGE: xcompute_direction_sd direction_dir gradient_dir')
   endif
 
@@ -40,7 +40,7 @@ program xcompute_direction_sd
 
      open(1001,file=trim(gradient_file),status='old',form='unformatted',iostat=ier)
      if (myrank == 0) print *, 'reading gradient1:',trim(gradient_file)
-     if (ier/=0) then
+     if (ier /= 0) then
         print *, 'error opening:',trim(gradient_file)
         call exit_mpi(myrank,'file not found')
      endif

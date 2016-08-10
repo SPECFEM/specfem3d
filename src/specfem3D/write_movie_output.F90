@@ -550,7 +550,7 @@
       velocity_z(:,:,:,ispec) = veloc_element(3,:,:,:)
    enddo
 
-   if ( .not. ELASTIC_SIMULATION .and. .not. POROELASTIC_SIMULATION) then
+   if (.not. ELASTIC_SIMULATION .and. .not. POROELASTIC_SIMULATION) then
      allocate(pressure_loc(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
 
      do ispec=1,NSPEC_AB

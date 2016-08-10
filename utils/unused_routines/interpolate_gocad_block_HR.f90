@@ -46,14 +46,14 @@
 
 ! this block is smaller than the grid, therefore just exit
 ! if the target point is outside of the block
-  if(ix < 0 .or. ix > NX_GOCAD_HR-2 .or. iy < 0 .or. iy > NY_GOCAD_HR-2) return
+  if (ix < 0 .or. ix > NX_GOCAD_HR-2 .or. iy < 0 .or. iy > NY_GOCAD_HR-2) return
 
 ! suppress edge effects in vertical direction
-  if(iz < 0) then
+  if (iz < 0) then
     iz = 0
     gamma_interp_z = 0.d0
   endif
-  if(iz > NZ_GOCAD_HR-2) then
+  if (iz > NZ_GOCAD_HR-2) then
     iz = NZ_GOCAD_HR-2
     gamma_interp_z = 1.d0
   endif
@@ -72,7 +72,7 @@
 ! check if element is defined (i.e. is in the sediments in Voxet)
 ! do nothing if element is undefined
 ! a P-velocity of 20 km/s is used to indicate fictitious elements
-   if(v1 < 19000. .and. v2 < 19000. .and. &
+   if (v1 < 19000. .and. v2 < 19000. .and. &
       v3 < 19000. .and. v4 < 19000. .and. &
       v5 < 19000. .and. v6 < 19000. .and. &
       v7 < 19000. .and. v8 < 19000.) then
@@ -92,15 +92,15 @@
            v8*(1.-gamma_interp_x)*gamma_interp_y*gamma_interp_z
 
 ! impose minimum velocity if needed
-         if(IMPOSE_MINIMUM_VP_GOCAD .and. vp_final < VP_MIN_GOCAD) vp_final = VP_MIN_GOCAD
+         if (IMPOSE_MINIMUM_VP_GOCAD .and. vp_final < VP_MIN_GOCAD) vp_final = VP_MIN_GOCAD
 
 ! taper edges to make smooth transition between MR and HR blocks
 ! get value from edge of medium-resolution block
 ! then use linear interpolation from edge of the model
-  if(TAPER_GOCAD_TRANSITIONS) then
+  if (TAPER_GOCAD_TRANSITIONS) then
 
 ! x = xmin
-  if(utm_x_eval < ORIG_X_GOCAD_HR + THICKNESS_TAPER_BLOCK_HR) then
+  if (utm_x_eval < ORIG_X_GOCAD_HR + THICKNESS_TAPER_BLOCK_HR) then
     gamma_interp_x = (utm_x_eval - ORIG_X_GOCAD_HR) / THICKNESS_TAPER_BLOCK_HR
     call interpolate_gocad_block_MR(vp_block_gocad_MR, &
               ORIG_X_GOCAD_HR,utm_y_eval,z_eval,rho_ref_MR,vp_ref_MR,vs_ref_MR,dummy_flag, &
@@ -110,7 +110,7 @@
     vp_final = vp_ref_MR * (1. - gamma_interp_x) + vp_final * gamma_interp_x
 
 ! x = xmax
-  else if(utm_x_eval > END_X_GOCAD_HR - THICKNESS_TAPER_BLOCK_HR) then
+  else if (utm_x_eval > END_X_GOCAD_HR - THICKNESS_TAPER_BLOCK_HR) then
     gamma_interp_x = (utm_x_eval - (END_X_GOCAD_HR - THICKNESS_TAPER_BLOCK_HR)) / THICKNESS_TAPER_BLOCK_HR
     call interpolate_gocad_block_MR(vp_block_gocad_MR, &
               END_X_GOCAD_HR,utm_y_eval,z_eval,rho_ref_MR,vp_ref_MR,vs_ref_MR,dummy_flag, &
@@ -120,7 +120,7 @@
     vp_final = vp_ref_MR * gamma_interp_x + vp_final * (1. - gamma_interp_x)
 
 ! y = ymin
-  else if(utm_y_eval < ORIG_Y_GOCAD_HR + THICKNESS_TAPER_BLOCK_HR) then
+  else if (utm_y_eval < ORIG_Y_GOCAD_HR + THICKNESS_TAPER_BLOCK_HR) then
     gamma_interp_y = (utm_y_eval - ORIG_Y_GOCAD_HR) / THICKNESS_TAPER_BLOCK_HR
     call interpolate_gocad_block_MR(vp_block_gocad_MR, &
               utm_x_eval,ORIG_Y_GOCAD_HR,z_eval,rho_ref_MR,vp_ref_MR,vs_ref_MR,dummy_flag, &
@@ -130,7 +130,7 @@
     vp_final = vp_ref_MR * (1. - gamma_interp_y) + vp_final * gamma_interp_y
 
 ! y = ymax
-  else if(utm_y_eval > END_Y_GOCAD_HR - THICKNESS_TAPER_BLOCK_HR) then
+  else if (utm_y_eval > END_Y_GOCAD_HR - THICKNESS_TAPER_BLOCK_HR) then
     gamma_interp_y = (utm_y_eval - (END_Y_GOCAD_HR - THICKNESS_TAPER_BLOCK_HR)) / THICKNESS_TAPER_BLOCK_HR
     call interpolate_gocad_block_MR(vp_block_gocad_MR, &
               utm_x_eval,END_Y_GOCAD_HR,z_eval,rho_ref_MR,vp_ref_MR,vs_ref_MR,dummy_flag, &
@@ -149,8 +149,8 @@
            (z_eval - (-8500.d0)) / (0.d0 - (-8500.d0))
 
 ! make sure ratio remains in interval
-  if(vp_vs_ratio < VP_VS_RATIO_GOCAD_BOTTOM) vp_vs_ratio = VP_VS_RATIO_GOCAD_BOTTOM
-  if(vp_vs_ratio > VP_VS_RATIO_GOCAD_TOP) vp_vs_ratio = VP_VS_RATIO_GOCAD_TOP
+  if (vp_vs_ratio < VP_VS_RATIO_GOCAD_BOTTOM) vp_vs_ratio = VP_VS_RATIO_GOCAD_BOTTOM
+  if (vp_vs_ratio > VP_VS_RATIO_GOCAD_TOP) vp_vs_ratio = VP_VS_RATIO_GOCAD_TOP
 
          vs_final = vp_final / vp_vs_ratio
          call compute_rho_estimate(rho_final,vp_final)

@@ -67,7 +67,7 @@
 !
 !--- case of a regular mesh
 !
-  if(USE_REGULAR_MESH) then
+  if (USE_REGULAR_MESH) then
 
 ! total number of spectral elements along radius
   NER = NER_SEDIM

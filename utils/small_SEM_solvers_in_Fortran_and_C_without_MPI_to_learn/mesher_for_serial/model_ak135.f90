@@ -77,14 +77,14 @@
 ! and a point below the ICB or the CMB and interpolate between them,
 ! which would lead to a wrong value (keeping in mind that we interpolate
 ! between points i-1 and i below)
-  if(iregion_code == IREGION_INNER_CORE .and. i > 25) i = 25
+  if (iregion_code == IREGION_INNER_CORE .and. i > 25) i = 25
 
-  if(iregion_code == IREGION_OUTER_CORE .and. i < 27) i = 27
-  if(iregion_code == IREGION_OUTER_CORE .and. i > 71) i = 71
+  if (iregion_code == IREGION_OUTER_CORE .and. i < 27) i = 27
+  if (iregion_code == IREGION_OUTER_CORE .and. i > 71) i = 71
 
-  if(iregion_code == IREGION_CRUST_MANTLE .and. i < 73) i = 73
+  if (iregion_code == IREGION_CRUST_MANTLE .and. i < 73) i = 73
 
-  if(i == 1) then
+  if (i == 1) then
     rho = Mak135_V%density_ak135(i)
     vp = Mak135_V%vp_ak135(i)
     vs = Mak135_V%vs_ak135(i)
@@ -105,7 +105,7 @@
 
 ! make sure Vs is zero in the outer core even if roundoff errors on depth
 ! also set fictitious attenuation to a very high value (attenuation is not used in the fluid)
-  if(iregion_code == IREGION_OUTER_CORE) then
+  if (iregion_code == IREGION_OUTER_CORE) then
     vs = 0.d0
     Qkappa = 3000.d0
     Qmu = 3000.d0
@@ -1024,7 +1024,7 @@
   Mak135_V%Qmu_ak135(144) =   599.990000000000
 
 ! strip the crust and replace it by mantle
-  if(USE_EXTERNAL_CRUSTAL_MODEL) then
+  if (USE_EXTERNAL_CRUSTAL_MODEL) then
     do i=NR_AK135-8,NR_AK135
       Mak135_V%density_ak135(i) = Mak135_V%density_ak135(NR_AK135-9)
       Mak135_V%vp_ak135(i) = Mak135_V%vp_ak135(NR_AK135-9)

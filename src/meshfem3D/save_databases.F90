@@ -259,7 +259,7 @@
   call synchronize_all()
 
   write(IIN_database) nspec_CPML_total
-  if(nspec_CPML_total > 0) then
+  if (nspec_CPML_total > 0) then
      write(IIN_database) nspec_CPML
      do ispec_CPML=1,nspec_CPML
         write(IIN_database) CPML_to_spec(ispec_CPML), CPML_regions(ispec_CPML)
@@ -361,7 +361,7 @@
     if (interfaces(NW)) then
       write(IIN_database) addressing(iproc_xi-1,iproc_eta+1),nspec_interface(NW)
       do ispec = 1,nspec
-        if ((iMPIcut_xi(1,ispec) .eqv. .true.) .and. (iMPIcut_eta(2,ispec) .eqv. .true.))  then
+        if ((iMPIcut_xi(1,ispec) .eqv. .true.) .and. (iMPIcut_eta(2,ispec) .eqv. .true.)) then
           write(IIN_database) ispec,2,ibool(1,2,1,ispec),ibool(1,2,2,ispec),-1,-1
         endif
       enddo
@@ -370,7 +370,7 @@
     if (interfaces(NE)) then
       write(IIN_database) addressing(iproc_xi+1,iproc_eta+1),nspec_interface(NE)
       do ispec = 1,nspec
-        if ((iMPIcut_xi(2,ispec) .eqv. .true.) .and. (iMPIcut_eta(2,ispec) .eqv. .true.))  then
+        if ((iMPIcut_xi(2,ispec) .eqv. .true.) .and. (iMPIcut_eta(2,ispec) .eqv. .true.)) then
           write(IIN_database) ispec,2,ibool(2,2,1,ispec),ibool(2,2,2,ispec),-1,-1
         endif
       enddo
@@ -379,7 +379,7 @@
     if (interfaces(SE)) then
       write(IIN_database) addressing(iproc_xi+1,iproc_eta-1),nspec_interface(SE)
       do ispec = 1,nspec
-        if ((iMPIcut_xi(2,ispec) .eqv. .true.) .and. (iMPIcut_eta(1,ispec) .eqv. .true.))  then
+        if ((iMPIcut_xi(2,ispec) .eqv. .true.) .and. (iMPIcut_eta(1,ispec) .eqv. .true.)) then
           write(IIN_database) ispec,2,ibool(2,1,1,ispec),ibool(2,1,2,ispec),-1,-1
         endif
       enddo
@@ -388,7 +388,7 @@
     if (interfaces(SW)) then
       write(IIN_database) addressing(iproc_xi-1,iproc_eta-1),nspec_interface(SW)
       do ispec = 1,nspec
-        if ((iMPIcut_xi(1,ispec) .eqv. .true.) .and. (iMPIcut_eta(1,ispec) .eqv. .true.))  then
+        if ((iMPIcut_xi(1,ispec) .eqv. .true.) .and. (iMPIcut_eta(1,ispec) .eqv. .true.)) then
           write(IIN_database) ispec,2,ibool(1,1,1,ispec),ibool(1,1,2,ispec),-1,-1
         endif
       enddo

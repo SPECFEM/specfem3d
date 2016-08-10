@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
 subroutine compute_interpolated_dva(displ,veloc,accel,NGLOB_AB, &
                                     ispec,NSPEC_AB,ibool, &
                                     xi_r,eta_r,gamma_r, &
@@ -196,7 +195,7 @@ subroutine compute_interpolated_dva_acoust(displ_element,veloc_element,accel_ele
     iglob = ibool(nint(xi_r),nint(eta_r),nint(gamma_r),ispec)
 
     ! pressure
-    if(USE_TRICK_FOR_BETTER_PRESSURE) then
+    if (USE_TRICK_FOR_BETTER_PRESSURE) then
       ! use a trick to increase accuracy of pressure seismograms in fluid (acoustic) elements:
       ! use the second derivative of the source for the source time function instead of the source itself,
       ! and then record -potential_acoustic() as pressure seismograms instead of -potential_dot_dot_acoustic();
@@ -251,7 +250,7 @@ subroutine compute_interpolated_dva_acoust(displ_element,veloc_element,accel_ele
           iglob = ibool(i,j,k,ispec)
 
           ! pressure
-          if(USE_TRICK_FOR_BETTER_PRESSURE) then
+          if (USE_TRICK_FOR_BETTER_PRESSURE) then
             ! use a trick to increase accuracy of pressure seismograms in fluid (acoustic) elements:
             ! use the second derivative of the source for the source time function instead of the source itself,
             ! and then record -potential_acoustic() as pressure seismograms instead of -potential_dot_dot_acoustic();

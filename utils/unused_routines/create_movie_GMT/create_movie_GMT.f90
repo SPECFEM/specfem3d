@@ -144,14 +144,14 @@ program create_movie_GMT
   print *, 'DT = ', DT , ' NSTEP = ', NSTEP
   print *
 
-  if(SAVE_DISPLACEMENT) then
+  if (SAVE_DISPLACEMENT) then
      print *,'Vertical displacement will be shown in movie'
   else
      print *,'Vertical velocity will be shown in movie'
   endif
   print *
 
-  if(USE_HIGHRES_FOR_MOVIES) then
+  if (USE_HIGHRES_FOR_MOVIES) then
      print *, 'Movie is in high-resolution'
      ilocnum = NGLLSQUARE*NEX_PER_PROC_XI*NEX_PER_PROC_ETA
   else
@@ -167,12 +167,12 @@ program create_movie_GMT
 
   zscaling = 0.
 
-  if(it1 == -1) then
+  if (it1 == -1) then
      plot_shaking_map = .true.
      nframes = 1
      it1 = 1
      inorm = it2
-     if(inorm < 1 .or. inorm > 3) stop 'incorrect value of inorm'
+     if (inorm < 1 .or. inorm > 3) stop 'incorrect value of inorm'
      it2 = 1
   else
      plot_shaking_map = .false.
@@ -187,13 +187,13 @@ program create_movie_GMT
      enddo
      print *
      print *,'total number of frames will be ',nframes
-     if(nframes == 0) stop 'null number of frames'
+     if (nframes == 0) stop 'null number of frames'
      max_all_frames = -100.0
   endif
 
 
   ! define the total number of elements at the surface
-  if(USE_HIGHRES_FOR_MOVIES) then
+  if (USE_HIGHRES_FOR_MOVIES) then
      nspectot_AVS_max = NEX_XI * NEX_ETA * (NGLLX-1) * (NGLLY-1)
   else
      nspectot_AVS_max = NEX_XI * NEX_ETA
@@ -217,7 +217,7 @@ program create_movie_GMT
 
   ! --------------------------------------
 
-  if(USE_HIGHRES_FOR_MOVIES) then
+  if (USE_HIGHRES_FOR_MOVIES) then
      allocate(x(NGLLX,NGLLY))
      allocate(y(NGLLX,NGLLY))
      allocate(z(NGLLX,NGLLY))
@@ -233,7 +233,7 @@ program create_movie_GMT
      iframe = iframe + 1
      ivalue = it * NTSTEP_BETWEEN_FRAMES
 !     print *, 'ivalue = ' ,ivalue
-     if(plot_shaking_map) then
+     if (plot_shaking_map) then
         print *,'reading shaking map snapshot'
      else
         print *,'reading snapshot frame ',it,' out of ',NSTEP/NTSTEP_BETWEEN_FRAMES
@@ -241,7 +241,7 @@ program create_movie_GMT
      print *
 
      ! read all the elements from the same file
-     if(plot_shaking_map) then
+     if (plot_shaking_map) then
         write(outputname,"('/shakingdata')")
      else
         write(outputname,"('/moviedata',i6.6)") ivalue
@@ -282,7 +282,7 @@ program create_movie_GMT
 
         do ispecloc = 1,NEX_PER_PROC_XI*NEX_PER_PROC_ETA
 
-           if(USE_HIGHRES_FOR_MOVIES) then
+           if (USE_HIGHRES_FOR_MOVIES) then
               ! assign the OpenDX "elements"
 
               do j = 1,NGLLY
@@ -305,10 +305,10 @@ program create_movie_GMT
                     y(i,j) = ycoord
                     z(i,j) = zcoord
 
-                    if(plot_shaking_map) then
-                       if(inorm == 1) then
+                    if (plot_shaking_map) then
+                       if (inorm == 1) then
                           display(i,j) = vectorx
-                       else if(inorm == 2) then
+                       else if (inorm == 2) then
                           display(i,j) = vectory
                        else
                           display(i,j) = vectorz
@@ -329,17 +329,17 @@ program create_movie_GMT
                     ieoff = NGNOD2D_AVS_DX*(ielm+(i-1)+(j-1)*(NGLLX-1))
                     do ilocnum = 1,NGNOD2D_AVS_DX
 
-                       if(ilocnum == 1) then
+                       if (ilocnum == 1) then
                           xp(ieoff+ilocnum) = dble(x(i,j))
                           yp(ieoff+ilocnum) = dble(y(i,j))
                           zp(ieoff+ilocnum) = dble(z(i,j))
                           field_display(ieoff+ilocnum) = dble(display(i,j))
-                       else if(ilocnum == 2) then
+                       else if (ilocnum == 2) then
                           xp(ieoff+ilocnum) = dble(x(i+1,j))
                           yp(ieoff+ilocnum) = dble(y(i+1,j))
                           zp(ieoff+ilocnum) = dble(z(i+1,j))
                           field_display(ieoff+ilocnum) = dble(display(i+1,j))
-                       else if(ilocnum == 3) then
+                       else if (ilocnum == 3) then
                           xp(ieoff+ilocnum) = dble(x(i+1,j+1))
                           yp(ieoff+ilocnum) = dble(y(i+1,j+1))
                           zp(ieoff+ilocnum) = dble(z(i+1,j+1))
@@ -383,10 +383,10 @@ program create_movie_GMT
                  ! show vertical component of displacement or velocity in the movie
                  ! or show norm of vector if shaking map
                  ! for shaking map, norm of U stored in ux, V in uy and A in uz
-                 if(plot_shaking_map) then
-                    if(inorm == 1) then
+                 if (plot_shaking_map) then
+                    if (inorm == 1) then
                        field_display(ilocnum+ieoff) = dble(vectorx)
-                    else if(inorm == 2) then
+                    else if (inorm == 2) then
                        field_display(ilocnum+ieoff) = dble(vectory)
                     else
                        field_display(ilocnum+ieoff) = dble(vectorz)
@@ -432,7 +432,7 @@ program create_movie_GMT
      print *,'maximum amplitude in current snapshot = ',max_field_current
      print *
 
-     if(plot_shaking_map) then
+     if (plot_shaking_map) then
 
         ! normalize field to [0:1]
         field_display(:) = field_display(:) / max_field_current
@@ -449,7 +449,7 @@ program create_movie_GMT
 
 
      ! create file name and open file
-     if(plot_shaking_map) then
+     if (plot_shaking_map) then
         write(outputname,"('/gmt_shaking_map.xyz')")
         open(unit=11,file=trim(output_file_prefix)//outputname,status='unknown',iostat=ios1)
      else
@@ -468,7 +468,7 @@ program create_movie_GMT
         ! four points for each element
         do ilocnum = 1,NGNOD2D_AVS_DX
            ibool_number = iglob(ilocnum+ieoff)
-           if(.not. mask_point(ibool_number)) then
+           if (.not. mask_point(ibool_number)) then
               call utm_geo(long,lat,xp_save(ilocnum+ieoff),yp_save(ilocnum+ieoff), &
                    UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
               if (plot_shaking_map) then
@@ -517,7 +517,7 @@ program create_movie_GMT
   deallocate(mask_point)
   deallocate(ireorder)
 
-  if(USE_HIGHRES_FOR_MOVIES) then
+  if (USE_HIGHRES_FOR_MOVIES) then
      deallocate(x)
      deallocate(y)
      deallocate(z)
@@ -590,9 +590,9 @@ end program create_movie_GMT
 ! sort within each segment
   ioff=1
   do iseg=1,nseg
-    if(j == 1) then
+    if (j == 1) then
       call rank(xp(ioff),ind,ninseg(iseg))
-    else if(j == 2) then
+    else if (j == 2) then
       call rank(yp(ioff),ind,ninseg(iseg))
     else
       call rank(zp(ioff),ind,ninseg(iseg))
@@ -603,24 +603,24 @@ end program create_movie_GMT
 
 ! check for jumps in current coordinate
 ! compare the coordinates of the points within a small tolerance
-  if(j == 1) then
+  if (j == 1) then
     do i=2,npointot
-      if(dabs(xp(i)-xp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
+      if (dabs(xp(i)-xp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
     enddo
-  else if(j == 2) then
+  else if (j == 2) then
     do i=2,npointot
-      if(dabs(yp(i)-yp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
+      if (dabs(yp(i)-yp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
     enddo
   else
     do i=2,npointot
-      if(dabs(zp(i)-zp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
+      if (dabs(zp(i)-zp(i-1)) > SMALLVALTOL) ifseg(i)=.true.
     enddo
   endif
 
 ! count up number of different segments
   nseg=0
   do i=1,npointot
-    if(ifseg(i)) then
+    if (ifseg(i)) then
       nseg=nseg+1
       ninseg(nseg)=1
     else
@@ -632,7 +632,7 @@ end program create_movie_GMT
 ! assign global node numbers (now sorted lexicographically)
   ig=0
   do i=1,npointot
-    if(ifseg(i)) ig=ig+1
+    if (ifseg(i)) ig=ig+1
     iglob(loc(i))=ig
   enddo
 
@@ -671,8 +671,8 @@ end program create_movie_GMT
 
   L=n/2+1
   ir=n
-  100 CONTINUE
-   IF (l>1) THEN
+  100 continue
+   if (l > 1) then
       l=l-1
       indx=ind(l)
       q=a(indx)
@@ -688,12 +688,12 @@ end program create_movie_GMT
    endif
    i=l
    j=l+l
-  200    CONTINUE
-   IF (J <= IR) THEN
-      IF (J<IR) THEN
-         IF ( A(IND(j))<A(IND(j+1)) ) j=j+1
+  200    continue
+   if (J <= IR) then
+      if (J < IR) then
+         if ( A(IND(j)) < A(IND(j+1)) ) j=j+1
       endif
-      IF (q<A(IND(j))) THEN
+      if (q < A(IND(j))) then
          IND(I)=IND(J)
          I=J
          J=J+J

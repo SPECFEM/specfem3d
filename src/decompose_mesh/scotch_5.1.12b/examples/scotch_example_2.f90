@@ -5,7 +5,7 @@
 !*   AUTHOR     : Francois PELLEGRINI                     **
 !*                Frederic COUDERC                        **
 !*                                                        **
-!*   FUNCTION   : FORTRAN testbed for the LibSCOTCH       **
+!*   function   : FORTRAN testbed for the LibSCOTCH       **
 !*                library routines.                       **
 !*                                                        **
 !*   DATES      : # Version 5.1  : from : 24 jul 2010     **

@@ -38,6 +38,10 @@
 
   implicit none
 
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_iterate_time_5.F90"
+#endif
+
   ! for EXACT_UNDOING_TO_DISK
   integer :: ispec,iglob,i,j,k,counter,record_length
   integer, dimension(:), allocatable :: integer_mask_ibool_exact_undo
@@ -103,6 +107,10 @@
 
   ! get MPI starting time
   time_start = wtime()
+
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_iterate_time_6.F90"
+#endif
 
   ! *********************************************************
   ! ************* MAIN LOOP OVER THE TIME STEPS *************
@@ -218,7 +226,7 @@
       else
         ! forward simulations
         do istage = 1, NSTAGE_TIME_SCHEME
-          if(USE_LDDRK) call update_displ_lddrk()
+          if (USE_LDDRK) call update_displ_lddrk()
           ! 1. acoustic domain
           if (ACOUSTIC_SIMULATION) call compute_forces_acoustic()
           ! 2. elastic domain
@@ -367,7 +375,7 @@
       call transfer_kernels_noise_to_host(Mesh_pointer,sigma_kl,NSPEC_AB)
     endif
 
-    ! approximative hessian for preconditioning kernels
+    ! approximative Hessian for preconditioning kernels
     if (APPROXIMATE_HESS_KL) then
       if (ELASTIC_SIMULATION) call transfer_kernels_hess_el_tohost(Mesh_pointer,hess_kl,NSPEC_AB)
       if (ACOUSTIC_SIMULATION) call transfer_kernels_hess_ac_tohost(Mesh_pointer,hess_ac_kl,NSPEC_AB)

@@ -401,7 +401,7 @@ subroutine compute_continuity_disp_po_el(NSPEC_AB,NGLOB_AB,ibool,&
       iglob = ibool(i,j,k,ispec)
       icount(iglob) = icount(iglob) + 1
 
-      if (icount(iglob) ==1) then
+      if (icount(iglob) == 1) then
 
         ! recovering original velocities and accelerations on boundaries (elastic side)
         veloc(1,iglob) = veloc(1,iglob) - deltatover2*accel(1,iglob)
@@ -447,7 +447,7 @@ subroutine compute_continuity_disp_po_el(NSPEC_AB,NGLOB_AB,ibool,&
           l = NSPEC_ADJOINT ! to avoid compilation warnings
         endif
 
-      endif !if (icount(iglob) ==1)
+      endif !if (icount(iglob) == 1)
     enddo ! igll
   enddo ! iface
 

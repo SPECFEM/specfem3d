@@ -121,14 +121,14 @@
   nz0 = 34
 
 ! avoid edge effects
-  if(theta==0.0d0) theta=0.000001d0
-  if(theta==180.d0) theta=0.999999d0*theta
-  if(phi==0.0d0) phi=0.000001d0
-  if(phi==360.d0) phi=0.999999d0*phi
+  if (theta == 0.0d0) theta=0.000001d0
+  if (theta == 180.d0) theta=0.999999d0*theta
+  if (phi == 0.0d0) phi=0.000001d0
+  if (phi == 360.d0) phi=0.999999d0*phi
 
 ! dimensionalize
   depth = R_EARTH_KM*(R_UNIT_SPHERE - r)
-  if(depth <= pro(nz0) .or. depth >= pro(1)) call exit_MPI_without_rank('r out of range in build_cij')
+  if (depth <= pro(nz0) .or. depth >= pro(1)) call exit_MPI_without_rank('r out of range in build_cij')
   itheta = int(theta + pxy0)/pxy0
   ilon = int(phi + pxy0)/pxy0
   tet = theta
@@ -136,7 +136,7 @@
 
   icz0 = 0
   do idep = 1,ndepth
-    if(pro(idep) > depth) icz0 = icz0 + 1
+    if (pro(idep) > depth) icz0 = icz0 + 1
   enddo
 
 !
@@ -153,12 +153,12 @@
   icz1 = icz0 + 1
 
 ! check that parameters make sense
-  if(ict0 < 1 .or. ict0 > nx0) call exit_MPI_without_rank('ict0 out of range')
-  if(ict1 < 1 .or. ict1 > nx0) call exit_MPI_without_rank('ict1 out of range')
-  if(icp0 < 1 .or. icp0 > ny0) call exit_MPI_without_rank('icp0 out of range')
-  if(icp1 < 1 .or. icp1 > ny0) call exit_MPI_without_rank('icp1 out of range')
-  if(icz0 < 1 .or. icz0 > nz0) call exit_MPI_without_rank('icz0 out of range')
-  if(icz1 < 1 .or. icz1 > nz0) call exit_MPI_without_rank('icz1 out of range')
+  if (ict0 < 1 .or. ict0 > nx0) call exit_MPI_without_rank('ict0 out of range')
+  if (ict1 < 1 .or. ict1 > nx0) call exit_MPI_without_rank('ict1 out of range')
+  if (icp0 < 1 .or. icp0 > ny0) call exit_MPI_without_rank('icp0 out of range')
+  if (icp1 < 1 .or. icp1 > ny0) call exit_MPI_without_rank('icp1 out of range')
+  if (icz0 < 1 .or. icz0 > nz0) call exit_MPI_without_rank('icz0 out of range')
+  if (icz1 < 1 .or. icz1 > nz0) call exit_MPI_without_rank('icz1 out of range')
 
   do ipar = 1,14
     anispara(ipar,1,1) = beta(ipar,icz0,ict0,icp0)
@@ -200,7 +200,7 @@
   eps = 0.01
 
   do ipar = 1,14
-     if(thickness < eps)then
+     if (thickness < eps) then
       pc1 = anispara(ipar,1,1)
       pc2 = anispara(ipar,1,2)
       pc3 = anispara(ipar,1,3)
@@ -375,11 +375,11 @@
       ppp = 1.
       read(19,"(f5.0,f8.4)",end = 88) AMM_V%pro(idep),ppp
 
-      if(nf == 1) pari(nf,il) = ppp
-      if(nf == 2) pari(nf,il) = ppp
-      if(nf == 3) pari(nf,il) = ppp
-      if(nf == 4) ppp = pari(nf,il)
-      if(nf == 5) ppp = pari(nf,il)
+      if (nf == 1) pari(nf,il) = ppp
+      if (nf == 2) pari(nf,il) = ppp
+      if (nf == 3) pari(nf,il) = ppp
+      if (nf == 4) ppp = pari(nf,il)
+      if (nf == 5) ppp = pari(nf,il)
       do ilat = 1,nx
         read(19,"(17f7.2)",end = 88) (AMM_V%beta(ipa,idep,ilat,ilon),ilon = 1,ny)
 !
@@ -391,11 +391,11 @@
 ! bet2(11,...)=Hc, bet2(12,...)=Hs,bet2(13,...)=Ec,bet2(14,...)=Es
 !
         do ilon = 1,ny
-          if(nf <= 3 .or. nf >= 6)then
+          if (nf <= 3 .or. nf >= 6) then
             bet2(ipa,idep,ilat,ilon) = AMM_V%beta(ipa,idep,ilat,ilon)*0.01*ppp + ppp
           else
-            if(nf == 4)bet2(ipa,idep,ilat,ilon) = AMM_V%beta(ipa,idep,ilat,ilon)*0.01 + 1.
-            if(nf == 5)bet2(ipa,idep,ilat,ilon) = - AMM_V%beta(ipa,idep,ilat,ilon)*0.01 + 1.
+            if (nf == 4)bet2(ipa,idep,ilat,ilon) = AMM_V%beta(ipa,idep,ilat,ilon)*0.01 + 1.
+            if (nf == 5)bet2(ipa,idep,ilat,ilon) = - AMM_V%beta(ipa,idep,ilat,ilon)*0.01 + 1.
           endif
         enddo
 
@@ -422,11 +422,11 @@
       il = idep + np1 - 1
       read(15,"(2f4.0,2i3,f4.0)",end = 888) xinf,yinf,nx,ny,pxy
       read(15,"(f5.0,f8.4)",end = 888) AMM_V%pro(idep),ppp
-      if(nf == 7) ppp = pari(2,il)
-      if(nf == 9) ppp = pari(3,il)
+      if (nf == 7) ppp = pari(2,il)
+      if (nf == 9) ppp = pari(3,il)
       af = pari(6,il)*(pari(2,il) - 2.*pari(3,il))
-      if(nf == 11) ppp = af
-      if(nf == 13) ppp = (pari(4,il) + 1.)*pari(3,il)
+      if (nf == 11) ppp = af
+      if (nf == 13) ppp = (pari(4,il) + 1.)*pari(3,il)
 
       do ilat = 1,nx
         read(15,"(17f7.2)",end = 888) (alph(ilon,ilat),ilon = 1,ny)
@@ -513,7 +513,7 @@
      open(unit=13,file=Adrem119,status='old',action='read')
      read(13,*,end = 77) nlayer,minlay,moho,nout,neff,nband,kiti,null
 
-     if(kiti == 0) read(13,"(20a4)",end = 77) idum1
+     if (kiti == 0) read(13,"(20a4)",end = 77) idum1
      read(13,"(20a4)",end = 77) idum2
      read(13,"(20a4)",end = 77) idum3
 
@@ -549,7 +549,7 @@
        enddo
        vsv = 0.
        vsh = 0.
-       if(al < 0.0001 .or. an < 0.0001) goto 12
+       if (al < 0.0001 .or. an < 0.0001) goto 12
        vsv = dsqrt(al/rho)
        vsh = dsqrt(an/rho)
  12    vpv = dsqrt(ac/rho)

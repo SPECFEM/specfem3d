@@ -474,9 +474,9 @@
       iy_initial_guess(irec) = 0
       iz_initial_guess(irec) = 0
       final_distance(irec) = HUGEVAL
-      if ((x_target(irec)>=xmin .and. x_target(irec)<=xmax) .and. &
-          (y_target(irec)>=ymin .and. y_target(irec)<=ymax) .and. &
-          (z_target(irec)>=zmin .and. z_target(irec)<=zmax)) then
+      if ((x_target(irec) >= xmin .and. x_target(irec) <= xmax) .and. &
+          (y_target(irec) >= ymin .and. y_target(irec) <= ymax) .and. &
+          (z_target(irec) >= zmin .and. z_target(irec) <= zmax)) then
         do ispec=1,NSPEC_AB
 
            ! the following original implementation is very slow
@@ -487,16 +487,16 @@
            !ymax_ELE=maxval(ystore(iglob_temp))
            !zmin_ELE=minval(zstore(iglob_temp))
            !zmax_ELE=maxval(zstore(iglob_temp))
-           !if ((x_target(irec)>=xmin_ELE .and. x_target(irec)<=xmax_ELE) .and. &
-           !     (y_target(irec)>=ymin_ELE .and. y_target(irec)<=ymax_ELE) .and. &
-           !     (z_target(irec)>=zmin_ELE .and. z_target(irec)<=zmax_ELE)) then
+           !if ((x_target(irec) >= xmin_ELE .and. x_target(irec) <= xmax_ELE) .and. &
+           !     (y_target(irec) >= ymin_ELE .and. y_target(irec) <= ymax_ELE) .and. &
+           !     (z_target(irec) >= zmin_ELE .and. z_target(irec) <= zmax_ELE)) then
            !   ! find the element (ispec) that may contain the receiver (irec)
 
            ! zch this implementation is at least 20 times faster than
            ! the original implementation
-           if ( (x_target(irec)>=xmin_ELE(ispec) .and. x_target(irec)<=xmax_ELE(ispec)) .and. &
-                (y_target(irec)>=ymin_ELE(ispec) .and. y_target(irec)<=ymax_ELE(ispec)) .and. &
-                (z_target(irec)>=zmin_ELE(ispec) .and. z_target(irec)<=zmax_ELE(ispec))) then
+           if ( (x_target(irec) >= xmin_ELE(ispec) .and. x_target(irec) <= xmax_ELE(ispec)) .and. &
+                (y_target(irec) >= ymin_ELE(ispec) .and. y_target(irec) <= ymax_ELE(ispec)) .and. &
+                (z_target(irec) >= zmin_ELE(ispec) .and. z_target(irec) <= zmax_ELE(ispec))) then
               ! find the element (ispec) that may contain the receiver (irec)
 
             ispec_selected_rec(irec) = ispec
@@ -653,9 +653,9 @@
         pt2_iz = NGLLZ
       endif
 
-      if (pt0_ix<0 .or.pt0_iy<0 .or. pt0_iz<0 .or. &
-         pt1_ix<0 .or. pt1_iy<0 .or. pt1_iz<0 .or. &
-         pt2_ix<0 .or. pt2_iy<0 .or. pt2_iz<0) then
+      if (pt0_ix < 0 .or. pt0_iy < 0 .or. pt0_iz < 0 .or. &
+         pt1_ix < 0 .or. pt1_iy < 0 .or. pt1_iz < 0 .or. &
+         pt2_ix < 0 .or. pt2_iy < 0 .or. pt2_iz < 0) then
         stop 'error in computing normal for receivers.'
       endif
 

@@ -55,11 +55,11 @@
 !
 !--- case of a regular mesh
 !
-  if(USE_REGULAR_MESH) then
+  if (USE_REGULAR_MESH) then
 
 ! use two layers even for a regular mesh, because the algorithm detects the top of the mesh
 ! (the "topography") based on one layer of elements with flag IFLAG_ONE_LAYER_TOPOGRAPHY
-  if(isubregion == 2) then
+  if (isubregion == 2) then
 
     call usual_hex_nodes(iaddx,iaddy,iaddz)
 
@@ -81,7 +81,7 @@
 
     doubling_index = IFLAG_BASEMENT_TOPO
 
-  else if(isubregion == 1) then
+  else if (isubregion == 1) then
 
     call usual_hex_nodes(iaddx,iaddy,iaddz)
 
@@ -115,7 +115,7 @@
   else
 
 ! this last region only defined when NER_SEDIM > 1
-  if(isubregion == 30) then
+  if (isubregion == 30) then
 
     call usual_hex_nodes(iaddx,iaddy,iaddz)
 
@@ -137,7 +137,7 @@
 
     doubling_index = IFLAG_BASEMENT_TOPO
 
-  else if(isubregion == 29) then
+  else if (isubregion == 29) then
 
     call usual_hex_nodes(iaddx,iaddy,iaddz)
 
@@ -159,7 +159,7 @@
 
     doubling_index = IFLAG_ONE_LAYER_TOPOGRAPHY
 
-  else if(isubregion == 28) then
+  else if (isubregion == 28) then
 
     call usual_hex_nodes(iaddx,iaddy,iaddz)
 
@@ -181,7 +181,7 @@
 
     doubling_index= IFLAG_HALFSPACE_MOHO
 
-  else if(isubregion == 27) then
+  else if (isubregion == 27) then
 
     call unusual_hex_nodes1(iaddx,iaddy,iaddz)
 
@@ -206,7 +206,7 @@
 
     doubling_index=IFLAG_16km_BASEMENT
 
-  else if(isubregion == 26) then
+  else if (isubregion == 26) then
 
     call unusual_hex_nodes1p(iaddx,iaddy,iaddz)
 
@@ -231,7 +231,7 @@
 
     doubling_index=IFLAG_16km_BASEMENT
 
-  else if(isubregion == 25) then
+  else if (isubregion == 25) then
 
     call unusual_hex_nodes2(iaddx,iaddy,iaddz)
 
@@ -256,7 +256,7 @@
 
     doubling_index=IFLAG_16km_BASEMENT
 
-  else if(isubregion == 24) then
+  else if (isubregion == 24) then
 
     call unusual_hex_nodes2p(iaddx,iaddy,iaddz)
 
@@ -281,7 +281,7 @@
 
     doubling_index=IFLAG_16km_BASEMENT
 
-  else if(isubregion == 23) then
+  else if (isubregion == 23) then
 
     call unusual_hex_nodes3(iaddx,iaddy,iaddz)
 
@@ -306,7 +306,7 @@
 
     doubling_index=IFLAG_16km_BASEMENT
 
-  else if(isubregion == 22) then
+  else if (isubregion == 22) then
 
     call unusual_hex_nodes3(iaddx,iaddy,iaddz)
 
@@ -331,7 +331,7 @@
 
     doubling_index=IFLAG_16km_BASEMENT
 
-  else if(isubregion == 21) then
+  else if (isubregion == 21) then
 
     call unusual_hex_nodes4(iaddx,iaddy,iaddz)
 
@@ -356,7 +356,7 @@
 
     doubling_index=IFLAG_16km_BASEMENT
 
-  else if(isubregion == 20) then
+  else if (isubregion == 20) then
 
     call unusual_hex_nodes4p(iaddx,iaddy,iaddz)
 
@@ -381,7 +381,7 @@
 
     doubling_index=IFLAG_16km_BASEMENT
 
-  else if(isubregion == 19) then
+  else if (isubregion == 19) then
 
     call usual_hex_nodes(iaddx,iaddy,iaddz)
 
@@ -406,7 +406,7 @@
 
     doubling_index=IFLAG_16km_BASEMENT
 
-  else if(isubregion == 18) then
+  else if (isubregion == 18) then
 
     call usual_hex_nodes(iaddx,iaddy,iaddz)
 
@@ -431,7 +431,7 @@
 
     doubling_index=IFLAG_16km_BASEMENT
 
-  else if(isubregion == 17) then
+  else if (isubregion == 17) then
 
     call unusual_hex_nodes6(iaddx,iaddy,iaddz)
 
@@ -456,7 +456,7 @@
 
     doubling_index=IFLAG_16km_BASEMENT
 
-  else if(isubregion == 16) then
+  else if (isubregion == 16) then
 
     call unusual_hex_nodes6p(iaddx,iaddy,iaddz)
 
@@ -481,7 +481,7 @@
 
     doubling_index=IFLAG_16km_BASEMENT
 
-  else if(isubregion == 15) then
+  else if (isubregion == 15) then
 
     call usual_hex_nodes(iaddx,iaddy,iaddz)
 
@@ -504,7 +504,7 @@
 
     doubling_index = IFLAG_MOHO_16km
 
-  else if(isubregion == 14) then
+  else if (isubregion == 14) then
 
     call usual_hex_nodes(iaddx,iaddy,iaddz)
 
@@ -528,7 +528,7 @@
     doubling_index = IFLAG_16km_BASEMENT
 
 
-  else if(isubregion == 13) then
+  else if (isubregion == 13) then
 
     call usual_hex_nodes(iaddx,iaddy,iaddz)
 
@@ -552,7 +552,7 @@
 
     doubling_index=IFLAG_BASEMENT_TOPO
 
-  else if(isubregion == 12) then
+  else if (isubregion == 12) then
 
     call unusual_hex_nodes1(iaddx,iaddy,iaddz)
 
@@ -577,7 +577,7 @@
 
     doubling_index=IFLAG_BASEMENT_TOPO
 
-  else if(isubregion == 11) then
+  else if (isubregion == 11) then
 
     call unusual_hex_nodes1p(iaddx,iaddy,iaddz)
 
@@ -602,7 +602,7 @@
 
     doubling_index=IFLAG_BASEMENT_TOPO
 
-  else if(isubregion == 10) then
+  else if (isubregion == 10) then
 
     call unusual_hex_nodes2(iaddx,iaddy,iaddz)
 
@@ -627,7 +627,7 @@
 
     doubling_index=IFLAG_BASEMENT_TOPO
 
-  else if(isubregion == 9) then
+  else if (isubregion == 9) then
 
     call unusual_hex_nodes2p(iaddx,iaddy,iaddz)
 
@@ -652,7 +652,7 @@
 
     doubling_index=IFLAG_BASEMENT_TOPO
 
-  else if(isubregion == 8) then
+  else if (isubregion == 8) then
 
     call unusual_hex_nodes3(iaddx,iaddy,iaddz)
 
@@ -677,7 +677,7 @@
 
     doubling_index=IFLAG_BASEMENT_TOPO
 
-  else if(isubregion == 7) then
+  else if (isubregion == 7) then
 
     call unusual_hex_nodes3(iaddx,iaddy,iaddz)
 
@@ -702,7 +702,7 @@
 
     doubling_index=IFLAG_BASEMENT_TOPO
 
-  else if(isubregion == 6) then
+  else if (isubregion == 6) then
 
     call unusual_hex_nodes4(iaddx,iaddy,iaddz)
 
@@ -727,7 +727,7 @@
 
     doubling_index=IFLAG_BASEMENT_TOPO
 
-  else if(isubregion == 5) then
+  else if (isubregion == 5) then
 
     call unusual_hex_nodes4p(iaddx,iaddy,iaddz)
 
@@ -752,7 +752,7 @@
 
     doubling_index=IFLAG_BASEMENT_TOPO
 
-  else if(isubregion == 4) then
+  else if (isubregion == 4) then
 
     call usual_hex_nodes(iaddx,iaddy,iaddz)
 
@@ -777,7 +777,7 @@
 
     doubling_index=IFLAG_BASEMENT_TOPO
 
-  else if(isubregion == 3) then
+  else if (isubregion == 3) then
 
     call usual_hex_nodes(iaddx,iaddy,iaddz)
 
@@ -802,7 +802,7 @@
 
     doubling_index=IFLAG_BASEMENT_TOPO
 
-  else if(isubregion == 2) then
+  else if (isubregion == 2) then
 
     call unusual_hex_nodes6(iaddx,iaddy,iaddz)
 
@@ -827,7 +827,7 @@
 
     doubling_index=IFLAG_BASEMENT_TOPO
 
-  else if(isubregion == 1) then
+  else if (isubregion == 1) then
 
     call unusual_hex_nodes6p(iaddx,iaddy,iaddz)
 

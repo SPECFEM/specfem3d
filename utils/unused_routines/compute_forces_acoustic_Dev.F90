@@ -146,7 +146,7 @@
     call mxm_single(chi_elem,m2,hprime_xxT,tempx3,m1)
 
     if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
-      ! do not merge this second line with the first using an ".and." statement
+      ! do not merge this second line with the first using an " .and. " statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
       if (is_CPML(ispec)) then
       ! gets values for element
@@ -195,7 +195,7 @@
 
       ! stores derivatives of ux, uy and uz with respect to x, y and z
       if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
-        ! do not merge this second line with the first using an ".and." statement
+        ! do not merge this second line with the first using an " .and. " statement
         ! because array is_CPML() is unallocated when PML_CONDITIONS is false
         if (is_CPML(ispec)) then
           PML_dpotential_dxl(INDEX_IJK) = dpotentialdxl
@@ -229,7 +229,7 @@
     ENDDO_LOOP_IJK
 
     if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
-      ! do not merge this second line with the first using an ".and." statement
+      ! do not merge this second line with the first using an " .and. " statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
       if (is_CPML(ispec)) then
         ispec_CPML = spec_to_CPML(ispec)
@@ -276,8 +276,8 @@
     ENDDO_LOOP_IJK
 
     ! updates potential_dot_dot_acoustic with contribution from each C-PML element
-    if (PML_CONDITIONS .and. (.not. backward_simulation)  .and. NSPEC_CPML > 0) then
-      ! do not merge this second line with the first using an ".and." statement
+    if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
+      ! do not merge this second line with the first using an " .and. " statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
       if (is_CPML(ispec)) then
         DO_LOOP_IJK

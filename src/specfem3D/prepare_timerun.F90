@@ -73,7 +73,7 @@
   ! prepares gravity arrays
   call prepare_timerun_gravity()
 
-  ! ZN I do not use if(USE_LDDRK) call prepare_timerun_lddrk()
+  ! ZN I do not use if (USE_LDDRK) call prepare_timerun_lddrk()
   ! ZN in order to avoid the error of using unallocated arrays later on in the code,
   ! ZN since R_**_lddrk are arguments in subroutine compute_forces_viscoelastic
   call prepare_timerun_lddrk()
@@ -979,7 +979,7 @@
   endif
 
   ! initializes adjoint kernels and reconstructed/backward wavefields
-  if (SIMULATION_TYPE == 3)  then
+  if (SIMULATION_TYPE == 3) then
     ! elastic domain
     if (ELASTIC_SIMULATION) then
       rho_kl(:,:,:,:)   = 0._CUSTOM_REAL

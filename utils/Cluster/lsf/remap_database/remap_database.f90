@@ -58,7 +58,7 @@ implicit none
 
   call system('echo '//trim(command_string)//' > '//trim(scp_outfile))
 
-  call system(trim(command_string)//' >> '//trim(scp_outfile))
+  call system(trim(command_string)//' >  > '//trim(scp_outfile))
 
 ! stop all the MPI processes, and exit
   call MPI_FINALIZE(ier)

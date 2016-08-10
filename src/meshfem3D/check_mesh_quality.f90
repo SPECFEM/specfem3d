@@ -537,7 +537,7 @@
         argument_of_arccos = (vectorA_x*vectorB_x + vectorA_y*vectorB_y + vectorA_z*vectorB_z) / (norm_A * norm_B)
 
         ! compute equiangle skewness
-        if(abs(argument_of_arccos) <= 0.9999999d0) then
+        if (abs(argument_of_arccos) <= 0.9999999d0) then
            angle_vectors = dacos(argument_of_arccos)
            equiangle_skewness = max(equiangle_skewness,dabs(2.d0 * angle_vectors - PI) / PI)
         else

@@ -49,9 +49,9 @@ integer :: nnode,nelmt,tmp_nnode !,tmp_nelmt
 write(*,'(a)')'writing VTK files...'
 ! Determine the Endianness of the Architecture
 call get_endian(endian)
-if(endian == LE)then
+if (endian == LE) then
   byte_order='LittleEndian'
-else if(endian == BE)then
+else if (endian == BE) then
   byte_order='BigEndian'
 else
   write(*,'(/,a)')'ERROR: illegal endianness!'
@@ -59,7 +59,7 @@ else
 endif
 
 ! vtk element type
-if (out_res==1)then
+if (out_res == 1) then
   ! Medium resolution
   ! 20-noded hexahedra
   vtk_etype=25
@@ -88,15 +88,15 @@ out_ext='.vtu'
 ! Open pvd file
 pvd_file=trim(out_path)//'/'// trim(out_head)//'.pvd'
 open(unit=pvd_unit, file=trim(pvd_file), status='replace', action='write', iostat=ios)
-if (ios /= 0)then
+if (ios /= 0) then
   write(*,'(/,a)')'ERROR: output file "'//trim(pvd_file)//'" cannot be opened!'
   stop
 endif
-buffer='<?xml version="1.0"?>'
+buffer=' < ?xml version="1.0"? > '
 write(pvd_unit,'(a)')trim(buffer)
-buffer='<VTKFile type="Collection" version="0.1" byte_order="'//trim(byte_order)//'">'
+buffer=' < VTKFile type="Collection" version="0.1" byte_order="'//trim(byte_order)//'" > '
 write(pvd_unit,'(a)')trim(buffer)
-buffer='<Collection>'
+buffer=' < Collection > '
 write(pvd_unit,'(a)')trim(buffer)
 
 !slice_nnode=0
@@ -110,7 +110,7 @@ do i_t=1,t_nstep
 
   ! collect pvtu file name in pvd file
   write(num_str1,'(f16.6)')(t_start+(i_t-1)*t_inc)*dt !  Change format here if time is so big and so tiny
-  buffer='<DataSet timestep="'//trim(adjustl(num_str1))//'" part="001" file="'//trim(pvtu_file)//'"/>'
+  buffer=' < DataSet timestep="'//trim(adjustl(num_str1))//'" part="001" file="'//trim(pvtu_file)//'"/ > '
   write(pvd_unit,'(a)')trim(buffer)
 
   ! open pvtu file
@@ -118,44 +118,44 @@ do i_t=1,t_nstep
   open(unit=pvtu_unit, file=trim(pvtu_file), action='write', status='replace')
   ! write headers
 
-  buffer='<?xml version="1.0"?>'
+  buffer=' < ?xml version="1.0"? > '
   write(pvtu_unit,'(a)')trim(buffer)
-  buffer='<VTKFile type="PUnstructuredGrid" version="0.1" byte_order="'//trim(byte_order)//'">';
+  buffer=' < VTKFile type="PUnstructuredGrid" version="0.1" byte_order="'//trim(byte_order)//'" > ';
   write(pvtu_unit,'(a)')trim(buffer)
-  buffer='<PUnstructuredGrid GhostLevel="0">'
+  buffer=' < PUnstructuredGrid GhostLevel="0" > '
   write(pvtu_unit,'(a)')trim(buffer)
-  buffer='<PPoints>'
+  buffer=' < PPoints > '
   write(pvtu_unit,'(a)')trim(buffer)
   write(num_str1,*)off(1);
-  buffer='<PDataArray type="Float32" NumberOfComponents="3" format="appended"/>'
+  buffer=' < PDataArray type="Float32" NumberOfComponents="3" format="appended"/ > '
   write(pvtu_unit,'(a)')trim(buffer)
-  buffer='</PPoints>'
+  buffer=' < /PPoints > '
   write(pvtu_unit,'(a)')trim(buffer)
-  buffer='<PCells>'
+  buffer=' < PCells > '
   write(pvtu_unit,'(a)')trim(buffer)
   write(num_str1,*)off(3);
-  buffer='<PDataArray type="Int32" Name="connectivity" format="appended"/>'
+  buffer=' < PDataArray type="Int32" Name="connectivity" format="appended"/ > '
   write(pvtu_unit,'(a)')trim(buffer)
   write(num_str1,*)off(4);
-  buffer='<PDataArray type="Int32" Name="offsets" format="appended"/>'
+  buffer=' < PDataArray type="Int32" Name="offsets" format="appended"/ > '
   write(pvtu_unit,'(a)')trim(buffer)
   write(num_str1,*)off(5);
-  buffer='<PDataArray type="Int32" Name="types" format="appended"/>'
+  buffer=' < PDataArray type="Int32" Name="types" format="appended"/ > '
   write(pvtu_unit,'(a)')trim(buffer)
-  buffer='</PCells>'
+  buffer=' < /PCells > '
   write(pvtu_unit,'(a)')trim(buffer)
-  buffer='<PPointData>'
+  buffer=' < PPointData > '
   write(pvtu_unit,'(a)')trim(buffer)
   write(num_str1,*)off(2);
-  buffer='<PDataArray type="Float32" NumberOfComponents="1" Name="'//trim(out_vname)// &
-          '" format="appended"/>'
+  buffer=' < PDataArray type="Float32" NumberOfComponents="1" Name="'//trim(out_vname)// &
+          '" format="appended"/ > '
   write(pvtu_unit,'(a)')trim(buffer)
-  buffer='</PPointData>'
+  buffer=' < /PPointData > '
   write(pvtu_unit,'(a)')trim(buffer)
 
-  buffer='<PCellData>'
+  buffer=' < PCellData > '
   write(pvtu_unit,'(a)')trim(buffer)
-  buffer='</PCellData>'
+  buffer=' < /PCellData > '
   write(pvtu_unit,'(a)')trim(buffer)
 
 
@@ -184,7 +184,7 @@ do i_t=1,t_nstep
 
     off(1)=0; ! 1st offset
     do i=1,plot_nvar
-      if(i < plot_nvar)then
+      if (i < plot_nvar) then
         off(i+1)=off(i)+size_int+bytes(i)
       endif
       bytes(i)=bytes(i)+size_int
@@ -196,71 +196,71 @@ do i_t=1,t_nstep
     write(out_fname,fmt=format_str1)trim(file_head)//'_',tstep,trim(out_ext)
     !write(*,*)tstep,trim(out_fname)
     ! write vtu file to pvtu file
-    buffer='<Piece Source="'//trim(out_fname)//'"/>'
+    buffer=' < Piece Source="'//trim(out_fname)//'"/ > '
     write(pvtu_unit,'(a)')trim(buffer)
 
     ! open vtu file
     vtu_file = trim(out_path) // '/' // trim(out_fname)
     open(unit=vtu_unit, file=trim(vtu_file), action='write', status='replace',iostat=ios)
     !write(*,*)trim(vtu_file),vtu_unit
-    if (ios/=0)then
+    if (ios /= 0) then
       write(*,'(/,a)')'ERROR: file '//trim(vtu_file)//' cannot be opened!'
       stop
     endif
 
     ! write header
-    buffer='<?xml version="1.0"?>'
+    buffer=' < ?xml version="1.0"? > '
     write(vtu_unit,'(a)')trim(buffer)
-    buffer='<VTKFile type="UnstructuredGrid" version="0.1" byte_order="'//trim(byte_order)//'">';
+    buffer=' < VTKFile type="UnstructuredGrid" version="0.1" byte_order="'//trim(byte_order)//'" > ';
     write(vtu_unit,'(a)')trim(buffer)
-    buffer='<UnstructuredGrid>'
+    buffer=' < UnstructuredGrid > '
     write(vtu_unit,'(a)')trim(buffer)
     write(num_str1,*)slice_nnode(i_slice); write(num_str2,*)slice_nelmt(i_slice);
-    buffer='<Piece NumberOfPoints="'//trim(adjustl(num_str1))//'" NumberOfCells="'//trim(adjustl(num_str2))//'">'
+    buffer=' < Piece NumberOfPoints="'//trim(adjustl(num_str1))//'" NumberOfCells="'//trim(adjustl(num_str2))//'" > '
     write(vtu_unit,'(a)')trim(buffer)
-    buffer='<Points>'
+    buffer=' < Points > '
     write(vtu_unit,'(a)')trim(buffer)
     write(num_str1,*)off(1);
-    buffer='<DataArray type="Float32" NumberOfComponents="3" format="appended" offset="'//trim(adjustl(num_str1))//'"/>'
+    buffer=' < DataArray type="Float32" NumberOfComponents="3" format="appended" offset="'//trim(adjustl(num_str1))//'"/ > '
     write(vtu_unit,'(a)')trim(buffer)
-    buffer='</Points>'
+    buffer=' < /Points > '
     write(vtu_unit,'(a)')trim(buffer)
-    buffer='<Cells>'
+    buffer=' < Cells > '
     write(vtu_unit,'(a)')trim(buffer)
     write(num_str1,*)off(2);
-    buffer='<DataArray type="Int32" Name="connectivity" format="appended" offset="'//trim(adjustl(num_str1))//'"/>'
+    buffer=' < DataArray type="Int32" Name="connectivity" format="appended" offset="'//trim(adjustl(num_str1))//'"/ > '
     write(vtu_unit,'(a)')trim(buffer)
     write(num_str1,*)off(3);
-    buffer='<DataArray type="Int32" Name="offsets" format="appended" offset="'//trim(adjustl(num_str1))//'"/>'
+    buffer=' < DataArray type="Int32" Name="offsets" format="appended" offset="'//trim(adjustl(num_str1))//'"/ > '
     write(vtu_unit,'(a)')trim(buffer)
     write(num_str1,*)off(4);
-    buffer='<DataArray type="Int32" Name="types" format="appended" offset="'//trim(adjustl(num_str1))//'"/>'
+    buffer=' < DataArray type="Int32" Name="types" format="appended" offset="'//trim(adjustl(num_str1))//'"/ > '
     write(vtu_unit,'(a)')trim(buffer)
-    buffer='</Cells>'
+    buffer=' < /Cells > '
     write(vtu_unit,'(a)')trim(buffer)
-    buffer='<PointData>'
+    buffer=' < PointData > '
     write(vtu_unit,'(a)')trim(buffer)
     write(num_str1,*)off(5);
-    buffer='<DataArray type="Float32" NumberOfComponents="1" Name="'//trim(out_vname)// &
-            '" format="appended" offset="'//trim(adjustl(num_str1))//'"/>'
+    buffer=' < DataArray type="Float32" NumberOfComponents="1" Name="'//trim(out_vname)// &
+            '" format="appended" offset="'//trim(adjustl(num_str1))//'"/ > '
     write(vtu_unit,'(a)')trim(buffer)
-    buffer='</PointData>'
+    buffer=' < /PointData > '
     write(vtu_unit,'(a)')trim(buffer)
-    buffer='<CellData>'
+    buffer=' < CellData > '
     write(vtu_unit,'(a)')trim(buffer)
-    buffer='</CellData>'
+    buffer=' < /CellData > '
     write(vtu_unit,'(a)')trim(buffer)
-    buffer='</Piece>'
+    buffer=' < /Piece > '
     write(vtu_unit,'(a)')trim(buffer)
-    buffer='</UnstructuredGrid>'
+    buffer=' < /UnstructuredGrid > '
     write(vtu_unit,'(a)')trim(buffer)
-    buffer='<AppendedData encoding="raw">'
+    buffer=' < AppendedData encoding="raw" > '
     write(vtu_unit,'(a)')trim(buffer)
     buffer='_'
     write(vtu_unit,'(a)',advance='no')trim(buffer)
     close(vtu_unit)
 
-    if (i_t==1)then
+    if (i_t == 1) then
       ! open temporary files to store coordinates
       write(tmp_str,*)i_slice
       call open_file2write('../tmp/tmp_x_slice'//trim(adjustl(tmp_str))//char(0),fd_x)
@@ -299,15 +299,15 @@ do i_t=1,t_nstep
         close(27)
 
         ! writes point coordinates and scalar value to mesh file
-        if (out_res==0) then
+        if (out_res == 0) then
           ! writes out element corners only
           call cvd_write_corners_only(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
           nnode,fd_x,fd_y,fd_z)
-        else if (out_res==1)then
+        else if (out_res == 1) then
           ! writes out element corners only
           call cvd_write_hexa20_only(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
           nnode,fd_x,fd_y,fd_z)
-        else if(out_res==2)then
+        else if (out_res == 2) then
           ! high resolution, all GLL points
           call cvd_write_GLL_points_only(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,&
           nnode,fd_x,fd_y,fd_z)
@@ -327,15 +327,15 @@ do i_t=1,t_nstep
         ! Read and store connectivity list
 
         ! writes out element corner indices
-        if(out_res==0) then
+        if (out_res == 0) then
           ! spectral elements
           call cvd_write_corner_elements(NSPEC_AB,NGLOB_AB,ibool, &
           node_count,nelmt,nnode,fd_con)
-        else if (out_res==1) then
+        else if (out_res == 1) then
           ! spectral elements
           call cvd_write_hexa20_elements(NSPEC_AB,NGLOB_AB,ibool, &
           node_count,nelmt,nnode,fd_con)
-        else if(out_res==2)then
+        else if (out_res == 2) then
           ! subdivided spectral elements
           call cvd_write_GLL_elements(NSPEC_AB,NGLOB_AB,ibool, &
           node_count,nelmt,nnode,fd_con)
@@ -348,7 +348,7 @@ do i_t=1,t_nstep
         !write(*,*)'  elements:',elmt_count,nelmt
         !write(*,*)'  points : ',node_count,nnode
         !write(*,*)tmp_nnode,node_count
-        if (tmp_nnode/=node_count)then
+        if (tmp_nnode /= node_count) then
           write(*,'(/,a)')'ERROR: inconsistent number of nodes!'
           stop
         endif
@@ -365,7 +365,7 @@ do i_t=1,t_nstep
       call close_file(fd_con)
 
       !write(*,*)node_count,slice_nnode(i_slice)
-      if (node_count /=  slice_nnode(i_slice)) stop 'Error: Number of total points are not consistent'
+      if (node_count /= slice_nnode(i_slice)) stop 'Error: Number of total points are not consistent'
       ! checks with total number of elements
       if (elmt_count /= slice_nelmt(i_slice)) then
         !write(*,'(/,a)')'ERROR: number of elements counted:',elmt_count,'total:',slice_nelmt(i_slice)
@@ -421,8 +421,8 @@ do i_t=1,t_nstep
     ! write data to vtu file
     call write_integer(bytes(5),fd)
 
-    if (out_ncomp>1)then ! vector or tensor data
-      if (i_t==1)then
+    if (out_ncomp > 1) then ! vector or tensor data
+      if (i_t == 1) then
         allocate(fd_array(out_ncomp))
         allocate(tmp_rvect(out_ncomp))
       endif
@@ -450,7 +450,7 @@ do i_t=1,t_nstep
         read(27) ibool
         close(27)
 
-        if (dat_topo==0)then ! Data from local points
+        if (dat_topo == 0) then ! Data from local points
           allocate(dat(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
 
           do i_comp=1,inp_ncomp
@@ -468,13 +468,13 @@ do i_t=1,t_nstep
             close(222)
 
             ! writes point data to file
-            if (out_res==0) then
+            if (out_res == 0) then
               call cvd_write_corners_data(NSPEC_AB,NGLOB_AB,ibool,real(dat), &
               nnode,fd_array(i_comp))
-            else if (out_res==1) then
+            else if (out_res == 1) then
               call cvd_write_hexa20_data(NSPEC_AB,NGLOB_AB,ibool,real(dat), &
               nnode,fd_array(i_comp))
-            else if (out_res==2) then
+            else if (out_res == 2) then
               call cvd_write_GLL_points_data(NSPEC_AB,NGLOB_AB,ibool,real(dat), &
               nnode,fd_array(i_comp))
             else
@@ -486,7 +486,7 @@ do i_t=1,t_nstep
           ! cleans up memory allocations
           deallocate(dat)
 
-        else if (dat_topo==1)then ! Data from global points
+        else if (dat_topo == 1) then ! Data from global points
           allocate(dat_glob(NGLOB_AB))
 
           do i_comp=1,inp_ncomp
@@ -503,13 +503,13 @@ do i_t=1,t_nstep
             read(11) dat_glob
 
             ! writes point coordinates and scalar value to mesh file
-            if (out_res==0) then
+            if (out_res == 0) then
               call cvd_write_corners_data_glob(NSPEC_AB,NGLOB_AB,ibool,real(dat_glob), &
               nnode,fd_array(i_comp))
-            else if (out_res==1) then
+            else if (out_res == 1) then
               call cvd_write_hexa20_data_glob(NSPEC_AB,NGLOB_AB,ibool,real(dat_glob), &
               nnode,fd_array(i_comp))
-            else if (out_res==2) then
+            else if (out_res == 2) then
               call cvd_write_GLL_points_data_glob(NSPEC_AB,NGLOB_AB,ibool,real(dat_glob), &
               nnode,fd_array(i_comp))
             else
@@ -530,7 +530,7 @@ do i_t=1,t_nstep
         node_count = node_count + nnode
 
       enddo  ! i_proc = 1, nproc
-      if (node_count /=  slice_nnode(i_slice))then
+      if (node_count /= slice_nnode(i_slice)) then
         write(*,'(/,a)')'Error: Number of total points are not consistent'
         stop
       endif
@@ -545,7 +545,7 @@ do i_t=1,t_nstep
         write(tmp_str,*)i_comp
         call open_file2read('../tmp/tmp_data_comp'//trim(adjustl(tmp_str))//char(0),fd_array(i_comp))
       enddo
-      if (out_ncomp==3)then
+      if (out_ncomp == 3) then
       ! vector
         do i=1,slice_nnode(i_slice)
           do i_comp=1,out_ncomp
@@ -553,7 +553,7 @@ do i_t=1,t_nstep
             call write_float(tmp_real,fd)
           enddo
         enddo
-      else if (out_ncomp==6)then
+      else if (out_ncomp == 6) then
       ! 9-component symmetric tensor
         do i=1,slice_nnode(i_slice)
           do i_comp=1,out_ncomp
@@ -592,7 +592,7 @@ do i_t=1,t_nstep
         read(27) ibool
         close(27)
 
-        if (dat_topo==0)then ! Data from local points
+        if (dat_topo == 0) then ! Data from local points
           allocate(tmp_dat(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
           allocate(dat(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
           tmp_dat=0.0
@@ -612,18 +612,18 @@ do i_t=1,t_nstep
             tmp_dat=tmp_dat+real(dat)
             !write(*,*)inp_fname
           enddo
-          if (inp_ncomp==3 .and. out_ncomp==1)then
+          if (inp_ncomp == 3 .and. out_ncomp == 1) then
             tmp_dat=0.5*tmp_dat ! Equivalent to S-wave potential
           endif
 
           ! writes point data to file
-          if (out_res==0) then
+          if (out_res == 0) then
             call cvd_write_corners_data(NSPEC_AB,NGLOB_AB,ibool,tmp_dat, &
             nnode,fd)
-          else if (out_res==1) then
+          else if (out_res == 1) then
             call cvd_write_hexa20_data(NSPEC_AB,NGLOB_AB,ibool,tmp_dat, &
             nnode,fd)
-          else if (out_res==2) then
+          else if (out_res == 2) then
             call cvd_write_GLL_points_data(NSPEC_AB,NGLOB_AB,ibool,tmp_dat, &
             nnode,fd)
           else
@@ -632,7 +632,7 @@ do i_t=1,t_nstep
           endif
           ! cleans up memory allocations
           deallocate(ibool,dat,tmp_dat)
-        else if (dat_topo==1)then ! Data from global points
+        else if (dat_topo == 1) then ! Data from global points
           allocate(tmp_dat_glob(NGLOB_AB))
           allocate(dat_glob(NGLOB_AB))
           tmp_dat=0.0
@@ -651,18 +651,18 @@ do i_t=1,t_nstep
             tmp_dat_glob=tmp_dat_glob+real(dat_glob)
             !write(*,*)inp_fname
           enddo
-          if (inp_ncomp==3 .and. out_ncomp==1)then
+          if (inp_ncomp == 3 .and. out_ncomp == 1) then
             tmp_dat_glob=0.5*tmp_dat_glob ! Equivalent to S-wave potential
           endif
 
           ! writes point coordinates and scalar value to mesh file
-          if (out_res==0) then
+          if (out_res == 0) then
             call cvd_write_corners_data_glob(NSPEC_AB,NGLOB_AB,ibool,tmp_dat_glob, &
             nnode,fd)
-          else if (out_res==1) then
+          else if (out_res == 1) then
             call cvd_write_hexa20_data_glob(NSPEC_AB,NGLOB_AB,ibool,tmp_dat_glob, &
             nnode,fd)
-          else if (out_res==2) then
+          else if (out_res == 2) then
             call cvd_write_GLL_points_data_glob(NSPEC_AB,NGLOB_AB,ibool,tmp_dat_glob, &
             nnode,fd)
           else
@@ -680,7 +680,7 @@ do i_t=1,t_nstep
 
       enddo  ! i_proc = 1, nproc
       call close_file(fd)
-      if (node_count /=  slice_nnode(i_slice))then
+      if (node_count /= slice_nnode(i_slice)) then
         write(*,'(/,a)')'Error: Number of total points are not consistent'
         stop
         endif
@@ -689,9 +689,9 @@ do i_t=1,t_nstep
     ! Write post header for vtu file
     open(unit=vtu_unit, file=trim(vtu_file), action='write', status='old',position='append')
     write(vtu_unit,*) ! Write new line
-    buffer='</AppendedData>'
+    buffer=' < /AppendedData > '
     write(vtu_unit,'(a)')trim(buffer)
-    buffer='</VTKFile>'
+    buffer=' < /VTKFile > '
     write(vtu_unit,'(a)')trim(buffer)
     close(vtu_unit);
 
@@ -701,9 +701,9 @@ do i_t=1,t_nstep
   enddo  ! do i_slice
 
   ! Write post header for pvtu file
-  buffer='</PUnstructuredGrid>'
+  buffer=' < /PUnstructuredGrid > '
   write(pvtu_unit,'(a)')trim(buffer)
-  buffer='</VTKFile>'
+  buffer=' < /VTKFile > '
   write(pvtu_unit,'(a)')trim(buffer)
   close(pvtu_unit);
 
@@ -713,9 +713,9 @@ do i_t=1,t_nstep
 enddo ! i_t
 
 ! write post header for pvd file
-buffer='</Collection>'
+buffer=' < /Collection > '
 write(pvd_unit,'(a)')trim(buffer)
-buffer='</VTKFile>'
+buffer=' < /VTKFile > '
 write(pvd_unit,'(a)')trim(buffer)
 close(pvd_unit);
 
@@ -728,7 +728,7 @@ do i_slice=1,out_nslice
   call delete_file('../tmp/tmp_con_slice'//trim(adjustl(tmp_str))//char(0))
 enddo
 
-if (out_ncomp>1)then
+if (out_ncomp > 1) then
   ! free memory
   deallocate(fd_array,tmp_rvect)
   ! delete temporary data files

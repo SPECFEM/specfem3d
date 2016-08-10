@@ -39,8 +39,8 @@
 !------------------------------------------------------------------
 !
 !   This packet evaluates erf(x) for a real argument x.
-!   It contains one FUNCTION type subprogram: ERF,
-!   and one SUBROUTINE type subprogram, CALERF.  The calling
+!   It contains one function type subprogram: ERF,
+!   and one subroutine type subprogram, CALERF. The calling
 !   statements for the primary entries are:
 !
 !                   Y = ERF(X)
@@ -54,7 +54,7 @@
 !
 !   where the parameter usage is as follows
 !
-!      Function                     Parameters for CALERF
+!      function                     Parameters for CALERF
 !       call              ARG                  Result          jintval
 !
 !     ERF(ARG)      ANY REAL ARGUMENT         ERF(ARG)          0
@@ -183,8 +183,8 @@
       enddo
 
       RESULT = X * (XNUM + A(4)) / (XDEN + B(4))
-      if (jintval  /=  0) RESULT = ONE - RESULT
-      if (jintval  ==  2) RESULT = EXP(YSQ) * RESULT
+      if (jintval /= 0) RESULT = ONE - RESULT
+      if (jintval == 2) RESULT = EXP(YSQ) * RESULT
       goto 800
 
 !------------------------------------------------------------------
@@ -200,7 +200,7 @@
       enddo
 
       RESULT = (XNUM + C(8)) / (XDEN + D(8))
-      if (jintval  /=  2) then
+      if (jintval /= 2) then
          YSQ = AINT(Y*SIXTEEN)/SIXTEEN
          DEL = (Y-YSQ)*(Y+YSQ)
          RESULT = EXP(-YSQ*YSQ) * EXP(-DEL) * RESULT

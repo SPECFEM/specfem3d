@@ -198,7 +198,7 @@
       ! figure out if we need to read in a chunk of the adjoint source at this
       ! timestep
       it_sub_adj = ceiling( dble(it)/dble(NTSTEP_BETWEEN_READ_ADJSRC) ) !chunk_number
-      ibool_read_adj_arrays = (((mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC) == 0)) .and.  (nadj_rec_local > 0))
+      ibool_read_adj_arrays = (((mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC) == 0)) .and. (nadj_rec_local > 0))
 
       ! needs to read in a new chunk/block of the adjoint source
       ! note that for each partition, we divide it into two parts --- boundaries
@@ -375,7 +375,7 @@
 ! returns source time function value for specified time
 
   use specfem_par,only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION, &
-    hdur,hdur_gaussian,DT
+    hdur,hdur_Gaussian,DT
 
   implicit none
 
@@ -409,7 +409,7 @@
     else
       ! Gaussian
       ! since the source is a bulk source (applied to both fluid and solid parts)
-      stf = comp_source_time_function_gauss(time_source_dble,hdur_gaussian(isource))
+      stf = comp_source_time_function_gauss(time_source_dble,hdur_Gaussian(isource))
     endif
   endif ! USE_FORCE_POINT_SOURCE
 
