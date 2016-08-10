@@ -26,18 +26,18 @@
 !=====================================================================
 
   subroutine compute_forces_poro_fluid_part( iphase, &
-                        NSPEC_AB,NGLOB_AB,displw_poroelastic,accelw_poroelastic,&
-                        velocw_poroelastic,displs_poroelastic,&
+                        NSPEC_AB,NGLOB_AB,displw_poroelastic,accelw_poroelastic, &
+                        velocw_poroelastic,displs_poroelastic, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        hprime_xx,hprime_yy,hprime_zz,&
-                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
-                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,wxgll,wygll,wzgll,  &
+                        hprime_xx,hprime_yy,hprime_zz, &
+                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
+                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,wxgll,wygll,wzgll, &
                         kappaarraystore,rhoarraystore,mustore,etastore,permstore, &
-                        phistore,tortstore,jacobian,ibool,&
-                        epsilonwdev_xx,epsilonwdev_yy,epsilonwdev_xy,&
+                        phistore,tortstore,jacobian,ibool, &
+                        epsilonwdev_xx,epsilonwdev_yy,epsilonwdev_xy, &
                         epsilonwdev_xz,epsilonwdev_yz,epsilonw_trace_over_3, &
                         SIMULATION_TYPE,NSPEC_ADJOINT, &
-                        num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic,&
+                        num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic, &
                         phase_ispec_inner_poroelastic )
 
 ! compute forces for the fluid poroelastic part
@@ -54,7 +54,7 @@
   integer :: NSPEC_ADJOINT
 
 ! displacement and acceleration
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displw_poroelastic,accelw_poroelastic,&
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displw_poroelastic,accelw_poroelastic, &
                                                       velocw_poroelastic
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displs_poroelastic
 
@@ -127,7 +127,7 @@
   real(kind=CUSTOM_REAL) :: kappal_s,rhol_s
   real(kind=CUSTOM_REAL) :: etal_f,kappal_f,rhol_f
   real(kind=CUSTOM_REAL) :: mul_fr,kappal_fr,phil,tortl,viscodampx,viscodampy,viscodampz
-  real(kind=CUSTOM_REAL) :: permlxx,permlxy,permlxz,permlyz,permlyy,permlzz,&
+  real(kind=CUSTOM_REAL) :: permlxx,permlxy,permlxz,permlyz,permlyy,permlzz, &
                             invpermlxx,invpermlxy,invpermlxz,invpermlyz,invpermlyy,invpermlzz,detk
   real(kind=CUSTOM_REAL) :: D_biot,H_biot,C_biot,M_biot,rhol_bar
 

@@ -109,7 +109,7 @@ contains
     localpath_name='./MESH'
 
     ! reads node coordinates
-    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file',&
+    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file', &
          status='old', form='formatted', iostat = ier)
     if (ier /= 0) then
        print *,'could not open file:',localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file'
@@ -224,7 +224,7 @@ contains
     ! cannot support more than 10 attributes
     count_def_mat = 0
     count_undef_mat = 0
-    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_velocity_file',&
+    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_velocity_file', &
          status='old', form='formatted',iostat=ier)
     if (ier /= 0) stop 'Error opening nummaterial_velocity_file'
 
@@ -426,12 +426,12 @@ contains
 
        if (trim(undef_mat_prop(2,imat)) == 'interface') then
           ! line will have 5 arguments, e.g.: 2 -1 interface 1 2
-          read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
+          read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat), &
                undef_mat_prop(3,imat),undef_mat_prop(4,imat)
           undef_mat_prop(5,imat) = "0" ! dummy value
        else if (trim(undef_mat_prop(2,imat)) == 'tomography') then
           ! line will have 6 arguments, e.g.: 2 -1 tomography elastic tomography_model.xyz 1
-          read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
+          read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat), &
                undef_mat_prop(3,imat),undef_mat_prop(4,imat)
           undef_mat_prop(5,imat) = "0" ! dummy value
        else

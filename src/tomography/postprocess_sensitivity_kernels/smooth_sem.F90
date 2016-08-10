@@ -725,7 +725,7 @@ program smooth_sem
             z0 = zl(INDEX_IJK,ispec)
 
             ! calculate weights based on Gaussian smoothing
-            call smoothing_weights_vec(x0,y0,z0,sigma_h2_inv,sigma_v2_inv,exp_val,&
+            call smoothing_weights_vec(x0,y0,z0,sigma_h2_inv,sigma_v2_inv,exp_val, &
                                        xx(:,:,:,ispec2),yy(:,:,:,ispec2),zz(:,:,:,ispec2))
 
             ! adds GLL integration weights
@@ -853,7 +853,7 @@ program smooth_sem
 !
 ! -----------------------------------------------------------------------------
 !
-  subroutine smoothing_weights_vec(x0,y0,z0,sigma_h2_inv,sigma_v2_inv,exp_val,&
+  subroutine smoothing_weights_vec(x0,y0,z0,sigma_h2_inv,sigma_v2_inv,exp_val, &
                               xx_elem,yy_elem,zz_elem)
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ

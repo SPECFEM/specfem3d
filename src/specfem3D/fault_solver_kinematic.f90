@@ -383,14 +383,14 @@ subroutine load_vslip_snapshots(dataXZ,itime,iflt,myrank)
   write(filename,"('../INPUT_FILES/Proc',I0,'Snapshot',I0,'_F',I0,'.bin')") myrank,itime,iflt
   print *, trim(filename)
 
-!  open(unit=IIN_BIN, file= trim(filename), status='old', form='formatted',&
+!  open(unit=IIN_BIN, file= trim(filename), status='old', form='formatted', &
 !       action='read',iostat=ier)
- open(unit=IIN_BIN, file= trim(filename), status='old', form='unformatted',&
+ open(unit=IIN_BIN, file= trim(filename), status='old', form='unformatted', &
        action='read',iostat=ier)
 
 
 !  COMPILERS WRITE BINARY OUTPUTS IN DIFFERENT FORMATS!
-!  open(unit=IIN_BIN, file= trim(filename), status='old', form='unformatted',&
+!  open(unit=IIN_BIN, file= trim(filename), status='old', form='unformatted', &
 !        action='read',iostat=ier)
 !  if ( ier /= 0 ) stop 'Snapshots have been found'
 

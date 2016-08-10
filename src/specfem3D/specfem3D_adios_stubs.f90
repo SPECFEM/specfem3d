@@ -114,7 +114,7 @@ subroutine save_kernels_acoustic_adios(handle)
 end subroutine
 
 subroutine save_kernels_elastic_adios(handle, alphav_kl, alphah_kl, &
-                                      betav_kl, betah_kl, eta_kl,   &
+                                      betav_kl, betah_kl, eta_kl, &
                                       rhop_kl, alpha_kl, beta_kl)
 
   use specfem_par

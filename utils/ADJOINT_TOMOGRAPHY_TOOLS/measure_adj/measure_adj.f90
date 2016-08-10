@@ -208,8 +208,8 @@ program measure_adj
 
       ! make measurements
       ! also compute reconstructed synthetics for CC (and MT, if specified) measurements
-      call mt_measure(datafile,measure_file_prefix,data,syn,syn_phydisp,t0,dt,npts,tstart,tend,&
-            istart,data_dtw,syn_dtw,syn_dtw_phydisp,nlen,tshift,sigma_dt_cc,dlnA,sigma_dlnA_cc,cc_max,syn_dtw_cc,&
+      call mt_measure(datafile,measure_file_prefix,data,syn,syn_phydisp,t0,dt,npts,tstart,tend, &
+            istart,data_dtw,syn_dtw,syn_dtw_phydisp,nlen,tshift,sigma_dt_cc,dlnA,sigma_dlnA_cc,cc_max,syn_dtw_cc, &
             i_pmax_dat,i_pmax_syn,i_right0,trans_mtm,dtau_w,dlnA_w,sigma_dt,sigma_dlnA,syn_dtw_mt,err_dt,err_dlnA)
       i_right = i_right0
       i_left = 1  ! LQY: is it feasible that i_left is not 1? mt_adj() inherently assumes it.
@@ -234,9 +234,9 @@ program measure_adj
             print *, '   reverting from MT measurement to CC measurement...'
             imeas = imeas0 - 2
             is_mtm = 3  ! LQY: WHY not is_mtm = 2?
-            call mt_measure(datafile,measure_file_prefix,data,syn,syn_phydisp,t0,dt,npts,tstart,tend,&
-                  istart,data_dtw,syn_dtw,syn_dtw_phydisp,nlen,&
-                  tshift,sigma_dt_cc,dlnA,sigma_dlnA_cc,cc_max,syn_dtw_cc,&
+            call mt_measure(datafile,measure_file_prefix,data,syn,syn_phydisp,t0,dt,npts,tstart,tend, &
+                  istart,data_dtw,syn_dtw,syn_dtw_phydisp,nlen, &
+                  tshift,sigma_dt_cc,dlnA,sigma_dlnA_cc,cc_max,syn_dtw_cc, &
                   i_pmax_dat,i_pmax_syn,i_right,trans_mtm,dtau_w,dlnA_w,sigma_dt,sigma_dlnA,syn_dtw_mt)
          else
             print *, '     using this MTM. '
@@ -271,8 +271,8 @@ program measure_adj
         endif
 
         tr_chi = 0.0 ; am_chi = 0.0    ! must be initialized
-        call mt_adj(istart,data_dtw,syn_dtw,syn_dtw_phydisp,nlen,dt,tshift,dlnA,sigma_dt_cc,sigma_dlnA_cc,&
-             dtau_w,dlnA_w,err_dt,err_dlnA,sigma_dt,sigma_dlnA,i_left,i_right,&
+        call mt_adj(istart,data_dtw,syn_dtw,syn_dtw_phydisp,nlen,dt,tshift,dlnA,sigma_dt_cc,sigma_dlnA_cc, &
+             dtau_w,dlnA_w,err_dt,err_dlnA,sigma_dt,sigma_dlnA,i_left,i_right, &
              window_chi,tr_adj_src,tr_chi,am_adj_src,am_chi)
 
         ! KEY: write misfit function values to file (two for each window)
@@ -284,7 +284,7 @@ program measure_adj
         ! FULL RECORD: 17: data power, 18: syn power, 19: (data-syn) power, 20: record duration
         ! Example of a reduced file: awk '{print $2,$3,$4,$5,$6,$31,$32}' window_chi > window_chi_sub
         write(13,'(a14,a8,a3,a5,i4,i4,2e14.6,20e14.6,2e14.6,2f14.6)') &
-           file_prefix0,sta,net,chan_syn,j,imeas,&
+           file_prefix0,sta,net,chan_syn,j,imeas, &
            tstart,tend,window_chi(:),tr_chi,am_chi,T_pmax_dat,T_pmax_syn
         print *, '     tr_chi = ', sngl(tr_chi), '  am_chi = ', sngl(am_chi)
 

@@ -120,9 +120,9 @@
 
     ! weighted jacobian and normal
     call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob,&
+              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob, &
               dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&
+              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
               ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLZ)
 
     ! normal convention: points away from element
@@ -202,9 +202,9 @@
         ! re-computes face infos
         ! weighted jacobian and normal
         call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob,&
+              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob, &
               dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&
+              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
               ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLZ)
 
         ! normal convention: points away from element

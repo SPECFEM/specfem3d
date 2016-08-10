@@ -24,7 +24,7 @@
 !=====================================================================
 ! Last revision: Hom Nath Gharti, April 06,2010
 
-subroutine cvd_count_totals_ext_mesh(nproc,proc_list,proc_width,inp_dir,&
+subroutine cvd_count_totals_ext_mesh(nproc,proc_list,proc_width,inp_dir, &
                         node_count,elmt_count,out_res)
 
 ! counts total number of points and elements for external meshes in given slice list
@@ -201,7 +201,7 @@ end subroutine cvd_count_totals_ext_mesh
 !=============================================================
 
 
-subroutine cvd_write_corners_only(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,&
+subroutine cvd_write_corners_only(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
                               numpoin,fd_x,fd_y,fd_z)
 
 ! writes out locations of spectral element corners only
@@ -256,7 +256,7 @@ enddo ! i_spec
 end subroutine cvd_write_corners_only
 !=============================================================
 
-subroutine cvd_write_hexa20_only(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,&
+subroutine cvd_write_hexa20_only(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
                               numpoin,fd_x,fd_y,fd_z)
 
 ! writes out locations of spectral element corners only
@@ -331,7 +331,7 @@ enddo ! i_spec
 end subroutine cvd_write_hexa20_only
 !=============================================================
 
-subroutine cvd_write_GLL_points_only(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,&
+subroutine cvd_write_GLL_points_only(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
                                 numpoin,fd_x,fd_y,fd_z)
 
 ! writes out locations of all GLL points of spectral elements
@@ -379,7 +379,7 @@ enddo !i_spec
 end subroutine cvd_write_GLL_points_only
 !=============================================================
 
-subroutine cvd_write_corners_data(NSPEC_AB,NGLOB_AB,ibool,dat,&
+subroutine cvd_write_corners_data(NSPEC_AB,NGLOB_AB,ibool,dat, &
                               numpoin,fd)
 
 ! writes out locations of spectral element corners only
@@ -438,7 +438,7 @@ enddo ! i_spec
 end subroutine cvd_write_corners_data
 !=============================================================
 
-subroutine cvd_write_corners_data_glob(NSPEC_AB,NGLOB_AB,ibool,dat,&
+subroutine cvd_write_corners_data_glob(NSPEC_AB,NGLOB_AB,ibool,dat, &
                               numpoin,fd)
 
 ! writes out locations of spectral element corners only
@@ -486,7 +486,7 @@ enddo ! i_spec
 end subroutine cvd_write_corners_data_glob
 !=============================================================
 
-subroutine cvd_write_hexa20_data(NSPEC_AB,NGLOB_AB,ibool,dat,&
+subroutine cvd_write_hexa20_data(NSPEC_AB,NGLOB_AB,ibool,dat, &
                               numpoin,fd)
 
 ! writes out locations of spectral element corners only
@@ -587,7 +587,7 @@ enddo ! i_spec
 end subroutine cvd_write_hexa20_data
 !=============================================================
 
-subroutine cvd_write_hexa20_data_glob(NSPEC_AB,NGLOB_AB,ibool,dat,&
+subroutine cvd_write_hexa20_data_glob(NSPEC_AB,NGLOB_AB,ibool,dat, &
                               numpoin,fd)
 
 ! writes out locations of spectral element corners only
@@ -656,7 +656,7 @@ enddo ! i_spec
 end subroutine cvd_write_hexa20_data_glob
 !=============================================================
 
-subroutine cvd_write_GLL_points_data(NSPEC_AB,NGLOB_AB,ibool,dat,&
+subroutine cvd_write_GLL_points_data(NSPEC_AB,NGLOB_AB,ibool,dat, &
                                 numpoin,fd)
 
 ! writes out locations of all GLL points of spectral elements
@@ -698,7 +698,7 @@ enddo !i_spec
 end subroutine cvd_write_GLL_points_data
 !=============================================================
 
-subroutine cvd_write_GLL_points_data_glob(NSPEC_AB,NGLOB_AB,ibool,dat,&
+subroutine cvd_write_GLL_points_data_glob(NSPEC_AB,NGLOB_AB,ibool,dat, &
                                 numpoin,fd)
 
 ! writes out locations of all GLL points of spectral elements
@@ -742,7 +742,7 @@ end subroutine cvd_write_GLL_points_data_glob
 
 ! writes out locations of spectral element corners only
 
-subroutine cvd_write_corner_elements(NSPEC_AB,NGLOB_AB,ibool,&
+subroutine cvd_write_corner_elements(NSPEC_AB,NGLOB_AB,ibool, &
                                     np,nelement,numpoin,fd)
 
 use visualize_constants
@@ -803,7 +803,7 @@ end subroutine cvd_write_corner_elements
 
 ! writes out locations of spectral element corners only
 
-subroutine cvd_write_hexa20_elements(NSPEC_AB,NGLOB_AB,ibool,&
+subroutine cvd_write_hexa20_elements(NSPEC_AB,NGLOB_AB,ibool, &
                                     np,nelement,numpoin,fd)
 
 use visualize_constants
@@ -958,7 +958,7 @@ end subroutine cvd_write_GLL_elements
 
 ! subroutines below may not be used
 
-subroutine cvd_write_corners(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,dat,&
+subroutine cvd_write_corners(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,dat, &
                               i_proc,npp,numpoin,fd)
 
 ! writes out locations of spectral element corners only
@@ -1029,7 +1029,7 @@ enddo ! i_spec
 end subroutine cvd_write_corners
 !=============================================================
 
-subroutine cvd_write_GLL_points(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,dat,&
+subroutine cvd_write_GLL_points(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,dat, &
                                 i_proc,npp,numpoin,fd)
 
 ! writes out locations of all GLL points of spectral elements

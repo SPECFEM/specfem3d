@@ -73,7 +73,7 @@
       if (station_name(irec) == station_name(irec2) .and. network_name(irec) == network_name(irec2)) then
         print *, &
           network_name(irec2)(1:len_trim(network_name(irec2))),'.',station_name(irec2)(1:len_trim(station_name(irec2))), &
-          ' is a duplicate of ',&
+          ' is a duplicate of ', &
           network_name(irec)(1:len_trim(network_name(irec))),'.',station_name(irec)(1:len_trim(station_name(irec))), &
           ' (same name)'
         is_a_duplicate(irec2) = .true.

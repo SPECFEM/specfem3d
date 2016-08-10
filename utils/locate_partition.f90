@@ -103,7 +103,7 @@
 
     ! gets number of elements and global points for this partition
     write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'
-    open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin',&
+    open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin', &
           status='old',action='read',form='unformatted',iostat=ios)
     if ( ios /= 0 ) exit
 

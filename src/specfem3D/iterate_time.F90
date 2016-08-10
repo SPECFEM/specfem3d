@@ -427,7 +427,7 @@
     call read_forward_arrays_adios()
   else
     ! reads in wavefields
-    open(unit=IIN,file=trim(prname)//'save_forward_arrays.bin',status='old',&
+    open(unit=IIN,file=trim(prname)//'save_forward_arrays.bin',status='old', &
           action='read',form='unformatted',iostat=ier)
     if (ier /= 0) then
       print *,'error: opening save_forward_arrays'
@@ -480,8 +480,8 @@
     if (ACOUSTIC_SIMULATION) then
     ! transfers fields onto GPU
       call transfer_b_fields_ac_to_device(NGLOB_AB,b_potential_acoustic, &
-                                          b_potential_dot_acoustic,      &
-                                          b_potential_dot_dot_acoustic,  &
+                                          b_potential_dot_acoustic, &
+                                          b_potential_dot_dot_acoustic, &
                                           Mesh_pointer)
     endif
     ! elastic wavefields
@@ -490,11 +490,11 @@
       call transfer_b_fields_to_device(NDIM*NGLOB_AB,b_displ,b_veloc,b_accel,Mesh_pointer)
       ! memory variables if attenuation
       if (ATTENUATION) then
-        call transfer_b_fields_att_to_device(Mesh_pointer,                    &
-                           b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz,                &
-                           size(b_R_xx),                                      &
-                           b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,   &
-                           b_epsilondev_xz,b_epsilondev_yz,                   &
+        call transfer_b_fields_att_to_device(Mesh_pointer, &
+                           b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
+                           size(b_R_xx), &
+                           b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
+                           b_epsilondev_xz,b_epsilondev_yz, &
                            size(b_epsilondev_xx))
       endif
     endif

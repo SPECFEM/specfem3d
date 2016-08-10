@@ -30,8 +30,8 @@
   use meshfem3D_par, only: LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
     UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
     NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE, &
-    LOCAL_PATH,SUPPRESS_UTM_PROJECTION,&
-    INTERFACES_FILE,CAVITY_FILE,NSUBREGIONS,subregions,NMATERIALS,material_properties,&
+    LOCAL_PATH,SUPPRESS_UTM_PROJECTION, &
+    INTERFACES_FILE,CAVITY_FILE,NSUBREGIONS,subregions,NMATERIALS,material_properties, &
     CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
     USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
     THICKNESS_OF_X_PML,THICKNESS_OF_Y_PML,THICKNESS_OF_Z_PML, &
@@ -191,7 +191,7 @@
   if (ier /= 0) stop 'Error allocation of subregions'
   subregions(:,:) = 0
   do ireg = 1,NSUBREGIONS
-    call read_region_parameters(IIN,ix_beg_region,ix_end_region,iy_beg_region,iy_end_region,&
+    call read_region_parameters(IIN,ix_beg_region,ix_end_region,iy_beg_region,iy_end_region, &
                                 iz_beg_region,iz_end_region,imaterial_number,ier)
     if (ier /= 0) stop 'Error reading regions in Mesh_Par_file'
     ! stores region

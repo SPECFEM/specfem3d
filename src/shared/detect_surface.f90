@@ -25,7 +25,7 @@
 !
 !=====================================================================
 
-  subroutine detect_surface(NPROC,nglob,nspec,ibool,&
+  subroutine detect_surface(NPROC,nglob,nspec,ibool, &
                             ispec_is_surface_external_mesh, &
                             iglob_is_surface_external_mesh, &
                             nfaces_surface, &
@@ -208,7 +208,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine detect_surface_cross_section(NPROC,nglob,nspec,ibool,&
+  subroutine detect_surface_cross_section(NPROC,nglob,nspec,ibool, &
                             ispec_is_surface_external_mesh, &
                             iglob_is_surface_external_mesh, &
                             nfaces_surface, &
@@ -216,7 +216,7 @@
                             max_nibool_interfaces_ext_mesh, &
                             nibool_interfaces_ext_mesh, &
                             my_neighbours_ext_mesh, &
-                            ibool_interfaces_ext_mesh,&
+                            ibool_interfaces_ext_mesh, &
                             x_section,y_section,z_section, &
                             xstore,ystore,zstore,myrank)
 
@@ -424,8 +424,8 @@
 
         ! gets face normal
         normal(:) = 0._CUSTOM_REAL
-        call get_element_face_normal(ispec,iface,xcoord_face,ycoord_face,zcoord_face,&
-                                    ibool,nspec,nglob,xstore,ystore,zstore,&
+        call get_element_face_normal(ispec,iface,xcoord_face,ycoord_face,zcoord_face, &
+                                    ibool,nspec,nglob,xstore,ystore,zstore, &
                                     normal)
 
         ! distance to cross-section planes
@@ -652,15 +652,15 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine detect_surface_PNM_image(NPROC,nglob,nspec,ibool,&
+  subroutine detect_surface_PNM_image(NPROC,nglob,nspec,ibool, &
                             ispec_is_image_surface, &
                             iglob_is_image_surface, &
                             num_iglob_image_surface, &
                             num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                             nibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
-                            ibool_interfaces_ext_mesh,&
-                            section_xorg,section_yorg,section_zorg,&
-                            section_nx,section_ny,section_nz,&
+                            ibool_interfaces_ext_mesh, &
+                            section_xorg,section_yorg,section_zorg, &
+                            section_nx,section_ny,section_nz, &
                             xstore,ystore,zstore,myrank)
 
 ! this returns points on a cross-section surface through model

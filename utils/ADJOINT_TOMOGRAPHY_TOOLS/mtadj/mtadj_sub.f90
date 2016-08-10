@@ -254,7 +254,7 @@ contains
 
     ! estimate tshift, dlnA uncertainties
     ! according to misfit between shifted data and reconstructed syn
-    call compute_cc_error(dataw_save,synw_rc_cc,nlen,dt,i_pmax,dlnA,&
+    call compute_cc_error(dataw_save,synw_rc_cc,nlen,dt,i_pmax,dlnA, &
          sigma_tshift_cc,sigma_dlnA_cc,MIN_DT_SIGMA,MIN_DlnA_SIGMA)
 
     ! write measurement file
@@ -361,12 +361,12 @@ contains
     ! estimate transfer function error
     if (itap == ITAP_MT) then
        ! for multi-taper
-       call compute_mt_error(ntaper,dataw,synw,tas,&
+       call compute_mt_error(ntaper,dataw,synw,tas, &
             nlen,dt,wtr_mtm,i_right,tshift_cc, &
             dtau_fdm,dlnA_fdm,sigma_dtau_fdm, sigma_dlnA_fdm)
     else
        ! for single tapers (BC or CS), use generic error estimation technique
-       call compute_fd_error(npi,nlen,i_right,dt,dtau_fdm,dlnA_fdm,&
+       call compute_fd_error(npi,nlen,i_right,dt,dtau_fdm,dlnA_fdm, &
             sigma_dtau_fdm,sigma_dlnA_fdm)
     endif
 
@@ -459,7 +459,7 @@ contains
     real, dimension(NPT) :: dt_adj_src, amp_adj_src
     real :: dt_chi,amp_chi
 
-    real, dimension(NPT) :: synw_veloc, synwt, synwt_veloc,&
+    real, dimension(NPT) :: synw_veloc, synwt, synwt_veloc, &
          ft_bar, fa_bar, wf_taper, wp_taper, wq_taper, &
          d_bot_mtm, v_bot_mtm
     real*8,dimension(NPT) :: dtau_pj_t, dlnA_qj_t
@@ -606,7 +606,7 @@ contains
 
 ! ================================================
 
-  subroutine adjust_adj_src(dt_adj_src,amp_adj_src,nlen,tstart,dt,&
+  subroutine adjust_adj_src(dt_adj_src,amp_adj_src,nlen,tstart,dt, &
                 dt_adj_src_win,amp_adj_src_win,npts_adj,b_adj,dt_adj)
 
     real,dimension(:) :: dt_adj_src_win, amp_adj_src_win

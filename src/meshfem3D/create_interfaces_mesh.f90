@@ -169,9 +169,9 @@
     endif
 
     ! read top interface
-    call read_interface_parameters(IIN,SUPPRESS_UTM_PROJECTION_TOP,interface_top_file,&
-                                   npx_interface_top,npy_interface_top,&
-                                   orig_x_interface_top,orig_y_interface_top,&
+    call read_interface_parameters(IIN,SUPPRESS_UTM_PROJECTION_TOP,interface_top_file, &
+                                   npx_interface_top,npy_interface_top, &
+                                   orig_x_interface_top,orig_y_interface_top, &
                                    spacing_x_interface_top,spacing_y_interface_top,ier)
     if (ier /= 0) stop 'Error reading interface parameters'
 
@@ -496,8 +496,8 @@
   ! loop on all the interfaces
   do interface_current = 1,number_of_interfaces
     call read_interface_parameters(IIN,SUPPRESS_UTM_PROJECTION_DUMMY,dummy_file, &
-                                   npx_interface,npy_interface,&
-                                   orig_x_dummy,orig_y_dummy,&
+                                   npx_interface,npy_interface, &
+                                   orig_x_dummy,orig_y_dummy, &
                                    spacing_x_dummy,spacing_y_dummy,ier)
     if (ier /= 0) then
       print *,'Error reading interface parameters: interface ',interface_current

@@ -28,7 +28,7 @@
   subroutine compute_coord_main_mesh(offset_x,offset_y,offset_z,xelm,yelm,zelm, &
                ANGULAR_WIDTH_XI_RAD,ANGULAR_WIDTH_ETA_RAD,iproc_xi,iproc_eta, &
                NPROC_XI,NPROC_ETA,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
-               r_top,r_bottom,ner,ilayer,ichunk,rotation_matrix,NCHUNKS,&
+               r_top,r_bottom,ner,ilayer,ichunk,rotation_matrix,NCHUNKS, &
                INCLUDE_CENTRAL_CUBE,NUMBER_OF_MESH_LAYERS)
 
   implicit none

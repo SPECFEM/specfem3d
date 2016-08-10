@@ -85,7 +85,7 @@
     total_size_adj = 1
     if (myrank == 0) write(IMAIN,*) 'calling create_adjacency_table_adjncy to determine the size of the table'
     allocate(adj(total_size_adj))
-    call create_adjacency_table_adjncy(mn,mp,ne,np,adj,xadj,maskel,nspec,nglob_eight_corners_only,&
+    call create_adjacency_table_adjncy(mn,mp,ne,np,adj,xadj,maskel,nspec,nglob_eight_corners_only, &
     count_only,total_size_ne,total_size_adj,.false.)
     deallocate(adj)
 
@@ -95,7 +95,7 @@
 ! now actually generate the array
     count_only = .false.
     if (myrank == 0) write(IMAIN,*) 'calling create_adjacency_table_adjncy again to actually create the table'
-    call create_adjacency_table_adjncy(mn,mp,ne,np,adj,xadj,maskel,nspec,nglob_eight_corners_only,&
+    call create_adjacency_table_adjncy(mn,mp,ne,np,adj,xadj,maskel,nspec,nglob_eight_corners_only, &
     count_only,total_size_ne,total_size_adj,.false.)
 
     do i=1,nspec
@@ -233,7 +233,7 @@ end subroutine get_color
 !
 !=======================================================================
 
-  subroutine form_elt_connectivity_foelco(mn,mp,nspec,global_corner_number,&
+  subroutine form_elt_connectivity_foelco(mn,mp,nspec,global_corner_number, &
 nglob_GLL_full,ibool,nglob_eight_corners_only)
 
 !-----------------------------------------------------------------------
@@ -324,7 +324,7 @@ nglob_GLL_full,ibool,nglob_eight_corners_only)
 !----------------------------------------------------
 !
 
-  subroutine form_node_connectivity_fonoco(mn,mp,ne,np,nglob_eight_corners_only,&
+  subroutine form_node_connectivity_fonoco(mn,mp,ne,np,nglob_eight_corners_only, &
 nspec,count_only,total_size_ne)
 
 !-----------------------------------------------------------------------
@@ -393,7 +393,7 @@ nspec,count_only,total_size_ne)
 !----------------------------------------------------
 !
 
-  subroutine create_adjacency_table_adjncy(mn,mp,ne,np,adj,xadj,maskel,nspec,nglob_eight_corners_only,&
+  subroutine create_adjacency_table_adjncy(mn,mp,ne,np,adj,xadj,maskel,nspec,nglob_eight_corners_only, &
                                            count_only,total_size_ne,total_size_adj,face)
 
 !-----------------------------------------------------------------------

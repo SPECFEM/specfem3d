@@ -88,7 +88,7 @@
       write(IMAIN,*) 'using double precision for the calculations'
     endif
     write(IMAIN,*)
-    write(IMAIN,*) 'smallest and largest possible floating-point numbers are: ',&
+    write(IMAIN,*) 'smallest and largest possible floating-point numbers are: ', &
                    tiny(1._CUSTOM_REAL),huge(1._CUSTOM_REAL)
     write(IMAIN,*)
     write(IMAIN,'(a)',advance='no') ' velocity model: '

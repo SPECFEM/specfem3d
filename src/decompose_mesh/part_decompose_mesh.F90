@@ -52,7 +52,7 @@ contains
   !-----------------------------------------------
   ! Creating dual graph (adjacency is defined by 'ncommonnodes' between two elements).
   !-----------------------------------------------
-  subroutine mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, elmnts,&
+  subroutine mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, elmnts, &
                                     xadj, adjncy, nnodes_elmnts, nodes_elmnts, max_neighbour, ncommonnodes, NGNOD)
 
     implicit none

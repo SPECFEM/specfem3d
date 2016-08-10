@@ -52,7 +52,7 @@
 
   interface
     subroutine save_kernels_elastic(adios_handle, alphav_kl, alphah_kl, &
-                                    betav_kl, betah_kl, eta_kl,         &
+                                    betav_kl, betah_kl, eta_kl, &
                                     rhop_kl, alpha_kl, beta_kl)
 
       use constants, only: CUSTOM_REAL
@@ -74,11 +74,11 @@
 
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: alphav_kl, &
                                                             alphah_kl, &
-                                                            betav_kl,  &
-                                                            betah_kl,  &
+                                                            betav_kl, &
+                                                            betah_kl, &
                                                             eta_kl
 
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: rhop_kl,  &
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: rhop_kl, &
                                                             alpha_kl, &
                                                             beta_kl
 
@@ -132,7 +132,7 @@
     endif
 
     call save_kernels_elastic(adios_handle, alphav_kl, alphah_kl, &
-                              betav_kl, betah_kl, eta_kl,         &
+                              betav_kl, betah_kl, eta_kl, &
                               rhop_kl, alpha_kl, beta_kl)
   endif
 
@@ -292,7 +292,7 @@ subroutine save_kernels_acoustic(adios_handle)
 !> Save elastic related kernels
 
   subroutine save_kernels_elastic(adios_handle, alphav_kl, alphah_kl, &
-                                betav_kl, betah_kl, eta_kl,         &
+                                betav_kl, betah_kl, eta_kl, &
                                 rhop_kl, alpha_kl, beta_kl)
 
   use specfem_par, only: CUSTOM_REAL,NSPEC_AB,ibool,mustore,kappastore,ANISOTROPIC_KL,SAVE_TRANSVERSE_KL,FOUR_THIRDS, &
@@ -303,7 +303,7 @@ subroutine save_kernels_acoustic(adios_handle)
 
   interface
     subroutine save_kernels_elastic_adios(adios_handle, alphav_kl, alphah_kl, &
-                                          betav_kl, betah_kl, eta_kl,         &
+                                          betav_kl, betah_kl, eta_kl, &
                                           rhop_kl, alpha_kl, beta_kl)
 
       use constants, only: CUSTOM_REAL
@@ -447,7 +447,7 @@ subroutine save_kernels_acoustic(adios_handle)
 
   if (ADIOS_FOR_KERNELS) then
     call save_kernels_elastic_adios(adios_handle, alphav_kl, alphah_kl, &
-                                      betav_kl, betah_kl, eta_kl,       &
+                                      betav_kl, betah_kl, eta_kl, &
                                       rhop_kl, alpha_kl, beta_kl)
   else
     if (ANISOTROPIC_KL) then

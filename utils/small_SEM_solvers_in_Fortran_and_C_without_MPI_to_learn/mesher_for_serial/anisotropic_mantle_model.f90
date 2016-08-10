@@ -42,7 +42,7 @@
 
 
   subroutine aniso_mantle_model(r,theta,phi,rho, &
-    c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66,&
+    c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66, &
     AMM_V)
 
   implicit none
@@ -79,34 +79,34 @@
 ! assign the local (d_ij) or global (c_ij) anisotropic parameters.
 ! The c_ij are the coefficients in the global
 ! reference frame used in SPECFEM3D.
-  call build_cij(AMM_V%pro,AMM_V%npar1,rho,AMM_V%beta,r,colat,lon,&
-                 d11,d12,d13,d14,d15,d16,d22,d23,d24,d25,d26,d33,d34,d35,d36,&
+  call build_cij(AMM_V%pro,AMM_V%npar1,rho,AMM_V%beta,r,colat,lon, &
+                 d11,d12,d13,d14,d15,d16,d22,d23,d24,d25,d26,d33,d34,d35,d36, &
                  d44,d45,d46,d55,d56,d66)
 
-  call rotate_aniso_tensor(theta,phi,d11,d12,d13,d14,d15,d16,d22,d23,d24,d25,d26,&
-       d33,d34,d35,d36,d44,d45,d46,d55,d56,d66,&
-       c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,&
+  call rotate_aniso_tensor(theta,phi,d11,d12,d13,d14,d15,d16,d22,d23,d24,d25,d26, &
+       d33,d34,d35,d36,d44,d45,d46,d55,d56,d66, &
+       c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26, &
        c33,c34,c35,c36,c44,c45,c46,c55,c56,c66)
 
   end subroutine aniso_mantle_model
 
 !--------------------------------------------------------------------
 
-  subroutine build_cij(pro,npar1,rho,beta,r,theta,phi,&
-       d11,d12,d13,d14,d15,d16,d22,d23,d24,d25,d26,d33,d34,d35,d36,&
+  subroutine build_cij(pro,npar1,rho,beta,r,theta,phi, &
+       d11,d12,d13,d14,d15,d16,d22,d23,d24,d25,d26,d33,d34,d35,d36, &
        d44,d45,d46,d55,d56,d66)
 
   implicit none
 
   include "constants.h"
 
-  integer npar1,ndepth,idep,ipar,itheta,ilon,icz0,nx0,ny0,nz0,&
+  integer npar1,ndepth,idep,ipar,itheta,ilon,icz0,nx0,ny0,nz0, &
           ict0,ict1,icp0,icp1,icz1
 
   double precision d11,d12,d13,d14,d15,d16,d22,d23,d24,d25,d26, &
                    d33,d34,d35,d36,d44,d45,d46,d55,d56,d66
   double precision r,theta,phi,rho,depth,tei,tet,ph,fi,x0,y0,pxy0
-  double precision d1,d2,d3,d4,sd,thickness,dprof1,dprof2,eps,pc1,pc2,pc3,pc4,&
+  double precision d1,d2,d3,d4,sd,thickness,dprof1,dprof2,eps,pc1,pc2,pc3,pc4, &
                    dpr1,dpr2,param,scale_GPa,scaleval
   double precision A,C,F,AL,AN,BC,BS,GC,GS,HC,HS,EC,ES,C1p,C1sv,C1sh,C3,S1p,S1sv,S1sh,S3
   double precision beta(14,34,37,73),pro(47)
@@ -497,7 +497,7 @@
 ! array par(i,nlayer)
 ! output: array pari(ipar, nlayer): rho, A, L, xi-1, phi-1, eta-1
 
-  integer i,j,k,ip,ifanis,idum1,idum2,idum3,nlayer,nout,neff,&
+  integer i,j,k,ip,ifanis,idum1,idum2,idum3,nlayer,nout,neff, &
           nband,nri,minlay,moho,kiti
   double precision pari(14,47),qkappa(47),qshear(47),par(6,47)
   double precision epa(14,47),ra(47),dcori(47),ri(47)
@@ -584,10 +584,10 @@
 
 !--------------------------------------------------------------------
 
-  subroutine rotate_aniso_tensor(theta,phi,d11,d12,d13,d14,d15,d16,&
-                           d22,d23,d24,d25,d26,&
-                           d33,d34,d35,d36,d44,d45,d46,d55,d56,d66,&
-                           c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,&
+  subroutine rotate_aniso_tensor(theta,phi,d11,d12,d13,d14,d15,d16, &
+                           d22,d23,d24,d25,d26, &
+                           d33,d34,d35,d36,d44,d45,d46,d55,d56,d66, &
+                           c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26, &
                            c33,c34,c35,c36,c44,c45,c46,c55,c56,c66)
 
   implicit none

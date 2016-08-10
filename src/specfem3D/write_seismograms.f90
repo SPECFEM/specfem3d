@@ -95,7 +95,7 @@
       if (ELASTIC_SIMULATION) then
         if (USE_CUDA_SEISMOGRAMS) then
           call transfer_seismograms_el_from_d(nrec_local,Mesh_pointer, &
-                                             seismograms_d,seismograms_v,seismograms_a,&
+                                             seismograms_d,seismograms_v,seismograms_a, &
                                              it)
         else
           call transfer_station_el_from_device(displ,veloc,accel, &
@@ -219,7 +219,7 @@
         ! elastic wave field
         if (ispec_is_elastic(ispec)) then
           ! backward field: interpolates displ/veloc/accel at receiver locations
-          call compute_interpolated_dva(b_displ,b_veloc,b_accel,NGLOB_ADJOINT,&
+          call compute_interpolated_dva(b_displ,b_veloc,b_accel,NGLOB_ADJOINT, &
                                         ispec,NSPEC_AB,ibool, &
                                         xi_r,eta_r,gamma_r, &
                                         hxir,hetar,hgammar, &
@@ -282,7 +282,7 @@
           hpgammar(:) = hpgammar_store(irec_local,:)
 
           ! computes the integrated derivatives of source parameters (M_jk and X_s)
-          call compute_adj_source_frechet(displ_element,Mxx(irec),Myy(irec),Mzz(irec),&
+          call compute_adj_source_frechet(displ_element,Mxx(irec),Myy(irec),Mzz(irec), &
                                           Mxy(irec),Mxz(irec),Myz(irec),eps_s,eps_m_s, &
                                           hxir,hetar,hgammar,hpxir,hpetar,hpgammar, &
                                           hprime_xx,hprime_yy,hprime_zz, &

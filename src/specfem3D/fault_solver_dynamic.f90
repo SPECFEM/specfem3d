@@ -206,8 +206,8 @@ contains
     nspec = faults(ifault)%nspec
     nglob = faults(ifault)%nglob
 
-    call transfer_todevice_fault_data(Fault_pointer,ifault-1,nspec,nglob,faults(ifault)%D,&
-    faults(ifault)%T0,faults(ifault)%T,faults(ifault)%B,faults(ifault)%R,faults(ifault)%V,&
+    call transfer_todevice_fault_data(Fault_pointer,ifault-1,nspec,nglob,faults(ifault)%D, &
+    faults(ifault)%T0,faults(ifault)%T,faults(ifault)%B,faults(ifault)%R,faults(ifault)%V, &
     faults(ifault)%Z,faults(ifault)%invM1,faults(ifault)%invM2,faults(ifault)%ibulk1,faults(ifault)%ibulk2)
 
   enddo
@@ -1046,7 +1046,7 @@ contains
 
     integer :: ier, ipar
     integer, parameter :: sIIN_NUC =271 ! WARNING: not safe, should look for an available unit
-    real(kind=CUSTOM_REAL),  allocatable :: sloc_str(:),  &
+    real(kind=CUSTOM_REAL),  allocatable :: sloc_str(:), &
          sloc_dip(:),ssigma0(:),stau0_str(:),stau0_dip(:),sV0(:), &
          sf0(:),sa(:),sb(:),sL(:),sV_init(:),stheta(:),sC(:)
     real(kind=CUSTOM_REAL) :: minX, ssiz_str,ssiz_dip
@@ -1465,11 +1465,11 @@ contains
   integer, parameter :: NSERIES = 39
 
   double precision, parameter :: asnhcs(NSERIES) = (/ &
-   -.12820039911738186343372127359268D+0,  -.58811761189951767565211757138362D-1,  &
-   +.47274654322124815640725249756029D-2,  -.49383631626536172101360174790273D-3,  &
-   +.58506207058557412287494835259321D-4,  -.74669983289313681354755069217188D-5,  &
-   +.10011693583558199265966192015812D-5,  -.13903543858708333608616472258886D-6,  &
-   +.19823169483172793547317360237148D-7,  -.28847468417848843612747272800317D-8,  &
+   -.12820039911738186343372127359268D+0,  -.58811761189951767565211757138362D-1, &
+   +.47274654322124815640725249756029D-2,  -.49383631626536172101360174790273D-3, &
+   +.58506207058557412287494835259321D-4,  -.74669983289313681354755069217188D-5, &
+   +.10011693583558199265966192015812D-5,  -.13903543858708333608616472258886D-6, &
+   +.19823169483172793547317360237148D-7,  -.28847468417848843612747272800317D-8, &
    +.42672965467159937953457514995907D-9,  -.63976084654366357868752632309681D-10, &
    +.96991686089064704147878293131179D-11, -.14844276972043770830246658365696D-11, &
    +.22903737939027447988040184378983D-12, -.35588395132732645159978942651310D-13, &
@@ -1699,7 +1699,7 @@ contains
 
   do ifault=1,Nfaults
 
-    call transfer_tohost_fault_data(Fault_pointer,ifault-1,faults(ifault)%nspec,&
+    call transfer_tohost_fault_data(Fault_pointer,ifault-1,faults(ifault)%nspec, &
                                     faults(ifault)%nglob,faults(ifault)%D,faults(ifault)%V,faults(ifault)%T)
     call transfer_tohost_datat(Fault_pointer, faults(ifault)%dataT%dat, it)
 

@@ -87,7 +87,7 @@
   beta = BETA_LDDRK(istage)
 
   ! forward wavefields
-  call update_acoustic_lddrk(NGLOB_AB,NGLOB_AB_LDDRK,&
+  call update_acoustic_lddrk(NGLOB_AB,NGLOB_AB_LDDRK, &
                              potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                              potential_acoustic_lddrk,potential_dot_acoustic_lddrk, &
                              deltat,alpha,beta)
@@ -98,7 +98,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine update_acoustic_lddrk(NGLOB,NGLOB_LDDRK,&
+  subroutine update_acoustic_lddrk(NGLOB,NGLOB_LDDRK, &
                                    potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                                    potential_acoustic_lddrk,potential_dot_acoustic_lddrk, &
                                    deltat,alpha,beta)
@@ -161,7 +161,7 @@
   beta = BETA_LDDRK(istage)
 
   ! forward wavefields
-  call update_elastic_lddrk(NGLOB_AB,NGLOB_AB_LDDRK,displ,veloc,accel,&
+  call update_elastic_lddrk(NGLOB_AB,NGLOB_AB_LDDRK,displ,veloc,accel, &
                             displ_lddrk,veloc_lddrk,deltat,alpha,beta)
 
   end subroutine update_veloc_elastic_lddrk

@@ -547,7 +547,7 @@ contains
 
   subroutine solver(solver_type, idata, &
        nsrc, sglob, ispec_src, hxis_store, hgammas_store, samp, &
-       nrec, rglob, ispec_rec, hxir_store, hgammar_store, ramp,  &
+       nrec, rglob, ispec_rec, hxir_store, hgammar_store, ramp, &
        last_frame, absorbfield, &
        atype_kernel, btype_kernel, rtype_kernel, &
        three_source_model, stf_syn, f0)

@@ -236,7 +236,7 @@
       call flush_IMAIN()
     endif
 
-    call define_model_regions(NEX_PER_PROC_XI,NEX_PER_PROC_ETA,iproc_xi_current,iproc_eta_current,&
+    call define_model_regions(NEX_PER_PROC_XI,NEX_PER_PROC_ETA,iproc_xi_current,iproc_eta_current, &
                               isubregion,nsubregions,subregions, &
                               iaddx,iaddy,iaddz,ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar, &
                               imaterial_number)
@@ -294,8 +294,8 @@
 
     ! define shape of elements
     call define_mesh_regions(myrank,USE_REGULAR_MESH,isubregion,NER,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
-                             iproc_xi_current,iproc_eta_current,&
-                             NDOUBLINGS,ner_doublings,&
+                             iproc_xi_current,iproc_eta_current, &
+                             NDOUBLINGS,ner_doublings, &
                              iaddx,iaddy,iaddz,ix1,ix2,dix,iy1,iy2,diy,ir1,ir2,dir,iax,iay,iar)
 
     ! loop on all the mesh points in current subregion
@@ -489,7 +489,7 @@
     write(IOVTK,'(a,i12,i12)') "CELLS ",nspec,nspec*9
     do ispec = 1,nspec
       write(IOVTK,'(9i12)') 8, &
-            ibool(1,1,1,ispec)-1,ibool(2,1,1,ispec)-1,ibool(2,2,1,ispec)-1,ibool(1,2,1,ispec)-1,&
+            ibool(1,1,1,ispec)-1,ibool(2,1,1,ispec)-1,ibool(2,2,1,ispec)-1,ibool(1,2,1,ispec)-1, &
             ibool(1,1,2,ispec)-1,ibool(2,1,2,ispec)-1,ibool(2,2,2,ispec)-1,ibool(1,2,2,ispec)-1
     enddo
     ibool(:,:,:,:) = 0
@@ -777,23 +777,23 @@
   if (ADIOS_FOR_DATABASES) then
     call save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
                               nspec,nglob,iproc_xi_current,iproc_eta_current, &
-                              NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta,&
+                              NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta, &
                               ibool,nodes_coords,ispec_material_id, &
                               nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
                               NSPEC2D_BOTTOM,NSPEC2D_TOP, NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
-                              ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
+                              ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
                               NMATERIALS,material_properties, &
                               nspec_CPML,CPML_to_spec,CPML_regions,is_CPML)
   else
     ! saves mesh as databases file  !! VM VM added xstore, ystore, zstore used for Axisem Coupling
     call save_databases(prname,nspec,nglob,iproc_xi_current,iproc_eta_current, &
-                        NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta,&
+                        NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta, &
                         ibool,nodes_coords,ispec_material_id, &
-                        nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP,&
+                        nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                         NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
-                        ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
+                        ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
                         NMATERIALS,material_properties, &
-                        nspec_cpml,CPML_to_spec,CPML_regions,is_CPML,&
+                        nspec_cpml,CPML_to_spec,CPML_regions,is_CPML, &
                         xstore, ystore, zstore)
   endif
 

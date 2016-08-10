@@ -1002,7 +1002,7 @@ subroutine save_new_databases()
   call synchronize_all()
 
   call save_external_bin_m_up(NSPEC_AB,NGLOB_AB, &
-                        xix,xiy,xiz,etax,etay,etaz,&
+                        xix,xiy,xiz,etax,etay,etaz, &
                         gammax,gammay,gammaz, &
                         jacobianstore,rho_vp_new,rho_vs_new,qmu_attenuation_store, &
                         rhostore_new,kappastore_new,mustore_new, &

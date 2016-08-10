@@ -99,7 +99,7 @@
 
   use image_PNM_par
 
-  use specfem_par, only: NGLOB_AB,NSPEC_AB,NPROC,ibool,xstore,ystore,zstore,&
+  use specfem_par, only: NGLOB_AB,NSPEC_AB,NPROC,ibool,xstore,ystore,zstore, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
                         ibool_interfaces_ext_mesh,myrank
@@ -155,21 +155,21 @@
   allocate(ispec_is_image_surface(NSPEC_AB),iglob_is_image_surface(NGLOB_AB),stat=ier)
   if (ier /= 0) call exit_mpi(myrank,'error allocating image ispec and iglob')
 
-  call detect_surface_PNM_image(NPROC,NGLOB_AB,NSPEC_AB,ibool,&
+  call detect_surface_PNM_image(NPROC,NGLOB_AB,NSPEC_AB,ibool, &
                             ispec_is_image_surface, &
                             iglob_is_image_surface, &
                             num_iglob_image_surface, &
                             num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                             nibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
-                            ibool_interfaces_ext_mesh,&
+                            ibool_interfaces_ext_mesh, &
                             section_xorg,section_yorg,section_zorg, &
                             section_nx,section_ny,section_nz, &
                             xstore,ystore,zstore,myrank)
 
   ! extracts points on surface
-  allocate( xcoord(num_iglob_image_surface),&
-           zcoord(num_iglob_image_surface),&
-           iglob_coord(num_iglob_image_surface),&
+  allocate( xcoord(num_iglob_image_surface), &
+           zcoord(num_iglob_image_surface), &
+           iglob_coord(num_iglob_image_surface), &
            ispec_coord(num_iglob_image_surface),stat=ier )
   if (ier /= 0) call exit_mpi(myrank,'error allocating xyz image coordinates')
 
@@ -281,7 +281,7 @@
   endif
 
   ! allocate an array for the grid point that corresponds to a given image data point
-  allocate(iglob_image_color(NX_IMAGE_color,NZ_IMAGE_color),&
+  allocate(iglob_image_color(NX_IMAGE_color,NZ_IMAGE_color), &
           ispec_image_color(NX_IMAGE_color,NZ_IMAGE_color),stat=ier)
   if (ier /= 0) call exit_mpi(myrank,'error allocating iglob_image_color')
 
@@ -585,7 +585,7 @@
   ! master process writes out file
   if (myrank == 0) then
     ! writes output file
-    call write_PNM_data(image_color_data,iglob_image_color,&
+    call write_PNM_data(image_color_data,iglob_image_color, &
                             NX_IMAGE_color,NZ_IMAGE_color,it,image_cutsnaps,image_color_vp_display)
   endif
 
@@ -596,7 +596,7 @@
 !================================================================
 
 
-  subroutine write_PNM_data(color_image_2D_data,iglob_image_color_2D,&
+  subroutine write_PNM_data(color_image_2D_data,iglob_image_color_2D, &
                                 NX,NY,it,cutsnaps,image_color_vp_display)
 
 ! display a given field as a red and blue color image
@@ -893,14 +893,14 @@
         if (SIMULATION_TYPE == 3) then
           ! displacement vector from backward potential
           call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                          b_potential_acoustic, val_element,&
+                          b_potential_acoustic, val_element, &
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
         else
           ! displacement vector
           call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                          potential_acoustic, val_element,&
+                          potential_acoustic, val_element, &
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
@@ -909,14 +909,14 @@
         if (SIMULATION_TYPE == 3) then
           ! velocity vector for backward/reconstructed wavefield
           call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                          b_potential_dot_acoustic, val_element,&
+                          b_potential_dot_acoustic, val_element, &
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
         else
           ! velocity vector
           call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                          potential_dot_acoustic, val_element,&
+                          potential_dot_acoustic, val_element, &
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)

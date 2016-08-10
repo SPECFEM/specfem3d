@@ -57,7 +57,7 @@ end subroutine print_usage_adios
 
 !=============================================================================
 !> Interpret command line arguments
-subroutine read_args_adios(arg, MAX_NUM_NODES, node_list, num_node,   &
+subroutine read_args_adios(arg, MAX_NUM_NODES, node_list, num_node, &
                            var_name, value_file_name, mesh_file_name, &
                            outdir, ires)
   use constants, only: MAX_STRING_LEN
@@ -208,7 +208,7 @@ end subroutine read_ibool_adios_mesh
 
 
 !=============================================================================
-subroutine read_coordinates_adios_mesh(mesh_handle, x_global_offset,  &
+subroutine read_coordinates_adios_mesh(mesh_handle, x_global_offset, &
                                        NGLOB_AB, xstore, ystore, zstore)
   use constants
   implicit none

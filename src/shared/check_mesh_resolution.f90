@@ -158,13 +158,13 @@
     write(IMAIN,*)
     write(IMAIN,*) 'NSPEC_global_min = ',NSPEC_AB_global_min
     write(IMAIN,*) 'NSPEC_global_max = ',NSPEC_AB_global_max
-    write(IMAIN,*) 'NSPEC_global_max / NSPEC_global_min imbalance = ',sngl(dble(NSPEC_AB_global_max) / dble(NSPEC_AB_global_min)),&
+    write(IMAIN,*) 'NSPEC_global_max / NSPEC_global_min imbalance = ',sngl(dble(NSPEC_AB_global_max) / dble(NSPEC_AB_global_min)), &
                       ' = ',sngl((dble(NSPEC_AB_global_max) / dble(NSPEC_AB_global_min) - 1.d0) * 100.d0),' %'
     write(IMAIN,*) 'NSPEC_global_sum = ',NSPEC_AB_global_sum
     write(IMAIN,*)
     write(IMAIN,*) 'NGLOB_global_min = ',NGLOB_AB_global_min
     write(IMAIN,*) 'NGLOB_global_max = ',NGLOB_AB_global_max
-    write(IMAIN,*) 'NGLOB_global_max / NGLOB_global_min imbalance = ',sngl(dble(NGLOB_AB_global_max) / dble(NGLOB_AB_global_min)),&
+    write(IMAIN,*) 'NGLOB_global_max / NGLOB_global_min imbalance = ',sngl(dble(NGLOB_AB_global_max) / dble(NGLOB_AB_global_min)), &
                       ' = ',sngl((dble(NGLOB_AB_global_max) / dble(NGLOB_AB_global_min) - 1.d0) * 100.d0),' %'
     write(IMAIN,*) 'NGLOB_global_sum = ',NGLOB_AB_global_sum
     write(IMAIN,*)
@@ -583,7 +583,7 @@
 
     ! determines minimum/maximum velocities within this element
     call get_vpvs_minmax_poro(vpmin,vpmax,vp2min,vp2max,vsmin,vsmax,ispec,has_vs_zero, &
-                        has_vp2_zero,NSPEC_AB,&
+                        has_vp2_zero,NSPEC_AB, &
                         phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI)
 
     ! min/max for whole cpu partition

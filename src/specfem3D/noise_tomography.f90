@@ -492,7 +492,7 @@ end module user_noise_distribution
 
   do itime =1,NSTEP
     read(IIN_NOISE,*,iostat=ier) junk, noise_src(itime)
-    if (ier /= 0)  call exit_MPI(myrank,&
+    if (ier /= 0)  call exit_MPI(myrank, &
         'file '//trim(filename)//' has wrong length, please check your simulation duration')
   enddo
   close(IIN_NOISE)
@@ -503,13 +503,13 @@ end module user_noise_distribution
   filename = trim(OUTPUT_FILES)//'/..//NOISE_TOMOGRAPHY/nu_master'
   open(unit=IIN_NOISE,file=trim(filename),status='old',action='read',iostat=ier)
   if (ier /= 0 .and. myrank == 0) &
-    call exit_MPI(myrank,&
+    call exit_MPI(myrank, &
       'file '//trim(filename)//' does NOT exist! nu_master is the component direction (ENZ) for master receiver')
 
   do itime =1,3
     read(IIN_NOISE,*,iostat=ier) nu_master(itime)
     if (ier /= 0 .and. myrank == 0) &
-      call exit_MPI(myrank,&
+      call exit_MPI(myrank, &
         'file '//trim(filename)//' has wrong length, the vector should have three components (ENZ)')
   enddo
   close(IIN_NOISE)
@@ -607,7 +607,7 @@ end module user_noise_distribution
                     ibool, &
                     noise_surface_movie,it, &
                     NSPEC_AB_VAL,NGLOB_AB_VAL, &
-                    num_free_surface_faces,free_surface_ispec,free_surface_ijk,&
+                    num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
                     Mesh_pointer,GPU_MODE)
 
   use constants

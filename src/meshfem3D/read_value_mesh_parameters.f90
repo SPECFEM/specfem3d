@@ -212,7 +212,7 @@
 ! interface file
 
   subroutine read_interface_parameters(iunit,SUPPRESS_UTM_PROJECTION,interface_file, &
-                                       npx_interface,npy_interface,&
+                                       npx_interface,npy_interface, &
                                        orig_x_interface,orig_y_interface, &
                                        spacing_x_interface,spacing_y_interface,ier)
 
@@ -233,7 +233,7 @@
   call read_next_line(iunit,DONT_IGNORE_JUNK,string_read,ier)
   if (ier /= 0) return
 
-  read(string_read,*,iostat=ier) SUPPRESS_UTM_PROJECTION,npx_interface,npy_interface,&
+  read(string_read,*,iostat=ier) SUPPRESS_UTM_PROJECTION,npx_interface,npy_interface, &
              orig_x_interface,orig_y_interface,spacing_x_interface,spacing_y_interface
 
   call read_value_string_mesh(iunit,DONT_IGNORE_JUNK,interface_file,'INTERFACE_FILE',ier)
@@ -269,7 +269,7 @@
 
 ! region parameter list
 
-  subroutine read_region_parameters(iunit,ix_beg_region,ix_end_region,iy_beg_region,iy_end_region,&
+  subroutine read_region_parameters(iunit,ix_beg_region,ix_end_region,iy_beg_region,iy_end_region, &
           iz_beg_region,iz_end_region,imaterial_number, ier)
 
   use constants, only: MAX_STRING_LEN,DONT_IGNORE_JUNK
@@ -286,7 +286,7 @@
   call read_next_line(iunit,DONT_IGNORE_JUNK,string_read,ier)
   if (ier /= 0) return
 
-  read(string_read,*,iostat=ier) ix_beg_region,ix_end_region,iy_beg_region,iy_end_region,&
+  read(string_read,*,iostat=ier) ix_beg_region,ix_end_region,iy_beg_region,iy_end_region, &
           iz_beg_region,iz_end_region,imaterial_number
 
   end subroutine read_region_parameters

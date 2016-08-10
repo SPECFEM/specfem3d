@@ -80,7 +80,7 @@ subroutine compute_forces_viscoelastic()
                         ATTENUATION,deltat,PML_CONDITIONS, &
                         one_minus_sum_beta,factor_common, &
                         one_minus_sum_beta_kappa,factor_common_kappa, &
-                        alphaval,betaval,gammaval,&
+                        alphaval,betaval,gammaval, &
                         NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa, &
                         R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
                         NSPEC_ATTENUATION_AB_LDDRK,NSPEC_ATTENUATION_AB_kappa,R_trace_lddrk, &
@@ -125,8 +125,8 @@ subroutine compute_forces_viscoelastic()
                        coupling_ac_el_ispec,coupling_ac_el_ijk, &
                        coupling_ac_el_normal, &
                        coupling_ac_el_jacobian2Dw, &
-                       ispec_is_inner,phase_is_inner,&
-                       PML_CONDITIONS,&
+                       ispec_is_inner,phase_is_inner, &
+                       PML_CONDITIONS, &
                        SIMULATION_TYPE,.false., &
                        potential_acoustic,potential_dot_acoustic)
 
@@ -140,8 +140,8 @@ subroutine compute_forces_viscoelastic()
                               coupling_ac_el_ispec,coupling_ac_el_ijk, &
                               coupling_ac_el_normal, &
                               coupling_ac_el_jacobian2Dw, &
-                              ispec_is_inner,phase_is_inner,&
-                              PML_CONDITIONS,&
+                              ispec_is_inner,phase_is_inner, &
+                              PML_CONDITIONS, &
                               SIMULATION_TYPE,.false., &
                               potential_acoustic,potential_dot_acoustic)
 
@@ -153,17 +153,17 @@ subroutine compute_forces_viscoelastic()
 
 ! poroelastic coupling
     if (POROELASTIC_SIMULATION) then
-      call compute_coupling_viscoelastic_po(NSPEC_AB,NGLOB_AB,ibool,&
-                        displs_poroelastic,displw_poroelastic,&
+      call compute_coupling_viscoelastic_po(NSPEC_AB,NGLOB_AB,ibool, &
+                        displs_poroelastic,displw_poroelastic, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        hprime_xx,hprime_yy,hprime_zz,&
+                        hprime_xx,hprime_yy,hprime_zz, &
                         kappaarraystore,rhoarraystore,mustore, &
-                        phistore,tortstore,jacobian,&
+                        phistore,tortstore,jacobian, &
                         displ,accel,kappastore, &
                         ANISOTROPY,NSPEC_ANISO, &
-                        c11store,c12store,c13store,c14store,c15store,c16store,&
-                        c22store,c23store,c24store,c25store,c26store,c33store,&
-                        c34store,c35store,c36store,c44store,c45store,c46store,&
+                        c11store,c12store,c13store,c14store,c15store,c16store, &
+                        c22store,c23store,c24store,c25store,c26store,c33store, &
+                        c34store,c35store,c36store,c44store,c45store,c46store, &
                         c55store,c56store,c66store, &
                         SIMULATION_TYPE,NGLOB_ADJOINT,NSPEC_ADJOINT, &
                         num_coupling_el_po_faces, &
@@ -183,7 +183,7 @@ subroutine compute_forces_viscoelastic()
       ! adds source term (single-force/moment-tensor solution)
       call compute_add_sources_viscoelastic(NSPEC_AB,NGLOB_AB,accel, &
                                             ibool, &
-                                            NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
+                                            NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
                                             sourcearrays, &
                                             ispec_is_elastic,SIMULATION_TYPE,NSTEP, &
                                             nrec,islice_selected_rec,ispec_selected_rec, &
@@ -199,14 +199,14 @@ subroutine compute_forces_viscoelastic()
        call assemble_MPI_vector_async_send(NPROC,NGLOB_AB,accel, &
                buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
                num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-               nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
+               nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                my_neighbours_ext_mesh, &
                request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
 
     else
       ! waits for send/receive requests to be completed and assembles values
       call assemble_MPI_vector_async_w_ord(NPROC,NGLOB_AB,accel, &
-                            buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh,&
+                            buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
                             max_nibool_interfaces_ext_mesh, &
                             nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                             request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
@@ -288,7 +288,7 @@ subroutine compute_forces_viscoelastic()
   if (PML_CONDITIONS) then
     if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
       if (nglob_interface_PML_elastic > 0) then
-        call save_field_on_pml_interface(displ,veloc,accel,nglob_interface_PML_elastic,&
+        call save_field_on_pml_interface(displ,veloc,accel,nglob_interface_PML_elastic, &
                                          b_PML_field,b_reclen_PML_field)
       endif
     endif
@@ -386,8 +386,8 @@ subroutine compute_forces_viscoelastic_backward()
                       coupling_ac_el_ispec,coupling_ac_el_ijk, &
                       coupling_ac_el_normal, &
                       coupling_ac_el_jacobian2Dw, &
-                      ispec_is_inner,phase_is_inner,&
-                      PML_CONDITIONS,&
+                      ispec_is_inner,phase_is_inner, &
+                      PML_CONDITIONS, &
                       SIMULATION_TYPE,.true., &
                       potential_acoustic,potential_dot_acoustic)
 
@@ -406,7 +406,7 @@ subroutine compute_forces_viscoelastic_backward()
       !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
       call compute_add_sources_viscoelastic_backward( NSPEC_AB,NGLOB_AB, &
                           ibool, &
-                          NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
+                          NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
                           sourcearrays, &
                           ispec_is_elastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                           b_accel,NOISE_TOMOGRAPHY)
@@ -419,14 +419,14 @@ subroutine compute_forces_viscoelastic_backward()
       call assemble_MPI_vector_async_send(NPROC,NGLOB_ADJOINT,b_accel, &
                  b_buffer_send_vector_ext_mesh,b_buffer_recv_vector_ext_mesh, &
                  num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                 nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
+                 nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                  my_neighbours_ext_mesh, &
                  b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh)
     else
       ! waits for send/receive requests to be completed and assembles values
       ! adjoint simulations
       call assemble_MPI_vector_async_w_ord(NPROC,NGLOB_ADJOINT,b_accel, &
-                             b_buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh,&
+                             b_buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
                              max_nibool_interfaces_ext_mesh, &
                              nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                              b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh, &
@@ -526,7 +526,7 @@ subroutine compute_forces_viscoelastic_GPU()
       call assemble_MPI_vector_send_cuda(NPROC, &
                   buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
                   num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                  nibool_interfaces_ext_mesh,&
+                  nibool_interfaces_ext_mesh, &
                   my_neighbours_ext_mesh, &
                   request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
 
@@ -562,17 +562,17 @@ subroutine compute_forces_viscoelastic_GPU()
       call transfer_displ_from_device(NDIM*NGLOB_AB,displ, Mesh_pointer)
       call transfer_accel_from_device(NDIM*NGLOB_AB,accel, Mesh_pointer)
 
-      call compute_coupling_viscoelastic_po(NSPEC_AB,NGLOB_AB,ibool,&
-                        displs_poroelastic,displw_poroelastic,&
+      call compute_coupling_viscoelastic_po(NSPEC_AB,NGLOB_AB,ibool, &
+                        displs_poroelastic,displw_poroelastic, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        hprime_xx,hprime_yy,hprime_zz,&
+                        hprime_xx,hprime_yy,hprime_zz, &
                         kappaarraystore,rhoarraystore,mustore, &
-                        phistore,tortstore,jacobian,&
+                        phistore,tortstore,jacobian, &
                         displ,accel,kappastore, &
                         ANISOTROPY,NSPEC_ANISO, &
-                        c11store,c12store,c13store,c14store,c15store,c16store,&
-                        c22store,c23store,c24store,c25store,c26store,c33store,&
-                        c34store,c35store,c36store,c44store,c45store,c46store,&
+                        c11store,c12store,c13store,c14store,c15store,c16store, &
+                        c22store,c23store,c24store,c25store,c26store,c33store, &
+                        c34store,c35store,c36store,c44store,c45store,c46store, &
                         c55store,c56store,c66store, &
                         SIMULATION_TYPE,NGLOB_ADJOINT,NSPEC_ADJOINT, &
                         num_coupling_el_po_faces, &
@@ -591,7 +591,7 @@ subroutine compute_forces_viscoelastic_GPU()
       ! note: we will add all source contributions in the first pass, when phase_is_inner == .false.
       !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
       call compute_add_sources_viscoelastic_GPU(NSPEC_AB, &
-                          NSOURCES,myrank,it,&
+                          NSOURCES,myrank,it, &
                           ispec_is_elastic,SIMULATION_TYPE,NSTEP, &
                           nrec,islice_selected_rec,ispec_selected_rec, &
                           nadj_rec_local,adj_sourcearrays, &
@@ -611,29 +611,29 @@ subroutine compute_forces_viscoelastic_GPU()
 
       ! adjoint simulations
       if (SIMULATION_TYPE == 3) then
-        call transfer_boun_accel_from_device(Mesh_pointer, b_accel,&
-                        b_buffer_send_vector_ext_mesh,&
+        call transfer_boun_accel_from_device(Mesh_pointer, b_accel, &
+                        b_buffer_send_vector_ext_mesh, &
                         3) ! -- 3 == adjoint b_accel
         call assemble_MPI_vector_send_cuda(NPROC, &
                         b_buffer_send_vector_ext_mesh,b_buffer_recv_vector_ext_mesh, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,&
+                        nibool_interfaces_ext_mesh, &
                         my_neighbours_ext_mesh, &
                         b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh)
       endif !adjoint
 
     else
       ! waits for send/receive requests to be completed and assembles values
-      call assemble_MPI_vector_write_cuda(NPROC,NGLOB_AB,accel, Mesh_pointer,&
-                      buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh,&
+      call assemble_MPI_vector_write_cuda(NPROC,NGLOB_AB,accel, Mesh_pointer, &
+                      buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
                       max_nibool_interfaces_ext_mesh, &
                       nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                       request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
                       1)
       ! adjoint simulations
       if (SIMULATION_TYPE == 3) then
-        call assemble_MPI_vector_write_cuda(NPROC,NGLOB_AB,b_accel, Mesh_pointer,&
-                              b_buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh,&
+        call assemble_MPI_vector_write_cuda(NPROC,NGLOB_AB,b_accel, Mesh_pointer, &
+                              b_buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
                               max_nibool_interfaces_ext_mesh, &
                               nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                               b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh, &
@@ -661,7 +661,7 @@ subroutine compute_forces_viscoelastic_GPU()
     !call assemble_MPI_vector_send_cuda(NPROC, &
     !              buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
     !              num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-    !              nibool_interfaces_ext_mesh,&
+    !              nibool_interfaces_ext_mesh, &
     !              my_neighbours_ext_mesh, &
     !              request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
 
@@ -670,8 +670,8 @@ subroutine compute_forces_viscoelastic_GPU()
     !              num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
     !              request_recv_vector_ext_mesh)
     ! waits for send/receive requests to be completed and assembles values
-    !call synchronize_MPI_vector_write_cuda(NPROC,NGLOB_AB,accel, Mesh_pointer,&
-    !                  buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh,&
+    !call synchronize_MPI_vector_write_cuda(NPROC,NGLOB_AB,accel, Mesh_pointer, &
+    !                  buffer_recv_vector_ext_mesh,num_interfaces_ext_mesh, &
     !                  max_nibool_interfaces_ext_mesh, &
     !                  nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
     !                  request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &

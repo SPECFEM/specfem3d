@@ -29,8 +29,8 @@
 
   subroutine compute_add_sources_acoustic(NSPEC_AB,NGLOB_AB,potential_dot_dot_acoustic, &
                                   ibool, &
-                                  NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                                  sourcearrays,kappastore,ispec_is_acoustic,&
+                                  NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
+                                  sourcearrays,kappastore,ispec_is_acoustic, &
                                   SIMULATION_TYPE,NSTEP, &
                                   nrec,islice_selected_rec,ispec_selected_rec, &
                                   nadj_rec_local,adj_sourcearrays,NTSTEP_BETWEEN_READ_ADJSRC)
@@ -300,8 +300,8 @@
 
   subroutine compute_add_sources_acoustic_backward(NSPEC_AB, &
                                   ibool, &
-                                  NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                                  sourcearrays,kappastore,ispec_is_acoustic,&
+                                  NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
+                                  sourcearrays,kappastore,ispec_is_acoustic, &
                                   SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                                   b_potential_dot_dot_acoustic)
 
@@ -425,7 +425,7 @@
 ! for acoustic solver on GPU
 
   subroutine compute_add_sources_acoustic_GPU(NSPEC_AB, &
-                                  NSOURCES,myrank,it,&
+                                  NSOURCES,myrank,it, &
                                   ispec_is_acoustic,SIMULATION_TYPE,NSTEP, &
                                   nrec,islice_selected_rec,ispec_selected_rec, &
                                   nadj_rec_local,adj_sourcearrays, &

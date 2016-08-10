@@ -197,8 +197,8 @@ program smooth_sem_globe
   ixi = myrank - ichunk * NPROC_XI_VAL * NPROC_ETA_VAL - ieta * NPROC_XI_VAL
 
   ! get the neighboring slices:
-  call get_all_eight_slices(ichunk,ixi,ieta,&
-             islice0(1),islice0(2),islice0(3),islice0(4),islice0(5),islice0(6),islice0(7),islice0(8),&
+  call get_all_eight_slices(ichunk,ixi,ieta, &
+             islice0(1),islice0(2),islice0(3),islice0(4),islice0(5),islice0(6),islice0(7),islice0(8), &
              NPROC_XI_VAL,NPROC_ETA_VAL)
 
   ! remove the repeated slices (only 8 for corner slices in global case)
@@ -400,7 +400,7 @@ program smooth_sem_globe
         ! calculates horizontal and vertical distance between two element centers
 
         ! vector approximation
-        call get_distance_vec(dist_h,dist_v,cx0(ispec),cy0(ispec),cz0(ispec),&
+        call get_distance_vec(dist_h,dist_v,cx0(ispec),cy0(ispec),cz0(ispec), &
                           cx(ispec2),cy(ispec2),cz(ispec2))
 
         ! note: distances and sigmah, sigmav are normalized by R_EARTH
@@ -426,7 +426,7 @@ program smooth_sem_globe
               z0 = zl(i,j,k,ispec)
 
               ! calculate weights based on Gaussian smoothing
-              call smoothing_weights_vec(x0,y0,z0,ispec2,sigma_h2,sigma_v2,exp_val,&
+              call smoothing_weights_vec(x0,y0,z0,ispec2,sigma_h2,sigma_v2,exp_val, &
                       xx(:,:,:,ispec2),yy(:,:,:,ispec2),zz(:,:,:,ispec2))
 
               ! adds GLL integration weights
@@ -523,7 +523,7 @@ end program smooth_sem_globe
 !
 ! -----------------------------------------------------------------------------
 !
-  subroutine smoothing_weights_vec(x0,y0,z0,ispec2,sigma_h2,sigma_v2,exp_val,&
+  subroutine smoothing_weights_vec(x0,y0,z0,ispec2,sigma_h2,sigma_v2,exp_val, &
                               xx_elem,yy_elem,zz_elem)
 
   implicit none

@@ -1,8 +1,8 @@
 
 ! --------------------------------------------------------------------------------
 
-subroutine get_all_eight_slices(ichunk,ixi,ieta,&
-           ileft,iright,ibot,itop, ilb,ilt,irb,irt,&
+subroutine get_all_eight_slices(ichunk,ixi,ieta, &
+           ileft,iright,ibot,itop, ilb,ilt,irb,irt, &
            nproc_xi,nproc_eta)
 
   implicit none

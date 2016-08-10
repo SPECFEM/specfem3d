@@ -43,7 +43,7 @@
 
   use specfem_par, only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION, &
       UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
-      factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP,&
+      factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP, &
       user_source_time_function,NSTEP_STF,NSOURCES_STF,EXTERNAL_STF,USE_TRICK_FOR_BETTER_PRESSURE
 
   implicit none
@@ -193,7 +193,7 @@
     if (myrank == 0) then
       ! only master process reads in FORCESOLUTION file
       call get_force(tshift_src,hdur,lat,long,depth,NSOURCES,min_tshift_src_original,factor_force_source, &
-                     comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP,&
+                     comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP, &
                      user_source_time_function)
     endif
     ! broadcasts specific point force infos

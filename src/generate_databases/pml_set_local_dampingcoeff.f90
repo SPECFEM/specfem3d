@@ -32,17 +32,17 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
   ! calculates damping profiles and auxiliary coefficients on C-PML points
 
   use generate_databases_par, only: ibool,NGLOB_AB,d_store_x,d_store_y,d_store_z, &
-                                    K_store_x,K_store_y,K_store_z,alpha_store_x,alpha_store_y,alpha_store_z,CPML_to_spec,&
-                                    CPML_width_x,CPML_width_y,CPML_width_z,min_distance_between_CPML_parameter,NPOWER,&
-                                    CUSTOM_REAL,SIZE_REAL,NGLLX,NGLLY,NGLLZ,nspec_cpml,PML_INSTEAD_OF_FREE_SURFACE,&
-                                    IMAIN,CPML_REGIONS,f0_FOR_PML,PI,&
-                                    CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ,&
-                                    SIMULATION_TYPE,SAVE_FORWARD,nspec => NSPEC_AB,is_CPML,&
-                                    mask_ibool_interior_domain,nglob_interface_PML_acoustic,points_interface_PML_acoustic,&
-                                    nglob_interface_PML_elastic,points_interface_PML_elastic,&
+                                    K_store_x,K_store_y,K_store_z,alpha_store_x,alpha_store_y,alpha_store_z,CPML_to_spec, &
+                                    CPML_width_x,CPML_width_y,CPML_width_z,min_distance_between_CPML_parameter,NPOWER, &
+                                    CUSTOM_REAL,SIZE_REAL,NGLLX,NGLLY,NGLLZ,nspec_cpml,PML_INSTEAD_OF_FREE_SURFACE, &
+                                    IMAIN,CPML_REGIONS,f0_FOR_PML,PI, &
+                                    CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ, &
+                                    SIMULATION_TYPE,SAVE_FORWARD,nspec => NSPEC_AB,is_CPML, &
+                                    mask_ibool_interior_domain,nglob_interface_PML_acoustic,points_interface_PML_acoustic, &
+                                    nglob_interface_PML_elastic,points_interface_PML_elastic, &
                                     ZERO,ONE,TWO,HUGEVAL
 
-  use create_regions_mesh_ext_par, only: rhostore,rho_vp,ispec_is_acoustic,ispec_is_elastic,&
+  use create_regions_mesh_ext_par, only: rhostore,rho_vp,ispec_is_acoustic,ispec_is_elastic, &
                                          ELASTIC_SIMULATION, ACOUSTIC_SIMULATION
 
   implicit none
@@ -59,18 +59,18 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
   real(kind=CUSTOM_REAL) :: xoriginleft,xoriginright,yoriginfront,yoriginback,zoriginbottom,zorigintop
   real(kind=CUSTOM_REAL) :: abscissa_in_PML_x,abscissa_in_PML_y,abscissa_in_PML_z
   real(kind=CUSTOM_REAL) :: d_x,d_y,d_z,k_x,k_y,k_z,alpha_x,alpha_y,alpha_z,beta_x,beta_y,beta_z
-  real(kind=CUSTOM_REAL) :: x_min,x_min_all,y_min,y_min_all,z_min,z_min_all,&
-                            x_max,x_max_all,y_max,y_max_all,z_max,z_max_all,&
+  real(kind=CUSTOM_REAL) :: x_min,x_min_all,y_min,y_min_all,z_min,z_min_all, &
+                            x_max,x_max_all,y_max,y_max_all,z_max,z_max_all, &
                             x_origin,y_origin,z_origin
-  real(kind=CUSTOM_REAL) :: CPML_width_x_left, CPML_width_x_right,&
-                            CPML_width_y_front,CPML_width_y_back,&
-                            CPML_width_z_top,CPML_width_z_bottom,&
-                            CPML_x_left, CPML_x_right,&
-                            CPML_y_front,CPML_y_back,&
-                            CPML_z_top,CPML_z_bottom,&
-                            CPML_width_x_left_max_all, CPML_width_x_right_max_all,&
-                            CPML_width_y_front_max_all,CPML_width_y_back_max_all,&
-                            CPML_width_z_top_max_all,CPML_width_z_bottom_max_all,&
+  real(kind=CUSTOM_REAL) :: CPML_width_x_left, CPML_width_x_right, &
+                            CPML_width_y_front,CPML_width_y_back, &
+                            CPML_width_z_top,CPML_width_z_bottom, &
+                            CPML_x_left, CPML_x_right, &
+                            CPML_y_front,CPML_y_back, &
+                            CPML_z_top,CPML_z_bottom, &
+                            CPML_width_x_left_max_all, CPML_width_x_right_max_all, &
+                            CPML_width_y_front_max_all,CPML_width_y_back_max_all, &
+                            CPML_width_z_top_max_all,CPML_width_z_bottom_max_all, &
                             vp_max,vp_max_all
 
 ! for robust parameter separation of PML damping parameter
@@ -1505,12 +1505,12 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
   if (second_minimum_for_alphaz_all < minimum_for_alphaz_all) &
     stop "there is error in dectection of second_minimum_for_alphaz_all in alphaz profile"
 
-  second_minimum_for_alpha_all = min(second_minimum_for_alphax_all,second_minimum_for_alphay_all,&
+  second_minimum_for_alpha_all = min(second_minimum_for_alphax_all,second_minimum_for_alphay_all, &
                                      second_minimum_for_alphaz_all)
   maximum_for_alpha_all = max(maximum_for_alphax_all,maximum_for_alphay_all,maximum_for_alphaz_all)
   const_for_tune_alpha_profile = second_minimum_for_alpha_all / maximum_for_alpha_all
 
-  second_minimum_for_d_all = min(second_minimum_for_dx_all,second_minimum_for_dy_all,&
+  second_minimum_for_d_all = min(second_minimum_for_dx_all,second_minimum_for_dy_all, &
                                  second_minimum_for_dz_all)
   maximum_for_d_all = max(maximum_for_dx_all,maximum_for_dy_all,maximum_for_dz_all)
   const_for_tune_d_profile = second_minimum_for_d_all / maximum_for_d_all
@@ -1544,12 +1544,12 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
             beta_y = alpha_y + d_y / K_y
 
             if (abs(beta_x - alpha_y) < min_distance_between_CPML_parameter) then
-              call seperate_two_value_with_one_changeable(beta_x,alpha_y,const_for_separation_two,&
+              call seperate_two_value_with_one_changeable(beta_x,alpha_y,const_for_separation_two, &
                                                           const_for_separation_four)
             endif
 
             if (abs(beta_y - alpha_x) < min_distance_between_CPML_parameter) then
-              call seperate_two_value_with_one_changeable(beta_y,alpha_x,const_for_separation_two,&
+              call seperate_two_value_with_one_changeable(beta_y,alpha_x,const_for_separation_two, &
                                                           const_for_separation_four)
             endif
 
@@ -1592,12 +1592,12 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
             beta_z = alpha_z + d_z / K_z
 
             if (abs(beta_x - alpha_z) < min_distance_between_CPML_parameter) then
-              call seperate_two_value_with_one_changeable(beta_x,alpha_z,const_for_separation_two,&
+              call seperate_two_value_with_one_changeable(beta_x,alpha_z,const_for_separation_two, &
                                                           const_for_separation_four)
             endif
 
             if (abs(beta_z - alpha_x) < min_distance_between_CPML_parameter) then
-              call seperate_two_value_with_one_changeable(beta_z,alpha_x,const_for_separation_two,&
+              call seperate_two_value_with_one_changeable(beta_z,alpha_x,const_for_separation_two, &
                                                           const_for_separation_four)
             endif
 
@@ -1640,12 +1640,12 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
             beta_z = alpha_z + d_z / K_z
 
             if (abs(beta_y - alpha_z) < min_distance_between_CPML_parameter) then
-              call seperate_two_value_with_one_changeable(beta_y,alpha_z,const_for_separation_two,&
+              call seperate_two_value_with_one_changeable(beta_y,alpha_z,const_for_separation_two, &
                                                           const_for_separation_four)
             endif
 
             if (abs(beta_z - alpha_y) < min_distance_between_CPML_parameter) then
-              call seperate_two_value_with_one_changeable(beta_z,alpha_y,const_for_separation_two,&
+              call seperate_two_value_with_one_changeable(beta_z,alpha_y,const_for_separation_two, &
                                                           const_for_separation_four)
             endif
 
@@ -2053,7 +2053,7 @@ subroutine seperate_two_changeable_value(value_a,value_b,const_for_separation_tw
 
 end subroutine seperate_two_changeable_value
 
-subroutine seperate_two_value_with_one_changeable(value_a,value_b,const_for_separation_two,&
+subroutine seperate_two_value_with_one_changeable(value_a,value_b,const_for_separation_two, &
                                                   const_for_separation_four)
   use generate_databases_par, only: CUSTOM_REAL
   implicit none

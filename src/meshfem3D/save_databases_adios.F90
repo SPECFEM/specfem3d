@@ -36,11 +36,11 @@
 !==============================================================================
 subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
                                 nspec,nglob,iproc_xi,iproc_eta, &
-                                NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta,&
+                                NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta, &
                                 ibool,nodes_coords,ispec_material_id, &
                                 nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
                                 NSPEC2D_BOTTOM,NSPEC2D_TOP, NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
-                                ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
+                                ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
                                 NMATERIALS,material_properties, &
                                 nspec_CPML,CPML_to_spec,CPML_regions,is_CPML)
 
@@ -130,9 +130,9 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
 
   !--- Variables to allreduce - wmax stands for world_max
   integer :: nglob_wmax, nspec_wmax, nmaterials_wmax, &
-             nspec2d_xmin_wmax, nspec2d_xmax_wmax,    &
-             nspec2d_ymin_wmax, nspec2d_ymax_wmax,    &
-             nspec2d_bottom_wmax, nspec2d_top_wmax,   &
+             nspec2d_xmin_wmax, nspec2d_xmax_wmax, &
+             nspec2d_ymin_wmax, nspec2d_ymax_wmax, &
+             nspec2d_bottom_wmax, nspec2d_top_wmax, &
              nb_interfaces_wmax, nspec_interfaces_max_wmax
   integer, parameter :: num_vars = 11
   integer, dimension(num_vars) :: max_global_values

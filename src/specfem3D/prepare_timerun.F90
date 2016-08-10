@@ -267,9 +267,9 @@
       deallocate(rmassz_acoustic)
     endif
 
-    call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_acoustic,&
+    call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_acoustic, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         my_neighbours_ext_mesh)
 
     ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
@@ -547,7 +547,7 @@
     ! gets stress relaxation times tau_sigma, i.e.
     ! precalculates tau_sigma depending on period band (constant for all Q_mu), and
     ! determines central frequency f_c_source of attenuation period band
-    call get_attenuation_constants(min_resolved_period,tau_sigma_dble,&
+    call get_attenuation_constants(min_resolved_period,tau_sigma_dble, &
               f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
 
     ! determines alphaval,betaval,gammaval for runge-kutta scheme
@@ -1361,7 +1361,7 @@
                                 nrec, nrec_local, &
                                 SIMULATION_TYPE, &
                                 USE_MESH_COLORING_GPU, &
-                                nspec_acoustic,nspec_elastic,&
+                                nspec_acoustic,nspec_elastic, &
                                 myrank,SAVE_FORWARD)
 
 
@@ -1466,7 +1466,7 @@
   ! prepares gravity arrays
   if (GRAVITY) then
     call prepare_fields_gravity_device(Mesh_pointer,GRAVITY, &
-                                minus_deriv_gravity,minus_g,wgll_cube,&
+                                minus_deriv_gravity,minus_g,wgll_cube, &
                                 ACOUSTIC_SIMULATION,rhostore)
   endif
 

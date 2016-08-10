@@ -286,25 +286,25 @@
   ! collects locations only once
   ! master collects all
   if (myrank == 0) then
-    call gatherv_all_cr(store_val_x,nfaces_surface_points,&
-       store_val_x_all,nfaces_perproc_surface,faces_surface_offset,&
+    call gatherv_all_cr(store_val_x,nfaces_surface_points, &
+       store_val_x_all,nfaces_perproc_surface,faces_surface_offset, &
        nfaces_surface_glob_points,NPROC)
-    call gatherv_all_cr(store_val_y,nfaces_surface_points,&
-       store_val_y_all,nfaces_perproc_surface,faces_surface_offset,&
+    call gatherv_all_cr(store_val_y,nfaces_surface_points, &
+       store_val_y_all,nfaces_perproc_surface,faces_surface_offset, &
        nfaces_surface_glob_points,NPROC)
-    call gatherv_all_cr(store_val_z,nfaces_surface_points,&
-       store_val_z_all,nfaces_perproc_surface,faces_surface_offset,&
+    call gatherv_all_cr(store_val_z,nfaces_surface_points, &
+       store_val_z_all,nfaces_perproc_surface,faces_surface_offset, &
        nfaces_surface_glob_points,NPROC)
   else
     ! slaves just send
-    call gatherv_all_cr(store_val_x,nfaces_surface_points,&
-       dummy,nfaces_perproc_surface,faces_surface_offset,&
+    call gatherv_all_cr(store_val_x,nfaces_surface_points, &
+       dummy,nfaces_perproc_surface,faces_surface_offset, &
        1,NPROC)
-    call gatherv_all_cr(store_val_y,nfaces_surface_points,&
-       dummy,nfaces_perproc_surface,faces_surface_offset,&
+    call gatherv_all_cr(store_val_y,nfaces_surface_points, &
+       dummy,nfaces_perproc_surface,faces_surface_offset, &
        1,NPROC)
-    call gatherv_all_cr(store_val_z,nfaces_surface_points,&
-       dummy,nfaces_perproc_surface,faces_surface_offset,&
+    call gatherv_all_cr(store_val_z,nfaces_surface_points, &
+       dummy,nfaces_perproc_surface,faces_surface_offset, &
        1,NPROC)
   endif
 

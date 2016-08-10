@@ -238,7 +238,7 @@
   ! integration values
   real(kind=CUSTOM_REAL) :: integral_bulk_sum,integral_betav_sum, &
     integral_betah_sum,integral_eta_sum
-  real(kind=CUSTOM_REAL) :: integral_bulk,integral_betav,&
+  real(kind=CUSTOM_REAL) :: integral_bulk,integral_betav, &
     integral_betah,integral_eta
   real(kind=CUSTOM_REAL) :: volume_glob,volume_glob_sum
 

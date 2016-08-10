@@ -138,7 +138,7 @@
           DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
           islice_selected_source,ispec_selected_source, &
           xi_source,eta_source,gamma_source, &
-          nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh,&
+          nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
           ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
           num_free_surface_faces,free_surface_ispec,free_surface_ijk)
 
@@ -806,7 +806,7 @@
               ! checks length
               if (itime /= NSTEP) then
                 print *,'adjoint source error: ',trim(filename),' has length',itime,' but should be',NSTEP
-                call exit_MPI(myrank,&
+                call exit_MPI(myrank, &
                   'file '//trim(filename)//' has wrong length, please check your adjoint sources and your simulation duration')
               endif
 
@@ -1014,7 +1014,7 @@
       ! gets element ancor nodes
       if (myrank == islice_selected_source(isource)) then
         ! find the coordinates of the eight corner nodes of the element
-        call eval_shape3D_element_corners(xelm,yelm,zelm,ispec,&
+        call eval_shape3D_element_corners(xelm,yelm,zelm,ispec, &
                         ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
 
       endif
@@ -1060,7 +1060,7 @@
 
     ! find the coordinates of the eight corner nodes of the element
     if (myrank == islice_selected_rec(irec)) then
-      call eval_shape3D_element_corners(xelm,yelm,zelm,ispec,&
+      call eval_shape3D_element_corners(xelm,yelm,zelm,ispec, &
                       ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
     endif
     ! master collects corner locations

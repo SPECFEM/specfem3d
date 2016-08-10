@@ -25,7 +25,7 @@
 !
 !=====================================================================
 
-  subroutine get_element_face_id(ispec,xcoord,ycoord,zcoord,&
+  subroutine get_element_face_id(ispec,xcoord,ycoord,zcoord, &
                               ibool,nspec,nglob, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface_id )

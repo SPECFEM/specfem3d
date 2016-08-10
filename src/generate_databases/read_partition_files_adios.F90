@@ -53,15 +53,15 @@ subroutine read_partition_files_adios()
   integer(kind=8), pointer :: sel => null()
   integer(kind=8), dimension(1) :: start, count
 
-  integer :: local_dim_nodes_coords,    local_dim_matpropl,           &
-             local_dim_material_index,  local_dim_elmnts_mesh,        &
-             local_dim_ibelm_xmin,      local_dim_nodes_ibelm_xmin,   &
-             local_dim_ibelm_xmax,      local_dim_nodes_ibelm_xmax,   &
-             local_dim_ibelm_ymin,      local_dim_nodes_ibelm_ymin,   &
-             local_dim_ibelm_ymax,      local_dim_nodes_ibelm_ymax,   &
+  integer :: local_dim_nodes_coords,    local_dim_matpropl, &
+             local_dim_material_index,  local_dim_elmnts_mesh, &
+             local_dim_ibelm_xmin,      local_dim_nodes_ibelm_xmin, &
+             local_dim_ibelm_xmax,      local_dim_nodes_ibelm_xmax, &
+             local_dim_ibelm_ymin,      local_dim_nodes_ibelm_ymin, &
+             local_dim_ibelm_ymax,      local_dim_nodes_ibelm_ymax, &
              local_dim_ibelm_bottom,    local_dim_nodes_ibelm_bottom, &
-             local_dim_ibelm_top,       local_dim_nodes_ibelm_top,    &
-             local_dim_neighbours_mesh, local_dim_num_elmnts_mesh,    &
+             local_dim_ibelm_top,       local_dim_nodes_ibelm_top, &
+             local_dim_neighbours_mesh, local_dim_num_elmnts_mesh, &
              local_dim_interfaces_mesh
 
   integer :: comm
@@ -168,19 +168,19 @@ subroutine read_partition_files_adios()
   allocate(mat_ext_mesh(2,nelmnts_ext_mesh),stat=ier)
   if (ier /= 0) stop 'error allocating array mat_ext_mesh'
 
-  allocate(ibelm_xmin(nspec2D_xmin),&
+  allocate(ibelm_xmin(nspec2D_xmin), &
            nodes_ibelm_xmin(NGNOD2D,nspec2D_xmin),stat=ier)
   if (ier /= 0) stop 'error allocating array ibelm_xmin etc.'
-  allocate(ibelm_xmax(nspec2D_xmax),&
+  allocate(ibelm_xmax(nspec2D_xmax), &
            nodes_ibelm_xmax(NGNOD2D,nspec2D_xmax),stat=ier)
   if (ier /= 0) stop 'error allocating array ibelm_xmax etc.'
   allocate(ibelm_ymin(nspec2D_ymin), &
            nodes_ibelm_ymin(NGNOD2D,nspec2D_ymin),stat=ier)
   if (ier /= 0) stop 'error allocating array ibelm_ymin'
-  allocate(ibelm_ymax(nspec2D_ymax),&
+  allocate(ibelm_ymax(nspec2D_ymax), &
            nodes_ibelm_ymax(NGNOD2D,nspec2D_ymax),stat=ier)
   if (ier /= 0) stop 'error allocating array ibelm_ymax etc.'
-  allocate(ibelm_bottom(nspec2D_bottom_ext),&
+  allocate(ibelm_bottom(nspec2D_bottom_ext), &
            nodes_ibelm_bottom(NGNOD2D,nspec2D_bottom_ext),stat=ier)
   if (ier /= 0) stop 'error allocating array ibelm_bottom etc.'
   allocate(ibelm_top(nspec2D_top_ext), &

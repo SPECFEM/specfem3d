@@ -48,7 +48,7 @@
 
 ! info about external mesh simulation
   if (I_should_read_the_database) then
-    open(unit=27,file=trim(database_name),status='old',&
+    open(unit=27,file=trim(database_name),status='old', &
        action='read',form='unformatted',iostat=ier)
     if (ier /= 0) then
       print *,'Error could not open database file: ',trim(database_name)
@@ -222,7 +222,7 @@
              epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),stat=ier)
     if (ier /= 0) stop 'Error allocating array epsilondev_xx etc.'
 
-    allocate(R_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa,N_SLS),&
+    allocate(R_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa,N_SLS), &
              epsilondev_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)
     if (ier /= 0) stop 'Error allocating array R_trace etc.'
 
@@ -899,7 +899,7 @@
   if (ELASTIC_SIMULATION .and. SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
     ! boundary elements
     if (I_should_read_the_database) then
-      open(unit=27,file=prname(1:len_trim(prname))//'ibelm_moho.bin',status='old',&
+      open(unit=27,file=prname(1:len_trim(prname))//'ibelm_moho.bin',status='old', &
          action='read',form='unformatted',iostat=ier)
       if (ier /= 0) then
         print *,'Error could not open ibelm_moho file: ',prname(1:len_trim(prname))//'ibelm_moho.bin'
@@ -934,7 +934,7 @@
 
     ! normals
     if (I_should_read_the_database) then
-      open(unit=27,file=prname(1:len_trim(prname))//'normal_moho.bin',status='old',&
+      open(unit=27,file=prname(1:len_trim(prname))//'normal_moho.bin',status='old', &
          action='read',form='unformatted',iostat=ier)
       if (ier /= 0) then
         print *,'Error could not open normal_moho file: ',prname(1:len_trim(prname))//'normal_moho.bin'
@@ -952,7 +952,7 @@
 
     ! flags
     if (I_should_read_the_database) then
-      open(unit=27,file=prname(1:len_trim(prname))//'is_moho.bin',status='old',&
+      open(unit=27,file=prname(1:len_trim(prname))//'is_moho.bin',status='old', &
          action='read',form='unformatted',iostat=ier)
       if (ier /= 0) then
         print *,'Error could not open is_moho file: ',prname(1:len_trim(prname))//'is_moho.bin'
@@ -1082,7 +1082,7 @@
     if (ier /= 0) stop 'Error allocating array b_epsilon_trace_over_3'
 
     ! allocates attenuation solids for considering kappa
-    allocate(b_R_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa,N_SLS),&
+    allocate(b_R_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa,N_SLS), &
              b_epsilondev_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)
     if (ier /= 0) stop 'Error allocating array b_R_trace etc.'
 

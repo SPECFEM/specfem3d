@@ -28,10 +28,10 @@
 ! for poroelastic solver
 
   subroutine compute_add_sources_poroelastic(NSPEC_AB,NGLOB_AB, &
-                                             accels,accelw,&
-                                             rhoarraystore,phistore,tortstore,&
+                                             accels,accelw, &
+                                             rhoarraystore,phistore,tortstore, &
                                              ibool, &
-                                             NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
+                                             NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
                                              sourcearrays, &
                                              ispec_is_poroelastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                                              nrec,islice_selected_rec,ispec_selected_rec, &

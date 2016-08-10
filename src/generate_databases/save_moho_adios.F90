@@ -94,34 +94,34 @@ subroutine crm_save_moho_adios()
 
   local_dim = nspec2d_moho_wmax
   call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, "",    &
+                                   local_dim, "", &
                                    STRINGIFY_VAR(ibelm_moho_top))
   call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, "",    &
+                                   local_dim, "", &
                                    STRINGIFY_VAR(ibelm_moho_bot))
 
   local_dim = 3 * NGLLSQUARE * nspec2d_moho_wmax
   call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, "",    &
+                                   local_dim, "", &
                                    STRINGIFY_VAR(ijk_moho_top))
   call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, "",    &
+                                   local_dim, "", &
                                    STRINGIFY_VAR(ijk_moho_bot))
 
   local_dim = NDIM * NGLLSQUARE * nspec2d_moho_wmax
   call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, "",    &
+                                   local_dim, "", &
                                    STRINGIFY_VAR(normal_moho_top))
   call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, "",    &
+                                   local_dim, "", &
                                    STRINGIFY_VAR(normal_moho_bot))
 
   local_dim = nspec_wmax
   call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, "",    &
+                                   local_dim, "", &
                                    STRINGIFY_VAR(is_moho_top))
   call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, "",    &
+                                   local_dim, "", &
                                    STRINGIFY_VAR(is_moho_bot))
 
   !------------------------------------------------------------.

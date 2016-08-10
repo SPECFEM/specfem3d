@@ -155,7 +155,7 @@ program combine_surf_data
     write(prname,'(a,i6.6,a)') trim(indir)//'/proc',iproc,'_'
 
     ! gets number of elements and global points for this partition
-    open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',&
+    open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin', &
           status='old',action='read',form='unformatted',iostat=ier)
     read(27) NSPEC_AB
     read(27) NGLOB_AB
@@ -314,7 +314,7 @@ program combine_surf_data
     write(prname,'(a,i6.6,a)') trim(indir)//'/proc',iproc,'_'
 
     ! gets number of elements and global points for this partition
-    open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin',&
+    open(unit=27,file=prname(1:len_trim(prname))//'external_mesh.bin', &
           status='old',action='read',form='unformatted',iostat=ier)
     read(27) NSPEC_AB
     read(27) NGLOB_AB

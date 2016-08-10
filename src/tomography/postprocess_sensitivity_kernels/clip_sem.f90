@@ -134,7 +134,7 @@ program clip_sem
 
   ! read mesh dimensions
   write(filename,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',myrank,'_'//'external_mesh.bin'
-  open(unit=27,file=trim(filename),&
+  open(unit=27,file=trim(filename), &
           status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
     print *,'Error: could not open external mesh file '

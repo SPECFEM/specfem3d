@@ -171,7 +171,7 @@
                         normal_x_noise,normal_y_noise,normal_z_noise, &
                         noise_surface_movie, &
                         NSPEC_AB,NGLOB_AB, &
-                        num_free_surface_faces,free_surface_ispec,free_surface_ijk,&
+                        num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
                         GPU_MODE,Mesh_pointer)
   endif
 
@@ -213,14 +213,14 @@
 
       ! backward fields: displacement vector
       call compute_gradient_in_acoustic(ispec,NSPEC_ADJOINT,NGLOB_ADJOINT, &
-                      b_potential_acoustic, b_displ_elm,&
+                      b_potential_acoustic, b_displ_elm, &
                       hprime_xx,hprime_yy,hprime_zz, &
                       xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                       ibool,rhostore,GRAVITY)
       ! adjoint fields: acceleration vector
       ! new expression (\partial_t^2\bfs^\dagger=-\frac{1}{\rho}\bfnabla\phi^\dagger)
       call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                      potential_acoustic, accel_elm,&
+                      potential_acoustic, accel_elm, &
                       hprime_xx,hprime_yy,hprime_zz, &
                       xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                       ibool,rhostore,GRAVITY)
@@ -394,14 +394,14 @@
 
       ! adjoint fields: acceleration vector
       call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                      potential_dot_dot_acoustic, accel_elm,&
+                      potential_dot_dot_acoustic, accel_elm, &
                       hprime_xx,hprime_yy,hprime_zz, &
                       xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                       ibool,rhostore,GRAVITY)
 
       ! adjoint fields: acceleration vector
       call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                      b_potential_dot_dot_acoustic, b_accel_elm,&
+                      b_potential_dot_dot_acoustic, b_accel_elm, &
                       hprime_xx,hprime_yy,hprime_zz, &
                       xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                       ibool,rhostore,GRAVITY)
@@ -448,7 +448,7 @@
 ! Last modified 19/04/2007
 
 !-------------------------------------------------------------------
-  subroutine compute_strain_product(prod,eps_trace_over_3,epsdev,&
+  subroutine compute_strain_product(prod,eps_trace_over_3,epsdev, &
                           b_eps_trace_over_3,b_epsdev)
 
   ! Purpose : compute the 21 strain products at a grid point

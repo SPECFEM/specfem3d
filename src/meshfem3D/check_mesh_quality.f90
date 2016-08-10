@@ -298,7 +298,7 @@
     do iclass = 0,NCLASS-1
       current_percent = 100.*dble(classes_skewnessMPI(iclass))/dble(NSPEC_ALL_SLICES)
       total_percent = total_percent + current_percent
-      write(IMAIN,*) real(iclass/dble(NCLASS)),' - ',real((iclass+1)/dble(NCLASS)),classes_skewnessMPI(iclass),&
+      write(IMAIN,*) real(iclass/dble(NCLASS)),' - ',real((iclass+1)/dble(NCLASS)),classes_skewnessMPI(iclass), &
                      ' ',sngl(current_percent),' %'
       write(14,*) 0.5*(real(iclass/dble(NCLASS)) + real((iclass+1)/dble(NCLASS))),' ',sngl(current_percent)
     enddo
@@ -367,7 +367,7 @@
     write(IOVTK,'(a,i12,i12)') "CELLS ",nspec,nspec*9
     do ispec=1,nspec
       write(IOVTK,'(9i12)') 8, &
-            ibool(1,ispec)-1,ibool(2,ispec)-1,ibool(4,ispec)-1,ibool(3,ispec)-1,&
+            ibool(1,ispec)-1,ibool(2,ispec)-1,ibool(4,ispec)-1,ibool(3,ispec)-1, &
             ibool(5,ispec)-1,ibool(6,ispec)-1,ibool(8,ispec)-1,ibool(7,ispec)-1
     enddo
     write(IOVTK,*) ""

@@ -177,7 +177,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
   real(kind=CUSTOM_REAL) :: kappal
 
   ! local anisotropy parameters
-  real(kind=CUSTOM_REAL) :: c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,&
+  real(kind=CUSTOM_REAL) :: c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26, &
                             c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
 
   ! local attenuation parameters
@@ -354,10 +354,10 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
     ! Elsevier Press (2005) ! pages 141
 
     call compute_strain_in_parent_element( &
-                 tempx1,tempx2,tempx3,zero_array,zero_array,zero_array,&
-                 tempy1,tempy2,tempy3,zero_array,zero_array,zero_array,&
-                 tempz1,tempz2,tempz3,zero_array,zero_array,zero_array,&
-                 dummyx_loc,dummyy_loc,dummyz_loc,&
+                 tempx1,tempx2,tempx3,zero_array,zero_array,zero_array, &
+                 tempy1,tempy2,tempy3,zero_array,zero_array,zero_array, &
+                 tempz1,tempz2,tempz3,zero_array,zero_array,zero_array, &
+                 dummyx_loc,dummyy_loc,dummyz_loc, &
                  hprime_xx,hprime_yy,hprime_zz)
 
     if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
@@ -366,17 +366,17 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
       if (is_CPML(ispec)) then
         if (.not. backward_simulation) then
           call compute_strain_in_parent_element( &
-                       tempx1_att,tempx2_att,tempx3_att,zero_array,zero_array,zero_array,&
-                       tempy1_att,tempy2_att,tempy3_att,zero_array,zero_array,zero_array,&
-                       tempz1_att,tempz2_att,tempz3_att,zero_array,zero_array,zero_array,&
-                       dummyx_loc_att,dummyy_loc_att,dummyz_loc_att,&
+                       tempx1_att,tempx2_att,tempx3_att,zero_array,zero_array,zero_array, &
+                       tempy1_att,tempy2_att,tempy3_att,zero_array,zero_array,zero_array, &
+                       tempz1_att,tempz2_att,tempz3_att,zero_array,zero_array,zero_array, &
+                       dummyx_loc_att,dummyy_loc_att,dummyz_loc_att, &
                        hprime_xx,hprime_yy,hprime_zz)
 
           call compute_strain_in_parent_element( &
-                       tempx1_att_new,tempx2_att_new,tempx3_att_new,zero_array,zero_array,zero_array,&
-                       tempy1_att_new,tempy2_att_new,tempy3_att_new,zero_array,zero_array,zero_array,&
-                       tempz1_att_new,tempz2_att_new,tempz3_att_new,zero_array,zero_array,zero_array,&
-                       dummyx_loc_att_new,dummyy_loc_att_new,dummyz_loc_att_new,&
+                       tempx1_att_new,tempx2_att_new,tempx3_att_new,zero_array,zero_array,zero_array, &
+                       tempy1_att_new,tempy2_att_new,tempy3_att_new,zero_array,zero_array,zero_array, &
+                       tempz1_att_new,tempz2_att_new,tempz3_att_new,zero_array,zero_array,zero_array, &
+                       dummyx_loc_att_new,dummyy_loc_att_new,dummyz_loc_att_new, &
                        hprime_xx,hprime_yy,hprime_zz)
         endif
       endif
@@ -389,18 +389,18 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
         ! because array is_CPML() is unallocated when PML_CONDITIONS is false
         if (.not. is_CPML(ispec)) then
           call compute_strain_in_parent_element( &
-                       tempx1_att,tempx2_att,tempx3_att,tempx1,tempx2,tempx3,&
-                       tempy1_att,tempy2_att,tempy3_att,tempy1,tempy2,tempy3,&
-                       tempz1_att,tempz2_att,tempz3_att,tempz1,tempz2,tempz3,&
-                       dummyx_loc_att,dummyy_loc_att,dummyz_loc_att,&
+                       tempx1_att,tempx2_att,tempx3_att,tempx1,tempx2,tempx3, &
+                       tempy1_att,tempy2_att,tempy3_att,tempy1,tempy2,tempy3, &
+                       tempz1_att,tempz2_att,tempz3_att,tempz1,tempz2,tempz3, &
+                       dummyx_loc_att,dummyy_loc_att,dummyz_loc_att, &
                        hprime_xx,hprime_yy,hprime_zz)
         endif
       else
         call compute_strain_in_parent_element( &
-                     tempx1_att,tempx2_att,tempx3_att,tempx1,tempx2,tempx3,&
-                     tempy1_att,tempy2_att,tempy3_att,tempy1,tempy2,tempy3,&
-                     tempz1_att,tempz2_att,tempz3_att,tempz1,tempz2,tempz3,&
-                     dummyx_loc_att,dummyy_loc_att,dummyz_loc_att,&
+                     tempx1_att,tempx2_att,tempx3_att,tempx1,tempx2,tempx3, &
+                     tempy1_att,tempy2_att,tempy3_att,tempy1,tempy2,tempy3, &
+                     tempz1_att,tempz2_att,tempz3_att,tempz1,tempz2,tempz3, &
+                     dummyx_loc_att,dummyy_loc_att,dummyz_loc_att, &
                      hprime_xx,hprime_yy,hprime_zz)
       endif
     endif
@@ -1086,17 +1086,17 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
         if (.not. is_CPML(ispec)) then
           if (USE_LDDRK) then
             call compute_element_att_memory_lddrk(ispec,deltat,NSPEC_AB,kappastore,mustore, &
-                   NSPEC_ATTENUATION_AB_Kappa,factor_common_kappa,&
+                   NSPEC_ATTENUATION_AB_Kappa,factor_common_kappa, &
                    R_trace,epsilondev_trace_loc, &
                    NSPEC_ATTENUATION_AB_Kappa_LDDRK,R_trace_lddrk, &
                    NSPEC_ATTENUATION_AB,factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &
                    NSPEC_ATTENUATION_AB_LDDRK,R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, &
-                   epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,&
+                   epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc, &
                    epsilondev_xz_loc,epsilondev_yz_loc)
           else
             ! use Runge-Kutta scheme to march in time
             call compute_element_att_memory_second_order_rk(ispec,alphaval,betaval,gammaval, &
-                   NSPEC_AB,kappastore,mustore,NSPEC_ATTENUATION_AB_Kappa,factor_common_kappa,&
+                   NSPEC_AB,kappastore,mustore,NSPEC_ATTENUATION_AB_Kappa,factor_common_kappa, &
                    R_trace,epsilondev_trace,epsilondev_trace_loc, &
                    NSPEC_ATTENUATION_AB,factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &
                    NSPEC_STRAIN_ONLY,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
@@ -1108,17 +1108,17 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
         ! use Runge-Kutta scheme to march in time
         if (USE_LDDRK) then
           call compute_element_att_memory_lddrk(ispec,deltat,NSPEC_AB,kappastore,mustore, &
-                 NSPEC_ATTENUATION_AB_Kappa,factor_common_kappa,&
+                 NSPEC_ATTENUATION_AB_Kappa,factor_common_kappa, &
                  R_trace,epsilondev_trace_loc, &
                  NSPEC_ATTENUATION_AB_Kappa_LDDRK,R_trace_lddrk, &
                  NSPEC_ATTENUATION_AB,factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &
                  NSPEC_ATTENUATION_AB_LDDRK,R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, &
-                 epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,&
+                 epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc, &
                  epsilondev_xz_loc,epsilondev_yz_loc)
         else
           ! use Runge-Kutta scheme to march in time
           call compute_element_att_memory_second_order_rk(ispec,alphaval,betaval,gammaval, &
-                 NSPEC_AB,kappastore,mustore,NSPEC_ATTENUATION_AB_Kappa,factor_common_kappa,&
+                 NSPEC_AB,kappastore,mustore,NSPEC_ATTENUATION_AB_Kappa,factor_common_kappa, &
                  R_trace,epsilondev_trace,epsilondev_trace_loc, &
                  NSPEC_ATTENUATION_AB,factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &
                  NSPEC_STRAIN_ONLY,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
@@ -1168,9 +1168,9 @@ end subroutine compute_forces_viscoelastic_noDev
 ! The concept of parent element can be found in
 ! O.C.Zienkiewicz, R.L.Taylor & J.Z. Zhu, The finite element method its basis and fundamentals 6th ed.,
 ! Elsevier Press (2005) ! pages 141
-subroutine compute_strain_in_parent_element(tempx1_att,tempx2_att,tempx3_att,tempx1,tempx2,tempx3,&
-                                            tempy1_att,tempy2_att,tempy3_att,tempy1,tempy2,tempy3,&
-                                            tempz1_att,tempz2_att,tempz3_att,tempz1,tempz2,tempz3,&
+subroutine compute_strain_in_parent_element(tempx1_att,tempx2_att,tempx3_att,tempx1,tempx2,tempx3, &
+                                            tempy1_att,tempy2_att,tempy3_att,tempy1,tempy2,tempy3, &
+                                            tempz1_att,tempz2_att,tempz3_att,tempz1,tempz2,tempz3, &
                                             dummyx_loc,dummyy_loc,dummyz_loc,hprime_xx,hprime_yy,hprime_zz)
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ

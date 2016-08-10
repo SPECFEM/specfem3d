@@ -10,7 +10,7 @@ program sem_model_slice
   integer, parameter :: NMAXPTS = 100000
   integer :: ier,sizeprocs,myrank,ios, i,j, k, ispec,iglob,ipt, npts
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
-  character(len=150) :: xyz_infile,topo_dir,model_dir,data_name,gmt_outfile,&
+  character(len=150) :: xyz_infile,topo_dir,model_dir,data_name,gmt_outfile, &
              local_data_file, prname
   real(kind=CUSTOM_REAL),dimension(NMAXPTS) :: x, y, z, v, vmin, &
              vall,distmin, dist, distall
@@ -143,7 +143,7 @@ program sem_model_slice
   do i = 1, npts
     if (myrank == nint(out(2,i))) then
       v(i) = vmin(i)
-!      if (GLL_INTERPOLATION) call xeg_search(x(i),y(i),z(i),&
+!      if (GLL_INTERPOLATION) call xeg_search(x(i),y(i),z(i), &
 !                 ispec_min(i),ix_min(i),iy_min(i),iz_min(i),v(i))
       dist(i) = distmin(i)
     endif

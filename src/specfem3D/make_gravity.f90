@@ -169,7 +169,7 @@
 !--------------------------------------------------------------------------------------------------
 
 
-  subroutine model_prem_iso(x,rho,drhodr,vp,vs,Qkappa,Qmu,&
+  subroutine model_prem_iso(x,rho,drhodr,vp,vs,Qkappa,Qmu, &
                           RICB,RCMB,RTOPDDOUBLEPRIME, &
                           R600,R670,R220,R771,R400,R80,RMOHO,RMIDDLE_CRUST,ROCEAN)
 

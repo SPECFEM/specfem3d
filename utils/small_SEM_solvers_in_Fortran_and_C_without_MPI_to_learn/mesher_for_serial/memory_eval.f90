@@ -27,10 +27,10 @@
 
 ! compute the approximate amount of static memory needed to run the solver
 
-  subroutine memory_eval(OCEANS,ABSORBING_CONDITIONS,ATTENUATION,ANISOTROPIC_3D_MANTLE,&
-                       TRANSVERSE_ISOTROPY,ANISOTROPIC_INNER_CORE,ROTATION,&
-                       ONE_CRUST,doubling_index,this_region_has_a_doubling,&
-                       ner,NEX_PER_PROC_XI,NEX_PER_PROC_ETA,ratio_sampling_array,&
+  subroutine memory_eval(OCEANS,ABSORBING_CONDITIONS,ATTENUATION,ANISOTROPIC_3D_MANTLE, &
+                       TRANSVERSE_ISOTROPY,ANISOTROPIC_INNER_CORE,ROTATION, &
+                       ONE_CRUST,doubling_index,this_region_has_a_doubling, &
+                       ner,NEX_PER_PROC_XI,NEX_PER_PROC_ETA,ratio_sampling_array, &
                        NSPEC,nglob,SIMULATION_TYPE,MOVIE_VOLUME,SAVE_FORWARD, &
          NSPECMAX_ANISO_IC,NSPECMAX_ISO_MANTLE,NSPECMAX_TISO_MANTLE, &
          NSPECMAX_ANISO_MANTLE,NSPEC_CRUST_MANTLE_ATTENUAT, &

@@ -38,7 +38,7 @@
 !!!!           NSPEC2D_ETA_FACE,NSPEC1D_RADIAL_CORNER,NGLOB1D_RADIAL_CORNER,NGLOB2DMAX_XY, &
            NSPEC2D_ETA_FACE,NGLOB2DMAX_XY, &
            myrank,LOCAL_PATH,OCEANS,ibathy_topo, &
-           rotation_matrix,ANGULAR_WIDTH_XI_RAD,ANGULAR_WIDTH_ETA_RAD,&
+           rotation_matrix,ANGULAR_WIDTH_XI_RAD,ANGULAR_WIDTH_ETA_RAD, &
            ATTENUATION,ATTENUATION_3D,SAVE_MESH_FILES, &
            NCHUNKS,INCLUDE_CENTRAL_CUBE,ABSORBING_CONDITIONS,REFERENCE_1D_MODEL,THREE_D_MODEL, &
            R_CENTRAL_CUBE,RICB,RHO_OCEANS,RCMB,R670,RMOHO,RTOPDDOUBLEPRIME,R600,R220,R771,R400,R120,R80,RMIDDLE_CRUST,ROCEAN, &
@@ -851,7 +851,7 @@
     call compute_coord_main_mesh(offset_x,offset_y,offset_z,xelm,yelm,zelm, &
                ANGULAR_WIDTH_XI_RAD,ANGULAR_WIDTH_ETA_RAD,iproc_xi,iproc_eta, &
                NPROC_XI,NPROC_ETA,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
-               stretch_tab(1,ner_without_doubling-iz_elem+1),&
+               stretch_tab(1,ner_without_doubling-iz_elem+1), &
                stretch_tab(2,ner_without_doubling-iz_elem+1),1,ilayer,ichunk,rotation_matrix, &
                NCHUNKS,INCLUDE_CENTRAL_CUBE,NUMBER_OF_MESH_LAYERS)
   else
@@ -908,7 +908,7 @@
            c11store,c12store,c13store,c14store,c15store,c16store,c22store, &
            c23store,c24store,c25store,c26store,c33store,c34store,c35store, &
            c36store,c44store,c45store,c46store,c55store,c56store,c66store, &
-           nspec_ani,nspec_stacey,Qmu_store,tau_e_store,rho_vp,rho_vs,&
+           nspec_ani,nspec_stacey,Qmu_store,tau_e_store,rho_vp,rho_vs, &
            AMM_V,M1066a_V,Mak135_V,Mref_V,SEA1DM_V,D3MM_V,JP3DM_V,SEA99M_V,CM_V, &
            numker,numhpa,numcof,ihpa,lmax,nylm, &
            lmxhpa,itypehpa,ihpakern,numcoe,ivarkern, &
@@ -1085,7 +1085,7 @@
            c11store,c12store,c13store,c14store,c15store,c16store,c22store, &
            c23store,c24store,c25store,c26store,c33store,c34store,c35store, &
            c36store,c44store,c45store,c46store,c55store,c56store,c66store, &
-           nspec_ani,nspec_stacey,Qmu_store,tau_e_store,rho_vp,rho_vs,&
+           nspec_ani,nspec_stacey,Qmu_store,tau_e_store,rho_vp,rho_vs, &
            AMM_V,M1066a_V,Mak135_V,Mref_V,SEA1DM_V,D3MM_V,JP3DM_V,SEA99M_V,CM_V, &
            numker,numhpa,numcof,ihpa,lmax,nylm, &
            lmxhpa,itypehpa,ihpakern,numcoe,ivarkern, &
@@ -1242,7 +1242,7 @@
            c11store,c12store,c13store,c14store,c15store,c16store,c22store, &
            c23store,c24store,c25store,c26store,c33store,c34store,c35store, &
            c36store,c44store,c45store,c46store,c55store,c56store,c66store, &
-           nspec_ani,nspec_stacey,Qmu_store,tau_e_store,rho_vp,rho_vs,&
+           nspec_ani,nspec_stacey,Qmu_store,tau_e_store,rho_vp,rho_vs, &
            AMM_V,M1066a_V,Mak135_V,Mref_V,SEA1DM_V,D3MM_V,JP3DM_V,SEA99M_V,CM_V, &
            numker,numhpa,numcof,ihpa,lmax,nylm, &
            lmxhpa,itypehpa,ihpakern,numcoe,ivarkern, &
@@ -1300,7 +1300,7 @@
 
 ! check that number of points found equals theoretical value
   if (nglob /= nglob_theor) then
-    write(errmsg,*) 'incorrect total number of points found: myrank,nglob,nglob_theor,ipass,iregion_code = ',&
+    write(errmsg,*) 'incorrect total number of points found: myrank,nglob,nglob_theor,ipass,iregion_code = ', &
       myrank,nglob,nglob_theor,ipass,iregion_code
     call exit_MPI(myrank,errmsg)
   endif

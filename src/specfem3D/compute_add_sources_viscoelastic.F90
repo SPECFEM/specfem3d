@@ -29,7 +29,7 @@
 
   subroutine compute_add_sources_viscoelastic(NSPEC_AB,NGLOB_AB,accel, &
                         ibool, &
-                        NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
+                        NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
                         sourcearrays, &
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP, &
                         nrec,islice_selected_rec,ispec_selected_rec, &
@@ -347,7 +347,7 @@
 
   subroutine compute_add_sources_viscoelastic_backward( NSPEC_AB,NGLOB_AB, &
                         ibool, &
-                        NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
+                        NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
                         sourcearrays, &
                         ispec_is_elastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                         b_accel,NOISE_TOMOGRAPHY)
@@ -490,7 +490,7 @@
 ! for elastic solver on GPU
 
   subroutine compute_add_sources_viscoelastic_GPU(NSPEC_AB, &
-                                                  NSOURCES,myrank,it,&
+                                                  NSOURCES,myrank,it, &
                                                   ispec_is_elastic,SIMULATION_TYPE,NSTEP, &
                                                   nrec,islice_selected_rec,ispec_selected_rec, &
                                                   nadj_rec_local,adj_sourcearrays, &
@@ -503,7 +503,7 @@
                         num_free_surface_faces, &
                         irec_master_noise,noise_surface_movie, &
                         nrec_local,number_receiver_global, &
-                        nsources_local,tshift_src,dt,t0,SU_FORMAT,&
+                        nsources_local,tshift_src,dt,t0,SU_FORMAT, &
                         USE_LDDRK,istage,EXTERNAL_STF,user_source_time_function
 
 #ifdef DEBUG_COUPLED

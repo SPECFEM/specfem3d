@@ -40,24 +40,24 @@
                                     wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D, &
                                     kappastore,mustore,jacobian,ibool, &
                                     ATTENUATION,deltat,PML_CONDITIONS, &
-                                    one_minus_sum_beta,factor_common,&
-                                    one_minus_sum_beta_kappa,factor_common_kappa,&
-                                    alphaval,betaval,gammaval,&
+                                    one_minus_sum_beta,factor_common, &
+                                    one_minus_sum_beta_kappa,factor_common_kappa, &
+                                    alphaval,betaval,gammaval, &
                                     NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_Kappa, &
                                     R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
                                     epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &
                                     epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
                                     ANISOTROPY,NSPEC_ANISO, &
-                                    c11store,c12store,c13store,c14store,c15store,c16store,&
-                                    c22store,c23store,c24store,c25store,c26store,c33store,&
-                                    c34store,c35store,c36store,c44store,c45store,c46store,&
+                                    c11store,c12store,c13store,c14store,c15store,c16store, &
+                                    c22store,c23store,c24store,c25store,c26store,c33store, &
+                                    c34store,c35store,c36store,c44store,c45store,c46store, &
                                     c55store,c56store,c66store, &
                                     SIMULATION_TYPE,COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
                                     NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT, &
                                     is_moho_top,is_moho_bot, &
                                     dsdx_top,dsdx_bot, &
                                     ispec2D_moho_top,ispec2D_moho_bot, &
-                                    num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic,&
+                                    num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
                                     phase_ispec_inner_elastic,backward_simulation)
 
 
@@ -201,7 +201,7 @@
   real(kind=CUSTOM_REAL) :: kappal
 
   ! local anisotropy parameters
-  real(kind=CUSTOM_REAL) :: c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,&
+  real(kind=CUSTOM_REAL) :: c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26, &
                             c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
 
   integer :: i_SLS,imodulo_N_SLS

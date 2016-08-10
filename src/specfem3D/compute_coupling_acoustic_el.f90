@@ -33,7 +33,7 @@
                         coupling_ac_el_ispec,coupling_ac_el_ijk, &
                         coupling_ac_el_normal, &
                         coupling_ac_el_jacobian2Dw, &
-                        ispec_is_inner,phase_is_inner,&
+                        ispec_is_inner,phase_is_inner, &
                         PML_CONDITIONS,SIMULATION_TYPE,backward_simulation)
 
 ! returns the updated pressure array: potential_dot_dot_acoustic
@@ -112,8 +112,8 @@
           if (is_CPML(ispec)) then
             if (SIMULATION_TYPE == 1) then
               ispec_CPML = spec_to_CPML(ispec)
-              call pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,i,j,k,&
-                                                    displ_x,displ_y,displ_z,displ,&
+              call pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,i,j,k, &
+                                                    displ_x,displ_y,displ_z,displ, &
                                                     num_coupling_ac_el_faces,rmemory_coupling_ac_el_displ)
             endif
 

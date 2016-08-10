@@ -122,7 +122,7 @@
 
     ! gets number of elements and global points for this partition
     write(prname_lp,'(a,i6.6,a)') trim(indir)//'/proc',iproc,'_'
-    open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin',&
+    open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin', &
           status='old',action='read',form='unformatted')
     read(27) NSPEC_AB
     read(27) NGLOB_AB
@@ -145,7 +145,7 @@
     ! data file
     write(prname,'(a,i6.6,a)') trim(indir)//'proc',iproc,'_'
     local_data_file = trim(prname) // trim(filename) // '.bin'
-    open(unit = 28,file = trim(local_data_file),status='old',&
+    open(unit = 28,file = trim(local_data_file),status='old', &
           action='read', iostat = ios,form ='unformatted')
     if (ios /= 0) then
       print *,'Error opening ',trim(local_data_file)
@@ -250,7 +250,7 @@
   ! note: indices for vtk start at 0
   write(IOVTK,'(a,i12,i12)') "CELLS ",nspec,nspec*9
   do ispec=1,nspec
-    write(IOVTK,'(9i12)') 8,(ispec-1)*8,(ispec-1)*8+1,(ispec-1)*8+2,(ispec-1)*8+3,&
+    write(IOVTK,'(9i12)') 8,(ispec-1)*8,(ispec-1)*8+1,(ispec-1)*8+2,(ispec-1)*8+3, &
           (ispec-1)*8+4,(ispec-1)*8+5,(ispec-1)*8+6,(ispec-1)*8+7
   enddo
   write(IOVTK,*) ""

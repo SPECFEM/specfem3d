@@ -301,11 +301,11 @@
   if (ier /= 0) stop 'Error allocating idomain arrays'
 
   if (SU_FORMAT) then
-     allocate(xmin_ELE(NSPEC_AB),&
-          xmax_ELE(NSPEC_AB),&
-          ymin_ELE(NSPEC_AB),&
-          ymax_ELE(NSPEC_AB),&
-          zmin_ELE(NSPEC_AB),&
+     allocate(xmin_ELE(NSPEC_AB), &
+          xmax_ELE(NSPEC_AB), &
+          ymin_ELE(NSPEC_AB), &
+          ymax_ELE(NSPEC_AB), &
+          zmin_ELE(NSPEC_AB), &
           zmax_ELE(NSPEC_AB),stat=ier)
      if (ier /= 0) stop 'error allocating arrays for locating receivers'
 
@@ -329,7 +329,7 @@
     if (ier /= 0) call exit_mpi(myrank, 'Error reading station file '//trim(rec_filename))
 
     ! convert station location to UTM
-    call utm_geo(stlon(irec),stlat(irec),stutm_x(irec),stutm_y(irec),&
+    call utm_geo(stlon(irec),stlat(irec),stutm_x(irec),stutm_y(irec), &
                 UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
 
     ! compute horizontal distance between source and receiver in km
@@ -725,11 +725,11 @@
   enddo
 
   if (SU_FORMAT) then
-     deallocate(xmin_ELE,&
-          xmax_ELE,&
-          ymin_ELE,&
-          ymax_ELE,&
-          zmin_ELE,&
+     deallocate(xmin_ELE, &
+          xmax_ELE, &
+          ymin_ELE, &
+          ymax_ELE, &
+          zmin_ELE, &
           zmax_ELE)
   endif
   ! close receiver file
@@ -1146,7 +1146,7 @@
       read(dummystring, *) station_name, network_name, stlat, stlon, stele, stbur
 
       ! convert station location to UTM
-      call utm_geo(stlon,stlat,stutm_x,stutm_y,&
+      call utm_geo(stlon,stlat,stutm_x,stutm_y, &
            UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
 
       ! counts stations within lon/lat region
@@ -1170,7 +1170,7 @@
         read(dummystring, *) station_name, network_name, stlat, stlon, stele, stbur
 
         ! convert station location to UTM
-        call utm_geo(stlon,stlat,stutm_x,stutm_y,&
+        call utm_geo(stlon,stlat,stutm_x,stutm_y, &
              UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
 
         if (stutm_y >= LATITUDE_MIN .and. stutm_y <= LATITUDE_MAX .and. &
@@ -1204,9 +1204,9 @@
         write(IMAIN,*) '    longitude min/max: ',LONGITUDE_MIN,LONGITUDE_MAX
       else
         ! convert edge locations from UTM back to lat/lon
-        call utm_geo(minlon,minlat,LONGITUDE_MIN,LATITUDE_MIN,&
+        call utm_geo(minlon,minlat,LONGITUDE_MIN,LATITUDE_MIN, &
              UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
-        call utm_geo(maxlon,maxlat,LONGITUDE_MAX,LATITUDE_MAX,&
+        call utm_geo(maxlon,maxlat,LONGITUDE_MAX,LATITUDE_MAX, &
              UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
         write(IMAIN,*) '    longitude min/max: ',minlon,maxlon
         write(IMAIN,*) '    latitude min/max : ',minlat,maxlat

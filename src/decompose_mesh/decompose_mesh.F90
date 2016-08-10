@@ -158,7 +158,7 @@ module decompose_mesh
     logical :: file_found
 
     ! reads node coordinates
-    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file',&
+    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file', &
           status='old', form='formatted', iostat = ier)
     if (ier /= 0) then
       print *,'could not open file:',localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file'
@@ -266,7 +266,7 @@ module decompose_mesh
   ! cannot support more than 10 attributes
     count_def_mat = 0
     count_undef_mat = 0
-    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_velocity_file',&
+    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_velocity_file', &
           status='old', form='formatted',iostat=ier)
     if (ier /= 0) stop 'Error opening nummaterial_velocity_file'
 
@@ -469,12 +469,12 @@ module decompose_mesh
 
        if (trim(undef_mat_prop(2,imat)) == 'interface') then
          ! line will have 5 arguments, e.g.: 2 -1 interface 1 2
-         read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
+         read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat), &
                       undef_mat_prop(3,imat),undef_mat_prop(4,imat)
          undef_mat_prop(5,imat) = "0" ! dummy value
        else if (trim(undef_mat_prop(2,imat)) == 'tomography') then
          ! line will have 6 arguments, e.g.: 2 -1 tomography elastic tomography_model.xyz 1
-         read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
+         read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat), &
                       undef_mat_prop(3,imat),undef_mat_prop(4,imat)
          undef_mat_prop(5,imat) = "0" ! dummy value
        else
@@ -1077,7 +1077,7 @@ module decompose_mesh
 
        ! opens output file
        write(prname, "(i6.6,'_Database')") ipart
-       open(unit=IIN_database,file=outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname,&
+       open(unit=IIN_database,file=outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname, &
             status='unknown', action='write', form='unformatted', iostat = ier)
        if (ier /= 0) then
         print *,'Error file open:',outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname
@@ -1101,7 +1101,7 @@ module decompose_mesh
        ! writes out node coordinate locations
        write(IIN_database) nnodes_loc
 
-       call write_glob2loc_nodes_database(IIN_database, ipart, nnodes_loc, nodes_coords,&
+       call write_glob2loc_nodes_database(IIN_database, ipart, nnodes_loc, nodes_coords, &
                                   glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                                   glob2loc_nodes, nnodes, 2)
 
@@ -1159,7 +1159,7 @@ module decompose_mesh
        ! write fault database
        if (ANY_FAULT) then
           write(prname, "(i6.6,'_Database_fault')") ipart
-          open(unit=16,file=outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname,&
+          open(unit=16,file=outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname, &
                status='replace', action='write', form='unformatted', iostat = ier)
           if (ier /= 0) then
             print *,'Error file open:',outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname
@@ -1172,7 +1172,7 @@ module decompose_mesh
                                     glob2loc_nodes, part)
           !write(16,*) nnodes_loc
           write(16) nnodes_loc
-          call write_glob2loc_nodes_database(16, ipart, nnodes_loc, nodes_coords_open,&
+          call write_glob2loc_nodes_database(16, ipart, nnodes_loc, nodes_coords_open, &
                                   glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                                   glob2loc_nodes, nnodes, 2)
           close(16)

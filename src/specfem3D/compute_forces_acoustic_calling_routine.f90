@@ -98,7 +98,7 @@ subroutine compute_forces_acoustic()
                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         rhostore,jacobian,ibool, &
-                        num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
+                        num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic, &
                         phase_ispec_inner_acoustic,.false.)
 
     ! Stacey absorbing boundary conditions
@@ -123,7 +123,7 @@ subroutine compute_forces_acoustic()
                               coupling_ac_el_ispec,coupling_ac_el_ijk, &
                               coupling_ac_el_normal, &
                               coupling_ac_el_jacobian2Dw, &
-                              ispec_is_inner,phase_is_inner,&
+                              ispec_is_inner,phase_is_inner, &
                               PML_CONDITIONS,SIMULATION_TYPE,.false.)
 
         else
@@ -135,7 +135,7 @@ subroutine compute_forces_acoustic()
                               coupling_ac_el_ispec,coupling_ac_el_ijk, &
                               coupling_ac_el_normal, &
                               coupling_ac_el_jacobian2Dw, &
-                              ispec_is_inner,phase_is_inner,&
+                              ispec_is_inner,phase_is_inner, &
                               PML_CONDITIONS,SIMULATION_TYPE,.false.)
         endif
       endif
@@ -166,8 +166,8 @@ subroutine compute_forces_acoustic()
       !
       call compute_add_sources_acoustic(NSPEC_AB,NGLOB_AB,potential_dot_dot_acoustic, &
                           ibool, &
-                          NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                          sourcearrays,kappastore,ispec_is_acoustic,&
+                          NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
+                          sourcearrays,kappastore,ispec_is_acoustic, &
                           SIMULATION_TYPE,NSTEP, &
                           nrec,islice_selected_rec,ispec_selected_rec, &
                           nadj_rec_local,adj_sourcearrays,NTSTEP_BETWEEN_READ_ADJSRC)
@@ -179,14 +179,14 @@ subroutine compute_forces_acoustic()
       call assemble_MPI_scalar_async_send(NPROC,NGLOB_AB,potential_dot_dot_acoustic, &
                         buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         my_neighbours_ext_mesh, &
                         request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh)
     else
 
       ! waits for send/receive requests to be completed and assembles values
       call assemble_MPI_scalar_async_recv(NPROC,NGLOB_AB,potential_dot_dot_acoustic, &
-                        buffer_recv_scalar_ext_mesh,num_interfaces_ext_mesh,&
+                        buffer_recv_scalar_ext_mesh,num_interfaces_ext_mesh, &
                         max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh)
@@ -281,7 +281,7 @@ subroutine compute_forces_acoustic()
   if (PML_CONDITIONS) then
     if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
       if (nglob_interface_PML_acoustic > 0) then
-        call save_potential_on_pml_interface(potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic,&
+        call save_potential_on_pml_interface(potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                                              nglob_interface_PML_acoustic,b_PML_potential,b_reclen_PML_potential)
       endif
     endif
@@ -360,7 +360,7 @@ subroutine compute_forces_acoustic_backward()
                       hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
                       wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                       rhostore,jacobian,ibool, &
-                      num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
+                      num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic, &
                       phase_ispec_inner_acoustic,.true.)
 
     ! Stacey absorbing boundary conditions
@@ -368,7 +368,7 @@ subroutine compute_forces_acoustic_backward()
        call compute_stacey_acoustic_backward(NSPEC_AB, &
                             ibool,ispec_is_inner,phase_is_inner, &
                             abs_boundary_ijk,abs_boundary_ispec, &
-                            num_abs_boundary_faces,ispec_is_acoustic,&
+                            num_abs_boundary_faces,ispec_is_acoustic, &
                             SIMULATION_TYPE,NSTEP,it,NGLOB_ADJOINT, &
                             b_potential_dot_dot_acoustic,b_reclen_potential, &
                             b_absorb_potential,b_num_abs_boundary_faces)
@@ -384,7 +384,7 @@ subroutine compute_forces_acoustic_backward()
                           coupling_ac_el_ispec,coupling_ac_el_ijk, &
                           coupling_ac_el_normal, &
                           coupling_ac_el_jacobian2Dw, &
-                          ispec_is_inner,phase_is_inner,&
+                          ispec_is_inner,phase_is_inner, &
                           PML_CONDITIONS,SIMULATION_TYPE,.true.)
       endif
     endif
@@ -403,8 +403,8 @@ subroutine compute_forces_acoustic_backward()
       !
       call compute_add_sources_acoustic_backward(NSPEC_AB, &
                                     ibool, &
-                                    NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                                    sourcearrays,kappastore,ispec_is_acoustic,&
+                                    NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
+                                    sourcearrays,kappastore,ispec_is_acoustic, &
                                     SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                                     b_potential_dot_dot_acoustic)
     endif
@@ -416,14 +416,14 @@ subroutine compute_forces_acoustic_backward()
       call assemble_MPI_scalar_async_send(NPROC,NGLOB_ADJOINT,b_potential_dot_dot_acoustic, &
                       b_buffer_send_scalar_ext_mesh,b_buffer_recv_scalar_ext_mesh, &
                       num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
+                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                       my_neighbours_ext_mesh, &
                       b_request_send_scalar_ext_mesh,b_request_recv_scalar_ext_mesh)
 
     else
       ! adjoint simulations
       call assemble_MPI_scalar_async_recv(NPROC,NGLOB_ADJOINT,b_potential_dot_dot_acoustic, &
-                      b_buffer_recv_scalar_ext_mesh,num_interfaces_ext_mesh,&
+                      b_buffer_recv_scalar_ext_mesh,num_interfaces_ext_mesh, &
                       max_nibool_interfaces_ext_mesh, &
                       nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                       b_request_send_scalar_ext_mesh,b_request_recv_scalar_ext_mesh)
@@ -499,7 +499,7 @@ subroutine compute_forces_acoustic_GPU()
 
     ! ! Stacey absorbing boundary conditions
     if (STACEY_ABSORBING_CONDITIONS) then
-       call compute_stacey_acoustic_GPU(phase_is_inner,num_abs_boundary_faces,&
+       call compute_stacey_acoustic_GPU(phase_is_inner,num_abs_boundary_faces, &
                             SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
                             b_reclen_potential,b_absorb_potential, &
                             b_num_abs_boundary_faces,Mesh_pointer)
@@ -540,7 +540,7 @@ subroutine compute_forces_acoustic_GPU()
       !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
       !
       call compute_add_sources_acoustic_GPU(NSPEC_AB, &
-                                    NSOURCES,myrank,it,&
+                                    NSOURCES,myrank,it, &
                                     ispec_is_acoustic,SIMULATION_TYPE,NSTEP, &
                                     nrec,islice_selected_rec,ispec_selected_rec, &
                                     nadj_rec_local,adj_sourcearrays, &
@@ -557,7 +557,7 @@ subroutine compute_forces_acoustic_GPU()
       call assemble_MPI_scalar_send_cuda(NPROC, &
                         buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,&
+                        nibool_interfaces_ext_mesh, &
                         my_neighbours_ext_mesh, &
                         request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh)
 
@@ -565,13 +565,13 @@ subroutine compute_forces_acoustic_GPU()
       if (SIMULATION_TYPE == 3) then
         call transfer_boun_pot_from_device(Mesh_pointer, &
                                            b_potential_dot_dot_acoustic, &
-                                           b_buffer_send_scalar_ext_mesh,&
+                                           b_buffer_send_scalar_ext_mesh, &
                                            3) ! -- 3 == adjoint b_accel
 
         call assemble_MPI_scalar_send_cuda(NPROC, &
                           b_buffer_send_scalar_ext_mesh,b_buffer_recv_scalar_ext_mesh, &
                           num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                          nibool_interfaces_ext_mesh,&
+                          nibool_interfaces_ext_mesh, &
                           my_neighbours_ext_mesh, &
                           b_request_send_scalar_ext_mesh,b_request_recv_scalar_ext_mesh)
 
@@ -581,7 +581,7 @@ subroutine compute_forces_acoustic_GPU()
 
       ! waits for send/receive requests to be completed and assembles values
       call assemble_MPI_scalar_write_cuda(NPROC,NGLOB_AB,potential_dot_dot_acoustic, &
-                        Mesh_pointer,&
+                        Mesh_pointer, &
                         buffer_recv_scalar_ext_mesh, &
                         num_interfaces_ext_mesh, &
                         max_nibool_interfaces_ext_mesh, &

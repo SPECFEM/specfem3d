@@ -74,7 +74,7 @@
   if (ier /= 0) stop 'error allocating rtmpseis array'
 
   ! write seismograms (dx)
-  open(unit=IOUT_SU, file=trim(final_LOCAL_PATH)//trim(procname)//'_dx_SU' ,&
+  open(unit=IOUT_SU, file=trim(final_LOCAL_PATH)//trim(procname)//'_dx_SU', &
        status='unknown', access='direct', recl=4, iostat=ier)
 
   if (ier /= 0) stop 'error opening ***_dx_SU file'
@@ -103,7 +103,7 @@
   close(IOUT_SU)
 
   ! write seismograms (dy)
-  open(unit=IOUT_SU, file=trim(final_LOCAL_PATH)//trim(procname)//'_dy_SU' ,&
+  open(unit=IOUT_SU, file=trim(final_LOCAL_PATH)//trim(procname)//'_dy_SU', &
        status='unknown', access='direct', recl=4, iostat=ier)
 
   if (ier /= 0) stop 'error opening ***_dy_SU file'
@@ -124,7 +124,7 @@
   close(IOUT_SU)
 
   ! write seismograms (dz)
-  open(unit=IOUT_SU, file=trim(final_LOCAL_PATH)//trim(procname)//'_dz_SU' ,&
+  open(unit=IOUT_SU, file=trim(final_LOCAL_PATH)//trim(procname)//'_dz_SU', &
        status='unknown', access='direct', recl=4, iostat=ier)
 
   if (ier /= 0) stop 'error opening ***_dz_SU file'

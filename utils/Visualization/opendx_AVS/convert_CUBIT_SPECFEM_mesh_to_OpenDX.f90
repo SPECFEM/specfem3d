@@ -82,7 +82,7 @@
 ! and point numbers start at 0 rather than 1
   do ispec=1,nspec
     write(11,"(i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9)") &
-                 ibool(4,ispec)-1,ibool(1,ispec)-1,ibool(8,ispec)-1,ibool(5,ispec)-1,&
+                 ibool(4,ispec)-1,ibool(1,ispec)-1,ibool(8,ispec)-1,ibool(5,ispec)-1, &
                  ibool(3,ispec)-1,ibool(2,ispec)-1,ibool(7,ispec)-1,ibool(6,ispec)-1
   enddo
 

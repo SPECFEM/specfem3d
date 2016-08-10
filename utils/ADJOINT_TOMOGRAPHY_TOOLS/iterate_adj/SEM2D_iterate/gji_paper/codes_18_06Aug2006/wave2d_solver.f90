@@ -192,7 +192,7 @@ contains
 !---------------------------------------------
 
   subroutine solver(solver_type, nsrc, sglob, ispec_src, hxis_store, hgammas_store, samp, &
-                                 nrec, rglob, ispec_rec, hxir_store, hgammar_store, ramp,  &
+                                 nrec, rglob, ispec_rec, hxir_store, hgammar_store, ramp, &
               last_frame, absorbfield, &
               rhop_kernel, beta_kernel, alpha_kernel, &
               three_source_model, stf, f0)

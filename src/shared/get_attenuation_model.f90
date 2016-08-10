@@ -159,7 +159,7 @@
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: factor_common_kappa
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: scale_factor, scale_factor_kappa
   double precision, dimension(N_SLS) :: tau_sigma_dble,beta_dble,beta_dble_kappa
-  double precision factor_scale_dble,one_minus_sum_beta_dble,&
+  double precision factor_scale_dble,one_minus_sum_beta_dble, &
                    factor_scale_dble_kappa,one_minus_sum_beta_dble_kappa
   double precision :: Q_mu,Q_kappa,Q_p,Q_s
   double precision :: L_val
@@ -210,7 +210,7 @@
   ! gets stress relaxation times tau_sigma, i.e.
   ! precalculates tau_sigma depending on period band (constant for all Q_mu), and
   ! determines central frequency f_c_source of attenuation period band
-  call get_attenuation_constants(min_resolved_period,tau_sigma_dble,&
+  call get_attenuation_constants(min_resolved_period,tau_sigma_dble, &
                                  f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
 
   ! user output

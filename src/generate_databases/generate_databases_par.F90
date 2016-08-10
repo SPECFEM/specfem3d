@@ -206,7 +206,7 @@
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_vpI,rho_vpII,rho_vsI
 
 ! mass matrix
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass,rmass_acoustic,&
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass,rmass_acoustic, &
                             rmass_solid_poroelastic,rmass_fluid_poroelastic
 
 ! mass matrix contributions
@@ -275,9 +275,9 @@
 ! anisotropy
   integer :: NSPEC_ANISO
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
-            c11store,c12store,c13store,c14store,c15store,c16store,&
-            c22store,c23store,c24store,c25store,c26store,c33store,&
-            c34store,c35store,c36store,c44store,c45store,c46store,&
+            c11store,c12store,c13store,c14store,c15store,c16store, &
+            c22store,c23store,c24store,c25store,c26store,c33store, &
+            c34store,c35store,c36store,c44store,c45store,c46store, &
             c55store,c56store,c66store
 
 ! material domain flags

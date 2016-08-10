@@ -123,14 +123,14 @@
       if (SAVE_DISPLACEMENT) then
         ! displacement vector
         call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                          potential_acoustic, val_element,&
+                          potential_acoustic, val_element, &
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
       else
         ! velocity vector
         call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                          potential_dot_acoustic, val_element,&
+                          potential_dot_acoustic, val_element, &
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
@@ -168,25 +168,25 @@
 
   ! updates/gathers velocity field
   if (myrank == 0) then
-    call gatherv_all_cr(store_val_ux,nfaces_surface_points,&
-         store_val_ux_all,nfaces_perproc_surface,faces_surface_offset,&
+    call gatherv_all_cr(store_val_ux,nfaces_surface_points, &
+         store_val_ux_all,nfaces_perproc_surface,faces_surface_offset, &
          nfaces_surface_glob_points,NPROC)
-    call gatherv_all_cr(store_val_uy,nfaces_surface_points,&
-         store_val_uy_all,nfaces_perproc_surface,faces_surface_offset,&
+    call gatherv_all_cr(store_val_uy,nfaces_surface_points, &
+         store_val_uy_all,nfaces_perproc_surface,faces_surface_offset, &
          nfaces_surface_glob_points,NPROC)
-    call gatherv_all_cr(store_val_uz,nfaces_surface_points,&
-         store_val_uz_all,nfaces_perproc_surface,faces_surface_offset,&
+    call gatherv_all_cr(store_val_uz,nfaces_surface_points, &
+         store_val_uz_all,nfaces_perproc_surface,faces_surface_offset, &
          nfaces_surface_glob_points,NPROC)
   else
     !slaves
-    call gatherv_all_cr(store_val_ux,nfaces_surface_points,&
-         dummy,nfaces_perproc_surface,faces_surface_offset,&
+    call gatherv_all_cr(store_val_ux,nfaces_surface_points, &
+         dummy,nfaces_perproc_surface,faces_surface_offset, &
          1,NPROC)
-    call gatherv_all_cr(store_val_uy,nfaces_surface_points,&
-         dummy,nfaces_perproc_surface,faces_surface_offset,&
+    call gatherv_all_cr(store_val_uy,nfaces_surface_points, &
+         dummy,nfaces_perproc_surface,faces_surface_offset, &
          1,NPROC)
-    call gatherv_all_cr(store_val_uz,nfaces_surface_points,&
-         dummy,nfaces_perproc_surface,faces_surface_offset,&
+    call gatherv_all_cr(store_val_uz,nfaces_surface_points, &
+         dummy,nfaces_perproc_surface,faces_surface_offset, &
          1,NPROC)
   endif
 
@@ -281,19 +281,19 @@
       ! computes displ/veloc/accel for local element
       ! displacement vector
       call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                          potential_acoustic, displ_element,&
+                          potential_acoustic, displ_element, &
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
       ! velocity vector
       call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                          potential_dot_acoustic, veloc_element,&
+                          potential_dot_acoustic, veloc_element, &
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
       ! accel ?
       call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                          potential_dot_dot_acoustic, accel_element,&
+                          potential_dot_dot_acoustic, accel_element, &
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
@@ -455,25 +455,25 @@
   ! master collects
   if (myrank == 0) then
     ! shakemaps
-    call gatherv_all_cr(shakemap_ux,nfaces_surface_points,&
-         shakemap_ux_all,nfaces_perproc_surface,faces_surface_offset,&
+    call gatherv_all_cr(shakemap_ux,nfaces_surface_points, &
+         shakemap_ux_all,nfaces_perproc_surface,faces_surface_offset, &
          nfaces_surface_glob_points,NPROC)
-    call gatherv_all_cr(shakemap_uy,nfaces_surface_points,&
-         shakemap_uy_all,nfaces_perproc_surface,faces_surface_offset,&
+    call gatherv_all_cr(shakemap_uy,nfaces_surface_points, &
+         shakemap_uy_all,nfaces_perproc_surface,faces_surface_offset, &
          nfaces_surface_glob_points,NPROC)
-    call gatherv_all_cr(shakemap_uz,nfaces_surface_points,&
-         shakemap_uz_all,nfaces_perproc_surface,faces_surface_offset,&
+    call gatherv_all_cr(shakemap_uz,nfaces_surface_points, &
+         shakemap_uz_all,nfaces_perproc_surface,faces_surface_offset, &
          nfaces_surface_glob_points,NPROC)
   else
     ! shakemaps
-    call gatherv_all_cr(shakemap_ux,nfaces_surface_points,&
-         dummy,nfaces_perproc_surface,faces_surface_offset,&
+    call gatherv_all_cr(shakemap_ux,nfaces_surface_points, &
+         dummy,nfaces_perproc_surface,faces_surface_offset, &
          1,NPROC)
-    call gatherv_all_cr(shakemap_uy,nfaces_surface_points,&
-         dummy,nfaces_perproc_surface,faces_surface_offset,&
+    call gatherv_all_cr(shakemap_uy,nfaces_surface_points, &
+         dummy,nfaces_perproc_surface,faces_surface_offset, &
          1,NPROC)
-    call gatherv_all_cr(shakemap_uz,nfaces_surface_points,&
-         dummy,nfaces_perproc_surface,faces_surface_offset,&
+    call gatherv_all_cr(shakemap_uz,nfaces_surface_points, &
+         dummy,nfaces_perproc_surface,faces_surface_offset, &
          1,NPROC)
   endif
 
@@ -541,7 +541,7 @@
       if (.not. ispec_is_acoustic(ispec)) cycle
       ! calculates velocity
       call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                        potential_dot_acoustic, veloc_element,&
+                        potential_dot_acoustic, veloc_element, &
                         hprime_xx,hprime_yy,hprime_zz, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         ibool,rhostore,GRAVITY)
@@ -720,7 +720,7 @@
         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz
 
   ! local parameters
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dvxdxl,dvxdyl,&
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dvxdxl,dvxdyl, &
                                 dvxdzl,dvydxl,dvydyl,dvydzl,dvzdxl,dvzdyl,dvzdzl
   real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl
   real(kind=CUSTOM_REAL) hp1,hp2,hp3

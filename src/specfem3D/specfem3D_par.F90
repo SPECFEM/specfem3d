@@ -237,7 +237,7 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:,:), allocatable :: adj_sourcearrays
   integer :: nadj_rec_local
   ! adjoint source frechet derivatives
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: Mxx_der,Myy_der,&
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: Mxx_der,Myy_der, &
     Mzz_der,Mxy_der,Mxz_der,Myz_der
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: sloc_der
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: seismograms_eps
@@ -295,9 +295,9 @@ module specfem_par_elastic
 
   ! anisotropic
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
-            c11store,c12store,c13store,c14store,c15store,c16store,&
-            c22store,c23store,c24store,c25store,c26store,c33store,&
-            c34store,c35store,c36store,c44store,c45store,c46store,&
+            c11store,c12store,c13store,c14store,c15store,c16store, &
+            c22store,c23store,c24store,c25store,c26store,c33store, &
+            c34store,c35store,c36store,c44store,c45store,c46store, &
             c55store,c56store,c66store
   integer :: NSPEC_ANISO
 
@@ -453,7 +453,7 @@ module specfem_par_poroelastic
   implicit none
 
 ! mass matrix
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_solid_poroelastic,&
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_solid_poroelastic, &
     rmass_fluid_poroelastic
 
 ! displacement, velocity, acceleration

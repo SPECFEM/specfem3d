@@ -309,7 +309,7 @@ do i_t=1,t_nstep
           nnode,fd_x,fd_y,fd_z)
         else if (out_res == 2) then
           ! high resolution, all GLL points
-          call cvd_write_GLL_points_only(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,&
+          call cvd_write_GLL_points_only(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
           nnode,fd_x,fd_y,fd_z)
         else
           write(*,'(/,a)')'ERROR: wrong out_res value!'
@@ -457,7 +457,7 @@ do i_t=1,t_nstep
             ! data file
             write(inp_fname,fmt=format_str2)trim(out_path)//'/'//trim(proc_head), &
               iproc,trim(inp_head(i_comp)),tstep,trim(inp_ext)
-            open(unit = 222,file = trim(inp_fname),status='old',&
+            open(unit = 222,file = trim(inp_fname),status='old', &
               action='read', iostat = ios,form ='unformatted')
             if (ios /= 0) then
               write(*,'(/,a)')'ERROR: opening '//trim(inp_fname)
@@ -493,7 +493,7 @@ do i_t=1,t_nstep
             ! data file
             write(inp_fname,fmt=format_str2)trim(out_path)//'/'//trim(proc_head), &
               iproc,trim(inp_head(i_comp)),tstep,trim(inp_ext)
-            open(unit = 11,file = trim(inp_fname),status='old',&
+            open(unit = 11,file = trim(inp_fname),status='old', &
               action='read', iostat = ios,form ='unformatted')
             if (ios /= 0) then
               write(*,'(/,a)')'ERROR: opening '//trim(inp_fname)
@@ -600,7 +600,7 @@ do i_t=1,t_nstep
             ! data file
             write(inp_fname,fmt=format_str2)trim(out_path)//'/'//trim(proc_head), &
               iproc,trim(inp_head(i_comp)),tstep,trim(inp_ext)
-            open(unit = 222,file = trim(inp_fname),status='old',&
+            open(unit = 222,file = trim(inp_fname),status='old', &
               action='read', iostat = ios,form ='unformatted')
             if (ios /= 0) then
               write(*,'(/,a)')'ERROR: opening '//trim(inp_fname)
@@ -640,7 +640,7 @@ do i_t=1,t_nstep
             ! data file
             write(inp_fname,fmt=format_str2)trim(out_path)//'/'//trim(proc_head), &
               iproc,trim(inp_head(i_comp)),tstep,trim(inp_ext)
-            open(unit = 11,file = trim(inp_fname),status='old',&
+            open(unit = 11,file = trim(inp_fname),status='old', &
               action='read', iostat = ios,form ='unformatted')
             if (ios /= 0) then
               write(*,'(/,a)')'ERROR: opening '//trim(inp_fname)

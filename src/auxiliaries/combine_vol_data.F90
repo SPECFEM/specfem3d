@@ -102,7 +102,7 @@
   enddo
 
   if (ADIOS_FOR_MESH) then
-    call read_args_adios(arg, MAX_NUM_NODES, node_list, num_node,   &
+    call read_args_adios(arg, MAX_NUM_NODES, node_list, num_node, &
                          var_name, value_file_name, mesh_file_name, &
                          outdir, ires)
     filename = var_name
@@ -144,7 +144,7 @@
   nee = 0
 
   call cvd_count_totals_ext_mesh(num_node,node_list,LOCAL_PATH, &
-                                 npp,nee,HIGH_RESOLUTION_MESH,  &
+                                 npp,nee,HIGH_RESOLUTION_MESH, &
                                  mesh_handle, ADIOS_FOR_MESH)
 
   ! writes point and scalar information
@@ -162,7 +162,7 @@
                                    ibool_offset, x_global_offset)
     else
       write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'
-      open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin',&
+      open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin', &
             status='old',action='read',form='unformatted',iostat=ier)
       read(27) NSPEC_AB
       read(27) NGLOB_AB
@@ -177,7 +177,7 @@
     if (ADIOS_FOR_MESH) then
       call read_ibool_adios_mesh(mesh_handle, ibool_offset, &
                                  NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
-      call read_coordinates_adios_mesh(mesh_handle, x_global_offset,  &
+      call read_coordinates_adios_mesh(mesh_handle, x_global_offset, &
                                        NGLOB_AB, xstore, ystore, zstore)
     else
       read(27) ibool
@@ -206,7 +206,7 @@
       ! data file
       write(prname,'(a,i6.6,a)') trim(indir)//'proc',iproc,'_'
       local_data_file = trim(prname) // trim(filename) // '.bin'
-      open(unit = 28,file = trim(local_data_file),status='old',&
+      open(unit = 28,file = trim(local_data_file),status='old', &
             action='read',form ='unformatted',iostat=ier)
       if (ier /= 0) then
         print *,'Error opening ',trim(local_data_file)
@@ -276,7 +276,7 @@
       write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'
 
       ! gets number of elements and global points for this partition
-      open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin',&
+      open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin', &
             status='old',action='read',form='unformatted')
       read(27) NSPEC_AB
       read(27) NGLOB_AB
@@ -381,7 +381,7 @@
 
 !=============================================================
 
-  subroutine cvd_count_totals_ext_mesh(num_node,node_list,LOCAL_PATH,&
+  subroutine cvd_count_totals_ext_mesh(num_node,node_list,LOCAL_PATH, &
                           npp,nee,HIGH_RESOLUTION_MESH, &
                           mesh_handle,ADIOS_FOR_MESH)
 ! counts total number of points and elements for external meshes in given slice list
@@ -426,7 +426,7 @@
       ! gets number of elements and points for this slice
       iproc = node_list(it)
       write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'
-      open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin',&
+      open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin', &
             status='old',action='read',form='unformatted',iostat=ier)
       if (ier /= 0) then
         print *,'Error opening: ',prname_lp(1:len_trim(prname_lp))//'external_mesh.bin'
@@ -507,7 +507,7 @@
 !=============================================================
 
 
-  subroutine cvd_write_corners(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,dat,&
+  subroutine cvd_write_corners(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,dat, &
                                it,npp,numpoin,np)
 
 ! writes out locations of spectral element corners only
@@ -699,11 +699,9 @@
 
   end subroutine cvd_write_corners
 
-
 !=============================================================
 
-
-  subroutine cvd_write_GLL_points(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,dat,&
+  subroutine cvd_write_GLL_points(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,dat, &
                                   it,npp,numpoin,np)
 
 ! writes out locations of all GLL points of spectral elements
@@ -777,7 +775,7 @@
 
 ! writes out locations of spectral element corners only
 
-  subroutine cvd_write_corner_elements(NSPEC_AB,NGLOB_AB,ibool,&
+  subroutine cvd_write_corner_elements(NSPEC_AB,NGLOB_AB,ibool, &
                                       np,nelement,it,nee,numpoin)
 
   use constants

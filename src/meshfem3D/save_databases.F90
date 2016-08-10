@@ -26,13 +26,13 @@
 !=====================================================================
 
   subroutine save_databases(prname,nspec,nglob,iproc_xi,iproc_eta, &
-                            NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta,&
+                            NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta, &
                             ibool,nodes_coords,ispec_material_id, &
-                            nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP,&
+                            nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                             NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
-                            ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
+                            ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
                             NMATERIALS,material_properties, &
-                            nspec_CPML,CPML_to_spec,CPML_regions,is_CPML,&
+                            nspec_CPML,CPML_to_spec,CPML_regions,is_CPML, &
                             xstore, ystore, zstore)
 
   use constants, only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC
@@ -228,7 +228,7 @@
   write(IIN_database) 6,NSPEC2D_TOP
 
   do i=1,nspec2D_xmin
-     write(IIN_database) ibelm_xmin(i),ibool(1,1,1,ibelm_xmin(i)),ibool(1,NGLLY_M,1,ibelm_xmin(i)),&
+     write(IIN_database) ibelm_xmin(i),ibool(1,1,1,ibelm_xmin(i)),ibool(1,NGLLY_M,1,ibelm_xmin(i)), &
           ibool(1,1,NGLLZ_M,ibelm_xmin(i)),ibool(1,NGLLY_M,NGLLZ_M,ibelm_xmin(i))
   enddo
   do i=1,nspec2D_xmax
@@ -236,7 +236,7 @@
           ibool(NGLLX_M,1,NGLLZ_M,ibelm_xmax(i)),ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_xmax(i))
   enddo
   do i=1,nspec2D_ymin
-     write(IIN_database) ibelm_ymin(i),ibool(1,1,1,ibelm_ymin(i)),ibool(NGLLX_M,1,1,ibelm_ymin(i)),&
+     write(IIN_database) ibelm_ymin(i),ibool(1,1,1,ibelm_ymin(i)),ibool(NGLLX_M,1,1,ibelm_ymin(i)), &
           ibool(1,1,NGLLZ_M,ibelm_ymin(i)),ibool(NGLLX_M,1,NGLLZ_M,ibelm_ymin(i))
   enddo
   do i=1,nspec2D_ymax
@@ -404,7 +404,7 @@
       call save_output_mesh_files_as_cubit(nspec,nglob, ibool,nodes_coords, ispec_material_id, &
                                            nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                                            NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NMATERIALS,material_properties, &
-                                           ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
+                                           ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
                                            xstore,ystore,zstore)
     endif
   endif
@@ -420,7 +420,7 @@
   subroutine save_output_mesh_files_as_cubit(nspec,nglob, ibool,nodes_coords, ispec_material_id, &
                                      nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                                      NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NMATERIALS,material_properties, &
-                                     ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
+                                     ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
                                      xgrid,ygrid,zgrid)
 
     use constants, only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC, NGLLX, NGLLY, NGLLZ, NDIM, ZERO
@@ -517,7 +517,7 @@
     open(IIN_database,file='MESH/nodes_coords_file')
     write(IIN_database,*) nglob
     do iglob=1,nglob
-       write(IIN_database,'(i14,3x,3(f20.5,1x))') iglob,nodes_coords(iglob,1),nodes_coords(iglob,2),&
+       write(IIN_database,'(i14,3x,3(f20.5,1x))') iglob,nodes_coords(iglob,1),nodes_coords(iglob,2), &
             nodes_coords(iglob,3)-z_bottom
     enddo
     close(IIN_database)
@@ -525,9 +525,9 @@
     open(IIN_database,file='MESH/mesh_file')
     write(IIN_database,*) nspec
     do ispec=1,nspec
-       write(IIN_database,'(9i15)')  ispec,ibool(1,1,1,ispec),ibool(2,1,1,ispec),&
-            ibool(2,2,1,ispec),ibool(1,2,1,ispec),&
-            ibool(1,1,2,ispec),ibool(2,1,2,ispec),&
+       write(IIN_database,'(9i15)')  ispec,ibool(1,1,1,ispec),ibool(2,1,1,ispec), &
+            ibool(2,2,1,ispec),ibool(1,2,1,ispec), &
+            ibool(1,1,2,ispec),ibool(2,1,2,ispec), &
             ibool(2,2,2,ispec),ibool(1,2,2,ispec)
     enddo
     close(IIN_database)
@@ -535,7 +535,7 @@
     open(IIN_database,file='MESH/absorbing_surface_file_xmin')
     write(IIN_database,*) nspec2D_xmin
     do i=1,nspec2D_xmin
-       write(IIN_database,'(5(i10,1x))') ibelm_xmin(i),ibool(1,1,1,ibelm_xmin(i)),ibool(1,NGLLY_M,1,ibelm_xmin(i)),&
+       write(IIN_database,'(5(i10,1x))') ibelm_xmin(i),ibool(1,1,1,ibelm_xmin(i)),ibool(1,NGLLY_M,1,ibelm_xmin(i)), &
           ibool(1,1,NGLLZ_M,ibelm_xmin(i)),ibool(1,NGLLY_M,NGLLZ_M,ibelm_xmin(i))
     enddo
     close(IIN_database)
@@ -543,8 +543,8 @@
     open(IIN_database,file='MESH/absorbing_surface_file_xmax')
     write(IIN_database,*) nspec2D_xmax
     do i=1,nspec2D_xmax
-       write(IIN_database,'(5(i10,1x))') ibelm_xmax(i),ibool(NGLLX_M,1,1,ibelm_xmax(i)),&
-            ibool(NGLLX_M,NGLLY_M,1,ibelm_xmax(i)), ibool(NGLLX_M,1,NGLLZ_M,ibelm_xmax(i)),&
+       write(IIN_database,'(5(i10,1x))') ibelm_xmax(i),ibool(NGLLX_M,1,1,ibelm_xmax(i)), &
+            ibool(NGLLX_M,NGLLY_M,1,ibelm_xmax(i)), ibool(NGLLX_M,1,NGLLZ_M,ibelm_xmax(i)), &
             ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_xmax(i))
     enddo
     close(IIN_database)
@@ -552,7 +552,7 @@
     open(IIN_database,file='MESH/absorbing_surface_file_ymin')
     write(IIN_database,*) nspec2D_ymin
     do i=1,nspec2D_ymin
-       write(IIN_database,'(5(i10,1x))') ibelm_ymin(i),ibool(1,1,1,ibelm_ymin(i)),ibool(NGLLX_M,1,1,ibelm_ymin(i)),&
+       write(IIN_database,'(5(i10,1x))') ibelm_ymin(i),ibool(1,1,1,ibelm_ymin(i)),ibool(NGLLX_M,1,1,ibelm_ymin(i)), &
             ibool(1,1,NGLLZ_M,ibelm_ymin(i)),ibool(NGLLX_M,1,NGLLZ_M,ibelm_ymin(i))
     enddo
     close(IIN_database)
@@ -560,8 +560,8 @@
     open(IIN_database,file='MESH/absorbing_surface_file_ymax')
     write(IIN_database,*) nspec2D_ymax
     do i=1,nspec2D_ymax
-       write(IIN_database,'(5(i10,1x))') ibelm_ymax(i),ibool(NGLLX_M,NGLLY_M,1,ibelm_ymax(i)),&
-            ibool(1,NGLLY_M,1,ibelm_ymax(i)), ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_ymax(i)),&
+       write(IIN_database,'(5(i10,1x))') ibelm_ymax(i),ibool(NGLLX_M,NGLLY_M,1,ibelm_ymax(i)), &
+            ibool(1,NGLLY_M,1,ibelm_ymax(i)), ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_ymax(i)), &
             ibool(1,NGLLY_M,NGLLZ_M,ibelm_ymax(i))
     enddo
 
@@ -577,8 +577,8 @@
     open(IIN_database,file='MESH/free_or_absorbing_surface_file_zmax')
     write(IIN_database,*) NSPEC2D_TOP
     do i=1,NSPEC2D_TOP
-       write(IIN_database,'(5(i10,1x))') ibelm_top(i),ibool(1,1,NGLLZ_M,ibelm_top(i)),&
-            ibool(NGLLX_M,1,NGLLZ_M,ibelm_top(i)),ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_top(i)),&
+       write(IIN_database,'(5(i10,1x))') ibelm_top(i),ibool(1,1,NGLLZ_M,ibelm_top(i)), &
+            ibool(NGLLX_M,1,NGLLZ_M,ibelm_top(i)),ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_top(i)), &
             ibool(1,NGLLY_M,NGLLZ_M,ibelm_top(i))
     enddo
     close(IIN_database)

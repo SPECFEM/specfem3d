@@ -44,7 +44,7 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
 
   use specfem_par, only: deltat,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
                          kappastore,mustore
-  use pml_par, only: NSPEC_CPML,CPML_regions,k_store_x,k_store_y,k_store_z,&
+  use pml_par, only: NSPEC_CPML,CPML_regions,k_store_x,k_store_y,k_store_z, &
                      d_store_x,d_store_y,d_store_z,alpha_store_x,alpha_store_y,alpha_store_z, &
                      PML_dux_dxl, PML_dux_dyl, PML_dux_dzl, PML_duy_dxl, PML_duy_dyl, PML_duy_dzl, &
                      PML_duz_dxl, PML_duz_dyl, PML_duz_dzl, &
@@ -121,10 +121,10 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
         alpha_x = alpha_store_x(i,j,k,ispec_CPML)
         alpha_y = alpha_store_y(i,j,k,ispec_CPML)
         alpha_z = alpha_store_z(i,j,k,ispec_CPML)
-        call lijk_parameter_computation(deltat,&
-                                        kappa_z,d_z,alpha_z,kappa_y,d_y,alpha_y,kappa_x,d_x,alpha_x,&
-                                        CPML_region_local,231,A6,A7,A8,A9,&
-                                        coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,&
+        call lijk_parameter_computation(deltat, &
+                                        kappa_z,d_z,alpha_z,kappa_y,d_y,alpha_y,kappa_x,d_x,alpha_x, &
+                                        CPML_region_local,231,A6,A7,A8,A9, &
+                                        coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2, &
                                         coef0_3,coef1_3,coef2_3)
         rmemory_dux_dxl_x(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dux_dxl_x(i,j,k,ispec_CPML,1) &
                + PML_dux_dxl_new(i,j,k) * coef1_1 + PML_dux_dxl_old(i,j,k) * coef2_1
@@ -158,10 +158,10 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
         alpha_x = alpha_store_x(i,j,k,ispec_CPML)
         alpha_y = alpha_store_y(i,j,k,ispec_CPML)
         alpha_z = alpha_store_z(i,j,k,ispec_CPML)
-        call lijk_parameter_computation(deltat,&
-                                        kappa_x,d_x,alpha_x,kappa_z,d_z,alpha_z,kappa_y,d_y,alpha_y,&
-                                        CPML_region_local,132,A10,A11,A12,A13,&
-                                        coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,&
+        call lijk_parameter_computation(deltat, &
+                                        kappa_x,d_x,alpha_x,kappa_z,d_z,alpha_z,kappa_y,d_y,alpha_y, &
+                                        CPML_region_local,132,A10,A11,A12,A13, &
+                                        coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2, &
                                         coef0_3,coef1_3,coef2_3)
         rmemory_dux_dyl_x(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dux_dyl_x(i,j,k,ispec_CPML,1) &
                + PML_dux_dyl_new(i,j,k) * coef1_1 + PML_dux_dyl_old(i,j,k) * coef2_1
@@ -194,10 +194,10 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
         alpha_x = alpha_store_x(i,j,k,ispec_CPML)
         alpha_y = alpha_store_y(i,j,k,ispec_CPML)
         alpha_z = alpha_store_z(i,j,k,ispec_CPML)
-        call lijk_parameter_computation(deltat,&
-                                        kappa_x,d_x,alpha_x,kappa_y,d_y,alpha_y,kappa_z,d_z,alpha_z,&
-                                        CPML_region_local,123,A14,A15,A16,A17,&
-                                        coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,&
+        call lijk_parameter_computation(deltat, &
+                                        kappa_x,d_x,alpha_x,kappa_y,d_y,alpha_y,kappa_z,d_z,alpha_z, &
+                                        CPML_region_local,123,A14,A15,A16,A17, &
+                                        coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2, &
                                         coef0_3,coef1_3,coef2_3)
 
         rmemory_dux_dzl_x(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dux_dzl_x(i,j,k,ispec_CPML,1) &
@@ -225,8 +225,8 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
         kappa_x = k_store_x(i,j,k,ispec_CPML)
         d_x = d_store_x(i,j,k,ispec_CPML)
         alpha_x = alpha_store_x(i,j,k,ispec_CPML)
-        call lx_parameter_computation(deltat,kappa_x,d_x,alpha_x,&
-                                      CPML_region_local,A18,A19,&
+        call lx_parameter_computation(deltat,kappa_x,d_x,alpha_x, &
+                                      CPML_region_local,A18,A19, &
                                       coef0_1,coef1_1,coef2_1)
 
         rmemory_duz_dzl_y(i,j,k,ispec_CPML) = coef0_1 * rmemory_duz_dzl_y(i,j,k,ispec_CPML) &
@@ -246,7 +246,7 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
         d_y = d_store_y(i,j,k,ispec_CPML)
         alpha_y = alpha_store_y(i,j,k,ispec_CPML)
         call ly_parameter_computation(deltat,kappa_y,d_y,alpha_y, &
-                                      CPML_region_local,A20,A21,&
+                                      CPML_region_local,A20,A21, &
                                       coef0_1,coef1_1,coef2_1)
 
         rmemory_duz_dzl_x(i,j,k,ispec_CPML) = coef0_1 * rmemory_duz_dzl_x(i,j,k,ispec_CPML) &
@@ -266,7 +266,7 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
         d_z = d_store_z(i,j,k,ispec_CPML)
         alpha_z = alpha_store_z(i,j,k,ispec_CPML)
         call lz_parameter_computation(deltat,kappa_z,d_z,alpha_z, &
-                                      CPML_region_local,A22,A23,&
+                                      CPML_region_local,A22,A23, &
                                       coef0_1,coef1_1,coef2_1)
 
         rmemory_duy_dyl_x(i,j,k,ispec_CPML) = coef0_1 * rmemory_duy_dyl_x(i,j,k,ispec_CPML) &
@@ -349,10 +349,10 @@ end subroutine pml_compute_memory_variables_elastic
 !
 !=====================================================================
 !
-subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,temp3,&
+subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,temp3, &
                                                  rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl, &
-                                                 PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl,&
-                                                 PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old,&
+                                                 PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl, &
+                                                 PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old, &
                                                  PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new)
   ! calculates C-PML elastic memory variables and computes stress sigma
 
@@ -361,11 +361,11 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
   ! Anisotropic-medium PML for vector FETD with modified basis functions,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
-  use specfem_par, only: xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian,&
+  use specfem_par, only: xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
                          deltat,rhostore
 
-  use pml_par, only: NSPEC_CPML,CPML_regions,k_store_x,k_store_y,k_store_z,&
-                     d_store_x,d_store_y,d_store_z,&
+  use pml_par, only: NSPEC_CPML,CPML_regions,k_store_x,k_store_y,k_store_z, &
+                     d_store_x,d_store_y,d_store_z, &
                      alpha_store_x,alpha_store_y,alpha_store_z
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS, &
@@ -425,10 +425,10 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
         alpha_z = alpha_store_z(i,j,k,ispec_CPML)
 
         !---------------------- A6, A7, A8, A9 --------------------------
-        call lijk_parameter_computation(deltat,&
-                                        kappa_z,d_z,alpha_z,kappa_y,d_y,alpha_y,kappa_x,d_x,alpha_x,&
-                                        CPML_region_local,231,A6,A7,A8,A9,&
-                                        coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,&
+        call lijk_parameter_computation(deltat, &
+                                        kappa_z,d_z,alpha_z,kappa_y,d_y,alpha_y,kappa_x,d_x,alpha_x, &
+                                        CPML_region_local,231,A6,A7,A8,A9, &
+                                        coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2, &
                                         coef0_3,coef1_3,coef2_3)
 
         rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dpotential_dxl(i,j,k,ispec_CPML,1) + &
@@ -441,10 +441,10 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
                 coef1_3 * PML_dpotential_dxl_new(i,j,k) + coef2_3 * PML_dpotential_dxl_old(i,j,k)
 
         !---------------------- A10,A11,A12,A13 --------------------------
-        call lijk_parameter_computation(deltat,&
-                                        kappa_x,d_x,alpha_x,kappa_z,d_z,alpha_z,kappa_y,d_y,alpha_y,&
-                                        CPML_region_local,132,A10,A11,A12,A13,&
-                                        coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,&
+        call lijk_parameter_computation(deltat, &
+                                        kappa_x,d_x,alpha_x,kappa_z,d_z,alpha_z,kappa_y,d_y,alpha_y, &
+                                        CPML_region_local,132,A10,A11,A12,A13, &
+                                        coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2, &
                                         coef0_3,coef1_3,coef2_3)
 
         rmemory_dpotential_dyl(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dpotential_dyl(i,j,k,ispec_CPML,1) + &
@@ -457,10 +457,10 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
                 coef1_3 * PML_dpotential_dyl_new(i,j,k) + coef2_3 * PML_dpotential_dyl_old(i,j,k)
 
         !---------------------- A14,A15,A16,A17 --------------------------
-        call lijk_parameter_computation(deltat,&
-                                        kappa_x,d_x,alpha_x,kappa_y,d_y,alpha_y,kappa_z,d_z,alpha_z,&
-                                        CPML_region_local,123,A14,A15,A16,A17,&
-                                        coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,&
+        call lijk_parameter_computation(deltat, &
+                                        kappa_x,d_x,alpha_x,kappa_y,d_y,alpha_y,kappa_z,d_z,alpha_z, &
+                                        CPML_region_local,123,A14,A15,A16,A17, &
+                                        coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2, &
                                         coef0_3,coef1_3,coef2_3)
 
         rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) = coef0_1 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,1) + &
@@ -510,8 +510,8 @@ end subroutine pml_compute_memory_variables_acoustic
 !
 !=====================================================================
 !
-subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,i,j,k,&
-                                                         displ_x,displ_y,displ_z,displ,&
+subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,i,j,k, &
+                                                         displ_x,displ_y,displ_z,displ, &
                                                          num_coupling_ac_el_faces,rmemory_coupling_ac_el_displ)
   ! calculates C-PML elastic memory variables and computes stress sigma
 
@@ -553,7 +553,7 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
 
 
   call lxy_interface_parameter_computation(deltat,kappa_x,d_x,alpha_x,kappa_y,d_y,alpha_y, &
-                                           CPML_region_local,12,A_12,A_13,A_14,&
+                                           CPML_region_local,12,A_12,A_13,A_14, &
                                            coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2)
   ! displ_x
   rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) = coef0_1 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) + &
@@ -596,9 +596,9 @@ end subroutine pml_compute_memory_variables_acoustic_elastic
 !
 !=====================================================================
 !
-subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k,&
-                                                         pressure,potential_acoustic,&
-                                                         potential_dot_acoustic,potential_dot_dot_acoustic,&
+subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k, &
+                                                         pressure,potential_acoustic, &
+                                                         potential_dot_acoustic,potential_dot_dot_acoustic, &
                                                          num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential)
   ! calculates C-PML elastic memory variables and computes stress sigma
 
@@ -648,7 +648,7 @@ subroutine pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,
                kappa_x, d_x, alpha_x, &
                kappa_y, d_y, alpha_y, &
                1.0_CUSTOM_REAL, 0.0_CUSTOM_REAL, 0.0_CUSTOM_REAL, &
-               CPML_region_local,  &
+               CPML_region_local, &
                A_0, A_1, A_2, A_3, A_4, A_5, &
                coef0_1,coef1_1,coef2_1, &
                coef0_2,coef1_2,coef2_2, &
@@ -671,11 +671,11 @@ end subroutine pml_compute_memory_variables_elastic_acoustic
 !=====================================================================
 !
 subroutine lijk_parameter_computation(deltat,kappa_x,d_x,alpha_x,kappa_y,d_y,alpha_y,kappa_z,d_z,alpha_z, &
-                                      CPML_region_local,index_ijk,A_0,A_1,A_2,A_3,&
-                                      coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,&
+                                      CPML_region_local,index_ijk,A_0,A_1,A_2,A_3, &
+                                      coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2, &
                                       coef0_3,coef1_3,coef2_3)
 
-  use constants, only: CUSTOM_REAL,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,&
+  use constants, only: CUSTOM_REAL,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
                        CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
   use pml_par, only: min_distance_between_CPML_parameter
 
@@ -689,14 +689,14 @@ subroutine lijk_parameter_computation(deltat,kappa_x,d_x,alpha_x,kappa_y,d_y,alp
   integer, intent(in) :: CPML_region_local,index_ijk
 
   real(kind=CUSTOM_REAL), intent(out) :: A_0,A_1,A_2,A_3
-  real(kind=CUSTOM_REAL), intent(out) :: coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2,&
+  real(kind=CUSTOM_REAL), intent(out) :: coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2, &
                                          coef0_3,coef1_3,coef2_3
 
   ! local variables
   real(kind=CUSTOM_REAL) :: beta_x,beta_y,beta_z
   real(kind=CUSTOM_REAL) :: bar_A_0,bar_A_1,bar_A_2,bar_A_3
 
-  integer :: CPML_X_ONLY_TEMP,CPML_Y_ONLY_TEMP,CPML_Z_ONLY_TEMP,&
+  integer :: CPML_X_ONLY_TEMP,CPML_Y_ONLY_TEMP,CPML_Z_ONLY_TEMP, &
              CPML_XY_ONLY_TEMP,CPML_XZ_ONLY_TEMP,CPML_YZ_ONLY_TEMP,CPML_XYZ_TEMP
 
   logical,parameter :: FIRST_ORDER_CONVOLUTION = .false.
@@ -905,10 +905,10 @@ end subroutine lijk_parameter_computation
 !
 !
 subroutine lx_parameter_computation(deltat,kappa_x,d_x,alpha_x, &
-                                    CPML_region_local,A_0,A_1,&
+                                    CPML_region_local,A_0,A_1, &
                                     coef0_1,coef1_1,coef2_1)
 
-  use constants, only: CUSTOM_REAL,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,&
+  use constants, only: CUSTOM_REAL,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
                        CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
   implicit none
@@ -976,10 +976,10 @@ end subroutine lx_parameter_computation
 !=====================================================================
 !
 subroutine ly_parameter_computation(deltat,kappa_y,d_y,alpha_y, &
-                                    CPML_region_local,A_0,A_1,&
+                                    CPML_region_local,A_0,A_1, &
                                     coef0_1,coef1_1,coef2_1)
 
-  use constants, only: CUSTOM_REAL,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,&
+  use constants, only: CUSTOM_REAL,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
                        CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
   implicit none
@@ -1051,10 +1051,10 @@ end subroutine ly_parameter_computation
 !
 !
 subroutine lz_parameter_computation(deltat,kappa_z,d_z,alpha_z, &
-                                    CPML_region_local,A_0,A_1,&
+                                    CPML_region_local,A_0,A_1, &
                                     coef0_1,coef1_1,coef2_1)
 
-  use constants, only: CUSTOM_REAL,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,&
+  use constants, only: CUSTOM_REAL,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
                        CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
   implicit none
@@ -1122,10 +1122,10 @@ end subroutine lz_parameter_computation
 !=====================================================================
 !
 subroutine lxy_interface_parameter_computation(deltat,kappa_x,d_x,alpha_x,kappa_y,d_y,alpha_y, &
-                                      CPML_region_local,index_ijk,A_0,A_1,A_2,&
+                                      CPML_region_local,index_ijk,A_0,A_1,A_2, &
                                       coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2)
 
-  use constants, only: CUSTOM_REAL,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,&
+  use constants, only: CUSTOM_REAL,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
                        CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
   use pml_par, only: min_distance_between_CPML_parameter
 
@@ -1142,7 +1142,7 @@ subroutine lxy_interface_parameter_computation(deltat,kappa_x,d_x,alpha_x,kappa_
   ! local variables
   real(kind=CUSTOM_REAL) :: bar_A_0,bar_A_1,bar_A_2,beta_x,beta_y
 
-  integer :: CPML_X_ONLY_TEMP,CPML_Y_ONLY_TEMP,CPML_Z_ONLY_TEMP,&
+  integer :: CPML_X_ONLY_TEMP,CPML_Y_ONLY_TEMP,CPML_Z_ONLY_TEMP, &
              CPML_XY_ONLY_TEMP,CPML_XZ_ONLY_TEMP,CPML_YZ_ONLY_TEMP,CPML_XYZ_TEMP
 
   logical,parameter :: FIRST_ORDER_CONVOLUTION = .false.

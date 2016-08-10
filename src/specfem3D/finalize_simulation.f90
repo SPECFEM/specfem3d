@@ -50,7 +50,7 @@
     if (ADIOS_FOR_FORWARD_ARRAYS) then
       call save_forward_arrays_adios()
     else
-      open(unit=IOUT,file=prname(1:len_trim(prname))//'save_forward_arrays.bin',&
+      open(unit=IOUT,file=prname(1:len_trim(prname))//'save_forward_arrays.bin', &
             status='unknown',form='unformatted',iostat=ier)
       if (ier /= 0) then
         print *,'error: opening save_forward_arrays.bin'

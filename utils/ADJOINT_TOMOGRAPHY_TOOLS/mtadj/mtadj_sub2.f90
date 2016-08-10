@@ -70,7 +70,7 @@ contains
   ! sigma_tshift_cc and sigma_dlnA_cc to take into account
   ! the data and synthetics misfit
 
-  subroutine compute_cc_error(dataw,synw,nlen,dt,i_pmax,dlnA,&
+  subroutine compute_cc_error(dataw,synw,nlen,dt,i_pmax,dlnA, &
        sigma_tshift_cc,sigma_dlnA_cc, &
        MIN_SIGMA_TSHIFT_CC,MIN_SIGMA_DLNA_CC)
 
@@ -101,7 +101,7 @@ contains
 
   ! ======================================================================
 
-  subroutine reconstruct_syn_fd(csynw,dtau_fdm,dlnA_fdm,i_right,&
+  subroutine reconstruct_syn_fd(csynw,dtau_fdm,dlnA_fdm,i_right, &
        synw_rc_fd,dt,nlen)
 
     complex, dimension(:), intent(in) :: csynw
@@ -186,7 +186,7 @@ contains
   end subroutine compute_dtau_dlnA
 
   ! ======================================================================
-  subroutine compute_mt_error(ntaper,dataw,synw,tas,&
+  subroutine compute_mt_error(ntaper,dataw,synw,tas, &
        nlen,dt,wtr_mtm,i_right,tshift_cc, &
        dtau_fdm,dlnA_fdm, sigma_dtau_fdm,sigma_dlnA_fdm)
 

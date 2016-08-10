@@ -29,7 +29,7 @@
 
 ! compute the approximate amount of memory needed to run the solver
 
- subroutine memory_eval(NSPEC_AB,NGLOB_AB,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh,&
+ subroutine memory_eval(NSPEC_AB,NGLOB_AB,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh, &
                         APPROXIMATE_OCEAN_LOAD,memory_size)
 
   use constants

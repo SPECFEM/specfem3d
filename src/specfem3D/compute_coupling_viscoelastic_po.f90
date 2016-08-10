@@ -27,17 +27,17 @@
 
 ! for elastic solver
 
-  subroutine compute_coupling_viscoelastic_po(NSPEC_AB,NGLOB_AB,ibool,&
-                        displs_poroelastic,displw_poroelastic,&
+  subroutine compute_coupling_viscoelastic_po(NSPEC_AB,NGLOB_AB,ibool, &
+                        displs_poroelastic,displw_poroelastic, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        hprime_xx,hprime_yy,hprime_zz,&
+                        hprime_xx,hprime_yy,hprime_zz, &
                         kappaarraystore,rhoarraystore,mustore, &
-                        phistore,tortstore,jacobian,&
+                        phistore,tortstore,jacobian, &
                         displ,accel,kappastore, &
                         ANISOTROPY,NSPEC_ANISO, &
-                        c11store,c12store,c13store,c14store,c15store,c16store,&
-                        c22store,c23store,c24store,c25store,c26store,c33store,&
-                        c34store,c35store,c36store,c44store,c45store,c46store,&
+                        c11store,c12store,c13store,c14store,c15store,c16store, &
+                        c22store,c23store,c24store,c25store,c26store,c33store, &
+                        c34store,c35store,c36store,c44store,c45store,c46store, &
                         c55store,c56store,c66store, &
                         SIMULATION_TYPE,NGLOB_ADJOINT,NSPEC_ADJOINT, &
                         num_coupling_el_po_faces, &
@@ -56,7 +56,7 @@
   integer :: NSPEC_AB,NGLOB_AB
 
 ! displacements, etc
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displs_poroelastic,&
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displs_poroelastic, &
                                                       displw_poroelastic
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displ,accel
 
@@ -116,7 +116,7 @@
   real(kind=CUSTOM_REAL) :: mul_G,lambdal_G,lambdalplus2mul_G
 
 ! local anisotropy parameters
-  real(kind=CUSTOM_REAL) c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,&
+  real(kind=CUSTOM_REAL) c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26, &
                         c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
 
   integer :: iface,igll,ispec_po,ispec_el,iglob,iglob_el,iglob_po

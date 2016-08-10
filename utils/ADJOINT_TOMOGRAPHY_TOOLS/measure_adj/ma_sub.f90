@@ -67,7 +67,7 @@ contains
          ampmax_unw,wtr_use_unw,ampmax,wtr_use,wtr_mtm,dtau_wa,dlnA_wa !omega
     integer :: ishift,i,ictaper,j,fnum,i_amp_max_unw,i_amp_max,i_right_stop,idf_new,iom,is_mtm_av
 
-    complex*16, dimension(NPT) :: syn_dtwo, dat_dtwo, syn_dtw_ho, dat_dtw_ho,  &
+    complex*16, dimension(NPT) :: syn_dtwo, dat_dtwo, syn_dtw_ho, dat_dtw_ho, &
                                   top_mtm, bot_mtm, trans_mtm
     double precision, dimension(NPT) :: wvec, ey1, ey2, dtau_mtm, dlnA_mtm, &
          phi_w, abs_w, err_phi, err_abs, phi_mtm, abs_mtm
@@ -1589,7 +1589,7 @@ contains
 
   ! --------------------------------------------------------------------
 
-  subroutine deconstruct_dat_cc(filename,dat_dtw,tstart,dt,nlen,&
+  subroutine deconstruct_dat_cc(filename,dat_dtw,tstart,dt,nlen, &
        ishift,tshift,dlnA,dat_dtw_cc)
 
     ! Using CC measurements, map the data to the synthetics;

@@ -235,12 +235,21 @@ use File::Basename;
       $line =~ s#write\s*\(\s*IMAIN\s*,\s*\*\s*\)\s*''#write\(IMAIN,\*\)#ogi;
       $line =~ s#write\s*\(\s*IOUT\s*,\s*\*\s*\)\s*''#write\(IOUT,\*\)#ogi;
 
+# force space in , & at end of line
+      $line =~ s#\s*,\s*&\s*$#, &#ogi;
+
 # always use upper case for GLL when used as a word
       $line =~ s# gll # GLL #ogi;
 
       $line =~ s# mpi # MPI #ogi;
 
       $line =~ s# pml # PML #ogi;
+
+# fix some typos I have found in the different codes
+      $line =~ s#debbug#debug#ogi;
+      $line =~ s#familly#family#ogi;
+      $line =~ s#warnning#warning#ogi;
+      $line =~ s#elemement#element#ogi;
 
       print FILEF90 "$line\n";
 

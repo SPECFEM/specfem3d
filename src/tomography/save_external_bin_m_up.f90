@@ -37,7 +37,7 @@
                     jacobianstore, rho_vp,rho_vs,qmu_attenuation_store, &
                     rhostore,kappastore,mustore, &
                     rmass,rmass_acoustic,rmass_solid_poroelastic,rmass_fluid_poroelastic, &
-                    APPROXIMATE_OCEAN_LOAD,rmass_ocean_load,NGLOB_OCEAN,&
+                    APPROXIMATE_OCEAN_LOAD,rmass_ocean_load,NGLOB_OCEAN, &
                     ibool, &
                     xstore_dummy,ystore_dummy,zstore_dummy, &
                     abs_boundary_normal,abs_boundary_jacobian2Dw, &
