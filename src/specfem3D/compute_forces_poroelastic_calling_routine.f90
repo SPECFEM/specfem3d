@@ -159,21 +159,21 @@ subroutine compute_forces_poroelastic()
 
       ! elastic coupling
       if (ELASTIC_SIMULATION) then
-        call compute_coupling_poroelastic_el(NSPEC_AB,NGLOB_AB,ibool,&
-                          displs_poroelastic,accels_poroelastic,displw_poroelastic,&
+        call compute_coupling_poroelastic_el(NSPEC_AB,NGLOB_AB,ibool, &
+                          displs_poroelastic,accels_poroelastic,displw_poroelastic, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          hprime_xx,hprime_yy,hprime_zz,&
+                          hprime_xx,hprime_yy,hprime_zz, &
                           kappaarraystore,rhoarraystore,mustore, &
-                          phistore,tortstore,jacobian,&
+                          phistore,tortstore,jacobian, &
                           displ,kappastore, &
                           ANISOTROPY,NSPEC_ANISO, &
-                          c11store,c12store,c13store,c14store,c15store,c16store,&
-                          c22store,c23store,c24store,c25store,c26store,c33store,&
-                          c34store,c35store,c36store,c44store,c45store,c46store,&
+                          c11store,c12store,c13store,c14store,c15store,c16store, &
+                          c22store,c23store,c24store,c25store,c26store,c33store, &
+                          c34store,c35store,c36store,c44store,c45store,c46store, &
                           c55store,c56store,c66store, &
                           SIMULATION_TYPE,NGLOB_ADJOINT,NSPEC_ADJOINT, &
                           num_coupling_el_po_faces, &
-                          coupling_el_po_ispec,coupling_po_el_ispec,&
+                          coupling_el_po_ispec,coupling_po_el_ispec, &
                           coupling_el_po_ijk,coupling_po_el_ijk, &
                           coupling_el_po_normal, &
                           coupling_el_po_jacobian2Dw, &

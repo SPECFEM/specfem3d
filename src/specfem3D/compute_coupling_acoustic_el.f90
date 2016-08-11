@@ -112,8 +112,8 @@
         if (is_CPML(ispec)) then
           if (SIMULATION_TYPE == 1) then
             ispec_CPML = spec_to_CPML(ispec)
-            call pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,i,j,k,&
-                                                  displ_x,displ_y,displ_z,displ,&
+            call pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,i,j,k, &
+                                                  displ_x,displ_y,displ_z,displ, &
                                                   num_coupling_ac_el_faces,rmemory_coupling_ac_el_displ)
           endif
 

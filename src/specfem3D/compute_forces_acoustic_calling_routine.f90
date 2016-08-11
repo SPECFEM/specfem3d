@@ -140,7 +140,7 @@ subroutine compute_forces_acoustic()
       endif
 
       ! poroelastic coupling
-      if (POROELASTIC_SIMULATION )  then
+      if (POROELASTIC_SIMULATION ) then
         if (num_coupling_ac_po_faces > 0) then
           if (SIMULATION_TYPE == 1) then
             call compute_coupling_acoustic_po(NSPEC_AB,NGLOB_AB, &
@@ -379,7 +379,7 @@ subroutine compute_forces_acoustic_backward()
       endif
 
       ! poroelastic coupling
-      if (POROELASTIC_SIMULATION )  then
+      if (POROELASTIC_SIMULATION ) then
         if (num_coupling_ac_po_faces > 0) then
             stop 'coupling acoustic-poroelastic domains not implemented yet...'
         endif
@@ -498,7 +498,7 @@ subroutine compute_forces_acoustic_GPU()
       endif
 
       ! poroelastic coupling
-      if (POROELASTIC_SIMULATION )  then
+      if (POROELASTIC_SIMULATION ) then
         if (num_coupling_ac_po_faces > 0) then
           if (SIMULATION_TYPE == 1) then
             call compute_coupling_acoustic_po(NSPEC_AB,NGLOB_AB, &

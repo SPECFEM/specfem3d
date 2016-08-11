@@ -365,8 +365,8 @@ subroutine compute_forces_viscoelastic_backward()
                         coupling_ac_el_ispec,coupling_ac_el_ijk, &
                         coupling_ac_el_normal, &
                         coupling_ac_el_jacobian2Dw, &
-                        iphase,&
-                        PML_CONDITIONS,&
+                        iphase, &
+                        PML_CONDITIONS, &
                         SIMULATION_TYPE,.true., &
                         potential_acoustic,potential_dot_acoustic)
 
@@ -533,17 +533,17 @@ subroutine compute_forces_viscoelastic_GPU()
         call transfer_displ_from_device(NDIM*NGLOB_AB,displ, Mesh_pointer)
         call transfer_accel_from_device(NDIM*NGLOB_AB,accel, Mesh_pointer)
 
-        call compute_coupling_viscoelastic_po(NSPEC_AB,NGLOB_AB,ibool,&
-                          displs_poroelastic,displw_poroelastic,&
+        call compute_coupling_viscoelastic_po(NSPEC_AB,NGLOB_AB,ibool, &
+                          displs_poroelastic,displw_poroelastic, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          hprime_xx,hprime_yy,hprime_zz,&
+                          hprime_xx,hprime_yy,hprime_zz, &
                           kappaarraystore,rhoarraystore,mustore, &
-                          phistore,tortstore,jacobian,&
+                          phistore,tortstore,jacobian, &
                           displ,accel,kappastore, &
                           ANISOTROPY,NSPEC_ANISO, &
-                          c11store,c12store,c13store,c14store,c15store,c16store,&
-                          c22store,c23store,c24store,c25store,c26store,c33store,&
-                          c34store,c35store,c36store,c44store,c45store,c46store,&
+                          c11store,c12store,c13store,c14store,c15store,c16store, &
+                          c22store,c23store,c24store,c25store,c26store,c33store, &
+                          c34store,c35store,c36store,c44store,c45store,c46store, &
                           c55store,c56store,c66store, &
                           SIMULATION_TYPE,NGLOB_ADJOINT,NSPEC_ADJOINT, &
                           num_coupling_el_po_faces, &
