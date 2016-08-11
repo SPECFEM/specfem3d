@@ -139,10 +139,6 @@ program smooth_sem
 
   logical :: BROADCAST_AFTER_READ, USE_GPU, USE_QUADRATURE_RULE
 
-#ifdef FORCE_VECTORIZATION
-  integer :: ijk
-#endif
-
   call init_mpi()
   call world_size(sizeprocs)
   call world_rank(myrank)
@@ -781,11 +777,7 @@ program smooth_sem
         !  print *, 'Problem norm here --- ', ispec, i, j, k, bk(i,j,k,ispec), norm
         !endif
         if (abs(bk(INDEX_IJK,ispec)) < 1.e-18) then
-#ifdef FORCE_VECTORIZATION
-          print *, 'Problem norm here --- ', ispec, ijk, bk(INDEX_IJK,ispec), norm
-#else
           print *, 'Problem norm here --- ', ispec, i, j, k, bk(i,j,k,ispec), norm
-#endif
         endif
 
         ! normalizes smoothed kernel values by integral value of Gaussian weighting
@@ -869,11 +861,7 @@ program smooth_sem
   real(kind=CUSTOM_REAL) :: val
   real(kind=CUSTOM_REAL) :: x1,y1,z1
 
-#ifdef FORCE_VECTORIZATION
-  integer :: ijk
-#else
   integer :: i,j,k
-#endif
 
   DO_LOOP_IJK
 
