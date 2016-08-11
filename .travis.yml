@@ -62,6 +62,9 @@ env:
     # run tomographic model example
     - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=11
 
+    # run acoustic kernel example
+    - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=12
+
 before_install:
   # informations on git
   - |
@@ -151,6 +154,7 @@ script:
     9) dir=EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_elastic_absorbing_CPML_5sides/ ;;
     10) dir=EXAMPLES/noise_tomography/ ;;
     11) dir=EXAMPLES/tomographic_model/ ;;
+    12) dir=EXAMPLES/homogeneous_acoustic/ ;;
     *) dir=EXAMPLES/homogeneous_halfspace/ ;;
     esac
     # runs test
@@ -204,14 +208,28 @@ script:
         sed -i "s:^NSTEP .*:NSTEP    = 500:" DATA/Par_file
         sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 50:" DATA/Par_file
       fi
+      # kernel example
+      if [ "$TESTMAKE" == "12" ]; then
+        sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
+        sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 100:" DATA/Par_file
+      fi
 
       # coverage run
       if [ "$TESTCOV" == "1" ]; then
         sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
       fi
 
-      # default script
-      ./run_this_example.sh
+      if [ "$TESTMAKE" == "12" ]; then
+        # kernel script
+        ./run_this_example_kernel.sh
+
+        # reverse order of seismogram output for comparison
+        mv OUTPUT_FILES/DB.X20.MXP.semp tmp
+        tac tmp > OUTPUT_FILES/DB.X20.MXP.semp
+      else
+        # default script
+        ./run_this_example.sh
+      fi
 
       # seismogram comparison
       if [ "$TESTCOV" == "0" ]; then
@@ -282,6 +300,17 @@ script:
       cd EXAMPLES/tomographic_model/
       sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
       ./run_this_example.sh
+      cd $WORKDIR
+    fi
+
+  # additional run for coverage
+  - |
+    if [ "$TESTCOV" == "1" ]; then
+      cd EXAMPLES/homogeneous_acoustic/
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+      sed -i "s:^t_start.*:t_start=-6.0:" create_adjoint_sources.sh
+      sed -i "s:^t_end.*:t_end=-5.55:" create_adjoint_sources.sh
+      ./run_this_example_kernel.sh
       cd $WORKDIR
     fi
 

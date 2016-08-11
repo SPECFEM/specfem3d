@@ -7,6 +7,8 @@
 F90 = gfortran
 CC = gcc
 
+FLAGS = #-Wall
+
 #############################################################
 
 
@@ -16,10 +18,10 @@ LIB_OBJS = create_adjsrc_traveltime.o rw_ascfile_c.o
 all: xcreate_adjsrc_traveltime
 
 xcreate_adjsrc_traveltime: $(LIB_OBJS)
-	${F90} -Wall -o xcreate_adjsrc_traveltime $(LIB_OBJS)
+	${F90} $(FLAGS) -o xcreate_adjsrc_traveltime $(LIB_OBJS)
 
 create_adjsrc_traveltime.o: create_adjsrc_traveltime.f90
-	${F90} -Wall -c create_adjsrc_traveltime.f90
+	${F90} $(FLAGS) -c create_adjsrc_traveltime.f90
 
 rw_ascfile_c.o: ../../lib/rw_ascfile_c.c
 	${CC} -c -o rw_ascfile_c.o ../../lib/rw_ascfile_c.c
