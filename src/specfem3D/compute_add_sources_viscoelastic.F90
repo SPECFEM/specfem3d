@@ -194,7 +194,7 @@
       ibool_read_adj_arrays = (((mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC) == 0)) .and. (nadj_rec_local > 0))
 
       ! needs to read in a new chunk/block of the adjoint source
-      ! note that for each partition, we divide it into two parts --- boundaries and interior --- indicated by 'phase_is_inner'
+      ! note that for each partition, we divide it into two parts --- boundaries and interior --- indicated by 'iphase'
       ! we first do calculations for the boudaries, and then start communication
       ! with other partitions while calculate for the inner part
       ! this must be done carefully, otherwise the adjoint sources may be added twice
@@ -311,8 +311,8 @@
 
   ! for noise simulations
   if (NOISE_TOMOGRAPHY > 0) then
-    ! we have two loops indicated by phase_is_inner ("inner elements/points" or "boundary elements/points")
-    ! here, we add all noise sources once, when we are calculating for boundary points (phase_is_inner==.false.),
+    ! we have two loops indicated by iphase ("inner elements/points" or "boundary elements/points")
+    ! here, we add all noise sources once, when we are calculating for boundary points (iphase==1),
     ! because boundary points are calculated first!
     if (NOISE_TOMOGRAPHY == 1) then
       ! the first step of noise tomography is to use |S(\omega)|^2 as a point force source at one of the receivers.
@@ -467,8 +467,8 @@
 
   ! for noise simulations
   if (NOISE_TOMOGRAPHY > 0) then
-    ! we have two loops indicated by phase_is_inner ("inner elements/points" or "boundary elements/points")
-    ! here, we add all noise sources once, when we are calculating for boundary points (phase_is_inner==.false.),
+    ! we have two loops indicated by iphase ("inner elements/points" or "boundary elements/points")
+    ! here, we add all noise sources once, when we are calculating for boundary points (iphase==1),
     ! because boundary points are calculated first!
     if (NOISE_TOMOGRAPHY == 3) then
       ! third step of noise tomography, i.e., read the surface movie saved at every timestep
@@ -631,7 +631,7 @@
       ibool_read_adj_arrays = (((mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC) == 0)) .and. (nadj_rec_local > 0))
 
       ! needs to read in a new chunk/block of the adjoint source
-      ! note that for each partition, we divide it into two parts --- boundaries and interior --- indicated by 'phase_is_inner'
+      ! note that for each partition, we divide it into two parts --- boundaries and interior --- indicated by 'iphase'
       ! we first do calculations for the boudaries, and then start communication
       ! with other partitions while calculate for the inner part
       ! this must be done carefully, otherwise the adjoint sources may be added twice
@@ -761,8 +761,8 @@
 
   ! for noise simulations
   if (NOISE_TOMOGRAPHY > 0) then
-    ! we have two loops indicated by phase_is_inner ("inner elements/points" or "boundary elements/points")
-    ! here, we add all noise sources once, when we are calculating for boundary points (phase_is_inner==.false.),
+    ! we have two loops indicated by iphase ("inner elements/points" or "boundary elements/points")
+    ! here, we add all noise sources once, when we are calculating for boundary points (iphase==1),
     ! because boundary points are calculated first!
     if (NOISE_TOMOGRAPHY == 1) then
       ! the first step of noise tomography is to use |S(\omega)|^2 as a point force source at one of the receivers.

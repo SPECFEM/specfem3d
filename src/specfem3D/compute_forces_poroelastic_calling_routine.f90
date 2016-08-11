@@ -37,18 +37,9 @@ subroutine compute_forces_poroelastic()
   implicit none
 
   integer:: iphase
-  logical:: phase_is_inner
 
 ! distinguishes two runs: for points on MPI interfaces, and points within the partitions
-  do iphase=1,2
-
-    !first for points on MPI interfaces
-    if (iphase == 1) then
-      phase_is_inner = .false.
-    else
-      phase_is_inner = .true.
-    endif
-
+  do iphase = 1,2
 
     if (.not. GPU_MODE) then
 
@@ -125,81 +116,83 @@ subroutine compute_forces_poroelastic()
       call exit_MPI(myrank,'GPU for poroelastic simulation not implemented')
     endif ! GPU_MODE
 
-    ! adds poroelastic absorbing boundary terms to accelerations (type Stacey conditions)
-    if (STACEY_ABSORBING_CONDITIONS) &
-      call compute_stacey_poroelastic(NSPEC_AB,NGLOB_AB,accels_poroelastic,accelw_poroelastic, &
-                        ibool,ispec_is_inner,phase_is_inner, &
-                        abs_boundary_normal,abs_boundary_jacobian2Dw, &
-                        abs_boundary_ijk,abs_boundary_ispec, &
-                        num_abs_boundary_faces, &
-                        velocs_poroelastic,velocw_poroelastic,rho_vpI,rho_vpII,rho_vsI, &
-                        rhoarraystore,phistore,tortstore, &
-                        ispec_is_poroelastic,SIMULATION_TYPE,SAVE_FORWARD, &
-                        NSTEP,it,NGLOB_ADJOINT,b_accels_poroelastic,b_accelw_poroelastic, &
-                        b_num_abs_boundary_faces,b_reclen_field_poro,b_absorb_fields, &
-                        b_absorb_fieldw)
 
-    ! acoustic coupling
-    if (ACOUSTIC_SIMULATION) then
-      call compute_coupling_poroelastic_ac(NSPEC_AB,NGLOB_AB, &
-                        ibool,accels_poroelastic,accelw_poroelastic, &
-                        potential_dot_dot_acoustic, &
-                        num_coupling_ac_po_faces, &
-                        coupling_ac_po_ispec,coupling_ac_po_ijk, &
-                        coupling_ac_po_normal, &
-                        coupling_ac_po_jacobian2Dw, &
-                        rhoarraystore,phistore,tortstore, &
-                        ispec_is_inner,phase_is_inner)
+    ! computes additional contributions
+    if (iphase == 1) then
+      ! adds poroelastic absorbing boundary terms to accelerations (type Stacey conditions)
+      if (STACEY_ABSORBING_CONDITIONS) &
+        call compute_stacey_poroelastic(NSPEC_AB,NGLOB_AB,accels_poroelastic,accelw_poroelastic, &
+                          ibool,iphase, &
+                          abs_boundary_normal,abs_boundary_jacobian2Dw, &
+                          abs_boundary_ijk,abs_boundary_ispec, &
+                          num_abs_boundary_faces, &
+                          velocs_poroelastic,velocw_poroelastic,rho_vpI,rho_vpII,rho_vsI, &
+                          rhoarraystore,phistore,tortstore, &
+                          ispec_is_poroelastic,SIMULATION_TYPE,SAVE_FORWARD, &
+                          NSTEP,it,NGLOB_ADJOINT,b_accels_poroelastic,b_accelw_poroelastic, &
+                          b_num_abs_boundary_faces,b_reclen_field_poro,b_absorb_fields, &
+                          b_absorb_fieldw)
 
-      ! adjoint simulations
-      !if (SIMULATION_TYPE == 3) &
-! chris:'adjoint acoustic-poroelastic simulation not implemented yet'
-!        call ccmpute_coupling_elastic_ac(NSPEC_ADJOINT,NGLOB_ADJOINT, &
-!                        ibool,b_accel,b_potential_dot_dot_acoustic, &
-!                        num_coupling_ac_el_faces, &
-!                        coupling_ac_el_ispec,coupling_ac_el_ijk, &
-!                        coupling_ac_el_normal, &
-!                        coupling_ac_el_jacobian2Dw, &
-!                        ispec_is_inner,phase_is_inner)
-    endif
+      ! acoustic coupling
+      if (ACOUSTIC_SIMULATION) then
+        call compute_coupling_poroelastic_ac(NSPEC_AB,NGLOB_AB, &
+                          ibool,accels_poroelastic,accelw_poroelastic, &
+                          potential_dot_dot_acoustic, &
+                          num_coupling_ac_po_faces, &
+                          coupling_ac_po_ispec,coupling_ac_po_ijk, &
+                          coupling_ac_po_normal, &
+                          coupling_ac_po_jacobian2Dw, &
+                          rhoarraystore,phistore,tortstore, &
+                          iphase)
 
-! elastic coupling
-    if (ELASTIC_SIMULATION) then
-      call compute_coupling_poroelastic_el(NSPEC_AB,NGLOB_AB,ibool, &
-                        displs_poroelastic,accels_poroelastic,displw_poroelastic, &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        hprime_xx,hprime_yy,hprime_zz, &
-                        kappaarraystore,rhoarraystore,mustore, &
-                        phistore,tortstore,jacobian, &
-                        displ,kappastore, &
-                        ANISOTROPY,NSPEC_ANISO, &
-                        c11store,c12store,c13store,c14store,c15store,c16store, &
-                        c22store,c23store,c24store,c25store,c26store,c33store, &
-                        c34store,c35store,c36store,c44store,c45store,c46store, &
-                        c55store,c56store,c66store, &
-                        SIMULATION_TYPE,NGLOB_ADJOINT,NSPEC_ADJOINT, &
-                        num_coupling_el_po_faces, &
-                        coupling_el_po_ispec,coupling_po_el_ispec, &
-                        coupling_el_po_ijk,coupling_po_el_ijk, &
-                        coupling_el_po_normal, &
-                        coupling_el_po_jacobian2Dw, &
-                        ispec_is_inner,phase_is_inner)
+        ! adjoint simulations
+        ! chris:'adjoint acoustic-poroelastic simulation not implemented yet'
+        !if (SIMULATION_TYPE == 3) &
+        ! call ccmpute_coupling_elastic_ac(NSPEC_ADJOINT,NGLOB_ADJOINT, &
+        !                        ibool,b_accel,b_potential_dot_dot_acoustic, &
+        !                        num_coupling_ac_el_faces, &
+        !                        coupling_ac_el_ispec,coupling_ac_el_ijk, &
+        !                        coupling_ac_el_normal, &
+        !                        coupling_ac_el_jacobian2Dw, &
+        !                        iphase)
+      endif
 
-      ! adjoint simulations
-! chris:'adjoint elastic-poroelastic simulation not implemented yet'
-!      if (SIMULATION_TYPE == 3) &
-!        call compute_coupling_viscoelastic_ac(NSPEC_ADJOINT,NGLOB_ADJOINT, &
-!                        ibool,b_accel,b_potential_dot_dot_acoustic, &
-!                        num_coupling_ac_el_faces, &
-!                        coupling_ac_el_ispec,coupling_ac_el_ijk, &
-!                        coupling_ac_el_normal, &
-!                        coupling_ac_el_jacobian2Dw, &
-!                        ispec_is_inner,phase_is_inner)
-    endif
+      ! elastic coupling
+      if (ELASTIC_SIMULATION) then
+        call compute_coupling_poroelastic_el(NSPEC_AB,NGLOB_AB,ibool,&
+                          displs_poroelastic,accels_poroelastic,displw_poroelastic,&
+                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                          hprime_xx,hprime_yy,hprime_zz,&
+                          kappaarraystore,rhoarraystore,mustore, &
+                          phistore,tortstore,jacobian,&
+                          displ,kappastore, &
+                          ANISOTROPY,NSPEC_ANISO, &
+                          c11store,c12store,c13store,c14store,c15store,c16store,&
+                          c22store,c23store,c24store,c25store,c26store,c33store,&
+                          c34store,c35store,c36store,c44store,c45store,c46store,&
+                          c55store,c56store,c66store, &
+                          SIMULATION_TYPE,NGLOB_ADJOINT,NSPEC_ADJOINT, &
+                          num_coupling_el_po_faces, &
+                          coupling_el_po_ispec,coupling_po_el_ispec,&
+                          coupling_el_po_ijk,coupling_po_el_ijk, &
+                          coupling_el_po_normal, &
+                          coupling_el_po_jacobian2Dw, &
+                          iphase)
 
-! adds source term (single-force/moment-tensor solution)
-    if (phase_is_inner .eqv. .false.) then
-      ! note: we will add all source contributions in the first pass, when phase_is_inner == .false.
+        ! adjoint simulations
+        ! chris:'adjoint elastic-poroelastic simulation not implemented yet'
+        ! if (SIMULATION_TYPE == 3) &
+        !  call compute_coupling_viscoelastic_ac(NSPEC_ADJOINT,NGLOB_ADJOINT, &
+        !                        ibool,b_accel,b_potential_dot_dot_acoustic, &
+        !                        num_coupling_ac_el_faces, &
+        !                        coupling_ac_el_ispec,coupling_ac_el_ijk, &
+        !                        coupling_ac_el_normal, &
+        !                        coupling_ac_el_jacobian2Dw, &
+        !                        iphase)
+      endif
+
+      ! adds source term (single-force/moment-tensor solution)
+      ! note: we will add all source contributions in the first pass, when iphase == 1
       !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
       !
       call compute_add_sources_poroelastic( NSPEC_AB,NGLOB_AB, &
@@ -212,10 +205,10 @@ subroutine compute_forces_poroelastic()
                           nrec,islice_selected_rec,ispec_selected_rec, &
                           nadj_rec_local,adj_sourcearrays,b_accels_poroelastic,b_accelw_poroelastic, &
                           NTSTEP_BETWEEN_READ_ADJSRC)
-    endif
+    endif ! iphase
 
-! assemble all the contributions between slices using MPI
-    if (phase_is_inner .eqv. .false.) then
+    ! assemble all the contributions between slices using MPI
+    if (iphase == 1) then
       ! sends accel values to corresponding MPI interface neighbors
       call assemble_MPI_vector_poro_s(NPROC,NGLOB_AB,accels_poroelastic, &
                         accelw_poroelastic, &

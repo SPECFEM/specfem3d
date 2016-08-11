@@ -40,9 +40,7 @@ subroutine compute_forces_viscoelastic()
   implicit none
 
   integer:: iphase
-  logical:: phase_is_inner
   integer:: iface,ispec,igll,i,j,k,iglob,ispec_CPML
-
 
   ! kbai added the following two synchronizations to ensure that the displacement and velocity values
   ! at nodes on MPI interfaces stay equal on all processors that share the node.
@@ -60,14 +58,7 @@ subroutine compute_forces_viscoelastic()
 
 
 ! distinguishes two runs: for points on MPI interfaces, and points within the partitions
-  do iphase=1,2
-
-    !first for points on MPI interfaces
-    if (iphase == 1) then
-      phase_is_inner = .false.
-    else
-      phase_is_inner = .true.
-    endif
+  do iphase = 1,2
 
 ! elastic term
     call compute_forces_viscoelastic_noDev(iphase,NSPEC_AB,NGLOB_AB, &
@@ -100,84 +91,82 @@ subroutine compute_forces_viscoelastic()
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
                         phase_ispec_inner_elastic,.false.)
 
-! adds elastic absorbing boundary term to acceleration (Stacey conditions)
-    if (STACEY_ABSORBING_CONDITIONS) then
-      call compute_stacey_viscoelastic(NSPEC_AB,NGLOB_AB,accel, &
-                       ibool,ispec_is_inner,phase_is_inner, &
-                       abs_boundary_normal,abs_boundary_jacobian2Dw, &
-                       abs_boundary_ijk,abs_boundary_ispec, &
-                       num_abs_boundary_faces, &
-                       veloc,rho_vp,rho_vs, &
-                       ispec_is_elastic,SIMULATION_TYPE,SAVE_FORWARD, &
-                       it, &
-                       b_num_abs_boundary_faces,b_reclen_field,b_absorb_field)
-    endif
+    ! computes additional contributions
+    if (iphase == 1) then
+      ! adds elastic absorbing boundary term to acceleration (Stacey conditions)
+      if (STACEY_ABSORBING_CONDITIONS) then
+        call compute_stacey_viscoelastic(NSPEC_AB,NGLOB_AB,accel, &
+                         ibool,iphase, &
+                         abs_boundary_normal,abs_boundary_jacobian2Dw, &
+                         abs_boundary_ijk,abs_boundary_ispec, &
+                         num_abs_boundary_faces, &
+                         veloc,rho_vp,rho_vs, &
+                         ispec_is_elastic,SIMULATION_TYPE,SAVE_FORWARD, &
+                         it, &
+                         b_num_abs_boundary_faces,b_reclen_field,b_absorb_field)
+      endif
+
+      ! acoustic coupling
+      if (ACOUSTIC_SIMULATION) then
+        if (num_coupling_ac_el_faces > 0) then
+          if (SIMULATION_TYPE == 1) then
+            ! forward definition: pressure = - potential_dot_dot
+            call compute_coupling_viscoelastic_ac(NSPEC_AB,NGLOB_AB, &
+                         ibool,accel,potential_dot_dot_acoustic, &
+                         num_coupling_ac_el_faces, &
+                         coupling_ac_el_ispec,coupling_ac_el_ijk, &
+                         coupling_ac_el_normal, &
+                         coupling_ac_el_jacobian2Dw, &
+                         iphase, &
+                         PML_CONDITIONS, &
+                         SIMULATION_TYPE,.false., &
+                         potential_acoustic,potential_dot_acoustic)
 
 
-! acoustic coupling
-    if (ACOUSTIC_SIMULATION) then
-      if (num_coupling_ac_el_faces > 0) then
-        if (SIMULATION_TYPE == 1) then
-          ! forward definition: pressure = - potential_dot_dot
-          call compute_coupling_viscoelastic_ac(NSPEC_AB,NGLOB_AB, &
-                       ibool,accel,potential_dot_dot_acoustic, &
-                       num_coupling_ac_el_faces, &
-                       coupling_ac_el_ispec,coupling_ac_el_ijk, &
-                       coupling_ac_el_normal, &
-                       coupling_ac_el_jacobian2Dw, &
-                       ispec_is_inner,phase_is_inner, &
-                       PML_CONDITIONS, &
-                       SIMULATION_TYPE,.false., &
-                       potential_acoustic,potential_dot_acoustic)
+          else
+            ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
+            ! adjoint definition: pressure^\dagger = potential^\dagger
+            call compute_coupling_viscoelastic_ac(NSPEC_AB,NGLOB_AB, &
+                                ibool,accel,potential_acoustic, &
+                                num_coupling_ac_el_faces, &
+                                coupling_ac_el_ispec,coupling_ac_el_ijk, &
+                                coupling_ac_el_normal, &
+                                coupling_ac_el_jacobian2Dw, &
+                                iphase, &
+                                PML_CONDITIONS, &
+                                SIMULATION_TYPE,.false., &
+                                potential_acoustic,potential_dot_acoustic)
 
+          endif
+        endif ! num_coupling_ac_el_faces
+      endif
 
-        else
-          ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
-          ! adjoint definition: pressure^\dagger = potential^\dagger
-          call compute_coupling_viscoelastic_ac(NSPEC_AB,NGLOB_AB, &
-                              ibool,accel,potential_acoustic, &
-                              num_coupling_ac_el_faces, &
-                              coupling_ac_el_ispec,coupling_ac_el_ijk, &
-                              coupling_ac_el_normal, &
-                              coupling_ac_el_jacobian2Dw, &
-                              ispec_is_inner,phase_is_inner, &
-                              PML_CONDITIONS, &
-                              SIMULATION_TYPE,.false., &
-                              potential_acoustic,potential_dot_acoustic)
-
-        endif
-
-      endif ! num_coupling_ac_el_faces
-    endif
-
-
-! poroelastic coupling
-    if (POROELASTIC_SIMULATION) then
-      call compute_coupling_viscoelastic_po(NSPEC_AB,NGLOB_AB,ibool, &
-                        displs_poroelastic,displw_poroelastic, &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        hprime_xx,hprime_yy,hprime_zz, &
-                        kappaarraystore,rhoarraystore,mustore, &
-                        phistore,tortstore,jacobian, &
-                        displ,accel,kappastore, &
-                        ANISOTROPY,NSPEC_ANISO, &
-                        c11store,c12store,c13store,c14store,c15store,c16store, &
-                        c22store,c23store,c24store,c25store,c26store,c33store, &
-                        c34store,c35store,c36store,c44store,c45store,c46store, &
-                        c55store,c56store,c66store, &
-                        SIMULATION_TYPE,NGLOB_ADJOINT,NSPEC_ADJOINT, &
-                        num_coupling_el_po_faces, &
-                        coupling_el_po_ispec,coupling_po_el_ispec, &
-                        coupling_el_po_ijk,coupling_po_el_ijk, &
-                        coupling_el_po_normal, &
-                        coupling_el_po_jacobian2Dw, &
-                        ispec_is_inner,phase_is_inner)
-    endif
+      ! poroelastic coupling
+      if (POROELASTIC_SIMULATION) then
+        call compute_coupling_viscoelastic_po(NSPEC_AB,NGLOB_AB,ibool, &
+                          displs_poroelastic,displw_poroelastic, &
+                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                          hprime_xx,hprime_yy,hprime_zz, &
+                          kappaarraystore,rhoarraystore,mustore, &
+                          phistore,tortstore,jacobian, &
+                          displ,accel,kappastore, &
+                          ANISOTROPY,NSPEC_ANISO, &
+                          c11store,c12store,c13store,c14store,c15store,c16store, &
+                          c22store,c23store,c24store,c25store,c26store,c33store, &
+                          c34store,c35store,c36store,c44store,c45store,c46store, &
+                          c55store,c56store,c66store, &
+                          SIMULATION_TYPE,NGLOB_ADJOINT,NSPEC_ADJOINT, &
+                          num_coupling_el_po_faces, &
+                          coupling_el_po_ispec,coupling_po_el_ispec, &
+                          coupling_el_po_ijk,coupling_po_el_ijk, &
+                          coupling_el_po_normal, &
+                          coupling_el_po_jacobian2Dw, &
+                          iphase)
+      endif
 
     !! CD CD
 #ifndef DEBUG_COUPLED
-    if (phase_is_inner .eqv. .false.) then
-      ! note: we will add all source contributions in the first pass, when phase_is_inner == .false.
+      ! note: we will add all source contributions in the first pass, when iphase == 1
       !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
       !
       ! adds source term (single-force/moment-tensor solution)
@@ -189,12 +178,12 @@ subroutine compute_forces_viscoelastic()
                                             nrec,islice_selected_rec,ispec_selected_rec, &
                                             nadj_rec_local,adj_sourcearrays, &
                                             NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY)
-    endif
 #endif
     !! CD CD
+    endif ! iphase
 
     ! assemble all the contributions between slices using MPI
-    if (phase_is_inner .eqv. .false.) then
+    if (iphase == 1) then
        ! sends accel values to corresponding MPI interface neighbors
        call assemble_MPI_vector_async_send(NPROC,NGLOB_AB,accel, &
                buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
@@ -212,7 +201,6 @@ subroutine compute_forces_viscoelastic()
                             request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
                             my_neighbours_ext_mesh,myrank)
     endif
-
   enddo
 
 !Percy , Fault boundary term B*tau is added to the assembled forces
@@ -239,7 +227,6 @@ subroutine compute_forces_viscoelastic()
     do iface = 1,num_abs_boundary_faces
       ispec = abs_boundary_ispec(iface)
 !!! It is better to move this into do iphase=1,2 loop
-!!!        if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
       if (ispec_is_elastic(ispec) .and. is_CPML(ispec)) then
         ! reference GLL points on boundary face
         ispec_CPML = spec_to_CPML(ispec)
@@ -315,22 +302,13 @@ subroutine compute_forces_viscoelastic_backward()
   implicit none
 
   integer:: iphase
-  logical:: phase_is_inner
 
   ! checks
   if (SIMULATION_TYPE /= 3) &
     call exit_MPI(myrank,'error calling compute_forces_viscoelastic_backward() with wrong SIMULATION_TYPE')
 
   ! distinguishes two runs: for points on MPI interfaces, and points within the partitions
-  do iphase=1,2
-
-    !first for points on MPI interfaces
-    if (iphase == 1) then
-      phase_is_inner = .false.
-    else
-      phase_is_inner = .true.
-    endif
-
+  do iphase = 1,2
 
 ! elastic term
     ! adjoint simulations: backward/reconstructed wavefield
@@ -364,45 +342,44 @@ subroutine compute_forces_viscoelastic_backward()
                         num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
                         phase_ispec_inner_elastic,.true.)
 
-! adds elastic absorbing boundary term to acceleration (Stacey conditions)
-    if (STACEY_ABSORBING_CONDITIONS) then
-      call compute_stacey_viscoelastic_backward(NSPEC_AB, &
-                       ibool,ispec_is_inner,phase_is_inner, &
-                       abs_boundary_ijk,abs_boundary_ispec, &
-                       num_abs_boundary_faces, &
-                       ispec_is_elastic,SIMULATION_TYPE, &
-                       NSTEP,it,NGLOB_ADJOINT,b_accel, &
-                       b_num_abs_boundary_faces,b_reclen_field,b_absorb_field)
-    endif
+    ! computes additional contributions
+    if (iphase == 1) then
+      ! adds elastic absorbing boundary term to acceleration (Stacey conditions)
+      if (STACEY_ABSORBING_CONDITIONS) then
+        call compute_stacey_viscoelastic_backward(NSPEC_AB, &
+                         ibool,iphase, &
+                         abs_boundary_ijk,abs_boundary_ispec, &
+                         num_abs_boundary_faces, &
+                         ispec_is_elastic,SIMULATION_TYPE, &
+                         NSTEP,it,NGLOB_ADJOINT,b_accel, &
+                         b_num_abs_boundary_faces,b_reclen_field,b_absorb_field)
+      endif
 
+      ! acoustic coupling
+      if (ACOUSTIC_SIMULATION) then
+        if (num_coupling_ac_el_faces > 0) then
+          ! backward simulations
+          call compute_coupling_viscoelastic_ac(NSPEC_ADJOINT,NGLOB_ADJOINT, &
+                        ibool,b_accel,b_potential_dot_dot_acoustic, &
+                        num_coupling_ac_el_faces, &
+                        coupling_ac_el_ispec,coupling_ac_el_ijk, &
+                        coupling_ac_el_normal, &
+                        coupling_ac_el_jacobian2Dw, &
+                        iphase,&
+                        PML_CONDITIONS,&
+                        SIMULATION_TYPE,.true., &
+                        potential_acoustic,potential_dot_acoustic)
 
-! acoustic coupling
-    if (ACOUSTIC_SIMULATION) then
-      if (num_coupling_ac_el_faces > 0) then
-        ! backward simulations
-        call compute_coupling_viscoelastic_ac(NSPEC_ADJOINT,NGLOB_ADJOINT, &
-                      ibool,b_accel,b_potential_dot_dot_acoustic, &
-                      num_coupling_ac_el_faces, &
-                      coupling_ac_el_ispec,coupling_ac_el_ijk, &
-                      coupling_ac_el_normal, &
-                      coupling_ac_el_jacobian2Dw, &
-                      ispec_is_inner,phase_is_inner, &
-                      PML_CONDITIONS, &
-                      SIMULATION_TYPE,.true., &
-                      potential_acoustic,potential_dot_acoustic)
+        endif ! num_coupling_ac_el_faces
+      endif
 
-      endif ! num_coupling_ac_el_faces
-    endif
+      ! poroelastic coupling
+      if (POROELASTIC_SIMULATION) then
+        stop 'poroelastic-elastic coupling error'
+      endif
 
-
-! poroelastic coupling
-    if (POROELASTIC_SIMULATION) then
-      stop 'poroelastic-elastic coupling error'
-    endif
-
-! adds source term (single-force/moment-tensor solution)
-    if (phase_is_inner .eqv. .false.) then
-      ! note: we will add all source contributions in the first pass, when phase_is_inner == .false.
+      ! adds source term (single-force/moment-tensor solution)
+      ! note: we will add all source contributions in the first pass, when iphase == 1
       !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
       call compute_add_sources_viscoelastic_backward( NSPEC_AB,NGLOB_AB, &
                           ibool, &
@@ -410,10 +387,10 @@ subroutine compute_forces_viscoelastic_backward()
                           sourcearrays, &
                           ispec_is_elastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                           b_accel,NOISE_TOMOGRAPHY)
-    endif
+    endif ! iphase
 
     ! assemble all the contributions between slices using MPI
-    if (phase_is_inner .eqv. .false.) then
+    if (iphase == 1) then
       ! sends accel values to corresponding MPI interface neighbors
       ! adjoint simulations
       call assemble_MPI_vector_async_send(NPROC,NGLOB_ADJOINT,b_accel, &
@@ -432,7 +409,6 @@ subroutine compute_forces_viscoelastic_backward()
                              b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh, &
                              my_neighbours_ext_mesh,myrank)
     endif
-
   enddo
 
   ! multiplies with inverse of mass matrix (note: rmass has been inverted already)
@@ -493,20 +469,13 @@ subroutine compute_forces_viscoelastic_GPU()
   implicit none
 
   integer:: iphase
-  logical:: phase_is_inner
 
   ! check
   if (PML_CONDITIONS) &
     call exit_MPI(myrank,'PML conditions not yet implemented for routine compute_forces_viscoelastic_GPU()')
-  ! distinguishes two runs: for points on MPI interfaces, and points within the partitions
-  do iphase=1,2
 
-    !first for points on MPI interfaces
-    if (iphase == 1) then
-      phase_is_inner = .false.
-    else
-      phase_is_inner = .true.
-    endif
+  ! distinguishes two runs: for points on MPI interfaces, and points within the partitions
+  do iphase = 1,2
 
     ! elastic term
     ! contains both forward SIM_TYPE==1 and backward SIM_TYPE==3 simulations
@@ -517,7 +486,7 @@ subroutine compute_forces_viscoelastic_GPU()
 
     ! while inner elements compute "Kernel_2", we wait for MPI to
     ! finish and transfer the boundary terms to the device asynchronously
-    if (phase_is_inner .eqv. .true.) then
+    if (iphase == 1) then
       !daniel: todo - this avoids calling the fortran vector send from CUDA routine
       ! wait for asynchronous copy to finish
       call sync_copy_from_device(Mesh_pointer,iphase,buffer_send_vector_ext_mesh)
@@ -536,59 +505,60 @@ subroutine compute_forces_viscoelastic_GPU()
                   request_recv_vector_ext_mesh)
     endif ! inner elements
 
-    ! adds elastic absorbing boundary term to acceleration (Stacey conditions)
-    if (STACEY_ABSORBING_CONDITIONS) then
-      call compute_stacey_viscoelastic_GPU(phase_is_inner,num_abs_boundary_faces, &
-                                           SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
-                                           b_num_abs_boundary_faces,b_reclen_field,b_absorb_field, &
-                                           Mesh_pointer)
-    endif
-
-    ! acoustic coupling
-    if (ACOUSTIC_SIMULATION) then
-      if (num_coupling_ac_el_faces > 0) then
-        call compute_coupling_el_ac_cuda(Mesh_pointer,phase_is_inner, &
-                                         num_coupling_ac_el_faces)
+    ! computes additional contributions
+    if (iphase == 1) then
+      ! adds elastic absorbing boundary term to acceleration (Stacey conditions)
+      if (STACEY_ABSORBING_CONDITIONS) then
+        call compute_stacey_viscoelastic_GPU(iphase,num_abs_boundary_faces, &
+                                             SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
+                                             b_num_abs_boundary_faces,b_reclen_field,b_absorb_field, &
+                                             Mesh_pointer)
       endif
-    endif
 
-    ! poroelastic coupling
-    if (POROELASTIC_SIMULATION) then
-      ! note:
-      ! these routines are not implemented as CUDA kernels, we just transfer the fields
-      ! from the GPU to the CPU and vice versa
+      ! acoustic coupling
+      if (ACOUSTIC_SIMULATION) then
+        if (num_coupling_ac_el_faces > 0) then
+          call compute_coupling_el_ac_cuda(Mesh_pointer,iphase, &
+                                           num_coupling_ac_el_faces)
+        endif
+      endif
 
-      ! transfers displacement & acceleration to the CPU
-      call transfer_displ_from_device(NDIM*NGLOB_AB,displ, Mesh_pointer)
-      call transfer_accel_from_device(NDIM*NGLOB_AB,accel, Mesh_pointer)
+      ! poroelastic coupling
+      if (POROELASTIC_SIMULATION) then
+        ! note:
+        ! these routines are not implemented as CUDA kernels, we just transfer the fields
+        ! from the GPU to the CPU and vice versa
 
-      call compute_coupling_viscoelastic_po(NSPEC_AB,NGLOB_AB,ibool, &
-                        displs_poroelastic,displw_poroelastic, &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        hprime_xx,hprime_yy,hprime_zz, &
-                        kappaarraystore,rhoarraystore,mustore, &
-                        phistore,tortstore,jacobian, &
-                        displ,accel,kappastore, &
-                        ANISOTROPY,NSPEC_ANISO, &
-                        c11store,c12store,c13store,c14store,c15store,c16store, &
-                        c22store,c23store,c24store,c25store,c26store,c33store, &
-                        c34store,c35store,c36store,c44store,c45store,c46store, &
-                        c55store,c56store,c66store, &
-                        SIMULATION_TYPE,NGLOB_ADJOINT,NSPEC_ADJOINT, &
-                        num_coupling_el_po_faces, &
-                        coupling_el_po_ispec,coupling_po_el_ispec, &
-                        coupling_el_po_ijk,coupling_po_el_ijk, &
-                        coupling_el_po_normal, &
-                        coupling_el_po_jacobian2Dw, &
-                        ispec_is_inner,phase_is_inner)
+        ! transfers displacement & acceleration to the CPU
+        call transfer_displ_from_device(NDIM*NGLOB_AB,displ, Mesh_pointer)
+        call transfer_accel_from_device(NDIM*NGLOB_AB,accel, Mesh_pointer)
 
-      ! transfers acceleration back to GPU
-      call transfer_accel_to_device(NDIM*NGLOB_AB,accel, Mesh_pointer)
-    endif
+        call compute_coupling_viscoelastic_po(NSPEC_AB,NGLOB_AB,ibool,&
+                          displs_poroelastic,displw_poroelastic,&
+                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                          hprime_xx,hprime_yy,hprime_zz,&
+                          kappaarraystore,rhoarraystore,mustore, &
+                          phistore,tortstore,jacobian,&
+                          displ,accel,kappastore, &
+                          ANISOTROPY,NSPEC_ANISO, &
+                          c11store,c12store,c13store,c14store,c15store,c16store,&
+                          c22store,c23store,c24store,c25store,c26store,c33store,&
+                          c34store,c35store,c36store,c44store,c45store,c46store,&
+                          c55store,c56store,c66store, &
+                          SIMULATION_TYPE,NGLOB_ADJOINT,NSPEC_ADJOINT, &
+                          num_coupling_el_po_faces, &
+                          coupling_el_po_ispec,coupling_po_el_ispec, &
+                          coupling_el_po_ijk,coupling_po_el_ijk, &
+                          coupling_el_po_normal, &
+                          coupling_el_po_jacobian2Dw, &
+                          iphase)
 
-    ! adds source term (single-force/moment-tensor solution)
-    if (phase_is_inner .eqv. .false.) then
-      ! note: we will add all source contributions in the first pass, when phase_is_inner == .false.
+        ! transfers acceleration back to GPU
+        call transfer_accel_to_device(NDIM*NGLOB_AB,accel, Mesh_pointer)
+      endif
+
+      ! adds source term (single-force/moment-tensor solution)
+      ! note: we will add all source contributions in the first pass, when iphase == 1
       !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
       call compute_add_sources_viscoelastic_GPU(NSPEC_AB, &
                           NSOURCES,myrank,it, &
@@ -597,10 +567,10 @@ subroutine compute_forces_viscoelastic_GPU()
                           nadj_rec_local,adj_sourcearrays, &
                           NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                           Mesh_pointer)
-    endif
+    endif ! iphase
 
     ! assemble all the contributions between slices using MPI
-    if (phase_is_inner .eqv. .false.) then
+    if (iphase == 1) then
       ! sends accel values to corresponding MPI interface neighbors
 
       ! transfers boundary region to host asynchronously. The

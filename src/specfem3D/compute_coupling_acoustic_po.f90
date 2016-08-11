@@ -34,7 +34,7 @@
                         coupling_ac_po_ispec,coupling_ac_po_ijk, &
                         coupling_ac_po_normal, &
                         coupling_ac_po_jacobian2Dw, &
-                        ispec_is_inner,phase_is_inner)
+                        iphase)
 
 ! returns the updated pressure array: potential_dot_dot_acoustic
 
@@ -59,8 +59,7 @@
   integer :: coupling_ac_po_ispec(num_coupling_ac_po_faces)
 
 ! communication overlap
-  logical, dimension(NSPEC_AB) :: ispec_is_inner
-  logical :: phase_is_inner
+  integer :: iphase
 
 ! local parameters
   real(kind=CUSTOM_REAL) :: displ_x,displ_y,displ_z,displ_n
@@ -69,56 +68,55 @@
   integer :: iface,igll,ispec,iglob
   integer :: i,j,k
 
+  ! only add these contributions in first pass
+  if (iphase /= 1) return
+
 ! loops on all coupling faces
   do iface = 1,num_coupling_ac_po_faces
 
     ! gets corresponding elements
     ispec = coupling_ac_po_ispec(iface)
 
-    if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
+    ! loops over common GLL points
+    do igll = 1, NGLLSQUARE
+      i = coupling_ac_po_ijk(1,igll,iface)
+      j = coupling_ac_po_ijk(2,igll,iface)
+      k = coupling_ac_po_ijk(3,igll,iface)
 
-      ! loops over common GLL points
-      do igll = 1, NGLLSQUARE
-        i = coupling_ac_po_ijk(1,igll,iface)
-        j = coupling_ac_po_ijk(2,igll,iface)
-        k = coupling_ac_po_ijk(3,igll,iface)
+      ! gets global index of this common GLL point
+      ! (note: should be the same as for corresponding i',j',k',ispec_poroelastic or ispec_acoustic)
+      iglob = ibool(i,j,k,ispec)
 
-        ! gets global index of this common GLL point
-        ! (note: should be the same as for corresponding i',j',k',ispec_poroelastic or ispec_acoustic)
-        iglob = ibool(i,j,k,ispec)
+      ! poroelastic displacement on global point
+      displ_x = displs_poroelastic(1,iglob) + displw_poroelastic(1,iglob)
+      displ_y = displs_poroelastic(2,iglob) + displw_poroelastic(2,iglob)
+      displ_z = displs_poroelastic(3,iglob) + displw_poroelastic(3,iglob)
 
-        ! poroelastic displacement on global point
-        displ_x = displs_poroelastic(1,iglob) + displw_poroelastic(1,iglob)
-        displ_y = displs_poroelastic(2,iglob) + displw_poroelastic(2,iglob)
-        displ_z = displs_poroelastic(3,iglob) + displw_poroelastic(3,iglob)
+      ! gets associated normal on GLL point
+      ! (note convention: pointing outwards of acoustic element)
+      nx = coupling_ac_po_normal(1,igll,iface)
+      ny = coupling_ac_po_normal(2,igll,iface)
+      nz = coupling_ac_po_normal(3,igll,iface)
 
-        ! gets associated normal on GLL point
-        ! (note convention: pointing outwards of acoustic element)
-        nx = coupling_ac_po_normal(1,igll,iface)
-        ny = coupling_ac_po_normal(2,igll,iface)
-        nz = coupling_ac_po_normal(3,igll,iface)
+      ! calculates displacement component along normal
+      ! (normal points outwards of acoustic element)
+      displ_n = displ_x*nx + displ_y*ny + displ_z*nz
 
-        ! calculates displacement component along normal
-        ! (normal points outwards of acoustic element)
-        displ_n = displ_x*nx + displ_y*ny + displ_z*nz
+      ! gets associated, weighted jacobian
+      jacobianw = coupling_ac_po_jacobian2Dw(igll,iface)
 
-        ! gets associated, weighted jacobian
-        jacobianw = coupling_ac_po_jacobian2Dw(igll,iface)
+      ! continuity of pressure and normal displacement on global point
+      !
+      ! note: Newmark time scheme together with definition of scalar potential:
+      !          pressure = - chi_dot_dot
+      !          requires that this coupling term uses the updated displacement at time step [t+delta_t],
+      !          which is done at the very beginning of the time loop
+      !          (see e.g. Chaljub & Vilotte, Nissen-Meyer thesis...)
+      !          it also means you have to calculate and update this here first before
+      !          calculating the coupling on the elastic side for the acceleration...
+      potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) + jacobianw*displ_n
 
-        ! continuity of pressure and normal displacement on global point
-        !
-        ! note: Newmark time scheme together with definition of scalar potential:
-        !          pressure = - chi_dot_dot
-        !          requires that this coupling term uses the updated displacement at time step [t+delta_t],
-        !          which is done at the very beginning of the time loop
-        !          (see e.g. Chaljub & Vilotte, Nissen-Meyer thesis...)
-        !          it also means you have to calculate and update this here first before
-        !          calculating the coupling on the elastic side for the acceleration...
-        potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) + jacobianw*displ_n
-
-      enddo ! igll
-
-    endif
+    enddo ! igll
 
   enddo ! iface
 

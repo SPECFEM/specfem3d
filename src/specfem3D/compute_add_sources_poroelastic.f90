@@ -202,7 +202,7 @@
 
       ! needs to read in a new chunk/block of the adjoint source
       ! note that for each partition, we divide it into two parts --- boundaries
-      ! and interior --- indicated by 'phase_is_inner'
+      ! and interior --- indicated by 'iphase'
       ! we first do calculations for the boudaries, and then start communication
       ! with other partitions while calculate for the inner part
       ! this must be done carefully, otherwise the adjoint sources may be added

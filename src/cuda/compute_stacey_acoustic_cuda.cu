@@ -39,9 +39,7 @@ __global__ void compute_stacey_acoustic_kernel(realw* potential_dot_acoustic,
                                                int* d_ibool,
                                                realw* rhostore,
                                                realw* kappastore,
-                                               int* ispec_is_inner,
                                                int* ispec_is_acoustic,
-                                               int phase_is_inner,
                                                int SIMULATION_TYPE,
                                                int SAVE_FORWARD,
                                                int num_abs_boundary_faces,
@@ -67,7 +65,7 @@ __global__ void compute_stacey_acoustic_kernel(realw* potential_dot_acoustic,
     // "-1" from index values to convert from Fortran-> C indexing
     ispec = abs_boundary_ispec[iface]-1;
 
-    if (ispec_is_inner[ispec] == phase_is_inner && ispec_is_acoustic[ispec]) {
+    if (ispec_is_acoustic[ispec]) {
 
       i = abs_boundary_ijk[INDEX3(NDIM,NGLL2,0,igll,iface)]-1;
       j = abs_boundary_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)]-1;
@@ -116,7 +114,7 @@ __global__ void compute_stacey_acoustic_kernel(realw* potential_dot_acoustic,
 extern "C"
 void FC_FUNC_(compute_stacey_acoustic_cuda,
               COMPUTE_STACEY_ACOUSTIC_CUDA)(long* Mesh_pointer,
-                                            int* phase_is_innerf,
+                                            int* iphasef,
                                             realw* h_b_absorb_potential) {
 TRACE("compute_stacey_acoustic_cuda");
   //double start_time = get_time();
@@ -126,7 +124,10 @@ TRACE("compute_stacey_acoustic_cuda");
   // checks if anything to do
   if (mp->d_num_abs_boundary_faces == 0) return;
 
-  int phase_is_inner          = *phase_is_innerf;
+  int iphase          = *iphasef;
+
+  // only add these contributions in first pass
+  if (iphase != 1) return;
 
   // way 1: Elapsed time: 4.385948e-03
   // > NGLLSQUARE==NGLL2==25, but we handle this inside kernel
@@ -157,9 +158,7 @@ TRACE("compute_stacey_acoustic_cuda");
                                                    mp->d_ibool,
                                                    mp->d_rhostore,
                                                    mp->d_kappastore,
-                                                   mp->d_ispec_is_inner,
                                                    mp->d_ispec_is_acoustic,
-                                                   phase_is_inner,
                                                    mp->simulation_type,
                                                    mp->save_forward,
                                                    mp->d_num_abs_boundary_faces,

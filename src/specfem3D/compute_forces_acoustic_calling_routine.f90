@@ -64,8 +64,11 @@ subroutine compute_forces_acoustic()
   implicit none
 
   ! local parameters
-  integer:: iphase,iface,ispec,iglob,igll,i,j,k,ispec_CPML
-  logical:: phase_is_inner
+  integer:: iface,ispec,iglob,igll,i,j,k,ispec_CPML
+  ! non blocking MPI
+  ! iphase: iphase = 1 is for computing outer elements (on MPI interface),
+  !         iphase = 2 is for computing inner elements
+  integer :: iphase
 
   ! enforces free surface (zeroes potentials at free surface)
   call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB,STACEY_INSTEAD_OF_FREE_SURFACE, &
@@ -81,14 +84,7 @@ subroutine compute_forces_acoustic()
   endif
 
   ! distinguishes two runs: for elements on MPI interfaces, and elements within the partitions
-  do iphase=1,2
-
-    !first for points on MPI interfaces, thus outer elements
-    if (iphase == 1) then
-      phase_is_inner = .false.
-    else
-      phase_is_inner = .true.
-    endif
+  do iphase = 1,2
 
     ! acoustic pressure term
     call compute_forces_acoustic_noDev(iphase,NSPEC_AB,NGLOB_AB, &
@@ -101,67 +97,68 @@ subroutine compute_forces_acoustic()
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic, &
                         phase_ispec_inner_acoustic,.false.)
 
-    ! Stacey absorbing boundary conditions
-    if (STACEY_ABSORBING_CONDITIONS) then
-      call compute_stacey_acoustic(NSPEC_AB,NGLOB_AB, &
-                        potential_dot_dot_acoustic,potential_dot_acoustic, &
-                        ibool,ispec_is_inner,phase_is_inner, &
-                        abs_boundary_jacobian2Dw,abs_boundary_ijk,abs_boundary_ispec, &
-                        num_abs_boundary_faces,rhostore,kappastore,ispec_is_acoustic, &
-                        SIMULATION_TYPE,SAVE_FORWARD,it,b_reclen_potential, &
-                        b_absorb_potential,b_num_abs_boundary_faces)
-    endif
+    ! computes additional contributions
+    if (iphase == 1) then
+      ! Stacey absorbing boundary conditions
+      if (STACEY_ABSORBING_CONDITIONS) then
+        call compute_stacey_acoustic(NSPEC_AB,NGLOB_AB, &
+                          potential_dot_dot_acoustic,potential_dot_acoustic, &
+                          ibool,iphase, &
+                          abs_boundary_jacobian2Dw,abs_boundary_ijk,abs_boundary_ispec, &
+                          num_abs_boundary_faces,rhostore,kappastore,ispec_is_acoustic, &
+                          SIMULATION_TYPE,SAVE_FORWARD,it,b_reclen_potential, &
+                          b_absorb_potential,b_num_abs_boundary_faces)
+      endif
 
-    ! elastic coupling
-    if (ELASTIC_SIMULATION) then
-      if (num_coupling_ac_el_faces > 0) then
-        if (SIMULATION_TYPE == 1) then
-          ! forward definition: \bfs=\frac{1}{\rho}\bfnabla\phi
-          call compute_coupling_acoustic_el(NSPEC_AB,NGLOB_AB, &
-                              ibool,displ,potential_dot_dot_acoustic, &
-                              num_coupling_ac_el_faces, &
-                              coupling_ac_el_ispec,coupling_ac_el_ijk, &
-                              coupling_ac_el_normal, &
-                              coupling_ac_el_jacobian2Dw, &
-                              ispec_is_inner,phase_is_inner, &
-                              PML_CONDITIONS,SIMULATION_TYPE,.false.)
+      ! elastic coupling
+      if (ELASTIC_SIMULATION) then
+        if (num_coupling_ac_el_faces > 0) then
+          if (SIMULATION_TYPE == 1) then
+            ! forward definition: \bfs=\frac{1}{\rho}\bfnabla\phi
+            call compute_coupling_acoustic_el(NSPEC_AB,NGLOB_AB, &
+                                ibool,displ,potential_dot_dot_acoustic, &
+                                num_coupling_ac_el_faces, &
+                                coupling_ac_el_ispec,coupling_ac_el_ijk, &
+                                coupling_ac_el_normal, &
+                                coupling_ac_el_jacobian2Dw, &
+                                iphase, &
+                                PML_CONDITIONS,SIMULATION_TYPE,.false.)
 
-        else
-          ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
-          ! adjoint definition: \partial_t^2 \bfs^\dagger=-\frac{1}{\rho}\bfnabla\phi^\dagger
-          call compute_coupling_acoustic_el(NSPEC_AB,NGLOB_AB, &
-                              ibool,accel,potential_dot_dot_acoustic, &
-                              num_coupling_ac_el_faces, &
-                              coupling_ac_el_ispec,coupling_ac_el_ijk, &
-                              coupling_ac_el_normal, &
-                              coupling_ac_el_jacobian2Dw, &
-                              ispec_is_inner,phase_is_inner, &
-                              PML_CONDITIONS,SIMULATION_TYPE,.false.)
+          else
+            ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
+            ! adjoint definition: \partial_t^2 \bfs^\dagger=-\frac{1}{\rho}\bfnabla\phi^\dagger
+            call compute_coupling_acoustic_el(NSPEC_AB,NGLOB_AB, &
+                                ibool,accel,potential_dot_dot_acoustic, &
+                                num_coupling_ac_el_faces, &
+                                coupling_ac_el_ispec,coupling_ac_el_ijk, &
+                                coupling_ac_el_normal, &
+                                coupling_ac_el_jacobian2Dw, &
+                                iphase, &
+                                PML_CONDITIONS,SIMULATION_TYPE,.false.)
+          endif
         endif
       endif
-    endif
 
-! poroelastic coupling
-    if (POROELASTIC_SIMULATION) then
-      if (num_coupling_ac_po_faces > 0) then
-        if (SIMULATION_TYPE == 1) then
-          call compute_coupling_acoustic_po(NSPEC_AB,NGLOB_AB, &
-                        ibool,displs_poroelastic,displw_poroelastic, &
-                        potential_dot_dot_acoustic, &
-                        num_coupling_ac_po_faces, &
-                        coupling_ac_po_ispec,coupling_ac_po_ijk, &
-                        coupling_ac_po_normal, &
-                        coupling_ac_po_jacobian2Dw, &
-                        ispec_is_inner,phase_is_inner)
-        else
-          stop 'not implemented yet'
+      ! poroelastic coupling
+      if (POROELASTIC_SIMULATION )  then
+        if (num_coupling_ac_po_faces > 0) then
+          if (SIMULATION_TYPE == 1) then
+            call compute_coupling_acoustic_po(NSPEC_AB,NGLOB_AB, &
+                          ibool,displs_poroelastic,displw_poroelastic, &
+                          potential_dot_dot_acoustic, &
+                          num_coupling_ac_po_faces, &
+                          coupling_ac_po_ispec,coupling_ac_po_ijk, &
+                          coupling_ac_po_normal, &
+                          coupling_ac_po_jacobian2Dw, &
+                          iphase)
+          else
+            stop 'not implemented yet'
+          endif
         endif
       endif
-    endif
 
-    ! sources
-    if (phase_is_inner .eqv. .false.) then
-      ! note: we will add all source contributions in the first pass, when phase_is_inner == .false.
+      ! adds sources
+      ! note: we will add all source contributions in the first pass, when iphase == 1
       !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
       !
       call compute_add_sources_acoustic(NSPEC_AB,NGLOB_AB,potential_dot_dot_acoustic, &
@@ -171,10 +168,10 @@ subroutine compute_forces_acoustic()
                           SIMULATION_TYPE,NSTEP, &
                           nrec,islice_selected_rec,ispec_selected_rec, &
                           nadj_rec_local,adj_sourcearrays,NTSTEP_BETWEEN_READ_ADJSRC)
-    endif
+    endif ! iphase
 
     ! assemble all the contributions between slices using MPI
-    if (phase_is_inner .eqv. .false.) then
+    if (iphase == 1) then
       ! sends potential_dot_dot_acoustic values to corresponding MPI interface neighbors (non-blocking)
       call assemble_MPI_scalar_async_send(NPROC,NGLOB_AB,potential_dot_dot_acoustic, &
                         buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh, &
@@ -190,8 +187,7 @@ subroutine compute_forces_acoustic()
                         max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh)
-    endif !phase_is_inner
-
+    endif
   enddo
 
   ! divides pressure with mass matrix
@@ -212,7 +208,6 @@ subroutine compute_forces_acoustic()
     do iface = 1,num_abs_boundary_faces
       ispec = abs_boundary_ispec(iface)
 !!! It is better to move this into do iphase=1,2 loop
-!!!   if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
         if (ispec_is_acoustic(ispec) .and. is_CPML(ispec)) then
           ! reference GLL points on boundary face
           ispec_CPML = spec_to_CPML(ispec)
@@ -330,7 +325,6 @@ subroutine compute_forces_acoustic_backward()
 
   ! local parameters
   integer:: iphase
-  logical:: phase_is_inner
 
   ! checks
   if (SIMULATION_TYPE /= 3) &
@@ -343,14 +337,7 @@ subroutine compute_forces_acoustic_backward()
                       num_free_surface_faces,ispec_is_acoustic)
 
   ! distinguishes two runs: for elements on MPI interfaces, and elements within the partitions
-  do iphase=1,2
-
-    !first for points on MPI interfaces, thus outer elements
-    if (iphase == 1) then
-      phase_is_inner = .false.
-    else
-      phase_is_inner = .true.
-    endif
+  do iphase = 1,2
 
     ! adjoint simulations
     call compute_forces_acoustic_noDev(iphase,NSPEC_ADJOINT,NGLOB_ADJOINT, &
@@ -363,42 +350,43 @@ subroutine compute_forces_acoustic_backward()
                       num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic, &
                       phase_ispec_inner_acoustic,.true.)
 
-    ! Stacey absorbing boundary conditions
-    if (STACEY_ABSORBING_CONDITIONS) then
-       call compute_stacey_acoustic_backward(NSPEC_AB, &
-                            ibool,ispec_is_inner,phase_is_inner, &
-                            abs_boundary_ijk,abs_boundary_ispec, &
-                            num_abs_boundary_faces,ispec_is_acoustic, &
-                            SIMULATION_TYPE,NSTEP,it,NGLOB_ADJOINT, &
-                            b_potential_dot_dot_acoustic,b_reclen_potential, &
-                            b_absorb_potential,b_num_abs_boundary_faces)
-    endif
-
-    ! elastic coupling
-    if (ELASTIC_SIMULATION) then
-      if (num_coupling_ac_el_faces > 0) then
-        ! adjoint/kernel simulations
-        call compute_coupling_acoustic_el(NSPEC_ADJOINT,NGLOB_ADJOINT, &
-                          ibool,b_displ,b_potential_dot_dot_acoustic, &
-                          num_coupling_ac_el_faces, &
-                          coupling_ac_el_ispec,coupling_ac_el_ijk, &
-                          coupling_ac_el_normal, &
-                          coupling_ac_el_jacobian2Dw, &
-                          ispec_is_inner,phase_is_inner, &
-                          PML_CONDITIONS,SIMULATION_TYPE,.true.)
+    ! computes additional contributions
+    if (iphase == 1) then
+      ! Stacey absorbing boundary conditions
+      if (STACEY_ABSORBING_CONDITIONS) then
+         call compute_stacey_acoustic_backward(NSPEC_AB, &
+                              ibool,iphase, &
+                              abs_boundary_ijk,abs_boundary_ispec, &
+                              num_abs_boundary_faces,ispec_is_acoustic, &
+                              SIMULATION_TYPE,NSTEP,it,NGLOB_ADJOINT, &
+                              b_potential_dot_dot_acoustic,b_reclen_potential, &
+                              b_absorb_potential,b_num_abs_boundary_faces)
       endif
-    endif
 
-! poroelastic coupling
-    if (POROELASTIC_SIMULATION) then
-      if (num_coupling_ac_po_faces > 0) then
-          stop 'coupling acoustic-poroelastic domains not implemented yet...'
+      ! elastic coupling
+      if (ELASTIC_SIMULATION) then
+        if (num_coupling_ac_el_faces > 0) then
+          ! adjoint/kernel simulations
+          call compute_coupling_acoustic_el(NSPEC_ADJOINT,NGLOB_ADJOINT, &
+                            ibool,b_displ,b_potential_dot_dot_acoustic, &
+                            num_coupling_ac_el_faces, &
+                            coupling_ac_el_ispec,coupling_ac_el_ijk, &
+                            coupling_ac_el_normal, &
+                            coupling_ac_el_jacobian2Dw, &
+                            iphase, &
+                            PML_CONDITIONS,SIMULATION_TYPE,.true.)
+        endif
       endif
-    endif
 
-    ! sources
-    if (phase_is_inner .eqv. .false.) then
-      ! note: we will add all source contributions in the first pass, when phase_is_inner == .false.
+      ! poroelastic coupling
+      if (POROELASTIC_SIMULATION )  then
+        if (num_coupling_ac_po_faces > 0) then
+            stop 'coupling acoustic-poroelastic domains not implemented yet...'
+        endif
+      endif
+
+      ! adds sources
+      ! note: we will add all source contributions in the first pass, when iphase == 1
       !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
       !
       call compute_add_sources_acoustic_backward(NSPEC_AB, &
@@ -407,10 +395,10 @@ subroutine compute_forces_acoustic_backward()
                                     sourcearrays,kappastore,ispec_is_acoustic, &
                                     SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
                                     b_potential_dot_dot_acoustic)
-    endif
+    endif ! iphase
 
     ! assemble all the contributions between slices using MPI
-    if (phase_is_inner .eqv. .false.) then
+    if (iphase == 1) then
       ! sends b_potential_dot_dot_acoustic values to corresponding MPI interface neighbors (non-blocking)
       ! adjoint simulations
       call assemble_MPI_scalar_async_send(NPROC,NGLOB_ADJOINT,b_potential_dot_dot_acoustic, &
@@ -427,8 +415,7 @@ subroutine compute_forces_acoustic_backward()
                       max_nibool_interfaces_ext_mesh, &
                       nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                       b_request_send_scalar_ext_mesh,b_request_recv_scalar_ext_mesh)
-    endif !phase_is_inner
-
+    endif
   enddo
 
   ! divides pressure with mass matrix
@@ -463,9 +450,11 @@ subroutine compute_forces_acoustic_backward()
                       num_free_surface_faces,ispec_is_acoustic)
 
 end subroutine compute_forces_acoustic_backward
+
 !
 !-------------------------------------------------------------------------------------------------
 !
+
 subroutine compute_forces_acoustic_GPU()
 
   use specfem_par
@@ -477,66 +466,59 @@ subroutine compute_forces_acoustic_GPU()
 
   ! local parameters
   integer:: iphase
-  logical:: phase_is_inner
 
   ! enforces free surface (zeroes potentials at free surface)
   call acoustic_enforce_free_surf_cuda(Mesh_pointer,STACEY_INSTEAD_OF_FREE_SURFACE)
 
   ! distinguishes two runs: for elements on MPI interfaces, and elements within the partitions
-  do iphase=1,2
-
-    !first for points on MPI interfaces, thus outer elements
-    if (iphase == 1) then
-      phase_is_inner = .false.
-    else
-      phase_is_inner = .true.
-    endif
+  do iphase = 1,2
 
     ! acoustic pressure term
     ! includes code for SIMULATION_TYPE==3
     call compute_forces_acoustic_cuda(Mesh_pointer, iphase, &
                                       nspec_outer_acoustic, nspec_inner_acoustic)
 
-    ! ! Stacey absorbing boundary conditions
-    if (STACEY_ABSORBING_CONDITIONS) then
-       call compute_stacey_acoustic_GPU(phase_is_inner,num_abs_boundary_faces, &
-                            SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
-                            b_reclen_potential,b_absorb_potential, &
-                            b_num_abs_boundary_faces,Mesh_pointer)
-    endif
-
-    ! elastic coupling
-    if (ELASTIC_SIMULATION) then
-      if (num_coupling_ac_el_faces > 0) then
-        ! on GPU
-        call compute_coupling_ac_el_cuda(Mesh_pointer,phase_is_inner, &
-                                         num_coupling_ac_el_faces)
+    ! computes additional contributions
+    if (iphase == 1) then
+      ! Stacey absorbing boundary conditions
+      if (STACEY_ABSORBING_CONDITIONS) then
+         call compute_stacey_acoustic_GPU(iphase,num_abs_boundary_faces, &
+                              SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
+                              b_reclen_potential,b_absorb_potential, &
+                              b_num_abs_boundary_faces,Mesh_pointer)
       endif
-    endif
 
-! poroelastic coupling
-    if (POROELASTIC_SIMULATION) then
-      if (num_coupling_ac_po_faces > 0) then
-        if (SIMULATION_TYPE == 1) then
-          call compute_coupling_acoustic_po(NSPEC_AB,NGLOB_AB, &
-                        ibool,displs_poroelastic,displw_poroelastic, &
-                        potential_dot_dot_acoustic, &
-                        num_coupling_ac_po_faces, &
-                        coupling_ac_po_ispec,coupling_ac_po_ijk, &
-                        coupling_ac_po_normal, &
-                        coupling_ac_po_jacobian2Dw, &
-                        ispec_is_inner,phase_is_inner)
-        else
-          stop 'not implemented yet'
+      ! elastic coupling
+      if (ELASTIC_SIMULATION) then
+        if (num_coupling_ac_el_faces > 0) then
+          ! on GPU
+          call compute_coupling_ac_el_cuda(Mesh_pointer,iphase, &
+                                           num_coupling_ac_el_faces)
         endif
-        if (SIMULATION_TYPE == 3) &
-          stop 'not implemented yet'
       endif
-    endif
 
-    ! sources
-    if (phase_is_inner .eqv. .false.) then
-      ! note: we will add all source contributions in the first pass, when phase_is_inner == .false.
+      ! poroelastic coupling
+      if (POROELASTIC_SIMULATION )  then
+        if (num_coupling_ac_po_faces > 0) then
+          if (SIMULATION_TYPE == 1) then
+            call compute_coupling_acoustic_po(NSPEC_AB,NGLOB_AB, &
+                          ibool,displs_poroelastic,displw_poroelastic, &
+                          potential_dot_dot_acoustic, &
+                          num_coupling_ac_po_faces, &
+                          coupling_ac_po_ispec,coupling_ac_po_ijk, &
+                          coupling_ac_po_normal, &
+                          coupling_ac_po_jacobian2Dw, &
+                          iphase)
+          else
+            stop 'not implemented yet'
+          endif
+          if (SIMULATION_TYPE == 3) &
+            stop 'not implemented yet'
+        endif
+      endif
+
+      ! adds sources
+      ! note: we will add all source contributions in the first pass, when iphase == 1
       !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
       !
       call compute_add_sources_acoustic_GPU(NSPEC_AB, &
@@ -545,10 +527,10 @@ subroutine compute_forces_acoustic_GPU()
                                     nrec,islice_selected_rec,ispec_selected_rec, &
                                     nadj_rec_local,adj_sourcearrays, &
                                     NTSTEP_BETWEEN_READ_ADJSRC,Mesh_pointer)
-    endif
+    endif ! iphase
 
     ! assemble all the contributions between slices using MPI
-    if (phase_is_inner .eqv. .false.) then
+    if (iphase == 1) then
       ! sends potential_dot_dot_acoustic values to corresponding MPI interface neighbors (non-blocking)
       call transfer_boun_pot_from_device(Mesh_pointer, &
                                          potential_dot_dot_acoustic, &
@@ -600,8 +582,7 @@ subroutine compute_forces_acoustic_GPU()
                         b_request_send_scalar_ext_mesh,b_request_recv_scalar_ext_mesh, &
                         3)
       endif
-    endif !phase_is_inner
-
+    endif
   enddo
 
  ! divides pressure with mass matrix
@@ -628,6 +609,7 @@ subroutine compute_forces_acoustic_GPU()
   call acoustic_enforce_free_surf_cuda(Mesh_pointer,STACEY_INSTEAD_OF_FREE_SURFACE)
 
 end subroutine compute_forces_acoustic_GPU
+
 !
 !-------------------------------------------------------------------------------------------------
 !
