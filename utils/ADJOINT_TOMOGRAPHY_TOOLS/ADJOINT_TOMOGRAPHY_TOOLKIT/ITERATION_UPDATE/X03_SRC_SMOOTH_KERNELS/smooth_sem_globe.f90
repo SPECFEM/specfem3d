@@ -310,7 +310,7 @@ program smooth_sem_globe
 
     ! read in the topology, kernel files, calculate center of elements
     ! point locations
-    ! given in cartesian coordinates
+    ! given in Cartesian coordinates
     open(11,file=solver2_file(iproc),status='old',form='unformatted',iostat=ier)
     if ( ier /= 0 ) call exit_mpi(myrank,'error opening slices: solver2 file')
 
@@ -420,7 +420,7 @@ program smooth_sem_globe
             do i = 1, NGLLX
 
               ! reference location
-              ! current point (i,j,k,ispec) location, cartesian coordinates
+              ! current point (i,j,k,ispec) location, Cartesian coordinates
               x0 = xl(i,j,k,ispec)
               y0 = yl(i,j,k,ispec)
               z0 = zl(i,j,k,ispec)

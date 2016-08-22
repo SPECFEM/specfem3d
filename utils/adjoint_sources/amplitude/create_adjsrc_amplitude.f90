@@ -153,7 +153,7 @@ program create_adjsrc_amplitude
   enddo
   print *, ' '
 
-  ! component rotation back to cartesian x-y-z
+  ! component rotation back to Cartesian x-y-z
   if (lrot) then
     call dwrite_ascfile_c(trim('t-cut.txt')//char(0),t0,dt,nstep,data(4,:))
     call dwrite_ascfile_c(trim('r-cut.txt')//char(0),t0,dt,nstep,data(5,:))

@@ -166,6 +166,7 @@ use File::Basename;
 
       $line =~ s#gaussian#Gaussian#ogi;
       $line =~ s#hessian#Hessian#ogi;
+      $line =~ s#cartesian#Cartesian#ogi;
 
 # for spaces around comparisons we exclude that file because it contains print statements that print
 # XML file lines and thus it contains many < and > characters that must not be changed
@@ -255,6 +256,9 @@ use File::Basename;
       $line =~ s#familly#family#ogi;
       $line =~ s#warnning#warning#ogi;
       $line =~ s#elemement#element#ogi;
+      $line =~ s#cartesion#Cartesian#ogi;
+      $line =~ s#partiton#partition#ogi;
+      $line =~ s#drection#direction#ogi;
 
       print FILEF90 "$line\n";
 

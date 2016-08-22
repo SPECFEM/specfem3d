@@ -715,7 +715,7 @@ program smooth_sem
           DO_LOOP_IJK
 
             ! reference location
-            ! current point (i,j,k,ispec) location, cartesian coordinates
+            ! current point (i,j,k,ispec) location, Cartesian coordinates
             x0 = xl(INDEX_IJK,ispec)
             y0 = yl(INDEX_IJK,ispec)
             z0 = zl(INDEX_IJK,ispec)

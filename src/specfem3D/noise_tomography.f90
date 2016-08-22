@@ -153,7 +153,7 @@ contains
   zcoord=zcoord_in
 
   !PB NOT UNIF DISTRIBUTION OF NOISE ON THE SURFACE OF A SPHERE
-  !PB lon lat colat ARE IN RADIANS SINCE ARE OBTAINED FROM CARTESIAN COORDINATES
+  !PB lon lat colat ARE IN RADIANS SINCE ARE OBTAINED FROM Cartesian COORDINATES
   !PB lon_cn lat_cn (cn = CENTER OF NOISE REGION) IF NOT, MUST BE CONVERTED IN RADIANS
   !PB lon_cn lat_cn are inserted directly here for simplicity
 
@@ -520,7 +520,7 @@ end module user_noise_distribution
     close(IOUT_NOISE)
   endif
 
-  ! rotates to cartesian
+  ! rotates to Cartesian
   do itime = 1, NSTEP
     noise_src_u(:,itime) = nu_single(1,:) * noise_src(itime) * nu_master(1) &
                          + nu_single(2,:) * noise_src(itime) * nu_master(2) &

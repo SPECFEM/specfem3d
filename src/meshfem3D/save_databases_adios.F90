@@ -66,7 +66,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   ! number of vertices in each block
   integer nglob
 
-  ! MPI cartesian topology
+  ! MPI Cartesian topology
   ! E for East (= XI_MIN), W for West (= XI_MAX),
   ! S for South (= ETA_MIN), N for North (= ETA_MAX)
   integer, parameter :: W=1,E=2,S=3,N=4,NW=5,NE=6,SE=7,SW=8

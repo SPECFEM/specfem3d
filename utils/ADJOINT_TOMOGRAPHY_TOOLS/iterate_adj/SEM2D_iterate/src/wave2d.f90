@@ -2457,7 +2457,7 @@ program wave2d
                     x_src_f = x_src_i + sin(src_az)*flen
                     z_src_f = z_src_i + cos(src_az)*flen
 
-                    ! determine the xz target points of the fault (Cartesion polar coordinates)
+                    ! determine the xz target points of the fault (Cartesian polar coordinates)
                     i = 0
                     do xd = 0,flen,finc
                        i = i+1

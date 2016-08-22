@@ -45,7 +45,7 @@ program xdecompose_mesh
       print *, 'Usage: ./xdecompose_mesh  nparts  input_directory output_directory'
       print *
       print *, '  where'
-      print *, '      nparts = number of partitons'
+      print *, '      nparts = number of partitions'
       print *, '      input_directory = directory containing mesh files mesh_file,nodes_coords_file,..'
       print *, '      output_directory = directory for output files proc***_Databases'
       print *

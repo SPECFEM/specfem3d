@@ -1119,7 +1119,7 @@
   ny_central_cube = NEX_PER_PROC_ETA / ratio_divide_central_cube
   nz_central_cube = NEX_XI / ratio_divide_central_cube
 
-! size of the cube along cartesian axes before rotation
+! size of the cube along Cartesian axes before rotation
   radius_cube = (R_CENTRAL_CUBE / R_EARTH) / sqrt(3.d0)
 
 ! define spectral elements in central cube

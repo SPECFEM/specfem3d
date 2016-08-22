@@ -488,7 +488,7 @@
 !*******************************************************************************
   subroutine ax2ca(trend,plunge,ax,ay,az,ierr)
 !
-!     compute cartesian components from trend and plunge
+!     compute Cartesian components from trend and plunge
 !
 !     usage:
 !     call ax2ca(trend,plunge,ax,ay,az,ierr)
