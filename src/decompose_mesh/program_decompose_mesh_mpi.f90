@@ -75,7 +75,7 @@ program xdecompose_mesh_mpi
      print *,'      npartX = number of mesh partitions to be created in the X direction'
      print *,'      npartY = number of mesh partitions to be created in the Y direction'
      print *,'      npartZ = number of mesh partitions to be created in the Z direction'
-     print *,
+     print *
      print *,'  and nparts **MUST BE** equal to npartX * npartY * npartZ'
      print *
      print *
