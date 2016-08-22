@@ -287,11 +287,9 @@
     if (.not. has_vs_zero) then
       if (poissonmin_glob < -1.d0 .or. poissonmax_glob > 0.5d0) then
         write(IMAIN,*)
-        write(IMAIN,*) '       Warning: Poisson''s ratio for the solid is out of range (-1 and +1/2)'
-        write(IMAIN,*) '                Please be aware that numerical solution is likely inaccurate'
+        write(IMAIN,*) '       Error: Poisson''s ratio for the solid is out of range (-1 and +1/2).'
         write(IMAIN,*)
-        ! well let user decide what to do with it..
-        !stop 'Poisson''s ratio for the solid phase out of range'
+        stop 'Poisson''s ratio for the solid phase out of range'
       endif
     endif
     write(IMAIN,*) '********'
