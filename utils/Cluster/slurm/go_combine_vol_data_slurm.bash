@@ -26,7 +26,7 @@ make xcombine_vol_data
 
 # model variable is vs; output file will be vs.vtk
 #./bin/xcombine_vol_data_vtk 0 $nmax vs $LOCALPATH/ $LOCALPATH 0
-srun -l /bin/hostname | sort -n | awk '{print $2}' > ./nodes.$SLURM_JOB_ID 
+srun -l /bin/hostname | sort -n | awk '{print $2}' > ./nodes.$SLURM_JOB_ID
 mpirun -np 1 -machinefile ./nodes.$SLURM_JOB_ID ./bin/xcombine_vol_data_vtk 0 $nmax vs $LOCALPATH/ $LOCALPATH 0
 
 cp go_combine_vol_data_slurm.bash OUTPUT_FILES/
