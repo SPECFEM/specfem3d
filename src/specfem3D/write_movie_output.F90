@@ -508,8 +508,8 @@
 
   real(kind=CUSTOM_REAL),dimension(:,:,:,:),allocatable :: veloc_element,pressure_loc
   ! divergence and curl only in the global nodes
-  real(kind=CUSTOM_REAL),dimension(:),allocatable:: div_glob,curl_glob
-  integer,dimension(:),allocatable :: valency
+  real(kind=CUSTOM_REAL),dimension(:),allocatable:: div_glob
+  integer,dimension(:),allocatable :: valence
   integer :: ispec,ier,iglob
   character(len=3) :: channel
   character(len=1) :: compx,compy,compz
@@ -579,13 +579,12 @@
 
     ! allocate array for single elements
     allocate(div_glob(NGLOB_AB), &
-             curl_glob(NGLOB_AB), &
-             valency(NGLOB_AB), stat=ier)
+             valence(NGLOB_AB), stat=ier)
     if (ier /= 0) stop 'error allocating arrays for movie div and curl'
 
     ! calculates divergence and curl of velocity field
     call wmo_movie_div_curl(NSPEC_AB,NGLOB_AB,veloc, &
-                            div_glob,curl_glob,valency, &
+                            div_glob,valence, &
                             div,curl_x,curl_y,curl_z, &
                             velocity_x,velocity_y,velocity_z, &
                             ibool,ispec_is_elastic, &
@@ -599,13 +598,7 @@
     write(27) div_glob
     close(27)
 
-    write(outputname,"('/proc',i6.6,'_curl_glob_it',i6.6,'.bin')") myrank,it
-    open(unit=27,file=trim(LOCAL_PATH)//trim(outputname),status='unknown',form='unformatted',iostat=ier)
-    if (ier /= 0) stop 'error opening file curl_glob'
-    write(27) curl_glob
-    close(27)
-
-    deallocate(div_glob,curl_glob,valency)
+    deallocate(div_glob,valence)
 
   endif ! elastic
 
@@ -613,19 +606,18 @@
   if (POROELASTIC_SIMULATION) then
     ! allocate array for single elements
     allocate(div_glob(NGLOB_AB), &
-             curl_glob(NGLOB_AB), &
-             valency(NGLOB_AB), stat=ier)
+             valence(NGLOB_AB), stat=ier)
     if (ier /= 0) stop 'error allocating arrays for movie div and curl'
 
     ! calculates divergence and curl of velocity field
     call wmo_movie_div_curl(NSPEC_AB,NGLOB_AB,velocs_poroelastic, &
-                            div_glob,curl_glob,valency, &
+                            div_glob,valence, &
                             div,curl_x,curl_y,curl_z, &
                             velocity_x,velocity_y,velocity_z, &
                             ibool,ispec_is_poroelastic, &
                             hprime_xx,hprime_yy,hprime_zz, &
                             xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
-    deallocate(div_glob,curl_glob,valency)
+    deallocate(div_glob,valence)
   endif ! poroelastic
 
   if (ELASTIC_SIMULATION .or. POROELASTIC_SIMULATION) then
@@ -684,7 +676,7 @@
 !=====================================================================
 
   subroutine wmo_movie_div_curl(NSPEC_AB,NGLOB_AB,veloc, &
-                                div_glob,curl_glob,valency, &
+                                div_glob,valence, &
                                 div,curl_x,curl_y,curl_z, &
                                 velocity_x,velocity_y,velocity_z, &
                                 ibool,ispec_is, &
@@ -703,8 +695,8 @@
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_AB),intent(in) :: veloc
 
   ! divergence and curl only in the global nodes
-  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: div_glob,curl_glob
-  integer,dimension(NGLOB_AB) :: valency
+  real(kind=CUSTOM_REAL),dimension(NGLOB_AB) :: div_glob
+  integer,dimension(NGLOB_AB) :: valence
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: div, curl_x, curl_y, curl_z
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: velocity_x,velocity_y,velocity_z
@@ -731,8 +723,7 @@
 
   ! initializes
   div_glob(:) = 0.0_CUSTOM_REAL
-  curl_glob(:) = 0.0_CUSTOM_REAL
-  valency(:) = 0
+  valence(:) = 0
 
   ! loops over elements
   do ispec=1,NSPEC_AB
@@ -800,24 +791,25 @@
     do k = 1,NGLLZ
       do j = 1,NGLLY
         do i = 1,NGLLX
+
           ! divergence \nabla \cdot \bf{v}
           div(i,j,k,ispec) = dvxdxl(i,j,k) + dvydyl(i,j,k) + dvzdzl(i,j,k)
+
           ! curl
           curl_x(i,j,k,ispec) = dvzdyl(i,j,k) - dvydzl(i,j,k)
           curl_y(i,j,k,ispec) = dvxdzl(i,j,k) - dvzdxl(i,j,k)
           curl_z(i,j,k,ispec) = dvydxl(i,j,k) - dvxdyl(i,j,k)
+
           ! velocity field
           iglob = ibool(i,j,k,ispec)
           velocity_x(i,j,k,ispec) = veloc(1,iglob)
           velocity_y(i,j,k,ispec) = veloc(2,iglob)
           velocity_z(i,j,k,ispec) = veloc(3,iglob)
 
-          valency(iglob)=valency(iglob)+1
+          valence(iglob)=valence(iglob)+1
 
           div_glob(iglob) = div_glob(iglob) + div(i,j,k,ispec)
-          curl_glob(iglob)= curl_glob(iglob) &
-                            + 0.5_CUSTOM_REAL*(curl_x(i,j,k,ispec) &
-                            + curl_x(i,j,k,ispec)+curl_x(i,j,k,ispec))
+
         enddo
       enddo
     enddo
@@ -826,10 +818,9 @@
   do i=1,NGLOB_AB
     ! checks if point has a contribution
     ! note: might not be the case for points in acoustic elements
-    if (valency(i) /= 0) then
+    if (valence(i) /= 0) then
       ! averages by number of contributions
-      div_glob(i) = div_glob(i)/valency(i)
-      curl_glob(i) = curl_glob(i)/valency(i)
+      div_glob(i) = div_glob(i)/valence(i)
     endif
 
   enddo
