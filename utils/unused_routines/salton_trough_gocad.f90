@@ -99,7 +99,7 @@ subroutine vx_xyz_interp(uc,vc,wc, vp, vs, rho, vp_array)
 !  print *, 'ixi, ieta, iga = ', ixi, ieta, iga
 
 
-  if (i > 0 .or. i < GOCAD_ST_NU  .or. j > 0 .or. j < GOCAD_ST_NV .or. k > 0 .or. k < GOCAD_ST_NW) then
+  if (i > 0 .or. i < GOCAD_ST_NU .or. j > 0 .or. j < GOCAD_ST_NV .or. k > 0 .or. k < GOCAD_ST_NW) then
     v1 = vp_array(i,j,k)
     v2 = vp_array(i+1,j,k)
     v3 = vp_array(i+1,j+1,k)
@@ -117,7 +117,7 @@ subroutine vx_xyz_interp(uc,vc,wc, vp, vs, rho, vp_array)
                (v5 - GOCAD_ST_NO_DATA_VALUE) > eps .and. &
                (v6 - GOCAD_ST_NO_DATA_VALUE) > eps .and. &
                (v7 - GOCAD_ST_NO_DATA_VALUE) > eps .and. &
-               (v8 - GOCAD_ST_NO_DATA_VALUE) > eps )  then
+               (v8 - GOCAD_ST_NO_DATA_VALUE) > eps ) then
       vp = dble(&
                  v1 * (1-xi) * (1-eta) * (1-ga) +&
                  v2 * xi * (1-eta) * (1-ga) +&
@@ -149,7 +149,7 @@ subroutine vx_xyz_interp(uc,vc,wc, vp, vs, rho, vp_array)
       vp = GOCAD_ST_NO_DATA_VALUE
     endif
     zmesh = wc / (GOCAD_ST_NW - 1) * GOCAD_ST_W_Z + GOCAD_ST_O_Z
-    if (zmesh > -8500.)  then
+    if (zmesh > -8500.) then
       vs = vp / (2 - (0.27*zmesh/(-8500)))
     else
       vs = vp/1.73

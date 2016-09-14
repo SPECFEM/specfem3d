@@ -25,12 +25,10 @@
 !
 !=====================================================================
 
-
 module postprocess_par
 
-  use constants,only: CUSTOM_REAL,MAX_STRING_LEN,IIN,IOUT, &
-    NGLLX,NGLLY,NGLLZ,NGLLSQUARE,NDIM, &
-    FOUR_THIRDS,R_EARTH_KM,GAUSSALPHA,GAUSSBETA,PI,TWO_PI
+  use constants, only: CUSTOM_REAL,MAX_STRING_LEN,IIN,IOUT, &
+    NGLLX,NGLLY,NGLLZ,NGLLSQUARE,NDIM,FOUR_THIRDS,R_EARTH_KM,GAUSSALPHA,GAUSSBETA,PI,TWO_PI
 
   implicit none
 
@@ -44,7 +42,7 @@ module postprocess_par
   real(kind=CUSTOM_REAL), dimension(:),allocatable :: x, y, z
   integer, dimension(:,:,:,:),allocatable :: ibool
 
-  ! mpi process
+  ! MPI process
   integer :: myrank,sizeprocs
 
 end module postprocess_par

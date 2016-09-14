@@ -124,12 +124,12 @@ program create_adjsrc_traveltime
 
     ! time window (parabola shaped)
     tw(1:nstep) = 0.
-    if( i == i1 ) open(44,file='plot_time_window.txt',status='unknown')
+    if ( i == i1 ) open(44,file='plot_time_window.txt',status='unknown')
     do j = is, ie
       tw(j) = 1 - (2 * (dble(j) - is)/(ie - is) - 1) ** 2
-      if( i == i1 ) write(44,*) j,tw(j)
+      if ( i == i1 ) write(44,*) j,tw(j)
     enddo
-    if( i == i1 ) close(44)
+    if ( i == i1 ) close(44)
 
     ! calculates velocity (by finite-differences)
     out(:) = 0.0
@@ -157,7 +157,7 @@ program create_adjsrc_traveltime
   enddo
   print *, ' '
 
-  ! component rotation back to cartesian x-y-z
+  ! component rotation back to Cartesian x-y-z
   if (lrot) then
     call dwrite_ascfile_c(trim('t-cut.txt')//char(0),t0,dt,nstep,data(4,:))
     call dwrite_ascfile_c(trim('r-cut.txt')//char(0),t0,dt,nstep,data(5,:))

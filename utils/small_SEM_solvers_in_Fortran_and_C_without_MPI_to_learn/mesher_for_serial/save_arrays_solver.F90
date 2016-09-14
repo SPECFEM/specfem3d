@@ -59,7 +59,7 @@
 ! we perform the calculation in single precision rather than integer
 ! to avoid integer overflow in the case of very large meshes
   memory_size = 4. * ((3.*NDIM + 1.) * NGLOB + 12. * real(NGLLX*NGLLY*NGLLZ)*real(NSPEC))
-  if(myrank == 0) then
+  if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) 'approximate total memory size that will be used by the solver in each slice = ',memory_size/1024./1024.,' Mb'
     write(IMAIN,*) 'i.e. = ',memory_size/1024./1024./1024.,' Gb'

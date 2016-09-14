@@ -75,7 +75,7 @@
 
 ! add elevation to all the points of that element
 ! also make sure gamma makes sense
-  if(gamma < -0.02 .or. gamma > 1.02) call exit_MPI(myrank,'incorrect value of gamma for topography')
+  if (gamma < -0.02 .or. gamma > 1.02) call exit_MPI(myrank,'incorrect value of gamma for topography')
 
   xelm(ia) = xelm(ia)*(ONE + gamma * elevation / r)
   yelm(ia) = yelm(ia)*(ONE + gamma * elevation / r)

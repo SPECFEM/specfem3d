@@ -25,26 +25,24 @@
 !
 !=====================================================================
 
-
   subroutine compute_forces_poro_fluid_part( iphase, &
-                        NSPEC_AB,NGLOB_AB,displw_poroelastic,accelw_poroelastic,&
-                        velocw_poroelastic,displs_poroelastic,&
+                        NSPEC_AB,NGLOB_AB,displw_poroelastic,accelw_poroelastic, &
+                        velocw_poroelastic,displs_poroelastic, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        hprime_xx,hprime_yy,hprime_zz,&
-                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,&
-                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,wxgll,wygll,wzgll,  &
+                        hprime_xx,hprime_yy,hprime_zz, &
+                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
+                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,wxgll,wygll,wzgll, &
                         kappaarraystore,rhoarraystore,mustore,etastore,permstore, &
-                        phistore,tortstore,jacobian,ibool,&
-                        epsilonwdev_xx,epsilonwdev_yy,epsilonwdev_xy,&
+                        phistore,tortstore,jacobian,ibool, &
+                        epsilonwdev_xx,epsilonwdev_yy,epsilonwdev_xy, &
                         epsilonwdev_xz,epsilonwdev_yz,epsilonw_trace_over_3, &
                         SIMULATION_TYPE,NSPEC_ADJOINT, &
-                        num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic,&
+                        num_phase_ispec_poroelastic,nspec_inner_poroelastic,nspec_outer_poroelastic, &
                         phase_ispec_inner_poroelastic )
 
 ! compute forces for the fluid poroelastic part
 
-  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM, &
-                      ONE_THIRD
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,ONE_THIRD
 
   implicit none
 
@@ -56,7 +54,7 @@
   integer :: NSPEC_ADJOINT
 
 ! displacement and acceleration
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displw_poroelastic,accelw_poroelastic,&
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displw_poroelastic,accelw_poroelastic, &
                                                       velocw_poroelastic
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displs_poroelastic
 
@@ -129,7 +127,7 @@
   real(kind=CUSTOM_REAL) :: kappal_s,rhol_s
   real(kind=CUSTOM_REAL) :: etal_f,kappal_f,rhol_f
   real(kind=CUSTOM_REAL) :: mul_fr,kappal_fr,phil,tortl,viscodampx,viscodampy,viscodampz
-  real(kind=CUSTOM_REAL) :: permlxx,permlxy,permlxz,permlyz,permlyy,permlzz,&
+  real(kind=CUSTOM_REAL) :: permlxx,permlxy,permlxz,permlyz,permlyy,permlzz, &
                             invpermlxx,invpermlxy,invpermlxz,invpermlyz,invpermlyy,invpermlzz,detk
   real(kind=CUSTOM_REAL) :: D_biot,H_biot,C_biot,M_biot,rhol_bar
 
@@ -172,7 +170,7 @@
                     kappal_fr + 4._CUSTOM_REAL*mul_fr/3._CUSTOM_REAL
           C_biot = kappal_s*(kappal_s - kappal_fr)/(D_biot - kappal_fr)
           M_biot = kappal_s*kappal_s/(D_biot - kappal_fr)
-          !The RHS has the form : div T -phi/c div T_f + phi/ceta_fk^-1.partial t w
+          !The RHS has the form : div T -phi/c div T_f + phi/ceta_f_k^-1.partial t w
           !where T = G:grad u_s + C_biot div w I
           !and T_f = C_biot div u_s I + M_biot div w I
           mul_G = mul_fr
@@ -456,7 +454,7 @@
 
           etal_f = etastore(i,j,k,ispec)
 
-          if (etal_f >0.d0) then
+          if (etal_f > 0.d0) then
 
             permlxx = permstore(1,i,j,k,ispec)
             permlxy = permstore(2,i,j,k,ispec)
@@ -540,7 +538,7 @@
             !   enddo
             ! enddo
 
-          endif ! if (etal_f >0.d0) then
+          endif ! if (etal_f > 0.d0) then
 
         enddo ! second loop over the GLL points
       enddo

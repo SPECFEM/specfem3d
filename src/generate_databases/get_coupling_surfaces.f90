@@ -25,8 +25,7 @@
 !
 !=====================================================================
 
-  subroutine get_coupling_surfaces(myrank, &
-                        nspec,ibool,NPROC, &
+  subroutine get_coupling_surfaces(myrank,nspec,ibool,NPROC, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
                         my_neighbours_ext_mesh)
@@ -34,7 +33,7 @@
 ! determines coupling surface for acoustic-elastic domains
 ! based on ispec_is_acoustic, ispec_is_elastic and ispec_is_poroelastic arrays
 
-  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,IMAIN
+  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,IMAIN
   use create_regions_mesh_ext_par
   implicit none
 
@@ -126,7 +125,7 @@
   if (ACOUSTIC_SIMULATION) then
     call assemble_MPI_scalar_i_blocking(NPROC,nglob_dummy,acoustic_flag, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy, &
                         my_neighbours_ext_mesh)
   endif
 
@@ -134,7 +133,7 @@
   if (ELASTIC_SIMULATION) then
     call assemble_MPI_scalar_i_blocking(NPROC,nglob_dummy,elastic_flag, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy, &
                         my_neighbours_ext_mesh)
   endif
 
@@ -142,7 +141,7 @@
   if (POROELASTIC_SIMULATION) then
     call assemble_MPI_scalar_i_blocking(NPROC,nglob_dummy,poroelastic_flag, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy,&
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy, &
                         my_neighbours_ext_mesh)
   endif
 
@@ -317,7 +316,7 @@
             igll = 0
             do j=1,NGLLY
               do i=1,NGLLX
-                ! adds all gll points on this face
+                ! adds all GLL points on this face
                 igll = igll + 1
 
                 ! do we need to store local i,j,k,ispec info? or only global indices iglob?
@@ -495,7 +494,7 @@
           igll = 0
           do j=1,NGLLY
             do i=1,NGLLX
-              ! adds all gll points on this face
+              ! adds all GLL points on this face
               igll = igll + 1
 
               ! we need to store local i,j,k,ispec info
@@ -688,7 +687,7 @@
                   igll = 0
                   do j=1,NGLLY
                     do i=1,NGLLX
-                      ! adds all gll points on this face
+                      ! adds all GLL points on this face
                       igll = igll + 1
 
                       ! we need to store local i,j,k,ispec info

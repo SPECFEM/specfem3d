@@ -31,6 +31,12 @@ var=xgenerate_databases
 echo "compilation: $var" >> $testdir/results.log
 make clean >> $testdir/results.log 2>&1
 make -j 4 $var >> $testdir/results.log 2>&1
+# checks exit code
+if [[ $? -ne 0 ]]; then
+  echo >> $testdir/results.log
+  echo "compilation failed, please check..." >> $testdir/results.log
+  exit 1
+fi
 
 echo "" >> $testdir/results.log
 

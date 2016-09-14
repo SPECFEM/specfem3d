@@ -26,7 +26,7 @@
 
   numarg = iargc()
 
-  if(numarg /= 3) stop 'need exactly 3 arguments'
+  if (numarg /= 3) stop 'need exactly 3 arguments'
 
 ! get the 3 arguments
   call getarg(1,arg1)
@@ -50,8 +50,8 @@
   close(11)
 
 !! DK DK particular case of 360 degree angle
-  if(iangle1 == 360) iangle1 = 0
-  if(iangle2 == 360) iangle2 = 0
+  if (iangle1 == 360) iangle1 = 0
+  if (iangle2 == 360) iangle2 = 0
 
   write(*,*)
   write(*,*) arg1,arg2,arg3
@@ -112,8 +112,8 @@
 
 ! swap components if needed, if angles are inverted on command line
   itarget_angle = iangle1 - 90
-  if(itarget_angle < 0) itarget_angle = itarget_angle + 360
-  if(iangle2 /= itarget_angle) then
+  if (itarget_angle < 0) itarget_angle = itarget_angle + 360
+  if (iangle2 /= itarget_angle) then
     print *,'swapping components **************'
     ianglebak = iangle1
     amplitudebak = amplitude1
@@ -128,8 +128,8 @@
 ! now check that angles are always correct
   write(*,*) iangle1,iangle2
   itarget_angle = iangle1 - 90
-  if(itarget_angle < 0) itarget_angle = itarget_angle + 360
-  if(iangle2 /= itarget_angle) stop 'difference of angles is not 90 degrees'
+  if (itarget_angle < 0) itarget_angle = itarget_angle + 360
+  if (iangle2 /= itarget_angle) stop 'difference of angles is not 90 degrees'
 
 !! DK DK rotation from Rob Graves' azimuth to SEM East/North/up convention
   rotation_angle = - (90 - iangle1) * PI / 180.d0

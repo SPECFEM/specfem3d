@@ -60,15 +60,15 @@
   sqroot3 = 1.73205080756890d0
   sqroot2over2 = 0.707106781186550d0
 
-  if(s >= 1.0d0-tol) s=1.0d0-tol
+  if (s >= 1.0d0-tol) s=1.0d0-tol
   lsave=l
-  if(l<0) l=-1-l
-  if(l>0) goto 1
+  if (l < 0) l=-1-l
+  if (l > 0) goto 1
   x(1)=rfpi
   dx(1)=0.0d0
   l=lsave
   return
- 1 if(l /= 1) goto 2
+ 1 if (l /= 1) goto 2
   c1=sqroot3*rfpi
   c2=sqroot2over2*c1
   x(1)=c1*c
@@ -78,7 +78,7 @@
   l=lsave
   return
     2 sos=s
-  if(s<tol) s=tol
+  if (s < tol) s=tol
   cot=c/s
   ct=2.0d0*c
   ss=s*s
@@ -109,7 +109,7 @@
   f1=(mp1*(2.0d0*s*g2-ct*f2)-t*ss*(f3+cot*g3))/d-cot*g1
   x(mp1)=g1
   dx(mp1)=f1
-  if(m == 0) goto 4
+  if (m == 0) goto 4
   mp1=m
   m=m-1
   v=v+1.0d0
@@ -137,7 +137,7 @@
   enddo
 
 ! set any remaining xlm to zero
-  if(maxsin <= l) then
+  if (maxsin <= l) then
     mmm=maxsin+1
     do m=mmm,lp1
       x(m)=0.0d0

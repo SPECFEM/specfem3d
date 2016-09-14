@@ -120,7 +120,7 @@ allocate(z(nglob))
 
 do i = 1,nglob
   read(10,*) iread,xread,yread,zread
-  if(iread < 1 .or. iread > nglob) stop 'incorrect point read'
+  if (iread < 1 .or. iread > nglob) stop 'incorrect point read'
   x(iread) = xread
   y(iread) = yread
   z(iread) = zread
@@ -147,14 +147,14 @@ ntet = 0
 do i = 1,nelem_in_file
   inode_read(:) = 0
 ! read list of elements stored in new Gmsh 2.9.3 format or in old Gmsh 2.4.2 format (the old one has one extra dummy value)
-  if(USE_OLD_GMSH_MESH_FORMAT) then
+  if (USE_OLD_GMSH_MESH_FORMAT) then
     read(10,*) iread,itype,idummy1,idummy2,ivolume,idummy3,(inode_read(k), k=0,number_of_points_per_element_type(itype)-1)
   else
     read(10,*) iread,itype,idummy1,idummy2,ivolume,(inode_read(k), k=0,number_of_points_per_element_type(itype)-1)
   endif
-  if(number_of_points_per_element_type(itype) <= 0) stop 'incorrect element type read'
-  if(iread < 1 .or. iread > nelem_in_file) stop 'incorrect element read'
-  if(itype == 4) then
+  if (number_of_points_per_element_type(itype) <= 0) stop 'incorrect element type read'
+  if (iread < 1 .or. iread > nelem_in_file) stop 'incorrect element read'
+  if (itype == 4) then
     ntet = ntet + 1
   endif
 enddo
@@ -209,16 +209,16 @@ do i = 1,nelem_in_file
   inode_read(:) = 0
 
 ! read list of elements stored in new Gmsh 2.9.3 format or in old Gmsh 2.4.2 format (the old one has one extra dummy value)
-  if(USE_OLD_GMSH_MESH_FORMAT) then
+  if (USE_OLD_GMSH_MESH_FORMAT) then
     read(10,*) iread,itype,idummy1,idummy2,ivolume,idummy3,(inode_read(k), k=0,number_of_points_per_element_type(itype)-1)
   else
     read(10,*) iread,itype,idummy1,idummy2,ivolume,(inode_read(k), k=0,number_of_points_per_element_type(itype)-1)
   endif
-  if(number_of_points_per_element_type(itype) <= 0) stop 'incorrect element type read'
-  if(iread < 1 .or. iread > nelem_in_file) stop 'incorrect element read'
+  if (number_of_points_per_element_type(itype) <= 0) stop 'incorrect element type read'
+  if (iread < 1 .or. iread > nelem_in_file) stop 'incorrect element read'
 
   ! processing only the elements that are tetrahedra
-  if(itype == 4) then
+  if (itype == 4) then
     ntet = ntet + 1
 
 ! now let us cut each tetrahedron into four hexahedra using the middle of each edge, each face and the barycenter.

@@ -146,7 +146,7 @@ xsmooth_sem_OBJECTS = \
 	$(EMPTY_MACRO)
 
 xsmooth_sem_SHARED_OBJECTS = \
-	$O/specfem3D_par.spec.o \
+	$O/specfem3D_par.spec_module.o \
 	$O/pml_par.spec.o \
 	$O/read_mesh_databases.spec.o \
 	$O/shared_par.shared_module.o \
@@ -192,7 +192,7 @@ INFO_CUDA_SEM="building xsmooth_sem without CUDA support"
 endif
 
 # extra dependencies
-$O/smooth_sem.postprocess.o: $O/specfem3D_par.spec.o $O/postprocess_par.postprocess_module.o
+$O/smooth_sem.postprocess.o: $O/specfem3D_par.spec_module.o $O/postprocess_par.postprocess_module.o
 
 ${E}/xsmooth_sem: $(xsmooth_sem_OBJECTS) $(xsmooth_sem_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
 	@echo ""

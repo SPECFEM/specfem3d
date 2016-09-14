@@ -34,7 +34,7 @@ do i = 1,nfile
         write(*,*) 'new syn:',newsyn_fnm
 
         call rsac1(oldsyn_fnm,oldsyn,npt,b,dt,NDIM,nerr)
-        if (nerr/=0) stop 'error reading sac file'
+        if (nerr /= 0) stop 'error reading sac file'
 
         call getfhv('evla',evla,nerr)
         call getfhv('evlo',evlo,nerr)
@@ -72,7 +72,7 @@ do i = 1,nfile
 
         ! write new seismograms
         call wsac0(newsyn_fnm,syn_t(1:npt),newsyn(1:npt),nerr1)
-        if (nerr1/=0) stop 'Error reading sac file'
+        if (nerr1 /= 0) stop 'Error reading sac file'
 
 enddo
 write(*,*) "SUCESSIVEFULLY"

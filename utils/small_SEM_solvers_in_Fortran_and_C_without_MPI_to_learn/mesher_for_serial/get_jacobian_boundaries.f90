@@ -84,8 +84,8 @@
   double precision xelm(NGNOD2D),yelm(NGNOD2D),zelm(NGNOD2D)
 
 ! check that the parameter file is correct
-  if(NGNOD /= 27) call exit_MPI(myrank,'elements should have 27 control nodes')
-  if(NGNOD2D /= 9) call exit_MPI(myrank,'surface elements should have 9 control nodes')
+  if (NGNOD /= 27) call exit_MPI(myrank,'elements should have 27 control nodes')
+  if (NGNOD2D /= 9) call exit_MPI(myrank,'surface elements should have 9 control nodes')
 
   ispecb1 = 0
   ispecb2 = 0
@@ -100,7 +100,7 @@
 
 ! on boundary: xmin
 
-  if(iboun(1,ispec)) then
+  if (iboun(1,ispec)) then
 
     ispecb1=ispecb1+1
     ibelm_xmin(ispecb1)=ispec
@@ -141,7 +141,7 @@
 
 ! on boundary: xmax
 
-  if(iboun(2,ispec)) then
+  if (iboun(2,ispec)) then
 
     ispecb2=ispecb2+1
     ibelm_xmax(ispecb2)=ispec
@@ -182,7 +182,7 @@
 
 ! on boundary: ymin
 
-  if(iboun(3,ispec)) then
+  if (iboun(3,ispec)) then
 
     ispecb3=ispecb3+1
     ibelm_ymin(ispecb3)=ispec
@@ -223,7 +223,7 @@
 
 ! on boundary: ymax
 
-  if(iboun(4,ispec)) then
+  if (iboun(4,ispec)) then
 
     ispecb4=ispecb4+1
     ibelm_ymax(ispecb4)=ispec
@@ -264,7 +264,7 @@
 
 ! on boundary: bottom
 
-  if(iboun(5,ispec)) then
+  if (iboun(5,ispec)) then
 
     ispecb5=ispecb5+1
     ibelm_bottom(ispecb5)=ispec
@@ -304,7 +304,7 @@
 
 ! on boundary: top
 
-  if(iboun(6,ispec)) then
+  if (iboun(6,ispec)) then
 
     ispecb6=ispecb6+1
     ibelm_top(ispecb6)=ispec
@@ -346,12 +346,12 @@
 
 
 ! check theoretical value of elements at the bottom
-  if(ispecb5 /= NSPEC2D_BOTTOM) then
+  if (ispecb5 /= NSPEC2D_BOTTOM) then
     call exit_MPI(myrank,'ispecb5 should equal NSPEC2D_BOTTOM')
   endif
 
 ! check theoretical value of elements at the top
-  if(ispecb6 /= NSPEC2D_TOP) call exit_MPI(myrank,'ispecb6 should equal NSPEC2D_TOP')
+  if (ispecb6 /= NSPEC2D_TOP) call exit_MPI(myrank,'ispecb6 should equal NSPEC2D_TOP')
 
   nspec2D_xmin = ispecb1
   nspec2D_xmax = ispecb2
@@ -405,12 +405,12 @@
     uny=zxi*xeta-zeta*xxi
     unz=xxi*yeta-xeta*yxi
     jacobian=dsqrt(unx**2+uny**2+unz**2)
-    if(jacobian == ZERO) call exit_MPI(myrank,'2D Jacobian undefined')
+    if (jacobian == ZERO) call exit_MPI(myrank,'2D Jacobian undefined')
 
 !   normalize normal vector and store surface jacobian
 
 ! distinguish between single and double precision for reals
-    if(CUSTOM_REAL == SIZE_REAL) then
+    if (CUSTOM_REAL == SIZE_REAL) then
       jacobian2D(i,j,ispecb)=sngl(jacobian)
       normal(1,i,j,ispecb)=sngl(unx/jacobian)
       normal(2,i,j,ispecb)=sngl(uny/jacobian)

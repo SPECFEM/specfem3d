@@ -103,30 +103,30 @@
 
     ! gets number of elements and global points for this partition
     write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',iproc,'_'
-    open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin',&
+    open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin', &
           status='old',action='read',form='unformatted',iostat=ios)
-    if( ios /= 0 ) exit
+    if ( ios /= 0 ) exit
 
     read(27,iostat=ier) NSPEC_AB
-    if( ier /= 0 ) stop 'please check your compilation, use the same compiler & flags as for SPECFEM3D'
+    if ( ier /= 0 ) stop 'please check your compilation, use the same compiler & flags as for SPECFEM3D'
     read(27,iostat=ier) NGLOB_AB
-    if( ier /= 0 ) stop 'please check your compilation, use the same compiler & flags as for SPECFEM3D'
+    if ( ier /= 0 ) stop 'please check your compilation, use the same compiler & flags as for SPECFEM3D'
 
     ! ibool file
     allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ibool'
+    if ( ier /= 0 ) stop 'error allocating array ibool'
     read(27,iostat=ier) ibool
-    if( ier /= 0 ) stop 'please check your compilation, use the same compiler & flags as for SPECFEM3D'
+    if ( ier /= 0 ) stop 'please check your compilation, use the same compiler & flags as for SPECFEM3D'
 
     ! global point arrays
     allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array xstore etc.'
+    if ( ier /= 0 ) stop 'error allocating array xstore etc.'
     read(27,iostat=ier) xstore
-    if( ier /= 0 ) stop 'please check your compilation, use the same compiler & flags as for SPECFEM3D'
+    if ( ier /= 0 ) stop 'please check your compilation, use the same compiler & flags as for SPECFEM3D'
     read(27,iostat=ier) ystore
-    if( ier /= 0 ) stop 'please check your compilation, use the same compiler & flags as for SPECFEM3D'
+    if ( ier /= 0 ) stop 'please check your compilation, use the same compiler & flags as for SPECFEM3D'
     read(27,iostat=ier) zstore
-    if( ier /= 0 ) stop 'please check your compilation, use the same compiler & flags as for SPECFEM3D'
+    if ( ier /= 0 ) stop 'please check your compilation, use the same compiler & flags as for SPECFEM3D'
     close(27)
 
     print *,'partition: ',iproc
@@ -142,7 +142,7 @@
                          NGLOB_AB,NSPEC_AB,xstore,ystore,zstore,ibool, &
                          distance,x_found,y_found,z_found)
 
-    if( distance < total_distance ) then
+    if ( distance < total_distance ) then
       total_distance = distance
       total_partition = iproc
       total_x = x_found
@@ -215,7 +215,7 @@
                 + (target_y - ystore(iglob))*(target_y - ystore(iglob)) &
                 + (target_z - zstore(iglob))*(target_z - zstore(iglob))
 
-          if( dist < distance ) then
+          if ( dist < distance ) then
             distance = dist
             x_found = xstore(iglob)
             y_found = ystore(iglob)

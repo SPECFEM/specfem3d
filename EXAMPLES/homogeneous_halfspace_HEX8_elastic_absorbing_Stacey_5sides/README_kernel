@@ -100,9 +100,9 @@ step-by-step kernel tutorial:
 
    - visualize with Paraview, e.g. :
       > cd /SPECFEM3D
-      > make xcombine_vol_data
+      > make xcombine_vol_data_vtk
       > cd bin/
-      > ./xcombine_vol_data 0 3 alpha_kernel ../OUTPUT_FILES/DATABASES_MPI/ ../OUTPUT_FILES/ 1
+      > ./xcombine_vol_data_vtk 0 3 alpha_kernel ../OUTPUT_FILES/DATABASES_MPI/ ../OUTPUT_FILES/ 1
 
      where we use the partitions with id 0 to 3 to include all 4 processor partitions.
      By default, this will produce the vtk file /SPECFEM3D/OUTPUT_FILES/alpha_kernel.vtk

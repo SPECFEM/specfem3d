@@ -128,15 +128,15 @@
 
  read(5,*) event_number
 
- if(event_number == 1) then
+ if (event_number == 1) then
   SIGN_NORMAL = +1
   tsurf_file = 'ASCII_1857_rupture_remeshed.dat'
 
- else if(event_number == 2) then
+ else if (event_number == 2) then
    SIGN_NORMAL = -1
    tsurf_file = 'ASCII_whittier_remeshed.dat'
 
- else if(event_number == 3) then
+ else if (event_number == 3) then
    SIGN_NORMAL = -1
    tsurf_file = 'ASCII_southern_san_andreas_remeshed.dat'
 
@@ -222,7 +222,7 @@
   exclude_source = .false.
 
 ! exclude if horizontal coordinates are outside the block
-  if(lat <= LAT_MIN + TOLERANCE .or. lat >= LAT_MAX - TOLERANCE .or. &
+  if (lat <= LAT_MIN + TOLERANCE .or. lat >= LAT_MAX - TOLERANCE .or. &
      long <= LONG_MIN + TOLERANCE .or. long >= LONG_MAX - TOLERANCE .or. &
      z_center_triangle <= - dabs(DEPTH_BLOCK_KM*1000.d0)) &
              exclude_source = .true.
@@ -234,10 +234,10 @@
     icornerlat = int((lat - ORIG_LAT_TOPO) / DEGREES_PER_CELL_TOPO) + 1
 
 ! avoid edge effects and extend with identical point if outside model
-    if(icornerlong < 1) icornerlong = 1
-    if(icornerlong > NX_TOPO-1) icornerlong = NX_TOPO-1
-    if(icornerlat < 1) icornerlat = 1
-    if(icornerlat > NY_TOPO-1) icornerlat = NY_TOPO-1
+    if (icornerlong < 1) icornerlong = 1
+    if (icornerlong > NX_TOPO-1) icornerlong = NX_TOPO-1
+    if (icornerlat < 1) icornerlat = 1
+    if (icornerlat > NY_TOPO-1) icornerlat = NY_TOPO-1
 
 ! compute coordinates of corner
     long_corner = ORIG_LONG_TOPO + (icornerlong-1)*DEGREES_PER_CELL_TOPO
@@ -248,10 +248,10 @@
     ratio_eta = (lat - lat_corner) / DEGREES_PER_CELL_TOPO
 
 ! avoid edge effects
-    if(ratio_xi < 0.) ratio_xi = 0.
-    if(ratio_xi > 1.) ratio_xi = 1.
-    if(ratio_eta < 0.) ratio_eta = 0.
-    if(ratio_eta > 1.) ratio_eta = 1.
+    if (ratio_xi < 0.) ratio_xi = 0.
+    if (ratio_xi > 1.) ratio_xi = 1.
+    if (ratio_eta < 0.) ratio_eta = 0.
+    if (ratio_eta > 1.) ratio_eta = 1.
 
 ! interpolate elevation at current point
     elevation = &
@@ -260,11 +260,11 @@
       itopo_bathy_basin(icornerlong+1,icornerlat+1)*ratio_xi*ratio_eta + &
       itopo_bathy_basin(icornerlong,icornerlat+1)*(1.-ratio_xi)*ratio_eta
 
-  if(z_center_triangle > elevation - DEPTH_REMOVED_TOPO) &
+  if (z_center_triangle > elevation - DEPTH_REMOVED_TOPO) &
     exclude_source = .true.
 
 ! store current point if source is kept
-  if(.not. exclude_source) then
+  if (.not. exclude_source) then
     isource = isource + 1
     iglob1_copy(isource) = iglob1(isource_current)
     iglob2_copy(isource) = iglob2(isource_current)
@@ -368,7 +368,7 @@
 
   time_shift = dsqrt((x_center_triangle-x_begin)**2 + (y_center_triangle-y_begin)**2) / rupture_velocity
 ! store source with minimum time shift for reference
-  if(time_shift < time_shift_min) isourceshiftmin = isource
+  if (time_shift < time_shift_min) isourceshiftmin = isource
   time_shift_min = dmin1(time_shift_min,time_shift)
   time_shift_max = dmax1(time_shift_max,time_shift)
 
@@ -382,7 +382,7 @@
   print *
 
 ! making sure that minimum time shift is set for source #1
-  if(isourceshiftmin /= 1) then
+  if (isourceshiftmin /= 1) then
     iglob1_store = iglob1_copy(1)
     iglob2_store = iglob2_copy(1)
     iglob3_store = iglob3_copy(1)
@@ -400,7 +400,7 @@
 
 ! read slip distribution from Sieh (1978) if San Andreas 1857
 ! convert horizontal distance from km to m
-  if(event_number == 1) then
+  if (event_number == 1) then
     print *,'reading slip ditribution from Sieh (1978)'
     open(unit=11,file='DATA/slip_sieh_1857_extracted.txt',status='old')
     do ipoin = 1,NPOIN_SIEH_1978
@@ -459,8 +459,8 @@
   ny = SIGN_NORMAL * ny / norm
   nz = SIGN_NORMAL * nz / norm
 !! DK DK fix problem of different normals for Southern San Andreas
-  if(event_number == 3) then
-    if(ny < 0.) then
+  if (event_number == 3) then
+    if (ny < 0.) then
       nx = - nx
       ny = - ny
       nz = - nz
@@ -483,14 +483,14 @@
 
 ! avoid null values when two points are aligned on the same vertical
 ! by choosing the edge with the longest projection along X
-  if(dabs(x3-x1) > horizdistval) then
+  if (dabs(x3-x1) > horizdistval) then
     ex = x3-x1
     ey = y3-y1
     ez = z3-z1
     horizdistval = dabs(ex)
   endif
 
-  if(dabs(x3-x2) > horizdistval) then
+  if (dabs(x3-x2) > horizdistval) then
     ex = x3-x2
     ey = y3-y2
     ez = z3-z2
@@ -499,7 +499,7 @@
 
 ! because of fault orientation, slip should always be from East to West
 !! DK DK UGLY check this, could be the other way around
-  if(ex > 0.) then
+  if (ex > 0.) then
     ex = - ex
     ey = - ey
     ez = - ez
@@ -507,13 +507,13 @@
 
 ! test of slip vector orientation for right-lateral strike-slip
 !! DK DK UGLY check this, could be the other way around
-!! DK DK UGLY fix this tomorrow  if(ex > 0. .or. ey < 0.) stop 'wrong orientation of slip vector'
+!! DK DK UGLY fix this tomorrow  if (ex > 0. .or. ey < 0.) stop 'wrong orientation of slip vector'
 
 ! make sure slip is horizontal (for strike-slip)
   ez = 0.
 
 ! determine slip length from Sieh (1978) if SAF 1857, use constant otherwise
-  if(event_number /= 1) then
+  if (event_number /= 1) then
 
     real_slip_length = AVERAGE_SLIP_LENGTH
 
@@ -527,7 +527,7 @@
     do ipoin = 1,NPOIN_SIEH_1978
 ! distance to current point in Sieh (1978) scanned curved
       dist_sieh = dabs(xslip_sieh_1978(ipoin) - horiz_dist_fault)
-      if(dist_sieh < min_dist) then
+      if (dist_sieh < min_dist) then
         min_dist = dist_sieh
         index_min_dist = ipoin
       endif
@@ -560,11 +560,11 @@
   time_shift = dsqrt((x_center_triangle-x_begin)**2 + (y_center_triangle-y_begin)**2) / rupture_velocity
 
 ! store source with minimum time shift for reference
-  if(time_shift < time_shift_min) isourceshiftmin = isource
+  if (time_shift < time_shift_min) isourceshiftmin = isource
   time_shift_min = dmin1(time_shift_min,time_shift)
   time_shift_max = dmax1(time_shift_max,time_shift)
 
-  if(isource == 1) then
+  if (isource == 1) then
     write(11,"('time shift:  0')")
   else
     write(11,"('time shift:  ',e)") time_shift
@@ -626,7 +626,7 @@
   print *,'time shift min max (s) = ',time_shift_min,time_shift_max
   print *,'minimum time shift was detected for new source ',isourceshiftmin
   print *,'and was automatically set to exactly zero'
-  if(isourceshiftmin /= 1) stop 'minimum time shift should be for first source'
+  if (isourceshiftmin /= 1) stop 'minimum time shift should be for first source'
 
   print *
   print *,'You need to set NSOURCES = ',NSOURCES,' in DATA/Par_file'
@@ -701,8 +701,8 @@
   ny = SIGN_NORMAL * ny / norm
   nz = SIGN_NORMAL * nz / norm
 !! DK DK fix problem of different normals for Southern San Andreas
-  if(event_number == 3) then
-    if(ny < 0.) then
+  if (event_number == 3) then
+    if (ny < 0.) then
       nx = - nx
       ny = - ny
       nz = - nz
@@ -762,7 +762,7 @@
    call utm_geo(long,lat,x_center_triangle,y_center_triangle,UTM_PROJECTION_ZONE)
 
 ! use different color depending on whether the source is inside the basin model
-   if(lat <= LAT_MIN + TOLERANCE .or. lat >= LAT_MAX - TOLERANCE .or. &
+   if (lat <= LAT_MIN + TOLERANCE .or. lat >= LAT_MAX - TOLERANCE .or. &
            long <= LONG_MIN + TOLERANCE .or. long >= LONG_MAX - TOLERANCE .or. &
            z_center_triangle <= - dabs(DEPTH_BLOCK_KM*1000.d0)) then
        write(11,*) '200'

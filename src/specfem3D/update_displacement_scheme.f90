@@ -148,7 +148,7 @@
       ! updates acoustic backward/reconstructed fields
       if (PML_CONDITIONS) then
         if (nglob_interface_PML_acoustic > 0) then
-          call read_potential_on_pml_interface(b_potential_dot_dot_acoustic,b_potential_dot_acoustic,b_potential_acoustic,&
+          call read_potential_on_pml_interface(b_potential_dot_dot_acoustic,b_potential_dot_acoustic,b_potential_acoustic, &
                                                nglob_interface_PML_acoustic,b_PML_potential,b_reclen_PML_potential)
         endif
       endif
@@ -240,7 +240,7 @@
       ! elastic backward fields
       if (PML_CONDITIONS) then
         if (nglob_interface_PML_elastic > 0) then
-          call read_field_on_pml_interface(b_accel,b_veloc,b_displ,nglob_interface_PML_elastic,&
+          call read_field_on_pml_interface(b_accel,b_veloc,b_displ,nglob_interface_PML_elastic, &
                                            b_PML_field,b_reclen_PML_field)
         endif
       endif

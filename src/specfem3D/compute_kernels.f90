@@ -52,9 +52,9 @@
     call compute_kernels_po()
   endif
 
-  ! computes an approximative hessian for preconditioning kernels
+  ! computes an approximative Hessian for preconditioning kernels
   if (APPROXIMATE_HESS_KL) then
-    call compute_kernels_hessian()
+    call compute_kernels_Hessian()
   endif
 
   end subroutine compute_kernels
@@ -171,7 +171,7 @@
                         normal_x_noise,normal_y_noise,normal_z_noise, &
                         noise_surface_movie, &
                         NSPEC_AB,NGLOB_AB, &
-                        num_free_surface_faces,free_surface_ispec,free_surface_ijk,&
+                        num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
                         GPU_MODE,Mesh_pointer)
   endif
 
@@ -213,14 +213,14 @@
 
       ! backward fields: displacement vector
       call compute_gradient_in_acoustic(ispec,NSPEC_ADJOINT,NGLOB_ADJOINT, &
-                      b_potential_acoustic, b_displ_elm,&
+                      b_potential_acoustic, b_displ_elm, &
                       hprime_xx,hprime_yy,hprime_zz, &
                       xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                       ibool,rhostore,GRAVITY)
       ! adjoint fields: acceleration vector
       ! new expression (\partial_t^2\bfs^\dagger=-\frac{1}{\rho}\bfnabla\phi^\dagger)
       call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                      potential_acoustic, accel_elm,&
+                      potential_acoustic, accel_elm, &
                       hprime_xx,hprime_yy,hprime_zz, &
                       xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                       ibool,rhostore,GRAVITY)
@@ -364,7 +364,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine compute_kernels_hessian()
+  subroutine compute_kernels_Hessian()
 
   use specfem_par
   use specfem_par_elastic
@@ -394,14 +394,14 @@
 
       ! adjoint fields: acceleration vector
       call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                      potential_dot_dot_acoustic, accel_elm,&
+                      potential_dot_dot_acoustic, accel_elm, &
                       hprime_xx,hprime_yy,hprime_zz, &
                       xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                       ibool,rhostore,GRAVITY)
 
       ! adjoint fields: acceleration vector
       call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                      b_potential_dot_dot_acoustic, b_accel_elm,&
+                      b_potential_dot_dot_acoustic, b_accel_elm, &
                       hprime_xx,hprime_yy,hprime_zz, &
                       xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                       ibool,rhostore,GRAVITY)
@@ -411,7 +411,7 @@
           do i = 1, NGLLX
             iglob = ibool(i,j,k,ispec)
 
-            ! approximates hessian
+            ! approximates Hessian
             ! term with adjoint acceleration and backward/reconstructed acceleration
             hess_ac_kl(i,j,k,ispec) =  hess_ac_kl(i,j,k,ispec) &
                + deltat * dot_product(accel_elm(:,i,j,k), b_accel_elm(:,i,j,k))
@@ -428,7 +428,7 @@
           do i = 1, NGLLX
             iglob = ibool(i,j,k,ispec)
 
-            ! approximates hessian
+            ! approximates Hessian
             ! term with adjoint acceleration and backward/reconstructed acceleration
             hess_kl(i,j,k,ispec) =  hess_kl(i,j,k,ispec) &
                + deltat * dot_product(accel(:,iglob), b_accel(:,iglob))
@@ -440,15 +440,15 @@
 
   enddo
 
-  end subroutine compute_kernels_hessian
+  end subroutine compute_kernels_Hessian
 
 !-------------------------------------------------------------------------------------------------
 !
-! Subroutine to compute the kernels for the 21 elastic coefficients
+! subroutine to compute the kernels for the 21 elastic coefficients
 ! Last modified 19/04/2007
 
 !-------------------------------------------------------------------
-  subroutine compute_strain_product(prod,eps_trace_over_3,epsdev,&
+  subroutine compute_strain_product(prod,eps_trace_over_3,epsdev, &
                           b_eps_trace_over_3,b_epsdev)
 
   ! Purpose : compute the 21 strain products at a grid point
@@ -491,11 +491,11 @@
   do i=1,6
     do j=i,6
       prod(p)=eps(i)*b_eps(j)
-      if (j>i) then
+      if (j > i) then
         prod(p)=prod(p)+eps(j)*b_eps(i)
-        if (j>3 .and. i<4) prod(p)=prod(p)*2
+        if (j > 3 .and. i < 4) prod(p)=prod(p)*2
       endif
-      if (i>3) prod(p)=prod(p)*4
+      if (i > 3) prod(p)=prod(p)*4
       p=p+1
     enddo
   enddo

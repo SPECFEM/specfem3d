@@ -25,10 +25,10 @@
 !
 !=====================================================================
 
-  subroutine detect_surface(NPROC,nglob,nspec,ibool,&
+  subroutine detect_surface(NPROC,nglob,nspec,ibool, &
                             ispec_is_surface_external_mesh, &
                             iglob_is_surface_external_mesh, &
-                            nfaces_surface_ext_mesh, &
+                            nfaces_surface, &
                             num_interfaces_ext_mesh, &
                             max_nibool_interfaces_ext_mesh, &
                             nibool_interfaces_ext_mesh, &
@@ -38,7 +38,7 @@
 ! detects surface (points/elements) of model based upon valence
 !
 ! returns: ispec_is_surface_external_mesh, iglob_is_surface_external_mesh
-!               and nfaces_surface_ext_mesh
+!               and nfaces_surface
 
   use constants
 
@@ -51,7 +51,7 @@
 ! surface
   logical, dimension(nspec) :: ispec_is_surface_external_mesh
   logical, dimension(nglob) :: iglob_is_surface_external_mesh
-  integer :: nfaces_surface_ext_mesh
+  integer :: nfaces_surface
 
 ! MPI partitions
   integer :: num_interfaces_ext_mesh
@@ -120,31 +120,31 @@
   enddo ! nspec
 
 ! counts faces for external-mesh movies and shakemaps
-  nfaces_surface_ext_mesh = 0
+  nfaces_surface = 0
   do ispec = 1, nspec
     iglob = ibool(2,2,1,ispec)
     if (iglob_is_surface_external_mesh(iglob)) then
-      nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
+      nfaces_surface = nfaces_surface + 1
     endif
     iglob = ibool(2,2,NGLLZ,ispec)
     if (iglob_is_surface_external_mesh(iglob)) then
-      nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
+      nfaces_surface = nfaces_surface + 1
     endif
     iglob = ibool(2,1,2,ispec)
     if (iglob_is_surface_external_mesh(iglob)) then
-      nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
+      nfaces_surface = nfaces_surface + 1
     endif
     iglob = ibool(2,NGLLY,2,ispec)
     if (iglob_is_surface_external_mesh(iglob)) then
-      nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
+      nfaces_surface = nfaces_surface + 1
     endif
     iglob = ibool(1,2,2,ispec)
     if (iglob_is_surface_external_mesh(iglob)) then
-      nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
+      nfaces_surface = nfaces_surface + 1
     endif
     iglob = ibool(NGLLX,2,2,ispec)
     if (iglob_is_surface_external_mesh(iglob)) then
-      nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
+      nfaces_surface = nfaces_surface + 1
     endif
   enddo
 
@@ -179,7 +179,7 @@
   ! sets surface flag for element
   ispec_is_surface_external_mesh(ispec) = .true.
 
-  ! sets flags for all gll points on this face
+  ! sets flags for all GLL points on this face
   if (k == 1 .or. k == NGLLZ) then
     do jj = 1, NGLLY
       do ii = 1, NGLLX
@@ -208,15 +208,15 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine detect_surface_cross_section(NPROC,nglob,nspec,ibool,&
+  subroutine detect_surface_cross_section(NPROC,nglob,nspec,ibool, &
                             ispec_is_surface_external_mesh, &
                             iglob_is_surface_external_mesh, &
-                            nfaces_surface_ext_mesh, &
+                            nfaces_surface, &
                             num_interfaces_ext_mesh, &
                             max_nibool_interfaces_ext_mesh, &
                             nibool_interfaces_ext_mesh, &
                             my_neighbours_ext_mesh, &
-                            ibool_interfaces_ext_mesh,&
+                            ibool_interfaces_ext_mesh, &
                             x_section,y_section,z_section, &
                             xstore,ystore,zstore,myrank)
 
@@ -227,7 +227,7 @@
 !         (this is only a quick & dirty cross-section implementation, no sophisticated interpolation of points considered...)
 !
 ! returns: ispec_is_surface_external_mesh, iglob_is_surface_external_mesh
-!               and nfaces_surface_ext_mesh
+!               and nfaces_surface
 
   use constants
 
@@ -240,7 +240,7 @@
 ! surface
   logical, dimension(nspec) :: ispec_is_surface_external_mesh
   logical, dimension(nglob) :: iglob_is_surface_external_mesh
-  integer :: nfaces_surface_ext_mesh
+  integer :: nfaces_surface
 
 ! MPI partitions
   integer :: num_interfaces_ext_mesh
@@ -300,7 +300,7 @@
 ! initialize surface indices
   ispec_is_surface_external_mesh(:) = .false.
   iglob_is_surface_external_mesh(:) = .false.
-  nfaces_surface_ext_mesh  = 0
+  nfaces_surface  = 0
   valence_external_mesh(:) = 0
 
 ! sets valence value to one corresponding to process rank  for points on cross-sections
@@ -365,8 +365,7 @@
 
             ! considers only points in same process or, if point is shared between two processes,
             ! only with higher process ranks than itself
-            if (valence_external_mesh(iglob) == myrank+1 &
-              .or. valence_external_mesh(iglob) > 2*(myrank+1)) then
+            if (valence_external_mesh(iglob) == myrank+1 .or. valence_external_mesh(iglob) > 2*(myrank+1)) then
               ! sets surface flags for cross section
               call ds_set_cross_section_flags(nspec,ispec_is_surface_external_mesh, &
                                             nglob,iglob_is_surface_external_mesh, &
@@ -425,8 +424,8 @@
 
         ! gets face normal
         normal(:) = 0._CUSTOM_REAL
-        call get_element_face_normal(ispec,iface,xcoord_face,ycoord_face,zcoord_face,&
-                                    ibool,nspec,nglob,xstore,ystore,zstore,&
+        call get_element_face_normal(ispec,iface,xcoord_face,ycoord_face,zcoord_face, &
+                                    ibool,nspec,nglob,xstore,ystore,zstore, &
                                     normal)
 
         ! distance to cross-section planes
@@ -489,32 +488,32 @@
   enddo
 
 ! counts faces for external-mesh movies and shakemaps
-  nfaces_surface_ext_mesh = 0
+  nfaces_surface = 0
   do ispec = 1, nspec
     if (ispec_is_surface_external_mesh(ispec)) then
       ! zmin face
       if (iglob_is_surface_external_mesh(ibool(2,2,1,ispec))) then
-        nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
+        nfaces_surface = nfaces_surface + 1
       endif
       ! zmax
       if (iglob_is_surface_external_mesh(ibool(2,2,NGLLZ,ispec))) then
-        nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
+        nfaces_surface = nfaces_surface + 1
       endif
       ! ymin
       if (iglob_is_surface_external_mesh(ibool(2,1,2,ispec))) then
-        nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
+        nfaces_surface = nfaces_surface + 1
       endif
       ! ymax
       if (iglob_is_surface_external_mesh(ibool(2,NGLLY,2,ispec))) then
-        nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
+        nfaces_surface = nfaces_surface + 1
       endif
       !xmin
       if (iglob_is_surface_external_mesh(ibool(1,2,2,ispec))) then
-        nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
+        nfaces_surface = nfaces_surface + 1
       endif
       !xmax
       if (iglob_is_surface_external_mesh(ibool(NGLLX,2,2,ispec))) then
-        nfaces_surface_ext_mesh = nfaces_surface_ext_mesh + 1
+        nfaces_surface = nfaces_surface + 1
       endif
     endif
   enddo
@@ -555,7 +554,7 @@
   ! initialize element flag
   has_face = .false.
 
-  ! sets flags for all gll points on a face and makes sure it's not inside the element
+  ! sets flags for all GLL points on a face and makes sure it's not inside the element
   ! zmin & zmax face
   if ((k == 1 .or. k == NGLLZ) .and. valence_external_mesh(ibool(3,3,k,ispec)) >= 1) then
     has_face = .true.
@@ -653,15 +652,15 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine detect_surface_PNM_image(NPROC,nglob,nspec,ibool,&
+  subroutine detect_surface_PNM_image(NPROC,nglob,nspec,ibool, &
                             ispec_is_image_surface, &
                             iglob_is_image_surface, &
                             num_iglob_image_surface, &
                             num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                             nibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
-                            ibool_interfaces_ext_mesh,&
-                            section_xorg,section_yorg,section_zorg,&
-                            section_nx,section_ny,section_nz,&
+                            ibool_interfaces_ext_mesh, &
+                            section_xorg,section_yorg,section_zorg, &
+                            section_nx,section_ny,section_nz, &
                             xstore,ystore,zstore,myrank)
 
 ! this returns points on a cross-section surface through model
@@ -727,7 +726,7 @@
 
           ! chooses points close to cross-section
           if (abs((xstore(iglob)-section_xorg)*section_nx + (ystore(iglob)-section_yorg)*section_ny &
-                 + (zstore(iglob)-section_zorg)*section_nz )  < distance) then
+                 + (zstore(iglob)-section_zorg)*section_nz ) < distance) then
             ! sets valence to 1 for points on cross-sections
             valence_external_mesh(iglob) = myrank+1
           endif

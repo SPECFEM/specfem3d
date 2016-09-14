@@ -123,16 +123,16 @@
   gammaf = one
 
   if (x == -half) gammaf = -two*dsqrt(pi)
-  if (x ==  half) gammaf =  dsqrt(pi)
-  if (x ==  one ) gammaf =  one
-  if (x ==  two ) gammaf =  one
-  if (x ==  1.5d0) gammaf =  dsqrt(pi)/2.d0
-  if (x ==  2.5d0) gammaf =  1.5d0*dsqrt(pi)/2.d0
-  if (x ==  3.5d0) gammaf =  2.5d0*1.5d0*dsqrt(pi)/2.d0
-  if (x ==  3.d0 ) gammaf =  2.d0
-  if (x ==  4.d0 ) gammaf = 6.d0
-  if (x ==  5.d0 ) gammaf = 24.d0
-  if (x ==  6.d0 ) gammaf = 120.d0
+  if (x == half) gammaf =  dsqrt(pi)
+  if (x == one ) gammaf =  one
+  if (x == two ) gammaf =  one
+  if (x == 1.5d0) gammaf =  dsqrt(pi)/2.d0
+  if (x == 2.5d0) gammaf =  1.5d0*dsqrt(pi)/2.d0
+  if (x == 3.5d0) gammaf =  2.5d0*1.5d0*dsqrt(pi)/2.d0
+  if (x == 3.d0 ) gammaf =  2.d0
+  if (x == 4.d0 ) gammaf = 6.d0
+  if (x == 5.d0 ) gammaf = 24.d0
+  if (x == 6.d0 ) gammaf = 120.d0
 
   end function gammaf
 
@@ -177,7 +177,7 @@
   pd = 0.d0
   jmin = 0
   do j=1,np
-   if(j == 1) then
+   if (j == 1) then
       x = dcos((2.d0*(dble(j)-1.d0)+1.d0)*dth)
    else
       x1 = dcos((2.d0*(dble(j)-1.d0)+1.d0)*dth)
@@ -193,7 +193,7 @@
       enddo
       delx = -p/(pd-recsum*p)
       x    = x+delx
-      if(abs(delx) < eps) goto 31
+      if (abs(delx) < eps) goto 31
    enddo
  31      continue
    xjac(np-j+1) = x
@@ -202,12 +202,12 @@
   do i=1,np
    xmin = 2.d0
    do j=i,np
-      if(xjac(j) < xmin) then
+      if (xjac(j) < xmin) then
          xmin = xjac(j)
          jmin = j
       endif
    enddo
-   if(jmin /= i) then
+   if (jmin /= i) then
       swap = xjac(i)
       xjac(i) = xjac(jmin)
       xjac(jmin) = swap
@@ -278,7 +278,7 @@
 !------------------------------------------------------------------------
 !
 
-  double precision FUNCTION PNDLEG (Z,N)
+  double precision function PNDLEG (Z,N)
 
 !------------------------------------------------------------------------
 !
@@ -318,7 +318,7 @@
 !------------------------------------------------------------------------
 !
 
-  double precision FUNCTION PNLEG (Z,N)
+  double precision function PNLEG (Z,N)
 
 !------------------------------------------------------------------------
 !

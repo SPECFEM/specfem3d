@@ -38,7 +38,7 @@
 
 ! the topology of the nodes is described in UTILS/chunk_notes_scanned/numbering_convention_27_nodes.tif
 
-  if(NGNOD /= 27) stop 'elements should have 27 control nodes'
+  if (NGNOD /= 27) stop 'elements should have 27 control nodes'
 
 ! corner nodes
 

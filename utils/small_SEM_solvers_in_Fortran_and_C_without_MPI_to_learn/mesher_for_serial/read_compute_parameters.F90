@@ -54,8 +54,8 @@
          NGLOB, &
          ratio_sampling_array, ner, doubling_index,r_bottom,r_top,this_region_has_a_doubling,rmins,rmaxs,CASE_3D, &
          OUTPUT_SEISMOS_ASCII_TEXT,OUTPUT_SEISMOS_SAC_ALPHANUM,OUTPUT_SEISMOS_SAC_BINARY, &
-         ROTATE_SEISMOGRAMS_RT,ratio_divide_central_cube,HONOR_1D_SPHERICAL_MOHO,CUT_SUPERBRICK_XI,CUT_SUPERBRICK_ETA,&
-         DIFF_NSPEC1D_RADIAL,DIFF_NSPEC2D_XI,DIFF_NSPEC2D_ETA,&
+         ROTATE_SEISMOGRAMS_RT,ratio_divide_central_cube,HONOR_1D_SPHERICAL_MOHO,CUT_SUPERBRICK_XI,CUT_SUPERBRICK_ETA, &
+         DIFF_NSPEC1D_RADIAL,DIFF_NSPEC2D_XI,DIFF_NSPEC2D_ETA, &
          WRITE_SEISMOGRAMS_BY_MASTER,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_LARGE_FILE,EMULATE_ONLY)
 
 
@@ -88,7 +88,7 @@
           SAVE_MESH_FILES,ATTENUATION, &
           ABSORBING_CONDITIONS,INCLUDE_CENTRAL_CUBE,INFLATE_CENTRAL_CUBE,SAVE_FORWARD, &
           OUTPUT_SEISMOS_ASCII_TEXT,OUTPUT_SEISMOS_SAC_ALPHANUM,OUTPUT_SEISMOS_SAC_BINARY, &
-          ROTATE_SEISMOGRAMS_RT,WRITE_SEISMOGRAMS_BY_MASTER,&
+          ROTATE_SEISMOGRAMS_RT,WRITE_SEISMOGRAMS_BY_MASTER, &
           SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_LARGE_FILE,EMULATE_ONLY
 
   character(len=150) OUTPUT_FILES,LOCAL_PATH,MODEL
@@ -135,7 +135,7 @@
 
 ! for the cut doublingbrick improvement
   logical :: CUT_SUPERBRICK_XI,CUT_SUPERBRICK_ETA
-  integer :: lastdoubling_layer, cut_doubling, nglob_int_surf_xi, nglob_int_surf_eta,nglob_ext_surf,&
+  integer :: lastdoubling_layer, cut_doubling, nglob_int_surf_xi, nglob_int_surf_eta,nglob_ext_surf, &
               normal_doubling, nglob_center_edge, nglob_corner_edge, nglob_border_edge
   integer, dimension(NB_SQUARE_CORNERS,NB_CUT_CASE) :: DIFF_NSPEC1D_RADIAL
   integer, dimension(NB_SQUARE_EDGES_ONEDIR,NB_CUT_CASE) :: DIFF_NSPEC2D_XI,DIFF_NSPEC2D_ETA
@@ -148,40 +148,40 @@
   call open_parameter_file
 
   call read_value_integer(SIMULATION_TYPE, 'solver.SIMULATION_TYPE')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_logical(SAVE_FORWARD, 'solver.SAVE_FORWARD')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
 
   call read_value_integer(NCHUNKS, 'mesher.NCHUNKS')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
-  if(NCHUNKS /= 1 .and. NCHUNKS /= 2 .and. NCHUNKS /= 3 .and. NCHUNKS /= 6) &
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (NCHUNKS /= 1 .and. NCHUNKS /= 2 .and. NCHUNKS /= 3 .and. NCHUNKS /= 6) &
     stop 'NCHUNKS must be either 1, 2, 3 or 6'
 
   call read_value_double_precision(ANGULAR_WIDTH_XI_IN_DEGREES, 'mesher.ANGULAR_WIDTH_XI_IN_DEGREES')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_double_precision(ANGULAR_WIDTH_ETA_IN_DEGREES, 'mesher.ANGULAR_WIDTH_ETA_IN_DEGREES')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_double_precision(CENTER_LATITUDE_IN_DEGREES, 'mesher.CENTER_LATITUDE_IN_DEGREES')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_double_precision(CENTER_LONGITUDE_IN_DEGREES, 'mesher.CENTER_LONGITUDE_IN_DEGREES')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_double_precision(GAMMA_ROTATION_AZIMUTH, 'mesher.GAMMA_ROTATION_AZIMUTH')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
 
 !! DK DK this version of the mesher for the GPU + MPI solver is limited to one chunk for now
-  if(NCHUNKS > 1) stop 'this version of the mesher for the GPU + MPI solver is limited to one chunk for now'
+  if (NCHUNKS > 1) stop 'this version of the mesher for the GPU + MPI solver is limited to one chunk for now'
 
 ! this MUST be 90 degrees for two chunks or more to match geometrically
-  if(NCHUNKS > 1 .and. abs(ANGULAR_WIDTH_XI_IN_DEGREES - 90.d0) > 0.00000001d0) &
+  if (NCHUNKS > 1 .and. abs(ANGULAR_WIDTH_XI_IN_DEGREES - 90.d0) > 0.00000001d0) &
     stop 'ANGULAR_WIDTH_XI_IN_DEGREES must be 90 for more than one chunk'
 
 ! this can be any value in the case of two chunks
-  if(NCHUNKS > 2 .and. abs(ANGULAR_WIDTH_ETA_IN_DEGREES - 90.d0) > 0.00000001d0) &
+  if (NCHUNKS > 2 .and. abs(ANGULAR_WIDTH_ETA_IN_DEGREES - 90.d0) > 0.00000001d0) &
     stop 'ANGULAR_WIDTH_ETA_IN_DEGREES must be 90 for more than two chunks'
 
 ! include central cube or not
 ! use regular cubed sphere instead of cube for large distances
-  if(NCHUNKS == 6) then
+  if (NCHUNKS == 6) then
     INCLUDE_CENTRAL_CUBE = .true.
     INFLATE_CENTRAL_CUBE = .false.
   else
@@ -191,15 +191,15 @@
 
 ! number of elements at the surface along the two sides of the first chunk
   call read_value_integer(NEX_XI_read, 'mesher.NEX_XI')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_integer(NEX_ETA_read, 'mesher.NEX_ETA')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_integer(NPROC_XI_read, 'mesher.NPROC_XI')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_integer(NPROC_ETA_read, 'mesher.NPROC_ETA')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
 
-  if(.not. EMULATE_ONLY) then
+  if (.not. EMULATE_ONLY) then
     NEX_XI = NEX_XI_read
     NEX_ETA = NEX_ETA_read
     NPROC_XI = NPROC_XI_read
@@ -212,7 +212,7 @@
 
 ! define the velocity model
   call read_value_string(MODEL, 'model.name')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
 
 ! use PREM as the 1D reference model by default
   REFERENCE_1D_MODEL = REFERENCE_MODEL_PREM
@@ -236,7 +236,7 @@
 ! default is no 3D model
   THREE_D_MODEL = 0
 
-  if(MODEL == '1D_isotropic_prem') then
+  if (MODEL == '1D_isotropic_prem') then
     TRANSVERSE_ISOTROPY = .false.
     ISOTROPIC_3D_MANTLE = .false.
     ANISOTROPIC_3D_MANTLE = .false.
@@ -245,7 +245,7 @@
     ATTENUATION_3D = .false.
     HONOR_1D_SPHERICAL_MOHO = .true.
 
-  else if(MODEL == '1D_transversely_isotropic_prem') then
+  else if (MODEL == '1D_transversely_isotropic_prem') then
     TRANSVERSE_ISOTROPY = .true.
     ISOTROPIC_3D_MANTLE = .false.
     ANISOTROPIC_3D_MANTLE = .false.
@@ -254,18 +254,18 @@
     ATTENUATION_3D = .false.
     HONOR_1D_SPHERICAL_MOHO = .true.
 
-  else if(MODEL == '1D_iasp91' .or. MODEL == '1D_1066a' .or. &
+  else if (MODEL == '1D_iasp91' .or. MODEL == '1D_1066a' .or. &
           MODEL == '1D_ak135' .or. MODEL == '1D_jp3d' .or. &
           MODEL == '1D_sea99') then
-    if(MODEL == '1D_iasp91') then
+    if (MODEL == '1D_iasp91') then
       REFERENCE_1D_MODEL = REFERENCE_MODEL_IASP91
-    else if(MODEL == '1D_1066a') then
+    else if (MODEL == '1D_1066a') then
       REFERENCE_1D_MODEL = REFERENCE_MODEL_1066A
-    else if(MODEL == '1D_ak135') then
+    else if (MODEL == '1D_ak135') then
       REFERENCE_1D_MODEL = REFERENCE_MODEL_AK135
-   else if(MODEL == '1D_jp3d') then
+   else if (MODEL == '1D_jp3d') then
       REFERENCE_1D_MODEL = REFERENCE_MODEL_JP1D
-   else if(MODEL == '1D_sea99') then
+   else if (MODEL == '1D_sea99') then
       REFERENCE_1D_MODEL = REFERENCE_MODEL_SEA1D
     else
       stop 'reference 1D Earth model unknown'
@@ -278,7 +278,7 @@
     ATTENUATION_3D = .false.
     HONOR_1D_SPHERICAL_MOHO = .true.
 
-  else if(MODEL == '1D_ref') then
+  else if (MODEL == '1D_ref') then
     TRANSVERSE_ISOTROPY = .true.
     ISOTROPIC_3D_MANTLE = .false.
     ANISOTROPIC_3D_MANTLE = .false.
@@ -288,7 +288,7 @@
     HONOR_1D_SPHERICAL_MOHO = .true.
     REFERENCE_1D_MODEL = REFERENCE_MODEL_REF
 
-  else if(MODEL == '1D_ref_iso') then
+  else if (MODEL == '1D_ref_iso') then
     TRANSVERSE_ISOTROPY = .false.
     ISOTROPIC_3D_MANTLE = .false.
     ANISOTROPIC_3D_MANTLE = .false.
@@ -298,7 +298,7 @@
     HONOR_1D_SPHERICAL_MOHO = .true.
     REFERENCE_1D_MODEL = REFERENCE_MODEL_REF
 
-  else if(MODEL == '1D_isotropic_prem_onecrust') then
+  else if (MODEL == '1D_isotropic_prem_onecrust') then
     TRANSVERSE_ISOTROPY = .false.
     ISOTROPIC_3D_MANTLE = .false.
     ANISOTROPIC_3D_MANTLE = .false.
@@ -308,7 +308,7 @@
     HONOR_1D_SPHERICAL_MOHO = .true.
     ONE_CRUST = .true.
 
-  else if(MODEL == '1D_transversely_isotropic_prem_onecrust') then
+  else if (MODEL == '1D_transversely_isotropic_prem_onecrust') then
     TRANSVERSE_ISOTROPY = .true.
     ISOTROPIC_3D_MANTLE = .false.
     ANISOTROPIC_3D_MANTLE = .false.
@@ -318,12 +318,12 @@
     HONOR_1D_SPHERICAL_MOHO = .true.
     ONE_CRUST = .true.
 
-  else if(MODEL == '1D_iasp91_onecrust' .or. MODEL == '1D_1066a_onecrust' .or. MODEL == '1D_ak135_onecrust') then
-    if(MODEL == '1D_iasp91_onecrust') then
+  else if (MODEL == '1D_iasp91_onecrust' .or. MODEL == '1D_1066a_onecrust' .or. MODEL == '1D_ak135_onecrust') then
+    if (MODEL == '1D_iasp91_onecrust') then
       REFERENCE_1D_MODEL = REFERENCE_MODEL_IASP91
-    else if(MODEL == '1D_1066a_onecrust') then
+    else if (MODEL == '1D_1066a_onecrust') then
       REFERENCE_1D_MODEL = REFERENCE_MODEL_1066A
-    else if(MODEL == '1D_ak135_onecrust') then
+    else if (MODEL == '1D_ak135_onecrust') then
       REFERENCE_1D_MODEL = REFERENCE_MODEL_AK135
     else
       stop 'reference 1D Earth model unknown'
@@ -337,7 +337,7 @@
     HONOR_1D_SPHERICAL_MOHO = .true.
     ONE_CRUST = .true.
 
-  else if(MODEL == 'transversely_isotropic_prem_plus_3D_crust_2.0') then
+  else if (MODEL == 'transversely_isotropic_prem_plus_3D_crust_2.0') then
     TRANSVERSE_ISOTROPY = .true.
     ISOTROPIC_3D_MANTLE = .false.
     ANISOTROPIC_3D_MANTLE = .false.
@@ -347,7 +347,7 @@
     ONE_CRUST = .true.
     CASE_3D = .true.
 
-  else if(MODEL == 's20rts') then
+  else if (MODEL == 's20rts') then
     TRANSVERSE_ISOTROPY = .true.
     ISOTROPIC_3D_MANTLE = .true.
     ANISOTROPIC_3D_MANTLE = .false.
@@ -359,7 +359,7 @@
     REFERENCE_1D_MODEL = REFERENCE_MODEL_PREM
     THREE_D_MODEL = THREE_D_MODEL_S20RTS
 
-  else if(MODEL == 'sea99_jp3d1994') then
+  else if (MODEL == 'sea99_jp3d1994') then
     TRANSVERSE_ISOTROPY = .false.
     ISOTROPIC_3D_MANTLE = .true.
     ANISOTROPIC_3D_MANTLE = .false.
@@ -371,7 +371,7 @@
     REFERENCE_1D_MODEL = REFERENCE_MODEL_SEA1D
     THREE_D_MODEL = THREE_D_MODEL_SEA99_JP3D
 
-  else if(MODEL == 'sea99') then
+  else if (MODEL == 'sea99') then
     TRANSVERSE_ISOTROPY = .false.
     ISOTROPIC_3D_MANTLE = .true.
     ANISOTROPIC_3D_MANTLE = .false.
@@ -384,7 +384,7 @@
     THREE_D_MODEL = THREE_D_MODEL_SEA99
 
 
-  else if(MODEL == 'jp3d1994') then
+  else if (MODEL == 'jp3d1994') then
     TRANSVERSE_ISOTROPY = .false.
     ISOTROPIC_3D_MANTLE = .true.
     ANISOTROPIC_3D_MANTLE = .false.
@@ -396,7 +396,7 @@
     REFERENCE_1D_MODEL = REFERENCE_MODEL_JP1D
     THREE_D_MODEL = THREE_D_MODEL_JP3D
 
-  else if(MODEL == 's362ani') then
+  else if (MODEL == 's362ani') then
     TRANSVERSE_ISOTROPY = .true.
     ISOTROPIC_3D_MANTLE = .true.
     ANISOTROPIC_3D_MANTLE = .false.
@@ -408,7 +408,7 @@
     REFERENCE_1D_MODEL = REFERENCE_MODEL_REF
     THREE_D_MODEL = THREE_D_MODEL_S362ANI
 
-  else if(MODEL == 's362iso') then
+  else if (MODEL == 's362iso') then
     TRANSVERSE_ISOTROPY = .false.
     ISOTROPIC_3D_MANTLE = .true.
     ANISOTROPIC_3D_MANTLE = .false.
@@ -420,7 +420,7 @@
     REFERENCE_1D_MODEL = REFERENCE_MODEL_REF
     THREE_D_MODEL = THREE_D_MODEL_S362ANI
 
-  else if(MODEL == 's362wmani') then
+  else if (MODEL == 's362wmani') then
     TRANSVERSE_ISOTROPY = .true.
     ISOTROPIC_3D_MANTLE = .true.
     ANISOTROPIC_3D_MANTLE = .false.
@@ -432,7 +432,7 @@
     REFERENCE_1D_MODEL = REFERENCE_MODEL_REF
     THREE_D_MODEL = THREE_D_MODEL_S362WMANI
 
-  else if(MODEL == 's362ani_prem') then
+  else if (MODEL == 's362ani_prem') then
     TRANSVERSE_ISOTROPY = .true.
     ISOTROPIC_3D_MANTLE = .true.
     ANISOTROPIC_3D_MANTLE = .false.
@@ -444,7 +444,7 @@
     REFERENCE_1D_MODEL = REFERENCE_MODEL_PREM
     THREE_D_MODEL = THREE_D_MODEL_S362ANI_PREM
 
-  else if(MODEL == 's29ea') then
+  else if (MODEL == 's29ea') then
     TRANSVERSE_ISOTROPY = .true.
     ISOTROPIC_3D_MANTLE = .true.
     ANISOTROPIC_3D_MANTLE = .false.
@@ -456,7 +456,7 @@
     REFERENCE_1D_MODEL = REFERENCE_MODEL_REF
     THREE_D_MODEL = THREE_D_MODEL_S29EA
 
-  else if(MODEL == '3D_attenuation') then
+  else if (MODEL == '3D_attenuation') then
     TRANSVERSE_ISOTROPY = .false.
     ISOTROPIC_3D_MANTLE = .false.
     ANISOTROPIC_3D_MANTLE = .false.
@@ -466,7 +466,7 @@
     ONE_CRUST = .true.
     CASE_3D = .true.
 
-  else if(MODEL == '3D_anisotropic') then
+  else if (MODEL == '3D_anisotropic') then
     TRANSVERSE_ISOTROPY = .true.
     ISOTROPIC_3D_MANTLE = .false.
     ANISOTROPIC_3D_MANTLE = .true.
@@ -494,7 +494,7 @@
       endif
 
      ! element width =   0.5625000      degrees =    62.54715      km
-      if(NEX_MAX*multiplication_factor <= 160) then
+      if (NEX_MAX*multiplication_factor <= 160) then
         DT                       = 0.252d0
 
         MIN_ATTENUATION_PERIOD   = 30
@@ -514,7 +514,7 @@
         R_CENTRAL_CUBE = 950000.d0
 
     ! element width =   0.3515625      degrees =    39.09196      km
-      else if(NEX_MAX*multiplication_factor <= 256) then
+      else if (NEX_MAX*multiplication_factor <= 256) then
         DT                       = 0.225d0
 
         MIN_ATTENUATION_PERIOD   = 20
@@ -534,7 +534,7 @@
         R_CENTRAL_CUBE = 965000.d0
 
     ! element width =   0.2812500      degrees =    31.27357      km
-      else if(NEX_MAX*multiplication_factor <= 320) then
+      else if (NEX_MAX*multiplication_factor <= 320) then
         DT                       = 0.16d0
 
         MIN_ATTENUATION_PERIOD   = 15
@@ -554,7 +554,7 @@
         R_CENTRAL_CUBE = 940000.d0
 
     ! element width =   0.1875000      degrees =    20.84905      km
-      else if(NEX_MAX*multiplication_factor <= 480) then
+      else if (NEX_MAX*multiplication_factor <= 480) then
         DT                       = 0.11d0
 
         MIN_ATTENUATION_PERIOD   = 10
@@ -574,7 +574,7 @@
         R_CENTRAL_CUBE = 988000.d0
 
     ! element width =   0.1757812      degrees =    19.54598      km
-      else if(NEX_MAX*multiplication_factor <= 512) then
+      else if (NEX_MAX*multiplication_factor <= 512) then
         DT                       = 0.1125d0
 
         MIN_ATTENUATION_PERIOD   = 9
@@ -594,7 +594,7 @@
         R_CENTRAL_CUBE = 1010000.d0
 
     ! element width =   0.1406250      degrees =    15.63679      km
-      else if(NEX_MAX*multiplication_factor <= 640) then
+      else if (NEX_MAX*multiplication_factor <= 640) then
         DT                       = 0.09d0
 
         MIN_ATTENUATION_PERIOD   = 8
@@ -614,7 +614,7 @@
         R_CENTRAL_CUBE = 1020000.d0
 
     ! element width =   0.1041667      degrees =    11.58280      km
-      else if(NEX_MAX*multiplication_factor <= 864) then
+      else if (NEX_MAX*multiplication_factor <= 864) then
         DT                       = 0.0667d0
 
         MIN_ATTENUATION_PERIOD   = 6
@@ -634,7 +634,7 @@
         R_CENTRAL_CUBE = 990000.d0
 
     ! element width =   7.8125000E-02  degrees =    8.687103      km
-      else if(NEX_MAX*multiplication_factor <= 1152) then
+      else if (NEX_MAX*multiplication_factor <= 1152) then
         DT                       = 0.05d0
 
         MIN_ATTENUATION_PERIOD   = 4
@@ -654,7 +654,7 @@
         R_CENTRAL_CUBE = 985000.d0
 
     ! element width =   7.2115384E-02  degrees =    8.018865      km
-      else if(NEX_MAX*multiplication_factor <= 1248) then
+      else if (NEX_MAX*multiplication_factor <= 1248) then
         DT                       = 0.0462d0
 
         MIN_ATTENUATION_PERIOD   = 4
@@ -707,21 +707,21 @@
     if (HONOR_1D_SPHERICAL_MOHO) then
       if (.not. ONE_CRUST) then
         ! case 1D + two crustal layers
-        if (NER_CRUST<2) NER_CRUST=2
-        if(NEX_MAX*multiplication_factor <= 160) then
+        if (NER_CRUST < 2) NER_CRUST=2
+        if (NEX_MAX*multiplication_factor <= 160) then
           DT = 0.20d0
-        else if(NEX_MAX*multiplication_factor <= 256) then
+        else if (NEX_MAX*multiplication_factor <= 256) then
           DT = 0.20d0
         endif
       endif
     else
       ! case 3D
-      if (NER_CRUST<2) NER_CRUST=2
-      if(NEX_MAX*multiplication_factor <= 160) then
+      if (NER_CRUST < 2) NER_CRUST=2
+      if (NEX_MAX*multiplication_factor <= 160) then
           DT = 0.15d0
-      else if(NEX_MAX*multiplication_factor <= 256) then
+      else if (NEX_MAX*multiplication_factor <= 256) then
           DT = 0.17d0
-      else if(NEX_MAX*multiplication_factor <= 320) then
+      else if (NEX_MAX*multiplication_factor <= 320) then
           DT = 0.155d0
       endif
     endif
@@ -731,12 +731,12 @@
     endif
 
 
-    if( .not. ATTENUATION_RANGE_PREDEFINED ) then
+    if (.not. ATTENUATION_RANGE_PREDEFINED ) then
        call auto_attenuation_periods(ANGULAR_WIDTH_XI_IN_DEGREES, NEX_MAX, &
             MIN_ATTENUATION_PERIOD, MAX_ATTENUATION_PERIOD)
     endif
 
-    if(ANGULAR_WIDTH_XI_IN_DEGREES  < 90.0d0 .or. &
+    if (ANGULAR_WIDTH_XI_IN_DEGREES < 90.0d0 .or. &
        ANGULAR_WIDTH_ETA_IN_DEGREES < 90.0d0 .or. &
        NEX_MAX > 1248) then
 
@@ -784,11 +784,11 @@
     if (HONOR_1D_SPHERICAL_MOHO) then
       if (.not. ONE_CRUST) then
         ! case 1D + two crustal layers
-        if (NER_CRUST<2) NER_CRUST=2
+        if (NER_CRUST < 2) NER_CRUST=2
       endif
     else
       ! case 3D
-      if (NER_CRUST<2) NER_CRUST=2
+      if (NER_CRUST < 2) NER_CRUST=2
     endif
   endif
 
@@ -798,26 +798,26 @@
 !!!!!!!!  DT = DT * (1.d0 - 0.05d0)
 
   call read_value_logical(OCEANS, 'model.OCEANS')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_logical(ELLIPTICITY, 'model.ELLIPTICITY')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_logical(TOPOGRAPHY, 'model.TOPOGRAPHY')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_logical(GRAVITY, 'model.GRAVITY')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_logical(ROTATION, 'model.ROTATION')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_logical(ATTENUATION, 'model.ATTENUATION')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
 
   call read_value_logical(ABSORBING_CONDITIONS, 'solver.ABSORBING_CONDITIONS')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
 
-  if(ABSORBING_CONDITIONS .and. NCHUNKS == 6) stop 'cannot have absorbing conditions in the full Earth'
+  if (ABSORBING_CONDITIONS .and. NCHUNKS == 6) stop 'cannot have absorbing conditions in the full Earth'
 
-  if(ABSORBING_CONDITIONS .and. NCHUNKS == 3) stop 'absorbing conditions not supported for three chunks yet'
+  if (ABSORBING_CONDITIONS .and. NCHUNKS == 3) stop 'absorbing conditions not supported for three chunks yet'
 
-  if(ATTENUATION_3D .and. .not. ATTENUATION) stop 'need ATTENUATION to use ATTENUATION_3D'
+  if (ATTENUATION_3D .and. .not. ATTENUATION) stop 'need ATTENUATION to use ATTENUATION_3D'
 
 ! radii in PREM or IASP91
 ! and normalized density at fluid-solid interface on fluid size for coupling
@@ -841,7 +841,7 @@
 ! value common to all models
   RHO_OCEANS = 1020.0 / RHOAV
 
-  if(REFERENCE_1D_MODEL == REFERENCE_MODEL_IASP91) then
+  if (REFERENCE_1D_MODEL == REFERENCE_MODEL_IASP91) then
 
 ! IASP91
     ROCEAN = 6371000.d0
@@ -863,12 +863,12 @@
     RHO_TOP_OC = 9900.2379 / RHOAV
     RHO_BOTTOM_OC = 12168.6383 / RHOAV
 
-  else if(REFERENCE_1D_MODEL == REFERENCE_MODEL_AK135) then
+  else if (REFERENCE_1D_MODEL == REFERENCE_MODEL_AK135) then
 
 ! our implementation of AK135 has not been checked carefully yet
 ! therefore let us doublecheck it carefully one day
 
-! values below corrected by Ying Zhou <yingz@gps.caltech.edu>
+! values below corrected by Ying Zhou < yingz@gps.caltech.edu>
 
 ! AK135 without the 300 meters of mud layer
    ROCEAN = 6368000.d0
@@ -889,9 +889,9 @@
    RHO_TOP_OC = 9914.5000 / RHOAV
    RHO_BOTTOM_OC = 12139.1000 / RHOAV
 
-  else if(REFERENCE_1D_MODEL == REFERENCE_MODEL_1066A) then
+  else if (REFERENCE_1D_MODEL == REFERENCE_MODEL_1066A) then
 
-! values below corrected by Ying Zhou <yingz@gps.caltech.edu>
+! values below corrected by Ying Zhou < yingz@gps.caltech.edu>
 
 ! 1066A
    RMOHO = 6360000.d0
@@ -916,7 +916,7 @@
    RHO_TOP_OC = 9917.4500 / RHOAV
    RHO_BOTTOM_OC = 12160.6500 / RHOAV
 
-  else if(REFERENCE_1D_MODEL == REFERENCE_MODEL_REF) then
+  else if (REFERENCE_1D_MODEL == REFERENCE_MODEL_REF) then
 
 ! REF
     ROCEAN = 6368000.d0
@@ -935,9 +935,9 @@
     RHO_TOP_OC = 9903.48 / RHOAV
     RHO_BOTTOM_OC = 12166.35 / RHOAV
 
-  else if(REFERENCE_1D_MODEL == REFERENCE_MODEL_JP1D) then
+  else if (REFERENCE_1D_MODEL == REFERENCE_MODEL_JP1D) then
 
-! values below corrected by Min Chen <mchen@gps.caltech.edu>
+! values below corrected by Min Chen < mchen@gps.caltech.edu>
 
 ! jp1d
     ROCEAN = 6371000.d0
@@ -955,7 +955,7 @@
     RHO_TOP_OC = 9900.2379 / RHOAV
     RHO_BOTTOM_OC = 12168.6383 / RHOAV
 
-  else if(REFERENCE_1D_MODEL == REFERENCE_MODEL_SEA1D) then
+  else if (REFERENCE_1D_MODEL == REFERENCE_MODEL_SEA1D) then
 
 ! SEA1D without the 2 km of mud layer or the 3km water layer
    ROCEAN = 6371000.d0
@@ -999,53 +999,53 @@
 
 ! honor the PREM Moho or define a fictitious Moho in order to have even radial sampling
 ! from the d220 to the Earth surface
-  if(HONOR_1D_SPHERICAL_MOHO) then
+  if (HONOR_1D_SPHERICAL_MOHO) then
     RMOHO_FICTITIOUS_IN_MESHER = RMOHO
   else
     RMOHO_FICTITIOUS_IN_MESHER = (R80 + R_EARTH) / 2
   endif
 
   call read_value_double_precision(RECORD_LENGTH_IN_MINUTES, 'solver.RECORD_LENGTH_IN_MINUTES')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
 
 ! compute total number of time steps, rounded to next multiple of 100
   NSTEP = 100 * (int(RECORD_LENGTH_IN_MINUTES * 60.d0 / (100.d0*DT)) + 1)
 
   call read_value_logical(MOVIE_SURFACE, 'solver.MOVIE_SURFACE')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_logical(MOVIE_VOLUME, 'solver.MOVIE_VOLUME')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_logical(MOVIE_COARSE,'solver.MOVIE_COARSE')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_integer(NTSTEP_BETWEEN_FRAMES, 'solver.NTSTEP_BETWEEN_FRAMES')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_double_precision(HDUR_MOVIE, 'solver.HDUR_MOVIE')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
 
 ! computes a default hdur_movie that creates nice looking movies.
 ! Sets HDUR_MOVIE as the minimum period the mesh can resolve
-  if(HDUR_MOVIE <= TINYVAL) &
+  if (HDUR_MOVIE <= TINYVAL) &
     HDUR_MOVIE = 1.2d0*max(240.d0/NEX_XI*18.d0*ANGULAR_WIDTH_XI_IN_DEGREES/90.d0, &
                            240.d0/NEX_ETA*18.d0*ANGULAR_WIDTH_ETA_IN_DEGREES/90.d0)
 
   call read_value_integer(MOVIE_VOLUME_TYPE, 'solver.MOVIE_VOLUME_TYPE')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_double_precision(MOVIE_TOP_KM, 'solver.MOVIE_TOP_KM')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_double_precision(MOVIE_BOTTOM_KM, 'solver.MOVIE_BOTTOM_KM')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_double_precision(MOVIE_WEST_DEG, 'solver.MOVIE_WEST_DEG')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_double_precision(MOVIE_EAST_DEG, 'solver.MOVIE_EAST_DEG')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_double_precision(MOVIE_NORTH_DEG, 'solver.MOVIE_NORTH_DEG')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_double_precision(MOVIE_SOUTH_DEG, 'solver.MOVIE_SOUTH_DEG')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_integer(MOVIE_START, 'solver.MOVIE_START')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_integer(MOVIE_STOP, 'solver.MOVIE_STOP')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   MOVIE_TOP = (R_EARTH_KM-MOVIE_TOP_KM)/R_EARTH_KM
   MOVIE_BOTTOM = (R_EARTH_KM-MOVIE_BOTTOM_KM)/R_EARTH_KM
   MOVIE_EAST = MOVIE_EAST_DEG * DEGREES_TO_RADIANS
@@ -1054,117 +1054,117 @@
   MOVIE_SOUTH = (90.0d0 - MOVIE_SOUTH_DEG) * DEGREES_TO_RADIANS
 
   call read_value_logical(SAVE_MESH_FILES, 'mesher.SAVE_MESH_FILES')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_integer(NUMBER_OF_RUNS, 'solver.NUMBER_OF_RUNS')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_integer(NUMBER_OF_THIS_RUN, 'solver.NUMBER_OF_THIS_RUN')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_string(LOCAL_PATH, 'LOCAL_PATH')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_integer(NTSTEP_BETWEEN_OUTPUT_INFO, 'solver.NTSTEP_BETWEEN_OUTPUT_INFO')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_integer(NTSTEP_BETWEEN_OUTPUT_SEISMOS, 'solver.NTSTEP_BETWEEN_OUTPUT_SEISMOS')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_integer(NTSTEP_BETWEEN_READ_ADJSRC, 'solver.NTSTEP_BETWEEN_READ_ADJSRC')
-  if(err_occurred() /= 0) return
+  if (err_occurred() /= 0) return
 
   call read_value_logical(OUTPUT_SEISMOS_ASCII_TEXT, 'solver.OUTPUT_SEISMOS_ASCII_TEXT')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_logical(OUTPUT_SEISMOS_SAC_ALPHANUM, 'solver.OUTPUT_SEISMOS_SAC_ALPHANUM')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_logical(OUTPUT_SEISMOS_SAC_BINARY, 'solver.OUTPUT_SEISMOS_SAC_BINARY')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_logical(ROTATE_SEISMOGRAMS_RT, 'solver.ROTATE_SEISMOGRAMS_RT')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_logical(WRITE_SEISMOGRAMS_BY_MASTER, 'solver.WRITE_SEISMOGRAMS_BY_MASTER')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_logical(SAVE_ALL_SEISMOS_IN_ONE_FILE, 'solver.SAVE_ALL_SEISMOS_IN_ONE_FILE')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_logical(USE_BINARY_FOR_LARGE_FILE, 'solver.USE_BINARY_FOR_LARGE_FILE')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
 
   call read_value_logical(RECEIVERS_CAN_BE_BURIED, 'solver.RECEIVERS_CAN_BE_BURIED')
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
   call read_value_logical(PRINT_SOURCE_TIME_FUNCTION, 'solver.PRINT_SOURCE_TIME_FUNCTION')
 
-  if(err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
+  if (err_occurred() /= 0) stop 'an error occurred while reading the parameter file'
 
 ! close parameter file
   call close_parameter_file
 !--- check that parameters make sense
 
-  if (OUTPUT_SEISMOS_SAC_ALPHANUM .and. (mod(NTSTEP_BETWEEN_OUTPUT_SEISMOS,5)/=0)) &
+  if (OUTPUT_SEISMOS_SAC_ALPHANUM .and. (mod(NTSTEP_BETWEEN_OUTPUT_SEISMOS,5) /= 0)) &
     stop 'if OUTPUT_SEISMOS_SAC_ALPHANUM = .true. then NTSTEP_BETWEEN_OUTPUT_SEISMOS must be a multiple of 5, check the Par_file'
 
 ! subsets used to save seismograms must not be larger than the whole time series,
 ! otherwise we waste memory
-  if(NTSTEP_BETWEEN_OUTPUT_SEISMOS > NSTEP) then
+  if (NTSTEP_BETWEEN_OUTPUT_SEISMOS > NSTEP) then
     NTSTEP_BETWEEN_OUTPUT_SEISMOS = NSTEP
-    if (OUTPUT_SEISMOS_SAC_ALPHANUM .and. (mod(NTSTEP_BETWEEN_OUTPUT_SEISMOS,5)/=0)) &
+    if (OUTPUT_SEISMOS_SAC_ALPHANUM .and. (mod(NTSTEP_BETWEEN_OUTPUT_SEISMOS,5) /= 0)) &
       stop 'if OUTPUT_SEISMOS_SAC_ALPHANUM = .true. then modified NTSTEP_BETWEEN_OUTPUT_SEISMOS must be a multiple of 5'
   endif
 
 ! check that reals are either 4 or 8 bytes
-  if(CUSTOM_REAL /= SIZE_REAL .and. CUSTOM_REAL /= SIZE_DOUBLE) stop 'wrong size of CUSTOM_REAL for reals'
+  if (CUSTOM_REAL /= SIZE_REAL .and. CUSTOM_REAL /= SIZE_DOUBLE) stop 'wrong size of CUSTOM_REAL for reals'
 
 ! check that the parameter file is correct
-  if(NGNOD /= 27) stop 'number of control nodes must be 27'
-  if(NGNOD == 27 .and. NGNOD2D /= 9) stop 'elements with 27 points should have NGNOD2D = 9'
+  if (NGNOD /= 27) stop 'number of control nodes must be 27'
+  if (NGNOD == 27 .and. NGNOD2D /= 9) stop 'elements with 27 points should have NGNOD2D = 9'
 
 ! for the number of standard linear solids for attenuation
-  if(N_SLS /= 3) stop 'number of SLS must be 3'
+  if (N_SLS /= 3) stop 'number of SLS must be 3'
 
 ! check number of slices in each direction
-  if(NCHUNKS < 1) stop 'must have at least one chunk'
+  if (NCHUNKS < 1) stop 'must have at least one chunk'
 #ifdef USE_MPI
-  if(NPROC_XI < 2) stop 'NPROC_XI must be at least 2 for the MPI + GPU version'
-  if(NPROC_ETA < 2) stop 'NPROC_ETA must be at least 2 for the MPI + GPU version'
+  if (NPROC_XI < 2) stop 'NPROC_XI must be at least 2 for the MPI + GPU version'
+  if (NPROC_ETA < 2) stop 'NPROC_ETA must be at least 2 for the MPI + GPU version'
 #endif
 
 ! check number of chunks
-  if(NCHUNKS /= 1 .and. NCHUNKS /= 2 .and. NCHUNKS /= 3 .and. NCHUNKS /= 6) &
+  if (NCHUNKS /= 1 .and. NCHUNKS /= 2 .and. NCHUNKS /= 3 .and. NCHUNKS /= 6) &
      stop 'only one, two, three or six chunks can be meshed'
 
 ! check that the central cube can be included
-  if(INCLUDE_CENTRAL_CUBE .and. NCHUNKS /= 6) stop 'need six chunks to include central cube'
+  if (INCLUDE_CENTRAL_CUBE .and. NCHUNKS /= 6) stop 'need six chunks to include central cube'
 
 ! check that sphere can be cut into slices without getting negative Jacobian
-  if(NEX_XI < 48) stop 'NEX_XI must be greater than 48 to cut the sphere into slices with positive Jacobian'
-  if(NEX_ETA < 48) stop 'NEX_ETA must be greater than 48 to cut the sphere into slices with positive Jacobian'
+  if (NEX_XI < 48) stop 'NEX_XI must be greater than 48 to cut the sphere into slices with positive Jacobian'
+  if (NEX_ETA < 48) stop 'NEX_ETA must be greater than 48 to cut the sphere into slices with positive Jacobian'
 
 ! check that mesh can be coarsened in depth three or four times
   CUT_SUPERBRICK_XI=.false.
   CUT_SUPERBRICK_ETA=.false.
 
   if (SUPPRESS_CRUSTAL_MESH .and. .not. ADD_4TH_DOUBLING) then
-    if(mod(NEX_XI,8) /= 0) stop 'NEX_XI must be a multiple of 8'
-    if(mod(NEX_ETA,8) /= 0) stop 'NEX_ETA must be a multiple of 8'
-    if(mod(NEX_XI/4,NPROC_XI) /= 0) stop 'NEX_XI must be a multiple of 4*NPROC_XI'
-    if(mod(NEX_ETA/4,NPROC_ETA) /= 0) stop 'NEX_ETA must be a multiple of 4*NPROC_ETA'
-    if(mod(NEX_XI/8,NPROC_XI) /=0) CUT_SUPERBRICK_XI = .true.
-    if(mod(NEX_ETA/8,NPROC_ETA) /=0) CUT_SUPERBRICK_ETA = .true.
+    if (mod(NEX_XI,8) /= 0) stop 'NEX_XI must be a multiple of 8'
+    if (mod(NEX_ETA,8) /= 0) stop 'NEX_ETA must be a multiple of 8'
+    if (mod(NEX_XI/4,NPROC_XI) /= 0) stop 'NEX_XI must be a multiple of 4*NPROC_XI'
+    if (mod(NEX_ETA/4,NPROC_ETA) /= 0) stop 'NEX_ETA must be a multiple of 4*NPROC_ETA'
+    if (mod(NEX_XI/8,NPROC_XI) /= 0) CUT_SUPERBRICK_XI = .true.
+    if (mod(NEX_ETA/8,NPROC_ETA) /= 0) CUT_SUPERBRICK_ETA = .true.
   else if (SUPPRESS_CRUSTAL_MESH .or. .not. ADD_4TH_DOUBLING) then
-    if(mod(NEX_XI,16) /= 0) stop 'NEX_XI must be a multiple of 16'
-    if(mod(NEX_ETA,16) /= 0) stop 'NEX_ETA must be a multiple of 16'
-    if(mod(NEX_XI/8,NPROC_XI) /= 0) stop 'NEX_XI must be a multiple of 8*NPROC_XI'
-    if(mod(NEX_ETA/8,NPROC_ETA) /= 0) stop 'NEX_ETA must be a multiple of 8*NPROC_ETA'
-    if(mod(NEX_XI/16,NPROC_XI) /=0) CUT_SUPERBRICK_XI = .true.
-    if(mod(NEX_ETA/16,NPROC_ETA) /=0) CUT_SUPERBRICK_ETA = .true.
+    if (mod(NEX_XI,16) /= 0) stop 'NEX_XI must be a multiple of 16'
+    if (mod(NEX_ETA,16) /= 0) stop 'NEX_ETA must be a multiple of 16'
+    if (mod(NEX_XI/8,NPROC_XI) /= 0) stop 'NEX_XI must be a multiple of 8*NPROC_XI'
+    if (mod(NEX_ETA/8,NPROC_ETA) /= 0) stop 'NEX_ETA must be a multiple of 8*NPROC_ETA'
+    if (mod(NEX_XI/16,NPROC_XI) /= 0) CUT_SUPERBRICK_XI = .true.
+    if (mod(NEX_ETA/16,NPROC_ETA) /= 0) CUT_SUPERBRICK_ETA = .true.
   else
-    if(mod(NEX_XI,32) /= 0) stop 'NEX_XI must be a multiple of 32'
-    if(mod(NEX_ETA,32) /= 0) stop 'NEX_ETA must be a multiple of 32'
-    if(mod(NEX_XI/16,NPROC_XI) /= 0) stop 'NEX_XI must be a multiple of 16*NPROC_XI'
-    if(mod(NEX_ETA/16,NPROC_ETA) /= 0) stop 'NEX_ETA must be a multiple of 16*NPROC_ETA'
-    if(mod(NEX_XI/32,NPROC_XI) /=0) CUT_SUPERBRICK_XI = .true.
-    if(mod(NEX_ETA/32,NPROC_ETA) /=0) CUT_SUPERBRICK_ETA = .true.
+    if (mod(NEX_XI,32) /= 0) stop 'NEX_XI must be a multiple of 32'
+    if (mod(NEX_ETA,32) /= 0) stop 'NEX_ETA must be a multiple of 32'
+    if (mod(NEX_XI/16,NPROC_XI) /= 0) stop 'NEX_XI must be a multiple of 16*NPROC_XI'
+    if (mod(NEX_ETA/16,NPROC_ETA) /= 0) stop 'NEX_ETA must be a multiple of 16*NPROC_ETA'
+    if (mod(NEX_XI/32,NPROC_XI) /= 0) CUT_SUPERBRICK_XI = .true.
+    if (mod(NEX_ETA/32,NPROC_ETA) /= 0) CUT_SUPERBRICK_ETA = .true.
   endif
 
 ! check that topology is correct if more than two chunks
-  if(NCHUNKS > 2 .and. NEX_XI /= NEX_ETA) stop 'must have NEX_XI = NEX_ETA for more than two chunks'
-  if(NCHUNKS > 2 .and. NPROC_XI /= NPROC_ETA) stop 'must have NPROC_XI = NPROC_ETA for more than two chunks'
+  if (NCHUNKS > 2 .and. NEX_XI /= NEX_ETA) stop 'must have NEX_XI = NEX_ETA for more than two chunks'
+  if (NCHUNKS > 2 .and. NPROC_XI /= NPROC_ETA) stop 'must have NPROC_XI = NPROC_ETA for more than two chunks'
 
 ! check that IASP91, AK135, 1066A, JP1D or SEA1D is isotropic
-  if((REFERENCE_1D_MODEL == REFERENCE_MODEL_IASP91 .or. &
+  if ((REFERENCE_1D_MODEL == REFERENCE_MODEL_IASP91 .or. &
       REFERENCE_1D_MODEL == REFERENCE_MODEL_AK135 .or. &
       REFERENCE_1D_MODEL == REFERENCE_MODEL_1066A .or. &
       REFERENCE_1D_MODEL == REFERENCE_MODEL_JP1D .or. &
@@ -1200,7 +1200,7 @@
   do ielem = 2,NER_TOPDDOUBLEPRIME_771
     zval = RTOPDDOUBLEPRIME + ielem * (R771 - RTOPDDOUBLEPRIME) / dble(NER_TOPDDOUBLEPRIME_771)
     distance = abs(zval - (R_EARTH - DEPTH_SECOND_DOUBLING_OPTIMAL))
-    if(distance < distance_min) then
+    if (distance < distance_min) then
       elem_doubling_mantle = ielem
       distance_min = distance
       DEPTH_SECOND_DOUBLING_REAL = R_EARTH - zval
@@ -1215,7 +1215,7 @@
   do ielem = 4,NER_OUTER_CORE
     zval = RICB + ielem * (RCMB - RICB) / dble(NER_OUTER_CORE)
     distance = abs(zval - (R_EARTH - DEPTH_THIRD_DOUBLING_OPTIMAL))
-    if(distance < distance_min) then
+    if (distance < distance_min) then
       elem_doubling_middle_outer_core = ielem
       distance_min = distance
       DEPTH_THIRD_DOUBLING_REAL = R_EARTH - zval
@@ -1231,14 +1231,14 @@
     do ielem = 2,NER_OUTER_CORE-2
       zval = RICB + ielem * (RCMB - RICB) / dble(NER_OUTER_CORE)
       distance = abs(zval - (R_EARTH - DEPTH_FOURTH_DOUBLING_OPTIMAL))
-      if(distance < distance_min) then
+      if (distance < distance_min) then
         elem_doubling_bottom_outer_core = ielem
         distance_min = distance
         DEPTH_FOURTH_DOUBLING_REAL = R_EARTH - zval
       endif
     enddo
 ! make sure that the two doublings in the outer core are found in the right order
-    if(elem_doubling_bottom_outer_core >= elem_doubling_middle_outer_core) &
+    if (elem_doubling_bottom_outer_core >= elem_doubling_middle_outer_core) &
                     stop 'error in location of the two doublings in the outer core'
   endif
 
@@ -1505,7 +1505,7 @@
 
       NUMBER_OF_MESH_LAYERS = 14
       layer_offset = 1
-      if ((RMIDDLE_CRUST-RMOHO_FICTITIOUS_IN_MESHER)<(R_EARTH-RMIDDLE_CRUST)) then
+      if ((RMIDDLE_CRUST-RMOHO_FICTITIOUS_IN_MESHER) < (R_EARTH-RMIDDLE_CRUST)) then
         ner( 1) = ceiling (NER_CRUST / 2.d0)
         ner( 2) = floor (NER_CRUST / 2.d0)
       else
@@ -1903,7 +1903,7 @@
 
       NUMBER_OF_MESH_LAYERS = 15
       layer_offset = 1
-      if ((RMIDDLE_CRUST-RMOHO_FICTITIOUS_IN_MESHER)<(R_EARTH-RMIDDLE_CRUST)) then
+      if ((RMIDDLE_CRUST-RMOHO_FICTITIOUS_IN_MESHER) < (R_EARTH-RMIDDLE_CRUST)) then
         ner( 1) = ceiling (NER_CRUST / 2.d0)
         ner( 2) = floor (NER_CRUST / 2.d0)
       else
@@ -2053,13 +2053,13 @@
 
 ! theoretical number of spectral elements in radial direction
 do iter_region = IREGION_CRUST_MANTLE,IREGION_INNER_CORE
-        if(iter_region == IREGION_CRUST_MANTLE) then
+        if (iter_region == IREGION_CRUST_MANTLE) then
                 ifirst_region = 1
                 ilast_region = 10 + layer_offset
-        else if(iter_region == IREGION_OUTER_CORE) then
+        else if (iter_region == IREGION_OUTER_CORE) then
                 ifirst_region = 11 + layer_offset
                 ilast_region = NUMBER_OF_MESH_LAYERS - 1
-        else if(iter_region == IREGION_INNER_CORE) then
+        else if (iter_region == IREGION_INNER_CORE) then
                 ifirst_region = NUMBER_OF_MESH_LAYERS
                 ilast_region = NUMBER_OF_MESH_LAYERS
         else
@@ -2113,13 +2113,13 @@ enddo
 ! exact number of surface elements for faces along XI and ETA
 
 do iter_region = IREGION_CRUST_MANTLE,IREGION_INNER_CORE
-    if(iter_region == IREGION_CRUST_MANTLE) then
+    if (iter_region == IREGION_CRUST_MANTLE) then
         ifirst_region = 1
         ilast_region = 10 + layer_offset
-    else if(iter_region == IREGION_OUTER_CORE) then
+    else if (iter_region == IREGION_OUTER_CORE) then
         ifirst_region = 11 + layer_offset
         ilast_region = NUMBER_OF_MESH_LAYERS - 1
-    else if(iter_region == IREGION_INNER_CORE) then
+    else if (iter_region == IREGION_INNER_CORE) then
         ifirst_region = NUMBER_OF_MESH_LAYERS
         ilast_region = NUMBER_OF_MESH_LAYERS
     else
@@ -2288,13 +2288,13 @@ enddo
 ! exact number of spectral elements in each region
 
 do iter_region = IREGION_CRUST_MANTLE,IREGION_INNER_CORE
-    if(iter_region == IREGION_CRUST_MANTLE) then
+    if (iter_region == IREGION_CRUST_MANTLE) then
         ifirst_region = 1
         ilast_region = 10 + layer_offset
-    else if(iter_region == IREGION_OUTER_CORE) then
+    else if (iter_region == IREGION_OUTER_CORE) then
         ifirst_region = 11 + layer_offset
         ilast_region = NUMBER_OF_MESH_LAYERS - 1
-    else if(iter_region == IREGION_INNER_CORE) then
+    else if (iter_region == IREGION_INNER_CORE) then
         ifirst_region = NUMBER_OF_MESH_LAYERS
         ilast_region = NUMBER_OF_MESH_LAYERS
     else
@@ -2324,12 +2324,12 @@ do iter_region = IREGION_CRUST_MANTLE,IREGION_INNER_CORE
     NSPEC(iter_region) = tmp_sum
 enddo
 
-  if(INCLUDE_CENTRAL_CUBE) NSPEC(IREGION_INNER_CORE) = NSPEC(IREGION_INNER_CORE) + &
+  if (INCLUDE_CENTRAL_CUBE) NSPEC(IREGION_INNER_CORE) = NSPEC(IREGION_INNER_CORE) + &
          (NEX_PER_PROC_XI / ratio_divide_central_cube) * &
          (NEX_PER_PROC_ETA / ratio_divide_central_cube) * &
          (NEX_XI / ratio_divide_central_cube)
 
-  if(minval(NSPEC) <= 0) stop 'negative NSPEC, there is a problem somewhere'
+  if (minval(NSPEC) <= 0) stop 'negative NSPEC, there is a problem somewhere'
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!
@@ -2369,7 +2369,7 @@ enddo
   NGLOB(:) = 0
 
 ! in the inner core (no doubling region + eventually central cube)
-  if(INCLUDE_CENTRAL_CUBE) then
+  if (INCLUDE_CENTRAL_CUBE) then
     NGLOB(IREGION_INNER_CORE) = ((NEX_PER_PROC_XI/ratio_divide_central_cube) &
       *(NGLLX-1)+1)*((NEX_PER_PROC_ETA/ratio_divide_central_cube) &
       *(NGLLY-1)+1)*((NER_TOP_CENTRAL_CUBE_ICB + NEX_XI / ratio_divide_central_cube)*(NGLLZ-1)+1)
@@ -2381,10 +2381,10 @@ enddo
 
 ! in the crust-mantle and outercore
   do iter_region = IREGION_CRUST_MANTLE,IREGION_OUTER_CORE
-      if(iter_region == IREGION_CRUST_MANTLE) then
+      if (iter_region == IREGION_CRUST_MANTLE) then
             ifirst_region = 1
             ilast_region = 10 + layer_offset
-      else if(iter_region == IREGION_OUTER_CORE) then
+      else if (iter_region == IREGION_OUTER_CORE) then
             ifirst_region = 11 + layer_offset
             ilast_region = NUMBER_OF_MESH_LAYERS - 1
       else

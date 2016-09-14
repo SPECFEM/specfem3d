@@ -17,7 +17,7 @@
 ! 1 = x, 2 = y and 3 = z
   do i = 1,3
     do j = 1,3
-      if(i == 3 .and. j == 3) then
+      if (i == 3 .and. j == 3) then
         print *,'sigma_',i,j,' * epsilon_',i,j,')'
       else
         print *,'sigma_',i,j,' * epsilon_',i,j,' + '

@@ -1,0 +1,323 @@
+#-----------------------------------------------------------
+#
+# Simulation input parameters
+#
+#-----------------------------------------------------------
+
+# forward or adjoint simulation
+# 1 = forward, 2 = adjoint, 3 = both simultaneously
+SIMULATION_TYPE                 = 1
+# 0 = earthquake simulation,  1/2/3 = three steps in noise simulation
+NOISE_TOMOGRAPHY                = 0
+SAVE_FORWARD                    = .true.
+
+# UTM projection parameters
+# Use a negative zone number for the Southern hemisphere:
+# The Northern hemisphere corresponds to zones +1 to +60,
+# The Southern hemisphere corresponds to zones -1 to -60.
+UTM_PROJECTION_ZONE             = 11
+SUPPRESS_UTM_PROJECTION         = .true.
+
+# number of MPI processors
+NPROC                           = 14
+
+# time step parameters
+NSTEP                           = 4000
+DT                              = 5.d-5
+
+#-----------------------------------------------------------
+#
+# LDDRK time scheme
+#
+#-----------------------------------------------------------
+USE_LDDRK                       = .false.
+INCREASE_CFL_FOR_LDDRK          = .false.
+RATIO_BY_WHICH_TO_INCREASE_IT   = 1.4
+
+#-----------------------------------------------------------
+#
+# Mesh
+#
+#-----------------------------------------------------------
+
+# number of nodes for 2D and 3D shape functions for hexahedra
+# we use either 8-node mesh elements (bricks) or 27-node elements.
+# If you use our internal mesher, the only option is 8-node bricks (27-node elements are not supported)
+# CUBIT does not support HEX27 elements either (it can generate them, but they are flat, i.e. identical to HEX8).
+# To generate HEX27 elements with curvature properly taken into account, you can use Gmsh http://geuz.org/gmsh/
+NGNOD                           = 8
+
+# models:
+# available options are:
+#   default (model parameters described by mesh properties)
+# 1D models available are:
+#   1d_prem,1d_socal,1d_cascadia
+# 3D models available are:
+#   aniso,external,gll,salton_trough,tomo,SEP...
+MODEL                           = default
+
+# path for external tomographic models files
+TOMOGRAPHY_PATH                 = ./DATA/tomo_files/
+# if you are using a SEP model (oil-industry format)
+SEP_MODEL_DIRECTORY             = ./DATA/my_SEP_model/
+
+#-----------------------------------------------------------
+
+# parameters describing the model
+APPROXIMATE_OCEAN_LOAD          = .false.
+TOPOGRAPHY                      = .false.
+ATTENUATION                     = .false.
+FULL_ATTENUATION_SOLID          = .false.
+ANISOTROPY                      = .false.
+GRAVITY                         = .false.
+
+# reference frequency for target velocity values in the velocity model
+# set here to a typical value for regional seismology / regional models (dominant period of 3 seconds, i.e. frequency of 1/3 Hz)
+ATTENUATION_f0_REFERENCE        = 0.33333d0
+
+# Olsen's constant for Q_mu = constant * V_s attenuation rule
+USE_OLSEN_ATTENUATION           = .false.
+OLSEN_ATTENUATION_RATIO         = 0.05
+
+#-----------------------------------------------------------
+#
+# Absorbing boundary conditions
+#
+#-----------------------------------------------------------
+
+# C-PML boundary conditions for a regional simulation
+# (if set to .false., and STACEY_ABSORBING_CONDITIONS is also set to .false., you get a free surface instead
+# in the case of elastic or viscoelastic mesh elements, and a rigid surface in the case of acoustic (fluid) elements
+PML_CONDITIONS                  = .false.
+
+# C-PML top surface
+PML_INSTEAD_OF_FREE_SURFACE     = .false.
+
+# C-PML dominant frequency
+f0_FOR_PML                      = 12.7
+
+# parameters used to rotate C-PML boundary conditions by a given angle (not completed yet)
+# ROTATE_PML_ACTIVATE           = .false.
+# ROTATE_PML_ANGLE              = 0.
+
+# absorbing boundary conditions for a regional simulation
+# (if set to .false., and PML_CONDITIONS is also set to .false., you get a free surface instead
+# in the case of elastic or viscoelastic mesh elements, and a rigid surface in the case of acoustic (fluid) elements
+STACEY_ABSORBING_CONDITIONS     = .false.
+
+# absorbing top surface (defined in mesh as 'free_surface_file')
+STACEY_INSTEAD_OF_FREE_SURFACE  = .false.
+
+# When STACEY_ABSORBING_CONDITIONS is set to .true. :
+# absorbing conditions are defined in xmin, xmax, ymin, ymax and zmin
+# this option BOTTOM_FREE_SURFACE can be set to .true. to
+# make zmin free surface instead of absorbing condition
+BOTTOM_FREE_SURFACE             = .false.
+
+#-----------------------------------------------------------
+#
+# Visualization
+#
+#-----------------------------------------------------------
+
+# save AVS or OpenDX movies
+# MOVIE_TYPE = 1 to show the top surface
+# MOVIE_TYPE = 2 to show all the external faces of the mesh
+CREATE_SHAKEMAP                 = .false.
+MOVIE_SURFACE                   = .false.
+MOVIE_TYPE                      = 1
+MOVIE_VOLUME                    = .false.
+SAVE_DISPLACEMENT               = .false.
+USE_HIGHRES_FOR_MOVIES          = .false.
+NTSTEP_BETWEEN_FRAMES           = 200
+HDUR_MOVIE                      = 0.0
+
+# save AVS or OpenDX mesh files to check the mesh
+SAVE_MESH_FILES                 = .false.
+
+# path to store the local database file on each node
+LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI
+
+# interval at which we output time step info and max of norm of displacement
+NTSTEP_BETWEEN_OUTPUT_INFO      = 250
+
+#-----------------------------------------------------------
+#
+# Sources
+#
+#-----------------------------------------------------------
+
+# use a (tilted) FORCESOLUTION force point source (or several) instead of a CMTSOLUTION moment-tensor source.
+# This can be useful e.g. for oil industry foothills simulations or asteroid simulations
+# in which the source is a vertical force, normal force, tilted force, impact etc.
+# If this flag is turned on, the FORCESOLUTION file must be edited by giving:
+# - the corresponding time-shift parameter,
+# - the half duration parameter of the source,
+# - the coordinates of the source,
+# - the magnitude of the force source,
+# - the components of a (non necessarily unitary) direction vector for the force source in the E/N/Z_UP basis.
+# The direction vector is made unitary internally in the code and thus only its direction matters here;
+# its norm is ignored and the norm of the force used is the factor force source times the source time function.
+USE_FORCE_POINT_SOURCE          = .false.
+
+# set to true to use a Ricker source time function instead of the source time functions set by default
+# to represent a (tilted) FORCESOLUTION force point source or a CMTSOLUTION moment-tensor source.
+USE_RICKER_TIME_FUNCTION        = .false.
+
+# use external source time function.
+# if .true. you must add a file with your source time function and the file name
+# path relative to lauching directory at the end of CMTSOLUTION or FORCESOURCE file
+# (with multiple sources, one file per source is required).
+# This file must have 2 columns  :
+#     current_time, amplitude
+# The time step **MUST** be the same as used for simulation.
+# be sure when this option is .false. to remove the name of stf file in
+# CMTSOLUTION or FORCESOURCE
+EXTERNAL_SOURCE_FILE            = .false.
+
+# print source time function
+PRINT_SOURCE_TIME_FUNCTION      = .false.
+
+# (for acoustic simulations only) determines source encoding factor +/-1 depending on sign of moment tensor
+# (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources, Geophysics, 74 (6), WCC177-WCC188.)
+USE_SOURCE_ENCODING             = .false.
+
+#-----------------------------------------------------------
+#
+# Seismograms
+#
+#-----------------------------------------------------------
+
+# interval in time steps for writing of seismograms
+NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
+
+# decide if we save displacement, velocity, acceleration and/or pressure in forward runs (they can be set to true simultaneously)
+# currently pressure seismograms are implemented in acoustic (i.e. fluid) elements only
+SAVE_SEISMOGRAMS_DISPLACEMENT   = .true.
+SAVE_SEISMOGRAMS_VELOCITY       = .true.
+SAVE_SEISMOGRAMS_ACCELERATION   = .true.
+SAVE_SEISMOGRAMS_PRESSURE       = .false.   # currently implemented in acoustic (i.e. fluid) elements only
+
+# save seismograms in binary or ASCII format (binary is smaller but may not be portable between machines)
+USE_BINARY_FOR_SEISMOGRAMS      = .false.
+
+# output seismograms in Seismic Unix format (binary with 240-byte-headers)
+SU_FORMAT                       = .false.
+
+# decide if master process writes all the seismograms or if all processes do it in parallel
+WRITE_SEISMOGRAMS_BY_MASTER     = .false.
+
+# save all seismograms in one large combined file instead of one file per seismogram
+# to avoid overloading shared non-local file systems such as LUSTRE or GPFS for instance
+SAVE_ALL_SEISMOS_IN_ONE_FILE    = .false.
+
+# use a trick to increase accuracy of pressure seismograms in fluid (acoustic) elements:
+# use the second derivative of the source for the source time function instead of the source itself,
+# and then record -potential_acoustic() as pressure seismograms instead of -potential_dot_dot_acoustic();
+# this is mathematically equivalent, but numerically significantly more accurate because in the explicit
+# Newmark time scheme acceleration is accurate at zeroth order while displacement is accurate at second order,
+# thus in fluid elements potential_dot_dot_acoustic() is accurate at zeroth order while potential_acoustic()
+# is accurate at second order and thus contains significantly less numerical noise.
+USE_TRICK_FOR_BETTER_PRESSURE   = .false.
+
+#-----------------------------------------------------------
+#
+# Total energy calculation
+#
+#-----------------------------------------------------------
+# to plot total energy curves, for instance to monitor how CPML absorbing layers behave;
+# should be turned OFF in most cases because expensive
+OUTPUT_ENERGY                   = .false.
+# every how many time steps we compute energy (which is expensive to compute)
+NTSTEP_BETWEEN_OUTPUT_ENERGY    = 10
+
+#-----------------------------------------------------------
+#
+# Adjoint kernel outputs
+#
+#-----------------------------------------------------------
+
+# interval in time steps for reading adjoint traces
+# 0 = read the whole adjoint sources at the same time
+NTSTEP_BETWEEN_READ_ADJSRC      = 0
+
+# this parameter must be set to .true. to compute anisotropic kernels
+# in crust and mantle (related to the 21 Cij in geographical coordinates)
+# default is .false. to compute isotropic kernels (related to alpha and beta)
+ANISOTROPIC_KL                  = .false.
+
+# compute transverse isotropic kernels (alpha_v,alpha_h,beta_v,beta_h,eta,rho)
+# rather than fully anisotropic kernels in case ANISOTROPIC_KL is set to .true.
+SAVE_TRANSVERSE_KL              = .false.
+
+# outputs approximate Hessian for preconditioning
+APPROXIMATE_HESS_KL             = .false.
+
+# save Moho mesh and compute Moho boundary kernels
+SAVE_MOHO_MESH                  = .false.
+
+#-----------------------------------------------------------
+
+# Dimitri Komatitsch, July 2014, CNRS Marseille, France:
+# added the ability to run several calculations (several earthquakes)
+# in an embarrassingly-parallel fashion from within the same run;
+# this can be useful when using a very large supercomputer to compute
+# many earthquakes in a catalog, in which case it can be better from
+# a batch job submission point of view to start fewer and much larger jobs,
+# each of them computing several earthquakes in parallel.
+# To turn that option on, set parameter NUMBER_OF_SIMULTANEOUS_RUNS to a value greater than 1.
+# To implement that, we create NUMBER_OF_SIMULTANEOUS_RUNS MPI sub-communicators,
+# each of them being labeled "my_local_mpi_comm_world", and we use them
+# in all the routines in "src/shared/parallel.f90", except in MPI_ABORT() because in that case
+# we need to kill the entire run.
+# When that option is on, of course the number of processor cores used to start
+# the code in the batch system must be a multiple of NUMBER_OF_SIMULTANEOUS_RUNS,
+# all the individual runs must use the same number of processor cores,
+# which as usual is NPROC in the Par_file,
+# and thus the total number of processor cores to request from the batch system
+# should be NUMBER_OF_SIMULTANEOUS_RUNS * NPROC.
+# All the runs to perform must be placed in directories called run0001, run0002, run0003 and so on
+# (with exactly four digits).
+#
+# Imagine you have 10 independent calculations to do, each of them on 100 cores; you have three options:
+#
+# 1/ submit 10 jobs to the batch system
+#
+# 2/ submit a single job on 1000 cores to the batch, and in that script create a sub-array of jobs to start 10 jobs,
+# each running on 100 cores (see e.g. http://www.schedmd.com/slurmdocs/job_array.html )
+#
+# 3/ submit a single job on 1000 cores to the batch, start SPECFEM3D on 1000 cores, create 10 sub-communicators,
+# cd into one of 10 subdirectories (called e.g. run0001, run0002,... run0010) depending on the sub-communicator
+# your MPI rank belongs to, and run normally on 100 cores using that sub-communicator.
+#
+# The option below implements 3/.
+#
+NUMBER_OF_SIMULTANEOUS_RUNS     = 1
+
+# if we perform simultaneous runs in parallel, if only the source and receivers vary between these runs
+# but not the mesh nor the model (velocity and density) then we can also read the mesh and model files
+# from a single run in the beginning and broadcast them to all the others; for a large number of simultaneous
+# runs for instance when solving inverse problems iteratively this can DRASTICALLY reduce I/Os to disk in the solver
+# (by a factor equal to NUMBER_OF_SIMULTANEOUS_RUNS), and reducing I/Os is crucial in the case of huge runs.
+# Thus, always set this option to .true. if the mesh and the model are the same for all simultaneous runs.
+# In that case there is no need to duplicate the mesh and model file database (the content of the DATABASES_MPI
+# directories) in each of the run0001, run0002,... directories, it is sufficient to have one in run0001
+# and the code will broadcast it to the others)
+BROADCAST_SAME_MESH_AND_MODEL   = .false.
+
+# if one or a few of these simultaneous runs fail, kill all the runs or let the others finish using a fail-safe mechanism
+# (in most cases, should be set to false)
+USE_FAILSAFE_MECHANISM          = .false.
+
+#-----------------------------------------------------------
+
+# set to true to use GPUs
+GPU_MODE                        = .false.
+
+# ADIOS Options for I/Os
+ADIOS_ENABLED                   = .false.
+ADIOS_FOR_DATABASES             = .false.
+ADIOS_FOR_MESH                  = .false.
+ADIOS_FOR_FORWARD_ARRAYS        = .false.
+ADIOS_FOR_KERNELS               = .false.
+

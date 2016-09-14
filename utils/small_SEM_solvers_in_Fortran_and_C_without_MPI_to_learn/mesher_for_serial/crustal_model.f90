@@ -67,23 +67,23 @@
  x7 = (R_EARTH-(h_uc+thicks(6)+thicks(7))*1000.0d0)/R_EARTH
 
  found_crust = .true.
- if(x > x3 .and. INCLUDE_SEDIMENTS_CRUST) then
+ if (x > x3 .and. INCLUDE_SEDIMENTS_CRUST) then
    vp = vps(3)
    vs = vss(3)
    rho = rhos(3)
- else if(x > x4 .and. INCLUDE_SEDIMENTS_CRUST) then
+ else if (x > x4 .and. INCLUDE_SEDIMENTS_CRUST) then
    vp = vps(4)
    vs = vss(4)
    rho = rhos(4)
- else if(x > x5) then
+ else if (x > x5) then
    vp = vps(5)
    vs = vss(5)
    rho = rhos(5)
- else if(x > x6) then
+ else if (x > x6) then
    vp = vps(6)
    vs = vss(6)
    rho = rhos(6)
- else if(x > x7) then
+ else if (x > x7) then
    vp = vps(7)
    vs = vss(7)
    rho = rhos(7)
@@ -150,12 +150,12 @@
     read (1,*) (CM_V%velocs(ikey,i),i=1,NLAYERS_CRUST)
     read (1,*) (CM_V%dens(ikey,i),i=1,NLAYERS_CRUST)
     read (1,*) (CM_V%thlr(ikey,i),i=1,NLAYERS_CRUST-1),CM_V%thlr(ikey,NLAYERS_CRUST)
-    if(CM_V%thlr(ikey,NLAYERS_CRUST) > h_moho_max) h_moho_max=CM_V%thlr(ikey,NLAYERS_CRUST)
-    if(CM_V%thlr(ikey,NLAYERS_CRUST) < h_moho_min) h_moho_min=CM_V%thlr(ikey,NLAYERS_CRUST)
+    if (CM_V%thlr(ikey,NLAYERS_CRUST) > h_moho_max) h_moho_max=CM_V%thlr(ikey,NLAYERS_CRUST)
+    if (CM_V%thlr(ikey,NLAYERS_CRUST) < h_moho_min) h_moho_min=CM_V%thlr(ikey,NLAYERS_CRUST)
   enddo
   close(1)
 
-  if(h_moho_min == HUGEVAL .or. h_moho_max == -HUGEVAL) &
+  if (h_moho_min == HUGEVAL .or. h_moho_max == -HUGEVAL) &
     stop 'incorrect moho depths in read_3D_crustal_model'
 
   end subroutine read_crustal_model
@@ -194,13 +194,13 @@
   character(len=2) crustaltype
 
 ! get integer colatitude and longitude of crustal cap
-! -90<lat<90 -180<lon<180
-  if(lat > 90.0d0 .or. lat < -90.0d0 .or. lon > 180.0d0 .or. lon < -180.0d0) &
+! -90 < lat < 90 -180 < lon < 180
+  if (lat > 90.0d0 .or. lat < -90.0d0 .or. lon > 180.0d0 .or. lon < -180.0d0) &
     stop 'error in latitude/longitude range in crust'
-  if(lat==90.0d0) lat=89.9999d0
-  if(lat==-90.0d0) lat=-89.9999d0
-  if(lon==180.0d0) lon=179.9999d0
-  if(lon==-180.0d0) lon=-179.9999d0
+  if (lat == 90.0d0) lat=89.9999d0
+  if (lat == -90.0d0) lat=-89.9999d0
+  if (lon == 180.0d0) lon=179.9999d0
+  if (lon == -180.0d0) lon=-179.9999d0
 
   call icolat_ilon(lat,lon,icolat,ilon)
   crustaltype=abbreviation(icolat,ilon)
@@ -270,13 +270,13 @@
       call reduce(theta_rot,phi_rot)
       xlat(i) = (PI/2.0-theta_rot)*180.0/PI
       xlon(i) = phi_rot*180.0/PI
-      if(xlon(i) > 180.0) xlon(i) = xlon(i)-360.0
+      if (xlon(i) > 180.0) xlon(i) = xlon(i)-360.0
 
     enddo
 
   enddo
 
-  if(abs(total-1.0) > 0.001) stop 'error in cap integration for crust2.0'
+  if (abs(total-1.0) > 0.001) stop 'error in cap integration for crust2.0'
 
   npoints = i
 
@@ -292,7 +292,7 @@
     crustaltype=abbreviation(icolat,ilon)
     call get_crust_structure(crustaltype,velpl,velsl,rhol,thickl, &
                     code,thlr,velocp,velocs,dens,ierr)
-    if(ierr /= 0) stop 'error in routine get_crust_structure'
+    if (ierr /= 0) stop 'error in routine get_crust_structure'
     do j=1,NLAYERS_CRUST
       rho(j)=rho(j)+weight(i)*rhol(j)
       thick(j)=thick(j)+weight(i)*thickl(j)
@@ -314,15 +314,15 @@
   double precision xlat,xlon
   integer icolat,ilon
 
-  if(xlat > 90.0d0 .or. xlat < -90.0d0 .or. xlon > 180.0d0 .or. xlon < -180.0d0) &
+  if (xlat > 90.0d0 .or. xlat < -90.0d0 .or. xlon > 180.0d0 .or. xlon < -180.0d0) &
     stop 'error in latitude/longitude range in icolat_ilon'
   icolat=int(1+((90.d0-xlat)/2.d0))
-  if(icolat == 91) icolat=90
+  if (icolat == 91) icolat=90
   ilon=int(1+((180.d0+xlon)/2.d0))
-  if(ilon == 181) ilon=1
+  if (ilon == 181) ilon=1
 
-  if(icolat>90 .or. icolat<1) stop 'error in routine icolat_ilon'
-  if(ilon<1 .or. ilon>180) stop 'error in routine icolat_ilon'
+  if (icolat > 90 .or. icolat < 1) stop 'error in routine icolat_ilon'
+  if (ilon < 1 .or. ilon > 180) stop 'error in routine icolat_ilon'
 
   end subroutine icolat_ilon
 

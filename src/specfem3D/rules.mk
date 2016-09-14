@@ -43,13 +43,9 @@ specfem3D_TARGETS = \
 
 
 specfem3D_OBJECTS = \
-	$O/shared_par.shared_module.o \
+	$O/specfem3D_par.spec_module.o \
 	$O/assemble_MPI_vector.spec.o \
 	$O/check_stability.spec.o \
-	$O/fault_solver_common.spec.o \
-	$O/fault_solver_dynamic.spec.o \
-	$O/fault_solver_kinematic.spec.o \
-	$O/gravity_perturbation.spec.o \
 	$O/comp_source_time_function.spec.o \
 	$O/compute_add_sources_acoustic.spec.o \
 	$O/compute_add_sources_viscoelastic.spec.o \
@@ -82,7 +78,13 @@ specfem3D_OBJECTS = \
 	$O/calendar.spec.o \
 	$O/create_color_image.spec.o \
 	$O/detect_mesh_surfaces.spec.o \
+	$O/fault_solver_common.spec.o \
+	$O/fault_solver_dynamic.spec.o \
+	$O/fault_solver_kinematic.spec.o \
 	$O/finalize_simulation.spec.o \
+	$O/get_cmt.spec.o \
+	$O/get_force.spec.o \
+	$O/gravity_perturbation.spec.o \
 	$O/initialize_simulation.spec.o \
 	$O/iterate_time.spec.o \
 	$O/locate_receivers.spec.o \
@@ -97,13 +99,13 @@ specfem3D_OBJECTS = \
 	$O/pml_par.spec.o \
 	$O/prepare_timerun.spec.o \
 	$O/program_specfem3D.spec.o \
+	$O/read_external_stf.spec.o \
 	$O/read_mesh_databases.spec.o \
 	$O/save_adjoint_kernels.spec.o \
 	$O/setup_GLL_points.spec.o \
 	$O/setup_movie_meshes.spec.o \
 	$O/setup_sources_receivers.spec.o \
 	$O/specfem3D.spec.o \
-	$O/specfem3D_par.spec.o \
 	$O/update_displacement_scheme.spec.o \
 	$O/update_displacement_LDDRK.spec.o \
 	$O/write_movie_output.spec.o \
@@ -113,6 +115,7 @@ specfem3D_OBJECTS = \
 	$(EMPTY_MACRO)
 
 specfem3D_SHARED_OBJECTS = \
+	$O/shared_par.shared_module.o \
 	$O/assemble_MPI_scalar.shared.o \
 	$O/check_mesh_resolution.shared.o \
 	$O/create_name_database.shared.o \
@@ -121,9 +124,7 @@ specfem3D_SHARED_OBJECTS = \
 	$O/exit_mpi.shared.o \
 	$O/force_ftz.cc.o \
 	$O/get_attenuation_model.shared.o \
-	$O/get_cmt.shared.o \
 	$O/get_element_face.shared.o \
-	$O/get_force.shared.o \
 	$O/get_jacobian_boundaries.shared.o \
 	$O/get_shape3D.shared.o \
 	$O/gll_library.shared.o \
@@ -293,80 +294,40 @@ endif
 ### Module dependencies
 ###
 
-$O/specfem3D_par.spec.o: $O/shared_par.shared_module.o
-$O/compute_stacey_acoustic.spec.o: $O/shared_par.shared_module.o
-$O/compute_stacey_poroelastic.spec.o: $O/shared_par.shared_module.o
-$O/locate_receivers.spec.o: $O/shared_par.shared_module.o
-$O/make_gravity.spec.o: $O/shared_par.shared_module.o
-$O/multiply_arrays_source.spec.o: $O/shared_par.shared_module.o
-$O/noise_tomography.spec.o: $O/shared_par.shared_module.o
-$O/write_output_ASCII_or_binary.spec.o: $O/shared_par.shared_module.o $O/specfem3D_par.spec.o
-
-$O/assemble_MPI_vector.spec.o: $O/specfem3D_par.spec.o
-$O/check_stability.spec.o: $O/specfem3D_par.spec.o
-$O/comp_source_time_function.spec.o: $O/specfem3D_par.spec.o
-$O/compute_add_sources_acoustic.spec.o: $O/specfem3D_par.spec.o
-$O/compute_add_sources_poroelastic.spec.o: $O/specfem3D_par.spec.o
-$O/compute_add_sources_viscoelastic.spec.o: $O/specfem3D_par.spec.o
-$O/compute_adj_source_frechet.spec.o: $O/specfem3D_par.spec.o
-$O/compute_arrays_source.spec.o: $O/specfem3D_par.spec.o
-$O/compute_boundary_kernel.spec.o: $O/specfem3D_par.spec.o
-$O/compute_coupling_poroelastic_ac.spec.o: $O/specfem3D_par.spec.o
-$O/compute_coupling_acoustic_po.spec.o: $O/specfem3D_par.spec.o
-$O/compute_coupling_viscoelastic_po.spec.o: $O/specfem3D_par.spec.o
-$O/compute_coupling_poroelastic_el.spec.o: $O/specfem3D_par.spec.o
-$O/compute_forces_poroelastic_calling_routine.spec.o: $O/specfem3D_par.spec.o
-$O/compute_forces_poro_fluid_part.spec.o: $O/specfem3D_par.spec.o
-$O/compute_forces_poro_solid_part.spec.o: $O/specfem3D_par.spec.o
-$O/compute_gradient_in_acoustic.spec.o: $O/specfem3D_par.spec.o
-$O/compute_interpolated_dva.spec.o: $O/specfem3D_par.spec.o
-$O/compute_kernels.spec.o: $O/specfem3D_par.spec.o
-$O/compute_stacey_viscoelastic.spec.o: $O/specfem3D_par.spec.o $O/shared_par.shared_module.o
-$O/create_color_image.spec.o: $O/specfem3D_par.spec.o
-$O/detect_mesh_surfaces.spec.o: $O/specfem3D_par.spec.o
-$O/fault_solver_common.spec.o: $O/specfem3D_par.spec.o
-$O/gravity_perturbation.spec.o: $O/specfem3D_par.spec.o
-$O/locate_source.spec.o: $O/specfem3D_par.spec.o
-$O/locate_receivers.spec.o: $O/specfem3D_par.spec.o
-$O/pml_par.spec.o: $O/specfem3D_par.spec.o
-$O/setup_GLL_points.spec.o: $O/specfem3D_par.spec.o
-$O/setup_movie_meshes.spec.o: $O/specfem3D_par.spec.o
-$O/setup_sources_receivers.spec.o: $O/specfem3D_par.spec.o $O/shared_par.shared_module.o
-$O/specfem3D.spec.o: $O/specfem3D_par.spec.o
-$O/save_adjoint_kernels.spec.o: $O/specfem3D_par.spec.o
-$O/write_movie_output.spec.o: $O/specfem3D_par.spec.o
-$O/write_output_SU.spec.o: $O/specfem3D_par.spec.o
-$O/write_seismograms.spec.o: $O/specfem3D_par.spec.o
+# Version file
+$O/initialize_simulation.spec.o: ${SETUP}/version.fh
 
 ## pml
-$O/compute_coupling_acoustic_el.spec.o: $O/shared_par.shared_module.o $O/pml_par.spec.o
-$O/compute_coupling_viscoelastic_ac.spec.o: $O/shared_par.shared_module.o $O/pml_par.spec.o
-$O/compute_forces_acoustic_calling_routine.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
-$O/compute_forces_acoustic_noDev.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
-$O/compute_total_energy.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
-$O/pml_allocate_arrays.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
-$O/pml_compute_accel_contribution.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
-$O/pml_compute_memory_variables.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
-$O/pml_output_VTKs.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
-$O/read_mesh_databases.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
-$O/update_displacement_scheme.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
-$O/update_displacement_LDDRK.spec.o: $O/specfem3D_par.spec.o
-$O/fault_solver_dynamic.spec.o: $O/specfem3D_par.spec.o $O/fault_solver_common.spec.o
-$O/fault_solver_kinematic.spec.o: $O/specfem3D_par.spec.o $O/fault_solver_common.spec.o
-$O/compute_forces_viscoelastic_noDev.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o
-$O/compute_element_att_memory.spec.o: $O/specfem3D_par.spec.o
-$O/compute_forces_viscoelastic_calling_routine.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o
-$O/iterate_time.spec.o: $O/specfem3D_par.spec.o $O/gravity_perturbation.spec.o
-$O/prepare_timerun.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o $O/gravity_perturbation.spec.o
+$O/compute_coupling_acoustic_el.spec.o: $O/pml_par.spec.o
+$O/compute_coupling_viscoelastic_ac.spec.o: $O/pml_par.spec.o
+$O/compute_forces_acoustic_calling_routine.spec.o: $O/pml_par.spec.o
+$O/compute_forces_acoustic_noDev.spec.o: $O/pml_par.spec.o
+$O/compute_total_energy.spec.o: $O/pml_par.spec.o
+$O/pml_allocate_arrays.spec.o: $O/pml_par.spec.o
+$O/pml_compute_accel_contribution.spec.o: $O/pml_par.spec.o
+$O/pml_compute_memory_variables.spec.o: $O/pml_par.spec.o
+$O/pml_output_VTKs.spec.o: $O/pml_par.spec.o
+$O/read_mesh_databases.spec.o: $O/pml_par.spec.o
+$O/update_displacement_scheme.spec.o: $O/pml_par.spec.o
+
+## fault
+$O/fault_solver_dynamic.spec.o: $O/fault_solver_common.spec.o
+$O/fault_solver_kinematic.spec.o: $O/fault_solver_common.spec.o
+$O/compute_forces_viscoelastic_noDev.spec.o: $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o
+$O/compute_forces_viscoelastic_calling_routine.spec.o: $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o
+
+## gravity
+$O/iterate_time.spec.o: $O/gravity_perturbation.spec.o
+$O/prepare_timerun.spec.o: $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o $O/gravity_perturbation.spec.o
 
 ## adios
-$O/read_forward_arrays_adios.spec_adios.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
-$O/read_mesh_databases_adios.spec_adios.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o
-$O/initialize_simulation.spec.o: $O/specfem3D_par.spec.o $(adios_specfem3D_PREOBJECTS)
-$O/save_kernels_adios.spec_adios.o: $O/specfem3D_par.spec.o $(adios_specfem3D_PREOBJECTS)
-$O/save_forward_arrays_adios.spec_adios.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o $(adios_specfem3D_PREOBJECTS)
-$O/finalize_simulation.spec.o: $O/specfem3D_par.spec.o $O/pml_par.spec.o $O/gravity_perturbation.spec.o $(adios_specfem3D_PREOBJECTS)
-$O/specfem3D_adios_stubs.spec_noadios.o: $O/specfem3D_par.spec.o $O/adios_manager_stubs.shared_noadios.o
+$O/read_forward_arrays_adios.spec_adios.o: $O/pml_par.spec.o
+$O/read_mesh_databases_adios.spec_adios.o: $O/pml_par.spec.o
+$O/initialize_simulation.spec.o: $(adios_specfem3D_PREOBJECTS)
+$O/save_kernels_adios.spec_adios.o: $(adios_specfem3D_PREOBJECTS)
+$O/save_forward_arrays_adios.spec_adios.o: $O/pml_par.spec.o $(adios_specfem3D_PREOBJECTS)
+$O/finalize_simulation.spec.o: $O/pml_par.spec.o $O/gravity_perturbation.spec.o $(adios_specfem3D_PREOBJECTS)
+$O/specfem3D_adios_stubs.spec_noadios.o: $O/adios_manager_stubs.shared_noadios.o
 $O/adios_helpers.shared_adios.o: \
 	$O/adios_helpers_definitions.shared_adios_module.o \
 	$O/adios_helpers_writers.shared_adios_module.o
@@ -376,11 +337,18 @@ $O/adios_helpers.shared_adios.o: \
 #### rule to build each .o file below
 ####
 
-
-$O/%.spec.o: $S/%.f90
+## modules
+$O/%.spec_module.o: $S/%.f90 $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.spec.o: $S/%.F90
+$O/%.spec_module.o: $S/%.F90 $O/shared_par.shared_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+
+$O/%.spec.o: $S/%.f90 $O/specfem3D_par.spec_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+$O/%.spec.o: $S/%.F90 $O/specfem3D_par.spec_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 ###
@@ -394,16 +362,16 @@ $(cuda_specfem3D_DEVICE_OBJ): $(cuda_OBJECTS)
 ### ADIOS compilation
 ###
 
-$O/%.spec_adios.o: $S/%.F90
+$O/%.spec_adios.o: $S/%.F90 $O/specfem3D_par.spec_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.spec_adios.o: $S/%.f90
+$O/%.spec_adios.o: $S/%.f90 $O/specfem3D_par.spec_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.spec_noadios.o: $S/%.F90
+$O/%.spec_noadios.o: $S/%.F90 $O/specfem3D_par.spec_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.spec_noadios.o: $S/%.f90
+$O/%.spec_noadios.o: $S/%.f90 $O/specfem3D_par.spec_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 

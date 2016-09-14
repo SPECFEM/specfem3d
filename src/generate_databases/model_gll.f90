@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
 !--------------------------------------------------------------------------------------------------
 !
 ! GLL
@@ -38,10 +37,10 @@
 
   subroutine model_gll(myrank,nspec,LOCAL_PATH)
 
-  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,IMAIN,MAX_STRING_LEN, &
+  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,IMAIN,MAX_STRING_LEN, &
     ATTENUATION,FULL_ATTENUATION_SOLID
 
-  use create_regions_mesh_ext_par,only: rhostore,kappastore,mustore,rho_vp,rho_vs, &
+  use create_regions_mesh_ext_par, only: rhostore,kappastore,mustore,rho_vp,rho_vs, &
     qkappa_attenuation_store,qmu_attenuation_store
 
   implicit none
@@ -55,14 +54,14 @@
   character(len=MAX_STRING_LEN) :: prname_lp,filename
 
   ! user output
-  if (myrank==0) then
+  if (myrank == 0) then
     write(IMAIN,*) '     using GLL model from: ',trim(LOCAL_PATH)
   endif
 
   ! processors name
   write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)// '/' //'proc',myrank,'_'
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!! if only vp structure is available (as is often the case in exploration seismology),
   !!! use lines for vp only
 
@@ -71,7 +70,7 @@
   if (ier /= 0) stop 'error allocating array rho_read'
 
   ! user output
-  if (myrank==0) write(IMAIN,*) '     reading in: rho.bin'
+  if (myrank == 0) write(IMAIN,*) '     reading in: rho.bin'
 
   filename = prname_lp(1:len_trim(prname_lp))//'rho.bin'
   open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
@@ -88,7 +87,7 @@
   if (ier /= 0) stop 'error allocating array vp_read'
 
   ! user output
-  if (myrank==0) write(IMAIN,*) '     reading in: vp.bin'
+  if (myrank == 0) write(IMAIN,*) '     reading in: vp.bin'
 
   filename = prname_lp(1:len_trim(prname_lp))//'vp.bin'
   open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
@@ -105,7 +104,7 @@
   if (ier /= 0) stop 'error allocating array vs_read'
 
   ! user output
-  if (myrank==0) write(IMAIN,*) '     reading in: vs.bin'
+  if (myrank == 0) write(IMAIN,*) '     reading in: vs.bin'
 
   filename = prname_lp(1:len_trim(prname_lp))//'vs.bin'
   open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
@@ -152,7 +151,7 @@
   if (ATTENUATION) then
     ! shear attenuation
     ! user output
-    if (myrank==0) write(IMAIN,*) '     reading in: qmu.bin'
+    if (myrank == 0) write(IMAIN,*) '     reading in: qmu.bin'
 
     filename = prname_lp(1:len_trim(prname_lp))//'qmu.bin'
     open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
@@ -167,7 +166,7 @@
     ! bulk attenuation
     if (FULL_ATTENUATION_SOLID) then
       ! user output
-      if (myrank==0) write(IMAIN,*) '     reading in: qkappa.bin'
+      if (myrank == 0) write(IMAIN,*) '     reading in: qkappa.bin'
 
       filename = prname_lp(1:len_trim(prname_lp))//'qkappa.bin'
       open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)

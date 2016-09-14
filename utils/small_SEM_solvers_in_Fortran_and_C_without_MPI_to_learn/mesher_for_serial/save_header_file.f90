@@ -31,7 +31,7 @@
         TRANSVERSE_ISOTROPY,ANISOTROPIC_3D_MANTLE,ANISOTROPIC_INNER_CORE, &
         ELLIPTICITY,GRAVITY,ROTATION,ATTENUATION,ATTENUATION_3D, &
         ANGULAR_WIDTH_XI_IN_DEGREES,ANGULAR_WIDTH_ETA_IN_DEGREES,NCHUNKS, &
-        INCLUDE_CENTRAL_CUBE,CENTER_LONGITUDE_IN_DEGREES,CENTER_LATITUDE_IN_DEGREES,GAMMA_ROTATION_AZIMUTH,NSOURCES,NSTEP,&
+        INCLUDE_CENTRAL_CUBE,CENTER_LONGITUDE_IN_DEGREES,CENTER_LATITUDE_IN_DEGREES,GAMMA_ROTATION_AZIMUTH,NSOURCES,NSTEP, &
         static_memory_size,NGLOB1D_RADIAL,NGLOB2DMAX_XMIN_XMAX,NGLOB2DMAX_YMIN_YMAX,NSPEC2D_TOP,NSPEC2D_BOTTOM, &
         NSPEC2DMAX_YMIN_YMAX,NSPEC2DMAX_XMIN_XMAX, &
         NPROC_XI,NPROC_ETA, &
@@ -116,7 +116,7 @@
   write(IOUT,*) '!'
 
 ! the central cube is counted 6 times, therefore remove 5 times
-  if(INCLUDE_CENTRAL_CUBE) then
+  if (INCLUDE_CENTRAL_CUBE) then
     write(IOUT,*) '! these statistics include the central cube'
     subtract_central_cube_elems = 5.d0 * dble((NEX_XI/8))**3
     subtract_central_cube_points = 5.d0 * (dble(NEX_XI/8)*dble(NGLLX-1)+1.d0)**3
@@ -148,7 +148,7 @@
   write(IOUT,*) '!'
 
 ! display location of chunk if regional run
-  if(NCHUNKS /= 6) then
+  if (NCHUNKS /= 6) then
 
   write(IOUT,*) '! position of the mesh chunk at the surface:'
   write(IOUT,*) '! -----------------------------------------'
@@ -209,7 +209,7 @@
 
 ! convert geocentric to geographic colatitude
     colat_corner=PI/2.0d0-datan(1.006760466d0*dcos(theta_corner)/dmax1(TINYVAL,dsin(theta_corner)))
-    if(phi_corner>PI) phi_corner=phi_corner-TWO_PI
+    if (phi_corner > PI) phi_corner=phi_corner-TWO_PI
 
 ! compute real position of the source
     lat = (PI/2.0d0-colat_corner)*180.0d0/PI
@@ -318,56 +318,56 @@
 
 ! this to allow for code elimination by compiler in solver for performance
 
-  if(TRANSVERSE_ISOTROPY) then
+  if (TRANSVERSE_ISOTROPY) then
     write(IOUT,*) 'logical, parameter :: TRANSVERSE_ISOTROPY_VAL = .true.'
   else
     write(IOUT,*) 'logical, parameter :: TRANSVERSE_ISOTROPY_VAL = .false.'
   endif
   write(IOUT,*)
 
-  if(ANISOTROPIC_3D_MANTLE) then
+  if (ANISOTROPIC_3D_MANTLE) then
     write(IOUT,*) 'logical, parameter :: ANISOTROPIC_3D_MANTLE_VAL = .true.'
   else
     write(IOUT,*) 'logical, parameter :: ANISOTROPIC_3D_MANTLE_VAL = .false.'
   endif
   write(IOUT,*)
 
-  if(ANISOTROPIC_INNER_CORE) then
+  if (ANISOTROPIC_INNER_CORE) then
     write(IOUT,*) 'logical, parameter :: ANISOTROPIC_INNER_CORE_VAL = .true.'
   else
     write(IOUT,*) 'logical, parameter :: ANISOTROPIC_INNER_CORE_VAL = .false.'
   endif
   write(IOUT,*)
 
-  if(ATTENUATION) then
+  if (ATTENUATION) then
     write(IOUT,*) 'logical, parameter :: ATTENUATION_VAL = .true.'
   else
     write(IOUT,*) 'logical, parameter :: ATTENUATION_VAL = .false.'
   endif
   write(IOUT,*)
 
-  if(ATTENUATION_3D) then
+  if (ATTENUATION_3D) then
     write(IOUT,*) 'logical, parameter :: ATTENUATION_3D_VAL = .true.'
   else
     write(IOUT,*) 'logical, parameter :: ATTENUATION_3D_VAL = .false.'
   endif
   write(IOUT,*)
 
-  if(ELLIPTICITY) then
+  if (ELLIPTICITY) then
     write(IOUT,*) 'logical, parameter :: ELLIPTICITY_VAL = .true.'
   else
     write(IOUT,*) 'logical, parameter :: ELLIPTICITY_VAL = .false.'
   endif
   write(IOUT,*)
 
-  if(GRAVITY) then
+  if (GRAVITY) then
     write(IOUT,*) 'logical, parameter :: GRAVITY_VAL = .true.'
   else
     write(IOUT,*) 'logical, parameter :: GRAVITY_VAL = .false.'
   endif
   write(IOUT,*)
 
-  if(ROTATION) then
+  if (ROTATION) then
     write(IOUT,*) 'logical, parameter :: ROTATION_VAL = .true.'
   else
     write(IOUT,*) 'logical, parameter :: ROTATION_VAL = .false.'
@@ -395,15 +395,15 @@
   write(IOUT,*) 'integer, parameter :: NGLOB2DMAX_XY_VAL = ', &
             max(NGLOB2DMAX_XMIN_XMAX(IREGION_CRUST_MANTLE),NGLOB2DMAX_YMIN_YMAX(IREGION_CRUST_MANTLE))
 
-  if(NCHUNKS == 1 .or. NCHUNKS == 2) then
+  if (NCHUNKS == 1 .or. NCHUNKS == 2) then
     NCORNERSCHUNKS = 1
     NUM_FACES = 1
     NUM_MSG_TYPES = 1
-  else if(NCHUNKS == 3) then
+  else if (NCHUNKS == 3) then
     NCORNERSCHUNKS = 1
     NUM_FACES = 1
     NUM_MSG_TYPES = 3
-  else if(NCHUNKS == 6) then
+  else if (NCHUNKS == 6) then
     NCORNERSCHUNKS = 8
     NUM_FACES = 4
     NUM_MSG_TYPES = 3
@@ -412,8 +412,8 @@
   write(IOUT,*) 'integer, parameter :: NUMMSGS_FACES_VAL = ',NPROC_XI*NUM_FACES*NUM_MSG_TYPES
   write(IOUT,*) 'integer, parameter :: NCORNERSCHUNKS_VAL = ',NCORNERSCHUNKS
 
-  if(ATTENUATION) then
-     if(ATTENUATION_3D) then
+  if (ATTENUATION) then
+     if (ATTENUATION_3D) then
         att1     = NGLLX
         att2     = NGLLY
         att3     = NGLLZ

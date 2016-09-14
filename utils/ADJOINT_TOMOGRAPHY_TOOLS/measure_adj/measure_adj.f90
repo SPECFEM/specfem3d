@@ -62,7 +62,7 @@ program measure_adj
 
   ! uses weights to balance love and rayleigh measurements
   ! we do a normalization of P_SV, P_SH, Love, Rayleigh with the number of measurement picks
-  if( DO_WEIGHTING ) call setup_weighting(chan)
+  if ( DO_WEIGHTING ) call setup_weighting(chan)
 
   ! input file: MEASUREMENT.WINDOWS
   open(11,file='MEASUREMENT.WINDOWS',status='old',iostat=ios)
@@ -133,7 +133,7 @@ program measure_adj
     ! Access to the kidate, xapiir, and getfil is not simple and not
     ! supported under the current state of the SAC code base.
 
-    if(RUN_BANDPASS) then
+    if (RUN_BANDPASS) then
        call bandpass(data,npts,dt,fstart0,fend0)
        call bandpass(syn,npts,dt,fstart0,fend0)
        if (USE_PHYSICAL_DISPERSION) then
@@ -208,8 +208,8 @@ program measure_adj
 
       ! make measurements
       ! also compute reconstructed synthetics for CC (and MT, if specified) measurements
-      call mt_measure(datafile,measure_file_prefix,data,syn,syn_phydisp,t0,dt,npts,tstart,tend,&
-            istart,data_dtw,syn_dtw,syn_dtw_phydisp,nlen,tshift,sigma_dt_cc,dlnA,sigma_dlnA_cc,cc_max,syn_dtw_cc,&
+      call mt_measure(datafile,measure_file_prefix,data,syn,syn_phydisp,t0,dt,npts,tstart,tend, &
+            istart,data_dtw,syn_dtw,syn_dtw_phydisp,nlen,tshift,sigma_dt_cc,dlnA,sigma_dlnA_cc,cc_max,syn_dtw_cc, &
             i_pmax_dat,i_pmax_syn,i_right0,trans_mtm,dtau_w,dlnA_w,sigma_dt,sigma_dlnA,syn_dtw_mt,err_dt,err_dlnA)
       i_right = i_right0
       i_left = 1  ! LQY: is it feasible that i_left is not 1? mt_adj() inherently assumes it.
@@ -229,14 +229,14 @@ program measure_adj
          print *, '     period of max data/syn power    :', sngl(T_pmax_dat), sngl(T_pmax_syn)
 
          ! if MT measurement window is rejected by mt_measure_select, then use a CC measurement
-         if(.not. use_trace) then
+         if (.not. use_trace) then
             !stop 'Check why this MT measurement was rejected'
             print *, '   reverting from MT measurement to CC measurement...'
             imeas = imeas0 - 2
             is_mtm = 3  ! LQY: WHY not is_mtm = 2?
-            call mt_measure(datafile,measure_file_prefix,data,syn,syn_phydisp,t0,dt,npts,tstart,tend,&
-                  istart,data_dtw,syn_dtw,syn_dtw_phydisp,nlen,&
-                  tshift,sigma_dt_cc,dlnA,sigma_dlnA_cc,cc_max,syn_dtw_cc,&
+            call mt_measure(datafile,measure_file_prefix,data,syn,syn_phydisp,t0,dt,npts,tstart,tend, &
+                  istart,data_dtw,syn_dtw,syn_dtw_phydisp,nlen, &
+                  tshift,sigma_dt_cc,dlnA,sigma_dlnA_cc,cc_max,syn_dtw_cc, &
                   i_pmax_dat,i_pmax_syn,i_right,trans_mtm,dtau_w,dlnA_w,sigma_dt,sigma_dlnA,syn_dtw_mt)
          else
             print *, '     using this MTM. '
@@ -262,7 +262,7 @@ program measure_adj
         ! LQY: what is this section intended to do?
         ! reset imeas == 3 for adjoint sources without time shift and uncertainty scaling
         ! (pure cross-correlation adjoint source for banana-doughnuts)
-        if(imeas == 5 .and. trim(datafile) == trim(synfile) ) then
+        if (imeas == 5 .and. trim(datafile) == trim(synfile) ) then
            print *,'cross-correlation measurement:'
            print *,'  only synthetic file: ',trim(synfile)
            print *,'    without traveltime difference/uncertainty'
@@ -271,8 +271,8 @@ program measure_adj
         endif
 
         tr_chi = 0.0 ; am_chi = 0.0    ! must be initialized
-        call mt_adj(istart,data_dtw,syn_dtw,syn_dtw_phydisp,nlen,dt,tshift,dlnA,sigma_dt_cc,sigma_dlnA_cc,&
-             dtau_w,dlnA_w,err_dt,err_dlnA,sigma_dt,sigma_dlnA,i_left,i_right,&
+        call mt_adj(istart,data_dtw,syn_dtw,syn_dtw_phydisp,nlen,dt,tshift,dlnA,sigma_dt_cc,sigma_dlnA_cc, &
+             dtau_w,dlnA_w,err_dt,err_dlnA,sigma_dt,sigma_dlnA,i_left,i_right, &
              window_chi,tr_adj_src,tr_chi,am_adj_src,am_chi)
 
         ! KEY: write misfit function values to file (two for each window)
@@ -284,23 +284,23 @@ program measure_adj
         ! FULL RECORD: 17: data power, 18: syn power, 19: (data-syn) power, 20: record duration
         ! Example of a reduced file: awk '{print $2,$3,$4,$5,$6,$31,$32}' window_chi > window_chi_sub
         write(13,'(a14,a8,a3,a5,i4,i4,2e14.6,20e14.6,2e14.6,2f14.6)') &
-           file_prefix0,sta,net,chan_syn,j,imeas,&
+           file_prefix0,sta,net,chan_syn,j,imeas, &
            tstart,tend,window_chi(:),tr_chi,am_chi,T_pmax_dat,T_pmax_syn
         print *, '     tr_chi = ', sngl(tr_chi), '  am_chi = ', sngl(am_chi)
 
         ! uses weighting to balance love / rayleigh measurements
-        if( DO_WEIGHTING ) then
+        if ( DO_WEIGHTING ) then
            ipick_type = 0
-           if( tend <= T_surfacewaves ) then
+           if ( tend <= T_surfacewaves ) then
               ! body wave picks
-              if( cmp(1:1) == "Z" ) ipick_type = P_SV_V
-              if( cmp(1:1) == "R" ) ipick_type = P_SV_R
-              if( cmp(1:1) == "T" ) ipick_type = SH_T
+              if ( cmp(1:1) == "Z" ) ipick_type = P_SV_V
+              if ( cmp(1:1) == "R" ) ipick_type = P_SV_R
+              if ( cmp(1:1) == "T" ) ipick_type = SH_T
            else
               ! surface wave picks
-              if( cmp(1:1) == "Z" ) ipick_type = Rayleigh_V
-              if( cmp(1:1) == "R" ) ipick_type = Rayleigh_R
-              if( cmp(1:1) == "T" ) ipick_type = Love_T
+              if ( cmp(1:1) == "Z" ) ipick_type = Rayleigh_V
+              if ( cmp(1:1) == "R" ) ipick_type = Rayleigh_R
+              if ( cmp(1:1) == "T" ) ipick_type = Love_T
            endif
 
           ! LQY: shouldn't chi values be changed accordingly?????
@@ -332,7 +332,7 @@ program measure_adj
        endif
 
         ! combine adjoint sources from different measurement windows
-       if (mod(imeas,2)==1) then
+       if (mod(imeas,2) == 1) then
           adj_syn_all(:) = adj_syn_all(:) + tr_adj_src(:)   ! imeas = 1,3,5,7
           all_chi = all_chi + tr_chi
        else
@@ -408,7 +408,7 @@ program measure_adj
 
       ! output the adjoint source (or ray density) as ASCII or SAC format
       print *, 'writing adjoint source to file for the full seismogram'
-      if( DO_RAY_DENSITY_SOURCE ) then
+      if ( DO_RAY_DENSITY_SOURCE ) then
         call dwascii(trim(adj_file_prefix)//'.density.adj',adj_syn_all,nn,tt,dtt)
       else
         call dwascii(trim(adj_file_prefix)//'.adj',adj_syn_all,nn,tt,dtt)

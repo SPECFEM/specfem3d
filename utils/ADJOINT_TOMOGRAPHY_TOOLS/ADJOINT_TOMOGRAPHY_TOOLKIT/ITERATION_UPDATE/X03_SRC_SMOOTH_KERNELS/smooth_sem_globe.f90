@@ -9,8 +9,8 @@
 !   ./smooth_sem_globe 160 10 bulk_c_kernel OUTPUT_SUM/ topo/
 !
 ! where:
-!   sigma_h                - gaussian width for horizontal smoothing (in km)
-!   sigma_v                - gaussian width for vertical smoothing (in km)
+!   sigma_h                - Gaussian width for horizontal smoothing (in km)
+!   sigma_v                - Gaussian width for vertical smoothing (in km)
 !   kernel_file_name  - takes file with this kernel name,
 !                                     e.g. "bulk_c_kernel"
 !   scratch_file_dir     - directory containing kernel files,
@@ -157,7 +157,7 @@ program smooth_sem_globe
   sigma_v = sigma_v * 1000.0 ! m
   if (global_code) sigma_v = sigma_v / R_EARTH ! scale
 
-  sigma_h2 = 2.0 * sigma_h ** 2  ! factor two for gaussian distribution with standard variance sigma
+  sigma_h2 = 2.0 * sigma_h ** 2  ! factor two for Gaussian distribution with standard variance sigma
   sigma_v2 = 2.0 * sigma_v ** 2
 
   ! search radius
@@ -167,7 +167,7 @@ program smooth_sem_globe
   ! theoretic normal value
   ! (see integral over -inf to +inf of exp[- x*x/(2*sigma) ] = sigma * sqrt(2*pi) )
 
-! note: smoothing is using a gaussian (ellipsoid for sigma_h /= sigma_v),
+! note: smoothing is using a Gaussian (ellipsoid for sigma_h /= sigma_v),
 !          but in spherical coordinates, we use horizontal distance as epicentral distance
 !          and vertical distance as radial distance?
 
@@ -197,8 +197,8 @@ program smooth_sem_globe
   ixi = myrank - ichunk * NPROC_XI_VAL * NPROC_ETA_VAL - ieta * NPROC_XI_VAL
 
   ! get the neighboring slices:
-  call get_all_eight_slices(ichunk,ixi,ieta,&
-             islice0(1),islice0(2),islice0(3),islice0(4),islice0(5),islice0(6),islice0(7),islice0(8),&
+  call get_all_eight_slices(ichunk,ixi,ieta, &
+             islice0(1),islice0(2),islice0(3),islice0(4),islice0(5),islice0(6),islice0(7),islice0(8), &
              NPROC_XI_VAL,NPROC_ETA_VAL)
 
   ! remove the repeated slices (only 8 for corner slices in global case)
@@ -211,7 +211,7 @@ program smooth_sem_globe
   enddo
   nums = j
 
-  if( myrank == 0 ) then
+  if ( myrank == 0 ) then
     print *,'slices:',nums
     print *,'  ',islice(:)
     print *
@@ -233,7 +233,7 @@ program smooth_sem_globe
 
   ! point locations
   open(11,file=solver2_file(1),status='old',form='unformatted',iostat=ier)
-  if( ier /= 0 ) call exit_mpi(myrank,'error opening solver2 file')
+  if ( ier /= 0 ) call exit_mpi(myrank,'error opening solver2 file')
 
   read(11) x(1:nglob(1))
   read(11) y(1:nglob(1))
@@ -243,7 +243,7 @@ program smooth_sem_globe
 
   ! jacobian
   open(11,file=solver1_file(1),status='old',form='unformatted',iostat=ier)
-  if( ier /= 0 ) call exit_mpi(myrank,'error opening solver1 file')
+  if ( ier /= 0 ) call exit_mpi(myrank,'error opening solver1 file')
 
   read(11) xix
   read(11) xiy
@@ -310,9 +310,9 @@ program smooth_sem_globe
 
     ! read in the topology, kernel files, calculate center of elements
     ! point locations
-    ! given in cartesian coordinates
+    ! given in Cartesian coordinates
     open(11,file=solver2_file(iproc),status='old',form='unformatted',iostat=ier)
-    if( ier /= 0 ) call exit_mpi(myrank,'error opening slices: solver2 file')
+    if ( ier /= 0 ) call exit_mpi(myrank,'error opening slices: solver2 file')
 
     read(11) x(1:nglob(iproc))
     read(11) y(1:nglob(iproc))
@@ -321,7 +321,7 @@ program smooth_sem_globe
     close(11)
 
     open(11,file=solver1_file(iproc),status='old',form='unformatted',iostat=ier)
-    if( ier /= 0 ) call exit_mpi(myrank,'error opening slices: solver1 file')
+    if ( ier /= 0 ) call exit_mpi(myrank,'error opening slices: solver1 file')
 
     read(11) xix
     read(11) xiy
@@ -362,7 +362,7 @@ program smooth_sem_globe
 
     ! kernel file
     open(11,file=k_file(iproc),status='old',form='unformatted',iostat=ier)
-    if( ier /= 0 ) call exit_mpi(myrank,'error opening kernel file')
+    if ( ier /= 0 ) call exit_mpi(myrank,'error opening kernel file')
 
     read(11) kernel(:,:,:,1:nspec(iproc))
     close(11)
@@ -400,7 +400,7 @@ program smooth_sem_globe
         ! calculates horizontal and vertical distance between two element centers
 
         ! vector approximation
-        call get_distance_vec(dist_h,dist_v,cx0(ispec),cy0(ispec),cz0(ispec),&
+        call get_distance_vec(dist_h,dist_v,cx0(ispec),cy0(ispec),cz0(ispec), &
                           cx(ispec2),cy(ispec2),cz(ispec2))
 
         ! note: distances and sigmah, sigmav are normalized by R_EARTH
@@ -420,13 +420,13 @@ program smooth_sem_globe
             do i = 1, NGLLX
 
               ! reference location
-              ! current point (i,j,k,ispec) location, cartesian coordinates
+              ! current point (i,j,k,ispec) location, Cartesian coordinates
               x0 = xl(i,j,k,ispec)
               y0 = yl(i,j,k,ispec)
               z0 = zl(i,j,k,ispec)
 
-              ! calculate weights based on gaussian smoothing
-              call smoothing_weights_vec(x0,y0,z0,ispec2,sigma_h2,sigma_v2,exp_val,&
+              ! calculate weights based on Gaussian smoothing
+              call smoothing_weights_vec(x0,y0,z0,ispec2,sigma_h2,sigma_v2,exp_val, &
                       xx(:,:,:,ispec2),yy(:,:,:,ispec2),zz(:,:,:,ispec2))
 
               ! adds GLL integration weights
@@ -435,11 +435,11 @@ program smooth_sem_globe
               ! adds contribution of element ispec2 to smoothed kernel values
               tk(i,j,k,ispec) = tk(i,j,k,ispec) + sum(exp_val(:,:,:) * kernel(:,:,:,ispec2))
 
-              ! normalization, integrated values of gaussian smoothing function
+              ! normalization, integrated values of Gaussian smoothing function
               bk(i,j,k,ispec) = bk(i,j,k,ispec) + sum(exp_val(:,:,:))
 
               ! checks number
-              !if( isNaN(tk(i,j,k,ispec)) ) then
+              !if ( isNaN(tk(i,j,k,ispec)) ) then
               !  print *,'error tk NaN: ',tk(i,j,k,ispec)
               !  print *,'rank:',myrank
               !  print *,'i,j,k,ispec:',i,j,k,ispec
@@ -473,12 +473,12 @@ program smooth_sem_globe
             !call exit_mpi(myrank, 'Error computing Gaussian function on the grid')
           endif
 
-          ! normalizes smoothed kernel values by integral value of gaussian weighting
+          ! normalizes smoothed kernel values by integral value of Gaussian weighting
           kernel_smooth(i,j,k,ispec) = tk(i,j,k,ispec) / bk(i,j,k,ispec)
 
 
           ! checks number
-          if( isNaN(kernel_smooth(i,j,k,ispec)) ) then
+          if ( isNaN(kernel_smooth(i,j,k,ispec)) ) then
             print *,'error kernel_smooth NaN: ',kernel_smooth(i,j,k,ispec)
             print *,'rank:',myrank
             print *,'i,j,k,ispec:',i,j,k,ispec
@@ -494,7 +494,7 @@ program smooth_sem_globe
 
   ! file output
   open(11,file=trim(ks_file),status='unknown',form='unformatted',iostat=ier)
-  if( ier /= 0 ) call exit_mpi(myrank,'error opening smoothed kernel file')
+  if ( ier /= 0 ) call exit_mpi(myrank,'error opening smoothed kernel file')
 
   ! Note: output the following instead of kernel_smooth(:,:,:,1:nspec(1)) to create files of the same sizes
   write(11) kernel_smooth(:,:,:,:)
@@ -523,7 +523,7 @@ end program smooth_sem_globe
 !
 ! -----------------------------------------------------------------------------
 !
-  subroutine smoothing_weights_vec(x0,y0,z0,ispec2,sigma_h2,sigma_v2,exp_val,&
+  subroutine smoothing_weights_vec(x0,y0,z0,ispec2,sigma_h2,sigma_v2,exp_val, &
                               xx_elem,yy_elem,zz_elem)
 
   implicit none
@@ -545,7 +545,7 @@ end program smooth_sem_globe
   !          +(zz(:,:,:,ispec2)-z0)**2 )/(2*sigma2) )*factor(:,:,:)
 
   ! from basin code smoothing:
-  ! gaussian function
+  ! Gaussian function
   !exp_val(:,:,:) = exp( -(xx(:,:,:,ispec2)-x0)**2/(sigma_h2) &
   !                      -(yy(:,:,:,ispec2)-y0)**2/(sigma_h2) &
   !                      -(zz(:,:,:,ispec2)-z0)**2/(sigma_v2) ) * factor(:,:,:)
@@ -560,13 +560,13 @@ end program smooth_sem_globe
         call get_distance_vec(dist_h,dist_v,x0,y0,z0, &
             xx_elem(ii,jj,kk),yy_elem(ii,jj,kk),zz_elem(ii,jj,kk))
 
-        ! gaussian function
+        ! Gaussian function
         exp_val(ii,jj,kk) = exp( - (dist_h*dist_h)/sigma_h2 &
                                   - (dist_v*dist_v)/sigma_v2 )    ! * factor(ii,jj,kk)
 
 
         ! checks number
-        !if( isNaN(exp_val(ii,jj,kk)) ) then
+        !if ( isNaN(exp_val(ii,jj,kk)) ) then
         !  print *,'error exp_val NaN: ',exp_val(ii,jj,kk)
         !  print *,'i,j,k:',ii,jj,kk
         !  print *,'dist_h: ',dist_h,'dist_v:',dist_v
@@ -614,8 +614,8 @@ end program smooth_sem_globe
   ratio = (x0*x1 + y0*y1 + z0*z1)/(r0 * r1)
 
   ! checks boundaries of ratio (due to numerical inaccuracies)
-  if( ratio > 1.0_CUSTOM_REAL ) ratio = 1.0_CUSTOM_REAL
-  if( ratio < -1.0_CUSTOM_REAL ) ratio = -1.0_CUSTOM_REAL
+  if ( ratio > 1.0_CUSTOM_REAL ) ratio = 1.0_CUSTOM_REAL
+  if ( ratio < -1.0_CUSTOM_REAL ) ratio = -1.0_CUSTOM_REAL
 
   theta = acos( ratio )
 

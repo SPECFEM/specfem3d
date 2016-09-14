@@ -33,14 +33,14 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
 
   ! second-order accurate convolution term calculation from equation (21) of
   ! Shumin Wang, Robert Lee, and Fernando L. Teixeira,
-  ! Anisotropic-Medium PML for Vector FETD With Modified Basis Functions,
+  ! Anisotropic-medium PML for vector FETD with modified basis functions,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
   use specfem_par, only: NGLOB_AB,deltat,wgll_cube,jacobian,ibool,rhostore
-  use pml_par, only: CPML_regions,d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z,&
-                     alpha_store_x, alpha_store_y, alpha_store_z,&
+  use pml_par, only: CPML_regions,d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z, &
+                     alpha_store_x, alpha_store_y, alpha_store_z, &
                      NSPEC_CPML,accel_elastic_CPML,PML_displ_old,PML_displ_new
-  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,&
+  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
                        CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
   implicit none
@@ -66,7 +66,7 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
         jacobianl = jacobian(i,j,k,ispec)
         wgllcube = wgll_cube(i,j,k)
 
-        ! pml coefficient values
+        ! PML coefficient values
         CPML_region_local = CPML_regions(ispec_CPML)
 
         kappa_x = k_store_x(i,j,k,ispec_CPML)
@@ -85,7 +85,7 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
                kappa_x, d_x, alpha_x, &
                kappa_y, d_y, alpha_y, &
                kappa_z, d_z, alpha_z, &
-               CPML_region_local,  &
+               CPML_region_local, &
                A_0, A_1, A_2, A_3, A_4, A_5, &
                coef0_x, coef1_x, coef2_x, &
                coef0_y, coef1_y, coef2_y, &
@@ -113,7 +113,7 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
         rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) = coef0_z * rmemory_displ_elastic(3,i,j,k,ispec_CPML,3) &
                 + PML_displ_new(3,i,j,k,ispec_CPML) * coef1_z + PML_displ_old(3,i,j,k,ispec_CPML) * coef2_z
 
-        ! updates pml acceleration
+        ! updates PML acceleration
         accel_elastic_CPML(1,i,j,k) =  wgllcube * rhol * jacobianl * &
              ( A_1 * veloc(1,iglob) + A_2 * displ(1,iglob) + &
                A_3 * rmemory_displ_elastic(1,i,j,k,ispec_CPML,1) + &
@@ -143,20 +143,20 @@ end subroutine pml_compute_accel_contribution_elastic
 !
 !=====================================================================
 !
-subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_acoustic,&
+subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_acoustic, &
                                                    potential_dot_acoustic,rmemory_potential_acoustic)
 
   ! calculates contribution from each C-PML element to update acceleration to the global mesh
 
   ! second-order accurate convolution term calculation from equation (21) of
   ! Shumin Wang, Robert Lee, and Fernando L. Teixeira,
-  ! Anisotropic-Medium PML for Vector FETD With Modified Basis Functions,
+  ! Anisotropic-medium PML for vector FETD with modified basis functions,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
   use specfem_par, only: NGLOB_AB,deltat,wgll_cube,jacobian,ibool,kappastore
-  use pml_par, only: CPML_regions,NSPEC_CPML,d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z,&
+  use pml_par, only: CPML_regions,NSPEC_CPML,d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z, &
                      alpha_store_x, alpha_store_y, alpha_store_z, &
-                     NSPEC_CPML,potential_dot_dot_acoustic_CPML,&
+                     NSPEC_CPML,potential_dot_dot_acoustic_CPML, &
                      PML_potential_acoustic_old,PML_potential_acoustic_new
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
                        CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
@@ -185,7 +185,7 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
         jacobianl = jacobian(i,j,k,ispec)
         kappal_inv = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
 
-        ! pml coefficient values
+        ! PML coefficient values
         CPML_region_local = CPML_regions(ispec_CPML)
 
         kappa_x = k_store_x(i,j,k,ispec_CPML)
@@ -204,7 +204,7 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
                kappa_x, d_x, alpha_x, &
                kappa_y, d_y, alpha_y, &
                kappa_z, d_z, alpha_z, &
-               CPML_region_local,  &
+               CPML_region_local, &
                A_0, A_1, A_2, A_3, A_4, A_5, &
                coef0_x, coef1_x, coef2_x, &
                coef0_y, coef1_y, coef2_y, &
@@ -223,7 +223,7 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
                 + coef1_z * PML_potential_acoustic_new(i,j,k,ispec_CPML) &
                 + coef2_z * PML_potential_acoustic_old(i,j,k,ispec_CPML)
 
-        ! updates pml potential
+        ! updates PML potential
         potential_dot_dot_acoustic_CPML(i,j,k) =  wgllcube * kappal_inv * jacobianl * &
                   ( A_1 * potential_dot_acoustic(iglob) + A_2 * potential_acoustic(iglob) &
                   + A_3 * rmemory_potential_acoustic(i,j,k,ispec_CPML,1) &
@@ -238,7 +238,7 @@ end subroutine pml_compute_accel_contribution_acoustic
 !
 !=====================================================================
 !
-subroutine save_field_on_pml_interface(displ,veloc,accel,nglob_interface_PML_elastic,&
+subroutine save_field_on_pml_interface(displ,veloc,accel,nglob_interface_PML_elastic, &
                                        b_PML_field,b_reclen_PML_field)
 
   use specfem_par, only: NGLOB_AB,it
@@ -271,7 +271,7 @@ end subroutine save_field_on_pml_interface
 !
 !=====================================================================
 !
-subroutine read_field_on_pml_interface(b_accel,b_veloc,b_displ,nglob_interface_PML_elastic,&
+subroutine read_field_on_pml_interface(b_accel,b_veloc,b_displ,nglob_interface_PML_elastic, &
                                        b_PML_field,b_reclen_PML_field)
 
   use specfem_par, only: NGLOB_AB,ibool,NSTEP,it
@@ -319,7 +319,7 @@ end subroutine read_field_on_pml_interface
 !
 !=====================================================================
 !
-subroutine save_potential_on_pml_interface(potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic,&
+subroutine save_potential_on_pml_interface(potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                                            nglob_interface_PML_acoustic,b_PML_potential,b_reclen_PML_potential)
 
   use specfem_par, only: NGLOB_AB,it
@@ -344,7 +344,7 @@ end subroutine save_potential_on_pml_interface
 !
 !=====================================================================
 !
-subroutine read_potential_on_pml_interface(b_potential_dot_dot_acoustic,b_potential_dot_acoustic,b_potential_acoustic,&
+subroutine read_potential_on_pml_interface(b_potential_dot_dot_acoustic,b_potential_dot_acoustic,b_potential_acoustic, &
                                            nglob_interface_PML_acoustic,b_PML_potential,b_reclen_PML_potential)
 
   use specfem_par, only: NGLOB_AB,ibool,NSTEP,it

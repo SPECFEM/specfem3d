@@ -25,10 +25,9 @@
 !
 !=====================================================================
 
-
 module module_database
 
-  use shared_parameters, only: NGNOD, NGNOD2D, LOCAL_PATH, MSL=>MAX_STRING_LEN
+  use shared_parameters, only: NGNOD, NGNOD2D, LOCAL_PATH, MSL => MAX_STRING_LEN
 
   integer                                     :: nE_loc
   integer, dimension(:),  allocatable         :: loc2glob_elmnt
@@ -78,7 +77,7 @@ contains
   subroutine write_database(myrank, ipart, elmnts, nodes_coords, elmnts_glob,  num_modele,  mat_prop, &
        undef_mat_prop, count_def_mat, count_undef_mat, ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, &
        ibelm_bottom, ibelm_top, nodes_ibelm_xmin, nodes_ibelm_xmax, nodes_ibelm_ymin, nodes_ibelm_ymax, &
-       nodes_ibelm_bottom, nodes_ibelm_top, cpml_to_spec, cpml_regions, is_cpml, ibelm_moho, nodes_ibelm_moho,  &
+       nodes_ibelm_bottom, nodes_ibelm_top, cpml_to_spec, cpml_regions, is_cpml, ibelm_moho, nodes_ibelm_moho, &
        nE, nnodes, nspec2D_xmin, nspec2D_xmax,nspec2D_ymin, &
        nspec2D_ymax, nspec2D_bottom, nspec2D_top, nspec_cpml, nspec2D_moho)
 
@@ -135,7 +134,7 @@ contains
 
     ! opens output file
     write(prname, "(i6.6,'_Database')") myrank
-    open(unit=IIN_database,file=LOCAL_PATH(1:len_trim(LOCAL_PATH))//'/proc'//prname,&
+    open(unit=IIN_database,file=LOCAL_PATH(1:len_trim(LOCAL_PATH))//'/proc'//prname, &
          status='unknown', action='write', form='unformatted', iostat = ier)
     if (ier /= 0) then
        print *,'Error file open:',LOCAL_PATH(1:len_trim(LOCAL_PATH))//'/proc'//prname
@@ -285,7 +284,7 @@ contains
                    enddo
                 enddo
              endif  !! on doit inclure ce if dessous ?
-             if (k > 0)  then
+             if (k > 0) then
                 ie_bnd_stored(inum_neigh_part) = ie_bnd_stored(inum_neigh_part) + 1
                 kE = ie_bnd_stored(inum_neigh_part)
                 my_interfaces_ext_mesh(1,kE ,inum_neigh_part) = glob2loc_elmnt(iE)
@@ -323,7 +322,7 @@ contains
        ! note: assumes that element indices in ibelm_* arrays are in the range from 1 to nspec
        !          (this is assigned by CUBIT, if this changes the following indexing must be changed as well)
        !          while glob2loc_elmnts(.) is shifted from 0 to nspec-1  thus
-       !          we need to have the arg of glob2loc_elmnts start at 0 ==> glob2loc_nodes(ibelm_** -1)
+       !          we need to have the arg of glob2loc_elmnts start at 0, and thus we use glob2loc_nodes(ibelm_** -1)
 
        ! optional moho
        do i=1,nspec2D_moho

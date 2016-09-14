@@ -32,7 +32,7 @@ program xcopy_local
   !call system(trim(command))
 
   ! copy command
-  if( myrank == 0 ) then
+  if ( myrank == 0 ) then
     cp = "cp -v"
   else
     cp = "cp"

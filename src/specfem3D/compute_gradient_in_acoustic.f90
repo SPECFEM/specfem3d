@@ -26,7 +26,7 @@
 !=====================================================================
 
   subroutine compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                        scalar_field, vector_field_element,&
+                        scalar_field, vector_field_element, &
                         hprime_xx,hprime_yy,hprime_zz, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         ibool,rhostore,GRAVITY)

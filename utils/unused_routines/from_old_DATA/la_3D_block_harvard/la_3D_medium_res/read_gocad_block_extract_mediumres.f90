@@ -66,7 +66,7 @@
 
 ! extend basin model below threshold to bottom of the grid to make sure
 ! there is no small gap between interpolated basement map and sediments
-  if(EXTEND_VOXET_BELOW_BASEMENT) then
+  if (EXTEND_VOXET_BELOW_BASEMENT) then
   do ix = 0,NX_GOCAD_MR-1
     do iy = 0,NY_GOCAD_MR-1
 
@@ -74,11 +74,11 @@
 ! a negative P velocity has been used to flag fictitious points
       iz_found = -1
       do iz = NZ_GOCAD_MR-1,0,-1
-        if(vp_block_gocad(ix,iy,iz) > 1.) iz_found = iz
+        if (vp_block_gocad(ix,iy,iz) > 1.) iz_found = iz
       enddo
 
 ! if some sediments are detected on this vertical line in Voxet
-      if(iz_found > -1) then
+      if (iz_found > -1) then
 
 ! define Gocad grid, shift of Voxet is taken into account
         zsedim_found = ORIG_Z_GOCAD_MR + iz_found*SPACING_Z_GOCAD_MR
@@ -87,7 +87,7 @@
 ! therefore we can safely extend below to make sure we leave no small gap
 ! between our mesh and the Gocad voxet (because we interpolate the basement
 ! slightly differently from what has been done in Gocad at Harvard)
-        if(zsedim_found <= Z_THRESHOLD_HONOR_BASEMENT) then
+        if (zsedim_found <= Z_THRESHOLD_HONOR_BASEMENT) then
           do iz = max(1,iz_found-NCELLS_EXTEND),iz_found-1
             vp_block_gocad(ix,iy,iz) = vp_block_gocad(ix,iy,iz_found)
           enddo
@@ -104,7 +104,7 @@
 ! also make sure there are no gaps between topography and sediments
 ! because we also define topography slightly differently from Gocad
 
-  if(EXTEND_VOXET_ABOVE_TOPO) then
+  if (EXTEND_VOXET_ABOVE_TOPO) then
 
   print *,'reading topography from file to fill small gaps'
   call read_basin_topo_bathy_file(itopo_bathy_basin)
@@ -121,11 +121,11 @@
 ! a negative P velocity has been used to flag fictitious points
       iz_found = -1
       do iz = 0,NZ_GOCAD_MR-1
-        if(vp_block_gocad(ix,iy,iz) > 1.) iz_found = iz
+        if (vp_block_gocad(ix,iy,iz) > 1.) iz_found = iz
       enddo
 
 ! if some sediments are detected on this vertical line in Voxet
-      if(iz_found > -1) then
+      if (iz_found > -1) then
 
 ! define Gocad grid, shift of Voxet is taken into account
         xcoord = ORIG_X_GOCAD_MR + ix*SPACING_X_GOCAD_MR
@@ -140,22 +140,22 @@
   iclosestlat = nint((lat - ORIG_LAT) / DEGREES_PER_CELL) + 1
 
 ! avoid edge effects and extend with identical topo if point outside model
-  if(iclosestlong < 1) iclosestlong = 1
-  if(iclosestlong > NX_TOPO) iclosestlong = NX_TOPO
+  if (iclosestlong < 1) iclosestlong = 1
+  if (iclosestlong > NX_TOPO) iclosestlong = NX_TOPO
 
-  if(iclosestlat < 1) iclosestlat = 1
-  if(iclosestlat > NY_TOPO) iclosestlat = NY_TOPO
+  if (iclosestlat < 1) iclosestlat = 1
+  if (iclosestlat > NY_TOPO) iclosestlat = NY_TOPO
 
 ! compute elevation at current point
     elevation = dble(itopo_bathy_basin(iclosestlong,iclosestlat))
 
 ! if distance is negative, it means our topo is below Gocad topo
 ! compute maximum to estimate maximum error between the two surfaces
-    if(elevation - zsedim_found < 0.d0) max_error = dmax1(max_error,dabs(elevation - zsedim_found))
+    if (elevation - zsedim_found < 0.d0) max_error = dmax1(max_error,dabs(elevation - zsedim_found))
 
 ! if point is not too far from topo, assume sediments should reach the surface,
 ! and fill the gap and extend above topo to be safe
-    if(elevation - zsedim_found < DISTMAX_ASSUME_SEDIMENTS) then
+    if (elevation - zsedim_found < DISTMAX_ASSUME_SEDIMENTS) then
       do iz = iz_found+1,min(iz_found+NCELLS_EXTEND,NZ_GOCAD_MR-1)
         vp_block_gocad(ix,iy,iz) = vp_block_gocad(ix,iy,iz_found)
       enddo
@@ -186,7 +186,7 @@
 
 ! exclude points that are undefined
 ! a negative P velocity has been used to flag these points
-        if(vp_block_gocad(ix,iy,iz) < 1.) then
+        if (vp_block_gocad(ix,iy,iz) < 1.) then
           icount_undefined = icount_undefined + 1
           iflag_point(ix,iy,iz) = .false.
 
@@ -217,7 +217,7 @@
   do ix = 0,NX_GOCAD_MR-1
     do iy = 0,NY_GOCAD_MR-1
       do iz = 0,NZ_GOCAD_MR-1
-        if(iflag_point(ix,iy,iz)) write(27,*) ix,' ',iy,' ',iz,' ',nint(vp_block_gocad(ix,iy,iz))
+        if (iflag_point(ix,iy,iz)) write(27,*) ix,' ',iy,' ',iz,' ',nint(vp_block_gocad(ix,iy,iz))
       enddo
     enddo
   enddo
@@ -231,7 +231,7 @@
       do iz = 0,NZ_GOCAD_MR-2
 
 ! suppress elements that are undefined
-   if(iflag_point(ix,iy,iz) .and. &
+   if (iflag_point(ix,iy,iz) .and. &
       iflag_point(ix+1,iy,iz) .and. &
       iflag_point(ix+1,iy+1,iz) .and. &
       iflag_point(ix,iy+1,iz) .and. &
@@ -274,7 +274,7 @@
     do iy = 0,NY_GOCAD_MR-1
       do iz = 0,NZ_GOCAD_MR-1
 
-    if(iflag_point(ix,iy,iz)) then
+    if (iflag_point(ix,iy,iz)) then
         ipoin = ipoin + 1
 
 ! define Gocad grid, shift of Voxet is taken into account
@@ -296,7 +296,7 @@
       do iz = 0,NZ_GOCAD_MR-2
 
 ! suppress elements that are undefined
-   if(iflag_point(ix,iy,iz) .and. &
+   if (iflag_point(ix,iy,iz) .and. &
       iflag_point(ix+1,iy,iz) .and. &
       iflag_point(ix+1,iy+1,iz) .and. &
       iflag_point(ix,iy+1,iz) .and. &
@@ -309,7 +309,7 @@
 
 ! use Z > 0 and Z < 0 to define material flag
         zcoord = ORIG_Z_GOCAD_MR + iz*SPACING_Z_GOCAD_MR
-        if(zcoord <= 0.) then
+        if (zcoord <= 0.) then
           imaterial = 1
         else
           imaterial = 2
@@ -337,7 +337,7 @@
   do ix = 0,NX_GOCAD_MR-1
     do iy = 0,NY_GOCAD_MR-1
       do iz = 0,NZ_GOCAD_MR-1
-      if(iflag_point(ix,iy,iz)) then
+      if (iflag_point(ix,iy,iz)) then
         ipoin = ipoin + 1
 
 ! use Vp to color the model
@@ -345,7 +345,7 @@
 
 ! or use Z > 0 and Z < 0 to color the model
 !       zcoord = ORIG_Z_GOCAD_MR + iz*SPACING_Z_GOCAD_MR
-!       if(zcoord <= 0.) then
+!       if (zcoord <= 0.) then
 !         write(11,*) ipoin,' 0.'
 !       else
 !         write(11,*) ipoin,' 255.'

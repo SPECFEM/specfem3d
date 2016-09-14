@@ -33,12 +33,12 @@
                         coupling_ac_el_ispec,coupling_ac_el_ijk, &
                         coupling_ac_el_normal, &
                         coupling_ac_el_jacobian2Dw, &
-                        ispec_is_inner,phase_is_inner,&
+                        iphase, &
                         PML_CONDITIONS,SIMULATION_TYPE,backward_simulation)
 
 ! returns the updated pressure array: potential_dot_dot_acoustic
 
-  use constants,only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,NGLLSQUARE
+  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,NGLLSQUARE
   use pml_par, only: NSPEC_CPML,spec_to_CPML,is_CPML,rmemory_coupling_ac_el_displ
 
   implicit none
@@ -62,8 +62,7 @@
   integer,intent(in) :: coupling_ac_el_ispec(num_coupling_ac_el_faces)
 
 ! communication overlap
-  logical, dimension(NSPEC_AB),intent(in) :: ispec_is_inner
-  logical,intent(in) :: phase_is_inner
+  integer,intent(in) :: iphase
 
 ! CPML
   logical,intent(in) :: PML_CONDITIONS
@@ -73,6 +72,9 @@
   real(kind=CUSTOM_REAL) :: nx,ny,nz,jacobianw
   integer :: iface,igll,ispec,iglob,ispec_CPML,i,j,k
 
+  ! only add these contributions in first pass
+  if (iphase /= 1) return
+
 ! loops on all coupling faces
   do iface = 1,num_coupling_ac_el_faces
 
@@ -81,76 +83,72 @@
     !           no material properties are needed for this coupling term)
     ispec = coupling_ac_el_ispec(iface)
 
-    if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
+    ! loops over common GLL points
+    do igll = 1, NGLLSQUARE
+      i = coupling_ac_el_ijk(1,igll,iface)
+      j = coupling_ac_el_ijk(2,igll,iface)
+      k = coupling_ac_el_ijk(3,igll,iface)
 
-      ! loops over common GLL points
-      do igll = 1, NGLLSQUARE
-        i = coupling_ac_el_ijk(1,igll,iface)
-        j = coupling_ac_el_ijk(2,igll,iface)
-        k = coupling_ac_el_ijk(3,igll,iface)
+      ! gets global index of this common GLL point
+      ! (note: should be the same as for corresponding i',j',k',ispec_elastic or ispec_acoustic)
+      iglob = ibool(i,j,k,ispec)
 
-        ! gets global index of this common GLL point
-        ! (note: should be the same as for corresponding i',j',k',ispec_elastic or ispec_acoustic)
-        iglob = ibool(i,j,k,ispec)
+      ! elastic displacement on global point
+      displ_x = displ(1,iglob)
+      displ_y = displ(2,iglob)
+      displ_z = displ(3,iglob)
 
-        ! elastic displacement on global point
-        displ_x = displ(1,iglob)
-        displ_y = displ(2,iglob)
-        displ_z = displ(3,iglob)
+      ! adjoint wavefield case
+      if (SIMULATION_TYPE /= 1 .and. (.not. backward_simulation)) then
+        ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
+        ! adjoint definition: \partial_t^2 \bfs^\dagger = - \frac{1}{\rho} \bfnabla\phi^\dagger
+        displ_x = - displ_x
+        displ_y = - displ_y
+        displ_z = - displ_z
+      endif
 
-        ! adjoint wavefield case
-        if (SIMULATION_TYPE /= 1 .and. (.not. backward_simulation)) then
-          ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
-          ! adjoint definition: \partial_t^2 \bfs^\dagger = - \frac{1}{\rho} \bfnabla\phi^\dagger
-          displ_x = - displ_x
-          displ_y = - displ_y
-          displ_z = - displ_z
-        endif
+      ! CPML overwrite cases
+      if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
+        if (is_CPML(ispec)) then
+          if (SIMULATION_TYPE == 1) then
+            ispec_CPML = spec_to_CPML(ispec)
+            call pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,i,j,k, &
+                                                  displ_x,displ_y,displ_z,displ, &
+                                                  num_coupling_ac_el_faces,rmemory_coupling_ac_el_displ)
+          endif
 
-        ! CPML overwrite cases
-        if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
-          if (is_CPML(ispec)) then
-            if (SIMULATION_TYPE == 1) then
-              ispec_CPML = spec_to_CPML(ispec)
-              call pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,i,j,k,&
-                                                    displ_x,displ_y,displ_z,displ,&
-                                                    num_coupling_ac_el_faces,rmemory_coupling_ac_el_displ)
-            endif
-
-            if (SIMULATION_TYPE == 3) then
-              ! safety stop
-              stop 'TODO: Coupling acoustic-elastic for CPML in compute_coupling_acoustic_el() not implemented yet...'
-            endif
+          if (SIMULATION_TYPE == 3) then
+            ! safety stop
+            stop 'TODO: Coupling acoustic-elastic for CPML in compute_coupling_acoustic_el() not implemented yet...'
           endif
         endif
+      endif
 
-        ! gets associated normal on GLL point
-        ! (note convention: pointing outwards of acoustic element)
-        nx = coupling_ac_el_normal(1,igll,iface)
-        ny = coupling_ac_el_normal(2,igll,iface)
-        nz = coupling_ac_el_normal(3,igll,iface)
+      ! gets associated normal on GLL point
+      ! (note convention: pointing outwards of acoustic element)
+      nx = coupling_ac_el_normal(1,igll,iface)
+      ny = coupling_ac_el_normal(2,igll,iface)
+      nz = coupling_ac_el_normal(3,igll,iface)
 
-        ! calculates displacement component along normal
-        ! (normal points outwards of acoustic element)
-        displ_n = displ_x*nx + displ_y*ny + displ_z*nz
+      ! calculates displacement component along normal
+      ! (normal points outwards of acoustic element)
+      displ_n = displ_x*nx + displ_y*ny + displ_z*nz
 
-        ! gets associated, weighted jacobian
-        jacobianw = coupling_ac_el_jacobian2Dw(igll,iface)
+      ! gets associated, weighted jacobian
+      jacobianw = coupling_ac_el_jacobian2Dw(igll,iface)
 
-        ! continuity of pressure and normal displacement on global point
-        !
-        ! note: Newmark time scheme together with definition of scalar potential:
-        !          pressure = - chi_dot_dot
-        !          requires that this coupling term uses the updated displacement at time step [t+delta_t],
-        !          which is done at the very beginning of the time loop
-        !          (see e.g. Chaljub & Vilotte, Nissen-Meyer thesis...)
-        !          it also means you have to calculate and update this here first before
-        !          calculating the coupling on the elastic side for the acceleration...
-        potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) + jacobianw*displ_n
+      ! continuity of pressure and normal displacement on global point
+      !
+      ! note: Newmark time scheme together with definition of scalar potential:
+      !          pressure = - chi_dot_dot
+      !          requires that this coupling term uses the updated displacement at time step [t+delta_t],
+      !          which is done at the very beginning of the time loop
+      !          (see e.g. Chaljub & Vilotte, Nissen-Meyer thesis...)
+      !          it also means you have to calculate and update this here first before
+      !          calculating the coupling on the elastic side for the acceleration...
+      potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) + jacobianw*displ_n
 
-      enddo ! igll
-
-    endif
+    enddo ! igll
 
   enddo ! iface
 

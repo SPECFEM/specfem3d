@@ -38,6 +38,10 @@
 
   implicit none
 
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_iterate_time_5.F90"
+#endif
+
   ! for EXACT_UNDOING_TO_DISK
   integer :: ispec,iglob,i,j,k,counter,record_length
   integer, dimension(:), allocatable :: integer_mask_ibool_exact_undo
@@ -103,6 +107,10 @@
 
   ! get MPI starting time
   time_start = wtime()
+
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_iterate_time_6.F90"
+#endif
 
   ! *********************************************************
   ! ************* MAIN LOOP OVER THE TIME STEPS *************
@@ -218,7 +226,7 @@
       else
         ! forward simulations
         do istage = 1, NSTAGE_TIME_SCHEME
-          if(USE_LDDRK) call update_displ_lddrk()
+          if (USE_LDDRK) call update_displ_lddrk()
           ! 1. acoustic domain
           if (ACOUSTIC_SIMULATION) call compute_forces_acoustic()
           ! 2. elastic domain
@@ -301,6 +309,14 @@
 !-------------------------------------------------------------------------------------------------
 !
 
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_iterate_time_4.F90"
+#endif
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
   subroutine it_transfer_from_GPU()
 
 ! transfers fields on GPU back onto CPU
@@ -359,7 +375,7 @@
       call transfer_kernels_noise_to_host(Mesh_pointer,sigma_kl,NSPEC_AB)
     endif
 
-    ! approximative hessian for preconditioning kernels
+    ! approximative Hessian for preconditioning kernels
     if (APPROXIMATE_HESS_KL) then
       if (ELASTIC_SIMULATION) call transfer_kernels_hess_el_tohost(Mesh_pointer,hess_kl,NSPEC_AB)
       if (ACOUSTIC_SIMULATION) call transfer_kernels_hess_ac_tohost(Mesh_pointer,hess_ac_kl,NSPEC_AB)
@@ -411,7 +427,7 @@
     call read_forward_arrays_adios()
   else
     ! reads in wavefields
-    open(unit=IIN,file=trim(prname)//'save_forward_arrays.bin',status='old',&
+    open(unit=IIN,file=trim(prname)//'save_forward_arrays.bin',status='old', &
           action='read',form='unformatted',iostat=ier)
     if (ier /= 0) then
       print *,'error: opening save_forward_arrays'
@@ -464,8 +480,8 @@
     if (ACOUSTIC_SIMULATION) then
     ! transfers fields onto GPU
       call transfer_b_fields_ac_to_device(NGLOB_AB,b_potential_acoustic, &
-                                          b_potential_dot_acoustic,      &
-                                          b_potential_dot_dot_acoustic,  &
+                                          b_potential_dot_acoustic, &
+                                          b_potential_dot_dot_acoustic, &
                                           Mesh_pointer)
     endif
     ! elastic wavefields
@@ -474,11 +490,11 @@
       call transfer_b_fields_to_device(NDIM*NGLOB_AB,b_displ,b_veloc,b_accel,Mesh_pointer)
       ! memory variables if attenuation
       if (ATTENUATION) then
-        call transfer_b_fields_att_to_device(Mesh_pointer,                    &
-                           b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz,                &
-                           size(b_R_xx),                                      &
-                           b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,   &
-                           b_epsilondev_xz,b_epsilondev_yz,                   &
+        call transfer_b_fields_att_to_device(Mesh_pointer, &
+                           b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
+                           size(b_R_xx), &
+                           b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
+                           b_epsilondev_xz,b_epsilondev_yz, &
                            size(b_epsilondev_xx))
       endif
     endif

@@ -61,7 +61,7 @@
 ! not necessarily a GLL point
 
 ! check that the parameter file is correct
-  if(NGNOD /= 27) stop 'elements should have 27 control nodes'
+  if (NGNOD /= 27) stop 'elements should have 27 control nodes'
 
   l1xi=HALF*xi*(xi-ONE)
   l2xi=ONE-xi**2
@@ -250,7 +250,7 @@
   jacobian = xxi*(yeta*zgamma-ygamma*zeta) - xeta*(yxi*zgamma-ygamma*zxi) + &
              xgamma*(yxi*zeta-yeta*zxi)
 
-  if(jacobian <= ZERO) stop '3D Jacobian undefined'
+  if (jacobian <= ZERO) stop '3D Jacobian undefined'
 
 ! invert the relation (Fletcher p. 50 vol. 2)
   xix=(yeta*zgamma-ygamma*zeta)/jacobian

@@ -25,12 +25,12 @@
 !
 !=====================================================================
 
-
 module model_ipati_adios_mod
 
-  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,IMAIN,FOUR_THIRDS
+  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,IMAIN,FOUR_THIRDS
 
 contains
+
 !-----------------------------------------------------------------------------
 !
 ! IPATI
@@ -38,6 +38,7 @@ contains
 ! based on given rho and vp structure for GLL files
 !
 !------------------------------------------------------------------------------
+
 subroutine model_ipati_adios(myrank,nspec,LOCAL_PATH)
 
   use adios_read_mod
@@ -60,7 +61,7 @@ subroutine model_ipati_adios(myrank,nspec,LOCAL_PATH)
   ! ---------------------------------------------------------------------------
 
   ! user output
-  if (myrank==0) then
+  if (myrank == 0) then
     write(IMAIN,*) '     using IPATI model (ADIOS) from: ',trim(LOCAL_PATH)
     write(IMAIN,*) '     scaling factor: ',SCALING_FACTOR
   endif
@@ -118,7 +119,7 @@ subroutine model_ipati_water_adios(myrank,nspec,LOCAL_PATH)
   ! -----------------------------------------------------------------------------
 
   ! user output
-  if (myrank==0) then
+  if (myrank == 0) then
     write(IMAIN,*) '     using IPATI_WATER model (ADIOS) from: ',trim(LOCAL_PATH)
     write(IMAIN,*) '     scaling factor: ',SCALING_FACTOR
   endif
@@ -183,7 +184,7 @@ subroutine read_model_vp_rho_adios (myrank, nspec, LOCAL_PATH, &
   integer :: ier
   integer :: comm
 
-  ! gets mpi communicator
+  ! gets MPI communicator
   call world_get_comm(comm)
 
   !-------------------------------------.

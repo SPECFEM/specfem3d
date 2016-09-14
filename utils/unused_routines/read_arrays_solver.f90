@@ -166,7 +166,7 @@
   close(IIN)
 
 ! read additional ocean load mass matrix
-  if(OCEANS) then
+  if (OCEANS) then
     open(unit=IIN,file=prname(1:len_trim(prname))//'rmass_ocean_load.bin',status='old',action='read',form='unformatted')
     read(IIN) rmass_ocean_load
     close(IIN)
@@ -208,7 +208,7 @@
   read(IIN) mustore
   close(IIN)
 
-  if(ANISOTROPY) then
+  if (ANISOTROPY) then
 
 ! c11
      open(unit=IIN,file=prname(1:len_trim(prname))//'c11.bin',status='old',action='read',form='unformatted')

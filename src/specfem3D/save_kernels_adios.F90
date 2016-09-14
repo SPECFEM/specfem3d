@@ -286,7 +286,7 @@ end subroutine save_kernels_acoustic_adios
 !==============================================================================
 !> Save elastic related kernels
 subroutine save_kernels_elastic_adios(handle, alphav_kl, alphah_kl, &
-                                      betav_kl, betah_kl, eta_kl,   &
+                                      betav_kl, betah_kl, eta_kl, &
                                       rhop_kl, alpha_kl, beta_kl)
 
   use specfem_par
@@ -428,8 +428,8 @@ subroutine save_kernels_poroelastic_adios(handle)
 end subroutine save_kernels_poroelastic_adios
 
 !==============================================================================
-!> Save hessians
-subroutine save_kernels_hessian_adios(handle)
+!> Save Hessians
+subroutine save_kernels_Hessian_adios(handle)
 
   use specfem_par
   use specfem_par_elastic
@@ -455,5 +455,5 @@ subroutine save_kernels_hessian_adios(handle)
                                      local_dim, STRINGIFY_VAR(hess_kl))
   endif
 
-end subroutine save_kernels_hessian_adios
+end subroutine save_kernels_Hessian_adios
 

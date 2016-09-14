@@ -84,13 +84,36 @@ layered halfspace (bottom-left) and tomographic model (bottom-right).}
 In each example subdirectory you will find a \texttt{README} file,
 which explains in a step-by-step tutorial the workflow for the example.
 Please feel free to contribute your own example to this package by
-contacting the CIG Computational Seismology Mailing List \urlwithparentheses{cig-seismo@geodynamics.org}.
+contacting the CIG Computational Seismology Mailing List \urlwithparentheses{cig-seismo@geodynamics.org}.\\
 
-In some cases, to re-create the meshes for the examples given, just type "claro ./create\_mesh.py" or similar
-from the command line ("claro" is the command to run CUBIT from the command line).
+In some cases, to re-create the meshes for the examples given, just type
+\begin{verbatim}
+claro ./create_mesh.py
+\end{verbatim}
+or similar from the command line (\texttt{claro} is the command to run CUBIT from the command line).
 
-IMPORTANT note: in order to correctly set up GEOCUBIT and run the examples, please read the file called "EXAMPLES/README";
+{\it IMPORTANT:} In order to correctly set up GEOCUBIT and run the examples, please read the file called \texttt{EXAMPLES/README};
 in particular, please make sure you correctly set up the Python paths as indicated in that file.
+
+Concerning the script \texttt{create\_mesh.py}, you may find the option \texttt{use\_explicit} which chooses how to assign the material properties for the volume (or domain):
+\begin{itemize}
+\item[(1)] one way is to explicitly assign block attributes to the block of the corresponding volume, by commands like:
+\begin{verbatim}
+cubit.cmd('block '+str(id_block)+' attribute index 2 2800') # vp
+\end{verbatim}
+This is done when using \texttt{use\_explicit = 1} in the script. The final command:
+\begin{verbatim}
+cubit2specfem3d.export2SPECFEM3D('MESH/')
+\end{verbatim}
+will then create the corresponding \texttt{MESH/nummaterial\_velocity\_file} for all such defined block volumes/domains.
+
+\item[(2)] the other option with \texttt{use\_explicit = 0} is to let GEOCUBIT deal with a dummy entry and then overwrite the \texttt{nummaterial\_velocity\_file} at the end with a corresponding command section:
+\begin{verbatim}
+f = open(nummaterial_velocity_file,'w')
+\end{verbatim}
+This second way is chosen by default because GEOCUBIT can handle partitions for several processes and glues everything together automatically. Thus, it adds some more sophistication when the model gets more complicated than just this single volume example.
+\end{itemize}
+You will find out by experimenting what is easier for your case.
 
 
 \subsection{Exporting the Mesh with \texttt{run\_cubit2specfem3d.py} }\label{subsec:Exporting-the-Mesh}
@@ -105,8 +128,8 @@ convention:
 \begin{description}
 \item [{material\_name}] Each material should have a specific block defined
 by a unique name. The name convention of the material is to start
-with either 'elastic' or 'acoustic'. It must be then followed by a
-unique identifier, e.g. 'elastic 1', 'elastic 2', etc. The additional
+with either \textbf{'elastic'} or \textbf{'acoustic'}. It must be then followed by a
+unique identifier, e.g. \textbf{'elastic 1'}, \textbf{'elastic 2'}, etc. The additional
 attributes to the block define the material description.
 
 
@@ -127,6 +150,8 @@ Please note that your Vp- and Vs-speeds are given for a reference frequency. To 
 this reference frequency, you change the value of \texttt{ATTENUATION\_f0\_REFERENCE}
 in the main constants file \texttt{constants.h} found in subdirectory
 \texttt{src/shared/}.
+The code uses a constant $Q$ quality factor, write(IMAIN,*) "but approximated based on a series of Zener standard linear solids (SLS).
+The approximation is thus performed in a given frequency band determined based on that \texttt{ATTENUATION\_f0\_REFERENCE} reference frequency.
 \item [{anisotropic\_flag}] Flag describing the anisotropic model to use
 in case an anisotropic simulation should be conducted. See the file
 \texttt{model\_aniso.f90} in subdirectory \texttt{src/generate\_databases/}
@@ -209,18 +234,19 @@ true for Ymin and Ymax, and also Zmin and Zmax.
 
 
 When you have an existing CUBIT (or similar) mesh stored in SPECFEM3D
-format, i.e., if you have existing \textquotedbl{}nodes\_coords\_file\textquotedbl{}
-and \textquotedbl{}mesh\_file\textquotedbl{} files but do not know
+format, i.e., if you have existing \texttt{nodes\_coords\_file}
+and \texttt{mesh\_file} files but do not know
 how to assign CPML flags to them, we have created a small serial Fortran
 program that will do that automatically for you, i.e., which will
-create the \textquotedbl{}absorbing\_cpml\_file\textquotedbl{} for
-you. That program is utils/CPML/convert\_external\_layers\_of\_a\_given\_mesh\_to\_CPML\_layers.f90,
+create the \texttt{absorbing\_cpml\_file} for
+you. That program is: \\
+\texttt{utils/CPML/convert\_external\_layers\_of\_a\_given\_mesh\_to\_CPML\_layers.f90},\\
 and a small Makefile is provided in that directory (utils/CPML).
 
 
 IMPORTANT: it is your responsibility to make sure that in the input
 CUBIT (or similar) mesh that this code will read in SPECFEM3D format
-from files \textquotedbl{}nodes\_coords\_file\textquotedbl{} and \textquotedbl{}mesh\_file\textquotedbl{}
+from files \texttt{nodes\_coords\_file} and \texttt{mesh\_file}
 you have created layers of elements that constitute a layer of constant
 thickness aligned with the coordinate grid axes (X, Y and/or Z), so
 that this code can assign CPML flags to them. This code does NOT check

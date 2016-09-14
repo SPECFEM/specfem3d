@@ -25,7 +25,7 @@
 !
 !=====================================================================
 
-  subroutine get_element_face_id(ispec,xcoord,ycoord,zcoord,&
+  subroutine get_element_face_id(ispec,xcoord,ycoord,zcoord, &
                               ibool,nspec,nglob, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface_id )
@@ -136,7 +136,7 @@
     print *,'error element face midpoint distance:',midpoint_distances(iloc(1)), &
           (xcoord(1)-xcoord(2))**2+(ycoord(1)-ycoord(2))**2+(zcoord(1)-zcoord(2))**2
     ! corner locations
-    do icorner=1,NGNOD2D_FOUR_CORNERS
+    do icorner = 1,NGNOD2D_FOUR_CORNERS
       i = iface_all_corner_ijk(1,icorner,iloc(1))
       j = iface_all_corner_ijk(2,icorner,iloc(1))
       k = iface_all_corner_ijk(3,icorner,iloc(1))
@@ -150,7 +150,6 @@
     stop 'error element face midpoint'
   else
     iface_id = iloc(1)
-
   endif
 
   end subroutine get_element_face_id
@@ -169,7 +168,7 @@
 
   integer :: iface !,nspec,nglob
 
-! gll point indices i,j,k for face, format corresponds to ijk_face(1,*) = i, ijk_face(2,*) = j, ijk_face(3,*) = k
+! GLL point indices i,j,k for face, format corresponds to ijk_face(1,*) = i, ijk_face(2,*) = j, ijk_face(3,*) = k
   integer :: NGLLA,NGLLB
   integer,dimension(3,NGLLA,NGLLB) :: ijk_face
 
@@ -263,7 +262,7 @@
 
   end select
 
-  ! checks number of gll points set on face
+  ! checks number of GLL points set on face
   if (ngll /= NGLLA*NGLLB) then
     print *,'error element face ngll:',ngll,NGLLA,NGLLB
     stop 'error element face ngll'

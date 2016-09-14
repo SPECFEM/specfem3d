@@ -57,15 +57,13 @@
 
 program smooth_sem
 
-  use postprocess_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,NGLLSQUARE, &
-    MAX_STRING_LEN,IIN,IOUT, &
-    GAUSSALPHA,GAUSSBETA,PI,TWO_PI, &
-    MAX_KERNEL_NAMES
+  use postprocess_par, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,NGLLSQUARE, &
+    MAX_STRING_LEN,IIN,IOUT,GAUSSALPHA,GAUSSBETA,PI,TWO_PI,MAX_KERNEL_NAMES
 
   use specfem_par
-  use specfem_par_elastic,only: ELASTIC_SIMULATION,ispec_is_elastic,rho_vp,rho_vs,min_resolved_period
-  use specfem_par_acoustic,only: ACOUSTIC_SIMULATION,ispec_is_acoustic
-  use specfem_par_poroelastic,only: POROELASTIC_SIMULATION,ispec_is_poroelastic,rho_vpI,rho_vpII,rho_vsI, &
+  use specfem_par_elastic, only: ELASTIC_SIMULATION,ispec_is_elastic,rho_vp,rho_vs,min_resolved_period
+  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION,ispec_is_acoustic
+  use specfem_par_poroelastic, only: POROELASTIC_SIMULATION,ispec_is_poroelastic,rho_vpI,rho_vpII,rho_vsI, &
     phistore,tortstore,rhoarraystore
   use specfem_par_movie
 
@@ -78,7 +76,7 @@ program smooth_sem
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: dummy ! for jacobian read
   integer :: NSPEC_N, NGLOB_N
 
-  integer :: i,iglob,ier,ispec2,ispec,inum
+  integer :: i,j,k,iglob,ier,ispec2,ispec,inum
   integer :: icounter,num_slices
   integer :: iproc,ncuda_devices
   integer(kind=8) :: Container
@@ -141,12 +139,6 @@ program smooth_sem
 
   logical :: BROADCAST_AFTER_READ, USE_GPU, USE_QUADRATURE_RULE
 
-#ifdef FORCE_VECTORIZATION
-  integer :: ijk
-#else
-  integer :: j,k
-#endif
-
   call init_mpi()
   call world_size(sizeprocs)
   call world_rank(myrank)
@@ -192,14 +184,14 @@ program smooth_sem
       !  on multiple arrays.
       if (myrank == 0) then
         print *,'Smoothing only first name in list: ',trim(kernel_name)
-        print *,''
+        print *
       endif
     endif
   endif
   call synchronize_all()
 
   ! check smoothing radii
-  sigma_h2 = 2.0 * sigma_h ** 2  ! factor two for gaussian distribution with standard variance sigma
+  sigma_h2 = 2.0 * sigma_h ** 2  ! factor two for Gaussian distribution with standard variance sigma
   sigma_v2 = 2.0 * sigma_v ** 2
 
   if (sigma_h2 < 1.e-18) stop 'Error sigma_h2 zero, must non-zero'
@@ -221,7 +213,7 @@ program smooth_sem
 
   ! theoretic normal value
   ! (see integral over -inf to +inf of exp[- x*x/(2*sigma) ] = sigma * sqrt(2*pi) )
-  ! note: smoothing is using a gaussian (ellipsoid for sigma_h /= sigma_v),
+  ! note: smoothing is using a Gaussian (ellipsoid for sigma_h /= sigma_v),
   norm_h = real(2.0*PI*sigma_h**2,kind=CUSTOM_REAL)
   norm_v = real(sqrt(2.0*PI) * sigma_v,kind=CUSTOM_REAL)
   norm   = norm_h * norm_v
@@ -230,7 +222,7 @@ program smooth_sem
   if (myrank == 0) then
     print *,'command line arguments:'
     print *,'  smoothing sigma_h , sigma_v                : ',sigma_h,sigma_v
-    ! scalelength: approximately S ~ sigma * sqrt(8.0) for a gaussian smoothing
+    ! scale length: approximately S ~ sigma * sqrt(8.0) for a Gaussian smoothing
     print *,'  smoothing scalelengths horizontal, vertical: ',sigma_h*sqrt(8.0),sigma_v*sqrt(8.0)
     print *,'  input dir : ',trim(input_dir)
     print *,'  output dir: ',trim(output_dir)
@@ -249,7 +241,7 @@ program smooth_sem
     if (myrank == 0) then
       print *,'Error number of processors supposed to run on: ',NPROC
       print *,'Error number of MPI processors actually run on: ',sizeprocs
-      print *,''
+      print *
       print *,'Please rerun with: mpirun -np ',NPROC,' bin/xsmooth_sem .. '
     endif
     call exit_MPI(myrank,'Error wrong number of MPI processes')
@@ -307,15 +299,15 @@ program smooth_sem
     print *,'  Xmin and Xmax of the model = ',x_min_glob,x_max_glob
     print *,'  Ymin and Ymax of the model = ',y_min_glob,y_max_glob
     print *,'  Zmin and Zmax of the model = ',z_min_glob,z_max_glob
-    print *,''
+    print *
     print *,'  Max GLL point distance = ',distance_max_glob
     print *,'  Min GLL point distance = ',distance_min_glob
     print *,'  Max/min ratio = ',distance_max_glob/distance_min_glob
-    print *,''
+    print *
     print *,'  Max element size = ',elemsize_max_glob
     print *,'  Min element size = ',elemsize_min_glob
     print *,'  Max/min ratio = ',elemsize_max_glob/elemsize_min_glob
-    print *,''
+    print *
   endif
 
   if (ELASTIC_SIMULATION) then
@@ -394,17 +386,17 @@ program smooth_sem
   if (myrank == 0) then
     print *,'smoothing:'
     print *,'  single slice dimensions in x/y/z-direction: ',dim_x,' / ',dim_y,' / ',dim_z
-    print *,'  gaussian search radius horizontal =',sigma_h3,' vertical =',sigma_v3
-    print *,''
+    print *,'  Gaussian search radius horizontal =',sigma_h3,' vertical =',sigma_v3
+    print *
   endif
 
-  ! checks if gaussian support exceeds slice dimensions
+  ! checks if Gaussian support exceeds slice dimensions
   if (sigma_h3 >= dim_x .or. sigma_h3 >= dim_y .or. sigma_v3 >= dim_z) then
-    ! gaussian support is likely larger than the direct neighbour and has support in a much wider area
+    ! Gaussian support is likely larger than the direct neighbour and has support in a much wider area
     ! user output
     if (myrank == 0) then
-      print *,'  using large gaussian with respect to slice dimension for smoothing'
-      print *,''
+      print *,'  using large Gaussian with respect to slice dimension for smoothing'
+      print *
     endif
   endif
 
@@ -438,8 +430,8 @@ program smooth_sem
       endif
     enddo
 
-    if( .not. do_include_slice) then
-      ! note: gaussian support might be larger than closest neighbour slices
+    if (.not. do_include_slice) then
+      ! note: Gaussian support might be larger than closest neighbour slices
       !       we add all slices close enough to still have an influence
 
       ! checks distances to this slice
@@ -509,13 +501,6 @@ program smooth_sem
         do_include_slice = .true.
       endif
 
-      ! debug output
-      !if (do_include_slice) then
-      !  print *,'reference rank ',myrank,' with slice to include: ',do_include_slice,iproc
-      !  print *,'reference slice min max x/y/z = ',x_min_ref,x_max_ref,'/',y_min_ref,y_max_ref,'/',z_min_ref,z_max_ref
-      !  print *,'  current slice min max x/y/z = ',x_min,x_max,'/',y_min,y_max,'/',z_min,z_max
-      !  print *,''
-      !endif
     endif
 
     ! adds to smoothing list neighbors
@@ -540,7 +525,7 @@ program smooth_sem
     print *,'slices:',num_slices
     print *,'  rank ',myrank,'  has smoothing slices:'
     print *,node_list(1:num_slices)
-    print *,''
+    print *
   endif
 
   !do i=0,sizeprocs-1
@@ -567,7 +552,7 @@ program smooth_sem
   endif
 
   ! loops over slices
-  ! each process reads in his own neighbor slices and gaussian filters the values
+  ! each process reads in his own neighbor slices and Gaussian filters the values
   allocate(tk(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
            bk(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) stop 'Error allocating array tk and bk'
@@ -730,13 +715,13 @@ program smooth_sem
           DO_LOOP_IJK
 
             ! reference location
-            ! current point (i,j,k,ispec) location, cartesian coordinates
+            ! current point (i,j,k,ispec) location, Cartesian coordinates
             x0 = xl(INDEX_IJK,ispec)
             y0 = yl(INDEX_IJK,ispec)
             z0 = zl(INDEX_IJK,ispec)
 
-            ! calculate weights based on gaussian smoothing
-            call smoothing_weights_vec(x0,y0,z0,sigma_h2_inv,sigma_v2_inv,exp_val,&
+            ! calculate weights based on Gaussian smoothing
+            call smoothing_weights_vec(x0,y0,z0,sigma_h2_inv,sigma_v2_inv,exp_val, &
                                        xx(:,:,:,ispec2),yy(:,:,:,ispec2),zz(:,:,:,ispec2))
 
             ! adds GLL integration weights
@@ -747,7 +732,7 @@ program smooth_sem
             ! adds contribution of element ispec2 to smoothed kernel values
             tk(INDEX_IJK,ispec) = tk(INDEX_IJK,ispec) + sum(exp_val(:,:,:) * dat(:,:,:,ispec2))
 
-            ! normalization, integrated values of gaussian smoothing function
+            ! normalization, integrated values of Gaussian smoothing function
             bk(INDEX_IJK,ispec) = bk(INDEX_IJK,ispec) + sum(exp_val(:,:,:))
 
           ENDDO_LOOP_IJK
@@ -771,7 +756,7 @@ program smooth_sem
 
   ! normalizes/scaling factor
   if (myrank == 0) then
-    print *,''
+    print *
     print *,'Scaling values: min/max = ',minval(bk),maxval(bk)
   endif
 
@@ -792,14 +777,10 @@ program smooth_sem
         !  print *, 'Problem norm here --- ', ispec, i, j, k, bk(i,j,k,ispec), norm
         !endif
         if (abs(bk(INDEX_IJK,ispec)) < 1.e-18) then
-#ifdef FORCE_VECTORIZATION
-          print *, 'Problem norm here --- ', ispec, ijk, bk(INDEX_IJK,ispec), norm
-#else
           print *, 'Problem norm here --- ', ispec, i, j, k, bk(i,j,k,ispec), norm
-#endif
         endif
 
-        ! normalizes smoothed kernel values by integral value of gaussian weighting
+        ! normalizes smoothed kernel values by integral value of Gaussian weighting
         dat_smooth(INDEX_IJK,ispec) = tk(INDEX_IJK,ispec) / bk(INDEX_IJK,ispec)
 
       ENDDO_LOOP_IJK
@@ -838,13 +819,13 @@ program smooth_sem
   call max_all_cr(max_new,max_new_all)
 
   if (myrank == 0) then
-    print *,''
+    print *
     print *,'Minimum data value before smoothing = ', min_old_all
     print *,'Minimum data value after smoothing  = ', min_new_all
-    print *,''
+    print *
     print *,'Maximum data value before smoothing = ', max_old_all
     print *,'Maximum data value after smoothing  = ', max_new_all
-    print *,''
+    print *
     close(IMAIN)
   endif
 
@@ -864,10 +845,11 @@ program smooth_sem
 !
 ! -----------------------------------------------------------------------------
 !
-  subroutine smoothing_weights_vec(x0,y0,z0,sigma_h2_inv,sigma_v2_inv,exp_val,&
+  subroutine smoothing_weights_vec(x0,y0,z0,sigma_h2_inv,sigma_v2_inv,exp_val, &
                               xx_elem,yy_elem,zz_elem)
 
-  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
+
   implicit none
 
   real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ),intent(out) :: exp_val
@@ -879,11 +861,7 @@ program smooth_sem
   real(kind=CUSTOM_REAL) :: val
   real(kind=CUSTOM_REAL) :: x1,y1,z1
 
-#ifdef FORCE_VECTORIZATION
-  integer :: ijk
-#else
   integer :: i,j,k
-#endif
 
   DO_LOOP_IJK
 
@@ -916,9 +894,9 @@ program smooth_sem
   subroutine get_distance_vec(dist_h,dist_v,x0,y0,z0,x1,y1,z1)
 
 ! returns vector lengths as distances in radial and horizontal direction
-! only for flat earth with z in vertical direction
+! only for flat Earth with z in vertical direction
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 

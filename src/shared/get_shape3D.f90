@@ -151,10 +151,10 @@
 
         ! sum of shape functions should be one
         ! sum of derivative of shape functions should be zero
-        if (abs(sumshape-one) >  TINYVAL) call exit_MPI(myrank,'error in 3D shape functions')
-        if (abs(sumdershapexi) >  TINYVAL) call exit_MPI(myrank,'error in xi derivative of 3D shape functions')
-        if (abs(sumdershapeeta) >  TINYVAL) call exit_MPI(myrank,'error in eta derivative of 3D shape functions')
-        if (abs(sumdershapegamma) >  TINYVAL) call exit_MPI(myrank,'error in gamma derivative of 3D shape functions')
+        if (abs(sumshape-one) > TINYVAL) call exit_MPI(myrank,'error in 3D shape functions')
+        if (abs(sumdershapexi) > TINYVAL) call exit_MPI(myrank,'error in xi derivative of 3D shape functions')
+        if (abs(sumdershapeeta) > TINYVAL) call exit_MPI(myrank,'error in eta derivative of 3D shape functions')
+        if (abs(sumdershapegamma) > TINYVAL) call exit_MPI(myrank,'error in gamma derivative of 3D shape functions')
 
       enddo
     enddo
@@ -275,7 +275,7 @@
 
   ! sum of shape functions should be one
   ! sum of derivative of shape functions should be zero
-  if (abs(sumshape-one) >  TINYVAL) call exit_MPI(myrank,'error single shape functions')
+  if (abs(sumshape-one) > TINYVAL) call exit_MPI(myrank,'error single shape functions')
 
   end subroutine eval_shape3D_single
 
@@ -283,7 +283,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine eval_shape3D_element_corners(xelm,yelm,zelm,ispec,&
+  subroutine eval_shape3D_element_corners(xelm,yelm,zelm,ispec, &
        ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
 
   use constants

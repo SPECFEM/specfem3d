@@ -426,7 +426,7 @@
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: array_val1,array_val2
 
   real(kind=CUSTOM_REAL), dimension(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: &
-       buffer_send_vector_ext_mesh_s,buffer_recv_vector_ext_mesh_s,&
+       buffer_send_vector_ext_mesh_s,buffer_recv_vector_ext_mesh_s, &
        buffer_send_vector_ext_mesh_w,buffer_recv_vector_ext_mesh_w
 
   integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh,my_neighbours_ext_mesh
@@ -555,7 +555,7 @@
 
   subroutine transfer_boundary_to_device(NPROC, Mesh_pointer, &
                                             buffer_recv_vector_ext_mesh, &
-                                            num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh,&
+                                            num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                                             request_recv_vector_ext_mesh)
 
   use constants
@@ -710,7 +710,7 @@
     call transfer_asmbl_accel_to_device(Mesh_pointer, array_val, &
                                         buffer_recv_vector_ext_mesh, &
                                         num_interfaces_ext_mesh, max_nibool_interfaces_ext_mesh, &
-                                        nibool_interfaces_ext_mesh,&
+                                        nibool_interfaces_ext_mesh, &
                                         ibool_interfaces_ext_mesh,FORWARD_OR_ADJOINT)
 
     ! This step is done via previous function transfer_and_assemble...
@@ -783,7 +783,7 @@
     call transfer_sync_accel_to_device(Mesh_pointer, array_val, &
                                         buffer_recv_vector_ext_mesh, &
                                         num_interfaces_ext_mesh, max_nibool_interfaces_ext_mesh, &
-                                        nibool_interfaces_ext_mesh,&
+                                        nibool_interfaces_ext_mesh, &
                                         ibool_interfaces_ext_mesh,FORWARD_OR_ADJOINT)
 
     ! This step is done via previous function transfer_and_assemble...

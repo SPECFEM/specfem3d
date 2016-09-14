@@ -95,15 +95,15 @@
   print *,'  (if not, you can run xconvert_mesh_files_from_ASCII_to_binary)'
   print *,'3 = exit'
   read(*,*) iformat
-  if(iformat /= 1 .and. iformat /= 2) stop 'exiting...'
+  if (iformat /= 1 .and. iformat /= 2) stop 'exiting...'
 
   print *
   print *,'1 = use a free surface at the top of the mesh (most classical option)'
   print *,'2 = use a CPML absorbing layer at the top of the mesh (less classical option)'
   print *,'3 = exit'
   read(*,*) iflag
-  if(iflag /= 1 .and. iflag /= 2) stop 'exiting...'
-  if(iflag == 1) then
+  if (iflag /= 1 .and. iflag /= 2) stop 'exiting...'
+  if (iflag == 1) then
     ALSO_ADD_ON_THE_TOP_SURFACE = .false.
   else
     ALSO_ADD_ON_THE_TOP_SURFACE = .true.
@@ -114,10 +114,10 @@
   print *,'2 = read them from a file created by the previous code, xconvert_external_layers_of_a_given_mesh_to_CPML_layers'
   print *,'3 = exit'
   read(*,*) iread
-  if(iread /= 1 .and. iread /= 2) stop 'exiting...'
+  if (iread /= 1 .and. iread /= 2) stop 'exiting...'
 
 ! open SPECFEM3D_Cartesian mesh file to read the points
-  if(iformat == 1) then
+  if (iformat == 1) then
     open(unit=23,file='nodes_coords_file',status='old',action='read')
     read(23,*) npoin
   else
@@ -127,7 +127,7 @@
   allocate(x(npoin))
   allocate(y(npoin))
   allocate(z(npoin))
-  if(iformat == 1) then
+  if (iformat == 1) then
     do ipoin = 1,npoin
       read(23,*) ipoin_read,xread,yread,zread
       x(ipoin_read) = xread
@@ -156,7 +156,7 @@
   print *,'Zmin and Zmax of the mesh read = ',zmin,zmax
   print *
 
-  if(iread == 2) then
+  if (iread == 2) then
 
 ! read the thickness values from an existing text file
   open(unit=23,file='values_to_use_for_convert_external_layers_of_a_given_mesh_to_CPML_layers.txt',status='old',action='read')
@@ -168,9 +168,9 @@
   read(23,*) THICKNESS_OF_ZMAX_PML
   close(23)
 ! check convention (negative value) that says that this Zmax absorbing edge is turned off
-  if(ALSO_ADD_ON_THE_TOP_SURFACE .and. THICKNESS_OF_ZMAX_PML <= 0) &
+  if (ALSO_ADD_ON_THE_TOP_SURFACE .and. THICKNESS_OF_ZMAX_PML <= 0) &
     stop 'negative thickness is not allowed; ALSO_ADD_ON_THE_TOP_SURFACE is maybe inconsistent with the previous code; exiting...'
-  if(.not. ALSO_ADD_ON_THE_TOP_SURFACE .and. THICKNESS_OF_ZMAX_PML > 0) &
+  if (.not. ALSO_ADD_ON_THE_TOP_SURFACE .and. THICKNESS_OF_ZMAX_PML > 0) &
     stop 'ALSO_ADD_ON_THE_TOP_SURFACE seems inconsistent with the previous code; exiting...'
 
   else
@@ -181,49 +181,49 @@
   print *,'the comment printed above; if you think you have roundoff issues or very'
   print *,'slightly varying thickness, give 2% or 5% more here, but never less'
   read(*,*) THICKNESS_OF_XMIN_PML
-  if(THICKNESS_OF_XMIN_PML <= 0) stop 'negative thickness is not allowed; exiting...'
-  if(THICKNESS_OF_XMIN_PML > 0.30*(xmax - xmin)) &
+  if (THICKNESS_OF_XMIN_PML <= 0) stop 'negative thickness is not allowed; exiting...'
+  if (THICKNESS_OF_XMIN_PML > 0.30*(xmax - xmin)) &
     stop 'thickness of each CPML layer greater than 30% of the size of the mesh is not a good idea; exiting...'
   print *
 
   print *,'What is the exact thickness of the PML layer that you want'
   print *,'on the Xmax face of your mesh?'
   read(*,*) THICKNESS_OF_XMAX_PML
-  if(THICKNESS_OF_XMAX_PML <= 0) stop 'negative thickness is not allowed; exiting...'
-  if(THICKNESS_OF_XMAX_PML > 0.30*(xmax - xmin)) &
+  if (THICKNESS_OF_XMAX_PML <= 0) stop 'negative thickness is not allowed; exiting...'
+  if (THICKNESS_OF_XMAX_PML > 0.30*(xmax - xmin)) &
     stop 'thickness of each CPML layer greater than 30% of the size of the mesh is not a good idea; exiting...'
   print *
 
   print *,'What is the exact thickness of the PML layer that you want'
   print *,'on the Ymin face of your mesh?'
   read(*,*) THICKNESS_OF_YMIN_PML
-  if(THICKNESS_OF_YMIN_PML <= 0) stop 'negative thickness is not allowed; exiting...'
-  if(THICKNESS_OF_YMIN_PML > 0.30*(ymax - ymin)) &
+  if (THICKNESS_OF_YMIN_PML <= 0) stop 'negative thickness is not allowed; exiting...'
+  if (THICKNESS_OF_YMIN_PML > 0.30*(ymax - ymin)) &
     stop 'thickness of each CPML layer greater than 30% of the size of the mesh is not a good idea; exiting...'
   print *
 
   print *,'What is the exact thickness of the PML layer that you want'
   print *,'on the Ymax face of your mesh?'
   read(*,*) THICKNESS_OF_YMAX_PML
-  if(THICKNESS_OF_YMAX_PML <= 0) stop 'negative thickness is not allowed; exiting...'
-  if(THICKNESS_OF_YMAX_PML > 0.30*(ymax - ymin)) &
+  if (THICKNESS_OF_YMAX_PML <= 0) stop 'negative thickness is not allowed; exiting...'
+  if (THICKNESS_OF_YMAX_PML > 0.30*(ymax - ymin)) &
     stop 'thickness of each CPML layer greater than 30% of the size of the mesh is not a good idea; exiting...'
   print *
 
   print *,'What is the exact thickness of the PML layer that you want'
   print *,'on the Zmin face of your mesh?'
   read(*,*) THICKNESS_OF_ZMIN_PML
-  if(THICKNESS_OF_ZMIN_PML <= 0) stop 'negative thickness is not allowed; exiting...'
-  if(THICKNESS_OF_ZMIN_PML > 0.30*(zmax - zmin)) &
+  if (THICKNESS_OF_ZMIN_PML <= 0) stop 'negative thickness is not allowed; exiting...'
+  if (THICKNESS_OF_ZMIN_PML > 0.30*(zmax - zmin)) &
     stop 'thickness of each CPML layer greater than 30% of the size of the mesh is not a good idea; exiting...'
   print *
 
-  if(ALSO_ADD_ON_THE_TOP_SURFACE) then
+  if (ALSO_ADD_ON_THE_TOP_SURFACE) then
     print *,'What is the exact thickness of the PML layer that you want'
     print *,'on the Zmax face of your mesh?'
     read(*,*) THICKNESS_OF_ZMAX_PML
-    if(THICKNESS_OF_ZMAX_PML <= 0) stop 'negative thickness is not allowed; exiting...'
-    if(THICKNESS_OF_ZMAX_PML > 0.30*(zmax - zmin)) &
+    if (THICKNESS_OF_ZMAX_PML <= 0) stop 'negative thickness is not allowed; exiting...'
+    if (THICKNESS_OF_ZMAX_PML > 0.30*(zmax - zmin)) &
       stop 'thickness of each CPML layer greater than 30% of the size of the mesh is not a good idea; exiting...'
     print *
   endif
@@ -233,7 +233,7 @@
 ! ************* read mesh elements and generate CPML flags *************
 
 ! open SPECFEM3D_Cartesian topology file to read the mesh elements
-  if(iformat == 1) then
+  if (iformat == 1) then
     open(unit=23,file='mesh_file',status='old',action='read')
     read(23,*) nspec
   else
@@ -252,7 +252,7 @@
   allocate(ibool(NGNOD,nspec))
 
 ! loop on the whole mesh
-  if(iformat == 1) then
+  if (iformat == 1) then
     do ispec_loop = 1,nspec
       read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
 ! store the ibool() array read
@@ -285,33 +285,33 @@
 
 ! Xmin CPML
     limit = xmin + THICKNESS_OF_XMIN_PML * SMALL_PERCENTAGE_TOLERANCE
-    if(x(i1) < limit .and. x(i2) < limit .and. x(i3) < limit .and. x(i4) < limit .and. &
+    if (x(i1) < limit .and. x(i2) < limit .and. x(i3) < limit .and. x(i4) < limit .and. &
        x(i5) < limit .and. x(i6) < limit .and. x(i7) < limit .and. x(i8) < limit) is_X_CPML(ispec) = .true.
 
 ! Xmax CPML
     limit = xmax - THICKNESS_OF_XMAX_PML * SMALL_PERCENTAGE_TOLERANCE
-    if(x(i1) > limit .and. x(i2) > limit .and. x(i3) > limit .and. x(i4) > limit .and. &
+    if (x(i1) > limit .and. x(i2) > limit .and. x(i3) > limit .and. x(i4) > limit .and. &
        x(i5) > limit .and. x(i6) > limit .and. x(i7) > limit .and. x(i8) > limit) is_X_CPML(ispec) = .true.
 
 ! Ymin CPML
     limit = ymin + THICKNESS_OF_YMIN_PML * SMALL_PERCENTAGE_TOLERANCE
-    if(y(i1) < limit .and. y(i2) < limit .and. y(i3) < limit .and. y(i4) < limit .and. &
+    if (y(i1) < limit .and. y(i2) < limit .and. y(i3) < limit .and. y(i4) < limit .and. &
        y(i5) < limit .and. y(i6) < limit .and. y(i7) < limit .and. y(i8) < limit) is_Y_CPML(ispec) = .true.
 
 ! Ymax CPML
     limit = ymax - THICKNESS_OF_YMAX_PML * SMALL_PERCENTAGE_TOLERANCE
-    if(y(i1) > limit .and. y(i2) > limit .and. y(i3) > limit .and. y(i4) > limit .and. &
+    if (y(i1) > limit .and. y(i2) > limit .and. y(i3) > limit .and. y(i4) > limit .and. &
        y(i5) > limit .and. y(i6) > limit .and. y(i7) > limit .and. y(i8) > limit) is_Y_CPML(ispec) = .true.
 
 ! Zmin CPML
     limit = zmin + THICKNESS_OF_ZMIN_PML * SMALL_PERCENTAGE_TOLERANCE
-    if(z(i1) < limit .and. z(i2) < limit .and. z(i3) < limit .and. z(i4) < limit .and. &
+    if (z(i1) < limit .and. z(i2) < limit .and. z(i3) < limit .and. z(i4) < limit .and. &
        z(i5) < limit .and. z(i6) < limit .and. z(i7) < limit .and. z(i8) < limit) is_Z_CPML(ispec) = .true.
 
 ! Zmax CPML
-  if(ALSO_ADD_ON_THE_TOP_SURFACE) then
+  if (ALSO_ADD_ON_THE_TOP_SURFACE) then
     limit = zmax - THICKNESS_OF_ZMAX_PML * SMALL_PERCENTAGE_TOLERANCE
-    if(z(i1) > limit .and. z(i2) > limit .and. z(i3) > limit .and. z(i4) > limit .and. &
+    if (z(i1) > limit .and. z(i2) > limit .and. z(i3) > limit .and. z(i4) > limit .and. &
        z(i5) > limit .and. z(i6) > limit .and. z(i7) > limit .and. z(i8) > limit) is_Z_CPML(ispec) = .true.
   endif
 
@@ -322,15 +322,15 @@
   print *,'Found ',count(is_X_CPML),' X_CPML elements'
   print *,'Found ',count(is_Y_CPML),' Y_CPML elements'
   print *,'Found ',count(is_Z_CPML),' Z_CPML elements'
-  if(ALSO_ADD_ON_THE_TOP_SURFACE) print *,'    (also converted the top surface from free surface to CPML)'
+  if (ALSO_ADD_ON_THE_TOP_SURFACE) print *,'    (also converted the top surface from free surface to CPML)'
   print *
 
-  if(count(is_X_CPML) == 0 .or. count(is_Y_CPML) == 0 .or. count(is_Z_CPML) == 0) &
+  if (count(is_X_CPML) == 0 .or. count(is_Y_CPML) == 0 .or. count(is_Z_CPML) == 0) &
     stop 'error: no CPML elements detected on at least one of the sides!'
 
   number_of_CPML_elements = 0
   do ispec=1,nspec
-    if(is_X_CPML(ispec) .or. is_Y_CPML(ispec) .or. is_Z_CPML(ispec)) &
+    if (is_X_CPML(ispec) .or. is_Y_CPML(ispec) .or. is_Z_CPML(ispec)) &
           number_of_CPML_elements = number_of_CPML_elements + 1
   enddo
   print *,'Created a total of ',number_of_CPML_elements,' unique CPML elements'
@@ -345,25 +345,25 @@
 
 ! write the CPML flag for each CPML element
   do ispec=1,nspec
-    if(is_X_CPML(ispec) .and. is_Y_CPML(ispec) .and. is_Z_CPML(ispec)) then
+    if (is_X_CPML(ispec) .and. is_Y_CPML(ispec) .and. is_Z_CPML(ispec)) then
       write(24,*) ispec,CPML_XYZ
 
-    else if(is_Y_CPML(ispec) .and. is_Z_CPML(ispec)) then
+    else if (is_Y_CPML(ispec) .and. is_Z_CPML(ispec)) then
       write(24,*) ispec,CPML_YZ_ONLY
 
-    else if(is_X_CPML(ispec) .and. is_Z_CPML(ispec)) then
+    else if (is_X_CPML(ispec) .and. is_Z_CPML(ispec)) then
       write(24,*) ispec,CPML_XZ_ONLY
 
-    else if(is_X_CPML(ispec) .and. is_Y_CPML(ispec)) then
+    else if (is_X_CPML(ispec) .and. is_Y_CPML(ispec)) then
       write(24,*) ispec,CPML_XY_ONLY
 
-    else if(is_Z_CPML(ispec)) then
+    else if (is_Z_CPML(ispec)) then
       write(24,*) ispec,CPML_Z_ONLY
 
-    else if(is_Y_CPML(ispec)) then
+    else if (is_Y_CPML(ispec)) then
       write(24,*) ispec,CPML_Y_ONLY
 
-    else if(is_X_CPML(ispec)) then
+    else if (is_X_CPML(ispec)) then
       write(24,*) ispec,CPML_X_ONLY
     endif
 
@@ -396,47 +396,47 @@
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
 
-    if(is_X_CPML(ispec)) then
+    if (is_X_CPML(ispec)) then
 
       already_found_a_face = .false.
 
 ! test face 1 (bottom)
-      if(x(i1) < limit .and. x(i2) < limit .and. x(i3) < limit .and. x(i4) < limit) then
+      if (x(i1) < limit .and. x(i2) < limit .and. x(i3) < limit .and. x(i4) < limit) then
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
 
 ! test face 2 (top)
-      if(x(i5) < limit .and. x(i6) < limit .and. x(i7) < limit .and. x(i8) < limit) then
-        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+      if (x(i5) < limit .and. x(i6) < limit .and. x(i7) < limit .and. x(i8) < limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
 
 ! test face 3 (left)
-      if(x(i1) < limit .and. x(i4) < limit .and. x(i8) < limit .and. x(i5) < limit) then
-        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+      if (x(i1) < limit .and. x(i4) < limit .and. x(i8) < limit .and. x(i5) < limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
 
 ! test face 4 (right)
-      if(x(i2) < limit .and. x(i3) < limit .and. x(i7) < limit .and. x(i6) < limit) then
-        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+      if (x(i2) < limit .and. x(i3) < limit .and. x(i7) < limit .and. x(i6) < limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
 
 ! test face 5 (front)
-      if(x(i1) < limit .and. x(i2) < limit .and. x(i6) < limit .and. x(i5) < limit) then
-        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+      if (x(i1) < limit .and. x(i2) < limit .and. x(i6) < limit .and. x(i5) < limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
 
 ! test face 6 (back)
-      if(x(i4) < limit .and. x(i3) < limit .and. x(i7) < limit .and. x(i8) < limit) then
-        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+      if (x(i4) < limit .and. x(i3) < limit .and. x(i7) < limit .and. x(i8) < limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
@@ -467,33 +467,33 @@
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
 
-    if(is_X_CPML(ispec)) then
+    if (is_X_CPML(ispec)) then
 
 ! for the six faces below it is important to make sure we write the four points
 ! in an order for which the normal to the face points outwards
 
 ! test face 1 (bottom)
-      if(x(i1) < limit .and. x(i2) < limit .and. x(i3) < limit .and. x(i4) < limit) &
+      if (x(i1) < limit .and. x(i2) < limit .and. x(i3) < limit .and. x(i4) < limit) &
         write(24,*) ispec,i4,i3,i2,i1
 
 ! test face 2 (top)
-      if(x(i5) < limit .and. x(i6) < limit .and. x(i7) < limit .and. x(i8) < limit) &
+      if (x(i5) < limit .and. x(i6) < limit .and. x(i7) < limit .and. x(i8) < limit) &
         write(24,*) ispec,i5,i6,i7,i8
 
 ! test face 3 (left)
-      if(x(i1) < limit .and. x(i4) < limit .and. x(i8) < limit .and. x(i5) < limit) &
+      if (x(i1) < limit .and. x(i4) < limit .and. x(i8) < limit .and. x(i5) < limit) &
         write(24,*) ispec,i1,i5,i8,i4
 
 ! test face 4 (right)
-      if(x(i2) < limit .and. x(i3) < limit .and. x(i7) < limit .and. x(i6) < limit) &
+      if (x(i2) < limit .and. x(i3) < limit .and. x(i7) < limit .and. x(i6) < limit) &
         write(24,*) ispec,i2,i3,i7,i6
 
 ! test face 5 (front)
-      if(x(i1) < limit .and. x(i2) < limit .and. x(i6) < limit .and. x(i5) < limit) &
+      if (x(i1) < limit .and. x(i2) < limit .and. x(i6) < limit .and. x(i5) < limit) &
         write(24,*) ispec,i1,i2,i6,i5
 
 ! test face 6 (back)
-      if(x(i4) < limit .and. x(i3) < limit .and. x(i7) < limit .and. x(i8) < limit) &
+      if (x(i4) < limit .and. x(i3) < limit .and. x(i7) < limit .and. x(i8) < limit) &
         write(24,*) ispec,i3,i4,i8,i7
 
     endif
@@ -527,47 +527,47 @@
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
 
-    if(is_X_CPML(ispec)) then
+    if (is_X_CPML(ispec)) then
 
       already_found_a_face = .false.
 
 ! test face 1 (bottom)
-      if(x(i1) > limit .and. x(i2) > limit .and. x(i3) > limit .and. x(i4) > limit) then
+      if (x(i1) > limit .and. x(i2) > limit .and. x(i3) > limit .and. x(i4) > limit) then
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
 
 ! test face 2 (top)
-      if(x(i5) > limit .and. x(i6) > limit .and. x(i7) > limit .and. x(i8) > limit) then
-        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+      if (x(i5) > limit .and. x(i6) > limit .and. x(i7) > limit .and. x(i8) > limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
 
 ! test face 3 (left)
-      if(x(i1) > limit .and. x(i4) > limit .and. x(i8) > limit .and. x(i5) > limit) then
-        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+      if (x(i1) > limit .and. x(i4) > limit .and. x(i8) > limit .and. x(i5) > limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
 
 ! test face 4 (right)
-      if(x(i2) > limit .and. x(i3) > limit .and. x(i7) > limit .and. x(i6) > limit) then
-        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+      if (x(i2) > limit .and. x(i3) > limit .and. x(i7) > limit .and. x(i6) > limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
 
 ! test face 5 (front)
-      if(x(i1) > limit .and. x(i2) > limit .and. x(i6) > limit .and. x(i5) > limit) then
-        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+      if (x(i1) > limit .and. x(i2) > limit .and. x(i6) > limit .and. x(i5) > limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
 
 ! test face 6 (back)
-      if(x(i4) > limit .and. x(i3) > limit .and. x(i7) > limit .and. x(i8) > limit) then
-        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+      if (x(i4) > limit .and. x(i3) > limit .and. x(i7) > limit .and. x(i8) > limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
@@ -597,33 +597,33 @@
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
 
-    if(is_X_CPML(ispec)) then
+    if (is_X_CPML(ispec)) then
 
 ! for the six faces below it is important to make sure we write the four points
 ! in an order for which the normal to the face points outwards
 
 ! test face 1 (bottom)
-      if(x(i1) > limit .and. x(i2) > limit .and. x(i3) > limit .and. x(i4) > limit) &
+      if (x(i1) > limit .and. x(i2) > limit .and. x(i3) > limit .and. x(i4) > limit) &
         write(24,*) ispec,i4,i3,i2,i1
 
 ! test face 2 (top)
-      if(x(i5) > limit .and. x(i6) > limit .and. x(i7) > limit .and. x(i8) > limit) &
+      if (x(i5) > limit .and. x(i6) > limit .and. x(i7) > limit .and. x(i8) > limit) &
         write(24,*) ispec,i5,i6,i7,i8
 
 ! test face 3 (left)
-      if(x(i1) > limit .and. x(i4) > limit .and. x(i8) > limit .and. x(i5) > limit) &
+      if (x(i1) > limit .and. x(i4) > limit .and. x(i8) > limit .and. x(i5) > limit) &
         write(24,*) ispec,i1,i5,i8,i4
 
 ! test face 4 (right)
-      if(x(i2) > limit .and. x(i3) > limit .and. x(i7) > limit .and. x(i6) > limit) &
+      if (x(i2) > limit .and. x(i3) > limit .and. x(i7) > limit .and. x(i6) > limit) &
         write(24,*) ispec,i2,i3,i7,i6
 
 ! test face 5 (front)
-      if(x(i1) > limit .and. x(i2) > limit .and. x(i6) > limit .and. x(i5) > limit) &
+      if (x(i1) > limit .and. x(i2) > limit .and. x(i6) > limit .and. x(i5) > limit) &
         write(24,*) ispec,i1,i2,i6,i5
 
 ! test face 6 (back)
-      if(x(i4) > limit .and. x(i3) > limit .and. x(i7) > limit .and. x(i8) > limit) &
+      if (x(i4) > limit .and. x(i3) > limit .and. x(i7) > limit .and. x(i8) > limit) &
         write(24,*) ispec,i3,i4,i8,i7
 
     endif
@@ -657,47 +657,47 @@
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
 
-    if(is_Y_CPML(ispec)) then
+    if (is_Y_CPML(ispec)) then
 
       already_found_a_face = .false.
 
 ! test face 1 (bottom)
-      if(y(i1) < limit .and. y(i2) < limit .and. y(i3) < limit .and. y(i4) < limit) then
+      if (y(i1) < limit .and. y(i2) < limit .and. y(i3) < limit .and. y(i4) < limit) then
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
 
 ! test face 2 (top)
-      if(y(i5) < limit .and. y(i6) < limit .and. y(i7) < limit .and. y(i8) < limit) then
-        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+      if (y(i5) < limit .and. y(i6) < limit .and. y(i7) < limit .and. y(i8) < limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
 
 ! test face 3 (left)
-      if(y(i1) < limit .and. y(i4) < limit .and. y(i8) < limit .and. y(i5) < limit) then
-        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+      if (y(i1) < limit .and. y(i4) < limit .and. y(i8) < limit .and. y(i5) < limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
 
 ! test face 4 (right)
-      if(y(i2) < limit .and. y(i3) < limit .and. y(i7) < limit .and. y(i6) < limit) then
-        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+      if (y(i2) < limit .and. y(i3) < limit .and. y(i7) < limit .and. y(i6) < limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
 
 ! test face 5 (front)
-      if(y(i1) < limit .and. y(i2) < limit .and. y(i6) < limit .and. y(i5) < limit) then
-        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+      if (y(i1) < limit .and. y(i2) < limit .and. y(i6) < limit .and. y(i5) < limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
 
 ! test face 6 (back)
-      if(y(i4) < limit .and. y(i3) < limit .and. y(i7) < limit .and. y(i8) < limit) then
-        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+      if (y(i4) < limit .and. y(i3) < limit .and. y(i7) < limit .and. y(i8) < limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
@@ -727,33 +727,33 @@
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
 
-    if(is_Y_CPML(ispec)) then
+    if (is_Y_CPML(ispec)) then
 
 ! for the six faces below it is important to make sure we write the four points
 ! in an order for which the normal to the face points outwards
 
 ! test face 1 (bottom)
-      if(y(i1) < limit .and. y(i2) < limit .and. y(i3) < limit .and. y(i4) < limit) &
+      if (y(i1) < limit .and. y(i2) < limit .and. y(i3) < limit .and. y(i4) < limit) &
         write(24,*) ispec,i4,i3,i2,i1
 
 ! test face 2 (top)
-      if(y(i5) < limit .and. y(i6) < limit .and. y(i7) < limit .and. y(i8) < limit) &
+      if (y(i5) < limit .and. y(i6) < limit .and. y(i7) < limit .and. y(i8) < limit) &
         write(24,*) ispec,i5,i6,i7,i8
 
 ! test face 3 (left)
-      if(y(i1) < limit .and. y(i4) < limit .and. y(i8) < limit .and. y(i5) < limit) &
+      if (y(i1) < limit .and. y(i4) < limit .and. y(i8) < limit .and. y(i5) < limit) &
         write(24,*) ispec,i1,i5,i8,i4
 
 ! test face 4 (right)
-      if(y(i2) < limit .and. y(i3) < limit .and. y(i7) < limit .and. y(i6) < limit) &
+      if (y(i2) < limit .and. y(i3) < limit .and. y(i7) < limit .and. y(i6) < limit) &
         write(24,*) ispec,i2,i3,i7,i6
 
 ! test face 5 (front)
-      if(y(i1) < limit .and. y(i2) < limit .and. y(i6) < limit .and. y(i5) < limit) &
+      if (y(i1) < limit .and. y(i2) < limit .and. y(i6) < limit .and. y(i5) < limit) &
         write(24,*) ispec,i1,i2,i6,i5
 
 ! test face 6 (back)
-      if(y(i4) < limit .and. y(i3) < limit .and. y(i7) < limit .and. y(i8) < limit) &
+      if (y(i4) < limit .and. y(i3) < limit .and. y(i7) < limit .and. y(i8) < limit) &
         write(24,*) ispec,i3,i4,i8,i7
 
     endif
@@ -787,47 +787,47 @@
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
 
-    if(is_Y_CPML(ispec)) then
+    if (is_Y_CPML(ispec)) then
 
       already_found_a_face = .false.
 
 ! test face 1 (bottom)
-      if(y(i1) > limit .and. y(i2) > limit .and. y(i3) > limit .and. y(i4) > limit) then
+      if (y(i1) > limit .and. y(i2) > limit .and. y(i3) > limit .and. y(i4) > limit) then
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
 
 ! test face 2 (top)
-      if(y(i5) > limit .and. y(i6) > limit .and. y(i7) > limit .and. y(i8) > limit) then
-        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+      if (y(i5) > limit .and. y(i6) > limit .and. y(i7) > limit .and. y(i8) > limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
 
 ! test face 3 (left)
-      if(y(i1) > limit .and. y(i4) > limit .and. y(i8) > limit .and. y(i5) > limit) then
-        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+      if (y(i1) > limit .and. y(i4) > limit .and. y(i8) > limit .and. y(i5) > limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
 
 ! test face 4 (right)
-      if(y(i2) > limit .and. y(i3) > limit .and. y(i7) > limit .and. y(i6) > limit) then
-        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+      if (y(i2) > limit .and. y(i3) > limit .and. y(i7) > limit .and. y(i6) > limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
 
 ! test face 5 (front)
-      if(y(i1) > limit .and. y(i2) > limit .and. y(i6) > limit .and. y(i5) > limit) then
-        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+      if (y(i1) > limit .and. y(i2) > limit .and. y(i6) > limit .and. y(i5) > limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
 
 ! test face 6 (back)
-      if(y(i4) > limit .and. y(i3) > limit .and. y(i7) > limit .and. y(i8) > limit) then
-        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+      if (y(i4) > limit .and. y(i3) > limit .and. y(i7) > limit .and. y(i8) > limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
@@ -857,33 +857,33 @@
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
 
-    if(is_Y_CPML(ispec)) then
+    if (is_Y_CPML(ispec)) then
 
 ! for the six faces below it is important to make sure we write the four points
 ! in an order for which the normal to the face points outwards
 
 ! test face 1 (bottom)
-      if(y(i1) > limit .and. y(i2) > limit .and. y(i3) > limit .and. y(i4) > limit) &
+      if (y(i1) > limit .and. y(i2) > limit .and. y(i3) > limit .and. y(i4) > limit) &
         write(24,*) ispec,i4,i3,i2,i1
 
 ! test face 2 (top)
-      if(y(i5) > limit .and. y(i6) > limit .and. y(i7) > limit .and. y(i8) > limit) &
+      if (y(i5) > limit .and. y(i6) > limit .and. y(i7) > limit .and. y(i8) > limit) &
         write(24,*) ispec,i5,i6,i7,i8
 
 ! test face 3 (left)
-      if(y(i1) > limit .and. y(i4) > limit .and. y(i8) > limit .and. y(i5) > limit) &
+      if (y(i1) > limit .and. y(i4) > limit .and. y(i8) > limit .and. y(i5) > limit) &
         write(24,*) ispec,i1,i5,i8,i4
 
 ! test face 4 (right)
-      if(y(i2) > limit .and. y(i3) > limit .and. y(i7) > limit .and. y(i6) > limit) &
+      if (y(i2) > limit .and. y(i3) > limit .and. y(i7) > limit .and. y(i6) > limit) &
         write(24,*) ispec,i2,i3,i7,i6
 
 ! test face 5 (front)
-      if(y(i1) > limit .and. y(i2) > limit .and. y(i6) > limit .and. y(i5) > limit) &
+      if (y(i1) > limit .and. y(i2) > limit .and. y(i6) > limit .and. y(i5) > limit) &
         write(24,*) ispec,i1,i2,i6,i5
 
 ! test face 6 (back)
-      if(y(i4) > limit .and. y(i3) > limit .and. y(i7) > limit .and. y(i8) > limit) &
+      if (y(i4) > limit .and. y(i3) > limit .and. y(i7) > limit .and. y(i8) > limit) &
         write(24,*) ispec,i3,i4,i8,i7
 
     endif
@@ -917,47 +917,47 @@
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
 
-    if(is_Z_CPML(ispec)) then
+    if (is_Z_CPML(ispec)) then
 
       already_found_a_face = .false.
 
 ! test face 1 (bottom)
-      if(z(i1) < limit .and. z(i2) < limit .and. z(i3) < limit .and. z(i4) < limit) then
+      if (z(i1) < limit .and. z(i2) < limit .and. z(i3) < limit .and. z(i4) < limit) then
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
 
 ! test face 2 (top)
-      if(z(i5) < limit .and. z(i6) < limit .and. z(i7) < limit .and. z(i8) < limit) then
-        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+      if (z(i5) < limit .and. z(i6) < limit .and. z(i7) < limit .and. z(i8) < limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
 
 ! test face 3 (left)
-      if(z(i1) < limit .and. z(i4) < limit .and. z(i8) < limit .and. z(i5) < limit) then
-        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+      if (z(i1) < limit .and. z(i4) < limit .and. z(i8) < limit .and. z(i5) < limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
 
 ! test face 4 (right)
-      if(z(i2) < limit .and. z(i3) < limit .and. z(i7) < limit .and. z(i6) < limit) then
-        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+      if (z(i2) < limit .and. z(i3) < limit .and. z(i7) < limit .and. z(i6) < limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
 
 ! test face 5 (front)
-      if(z(i1) < limit .and. z(i2) < limit .and. z(i6) < limit .and. z(i5) < limit) then
-        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+      if (z(i1) < limit .and. z(i2) < limit .and. z(i6) < limit .and. z(i5) < limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
 
 ! test face 6 (back)
-      if(z(i4) < limit .and. z(i3) < limit .and. z(i7) < limit .and. z(i8) < limit) then
-        if(already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+      if (z(i4) < limit .and. z(i3) < limit .and. z(i7) < limit .and. z(i8) < limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
@@ -987,33 +987,33 @@
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
 
-    if(is_Z_CPML(ispec)) then
+    if (is_Z_CPML(ispec)) then
 
 ! for the six faces below it is important to make sure we write the four points
 ! in an order for which the normal to the face points outwards
 
 ! test face 1 (bottom)
-      if(z(i1) < limit .and. z(i2) < limit .and. z(i3) < limit .and. z(i4) < limit) &
+      if (z(i1) < limit .and. z(i2) < limit .and. z(i3) < limit .and. z(i4) < limit) &
         write(24,*) ispec,i4,i3,i2,i1
 
 ! test face 2 (top)
-      if(z(i5) < limit .and. z(i6) < limit .and. z(i7) < limit .and. z(i8) < limit) &
+      if (z(i5) < limit .and. z(i6) < limit .and. z(i7) < limit .and. z(i8) < limit) &
         write(24,*) ispec,i5,i6,i7,i8
 
 ! test face 3 (left)
-      if(z(i1) < limit .and. z(i4) < limit .and. z(i8) < limit .and. z(i5) < limit) &
+      if (z(i1) < limit .and. z(i4) < limit .and. z(i8) < limit .and. z(i5) < limit) &
         write(24,*) ispec,i1,i5,i8,i4
 
 ! test face 4 (right)
-      if(z(i2) < limit .and. z(i3) < limit .and. z(i7) < limit .and. z(i6) < limit) &
+      if (z(i2) < limit .and. z(i3) < limit .and. z(i7) < limit .and. z(i6) < limit) &
         write(24,*) ispec,i2,i3,i7,i6
 
 ! test face 5 (front)
-      if(z(i1) < limit .and. z(i2) < limit .and. z(i6) < limit .and. z(i5) < limit) &
+      if (z(i1) < limit .and. z(i2) < limit .and. z(i6) < limit .and. z(i5) < limit) &
         write(24,*) ispec,i1,i2,i6,i5
 
 ! test face 6 (back)
-      if(z(i4) < limit .and. z(i3) < limit .and. z(i7) < limit .and. z(i8) < limit) &
+      if (z(i4) < limit .and. z(i3) < limit .and. z(i7) < limit .and. z(i8) < limit) &
         write(24,*) ispec,i3,i4,i8,i7
 
     endif

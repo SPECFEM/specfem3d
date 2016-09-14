@@ -159,7 +159,7 @@
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: factor_common_kappa
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: scale_factor, scale_factor_kappa
   double precision, dimension(N_SLS) :: tau_sigma_dble,beta_dble,beta_dble_kappa
-  double precision factor_scale_dble,one_minus_sum_beta_dble,&
+  double precision factor_scale_dble,one_minus_sum_beta_dble, &
                    factor_scale_dble_kappa,one_minus_sum_beta_dble_kappa
   double precision :: Q_mu,Q_kappa,Q_p,Q_s
   double precision :: L_val
@@ -210,13 +210,16 @@
   ! gets stress relaxation times tau_sigma, i.e.
   ! precalculates tau_sigma depending on period band (constant for all Q_mu), and
   ! determines central frequency f_c_source of attenuation period band
-  call get_attenuation_constants(min_resolved_period,tau_sigma_dble,&
+  call get_attenuation_constants(min_resolved_period,tau_sigma_dble, &
                                  f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
 
   ! user output
   if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) "Attenuation:"
+    write(IMAIN,*) "The code uses a constant Q quality factor,"
+    write(IMAIN,*) "but approximated based on a series of Zener standard linear solids (SLS)."
+    write(IMAIN,*) "The approximation is performed in the following frequency band:"
     write(IMAIN,*) "  Reference frequency (Hz):",sngl(ATTENUATION_f0_REFERENCE)," period (s):",sngl(1.0/ATTENUATION_f0_REFERENCE)
     write(IMAIN,*) "  Frequency band min/max (Hz):",sngl(1.0/MAX_ATTENUATION_PERIOD),sngl(1.0/MIN_ATTENUATION_PERIOD)
     write(IMAIN,*) "  Period band min/max (s):",sngl(MIN_ATTENUATION_PERIOD),sngl(MAX_ATTENUATION_PERIOD)
@@ -803,10 +806,6 @@
 !     Department of Terrestrial Magnetism / Carnegie Institute of Washington
 !     Univeristy of Rhode Island
 !
-!  <savage@uri.edu>.
-!  <savage13@gps.caltech.edu>
-!  <savage13@dtm.ciw.edu>
-!
 !   It is based upon formulation in the following references:
 !
 !   Dahlen and Tromp, 1998
@@ -862,12 +861,11 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-
   subroutine model_attenuation_storage(Qmu, tau_eps, rw)
 
   use constants
 
-  use attenuation_model,only: AM_S
+  use attenuation_model, only: AM_S
 
   implicit none
 
@@ -1048,7 +1046,7 @@
 !   - Inserts necessary parameters into the module attenuation_simplex_variables
 !   - See module for explaination
 
-  use attenuation_model,only: AS_V
+  use attenuation_model, only: AS_V
 
   implicit none
 
@@ -1075,7 +1073,6 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-
   double precision function attenuation_eval(Xin)
 
 !    - Computes the misfit from a set of relaxation paramters
@@ -1096,9 +1093,9 @@
 !
 !    Uses attenuation_simplex_variables to store constant values
 !
-!    See atteunation_simplex_setup
-!
-  use attenuation_model,only: AS_V
+!    See attenuation_simplex_setup
+
+  use attenuation_model, only: AS_V
 
   implicit none
 
@@ -1222,7 +1219,7 @@
 !                 4 => report every iteration, total simplex
 !     err       = Output
 !                 0 => Normal exeecution, converged within desired range
-!                 1 => Function Evaluation exceeded limit
+!                 1 => function evaluation exceeded limit
 !                 2 => Iterations exceeded limit
 !
 !     See Matlab fminsearch
@@ -1461,7 +1458,7 @@
 !      n  = Input
 !             Length of fv
 !
-!      Returns:
+!      returns:
 !         Xi = max( || fv(1)- fv(i) || ) for i=2:n
 !
 
@@ -1497,7 +1494,7 @@
 !            dimension(n, n+1)
 !     n  = Pseudo Length of n
 !
-!     Returns:
+!     returns:
 !       Xi = max( max( || v(:,1) - v(:,i) || ) ) for i=2:n+1
 !
 
@@ -1583,7 +1580,7 @@
 
   subroutine attenuation_simplex_finish()
 
-  use attenuation_model,only: AS_V
+  use attenuation_model, only: AS_V
 
   implicit none
 

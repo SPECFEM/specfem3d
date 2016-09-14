@@ -27,9 +27,9 @@
 
 program model_update
 
-  use specfem_par,only: kappastore,mustore !,ibool
-  use specfem_par,only: NPROC,OUTPUT_FILES,LOCAL_PATH
-  use specfem_par_elastic,only: rho_vp,rho_vs
+  use specfem_par, only: kappastore,mustore
+  use specfem_par, only: NPROC,OUTPUT_FILES,LOCAL_PATH
+  use specfem_par_elastic, only: rho_vp,rho_vs
 
   use tomography_model_iso
   use tomography_kernels_iso
@@ -561,11 +561,9 @@ subroutine initialize()
 
 ! initializes arrays
 
-  use tomography_par,only: myrank_tomo => myrank, sizeprocs, NSPEC, NGLOB, USE_ALPHA_BETA_RHO
+  use tomography_par, only: myrank_tomo => myrank, sizeprocs, NSPEC, NGLOB, USE_ALPHA_BETA_RHO
 
-  use specfem_par,only: &
-    NSPEC_AB,NGLOB_AB,NPROC,myrank, &
-    ADIOS_ENABLED,ATTENUATION
+  use specfem_par, only: NSPEC_AB,NGLOB_AB,NPROC,myrank,ADIOS_ENABLED,ATTENUATION
 
   implicit none
 
@@ -620,18 +618,18 @@ end subroutine initialize
 
 subroutine get_external_mesh()
 
-  use specfem_par,only: CUSTOM_REAL,NSPEC_AB,NGLOB_AB,NGLLX,NGLLY,NGLLZ, &
+  use specfem_par, only: CUSTOM_REAL,NSPEC_AB,NGLOB_AB,NGLLX,NGLLY,NGLLZ, &
     LOCAL_PATH,SAVE_MESH_FILES,model_speed_max,DT,myrank,IMAIN,ISTANDARD_OUTPUT
 
-  use specfem_par,only: ibool,xstore,ystore,zstore,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
+  use specfem_par, only: ibool,xstore,ystore,zstore,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
     kappastore,mustore,rhostore
 
-  use specfem_par_elastic,only: ELASTIC_SIMULATION,ispec_is_elastic,rho_vp,rho_vs,min_resolved_period
-  use specfem_par_acoustic,only: ACOUSTIC_SIMULATION,ispec_is_acoustic
-  use specfem_par_poroelastic,only: POROELASTIC_SIMULATION,ispec_is_poroelastic,rho_vpI,rho_vpII,rho_vsI, &
+  use specfem_par_elastic, only: ELASTIC_SIMULATION,ispec_is_elastic,rho_vp,rho_vs,min_resolved_period
+  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION,ispec_is_acoustic
+  use specfem_par_poroelastic, only: POROELASTIC_SIMULATION,ispec_is_poroelastic,rho_vpI,rho_vpII,rho_vsI, &
     phistore,tortstore,rhoarraystore
 
-  use tomography_par,only: OUTPUT_MODEL_DIR
+  use tomography_par, only: OUTPUT_MODEL_DIR
 
   implicit none
   integer :: ier
@@ -751,10 +749,10 @@ subroutine save_new_databases()
 
   use specfem_par
   use specfem_par_elastic
-  use specfem_par_acoustic,only:ACOUSTIC_SIMULATION,ispec_is_acoustic
-  use specfem_par_poroelastic,only:POROELASTIC_SIMULATION,ispec_is_poroelastic
+  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION,ispec_is_acoustic
+  use specfem_par_poroelastic, only: POROELASTIC_SIMULATION,ispec_is_poroelastic
 
-  use tomography_model_iso,only: model_vs_new,model_vp_new,model_rho_new,OUTPUT_MODEL_DIR
+  use tomography_model_iso, only: model_vs_new,model_vp_new,model_rho_new,OUTPUT_MODEL_DIR
 
   implicit none
 
@@ -1004,7 +1002,7 @@ subroutine save_new_databases()
   call synchronize_all()
 
   call save_external_bin_m_up(NSPEC_AB,NGLOB_AB, &
-                        xix,xiy,xiz,etax,etay,etaz,&
+                        xix,xiy,xiz,etax,etay,etaz, &
                         gammax,gammay,gammaz, &
                         jacobianstore,rho_vp_new,rho_vs_new,qmu_attenuation_store, &
                         rhostore_new,kappastore_new,mustore_new, &

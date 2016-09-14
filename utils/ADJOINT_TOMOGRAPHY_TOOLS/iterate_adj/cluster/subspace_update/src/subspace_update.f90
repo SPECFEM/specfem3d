@@ -48,7 +48,7 @@ program subspace_update
   read(20,*) kernel_name
   close(20)
 
-  if(myrank==0) then
+  if (myrank == 0) then
      write(*,*) 'dcov_tag : ', trim(dcov_tag)
      write(*,*) 'kernel_name : ', trim(kernel_name)
 
@@ -87,7 +87,7 @@ program subspace_update
   enddo
   close(19)
 
-  if(myrank == 0) then
+  if (myrank == 0) then
      write(*,*) 'total number of events (and kernels) : ',nsrc
      write(*,*) (kernel_list(isrc),isrc=1,nsrc)
   endif
@@ -100,7 +100,7 @@ program subspace_update
   open(unit=22,file=trim(idir)//'data_norm',status='old',iostat=ios)
   do i=1,nsrc
      read(22,*) dnorm(i)
-     if(myrank==0) write(*,*) dnorm(i)
+     if (myrank == 0) write(*,*) dnorm(i)
   enddo
   close(22)
 
@@ -109,7 +109,7 @@ program subspace_update
   open(unit=23,file=trim(idir)//'dcov_fac',status='old',iostat=ios)
   do i=1,nsrc
      read(23,*) dcov_fac(i)
-     if(myrank==0) write(*,*) dcov_fac(i)
+     if (myrank == 0) write(*,*) dcov_fac(i)
   enddo
   close(23)
 
@@ -118,14 +118,14 @@ program subspace_update
   open(unit=24,file='INPUT/dVfac',status='old',iostat=ios)
      read(24,*) dVfac
   close(24)
-  if(myrank==0) write(*,*) dVfac
+  if (myrank == 0) write(*,*) dVfac
 
   ! read in the sigma value (fixed) used for the model covariance
   if (myrank == 0) write(*,*) 'reading in sigma_structure'
   open(unit=25,file='INPUT/sigma_structure',status='old',iostat=ios)
      read(25,*) sigma_structure
   close(25)
-  if(myrank==0) write(*,*) sigma_structure
+  if (myrank == 0) write(*,*) sigma_structure
 
 !---------------------------------------------------
 
@@ -145,7 +145,7 @@ program subspace_update
   enddo
   close(19)
 
-  if(myrank == 0) then
+  if (myrank == 0) then
      write(*,*) 'total number of pmax update models : ',npmax
      write(*,*) (pmax_list(i),i=1,npmax)
   endif
@@ -156,7 +156,7 @@ program subspace_update
   read(26,*) (lambdas(p),p=1,npmax)
   close(26)
 
-  if(myrank == 0) then
+  if (myrank == 0) then
      write(*,*) (lambdas(p),p=1,npmax)
   endif
 
@@ -175,7 +175,7 @@ program subspace_update
      open(unit=20,file=trim(filename),status='old',iostat=ios)
      do i=1,nsrc
         read(20,*) mu_beta(i)
-        if(myrank==0) write(*,*) mu_beta(i)
+        if (myrank == 0) write(*,*) mu_beta(i)
      enddo
      close(20)
 

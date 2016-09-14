@@ -118,13 +118,13 @@
       enddo
 
 !   the sum of the shape functions should be 1
-      if (abs(sumshape-ONE)>TINYVAL) call exit_MPI(myrank,'error in 2D shape functions')
+      if (abs(sumshape-ONE) > TINYVAL) call exit_MPI(myrank,'error in 2D shape functions')
 
 !   the sum of the derivatives of the shape functions should be 0
-      if (abs(sumdershapexi)>TINYVAL) &
+      if (abs(sumdershapexi) > TINYVAL) &
         call exit_MPI(myrank,'error in xi derivatives of 2D shape function')
 
-      if (abs(sumdershapeeta)>TINYVAL) &
+      if (abs(sumdershapeeta) > TINYVAL) &
         call exit_MPI(myrank,'error in eta derivatives of 2D shape function')
 
     enddo

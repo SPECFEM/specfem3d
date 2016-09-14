@@ -43,7 +43,7 @@ program add_model
   write(20,'(1e24.12)') step_fac
   close(20)
 
-  if(MINMAX_THRESHOLD_OLD .or. MINMAX_THRESHOLD_NEW) then
+  if (MINMAX_THRESHOLD_OLD .or. MINMAX_THRESHOLD_NEW) then
      ! minmax wavespeed values for southern california simulations
      VS_MIN = 600.0
      VS_MAX = 4700.0
@@ -129,15 +129,15 @@ program add_model
   endif
 
   ! threshold current model and write out the modified version
-  if(MINMAX_THRESHOLD_OLD) then
+  if (MINMAX_THRESHOLD_OLD) then
      do ispec=1,NSPEC
         do k=1,NGLLZ
            do j=1,NGLLY
               do i=1,NGLLX
-                 if(model_vs(i,j,k,ispec) < VS_MIN) model_vs(i,j,k,ispec) = VS_MIN
-                 if(model_vs(i,j,k,ispec) > VS_MAX) model_vs(i,j,k,ispec) = VS_MAX
-                 if(model_vp(i,j,k,ispec) < VP_MIN) model_vp(i,j,k,ispec) = VP_MIN
-                 if(model_vp(i,j,k,ispec) > VP_MAX) model_vp(i,j,k,ispec) = VP_MAX
+                 if (model_vs(i,j,k,ispec) < VS_MIN) model_vs(i,j,k,ispec) = VS_MIN
+                 if (model_vs(i,j,k,ispec) > VS_MAX) model_vs(i,j,k,ispec) = VS_MAX
+                 if (model_vp(i,j,k,ispec) < VP_MIN) model_vp(i,j,k,ispec) = VP_MIN
+                 if (model_vp(i,j,k,ispec) > VP_MAX) model_vp(i,j,k,ispec) = VP_MAX
               enddo
            enddo
         enddo
@@ -214,15 +214,15 @@ program add_model
   !-----------------------------------------------------
   ! threshold model according to minmax values specified above
 
-  if(MINMAX_THRESHOLD_NEW) then
+  if (MINMAX_THRESHOLD_NEW) then
      do ispec=1,NSPEC
         do k=1,NGLLZ
            do j=1,NGLLY
               do i=1,NGLLX
-                 if(model_vs_new(i,j,k,ispec) < VS_MIN) model_vs_new(i,j,k,ispec) = VS_MIN
-                 if(model_vs_new(i,j,k,ispec) > VS_MAX) model_vs_new(i,j,k,ispec) = VS_MAX
-                 if(model_vp_new(i,j,k,ispec) < VP_MIN) model_vp_new(i,j,k,ispec) = VP_MIN
-                 if(model_vp_new(i,j,k,ispec) > VP_MAX) model_vp_new(i,j,k,ispec) = VP_MAX
+                 if (model_vs_new(i,j,k,ispec) < VS_MIN) model_vs_new(i,j,k,ispec) = VS_MIN
+                 if (model_vs_new(i,j,k,ispec) > VS_MAX) model_vs_new(i,j,k,ispec) = VS_MAX
+                 if (model_vp_new(i,j,k,ispec) < VP_MIN) model_vp_new(i,j,k,ispec) = VP_MIN
+                 if (model_vp_new(i,j,k,ispec) > VP_MAX) model_vp_new(i,j,k,ispec) = VP_MAX
               enddo
            enddo
         enddo

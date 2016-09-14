@@ -30,8 +30,8 @@
   use meshfem3D_par, only: LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX, &
     UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
     NEX_XI,NEX_ETA,NPROC_XI,NPROC_ETA,UTM_PROJECTION_ZONE, &
-    LOCAL_PATH,SUPPRESS_UTM_PROJECTION,&
-    INTERFACES_FILE,CAVITY_FILE,NSUBREGIONS,subregions,NMATERIALS,material_properties,&
+    LOCAL_PATH,SUPPRESS_UTM_PROJECTION, &
+    INTERFACES_FILE,CAVITY_FILE,NSUBREGIONS,subregions,NMATERIALS,material_properties, &
     CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
     USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
     THICKNESS_OF_X_PML,THICKNESS_OF_Y_PML,THICKNESS_OF_Z_PML, &
@@ -69,7 +69,10 @@
     call flush_IMAIN()
   endif
 
-! open parameter file Mesh_Par_file
+  ! note: please be careful that the order of reading in parameters here
+  !       must match the order of appearance in the Mesh_Par_file
+  !
+  ! open parameter file Mesh_Par_file
   call open_parameter_file_mesh(filename)
 
   call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,LATITUDE_MIN, 'LATITUDE_MIN', ier)
@@ -89,7 +92,8 @@
   call read_value_string_mesh(IIN,IGNORE_JUNK,INTERFACES_FILE, 'INTERFACES_FILE', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter INTERFACES_FILE'
   call read_value_string_mesh(IIN,IGNORE_JUNK,CAVITY_FILE, 'CAVITY_FILE', ier)
-    if (ier /= 0) stop 'Error reading Mesh parameter CAVITY_FILE'
+  if (ier /= 0) stop 'Error reading Mesh parameter CAVITY_FILE'
+
   call read_value_integer_mesh(IIN,IGNORE_JUNK,NEX_XI, 'NEX_XI', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter NEX_XI'
   call read_value_integer_mesh(IIN,IGNORE_JUNK,NEX_ETA, 'NEX_ETA', ier)
@@ -101,7 +105,6 @@
 
   call read_value_logical_mesh(IIN,IGNORE_JUNK,USE_REGULAR_MESH, 'USE_REGULAR_MESH', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter USE_REGULAR_MESH'
-
   call read_value_integer_mesh(IIN,IGNORE_JUNK,NDOUBLINGS, 'NDOUBLINGS', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter NDOUBLINGS'
 
@@ -146,6 +149,10 @@
   call read_value_logical_mesh(IIN,IGNORE_JUNK,CREATE_VTK_FILES, 'CREATE_VTK_FILES', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter CREATE_VTK_FILES'
 
+  ! file in which we store the databases
+  call read_value_string_mesh(IIN,IGNORE_JUNK,LOCAL_PATH, 'LOCAL_PATH', ier)
+  if (ier /= 0) stop 'Error reading Mesh parameter LOCAL_PATH'
+
   ! CPML thickness
   call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,THICKNESS_OF_X_PML, 'THICKNESS_OF_X_PML', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter THICKNESS_OF_X_PML'
@@ -153,10 +160,6 @@
   if (ier /= 0) stop 'Error reading Mesh parameter THICKNESS_OF_Y_PML'
   call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,THICKNESS_OF_Z_PML, 'THICKNESS_OF_Z_PML', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter THICKNESS_OF_Z_PML'
-
-  ! file in which we store the databases
-  call read_value_string_mesh(IIN,IGNORE_JUNK,LOCAL_PATH, 'LOCAL_PATH', ier)
-  if (ier /= 0) stop 'Error reading Mesh parameter LOCAL_PATH'
 
   ! read number of materials
   call read_value_integer_mesh(IIN,IGNORE_JUNK,NMATERIALS, 'NMATERIALS', ier)
@@ -188,7 +191,7 @@
   if (ier /= 0) stop 'Error allocation of subregions'
   subregions(:,:) = 0
   do ireg = 1,NSUBREGIONS
-    call read_region_parameters(IIN,ix_beg_region,ix_end_region,iy_beg_region,iy_end_region,&
+    call read_region_parameters(IIN,ix_beg_region,ix_end_region,iy_beg_region,iy_end_region, &
                                 iz_beg_region,iz_end_region,imaterial_number,ier)
     if (ier /= 0) stop 'Error reading regions in Mesh_Par_file'
     ! stores region

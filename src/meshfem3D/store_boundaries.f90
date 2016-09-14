@@ -25,7 +25,7 @@
 !
 !=====================================================================
 
-  subroutine store_boundaries(myrank,iboun,nspec,&
+  subroutine store_boundaries(myrank,iboun,nspec, &
                               ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
                               nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
                               NSPEC2D_BOTTOM,NSPEC2D_TOP, &

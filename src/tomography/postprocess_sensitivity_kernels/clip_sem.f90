@@ -59,9 +59,8 @@
 
 program clip_sem
 
-  use postprocess_par,only: MAX_STRING_LEN,IIN,IOUT, &
-    myrank,sizeprocs,NGLOB,NSPEC,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL, &
-    MAX_KERNEL_NAMES
+  use postprocess_par, only: MAX_STRING_LEN,IIN,IOUT, &
+    myrank,sizeprocs,NGLOB,NSPEC,NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,MAX_KERNEL_NAMES
 
   use shared_parameters
 
@@ -87,7 +86,7 @@ program clip_sem
   call world_size(sizeprocs)
   call world_rank(myrank)
 
-  if (myrank==0) then
+  if (myrank == 0) then
     write(*,*) 'Running XCLIP_SEM'
     write(*,*)
   endif
@@ -123,10 +122,10 @@ program clip_sem
   ! checks number of MPI processes
   if (sizeprocs /= NPROC) then
     if (myrank == 0) then
-      print *,''
+      print *
       print *,'Expected number of MPI processes: ', NPROC
       print *,'Actual number of MPI processes: ', sizeprocs
-      print *,''
+      print *
     endif
     call synchronize_all()
     stop 'Error wrong number of MPI processes'
@@ -135,7 +134,7 @@ program clip_sem
 
   ! read mesh dimensions
   write(filename,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',myrank,'_'//'external_mesh.bin'
-  open(unit=27,file=trim(filename),&
+  open(unit=27,file=trim(filename), &
           status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
     print *,'Error: could not open external mesh file '
@@ -165,7 +164,7 @@ program clip_sem
       read(IIN) sem_array
       close(IIN)
 
-     if (myrank==0) then
+     if (myrank == 0) then
         write(*,*) 'clipping array: ',trim(kernel_names(iker))
         write(*,*) '  min/max values = ',min_val,max_val
      endif
@@ -197,7 +196,7 @@ program clip_sem
   enddo
 
 
-  if (myrank==0) write(*,*) 'done clipping all arrays, see directory: ', trim(output_dir)
+  if (myrank == 0) write(*,*) 'done clipping all arrays, see directory: ', trim(output_dir)
   deallocate(sem_array)
   call finalize_mpi()
 

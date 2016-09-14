@@ -38,11 +38,11 @@ module fault_solver_common
 
   type fault_type
     integer :: nspec=0, nglob=0
-    real(kind=CUSTOM_REAL), dimension(:,:),   pointer :: T=>null(),V=>null(),D=>null(),coord=>null()
-    real(kind=CUSTOM_REAL), dimension(:,:,:), pointer :: R=>null()
-    real(kind=CUSTOM_REAL), dimension(:),     pointer :: B=>null(),invM1=>null(),invM2=>null(),Z=>null()
+    real(kind=CUSTOM_REAL), dimension(:,:),   pointer :: T => null(),V => null(),D => null(),coord => null()
+    real(kind=CUSTOM_REAL), dimension(:,:,:), pointer :: R => null()
+    real(kind=CUSTOM_REAL), dimension(:),     pointer :: B => null(),invM1 => null(),invM2 => null(),Z => null()
     real(kind=CUSTOM_REAL) :: dt
-    integer, dimension(:), pointer :: ibulk1=>null(), ibulk2=>null()
+    integer, dimension(:), pointer :: ibulk1 => null(), ibulk2 => null()
   end type fault_type
 
   ! outputs(dyn) /inputs (kind) at selected times for all fault nodes:
@@ -50,42 +50,43 @@ module fault_solver_common
   ! rupture time = first time when slip velocity = threshold V_RUPT (defined below)
   ! process zone time = first time when slip = Dc
   type dataXZ_type
-    real(kind=CUSTOM_REAL), dimension(:), pointer :: stg=>null(), sta=>null(), d1=>null(), d2=>null(), v1=>null(), v2=>null(), &
-                                                     t1=>null(), t2=>null(), t3=>null(), tRUP=>null(), tPZ=>null()
-    real(kind=CUSTOM_REAL), dimension(:), pointer :: xcoord=>null(), ycoord=>null(), zcoord=>null()
+    real(kind=CUSTOM_REAL), dimension(:), pointer :: stg => null(), sta => null(), d1 => null(), d2 => null(), &
+                                                     v1 => null(), v2 => null(), &
+                                                     t1 => null(), t2 => null(), t3 => null(), tRUP => null(), tPZ => null()
+    real(kind=CUSTOM_REAL), dimension(:), pointer :: xcoord => null(), ycoord => null(), zcoord => null()
     integer                                       :: npoin=0
   end type dataXZ_type
 
   type swf_type
     integer :: kind
     logical :: healing = .false.
-    real(kind=CUSTOM_REAL), dimension(:), pointer :: Dc=>null(), mus=>null(), mud=>null(), &
-                                                     theta=>null(), T=>null(), C=>null()
+    real(kind=CUSTOM_REAL), dimension(:), pointer :: Dc => null(), mus => null(), mud => null(), &
+                                                     theta => null(), T => null(), C => null()
   end type swf_type
 
   type rsf_type
     integer :: StateLaw = 1 ! 1=ageing law, 2=slip law
-    real(kind=CUSTOM_REAL), dimension(:), pointer :: V0=>null(), f0=>null(), L=>null(), &
-                                                     V_init=>null(), &
-                                                     a=>null(), b=>null(), theta=>null(), &
-                                                     T=>null(), C=>null(), &
-                                                     fw=>null(), Vw=>null()
+    real(kind=CUSTOM_REAL), dimension(:), pointer :: V0 => null(), f0 => null(), L => null(), &
+                                                     V_init => null(), &
+                                                     a => null(), b => null(), theta => null(), &
+                                                     T => null(), C => null(), &
+                                                     fw => null(), Vw => null()
   end type rsf_type
 
  ! outputs on selected fault nodes at every time step:
   type dataT_type
     integer :: npoin=0, ndat=0, nt=0
     real(kind=CUSTOM_REAL) :: dt
-    integer, dimension(:), pointer :: iglob=>null()   ! on-fault global index of output nodes
-    real(kind=CUSTOM_REAL), dimension(:,:,:), pointer :: dat=>null()
-    character(len=MAX_STRING_LEN), dimension(:), pointer :: name=>null(),longFieldNames=>null()
+    integer, dimension(:), pointer :: iglob => null()   ! on-fault global index of output nodes
+    real(kind=CUSTOM_REAL), dimension(:,:,:), pointer :: dat => null()
+    character(len=MAX_STRING_LEN), dimension(:), pointer :: name => null(),longFieldNames => null()
     character(len=MAX_STRING_LEN) :: shortFieldNames
   end type dataT_type
 
   type, extends (fault_type) :: bc_dynandkinflt_type
-    real(kind=CUSTOM_REAL), dimension(:,:), pointer :: T0=>null()
-    real(kind=CUSTOM_REAL), dimension(:),   pointer :: MU=>null(), Fload=>null()
-    integer, dimension(:),   pointer :: npoin_perproc=>null(), poin_offset=>null()
+    real(kind=CUSTOM_REAL), dimension(:,:), pointer :: T0 => null()
+    real(kind=CUSTOM_REAL), dimension(:),   pointer :: MU => null(), Fload => null()
+    integer, dimension(:),   pointer :: npoin_perproc => null(), poin_offset => null()
     type(dataT_type)        :: dataT
     type(dataXZ_type)       :: dataXZ,dataXZ_all
     type(swf_type), pointer :: swf => null()
@@ -114,7 +115,7 @@ contains
 subroutine initialize_fault (bc,IIN_BIN)
 
   use specfem_par
-  use specfem_par_elastic, only : rmassx !,rmassy,rmassz
+  use specfem_par_elastic, only: rmassx
 
 !! DK DK use type(bc_dynandkinflt_type) instead of class(fault_type) for compatibility with some current compilers
   type(bc_dynandkinflt_type), intent(inout) :: bc
@@ -128,8 +129,8 @@ subroutine initialize_fault (bc,IIN_BIN)
   integer :: ij,k,e
 
   read(IIN_BIN) bc%nspec,bc%nglob
-  if (.not.PARALLEL_FAULT .and. bc%nspec==0) return
-  if (bc%nspec>0) then
+  if (.not. PARALLEL_FAULT .and. bc%nspec == 0) return
+  if (bc%nspec > 0) then
 
     allocate(bc%ibulk1(bc%nglob))
     allocate(bc%ibulk2(bc%nglob))
@@ -170,26 +171,26 @@ subroutine initialize_fault (bc,IIN_BIN)
   if (PARALLEL_FAULT) then
 
     tmp_vec = 0._CUSTOM_REAL
-    if (bc%nspec>0) tmp_vec(1,bc%ibulk1) = bc%B
+    if (bc%nspec > 0) tmp_vec(1,bc%ibulk1) = bc%B
     ! assembles with other MPI processes
     call assemble_MPI_vector_blocking(NPROC,NGLOB_AB,tmp_vec, &
                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                                      my_neighbours_ext_mesh)
-    if (bc%nspec>0) bc%B = tmp_vec(1,bc%ibulk1)
+    if (bc%nspec > 0) bc%B = tmp_vec(1,bc%ibulk1)
 
     tmp_vec = 0._CUSTOM_REAL
-    if (bc%nspec>0) tmp_vec(:,bc%ibulk1) = nxyz
+    if (bc%nspec > 0) tmp_vec(:,bc%ibulk1) = nxyz
     ! assembles with other MPI processes
     call assemble_MPI_vector_blocking(NPROC,NGLOB_AB,tmp_vec, &
                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                                      my_neighbours_ext_mesh)
-    if (bc%nspec>0) nxyz = tmp_vec(:,bc%ibulk1)
+    if (bc%nspec > 0) nxyz = tmp_vec(:,bc%ibulk1)
 
   endif
 
-  if (bc%nspec>0) then
+  if (bc%nspec > 0) then
     call normalize_3d_vector(nxyz)
     call compute_R(bc%R,bc%nglob,nxyz)
 
@@ -308,7 +309,7 @@ function rotate(bc,v,fb) result(vr)
   ! Percy, tangential direction Vt, equation 7 of Pablo's notes in agreement with SPECFEM3D
 
   ! forward rotation
-  if (fb==1) then
+  if (fb == 1) then
     vr(1,:) = v(1,:)*bc%R(1,1,:)+v(2,:)*bc%R(1,2,:)+v(3,:)*bc%R(1,3,:) ! vs
     vr(2,:) = v(1,:)*bc%R(2,1,:)+v(2,:)*bc%R(2,2,:)+v(3,:)*bc%R(2,3,:) ! vd
     vr(3,:) = v(1,:)*bc%R(3,1,:)+v(2,:)*bc%R(3,2,:)+v(3,:)*bc%R(3,3,:) ! vn
@@ -348,7 +349,7 @@ end subroutine add_BT
 
 subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
 
-  use specfem_par, only : NPROC,myrank
+  use specfem_par, only: NPROC,myrank
 
   integer, intent(in) :: nglob,NT,iflt,ndat
   real(kind=CUSTOM_REAL), intent(in) :: coord(3,nglob),DT
@@ -374,14 +375,14 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
  ! count the number of output points on the current fault (#iflt)
   open(IIN,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'FAULT_STATIONS',status='old',action='read',iostat=ier)
   if (ier /= 0) then
-    if (myrank==0) write(IMAIN,*) 'Fatal error opening FAULT_STATIONS file. Abort.'
+    if (myrank == 0) write(IMAIN,*) 'Fatal error opening FAULT_STATIONS file. Abort.'
     stop
   endif
   read(IIN,*) np
   dataT%npoin =0
   do i=1,np
     read(IIN,*) xtarget,ytarget,ztarget,tmpname,jflt
-    if (jflt==iflt) dataT%npoin = dataT%npoin +1
+    if (jflt == iflt) dataT%npoin = dataT%npoin +1
   enddo
   close(IIN)
 
@@ -396,7 +397,7 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
   k = 0
   do i=1,np
     read(IIN,*) xtarget,ytarget,ztarget,tmpname,jflt
-    if (jflt/=iflt) cycle
+    if (jflt /= iflt) cycle
     k = k+1
     dataT%name(k) = tmpname
 
@@ -424,7 +425,7 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
     allocate(dist_all(dataT%npoin,0:NPROC-1))
     call gather_all_i(dataT%iglob,dataT%npoin,iglob_all,dataT%npoin,NPROC)
     call gather_all_cr(dist_loc,dataT%npoin,dist_all,dataT%npoin,NPROC)
-    if (myrank==0) then
+    if (myrank == 0) then
       ! NOTE: output points lying at an interface between procs are assigned to a unique proc
       iproc = minloc(dist_all,2) - 1
       do ipoin = 1,dataT%npoin
@@ -437,7 +438,7 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
     ! Number of output points contained in the current processor
     npoin_local = count( iproc == myrank )
 
-    if (npoin_local>0) then
+    if (npoin_local > 0) then
       ! Make a list of output points contained in the current processor
       allocate(glob_indx(npoin_local))
       ipoin_local = 0
@@ -471,7 +472,7 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
   endif
 
  !  3. initialize arrays
-  if (dataT%npoin>0) then
+  if (dataT%npoin > 0) then
     dataT%ndat = ndat
     dataT%nt = NT
     dataT%dt = DT

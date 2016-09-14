@@ -37,8 +37,6 @@
 
 __global__ void compute_add_sources_acoustic_kernel(realw* potential_dot_dot_acoustic,
                                                     int* d_ibool,
-                                                    int* ispec_is_inner,
-                                                    int phase_is_inner,
                                                     realw* sourcearrays,
                                                     double* stf_pre_compute,
                                                     int myrank,
@@ -62,7 +60,7 @@ __global__ void compute_add_sources_acoustic_kernel(realw* potential_dot_dot_aco
 
       ispec = ispec_selected_source[isource]-1;
 
-      if (ispec_is_inner[ispec] == phase_is_inner && ispec_is_acoustic[ispec]) {
+      if (ispec_is_acoustic[ispec]) {
 
         iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)] - 1;
 
@@ -86,7 +84,6 @@ __global__ void compute_add_sources_acoustic_kernel(realw* potential_dot_dot_aco
 extern "C"
 void FC_FUNC_(compute_add_sources_ac_cuda,
               COMPUTE_ADD_SOURCES_AC_CUDA)(long* Mesh_pointer,
-                                           int* phase_is_innerf,
                                            int* NSOURCESf,
                                            double* h_stf_pre_compute) {
 
@@ -98,7 +95,6 @@ void FC_FUNC_(compute_add_sources_ac_cuda,
   if (mp->nsources_local == 0) return;
 
   int NSOURCES = *NSOURCESf;
-  int phase_is_inner = *phase_is_innerf;
 
   // copies pre-computed source time factors onto GPU
   print_CUDA_error_if_any(cudaMemcpy(mp->d_stf_pre_compute,h_stf_pre_compute,
@@ -112,8 +108,6 @@ void FC_FUNC_(compute_add_sources_ac_cuda,
 
   compute_add_sources_acoustic_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_dot_dot_acoustic,
                                                                               mp->d_ibool,
-                                                                              mp->d_ispec_is_inner,
-                                                                              phase_is_inner,
                                                                               mp->d_sourcearrays,
                                                                               mp->d_stf_pre_compute,
                                                                               mp->myrank,
@@ -133,7 +127,6 @@ void FC_FUNC_(compute_add_sources_ac_cuda,
 extern "C"
 void FC_FUNC_(compute_add_sources_ac_s3_cuda,
               COMPUTE_ADD_SOURCES_AC_s3_CUDA)(long* Mesh_pointer,
-                                              int* phase_is_innerf,
                                               int* NSOURCESf,
                                               double* h_stf_pre_compute) {
 
@@ -145,7 +138,6 @@ void FC_FUNC_(compute_add_sources_ac_s3_cuda,
   if (mp->nsources_local == 0) return;
 
   int NSOURCES = *NSOURCESf;
-  int phase_is_inner = *phase_is_innerf;
 
   // copies source time factors onto GPU
   print_CUDA_error_if_any(cudaMemcpy(mp->d_stf_pre_compute,h_stf_pre_compute,
@@ -159,8 +151,6 @@ void FC_FUNC_(compute_add_sources_ac_s3_cuda,
 
   compute_add_sources_acoustic_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_dot_dot_acoustic,
                                                                               mp->d_ibool,
-                                                                              mp->d_ispec_is_inner,
-                                                                              phase_is_inner,
                                                                               mp->d_sourcearrays,
                                                                               mp->d_stf_pre_compute,
                                                                               mp->myrank,
@@ -186,10 +176,8 @@ __global__ void add_sources_ac_SIM_TYPE_2_OR_3_kernel(realw* potential_dot_dot_a
                                                       int nrec,
                                                       realw* adj_sourcearrays,
                                                       int* d_ibool,
-                                                      int* ispec_is_inner,
                                                       int* ispec_is_acoustic,
                                                       int* ispec_selected_rec,
-                                                      int phase_is_inner,
                                                       int* pre_computed_irec,
                                                       int nadj_rec_local,
                                                       realw* kappastore) {
@@ -203,38 +191,34 @@ __global__ void add_sources_ac_SIM_TYPE_2_OR_3_kernel(realw* potential_dot_dot_a
 
     int ispec = ispec_selected_rec[irec]-1;
     if (ispec_is_acoustic[ispec]){
+      int i = threadIdx.x;
+      int j = threadIdx.y;
+      int k = threadIdx.z;
 
-      // checks if element is in phase_is_inner run
-      if (ispec_is_inner[ispec] == phase_is_inner) {
-        int i = threadIdx.x;
-        int j = threadIdx.y;
-        int k = threadIdx.z;
+      int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
 
-        int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
+      //kappal = kappastore[INDEX4(5,5,5,i,j,k,ispec)];
 
-        //kappal = kappastore[INDEX4(5,5,5,i,j,k,ispec)];
+      //potential_dot_dot_acoustic[iglob] += adj_sourcearrays[INDEX6(nadj_rec_local,NTSTEP_BETWEEN_ADJSRC,3,5,5,
+      //                                            pre_computed_irec_local_index[irec],
+      //                                            pre_computed_index,
+      //                                            0,
+      //                                            i,j,k)]/kappal;
 
-        //potential_dot_dot_acoustic[iglob] += adj_sourcearrays[INDEX6(nadj_rec_local,NTSTEP_BETWEEN_ADJSRC,3,5,5,
-        //                                            pre_computed_irec_local_index[irec],
-        //                                            pre_computed_index,
-        //                                            0,
-        //                                            i,j,k)]/kappal;
+      // beware, for acoustic medium, a pressure source would be taking the negative
+      // and divide by Kappa of the fluid;
+      // this would have to be done when constructing the adjoint source.
+      //
+      // note: we take the first component of the adj_sourcearrays
+      //          the idea is to have e.g. a pressure source, where all 3 components would be the same
+      realw stf = adj_sourcearrays[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,0,irec_local)]; // / kappal
 
-        // beware, for acoustic medium, a pressure source would be taking the negative
-        // and divide by Kappa of the fluid;
-        // this would have to be done when constructing the adjoint source.
-        //
-        // note: we take the first component of the adj_sourcearrays
-        //          the idea is to have e.g. a pressure source, where all 3 components would be the same
-        realw stf = adj_sourcearrays[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,0,irec_local)]; // / kappal
+      atomicAdd(&potential_dot_dot_acoustic[iglob],stf);
 
-        atomicAdd(&potential_dot_dot_acoustic[iglob],stf);
-
-                  //+adj_sourcearrays[INDEX6(nadj_rec_local,NTSTEP_BETWEEN_ADJSRC,3,5,5,
-                  //                         pre_computed_irec_local_index[irec],pre_computed_index-1,
-                  //                         0,i,j,k)] // / kappal
-                  //                         );
-      }
+                //+adj_sourcearrays[INDEX6(nadj_rec_local,NTSTEP_BETWEEN_ADJSRC,3,5,5,
+                //                         pre_computed_irec_local_index[irec],pre_computed_index-1,
+                //                         0,i,j,k)] // / kappal
+                //                         );
     }
   }
 }
@@ -246,8 +230,6 @@ extern "C"
 void FC_FUNC_(add_sources_ac_sim_2_or_3_cuda,
               ADD_SOURCES_AC_SIM_2_OR_3_CUDA)(long* Mesh_pointer,
                                                realw* h_adj_sourcearrays,
-                                               int* phase_is_inner,
-                                               int* h_ispec_is_inner,
                                                int* h_ispec_is_acoustic,
                                                int* h_ispec_selected_rec,
                                                int* nrec,
@@ -284,29 +266,27 @@ void FC_FUNC_(add_sources_ac_sim_2_or_3_cuda,
 
       // only for acoustic elements
       if (h_ispec_is_acoustic[ispec]){
-        if (h_ispec_is_inner[ispec] == *phase_is_inner) {
-          for(k=0;k<5;k++) {
-            for(j=0;j<5;j++) {
-              for(i=0;i<5;i++) {
+        for(k=0;k<5;k++) {
+          for(j=0;j<5;j++) {
+            for(i=0;i<5;i++) {
 
-                mp->h_adj_sourcearrays_slice[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,0,irec_local)]
-                  = h_adj_sourcearrays[INDEX6(mp->nadj_rec_local,
-                                            *NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLX,
-                                            irec_local,it_index,0,i,j,k)];
+              mp->h_adj_sourcearrays_slice[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,0,irec_local)]
+                = h_adj_sourcearrays[INDEX6(mp->nadj_rec_local,
+                                          *NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLX,
+                                          irec_local,it_index,0,i,j,k)];
 
-                mp->h_adj_sourcearrays_slice[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,1,irec_local)]
-                  = h_adj_sourcearrays[INDEX6(mp->nadj_rec_local,
-                                            *NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLX,
-                                            irec_local,it_index,1,i,j,k)];
+              mp->h_adj_sourcearrays_slice[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,1,irec_local)]
+                = h_adj_sourcearrays[INDEX6(mp->nadj_rec_local,
+                                          *NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLX,
+                                          irec_local,it_index,1,i,j,k)];
 
-                mp->h_adj_sourcearrays_slice[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,2,irec_local)]
-                  = h_adj_sourcearrays[INDEX6(mp->nadj_rec_local,
-                                            *NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLX,
-                                            irec_local,it_index,2,i,j,k)];
-              }
+              mp->h_adj_sourcearrays_slice[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,2,irec_local)]
+                = h_adj_sourcearrays[INDEX6(mp->nadj_rec_local,
+                                          *NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLX,
+                                          irec_local,it_index,2,i,j,k)];
             }
           }
-        } // phase_is_inner
+        }
       } // h_ispec_is_acoustic
 
       // increases local receivers counter
@@ -325,10 +305,8 @@ void FC_FUNC_(add_sources_ac_sim_2_or_3_cuda,
                                                                                 *nrec,
                                                                                 mp->d_adj_sourcearrays,
                                                                                 mp->d_ibool,
-                                                                                mp->d_ispec_is_inner,
                                                                                 mp->d_ispec_is_acoustic,
                                                                                 mp->d_ispec_selected_rec,
-                                                                                *phase_is_inner,
                                                                                 mp->d_pre_computed_irec,
                                                                                 mp->nadj_rec_local,
                                                                                 mp->d_kappastore);

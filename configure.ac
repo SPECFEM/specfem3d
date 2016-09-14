@@ -398,9 +398,17 @@ AC_CONFIG_FILES([
     Makefile
     setup/constants.h
     setup/constants_tomography.h
-    setup/constants_inverse_problem.h
     setup/precision.h
     setup/config.fh
+])
+AS_IF([test -d $srcdir/.git], [
+    GIT_VERSION_DEPS="$srcdir/.git/logs/HEAD"
+    AC_MSG_NOTICE([building from git repository])
+    AC_SUBST(GIT_VERSION_DEPS)
+], [
+    dnl Only substitute if not in a git repository.
+    AC_MSG_NOTICE([not a git repository])
+    AC_CONFIG_FILES([setup/version.fh])
 ])
 
 if test "$USE_BUNDLED_SCOTCH" = 1; then

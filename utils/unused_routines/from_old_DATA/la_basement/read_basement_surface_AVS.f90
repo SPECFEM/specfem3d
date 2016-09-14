@@ -23,8 +23,8 @@
     read(*,*)  idummy,utm_x(iline_x,iline_y),utm_y(iline_x,iline_y),z_value(iline_x,iline_y),zdummy1,zdummy2
 
 ! apply threshold to get bottom of basin only
-  if(APPLY_THRESHOLD_BASEMENT) then
-    if(z_value(iline_x,iline_y) > Z_THRESHOLD_HONOR_BASEMENT) &
+  if (APPLY_THRESHOLD_BASEMENT) then
+    if (z_value(iline_x,iline_y) > Z_THRESHOLD_HONOR_BASEMENT) &
               z_value(iline_x,iline_y) = Z_THRESHOLD_HONOR_BASEMENT
   endif
 

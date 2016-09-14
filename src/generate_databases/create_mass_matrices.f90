@@ -341,7 +341,7 @@
 
     ! elastic elements
     if (ispec_is_elastic(ispec)) then
-      ! reference gll points on boundary face
+      ! reference GLL points on boundary face
       do igll = 1,NGLLSQUARE
         ! gets local indices for GLL point
         i = abs_boundary_ijk(1,igll,iface)
@@ -376,7 +376,7 @@
     ! acoustic element
     if (ispec_is_acoustic(ispec)) then
 
-      ! reference gll points on boundary face
+      ! reference GLL points on boundary face
       do igll = 1,NGLLSQUARE
         ! gets local indices for GLL point
         i = abs_boundary_ijk(1,igll,iface)
@@ -411,7 +411,7 @@
     CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
     CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
-  use create_regions_mesh_ext_par,only : rmass,rhostore,jacobianstore,wxgll,wygll,wzgll,ispec_is_elastic
+  use create_regions_mesh_ext_par, only: rmass,rhostore,jacobianstore,wxgll,wygll,wzgll,ispec_is_elastic
 
   implicit none
 
@@ -614,7 +614,7 @@
     CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
     CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
-  use create_regions_mesh_ext_par,only : rmass_acoustic,kappastore,jacobianstore,wxgll,wygll,wzgll,ispec_is_acoustic
+  use create_regions_mesh_ext_par, only: rmass_acoustic,kappastore,jacobianstore,wxgll,wygll,wzgll,ispec_is_acoustic
 
   implicit none
 

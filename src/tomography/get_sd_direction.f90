@@ -26,7 +26,7 @@
 !=====================================================================
 
 
-subroutine get_sd_direction_iso()
+  subroutine get_sd_direction_iso()
 
 ! calculates gradient by steepest descent method
 
@@ -227,14 +227,14 @@ subroutine get_sd_direction_iso()
     close(IOUT)
   endif
 
-end subroutine get_sd_direction_iso
+  end subroutine get_sd_direction_iso
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
 
-subroutine get_sd_direction_tiso()
+  subroutine get_sd_direction_tiso()
 
 ! calculates gradient by steepest descent method
 
@@ -431,5 +431,5 @@ subroutine get_sd_direction_tiso()
   endif
   call synchronize_all()
 
-end subroutine get_sd_direction_tiso
+  end subroutine get_sd_direction_tiso
 

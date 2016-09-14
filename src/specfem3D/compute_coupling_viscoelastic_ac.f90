@@ -33,15 +33,15 @@
                         coupling_ac_el_ispec,coupling_ac_el_ijk, &
                         coupling_ac_el_normal, &
                         coupling_ac_el_jacobian2Dw, &
-                        ispec_is_inner,phase_is_inner,&
-                        PML_CONDITIONS,&
-                        SIMULATION_TYPE,backward_simulation,&
+                        iphase, &
+                        PML_CONDITIONS, &
+                        SIMULATION_TYPE,backward_simulation, &
                         potential_acoustic,potential_dot_acoustic)
 
 ! returns the updated acceleration array: accel
 
-  use constants,only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,NGLLSQUARE
-  use pml_par,only : rmemory_coupling_el_ac_potential_dot_dot,is_CPML,spec_to_CPML,NSPEC_CPML
+  use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,NGLLSQUARE
+  use pml_par, only: rmemory_coupling_el_ac_potential_dot_dot,is_CPML,spec_to_CPML,NSPEC_CPML
 
   implicit none
 
@@ -63,8 +63,7 @@
   integer,intent(in) :: coupling_ac_el_ispec(num_coupling_ac_el_faces)
 
 ! communication overlap
-  logical, dimension(NSPEC_AB),intent(in) :: ispec_is_inner
-  logical,intent(in) :: phase_is_inner
+  integer,intent(in) :: iphase
 
 ! local parameters
   real(kind=CUSTOM_REAL) :: pressure
@@ -77,6 +76,9 @@
   integer :: ispec_CPML
   logical :: PML_CONDITIONS
 
+  ! only add these contributions in first pass
+  if (iphase /= 1) return
+
 ! loops on all coupling faces
   do iface = 1,num_coupling_ac_el_faces
 
@@ -85,80 +87,76 @@
     !           no material properties are needed for this coupling term)
     ispec = coupling_ac_el_ispec(iface)
 
-    if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
+    ! loops over common GLL points
+    do igll = 1, NGLLSQUARE
+      i = coupling_ac_el_ijk(1,igll,iface)
+      j = coupling_ac_el_ijk(2,igll,iface)
+      k = coupling_ac_el_ijk(3,igll,iface)
 
-      ! loops over common GLL points
-      do igll = 1, NGLLSQUARE
-        i = coupling_ac_el_ijk(1,igll,iface)
-        j = coupling_ac_el_ijk(2,igll,iface)
-        k = coupling_ac_el_ijk(3,igll,iface)
+      ! gets global index of this common GLL point
+      ! (note: should be the same as for corresponding i',j',k',ispec_elastic or ispec_elastic )
+      iglob = ibool(i,j,k,ispec)
 
-        ! gets global index of this common GLL point
-        ! (note: should be the same as for corresponding i',j',k',ispec_elastic or ispec_elastic )
-        iglob = ibool(i,j,k,ispec)
+      ! acoustic pressure on global point
+      pressure = - potential_dot_dot_acoustic(iglob)
 
-        ! acoustic pressure on global point
-        pressure = - potential_dot_dot_acoustic(iglob)
+      ! adjoint wavefield case
+      if (SIMULATION_TYPE /= 1 .and. (.not. backward_simulation)) then
+        ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
+        ! adjoint definition: pressure^\dagger = potential^\dagger
+        pressure = - pressure
+      endif
 
-        ! adjoint wavefield case
-        if (SIMULATION_TYPE /= 1 .and. (.not. backward_simulation)) then
-          ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
-          ! adjoint definition: pressure^\dagger = potential^\dagger
-          pressure = - pressure
-        endif
+      ! CPML overwrite cases
+      if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
+        if (is_CPML(ispec)) then
+          if (SIMULATION_TYPE == 1) then
+            ispec_CPML = spec_to_CPML(ispec)
+            call pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k, &
+                                            pressure,potential_acoustic, &
+                                            potential_dot_acoustic,potential_dot_dot_acoustic, &
+                                            num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential_dot_dot)
+            pressure = - pressure
+          endif
 
-        ! CPML overwrite cases
-        if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
-          if (is_CPML(ispec)) then
-            if (SIMULATION_TYPE == 1) then
-              ispec_CPML = spec_to_CPML(ispec)
-              call pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k,&
-                                              pressure,potential_acoustic,&
-                                              potential_dot_acoustic,potential_dot_dot_acoustic, &
-                                              num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential_dot_dot)
-              pressure = - pressure
-            endif
-
-            if (SIMULATION_TYPE == 3) then
-              ispec_CPML = spec_to_CPML(ispec)
-              call pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k,&
-                                              pressure,potential_acoustic,&
-                                              potential_dot_acoustic,potential_dot_dot_acoustic,&
-                                              num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential_dot_dot)
-            endif
+          if (SIMULATION_TYPE == 3) then
+            ispec_CPML = spec_to_CPML(ispec)
+            call pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k, &
+                                            pressure,potential_acoustic, &
+                                            potential_dot_acoustic,potential_dot_dot_acoustic, &
+                                            num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential_dot_dot)
           endif
         endif
+      endif
 
-        ! gets associated normal on GLL point
-        ! (note convention: pointing outwards of acoustic element)
-        nx = coupling_ac_el_normal(1,igll,iface)
-        ny = coupling_ac_el_normal(2,igll,iface)
-        nz = coupling_ac_el_normal(3,igll,iface)
+      ! gets associated normal on GLL point
+      ! (note convention: pointing outwards of acoustic element)
+      nx = coupling_ac_el_normal(1,igll,iface)
+      ny = coupling_ac_el_normal(2,igll,iface)
+      nz = coupling_ac_el_normal(3,igll,iface)
 
-        ! gets associated, weighted 2D jacobian
-        ! (note: should be the same for elastic and acoustic element)
-        jacobianw = coupling_ac_el_jacobian2Dw(igll,iface)
+      ! gets associated, weighted 2D jacobian
+      ! (note: should be the same for elastic and acoustic element)
+      jacobianw = coupling_ac_el_jacobian2Dw(igll,iface)
 
-        ! continuity of displacement and pressure on global point
-        !
-        ! note: Newmark time scheme together with definition of scalar potential:
-        !          pressure = - chi_dot_dot
-        !          requires that this coupling term uses the *UPDATED* pressure (chi_dot_dot), i.e.
-        !          pressure at time step [t + delta_t]
-        !          (see e.g. Chaljub & Vilotte, Nissen-Meyer thesis...)
-        !          it means you have to calculate and update the acoustic pressure first before
-        !          calculating this term...
-        accel(1,iglob) = accel(1,iglob) + jacobianw*nx*pressure
-        accel(2,iglob) = accel(2,iglob) + jacobianw*ny*pressure
-        accel(3,iglob) = accel(3,iglob) + jacobianw*nz*pressure
+      ! continuity of displacement and pressure on global point
+      !
+      ! note: Newmark time scheme together with definition of scalar potential:
+      !          pressure = - chi_dot_dot
+      !          requires that this coupling term uses the *UPDATED* pressure (chi_dot_dot), i.e.
+      !          pressure at time step [t + delta_t]
+      !          (see e.g. Chaljub & Vilotte, Nissen-Meyer thesis...)
+      !          it means you have to calculate and update the acoustic pressure first before
+      !          calculating this term...
+      accel(1,iglob) = accel(1,iglob) + jacobianw*nx*pressure
+      accel(2,iglob) = accel(2,iglob) + jacobianw*ny*pressure
+      accel(3,iglob) = accel(3,iglob) + jacobianw*nz*pressure
 
-      enddo ! igll
-
-    endif
+    enddo ! igll
 
   enddo ! iface
 
-end subroutine compute_coupling_viscoelastic_ac
+  end subroutine compute_coupling_viscoelastic_ac
 
 !
 !-------------------------------------------------------------------------------------------------

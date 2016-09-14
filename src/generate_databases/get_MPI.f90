@@ -202,9 +202,9 @@
   ! integer arrays
   call assemble_MPI_scalar_i_blocking(NPROC,nglob,test_flag, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_dummy,&
+                        nibool_interfaces_ext_mesh,ibool_interfaces_dummy, &
                         my_neighbours_ext_mesh)
-  ! custom_real arrays
+  ! CUSTOM_REAL arrays
   call assemble_MPI_scalar_blocking(NPROC,nglob,test_flag_cr, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_dummy, &

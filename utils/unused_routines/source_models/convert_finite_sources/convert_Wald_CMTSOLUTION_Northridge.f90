@@ -181,7 +181,7 @@
  time_shift = distance_hypo / RUPTURE_VELOCITY
 
 ! compute and locate minimum time shift
-  if(time_shift < timeshift_min) then
+  if (time_shift < timeshift_min) then
     timeshift_min = time_shift
     ix_time_min = ix
     iy_time_min = iy
@@ -237,7 +237,7 @@
 !     ierr           error indicator (OUTPUT)
  ierr = 0
  call pl2nd(strike,dip,rake,anx,any,anz,dx,dy,dz,ierr)
- if(ierr /= 0) stop 'error in pl2nd conversion'
+ if (ierr /= 0) stop 'error in pl2nd conversion'
 
 
 !     compute moment tensor Cartesian components (Harvard CMT convention)
@@ -254,7 +254,7 @@
  ierr = 0
  am0 = scalar_moment_patch
  call nd2ha(anx,any,anz,dx,dy,dz,am0,am,ierr)
- if(ierr /= 0) stop 'error in nd2ha conversion'
+ if (ierr /= 0) stop 'error in nd2ha conversion'
 
 !! DK DK compute longitude and depth of this point in the fault plane
 !! DK DK use bilinear interpolation from the four corners of the fault
@@ -287,7 +287,7 @@
   write(11,"(a)") 'event name:     9903873'
 
 ! time shift
-  if(ix == ix_time_min .and. iy == iy_time_min) then
+  if (ix == ix_time_min .and. iy == iy_time_min) then
     write(11,"('time shift:   0')")
   else
     write(11,"('time shift:  ',e)") time_shift
@@ -381,15 +381,15 @@
   dy=c0
   dz=c0
   ierr=0
-  if(strike<amistr.or.strike>amastr) then
+  if (strike < amistr .or. strike > amastr) then
    write(io,'(1x,a,g10.4,a)') 'PL2ND: input STRIKE angle ',strike, &
      ' out of range'
    ierr=1
   endif
-  if(dip<amidip.or.dip>amadip) then
-   if(dip<amadip.and.dip>-ovrtol) then
+  if (dip < amidip .or. dip > amadip) then
+   if (dip < amadip .and. dip > -ovrtol) then
       dip=amidip
-   else if(dip>amidip.and.dip-amadip<ovrtol) then
+   else if (dip > amidip .and. dip-amadip < ovrtol) then
       dip=amadip
    else
       write(io,'(1x,a,g10.4,a)') 'PL2ND: input DIP angle ',dip, &
@@ -397,12 +397,12 @@
       ierr=ierr+2
    endif
   endif
-  if(rake<amirak.or.rake>amarak) then
+  if (rake < amirak .or. rake > amarak) then
    write(io,'(1x,a,g10.4,a)') 'PL2ND: input RAKE angle ',rake, &
      ' out of range'
    ierr=ierr+4
   endif
-  if(ierr/=0) return
+  if (ierr /= 0) return
   wstrik=strike*dtor
   wdip=dip*dtor
   wrake=rake*dtor
@@ -456,19 +456,19 @@
 !
   ierr=0
   call angle(wanx,wany,wanz,wdx,wdy,wdz,ang)
-  if(abs(ang-c90)>orttol) then
+  if (abs(ang-c90) > orttol) then
    write(io,'(1x,a,g15.7,a)') 'ND2PL: input vectors not ' &
      //'perpendicular, angle=',ang
    ierr=1
   endif
   call norm(wanx,wany,wanz,anorm,anx,any,anz)
   call norm(wdx,wdy,wdz,dnorm,dx,dy,dz)
-  if(anz>c0) then
+  if (anz > c0) then
    call invert(anx,any,anz)
    call invert(dx,dy,dz)
   endif
 !
-  if(anz==-c1) then
+  if (anz == -c1) then
    wdelta=c0
    wphi=c0
    walam=atan2(-dy,dx)
@@ -488,7 +488,7 @@
 !*******************************************************************************
   subroutine ax2ca(trend,plunge,ax,ay,az,ierr)
 !
-!     compute cartesian components from trend and plunge
+!     compute Cartesian components from trend and plunge
 !
 !     usage:
 !     call ax2ca(trend,plunge,ax,ay,az,ierr)
@@ -523,15 +523,15 @@
   ay=c0
   az=c0
   ierr=0
-  if(trend<amitre.or.trend>amatre) then
+  if (trend < amitre .or. trend > amatre) then
    write(io,'(1x,a,g10.4,a)') 'AX2CA: input TREND angle ',trend, &
      ' out of range'
    ierr=1
   endif
-  if(plunge<amiplu.or.plunge>amaplu) then
-   if(plunge<amaplu.and.plunge>-ovrtol) then
+  if (plunge < amiplu .or. plunge > amaplu) then
+   if (plunge < amaplu .and. plunge > -ovrtol) then
       plunge=amiplu
-   else if(plunge>amiplu.and.plunge-amaplu<ovrtol) then
+   else if (plunge > amiplu .and. plunge-amaplu < ovrtol) then
       plunge=amaplu
    else
       write(io,'(1x,a,g10.4,a)') 'AX2CA: input PLUNGE angle ', &
@@ -539,7 +539,7 @@
       ierr=ierr+2
    endif
   endif
-  if(ierr/=0) return
+  if (ierr /= 0) return
   ax=cos(plunge*dtor)*cos(trend*dtor)
   ay=cos(plunge*dtor)*sin(trend*dtor)
   az=sin(plunge*dtor)
@@ -578,8 +578,8 @@
 !
   ierr=0
   call norm(wax,way,waz,wnorm,ax,ay,az)
-  if(az<c0) call invert(ax,ay,az)
-  if(ay/=c0.or.ax/=c0) then
+  if (az < c0) call invert(ax,ay,az)
+  if (ay /= c0 .or. ax /= c0) then
    trend=atan2(ay,ax)/dtor
   else
    trend=c0
@@ -635,15 +635,15 @@
   dz=c0
   ierr=0
   call angle(wpx,wpy,wpz,wtx,wty,wtz,ang)
-  if(abs(ang-c90)>orttol) then
+  if (abs(ang-c90) > orttol) then
    write(io,'(1x,a,g15.7,a)') 'PT2ND: input vectors not ' &
      //'perpendicular, angle=',ang
    ierr=1
   endif
   call norm(wpx,wpy,wpz,pnorm,px,py,pz)
-  if(pz<c0) call invert(px,py,pz)
+  if (pz < c0) call invert(px,py,pz)
   call norm(wtx,wty,wtz,tnorm,tx,ty,tz)
-  if(tz<c0) call invert(tx,ty,tz)
+  if (tz < c0) call invert(tx,ty,tz)
   anx=tx+px
   any=ty+py
   anz=tz+pz
@@ -653,7 +653,7 @@
   dy=ty-py
   dz=tz-pz
   call norm(dx,dy,dz,amn,dx,dy,dz)
-  if(anz>c0) then
+  if (anz > c0) then
    call invert(anx,any,anz)
    call invert(dx,dy,dz)
   endif
@@ -704,7 +704,7 @@
   call norm(wanx,wany,wanz,amn,anx,any,anz)
   call norm(wdx,wdy,wdz,amd,dx,dy,dz)
   call angle(anx,any,anz,dx,dy,dz,ang)
-  if(abs(ang-c90)>orttol) then
+  if (abs(ang-c90) > orttol) then
    write(io,'(1x,a,g15.7,a)') 'ND2PT: input vectors not ' &
      //'perpendicular, angle=',ang
    ierr=1
@@ -713,14 +713,14 @@
   py=any-dy
   pz=anz-dz
   call norm(px,py,pz,amp,px,py,pz)
-  if(pz<c0) call invert(px,py,pz)
+  if (pz < c0) call invert(px,py,pz)
   tx=anx+dx
   ty=any+dy
   tz=anz+dz
   call norm(tx,ty,tz,amp,tx,ty,tz)
-  if(tz<c0) call invert(tx,ty,tz)
+  if (tz < c0) call invert(tx,ty,tz)
   call vecpro(px,py,pz,tx,ty,tz,bx,by,bz)
-  if(bz<c0) call invert(bx,by,bz)
+  if (bz < c0) call invert(bx,by,bz)
   return
   end
 !*******************************************************************************
@@ -752,9 +752,9 @@
 !     ierr           error indicator (OUTPUT)
 !
 !     errors:
-!     1              input tensor not symmetrical: am(1,2)/=am(2,1)
-!     2              input tensor not symmetrical: am(1,3)/=am(3,1)
-!     3              input tensor not symmetrical: am(2,3)/=am(3,2)
+!     1              input tensor not symmetrical: am(1,2) /= am(2,1)
+!     2              input tensor not symmetrical: am(1,3) /= am(3,1)
+!     3              input tensor not symmetrical: am(2,3) /= am(3,2)
 !
        implicit none
 !-------------------------------------------------------------------------------
@@ -785,22 +785,22 @@
   by=c0
   bz=c0
   ierr=0
-  if(abs(am(1,2)-am(2,1))>tentol) then
+  if (abs(am(1,2)-am(2,1)) > tentol) then
    write(io,'(1x,a,g10.4,a,g10.4)') 'AR2PT: input tensor not' &
      //' symmetrical, m(1,2)=',am(1,2),' m(2,1)=',am(2,1)
    ierr=1
   endif
-  if(abs(am(1,3)-am(3,1))>tentol) then
+  if (abs(am(1,3)-am(3,1)) > tentol) then
    write(io,'(1x,a,g10.4,a,g10.4)') 'AR2PT: input tensor not' &
      //' symmetrical, m(1,3)=',am(1,3),' m(3,1)=',am(3,1)
    ierr=ierr+2
   endif
-  if(abs(am(3,2)-am(2,3))>tentol) then
+  if (abs(am(3,2)-am(2,3)) > tentol) then
    write(io,'(1x,a,g10.4,a,g10.4)') 'AR2PT: input tensor not' &
      //' symmetrical, m(2,3)=',am(2,3),' m(3,2)=',am(3,2)
    ierr=ierr+4
   endif
-  if(ierr/=0) return
+  if (ierr /= 0) return
   call avec(am,val,vec)
   e=(val(1)+val(2)+val(3))/c3
 !
@@ -815,7 +815,7 @@
 !
   do 2 i=1,2
    do 3 j=i+1,3
-      if(abs(val(i))<abs(val(j))) then
+      if (abs(val(i)) < abs(val(j))) then
          dum=val(i)
          val(i)=val(j)
          val(j)=dum
@@ -831,7 +831,7 @@
   eta=-val(3)/(c2*am0)
   am1=abs(val(3))
   am0b=(abs(val(1))+abs(val(2)))/c2
-  if(am0<c0) then
+  if (am0 < c0) then
    am0=-am0
    tx=vec(1,2)
    ty=vec(2,2)
@@ -897,14 +897,14 @@
       am(i,j)=c0
   2        continue
   1     continue
-  if(am0==c0) then
+  if (am0 == c0) then
    aam0=c1
   else
    aam0=am0
   endif
   ierr=0
   call angle(anx,any,anz,dx,dy,dz,ang)
-  if(abs(ang-c90)>orttol) then
+  if (abs(ang-c90) > orttol) then
    write(io,'(1x,a,g15.7,a)') 'ND2AR: input vectors not ' &
      //'perpendicular, angle=',ang
    ierr=1
@@ -937,9 +937,9 @@
 !     ierr           error indicator (OUTPUT)
 !
 !     errors:
-!     1              input tensor not symmetrical: am(1,2)/=am(2,1)
-!     2              input tensor not symmetrical: am(1,3)/=am(3,1)
-!     3              input tensor not symmetrical: am(2,3)/=am(3,2)
+!     1              input tensor not symmetrical: am(1,2) /= am(2,1)
+!     2              input tensor not symmetrical: am(1,3) /= am(3,1)
+!     3              input tensor not symmetrical: am(2,3) /= am(3,2)
 !
        implicit none
 !-------------------------------------------------------------------------------
@@ -956,22 +956,22 @@
   call fpsset
 !
   ierr=0
-  if(abs(am(1,2)-am(2,1))>tentol) then
+  if (abs(am(1,2)-am(2,1)) > tentol) then
    write(io,'(1x,a,g10.4,a,g10.4)') 'AR2HA: input tensor not' &
      //' symmetrical, m(1,2)=',am(1,2),' m(2,1)=',am(2,1)
    ierr=1
   endif
-  if(abs(am(1,3)-am(3,1))>tentol) then
+  if (abs(am(1,3)-am(3,1)) > tentol) then
    write(io,'(1x,a,g10.4,a,g10.4)') 'AR2HA: input tensor not' &
      //' symmetrical, m(1,3)=',am(1,3),' m(3,1)=',am(3,1)
    ierr=ierr+2
   endif
-  if(abs(am(3,2)-am(2,3))>tentol) then
+  if (abs(am(3,2)-am(2,3)) > tentol) then
    write(io,'(1x,a,g10.4,a,g10.4)') 'AR2HA: input tensor not' &
      //' symmetrical, m(2,3)=',am(2,3),' m(3,2)=',am(3,2)
    ierr=ierr+4
   endif
-  if(ierr/=0) then
+  if (ierr /= 0) then
    do 1 i=1,3
       do 2 j=1,3
          amo(i,j)=c0
@@ -1036,12 +1036,12 @@
   1     continue
   ierr=0
   call nd2ar(anx,any,anz,dx,dy,dz,am0,am,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    write(io,'(1x,a,i3)') 'ND2HA: ierr=',ierr
    return
   endif
   call ar2ha(am,am,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    ierr=2
    write(io,'(1x,a,i3)') 'ND2HA: ierr=',ierr
   endif
@@ -1093,12 +1093,12 @@
   call fpsset
 !
   call pl2nd(strika,dipa,rakea,anx,any,anz,dx,dy,dz,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    write(io,'(1x,a,i3)') 'PL2PL: ierr=',ierr
    return
   endif
   call nd2pl(dx,dy,dz,anx,any,anz,strikb,dipb,rakeb,dipdib,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    ierr=8
    write(io,'(1x,a,i3)') 'PL2PL: ierr=',ierr
   endif
@@ -1152,27 +1152,27 @@
   call fpsset
 !
   call pl2nd(strike,dip,rake,anx,any,anz,dx,dy,dz,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    write(io,'(1x,a,i3)') 'PL2PT: ierr=',ierr
    return
   endif
   call nd2pt(dx,dy,dz,anx,any,anz,px,py,pz,tx,ty,tz,bx,by,bz,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    ierr=8
    write(io,'(1x,a,i3)') 'PL2PT: ierr=',ierr
   endif
   call ca2ax(px,py,pz,trendp,plungp,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    ierr=9
    write(io,'(1x,a,i3)') 'PL2PT: ierr=',ierr
   endif
   call ca2ax(tx,ty,tz,trendt,plungt,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    ierr=10
    write(io,'(1x,a,i3)') 'PL2PT: ierr=',ierr
   endif
   call ca2ax(bx,by,bz,trendb,plungb,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    ierr=11
    write(io,'(1x,a,i3)') 'PL2PT: ierr=',ierr
   endif
@@ -1230,30 +1230,30 @@
   call fpsset
 !
   call ax2ca(trendp,plungp,px,py,pz,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    write(io,'(1x,a,i3)') 'PT2PL: ierr=',ierr
    return
   endif
   call ax2ca(trendt,plungt,tx,ty,tz,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    ierr=ierr+3
    write(io,'(1x,a,i3)') 'PT2PL: ierr=',ierr
    return
   endif
   call pt2nd(px,py,pz,tx,ty,tz,anx,any,anz,dx,dy,dz,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    ierr=8
    write(io,'(1x,a,i3)') 'PT2PL: ierr=',ierr
    return
   endif
   call nd2pl(anx,any,anz,dx,dy,dz,strika,dipa,rakea,dipdia,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    ierr=9
    write(io,'(1x,a,i3)') 'PT2PL: ierr=',ierr
    return
   endif
   call nd2pl(dx,dy,dz,anx,any,anz,strikb,dipb,rakeb,dipdib,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    ierr=10
    write(io,'(1x,a,i3)') 'PT2PL: ierr=',ierr
    return
@@ -1301,9 +1301,9 @@
 !     ierr           error indicator (OUTPUT)
 !
 !     errors:
-!     1              input tensor not symmetrical: am(1,2)/=am(2,1)
-!     2              input tensor not symmetrical: am(1,3)/=am(3,1)
-!     3              input tensor not symmetrical: am(2,3)/=am(3,2)
+!     1              input tensor not symmetrical: am(1,2) /= am(2,1)
+!     2              input tensor not symmetrical: am(1,3) /= am(3,1)
+!     3              input tensor not symmetrical: am(2,3) /= am(3,2)
 !     5,6,7,8,9,10   internal errors
 !
        implicit none
@@ -1343,42 +1343,42 @@
   plungb=c0
   ierr=0
   call ar2pt(am,am0,am1,e,am0b,px,py,pz,tx,ty,tz,bx,by,bz,eta,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    write(io,'(1x,a,i3)') 'AR2PLP: ierr=',ierr
    return
   endif
   call ca2ax(px,py,pz,trendp,plungp,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    ierr=5
    write(io,'(1x,a,i3)') 'AR2PLP: ierr=',ierr
    return
   endif
   call ca2ax(tx,ty,tz,trendt,plungt,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    ierr=6
    write(io,'(1x,a,i3)') 'AR2PLP: ierr=',ierr
    return
   endif
   call ca2ax(bx,by,bz,trendb,plungb,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    ierr=7
    write(io,'(1x,a,i3)') 'AR2PLP: ierr=',ierr
    return
   endif
   call pt2nd(px,py,pz,tx,ty,tz,anx,any,anz,dx,dy,dz,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    ierr=8
    write(io,'(1x,a,i3)') 'AR2PLP: ierr=',ierr
    return
   endif
   call nd2pl(anx,any,anz,dx,dy,dz,phia,deltaa,alama,slipa,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    ierr=9
    write(io,'(1x,a,i3)') 'AR2PLP: ierr=',ierr
    return
   endif
   call nd2pl(dx,dy,dz,anx,any,anz,phib,deltab,alamb,slipb,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    ierr=10
    write(io,'(1x,a,i3)') 'AR2PLP: ierr=',ierr
    return
@@ -1425,9 +1425,9 @@
 !     ierr           error indicator (OUTPUT)
 !
 !     errors:
-!     1              input tensor not symmetrical: am(1,2)/=am(2,1)
-!     2              input tensor not symmetrical: am(1,3)/=am(3,1)
-!     3              input tensor not symmetrical: am(2,3)/=am(3,2)
+!     1              input tensor not symmetrical: am(1,2) /= am(2,1)
+!     2              input tensor not symmetrical: am(1,3) /= am(3,1)
+!     3              input tensor not symmetrical: am(2,3) /= am(3,2)
 !     5,6,7,8,9,10   internal errors
 !
        implicit none
@@ -1466,14 +1466,14 @@
   plungb=c0
   ierr=0
   call ar2ha(am,ama,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    write(io,'(1x,a,i3)') 'HA2PLP: ierr=',ierr
    return
   endif
   call ar2plp(ama,am0,am1,e,am0b,strika,dipa,rakea,slipa, &
   strikb,dipb,rakeb,slipb,trendp,plungp,trendt,plungt,trendb, &
   plungb,eta,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    write(io,'(1x,a,i3)') 'HA2PLP: ierr=',ierr
   endif
   return
@@ -1526,12 +1526,12 @@
   1     continue
   ierr=0
   call pl2nd(strike,dip,rake,anx,any,anz,dx,dy,dz,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    write(io,'(1x,a,i3)') 'PL2AR: ierr=',ierr
    return
   endif
   call nd2ar(anx,any,anz,dx,dy,dz,am0,am,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    ierr=8
    write(io,'(1x,a,i3)') 'PL2AR: ierr=',ierr
   endif
@@ -1585,12 +1585,12 @@
   1     continue
   ierr=0
   call pl2ar(strike,dip,rake,am0,am,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    write(io,'(1x,a,i3)') 'PL2HA: ierr=',ierr
    return
   endif
   call ar2ha(am,am,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    ierr=9
    write(io,'(1x,a,i3)') 'PL2HA: ierr=',ierr
   endif
@@ -1646,24 +1646,24 @@
   1     continue
   ierr=0
   call ax2ca(trendp,plungp,px,py,pz,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    write(io,'(1x,a,i3)') 'PT2AR: ierr=',ierr
    return
   endif
   call ax2ca(trendt,plungt,tx,ty,tz,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    ierr=ierr+3
    write(io,'(1x,a,i3)') 'PT2AR: ierr=',ierr
    return
   endif
   call pt2nd(px,py,pz,tx,ty,tz,anx,any,anz,dx,dy,dz,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    ierr=8
    write(io,'(1x,a,i3)') 'PT2AR: ierr=',ierr
    return
   endif
   call nd2ar(anx,any,anz,dx,dy,dz,am0,am,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    ierr=9
    write(io,'(1x,a,i3)') 'PT2AR: ierr=',ierr
   endif
@@ -1718,12 +1718,12 @@
   1     continue
   ierr=0
   call pt2ar(trendp,plungp,trendt,plungt,am0,am,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    write(io,'(1x,a,i3)') 'PT2HA: ierr=',ierr
    return
   endif
   call ar2ha(am,am,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    ierr=10
    write(io,'(1x,a,i3)') 'PT2HA: ierr=',ierr
   endif
@@ -1758,7 +1758,7 @@
   stop 'DK DK CALL EVCSF (3, AM, 3, EVAL, EVEC, 3) not included, error'
   do 2 i=1,2
    do 3 j=i+1,3
-      if(abs(eval(i))<abs(eval(j))) then
+      if (abs(eval(i)) < abs(eval(j))) then
          dum=eval(i)
          eval(i)=eval(j)
          eval(j)=dum
@@ -1855,12 +1855,12 @@
   call fpsset
 !
   call pl2nd(strika,dipa,rakea,anax,anay,anaz,dax,day,daz,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    write(io,'(1x,a,i3)') 'ANGLES: ierr=',ierr
    return
   endif
   call pl2nd(strikb,dipb,rakeb,anbx,anby,anbz,dbx,dby,dbz,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    ierr=ierr+8
    write(io,'(1x,a,i3)') 'ANGLES: ierr=',ierr
    return
@@ -1906,12 +1906,12 @@
   call fpsset
 !
   call ax2ca(trenda,plunga,ax,ay,az,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    write(io,'(1x,a,i3)') 'ANGLEA: ierr=',ierr
    return
   endif
   call ax2ca(trendb,plungb,bx,by,bz,ierr)
-  if(ierr/=0) then
+  if (ierr /= 0) then
    ierr=ierr+4
    write(io,'(1x,a,i3)') 'ANGLEA: ierr=',ierr
    return
@@ -1946,7 +1946,7 @@
   call fpsset
 !
   anorm=sqrt(wax*wax+way*way+waz*waz)
-  if(anorm==c0) return
+  if (anorm == c0) return
   ax=wax/anorm
   ay=way/anorm
   az=waz/anorm
@@ -2136,7 +2136,7 @@
   integer ifl
   save ifl
   data ifl/0/
-  if(ifl==0) then
+  if (ifl == 0) then
    amistr=-360.
    amastr=360.
    amidip=0.
@@ -2213,7 +2213,7 @@
   double precision f1,f2,f3,f4,rm,rn,t,c,a,e1,u,rlat1,dlat1,c1,t1,rn1,r1,d
   double precision rx_save,ry_save,rlon_save,rlat_save
 
-  if(SUPPRESS_UTM_PROJECTION) then
+  if (SUPPRESS_UTM_PROJECTION) then
     if (iway == ILONGLAT2UTM) then
       rx = rlon
       ry = rlat

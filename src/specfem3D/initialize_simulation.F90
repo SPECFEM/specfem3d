@@ -38,6 +38,8 @@
 
   implicit none
 
+  include 'version.fh'
+
   integer :: ier
   logical :: BROADCAST_AFTER_READ
 
@@ -64,6 +66,7 @@
     write(IMAIN,*) '**** Specfem 3-D Solver - MPI version f90 ****'
     write(IMAIN,*) '**********************************************'
     write(IMAIN,*)
+    write(IMAIN,*) 'Version: ', git_version
     write(IMAIN,*)
     if (FIX_UNDERFLOW_PROBLEM) write(IMAIN,*) 'Fixing slow underflow trapping problem using small initial field'
     write(IMAIN,*)
@@ -85,7 +88,7 @@
       write(IMAIN,*) 'using double precision for the calculations'
     endif
     write(IMAIN,*)
-    write(IMAIN,*) 'smallest and largest possible floating-point numbers are: ',&
+    write(IMAIN,*) 'smallest and largest possible floating-point numbers are: ', &
                    tiny(1._CUSTOM_REAL),huge(1._CUSTOM_REAL)
     write(IMAIN,*)
     write(IMAIN,'(a)',advance='no') ' velocity model: '
@@ -316,7 +319,7 @@
     read(IOUT,NML=MESHER)
     close(IOUT)
 
-    if (STACEY_INSTEAD_OF_FREE_SURFACE .NEQV. ABSORB_FREE_SURFACE_VAL) then
+    if (STACEY_INSTEAD_OF_FREE_SURFACE .neqv. ABSORB_FREE_SURFACE_VAL) then
       write(IMAIN,*) 'STACEY_INSTEAD_OF_FREE_SURFACE:',STACEY_INSTEAD_OF_FREE_SURFACE,ABSORB_FREE_SURFACE_VAL
       call exit_MPI(myrank,'it seems you have changed STACEY_INSTEAD_OF_FREE_SURFACE, you need to rerun xgenerate_databases')
     endif

@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
 !--------------------------------------------------------------------------------------------------
 !
 ! IPATI
@@ -36,7 +35,7 @@
 
   subroutine model_ipati(myrank,nspec,LOCAL_PATH)
 
-  use generate_databases_par,only: IMAIN,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
+  use generate_databases_par, only: IMAIN,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
   use create_regions_mesh_ext_par
   implicit none
 
@@ -57,7 +56,7 @@
   ! -----------------------------------------------------------------------------
 
   ! user output
-  if (myrank==0) then
+  if (myrank == 0) then
     write(IMAIN,*) '     using IPATI model from: ',trim(LOCAL_PATH)
     write(IMAIN,*) '     scaling factor: ',SCALING_FACTOR
   endif
@@ -118,7 +117,7 @@
 
   subroutine model_ipati_water(myrank,nspec,LOCAL_PATH)
 
-  use generate_databases_par,only: IMAIN,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
+  use generate_databases_par, only: IMAIN,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
   use create_regions_mesh_ext_par
   implicit none
 
@@ -139,7 +138,7 @@
   ! -----------------------------------------------------------------------------
 
   ! user output
-  if (myrank==0) then
+  if (myrank == 0) then
     write(IMAIN,*) '     using IPATI_WATER model from: ',trim(LOCAL_PATH)
     write(IMAIN,*) '     scaling factor: ',SCALING_FACTOR
   endif

@@ -34,111 +34,38 @@ $(auxiliaries_OBJECTS): S := ${S_TOP}/src/auxiliaries
 auxiliaries_TARGETS = \
 	$E/xcombine_surf_data \
 	$E/xcombine_vol_data \
+	$E/xcombine_vol_data_vtk \
 	$E/xconvolve_source_timefunction \
 	$E/xdetect_duplicates_stations_file \
 	$E/xcreate_movie_shakemap_AVS_DX_GMT \
 	$(EMPTY_MACRO)
 
 auxiliaries_OBJECTS = \
-	$O/combine_surf_data.aux.o \
-	$O/combine_vol_data.aux.o \
-	$O/convolve_source_timefunction.aux.o \
-	$O/detect_duplicates_stations_file.aux.o \
-	$O/create_movie_shakemap_AVS_DX_GMT.aux.o \
+	$(xcombine_surf_data_OBJECTS) \
+	$(xcombine_vol_data_OBJECTS) \
+	$(xcombine_vol_data_vtk_OBJECTS) \
+	$(xcreate_movie_shakemap_AVS_DX_GMT_OBJECTS) \
+	$(xconvolve_source_timefunction_OBJECTS) \
+	$(xdetect_duplicates_stations_file_OBJECTS) \
 	$(EMPTY_MACRO)
 
 # These files come from the shared directory
 auxiliaries_SHARED_OBJECTS = \
-	$O/shared_par.shared_module.o \
-	$O/check_mesh_resolution.shared.o \
-	$O/create_name_database.shared.o \
-	$O/exit_mpi.shared.o \
-	$O/get_attenuation_model.shared.o \
-	$O/gll_library.shared.o \
-	$O/param_reader.cc.o \
-	$O/read_parameter_file.shared.o \
-	$O/read_value_parameters.shared.o \
-	$O/write_VTK_data.shared.o \
+	$(xcombine_surf_data_SHARED_OBJECTS) \
+	$(xcombine_vol_data_SHARED_OBJECTS) \
+	$(xcombine_vol_data_vtk_SHARED_OBJECTS) \
+	$(xcreate_movie_shakemap_AVS_DX_GMT_SHARED_OBJECTS) \
+	$(xconvolve_source_timefunction_SHARED_OBJECTS) \
+	$(xdetect_duplicates_stations_file_SHARED_OBJECTS) \
 	$(EMPTY_MACRO)
 
 auxiliaries_SHARED_OBJECTS += $(COND_MPI_OBJECTS)
 
 auxiliaries_MODULES = \
 	$(FC_MODDIR)/combine_vol_data_mod.$(FC_MODEXT) \
-	$(FC_MODDIR)/combine_vtk.$(FC_MODEXT) \
+	$(FC_MODDIR)/combine_vtk_par.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 
-
-
-##
-## combine_surf_data
-##
-combine_surf_data_auxiliaries_OBJECTS = \
-	$O/combine_surf_data.aux.o \
-	$(EMPTY_MACRO)
-
-combine_surf_data_auxiliaries_SHARED_OBJECTS = \
-	$O/shared_par.shared_module.o \
-	$O/param_reader.cc.o \
-	$O/write_c_binary.cc.o \
-	$(EMPTY_MACRO)
-
-auxiliaries_OBJECTS += $(combine_surf_data_auxiliaries_OBJECTS)
-auxiliaries_SHARED_OBJECTS += $(combine_surf_data_auxiliaries_SHARED_OBJECTS)
-
-##
-## combine_vol_data
-##
-combine_vol_data_auxiliaries_OBJECTS = \
-	$O/combine_vol_data.aux.o \
-	$O/combine_vol_data_impl.aux.o \
-	$(EMPTY_MACRO)
-
-combine_vol_data_auxiliaries_SHARED_OBJECTS = \
-	$O/shared_par.shared_module.o \
-	$O/read_parameter_file.shared.o \
-	$O/read_value_parameters.shared.o \
-	$O/param_reader.cc.o \
-	$O/write_c_binary.cc.o \
-	$(EMPTY_MACRO)
-
-## ADIOS
-# conditional adios linking
-ifeq ($(ADIOS),yes)
-combine_vol_data_auxiliaries_OBJECTS += \
-	$O/combine_vol_data_adios_impl.aux_adios.o
-else
-combine_vol_data_auxiliaries_OBJECTS += \
-	$O/combine_vol_data_adios_stubs.aux_noadios.o
-combine_vol_data_auxiliaries_SHARED_OBJECTS += \
-	$O/adios_manager_stubs.shared_noadios.o
-endif
-
-auxiliaries_OBJECTS += $(combine_vol_data_auxiliaries_OBJECTS)
-auxiliaries_SHARED_OBJECTS += $(combine_vol_data_auxiliaries_SHARED_OBJECTS)
-auxiliaries_MODULES += $(FC_MODDIR)/combine_vol_data_adios_mod.$(FC_MODEXT)
-
-##
-## create_movie_shakemap_AVS_DX_GMT
-##
-create_movie_shakemap_AVS_DX_GMT_auxiliaries_OBJECTS = \
-	$O/create_movie_shakemap_AVS_DX_GMT.aux.o \
-	$(EMPTY_MACRO)
-
-create_movie_shakemap_AVS_DX_GMT_auxiliaries_SHARED_OBJECTS = \
-	$O/shared_par.shared_module.o \
-	$O/get_global.shared.o \
-	$O/param_reader.cc.o \
-	$O/read_parameter_file.shared.o \
-	$O/read_value_parameters.shared.o \
-	$O/sort_array_coordinates.shared.o \
-	$O/utm_geo.shared.o \
-	$(EMPTY_MACRO)
-
-auxiliaries_OBJECTS += $(create_movie_shakemap_AVS_DX_GMT_auxiliaries_OBJECTS)
-auxiliaries_SHARED_OBJECTS += $(create_movie_shakemap_AVS_DX_GMT_auxiliaries_SHARED_OBJECTS)
-
-#######################################
 
 ####
 #### rules for executables
@@ -158,47 +85,173 @@ xcombine_surf_data: $E/xcombine_surf_data
 combine_vol_data: xcombine_vol_data
 xcombine_vol_data: $E/xcombine_vol_data
 
+combine_vol_data_vtk: xcombine_vol_data_vtk
+xcombine_vol_data_vtk: $E/xcombine_vol_data_vtk
+
 create_movie_shakemap_AVS_DX_GMT: xcreate_movie_shakemap_AVS_DX_GMT
 xcreate_movie_shakemap_AVS_DX_GMT: $E/xcreate_movie_shakemap_AVS_DX_GMT
 
+#######################################
 
-$E/xconvolve_source_timefunction: $O/convolve_source_timefunction.aux.o $O/shared_par.shared_module.o
-	@echo ""
-	@echo "building xconvolve_source_timefunction"
-	@echo ""
-	${FCCOMPILE_CHECK} -o  ${E}/xconvolve_source_timefunction $O/convolve_source_timefunction.aux.o $O/shared_par.shared_module.o
-	@echo ""
+####
+#### rules for each program follow
+####
 
-$E/xdetect_duplicates_stations_file: $O/detect_duplicates_stations_file.aux.o $O/shared_par.shared_module.o
-	@echo ""
-	@echo "building xdetect_duplicates_stations_file"
-	@echo ""
-	${FCCOMPILE_CHECK} -o  ${E}/xdetect_duplicates_stations_file $O/detect_duplicates_stations_file.aux.o $O/shared_par.shared_module.o
-	@echo ""
+#######################################
 
-$E/xcombine_surf_data: $(combine_surf_data_auxiliaries_OBJECTS) $(combine_surf_data_auxiliaries_SHARED_OBJECTS)
+##
+## xcombine_surf_data
+##
+xcombine_surf_data_OBJECTS = \
+	$O/combine_surf_data.aux.o \
+	$(EMPTY_MACRO)
+
+xcombine_surf_data_SHARED_OBJECTS = \
+	$O/shared_par.shared_module.o \
+	$O/param_reader.cc.o \
+	$O/write_c_binary.cc.o \
+	$(EMPTY_MACRO)
+
+$E/xcombine_surf_data: $(xcombine_surf_data_OBJECTS) $(xcombine_surf_data_SHARED_OBJECTS)
 	@echo ""
 	@echo "building xcombine_surf_data"
 	@echo ""
 	${FCLINK} -o $@ $+
 	@echo ""
 
-$E/xcombine_vol_data: $(combine_vol_data_auxiliaries_OBJECTS) $(combine_vol_data_auxiliaries_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
+#######################################
+
+##
+## xcombine_vol_data
+##
+xcombine_vol_data_OBJECTS = \
+	$O/combine_vol_data.aux.o \
+	$O/combine_vol_data_impl.aux.o \
+	$(EMPTY_MACRO)
+
+xcombine_vol_data_SHARED_OBJECTS = \
+	$O/shared_par.shared_module.o \
+	$O/read_parameter_file.shared.o \
+	$O/read_value_parameters.shared.o \
+	$O/param_reader.cc.o \
+	$O/write_c_binary.cc.o \
+	$(EMPTY_MACRO)
+
+## ADIOS
+# conditional adios linking
+ifeq ($(ADIOS),yes)
+xcombine_vol_data_OBJECTS += \
+	$O/combine_vol_data_adios_impl.aux_adios.o
+else
+xcombine_vol_data_OBJECTS += \
+	$O/combine_vol_data_adios_stubs.aux_noadios.o
+xcombine_vol_data_SHARED_OBJECTS += \
+	$O/adios_manager_stubs.shared_noadios.o
+endif
+
+auxiliaries_OBJECTS += $(xcombine_vol_data_OBJECTS)
+auxiliaries_SHARED_OBJECTS += $(xcombine_vol_data_SHARED_OBJECTS)
+auxiliaries_MODULES += $(FC_MODDIR)/combine_vol_data_adios_mod.$(FC_MODEXT)
+
+$E/xcombine_vol_data: $(xcombine_vol_data_OBJECTS) $(xcombine_vol_data_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
 	@echo ""
 	@echo "building xcombine_vol_data"
 	@echo ""
 	${FCLINK} -o $@ $+ $(MPILIBS)
 	@echo ""
 
-$E/xcreate_movie_shakemap_AVS_DX_GMT: $(create_movie_shakemap_AVS_DX_GMT_auxiliaries_OBJECTS) $(create_movie_shakemap_AVS_DX_GMT_auxiliaries_SHARED_OBJECTS)
+#######################################
+
+##
+## xcombine_vol_data_vtk
+##
+xcombine_vol_data_vtk_OBJECTS = \
+	$O/combine_vol_data.aux_vtk.o \
+	$O/combine_vol_data_impl.aux.o \
+	$(EMPTY_MACRO)
+
+# ADIOS
+ifeq ($(ADIOS),yes)
+xcombine_vol_data_vtk_OBJECTS += \
+	$O/combine_vol_data_adios_impl.aux_adios.o
+else
+xcombine_vol_data_vtk_OBJECTS += \
+	$O/combine_vol_data_adios_stubs.aux_noadios.o
+endif
+
+$E/xcombine_vol_data_vtk: $(xcombine_vol_data_vtk_OBJECTS) $(xcombine_vol_data_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
+	@echo ""
+	@echo "building xcombine_vol_data_vtk"
+	@echo ""
+	${FCLINK} -o $@ $+ $(MPILIBS)
+	@echo ""
+
+#######################################
+
+##
+## xcreate_movie_shakemap_AVS_DX_GMT
+##
+xcreate_movie_shakemap_AVS_DX_GMT_OBJECTS = \
+	$O/create_movie_shakemap_AVS_DX_GMT.aux.o \
+	$(EMPTY_MACRO)
+
+xcreate_movie_shakemap_AVS_DX_GMT_SHARED_OBJECTS = \
+	$O/shared_par.shared_module.o \
+	$O/get_global.shared.o \
+	$O/param_reader.cc.o \
+	$O/read_parameter_file.shared.o \
+	$O/read_value_parameters.shared.o \
+	$O/sort_array_coordinates.shared.o \
+	$O/utm_geo.shared.o \
+	$(EMPTY_MACRO)
+
+$E/xcreate_movie_shakemap_AVS_DX_GMT: $(xcreate_movie_shakemap_AVS_DX_GMT_OBJECTS) $(xcreate_movie_shakemap_AVS_DX_GMT_SHARED_OBJECTS)
 	@echo ""
 	@echo "building xcreate_movie_shakemap_AVS_DX_GMT"
 	@echo ""
 	${FCLINK} -o $@ $+
 	@echo ""
 
+#######################################
 
+##
+## xconvolve_source_timefunction
+##
+xconvolve_source_timefunction_OBJECTS = \
+	$O/convolve_source_timefunction.aux.o \
+	$(EMPTY_MACRO)
 
+xconvolve_source_timefunction_SHARED_OBJECTS = \
+	$O/shared_par.shared_module.o \
+	$(EMPTY_MACRO)
+
+$E/xconvolve_source_timefunction: $(xconvolve_source_timefunction_OBJECTS) $(xconvolve_source_timefunction_SHARED_OBJECTS)
+	@echo ""
+	@echo "building xconvolve_source_timefunction"
+	@echo ""
+	${FCLINK} -o $@ $+
+	@echo ""
+
+#######################################
+
+##
+## xdetect_duplicates_stations_file
+##
+
+xdetect_duplicates_stations_file_OBJECTS = \
+	$O/detect_duplicates_stations_file.aux.o \
+	$(EMPTY_MACRO)
+
+xdetect_duplicates_stations_file_SHARED_OBJECTS = \
+	$O/shared_par.shared_module.o \
+	$(EMPTY_MACRO)
+
+$E/xdetect_duplicates_stations_file: $(xdetect_duplicates_stations_file_OBJECTS) $(xdetect_duplicates_stations_file_SHARED_OBJECTS)
+	@echo ""
+	@echo "building xdetect_duplicates_stations_file"
+	@echo ""
+	${FCLINK} -o $@ $+
+	@echo ""
 
 #######################################
 
@@ -206,18 +259,27 @@ $E/xcreate_movie_shakemap_AVS_DX_GMT: $(create_movie_shakemap_AVS_DX_GMT_auxilia
 ### Module dependencies
 ###
 
-# combine_vol_data
+# xcombine_vol_data
+$O/combine_vol_data.aux.o: $O/combine_vol_data_impl.aux.o
+
 $O/combine_vol_data_adios_stubs.aux_noadios.o: $O/adios_manager_stubs.shared_noadios.o
 ifeq ($(ADIOS),yes)
-$O/combine_vol_data.aux.o: $O/combine_vol_data_impl.aux.o $O/combine_vol_data_adios_impl.aux_adios.o
+$O/combine_vol_data.aux.o: $O/combine_vol_data_adios_impl.aux_adios.o
 $O/adios_helpers.shared_adios.o: \
 	$O/adios_helpers_definitions.shared_adios_module.o \
 	$O/adios_helpers_writers.shared_adios_module.o
 else
-$O/combine_vol_data.aux.o: $O/combine_vol_data_impl.aux.o $O/combine_vol_data_adios_stubs.aux_noadios.o
+$O/combine_vol_data.aux.o: $O/combine_vol_data_adios_stubs.aux_noadios.o
 endif
 
+# xcombine_vol_data_vtk
+$O/combine_vol_data.aux_vtk.o: $O/combine_vol_data_impl.aux.o
 
+ifeq ($(ADIOS),yes)
+$O/combine_vol_data.aux_vtk.o: $O/combine_vol_data_adios_impl.aux_adios.o
+else
+$O/combine_vol_data.aux_vtk.o: $O/combine_vol_data_adios_stubs.aux_noadios.o
+endif
 
 #######################################
 
@@ -229,8 +291,14 @@ endif
 ## auxiliaries
 ##
 
+$O/%.aux.o: $S/%.F90 $O/shared_par.shared_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
 $O/%.aux.o: $S/%.f90 $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+$O/%.aux_vtk.o: $S/%.F90 $O/shared_par.shared_module.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $< $(FC_DEFINE)USE_VTK_INSTEAD_OF_MESH
 
 
 ###

@@ -83,10 +83,6 @@ cp ./bin/xgenerate_databases   $bin/xgenerate_databases_internal
 cp ./bin/xspecfem3D            $bin/xspecfem3D
 
 #daniel
-make xcombine_vol_data >> $bin/../make.log
-cp ./bin/xcombine_vol_data   $bin/
-
-#daniel
 #cp $bin/../get_model_external.f90 ./src/generate_databases/get_model.f90
 sed -i "s:USE_EXTERNAL_FILES.*=.*:USE_EXTERNAL_FILES = .true.:" ./src/generate_databases/get_model.f90
 

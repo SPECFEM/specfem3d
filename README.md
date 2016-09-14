@@ -15,10 +15,12 @@ available in the
 
 - PDF manual located in directory: [doc/USER_MANUAL](doc/USER_MANUAL)
 
-- HTML manual (latest version): [specfem3d.readthedocs.org](http://specfem3d.readthedocs.org/)
+- HTML manual (latest version): [specfem3d.readthedocs.io](http://specfem3d.readthedocs.io/)
 
 
 ## Development
+
+[![Build Status](https://travis-ci.org/geodynamics/specfem3d.svg?branch=devel)](https://travis-ci.org/geodynamics/specfem3d) [![codecov](https://codecov.io/gh/geodynamics/specfem3d/branch/devel/graph/badge.svg)](https://codecov.io/gh/geodynamics/specfem3d)
 
 Development is hosted on GitHub in the
 [geodynamics/specfem3d repository](https://github.com/geodynamics/specfem3d).

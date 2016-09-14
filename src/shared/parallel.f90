@@ -153,7 +153,7 @@ end module my_mpi
   call MPI_COMM_RANK(MPI_COMM_WORLD,my_global_rank,ier)
 
   ! write a stamp file to disk to let the user know that the run failed
-  if(NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
+  if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
     ! notifies which run directory failed
     write(filename,"('run',i4.4,'_failed')") mygroup + 1
     inquire(file=trim(filename), exist=run_file_exists)
@@ -184,7 +184,7 @@ end module my_mpi
   ! in case of a large number of simultaneous runs, if one fails we may want that one to just call MPI_FINALIZE() and wait
   ! until all the others are finished instead of calling MPI_ABORT(), which would instead kill all the runs,
   ! including all the successful ones
-  if(USE_FAILSAFE_MECHANISM .and. NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
+  if (USE_FAILSAFE_MECHANISM .and. NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
     ! do NOT remove the barrier here, it is critical in order to let other runs finish before calling MPI_FINALIZE
     call MPI_BARRIER(MPI_COMM_WORLD,ier)
     call MPI_FINALIZE(ier)
@@ -344,7 +344,7 @@ end module my_mpi
   subroutine bcast_all_cr(buffer, countval)
 
   use my_mpi
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -366,7 +366,7 @@ end module my_mpi
   subroutine bcast_all_singlecr(buffer)
 
   use my_mpi
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -457,7 +457,7 @@ end module my_mpi
   subroutine bcast_all_ch_array(buffer,countval)
 
     use my_mpi
-    use constants,only: MAX_STRING_LEN
+    use constants, only: MAX_STRING_LEN
 
     implicit none
 
@@ -502,7 +502,7 @@ end module my_mpi
   subroutine bcast_all_i_for_database(buffer, countval)
 
   use my_mpi
-  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
+  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   implicit none
 
@@ -527,7 +527,7 @@ end module my_mpi
   subroutine bcast_all_l_for_database(buffer, countval)
 
   use my_mpi
-  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
+  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   implicit none
 
@@ -552,8 +552,8 @@ end module my_mpi
   subroutine bcast_all_cr_for_database(buffer, countval)
 
   use my_mpi
-  use constants,only: CUSTOM_REAL
-  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
+  use constants, only: CUSTOM_REAL
+  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   implicit none
 
@@ -580,7 +580,7 @@ end module my_mpi
   subroutine bcast_all_dp_for_database(buffer, countval)
 
   use my_mpi
-  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
+  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   implicit none
 
@@ -605,7 +605,7 @@ end module my_mpi
   subroutine bcast_all_r_for_database(buffer, countval)
 
   use my_mpi
-  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
+  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   implicit none
 
@@ -684,7 +684,7 @@ end module my_mpi
   subroutine bcast_all_string_world(buffer)
 
   use my_mpi
-  use constants,only: MAX_STRING_LEN
+  use constants, only: MAX_STRING_LEN
 
   implicit none
 
@@ -770,7 +770,7 @@ end module my_mpi
   subroutine min_all_cr(sendbuf, recvbuf)
 
   use my_mpi
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -790,7 +790,7 @@ end module my_mpi
   subroutine min_all_all_cr(sendbuf, recvbuf)
 
   use my_mpi
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -810,7 +810,7 @@ end module my_mpi
   subroutine max_all_cr(sendbuf, recvbuf)
 
   use my_mpi
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -837,7 +837,7 @@ end module my_mpi
   subroutine max_all_all_cr(sendbuf, recvbuf)
 
   use my_mpi
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -978,7 +978,7 @@ end module my_mpi
   subroutine sum_all_cr(sendbuf, recvbuf)
 
   use my_mpi
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -998,7 +998,7 @@ end module my_mpi
   subroutine sum_all_all_cr(sendbuf, recvbuf)
 
   use my_mpi
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -1066,7 +1066,7 @@ end module my_mpi
   subroutine isend_cr(sendbuf, sendcount, dest, sendtag, req)
 
   use my_mpi
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -1114,7 +1114,7 @@ end module my_mpi
   subroutine irecv_cr(recvbuf, recvcount, dest, recvtag, req)
 
   use my_mpi
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -1205,7 +1205,7 @@ end module my_mpi
   subroutine recvv_cr(recvbuf, recvcount, dest, recvtag )
 
   use my_mpi
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -1327,7 +1327,7 @@ end module my_mpi
   subroutine sendv_cr(sendbuf, sendcount, dest, sendtag)
 
   use my_mpi
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -1382,6 +1382,10 @@ end module my_mpi
 
   end subroutine gather_all_i
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
   subroutine all_gather_all_i(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
 
   use my_mpi
@@ -1395,11 +1399,10 @@ end module my_mpi
   integer :: ier
 
   call MPI_ALLGATHER(sendbuf,sendcnt,MPI_INTEGER, &
-                  recvbuf,recvcount,MPI_INTEGER, &
-                  my_local_mpi_comm_world,ier)
+                     recvbuf,recvcount,MPI_INTEGER, &
+                     my_local_mpi_comm_world,ier)
 
-end subroutine all_gather_all_i
-
+  end subroutine all_gather_all_i
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -1430,7 +1433,7 @@ end subroutine all_gather_all_i
   subroutine gather_all_cr(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
 
   use my_mpi
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -1495,7 +1498,7 @@ end subroutine all_gather_all_i
   subroutine gather_all_all_cr(sendbuf, recvbuf, counts, NPROC)
 
   use my_mpi
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -1525,7 +1528,7 @@ end subroutine all_gather_all_i
   subroutine gatherv_all_cr(sendbuf, sendcnt, recvbuf, recvcount, recvoffset,recvcounttot, NPROC)
 
   use my_mpi
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -1659,9 +1662,9 @@ end subroutine all_gather_all_i
   subroutine world_split()
 
   use my_mpi
-  use constants,only: MAX_STRING_LEN,OUTPUT_FILES, &
+  use constants, only: MAX_STRING_LEN,OUTPUT_FILES, &
     IMAIN,ISTANDARD_OUTPUT,mygroup,I_should_read_the_database
-  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
+  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   implicit none
 
@@ -1748,7 +1751,7 @@ end subroutine all_gather_all_i
   subroutine world_unsplit()
 
   use my_mpi
-  use shared_parameters,only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
+  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,BROADCAST_SAME_MESH_AND_MODEL
 
   implicit none
 

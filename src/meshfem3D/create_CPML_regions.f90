@@ -32,7 +32,7 @@
     THICKNESS_OF_X_PML,THICKNESS_OF_Y_PML,THICKNESS_OF_Z_PML
 
   ! create the different regions of the mesh
-  use constants,only: IMAIN,CUSTOM_REAL,SMALL_PERCENTAGE_TOLERANCE,&
+  use constants, only: IMAIN,CUSTOM_REAL,SMALL_PERCENTAGE_TOLERANCE, &
                       CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
   ! CPML
@@ -119,7 +119,7 @@
 
     ! Xmin CPML
     limit=xmin_all+THICKNESS_OF_X_PML * SMALL_PERCENTAGE_TOLERANCE
-    if(  nodes_coords(i1,1) < limit .and. nodes_coords(i2,1) < limit .and. &
+    if (  nodes_coords(i1,1) < limit .and. nodes_coords(i2,1) < limit .and. &
          nodes_coords(i3,1) < limit .and. nodes_coords(i4,1) < limit .and. &
          nodes_coords(i5,1) < limit .and. nodes_coords(i6,1) < limit .and. &
          nodes_coords(i7,1) < limit .and. nodes_coords(i8,1) < limit) then
@@ -128,7 +128,7 @@
 
     ! Xmax CPML
     limit = xmax_all - THICKNESS_OF_X_PML * SMALL_PERCENTAGE_TOLERANCE
-    if(  nodes_coords(i1,1) > limit .and. nodes_coords(i2,1) > limit .and. &
+    if (  nodes_coords(i1,1) > limit .and. nodes_coords(i2,1) > limit .and. &
          nodes_coords(i3,1) > limit .and. nodes_coords(i4,1) > limit .and. &
          nodes_coords(i5,1) > limit .and. nodes_coords(i6,1) > limit .and. &
          nodes_coords(i7,1) > limit .and. nodes_coords(i8,1) > limit) then
@@ -137,7 +137,7 @@
 
     ! Ymin CPML
     limit=ymin_all+THICKNESS_OF_Y_PML * SMALL_PERCENTAGE_TOLERANCE
-    if(  nodes_coords(i1,2) < limit .and. nodes_coords(i2,2) < limit .and. &
+    if (  nodes_coords(i1,2) < limit .and. nodes_coords(i2,2) < limit .and. &
          nodes_coords(i3,2) < limit .and. nodes_coords(i4,2) < limit .and. &
          nodes_coords(i5,2) < limit .and. nodes_coords(i6,2) < limit .and. &
          nodes_coords(i7,2) < limit .and. nodes_coords(i8,2) < limit) then
@@ -146,7 +146,7 @@
 
     ! Ymax CPML
     limit = ymax_all - THICKNESS_OF_Y_PML * SMALL_PERCENTAGE_TOLERANCE
-    if(  nodes_coords(i1,2) > limit .and. nodes_coords(i2,2) > limit .and. &
+    if (  nodes_coords(i1,2) > limit .and. nodes_coords(i2,2) > limit .and. &
          nodes_coords(i3,2) > limit .and. nodes_coords(i4,2) > limit .and. &
          nodes_coords(i5,2) > limit .and. nodes_coords(i6,2) > limit .and. &
          nodes_coords(i7,2) > limit .and. nodes_coords(i8,2) > limit) then
@@ -155,17 +155,17 @@
 
     ! Zmin CPML
     limit=zmin_all+THICKNESS_OF_Z_PML * SMALL_PERCENTAGE_TOLERANCE
-    if(  nodes_coords(i1,3) < limit .and. nodes_coords(i2,3) < limit .and. &
+    if (  nodes_coords(i1,3) < limit .and. nodes_coords(i2,3) < limit .and. &
          nodes_coords(i3,3) < limit .and. nodes_coords(i4,3) < limit .and. &
          nodes_coords(i5,3) < limit .and. nodes_coords(i6,3) < limit .and. &
          nodes_coords(i7,3) < limit .and. nodes_coords(i8,3) < limit) then
        is_Z_CPML(ispec) = .true.
     endif
 
-    if(PML_INSTEAD_OF_FREE_SURFACE) then
+    if (PML_INSTEAD_OF_FREE_SURFACE) then
        ! Zmax CPML
        limit = zmax_all - THICKNESS_OF_Z_PML * SMALL_PERCENTAGE_TOLERANCE
-       if(  nodes_coords(i1,3) > limit .and. nodes_coords(i2,3) > limit .and. &
+       if (  nodes_coords(i1,3) > limit .and. nodes_coords(i2,3) > limit .and. &
             nodes_coords(i3,3) > limit .and. nodes_coords(i4,3) > limit .and. &
             nodes_coords(i5,3) > limit .and. nodes_coords(i6,3) > limit .and. &
             nodes_coords(i7,3) > limit .and. nodes_coords(i8,3) > limit) then
@@ -173,7 +173,7 @@
        endif
     endif
 
-    if(is_X_CPML(ispec) .or. is_Y_CPML(ispec) .or. is_Z_CPML(ispec)) &
+    if (is_X_CPML(ispec) .or. is_Y_CPML(ispec) .or. is_Z_CPML(ispec)) &
          nspec_CPML = nspec_CPML + 1
 
   enddo
@@ -197,42 +197,42 @@
 
   ispec_CPML=0
   do ispec=1,nspec
-    if(is_X_CPML(ispec) .and. is_Y_CPML(ispec) .and. is_Z_CPML(ispec)) then
+    if (is_X_CPML(ispec) .and. is_Y_CPML(ispec) .and. is_Z_CPML(ispec)) then
        ispec_CPML=ispec_CPML+1
        CPML_to_spec(ispec_CPML)=ispec
        CPML_regions(ispec_CPML)=CPML_XYZ
        is_CPML(ispec)=.true.
-    else if(is_Y_CPML(ispec) .and. is_Z_CPML(ispec)) then
+    else if (is_Y_CPML(ispec) .and. is_Z_CPML(ispec)) then
        ispec_CPML=ispec_CPML+1
        CPML_to_spec(ispec_CPML)=ispec
        CPML_regions(ispec_CPML)=CPML_YZ_ONLY
        is_CPML(ispec)=.true.
 
-    else if(is_X_CPML(ispec) .and. is_Z_CPML(ispec)) then
+    else if (is_X_CPML(ispec) .and. is_Z_CPML(ispec)) then
        ispec_CPML=ispec_CPML+1
        CPML_to_spec(ispec_CPML)=ispec
        CPML_regions(ispec_CPML)=CPML_XZ_ONLY
        is_CPML(ispec)=.true.
 
-    else if(is_X_CPML(ispec) .and. is_Y_CPML(ispec)) then
+    else if (is_X_CPML(ispec) .and. is_Y_CPML(ispec)) then
        ispec_CPML=ispec_CPML+1
        CPML_to_spec(ispec_CPML)=ispec
        CPML_regions(ispec_CPML)=CPML_XY_ONLY
        is_CPML(ispec)=.true.
 
-    else if(is_Z_CPML(ispec)) then
+    else if (is_Z_CPML(ispec)) then
        ispec_CPML=ispec_CPML+1
        CPML_to_spec(ispec_CPML)=ispec
        CPML_regions(ispec_CPML)=CPML_Z_ONLY
        is_CPML(ispec)=.true.
 
-    else if(is_Y_CPML(ispec)) then
+    else if (is_Y_CPML(ispec)) then
        ispec_CPML=ispec_CPML+1
        CPML_to_spec(ispec_CPML)=ispec
        CPML_regions(ispec_CPML)=CPML_Y_ONLY
        is_CPML(ispec)=.true.
 
-    else if(is_X_CPML(ispec)) then
+    else if (is_X_CPML(ispec)) then
        ispec_CPML=ispec_CPML+1
        CPML_to_spec(ispec_CPML)=ispec
        CPML_regions(ispec_CPML)=CPML_X_ONLY
@@ -243,6 +243,6 @@
   enddo
 
   ! checks
-  if(ispec_CPML /= nspec_CPML) stop 'Error number of CPML element is not consistent'
+  if (ispec_CPML /= nspec_CPML) stop 'Error number of CPML element is not consistent'
 
   end subroutine create_CPML_regions

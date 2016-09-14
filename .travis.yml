@@ -1,0 +1,340 @@
+# Travis configuration
+#
+# Note: building Fortran code is not supported (yet): see https://docs.travis-ci.com/user/language-specific/
+#       this is using C as a base and installs gfortran in the test environment
+
+language: c
+
+sudo: required
+
+os: linux
+compiler: gcc
+
+env:
+  global:
+    - FC=gfortran
+    - MPIFC=mpif90
+    - CC=gcc
+    - OMP_NUM_THREADS=2
+    - WORKDIR=`pwd`
+
+  matrix:
+    # for test cases, we use
+    #   TEST    - flags used for configuration
+    #   TESTCOV - determines whether or not (0/1) code coverage flags are used
+
+    # run coverage (using code coverage flags)
+    - TEST="--enable-vectorization --with-mpi" TESTCOV=1 TESTMAKE=1
+
+    # run default test with make tests
+    - TEST="" TESTCOV=0 TESTMAKE=0
+
+    # run default example (elastic)
+    - TEST="" TESTCOV=0 TESTMAKE=1
+
+    # run example 2 (acoustic)
+    - TEST="--enable-vectorization" TESTCOV=0 TESTMAKE=2
+
+    # run example 3 (poroelastic)
+    - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=3
+
+    # run example 4 (internal mesher)
+    - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=4
+
+    # run serial example (acoustic)
+    - TEST="--enable-vectorization --without-mpi" TESTCOV=0 TESTMAKE=5
+
+    # run debug & double precision (acoustic)
+    - TEST="--enable-double-precision --enable-debug" TESTCOV=0 TESTMAKE=6
+
+    # run debug with bounds-check (elastic)
+    - TEST="--enable-debug" TESTCOV=0 TESTMAKE=7
+
+    # run PML example (acoustic)
+    - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=8
+
+    # run PML example (elastic)
+    - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=9
+
+    # run noise example
+    - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=10
+
+    # run tomographic model example
+    - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=11
+
+    # run acoustic kernel example
+    - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=12
+
+before_install:
+  # informations on git
+  - |
+    git --version
+    git rev-parse --verify HEAD
+    git branch -a
+
+  # checks if changes occurred in folders src/ or setup/
+  - |
+    echo "request: Branch($TRAVIS_BRANCH) Pull Request($TRAVIS_PULL_REQUEST) Tag($TRAVIS_TAG)"
+    echo "commit : Commit($TRAVIS_COMMIT) Range($TRAVIS_COMMIT_RANGE)"
+
+  # recommended for MPI projects to unset CC: see https://docs.travis-ci.com/user/languages/c
+  #- test -n $CC && unset CC
+
+  # updates repository
+  - sudo apt-get update
+
+install:
+  # fortran/openMPI compiler
+  - sudo apt-get install gfortran libgomp1 openmpi-bin libopenmpi-dev
+
+  # python script needs numpy
+  - sudo apt-get install -qq python-numpy #python-scipy
+
+  # version infos
+  - echo "compiler versions:" ${FC} ${MPIFC} ${CC}
+  - ${FC} --version
+  - ${MPIFC} --version
+  - ${CC} --version
+
+script:
+  ###########################################################
+  # setup
+  ###########################################################
+  # info
+  - |
+    echo $TRAVIS_BUILD_DIR
+    echo $WORKDIR
+    echo "configuration test:" ${TEST} ${TESTFLAGS}
+
+  # bash function for checking seismogram output with reference solutions
+  - |
+    my_test(){
+      echo "testing seismograms:"
+      ln -s $WORKDIR/utils/compare_seismogram_correlations.py
+      ./compare_seismogram_correlations.py OUTPUT_FILES/ REF_SEIS/
+      if [[ $? -ne 0 ]]; then exit 1; fi
+      ./compare_seismogram_correlations.py OUTPUT_FILES/ REF_SEIS/ | grep min/max | cut -d \| -f 3 | awk '{print "correlation:",$1; if ($1 < 0.9 ){print $1,"failed"; exit 1;}else{ print $1,"good"; exit 0;}}'
+      if [[ $? -ne 0 ]]; then exit 1; fi
+      rm -rf OUTPUT_FILES/
+    }
+
+  ###########################################################
+  # configuration & compilation
+  ###########################################################
+  # configuration
+  - |
+    if [ "$TESTCOV" == "1" ]; then
+      ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TEST} FLAGS_CHECK="-fprofile-arcs -ftest-coverage -O0"
+    else
+      ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TEST}
+    fi
+
+  # we output to console
+  - sed -i "s:IMAIN .*:IMAIN = ISTANDARD_OUTPUT:" setup/constants.h
+
+  # compilation
+  - make clean; make -j2 all
+
+  ###########################################################
+  # test examples
+  ###########################################################
+  # testing internal mesher example (short & quick for all configuration)
+  - |
+    # chooses example directory
+    case "$TESTMAKE" in
+    0) dir=./ ;;
+    1) dir=EXAMPLES/homogeneous_halfspace_HEX8_elastic_absorbing_Stacey_5sides/ ;;
+    2) dir=EXAMPLES/homogeneous_acoustic/ ;;
+    3) dir=EXAMPLES/homogeneous_poroelastic/ ;;
+    4) dir=EXAMPLES/meshfem3D_examples/simple_model/ ;;
+    5) dir=EXAMPLES/homogeneous_acoustic/ ;;
+    6) dir=EXAMPLES/homogeneous_acoustic/ ;;
+    7) dir=EXAMPLES/homogeneous_halfspace/ ;;
+    8) dir=EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_acoustic_absorbing_CPML_5sides/ ;;
+    9) dir=EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_elastic_absorbing_CPML_5sides/ ;;
+    10) dir=EXAMPLES/noise_tomography/ ;;
+    11) dir=EXAMPLES/tomographic_model/ ;;
+    12) dir=EXAMPLES/homogeneous_acoustic/ ;;
+    *) dir=EXAMPLES/homogeneous_halfspace/ ;;
+    esac
+    # runs test
+    echo "##########################################################"
+    echo "test directory: $dir"
+    echo "##########################################################"
+    cd $dir
+    if [ "$TESTMAKE" == "0" ]; then
+      # runs default tests
+      make tests
+    elif [ "$TESTMAKE" == "10" ]; then
+      # noise example
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step1
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step2
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step3
+      ./run_this_example.sh
+    else
+      # limit time steps for testing
+      sed -i "s:^NSTEP .*:NSTEP    = 100:" DATA/Par_file
+      # shortens output interval to avoid timeouts
+      sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 10:" DATA/Par_file
+
+      # acoustic example
+      if [ "$TESTMAKE" == "2" ]; then
+        sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
+        sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 100:" DATA/Par_file
+      fi
+      # serial example
+      if [ "$TESTMAKE" == "5" ]; then
+        sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
+        sed -i "s:^NSTEP .*:NSTEP    = 200:" DATA/Par_file
+        sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 20:" DATA/Par_file
+      fi
+      # debug+double precision example (acoustic)
+      if [ "$TESTMAKE" == "6" ]; then
+        sed -i "s:^NSTEP .*:NSTEP    = 200:" DATA/Par_file
+        sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 20:" DATA/Par_file
+      fi
+      # debug example (elastic)
+      if [ "$TESTMAKE" == "7" ]; then
+        sed -i "s:^NSTEP .*:NSTEP    = 10:" DATA/Par_file
+        sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 5:" DATA/Par_file
+      fi
+      # PML example (acoustic)
+      if [ "$TESTMAKE" == "8" ]; then
+        sed -i "s:^NSTEP .*:NSTEP    = 200:" DATA/Par_file
+        sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 50:" DATA/Par_file
+      fi
+      # tomographic model
+      if [ "$TESTMAKE" == "11" ]; then
+        sed -i "s:^NSTEP .*:NSTEP    = 500:" DATA/Par_file
+        sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 50:" DATA/Par_file
+      fi
+      # kernel example
+      if [ "$TESTMAKE" == "12" ]; then
+        sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
+        sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 100:" DATA/Par_file
+      fi
+
+      # coverage run
+      if [ "$TESTCOV" == "1" ]; then
+        sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+      fi
+
+      if [ "$TESTMAKE" == "12" ]; then
+        # kernel script
+        ./run_this_example_kernel.sh
+
+        # reverse order of seismogram output for comparison
+        mv OUTPUT_FILES/DB.X20.MXP.semp tmp
+        tac tmp > OUTPUT_FILES/DB.X20.MXP.semp
+      else
+        # default script
+        ./run_this_example.sh
+      fi
+
+      # seismogram comparison
+      if [ "$TESTCOV" == "0" ]; then
+        my_test
+      fi
+      cd $WORKDIR
+    fi
+
+  # additional run for coverage
+  - |
+    if [ "$TESTCOV" == "1" ]; then
+      cd EXAMPLES/homogeneous_acoustic/
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+      ./run_this_example.sh
+      cd $WORKDIR
+    fi
+
+  # additional run for coverage
+  - |
+    if [ "$TESTCOV" == "1" ]; then
+      cd EXAMPLES/homogeneous_poroelastic/
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+      ./run_this_example.sh
+      cd $WORKDIR
+    fi
+
+  # additional run for coverage
+  - |
+    if [ "$TESTCOV" == "1" ]; then
+      cd EXAMPLES/meshfem3D_examples/simple_model/
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+      ./run_this_example.sh
+      cd $WORKDIR
+    fi
+
+  # additional run for coverage
+  - |
+    if [ "$TESTCOV" == "1" ]; then
+      cd EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_acoustic_absorbing_CPML_5sides/
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+      ./run_this_example.sh
+      cd $WORKDIR
+    fi
+
+  # additional run for coverage
+  - |
+    if [ "$TESTCOV" == "1" ]; then
+      cd EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_elastic_absorbing_CPML_5sides/
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+      ./run_this_example.sh
+      cd $WORKDIR
+    fi
+
+  # additional run for coverage
+  - |
+    if [ "$TESTCOV" == "1" ]; then
+      cd EXAMPLES/noise_tomography/
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step1
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step2
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step3
+      ./run_this_example.sh
+      cd $WORKDIR
+    fi
+
+  # additional run for coverage
+  - |
+    if [ "$TESTCOV" == "1" ]; then
+      cd EXAMPLES/tomographic_model/
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+      ./run_this_example.sh
+      cd $WORKDIR
+    fi
+
+  # additional run for coverage
+  - |
+    if [ "$TESTCOV" == "1" ]; then
+      cd EXAMPLES/homogeneous_acoustic/
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+      sed -i "s:^t_start.*:t_start=-6.0:" create_adjoint_sources.sh
+      sed -i "s:^t_end.*:t_end=-5.55:" create_adjoint_sources.sh
+      ./run_this_example_kernel.sh
+      cd $WORKDIR
+    fi
+
+  # done
+  - echo `pwd`
+
+after_success:
+  ###########################################################
+  # code coverage
+  ###########################################################
+  - |
+    if [ "$TESTCOV" == "1" ]; then
+      gcov --version
+      echo `pwd`
+      ls -al obj/
+    fi
+
+  # produces coverage reports (done manually because of different naming for source & object files)
+  - |
+    if [ "$TESTCOV" == "1" ]; then
+      find obj/ -iname '*.o' | sort | awk '{print "gcov -o obj/ "$1;}'
+      # executes gcov-commands
+      find obj/ -iname '*.o' | sort | awk '{print "gcov -o obj/ "$1;}' | sh
+    fi
+
+  # code coverage: see example https://github.com/codecov/example-fortran/blob/master/.travis.yml
+  - if [ "$TESTCOV" == "1" ]; then bash <(curl -s https://codecov.io/bash) -X gcov; fi

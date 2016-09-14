@@ -27,7 +27,7 @@
 
   module image_PNM_par
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   ! ----------------------------------------------
   ! USER PARAMETER
@@ -37,7 +37,7 @@
   !   type = 2 : displ/velocity y-component
   !   type = 3 : displ/velocity z-component
   !   type = 4 : displ/velocity norm
-  integer,parameter:: IMAGE_TYPE = 3 ! 4
+  integer,parameter:: IMAGE_TYPE = 3
 
   ! cross-section surface
   ! cross-section origin point
@@ -46,19 +46,19 @@
   real(kind=CUSTOM_REAL),parameter:: section_zorg = -100.0 ! 0.0
 
   ! cross-section surface normal
-  real(kind=CUSTOM_REAL),parameter:: section_nx = 0.0 !1.0
-  real(kind=CUSTOM_REAL),parameter:: section_ny = 0.0 !0.0
-  real(kind=CUSTOM_REAL),parameter:: section_nz = 1.0 !0.0
+  real(kind=CUSTOM_REAL),parameter:: section_nx = 0.0
+  real(kind=CUSTOM_REAL),parameter:: section_ny = 0.0
+  real(kind=CUSTOM_REAL),parameter:: section_nz = 1.0
 
   ! cross-section (in-plane) horizontal-direction
-  real(kind=CUSTOM_REAL),parameter:: section_hdirx = 1.0 ! 0.0
-  real(kind=CUSTOM_REAL),parameter:: section_hdiry = 0.0 !1.0
-  real(kind=CUSTOM_REAL),parameter:: section_hdirz = 0.0 ! 0.0
+  real(kind=CUSTOM_REAL),parameter:: section_hdirx = 1.0
+  real(kind=CUSTOM_REAL),parameter:: section_hdiry = 0.0
+  real(kind=CUSTOM_REAL),parameter:: section_hdirz = 0.0
 
   ! cross-section (in-plane) vertical-direction
-  real(kind=CUSTOM_REAL),parameter:: section_vdirx = 0.0 ! 0.0
-  real(kind=CUSTOM_REAL),parameter:: section_vdiry = 1.0 ! 0.0
-  real(kind=CUSTOM_REAL),parameter:: section_vdirz = 0.0 ! 1.0
+  real(kind=CUSTOM_REAL),parameter:: section_vdirx = 0.0
+  real(kind=CUSTOM_REAL),parameter:: section_vdiry = 1.0
+  real(kind=CUSTOM_REAL),parameter:: section_vdirz = 0.0
 
   ! non linear display to enhance small amplitudes in color images
   real(kind=CUSTOM_REAL), parameter :: POWER_DISPLAY_COLOR = 0.30_CUSTOM_REAL
@@ -99,12 +99,12 @@
 
   use image_PNM_par
 
-  use specfem_par,only: NGLOB_AB,NSPEC_AB,NPROC,ibool,xstore,ystore,zstore,&
+  use specfem_par, only: NGLOB_AB,NSPEC_AB,NPROC,ibool,xstore,ystore,zstore, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
                         ibool_interfaces_ext_mesh,myrank
 
-  use constants,only: HUGEVAL,NGLLX,NGLLY,NGLLZ,IMAIN
+  use constants, only: HUGEVAL,NGLLX,NGLLY,NGLLZ,IMAIN
 
   implicit none
   ! local parameters
@@ -155,21 +155,21 @@
   allocate(ispec_is_image_surface(NSPEC_AB),iglob_is_image_surface(NGLOB_AB),stat=ier)
   if (ier /= 0) call exit_mpi(myrank,'error allocating image ispec and iglob')
 
-  call detect_surface_PNM_image(NPROC,NGLOB_AB,NSPEC_AB,ibool,&
+  call detect_surface_PNM_image(NPROC,NGLOB_AB,NSPEC_AB,ibool, &
                             ispec_is_image_surface, &
                             iglob_is_image_surface, &
                             num_iglob_image_surface, &
                             num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                             nibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
-                            ibool_interfaces_ext_mesh,&
+                            ibool_interfaces_ext_mesh, &
                             section_xorg,section_yorg,section_zorg, &
                             section_nx,section_ny,section_nz, &
                             xstore,ystore,zstore,myrank)
 
   ! extracts points on surface
-  allocate( xcoord(num_iglob_image_surface),&
-           zcoord(num_iglob_image_surface),&
-           iglob_coord(num_iglob_image_surface),&
+  allocate( xcoord(num_iglob_image_surface), &
+           zcoord(num_iglob_image_surface), &
+           iglob_coord(num_iglob_image_surface), &
            ispec_coord(num_iglob_image_surface),stat=ier )
   if (ier /= 0) call exit_mpi(myrank,'error allocating xyz image coordinates')
 
@@ -281,7 +281,7 @@
   endif
 
   ! allocate an array for the grid point that corresponds to a given image data point
-  allocate(iglob_image_color(NX_IMAGE_color,NZ_IMAGE_color),&
+  allocate(iglob_image_color(NX_IMAGE_color,NZ_IMAGE_color), &
           ispec_image_color(NX_IMAGE_color,NZ_IMAGE_color),stat=ier)
   if (ier /= 0) call exit_mpi(myrank,'error allocating iglob_image_color')
 
@@ -458,12 +458,11 @@
 
 !=============================================================
 
-
   subroutine write_PNM_vp_background()
 
   use image_PNM_par
 
-  use specfem_par,only: myrank,NPROC
+  use specfem_par, only: myrank,NPROC
 
   implicit none
   ! local parameters
@@ -522,8 +521,8 @@
 
   use image_PNM_par
 
-  use constants,only: NDIM
-  use specfem_par,only: NPROC,it,myrank
+  use constants, only: NDIM
+  use specfem_par, only: NPROC,it,myrank
 
   implicit none
 
@@ -540,7 +539,7 @@
     j = ceiling(real(num_pixel_loc(k)) / real(NX_IMAGE_color))
     i = num_pixel_loc(k) - (j-1)*NX_IMAGE_color
 
-    ! global point and element indices of gll point in this pixel
+    ! global point and element indices of GLL point in this pixel
     iglob = iglob_image_color(i,j)
     ispec = ispec_image_color(i,j)
 
@@ -586,7 +585,7 @@
   ! master process writes out file
   if (myrank == 0) then
     ! writes output file
-    call write_PNM_data(image_color_data,iglob_image_color,&
+    call write_PNM_data(image_color_data,iglob_image_color, &
                             NX_IMAGE_color,NZ_IMAGE_color,it,image_cutsnaps,image_color_vp_display)
   endif
 
@@ -597,17 +596,17 @@
 !================================================================
 
 
-  subroutine write_PNM_data(color_image_2D_data,iglob_image_color_2D,&
+  subroutine write_PNM_data(color_image_2D_data,iglob_image_color_2D, &
                                 NX,NY,it,cutsnaps,image_color_vp_display)
 
 ! display a given field as a red and blue color image
 ! to display the snapshots : display image*.gif
 ! when compiling with Intel ifort, use " -assume byterecl " option to create binary PNM images
 
-  use constants,only: HUGEVAL,TINYVAL,CUSTOM_REAL,OUTPUT_FILES,MAX_STRING_LEN
+  use constants, only: HUGEVAL,TINYVAL,CUSTOM_REAL,OUTPUT_FILES,MAX_STRING_LEN
 
-  use image_PNM_par,only: BINARY_FILE,VP_BACKGROUND,&
-                        POWER_DISPLAY_COLOR
+  use image_PNM_par, only: BINARY_FILE,VP_BACKGROUND,POWER_DISPLAY_COLOR
+
   implicit none
 
   integer,intent(in) :: NX,NY,it
@@ -805,11 +804,11 @@
 
   subroutine get_iglob_vp(iglob,ispec,vp)
 
-  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS
 
-  use specfem_par,only: mustore,kappastore,rhostore,ibool,myrank
-  use specfem_par_acoustic,only: ACOUSTIC_SIMULATION
-  use specfem_par_elastic,only: ELASTIC_SIMULATION,rho_vp
+  use specfem_par, only: mustore,kappastore,rhostore,ibool,myrank
+  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION
+  use specfem_par_elastic, only: ELASTIC_SIMULATION,rho_vp
 
   implicit none
 
@@ -844,13 +843,11 @@
 
   subroutine get_iglob_veloc(iglob,ispec,val_vector)
 
-  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM
-  use specfem_par_acoustic,only: ACOUSTIC_SIMULATION,potential_acoustic,potential_dot_acoustic, &
-                                ispec_is_acoustic, &
-                                b_potential_acoustic,b_potential_dot_acoustic
-  use specfem_par_elastic,only: ELASTIC_SIMULATION,displ,veloc, &
-                                ispec_is_elastic ! ,b_displ,b_veloc
-  use specfem_par,only: NSPEC_AB,NGLOB_AB,hprime_xx,hprime_yy,hprime_zz, &
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM
+  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION,potential_acoustic,potential_dot_acoustic, &
+                                ispec_is_acoustic,b_potential_acoustic,b_potential_dot_acoustic
+  use specfem_par_elastic, only: ELASTIC_SIMULATION,displ,veloc,ispec_is_elastic
+  use specfem_par, only: NSPEC_AB,NGLOB_AB,hprime_xx,hprime_yy,hprime_zz, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         ibool,rhostore,SIMULATION_TYPE,GRAVITY,SAVE_DISPLACEMENT
   implicit none
@@ -896,14 +893,14 @@
         if (SIMULATION_TYPE == 3) then
           ! displacement vector from backward potential
           call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                          b_potential_acoustic, val_element,&
+                          b_potential_acoustic, val_element, &
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
         else
           ! displacement vector
           call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                          potential_acoustic, val_element,&
+                          potential_acoustic, val_element, &
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
@@ -912,14 +909,14 @@
         if (SIMULATION_TYPE == 3) then
           ! velocity vector for backward/reconstructed wavefield
           call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                          b_potential_dot_acoustic, val_element,&
+                          b_potential_dot_acoustic, val_element, &
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)
         else
           ! velocity vector
           call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                          potential_dot_acoustic, val_element,&
+                          potential_dot_acoustic, val_element, &
                           hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           ibool,rhostore,GRAVITY)

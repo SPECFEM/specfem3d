@@ -25,12 +25,11 @@
 !
 !=====================================================================
 
-
-subroutine get_cg_direction_tiso()
+  subroutine get_cg_direction_tiso()
 
 ! calculates TI gradient based on a conjugate gradient method
 !
-! based on: Tarantola, inverse problem theory, 2005.
+! based on: Tarantola, Inverse problem theory, 2005.
 !                  section 6.22.7 conjugate directions, page 217.
 !                  formula for alpha_n based on Polak & Ribiere (1969)
 !
@@ -126,7 +125,7 @@ subroutine get_cg_direction_tiso()
     ratio_eta = norm_eta_sum / norm_eta_old
 
     ! if ratio > 0.2 (empirical threshold value), then one should restart with a steepest descent
-    print *,'Powell ratio: (> 0.2 then restart with steepest descent)'
+    print *,'Powell ratio: ( > 0.2 then restart with steepest descent)'
     print *,'  bulk : ',ratio_bulk
     print *,'  betav: ',ratio_betav
     print *,'  betah: ',ratio_betah
@@ -475,5 +474,5 @@ subroutine get_cg_direction_tiso()
   endif
   call synchronize_all()
 
-end subroutine get_cg_direction_tiso
+  end subroutine get_cg_direction_tiso
 

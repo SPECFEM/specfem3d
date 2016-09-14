@@ -32,17 +32,17 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
   ! calculates damping profiles and auxiliary coefficients on C-PML points
 
   use generate_databases_par, only: ibool,NGLOB_AB,d_store_x,d_store_y,d_store_z, &
-                                    K_store_x,K_store_y,K_store_z,alpha_store_x,alpha_store_y,alpha_store_z,CPML_to_spec,&
-                                    CPML_width_x,CPML_width_y,CPML_width_z,min_distance_between_CPML_parameter,NPOWER,&
-                                    CUSTOM_REAL,SIZE_REAL,NGLLX,NGLLY,NGLLZ,nspec_cpml,PML_INSTEAD_OF_FREE_SURFACE,&
-                                    IMAIN,CPML_REGIONS,f0_FOR_PML,PI,&
-                                    CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ,&
-                                    SIMULATION_TYPE,SAVE_FORWARD,nspec => NSPEC_AB,is_CPML,&
-                                    mask_ibool_interior_domain,nglob_interface_PML_acoustic,points_interface_PML_acoustic,&
-                                    nglob_interface_PML_elastic,points_interface_PML_elastic,&
+                                    K_store_x,K_store_y,K_store_z,alpha_store_x,alpha_store_y,alpha_store_z,CPML_to_spec, &
+                                    CPML_width_x,CPML_width_y,CPML_width_z,min_distance_between_CPML_parameter,NPOWER, &
+                                    CUSTOM_REAL,SIZE_REAL,NGLLX,NGLLY,NGLLZ,nspec_cpml,PML_INSTEAD_OF_FREE_SURFACE, &
+                                    IMAIN,CPML_REGIONS,f0_FOR_PML,PI, &
+                                    CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ, &
+                                    SIMULATION_TYPE,SAVE_FORWARD,nspec => NSPEC_AB,is_CPML, &
+                                    mask_ibool_interior_domain,nglob_interface_PML_acoustic,points_interface_PML_acoustic, &
+                                    nglob_interface_PML_elastic,points_interface_PML_elastic, &
                                     ZERO,ONE,TWO,HUGEVAL
 
-  use create_regions_mesh_ext_par, only: rhostore,rho_vp,ispec_is_acoustic,ispec_is_elastic,&
+  use create_regions_mesh_ext_par, only: rhostore,rho_vp,ispec_is_acoustic,ispec_is_elastic, &
                                          ELASTIC_SIMULATION, ACOUSTIC_SIMULATION
 
   implicit none
@@ -59,18 +59,18 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
   real(kind=CUSTOM_REAL) :: xoriginleft,xoriginright,yoriginfront,yoriginback,zoriginbottom,zorigintop
   real(kind=CUSTOM_REAL) :: abscissa_in_PML_x,abscissa_in_PML_y,abscissa_in_PML_z
   real(kind=CUSTOM_REAL) :: d_x,d_y,d_z,k_x,k_y,k_z,alpha_x,alpha_y,alpha_z,beta_x,beta_y,beta_z
-  real(kind=CUSTOM_REAL) :: x_min,x_min_all,y_min,y_min_all,z_min,z_min_all,&
-                            x_max,x_max_all,y_max,y_max_all,z_max,z_max_all,&
+  real(kind=CUSTOM_REAL) :: x_min,x_min_all,y_min,y_min_all,z_min,z_min_all, &
+                            x_max,x_max_all,y_max,y_max_all,z_max,z_max_all, &
                             x_origin,y_origin,z_origin
-  real(kind=CUSTOM_REAL) :: CPML_width_x_left, CPML_width_x_right,&
-                            CPML_width_y_front,CPML_width_y_back,&
-                            CPML_width_z_top,CPML_width_z_bottom,&
-                            CPML_x_left, CPML_x_right,&
-                            CPML_y_front,CPML_y_back,&
-                            CPML_z_top,CPML_z_bottom,&
-                            CPML_width_x_left_max_all, CPML_width_x_right_max_all,&
-                            CPML_width_y_front_max_all,CPML_width_y_back_max_all,&
-                            CPML_width_z_top_max_all,CPML_width_z_bottom_max_all,&
+  real(kind=CUSTOM_REAL) :: CPML_width_x_left, CPML_width_x_right, &
+                            CPML_width_y_front,CPML_width_y_back, &
+                            CPML_width_z_top,CPML_width_z_bottom, &
+                            CPML_x_left, CPML_x_right, &
+                            CPML_y_front,CPML_y_back, &
+                            CPML_z_top,CPML_z_bottom, &
+                            CPML_width_x_left_max_all, CPML_width_x_right_max_all, &
+                            CPML_width_y_front_max_all,CPML_width_y_back_max_all, &
+                            CPML_width_z_top_max_all,CPML_width_z_bottom_max_all, &
                             vp_max,vp_max_all
 
 ! for robust parameter separation of PML damping parameter
@@ -197,7 +197,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
       iglob = ibool(i,j,k,ispec)
 
-      if (CPML_regions(ispec_CPML) == CPML_X_ONLY  .or. CPML_regions(ispec_CPML) == CPML_XY_ONLY .or. &
+      if (CPML_regions(ispec_CPML) == CPML_X_ONLY .or. CPML_regions(ispec_CPML) == CPML_XY_ONLY .or. &
           CPML_regions(ispec_CPML) == CPML_XZ_ONLY .or. CPML_regions(ispec_CPML) == CPML_XYZ) then
         if (xstore(iglob) - x_origin > ZERO) then
           if (xstore(iglob) - x_origin <= CPML_x_right - x_origin) then
@@ -210,7 +210,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
         endif
       endif
 
-      if (CPML_regions(ispec_CPML) == CPML_Y_ONLY  .or. CPML_regions(ispec_CPML) == CPML_XY_ONLY .or. &
+      if (CPML_regions(ispec_CPML) == CPML_Y_ONLY .or. CPML_regions(ispec_CPML) == CPML_XY_ONLY .or. &
           CPML_regions(ispec_CPML) == CPML_YZ_ONLY .or. CPML_regions(ispec_CPML) == CPML_XYZ) then
         if (ystore(iglob) - y_origin > ZERO) then
           if (ystore(iglob) - y_origin <= CPML_y_front - y_origin) then
@@ -224,7 +224,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
       endif
 
       if (CPML_regions(ispec_CPML) == CPML_Z_ONLY .or. CPML_regions(ispec_CPML) == CPML_YZ_ONLY .or. &
-        CPML_regions(ispec_CPML) == CPML_XZ_ONLY .or.  CPML_regions(ispec_CPML) == CPML_XYZ) then
+        CPML_regions(ispec_CPML) == CPML_XZ_ONLY .or. CPML_regions(ispec_CPML) == CPML_XYZ) then
         if (zstore(iglob) - z_origin > ZERO) then
           if (zstore(iglob) - z_origin <= CPML_z_top - z_origin) then
             CPML_z_top = zstore(iglob)
@@ -829,11 +829,11 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                 d_z = pml_damping_profile_l(myrank,iglob,dist,vp,CPML_width_z)
                 alpha_z = ALPHA_MAX_PML_z * (ONE - dist)
 
-                if (d_y < ZERO  .or. K_y < ONE) then
+                if (d_y < ZERO .or. K_y < ONE) then
                   K_y = ONE; d_y = ZERO
                 endif
 
-                if (d_z < ZERO  .or. K_z < ONE) then
+                if (d_z < ZERO .or. K_z < ONE) then
                   K_z = ONE; d_z = ZERO
                 endif
               endif
@@ -956,7 +956,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
             !------------------------------------------------------------------------------
             !---------------------------- XYZ-surface C-PML -------------------------------
             !------------------------------------------------------------------------------
-            if (xstore(iglob) - x_origin > ZERO .and. ystore(iglob) - y_origin>ZERO .and. &
+            if (xstore(iglob) - x_origin > ZERO .and. ystore(iglob) - y_origin > ZERO .and. &
                 zstore(iglob) - z_origin > ZERO) then
               if (PML_INSTEAD_OF_FREE_SURFACE) then
                 ! gets abscissa of current grid point along the damping profile
@@ -1409,12 +1409,12 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
   call max_all_all_cr(maximum_for_alphay,maximum_for_alphay_all)
   call max_all_all_cr(maximum_for_alphaz,maximum_for_alphaz_all)
 
-  if(minimum_for_dx_all < ZERO) stop "there is error in dx profile"
-  if(minimum_for_dy_all < ZERO) stop "there is error in dy profile"
-  if(minimum_for_dz_all < ZERO) stop "there is error in dz profile"
-  if(minimum_for_alphax_all < ZERO) stop "there is error in alphax profile"
-  if(minimum_for_alphay_all < ZERO) stop "there is error in alphay profile"
-  if(minimum_for_alphaz_all < ZERO) stop "there is error in alphaz profile"
+  if (minimum_for_dx_all < ZERO) stop "there is error in dx profile"
+  if (minimum_for_dy_all < ZERO) stop "there is error in dy profile"
+  if (minimum_for_dz_all < ZERO) stop "there is error in dz profile"
+  if (minimum_for_alphax_all < ZERO) stop "there is error in alphax profile"
+  if (minimum_for_alphay_all < ZERO) stop "there is error in alphay profile"
+  if (minimum_for_alphaz_all < ZERO) stop "there is error in alphaz profile"
 
   second_minimum_for_dx = HUGEVAL
   second_minimum_for_dy = HUGEVAL
@@ -1429,47 +1429,47 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
       do j = 1,NGLLY
         do i = 1,NGLLX
           iglob = ibool(i,j,k,ispec)
-          if(d_store_x(i,j,k,ispec_CPML) == minimum_for_dx_all .or. &
+          if (d_store_x(i,j,k,ispec_CPML) == minimum_for_dx_all .or. &
              xstore(iglob) == xoriginleft .or. xstore(iglob) == xoriginright) then
-          else if(second_minimum_for_dx >= d_store_x(i,j,k,ispec_CPML)) then
+          else if (second_minimum_for_dx >= d_store_x(i,j,k,ispec_CPML)) then
             second_minimum_for_dx = d_store_x(i,j,k,ispec_CPML)
           endif
 
-          if(d_store_y(i,j,k,ispec_CPML) == minimum_for_dy_all .or. &
+          if (d_store_y(i,j,k,ispec_CPML) == minimum_for_dy_all .or. &
              ystore(iglob) == yoriginfront .or. ystore(iglob) == yoriginback) then
-          else if(second_minimum_for_dy >= d_store_y(i,j,k,ispec_CPML)) then
+          else if (second_minimum_for_dy >= d_store_y(i,j,k,ispec_CPML)) then
             second_minimum_for_dy = d_store_y(i,j,k,ispec_CPML)
           endif
 
           if (PML_INSTEAD_OF_FREE_SURFACE) then
-            if(d_store_z(i,j,k,ispec_CPML) == minimum_for_dz_all .or. &
+            if (d_store_z(i,j,k,ispec_CPML) == minimum_for_dz_all .or. &
                zstore(iglob) == zorigintop .or. zstore(iglob) == zoriginbottom) then
-            else if(second_minimum_for_dz >= d_store_z(i,j,k,ispec_CPML)) then
+            else if (second_minimum_for_dz >= d_store_z(i,j,k,ispec_CPML)) then
               second_minimum_for_dz = d_store_z(i,j,k,ispec_CPML)
             endif
           else
-            if(d_store_z(i,j,k,ispec_CPML) == minimum_for_dz_all .or. &
+            if (d_store_z(i,j,k,ispec_CPML) == minimum_for_dz_all .or. &
                zstore(iglob) == zoriginbottom) then
-            else if(second_minimum_for_dz >= d_store_z(i,j,k,ispec_CPML)) then
+            else if (second_minimum_for_dz >= d_store_z(i,j,k,ispec_CPML)) then
               second_minimum_for_dz = d_store_z(i,j,k,ispec_CPML)
             endif
           endif
 
-          if(alpha_store_x(i,j,k,ispec_CPML) == minimum_for_alphax_all .or. &
+          if (alpha_store_x(i,j,k,ispec_CPML) == minimum_for_alphax_all .or. &
              xstore(iglob) == x_max_all .or. xstore(iglob) == x_min_all) then
-          else if(second_minimum_for_alphax >= alpha_store_x(i,j,k,ispec_CPML)) then
+          else if (second_minimum_for_alphax >= alpha_store_x(i,j,k,ispec_CPML)) then
             second_minimum_for_alphax = alpha_store_x(i,j,k,ispec_CPML)
           endif
 
-          if(alpha_store_y(i,j,k,ispec_CPML) == minimum_for_alphay_all .or. &
+          if (alpha_store_y(i,j,k,ispec_CPML) == minimum_for_alphay_all .or. &
              ystore(iglob) == y_max_all .or. ystore(iglob) == y_min_all) then
-          else if(second_minimum_for_alphay >= alpha_store_y(i,j,k,ispec_CPML)) then
+          else if (second_minimum_for_alphay >= alpha_store_y(i,j,k,ispec_CPML)) then
             second_minimum_for_alphay = alpha_store_y(i,j,k,ispec_CPML)
           endif
 
-          if(alpha_store_z(i,j,k,ispec_CPML) == minimum_for_alphaz_all .or. &
+          if (alpha_store_z(i,j,k,ispec_CPML) == minimum_for_alphaz_all .or. &
              zstore(iglob) == z_max_all .or. zstore(iglob) == z_min_all) then
-          else if(second_minimum_for_alphaz >= alpha_store_z(i,j,k,ispec_CPML)) then
+          else if (second_minimum_for_alphaz >= alpha_store_z(i,j,k,ispec_CPML)) then
             second_minimum_for_alphaz = alpha_store_z(i,j,k,ispec_CPML)
           endif
 
@@ -1492,25 +1492,25 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
   call min_all_all_cr(second_minimum_for_alphay,second_minimum_for_alphay_all)
   call min_all_all_cr(second_minimum_for_alphaz,second_minimum_for_alphaz_all)
 
-  if(second_minimum_for_dx_all < minimum_for_dx_all) &
+  if (second_minimum_for_dx_all < minimum_for_dx_all) &
     stop "there is error in dectection of second_minimum_for_dx_all in dx profile"
-  if(second_minimum_for_dy_all < minimum_for_dy_all) &
+  if (second_minimum_for_dy_all < minimum_for_dy_all) &
     stop "there is error in dectection of second_minimum_for_dy_all in dy profile"
-  if(second_minimum_for_dz_all < minimum_for_dz_all) &
+  if (second_minimum_for_dz_all < minimum_for_dz_all) &
     stop "there is error in dectection of second_minimum_for_dz_all in dz profile"
-  if(second_minimum_for_alphax_all < minimum_for_alphax_all) &
+  if (second_minimum_for_alphax_all < minimum_for_alphax_all) &
     stop "there is error in dectection of second_minimum_for_alphax_all in alphax profile"
-  if(second_minimum_for_alphay_all < minimum_for_alphay_all) &
+  if (second_minimum_for_alphay_all < minimum_for_alphay_all) &
     stop "there is error in dectection of second_minimum_for_alphay_all in alphay profile"
-  if(second_minimum_for_alphaz_all < minimum_for_alphaz_all) &
+  if (second_minimum_for_alphaz_all < minimum_for_alphaz_all) &
     stop "there is error in dectection of second_minimum_for_alphaz_all in alphaz profile"
 
-  second_minimum_for_alpha_all = min(second_minimum_for_alphax_all,second_minimum_for_alphay_all,&
+  second_minimum_for_alpha_all = min(second_minimum_for_alphax_all,second_minimum_for_alphay_all, &
                                      second_minimum_for_alphaz_all)
   maximum_for_alpha_all = max(maximum_for_alphax_all,maximum_for_alphay_all,maximum_for_alphaz_all)
   const_for_tune_alpha_profile = second_minimum_for_alpha_all / maximum_for_alpha_all
 
-  second_minimum_for_d_all = min(second_minimum_for_dx_all,second_minimum_for_dy_all,&
+  second_minimum_for_d_all = min(second_minimum_for_dx_all,second_minimum_for_dy_all, &
                                  second_minimum_for_dz_all)
   maximum_for_d_all = max(maximum_for_dx_all,maximum_for_dy_all,maximum_for_dz_all)
   const_for_tune_d_profile = second_minimum_for_d_all / maximum_for_d_all
@@ -1544,12 +1544,12 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
             beta_y = alpha_y + d_y / K_y
 
             if (abs(beta_x - alpha_y) < min_distance_between_CPML_parameter) then
-              call seperate_two_value_with_one_changeable(beta_x,alpha_y,const_for_separation_two,&
+              call seperate_two_value_with_one_changeable(beta_x,alpha_y,const_for_separation_two, &
                                                           const_for_separation_four)
             endif
 
             if (abs(beta_y - alpha_x) < min_distance_between_CPML_parameter) then
-              call seperate_two_value_with_one_changeable(beta_y,alpha_x,const_for_separation_two,&
+              call seperate_two_value_with_one_changeable(beta_y,alpha_x,const_for_separation_two, &
                                                           const_for_separation_four)
             endif
 
@@ -1592,12 +1592,12 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
             beta_z = alpha_z + d_z / K_z
 
             if (abs(beta_x - alpha_z) < min_distance_between_CPML_parameter) then
-              call seperate_two_value_with_one_changeable(beta_x,alpha_z,const_for_separation_two,&
+              call seperate_two_value_with_one_changeable(beta_x,alpha_z,const_for_separation_two, &
                                                           const_for_separation_four)
             endif
 
             if (abs(beta_z - alpha_x) < min_distance_between_CPML_parameter) then
-              call seperate_two_value_with_one_changeable(beta_z,alpha_x,const_for_separation_two,&
+              call seperate_two_value_with_one_changeable(beta_z,alpha_x,const_for_separation_two, &
                                                           const_for_separation_four)
             endif
 
@@ -1640,12 +1640,12 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
             beta_z = alpha_z + d_z / K_z
 
             if (abs(beta_y - alpha_z) < min_distance_between_CPML_parameter) then
-              call seperate_two_value_with_one_changeable(beta_y,alpha_z,const_for_separation_two,&
+              call seperate_two_value_with_one_changeable(beta_y,alpha_z,const_for_separation_two, &
                                                           const_for_separation_four)
             endif
 
             if (abs(beta_z - alpha_y) < min_distance_between_CPML_parameter) then
-              call seperate_two_value_with_one_changeable(beta_z,alpha_y,const_for_separation_two,&
+              call seperate_two_value_with_one_changeable(beta_z,alpha_y,const_for_separation_two, &
                                                           const_for_separation_four)
             endif
 
@@ -1670,7 +1670,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
             d_store_z(i,j,k,ispec_CPML) = d_z
             alpha_store_z(i,j,k,ispec_CPML) = alpha_z
 
-          else if(CPML_regions(ispec_CPML) == CPML_XYZ) then
+          else if (CPML_regions(ispec_CPML) == CPML_XYZ) then
 
             K_x = K_store_x(i,j,k,ispec_CPML)
             d_x = d_store_x(i,j,k,ispec_CPML)
@@ -1685,20 +1685,20 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
             alpha_z = alpha_store_z(i,j,k,ispec_CPML)
 
             if (abs(alpha_x - alpha_y) < min_distance_between_CPML_parameter) then
-              if(alpha_x > alpha_y)then
+              if (alpha_x > alpha_y) then
                 alpha_x = alpha_y + const_for_separation_two
               else
                 alpha_y = alpha_x + const_for_separation_two
               endif
               maxtemp = max(alpha_x, alpha_y)
               mintemp = min(alpha_x, alpha_y)
-              if(alpha_z > maxtemp)then
-                 if(abs(alpha_z - maxtemp) < min_distance_between_CPML_parameter)then
+              if (alpha_z > maxtemp) then
+                 if (abs(alpha_z - maxtemp) < min_distance_between_CPML_parameter) then
                    alpha_z = maxtemp + const_for_separation_two
                  endif
-              else if(alpha_z < mintemp)then
-                 if(abs(alpha_z - mintemp) < min_distance_between_CPML_parameter)then
-                   if(alpha_x > alpha_y)then
+              else if (alpha_z < mintemp) then
+                 if (abs(alpha_z - mintemp) < min_distance_between_CPML_parameter) then
+                   if (alpha_x > alpha_y) then
                      alpha_x = alpha_z + const_for_separation_four
                      alpha_y = alpha_z + const_for_separation_two
                    else
@@ -1707,7 +1707,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                    endif
                  endif
               else
-                 if(alpha_x > alpha_y)then
+                 if (alpha_x > alpha_y) then
                    alpha_x = alpha_y + const_for_separation_four
                    alpha_z = alpha_y + const_for_separation_two
                  else
@@ -1718,20 +1718,20 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
             endif
 
             if (abs(alpha_x - alpha_z) < min_distance_between_CPML_parameter) then
-              if(alpha_x > alpha_z)then
+              if (alpha_x > alpha_z) then
                 alpha_x = alpha_z + const_for_separation_two
               else
                 alpha_z = alpha_x + const_for_separation_two
               endif
               maxtemp = max(alpha_x, alpha_z)
               mintemp = min(alpha_x, alpha_z)
-              if(alpha_y > maxtemp)then
-                 if(abs(alpha_y - maxtemp) < min_distance_between_CPML_parameter)then
+              if (alpha_y > maxtemp) then
+                 if (abs(alpha_y - maxtemp) < min_distance_between_CPML_parameter) then
                    alpha_y = maxtemp + const_for_separation_two
                  endif
-              else if(alpha_y < mintemp)then
-                 if(abs(alpha_y - mintemp) < min_distance_between_CPML_parameter)then
-                   if(alpha_x > alpha_z)then
+              else if (alpha_y < mintemp) then
+                 if (abs(alpha_y - mintemp) < min_distance_between_CPML_parameter) then
+                   if (alpha_x > alpha_z) then
                      alpha_x = alpha_y + const_for_separation_four
                      alpha_z = alpha_y + const_for_separation_two
                    else
@@ -1740,7 +1740,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                    endif
                  endif
               else
-                 if(alpha_x > alpha_z)then
+                 if (alpha_x > alpha_z) then
                    alpha_x = alpha_z + const_for_separation_four
                    alpha_y = alpha_z + const_for_separation_two
                  else
@@ -1751,20 +1751,20 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
             endif
 
             if (abs(alpha_y - alpha_z) < min_distance_between_CPML_parameter) then
-              if(alpha_y > alpha_z)then
+              if (alpha_y > alpha_z) then
                 alpha_y = alpha_z + const_for_separation_two
               else
                 alpha_z = alpha_y + const_for_separation_two
               endif
               maxtemp = max(alpha_y, alpha_z)
               mintemp = min(alpha_y, alpha_z)
-              if(alpha_x > maxtemp)then
-                 if(abs(alpha_x - maxtemp) < min_distance_between_CPML_parameter)then
+              if (alpha_x > maxtemp) then
+                 if (abs(alpha_x - maxtemp) < min_distance_between_CPML_parameter) then
                    alpha_x = maxtemp + const_for_separation_two
                  endif
-              else if(alpha_x < mintemp)then
-                 if(abs(alpha_x - mintemp) < min_distance_between_CPML_parameter)then
-                   if(alpha_y > alpha_z)then
+              else if (alpha_x < mintemp) then
+                 if (abs(alpha_x - mintemp) < min_distance_between_CPML_parameter) then
+                   if (alpha_y > alpha_z) then
                      alpha_y = alpha_x + const_for_separation_four
                      alpha_z = alpha_x + const_for_separation_two
                    else
@@ -1773,7 +1773,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                    endif
                  endif
               else
-                 if(alpha_y > alpha_z)then
+                 if (alpha_y > alpha_z) then
                    alpha_y = alpha_z + const_for_separation_four
                    alpha_x = alpha_z + const_for_separation_two
                  else
@@ -1792,20 +1792,20 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
             beta_x = alpha_x + d_x / K_x
             maxtemp = max(alpha_y, alpha_z)
             mintemp = min(alpha_y, alpha_z)
-            if(beta_x > maxtemp)then
-               if(abs(beta_x- maxtemp) < min_distance_between_CPML_parameter)then
+            if (beta_x > maxtemp) then
+               if (abs(beta_x- maxtemp) < min_distance_between_CPML_parameter) then
                  beta_x = maxtemp + const_for_separation_two
                endif
-            else if(beta_x < mintemp)then
-               if(abs(beta_x - mintemp) < min_distance_between_CPML_parameter)then
-                 if(alpha_y > alpha_z)then
+            else if (beta_x < mintemp) then
+               if (abs(beta_x - mintemp) < min_distance_between_CPML_parameter) then
+                 if (alpha_y > alpha_z) then
                    beta_x = alpha_y + const_for_separation_two
                  else
                    beta_x = alpha_z + const_for_separation_two
                  endif
                endif
             else
-               if(alpha_y > alpha_z)then
+               if (alpha_y > alpha_z) then
                  beta_x = alpha_y + const_for_separation_two
                else
                  beta_x = alpha_z + const_for_separation_two
@@ -1816,20 +1816,20 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
             maxtemp = max(alpha_x, alpha_z)
             mintemp = min(alpha_x, alpha_z)
-            if(beta_y > maxtemp)then
-               if(abs(beta_y - maxtemp) < min_distance_between_CPML_parameter)then
+            if (beta_y > maxtemp) then
+               if (abs(beta_y - maxtemp) < min_distance_between_CPML_parameter) then
                  beta_y = maxtemp + const_for_separation_two
                endif
-            else if(beta_y < mintemp)then
-               if(abs(beta_y - mintemp) < min_distance_between_CPML_parameter)then
-                 if(alpha_x > alpha_z)then
+            else if (beta_y < mintemp) then
+               if (abs(beta_y - mintemp) < min_distance_between_CPML_parameter) then
+                 if (alpha_x > alpha_z) then
                    beta_y = alpha_x + const_for_separation_two
                  else
                    beta_y = alpha_z + const_for_separation_two
                  endif
                endif
             else
-               if(alpha_x > alpha_z)then
+               if (alpha_x > alpha_z) then
                  beta_y = alpha_x + const_for_separation_two
                else
                  beta_y = alpha_z + const_for_separation_two
@@ -1839,20 +1839,20 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
             beta_z = alpha_z + d_z / K_z
             maxtemp = max(alpha_x, alpha_y)
             mintemp = min(alpha_x, alpha_y)
-            if(beta_z > maxtemp)then
-               if(abs(beta_z - maxtemp) < min_distance_between_CPML_parameter)then
+            if (beta_z > maxtemp) then
+               if (abs(beta_z - maxtemp) < min_distance_between_CPML_parameter) then
                  beta_z = maxtemp + const_for_separation_two
                endif
-            else if(beta_z < mintemp)then
-               if(abs(beta_z - mintemp) < min_distance_between_CPML_parameter)then
-                 if(alpha_x > alpha_y)then
+            else if (beta_z < mintemp) then
+               if (abs(beta_z - mintemp) < min_distance_between_CPML_parameter) then
+                 if (alpha_x > alpha_y) then
                    beta_z = alpha_x + const_for_separation_two
                  else
                    beta_z = alpha_y + const_for_separation_two
                  endif
                endif
             else
-               if(alpha_x > alpha_y)then
+               if (alpha_x > alpha_y) then
                  beta_z = alpha_x + const_for_separation_two
                else
                  beta_z = alpha_y + const_for_separation_two
@@ -2019,7 +2019,7 @@ function pml_damping_profile_l(myrank,iglob,dist,vp,delta)
      ! In INRIA research report section 6.1:  http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
      ! pml_damping_profile_l = - ((NPOWER + 1) * vp * log(CPML_Rcoef) / (TWO * delta)) * dist**(NPOWER)
      ! based on tests it is more accurate to use the following definition when NPOWER = 1 as defined in constants.h.in
-    if(CUSTOM_REAL == SIZE_REAL) then
+    if (CUSTOM_REAL == SIZE_REAL) then
       pml_damping_profile_l = - sngl(((NPOWER + 1.d0) * dble(vp) * log(CPML_Rcoef) / &
                                           (TWO * dble(delta))) * dble(dist)**(1.2d0 * NPOWER))
     else
@@ -2045,7 +2045,7 @@ subroutine seperate_two_changeable_value(value_a,value_b,const_for_separation_tw
   implicit none
   real(kind=CUSTOM_REAL), intent(in) :: const_for_separation_two
   real(kind=CUSTOM_REAL) :: value_a,value_b
-  if(value_a >= value_b) then
+  if (value_a >= value_b) then
      value_a = value_b + const_for_separation_two
   else
      value_b = value_a + const_for_separation_two
@@ -2053,7 +2053,7 @@ subroutine seperate_two_changeable_value(value_a,value_b,const_for_separation_tw
 
 end subroutine seperate_two_changeable_value
 
-subroutine seperate_two_value_with_one_changeable(value_a,value_b,const_for_separation_two,&
+subroutine seperate_two_value_with_one_changeable(value_a,value_b,const_for_separation_two, &
                                                   const_for_separation_four)
   use generate_databases_par, only: CUSTOM_REAL
   implicit none

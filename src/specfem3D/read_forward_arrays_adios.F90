@@ -51,29 +51,29 @@ subroutine read_forward_arrays_adios()
   integer(kind=8), pointer :: sel => null()
   integer(kind=8), dimension(1) :: start, count_ad
 
-  integer :: local_dim_potential_acoustic,            &
-             local_dim_potential_dot_acoustic,        &
-             local_dim_potential_dot_dot_acoustic,    &
-             local_dim_displ,                         &
-             local_dim_veloc,                         &
-             local_dim_accel,                         &
-             local_dim_R_xx,                          &
-             local_dim_R_yy,                          &
-             local_dim_R_xy,                          &
-             local_dim_R_xz,                          &
-             local_dim_R_yz,                          &
-             local_dim_epsilondev_xx,                 &
-             local_dim_epsilondev_yy,                 &
-             local_dim_epsilondev_xy,                 &
-             local_dim_epsilondev_xz,                 &
-             local_dim_epsilondev_yz,                 &
-             local_dim_R_trace,                       &
-             local_dim_epsilondev_trace,              &
-             local_dim_displs_poroelastic,            &
-             local_dim_velocs_poroelastic,            &
-             local_dim_accels_poroelastic,            &
-             local_dim_displw_poroelastic,            &
-             local_dim_velocw_poroelastic,            &
+  integer :: local_dim_potential_acoustic, &
+             local_dim_potential_dot_acoustic, &
+             local_dim_potential_dot_dot_acoustic, &
+             local_dim_displ, &
+             local_dim_veloc, &
+             local_dim_accel, &
+             local_dim_R_xx, &
+             local_dim_R_yy, &
+             local_dim_R_xy, &
+             local_dim_R_xz, &
+             local_dim_R_yz, &
+             local_dim_epsilondev_xx, &
+             local_dim_epsilondev_yy, &
+             local_dim_epsilondev_xy, &
+             local_dim_epsilondev_xz, &
+             local_dim_epsilondev_yz, &
+             local_dim_R_trace, &
+             local_dim_epsilondev_trace, &
+             local_dim_displs_poroelastic, &
+             local_dim_velocs_poroelastic, &
+             local_dim_accels_poroelastic, &
+             local_dim_displw_poroelastic, &
+             local_dim_velocw_poroelastic, &
              local_dim_accelw_poroelastic
 
   integer :: comm
@@ -96,61 +96,61 @@ subroutine read_forward_arrays_adios()
   ! Get the 'chunks' sizes |
   !------------------------'
   if (ACOUSTIC_SIMULATION) then
-    call adios_get_scalar(handle, "potential_acoustic/local_dim",&
+    call adios_get_scalar(handle, "potential_acoustic/local_dim", &
                           local_dim_potential_acoustic,ier)
-    call adios_get_scalar(handle, "potential_dot_acoustic/local_dim",&
+    call adios_get_scalar(handle, "potential_dot_acoustic/local_dim", &
                           local_dim_potential_dot_acoustic,ier)
-    call adios_get_scalar(handle, "potential_dot_dot_acoustic/local_dim",&
+    call adios_get_scalar(handle, "potential_dot_dot_acoustic/local_dim", &
                           local_dim_potential_dot_dot_acoustic,ier)
   endif
   if (ELASTIC_SIMULATION) then
-    call adios_get_scalar(handle, "displ/local_dim",&
+    call adios_get_scalar(handle, "displ/local_dim", &
                           local_dim_displ,ier)
-    call adios_get_scalar(handle, "veloc/local_dim",&
+    call adios_get_scalar(handle, "veloc/local_dim", &
                           local_dim_veloc,ier)
-    call adios_get_scalar(handle, "accel/local_dim",&
+    call adios_get_scalar(handle, "accel/local_dim", &
                           local_dim_accel,ier)
     if (ATTENUATION) then
-      call adios_get_scalar(handle, "R_xx/local_dim",&
+      call adios_get_scalar(handle, "R_xx/local_dim", &
                             local_dim_R_xx,ier)
-      call adios_get_scalar(handle, "R_yy/local_dim",&
+      call adios_get_scalar(handle, "R_yy/local_dim", &
                             local_dim_R_yy,ier)
-      call adios_get_scalar(handle, "R_xy/local_dim",&
+      call adios_get_scalar(handle, "R_xy/local_dim", &
                             local_dim_R_xy,ier)
-      call adios_get_scalar(handle, "R_xz/local_dim",&
+      call adios_get_scalar(handle, "R_xz/local_dim", &
                             local_dim_R_xz,ier)
-      call adios_get_scalar(handle, "R_yz/local_dim",&
+      call adios_get_scalar(handle, "R_yz/local_dim", &
                             local_dim_R_yz,ier)
-      call adios_get_scalar(handle, "epsilondev_xx/local_dim",&
+      call adios_get_scalar(handle, "epsilondev_xx/local_dim", &
                             local_dim_epsilondev_xx,ier)
-      call adios_get_scalar(handle, "epsilondev_yy/local_dim",&
+      call adios_get_scalar(handle, "epsilondev_yy/local_dim", &
                             local_dim_epsilondev_yy,ier)
-      call adios_get_scalar(handle, "epsilondev_xy/local_dim",&
+      call adios_get_scalar(handle, "epsilondev_xy/local_dim", &
                             local_dim_epsilondev_xy,ier)
-      call adios_get_scalar(handle, "epsilondev_xz/local_dim",&
+      call adios_get_scalar(handle, "epsilondev_xz/local_dim", &
                             local_dim_epsilondev_xz,ier)
-      call adios_get_scalar(handle, "epsilondev_yz/local_dim",&
+      call adios_get_scalar(handle, "epsilondev_yz/local_dim", &
                             local_dim_epsilondev_yz,ier)
       if (FULL_ATTENUATION_SOLID) then
-        call adios_get_scalar(handle, "R_trace/local_dim",&
+        call adios_get_scalar(handle, "R_trace/local_dim", &
                               local_dim_R_trace,ier)
-        call adios_get_scalar(handle, "epsilondev_trace/local_dim",&
+        call adios_get_scalar(handle, "epsilondev_trace/local_dim", &
                               local_dim_epsilondev_trace,ier)
       endif
     endif
   endif
   if (POROELASTIC_SIMULATION) then
-    call adios_get_scalar(handle, "displs_poroelastic/local_dim",&
+    call adios_get_scalar(handle, "displs_poroelastic/local_dim", &
                           local_dim_displs_poroelastic,ier)
-    call adios_get_scalar(handle, "velocs_poroelastic/local_dim",&
+    call adios_get_scalar(handle, "velocs_poroelastic/local_dim", &
                           local_dim_velocs_poroelastic,ier)
-    call adios_get_scalar(handle, "accels_poroelastic/local_dim",&
+    call adios_get_scalar(handle, "accels_poroelastic/local_dim", &
                           local_dim_accels_poroelastic,ier)
-    call adios_get_scalar(handle, "displw_poroelastic/local_dim",&
+    call adios_get_scalar(handle, "displw_poroelastic/local_dim", &
                           local_dim_displw_poroelastic,ier)
-    call adios_get_scalar(handle, "velocw_poroelastic/local_dim",&
+    call adios_get_scalar(handle, "velocw_poroelastic/local_dim", &
                           local_dim_velocw_poroelastic,ier)
-    call adios_get_scalar(handle, "accelw_poroelastic/local_dim",&
+    call adios_get_scalar(handle, "accelw_poroelastic/local_dim", &
                           local_dim_accelw_poroelastic,ier)
   endif
 

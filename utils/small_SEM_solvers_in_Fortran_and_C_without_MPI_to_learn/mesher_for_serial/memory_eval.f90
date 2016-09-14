@@ -27,10 +27,10 @@
 
 ! compute the approximate amount of static memory needed to run the solver
 
-  subroutine memory_eval(OCEANS,ABSORBING_CONDITIONS,ATTENUATION,ANISOTROPIC_3D_MANTLE,&
-                       TRANSVERSE_ISOTROPY,ANISOTROPIC_INNER_CORE,ROTATION,&
-                       ONE_CRUST,doubling_index,this_region_has_a_doubling,&
-                       ner,NEX_PER_PROC_XI,NEX_PER_PROC_ETA,ratio_sampling_array,&
+  subroutine memory_eval(OCEANS,ABSORBING_CONDITIONS,ATTENUATION,ANISOTROPIC_3D_MANTLE, &
+                       TRANSVERSE_ISOTROPY,ANISOTROPIC_INNER_CORE,ROTATION, &
+                       ONE_CRUST,doubling_index,this_region_has_a_doubling, &
+                       ner,NEX_PER_PROC_XI,NEX_PER_PROC_ETA,ratio_sampling_array, &
                        NSPEC,nglob,SIMULATION_TYPE,MOVIE_VOLUME,SAVE_FORWARD, &
          NSPECMAX_ANISO_IC,NSPECMAX_ISO_MANTLE,NSPECMAX_TISO_MANTLE, &
          NSPECMAX_ANISO_MANTLE,NSPEC_CRUST_MANTLE_ATTENUAT, &
@@ -88,9 +88,9 @@
 
 ! count anisotropic elements
   do ilayer = 1, NUMBER_OF_MESH_LAYERS
-      if(doubling_index(ilayer) == IFLAG_220_80 .or. doubling_index(ilayer) == IFLAG_80_MOHO) then
+      if (doubling_index(ilayer) == IFLAG_220_80 .or. doubling_index(ilayer) == IFLAG_80_MOHO) then
           ner_without_doubling = ner(ilayer)
-          if(this_region_has_a_doubling(ilayer)) then
+          if (this_region_has_a_doubling(ilayer)) then
               ner_without_doubling = ner_without_doubling - 2
               ispec_aniso = ispec_aniso + &
               (NSPEC_DOUBLING_SUPERBRICK*(NEX_PER_PROC_XI/ratio_sampling_array(ilayer)/2)* &
@@ -103,20 +103,20 @@
 
 ! define static size of the arrays whose size depends on logical tests
 
-  if(ANISOTROPIC_INNER_CORE) then
+  if (ANISOTROPIC_INNER_CORE) then
     NSPECMAX_ANISO_IC = NSPEC(IREGION_INNER_CORE)
   else
     NSPECMAX_ANISO_IC = 1
   endif
 
-  if(ANISOTROPIC_3D_MANTLE) then
+  if (ANISOTROPIC_3D_MANTLE) then
     NSPECMAX_ISO_MANTLE = 1
     NSPECMAX_TISO_MANTLE = 1
     NSPECMAX_ANISO_MANTLE = NSPEC(IREGION_CRUST_MANTLE)
   else
 
     NSPECMAX_ISO_MANTLE = NSPEC(IREGION_CRUST_MANTLE)
-    if(TRANSVERSE_ISOTROPY) then
+    if (TRANSVERSE_ISOTROPY) then
       NSPECMAX_TISO_MANTLE = ispec_aniso
     else
       NSPECMAX_TISO_MANTLE = 1
@@ -126,7 +126,7 @@
   endif
 
 ! if attenuation is off, set dummy size of arrays to one
-  if(ATTENUATION) then
+  if (ATTENUATION) then
     NSPEC_CRUST_MANTLE_ATTENUAT = NSPEC(IREGION_CRUST_MANTLE)
     NSPEC_INNER_CORE_ATTENUATION = NSPEC(IREGION_INNER_CORE)
   else
@@ -134,7 +134,7 @@
     NSPEC_INNER_CORE_ATTENUATION = 1
   endif
 
-  if(ATTENUATION .or. SIMULATION_TYPE /= 1 .or. SAVE_FORWARD .or. (MOVIE_VOLUME .and. SIMULATION_TYPE /= 3)) then
+  if (ATTENUATION .or. SIMULATION_TYPE /= 1 .or. SAVE_FORWARD .or. (MOVIE_VOLUME .and. SIMULATION_TYPE /= 3)) then
     NSPEC_CRUST_MANTLE_STR_OR_ATT = NSPEC(IREGION_CRUST_MANTLE)
     NSPEC_INNER_CORE_STR_OR_ATT = NSPEC(IREGION_INNER_CORE)
   else
@@ -142,7 +142,7 @@
     NSPEC_INNER_CORE_STR_OR_ATT = 1
   endif
 
-  if(ATTENUATION .and. SIMULATION_TYPE == 3) then
+  if (ATTENUATION .and. SIMULATION_TYPE == 3) then
     NSPEC_CRUST_MANTLE_STR_AND_ATT = NSPEC(IREGION_CRUST_MANTLE)
     NSPEC_INNER_CORE_STR_AND_ATT = NSPEC(IREGION_INNER_CORE)
   else
@@ -151,7 +151,7 @@
   endif
 
 
-  if(SIMULATION_TYPE /= 1 .or. SAVE_FORWARD .or. (MOVIE_VOLUME .and. SIMULATION_TYPE /= 3)) then
+  if (SIMULATION_TYPE /= 1 .or. SAVE_FORWARD .or. (MOVIE_VOLUME .and. SIMULATION_TYPE /= 3)) then
     NSPEC_CRUST_MANTLE_STRAIN_ONLY = NSPEC(IREGION_CRUST_MANTLE)
     NSPEC_INNER_CORE_STRAIN_ONLY = NSPEC(IREGION_INNER_CORE)
   else
@@ -168,7 +168,7 @@
     NGLOB_OUTER_CORE_ADJOINT = NGLOB(IREGION_OUTER_CORE)
     NGLOB_INNER_CORE_ADJOINT = NGLOB(IREGION_INNER_CORE)
 
-    if(ROTATION) then
+    if (ROTATION) then
       NSPEC_OUTER_CORE_ROT_ADJOINT = NSPEC(IREGION_OUTER_CORE)
     else
       NSPEC_OUTER_CORE_ROT_ADJOINT = 1
@@ -186,7 +186,7 @@
    endif
 
 ! if absorbing conditions are off, set dummy size of arrays to one
-  if(ABSORBING_CONDITIONS) then
+  if (ABSORBING_CONDITIONS) then
     NSPEC_CRUST_MANTLE_STACEY = NSPEC(IREGION_CRUST_MANTLE)
     NSPEC_OUTER_CORE_STACEY = NSPEC(IREGION_OUTER_CORE)
   else
@@ -195,13 +195,13 @@
   endif
 
 ! if oceans are off, set dummy size of arrays to one
-  if(OCEANS) then
+  if (OCEANS) then
     NGLOB_CRUST_MANTLE_OCEANS = NGLOB(IREGION_CRUST_MANTLE)
   else
     NGLOB_CRUST_MANTLE_OCEANS = 1
   endif
 
-  if(ROTATION) then
+  if (ROTATION) then
     NSPEC_OUTER_CORE_ROTATION = NSPEC(IREGION_OUTER_CORE)
   else
     NSPEC_OUTER_CORE_ROTATION = 1
@@ -288,7 +288,7 @@
 ! A_array_rotation,B_array_rotation
 ! static_memory_size = static_memory_size + dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_OUTER_CORE_ROTATION*2.d0*dble(CUSTOM_REAL)
 
-! if(ABSORBING_CONDITIONS) then
+! if (ABSORBING_CONDITIONS) then
 
 ! rho_vp_crust_mantle,rho_vs_crust_mantle
 !   static_memory_size = static_memory_size + dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC(IREGION_CRUST_MANTLE)*2.d0*dble(CUSTOM_REAL)
@@ -298,7 +298,7 @@
 
 ! endif
 
-! if(OCEANS) then
+! if (OCEANS) then
 
 ! rmass_ocean_load
 !   static_memory_size = static_memory_size + NGLOB(IREGION_CRUST_MANTLE)*dble(CUSTOM_REAL)

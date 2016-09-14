@@ -15,7 +15,7 @@ character(len=*) :: str
 
 isblank=.false.
 
-if (len(trim(str))==0)isblank=.true.
+if (len(trim(str)) == 0)isblank=.true.
 return
 end function isblank
 !=====================================================
@@ -31,7 +31,7 @@ call first_char(str,ch,ind)
 
 iscomment=.false.
 
-if (ch==rch)iscomment=.true.
+if (ch == rch)iscomment=.true.
 
 return
 end function iscomment
@@ -54,7 +54,7 @@ str=' '
 
 ! first token is a word before first space
 do i=1,slen
-  if (tmp_str(i:i)==' ')then
+  if (tmp_str(i:i) == ' ') then
     token=tmp_str(1:i-1)
     str=tmp_str(i+1:slen)
     exit
@@ -82,7 +82,7 @@ ind=1
 
 ! find first character
 do i=1,slen
-  if (str(i:i)/=' ')then
+  if (str(i:i) /= ' ') then
     ch=str(i:i)
     ind=i
     exit
@@ -108,7 +108,7 @@ ind=slen
 
 ! find last character
 do i=slen,1,-1
-  if (str(i:i)/=' ')then
+  if (str(i:i) /= ' ') then
     ch=str(i:i)
     ind=i
     exit
@@ -136,7 +136,7 @@ tmp_str=trim(str)
 ! find and count indices of all delimeters
 narg=0
 do i=1,slen
-  if(tmp_str(i:i)==delm)then
+  if (tmp_str(i:i) == delm) then
     narg=narg+1
     ind(narg)=i
   endif
@@ -166,8 +166,8 @@ integer :: i,narg
 
 do i=1,nvar
   call split_string(slist(i),'=',args,narg)
-  if (narg/=2)cycle
-  if (vname==trim(adjustl(args(1))))then
+  if (narg /= 2)cycle
+  if (vname == trim(adjustl(args(1)))) then
      read(args(2),*)get_string
      return
   endif
@@ -191,8 +191,8 @@ integer :: i,narg
 strval=''
 do i=1,nvar
   call split_string(slist(i),'=',args,narg)
-  if (narg/=2)cycle
-  if (vname==trim(adjustl(args(1))))then
+  if (narg /= 2)cycle
+  if (vname == trim(adjustl(args(1)))) then
      read(args(2),*)strval
      return
   endif
@@ -218,8 +218,8 @@ integer :: i,narg
 
 do i=1,nvar
   call split_string(slist(i),'=',args,narg)
-  if (narg/=2)cycle
-  if (vname==trim(adjustl(args(1))))then
+  if (narg /= 2)cycle
+  if (vname == trim(adjustl(args(1)))) then
      read(args(2),*)get_string_vect
      return
   endif
@@ -241,8 +241,8 @@ integer :: i,narg
 
 do i=1,nvar
   call split_string(slist(i),'=',args,narg)
-  if (narg/=2)cycle
-  if (vname==trim(adjustl(args(1))))then
+  if (narg /= 2)cycle
+  if (vname == trim(adjustl(args(1)))) then
      read(args(2),*)get_integer
      return
   endif
@@ -267,8 +267,8 @@ integer :: i,narg
 
 do i=1,nvar
   call split_string(slist(i),'=',args,narg)
-  if (narg/=2)cycle
-  if (vname==trim(adjustl(args(1))))then
+  if (narg /= 2)cycle
+  if (vname == trim(adjustl(args(1)))) then
      read(args(2),*)get_integer_vect(1:n)
      return
   endif
@@ -290,8 +290,8 @@ integer :: i,narg
 
 do i=1,nvar
   call split_string(slist(i),'=',args,narg)
-  if (narg/=2)cycle
-  if (vname==trim(adjustl(args(1))))then
+  if (narg /= 2)cycle
+  if (vname == trim(adjustl(args(1)))) then
      read(args(2),*)get_real
      return
   endif

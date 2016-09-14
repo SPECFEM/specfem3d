@@ -40,9 +40,7 @@ __global__ void compute_stacey_elastic_kernel(realw* veloc,
                                               int* d_ibool,
                                               realw* rho_vp,
                                               realw* rho_vs,
-                                              int* ispec_is_inner,
                                               int* ispec_is_elastic,
-                                              int phase_is_inner,
                                               int SIMULATION_TYPE,
                                               int SAVE_FORWARD,
                                               int num_abs_boundary_faces,
@@ -67,7 +65,7 @@ __global__ void compute_stacey_elastic_kernel(realw* veloc,
     // "-1" from index values to convert from Fortran-> C indexing
     ispec = abs_boundary_ispec[iface]-1;
 
-    if (ispec_is_inner[ispec] == phase_is_inner && ispec_is_elastic[ispec]) {
+    if (ispec_is_elastic[ispec]) {
 
       i = abs_boundary_ijk[INDEX3(NDIM,NGLL2,0,igll,iface)]-1;
       j = abs_boundary_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)]-1;
@@ -117,9 +115,7 @@ __global__ void compute_stacey_elastic_kernel(realw* veloc,
 __global__ void compute_stacey_elastic_sim3_kernel(int* abs_boundary_ispec,
                                                    int* abs_boundary_ijk,
                                                    int* d_ibool,
-                                                   int* ispec_is_inner,
                                                    int* ispec_is_elastic,
-                                                   int phase_is_inner,
                                                    int num_abs_boundary_faces,
                                                    realw* b_accel,
                                                    realw* b_absorb_field) {
@@ -138,7 +134,7 @@ __global__ void compute_stacey_elastic_sim3_kernel(int* abs_boundary_ispec,
     // "-1" from index values to convert from Fortran-> C indexing
     ispec = abs_boundary_ispec[iface]-1;
 
-    if (ispec_is_inner[ispec] == phase_is_inner && ispec_is_elastic[ispec]) {
+    if (ispec_is_elastic[ispec]) {
 
       i = abs_boundary_ijk[INDEX3(NDIM,NGLL2,0,igll,iface)]-1;
       j = abs_boundary_ijk[INDEX3(NDIM,NGLL2,1,igll,iface)]-1;
@@ -160,7 +156,7 @@ __global__ void compute_stacey_elastic_sim3_kernel(int* abs_boundary_ispec,
 extern "C"
 void FC_FUNC_(compute_stacey_viscoelastic_cuda,
               COMPUTE_STACEY_VISCOELASTIC_CUDA)(long* Mesh_pointer,
-                                           int* phase_is_innerf,
+                                           int* iphasef,
                                            realw* b_absorb_field) {
 
   TRACE("\tcompute_stacey_viscoelastic_cuda");
@@ -170,7 +166,10 @@ void FC_FUNC_(compute_stacey_viscoelastic_cuda,
   // checks if anything to do
   if (mp->d_num_abs_boundary_faces == 0) return;
 
-  int phase_is_inner    = *phase_is_innerf;
+  int iphase    = *iphasef;
+
+  // only add these contributions in first pass
+  if (iphase != 1) return;
 
   // way 1
   // > NGLLSQUARE==NGLL2==25, but we handle this inside kernel
@@ -205,9 +204,7 @@ void FC_FUNC_(compute_stacey_viscoelastic_cuda,
                                                   mp->d_ibool,
                                                   mp->d_rho_vp,
                                                   mp->d_rho_vs,
-                                                  mp->d_ispec_is_inner,
                                                   mp->d_ispec_is_elastic,
-                                                  phase_is_inner,
                                                   mp->simulation_type,
                                                   mp->save_forward,
                                                   mp->d_num_abs_boundary_faces,
@@ -218,9 +215,7 @@ void FC_FUNC_(compute_stacey_viscoelastic_cuda,
     compute_stacey_elastic_sim3_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_abs_boundary_ispec,
                                                          mp->d_abs_boundary_ijk,
                                                          mp->d_ibool,
-                                                         mp->d_ispec_is_inner,
                                                          mp->d_ispec_is_elastic,
-                                                         phase_is_inner,
                                                          mp->d_num_abs_boundary_faces,
                                                          mp->d_b_accel,
                                                          mp->d_b_absorb_field);

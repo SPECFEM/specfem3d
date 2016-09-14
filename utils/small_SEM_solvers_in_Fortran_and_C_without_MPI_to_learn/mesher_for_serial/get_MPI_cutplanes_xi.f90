@@ -108,14 +108,14 @@
   ispecc1=0
 
   do ispec=1,nspec
-    if(iMPIcut_xi(1,ispec)) then
+    if (iMPIcut_xi(1,ispec)) then
       ispecc1=ispecc1+1
       ! loop on all the points in that 2-D element, including edges
       ix = 1
       do iy=1,NGLLY
           do iz=1,NGLLZ
             ! select point, if not already selected
-            if(.not. mask_ibool(ibool(ix,iy,iz,ispec))) then
+            if (.not. mask_ibool(ibool(ix,iy,iz,ispec))) then
                 mask_ibool(ibool(ix,iy,iz,ispec)) = .true.
                 npoin2D_xi = npoin2D_xi + 1
                 if (USE_MESH_COLORING_INNER_OUTER) then
@@ -151,7 +151,7 @@
   close(10)
 
 ! compare number of surface elements detected to analytical value
-  if(ispecc1 /= nspec2Dtheor) then
+  if (ispecc1 /= nspec2Dtheor) then
     write(errmsg,*) 'error MPI cut-planes detection in xi=left T=',nspec2Dtheor,' C=',ispecc1
     call exit_MPI(myrank,errmsg)
   endif
@@ -173,14 +173,14 @@
   ispecc2=0
 
   do ispec=1,nspec
-    if(iMPIcut_xi(2,ispec)) then
+    if (iMPIcut_xi(2,ispec)) then
       ispecc2=ispecc2+1
       ! loop on all the points in that 2-D element, including edges
       ix = NGLLX
       do iy=1,NGLLY
         do iz=1,NGLLZ
           ! select point, if not already selected
-          if(.not. mask_ibool(ibool(ix,iy,iz,ispec))) then
+          if (.not. mask_ibool(ibool(ix,iy,iz,ispec))) then
               mask_ibool(ibool(ix,iy,iz,ispec)) = .true.
               npoin2D_xi = npoin2D_xi + 1
               if (USE_MESH_COLORING_INNER_OUTER) then
@@ -217,7 +217,7 @@
   close(10)
 
 ! compare number of surface elements detected to analytical value
-  if(ispecc2 /= nspec2Dtheor) then
+  if (ispecc2 /= nspec2Dtheor) then
     write(errmsg,*) 'error MPI cut-planes detection in xi=right T=',nspec2Dtheor,' C=',ispecc2
     call exit_MPI(myrank,errmsg)
   endif

@@ -26,9 +26,9 @@ contains
     do i = -nlen, nlen, 1
        cc = 0.
        do j = 1, nlen
-          if((j+i) >= 1 .and. (j+i) <= nlen) cc = cc + synw(j) * dataw(j+i)
+          if ((j+i) >= 1 .and. (j+i) <= nlen) cc = cc + synw(j) * dataw(j+i)
        enddo
-       if(cc > cc_max) then
+       if (cc > cc_max) then
           cc_max = cc
           ishift = i
        endif
@@ -70,7 +70,7 @@ contains
   ! sigma_tshift_cc and sigma_dlnA_cc to take into account
   ! the data and synthetics misfit
 
-  subroutine compute_cc_error(dataw,synw,nlen,dt,i_pmax,dlnA,&
+  subroutine compute_cc_error(dataw,synw,nlen,dt,i_pmax,dlnA, &
        sigma_tshift_cc,sigma_dlnA_cc, &
        MIN_SIGMA_TSHIFT_CC,MIN_SIGMA_DLNA_CC)
 
@@ -101,7 +101,7 @@ contains
 
   ! ======================================================================
 
-  subroutine reconstruct_syn_fd(csynw,dtau_fdm,dlnA_fdm,i_right,&
+  subroutine reconstruct_syn_fd(csynw,dtau_fdm,dlnA_fdm,i_right, &
        synw_rc_fd,dt,nlen)
 
     complex, dimension(:), intent(in) :: csynw
@@ -167,13 +167,13 @@ contains
          smth  =  phi_wt(i+1) + phi_wt(i-1) -  2.0 * phi_wt(i)
          smth1 = (phi_wt(i+1) + TWOPI) + phi_wt(i-1) -  2.0 * phi_wt(i)
          smth2 = (phi_wt(i+1) - TWOPI) + phi_wt(i-1) -  2.0 * phi_wt(i)
-         if(abs(smth1)<abs(smth).and.abs(smth1)<abs(smth2).and. abs(phi_wt(i) - phi_wt(i+1)) > PHASE_STEP)then
+         if (abs(smth1) < abs(smth) .and. abs(smth1) < abs(smth2) .and. abs(phi_wt(i) - phi_wt(i+1)) > PHASE_STEP) then
             if (DEBUG) print *, '2 pi phase correction:', fvec(i), phi_wt(i) - phi_wt(i+1)
             do j = i+1, i_right
                phi_wt(j) = phi_wt(j) + TWOPI
             enddo
          endif
-         if(abs(smth2)<abs(smth).and.abs(smth2)<abs(smth1).and. abs(phi_wt(i) - phi_wt(i+1)) > PHASE_STEP)then
+         if (abs(smth2) < abs(smth) .and. abs(smth2) < abs(smth1) .and. abs(phi_wt(i) - phi_wt(i+1)) > PHASE_STEP) then
             if (DEBUG) print *, '-2 pi phase correction:', fvec(i), phi_wt(i) - phi_wt(i+1)
             do j = i+1, i_right
                phi_wt(j) = phi_wt(j) - TWOPI
@@ -186,7 +186,7 @@ contains
   end subroutine compute_dtau_dlnA
 
   ! ======================================================================
-  subroutine compute_mt_error(ntaper,dataw,synw,tas,&
+  subroutine compute_mt_error(ntaper,dataw,synw,tas, &
        nlen,dt,wtr_mtm,i_right,tshift_cc, &
        dtau_fdm,dlnA_fdm, sigma_dtau_fdm,sigma_dlnA_fdm)
 
@@ -213,7 +213,7 @@ contains
        bot_mtm(:) = cmplx(0.,0.)
 
        do ictaper = 1, ntaper
-          if(ictaper==iom) cycle
+          if (ictaper == iom) cycle
 
           ! apply ictaper'th taper
           datawt(1:nlen) = dataw(1:nlen) * tas(1:nlen,ictaper)
@@ -242,8 +242,8 @@ contains
 
        !  calculate transfer function using water level
        do i = 1, i_right
-          if(abs(bot_mtm(i)) >= abs(wtr_amp_bot)) trans_mtm(i) = top_mtm(i) / bot_mtm(i)
-          if(abs(bot_mtm(i)) < abs(wtr_amp_bot)) trans_mtm(i) = top_mtm(i) /(bot_mtm(i)+wtr_amp_bot)
+          if (abs(bot_mtm(i)) >= abs(wtr_amp_bot)) trans_mtm(i) = top_mtm(i) / bot_mtm(i)
+          if (abs(bot_mtm(i)) < abs(wtr_amp_bot)) trans_mtm(i) = top_mtm(i) /(bot_mtm(i)+wtr_amp_bot)
        enddo
        call compute_dtau_dlnA(trans_mtm,dt,tshift_cc,dtau_mtm(:,iom),dlnA_mtm(:,iom),i_right)
     enddo ! iom

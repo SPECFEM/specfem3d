@@ -39,7 +39,7 @@
   nrec = 0
   do while(ios == 0)
     read(IIN,"(a)",iostat=ios) dummystring
-    if(ios == 0) nrec = nrec + 1
+    if (ios == 0) nrec = nrec + 1
   enddo
   close(IIN)
 
@@ -67,13 +67,13 @@
 
 ! look for duplicates in the station file in terms of station name
   do irec = 1,nrec-1
-    if(is_a_duplicate(irec)) cycle
+    if (is_a_duplicate(irec)) cycle
     do irec2 = irec+1,nrec
-      if(is_a_duplicate(irec2)) cycle
-      if(station_name(irec) == station_name(irec2) .and. network_name(irec) == network_name(irec2)) then
+      if (is_a_duplicate(irec2)) cycle
+      if (station_name(irec) == station_name(irec2) .and. network_name(irec) == network_name(irec2)) then
         print *, &
           network_name(irec2)(1:len_trim(network_name(irec2))),'.',station_name(irec2)(1:len_trim(station_name(irec2))), &
-          ' is a duplicate of ',&
+          ' is a duplicate of ', &
           network_name(irec)(1:len_trim(network_name(irec))),'.',station_name(irec)(1:len_trim(station_name(irec))), &
           ' (same name)'
         is_a_duplicate(irec2) = .true.
@@ -85,10 +85,10 @@
 
 ! look for duplicates in the station file in terms of position
   do irec = 1,nrec-1
-    if(is_a_duplicate(irec)) cycle
+    if (is_a_duplicate(irec)) cycle
     do irec2 = irec+1,nrec
-      if(is_a_duplicate(irec2)) cycle
-      if(stlat(irec) == stlat(irec2) .and. stlon(irec) == stlon(irec2)) then
+      if (is_a_duplicate(irec2)) cycle
+      if (stlat(irec) == stlat(irec2) .and. stlon(irec) == stlon(irec2)) then
         print *, &
           network_name(irec2)(1:len_trim(network_name(irec2))),'.',station_name(irec2)(1:len_trim(station_name(irec2))), &
           ' is a duplicate of ', &
@@ -107,7 +107,7 @@
   open(unit=IOUT,file=STATIONS_FILE(1:len_trim(STATIONS_FILE))//'_cleaned',status='unknown',action='write')
 ! loop on all the stations to write station information
   do irec = 1,nrec
-    if(.not. is_a_duplicate(irec)) write(IOUT,*) trim(station_name(irec)),' ', &
+    if (.not. is_a_duplicate(irec)) write(IOUT,*) trim(station_name(irec)),' ', &
        trim(network_name(irec)),' ',sngl(stlat(irec)),' ',sngl(stlon(irec)),' ',sngl(stele(irec)),' ',sngl(stbur(irec))
   enddo
 ! close receiver file

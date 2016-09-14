@@ -36,7 +36,7 @@
                         coupling_ac_po_normal, &
                         coupling_ac_po_jacobian2Dw, &
                         rhoarraystore,phistore,tortstore, &
-                        ispec_is_inner,phase_is_inner)
+                        iphase)
 
 ! returns the updated accelerations array: accels_poroelatsic & accelw_poroelastic
 
@@ -66,8 +66,7 @@
         phistore,tortstore
 
 ! communication overlap
-  logical, dimension(NSPEC_AB) :: ispec_is_inner
-  logical :: phase_is_inner
+  integer :: iphase
 
 ! local parameters
   real(kind=CUSTOM_REAL) :: pressure
@@ -77,6 +76,9 @@
   integer :: iface,igll,ispec,iglob
   integer :: i,j,k
 
+  ! only add these contributions in first pass
+  if (iphase /= 1) return
+
 ! loops on all coupling faces
   do iface = 1,num_coupling_ac_po_faces
 
@@ -84,67 +86,63 @@
     ! element, since we need to have access to porous properties
     ispec = coupling_ac_po_ispec(iface)
 
-    if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
+    ! loops over common GLL points
+    do igll = 1, NGLLSQUARE
+      i = coupling_ac_po_ijk(1,igll,iface)
+      j = coupling_ac_po_ijk(2,igll,iface)
+      k = coupling_ac_po_ijk(3,igll,iface)
 
-      ! loops over common GLL points
-      do igll = 1, NGLLSQUARE
-        i = coupling_ac_po_ijk(1,igll,iface)
-        j = coupling_ac_po_ijk(2,igll,iface)
-        k = coupling_ac_po_ijk(3,igll,iface)
+      ! gets global index of this common GLL point
+      ! (note: should be the same as for corresponding i',j',k',ispec_poroelastic or ispec_acoustic )
+      iglob = ibool(i,j,k,ispec)
 
-        ! gets global index of this common GLL point
-        ! (note: should be the same as for corresponding i',j',k',ispec_poroelastic or ispec_acoustic )
-        iglob = ibool(i,j,k,ispec)
+      ! get poroelastic parameters
+      phil = phistore(i,j,k,ispec)
+      tortl = tortstore(i,j,k,ispec)
+      rhol_s = rhoarraystore(1,i,j,k,ispec)
+      rhol_f = rhoarraystore(2,i,j,k,ispec)
+      rhol_bar = (1._CUSTOM_REAL-phil)*rhol_s + phil*rhol_f
 
-        ! get poroelastic parameters
-        phil = phistore(i,j,k,ispec)
-        tortl = tortstore(i,j,k,ispec)
-        rhol_s = rhoarraystore(1,i,j,k,ispec)
-        rhol_f = rhoarraystore(2,i,j,k,ispec)
-        rhol_bar = (1._CUSTOM_REAL-phil)*rhol_s + phil*rhol_f
+      ! acoustic pressure on global point
+      pressure = - potential_dot_dot_acoustic(iglob)
 
-        ! acoustic pressure on global point
-        pressure = - potential_dot_dot_acoustic(iglob)
+      ! gets associated normal on GLL point
+      ! (note convention: pointing outwards of acoustic element)
+      nx = coupling_ac_po_normal(1,igll,iface)
+      ny = coupling_ac_po_normal(2,igll,iface)
+      nz = coupling_ac_po_normal(3,igll,iface)
 
-        ! gets associated normal on GLL point
-        ! (note convention: pointing outwards of acoustic element)
-        nx = coupling_ac_po_normal(1,igll,iface)
-        ny = coupling_ac_po_normal(2,igll,iface)
-        nz = coupling_ac_po_normal(3,igll,iface)
+      ! gets associated, weighted 2D jacobian
+      ! (note: should be the same for poroelastic and acoustic element)
+      jacobianw = coupling_ac_po_jacobian2Dw(igll,iface)
 
-        ! gets associated, weighted 2D jacobian
-        ! (note: should be the same for poroelastic and acoustic element)
-        jacobianw = coupling_ac_po_jacobian2Dw(igll,iface)
-
-        ! continuity of displacement and pressure on global point
-        !
-        ! note: Newmark time scheme together with definition of scalar potential:
-        !          pressure = - chi_dot_dot
-        !          requires that this coupling term uses the *UPDATED* pressure (chi_dot_dot), i.e.
-        !          pressure at time step [t + delta_t]
-        !          (see e.g. Chaljub & Vilotte, Nissen-Meyer thesis...)
-        !          it means you have to calculate and update the acoustic pressure first before
-        !          calculating this term...
+      ! continuity of displacement and pressure on global point
+      !
+      ! note: Newmark time scheme together with definition of scalar potential:
+      !          pressure = - chi_dot_dot
+      !          requires that this coupling term uses the *UPDATED* pressure (chi_dot_dot), i.e.
+      !          pressure at time step [t + delta_t]
+      !          (see e.g. Chaljub & Vilotte, Nissen-Meyer thesis...)
+      !          it means you have to calculate and update the acoustic pressure first before
+      !          calculating this term...
 ! contribution to the solid phase
-        accels_poroelastic(1,iglob) = accels_poroelastic(1,iglob) + jacobianw*nx*pressure*&
-                                    (1._CUSTOM_REAL-phil/tortl)
-        accels_poroelastic(2,iglob) = accels_poroelastic(2,iglob) + jacobianw*ny*pressure*&
-                                    (1._CUSTOM_REAL-phil/tortl)
-        accels_poroelastic(3,iglob) = accels_poroelastic(3,iglob) + jacobianw*nz*pressure*&
-                                    (1._CUSTOM_REAL-phil/tortl)
+      accels_poroelastic(1,iglob) = accels_poroelastic(1,iglob) + jacobianw*nx*pressure*&
+                                  (1._CUSTOM_REAL-phil/tortl)
+      accels_poroelastic(2,iglob) = accels_poroelastic(2,iglob) + jacobianw*ny*pressure*&
+                                  (1._CUSTOM_REAL-phil/tortl)
+      accels_poroelastic(3,iglob) = accels_poroelastic(3,iglob) + jacobianw*nz*pressure*&
+                                  (1._CUSTOM_REAL-phil/tortl)
 ! contribution to the fluid phase
-        accelw_poroelastic(1,iglob) = accelw_poroelastic(1,iglob) + jacobianw*nx*pressure*&
-                                    (1._CUSTOM_REAL-rhol_f/rhol_bar)
-        accelw_poroelastic(2,iglob) = accelw_poroelastic(2,iglob) + jacobianw*ny*pressure*&
-                                    (1._CUSTOM_REAL-rhol_f/rhol_bar)
-        accelw_poroelastic(3,iglob) = accelw_poroelastic(3,iglob) + jacobianw*nz*pressure*&
-                                    (1._CUSTOM_REAL-rhol_f/rhol_bar)
+      accelw_poroelastic(1,iglob) = accelw_poroelastic(1,iglob) + jacobianw*nx*pressure*&
+                                  (1._CUSTOM_REAL-rhol_f/rhol_bar)
+      accelw_poroelastic(2,iglob) = accelw_poroelastic(2,iglob) + jacobianw*ny*pressure*&
+                                  (1._CUSTOM_REAL-rhol_f/rhol_bar)
+      accelw_poroelastic(3,iglob) = accelw_poroelastic(3,iglob) + jacobianw*nz*pressure*&
+                                  (1._CUSTOM_REAL-rhol_f/rhol_bar)
 
-      enddo ! igll
-
-    endif
+    enddo ! igll
 
   enddo ! iface
 
-end subroutine compute_coupling_poroelastic_ac
+  end subroutine compute_coupling_poroelastic_ac
 

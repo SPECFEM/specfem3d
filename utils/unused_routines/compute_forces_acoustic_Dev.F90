@@ -38,7 +38,7 @@
                         hprime_xx,hprime_xxT,hprimewgll_xx,hprimewgll_xxT, &
                         wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D, &
                         rhostore,jacobian,ibool, &
-                        num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic,&
+                        num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic, &
                         phase_ispec_inner_acoustic,backward_simulation)
 
 ! computes forces for acoustic elements
@@ -46,11 +46,11 @@
 ! note that pressure is defined as:
 !     p = - Chi_dot_dot
 !
-  use specfem_par,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ, &
+  use specfem_par, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ, &
                         m1,m2,NGLLCUBE,PML_CONDITIONS
 
   use pml_par, only: is_CPML, spec_to_CPML, NSPEC_CPML, &
-                     potential_dot_dot_acoustic_CPML,rmemory_dpotential_dxl,rmemory_dpotential_dyl,&
+                     potential_dot_dot_acoustic_CPML,rmemory_dpotential_dxl,rmemory_dpotential_dyl, &
                      rmemory_dpotential_dzl,rmemory_potential_acoustic, &
                      potential_acoustic_old,potential_acoustic_new
 
@@ -146,7 +146,7 @@
     call mxm_single(chi_elem,m2,hprime_xxT,tempx3,m1)
 
     if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
-      ! do not merge this second line with the first using an ".and." statement
+      ! do not merge this second line with the first using an " .and. " statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
       if (is_CPML(ispec)) then
       ! gets values for element
@@ -195,7 +195,7 @@
 
       ! stores derivatives of ux, uy and uz with respect to x, y and z
       if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
-        ! do not merge this second line with the first using an ".and." statement
+        ! do not merge this second line with the first using an " .and. " statement
         ! because array is_CPML() is unallocated when PML_CONDITIONS is false
         if (is_CPML(ispec)) then
           PML_dpotential_dxl(INDEX_IJK) = dpotentialdxl
@@ -229,21 +229,21 @@
     ENDDO_LOOP_IJK
 
     if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
-      ! do not merge this second line with the first using an ".and." statement
+      ! do not merge this second line with the first using an " .and. " statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
       if (is_CPML(ispec)) then
         ispec_CPML = spec_to_CPML(ispec)
 
         ! sets C-PML elastic memory variables to compute stress sigma and form dot product with test vector
         call pml_compute_memory_variables_acoustic(ispec,ispec_CPML, &
-                                                   tempx1,tempx2,tempx3,&
+                                                   tempx1,tempx2,tempx3, &
                                                    rmemory_dpotential_dxl,rmemory_dpotential_dyl,rmemory_dpotential_dzl, &
-                                                   PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl,&
-                                                   PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old,&
+                                                   PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl, &
+                                                   PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old, &
                                                    PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new)
 
         ! calculates contribution from each C-PML element to update acceleration
-        call pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_acoustic,&
+        call pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_acoustic, &
                                                      potential_dot_acoustic,rmemory_potential_acoustic)
       endif
     endif ! PML_CONDITIONS
@@ -276,8 +276,8 @@
     ENDDO_LOOP_IJK
 
     ! updates potential_dot_dot_acoustic with contribution from each C-PML element
-    if (PML_CONDITIONS .and. (.not. backward_simulation)  .and. NSPEC_CPML > 0) then
-      ! do not merge this second line with the first using an ".and." statement
+    if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
+      ! do not merge this second line with the first using an " .and. " statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
       if (is_CPML(ispec)) then
         DO_LOOP_IJK
@@ -316,7 +316,7 @@
 
 ! 2-dimensional arrays e.g. (25,5)/(5,25)
 
-  use constants,only: CUSTOM_REAL,NGLLX
+  use constants, only: CUSTOM_REAL,NGLLX
 
   implicit none
 
@@ -342,7 +342,7 @@
 
 ! 2-dimensional arrays (25,5)/(5,25)
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -373,7 +373,7 @@
 
 ! 2-dimensional arrays (36,6)/(6,36)
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -405,7 +405,7 @@
 
 ! 2-dimensional arrays (49,7)/(7,49)
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -439,7 +439,7 @@
 
 ! 3-dimensional arrays e.g. (5,5,5) for A and C
 
-  use constants,only: CUSTOM_REAL,NGLLX
+  use constants, only: CUSTOM_REAL,NGLLX
 
   implicit none
 
@@ -465,7 +465,7 @@
 
 ! 3-dimensional arrays (5,5,5) for A and C
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -498,7 +498,7 @@
 
 ! 3-dimensional arrays (6,6,6) for A and C
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -532,7 +532,7 @@
 
 ! 3-dimensional arrays (6,6,6) for A and C
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 

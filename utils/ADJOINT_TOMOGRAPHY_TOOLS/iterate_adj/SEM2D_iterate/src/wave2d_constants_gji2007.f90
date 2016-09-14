@@ -160,7 +160,7 @@ module wave2d_constants
   logical, parameter :: COMPUTE_KERNELS = .true.
 
   ! whether to use the data subspace method, which has a Hessian
-  logical, parameter :: HESSIAN = .false.
+  logical, parameter :: Hessian = .false.
 
   ! stopping criteria
   ! NITERATION  : number of iterations
@@ -220,7 +220,7 @@ module wave2d_constants
 
   ! parameters for smoothing
   logical, parameter :: HIGH_RES_SMOOTHING = .true.  ! smooth at high resolution
-  logical, parameter :: EXAMPLE_GAUSSIAN = .false.   ! plot an example Gaussian
+  logical, parameter :: EXAMPLE_Gaussian = .false.   ! plot an example Gaussian
 
 ! homogeneous background model (S.I. units)
   double precision, parameter :: DENSITY           = 2.60d+03 ! kg/m^3

@@ -35,7 +35,7 @@
 !==============================================================================
 
 !------------------------------------------------.
-! Subroutines from read_mesh_databases_adios.F90 |
+! subroutines from read_mesh_databases_adios.F90 |
 !------------------------------------------------'
 
 subroutine read_mesh_for_init_ADIOS(nspec, nglob)
@@ -65,7 +65,7 @@ subroutine read_mesh_databases_moho_adios()
 end subroutine read_mesh_databases_moho_adios
 
 !-----------------------------------------.
-! Subroutines from save_kernels_adios.F90 |
+! subroutines from save_kernels_adios.F90 |
 !-----------------------------------------'
 
 subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
@@ -114,7 +114,7 @@ subroutine save_kernels_acoustic_adios(handle)
 end subroutine
 
 subroutine save_kernels_elastic_adios(handle, alphav_kl, alphah_kl, &
-                                      betav_kl, betah_kl, eta_kl,   &
+                                      betav_kl, betah_kl, eta_kl, &
                                       rhop_kl, alpha_kl, beta_kl)
 
   use specfem_par
@@ -156,7 +156,7 @@ subroutine save_kernels_poroelastic_adios(handle)
   call no_adios_err()
 end subroutine save_kernels_poroelastic_adios
 
-subroutine save_kernels_hessian_adios(handle)
+subroutine save_kernels_Hessian_adios(handle)
 
   use adios_manager_mod
 
@@ -168,10 +168,10 @@ subroutine save_kernels_hessian_adios(handle)
   unused_i8 = handle
 
   call no_adios_err()
-end subroutine save_kernels_hessian_adios
+end subroutine save_kernels_Hessian_adios
 
 !------------------------------------------------.
-! Subroutines from save_forward_arrays_adios.F90 |
+! subroutines from save_forward_arrays_adios.F90 |
 !------------------------------------------------'
 
 subroutine save_forward_arrays_adios()
@@ -181,7 +181,7 @@ subroutine save_forward_arrays_adios()
 end subroutine save_forward_arrays_adios
 
 !------------------------------------------------.
-! Subroutines from read_forward_arrays_adios.F90 |
+! subroutines from read_forward_arrays_adios.F90 |
 !------------------------------------------------'
 
 subroutine read_forward_arrays_adios()

@@ -87,7 +87,7 @@
   ispecc1=0
 
   do ispec=1,nspec
-  if(iMPIcut_eta(1,ispec)) then
+  if (iMPIcut_eta(1,ispec)) then
 
     ispecc1=ispecc1+1
 
@@ -97,7 +97,7 @@
       do iz=1,NGLLZ
 
 ! select point, if not already selected
-  if(.not. mask_ibool(ibool(ix,iy,iz,ispec))) then
+  if (.not. mask_ibool(ibool(ix,iy,iz,ispec))) then
       mask_ibool(ibool(ix,iy,iz,ispec)) = .true.
       npoin2D_eta = npoin2D_eta + 1
 
@@ -120,7 +120,7 @@
   close(10)
 
 ! compare number of surface elements detected to analytical value
-  if(ispecc1 /= nspec2Dtheor1 .and. ispecc1 /= nspec2Dtheor2) &
+  if (ispecc1 /= nspec2Dtheor1 .and. ispecc1 /= nspec2Dtheor2) &
     call exit_MPI(myrank,'error MPI cut-planes detection in eta=left')
 
 !
@@ -140,7 +140,7 @@
   ispecc2=0
 
   do ispec=1,nspec
-  if(iMPIcut_eta(2,ispec)) then
+  if (iMPIcut_eta(2,ispec)) then
 
     ispecc2=ispecc2+1
 
@@ -150,7 +150,7 @@
       do iz=1,NGLLZ
 
 ! select point, if not already selected
-  if(.not. mask_ibool(ibool(ix,iy,iz,ispec))) then
+  if (.not. mask_ibool(ibool(ix,iy,iz,ispec))) then
       mask_ibool(ibool(ix,iy,iz,ispec)) = .true.
       npoin2D_eta = npoin2D_eta + 1
 
@@ -173,7 +173,7 @@
   close(10)
 
 ! compare number of surface elements detected to analytical value
-  if(ispecc2 /= nspec2Dtheor1 .and. ispecc2 /= nspec2Dtheor2) &
+  if (ispecc2 /= nspec2Dtheor1 .and. ispecc2 /= nspec2Dtheor2) &
     call exit_MPI(myrank,'error MPI cut-planes detection in eta=right')
 
   end subroutine get_MPI_cutplanes_eta

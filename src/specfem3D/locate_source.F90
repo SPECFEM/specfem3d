@@ -41,9 +41,10 @@
 
   use constants
 
-  use specfem_par,only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION, &
+  use specfem_par, only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION, &
       UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
-      factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP
+      factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP, &
+      user_source_time_function,NSTEP_STF,NSOURCES_STF,EXTERNAL_STF,USE_TRICK_FOR_BETTER_PRESSURE
 
   implicit none
 
@@ -192,7 +193,8 @@
     if (myrank == 0) then
       ! only master process reads in FORCESOLUTION file
       call get_force(tshift_src,hdur,lat,long,depth,NSOURCES,min_tshift_src_original,factor_force_source, &
-                     comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP)
+                     comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP, &
+                     user_source_time_function)
     endif
     ! broadcasts specific point force infos
     call bcast_all_dp(factor_force_source,NSOURCES)
@@ -204,7 +206,7 @@
     if (myrank == 0) then
       ! only master process reads in CMTSOLUTION file
       call get_cmt(yr,jda,ho,mi,sec,tshift_src,hdur,lat,long,depth,moment_tensor, &
-                   DT,NSOURCES,min_tshift_src_original)
+                   DT,NSOURCES,min_tshift_src_original,user_source_time_function)
     endif
     ! broadcasts specific moment tensor infos
     call bcast_all_dp(moment_tensor,6*NSOURCES)
@@ -217,6 +219,7 @@
   call bcast_all_dp(long,NSOURCES)
   call bcast_all_dp(depth,NSOURCES)
   call bcast_all_singledp(min_tshift_src_original)
+  call bcast_all_cr(user_source_time_function,NSOURCES_STF*NSTEP_STF)
 
   ! define topology of the control element
   call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
@@ -539,9 +542,9 @@
         pt2_iz = NGLLZ
       endif
 
-      if (pt0_ix<0 .or.pt0_iy<0 .or. pt0_iz<0 .or. &
-         pt1_ix<0 .or. pt1_iy<0 .or. pt1_iz<0 .or. &
-         pt2_ix<0 .or. pt2_iy<0 .or. pt2_iz<0) then
+      if (pt0_ix < 0 .or. pt0_iy < 0 .or. pt0_iz < 0 .or. &
+         pt1_ix < 0 .or. pt1_iy < 0 .or. pt1_iz < 0 .or. &
+         pt2_ix < 0 .or. pt2_iy < 0 .or. pt2_iz < 0) then
         call exit_mpi(myrank,'error in computing normal for sources.')
       endif
 
@@ -712,7 +715,7 @@
 
   ! number of gather bins
   ngather = NSOURCES/NGATHER_SOURCES
-  if (mod(NSOURCES,NGATHER_SOURCES)/= 0) ngather = ngather+1
+  if (mod(NSOURCES,NGATHER_SOURCES) /= 0) ngather = ngather+1
 
   ! loops over single bin
   do ig = 1, ngather
@@ -826,15 +829,16 @@
     do isource = 1,NSOURCES
 
       if (SHOW_DETAILS_LOCATE_SOURCE .or. NSOURCES == 1) then
-
+        ! source info
         write(IMAIN,*)
         write(IMAIN,*) '*************************************'
         write(IMAIN,*) ' locating source ',isource
         write(IMAIN,*) '*************************************'
         write(IMAIN,*)
+
+        ! source type
         write(IMAIN,*) 'source located in slice ',islice_selected_source(isource)
         write(IMAIN,*) '               in element ',ispec_selected_source(isource)
-
         if (idomain(isource) == IDOMAIN_ACOUSTIC) then
           write(IMAIN,*) '               in acoustic domain'
         else if (idomain(isource) == IDOMAIN_ELASTIC) then
@@ -844,9 +848,11 @@
         else
           write(IMAIN,*) '               in unknown domain'
         endif
-
         write(IMAIN,*)
+
+        ! source location (reference element)
         if (USE_FORCE_POINT_SOURCE) then
+          ! single point force
           write(IMAIN,*) 'using force point source: '
           write(IMAIN,*) '  xi coordinate of source in that element: ',xi_source(isource)
           write(IMAIN,*) '  eta coordinate of source in that element: ',eta_source(isource)
@@ -862,50 +868,96 @@
           write(IMAIN,*) '  nu3 = ',nu_source(3,:,isource)
           write(IMAIN,*)
           write(IMAIN,*) '  at (x,y,z) coordinates = ',x_found_source(isource),y_found_source(isource),z_found_source(isource)
-
-          ! prints frequency content for point forces
-          f0 = hdur(isource)
-          write(IMAIN,*) '  using a source of dominant frequency ',f0
-          write(IMAIN,*) '  lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
-          write(IMAIN,*) '  lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
-          if (USE_RICKER_TIME_FUNCTION) then
-            t0_ricker = 1.2d0/f0
-            write(IMAIN,*) '  t0_ricker = ',t0_ricker
-          endif
-          write(IMAIN,*) '  time shift = ',tshift_src(isource)
-          write(IMAIN,*)
-          write(IMAIN,*) '  half duration -> frequency: ',hdur(isource),' seconds**(-1)'
         else
+          ! moment tensor
           write(IMAIN,*) 'using moment tensor source: '
           write(IMAIN,*) '  xi coordinate of source in that element: ',xi_source(isource)
           write(IMAIN,*) '  eta coordinate of source in that element: ',eta_source(isource)
           write(IMAIN,*) '  gamma coordinate of source in that element: ',gamma_source(isource)
+        endif
+        write(IMAIN,*)
+
+        ! source time function info
+        write(IMAIN,*) 'source time function:'
+        if (EXTERNAL_STF) then
+          ! external STF
+          write(IMAIN,*) '  using external source time function'
           write(IMAIN,*)
-          ! add message if source is a Heaviside
-          if (hdur(isource) <= 5.*DT) then
-            write(IMAIN,*)
-            write(IMAIN,*) 'Source time function is a Heaviside, convolve later'
-            write(IMAIN,*)
+        else
+          ! STF details
+          if (USE_RICKER_TIME_FUNCTION) then
+            write(IMAIN,*) '  using Ricker source time function'
+          else
+            write(IMAIN,*) '  using Gaussian source time function'
           endif
-          write(IMAIN,*) '  half duration: ',hdur(isource),' seconds'
+          if (idomain(isource) == IDOMAIN_ACOUSTIC) then
+            if (USE_TRICK_FOR_BETTER_PRESSURE) then
+              write(IMAIN,*) '  using trick for better pressure (second derivatives)'
+            endif
+          endif
 
-#ifdef DEBUG_COUPLED
-            write(IMAIN,*)
-            write(IMAIN,*) 'Coupled activated, thus not including any internal source'
-            write(IMAIN,*)
-#else
-            write(IMAIN,*)
-            write(IMAIN,*) 'magnitude of the source:'
-            write(IMAIN,*) '     scalar moment M0 = ', &
-              get_cmt_scalar_moment(Mxx(isource),Myy(isource),Mzz(isource),Mxy(isource),Mxz(isource),Myz(isource)),' dyne-cm'
-            write(IMAIN,*) '  moment magnitude Mw = ', &
-              get_cmt_moment_magnitude(Mxx(isource),Myy(isource),Mzz(isource),Mxy(isource),Mxz(isource),Myz(isource))
-            write(IMAIN,*)
-#endif
+          ! frequency/half-duration
+          if (USE_FORCE_POINT_SOURCE) then
+            ! single point force
+            ! prints frequency content for point forces
+            f0 = hdur(isource)
+            if (USE_RICKER_TIME_FUNCTION) then
+              write(IMAIN,*) '  using a source of dominant frequency ',f0
+              write(IMAIN,*) '  lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
+              write(IMAIN,*) '  lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
 
+              t0_ricker = 1.2d0/f0
+              write(IMAIN,*) '  t0_ricker = ',t0_ricker
+              write(IMAIN,*) '  Ricker frequency: ',hdur(isource),' Hz'
+            else
+              if (idomain(isource) == IDOMAIN_ACOUSTIC) then
+                write(IMAIN,*) '  Gaussian half duration: ',5.d0*DT,' seconds'
+              else if (idomain(isource) == IDOMAIN_ELASTIC) then
+                write(IMAIN,*) '  Gaussian half duration: ',hdur(isource)/SOURCE_DECAY_MIMIC_TRIANGLE,' seconds'
+              else if (idomain(isource) == IDOMAIN_POROELASTIC) then
+                write(IMAIN,*) '  Gaussian half duration: ',5.d0*DT,' seconds'
+              endif
+            endif
+            write(IMAIN,*)
+          else
+            ! moment-tensor
+            if (USE_RICKER_TIME_FUNCTION) then
+              write(IMAIN,*) '  Ricker frequency: ',hdur(isource),' Hz'
+            else
+              ! add message if source is a Heaviside
+              if (hdur(isource) <= 5.*DT) then
+                write(IMAIN,*)
+                write(IMAIN,*) '  Source time function is a Heaviside, convolve later'
+                write(IMAIN,*)
+              endif
+              write(IMAIN,*) '  half duration: ',hdur(isource),' seconds'
+            endif
+          endif
         endif
         write(IMAIN,*) '  time shift: ',tshift_src(isource),' seconds'
         write(IMAIN,*)
+
+        ! magnitude
+#ifdef DEBUG_COUPLED
+        write(IMAIN,*)
+        write(IMAIN,*) 'Coupled activated, thus not including any internal source'
+        write(IMAIN,*)
+#else
+        write(IMAIN,*) 'magnitude of the source:'
+        if (USE_FORCE_POINT_SOURCE) then
+          ! single point force
+          write(IMAIN,*) '  factor = ', factor_force_source(isource)
+        else
+          ! moment-tensor
+          write(IMAIN,*) '     scalar moment M0 = ', &
+            get_cmt_scalar_moment(Mxx(isource),Myy(isource),Mzz(isource),Mxy(isource),Mxz(isource),Myz(isource)),' dyne-cm'
+          write(IMAIN,*) '  moment magnitude Mw = ', &
+            get_cmt_moment_magnitude(Mxx(isource),Myy(isource),Mzz(isource),Mxy(isource),Mxz(isource),Myz(isource))
+        endif
+#endif
+        write(IMAIN,*)
+
+        ! location accuracy
         write(IMAIN,*) 'original (requested) position of the source:'
         write(IMAIN,*)
         write(IMAIN,*) '          latitude: ',lat(isource)
@@ -990,11 +1042,6 @@
       write(IMAIN,*) '*************************************'
       write(IMAIN,*)
       call flush_IMAIN()
-    endif
-
-    if (PRINT_SOURCE_TIME_FUNCTION) then
-      write(IMAIN,*)
-      write(IMAIN,*) 'printing the source-time function'
     endif
 
     ! display maximum error in location estimate

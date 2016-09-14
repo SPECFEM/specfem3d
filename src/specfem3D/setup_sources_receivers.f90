@@ -102,7 +102,7 @@
            gamma_source(NSOURCES), &
            tshift_src(NSOURCES), &
            hdur(NSOURCES), &
-           hdur_gaussian(NSOURCES), &
+           hdur_Gaussian(NSOURCES), &
            utm_x_source(NSOURCES), &
            utm_y_source(NSOURCES), &
            nu_source(3,3,NSOURCES), stat=ier)
@@ -116,13 +116,17 @@
     if (ier /= 0) stop 'error allocating arrays for force point sources'
   endif
 
-  ! for source encoding (acoustic sources only so far)
-  if(USE_SOURCE_ENCODING) then
-    allocate(pm1_source_encoding(NSOURCES),stat=ier)
-  else
-    allocate(pm1_source_encoding(1),stat=ier)
+  !! VM VM set the size of user_source_time_function
+  if (EXTERNAL_STF) then
+     NSTEP_STF = NSTEP
+     NSOURCES_STF = NSOURCES
+  else !! We don't need the array user_source_time_function : use a small dummy array
+     NSTEP_STF = 1
+     NSOURCES_STF = 1
   endif
-  if (ier /= 0) stop 'error allocating arrays for sources'
+  !! allocate the array contains the user defined source time function
+  allocate(user_source_time_function(NSTEP_STF, NSOURCES_STF),stat=ier)
+  if (ier /= 0) stop 'error allocating arrays for user sources time function'
 
 ! locate sources in the mesh
 !
@@ -134,7 +138,7 @@
           DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
           islice_selected_source,ispec_selected_source, &
           xi_source,eta_source,gamma_source, &
-          nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh,&
+          nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
           ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
           num_free_surface_faces,free_surface_ispec,free_surface_ijk)
 
@@ -151,15 +155,15 @@
     endif
   endif
 
-  ! convert the half duration for triangle STF to the one for gaussian STF
-  hdur_gaussian(:) = hdur(:)/SOURCE_DECAY_MIMIC_TRIANGLE
+  ! convert the half duration for triangle STF to the one for Gaussian STF
+  hdur_Gaussian(:) = hdur(:)/SOURCE_DECAY_MIMIC_TRIANGLE
 
   ! define t0 as the earliest start time
   ! note: an earlier start time also reduces numerical noise due to a
   !          non-zero offset at the beginning of the source time function
   t0 = - 2.0d0 * minval(tshift_src(:) - hdur(:))   ! - 1.5d0 * minval(tshift_src-hdur)
 
-  ! uses an earlier start time if source is acoustic with a gaussian source time function
+  ! uses an earlier start time if source is acoustic with a Gaussian source time function
   t0_acoustic = 0.0d0
   do isource = 1,NSOURCES
     if (myrank == islice_selected_source(isource)) then
@@ -178,7 +182,7 @@
 
   ! point force sources will start depending on the frequency given by hdur
   !if (USE_FORCE_POINT_SOURCE .or. USE_RICKER_TIME_FUNCTION) then
-!! COMMENTED BY FS FS -> account for the case USE_FORCE_POINT_SOURCE but NOT using a ricker (i.e. using a gaussian),
+!! COMMENTED BY FS FS -> account for the case USE_FORCE_POINT_SOURCE but NOT using a ricker (i.e. using a Gaussian),
 ! in this case the above defined t0 = - 2.0d0 * minval(tshift_src(:) - hdur(:)) is correct
 ! (analogous to using error function in case of moment tensor sources). You only need to be aware that hdur=0
 ! then has a different behaviour for point forces (compared with moment tensor sources):
@@ -186,9 +190,21 @@
   if (USE_RICKER_TIME_FUNCTION) then !! ADDED BY FS FS
     ! note: point force sources will give the dominant frequency in hdur,
     !       thus the main period is 1/hdur.
-    !       also, these sources use a Ricker source time function instead of a gaussian.
+    !       also, these sources use a Ricker source time function instead of a Gaussian.
     !       for a Ricker source time function, a start time ~1.2 * dominant_period is a good choice
     t0 = - 1.2d0 * minval(tshift_src(:) - 1.0d0/hdur(:))
+  endif
+
+  !! VM VM for external source the time will begin with simulation
+  if (EXTERNAL_STF) then
+    t0 = 0.d0
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) 'External STF:'
+      write(IMAIN,*) '  simulation start time set to zero: ', t0
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
   endif
 
   ! checks if user set USER_T0 to fix simulation start time
@@ -254,6 +270,9 @@
   ! checks if source is in an acoustic element and exactly on the free surface because pressure is zero there
   call setup_sources_check_acoustic()
 
+  ! prints source time functions to output files
+  if (PRINT_SOURCE_TIME_FUNCTION) call print_stf_file()
+
   end subroutine setup_sources
 
 !
@@ -300,22 +319,22 @@
             izmax = maxval( free_surface_ijk(3,:,iface) )
 
             ! xmin face
-            if (ixmin==1 .and. ixmax==1) then
+            if (ixmin == 1 .and. ixmax == 1) then
               if (xi_source(isource) < -0.99d0) is_on = .true.
             ! xmax face
-            else if (ixmin==NGLLX .and. ixmax==NGLLX) then
+            else if (ixmin == NGLLX .and. ixmax == NGLLX) then
               if (xi_source(isource) > 0.99d0) is_on = .true.
             ! ymin face
-            else if (iymin==1 .and. iymax==1) then
+            else if (iymin == 1 .and. iymax == 1) then
               if (eta_source(isource) < -0.99d0) is_on = .true.
             ! ymax face
-            else if (iymin==NGLLY .and. iymax==NGLLY) then
+            else if (iymin == NGLLY .and. iymax == NGLLY) then
               if (eta_source(isource) > 0.99d0) is_on = .true.
             ! zmin face
-            else if (izmin==1 .and. izmax==1) then
+            else if (izmin == 1 .and. izmax == 1) then
               if (gamma_source(isource) < -0.99d0) is_on = .true.
             ! zmax face
-            else if (izmin==NGLLZ .and. izmax==NGLLZ) then
+            else if (izmin == NGLLZ .and. izmax == NGLLZ) then
               if (gamma_source(isource) > 0.99d0) is_on = .true.
             endif
 
@@ -534,22 +553,22 @@
             izmax = maxval( free_surface_ijk(3,:,iface) )
 
             ! xmin face
-            if (ixmin==1 .and. ixmax==1) then
+            if (ixmin == 1 .and. ixmax == 1) then
               if (xi_receiver(irec) < -0.99d0) is_on = .true.
             ! xmax face
-            else if (ixmin==NGLLX .and. ixmax==NGLLX) then
+            else if (ixmin == NGLLX .and. ixmax == NGLLX) then
               if (xi_receiver(irec) > 0.99d0) is_on = .true.
             ! ymin face
-            else if (iymin==1 .and. iymax==1) then
+            else if (iymin == 1 .and. iymax == 1) then
               if (eta_receiver(irec) < -0.99d0) is_on = .true.
             ! ymax face
-            else if (iymin==NGLLY .and. iymax==NGLLY) then
+            else if (iymin == NGLLY .and. iymax == NGLLY) then
               if (eta_receiver(irec) > 0.99d0) is_on = .true.
             ! zmin face
-            else if (izmin==1 .and. izmax==1) then
+            else if (izmin == 1 .and. izmax == 1) then
               if (gamma_receiver(irec) < -0.99d0) is_on = .true.
             ! zmax face
-            else if (izmin==NGLLZ .and. izmax==NGLLZ) then
+            else if (izmin == NGLLZ .and. izmax == NGLLZ) then
               if (gamma_receiver(irec) > 0.99d0) is_on = .true.
             endif
 
@@ -607,10 +626,22 @@
 
   double precision, dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrayd
   double precision :: hlagrange
-  double precision :: norm
+  double precision :: norm,comp_x,comp_y,comp_z
+
+  logical :: does_source_encoding
+
+  ! for source encoding (acoustic sources only so far)
+  if (USE_SOURCE_ENCODING) then
+    allocate(pm1_source_encoding(NSOURCES),stat=ier)
+  else
+    allocate(pm1_source_encoding(1),stat=ier)
+  endif
+  if (ier /= 0) stop 'error allocating arrays for sources'
+  pm1_source_encoding(:) = 1._CUSTOM_REAL
+  does_source_encoding = .false.
 
   ! forward simulations
-  if (SIMULATION_TYPE == 1  .or. SIMULATION_TYPE == 3) then
+  if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
     allocate(sourcearray(NDIM,NGLLX,NGLLY,NGLLZ), &
              sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
     if (ier /= 0) stop 'error allocating array sourcearray'
@@ -653,6 +684,7 @@
 
                 ! elastic source
                 if (ispec_is_elastic(ispec)) then
+                  ! length of component vector
                   norm = sqrt( comp_dir_vect_source_E(isource)**2 &
                              + comp_dir_vect_source_N(isource)**2 &
                              + comp_dir_vect_source_Z_UP(isource)**2 )
@@ -662,12 +694,17 @@
                     call exit_MPI(myrank,'error force point source: component vector has (almost) zero norm')
                   endif
 
+                  ! normalizes given component vector
+                  comp_x = comp_dir_vect_source_E(isource)/norm
+                  comp_y = comp_dir_vect_source_N(isource)/norm
+                  comp_z = comp_dir_vect_source_Z_UP(isource)/norm
+
                   ! we use an tilted force defined by its magnitude and the projections
                   ! of an arbitrary (non-unitary) direction vector on the E/N/Z_UP basis
                   sourcearrayd(:,i,j,k) = factor_force_source(isource) * hlagrange * &
-                                          ( nu_source(1,:,isource) * comp_dir_vect_source_E(isource) + &
-                                            nu_source(2,:,isource) * comp_dir_vect_source_N(isource) + &
-                                            nu_source(3,:,isource) * comp_dir_vect_source_Z_UP(isource) ) / norm
+                                          ( nu_source(1,:,isource) * comp_x + &
+                                            nu_source(2,:,isource) * comp_y + &
+                                            nu_source(3,:,isource) * comp_z )
 
                 endif
               enddo
@@ -693,7 +730,7 @@
             ! scalar moment of moment tensor values read in from CMTSOLUTION
             ! note: M0 by Dahlen and Tromp, eq. 5.91
             factor_source = 1.0/sqrt(2.0) * sqrt( Mxx(isource)**2 + Myy(isource)**2 + Mzz(isource)**2 &
-                 + 2*( Myz(isource)**2 + Mxz(isource)**2 + Mxy(isource)**2) )
+                                                  + 2*( Myz(isource)**2 + Mxz(isource)**2 + Mxy(isource)**2) )
 
             ! scales source such that it would be equivalent to explosion source moment tensor,
             ! where Mxx=Myy=Mzz, others Mxy,.. = zero, in equivalent elastic media
@@ -704,9 +741,12 @@
             ! determines factor +/-1 depending on sign of moment tensor
             ! (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources,
             !   Geophysics, 74 (6), WCC177-WCC188.)
-            if (USE_SOURCE_ENCODING) pm1_source_encoding(isource) = sign(1.0d0,Mxx(isource))
+            if (USE_SOURCE_ENCODING) then
+              pm1_source_encoding(isource) = sign(1.0d0,Mxx(isource))
+              does_source_encoding = .true.
+            endif
 
-            ! source array interpolated on all element gll points (only used for non point sources)
+            ! source array interpolated on all element GLL points
             call compute_arrays_source_acoustic(sourcearray,hxis,hetas,hgammas,factor_source)
           endif
 
@@ -766,7 +806,7 @@
               ! checks length
               if (itime /= NSTEP) then
                 print *,'adjoint source error: ',trim(filename),' has length',itime,' but should be',NSTEP
-                call exit_MPI(myrank,&
+                call exit_MPI(myrank, &
                   'file '//trim(filename)//' has wrong length, please check your adjoint sources and your simulation duration')
               endif
 
@@ -802,7 +842,7 @@
         if (.not. SU_FORMAT) then
           print *,'with endings : ', '**.'//comp(1)//'.adj',' ','**.'//comp(2)//'.adj',' ','**.'//comp(3)//'.adj'
         endif
-        print *,''
+        print *
         call exit_MPI(myrank,'no adjoint traces found, please check adjoint sources in directory SEM/')
       endif
     endif
@@ -824,6 +864,21 @@
     NTSTEP_BETWEEN_READ_ADJSRC = 0
     allocate(adj_sourcearrays(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
     if (ier /= 0) stop 'error allocating dummy array adj_sourcearrays'
+  endif
+
+  ! user info
+  if (USE_SOURCE_ENCODING) then
+    if (myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*) 'using source encoding:'
+      if (does_source_encoding) then
+        write(IMAIN,*) '  sources have been encoded'
+      else
+        write(IMAIN,*) '  source encoding has no effect (only supported for acoustic sources)'
+      endif
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
   endif
 
   end subroutine setup_sources_precompute_arrays
@@ -959,7 +1014,7 @@
       ! gets element ancor nodes
       if (myrank == islice_selected_source(isource)) then
         ! find the coordinates of the eight corner nodes of the element
-        call eval_shape3D_element_corners(xelm,yelm,zelm,ispec,&
+        call eval_shape3D_element_corners(xelm,yelm,zelm,ispec, &
                         ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
 
       endif
@@ -1005,7 +1060,7 @@
 
     ! find the coordinates of the eight corner nodes of the element
     if (myrank == islice_selected_rec(irec)) then
-      call eval_shape3D_element_corners(xelm,yelm,zelm,ispec,&
+      call eval_shape3D_element_corners(xelm,yelm,zelm,ispec, &
                       ibool,xstore,ystore,zstore,NSPEC_AB,NGLOB_AB)
     endif
     ! master collects corner locations
@@ -1056,18 +1111,19 @@
 
       ! vtk file for receivers only
       write(system_command, &
-  "('awk ',a1,'{if (NR<5) print $0;if (NR==5)print ',a1,'POINTS',i6,' float',a1,';if (NR>5+',i6,')print $0}',a1,' < ',a,' > ',a)")&
+  "('awk ',a1,'{if (NR < 5) print $0;if (NR == 5)print ',a1,'POINTS',i6,' float',a1,';if &
+      &(NR > 5+',i6,')print $0}',a1,' < ',a,' > ',a)")&
       "'",'"',nrec,'"',NSOURCES,"'",trim(filename),trim(filename_new)
 
       ! extracts source locations
       filename_new = trim(OUTPUT_FILES)//'/source.vtk'
 
       write(system_command1, &
-  "('awk ',a1,'{if (NR<5) print $0;if (NR==5)print ',a1,'POINTS',i6,' float',a1,';')") &
+  "('awk ',a1,'{if (NR < 5) print $0;if (NR == 5)print ',a1,'POINTS',i6,' float',a1,';')") &
         "'",'"',NSOURCES,'"'
 
       write(system_command2, &
-  "('if (NR>5 && NR <6+',i6,')print $0}END{print ',a,'}',a1,' < ',a,' > ',a)") &
+  "('if (NR > 5 && NR < 6+',i6,')print $0}END{print ',a,'}',a1,' < ',a,' > ',a)") &
         NSOURCES,'" "',"'",trim(filename),trim(filename_new)
 
       system_command = trim(system_command1)//trim(system_command2)
@@ -1076,3 +1132,146 @@
   endif
 
   end subroutine setup_sources_receivers_VTKfile
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine print_stf_file()
+
+  use specfem_par
+  use specfem_par_acoustic, only: ispec_is_acoustic
+  use specfem_par_elastic, only: ispec_is_elastic
+  use specfem_par_poroelastic, only: ispec_is_poroelastic
+
+  implicit none
+
+  ! local parameters
+  real(kind=CUSTOM_REAL) :: stf_used,time_source
+  real(kind=CUSTOM_REAL),dimension(NSTEP) :: source_time_function
+
+  double precision :: stf,time_source_dble
+  double precision,external :: get_stf_acoustic,get_stf_viscoelastic,get_stf_poroelastic
+
+  integer :: isource,ispec,ier
+  character(len=MAX_STRING_LEN) :: plot_file
+
+  ! check
+  if (SIMULATION_TYPE /= 1 .and. SIMULATION_TYPE /= 2 .and. SIMULATION_TYPE /= 3) &
+    stop 'unrecognized SIMULATION_TYPE value in printing stf file'
+
+  if (myrank == 0) then
+    write(IMAIN,*)
+    write(IMAIN,*) 'printing the source-time function'
+    call flush_IMAIN()
+  endif
+
+  ! note: the source time function will be output for each source separately,
+  !       instead of summing up all stf from single source contributions
+
+  ! source contributions
+  do isource = 1,NSOURCES
+
+    ! initializes
+    source_time_function(:) = 0._CUSTOM_REAL
+
+    ! compute the source contribution (only if this proc carries the source)
+    if (myrank == islice_selected_source(isource)) then
+
+      ! time loop
+      do it = 1,NSTEP
+        ! current source time
+        if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 2) then
+          if (USE_LDDRK) then
+            time_source_dble = dble(it-1)*DT + dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+          else
+            time_source_dble = dble(it-1)*DT - t0 - tshift_src(isource)
+          endif
+        else
+          ! backward simulation (SIMULATION_TYPE == 3)
+          if (USE_LDDRK) then
+            time_source_dble = dble(NSTEP-1)*DT - dble(C_LDDRK(istage))*DT - t0 - tshift_src(isource)
+          else
+            time_source_dble = dble(NSTEP-1)*DT - t0 - tshift_src(isource)
+          endif
+        endif
+
+        ispec = ispec_selected_source(isource)
+
+        ! determines source time function value
+        if (ispec_is_acoustic(ispec)) then
+          stf = get_stf_acoustic(time_source_dble,isource)
+        else if (ispec_is_elastic(ispec)) then
+          stf = get_stf_viscoelastic(time_source_dble,isource)
+        else if (ispec_is_poroelastic(ispec)) then
+          stf = get_stf_poroelastic(time_source_dble,isource)
+        else
+          call exit_MPI(myrank,'Invalid source element type, please check your mesh...')
+        endif
+
+        !! VM VM add external source time function
+        if (EXTERNAL_STF) stf = user_source_time_function(it, isource)
+
+        ! distinguishes between single and double precision for reals
+        stf_used = real(stf,kind=CUSTOM_REAL)
+
+        ! for file output
+        source_time_function(it) = stf_used
+      enddo
+    endif
+
+    ! master collects stf (if it does not already have it, i.e. if this source is not on the master)
+    if (islice_selected_source(isource) /= 0) then
+      if (myrank == 0) then
+        ! master collects
+        call recvv_cr(source_time_function,NSTEP,islice_selected_source(isource),0)
+      else if (myrank == islice_selected_source(isource)) then
+        ! slave sends to master
+        call sendv_cr(source_time_function,NSTEP,0,0)
+      endif
+    endif
+
+    ! master prints out to file
+    if (myrank == 0) then
+      ! opens source time function file
+      if (NSOURCES == 1) then
+        plot_file = '/plot_source_time_function.txt'
+      else if (isource < 10) then
+        write(plot_file,"('/plot_source_time_function',i1,'.txt')") isource
+      else if (isource < 100) then
+        write(plot_file,"('/plot_source_time_function',i2,'.txt')") isource
+      else
+        write(plot_file,"('/plot_source_time_functionA',i7.7,'.txt')") isource
+      endif
+      open(unit=IOSTF,file=trim(OUTPUT_FILES)//trim(plot_file),status='unknown',iostat=ier)
+      if (ier /= 0) call exit_mpi(myrank,'Error opening plot_source_time_function file')
+
+      do it = 1,NSTEP
+        ! overall time, note that t_shift_src will start at zero for simulation
+        if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 2) then
+          if (USE_LDDRK) then
+            time_source = dble(it-1)*DT + dble(C_LDDRK(istage))*DT - t0
+          else
+            time_source = dble(it-1)*DT - t0
+          endif
+        else
+          ! backward simulation (SIMULATION_TYPE == 3)
+          if (USE_LDDRK) then
+            time_source = dble(NSTEP-1)*DT - dble(C_LDDRK(istage))*DT - t0
+          else
+            time_source = dble(NSTEP-1)*DT - t0
+          endif
+        endif
+
+        ! file output
+        write(IOSTF,*) time_source,source_time_function(it)
+      enddo
+
+      close(IOSTF)
+
+    endif ! of if (myrank == 0) then
+
+  enddo ! NSOURCES
+
+  end subroutine print_stf_file
+

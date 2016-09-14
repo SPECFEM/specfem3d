@@ -44,7 +44,7 @@
   ! checks PML flag
   if (.not. PML_CONDITIONS) return
 
-  ! slices without pml elements
+  ! slices without PML elements
   if (NSPEC_CPML == 0) then
     ! dummy allocation with a size of 1 for all the PML arrays that have not yet been allocated
     ! in order to be able to use these arrays as arguments in subroutine calls

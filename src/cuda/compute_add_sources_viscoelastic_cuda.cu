@@ -37,8 +37,6 @@
 
 __global__ void compute_add_sources_kernel(realw* accel,
                                            int* d_ibool,
-                                           int* ispec_is_inner,
-                                           int phase_is_inner,
                                            realw* sourcearrays,
                                            double* stf_pre_compute,
                                            int myrank,
@@ -61,7 +59,7 @@ __global__ void compute_add_sources_kernel(realw* accel,
 
       ispec = ispec_selected_source[isource]-1;
 
-      if (ispec_is_inner[ispec] == phase_is_inner && ispec_is_elastic[ispec]) {
+      if (ispec_is_elastic[ispec]) {
 
         stf = (realw) stf_pre_compute[isource];
         iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
@@ -82,8 +80,7 @@ extern "C"
 void FC_FUNC_(compute_add_sources_el_cuda,
               COMPUTE_ADD_SOURCES_EL_CUDA)(long* Mesh_pointer,
                                            double* h_stf_pre_compute,
-                                           int* h_NSOURCES,
-                                           int* h_phase_is_inner) {
+                                           int* h_NSOURCES) {
 
   TRACE("\tcompute_add_sources_el_cuda");
 
@@ -93,7 +90,6 @@ void FC_FUNC_(compute_add_sources_el_cuda,
   if (mp->nsources_local == 0) return;
 
   int NSOURCES = *h_NSOURCES;
-  int phase_is_inner = *h_phase_is_inner;
 
   print_CUDA_error_if_any(cudaMemcpy(mp->d_stf_pre_compute,h_stf_pre_compute,
                                      NSOURCES*sizeof(double),cudaMemcpyHostToDevice),18);
@@ -109,7 +105,6 @@ void FC_FUNC_(compute_add_sources_el_cuda,
   dim3 threads(5,5,5);
 
   compute_add_sources_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_accel,mp->d_ibool,
-                                                                    mp->d_ispec_is_inner,phase_is_inner,
                                                                     mp->d_sourcearrays,
                                                                     mp->d_stf_pre_compute,
                                                                     mp->myrank,
@@ -128,8 +123,7 @@ extern "C"
 void FC_FUNC_(compute_add_sources_el_s3_cuda,
               COMPUTE_ADD_SOURCES_EL_S3_CUDA)(long* Mesh_pointer,
                                               double* h_stf_pre_compute,
-                                              int* h_NSOURCES,
-                                              int* h_phase_is_inner) {
+                                              int* h_NSOURCES) {
 
   TRACE("\tcompute_add_sources_el_s3_cuda");
   // EPIK_TRACER("compute_add_sources_el_s3_cuda");
@@ -137,7 +131,6 @@ void FC_FUNC_(compute_add_sources_el_s3_cuda,
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
   int NSOURCES = *h_NSOURCES;
-  int phase_is_inner = *h_phase_is_inner;
 
   print_CUDA_error_if_any(cudaMemcpy(mp->d_stf_pre_compute,h_stf_pre_compute,
                                      NSOURCES*sizeof(double),cudaMemcpyHostToDevice),18);
@@ -153,7 +146,6 @@ void FC_FUNC_(compute_add_sources_el_s3_cuda,
   dim3 threads(5,5,5);
 
   compute_add_sources_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_accel,mp->d_ibool,
-                                                                    mp->d_ispec_is_inner, phase_is_inner,
                                                                     mp->d_sourcearrays,
                                                                     mp->d_stf_pre_compute,
                                                                     mp->myrank,
@@ -235,10 +227,8 @@ __global__ void add_sources_el_SIM_TYPE_2_OR_3_kernel(realw* accel,
                                                      int nrec,
                                                      realw* adj_sourcearrays,
                                                      int* d_ibool,
-                                                     int* ispec_is_inner,
                                                      int* ispec_is_elastic,
                                                      int* ispec_selected_rec,
-                                                     int phase_is_inner,
                                                      int* pre_computed_irec,
                                                      int nadj_rec_local) {
 
@@ -249,19 +239,17 @@ __global__ void add_sources_el_SIM_TYPE_2_OR_3_kernel(realw* accel,
     int irec = pre_computed_irec[irec_local];
 
     int ispec = ispec_selected_rec[irec]-1;
+
     if (ispec_is_elastic[ispec]){
+      int i = threadIdx.x;
+      int j = threadIdx.y;
+      int k = threadIdx.z;
+      int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
 
-      if (ispec_is_inner[ispec] == phase_is_inner) {
-        int i = threadIdx.x;
-        int j = threadIdx.y;
-        int k = threadIdx.z;
-        int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
-
-        // atomic operations are absolutely necessary for correctness!
-        atomicAdd(&accel[3*iglob],adj_sourcearrays[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,0,irec_local)]);
-        atomicAdd(&accel[1+3*iglob], adj_sourcearrays[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,1,irec_local)]);
-        atomicAdd(&accel[2+3*iglob],adj_sourcearrays[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,2,irec_local)]);
-      }
+      // atomic operations are absolutely necessary for correctness!
+      atomicAdd(&accel[3*iglob],adj_sourcearrays[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,0,irec_local)]);
+      atomicAdd(&accel[1+3*iglob], adj_sourcearrays[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,1,irec_local)]);
+      atomicAdd(&accel[2+3*iglob],adj_sourcearrays[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,2,irec_local)]);
     } // ispec_is_elastic
   }
 
@@ -273,8 +261,6 @@ extern "C"
 void FC_FUNC_(add_sources_el_sim_type_2_or_3,
               ADD_SOURCES_EL_SIM_TYPE_2_OR_3)(long* Mesh_pointer,
                                                realw* h_adj_sourcearrays,
-                                               int* phase_is_inner,
-                                               int* h_ispec_is_inner,
                                                int* h_ispec_is_elastic,
                                                int* h_ispec_selected_rec,
                                                int* nrec,
@@ -312,29 +298,27 @@ void FC_FUNC_(add_sources_el_sim_type_2_or_3,
       // only for elastic elements
       if (h_ispec_is_elastic[ispec]){
 
-        if (h_ispec_is_inner[ispec] == *phase_is_inner) {
-          for(k=0;k<NGLLX;k++) {
-            for(j=0;j<NGLLX;j++) {
-              for(i=0;i<NGLLX;i++) {
+        for(k=0;k<NGLLX;k++) {
+          for(j=0;j<NGLLX;j++) {
+            for(i=0;i<NGLLX;i++) {
 
-                mp->h_adj_sourcearrays_slice[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,0,irec_local)]
-                        = h_adj_sourcearrays[INDEX6(*nadj_rec_local,
-                                                    *NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLX,
-                                                    irec_local,it_index,0,i,j,k)];
+              mp->h_adj_sourcearrays_slice[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,0,irec_local)]
+                      = h_adj_sourcearrays[INDEX6(*nadj_rec_local,
+                                                  *NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLX,
+                                                  irec_local,it_index,0,i,j,k)];
 
-                mp->h_adj_sourcearrays_slice[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,1,irec_local)]
-                        = h_adj_sourcearrays[INDEX6(*nadj_rec_local,
-                                                    *NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLX,
-                                                    irec_local,it_index,1,i,j,k)];
+              mp->h_adj_sourcearrays_slice[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,1,irec_local)]
+                      = h_adj_sourcearrays[INDEX6(*nadj_rec_local,
+                                                  *NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLX,
+                                                  irec_local,it_index,1,i,j,k)];
 
-                mp->h_adj_sourcearrays_slice[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,2,irec_local)]
-                        = h_adj_sourcearrays[INDEX6(*nadj_rec_local,
-                                                    *NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLX,
-                                                    irec_local,it_index,2,i,j,k)];
-              }
+              mp->h_adj_sourcearrays_slice[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,2,irec_local)]
+                      = h_adj_sourcearrays[INDEX6(*nadj_rec_local,
+                                                  *NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLX,
+                                                  irec_local,it_index,2,i,j,k)];
             }
           }
-        } // phase_is_inner
+        }
       } // h_ispec_is_elastic
 
       // increases local receivers counter
@@ -357,10 +341,8 @@ void FC_FUNC_(add_sources_el_sim_type_2_or_3,
                                                                                *nrec,
                                                                                mp->d_adj_sourcearrays,
                                                                                mp->d_ibool,
-                                                                               mp->d_ispec_is_inner,
                                                                                mp->d_ispec_is_elastic,
                                                                                mp->d_ispec_selected_rec,
-                                                                               *phase_is_inner,
                                                                                mp->d_pre_computed_irec,
                                                                                mp->nadj_rec_local);
 

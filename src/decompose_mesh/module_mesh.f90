@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
 module module_mesh
 
   use shared_parameters
@@ -110,7 +109,7 @@ contains
     localpath_name='./MESH'
 
     ! reads node coordinates
-    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file',&
+    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file', &
          status='old', form='formatted', iostat = ier)
     if (ier /= 0) then
        print *,'could not open file:',localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file'
@@ -123,7 +122,7 @@ contains
     do inode = 1, nnodes_glob
        ! format: #id_node #x_coordinate #y_coordinate #z_coordinate
        read(98,*) num_node, nodes_coords_glob(1,num_node), nodes_coords_glob(2,num_node), nodes_coords_glob(3,num_node)
-       if (mod(inode,100000)==0) then
+       if (mod(inode,100000) == 0) then
           write(27,'(2i10)') num_node/100000, nnodes_glob/100000
        endif
     enddo
@@ -175,7 +174,7 @@ contains
        endif
 
        if ((num_elmnt > nspec_glob) .or. (num_elmnt < 1))  stop "Error : Invalid mesh_file"
-       if (mod(ispec,100000)==0) then
+       if (mod(ispec,100000) == 0) then
           write(27,'(2i10)') ispec/100000, nspec_glob/100000
        endif
     enddo
@@ -225,7 +224,7 @@ contains
     ! cannot support more than 10 attributes
     count_def_mat = 0
     count_undef_mat = 0
-    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_velocity_file',&
+    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_velocity_file', &
          status='old', form='formatted',iostat=ier)
     if (ier /= 0) stop 'Error opening nummaterial_velocity_file'
 
@@ -400,11 +399,11 @@ contains
        !  undefined materials: have to be listed in decreasing order of material_id (start with -1, -2, etc...)
        !  format:
        !   - for interfaces
-       !    #(6) material_domain_id #(1) material_id(<0) #(2) type_name (="interface")
+       !    #(6) material_domain_id #(1) material_id( < 0) #(2) type_name (="interface")
        !     #(3) material_id_for_material_below #(4) material_id_for_material_above
        !        example:     2 -1 interface 1 2
        !   - for tomography models
-       !    #(6) material_domain_id #(1) material_id(<0) #(2) type_name (="tomography")
+       !    #(6) material_domain_id #(1) material_id( < 0) #(2) type_name (="tomography")
        !     #(3) block_name (="elastic") #(4) file_name
        !        example:     2 -1 tomography elastic tomography_model.xyz
        ! reads lines until it reaches a defined material
@@ -427,12 +426,12 @@ contains
 
        if (trim(undef_mat_prop(2,imat)) == 'interface') then
           ! line will have 5 arguments, e.g.: 2 -1 interface 1 2
-          read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
+          read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat), &
                undef_mat_prop(3,imat),undef_mat_prop(4,imat)
           undef_mat_prop(5,imat) = "0" ! dummy value
        else if (trim(undef_mat_prop(2,imat)) == 'tomography') then
           ! line will have 6 arguments, e.g.: 2 -1 tomography elastic tomography_model.xyz 1
-          read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
+          read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat), &
                undef_mat_prop(3,imat),undef_mat_prop(4,imat)
           undef_mat_prop(5,imat) = "0" ! dummy value
        else
@@ -704,7 +703,7 @@ contains
     if (ier /= 0) stop 'Error allocating array is_CPML'
     is_cpml(:) = .false.
     do ispec_cpml=1,nspec_cpml
-       if ((cpml_regions(ispec_cpml)>=1) .and. (cpml_regions(ispec_cpml)<=7)) then
+       if ((cpml_regions(ispec_cpml) >= 1) .and. (cpml_regions(ispec_cpml) <= 7)) then
           is_cpml(cpml_to_spec(ispec_cpml)) = .true.
        endif
     enddo
@@ -757,9 +756,7 @@ contains
 end module module_mesh
 
 
-
-
-!-----------------------------  OTHERS SUBROUTINES -------------------------------------------------------
+!-----------------------------  other subroutines -------------------------------------------------------
 
   !--------------------------------------------------
   ! loading : sets weights for acoustic/elastic/poroelastic elements to account for different
@@ -769,7 +766,7 @@ end module module_mesh
 subroutine acoustic_elastic_poro_load (elmnts_load,nspec,count_def_mat,count_undef_mat, &
                                     num_material,mat_prop,undef_mat_prop,ATTENUATION)
 
-  use module_mesh, only : MAX_STRING_LEN, ACOUSTIC_LOAD, ELASTIC_LOAD, VISCOELASTIC_LOAD, POROELASTIC_LOAD
+  use module_mesh, only: MAX_STRING_LEN, ACOUSTIC_LOAD, ELASTIC_LOAD, VISCOELASTIC_LOAD, POROELASTIC_LOAD
   !
   ! note:
   !   acoustic material    = domainID 1  (stored in mat_prop(6,..) )

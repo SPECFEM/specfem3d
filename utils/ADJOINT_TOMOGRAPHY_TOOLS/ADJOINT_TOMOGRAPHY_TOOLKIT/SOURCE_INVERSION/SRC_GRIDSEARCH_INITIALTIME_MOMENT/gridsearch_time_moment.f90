@@ -79,10 +79,10 @@ program xgrid_search_time_moment
      read(1001,'(a)') syn_file
 
      call rsac1(data_file,data,npts,b,dt,NDIM,nerr)
-     if (nerr/=0) stop 'error reading data'
+     if (nerr /= 0) stop 'error reading data'
 
      call rsac1(syn_file,syn,npts2,b2,dt2,NDIM,nerr)
-     if (nerr/=0) stop 'error reading synthetics'
+     if (nerr /= 0) stop 'error reading synthetics'
 
      lstr=len_trim(syn_file)
      bandpass=syn_file(lstr-7:lstr)
@@ -191,7 +191,7 @@ program xgrid_search_time_moment
   maxmisfit=maxval(misfit(1:n_total))
 
   open(1004,file=trim(cmt_file),status='old',iostat=ios)
-  if (ios/=0) stop 'Error openning CMT file'
+  if (ios /= 0) stop 'Error openning CMT file'
   do while (ios == 0)
      read(1004,'(a)',iostat=ios) string
      lstr=len_trim(string)
@@ -272,7 +272,7 @@ subroutine xcorr_calc(d,s,npts,i1,i2,ishift,cc_max)
   ishift = 0
   cc_max = 0.0
 
-  if (i1<1 .or. i1>i2 .or. i2>npts) then
+  if (i1 < 1 .or. i1 > i2 .or. i2 > npts) then
     write(*,*) 'Error with window limits: i1, i2, npts ', i1, i2, npts
     return
   endif
@@ -306,7 +306,7 @@ subroutine xcorr_calc(d,s,npts,i1,i2,ishift,cc_max)
     ! cc as a function of i
     cc = 0.
     do j = i1, i2   ! loop over full window length
-      if((j+i)>=1 .and. (j+i)<=npts) cc = cc + s(j)*d(j+i)  ! d is shifted by i
+      if ((j+i) >= 1 .and. (j+i) <= npts) cc = cc + s(j)*d(j+i)  ! d is shifted by i
     enddo
     cc = cc/norm
 
@@ -323,7 +323,7 @@ subroutine xcorr_calc(d,s,npts,i1,i2,ishift,cc_max)
   !    i   i1+i   i2+i  id_left  id_right
   !  -11     9     30      9        30
   !   -5    15     36     15        36
-  !    0    20     41     20        41    <== ORIGINAL WINDOW
+  !    0    20     41     20        41 <== ORIGINAL WINDOW
   !    5    25     46     25        46
   !   10    31     52     31        52
 
@@ -356,7 +356,7 @@ subroutine write_new_cmtsolution(cmt_file,new_cmt_file,t0_best,m0_best)
   ! read tshift and moment tensor
   open(IOCMT,file=trim(cmt_file),status='old',iostat=ios)
   if (ios /= 0) stop 'Error opening CMT file'
-  do while (ios==0)
+  do while (ios == 0)
         read(IOCMT,'(a)',iostat=ios) string
         lstr=len_trim(string)
 

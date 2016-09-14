@@ -55,7 +55,7 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore
 
 ! GPU
-! CUDA mesh pointer<->integer wrapper
+! CUDA mesh pointer to integer wrapper
   integer(kind=8) :: Mesh_pointer
 
   integer(kind=8) :: Fault_pointer
@@ -81,7 +81,7 @@ module specfem_par
   integer :: num_free_surface_faces
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_specfem3D_par.F90"
+    include "../../../add_to_specfem3D_par_1.F90"
 #endif
 
 ! attenuation
@@ -108,16 +108,17 @@ module specfem_par
   double precision, dimension(:,:,:), allocatable :: nu_source
   double precision, dimension(:), allocatable :: Mxx,Myy,Mzz,Mxy,Mxz,Myz
   double precision, dimension(:), allocatable :: xi_source,eta_source,gamma_source
-  double precision, dimension(:), allocatable :: tshift_src,hdur,hdur_gaussian
+  double precision, dimension(:), allocatable :: tshift_src,hdur,hdur_Gaussian
   double precision, dimension(:), allocatable :: utm_x_source,utm_y_source
   double precision, external :: comp_source_time_function
   double precision :: t0
   real(kind=CUSTOM_REAL) :: stf_used_total
   integer :: nsources_local
   ! source encoding
-  ! for acoustic sources: takes +/- 1 sign, depending on sign(Mxx)[ = sign(Myy) = sign(Mzz)
-  ! since they have to equal in the acoustic setting]
+  ! for acoustic sources: takes +/- 1 sign, depending on sign(Mxx)
+  ! [ = sign(Myy) = sign(Mzz) since they have to be equal in the acoustic setting]
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: pm1_source_encoding
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: user_source_time_function
 
 ! receiver information
   character(len=MAX_STRING_LEN) :: rec_filename,filtered_rec_filename,dummystring
@@ -236,7 +237,7 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:,:), allocatable :: adj_sourcearrays
   integer :: nadj_rec_local
   ! adjoint source frechet derivatives
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: Mxx_der,Myy_der,&
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: Mxx_der,Myy_der, &
     Mzz_der,Mxy_der,Mxz_der,Myz_der
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: sloc_der
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: seismograms_eps
@@ -264,7 +265,7 @@ module specfem_par_elastic
 
 ! parameter module for elastic solver
 
-  use constants,only: CUSTOM_REAL,N_SLS,NGLLX,NGLLY,NGLLZ
+  use constants, only: CUSTOM_REAL,N_SLS,NGLLX,NGLLY,NGLLZ
 
   implicit none
 
@@ -276,8 +277,7 @@ module specfem_par_elastic
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: &
     alphaval,betaval,gammaval
 
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: &
-    R_trace,R_xx,R_yy,R_xy,R_xz,R_yz
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: R_trace,R_xx,R_yy,R_xy,R_xz,R_yz
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
     epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: epsilon_trace_over_3
@@ -295,9 +295,9 @@ module specfem_par_elastic
 
   ! anisotropic
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
-            c11store,c12store,c13store,c14store,c15store,c16store,&
-            c22store,c23store,c24store,c25store,c26store,c33store,&
-            c34store,c35store,c36store,c44store,c45store,c46store,&
+            c11store,c12store,c13store,c14store,c15store,c16store, &
+            c22store,c23store,c24store,c25store,c26store,c33store, &
+            c34store,c35store,c36store,c44store,c45store,c46store, &
             c55store,c56store,c66store
   integer :: NSPEC_ANISO
 
@@ -337,7 +337,7 @@ module specfem_par_elastic
   ! anisotropic kernels
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: cijkl_kl
 
-  ! approximate hessian
+  ! approximate Hessian
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: hess_kl
 
   ! topographic (Moho) kernel
@@ -355,6 +355,10 @@ module specfem_par_elastic
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: b_buffer_recv_vector_ext_mesh
   integer, dimension(:), allocatable :: b_request_send_vector_ext_mesh
   integer, dimension(:), allocatable :: b_request_recv_vector_ext_mesh
+
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_specfem3D_par_2.F90"
+#endif
 
   ! LDDRK time scheme
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: displ_lddrk,veloc_lddrk
@@ -374,7 +378,7 @@ module specfem_par_acoustic
 
 ! parameter module for acoustic solver
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
   implicit none
 
 ! potential
@@ -421,7 +425,7 @@ module specfem_par_acoustic
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_ac_kl, kappa_ac_kl, &
     rhop_ac_kl, alpha_ac_kl
 
-  ! approximate hessian
+  ! approximate Hessian
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: hess_ac_kl
 
   ! absorbing stacey wavefield parts
@@ -445,11 +449,11 @@ module specfem_par_poroelastic
 
 ! parameter module for elastic solver
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
   implicit none
 
 ! mass matrix
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_solid_poroelastic,&
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rmass_solid_poroelastic, &
     rmass_fluid_poroelastic
 
 ! displacement, velocity, acceleration
@@ -515,7 +519,6 @@ module specfem_par_poroelastic
   integer, dimension(:), allocatable :: b_request_recv_vector_ext_meshs
   integer, dimension(:), allocatable :: b_request_recv_vector_ext_meshw
 
-
 end module specfem_par_poroelastic
 
 !=====================================================================
@@ -524,34 +527,39 @@ module specfem_par_movie
 
 ! parameter module for movies/shakemovies
 
-  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NGNOD2D_FOUR_CORNERS
-
-!  use shared_parameters,only: &
-!    NTSTEP_BETWEEN_FRAMES, &
-!    CREATE_SHAKEMAP,MOVIE_SURFACE,MOVIE_VOLUME,SAVE_DISPLACEMENT,USE_HIGHRES_FOR_MOVIES, &
-!    MOVIE_TYPE,HDUR_MOVIE
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NGNOD2D_FOUR_CORNERS
 
   implicit none
 
-! to save full 3D snapshot of velocity (movie volume
+  ! to save full 3D snapshot of velocity (movie volume
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: div, curl_x, curl_y, curl_z
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable:: velocity_x,velocity_y,velocity_z
 
-! shakemovies and movie surface
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_x_external_mesh
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_y_external_mesh
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_z_external_mesh
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_x_all_external_mesh
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_y_all_external_mesh
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_z_all_external_mesh
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_ux_external_mesh
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_uy_external_mesh
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_uz_external_mesh
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_ux_all_external_mesh
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_uy_all_external_mesh
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_uz_all_external_mesh
+  ! surface point locations
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_x
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_y
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_z
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_x_all
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_y_all
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_z_all
 
-! movie volume
+  ! movie data
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_ux
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_uy
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_uz
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_ux_all
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_uy_all
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: store_val_uz_all
+
+  ! shakemovie data
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: shakemap_ux
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: shakemap_uy
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: shakemap_uz
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: shakemap_ux_all
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: shakemap_uy_all
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: shakemap_uz_all
+
+  ! movie volume
   real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl
 
   real(kind=CUSTOM_REAL) hp1,hp2,hp3
@@ -560,17 +568,15 @@ module specfem_par_movie
   real(kind=CUSTOM_REAL) tempy1l,tempy2l,tempy3l
   real(kind=CUSTOM_REAL) tempz1l,tempz2l,tempz3l
 
-! for storing surface of external mesh
-  integer,dimension(:),allocatable :: nfaces_perproc_surface_ext_mesh
-  integer,dimension(:),allocatable :: faces_surface_offset_ext_mesh
-  integer,dimension(:,:),allocatable :: faces_surface_ext_mesh
-  integer,dimension(:),allocatable :: faces_surface_ext_mesh_ispec
-  integer :: nfaces_surface_ext_mesh,nfaces_surface_ext_mesh_points
-  integer :: nfaces_surface_glob_ext_mesh,nfaces_surface_glob_em_points
-  ! face corner indices
-  integer :: iorderi(NGNOD2D_FOUR_CORNERS),iorderj(NGNOD2D_FOUR_CORNERS)
+  ! for storing surface of external mesh
+  integer,dimension(:),allocatable :: nfaces_perproc_surface
+  integer,dimension(:),allocatable :: faces_surface_offset
+  integer,dimension(:,:),allocatable :: faces_surface_ibool
+  integer,dimension(:),allocatable :: faces_surface_ispec
+  integer :: nfaces_surface,nfaces_surface_points
+  integer :: nfaces_surface_glob_ext_mesh,nfaces_surface_glob_points
 
-! movie parameters
+  ! movie parameters
   logical :: MOVIE_SIMULATION
 
 end module specfem_par_movie
