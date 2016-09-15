@@ -824,8 +824,15 @@ module decompose_mesh
 
     print *, 'node valence:  min = ',minval(used_nodes_elmnts(:)),' max = ', maxval(used_nodes_elmnts(:))
 
-    if (minval(used_nodes_elmnts(:)) <= 0) &
+    if (minval(used_nodes_elmnts(:)) <= 0) then
+        if(count(used_nodes_elmnts(:) == 0) > 0.5*nnodes .and. NGNOD == 8) &
+        stop 'Error: found some unused nodes (weird, but not necessarily fatal; your mesher may have created extra nodes& 
+        & or your mesh contains HEX27 elements while NGNOD in Par_file is set to 8).'
         stop 'Error: found some unused nodes (weird, but not necessarily fatal; your mesher may have created extra nodes).'
+    endif
+
+
+
 
     ! max number of elements that contain the same node
     nsize = maxval(used_nodes_elmnts(:))
