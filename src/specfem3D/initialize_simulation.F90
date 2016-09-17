@@ -139,17 +139,10 @@
 
   ! attenuation arrays size
   if (ATTENUATION) then
-    !pll
     NSPEC_ATTENUATION_AB = NSPEC_AB
-    if (FULL_ATTENUATION_SOLID) then
-      NSPEC_ATTENUATION_AB_kappa = NSPEC_AB
-    else
-      NSPEC_ATTENUATION_AB_kappa = 1
-    endif
   else
     ! if attenuation is off, set dummy size of arrays to one
     NSPEC_ATTENUATION_AB = 1
-    NSPEC_ATTENUATION_AB_kappa = 1
   endif
 
   ! needed for attenuation and/or kernel computations

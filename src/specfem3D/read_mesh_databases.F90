@@ -222,8 +222,8 @@
              epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),stat=ier)
     if (ier /= 0) stop 'Error allocating array epsilondev_xx etc.'
 
-    allocate(R_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa,N_SLS), &
-             epsilondev_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)
+    allocate(R_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
+             epsilondev_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
     if (ier /= 0) stop 'Error allocating array R_trace etc.'
 
     ! note: needed for some subroutine arguments
@@ -235,8 +235,8 @@
              factor_common(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
     if (ier /= 0) stop 'Error allocating array one_minus_sum_beta etc.'
 
-    allocate(one_minus_sum_beta_kappa(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa), &
-             factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)
+    allocate(one_minus_sum_beta_kappa(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB), &
+             factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
     if (ier /= 0) stop 'Error allocating array one_minus_sum_beta_kappa etc.'
 
     ! reads mass matrices
@@ -1082,8 +1082,8 @@
     if (ier /= 0) stop 'Error allocating array b_epsilon_trace_over_3'
 
     ! allocates attenuation solids for considering kappa
-    allocate(b_R_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa,N_SLS), &
-             b_epsilondev_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)
+    allocate(b_R_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
+             b_epsilondev_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
     if (ier /= 0) stop 'Error allocating array b_R_trace etc.'
 
     ! Moho kernel

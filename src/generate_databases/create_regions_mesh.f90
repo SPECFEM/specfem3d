@@ -44,7 +44,7 @@
       ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top, &
       nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax, &
       nodes_ibelm_bottom,nodes_ibelm_top, &
-      SAVE_MESH_FILES,PML_CONDITIONS,FULL_ATTENUATION_SOLID, &
+      SAVE_MESH_FILES,PML_CONDITIONS, &
       ANISOTROPY,NPROC,APPROXIMATE_OCEAN_LOAD,OLSEN_ATTENUATION_RATIO, &
       ATTENUATION,USE_OLSEN_ATTENUATION, &
       nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho, &
@@ -325,7 +325,7 @@
     endif
     call get_attenuation_model(myrank,nspec,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
                                mustore,rho_vs,kappastore,rho_vp,qkappa_attenuation_store,qmu_attenuation_store, &
-                               ispec_is_elastic,min_resolved_period,prname,FULL_ATTENUATION_SOLID,ATTENUATION_f0_REFERENCE)
+                               ispec_is_elastic,min_resolved_period,prname,ATTENUATION_f0_REFERENCE)
   endif
 
   ! cleanup

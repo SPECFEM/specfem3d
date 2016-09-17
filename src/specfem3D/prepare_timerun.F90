@@ -499,7 +499,7 @@
 
     one_minus_sum_beta_kappa(:,:,:,:) = 1._CUSTOM_REAL
     factor_common_kappa(:,:,:,:,:) = 1._CUSTOM_REAL
-    allocate( scale_factor_kappa(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)
+    allocate( scale_factor_kappa(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
     if (ier /= 0) call exit_mpi(myrank,'error allocation scale_factor_kappa')
     scale_factor_kappa(:,:,:,:) = 1._CUSTOM_REAL
 
@@ -524,11 +524,9 @@
         read(27) factor_common
         read(27) scale_factor
 
-        if (FULL_ATTENUATION_SOLID) then
-            read(27) one_minus_sum_beta_kappa
-            read(27) factor_common_kappa
-            read(27) scale_factor_kappa
-        endif
+        read(27) one_minus_sum_beta_kappa
+        read(27) factor_common_kappa
+        read(27) scale_factor_kappa
 
         close(27)
     endif
@@ -537,12 +535,9 @@
     if (size(one_minus_sum_beta) > 0) call bcast_all_cr_for_database(one_minus_sum_beta(1,1,1,1), size(one_minus_sum_beta))
     if (size(factor_common) > 0) call bcast_all_cr_for_database(factor_common(1,1,1,1,1), size(factor_common))
     if (size(scale_factor) > 0) call bcast_all_cr_for_database(scale_factor(1,1,1,1), size(scale_factor))
-    if (FULL_ATTENUATION_SOLID) then
-        call bcast_all_cr_for_database(one_minus_sum_beta_kappa(1,1,1,1), size(one_minus_sum_beta_kappa))
-        call bcast_all_cr_for_database(factor_common_kappa(1,1,1,1,1), size(factor_common_kappa))
-        call bcast_all_cr_for_database(scale_factor_kappa(1,1,1,1), size(scale_factor_kappa))
-    endif
-
+    call bcast_all_cr_for_database(one_minus_sum_beta_kappa(1,1,1,1), size(one_minus_sum_beta_kappa))
+    call bcast_all_cr_for_database(factor_common_kappa(1,1,1,1,1), size(factor_common_kappa))
+    call bcast_all_cr_for_database(scale_factor_kappa(1,1,1,1), size(scale_factor_kappa))
 
     ! gets stress relaxation times tau_sigma, i.e.
     ! precalculates tau_sigma depending on period band (constant for all Q_mu), and
@@ -570,11 +565,9 @@
             scale_factorl = scale_factor(i,j,k,ispec)
             mustore(i,j,k,ispec) = mustore(i,j,k,ispec) * scale_factorl
 
-            if (FULL_ATTENUATION_SOLID) then
-              ! scales kappa moduli
-              scale_factorl = scale_factor_kappa(i,j,k,ispec)
-              kappastore(i,j,k,ispec) = kappastore(i,j,k,ispec) * scale_factorl
-            endif
+            ! scales kappa moduli
+            scale_factorl = scale_factor_kappa(i,j,k,ispec)
+            kappastore(i,j,k,ispec) = kappastore(i,j,k,ispec) * scale_factorl
 
           enddo
         enddo
@@ -598,9 +591,7 @@
       write(IMAIN,*) "  Frequency band min/max (Hz):",sngl(1.0/MAX_ATTENUATION_PERIOD),sngl(1.0/MIN_ATTENUATION_PERIOD)
       write(IMAIN,*) "  Period band min/max (s):",sngl(MIN_ATTENUATION_PERIOD),sngl(MAX_ATTENUATION_PERIOD)
       write(IMAIN,*) "  Logarithmic central frequency (Hz):",sngl(f_c_source)," period (s):",sngl(1.0/f_c_source)
-      if (FULL_ATTENUATION_SOLID) then
-        write(IMAIN,*) "  using attenuation having both Q_kappa and Q_mu"
-      endif
+      write(IMAIN,*) "  Using full attenuation with both Q_kappa and Q_mu."
       write(IMAIN,*)
       call flush_IMAIN()
     endif
@@ -746,11 +737,9 @@
   if (USE_LDDRK) then
     NGLOB_AB_LDDRK = NGLOB_AB
     NSPEC_ATTENUATION_AB_LDDRK = NSPEC_ATTENUATION_AB
-    NSPEC_ATTENUATION_AB_kappa_LDDRK = NSPEC_ATTENUATION_AB_kappa
   else
     NGLOB_AB_LDDRK = 1
     NSPEC_ATTENUATION_AB_LDDRK = 1
-    NSPEC_ATTENUATION_AB_kappa_LDDRK = 1
   endif
 
   if (ACOUSTIC_SIMULATION) then
@@ -786,7 +775,7 @@
              R_yz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS),stat=ier)
     if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
 
-    allocate(R_trace_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa_LDDRK,N_SLS))
+    allocate(R_trace_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK,N_SLS))
     if (ier /= 0) stop 'Error allocating array R_trace_lddrk etc.'
 
     if (SIMULATION_TYPE == 3) then
@@ -797,7 +786,7 @@
                b_R_yz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS),stat=ier)
       if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
 
-      allocate(b_R_trace_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa_LDDRK,N_SLS))
+      allocate(b_R_trace_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK,N_SLS))
       if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
     endif
 

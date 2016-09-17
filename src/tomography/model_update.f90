@@ -987,7 +987,7 @@ subroutine save_new_databases()
     call get_attenuation_model(myrank,NSPEC_AB,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
                                mustore_new,rho_vs_new,kappastore_new,rho_vp_new, &
                                qkappa_attenuation_store,qmu_attenuation_store, &
-                               ispec_is_elastic,min_resolved_period,prname_new,FULL_ATTENUATION_SOLID,ATTENUATION_f0_REFERENCE)
+                               ispec_is_elastic,min_resolved_period,prname_new,ATTENUATION_f0_REFERENCE)
 
     deallocate(flag_val,mask_ibool)
   endif

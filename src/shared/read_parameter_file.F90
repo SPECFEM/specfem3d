@@ -134,8 +134,6 @@
     if (ier /= 0) stop 'Error reading Par_file parameter TOPOGRAPHY'
     call read_value_logical(ATTENUATION, 'ATTENUATION', ier)
     if (ier /= 0) stop 'Error reading Par_file parameter ATTENUATION'
-    call read_value_logical(FULL_ATTENUATION_SOLID, 'FULL_ATTENUATION_SOLID', ier)
-    if (ier /= 0) stop 'Error reading Par_file parameter FULL_ATTENUATION_SOLID'
     call read_value_logical(ANISOTROPY, 'ANISOTROPY', ier)
     if (ier /= 0) stop 'Error reading Par_file parameter ANISOTROPY'
     call read_value_logical(GRAVITY, 'GRAVITY', ier)
@@ -451,7 +449,6 @@
     call bcast_all_singlel_world(APPROXIMATE_OCEAN_LOAD)
     call bcast_all_singlel_world(TOPOGRAPHY)
     call bcast_all_singlel_world(ATTENUATION)
-    call bcast_all_singlel_world(FULL_ATTENUATION_SOLID)
     call bcast_all_singlel_world(ANISOTROPY)
     call bcast_all_singlel_world(GRAVITY)
     call bcast_all_singledp_world(ATTENUATION_f0_REFERENCE)
