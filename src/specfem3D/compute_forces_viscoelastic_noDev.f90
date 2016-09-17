@@ -36,9 +36,9 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                         one_minus_sum_beta,factor_common, &
                         one_minus_sum_beta_kappa,factor_common_kappa, &
                         alphaval,betaval,gammaval, &
-                        NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_Kappa, &
+                        NSPEC_ATTENUATION_AB, &
                         R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
-                        NSPEC_ATTENUATION_AB_LDDRK,NSPEC_ATTENUATION_AB_kappa_LDDRK,R_trace_lddrk, &
+                        NSPEC_ATTENUATION_AB_LDDRK,R_trace_lddrk, &
                         R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, &
                         epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &
                         epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
@@ -60,7 +60,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                        MAKE_HOOKE_LAW_WEAKLY_NONLINEAR,A,B,C,A_over_4,B_over_2
   use fault_solver_dynamic, only: Kelvin_Voigt_eta
 
-  use specfem_par, only: FULL_ATTENUATION_SOLID,SAVE_MOHO_MESH,USE_LDDRK
+  use specfem_par, only: SAVE_MOHO_MESH,USE_LDDRK
 
   use pml_par, only: is_CPML,spec_to_CPML,accel_elastic_CPML,NSPEC_CPML, &
                      PML_dux_dxl,PML_dux_dyl,PML_dux_dzl,PML_duy_dxl,PML_duy_dyl,PML_duy_dzl, &
@@ -108,26 +108,26 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
   logical :: ATTENUATION
   logical :: COMPUTE_AND_STORE_STRAIN
   integer :: NSPEC_STRAIN_ONLY, NSPEC_ADJOINT
-  integer :: NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_Kappa
+  integer :: NSPEC_ATTENUATION_AB
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: one_minus_sum_beta
   real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: factor_common
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa) :: one_minus_sum_beta_kappa
-  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa) :: factor_common_kappa
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: one_minus_sum_beta_kappa
+  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: factor_common_kappa
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: alphaval,betaval,gammaval
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS) :: &
             R_xx,R_yy,R_xy,R_xz,R_yz
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa,N_SLS) :: R_trace
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS) :: R_trace
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY) :: &
             epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa) :: epsilondev_trace
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: epsilondev_trace
   real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: epsilon_trace_over_3
 
 ! lddrk for update the memory variables
-  integer :: NSPEC_ATTENUATION_AB_LDDRK,NSPEC_ATTENUATION_AB_Kappa_LDDRK
+  integer :: NSPEC_ATTENUATION_AB_LDDRK
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK,N_SLS) :: &
             R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa_LDDRK,N_SLS) :: R_trace_lddrk
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK,N_SLS) :: R_trace_lddrk
 
 ! anisotropy
   logical :: ANISOTROPY
@@ -503,7 +503,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
               if (COMPUTE_AND_STORE_STRAIN) then
                 templ = ONE_THIRD * (duxdxl + duydyl + duzdzl)
                 if (SIMULATION_TYPE == 3) epsilon_trace_over_3(i,j,k,ispec) = templ
-                if (FULL_ATTENUATION_SOLID) epsilondev_trace_loc(i,j,k) = 3._CUSTOM_REAL * templ
+                epsilondev_trace_loc(i,j,k) = 3._CUSTOM_REAL * templ
                 epsilondev_xx_loc(i,j,k) = duxdxl - templ
                 epsilondev_yy_loc(i,j,k) = duydyl - templ
                 epsilondev_xy_loc(i,j,k) = 0.5_CUSTOM_REAL * (duxdyl + duydxl)
@@ -573,7 +573,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                 ! compute deviatoric strain
                 templ = ONE_THIRD * (duxdxl_att + duydyl_att + duzdzl_att)
                 if (SIMULATION_TYPE == 3) epsilon_trace_over_3(i,j,k,ispec) = templ
-                if (FULL_ATTENUATION_SOLID) epsilondev_trace_loc(i,j,k) = 3._CUSTOM_REAL * templ
+                epsilondev_trace_loc(i,j,k) = 3._CUSTOM_REAL * templ
                 epsilondev_xx_loc(i,j,k) = duxdxl_att - templ
                 epsilondev_yy_loc(i,j,k) = duydyl_att - templ
                 epsilondev_xy_loc(i,j,k) = 0.5_CUSTOM_REAL * duxdyl_plus_duydxl_att
@@ -601,7 +601,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
               ! compute deviatoric strain
               templ = ONE_THIRD * (duxdxl_att + duydyl_att + duzdzl_att)
               if (SIMULATION_TYPE == 3) epsilon_trace_over_3(i,j,k,ispec) = templ
-              if (FULL_ATTENUATION_SOLID) epsilondev_trace_loc(i,j,k) = 3._CUSTOM_REAL * templ
+              epsilondev_trace_loc(i,j,k) = 3._CUSTOM_REAL * templ
               epsilondev_xx_loc(i,j,k) = duxdxl_att - templ
               epsilondev_yy_loc(i,j,k) = duydyl_att - templ
               epsilondev_xy_loc(i,j,k) = 0.5_CUSTOM_REAL * duxdyl_plus_duydxl_att
@@ -613,7 +613,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
             if (COMPUTE_AND_STORE_STRAIN) then
               templ = ONE_THIRD * (duxdxl + duydyl + duzdzl)
               if (SIMULATION_TYPE == 3) epsilon_trace_over_3(i,j,k,ispec) = templ
-              if (FULL_ATTENUATION_SOLID) epsilondev_trace_loc(i,j,k) = 3._CUSTOM_REAL * templ
+              epsilondev_trace_loc(i,j,k) = 3._CUSTOM_REAL * templ
               epsilondev_xx_loc(i,j,k) = duxdxl - templ
               epsilondev_yy_loc(i,j,k) = duydyl - templ
               epsilondev_xy_loc(i,j,k) = 0.5_CUSTOM_REAL * duxdyl_plus_duydxl
@@ -633,11 +633,11 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
               ! because array is_CPML() is unallocated when PML_CONDITIONS is false
               if (.not. is_CPML(ispec)) then
                 mul  = mul * one_minus_sum_beta(i,j,k,ispec)
-                if (FULL_ATTENUATION_SOLID) kappal = kappal * one_minus_sum_beta_kappa(i,j,k,ispec)
+                kappal = kappal * one_minus_sum_beta_kappa(i,j,k,ispec)
               endif
             else
               mul  = mul * one_minus_sum_beta(i,j,k,ispec)
-              if (FULL_ATTENUATION_SOLID) kappal = kappal * one_minus_sum_beta_kappa(i,j,k,ispec)
+              kappal = kappal * one_minus_sum_beta_kappa(i,j,k,ispec)
             endif
           endif
 
@@ -812,11 +812,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
               if (.not. is_CPML(ispec)) then
                 if (imodulo_N_SLS >= 1) then
                   do i_sls = 1,imodulo_N_SLS
-                    if (FULL_ATTENUATION_SOLID) then
-                      R_trace_val1 = R_trace(i,j,k,ispec,i_sls)
-                    else
-                      R_trace_val1 = 0._CUSTOM_REAL
-                    endif
+                    R_trace_val1 = R_trace(i,j,k,ispec,i_sls)
                     R_xx_val1 = R_xx(i,j,k,ispec,i_sls)
                     R_yy_val1 = R_yy(i,j,k,ispec,i_sls)
                     sigma_xx = sigma_xx - R_xx_val1 - R_trace_val1
@@ -830,11 +826,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 
                 if (N_SLS >= imodulo_N_SLS+1) then
                   do i_sls = imodulo_N_SLS+1,N_SLS,3
-                    if (FULL_ATTENUATION_SOLID) then
-                      R_trace_val1 = R_trace(i,j,k,ispec,i_sls)
-                    else
-                      R_trace_val1 = 0._CUSTOM_REAL
-                    endif
+                    R_trace_val1 = R_trace(i,j,k,ispec,i_sls)
                     R_xx_val1 = R_xx(i,j,k,ispec,i_sls)
                     R_yy_val1 = R_yy(i,j,k,ispec,i_sls)
                     sigma_xx = sigma_xx - R_xx_val1 - R_trace_val1
@@ -843,11 +835,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                     sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls)
                     sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls)
                     sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls)
-                    if (FULL_ATTENUATION_SOLID) then
-                      R_trace_val2 = R_trace(i,j,k,ispec,i_sls+1)
-                    else
-                      R_trace_val2 = 0._CUSTOM_REAL
-                    endif
+                    R_trace_val2 = R_trace(i,j,k,ispec,i_sls+1)
                     R_xx_val2 = R_xx(i,j,k,ispec,i_sls+1)
                     R_yy_val2 = R_yy(i,j,k,ispec,i_sls+1)
                     sigma_xx = sigma_xx - R_xx_val2 - R_trace_val2
@@ -857,11 +845,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                     sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls+1)
                     sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls+1)
 
-                    if (FULL_ATTENUATION_SOLID) then
-                      R_trace_val3 = R_trace(i,j,k,ispec,i_sls+2)
-                    else
-                      R_trace_val3 = 0._CUSTOM_REAL
-                    endif
+                    R_trace_val3 = R_trace(i,j,k,ispec,i_sls+2)
                     R_xx_val3 = R_xx(i,j,k,ispec,i_sls+2)
                     R_yy_val3 = R_yy(i,j,k,ispec,i_sls+2)
                     sigma_xx = sigma_xx - R_xx_val3 - R_trace_val3
@@ -876,11 +860,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
             else
               if (imodulo_N_SLS >= 1) then
                 do i_sls = 1,imodulo_N_SLS
-                  if (FULL_ATTENUATION_SOLID) then
-                    R_trace_val1 = R_trace(i,j,k,ispec,i_sls)
-                  else
-                    R_trace_val1 = 0._CUSTOM_REAL
-                  endif
+                  R_trace_val1 = R_trace(i,j,k,ispec,i_sls)
                   R_xx_val1 = R_xx(i,j,k,ispec,i_sls)
                   R_yy_val1 = R_yy(i,j,k,ispec,i_sls)
                   sigma_xx = sigma_xx - R_xx_val1 - R_trace_val1
@@ -894,11 +874,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 
               if (N_SLS >= imodulo_N_SLS+1) then
                 do i_sls = imodulo_N_SLS+1,N_SLS,3
-                  if (FULL_ATTENUATION_SOLID) then
-                    R_trace_val1 = R_trace(i,j,k,ispec,i_sls)
-                  else
-                    R_trace_val1 = 0._CUSTOM_REAL
-                  endif
+                  R_trace_val1 = R_trace(i,j,k,ispec,i_sls)
                   R_xx_val1 = R_xx(i,j,k,ispec,i_sls)
                   R_yy_val1 = R_yy(i,j,k,ispec,i_sls)
                   sigma_xx = sigma_xx - R_xx_val1 - R_trace_val1
@@ -907,11 +883,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                   sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls)
                   sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls)
                   sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls)
-                  if (FULL_ATTENUATION_SOLID) then
-                    R_trace_val2 = R_trace(i,j,k,ispec,i_sls+1)
-                  else
-                    R_trace_val2 = 0._CUSTOM_REAL
-                  endif
+                  R_trace_val2 = R_trace(i,j,k,ispec,i_sls+1)
                   R_xx_val2 = R_xx(i,j,k,ispec,i_sls+1)
                   R_yy_val2 = R_yy(i,j,k,ispec,i_sls+1)
                   sigma_xx = sigma_xx - R_xx_val2 - R_trace_val2
@@ -921,11 +893,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
                   sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls+1)
                   sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls+1)
 
-                  if (FULL_ATTENUATION_SOLID) then
-                    R_trace_val3 = R_trace(i,j,k,ispec,i_sls+2)
-                  else
-                    R_trace_val3 = 0._CUSTOM_REAL
-                  endif
+                  R_trace_val3 = R_trace(i,j,k,ispec,i_sls+2)
                   R_xx_val3 = R_xx(i,j,k,ispec,i_sls+2)
                   R_yy_val3 = R_yy(i,j,k,ispec,i_sls+2)
                   sigma_xx = sigma_xx - R_xx_val3 - R_trace_val3
@@ -1086,19 +1054,19 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
         if (.not. is_CPML(ispec)) then
           if (USE_LDDRK) then
             call compute_element_att_memory_lddrk(ispec,deltat,NSPEC_AB,kappastore,mustore, &
-                   NSPEC_ATTENUATION_AB_Kappa,factor_common_kappa, &
+                   NSPEC_ATTENUATION_AB,factor_common_kappa, &
                    R_trace,epsilondev_trace_loc, &
-                   NSPEC_ATTENUATION_AB_Kappa_LDDRK,R_trace_lddrk, &
-                   NSPEC_ATTENUATION_AB,factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &
-                   NSPEC_ATTENUATION_AB_LDDRK,R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, &
+                   NSPEC_ATTENUATION_AB_LDDRK,R_trace_lddrk, &
+                   factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &
+                   R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, &
                    epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc, &
                    epsilondev_xz_loc,epsilondev_yz_loc)
           else
             ! use Runge-Kutta scheme to march in time
             call compute_element_att_memory_second_order_rk(ispec,alphaval,betaval,gammaval, &
-                   NSPEC_AB,kappastore,mustore,NSPEC_ATTENUATION_AB_Kappa,factor_common_kappa, &
+                   NSPEC_AB,kappastore,mustore,NSPEC_ATTENUATION_AB,factor_common_kappa, &
                    R_trace,epsilondev_trace,epsilondev_trace_loc, &
-                   NSPEC_ATTENUATION_AB,factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &
+                   factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &
                    NSPEC_STRAIN_ONLY,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
                    epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,epsilondev_xz_loc,epsilondev_yz_loc)
 
@@ -1108,19 +1076,19 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
         ! use Runge-Kutta scheme to march in time
         if (USE_LDDRK) then
           call compute_element_att_memory_lddrk(ispec,deltat,NSPEC_AB,kappastore,mustore, &
-                 NSPEC_ATTENUATION_AB_Kappa,factor_common_kappa, &
+                 NSPEC_ATTENUATION_AB,factor_common_kappa, &
                  R_trace,epsilondev_trace_loc, &
-                 NSPEC_ATTENUATION_AB_Kappa_LDDRK,R_trace_lddrk, &
-                 NSPEC_ATTENUATION_AB,factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &
-                 NSPEC_ATTENUATION_AB_LDDRK,R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, &
+                 NSPEC_ATTENUATION_AB_LDDRK,R_trace_lddrk, &
+                 factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &
+                 R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, &
                  epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc, &
                  epsilondev_xz_loc,epsilondev_yz_loc)
         else
           ! use Runge-Kutta scheme to march in time
           call compute_element_att_memory_second_order_rk(ispec,alphaval,betaval,gammaval, &
-                 NSPEC_AB,kappastore,mustore,NSPEC_ATTENUATION_AB_Kappa,factor_common_kappa, &
+                 NSPEC_AB,kappastore,mustore,NSPEC_ATTENUATION_AB,factor_common_kappa, &
                  R_trace,epsilondev_trace,epsilondev_trace_loc, &
-                 NSPEC_ATTENUATION_AB,factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &
+                 factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &
                  NSPEC_STRAIN_ONLY,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
                  epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,epsilondev_xz_loc,epsilondev_yz_loc)
         endif
@@ -1152,7 +1120,7 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 
     ! save deviatoric strain for Runge-Kutta scheme
     if (COMPUTE_AND_STORE_STRAIN) then
-      if (FULL_ATTENUATION_SOLID) epsilondev_trace(:,:,:,ispec) = epsilondev_trace_loc(:,:,:)
+      epsilondev_trace(:,:,:,ispec) = epsilondev_trace_loc(:,:,:)
       epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
       epsilondev_yy(:,:,:,ispec) = epsilondev_yy_loc(:,:,:)
       epsilondev_xy(:,:,:,ispec) = epsilondev_xy_loc(:,:,:)

@@ -37,11 +37,9 @@
 
   subroutine model_gll(myrank,nspec,LOCAL_PATH)
 
-  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,IMAIN,MAX_STRING_LEN, &
-    ATTENUATION,FULL_ATTENUATION_SOLID
+  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,IMAIN,MAX_STRING_LEN,ATTENUATION
 
-  use create_regions_mesh_ext_par, only: rhostore,kappastore,mustore,rho_vp,rho_vs, &
-    qkappa_attenuation_store,qmu_attenuation_store
+  use create_regions_mesh_ext_par, only: rhostore,kappastore,mustore,rho_vp,rho_vs,qkappa_attenuation_store,qmu_attenuation_store
 
   implicit none
 
@@ -164,23 +162,22 @@
     close(28)
 
     ! bulk attenuation
-    if (FULL_ATTENUATION_SOLID) then
-      ! user output
-      if (myrank == 0) write(IMAIN,*) '     reading in: qkappa.bin'
+    ! user output
+    if (myrank == 0) write(IMAIN,*) '     reading in: qkappa.bin'
 
-      filename = prname_lp(1:len_trim(prname_lp))//'qkappa.bin'
-      open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
-      if (ier /= 0) then
-        print *,'error opening file: ',trim(filename)
-        stop 'error reading qkappa.bin file'
-      endif
-
-      read(28) qkappa_attenuation_store
-      close(28)
+    filename = prname_lp(1:len_trim(prname_lp))//'qkappa.bin'
+    open(unit=28,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
+    if (ier /= 0) then
+      print *,'error opening file: ',trim(filename)
+      stop 'error reading qkappa.bin file'
     endif
+
+    read(28) qkappa_attenuation_store
+    close(28)
   endif
 
   ! free memory
-  deallocate( rho_read,vp_read,vs_read)
+  deallocate(rho_read,vp_read,vs_read)
 
   end subroutine model_gll
+

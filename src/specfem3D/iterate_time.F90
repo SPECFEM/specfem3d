@@ -448,19 +448,19 @@
       read(IIN) b_accel
       ! memory variables if attenuation
       if (ATTENUATION) then
-        if (FULL_ATTENUATION_SOLID) read(IIN) b_R_trace
+        read(IIN) b_R_trace
         read(IIN) b_R_xx
         read(IIN) b_R_yy
         read(IIN) b_R_xy
         read(IIN) b_R_xz
         read(IIN) b_R_yz
-        if (FULL_ATTENUATION_SOLID) read(IIN) b_epsilondev_trace
+        read(IIN) b_epsilondev_trace
         read(IIN) b_epsilondev_xx
         read(IIN) b_epsilondev_yy
         read(IIN) b_epsilondev_xy
         read(IIN) b_epsilondev_xz
         read(IIN) b_epsilondev_yz
-      endif ! ATTENUATION
+      endif
     endif
 
     ! poroelastic wavefields

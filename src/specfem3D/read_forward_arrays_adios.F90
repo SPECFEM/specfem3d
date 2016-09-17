@@ -131,12 +131,10 @@ subroutine read_forward_arrays_adios()
                             local_dim_epsilondev_xz,ier)
       call adios_get_scalar(handle, "epsilondev_yz/local_dim", &
                             local_dim_epsilondev_yz,ier)
-      if (FULL_ATTENUATION_SOLID) then
-        call adios_get_scalar(handle, "R_trace/local_dim", &
-                              local_dim_R_trace,ier)
-        call adios_get_scalar(handle, "epsilondev_trace/local_dim", &
-                              local_dim_epsilondev_trace,ier)
-      endif
+      call adios_get_scalar(handle, "R_trace/local_dim", &
+                            local_dim_R_trace,ier)
+      call adios_get_scalar(handle, "epsilondev_trace/local_dim", &
+                            local_dim_epsilondev_trace,ier)
     endif
   endif
   if (POROELASTIC_SIMULATION) then
@@ -292,23 +290,21 @@ subroutine read_forward_arrays_adios()
       call adios_schedule_read(handle, sel, "epsilondev_yz/array", 0, 1, &
                                b_epsilondev_yz, ier)
 
-      if (FULL_ATTENUATION_SOLID) then
-        start(1) = local_dim_R_trace * myrank
-        count_ad(1) = NGLLX * NGLLY * NGLLZ * NSPEC_ATTENUATION_AB_kappa * N_SLS
-        sel_num = sel_num+1
-        sel => selections(sel_num)
-        call adios_selection_boundingbox (sel , 1, start, count_ad)
-        call adios_schedule_read(handle, sel, "R_trace/array", 0, 1, &
-                                 b_R_trace, ier)
+      start(1) = local_dim_R_trace * myrank
+      count_ad(1) = NGLLX * NGLLY * NGLLZ * NSPEC_ATTENUATION_AB * N_SLS
+      sel_num = sel_num+1
+      sel => selections(sel_num)
+      call adios_selection_boundingbox (sel , 1, start, count_ad)
+      call adios_schedule_read(handle, sel, "R_trace/array", 0, 1, &
+                               b_R_trace, ier)
 
-        start(1) = local_dim_epsilondev_trace * myrank
-        count_ad(1) = NGLLX * NGLLY * NGLLZ * NSPEC_ATTENUATION_AB_kappa
-        sel_num = sel_num+1
-        sel => selections(sel_num)
-        call adios_selection_boundingbox (sel , 1, start, count_ad)
-        call adios_schedule_read(handle, sel, "epsilondev_trace/array", 0, 1, &
-                                 b_epsilondev_trace, ier)
-      endif
+      start(1) = local_dim_epsilondev_trace * myrank
+      count_ad(1) = NGLLX * NGLLY * NGLLZ * NSPEC_ATTENUATION_AB
+      sel_num = sel_num+1
+      sel => selections(sel_num)
+      call adios_selection_boundingbox (sel , 1, start, count_ad)
+      call adios_schedule_read(handle, sel, "epsilondev_trace/array", 0, 1, &
+                               b_epsilondev_trace, ier)
     endif
   endif
 

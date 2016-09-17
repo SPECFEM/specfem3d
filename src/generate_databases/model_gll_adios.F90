@@ -38,7 +38,7 @@ subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
 
   use adios_read_mod
 
-  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,IMAIN,ATTENUATION,FULL_ATTENUATION_SOLID
+  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,IMAIN,ATTENUATION
 
   use create_regions_mesh_ext_par
 
@@ -110,10 +110,8 @@ subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
     call adios_schedule_read(handle, sel, "qmu/array", 0, 1, &
                              qmu_attenuation_store, ier)
     ! bulk attenuation
-    if (FULL_ATTENUATION_SOLID) then
-      call adios_schedule_read(handle, sel, "qkappa/array", 0, 1, &
-                               qkappa_attenuation_store, ier)
-    endif
+    call adios_schedule_read(handle, sel, "qkappa/array", 0, 1, &
+                             qkappa_attenuation_store, ier)
   endif
 
   !---------------------------------------.

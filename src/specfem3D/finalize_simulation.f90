@@ -70,13 +70,13 @@
         write(IOUT) accel
 
         if (ATTENUATION) then
-          if (FULL_ATTENUATION_SOLID) write(IOUT) R_trace
+          write(IOUT) R_trace
           write(IOUT) R_xx
           write(IOUT) R_yy
           write(IOUT) R_xy
           write(IOUT) R_xz
           write(IOUT) R_yz
-          if (FULL_ATTENUATION_SOLID) write(IOUT) epsilondev_trace
+          write(IOUT) epsilondev_trace
           write(IOUT) epsilondev_xx
           write(IOUT) epsilondev_yy
           write(IOUT) epsilondev_xy
