@@ -152,14 +152,8 @@ of \texttt{ATTENUATION\_f0\_REFERENCE} in the main constants file
 \texttt{constants.h} found in subdirectory \texttt{src/shared/}.
 The code uses a constant $Q$ quality factor, write(IMAIN,*) "but approximated based on a series of Zener standard linear solids (SLS).
 The approximation is thus performed in a given frequency band determined based on that \texttt{ATTENUATION\_f0\_REFERENCE} reference frequency.
-\item [{\texttt{FULL\_ATTENUATION\_SOLID}}] Set to \texttt{.true.} to add
-$Q_{\kappa}$ attenuation to the simulations in addition to $Q_{\mu}$
-attenuation when the \texttt{ATTENUATION} flag above is on. Should
-be off in almost all cases for seismic wave propagation, since $Q_{\kappa}$
-is almost always negligible in Earth models. However, this parameter
-can be useful for instance for ocean acoustics simulations, when $Q_{\kappa}$
-is not negligible in the solid layer at the sea bottom.
-Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp. To convert one to the other see doc/note\_on\_Qkappa\_versus\_Qp.pdf and utils/attenuation/conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90.
+Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp.
+To convert one to the other see doc/note\_on\_Qkappa\_versus\_Qp.pdf and utils/attenuation/conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90.
 \item [{\texttt{ANISOTROPY}}] Set to \texttt{.true.} if you want to use
 an anisotropy model. Please see the file \texttt{model\_aniso.f90}
 in subdirectory \texttt{src/generate\_databases/} for the current
