@@ -67,7 +67,6 @@ SEP_MODEL_DIRECTORY             = ./sep_model
 APPROXIMATE_OCEAN_LOAD          = .false.
 TOPOGRAPHY                      = .false.
 ATTENUATION                     = .false.
-FULL_ATTENUATION_SOLID          = .false.
 ANISOTROPY                      = .false.
 GRAVITY                         = .false.
 

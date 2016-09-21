@@ -307,15 +307,12 @@ for elastic or viscoelastic materials,} \texttt{material\_ID} a unique
 identifier, \texttt{rho} the density in $kg\, m^{-3}$, \texttt{vp}
 the P-wave speed in $m\, s^{-1}$, \texttt{vs} the S-wave speed in
 $m\, s^{-1}$, \texttt{Q} the quality factor and \texttt{anisotropy\_flag}
-an identifier for anisotropic models. Note that the \texttt{Qkappa}
-value is ignored by the code unless \texttt{FULL\_ATTENUATION\_SOLID}
-is set. Note also that both \texttt{Qkappa} and \texttt{Qmu} are ignored
+an identifier for anisotropic models.
+Note that both \texttt{Qkappa} and \texttt{Qmu} are ignored
 by the code unless \texttt{ATTENUATION} is set. If you want a model
 with no \texttt{Qmu} attenuation, both set \texttt{ATTENUATION} to
 \texttt{.false.} in the \texttt{Par\_file} and set \texttt{Qmu} to
-9999 here. If you want a model with no \texttt{Qkappa} attenuation,
-both set \texttt{FULL\_ATTENUATION\_SOLID} to \texttt{.false.} in
-the \texttt{Par\_file} and set \texttt{Qkappa} to 9999 here.
+9999 here. If you want a model with no \texttt{Qkappa} attenuation, set \texttt{Qkappa} to 9999 here.
 Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp. To convert one to the other see doc/note\_on\_Qkappa\_versus\_Qp.pdf and utils/attenuation/conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90.
 
 \item For tomographic velocity models, please read Chapter \ref{cha:-Changing-the}

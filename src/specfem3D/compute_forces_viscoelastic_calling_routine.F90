@@ -72,9 +72,9 @@ subroutine compute_forces_viscoelastic()
                         one_minus_sum_beta,factor_common, &
                         one_minus_sum_beta_kappa,factor_common_kappa, &
                         alphaval,betaval,gammaval, &
-                        NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa, &
+                        NSPEC_ATTENUATION_AB, &
                         R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
-                        NSPEC_ATTENUATION_AB_LDDRK,NSPEC_ATTENUATION_AB_kappa,R_trace_lddrk, &
+                        NSPEC_ATTENUATION_AB_LDDRK,R_trace_lddrk, &
                         R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, &
                         epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &
                         epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
@@ -323,9 +323,9 @@ subroutine compute_forces_viscoelastic_backward()
                         one_minus_sum_beta,factor_common, &
                         one_minus_sum_beta_kappa,factor_common_kappa, &
                         b_alphaval,b_betaval,b_gammaval, &
-                        NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa, &
+                        NSPEC_ATTENUATION_AB, &
                         b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
-                        NSPEC_ATTENUATION_AB_LDDRK,NSPEC_ATTENUATION_AB_kappa,b_R_trace_lddrk, &
+                        NSPEC_ATTENUATION_AB_LDDRK,b_R_trace_lddrk, &
                         b_R_xx_lddrk,b_R_yy_lddrk,b_R_xy_lddrk,b_R_xz_lddrk,b_R_yz_lddrk, &
                         b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
                         b_epsilondev_xz,b_epsilondev_yz,b_epsilon_trace_over_3, &

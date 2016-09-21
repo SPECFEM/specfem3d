@@ -85,7 +85,7 @@ module specfem_par
 #endif
 
 ! attenuation
-  integer :: NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_kappa
+  integer :: NSPEC_ATTENUATION_AB
   character(len=MAX_STRING_LEN) :: prname_Q
 
 ! additional mass matrix for ocean load
@@ -96,7 +96,7 @@ module specfem_par
 
 ! LDDRK time scheme
   integer :: NSTAGE_TIME_SCHEME,istage
-  integer :: NGLOB_AB_LDDRK, NSPEC_ATTENUATION_AB_LDDRK, NSPEC_ATTENUATION_AB_kappa_LDDRK
+  integer :: NGLOB_AB_LDDRK,NSPEC_ATTENUATION_AB_LDDRK
 
 ! time loop step
   integer :: it
