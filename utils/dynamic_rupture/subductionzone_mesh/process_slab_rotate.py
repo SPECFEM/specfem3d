@@ -27,6 +27,7 @@ cuttingdepth = -100.0
 refine_slab = False # refine mesh near the subduction interface , can be very slow
 Mesh = False # set to true to trigger meshing 
 rotate =-15
+Plotsquare=False
 # rotate function doesn't seem to work
 #def rotate(X,deg):
 #    rad = math.radians(deg)
@@ -79,17 +80,18 @@ data = import_slab_data()
 
 plt.scatter(data[:,0],data[:,1],1.0,c=data[:,2],edgecolors='none')
 
-XB = [393.3,186.3,-393.3,-186.3,393.3]
-YB = [308.7,-464.0,-308.7,464.0,308.7]
-XB = np.array(XB)/Lon2dis+xc
-YB = np.array(YB)/Lat2dis+yc
-print(XB)
-print(YB)
-plt.plot(XB,YB)
+if Plotsquare:
+    XB = [393.3,186.3,-393.3,-186.3,393.3]
+    YB = [308.7,-464.0,-308.7,464.0,308.7]
+    XB = np.array(XB)/Lon2dis+xc
+    YB = np.array(YB)/Lat2dis+yc
+    print(XB)
+    print(YB)
+    plt.plot(XB,YB)
 #Xm,Ym,Zm = generating_contour(data[:,0],data[:,1],data[:,2])
 #plt.contourf(Xm,Ym,Zm)
-plt.colorbar()
-plt.show()
+    plt.colorbar()
+    plt.show()
 np.savetxt('outputslab.txt',data,delimiter=',')
 
 #exit()
@@ -130,16 +132,17 @@ print('total curve %d'%n_curve)
 #for ii in range(1,n_curve,20):#
 #cubit.cmd('create surface skin curve %d to %d'%(ii,ii+20))
 data = import_elev_data()
-plt.scatter(data[:,0],data[:,1],1.0,c=data[:,2],edgecolors='none')
-XB = [393.3,186.3,-393.3,-186.3,393.3]
-YB = [308.7,-464.0,-308.7,464.0,308.7]
-XB = np.array(XB)/Lon2dis+xc
-YB = np.array(YB)/Lat2dis+yc
-plt.plot(XB,YB)
+if Plotsquare:
+    plt.scatter(data[:,0],data[:,1],1.0,c=data[:,2],edgecolors='none')
+    XB = [393.3,186.3,-393.3,-186.3,393.3]
+    YB = [308.7,-464.0,-308.7,464.0,308.7]
+    XB = np.array(XB)/Lon2dis+xc
+    YB = np.array(YB)/Lat2dis+yc
+    plt.plot(XB,YB)
 #Xm,Ym,Zm = generating_contour(data[:,0],data[:,1],data[:,2])
 #plt.contourf(Xm,Ym,Zm)
-plt.colorbar()
-plt.show()
+    plt.colorbar()
+    plt.show()
 np.savetxt('outputelev.txt',data,delimiter=',')
 
 
