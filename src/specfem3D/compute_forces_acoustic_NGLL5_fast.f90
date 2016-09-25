@@ -86,7 +86,7 @@
   real(kind=CUSTOM_REAL) :: temp1l,temp2l,temp3l
   real(kind=CUSTOM_REAL) :: hp1,hp2,hp3
 
-  integer :: ispec,iglob,i,j,k,l,ispec_p,num_elements
+  integer :: ispec,iglob,i,j,k,ispec_p,num_elements
 
   ! CPML
   integer :: ispec_CPML
@@ -162,31 +162,73 @@
                    chi_elem(i,j,4)*hprime_zz(k,4) + &
                    chi_elem(i,j,5)*hprime_zz(k,5)
 
-              temp1l_old = 0._CUSTOM_REAL
-              temp2l_old = 0._CUSTOM_REAL
-              temp3l_old = 0._CUSTOM_REAL
+              hp1 = hprime_xx(i,1)
+              temp1l_old = PML_potential_acoustic_old(1,j,k,ispec_CPML)*hp1
+              temp1l_new = PML_potential_acoustic_new(1,j,k,ispec_CPML)*hp1
 
-              temp1l_new = 0._CUSTOM_REAL
-              temp2l_new = 0._CUSTOM_REAL
-              temp3l_new = 0._CUSTOM_REAL
+              hp2 = hprime_yy(j,1)
+              temp2l_old = PML_potential_acoustic_old(i,1,k,ispec_CPML)*hp2
+              temp2l_new = PML_potential_acoustic_new(i,1,k,ispec_CPML)*hp2
 
-              ! we can merge these loops because NGLLX = NGLLY = NGLLZ
-              do l=1,NGLLX
-                hp1 = hprime_xx(i,l)
-                iglob = ibool(l,j,k,ispec)
-                temp1l_old = temp1l_old + PML_potential_acoustic_old(l,j,k,ispec_CPML)*hp1
-                temp1l_new = temp1l_new + PML_potential_acoustic_new(l,j,k,ispec_CPML)*hp1
+              hp3 = hprime_zz(k,1)
+              temp3l_old = PML_potential_acoustic_old(i,j,1,ispec_CPML)*hp3
+              temp3l_new = PML_potential_acoustic_new(i,j,1,ispec_CPML)*hp3
 
-                hp2 = hprime_yy(j,l)
-                iglob = ibool(i,l,k,ispec)
-                temp2l_old = temp2l_old + PML_potential_acoustic_old(i,l,k,ispec_CPML)*hp2
-                temp2l_new = temp2l_new + PML_potential_acoustic_new(i,l,k,ispec_CPML)*hp2
+!---
 
-                hp3 = hprime_zz(k,l)
-                iglob = ibool(i,j,l,ispec)
-                temp3l_old = temp3l_old + PML_potential_acoustic_old(i,j,l,ispec_CPML)*hp3
-                temp3l_new = temp3l_new + PML_potential_acoustic_new(i,j,l,ispec_CPML)*hp3
-              enddo
+              hp1 = hprime_xx(i,2)
+              temp1l_old = temp1l_old + PML_potential_acoustic_old(2,j,k,ispec_CPML)*hp1
+              temp1l_new = temp1l_new + PML_potential_acoustic_new(2,j,k,ispec_CPML)*hp1
+
+              hp2 = hprime_yy(j,2)
+              temp2l_old = temp2l_old + PML_potential_acoustic_old(i,2,k,ispec_CPML)*hp2
+              temp2l_new = temp2l_new + PML_potential_acoustic_new(i,2,k,ispec_CPML)*hp2
+
+              hp3 = hprime_zz(k,2)
+              temp3l_old = temp3l_old + PML_potential_acoustic_old(i,j,2,ispec_CPML)*hp3
+              temp3l_new = temp3l_new + PML_potential_acoustic_new(i,j,2,ispec_CPML)*hp3
+
+!---
+
+              hp1 = hprime_xx(i,3)
+              temp1l_old = temp1l_old + PML_potential_acoustic_old(3,j,k,ispec_CPML)*hp1
+              temp1l_new = temp1l_new + PML_potential_acoustic_new(3,j,k,ispec_CPML)*hp1
+
+              hp2 = hprime_yy(j,3)
+              temp2l_old = temp2l_old + PML_potential_acoustic_old(i,3,k,ispec_CPML)*hp2
+              temp2l_new = temp2l_new + PML_potential_acoustic_new(i,3,k,ispec_CPML)*hp2
+
+              hp3 = hprime_zz(k,3)
+              temp3l_old = temp3l_old + PML_potential_acoustic_old(i,j,3,ispec_CPML)*hp3
+              temp3l_new = temp3l_new + PML_potential_acoustic_new(i,j,3,ispec_CPML)*hp3
+
+!---
+
+              hp1 = hprime_xx(i,4)
+              temp1l_old = temp1l_old + PML_potential_acoustic_old(4,j,k,ispec_CPML)*hp1
+              temp1l_new = temp1l_new + PML_potential_acoustic_new(4,j,k,ispec_CPML)*hp1
+
+              hp2 = hprime_yy(j,4)
+              temp2l_old = temp2l_old + PML_potential_acoustic_old(i,4,k,ispec_CPML)*hp2
+              temp2l_new = temp2l_new + PML_potential_acoustic_new(i,4,k,ispec_CPML)*hp2
+
+              hp3 = hprime_zz(k,4)
+              temp3l_old = temp3l_old + PML_potential_acoustic_old(i,j,4,ispec_CPML)*hp3
+              temp3l_new = temp3l_new + PML_potential_acoustic_new(i,j,4,ispec_CPML)*hp3
+
+!---
+
+              hp1 = hprime_xx(i,5)
+              temp1l_old = temp1l_old + PML_potential_acoustic_old(5,j,k,ispec_CPML)*hp1
+              temp1l_new = temp1l_new + PML_potential_acoustic_new(5,j,k,ispec_CPML)*hp1
+
+              hp2 = hprime_yy(j,5)
+              temp2l_old = temp2l_old + PML_potential_acoustic_old(i,5,k,ispec_CPML)*hp2
+              temp2l_new = temp2l_new + PML_potential_acoustic_new(i,5,k,ispec_CPML)*hp2
+
+              hp3 = hprime_zz(k,5)
+              temp3l_old = temp3l_old + PML_potential_acoustic_old(i,j,5,ispec_CPML)*hp3
+              temp3l_new = temp3l_new + PML_potential_acoustic_new(i,j,5,ispec_CPML)*hp3
 
           ! get derivatives of potential with respect to x, y and z
           xixl = xix(i,j,k,ispec)
