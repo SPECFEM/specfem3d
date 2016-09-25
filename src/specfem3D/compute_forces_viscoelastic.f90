@@ -25,7 +25,7 @@
 !
 !=====================================================================
 
-subroutine compute_forces_viscoelastic_noDev(iphase, &
+subroutine compute_forces_viscoelastic(iphase, &
                         NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
@@ -1130,12 +1130,12 @@ subroutine compute_forces_viscoelastic_noDev(iphase, &
 
   enddo  ! spectral element loop
 
-end subroutine compute_forces_viscoelastic_noDev
+end subroutine compute_forces_viscoelastic
 
 ! put the code used for computation of strain in parent element in a subroutine.
 ! The concept of parent element can be found in
-! O.C.Zienkiewicz, R.L.Taylor & J.Z. Zhu, The finite element method its basis and fundamentals 6th ed.,
-! Elsevier Press (2005) ! pages 141
+! O. C. Zienkiewicz, R. L. Taylor and J. Z. Zhu, The finite element method its basis and fundamentals 6th ed.,
+! Elsevier Press (2005), page 141
 subroutine compute_strain_in_parent_element(tempx1_att,tempx2_att,tempx3_att,tempx1,tempx2,tempx3, &
                                             tempy1_att,tempy2_att,tempy3_att,tempy1,tempy2,tempy3, &
                                             tempz1_att,tempz2_att,tempz3_att,tempz1,tempz2,tempz3, &

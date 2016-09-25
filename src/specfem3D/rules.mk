@@ -60,9 +60,9 @@ specfem3D_OBJECTS = \
 	$O/compute_coupling_poroelastic_ac.spec.o \
 	$O/compute_coupling_poroelastic_el.spec.o \
 	$O/compute_forces_acoustic_calling_routine.spec.o \
-	$O/compute_forces_acoustic_noDev.spec.o \
+	$O/compute_forces_acoustic.spec.o \
 	$O/compute_forces_viscoelastic_calling_routine.spec.o \
-	$O/compute_forces_viscoelastic_noDev.spec.o \
+	$O/compute_forces_viscoelastic.spec.o \
 	$O/compute_element_att_memory.spec.o \
 	$O/compute_forces_poro_fluid_part.spec.o \
 	$O/compute_forces_poroelastic_calling_routine.spec.o \
@@ -301,7 +301,7 @@ $O/initialize_simulation.spec.o: ${SETUP}/version.fh
 $O/compute_coupling_acoustic_el.spec.o: $O/pml_par.spec.o
 $O/compute_coupling_viscoelastic_ac.spec.o: $O/pml_par.spec.o
 $O/compute_forces_acoustic_calling_routine.spec.o: $O/pml_par.spec.o
-$O/compute_forces_acoustic_noDev.spec.o: $O/pml_par.spec.o
+$O/compute_forces_acoustic.spec.o: $O/pml_par.spec.o
 $O/compute_total_energy.spec.o: $O/pml_par.spec.o
 $O/pml_allocate_arrays.spec.o: $O/pml_par.spec.o
 $O/pml_compute_accel_contribution.spec.o: $O/pml_par.spec.o
@@ -313,7 +313,7 @@ $O/update_displacement_scheme.spec.o: $O/pml_par.spec.o
 ## fault
 $O/fault_solver_dynamic.spec.o: $O/fault_solver_common.spec.o
 $O/fault_solver_kinematic.spec.o: $O/fault_solver_common.spec.o
-$O/compute_forces_viscoelastic_noDev.spec.o: $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o
+$O/compute_forces_viscoelastic.spec.o: $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o
 $O/compute_forces_viscoelastic_calling_routine.spec.o: $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o
 
 ## gravity

@@ -90,7 +90,7 @@ subroutine compute_forces_acoustic()
   do iphase = 1,2
 
     ! acoustic pressure term
-    call compute_forces_acoustic_noDev(iphase,NSPEC_AB,NGLOB_AB, &
+    call compute_forces_acoustic(iphase,NSPEC_AB,NGLOB_AB, &
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
@@ -343,7 +343,7 @@ subroutine compute_forces_acoustic_backward()
   do iphase = 1,2
 
     ! adjoint simulations
-    call compute_forces_acoustic_noDev(iphase,NSPEC_ADJOINT,NGLOB_ADJOINT, &
+    call compute_forces_acoustic(iphase,NSPEC_ADJOINT,NGLOB_ADJOINT, &
                       b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
                       xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                       hprime_xx,hprime_yy,hprime_zz, &

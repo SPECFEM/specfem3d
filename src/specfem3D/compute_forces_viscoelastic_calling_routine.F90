@@ -61,7 +61,7 @@ subroutine compute_forces_viscoelastic()
   do iphase = 1,2
 
 ! elastic term
-    call compute_forces_viscoelastic_noDev(iphase,NSPEC_AB,NGLOB_AB, &
+    call compute_forces_viscoelastic(iphase,NSPEC_AB,NGLOB_AB, &
                         displ,veloc,accel, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
@@ -312,7 +312,7 @@ subroutine compute_forces_viscoelastic_backward()
 
 ! elastic term
     ! adjoint simulations: backward/reconstructed wavefield
-    call compute_forces_viscoelastic_noDev(iphase,NSPEC_AB,NGLOB_AB, &
+    call compute_forces_viscoelastic(iphase,NSPEC_AB,NGLOB_AB, &
                         b_displ,b_veloc,b_accel, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
