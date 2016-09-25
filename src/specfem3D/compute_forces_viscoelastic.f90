@@ -325,14 +325,11 @@ subroutine compute_forces_viscoelastic(iphase, &
           enddo
     endif
 
-    !--------------------------------------------------------------------------------------
-    !---------------------computation the strain in parent element-------------------------
-    !--------------------------------------------------------------------------------------
-    ! The concept of parent element can be found in
-    ! O.C.Zienkiewicz, R.L.Taylor & J.Z. Zhu, The finite element method its basis and fundamentals 6th ed.,
-    ! Elsevier Press (2005) ! pages 141
+    !------------------------------------------------------------------------------
+    !---------------------computation of strain in element-------------------------
+    !------------------------------------------------------------------------------
 
-    call compute_strain_in_parent_element( &
+    call compute_strain_in_element( &
                  tempx1,tempx2,tempx3,zero_array,zero_array,zero_array, &
                  tempy1,tempy2,tempy3,zero_array,zero_array,zero_array, &
                  tempz1,tempz2,tempz3,zero_array,zero_array,zero_array, &
@@ -341,14 +338,14 @@ subroutine compute_forces_viscoelastic(iphase, &
 
     if (is_CPML(ispec)) then
         if (.not. backward_simulation) then
-          call compute_strain_in_parent_element( &
+          call compute_strain_in_element( &
                        tempx1_att,tempx2_att,tempx3_att,zero_array,zero_array,zero_array, &
                        tempy1_att,tempy2_att,tempy3_att,zero_array,zero_array,zero_array, &
                        tempz1_att,tempz2_att,tempz3_att,zero_array,zero_array,zero_array, &
                        dummyx_loc_att,dummyy_loc_att,dummyz_loc_att, &
                        hprime_xx,hprime_yy,hprime_zz)
 
-          call compute_strain_in_parent_element( &
+          call compute_strain_in_element( &
                        tempx1_att_new,tempx2_att_new,tempx3_att_new,zero_array,zero_array,zero_array, &
                        tempy1_att_new,tempy2_att_new,tempy3_att_new,zero_array,zero_array,zero_array, &
                        tempz1_att_new,tempz2_att_new,tempz3_att_new,zero_array,zero_array,zero_array, &
@@ -358,17 +355,13 @@ subroutine compute_forces_viscoelastic(iphase, &
     endif
 
     if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN .and. .not. is_CPML(ispec)) then
-        call compute_strain_in_parent_element( &
+        call compute_strain_in_element( &
                      tempx1_att,tempx2_att,tempx3_att,tempx1,tempx2,tempx3, &
                      tempy1_att,tempy2_att,tempy3_att,tempy1,tempy2,tempy3, &
                      tempz1_att,tempz2_att,tempz3_att,tempz1,tempz2,tempz3, &
                      dummyx_loc_att,dummyy_loc_att,dummyz_loc_att, &
                      hprime_xx,hprime_yy,hprime_zz)
     endif
-
-    !--------------------------------------------------------------------------------------
-    !----------------finish the computation the strain in parent element-------------------
-    !--------------------------------------------------------------------------------------
 
     do k=1,NGLLZ
       do j=1,NGLLY
@@ -923,11 +916,13 @@ subroutine compute_forces_viscoelastic(iphase, &
 
 end subroutine compute_forces_viscoelastic
 
-! put the code used for computation of strain in parent element in a subroutine.
-! The concept of parent element can be found in
-! O. C. Zienkiewicz, R. L. Taylor and J. Z. Zhu, The finite element method its basis and fundamentals 6th ed.,
-! Elsevier Press (2005), page 141
-subroutine compute_strain_in_parent_element(tempx1_att,tempx2_att,tempx3_att,tempx1,tempx2,tempx3, &
+!
+!---------------
+!
+
+! put the code used for computation of strain in element in a subroutine
+
+subroutine compute_strain_in_element(tempx1_att,tempx2_att,tempx3_att,tempx1,tempx2,tempx3, &
                                             tempy1_att,tempy2_att,tempy3_att,tempy1,tempy2,tempy3, &
                                             tempz1_att,tempz2_att,tempz3_att,tempz1,tempz2,tempz3, &
                                             dummyx_loc,dummyy_loc,dummyz_loc,hprime_xx,hprime_yy,hprime_zz)
@@ -991,5 +986,5 @@ subroutine compute_strain_in_parent_element(tempx1_att,tempx2_att,tempx3_att,tem
     enddo
   enddo
 
-end subroutine compute_strain_in_parent_element
+end subroutine compute_strain_in_element
 
