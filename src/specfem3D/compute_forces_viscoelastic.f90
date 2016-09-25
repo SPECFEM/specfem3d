@@ -306,17 +306,13 @@ subroutine compute_forces_viscoelastic(iphase, &
 
     ! use first order Taylor expansion of displacement for local storage of stresses
     ! at this current time step, to fix attenuation in a consistent way
-    if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
-      if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-        ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an .and. statement
-        ! because array is_CPML() is unallocated when PML_CONDITIONS is false
-        if (.not. is_CPML(ispec)) then
+    if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN .and. .not. is_CPML(ispec)) then
           ! Keeping in mind, currently we implement a PML derived based on elastic wave equation
           ! for visco-elastic wave simulation. Thus it is not a PML anymore,
           ! because the solution of PML equation derived based on elastic wave equation is not perfectly mathced
           ! with solution of visco-elastic wave equation along the PML interface.
           ! you can seen PML in this case as a sponge layer.
-          ! Due to limited numerical experiment, that PML implementation will work in case Q > 70.
+          ! Based on limited numerical experiments, that PML implementation will work more or less OK anyway if Q > 70.
           do k=1,NGLLZ
             do j=1,NGLLY
               do i=1,NGLLX
@@ -327,19 +323,6 @@ subroutine compute_forces_viscoelastic(iphase, &
               enddo
             enddo
           enddo
-        endif
-      else
-        do k=1,NGLLZ
-          do j=1,NGLLY
-            do i=1,NGLLX
-              iglob = ibool(i,j,k,ispec)
-              dummyx_loc_att(i,j,k) = deltat * veloc(1,iglob)
-              dummyy_loc_att(i,j,k) = deltat * veloc(2,iglob)
-              dummyz_loc_att(i,j,k) = deltat * veloc(3,iglob)
-            enddo
-          enddo
-        enddo
-      endif
     endif
 
     !--------------------------------------------------------------------------------------
@@ -374,27 +357,13 @@ subroutine compute_forces_viscoelastic(iphase, &
         endif
     endif
 
-    if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
-      ! it is noteworthy here that if ATTENUATION == .true., COMPUTE_AND_STORE_STRAIN == .true.
-      if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-        ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an .and. statement
-        ! because array is_CPML() is unallocated when PML_CONDITIONS is false
-        if (.not. is_CPML(ispec)) then
-          call compute_strain_in_parent_element( &
-                       tempx1_att,tempx2_att,tempx3_att,tempx1,tempx2,tempx3, &
-                       tempy1_att,tempy2_att,tempy3_att,tempy1,tempy2,tempy3, &
-                       tempz1_att,tempz2_att,tempz3_att,tempz1,tempz2,tempz3, &
-                       dummyx_loc_att,dummyy_loc_att,dummyz_loc_att, &
-                       hprime_xx,hprime_yy,hprime_zz)
-        endif
-      else
+    if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN .and. .not. is_CPML(ispec)) then
         call compute_strain_in_parent_element( &
                      tempx1_att,tempx2_att,tempx3_att,tempx1,tempx2,tempx3, &
                      tempy1_att,tempy2_att,tempy3_att,tempy1,tempy2,tempy3, &
                      tempz1_att,tempz2_att,tempz3_att,tempz1,tempz2,tempz3, &
                      dummyx_loc_att,dummyy_loc_att,dummyz_loc_att, &
                      hprime_xx,hprime_yy,hprime_zz)
-      endif
     endif
 
     !--------------------------------------------------------------------------------------
@@ -537,10 +506,8 @@ subroutine compute_forces_viscoelastic(iphase, &
 
           if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
             ! temporary variables used for fixing attenuation in a consistent way
-            if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-              ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an .and. statement
-              ! because array is_CPML() is unallocated when PML_CONDITIONS is false
-              if (.not. is_CPML(ispec)) then
+
+              if (.not. is_CPML(ispec)) then ! 333333333333333
                 duxdxl_att = xixl * tempx1_att(i,j,k) + etaxl * tempx2_att(i,j,k) + gammaxl * tempx3_att(i,j,k)
                 duxdyl_att = xiyl * tempx1_att(i,j,k) + etayl * tempx2_att(i,j,k) + gammayl * tempx3_att(i,j,k)
                 duxdzl_att = xizl * tempx1_att(i,j,k) + etazl * tempx2_att(i,j,k) + gammazl * tempx3_att(i,j,k)
@@ -567,35 +534,8 @@ subroutine compute_forces_viscoelastic(iphase, &
                 epsilondev_xy_loc(i,j,k) = 0.5_CUSTOM_REAL * duxdyl_plus_duydxl_att
                 epsilondev_xz_loc(i,j,k) = 0.5_CUSTOM_REAL * duzdxl_plus_duxdzl_att
                 epsilondev_yz_loc(i,j,k) = 0.5_CUSTOM_REAL * duzdyl_plus_duydzl_att
-              endif
-            else
-              duxdxl_att = xixl * tempx1_att(i,j,k) + etaxl * tempx2_att(i,j,k) + gammaxl * tempx3_att(i,j,k)
-              duxdyl_att = xiyl * tempx1_att(i,j,k) + etayl * tempx2_att(i,j,k) + gammayl * tempx3_att(i,j,k)
-              duxdzl_att = xizl * tempx1_att(i,j,k) + etazl * tempx2_att(i,j,k) + gammazl * tempx3_att(i,j,k)
+              endif ! 333333333333333
 
-              duydxl_att = xixl * tempy1_att(i,j,k) + etaxl * tempy2_att(i,j,k) + gammaxl * tempy3_att(i,j,k)
-              duydyl_att = xiyl * tempy1_att(i,j,k) + etayl * tempy2_att(i,j,k) + gammayl * tempy3_att(i,j,k)
-              duydzl_att = xizl * tempy1_att(i,j,k) + etazl * tempy2_att(i,j,k) + gammazl * tempy3_att(i,j,k)
-
-              duzdxl_att = xixl * tempz1_att(i,j,k) + etaxl * tempz2_att(i,j,k) + gammaxl * tempz3_att(i,j,k)
-              duzdyl_att = xiyl * tempz1_att(i,j,k) + etayl * tempz2_att(i,j,k) + gammayl * tempz3_att(i,j,k)
-              duzdzl_att = xizl * tempz1_att(i,j,k) + etazl * tempz2_att(i,j,k) + gammazl * tempz3_att(i,j,k)
-
-              ! precompute some sums to save CPU time
-              duxdyl_plus_duydxl_att = duxdyl_att + duydxl_att
-              duzdxl_plus_duxdzl_att = duzdxl_att + duxdzl_att
-              duzdyl_plus_duydzl_att = duzdyl_att + duydzl_att
-
-              ! compute deviatoric strain
-              templ = ONE_THIRD * (duxdxl_att + duydyl_att + duzdzl_att)
-              if (SIMULATION_TYPE == 3) epsilon_trace_over_3(i,j,k,ispec) = templ
-              epsilondev_trace_loc(i,j,k) = 3._CUSTOM_REAL * templ
-              epsilondev_xx_loc(i,j,k) = duxdxl_att - templ
-              epsilondev_yy_loc(i,j,k) = duydyl_att - templ
-              epsilondev_xy_loc(i,j,k) = 0.5_CUSTOM_REAL * duxdyl_plus_duydxl_att
-              epsilondev_xz_loc(i,j,k) = 0.5_CUSTOM_REAL * duzdxl_plus_duxdzl_att
-              epsilondev_yz_loc(i,j,k) = 0.5_CUSTOM_REAL * duzdyl_plus_duydzl_att
-            endif
           else
             ! computes deviatoric strain attenuation and/or for kernel calculations
             if (COMPUTE_AND_STORE_STRAIN) then
@@ -608,25 +548,15 @@ subroutine compute_forces_viscoelastic(iphase, &
               epsilondev_xz_loc(i,j,k) = 0.5_CUSTOM_REAL * duzdxl_plus_duxdzl
               epsilondev_yz_loc(i,j,k) = 0.5_CUSTOM_REAL * duzdyl_plus_duydzl
             endif
-          endif
+          endif ! 111111111111111111
 
           kappal = kappastore(i,j,k,ispec)
           mul = mustore(i,j,k,ispec)
 
-          ! attenuation
-          if (ATTENUATION) then
-            ! use unrelaxed parameters if attenuation
-            if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-              ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an .and. statement
-              ! because array is_CPML() is unallocated when PML_CONDITIONS is false
-              if (.not. is_CPML(ispec)) then
-                mul  = mul * one_minus_sum_beta(i,j,k,ispec)
-                kappal = kappal * one_minus_sum_beta_kappa(i,j,k,ispec)
-              endif
-            else
-              mul  = mul * one_minus_sum_beta(i,j,k,ispec)
-              kappal = kappal * one_minus_sum_beta_kappa(i,j,k,ispec)
-            endif
+          ! use unrelaxed parameters if attenuation
+          if (ATTENUATION .and. .not. is_CPML(ispec)) then
+            mul  = mul * one_minus_sum_beta(i,j,k,ispec)
+            kappal = kappal * one_minus_sum_beta_kappa(i,j,k,ispec)
           endif
 
           ! full anisotropic case, stress calculations
@@ -777,8 +707,8 @@ subroutine compute_forces_viscoelastic(iphase, &
           endif ! ANISOTROPY
 
           ! subtract memory variables if attenuation
-          if (ATTENUATION) then
-! way 1
+          if (ATTENUATION .and. .not. is_CPML(ispec)) then
+! old way 1
 !             do i_sls = 1,N_SLS
 !               R_xx_val = R_xx(i,j,k,ispec,i_sls)
 !               R_yy_val = R_yy(i,j,k,ispec,i_sls)
@@ -790,14 +720,10 @@ subroutine compute_forces_viscoelastic(iphase, &
 !               sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls)
 !             enddo
 
-! way 2
-! note: this should help compilers to pipeline the code and make better use of the cache;
+! new way 2
+! note: this helps compilers to pipeline the code and make better use of the cache;
 !       depending on compilers, it can further decrease the computation time by ~ 30%.
 !       by default, N_SLS = 3, therefore we take steps of 3
-            if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-              ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an .and. statement
-              ! because array is_CPML() is unallocated when PML_CONDITIONS is false
-              if (.not. is_CPML(ispec)) then
                 if (imodulo_N_SLS >= 1) then
                   do i_sls = 1,imodulo_N_SLS
                     R_trace_val1 = R_trace(i,j,k,ispec,i_sls)
@@ -844,69 +770,10 @@ subroutine compute_forces_viscoelastic(iphase, &
                     sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls+2)
                   enddo
                 endif
-              endif
-            else
-              if (imodulo_N_SLS >= 1) then
-                do i_sls = 1,imodulo_N_SLS
-                  R_trace_val1 = R_trace(i,j,k,ispec,i_sls)
-                  R_xx_val1 = R_xx(i,j,k,ispec,i_sls)
-                  R_yy_val1 = R_yy(i,j,k,ispec,i_sls)
-                  sigma_xx = sigma_xx - R_xx_val1 - R_trace_val1
-                  sigma_yy = sigma_yy - R_yy_val1 - R_trace_val1
-                  sigma_zz = sigma_zz + R_xx_val1 + R_yy_val1 - R_trace_val1
-                  sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls)
-                  sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls)
-                  sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls)
-                enddo
-              endif
-
-              if (N_SLS >= imodulo_N_SLS+1) then
-                do i_sls = imodulo_N_SLS+1,N_SLS,3
-                  R_trace_val1 = R_trace(i,j,k,ispec,i_sls)
-                  R_xx_val1 = R_xx(i,j,k,ispec,i_sls)
-                  R_yy_val1 = R_yy(i,j,k,ispec,i_sls)
-                  sigma_xx = sigma_xx - R_xx_val1 - R_trace_val1
-                  sigma_yy = sigma_yy - R_yy_val1 - R_trace_val1
-                  sigma_zz = sigma_zz + R_xx_val1 + R_yy_val1 - R_trace_val1
-                  sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls)
-                  sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls)
-                  sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls)
-                  R_trace_val2 = R_trace(i,j,k,ispec,i_sls+1)
-                  R_xx_val2 = R_xx(i,j,k,ispec,i_sls+1)
-                  R_yy_val2 = R_yy(i,j,k,ispec,i_sls+1)
-                  sigma_xx = sigma_xx - R_xx_val2 - R_trace_val2
-                  sigma_yy = sigma_yy - R_yy_val2 - R_trace_val2
-                  sigma_zz = sigma_zz + R_xx_val2 + R_yy_val2 - R_trace_val2
-                  sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls+1)
-                  sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls+1)
-                  sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls+1)
-
-                  R_trace_val3 = R_trace(i,j,k,ispec,i_sls+2)
-                  R_xx_val3 = R_xx(i,j,k,ispec,i_sls+2)
-                  R_yy_val3 = R_yy(i,j,k,ispec,i_sls+2)
-                  sigma_xx = sigma_xx - R_xx_val3 - R_trace_val3
-                  sigma_yy = sigma_yy - R_yy_val3 - R_trace_val3
-                  sigma_zz = sigma_zz + R_xx_val3 + R_yy_val3 - R_trace_val3
-                  sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls+2)
-                  sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls+2)
-                  sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls+2)
-                enddo
-              endif
-            endif
 
           endif
 
-!! DK DK comment from DK DK, 22 March 2013, for Jo and Zhinan to debug CPML:
-!! DK DK are you sure about this "if" statement below? because I am surprised to see
-!! DK DK that when PML_CONDITIONS is on then you do not compute the tempx[1,3], tempy[1,3], tempz[1,3] arrays
-!! DK DK (even in non-PML elements!!), even though such arrays are needed below;
-!! DK DK shouldn't there be at least a "if (is_CPML(ispec))" test as well here, or something like that?
-!! ZN ZN The tempx[1,3], tempy[1,3], tempz[1,3] arrays in PML region is computed in pml_compute_memory_variables_elastic
-          if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-            ! do not merge this second line with the first using an .and. statement
-            ! because array is_CPML() is unallocated when PML_CONDITIONS is false
             if (.not. is_CPML(ispec)) then
-
               ! define symmetric components of sigma
               if (.not. MAKE_HOOKE_LAW_WEAKLY_NONLINEAR) then
                 sigma_yx = sigma_xy
@@ -928,29 +795,7 @@ subroutine compute_forces_viscoelastic(iphase, &
               tempz3(i,j,k) = jacobianl * (sigma_xz * gammaxl + sigma_yz * gammayl + sigma_zz * gammazl) ! this goes to accel_z
             endif
 
-          else
-
-            ! define symmetric components of sigma
-            if (.not. MAKE_HOOKE_LAW_WEAKLY_NONLINEAR) then
-              sigma_yx = sigma_xy
-              sigma_zx = sigma_xz
-              sigma_zy = sigma_yz
-            endif
-
-            ! form dot product with test vector, non-symmetric form (which is useful in the case of PML)
-            tempx1(i,j,k) = jacobianl * (sigma_xx * xixl + sigma_yx * xiyl + sigma_zx * xizl) ! this goes to accel_x
-            tempy1(i,j,k) = jacobianl * (sigma_xy * xixl + sigma_yy * xiyl + sigma_zy * xizl) ! this goes to accel_y
-            tempz1(i,j,k) = jacobianl * (sigma_xz * xixl + sigma_yz * xiyl + sigma_zz * xizl) ! this goes to accel_z
-
-            tempx2(i,j,k) = jacobianl * (sigma_xx * etaxl + sigma_yx * etayl + sigma_zx * etazl) ! this goes to accel_x
-            tempy2(i,j,k) = jacobianl * (sigma_xy * etaxl + sigma_yy * etayl + sigma_zy * etazl) ! this goes to accel_y
-            tempz2(i,j,k) = jacobianl * (sigma_xz * etaxl + sigma_yz * etayl + sigma_zz * etazl) ! this goes to accel_z
-
-            tempx3(i,j,k) = jacobianl * (sigma_xx * gammaxl + sigma_yx * gammayl + sigma_zx * gammazl) ! this goes to accel_x
-            tempy3(i,j,k) = jacobianl * (sigma_xy * gammaxl + sigma_yy * gammayl + sigma_zy * gammazl) ! this goes to accel_y
-            tempz3(i,j,k) = jacobianl * (sigma_xz * gammaxl + sigma_yz * gammayl + sigma_zz * gammazl) ! this goes to accel_z
-          endif
-        enddo
+        enddo ! of the triple loop on i,j,k
       enddo
     enddo
 
@@ -1026,32 +871,7 @@ subroutine compute_forces_viscoelastic(iphase, &
     enddo
 
     !  update memory variables based upon the Runge-Kutta scheme
-    if (ATTENUATION) then
-      if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-        ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an .and. statement
-        ! because array is_CPML() is unallocated when PML_CONDITIONS is false
-        if (.not. is_CPML(ispec)) then
-          if (USE_LDDRK) then
-            call compute_element_att_memory_lddrk(ispec,deltat,NSPEC_AB,kappastore,mustore, &
-                   NSPEC_ATTENUATION_AB,factor_common_kappa, &
-                   R_trace,epsilondev_trace_loc, &
-                   NSPEC_ATTENUATION_AB_LDDRK,R_trace_lddrk, &
-                   factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &
-                   R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, &
-                   epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc, &
-                   epsilondev_xz_loc,epsilondev_yz_loc)
-          else
-            ! use Runge-Kutta scheme to march in time
-            call compute_element_att_memory_second_order_rk(ispec,alphaval,betaval,gammaval, &
-                   NSPEC_AB,kappastore,mustore,NSPEC_ATTENUATION_AB,factor_common_kappa, &
-                   R_trace,epsilondev_trace,epsilondev_trace_loc, &
-                   factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &
-                   NSPEC_STRAIN_ONLY,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
-                   epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,epsilondev_xz_loc,epsilondev_yz_loc)
-
-          endif
-        endif
-      else
+    if (ATTENUATION .and. .not. is_CPML(ispec)) then
         ! use Runge-Kutta scheme to march in time
         if (USE_LDDRK) then
           call compute_element_att_memory_lddrk(ispec,deltat,NSPEC_AB,kappastore,mustore, &
@@ -1071,9 +891,7 @@ subroutine compute_forces_viscoelastic(iphase, &
                  NSPEC_STRAIN_ONLY,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
                  epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,epsilondev_xz_loc,epsilondev_yz_loc)
         endif
-      endif
-
-    endif  !  end of if attenuation
+    endif
 
       if (is_CPML(ispec) .and. .not. backward_simulation) then
         ! In backward_simulation involved in SIMULATION_TYPE == 3,

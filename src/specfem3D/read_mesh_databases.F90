@@ -376,8 +376,8 @@
 ! make sure there are no PMLs by default,
 ! and then below if NSPEC_CPML > 0 we will read the real flags for this mesh from the disk
   is_CPML(:) = .false.
-
   NSPEC_CPML = 0
+
   if (PML_CONDITIONS) then
     if (I_should_read_the_database) then
       read(27) NSPEC_CPML
