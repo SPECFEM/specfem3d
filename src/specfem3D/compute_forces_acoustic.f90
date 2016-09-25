@@ -42,9 +42,8 @@
 ! note that pressure is defined as:
 !     p = - Chi_dot_dot
 
-  use specfem_par, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,PML_CONDITIONS
-  use pml_par, only: is_CPML, spec_to_CPML, NSPEC_CPML, &
-                     potential_dot_dot_acoustic_CPML,rmemory_dpotential_dxl,rmemory_dpotential_dyl, &
+  use specfem_par, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
+  use pml_par, only: is_CPML, spec_to_CPML, potential_dot_dot_acoustic_CPML,rmemory_dpotential_dxl,rmemory_dpotential_dyl, &
                      rmemory_dpotential_dzl,rmemory_potential_acoustic, &
                      PML_potential_acoustic_old,PML_potential_acoustic_new
 
