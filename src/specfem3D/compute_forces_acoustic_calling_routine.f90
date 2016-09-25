@@ -51,8 +51,7 @@
 ! not work because it would be discontinuous at such an interface and would
 ! therefore not be consistent with the basis functions.
 
-
-subroutine compute_forces_acoustic()
+subroutine compute_forces_acoustic_calling()
 
   use specfem_par
   use specfem_par_acoustic
@@ -285,7 +284,7 @@ subroutine compute_forces_acoustic()
     endif
   endif
 
-end subroutine compute_forces_acoustic
+end subroutine compute_forces_acoustic_calling
 
 !
 !=====================================================================
@@ -317,7 +316,7 @@ end subroutine compute_forces_acoustic
 ! therefore not be consistent with the basis functions.
 
 
-subroutine compute_forces_acoustic_backward()
+subroutine compute_forces_acoustic_backward_calling()
 
   use specfem_par
   use specfem_par_acoustic
@@ -452,13 +451,13 @@ subroutine compute_forces_acoustic_backward()
                       ibool,free_surface_ijk,free_surface_ispec, &
                       num_free_surface_faces,ispec_is_acoustic)
 
-end subroutine compute_forces_acoustic_backward
+end subroutine compute_forces_acoustic_backward_calling
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine compute_forces_acoustic_GPU()
+subroutine compute_forces_acoustic_GPU_calling()
 
   use specfem_par
   use specfem_par_acoustic
@@ -611,7 +610,7 @@ subroutine compute_forces_acoustic_GPU()
 ! enforces free surface (zeroes potentials at free surface)
   call acoustic_enforce_free_surf_cuda(Mesh_pointer,STACEY_INSTEAD_OF_FREE_SURFACE)
 
-end subroutine compute_forces_acoustic_GPU
+end subroutine compute_forces_acoustic_GPU_calling
 
 !
 !-------------------------------------------------------------------------------------------------

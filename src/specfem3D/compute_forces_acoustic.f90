@@ -249,11 +249,11 @@
         do i = 1,NGLLX
           ! along x,y,z direction
           ! and assemble the contributions
-          !!! can merge these loops because NGLLX = NGLLY = NGLLZ
           temp1l = 0._CUSTOM_REAL
           temp2l = 0._CUSTOM_REAL
           temp3l = 0._CUSTOM_REAL
 
+          ! can merge these loops because NGLLX = NGLLY = NGLLZ
           do l=1,NGLLX
             temp1l = temp1l + temp1(l,j,k) * hprimewgll_xx(l,i)
             temp2l = temp2l + temp2(i,l,k) * hprimewgll_yy(l,j)

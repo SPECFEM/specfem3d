@@ -27,7 +27,7 @@
 
 ! poroelastic solver
 
-subroutine compute_forces_poroelastic()
+subroutine compute_forces_poroelastic_calling()
 
   use specfem_par
   use specfem_par_acoustic
@@ -329,8 +329,7 @@ subroutine compute_forces_poroelastic()
                         deltatover2)
 
 
-end subroutine compute_forces_poroelastic
-
+end subroutine compute_forces_poroelastic_calling
 
 !-----------------------------------------------------------------------------------------------------------------
 

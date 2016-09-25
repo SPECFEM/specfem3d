@@ -27,7 +27,7 @@
 
 ! elastic solver
 
-subroutine compute_forces_viscoelastic()
+subroutine compute_forces_viscoelastic_calling()
 
   use specfem_par
   use specfem_par_acoustic
@@ -281,7 +281,7 @@ subroutine compute_forces_viscoelastic()
     endif
   endif
 
-end subroutine compute_forces_viscoelastic
+end subroutine compute_forces_viscoelastic_calling
 
 !
 !=====================================================================
@@ -289,7 +289,7 @@ end subroutine compute_forces_viscoelastic
 
 ! elastic solver for backward/reconstructed wavefields
 
-subroutine compute_forces_viscoelastic_backward()
+subroutine compute_forces_viscoelastic_backward_calling()
 
   use specfem_par
   use specfem_par_acoustic
@@ -448,7 +448,7 @@ subroutine compute_forces_viscoelastic_backward()
   ! adjoint simulations
   b_veloc(:,:) = b_veloc(:,:) + b_deltatover2*b_accel(:,:)
 
-end subroutine compute_forces_viscoelastic_backward
+end subroutine compute_forces_viscoelastic_backward_calling
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -456,7 +456,7 @@ end subroutine compute_forces_viscoelastic_backward
 
 ! elastic solver
 
-subroutine compute_forces_viscoelastic_GPU()
+subroutine compute_forces_viscoelastic_GPU_calling()
 
   use specfem_par
   use specfem_par_acoustic
@@ -680,5 +680,5 @@ subroutine compute_forces_viscoelastic_GPU()
     call kernel_3_b_cuda(Mesh_pointer,deltatover2,b_deltatover2)
   endif
 
-end subroutine compute_forces_viscoelastic_GPU
+end subroutine compute_forces_viscoelastic_GPU_calling
 

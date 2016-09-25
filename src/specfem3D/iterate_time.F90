@@ -205,45 +205,45 @@
         if (ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION) then
           ! coupled acoustic-elastic simulations
           ! 1. elastic domain w/ adjoint wavefields
-          call compute_forces_viscoelastic()
+          call compute_forces_viscoelastic_calling()
           ! 2. acoustic domain w/ adjoint wavefields
-          call compute_forces_acoustic()
+          call compute_forces_acoustic_calling()
         else
           ! non-coupled simulations
           ! (purely acoustic or elastic)
-          if (ACOUSTIC_SIMULATION) call compute_forces_acoustic()
-          if (ELASTIC_SIMULATION) call compute_forces_viscoelastic()
+          if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_calling()
+          if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_calling()
         endif
 
         ! backward/reconstructed wavefields
         ! acoustic solver
         ! (needs to be done after elastic one)
-        if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_backward()
+        if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_backward_calling()
         ! elastic solver
         ! (needs to be done first, before poroelastic one)
-        if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_backward()
+        if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_backward_calling()
 
       else
         ! forward simulations
         do istage = 1, NSTAGE_TIME_SCHEME
           if (USE_LDDRK) call update_displ_lddrk()
           ! 1. acoustic domain
-          if (ACOUSTIC_SIMULATION) call compute_forces_acoustic()
+          if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_calling()
           ! 2. elastic domain
-          if (ELASTIC_SIMULATION) call compute_forces_viscoelastic()
+          if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_calling()
         enddo
       endif
 
       ! poroelastic solver
-      if (POROELASTIC_SIMULATION) call compute_forces_poroelastic()
+      if (POROELASTIC_SIMULATION) call compute_forces_poroelastic_calling()
 
     else
       ! wavefields on GPU
       ! acoustic solver
-      if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_GPU()
+      if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_GPU_calling()
       ! elastic solver
       ! (needs to be done first, before poroelastic one)
-      if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_GPU()
+      if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_GPU_calling()
     endif
 
     ! restores last time snapshot saved for backward/reconstruction of wavefields
