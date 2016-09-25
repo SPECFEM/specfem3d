@@ -167,10 +167,20 @@ module specfem_par
   double precision, dimension(:), allocatable :: comp_dir_vect_source_N
   double precision, dimension(:), allocatable :: comp_dir_vect_source_Z_UP
 
+! arrays for elemental computations in compute_forces()
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: chi_elem
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: temp1,temp2,temp3,temp4
 
-! parameters read from mesh parameter file
-!  integer :: NPROC_XI,NPROC_ETA
-!  double precision :: LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
+! arrays for elemental computations in compute_forces() for PML elements
+  ! derivatives of potential with respect to x, y and z
+  ! in computation potential_acoustic at "n" time step is used
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl
+  ! in computation of PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old
+  ! we replace potential_acoustic with potential_acoustic_old
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old
+  ! we replace potential_acoustic at "n" time step with
+  ! we replace potential_acoustic with potential_acoustic_old with potential_acoustic_new
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new
 
   character(len=MAX_STRING_LEN) :: prname,dsmname
 
