@@ -283,13 +283,10 @@ subroutine compute_forces_viscoelastic(iphase, &
       enddo
     endif
 
-    if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-      ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an .and. statement
-      ! because array is_CPML() is unallocated when PML_CONDITIONS is false
-      if (is_CPML(ispec)) then
+    if (is_CPML(ispec)) then
         ! In backward_simulation involved in SIMULATION_TYPE == 3,
         ! we only use the stored value on edge of PML interface.
-        ! Thus no compuation need to do in PML region in this case.
+        ! Thus no computation needs to be done in the PML region in this case.
         if (.not. backward_simulation) then
           ispec_CPML = spec_to_CPML(ispec)
           do k=1,NGLLZ
@@ -305,7 +302,6 @@ subroutine compute_forces_viscoelastic(iphase, &
             enddo
           enddo
         endif
-      endif
     endif
 
     ! use first order Taylor expansion of displacement for local storage of stresses
@@ -360,10 +356,7 @@ subroutine compute_forces_viscoelastic(iphase, &
                  dummyx_loc,dummyy_loc,dummyz_loc, &
                  hprime_xx,hprime_yy,hprime_zz)
 
-    if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-      ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an .and. statement
-      ! because array is_CPML() is unallocated when PML_CONDITIONS is false
-      if (is_CPML(ispec)) then
+    if (is_CPML(ispec)) then
         if (.not. backward_simulation) then
           call compute_strain_in_parent_element( &
                        tempx1_att,tempx2_att,tempx3_att,zero_array,zero_array,zero_array, &
@@ -379,7 +372,6 @@ subroutine compute_forces_viscoelastic(iphase, &
                        dummyx_loc_att_new,dummyy_loc_att_new,dummyz_loc_att_new, &
                        hprime_xx,hprime_yy,hprime_zz)
         endif
-      endif
     endif
 
     if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
@@ -437,13 +429,10 @@ subroutine compute_forces_viscoelastic(iphase, &
           duzdzl = xizl * tempz1(i,j,k) + etazl * tempz2(i,j,k) + gammazl * tempz3(i,j,k)
 
           ! stores derivatives of ux, uy and uz with respect to x, y and z
-          if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-          ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an .and. statement
-          ! because array is_CPML() is unallocated when PML_CONDITIONS is false
-            if (is_CPML(ispec)) then
+          if (is_CPML(ispec)) then
               ! In backward_simulation involved in SIMULATION_TYPE == 3,
               ! we only use the stored value on edge of PML interface.
-              ! Thus no compuation need to do in PML region in this case.
+              ! Thus no computation needs to be done in the PML region in this case.
               if (.not. backward_simulation) then
                 PML_dux_dxl(i,j,k) = duxdxl
                 PML_dux_dyl(i,j,k) = duxdyl
@@ -511,7 +500,6 @@ subroutine compute_forces_viscoelastic(iphase, &
                 epsilondev_yz_loc(i,j,k) = 0.5_CUSTOM_REAL * (duzdyl + duydzl)
               endif
 
-            endif
           endif
 
           ! save strain on the Moho boundary
@@ -966,14 +954,10 @@ subroutine compute_forces_viscoelastic(iphase, &
       enddo
     enddo
 
-    if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-      ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an .and. statement
-      ! because array is_CPML() is unallocated when PML_CONDITIONS is false
-      if (is_CPML(ispec)) then
+    if (is_CPML(ispec) .and. .not. backward_simulation) then
         ! In backward_simulation involved in SIMULATION_TYPE == 3,
         ! we only use the stored value on edge of PML interface.
-        ! Thus no compuation need to do in PML region in this case.
-        if (.not. backward_simulation) then
+        ! Thus no computation needs to be done in the PML region in this case.
           ! sets C-PML elastic memory variables to compute stress sigma and form dot product with test vector
           ispec_CPML = spec_to_CPML(ispec)
           call pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,tempz1, &
@@ -987,8 +971,6 @@ subroutine compute_forces_viscoelastic(iphase, &
 
           ! calculates contribution from each C-PML element to update acceleration
           call pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,rmemory_displ_elastic)
-        endif
-      endif
     endif
 
     ! second double-loop over GLL to compute all the terms
@@ -1008,20 +990,17 @@ subroutine compute_forces_viscoelastic(iphase, &
           newtempy3(i,j,k) = 0._CUSTOM_REAL
           newtempz3(i,j,k) = 0._CUSTOM_REAL
 
+          ! we can merge these loops because NGLLX = NGLLY = NGLLZ
           do l=1,NGLLX
             fac1 = hprimewgll_xx(l,i)
             newtempx1(i,j,k) = newtempx1(i,j,k) + tempx1(l,j,k) * fac1
             newtempy1(i,j,k) = newtempy1(i,j,k) + tempy1(l,j,k) * fac1
             newtempz1(i,j,k) = newtempz1(i,j,k) + tempz1(l,j,k) * fac1
 
-            !!! can merge these loops because NGLLX = NGLLY = NGLLZ
-
             fac2 = hprimewgll_yy(l,j)
             newtempx2(i,j,k) = newtempx2(i,j,k) + tempx2(i,l,k) * fac2
             newtempy2(i,j,k) = newtempy2(i,j,k) + tempy2(i,l,k) * fac2
             newtempz2(i,j,k) = newtempz2(i,j,k) + tempz2(i,l,k) * fac2
-
-            !!! can merge these loops because NGLLX = NGLLY = NGLLZ
 
             fac3 = hprimewgll_zz(l,k)
             newtempx3(i,j,k) = newtempx3(i,j,k) + tempx3(i,j,l) * fac3
@@ -1096,14 +1075,10 @@ subroutine compute_forces_viscoelastic(iphase, &
 
     endif  !  end of if attenuation
 
-    if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-      ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an .and. statement
-      ! because array is_CPML() is unallocated when PML_CONDITIONS is false
-      if (is_CPML(ispec)) then
+      if (is_CPML(ispec) .and. .not. backward_simulation) then
         ! In backward_simulation involved in SIMULATION_TYPE == 3,
         ! we only use the stored value on edge of PML interface.
-        ! Thus no compuation need to do in PML region in this case.
-        if (.not. backward_simulation) then
+        ! Thus no computation needs to be done in the PML region in this case.
           do k = 1,NGLLZ
             do j = 1,NGLLY
               do i = 1,NGLLX
@@ -1114,9 +1089,7 @@ subroutine compute_forces_viscoelastic(iphase, &
               enddo
             enddo
           enddo
-        endif
       endif
-    endif
 
     ! save deviatoric strain for Runge-Kutta scheme
     if (COMPUTE_AND_STORE_STRAIN) then
@@ -1178,20 +1151,17 @@ subroutine compute_strain_in_parent_element(tempx1_att,tempx2_att,tempx3_att,tem
     do j=1,NGLLY
       do i=1,NGLLX
 
+        ! we can merge these loops because NGLLX = NGLLY = NGLLZ
         do l=1,NGLLX
           hp1 = hprime_xx(i,l)
           tempx1_att(i,j,k) = tempx1_att(i,j,k) + dummyx_loc(l,j,k) * hp1
           tempy1_att(i,j,k) = tempy1_att(i,j,k) + dummyy_loc(l,j,k) * hp1
           tempz1_att(i,j,k) = tempz1_att(i,j,k) + dummyz_loc(l,j,k) * hp1
 
-          !!! can merge these loops because NGLLX = NGLLY = NGLLZ
-
           hp2 = hprime_yy(j,l)
           tempx2_att(i,j,k) = tempx2_att(i,j,k) + dummyx_loc(i,l,k) * hp2
           tempy2_att(i,j,k) = tempy2_att(i,j,k) + dummyy_loc(i,l,k) * hp2
           tempz2_att(i,j,k) = tempz2_att(i,j,k) + dummyz_loc(i,l,k) * hp2
-
-          !!! can merge these loops because NGLLX = NGLLY = NGLLZ
 
           hp3 = hprime_zz(k,l)
           tempx3_att(i,j,k) = tempx3_att(i,j,k) + dummyx_loc(i,j,l) * hp3

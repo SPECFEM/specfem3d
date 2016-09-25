@@ -203,6 +203,7 @@
           tempz3lw = 0.
 
           ! first double loop over GLL points to compute and store gradients
+          ! we can merge these loops because NGLLX = NGLLY = NGLLZ
           do l = 1,NGLLX
             hp1 = hprime_xx(i,l)
             iglob = ibool(l,j,k,ispec)
@@ -213,8 +214,6 @@
             tempy1lw = tempy1lw + displw_poroelastic(2,iglob)*hp1
             tempz1lw = tempz1lw + displw_poroelastic(3,iglob)*hp1
 
-            !!! can merge these loops because NGLLX = NGLLY = NGLLZ
-
             hp2 = hprime_yy(j,l)
             iglob = ibool(i,l,k,ispec)
             tempx2ls = tempx2ls + displs_poroelastic(1,iglob)*hp2
@@ -224,7 +223,6 @@
             tempy2lw = tempy2lw + displw_poroelastic(2,iglob)*hp2
             tempz2lw = tempz2lw + displw_poroelastic(3,iglob)*hp2
 
-            !!! can merge these loops because NGLLX = NGLLY = NGLLZ
             hp3 = hprime_zz(k,l)
             iglob = ibool(i,j,l,ispec)
             tempx3ls = tempx3ls + displs_poroelastic(1,iglob)*hp3
@@ -383,6 +381,7 @@
           tempy3lw = 0.
           tempz3lw = 0.
 
+          ! we can merge these loops because NGLLX = NGLLY = NGLLZ
           do l=1,NGLLX
             fac1 = hprimewgll_xx(l,i)
             tempx1ls = tempx1ls + tempx1(l,j,k)*fac1
@@ -392,8 +391,6 @@
             tempy1lw = tempy1lw + tempy1p(l,j,k)*fac1
             tempz1lw = tempz1lw + tempz1p(l,j,k)*fac1
 
-            !!! can merge these loops because NGLLX = NGLLY = NGLLZ
-
             fac2 = hprimewgll_yy(l,j)
             tempx2ls = tempx2ls + tempx2(i,l,k)*fac2
             tempy2ls = tempy2ls + tempy2(i,l,k)*fac2
@@ -401,8 +398,6 @@
             tempx2lw = tempx2lw + tempx2p(i,l,k)*fac2
             tempy2lw = tempy2lw + tempy2p(i,l,k)*fac2
             tempz2lw = tempz2lw + tempz2p(i,l,k)*fac2
-
-            !!! can merge these loops because NGLLX = NGLLY = NGLLZ
 
             fac3 = hprimewgll_zz(l,k)
             tempx3ls = tempx3ls + tempx3(i,j,l)*fac3

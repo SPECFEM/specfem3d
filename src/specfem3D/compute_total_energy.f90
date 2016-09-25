@@ -76,11 +76,7 @@
 
 ! if element is a CPML then do not compute energy in it, since it is non physical;
 ! thus, we compute energy in the main domain only, without absorbing elements
-    if (PML_CONDITIONS) then
-      ! do not merge this second line with the first using an .and. statement
-      ! because array is_CPML() is unallocated when PML_CONDITIONS is false
-      if (is_CPML(ispec)) cycle
-    endif
+    if (is_CPML(ispec)) cycle
 
     !---
     !--- elastic spectral element
@@ -116,20 +112,17 @@
             tempz2(i,j,k) = 0._CUSTOM_REAL
             tempz3(i,j,k) = 0._CUSTOM_REAL
 
+            ! we can merge these loops because NGLLX = NGLLY = NGLLZ
             do l=1,NGLLX
               hp1 = hprime_xx(i,l)
               tempx1(i,j,k) = tempx1(i,j,k) + dummyx_loc(l,j,k)*hp1
               tempy1(i,j,k) = tempy1(i,j,k) + dummyy_loc(l,j,k)*hp1
               tempz1(i,j,k) = tempz1(i,j,k) + dummyz_loc(l,j,k)*hp1
 
-              !!! can merge these loops because NGLLX = NGLLY = NGLLZ
-
               hp2 = hprime_yy(j,l)
               tempx2(i,j,k) = tempx2(i,j,k) + dummyx_loc(i,l,k)*hp2
               tempy2(i,j,k) = tempy2(i,j,k) + dummyy_loc(i,l,k)*hp2
               tempz2(i,j,k) = tempz2(i,j,k) + dummyz_loc(i,l,k)*hp2
-
-              !!! can merge these loops because NGLLX = NGLLY = NGLLZ
 
               hp3 = hprime_zz(k,l)
               tempx3(i,j,k) = tempx3(i,j,k) + dummyx_loc(i,j,l)*hp3
@@ -255,16 +248,13 @@
             tempx2(i,j,k) = 0._CUSTOM_REAL
             tempx3(i,j,k) = 0._CUSTOM_REAL
 
+            ! we can merge these loops because NGLLX = NGLLY = NGLLZ
             do l=1,NGLLX
               hp1 = hprime_xx(i,l)
               tempx1(i,j,k) = tempx1(i,j,k) + dummyx_loc(l,j,k)*hp1
 
-              !!! can merge these loops because NGLLX = NGLLY = NGLLZ
-
               hp2 = hprime_yy(j,l)
               tempx2(i,j,k) = tempx2(i,j,k) + dummyx_loc(i,l,k)*hp2
-
-              !!! can merge these loops because NGLLX = NGLLY = NGLLZ
 
               hp3 = hprime_zz(k,l)
               tempx3(i,j,k) = tempx3(i,j,k) + dummyx_loc(i,j,l)*hp3

@@ -176,6 +176,7 @@
       tempz2l = 0.
       tempz3l = 0.
 
+      ! we can merge these loops because NGLLX = NGLLY = NGLLZ
       do l=1,NGLLX
         hp1 = hprime_xx(i,l)
         iglob = ibool(l,j,k,ispec_el)
@@ -183,14 +184,12 @@
         tempy1l = tempy1l + displ(2,iglob)*hp1
         tempz1l = tempz1l + displ(3,iglob)*hp1
 
-        !!! can merge these loops because NGLLX = NGLLY = NGLLZ
         hp2 = hprime_yy(j,l)
         iglob = ibool(i,l,k,ispec_el)
         tempx2l = tempx2l + displ(1,iglob)*hp2
         tempy2l = tempy2l + displ(2,iglob)*hp2
         tempz2l = tempz2l + displ(3,iglob)*hp2
 
-        !!! can merge these loops because NGLLX = NGLLY = NGLLZ
         hp3 = hprime_zz(k,l)
         iglob = ibool(i,j,l,ispec_el)
         tempx3l = tempx3l + displ(1,iglob)*hp3
@@ -349,6 +348,7 @@
       tempz3lw = 0.
 
       ! first double loop over GLL points to compute and store gradients
+      ! we can merge these loops because NGLLX = NGLLY = NGLLZ
       do l = 1,NGLLX
         hp1 = hprime_xx(i,l)
         iglob = ibool(l,j,k,ispec_po)
@@ -368,8 +368,6 @@
           iglob = NSPEC_ADJOINT
         endif ! adjoint
 
-        !!! can merge these loops because NGLLX = NGLLY = NGLLZ
-
         hp2 = hprime_yy(j,l)
         iglob = ibool(i,l,k,ispec_po)
         tempx2ls = tempx2ls + displs_poroelastic(1,iglob)*hp2
@@ -381,8 +379,6 @@
         ! adjoint simulations
         if (SIMULATION_TYPE == 3) then
         endif ! adjoint
-
-        !!! can merge these loops because NGLLX = NGLLY = NGLLZ
 
         hp3 = hprime_zz(k,l)
         iglob = ibool(i,j,l,ispec_po)

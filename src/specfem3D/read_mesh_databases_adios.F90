@@ -778,15 +778,15 @@ subroutine read_mesh_databases_adios()
   endif
 
   ! C-PML absorbing boundary conditions
+  ! we allocate this array even when PMLs are absent because we need it in logical tests in "if" statements
+  allocate(is_CPML(NSPEC_AB),stat=ier)
+  if (ier /= 0) stop 'error allocating array is_CPML'
+
+  ! make sure there are no PMLs by default,
+  ! and then below if NSPEC_CPML > 0 we will read the real flags for this mesh from the disk
+  is_CPML(:) = .false.
+
   if (PML_CONDITIONS) then
-    allocate(is_CPML(NSPEC_AB),stat=ier)
-    if (ier /= 0) stop 'error allocating array is_CPML'
-
-    ! make sure there are no PMLs by default,
-    ! and then below if NSPEC_CPML > 0 we will need the real flags
-    ! for this mesh from the disk
-    is_CPML(:) = .false.
-
     if (NSPEC_CPML > 0) then
       allocate(CPML_regions(NSPEC_CPML),stat=ier)
       if (ier /= 0) stop 'error allocating array CPML_regions'
@@ -822,10 +822,6 @@ subroutine read_mesh_databases_adios()
         endif
       endif
     endif
-  else
-    ! allocate with a dummy size of zero just to be able to use this array
-    ! as argument in subroutine calls
-    allocate(is_CPML(0),stat=ier)
   endif
 
   ! absorbing boundary surface
