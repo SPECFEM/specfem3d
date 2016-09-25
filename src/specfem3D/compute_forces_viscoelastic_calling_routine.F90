@@ -57,7 +57,7 @@ subroutine compute_forces_viscoelastic()
   endif
 
 
-! distinguishes two runs: for points on MPI interfaces, and points within the partitions
+! distinguishes two runs: for elements in contact with MPI interfaces, and elements within the partitions
   do iphase = 1,2
 
 ! elastic term
@@ -307,7 +307,7 @@ subroutine compute_forces_viscoelastic_backward()
   if (SIMULATION_TYPE /= 3) &
     call exit_MPI(myrank,'error calling compute_forces_viscoelastic_backward() with wrong SIMULATION_TYPE')
 
-  ! distinguishes two runs: for points on MPI interfaces, and points within the partitions
+  ! distinguishes two runs: for elements in contact with MPI interfaces, and elements within the partitions
   do iphase = 1,2
 
 ! elastic term
@@ -471,10 +471,9 @@ subroutine compute_forces_viscoelastic_GPU()
   integer:: iphase
 
   ! check
-  if (PML_CONDITIONS) &
-    call exit_MPI(myrank,'PML conditions not yet implemented for routine compute_forces_viscoelastic_GPU()')
+  if (PML_CONDITIONS) call exit_MPI(myrank,'PML conditions not yet implemented on GPUs')
 
-  ! distinguishes two runs: for points on MPI interfaces, and points within the partitions
+  ! distinguishes two runs: for elements in contact with MPI interfaces, and elements within the partitions
   do iphase = 1,2
 
     ! elastic term

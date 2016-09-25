@@ -38,7 +38,7 @@ subroutine compute_forces_poroelastic()
 
   integer:: iphase
 
-! distinguishes two runs: for points on MPI interfaces, and points within the partitions
+! distinguishes two runs: for elements in contact with MPI interfaces, and elements within the partitions
   do iphase = 1,2
 
     if (.not. GPU_MODE) then

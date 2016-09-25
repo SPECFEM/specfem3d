@@ -70,6 +70,9 @@ subroutine compute_forces_acoustic()
   !         iphase = 2 is for computing inner elements
   integer :: iphase
 
+  ! check
+  if (PML_CONDITIONS) call exit_MPI(myrank,'PML conditions not yet implemented on GPUs')
+
   ! enforces free surface (zeroes potentials at free surface)
   call acoustic_enforce_free_surface(NSPEC_AB,NGLOB_AB,STACEY_INSTEAD_OF_FREE_SURFACE, &
                         BOTTOM_FREE_SURFACE,potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
@@ -83,7 +86,7 @@ subroutine compute_forces_acoustic()
                         num_free_surface_faces,ispec_is_acoustic)
   endif
 
-  ! distinguishes two runs: for elements on MPI interfaces, and elements within the partitions
+  ! distinguishes two runs: for elements in contact with MPI interfaces, and elements within the partitions
   do iphase = 1,2
 
     ! acoustic pressure term
