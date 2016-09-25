@@ -250,11 +250,7 @@ subroutine compute_forces_viscoelastic(iphase, &
 
       eta = Kelvin_Voigt_eta(ispec)
 
-      if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-        if (is_CPML(ispec) .and. eta /= 0._CUSTOM_REAL) then
-          stop 'you cannot put fault in PML region'
-        endif
-      endif
+      if (is_CPML(ispec) .and. eta /= 0._CUSTOM_REAL) stop 'you cannot put a fault inside a PML layer'
 
       do k=1,NGLLZ
         do j=1,NGLLY
@@ -754,12 +750,9 @@ subroutine compute_forces_viscoelastic(iphase, &
 
           ! sum contributions from each element to the global mesh using indirect addressing
           iglob = ibool(i,j,k,ispec)
-          accel(1,iglob) = accel(1,iglob) - fac1 * newtempx1(i,j,k) - &
-                                fac2 * newtempx2(i,j,k) - fac3 * newtempx3(i,j,k)
-          accel(2,iglob) = accel(2,iglob) - fac1 * newtempy1(i,j,k) - &
-                                fac2 * newtempy2(i,j,k) - fac3 * newtempy3(i,j,k)
-          accel(3,iglob) = accel(3,iglob) - fac1 * newtempz1(i,j,k) - &
-                                fac2 * newtempz2(i,j,k) - fac3 * newtempz3(i,j,k)
+          accel(1,iglob) = accel(1,iglob) - (fac1 * newtempx1(i,j,k) + fac2 * newtempx2(i,j,k) + fac3 * newtempx3(i,j,k))
+          accel(2,iglob) = accel(2,iglob) - (fac1 * newtempy1(i,j,k) + fac2 * newtempy2(i,j,k) + fac3 * newtempy3(i,j,k))
+          accel(3,iglob) = accel(3,iglob) - (fac1 * newtempz1(i,j,k) + fac2 * newtempz2(i,j,k) + fac3 * newtempz3(i,j,k))
 
         enddo
       enddo
