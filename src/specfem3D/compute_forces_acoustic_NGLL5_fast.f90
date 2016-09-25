@@ -27,7 +27,7 @@
 
 ! for acoustic solver
 
-  subroutine compute_forces_acoustic(iphase,NSPEC_AB,NGLOB_AB, &
+  subroutine compute_forces_acoustic_NGLL5_fast(iphase,NSPEC_AB,NGLOB_AB, &
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
@@ -144,16 +144,23 @@
 
           ! derivative along x, y, z
           ! first double loop over GLL points to compute and store gradients
-          temp1l = 0._CUSTOM_REAL
-          temp2l = 0._CUSTOM_REAL
-          temp3l = 0._CUSTOM_REAL
+          temp1l = chi_elem(1,j,k)*hprime_xx(i,1) + &
+                   chi_elem(2,j,k)*hprime_xx(i,2) + &
+                   chi_elem(3,j,k)*hprime_xx(i,3) + &
+                   chi_elem(4,j,k)*hprime_xx(i,4) + &
+                   chi_elem(5,j,k)*hprime_xx(i,5)
 
-          ! we can merge the loops because NGLLX == NGLLY == NGLLZ
-          do l = 1,NGLLX
-            temp1l = temp1l + chi_elem(l,j,k)*hprime_xx(i,l)
-            temp2l = temp2l + chi_elem(i,l,k)*hprime_yy(j,l)
-            temp3l = temp3l + chi_elem(i,j,l)*hprime_zz(k,l)
-          enddo
+          temp2l = chi_elem(i,1,k)*hprime_yy(j,1) + &
+                   chi_elem(i,2,k)*hprime_yy(j,2) + &
+                   chi_elem(i,3,k)*hprime_yy(j,3) + &
+                   chi_elem(i,4,k)*hprime_yy(j,4) + &
+                   chi_elem(i,5,k)*hprime_yy(j,5)
+
+          temp3l = chi_elem(i,j,1)*hprime_zz(k,1) + &
+                   chi_elem(i,j,2)*hprime_zz(k,2) + &
+                   chi_elem(i,j,3)*hprime_zz(k,3) + &
+                   chi_elem(i,j,4)*hprime_zz(k,4) + &
+                   chi_elem(i,j,5)*hprime_zz(k,5)
 
               temp1l_old = 0._CUSTOM_REAL
               temp2l_old = 0._CUSTOM_REAL
@@ -234,16 +241,23 @@
 
           ! derivative along x, y, z
           ! first double loop over GLL points to compute and store gradients
-          temp1l = 0._CUSTOM_REAL
-          temp2l = 0._CUSTOM_REAL
-          temp3l = 0._CUSTOM_REAL
+          temp1l = chi_elem(1,j,k)*hprime_xx(i,1) + &
+                   chi_elem(2,j,k)*hprime_xx(i,2) + &
+                   chi_elem(3,j,k)*hprime_xx(i,3) + &
+                   chi_elem(4,j,k)*hprime_xx(i,4) + &
+                   chi_elem(5,j,k)*hprime_xx(i,5)
 
-          ! we can merge the loops because NGLLX == NGLLY == NGLLZ
-          do l = 1,NGLLX
-            temp1l = temp1l + chi_elem(l,j,k)*hprime_xx(i,l)
-            temp2l = temp2l + chi_elem(i,l,k)*hprime_yy(j,l)
-            temp3l = temp3l + chi_elem(i,j,l)*hprime_zz(k,l)
-          enddo
+          temp2l = chi_elem(i,1,k)*hprime_yy(j,1) + &
+                   chi_elem(i,2,k)*hprime_yy(j,2) + &
+                   chi_elem(i,3,k)*hprime_yy(j,3) + &
+                   chi_elem(i,4,k)*hprime_yy(j,4) + &
+                   chi_elem(i,5,k)*hprime_yy(j,5)
+
+          temp3l = chi_elem(i,j,1)*hprime_zz(k,1) + &
+                   chi_elem(i,j,2)*hprime_zz(k,2) + &
+                   chi_elem(i,j,3)*hprime_zz(k,3) + &
+                   chi_elem(i,j,4)*hprime_zz(k,4) + &
+                   chi_elem(i,j,5)*hprime_zz(k,5)
 
           ! get derivatives of potential with respect to x, y and z
           xixl = xix(i,j,k,ispec)
@@ -304,16 +318,24 @@
     do k = 1,NGLLZ
       do j = 1,NGLLY
         do i = 1,NGLLX
-          temp1l = 0._CUSTOM_REAL
-          temp2l = 0._CUSTOM_REAL
-          temp3l = 0._CUSTOM_REAL
 
-          ! we can merge these loops because NGLLX = NGLLY = NGLLZ
-          do l=1,NGLLX
-            temp1l = temp1l + temp1(l,j,k) * hprimewgll_xx(l,i)
-            temp2l = temp2l + temp2(i,l,k) * hprimewgll_yy(l,j)
-            temp3l = temp3l + temp3(i,j,l) * hprimewgll_zz(l,k)
-          enddo
+          temp1l = temp1(1,j,k) * hprimewgll_xx(1,i) + &
+                   temp1(2,j,k) * hprimewgll_xx(2,i) + &
+                   temp1(3,j,k) * hprimewgll_xx(3,i) + &
+                   temp1(4,j,k) * hprimewgll_xx(4,i) + &
+                   temp1(5,j,k) * hprimewgll_xx(5,i)
+
+          temp2l = temp2(i,1,k) * hprimewgll_yy(1,j) + &
+                   temp2(i,2,k) * hprimewgll_yy(2,j) + &
+                   temp2(i,3,k) * hprimewgll_yy(3,j) + &
+                   temp2(i,4,k) * hprimewgll_yy(4,j) + &
+                   temp2(i,5,k) * hprimewgll_yy(5,j)
+
+          temp3l = temp3(i,j,1) * hprimewgll_zz(1,k) + &
+                   temp3(i,j,2) * hprimewgll_zz(2,k) + &
+                   temp3(i,j,3) * hprimewgll_zz(3,k) + &
+                   temp3(i,j,4) * hprimewgll_zz(4,k) + &
+                   temp3(i,j,5) * hprimewgll_zz(5,k)
 
           ! also add GLL integration weights
           temp4(i,j,k) = - ( wgllwgll_yz(j,k)*temp1l + wgllwgll_xz(i,k)*temp2l + wgllwgll_xy(i,j)*temp3l )
@@ -356,5 +378,5 @@
 
   enddo ! end of loop over all spectral elements
 
-  end subroutine compute_forces_acoustic
+  end subroutine compute_forces_acoustic_NGLL5_fast
 

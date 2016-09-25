@@ -86,7 +86,8 @@ subroutine compute_forces_acoustic_calling()
   do iphase = 1,2
 
     ! acoustic pressure term
-    call compute_forces_acoustic(iphase,NSPEC_AB,NGLOB_AB, &
+    if (NGLLX == 5) then ! no need to test the two others because NGLLX == NGLLY = NGLLZ in unstructured meshes
+      call compute_forces_acoustic_NGLL5_fast(iphase,NSPEC_AB,NGLOB_AB, &
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         hprime_xx,hprime_yy,hprime_zz, &
@@ -95,6 +96,17 @@ subroutine compute_forces_acoustic_calling()
                         rhostore,jacobian,ibool, &
                         num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic, &
                         phase_ispec_inner_acoustic,.false.)
+    else
+      call compute_forces_acoustic_NGLLnot5_generic_slow(iphase,NSPEC_AB,NGLOB_AB, &
+                        potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
+                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                        hprime_xx,hprime_yy,hprime_zz, &
+                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
+                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                        rhostore,jacobian,ibool, &
+                        num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic, &
+                        phase_ispec_inner_acoustic,.false.)
+    endif
 
     ! computes additional contributions
     if (iphase == 1) then
@@ -339,7 +351,9 @@ subroutine compute_forces_acoustic_backward_calling()
   do iphase = 1,2
 
     ! adjoint simulations
-    call compute_forces_acoustic(iphase,NSPEC_ADJOINT,NGLOB_ADJOINT, &
+
+    if (NGLLX == 5) then ! no need to test the two others because NGLLX == NGLLY = NGLLZ in unstructured meshes
+      call compute_forces_acoustic_NGLL5_fast(iphase,NSPEC_ADJOINT,NGLOB_ADJOINT, &
                       b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
                       xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                       hprime_xx,hprime_yy,hprime_zz, &
@@ -348,6 +362,17 @@ subroutine compute_forces_acoustic_backward_calling()
                       rhostore,jacobian,ibool, &
                       num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic, &
                       phase_ispec_inner_acoustic,.true.)
+    else
+      call compute_forces_acoustic_NGLLnot5_generic_slow(iphase,NSPEC_ADJOINT,NGLOB_ADJOINT, &
+                      b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
+                      xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                      hprime_xx,hprime_yy,hprime_zz, &
+                      hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
+                      wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                      rhostore,jacobian,ibool, &
+                      num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic, &
+                      phase_ispec_inner_acoustic,.true.)
+    endif
 
     ! computes additional contributions
     if (iphase == 1) then
