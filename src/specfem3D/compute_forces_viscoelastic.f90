@@ -61,7 +61,7 @@ subroutine compute_forces_viscoelastic(iphase, &
 
   use specfem_par, only: SAVE_MOHO_MESH,USE_LDDRK
 
-  use pml_par, only: is_CPML,spec_to_CPML,accel_elastic_CPML,NSPEC_CPML, &
+  use pml_par, only: is_CPML,spec_to_CPML,accel_elastic_CPML, &
                      PML_dux_dxl,PML_dux_dyl,PML_dux_dzl,PML_duy_dxl,PML_duy_dyl,PML_duy_dzl, &
                      PML_duz_dxl,PML_duz_dyl,PML_duz_dzl, &
                      PML_dux_dxl_old,PML_dux_dyl_old,PML_dux_dzl_old, &
