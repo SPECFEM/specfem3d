@@ -139,7 +139,7 @@ end module my_mpi
 
   use my_mpi
   use constants, only: MAX_STRING_LEN,mygroup
-  use shared_input_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,USE_FAILSAFE_MECHANISM
+  use shared_input_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS
 
   implicit none
 
@@ -181,19 +181,9 @@ end module my_mpi
     !close(9765)
   endif
 
-  ! in case of a large number of simultaneous runs, if one fails we may want that one to just call MPI_FINALIZE() and wait
-  ! until all the others are finished instead of calling MPI_ABORT(), which would instead kill all the runs,
-  ! including all the successful ones
-  if (USE_FAILSAFE_MECHANISM .and. NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
-    ! do NOT remove the barrier here, it is critical in order to let other runs finish before calling MPI_FINALIZE
-    call MPI_BARRIER(MPI_COMM_WORLD,ier)
-    call MPI_FINALIZE(ier)
-    if (ier /= 0) stop 'Error finalizing MPI'
-  else
-    ! note: MPI_ABORT does not return, it makes the program exit with an error code of 30
-    call MPI_ABORT(MPI_COMM_WORLD,30,ier)
-    stop 'error, program ended in exit_MPI'
-  endif
+  ! note: MPI_ABORT does not return, it makes the program exit with an error code of 30
+  call MPI_ABORT(MPI_COMM_WORLD,30,ier)
+  stop 'error, program ended in exit_MPI'
 
   end subroutine abort_mpi
 

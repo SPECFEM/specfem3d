@@ -266,8 +266,6 @@
     if (ier /= 0) stop 'Error reading Par_file parameter NUMBER_OF_SIMULTANEOUS_RUNS'
     call read_value_logical(BROADCAST_SAME_MESH_AND_MODEL, 'BROADCAST_SAME_MESH_AND_MODEL', ier)
     if (ier /= 0) stop 'Error reading Par_file parameter BROADCAST_SAME_MESH_AND_MODEL'
-    call read_value_logical(USE_FAILSAFE_MECHANISM, 'USE_FAILSAFE_MECHANISM', ier)
-    if (ier /= 0) stop 'Error reading Par_file parameter USE_FAILSAFE_MECHANISM'
 
     !-------------------------------------------------------
 
@@ -495,7 +493,6 @@
     call bcast_all_singlel_world(PRINT_SOURCE_TIME_FUNCTION)
     call bcast_all_singlei_world(NUMBER_OF_SIMULTANEOUS_RUNS)
     call bcast_all_singlel_world(BROADCAST_SAME_MESH_AND_MODEL)
-    call bcast_all_singlel_world(USE_FAILSAFE_MECHANISM)
     call bcast_all_singlel_world(GPU_MODE)
     call bcast_all_singlel_world(ADIOS_ENABLED)
     call bcast_all_singlel_world(ADIOS_FOR_DATABASES)
