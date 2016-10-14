@@ -73,7 +73,7 @@ def main(parameter):
     W1 = (kink_depth)/math.sin(alpha1*Radian)
     W2 = float(parameter[1])       # Fault width
     h_size = float(parameter[2])   # Element size on the fault domain
-    small_opening = h_size/100.0
+    small_opening = h_size/10000.0
     ratio = float(parameter[6])
     w1cos = W1*math.cos(alpha1*Radian)
     w2cos = W2*math.cos(alpha2*Radian)
@@ -155,14 +155,13 @@ def main(parameter):
     cubit.cmd('nodeset 200  move 0 0 '+str(-0.5*small_opening*sf))
     cubit.cmd('nodeset 100  move 0 0 '+str(0.5*small_opening*sf))
     cubit.cmd("vol all scale "+ str(1./sf * 1000)) #scale back, and make unit meter.
-    cubit.cmd('save as "subduction_kink.cub" overwrite')
+    cubit.cmd('delete vertex 1')
     
     
     fd = [1,2]  # fault face_down
     fu = [14,15]  # fault face_up 
     
-    fault = fault_input(1,fu,fd)
-    
+   
     ##  FOR THE BULK (Seismic wave propagation part for SESAME)
     ####### defining absorbing-boundary surface
     
@@ -170,29 +169,29 @@ def main(parameter):
     xmax   = [5]
     ymin   = [11,12]
     ymax   = [10,13] 
-    bottom = [4,9]
-    
-    #### defining free surface with block face_topo.
-    topo    = [6,7] # Free surface.
-    abs_surf = abs_surface_topo(xmin,xmax,ymin,ymax,bottom,topo)
-    
-    ##..... which extracts the bounding faces and defines them into blocks
+    zmin   = [4,9]
+    zmax   = [6,7] # Free surface.
     entities=['face']
     
-    define_bc_topo2(entities,abs_surf) # Define absorbing boundaries surfaces and free surface.
+    define_boundaries(entities,xmin,xmax,ymin,ymax,zmin,zmax)
+
+
     
     ##### USER: define material properties ################
     cubit.cmd('#### DEFINE MATERIAL PROPERTIES #######################')
+    print 'we are here'
     
     #for iblock in range(1,11,1):
     for iblock in range(1,3,1):
         export_block(nb = iblock,vp=6000,vs=3464,rho=2670)
-    
+    cubit.cmd('save as "subduction_kink.cub" overwrite')
+   
     #### Export to SESAME format using cubit2specfem3d.py of GEOCUBIT
     
     cubit2specfem3d.export2SPECFEM3D('MESH',hex27=False)
     # all files needed by SCOTCH are now in directory MESH
-
+    fault = fault_input(1,fu,fd)
+ 
 def usage():
     print "Generate mesh for a planar dipping fault with a kink (change of dip angle)"
     print "usage: python dipping_fault_planar_dip10_kink.py L W H A1 A2 ZK DA"

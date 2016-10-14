@@ -19,8 +19,8 @@ Lonmin = 136
 Lonmax = 150
 xc = 0.5*(Lonmin+Lonmax)
 yc = 0.5*(Latmin+Latmax)
-Lon2dis = 76  #100km = 1deg in longitude
-Lat2dis = 100 # 100km = 1deg in latitude
+Lat2dis = 111.195 # 100km = 1deg in latitude
+Lon2dis = Lat2dis * math.cos(math.radians(0.5*(Latmin+Latmax)))
 Meshsize = 4.0 # mesh size set to 4.0 km
 radius = 1000.0
 cuttingdepth = -100.0
