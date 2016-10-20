@@ -41,13 +41,14 @@ echo "$VP_MIN $VP_MAX $VS_MIN $VS_MAX $RHO_MIN $RHO_MAX" >> tmp.xyz
 
 # velocity gradient
 GRADIENT=0.1
+VS_RATIO=1.73  # sqrt(3)
 
 # adds point location and velocity model values
 echo "adding model values..."
 
 # format: lists first all x, then y, then z
-echo "1" | awk '{ for(k=0;k<NZ;k++){ for(j=0;j<NY;j++){for(i=0;i<NX;i++){ x=i*SPACING_X;y=j*SPACING_Y;z=k*SPACING_Z;vp=VP_MIN+GRADIENT*(-z);vs=VS_MIN + GRADIENT*(-z); rho=RHO_MIN;print x,y,z,vp,vs,rho }}} }' \
-            NX=$NX NY=$NY NZ=$NZ SPACING_X=$SPACING_X SPACING_Y=$SPACING_Y SPACING_Z=$SPACING_Z VP_MIN=$VP_MIN VS_MIN=$VS_MIN RHO_MIN=$RHO_MIN GRADIENT=$GRADIENT >> tmp.xyz
+echo "1" | awk '{ for(k=0;k<NZ;k++){ for(j=0;j<NY;j++){for(i=0;i<NX;i++){ x=i*SPACING_X;y=j*SPACING_Y;z=k*SPACING_Z;vp=VP_MIN+GRADIENT*(-z);vs=VS_MIN + GRADIENT*(-z)/VS_RATIO; rho=RHO_MIN;print x,y,z,vp,vs,rho }}} }' \
+            NX=$NX NY=$NY NZ=$NZ SPACING_X=$SPACING_X SPACING_Y=$SPACING_Y SPACING_Z=$SPACING_Z VP_MIN=$VP_MIN VS_MIN=$VS_MIN RHO_MIN=$RHO_MIN GRADIENT=$GRADIENT VS_RATIO=$VS_RATIO >> tmp.xyz
 
 # renames file
 mv tmp.xyz tomography_model.xyz
