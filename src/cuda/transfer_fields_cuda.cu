@@ -104,6 +104,21 @@ void FC_FUNC_(transfer_b_fields_from_device,
 
 }
 
+/* ----------------------------------------------------------------------------------------------- */
+
+extern "C"
+void FC_FUNC_(transfer_veloc_from_device,
+              TRANSFER_VELOC_FROM_DEVICE)(int* size, realw* veloc, long* Mesh_pointer) {
+
+  TRACE("transfer_veloc_from_device");
+
+  Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
+
+  print_CUDA_error_if_any(cudaMemcpy(veloc,mp->d_veloc,sizeof(realw)*(*size),cudaMemcpyDeviceToHost),40009);
+
+}
+
+
 
 /* ----------------------------------------------------------------------------------------------- */
 

@@ -246,6 +246,19 @@ specfem3D_OBJECTS += $(adios_specfem3D_OBJECTS)
 specfem3D_SHARED_OBJECTS += $(adios_specfem3D_PREOBJECTS)
 
 
+###
+### VTK
+###
+
+ifeq ($(VTK),yes)
+specfem3D_OBJECTS += \
+	$O/vtk_window.spec.o \
+	$O/vtk_helper.visualcc.o \
+	$(EMPTY_MACRO)
+specfem3D_MODULES += \
+	$(FC_MODDIR)/vtk_window_par.$(FC_MODEXT) \
+	$(EMPTY_MACRO)
+endif
 
 #######################################
 
@@ -267,7 +280,7 @@ ${E}/xspecfem3D: $(specfem3D_OBJECTS) $(specfem3D_SHARED_OBJECTS)
 	@echo ""
 	@echo $(INFO_CUDA_SPECFEM)
 	@echo ""
-	${FCLINK} -o ${E}/xspecfem3D $(specfem3D_OBJECTS) $(specfem3D_SHARED_OBJECTS) $(MPILIBS) $(CUDA_LINK)
+	${FCLINK} -o ${E}/xspecfem3D $(specfem3D_OBJECTS) $(specfem3D_SHARED_OBJECTS) $(MPILIBS) $(CUDA_LINK) $(VTKLIBS)
 	@echo ""
 
 else
@@ -277,7 +290,7 @@ ${E}/xspecfem3D: $(specfem3D_OBJECTS) $(specfem3D_SHARED_OBJECTS)
 	@echo ""
 	@echo "building xspecfem3D"
 	@echo ""
-	${FCLINK} -o ${E}/xspecfem3D $(specfem3D_OBJECTS) $(specfem3D_SHARED_OBJECTS) $(MPILIBS)
+	${FCLINK} -o ${E}/xspecfem3D $(specfem3D_OBJECTS) $(specfem3D_SHARED_OBJECTS) $(MPILIBS) $(VTKLIBS)
 	@echo ""
 
 endif
@@ -380,5 +393,11 @@ $O/%.openmp.o: $S/%.f90 ${SETUP}/constants.h
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 
+####
+#### VTK file
+####
+
+$O/%.visualcc.o: $S/%.cpp ${SETUP}/config.h
+	${CC} -c $(CPPFLAGS) $(CFLAGS) $(MPI_INCLUDES) -o $@ $<
 
 

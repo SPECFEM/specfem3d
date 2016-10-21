@@ -66,7 +66,7 @@ MPILIBS += @LDFLAGS@ @LIBS@
 @COND_MPI_TRUE@FCLINK = $(MPIFCCOMPILE_CHECK)
 @COND_MPI_FALSE@FCLINK = $(FCCOMPILE_CHECK)
 
-@COND_MPI_TRUE@COND_MPI_CPPFLAGS = -DWITH_MPI
+@COND_MPI_TRUE@COND_MPI_CPPFLAGS = $(FC_DEFINE)WITH_MPI
 @COND_MPI_FALSE@COND_MPI_CPPFLAGS =
 
 # objects toggled between the parallel and serial version
@@ -178,7 +178,7 @@ GENCODE_60 = -gencode=arch=compute_60,code=\"sm_60\"
 
 @COND_OPENMP_TRUE@OPENMP_LIBS = $(OPENMP_LIB)
 @COND_OPENMP_FALSE@OPENMP_LIBS =
-@COND_OPENMP_TRUE@COND_OPENMP_FFLAGS = -DOPENMP_MODE
+@COND_OPENMP_TRUE@COND_OPENMP_FFLAGS = $(FC_DEFINE)OPENMP_MODE
 @COND_OPENMP_FALSE@COND_OPENMP_FFLAGS =
 
 # objects toggled between openmp and non-openmp version
@@ -186,6 +186,20 @@ GENCODE_60 = -gencode=arch=compute_60,code=\"sm_60\"
 @COND_OPENMP_TRUE@COND_OPENMP_OBJECTS =
 @COND_OPENMP_FALSE@COND_OPENMP_OBJECTS =
 
+#######################################
+####
+#### VTK
+#### with configure: ./configure --enable-vtk --with-vtk-version=5.8 ..
+####
+#######################################
+
+@COND_VTK_TRUE@VTK = yes
+@COND_VTK_FALSE@VTK = no
+
+@COND_VTK_TRUE@FCCOMPILE_CHECK += $(FC_DEFINE)VTK_VIS
+@COND_VTK_TRUE@CPPFLAGS += @VTK_INCLUDES@
+@COND_VTK_TRUE@LDFLAGS += @VTK_LDFLAGS@
+@COND_VTK_TRUE@VTKLIBS += @VTK_LIBS@
 
 #######################################
 ####

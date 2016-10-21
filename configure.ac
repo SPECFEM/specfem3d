@@ -107,6 +107,18 @@ AM_CONDITIONAL([COND_CUDA8], [test "$want_cuda" = cuda8])
 AM_CONDITIONAL([COND_CUDA_PLUS], [test "$want_cuda" = cuda5 -o "$want_cuda" = cuda6 -o "$want_cuda" = cuda7 -o "$want_cuda" = cuda8])
 
 ###
+### VTK
+###
+
+AC_ARG_ENABLE([vtk],
+    [AC_HELP_STRING([--enable-vtk],
+        [build VTK enabled version @<:@default=no@:>@])],
+    [want_vtk="$enableval"],
+    [want_vtk=no])
+AM_CONDITIONAL([COND_VTK], [test x"$want_vtk" != xno])
+
+
+###
 ### ADIOS
 ###
 
@@ -341,6 +353,17 @@ AS_IF([test "$want_mpi" = yes], [
     CIT_MPI_INCDIR([$MPIFC])
 ])
 
+###
+### VTK
+###
+
+AS_IF([test x"$want_vtk" != xno], [
+    AS_BOX([VTK])
+    CIT_OPTIONS_VTK
+    CIT_PATH_VTK
+    # Add optional libraries we need:
+    VTK_LIBS="-lvtkRendering -lvtkGraphics $VTK_LIBS"
+])
 
 ###
 ### ADIOS

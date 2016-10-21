@@ -646,6 +646,9 @@ void FC_FUNC_(transfer_b_fields_to_device,
 void FC_FUNC_(transfer_b_fields_from_device,
               TRANSFER_B_FIELDS_FROM_DEVICE)(int* size, realw* b_displ, realw* b_veloc, realw* b_accel,long* Mesh_pointer) {}
 
+void FC_FUNC_(transfer_veloc_from_device,
+              TRANSFER_VELOC_FROM_DEVICE)(int* size, realw* veloc, long* Mesh_pointer) {}
+
 void FC_FUNC_(transfer_accel_to_device,
               TRNASFER_ACCEL_TO_DEVICE)(int* size, realw* accel,long* Mesh_pointer) {}
 

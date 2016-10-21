@@ -636,6 +636,9 @@ CONFIGURE_FLAGS
 ADIOS_LIBS
 ADIOS_FCFLAGS
 ADIOS_CONFIG
+VTK_LIBS
+VTK_LDFLAGS
+VTK_INCLUDES
 MPI_INCLUDES
 CXXCPP
 ac_ct_CXX
@@ -690,6 +693,8 @@ COND_OPENMP_FALSE
 COND_OPENMP_TRUE
 COND_ADIOS_FALSE
 COND_ADIOS_TRUE
+COND_VTK_FALSE
+COND_VTK_TRUE
 COND_CUDA_PLUS_FALSE
 COND_CUDA_PLUS_TRUE
 COND_CUDA8_FALSE
@@ -764,11 +769,15 @@ enable_double_precision
 enable_debug
 enable_vectorization
 with_cuda
+enable_vtk
 with_adios
 with_openmp
 with_scotch_dir
 with_scotch_includedir
 with_scotch_libdir
+with_vtk
+with_vtk_suffix
+with_vtk_version
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1421,6 +1430,7 @@ Optional Features:
   --enable-debug          build with debugging options enabled [default=no]
   --enable-vectorization  build FORCE_VECTORIZATION enabled version
                           [default=auto]
+  --enable-vtk            build VTK enabled version [default=no]
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -1436,6 +1446,10 @@ Optional Packages:
   --with-scotch-libdir=DIR
                           define the path to the Scotch libraries (e.g.
                           /opt/scotch/lib)
+  --with-vtk              The prefix where VTK is installed [default=/usr]
+  --with-vtk-suffix       Suffix to append to VTK's include directory, e.g.,
+                          for vtk-5.2/ the suffix is "-5.2"
+  --with-vtk-version      Version number of VTK library [default=5.2]
 
 Some influential environment variables:
   FC          Fortran compiler command
@@ -2852,6 +2866,27 @@ else
   COND_CUDA_PLUS_TRUE='#'
   COND_CUDA_PLUS_FALSE=
 fi
+
+
+###
+### VTK
+###
+
+# Check whether --enable-vtk was given.
+if test "${enable_vtk+set}" = set; then :
+  enableval=$enable_vtk; want_vtk="$enableval"
+else
+  want_vtk=no
+fi
+
+ if test x"$want_vtk" != xno; then
+  COND_VTK_TRUE=
+  COND_VTK_FALSE='#'
+else
+  COND_VTK_TRUE='#'
+  COND_VTK_FALSE=
+fi
+
 
 
 ###
@@ -7394,6 +7429,462 @@ ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 fi
 
+###
+### VTK
+###
+
+if test x"$want_vtk" != xno; then :
+
+    $as_echo "## --- ##
+## VTK ##
+## --- ##"
+
+
+    # vtk install prefix
+
+# Check whether --with-vtk was given.
+if test "${with_vtk+set}" = set; then :
+  withval=$with_vtk; with_vtk="$withval"
+else
+  with_vtk="/usr"
+fi
+
+
+    # vtk suffix, to allow for multiple installations of vtk libraries
+
+# Check whether --with-vtk-suffix was given.
+if test "${with_vtk_suffix+set}" = set; then :
+  withval=$with_vtk_suffix; vtk_suffix="$withval"
+else
+  vtk_suffix=""
+fi
+
+
+    # alternatively, derive suffix from version number
+
+# Check whether --with-vtk-version was given.
+if test "${with_vtk_version+set}" = set; then :
+  withval=$with_vtk_version; vtk_version="$withval"
+else
+  vtk_version="5.2"
+fi
+
+
+    if test -z "$vtk_suffix"; then
+        #
+        # suffix was not specified. use the version number
+        # to calculate what it should be
+        #
+        if test -n "$vtk_version"; then
+            vtk_suffix="-$vtk_version"
+        fi
+
+    else
+        #
+        # suffix was specified. ignore version silently?
+        # produce error for now
+        #
+        if test -n "$vtk_version"; then
+            as_fn_error $? "The option --with-vtk-suffix overrides --with-vtk-version. Do not use simultaneously." "$LINENO" 5
+        fi
+
+    fi
+
+
+
+        if test x$with_vtk = "xyes"; then
+                with_vtk="/usr"
+    fi
+
+    if test x$with_vtk != "xno"; then
+        VTK_PREFIX="$with_vtk"
+
+        as_ac_File=`$as_echo "ac_cv_file_$VTK_PREFIX/include/vtk$vtk_suffix/vtkCommonInstantiator.h" | $as_tr_sh`
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $VTK_PREFIX/include/vtk$vtk_suffix/vtkCommonInstantiator.h" >&5
+$as_echo_n "checking for $VTK_PREFIX/include/vtk$vtk_suffix/vtkCommonInstantiator.h... " >&6; }
+if eval \${$as_ac_File+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  test "$cross_compiling" = yes &&
+  as_fn_error $? "cannot check for file existence when cross compiling" "$LINENO" 5
+if test -r "$VTK_PREFIX/include/vtk$vtk_suffix/vtkCommonInstantiator.h"; then
+  eval "$as_ac_File=yes"
+else
+  eval "$as_ac_File=no"
+fi
+fi
+eval ac_res=\$$as_ac_File
+	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
+$as_echo "$ac_res" >&6; }
+if eval test \"x\$"$as_ac_File"\" = x"yes"; then :
+  vtkFound="OK"
+fi
+
+        { $as_echo "$as_me:${as_lineno-$LINENO}: checking if VTK is installed in $VTK_PREFIX" >&5
+$as_echo_n "checking if VTK is installed in $VTK_PREFIX... " >&6; }
+
+        if test -z "$vtkFound"; then
+
+                        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+
+
+        else
+
+                        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+
+                        VTK_INCLUDES="-I$VTK_PREFIX/include/vtk$vtk_suffix"
+            VTK_LDFLAGS="-L$VTK_PREFIX/lib/vtk$vtk_suffix -L$VTK_PREFIX/lib64/vtk$vtk_suffix"
+
+                        ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+            OLD_CFLAGS=$CFLAGS
+            OLD_CXXFLAGS=$CXXFLAGS
+            OLD_LDFLAGS=$LDFLAGS
+            OLD_LIBS=$LIBS
+
+                                    CFLAGS="$VTK_CFLAGS $CFLAGS"
+            CXXFLAGS="$VTK_CXXFLAGS $CXXFLAGS"
+            LDFLAGS="$VTK_LDFLAGS $LDFLAGS"
+
+                                                VTK_SUPPORT_LIBS="-lvtktiff -lvtkpng -lvtkjpeg -lvtkzlib -lvtkexpat -lvfw32 -lgdi32"
+            { $as_echo "$as_me:${as_lineno-$LINENO}: checking for strcmp in -lvtkIO" >&5
+$as_echo_n "checking for strcmp in -lvtkIO... " >&6; }
+if ${ac_cv_lib_vtkIO_strcmp+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lvtkIO $VTK_SUPPORT_LIBS $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char strcmp ();
+#ifdef FC_DUMMY_MAIN
+#ifndef FC_DUMMY_MAIN_EQ_F77
+#  ifdef __cplusplus
+     extern "C"
+#  endif
+   int FC_DUMMY_MAIN() { return 1; }
+#endif
+#endif
+int
+main ()
+{
+return strcmp ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_vtkIO_strcmp=yes
+else
+  ac_cv_lib_vtkIO_strcmp=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_vtkIO_strcmp" >&5
+$as_echo "$ac_cv_lib_vtkIO_strcmp" >&6; }
+if test "x$ac_cv_lib_vtkIO_strcmp" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBVTKIO 1
+_ACEOF
+
+  LIBS="-lvtkIO $LIBS"
+
+else
+
+                VTK_SUPPORT_LIBS="-lvtktiff -lvtkpng -lvtkjpeg -lvtkzlib -lvtkexpat"
+                { $as_echo "$as_me:${as_lineno-$LINENO}: checking for abort in -lvtkIO" >&5
+$as_echo_n "checking for abort in -lvtkIO... " >&6; }
+if ${ac_cv_lib_vtkIO_abort+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lvtkIO $VTK_SUPPORT_LIBS $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char abort ();
+#ifdef FC_DUMMY_MAIN
+#ifndef FC_DUMMY_MAIN_EQ_F77
+#  ifdef __cplusplus
+     extern "C"
+#  endif
+   int FC_DUMMY_MAIN() { return 1; }
+#endif
+#endif
+int
+main ()
+{
+return abort ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_vtkIO_abort=yes
+else
+  ac_cv_lib_vtkIO_abort=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_vtkIO_abort" >&5
+$as_echo "$ac_cv_lib_vtkIO_abort" >&6; }
+if test "x$ac_cv_lib_vtkIO_abort" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBVTKIO 1
+_ACEOF
+
+  LIBS="-lvtkIO $LIBS"
+
+else
+
+                    VTK_SUPPORT_LIBS="-ltiff -lpng -ljpeg -lz -lexpat"
+                    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for exit in -lvtkIO" >&5
+$as_echo_n "checking for exit in -lvtkIO... " >&6; }
+if ${ac_cv_lib_vtkIO_exit+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lvtkIO $VTK_SUPPORT_LIBS $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char exit ();
+#ifdef FC_DUMMY_MAIN
+#ifndef FC_DUMMY_MAIN_EQ_F77
+#  ifdef __cplusplus
+     extern "C"
+#  endif
+   int FC_DUMMY_MAIN() { return 1; }
+#endif
+#endif
+int
+main ()
+{
+return exit ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_vtkIO_exit=yes
+else
+  ac_cv_lib_vtkIO_exit=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_vtkIO_exit" >&5
+$as_echo "$ac_cv_lib_vtkIO_exit" >&6; }
+if test "x$ac_cv_lib_vtkIO_exit" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBVTKIO 1
+_ACEOF
+
+  LIBS="-lvtkIO $LIBS"
+
+else
+
+                        VTK_SUPPORT_LIBS=""
+                        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for strstr in -lvtkIO" >&5
+$as_echo_n "checking for strstr in -lvtkIO... " >&6; }
+if ${ac_cv_lib_vtkIO_strstr+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lvtkIO $VTK_SUPPORT_LIBS $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char strstr ();
+#ifdef FC_DUMMY_MAIN
+#ifndef FC_DUMMY_MAIN_EQ_F77
+#  ifdef __cplusplus
+     extern "C"
+#  endif
+   int FC_DUMMY_MAIN() { return 1; }
+#endif
+#endif
+int
+main ()
+{
+return strstr ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_vtkIO_strstr=yes
+else
+  ac_cv_lib_vtkIO_strstr=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_vtkIO_strstr" >&5
+$as_echo "$ac_cv_lib_vtkIO_strstr" >&6; }
+if test "x$ac_cv_lib_vtkIO_strstr" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBVTKIO 1
+_ACEOF
+
+  LIBS="-lvtkIO $LIBS"
+
+else
+
+                            as_fn_error $? "cannot link against VTK libraries" "$LINENO" 5
+
+fi
+
+
+fi
+
+
+fi
+
+
+fi
+
+            VTK_LIBS="-lvtkIO -lvtkDICOMParser -lvtkFiltering -lvtkGenericFiltering -lvtkCommon $VTK_SUPPORT_LIBS -lvtksys"
+            LIBS="$VTK_LIBS $LIBS"
+
+                        if test -n ""; then
+
+                maj=`echo  | sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1/'`
+                min=`echo  | sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\2/'`
+                rel=`echo  | sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\3/'`
+                { $as_echo "$as_me:${as_lineno-$LINENO}: checking if VTK version is at least $maj.$min.$rel" >&5
+$as_echo_n "checking if VTK version is at least $maj.$min.$rel... " >&6; }
+
+                                cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+
+                        #include <vtk/vtkConfigure.h>
+                        #include <stdio.h>
+
+#ifdef FC_DUMMY_MAIN
+#ifndef FC_DUMMY_MAIN_EQ_F77
+#  ifdef __cplusplus
+     extern "C"
+#  endif
+   int FC_DUMMY_MAIN() { return 1; }
+#endif
+#endif
+int
+main ()
+{
+
+                        printf("VTK version is: %d.%d.%d",
+                               VTK_MAJOR_VERSION,
+                               VTK_MINOR_VERSION,
+                               VTK_BUILD_VERSION);
+
+                        #if VTK_MAJOR_VERSION < $maj
+                        #error Installed VTK is too old!
+                        #endif
+
+                        #if VTK_MINOR_VERSION < $min
+                        #error Installed VTK is too old!
+                        #endif
+
+                        #if VTK_BUILD_VERSION < $rel
+                        #error Installed VTK is too old!
+                        #endif
+
+  ;
+  return 0;
+}
+
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  vtkVersion="OK"
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+
+                                CFLAGS=$OLD_CFLAGS
+                CXXFLAGS=$OLD_CXXFLAGS
+                LDFLAGS=$OLD_LDFLAGS
+                LIBS=$OLD_LIBS
+
+                if test "$vtkVersion" = "OK"; then
+                    { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+
+                else
+                    { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+
+                fi
+
+            else
+
+                                CFLAGS=$OLD_CFLAGS
+                CXXFLAGS=$OLD_CXXFLAGS
+                LDFLAGS=$OLD_LDFLAGS
+                LIBS=$OLD_LIBS
+
+
+
+            fi          #if [[ -n "" ]];
+
+                        ac_ext=${ac_fc_srcext-f}
+ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
+ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_fc_compiler_gnu
+
+
+
+$as_echo "#define HAVE_VTK /**/" >>confdefs.h
+
+
+        fi          # if [[ -z "$vtkFound" ]];
+    fi          # $with_vtk != "no"
+
+
+
+
+
+    # Add optional libraries we need:
+    VTK_LIBS="-lvtkRendering -lvtkGraphics $VTK_LIBS"
+
+fi
 
 ###
 ### ADIOS
@@ -8097,6 +8588,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${COND_CUDA_PLUS_TRUE}" && test -z "${COND_CUDA_PLUS_FALSE}"; then
   as_fn_error $? "conditional \"COND_CUDA_PLUS\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${COND_VTK_TRUE}" && test -z "${COND_VTK_FALSE}"; then
+  as_fn_error $? "conditional \"COND_VTK\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${COND_ADIOS_TRUE}" && test -z "${COND_ADIOS_FALSE}"; then

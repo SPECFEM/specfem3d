@@ -105,6 +105,12 @@
     call compute_gravity_integrals()
   endif
 
+#ifdef VTK_VIS
+  ! prepares vtk window visualization
+  call vtk_window_prepare()
+#endif
+
+
   ! elapsed time since beginning of preparation
   if (myrank == 0) then
     tCPU = wtime() - time_start

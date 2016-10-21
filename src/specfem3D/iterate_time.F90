@@ -51,6 +51,9 @@
   character(len=MAX_STRING_LEN) outputname
   ! timing
   double precision, external :: wtime
+#ifdef VTK_VIS
+  logical :: do_restart = .false.
+#endif
 
   !! for FK point for intialization injected wavefield
   real(kind=CUSTOM_REAL) :: Xmin_box, Xmax_box, Ymin_box, Ymax_box, Zmin_box, Zmax_box
@@ -237,6 +240,13 @@
 !
 !   s t a r t   t i m e   i t e r a t i o n s
 !
+#ifdef VTK_VIS
+  ! restart: goto starting point
+  123 continue
+  if (do_restart) then
+    if (myrank == 0) print *,'VTK_VIS: restarting simulation'
+  endif
+#endif
 
   ! synchronize all processes to make sure everybody is ready to start time loop
   call synchronize_all()
@@ -425,10 +435,10 @@
                             num_free_surface_faces,free_surface_ispec,free_surface_ijk,Mesh_pointer,GPU_MODE)
     endif
 
+#ifdef VTK_VIS
     ! updates VTK window
-    if (VTK_MODE) then
-      call it_update_vtkwindow()
-    endif
+    call vtk_window_update()
+#endif
 
     !! CD CD add this : under validation option
     if (RECIPROCITY_AND_KH_INTEGRAL) then
@@ -461,6 +471,19 @@
 
 !----  close energy file
   if (OUTPUT_ENERGY .and. myrank == 0) close(IOUT_ENERGY)
+
+#ifdef VTK_VIS
+  ! frees memory
+  call vtk_window_cleanup(do_restart)
+
+  ! check if restart time iterations
+  if (do_restart) then
+    goto 123
+  endif
+#endif
+
+  ! cleanup GPU arrays
+  if (GPU_MODE) call it_cleanup_GPU()
 
   end subroutine iterate_time
 
@@ -844,6 +867,20 @@
 
   endif
 
+  end subroutine it_transfer_from_GPU
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine it_cleanup_GPU()
+
+  use specfem_par
+  use specfem_par_elastic
+  use specfem_par_acoustic
+
+  implicit none
+
   ! from here on, no gpu data is needed anymore
   ! frees allocated memory on GPU
   call prepare_cleanup_device(Mesh_pointer,ACOUSTIC_SIMULATION,ELASTIC_SIMULATION, &
@@ -851,23 +888,12 @@
                               ATTENUATION,ANISOTROPY,APPROXIMATE_OCEAN_LOAD, &
                               APPROXIMATE_HESS_KL)
 
-  end subroutine it_transfer_from_GPU
+  end subroutine it_cleanup_GPU
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine it_update_vtkwindow()
-
-  implicit none
-
-  stop 'it_update_vtkwindow() not implemented for this code yet'
-
-  end subroutine it_update_vtkwindow
-
-!
-!-------------------------------------------------------------------------------------------------
-!
 
   subroutine it_read_forward_arrays()
 

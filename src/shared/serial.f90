@@ -415,6 +415,28 @@
 !----
 !
 
+  subroutine gatherv_all_i(sendbuf, sendcnt, recvbuf, recvcount, recvoffset,recvcounttot, NPROC)
+
+  implicit none
+
+  integer :: sendcnt,recvcounttot,NPROC
+  integer, dimension(NPROC) :: recvcount,recvoffset
+  integer, dimension(sendcnt) :: sendbuf
+  integer, dimension(recvcounttot) :: recvbuf
+
+  integer(kind=4) :: unused_i4
+
+  recvbuf(:) = sendbuf(:)
+
+  unused_i4 = recvcount(1)
+  unused_i4 = recvoffset(1)
+
+  end subroutine gatherv_all_i
+
+!
+!----
+!
+
  subroutine gatherv_all_cr(sendbuf, sendcnt, recvbuf, recvcount, recvoffset,recvcounttot, NPROC)
 
   use constants, only: CUSTOM_REAL

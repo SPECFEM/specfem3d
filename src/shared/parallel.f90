@@ -1418,8 +1418,26 @@ end module my_mpi
 !-------------------------------------------------------------------------------------------------
 !
 
-!  subroutine gatherv_all_i(sendbuf, sendcnt, recvbuf, recvcount, recvoffset,recvcounttot, NPROC)
-!  end subroutine gatherv_all_i
+  subroutine gatherv_all_i(sendbuf, sendcnt, recvbuf, recvcount, recvoffset,recvcounttot, NPROC)
+
+  use my_mpi
+
+  implicit none
+
+  include "precision.h"
+
+  integer :: sendcnt,recvcounttot,NPROC
+  integer, dimension(NPROC) :: recvcount,recvoffset
+  integer, dimension(sendcnt) :: sendbuf
+  integer, dimension(recvcounttot) :: recvbuf
+
+  integer :: ier
+
+  call MPI_GATHERV(sendbuf,sendcnt,MPI_INTEGER,recvbuf,recvcount,recvoffset,MPI_INTEGER, &
+                   0,my_local_mpi_comm_world,ier)
+
+  end subroutine gatherv_all_i
+
 
 !
 !-------------------------------------------------------------------------------------------------
