@@ -54,8 +54,8 @@ subroutine save_forward_arrays_adios()
 
   !--- Variables to allreduce - wmax stands for world_max
   integer :: nglob_wmax, NSPEC_ATTENUATION_wmax, &
-             NSPEC_STRAIN_wmax, NSPEC_ATTENUATION_kappa_wmax, N_SLS_wmax
-  integer, parameter :: num_vars = 5
+             NSPEC_STRAIN_wmax, N_SLS_wmax
+  integer, parameter :: num_vars = 4
   integer, dimension(num_vars) :: max_global_values
 
   integer :: ier
@@ -69,16 +69,14 @@ subroutine save_forward_arrays_adios()
   max_global_values(1) = NGLOB_AB
   max_global_values(2) =  NSPEC_ATTENUATION_AB
   max_global_values(3) =  NSPEC_STRAIN_ONLY
-  max_global_values(4) =  NSPEC_ATTENUATION_AB
-  max_global_values(5) =  N_SLS
+  max_global_values(4) =  N_SLS
 
   call max_allreduce_i(max_global_values,num_vars)
 
   nglob_wmax                   = max_global_values(1)
   NSPEC_ATTENUATION_wmax       = max_global_values(2)
   NSPEC_STRAIN_wmax            = max_global_values(3)
-  NSPEC_ATTENUATION_kappa_wmax = max_global_values(4)
-  N_SLS_wmax                   = max_global_values(5)
+  N_SLS_wmax                   = max_global_values(4)
 
   !-----------------------------------.
   ! Setup ADIOS for the current group |
@@ -96,14 +94,9 @@ subroutine save_forward_arrays_adios()
   call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(ngllz))
 
   call define_adios_scalar(group, groupsize, '', "nglob", NGLOB_AB)
-  call define_adios_scalar(group, groupsize, '', &
-                           STRINGIFY_VAR(NSPEC_ATTENUATION_AB))
-  call define_adios_scalar(group, groupsize, '', &
-                           STRINGIFY_VAR(NSPEC_STRAIN_ONLY))
-  call define_adios_scalar(group, groupsize, '', &
-                           STRINGIFY_VAR(NSPEC_ATTENUATION_AB))
-  call define_adios_scalar(group, groupsize, '', &
-                           STRINGIFY_VAR(N_SLS))
+  call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(NSPEC_ATTENUATION_AB))
+  call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(NSPEC_STRAIN_ONLY))
+  call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(N_SLS))
 
   if (ACOUSTIC_SIMULATION) then
     local_dim = nglob_wmax
@@ -134,6 +127,9 @@ subroutine save_forward_arrays_adios()
                                        STRINGIFY_VAR(R_xz))
       call define_adios_global_array1D(group, groupsize, local_dim, '', &
                                        STRINGIFY_VAR(R_yz))
+      call define_adios_global_array1D(group, groupsize, local_dim, "", &
+                                       STRINGIFY_VAR(R_trace))
+
       local_dim = NGLLX * NGLLY * NGLLZ * NSPEC_STRAIN_wmax
       call define_adios_global_array1D(group, groupsize, local_dim, '', &
                                        STRINGIFY_VAR(epsilondev_xx))
@@ -145,12 +141,7 @@ subroutine save_forward_arrays_adios()
                                        STRINGIFY_VAR(epsilondev_xz))
       call define_adios_global_array1D(group, groupsize, local_dim, '', &
                                        STRINGIFY_VAR(epsilondev_yz))
-      local_dim = NGLLX * NGLLY * NGLLZ * NSPEC_ATTENUATION_kappa_wmax &
-                * N_SLS_wmax
-      call define_adios_global_array1D(group, groupsize, local_dim, '', &
-                                       STRINGIFY_VAR(R_trace))
-      local_dim = NGLLX * NGLLY * NGLLZ * NSPEC_ATTENUATION_kappa_wmax
-      call define_adios_global_array1D(group, groupsize, local_dim, '', &
+      call define_adios_global_array1D(group, groupsize, local_dim, "", &
                                        STRINGIFY_VAR(epsilondev_trace))
     endif
   endif
@@ -189,7 +180,6 @@ subroutine save_forward_arrays_adios()
   call adios_write(handle, "nglob", NGLOB_AB, ier)
   call adios_write(handle, STRINGIFY_VAR(NSPEC_ATTENUATION_AB), ier)
   call adios_write(handle, STRINGIFY_VAR(NSPEC_STRAIN_ONLY), ier)
-  call adios_write(handle, STRINGIFY_VAR(NSPEC_ATTENUATION_AB), ier)
   call adios_write(handle, STRINGIFY_VAR(N_SLS), ier)
 
   if (ACOUSTIC_SIMULATION) then
@@ -221,6 +211,9 @@ subroutine save_forward_arrays_adios()
                                        STRINGIFY_VAR(R_xz))
       call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                        STRINGIFY_VAR(R_yz))
+      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
+                                       STRINGIFY_VAR(R_trace))
+
       local_dim = NGLLX * NGLLY * NGLLZ * NSPEC_STRAIN_wmax
       call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                        STRINGIFY_VAR(epsilondev_xx))
@@ -232,11 +225,6 @@ subroutine save_forward_arrays_adios()
                                        STRINGIFY_VAR(epsilondev_xz))
       call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                        STRINGIFY_VAR(epsilondev_yz))
-      local_dim = NGLLX * NGLLY * NGLLZ * NSPEC_ATTENUATION_kappa_wmax &
-                * N_SLS_wmax
-      call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                       STRINGIFY_VAR(R_trace))
-      local_dim = NGLLX * NGLLY * NGLLZ * NSPEC_ATTENUATION_kappa_wmax
       call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                        STRINGIFY_VAR(epsilondev_trace))
     endif
