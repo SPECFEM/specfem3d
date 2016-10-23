@@ -199,7 +199,9 @@ contains
   integer :: ifault,nspec,nglob
 
   call initialize_fault_solver(Fault_pointer,Nfaults,V_HEALING,V_RUPT)
-  call initialize_fault_data(Fault_pointer,faults(1)%dataT%iglob, faults(1)%dataT%npoin, 500)
+  do ifault = 1,Nfaults
+    call initialize_fault_data(Fault_pointer,faults(ifault)%dataT%iglob, faults(ifault)%dataT%npoin, 500, ifault-1)
+  enddo
 
   do ifault = 1,Nfaults
 
@@ -1701,7 +1703,7 @@ contains
 
     call transfer_tohost_fault_data(Fault_pointer,ifault-1,faults(ifault)%nspec, &
                                     faults(ifault)%nglob,faults(ifault)%D,faults(ifault)%V,faults(ifault)%T)
-    call transfer_tohost_datat(Fault_pointer, faults(ifault)%dataT%dat, it)
+    call transfer_tohost_datat(Fault_pointer, faults(ifault)%dataT%dat, it, ifault - 1)
 
     call gather_dataXZ(faults(ifault))
     call SCEC_write_dataT(faults(ifault)%dataT)
