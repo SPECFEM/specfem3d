@@ -47,12 +47,20 @@ typedef struct rsf_type_{
   realw *V0,*f0,*L,*V_init,*a,*b,*theta,*T,*C,*fw,*Vw;
 }Rsf_type;
 
+typedef struct fault_data_{
+  int NRECORD;
+  int NT;
+  int* iglob; //record the global index of the station
+  realw* dataT; //data pointer to the array
+}Fault_data;
+
 typedef struct fault_ {
 
   // mesh resolution
   int NSPEC_AB;
   int NGLOB_AB;
 
+  Fault_data* output_dataT;
   realw *T0, *T, *B, *V, *D;
   realw *R, *invM1, *invM2, *Z ;
   int *ibulk1,*ibulk2;
@@ -61,16 +69,8 @@ typedef struct fault_ {
 
 }Fault ;
 
-typedef struct fault_data_{
-  int NRECORD;
-  int NT;
-  int* iglob; //record the global index of the station
-  realw* dataT; //data pointer to the array
-}Fault_data;
-
 typedef struct fault_solver_dynamics_{
   Fault* faults;
-  Fault_data* output_dataT;
   realw v_healing;
   realw v_rupt;
   int NTOUT,NSNAP;
