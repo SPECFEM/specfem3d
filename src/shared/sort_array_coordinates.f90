@@ -91,7 +91,7 @@
         if (dabs(y(i) - y(i-1)) > xtol) ifseg(i) = .true.
       enddo
     else
-      do i=2,npointot
+      do i = 2,npointot
         if (dabs(z(i) - z(i-1)) > xtol) ifseg(i) = .true.
       enddo
     endif
