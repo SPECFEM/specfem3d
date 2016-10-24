@@ -58,7 +58,7 @@ void FC_FUNC_(initialize_fault_data,
                     int* iglob,
                     int* num_of_records,
                     int* nt,
-					int* ifault)
+          int* ifault)
 {
 
   Fault_data *fault_data_recorder = (Fault_data*)malloc(sizeof(Fault_data));
@@ -201,20 +201,20 @@ void FC_FUNC_(transfer_tohost_datat,
               TRANSFER_TOHOST_DATAT)(long* Fault_pointer,
                          realw* h_dataT,
              int* it,
-			 int* ifault
+       int* ifault
                         )
 {
     Fault_solver_dynamics* Fsolver = (Fault_solver_dynamics*)(*Fault_pointer);
-	Fault* fault_pointer = Fsolver->faults + *ifault;
-	if(fault_pointer->output_dataT->NRECORD > 0)
-	{
+  Fault* fault_pointer = Fsolver->faults + *ifault;
+  if(fault_pointer->output_dataT->NRECORD > 0)
+  {
 
 
-		copy_tohost_realw_test((void **)&(fault_pointer->output_dataT->dataT),h_dataT + (*it -fault_pointer->output_dataT->NT) * fault_pointer->output_dataT->NRECORD*7
-			,fault_pointer->output_dataT->NRECORD*7*fault_pointer->output_dataT->NT);
+    copy_tohost_realw_test((void **)&(fault_pointer->output_dataT->dataT),h_dataT + (*it -fault_pointer->output_dataT->NT) * fault_pointer->output_dataT->NRECORD*7
+      ,fault_pointer->output_dataT->NRECORD*7*fault_pointer->output_dataT->NT);
 
 
-	}
+  }
 
 }
 /*-------------------------------------------------------------------------------------------------*/
