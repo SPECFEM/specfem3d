@@ -119,6 +119,9 @@
 
 ! -------------------- library for sorting routine ------------------
 
+! this directive avoids triggering a random bug in Intel ifort v13 (in the compiler, not in SPECFEM),
+! fixed in later versions of Intel ifort, which also ignore this directive because it was discontinued
+!$DIR NOOPTIMIZE
   subroutine heap_sort_multi(N, dx, dy, dz, ia, ib)
 
   implicit none
@@ -152,6 +155,10 @@
 
   contains
 
+! this directive avoids triggering a random bug in Intel ifort v13 (in the compiler, not in SPECFEM),
+! fixed in later versions of Intel ifort, which also ignore this directive because it was discontinued
+!$DIR NOOPTIMIZE
+    !$DIR NOOPTIMIZE
     subroutine dswap(A, i, j)
 
     double precision, dimension(:), intent(inout) :: A
@@ -180,6 +187,9 @@
 
     end subroutine
 
+! this directive avoids triggering a random bug in Intel ifort v13 (in the compiler, not in SPECFEM),
+! fixed in later versions of Intel ifort, which also ignore this directive because it was discontinued
+!$DIR NOOPTIMIZE
     subroutine heap_sort_siftdown(start, bottom)
 
     integer, intent(in) :: start
