@@ -63,6 +63,7 @@
   ninseg(1) = npointot
 
   do j = 1,NDIM
+
     ! sort within each segment
     ioff = 1
     do iseg = 1,nseg
@@ -82,11 +83,11 @@
     ! check for jumps in current coordinate
     ! define a tolerance, normalized radius is 1., so let's use a small value
     if (j == 1) then
-      do i=2,npointot
+      do i = 2,npointot
         if (dabs(x(i) - x(i-1)) > xtol) ifseg(i) = .true.
       enddo
     else if (j == 2) then
-      do i=2,npointot
+      do i = 2,npointot
         if (dabs(y(i) - y(i-1)) > xtol) ifseg(i) = .true.
       enddo
     else
@@ -128,6 +129,8 @@
 ! sorting routine left here for inlining
 
 ! -------------------- library for sorting routine ------------------
+
+! sorting routines put here in same file to allow for inlining
 
 ! this directive avoids triggering a random bug in Intel ifort v13 (in the compiler, not in SPECFEM),
 ! fixed in later versions of Intel ifort, which also ignore this directive because it was discontinued
