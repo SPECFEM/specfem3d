@@ -37,18 +37,16 @@ shared_TARGETS = \
 
 
 shared_OBJECTS = \
+	$O/shared_par.shared_module.o \
 	$O/assemble_MPI_scalar.shared.o \
 	$O/check_mesh_resolution.shared.o \
-	$O/shared_par.shared_module.o \
 	$O/create_name_database.shared.o \
 	$O/define_derivation_matrices.shared.o \
 	$O/detect_surface.shared.o \
 	$O/exit_mpi.shared.o \
 	$O/force_ftz.cc.o \
 	$O/get_attenuation_model.shared.o \
-	$O/get_cmt.shared.o \
 	$O/get_element_face.shared.o \
-	$O/get_force.shared.o \
 	$O/get_global.shared.o \
 	$O/get_jacobian_boundaries.shared.o \
 	$O/get_shape2D.shared.o \
@@ -137,6 +135,9 @@ endif
 $O/%.shared_module.o: $S/%.f90 ${SETUP}/constants.h
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
+$O/%.shared_module.o: $S/%.F90 ${SETUP}/constants.h
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
 $O/%.shared.o: $S/%.f90 $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
@@ -144,6 +145,9 @@ $O/%.shared.o: $S/%.F90 $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 $O/%.sharedmpi.o: $S/%.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o
+	${MPIFCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+$O/%.sharedmpi.o: $S/%.F90 ${SETUP}/constants.h $O/shared_par.shared_module.o
 	${MPIFCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 

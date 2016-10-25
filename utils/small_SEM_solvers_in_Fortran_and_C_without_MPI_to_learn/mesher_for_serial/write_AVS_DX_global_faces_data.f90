@@ -73,7 +73,7 @@
 ! mark global AVS or DX points
   do ispec=1,nspec
 ! only if on face
-  if(iMPIcut_xi(1,ispec) .or. iMPIcut_xi(2,ispec) .or. &
+  if (iMPIcut_xi(1,ispec) .or. iMPIcut_xi(2,ispec) .or. &
               iMPIcut_eta(1,ispec) .or. iMPIcut_eta(2,ispec)) then
     iglob1=ibool(1,1,1,ispec)
     iglob2=ibool(NGLLX,1,1,ispec)
@@ -85,7 +85,7 @@
     iglob8=ibool(1,NGLLY,NGLLZ,ispec)
 
 ! face xi = xi_min
-  if(iMPIcut_xi(1,ispec)) then
+  if (iMPIcut_xi(1,ispec)) then
     nspecface = nspecface + 1
     mask_ibool(iglob1) = .true.
     mask_ibool(iglob4) = .true.
@@ -94,7 +94,7 @@
   endif
 
 ! face xi = xi_max
-  if(iMPIcut_xi(2,ispec)) then
+  if (iMPIcut_xi(2,ispec)) then
     nspecface = nspecface + 1
     mask_ibool(iglob2) = .true.
     mask_ibool(iglob3) = .true.
@@ -103,7 +103,7 @@
   endif
 
 ! face eta = eta_min
-  if(iMPIcut_eta(1,ispec)) then
+  if (iMPIcut_eta(1,ispec)) then
     nspecface = nspecface + 1
     mask_ibool(iglob1) = .true.
     mask_ibool(iglob2) = .true.
@@ -112,7 +112,7 @@
   endif
 
 ! face eta = eta_max
-  if(iMPIcut_eta(2,ispec)) then
+  if (iMPIcut_eta(2,ispec)) then
     nspecface = nspecface + 1
     mask_ibool(iglob4) = .true.
     mask_ibool(iglob3) = .true.
@@ -136,7 +136,7 @@
   numpoin = 0
   do ispec=1,nspec
 ! only if on face
-  if(iMPIcut_xi(1,ispec) .or. iMPIcut_xi(2,ispec) .or. &
+  if (iMPIcut_xi(1,ispec) .or. iMPIcut_xi(2,ispec) .or. &
               iMPIcut_eta(1,ispec) .or. iMPIcut_eta(2,ispec)) then
     iglob1=ibool(1,1,1,ispec)
     iglob2=ibool(NGLLX,1,1,ispec)
@@ -148,26 +148,26 @@
     iglob8=ibool(1,NGLLY,NGLLZ,ispec)
 
 ! face xi = xi_min
-  if(iMPIcut_xi(1,ispec)) then
-    if(.not. mask_ibool(iglob1)) then
+  if (iMPIcut_xi(1,ispec)) then
+    if (.not. mask_ibool(iglob1)) then
       numpoin = numpoin + 1
       num_ibool_AVS_DX(iglob1) = numpoin
       write(10,*) numpoin,sngl(xstore(1,1,1,ispec)), &
               sngl(ystore(1,1,1,ispec)),sngl(zstore(1,1,1,ispec))
     endif
-    if(.not. mask_ibool(iglob4)) then
+    if (.not. mask_ibool(iglob4)) then
       numpoin = numpoin + 1
       num_ibool_AVS_DX(iglob4) = numpoin
       write(10,*) numpoin,sngl(xstore(1,NGLLY,1,ispec)), &
               sngl(ystore(1,NGLLY,1,ispec)),sngl(zstore(1,NGLLY,1,ispec))
     endif
-    if(.not. mask_ibool(iglob8)) then
+    if (.not. mask_ibool(iglob8)) then
       numpoin = numpoin + 1
       num_ibool_AVS_DX(iglob8) = numpoin
       write(10,*) numpoin,sngl(xstore(1,NGLLY,NGLLZ,ispec)), &
               sngl(ystore(1,NGLLY,NGLLZ,ispec)),sngl(zstore(1,NGLLY,NGLLZ,ispec))
     endif
-    if(.not. mask_ibool(iglob5)) then
+    if (.not. mask_ibool(iglob5)) then
       numpoin = numpoin + 1
       num_ibool_AVS_DX(iglob5) = numpoin
       write(10,*) numpoin,sngl(xstore(1,1,NGLLZ,ispec)), &
@@ -180,26 +180,26 @@
   endif
 
 ! face xi = xi_max
-  if(iMPIcut_xi(2,ispec)) then
-    if(.not. mask_ibool(iglob2)) then
+  if (iMPIcut_xi(2,ispec)) then
+    if (.not. mask_ibool(iglob2)) then
       numpoin = numpoin + 1
       num_ibool_AVS_DX(iglob2) = numpoin
       write(10,*) numpoin,sngl(xstore(NGLLX,1,1,ispec)), &
               sngl(ystore(NGLLX,1,1,ispec)),sngl(zstore(NGLLX,1,1,ispec))
     endif
-    if(.not. mask_ibool(iglob3)) then
+    if (.not. mask_ibool(iglob3)) then
       numpoin = numpoin + 1
       num_ibool_AVS_DX(iglob3) = numpoin
       write(10,*) numpoin,sngl(xstore(NGLLX,NGLLY,1,ispec)), &
               sngl(ystore(NGLLX,NGLLY,1,ispec)),sngl(zstore(NGLLX,NGLLY,1,ispec))
     endif
-    if(.not. mask_ibool(iglob7)) then
+    if (.not. mask_ibool(iglob7)) then
       numpoin = numpoin + 1
       num_ibool_AVS_DX(iglob7) = numpoin
       write(10,*) numpoin,sngl(xstore(NGLLX,NGLLY,NGLLZ,ispec)), &
               sngl(ystore(NGLLX,NGLLY,NGLLZ,ispec)),sngl(zstore(NGLLX,NGLLY,NGLLZ,ispec))
     endif
-    if(.not. mask_ibool(iglob6)) then
+    if (.not. mask_ibool(iglob6)) then
       numpoin = numpoin + 1
       num_ibool_AVS_DX(iglob6) = numpoin
       write(10,*) numpoin,sngl(xstore(NGLLX,1,NGLLZ,ispec)), &
@@ -212,26 +212,26 @@
   endif
 
 ! face eta = eta_min
-  if(iMPIcut_eta(1,ispec)) then
-    if(.not. mask_ibool(iglob1)) then
+  if (iMPIcut_eta(1,ispec)) then
+    if (.not. mask_ibool(iglob1)) then
       numpoin = numpoin + 1
       num_ibool_AVS_DX(iglob1) = numpoin
       write(10,*) numpoin,sngl(xstore(1,1,1,ispec)), &
               sngl(ystore(1,1,1,ispec)),sngl(zstore(1,1,1,ispec))
     endif
-    if(.not. mask_ibool(iglob2)) then
+    if (.not. mask_ibool(iglob2)) then
       numpoin = numpoin + 1
       num_ibool_AVS_DX(iglob2) = numpoin
       write(10,*) numpoin,sngl(xstore(NGLLX,1,1,ispec)), &
               sngl(ystore(NGLLX,1,1,ispec)),sngl(zstore(NGLLX,1,1,ispec))
     endif
-    if(.not. mask_ibool(iglob6)) then
+    if (.not. mask_ibool(iglob6)) then
       numpoin = numpoin + 1
       num_ibool_AVS_DX(iglob6) = numpoin
       write(10,*) numpoin,sngl(xstore(NGLLX,1,NGLLZ,ispec)), &
               sngl(ystore(NGLLX,1,NGLLZ,ispec)),sngl(zstore(NGLLX,1,NGLLZ,ispec))
     endif
-    if(.not. mask_ibool(iglob5)) then
+    if (.not. mask_ibool(iglob5)) then
       numpoin = numpoin + 1
       num_ibool_AVS_DX(iglob5) = numpoin
       write(10,*) numpoin,sngl(xstore(1,1,NGLLZ,ispec)), &
@@ -244,26 +244,26 @@
   endif
 
 ! face eta = eta_max
-  if(iMPIcut_eta(2,ispec)) then
-    if(.not. mask_ibool(iglob4)) then
+  if (iMPIcut_eta(2,ispec)) then
+    if (.not. mask_ibool(iglob4)) then
       numpoin = numpoin + 1
       num_ibool_AVS_DX(iglob4) = numpoin
       write(10,*) numpoin,sngl(xstore(1,NGLLY,1,ispec)), &
               sngl(ystore(1,NGLLY,1,ispec)),sngl(zstore(1,NGLLY,1,ispec))
     endif
-    if(.not. mask_ibool(iglob3)) then
+    if (.not. mask_ibool(iglob3)) then
       numpoin = numpoin + 1
       num_ibool_AVS_DX(iglob3) = numpoin
       write(10,*) numpoin,sngl(xstore(NGLLX,NGLLY,1,ispec)), &
               sngl(ystore(NGLLX,NGLLY,1,ispec)),sngl(zstore(NGLLX,NGLLY,1,ispec))
     endif
-    if(.not. mask_ibool(iglob7)) then
+    if (.not. mask_ibool(iglob7)) then
       numpoin = numpoin + 1
       num_ibool_AVS_DX(iglob7) = numpoin
       write(10,*) numpoin,sngl(xstore(NGLLX,NGLLY,NGLLZ,ispec)), &
               sngl(ystore(NGLLX,NGLLY,NGLLZ,ispec)),sngl(zstore(NGLLX,NGLLY,NGLLZ,ispec))
     endif
-    if(.not. mask_ibool(iglob8)) then
+    if (.not. mask_ibool(iglob8)) then
       numpoin = numpoin + 1
       num_ibool_AVS_DX(iglob8) = numpoin
       write(10,*) numpoin,sngl(xstore(1,NGLLY,NGLLZ,ispec)), &
@@ -279,7 +279,7 @@
   enddo
 
 ! check that number of global points output is okay
-  if(numpoin /= npoin) &
+  if (numpoin /= npoin) &
     call exit_MPI(myrank,'incorrect number of global points in AVS or DX file creation')
 
   close(10)
@@ -295,7 +295,7 @@
   ispecface = 0
   do ispec=1,nspec
 ! only if on face
-  if(iMPIcut_xi(1,ispec) .or. iMPIcut_xi(2,ispec) .or. &
+  if (iMPIcut_xi(1,ispec) .or. iMPIcut_xi(2,ispec) .or. &
               iMPIcut_eta(1,ispec) .or. iMPIcut_eta(2,ispec)) then
     iglob1=ibool(1,1,1,ispec)
     iglob2=ibool(NGLLX,1,1,ispec)
@@ -307,7 +307,7 @@
     iglob8=ibool(1,NGLLY,NGLLZ,ispec)
 
 ! face xi = xi_min
-  if(iMPIcut_xi(1,ispec)) then
+  if (iMPIcut_xi(1,ispec)) then
     ispecface = ispecface + 1
     write(10,*) ispecface,idoubling(ispec),num_ibool_AVS_DX(iglob1), &
                   num_ibool_AVS_DX(iglob4),num_ibool_AVS_DX(iglob8), &
@@ -315,7 +315,7 @@
   endif
 
 ! face xi = xi_max
-  if(iMPIcut_xi(2,ispec)) then
+  if (iMPIcut_xi(2,ispec)) then
     ispecface = ispecface + 1
     write(10,*) ispecface,idoubling(ispec),num_ibool_AVS_DX(iglob2), &
                   num_ibool_AVS_DX(iglob3),num_ibool_AVS_DX(iglob7), &
@@ -323,7 +323,7 @@
   endif
 
 ! face eta = eta_min
-  if(iMPIcut_eta(1,ispec)) then
+  if (iMPIcut_eta(1,ispec)) then
     ispecface = ispecface + 1
     write(10,*) ispecface,idoubling(ispec),num_ibool_AVS_DX(iglob1), &
                   num_ibool_AVS_DX(iglob2),num_ibool_AVS_DX(iglob6), &
@@ -331,7 +331,7 @@
   endif
 
 ! face eta = eta_max
-  if(iMPIcut_eta(2,ispec)) then
+  if (iMPIcut_eta(2,ispec)) then
     ispecface = ispecface + 1
     write(10,*) ispecface,idoubling(ispec),num_ibool_AVS_DX(iglob4), &
                   num_ibool_AVS_DX(iglob3),num_ibool_AVS_DX(iglob7), &
@@ -342,7 +342,7 @@
   enddo
 
 ! check that number of surface elements output is okay
-  if(ispecface /= nspecface) &
+  if (ispecface /= nspecface) &
     call exit_MPI(myrank,'incorrect number of surface elements in AVS or DX file creation')
 
   close(10)

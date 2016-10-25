@@ -42,7 +42,7 @@
 
 
   subroutine aniso_mantle_model(r,theta,phi,rho, &
-    c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66,&
+    c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66, &
     AMM_V)
 
   implicit none
@@ -79,34 +79,34 @@
 ! assign the local (d_ij) or global (c_ij) anisotropic parameters.
 ! The c_ij are the coefficients in the global
 ! reference frame used in SPECFEM3D.
-  call build_cij(AMM_V%pro,AMM_V%npar1,rho,AMM_V%beta,r,colat,lon,&
-                 d11,d12,d13,d14,d15,d16,d22,d23,d24,d25,d26,d33,d34,d35,d36,&
+  call build_cij(AMM_V%pro,AMM_V%npar1,rho,AMM_V%beta,r,colat,lon, &
+                 d11,d12,d13,d14,d15,d16,d22,d23,d24,d25,d26,d33,d34,d35,d36, &
                  d44,d45,d46,d55,d56,d66)
 
-  call rotate_aniso_tensor(theta,phi,d11,d12,d13,d14,d15,d16,d22,d23,d24,d25,d26,&
-       d33,d34,d35,d36,d44,d45,d46,d55,d56,d66,&
-       c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,&
+  call rotate_aniso_tensor(theta,phi,d11,d12,d13,d14,d15,d16,d22,d23,d24,d25,d26, &
+       d33,d34,d35,d36,d44,d45,d46,d55,d56,d66, &
+       c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26, &
        c33,c34,c35,c36,c44,c45,c46,c55,c56,c66)
 
   end subroutine aniso_mantle_model
 
 !--------------------------------------------------------------------
 
-  subroutine build_cij(pro,npar1,rho,beta,r,theta,phi,&
-       d11,d12,d13,d14,d15,d16,d22,d23,d24,d25,d26,d33,d34,d35,d36,&
+  subroutine build_cij(pro,npar1,rho,beta,r,theta,phi, &
+       d11,d12,d13,d14,d15,d16,d22,d23,d24,d25,d26,d33,d34,d35,d36, &
        d44,d45,d46,d55,d56,d66)
 
   implicit none
 
   include "constants.h"
 
-  integer npar1,ndepth,idep,ipar,itheta,ilon,icz0,nx0,ny0,nz0,&
+  integer npar1,ndepth,idep,ipar,itheta,ilon,icz0,nx0,ny0,nz0, &
           ict0,ict1,icp0,icp1,icz1
 
   double precision d11,d12,d13,d14,d15,d16,d22,d23,d24,d25,d26, &
                    d33,d34,d35,d36,d44,d45,d46,d55,d56,d66
   double precision r,theta,phi,rho,depth,tei,tet,ph,fi,x0,y0,pxy0
-  double precision d1,d2,d3,d4,sd,thickness,dprof1,dprof2,eps,pc1,pc2,pc3,pc4,&
+  double precision d1,d2,d3,d4,sd,thickness,dprof1,dprof2,eps,pc1,pc2,pc3,pc4, &
                    dpr1,dpr2,param,scale_GPa,scaleval
   double precision A,C,F,AL,AN,BC,BS,GC,GS,HC,HS,EC,ES,C1p,C1sv,C1sh,C3,S1p,S1sv,S1sh,S3
   double precision beta(14,34,37,73),pro(47)
@@ -121,14 +121,14 @@
   nz0 = 34
 
 ! avoid edge effects
-  if(theta==0.0d0) theta=0.000001d0
-  if(theta==180.d0) theta=0.999999d0*theta
-  if(phi==0.0d0) phi=0.000001d0
-  if(phi==360.d0) phi=0.999999d0*phi
+  if (theta == 0.0d0) theta=0.000001d0
+  if (theta == 180.d0) theta=0.999999d0*theta
+  if (phi == 0.0d0) phi=0.000001d0
+  if (phi == 360.d0) phi=0.999999d0*phi
 
 ! dimensionalize
   depth = R_EARTH_KM*(R_UNIT_SPHERE - r)
-  if(depth <= pro(nz0) .or. depth >= pro(1)) call exit_MPI_without_rank('r out of range in build_cij')
+  if (depth <= pro(nz0) .or. depth >= pro(1)) call exit_MPI_without_rank('r out of range in build_cij')
   itheta = int(theta + pxy0)/pxy0
   ilon = int(phi + pxy0)/pxy0
   tet = theta
@@ -136,7 +136,7 @@
 
   icz0 = 0
   do idep = 1,ndepth
-    if(pro(idep) > depth) icz0 = icz0 + 1
+    if (pro(idep) > depth) icz0 = icz0 + 1
   enddo
 
 !
@@ -153,12 +153,12 @@
   icz1 = icz0 + 1
 
 ! check that parameters make sense
-  if(ict0 < 1 .or. ict0 > nx0) call exit_MPI_without_rank('ict0 out of range')
-  if(ict1 < 1 .or. ict1 > nx0) call exit_MPI_without_rank('ict1 out of range')
-  if(icp0 < 1 .or. icp0 > ny0) call exit_MPI_without_rank('icp0 out of range')
-  if(icp1 < 1 .or. icp1 > ny0) call exit_MPI_without_rank('icp1 out of range')
-  if(icz0 < 1 .or. icz0 > nz0) call exit_MPI_without_rank('icz0 out of range')
-  if(icz1 < 1 .or. icz1 > nz0) call exit_MPI_without_rank('icz1 out of range')
+  if (ict0 < 1 .or. ict0 > nx0) call exit_MPI_without_rank('ict0 out of range')
+  if (ict1 < 1 .or. ict1 > nx0) call exit_MPI_without_rank('ict1 out of range')
+  if (icp0 < 1 .or. icp0 > ny0) call exit_MPI_without_rank('icp0 out of range')
+  if (icp1 < 1 .or. icp1 > ny0) call exit_MPI_without_rank('icp1 out of range')
+  if (icz0 < 1 .or. icz0 > nz0) call exit_MPI_without_rank('icz0 out of range')
+  if (icz1 < 1 .or. icz1 > nz0) call exit_MPI_without_rank('icz1 out of range')
 
   do ipar = 1,14
     anispara(ipar,1,1) = beta(ipar,icz0,ict0,icp0)
@@ -200,7 +200,7 @@
   eps = 0.01
 
   do ipar = 1,14
-     if(thickness < eps)then
+     if (thickness < eps) then
       pc1 = anispara(ipar,1,1)
       pc2 = anispara(ipar,1,2)
       pc3 = anispara(ipar,1,3)
@@ -375,11 +375,11 @@
       ppp = 1.
       read(19,"(f5.0,f8.4)",end = 88) AMM_V%pro(idep),ppp
 
-      if(nf == 1) pari(nf,il) = ppp
-      if(nf == 2) pari(nf,il) = ppp
-      if(nf == 3) pari(nf,il) = ppp
-      if(nf == 4) ppp = pari(nf,il)
-      if(nf == 5) ppp = pari(nf,il)
+      if (nf == 1) pari(nf,il) = ppp
+      if (nf == 2) pari(nf,il) = ppp
+      if (nf == 3) pari(nf,il) = ppp
+      if (nf == 4) ppp = pari(nf,il)
+      if (nf == 5) ppp = pari(nf,il)
       do ilat = 1,nx
         read(19,"(17f7.2)",end = 88) (AMM_V%beta(ipa,idep,ilat,ilon),ilon = 1,ny)
 !
@@ -391,11 +391,11 @@
 ! bet2(11,...)=Hc, bet2(12,...)=Hs,bet2(13,...)=Ec,bet2(14,...)=Es
 !
         do ilon = 1,ny
-          if(nf <= 3 .or. nf >= 6)then
+          if (nf <= 3 .or. nf >= 6) then
             bet2(ipa,idep,ilat,ilon) = AMM_V%beta(ipa,idep,ilat,ilon)*0.01*ppp + ppp
           else
-            if(nf == 4)bet2(ipa,idep,ilat,ilon) = AMM_V%beta(ipa,idep,ilat,ilon)*0.01 + 1.
-            if(nf == 5)bet2(ipa,idep,ilat,ilon) = - AMM_V%beta(ipa,idep,ilat,ilon)*0.01 + 1.
+            if (nf == 4)bet2(ipa,idep,ilat,ilon) = AMM_V%beta(ipa,idep,ilat,ilon)*0.01 + 1.
+            if (nf == 5)bet2(ipa,idep,ilat,ilon) = - AMM_V%beta(ipa,idep,ilat,ilon)*0.01 + 1.
           endif
         enddo
 
@@ -422,11 +422,11 @@
       il = idep + np1 - 1
       read(15,"(2f4.0,2i3,f4.0)",end = 888) xinf,yinf,nx,ny,pxy
       read(15,"(f5.0,f8.4)",end = 888) AMM_V%pro(idep),ppp
-      if(nf == 7) ppp = pari(2,il)
-      if(nf == 9) ppp = pari(3,il)
+      if (nf == 7) ppp = pari(2,il)
+      if (nf == 9) ppp = pari(3,il)
       af = pari(6,il)*(pari(2,il) - 2.*pari(3,il))
-      if(nf == 11) ppp = af
-      if(nf == 13) ppp = (pari(4,il) + 1.)*pari(3,il)
+      if (nf == 11) ppp = af
+      if (nf == 13) ppp = (pari(4,il) + 1.)*pari(3,il)
 
       do ilat = 1,nx
         read(15,"(17f7.2)",end = 888) (alph(ilon,ilat),ilon = 1,ny)
@@ -497,7 +497,7 @@
 ! array par(i,nlayer)
 ! output: array pari(ipar, nlayer): rho, A, L, xi-1, phi-1, eta-1
 
-  integer i,j,k,ip,ifanis,idum1,idum2,idum3,nlayer,nout,neff,&
+  integer i,j,k,ip,ifanis,idum1,idum2,idum3,nlayer,nout,neff, &
           nband,nri,minlay,moho,kiti
   double precision pari(14,47),qkappa(47),qshear(47),par(6,47)
   double precision epa(14,47),ra(47),dcori(47),ri(47)
@@ -513,7 +513,7 @@
      open(unit=13,file=Adrem119,status='old',action='read')
      read(13,*,end = 77) nlayer,minlay,moho,nout,neff,nband,kiti,null
 
-     if(kiti == 0) read(13,"(20a4)",end = 77) idum1
+     if (kiti == 0) read(13,"(20a4)",end = 77) idum1
      read(13,"(20a4)",end = 77) idum2
      read(13,"(20a4)",end = 77) idum3
 
@@ -549,7 +549,7 @@
        enddo
        vsv = 0.
        vsh = 0.
-       if(al < 0.0001 .or. an < 0.0001) goto 12
+       if (al < 0.0001 .or. an < 0.0001) goto 12
        vsv = dsqrt(al/rho)
        vsh = dsqrt(an/rho)
  12    vpv = dsqrt(ac/rho)
@@ -584,10 +584,10 @@
 
 !--------------------------------------------------------------------
 
-  subroutine rotate_aniso_tensor(theta,phi,d11,d12,d13,d14,d15,d16,&
-                           d22,d23,d24,d25,d26,&
-                           d33,d34,d35,d36,d44,d45,d46,d55,d56,d66,&
-                           c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,&
+  subroutine rotate_aniso_tensor(theta,phi,d11,d12,d13,d14,d15,d16, &
+                           d22,d23,d24,d25,d26, &
+                           d33,d34,d35,d36,d44,d45,d46,d55,d56,d66, &
+                           c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26, &
                            c33,c34,c35,c36,c44,c45,c46,c55,c56,c66)
 
   implicit none

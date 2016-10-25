@@ -44,29 +44,29 @@
   gamma_interp_z = spacing_z - dble(iz)
 
 ! suppress edge effects for points outside of Gocad model
-  if(ix < 0) then
+  if (ix < 0) then
     ix = 0
     gamma_interp_x = 0.d0
   endif
-  if(ix > NX_GOCAD_MR-2) then
+  if (ix > NX_GOCAD_MR-2) then
     ix = NX_GOCAD_MR-2
     gamma_interp_x = 1.d0
   endif
 
-  if(iy < 0) then
+  if (iy < 0) then
     iy = 0
     gamma_interp_y = 0.d0
   endif
-  if(iy > NY_GOCAD_MR-2) then
+  if (iy > NY_GOCAD_MR-2) then
     iy = NY_GOCAD_MR-2
     gamma_interp_y = 1.d0
   endif
 
-  if(iz < 0) then
+  if (iz < 0) then
     iz = 0
     gamma_interp_z = 0.d0
   endif
-  if(iz > NZ_GOCAD_MR-2) then
+  if (iz > NZ_GOCAD_MR-2) then
     iz = NZ_GOCAD_MR-2
     gamma_interp_z = 1.d0
   endif
@@ -85,7 +85,7 @@
 ! check if element is defined (i.e. is in the sediments in Voxet)
 ! do nothing if element is undefined
 ! a P-velocity of 20 km/s is used to indicate fictitious elements
-   if(v1 < 19000. .and. v2 < 19000. .and. &
+   if (v1 < 19000. .and. v2 < 19000. .and. &
       v3 < 19000. .and. v4 < 19000. .and. &
       v5 < 19000. .and. v6 < 19000. .and. &
       v7 < 19000. .and. v8 < 19000.) then
@@ -105,19 +105,19 @@
            v8*(1.-gamma_interp_x)*gamma_interp_y*gamma_interp_z
 
 ! impose minimum velocity if needed
-         if(IMPOSE_MINIMUM_VP_GOCAD .and. vp_final < VP_MIN_GOCAD) vp_final = VP_MIN_GOCAD
+         if (IMPOSE_MINIMUM_VP_GOCAD .and. vp_final < VP_MIN_GOCAD) vp_final = VP_MIN_GOCAD
 
 ! taper edges to make smooth transition between Hauksson and MR blocks
 ! get value from edge of medium-resolution block
 ! then use linear interpolation from edge of the model
-  if(TAPER_GOCAD_TRANSITIONS) then
+  if (TAPER_GOCAD_TRANSITIONS) then
 
 ! x = xmin
-  if(utm_x_eval < ORIG_X_GOCAD_MR + THICKNESS_TAPER_BLOCK_MR) then
+  if (utm_x_eval < ORIG_X_GOCAD_MR + THICKNESS_TAPER_BLOCK_MR) then
     xmesh = ORIG_X_GOCAD_MR
     ymesh = utm_y_eval
     zmesh = z_eval
-    if(HAUKSSON_REGIONAL_MODEL) then
+    if (HAUKSSON_REGIONAL_MODEL) then
       call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp_ref_hauksson,vs_dummy, MOHO_MAP_LUPEI)
     else
       call socal_model(doubling_index,rho_dummy,vp_ref_hauksson,vs_dummy)
@@ -126,11 +126,11 @@
     vp_final = vp_ref_hauksson * (1. - gamma_interp_x) + vp_final * gamma_interp_x
 
 ! x = xmax
-  else if(utm_x_eval > END_X_GOCAD_MR - THICKNESS_TAPER_BLOCK_MR) then
+  else if (utm_x_eval > END_X_GOCAD_MR - THICKNESS_TAPER_BLOCK_MR) then
     xmesh = END_X_GOCAD_MR
     ymesh = utm_y_eval
     zmesh = z_eval
-    if(HAUKSSON_REGIONAL_MODEL) then
+    if (HAUKSSON_REGIONAL_MODEL) then
       call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp_ref_hauksson,vs_dummy, MOHO_MAP_LUPEI)
     else
       call socal_model(doubling_index,rho_dummy,vp_ref_hauksson,vs_dummy)
@@ -139,11 +139,11 @@
     vp_final = vp_ref_hauksson * gamma_interp_x + vp_final * (1. - gamma_interp_x)
 
 ! y = ymin
-  else if(utm_y_eval < ORIG_Y_GOCAD_MR + THICKNESS_TAPER_BLOCK_MR) then
+  else if (utm_y_eval < ORIG_Y_GOCAD_MR + THICKNESS_TAPER_BLOCK_MR) then
     xmesh = utm_x_eval
     ymesh = ORIG_Y_GOCAD_MR
     zmesh = z_eval
-    if(HAUKSSON_REGIONAL_MODEL) then
+    if (HAUKSSON_REGIONAL_MODEL) then
       call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp_ref_hauksson,vs_dummy, MOHO_MAP_LUPEI)
     else
       call socal_model(doubling_index,rho_dummy,vp_ref_hauksson,vs_dummy)
@@ -152,11 +152,11 @@
     vp_final = vp_ref_hauksson * (1. - gamma_interp_y) + vp_final * gamma_interp_y
 
 ! y = ymax
-  else if(utm_y_eval > END_Y_GOCAD_MR - THICKNESS_TAPER_BLOCK_MR) then
+  else if (utm_y_eval > END_Y_GOCAD_MR - THICKNESS_TAPER_BLOCK_MR) then
     xmesh = utm_x_eval
     ymesh = END_Y_GOCAD_MR
     zmesh = z_eval
-    if(HAUKSSON_REGIONAL_MODEL) then
+    if (HAUKSSON_REGIONAL_MODEL) then
       call hauksson_model(vp_hauksson,vs_hauksson,xmesh,ymesh,zmesh,vp_ref_hauksson,vs_dummy, MOHO_MAP_LUPEI)
     else
       call socal_model(doubling_index,rho_dummy,vp_ref_hauksson,vs_dummy)
@@ -174,8 +174,8 @@
            (z_eval - (-8500.d0)) / (0.d0 - (-8500.d0))
 
 ! make sure ratio remains in interval
-  if(vp_vs_ratio < VP_VS_RATIO_GOCAD_BOTTOM) vp_vs_ratio = VP_VS_RATIO_GOCAD_BOTTOM
-  if(vp_vs_ratio > VP_VS_RATIO_GOCAD_TOP) vp_vs_ratio = VP_VS_RATIO_GOCAD_TOP
+  if (vp_vs_ratio < VP_VS_RATIO_GOCAD_BOTTOM) vp_vs_ratio = VP_VS_RATIO_GOCAD_BOTTOM
+  if (vp_vs_ratio > VP_VS_RATIO_GOCAD_TOP) vp_vs_ratio = VP_VS_RATIO_GOCAD_TOP
 
          vs_final = vp_final / vp_vs_ratio
          call compute_rho_estimate(rho_final,vp_final)

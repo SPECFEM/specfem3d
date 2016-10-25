@@ -397,7 +397,7 @@ enddo
                   (temporary_nodes(1,ix,iy,iz)-nodes_coords_ext_mesh_sub(1,elmnts_ext_mesh_sub(inode,ispec_neighbours_sub)))**2 + &
                   (temporary_nodes(2,ix,iy,iz)-nodes_coords_ext_mesh_sub(2,elmnts_ext_mesh_sub(inode,ispec_neighbours_sub)))**2 + &
                   (temporary_nodes(3,ix,iy,iz)-nodes_coords_ext_mesh_sub(3,elmnts_ext_mesh_sub(inode,ispec_neighbours_sub)))**2 ) &
-                     < xtol ) then
+ < xtol ) then
                   temporary_nodes_lookup(ix,iy,iz) = elmnts_ext_mesh_sub(inode,ispec_neighbours_sub)
                 endif
 
@@ -553,12 +553,12 @@ enddo
                 enddo
              enddo
 
-             if ( connectivity >=  ncommonnodes) then
+             if ( connectivity >= ncommonnodes) then
 
                 is_neighbour = .false.
 
                 do m = 0, xadj(nodes_elmnts(k+j*nsize))
-                   if ( .not.is_neighbour ) then
+                   if (.not. is_neighbour ) then
                       if ( adjncy(nodes_elmnts(k+j*nsize)*MAX_NEIGHBOURS+m) == nodes_elmnts(l+j*nsize) ) then
                          is_neighbour = .true.
 
@@ -566,7 +566,7 @@ enddo
                       endif
                    endif
                 enddo
-                if ( .not.is_neighbour ) then
+                if (.not. is_neighbour ) then
                    adjncy(nodes_elmnts(k+j*nsize)*MAX_NEIGHBOURS+xadj(nodes_elmnts(k+j*nsize))) = nodes_elmnts(l+j*nsize)
                    xadj(nodes_elmnts(k+j*nsize)) = xadj(nodes_elmnts(k+j*nsize)) + 1
                    adjncy(nodes_elmnts(l+j*nsize)*MAX_NEIGHBOURS+xadj(nodes_elmnts(l+j*nsize))) = nodes_elmnts(k+j*nsize)

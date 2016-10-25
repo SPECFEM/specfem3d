@@ -34,7 +34,6 @@ RHO_MAX=1500.
 
 # header info
 echo "creating header info..."
-
 echo "$ORIG_X $ORIG_Y $ORIG_Z $END_X $END_Y $END_Z  " > tmp.xyz
 echo "$SPACING_X $SPACING_Y $SPACING_Z " >> tmp.xyz
 echo "$NX $NY $NZ " >> tmp.xyz
@@ -50,15 +49,20 @@ echo "adding model values..."
 echo "1" | awk '{ for(k=0;k<NZ;k++){ for(j=0;j<NY;j++){for(i=0;i<NX;i++){ x=i*SPACING_X;y=j*SPACING_Y;z=k*SPACING_Z;vp=VP_MIN+GRADIENT*(-z);vs=VS_MIN + GRADIENT*(-z); rho=RHO_MIN;print x,y,z,vp,vs,rho }}} }' \
             NX=$NX NY=$NY NZ=$NZ SPACING_X=$SPACING_X SPACING_Y=$SPACING_Y SPACING_Z=$SPACING_Z VP_MIN=$VP_MIN VS_MIN=$VS_MIN RHO_MIN=$RHO_MIN GRADIENT=$GRADIENT >> tmp.xyz
 
+# renames file
 mv tmp.xyz tomography_model.xyz
 
 # links to file
 mkdir -p DATA
 mkdir -p DATA/tomo_files
+
+mv -v tomography_model.xyz DATA/
+
 cd DATA/tomo_files/
 if [ ! -e tomography_model.xyz ]; then
-ln -s ../../tomography_model.xyz
+ln -s ../tomography_model.xyz
 fi
 cd ../../
 
-echo "created file: tomography_model.xyz"
+echo "created file: DATA/tomography_model.xyz"
+echo

@@ -86,9 +86,12 @@ contains
 ! Minv          inverse mass matrix
 ! dt            global time step
 !
-subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
+  subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
 
-  use specfem_par, only : nt=>NSTEP
+  use specfem_par, only: nt => NSTEP
+
+  implicit none
+
   character(len=MAX_STRING_LEN), intent(in) :: prname ! 'proc***'
   double precision, intent(in) :: DTglobal
   integer, intent(in) :: myrank
@@ -109,19 +112,19 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
 
   open(unit=IIN_PAR,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file_faults',status='old',iostat=ier)
   if (ier /= 0) then
-    if (myrank==0) write(IMAIN,*) 'no dynamic faults'
+    if (myrank == 0) write(IMAIN,*) 'no dynamic faults'
     close(IIN_PAR)
     return
   endif
 
   read(IIN_PAR,*) nbfaults
-  if (nbfaults==0) then
-    if (myrank==0) write(IMAIN,*) 'No faults found in file DATA/Par_file_faults'
+  if (nbfaults == 0) then
+    if (myrank == 0) write(IMAIN,*) 'No faults found in file DATA/Par_file_faults'
     return
-  else if (nbfaults==1) then
-    if (myrank==0) write(IMAIN,*) 'There is 1 fault in file DATA/Par_file_faults'
+  else if (nbfaults == 1) then
+    if (myrank == 0) write(IMAIN,*) 'There is 1 fault in file DATA/Par_file_faults'
   else
-    if (myrank==0) write(IMAIN,*) 'There are ', nbfaults, ' faults in file DATA/Par_file_faults'
+    if (myrank == 0) write(IMAIN,*) 'There are ', nbfaults, ' faults in file DATA/Par_file_faults'
   endif
 
   filename = prname(1:len_trim(prname))//'fault_db.bin'
@@ -153,7 +156,7 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
   allocate( faults(nbfaults) )
   dt = real(DTglobal)
   read(IIN_PAR,nml=RUPTURE_SWITCHES,end=110,iostat=ier)
-  if(ier/=0) write(*,*) 'RUPTURE_SWITCHES not found in Par_file_faults'
+  if (ier /= 0) write(*,*) 'RUPTURE_SWITCHES not found in Par_file_faults'
   do iflt=1,nbfaults
     read(IIN_PAR,nml=BEGIN_FAULT,end=100)
     call init_one_fault(faults(iflt),IIN_BIN,IIN_PAR,dt,nt,iflt,myrank)
@@ -176,39 +179,46 @@ subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
 
   return
 
-100 if (myrank==0) write(IMAIN,*) 'Fatal error: did not find BEGIN_FAULT input block in file DATA/Par_file_faults. Abort.'
+100 if (myrank == 0) write(IMAIN,*) 'Fatal error: did not find BEGIN_FAULT input block in file DATA/Par_file_faults. Abort.'
     stop
 
-110 if (myrank==0) write(IMAIN,*) 'Fatal error: did not find RUPTURE_SWITCHES input block in file DATA/Par_file_faults. Abort.'
+110 if (myrank == 0) write(IMAIN,*) 'Fatal error: did not find RUPTURE_SWITCHES input block in file DATA/Par_file_faults. Abort.'
     stop
   ! WARNING TO DO: should be an MPI abort
 
-end subroutine BC_DYNFLT_init
+  end subroutine BC_DYNFLT_init
 
-subroutine transfer_faultdata_GPU()
-   use specfem_par ,only: Fault_pointer
+!---------------------------------------------------------------------
 
-   integer :: ifault,nspec,nglob
+  subroutine transfer_faultdata_GPU()
 
-   call initialize_fault_solver(Fault_pointer,Nfaults,V_HEALING,V_RUPT)
-   call initialize_fault_data(Fault_pointer,faults(1)%dataT%iglob, faults(1)%dataT%npoin, 500)
+  use specfem_par , only: Fault_pointer
 
-   do ifault = 1,Nfaults
+  implicit none
+
+  integer :: ifault,nspec,nglob
+
+  call initialize_fault_solver(Fault_pointer,Nfaults,V_HEALING,V_RUPT)
+  do ifault = 1,Nfaults
+    call initialize_fault_data(Fault_pointer,faults(ifault)%dataT%iglob, faults(ifault)%dataT%npoin, 500, ifault-1)
+  enddo
+
+  do ifault = 1,Nfaults
 
     nspec = faults(ifault)%nspec
     nglob = faults(ifault)%nglob
 
-   call transfer_todevice_fault_data(Fault_pointer,ifault-1,nspec,nglob,faults(ifault)%D,&
-   faults(ifault)%T0,faults(ifault)%T,faults(ifault)%B,faults(ifault)%R,faults(ifault)%V,&
-   faults(ifault)%Z,faults(ifault)%invM1,faults(ifault)%invM2,faults(ifault)%ibulk1,faults(ifault)%ibulk2)
+    call transfer_todevice_fault_data(Fault_pointer,ifault-1,nspec,nglob,faults(ifault)%D, &
+    faults(ifault)%T0,faults(ifault)%T,faults(ifault)%B,faults(ifault)%R,faults(ifault)%V, &
+    faults(ifault)%Z,faults(ifault)%invM1,faults(ifault)%invM2,faults(ifault)%ibulk1,faults(ifault)%ibulk2)
 
-   enddo
-end subroutine transfer_faultdata_GPU
+  enddo
+
+  end subroutine transfer_faultdata_GPU
 
 !---------------------------------------------------------------------
 
-subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
-
+  subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
 
   type(bc_dynandkinflt_type), intent(inout) :: bc
   integer, intent(in)                 :: IIN_BIN,IIN_PAR,NT,iflt
@@ -224,7 +234,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
 
   call initialize_fault(bc,IIN_BIN)
 
-  if (bc%nspec>0) then
+  if (bc%nspec > 0) then
 
     allocate(bc%T(3,bc%nglob))
     allocate(bc%D(3,bc%nglob))
@@ -247,7 +257,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
     bc%T0(2,:) = S2
     bc%T0(3,:) = S3
 
-    if(LOAD_STRESSDROP) then
+    if (LOAD_STRESSDROP) then
         call make_frictional_stress
         call load_stress_drop
     endif
@@ -279,9 +289,9 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
   bc%T=bc%T0
   if (RATE_AND_STATE) then
     call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt,8,iflt)
-    if (bc%dataT%npoin>0) then
+    if (bc%dataT%npoin > 0) then
     bc%dataT%longFieldNames(8) = "log10 of state variable (log-seconds)"
-    if (bc%rsf%StateLaw==1) then
+    if (bc%rsf%StateLaw == 1) then
       bc%dataT%shortFieldNames = trim(bc%dataT%shortFieldNames)//" log-theta"
     else
       bc%dataT%shortFieldNames = trim(bc%dataT%shortFieldNames)//" psi"
@@ -297,93 +307,108 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt,myrank)
     if (bc%nspec > 0) call write_dataXZ(bc%dataXZ,0,iflt)
   else
     call gather_dataXZ(bc)
-    if (myrank==0) call write_dataXZ(bc%dataXZ_all,0,iflt)
+    if (myrank == 0) call write_dataXZ(bc%dataXZ_all,0,iflt)
   endif
 
-!--------------------------------------------------------
-contains
+  contains
 
-subroutine TPV16_init
+    !-----
 
-  integer :: ier, ipar
-  integer, parameter :: IIN_NUC =270 ! WARNING: not safe, should look for an available unit
-  real(kind=CUSTOM_REAL), dimension(bc%nglob) :: loc_str,loc_dip,sigma0,tau0_str,tau0_dip,Rstress_str,Rstress_dip,static_fc, &
-       dyn_fc,swcd,cohes,tim_forcedRup
-  integer, dimension(bc%nglob) :: inp_nx,inp_nz
-  real(kind=CUSTOM_REAL) :: minX, siz_str,siz_dip, hypo_loc_str,hypo_loc_dip,rad_T_str,rad_T_dip
-  integer :: relz_num,sub_relz_num, num_cell_str,num_cell_dip, hypo_cell_str,hypo_cell_dip
-  integer :: i
+    subroutine TPV16_init
 
-  open(unit=IIN_NUC,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'input_file.txt',status='old',iostat=ier)
-  read(IIN_NUC,*) relz_num,sub_relz_num
-  read(IIN_NUC,*) num_cell_str,num_cell_dip,siz_str,siz_dip
-  read(IIN_NUC,*) hypo_cell_str,hypo_cell_dip,hypo_loc_str,hypo_loc_dip,rad_T_str,rad_T_dip
-  do ipar=1,bc%nglob
-    read(IIN_NUC,*) inp_nx(ipar),inp_nz(ipar),loc_str(ipar),loc_dip(ipar),sigma0(ipar),tau0_str(ipar),tau0_dip(ipar), &
-         Rstress_str(ipar),Rstress_dip(ipar),static_fc(ipar),dyn_fc(ipar),swcd(ipar),cohes(ipar),tim_forcedRup(ipar)
-  enddo
-  close(IIN_NUC)
+    implicit none
 
-  minX = minval(bc%coord(1,:))
+    integer :: ier, ipar
+    integer, parameter :: IIN_NUC =270 ! WARNING: not safe, should look for an available unit
+    real(kind=CUSTOM_REAL), dimension(bc%nglob) :: loc_str,loc_dip,sigma0,tau0_str,tau0_dip,Rstress_str,Rstress_dip,static_fc, &
+         dyn_fc,swcd,cohes,tim_forcedRup
+    integer, dimension(bc%nglob) :: inp_nx,inp_nz
+    real(kind=CUSTOM_REAL) :: minX, siz_str,siz_dip, hypo_loc_str,hypo_loc_dip,rad_T_str,rad_T_dip
+    integer :: relz_num,sub_relz_num, num_cell_str,num_cell_dip, hypo_cell_str,hypo_cell_dip
+    integer :: i
 
-  do i=1,bc%nglob
+    open(unit=IIN_NUC,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'input_file.txt',status='old',iostat=ier)
+    read(IIN_NUC,*) relz_num,sub_relz_num
+    read(IIN_NUC,*) num_cell_str,num_cell_dip,siz_str,siz_dip
+    read(IIN_NUC,*) hypo_cell_str,hypo_cell_dip,hypo_loc_str,hypo_loc_dip,rad_T_str,rad_T_dip
+    do ipar=1,bc%nglob
+      read(IIN_NUC,*) inp_nx(ipar),inp_nz(ipar),loc_str(ipar),loc_dip(ipar),sigma0(ipar),tau0_str(ipar),tau0_dip(ipar), &
+           Rstress_str(ipar),Rstress_dip(ipar),static_fc(ipar),dyn_fc(ipar),swcd(ipar),cohes(ipar),tim_forcedRup(ipar)
+    enddo
+    close(IIN_NUC)
 
-   ! WARNING: nearest neighbor interpolation
-    ipar = minloc( (minX+loc_str(:)-bc%coord(1,i))**2 + (-loc_dip(:)-bc%coord(3,i))**2 , 1)
-   !loc_dip is negative of Z-coord
+    minX = minval(bc%coord(1,:))
 
-    bc%T0(3,i) = -sigma0(ipar)
-    bc%T0(1,i) = tau0_str(ipar)
-    bc%T0(2,i) = tau0_dip(ipar)
+    do i=1,bc%nglob
 
-    bc%swf%mus(i) = static_fc(ipar)
-    bc%swf%mud(i) = dyn_fc(ipar)
-    bc%swf%Dc(i) = swcd(ipar)
-    bc%swf%C(i) = cohes(ipar)
-    bc%swf%T(i) = tim_forcedRup(ipar)
+     ! WARNING: nearest neighbor interpolation
+      ipar = minloc( (minX+loc_str(:)-bc%coord(1,i))**2 + (-loc_dip(:)-bc%coord(3,i))**2 , 1)
+     !loc_dip is negative of Z-coord
 
-  enddo
+      bc%T0(3,i) = -sigma0(ipar)
+      bc%T0(1,i) = tau0_str(ipar)
+      bc%T0(2,i) = tau0_dip(ipar)
 
-end subroutine TPV16_init
+      bc%swf%mus(i) = static_fc(ipar)
+      bc%swf%mud(i) = dyn_fc(ipar)
+      bc%swf%Dc(i) = swcd(ipar)
+      bc%swf%C(i) = cohes(ipar)
+      bc%swf%T(i) = tim_forcedRup(ipar)
 
-subroutine make_frictional_stress
+    enddo
+
+    end subroutine TPV16_init
+
+    !-------
+
+    subroutine make_frictional_stress
+
+    implicit none
+
     real(kind=CUSTOM_REAL),dimension(bc%nglob) :: T1tmp, T2tmp
     !T1tmp=sign(abs(bc%T0(3,:)*0.3*abs(bc%T0(1,:))/sqrt(bc%T0(1,:)*bc%T0(1,:)+bc%T0(2,:)*bc%T0(2,:))),bc%T0(1,:))
     !T2tmp=sign(abs(bc%T0(3,:)*0.3*abs(bc%T0(2,:))/sqrt(bc%T0(1,:)*bc%T0(1,:)+bc%T0(2,:)*bc%T0(2,:))),bc%T0(2,:))
     T1tmp = 0e0_CUSTOM_REAL
     T2tmp = -bc%T0(3,:)*0.3
-bc%T0(1,:)=T1tmp
-bc%T0(2,:)=T2tmp
-end  subroutine make_frictional_stress
+    bc%T0(1,:)=T1tmp
+    bc%T0(2,:)=T2tmp
 
-subroutine load_stress_drop   !added by kangchen this is specially made for Balochistan Simulation
+    end subroutine make_frictional_stress
 
-   use specfem_par, only:prname
+    !--------
 
-   real(kind=CUSTOM_REAL),dimension(bc%nglob) :: T1tmp, T2tmp
-   character(len=70) :: filename
-   integer :: IIN_STR,ier
-   filename = prname(1:len_trim(prname))//'fault_prestr.bin'
-   write(*,*) prname,bc%nglob
-   open(unit=IIN_STR,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
-   read(IIN_STR) T1tmp
-   read(IIN_STR) T2tmp
-   close(IIN_STR)
-!   write(*,*) prname,bc%nglob,'successful'
+    subroutine load_stress_drop   !added by kangchen this is specially made for Balochistan Simulation
 
-   bc%T0(1,:)=bc%T0(1,:)-T1tmp
-   bc%T0(2,:)=bc%T0(2,:)-T2tmp
+    use specfem_par, only: prname
 
+    implicit none
 
-end subroutine load_stress_drop
+    real(kind=CUSTOM_REAL),dimension(bc%nglob) :: T1tmp, T2tmp
+    character(len=70) :: filename
+    integer :: ier
+    integer,parameter :: IIN_STR = 122 ! could also use e.g. standard IIN from constants.h
 
+    filename = prname(1:len_trim(prname))//'fault_prestr.bin'
+    write(*,*) prname,bc%nglob
+    open(unit=IIN_STR,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
+    read(IIN_STR) T1tmp
+    read(IIN_STR) T2tmp
+    close(IIN_STR)
+    !   write(*,*) prname,bc%nglob,'successful'
 
-end subroutine init_one_fault
+    bc%T0(1,:)=bc%T0(1,:)-T1tmp
+    bc%T0(2,:)=bc%T0(2,:)-T2tmp
+
+    end subroutine load_stress_drop
+
+  end subroutine init_one_fault
 
 !---------------------------------------------------------------------
 ! REPLACES the value of a fault parameter inside an area with prescribed shape
-subroutine init_2d_distribution(a,coord,iin,n)
+  subroutine init_2d_distribution(a,coord,iin,n)
 !JPA refactor: background value should be an argument
+
+  implicit none
 
   real(kind=CUSTOM_REAL), intent(inout) :: a(:)
   real(kind=CUSTOM_REAL), intent(in) :: coord(:,:)
@@ -402,7 +427,7 @@ subroutine init_2d_distribution(a,coord,iin,n)
 
   SMALLVAL = 1.e-10_CUSTOM_REAL
 
-  if (n==0) return
+  if (n == 0) return
 
   do i=1,n
     shapeval = ''
@@ -427,7 +452,7 @@ subroutine init_2d_distribution(a,coord,iin,n)
 
     case ('circle-exp')
       r1 = sqrt((coord(1,:)-xc)**2 + (coord(2,:)-yc)**2 + (coord(3,:)-zc)**2)
-      where(r1<r)
+      where(r1 < r)
         b = exp(r1**2/(r1**2 - r**2) ) * val + valh
       elsewhere
         b = 0._CUSTOM_REAL
@@ -462,8 +487,8 @@ subroutine init_2d_distribution(a,coord,iin,n)
 
     case ('cylindertaper')
       r1=sqrt(((coord(1,:)-xc)**2 + (coord(3,:)-zc)**2 ));
-      where(r1<rc)
-        where(r1<r)
+      where(r1 < rc)
+        where(r1 < r)
          b=val;
         elsewhere
         b=0.5e0_CUSTOM_REAL*val*(1e0_CUSTOM_REAL+cos(PI*(r1-r)/(rc-r)))
@@ -494,15 +519,15 @@ subroutine init_2d_distribution(a,coord,iin,n)
     where (b /= 0e0_CUSTOM_REAL) a = b
   enddo
 
-end subroutine init_2d_distribution
-
-
+  end subroutine init_2d_distribution
 
 !---------------------------------------------------------------------
+
 !init_fault_traction subroutine computes the traction on the fault plane
 !according to a uniform regional stress field.
-subroutine init_fault_traction(bc,Sigma)
+  subroutine init_fault_traction(bc,Sigma)
 
+  implicit none
   type(bc_dynandkinflt_type), intent(inout) :: bc
   real(kind=CUSTOM_REAL),dimension(6), intent(in) :: Sigma
   real(kind=CUSTOM_REAL),dimension(3,bc%nglob) :: Traction
@@ -518,22 +543,25 @@ subroutine init_fault_traction(bc,Sigma)
   Traction = rotate(bc,Traction,1)
   bc%T0 = bc%T0 + Traction
 
-end subroutine init_fault_traction
+  end subroutine init_fault_traction
 
 
 !---------------------------------------------------------------------
-elemental function heaviside(x)
+
+  elemental function heaviside(x)
+
+  implicit none
 
   real(kind=CUSTOM_REAL), intent(in) :: x
   real(kind=CUSTOM_REAL) :: heaviside
 
-  if (x>=0e0_CUSTOM_REAL) then
+  if (x >= 0e0_CUSTOM_REAL) then
     heaviside = 1e0_CUSTOM_REAL
   else
     heaviside = 0e0_CUSTOM_REAL
   endif
 
-end function heaviside
+  end function heaviside
 
 !=====================================================================
 ! adds boundary term Bt into Force array for each fault.
@@ -541,7 +569,9 @@ end function heaviside
 ! NOTE: On non-split nodes at fault edges, dD=dV=dA=0
 ! and the net contribution of B*T is =0
 !
-subroutine bc_dynflt_set3d_all(F,V,D)
+  subroutine bc_dynflt_set3d_all(F,V,D)
+
+  implicit none
 
   real(kind=CUSTOM_REAL), dimension(:,:), intent(in) :: V,D
   real(kind=CUSTOM_REAL), dimension(:,:), intent(inout) :: F
@@ -553,12 +583,15 @@ subroutine bc_dynflt_set3d_all(F,V,D)
     call BC_DYNFLT_set3d(faults(i),F,V,D,i)
   enddo
 
-end subroutine bc_dynflt_set3d_all
+  end subroutine bc_dynflt_set3d_all
 
 !---------------------------------------------------------------------
-subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
+
+  subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
 
   use specfem_par, only: it,NSTEP,myrank
+
+  implicit none
 
   real(kind=CUSTOM_REAL), intent(inout) :: MxA(:,:)
   type(bc_dynandkinflt_type), intent(inout) :: bc
@@ -714,16 +747,16 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
 
     call store_dataT(bc%dataT,bc%D,bc%V,bc%T,it)
     if (RATE_AND_STATE) then
-      if (bc%rsf%StateLaw==1) then
-        bc%dataT%dat(8,it,:) = log10(theta_new(bc%dataT%iglob))
+      if (bc%rsf%StateLaw == 1) then
+        bc%dataT%dat(8,:,it) = log10(theta_new(bc%dataT%iglob))
       else
-        bc%dataT%dat(8,it,:) = theta_new(bc%dataT%iglob)
+        bc%dataT%dat(8,:,it) = theta_new(bc%dataT%iglob)
       endif
     endif
 
     !-- outputs --
     ! write dataT every NTOUT time step or at the end of simulation
-    if (mod(it,NTOUT) == 0 .or. it==NSTEP) call SCEC_write_dataT(bc%dataT)
+    if (mod(it,NTOUT) == 0 .or. it == NSTEP) call SCEC_write_dataT(bc%dataT)
 
   endif
 
@@ -733,7 +766,7 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
       if (bc%nspec > 0) call write_dataXZ(bc%dataXZ,it,iflt)
     else
       call gather_dataXZ(bc)
-      if (myrank==0) call write_dataXZ(bc%dataXZ_all,it,iflt)
+      if (myrank == 0) call write_dataXZ(bc%dataXZ_all,it,iflt)
     endif
   endif
 
@@ -741,15 +774,17 @@ subroutine BC_DYNFLT_set3d(bc,MxA,V,D,iflt)
     if (.not. PARALLEL_FAULT) then
       call SCEC_Write_RuptureTime(bc%dataXZ,iflt)
     else
-      if (myrank==0) call SCEC_Write_RuptureTime(bc%dataXZ_all,iflt)
+      if (myrank == 0) call SCEC_Write_RuptureTime(bc%dataXZ_all,iflt)
     endif
   endif
 
-end subroutine BC_DYNFLT_set3d
+  end subroutine BC_DYNFLT_set3d
 
 !===============================================================
 
-subroutine swf_init(f,mu,coord,IIN_PAR)
+  subroutine swf_init(f,mu,coord,IIN_PAR)
+
+  implicit none
 
   type(swf_type), intent(out) :: f
   real(kind=CUSTOM_REAL), intent(out)  :: mu(:)
@@ -802,10 +837,13 @@ subroutine swf_init(f,mu,coord,IIN_PAR)
 
   mu = swf_mu(f)
 
-end subroutine swf_init
+  end subroutine swf_init
 
 !---------------------------------------------------------------------
-subroutine swf_update_state(dold,dnew,vold,f)
+
+  subroutine swf_update_state(dold,dnew,vold,f)
+
+  implicit none
 
   real(kind=CUSTOM_REAL), dimension(:,:), intent(in) :: vold,dold,dnew
   type(swf_type), intent(inout) :: f
@@ -819,50 +857,61 @@ subroutine swf_update_state(dold,dnew,vold,f)
     npoin = size(vold,2)
     do k=1,npoin
       vnorm = sqrt(vold(1,k)**2 + vold(2,k)**2)
-      if (vnorm<V_HEALING) f%theta(k) = 0e0_CUSTOM_REAL
+      if (vnorm < V_HEALING) f%theta(k) = 0e0_CUSTOM_REAL
     enddo
   endif
-end subroutine swf_update_state
+
+  end subroutine swf_update_state
 
 !---------------------------------------------------------------------
-function swf_mu(f) result(mu)
+
+  function swf_mu(f) result(mu)
+
+  implicit none
 
   type(swf_type), intent(in) :: f
   real(kind=CUSTOM_REAL) :: mu(size(f%theta))
 
   mu = f%mus -(f%mus-f%mud)* min(f%theta/f%dc, 1e0_CUSTOM_REAL)
 
-end function swf_mu
+  end function swf_mu
 
 
 !=====================================================================
-subroutine rsf_GPU_init()
 
-   use specfem_par, only : Fault_pointer
-   implicit none
-   type(rsf_type),pointer :: f
-   type(swf_type),pointer :: g
-   integer :: ifault
+  subroutine rsf_GPU_init()
 
-   do ifault = 1,Nfaults
-   f => faults(ifault)%rsf
-   g => faults(ifault)%swf
+  use specfem_par, only: Fault_pointer
 
-   if (associated(f)) then  ! rate and state friction simulation
-    call transfer_todevice_rsf_data(Fault_pointer,faults(ifault)%nglob,ifault-1 &
-    ,f%V0,f%f0,f%V_init,f%a,f%b,f%L,f%theta,f%T,f%C,f%fw,f%Vw)
+  implicit none
+
+  type(rsf_type),pointer :: f
+  type(swf_type),pointer :: g
+  integer :: ifault
+
+  do ifault = 1,Nfaults
+    f => faults(ifault)%rsf
+    g => faults(ifault)%swf
+
+    if (associated(f)) then
+      ! rate and state friction simulation
+      call transfer_todevice_rsf_data(Fault_pointer,faults(ifault)%nglob,ifault-1 &
+                                      ,f%V0,f%f0,f%V_init,f%a,f%b,f%L,f%theta,f%T,f%C,f%fw,f%Vw)
     ! ifault - 1 because in C language, array index start from 0
-   else if(associated(g)) then  ! slip weakening friction simulation
-    call transfer_todevice_swf_data(Fault_pointer,faults(ifault)%nglob,ifault-1 &
-    ,g%Dc,g%mus,g%mud,g%T,g%C,g%theta)
-   endif
-   enddo
+    else if (associated(g)) then
+      ! slip weakening friction simulation
+      call transfer_todevice_swf_data(Fault_pointer,faults(ifault)%nglob,ifault-1 &
+                                      ,g%Dc,g%mus,g%mud,g%T,g%C,g%theta)
+    endif
+  enddo
 
-end subroutine rsf_GPU_init
+  end subroutine rsf_GPU_init
 
+!---------------------------------------------------------------------
 
+  subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
 
-subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
+  implicit none
 
   type(rsf_type), intent(out) :: f
   real(kind=CUSTOM_REAL)  :: T0(:,:)
@@ -878,8 +927,6 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
 !  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: init_vel
   integer :: nglob
   integer :: InputStateLaw = 1 ! By default using aging law
-
-
 
   NAMELIST / RSF / V0,f0,a,b,L,V_init,theta_init,nV0,nf0,na,nb,nL,nV_init,ntheta_init,C,T,nC,nForcedRup,Vw,fw,nVw,nfw,InputStateLaw
   NAMELIST / ASP / Fload,nFload
@@ -964,17 +1011,17 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
 
   ! WARNING: The line below scratches an earlier initialization of theta through theta_init
   !          We should implement it as an option for the user
- if(TPV16) then
-  if (f%stateLaw == 1) then
-    f%theta = f%L/f%V0 &
-              * exp( ( f%a * log(TWO*sinh(-sqrt(T0(1,:)**2+T0(2,:)**2)/T0(3,:)/f%a)) &
-                       - f%f0 - f%a*log(f%V_init/f%V0) ) &
-                     / f%b )
-  else
-    f%theta =  f%a * log(TWO*f%V0/f%V_init * sinh(-sqrt(T0(1,:)**2+T0(2,:)**2)/T0(3,:)/f%a))
+  if (TPV16) then
+    if (f%stateLaw == 1) then
+      f%theta = f%L/f%V0 &
+                * exp( ( f%a * log(TWO*sinh(-sqrt(T0(1,:)**2+T0(2,:)**2)/T0(3,:)/f%a)) &
+                         - f%f0 - f%a*log(f%V_init/f%V0) ) &
+                       / f%b )
+    else
+      f%theta =  f%a * log(TWO*f%V0/f%V_init * sinh(-sqrt(T0(1,:)**2+T0(2,:)**2)/T0(3,:)/f%a))
+    endif
   endif
- endif
- ! WARNING : ad hoc for SCEC benchmark TPV10x
+  ! WARNING : ad hoc for SCEC benchmark TPV10x
   allocate( nucFload(nglob) )
   Fload = 0.e0_CUSTOM_REAL
   nFload = 0
@@ -986,140 +1033,143 @@ subroutine rsf_init(f,T0,V,nucFload,coord,IIN_PAR)
   V(1,:) = f%V_init
 
   if (TPV10X) then
-          call MakeTPV10XBoundaryRateStrengtheningLayer()
+    call MakeTPV10XBoundaryRateStrengtheningLayer()
   endif
 
   if (RSF_HETE) then
-          call RSF_HETE_init()
+    call RSF_HETE_init()
   endif
 
-contains
- subroutine RSF_HETE_init()
+  contains
 
-  integer :: ier, ipar
-  integer, parameter :: sIIN_NUC =271 ! WARNING: not safe, should look for an available unit
-  real(kind=CUSTOM_REAL),  allocatable :: sloc_str(:),  &
-       sloc_dip(:),ssigma0(:),stau0_str(:),stau0_dip(:),sV0(:), &
-       sf0(:),sa(:),sb(:),sL(:),sV_init(:),stheta(:),sC(:)
-  real(kind=CUSTOM_REAL) :: minX, ssiz_str,ssiz_dip
-  integer :: snum_cell_str,snum_cell_dip,snum_cell_all
-  integer :: si
+  !-------
 
-       open(unit=sIIN_NUC,file='../DATA/rsf_hete_input_file.txt',status='old',iostat=ier)
-       read(sIIN_NUC,*) snum_cell_str,snum_cell_dip,ssiz_str,ssiz_dip
-       snum_cell_all=snum_cell_str*snum_cell_dip
-       write(6,*) snum_cell_str,snum_cell_dip,ssiz_str,ssiz_dip
+    subroutine RSF_HETE_init()
 
-   allocate( sloc_str(snum_cell_all) )
-   allocate( sloc_dip(snum_cell_all) )
-   allocate( ssigma0(snum_cell_all) )
-   allocate( stau0_str(snum_cell_all) )
-   allocate( stau0_dip(snum_cell_all) )
-   allocate( sV0(snum_cell_all) )
-   allocate( sf0(snum_cell_all) )
-   allocate( sa(snum_cell_all) )
-   allocate( sb(snum_cell_all) )
-   allocate( sL(snum_cell_all) )
-   allocate( sV_init(snum_cell_all) )
-   allocate( stheta(snum_cell_all) )
-   allocate( sC(snum_cell_all) )
+    integer :: ier, ipar
+    integer, parameter :: sIIN_NUC =271 ! WARNING: not safe, should look for an available unit
+    real(kind=CUSTOM_REAL),  allocatable :: sloc_str(:), &
+         sloc_dip(:),ssigma0(:),stau0_str(:),stau0_dip(:),sV0(:), &
+         sf0(:),sa(:),sb(:),sL(:),sV_init(:),stheta(:),sC(:)
+    real(kind=CUSTOM_REAL) :: minX, ssiz_str,ssiz_dip
+    integer :: snum_cell_str,snum_cell_dip,snum_cell_all
+    integer :: si
 
-       do ipar=1,snum_cell_all
-         read(sIIN_NUC,*) sloc_str(ipar),sloc_dip(ipar),ssigma0(ipar),stau0_str(ipar),stau0_dip(ipar), &
-              sV0(ipar),sf0(ipar),sa(ipar),sb(ipar),sL(ipar), &
-              sV_init(ipar),stheta(ipar),sC(ipar)
-       enddo
-       close(sIIN_NUC)
-       minX = minval(coord(1,:))
-       write(6,*) 'RSF_HETE nglob= ', nglob, 'num_cell_all= ', snum_cell_all
-       write(6,*) 'minX = ', minval(coord(1,:)), 'minZ = ', minval(coord(3,:))
-       write(6,*) 'maxX = ', maxval(coord(1,:)), 'maxZ = ', maxval(coord(3,:))
-       write(6,*) 'minXall = ', minval(sloc_str(:)), 'minZall = ', minval(sloc_dip(:))
-       write(6,*) 'maxXall = ', maxval(sloc_str(:)), 'maxZall = ', maxval(sloc_dip(:))
+    open(unit=sIIN_NUC,file='../DATA/rsf_hete_input_file.txt',status='old',iostat=ier)
+    read(sIIN_NUC,*) snum_cell_str,snum_cell_dip,ssiz_str,ssiz_dip
+    snum_cell_all=snum_cell_str*snum_cell_dip
+    write(6,*) snum_cell_str,snum_cell_dip,ssiz_str,ssiz_dip
 
-       do si=1,nglob
+    allocate( sloc_str(snum_cell_all) )
+    allocate( sloc_dip(snum_cell_all) )
+    allocate( ssigma0(snum_cell_all) )
+    allocate( stau0_str(snum_cell_all) )
+    allocate( stau0_dip(snum_cell_all) )
+    allocate( sV0(snum_cell_all) )
+    allocate( sf0(snum_cell_all) )
+    allocate( sa(snum_cell_all) )
+    allocate( sb(snum_cell_all) )
+    allocate( sL(snum_cell_all) )
+    allocate( sV_init(snum_cell_all) )
+    allocate( stheta(snum_cell_all) )
+    allocate( sC(snum_cell_all) )
 
-        ! WARNING: nearest neighbor interpolation
-         ipar = minloc( (sloc_str(:)-coord(1,si))**2 + (sloc_dip(:)-coord(3,si))**2 , 1)
-        !loc_dip is negative of Z-coord
+    do ipar=1,snum_cell_all
+      read(sIIN_NUC,*) sloc_str(ipar),sloc_dip(ipar),ssigma0(ipar),stau0_str(ipar),stau0_dip(ipar), &
+                       sV0(ipar),sf0(ipar),sa(ipar),sb(ipar),sL(ipar), &
+                       sV_init(ipar),stheta(ipar),sC(ipar)
+    enddo
+    close(sIIN_NUC)
+    minX = minval(coord(1,:))
+    write(6,*) 'RSF_HETE nglob= ', nglob, 'num_cell_all= ', snum_cell_all
+    write(6,*) 'minX = ', minval(coord(1,:)), 'minZ = ', minval(coord(3,:))
+    write(6,*) 'maxX = ', maxval(coord(1,:)), 'maxZ = ', maxval(coord(3,:))
+    write(6,*) 'minXall = ', minval(sloc_str(:)), 'minZall = ', minval(sloc_dip(:))
+    write(6,*) 'maxXall = ', maxval(sloc_str(:)), 'maxZall = ', maxval(sloc_dip(:))
 
-         T0(3,si) = -ssigma0(ipar)
-         T0(1,si) = stau0_str(ipar)
-         T0(2,si) = stau0_dip(ipar)
+    do si=1,nglob
 
-         f%V0(si) = sV0(ipar)
-         f%f0(si) = sf0(ipar)
-         f%a(si) = sa(ipar)
-         f%b(si) = sb(ipar)
-         f%L(si) = sL(ipar)
-         f%V_init(si) = sV_init(ipar)
-         f%theta(si) = stheta(ipar)
-         f%C(si) = sC(ipar)
-       enddo
+      ! WARNING: nearest neighbor interpolation
+      ipar = minloc( (sloc_str(:)-coord(1,si))**2 + (sloc_dip(:)-coord(3,si))**2 , 1)
+      !loc_dip is negative of Z-coord
 
- end subroutine RSF_HETE_init
+      T0(3,si) = -ssigma0(ipar)
+      T0(1,si) = stau0_str(ipar)
+      T0(2,si) = stau0_dip(ipar)
 
- subroutine MakeTPV10XBoundaryRateStrengtheningLayer()
+      f%V0(si) = sV0(ipar)
+      f%f0(si) = sf0(ipar)
+      f%a(si) = sa(ipar)
+      f%b(si) = sb(ipar)
+      f%L(si) = sL(ipar)
+      f%V_init(si) = sV_init(ipar)
+      f%theta(si) = stheta(ipar)
+      f%C(si) = sC(ipar)
+    enddo
+
+    end subroutine RSF_HETE_init
+
+    !--------
+
+    subroutine MakeTPV10XBoundaryRateStrengtheningLayer()
 ! adding a rate strengthening layer at the boundary of a fault for TPV10X
 ! see http://scecdata.usc.edu/cvws/download/uploadTPV103.pdf for more details
 
-  real(kind=CUSTOM_REAL) :: W1,W2,w,hypo_z
-  real(kind=CUSTOM_REAL) :: x,z
-  logical :: c1,c2,c3,c4
-  real(kind=CUSTOM_REAL) :: b11,b12,b21,b22,B1,B2
-  integer :: i !,nglob_bulk
+    implicit none
+    real(kind=CUSTOM_REAL) :: W1,W2,w,hypo_z
+    real(kind=CUSTOM_REAL) :: x,z
+    logical :: c1,c2,c3,c4
+    real(kind=CUSTOM_REAL) :: b11,b12,b21,b22,B1,B2
+    integer :: i !,nglob_bulk
 
+    W1=15000._CUSTOM_REAL
+    W2=7500._CUSTOM_REAL
+    w=3000._CUSTOM_REAL
+    hypo_z = -7500._CUSTOM_REAL
+    do i=1,nglob
+      x=coord(1,i)
+      z=coord(3,i)
+      c1=abs(x) < W1+w
+      c2=abs(x) > W1
+      c3=abs(z-hypo_z) < W2+w
+      c4=abs(z-hypo_z) > W2
+      if ((c1 .and. c2 .and. c3) .or. (c3 .and. c4 .and. c1)) then
 
+        if (c1 .and. c2) then
+          b11 = w/(abs(x)-W1-w)
+          b12 = w/(abs(x)-W1)
+          B1 = HALF * (ONE + tanh(b11 + b12))
+        else if (abs(x) <= W1) then
+          B1 = 1._CUSTOM_REAL
+        else
+          B1 = 0._CUSTOM_REAL
+        endif
 
-   W1=15000._CUSTOM_REAL
-   W2=7500._CUSTOM_REAL
-   w=3000._CUSTOM_REAL
-   hypo_z = -7500._CUSTOM_REAL
-   do i=1,nglob
-     x=coord(1,i)
-     z=coord(3,i)
-     c1=abs(x)<W1+w
-     c2=abs(x)>W1
-     c3=abs(z-hypo_z)<W2+w
-     c4=abs(z-hypo_z)>W2
-     if ((c1 .and. c2 .and. c3) .or. (c3 .and. c4 .and. c1)) then
+        if (c3 .and. c4) then
+          b21 = w/(abs(z-hypo_z)-W2-w)
+          b22 = w/(abs(z-hypo_z)-W2)
+          B2 = HALF * (ONE + tanh(b21 + b22))
+        else if (abs(z-hypo_z) <= W2) then
+          B2 = 1._CUSTOM_REAL
+        else
+          B2 = 0._CUSTOM_REAL
+        endif
 
-       if (c1 .and. c2) then
-         b11 = w/(abs(x)-W1-w)
-         b12 = w/(abs(x)-W1)
-         B1 = HALF * (ONE + tanh(b11 + b12))
-       else if (abs(x)<=W1) then
-         B1 = 1._CUSTOM_REAL
-       else
-         B1 = 0._CUSTOM_REAL
-       endif
+        f%a(i) = 0.008 + 0.008 * (ONE - B1*B2)
+        f%Vw(i) = 0.1 + 0.9 * (ONE - B1*B2)
 
-       if (c3 .and. c4) then
-         b21 = w/(abs(z-hypo_z)-W2-w)
-         b22 = w/(abs(z-hypo_z)-W2)
-         B2 = HALF * (ONE + tanh(b21 + b22))
-       else if (abs(z-hypo_z)<=W2) then
-         B2 = 1._CUSTOM_REAL
-       else
-         B2 = 0._CUSTOM_REAL
-       endif
+      else if (abs(x) <= W1 .and. abs(z-hypo_z) <= W2) then
+        f%a(i) = 0.008
+        f%Vw(i) = 0.1_CUSTOM_REAL
+      else
+        f%a(i) = 0.016
+        f%Vw(i) = 1.0_CUSTOM_REAL
+      endif
+    enddo
 
-       f%a(i) = 0.008 + 0.008 * (ONE - B1*B2)
-       f%Vw(i) = 0.1 + 0.9 * (ONE - B1*B2)
+    end subroutine MakeTPV10XBoundaryRateStrengtheningLayer
 
-     else if (abs(x)<=W1 .and. abs(z-hypo_z)<=W2) then
-       f%a(i) = 0.008
-       f%Vw(i) = 0.1_CUSTOM_REAL
-     else
-       f%a(i) = 0.016
-       f%Vw(i) = 1.0_CUSTOM_REAL
-     endif
-
-   enddo
-
-
- end subroutine MakeTPV10XBoundaryRateStrengtheningLayer
-end subroutine rsf_init
+  end subroutine rsf_init
 
 !---------------------------------------------------------------------
 !!$! Rate and state friction coefficient
@@ -1137,7 +1187,9 @@ end subroutine rsf_init
 !!$end function rsf_mu
 
 !---------------------------------------------------------------------
-subroutine rsf_update_state(V,dt,f)
+  subroutine rsf_update_state(V,dt,f)
+
+  implicit none
 
   real(kind=CUSTOM_REAL), dimension(:), intent(in) :: V
   type(rsf_type), intent(inout) :: f
@@ -1169,15 +1221,18 @@ subroutine rsf_update_state(V,dt,f)
     endwhere
   endif
 
-end subroutine rsf_update_state
+  end subroutine rsf_update_state
 
 
 !===============================================================
 ! OUTPUTS
 
-subroutine SCEC_Write_RuptureTime(dataXZ,iflt)
+  subroutine SCEC_Write_RuptureTime(dataXZ,iflt)
 
   use specfem_par, only: OUTPUT_FILES
+
+  implicit none
+
   type(dataXZ_type), intent(in) :: dataXZ
   integer, intent(in) :: iflt
 
@@ -1212,12 +1267,15 @@ subroutine SCEC_Write_RuptureTime(dataXZ,iflt)
 
 1000 format ( ' # Date = ', i2.2, '/', i2.2, '/', i4.4, '; time = ',i2.2, ':', i2.2, ':', i2.2 )
 
-end subroutine SCEC_Write_RuptureTime
+  end subroutine SCEC_Write_RuptureTime
 
 !-------------------------------------------------------------------------------------------------
-subroutine init_dataXZ(dataXZ,bc)
 
-  use specfem_par, only : NPROC,myrank
+  subroutine init_dataXZ(dataXZ,bc)
+
+  use specfem_par, only: NPROC,myrank
+
+  implicit none
 
   type(dataXZ_type), intent(inout) :: dataXZ
   type(bc_dynandkinflt_type) :: bc
@@ -1257,7 +1315,7 @@ subroutine init_dataXZ(dataXZ,bc)
   if (PARALLEL_FAULT) then
     npoin_all = 0
     call sum_all_i(bc%nglob,npoin_all)
-    if (myrank==0 .and. npoin_all>0) then
+    if (myrank == 0 .and. npoin_all > 0) then
       bc%dataXZ_all%npoin = npoin_all
       allocate(bc%dataXZ_all%xcoord(npoin_all))
       allocate(bc%dataXZ_all%ycoord(npoin_all))
@@ -1294,12 +1352,15 @@ subroutine init_dataXZ(dataXZ,bc)
     call gatherv_all_cr(dataXZ%zcoord,dataXZ%npoin,bc%dataXZ_all%zcoord,bc%npoin_perproc,bc%poin_offset,bc%dataXZ_all%npoin,NPROC)
   endif
 
-end subroutine init_dataXZ
+  end subroutine init_dataXZ
+
 !---------------------------------------------------------------
 
-subroutine gather_dataXZ(bc)
+  subroutine gather_dataXZ(bc)
 
-  use specfem_par, only : NPROC
+  use specfem_par, only: NPROC
+
+  implicit none
 
   type(bc_dynandkinflt_type), intent(inout) :: bc
 
@@ -1315,10 +1376,13 @@ subroutine gather_dataXZ(bc)
   call gatherv_all_cr(bc%dataXZ%stg,bc%dataXZ%npoin,bc%dataXZ_all%stg,bc%npoin_perproc,bc%poin_offset,bc%dataXZ_all%npoin,NPROC)
   call gatherv_all_cr(bc%dataXZ%sta,bc%dataXZ%npoin,bc%dataXZ_all%sta,bc%npoin_perproc,bc%poin_offset,bc%dataXZ_all%npoin,NPROC)
 
-end subroutine gather_dataXZ
+  end subroutine gather_dataXZ
 
 !---------------------------------------------------------------
-subroutine store_dataXZ(dataXZ,stg,dold,dnew,dc,vold,vnew,timeval,dt)
+
+  subroutine store_dataXZ(dataXZ,stg,dold,dnew,dc,vold,vnew,timeval,dt)
+
+  implicit none
 
   type(dataXZ_type), intent(inout) :: dataXZ
   real(kind=CUSTOM_REAL), dimension(:), intent(in) :: stg,dold,dnew,dc,vold,vnew
@@ -1332,16 +1396,16 @@ subroutine store_dataXZ(dataXZ,stg,dold,dnew,dc,vold,vnew,timeval,dt)
 
     ! process zone time = first time when slip = dc  (break down process)
     ! with linear time interpolation
-    if (dataXZ%tPZ(i)==0e0_CUSTOM_REAL) then
-      if (dold(i)<=dc(i) .and. dnew(i) >= dc(i)) then
+    if (dataXZ%tPZ(i) == 0e0_CUSTOM_REAL) then
+      if (dold(i) <= dc(i) .and. dnew(i) >= dc(i)) then
         dataXZ%tPZ(i) = timeval-dt*(dnew(i)-dc(i))/(dnew(i)-dold(i))
       endif
     endif
 
     ! rupture time = first time when slip velocity = V_RUPT
     ! with linear time interpolation
-    if (dataXZ%tRUP(i)==0e0_CUSTOM_REAL) then
-      if (vold(i)<=V_RUPT .and. vnew(i)>=V_RUPT) dataXZ%tRUP(i)= timeval-dt*(vnew(i)-V_RUPT)/(vnew(i)-vold(i))
+    if (dataXZ%tRUP(i) == 0e0_CUSTOM_REAL) then
+      if (vold(i) <= V_RUPT .and. vnew(i) >= V_RUPT) dataXZ%tRUP(i)= timeval-dt*(vnew(i)-V_RUPT)/(vnew(i)-vold(i))
     endif
 
   enddo
@@ -1349,12 +1413,16 @@ subroutine store_dataXZ(dataXZ,stg,dold,dnew,dc,vold,vnew,timeval,dt)
   ! note: the other arrays in dataXZ are pointers to arrays in bc
   !       they do not need to be updated here
 
-end subroutine store_dataXZ
+  end subroutine store_dataXZ
 
 !---------------------------------------------------------------
-subroutine write_dataXZ(dataXZ,itime,iflt)
+
+  subroutine write_dataXZ(dataXZ,itime,iflt)
 
   use specfem_par, only: OUTPUT_FILES
+
+  implicit none
+
   type(dataXZ_type), intent(in) :: dataXZ
   integer, intent(in) :: itime,iflt
 
@@ -1380,7 +1448,7 @@ subroutine write_dataXZ(dataXZ,itime,iflt)
   write(IOUT) dataXZ%tPZ
   close(IOUT)
 
-end subroutine write_dataXZ
+  end subroutine write_dataXZ
 
 !---------------------------------------------------------------
 
@@ -1392,18 +1460,18 @@ end subroutine write_dataXZ
 
 ! and modified by Dimitri Komatitsch in December 2012 for portability
 
- double precision function asinh_slatec(x)
+  double precision function asinh_slatec(x)
 
   double precision, intent(in) :: x
 
   integer, parameter :: NSERIES = 39
 
   double precision, parameter :: asnhcs(NSERIES) = (/ &
-   -.12820039911738186343372127359268D+0,  -.58811761189951767565211757138362D-1,  &
-   +.47274654322124815640725249756029D-2,  -.49383631626536172101360174790273D-3,  &
-   +.58506207058557412287494835259321D-4,  -.74669983289313681354755069217188D-5,  &
-   +.10011693583558199265966192015812D-5,  -.13903543858708333608616472258886D-6,  &
-   +.19823169483172793547317360237148D-7,  -.28847468417848843612747272800317D-8,  &
+   -.12820039911738186343372127359268D+0,  -.58811761189951767565211757138362D-1, &
+   +.47274654322124815640725249756029D-2,  -.49383631626536172101360174790273D-3, &
+   +.58506207058557412287494835259321D-4,  -.74669983289313681354755069217188D-5, &
+   +.10011693583558199265966192015812D-5,  -.13903543858708333608616472258886D-6, &
+   +.19823169483172793547317360237148D-7,  -.28847468417848843612747272800317D-8, &
    +.42672965467159937953457514995907D-9,  -.63976084654366357868752632309681D-10, &
    +.96991686089064704147878293131179D-11, -.14844276972043770830246658365696D-11, &
    +.22903737939027447988040184378983D-12, -.35588395132732645159978942651310D-13, &
@@ -1454,7 +1522,7 @@ end subroutine write_dataXZ
   if (y >= xmax) asinh_slatec = aln2 + log(y)
   asinh_slatec = sign(asinh_slatec, x)
 
-contains
+  contains
 
 
 ! April 1977 version.  W. Fullerton, C3, Los Alamos Scientific Lab.
@@ -1468,34 +1536,36 @@ contains
 !        in evaluating cs, only half the first coefficient is summed.
 ! n      number of terms in array cs.
 
-double precision function csevl(x, cs, n)
+    double precision function csevl(x, cs, n)
 
-  integer, intent(in) :: n
-  double precision, intent(in) :: x
-  double precision, intent(in), dimension(n) :: cs
+    implicit none
 
-  integer i, ni
-  double precision :: b0, b1, b2, twox
+    integer, intent(in) :: n
+    double precision, intent(in) :: x
+    double precision, intent(in), dimension(n) :: cs
 
-  if (n < 1) stop 'Math::csevl: number of terms <= 0'
-  if (n > 1000) stop 'Math::csevl: number of terms > 1000'
+    integer i, ni
+    double precision :: b0, b1, b2, twox
 
-  if (x < -1.1d0 .or. x > 1.1d0) stop 'Math::csevl: x outside (-1,+1)'
+    if (n < 1) stop 'Math::csevl: number of terms <= 0'
+    if (n > 1000) stop 'Math::csevl: number of terms > 1000'
 
-  b1 = 0.d0
-  b0 = 0.d0
-  twox = 2.d0*x
+    if (x < -1.1d0 .or. x > 1.1d0) stop 'Math::csevl: x outside (-1,+1)'
 
-  do i = 1, n
-    b2 = b1
-    b1 = b0
-    ni = n + 1 - i
-    b0 = twox*b1 - b2 + cs(ni)
-  enddo
+    b1 = 0.d0
+    b0 = 0.d0
+    twox = 2.d0*x
 
-  csevl = 0.5d0 * (b0 - b2)
+    do i = 1, n
+      b2 = b1
+      b1 = b0
+      ni = n + 1 - i
+      b0 = twox*b1 - b2 + cs(ni)
+    enddo
 
-end function csevl
+    csevl = 0.5d0 * (b0 - b2)
+
+    end function csevl
 
 
 ! April 1977 version.  W. Fullerton, C3, Los Alamos Scientific Lab.
@@ -1509,35 +1579,40 @@ end function csevl
 ! nos    number of coefficients in os.
 ! eta    requested accuracy of series.
 
-integer function inits(os, nos, eta)
+    integer function inits(os, nos, eta)
 
-  integer, intent(in) :: nos
-  double precision, intent(in), dimension(nos) :: os
-  double precision, intent(in) :: eta
+    implicit none
 
-  integer :: i, ii
-  double precision :: err
+    integer, intent(in) :: nos
+    double precision, intent(in), dimension(nos) :: os
+    double precision, intent(in) :: eta
 
-  if (nos < 1) stop 'Math::inits: number of terms <= 0'
+    integer :: i, ii
+    double precision :: err
 
-  err = 0.d0
-  do ii=1,nos
-    i = nos + 1 - ii
-    err = err + abs(os(i))
-    if (err > eta) exit
-  enddo
+    if (nos < 1) stop 'Math::inits: number of terms <= 0'
 
-!!!!!!!  if (i == nos) print *,'warning: Math::inits: eta may be too small'
+    err = 0.d0
+    do ii=1,nos
+      i = nos + 1 - ii
+      err = err + abs(os(i))
+      if (err > eta) exit
+    enddo
 
-  inits = i
+    !!!!!!!  if (i == nos) print *,'warning: Math::inits: eta may be too small'
 
-end function inits
+    inits = i
 
-end function asinh_slatec
+    end function inits
+
+  end function asinh_slatec
 
 
 !---------------------------------------------------------------------
-subroutine funcd(x,fn,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
+
+  subroutine funcd(x,fn,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
+
+  implicit none
 
   real(kind=CUSTOM_REAL) :: tStick,Seff,Z,f0,V0,a,b,L,theta
   double precision :: arg,fn,df,x
@@ -1551,10 +1626,13 @@ subroutine funcd(x,fn,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
   fn = tStick - Z*x - a*Seff*asinh_slatec(x*arg)
   df = -Z - a*Seff/sqrt(ONE + (x*arg)**2)*arg
 
-end subroutine funcd
+  end subroutine funcd
 
 !---------------------------------------------------------------------
-function rtsafe(x1,x2,xacc,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
+
+  function rtsafe(x1,x2,xacc,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
+
+  implicit none
 
   integer, parameter :: MAXIT=200
   real(kind=CUSTOM_REAL) :: x1,x2,xacc
@@ -1566,14 +1644,14 @@ function rtsafe(x1,x2,xacc,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
 
   call funcd(dble(x1),fl,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
   call funcd(dble(x2),fh,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
-  if ((fl>0 .and. fh>0) .or. (fl<0 .and. fh<0) ) stop 'root must be bracketed in rtsafe'
-  if (fl==0.) then
+  if ((fl > 0 .and. fh > 0) .or. (fl < 0 .and. fh < 0) ) stop 'root must be bracketed in rtsafe'
+  if (fl == 0.) then
     rtsafe=x2
     return
-  else if (fh==0.) then
+  else if (fh == 0.) then
     rtsafe=x2
     return
-  else if (fl<0) then
+  else if (fl < 0) then
     xl=x1
     xh=x2
   else
@@ -1586,21 +1664,21 @@ function rtsafe(x1,x2,xacc,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
   dx=dxold
   call funcd(rtsafe,f,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
   do j=1,MAXIT
-    if (((rtsafe-xh)*df-f)*((rtsafe-xl)*df-f)>0 .or. abs(2.*f)>abs(dxold*df)) then
+    if (((rtsafe-xh)*df-f)*((rtsafe-xl)*df-f) > 0 .or. abs(2.*f) > abs(dxold*df)) then
       dxold=dx
       dx=0.5d0*(xh-xl)
       rtsafe=xl+dx
-      if (xl==rtsafe) return
+      if (xl == rtsafe) return
     else
       dxold=dx
       dx=f/df
       temp=rtsafe
       rtsafe=rtsafe-dx
-      if (temp==rtsafe) return
+      if (temp == rtsafe) return
     endif
-    if (abs(dx)<xacc) return
+    if (abs(dx) < xacc) return
     call funcd(rtsafe,f,df,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
-    if (f<0.) then
+    if (f < 0.) then
       xl=rtsafe
     else
       xh=rtsafe
@@ -1609,28 +1687,32 @@ function rtsafe(x1,x2,xacc,tStick,Seff,Z,f0,V0,a,b,L,theta,statelaw)
   stop 'rtsafe exceeding maximum iterations'
   return
 
-end function rtsafe
+  end function rtsafe
 
-subroutine synchronize_GPU(it)
+!---------------------------------------------------------------------
 
-use specfem_par,only: Fault_pointer,myrank
+  subroutine synchronize_GPU(it)
 
-integer :: it,ifault
+  use specfem_par, only: Fault_pointer,myrank
 
-do ifault=1,Nfaults
+  implicit none
 
-call transfer_tohost_fault_data(Fault_pointer,ifault-1,faults(ifault)%nspec,&
-faults(ifault)%nglob,faults(ifault)%D,faults(ifault)%V,faults(ifault)%T)
-call transfer_tohost_datat(Fault_pointer, faults(ifault)%dataT%dat, it)
+  integer :: it,ifault
 
-call gather_dataXZ(faults(ifault))
-call SCEC_write_dataT(faults(ifault)%dataT)
+  do ifault=1,Nfaults
 
-if(myrank == 0 )call write_dataXZ(faults(ifault)%dataXZ_all,it,ifault)
+    call transfer_tohost_fault_data(Fault_pointer,ifault-1,faults(ifault)%nspec, &
+                                    faults(ifault)%nglob,faults(ifault)%D,faults(ifault)%V,faults(ifault)%T)
+    call transfer_tohost_datat(Fault_pointer, faults(ifault)%dataT%dat, it, ifault - 1)
 
-enddo
+    call gather_dataXZ(faults(ifault))
+    call SCEC_write_dataT(faults(ifault)%dataT)
 
-end subroutine synchronize_GPU
+    if (myrank == 0) call write_dataXZ(faults(ifault)%dataXZ_all,it,ifault)
+
+  enddo
+
+  end subroutine synchronize_GPU
 
 end module fault_solver_dynamic
 

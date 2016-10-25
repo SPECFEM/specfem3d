@@ -1,3 +1,8 @@
+#-----------------------------------------------------------
+#
+# Meshing input parameters
+#
+#-----------------------------------------------------------
 
 # coordinates of mesh block in latitude/longitude and depth in km
 LATITUDE_MIN                    = 33.790d0
@@ -24,6 +29,12 @@ NEX_ETA                         = 24
 NPROC_XI                        = 1
 NPROC_ETA                       = 1
 
+#-----------------------------------------------------------
+#
+# Doubling layers
+#
+#-----------------------------------------------------------
+
 # Regular/irregular mesh
 USE_REGULAR_MESH                = .false.
 # Only for irregular meshes, number of doubling layers and their position
@@ -33,18 +44,36 @@ NDOUBLINGS                      = 2
 NZ_DOUBLING_1                   = 6
 NZ_DOUBLING_2                   = 9
 
+#-----------------------------------------------------------
+#
+# Visualization
+#
+#-----------------------------------------------------------
+
 # create mesh files for visualisation or further checking
 CREATE_ABAQUS_FILES             = .true.
 CREATE_DX_FILES                 = .true.
 CREATE_VTK_FILES                = .false.
+
+# path to store the databases files
+LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI
+
+#-----------------------------------------------------------
+#
+# CPML
+#
+#-----------------------------------------------------------
 
 # CPML perfectly matched absorbing layers
 THICKNESS_OF_X_PML              = 12.3d0
 THICKNESS_OF_Y_PML              = 12.3d0
 THICKNESS_OF_Z_PML              = 12.3d0
 
-# path to store the databases files
-LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI
+#-----------------------------------------------------------
+#
+# Domain materials
+#
+#-----------------------------------------------------------
 
 # number of materials
 NMATERIALS                      = 4
@@ -57,6 +86,13 @@ NMATERIALS                      = 4
 2  2800  6700  3870 0.0  0  2
 3  2670  6300  3640 0.0  0  2
 4  2400  5500  3180 0.0  0  2
+
+#-----------------------------------------------------------
+#
+# Domain regions
+#
+#-----------------------------------------------------------
+
 # number of regions
 NREGIONS                        = 4
 # define the different regions of the model as :

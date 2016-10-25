@@ -34,9 +34,9 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
   use specfem_par_movie
-  use fault_solver_dynamic, only : BC_DYNFLT_init
-  use fault_solver_kinematic, only : BC_KINFLT_init
-  use gravity_perturbation, only : gravity_init
+  use fault_solver_dynamic, only: BC_DYNFLT_init
+  use fault_solver_kinematic, only: BC_KINFLT_init
+  use gravity_perturbation, only: gravity_init
 
   implicit none
 
@@ -73,7 +73,7 @@
   ! prepares gravity arrays
   call prepare_timerun_gravity()
 
-  ! ZN I do not use if(USE_LDDRK) call prepare_timerun_lddrk()
+  ! ZN I do not use if (USE_LDDRK) call prepare_timerun_lddrk()
   ! ZN in order to avoid the error of using unallocated arrays later on in the code,
   ! ZN since R_**_lddrk are arguments in subroutine compute_forces_viscoelastic
   call prepare_timerun_lddrk()
@@ -267,9 +267,9 @@
       deallocate(rmassz_acoustic)
     endif
 
-    call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_acoustic,&
+    call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_acoustic, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
+                        nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         my_neighbours_ext_mesh)
 
     ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
@@ -352,7 +352,6 @@
     where(rmass_fluid_poroelastic <= 0._CUSTOM_REAL) rmass_fluid_poroelastic = 1._CUSTOM_REAL
     rmass_solid_poroelastic(:) = 1._CUSTOM_REAL / rmass_solid_poroelastic(:)
     rmass_fluid_poroelastic(:) = 1._CUSTOM_REAL / rmass_fluid_poroelastic(:)
-
   endif
 
   end subroutine prepare_timerun_mass_matrices
@@ -419,7 +418,6 @@
   implicit none
 
   ! local parameters
-  character(len=MAX_STRING_LEN) :: plot_file
   integer :: ier
 
   ! time scheme
@@ -464,18 +462,6 @@
     seismograms_p(:,:,:) = 0._CUSTOM_REAL
   endif
 
-  ! opens source time function file
-  if (PRINT_SOURCE_TIME_FUNCTION .and. myrank == 0) then
-    ! print the source-time function
-    if (NSOURCES == 1) then
-      plot_file = '/plot_source_time_function.txt'
-    else
-      write(plot_file,"('/plot_source_time_function',i7.7,'.txt')") NSOURCES
-    endif
-    open(unit=IOSTF,file=trim(OUTPUT_FILES)//plot_file,status='unknown',iostat=ier)
-    if (ier /= 0) call exit_mpi(myrank,'error opening plot_source_time_function file')
-  endif
-
   end subroutine prepare_timerun_constants
 
 !
@@ -513,7 +499,7 @@
 
     one_minus_sum_beta_kappa(:,:,:,:) = 1._CUSTOM_REAL
     factor_common_kappa(:,:,:,:,:) = 1._CUSTOM_REAL
-    allocate( scale_factor_kappa(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)
+    allocate( scale_factor_kappa(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
     if (ier /= 0) call exit_mpi(myrank,'error allocation scale_factor_kappa')
     scale_factor_kappa(:,:,:,:) = 1._CUSTOM_REAL
 
@@ -538,11 +524,9 @@
         read(27) factor_common
         read(27) scale_factor
 
-        if (FULL_ATTENUATION_SOLID) then
-            read(27) one_minus_sum_beta_kappa
-            read(27) factor_common_kappa
-            read(27) scale_factor_kappa
-        endif
+        read(27) one_minus_sum_beta_kappa
+        read(27) factor_common_kappa
+        read(27) scale_factor_kappa
 
         close(27)
     endif
@@ -551,17 +535,14 @@
     if (size(one_minus_sum_beta) > 0) call bcast_all_cr_for_database(one_minus_sum_beta(1,1,1,1), size(one_minus_sum_beta))
     if (size(factor_common) > 0) call bcast_all_cr_for_database(factor_common(1,1,1,1,1), size(factor_common))
     if (size(scale_factor) > 0) call bcast_all_cr_for_database(scale_factor(1,1,1,1), size(scale_factor))
-    if (FULL_ATTENUATION_SOLID) then
-        call bcast_all_cr_for_database(one_minus_sum_beta_kappa(1,1,1,1), size(one_minus_sum_beta_kappa))
-        call bcast_all_cr_for_database(factor_common_kappa(1,1,1,1,1), size(factor_common_kappa))
-        call bcast_all_cr_for_database(scale_factor_kappa(1,1,1,1), size(scale_factor_kappa))
-    endif
-
+    call bcast_all_cr_for_database(one_minus_sum_beta_kappa(1,1,1,1), size(one_minus_sum_beta_kappa))
+    call bcast_all_cr_for_database(factor_common_kappa(1,1,1,1,1), size(factor_common_kappa))
+    call bcast_all_cr_for_database(scale_factor_kappa(1,1,1,1), size(scale_factor_kappa))
 
     ! gets stress relaxation times tau_sigma, i.e.
     ! precalculates tau_sigma depending on period band (constant for all Q_mu), and
     ! determines central frequency f_c_source of attenuation period band
-    call get_attenuation_constants(min_resolved_period,tau_sigma_dble,&
+    call get_attenuation_constants(min_resolved_period,tau_sigma_dble, &
               f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
 
     ! determines alphaval,betaval,gammaval for runge-kutta scheme
@@ -584,11 +565,9 @@
             scale_factorl = scale_factor(i,j,k,ispec)
             mustore(i,j,k,ispec) = mustore(i,j,k,ispec) * scale_factorl
 
-            if (FULL_ATTENUATION_SOLID) then
-              ! scales kappa moduli
-              scale_factorl = scale_factor_kappa(i,j,k,ispec)
-              kappastore(i,j,k,ispec) = kappastore(i,j,k,ispec) * scale_factorl
-            endif
+            ! scales kappa moduli
+            scale_factorl = scale_factor_kappa(i,j,k,ispec)
+            kappastore(i,j,k,ispec) = kappastore(i,j,k,ispec) * scale_factorl
 
           enddo
         enddo
@@ -603,13 +582,16 @@
     if (myrank == 0) then
       write(IMAIN,*)
       write(IMAIN,*) "Attenuation:"
+      write(IMAIN,*)
+      write(IMAIN,*) "The code uses a constant Q quality factor,"
+      write(IMAIN,*) "but approximated based on a series of Zener standard linear solids (SLS)."
+      write(IMAIN,*) "The approximation is performed in the following frequency band:"
+      write(IMAIN,*)
       write(IMAIN,*) "  Reference frequency (Hz):",sngl(ATTENUATION_f0_REFERENCE)," period (s):",sngl(1.0/ATTENUATION_f0_REFERENCE)
       write(IMAIN,*) "  Frequency band min/max (Hz):",sngl(1.0/MAX_ATTENUATION_PERIOD),sngl(1.0/MIN_ATTENUATION_PERIOD)
       write(IMAIN,*) "  Period band min/max (s):",sngl(MIN_ATTENUATION_PERIOD),sngl(MAX_ATTENUATION_PERIOD)
       write(IMAIN,*) "  Logarithmic central frequency (Hz):",sngl(f_c_source)," period (s):",sngl(1.0/f_c_source)
-      if (FULL_ATTENUATION_SOLID) then
-        write(IMAIN,*) "  using attenuation having both Q_kappa and Q_mu"
-      endif
+      write(IMAIN,*) "  Using full attenuation with both Q_kappa and Q_mu."
       write(IMAIN,*)
       call flush_IMAIN()
     endif
@@ -755,11 +737,9 @@
   if (USE_LDDRK) then
     NGLOB_AB_LDDRK = NGLOB_AB
     NSPEC_ATTENUATION_AB_LDDRK = NSPEC_ATTENUATION_AB
-    NSPEC_ATTENUATION_AB_kappa_LDDRK = NSPEC_ATTENUATION_AB_kappa
   else
     NGLOB_AB_LDDRK = 1
     NSPEC_ATTENUATION_AB_LDDRK = 1
-    NSPEC_ATTENUATION_AB_kappa_LDDRK = 1
   endif
 
   if (ACOUSTIC_SIMULATION) then
@@ -787,66 +767,69 @@
       veloc_lddrk(:,:) = VERYSMALLVAL
     endif
 
-    if (ATTENUATION) then
-      ! note: currently, they need to be defined, as they are used in some subroutine arguments
-      allocate(R_xx_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
-               R_yy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
-               R_xy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
-               R_xz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
-               R_yz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS),stat=ier)
+    ! note: currently, they need to be defined, as they are used in some subroutine arguments
+    allocate(R_xx_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+             R_yy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+             R_xy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+             R_xz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+             R_yz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS),stat=ier)
+    if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
+
+    allocate(R_trace_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK,N_SLS))
+    if (ier /= 0) stop 'Error allocating array R_trace_lddrk etc.'
+
+    if (SIMULATION_TYPE == 3) then
+      allocate(b_R_xx_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+               b_R_yy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+               b_R_xy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+               b_R_xz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+               b_R_yz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS),stat=ier)
       if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
 
+      allocate(b_R_trace_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK,N_SLS))
+      if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
+    endif
+
+    ! initializes
+    if (ATTENUATION) then
       R_xx_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
       R_yy_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
       R_xy_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
       R_xz_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
       R_yz_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+      R_trace_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
       if (FIX_UNDERFLOW_PROBLEM) then
         R_xx_lddrk(:,:,:,:,:) = VERYSMALLVAL
         R_yy_lddrk(:,:,:,:,:) = VERYSMALLVAL
         R_xy_lddrk(:,:,:,:,:) = VERYSMALLVAL
         R_xz_lddrk(:,:,:,:,:) = VERYSMALLVAL
         R_yz_lddrk(:,:,:,:,:) = VERYSMALLVAL
+        R_trace_lddrk(:,:,:,:,:) = VERYSMALLVAL
       endif
 
-      allocate(R_trace_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa_LDDRK,N_SLS))
-      if (ier /= 0) stop 'Error allocating array R_trace_lddrk etc.'
-      R_trace_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
-      if (FIX_UNDERFLOW_PROBLEM) R_trace_lddrk(:,:,:,:,:) = VERYSMALLVAL
-
       if (SIMULATION_TYPE == 3) then
-        allocate(b_R_xx_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
-                 b_R_yy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
-                 b_R_xy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
-                 b_R_xz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
-                 b_R_yz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS),stat=ier)
-        if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
-
         b_R_xx_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
         b_R_yy_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
         b_R_xy_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
         b_R_xz_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
         b_R_yz_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+        b_R_trace_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
         if (FIX_UNDERFLOW_PROBLEM) then
           b_R_xx_lddrk(:,:,:,:,:) = VERYSMALLVAL
           b_R_yy_lddrk(:,:,:,:,:) = VERYSMALLVAL
           b_R_xy_lddrk(:,:,:,:,:) = VERYSMALLVAL
           b_R_xz_lddrk(:,:,:,:,:) = VERYSMALLVAL
           b_R_yz_lddrk(:,:,:,:,:) = VERYSMALLVAL
+          b_R_trace_lddrk(:,:,:,:,:) = VERYSMALLVAL
         endif
-
-        allocate(b_R_trace_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa_LDDRK,N_SLS))
-        if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
-        b_R_trace_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
-        if (FIX_UNDERFLOW_PROBLEM) b_R_trace_lddrk(:,:,:,:,:) = VERYSMALLVAL
-
       endif
-
     endif
   endif
 
+  ! safety stop
   if (POROELASTIC_SIMULATION) then
-    stop 'LDDRK has not been implemented for POROELASTIC_SIMULATION'
+    if (USE_LDDRK) &
+      stop 'LDDRK has not been implemented for POROELASTIC_SIMULATION'
   endif
 
   end subroutine prepare_timerun_lddrk
@@ -872,7 +855,7 @@
   if (GPU_MODE) &
     stop 'Error C-PML only supported in CPU mode for now'
 
-  ! total number of pml elements
+  ! total number of PML elements
   call sum_all_i(NSPEC_CPML,NSPEC_CPML_GLOBAL)
 
   ! user output
@@ -986,7 +969,7 @@
   endif
 
   ! initializes adjoint kernels and reconstructed/backward wavefields
-  if (SIMULATION_TYPE == 3)  then
+  if (SIMULATION_TYPE == 3) then
     ! elastic domain
     if (ELASTIC_SIMULATION) then
       rho_kl(:,:,:,:)   = 0._CUSTOM_REAL
@@ -1368,7 +1351,7 @@
                                 nrec, nrec_local, &
                                 SIMULATION_TYPE, &
                                 USE_MESH_COLORING_GPU, &
-                                nspec_acoustic,nspec_elastic,&
+                                nspec_acoustic,nspec_elastic, &
                                 myrank,SAVE_FORWARD)
 
 
@@ -1473,7 +1456,7 @@
   ! prepares gravity arrays
   if (GRAVITY) then
     call prepare_fields_gravity_device(Mesh_pointer,GRAVITY, &
-                                minus_deriv_gravity,minus_g,wgll_cube,&
+                                minus_deriv_gravity,minus_g,wgll_cube, &
                                 ACOUSTIC_SIMULATION,rhostore)
   endif
 

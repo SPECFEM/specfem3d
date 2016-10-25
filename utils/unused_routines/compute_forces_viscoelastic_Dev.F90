@@ -40,24 +40,24 @@
                                     wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D, &
                                     kappastore,mustore,jacobian,ibool, &
                                     ATTENUATION,deltat,PML_CONDITIONS, &
-                                    one_minus_sum_beta,factor_common,&
-                                    one_minus_sum_beta_kappa,factor_common_kappa,&
-                                    alphaval,betaval,gammaval,&
+                                    one_minus_sum_beta,factor_common, &
+                                    one_minus_sum_beta_kappa,factor_common_kappa, &
+                                    alphaval,betaval,gammaval, &
                                     NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_Kappa, &
                                     R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
                                     epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &
                                     epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
                                     ANISOTROPY,NSPEC_ANISO, &
-                                    c11store,c12store,c13store,c14store,c15store,c16store,&
-                                    c22store,c23store,c24store,c25store,c26store,c33store,&
-                                    c34store,c35store,c36store,c44store,c45store,c46store,&
+                                    c11store,c12store,c13store,c14store,c15store,c16store, &
+                                    c22store,c23store,c24store,c25store,c26store,c33store, &
+                                    c34store,c35store,c36store,c44store,c45store,c46store, &
                                     c55store,c56store,c66store, &
                                     SIMULATION_TYPE,COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
                                     NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT, &
                                     is_moho_top,is_moho_bot, &
                                     dsdx_top,dsdx_bot, &
                                     ispec2D_moho_top,ispec2D_moho_bot, &
-                                    num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic,&
+                                    num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
                                     phase_ispec_inner_elastic,backward_simulation)
 
 
@@ -66,7 +66,7 @@
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,NGLLCUBE, &
                        N_SLS,ONE_THIRD,FOUR_THIRDS,m1,m2, &
                        MAKE_HOOKE_LAW_WEAKLY_NONLINEAR,A,B,C,A_over_4,B_over_2
-  use fault_solver_dynamic, only : Kelvin_Voigt_eta
+  use fault_solver_dynamic, only: Kelvin_Voigt_eta
 
   use specfem_par, only: FULL_ATTENUATION_SOLID,SAVE_MOHO_MESH
 
@@ -201,7 +201,7 @@
   real(kind=CUSTOM_REAL) :: kappal
 
   ! local anisotropy parameters
-  real(kind=CUSTOM_REAL) :: c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,&
+  real(kind=CUSTOM_REAL) :: c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26, &
                             c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
 
   integer :: i_SLS,imodulo_N_SLS
@@ -300,7 +300,7 @@
 ! + NGLLX * NGLLY * NGLLZ * ( 1 + 3) float = 2000 BYTE
 
     if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-      ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
+      ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an " .and. " statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
       if (is_CPML(ispec)) then
         ! In backward_simulation involved in SIMULATION_TYPE == 3,
@@ -324,7 +324,7 @@
     ! at this current time step, to fix attenuation in a consistent way
     if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
       if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-        ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
+        ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an " .and. " statement
         ! because array is_CPML() is unallocated when PML_CONDITIONS is false
         if (.not. is_CPML(ispec)) then
           ! Keeping in mind, currently we implement a PML derived based on elastic wave equation
@@ -379,7 +379,7 @@
 ! + 0 BYTE  (assuming A3_**, hprime_xxT in cache)
 
     if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-      ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
+      ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an " .and. " statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
       if (is_CPML(ispec)) then
         if (.not. backward_simulation) then
@@ -410,7 +410,7 @@
     if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
       ! it is noteworthy here that if ATTENUATION == .true., COMPUTE_AND_STORE_STRAIN == .true.
       if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-        ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
+        ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an " .and. " statement
         ! because array is_CPML() is unallocated when PML_CONDITIONS is false
         if (.not. is_CPML(ispec)) then
           ! temporary variables used for fixing attenuation in a consistent way
@@ -504,7 +504,7 @@
 
       ! stores derivatives of ux, uy and uz with respect to x, y and z
       if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-      ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
+      ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an " .and. " statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
         if (is_CPML(ispec)) then
           ! In backward_simulation involved in SIMULATION_TYPE == 3,
@@ -626,7 +626,7 @@
       if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
             ! temporary variables used for fixing attenuation in a consistent way
         if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-          ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
+          ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an " .and. " statement
           ! because array is_CPML() is unallocated when PML_CONDITIONS is false
           if (.not. is_CPML(ispec)) then
             ! temporary variables used for fixing attenuation in a consistent way
@@ -711,7 +711,7 @@
       ! attenuation
       if (ATTENUATION) then
         if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-          ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
+          ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an " .and. " statement
           ! because array is_CPML() is unallocated when PML_CONDITIONS is false
           if (.not. is_CPML(ispec)) then
             ! use unrelaxed parameters if attenuation
@@ -896,7 +896,7 @@
 !          depending on compilers, it can further decrease the computation time by ~ 30%.
 !          by default, N_SLS = 3, therefore we take steps of 3
         if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-          ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
+          ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an " .and. " statement
           ! because array is_CPML() is unallocated when PML_CONDITIONS is false
           if (.not. is_CPML(ispec)) then
             if (imodulo_N_SLS >= 1) then
@@ -1057,7 +1057,7 @@
     ENDDO_LOOP_IJK
 
     if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-      ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
+      ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an " .and. " statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
       if (is_CPML(ispec)) then
         ! In backward_simulation involved in SIMULATION_TYPE == 3,
@@ -1135,7 +1135,7 @@
       !  update memory variables based upon the Runge-Kutta scheme
       if (ATTENUATION) then
         if (PML_CONDITIONS .and. NSPEC_CPML > 0) then
-          ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an ".and." statement
+          ! do not merge the line "if (is_CPML(ispec)) then" with the above if statement using an " .and. " statement
           ! because array is_CPML() is unallocated when PML_CONDITIONS is false
           if (.not. is_CPML(ispec)) then
             ! use Runge-Kutta scheme to march in time
@@ -1240,8 +1240,8 @@
 
     ENDDO_LOOP_IJK
 
-    if (PML_CONDITIONS .and. (.not. backward_simulation)  .and. NSPEC_CPML > 0) then
-      ! do not merge this second line with the first using an ".and." statement
+    if (PML_CONDITIONS .and. (.not. backward_simulation) .and. NSPEC_CPML > 0) then
+      ! do not merge this second line with the first using an " .and. " statement
       ! because array is_CPML() is unallocated when PML_CONDITIONS is false
       if (is_CPML(ispec)) then
 
@@ -1301,7 +1301,7 @@
 
 ! 3 different arrays for x/y/z-components, 2-dimensional arrays e.g. (25,5)/(5,25), same B matrix for all 3 component arrays
 
-  use constants,only: CUSTOM_REAL,NGLLX
+  use constants, only: CUSTOM_REAL,NGLLX
 
   implicit none
 
@@ -1328,7 +1328,7 @@
 
 ! 3 different arrays for x/y/z-components, 2-dimensional arrays (25,5)/(5,25), same B matrix for all 3 component arrays
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -1371,7 +1371,7 @@
 
 ! 3 different arrays for x/y/z-components, 2-dimensional arrays (36,6)/(6,36), same B matrix for all 3 component arrays
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -1417,7 +1417,7 @@
 
 ! 3 different arrays for x/y/z-components, 2-dimensional arrays (49,7)/(7,49), same B matrix for all 3 component arrays
 
-  use constants,only: CUSTOM_REAL,NGLLX
+  use constants, only: CUSTOM_REAL,NGLLX
 
   implicit none
 
@@ -1467,7 +1467,7 @@
 
 ! 3 different arrays for x/y/z-components, 2-dimensional arrays e.g. (25,5)/(5,25), same B matrix for all 3 component arrays
 
-  use constants,only: CUSTOM_REAL,NGLLX
+  use constants, only: CUSTOM_REAL,NGLLX
 
   implicit none
 
@@ -1493,7 +1493,7 @@
 
 ! 3 different arrays for x/y/z-components, 2-dimensional arrays (25,5)/(5,25), same B matrix for all 3 component arrays
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -1536,7 +1536,7 @@
 
 ! 3 different arrays for x/y/z-components, 2-dimensional arrays (36,6)/(6,36), same B matrix for all 3 component arrays
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -1582,7 +1582,7 @@
 
 ! 3 different arrays for x/y/z-components, 2-dimensional arrays (49,7)/(7,49), same B matrix for all 3 component arrays
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -1632,7 +1632,7 @@
 
 ! 3 different arrays for x/y/z-components, 3-dimensional arrays e.g. (5,5,5), same B matrix for all 3 component arrays
 
-  use constants,only: CUSTOM_REAL,NGLLX
+  use constants, only: CUSTOM_REAL,NGLLX
 
   implicit none
 
@@ -1658,7 +1658,7 @@
 
 ! 3 different arrays for x/y/z-components, 3-dimensional arrays (5,5,5), same B matrix for all 3 component arrays
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -1703,7 +1703,7 @@
 
 ! 3 different arrays for x/y/z-components, 3-dimensional arrays (6,6,6), same B matrix for all 3 component arrays
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -1751,7 +1751,7 @@
 
 ! 3 different arrays for x/y/z-components, 3-dimensional arrays (7,7,7), same B matrix for all 3 component arrays
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 

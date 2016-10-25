@@ -130,8 +130,8 @@ program smooth_specfem_function
   ixi = myrank - ichunk * nproc_xi * nproc_eta - ieta * nproc_xi
 
   ! get the neighboring slices:
-  call get_all_eight_slices(ichunk,ixi,ieta,&
-             islice0(1),islice0(2),islice0(3),islice0(4),islice0(5),islice0(6),islice0(7),islice0(8),&
+  call get_all_eight_slices(ichunk,ixi,ieta, &
+             islice0(1),islice0(2),islice0(3),islice0(4),islice0(5),islice0(6),islice0(7),islice0(8), &
              nproc_xi,nproc_eta)
 
   ! remove the repeated slices (only 8 for corner slices in global case)

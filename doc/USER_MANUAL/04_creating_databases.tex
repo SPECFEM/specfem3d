@@ -150,14 +150,10 @@ the Vp- and Vs-velocities of your model are given for a reference
 frequency. To change this reference frequency, you change the value
 of \texttt{ATTENUATION\_f0\_REFERENCE} in the main constants file
 \texttt{constants.h} found in subdirectory \texttt{src/shared/}.
-\item [{\texttt{FULL\_ATTENUATION\_SOLID}}] Set to \texttt{.true.} to add
-$Q_{\kappa}$ attenuation to the simulations in addition to $Q_{\mu}$
-attenuation when the \texttt{ATTENUATION} flag above is on. Should
-be off in almost all cases for seismic wave propagation, since $Q_{\kappa}$
-is almost always negligible in Earth models. However, this parameter
-can be useful for instance for ocean acoustics simulations, when $Q_{\kappa}$
-is not negligible in the solid layer at the sea bottom.
-Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp. To convert one to the other see doc/note\_on\_Qkappa\_versus\_Qp.pdf and utils/attenuation/conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90.
+The code uses a constant $Q$ quality factor, write(IMAIN,*) "but approximated based on a series of Zener standard linear solids (SLS).
+The approximation is thus performed in a given frequency band determined based on that \texttt{ATTENUATION\_f0\_REFERENCE} reference frequency.
+Note that Qmu is always equal to Qs, but Qkappa is in general not equal to Qp.
+To convert one to the other see doc/note\_on\_Qkappa\_versus\_Qp.pdf and utils/attenuation/conversion\_from\_Qkappa\_Qmu\_to\_Qp\_Qs\_from\_Dahlen\_Tromp\_959\_960.f90.
 \item [{\texttt{ANISOTROPY}}] Set to \texttt{.true.} if you want to use
 an anisotropy model. Please see the file \texttt{model\_aniso.f90}
 in subdirectory \texttt{src/generate\_databases/} for the current
@@ -190,6 +186,11 @@ In almost all cases it is much better to use CPML absorbing layers
 \item [{\texttt{STACEY\_INSTEAD\_OF\_FREE\_SURFACE}}] Set to \texttt{.true.}
 to turn on absorbing boundary conditions on the top surface which
 by default constitutes a free surface of the model.
+\item [{\texttt{BOTTOM\_FREE\_SURFACE}}]
+When STACEY\_ABSORBING\_CONDITIONS is set to .true. :
+absorbing conditions are defined in xmin, xmax, ymin, ymax and zmin
+this option BOTTOM\_FREE\_SURFACE can be set to .true. to
+make zmin free surface instead of absorbing condition.
 \item [{\texttt{CREATE\_SHAKEMAP}}] Set this flag to \texttt{.true.} to
 create a ShakeMap\textregistered{}, i.e., a peak ground velocity map
 of the maximum absolute value of the two horizontal components of
@@ -415,7 +416,10 @@ such as CUBIT/TRELIS or similar), try to have elements inside the PML as regular
 i.e. ideally non-deformed cubes obtained by `extrusion' of regular surface mesh elements meshing the
 outer edges of the computational domain without PML; by doing so, the PMLs obtained will be far more stable
 in time (PML being weakly unstable from a mathematical point of view, very deformed mesh elements
-inside the PMLs can trigger instabilities much more quickly).
+inside the PMLs can trigger instabilities much more quickly). \red{We have two utilities in directory utils/CPML that do that automatically
+and that are very fast}. To stabilize PMLs it also helps to add a transition layer of geometrically-regular non-PML elements, in which attenuation is also
+turned off (i.e. $Q_\kappa = Q_\mu = 9999$ in that layer), as in the red layer of Figure~\ref{fig:mesh_extrusion}.
+Our tools in directory utils/CPML implement that transition layer automatically.
 
 If you use PML and an external tomographic velocity and density model,
 you should be careful because mathematically a PML cannot handle heterogeneities
@@ -436,20 +440,24 @@ from its values along the inner PML edge.
 %%
 \begin{figure}[htbp]
 \noindent \begin{centering}
+\includegraphics[width=4.5in]{figures/how_to_use_a_transition_mesh_layer_to_stabilize_PML.png}
+\par\end{centering}
+\caption{Mesh extrusion for PML (green elements) and a non-PML stabilization layer (red elements).}
+\label{fig:mesh_extrusion}
+\end{figure}
+%%
+
+%%
+\begin{figure}[htbp]
+\noindent \begin{centering}
 \includegraphics[width=6in]{figures/how_to_use_PML_when_a_tomographic_velocity_model_is_used.png}
 \par\end{centering}
-
 \caption{How to modify your external 3D velocity and density model in order
 to use PML. Such a modification is not needed when using Stacey absorbing
 boundary conditions (but such conditions are significantly less efficient).}
-
-
 \label{fig:modify_external_velocity_model_to_use_PML}
 \end{figure}
-
-
 %%
-
 
 
 \section{Choosing the time step \texttt{DT}}\label{sec:Choosing-the-Time-Step}

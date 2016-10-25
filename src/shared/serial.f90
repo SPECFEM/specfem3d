@@ -79,7 +79,7 @@
 
   subroutine bcast_all_cr(buffer, countval)
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -97,7 +97,7 @@
 
   subroutine bcast_all_singlecr(buffer)
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -161,7 +161,7 @@
 
   subroutine bcast_all_ch_array(buffer,countval)
 
-    use constants,only: MAX_STRING_LEN
+    use constants, only: MAX_STRING_LEN
 
     implicit none
 
@@ -223,7 +223,7 @@
 
   subroutine bcast_all_cr_for_database(buffer, countval)
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -347,7 +347,7 @@
 
   subroutine bcast_all_string_world(buffer)
 
-  use constants,only: MAX_STRING_LEN
+  use constants, only: MAX_STRING_LEN
 
   implicit none
 
@@ -411,7 +411,7 @@
 
   subroutine gather_all_cr(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -429,7 +429,7 @@
 
   subroutine gather_all_all_cr(sendbuf, recvbuf, counts,NPROC)
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -447,7 +447,7 @@
 
  subroutine gatherv_all_cr(sendbuf, sendcnt, recvbuf, recvcount, recvoffset,recvcounttot, NPROC)
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -556,7 +556,7 @@
 
   subroutine max_all_cr(sendbuf, recvbuf)
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -573,7 +573,7 @@
 
   subroutine min_all_cr(sendbuf, recvbuf)
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -589,7 +589,7 @@
 
   subroutine min_all_all_cr(sendbuf, recvbuf)
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -635,7 +635,7 @@
 
   subroutine max_all_all_cr(sendbuf, recvbuf)
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -708,7 +708,7 @@
 
   subroutine sum_all_cr(sendbuf, recvbuf)
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -739,7 +739,7 @@
 
   subroutine sum_all_all_cr(sendbuf, recvbuf)
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -797,7 +797,7 @@
 
   subroutine isend_cr(sendbuf, sendcount, dest, sendtag, req)
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -821,7 +821,7 @@
 
   subroutine irecv_cr(recvbuf, recvcount, dest, recvtag, req)
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -909,7 +909,7 @@
 
   subroutine recvv_cr(recvbuf, recvcount, dest, recvtag )
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -1068,7 +1068,7 @@
 
   subroutine sendv_cr(sendbuf, sendcount, dest, sendtag)
 
-  use constants,only: CUSTOM_REAL
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
@@ -1134,7 +1134,7 @@
 
   subroutine world_split()
 
-  use constants,only: mygroup
+  use constants, only: mygroup
 
   implicit none
 

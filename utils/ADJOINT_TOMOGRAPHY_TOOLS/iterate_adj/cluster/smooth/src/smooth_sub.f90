@@ -1,8 +1,8 @@
 
 ! --------------------------------------------------------------------------------
 
-subroutine get_all_eight_slices(ichunk,ixi,ieta,&
-           ileft,iright,ibot,itop, ilb,ilt,irb,irt,&
+subroutine get_all_eight_slices(ichunk,ixi,ieta, &
+           ileft,iright,ibot,itop, ilb,ilt,irb,irt, &
            nproc_xi,nproc_eta)
 
   implicit none
@@ -38,7 +38,7 @@ subroutine get_all_eight_slices(ichunk,ixi,ieta,&
   irb = get_slice_number(ichunk,ixi+1,ieta-1,nproc_xi,nproc_eta)
   irt = get_slice_number(ichunk,ixi+1,ieta+1,nproc_xi,nproc_eta)
 
-  if (ixi==0) then
+  if (ixi == 0) then
     call get_lrbt_slices(ichunk_left,islice_xi_left,islice_eta_left, &
                ileft0, ichunk_left0, islice_xi_left0, islice_eta_left0, &
                iright0, ichunk_right0, islice_xi_right0, islice_eta_right0, &
@@ -58,7 +58,7 @@ subroutine get_all_eight_slices(ichunk,ixi,ieta,&
     endif
   endif
 
-  if (ixi==nproc_xi-1) then
+  if (ixi == nproc_xi-1) then
     call get_lrbt_slices(ichunk_right,islice_xi_right,islice_eta_right, &
                ileft0, ichunk_left0, islice_xi_left0, islice_eta_left0, &
                iright0, ichunk_right0, islice_xi_right0, islice_eta_right0, &
@@ -77,7 +77,7 @@ subroutine get_all_eight_slices(ichunk,ixi,ieta,&
     endif
   endif
 
-  if (ieta==0) then
+  if (ieta == 0) then
     call get_lrbt_slices(ichunk_bot,islice_xi_bot,islice_eta_bot, &
                ileft0, ichunk_left0, islice_xi_left0, islice_eta_left0, &
                iright0, ichunk_right0, islice_xi_right0, islice_eta_right0, &
@@ -99,7 +99,7 @@ subroutine get_all_eight_slices(ichunk,ixi,ieta,&
     endif
   endif
 
-  if (ieta==nproc_eta-1) then
+  if (ieta == nproc_eta-1) then
     call get_lrbt_slices(ichunk_top,islice_xi_top,islice_eta_top, &
                ileft0, ichunk_left0, islice_xi_left0, islice_eta_left0, &
                iright0, ichunk_right0, islice_xi_right0, islice_eta_right0, &

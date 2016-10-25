@@ -1,5 +1,9 @@
-# simulation input parameters
+#-----------------------------------------------------------
 #
+# Simulation input parameters
+#
+#-----------------------------------------------------------
+
 # forward or adjoint simulation
 # 1 = forward, 2 = adjoint, 3 = both simultaneously
 SIMULATION_TYPE                 = 1
@@ -20,9 +24,21 @@ NPROC                           = 96
 # time step parameters
 NSTEP                           = 6001
 DT                              = 0.0001
+
+#-----------------------------------------------------------
+#
+# LDDRK time scheme
+#
+#-----------------------------------------------------------
 USE_LDDRK                       = .false.
 INCREASE_CFL_FOR_LDDRK          = .false.
 RATIO_BY_WHICH_TO_INCREASE_IT   = 1.4
+
+#-----------------------------------------------------------
+#
+# Mesh
+#
+#-----------------------------------------------------------
 
 # number of nodes for 2D and 3D shape functions for hexahedra
 # we use either 8-node mesh elements (bricks) or 27-node elements.
@@ -40,25 +56,37 @@ NGNOD                           = 8
 #   aniso,external,gll,salton_trough,tomo,SEP...
 MODEL                           = tomo
 
+# path for external tomographic models files
+TOMOGRAPHY_PATH                 = ./DATA/tomo_files/
 # if you are using a SEP model (oil-industry format)
 SEP_MODEL_DIRECTORY             = ./DATA/my_SEP_model/
+
+#-----------------------------------------------------------
 
 # parameters describing the model
 APPROXIMATE_OCEAN_LOAD          = .false.
 TOPOGRAPHY                      = .false.
 ATTENUATION                     = .false.
-FULL_ATTENUATION_SOLID          = .false.
 ANISOTROPY                      = .false.
 GRAVITY                         = .false.
 
-# path for external tomographic models files
-TOMOGRAPHY_PATH                 = ./DATA/tomo_files/
+# reference frequency for target velocity values in the velocity model
+# set here to a typical value for regional seismology / regional models (dominant period of 3 seconds, i.e. frequency of 1/3 Hz)
+ATTENUATION_f0_REFERENCE        = 0.33333d0
 
-# Olsen's constant for Q_mu = constant * v_s attenuation rule
+# Olsen's constant for Q_mu = constant * V_s attenuation rule
 USE_OLSEN_ATTENUATION           = .false.
 OLSEN_ATTENUATION_RATIO         = 0.05
 
+#-----------------------------------------------------------
+#
+# Absorbing boundary conditions
+#
+#-----------------------------------------------------------
+
 # C-PML boundary conditions for a regional simulation
+# (if set to .false., and STACEY_ABSORBING_CONDITIONS is also set to .false., you get a free surface instead
+# in the case of elastic or viscoelastic mesh elements, and a rigid surface in the case of acoustic (fluid) elements
 PML_CONDITIONS                  = .false.
 
 # C-PML top surface
@@ -72,10 +100,24 @@ f0_FOR_PML                      = 12.7
 # ROTATE_PML_ANGLE              = 0.
 
 # absorbing boundary conditions for a regional simulation
+# (if set to .false., and PML_CONDITIONS is also set to .false., you get a free surface instead
+# in the case of elastic or viscoelastic mesh elements, and a rigid surface in the case of acoustic (fluid) elements
 STACEY_ABSORBING_CONDITIONS     = .true.
 
 # absorbing top surface (defined in mesh as 'free_surface_file')
 STACEY_INSTEAD_OF_FREE_SURFACE  = .false.
+
+# When STACEY_ABSORBING_CONDITIONS is set to .true. :
+# absorbing conditions are defined in xmin, xmax, ymin, ymax and zmin
+# this option BOTTOM_FREE_SURFACE can be set to .true. to
+# make zmin free surface instead of absorbing condition
+BOTTOM_FREE_SURFACE             = .false.
+
+#-----------------------------------------------------------
+#
+# Visualization
+#
+#-----------------------------------------------------------
 
 # save AVS or OpenDX movies
 # MOVIE_TYPE = 1 to show the top surface
@@ -98,12 +140,11 @@ LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI
 # interval at which we output time step info and max of norm of displacement
 NTSTEP_BETWEEN_OUTPUT_INFO      = 500
 
-# interval in time steps for writing of seismograms
-NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
-
-# interval in time steps for reading adjoint traces
-# 0 = read the whole adjoint sources at the same time
-NTSTEP_BETWEEN_READ_ADJSRC      = 0
+#-----------------------------------------------------------
+#
+# Sources
+#
+#-----------------------------------------------------------
 
 # use a (tilted) FORCESOLUTION force point source (or several) instead of a CMTSOLUTION moment-tensor source.
 # This can be useful e.g. for oil industry foothills simulations or asteroid simulations
@@ -122,12 +163,39 @@ USE_FORCE_POINT_SOURCE          = .true.
 # to represent a (tilted) FORCESOLUTION force point source or a CMTSOLUTION moment-tensor source.
 USE_RICKER_TIME_FUNCTION        = .true.
 
+# use external source time function.
+# if .true. you must add a file with your source time function and the file name
+# path relative to lauching directory at the end of CMTSOLUTION or FORCESOURCE file
+# (with multiple sources, one file per source is required).
+# This file must have 2 columns  :
+#     current_time, amplitude
+# The time step **MUST** be the same as used for simulation.
+# be sure when this option is .false. to remove the name of stf file in
+# CMTSOLUTION or FORCESOURCE
+EXTERNAL_SOURCE_FILE            = .false.
+
+# print source time function
+PRINT_SOURCE_TIME_FUNCTION      = .false.
+
+# (for acoustic simulations only) determines source encoding factor +/-1 depending on sign of moment tensor
+# (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources, Geophysics, 74 (6), WCC177-WCC188.)
+USE_SOURCE_ENCODING             = .false.
+
+#-----------------------------------------------------------
+#
+# Seismograms
+#
+#-----------------------------------------------------------
+
+# interval in time steps for writing of seismograms
+NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
+
 # decide if we save displacement, velocity, acceleration and/or pressure in forward runs (they can be set to true simultaneously)
 # currently pressure seismograms are implemented in acoustic (i.e. fluid) elements only
 SAVE_SEISMOGRAMS_DISPLACEMENT   = .true.
 SAVE_SEISMOGRAMS_VELOCITY       = .true.
 SAVE_SEISMOGRAMS_ACCELERATION   = .false.
-SAVE_SEISMOGRAMS_PRESSURE       = .false.  # currently implemented in acoustic (i.e. fluid) elements only
+SAVE_SEISMOGRAMS_PRESSURE       = .false.   # currently implemented in acoustic (i.e. fluid) elements only
 
 # save seismograms in binary or ASCII format (binary is smaller but may not be portable between machines)
 USE_BINARY_FOR_SEISMOGRAMS      = .true.
@@ -151,25 +219,27 @@ SAVE_ALL_SEISMOS_IN_ONE_FILE    = .false.
 # is accurate at second order and thus contains significantly less numerical noise.
 USE_TRICK_FOR_BETTER_PRESSURE   = .false.
 
+#-----------------------------------------------------------
 #
-# source encoding
+# Total energy calculation
 #
-# determines source encoding factor +/-1 depending on sign of moment tensor
-# (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources, Geophysics, 74 (6), WCC177-WCC188.)
-USE_SOURCE_ENCODING             = .false.
-
-#
-# total energy calculation
-#
+#-----------------------------------------------------------
 # to plot total energy curves, for instance to monitor how CPML absorbing layers behave;
 # should be turned OFF in most cases because expensive
 OUTPUT_ENERGY                   = .false.
 # every how many time steps we compute energy (which is expensive to compute)
 NTSTEP_BETWEEN_OUTPUT_ENERGY    = 10
 
+#-----------------------------------------------------------
 #
-# adjoint kernel outputs
+# Adjoint kernel outputs
 #
+#-----------------------------------------------------------
+
+# interval in time steps for reading adjoint traces
+# 0 = read the whole adjoint sources at the same time
+NTSTEP_BETWEEN_READ_ADJSRC      = 0
+
 # this parameter must be set to .true. to compute anisotropic kernels
 # in crust and mantle (related to the 21 Cij in geographical coordinates)
 # default is .false. to compute isotropic kernels (related to alpha and beta)
@@ -185,8 +255,7 @@ APPROXIMATE_HESS_KL             = .false.
 # save Moho mesh and compute Moho boundary kernels
 SAVE_MOHO_MESH                  = .false.
 
-# print source time function
-PRINT_SOURCE_TIME_FUNCTION      = .false.
+#-----------------------------------------------------------
 
 # Dimitri Komatitsch, July 2014, CNRS Marseille, France:
 # added the ability to run several calculations (several earthquakes)
@@ -235,9 +304,7 @@ NUMBER_OF_SIMULTANEOUS_RUNS     = 1
 # and the code will broadcast it to the others)
 BROADCAST_SAME_MESH_AND_MODEL   = .false.
 
-# if one or a few of these simultaneous runs fail, kill all the runs or let the others finish using a fail-safe mechanism
-# (in most cases, should be set to false)
-USE_FAILSAFE_MECHANISM          = .false.
+#-----------------------------------------------------------
 
 # set to true to use GPUs
 GPU_MODE                        = .false.

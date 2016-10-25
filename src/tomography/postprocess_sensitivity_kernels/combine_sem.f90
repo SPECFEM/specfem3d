@@ -51,14 +51,11 @@
 !   any scalar field of dimension (NGLLX,NGLLY,NGLLZ,NSPEC).
 !
 !   This is a parrallel program -- it must be invoked with mpirun or other
-!   appropriate utility.  Operations are performed in embarassingly-parallel
-!   fashion.
-
+!   appropriate utility.  Operations are performed in embarassingly-parallel fashion.
 
 program combine_sem
 
-  use postprocess_par,only: MAX_STRING_LEN,MAX_KERNEL_PATHS,IIN, &
-    myrank,sizeprocs,NGLOB,NSPEC
+  use postprocess_par, only: MAX_STRING_LEN,MAX_KERNEL_PATHS,IIN,myrank,sizeprocs,NGLOB,NSPEC
 
   use shared_parameters
 
@@ -79,7 +76,7 @@ program combine_sem
   call world_size(sizeprocs)
   call world_rank(myrank)
 
-  if (myrank==0) then
+  if (myrank == 0) then
     write(*,*) 'Running XCOMBINE_SEM'
     write(*,*)
   endif
@@ -132,10 +129,10 @@ program combine_sem
   ! checks number of MPI processes
   if (sizeprocs /= NPROC) then
     if (myrank == 0) then
-      print *,''
+      print *
       print *,'Expected number of MPI processes: ', NPROC
       print *,'Actual number of MPI processes: ', sizeprocs
-      print *,''
+      print *
     endif
     call synchronize_all()
     stop 'Error wrong number of MPI processes'
@@ -144,7 +141,7 @@ program combine_sem
 
   ! read mesh dimensions
   write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',myrank,'_'//'external_mesh.bin'
-  open(unit=27,file=trim(prname_lp),&
+  open(unit=27,file=trim(prname_lp), &
           status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
     print *,'Error: could not open database '
@@ -168,7 +165,7 @@ program combine_sem
   enddo
 
 
-  if (myrank==0) write(*,*) 'done writing all arrays, see directory: ', output_dir
+  if (myrank == 0) write(*,*) 'done writing all arrays, see directory: ', output_dir
   call finalize_mpi()
 
 end program combine_sem
@@ -200,7 +197,7 @@ subroutine combine_sem_array(kernel_name,kernel_paths,output_dir,npath)
  ! loop over kernel paths
   sum_arrays = 0._CUSTOM_REAL
   do iker = 1, npath
-    if (myrank==0) then
+    if (myrank == 0) then
       write(*,*) 'reading in array for: ',trim(kernel_name)
       write(*,*) '    ',iker, ' out of ', npath
     endif
@@ -230,7 +227,7 @@ subroutine combine_sem_array(kernel_name,kernel_paths,output_dir,npath)
   enddo
 
   ! write sum
-  if (myrank==0) write(*,*) 'writing sum: ',trim(kernel_name)
+  if (myrank == 0) write(*,*) 'writing sum: ',trim(kernel_name)
   write(filename,'(a,i6.6,a)') trim(output_dir)//'/'//'proc',myrank,'_'//trim(kernel_name)//'.bin'
   open(IOUT,file=trim(filename),form='unformatted',status='unknown',action='write',iostat=ier)
   if (ier /= 0) then
@@ -240,7 +237,7 @@ subroutine combine_sem_array(kernel_name,kernel_paths,output_dir,npath)
   write(IOUT) sum_arrays
   close(IOUT)
 
-  if (myrank==0) write(*,*)
+  if (myrank == 0) write(*,*)
   deallocate(array,sum_arrays)
 
 end subroutine combine_sem_array

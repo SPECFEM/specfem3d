@@ -38,6 +38,10 @@
 
   implicit none
 
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_iterate_time_5.F90"
+#endif
+
   ! for EXACT_UNDOING_TO_DISK
   integer :: ispec,iglob,i,j,k,counter,record_length
   integer, dimension(:), allocatable :: integer_mask_ibool_exact_undo
@@ -103,6 +107,10 @@
 
   ! get MPI starting time
   time_start = wtime()
+
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_iterate_time_6.F90"
+#endif
 
   ! *********************************************************
   ! ************* MAIN LOOP OVER THE TIME STEPS *************
@@ -197,45 +205,45 @@
         if (ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION) then
           ! coupled acoustic-elastic simulations
           ! 1. elastic domain w/ adjoint wavefields
-          call compute_forces_viscoelastic()
+          call compute_forces_viscoelastic_calling()
           ! 2. acoustic domain w/ adjoint wavefields
-          call compute_forces_acoustic()
+          call compute_forces_acoustic_calling()
         else
           ! non-coupled simulations
           ! (purely acoustic or elastic)
-          if (ACOUSTIC_SIMULATION) call compute_forces_acoustic()
-          if (ELASTIC_SIMULATION) call compute_forces_viscoelastic()
+          if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_calling()
+          if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_calling()
         endif
 
         ! backward/reconstructed wavefields
         ! acoustic solver
         ! (needs to be done after elastic one)
-        if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_backward()
+        if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_backward_calling()
         ! elastic solver
         ! (needs to be done first, before poroelastic one)
-        if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_backward()
+        if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_backward_calling()
 
       else
         ! forward simulations
         do istage = 1, NSTAGE_TIME_SCHEME
-          if(USE_LDDRK) call update_displ_lddrk()
+          if (USE_LDDRK) call update_displ_lddrk()
           ! 1. acoustic domain
-          if (ACOUSTIC_SIMULATION) call compute_forces_acoustic()
+          if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_calling()
           ! 2. elastic domain
-          if (ELASTIC_SIMULATION) call compute_forces_viscoelastic()
+          if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_calling()
         enddo
       endif
 
       ! poroelastic solver
-      if (POROELASTIC_SIMULATION) call compute_forces_poroelastic()
+      if (POROELASTIC_SIMULATION) call compute_forces_poroelastic_calling()
 
     else
       ! wavefields on GPU
       ! acoustic solver
-      if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_GPU()
+      if (ACOUSTIC_SIMULATION) call compute_forces_acoustic_GPU_calling()
       ! elastic solver
       ! (needs to be done first, before poroelastic one)
-      if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_GPU()
+      if (ELASTIC_SIMULATION) call compute_forces_viscoelastic_GPU_calling()
     endif
 
     ! restores last time snapshot saved for backward/reconstruction of wavefields
@@ -301,6 +309,14 @@
 !-------------------------------------------------------------------------------------------------
 !
 
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_iterate_time_4.F90"
+#endif
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
   subroutine it_transfer_from_GPU()
 
 ! transfers fields on GPU back onto CPU
@@ -359,7 +375,7 @@
       call transfer_kernels_noise_to_host(Mesh_pointer,sigma_kl,NSPEC_AB)
     endif
 
-    ! approximative hessian for preconditioning kernels
+    ! approximative Hessian for preconditioning kernels
     if (APPROXIMATE_HESS_KL) then
       if (ELASTIC_SIMULATION) call transfer_kernels_hess_el_tohost(Mesh_pointer,hess_kl,NSPEC_AB)
       if (ACOUSTIC_SIMULATION) call transfer_kernels_hess_ac_tohost(Mesh_pointer,hess_ac_kl,NSPEC_AB)
@@ -411,7 +427,7 @@
     call read_forward_arrays_adios()
   else
     ! reads in wavefields
-    open(unit=IIN,file=trim(prname)//'save_forward_arrays.bin',status='old',&
+    open(unit=IIN,file=trim(prname)//'save_forward_arrays.bin',status='old', &
           action='read',form='unformatted',iostat=ier)
     if (ier /= 0) then
       print *,'error: opening save_forward_arrays'
@@ -432,19 +448,19 @@
       read(IIN) b_accel
       ! memory variables if attenuation
       if (ATTENUATION) then
-        if (FULL_ATTENUATION_SOLID) read(IIN) b_R_trace
+        read(IIN) b_R_trace
         read(IIN) b_R_xx
         read(IIN) b_R_yy
         read(IIN) b_R_xy
         read(IIN) b_R_xz
         read(IIN) b_R_yz
-        if (FULL_ATTENUATION_SOLID) read(IIN) b_epsilondev_trace
+        read(IIN) b_epsilondev_trace
         read(IIN) b_epsilondev_xx
         read(IIN) b_epsilondev_yy
         read(IIN) b_epsilondev_xy
         read(IIN) b_epsilondev_xz
         read(IIN) b_epsilondev_yz
-      endif ! ATTENUATION
+      endif
     endif
 
     ! poroelastic wavefields
@@ -464,8 +480,8 @@
     if (ACOUSTIC_SIMULATION) then
     ! transfers fields onto GPU
       call transfer_b_fields_ac_to_device(NGLOB_AB,b_potential_acoustic, &
-                                          b_potential_dot_acoustic,      &
-                                          b_potential_dot_dot_acoustic,  &
+                                          b_potential_dot_acoustic, &
+                                          b_potential_dot_dot_acoustic, &
                                           Mesh_pointer)
     endif
     ! elastic wavefields
@@ -474,11 +490,11 @@
       call transfer_b_fields_to_device(NDIM*NGLOB_AB,b_displ,b_veloc,b_accel,Mesh_pointer)
       ! memory variables if attenuation
       if (ATTENUATION) then
-        call transfer_b_fields_att_to_device(Mesh_pointer,                    &
-                           b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz,                &
-                           size(b_R_xx),                                      &
-                           b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy,   &
-                           b_epsilondev_xz,b_epsilondev_yz,                   &
+        call transfer_b_fields_att_to_device(Mesh_pointer, &
+                           b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
+                           size(b_R_xx), &
+                           b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
+                           b_epsilondev_xz,b_epsilondev_yz, &
                            size(b_epsilondev_xx))
       endif
     endif

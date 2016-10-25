@@ -37,7 +37,7 @@ subroutine print_usage_adios()
 end subroutine print_usage_adios
 
 !=============================================================================
-subroutine read_args_adios(arg, MAX_NUM_NODES, node_list, num_node,   &
+subroutine read_args_adios(arg, MAX_NUM_NODES, node_list, num_node, &
                            var_name, value_file_name, mesh_file_name, &
                            outdir, ires)
   ! Arguments
@@ -147,7 +147,7 @@ subroutine read_ibool_adios_mesh(mesh_handle, ibool_offset, &
 end subroutine read_ibool_adios_mesh
 
 !=============================================================================
-subroutine read_coordinates_adios_mesh(mesh_handle, x_global_offset,  &
+subroutine read_coordinates_adios_mesh(mesh_handle, x_global_offset, &
                                        NGLOB_AB, xstore, ystore, zstore)
 
   use constants

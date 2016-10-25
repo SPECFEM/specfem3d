@@ -26,16 +26,16 @@
 !=====================================================================
 
   subroutine save_databases(prname,nspec,nglob,iproc_xi,iproc_eta, &
-                            NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta,&
+                            NPROC_XI,NPROC_ETA,addressing,iMPIcut_xi,iMPIcut_eta, &
                             ibool,nodes_coords,ispec_material_id, &
-                            nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP,&
+                            nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                             NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX, &
-                            ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
+                            ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
                             NMATERIALS,material_properties, &
-                            nspec_CPML,CPML_to_spec,CPML_regions,is_CPML,&
+                            nspec_CPML,CPML_to_spec,CPML_regions,is_CPML, &
                             xstore, ystore, zstore)
 
-  use constants,only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC
+  use constants, only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC
 
   implicit none
 
@@ -47,7 +47,7 @@
   ! number of vertices in each block
   integer nglob
 
-  ! MPI cartesian topology
+  ! MPI Cartesian topology
   ! E for East (= XI_MIN), W for West (= XI_MAX), S for South (= ETA_MIN), N for North (= ETA_MAX)
   integer, parameter :: W=1,E=2,S=3,N=4,NW=5,NE=6,SE=7,SW=8
   integer iproc_xi,iproc_eta
@@ -59,7 +59,7 @@
   integer ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
   double precision :: nodes_coords(nglob,3)
 
-  !! VM VM add all gll points for Axisem coupling
+  !! VM VM add all GLL points for Axisem coupling
   double precision, dimension(NGLLX_M,NGLLY_M,NGLLZ_M,nspec) :: xstore, ystore, zstore
 
   integer ispec_material_id(nspec)
@@ -99,7 +99,9 @@
 
   integer :: ndef,nundef
   integer :: mat_id,domain_id
-  integer,dimension(2,nspec) :: material_index
+  ! there was a potential bug here if nspec is big
+  !integer,dimension(2,nspec) :: material_index
+  integer,dimension(:,:),allocatable :: material_index
   character(len=MAX_STRING_LEN), dimension(6,1) :: undef_mat_prop
 
   !------------------------------------------------------------------
@@ -113,6 +115,8 @@
 
   ! assignes material index
   ! format: (1,ispec) = #material_id , (2,ispec) = #material_definition
+  allocate(material_index(2,nspec),stat=ier)
+  if (ier /= 0) stop 'Error allocating array material_index'
   material_index (:,:) = 0
   do ispec = 1, nspec
     ! material id
@@ -207,7 +211,7 @@
     endif
   enddo
 
-  ! spectral-elements
+  ! spectral elements
   write(IIN_database) nspec
   do ispec=1,nspec
       write(IIN_database) ispec,material_index(1,ispec),material_index(2,ispec), &
@@ -224,7 +228,7 @@
   write(IIN_database) 6,NSPEC2D_TOP
 
   do i=1,nspec2D_xmin
-     write(IIN_database) ibelm_xmin(i),ibool(1,1,1,ibelm_xmin(i)),ibool(1,NGLLY_M,1,ibelm_xmin(i)),&
+     write(IIN_database) ibelm_xmin(i),ibool(1,1,1,ibelm_xmin(i)),ibool(1,NGLLY_M,1,ibelm_xmin(i)), &
           ibool(1,1,NGLLZ_M,ibelm_xmin(i)),ibool(1,NGLLY_M,NGLLZ_M,ibelm_xmin(i))
   enddo
   do i=1,nspec2D_xmax
@@ -232,7 +236,7 @@
           ibool(NGLLX_M,1,NGLLZ_M,ibelm_xmax(i)),ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_xmax(i))
   enddo
   do i=1,nspec2D_ymin
-     write(IIN_database) ibelm_ymin(i),ibool(1,1,1,ibelm_ymin(i)),ibool(NGLLX_M,1,1,ibelm_ymin(i)),&
+     write(IIN_database) ibelm_ymin(i),ibool(1,1,1,ibelm_ymin(i)),ibool(NGLLX_M,1,1,ibelm_ymin(i)), &
           ibool(1,1,NGLLZ_M,ibelm_ymin(i)),ibool(NGLLX_M,1,NGLLZ_M,ibelm_ymin(i))
   enddo
   do i=1,nspec2D_ymax
@@ -255,7 +259,7 @@
   call synchronize_all()
 
   write(IIN_database) nspec_CPML_total
-  if(nspec_CPML_total > 0) then
+  if (nspec_CPML_total > 0) then
      write(IIN_database) nspec_CPML
      do ispec_CPML=1,nspec_CPML
         write(IIN_database) CPML_to_spec(ispec_CPML), CPML_regions(ispec_CPML)
@@ -267,7 +271,7 @@
 
   ! MPI Interfaces
   if (NPROC_XI >= 2 .or. NPROC_ETA >= 2) then
-    ! determines number of mpi interfaces for each slice
+    ! determines number of MPI interfaces for each slice
     nb_interfaces = 4
     interfaces(W:N) = .true.
     interfaces(NW:SW) = .false.
@@ -357,7 +361,7 @@
     if (interfaces(NW)) then
       write(IIN_database) addressing(iproc_xi-1,iproc_eta+1),nspec_interface(NW)
       do ispec = 1,nspec
-        if ((iMPIcut_xi(1,ispec) .eqv. .true.) .and. (iMPIcut_eta(2,ispec) .eqv. .true.))  then
+        if ((iMPIcut_xi(1,ispec) .eqv. .true.) .and. (iMPIcut_eta(2,ispec) .eqv. .true.)) then
           write(IIN_database) ispec,2,ibool(1,2,1,ispec),ibool(1,2,2,ispec),-1,-1
         endif
       enddo
@@ -366,7 +370,7 @@
     if (interfaces(NE)) then
       write(IIN_database) addressing(iproc_xi+1,iproc_eta+1),nspec_interface(NE)
       do ispec = 1,nspec
-        if ((iMPIcut_xi(2,ispec) .eqv. .true.) .and. (iMPIcut_eta(2,ispec) .eqv. .true.))  then
+        if ((iMPIcut_xi(2,ispec) .eqv. .true.) .and. (iMPIcut_eta(2,ispec) .eqv. .true.)) then
           write(IIN_database) ispec,2,ibool(2,2,1,ispec),ibool(2,2,2,ispec),-1,-1
         endif
       enddo
@@ -375,7 +379,7 @@
     if (interfaces(SE)) then
       write(IIN_database) addressing(iproc_xi+1,iproc_eta-1),nspec_interface(SE)
       do ispec = 1,nspec
-        if ((iMPIcut_xi(2,ispec) .eqv. .true.) .and. (iMPIcut_eta(1,ispec) .eqv. .true.))  then
+        if ((iMPIcut_xi(2,ispec) .eqv. .true.) .and. (iMPIcut_eta(1,ispec) .eqv. .true.)) then
           write(IIN_database) ispec,2,ibool(2,1,1,ispec),ibool(2,1,2,ispec),-1,-1
         endif
       enddo
@@ -384,7 +388,7 @@
     if (interfaces(SW)) then
       write(IIN_database) addressing(iproc_xi-1,iproc_eta-1),nspec_interface(SW)
       do ispec = 1,nspec
-        if ((iMPIcut_xi(1,ispec) .eqv. .true.) .and. (iMPIcut_eta(1,ispec) .eqv. .true.))  then
+        if ((iMPIcut_xi(1,ispec) .eqv. .true.) .and. (iMPIcut_eta(1,ispec) .eqv. .true.)) then
           write(IIN_database) ispec,2,ibool(1,1,1,ispec),ibool(1,1,2,ispec),-1,-1
         endif
       enddo
@@ -392,7 +396,7 @@
 
   else
 
-    ! only 1 single slice, no mpi interfaces
+    ! only one slice, no MPI interfaces
     write(IIN_database) 0,0
 
     !! VM VM add outputs as CUBIT
@@ -400,25 +404,26 @@
       call save_output_mesh_files_as_cubit(nspec,nglob, ibool,nodes_coords, ispec_material_id, &
                                            nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                                            NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NMATERIALS,material_properties, &
-                                           ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
+                                           ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
                                            xstore,ystore,zstore)
     endif
   endif
 
   close(IIN_database)
+  deallocate(material_index)
 
   end subroutine save_databases
 
 !---------------------------------------------------------------------------------------------------------------
 
-  !! VM VM add subroutine for saving meshes in case of 1 mpi process
+  !! VM VM add subroutine to save meshes in case of a single MPI process
   subroutine save_output_mesh_files_as_cubit(nspec,nglob, ibool,nodes_coords, ispec_material_id, &
                                      nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
                                      NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NMATERIALS,material_properties, &
-                                     ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,&
+                                     ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
                                      xgrid,ygrid,zgrid)
 
-    use constants,only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC, NGLLX, NGLLY, NGLLZ, NDIM, ZERO
+    use constants, only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC, NGLLX, NGLLY, NGLLZ, NDIM, ZERO
 
 #ifdef DEBUG_COUPLED
     include "../../../add_to_save_databases_4.F90"
@@ -435,7 +440,7 @@
     ! number of vertices in each block
     integer :: nglob
 
-    ! MPI cartesian topology
+    ! MPI Cartesian topology
     ! E for East (= XI_MIN), W for West (= XI_MAX), S for South (= ETA_MIN), N for North (= ETA_MAX)
     integer, parameter :: W=1,E=2,S=3,N=4,NW=5,NE=6,SE=7,SW=8
 
@@ -443,7 +448,7 @@
     integer :: ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
     double precision :: nodes_coords(nglob,3)
 
-    !! VM VM add all gll points for Axisem coupling
+    !! VM VM add all GLL points for Axisem coupling
     double precision, dimension(NGLLX_M,NGLLY_M,NGLLZ_M,nspec) :: xgrid, ygrid, zgrid
 
     integer :: ispec_material_id(nspec)
@@ -512,7 +517,7 @@
     open(IIN_database,file='MESH/nodes_coords_file')
     write(IIN_database,*) nglob
     do iglob=1,nglob
-       write(IIN_database,'(i14,3x,3(f20.5,1x))') iglob,nodes_coords(iglob,1),nodes_coords(iglob,2),&
+       write(IIN_database,'(i14,3x,3(f20.5,1x))') iglob,nodes_coords(iglob,1),nodes_coords(iglob,2), &
             nodes_coords(iglob,3)-z_bottom
     enddo
     close(IIN_database)
@@ -520,9 +525,9 @@
     open(IIN_database,file='MESH/mesh_file')
     write(IIN_database,*) nspec
     do ispec=1,nspec
-       write(IIN_database,'(9i15)')  ispec,ibool(1,1,1,ispec),ibool(2,1,1,ispec),&
-            ibool(2,2,1,ispec),ibool(1,2,1,ispec),&
-            ibool(1,1,2,ispec),ibool(2,1,2,ispec),&
+       write(IIN_database,'(9i15)')  ispec,ibool(1,1,1,ispec),ibool(2,1,1,ispec), &
+            ibool(2,2,1,ispec),ibool(1,2,1,ispec), &
+            ibool(1,1,2,ispec),ibool(2,1,2,ispec), &
             ibool(2,2,2,ispec),ibool(1,2,2,ispec)
     enddo
     close(IIN_database)
@@ -530,7 +535,7 @@
     open(IIN_database,file='MESH/absorbing_surface_file_xmin')
     write(IIN_database,*) nspec2D_xmin
     do i=1,nspec2D_xmin
-       write(IIN_database,'(5(i10,1x))') ibelm_xmin(i),ibool(1,1,1,ibelm_xmin(i)),ibool(1,NGLLY_M,1,ibelm_xmin(i)),&
+       write(IIN_database,'(5(i10,1x))') ibelm_xmin(i),ibool(1,1,1,ibelm_xmin(i)),ibool(1,NGLLY_M,1,ibelm_xmin(i)), &
           ibool(1,1,NGLLZ_M,ibelm_xmin(i)),ibool(1,NGLLY_M,NGLLZ_M,ibelm_xmin(i))
     enddo
     close(IIN_database)
@@ -538,8 +543,8 @@
     open(IIN_database,file='MESH/absorbing_surface_file_xmax')
     write(IIN_database,*) nspec2D_xmax
     do i=1,nspec2D_xmax
-       write(IIN_database,'(5(i10,1x))') ibelm_xmax(i),ibool(NGLLX_M,1,1,ibelm_xmax(i)),&
-            ibool(NGLLX_M,NGLLY_M,1,ibelm_xmax(i)), ibool(NGLLX_M,1,NGLLZ_M,ibelm_xmax(i)),&
+       write(IIN_database,'(5(i10,1x))') ibelm_xmax(i),ibool(NGLLX_M,1,1,ibelm_xmax(i)), &
+            ibool(NGLLX_M,NGLLY_M,1,ibelm_xmax(i)), ibool(NGLLX_M,1,NGLLZ_M,ibelm_xmax(i)), &
             ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_xmax(i))
     enddo
     close(IIN_database)
@@ -547,7 +552,7 @@
     open(IIN_database,file='MESH/absorbing_surface_file_ymin')
     write(IIN_database,*) nspec2D_ymin
     do i=1,nspec2D_ymin
-       write(IIN_database,'(5(i10,1x))') ibelm_ymin(i),ibool(1,1,1,ibelm_ymin(i)),ibool(NGLLX_M,1,1,ibelm_ymin(i)),&
+       write(IIN_database,'(5(i10,1x))') ibelm_ymin(i),ibool(1,1,1,ibelm_ymin(i)),ibool(NGLLX_M,1,1,ibelm_ymin(i)), &
             ibool(1,1,NGLLZ_M,ibelm_ymin(i)),ibool(NGLLX_M,1,NGLLZ_M,ibelm_ymin(i))
     enddo
     close(IIN_database)
@@ -555,8 +560,8 @@
     open(IIN_database,file='MESH/absorbing_surface_file_ymax')
     write(IIN_database,*) nspec2D_ymax
     do i=1,nspec2D_ymax
-       write(IIN_database,'(5(i10,1x))') ibelm_ymax(i),ibool(NGLLX_M,NGLLY_M,1,ibelm_ymax(i)),&
-            ibool(1,NGLLY_M,1,ibelm_ymax(i)), ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_ymax(i)),&
+       write(IIN_database,'(5(i10,1x))') ibelm_ymax(i),ibool(NGLLX_M,NGLLY_M,1,ibelm_ymax(i)), &
+            ibool(1,NGLLY_M,1,ibelm_ymax(i)), ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_ymax(i)), &
             ibool(1,NGLLY_M,NGLLZ_M,ibelm_ymax(i))
     enddo
 
@@ -572,8 +577,8 @@
     open(IIN_database,file='MESH/free_or_absorbing_surface_file_zmax')
     write(IIN_database,*) NSPEC2D_TOP
     do i=1,NSPEC2D_TOP
-       write(IIN_database,'(5(i10,1x))') ibelm_top(i),ibool(1,1,NGLLZ_M,ibelm_top(i)),&
-            ibool(NGLLX_M,1,NGLLZ_M,ibelm_top(i)),ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_top(i)),&
+       write(IIN_database,'(5(i10,1x))') ibelm_top(i),ibool(1,1,NGLLZ_M,ibelm_top(i)), &
+            ibool(NGLLX_M,1,NGLLZ_M,ibelm_top(i)),ibool(NGLLX_M,NGLLY_M,NGLLZ_M,ibelm_top(i)), &
             ibool(1,NGLLY_M,NGLLZ_M,ibelm_top(i))
     enddo
     close(IIN_database)

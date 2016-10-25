@@ -26,9 +26,9 @@
 !=====================================================================
 
   subroutine get_jacobian_boundary_face(myrank,nspec, &
-                        xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob,&
+                        xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob, &
                         dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&
+                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         ispec,iface,jacobian2Dw_face,normal_face,NGLLA,NGLLB,NGNOD2D)
 
 ! returns jacobian2Dw_face and normal_face (pointing outwards of element)
@@ -249,7 +249,7 @@
       zelm(9)=zstore_dummy( ibool((NGLLX+1)/2,(NGLLY+1)/2,1,ispec) )
     endif
 
-    call compute_jacobian_2D_face(myrank,xelm,yelm,zelm,&
+    call compute_jacobian_2D_face(myrank,xelm,yelm,zelm, &
                   dershape2D_bottom,wgllwgll_xy, &
                   jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
 
@@ -286,7 +286,7 @@
       zelm(9)=zstore_dummy( ibool((NGLLX+1)/2,(NGLLY+1)/2,NGLLZ,ispec) )
     endif
 
-    call compute_jacobian_2D_face(myrank,xelm,yelm,zelm,&
+    call compute_jacobian_2D_face(myrank,xelm,yelm,zelm, &
                   dershape2D_top, wgllwgll_xy, &
                   jacobian2Dw_face,normal_face,NGLLX,NGLLY,NGNOD2D)
 

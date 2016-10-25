@@ -61,7 +61,7 @@ contains
 !
 subroutine BC_KINFLT_init(prname,DTglobal,myrank)
 
-  use specfem_par, only : nt=>NSTEP
+  use specfem_par, only: nt => NSTEP
   character(len=MAX_STRING_LEN), intent(in) :: prname ! 'proc***'
   double precision, intent(in) :: DTglobal
   integer, intent(in) :: myrank
@@ -81,19 +81,19 @@ subroutine BC_KINFLT_init(prname,DTglobal,myrank)
 
   open(unit=IIN_PAR,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file_faults',status='old',iostat=ier)
   if (ier /= 0) then
-    if (myrank==0) write(IMAIN,*) 'no kinematic faults'
+    if (myrank == 0) write(IMAIN,*) 'no kinematic faults'
     close(IIN_PAR)
     return
   endif
 
   read(IIN_PAR,*) nbfaults
-  if (nbfaults==0) then
-    if (myrank==0) write(IMAIN,*) 'No faults found in file DATA/Par_file_faults'
+  if (nbfaults == 0) then
+    if (myrank == 0) write(IMAIN,*) 'No faults found in file DATA/Par_file_faults'
     return
-  else if (nbfaults==1) then
-    if (myrank==0) write(IMAIN,*) 'There is 1 fault in file DATA/Par_file_faults'
+  else if (nbfaults == 1) then
+    if (myrank == 0) write(IMAIN,*) 'There is 1 fault in file DATA/Par_file_faults'
   else
-    if (myrank==0) write(IMAIN,*) 'There are ', nbfaults, ' faults in file DATA/Par_file_faults'
+    if (myrank == 0) write(IMAIN,*) 'There are ', nbfaults, ' faults in file DATA/Par_file_faults'
   endif
 
   filename = prname(1:len_trim(prname))//'fault_db.bin'
@@ -125,7 +125,7 @@ subroutine BC_KINFLT_init(prname,DTglobal,myrank)
 
   return
 
-100 if (myrank==0) write(IMAIN,*) 'Fatal error: did not find BEGIN_FAULT input block in file DATA/Par_file_faults. Abort.'
+100 if (myrank == 0) write(IMAIN,*) 'Fatal error: did not find BEGIN_FAULT input block in file DATA/Par_file_faults. Abort.'
     stop
   ! WARNING TO DO: should be an MPI abort
 
@@ -146,7 +146,7 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt)
 
   call initialize_fault(bc,IIN_BIN)
 
-  if (bc%nspec>0) then
+  if (bc%nspec > 0) then
 
     allocate(bc%T(3,bc%nglob))
     allocate(bc%D(3,bc%nglob))
@@ -188,7 +188,7 @@ subroutine BC_KINFLT_set_all(F,Vel,Dis)
 
   if (.not. allocated(faults)) return
   do iflt=1,size(faults)
-    if (faults(iflt)%nspec>0) call BC_KINFLT_set_single(faults(iflt),F,Vel,Dis,iflt)
+    if (faults(iflt)%nspec > 0) call BC_KINFLT_set_single(faults(iflt),F,Vel,Dis,iflt)
   enddo
 
 end subroutine BC_KINFLT_set_all
@@ -202,7 +202,7 @@ end subroutine BC_KINFLT_set_all
 !
 subroutine BC_KINFLT_set_single(bc,MxA,V,D,iflt)
 
-  use specfem_par, only:it,NSTEP,myrank
+  use specfem_par, only: it,NSTEP,myrank
 
   real(kind=CUSTOM_REAL), intent(inout) :: MxA(:,:)
   type(bc_dynandkinflt_type), intent(inout) :: bc
@@ -301,7 +301,7 @@ subroutine BC_KINFLT_set_single(bc,MxA,V,D,iflt)
 
     !-- OUTPUTS --
     ! write dataT every NTOUT time steps or at the end of simulation
-    if (mod(it,NTOUT) == 0 .or. it==NSTEP) call SCEC_write_dataT(bc%dataT)
+    if (mod(it,NTOUT) == 0 .or. it == NSTEP) call SCEC_write_dataT(bc%dataT)
     ! write dataXZ every NSNAP time steps
     if (mod(it,NSNAP) == 0) call write_dataXZ(bc%dataXZ,it,iflt)
 
@@ -313,33 +313,28 @@ end subroutine BC_KINFLT_set_single
 
 subroutine init_dataXZ(dataXZ,bc)
 
-
   type(dataXZ_type), intent(inout) :: dataXZ
   type(bc_dynandkinflt_type) :: bc
 
-
-
- if(bc%nglob > 0) then
-
-
-    dataXZ%d1 => bc%d(1,:)
-    dataXZ%d2 => bc%d(2,:)
-    dataXZ%v1 => bc%v(1,:)
-    dataXZ%v2 => bc%v(2,:)
-    dataXZ%t1 => bc%t(1,:)
-    dataXZ%t2 => bc%t(2,:)
-    dataXZ%t3 => bc%t(3,:)
-  allocate(dataXZ%xcoord(bc%nglob))
-  allocate(dataXZ%ycoord(bc%nglob))
-  allocate(dataXZ%zcoord(bc%nglob))
-!
+ if (bc%nglob > 0) then
+   dataXZ%d1 => bc%d(1,:)
+   dataXZ%d2 => bc%d(2,:)
+   dataXZ%v1 => bc%v(1,:)
+   dataXZ%v2 => bc%v(2,:)
+   dataXZ%t1 => bc%t(1,:)
+   dataXZ%t2 => bc%t(2,:)
+   dataXZ%t3 => bc%t(3,:)
+   allocate(dataXZ%xcoord(bc%nglob))
+   allocate(dataXZ%ycoord(bc%nglob))
+   allocate(dataXZ%zcoord(bc%nglob))
  endif
+
 end subroutine init_dataXZ
 
 !===============================================================
 subroutine write_dataXZ(dataXZ,itime,iflt)
 
-  use specfem_par,only: myrank
+  use specfem_par, only: myrank
 
   type(dataXZ_type), intent(in) :: dataXZ
   integer, intent(in) :: itime,iflt
@@ -371,7 +366,7 @@ end subroutine write_dataXZ
 !   INPUT  itime : iteration time
 !          coord : Receivers coordinates
 !          npoin : number of Receivers.
-!          nglob : number of gll points along the fault.
+!          nglob : number of GLL points along the fault.
 !          dataXZ : slip rate .
 !          iflt : number of faults.
 
@@ -388,18 +383,18 @@ subroutine load_vslip_snapshots(dataXZ,itime,iflt,myrank)
   write(filename,"('../INPUT_FILES/Proc',I0,'Snapshot',I0,'_F',I0,'.bin')") myrank,itime,iflt
   print *, trim(filename)
 
-!  open(unit=IIN_BIN, file= trim(filename), status='old', form='formatted',&
+!  open(unit=IIN_BIN, file= trim(filename), status='old', form='formatted', &
 !       action='read',iostat=ier)
- open(unit=IIN_BIN, file= trim(filename), status='old', form='unformatted',&
+ open(unit=IIN_BIN, file= trim(filename), status='old', form='unformatted', &
        action='read',iostat=ier)
 
 
-!  COMPILERS WRITE BINARY OUTPUTS IN DIFFERENT FORMATS !!!!!!!!!!
-!  open(unit=IIN_BIN, file= trim(filename), status='old', form='unformatted',&
+!  COMPILERS WRITE BINARY OUTPUTS IN DIFFERENT FORMATS!
+!  open(unit=IIN_BIN, file= trim(filename), status='old', form='unformatted', &
 !        action='read',iostat=ier)
-!  if( ier /= 0 ) stop 'Snapshots have been found'
+!  if ( ier /= 0 ) stop 'Snapshots have been found'
 
-  if(ier == 0) then
+  if (ier == 0) then
 !   read(IIN_BIN,"(5F24.15)") dataXZ%xcoord,dataXZ%ycoord,dataXZ%zcoord,dataXZ%v1,dataXZ%v2
   write(IMAIN,*) 'Load vslip file for kinematic rupture simulation!'
 !  write(IMAIN,*)   max(abs(dataXZ

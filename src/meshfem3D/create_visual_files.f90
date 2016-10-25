@@ -26,7 +26,7 @@
 !=====================================================================
 
 
-  subroutine create_visual_files(CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES,&
+  subroutine create_visual_files(CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
                                 nspec,nglob,prname,nodes_coords,ibool,ispec_material_id)
 
   use constants
@@ -96,7 +96,7 @@
         ! point order in OpenDX in 3D is 4,1,8,5,3,2,7,6, *not* 1,2,3,4,5,6,7,8 as in AVS
         ! in the case of OpenDX, node numbers start at zero
         write(66,"(i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9)") &
-             ibool(1,1,2,ispec)-1,ibool(2,1,2,ispec)-1,ibool(1,2,2,ispec)-1,ibool(2,2,2,ispec)-1,&
+             ibool(1,1,2,ispec)-1,ibool(2,1,2,ispec)-1,ibool(1,2,2,ispec)-1,ibool(2,2,2,ispec)-1, &
              ibool(1,1,1,ispec)-1,ibool(2,1,1,ispec)-1,ibool(1,2,1,ispec)-1,ibool(2,2,1,ispec)-1
      enddo
 
@@ -143,7 +143,7 @@
     write(66,'(a,i12,i12)') "CELLS ",nspec,nspec*9
     do ispec=1,nspec
       write(66,'(9i12)') 8, &
-            ibool(1,1,1,ispec)-1,ibool(2,1,1,ispec)-1,ibool(2,2,1,ispec)-1,ibool(1,2,1,ispec)-1,&
+            ibool(1,1,1,ispec)-1,ibool(2,1,1,ispec)-1,ibool(2,2,1,ispec)-1,ibool(1,2,1,ispec)-1, &
             ibool(1,1,2,ispec)-1,ibool(2,1,2,ispec)-1,ibool(2,2,2,ispec)-1,ibool(1,2,2,ispec)-1
     enddo
     write(66,*) ""

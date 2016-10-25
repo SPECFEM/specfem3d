@@ -48,7 +48,7 @@
 
 ! info about external mesh simulation
   if (I_should_read_the_database) then
-    open(unit=27,file=trim(database_name),status='old',&
+    open(unit=27,file=trim(database_name),status='old', &
        action='read',form='unformatted',iostat=ier)
     if (ier /= 0) then
       print *,'Error could not open database file: ',trim(database_name)
@@ -222,8 +222,8 @@
              epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),stat=ier)
     if (ier /= 0) stop 'Error allocating array epsilondev_xx etc.'
 
-    allocate(R_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa,N_SLS),&
-             epsilondev_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)
+    allocate(R_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
+             epsilondev_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
     if (ier /= 0) stop 'Error allocating array R_trace etc.'
 
     ! note: needed for some subroutine arguments
@@ -235,8 +235,8 @@
              factor_common(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
     if (ier /= 0) stop 'Error allocating array one_minus_sum_beta etc.'
 
-    allocate(one_minus_sum_beta_kappa(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa), &
-             factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)
+    allocate(one_minus_sum_beta_kappa(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB), &
+             factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
     if (ier /= 0) stop 'Error allocating array one_minus_sum_beta_kappa etc.'
 
     ! reads mass matrices
@@ -369,7 +369,15 @@
   endif
 
   ! C-PML absorbing boundary conditions
+  ! we allocate this array even when PMLs are absent because we need it in logical tests in "if" statements
+  allocate(is_CPML(NSPEC_AB),stat=ier)
+  if (ier /= 0) stop 'Error allocating array is_CPML'
+
+! make sure there are no PMLs by default,
+! and then below if NSPEC_CPML > 0 we will read the real flags for this mesh from the disk
+  is_CPML(:) = .false.
   NSPEC_CPML = 0
+
   if (PML_CONDITIONS) then
     if (I_should_read_the_database) then
       read(27) NSPEC_CPML
@@ -383,13 +391,6 @@
     call bcast_all_cr_for_database(CPML_width_y, 1)
     call bcast_all_cr_for_database(CPML_width_z, 1)
     call bcast_all_cr_for_database(min_distance_between_CPML_parameter, 1)
-
-    allocate(is_CPML(NSPEC_AB),stat=ier)
-    if (ier /= 0) stop 'Error allocating array is_CPML'
-
-! make sure there are no PMLs by default,
-! and then below if NSPEC_CPML > 0 we will need the real flags for this mesh from the disk
-    is_CPML(:) = .false.
 
     if (NSPEC_CPML > 0) then
       allocate(CPML_regions(NSPEC_CPML),stat=ier)
@@ -464,9 +465,6 @@
         endif
       endif
     endif
-  else
-    ! allocate with a dummy size of zero just to be able to use this array as argument in subroutine calls
-    allocate(is_CPML(0),stat=ier)
   endif
 
   ! absorbing boundary surface
@@ -899,7 +897,7 @@
   if (ELASTIC_SIMULATION .and. SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
     ! boundary elements
     if (I_should_read_the_database) then
-      open(unit=27,file=prname(1:len_trim(prname))//'ibelm_moho.bin',status='old',&
+      open(unit=27,file=prname(1:len_trim(prname))//'ibelm_moho.bin',status='old', &
          action='read',form='unformatted',iostat=ier)
       if (ier /= 0) then
         print *,'Error could not open ibelm_moho file: ',prname(1:len_trim(prname))//'ibelm_moho.bin'
@@ -934,7 +932,7 @@
 
     ! normals
     if (I_should_read_the_database) then
-      open(unit=27,file=prname(1:len_trim(prname))//'normal_moho.bin',status='old',&
+      open(unit=27,file=prname(1:len_trim(prname))//'normal_moho.bin',status='old', &
          action='read',form='unformatted',iostat=ier)
       if (ier /= 0) then
         print *,'Error could not open normal_moho file: ',prname(1:len_trim(prname))//'normal_moho.bin'
@@ -952,7 +950,7 @@
 
     ! flags
     if (I_should_read_the_database) then
-      open(unit=27,file=prname(1:len_trim(prname))//'is_moho.bin',status='old',&
+      open(unit=27,file=prname(1:len_trim(prname))//'is_moho.bin',status='old', &
          action='read',form='unformatted',iostat=ier)
       if (ier /= 0) then
         print *,'Error could not open is_moho file: ',prname(1:len_trim(prname))//'is_moho.bin'
@@ -1082,8 +1080,8 @@
     if (ier /= 0) stop 'Error allocating array b_epsilon_trace_over_3'
 
     ! allocates attenuation solids for considering kappa
-    allocate(b_R_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa,N_SLS),&
-             b_epsilondev_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)
+    allocate(b_R_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
+             b_epsilondev_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
     if (ier /= 0) stop 'Error allocating array b_R_trace etc.'
 
     ! Moho kernel

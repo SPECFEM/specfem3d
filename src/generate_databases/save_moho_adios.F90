@@ -38,8 +38,7 @@
 subroutine crm_save_moho_adios()
 
   use adios_helpers_mod
-  use generate_databases_par, only : myrank, sizeprocs, LOCAL_PATH, &
-    NSPEC_AB,NDIM,NGLLSQUARE,ADIOS_TRANSPORT_METHOD
+  use generate_databases_par, only: myrank, sizeprocs, LOCAL_PATH, NSPEC_AB,NDIM,NGLLSQUARE,ADIOS_TRANSPORT_METHOD
   use create_regions_mesh_ext_par
 
   implicit none
@@ -62,7 +61,7 @@ subroutine crm_save_moho_adios()
 
   integer :: comm
 
-  ! gets mpi communicator
+  ! gets MPI communicator
   call world_get_comm(comm)
 
   !-----------------------------------------------------------------.
@@ -95,34 +94,34 @@ subroutine crm_save_moho_adios()
 
   local_dim = nspec2d_moho_wmax
   call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, "",    &
+                                   local_dim, "", &
                                    STRINGIFY_VAR(ibelm_moho_top))
   call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, "",    &
+                                   local_dim, "", &
                                    STRINGIFY_VAR(ibelm_moho_bot))
 
   local_dim = 3 * NGLLSQUARE * nspec2d_moho_wmax
   call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, "",    &
+                                   local_dim, "", &
                                    STRINGIFY_VAR(ijk_moho_top))
   call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, "",    &
+                                   local_dim, "", &
                                    STRINGIFY_VAR(ijk_moho_bot))
 
   local_dim = NDIM * NGLLSQUARE * nspec2d_moho_wmax
   call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, "",    &
+                                   local_dim, "", &
                                    STRINGIFY_VAR(normal_moho_top))
   call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, "",    &
+                                   local_dim, "", &
                                    STRINGIFY_VAR(normal_moho_bot))
 
   local_dim = nspec_wmax
   call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, "",    &
+                                   local_dim, "", &
                                    STRINGIFY_VAR(is_moho_top))
   call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, "",    &
+                                   local_dim, "", &
                                    STRINGIFY_VAR(is_moho_bot))
 
   !------------------------------------------------------------.

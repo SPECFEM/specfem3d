@@ -37,9 +37,13 @@
 
   use generate_databases_par, only: STACEY_INSTEAD_OF_FREE_SURFACE, PML_INSTEAD_OF_FREE_SURFACE, NGNOD2D, &
     STACEY_ABSORBING_CONDITIONS,PML_CONDITIONS, &
-    NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,IMAIN
+    NGLLX,NGLLY,NGLLZ,NDIM,NGNOD2D_FOUR_CORNERS,IMAIN,BOTTOM_FREE_SURFACE
 
   use create_regions_mesh_ext_par
+
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_get_absorbing_boundary_5.F90"
+#endif
 
   implicit none
 
@@ -89,6 +93,8 @@
 
   ! abs face counter
   iabsval = 0
+  ! free surface face counter
+  ifree = 0
 
   ! xmin
   ijk_face(:,:,:) = 0
@@ -121,9 +127,9 @@
 
     ! weighted jacobian and normal
     call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy,&
+              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
               dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&
+              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
               ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLZ,NGNOD2D)
 
     ! normal convention: points away from element
@@ -148,7 +154,7 @@
     iabsval = iabsval + 1
     abs_boundary_ispec(iabsval) = ispec
 
-    ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+    ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
     igll = 0
     do j=1,NGLLZ
       do i=1,NGLLX
@@ -182,7 +188,7 @@
     enddo
 
     ! sets face id of reference element associated with this face
-    call get_element_face_id(ispec,xcoord,ycoord,zcoord,&
+    call get_element_face_id(ispec,xcoord,ycoord,zcoord, &
                               ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface)
@@ -196,9 +202,9 @@
 
     ! weighted jacobian and normal
     call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy,&
+              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
               dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&
+              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
               ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLZ,NGNOD2D)
 
     ! normal convention: points away from element
@@ -218,7 +224,7 @@
     iabsval = iabsval + 1
     abs_boundary_ispec(iabsval) = ispec
 
-    ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+    ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
     igll = 0
     do j=1,NGLLZ
       do i=1,NGLLX
@@ -248,73 +254,7 @@
     enddo
 
     ! sets face id of reference element associated with this face
-    call get_element_face_id(ispec,xcoord,ycoord,zcoord,&
-                              ibool,nspec,nglob_dummy, &
-                              xstore_dummy,ystore_dummy,zstore_dummy, &
-                              iface)
-
-#ifdef DEBUG_COUPLED
-    include "../../../add_to_get_absorbing_boundary_2.F90"
-#endif
-
-    ! ijk indices of GLL points on face
-    call get_element_face_gll_indices(iface,ijk_face,NGLLY,NGLLZ)
-
-    ! weighted jacobian and normal
-    call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy,&
-              dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&
-              ispec,iface,jacobian2Dw_face,normal_face,NGLLY,NGLLZ,NGNOD2D)
-
-    ! normal convention: points away from element
-    ! switch normal direction if necessary
-    do j=1,NGLLZ
-      do i=1,NGLLY
-        lnormal(:) = normal_face(:,i,j)
-        call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
-                                      ibool,nspec,nglob_dummy, &
-                                      xstore_dummy,ystore_dummy,zstore_dummy, &
-                                      lnormal )
-        normal_face(:,i,j) = lnormal(:)
-      enddo
-    enddo
-
-    ! sets face infos
-    iabsval = iabsval + 1
-    abs_boundary_ispec(iabsval) = ispec
-
-    ! gll points -- assuming NGLLX = NGLLY = NGLLZ
-    igll = 0
-    do j=1,NGLLZ
-      do i=1,NGLLY
-        igll = igll+1
-        abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
-        abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
-        abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
-      enddo
-    enddo
-
-  enddo
-
-  ! ymax
-  ijk_face(:,:,:) = 0
-  normal_face(:,:,:) = 0.0_CUSTOM_REAL
-  jacobian2Dw_face(:,:) = 0.0_CUSTOM_REAL
-  do ispec2D = 1, nspec2D_ymax
-    ! sets element
-    ispec = ibelm_ymax(ispec2D)
-
-    ! looks for i,j,k indices of GLL points on boundary face
-    ! determines element face by given CUBIT corners
-    do icorner=1,NGNOD2D_FOUR_CORNERS
-      xcoord(icorner) = nodes_coords_ext_mesh(1,nodes_ibelm_ymax(icorner,ispec2D))
-      ycoord(icorner) = nodes_coords_ext_mesh(2,nodes_ibelm_ymax(icorner,ispec2D))
-      zcoord(icorner) = nodes_coords_ext_mesh(3,nodes_ibelm_ymax(icorner,ispec2D))
-    enddo
-
-    ! sets face id of reference element associated with this face
-    call get_element_face_id(ispec,xcoord,ycoord,zcoord,&
+    call get_element_face_id(ispec,xcoord,ycoord,zcoord, &
                               ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface)
@@ -350,7 +290,73 @@
     iabsval = iabsval + 1
     abs_boundary_ispec(iabsval) = ispec
 
-    ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+    ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
+    igll = 0
+    do j=1,NGLLZ
+      do i=1,NGLLY
+        igll = igll+1
+        abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
+        abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
+        abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
+      enddo
+    enddo
+
+  enddo
+
+  ! ymax
+  ijk_face(:,:,:) = 0
+  normal_face(:,:,:) = 0.0_CUSTOM_REAL
+  jacobian2Dw_face(:,:) = 0.0_CUSTOM_REAL
+  do ispec2D = 1, nspec2D_ymax
+    ! sets element
+    ispec = ibelm_ymax(ispec2D)
+
+    ! looks for i,j,k indices of GLL points on boundary face
+    ! determines element face by given CUBIT corners
+    do icorner=1,NGNOD2D_FOUR_CORNERS
+      xcoord(icorner) = nodes_coords_ext_mesh(1,nodes_ibelm_ymax(icorner,ispec2D))
+      ycoord(icorner) = nodes_coords_ext_mesh(2,nodes_ibelm_ymax(icorner,ispec2D))
+      zcoord(icorner) = nodes_coords_ext_mesh(3,nodes_ibelm_ymax(icorner,ispec2D))
+    enddo
+
+    ! sets face id of reference element associated with this face
+    call get_element_face_id(ispec,xcoord,ycoord,zcoord, &
+                              ibool,nspec,nglob_dummy, &
+                              xstore_dummy,ystore_dummy,zstore_dummy, &
+                              iface)
+
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_get_absorbing_boundary_2.F90"
+#endif
+
+    ! ijk indices of GLL points on face
+    call get_element_face_gll_indices(iface,ijk_face,NGLLY,NGLLZ)
+
+    ! weighted jacobian and normal
+    call get_jacobian_boundary_face(myrank,nspec, &
+              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
+              dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
+              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+              ispec,iface,jacobian2Dw_face,normal_face,NGLLY,NGLLZ,NGNOD2D)
+
+    ! normal convention: points away from element
+    ! switch normal direction if necessary
+    do j=1,NGLLZ
+      do i=1,NGLLY
+        lnormal(:) = normal_face(:,i,j)
+        call get_element_face_normal(ispec,iface,xcoord,ycoord,zcoord, &
+                                      ibool,nspec,nglob_dummy, &
+                                      xstore_dummy,ystore_dummy,zstore_dummy, &
+                                      lnormal )
+        normal_face(:,i,j) = lnormal(:)
+      enddo
+    enddo
+
+    ! sets face infos
+    iabsval = iabsval + 1
+    abs_boundary_ispec(iabsval) = ispec
+
+    ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
     igll = 0
     do j=1,NGLLY
       do i=1,NGLLX
@@ -380,7 +386,7 @@
     enddo
 
     ! sets face id of reference element associated with this face
-    call get_element_face_id(ispec,xcoord,ycoord,zcoord,&
+    call get_element_face_id(ispec,xcoord,ycoord,zcoord, &
                               ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface)
@@ -412,20 +418,38 @@
       enddo
     enddo
 
-    ! sets face infos
-    iabsval = iabsval + 1
-    abs_boundary_ispec(iabsval) = ispec
+    if (BOTTOM_FREE_SURFACE) then ! use bottom free surface instead of absorbing Stacey condition
+       ! stores free surface
+       ! sets face infos
+       ifree = ifree + 1
+       free_surface_ispec(ifree) = ispec
 
-    ! gll points -- assuming NGLLX = NGLLY = NGLLZ
-    igll = 0
-    do j=1,NGLLY
-      do i=1,NGLLX
-        igll = igll+1
-        abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
-        abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
-        abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
-      enddo
-    enddo
+       ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
+       igllfree = 0
+       do j=1,NGLLY
+          do i=1,NGLLX
+             igllfree = igllfree+1
+             free_surface_ijk(:,igllfree,ifree) = ijk_face(:,i,j)
+             free_surface_jacobian2Dw(igllfree,ifree) = jacobian2Dw_face(i,j)
+             free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
+          enddo
+       enddo
+    else
+       ! sets face infos
+       iabsval = iabsval + 1
+       abs_boundary_ispec(iabsval) = ispec
+
+       ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
+       igll = 0
+       do j=1,NGLLY
+          do i=1,NGLLX
+             igll = igll+1
+             abs_boundary_ijk(:,igll,iabsval) = ijk_face(:,i,j)
+             abs_boundary_jacobian2Dw(igll,iabsval) = jacobian2Dw_face(i,j)
+             abs_boundary_normal(:,igll,iabsval) = normal_face(:,i,j)
+          enddo
+       enddo
+    endif
 
   enddo
 
@@ -433,8 +457,7 @@
   ijk_face(:,:,:) = 0
   normal_face(:,:,:) = 0.0_CUSTOM_REAL
   jacobian2Dw_face(:,:) = 0.0_CUSTOM_REAL
-  ! free surface face counter
-  ifree = 0
+
 
   do ispec2D = 1, NSPEC2D_TOP
     ! sets element
@@ -449,7 +472,7 @@
     enddo
 
     ! sets face id of reference element associated with this face
-    call get_element_face_id(ispec,xcoord,ycoord,zcoord,&
+    call get_element_face_id(ispec,xcoord,ycoord,zcoord, &
                               ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy, &
                               iface)
@@ -484,30 +507,33 @@
     ! stores surface infos
     if (STACEY_ABSORBING_CONDITIONS) then
        if (.not. STACEY_INSTEAD_OF_FREE_SURFACE) then
-         ! stores free surface
-         ! sets face infos
-         ifree = ifree + 1
-         free_surface_ispec(ifree) = ispec
 
-         ! gll points -- assuming NGLLX = NGLLY = NGLLZ
-         igllfree = 0
-         do j=1,NGLLY
-           do i=1,NGLLX
-             igllfree = igllfree+1
-             free_surface_ijk(:,igllfree,ifree) = ijk_face(:,i,j)
-             free_surface_jacobian2Dw(igllfree,ifree) = jacobian2Dw_face(i,j)
-             free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
-           enddo
-         enddo
+          ! stores free surface
+          ! sets face infos
+          ifree = ifree + 1
+          free_surface_ispec(ifree) = ispec
+
+          ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
+          igllfree = 0
+          do j=1,NGLLY
+             do i=1,NGLLX
+                igllfree = igllfree+1
+                free_surface_ijk(:,igllfree,ifree) = ijk_face(:,i,j)
+                free_surface_jacobian2Dw(igllfree,ifree) = jacobian2Dw_face(i,j)
+                free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
+             enddo
+          enddo
+
 
        else
 
+          if (.not. BOTTOM_FREE_SURFACE) then
          ! stores free surface and adds it also to absorbing boundaries
          ! sets face infos
          ifree = ifree + 1
          free_surface_ispec(ifree) = ispec
 
-         ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+         ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
          igllfree = 0
          do j=1,NGLLY
            do i=1,NGLLX
@@ -517,12 +543,12 @@
              free_surface_normal(:,igllfree,ifree) = normal_face(:,i,j)
            enddo
          enddo
-
+         endif
          ! adds face infos to absorbing boundary surface
          iabsval = iabsval + 1
          abs_boundary_ispec(iabsval) = ispec
 
-         ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+         ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
          igll = 0
          do j=1,NGLLY
            do i=1,NGLLX
@@ -541,7 +567,7 @@
          ifree = ifree + 1
          free_surface_ispec(ifree) = ispec
 
-         ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+         ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
          igllfree = 0
          do j=1,NGLLY
            do i=1,NGLLX
@@ -559,7 +585,7 @@
          ifree = ifree + 1
          free_surface_ispec(ifree) = ispec
 
-         ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+         ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
          igllfree = 0
          do j=1,NGLLY
            do i=1,NGLLX
@@ -574,7 +600,7 @@
          iabsval = iabsval + 1
          abs_boundary_ispec(iabsval) = ispec
 
-         ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+         ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
          igll = 0
          do j=1,NGLLY
            do i=1,NGLLX
@@ -592,7 +618,7 @@
       ifree = ifree + 1
       free_surface_ispec(ifree) = ispec
 
-      ! gll points -- assuming NGLLX = NGLLY = NGLLZ
+      ! GLL points -- assuming NGLLX = NGLLY = NGLLZ
       igllfree = 0
       do j=1,NGLLY
        do i=1,NGLLX

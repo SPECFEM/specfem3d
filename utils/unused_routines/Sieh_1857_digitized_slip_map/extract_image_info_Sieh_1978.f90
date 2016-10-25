@@ -28,7 +28,7 @@
   index_imax = -1
 ! detect minimum value for this column, corresponding to darkest pixel
  do iy=1,NY
-   if(image(ix,iy) < imax) then
+   if (image(ix,iy) < imax) then
      imax = image(ix,iy)
      index_imax = iy
    endif

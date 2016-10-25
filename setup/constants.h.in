@@ -109,27 +109,6 @@
 
 !!-----------------------------------------------------------
 !!
-!! weakly nonlinear Hooke's law
-!!
-!!-----------------------------------------------------------
-
-! in the case of weakly nonlinear materials the stress tensor becomes non-symmetric, see for instance equation (A9) in
-! D. L. Johnson, S. Kostek and A. N. Norris, Nonlinear tube waves, J. Acoust. Soc. Am. vol. 96, p. 1829-1843 (1994).
-
-  logical, parameter :: MAKE_HOOKE_LAW_WEAKLY_NONLINEAR = .false.
-
-! define here the third-order elastic constants that are needed in addition to lambda and mu
-! for now they are constant in the whole medium; that will be easy to change later if needed
-  real(kind=CUSTOM_REAL), parameter :: A = 0.0_CUSTOM_REAL
-  real(kind=CUSTOM_REAL), parameter :: B = 0.0_CUSTOM_REAL
-  real(kind=CUSTOM_REAL), parameter :: C = 0.0_CUSTOM_REAL
-
-! we precompute some related constants in order to save compute time in the solver
-  real(kind=CUSTOM_REAL), parameter :: A_over_4 = 0.25_CUSTOM_REAL * A
-  real(kind=CUSTOM_REAL), parameter :: B_over_2 = 0.50_CUSTOM_REAL * B
-
-!!-----------------------------------------------------------
-!!
 !! gravity integral calculations
 !!
 !!-----------------------------------------------------------
@@ -489,14 +468,14 @@
   integer, parameter :: NSTAGE = 6
 
   real(kind=CUSTOM_REAL), dimension(NSTAGE), parameter :: ALPHA_LDDRK = &
-    (/0.0_CUSTOM_REAL,-0.737101392796_CUSTOM_REAL, -1.634740794341_CUSTOM_REAL,&
+    (/0.0_CUSTOM_REAL,-0.737101392796_CUSTOM_REAL, -1.634740794341_CUSTOM_REAL, &
       -0.744739003780_CUSTOM_REAL,-1.469897351522_CUSTOM_REAL,-2.813971388035_CUSTOM_REAL/)
 
   real(kind=CUSTOM_REAL), dimension(NSTAGE), parameter :: BETA_LDDRK = &
-    (/0.032918605146_CUSTOM_REAL,0.823256998200_CUSTOM_REAL,0.381530948900_CUSTOM_REAL,&
+    (/0.032918605146_CUSTOM_REAL,0.823256998200_CUSTOM_REAL,0.381530948900_CUSTOM_REAL, &
       0.200092213184_CUSTOM_REAL,1.718581042715_CUSTOM_REAL,0.27_CUSTOM_REAL/)
 
   real(kind=CUSTOM_REAL), dimension(NSTAGE), parameter :: C_LDDRK = &
-    (/0.0_CUSTOM_REAL,0.032918605146_CUSTOM_REAL,0.249351723343_CUSTOM_REAL,&
+    (/0.0_CUSTOM_REAL,0.032918605146_CUSTOM_REAL,0.249351723343_CUSTOM_REAL, &
       0.466911705055_CUSTOM_REAL,0.582030414044_CUSTOM_REAL,0.847252983783_CUSTOM_REAL/)
 

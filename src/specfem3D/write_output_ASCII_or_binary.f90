@@ -37,7 +37,7 @@
 
   use constants
 
-  use specfem_par,only: USE_BINARY_FOR_SEISMOGRAMS,SAVE_ALL_SEISMOS_IN_ONE_FILE
+  use specfem_par, only: USE_BINARY_FOR_SEISMOGRAMS,SAVE_ALL_SEISMOS_IN_ONE_FILE
 
   implicit none
 
@@ -65,7 +65,7 @@
     if (ier /= 0) stop 'error allocating array tr()'
 
     ! binary format case
-    if(.not. SAVE_ALL_SEISMOS_IN_ONE_FILE) then
+    if (.not. SAVE_ALL_SEISMOS_IN_ONE_FILE) then
       open(unit=IOUT, file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//&
          sisname(1:len_trim(sisname)), form='unformatted', access='direct', recl=4*(nt_s))
     else
@@ -76,7 +76,7 @@
   else
 
     ! ASCII format case
-    if(.not. SAVE_ALL_SEISMOS_IN_ONE_FILE) then
+    if (.not. SAVE_ALL_SEISMOS_IN_ONE_FILE) then
       open(unit=IOUT,file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//&
          sisname(1:len_trim(sisname)),status='unknown')
     else
@@ -104,7 +104,7 @@
 
       if (USE_BINARY_FOR_SEISMOGRAMS) then
         ! binary format case
-        if(.not. SAVE_ALL_SEISMOS_IN_ONE_FILE) then
+        if (.not. SAVE_ALL_SEISMOS_IN_ONE_FILE) then
           tr(isample) = one_seismogram(iorientation,isample)
         else
           write(IOUT) time_t,one_seismogram(iorientation,isample)
@@ -119,11 +119,11 @@
   ! binary format case
   if (USE_BINARY_FOR_SEISMOGRAMS) then
     ! writes out whole trace into binary file
-    if(.not. SAVE_ALL_SEISMOS_IN_ONE_FILE) write(IOUT,rec=1) tr
+    if (.not. SAVE_ALL_SEISMOS_IN_ONE_FILE) write(IOUT,rec=1) tr
     deallocate(tr)
   endif
 
-  if(.not. SAVE_ALL_SEISMOS_IN_ONE_FILE) close(IOUT)
+  if (.not. SAVE_ALL_SEISMOS_IN_ONE_FILE) close(IOUT)
 
   end subroutine write_output_ASCII_or_binary
 

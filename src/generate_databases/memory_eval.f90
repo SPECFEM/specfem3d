@@ -27,15 +27,14 @@
 !
 ! United States and French Government Sponsorship Acknowledged.
 
-
 ! compute the approximate amount of memory needed to run the solver
 
- subroutine memory_eval(NSPEC_AB,NGLOB_AB,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh,&
+ subroutine memory_eval(NSPEC_AB,NGLOB_AB,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh, &
                         APPROXIMATE_OCEAN_LOAD,memory_size)
 
   use constants
   use generate_databases_par, only: PML_CONDITIONS,nspec_cpml
-  use create_regions_mesh_ext_par,only: NSPEC_ANISO,ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic
+  use create_regions_mesh_ext_par, only: NSPEC_ANISO,ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic
 
   implicit none
 

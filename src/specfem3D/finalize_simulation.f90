@@ -35,7 +35,7 @@
   use specfem_par_acoustic
   use specfem_par_poroelastic
   use pml_par
-  use gravity_perturbation, only : gravity_output, GRAVITY_SIMULATION
+  use gravity_perturbation, only: gravity_output, GRAVITY_SIMULATION
 
   implicit none
 
@@ -50,7 +50,7 @@
     if (ADIOS_FOR_FORWARD_ARRAYS) then
       call save_forward_arrays_adios()
     else
-      open(unit=IOUT,file=prname(1:len_trim(prname))//'save_forward_arrays.bin',&
+      open(unit=IOUT,file=prname(1:len_trim(prname))//'save_forward_arrays.bin', &
             status='unknown',form='unformatted',iostat=ier)
       if (ier /= 0) then
         print *,'error: opening save_forward_arrays.bin'
@@ -70,13 +70,13 @@
         write(IOUT) accel
 
         if (ATTENUATION) then
-          if (FULL_ATTENUATION_SOLID) write(IOUT) R_trace
+          write(IOUT) R_trace
           write(IOUT) R_xx
           write(IOUT) R_yy
           write(IOUT) R_xy
           write(IOUT) R_xz
           write(IOUT) R_yz
-          if (FULL_ATTENUATION_SOLID) write(IOUT) epsilondev_trace
+          write(IOUT) epsilondev_trace
           write(IOUT) epsilondev_xx
           write(IOUT) epsilondev_yy
           write(IOUT) epsilondev_xy
@@ -112,11 +112,6 @@
       ! source gradients  (for sources in elastic domains)
       call save_kernels_source_derivatives()
     endif
-  endif
-
-  ! closing source time function file
-  if (PRINT_SOURCE_TIME_FUNCTION .and. myrank == 0) then
-    close(IOSTF)
   endif
 
   ! stacey absorbing fields will be reconstructed for adjoint simulations

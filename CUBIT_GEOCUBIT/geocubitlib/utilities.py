@@ -502,3 +502,28 @@ def highlight(ent,l):
     txt=list2str(l)
     txt='highlight '+ent+' '+txt
     cubit.cmd(txt)
+
+# In ACIS, the third-party solid modeler used by Trelis,
+# the smallest representable quantity is resabs
+# and the largest one is resabs/resnor.
+# The default values are resabs=1e-6 and resnor=1e-10.
+# We have found that when the range of size in a model is out of ACIS' range
+# Trelis takes very long to generate the mesh or fails.
+# Corey Ernst (Trelis) recommends "modeling in ACIS'
+# sweet spot [resabs, resabs/resnor], then scaling the model up at the end after
+# all the solid modeling operations are done".
+# The function get_global_scale computes the re-scaling factor such that the 
+# re-scaled range of sizes in the mesh, [min_size, max_size]*scale_factor,
+# is centered on the ACIS range [resabs, resabs/resnor] in a logarithmic sense.
+# It also gives a warning when the range of scales in the model
+# exceeds ACIS' default range even after re-scaling.
+def get_global_scale(Xmax,Xmin,Ymax,Ymin,Zmin,h_size):
+    max_size = max((Xmax-Xmin),(Ymax-Ymin),(-Zmin))
+    min_size = h_size
+    resabs = 1e-6  # default smallest representable length in ACIS 
+    resnor = 1e-10 # default largest representable length in ACIS 
+    scale_factor = math.sqrt((resabs * resabs/resnor)/(max_size*min_size))
+    if max_size/min_size > 1./resnor:
+        exit('Trelis cannot handle the large dynamic range of the model.')
+    return scale_factor
+ 

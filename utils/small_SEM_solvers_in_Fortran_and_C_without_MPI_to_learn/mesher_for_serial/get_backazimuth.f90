@@ -82,7 +82,7 @@
   ! GLOBAL INPUT:
   !    MACH:
   !=====================================================================
-  ! SUBROUTINES CALLED:
+  ! subroutineS CALLED:
   !    SACLIB:  SETMSG, APCMSG
   !=====================================================================
   ! LOCAL VARIABLES:
@@ -104,7 +104,7 @@
   !   (Equations are unstable for latidudes of exactly 0 degrees.)
 
   temp = the
-  if( temp == 0. ) temp = 1.0e-08
+  if ( temp == 0. ) temp = 1.0e-08
   therad = TORAD*temp
   pherad = TORAD*phe
 
@@ -130,7 +130,7 @@
 
   ! -- Convert to radians.
   temp = Ths
-  if( temp == 0. ) temp = 1.0e-08
+  if ( temp == 0. ) temp = 1.0e-08
   thsrad = TORAD*temp
   phsrad = TORAD*Phs
 
@@ -156,19 +156,19 @@
   sd = 0.5*sqrt( ((a - a1)**2 + (b - b1)**2 + (c - &
    c1)**2)*((a + a1)**2 + (b + b1)**2 + (c + c1)**2) )
   Xdeg = atan2( sd, sc )*TODEG
-  if( Xdeg < 0. ) &
+  if ( Xdeg < 0. ) &
       Xdeg = Xdeg + twopideg
 
   ss = (a1 - d)**2 + (b1 - e)**2 + (c1)**2 - 2.
   sc = (a1 - g)**2 + (b1 - h)**2 + (c1 - f)**2 - 2.
   Az = atan2( ss, sc )*TODEG
-  if( Az < 0. ) &
+  if ( Az < 0. ) &
       Az = Az + twopideg
 
   ss = (a - d1)**2 + (b - e1)**2 + (c)**2 - 2.
   sc = (a - g1)**2 + (b - h1)**2 + (c - f1)**2 - 2.
   Baz = atan2( ss, sc )*TODEG
-  if( Baz < 0. ) &
+  if ( Baz < 0. ) &
       Baz = Baz + twopideg
 
 end subroutine get_backazimuth

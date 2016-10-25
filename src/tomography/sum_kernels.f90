@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
 ! sum_kernels
 !
 ! this program can be used for event kernel summation,
@@ -50,13 +49,10 @@
 ! some the subroutines, will be merged with src/tomography/xcombine_sem
 !
 
-
 program sum_kernels
 
-  use tomography_par,only: MAX_STRING_LEN,MAX_KERNEL_PATHS,KERNEL_FILE_LIST,IIN, &
-    myrank,sizeprocs, &
-    NGLOB,NSPEC, &
-    USE_ALPHA_BETA_RHO,USE_ISO_KERNELS
+  use tomography_par, only: MAX_STRING_LEN,MAX_KERNEL_PATHS,KERNEL_FILE_LIST,IIN, &
+    myrank,sizeprocs,NGLOB,NSPEC,USE_ALPHA_BETA_RHO,USE_ISO_KERNELS
 
   use shared_parameters
 
@@ -76,7 +72,7 @@ program sum_kernels
   call world_size(sizeprocs)
   call world_rank(myrank)
 
-  if (myrank==0) then
+  if (myrank == 0) then
     write(*,*) 'sum_kernels:'
     write(*,*)
     write(*,*) 'reading kernel list: '
@@ -110,12 +106,12 @@ program sum_kernels
   ! checks if number of MPI process as specified
   if (sizeprocs /= NPROC) then
     if (myrank == 0) then
-      print *,''
+      print *
       print *,'Error: run xsum_kernels with the same number of MPI processes '
       print *,'       as specified in Par_file by NPROC when slices were created'
-      print *,''
+      print *
       print *,'for example: mpirun -np ',NPROC,' ./xsum_kernels ...'
-      print *,''
+      print *
     endif
     call synchronize_all()
     stop 'Error total number of slices'
@@ -128,7 +124,7 @@ program sum_kernels
 
   ! opens external mesh file
   write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',myrank,'_'//'external_mesh.bin'
-  open(unit=27,file=trim(prname_lp),&
+  open(unit=27,file=trim(prname_lp), &
           status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
     print *,'Error: could not open database '
@@ -200,7 +196,7 @@ program sum_kernels
 
   endif
 
-  if (myrank==0) write(*,*) 'done writing all kernels, see directory OUTPUT_SUM/'
+  if (myrank == 0) write(*,*) 'done writing all kernels, see directory OUTPUT_SUM/'
 
   ! stop all the processes, and exit
   call finalize_mpi()
@@ -241,7 +237,7 @@ subroutine sum_kernel(kernel_name,kernel_list,nker)
   total_kernel = 0._CUSTOM_REAL
   do iker = 1, nker
     ! user output
-    if (myrank==0) then
+    if (myrank == 0) then
       write(*,*) 'reading in event kernel for: ',trim(kernel_name)
       write(*,*) '    ',iker, ' out of ', nker
     endif
@@ -289,7 +285,7 @@ subroutine sum_kernel(kernel_name,kernel_list,nker)
   enddo
 
   ! stores summed kernels
-  if (myrank==0) write(*,*) 'writing out summed kernel for: ',trim(kernel_name)
+  if (myrank == 0) write(*,*) 'writing out summed kernel for: ',trim(kernel_name)
 
   write(k_file,'(a,i6.6,a)') 'OUTPUT_SUM/proc',myrank,trim(REG)//trim(kernel_name)//'.bin'
 
@@ -301,7 +297,7 @@ subroutine sum_kernel(kernel_name,kernel_list,nker)
   write(IOUT) total_kernel
   close(IOUT)
 
-  if (myrank==0) write(*,*)
+  if (myrank == 0) write(*,*)
 
   ! frees memory
   deallocate(kernel,total_kernel)

@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
 ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
 ! This file is first implemented for SPECFEM3D_GLOBE, and therefore it follows variables in GLOBAL package.
@@ -49,7 +48,7 @@ module user_noise_distribution
 !daniel: TODO -- setting USE_PIERO_DISTRIBUTION = .true. will produce errors
 !            when using with the default example in "example/noise_tomography/"
 !            i left it here so that Max can run his example without changing this every time...
-  logical,parameter :: USE_PIERO_DISTRIBUTION = .true.
+  logical,parameter :: USE_PIERO_DISTRIBUTION = .false.
 
 contains
 
@@ -154,19 +153,28 @@ contains
   zcoord=zcoord_in
 
   !PB NOT UNIF DISTRIBUTION OF NOISE ON THE SURFACE OF A SPHERE
-  !PB lon lat colat ARE IN RADIANS SINCE ARE OBTAINED FROM CARTESIAN COORDINATES
+  !PB lon lat colat ARE IN RADIANS SINCE ARE OBTAINED FROM Cartesian COORDINATES
   !PB lon_cn lat_cn (cn = CENTER OF NOISE REGION) IF NOT, MUST BE CONVERTED IN RADIANS
-  !PB lon_cn lat_cn  ARE INSERTED DIRECTLY HERE FOR SIMPLICITY
+  !PB lon_cn lat_cn are inserted directly here for simplicity
 
   lon_cn = (3.89)*PI/180
   lat_cn = (45.113)*PI/180
 
-  if (xcoord >= 0) then
-    lon=asin(ycoord/(sqrt(xcoord**2+ycoord**2)))
+  if (abs(xcoord) > 1.e-24 .or. abs(ycoord) > 1.e-24) then
+    if (xcoord >= 0) then
+      lon=asin(ycoord/(sqrt(xcoord**2+ycoord**2)))
+    else
+      lon=(PI-(asin(ycoord/(sqrt(xcoord**2+ycoord**2)))))
+    endif
   else
-    lon=(PI-(asin(ycoord/(sqrt(xcoord**2+ycoord**2)))))
+    lon=0.0
   endif
-  colat=atan(sqrt(xcoord**2+ycoord**2)/zcoord)
+
+  if (abs(zcoord) > 1.e-24) then
+    colat=atan(sqrt(xcoord**2+ycoord**2)/zcoord)
+  else
+    colat=0.0
+  endif
   lat=(PI/2)-colat
 
   !PB CALCULATE THE DISTANCE BETWEEN CENTER OF NOISE REGION AND EACH
@@ -216,7 +224,6 @@ contains
   !*****************************************************************************************************************
 
   end subroutine noise_distribution_dir_non_uni
-
 
 end module user_noise_distribution
 
@@ -314,8 +321,8 @@ end module user_noise_distribution
 
     ! checks if surface element belongs to elastic domain
     if (ispec_is_acoustic(ispec)) then
-      print *,'error noise simulation: element',ispec,'is acoustic'
-      stop 'error: noise for acoustic elements not implemented yet!'
+      print *,'Error noise simulation: element',ispec,'is acoustic'
+      call exit_MPI(myrank,'Error: noise for acoustic elements not implemented yet!')
     endif
 
     do igll = 1, NGLLSQUARE
@@ -388,24 +395,24 @@ end module user_noise_distribution
   !if (.not. USE_HIGHRES_FOR_MOVIES) &
   !  call exit_mpi(myrank,'Please set USE_HIGHRES_FOR_MOVIES in Par_file to be .true.')
 
-  if (NOISE_TOMOGRAPHY==1) then
-    if (SIMULATION_TYPE/=1) &
+  if (NOISE_TOMOGRAPHY == 1) then
+    if (SIMULATION_TYPE /= 1) &
       call exit_mpi(myrank,'NOISE_TOMOGRAPHY=1 requires SIMULATION_TYPE=1! check Par_file')
 
-  else if (NOISE_TOMOGRAPHY==2) then
-    if (SIMULATION_TYPE/=1) &
+  else if (NOISE_TOMOGRAPHY == 2) then
+    if (SIMULATION_TYPE /= 1) &
       call exit_mpi(myrank,'NOISE_TOMOGRAPHY=2 requires SIMULATION_TYPE=1! check Par_file')
     if (.not. SAVE_FORWARD) &
       call exit_mpi(myrank,'NOISE_TOMOGRAPHY=2 requires SAVE_FORWARD=.true.! check Par_file')
 
-  else if (NOISE_TOMOGRAPHY==3) then
-    if (SIMULATION_TYPE/=3) &
+  else if (NOISE_TOMOGRAPHY == 3) then
+    if (SIMULATION_TYPE /= 3) &
       call exit_mpi(myrank,'NOISE_TOMOGRAPHY=3 requires SIMULATION_TYPE=3! check Par_file')
     if (SAVE_FORWARD) &
       call exit_mpi(myrank,'NOISE_TOMOGRAPHY=3 requires SAVE_FORWARD=.false.! check Par_file')
   endif
 
-  if (NOISE_TOMOGRAPHY/=0) then
+  if (NOISE_TOMOGRAPHY /= 0) then
     ! save/read the surface movie using the same c routine as we do for absorbing boundaries (file ID is 2)
 
     ! size of single record
@@ -427,15 +434,15 @@ end module user_noise_distribution
       filesize = filesize*NSTEP
 
       write(outputname,"('/proc',i6.6,'_surface_movie')") myrank
-      if (NOISE_TOMOGRAPHY==1) &
+      if (NOISE_TOMOGRAPHY == 1) &
         call open_file_abs_w(2,trim(LOCAL_PATH)//trim(outputname), &
            len_trim(trim(LOCAL_PATH)//trim(outputname)), &
            filesize)
-      if (NOISE_TOMOGRAPHY==2) &
+      if (NOISE_TOMOGRAPHY == 2) &
         call open_file_abs_r(2,trim(LOCAL_PATH)//trim(outputname), &
            len_trim(trim(LOCAL_PATH)//trim(outputname)), &
            filesize)
-      if (NOISE_TOMOGRAPHY==3) &
+      if (NOISE_TOMOGRAPHY == 3) &
         call open_file_abs_r(2,trim(LOCAL_PATH)//trim(outputname), &
            len_trim(trim(LOCAL_PATH)//trim(outputname)), &
            filesize)
@@ -485,7 +492,7 @@ end module user_noise_distribution
 
   do itime =1,NSTEP
     read(IIN_NOISE,*,iostat=ier) junk, noise_src(itime)
-    if (ier /= 0)  call exit_MPI(myrank,&
+    if (ier /= 0)  call exit_MPI(myrank, &
         'file '//trim(filename)//' has wrong length, please check your simulation duration')
   enddo
   close(IIN_NOISE)
@@ -496,13 +503,13 @@ end module user_noise_distribution
   filename = trim(OUTPUT_FILES)//'/..//NOISE_TOMOGRAPHY/nu_master'
   open(unit=IIN_NOISE,file=trim(filename),status='old',action='read',iostat=ier)
   if (ier /= 0 .and. myrank == 0) &
-    call exit_MPI(myrank,&
+    call exit_MPI(myrank, &
       'file '//trim(filename)//' does NOT exist! nu_master is the component direction (ENZ) for master receiver')
 
   do itime =1,3
     read(IIN_NOISE,*,iostat=ier) nu_master(itime)
     if (ier /= 0 .and. myrank == 0) &
-      call exit_MPI(myrank,&
+      call exit_MPI(myrank, &
         'file '//trim(filename)//' has wrong length, the vector should have three components (ENZ)')
   enddo
   close(IIN_NOISE)
@@ -513,7 +520,7 @@ end module user_noise_distribution
     close(IOUT_NOISE)
   endif
 
-  ! rotates to cartesian
+  ! rotates to Cartesian
   do itime = 1, NSTEP
     noise_src_u(:,itime) = nu_single(1,:) * noise_src(itime) * nu_master(1) &
                          + nu_single(2,:) * noise_src(itime) * nu_master(2) &
@@ -600,7 +607,7 @@ end module user_noise_distribution
                     ibool, &
                     noise_surface_movie,it, &
                     NSPEC_AB_VAL,NGLOB_AB_VAL, &
-                    num_free_surface_faces,free_surface_ispec,free_surface_ijk,&
+                    num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
                     Mesh_pointer,GPU_MODE)
 
   use constants
@@ -851,7 +858,7 @@ end module user_noise_distribution
 
       enddo
 
-    else ! GPU_MODE==1
+    else ! GPU_MODE == 1
       call compute_kernels_strgth_noise_cu(Mesh_pointer,noise_surface_movie,deltat)
     endif ! GPU_MODE
 

@@ -1,4 +1,4 @@
-program subspace_hessian
+program subspace_Hessian
 
   implicit none
   include 'mpif.h'
@@ -66,7 +66,7 @@ program subspace_hessian
   read(12,*) ismooth
   close(12)
 
-  if(ismooth == 1) then
+  if (ismooth == 1) then
      kernel_name1 = 'mu_kernel_smooth'
      kernel_name2 = 'kappa_kernel_smooth'
   else
@@ -99,7 +99,7 @@ program subspace_hessian
 !!$  open(unit=20,file=trim(win_file),status='old',iostat=ios)
 !!$  do i=1,nsrc
 !!$     read(20,*) nwin_vec(i)
-!!$     if(myrank==0) write(*,*) nwin_vec(i)
+!!$     if (myrank==0) write(*,*) nwin_vec(i)
 !!$  enddo
 !!$  close(20)
 
@@ -261,7 +261,7 @@ program subspace_hessian
      if (myrank == 0) then
         write(*,*) 'writing out files...'
 
-        write(filename,'(a,i3.3)') 'hessian_index_' // trim(smodel) // '_' // trim(kernel_name) // '_', nker
+        write(filename,'(a,i3.3)') 'Hessian_index_' // trim(smodel) // '_' // trim(kernel_name) // '_', nker
         open(20,file=trim(filename),status='unknown')
         k = 0
         do iker = 1, nker
@@ -272,7 +272,7 @@ program subspace_hessian
         enddo
         close(20)
 
-        !write(filename,'(a,i3.3)') 'hessian_' // trim(kernel_name) // '_', nker
+        !write(filename,'(a,i3.3)') 'Hessian_' // trim(kernel_name) // '_', nker
         !open(19,file=trim(filename),status='unknown')
         !write(19,'(i8,1e24.12)') (kdot_total(k),k=1,nops)
         !close(19)
@@ -295,6 +295,6 @@ program subspace_hessian
 ! stop all the MPI processes, and exit
   call MPI_FINALIZE(ier)
 
-end program subspace_hessian
+end program subspace_Hessian
 
 

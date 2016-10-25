@@ -31,7 +31,7 @@
 subroutine read_mesh_for_init_ADIOS(nspec, nglob)
 
   use adios_read_mod
-  use specfem_par, only : myrank, LOCAL_PATH, MAX_STRING_LEN
+  use specfem_par, only: myrank, LOCAL_PATH, MAX_STRING_LEN
 
   implicit none
   ! Paramters
@@ -94,54 +94,54 @@ subroutine read_mesh_databases_adios()
   integer(kind=8), pointer :: sel => null()
   integer(kind=8), dimension(1) :: start, count_ad
 
-  integer :: local_dim_ibool, local_dim_x_global, local_dim_y_global,          &
-             local_dim_z_global, local_dim_xixstore, local_dim_xiystore,       &
-             local_dim_xizstore, local_dim_etaxstore, local_dim_etaystore,     &
-             local_dim_etazstore, local_dim_gammaxstore,                       &
-             local_dim_gammaystore, local_dim_gammazstore,                     &
-             local_dim_jacobianstore, local_dim_kappastore,                    &
-             local_dim_mustore, local_dim_rhostore,                            &
-             local_dim_ispec_is_acoustic, local_dim_ispec_is_elastic,          &
-             local_dim_ispec_is_poroelastic, local_dim_rmass,                  &
-             local_dim_rmass_ocean_load, local_dim_rmass_acoustic,             &
-             local_dim_rho_vp,                                                 &
-             local_dim_rho_vs, local_dim_abs_boundary_ispec,                   &
-             local_dim_abs_boundary_ijk, local_dim_abs_boundary_jacobian2Dw,   &
-             local_dim_abs_boundary_normal, local_dim_ibelm_xmin,              &
-             local_dim_ibelm_ymin, local_dim_ibelm_bottom,                     &
-             local_dim_ibelm_top, local_dim_free_surface_ispec,                &
-             local_dim_free_surface_ijk, local_dim_free_surface_jacobian2Dw,   &
-             local_dim_free_surface_normal, local_dim_coupling_ac_el_ispec,    &
-             local_dim_coupling_ac_el_ijk,                                     &
-             local_dim_coupling_ac_el_jacobian2Dw,                             &
-             local_dim_coupling_ac_el_normal, local_dim_my_neighbours_ext_mesh,&
-             local_dim_nibool_interfaces_ext_mesh,                             &
-             local_dim_ibool_interfaces_ext_mesh,                              &
-             local_dim_ispec_is_inner, local_dim_phase_ispec_inner_acoustic,   &
-             local_dim_phase_ispec_inner_elastic, local_dim_ibelm_xmax,        &
-             local_dim_ibelm_ymax, local_dim_rmass_solid_poroelastic,          &
-             local_dim_rmass_fluid_poroelastic, local_dim_rhoarraystore,       &
-             local_dim_kappaarraystore, local_dim_permstore,                   &
-             local_dim_etastore, local_dim_tortstore, local_dim_phistore,      &
-             local_dim_rho_vpI, local_dim_rho_vpII, local_dim_rho_vsI,         &
-             local_dim_CPML_regions, local_dim_CPML_to_spec, local_dim_is_CPML,&
-             local_dim_d_store_x, local_dim_d_store_y, local_dim_d_store_z,    &
-             local_dim_k_store_x, local_dim_k_store_y, local_dim_k_store_z,    &
-             local_dim_alpha_store_x, local_dim_alpha_store_y,                 &
-             local_dim_alpha_store_z,                                          &
-             local_dim_points_interface_PML_acoustic,                          &
-             local_dim_points_interface_PML_elastic,                           &
-             local_dim_rmassx, local_dim_rmassy, local_dim_rmassz,             &
-             local_dim_rmassz_acoustic, local_dim_coupling_el_po_ispec,        &
-             local_dim_coupling_po_el_ispec, local_dim_coupling_el_po_ijk,     &
-             local_dim_coupling_po_el_ijk,                                     &
-             local_dim_coupling_el_po_jacobian2Dw,                             &
-             local_dim_coupling_el_po_normal, local_dim_c11store,              &
-             local_dim_phase_ispec_inner_poroelastic,                          &
-             local_dim_num_elem_colors_acoustic,                               &
-             local_dim_num_elem_colors_elastic, local_dim_coupling_ac_po_ispec,&
-             local_dim_coupling_ac_po_ijk,                                     &
-             local_dim_coupling_ac_po_jacobian2Dw,                             &
+  integer :: local_dim_ibool, local_dim_x_global, local_dim_y_global, &
+             local_dim_z_global, local_dim_xixstore, local_dim_xiystore, &
+             local_dim_xizstore, local_dim_etaxstore, local_dim_etaystore, &
+             local_dim_etazstore, local_dim_gammaxstore, &
+             local_dim_gammaystore, local_dim_gammazstore, &
+             local_dim_jacobianstore, local_dim_kappastore, &
+             local_dim_mustore, local_dim_rhostore, &
+             local_dim_ispec_is_acoustic, local_dim_ispec_is_elastic, &
+             local_dim_ispec_is_poroelastic, local_dim_rmass, &
+             local_dim_rmass_ocean_load, local_dim_rmass_acoustic, &
+             local_dim_rho_vp, &
+             local_dim_rho_vs, local_dim_abs_boundary_ispec, &
+             local_dim_abs_boundary_ijk, local_dim_abs_boundary_jacobian2Dw, &
+             local_dim_abs_boundary_normal, local_dim_ibelm_xmin, &
+             local_dim_ibelm_ymin, local_dim_ibelm_bottom, &
+             local_dim_ibelm_top, local_dim_free_surface_ispec, &
+             local_dim_free_surface_ijk, local_dim_free_surface_jacobian2Dw, &
+             local_dim_free_surface_normal, local_dim_coupling_ac_el_ispec, &
+             local_dim_coupling_ac_el_ijk, &
+             local_dim_coupling_ac_el_jacobian2Dw, &
+             local_dim_coupling_ac_el_normal, local_dim_my_neighbours_ext_mesh, &
+             local_dim_nibool_interfaces_ext_mesh, &
+             local_dim_ibool_interfaces_ext_mesh, &
+             local_dim_ispec_is_inner, local_dim_phase_ispec_inner_acoustic, &
+             local_dim_phase_ispec_inner_elastic, local_dim_ibelm_xmax, &
+             local_dim_ibelm_ymax, local_dim_rmass_solid_poroelastic, &
+             local_dim_rmass_fluid_poroelastic, local_dim_rhoarraystore, &
+             local_dim_kappaarraystore, local_dim_permstore, &
+             local_dim_etastore, local_dim_tortstore, local_dim_phistore, &
+             local_dim_rho_vpI, local_dim_rho_vpII, local_dim_rho_vsI, &
+             local_dim_CPML_regions, local_dim_CPML_to_spec, local_dim_is_CPML, &
+             local_dim_d_store_x, local_dim_d_store_y, local_dim_d_store_z, &
+             local_dim_k_store_x, local_dim_k_store_y, local_dim_k_store_z, &
+             local_dim_alpha_store_x, local_dim_alpha_store_y, &
+             local_dim_alpha_store_z, &
+             local_dim_points_interface_PML_acoustic, &
+             local_dim_points_interface_PML_elastic, &
+             local_dim_rmassx, local_dim_rmassy, local_dim_rmassz, &
+             local_dim_rmassz_acoustic, local_dim_coupling_el_po_ispec, &
+             local_dim_coupling_po_el_ispec, local_dim_coupling_el_po_ijk, &
+             local_dim_coupling_po_el_ijk, &
+             local_dim_coupling_el_po_jacobian2Dw, &
+             local_dim_coupling_el_po_normal, local_dim_c11store, &
+             local_dim_phase_ispec_inner_poroelastic, &
+             local_dim_num_elem_colors_acoustic, &
+             local_dim_num_elem_colors_elastic, local_dim_coupling_ac_po_ispec, &
+             local_dim_coupling_ac_po_ijk, &
+             local_dim_coupling_ac_po_jacobian2Dw, &
              local_dim_coupling_ac_po_normal
 
   integer :: comm
@@ -177,11 +177,11 @@ subroutine read_mesh_databases_adios()
   ! Fetch values to compute the simulation type. |
   !----------------------------------------------'
   sel_num = 0
-  call adios_get_scalar(handle, "ispec_is_acoustic/local_dim",&
+  call adios_get_scalar(handle, "ispec_is_acoustic/local_dim", &
                         local_dim_ispec_is_acoustic,ier)
-  call adios_get_scalar(handle, "ispec_is_elastic/local_dim",&
+  call adios_get_scalar(handle, "ispec_is_elastic/local_dim", &
                         local_dim_ispec_is_elastic,ier)
-  call adios_get_scalar(handle, "ispec_is_poroelastic/local_dim",&
+  call adios_get_scalar(handle, "ispec_is_poroelastic/local_dim", &
                         local_dim_ispec_is_poroelastic,ier)
 
   start(1) = local_dim_ispec_is_acoustic * myrank
@@ -296,7 +296,7 @@ subroutine read_mesh_databases_adios()
                              nspec_inner_poroelastic, ier)
     call adios_schedule_read(handle, sel, "nspec_outer_poroelastic", 0, 1, &
                              nspec_outer_poroelastic, ier)
-    call adios_schedule_read(handle, sel, "num_phase_ispec_poroelastic", 0, 1,&
+    call adios_schedule_read(handle, sel, "num_phase_ispec_poroelastic", 0, 1, &
                              num_phase_ispec_poroelastic, ier)
   endif
 
@@ -326,115 +326,115 @@ subroutine read_mesh_databases_adios()
   !------------------------.
   ! Get the 'chunks' sizes |
   !------------------------'
-  call adios_get_scalar(handle, "ibool/local_dim",&
+  call adios_get_scalar(handle, "ibool/local_dim", &
                         local_dim_ibool,ier)
-  call adios_get_scalar(handle, "x_global/local_dim",&
+  call adios_get_scalar(handle, "x_global/local_dim", &
                         local_dim_x_global,ier)
-  call adios_get_scalar(handle, "y_global/local_dim",&
+  call adios_get_scalar(handle, "y_global/local_dim", &
                         local_dim_y_global,ier)
-  call adios_get_scalar(handle, "z_global/local_dim",&
+  call adios_get_scalar(handle, "z_global/local_dim", &
                         local_dim_z_global,ier)
-  call adios_get_scalar(handle, "xixstore/local_dim",&
+  call adios_get_scalar(handle, "xixstore/local_dim", &
                         local_dim_xixstore,ier)
-  call adios_get_scalar(handle, "xiystore/local_dim",&
+  call adios_get_scalar(handle, "xiystore/local_dim", &
                         local_dim_xiystore,ier)
-  call adios_get_scalar(handle, "xizstore/local_dim",&
+  call adios_get_scalar(handle, "xizstore/local_dim", &
                         local_dim_xizstore,ier)
-  call adios_get_scalar(handle, "etaxstore/local_dim",&
+  call adios_get_scalar(handle, "etaxstore/local_dim", &
                         local_dim_etaxstore,ier)
-  call adios_get_scalar(handle, "etaystore/local_dim",&
+  call adios_get_scalar(handle, "etaystore/local_dim", &
                         local_dim_etaystore,ier)
-  call adios_get_scalar(handle, "etazstore/local_dim",&
+  call adios_get_scalar(handle, "etazstore/local_dim", &
                         local_dim_etazstore,ier)
-  call adios_get_scalar(handle, "gammaxstore/local_dim",&
+  call adios_get_scalar(handle, "gammaxstore/local_dim", &
                         local_dim_gammaxstore,ier)
-  call adios_get_scalar(handle, "gammaystore/local_dim",&
+  call adios_get_scalar(handle, "gammaystore/local_dim", &
                         local_dim_gammaystore,ier)
-  call adios_get_scalar(handle, "gammazstore/local_dim",&
+  call adios_get_scalar(handle, "gammazstore/local_dim", &
                         local_dim_gammazstore,ier)
-  call adios_get_scalar(handle, "jacobianstore/local_dim",&
+  call adios_get_scalar(handle, "jacobianstore/local_dim", &
                         local_dim_jacobianstore,ier)
-  call adios_get_scalar(handle, "kappastore/local_dim",&
+  call adios_get_scalar(handle, "kappastore/local_dim", &
                         local_dim_kappastore,ier)
-  call adios_get_scalar(handle, "mustore/local_dim",&
+  call adios_get_scalar(handle, "mustore/local_dim", &
                         local_dim_mustore,ier)
-  call adios_get_scalar(handle, "rhostore/local_dim",&
+  call adios_get_scalar(handle, "rhostore/local_dim", &
                         local_dim_rhostore,ier)
   if (ACOUSTIC_SIMULATION) then
-    call adios_get_scalar(handle, "rmass_acoustic/local_dim",&
+    call adios_get_scalar(handle, "rmass_acoustic/local_dim", &
                           local_dim_rmass_acoustic,ier)
   endif
   if (ELASTIC_SIMULATION) then
-    call adios_get_scalar(handle, "rmass/local_dim",&
+    call adios_get_scalar(handle, "rmass/local_dim", &
                           local_dim_rmass,ier)
 
     if (APPROXIMATE_OCEAN_LOAD) then
-      call adios_get_scalar(handle, "rmass_ocean_load/local_dim",&
+      call adios_get_scalar(handle, "rmass_ocean_load/local_dim", &
                             local_dim_rmass_ocean_load,ier)
     endif
-    call adios_get_scalar(handle, "rho_vp/local_dim",&
+    call adios_get_scalar(handle, "rho_vp/local_dim", &
                           local_dim_rho_vp,ier)
-    call adios_get_scalar(handle, "rho_vs/local_dim",&
+    call adios_get_scalar(handle, "rho_vs/local_dim", &
                           local_dim_rho_vs,ier)
   endif
   if (POROELASTIC_SIMULATION) then
-    call adios_get_scalar(handle, "rmass_solid_poroelastic/local_dim",&
+    call adios_get_scalar(handle, "rmass_solid_poroelastic/local_dim", &
                           local_dim_rmass_solid_poroelastic,ier)
-    call adios_get_scalar(handle, "rmass_fluid_poroelastic/local_dim",&
+    call adios_get_scalar(handle, "rmass_fluid_poroelastic/local_dim", &
                           local_dim_rmass_fluid_poroelastic,ier)
-    call adios_get_scalar(handle, "rhoarraystore/local_dim",&
+    call adios_get_scalar(handle, "rhoarraystore/local_dim", &
                           local_dim_rhoarraystore,ier)
-    call adios_get_scalar(handle, "kappaarraystore/local_dim",&
+    call adios_get_scalar(handle, "kappaarraystore/local_dim", &
                           local_dim_kappaarraystore,ier)
-    call adios_get_scalar(handle, "permstore/local_dim",&
+    call adios_get_scalar(handle, "permstore/local_dim", &
                           local_dim_permstore,ier)
-    call adios_get_scalar(handle, "etastore/local_dim",&
+    call adios_get_scalar(handle, "etastore/local_dim", &
                           local_dim_etastore,ier)
-    call adios_get_scalar(handle, "tortstore/local_dim",&
+    call adios_get_scalar(handle, "tortstore/local_dim", &
                           local_dim_tortstore,ier)
-    call adios_get_scalar(handle, "phistore/local_dim",&
+    call adios_get_scalar(handle, "phistore/local_dim", &
                           local_dim_phistore,ier)
-    call adios_get_scalar(handle, "rho_vpI/local_dim",&
+    call adios_get_scalar(handle, "rho_vpI/local_dim", &
                           local_dim_rho_vpI,ier)
-    call adios_get_scalar(handle, "rho_vpII/local_dim",&
+    call adios_get_scalar(handle, "rho_vpII/local_dim", &
                           local_dim_rho_vpII,ier)
-    call adios_get_scalar(handle, "rho_vsI/local_dim",&
+    call adios_get_scalar(handle, "rho_vsI/local_dim", &
                           local_dim_rho_vsI,ier)
   endif
   if (PML_CONDITIONS) then
     if (nspec_cpml > 0) then
-      call adios_get_scalar(handle, "CPML_regions/local_dim",&
+      call adios_get_scalar(handle, "CPML_regions/local_dim", &
                             local_dim_CPML_regions, ier)
-      call adios_get_scalar(handle, "CPML_to_spec/local_dim",&
+      call adios_get_scalar(handle, "CPML_to_spec/local_dim", &
                             local_dim_CPML_to_spec, ier)
-      call adios_get_scalar(handle, "is_CPML/local_dim",&
+      call adios_get_scalar(handle, "is_CPML/local_dim", &
                             local_dim_is_CPML, ier)
-      call adios_get_scalar(handle, "d_store_x/local_dim",&
+      call adios_get_scalar(handle, "d_store_x/local_dim", &
                             local_dim_d_store_x, ier)
-      call adios_get_scalar(handle, "d_store_y/local_dim",&
+      call adios_get_scalar(handle, "d_store_y/local_dim", &
                             local_dim_d_store_y, ier)
-      call adios_get_scalar(handle, "d_store_z/local_dim",&
+      call adios_get_scalar(handle, "d_store_z/local_dim", &
                             local_dim_d_store_z, ier)
-      call adios_get_scalar(handle, "k_store_x/local_dim",&
+      call adios_get_scalar(handle, "k_store_x/local_dim", &
                             local_dim_k_store_x, ier)
-      call adios_get_scalar(handle, "k_store_y/local_dim",&
+      call adios_get_scalar(handle, "k_store_y/local_dim", &
                             local_dim_k_store_y, ier)
-      call adios_get_scalar(handle, "k_store_z/local_dim",&
+      call adios_get_scalar(handle, "k_store_z/local_dim", &
                             local_dim_k_store_z, ier)
-      call adios_get_scalar(handle, "alpha_store_x/local_dim",&
+      call adios_get_scalar(handle, "alpha_store_x/local_dim", &
                             local_dim_alpha_store_x, ier)
-      call adios_get_scalar(handle, "alpha_store_y/local_dim",&
+      call adios_get_scalar(handle, "alpha_store_y/local_dim", &
                             local_dim_alpha_store_y, ier)
-      call adios_get_scalar(handle, "alpha_store_z/local_dim",&
+      call adios_get_scalar(handle, "alpha_store_z/local_dim", &
                             local_dim_alpha_store_z, ier)
       if ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) &
           .or. SIMULATION_TYPE == 3) then
         if (nglob_interface_PML_acoustic > 0) then
-          call adios_get_scalar(handle, "points_interface_PML_acoustic/local_dim",&
+          call adios_get_scalar(handle, "points_interface_PML_acoustic/local_dim", &
                                 local_dim_points_interface_PML_acoustic, ier)
         endif
         if (nglob_interface_PML_elastic > 0) then
-          call adios_get_scalar(handle, "points_interface_PML_elastic/local_dim",&
+          call adios_get_scalar(handle, "points_interface_PML_elastic/local_dim", &
                                 local_dim_points_interface_PML_elastic, ier)
         endif
       endif
@@ -443,139 +443,139 @@ subroutine read_mesh_databases_adios()
 
   if (PML_CONDITIONS) then
     if (num_abs_boundary_faces > 0) then
-      call adios_get_scalar(handle, "abs_boundary_ispec/local_dim",&
+      call adios_get_scalar(handle, "abs_boundary_ispec/local_dim", &
                             local_dim_abs_boundary_ispec,ier)
-      call adios_get_scalar(handle, "abs_boundary_ijk/local_dim",&
+      call adios_get_scalar(handle, "abs_boundary_ijk/local_dim", &
                             local_dim_abs_boundary_ijk,ier)
-      call adios_get_scalar(handle, "abs_boundary_jacobian2Dw/local_dim",&
+      call adios_get_scalar(handle, "abs_boundary_jacobian2Dw/local_dim", &
                             local_dim_abs_boundary_jacobian2Dw,ier)
-      call adios_get_scalar(handle, "abs_boundary_normal/local_dim",&
+      call adios_get_scalar(handle, "abs_boundary_normal/local_dim", &
                             local_dim_abs_boundary_normal,ier)
     endif
   else
     if (num_abs_boundary_faces > 0) then
-      call adios_get_scalar(handle, "abs_boundary_ispec/local_dim",&
+      call adios_get_scalar(handle, "abs_boundary_ispec/local_dim", &
                             local_dim_abs_boundary_ispec,ier)
-      call adios_get_scalar(handle, "abs_boundary_ijk/local_dim",&
+      call adios_get_scalar(handle, "abs_boundary_ijk/local_dim", &
                             local_dim_abs_boundary_ijk,ier)
-      call adios_get_scalar(handle, "abs_boundary_jacobian2Dw/local_dim",&
+      call adios_get_scalar(handle, "abs_boundary_jacobian2Dw/local_dim", &
                             local_dim_abs_boundary_jacobian2Dw,ier)
-      call adios_get_scalar(handle, "abs_boundary_normal/local_dim",&
+      call adios_get_scalar(handle, "abs_boundary_normal/local_dim", &
                             local_dim_abs_boundary_normal,ier)
       if (STACEY_ABSORBING_CONDITIONS) then
         ! store mass matrix contributions
         if (ELASTIC_SIMULATION) then
-          call adios_get_scalar(handle, "rmassx/local_dim",&
+          call adios_get_scalar(handle, "rmassx/local_dim", &
                                 local_dim_rmassx, ier)
-          call adios_get_scalar(handle, "rmassy/local_dim",&
+          call adios_get_scalar(handle, "rmassy/local_dim", &
                                 local_dim_rmassy, ier)
-          call adios_get_scalar(handle, "rmassz/local_dim",&
+          call adios_get_scalar(handle, "rmassz/local_dim", &
                                 local_dim_rmassz, ier)
         endif
         if (ACOUSTIC_SIMULATION) then
-          call adios_get_scalar(handle, "rmassz_acoustic/local_dim",&
+          call adios_get_scalar(handle, "rmassz_acoustic/local_dim", &
                                 local_dim_rmassz_acoustic, ier)
         endif
       endif
     endif
   endif
 
-  call adios_get_scalar(handle, "ibelm_xmin/local_dim",&
+  call adios_get_scalar(handle, "ibelm_xmin/local_dim", &
                         local_dim_ibelm_xmin,ier)
-  call adios_get_scalar(handle, "ibelm_xmax/local_dim",&
+  call adios_get_scalar(handle, "ibelm_xmax/local_dim", &
                         local_dim_ibelm_xmax,ier)
-  call adios_get_scalar(handle, "ibelm_ymin/local_dim",&
+  call adios_get_scalar(handle, "ibelm_ymin/local_dim", &
                         local_dim_ibelm_ymin,ier)
-  call adios_get_scalar(handle, "ibelm_ymax/local_dim",&
+  call adios_get_scalar(handle, "ibelm_ymax/local_dim", &
                         local_dim_ibelm_ymax,ier)
-  call adios_get_scalar(handle, "ibelm_bottom/local_dim",&
+  call adios_get_scalar(handle, "ibelm_bottom/local_dim", &
                         local_dim_ibelm_bottom,ier)
-  call adios_get_scalar(handle, "ibelm_top/local_dim",&
+  call adios_get_scalar(handle, "ibelm_top/local_dim", &
                         local_dim_ibelm_top,ier)
 
   if (num_free_surface_faces > 0) then
-    call adios_get_scalar(handle, "free_surface_ispec/local_dim",&
+    call adios_get_scalar(handle, "free_surface_ispec/local_dim", &
                           local_dim_free_surface_ispec,ier)
-    call adios_get_scalar(handle, "free_surface_ijk/local_dim",&
+    call adios_get_scalar(handle, "free_surface_ijk/local_dim", &
                           local_dim_free_surface_ijk,ier)
-    call adios_get_scalar(handle, "free_surface_jacobian2Dw/local_dim",&
+    call adios_get_scalar(handle, "free_surface_jacobian2Dw/local_dim", &
                           local_dim_free_surface_jacobian2Dw,ier)
-    call adios_get_scalar(handle, "free_surface_normal/local_dim",&
+    call adios_get_scalar(handle, "free_surface_normal/local_dim", &
                           local_dim_free_surface_normal,ier)
   endif
   if (num_coupling_ac_el_faces > 0) then
-    call adios_get_scalar(handle, "coupling_ac_el_ispec/local_dim",&
+    call adios_get_scalar(handle, "coupling_ac_el_ispec/local_dim", &
                           local_dim_coupling_ac_el_ispec,ier)
-    call adios_get_scalar(handle, "coupling_ac_el_ijk/local_dim",&
+    call adios_get_scalar(handle, "coupling_ac_el_ijk/local_dim", &
                           local_dim_coupling_ac_el_ijk,ier)
-    call adios_get_scalar(handle, "coupling_ac_el_jacobian2Dw/local_dim",&
+    call adios_get_scalar(handle, "coupling_ac_el_jacobian2Dw/local_dim", &
                           local_dim_coupling_ac_el_jacobian2Dw,ier)
-    call adios_get_scalar(handle, "coupling_ac_el_normal/local_dim",&
+    call adios_get_scalar(handle, "coupling_ac_el_normal/local_dim", &
                           local_dim_coupling_ac_el_normal,ier)
   endif
   if (num_coupling_ac_po_faces > 0) then
-    call adios_get_scalar(handle, "coupling_ac_po_ispec/local_dim",&
+    call adios_get_scalar(handle, "coupling_ac_po_ispec/local_dim", &
                           local_dim_coupling_ac_po_ispec, ier)
-    call adios_get_scalar(handle, "coupling_ac_po_ijk/local_dim",&
+    call adios_get_scalar(handle, "coupling_ac_po_ijk/local_dim", &
                           local_dim_coupling_ac_po_ijk, ier)
-    call adios_get_scalar(handle, "coupling_ac_po_jacobian2Dw/local_dim",&
+    call adios_get_scalar(handle, "coupling_ac_po_jacobian2Dw/local_dim", &
                           local_dim_coupling_ac_po_jacobian2Dw, ier)
-    call adios_get_scalar(handle, "coupling_ac_po_normal/local_dim",&
+    call adios_get_scalar(handle, "coupling_ac_po_normal/local_dim", &
                           local_dim_coupling_ac_po_normal, ier)
   endif
   if (num_coupling_el_po_faces > 0) then
-    call adios_get_scalar(handle, "coupling_el_po_ispec/local_dim",&
+    call adios_get_scalar(handle, "coupling_el_po_ispec/local_dim", &
                           local_dim_coupling_el_po_ispec, ier)
-    call adios_get_scalar(handle, "coupling_po_el_ispec/local_dim",&
+    call adios_get_scalar(handle, "coupling_po_el_ispec/local_dim", &
                           local_dim_coupling_po_el_ispec, ier)
-    call adios_get_scalar(handle, "coupling_el_po_ijk/local_dim",&
+    call adios_get_scalar(handle, "coupling_el_po_ijk/local_dim", &
                           local_dim_coupling_el_po_ijk, ier)
-    call adios_get_scalar(handle, "coupling_po_el_ijk/local_dim",&
+    call adios_get_scalar(handle, "coupling_po_el_ijk/local_dim", &
                           local_dim_coupling_po_el_ijk, ier)
-    call adios_get_scalar(handle, "coupling_el_po_jacobian2Dw/local_dim",&
+    call adios_get_scalar(handle, "coupling_el_po_jacobian2Dw/local_dim", &
                           local_dim_coupling_el_po_jacobian2Dw, ier)
-    call adios_get_scalar(handle, "coupling_el_po_normal/local_dim",&
+    call adios_get_scalar(handle, "coupling_el_po_normal/local_dim", &
                           local_dim_coupling_el_po_normal, ier)
   endif
   if (num_interfaces_ext_mesh > 0) then
-    call adios_get_scalar(handle, "my_neighbours_ext_mesh/local_dim",&
+    call adios_get_scalar(handle, "my_neighbours_ext_mesh/local_dim", &
                           local_dim_my_neighbours_ext_mesh,ier)
-    call adios_get_scalar(handle, "nibool_interfaces_ext_mesh/local_dim",&
+    call adios_get_scalar(handle, "nibool_interfaces_ext_mesh/local_dim", &
                           local_dim_nibool_interfaces_ext_mesh,ier)
-    call adios_get_scalar(handle, "ibool_interfaces_ext_mesh_dummy/local_dim",&
+    call adios_get_scalar(handle, "ibool_interfaces_ext_mesh_dummy/local_dim", &
                           local_dim_ibool_interfaces_ext_mesh, ier)
   endif
   if (ELASTIC_SIMULATION .and. ANISOTROPY) then
-    call adios_get_scalar(handle, "c11store/local_dim",&
+    call adios_get_scalar(handle, "c11store/local_dim", &
                           local_dim_c11store, ier)
   endif
-  call adios_get_scalar(handle, "ispec_is_inner/local_dim",&
+  call adios_get_scalar(handle, "ispec_is_inner/local_dim", &
                         local_dim_ispec_is_inner,ier)
   if (ACOUSTIC_SIMULATION) then
     if (num_phase_ispec_acoustic > 0) then
-      call adios_get_scalar(handle, "phase_ispec_inner_acoustic/local_dim",&
+      call adios_get_scalar(handle, "phase_ispec_inner_acoustic/local_dim", &
                             local_dim_phase_ispec_inner_acoustic,ier)
     endif
   endif
   if (ELASTIC_SIMULATION) then
     if (num_phase_ispec_elastic > 0) then
-      call adios_get_scalar(handle, "phase_ispec_inner_elastic/local_dim",&
+      call adios_get_scalar(handle, "phase_ispec_inner_elastic/local_dim", &
                             local_dim_phase_ispec_inner_elastic,ier)
     endif
   endif
   if (POROELASTIC_SIMULATION) then
     if (num_phase_ispec_poroelastic > 0) then
-      call adios_get_scalar(handle, "phase_ispec_inner_poroelastic/local_dim",&
+      call adios_get_scalar(handle, "phase_ispec_inner_poroelastic/local_dim", &
                             local_dim_phase_ispec_inner_poroelastic,ier)
     endif
   endif
   if (USE_MESH_COLORING_GPU) then
     if (ACOUSTIC_SIMULATION) then
-      call adios_get_scalar(handle, "num_elem_colors_acoustic/local_dim",&
+      call adios_get_scalar(handle, "num_elem_colors_acoustic/local_dim", &
                             local_dim_num_elem_colors_acoustic, ier)
     endif
     if (ELASTIC_SIMULATION) then
-      call adios_get_scalar(handle, "num_elem_colors_elastic/local_dim",&
+      call adios_get_scalar(handle, "num_elem_colors_elastic/local_dim", &
                             local_dim_num_elem_colors_elastic, ier)
     endif
   endif
@@ -690,8 +690,8 @@ subroutine read_mesh_databases_adios()
             epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),stat=ier)
     if (ier /= 0) stop 'error allocating array epsilondev_xx etc.'
 
-    allocate(R_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa,N_SLS),&
-             epsilondev_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)
+    allocate(R_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS), &
+             epsilondev_trace(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
     if (ier /= 0) stop 'error allocating array R_trace etc.'
 
     ! note: needed for some subroutine arguments
@@ -703,8 +703,8 @@ subroutine read_mesh_databases_adios()
             factor_common(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
     if (ier /= 0) stop 'error allocating array one_minus_sum_beta etc.'
 
-    allocate(one_minus_sum_beta_kappa(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa), &
-             factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_kappa),stat=ier)
+    allocate(one_minus_sum_beta_kappa(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB), &
+             factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
     if (ier /= 0) stop 'error allocating array one_minus_sum_beta_kappa etc.'
 
     if (APPROXIMATE_OCEAN_LOAD) then
@@ -778,15 +778,15 @@ subroutine read_mesh_databases_adios()
   endif
 
   ! C-PML absorbing boundary conditions
+  ! we allocate this array even when PMLs are absent because we need it in logical tests in "if" statements
+  allocate(is_CPML(NSPEC_AB),stat=ier)
+  if (ier /= 0) stop 'error allocating array is_CPML'
+
+  ! make sure there are no PMLs by default,
+  ! and then below if NSPEC_CPML > 0 we will read the real flags for this mesh from the disk
+  is_CPML(:) = .false.
+
   if (PML_CONDITIONS) then
-    allocate(is_CPML(NSPEC_AB),stat=ier)
-    if (ier /= 0) stop 'error allocating array is_CPML'
-
-    ! make sure there are no PMLs by default,
-    ! and then below if NSPEC_CPML > 0 we will need the real flags
-    ! for this mesh from the disk
-    is_CPML(:) = .false.
-
     if (NSPEC_CPML > 0) then
       allocate(CPML_regions(NSPEC_CPML),stat=ier)
       if (ier /= 0) stop 'error allocating array CPML_regions'
@@ -822,10 +822,6 @@ subroutine read_mesh_databases_adios()
         endif
       endif
     endif
-  else
-    ! allocate with a dummy size of zero just to be able to use this array
-    ! as argument in subroutine calls
-    allocate(is_CPML(0),stat=ier)
   endif
 
   ! absorbing boundary surface
@@ -834,6 +830,12 @@ subroutine read_mesh_databases_adios()
            abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces), &
            abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
   if (ier /= 0) stop 'error allocating array abs_boundary_ispec etc.'
+
+#ifdef DEBUG_COUPLED
+  ! safety stop, as the code below will probably not work anymore...
+  ! see commits like: 858afb31e8bbdab6ac1e8354a9dbab913a7111f3
+  ! by PR #759: "now fully done removing the old DSM coupling"
+  stop 'COUPLE w/ external code: ADIOS support not fully implemented yet'
 
   !! CD CD !! For coupling with DSM
   if (COUPLE_WITH_EXTERNAL_CODE) then
@@ -854,6 +856,7 @@ subroutine read_mesh_databases_adios()
     allocate(Tract_dsm_boundary(1,1,1,1))
   endif
   !! CD CD
+#endif
 
   allocate(ibelm_xmin(nspec2D_xmin),ibelm_xmax(nspec2D_xmax), &
            ibelm_ymin(nspec2D_ymin),ibelm_ymax(nspec2D_ymax), &
@@ -1645,8 +1648,8 @@ subroutine read_mesh_databases_moho_adios()
   integer(kind=8), pointer :: sel => null()
   integer(kind=8), dimension(1) :: start, count_ad
 
-  integer :: local_dim_ibelm_moho_bot,  local_dim_ibelm_moho_top,  &
-             local_dim_ijk_moho_bot,    local_dim_ijk_moho_top,    &
+  integer :: local_dim_ibelm_moho_bot,  local_dim_ibelm_moho_top, &
+             local_dim_ijk_moho_bot,    local_dim_ijk_moho_top, &
              local_dim_normal_moho_bot, local_dim_normal_moho_top, &
              local_dim_is_moho_bot,     local_dim_is_moho_top
 
@@ -1691,24 +1694,24 @@ subroutine read_mesh_databases_moho_adios()
     ! Fetch values to compute the simulation type. |
     !----------------------------------------------'
     sel_num = 0
-    call adios_get_scalar(handle, "ibelm_moho_bot/local_dim",&
+    call adios_get_scalar(handle, "ibelm_moho_bot/local_dim", &
                           local_dim_ibelm_moho_bot ,ier)
-    call adios_get_scalar(handle, "ibelm_moho_top/local_dim",&
+    call adios_get_scalar(handle, "ibelm_moho_top/local_dim", &
                           local_dim_ibelm_moho_top ,ier)
 
-    call adios_get_scalar(handle, "ijk_moho_bot/local_dim",&
+    call adios_get_scalar(handle, "ijk_moho_bot/local_dim", &
                           local_dim_ijk_moho_bot ,ier)
-    call adios_get_scalar(handle, "ijk_moho_top/local_dim",&
+    call adios_get_scalar(handle, "ijk_moho_top/local_dim", &
                           local_dim_ijk_moho_top ,ier)
 
-    call adios_get_scalar(handle,"normal_moho_bot /local_dim",&
+    call adios_get_scalar(handle,"normal_moho_bot /local_dim", &
                           local_dim_normal_moho_bot ,ier)
-    call adios_get_scalar(handle, "normal_moho_top/local_dim",&
+    call adios_get_scalar(handle, "normal_moho_top/local_dim", &
                           local_dim_normal_moho_top ,ier)
 
-    call adios_get_scalar(handle, "is_moho_bot/local_dim",&
+    call adios_get_scalar(handle, "is_moho_bot/local_dim", &
                           local_dim_is_moho_bot ,ier)
-    call adios_get_scalar(handle, "is_moho_top/local_dim",&
+    call adios_get_scalar(handle, "is_moho_top/local_dim", &
                           local_dim_is_moho_top ,ier)
 
     !---------------------------------------------.

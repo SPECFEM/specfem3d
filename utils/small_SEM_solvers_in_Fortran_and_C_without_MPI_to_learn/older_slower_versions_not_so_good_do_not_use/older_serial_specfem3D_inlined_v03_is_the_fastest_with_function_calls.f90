@@ -147,7 +147,7 @@
   print *
 
 ! make sure the source element number is an integer
-  if(mod(NSPEC,2) /= 0) stop 'source element number is not an integer, exiting...'
+  if (mod(NSPEC,2) /= 0) stop 'source element number is not an integer, exiting...'
 
 ! read the mesh from external file
   open(unit=IIN,file='DATABASES_FOR_SOLVER/proc000000_reg1_database.dat',status='old')
@@ -215,7 +215,7 @@
     enddo
   enddo
 
-  if(NGLLX /= 5) stop 'this inlined version with matrix products following Deville (2002) is only valid for NGLL = 5'
+  if (NGLLX /= 5) stop 'this inlined version with matrix products following Deville (2002) is only valid for NGLL = 5'
 
 ! clear initial vectors before starting the time loop
 ! (can remain serial because done only once before entering the time loop)
@@ -239,18 +239,18 @@
 
 ! compute maximum of norm of displacement from time to time and display it
 ! in order to monitor the simulation
-    if(mod(it,NTSTEP_BETWEEN_OUTPUT_INFO) == 0 .or. it == 5 .or. it == NSTEP) then
+    if (mod(it,NTSTEP_BETWEEN_OUTPUT_INFO) == 0 .or. it == 5 .or. it == NSTEP) then
       Usolidnorm = -1.
       do iglob = 1,NGLOB
         current_value = sqrt(displ(1,iglob)**2 + displ(2,iglob)**2 + displ(3,iglob)**2)
-        if(current_value > Usolidnorm) Usolidnorm = current_value
+        if (current_value > Usolidnorm) Usolidnorm = current_value
       enddo
       write(*,*) 'Time step # ',it,' out of ',NSTEP
 ! compute current time
       time = (it-1)*deltat
       write(*,*) 'Max norm displacement vector U in the solid (m) = ',Usolidnorm
 ! check stability of the code, exit if unstable
-      if(Usolidnorm > STABILITY_THRESHOLD .or. Usolidnorm < 0) stop 'code became unstable and blew up'
+      if (Usolidnorm > STABILITY_THRESHOLD .or. Usolidnorm < 0) stop 'code became unstable and blew up'
 
 ! count elapsed wall-clock time
   call date_and_time(datein,timein,zone,time_values)

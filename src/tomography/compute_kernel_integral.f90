@@ -25,8 +25,7 @@
 !
 !=====================================================================
 
-
-subroutine compute_kernel_integral_iso()
+  subroutine compute_kernel_integral_iso()
 
 ! computes volume element associated with points and calculates kernel integral
 
@@ -218,13 +217,13 @@ subroutine compute_kernel_integral_iso()
   ! frees memory
   deallocate(jacobian)
 
-end subroutine compute_kernel_integral_iso
+  end subroutine compute_kernel_integral_iso
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine compute_kernel_integral_tiso()
+  subroutine compute_kernel_integral_tiso()
 
 ! computes volume element associated with points
 
@@ -239,7 +238,7 @@ subroutine compute_kernel_integral_tiso()
   ! integration values
   real(kind=CUSTOM_REAL) :: integral_bulk_sum,integral_betav_sum, &
     integral_betah_sum,integral_eta_sum
-  real(kind=CUSTOM_REAL) :: integral_bulk,integral_betav,&
+  real(kind=CUSTOM_REAL) :: integral_bulk,integral_betav, &
     integral_betah,integral_eta
   real(kind=CUSTOM_REAL) :: volume_glob,volume_glob_sum
 
@@ -451,14 +450,14 @@ subroutine compute_kernel_integral_tiso()
   ! frees memory
   deallocate(jacobian)
 
-end subroutine compute_kernel_integral_tiso
+  end subroutine compute_kernel_integral_tiso
 
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine compute_kernel_integral_tiso_iso()
+  subroutine compute_kernel_integral_tiso_iso()
 
 ! computes volume element associated with points
 
@@ -671,17 +670,17 @@ subroutine compute_kernel_integral_tiso_iso()
   ! frees memory
   deallocate(jacobian)
 
-end subroutine compute_kernel_integral_tiso_iso
+  end subroutine compute_kernel_integral_tiso_iso
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-subroutine compute_jacobian(jacobian)
+  subroutine compute_jacobian(jacobian)
 
 ! computes volume element associated with points
 
-  use tomography_par,only: CUSTOM_REAL,NSPEC,NGLOB,NGLLX,NGLLY,NGLLZ,IIN,myrank,MAX_STRING_LEN,REG
+  use tomography_par, only: CUSTOM_REAL,NSPEC,NGLOB,NGLLX,NGLLY,NGLLZ,IIN,myrank,MAX_STRING_LEN,REG
 
   implicit none
 
@@ -730,5 +729,5 @@ subroutine compute_jacobian(jacobian)
 
   close(IIN)
 
-end subroutine compute_jacobian
+  end subroutine compute_jacobian
 

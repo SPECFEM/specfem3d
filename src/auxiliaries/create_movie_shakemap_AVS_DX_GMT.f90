@@ -146,17 +146,24 @@
   else
      ilocnum = NSPEC_SURFACE_EXT_MESH*NGNOD2D_FOUR_CORNERS_AVS_DX
   endif
+  print *,'  high-resolution: ',USE_HIGHRES_FOR_MOVIES
   print *,'  moviedata element surfaces: ',NSPEC_SURFACE_EXT_MESH
   print *,'  moviedata total elements all: ',ilocnum
   print *
 
   if (SAVE_DISPLACEMENT) then
-    print *,'Vertical displacement will be shown in movie'
+    print *,'Displacement will be shown in movie'
   else
-    print *,'Vertical velocity will be shown in movie'
+    print *,'Velocity will be shown in movie'
   endif
   print *
 
+  if (MUTE_SOURCE) then
+    print *,'Muting source region:'
+    print *,'  radius = ',RADIUS_TO_MUTE
+    print *,'  source location x/y/z = ',X_SOURCE_EXT_MESH,Y_SOURCE_EXT_MESH,Z_SOURCE_EXT_MESH
+    print *
+  endif
 
   ! user input
   print *,'1 = create files in OpenDX format'
@@ -188,7 +195,7 @@
     print *
     print *,'enter value:'
     read(5,*) inumber
-    if (inumber<1 .or. inumber>2) stop 'exiting...'
+    if (inumber < 1 .or. inumber > 2) stop 'exiting...'
     print *
     print *,'looping from ',it1,' to ',it2,' every ',NTSTEP_BETWEEN_FRAMES,' time steps'
     ! count number of movie frames
@@ -223,7 +230,11 @@
   else
     print *
     print *,'movie data:'
-    print *,'1= norm of velocity  2=velocity x-comp 3=velocity y-comp 4=velocity z-comp'
+    if (SAVE_DISPLACEMENT) then
+      print *,'1= norm of displacement  2=displacement x-comp 3=displacement y-comp 4=displacement z-comp'
+    else
+      print *,'1= norm of velocity  2=velocity x-comp 3=velocity y-comp 4=velocity z-comp'
+    endif
     print *
     read(5,*) inorm
     if (inorm < 1 .or. inorm > 4) stop 'incorrect value of inorm'
@@ -256,28 +267,28 @@
 
   ! allocate arrays for sorting routine
   allocate(iglob(npointot),locval(npointot), &
-          ifseg(npointot), &
-          xp(npointot),yp(npointot),zp(npointot), &
-          xp_save(npointot),yp_save(npointot),zp_save(npointot), &
-          field_display(npointot), &
-          mask_point(npointot), &
-          ireorder(npointot),stat=ier)
+           ifseg(npointot), &
+           xp(npointot),yp(npointot),zp(npointot), &
+           xp_save(npointot),yp_save(npointot),zp_save(npointot), &
+           field_display(npointot), &
+           mask_point(npointot), &
+           ireorder(npointot),stat=ier)
   if (ier /= 0) stop 'error allocating arrays for sorting routine'
 
   ! allocates data arrays
   allocate(store_val_x(ilocnum), &
-          store_val_y(ilocnum), &
-          store_val_z(ilocnum), &
-          store_val_ux(ilocnum), &
-          store_val_uy(ilocnum), &
-          store_val_uz(ilocnum),stat=ier)
+           store_val_y(ilocnum), &
+           store_val_z(ilocnum), &
+           store_val_ux(ilocnum), &
+           store_val_uy(ilocnum), &
+           store_val_uz(ilocnum),stat=ier)
   if (ier /= 0) stop 'error allocating arrays for data arrays'
 
   if (USE_HIGHRES_FOR_MOVIES) then
     allocate(x(NGLLX,NGLLY), &
-            y(NGLLX,NGLLY), &
-            z(NGLLX,NGLLY), &
-            display(NGLLX,NGLLY),stat=ier)
+             y(NGLLX,NGLLY), &
+             z(NGLLX,NGLLY), &
+             display(NGLLX,NGLLY),stat=ier)
     if (ier /= 0) stop 'error allocating arrays for highres'
   endif
 
@@ -290,7 +301,6 @@
     print *,'Will apply a threshold to amplitude below ',100.*THRESHOLD,' %'
   if (NONLINEAR_SCALING .and. (.not. plot_shaking_map .or. iscaling_shake == 1)) &
     print *,'Will apply a non linear scaling with coef ',POWER_SCALING
-
 
   iframe = 0
 
@@ -363,24 +373,23 @@
 
               ! shakemap
               if (plot_shaking_map) then
-                !!!! NL NL mute value near source
-                if ( (sqrt(((x(i,j) - (X_SOURCE_EXT_MESH))**2 + &
-                     (y(i,j) - (Y_SOURCE_EXT_MESH))**2 + &
-                     (z(i,j) - (Z_SOURCE_EXT_MESH))**2)) < RADIUS_TO_MUTE) &
-                     .and. MUTE_SOURCE) then
-
-                  display(i,j) = 0.
+                ! chooses norm
+                if (inorm == 1) then
+                  ! norm displacement
+                  display(i,j) = vectorx
+                else if (inorm == 2) then
+                  ! norm velocity
+                  display(i,j) = vectory
                 else
-                  ! chooses norm
-                  if (inorm == 1) then
-                    ! norm displacement
-                    display(i,j) = vectorx
-                  else if (inorm == 2) then
-                    ! norm velocity
-                    display(i,j) = vectory
-                  else
-                    ! norm acceleration
-                    display(i,j) = vectorz
+                  ! norm acceleration
+                  display(i,j) = vectorz
+                endif
+                !!!! NL NL mute value near source
+                if (MUTE_SOURCE) then
+                  if ( (sqrt(((x(i,j) - (X_SOURCE_EXT_MESH))**2 + &
+                              (y(i,j) - (Y_SOURCE_EXT_MESH))**2 + &
+                              (z(i,j) - (Z_SOURCE_EXT_MESH))**2)) < RADIUS_TO_MUTE) ) then
+                    display(i,j) = 0.0
                   endif
                 endif
               else
@@ -473,22 +482,22 @@
 
             ! shakemap
             if (plot_shaking_map) then
-              !!!! NL NL mute value near source
-              if ( (sqrt(((dble(xcoord) - (X_SOURCE_EXT_MESH))**2 + &
-                     (dble(ycoord) - (Y_SOURCE_EXT_MESH))**2 + &
-                     (dble(zcoord) - (Z_SOURCE_EXT_MESH))**2)) < RADIUS_TO_MUTE) &
-                     .and. MUTE_SOURCE) then
-                  field_display(ilocnum+ieoff) = 0.
+              if (inorm == 1) then
+                ! norm of displacement
+                field_display(ilocnum+ieoff) = dble(vectorx)
+              else if (inorm == 2) then
+                ! norm of velocity
+                field_display(ilocnum+ieoff) = dble(vectory)
               else
-                if (inorm == 1) then
-                  ! norm of displacement
-                  field_display(ilocnum+ieoff) = dble(vectorx)
-                else if (inorm == 2) then
-                  ! norm of velocity
-                  field_display(ilocnum+ieoff) = dble(vectory)
-                else
-                  ! norm of acceleration
-                  field_display(ilocnum+ieoff) = dble(vectorz)
+                ! norm of acceleration
+                field_display(ilocnum+ieoff) = dble(vectorz)
+              endif
+              !!!! NL NL mute value near source
+              if (MUTE_SOURCE) then
+                if (sqrt(((dble(xcoord) - (X_SOURCE_EXT_MESH))**2 + &
+                          (dble(ycoord) - (Y_SOURCE_EXT_MESH))**2 + &
+                          (dble(zcoord) - (Z_SOURCE_EXT_MESH))**2)) < RADIUS_TO_MUTE) then
+                  field_display(ilocnum+ieoff) = 0.0
                 endif
               endif
             else

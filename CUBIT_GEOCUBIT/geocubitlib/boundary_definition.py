@@ -146,6 +146,8 @@ def define_surf(ip=0,cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,cpuy=1):
     top_surf=[]
     bottom_surf=[]
     list_vol=cubit.parse_cubit_list("volume","all")
+    print "#define_surf: volume list = ",list_vol
+
     zmax_box=cubit.get_total_bounding_box("volume",list_vol)[7]
     zmin_box=cubit.get_total_bounding_box("volume",list_vol)[6] #it is the z_min of the box ... box= xmin,xmax,d,ymin,ymax,d,zmin...
     xmin_box=cubit.get_total_bounding_box("volume",list_vol)[0]
@@ -251,6 +253,7 @@ def build_block(vol_list,name,id_0=1,top_surf=None,optionsea=False):
 
     #
     block_list=cubit.get_block_id_list()
+    print "#build block: block id list = ",block_list
     if len(block_list) > 0:
         id_block=max(max(block_list),2)+id_0
     else:
@@ -279,7 +282,11 @@ def build_block(vol_list,name,id_0=1,top_surf=None,optionsea=False):
             command = "block "+str(id_block)+" name 'continent"+n+"'"
             cubit.cmd(command)
         else:
-            command= 'block '+str(id_block)+' hex in vol '+str(v)+' except hex in vol '+str(list(v_other))
+            print "#build block: volume ",str(v)," except other ",str(list(v_other))," of length ",len(v_other)
+            if len(v_other) > 0:
+                command= 'block '+str(id_block)+' hex in vol '+str(v)+' except hex in vol '+str(list(v_other))
+            else:
+                command= 'block '+str(id_block)+' hex in vol '+str(v)
             print command
             command = command.replace("["," ").replace("]"," ")
             cubit.cmd(command)

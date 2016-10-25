@@ -35,14 +35,14 @@ module decompose_mesh
 
   use shared_parameters
 
-  use part_decompose_mesh,only: long,MAX_STRING_LEN,ACOUSTIC_LOAD,nfaces,NGNOD_EIGHT_CORNERS, &
+  use part_decompose_mesh, only: long,MAX_STRING_LEN,ACOUSTIC_LOAD,nfaces,NGNOD_EIGHT_CORNERS, &
     write_interfaces_database,write_moho_surface_database,write_glob2loc_nodes_database, &
     write_material_props_database,write_boundaries_database, &
     write_partition_database,write_cpml_database, &
     acoustic_elastic_poro_load,mesh2dual_ncommonnodes, &
     build_glob2loc_elmnts,build_glob2loc_nodes,build_interfaces,poro_elastic_repartitioning,moho_surface_repartitioning
 
-  use fault_scotch,only: ANY_FAULT,nodes_coords_open,read_fault_files,save_nodes_coords,close_faults, &
+  use fault_scotch, only: ANY_FAULT,nodes_coords_open,read_fault_files,save_nodes_coords,close_faults, &
     fault_repartition,write_fault_database
 
   implicit none
@@ -155,15 +155,18 @@ module decompose_mesh
     logical :: use_poroelastic_file
     integer(long) :: nspec_long
     integer :: inode
+    logical :: file_found
 
     ! reads node coordinates
-    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file',&
+    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file', &
           status='old', form='formatted', iostat = ier)
     if (ier /= 0) then
       print *,'could not open file:',localpath_name(1:len_trim(localpath_name))//'/nodes_coords_file'
       stop 'Error opening file nodes_coords_file'
     endif
+
     read(98,*) nnodes
+
     if (nnodes < 1) stop 'Error: nnodes < 1'
     allocate(nodes_coords(3,nnodes),stat=ier)
     if (ier /= 0) stop 'Error allocating array nodes_coords'
@@ -181,6 +184,7 @@ module decompose_mesh
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/mesh_file', &
           status='old', form='formatted',iostat=ier)
     if (ier /= 0) stop 'Error opening mesh_file'
+
     read(98,*) nspec_long
 
     ! debug check size limit
@@ -229,8 +233,10 @@ module decompose_mesh
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/materials_file', &
           status='old', form='formatted',iostat=ier)
     if (ier /= 0) stop 'Error opening materials_file'
+
     allocate(mat(2,nspec),stat=ier)
     if (ier /= 0) stop 'Error allocating array mat'
+
     mat(:,:) = 0
     do ispec = 1, nspec
       ! format: #id_element #flag
@@ -260,7 +266,7 @@ module decompose_mesh
   ! cannot support more than 10 attributes
     count_def_mat = 0
     count_undef_mat = 0
-    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_velocity_file',&
+    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/nummaterial_velocity_file', &
           status='old', form='formatted',iostat=ier)
     if (ier /= 0) stop 'Error opening nummaterial_velocity_file'
 
@@ -339,6 +345,7 @@ module decompose_mesh
     if (ier /= 0) then
       use_poroelastic_file = .false.
       !stop 'Error opening nummaterial_poroelastic_file'
+      print *, '  no poroelastic material file found'
     else
       use_poroelastic_file = .true.
       print *, '  poroelastic material file found'
@@ -435,11 +442,11 @@ module decompose_mesh
        !  undefined materials: have to be listed in decreasing order of material_id (start with -1, -2, etc...)
        !  format:
        !   - for interfaces
-       !    #(6) material_domain_id #(1) material_id(<0) #(2) type_name (="interface")
+       !    #(6) material_domain_id #(1) material_id( < 0) #(2) type_name (="interface")
        !     #(3) material_id_for_material_below #(4) material_id_for_material_above
        !        example:     2 -1 interface 1 2
        !   - for tomography models
-       !    #(6) material_domain_id #(1) material_id(<0) #(2) type_name (="tomography")
+       !    #(6) material_domain_id #(1) material_id( < 0) #(2) type_name (="tomography")
        !     #(3) block_name (="elastic") #(4) file_name
        !        example:     2 -1 tomography elastic tomography_model.xyz
        ! reads lines until it reaches a defined material
@@ -462,12 +469,12 @@ module decompose_mesh
 
        if (trim(undef_mat_prop(2,imat)) == 'interface') then
          ! line will have 5 arguments, e.g.: 2 -1 interface 1 2
-         read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
+         read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat), &
                       undef_mat_prop(3,imat),undef_mat_prop(4,imat)
          undef_mat_prop(5,imat) = "0" ! dummy value
        else if (trim(undef_mat_prop(2,imat)) == 'tomography') then
          ! line will have 6 arguments, e.g.: 2 -1 tomography elastic tomography_model.xyz 1
-         read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat),&
+         read(line,*) undef_mat_prop(6,imat),undef_mat_prop(1,imat),undef_mat_prop(2,imat), &
                       undef_mat_prop(3,imat),undef_mat_prop(4,imat)
          undef_mat_prop(5,imat) = "0" ! dummy value
        else
@@ -566,6 +573,7 @@ module decompose_mesh
 ! even when STACEY_ABSORBING_CONDITIONS is false
     if (ier /= 0) then
       nspec2D_xmin = 0
+      print *, '  no absorbing_surface_file_xmin file found'
     else
       read(98,*) nspec2D_xmin
     endif
@@ -598,6 +606,7 @@ module decompose_mesh
           status='old', form='formatted',iostat=ier)
     if (ier /= 0) then
       nspec2D_xmax = 0
+      print *, '  no absorbing_surface_file_xmax file found'
     else
       read(98,*) nspec2D_xmax
     endif
@@ -617,6 +626,7 @@ module decompose_mesh
           status='old', form='formatted',iostat=ier)
     if (ier /= 0) then
       nspec2D_ymin = 0
+      print *, '  no absorbing_surface_file_ymin file found'
     else
       read(98,*) nspec2D_ymin
     endif
@@ -636,6 +646,7 @@ module decompose_mesh
           status='old', form='formatted',iostat=ier)
     if (ier /= 0) then
       nspec2D_ymax = 0
+      print *, '  no absorbing_surface_file_ymax file found'
     else
       read(98,*) nspec2D_ymax
     endif
@@ -655,6 +666,7 @@ module decompose_mesh
           status='old', form='formatted',iostat=ier)
     if (ier /= 0) then
       nspec2D_bottom = 0
+      print *, '  no absorbing_surface_file_bottom file found'
     else
       read(98,*) nspec2D_bottom
     endif
@@ -670,10 +682,24 @@ module decompose_mesh
     print *, '  nspec2D_bottom = ', nspec2D_bottom
 
   ! reads in free_surface boundary files
+    file_found = .false.
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/free_or_absorbing_surface_file_zmax', &
           status='old', form='formatted',iostat=ier)
     if (ier /= 0) then
+      ! checks with old naming format (version 2.0 format) to be back-compatible
+      open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/free_surface_file', &
+          status='old', form='formatted',iostat=ier)
+      if (ier == 0) then
+        file_found = .true.
+        print *, '  Note: free_surface_file name is deprecated!'
+        print *, '        Please use new name: free_or_absorbing_surface_file_zmax'
+      endif
+    else
+      file_found = .true.
+    endif
+    if (.not. file_found) then
       nspec2D_top = 0
+      print *, '  no free_or_absorbing_surface_file_zmax file found'
     else
       read(98,*) nspec2D_top
     endif
@@ -701,8 +727,12 @@ module decompose_mesh
     if (ier /= 0 .and. PML_CONDITIONS) &
         stop 'Error: PML_CONDITIONS is set to true but file absorbing_cpml_file does not exist'
 ! if the file does not exist or if there are no PML_CONDITIONS then define the number of CPML elements as zero
-    if (ier /= 0 .or. .not. PML_CONDITIONS) then
-       nspec_cpml = 0
+    ! note: in case there is a cpml file, we will read it in and let the user decide when running an actual simulation
+    !       if he wants to use cpml elements or not... otherwise he will need to re-run the whole meshing part when
+    !       switching PML_CONDITIONS
+    if (ier /= 0) then
+      nspec_cpml = 0
+      print *, '  no absorbing_cpml_file file found'
     else
        read(98,*) nspec_cpml
     endif
@@ -739,7 +769,7 @@ module decompose_mesh
     if (ier /= 0) stop 'Error allocating array is_CPML'
     is_CPML(:) = .false.
     do ispec_CPML=1,nspec_cpml
-       if ((CPML_regions(ispec_CPML)>=1) .and. (CPML_regions(ispec_CPML)<=7)) then
+       if ((CPML_regions(ispec_CPML) >= 1) .and. (CPML_regions(ispec_CPML) <= 7)) then
           is_CPML(CPML_to_spec(ispec_CPML)) = .true.
        endif
     enddo
@@ -749,6 +779,7 @@ module decompose_mesh
           status='old', form='formatted',iostat=ier)
     if (ier /= 0) then
       nspec2D_moho = 0
+      print *, '  no moho_surface_file file found'
     else
       read(98,*) nspec2D_moho
     endif
@@ -775,7 +806,7 @@ module decompose_mesh
   ! checks valence of nodes
   !----------------------------------------------------------------------------------------------
 
-  subroutine check_valence
+  subroutine check_valence()
 
     implicit none
 
@@ -793,8 +824,15 @@ module decompose_mesh
 
     print *, 'node valence:  min = ',minval(used_nodes_elmnts(:)),' max = ', maxval(used_nodes_elmnts(:))
 
-    if(minval(used_nodes_elmnts(:)) <= 0) &
+    if (minval(used_nodes_elmnts(:)) <= 0) then
+        if (count(used_nodes_elmnts(:) == 0) > 0.5*nnodes .and. NGNOD == 8) &
+        stop 'Error: found some unused nodes (weird, but not necessarily fatal; your mesher may have created extra nodes&
+        & or your mesh contains HEX27 elements while NGNOD in Par_file is set to 8).'
         stop 'Error: found some unused nodes (weird, but not necessarily fatal; your mesher may have created extra nodes).'
+    endif
+
+
+
 
     ! max number of elements that contain the same node
     nsize = maxval(used_nodes_elmnts(:))
@@ -923,6 +961,9 @@ module decompose_mesh
        stop 'Error : MAIN : Cannot initialize strategy'
     endif
 
+    ! resets SCOTCH random number generator to produce deterministic partitions
+    call scotchfrandomReset()
+
     !call scotchfstratgraphmap (scotchstrat(1), trim(scotch_strategy), ier)
     ! if (ier /= 0) then
     !   stop 'Error : MAIN : Cannot build strategy'
@@ -1004,7 +1045,7 @@ module decompose_mesh
     call build_glob2loc_nodes(nspec, nnodes,nsize, nnodes_elmnts, nodes_elmnts, part, &
          glob2loc_nodes_nparts, glob2loc_nodes_parts, glob2loc_nodes, nparts)
 
-    ! mpi interfaces
+    ! MPI interfaces
     ! acoustic/elastic/poroelastic boundaries will be split into different MPI partitions
     call build_interfaces(nspec, sup_neighbour, part, elmnts, &
                              xadj, adjncy, tab_interfaces, &
@@ -1043,7 +1084,7 @@ module decompose_mesh
 
        ! opens output file
        write(prname, "(i6.6,'_Database')") ipart
-       open(unit=IIN_database,file=outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname,&
+       open(unit=IIN_database,file=outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname, &
             status='unknown', action='write', form='unformatted', iostat = ier)
        if (ier /= 0) then
         print *,'Error file open:',outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname
@@ -1067,7 +1108,7 @@ module decompose_mesh
        ! writes out node coordinate locations
        write(IIN_database) nnodes_loc
 
-       call write_glob2loc_nodes_database(IIN_database, ipart, nnodes_loc, nodes_coords,&
+       call write_glob2loc_nodes_database(IIN_database, ipart, nnodes_loc, nodes_coords, &
                                   glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                                   glob2loc_nodes, nnodes, 2)
 
@@ -1125,7 +1166,7 @@ module decompose_mesh
        ! write fault database
        if (ANY_FAULT) then
           write(prname, "(i6.6,'_Database_fault')") ipart
-          open(unit=16,file=outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname,&
+          open(unit=16,file=outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname, &
                status='replace', action='write', form='unformatted', iostat = ier)
           if (ier /= 0) then
             print *,'Error file open:',outputpath_name(1:len_trim(outputpath_name))//'/proc'//prname
@@ -1138,7 +1179,7 @@ module decompose_mesh
                                     glob2loc_nodes, part)
           !write(16,*) nnodes_loc
           write(16) nnodes_loc
-          call write_glob2loc_nodes_database(16, ipart, nnodes_loc, nodes_coords_open,&
+          call write_glob2loc_nodes_database(16, ipart, nnodes_loc, nodes_coords_open, &
                                   glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                                   glob2loc_nodes, nnodes, 2)
           close(16)

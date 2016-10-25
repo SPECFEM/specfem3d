@@ -39,23 +39,10 @@ $(decompose_mesh_OBJECTS): S = ${S_TOP}/src/decompose_mesh
 decompose_mesh_TARGETS = \
 	$E/xscotch \
 	$E/xdecompose_mesh \
-	$E/xdecompose_mesh_mpi \
 	$(EMPTY_MACRO)
 
 decompose_mesh_OBJECTS = \
-	$O/part_decompose_mesh.dec.o \
-	$O/fault_scotch.dec.o \
-	$O/decompose_mesh.dec.o \
-	$O/program_decompose_mesh.dec.o \
-	$(EMPTY_MACRO)
-
-decompose_mesh_mpi_OBJECTS = \
-	$O/fault_scotch.dec.o \
-	$O/module_qsort.dec.o \
-	$O/module_database.dec.o \
-	$O/module_mesh.dec.o \
-	$O/module_partition.dec.o \
-	$O/program_decompose_mesh_mpi.mpidec.o \
+	$(xdecompose_mesh_OBJECTS) \
 	$(EMPTY_MACRO)
 
 decompose_mesh_MODULES = \
@@ -84,28 +71,29 @@ decompose_mesh_SHARED_OBJECTS = \
 ####
 
 dec: $(decompose_mesh_TARGETS)
-mpidec : xdecompose_mesh_mpi
 
 decompose_mesh: xdecompose_mesh
 xdecompose_mesh: $E/xdecompose_mesh
 
-scotch: xscotch
-xscotch: $E/xscotch
-
 decompose_mesh_mpi: xdecompose_mesh_mpi
 xdecompose_mesh_mpi: $E/xdecompose_mesh_mpi
 
+scotch: xscotch
+xscotch: $E/xscotch
+
 ${SCOTCH_DIR}/include/scotchf.h: xscotch
 
-# rules for the pure Fortran version
-$E/xdecompose_mesh: ${SCOTCH_DIR}/include/scotchf.h $(decompose_mesh_SHARED_OBJECTS) $(decompose_mesh_OBJECTS) $(COND_MPI_OBJECTS)
-	@echo ""
-	@echo "building xdecompose_mesh"
-	@echo ""
-	${FCLINK} -o  $E/xdecompose_mesh $(decompose_mesh_SHARED_OBJECTS) $(decompose_mesh_OBJECTS) $(SCOTCH_LIBS) $(COND_MPI_OBJECTS)
-	@echo ""
+#######################################
 
-# scotch
+####
+#### rules for each program follow
+####
+
+#######################################
+
+##
+## scotch
+##
 $E/xscotch:
 ifeq (${SCOTCH_BUNDLED},1)
 	@echo "Using bundled Scotch in directory: ${SCOTCH_DIR}/src"
@@ -114,13 +102,56 @@ else
 	@echo "Not using bundled Scotch"
 endif
 
+
+##
+## xdecompose_mesh
+##
+xdecompose_mesh_OBJECTS = \
+	$O/part_decompose_mesh.dec.o \
+	$O/fault_scotch.dec.o \
+	$O/decompose_mesh.dec.o \
+	$O/program_decompose_mesh.dec.o \
+	$(EMPTY_MACRO)
+
+# rules for the pure Fortran version
+$E/xdecompose_mesh: ${SCOTCH_DIR}/include/scotchf.h $(decompose_mesh_SHARED_OBJECTS) $(xdecompose_mesh_OBJECTS) $(COND_MPI_OBJECTS)
+	@echo ""
+	@echo "building xdecompose_mesh"
+	@echo ""
+	${FCLINK} -o  $E/xdecompose_mesh $(decompose_mesh_SHARED_OBJECTS) $(xdecompose_mesh_OBJECTS) $(SCOTCH_LIBS) $(COND_MPI_OBJECTS)
+	@echo ""
+
+
+##
+## xdecompose_mesh_mpi
+##
+xdecompose_mesh_mpi_OBJECTS = \
+	$O/fault_scotch.dec.o \
+	$O/module_qsort.dec.o \
+	$O/module_database.dec.o \
+	$O/module_mesh.dec.o \
+	$O/module_partition.dec.o \
+	$O/program_decompose_mesh_mpi.mpidec.o \
+	$(EMPTY_MACRO)
+
+# conditional target, needs mpi
+ifeq ($(MPI),yes)
+decompose_mesh_TARGETS += \
+	$E/xdecompose_mesh_mpi \
+	$(EMPTY_MACRO)
+decompose_mesh_OBJECTS += \
+	$(xdecompose_mesh_mpi_OBJECTS) \
+	$(EMPTY_MACRO)
+endif
+
 # parallel version of decompose_mesh
-$E/xdecompose_mesh_mpi: $(decompose_mesh_SHARED_OBJECTS) $(decompose_mesh_mpi_OBJECTS) $(COND_MPI_OBJECTS)
+$E/xdecompose_mesh_mpi: $(decompose_mesh_SHARED_OBJECTS) $(xdecompose_mesh_mpi_OBJECTS) $(COND_MPI_OBJECTS)
 	@echo ""
 	@echo "building xdecompose_mesh_mpi"
 	@echo ""
-	${FCLINK} -o  $E/xdecompose_mesh_mpi $(decompose_mesh_SHARED_OBJECTS) $(decompose_mesh_mpi_OBJECTS) $(COND_MPI_OBJECTS)
+	${FCLINK} -o  $E/xdecompose_mesh_mpi $(decompose_mesh_SHARED_OBJECTS) $(xdecompose_mesh_mpi_OBJECTS) $(COND_MPI_OBJECTS)
 	@echo ""
+
 
 #######################################
 
@@ -129,8 +160,10 @@ $E/xdecompose_mesh_mpi: $(decompose_mesh_SHARED_OBJECTS) $(decompose_mesh_mpi_OB
 ###
 
 $O/decompose_mesh.dec.o: $O/part_decompose_mesh.dec.o $O/fault_scotch.dec.o ${SCOTCH_DIR}/include/scotchf.h $O/shared_par.shared_module.o $(COND_MPI_OBJECTS)
+
 $O/program_decompose_mesh.dec.o: $O/decompose_mesh.dec.o $O/shared_par.shared_module.o $(COND_MPI_OBJECTS)
 $O/program_decompose_mesh_mpi.mpidec.o: $O/shared_par.shared_module.o $O/module_mesh.dec.o $O/module_database.dec.o $O/module_partition.dec.o $(COND_MPI_OBJECTS)
+
 $O/module_database.dec.o : $O/shared_par.shared_module.o
 $O/module_partition.dec.o : $O/shared_par.shared_module.o $O/fault_scotch.dec.o $O/module_qsort.dec.o
 $O/module_mesh.dec.o : $O/shared_par.shared_module.o $O/fault_scotch.dec.o

@@ -84,7 +84,7 @@
   filename = trim(DATA_PATH)//trim(adjustl(procname))//"_dx_SU"
   open(11,file=trim(filename),access='direct',status='old', &
         recl=240,iostat=ios)
-  if( ios /= 0 ) then
+  if ( ios /= 0 ) then
     print *,'error opening file: ',trim(filename)
     stop 'error opening data file'
   endif
@@ -124,7 +124,7 @@
       filename = trim(DATA_PATH)//trim(adjustl(procname))//"_d"//compstr(icomp)//"_SU"
       open(11,file=trim(filename),access='direct',status='old', &
             recl=240+4*NSTEP,iostat=ios)
-      if( ios /= 0 ) then
+      if ( ios /= 0 ) then
         print *,'error opening file: ',trim(filename)
         stop 'error opening input data file '
       endif
@@ -133,7 +133,7 @@
       filename = trim(SYN_PATH)//trim(adjustl(procname))//"_d"//compstr(icomp)//"_SU"
       open(22,file=trim(filename),access='direct',status='old', &
             recl=240+4*NSTEP,iostat=ios)
-      if( ios /= 0 ) then
+      if ( ios /= 0 ) then
         print *,'error opening file: ',trim(filename)
         stop 'error opening input file '
       endif
@@ -142,14 +142,14 @@
       filename = trim(ADJ_PATH)//trim(adjustl(procname))//"_d"//compstr(icomp)//"_SU"//".adj"
       open(33,file=trim(filename),access='direct',status='unknown', &
             recl=240+4*NSTEP,iostat = ios)
-      if( ios /= 0 ) then
+      if ( ios /= 0 ) then
         print *,'error opening file: ',trim(filename)
         stop 'error opening output file '
       endif
 
       ! loops over all records
       irec=1
-      do while(ios==0)
+      do while(ios == 0)
         ! reads in data
         read(11,rec=irec,iostat=ios) r4head,dat
         if (ios /= 0) cycle

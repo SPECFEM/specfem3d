@@ -28,7 +28,7 @@ if nargin<5, Dmin=1e-3; end
 fault=1;
 
 % read slip
-dat = FSEM3D_snapshot(isnap,data_dir,fault);
+dat = FSEM3D_snapshot(isnap,data_dir,fault,'single');
 Dx=dat.Dx;
 Dz=dat.Dz;
 clear dat

@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
 ! define sets of colors that contain disconnected elements for the CUDA solver.
 ! also split the elements into two subsets: inner and outer elements, in order
 ! to be able to compute the outer elements first in the solver and then
@@ -178,8 +177,8 @@
   if (BALANCE_COLORS_SIMPLE_ALGO .and. USE_DROUX_OPTIMIZATION) then
     if (myrank == 0) then
       print *,'noticed a problem with mesh coloring options: '
-      print *,'  cannot set both USE_DROUX_OPTIMAL_ALGO and BALANCE_COLORS_SIMPLE_ALGO'
-      print *,'  -> this run will use only BALANCE_COLORS_SIMPLE_ALGO'
+      print *,'  cannot set both USE_DROUX_OPTIMAL_ALGO and BALANCE_COLORS_SIMPLE_ALGO,'
+      print *,'  thus this run will use only BALANCE_COLORS_SIMPLE_ALGO'
       print *,'please check parameter settings in constants.h...'
     endif
     try_Droux_coloring = .false.

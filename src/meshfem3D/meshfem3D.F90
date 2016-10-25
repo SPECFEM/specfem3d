@@ -187,8 +187,7 @@
 !  - Y axis is East
 !  - Z axis is up
 !
-! To report bugs or suggest improvements to the code, please send an email
-! to Jeroen Tromp <jtromp AT princeton.edu> and/or use our online
+! To report bugs or suggest improvements to the code, please use our online
 ! bug tracking system at http://www.geodynamics.org/roundup .
 !
 ! Evolution of the code:
@@ -318,7 +317,7 @@
                           NSPEC_AB,NSPEC2D_A_XI,NSPEC2D_B_XI, &
                           NSPEC2D_A_ETA,NSPEC2D_B_ETA, &
                           NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-                          NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB,&
+                          NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB, &
                           USE_REGULAR_MESH,NDOUBLINGS,ner_doublings)
 
   ! check that the code is running with the requested nb of processes
@@ -479,7 +478,7 @@
     else
       write(IMAIN,*) 'using UTM projection in region ',UTM_PROJECTION_ZONE
     endif
-     if(PML_CONDITIONS) then
+     if (PML_CONDITIONS) then
        write(IMAIN,*)
        write(IMAIN,*) 'PML thickness in X direction = ',THICKNESS_OF_X_PML,'m'
        write(IMAIN,*) 'PML thickness in Y direction = ',THICKNESS_OF_Y_PML,'m'

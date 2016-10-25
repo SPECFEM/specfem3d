@@ -76,7 +76,7 @@
       print *, '   - slice_list:    file containing slice/proc ids '
       print *, '   - filename:    looks for filename.bin must be array of (NGLLX,NGLLY,NGLLZ,nspec)'
       print *, '   - input_dir:    includes proc***_external_mesh.bin and proc****filename.bin '
-      print *, '   - output_dir:    output mesh files go to here '
+      print *, '   - output_dir:    output mesh files goto here '
       print *
       stop ' Reenter command line options'
     endif
@@ -122,19 +122,19 @@
 
     ! gets number of elements and global points for this partition
     write(prname_lp,'(a,i6.6,a)') trim(indir)//'/proc',iproc,'_'
-    open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin',&
+    open(unit=27,file=prname_lp(1:len_trim(prname_lp))//'external_mesh.bin', &
           status='old',action='read',form='unformatted')
     read(27) NSPEC_AB
     read(27) NGLOB_AB
 
     ! ibool file
     allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array ibool'
+    if ( ier /= 0 ) stop 'error allocating array ibool'
     read(27) ibool
 
     ! global point arrays
     allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array xstore etc.'
+    if ( ier /= 0 ) stop 'error allocating array xstore etc.'
     read(27) xstore
     read(27) ystore
     read(27) zstore
@@ -145,14 +145,14 @@
     ! data file
     write(prname,'(a,i6.6,a)') trim(indir)//'proc',iproc,'_'
     local_data_file = trim(prname) // trim(filename) // '.bin'
-    open(unit = 28,file = trim(local_data_file),status='old',&
+    open(unit = 28,file = trim(local_data_file),status='old', &
           action='read', iostat = ios,form ='unformatted')
     if (ios /= 0) then
       print *,'Error opening ',trim(local_data_file)
       stop
     endif
     allocate(data(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
-    if( ier /= 0 ) stop 'error allocating array data'
+    if ( ier /= 0 ) stop 'error allocating array data'
     read(28) data
     close(28)
 
@@ -188,7 +188,7 @@
             xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
             gll_data,prname_file)
 
-! external mesh routine for saving vtk files for custom_real values on all gll points
+! external mesh routine for saving vtk files for CUSTOM_REAL values on all GLL points
 
   implicit none
 
@@ -200,7 +200,7 @@
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
   real(kind=CUSTOM_REAL), dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
 
-! gll data values array
+! GLL data values array
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: gll_data
 
 ! file name
@@ -250,7 +250,7 @@
   ! note: indices for vtk start at 0
   write(IOVTK,'(a,i12,i12)') "CELLS ",nspec,nspec*9
   do ispec=1,nspec
-    write(IOVTK,'(9i12)') 8,(ispec-1)*8,(ispec-1)*8+1,(ispec-1)*8+2,(ispec-1)*8+3,&
+    write(IOVTK,'(9i12)') 8,(ispec-1)*8,(ispec-1)*8+1,(ispec-1)*8+2,(ispec-1)*8+3, &
           (ispec-1)*8+4,(ispec-1)*8+5,(ispec-1)*8+6,(ispec-1)*8+7
   enddo
   write(IOVTK,*) ""

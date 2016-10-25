@@ -29,9 +29,9 @@
 
   subroutine compute_stacey_acoustic(NSPEC_AB,NGLOB_AB, &
                             potential_dot_dot_acoustic,potential_dot_acoustic, &
-                            ibool,ispec_is_inner,phase_is_inner, &
+                            ibool,iphase, &
                             abs_boundary_jacobian2Dw,abs_boundary_ijk,abs_boundary_ispec, &
-                            num_abs_boundary_faces,rhostore,kappastore,ispec_is_acoustic,&
+                            num_abs_boundary_faces,rhostore,kappastore,ispec_is_acoustic, &
                             SIMULATION_TYPE,SAVE_FORWARD,it,b_reclen_potential, &
                             b_absorb_potential,b_num_abs_boundary_faces)
 
@@ -42,13 +42,12 @@
   integer :: NSPEC_AB,NGLOB_AB
 
 ! potentials
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic,&
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic, &
                                                  potential_dot_acoustic
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
 
 ! communication overlap
-  logical, dimension(NSPEC_AB) :: ispec_is_inner
-  logical :: phase_is_inner
+  integer :: iphase
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rhostore,kappastore
   logical, dimension(NSPEC_AB) :: ispec_is_acoustic
@@ -70,6 +69,9 @@
   integer :: ispec,iglob,i,j,k,iface,igll
   !integer:: reclen1,reclen2
 
+  ! only add these contributions in first pass
+  if (iphase /= 1) return
+
   ! checks if anything to do
   if (num_abs_boundary_faces == 0) return
 
@@ -78,48 +80,42 @@
 
     ispec = abs_boundary_ispec(iface)
 
-    if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
+    if (ispec_is_acoustic(ispec)) then
 
-      if (ispec_is_acoustic(ispec)) then
+      ! reference GLL points on boundary face
+      do igll = 1,NGLLSQUARE
+        ! gets local indices for GLL point
+        i = abs_boundary_ijk(1,igll,iface)
+        j = abs_boundary_ijk(2,igll,iface)
+        k = abs_boundary_ijk(3,igll,iface)
 
-        ! reference gll points on boundary face
-        do igll = 1,NGLLSQUARE
+        ! gets global index
+        iglob=ibool(i,j,k,ispec)
 
-          ! gets local indices for GLL point
-          i = abs_boundary_ijk(1,igll,iface)
-          j = abs_boundary_ijk(2,igll,iface)
-          k = abs_boundary_ijk(3,igll,iface)
+        ! determines bulk sound speed
+        rhol = rhostore(i,j,k,ispec)
+        cpl = sqrt( kappastore(i,j,k,ispec) / rhol )
 
-          ! gets global index
-          iglob=ibool(i,j,k,ispec)
+        ! gets associated, weighted jacobian
+        jacobianw = abs_boundary_jacobian2Dw(igll,iface)
 
-          ! determines bulk sound speed
-          rhol = rhostore(i,j,k,ispec)
-          cpl = sqrt( kappastore(i,j,k,ispec) / rhol )
+        ! Sommerfeld condition
+        absorbl = potential_dot_acoustic(iglob) * jacobianw / cpl / rhol
+        potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) - absorbl
 
-          ! gets associated, weighted jacobian
-          jacobianw = abs_boundary_jacobian2Dw(igll,iface)
+        ! adjoint simulations
+        if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
+          b_absorb_potential(igll,iface) = absorbl
+        endif !adjoint
 
-          ! Sommerfeld condition
-          absorbl = potential_dot_acoustic(iglob) * jacobianw / cpl / rhol
-          potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) - absorbl
-
-          ! adjoint simulations
-          if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
-            b_absorb_potential(igll,iface) = absorbl
-          endif !adjoint
-
-         enddo
-      endif ! ispec_is_acoustic
-    endif ! ispec_is_inner
+       enddo
+    endif ! ispec_is_acoustic
   enddo ! num_abs_boundary_faces
 
   ! adjoint simulations: stores absorbed wavefield part
   if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
-    ! writes out absorbing boundary value only when second phase is running
-    if (phase_is_inner .eqv. .true.) then
-      call write_abs(IOABS_AC,b_absorb_potential,b_reclen_potential,it)
-    endif
+    ! writes out absorbing boundary value
+    call write_abs(IOABS_AC,b_absorb_potential,b_reclen_potential,it)
   endif
 
   end subroutine compute_stacey_acoustic
@@ -128,9 +124,9 @@
 ! for acoustic solver for back propagation wave field
 
   subroutine compute_stacey_acoustic_backward(NSPEC_AB, &
-                            ibool,ispec_is_inner,phase_is_inner, &
+                            ibool,iphase, &
                             abs_boundary_ijk,abs_boundary_ispec, &
-                            num_abs_boundary_faces,ispec_is_acoustic,&
+                            num_abs_boundary_faces,ispec_is_acoustic, &
                             SIMULATION_TYPE,NSTEP,it,NGLOB_ADJOINT, &
                             b_potential_dot_dot_acoustic,b_reclen_potential, &
                             b_absorb_potential,b_num_abs_boundary_faces)
@@ -145,8 +141,7 @@
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
 
 ! communication overlap
-  logical, dimension(NSPEC_AB) :: ispec_is_inner
-  logical :: phase_is_inner
+  integer :: iphase
 
   logical, dimension(NSPEC_AB) :: ispec_is_acoustic
 
@@ -166,16 +161,17 @@
   integer :: ispec,iglob,i,j,k,iface,igll
   !integer:: reclen1,reclen2
 
+  ! only add these contributions in first pass
+  if (iphase /= 1) return
+
   ! checks if anything to do
   if (num_abs_boundary_faces == 0) return
 
   ! adjoint simulations:
   if (SIMULATION_TYPE == 3) then
-    ! reads in absorbing boundary array when first phase is running
-    if (phase_is_inner .eqv. .false.) then
-      ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
-      call read_abs(IOABS_AC,b_absorb_potential,b_reclen_potential,NSTEP-it+1)
-    endif
+    ! reads in absorbing boundary array
+    ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
+    call read_abs(IOABS_AC,b_absorb_potential,b_reclen_potential,NSTEP-it+1)
   endif !adjoint
 
   ! absorbs absorbing-boundary surface using Sommerfeld condition (vanishing field in the outer-space)
@@ -183,30 +179,26 @@
 
     ispec = abs_boundary_ispec(iface)
 
-    if (ispec_is_inner(ispec) .eqv. phase_is_inner) then
+    if (ispec_is_acoustic(ispec)) then
 
-      if (ispec_is_acoustic(ispec)) then
+      ! reference GLL points on boundary face
+      do igll = 1,NGLLSQUARE
+        ! gets local indices for GLL point
+        i = abs_boundary_ijk(1,igll,iface)
+        j = abs_boundary_ijk(2,igll,iface)
+        k = abs_boundary_ijk(3,igll,iface)
 
-        ! reference gll points on boundary face
-        do igll = 1,NGLLSQUARE
+        ! gets global index
+        iglob=ibool(i,j,k,ispec)
 
-          ! gets local indices for GLL point
-          i = abs_boundary_ijk(1,igll,iface)
-          j = abs_boundary_ijk(2,igll,iface)
-          k = abs_boundary_ijk(3,igll,iface)
+        ! adjoint simulations
+        if (SIMULATION_TYPE == 3) then
+          b_potential_dot_dot_acoustic(iglob) = b_potential_dot_dot_acoustic(iglob) &
+                                              - b_absorb_potential(igll,iface)
+        endif !adjoint
 
-          ! gets global index
-          iglob=ibool(i,j,k,ispec)
-
-          ! adjoint simulations
-          if (SIMULATION_TYPE == 3) then
-            b_potential_dot_dot_acoustic(iglob) = b_potential_dot_dot_acoustic(iglob) &
-                                                - b_absorb_potential(igll,iface)
-          endif !adjoint
-
-        enddo
-      endif ! ispec_is_acoustic
-    endif ! ispec_is_inner
+      enddo
+    endif ! ispec_is_acoustic
   enddo ! num_abs_boundary_faces
 
   end subroutine compute_stacey_acoustic_backward
@@ -214,7 +206,7 @@
 !=====================================================================
 ! for acoustic solver on GPU
 
-  subroutine compute_stacey_acoustic_GPU(phase_is_inner,num_abs_boundary_faces,&
+  subroutine compute_stacey_acoustic_GPU(iphase,num_abs_boundary_faces, &
                             SIMULATION_TYPE,SAVE_FORWARD,NSTEP,it, &
                             b_reclen_potential,b_absorb_potential, &
                             b_num_abs_boundary_faces,Mesh_pointer)
@@ -226,7 +218,7 @@
 ! potentials
 
 ! communication overlap
-  logical :: phase_is_inner
+  integer :: iphase
 
 ! absorbing boundary surface
   integer :: num_abs_boundary_faces
@@ -241,27 +233,26 @@
   ! GPU_MODE variables
   integer(kind=8) :: Mesh_pointer
 
+  ! only add these contributions in first pass
+  if (iphase /= 1) return
+
   ! checks if anything to do
   if (num_abs_boundary_faces == 0) return
 
   ! adjoint simulations:
   if (SIMULATION_TYPE == 3) then
-    ! reads in absorbing boundary array when first phase is running
-    if (phase_is_inner .eqv. .false.) then
-      ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
-      call read_abs(IOABS_AC,b_absorb_potential,b_reclen_potential,NSTEP-it+1)
-    endif
+    ! reads in absorbing boundary array (when first phase is running)
+    ! note: the index NSTEP-it+1 is valid if b_displ is read in after the Newmark scheme
+    call read_abs(IOABS_AC,b_absorb_potential,b_reclen_potential,NSTEP-it+1)
   endif !adjoint
 
   ! absorbs absorbing-boundary surface using Sommerfeld condition (vanishing field in the outer-space)
-  call compute_stacey_acoustic_cuda(Mesh_pointer, phase_is_inner,b_absorb_potential)
+  call compute_stacey_acoustic_cuda(Mesh_pointer,iphase,b_absorb_potential)
 
   ! adjoint simulations: stores absorbed wavefield part
   if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
-    ! writes out absorbing boundary value only when second phase is running
-    if (phase_is_inner .eqv. .true.) then
-      call write_abs(IOABS_AC,b_absorb_potential,b_reclen_potential,it)
-    endif
+    ! writes out absorbing boundary value
+    call write_abs(IOABS_AC,b_absorb_potential,b_reclen_potential,it)
   endif
 
   end subroutine compute_stacey_acoustic_GPU

@@ -1,4 +1,4 @@
-!=====================================================================
+!========================================================================
 !
 !               S p e c f e m 3 D  V e r s i o n  3 . 0
 !               ---------------------------------------
@@ -16,14 +16,16 @@
 !
 ! This program is distributed in the hope that it will be useful,
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
-! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 ! GNU General Public License for more details.
 !
 ! You should have received a copy of the GNU General Public License along
 ! with this program; if not, write to the Free Software Foundation, Inc.,
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
-!=====================================================================
+! The full text of the license is available in file "LICENSE".
+!
+!========================================================================
 
 !=======================================================================
 !
@@ -32,6 +34,8 @@
 !  Department of Mechanical Engineering
 !
 !=======================================================================
+
+! note: this version uses zwgljd() with double precision arguments
 
   double precision function endw1(n,alpha,beta)
 
@@ -150,16 +154,16 @@
   gammaf = one
 
   if (x == -half) gammaf = -two*dsqrt(pi)
-  if (x ==  half) gammaf =  dsqrt(pi)
-  if (x ==  one) gammaf =  one
-  if (x ==  two) gammaf =  one
-  if (x ==  1.5d0) gammaf =  dsqrt(pi)/2.d0
-  if (x ==  2.5d0) gammaf =  1.5d0*dsqrt(pi)/2.d0
-  if (x ==  3.5d0) gammaf =  2.5d0*1.5d0*dsqrt(pi)/2.d0
-  if (x ==  3.d0 ) gammaf =  2.d0
-  if (x ==  4.d0 ) gammaf = 6.d0
-  if (x ==  5.d0 ) gammaf = 24.d0
-  if (x ==  6.d0 ) gammaf = 120.d0
+  if (x == half) gammaf =  dsqrt(pi)
+  if (x == one) gammaf =  one
+  if (x == two) gammaf =  one
+  if (x == 1.5d0) gammaf =  dsqrt(pi)/2.d0
+  if (x == 2.5d0) gammaf =  1.5d0*dsqrt(pi)/2.d0
+  if (x == 3.5d0) gammaf =  2.5d0*1.5d0*dsqrt(pi)/2.d0
+  if (x == 3.d0 ) gammaf =  2.d0
+  if (x == 4.d0 ) gammaf = 6.d0
+  if (x == 5.d0 ) gammaf = 24.d0
+  if (x == 6.d0 ) gammaf = 120.d0
 
   end function gammaf
 
@@ -329,7 +333,7 @@
 !------------------------------------------------------------------------
 !
 
-  double precision FUNCTION PNDLEG (Z,N)
+  double precision function PNDLEG (Z,N)
 
 !------------------------------------------------------------------------
 !
@@ -342,7 +346,7 @@
   double precision z
   integer n
 
-  double precision P1,P2,P1D,P2D,P3D,FK,P3
+  double precision P1,P2,P1D,P2D,P3D,DBLE_K,P3
   integer k
 
   P1   = 1.d0
@@ -352,9 +356,9 @@
   P3D  = 1.d0
 
   do K = 1, N-1
-    FK  = dble(K)
-    P3  = ((2.d0*FK+1.d0)*Z*P2 - FK*P1)/(FK+1.d0)
-    P3D = ((2.d0*FK+1.d0)*P2 + (2.d0*FK+1.d0)*Z*P2D - FK*P1D) / (FK+1.d0)
+    DBLE_K  = dble(K)
+    P3  = ((2.d0*DBLE_K+1.d0)*Z*P2 - DBLE_K*P1)/(DBLE_K+1.d0)
+    P3D = ((2.d0*DBLE_K+1.d0)*P2 + (2.d0*DBLE_K+1.d0)*Z*P2D - DBLE_K*P1D) / (DBLE_K+1.d0)
     P1  = P2
     P2  = P3
     P1D = P2D
@@ -369,7 +373,7 @@
 !------------------------------------------------------------------------
 !
 
-  double precision FUNCTION PNLEG (Z,N)
+  double precision function PNLEG (Z,N)
 
 !------------------------------------------------------------------------
 !
@@ -382,7 +386,7 @@
   double precision z
   integer n
 
-  double precision P1,P2,P3,FK
+  double precision P1,P2,P3,DBLE_K
   integer k
 
   P1   = 1.d0
@@ -390,8 +394,8 @@
   P3   = P2
 
   do K = 1, N-1
-    FK  = dble(K)
-    P3  = ((2.d0*FK+1.d0)*Z*P2 - FK*P1)/(FK+1.d0)
+    DBLE_K  = dble(K)
+    P3  = ((2.d0*DBLE_K+1.d0)*Z*P2 - DBLE_K*P1)/(DBLE_K+1.d0)
     P1  = P2
     P2  = P3
   enddo
@@ -465,7 +469,7 @@
   double precision z(np),w(np)
   double precision alpha,beta
 
-  ! local paraeters
+  ! local parameters
   integer n,np1,np2,i
   double precision p,pd,pm1,pdm1,pm2,pdm2
   double precision apb,dnp1,dnp2,fac1,fac2,fac3,fnorm,rcoef
@@ -530,7 +534,7 @@
 
   implicit none
 
-  double precision, parameter :: zero=0.d0,one=1.d0,two=2.d0
+  double precision, parameter :: zero=0.d0,one=1.d0,two=2.d0,tol_zero=1.d-30
 
   integer np
   double precision alpha,beta
@@ -569,8 +573,11 @@
   z(1)  = - one
   z(np) =  one
 
-! if number of points is odd, the middle abscissa is exactly zero
-  if (mod(np,2) /= 0) z((np-1)/2+1) = zero
+! note: Jacobi polynomials with (alpha,beta) equal to zero become Legendre polynomials.
+!       for Legendre polynomials, if number of points is odd, the middle abscissa is exactly zero
+  if (abs(alpha) < tol_zero .and. abs(beta) < tol_zero) then
+    if (mod(np,2) /= 0) z((np-1)/2+1) = zero
+  endif
 
 ! weights
   do i=2,np-1
@@ -584,4 +591,62 @@
   w(np) = endw2(n,alpha,beta)/(two*pd)
 
   end subroutine zwgljd
+
+
+!
+!------------------------------------------------------------------------
+!
+
+  double precision function pnglj(z,n)
+
+!------------------------------------------------------------------------
+!
+!     Compute the value of the Nth order polynomial of the
+!     Gauss-Lobatto-Jacobi (0,1) at Z. from Legendre polynomials.
+!
+!------------------------------------------------------------------------
+
+  implicit none
+  include "constants.h"
+
+  double precision z
+  integer n
+  double precision, external :: pnleg
+
+  if (abs(z+1.d0) > TINYVAL) then  ! if (z /= -1.d0)
+    pnglj = (pnleg(z,n)+pnleg(z,n+1))/(ONE+z)
+  else
+    pnglj = (dble(n)+ONE)*(-1)**n
+  endif
+
+  end function pnglj
+
+!
+!------------------------------------------------------------------------
+!
+
+  double precision function pndglj(z,n)
+
+!------------------------------------------------------------------------
+!
+!     Compute the value of the derivative of Nth order polynomial of the
+!     Gauss-Lobatto-Jacobi (0,1) at Z. from Legendre polynomials.
+!
+!------------------------------------------------------------------------
+
+  implicit none
+  include "constants.h"
+
+  double precision z
+  integer n
+  double precision, external :: pnleg, pndleg
+
+  if (abs(z+1.d0) > TINYVAL) then  ! if (z /= -1.d0)
+    pndglj = (pndleg(z,n)+pndleg(z,n+1))/(ONE+z) - (pnleg(z,n)+pnleg(z,n+1))/((ONE+z)**2)
+  else
+    pndglj = pnleg(-1.d0,n)+pnleg(-1.d0,n+1)
+  endif
+
+  end function pndglj
+
 

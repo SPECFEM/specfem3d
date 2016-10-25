@@ -43,20 +43,20 @@
   call get_value_string(CMTSOLUTION, 'solver.CMTSOLUTION', 'DATA/CMTSOLUTION')
 
   open(unit=1,file=CMTSOLUTION,iostat=ios,status='old',action='read')
-  if(ios /= 0) stop 'error opening CMTSOLUTION file'
+  if (ios /= 0) stop 'error opening CMTSOLUTION file'
   icounter = 0
   do while(ios == 0)
     read(1,"(a)",iostat=ios) dummystring
-    if(ios == 0) icounter = icounter + 1
+    if (ios == 0) icounter = icounter + 1
   enddo
   close(1)
 
-  if(mod(icounter,NLINES_PER_CMTSOLUTION_SOURCE) /= 0) &
+  if (mod(icounter,NLINES_PER_CMTSOLUTION_SOURCE) /= 0) &
     stop 'total number of lines in CMTSOLUTION file should be a multiple of NLINES_PER_CMTSOLUTION_SOURCE'
 
   NSOURCES = icounter / NLINES_PER_CMTSOLUTION_SOURCE
 
-  if(NSOURCES < 1) stop 'need at least one source in CMTSOLUTION file'
+  if (NSOURCES < 1) stop 'need at least one source in CMTSOLUTION file'
 
   end subroutine count_number_of_sources
 

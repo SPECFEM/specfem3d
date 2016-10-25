@@ -10,7 +10,7 @@ we suggest to start with:
 
 - homogeneous_halfspace/: a model with a single constant material description.
 
-  Use the script "process.sh" in that directory to run the simulation,
+  Use the script "run_this_example.sh" in that directory to run the simulation,
   or execute the step-by-step instructions in the README from that directory.
 
 More complex examples are provided in:

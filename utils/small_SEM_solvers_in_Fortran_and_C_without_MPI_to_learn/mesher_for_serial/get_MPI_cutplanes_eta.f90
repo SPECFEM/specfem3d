@@ -110,14 +110,14 @@
   ispecc1=0
 
   do ispec=1,nspec
-    if(iMPIcut_eta(1,ispec)) then
+    if (iMPIcut_eta(1,ispec)) then
       ispecc1=ispecc1+1
       ! loop on all the points in that 2-D element, including edges
       iy = 1
       do ix=1,NGLLX
           do iz=1,NGLLZ
             ! select point, if not already selected
-            if(.not. mask_ibool(ibool(ix,iy,iz,ispec))) then
+            if (.not. mask_ibool(ibool(ix,iy,iz,ispec))) then
                 mask_ibool(ibool(ix,iy,iz,ispec)) = .true.
                 npoin2D_eta = npoin2D_eta + 1
                 if (USE_MESH_COLORING_INNER_OUTER) then
@@ -153,7 +153,7 @@
   close(10)
 
 ! compare number of surface elements detected to analytical value
-  if(ispecc1 /= nspec2Dtheor) call exit_MPI(myrank,'error MPI cut-planes detection in eta=left')
+  if (ispecc1 /= nspec2Dtheor) call exit_MPI(myrank,'error MPI cut-planes detection in eta=left')
 
 !
 ! determine if the element falls on the right MPI cut plane
@@ -173,14 +173,14 @@
   ispecc2=0
 
   do ispec=1,nspec
-    if(iMPIcut_eta(2,ispec)) then
+    if (iMPIcut_eta(2,ispec)) then
       ispecc2=ispecc2+1
       ! loop on all the points in that 2-D element, including edges
       iy = NGLLY
       do ix=1,NGLLX
           do iz=1,NGLLZ
           ! select point, if not already selected
-          if(.not. mask_ibool(ibool(ix,iy,iz,ispec))) then
+          if (.not. mask_ibool(ibool(ix,iy,iz,ispec))) then
               mask_ibool(ibool(ix,iy,iz,ispec)) = .true.
               npoin2D_eta = npoin2D_eta + 1
               if (USE_MESH_COLORING_INNER_OUTER) then
@@ -216,7 +216,7 @@
   close(10)
 
 ! compare number of surface elements detected to analytical value
-  if(ispecc2 /= nspec2Dtheor) call exit_MPI(myrank,'error MPI cut-planes detection in eta=right')
+  if (ispecc2 /= nspec2Dtheor) call exit_MPI(myrank,'error MPI cut-planes detection in eta=right')
 
   if (USE_MESH_COLORING_INNER_OUTER) then
     deallocate(ibool_selected)

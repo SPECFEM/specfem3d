@@ -47,7 +47,7 @@
   write(procname,"('/proc',i6.6,'_reg',i1,'_')") iproc,iregion_code
 
 ! on a machine with local disks, path on frontend can be different from local paths
-  if(.not. LOCAL_PATH_IS_ALSO_GLOBAL) then
+  if (.not. LOCAL_PATH_IS_ALSO_GLOBAL) then
 
 ! allocate array for active processors
     allocate(num_active_proc(0:NPROCTOT-1))

@@ -122,7 +122,7 @@ program wave2d_cmap
 !!$  ! regular mesh or SPECFEM mesh
 !!$  i_regular = 0
 !!$
-!!$  if(i_regular==1) then
+!!$  if (i_regular==1) then
 !!$
 !!$     ! enter new uniform mesh
 !!$     dx = 40.0d+03
@@ -144,7 +144,7 @@ program wave2d_cmap
 !!$  allocate(c_glob9(ntemp),c_glob_syn9(ntemp),c_glob_dat9(ntemp))
 !!$  allocate(da9(ntemp))
 !!$
-!!$  if(i_regular==1) then
+!!$  if (i_regular==1) then
 !!$
 !!$     k = 0
 !!$     do xtemp = -fac,LENGTH+fac,dx
@@ -226,14 +226,14 @@ program wave2d_cmap
   ! Gaussian half-width controlling the smoothing (m)
   dtrsh2 = (3.*SIGMA)**2  ! all points outside d^2 are set to zero
 
-  ! EXAMPLE gaussian smoothing function for one point
+  ! EXAMPLE Gaussian smoothing function for one point
   ! find the closest gridpoint to the target point
   xtar = 0.7*LENGTH
   ztar = 0.5*HEIGHT
   dmin = sqrt(LENGTH**2+HEIGHT**2)  ! max possible distance
   do iglob = 1,NGLOB
     d = sqrt((xtar-x(iglob))**2+(ztar-z(iglob))**2)
-    if(d < dmin) then
+    if (d < dmin) then
        igaus = iglob
        dmin = d
     endif
@@ -243,7 +243,7 @@ program wave2d_cmap
   k_gaus_global_ex(:) = 0.
   do iglob = 1,NGLOB
      dist2 = (xcen - x(iglob))**2 + (zcen - z(iglob))**2
-     if(dist2 <= dtrsh2) &
+     if (dist2 <= dtrsh2) &
         k_gaus_global_ex(iglob) = (1./(2*PI*SIGMA**2)) * exp(-dist2 / (2.*SIGMA**2))
   enddo
 
@@ -257,7 +257,7 @@ program wave2d_cmap
      k_gaus_global(:) = 0.
      do i = 1,NGLOB
         dist2 = (xcen - x(i))**2 + (zcen - z(i))**2
-        if(dist2 <= dtrsh2) &
+        if (dist2 <= dtrsh2) &
            k_gaus_global(i) = (1./(2.*PI*SIGMA**2)) * exp(-dist2 / (2.*SIGMA**2))
      enddo
 

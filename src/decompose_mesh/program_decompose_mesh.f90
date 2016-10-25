@@ -28,12 +28,9 @@
 program xdecompose_mesh
 
   use constants, only: MAX_STRING_LEN
-  use decompose_mesh,only: nparts,localpath_name, outputpath_name, &
-                                  read_mesh_files, &
-                                  check_valence, &
-                                  scotch_partitioning, &
-                                  write_mesh_databases, &
-                                  ADIOS_FOR_DATABASES
+
+  use decompose_mesh, only: nparts,localpath_name,outputpath_name,read_mesh_files,check_valence, &
+                                  scotch_partitioning,write_mesh_databases,ADIOS_FOR_DATABASES
 
   implicit none
 
@@ -48,7 +45,7 @@ program xdecompose_mesh
       print *, 'Usage: ./xdecompose_mesh  nparts  input_directory output_directory'
       print *
       print *, '  where'
-      print *, '      nparts = number of partitons'
+      print *, '      nparts = number of partitions'
       print *, '      input_directory = directory containing mesh files mesh_file,nodes_coords_file,..'
       print *, '      output_directory = directory for output files proc***_Databases'
       print *

@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
 ! sum_preconditioned_kernels
 !
 ! this program can be used for event kernel summation,
@@ -49,13 +48,10 @@
 ! output directory: OUTPUT_SUM/
 !    the resulting kernel files will be stored in this directory
 
-
 program sum_preconditioned_kernels
 
-  use tomography_par,only: MAX_STRING_LEN,MAX_KERNEL_PATHS,KERNEL_FILE_LIST,IIN, &
-    myrank,sizeprocs, &
-    NGLOB,NSPEC, &
-    USE_ALPHA_BETA_RHO,USE_ISO_KERNELS
+  use tomography_par, only: MAX_STRING_LEN,MAX_KERNEL_PATHS,KERNEL_FILE_LIST,IIN, &
+                            myrank,sizeprocs,NGLOB,NSPEC,USE_ALPHA_BETA_RHO,USE_ISO_KERNELS
 
   use shared_parameters
 
@@ -75,7 +71,7 @@ program sum_preconditioned_kernels
   call world_size(sizeprocs)
   call world_rank(myrank)
 
-  if (myrank==0) then
+  if (myrank == 0) then
     write(*,*) 'sum_preconditioned_kernels:'
     write(*,*)
     write(*,*) 'reading kernel list: '
@@ -109,12 +105,12 @@ program sum_preconditioned_kernels
   ! checks if number of MPI process as specified
   if (sizeprocs /= NPROC) then
     if (myrank == 0) then
-      print *,''
+      print *
       print *,'Error: run xsum_kernels with the same number of MPI processes '
       print *,'       as specified in Par_file by NPROC when slices were created'
-      print *,''
+      print *
       print *,'for example: mpirun -np ',NPROC,' ./xsum_kernels ...'
-      print *,''
+      print *
     endif
     call synchronize_all()
     stop 'Error total number of slices'
@@ -127,7 +123,7 @@ program sum_preconditioned_kernels
 
   ! opens external mesh file
   write(prname_lp,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',myrank,'_'//'external_mesh.bin'
-  open(unit=27,file=trim(prname_lp),&
+  open(unit=27,file=trim(prname_lp), &
           status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
     print *,'Error: could not open database '
@@ -199,7 +195,7 @@ program sum_preconditioned_kernels
 
   endif
 
-  if (myrank==0) write(*,*) 'done writing all kernels, see directory OUTPUT_SUM/'
+  if (myrank == 0) write(*,*) 'done writing all kernels, see directory OUTPUT_SUM/'
 
   ! stop all the processes, and exit
   call finalize_mpi()
@@ -246,7 +242,7 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker)
   total_kernel = 0._CUSTOM_REAL
   do iker = 1, nker
     ! user output
-    if (myrank==0) then
+    if (myrank == 0) then
       write(*,*) 'reading in event kernel for: ',trim(kernel_name)
       write(*,*) 'and preconditioner         : ','hess_kernel'
       write(*,*) '    ',iker, ' out of ', nker
@@ -279,7 +275,7 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker)
 
     open(IIN,file=trim(k_file),status='old',form='unformatted',action='read',iostat=ier)
     if (ier /= 0) then
-      write(*,*) '  hessian kernel not found: ',trim(k_file)
+      write(*,*) '  Hessian kernel not found: ',trim(k_file)
       stop 'Error hess_kernel.bin files not found'
     endif
 
@@ -293,7 +289,7 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker)
       print *,'  norm preconditioner: ',sqrt(norm_sum)
     endif
 
-    ! note: we take absolute values for hessian (as proposed by Yang)
+    ! note: we take absolute values for Hessian (as proposed by Yang)
     hess = abs(hess)
 
     ! source mask
@@ -317,15 +313,15 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker)
     ! precondition
     if (USE_HESS_SUM) then
 
-      ! sums up hessians first
+      ! sums up Hessians first
       total_hess = total_hess + hess
 
     else
 
-      ! inverts hessian
+      ! inverts Hessian
       call invert_hess( hess )
 
-      ! preconditions each event kernel with its hessian
+      ! preconditions each event kernel with its Hessian
       kernel = kernel * hess
 
     endif
@@ -336,10 +332,10 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker)
     if (myrank == 0) print *
   enddo
 
-  ! preconditions summed kernels with summed hessians
+  ! preconditions summed kernels with summed Hessians
   if (USE_HESS_SUM) then
 
-      ! inverts hessian matrix
+      ! inverts Hessian matrix
       call invert_hess( total_hess )
 
       ! preconditions kernel
@@ -348,7 +344,7 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker)
   endif
 
   ! stores summed kernels
-  if (myrank==0) write(*,*) 'writing out summed kernel for: ',trim(kernel_name)
+  if (myrank == 0) write(*,*) 'writing out summed kernel for: ',trim(kernel_name)
 
   ! outputs summed kernel
   write(k_file,'(a,i6.6,a)') 'OUTPUT_SUM/proc',myrank,trim(REG) // trim(kernel_name) // '.bin'
@@ -360,9 +356,9 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker)
   write(IOUT) total_kernel
   close(IOUT)
 
-  ! outputs summed hessian
+  ! outputs summed Hessian
   if (USE_HESS_SUM) then
-    if (myrank==0) write(*,*) 'writing out summed kernel for: ','hess_inv_kernel'
+    if (myrank == 0) write(*,*) 'writing out summed kernel for: ','hess_inv_kernel'
     write(k_file,'(a,i6.6,a)') 'OUTPUT_SUM/proc',myrank,trim(REG) // 'hess_inv_kernel' // '.bin'
     open(IOUT,file=trim(k_file),form='unformatted',status='unknown',action='write',iostat=ier)
     if (ier /= 0) then
@@ -373,7 +369,7 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker)
     close(IOUT)
   endif
 
-  if (myrank==0) write(*,*)
+  if (myrank == 0) write(*,*)
 
   ! frees memory
   deallocate(kernel,hess,total_kernel)
@@ -388,8 +384,8 @@ end subroutine sum_kernel_pre
 
 subroutine invert_hess( hess_matrix )
 
-! inverts the hessian matrix
-! the approximate hessian is only defined for diagonal elements: like
+! inverts the Hessian matrix
+! the approximate Hessian is only defined for diagonal elements: like
 ! H_nn = \frac{ \partial^2 \chi }{ \partial \rho_n \partial \rho_n }
 ! on all GLL points, which are indexed (i,j,k,ispec)
 
@@ -402,7 +398,7 @@ subroutine invert_hess( hess_matrix )
   ! local parameters
   real(kind=CUSTOM_REAL) :: maxh,maxh_all
 
-  ! maximum value of hessian
+  ! maximum value of Hessian
   maxh = maxval( abs(hess_matrix) )
 
   ! determines maximum from all slices on master
@@ -411,29 +407,29 @@ subroutine invert_hess( hess_matrix )
   ! user output
   if (myrank == 0) then
     print *
-    print *,'hessian maximum: ',maxh_all
+    print *,'Hessian maximum: ',maxh_all
     print *
   endif
 
-  ! normalizes hessian
+  ! normalizes Hessian
   if (maxh_all < 1.e-18) then
-    ! hessian is zero, re-initializes
+    ! Hessian is zero, re-initializes
     hess_matrix = 1.0_CUSTOM_REAL
-    !stop 'Error hessian too small'
+    !stop 'Error Hessian too small'
   else
-    ! since hessian has absolute values, this scales between [0,1]
+    ! since Hessian has absolute values, this scales between [0,1]
     hess_matrix = hess_matrix / maxh_all
   endif
 
 
-  ! inverts hessian values
+  ! inverts Hessian values
   where( abs(hess_matrix(:,:,:,:)) > THRESHOLD_HESS )
     hess_matrix = 1.0_CUSTOM_REAL / hess_matrix
   elsewhere
     hess_matrix = 1.0_CUSTOM_REAL / THRESHOLD_HESS
   endwhere
 
-  ! rescales hessian
+  ! rescales Hessian
   !hess_matrix = hess_matrix * maxh_all
 
 end subroutine invert_hess

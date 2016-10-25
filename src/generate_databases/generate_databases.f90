@@ -153,8 +153,7 @@
 !  - Y axis is East
 !  - Z axis is up
 !
-! To report bugs or suggest improvements to the code, please send an email
-! to Jeroen Tromp <jtromp AT princeton.edu> and/or use our online
+! To report bugs or suggest improvements to the code, please use our online
 ! bug tracking system at http://www.geodynamics.org/roundup .
 !
 ! Evolution of the code:
@@ -186,13 +185,14 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-
   subroutine generate_databases
 
   use adios_manager_mod
   use generate_databases_par
 
   implicit none
+
+  include 'version.fh'
 
   ! local parameters
   ! timing
@@ -217,6 +217,8 @@
     write(IMAIN,*) '******************************************'
     write(IMAIN,*) '*** Specfem3D MPI Mesher - f90 version ***'
     write(IMAIN,*) '******************************************'
+    write(IMAIN,*)
+    write(IMAIN,*) 'Version: ', git_version
     write(IMAIN,*)
     call flush_IMAIN()
   endif

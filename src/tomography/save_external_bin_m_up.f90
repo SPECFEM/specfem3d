@@ -25,7 +25,6 @@
 !
 !=====================================================================
 
-
 ! for external mesh
 
 ! Federica Magnoni:
@@ -38,7 +37,7 @@
                     jacobianstore, rho_vp,rho_vs,qmu_attenuation_store, &
                     rhostore,kappastore,mustore, &
                     rmass,rmass_acoustic,rmass_solid_poroelastic,rmass_fluid_poroelastic, &
-                    APPROXIMATE_OCEAN_LOAD,rmass_ocean_load,NGLOB_OCEAN,&
+                    APPROXIMATE_OCEAN_LOAD,rmass_ocean_load,NGLOB_OCEAN, &
                     ibool, &
                     xstore_dummy,ystore_dummy,zstore_dummy, &
                     abs_boundary_normal,abs_boundary_jacobian2Dw, &
@@ -59,22 +58,18 @@
 
   use constants
 
-  use specfem_par,only: &
-    ispec_is_inner,ATTENUATION
+  use specfem_par, only: ispec_is_inner,ATTENUATION
 
-  use specfem_par_elastic,only: &
-    rmassx,rmassy,rmassz, &
+  use specfem_par_elastic, only: rmassx,rmassy,rmassz, &
     nspec_inner_elastic,nspec_outer_elastic,num_phase_ispec_elastic,phase_ispec_inner_elastic, &
     num_colors_outer_elastic,num_colors_inner_elastic,num_elem_colors_elastic
 
-  use specfem_par_acoustic,only: &
-    rmassz_acoustic,num_coupling_ac_po_faces, &
+  use specfem_par_acoustic, only: rmassz_acoustic,num_coupling_ac_po_faces, &
     num_coupling_ac_el_faces,coupling_ac_el_ijk,coupling_ac_el_ispec, &
     nspec_inner_acoustic,nspec_outer_acoustic,num_phase_ispec_acoustic,phase_ispec_inner_acoustic, &
     num_colors_outer_acoustic,num_colors_inner_acoustic,num_elem_colors_acoustic
 
-  use specfem_par_poroelastic,only: &
-    num_coupling_el_po_faces, &
+  use specfem_par_poroelastic, only: num_coupling_el_po_faces, &
     nspec_inner_poroelastic,nspec_outer_poroelastic,num_phase_ispec_poroelastic,phase_ispec_inner_poroelastic
 
   implicit none
@@ -411,7 +406,7 @@
 
     ! VTK file output
     if (ATTENUATION) then
-      ! saves attenuation flag assigned on each gll point into a vtk file
+      ! saves attenuation flag assigned on each GLL point into a vtk file
       filename = prname(1:len_trim(prname))//'attenuation'
       call write_VTK_data_gll_cr(nspec,nglob, &
                           xstore_dummy,ystore_dummy,zstore_dummy,ibool, &

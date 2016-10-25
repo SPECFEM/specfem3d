@@ -26,24 +26,23 @@
 !=====================================================================
 
 subroutine compute_element_att_memory_second_order_rk(ispec,alphaval,betaval,gammaval,NSPEC_AB,kappastore,mustore, &
-                          NSPEC_ATTENUATION_AB_Kappa,factor_common_kappa,&
+                          NSPEC_ATTENUATION_AB,factor_common_kappa, &
                           R_trace,epsilondev_trace,epsilondev_trace_loc, &
-                          NSPEC_ATTENUATION_AB,factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &
+                          factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &
                           NSPEC_STRAIN_ONLY,epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz, &
                           epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,epsilondev_xz_loc,epsilondev_yz_loc)
 
   use constants, only: CUSTOM_REAL,N_SLS,NGLLX,NGLLY,NGLLZ
-  use specfem_par, only: FULL_ATTENUATION_SOLID
 
   implicit none
 
-  integer :: ispec,NSPEC_AB,NSPEC_ATTENUATION_AB_Kappa,NSPEC_ATTENUATION_AB,NSPEC_STRAIN_ONLY
+  integer :: ispec,NSPEC_AB,NSPEC_ATTENUATION_AB,NSPEC_STRAIN_ONLY
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: alphaval,betaval,gammaval
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: kappastore,mustore
-  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa) :: factor_common_kappa
+  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: factor_common_kappa
   real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: factor_common
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa,N_SLS) :: R_trace
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa) :: epsilondev_trace
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS) :: R_trace
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: epsilondev_trace
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS) :: R_xx,R_yy,R_xy,R_xz,R_yz
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY) :: &
@@ -64,15 +63,13 @@ subroutine compute_element_att_memory_second_order_rk(ispec,alphaval,betaval,gam
           betaval_loc = betaval(i_sls)
           gammaval_loc = gammaval(i_sls)
 
-          if (FULL_ATTENUATION_SOLID) then
-            ! term in trace
-            factor_loc = kappastore(i,j,k,ispec) * factor_common_kappa(i_sls,i,j,k,ispec)
+          ! term in trace
+          factor_loc = kappastore(i,j,k,ispec) * factor_common_kappa(i_sls,i,j,k,ispec)
 
-            Sn   = factor_loc * epsilondev_trace(i,j,k,ispec)
-            Snp1   = factor_loc * epsilondev_trace_loc(i,j,k)
-            R_trace(i,j,k,ispec,i_sls) = alphaval_loc * R_trace(i,j,k,ispec,i_sls) + &
-                                      betaval_loc * Sn + gammaval_loc * Snp1
-          endif
+          Sn   = factor_loc * epsilondev_trace(i,j,k,ispec)
+          Snp1   = factor_loc * epsilondev_trace_loc(i,j,k)
+          R_trace(i,j,k,ispec,i_sls) = alphaval_loc * R_trace(i,j,k,ispec,i_sls) + &
+                                    betaval_loc * Sn + gammaval_loc * Snp1
 
           ! term in xx yy zz xy xz yz
           factor_loc = mustore(i,j,k,ispec) * factor_common(i_sls,i,j,k,ispec)
@@ -117,28 +114,27 @@ end subroutine compute_element_att_memory_second_order_rk
 !
 
 subroutine compute_element_att_memory_lddrk(ispec,deltat,NSPEC_AB,kappastore,mustore, &
-                          NSPEC_ATTENUATION_AB_Kappa,factor_common_kappa,&
+                          NSPEC_ATTENUATION_AB,factor_common_kappa, &
                           R_trace,epsilondev_trace_loc, &
-                          NSPEC_ATTENUATION_AB_Kappa_LDDRK,R_trace_lddrk, &
-                          NSPEC_ATTENUATION_AB,factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &
-                          NSPEC_ATTENUATION_AB_LDDRK,R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, &
-                          epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,&
+                          NSPEC_ATTENUATION_AB_LDDRK,R_trace_lddrk, &
+                          factor_common,R_xx,R_yy,R_xy,R_xz,R_yz, &
+                          R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, &
+                          epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc, &
                           epsilondev_xz_loc,epsilondev_yz_loc)
 
   use constants, only: CUSTOM_REAL,N_SLS,NGLLX,NGLLY,NGLLZ,ALPHA_LDDRK,BETA_LDDRK
-  use specfem_par, only: FULL_ATTENUATION_SOLID,istage
+  use specfem_par, only: istage
   use specfem_par_elastic, only: tau_sigma
 
   implicit none
 
-  integer :: ispec,NSPEC_AB,NSPEC_ATTENUATION_AB_Kappa,NSPEC_ATTENUATION_AB,&
-             NSPEC_ATTENUATION_AB_Kappa_LDDRK,NSPEC_ATTENUATION_AB_LDDRK
+  integer :: ispec,NSPEC_AB,NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_LDDRK
   real(kind=CUSTOM_REAL) :: deltat
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: kappastore,mustore
-  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa) :: factor_common_kappa
+  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: factor_common_kappa
   real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: factor_common
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa,N_SLS) :: R_trace
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_Kappa_LDDRK,N_SLS) :: R_trace_lddrk
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS) :: R_trace
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK,N_SLS) :: R_trace_lddrk
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS) :: R_xx,R_yy,R_xy,R_xz,R_yz
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK,N_SLS) :: &
@@ -155,15 +151,13 @@ subroutine compute_element_att_memory_lddrk(ispec,deltat,NSPEC_AB,kappastore,mus
       do j=1,NGLLY
         do i=1,NGLLX
 
-          if (FULL_ATTENUATION_SOLID) then
-            ! term in trace
-            factor_loc = kappastore(i,j,k,ispec) * factor_common_kappa(i_sls,i,j,k,ispec)
-            Snp1   = factor_loc * epsilondev_trace_loc(i,j,k)
+          ! term in trace
+          factor_loc = kappastore(i,j,k,ispec) * factor_common_kappa(i_sls,i,j,k,ispec)
+          Snp1   = factor_loc * epsilondev_trace_loc(i,j,k)
 
-            R_trace_lddrk(i,j,k,ispec,i_sls) = ALPHA_LDDRK(istage) * R_trace_lddrk(i,j,k,ispec,i_sls) + &
-              deltat * (Snp1 - R_trace(i,j,k,ispec,i_sls)*(1.0_CUSTOM_REAL/tau_sigma(i_SLS)))
-            R_trace(i,j,k,i_SLS,ispec) = R_trace(i,j,k,i_SLS,ispec) + BETA_LDDRK(istage) * R_trace_lddrk(i,j,k,i_SLS,ispec)
-          endif
+          R_trace_lddrk(i,j,k,ispec,i_sls) = ALPHA_LDDRK(istage) * R_trace_lddrk(i,j,k,ispec,i_sls) + &
+            deltat * (Snp1 - R_trace(i,j,k,ispec,i_sls)*(1.0_CUSTOM_REAL/tau_sigma(i_SLS)))
+          R_trace(i,j,k,i_SLS,ispec) = R_trace(i,j,k,i_SLS,ispec) + BETA_LDDRK(istage) * R_trace_lddrk(i,j,k,i_SLS,ispec)
 
           ! term in xx yy zz xy xz yz
           factor_loc = mustore(i,j,k,ispec) * factor_common(i_sls,i,j,k,ispec)

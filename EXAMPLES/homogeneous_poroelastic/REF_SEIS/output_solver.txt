@@ -1,0 +1,363 @@
+
+ **********************************************
+ **** Specfem 3-D Solver - MPI version f90 ****
+ **********************************************
+
+
+ Fixing slow underflow trapping problem using small initial field
+
+ There are            4  MPI processes
+ Processes are numbered from 0 to            3
+
+ There is a total of            4  slices
+
+  NDIM =            3
+
+  NGLLX =            5
+  NGLLY =            5
+  NGLLZ =            5
+
+ using single precision for the calculations
+
+ smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
+
+ velocity model:   default
+
+ total acoustic elements    :           0
+ total elastic elements     :           0
+ total poroelastic elements :       20736
+
+ ********
+ minimum and maximum number of elements
+ and points in the CUBIT + SCOTCH mesh:
+
+ NSPEC_AB_global_min =         5184
+ NSPEC_AB_global_max =         5184
+ NSPEC_AB_global_sum =        20736
+
+ NGLOB_AB_global_min =       346385
+ NGLOB_AB_global_max =       346385
+ NGLOB_AB_global_sum =      1385540
+
+ ********
+ Model: P velocity min,max =    3968.73071       3968.73071
+ Model: PII velocity min,max =    2684.73999       2684.73999
+ Model: S velocity min,max =    2557.83618       2557.83618
+ ********
+
+ *********************************************
+ *** Verification of simulation parameters ***
+ *********************************************
+
+ *** Max GLL point distance =    1227.47656
+ *** Min GLL point distance =    642.726562
+ *** Max/min ratio =    1.90979588
+ *** Max element size =    3750.00000
+ *** Min element size =    3722.21875
+ *** Max/min ratio =    1.00746357
+
+ *** Minimum period resolved =    1.83260369
+ *** Maximum suggested time step =    8.09738189E-02
+
+ *** for DT :    5.0000000000000003E-002
+ *** Max stability for wave velocities =   0.308741778
+
+ Elapsed time for checking mesh resolution in seconds =    1.2744903564453125E-002
+ ******************************************
+ There is a total of            4  slices
+ ******************************************
+
+
+ sources:
+ no UTM projection
+
+ *************************************
+  locating source            1
+ *************************************
+
+ source located in slice            0
+                in element         2772
+                in poroelastic domain
+
+ using moment tensor source:
+   xi coordinate of source in that element:    1.0000000000000000
+   eta coordinate of source in that element:    1.0000000000000000
+   gamma coordinate of source in that element:   0.99999999999999922
+
+   half duration:    5.0000000000000000       seconds
+
+ magnitude of the source:
+      scalar moment M0 =    9.4305355097152345E+027  dyne-cm
+   moment magnitude Mw =    7.9496910938684096
+
+   time shift:    0.0000000000000000       seconds
+
+ original (requested) position of the source:
+
+           latitude:    67000.000000000000
+          longitude:    67000.000000000000
+
+              x:    67000.000000000000
+              y:    67000.000000000000
+          depth:    30.000000000000000       km
+ topo elevation:    0.0000000000000000
+
+ position of the source that will be used:
+
+              x:    67000.000000000000
+              y:    67000.000000000000
+          depth:    30.000000000000000       km
+              z:   -30000.000000000000
+
+ error in location of the source:    0.00000000      m
+
+ maximum error in location of the sources:    0.00000000      m
+
+
+ Elapsed time for detection of sources in seconds =    5.7005882263183594E-004
+
+ End of source detection - done
+
+
+ receivers:
+
+ there are            4  stations in file ./DATA/STATIONS
+ saving            4  stations inside the model in file ./DATA/STATIONS_FILTERED
+ excluding            0  stations located outside the model
+
+
+ Total number of receivers =            4
+
+
+ ********************
+  locating receivers
+ ********************
+
+ reading receiver information from ./DATA/STATIONS_FILTERED file
+
+ Station #           1 : DB.X20    horizontal distance:     44.2678986      km
+ Station #           2 : DB.X30    horizontal distance:     32.3036003      km
+ Station #           3 : DB.X40    horizontal distance:     20.3393002      km
+ Station #           4 : DB.X50    horizontal distance:     8.37500000      km
+
+ station #            1     DB    X20
+      original latitude:    67000.0000
+      original longitude:    22732.0996
+      original x:    22732.0996
+      original y:    67000.0000
+      original depth:    0.00000000      m
+      horizontal distance:    44.2678986
+      target x, y, z:    22732.0996       67000.0000       0.00000000
+      closest estimate found:    0.00000000      m away
+      in slice            0  in element         5173
+      at coordinates:
+      xi    =  -0.78573757580241610
+      eta   =   0.99999999999999956
+      gamma =    1.0000000000000000
+      x:    22732.099999999999
+      y:    67000.000000000000
+      depth:    0.0000000000000000       m
+      z:    0.0000000000000000
+
+
+
+ station #            2     DB    X30
+      original latitude:    67000.0000
+      original longitude:    34696.3984
+      original x:    34696.3984
+      original y:    67000.0000
+      original depth:    0.00000000      m
+      horizontal distance:    32.3036003
+      target x, y, z:    34696.3984       67000.0000       0.00000000
+      closest estimate found:    0.00000000      m away
+      in slice            0  in element         5176
+      at coordinates:
+      xi    =  -0.35715828391344595
+      eta   =   0.99999999999999956
+      gamma =    1.0000000000000000
+      x:    34696.400000000001
+      y:    67000.000000000000
+      depth:    0.0000000000000000       m
+      z:    0.0000000000000000
+
+
+
+ station #            3     DB    X40
+      original latitude:    67000.0000
+      original longitude:    46660.6992
+      original x:    46660.6992
+      original y:    67000.0000
+      original depth:    0.00000000      m
+      horizontal distance:    20.3393002
+      target x, y, z:    46660.6992       67000.0000       0.00000000
+      closest estimate found:    0.00000000      m away
+      in slice            0  in element         5179
+      at coordinates:
+      xi    =    7.1420070963143081E-002
+      eta   =    1.0000000000000009
+      gamma =    1.0000000000000000
+      x:    46660.699999999997
+      y:    67000.000000000000
+      depth:    0.0000000000000000       m
+      z:    0.0000000000000000
+
+
+
+ station #            4     DB    X50
+      original latitude:    67000.0000
+      original longitude:    58625.0000
+      original x:    58625.0000
+      original y:    67000.0000
+      original depth:    0.00000000      m
+      horizontal distance:    8.37500000
+      target x, y, z:    58625.0000       67000.0000       0.00000000
+      closest estimate found:    0.00000000      m away
+      in slice            0  in element         5182
+      at coordinates:
+      xi    =   0.50000052472008893
+      eta   =    1.0000000000000009
+      gamma =    1.0000000000000000
+      x:    58625.000000000000
+      y:    67000.000000000000
+      depth:    0.0000000000000000       m
+      z:    0.0000000000000000
+
+
+ maximum error in location of all the receivers:    0.00000000      m
+
+ Elapsed time for receiver detection in seconds =    6.1700344085693359E-003
+
+ End of receiver detection - done
+
+
+ Total number of samples for seismograms =         1000
+
+ found a total of            4  receivers in all the slices
+
+
+ no attenuation
+
+ no anisotropy
+
+ no oceans
+
+ no gravity
+
+ no acoustic simulation
+
+ no elastic simulation
+
+ incorporating poroelastic simulation
+
+ no movie simulation
+
+
+ no dynamic faults
+ no kinematic faults
+
+ no gravity simulation
+
+
+ Elapsed time for preparing timerun in seconds =    2.1069049835205078E-002
+
+ time loop:
+               scheme:         Newmark
+
+            time step:    5.00000007E-02  s
+ number of time steps:         1000
+ total simulated time:    50.0000000      seconds
+ start time:  -10.0000000      seconds
+
+ All processes are synchronized before time loop
+
+ Starting time iteration loop...
+
+ Time step #            5
+ Time:   -9.80000019      seconds
+ Elapsed time in seconds =   0.82613992691040039
+ Elapsed time in hh:mm:ss =      0 h 00 m 00 s
+ Mean elapsed time per time step in seconds =   0.165227979
+ Max norm displacement vector Us in all slices (m) =    1.14452577
+ Max norm displacement vector W in all slices (m) =   0.148832202
+ Time steps done =            5  out of         1000
+ Time steps remaining =          995
+ Estimated remaining time in seconds =    164.401840
+ Estimated remaining time in hh:mm:ss =      0 h 02 m 44 s
+ Estimated total run time in seconds =    165.227982
+ Estimated total run time in hh:mm:ss =      0 h 02 m 45 s
+ We have done   0.500000000     % of that
+ The run will finish approximately on (in local time): Mon Jul 04, 2016 01:32
+ ************************************************************
+ **** BEWARE: the above time estimates are not reliable
+ **** because fewer than 100 iterations have been performed
+ ************************************************************
+
+ Time step #          250
+ Time:    2.45000005      seconds
+ Elapsed time in seconds =    52.883179903030396
+ Elapsed time in hh:mm:ss =      0 h 00 m 52 s
+ Mean elapsed time per time step in seconds =   0.211532727
+ Max norm displacement vector Us in all slices (m) =    10669.4863
+ Max norm displacement vector W in all slices (m) =    944.043640
+ Time steps done =          250  out of         1000
+ Time steps remaining =          750
+ Estimated remaining time in seconds =    158.649536
+ Estimated remaining time in hh:mm:ss =      0 h 02 m 38 s
+ Estimated total run time in seconds =    211.532715
+ Estimated total run time in hh:mm:ss =      0 h 03 m 31 s
+ We have done    25.0000000     % of that
+ The run will finish approximately on (in local time): Mon Jul 04, 2016 01:33
+
+ Time step #          500
+ Time:    14.9499998      seconds
+ Elapsed time in seconds =    109.19361901283264
+ Elapsed time in hh:mm:ss =      0 h 01 m 49 s
+ Mean elapsed time per time step in seconds =   0.218387231
+ Max norm displacement vector Us in all slices (m) =    1.00517523
+ Max norm displacement vector W in all slices (m) =   0.715800881
+ Time steps done =          500  out of         1000
+ Time steps remaining =          500
+ Estimated remaining time in seconds =    109.193619
+ Estimated remaining time in hh:mm:ss =      0 h 01 m 49 s
+ Estimated total run time in seconds =    218.387238
+ Estimated total run time in hh:mm:ss =      0 h 03 m 38 s
+ We have done    50.0000000     % of that
+ The run will finish approximately on (in local time): Mon Jul 04, 2016 01:33
+
+ Time step #          750
+ Time:    27.4500008      seconds
+ Elapsed time in seconds =    166.05802297592163
+ Elapsed time in hh:mm:ss =      0 h 02 m 46 s
+ Mean elapsed time per time step in seconds =   0.221410692
+ Max norm displacement vector Us in all slices (m) =    1.64365447
+ Max norm displacement vector W in all slices (m) =    1.30422699
+ Time steps done =          750  out of         1000
+ Time steps remaining =          250
+ Estimated remaining time in seconds =    55.3526726
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 55 s
+ Estimated total run time in seconds =    221.410690
+ Estimated total run time in hh:mm:ss =      0 h 03 m 41 s
+ We have done    75.0000000     % of that
+ The run will finish approximately on (in local time): Mon Jul 04, 2016 01:33
+
+ Time step #         1000
+ Time:    39.9500008      seconds
+ Elapsed time in seconds =    222.01350688934326
+ Elapsed time in hh:mm:ss =      0 h 03 m 42 s
+ Mean elapsed time per time step in seconds =   0.222013503
+ Max norm displacement vector Us in all slices (m) =    2.42120385
+ Max norm displacement vector W in all slices (m) =    1.88649452
+ Time steps done =         1000  out of         1000
+ Time steps remaining =            0
+ Estimated remaining time in seconds =    0.00000000
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 00 s
+ Estimated total run time in seconds =    222.013504
+ Estimated total run time in hh:mm:ss =      0 h 03 m 42 s
+ We have done    100.000000     % of that
+
+ Time-Loop Complete. Timing info:
+ Total elapsed time in seconds =    222.29793095588684
+ Total elapsed time in hh:mm:ss =      0 h 03 m 42 s
+
+ End of the simulation
+

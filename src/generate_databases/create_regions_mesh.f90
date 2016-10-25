@@ -25,37 +25,35 @@
 !
 !=====================================================================
 
-
   subroutine create_regions_mesh()
 
 ! create the different regions of the mesh
 
-  use generate_databases_par, only:                                            &
-      nspec => NSPEC_AB,nglob => NGLOB_AB,                                     &
-      ibool,xstore,ystore,zstore,                                              &
-      npointot,myrank,LOCAL_PATH,                                              &
-      nnodes_ext_mesh,nelmnts_ext_mesh,                                        &
-      nodes_coords_ext_mesh, elmnts_ext_mesh,                                  &
-      max_memory_size,num_interfaces_ext_mesh, max_interface_size_ext_mesh,    &
-      my_neighbours_ext_mesh, my_nelmnts_neighbours_ext_mesh,                  &
-      my_interfaces_ext_mesh,                                                  &
-      ibool_interfaces_ext_mesh, nibool_interfaces_ext_mesh,                   &
-      STACEY_ABSORBING_CONDITIONS, nspec2D_xmin, nspec2D_xmax,                 &
-      nspec2D_ymin, nspec2D_ymax,                                              &
-      NSPEC2D_BOTTOM, NSPEC2D_TOP,                                             &
+  use generate_databases_par, only: nspec => NSPEC_AB,nglob => NGLOB_AB, &
+      ibool,xstore,ystore,zstore, &
+      npointot,myrank,LOCAL_PATH, &
+      nnodes_ext_mesh,nelmnts_ext_mesh, &
+      nodes_coords_ext_mesh, elmnts_ext_mesh, &
+      max_memory_size,num_interfaces_ext_mesh, max_interface_size_ext_mesh, &
+      my_neighbours_ext_mesh, my_nelmnts_neighbours_ext_mesh, &
+      my_interfaces_ext_mesh, &
+      ibool_interfaces_ext_mesh, nibool_interfaces_ext_mesh, &
+      STACEY_ABSORBING_CONDITIONS, nspec2D_xmin, nspec2D_xmax, &
+      nspec2D_ymin, nspec2D_ymax, &
+      NSPEC2D_BOTTOM, NSPEC2D_TOP, &
       ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, ibelm_bottom, ibelm_top, &
-      nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax,     &
-      nodes_ibelm_bottom,nodes_ibelm_top,                                      &
-      SAVE_MESH_FILES,PML_CONDITIONS,FULL_ATTENUATION_SOLID,                   &
-      ANISOTROPY,NPROC,APPROXIMATE_OCEAN_LOAD,OLSEN_ATTENUATION_RATIO,         &
-      ATTENUATION,USE_OLSEN_ATTENUATION,                                       &
-      nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho,                            &
+      nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax, &
+      nodes_ibelm_bottom,nodes_ibelm_top, &
+      SAVE_MESH_FILES,PML_CONDITIONS, &
+      ANISOTROPY,NPROC,APPROXIMATE_OCEAN_LOAD,OLSEN_ATTENUATION_RATIO, &
+      ATTENUATION,USE_OLSEN_ATTENUATION, &
+      nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho, &
       ADIOS_FOR_MESH,IMAIN,SAVE_MOHO_MESH,ATTENUATION_f0_REFERENCE
 
   use create_regions_mesh_ext_par
   use fault_generate_databases, only: fault_read_input,fault_setup, &
-                          fault_save_arrays,fault_save_arrays_test,&
-                          nnodes_coords_open,nodes_coords_open,ANY_FAULT_IN_THIS_PROC,&
+                          fault_save_arrays,fault_save_arrays_test, &
+                          nnodes_coords_open,nodes_coords_open,ANY_FAULT_IN_THIS_PROC, &
                           ANY_FAULT, PARALLEL_FAULT
 
   implicit none
@@ -89,15 +87,11 @@
   endif
   if (ANY_FAULT_IN_THIS_PROC) then
    ! compute jacobians with fault open and *store needed for ibool.
-    call crm_ext_setup_jacobian(myrank, &
-                                xstore,ystore,zstore,nspec, &
-                                nodes_coords_open, nnodes_coords_open,&
-                                elmnts_ext_mesh,nelmnts_ext_mesh)
+    call crm_ext_setup_jacobian(myrank,xstore,ystore,zstore,nspec, &
+                                nodes_coords_open, nnodes_coords_open,elmnts_ext_mesh,nelmnts_ext_mesh)
   else ! with no fault
-    call crm_ext_setup_jacobian(myrank, &
-                                xstore,ystore,zstore,nspec, &
-                                nodes_coords_ext_mesh,nnodes_ext_mesh,&
-                                elmnts_ext_mesh,nelmnts_ext_mesh)
+    call crm_ext_setup_jacobian(myrank,xstore,ystore,zstore,nspec, &
+                                nodes_coords_ext_mesh,nnodes_ext_mesh,elmnts_ext_mesh,nelmnts_ext_mesh)
   endif
 
 
@@ -125,9 +119,8 @@
       call flush_IMAIN()
     endif
     if (ANY_FAULT_IN_THIS_PROC) then
-      call crm_ext_setup_jacobian(myrank, &
-                                  xstore,ystore,zstore,nspec, &
-                                  nodes_coords_ext_mesh,nnodes_ext_mesh,&
+      call crm_ext_setup_jacobian(myrank,xstore,ystore,zstore,nspec, &
+                                  nodes_coords_ext_mesh,nnodes_ext_mesh, &
                                   elmnts_ext_mesh,nelmnts_ext_mesh)
     endif
     ! at this point (xyz)store_dummy are still open
@@ -150,9 +143,8 @@
                my_nelmnts_neighbours_ext_mesh, my_interfaces_ext_mesh, &
                ibool_interfaces_ext_mesh, &
                nibool_interfaces_ext_mesh, &
-               num_interfaces_ext_mesh,max_interface_size_ext_mesh,&
+               num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
                my_neighbours_ext_mesh)
-
 
   !SURENDRA (setting up parallel fault)
   if (PARALLEL_FAULT .and. ANY_FAULT) then
@@ -162,7 +154,6 @@
                       xstore,ystore,zstore,nspec,nglob,myrank)
    ! this closes (xyz)store_dummy
   endif
-
 
 ! sets up absorbing/free surface boundaries
   call synchronize_all()
@@ -206,7 +197,7 @@
   endif
   call get_coupling_surfaces(myrank, &
                              nspec,ibool,NPROC, &
-                             nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,&
+                             nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                              num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
                              my_neighbours_ext_mesh)
 
@@ -263,14 +254,12 @@
   endif
   !call create_name_database(prname,myrank,LOCAL_PATH)
   if (ADIOS_FOR_MESH) then
-    call save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
-                                           APPROXIMATE_OCEAN_LOAD,         &
-                                           ibool, num_interfaces_ext_mesh, &
-                                           my_neighbours_ext_mesh,         &
-                                           nibool_interfaces_ext_mesh,     &
-                                           max_interface_size_ext_mesh,    &
-                                           ibool_interfaces_ext_mesh,      &
-                                           SAVE_MESH_FILES,ANISOTROPY)
+    call save_arrays_solver_ext_mesh_adios(nspec,nglob,APPROXIMATE_OCEAN_LOAD, &
+                                           ibool,num_interfaces_ext_mesh, &
+                                           my_neighbours_ext_mesh, &
+                                           nibool_interfaces_ext_mesh, &
+                                           max_interface_size_ext_mesh, &
+                                           ibool_interfaces_ext_mesh,SAVE_MESH_FILES,ANISOTROPY)
   else
     call save_arrays_solver_ext_mesh(nspec,nglob_dummy,APPROXIMATE_OCEAN_LOAD,ibool, &
                                      num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
@@ -314,7 +303,7 @@
 
   if (POROELASTIC_SIMULATION) then
     !chris: check for poro: At the moment cpI & cpII are for eta=0
-    call check_mesh_resolution_poro(myrank,nspec,nglob_dummy,ibool,&
+    call check_mesh_resolution_poro(myrank,nspec,nglob_dummy,ibool, &
                                     xstore_dummy,ystore_dummy,zstore_dummy, &
                                     -1.0d0, model_speed_max,min_resolved_period, &
                                     phistore,tortstore,rhoarraystore,rho_vpI,rho_vpII,rho_vsI, &
@@ -336,12 +325,12 @@
     endif
     call get_attenuation_model(myrank,nspec,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
                                mustore,rho_vs,kappastore,rho_vp,qkappa_attenuation_store,qmu_attenuation_store, &
-                               ispec_is_elastic,min_resolved_period,prname,FULL_ATTENUATION_SOLID,ATTENUATION_f0_REFERENCE)
+                               ispec_is_elastic,min_resolved_period,prname,ATTENUATION_f0_REFERENCE)
   endif
 
   ! cleanup
-  deallocate(xixstore,xiystore,xizstore,&
-             etaxstore,etaystore,etazstore,&
+  deallocate(xixstore,xiystore,xizstore, &
+             etaxstore,etaystore,etazstore, &
              gammaxstore,gammaystore,gammazstore)
   deallocate(jacobianstore)
   deallocate(qkappa_attenuation_store,qmu_attenuation_store)
@@ -385,7 +374,7 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
                         nspec2D_bottom,nspec2D_top,ANISOTROPY)
 
   use generate_databases_par, only: STACEY_INSTEAD_OF_FREE_SURFACE,PML_INSTEAD_OF_FREE_SURFACE, &
-    NGNOD,NGNOD2D,NDIM,NDIM2D,NGLLX,NGLLY,NGLLZ,NGLLSQUARE
+    NGNOD,NGNOD2D,NDIM,NDIM2D,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,BOTTOM_FREE_SURFACE
   use create_regions_mesh_ext_par
 
   implicit none
@@ -488,16 +477,25 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
   if (STACEY_INSTEAD_OF_FREE_SURFACE .or. PML_INSTEAD_OF_FREE_SURFACE) then
      num_abs_boundary_faces = num_abs_boundary_faces + nspec2D_top
   endif
+
+  ! subtract bottom surface from Stacey condition when free surface
+  if (BOTTOM_FREE_SURFACE)  num_abs_boundary_faces = num_abs_boundary_faces -  nspec2D_bottom
+
   ! allocates arrays to store info for each face (assumes NGLLX=NGLLY=NGLLZ)
-  allocate( abs_boundary_ispec(num_abs_boundary_faces), &
-            abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces), &
-            abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces), &
-            abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
+  allocate(abs_boundary_ispec(num_abs_boundary_faces), &
+           abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces), &
+           abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces), &
+           abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
   ! free surface faces
   num_free_surface_faces = nspec2D_top
 
+   ! add bottom surface to free surface condition
+  if (BOTTOM_FREE_SURFACE) then
+     num_free_surface_faces = num_free_surface_faces + nspec2D_bottom
+     if (STACEY_INSTEAD_OF_FREE_SURFACE)  num_free_surface_faces = num_free_surface_faces - nspec2D_top
+  endif
   ! allocates arrays to store info for each face (assumes NGLLX=NGLLY=NGLLZ)
   allocate( free_surface_ispec(num_free_surface_faces), &
             free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces), &
@@ -535,9 +533,9 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
   ! material flags
-  allocate( ispec_is_acoustic(nspec), &
-            ispec_is_elastic(nspec), &
-            ispec_is_poroelastic(nspec), stat=ier)
+  allocate(ispec_is_acoustic(nspec), &
+           ispec_is_elastic(nspec), &
+           ispec_is_poroelastic(nspec), stat=ier)
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
   ! initializes Moho surface
@@ -552,7 +550,7 @@ end subroutine crm_ext_allocate_arrays
 
 subroutine crm_ext_setup_jacobian(myrank, &
                         xstore,ystore,zstore,nspec, &
-                        nodes_coords_ext_mesh,nnodes_ext_mesh,&
+                        nodes_coords_ext_mesh,nnodes_ext_mesh, &
                         elmnts_ext_mesh,nelmnts_ext_mesh)
 
   use generate_databases_par, only: NGNOD,NGNOD2D,NDIM,NGLLX,NGLLY,NGLLZ,GAUSSALPHA,GAUSSBETA
@@ -642,7 +640,7 @@ subroutine crm_ext_setup_indexing(ibool, &
 
 ! creates global indexing array ibool
 
-  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,NDIM
+  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,NDIM
   use create_regions_mesh_ext_par
 
   implicit none
@@ -740,7 +738,6 @@ subroutine crm_ext_setup_indexing(ibool, &
 !-------------------------------------------------------------------------------------------------
 !
 
-
   subroutine crm_setup_moho( myrank,nspec, &
                         nspec2D_moho_ext,ibelm_moho,nodes_ibelm_moho, &
                         nodes_coords_ext_mesh,nnodes_ext_mesh,ibool )
@@ -834,9 +831,9 @@ subroutine crm_ext_setup_indexing(ibool, &
 
     ! weighted jacobian and normal
     call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy,&
+              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
               dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&
+              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
               ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLZ,NGNOD2D)
 
     ! normal convention: points away from element
@@ -919,9 +916,9 @@ subroutine crm_ext_setup_indexing(ibool, &
         ! re-computes face infos
         ! weighted jacobian and normal
         call get_jacobian_boundary_face(myrank,nspec, &
-              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy,&
+              xstore_dummy,ystore_dummy,zstore_dummy,ibool,nglob_dummy, &
               dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
-              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz,&
+              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
               ispec,iface,jacobian2Dw_face,normal_face,NGLLX,NGLLZ,NGNOD2D)
 
         ! normal convention: points away from element
@@ -965,7 +962,7 @@ subroutine crm_ext_setup_indexing(ibool, &
           is_moho_bot(ispec) = .true.
           ibelm_moho_bot(ispec2D) = ispec
 
-          ! stores on surface gll points (assuming NGLLX = NGLLY = NGLLZ)
+          ! stores on surface GLL points (assuming NGLLX = NGLLY = NGLLZ)
           igll = 0
           do j=1,NGLLZ
             do i=1,NGLLX
@@ -989,7 +986,7 @@ subroutine crm_ext_setup_indexing(ibool, &
           is_moho_top(ispec) = .true.
           ibelm_moho_top(ispec2D) = ispec
 
-          ! gll points
+          ! GLL points
           igll = 0
           do j=1,NGLLZ
             do i=1,NGLLX
@@ -1086,7 +1083,7 @@ subroutine crm_ext_setup_indexing(ibool, &
 
 ! locates inner and outer elements
 
-  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,IMAIN
+  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,IMAIN
   use create_regions_mesh_ext_par
 
   implicit none

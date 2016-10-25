@@ -70,7 +70,7 @@
 ! mark global AVS or DX points
   do ispec=1,nspec
 ! only if at the surface (top plane)
-  if(iboun(6,ispec)) then
+  if (iboun(6,ispec)) then
 
     iglobval(5)=ibool(1,1,NGLLZ,ispec)
     iglobval(6)=ibool(NGLLX,1,NGLLZ,ispec)
@@ -100,7 +100,7 @@
   numpoin = 0
   do ispec=1,nspec
 ! only if at the surface
-  if(iboun(6,ispec)) then
+  if (iboun(6,ispec)) then
 
     iglobval(5)=ibool(1,1,NGLLZ,ispec)
     iglobval(6)=ibool(NGLLX,1,NGLLZ,ispec)
@@ -108,30 +108,30 @@
     iglobval(8)=ibool(1,NGLLY,NGLLZ,ispec)
 
 ! top face
-  if(iboun(6,ispec)) then
+  if (iboun(6,ispec)) then
 
-    if(.not. mask_ibool(iglobval(5))) then
+    if (.not. mask_ibool(iglobval(5))) then
       numpoin = numpoin + 1
       num_ibool_AVS_DX(iglobval(5)) = numpoin
       write(10,*) numpoin,sngl(xstore(1,1,NGLLZ,ispec)), &
               sngl(ystore(1,1,NGLLZ,ispec)),sngl(zstore(1,1,NGLLZ,ispec))
     endif
 
-    if(.not. mask_ibool(iglobval(6))) then
+    if (.not. mask_ibool(iglobval(6))) then
       numpoin = numpoin + 1
       num_ibool_AVS_DX(iglobval(6)) = numpoin
       write(10,*) numpoin,sngl(xstore(NGLLX,1,NGLLZ,ispec)), &
               sngl(ystore(NGLLX,1,NGLLZ,ispec)),sngl(zstore(NGLLX,1,NGLLZ,ispec))
     endif
 
-    if(.not. mask_ibool(iglobval(7))) then
+    if (.not. mask_ibool(iglobval(7))) then
       numpoin = numpoin + 1
       num_ibool_AVS_DX(iglobval(7)) = numpoin
       write(10,*) numpoin,sngl(xstore(NGLLX,NGLLY,NGLLZ,ispec)), &
               sngl(ystore(NGLLX,NGLLY,NGLLZ,ispec)),sngl(zstore(NGLLX,NGLLY,NGLLZ,ispec))
     endif
 
-    if(.not. mask_ibool(iglobval(8))) then
+    if (.not. mask_ibool(iglobval(8))) then
       numpoin = numpoin + 1
       num_ibool_AVS_DX(iglobval(8)) = numpoin
       write(10,*) numpoin,sngl(xstore(1,NGLLY,NGLLZ,ispec)), &
@@ -149,7 +149,7 @@
   enddo
 
 ! check that number of global points output is okay
-  if(numpoin /= npoin) &
+  if (numpoin /= npoin) &
     call exit_MPI(myrank,'incorrect number of global points in AVS or DX file creation')
 
   close(10)
@@ -165,7 +165,7 @@
   ispecface = 0
   do ispec=1,nspec
 ! only if at the surface
-  if(iboun(6,ispec)) then
+  if (iboun(6,ispec)) then
 
     iglobval(5)=ibool(1,1,NGLLZ,ispec)
     iglobval(6)=ibool(NGLLX,1,NGLLZ,ispec)
@@ -182,7 +182,7 @@
   enddo
 
 ! check that number of surface elements output is okay
-  if(ispecface /= nspecface) &
+  if (ispecface /= nspecface) &
     call exit_MPI(myrank,'incorrect number of surface elements in AVS or DX file creation')
 
   close(10)

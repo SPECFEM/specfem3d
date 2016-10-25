@@ -80,7 +80,7 @@
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ! If you find any errors, please notify:
-! Jon Ahlquist <ahlquist@met.fsu.edu>
+! Jon Ahlquist
 ! Dept of Meteorology
 ! Florida State University
 ! Tallahassee, FL 32306-4520
@@ -129,7 +129,7 @@
 
 !----------
 !
-! Subroutine calndr() performs calendar calculations using either
+! The subroutine calndr() performs calendar calculations using either
 ! the standard Gregorian calendar or the old Julian calendar.
 ! This subroutine extends the definitions of these calendar systems
 ! to any arbitrary year.  The algorithms in this subroutine
@@ -143,7 +143,7 @@
 !
 !----------
 !
-! INPUT/OUTPUT ARGUMENTS FOR SUBROUTINE CALNDR()
+! Input/output arguments for subroutine CALNDR()
 !
 ! "ioptn" is the desired calendar conversion option explained below.
 ! Positive option values use the standard modern Gregorian calendar.
@@ -159,7 +159,7 @@
 ! For BC years, iyear should be negative, so 45 BC would be iyear=-45.
 ! By convention, there is no year 0 under the BC/AD year numbering
 ! scheme.  That is, years proceed as 2 BC, 1 BC, 1 AD, 2 AD, etc.,
-! without including 0.  Subroutine calndr() will print an error message
+! without including 0. The subroutine calndr() will print an error message
 ! and stop if you specify iyear = 0.
 !
 ! "idayct" is a day count.  It is either the day number during the
@@ -402,7 +402,7 @@
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ! If you find any errors, please notify:
-! Jon Ahlquist <ahlquist@met.fsu.edu>
+! Jon Ahlquist
 ! Dept of Meteorology
 ! Florida State University
 ! Tallahassee, FL 32306-4520
@@ -694,7 +694,7 @@
 !        Now find the day number "iday".
 !        ndays is the number of days since the most recent 1 March,
 !        so ndays = 0 on 1 March.
-   if (ndays <=305) then
+   if (ndays <= 305) then
       iday  = ndays + 60 + leap
    else
       iday  = ndays - 305

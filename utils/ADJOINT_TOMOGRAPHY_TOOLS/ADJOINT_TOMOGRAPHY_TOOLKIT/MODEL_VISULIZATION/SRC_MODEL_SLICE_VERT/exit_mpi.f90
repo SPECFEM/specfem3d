@@ -60,7 +60,7 @@
   close(IERROR)
 
 ! close output file
-  if(myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) close(IMAIN)
+  if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) close(IMAIN)
 
 ! stop all the MPI processes, and exit
 ! note: MPI_ABORT does not return, and does exit the

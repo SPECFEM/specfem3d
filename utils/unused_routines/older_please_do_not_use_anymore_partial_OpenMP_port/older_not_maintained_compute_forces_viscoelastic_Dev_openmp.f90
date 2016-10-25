@@ -36,43 +36,43 @@
                              wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                              kappastore,mustore,jacobian,ibool, &
                              ATTENUATION,deltat, &
-                             one_minus_sum_beta,factor_common,alphaval,betaval,gammaval,&
+                             one_minus_sum_beta,factor_common,alphaval,betaval,gammaval, &
                              NSPEC_ATTENUATION_AB, &
                              R_xx,R_yy,R_xy,R_xz,R_yz, &
                              epsilondev_xx,epsilondev_yy,epsilondev_xy, &
                              epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
                              ANISOTROPY,NSPEC_ANISO, &
-                             c11store,c12store,c13store,c14store,c15store,c16store,&
-                             c22store,c23store,c24store,c25store,c26store,c33store,&
-                             c34store,c35store,c36store,c44store,c45store,c46store,&
+                             c11store,c12store,c13store,c14store,c15store,c16store, &
+                             c22store,c23store,c24store,c25store,c26store,c33store, &
+                             c34store,c35store,c36store,c44store,c45store,c46store, &
                              c55store,c56store,c66store, &
                              SIMULATION_TYPE,COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
                              NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT, &
                              is_moho_top,is_moho_bot, &
                              dsdx_top,dsdx_bot, &
                              ispec2D_moho_top,ispec2D_moho_bot, &
-                             num_phase_ispec_elastic,&
-                             phase_ispec_inner_elastic,&
+                             num_phase_ispec_elastic, &
+                             phase_ispec_inner_elastic, &
                              num_colors_outer_elastic,num_colors_inner_elastic)
 
 
 
   ! computes elastic tensor term
 
-  use constants,only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM, &
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM, &
        N_SLS,SAVE_MOHO_MESH, &
        ONE_THIRD,FOUR_THIRDS,m1,m2
 
   ! Trying to pass these variables as subroutine arguments ran into
   ! problems, so we reference them from their module, making them
   ! accessible from this subroutine
-  use specfem_par_elastic, only:dummyx_loc,dummyy_loc,dummyz_loc,newtempx1,newtempx2,newtempx3, &
+  use specfem_par_elastic, only: dummyx_loc,dummyy_loc,dummyz_loc,newtempx1,newtempx2,newtempx3, &
        newtempy1,newtempy2,newtempy3,newtempz1,newtempz2,newtempz3, &
        tempx1,tempx2,tempx3,tempy1,tempy2,tempy3,tempz1,tempz2,tempz3,num_elem_colors_elastic, &
        dummyx_loc_att,dummyy_loc_att,dummyz_loc_att,tempx1_att,tempx2_att,tempx3_att, &
        tempy1_att,tempy2_att,tempy3_att,tempz1_att,tempz2_att,tempz3_att
 
-  use fault_solver_dynamic, only : Kelvin_Voigt_eta
+  use fault_solver_dynamic, only: Kelvin_Voigt_eta
 
   implicit none
 
@@ -170,7 +170,7 @@
   !double precision accumulate_time_stop
 
   ! local anisotropy parameters
-  real(kind=CUSTOM_REAL) c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,&
+  real(kind=CUSTOM_REAL) c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26, &
        c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
 
   integer i_SLS,imodulo_N_SLS
@@ -219,22 +219,22 @@
   do icolor = istart, number_of_colors
 
     !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(&
-    !$OMP R_xx_val1,R_yy_val1,R_xx_val2,R_yy_val2,R_xx_val3,R_yy_val3,&
-    !$OMP factor_loc,alphaval_loc,betaval_loc,gammaval_loc,&
-    !$OMP Sn,Snp1,&
-    !$OMP templ,&
-    !$OMP xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl,&
-    !$OMP duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl,&
-    !$OMP duxdxl_plus_duydyl,duxdxl_plus_duzdzl,duydyl_plus_duzdzl,&
-    !$OMP duxdyl_plus_duydxl,duzdxl_plus_duxdzl,duzdyl_plus_duydzl,&
-    !$OMP sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz,&
-    !$OMP fac1,fac2,fac3,&
-    !$OMP lambdal,mul,lambdalplus2mul,kappal,&
-    !$OMP c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,&
-    !$OMP c33,c34,c35,c36,c44,c45,c46,c55,c56,c66,&
-    !$OMP i_SLS,&
-    !$OMP ispec,iglob,ispec_p,&
-    !$OMP i,j,k,&
+    !$OMP R_xx_val1,R_yy_val1,R_xx_val2,R_yy_val2,R_xx_val3,R_yy_val3, &
+    !$OMP factor_loc,alphaval_loc,betaval_loc,gammaval_loc, &
+    !$OMP Sn,Snp1, &
+    !$OMP templ, &
+    !$OMP xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl, &
+    !$OMP duxdxl,duxdyl,duxdzl,duydxl,duydyl,duydzl,duzdxl,duzdyl,duzdzl, &
+    !$OMP duxdxl_plus_duydyl,duxdxl_plus_duzdzl,duydyl_plus_duzdzl, &
+    !$OMP duxdyl_plus_duydxl,duzdxl_plus_duxdzl,duzdyl_plus_duydzl, &
+    !$OMP sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz, &
+    !$OMP fac1,fac2,fac3, &
+    !$OMP lambdal,mul,lambdalplus2mul,kappal, &
+    !$OMP c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26, &
+    !$OMP c33,c34,c35,c36,c44,c45,c46,c55,c56,c66, &
+    !$OMP i_SLS, &
+    !$OMP ispec,iglob,ispec_p, &
+    !$OMP i,j,k, &
     !$OMP thread_id)
 
     thread_id = OMP_get_thread_num()+1

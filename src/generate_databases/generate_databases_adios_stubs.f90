@@ -35,7 +35,7 @@
 !==============================================================================
 
 !--------------------------------------.
-! Subroutines from model_gll_adios.F90 |
+! subroutines from model_gll_adios.F90 |
 !--------------------------------------'
 
 subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
@@ -58,7 +58,7 @@ subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
 end subroutine
 
 !----------------------------------------.
-! Subroutines from model_ipati_adios.F90 |
+! subroutines from model_ipati_adios.F90 |
 !----------------------------------------'
 
 module model_ipati_adios_mod
@@ -126,7 +126,7 @@ end subroutine read_model_vp_rho_adios
 end module model_ipati_adios_mod
 
 !-------------------------------------------------.
-! Subroutines from read_partition_files_adios.F90 |
+! subroutines from read_partition_files_adios.F90 |
 !-------------------------------------------------'
 
 subroutine read_partition_files_adios()
@@ -136,16 +136,16 @@ subroutine read_partition_files_adios()
 end subroutine read_partition_files_adios
 
 !-----------------------------------------------.
-! Subroutines from save_arrays_solver_adios.F90 |
+! subroutines from save_arrays_solver_adios.F90 |
 !-----------------------------------------------'
 
-subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
-                                             APPROXIMATE_OCEAN_LOAD,         &
+subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
+                                             APPROXIMATE_OCEAN_LOAD, &
                                              ibool, num_interfaces_ext_mesh, &
-                                             my_neighbours_ext_mesh,         &
-                                             nibool_interfaces_ext_mesh,     &
-                                             max_interface_size_ext_mesh,    &
-                                             ibool_interfaces_ext_mesh,      &
+                                             my_neighbours_ext_mesh, &
+                                             nibool_interfaces_ext_mesh, &
+                                             max_interface_size_ext_mesh, &
+                                             ibool_interfaces_ext_mesh, &
                                              SAVE_MESH_FILES,ANISOTROPY)
 
   use adios_manager_mod
@@ -180,7 +180,7 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob,                   &
 end subroutine
 
 !--------------------------------------.
-! Subroutines from save_moho_adios.F90 |
+! subroutines from save_moho_adios.F90 |
 !--------------------------------------'
 
 subroutine crm_save_moho_adios()

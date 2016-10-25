@@ -66,7 +66,7 @@
 
 ! determine if the element falls on an absorbing boundary
 
-  if(iboun(1,ispecg)) then
+  if (iboun(1,ispecg)) then
 
 !   on boundary 1: xmin
     ispecb1=ispecb1+1
@@ -77,10 +77,10 @@
 
 !   check for ovelap with other boundaries
     nkmin_xi(1,ispecb1)=1
-    if(iboun(5,ispecg)) nkmin_xi(1,ispecb1)=2
+    if (iboun(5,ispecg)) nkmin_xi(1,ispecb1)=2
   endif
 
-  if(iboun(2,ispecg)) then
+  if (iboun(2,ispecg)) then
 
 !   on boundary 2: xmax
     ispecb2=ispecb2+1
@@ -91,44 +91,44 @@
 
 !   check for ovelap with other boundaries
     nkmin_xi(2,ispecb2)=1
-    if(iboun(5,ispecg)) nkmin_xi(2,ispecb2)=2
+    if (iboun(5,ispecg)) nkmin_xi(2,ispecb2)=2
   endif
 
-  if(iboun(3,ispecg)) then
+  if (iboun(3,ispecg)) then
 
 !   on boundary 3: ymin
     ispecb3=ispecb3+1
 
 !   check for ovelap with other boundaries
     nimin(1,ispecb3)=1
-    if(iboun(1,ispecg)) nimin(1,ispecb3)=2
+    if (iboun(1,ispecg)) nimin(1,ispecb3)=2
     nimax(1,ispecb3)=NGLLX
-    if(iboun(2,ispecg)) nimax(1,ispecb3)=NGLLX-1
+    if (iboun(2,ispecg)) nimax(1,ispecb3)=NGLLX-1
     nkmin_eta(1,ispecb3)=1
-    if(iboun(5,ispecg)) nkmin_eta(1,ispecb3)=2
+    if (iboun(5,ispecg)) nkmin_eta(1,ispecb3)=2
   endif
 
-  if(iboun(4,ispecg)) then
+  if (iboun(4,ispecg)) then
 
 !   on boundary 4: ymax
     ispecb4=ispecb4+1
 
 !   check for ovelap with other boundaries
     nimin(2,ispecb4)=1
-    if(iboun(1,ispecg)) nimin(2,ispecb4)=2
+    if (iboun(1,ispecg)) nimin(2,ispecb4)=2
     nimax(2,ispecb4)=NGLLX
-    if(iboun(2,ispecg)) nimax(2,ispecb4)=NGLLX-1
+    if (iboun(2,ispecg)) nimax(2,ispecb4)=NGLLX-1
     nkmin_eta(2,ispecb4)=1
-    if(iboun(5,ispecg)) nkmin_eta(2,ispecb4)=2
+    if (iboun(5,ispecg)) nkmin_eta(2,ispecb4)=2
   endif
 
 ! on boundary 5: bottom
-  if(iboun(5,ispecg)) ispecb5=ispecb5+1
+  if (iboun(5,ispecg)) ispecb5=ispecb5+1
 
   enddo
 
 ! check theoretical value of elements at the bottom
-  if(ispecb5 /= NSPEC2D_BOTTOM) &
+  if (ispecb5 /= NSPEC2D_BOTTOM) &
     call exit_MPI(myrank,'ispecb5 should equal NSPEC2D_BOTTOM in absorbing boundary detection')
 
 ! save these temporary arrays for the solver for Stacey conditions

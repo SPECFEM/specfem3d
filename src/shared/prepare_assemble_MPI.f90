@@ -238,7 +238,7 @@ subroutine get_edge ( n, itype, e1, e2, e3, e4, &
 
 ! edges
 
-    if (e1 ==  n(1)) then
+    if (e1 == n(1)) then
       ixmin = 1
       iymin = 1
       izmin = 1

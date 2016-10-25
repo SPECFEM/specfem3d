@@ -142,7 +142,7 @@
   rspl(1)=r(1)
   gspl(1)=g(1)
   do i=2,NR
-    if (r(i)/=r(i-1)) then
+    if (r(i) /= r(i-1)) then
       nspl=nspl+1
       rspl(nspl)=r(i)
       gspl(nspl)=g(i)
@@ -169,7 +169,7 @@
 !--------------------------------------------------------------------------------------------------
 
 
-  subroutine model_prem_iso(x,rho,drhodr,vp,vs,Qkappa,Qmu,&
+  subroutine model_prem_iso(x,rho,drhodr,vp,vs,Qkappa,Qmu, &
                           RICB,RCMB,RTOPDDOUBLEPRIME, &
                           R600,R670,R220,R771,R400,R80,RMOHO,RMIDDLE_CRUST,ROCEAN)
 
@@ -486,7 +486,7 @@
   goto 6
     5 j1=kdis(ndis)+1
   j2=n-2
-    6 if ((j2+1-j1)>0) goto 11
+    6 if ((j2+1-j1) > 0) goto 11
   j2=j2+2
   yy(1)=(y(j2)-y(j1))/(r(j2)-r(j1))
   s1(j1)=yy(1)

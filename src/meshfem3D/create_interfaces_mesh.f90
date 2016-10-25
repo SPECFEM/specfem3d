@@ -36,7 +36,7 @@
     number_of_layers,ner_layer,iproc_xi_current,iproc_eta_current,NPROC_XI,NPROC_ETA, &
     xgrid,ygrid,zgrid
 
-  use constants,only: IMAIN,IIN,MF_IN_DATA_FILES,DONT_IGNORE_JUNK,IUTM2LONGLAT,MAX_STRING_LEN,HUGEVAL
+  use constants, only: IMAIN,IIN,MF_IN_DATA_FILES,DONT_IGNORE_JUNK,IUTM2LONGLAT,MAX_STRING_LEN,HUGEVAL
 
   implicit none
 
@@ -169,9 +169,9 @@
     endif
 
     ! read top interface
-    call read_interface_parameters(IIN,SUPPRESS_UTM_PROJECTION_TOP,interface_top_file,&
-                                   npx_interface_top,npy_interface_top,&
-                                   orig_x_interface_top,orig_y_interface_top,&
+    call read_interface_parameters(IIN,SUPPRESS_UTM_PROJECTION_TOP,interface_top_file, &
+                                   npx_interface_top,npy_interface_top, &
+                                   orig_x_interface_top,orig_y_interface_top, &
                                    spacing_x_interface_top,spacing_y_interface_top,ier)
     if (ier /= 0) stop 'Error reading interface parameters'
 
@@ -454,7 +454,7 @@
     number_of_interfaces,max_npx_interface,max_npy_interface, &
     number_of_layers,ner_layer
 
-  use constants,only: IMAIN,IIN,MF_IN_DATA_FILES,DONT_IGNORE_JUNK,IUTM2LONGLAT,MAX_STRING_LEN
+  use constants, only: IMAIN,IIN,MF_IN_DATA_FILES,DONT_IGNORE_JUNK,IUTM2LONGLAT,MAX_STRING_LEN
 
   implicit none
 
@@ -496,8 +496,8 @@
   ! loop on all the interfaces
   do interface_current = 1,number_of_interfaces
     call read_interface_parameters(IIN,SUPPRESS_UTM_PROJECTION_DUMMY,dummy_file, &
-                                   npx_interface,npy_interface,&
-                                   orig_x_dummy,orig_y_dummy,&
+                                   npx_interface,npy_interface, &
+                                   orig_x_dummy,orig_y_dummy, &
                                    spacing_x_dummy,spacing_y_dummy,ier)
     if (ier /= 0) then
       print *,'Error reading interface parameters: interface ',interface_current
@@ -507,7 +507,7 @@
     max_npx_interface = max(npx_interface,max_npx_interface)
     max_npy_interface = max(npy_interface,max_npy_interface)
 
-    if ((max_npx_interface < 2) .or.(max_npy_interface < 2)) then
+    if ((max_npx_interface < 2) .or. (max_npy_interface < 2)) then
       print *,'Error interface ',interface_current,': has not enough interface points (minimum is 2x2)'
       stop 'Error not enough interface points (minimum is 2x2)'
     endif

@@ -127,7 +127,7 @@ module wave2d_constants
 
   ! parameters for smoothing
   logical, parameter :: HIGH_RES_SMOOTHING = .true.  ! smooth at high resolution
-  logical, parameter :: EXAMPLE_GAUSSIAN = .false.   ! plot an example Gaussian
+  logical, parameter :: EXAMPLE_Gaussian = .false.   ! plot an example Gaussian
 
   !========================
 

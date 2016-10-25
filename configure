@@ -623,6 +623,7 @@ ac_includes_default="\
 
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
+GIT_VERSION_DEPS
 CUDA_LIBS
 CUDA_LDFLAGS
 CUDA_CPPFLAGS
@@ -1415,7 +1416,7 @@ Optional Features:
                           solver in double precision [default=no]
   --enable-debug          build with debugging options enabled [default=no]
   --enable-vectorization  build FORCE_VECTORIZATION enabled version
-                          [default=no]
+                          [default=auto]
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -7899,8 +7900,23 @@ $as_echo "## ----------------------------------- ##
 ## ----------------------------------- ##"
 
 # Output results.
-ac_config_files="$ac_config_files Makefile setup/constants.h setup/constants_tomography.h setup/constants_inverse_problem.h setup/precision.h setup/config.fh"
+ac_config_files="$ac_config_files Makefile setup/constants.h setup/constants_tomography.h setup/precision.h setup/config.fh"
 
+if test -d $srcdir/.git; then :
+
+    GIT_VERSION_DEPS="$srcdir/.git/logs/HEAD"
+    { $as_echo "$as_me:${as_lineno-$LINENO}: building from git repository" >&5
+$as_echo "$as_me: building from git repository" >&6;}
+
+
+else
+
+        { $as_echo "$as_me:${as_lineno-$LINENO}: not a git repository" >&5
+$as_echo "$as_me: not a git repository" >&6;}
+    ac_config_files="$ac_config_files setup/version.fh"
+
+
+fi
 
 if test "$USE_BUNDLED_SCOTCH" = 1; then
   ac_config_files="$ac_config_files ${SCOTCH_DIR}/src/Makefile.inc"
@@ -8657,9 +8673,9 @@ do
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "setup/constants.h") CONFIG_FILES="$CONFIG_FILES setup/constants.h" ;;
     "setup/constants_tomography.h") CONFIG_FILES="$CONFIG_FILES setup/constants_tomography.h" ;;
-    "setup/constants_inverse_problem.h") CONFIG_FILES="$CONFIG_FILES setup/constants_inverse_problem.h" ;;
     "setup/precision.h") CONFIG_FILES="$CONFIG_FILES setup/precision.h" ;;
     "setup/config.fh") CONFIG_FILES="$CONFIG_FILES setup/config.fh" ;;
+    "setup/version.fh") CONFIG_FILES="$CONFIG_FILES setup/version.fh" ;;
     "${SCOTCH_DIR}/src/Makefile.inc") CONFIG_FILES="$CONFIG_FILES ${SCOTCH_DIR}/src/Makefile.inc" ;;
     "bin") CONFIG_COMMANDS="$CONFIG_COMMANDS bin" ;;
     "obj") CONFIG_COMMANDS="$CONFIG_COMMANDS obj" ;;

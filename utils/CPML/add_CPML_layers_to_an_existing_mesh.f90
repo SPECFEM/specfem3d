@@ -97,19 +97,19 @@
   print *,'  (if not, you can run xconvert_mesh_files_from_ASCII_to_binary)'
   print *,'3 = exit'
   read(*,*) iformat
-  if(iformat /= 1 .and. iformat /= 2) stop 'exiting...'
+  if (iformat /= 1 .and. iformat /= 2) stop 'exiting...'
 
   print *,'enter the number of PML layers to add on each side of the mesh (usually 3, can also be 4):'
   read(*,*) NUMBER_OF_PML_LAYERS_TO_ADD
-  if(NUMBER_OF_PML_LAYERS_TO_ADD < 1) stop 'NUMBER_OF_PML_LAYERS_TO_ADD must be >= 1'
+  if (NUMBER_OF_PML_LAYERS_TO_ADD < 1) stop 'NUMBER_OF_PML_LAYERS_TO_ADD must be >= 1'
   print *
 
   print *,'1 = use a free surface at the top of the mesh i.e. do not add a CPML layer at the top (most classical option)'
   print *,'2 = add a CPML absorbing layer at the top of the mesh (less classical option)'
   print *,'3 = exit'
   read(*,*) iflag
-  if(iflag /= 1 .and. iflag /= 2) stop 'exiting...'
-  if(iflag == 1) then
+  if (iflag /= 1 .and. iflag /= 2) stop 'exiting...'
+  if (iflag == 1) then
     ALSO_ADD_ON_THE_TOP_SURFACE = .false.
   else
     ALSO_ADD_ON_THE_TOP_SURFACE = .true.
@@ -120,39 +120,39 @@
   print *,'2 = enter the size of the PML elements to add manually'
   print *,'3 = exit'
   read(*,*) icompute_size
-  if(icompute_size /= 1 .and. icompute_size /= 2) stop 'exiting...'
+  if (icompute_size /= 1 .and. icompute_size /= 2) stop 'exiting...'
 
-  if(icompute_size == 2) then
+  if (icompute_size == 2) then
 
   print *,'enter the X size (in meters) of each CPML element to add on the Xmin face:'
   read(*,*) SIZE_OF_XMIN_ELEMENT_TO_ADD
-  if(SIZE_OF_XMIN_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_XMIN_ELEMENT_TO_ADD must be > 0'
+  if (SIZE_OF_XMIN_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_XMIN_ELEMENT_TO_ADD must be > 0'
   print *
 
   print *,'enter the X size (in meters) of each CPML element to add on the Xmax face:'
   read(*,*) SIZE_OF_XMAX_ELEMENT_TO_ADD
-  if(SIZE_OF_XMAX_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_XMAX_ELEMENT_TO_ADD must be > 0'
+  if (SIZE_OF_XMAX_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_XMAX_ELEMENT_TO_ADD must be > 0'
   print *
 
   print *,'enter the Y size (in meters) of each CPML element to add on the Ymin faces:'
   read(*,*) SIZE_OF_YMIN_ELEMENT_TO_ADD
-  if(SIZE_OF_YMIN_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_YMIN_ELEMENT_TO_ADD must be > 0'
+  if (SIZE_OF_YMIN_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_YMIN_ELEMENT_TO_ADD must be > 0'
   print *
 
   print *,'enter the Y size (in meters) of each CPML element to add on the Ymax faces:'
   read(*,*) SIZE_OF_YMAX_ELEMENT_TO_ADD
-  if(SIZE_OF_YMAX_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_YMAX_ELEMENT_TO_ADD must be > 0'
+  if (SIZE_OF_YMAX_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_YMAX_ELEMENT_TO_ADD must be > 0'
   print *
 
   print *,'enter the Z size (in meters) of each CPML element to add on the Zmin faces:'
   read(*,*) SIZE_OF_ZMIN_ELEMENT_TO_ADD
-  if(SIZE_OF_ZMIN_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_ZMIN_ELEMENT_TO_ADD must be > 0'
+  if (SIZE_OF_ZMIN_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_ZMIN_ELEMENT_TO_ADD must be > 0'
   print *
 
-  if(ALSO_ADD_ON_THE_TOP_SURFACE) then
+  if (ALSO_ADD_ON_THE_TOP_SURFACE) then
     print *,'enter the Z size (in meters) of each CPML element to add on the Zmax faces:'
     read(*,*) SIZE_OF_ZMAX_ELEMENT_TO_ADD
-    if(SIZE_OF_ZMAX_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_ZMAX_ELEMENT_TO_ADD must be > 0'
+    if (SIZE_OF_ZMAX_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_ZMAX_ELEMENT_TO_ADD must be > 0'
     print *
   endif
 
@@ -165,7 +165,7 @@
   call get_shape3D(dershape3D,xigll,yigll,zigll,NGNOD,NGLLX,NGLLY,NGLLZ,NDIM)
 
 ! open SPECFEM3D_Cartesian mesh file to read the points
-  if(iformat == 1) then
+  if (iformat == 1) then
     open(unit=23,file='nodes_coords_file',status='old',action='read')
     read(23,*) npoin
   else
@@ -175,7 +175,7 @@
   allocate(x(npoin))
   allocate(y(npoin))
   allocate(z(npoin))
-  if(iformat == 1) then
+  if (iformat == 1) then
     do ipoin = 1,npoin
       read(23,*) ipoin_read,xread,yread,zread
       x(ipoin_read) = xread
@@ -192,7 +192,7 @@
 ! ************* read mesh elements *************
 
 ! open SPECFEM3D_Cartesian topology file to read the mesh elements
-  if(iformat == 1) then
+  if (iformat == 1) then
     open(unit=23,file='mesh_file',status='old',action='read')
     read(23,*) nspec
   else
@@ -203,7 +203,7 @@
   allocate(ibool(NGNOD,nspec))
 
 ! loop on the whole mesh
-  if(iformat == 1) then
+  if (iformat == 1) then
     do ispec_loop = 1,nspec
       read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
 ! store the ibool() array read
@@ -226,13 +226,13 @@
 
 ! read the materials file
   allocate(imaterial(nspec))
-  if(iformat == 1) then
+  if (iformat == 1) then
     open(unit=23,file='materials_file',status='old',action='read')
   else
     open(unit=23,file='materials_file.bin',form='unformatted',status='old',action='read')
   endif
 ! loop on the whole mesh
-  if(iformat == 1) then
+  if (iformat == 1) then
     do ispec_loop = 1,nspec
       read(23,*) ispec,i1
 ! store the imaterial() array read
@@ -252,15 +252,15 @@
     do iloop_on_min_face_then_max_face = 1,2  ! 1 is min face and 2 is max face (Xmin then Xmax, Ymin then Ymax, or Zmin then Zmax)
 
 ! do not add a CPML layer on the top surface if the user asked not to
-      if(iloop_on_X_Y_Z_faces == 3 .and. iloop_on_min_face_then_max_face == 2 .and. .not. ALSO_ADD_ON_THE_TOP_SURFACE) cycle
+      if (iloop_on_X_Y_Z_faces == 3 .and. iloop_on_min_face_then_max_face == 2 .and. .not. ALSO_ADD_ON_THE_TOP_SURFACE) cycle
 
     print *
     print *,'********************************************************************'
-    if(iloop_on_X_Y_Z_faces == 1) then
+    if (iloop_on_X_Y_Z_faces == 1) then
       print *,'adding CPML elements along one of the two X faces of the existing mesh'
-    else if(iloop_on_X_Y_Z_faces == 2) then
+    else if (iloop_on_X_Y_Z_faces == 2) then
       print *,'adding CPML elements along one of the two Y faces of the existing mesh'
-    else if(iloop_on_X_Y_Z_faces == 3) then
+    else if (iloop_on_X_Y_Z_faces == 3) then
       print *,'adding CPML elements along one of the two Z faces of the existing mesh'
     else
       stop 'wrong index in loop on faces'
@@ -294,21 +294,21 @@
 
   count_elem_faces_to_extend = 0
 
-    if(iloop_on_X_Y_Z_faces == 1) then ! Xmin or Xmax face
+    if (iloop_on_X_Y_Z_faces == 1) then ! Xmin or Xmax face
       value_min = xmin
       value_max = xmax
       value_size = xsize
       coord_to_use1 => x  ! make coordinate array to use point to array x()
       coord_to_use2 => y
       coord_to_use3 => z
-    else if(iloop_on_X_Y_Z_faces == 2) then ! Ymin or Ymax face
+    else if (iloop_on_X_Y_Z_faces == 2) then ! Ymin or Ymax face
       value_min = ymin
       value_max = ymax
       value_size = ysize
       coord_to_use1 => y  ! make coordinate array to use point to array y()
       coord_to_use2 => x
       coord_to_use3 => z
-    else if(iloop_on_X_Y_Z_faces == 3) then ! Zmin or Zmax face
+    else if (iloop_on_X_Y_Z_faces == 3) then ! Zmin or Zmax face
       value_min = zmin
       value_max = zmax
       value_size = zsize
@@ -319,7 +319,7 @@
       stop 'wrong index in loop on faces'
     endif
 
-  if(minval(ibool) /= 1) stop 'error in minval(ibool)'
+  if (minval(ibool) /= 1) stop 'error in minval(ibool)'
 
   sum_of_distances = 0.d0
 
@@ -335,13 +335,13 @@
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
 
-      if(iloop_on_min_face_then_max_face == 1) then ! min face
+      if (iloop_on_min_face_then_max_face == 1) then ! min face
 
 ! detect elements belonging to the min face
     limit = value_min + value_size * SMALL_RELATIVE_VALUE
 
 ! test face 1 (bottom)
-    if(coord_to_use1(i1) < limit .and. coord_to_use1(i2) < limit .and. &
+    if (coord_to_use1(i1) < limit .and. coord_to_use1(i2) < limit .and. &
        coord_to_use1(i3) < limit .and. coord_to_use1(i4) < limit) then
       count_elem_faces_to_extend = count_elem_faces_to_extend + 1
       sum_of_distances = sum_of_distances + &
@@ -349,7 +349,7 @@
     endif
 
 ! test face 2 (top)
-    if(coord_to_use1(i5) < limit .and. coord_to_use1(i6) < limit .and. &
+    if (coord_to_use1(i5) < limit .and. coord_to_use1(i6) < limit .and. &
        coord_to_use1(i7) < limit .and. coord_to_use1(i8) < limit) then
       count_elem_faces_to_extend = count_elem_faces_to_extend + 1
       sum_of_distances = sum_of_distances + &
@@ -357,7 +357,7 @@
     endif
 
 ! test face 3 (left)
-    if(coord_to_use1(i1) < limit .and. coord_to_use1(i4) < limit .and. &
+    if (coord_to_use1(i1) < limit .and. coord_to_use1(i4) < limit .and. &
        coord_to_use1(i8) < limit .and. coord_to_use1(i5) < limit) then
       count_elem_faces_to_extend = count_elem_faces_to_extend + 1
       sum_of_distances = sum_of_distances + &
@@ -365,7 +365,7 @@
     endif
 
 ! test face 4 (right)
-    if(coord_to_use1(i2) < limit .and. coord_to_use1(i3) < limit .and. &
+    if (coord_to_use1(i2) < limit .and. coord_to_use1(i3) < limit .and. &
        coord_to_use1(i7) < limit .and. coord_to_use1(i6) < limit) then
       count_elem_faces_to_extend = count_elem_faces_to_extend + 1
       sum_of_distances = sum_of_distances + &
@@ -373,7 +373,7 @@
     endif
 
 ! test face 5 (front)
-    if(coord_to_use1(i1) < limit .and. coord_to_use1(i2) < limit .and. &
+    if (coord_to_use1(i1) < limit .and. coord_to_use1(i2) < limit .and. &
        coord_to_use1(i6) < limit .and. coord_to_use1(i5) < limit) then
       count_elem_faces_to_extend = count_elem_faces_to_extend + 1
       sum_of_distances = sum_of_distances + &
@@ -381,7 +381,7 @@
     endif
 
 ! test face 6 (back)
-    if(coord_to_use1(i4) < limit .and. coord_to_use1(i3) < limit .and. &
+    if (coord_to_use1(i4) < limit .and. coord_to_use1(i3) < limit .and. &
        coord_to_use1(i7) < limit .and. coord_to_use1(i8) < limit) then
       count_elem_faces_to_extend = count_elem_faces_to_extend + 1
       sum_of_distances = sum_of_distances + &
@@ -394,7 +394,7 @@
     limit = value_max - value_size * SMALL_RELATIVE_VALUE
 
 ! test face 1 (bottom)
-    if(coord_to_use1(i1) > limit .and. coord_to_use1(i2) > limit .and. &
+    if (coord_to_use1(i1) > limit .and. coord_to_use1(i2) > limit .and. &
        coord_to_use1(i3) > limit .and. coord_to_use1(i4) > limit) then
       count_elem_faces_to_extend = count_elem_faces_to_extend + 1
       sum_of_distances = sum_of_distances + &
@@ -402,7 +402,7 @@
     endif
 
 ! test face 2 (top)
-    if(coord_to_use1(i5) > limit .and. coord_to_use1(i6) > limit .and. &
+    if (coord_to_use1(i5) > limit .and. coord_to_use1(i6) > limit .and. &
        coord_to_use1(i7) > limit .and. coord_to_use1(i8) > limit) then
       count_elem_faces_to_extend = count_elem_faces_to_extend + 1
       sum_of_distances = sum_of_distances + &
@@ -410,7 +410,7 @@
     endif
 
 ! test face 3 (left)
-    if(coord_to_use1(i1) > limit .and. coord_to_use1(i4) > limit .and. &
+    if (coord_to_use1(i1) > limit .and. coord_to_use1(i4) > limit .and. &
        coord_to_use1(i8) > limit .and. coord_to_use1(i5) > limit) then
       count_elem_faces_to_extend = count_elem_faces_to_extend + 1
       sum_of_distances = sum_of_distances + &
@@ -418,7 +418,7 @@
     endif
 
 ! test face 4 (right)
-    if(coord_to_use1(i2) > limit .and. coord_to_use1(i3) > limit .and. &
+    if (coord_to_use1(i2) > limit .and. coord_to_use1(i3) > limit .and. &
        coord_to_use1(i7) > limit .and. coord_to_use1(i6) > limit) then
       count_elem_faces_to_extend = count_elem_faces_to_extend + 1
       sum_of_distances = sum_of_distances + &
@@ -426,7 +426,7 @@
     endif
 
 ! test face 5 (front)
-    if(coord_to_use1(i1) > limit .and. coord_to_use1(i2) > limit .and. &
+    if (coord_to_use1(i1) > limit .and. coord_to_use1(i2) > limit .and. &
        coord_to_use1(i6) > limit .and. coord_to_use1(i5) > limit) then
       count_elem_faces_to_extend = count_elem_faces_to_extend + 1
       sum_of_distances = sum_of_distances + &
@@ -434,7 +434,7 @@
     endif
 
 ! test face 6 (back)
-    if(coord_to_use1(i4) > limit .and. coord_to_use1(i3) > limit .and. &
+    if (coord_to_use1(i4) > limit .and. coord_to_use1(i3) > limit .and. &
        coord_to_use1(i7) > limit .and. coord_to_use1(i8) > limit) then
       count_elem_faces_to_extend = count_elem_faces_to_extend + 1
       sum_of_distances = sum_of_distances + &
@@ -447,14 +447,14 @@
 
   print *,'Total number of elements in the mesh before extension = ',nspec
   print *,'Number of element faces to extend  = ',count_elem_faces_to_extend
-  if(count_elem_faces_to_extend == 0) stop 'error: number of element faces to extend detected is zero!'
+  if (count_elem_faces_to_extend == 0) stop 'error: number of element faces to extend detected is zero!'
 ! we will add NUMBER_OF_PML_LAYERS_TO_ADD to each of the element faces detected that need to be extended
   nspec_new = nspec + count_elem_faces_to_extend * NUMBER_OF_PML_LAYERS_TO_ADD
 ! and each of these elements will have NGNOD points
 ! (some of them shared with other elements, but we do not care because they will be removed automatically by xdecompose_mesh)
   npoin_new = npoin + count_elem_faces_to_extend * NUMBER_OF_PML_LAYERS_TO_ADD * NGNOD
   print *,'Total number of elements in the mesh after extension = ',nspec_new
-  if(icompute_size == 1) then
+  if (icompute_size == 1) then
     mean_distance = sum_of_distances / dble(count_elem_faces_to_extend)
     print *,'Computed mean size of the elements to extend = ',mean_distance
   endif
@@ -473,7 +473,7 @@
   ibool_new(:,1:nspec) = ibool(:,1:nspec)
   imaterial_new(1:nspec) = imaterial(1:nspec)
 
-  if(minval(ibool) /= 1) stop 'error in minval(ibool)'
+  if (minval(ibool) /= 1) stop 'error in minval(ibool)'
 
 ! allocate a new set of points, with multiples
   allocate(x_new(npoin_new))
@@ -504,13 +504,13 @@
 ! reset flag
     need_to_extend_this_element = .false.
 
-      if(iloop_on_min_face_then_max_face == 1) then ! min face
+      if (iloop_on_min_face_then_max_face == 1) then ! min face
 
 ! detect elements belonging to the min face
     limit = value_min + value_size * SMALL_RELATIVE_VALUE
 
 ! test face 1 (bottom)
-    if(coord_to_use1(i1) < limit .and. coord_to_use1(i2) < limit .and. &
+    if (coord_to_use1(i1) < limit .and. coord_to_use1(i2) < limit .and. &
        coord_to_use1(i3) < limit .and. coord_to_use1(i4) < limit) then
       need_to_extend_this_element = .true.
       p1 = i1
@@ -520,7 +520,7 @@
     endif
 
 ! test face 2 (top)
-    if(coord_to_use1(i5) < limit .and. coord_to_use1(i6) < limit .and. &
+    if (coord_to_use1(i5) < limit .and. coord_to_use1(i6) < limit .and. &
        coord_to_use1(i7) < limit .and. coord_to_use1(i8) < limit) then
       need_to_extend_this_element = .true.
       p1 = i5
@@ -530,7 +530,7 @@
     endif
 
 ! test face 3 (left)
-    if(coord_to_use1(i1) < limit .and. coord_to_use1(i4) < limit .and. &
+    if (coord_to_use1(i1) < limit .and. coord_to_use1(i4) < limit .and. &
        coord_to_use1(i5) < limit .and. coord_to_use1(i8) < limit) then
       need_to_extend_this_element = .true.
       p1 = i1
@@ -540,7 +540,7 @@
     endif
 
 ! test face 4 (right)
-    if(coord_to_use1(i2) < limit .and. coord_to_use1(i3) < limit .and. &
+    if (coord_to_use1(i2) < limit .and. coord_to_use1(i3) < limit .and. &
        coord_to_use1(i7) < limit .and. coord_to_use1(i6) < limit) then
       need_to_extend_this_element = .true.
       p1 = i2
@@ -550,7 +550,7 @@
     endif
 
 ! test face 5 (front)
-    if(coord_to_use1(i1) < limit .and. coord_to_use1(i2) < limit .and. &
+    if (coord_to_use1(i1) < limit .and. coord_to_use1(i2) < limit .and. &
        coord_to_use1(i6) < limit .and. coord_to_use1(i5) < limit) then
       need_to_extend_this_element = .true.
       p1 = i1
@@ -560,7 +560,7 @@
     endif
 
 ! test face 6 (back)
-    if(coord_to_use1(i4) < limit .and. coord_to_use1(i3) < limit .and. &
+    if (coord_to_use1(i4) < limit .and. coord_to_use1(i3) < limit .and. &
        coord_to_use1(i7) < limit .and. coord_to_use1(i8) < limit) then
       need_to_extend_this_element = .true.
       p1 = i4
@@ -575,7 +575,7 @@
     limit = value_max - value_size * SMALL_RELATIVE_VALUE
 
 ! test face 1 (bottom)
-    if(coord_to_use1(i1) > limit .and. coord_to_use1(i2) > limit .and. &
+    if (coord_to_use1(i1) > limit .and. coord_to_use1(i2) > limit .and. &
        coord_to_use1(i3) > limit .and. coord_to_use1(i4) > limit) then
       need_to_extend_this_element = .true.
       p1 = i1
@@ -585,7 +585,7 @@
     endif
 
 ! test face 2 (top)
-    if(coord_to_use1(i5) > limit .and. coord_to_use1(i6) > limit .and. &
+    if (coord_to_use1(i5) > limit .and. coord_to_use1(i6) > limit .and. &
        coord_to_use1(i7) > limit .and. coord_to_use1(i8) > limit) then
       need_to_extend_this_element = .true.
       p1 = i5
@@ -595,7 +595,7 @@
     endif
 
 ! test face 3 (left)
-    if(coord_to_use1(i1) > limit .and. coord_to_use1(i4) > limit .and. &
+    if (coord_to_use1(i1) > limit .and. coord_to_use1(i4) > limit .and. &
        coord_to_use1(i5) > limit .and. coord_to_use1(i8) > limit) then
       need_to_extend_this_element = .true.
       p1 = i1
@@ -605,7 +605,7 @@
     endif
 
 ! test face 4 (right)
-    if(coord_to_use1(i2) > limit .and. coord_to_use1(i3) > limit .and. &
+    if (coord_to_use1(i2) > limit .and. coord_to_use1(i3) > limit .and. &
        coord_to_use1(i7) > limit .and. coord_to_use1(i6) > limit) then
       need_to_extend_this_element = .true.
       p1 = i2
@@ -615,7 +615,7 @@
     endif
 
 ! test face 5 (front)
-    if(coord_to_use1(i1) > limit .and. coord_to_use1(i2) > limit .and. &
+    if (coord_to_use1(i1) > limit .and. coord_to_use1(i2) > limit .and. &
        coord_to_use1(i6) > limit .and. coord_to_use1(i5) > limit) then
       need_to_extend_this_element = .true.
       p1 = i1
@@ -625,7 +625,7 @@
     endif
 
 ! test face 6 (back)
-    if(coord_to_use1(i4) > limit .and. coord_to_use1(i3) > limit .and. &
+    if (coord_to_use1(i4) > limit .and. coord_to_use1(i3) > limit .and. &
        coord_to_use1(i7) > limit .and. coord_to_use1(i8) > limit) then
       need_to_extend_this_element = .true.
       p1 = i4
@@ -636,7 +636,7 @@
 
       endif
 
-    if(need_to_extend_this_element) then
+    if (need_to_extend_this_element) then
 
 ! create the NUMBER_OF_PML_LAYERS_TO_ADD new elements
 
@@ -652,34 +652,34 @@
     SIZE_OF_Y_ELEMENT_TO_ADD = 0.d0
     SIZE_OF_Z_ELEMENT_TO_ADD = 0.d0
 
-    if(iloop_on_X_Y_Z_faces == 1) then  ! Xmin or Xmax
-      if(iloop_on_min_face_then_max_face == 1) then ! min face
+    if (iloop_on_X_Y_Z_faces == 1) then  ! Xmin or Xmax
+      if (iloop_on_min_face_then_max_face == 1) then ! min face
         factor_x = -1
-        if(icompute_size == 1) SIZE_OF_XMIN_ELEMENT_TO_ADD = mean_distance
+        if (icompute_size == 1) SIZE_OF_XMIN_ELEMENT_TO_ADD = mean_distance
         SIZE_OF_X_ELEMENT_TO_ADD = SIZE_OF_XMIN_ELEMENT_TO_ADD
       else ! max face
         factor_x = +1
-        if(icompute_size == 1) SIZE_OF_XMAX_ELEMENT_TO_ADD = mean_distance
+        if (icompute_size == 1) SIZE_OF_XMAX_ELEMENT_TO_ADD = mean_distance
         SIZE_OF_X_ELEMENT_TO_ADD = SIZE_OF_XMAX_ELEMENT_TO_ADD
       endif
-    else if(iloop_on_X_Y_Z_faces == 2) then
-      if(iloop_on_min_face_then_max_face == 1) then ! min face
+    else if (iloop_on_X_Y_Z_faces == 2) then
+      if (iloop_on_min_face_then_max_face == 1) then ! min face
         factor_y = -1
-        if(icompute_size == 1) SIZE_OF_YMIN_ELEMENT_TO_ADD = mean_distance
+        if (icompute_size == 1) SIZE_OF_YMIN_ELEMENT_TO_ADD = mean_distance
         SIZE_OF_Y_ELEMENT_TO_ADD = SIZE_OF_YMIN_ELEMENT_TO_ADD
       else ! max face
         factor_y = +1
-        if(icompute_size == 1) SIZE_OF_YMAX_ELEMENT_TO_ADD = mean_distance
+        if (icompute_size == 1) SIZE_OF_YMAX_ELEMENT_TO_ADD = mean_distance
         SIZE_OF_Y_ELEMENT_TO_ADD = SIZE_OF_YMAX_ELEMENT_TO_ADD
       endif
-    else if(iloop_on_X_Y_Z_faces == 3) then
-      if(iloop_on_min_face_then_max_face == 1) then ! min face
+    else if (iloop_on_X_Y_Z_faces == 3) then
+      if (iloop_on_min_face_then_max_face == 1) then ! min face
         factor_z = -1
-        if(icompute_size == 1) SIZE_OF_ZMIN_ELEMENT_TO_ADD = mean_distance
+        if (icompute_size == 1) SIZE_OF_ZMIN_ELEMENT_TO_ADD = mean_distance
         SIZE_OF_Z_ELEMENT_TO_ADD = SIZE_OF_ZMIN_ELEMENT_TO_ADD
       else ! max face
         factor_z = +1
-        if(icompute_size == 1) SIZE_OF_ZMAX_ELEMENT_TO_ADD = mean_distance
+        if (icompute_size == 1) SIZE_OF_ZMAX_ELEMENT_TO_ADD = mean_distance
         SIZE_OF_Z_ELEMENT_TO_ADD = SIZE_OF_ZMAX_ELEMENT_TO_ADD
       endif
     else
@@ -815,16 +815,16 @@
       call calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian2,NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
 
 ! this should never happen, it is just a safety test
-      if(found_a_negative_jacobian1 .and. found_a_negative_jacobian2) &
+      if (found_a_negative_jacobian1 .and. found_a_negative_jacobian2) &
         stop 'error: found a negative Jacobian that could not be fixed'
 
 ! this should also never happen, it is just a second safety test
-      if(.not. found_a_negative_jacobian1 .and. .not. found_a_negative_jacobian2) &
+      if (.not. found_a_negative_jacobian1 .and. .not. found_a_negative_jacobian2) &
         stop 'strange error: both the element created and its mirrored version have a positive Jacobian!'
 
 ! if we have found that the original element has a negative Jacobian and its mirrored element is fine,
 ! swap the points so that we use that mirrored element in the final mesh saved to disk instead of the original one
-      if(found_a_negative_jacobian1) then
+      if (found_a_negative_jacobian1) then
         i1 = ibool_new(5,elem_counter)
         i2 = ibool_new(6,elem_counter)
         i3 = ibool_new(7,elem_counter)
@@ -849,7 +849,7 @@
 
   enddo
 
-  if(minval(ibool_new) /= 1) stop 'error in minval(ibool_new)'
+  if (minval(ibool_new) /= 1) stop 'error in minval(ibool_new)'
 
 ! deallocate the original arrays
   deallocate(x,y,z)
@@ -880,14 +880,14 @@
   deallocate(ibool_new)
   deallocate(imaterial_new)
 
-  if(minval(ibool) /= 1) stop 'error in minval(ibool)'
+  if (minval(ibool) /= 1) stop 'error in minval(ibool)'
 
     enddo ! of iloop_on_min_face_then_max_face loop on Xmin then Xmax, or Ymin then Ymax, or Zmin then Zmax
 
 ! end of loop on the three sets of faces to first add CPML elements along X, then along Y, then along Z
   enddo
 
-  if(iformat == 1) then ! write the output in ASCII format
+  if (iformat == 1) then ! write the output in ASCII format
 
 ! write the new points (overwrite the old file)
   open(unit=23,file='nodes_coords_file',status='old',action='write')
@@ -947,7 +947,7 @@
   print *,'THICKNESS_OF_YMIN_PML = ',sngl(SIZE_OF_YMIN_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD)
   print *,'THICKNESS_OF_YMAX_PML = ',sngl(SIZE_OF_YMAX_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD)
   print *,'THICKNESS_OF_ZMIN_PML = ',sngl(SIZE_OF_ZMIN_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD)
-  if(ALSO_ADD_ON_THE_TOP_SURFACE) &
+  if (ALSO_ADD_ON_THE_TOP_SURFACE) &
       print *,'THICKNESS_OF_ZMAX_PML = ',sngl(SIZE_OF_ZMAX_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD)
   print *
 
@@ -958,7 +958,7 @@
   write(23,*) SIZE_OF_YMIN_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD
   write(23,*) SIZE_OF_YMAX_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD
   write(23,*) SIZE_OF_ZMIN_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD
-  if(ALSO_ADD_ON_THE_TOP_SURFACE) then
+  if (ALSO_ADD_ON_THE_TOP_SURFACE) then
     write(23,*) SIZE_OF_ZMAX_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD
   else
 ! convention (negative value) to say that this Zmax absorbing edge is turned off

@@ -51,17 +51,17 @@
     read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
 
 ! implement shuffling of the list of points, one possibility for each of the six faces of the reference cube
-    if(mod(ispec_loop,6) == 0) then
+    if (mod(ispec_loop,6) == 0) then
       write(24,"(i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9)") ispec,i1,i2,i3,i4,i5,i6,i7,i8
-    else if(mod(ispec_loop,6) == 1) then
+    else if (mod(ispec_loop,6) == 1) then
       write(24,"(i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9)") ispec,i5,i1,i4,i8,i6,i2,i3,i7
-    else if(mod(ispec_loop,6) == 2) then
+    else if (mod(ispec_loop,6) == 2) then
       write(24,"(i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9)") ispec,i8,i7,i6,i5,i4,i3,i2,i1
-    else if(mod(ispec_loop,6) == 3) then
+    else if (mod(ispec_loop,6) == 3) then
       write(24,"(i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9)") ispec,i3,i2,i6,i7,i4,i1,i5,i8
-    else if(mod(ispec_loop,6) == 4) then
+    else if (mod(ispec_loop,6) == 4) then
       write(24,"(i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9)") ispec,i4,i3,i7,i8,i1,i2,i6,i5
-    else if(mod(ispec_loop,6) == 5) then
+    else if (mod(ispec_loop,6) == 5) then
       write(24,"(i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9,1x,i9)") ispec,i1,i5,i6,i2,i4,i8,i7,i3
     else
       stop 'incorrect value of the shuffling index'

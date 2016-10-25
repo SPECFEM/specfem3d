@@ -28,7 +28,7 @@
   subroutine compute_coord_main_mesh(offset_x,offset_y,offset_z,xelm,yelm,zelm, &
                ANGULAR_WIDTH_XI_RAD,ANGULAR_WIDTH_ETA_RAD,iproc_xi,iproc_eta, &
                NPROC_XI,NPROC_ETA,NEX_PER_PROC_XI,NEX_PER_PROC_ETA, &
-               r_top,r_bottom,ner,ilayer,ichunk,rotation_matrix,NCHUNKS,&
+               r_top,r_bottom,ner,ilayer,ichunk,rotation_matrix,NCHUNKS, &
                INCLUDE_CENTRAL_CUBE,NUMBER_OF_MESH_LAYERS)
 
   implicit none
@@ -70,7 +70,7 @@
 ! loop on all the nodes in this element
   do ignod = 1,NGNOD
 
-    if(ilayer == NUMBER_OF_MESH_LAYERS .and. INCLUDE_CENTRAL_CUBE) then
+    if (ilayer == NUMBER_OF_MESH_LAYERS .and. INCLUDE_CENTRAL_CUBE) then
 ! case of the inner core
       ratio_xi = ((iproc_xi + offset_x(ignod)/dble(NEX_PER_PROC_XI))/dble(NPROC_XI))
       fact_xi = 2.d0*ratio_xi-1.d0
@@ -235,7 +235,7 @@
       end select
 
     ! rotate the chunk to the right location if we do not mesh the full Earth
-      if(NCHUNKS /= 6) then
+      if (NCHUNKS /= 6) then
 
     ! rotate bottom
         vector_ori(1) = x_bot
@@ -275,7 +275,7 @@
 
     endif
   enddo
-!   if(ilayer == NUMBER_OF_MESH_LAYERS .and. INCLUDE_CENTRAL_CUBE) write(IMAIN,*)
+!   if (ilayer == NUMBER_OF_MESH_LAYERS .and. INCLUDE_CENTRAL_CUBE) write(IMAIN,*)
   end subroutine compute_coord_main_mesh
 
 !---------------------------------------------------------------------------
@@ -305,7 +305,7 @@
   ratio_y = (dble(iproc_eta) + dble(iy)/dble(2*ny_central_cube)) / dble(NPROC_ETA)
   ratio_z = dble(iz)/dble(2*nz_central_cube)
 
-  if(abs(ratio_x) > 1.001d0 .or. abs(ratio_y) > 1.001d0 .or. abs(ratio_z) > 1.001d0) stop 'wrong ratio in central cube'
+  if (abs(ratio_x) > 1.001d0 .or. abs(ratio_y) > 1.001d0 .or. abs(ratio_z) > 1.001d0) stop 'wrong ratio in central cube'
 
 ! use a "flat" cubed sphere to create the central cube
 

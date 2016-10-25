@@ -95,7 +95,7 @@
       if (ELASTIC_SIMULATION) then
         if (USE_CUDA_SEISMOGRAMS) then
           call transfer_seismograms_el_from_d(nrec_local,Mesh_pointer, &
-                                             seismograms_d,seismograms_v,seismograms_a,&
+                                             seismograms_d,seismograms_v,seismograms_a, &
                                              it)
         else
           call transfer_station_el_from_device(displ,veloc,accel, &
@@ -219,7 +219,7 @@
         ! elastic wave field
         if (ispec_is_elastic(ispec)) then
           ! backward field: interpolates displ/veloc/accel at receiver locations
-          call compute_interpolated_dva(b_displ,b_veloc,b_accel,NGLOB_ADJOINT,&
+          call compute_interpolated_dva(b_displ,b_veloc,b_accel,NGLOB_ADJOINT, &
                                         ispec,NSPEC_AB,ibool, &
                                         xi_r,eta_r,gamma_r, &
                                         hxir,hetar,hgammar, &
@@ -282,7 +282,7 @@
           hpgammar(:) = hpgammar_store(irec_local,:)
 
           ! computes the integrated derivatives of source parameters (M_jk and X_s)
-          call compute_adj_source_frechet(displ_element,Mxx(irec),Myy(irec),Mzz(irec),&
+          call compute_adj_source_frechet(displ_element,Mxx(irec),Myy(irec),Mzz(irec), &
                                           Mxy(irec),Mxz(irec),Myz(irec),eps_s,eps_m_s, &
                                           hxir,hetar,hgammar,hpxir,hpetar,hpgammar, &
                                           hprime_xx,hprime_yy,hprime_zz, &
@@ -290,7 +290,7 @@
                                           etax(:,:,:,ispec),etay(:,:,:,ispec),etaz(:,:,:,ispec), &
                                           gammax(:,:,:,ispec),gammay(:,:,:,ispec),gammaz(:,:,:,ispec))
 
-          stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(irec),hdur_gaussian(irec))
+          stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(irec),hdur_Gaussian(irec))
           stf_deltat = stf * deltat
 
           Mxx_der(irec_local) = Mxx_der(irec_local) + eps_s(1,1) * stf_deltat
@@ -308,34 +308,34 @@
       if (SIMULATION_TYPE == 2) then
         ! adjoint simulations
         ! adjoint "receiver" N/E/Z orientations given by nu_source array
-        if(SAVE_SEISMOGRAMS_DISPLACEMENT) &
+        if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
           seismograms_d(:,irec_local,it) = real(nu_source(:,1,irec)*dxd &
                                               + nu_source(:,2,irec)*dyd &
                                               + nu_source(:,3,irec)*dzd,kind=CUSTOM_REAL)
 
-        if(SAVE_SEISMOGRAMS_VELOCITY) &
+        if (SAVE_SEISMOGRAMS_VELOCITY) &
           seismograms_v(:,irec_local,it) = real(nu_source(:,1,irec)*vxd &
                                               + nu_source(:,2,irec)*vyd &
                                               + nu_source(:,3,irec)*vzd,kind=CUSTOM_REAL)
 
-        if(SAVE_SEISMOGRAMS_ACCELERATION) &
+        if (SAVE_SEISMOGRAMS_ACCELERATION) &
           seismograms_a(:,irec_local,it) = real(nu_source(:,1,irec)*axd &
                                               + nu_source(:,2,irec)*ayd &
                                               + nu_source(:,3,irec)*azd,kind=CUSTOM_REAL)
       else
         ! forward & kernel simulations
-        if(SAVE_SEISMOGRAMS_DISPLACEMENT) &
+        if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
           seismograms_d(:,irec_local,it) = real(nu(:,1,irec)*dxd + nu(:,2,irec)*dyd + nu(:,3,irec)*dzd,kind=CUSTOM_REAL)
 
-        if(SAVE_SEISMOGRAMS_VELOCITY) &
+        if (SAVE_SEISMOGRAMS_VELOCITY) &
           seismograms_v(:,irec_local,it) = real(nu(:,1,irec)*vxd + nu(:,2,irec)*vyd + nu(:,3,irec)*vzd,kind=CUSTOM_REAL)
 
-        if(SAVE_SEISMOGRAMS_ACCELERATION) &
+        if (SAVE_SEISMOGRAMS_ACCELERATION) &
           seismograms_a(:,irec_local,it) = real(nu(:,1,irec)*axd + nu(:,2,irec)*ayd + nu(:,3,irec)*azd,kind=CUSTOM_REAL)
       endif
 
       ! only one scalar in the case of pressure
-      if(SAVE_SEISMOGRAMS_PRESSURE) &
+      if (SAVE_SEISMOGRAMS_PRESSURE) &
         seismograms_p(1,irec_local,it) = real(pd,kind=CUSTOM_REAL)
 
       ! adjoint simulations
@@ -349,30 +349,30 @@
   if ((mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0 .or. it == NSTEP) .and. .not. SU_FORMAT) then
     if (SIMULATION_TYPE == 2) then
       ! adjoint simulations
-      if(SAVE_SEISMOGRAMS_DISPLACEMENT) &
+      if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
         call write_adj_seismograms_to_file(myrank,seismograms_d,number_receiver_global,nrec_local,it,DT,NSTEP,t0,1)
-      if(SAVE_SEISMOGRAMS_VELOCITY) &
+      if (SAVE_SEISMOGRAMS_VELOCITY) &
         call write_adj_seismograms_to_file(myrank,seismograms_v,number_receiver_global,nrec_local,it,DT,NSTEP,t0,2)
-      if(SAVE_SEISMOGRAMS_ACCELERATION) &
+      if (SAVE_SEISMOGRAMS_ACCELERATION) &
         call write_adj_seismograms_to_file(myrank,seismograms_a,number_receiver_global,nrec_local,it,DT,NSTEP,t0,3)
-      if(SAVE_SEISMOGRAMS_PRESSURE) &
+      if (SAVE_SEISMOGRAMS_PRESSURE) &
         call write_adj_seismograms_to_file(myrank,seismograms_p,number_receiver_global,nrec_local,it,DT,NSTEP,t0,4)
     else
       ! forward & kernel simulations
-      if(SAVE_SEISMOGRAMS_DISPLACEMENT) &
+      if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
         call write_seismograms_to_file(seismograms_d,1)
-      if(SAVE_SEISMOGRAMS_VELOCITY) &
+      if (SAVE_SEISMOGRAMS_VELOCITY) &
         call write_seismograms_to_file(seismograms_v,2)
-      if(SAVE_SEISMOGRAMS_ACCELERATION) &
+      if (SAVE_SEISMOGRAMS_ACCELERATION) &
         call write_seismograms_to_file(seismograms_a,3)
-      if(SAVE_SEISMOGRAMS_PRESSURE) &
+      if (SAVE_SEISMOGRAMS_PRESSURE) &
         call write_seismograms_to_file(seismograms_p,4)
     endif
   endif
 
   ! write ONE binary file for all receivers (nrec_local) within one proc
   ! SU format, with 240-byte-header for each trace
-  if ((mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0 .or. it==NSTEP) .and. SU_FORMAT) &
+  if ((mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0 .or. it == NSTEP) .and. SU_FORMAT) &
     call write_output_SU()
 
   end subroutine write_seismograms
@@ -386,8 +386,7 @@
 
   use constants
 
-  use specfem_par,only: &
-          myrank,number_receiver_global,station_name,network_name, &
+  use specfem_par, only: myrank,number_receiver_global,station_name,network_name, &
           nrec,nrec_local,islice_selected_rec, &
           it,DT,NSTEP,t0,SIMULATION_TYPE,WRITE_SEISMOGRAMS_BY_MASTER,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_SEISMOGRAMS
 
@@ -595,7 +594,7 @@
   character(len=3) :: channel
 
   ! see how many components we need to store: 1 for pressure, NDIM for a vector
-  if(istore == 4) then ! this is for pressure
+  if (istore == 4) then ! this is for pressure
     number_of_components = 1
   else
     number_of_components = NDIM
@@ -605,7 +604,7 @@
   do iorientation = 1,number_of_components
 
     ! gets channel name
-    if(istore == 4) then ! this is for pressure
+    if (istore == 4) then ! this is for pressure
       call write_channel_name(istore,channel)
     else
       call write_channel_name(iorientation,channel)
@@ -646,7 +645,7 @@
   subroutine write_adj_seismograms_to_file(myrank,seismograms,number_receiver_global, &
                                            nrec_local,it,DT,NSTEP,t0,istore)
 
-  use constants,only: CUSTOM_REAL,NDIM,MAX_STRING_LEN,IOUT,OUTPUT_FILES
+  use constants, only: CUSTOM_REAL,NDIM,MAX_STRING_LEN,IOUT,OUTPUT_FILES
 
   implicit none
 
@@ -683,7 +682,7 @@
     irec = number_receiver_global(irec_local)
 
     ! see how many components we need to store: 1 for pressure, NDIM for a vector
-    if(istore == 4) then ! this is for pressure
+    if (istore == 4) then ! this is for pressure
       number_of_components = 1
     else
       number_of_components = NDIM
@@ -693,7 +692,7 @@
     do iorientation = 1,number_of_components
 
       ! gets channel name
-      if(istore == 4) then ! this is for pressure
+      if (istore == 4) then ! this is for pressure
         call write_channel_name(istore,channel)
       else
         call write_channel_name(iorientation,channel)
@@ -731,7 +730,7 @@
 
   subroutine write_adj_seismograms2_to_file(myrank,seismograms,number_receiver_global,nrec_local,it,DT,NSTEP,t0)
 
-  use constants,only: CUSTOM_REAL,NDIM,MAX_STRING_LEN,IOUT,OUTPUT_FILES
+  use constants, only: CUSTOM_REAL,NDIM,MAX_STRING_LEN,IOUT,OUTPUT_FILES
 
   implicit none
   integer :: myrank
@@ -805,7 +804,8 @@
 
   subroutine write_channel_name(iorientation,channel)
 
-  use specfem_par,only: DT,SUPPRESS_UTM_PROJECTION
+  use specfem_par, only: DT,SUPPRESS_UTM_PROJECTION
+
   implicit none
 
   integer :: iorientation

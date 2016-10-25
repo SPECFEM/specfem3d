@@ -32,17 +32,21 @@
                     max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
                     SAVE_MESH_FILES,ANISOTROPY)
 
-  use generate_databases_par, only: nspec_cpml,CPML_width_x,CPML_width_y,CPML_width_z,CPML_to_spec,&
+  use generate_databases_par, only: nspec_cpml,CPML_width_x,CPML_width_y,CPML_width_z,CPML_to_spec, &
     CPML_regions,is_CPML,min_distance_between_CPML_parameter,nspec_cpml_tot, &
-    d_store_x,d_store_y,d_store_z,k_store_x,k_store_y,k_store_z,&
+    d_store_x,d_store_y,d_store_z,k_store_x,k_store_y,k_store_z, &
     alpha_store_x,alpha_store_y,alpha_store_z, &
     nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-    ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,PML_CONDITIONS,&
+    ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,PML_CONDITIONS, &
     SIMULATION_TYPE,SAVE_FORWARD,mask_ibool_interior_domain, &
-    nglob_interface_PML_acoustic,points_interface_PML_acoustic,&
+    nglob_interface_PML_acoustic,points_interface_PML_acoustic, &
     nglob_interface_PML_elastic,points_interface_PML_elastic, &
     STACEY_ABSORBING_CONDITIONS,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT,USE_MESH_COLORING_GPU
   use create_regions_mesh_ext_par
+
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_save_arrays_solver_3.F90"
+#endif
 
   implicit none
 
@@ -318,6 +322,7 @@
 
   ! stores arrays in binary files
   if (SAVE_MESH_FILES) call save_arrays_solver_files(nspec,nglob,ibool)
+
 #ifdef DEBUG_COUPLED
     include "../../../add_to_save_arrays_solver_1.F90"
 #endif
@@ -368,6 +373,10 @@
   use generate_databases_par, only: myrank,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT,FOUR_THIRDS
   use create_regions_mesh_ext_par
 
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_save_arrays_solver_3.F90"
+#endif
+
   implicit none
 
   integer :: nspec,nglob
@@ -382,7 +391,7 @@
   integer :: j,inum
   character(len=MAX_STRING_LEN) :: filename
 
-  logical,parameter :: DEBUG = .false.
+  logical,parameter :: SAVE_MESH_FILES_ADDITIONAL = .true.
 
   if (myrank == 0) then
     write(IMAIN,*) '     saving mesh files for AVS, OpenDX, Paraview'
@@ -494,11 +503,11 @@
   deallocate(v_tmp)
 
   ! additional VTK file output
-  if (DEBUG) then
+  if (SAVE_MESH_FILES_ADDITIONAL) then
     ! user output
     call synchronize_all()
     if (myrank == 0) then
-      write(IMAIN,*) '     saving debugging mesh files'
+      write(IMAIN,*) '     saving additonal mesh files with surface/coupling points'
       call flush_IMAIN()
     endif
 
@@ -568,13 +577,6 @@
 
       deallocate(iglob_tmp,v_tmp_i)
     endif !if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION )
-  endif  !if (DEBUG)
-
-#ifdef DEBUG_COUPLED
-    include "../../../add_to_save_arrays_solver_2.F90"
-#endif
-
-  if (DEBUG) then  !! CD CD
 
     ! acoustic-poroelastic domains
     if (ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION) then
@@ -660,6 +662,11 @@
       deallocate(v_tmp_i,iglob_tmp)
     endif !if (ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION
 
-  endif ! DEBUG
+  endif  !if (SAVE_MESH_FILES_ADDITIONAL)
+
+#ifdef DEBUG_COUPLED
+    include "../../../add_to_save_arrays_solver_2.F90"
+#endif
+
 
   end subroutine save_arrays_solver_files

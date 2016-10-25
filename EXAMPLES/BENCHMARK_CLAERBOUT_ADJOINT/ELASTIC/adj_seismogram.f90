@@ -22,7 +22,7 @@ program adj_seismogram
   write(procname,"(i4)") myrank
 
   !! input parameters
-  if( iargc() /= 2 ) stop 'Usage: ./xadj NSTEP DT'
+  if ( iargc() /= 2 ) stop 'Usage: ./xadj NSTEP DT'
   j=1;  call getarg(j, arg); read(arg,*,iostat=ios) NSTEP;   if (ios /= 0) stop 'Error reading NSTEP'
   j=2;  call getarg(j, arg); read(arg,*,iostat=ios)    DT;   if (ios /= 0) stop 'Error reading DT'
 
@@ -50,16 +50,16 @@ program adj_seismogram
   filename=trim(adjustl(procname))//"_dx_SU"
   open(111,file="../OUTPUT_FILES/SEM/syn/"//trim(filename), &
             status='old',access='direct',action='read',recl=240+4*NSTEP,iostat = ios)
-  if( ios /= 0 ) stop 'error opening file syn'
+  if ( ios /= 0 ) stop 'error opening file syn'
   open(112,file="../OUTPUT_FILES/SEM/dat/"//trim(filename), &
             status='old',access='direct',action='read',recl=240+4*NSTEP,iostat = ios)
-  if( ios /= 0 ) stop 'error opening file dat'
+  if ( ios /= 0 ) stop 'error opening file dat'
   open(113,file="../OUTPUT_FILES/SEM/"//trim(filename)//".adj", &
             status='unknown',access='direct',action='write',recl=240+4*NSTEP,iostat = ios)
-  if( ios /= 0 ) stop 'error opening file .adj'
+  if ( ios /= 0 ) stop 'error opening file .adj'
 
   irec=1
-  do while(ios==0)
+  do while(ios == 0)
 
      syn(:) = 0.0
      dat(:) = 0.0
@@ -73,7 +73,7 @@ program adj_seismogram
      if (ios /= 0) exit
 
 !daniel: outputs ascii trace
-     if( myrank == 0 .and. irec == 196 ) then
+     if ( myrank == 0 .and. irec == 196 ) then
        open(221,file="../OUTPUT_FILES/SEM/syn/"//trim(filename)//".ascii",status='unknown')
        do i=1,NSTEP
          write(221,*) i,syn(i)
@@ -101,16 +101,16 @@ program adj_seismogram
   filename=trim(adjustl(procname))//"_dy_SU"
   open(111,file="../OUTPUT_FILES/SEM/syn/"//trim(filename), &
             status='old',access='direct',action='read',recl=240+4*NSTEP,iostat = ios)
-  if( ios /= 0 ) stop 'error opening file syn'
+  if ( ios /= 0 ) stop 'error opening file syn'
   open(112,file="../OUTPUT_FILES/SEM/dat/"//trim(filename), &
             status='old',access='direct',action='read',recl=240+4*NSTEP,iostat = ios)
-  if( ios /= 0 ) stop 'error opening file dat'
+  if ( ios /= 0 ) stop 'error opening file dat'
   open(113,file="../OUTPUT_FILES/SEM/"//trim(filename)//".adj", &
             status='unknown',access='direct',action='write',recl=240+4*NSTEP,iostat = ios)
-  if( ios /= 0 ) stop 'error opening file .adj'
+  if ( ios /= 0 ) stop 'error opening file .adj'
 
   irec=1
-  do while(ios==0)
+  do while(ios == 0)
 
      syn(:) = 0.0
      dat(:) = 0.0
@@ -123,7 +123,7 @@ program adj_seismogram
               if (ios /= 0) exit
 
 !daniel: outputs ascii trace
-     if( myrank == 0 .and. irec == 196 ) then
+     if ( myrank == 0 .and. irec == 196 ) then
        open(221,file="../OUTPUT_FILES/SEM/syn/"//trim(filename)//".ascii",status='unknown')
        do i=1,NSTEP
          write(221,*) i,syn(i)
@@ -152,15 +152,15 @@ program adj_seismogram
   filename=trim(adjustl(procname))//"_dz_SU"
   open(111,file="../OUTPUT_FILES/SEM/syn/"//trim(filename), &
         status='old',access='direct',action='read',recl=240+4*NSTEP,iostat = ios)
-  if( ios /= 0 ) stop 'error opening file syn'
+  if ( ios /= 0 ) stop 'error opening file syn'
   open(112,file="../OUTPUT_FILES/SEM/dat/"//trim(filename), &
         status='old',access='direct',action='read',recl=240+4*NSTEP,iostat = ios)
-  if( ios /= 0 ) stop 'error opening file dat'
+  if ( ios /= 0 ) stop 'error opening file dat'
   open(113,file="../OUTPUT_FILES/SEM/"//trim(filename)//".adj", &
         status='unknown',access='direct',action='write',recl=240+4*NSTEP,iostat = ios)
-  if( ios /= 0 ) stop 'error opening file .adj'
+  if ( ios /= 0 ) stop 'error opening file .adj'
   irec=1
-  do while(ios==0)
+  do while(ios == 0)
 
      syn(:) = 0.0
      dat(:) = 0.0
@@ -173,7 +173,7 @@ program adj_seismogram
               if (ios /= 0) exit
 
 !daniel: outputs ascii trace
-     if( myrank == 0 .and. irec == 196 ) then
+     if ( myrank == 0 .and. irec == 196 ) then
        open(221,file="../OUTPUT_FILES/SEM/syn/"//trim(filename)//".ascii",status='unknown')
        do i=1,NSTEP
          write(221,*) i,syn(i)

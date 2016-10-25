@@ -24,7 +24,7 @@
 !=====================================================================
 ! Last revision: Hom Nath Gharti, April 06,2010
 
-subroutine cvd_count_totals_ext_mesh(nproc,proc_list,proc_width,inp_dir,&
+subroutine cvd_count_totals_ext_mesh(nproc,proc_list,proc_width,inp_dir, &
                         node_count,elmt_count,out_res)
 
 ! counts total number of points and elements for external meshes in given slice list
@@ -73,14 +73,14 @@ do i_proc = 1, nproc
   read(27) NSPEC_AB
   read(27) NGLOB_AB
   ! gets ibool
-  if(out_res/=2) then
+  if (out_res /= 2) then
     allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
     read(27) ibool
   endif
   close(27)
 
   ! calculates totals
-  if(out_res==2) then
+  if (out_res == 2) then
     ! total number of global points
     node_count = node_count + NGLOB_AB
 
@@ -90,7 +90,7 @@ do i_proc = 1, nproc
     nelement = NSPEC_AB * (NGLLX-1) * (NGLLY-1) * (NGLLZ-1)
     elmt_count = elmt_count + nelement
 
-  else if (out_res==1)then ! Medium resolution
+  else if (out_res == 1) then ! Medium resolution
 
     ! mark element corners (global AVS or DX points)
     allocate(mask_ibool(NGLOB_AB))
@@ -156,7 +156,7 @@ do i_proc = 1, nproc
     ! total number of spectral elements
     elmt_count = elmt_count + NSPEC_AB
     deallocate(mask_ibool)
-  else if (out_res==0)then !
+  else if (out_res == 0) then !
     ! mark element corners (global AVS or DX points)
     allocate(mask_ibool(NGLOB_AB))
     mask_ibool = .false.
@@ -191,7 +191,7 @@ do i_proc = 1, nproc
     write(*,'(/,a)')'ERROR: wrong out_res value!'
     stop
   endif ! out_res
-  if(out_res/=2) then
+  if (out_res /= 2) then
     deallocate(ibool)
   endif
 
@@ -201,7 +201,7 @@ end subroutine cvd_count_totals_ext_mesh
 !=============================================================
 
 
-subroutine cvd_write_corners_only(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,&
+subroutine cvd_write_corners_only(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
                               numpoin,fd_x,fd_y,fd_z)
 
 ! writes out locations of spectral element corners only
@@ -238,7 +238,7 @@ do i_spec=1,NSPEC_AB
   iglob(8)=ibool(1,NGLLY,NGLLZ,i_spec)
 
   do i_node=1,NENOD_OUT
-    if(.not. mask_ibool(iglob(i_node))) then
+    if (.not. mask_ibool(iglob(i_node))) then
       numpoin = numpoin + 1
       x = xstore(iglob(i_node))
       y = ystore(iglob(i_node))
@@ -256,7 +256,7 @@ enddo ! i_spec
 end subroutine cvd_write_corners_only
 !=============================================================
 
-subroutine cvd_write_hexa20_only(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,&
+subroutine cvd_write_hexa20_only(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
                               numpoin,fd_x,fd_y,fd_z)
 
 ! writes out locations of spectral element corners only
@@ -313,7 +313,7 @@ do i_spec=1,NSPEC_AB
   iglob(20)=ibool(1,NGLLY,NGLLZ_MID,i_spec)
 
   do i_node=1,NENOD_OUT
-    if(.not. mask_ibool(iglob(i_node))) then
+    if (.not. mask_ibool(iglob(i_node))) then
       numpoin = numpoin + 1
       x = xstore(iglob(i_node))
       y = ystore(iglob(i_node))
@@ -331,7 +331,7 @@ enddo ! i_spec
 end subroutine cvd_write_hexa20_only
 !=============================================================
 
-subroutine cvd_write_GLL_points_only(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,&
+subroutine cvd_write_GLL_points_only(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
                                 numpoin,fd_x,fd_y,fd_z)
 
 ! writes out locations of all GLL points of spectral elements
@@ -361,7 +361,7 @@ do i_spec=1,NSPEC_AB
     do j = 1, NGLLY
       do i = 1, NGLLX
         iglob1 = ibool(i,j,k,i_spec)
-        if(.not. mask_ibool(iglob1)) then
+        if (.not. mask_ibool(iglob1)) then
           numpoin = numpoin + 1
           x = xstore(iglob1)
           y = ystore(iglob1)
@@ -379,7 +379,7 @@ enddo !i_spec
 end subroutine cvd_write_GLL_points_only
 !=============================================================
 
-subroutine cvd_write_corners_data(NSPEC_AB,NGLOB_AB,ibool,dat,&
+subroutine cvd_write_corners_data(NSPEC_AB,NGLOB_AB,ibool,dat, &
                               numpoin,fd)
 
 ! writes out locations of spectral element corners only
@@ -426,7 +426,7 @@ do i_spec=1,NSPEC_AB
   tmp_dat(8)=dat(1,NGLLY,NGLLZ,i_spec)
 
   do i_node=1,NENOD_OUT
-    if(.not. mask_ibool(iglob(i_node))) then
+    if (.not. mask_ibool(iglob(i_node))) then
       numpoin = numpoin + 1
       call write_real(tmp_dat(i_node),fd)
       mask_ibool(iglob(i_node)) = .true.
@@ -438,7 +438,7 @@ enddo ! i_spec
 end subroutine cvd_write_corners_data
 !=============================================================
 
-subroutine cvd_write_corners_data_glob(NSPEC_AB,NGLOB_AB,ibool,dat,&
+subroutine cvd_write_corners_data_glob(NSPEC_AB,NGLOB_AB,ibool,dat, &
                               numpoin,fd)
 
 ! writes out locations of spectral element corners only
@@ -474,7 +474,7 @@ do i_spec=1,NSPEC_AB
   iglob(8)=ibool(1,NGLLY,NGLLZ,i_spec)
 
   do i_node=1,NENOD_OUT
-    if(.not. mask_ibool(iglob(i_node))) then
+    if (.not. mask_ibool(iglob(i_node))) then
       numpoin = numpoin + 1
       call write_real(dat(iglob(i_node)),fd)
       mask_ibool(iglob(i_node)) = .true.
@@ -486,7 +486,7 @@ enddo ! i_spec
 end subroutine cvd_write_corners_data_glob
 !=============================================================
 
-subroutine cvd_write_hexa20_data(NSPEC_AB,NGLOB_AB,ibool,dat,&
+subroutine cvd_write_hexa20_data(NSPEC_AB,NGLOB_AB,ibool,dat, &
                               numpoin,fd)
 
 ! writes out locations of spectral element corners only
@@ -575,7 +575,7 @@ do i_spec=1,NSPEC_AB
   tmp_dat(20)=dat(1,NGLLY,NGLLZ_MID,i_spec)
 
   do i_node=1,NENOD_OUT
-    if(.not. mask_ibool(iglob(i_node))) then
+    if (.not. mask_ibool(iglob(i_node))) then
       numpoin = numpoin + 1
       call write_real(tmp_dat(i_node),fd)
       mask_ibool(iglob(i_node)) = .true.
@@ -587,7 +587,7 @@ enddo ! i_spec
 end subroutine cvd_write_hexa20_data
 !=============================================================
 
-subroutine cvd_write_hexa20_data_glob(NSPEC_AB,NGLOB_AB,ibool,dat,&
+subroutine cvd_write_hexa20_data_glob(NSPEC_AB,NGLOB_AB,ibool,dat, &
                               numpoin,fd)
 
 ! writes out locations of spectral element corners only
@@ -644,7 +644,7 @@ do i_spec=1,NSPEC_AB
   iglob(20)=ibool(1,NGLLY,NGLLZ_MID,i_spec)
 
   do i_node=1,NENOD_OUT
-    if(.not. mask_ibool(iglob(i_node))) then
+    if (.not. mask_ibool(iglob(i_node))) then
       numpoin = numpoin + 1
       call write_real(dat(iglob(i_node)),fd)
       mask_ibool(iglob(i_node)) = .true.
@@ -656,7 +656,7 @@ enddo ! i_spec
 end subroutine cvd_write_hexa20_data_glob
 !=============================================================
 
-subroutine cvd_write_GLL_points_data(NSPEC_AB,NGLOB_AB,ibool,dat,&
+subroutine cvd_write_GLL_points_data(NSPEC_AB,NGLOB_AB,ibool,dat, &
                                 numpoin,fd)
 
 ! writes out locations of all GLL points of spectral elements
@@ -685,7 +685,7 @@ do i_spec=1,NSPEC_AB
     do j = 1, NGLLY
       do i = 1, NGLLX
         iglob1 = ibool(i,j,k,i_spec)
-        if(.not. mask_ibool(iglob1)) then
+        if (.not. mask_ibool(iglob1)) then
           numpoin = numpoin + 1
           call write_real(dat(i,j,k,i_spec),fd)
           mask_ibool(iglob1) = .true.
@@ -698,7 +698,7 @@ enddo !i_spec
 end subroutine cvd_write_GLL_points_data
 !=============================================================
 
-subroutine cvd_write_GLL_points_data_glob(NSPEC_AB,NGLOB_AB,ibool,dat,&
+subroutine cvd_write_GLL_points_data_glob(NSPEC_AB,NGLOB_AB,ibool,dat, &
                                 numpoin,fd)
 
 ! writes out locations of all GLL points of spectral elements
@@ -727,7 +727,7 @@ do i_spec=1,NSPEC_AB
     do j = 1, NGLLY
       do i = 1, NGLLX
         iglob1 = ibool(i,j,k,i_spec)
-        if(.not. mask_ibool(iglob1)) then
+        if (.not. mask_ibool(iglob1)) then
           numpoin = numpoin + 1
           call write_real(dat(iglob1),fd)
           mask_ibool(iglob1) = .true.
@@ -742,7 +742,7 @@ end subroutine cvd_write_GLL_points_data_glob
 
 ! writes out locations of spectral element corners only
 
-subroutine cvd_write_corner_elements(NSPEC_AB,NGLOB_AB,ibool,&
+subroutine cvd_write_corner_elements(NSPEC_AB,NGLOB_AB,ibool, &
                                     np,nelement,numpoin,fd)
 
 use visualize_constants
@@ -780,7 +780,7 @@ do i_spec=1,NSPEC_AB
 
   ! sets increasing numbering
   do i_node=1,NENOD_OUT
-    if(.not. mask_ibool(iglob(i_node))) then
+    if (.not. mask_ibool(iglob(i_node))) then
       numpoin = numpoin + 1
       num_ibool(iglob(i_node)) = numpoin
       mask_ibool(iglob(i_node)) = .true.
@@ -803,7 +803,7 @@ end subroutine cvd_write_corner_elements
 
 ! writes out locations of spectral element corners only
 
-subroutine cvd_write_hexa20_elements(NSPEC_AB,NGLOB_AB,ibool,&
+subroutine cvd_write_hexa20_elements(NSPEC_AB,NGLOB_AB,ibool, &
                                     np,nelement,numpoin,fd)
 
 use visualize_constants
@@ -861,7 +861,7 @@ do i_spec=1,NSPEC_AB
 
   ! sets increasing numbering
   do i_node=1,NENOD_OUT
-    if(.not. mask_ibool(iglob(i_node))) then
+    if (.not. mask_ibool(iglob(i_node))) then
       numpoin = numpoin + 1
       num_ibool(iglob(i_node)) = numpoin
       mask_ibool(iglob(i_node)) = .true.
@@ -916,7 +916,7 @@ do i_spec=1,NSPEC_AB
     do j = 1, NGLLY
       do i = 1, NGLLX
         iglob1 = ibool(i,j,k,i_spec)
-        if(.not. mask_ibool(iglob1)) then
+        if (.not. mask_ibool(iglob1)) then
           numpoin = numpoin + 1
           num_ibool(iglob1) = numpoin
           mask_ibool(iglob1) = .true.
@@ -958,7 +958,7 @@ end subroutine cvd_write_GLL_elements
 
 ! subroutines below may not be used
 
-subroutine cvd_write_corners(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,dat,&
+subroutine cvd_write_corners(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,dat, &
                               i_proc,npp,numpoin,fd)
 
 ! writes out locations of spectral element corners only
@@ -1011,7 +1011,7 @@ do i_spec=1,NSPEC_AB
   tmp_dat(8)=dat(1,NGLLY,NGLLZ,i_spec)
 
   do i_node=1,NENOD_OUT
-    if(.not. mask_ibool(iglob(i_node))) then
+    if (.not. mask_ibool(iglob(i_node))) then
       numpoin = numpoin + 1
       x = xstore(iglob(i_node))
       y = ystore(iglob(i_node))
@@ -1029,7 +1029,7 @@ enddo ! i_spec
 end subroutine cvd_write_corners
 !=============================================================
 
-subroutine cvd_write_GLL_points(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,dat,&
+subroutine cvd_write_GLL_points(NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,dat, &
                                 i_proc,npp,numpoin,fd)
 
 ! writes out locations of all GLL points of spectral elements
@@ -1064,7 +1064,7 @@ do i_spec=1,NSPEC_AB
     do j = 1, NGLLY
       do i = 1, NGLLX
         iglob1 = ibool(i,j,k,i_spec)
-        if(.not. mask_ibool(iglob1)) then
+        if (.not. mask_ibool(iglob1)) then
           numpoin = numpoin + 1
           x = xstore(iglob1)
           y = ystore(iglob1)

@@ -38,7 +38,7 @@
     distmin = +100000000000.d0
     do iold=1,NLINES_HAUKSSON_DENSER
       dist = dsqrt((utm_x_new(i,j) - utm_x_ori(iold))**2 + (utm_y_new(i,j) - utm_y_ori(iold))**2)
-      if(dist < distmin) then
+      if (dist < distmin) then
         ic = iold
         distmin = dist
       endif

@@ -25,17 +25,12 @@
 !
 !=====================================================================
 
-
-! Parallel Heuristic mesh decomposer
+! Parallel heuristic mesh decomposer
 !
-! the decomposition is made in the 3 cartesion direction given a
-! desired number of partition in each direction. The domain should be
-! a box.
+! The decomposition is performed in the three Cartesian directions, given a
+! desired number of partitions in each direction. The domain should be a box.
 !
-!
-!
-! Vadim Monteiller (monteiller@lma.cnrs-mrs.fr) February 2016
-
+! Vadim Monteiller, CNRS Marseille, France, February 2016
 
 program xdecompose_mesh_mpi
 
@@ -50,9 +45,9 @@ program xdecompose_mesh_mpi
   logical, parameter  :: BROADCAST_AFTER_READ=.true.
 
   ! number of proc in each direction
-  integer             :: npart_1, npart_2, npart_3
+  integer             :: npartX, npartY, npartZ
 
-  ! mpi initialization
+  ! MPI initialization
   call init_mpi()
   call world_size(sizeprocs)
   call world_rank(myrank)
@@ -61,29 +56,31 @@ program xdecompose_mesh_mpi
   call read_parameter_file(myrank, BROADCAST_AFTER_READ)
 
   ! 2/ read mesh
-  if (myrank==0) then
+  if (myrank == 0) then
 
-     print *, '         parallel Heuristic mesh decomposer '
+     print *,'         Parallel heuristic mesh decomposer'
+     print *
+     print *,'The decomposition is performed in the three Cartesian directions, given a'
+     print *,'desired number of partitions in each direction. The domain should be a box.'
+     print *
+     print *,'Works for a topologically-rectangular domain in which the user has to'
+     print *,'specify the number of slices to decompose the mesh into in the X, Y and Z directions.'
+     print *,'Load imbalance is handled by taking into account the cost of the calculations inside each type'
+     print *,'of spectral elements: acoustic, elastic, viscoelastic, ...'
      print *
      print *
-     print *, ' Work on rectangular domain in which the user have to '
-     print *, ' specify the deiser decompostion in x, y and z direction '
-     print *,' load inbalance taking into account the weight of computation in element'
-     print *,' according physics : (eg : acoustic, elastic, visco , ...)'
+     print *,'Usage: mpirun -np nparts xdecompose_mesh_mpi npartX npartY npartZ'
+     print *
+     print *,'  where'
+     print *,'      npartX = number of mesh partitions to be created in the X direction'
+     print *,'      npartY = number of mesh partitions to be created in the Y direction'
+     print *,'      npartZ = number of mesh partitions to be created in the Z direction'
+     print *
+     print *,'  and nparts **MUST BE** equal to npartX * npartY * npartZ'
      print *
      print *
-     print *, 'Usage: mpirun -np nparts xdecompose_mesh  npart1 npart2 npart3  '
-     print *
-     print *, '  where'
-     print *, '      nparts = number of partitons'
-     print *, '      npart1 = number of partitons in x direction '
-     print *, '      npart2 = number of partitons in y direction '
-     print *, '      npart3 = number of partitons in z direction '
-     print *, '      nparts **MUST BE** = npart1* npart2*npart3'
-     print *
-     print *
-     print *, '      input_directory = directory containing mesh files mesh_file,nodes_coords_file,.. = MESH'
-     print *, '      output_directory = directory for output files proc***_Databases = defined in Par_file'
+     print *,'      input_directory = directory containing mesh files mesh_file,nodes_coords_file,.. = MESH'
+     print *,'      output_directory = directory for output files proc***_Databases = defined in Par_file'
      print *
      print *
 
@@ -92,24 +89,26 @@ program xdecompose_mesh_mpi
      call read_mesh_files()
      write(27,*) ' COMPUTE COMPUTATIONAL LOAD of EACH ELEMENT'
      call compute_load_elemnts()
-     write(27,*) ' READING Npart in each cartesian drection '
-     call read_tmp_in_file(npart_1, npart_2, npart_3)
+     write(27,*) ' READING Npart in each Cartesian direction'
+     call read_tmp_in_file(npartX, npartY, npartZ)
   endif
 
-  call bcast_all_singlei(npart_1)
-  call bcast_all_singlei(npart_2)
-  call bcast_all_singlei(npart_3)
+  call bcast_all_singlei(npartX)
+  call bcast_all_singlei(npartY)
+  call bcast_all_singlei(npartZ)
+
+  if (sizeprocs /= npartX * npartY * npartZ) stop 'error: nparts **MUST BE** equal to npartX * npartY * npartZ'
 
   ! 3/ Heuristic mesh partition
-  if (myrank==0) then
+  if (myrank == 0) then
      write(27,*) ' DECOMPOSING MESH '
-     call decompose_mesh(elmnts_glob, nodes_coords_glob, load_elmnts, nspec_glob, nnodes_glob, npart_1, npart_2, npart_3)
+     call decompose_mesh(elmnts_glob, nodes_coords_glob, load_elmnts, nspec_glob, nnodes_glob, npartX, npartY, npartZ)
   endif
 
   call bcast_all_singlei(nspec_glob)
   if (myrank > 0) allocate(ipart(nspec_glob))
   call bcast_all_i(ipart, nspec_glob)
-  call send_partition_mesh_to_all(myrank, ipart, npart_1*npart_2*npart_3)
+  call send_partition_mesh_to_all(myrank, ipart, npartX*npartY*npartZ)
   call send_mesh_to_all(myrank)
 
   ! 4/ write partitionned mesh in one file per proc
@@ -121,12 +120,12 @@ program xdecompose_mesh_mpi
        nspec_glob, nnodes, nspec2D_xmin, nspec2D_xmax,nspec2D_ymin, &
        nspec2D_ymax, nspec2D_bottom, nspec2D_top, nspec_cpml, nspec2D_moho)
 
-  if (myrank==0) then
-     write(27,*) ' END OF MESH DECOMPOSER '
+  if (myrank == 0) then
+     write(27,*) ' END OF MESH DECOMPOSER'
      close(27)
   endif
 
-  ! mpi finish
+  ! MPI finish
   call finalize_mpi()
 
 end program xdecompose_mesh_mpi
@@ -391,20 +390,16 @@ end subroutine send_partition_mesh_to_all
 !
 !-------------------------------------------------------
 
-
-
 subroutine send_mesh_to_all(myrank)
 
   use module_mesh
 
-
   integer,               intent(in) :: myrank
   integer                           :: ier
 
-
   if (myrank > 0) then
      allocate(elmnts_glob(NGNOD,nspec_glob),stat=ier)
-     if (ier /= 0)then
+     if (ier /= 0) then
         write(*,*) 'Error ', myrank, NGNOD,nspec_glob
         stop 'Error allocating array elmnts'
      endif
@@ -499,9 +494,9 @@ end subroutine send_mesh_to_all
 !
 !--------------------------------
 
-subroutine read_tmp_in_file(npart_1,npart_2,npart_3)
+subroutine read_tmp_in_file(npartX,npartY,npartZ)
 
-  integer,               intent(inout) :: npart_1,npart_2,npart_3
+  integer,               intent(inout) :: npartX,npartY,npartZ
   character(len=512)                   :: arg(3)
   integer                              :: i
 
@@ -509,8 +504,8 @@ subroutine read_tmp_in_file(npart_1,npart_2,npart_3)
      call get_command_argument(i,arg(i))
   enddo
 
-  read(arg(1),*) npart_1
-  read(arg(2),*) npart_2
-  read(arg(3),*) npart_3
+  read(arg(1),*) npartX
+  read(arg(2),*) npartY
+  read(arg(3),*) npartZ
 
 end subroutine read_tmp_in_file

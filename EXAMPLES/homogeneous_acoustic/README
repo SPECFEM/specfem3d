@@ -34,13 +34,13 @@ step-by-step tutorial:
 
 2. copy three input files from examples directory into SPECFEM3D/DATA/
 
-     > cd examples/homogeneous_acoustic/DATA/
+     > cd EXAMPLES/homogeneous_acoustic/DATA/
      > cp * ../../../DATA/
 
 
 3. create mesh:
 
-   - from the directory SPECFEM3D/examples/homogeneous_acoustic,
+   - from the directory SPECFEM3D/EXAMPLES/homogeneous_acoustic,
      open the cubit GUI:
 
      > claro (or cubit)
@@ -54,7 +54,7 @@ step-by-step tutorial:
         MESH/absorbing_surface_file_xmin
         MESH/absorbing_surface_file_ymax
         MESH/absorbing_surface_file_ymin
-        MESH/free_surface_file
+        MESH/free_or_absorbing_surface_file_zmax
         MESH/materials_file
         MESH/mesh_file
         MESH/nodes_coords_file
@@ -62,6 +62,7 @@ step-by-step tutorial:
 
      the cubit graphics window should show a mesh similar to the file homogeneous.png
 
+     A default mesh for running this example is already provided in MESH-default/ folder.
 
 4. decompose mesh files:
 
@@ -81,7 +82,7 @@ step-by-step tutorial:
      note 2: for small jobs (like this one), you can simply launch the job on
              the local node from directory SPECFEM3D:
 
-     > ./bin/xdecompose_mesh 4 examples/homogeneous_acoustic/MESH/ OUTPUT_FILES/DATABASES_MPI/
+     > ./bin/xdecompose_mesh 4 EXAMPLES/homogeneous_acoustic/MESH/ OUTPUT_FILES/DATABASES_MPI/
 
 
 5. generate databases:
@@ -121,19 +122,27 @@ step-by-step tutorial:
 
 
 7. check with 6 reference seismograms in
-      SPECFEM3D/examples/homogeneous_acoustic/REF_SEIS/
+      SPECFEM3D/EXAMPLES/homogeneous_acoustic/REF_SEIS/
 
    - option 1: from SPECFEM3D/, quick viewing using xmgrace (if available):
 
-     > xmgrace examples/homogeneous_acoustic/REF_SEIS/*Z.semd &
+     > xmgrace EXAMPLES/homogeneous_acoustic/REF_SEIS/*Z.semd &
      > xmgrace OUTPUT_FILES/*Z.semd &
 
    - option 2: generate ps files using gnuplot:
 
-     > cd SPECFEM3D/examples/homogeneous_acoustic/REF_SEIS
+     > cd SPECFEM3D/EXAMPLES/homogeneous_acoustic/REF_SEIS
      > gnuplot plot_these_seismograms_with_gnuplot.gnu
 
      You should see a figure in a render window.
 
 ===========================================================
+
+
+For a default simulation, you can run the script provided in this example:
+
+ > ./run_this_example.sh
+
+Please consider submitting your own example to this package!
+email us: cig-seismo AT geodynamics.org
 

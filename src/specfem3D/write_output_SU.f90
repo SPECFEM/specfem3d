@@ -74,7 +74,7 @@
   if (ier /= 0) stop 'error allocating rtmpseis array'
 
   ! write seismograms (dx)
-  open(unit=IOUT_SU, file=trim(final_LOCAL_PATH)//trim(procname)//'_dx_SU' ,&
+  open(unit=IOUT_SU, file=trim(final_LOCAL_PATH)//trim(procname)//'_dx_SU', &
        status='unknown', access='direct', recl=4, iostat=ier)
 
   if (ier /= 0) stop 'error opening ***_dx_SU file'
@@ -103,7 +103,7 @@
   close(IOUT_SU)
 
   ! write seismograms (dy)
-  open(unit=IOUT_SU, file=trim(final_LOCAL_PATH)//trim(procname)//'_dy_SU' ,&
+  open(unit=IOUT_SU, file=trim(final_LOCAL_PATH)//trim(procname)//'_dy_SU', &
        status='unknown', access='direct', recl=4, iostat=ier)
 
   if (ier /= 0) stop 'error opening ***_dy_SU file'
@@ -124,7 +124,7 @@
   close(IOUT_SU)
 
   ! write seismograms (dz)
-  open(unit=IOUT_SU, file=trim(final_LOCAL_PATH)//trim(procname)//'_dz_SU' ,&
+  open(unit=IOUT_SU, file=trim(final_LOCAL_PATH)//trim(procname)//'_dz_SU', &
        status='unknown', access='direct', recl=4, iostat=ier)
 
   if (ier /= 0) stop 'error opening ***_dz_SU file'
@@ -181,7 +181,7 @@
   write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+21) NINT(x_found)           ! receiver location xr
   write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+22) NINT(y_found)           ! receiver location zr
 
-  if (nrec>1) write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+48) dx ! receiver interval
+  if (nrec > 1) write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+48) dx ! receiver interval
 
   ! time steps
   header2(1)=0  ! dummy

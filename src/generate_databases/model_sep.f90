@@ -56,7 +56,7 @@ subroutine model_sep()
   logical :: vp_exists, vs_exists, rho_exists
 
   ! user output
-  if (myrank==0) then
+  if (myrank == 0) then
     write(IMAIN,*) '     using SEP model from directory: ',trim(SEP_MODEL_DIRECTORY)
   endif
 
@@ -81,13 +81,13 @@ subroutine model_sep()
   ! Parse only one of the header, vp is the most likely to be present
   ! It might be useful to make sure that all SEP files have coherent dimensions.
   call parse_sep_header(trim(sep_header_name_vp) // char(0), &
-                        NX, NY, NZ, OX, OY, OZ, DX, DY, DZ,  &
+                        NX, NY, NZ, OX, OY, OZ, DX, DY, DZ, &
                         sep_bin_vp)
   if (vs_exists) then
     call parse_sep_header(trim(sep_header_name_vs) // char(0), &
-                          NX_alt, NY_alt, NZ_alt,              &
-                          OX_alt, OY_alt, OZ_alt,              &
-                          DX_alt, DY_alt, DZ_alt,              &
+                          NX_alt, NY_alt, NZ_alt, &
+                          OX_alt, OY_alt, OZ_alt, &
+                          DX_alt, DY_alt, DZ_alt, &
                           sep_bin_vs)
     if ((NX /= NX_alt) .and. (NY /= NX_alt) .and. (NZ /= NZ_alt) .and. &
         (OX /= OX_alt) .and. (OY /= OX_alt) .and. (OZ /= OZ_alt) .and. &
@@ -97,13 +97,13 @@ subroutine model_sep()
   endif
   if (rho_exists) then
     call parse_sep_header(trim(sep_header_name_rho) // char(0), &
-                          NX_alt, NY_alt, NZ_alt,               &
-                          OX_alt, OY_alt, OZ_alt,               &
-                          DX_alt, DY_alt, DZ_alt,               &
+                          NX_alt, NY_alt, NZ_alt, &
+                          OX_alt, OY_alt, OZ_alt, &
+                          DX_alt, DY_alt, DZ_alt, &
                           sep_bin_rho)
-    if ((NX /= NX_alt) .and. (NY/= NX_alt) .and. (NZ/= NZ_alt) .and. &
-        (OX /= OX_alt) .and. (OY/= OX_alt) .and. (OZ/= OZ_alt) .and. &
-        (DX /= DX_alt) .and. (DY/= DX_alt) .and. (DZ/= DZ_alt)) then
+    if ((NX /= NX_alt) .and. (NY /= NX_alt) .and. (NZ /= NZ_alt) .and. &
+        (OX /= OX_alt) .and. (OY /= OX_alt) .and. (OZ /= OZ_alt) .and. &
+        (DX /= DX_alt) .and. (DY /= DX_alt) .and. (DZ /= DZ_alt)) then
       stop "SEP headers should be consistant."
     endif
   endif
@@ -118,7 +118,7 @@ subroutine model_sep()
   ! Read available SEP files, assign default values for unfound files.
   allocate(vp_sep(ni, nj, NZ))
   call read_sep_binary_mpiio(trim(SEP_MODEL_DIRECTORY) // "/" // sep_bin_vp, &
-                             NX, NY, NZ, ni, nj, NZ,                         &
+                             NX, NY, NZ, ni, nj, NZ, &
                              imin, jmin, kmin, vp_sep)
   ! Interpolate SEP values on meshfem mesh.
   rho_vp = 0.0
@@ -131,7 +131,7 @@ subroutine model_sep()
   if (vs_exists) then
     allocate(vs_sep(ni, nj, NZ))
     call read_sep_binary_mpiio(trim(SEP_MODEL_DIRECTORY) // "/" // sep_bin_vs, &
-                               NX, NY, NZ, ni, nj, NZ,                         &
+                               NX, NY, NZ, ni, nj, NZ, &
                                imin, jmin, kmin, vs_sep)
     call interpolate_sep_on_mesh(vs_sep, xmin, ymin, ni, nj, NZ, &
                                  DX, DY, DZ, rho_vs)
@@ -143,7 +143,7 @@ subroutine model_sep()
   if (rho_exists) then
     allocate(rho_sep(ni, nj, NZ))
     call read_sep_binary_mpiio(trim(SEP_MODEL_DIRECTORY) // "/" // sep_bin_rho, &
-                               NX, NY, NZ, ni, nj, NZ,                          &
+                               NX, NY, NZ, ni, nj, NZ, &
                                imin, jmin, kmin, rho_sep)
     call interpolate_sep_on_mesh(rho_sep, xmin, ymin, ni, nj, NZ, &
                                  DX, DY, DZ, rhostore)
@@ -236,7 +236,7 @@ end subroutine read_sep_binary_mpiio
 !! \note from Yang Luo's external routines. Actually finds a nearby point.
 subroutine interpolate_sep_on_mesh(sep_var, xmin, ymin, ni, nj, NZ, &
                                    DX, DY, DZ, var)
-  use generate_databases_par, only: NGLLX, NGLLY, NGLLZ, NSPEC=>NSPEC_AB, &
+  use generate_databases_par, only: NGLLX, NGLLY, NGLLZ, NSPEC => NSPEC_AB, &
                                     ibool, xstore, ystore, zstore, &
                                     CUSTOM_REAL
   !--- Parameters
@@ -258,12 +258,12 @@ subroutine interpolate_sep_on_mesh(sep_var, xmin, ymin, ni, nj, NZ, &
               ! in SEP, z-axis is downward; in SPECFEM, z-axis is upward
               k_target=NINT(-zstore(i, j, k, ispec)/DZ)+1; !NOT using (z_temp-zmin)
               ! Stay in the computational domain
-              if (i_target< 1)  i_target=  1
-              if (j_target< 1)  j_target=  1
-              if (k_target< 1)  k_target=  1
-              if (i_target>ni)  i_target= ni
-              if (j_target>nj)  j_target= nj
-              if (k_target>NZ)  k_target= NZ
+              if (i_target < 1)  i_target=  1
+              if (j_target < 1)  j_target=  1
+              if (k_target < 1)  k_target=  1
+              if (i_target > ni)  i_target= ni
+              if (j_target > nj)  j_target= nj
+              if (k_target > NZ)  k_target= NZ
 
               var(i,j,k,ispec) = sep_var(i_target,j_target,k_target)
            enddo
@@ -297,8 +297,8 @@ subroutine find_slice_bounds_sep(NX, NY, NZ, OX, OY, OZ, DX, DY, DZ, &
   imin=floor((xmin-OX)/DX+1); imax=ceiling((xmax-OX)/DX+1);
   jmin=floor((ymin-OY)/DY+1); jmax=ceiling((ymax-OY)/DY+1);
   kmin=floor((zmin-OZ)/DZ+1); kmax=ceiling((zmax-OZ)/DZ+1);
-  if (imin<1)  imin= 1;  if (jmin<1)  jmin= 1;  if (kmin<1)  kmin= 1;
-  if (imax>NX) imin=NX;  if (jmax>NY) jmax=NY;  if (kmax>NZ) kmax=NZ;
+  if (imin < 1)  imin= 1;  if (jmin < 1)  jmin= 1;  if (kmin < 1)  kmin= 1;
+  if (imax > NX) imin=NX;  if (jmax > NY) jmax=NY;  if (kmax > NZ) kmax=NZ;
   ! Number of SEP indexes for the current slice
   ni=imax-imin+1
   nj=jmax-jmin+1
@@ -315,7 +315,7 @@ end subroutine find_slice_bounds_sep
 !==============================================================================
 !> Make sure that each element is fully acoustic or fully elastic.
 subroutine correct_sep_interface()
-  use generate_databases_par, only: NGLLX, NGLLY, NGLLZ, NSPEC=>NSPEC_AB
+  use generate_databases_par, only: NGLLX, NGLLY, NGLLZ, NSPEC => NSPEC_AB
   use create_regions_mesh_ext_par, only: rhostore, rho_vp, rho_vs, &
                                          ispec_is_acoustic, ispec_is_elastic
   integer :: ispec, i, j, k

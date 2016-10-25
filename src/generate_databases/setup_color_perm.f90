@@ -25,12 +25,11 @@
 !
 !=====================================================================
 
-
   subroutine setup_color_perm(myrank,nspec,nglob,ibool,ANISOTROPY,SAVE_MESH_FILES)
 
 ! sets up mesh coloring and permutes elements
 
-  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,IMAIN,USE_MESH_COLORING_GPU
+  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,IMAIN,USE_MESH_COLORING_GPU
   use create_regions_mesh_ext_par
   implicit none
 
@@ -123,14 +122,12 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine setup_color(myrank,nspec,nglob,ibool,perm, &
-                            ispec_is_d,idomain, &
-                            num_phase_ispec_d,phase_ispec_inner_d, &
-                            SAVE_MESH_FILES)
+  subroutine setup_color(myrank,nspec,nglob,ibool,perm,ispec_is_d,idomain, &
+                            num_phase_ispec_d,phase_ispec_inner_d,SAVE_MESH_FILES)
 
 ! sets up mesh coloring
 
-  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,IMAIN,USE_MESH_COLORING_GPU,MAX_NUMBER_OF_COLORS
+  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,IMAIN,USE_MESH_COLORING_GPU,MAX_NUMBER_OF_COLORS
   use create_regions_mesh_ext_par
 
   implicit none
@@ -391,9 +388,7 @@
   ! debug: outputs permutation array as vtk file
   if (DEBUG) then
     filename = prname(1:len_trim(prname))//'perm_'//str_domain(idomain)
-    call write_VTK_data_elem_i(nspec,nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-                        perm,filename)
+    call write_VTK_data_elem_i(nspec,nglob,xstore_dummy,ystore_dummy,zstore_dummy,ibool,perm,filename)
   endif
 
   deallocate(num_of_elems_in_this_color)
@@ -406,8 +401,7 @@
 
   subroutine setup_permutation(myrank,nspec,nglob,ibool,ANISOTROPY,perm,SAVE_MESH_FILES)
 
-  use generate_databases_par,only: NGLLX,NGLLY,NGLLZ,IMAIN, &
-    PML_CONDITIONS,is_CPML,CPML_to_spec,NSPEC_CPML,ATTENUATION
+  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,IMAIN,PML_CONDITIONS,is_CPML,CPML_to_spec,NSPEC_CPML,ATTENUATION
 
   use create_regions_mesh_ext_par
 
@@ -456,7 +450,7 @@
       ! loops through elements
       do i = 1,num_elem_colors_elastic(icolor)
         ielem = ielem + 1
-        ispec = phase_ispec_inner_elastic(ielem,1) ! 1 <-- first phase, outer elements
+        ispec = phase_ispec_inner_elastic(ielem,1) ! 1 -- first phase, outer elements
         ! reorders elements
         icounter = icounter + 1
         temp_perm_global(ispec) = icounter
@@ -470,7 +464,7 @@
       ! loops through elements
       do i = 1,num_elem_colors_elastic(icolor)
         ielem = ielem + 1
-        ispec = phase_ispec_inner_elastic(ielem,2) ! 2 <-- second phase, inner elements
+        ispec = phase_ispec_inner_elastic(ielem,2) ! 2 -- second phase, inner elements
         ! reorders elements
         icounter = icounter + 1
         temp_perm_global(ispec) = icounter
@@ -489,7 +483,7 @@
       ! loops through elements
       do i = 1,num_elem_colors_acoustic(icolor)
         ielem = ielem + 1
-        ispec = phase_ispec_inner_acoustic(ielem,1) ! 1 <-- first phase, outer elements
+        ispec = phase_ispec_inner_acoustic(ielem,1) ! 1 -- first phase, outer elements
         ! reorders elements
         icounter = icounter + 1
         temp_perm_global(ispec) = icounter
@@ -503,7 +497,7 @@
       ! loops through elements
       do i = 1,num_elem_colors_acoustic(icolor)
         ielem = ielem + 1
-        ispec = phase_ispec_inner_acoustic(ielem,2) ! 2 <-- second phase, inner elements
+        ispec = phase_ispec_inner_acoustic(ielem,2) ! 2 -- second phase, inner elements
         ! reorders elements
         icounter = icounter + 1
         temp_perm_global(ispec) = icounter
@@ -602,7 +596,7 @@
   call permute_elements_real(kappastore,temp_array_real,perm,nspec)
   call permute_elements_real(mustore,temp_array_real,perm,nspec)
 
-  if(ATTENUATION) then
+  if (ATTENUATION) then
      call permute_elements_real(qmu_attenuation_store,temp_array_real,perm,nspec)
      call permute_elements_real(qkappa_attenuation_store,temp_array_real,perm,nspec)
   endif

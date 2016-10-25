@@ -126,7 +126,7 @@
 
   subroutine get_attenuation_model(myrank,nspec,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
                                   mustore,rho_vs,kappastore,rho_vp,qkappa_attenuation_store,qmu_attenuation_store, &
-                                  ispec_is_elastic,min_resolved_period,prname,FULL_ATTENUATION_SOLID,ATTENUATION_f0_REFERENCE)
+                                  ispec_is_elastic,min_resolved_period,prname,ATTENUATION_f0_REFERENCE)
 
 ! precalculates attenuation arrays and stores arrays into files
 
@@ -150,8 +150,6 @@
   real(kind=CUSTOM_REAL),intent(in) :: min_resolved_period
   character(len=MAX_STRING_LEN),intent(in) :: prname
 
-  logical,intent(in) :: FULL_ATTENUATION_SOLID
-
   ! local parameters
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: one_minus_sum_beta
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: factor_common
@@ -159,7 +157,7 @@
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: factor_common_kappa
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: scale_factor, scale_factor_kappa
   double precision, dimension(N_SLS) :: tau_sigma_dble,beta_dble,beta_dble_kappa
-  double precision factor_scale_dble,one_minus_sum_beta_dble,&
+  double precision factor_scale_dble,one_minus_sum_beta_dble, &
                    factor_scale_dble_kappa,one_minus_sum_beta_dble_kappa
   double precision :: Q_mu,Q_kappa,Q_p,Q_s
   double precision :: L_val
@@ -187,17 +185,10 @@
           scale_factor(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if (ier /= 0) call exit_mpi(myrank,'error allocation attenuation arrays')
 
-  if (FULL_ATTENUATION_SOLID) then
-    allocate(one_minus_sum_beta_kappa(NGLLX,NGLLY,NGLLZ,nspec), &
-            factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,nspec), &
-            scale_factor_kappa(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-    if (ier /= 0) call exit_mpi(myrank,'error allocation attenuation arrays')
-  else
-    allocate(one_minus_sum_beta_kappa(NGLLX,NGLLY,NGLLZ,1), &
-            factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,1), &
-            scale_factor_kappa(NGLLX,NGLLY,NGLLZ,1),stat=ier)
-    if (ier /= 0) call exit_mpi(myrank,'error allocation attenuation arrays')
-  endif
+  allocate(one_minus_sum_beta_kappa(NGLLX,NGLLY,NGLLZ,nspec), &
+          factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,nspec), &
+          scale_factor_kappa(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if (ier /= 0) call exit_mpi(myrank,'error allocation attenuation arrays')
 
   one_minus_sum_beta(:,:,:,:) = 1._CUSTOM_REAL
   factor_common(:,:,:,:,:) = 1._CUSTOM_REAL
@@ -210,25 +201,24 @@
   ! gets stress relaxation times tau_sigma, i.e.
   ! precalculates tau_sigma depending on period band (constant for all Q_mu), and
   ! determines central frequency f_c_source of attenuation period band
-  call get_attenuation_constants(min_resolved_period,tau_sigma_dble,&
+  call get_attenuation_constants(min_resolved_period,tau_sigma_dble, &
                                  f_c_source,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
 
   ! user output
   if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) "Attenuation:"
+    write(IMAIN,*) "The code uses a constant Q quality factor,"
+    write(IMAIN,*) "but approximated based on a series of Zener standard linear solids (SLS)."
+    write(IMAIN,*) "The approximation is performed in the following frequency band:"
     write(IMAIN,*) "  Reference frequency (Hz):",sngl(ATTENUATION_f0_REFERENCE)," period (s):",sngl(1.0/ATTENUATION_f0_REFERENCE)
     write(IMAIN,*) "  Frequency band min/max (Hz):",sngl(1.0/MAX_ATTENUATION_PERIOD),sngl(1.0/MIN_ATTENUATION_PERIOD)
     write(IMAIN,*) "  Period band min/max (s):",sngl(MIN_ATTENUATION_PERIOD),sngl(MAX_ATTENUATION_PERIOD)
     write(IMAIN,*) "  Logarithmic central frequency (Hz):",sngl(f_c_source)," period (s):",sngl(1.0/f_c_source)
-    if (FULL_ATTENUATION_SOLID) then
-      write(IMAIN,*) "  using attenuation having both Q_kappa and Q_mu"
-    endif
+    write(IMAIN,*) "  Using full attenuation with both Q_kappa and Q_mu."
     if (USE_OLSEN_ATTENUATION) then
       write(IMAIN,*) "  using Olsen scaling with attenuation ratio Qmu/vs = ",sngl(OLSEN_ATTENUATION_RATIO)
-      if (FULL_ATTENUATION_SOLID .and. USE_ANDERSON_CRITERIA) then
-        write(IMAIN,*) "  using Anderson and Hart criteria for ratio Qs/Qp"
-      endif
+      if (USE_ANDERSON_CRITERIA) write(IMAIN,*) "  using Anderson and Hart criteria for ratio Qs/Qp"
     endif
     call flush_IMAIN()
   endif
@@ -284,8 +274,7 @@
 
           ! bulk moduli attenuation
           ! gets Q_kappa value
-          if (FULL_ATTENUATION_SOLID) then
-            ! gets Q_kappa value
+
             if (USE_OLSEN_ATTENUATION) then
               ! bulk attenuation
               ! compressional wave speed vp
@@ -342,7 +331,6 @@
             ! statistics on Q_kappa
             if (Q_kappa < qmin_kappa) qmin_kappa = Q_kappa
             if (Q_kappa > qmax_kappa) qmax_kappa = Q_kappa
-          endif
 
           ! gets beta, on_minus_sum_beta and factor_scale
           ! based on calculation of strain relaxation times tau_eps
@@ -350,7 +338,7 @@
                                        f_c_source,tau_sigma_dble, &
                                        beta_dble,one_minus_sum_beta_dble,factor_scale_dble, &
                                        Q_kappa,beta_dble_kappa,one_minus_sum_beta_dble_kappa,factor_scale_dble_kappa, &
-                                       FULL_ATTENUATION_SOLID,ATTENUATION_f0_REFERENCE)
+                                       ATTENUATION_f0_REFERENCE)
 
           ! shear attenuation
           ! stores factor for unrelaxed parameter
@@ -367,14 +355,12 @@
           scale_factor(i,j,k,ispec) = factor_scale_dble
 
           ! bulk attenuation
-          if (FULL_ATTENUATION_SOLID) then
-            one_minus_sum_beta_kappa(i,j,k,ispec) = one_minus_sum_beta_dble_kappa
-            beta_kappa(:) = beta_dble_kappa(:)
-            factor_common_kappa(:,i,j,k,ispec) = beta_kappa(:) * tauinv(:)
+          one_minus_sum_beta_kappa(i,j,k,ispec) = one_minus_sum_beta_dble_kappa
+          beta_kappa(:) = beta_dble_kappa(:)
+          factor_common_kappa(:,i,j,k,ispec) = beta_kappa(:) * tauinv(:)
 
-            ! stores scale factor for mu moduli
-            scale_factor_kappa(i,j,k,ispec) = factor_scale_dble_kappa
-          endif
+          ! stores scale factor for mu moduli
+          scale_factor_kappa(i,j,k,ispec) = factor_scale_dble_kappa
 
         enddo
       enddo
@@ -384,17 +370,13 @@
   ! statistics
   call min_all_dp(qmin,qmin_all)
   call max_all_dp(qmax,qmax_all)
-  if (FULL_ATTENUATION_SOLID) then
-    call min_all_dp(qmin_kappa,qmin_kappa_all)
-    call max_all_dp(qmax_kappa,qmax_kappa_all)
-  endif
+  call min_all_dp(qmin_kappa,qmin_kappa_all)
+  call max_all_dp(qmax_kappa,qmax_kappa_all)
 
   ! user output
   if (myrank == 0) then
     write(IMAIN,*) "  Q_mu min/max           : ",sngl(qmin_all),sngl(qmax_all)
-    if (FULL_ATTENUATION_SOLID) then
-      write(IMAIN,*) "  Q_kappa min/max        : ",sngl(qmin_kappa_all),sngl(qmax_kappa_all)
-    endif
+    write(IMAIN,*) "  Q_kappa min/max        : ",sngl(qmin_kappa_all),sngl(qmax_kappa_all)
     write(IMAIN,*)
   endif
 
@@ -406,24 +388,22 @@
     call exit_mpi(myrank,'error opening attenuation.bin file')
   endif
   write(27) nspec
+
   ! shear attenuation
   write(27) one_minus_sum_beta
   write(27) factor_common
   write(27) scale_factor
+
   ! bulk attenuation
-  if (FULL_ATTENUATION_SOLID) then
-    write(27) one_minus_sum_beta_kappa
-    write(27) factor_common_kappa
-    write(27) scale_factor_kappa
-  endif
+  write(27) one_minus_sum_beta_kappa
+  write(27) factor_common_kappa
+  write(27) scale_factor_kappa
 
   close(27)
 
   ! frees memory
   deallocate(one_minus_sum_beta,factor_common,scale_factor)
-  if (FULL_ATTENUATION_SOLID) then
-    deallocate(one_minus_sum_beta_kappa,factor_common_kappa,scale_factor_kappa)
-  endif
+  deallocate(one_minus_sum_beta_kappa,factor_common_kappa,scale_factor_kappa)
 
   end subroutine get_attenuation_model
 
@@ -506,8 +486,7 @@
   subroutine get_attenuation_factors(myrank,Q_mu,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD, &
                                      f_c_source,tau_sigma, &
                                      beta,one_minus_sum_beta,factor_scale, &
-                                     Q_kappa,beta_kappa,one_minus_sum_beta_kappa,factor_scale_kappa, &
-                                     FULL_ATTENUATION_SOLID,ATTENUATION_f0_REFERENCE)
+                                     Q_kappa,beta_kappa,one_minus_sum_beta_kappa,factor_scale_kappa,ATTENUATION_f0_REFERENCE)
 
 ! returns: attenuation mechanisms beta,one_minus_sum_beta,factor_scale
 
@@ -529,7 +508,7 @@
   double precision, dimension(N_SLS) :: beta,beta_kappa
   double precision :: one_minus_sum_beta,one_minus_sum_beta_kappa
   double precision :: factor_scale,factor_scale_kappa
-  logical :: FULL_ATTENUATION_SOLID
+
   ! local parameters
   double precision, dimension(N_SLS) :: tau_eps,tau_eps_kappa
 
@@ -544,17 +523,14 @@
   ! determines the "scale factor"
   call get_attenuation_scale_factor(myrank,f_c_source,tau_eps,tau_sigma,Q_mu,factor_scale,ATTENUATION_f0_REFERENCE)
 
-  if (FULL_ATTENUATION_SOLID) then
-    ! determines tau_eps for Q_kappa
-    call get_attenuation_tau_eps(Q_kappa,tau_sigma,tau_eps_kappa, &
-                                 MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
+  ! determines tau_eps for Q_kappa
+  call get_attenuation_tau_eps(Q_kappa,tau_sigma,tau_eps_kappa,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
 
-    ! determines one_minus_sum_beta
-    call get_attenuation_property_values(tau_sigma,tau_eps_kappa,beta_kappa,one_minus_sum_beta_kappa)
+  ! determines one_minus_sum_beta
+  call get_attenuation_property_values(tau_sigma,tau_eps_kappa,beta_kappa,one_minus_sum_beta_kappa)
 
-    ! determines the "scale factor"
-    call get_attenuation_scale_factor(myrank,f_c_source,tau_eps_kappa,tau_sigma,Q_kappa,factor_scale_kappa,ATTENUATION_f0_REFERENCE)
-  endif
+  ! determines the "scale factor"
+  call get_attenuation_scale_factor(myrank,f_c_source,tau_eps_kappa,tau_sigma,Q_kappa,factor_scale_kappa,ATTENUATION_f0_REFERENCE)
 
   end subroutine get_attenuation_factors
 
@@ -803,10 +779,6 @@
 !     Department of Terrestrial Magnetism / Carnegie Institute of Washington
 !     Univeristy of Rhode Island
 !
-!  <savage@uri.edu>.
-!  <savage13@gps.caltech.edu>
-!  <savage13@dtm.ciw.edu>
-!
 !   It is based upon formulation in the following references:
 !
 !   Dahlen and Tromp, 1998
@@ -862,12 +834,11 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-
   subroutine model_attenuation_storage(Qmu, tau_eps, rw)
 
   use constants
 
-  use attenuation_model,only: AM_S
+  use attenuation_model, only: AM_S
 
   implicit none
 
@@ -1048,7 +1019,7 @@
 !   - Inserts necessary parameters into the module attenuation_simplex_variables
 !   - See module for explaination
 
-  use attenuation_model,only: AS_V
+  use attenuation_model, only: AS_V
 
   implicit none
 
@@ -1075,7 +1046,6 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-
   double precision function attenuation_eval(Xin)
 
 !    - Computes the misfit from a set of relaxation paramters
@@ -1096,9 +1066,9 @@
 !
 !    Uses attenuation_simplex_variables to store constant values
 !
-!    See atteunation_simplex_setup
-!
-  use attenuation_model,only: AS_V
+!    See attenuation_simplex_setup
+
+  use attenuation_model, only: AS_V
 
   implicit none
 
@@ -1222,7 +1192,7 @@
 !                 4 => report every iteration, total simplex
 !     err       = Output
 !                 0 => Normal exeecution, converged within desired range
-!                 1 => Function Evaluation exceeded limit
+!                 1 => function evaluation exceeded limit
 !                 2 => Iterations exceeded limit
 !
 !     See Matlab fminsearch
@@ -1461,7 +1431,7 @@
 !      n  = Input
 !             Length of fv
 !
-!      Returns:
+!      returns:
 !         Xi = max( || fv(1)- fv(i) || ) for i=2:n
 !
 
@@ -1497,7 +1467,7 @@
 !            dimension(n, n+1)
 !     n  = Pseudo Length of n
 !
-!     Returns:
+!     returns:
 !       Xi = max( max( || v(:,1) - v(:,i) || ) ) for i=2:n+1
 !
 
@@ -1583,7 +1553,7 @@
 
   subroutine attenuation_simplex_finish()
 
-  use attenuation_model,only: AS_V
+  use attenuation_model, only: AS_V
 
   implicit none
 

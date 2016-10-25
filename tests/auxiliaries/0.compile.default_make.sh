@@ -29,11 +29,18 @@ echo "compilation: $testdir" >> $testdir/results.log
 make clean >> $testdir/results.log 2>&1
 
 make -j 4 aux >> $testdir/results.log 2>&1
+# checks exit code
+if [[ $? -ne 0 ]]; then
+  echo >> $testdir/results.log
+  echo "compilation failed, please check..." >> $testdir/results.log
+  exit 1
+fi
 
 echo "" >> $testdir/results.log
 
 # checks executable availability
 exec=( xcombine_vol_data \
+       xcombine_vol_data_vtk \
        xcombine_surf_data \
        xcreate_movie_shakemap_AVS_DX_GMT \
       )
