@@ -41,6 +41,7 @@
   integer, intent(in) :: npointot
   double precision, dimension(npointot), intent(inout) :: x, y, z
   integer, dimension(npointot), intent(inout) :: ibool
+
   integer, dimension(npointot), intent(out) :: iglob, locval, ninseg
   logical, dimension(npointot), intent(out) :: ifseg
   integer, intent(out) :: nglob
@@ -51,7 +52,7 @@
   integer :: nseg, ioff, iseg, ig
 
   ! establish initial pointers
-  do i=1,npointot
+  do i = 1,npointot
     locval(i) = i
   enddo
 
@@ -61,10 +62,11 @@
   ifseg(1) = .true.
   ninseg(1) = npointot
 
-  do j=1,NDIM
+  do j = 1,NDIM
+
     ! sort within each segment
     ioff = 1
-    do iseg=1,nseg
+    do iseg = 1,nseg
       if (j == 1) then
         ! sort on X
         call heap_sort_multi(ninseg(iseg), x(ioff), y(ioff), z(ioff), ibool(ioff), locval(ioff))
@@ -79,23 +81,24 @@
     enddo
 
     ! check for jumps in current coordinate
+    ! define a tolerance, normalized radius is 1., so let's use a small value
     if (j == 1) then
-      do i=2,npointot
+      do i = 2,npointot
         if (dabs(x(i) - x(i-1)) > xtol) ifseg(i) = .true.
       enddo
     else if (j == 2) then
-      do i=2,npointot
+      do i = 2,npointot
         if (dabs(y(i) - y(i-1)) > xtol) ifseg(i) = .true.
       enddo
     else
-      do i=2,npointot
+      do i = 2,npointot
         if (dabs(z(i) - z(i-1)) > xtol) ifseg(i) = .true.
       enddo
     endif
 
     ! count up number of different segments
     nseg = 0
-    do i=1,npointot
+    do i = 1,npointot
       if (ifseg(i)) then
         nseg = nseg + 1
         ninseg(nseg) = 1
@@ -103,11 +106,12 @@
         ninseg(nseg) = ninseg(nseg) + 1
       endif
     enddo
+
   enddo
 
   ! assign global node numbers (now sorted lexicographically)
   ig = 0
-  do i=1,npointot
+  do i = 1,npointot
     ! eliminate the multiples by using a single (new) point number for all the points that have the same X Y Z after sorting
     if (ifseg(i)) ig = ig + 1
     iglob(locval(i)) = ig
@@ -117,8 +121,20 @@
 
   end subroutine sort_array_coordinates
 
+!
+!--------------------
+!
+
+
+! sorting routine left here for inlining
+
 ! -------------------- library for sorting routine ------------------
 
+! sorting routines put here in same file to allow for inlining
+
+! this directive avoids triggering a random bug in Intel ifort v13 (in the compiler, not in SPECFEM),
+! fixed in later versions of Intel ifort, which also ignore this directive because it was discontinued
+!$DIR NOOPTIMIZE
   subroutine heap_sort_multi(N, dx, dy, dz, ia, ib)
 
   implicit none
@@ -152,6 +168,9 @@
 
   contains
 
+! this directive avoids triggering a random bug in Intel ifort v13 (in the compiler, not in SPECFEM),
+! fixed in later versions of Intel ifort, which also ignore this directive because it was discontinued
+!$DIR NOOPTIMIZE
     subroutine dswap(A, i, j)
 
     double precision, dimension(:), intent(inout) :: A
@@ -180,6 +199,9 @@
 
     end subroutine
 
+! this directive avoids triggering a random bug in Intel ifort v13 (in the compiler, not in SPECFEM),
+! fixed in later versions of Intel ifort, which also ignore this directive because it was discontinued
+!$DIR NOOPTIMIZE
     subroutine heap_sort_siftdown(start, bottom)
 
     integer, intent(in) :: start
@@ -224,3 +246,4 @@
     end subroutine heap_sort_siftdown
 
   end subroutine heap_sort_multi
+

@@ -179,6 +179,7 @@
   it_end = NSTEP
   do it = it_begin,it_end
 
+  write(IMAIN,*) 'we are at step', it 
     ! simulation status output and stability check
     if (mod(it,NTSTEP_BETWEEN_OUTPUT_INFO) == 0 .or. it == it_begin + 4 .or. it == it_end) then
       call check_stability()
