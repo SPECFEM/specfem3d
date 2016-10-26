@@ -19,8 +19,12 @@ Lonmin = 136
 Lonmax = 150
 xc = 0.5*(Lonmin+Lonmax)
 yc = 0.5*(Latmin+Latmax)
-Lat2dis = 111.195 # 100km = 1deg in latitude
-Lon2dis = Lat2dis * math.cos(math.radians(0.5*(Latmin+Latmax)))
+Lat2dis = 100.0 
+# The true latitude to distance conversion ratio should be 111.195km=1deg.
+#We will reflect that at the end of the exportmesh.py by scaling the model
+#up by a factor of 1.1195. The reason we don't do it here is that it will 
+#change the whole script of mesh generation.
+Lon2dis = 76.0
 Meshsize = 4.0 # mesh size set to 4.0 km
 radius = 1000.0
 cuttingdepth = -100.0
