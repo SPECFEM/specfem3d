@@ -259,6 +259,7 @@ use File::Basename;
       $line =~ s#cartesion#Cartesian#ogi;
       $line =~ s#partiton#partition#ogi;
       $line =~ s#drection#direction#ogi;
+      $line =~ s#seperation#separation#ogi;
 
       print FILEF90 "$line\n";
 
