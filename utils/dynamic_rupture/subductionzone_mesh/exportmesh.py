@@ -7,7 +7,7 @@ import sys
 from save_fault_nodes_elements import *
 from absorbing_boundary import *
 
-def export_block(nb,vp,vs,rho,count=6,Q=13):
+def export_block(nb,vp,vs,rho,count=6,Q=9999):
     cubit.cmd('block {0}  name "elastic {0}" '.format(nb))        # material region  
     cubit.cmd('block {0} attribute count {1}'.format(nb,count)) 
     cubit.cmd('block {0} attribute index 1 1'.format(nb))      # flag for fault side 1 
