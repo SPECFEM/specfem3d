@@ -1813,7 +1813,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                   beta_x = mintemp + const_for_separation_two
                   if (abs(beta_x - maxtemp) < min_distance_between_CPML_parameter) then
                      beta_x = maxtemp + const_for_separation_two
-                  endif                  
+                  endif
                endif
             endif
 
@@ -1842,7 +1842,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                   beta_y = mintemp + const_for_separation_two
                   if (abs(beta_y - maxtemp) < min_distance_between_CPML_parameter) then
                      beta_y = maxtemp + const_for_separation_two
-                  endif                  
+                  endif
                endif
             endif
 
@@ -1870,7 +1870,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                   beta_z = mintemp + const_for_separation_two
                   if (abs(beta_z - maxtemp) < min_distance_between_CPML_parameter) then
                      beta_z = maxtemp + const_for_separation_two
-                  endif                  
+                  endif
                endif
             endif
 
