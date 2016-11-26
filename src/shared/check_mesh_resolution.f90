@@ -284,13 +284,11 @@
     write(IMAIN,*)
     write(IMAIN,*) 'Model: Poisson''s ratio min,max = ',poissonmin_glob,poissonmax_glob
     ! Poisson's ratio must be between -1 and +1/2
-    if (.not. has_vs_zero) then
-      if (poissonmin_glob < -1.d0 .or. poissonmax_glob > 0.5d0) then
-        write(IMAIN,*)
-        write(IMAIN,*) '       Error: Poisson''s ratio for the solid is out of range (-1 and +1/2).'
-        write(IMAIN,*)
-        stop 'Poisson''s ratio for the solid phase out of range'
-      endif
+    if (poissonmin_glob < -1.0000001d0 .or. poissonmax_glob > 0.50000001d0) then
+      write(IMAIN,*)
+      write(IMAIN,*) '       Error: Poisson''s ratio is out of range (should be between -1 and +0.5).'
+      write(IMAIN,*)
+      stop 'Poisson''s ratio out of range'
     endif
     write(IMAIN,*) '********'
     write(IMAIN,*)
@@ -847,7 +845,6 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-
   subroutine get_vpvs_minmax(vpmin,vpmax,vsmin,vsmax,poissonmin,poissonmax, &
                              ispec,has_vs_zero, &
                              NSPEC_AB,kappastore,mustore,rho_vp,rho_vs)
@@ -927,18 +924,16 @@
         endif
         if (vs > vsmax) vsmax = vs
 
-        ! Poisson solid: for poisson solid, the lame parameters lambda == mu,
+        ! Poisson solid: for poisson solid, the Lame parameters lambda == mu,
         !                and vp/vs = sqrt(3) => vp = sqrt(3) * vs ~ 1.73 * vs and Poisson's ratio == 0.25 (1/4)
         if (has_vs_zero) then
-          ! poisson ratio makes no sense for fluid
-          poisson = 1.0_CUSTOM_REAL
+          poisson = 0.5_CUSTOM_REAL
         else
-          ! Poisson's ratio for vp & vs: \nu = 1/2 \frac{(vp/vs)^2 - 2}{(vp/vs)^2 - 1} = \frac{vp^2 - 2 vs^2}{2 vp^2 - 2 vs^2}
+          ! Poisson's ratio for vp and vs: \nu = 1/2 \frac{(vp/vs)^2 - 2}{(vp/vs)^2 - 1} = \frac{vp^2 - 2 vs^2}{2 vp^2 - 2 vs^2}
           if (vp > TINYVAL) then
             poisson = (vp*vp - 2.0_CUSTOM_REAL * vs*vs) / (2.0_CUSTOM_REAL * (vp*vp - vs*vs))
-
-            ! Poisson's ratio for kappa & mu: \nu = 1/2 (3 kappa - 2 mu)/(3 kappa + mu)
-            !poisson = 0.5d0 * (3.d0*kappa - 2.d0*mu)/(3.d0*kappa + mu)
+            ! Poisson's ratio for kappa and mu: \nu = 1/2 (3 kappa - 2 mu)/(3 kappa + mu)
+            ! poisson = 0.5d0 * (3.d0*kappa - 2.d0*mu)/(3.d0*kappa + mu)
           else
             ! vp not defined
             poisson = 1.0_CUSTOM_REAL
