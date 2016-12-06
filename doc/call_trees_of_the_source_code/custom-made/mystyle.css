@@ -1,0 +1,128 @@
+/* -------------------------------------------------------------
+
+version 0.1: november 2016, daniel peter
+
+------------------------------------------------------------- */
+
+
+/* -------------------------------------------------------------
+
+reset
+
+------------------------------------------------------------- */
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, font, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td {
+  border: 0; 
+  font-family: inherit;
+  font-size: 100%;
+  font-style: inherit;
+  font-weight: inherit;
+  outline: 0;
+  vertical-align: baseline;
+}
+
+
+body, div, a, .title, .tabs, .tabs2, .tabs3, .navpath, #projectname {
+  font-family: Lato, Verdana Regular, Verdana, Sans-serif;
+}
+
+
+/* -------------------------------------------------------------
+
+structure
+
+------------------------------------------------------------- */
+
+#titlearea {
+  /* margin: 10px 8px 10px 4px; */
+  border-bottom: none;
+  background-color: #33b;
+  color: #fff;
+  padding-top: 10px;
+  padding-bottom: 20px;
+  /*
+  -webkit-box-shadow: inset 0px -10px 5px #777;
+  -moz-box-shadow: inset 0px -10px 5px #777;
+  box-shadow: inset 0px -10px 5px #777;
+  */
+}
+
+.title {
+  font-weight: inherit;
+}
+
+.tabs, .tabs2, .tabs3 {
+  font-weight: inherit;
+  background-image: none;
+  background-color: #FFFFFF;
+  text-shadow: none;
+  color: #FFF;
+}
+
+.tablist a {
+  background-image: none;
+  text-shadow: none;
+  font-weight: inherit;
+  color: #2585ED;
+}
+
+
+.tablist a:hover {
+  background-image: none;
+  color: #1555AD;
+  text-shadow: none;
+  font-weight: inherit;
+}
+
+.tablist li.current a {
+  background-image: none;
+  background-color: #228;
+  text-shadow: none;
+  font-weight: inherit;
+  color: #FFF;
+}
+
+.tablist li {
+  background-image: none;
+  background-color: #FFF; /* #1575CD; */
+  text-shadow: none;
+  font-weight: inherit;
+  color: #FFF;
+  margin: 10px 8px 10px 4px;
+
+}
+
+
+.navpath ul
+{
+  font-size: 11px;
+  font-weight: inherit;
+  background-image: none;
+  background-color: rgba(200,200,200,0.8);
+  border-top: 1px solid #A1A1A1;
+  text-shadow: none;
+  color: #FFF;
+  padding-top: 10px;
+  padding-bottom: 20px;
+}
+
+.navpath li.navelem a
+{
+  background-image: none;
+  text-shadow: none;
+}
+
+.memproto, dl.reflist dt {
+  text-shadow: none;
+  color: #FFF;
+  background-image: none;
+  background-color: #abc;
+}
+
