@@ -74,8 +74,8 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
                             vp_max,vp_max_all
 
 ! for robust parameter separation of PML damping parameter
-  real(kind=CUSTOM_REAL) :: distance_min,distance_min_glob,&
-                            const_for_separation_two,const_for_separation_four,maxtemp,mintemp,&
+  real(kind=CUSTOM_REAL) :: distance_min,distance_min_glob, &
+                            const_for_separation_two,const_for_separation_four,maxtemp,mintemp, &
                             min_distance_between_CPML_parameter_glob
   real(kind=CUSTOM_REAL) :: x1,x2,y1,y2,z1,z2
   integer :: iglob1,iglob2
