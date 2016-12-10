@@ -458,6 +458,8 @@
 
   use constants
 
+  use shared_parameters, only: COMPUTE_FREQ_BAND_AUTOMATIC
+
   implicit none
 
   real(kind=CUSTOM_REAL) :: min_resolved_period
@@ -469,8 +471,10 @@
   real(kind=CUSTOM_REAL)  :: min_period
 
   ! determines min/max periods for attenuation band based on minimum resolved period of mesh
-  min_period = 0.99 * min_resolved_period ! uses a small margin
-  call get_attenuation_periods(min_period,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
+  if (COMPUTE_FREQ_BAND_AUTOMATIC) then ! otherwise they were entered as input values by the user in the Par_file
+    min_period = 0.99 * min_resolved_period ! uses a small margin
+    call get_attenuation_periods(min_period,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
+  endif
 
   !  sets up stress relaxation times tau_sigma,
   ! equally spaced based on number of standard linear solids and period band
