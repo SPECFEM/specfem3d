@@ -132,6 +132,8 @@
 
   use constants
 
+  use shared_parameters, only: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD,COMPUTE_FREQ_BAND_AUTOMATIC
+
   implicit none
 
   double precision,intent(in) :: OLSEN_ATTENUATION_RATIO,ATTENUATION_f0_REFERENCE
@@ -162,7 +164,6 @@
   double precision :: Q_mu,Q_kappa,Q_p,Q_s
   double precision :: L_val
   double precision :: f_c_source
-  double precision :: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: tau_sigma
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: tauinv
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: beta,beta_kappa
@@ -211,7 +212,10 @@
     write(IMAIN,*) "The code uses a constant Q quality factor,"
     write(IMAIN,*) "but approximated based on a series of Zener standard linear solids (SLS)."
     write(IMAIN,*) "The approximation is performed in the following frequency band:"
-    write(IMAIN,*) "  Reference frequency (Hz):",sngl(ATTENUATION_f0_REFERENCE)," period (s):",sngl(1.0/ATTENUATION_f0_REFERENCE)
+    write(IMAIN,*) "  Reference frequency requested by the user (Hz):",sngl(ATTENUATION_f0_REFERENCE), &
+                                            " period (s):",sngl(1.0/ATTENUATION_f0_REFERENCE)
+    if (COMPUTE_FREQ_BAND_AUTOMATIC) write(IMAIN,*) "  The following values are computed automatically by the code based on &
+         &the estimated maximum frequency resolution of your mesh and can thus vary from what you have requested:"
     write(IMAIN,*) "  Frequency band min/max (Hz):",sngl(1.0/MAX_ATTENUATION_PERIOD),sngl(1.0/MIN_ATTENUATION_PERIOD)
     write(IMAIN,*) "  Period band min/max (s):",sngl(MIN_ATTENUATION_PERIOD),sngl(MAX_ATTENUATION_PERIOD)
     write(IMAIN,*) "  Logarithmic central frequency (Hz):",sngl(f_c_source)," period (s):",sngl(1.0/f_c_source)

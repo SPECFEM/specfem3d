@@ -74,6 +74,12 @@ GRAVITY                         = .false.
 # set here to a typical value for regional seismology / regional models (dominant period of 3 seconds, i.e. frequency of 1/3 Hz)
 ATTENUATION_f0_REFERENCE        = 0.33333d0
 
+# attenuation period range over which we try to mimic a constant Q factor
+MIN_ATTENUATION_PERIOD          = 999999998.d0
+MAX_ATTENUATION_PERIOD          = 999999999.d0
+# ignore this range and ask the code to compute it automatically instead based on the estimated resolution of the mesh (use this unless you know what you are doing)
+COMPUTE_FREQ_BAND_AUTOMATIC     = .true.
+
 # Olsen's constant for Q_mu = constant * V_s attenuation rule
 USE_OLSEN_ATTENUATION           = .false.
 OLSEN_ATTENUATION_RATIO         = 0.05
