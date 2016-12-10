@@ -83,13 +83,14 @@
   enddo
   rewind(IOSTF)
 
-  ! checks number of entries
-  if (i /= NSTEP) then
+  ! checks number of time steps read
+  if (i < NSTEP) then
     print *,'Problem when reading external source time file: ', trim(external_stf_filename)
-    print *,'  simulation number of time steps = ',NSTEP
-    print *,'  source time function read number of entries = ',i
-    print *,'Please make sure that the number of file entries correspond to the number of time steps in the simulation'
-    stop 'Error invalid number of entries in external source time file'
+    print *,'  number of time steps in the simulation = ',NSTEP
+    print *,'  number of time steps read from the source time function = ',i
+    print *,'Please make sure that the number of time steps in the external source file read is greater or &
+             &equal to the number of time steps in the simulation'
+    stop 'Error invalid number of time steps in external source time file'
   endif
 
   ! reads in external values
