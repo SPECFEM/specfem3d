@@ -542,6 +542,10 @@
   if (NSTEP <= 0) &
     stop 'NSTEP must be > 0 for any simulation'
 
+  ! period band over which we mimic a constant Q factor for attenuation
+  if (.not. COMPUTE_FREQ_BAND_AUTOMATIC .and. MIN_ATTENUATION_PERIOD >= MAX_ATTENUATION_PERIOD) &
+    stop 'must have MIN_ATTENUATION_PERIOD < MAX_ATTENUATION_PERIOD'
+
   ! seismogram output
   if (.not. SAVE_SEISMOGRAMS_DISPLACEMENT .and. .not. SAVE_SEISMOGRAMS_VELOCITY .and. &
      .not. SAVE_SEISMOGRAMS_ACCELERATION .and. .not. SAVE_SEISMOGRAMS_PRESSURE) &

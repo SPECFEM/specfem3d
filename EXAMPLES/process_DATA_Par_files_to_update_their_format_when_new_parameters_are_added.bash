@@ -28,9 +28,9 @@ USE_SOURCE_ENCODING             = .false.
 # total energy calculation
 #
 # to plot total energy curves, for instance to monitor how CPML absorbing layers behave;
-# should be turned OFF in most cases because expensive
+# should be turned OFF in most cases because a bit expensive
 OUTPUT_ENERGY                   = .false.
-# every how many time steps we compute energy (which is expensive to compute)
+# every how many time steps we compute energy (which is a bit expensive to compute)
 NTSTEP_BETWEEN_OUTPUT_ENERGY    = 10
 
 #
