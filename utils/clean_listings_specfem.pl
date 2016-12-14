@@ -260,6 +260,7 @@ use File::Basename;
       $line =~ s#partiton#partition#ogi;
       $line =~ s#drection#direction#ogi;
       $line =~ s#seperation#separation#ogi;
+      $line =~ s#inverision#inversion#ogi;
 
       print FILEF90 "$line\n";
 
