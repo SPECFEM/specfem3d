@@ -668,13 +668,17 @@
         gamma = gamma + dgamma
 
         ! impose that we stay in that element
-        ! (useful if user gives a source outside the mesh for instance)
-        if (xi > 1.d0) xi = 1.d0
-        if (xi < -1.d0) xi = -1.d0
-        if (eta > 1.d0) eta = 1.d0
-        if (eta < -1.d0) eta = -1.d0
-        if (gamma > 1.d0) gamma = 1.d0
-        if (gamma < -1.d0) gamma = -1.d0
+        ! (useful if user gives a receiver outside the mesh for instance)
+        ! we can go slightly outside the [1,1] segment since with finite elements
+        ! the polynomial solution is defined everywhere
+        ! this can be useful for convergence of itertive scheme with distorted elements.
+        ! this is purposely set to 1.10, do *NOT* set it back to 1.00 because 1.10 gives more accurate locations
+        if (xi > 1.10d0) xi = 1.10d0
+        if (xi < -1.10d0) xi = -1.10d0
+        if (eta > 1.10d0) eta = 1.10d0
+        if (eta < -1.10d0) eta = -1.10d0
+        if (gamma > 1.10d0) gamma = 1.10d0
+        if (gamma < -1.10d0) gamma = -1.10d0
 
       enddo
 
