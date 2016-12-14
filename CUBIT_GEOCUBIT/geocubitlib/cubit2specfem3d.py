@@ -679,7 +679,6 @@ class mesh(object,mesh_tools):
 '''
             nummaterial.write(txt)
         nummaterial.close()
-        print 'Ok'
 
     def create_hexnode_string(self,hexa):
         nodes=self.get_hex_connectivity(hexa)
@@ -735,7 +734,6 @@ class mesh(object,mesh_tools):
                 txt=self.create_hexnode_string(hexa)
                 meshfile.write(txt)
         meshfile.close()
-        print 'Ok'
 
     def material_write(self,mat_name):
         mat=open(mat_name,'w')
@@ -746,7 +744,6 @@ class mesh(object,mesh_tools):
                 for hexa in hexes:
                     mat.write(('%10i %10i\n') % (hexa,flag))
         mat.close()
-        print 'Ok'
 
     def get_extreme(self,c,cmin,cmax):
         if not cmin and not cmax:
@@ -783,7 +780,6 @@ class mesh(object,mesh_tools):
         print '  x-coordinate min/max:',str(self.xmin),str(self.xmax)
         print '  y-coordinate min/max:',str(self.ymin),str(self.ymax)
         print '  z-coordinate min/max:',str(self.zmin),str(self.zmax)
-        print 'Ok'
 
     def free_write(self,freename=None):
         # free surface
@@ -830,7 +826,7 @@ class mesh(object,mesh_tools):
                             txt=self.create_facenode_string(h,f,normal,cknormal=False)
                             freehex.write(txt)
                 freehex.close()
-        print 'Ok'
+
         cubit.cmd('set info on')
         cubit.cmd('set echo on')
 
@@ -1026,7 +1022,7 @@ class mesh(object,mesh_tools):
                                     txt=self.create_facenode_string(h,f,normal=normal,cknormal=cknormal)
                                     abshex_local.write(txt)
                         abshex_local.close()
-                        print 'Ok'
+
             cubit.cmd('set info on')
             cubit.cmd('set echo on')
 
@@ -1071,7 +1067,6 @@ class mesh(object,mesh_tools):
                             surfhex_local.write(txt)
                 # closes file
                 surfhex_local.close()
-                print 'Ok'
 
     def rec_write(self,recname):
         print 'Writing '+self.recname+'.....'
@@ -1081,7 +1076,6 @@ class mesh(object,mesh_tools):
             x,y,z=cubit.get_nodal_coordinates(n)
             recfile.write('ST%i XX %20f %20f 0.0 0.0 \n' % (i,x,z))
         recfile.close()
-        print 'Ok'
 
     def write(self,path=''):
         cubit.cmd('set info off')

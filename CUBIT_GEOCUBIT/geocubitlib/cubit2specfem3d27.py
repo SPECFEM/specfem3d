@@ -427,11 +427,15 @@ class mesh(object,mesh_tools):
                     #   positive => material properties,
                     #   negative => interface/tomography domain
                     flag=int(cubit.get_block_attribute_value(block,0))
-                    if 0< flag and nattrib >= 2:
+                    if flag > 0 and nattrib >= 2:
+                        # material properties
+                        # vp
                         vel=cubit.get_block_attribute_value(block,1)
                         if nattrib >= 3:
+                            # vs
                             vs=cubit.get_block_attribute_value(block,2)
                             if nattrib >= 4:
+                                # density
                                 rho=cubit.get_block_attribute_value(block,3)
                                 if nattrib >= 5:
                                     qk=cubit.get_block_attribute_value(block,4)
@@ -444,6 +448,8 @@ class mesh(object,mesh_tools):
                                     if nattrib == 7:
                                         ani=cubit.get_block_attribute_value(block,5)
                     elif flag < 0:
+                        # interface/tomography domain
+                        # velocity model
                         vel=name
                         attrib=cubit.get_block_attribute_value(block,1)
                         if attrib == 1:
@@ -567,10 +573,11 @@ class mesh(object,mesh_tools):
         #format nummaterials file: #material_domain_id #material_id #rho #vp #vs #Q_kappa #Q_mu #anisotropy_flag
         imaterial=properties[0]
         flag=properties[1]
-        #print 'prop',flag
+        print 'number of material:',flag
         if flag > 0:
             vel=properties[2]
             if properties[2] is None and type(vel) != str:
+                # velocity model scales with given vp value
                 if vel >= 30:
                     m2km=1000.
                 else:
@@ -579,6 +586,8 @@ class mesh(object,mesh_tools):
                 rho=(1.6612*vp-0.472*vp**2+0.0671*vp**3-0.0043*vp**4+0.000106*vp**4)*m2km
                 txt='%1i %3i %20f %20f %20f %1i %1i\n' % (properties[0],properties[1],rho,vel,vel/(3**.5),0,0)
             elif type(vel) != str and vel != 0.:
+                # velocity model given as vp,vs,rho,..
+                #format nummaterials file: #material_domain_id #material_id #rho #vp #vs #Q_kappa #Q_mu #anisotropy_flag
                 try:
                     qmu=properties[6]
                 except:
@@ -592,12 +601,13 @@ class mesh(object,mesh_tools):
                 except:
                     ani=0.
                 #print properties[0],properties[3],properties[1],properties[2],q,ani
+                #format: #material_domain_id #material_id #rho #vp #vs #Q_kappa #Q_mu #anisotropy_flag
                 txt='%1i %3i %20f %20f %20f %20f %20f\n' % (properties[0],properties[1],properties[4],properties[2],properties[3],qk,qmu,ani)
             elif type(vel) != str and vel != 0.:
                 helpstring="#material_domain_id #material_id #rho #vp #vs #Q_kappa #Q_mu #anisotropy"
                 txt='%1i %3i %s \n' % (properties[0],properties[1],helpstring)
             else:
-                helpstring=" -->       sintax: #material_domain_id #material_id #rho #vp #vs #Q_kappa #Q_mu #anisotropy"
+                helpstring=" -->       syntax: #material_domain_id #material_id #rho #vp #vs #Q_kappa #Q_mu #anisotropy"
                 txt='%1i %3i %s %s\n' % (properties[0],properties[1],properties[2],helpstring)
         elif flag < 0:
             if properties[2] == 'tomography':
@@ -605,11 +615,12 @@ class mesh(object,mesh_tools):
             elif properties[2] == 'interface':
                 txt='%1i %3i %s %s %1i %1i\n' % (properties[0],properties[1],properties[2],properties[3],properties[4],properties[5])
             else:
-                helpstring=" -->       sintax: #material_domain_id 'tomography' #file_name "
+                helpstring=" -->       syntax: #material_domain_id 'tomography' #file_name "
                 txt='%1i %3i %s %s \n' % (properties[0],properties[1],properties[2],helpstring)
                 #
         #print txt
         return txt
+
     def nummaterial_write(self,nummaterial_name,placeholder=True):
         print 'Writing '+nummaterial_name+'.....'
         nummaterial=open(nummaterial_name,'w')
@@ -711,6 +722,7 @@ class mesh(object,mesh_tools):
                 txt=self.create_hexnode_string(hexa)
                 meshfile.write(txt)
         meshfile.close()
+
     def material_write(self,mat_name):
         mat=open(mat_name,'w')
         print 'Writing '+mat_name+'.....'
@@ -720,6 +732,7 @@ class mesh(object,mesh_tools):
                 for hexa in hexes:
                     mat.write(('%10i %10i\n') % (hexa,flag))
         mat.close()
+
     def get_extreme(self,c,cmin,cmax):
         if not cmin and not cmax:
             cmin=c
@@ -728,34 +741,47 @@ class mesh(object,mesh_tools):
             if c<cmin: cmin=c
             if c>cmax: cmax=c
         return cmin,cmax
+
     def nodescoord_write(self,nodecoord_name):
         nodecoord=open(nodecoord_name,'w')
         print 'Writing '+nodecoord_name+'.....'
         node_list=cubit.parse_cubit_list('node','all')
+        # number of nodes
         num_nodes=len(node_list)
         print '  number of nodes:',str(num_nodes)
         nodecoord.write('%10i\n' % num_nodes)
-        #
-
+        # coordinates
         for node in node_list:
             x,y,z=cubit.get_nodal_coordinates(node)
+            # min/max
             self.xmin,self.xmax=self.get_extreme(x,self.xmin,self.xmax)
             self.ymin,self.ymax=self.get_extreme(y,self.ymin,self.ymax)
             self.zmin,self.zmax=self.get_extreme(z,self.zmin,self.zmax)
-            txt=('%10i %20f %20f %20f\n') % (node,x,y,z)
+            if abs(x) < 1.0 and abs(y) < 1.0 and abs(z) < 1.0:
+                # avoids problem w/ fixed floating point formatting for very small values
+                txt=('%10i %20e %20e %20e\n') % (node,x,y,z)
+            else:
+                # standard float format
+                txt=('%10i %20f %20f %20f\n') % (node,x,y,z)
             nodecoord.write(txt)
         nodecoord.close()
+        print '  x-coordinate min/max:',str(self.xmin),str(self.xmax)
+        print '  y-coordinate min/max:',str(self.ymin),str(self.ymax)
+        print '  z-coordinate min/max:',str(self.zmin),str(self.zmax)
+
     def free_write(self,freename=None):
+        # free surface
         cubit.cmd('set info off')
         cubit.cmd('set echo off')
         cubit.cmd('set journal off')
         from sets import Set
         normal=(0,0,1)
         if not freename: freename=self.freename
-        freehex=open(freename,'w')
+        # writes free surface file
         print 'Writing '+freename+'.....'
+        freehex=open(freename,'w')
         #
-        #
+        # searches block definition with name face_topo
         for block,flag in zip(self.block_bc,self.block_bc_flag):
             if block == self.topography:
                 name=cubit.get_exodus_entity_name('block',block)
@@ -788,8 +814,10 @@ class mesh(object,mesh_tools):
                             txt=self.create_facenode_string(h,f,normal,cknormal=False)
                             freehex.write(txt)
                 freehex.close()
+
         cubit.cmd('set info on')
         cubit.cmd('set echo on')
+
     def check_cmpl_size(self,case='x'):
         if case=='x':
             vmaxtmp=self.xmax
@@ -810,6 +838,7 @@ class mesh(object,mesh_tools):
             vmin=vmintmp+self.size
             vmax=vmaxtmp-self.size
         return vmin,vmax
+
     def select_cpml(self):
         xmin,xmax=self.check_cmpl_size(case='x')
         ymin,ymax=self.check_cmpl_size(case='y')
@@ -870,15 +899,8 @@ class mesh(object,mesh_tools):
             cubit.cmd("group 'xyz_cpml' add hex "+txt)
             return cpml_x,cpml_y,cpml_z,cpml_xy,cpml_xz,cpml_yz,cpml_xyz
 
-
-
-
-
-
-
-
-
     def abs_write(self,absname=None):
+        # absorbing boundaries
         import re
         cubit.cmd('set info off')
         cubit.cmd('set echo off')
@@ -907,6 +929,7 @@ class mesh(object,mesh_tools):
             #
             #
             if not absname: absname=self.absname
+            # loops through all block definitions
             list_hex=cubit.parse_cubit_list('hex','all')
             for block,flag in zip(self.block_bc,self.block_bc_flag):
                 if block != self.topography:
@@ -914,6 +937,7 @@ class mesh(object,mesh_tools):
                     print '  block name:',name,'id:',block
                     cknormal=True
                     abshex_local=False
+                    # opens file
                     if re.search('xmin',name):
                         print 'xmin'
                         abshex_local=open(absname+'_xmin','w')
@@ -967,6 +991,7 @@ class mesh(object,mesh_tools):
                     #
                     #
                     if abshex_local:
+                        # gets face elements
                         quads_all=cubit.get_block_faces(block)
                         dic_quads_all=dict(zip(quads_all,quads_all))
                         print '  number of faces = ',len(quads_all)
@@ -985,8 +1010,10 @@ class mesh(object,mesh_tools):
                                     txt=self.create_facenode_string(h,f,normal=normal,cknormal=cknormal)
                                     abshex_local.write(txt)
                         abshex_local.close()
+
             cubit.cmd('set info on')
             cubit.cmd('set echo on')
+
     def surface_write(self,pathdir=None):
         # optional surfaces, e.g. moho_surface
         # should be created like e.g.:
@@ -1028,6 +1055,7 @@ class mesh(object,mesh_tools):
                             surfhex_local.write(txt)
                 # closes file
                 surfhex_local.close()
+
     def rec_write(self,recname):
         print 'Writing '+self.recname+'.....'
         recfile=open(self.recname,'w')
@@ -1036,6 +1064,7 @@ class mesh(object,mesh_tools):
             x,y,z=cubit.get_nodal_coordinates(n)
             recfile.write('ST%i XX %20f %20f 0.0 0.0 \n' % (i,x,z))
         recfile.close()
+
     def write(self,path=''):
         cubit.cmd('set info off')
         cubit.cmd('set echo off')
@@ -1043,17 +1072,24 @@ class mesh(object,mesh_tools):
         cubit.cmd('compress all')
         if len(path) != 0:
             if path[-1] != '/': path=path+'/'
+        # mesh file
         self.mesh_write(path+self.mesh_name)
+        # mesh material
         self.material_write(path+self.material_name)
+        # mesh coordinates
         self.nodescoord_write(path+self.nodecoord_name)
+        # free surface: face_top
         self.free_write(path+self.freename)
+        # absorbing surfaces: abs_***
         if self.cpml:
             self.abs_write(path+self.cpmlname)
         else:
             self.abs_write(path+self.absname)
+        # material definitions
         self.nummaterial_write(path+self.nummaterial_name)
         # any other surfaces: ***surface***
         self.surface_write(path)
+        # receivers
         if self.receivers: self.rec_write(path+self.recname)
         cubit.cmd('set info on')
         cubit.cmd('set echo on')
@@ -1064,6 +1100,7 @@ def export2SPECFEM3D(path_exporting_mesh_SPECFEM3D='.',hex27=False,cpml=False,cp
     #print sem_mesh.block_mat
     #print sem_mesh.block_flag
     #
+    print "#export2SPECFEM3D: path = ",path_exporting_mesh_SPECFEM3D
     sem_mesh.write(path=path_exporting_mesh_SPECFEM3D)
     print 'END SPECFEM3D exporting process......'
     if cpml:
