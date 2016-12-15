@@ -263,6 +263,7 @@ use File::Basename;
       $line =~ s#inverision#inversion#ogi;
       $line =~ s#restauration#restoration#ogi;
       $line =~ s#restaure#restore#ogi;
+      $line =~ s#memmory#memory#ogi;
 
       print FILEF90 "$line\n";
 
