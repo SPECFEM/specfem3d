@@ -453,7 +453,7 @@ contains
        adjcy(id_adjcy(iE_loc-1)+1:id_adjcy(iE_loc))=stored_elements(1:nb_element_stored)
     enddo
 
-    ! deallocate temporary arrays to save memmory
+    ! deallocate temporary arrays to save memory
     deallocate(nelmnts_by_node, stored_elements, nb_neigh, elmnts_by_node)
 
     if (myrank == 0) write(27,*) ' END OF ADJACY TABLE COMPUTATION'
