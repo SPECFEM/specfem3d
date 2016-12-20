@@ -1,4 +1,4 @@
-#open "/export/nobackup/kbai/RUPTURE_Simulation/subductzone/jpn_subduct_zone_35_42/slab_rotate_before_loft.cub"
+open "./slab_rotate_before_loft.cub"
 create volume loft surface 1 15
 create volume loft surface 2 16
 create volume loft surface 4 18 match vertex 3 42 match vertex 12 41
