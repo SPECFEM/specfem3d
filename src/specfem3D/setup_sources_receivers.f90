@@ -607,6 +607,7 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
   use specfem_par_acoustic
+
   implicit none
 
   real(kind=CUSTOM_REAL) :: factor_source
@@ -719,10 +720,11 @@
           ! elastic or poroelastic moment tensor source
           if (ispec_is_elastic(ispec) .or. ispec_is_poroelastic(ispec)) then
             call compute_arrays_source(ispec,sourcearray, &
+                                       xi_source(isource),eta_source(isource),gamma_source(isource), &
                                        Mxx(isource),Myy(isource),Mzz(isource), &
                                        Mxy(isource),Mxz(isource),Myz(isource), &
                                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                                       hxis,hpxis,hetas,hpetas,hgammas,hpgammas,NSPEC_AB)
+                                       xigll,yigll,zigll,NSPEC_AB)
           endif
 
           ! acoustic case
