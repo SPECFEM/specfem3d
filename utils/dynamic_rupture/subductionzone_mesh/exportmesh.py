@@ -25,7 +25,7 @@ def define_block_hex27(i):
 
 cubit.init([''])
 #cubit.cmd('open "tpv29.cub"')
-cubit.cmd('open "slab_rotate_refine.cub"')
+cubit.cmd('open "slab_rotate.cub"')
 cubit.cmd('vol all scale 1000')
 cubit.cmd('vol all scale 1.11195') 
 #This reflects the fact that 1deg=111.195km

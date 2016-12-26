@@ -15,4 +15,6 @@ If you have no easy access to Trelis graphics window, you can run “trelis -nog
 Notes:
 Before starting, include the path to cubit.py in your $PYTHONPATH environment variable. 
 Python scripts have been tested with python 2.7, but 2.6 to 3.5 should also be fine. 
+
 Step 1 runs on the linux shell, but not directly in the Trelis window (the numpy and matplotlib modules cannot be found).
+type "sh run.sh" to run all three steps.

@@ -38,4 +38,5 @@ mesh vol 9
 vol 10 scheme sweep source 7 target 39
 mesh vol 10
 refine surf 3 depth 10 smooth
-save as "/export/nobackup/kbai/RUPTURE_Simulation/subductzone/jpn_subduct_zone_35_42/slab_rotate.cub" overwrite
+#save as "/export/nobackup/kbai/RUPTURE_Simulation/subductzone/jpn_subduct_zone_35_42/slab_rotate.cub" overwrite
+save as "./slab_rotate.cub" overwrite
