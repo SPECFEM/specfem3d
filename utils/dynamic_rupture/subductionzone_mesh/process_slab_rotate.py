@@ -1,15 +1,13 @@
 #!/usr/bin/python2.7
-import numpy as np
-import matplotlib.pyplot as plt
 #from matplotlib.mlab import griddata
 #this script generates topology and slab interface in cubit
-import os
-import sys
 import cubit
 import os
 import sys
 import math
- 
+import numpy as np
+#import matplotlib.pyplot as plt
+
 
 cubit.init([''])
 cubit.cmd('reset')
@@ -82,7 +80,7 @@ def generating_contour(X,Y,Z):
 
 data = import_slab_data()
 
-plt.scatter(data[:,0],data[:,1],1.0,c=data[:,2],edgecolors='none')
+#plt.scatter(data[:,0],data[:,1],1.0,c=data[:,2],edgecolors='none')
 
 if Plotsquare:
     XB = [393.3,186.3,-393.3,-186.3,393.3]
@@ -91,11 +89,11 @@ if Plotsquare:
     YB = np.array(YB)/Lat2dis+yc
     print(XB)
     print(YB)
-    plt.plot(XB,YB)
+    #plt.plot(XB,YB)
 #Xm,Ym,Zm = generating_contour(data[:,0],data[:,1],data[:,2])
 #plt.contourf(Xm,Ym,Zm)
-    plt.colorbar()
-    plt.show()
+    #plt.colorbar()
+    #plt.show()
 np.savetxt('outputslab.txt',data,delimiter=',')
 
 #exit()
@@ -137,16 +135,16 @@ print('total curve %d'%n_curve)
 #cubit.cmd('create surface skin curve %d to %d'%(ii,ii+20))
 data = import_elev_data()
 if Plotsquare:
-    plt.scatter(data[:,0],data[:,1],1.0,c=data[:,2],edgecolors='none')
+    #plt.scatter(data[:,0],data[:,1],1.0,c=data[:,2],edgecolors='none')
     XB = [393.3,186.3,-393.3,-186.3,393.3]
     YB = [308.7,-464.0,-308.7,464.0,308.7]
     XB = np.array(XB)/Lon2dis+xc
     YB = np.array(YB)/Lat2dis+yc
-    plt.plot(XB,YB)
+    #plt.plot(XB,YB)
 #Xm,Ym,Zm = generating_contour(data[:,0],data[:,1],data[:,2])
 #plt.contourf(Xm,Ym,Zm)
-    plt.colorbar()
-    plt.show()
+    #plt.colorbar()
+    #plt.show()
 np.savetxt('outputelev.txt',data,delimiter=',')
 
 
