@@ -25,7 +25,7 @@
 !
 !=====================================================================
 
-subroutine compute_interpolated_dva(displ,veloc,accel,NGLOB_AB, &
+subroutine compute_interpolated_dva_viscoelast(displ,veloc,accel,NGLOB_AB, &
                                     ispec,NSPEC_AB,ibool, &
                                     xi_r,eta_r,gamma_r, &
                                     hxir,hetar,hgammar, &
@@ -115,7 +115,7 @@ subroutine compute_interpolated_dva(displ,veloc,accel,NGLOB_AB, &
 
   endif
 
-end subroutine compute_interpolated_dva
+end subroutine compute_interpolated_dva_viscoelast
 
 !
 !-------------------------------------------------------------------------------------------------
