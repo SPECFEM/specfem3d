@@ -22,16 +22,16 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.               #
 #                                                                           #
 #############################################################################
-##mesh=SEM_metric_3D
-##mesh.check_metric()
-##print mesh
+# mesh=SEM_metric_3D
+# mesh.check_metric()
+# print mesh
 #
 #
 import math
 
 try:
     import start as start
-    cubit                   = start.start_cubit()
+    cubit = start.start_cubit()
 except:
     try:
         import cubit
@@ -39,543 +39,609 @@ except:
         print 'error importing cubit, check if cubit is installed'
         pass
 
+
 class SEM_metric_3D(object):
-    def __init__(self,list_hex=None,volume=None):
+
+    def __init__(self, list_hex=None, volume=None):
         super(SEM_metric_3D, self).__init__()
-        self.list_hex=list_hex
-        self.volume=volume
-        self.skew_hystogram=None
-        self.max_skewness=None
-        self.max_angle=None
-        self.min_angle=None
-        self.min_edge_length=None
-        self.cubit_skew=0
-        self.max_valence=None
-        self.node_with_max_valence=None
-        self.valence_threshold=7
-        self.resolution=.05
-        self.resolution_edge_length=.1
-        self.nbin=10
-        self.spatial_unit=1
-        self.gll=0.17267316464601141
-        self.dt=None
+        self.list_hex = list_hex
+        self.volume = volume
+        self.skew_hystogram = None
+        self.max_skewness = None
+        self.max_angle = None
+        self.min_angle = None
+        self.min_edge_length = None
+        self.cubit_skew = 0
+        self.max_valence = None
+        self.node_with_max_valence = None
+        self.valence_threshold = 7
+        self.resolution = .05
+        self.resolution_edge_length = .1
+        self.nbin = 10
+        self.spatial_unit = 1
+        self.gll = 0.17267316464601141
+        self.dt = None
+
     def __repr__(self):
         if self.max_skewness is not None:
-            self.skew_hystogram=self.hyst(0,self.max_skewness,self.skew_hyst)
-            print '-'*70
+            self.skew_hystogram = self.hyst(
+                0, self.max_skewness, self.skew_hyst)
+            print '-' * 70
             print 'SKEWNESS'
             print
             if len(self.hex_max_skewness) <= 30:
-                print 'max = ',self.max_skewness,' in hexes ',self.hex_max_skewness
-                print '(angle -> minimun =', self.min_angle, ' maximun =', self.max_angle,')'
+                print 'max = ', self.max_skewness, ' in hexes ', \
+                    self.hex_max_skewness
+                print '(angle -> minimun =', self.min_angle, \
+                    ' maximun =', self.max_angle, ')'
             else:
-                print 'max = ',self.max_skewness,' in ', len(self.hex_max_skewness), ' hexes '
-                print '(angle -> minimun =', self.min_angle, ' maximun =', self.max_angle,')'
+                print 'max = ', self.max_skewness, ' in ', \
+                    len(self.hex_max_skewness), ' hexes '
+                print '(angle -> minimun =', self.min_angle, \
+                    ' maximun =', self.max_angle, ')'
             print
             print 'skew hystogram'
             print
-            tot=0
+            tot = 0
             for i in self.skew_hystogram.values():
-                tot=tot+len(i)
-            #k=self.skew_hystogram.keys()
-            #k.sort()
-            factor=self.max_skewness/self.nbin
-            for i in range(0,self.nbin+1):
+                tot = tot + len(i)
+            # k=self.skew_hystogram.keys()
+            # k.sort()
+            factor = self.max_skewness / self.nbin
+            for i in range(0, self.nbin + 1):
                 if self.skew_hystogram.has_key(i):
-                    if (i+1)*factor <= 1:
-                        print i,' [',i*factor,'->',(i+1)*factor,'[ : ',len(self.skew_hystogram[i]),'/',tot,' hexes (',len(self.skew_hystogram[i])/float(tot)*100.,'%)'
+                    if (i + 1) * factor <= 1:
+                        nshi = len(self.skew_hystogram[i])
+                        print i, ' [', i * factor, '->', (i + 1) * factor, \
+                            '[ : ', nshi, '/', tot, \
+                            ' hexes (', nshi / float(tot) * 100., '%)'
                 else:
-                    if (i+1)*factor <= 1:
-                        print i,' [',i*factor,'->',(i+1)*factor,'[ : ',0,'/',tot,' hexes (0%)'
+                    if (i + 1) * factor <= 1:
+                        print i, ' [', i * factor, '->', (i + 1) * factor, \
+                            '[ : ', 0, '/', tot, ' hexes (0%)'
             print
         ###############################################
         if self.min_edge_length is not None:
-            self.edgemin_hystogram=self.hyst(self.min_edge_length,self.max_edge_length,self.edgemin_hyst)
-            self.edgemax_hystogram=self.hyst(self.min_edge_length,self.max_edge_length,self.edgemax_hyst)
-            print '-'*70
+            self.edgemin_hystogram = self.hyst(
+                self.min_edge_length, self.max_edge_length, self.edgemin_hyst)
+            self.edgemax_hystogram = self.hyst(
+                self.min_edge_length, self.max_edge_length, self.edgemax_hyst)
+            print '-' * 70
             print 'edge length'
             print
             if len(self.hex_min_edge_length) <= 30:
-                print 'minimum edge length: ', self.min_edge_length, ' in hexes ',  self.hex_min_edge_length
+                print 'minimum edge length: ', self.min_edge_length, \
+                    ' in hexes ',  self.hex_min_edge_length
             else:
-                print 'minimum edge length: ', self.min_edge_length, ' in ',  len(self.hex_min_edge_length), ' hexes.'
+                print 'minimum edge length: ', self.min_edge_length, ' in ', \
+                    len(self.hex_min_edge_length), ' hexes.'
             if len(self.hex_max_edge_length) <= 30:
-                print 'maximum edge length: ', self.max_edge_length, ' in hexes ',  self.hex_max_edge_length
+                print 'maximum edge length: ', self.max_edge_length, \
+                    ' in hexes ',  self.hex_max_edge_length
             else:
-                print 'maximum edge length: ', self.max_edge_length, ' in ',  len(self.hex_max_edge_length), ' hexes.'
+                print 'maximum edge length: ', self.max_edge_length, \
+                    ' in ',  len(self.hex_max_edge_length), ' hexes.'
             print
             print 'edge length hystogram'
             print
-            factor=(self.max_edge_length-self.min_edge_length)/self.nbin
+            factor = (self.max_edge_length - self.min_edge_length) / self.nbin
             print 'minimum edge length'
-            tot=0
+            tot = 0
             for i in self.edgemin_hystogram.values():
-                tot=tot+len(i)
-            #k=self.edgemin_hystogram.keys()
-            #k.sort()
-            for i in range(0,self.nbin+1):
+                tot = tot + len(i)
+            # k=self.edgemin_hystogram.keys()
+            # k.sort()
+            for i in range(0, self.nbin + 1):
                 if self.edgemin_hystogram.has_key(i):
-                    print i,' [',i*factor+self.min_edge_length,'->',(i+1)*factor+self.min_edge_length,'[ : ',len(self.edgemin_hystogram[i]),'/',tot,' hexes (',len(self.edgemin_hystogram[i])/float(tot)*100.,'%)'
+                    nh = len(self.edgemin_hystogram[i])
+                    print i, ' [', i * factor + self.min_edge_length, '->', \
+                        (i + 1) * factor + self.min_edge_length, \
+                        '[ : ', nh, '/', tot, \
+                        ' hexes (', nh / float(tot) * 100., '%)'
                 else:
-                    print i,' [',i*factor+self.min_edge_length,'->',(i+1)*factor+self.min_edge_length,'[ : ',0,'/',tot,' hexes (0%)'
+                    print i, ' [', i * factor + self.min_edge_length, '->', \
+                        (i + 1) * factor + self.min_edge_length, \
+                        '[ : ', 0, '/', tot, ' hexes (0%)'
             print
             print 'maximum edge length'
-            tot=0
+            tot = 0
             for i in self.edgemax_hystogram.values():
-                tot=tot+len(i)
-            #k=self.edgemax_hystogram.keys()
-            #k.sort()
-            for i in range(0,self.nbin+1):
+                tot = tot + len(i)
+            # k=self.edgemax_hystogram.keys()
+            # k.sort()
+            for i in range(0, self.nbin + 1):
                 if self.edgemax_hystogram.has_key(i):
-                    print i,' [',i*factor+self.min_edge_length,'->',(i+1)*factor+self.min_edge_length,'[ : ',len(self.edgemax_hystogram[i]),'/',tot,' hexes (',len(self.edgemax_hystogram[i])/float(tot)*100.,'%)'
+                    nh = len(self.edgemax_hystogram[i])
+                    print i, ' [', i * factor + self.min_edge_length, \
+                        '->', (i + 1) * factor + self.min_edge_length, \
+                        '[ : ', len(self.edgemax_hystogram[i]), '/', tot, \
+                        ' hexes (', nh / float(tot) * 100., '%)'
                 else:
-                    print i,' [',i*factor+self.min_edge_length,'->',(i+1)*factor+self.min_edge_length,'[ : ',0,'/',tot,' hexes (0%)'
+                    print i, ' [', i * factor + self.min_edge_length, \
+                        '->', (i + 1) * factor + self.min_edge_length, \
+                        '[ : ', 0, '/', tot, ' hexes (0%)'
         if self.dt is not None:
-            print '-'*70
+            print '-' * 70
             print
             print 'STABILITY'
             print
-            print 'time step < ',self.dt,'s, for velocity = ',self.velocity
+            print 'time step < ', self.dt, 's, for velocity = ', self.velocity
             print
         try:
-            return str(len(self.list_hex))+' hexes checked'
+            return str(len(self.list_hex)) + ' hexes checked'
         except:
-            return 'please performe a metric check: ex ... object.check_metric()'
+            return 'please perform a metric check: object.check_metric()'
     #
     #
-    def invert_dict(self,d):
-         inv = {}
-         for k,v in d.iteritems():
-             keys = inv.setdefault(v, [])
-             keys.append(k)
-         return inv
-    def hex_metric(self,h):
-        nodes=cubit.get_connectivity('Hex',h)
-        equiangle_skewness=None
-        min_angle=float('infinity')
-        edge_length_min=float('infinity')
-        max_angle=None
-        edge_length_max=None
-        #loopnode=[(i,j) for i in range(8) for j in range(i+1,8)]
+
+    def invert_dict(self, d):
+        inv = {}
+        for k, v in d.iteritems():
+            keys = inv.setdefault(v, [])
+            keys.append(k)
+        return inv
+
+    def hex_metric(self, h):
+        nodes = cubit.get_connectivity('Hex', h)
+        equiangle_skewness = None
+        min_angle = float('infinity')
+        edge_length_min = float('infinity')
+        max_angle = None
+        edge_length_max = None
         if len(nodes) == 4:
-            faces=[[0,1,2,3]]
+            faces = [[0, 1, 2, 3]]
         elif len(nodes) == 8:
-            faces=[[0,1,2,3],[4,5,6,7],[1,5,6,2],[0,4,7,3],[2,6,7,3],[1,5,4,0]]
+            faces = [[0, 1, 2, 3], [4, 5, 6, 7], [1, 5, 6, 2],
+                     [0, 4, 7, 3], [2, 6, 7, 3], [1, 5, 4, 0]]
         else:
             print 'bad definition of nodes'
-            return None,None,None
-        x=[]
-        y=[]
-        z=[]
+            return None, None, None
+        x = []
+        y = []
+        z = []
         for i in nodes:
-            n=cubit.get_nodal_coordinates(i)
+            n = cubit.get_nodal_coordinates(i)
             x.append(n[0])
             y.append(n[1])
             z.append(n[2])
         for face in faces:
-            for i in range(-1,3):
-                vx1=x[face[i-1]]-x[face[i]]
-                vy1=y[face[i-1]]-y[face[i]]
-                vz1=z[face[i-1]]-z[face[i]]
+            for i in range(-1, 3):
+                vx1 = x[face[i - 1]] - x[face[i]]
+                vy1 = y[face[i - 1]] - y[face[i]]
+                vz1 = z[face[i - 1]] - z[face[i]]
                 #
-                vx2=x[face[i+1]]-x[face[i]]
-                vy2=y[face[i+1]]-y[face[i]]
-                vz2=z[face[i+1]]-z[face[i]]
+                vx2 = x[face[i + 1]] - x[face[i]]
+                vy2 = y[face[i + 1]] - y[face[i]]
+                vz2 = z[face[i + 1]] - z[face[i]]
                 #
-                norm1=math.sqrt(vx1*vx1+vy1*vy1+vz1*vz1)
-                norm2=math.sqrt(vx2*vx2+vy2*vy2+vz2*vz2)
+                norm1 = math.sqrt(vx1 * vx1 + vy1 * vy1 + vz1 * vz1)
+                norm2 = math.sqrt(vx2 * vx2 + vy2 * vy2 + vz2 * vz2)
                 #
                 if norm1 == 0 or norm2 == 0:
                     print 'degenerated mesh, 0 length edge'
                     import sys
                     sys.exit()
-                angle=math.acos((vx1*vx2+vy1*vy2+vz1*vz2)/(norm1*norm2))
+                angle = math.acos(
+                    (vx1 * vx2 + vy1 * vy2 + vz1 * vz2) / (norm1 * norm2))
                 #
-                equiangle_skewness=max(equiangle_skewness,math.fabs(2.*angle-math.pi)/math.pi)
-                min_angle=min(min_angle,angle*180./math.pi)
-                max_angle=max(max_angle,angle*180./math.pi)
-                edge_length_min=min(edge_length_min,norm1)
-                edge_length_max=max(edge_length_max,norm1)
-        return round(equiangle_skewness,5),min_angle,max_angle,round(edge_length_min,5),round(edge_length_max,5)
-    def show(self,minvalue,maxvalue,dic):
-        hexlist=[]
+                equiangle_skewness = max(equiangle_skewness, math.fabs(
+                    2. * angle - math.pi) / math.pi)
+                min_angle = min(min_angle, angle * 180. / math.pi)
+                max_angle = max(max_angle, angle * 180. / math.pi)
+                edge_length_min = min(edge_length_min, norm1)
+                edge_length_max = max(edge_length_max, norm1)
+        return round(equiangle_skewness, 5), min_angle, max_angle, \
+            round(edge_length_min, 5), round(edge_length_max, 5)
+
+    def show(self, minvalue, maxvalue, dic):
+        hexlist = []
         for k in dic.keys():
-            if minvalue <= dic[k] <= maxvalue: hexlist.extend([k])
-        #command = "draw hex "+str(hexlist)
-        #command = command.replace("["," ").replace("]"," ").replace("("," ").replace(")"," ")
-        #cubit.cmd(command)
+            if minvalue <= dic[k] <= maxvalue:
+                hexlist.extend([k])
         return hexlist
-    def hyst(self,minvalue,maxvalue,dic):
+
+    def hyst(self, minvalue, maxvalue, dic):
         if maxvalue != minvalue:
-            factor=(maxvalue-minvalue)/self.nbin
+            factor = (maxvalue - minvalue) / self.nbin
         else:
-            factor=1
-        dic_new={}
+            factor = 1
+        dic_new = {}
         for k in dic.keys():
-            dic_new[k]=int((dic[k]-minvalue)/factor)
-        inv_dic=self.invert_dict(dic_new)
+            dic_new[k] = int((dic[k] - minvalue) / factor)
+        inv_dic = self.invert_dict(dic_new)
         return inv_dic
     #
     #
     #
     #
     #
-    ############################################################################################
-    def pick_hex(self,list_hex=None,volume=None):
+    ##########################################################################
+
+    def pick_hex(self, list_hex=None, volume=None):
         if self.cubit_skew > 0:
             command = "del group skew_top"
             cubit.cmd(command)
-            command = "group 'skew_top' add quality volume all skew low "+str(self.cubit_skew)
+            command = "group 'skew_top' add quality volume all skew low " + \
+                str(self.cubit_skew)
             cubit.silent_cmd(command)
-            group=cubit.get_id_from_name("skew_top")
-            self.list_hex=cubit.get_group_hexes(group)
+            group = cubit.get_id_from_name("skew_top")
+            self.list_hex = cubit.get_group_hexes(group)
         elif list_hex is not None:
-            self.list_hex=list_hex
+            self.list_hex = list_hex
         elif volume is not None:
-            command = "group 'hextmp' add hex in volume "+str(volume)
+            command = "group 'hextmp' add hex in volume " + str(volume)
             cubit.silent_cmd(command)
-            group=cubit.get_id_from_name("hextmp")
-            self.list_hex=cubit.get_group_hexes(group)
+            group = cubit.get_id_from_name("hextmp")
+            self.list_hex = cubit.get_group_hexes(group)
             command = "del group hextmp"
             cubit.silent_cmd(command)
         elif self.volume is not None:
-            command = "group 'hextmp' add hex in volume "+str(self.volume)
+            command = "group 'hextmp' add hex in volume " + str(self.volume)
             cubit.silent_cmd(command)
-            group=cubit.get_id_from_name("hextmp")
-            self.list_hex=cubit.get_group_hexes(group)
+            group = cubit.get_id_from_name("hextmp")
+            self.list_hex = cubit.get_group_hexes(group)
             command = "del group hextmp"
             cubit.silent_cmd(command)
         elif list_hex is None and self.list_hex is None:
-            self.list_hex=cubit.parse_cubit_list('hex','all')
-        print 'list_hex: ',len(self.list_hex),' hexes'
+            self.list_hex = cubit.parse_cubit_list('hex', 'all')
+        print 'list_hex: ', len(self.list_hex), ' hexes'
     #
     #
-    ############################################################################################
-    #SKEWNESS
-    def check_skew(self,list_hex=None,volume=None):
-        self.pick_hex(list_hex=list_hex,volume=volume)
-        global_max_skew=None
-        global_max_angle=None
-        global_min_angle=float('infinity')
-        tmp=int(1./self.resolution)+1
-        skew_hyst={}
-        for i in range(0,tmp):
-            if i*self.resolution < 1:
-                skew_hyst[i]=[]
-        h_global_max_skew=[]
-        h_global_max_angle=[]
-        h_global_min_angle=[]
+    ##########################################################################
+    # SKEWNESS
+
+    def check_skew(self, list_hex=None, volume=None):
+        self.pick_hex(list_hex=list_hex, volume=volume)
+        global_max_skew = None
+        global_max_angle = None
+        global_min_angle = float('infinity')
+        tmp = int(1. / self.resolution) + 1
+        skew_hyst = {}
+        for i in range(0, tmp):
+            if i * self.resolution < 1:
+                skew_hyst[i] = []
+        h_global_max_skew = []
         for h in self.list_hex:
-            equiangle_skewness,min_angle,max_angle,tmp,tmp2=self.hex_metric(h)
-            skew_hyst[h]=equiangle_skewness
+            equiangle_skewness, min_angle, max_angle, \
+                tmp, tmp2 = self.hex_metric(h)
+            skew_hyst[h] = equiangle_skewness
             #
             if equiangle_skewness > global_max_skew:
-                global_max_skew=equiangle_skewness
-                h_global_max_shew=[]
-                h_global_max_shew.append(h)
-                global_min_angle=min_angle
-                global_max_angle=max_angle
+                global_max_skew = equiangle_skewness
+                h_global_max_skew = []
+                h_global_max_skew.append(h)
+                global_min_angle = min_angle
+                global_max_angle = max_angle
             elif equiangle_skewness == global_max_skew:
-                h_global_max_shew.append(h)
-            s=h_global_max_shew
-        self.skew_hyst=skew_hyst
-        self.max_skewness=global_max_skew
-        self.max_angle=global_max_angle
-        self.min_angle=global_min_angle
-        self.hex_max_skewness=s
-    def show_skew(self,low=None,high=None):
+                h_global_max_skew.append(h)
+            s = h_global_max_skew
+        self.skew_hyst = skew_hyst
+        self.max_skewness = global_max_skew
+        self.max_angle = global_max_angle
+        self.min_angle = global_min_angle
+        self.hex_max_skewness = s
+
+    def show_skew(self, low=None, high=None):
         if low is None and high is not None:
-            hexlist=self.show(low,self.max_skewness,self.skew_hyst)
+            hexlist = self.show(low, self.max_skewness, self.skew_hyst)
         elif low is not None and high is None:
-            hexlist=self.show(0,high,self.skew_hyst)
+            hexlist = self.show(0, high, self.skew_hyst)
         if low is not None and high is not None:
-            hexlist=self.show(low,high,self.skew_hyst)
+            hexlist = self.show(low, high, self.skew_hyst)
         else:
-            hexlist=self.hex_min_edge_length
-        command = "draw hex "+str(hexlist)
-        command = command.replace("["," ").replace("]"," ").replace("("," ").replace(")"," ")
+            hexlist = self.hex_min_edge_length
+        command = "draw hex " + str(hexlist)
+        command = command.replace("[", " ").replace(
+            "]", " ").replace("(", " ").replace(")", " ")
         cubit.silent_cmd(command)
-    def list_skew(self,low=None,high=None):
+
+    def list_skew(self, low=None, high=None):
         if low is None and high is not None:
-            hexlist=self.show(low,self.max_skewness,self.skew_hyst)
+            hexlist = self.show(low, self.max_skewness, self.skew_hyst)
         elif low is not None and high is None:
-            hexlist=self.show(0,high,self.skew_hyst)
+            hexlist = self.show(0, high, self.skew_hyst)
         if low is not None and high is not None:
-            hexlist=self.show(low,high,self.skew_hyst)
+            hexlist = self.show(low, high, self.skew_hyst)
         else:
-            hexlist=self.hex_min_edge_length
+            hexlist = self.hex_min_edge_length
         return hexlist
-    def highlight_skew(self,low=None,high=None):
+
+    def highlight_skew(self, low=None, high=None):
         if low is None and high is not None:
-            hexlist=self.show(low,self.max_skewness,self.skew_hyst)
+            hexlist = self.show(low, self.max_skewness, self.skew_hyst)
         elif low is not None and high is None:
-            hexlist=self.show(0,high,self.skew_hyst)
+            hexlist = self.show(0, high, self.skew_hyst)
         if low is not None and high is not None:
-            hexlist=self.show(low,high,self.skew_hyst)
+            hexlist = self.show(low, high, self.skew_hyst)
         else:
-            hexlist=self.hex_min_edge_length
-        command = "highlight hex "+str(hexlist)
-        command = command.replace("["," ").replace("]"," ").replace("("," ").replace(")"," ")
+            hexlist = self.hex_min_edge_length
+        command = "highlight hex " + str(hexlist)
+        command = command.replace("[", " ").replace(
+            "]", " ").replace("(", " ").replace(")", " ")
         cubit.silent_cmd(command)
     #
     #
     #
-    #############################################################################################
-    #HEX VALENCE
+    ##########################################################################
+    # HEX VALENCE
+
     def check_valence(self):
-        #usage: hex_valence()
+        # usage: hex_valence()
         #
-        list_hex=cubit.parse_cubit_list('hex','all')
-        list_node=cubit.parse_cubit_list('node','all')
-        lookup=dict(zip(list_node,[0]*len(list_node)))
+        list_hex = cubit.parse_cubit_list('hex', 'all')
+        list_node = cubit.parse_cubit_list('node', 'all')
+        lookup = dict(zip(list_node, [0] * len(list_node)))
         for h in list_hex:
-            n=cubit.get_connectivity('Hex',h)
+            n = cubit.get_connectivity('Hex', h)
             for i in n:
-                if lookup.has_key(i): lookup[i]=lookup[i]+1
-        inv_lookup=self.invert_dict(lookup)
+                if lookup.has_key(i):
+                    lookup[i] = lookup[i] + 1
+        inv_lookup = self.invert_dict(lookup)
         #
-        vmax=max(inv_lookup.keys())
-        nmax=inv_lookup[max(inv_lookup.keys())]
-        print 'max hex valence ',vmax,' at node ',nmax
+        vmax = max(inv_lookup.keys())
+        nmax = inv_lookup[max(inv_lookup.keys())]
+        print 'max hex valence ', vmax, ' at node ', nmax
         print '_____'
         for v in inv_lookup.keys():
-            print ('valence %2i - %9i hexes '% (v,len(inv_lookup[v])))
-        self.valence_summary=inv_lookup
-        self.max_valence=vmax
-        self.node_with_max_valence=nmax
+            print ('valence %2i - %9i hexes ' % (v, len(inv_lookup[v])))
+        self.valence_summary = inv_lookup
+        self.max_valence = vmax
+        self.node_with_max_valence = nmax
     #
     #
-    ###########################################################################################
-    #EDGE LENGTH
-    def check_edge_length(self,list_hex=None,volume=None):
-        self.pick_hex(list_hex=list_hex,volume=volume)
-        global_min_edge_length=float('infinity')
-        h_global_min_edge_length=[]
-        global_max_edge_length=None
-        h_global_max_edge_length=[]
-        edgemin_hyst={}
-        edgemax_hyst={}
+    ##########################################################################
+    # EDGE LENGTH
+
+    def check_edge_length(self, list_hex=None, volume=None):
+        self.pick_hex(list_hex=list_hex, volume=volume)
+        global_min_edge_length = float('infinity')
+        h_global_min_edge_length = []
+        global_max_edge_length = None
+        h_global_max_edge_length = []
+        edgemin_hyst = {}
+        edgemax_hyst = {}
         for h in self.list_hex:
-            tmp,tmp2,tmp3,edge_length_min,edge_length_max=self.hex_metric(h)
-            edgemax_hyst[h]=edge_length_max
-            edgemin_hyst[h]=edge_length_min
+            _, _, _, edge_length_min, edge_length_max = self.hex_metric(
+                h)
+            edgemax_hyst[h] = edge_length_max
+            edgemin_hyst[h] = edge_length_min
             if edge_length_min < global_min_edge_length:
-                global_min_edge_length=edge_length_min
-                h_global_min_edge_length=[]
+                global_min_edge_length = edge_length_min
+                h_global_min_edge_length = []
                 h_global_min_edge_length.append(h)
             elif edge_length_min == global_min_edge_length:
                 h_global_min_edge_length.append(h)
             if edge_length_max > global_max_edge_length:
-                global_max_edge_length=edge_length_max
-                h_global_max_edge_length=[]
+                global_max_edge_length = edge_length_max
+                h_global_max_edge_length = []
                 h_global_max_edge_length.append(h)
             elif edge_length_max == global_max_edge_length:
                 h_global_max_edge_length.append(h)
-        self.min_edge_length=global_min_edge_length
-        self.hex_min_edge_length=h_global_min_edge_length
-        self.max_edge_length=global_max_edge_length
-        self.hex_max_edge_length=h_global_max_edge_length
-        self.edgemin_hyst=edgemin_hyst
-        self.edgemax_hyst=edgemax_hyst
-    def show_edgemin(self,low=None,high=None):
+        self.min_edge_length = global_min_edge_length
+        self.hex_min_edge_length = h_global_min_edge_length
+        self.max_edge_length = global_max_edge_length
+        self.hex_max_edge_length = h_global_max_edge_length
+        self.edgemin_hyst = edgemin_hyst
+        self.edgemax_hyst = edgemax_hyst
+
+    def show_edgemin(self, low=None, high=None):
         if low is None and high is not None:
-            hexlist=self.show(low,self.max_edge_length,self.edgemin_hyst)
+            hexlist = self.show(low, self.max_edge_length, self.edgemin_hyst)
         elif low is not None and high is None:
-            hexlist=self.show(self.min_edge_length,high,self.edgemin_hyst)
+            hexlist = self.show(self.min_edge_length, high, self.edgemin_hyst)
         if low is not None and high is not None:
-            hexlist=self.show(low,high,self.edgemin_hyst)
+            hexlist = self.show(low, high, self.edgemin_hyst)
         else:
-            hexlist=self.hex_min_edge_length
-        command = "draw hex "+str(hexlist)
-        command = command.replace("["," ").replace("]"," ").replace("("," ").replace(")"," ")
+            hexlist = self.hex_min_edge_length
+        command = "draw hex " + str(hexlist)
+        command = command.replace("[", " ").replace(
+            "]", " ").replace("(", " ").replace(")", " ")
         cubit.cmd(command)
-    def show_edgemax(self,low=None,high=None):
+
+    def show_edgemax(self, low=None, high=None):
         if low is None and high is not None:
-            hexlist=self.show(low,self.max_edge_length,self.edgemax_hyst)
+            hexlist = self.show(low, self.max_edge_length, self.edgemax_hyst)
         elif low is not None and high is None:
-            hexlist=self.show(self.min_edge_length,high,self.edgemax_hyst)
+            hexlist = self.show(self.min_edge_length, high, self.edgemax_hyst)
         if low is not None and high is not None:
-            hexlist=self.show(low,high,self.edgemax_hyst)
+            hexlist = self.show(low, high, self.edgemax_hyst)
         else:
-            hexlist=self.hex_max_edge_length
-        command = "draw hex "+str(hexlist)
-        command = command.replace("["," ").replace("]"," ").replace("("," ").replace(")"," ")
+            hexlist = self.hex_max_edge_length
+        command = "draw hex " + str(hexlist)
+        command = command.replace("[", " ").replace(
+            "]", " ").replace("(", " ").replace(")", " ")
         cubit.cmd(command)
-    def list_edgemax(self,low=None,high=None):
+
+    def list_edgemax(self, low=None, high=None):
         if low is None and high is not None:
-            hexlist=self.show(low,self.max_edge_length,self.edgemax_hyst)
+            hexlist = self.show(low, self.max_edge_length, self.edgemax_hyst)
         elif low is not None and high is None:
-            hexlist=self.show(self.min_edge_length,high,self.edgemax_hyst)
+            hexlist = self.show(self.min_edge_length, high, self.edgemax_hyst)
         if low is not None and high is not None:
-            hexlist=self.show(low,high,self.edgemax_hyst)
+            hexlist = self.show(low, high, self.edgemax_hyst)
         else:
-            hexlist=self.hex_max_edge_length
+            hexlist = self.hex_max_edge_length
         return hexlist
-    def list_edgemin(self,low=None,high=None):
+
+    def list_edgemin(self, low=None, high=None):
         if low is None and high is not None:
-            hexlist=self.show(low,self.max_edge_length,self.edgemin_hyst)
+            hexlist = self.show(low, self.max_edge_length, self.edgemin_hyst)
         elif low is not None and high is None:
-            hexlist=self.show(self.min_edge_length,high,self.edgemin_hyst)
+            hexlist = self.show(self.min_edge_length, high, self.edgemin_hyst)
         if low is not None and high is not None:
-            hexlist=self.show(low,high,self.edgemin_hyst)
+            hexlist = self.show(low, high, self.edgemin_hyst)
         else:
-            hexlist=self.hex_min_edge_length
+            hexlist = self.hex_min_edge_length
         return hexlist
-    def highlight_edgemin(self,low=None,high=None):
+
+    def highlight_edgemin(self, low=None, high=None):
         if low is None and high is not None:
-            hexlist=self.show(low,self.max_edge_length,self.edgemin_hyst)
+            hexlist = self.show(low, self.max_edge_length, self.edgemin_hyst)
         elif low is not None and high is None:
-            hexlist=self.show(self.min_edge_length,high,self.edgemin_hyst)
+            hexlist = self.show(self.min_edge_length, high, self.edgemin_hyst)
         if low is not None and high is not None:
-            hexlist=self.show(low,high,self.edgemin_hyst)
+            hexlist = self.show(low, high, self.edgemin_hyst)
         else:
-            hexlist=self.hex_min_edge_length
-        command = "highlight hex "+str(hexlist)
-        command = command.replace("["," ").replace("]"," ").replace("("," ").replace(")"," ")
+            hexlist = self.hex_min_edge_length
+        command = "highlight hex " + str(hexlist)
+        command = command.replace("[", " ").replace(
+            "]", " ").replace("(", " ").replace(")", " ")
         cubit.cmd(command)
-    def highlight_edgemax(self,low=None,high=None):
+
+    def highlight_edgemax(self, low=None, high=None):
         if low is None and high is not None:
-            hexlist=self.show(low,self.max_edge_length,self.edgemax_hyst)
+            hexlist = self.show(low, self.max_edge_length, self.edgemax_hyst)
         elif low is not None and high is None:
-            hexlist=self.show(self.min_edge_length,high,self.edgemax_hyst)
+            hexlist = self.show(self.min_edge_length, high, self.edgemax_hyst)
         if low is not None and high is not None:
-            hexlist=self.show(low,high,self.edgemax_hyst)
+            hexlist = self.show(low, high, self.edgemax_hyst)
         else:
-            hexlist=self.hex_max_edge_length
-        command = "highlight hex "+str(hexlist)
-        command = command.replace("["," ").replace("]"," ").replace("("," ").replace(")"," ")
+            hexlist = self.hex_max_edge_length
+        command = "highlight hex " + str(hexlist)
+        command = command.replace("[", " ").replace(
+            "]", " ").replace("(", " ").replace(")", " ")
         cubit.cmd(command)    #
     #
     #
     #
     #
-    ############################################################################################
-    def check_metric(self,list_hex=None,volume=None):
-        self.pick_hex(list_hex=list_hex,volume=volume)
-        skew_hyst={}
-        edata={}
-        edgemin_hyst={}
-        edgemax_hyst={}
-        edgemaxdata={}
-        edgemindata={}
+    ##########################################################################
+
+    def check_metric(self, list_hex=None, volume=None):
+        self.pick_hex(list_hex=list_hex, volume=volume)
+        skew_hyst = {}
+        edgemin_hyst = {}
+        edgemax_hyst = {}
         #
-        global_min_edge_length=float('infinity')
-        h_global_min_edge_length=[]
-        global_max_edge_length=None
-        h_global_max_edge_length=[]
+        global_min_edge_length = float('infinity')
+        h_global_min_edge_length = []
+        global_max_edge_length = None
+        h_global_max_edge_length = []
         #
-        global_max_skew=None
-        global_max_angle=None
-        global_min_angle=float('infinity')
-        h_global_max_skew=[]
-        h_global_max_angle=[]
-        h_global_min_angle=[]
+        global_max_skew = None
+        global_max_angle = None
+        global_min_angle = float('infinity')
+        h_global_max_skew = []
         #
-        s=0.
+        s = 0.
         for h in self.list_hex:
-            equiangle_skewness,min_angle,max_angle,edge_length_min,edge_length_max=self.hex_metric(h)
-            skew_hyst[h]=equiangle_skewness
-            edgemax_hyst[h]=edge_length_max
-            edgemin_hyst[h]=edge_length_min
+            equiangle_skewness, min_angle, max_angle, \
+                edge_length_min, edge_length_max = self.hex_metric(h)
+            skew_hyst[h] = equiangle_skewness
+            edgemax_hyst[h] = edge_length_max
+            edgemin_hyst[h] = edge_length_min
             if edge_length_min < global_min_edge_length:
-                global_min_edge_length=edge_length_min
-                h_global_min_edge_length=[]
+                global_min_edge_length = edge_length_min
+                h_global_min_edge_length = []
                 h_global_min_edge_length.append(h)
             elif edge_length_min == global_min_edge_length:
                 h_global_min_edge_length.append(h)
             if edge_length_max > global_max_edge_length:
-                global_max_edge_length=edge_length_max
-                h_global_max_edge_length=[]
+                global_max_edge_length = edge_length_max
+                h_global_max_edge_length = []
                 h_global_max_edge_length.append(h)
             elif edge_length_max == global_max_edge_length:
                 h_global_max_edge_length.append(h)
             if equiangle_skewness > global_max_skew:
-                global_max_skew=equiangle_skewness
-                h_global_max_shew=[]
-                h_global_max_shew.append(h)
-                global_min_angle=min_angle
-                global_max_angle=max_angle
+                global_max_skew = equiangle_skewness
+                h_global_max_skew = []
+                h_global_max_skew.append(h)
+                global_min_angle = min_angle
+                global_max_angle = max_angle
             elif equiangle_skewness == global_max_skew:
-                h_global_max_shew.append(h)
-            s=h_global_max_shew
+                h_global_max_skew.append(h)
+            s = h_global_max_skew
         #
-        self.max_skewness=global_max_skew
-        self.max_angle=global_max_angle
-        self.min_angle=global_min_angle
-        self.hex_max_skewness=s
-        self.skew_hyst=skew_hyst
+        self.max_skewness = global_max_skew
+        self.max_angle = global_max_angle
+        self.min_angle = global_min_angle
+        self.hex_max_skewness = s
+        self.skew_hyst = skew_hyst
         #
-        self.min_edge_length=global_min_edge_length
-        self.hex_min_edge_length=h_global_min_edge_length
-        self.max_edge_length=global_max_edge_length
-        self.hex_max_edge_length=h_global_max_edge_length
-        self.edgemin_hyst=edgemin_hyst
-        self.edgemax_hyst=edgemax_hyst
+        self.min_edge_length = global_min_edge_length
+        self.hex_min_edge_length = h_global_min_edge_length
+        self.max_edge_length = global_max_edge_length
+        self.hex_max_edge_length = h_global_max_edge_length
+        self.edgemin_hyst = edgemin_hyst
+        self.edgemax_hyst = edgemax_hyst
         #
 
+
 class SEM_stability_3D(SEM_metric_3D):
-    def __init__(self,list_hex=None,volume=None):
+
+    def __init__(self, list_hex=None, volume=None):
         super(SEM_metric_3D, self).__init__()
-        self.list_hex=list_hex
-        self.volume=volume
-        self.Ngll_per_wavelength=5
-        self.gllcoeff=.17
-        self.maxgllcoeff=0.5-.17
-        self.Cmax=.3
-        self.nbin=10
-        self.period_hyst=None
-        self.dt=None
-        self.cubit_skew =0
+        self.list_hex = list_hex
+        self.volume = volume
+        self.Ngll_per_wavelength = 5
+        self.gllcoeff = .17
+        self.maxgllcoeff = 0.5 - .17
+        self.Cmax = .3
+        self.nbin = 10
+        self.period_hyst = None
+        self.dt = None
+        self.cubit_skew = 0
         #
         #
         #
+
     def __repr__(self):
         print 'check mesh stability'
         #
-    def check_simulation_parameter(self,list_hex=None,volume=None,tomofile=None,vp_static=None,vs_static=None):
-        self.pick_hex(list_hex=list_hex,volume=volume)
-        timestep_hyst={}
-        stability_hyst={}
-        global_min_timestep=float(1)
-        global_max_periodresolved=None
+
+    def check_simulation_parameter(self, list_hex=None, volume=None,
+                                   tomofile=None, vp_static=None,
+                                   vs_static=None):
+        self.pick_hex(list_hex=list_hex, volume=volume)
+        timestep_hyst = {}
+        stability_hyst = {}
+        global_min_timestep = float(1)
+        global_max_periodresolved = None
         if tomofile:
             self.read_tomo(tomofile)
         #
         #
-        for ind,h in enumerate(self.list_hex):
-            if ind%10000==0: print 'hex checked: '+str(int(float(ind)/len(self.list_hex)*100))+'%'
-            dt_tmp,pmax_tmp,_,_=self.hex_simulation_parameter(h,vp_static=vp_static,vs_static=vs_static)
-            timestep_hyst[h]=dt_tmp
-            stability_hyst[h]=pmax_tmp
+        for ind, h in enumerate(self.list_hex):
+            if ind % 10000 == 0:
+                print 'hex checked: ' + \
+                    str(int(float(ind) / len(self.list_hex) * 100)) + '%'
+            dt_tmp, pmax_tmp, _, _ = self.hex_simulation_parameter(
+                h, vp_static=vp_static, vs_static=vs_static)
+            timestep_hyst[h] = dt_tmp
+            stability_hyst[h] = pmax_tmp
             if dt_tmp < global_min_timestep:
-                global_min_timestep=dt_tmp
+                global_min_timestep = dt_tmp
             if pmax_tmp > global_max_periodresolved:
-                global_max_periodresolved=pmax_tmp
+                global_max_periodresolved = pmax_tmp
         #
-        self.period=global_max_periodresolved
-        self.dt=global_min_timestep
-        self.dt_hyst=timestep_hyst
-        self.period_hyst=stability_hyst
+        self.period = global_max_periodresolved
+        self.dt = global_min_timestep
+        self.dt_hyst = timestep_hyst
+        self.period_hyst = stability_hyst
         #
-    def read_tomo(self,tomofile=None):
+
+    def read_tomo(self, tomofile=None):
         if tomofile:
-            print 'reading tomography file ',tomofile
-            import numpy
-            #xtomo,ytomo,ztomo,vp,vs,rho=numpy.loadtxt(tomofile,skiprows=4)
+            print 'reading tomography file ', tomofile
+            # xtomo,ytomo,ztomo,vp,vs,rho=numpy.loadtxt(tomofile,skiprows=4)
             print 'tomography file loaded'
-            tf=open(tomofile,'r')
-            orig_x, orig_y, orig_z, end_x, end_y, end_z        =map(float,tf.readline().split())
-            spacing_x, spacing_y, spacing_z                    =map(float,tf.readline().split())
-            nx, ny, nz                                         =map(int,tf.readline().split())
-            vp_min, vp_max, vs_min, vs_max, rho_min, rho_max   =map(float,tf.readline().split())
+            tf = open(tomofile, 'r')
+            orig_x, orig_y, orig_z, end_x, end_y, end_z = map(
+                float, tf.readline().split())
+            spacing_x, spacing_y, spacing_z = map(float, tf.readline().split())
+            nx, ny, nz = map(int, tf.readline().split())
+            vp_min, vp_max, vs_min, vs_max, rho_min, rho_max = map(
+                float, tf.readline().split())
             #
-            ind=0
+            ind = 0
             import sys
-            xtomo,ytomo,ztomo,vp,vs=[],[],[],[],[]
-            while ind<nx*ny*nz:
-                ind=ind+1
-                if ind%100000==0: sys.stdout.write("reading progress: %i/%i   \r" % (ind,(nx*ny*nz)) )
-                x,y,z,v1,v2,_=map(float,tf.readline().split())
+            xtomo, ytomo, ztomo, vp, vs = [], [], [], [], []
+            while ind < nx * ny * nz:
+                ind = ind + 1
+                if ind % 100000 == 0:
+                    sys.stdout.write("reading progress: %i/%i   \r" %
+                                     (ind, (nx * ny * nz)))
+                x, y, z, v1, v2, _ = map(float, tf.readline().split())
                 xtomo.append(x)
                 ytomo.append(y)
                 ztomo.append(z)
@@ -584,17 +650,22 @@ class SEM_stability_3D(SEM_metric_3D):
             tf.close()
             print 'tomography file loaded'
             #
-            self.orig_x, self.orig_y, self.orig_z, self.end_x, self.end_y, self.end_z        = orig_x, orig_y, orig_z, end_x, end_y, end_z
-            self.spacing_x, self.spacing_y, self.spacing_z                    = spacing_x, spacing_y, spacing_z
-            self.nx, self.ny, self.nz                                         = nx, ny, nz
-            self.vp_min, self.vp_max, self.vs_min, self.vs_max = vp_min, vp_max, vs_min, vs_max
-            self.xtomo,self.ytomo,self.ztomo,self.vp,self.vs=xtomo,ytomo,ztomo,vp,vs
+            self.orig_x, self.orig_y, self.orig_z, self.end_x, self.end_y, \
+                self.end_z = orig_x, orig_y, orig_z, end_x, end_y, end_z
+            self.spacing_x, self.spacing_y, self.spacing_z = spacing_x, \
+                spacing_y, spacing_z
+            self.nx, self.ny, self.nz = nx, ny, nz
+            self.vp_min, self.vp_max, self.vs_min, self.vs_max = vp_min, \
+                vp_max, vs_min, vs_max
+            self.xtomo, self.ytomo, self.ztomo, self.vp, self.vs = xtomo, \
+                ytomo, ztomo, vp, vs
         else:
             print 'no tomofile!!!!'
             #
             #
             #
-    def tomo(self,x,y,z,vp_static=None,vs_static=None):
+
+    def tomo(self, x, y, z, vp_static=None, vs_static=None):
         if not vp_static:
             spac_x = (x - self.orig_x) / self.spacing_x
             spac_y = (y - self.orig_y) / self.spacing_y
@@ -607,67 +678,75 @@ class SEM_stability_3D(SEM_metric_3D):
             gamma_interp_x = spac_x - float(ix)
             gamma_interp_y = spac_y - float(iy)
             #
-            NX=self.nx
-            NY=self.ny
-            NZ=self.nz
+            NX = self.nx
+            NY = self.ny
+            NZ = self.nz
             if(ix < 0):
                 ix = 0
                 gamma_interp_x = 0.
-            if(ix > NX-2):
-                ix = NX-2
+            if(ix > NX - 2):
+                ix = NX - 2
                 gamma_interp_x = 1.
             if(iy < 0):
                 iy = 0
                 gamma_interp_y = 0.
-            if(iy > NY-2):
-                iy = NY-2
+            if(iy > NY - 2):
+                iy = NY - 2
                 gamma_interp_y = 1.
             if(iz < 0):
-                 iz = 0
-            if(iz > NZ-2):
-                 iz = NZ-2
+                iz = 0
+            if(iz > NZ - 2):
+                iz = NZ - 2
             #
-            p0 = ix+iy*NX+iz*(NX*NY)
-            p1 = (ix+1)+iy*NX+iz*(NX*NY)
-            p2 = (ix+1)+(iy+1)*NX+iz*(NX*NY)
-            p3 = ix+(iy+1)*NX+iz*(NX*NY)
-            p4 = ix+iy*NX+(iz+1)*(NX*NY)
-            p5 = (ix+1)+iy*NX+(iz+1)*(NX*NY)
-            p6 = (ix+1)+(iy+1)*NX+(iz+1)*(NX*NY)
-            p7 = ix+(iy+1)*NX+(iz+1)*(NX*NY)
+            p0 = ix + iy * NX + iz * (NX * NY)
+            p1 = (ix + 1) + iy * NX + iz * (NX * NY)
+            p2 = (ix + 1) + (iy + 1) * NX + iz * (NX * NY)
+            p3 = ix + (iy + 1) * NX + iz * (NX * NY)
+            p4 = ix + iy * NX + (iz + 1) * (NX * NY)
+            p5 = (ix + 1) + iy * NX + (iz + 1) * (NX * NY)
+            p6 = (ix + 1) + (iy + 1) * NX + (iz + 1) * (NX * NY)
+            p7 = ix + (iy + 1) * NX + (iz + 1) * (NX * NY)
             #
-            if self.ztomo[p4]==self.ztomo[p0]:
+            if self.ztomo[p4] == self.ztomo[p0]:
                 gamma_interp_z1 = 1
             else:
-                gamma_interp_z1 = (z-self.ztomo[p0])/(self.ztomo[p4]-self.ztomo[p0])
-            if(gamma_interp_z1 > 1.): gamma_interp_z1 = 1.
-            if(gamma_interp_z1 < 0.): gamma_interp_z1 = 0.
+                gamma_interp_z1 = (
+                    z - self.ztomo[p0]) / (self.ztomo[p4] - self.ztomo[p0])
+            if(gamma_interp_z1 > 1.):
+                gamma_interp_z1 = 1.
+            if(gamma_interp_z1 < 0.):
+                gamma_interp_z1 = 0.
             #
-            if self.ztomo[p5]==self.ztomo[p1]:
+            if self.ztomo[p5] == self.ztomo[p1]:
                 gamma_interp_z2 = 1
             else:
-                gamma_interp_z2 = (z-self.ztomo[p1])/(self.ztomo[p5]-self.ztomo[p1])
-            if(gamma_interp_z2 > 1.): gamma_interp_z2 = 1.
-            if(gamma_interp_z2 < 0.): gamma_interp_z2 = 0.
+                gamma_interp_z2 = (
+                    z - self.ztomo[p1]) / (self.ztomo[p5] - self.ztomo[p1])
+            if(gamma_interp_z2 > 1.):
+                gamma_interp_z2 = 1.
+            if(gamma_interp_z2 < 0.):
+                gamma_interp_z2 = 0.
             #
-            if self.ztomo[p6]==self.ztomo[p2]:
+            if self.ztomo[p6] == self.ztomo[p2]:
                 gamma_interp_z3 = 1
             else:
-                gamma_interp_z3 = (z-self.ztomo[p2])/(self.ztomo[p6]-self.ztomo[p2])
-            if(gamma_interp_z3 > 1.): gamma_interp_z3 = 1.
-            if(gamma_interp_z3 < 0.): gamma_interp_z3 = 0.
+                gamma_interp_z3 = (
+                    z - self.ztomo[p2]) / (self.ztomo[p6] - self.ztomo[p2])
+            if(gamma_interp_z3 > 1.):
+                gamma_interp_z3 = 1.
+            if(gamma_interp_z3 < 0.):
+                gamma_interp_z3 = 0.
             #
-            if self.ztomo[p7]==self.ztomo[p3]:
+            if self.ztomo[p7] == self.ztomo[p3]:
                 gamma_interp_z4 = 1
             else:
-                gamma_interp_z4 = (z-self.ztomo[p3])/(self.ztomo[p7]-self.ztomo[p3])
-            if(gamma_interp_z4 > 1.): gamma_interp_z4 = 1.
-            if(gamma_interp_z4 < 0.): gamma_interp_z4 = 0.
+                gamma_interp_z4 = (
+                    z - self.ztomo[p3]) / (self.ztomo[p7] - self.ztomo[p3])
+            if(gamma_interp_z4 > 1.):
+                gamma_interp_z4 = 1.
+            if(gamma_interp_z4 < 0.):
+                gamma_interp_z4 = 0.
             #
-            gamma_interp_z5 = 1. - gamma_interp_z1
-            gamma_interp_z6 = 1. - gamma_interp_z2
-            gamma_interp_z7 = 1. - gamma_interp_z3
-            gamma_interp_z8 = 1. - gamma_interp_z4
             #
             vp1 = self.vp[p0]
             vp2 = self.vp[p1]
@@ -687,87 +766,104 @@ class SEM_stability_3D(SEM_metric_3D):
             vs7 = self.vs[p6]
             vs8 = self.vs[p7]
             #
-            vp_final = vp1*(1.-gamma_interp_x)*(1.-gamma_interp_y)*(1.-gamma_interp_z1) + \
-               vp2*gamma_interp_x*(1.-gamma_interp_y)*(1.-gamma_interp_z2) + \
-               vp3*gamma_interp_x*gamma_interp_y*(1.-gamma_interp_z3) + \
-               vp4*(1.-gamma_interp_x)*gamma_interp_y*(1.-gamma_interp_z4) + \
-               vp5*(1.-gamma_interp_x)*(1.-gamma_interp_y)*gamma_interp_z1 + \
-               vp6*gamma_interp_x*(1.-gamma_interp_y)*gamma_interp_z2 + \
-               vp7*gamma_interp_x*gamma_interp_y*gamma_interp_z3 + \
-               vp8*(1.-gamma_interp_x)*gamma_interp_y*gamma_interp_z4
+            onegx = (1. - gamma_interp_x)
+            onegy = (1. - gamma_interp_y)
+            onegz3 = (1. - gamma_interp_z3)
+            vp_final = \
+                vp1 * onegx * onegy * (1. - gamma_interp_z1) + \
+                vp2 * gamma_interp_x * onegy * (1. - gamma_interp_z2) + \
+                vp3 * gamma_interp_x * gamma_interp_y * onegz3 + \
+                vp4 * onegx * gamma_interp_y * (1. - gamma_interp_z4) + \
+                vp5 * onegx * onegy * gamma_interp_z1 + \
+                vp6 * gamma_interp_x * onegy * gamma_interp_z2 + \
+                vp7 * gamma_interp_x * gamma_interp_y * gamma_interp_z3 + \
+                vp8 * onegx * gamma_interp_y * gamma_interp_z4
             #
-            vs_final = vs1*(1.-gamma_interp_x)*(1.-gamma_interp_y)*(1.-gamma_interp_z1) + \
-               vs2*gamma_interp_x*(1.-gamma_interp_y)*(1.-gamma_interp_z2) + \
-               vs3*gamma_interp_x*gamma_interp_y*(1.-gamma_interp_z3) + \
-               vs4*(1.-gamma_interp_x)*gamma_interp_y*(1.-gamma_interp_z4) + \
-               vs5*(1.-gamma_interp_x)*(1.-gamma_interp_y)*gamma_interp_z1 + \
-               vs6*gamma_interp_x*(1.-gamma_interp_y)*gamma_interp_z2 + \
-               vs7*gamma_interp_x*gamma_interp_y*gamma_interp_z3 + \
-               vs8*(1.-gamma_interp_x)*gamma_interp_y*gamma_interp_z4
+            vs_final = vs1 * onegx * onegy * (1. - gamma_interp_z1) + \
+                vs2 * gamma_interp_x * onegy * (1. - gamma_interp_z2) + \
+                vs3 * gamma_interp_x * gamma_interp_y * onegz3 + \
+                vs4 * onegx * gamma_interp_y * (1. - gamma_interp_z4) + \
+                vs5 * onegx * onegy * gamma_interp_z1 + \
+                vs6 * gamma_interp_x * onegy * gamma_interp_z2 + \
+                vs7 * gamma_interp_x * gamma_interp_y * gamma_interp_z3 + \
+                vs8 * onegx * gamma_interp_y * gamma_interp_z4
             #
-            if(vp_final < self.vp_min): vp_final = self.vp_min
-            if(vs_final < self.vs_min): vs_final = self.vs_min
-            if(vp_final > self.vp_max): vp_final = self.vp_max
-            if(vs_final > self.vs_max): vs_final = self.vs_max
-            return vp_final,vs_final
+            if(vp_final < self.vp_min):
+                vp_final = self.vp_min
+            if(vs_final < self.vs_min):
+                vs_final = self.vs_min
+            if(vp_final > self.vp_max):
+                vp_final = self.vp_max
+            if(vs_final > self.vs_max):
+                vs_final = self.vs_max
+            return vp_final, vs_final
         else:
-            return vp_static,vs_static
+            return vp_static, vs_static
     #
-    def hex_simulation_parameter(self,h,vp_static=None,vs_static=None):
-        nodes=cubit.get_connectivity('Hex',h)
-        id_nodes=[0,1,2,3,4,5,6,7]
-        id_faces=[[1,3,4],[0,2,5],[1,3,6],[0,2,7],[5,7],[4,6],[5,7],[4,6]]
-        dt=[]
-        pmax=[]
-        vmax=[]
-        vmin=[]
+
+    def hex_simulation_parameter(self, h, vp_static=None, vs_static=None):
+        nodes = cubit.get_connectivity('Hex', h)
+        id_nodes = [0, 1, 2, 3, 4, 5, 6, 7]
+        id_faces = [[1, 3, 4], [0, 2, 5], [1, 3, 6], [
+            0, 2, 7], [5, 7], [4, 6], [5, 7], [4, 6]]
+        dt = []
+        pmax = []
+        vmax = []
+        vmin = []
         for i in id_nodes[:-1]:
-            for j in id_nodes[i+1:]:
-                x1,y1,z1=cubit.get_nodal_coordinates(nodes[i])
-                x2,y2,z2=cubit.get_nodal_coordinates(nodes[j])
-                nvp1,nvs1=self.tomo(x1,y1,z1,vp_static,vs_static)
-                nvp2,nvs2=self.tomo(x2,y2,z2,vp_static,vs_static)
-                d=math.sqrt((x2-x1)**2+(y2-y1)**2+(z2-z1)**2)
-                #pmax_tmp=d*self.gllcoeff/min(nvp1,nvp2,nvs1,nvs2)*self.Ngll_per_wavelength
-                pmax_tmp=d*(.5-self.gllcoeff)/min(nvp1,nvp2,nvs1,nvs2)*self.Ngll_per_wavelength #more conservative.....
-                dt_tmp=self.Cmax*d*self.gllcoeff/max(nvp1,nvp2,nvs1,nvs2)
+            for j in id_nodes[i + 1:]:
+                x1, y1, z1 = cubit.get_nodal_coordinates(nodes[i])
+                x2, y2, z2 = cubit.get_nodal_coordinates(nodes[j])
+                nvp1, nvs1 = self.tomo(x1, y1, z1, vp_static, vs_static)
+                nvp2, nvs2 = self.tomo(x2, y2, z2, vp_static, vs_static)
+                d = math.sqrt((x2 - x1)**2 + (y2 - y1)**2 + (z2 - z1)**2)
+                # pmax_tmp=d*self.gllcoeff/min(nvp1,nvp2,nvs1,nvs2)*self.Ngll_per_wavelength
+                # more conservative.....
+                pmax_tmp = d * (.5 - self.gllcoeff)
+                pmax_tmp = pmax_tmp / min(nvp1, nvp2, nvs1, nvs2)
+                pmax_tmp = pmax_tmp * self.Ngll_per_wavelength
+                dt_tmp = self.Cmax * d * self.gllcoeff / \
+                    max(nvp1, nvp2, nvs1, nvs2)
                 dt.append(dt_tmp)
                 pmax.append(pmax_tmp)
-                vmax.append(max(nvp1,nvp2,nvs1,nvs2))
-                vmin.append(min(nvp1,nvp2,nvs1,nvs2))
-        return min(dt),max(pmax),min(vmin),max(vmax)
+                vmax.append(max(nvp1, nvp2, nvs1, nvs2))
+                vmin.append(min(nvp1, nvp2, nvs1, nvs2))
+        return min(dt), max(pmax), min(vmin), max(vmax)
     #
+
     def group_period(self):
-        tot=0.
         if self.period_hyst is not None:
-            pmin=min(self.period_hyst.values())
-            period=self.hyst(pmin,self.period,self.period_hyst)
-            factor=(self.period-pmin)/self.nbin
-            for i in range(0,self.nbin+1):
+            pmin = min(self.period_hyst.values())
+            period = self.hyst(pmin, self.period, self.period_hyst)
+            factor = (self.period - pmin) / self.nbin
+            for i in range(0, self.nbin + 1):
                 if period.has_key(i):
-                    txt='group "period_%.1e_%.1e" add hex ' %(pmin+factor*i,pmin+factor*(i+1))
-                    txt=txt+' '.join(str(hh) for hh in period[i])
+                    txt = 'group "period_%.1e_%.1e" add hex ' % (
+                        pmin + factor * i, pmin + factor * (i + 1))
+                    txt = txt + ' '.join(str(hh) for hh in period[i])
                     cubit.cmd(txt)
+
     def group_timestep(self):
-         tot=0.
-         if self.dt_hyst is not None:
-             dtmax=max(self.dt_hyst.values())
-             dt=self.hyst(self.dt,dtmax,self.dt_hyst)
-             factor=(dtmax-self.dt)/self.nbin
-             for i in range(0,self.nbin+1):
-                 if dt.has_key(i):
-                     txt='group "timestep_%.1e_%.1e" add hex ' %(self.dt+factor*i,self.dt+factor*(i+1))
-                     txt=txt+' '.join(str(hh) for hh in dt[i])
-                     cubit.cmd(txt)
+        if self.dt_hyst is not None:
+            dtmax = max(self.dt_hyst.values())
+            dt = self.hyst(self.dt, dtmax, self.dt_hyst)
+            factor = (dtmax - self.dt) / self.nbin
+            for i in range(0, self.nbin + 1):
+                if dt.has_key(i):
+                    txt = 'group "timestep_%.1e_%.1e" add hex ' % (
+                        self.dt + factor * i, self.dt + factor * (i + 1))
+                    txt = txt + ' '.join(str(hh) for hh in dt[i])
+                    cubit.cmd(txt)
 
 
-#cubit.cmd('brick x 10000')
-#cubit.cmd('mesh vol 1')
-#cubit.cmd('refine hex in node in surf 1')
-#cubit.cmd('refine hex in node in surf 3')
-#vp=1000
-#vs=600
-#mesh=SEM_stability_3D()
-#mesh.check_simulation_parameter(vp_static=vp,vs_static=vs)
-#mesh.group_timestep()
-#mesh.group_period()
+# USAGE
+# cubit.cmd('brick x 10000')
+# cubit.cmd('mesh vol 1')
+# cubit.cmd('refine hex in node in surf 1')
+# cubit.cmd('refine hex in node in surf 3')
+# vp=1000
+# vs=600
+# mesh=SEM_stability_3D()
+# mesh.check_simulation_parameter(vp_static=vp,vs_static=vs)
+# mesh.group_timestep()
+# mesh.group_period()

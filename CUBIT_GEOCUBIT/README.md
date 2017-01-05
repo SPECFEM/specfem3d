@@ -36,21 +36,19 @@ In particular, it is focused on the meshing requests of Specfem3D and it is help
 
 • It can be used as a serial or parallel process. The parallel meshing capabilities are fun- damental for large geophysical problems (ex. mesh of Southern California using SRTM topography).
 
-GeoCubit can be used inside the graphical interface of Cubit (i.e. as a Python object in the script tab) or as Unix command.
+GeoCubit can be used inside the graphical interface of Trelis (i.e. as a Python object in the script tab) or as Unix command.
 
 ## Requirements:
 
-- cubit 13+ (or Trelis 14+)
-- python
- - MACOSX+CUBIT = python 2.5,  
- - MACOSX+TRELIS = python 2.6, 
- - linux+cubit 32/64bit = python 2.* 32/64bit
+- Trelis 15+ (www.csimsoft.com, see also cubit.sandia.gov)
+- python 2.7
 - numpy 1.0+
 
+It is possible that GEOCUBIT continues to work for CUBIT 15+ but it is not supported anymore.
 
 ## Configuration:
 
-In order to have the possibility to import cubit in a **python script** you should set up the path for CUBIT/Trelis
+On Linux/Unix system: in order to have the possibility to import the cubit libray included in Trelis in a **python script** you should set up the path for CUBIT/Trelis
 
 ```
 export CUBITDIR=$CUBITHOME
@@ -64,7 +62,7 @@ You could install GEOCUBIT
 
 `python setup.py install`
 
-or 
+or
 
 ```
 export PYTHONPATH=$PYTHONPATH:[YourGeocubitDir]
@@ -72,17 +70,47 @@ export PATH=$PATH:[YourGeocubitDir]
 ```
 
 
-  
-On MacOSX, if you prefer to load GEOCUBIT in the CUBIT/TRELIS **GUI**:
 
-CUBIT: `python2.5 setup.py install --install-lib=/Library/Python/2.5/site-packages/`
+On MacOSX 10.10, Trelis points the system version of python2.7 (/Library/Python/2.7/site-packages)
+so the version of python required is `/usr/bin/python2.7`
 
-TRELIS 14: `python2.6 setup.py install --install-lib=/Library/Python/2.6/site-packages/`
+You could install GEOCUBIT with administrator privilege (for running script in the python tab of the Trelis GUI)
 
+`/usr/bin/python2.7 setup.py install --install-lib=/Library/Python/2.7/site-packages/`
 
+and in addition if you want to run meshing scripts in python (outside of the GUI)   
 
+```
+export CUBITDIR=$CUBITHOME #for example /Applications/Trelis-16.0.app
+export PYTHONPATH=$CUBITDIR/contents/MacOS:$PYTHONPATH
+export CUBITLIB=$CUBITDIR/contents/MacOS
+export DYLD_LIBRARY_PATH=$CUBITDIR/contents/MacOS:${DYLD_LIBRARY_PATH}
+export PATH=$PATH:$CUBITDIR:$CUBITDIR/Contents/MacOS
+```
 
+The meshing scripts works for `/usr/bin/python2.7`.
 
+A simple "hello world" meshing script is:
 
-See also Cubit (now also sold as "Trelis") here [cubit.sandia.gov]
+```
+import cubit
+cubit.init([""])
+cubit.cmd('brick x 10')
+cubit.cmd('mesh vol all')
+```
+
+For defining the absorbing boundary surfaces in a 4 (near parallel) side meshed volume:
+
+```
+from geocubitlib import exportlib 
+exportlib.collect(outdir='.',outfilename='mymesh')
+```
+
+The mesh will be exported in exodus format with name defined by the optional parameter `outfilename`:
+
+For saving the mesh in Specfem3D format:
+
+```
+exportlib.e2SEM(outdir='.')
+```
 
