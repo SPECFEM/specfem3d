@@ -1,11 +1,48 @@
+
+Update by Emanuele Casarotti, INGV, Roma, Italy, January 2017:
+
+I have finally concluded the review of geocubit for compatibility
+issue with the last version of Trelis 16.
+I have submitted to the repository the changes and I have tested the examples.
+I'm waitinfg for travis.
+
+As reported there some examples that fails: the CPML and the
+tomography (we need to modify the starting toy model).
+
+This is the list of updates made on Jan 5, 2017:
+
+- compatibility with trelis 15+ and 16+
+
+- new merging chunk function (faster and more stable) for trelis 15+ (before it was only for cubit 12.2)
+
+- pep8 beautification
+
+- bug fixes (including hex27 support in addition to hex8)
+
+- alpha version of netcdf mesh for specfem3d
+
+
+I've tested on macosx, linux version of trelis/cubit from 12 to 16 for
+usage in the GUI, inside a python script on local machine and on
+cluster (48 flavors! and I don't have the version for window).
+Nevertheless, it is always possible that I miss something.
+
+I think it is a pain and, in the future, I would like to maintain the
+compatibility only for version 15+.
+
+Moreover, my access to cubit is sadly ended
+and I will drop soon also the support for it (sadly).
+
+=========================================
+
 GEOCUBIT
-======================
+========
 
 GeoCubit is a Python library wrapping around the Cubit Python Interface.
 
 Main author: Emanuele Casarotti, INGV, Roma, Italy.
 
-Copyright (c) 2011 Istituto Nazionale di Geofisica e Vulcanologia.
+Copyright (c) 2011 and 2017, Istituto Nazionale di Geofisica e Vulcanologia.
 
 Improvements by: Elliott Sales de Andrade, Department of Physics, University of Toronto, Canada.
 
