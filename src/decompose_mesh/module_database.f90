@@ -130,7 +130,7 @@ contains
     integer,            dimension(:),       allocatable               :: ie_bnd_stored, loc_elmnt
     integer,            dimension(:,:,:),   allocatable               :: my_interfaces_ext_mesh
 
-    integer :: ncp
+    integer :: ncp, itype
 
     ! opens output file
     write(prname, "(i6.6,'_Database')") myrank
@@ -285,11 +285,17 @@ contains
                 enddo
              endif  !! on doit inclure ce if dessous ?
              if (k > 0) then
+                itype=k
+                !! need to update flag for HEX27 
+                if(NGNOD==27) then
+                   if (k==3) itype=2  !! it's edge
+                   if (k==9) itype=4  !! it's face
+                end if
                 ie_bnd_stored(inum_neigh_part) = ie_bnd_stored(inum_neigh_part) + 1
                 kE = ie_bnd_stored(inum_neigh_part)
                 my_interfaces_ext_mesh(1,kE ,inum_neigh_part) = glob2loc_elmnt(iE)
-                my_interfaces_ext_mesh(2,kE ,inum_neigh_part) = k
-                my_interfaces_ext_mesh(3:6,kE ,inum_neigh_part) = liste_comm_nodes(1:NGNOD2D)
+                my_interfaces_ext_mesh(2,kE ,inum_neigh_part) = itype 
+                my_interfaces_ext_mesh(3:6,kE ,inum_neigh_part) = liste_comm_nodes(1:4)
              endif
           enddo
        endif
