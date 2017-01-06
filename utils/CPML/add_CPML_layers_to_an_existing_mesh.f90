@@ -78,7 +78,11 @@
   double precision :: xread,yread,zread,xmin,xmax,ymin,ymax,zmin,zmax,limit,xsize,ysize,zsize
   double precision :: value_min,value_max,value_size,sum_of_distances,mean_distance
 
-  logical :: ALSO_ADD_ON_THE_TOP_SURFACE,need_to_extend_this_element,found_a_negative_Jacobian1,found_a_negative_Jacobian2
+  logical :: ADD_ON_THE_XMIN_SURFACE,ADD_ON_THE_XMAX_SURFACE
+  logical :: ADD_ON_THE_YMIN_SURFACE,ADD_ON_THE_YMAX_SURFACE
+  logical :: ADD_ON_THE_ZMIN_SURFACE,ADD_ON_THE_ZMAX_SURFACE
+
+  logical :: need_to_extend_this_element,found_a_negative_Jacobian1,found_a_negative_Jacobian2
 
   double precision, parameter :: SMALL_RELATIVE_VALUE = 1.d-5
 
@@ -104,15 +108,22 @@
   if (NUMBER_OF_PML_LAYERS_TO_ADD < 1) stop 'NUMBER_OF_PML_LAYERS_TO_ADD must be >= 1'
   print *
 
+  ADD_ON_THE_XMIN_SURFACE = .true.
+  ADD_ON_THE_XMAX_SURFACE = .true.
+  ADD_ON_THE_YMIN_SURFACE = .true.
+  ADD_ON_THE_YMAX_SURFACE = .true.
+  ADD_ON_THE_ZMIN_SURFACE = .true.
+  ADD_ON_THE_ZMAX_SURFACE = .true.
+
   print *,'1 = use a free surface at the top of the mesh i.e. do not add a CPML layer at the top (most classical option)'
   print *,'2 = add a CPML absorbing layer at the top of the mesh (less classical option)'
   print *,'3 = exit'
   read(*,*) iflag
   if (iflag /= 1 .and. iflag /= 2) stop 'exiting...'
   if (iflag == 1) then
-    ALSO_ADD_ON_THE_TOP_SURFACE = .false.
+    ADD_ON_THE_ZMAX_SURFACE = .false.
   else
-    ALSO_ADD_ON_THE_TOP_SURFACE = .true.
+    ADD_ON_THE_ZMAX_SURFACE = .true.
   endif
   print *
 
@@ -124,39 +135,63 @@
 
   if (icompute_size == 2) then
 
-  print *,'enter the X size (in meters) of each CPML element to add on the Xmin face:'
+  print *,'enter the X size (in meters) of each CPML element to add on the Xmin face (enter -1 to turn that PML layer off):'
   read(*,*) SIZE_OF_XMIN_ELEMENT_TO_ADD
-  if (SIZE_OF_XMIN_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_XMIN_ELEMENT_TO_ADD must be > 0'
+  if (SIZE_OF_XMIN_ELEMENT_TO_ADD <= 0.d0) then
+    SIZE_OF_XMIN_ELEMENT_TO_ADD = 0.d0
+    ADD_ON_THE_XMIN_SURFACE = .false.
+  endif
   print *
 
-  print *,'enter the X size (in meters) of each CPML element to add on the Xmax face:'
+  print *,'enter the X size (in meters) of each CPML element to add on the Xmax face (enter -1 to turn that PML layer off):'
   read(*,*) SIZE_OF_XMAX_ELEMENT_TO_ADD
-  if (SIZE_OF_XMAX_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_XMAX_ELEMENT_TO_ADD must be > 0'
+  if (SIZE_OF_XMAX_ELEMENT_TO_ADD <= 0.d0) then
+    SIZE_OF_XMAX_ELEMENT_TO_ADD = 0.d0
+    ADD_ON_THE_XMAX_SURFACE = .false.
+  endif
   print *
 
-  print *,'enter the Y size (in meters) of each CPML element to add on the Ymin faces:'
+  print *,'enter the Y size (in meters) of each CPML element to add on the Ymin faces (enter -1 to turn that PML layer off):'
   read(*,*) SIZE_OF_YMIN_ELEMENT_TO_ADD
-  if (SIZE_OF_YMIN_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_YMIN_ELEMENT_TO_ADD must be > 0'
+  if (SIZE_OF_YMIN_ELEMENT_TO_ADD <= 0.d0) then
+    SIZE_OF_YMIN_ELEMENT_TO_ADD = 0.d0
+    ADD_ON_THE_YMIN_SURFACE = .false.
+  endif
   print *
 
-  print *,'enter the Y size (in meters) of each CPML element to add on the Ymax faces:'
+  print *,'enter the Y size (in meters) of each CPML element to add on the Ymax faces (enter -1 to turn that PML layer off):'
   read(*,*) SIZE_OF_YMAX_ELEMENT_TO_ADD
-  if (SIZE_OF_YMAX_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_YMAX_ELEMENT_TO_ADD must be > 0'
+  if (SIZE_OF_YMAX_ELEMENT_TO_ADD <= 0.d0) then
+    SIZE_OF_YMAX_ELEMENT_TO_ADD = 0.d0
+    ADD_ON_THE_YMAX_SURFACE = .false.
+  endif
   print *
 
-  print *,'enter the Z size (in meters) of each CPML element to add on the Zmin faces:'
+  print *,'enter the Z size (in meters) of each CPML element to add on the Zmin faces (enter -1 to turn that PML layer off):'
   read(*,*) SIZE_OF_ZMIN_ELEMENT_TO_ADD
-  if (SIZE_OF_ZMIN_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_ZMIN_ELEMENT_TO_ADD must be > 0'
+  if (SIZE_OF_ZMIN_ELEMENT_TO_ADD <= 0.d0) then
+    SIZE_OF_ZMIN_ELEMENT_TO_ADD = 0.d0
+    ADD_ON_THE_ZMIN_SURFACE = .false.
+  endif
   print *
 
-  if (ALSO_ADD_ON_THE_TOP_SURFACE) then
-    print *,'enter the Z size (in meters) of each CPML element to add on the Zmax faces:'
+  if (ADD_ON_THE_ZMAX_SURFACE) then
+    print *,'enter the Z size (in meters) of each CPML element to add on the Zmax faces (enter -1 to turn that PML layer off):'
     read(*,*) SIZE_OF_ZMAX_ELEMENT_TO_ADD
-    if (SIZE_OF_ZMAX_ELEMENT_TO_ADD <= 0.d0) stop 'SIZE_OF_ZMAX_ELEMENT_TO_ADD must be > 0'
+    if (SIZE_OF_ZMAX_ELEMENT_TO_ADD <= 0.d0) then
+      SIZE_OF_ZMAX_ELEMENT_TO_ADD = 0.d0
+      ADD_ON_THE_ZMAX_SURFACE = .false.
+    endif
     print *
   endif
 
   endif
+
+! check that we need to add at least one PML, otherwise this code is useless
+  if (.not. ADD_ON_THE_XMIN_SURFACE .and. .not. ADD_ON_THE_XMAX_SURFACE &
+      .and. .not. ADD_ON_THE_YMIN_SURFACE .and. .not. ADD_ON_THE_YMAX_SURFACE &
+      .and. .not. ADD_ON_THE_ZMIN_SURFACE .and. .not. ADD_ON_THE_ZMAX_SURFACE) &
+    stop 'Error: the purpose of this code is to add at least one PML, but you have added none'
 
 ! hardwire GLL point location values to avoid having to link with a long library to compute them
   xigll(:) = (/ -1.d0 , -0.654653670707977d0 , 0.d0 , 0.654653670707977d0 , 1.d0 /)
@@ -251,8 +286,13 @@
 
     do iloop_on_min_face_then_max_face = 1,2  ! 1 is min face and 2 is max face (Xmin then Xmax, Ymin then Ymax, or Zmin then Zmax)
 
-! do not add a CPML layer on the top surface if the user asked not to
-      if (iloop_on_X_Y_Z_faces == 3 .and. iloop_on_min_face_then_max_face == 2 .and. .not. ALSO_ADD_ON_THE_TOP_SURFACE) cycle
+! do not add a CPML layer on a given surface if the user asked not to
+      if (iloop_on_X_Y_Z_faces == 1 .and. iloop_on_min_face_then_max_face == 1 .and. .not. ADD_ON_THE_XMIN_SURFACE) cycle
+      if (iloop_on_X_Y_Z_faces == 1 .and. iloop_on_min_face_then_max_face == 2 .and. .not. ADD_ON_THE_XMAX_SURFACE) cycle
+      if (iloop_on_X_Y_Z_faces == 2 .and. iloop_on_min_face_then_max_face == 1 .and. .not. ADD_ON_THE_YMIN_SURFACE) cycle
+      if (iloop_on_X_Y_Z_faces == 2 .and. iloop_on_min_face_then_max_face == 2 .and. .not. ADD_ON_THE_YMAX_SURFACE) cycle
+      if (iloop_on_X_Y_Z_faces == 3 .and. iloop_on_min_face_then_max_face == 1 .and. .not. ADD_ON_THE_ZMIN_SURFACE) cycle
+      if (iloop_on_X_Y_Z_faces == 3 .and. iloop_on_min_face_then_max_face == 2 .and. .not. ADD_ON_THE_ZMAX_SURFACE) cycle
 
     print *
     print *,'********************************************************************'
@@ -942,28 +982,59 @@
   print *,'Here are the values to use as input in the next code, xconvert_external_layers_of_a_given_mesh_to_CPML_layers:'
   print *,'  (also saved in file values_to_use_for_convert_external_layers_of_a_given_mesh_to_CPML_layers.txt)'
   print *
-  print *,'THICKNESS_OF_XMIN_PML = ',sngl(SIZE_OF_XMIN_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD)
-  print *,'THICKNESS_OF_XMAX_PML = ',sngl(SIZE_OF_XMAX_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD)
-  print *,'THICKNESS_OF_YMIN_PML = ',sngl(SIZE_OF_YMIN_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD)
-  print *,'THICKNESS_OF_YMAX_PML = ',sngl(SIZE_OF_YMAX_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD)
-  print *,'THICKNESS_OF_ZMIN_PML = ',sngl(SIZE_OF_ZMIN_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD)
-  if (ALSO_ADD_ON_THE_TOP_SURFACE) &
-      print *,'THICKNESS_OF_ZMAX_PML = ',sngl(SIZE_OF_ZMAX_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD)
+  if (ADD_ON_THE_XMIN_SURFACE) print *,'THICKNESS_OF_XMIN_PML = ',sngl(SIZE_OF_XMIN_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD)
+  if (ADD_ON_THE_XMAX_SURFACE) print *,'THICKNESS_OF_XMAX_PML = ',sngl(SIZE_OF_XMAX_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD)
+  if (ADD_ON_THE_YMIN_SURFACE) print *,'THICKNESS_OF_YMIN_PML = ',sngl(SIZE_OF_YMIN_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD)
+  if (ADD_ON_THE_YMAX_SURFACE) print *,'THICKNESS_OF_YMAX_PML = ',sngl(SIZE_OF_YMAX_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD)
+  if (ADD_ON_THE_ZMIN_SURFACE) print *,'THICKNESS_OF_ZMIN_PML = ',sngl(SIZE_OF_ZMIN_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD)
+  if (ADD_ON_THE_ZMAX_SURFACE) print *,'THICKNESS_OF_ZMAX_PML = ',sngl(SIZE_OF_ZMAX_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD)
   print *
 
 ! save the thickness values to a text file
   open(unit=23,file='values_to_use_for_convert_external_layers_of_a_given_mesh_to_CPML_layers.txt',status='unknown',action='write')
-  write(23,*) SIZE_OF_XMIN_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD
-  write(23,*) SIZE_OF_XMAX_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD
-  write(23,*) SIZE_OF_YMIN_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD
-  write(23,*) SIZE_OF_YMAX_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD
-  write(23,*) SIZE_OF_ZMIN_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD
-  if (ALSO_ADD_ON_THE_TOP_SURFACE) then
-    write(23,*) SIZE_OF_ZMAX_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD
+
+  if (ADD_ON_THE_XMIN_SURFACE) then
+    write(23,*) SIZE_OF_XMIN_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD
   else
-! convention (negative value) to say that this Zmax absorbing edge is turned off
+! convention (negative value) to say that this absorbing edge is turned off
     write(23,*) -1
   endif
+
+  if (ADD_ON_THE_XMAX_SURFACE) then
+    write(23,*) SIZE_OF_XMAX_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD
+  else
+! convention (negative value) to say that this absorbing edge is turned off
+    write(23,*) -1
+  endif
+
+  if (ADD_ON_THE_YMIN_SURFACE) then
+    write(23,*) SIZE_OF_YMIN_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD
+  else
+! convention (negative value) to say that this absorbing edge is turned off
+    write(23,*) -1
+  endif
+
+  if (ADD_ON_THE_YMAX_SURFACE) then
+    write(23,*) SIZE_OF_YMAX_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD
+  else
+! convention (negative value) to say that this absorbing edge is turned off
+    write(23,*) -1
+  endif
+
+  if (ADD_ON_THE_ZMIN_SURFACE) then
+    write(23,*) SIZE_OF_ZMIN_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD
+  else
+! convention (negative value) to say that this absorbing edge is turned off
+    write(23,*) -1
+  endif
+
+  if (ADD_ON_THE_ZMAX_SURFACE) then
+    write(23,*) SIZE_OF_ZMAX_ELEMENT_TO_ADD * NUMBER_OF_PML_LAYERS_TO_ADD
+  else
+! convention (negative value) to say that this absorbing edge is turned off
+    write(23,*) -1
+  endif
+
   close(23)
 
   end program add_CPML_layers_to_a_given_mesh

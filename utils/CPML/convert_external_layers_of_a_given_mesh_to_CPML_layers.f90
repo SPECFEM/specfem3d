@@ -49,7 +49,11 @@
 
   double precision :: xread,yread,zread,xmin,xmax,ymin,ymax,zmin,zmax,limit,size_of_model
 
-  logical :: ALSO_ADD_ON_THE_TOP_SURFACE,already_found_a_face
+  logical :: ADD_ON_THE_XMIN_SURFACE,ADD_ON_THE_XMAX_SURFACE
+  logical :: ADD_ON_THE_YMIN_SURFACE,ADD_ON_THE_YMAX_SURFACE
+  logical :: ADD_ON_THE_ZMIN_SURFACE,ADD_ON_THE_ZMAX_SURFACE
+
+  logical :: already_found_a_face
 
   double precision :: THICKNESS_OF_XMIN_PML,THICKNESS_OF_YMIN_PML,THICKNESS_OF_ZMIN_PML
   double precision :: THICKNESS_OF_XMAX_PML,THICKNESS_OF_YMAX_PML,THICKNESS_OF_ZMAX_PML
@@ -97,6 +101,13 @@
   read(*,*) iformat
   if (iformat /= 1 .and. iformat /= 2) stop 'exiting...'
 
+  ADD_ON_THE_XMIN_SURFACE = .true.
+  ADD_ON_THE_XMAX_SURFACE = .true.
+  ADD_ON_THE_YMIN_SURFACE = .true.
+  ADD_ON_THE_YMAX_SURFACE = .true.
+  ADD_ON_THE_ZMIN_SURFACE = .true.
+  ADD_ON_THE_ZMAX_SURFACE = .true.
+
   print *
   print *,'1 = use a free surface at the top of the mesh (most classical option)'
   print *,'2 = use a CPML absorbing layer at the top of the mesh (less classical option)'
@@ -104,9 +115,9 @@
   read(*,*) iflag
   if (iflag /= 1 .and. iflag /= 2) stop 'exiting...'
   if (iflag == 1) then
-    ALSO_ADD_ON_THE_TOP_SURFACE = .false.
+    ADD_ON_THE_ZMAX_SURFACE = .false.
   else
-    ALSO_ADD_ON_THE_TOP_SURFACE = .true.
+    ADD_ON_THE_ZMAX_SURFACE = .true.
   endif
   print *
 
@@ -167,68 +178,123 @@
   read(23,*) THICKNESS_OF_ZMIN_PML
   read(23,*) THICKNESS_OF_ZMAX_PML
   close(23)
-! check convention (negative value) that says that this Zmax absorbing edge is turned off
-  if (ALSO_ADD_ON_THE_TOP_SURFACE .and. THICKNESS_OF_ZMAX_PML <= 0) &
-    stop 'negative thickness is not allowed; ALSO_ADD_ON_THE_TOP_SURFACE is maybe inconsistent with the previous code; exiting...'
-  if (.not. ALSO_ADD_ON_THE_TOP_SURFACE .and. THICKNESS_OF_ZMAX_PML > 0) &
-    stop 'ALSO_ADD_ON_THE_TOP_SURFACE seems inconsistent with the previous code; exiting...'
+
+! check convention (negative value) that says that this absorbing edge is turned off
+  if (ADD_ON_THE_XMIN_SURFACE .and. THICKNESS_OF_XMIN_PML <= 0) &
+    stop 'negative thickness is not allowed; ADD_ON_THE_XMIN_SURFACE is maybe inconsistent with the previous code; exiting...'
+  if (.not. ADD_ON_THE_XMIN_SURFACE .and. THICKNESS_OF_XMIN_PML > 0) &
+    stop 'ADD_ON_THE_XMIN_SURFACE seems inconsistent with the previous code; exiting...'
+
+! check convention (negative value) that says that this absorbing edge is turned off
+  if (ADD_ON_THE_XMAX_SURFACE .and. THICKNESS_OF_XMAX_PML <= 0) &
+    stop 'negative thickness is not allowed; ADD_ON_THE_XMAX_SURFACE is maybe inconsistent with the previous code; exiting...'
+  if (.not. ADD_ON_THE_XMAX_SURFACE .and. THICKNESS_OF_XMAX_PML > 0) &
+    stop 'ADD_ON_THE_XMAX_SURFACE seems inconsistent with the previous code; exiting...'
+
+! check convention (negative value) that says that this absorbing edge is turned off
+  if (ADD_ON_THE_YMIN_SURFACE .and. THICKNESS_OF_YMIN_PML <= 0) &
+    stop 'negative thickness is not allowed; ADD_ON_THE_YMIN_SURFACE is maybe inconsistent with the previous code; exiting...'
+  if (.not. ADD_ON_THE_YMIN_SURFACE .and. THICKNESS_OF_YMIN_PML > 0) &
+    stop 'ADD_ON_THE_YMIN_SURFACE seems inconsistent with the previous code; exiting...'
+
+! check convention (negative value) that says that this absorbing edge is turned off
+  if (ADD_ON_THE_YMAX_SURFACE .and. THICKNESS_OF_YMAX_PML <= 0) &
+    stop 'negative thickness is not allowed; ADD_ON_THE_YMAX_SURFACE is maybe inconsistent with the previous code; exiting...'
+  if (.not. ADD_ON_THE_YMAX_SURFACE .and. THICKNESS_OF_YMAX_PML > 0) &
+    stop 'ADD_ON_THE_YMAX_SURFACE seems inconsistent with the previous code; exiting...'
+
+! check convention (negative value) that says that this absorbing edge is turned off
+  if (ADD_ON_THE_ZMIN_SURFACE .and. THICKNESS_OF_ZMIN_PML <= 0) &
+    stop 'negative thickness is not allowed; ADD_ON_THE_ZMIN_SURFACE is maybe inconsistent with the previous code; exiting...'
+  if (.not. ADD_ON_THE_ZMIN_SURFACE .and. THICKNESS_OF_ZMIN_PML > 0) &
+    stop 'ADD_ON_THE_ZMIN_SURFACE seems inconsistent with the previous code; exiting...'
+
+! check convention (negative value) that says that this absorbing edge is turned off
+  if (ADD_ON_THE_ZMAX_SURFACE .and. THICKNESS_OF_ZMAX_PML <= 0) &
+    stop 'negative thickness is not allowed; ADD_ON_THE_ZMAX_SURFACE is maybe inconsistent with the previous code; exiting...'
+  if (.not. ADD_ON_THE_ZMAX_SURFACE .and. THICKNESS_OF_ZMAX_PML > 0) &
+    stop 'ADD_ON_THE_ZMAX_SURFACE seems inconsistent with the previous code; exiting...'
 
   else
 
-  print *,'What is the exact thickness of the PML layer that you want'
+  print *,'What is the exact thickness of the PML layer that you want (enter -1 to turn that PML layer off)'
   print *,'on the Xmin face of your mesh? (it needs to correspond exactly'
   print *,'to the flat layers you created in your input CUBIT mesh, as mentioned in'
   print *,'the comment printed above; if you think you have roundoff issues or very'
   print *,'slightly varying thickness, give 2% or 5% more here, but never less'
   read(*,*) THICKNESS_OF_XMIN_PML
-  if (THICKNESS_OF_XMIN_PML <= 0) stop 'negative thickness is not allowed; exiting...'
-  if (THICKNESS_OF_XMIN_PML > 0.30*(xmax - xmin)) &
+  if (THICKNESS_OF_XMIN_PML <= 0) then
+    THICKNESS_OF_XMIN_PML = 0
+    ADD_ON_THE_XMIN_SURFACE = .false.
+  else if (THICKNESS_OF_XMIN_PML > 0.30*(xmax - xmin)) then
     stop 'thickness of each CPML layer greater than 30% of the size of the mesh is not a good idea; exiting...'
+  endif
   print *
 
-  print *,'What is the exact thickness of the PML layer that you want'
+  print *,'What is the exact thickness of the PML layer that you want (enter -1 to turn that PML layer off)'
   print *,'on the Xmax face of your mesh?'
   read(*,*) THICKNESS_OF_XMAX_PML
-  if (THICKNESS_OF_XMAX_PML <= 0) stop 'negative thickness is not allowed; exiting...'
-  if (THICKNESS_OF_XMAX_PML > 0.30*(xmax - xmin)) &
+  if (THICKNESS_OF_XMAX_PML <= 0) then
+    THICKNESS_OF_XMAX_PML = 0
+    ADD_ON_THE_XMAX_SURFACE = .false.
+  else if (THICKNESS_OF_XMAX_PML > 0.30*(xmax - xmin)) then
     stop 'thickness of each CPML layer greater than 30% of the size of the mesh is not a good idea; exiting...'
+  endif
   print *
 
-  print *,'What is the exact thickness of the PML layer that you want'
+  print *,'What is the exact thickness of the PML layer that you want (enter -1 to turn that PML layer off)'
   print *,'on the Ymin face of your mesh?'
   read(*,*) THICKNESS_OF_YMIN_PML
-  if (THICKNESS_OF_YMIN_PML <= 0) stop 'negative thickness is not allowed; exiting...'
-  if (THICKNESS_OF_YMIN_PML > 0.30*(ymax - ymin)) &
+  if (THICKNESS_OF_YMIN_PML <= 0) then
+    THICKNESS_OF_YMIN_PML = 0
+    ADD_ON_THE_YMIN_SURFACE = .false.
+  else if (THICKNESS_OF_YMIN_PML > 0.30*(ymax - ymin)) then
     stop 'thickness of each CPML layer greater than 30% of the size of the mesh is not a good idea; exiting...'
+  endif
   print *
 
-  print *,'What is the exact thickness of the PML layer that you want'
+  print *,'What is the exact thickness of the PML layer that you want (enter -1 to turn that PML layer off)'
   print *,'on the Ymax face of your mesh?'
   read(*,*) THICKNESS_OF_YMAX_PML
-  if (THICKNESS_OF_YMAX_PML <= 0) stop 'negative thickness is not allowed; exiting...'
-  if (THICKNESS_OF_YMAX_PML > 0.30*(ymax - ymin)) &
+  if (THICKNESS_OF_YMAX_PML <= 0) then
+    THICKNESS_OF_YMAX_PML = 0
+    ADD_ON_THE_YMAX_SURFACE = .false.
+  else if (THICKNESS_OF_YMAX_PML > 0.30*(ymax - ymin)) then
     stop 'thickness of each CPML layer greater than 30% of the size of the mesh is not a good idea; exiting...'
+  endif
   print *
 
-  print *,'What is the exact thickness of the PML layer that you want'
+  print *,'What is the exact thickness of the PML layer that you want (enter -1 to turn that PML layer off)'
   print *,'on the Zmin face of your mesh?'
   read(*,*) THICKNESS_OF_ZMIN_PML
-  if (THICKNESS_OF_ZMIN_PML <= 0) stop 'negative thickness is not allowed; exiting...'
-  if (THICKNESS_OF_ZMIN_PML > 0.30*(zmax - zmin)) &
+  if (THICKNESS_OF_ZMIN_PML <= 0) then
+    THICKNESS_OF_ZMIN_PML = 0
+    ADD_ON_THE_ZMIN_SURFACE = .false.
+  else if (THICKNESS_OF_ZMIN_PML > 0.30*(zmax - zmin)) then
     stop 'thickness of each CPML layer greater than 30% of the size of the mesh is not a good idea; exiting...'
+  endif
   print *
 
-  if (ALSO_ADD_ON_THE_TOP_SURFACE) then
-    print *,'What is the exact thickness of the PML layer that you want'
+  if (ADD_ON_THE_ZMAX_SURFACE) then
+    print *,'What is the exact thickness of the PML layer that you want (enter -1 to turn that PML layer off)'
     print *,'on the Zmax face of your mesh?'
     read(*,*) THICKNESS_OF_ZMAX_PML
-    if (THICKNESS_OF_ZMAX_PML <= 0) stop 'negative thickness is not allowed; exiting...'
-    if (THICKNESS_OF_ZMAX_PML > 0.30*(zmax - zmin)) &
+    if (THICKNESS_OF_ZMAX_PML <= 0) then
+      THICKNESS_OF_ZMAX_PML = 0
+      ADD_ON_THE_ZMAX_SURFACE = .false.
+    else if (THICKNESS_OF_ZMAX_PML > 0.30*(zmax - zmin)) then
       stop 'thickness of each CPML layer greater than 30% of the size of the mesh is not a good idea; exiting...'
+    endif
     print *
   endif
 
   endif
+
+! check that we need to create at least one PML, otherwise this code is useless
+  if (.not. ADD_ON_THE_XMIN_SURFACE .and. .not. ADD_ON_THE_XMAX_SURFACE &
+      .and. .not. ADD_ON_THE_YMIN_SURFACE .and. .not. ADD_ON_THE_YMAX_SURFACE &
+      .and. .not. ADD_ON_THE_ZMIN_SURFACE .and. .not. ADD_ON_THE_ZMAX_SURFACE) &
+    stop 'Error: the purpose of this code is to create at least one PML, but you are creating none'
 
 ! ************* read mesh elements and generate CPML flags *************
 
@@ -284,32 +350,42 @@
     i8 = ibool(8,ispec)
 
 ! Xmin CPML
+  if (ADD_ON_THE_XMIN_SURFACE) then
     limit = xmin + THICKNESS_OF_XMIN_PML * SMALL_PERCENTAGE_TOLERANCE
     if (x(i1) < limit .and. x(i2) < limit .and. x(i3) < limit .and. x(i4) < limit .and. &
        x(i5) < limit .and. x(i6) < limit .and. x(i7) < limit .and. x(i8) < limit) is_X_CPML(ispec) = .true.
+  endif
 
 ! Xmax CPML
+  if (ADD_ON_THE_XMAX_SURFACE) then
     limit = xmax - THICKNESS_OF_XMAX_PML * SMALL_PERCENTAGE_TOLERANCE
     if (x(i1) > limit .and. x(i2) > limit .and. x(i3) > limit .and. x(i4) > limit .and. &
        x(i5) > limit .and. x(i6) > limit .and. x(i7) > limit .and. x(i8) > limit) is_X_CPML(ispec) = .true.
+  endif
 
 ! Ymin CPML
+  if (ADD_ON_THE_YMIN_SURFACE) then
     limit = ymin + THICKNESS_OF_YMIN_PML * SMALL_PERCENTAGE_TOLERANCE
     if (y(i1) < limit .and. y(i2) < limit .and. y(i3) < limit .and. y(i4) < limit .and. &
        y(i5) < limit .and. y(i6) < limit .and. y(i7) < limit .and. y(i8) < limit) is_Y_CPML(ispec) = .true.
+  endif
 
 ! Ymax CPML
+  if (ADD_ON_THE_YMAX_SURFACE) then
     limit = ymax - THICKNESS_OF_YMAX_PML * SMALL_PERCENTAGE_TOLERANCE
     if (y(i1) > limit .and. y(i2) > limit .and. y(i3) > limit .and. y(i4) > limit .and. &
        y(i5) > limit .and. y(i6) > limit .and. y(i7) > limit .and. y(i8) > limit) is_Y_CPML(ispec) = .true.
+  endif
 
 ! Zmin CPML
+  if (ADD_ON_THE_ZMIN_SURFACE) then
     limit = zmin + THICKNESS_OF_ZMIN_PML * SMALL_PERCENTAGE_TOLERANCE
     if (z(i1) < limit .and. z(i2) < limit .and. z(i3) < limit .and. z(i4) < limit .and. &
        z(i5) < limit .and. z(i6) < limit .and. z(i7) < limit .and. z(i8) < limit) is_Z_CPML(ispec) = .true.
+  endif
 
 ! Zmax CPML
-  if (ALSO_ADD_ON_THE_TOP_SURFACE) then
+  if (ADD_ON_THE_ZMAX_SURFACE) then
     limit = zmax - THICKNESS_OF_ZMAX_PML * SMALL_PERCENTAGE_TOLERANCE
     if (z(i1) > limit .and. z(i2) > limit .and. z(i3) > limit .and. z(i4) > limit .and. &
        z(i5) > limit .and. z(i6) > limit .and. z(i7) > limit .and. z(i8) > limit) is_Z_CPML(ispec) = .true.
@@ -322,14 +398,19 @@
   print *,'Found ',count(is_X_CPML),' X_CPML elements'
   print *,'Found ',count(is_Y_CPML),' Y_CPML elements'
   print *,'Found ',count(is_Z_CPML),' Z_CPML elements'
-  if (ALSO_ADD_ON_THE_TOP_SURFACE) print *,'    (also converted the top surface from free surface to CPML)'
+  if (ADD_ON_THE_XMIN_SURFACE) print *,'    (converted the Xmin surface from free surface to CPML)'
+  if (ADD_ON_THE_XMAX_SURFACE) print *,'    (converted the Xmax surface from free surface to CPML)'
+  if (ADD_ON_THE_YMIN_SURFACE) print *,'    (converted the Ymin surface from free surface to CPML)'
+  if (ADD_ON_THE_YMAX_SURFACE) print *,'    (converted the Ymax surface from free surface to CPML)'
+  if (ADD_ON_THE_ZMIN_SURFACE) print *,'    (converted the Zmin surface from free surface to CPML)'
+  if (ADD_ON_THE_ZMAX_SURFACE) print *,'    (converted the Zmax surface from free surface to CPML)'
   print *
 
-  if (count(is_X_CPML) == 0 .or. count(is_Y_CPML) == 0 .or. count(is_Z_CPML) == 0) &
-    stop 'error: no CPML elements detected on at least one of the sides!'
+  if (count(is_X_CPML) == 0 .and. count(is_Y_CPML) == 0 .and. count(is_Z_CPML) == 0) &
+    stop 'error: no CPML elements detected on any of the sides!'
 
   number_of_CPML_elements = 0
-  do ispec=1,nspec
+  do ispec = 1,nspec
     if (is_X_CPML(ispec) .or. is_Y_CPML(ispec) .or. is_Z_CPML(ispec)) &
           number_of_CPML_elements = number_of_CPML_elements + 1
   enddo
