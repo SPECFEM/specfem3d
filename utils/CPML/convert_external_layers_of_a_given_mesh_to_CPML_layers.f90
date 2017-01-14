@@ -122,7 +122,7 @@
   print *
 
   print *,'1 = enter the CPML thickness values to create manually'
-  print *,'2 = read them from a file created by the previous code, xconvert_external_layers_of_a_given_mesh_to_CPML_layers'
+  print *,'2 = read them from a file created by the previous code, xadd_CPML_layers_to_an_existing_mesh'
   print *,'3 = exit'
   read(*,*) iread
   if (iread /= 1 .and. iread /= 2) stop 'exiting...'
