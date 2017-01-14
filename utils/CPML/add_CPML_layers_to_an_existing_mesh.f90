@@ -195,6 +195,8 @@
 
 ! hardwire GLL point location values to avoid having to link with a long library to compute them
   xigll(:) = (/ -1.d0 , -0.654653670707977d0 , 0.d0 , 0.654653670707977d0 , 1.d0 /)
+  yigll(:) = xigll(:)
+  zigll(:) = xigll(:)
 
 ! compute the derivatives of the 3D shape functions for a 8-node element
   call get_shape3D(dershape3D,xigll,yigll,zigll,NGNOD,NGLLX,NGLLY,NGLLZ,NDIM)
