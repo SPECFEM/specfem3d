@@ -1036,6 +1036,9 @@
 
         ! add warning if estimate is poor
         ! (usually means receiver outside the mesh given by the user)
+!! DK DK warning: this should be made a relative distance rather than absolute, now that we use the code at many different scales
+!! DK DK warning: this should be made a relative distance rather than absolute, now that we use the code at many different scales
+!! DK DK warning: this should be made a relative distance rather than absolute, now that we use the code at many different scales
         if (final_distance(irec) > 3000.d0) then
           write(IMAIN,*) '*******************************************************'
           write(IMAIN,*) '***** WARNING: receiver location estimate is poor *****'
@@ -1055,6 +1058,9 @@
 
     ! add warning if estimate is poor
     ! (usually means receiver outside the mesh given by the user)
+!! DK DK warning: this should be made a relative distance rather than absolute, now that we use the code at many different scales
+!! DK DK warning: this should be made a relative distance rather than absolute, now that we use the code at many different scales
+!! DK DK warning: this should be made a relative distance rather than absolute, now that we use the code at many different scales
     if (final_distance_max > 1000.d0) then
       write(IMAIN,*)
       write(IMAIN,*) '************************************************************'
