@@ -225,7 +225,7 @@
   call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
 
   ! compute typical size of elements
-  if (USE_DISTANCE_CRITERION) then
+  if (USE_DISTANCE_CRITERION_SOURCES) then
     ! gets mesh dimensions
     call check_mesh_distances(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
                               x_min_glob,x_max_glob,y_min_glob,y_max_glob,z_min_glob,z_max_glob, &
@@ -340,7 +340,7 @@
     do ispec=1,NSPEC_AB
 
       ! exclude elements that are too far from target
-      if (USE_DISTANCE_CRITERION) then
+      if (USE_DISTANCE_CRITERION_SOURCES) then
         iglob = ibool(MIDX,MIDY,MIDZ,ispec)
         dist_squared = (x_target_source - dble(xstore(iglob)))**2 &
                      + (y_target_source - dble(ystore(iglob)))**2 &
