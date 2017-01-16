@@ -337,7 +337,7 @@
     iy_initial_guess_source = 1
     iz_initial_guess_source = 1
 
-    do ispec=1,NSPEC_AB
+    do ispec = 1,NSPEC_AB
 
       ! exclude elements that are too far from target
       if (USE_DISTANCE_CRITERION_SOURCES) then

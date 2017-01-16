@@ -172,6 +172,9 @@
 
 ! receivers
 
+! flag to exclude elements that are too far from target in receiver detection
+  logical, parameter :: USE_DISTANCE_CRITERION_RECEIVERS = .true.
+
 ! no Lagrange interpolation for seismograms (we then take the value at the closest NGLL point, which is less accurate but faster)
   logical, parameter :: FASTER_RECEIVERS_POINTS_ONLY = .false.
 
