@@ -907,8 +907,6 @@
             f0 = hdur(isource)
             if (USE_RICKER_TIME_FUNCTION) then
               write(IMAIN,*) '  using a source of dominant frequency ',f0
-              write(IMAIN,*) '  lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
-              write(IMAIN,*) '  lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
 
               t0_ricker = 1.2d0/f0
               write(IMAIN,*) '  t0_ricker = ',t0_ricker
@@ -1004,6 +1002,9 @@
 
         ! add warning if estimate is poor
         ! (usually means source outside the mesh given by the user)
+!! DK DK warning: this should be made a relative distance rather than absolute, now that we use the code at many different scales
+!! DK DK warning: this should be made a relative distance rather than absolute, now that we use the code at many different scales
+!! DK DK warning: this should be made a relative distance rather than absolute, now that we use the code at many different scales
         if (final_distance_source(isource) > 3000.d0) then
           write(IMAIN,*)
           write(IMAIN,*) '*****************************************************'
