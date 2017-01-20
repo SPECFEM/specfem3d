@@ -162,6 +162,14 @@
 
   real(kind=CUSTOM_REAL) :: xstore_loc,ystore_loc,zstore_loc
 
+  ! location search
+  double precision :: typical_size_squared
+  real(kind=CUSTOM_REAL) :: distance_min_glob,distance_max_glob
+  real(kind=CUSTOM_REAL) :: elemsize_min_glob,elemsize_max_glob
+  real(kind=CUSTOM_REAL) :: x_min_glob,x_max_glob
+  real(kind=CUSTOM_REAL) :: y_min_glob,y_max_glob
+  real(kind=CUSTOM_REAL) :: z_min_glob,z_max_glob
+
   ! get MPI starting time
   time_start = wtime()
 
@@ -195,6 +203,21 @@
 
   ! define topology of the control element
   call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
+
+  ! compute typical size of elements
+  if (USE_DISTANCE_CRITERION_RECEIVERS) then
+    ! gets mesh dimensions
+    call check_mesh_distances(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
+                              x_min_glob,x_max_glob,y_min_glob,y_max_glob,z_min_glob,z_max_glob, &
+                              elemsize_min_glob,elemsize_max_glob, &
+                              distance_min_glob,distance_max_glob)
+
+    ! sets typical element size for search
+    typical_size_squared =  elemsize_max_glob
+
+    ! use 10 times the distance as a criterion for source detection
+    typical_size_squared = (10. * typical_size_squared)**2
+  endif
 
   ! opens STATIONS or STATIONS_ADJOINT file
   open(unit=IIN,file=trim(rec_filename),status='old',action='read',iostat=ier)
@@ -399,9 +422,20 @@
     distmin_squared = HUGEVAL
 
     if (.not. SU_FORMAT) then
+
       ! determines closest GLL point
       ispec_selected_rec(irec) = 0
-      do ispec=1,NSPEC_AB
+
+      do ispec = 1,NSPEC_AB
+
+          ! exclude elements that are too far from target
+          if (USE_DISTANCE_CRITERION_RECEIVERS) then
+            iglob = ibool(MIDX,MIDY,MIDZ,ispec)
+            dist_squared = (x_target(irec) - dble(xstore(iglob)))**2 &
+                         + (y_target(irec) - dble(ystore(iglob)))**2 &
+                         + (z_target(irec) - dble(zstore(iglob)))**2
+            if (dist_squared > typical_size_squared) cycle
+          endif
 
         ! define the interval in which we look for points
         if (FASTER_RECEIVERS_POINTS_ONLY) then
@@ -467,17 +501,30 @@
 
       ! end of loop on all the spectral elements in current slice
       enddo
+
     else
+
       ! SeismicUnix format
       ispec_selected_rec(irec) = 0
       ix_initial_guess(irec) = 0
       iy_initial_guess(irec) = 0
       iz_initial_guess(irec) = 0
       final_distance(irec) = HUGEVAL
+
       if ((x_target(irec) >= xmin .and. x_target(irec) <= xmax) .and. &
           (y_target(irec) >= ymin .and. y_target(irec) <= ymax) .and. &
           (z_target(irec) >= zmin .and. z_target(irec) <= zmax)) then
-        do ispec=1,NSPEC_AB
+
+        do ispec = 1,NSPEC_AB
+
+          ! exclude elements that are too far from target
+          if (USE_DISTANCE_CRITERION_RECEIVERS) then
+            iglob = ibool(MIDX,MIDY,MIDZ,ispec)
+            dist_squared = (x_target(irec) - dble(xstore(iglob)))**2 &
+                         + (y_target(irec) - dble(ystore(iglob)))**2 &
+                         + (z_target(irec) - dble(zstore(iglob)))**2
+            if (dist_squared > typical_size_squared) cycle
+          endif
 
            ! the following original implementation is very slow
            !iglob_temp=reshape(ibool(:,:,:,ispec),(/NGLLX*NGLLY*NGLLZ/))
@@ -823,7 +870,8 @@
         ! (useful if user gives a receiver outside the mesh for instance)
         ! we can go slightly outside the [1,1] segment since with finite elements
         ! the polynomial solution is defined everywhere
-        ! this can be useful for convergence of itertive scheme with distorted elements
+        ! this can be useful for convergence of itertive scheme with distorted elements.
+        ! this is purposely set to 1.10, do *NOT* set it back to 1.00 because 1.10 gives more accurate locations
         if (xi > 1.10d0) xi = 1.10d0
         if (xi < -1.10d0) xi = -1.10d0
         if (eta > 1.10d0) eta = 1.10d0
@@ -988,6 +1036,9 @@
 
         ! add warning if estimate is poor
         ! (usually means receiver outside the mesh given by the user)
+!! DK DK warning: this should be made a relative distance rather than absolute, now that we use the code at many different scales
+!! DK DK warning: this should be made a relative distance rather than absolute, now that we use the code at many different scales
+!! DK DK warning: this should be made a relative distance rather than absolute, now that we use the code at many different scales
         if (final_distance(irec) > 3000.d0) then
           write(IMAIN,*) '*******************************************************'
           write(IMAIN,*) '***** WARNING: receiver location estimate is poor *****'
@@ -1007,6 +1058,9 @@
 
     ! add warning if estimate is poor
     ! (usually means receiver outside the mesh given by the user)
+!! DK DK warning: this should be made a relative distance rather than absolute, now that we use the code at many different scales
+!! DK DK warning: this should be made a relative distance rather than absolute, now that we use the code at many different scales
+!! DK DK warning: this should be made a relative distance rather than absolute, now that we use the code at many different scales
     if (final_distance_max > 1000.d0) then
       write(IMAIN,*)
       write(IMAIN,*) '************************************************************'

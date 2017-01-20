@@ -148,7 +148,7 @@
 ! sources
 
 ! flag to exclude elements that are too far from target in source detection
-  logical, parameter :: USE_DISTANCE_CRITERION = .true.
+  logical, parameter :: USE_DISTANCE_CRITERION_SOURCES = .true.
 
 ! interpolates position to find the best possible location for the source, between GLL points if needed.
 ! note: this can be turned off to speedup location search and locate the source at the closest GLL point instead.
@@ -171,6 +171,9 @@
   double precision, parameter :: SOURCE_DECAY_MIMIC_TRIANGLE = 1.628d0
 
 ! receivers
+
+! flag to exclude elements that are too far from target in receiver detection
+  logical, parameter :: USE_DISTANCE_CRITERION_RECEIVERS = .true.
 
 ! no Lagrange interpolation for seismograms (we then take the value at the closest NGLL point, which is less accurate but faster)
   logical, parameter :: FASTER_RECEIVERS_POINTS_ONLY = .false.
@@ -368,6 +371,9 @@
 ! setting it to 5 instead of 4 ensures that the result obtained is not compiler dependent
 ! (when using 4 only some small discrepancies were observed)
   integer, parameter :: NUM_ITER = 5
+
+! flag to exclude elements that are too far from target in topography detection
+  logical, parameter :: USE_DISTANCE_CRITERION_TOPO = .true.
 
 ! size of topography and bathymetry file for Southern California
   integer, parameter :: NX_TOPO_FILE = 1401,NY_TOPO_FILE = 1001

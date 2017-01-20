@@ -163,7 +163,7 @@
         ! elastic wave field
         if (ispec_is_elastic(ispec)) then
           ! interpolates displ/veloc/accel at receiver locations
-          call compute_interpolated_dva(displ,veloc,accel,NGLOB_AB, &
+          call compute_interpolated_dva_viscoelast(displ,veloc,accel,NGLOB_AB, &
                                         ispec,NSPEC_AB,ibool, &
                                         xi_r,eta_r,gamma_r, &
                                         hxir,hetar,hgammar, &
@@ -205,7 +205,7 @@
         ! poroelastic wave field
         if (ispec_is_poroelastic(ispec)) then
           ! interpolates displ/veloc/accel at receiver locations
-          call compute_interpolated_dva(displs_poroelastic,velocs_poroelastic,accels_poroelastic,NGLOB_AB, &
+          call compute_interpolated_dva_viscoelast(displs_poroelastic,velocs_poroelastic,accels_poroelastic,NGLOB_AB, &
                                         ispec,NSPEC_AB,ibool, &
                                         xi_r,eta_r,gamma_r, &
                                         hxir,hetar,hgammar, &
@@ -219,7 +219,7 @@
         ! elastic wave field
         if (ispec_is_elastic(ispec)) then
           ! backward field: interpolates displ/veloc/accel at receiver locations
-          call compute_interpolated_dva(b_displ,b_veloc,b_accel,NGLOB_ADJOINT, &
+          call compute_interpolated_dva_viscoelast(b_displ,b_veloc,b_accel,NGLOB_ADJOINT, &
                                         ispec,NSPEC_AB,ibool, &
                                         xi_r,eta_r,gamma_r, &
                                         hxir,hetar,hgammar, &
@@ -335,8 +335,7 @@
       endif
 
       ! only one scalar in the case of pressure
-      if (SAVE_SEISMOGRAMS_PRESSURE) &
-        seismograms_p(1,irec_local,it) = real(pd,kind=CUSTOM_REAL)
+      if (SAVE_SEISMOGRAMS_PRESSURE) seismograms_p(1,irec_local,it) = real(pd,kind=CUSTOM_REAL)
 
       ! adjoint simulations
       if (SIMULATION_TYPE == 2) seismograms_eps(:,:,irec_local,it) = eps_s(:,:)

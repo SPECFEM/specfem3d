@@ -7,7 +7,7 @@ import sys
 from save_fault_nodes_elements import *
 from absorbing_boundary import *
 
-def export_block(nb,vp,vs,rho,count=6,Q=13):
+def export_block(nb,vp,vs,rho,count=6,Q=9999):
     cubit.cmd('block {0}  name "elastic {0}" '.format(nb))        # material region  
     cubit.cmd('block {0} attribute count {1}'.format(nb,count)) 
     cubit.cmd('block {0} attribute index 1 1'.format(nb))      # flag for fault side 1 
@@ -25,8 +25,10 @@ def define_block_hex27(i):
 
 cubit.init([''])
 #cubit.cmd('open "tpv29.cub"')
-cubit.cmd('open "slab_rotate_refine.cub"')
+cubit.cmd('open "slab_rotate.cub"')
 cubit.cmd('vol all scale 1000')
+cubit.cmd('vol all scale 1.11195') 
+#This reflects the fact that 1deg=111.195km
 ########### Fault elements and nodes ###############
 os.system('mkdir -p MESH') 
 cubit.cmd('unmerge surf 3')

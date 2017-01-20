@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import cubit
+cubit.init([""])
+
 
 import os
 import sys
@@ -28,7 +30,12 @@ print "path: "
 print sys.path
 print ""
 
-from geocubitlib import boundary_definition,cubit2specfem3d
+try:
+	from geocubitlib import boundary_definition
+	from geocubitlib import cubit2specfem3d
+except:
+    import boundary_definition
+	import cubit2specfem3d
 
 # bounding faces
 boundary_definition.entities=['face']

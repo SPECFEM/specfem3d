@@ -71,7 +71,7 @@ end module constants
   integer :: NSTEP
   double precision :: DT
 
-  ! VM VM number of time step for external source time function
+  ! number of time step for external source time function
   integer :: NSTEP_STF
 
   ! LDD Runge-Kutta time scheme
@@ -90,6 +90,10 @@ end module constants
   ! attenuation
   logical :: USE_OLSEN_ATTENUATION
   double precision :: OLSEN_ATTENUATION_RATIO,ATTENUATION_f0_REFERENCE
+
+  ! attenuation period range over which we try to mimic a constant Q factor
+  double precision :: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD
+  logical :: COMPUTE_FREQ_BAND_AUTOMATIC
 
   ! absorbing boundaries
   logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE
@@ -124,7 +128,7 @@ end module constants
   logical :: USE_FORCE_POINT_SOURCE
   logical :: USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
 
-  !! VM VM add external source time function
+  ! external source time function
   logical ::  EXTERNAL_STF
 
   logical :: USE_TRICK_FOR_BETTER_PRESSURE,USE_SOURCE_ENCODING,OUTPUT_ENERGY

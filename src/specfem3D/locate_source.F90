@@ -225,7 +225,7 @@
   call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
 
   ! compute typical size of elements
-  if (USE_DISTANCE_CRITERION) then
+  if (USE_DISTANCE_CRITERION_SOURCES) then
     ! gets mesh dimensions
     call check_mesh_distances(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
                               x_min_glob,x_max_glob,y_min_glob,y_max_glob,z_min_glob,z_max_glob, &
@@ -337,10 +337,10 @@
     iy_initial_guess_source = 1
     iz_initial_guess_source = 1
 
-    do ispec=1,NSPEC_AB
+    do ispec = 1,NSPEC_AB
 
       ! exclude elements that are too far from target
-      if (USE_DISTANCE_CRITERION) then
+      if (USE_DISTANCE_CRITERION_SOURCES) then
         iglob = ibool(MIDX,MIDY,MIDZ,ispec)
         dist_squared = (x_target_source - dble(xstore(iglob)))**2 &
                      + (y_target_source - dble(ystore(iglob)))**2 &
@@ -668,13 +668,17 @@
         gamma = gamma + dgamma
 
         ! impose that we stay in that element
-        ! (useful if user gives a source outside the mesh for instance)
-        if (xi > 1.d0) xi = 1.d0
-        if (xi < -1.d0) xi = -1.d0
-        if (eta > 1.d0) eta = 1.d0
-        if (eta < -1.d0) eta = -1.d0
-        if (gamma > 1.d0) gamma = 1.d0
-        if (gamma < -1.d0) gamma = -1.d0
+        ! (useful if user gives a receiver outside the mesh for instance)
+        ! we can go slightly outside the [1,1] segment since with finite elements
+        ! the polynomial solution is defined everywhere
+        ! this can be useful for convergence of itertive scheme with distorted elements.
+        ! this is purposely set to 1.10, do *NOT* set it back to 1.00 because 1.10 gives more accurate locations
+        if (xi > 1.10d0) xi = 1.10d0
+        if (xi < -1.10d0) xi = -1.10d0
+        if (eta > 1.10d0) eta = 1.10d0
+        if (eta < -1.10d0) eta = -1.10d0
+        if (gamma > 1.10d0) gamma = 1.10d0
+        if (gamma < -1.10d0) gamma = -1.10d0
 
       enddo
 
@@ -903,8 +907,6 @@
             f0 = hdur(isource)
             if (USE_RICKER_TIME_FUNCTION) then
               write(IMAIN,*) '  using a source of dominant frequency ',f0
-              write(IMAIN,*) '  lambda_S at dominant frequency = ',3000./sqrt(3.)/f0
-              write(IMAIN,*) '  lambda_S at highest significant frequency = ',3000./sqrt(3.)/(2.5*f0)
 
               t0_ricker = 1.2d0/f0
               write(IMAIN,*) '  t0_ricker = ',t0_ricker
@@ -1000,6 +1002,9 @@
 
         ! add warning if estimate is poor
         ! (usually means source outside the mesh given by the user)
+!! DK DK warning: this should be made a relative distance rather than absolute, now that we use the code at many different scales
+!! DK DK warning: this should be made a relative distance rather than absolute, now that we use the code at many different scales
+!! DK DK warning: this should be made a relative distance rather than absolute, now that we use the code at many different scales
         if (final_distance_source(isource) > 3000.d0) then
           write(IMAIN,*)
           write(IMAIN,*) '*****************************************************'

@@ -31,6 +31,7 @@ fault=1;
 dat = FSEM3D_snapshot(isnap,data_dir,fault,'single');
 Dx=dat.Dx;
 Dz=dat.Dz;
+Z = dat.Z;
 clear dat
 
 list = dir([db_dir '/*fault_db.bin']); 
@@ -58,8 +59,24 @@ for p=1:nproc
 
   Dpx = Dx(i0+ibool);
   Dpz = Dz(i0+ibool);
-  Px = Px + jacw*Dpx;
-  Pz = Pz + jacw*Dpz;
+   mu=3200*3200*2110;
+  if(Z(i0+ibool)<-4) 
+      mu = 3200*3200*2720;
+  end
+  if(Z(i0+ibool)<-24) 
+          mu = 3700*3700*2790;
+  end
+      if(Z(i0+ibool)<-46)
+          mu = 4550*4550*3380;
+      end
+  
+     
+      
+  Px = Px + jacw*Dpx*mu;
+  if(Z(i0+ibool) < -10.3)
+     % Z(i0+ibool)
+    Pz = Pz + jacw*Dpz*mu;
+  end
   Dp2 = Dpx.*Dpx+Dpz.*Dpz;
   A = A + jacw*(Dp2>Dmin^2);
 

@@ -75,15 +75,8 @@ print "path: "
 print sys.path
 print ""
 
-##
-from geocubitlib import boundary_definition
-
 # avoids assigning empty blocks
 cubit.cmd('set duplicate block elements on')
-
-# bounding faces
-boundary_definition.entities=['face']
-boundary_definition.define_bc(boundary_definition.entities,parallel=True)
 
 # creates MESH/ directory for file output
 os.system('mkdir -p MESH')
@@ -93,13 +86,17 @@ os.system('mkdir -p MESH')
 use_explicit=0
 
 if use_explicit == 1:
+    from geocubitlib import boundary_definition
+    # bounding faces
+    boundary_definition.entities=['face']
+    boundary_definition.define_bc(boundary_definition.entities,parallel=True)
     from geocubitlib import cubit2specfem3d
     print ""
     print "material properties: assigned as block attributes"
     print ""
     # sets the id of the volume block
     # (volume block starts at id 4)
-    id_block = 4
+    id_block = 1
     print "cubit block:"
     print "  volume block id = " + str(id_block)
     print ""
@@ -127,6 +124,9 @@ if use_explicit == 1:
     print ""
     # Export to SPECFEM3D format
     cubit2specfem3d.export2SPECFEM3D('MESH/')
+    # backup cubit
+    cubit.cmd('export mesh "MESH/top.e" dimension 3 overwrite')
+    cubit.cmd('save as "MESH/meshing.cub" overwrite')
 else:
     from geocubitlib import exportlib
     print ""
@@ -134,7 +134,7 @@ else:
     print ""
     # Export to SPECFEM3D format
     # note: exportlib-commands will overwrite material properties
-    exportlib.collect(outdir='MESH/')
+    exportlib.define_blocks(outdir='MESH/',save_cubfile=True,outfilename='top')
     exportlib.e2SEM(outdir='MESH/')
     # Define material properties
     print "#### DEFINE MATERIAL PROPERTIES #######################"
@@ -157,7 +157,5 @@ else:
     f.close()
 
 # backup cubit
-cubit.cmd('export mesh "MESH/top.e" dimension 3 overwrite')
-cubit.cmd('save as "MESH/meshing.cub" overwrite')
 
 # all files needed by xdecompose_mesh are now in directory MESH/

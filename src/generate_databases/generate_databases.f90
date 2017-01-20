@@ -207,16 +207,16 @@
 
 ! open main output file, only written to by process 0
   if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
-    open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_mesher.txt',status='unknown')
+    open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_generate_databases.txt',status='unknown')
 
 ! get MPI starting time
   time_start = wtime()
 
   if (myrank == 0) then
     write(IMAIN,*)
-    write(IMAIN,*) '******************************************'
-    write(IMAIN,*) '*** Specfem3D MPI Mesher - f90 version ***'
-    write(IMAIN,*) '******************************************'
+    write(IMAIN,*) '*****************************************'
+    write(IMAIN,*) '*** Specfem3D MPI database generation ***'
+    write(IMAIN,*) '*****************************************'
     write(IMAIN,*)
     write(IMAIN,*) 'Version: ', git_version
     write(IMAIN,*)
@@ -231,9 +231,9 @@
 
   if (myrank == 0) then
     write(IMAIN,*)
-    write(IMAIN,*) '**************************'
-    write(IMAIN,*) 'creating mesh in the model'
-    write(IMAIN,*) '**************************'
+    write(IMAIN,*) '************************************'
+    write(IMAIN,*) 'reading partition files in the model'
+    write(IMAIN,*) '************************************'
     write(IMAIN,*)
     call flush_IMAIN()
   endif

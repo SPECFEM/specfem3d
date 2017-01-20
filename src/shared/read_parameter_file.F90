@@ -142,6 +142,13 @@
     call read_value_double_precision(ATTENUATION_f0_REFERENCE, 'ATTENUATION_f0_REFERENCE', ier)
     if (ier /= 0) stop 'Error reading Par_file parameter ATTENUATION_f0_REFERENCE'
 
+    call read_value_double_precision(MIN_ATTENUATION_PERIOD, 'MIN_ATTENUATION_PERIOD', ier)
+    if (ier /= 0) stop 'Error reading Par_file parameter MIN_ATTENUATION_PERIOD'
+    call read_value_double_precision(MAX_ATTENUATION_PERIOD, 'MAX_ATTENUATION_PERIOD', ier)
+    if (ier /= 0) stop 'Error reading Par_file parameter MAX_ATTENUATION_PERIOD'
+    call read_value_logical(COMPUTE_FREQ_BAND_AUTOMATIC, 'COMPUTE_FREQ_BAND_AUTOMATIC', ier)
+    if (ier /= 0) stop 'Error reading Par_file parameter COMPUTE_FREQ_BAND_AUTOMATIC'
+
     call read_value_logical(USE_OLSEN_ATTENUATION, 'USE_OLSEN_ATTENUATION', ier)
     if (ier /= 0) stop 'Error reading Par_file parameter USE_OLSEN_ATTENUATION'
     call read_value_double_precision(OLSEN_ATTENUATION_RATIO, 'OLSEN_ATTENUATION_RATIO', ier)
@@ -450,6 +457,9 @@
     call bcast_all_singlel_world(ANISOTROPY)
     call bcast_all_singlel_world(GRAVITY)
     call bcast_all_singledp_world(ATTENUATION_f0_REFERENCE)
+    call bcast_all_singledp_world(MIN_ATTENUATION_PERIOD)
+    call bcast_all_singledp_world(MAX_ATTENUATION_PERIOD)
+    call bcast_all_singlel_world(COMPUTE_FREQ_BAND_AUTOMATIC)
     call bcast_all_singlel_world(USE_OLSEN_ATTENUATION)
     call bcast_all_singledp_world(OLSEN_ATTENUATION_RATIO)
     call bcast_all_string_world(TOMOGRAPHY_PATH)
@@ -531,6 +541,10 @@
   ! time steps
   if (NSTEP <= 0) &
     stop 'NSTEP must be > 0 for any simulation'
+
+  ! period band over which we mimic a constant Q factor for attenuation
+  if (.not. COMPUTE_FREQ_BAND_AUTOMATIC .and. MIN_ATTENUATION_PERIOD >= MAX_ATTENUATION_PERIOD) &
+    stop 'must have MIN_ATTENUATION_PERIOD < MAX_ATTENUATION_PERIOD'
 
   ! seismogram output
   if (.not. SAVE_SEISMOGRAMS_DISPLACEMENT .and. .not. SAVE_SEISMOGRAMS_VELOCITY .and. &

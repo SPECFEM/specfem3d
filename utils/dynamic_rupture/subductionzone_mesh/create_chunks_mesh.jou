@@ -1,4 +1,4 @@
-#open "/export/nobackup/kbai/RUPTURE_Simulation/subductzone/jpn_subduct_zone_35_42/slab_rotate_before_loft.cub"
+open "./slab_rotate_before_loft.cub"
 create volume loft surface 1 15
 create volume loft surface 2 16
 create volume loft surface 4 18 match vertex 3 42 match vertex 12 41
@@ -14,7 +14,7 @@ merge surf 44 54 tolerance 10  #dirty operation
 merge surf 31 49 tolerance 10  #dirty operation
 
 compress all
-vol all size 10
+vol all size 8
 vol 1 scheme sweep source 5 target 7
 vol 2 scheme sweep source 9 target 11
 surf 5 scheme pave
@@ -37,5 +37,7 @@ vol 9 scheme sweep source 11 target 37
 mesh vol 9
 vol 10 scheme sweep source 7 target 39
 mesh vol 10
-refine surf 3 depth 10 smooth
-save as "/export/nobackup/kbai/RUPTURE_Simulation/subductzone/jpn_subduct_zone_35_42/slab_rotate.cub" overwrite
+refine surf 3 depth 10 
+#save as "/export/nobackup/kbai/RUPTURE_Simulation/subductzone/jpn_subduct_zone_35_42/slab_rotate.cub" overwrite
+save as "./slab_rotate.cub" overwrite
+exit

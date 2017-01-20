@@ -1,15 +1,13 @@
 #!/usr/bin/python2.7
-import numpy as np
-import matplotlib.pyplot as plt
 #from matplotlib.mlab import griddata
 #this script generates topology and slab interface in cubit
-import os
-import sys
 import cubit
 import os
 import sys
 import math
- 
+import numpy as np
+#import matplotlib.pyplot as plt
+
 
 cubit.init([''])
 cubit.cmd('reset')
@@ -19,8 +17,12 @@ Lonmin = 136
 Lonmax = 150
 xc = 0.5*(Lonmin+Lonmax)
 yc = 0.5*(Latmin+Latmax)
-Lat2dis = 111.195 # 100km = 1deg in latitude
-Lon2dis = Lat2dis * math.cos(math.radians(0.5*(Latmin+Latmax)))
+Lat2dis = 100.0 
+# The true latitude to distance conversion ratio should be 111.195km=1deg.
+#We will reflect that at the end of the exportmesh.py by scaling the model
+#up by a factor of 1.1195. The reason we don't do it here is that it will 
+#change the whole script of mesh generation.
+Lon2dis = 76.0
 Meshsize = 4.0 # mesh size set to 4.0 km
 radius = 1000.0
 cuttingdepth = -100.0
@@ -78,7 +80,7 @@ def generating_contour(X,Y,Z):
 
 data = import_slab_data()
 
-plt.scatter(data[:,0],data[:,1],1.0,c=data[:,2],edgecolors='none')
+#plt.scatter(data[:,0],data[:,1],1.0,c=data[:,2],edgecolors='none')
 
 if Plotsquare:
     XB = [393.3,186.3,-393.3,-186.3,393.3]
@@ -87,11 +89,11 @@ if Plotsquare:
     YB = np.array(YB)/Lat2dis+yc
     print(XB)
     print(YB)
-    plt.plot(XB,YB)
+    #plt.plot(XB,YB)
 #Xm,Ym,Zm = generating_contour(data[:,0],data[:,1],data[:,2])
 #plt.contourf(Xm,Ym,Zm)
-    plt.colorbar()
-    plt.show()
+    #plt.colorbar()
+    #plt.show()
 np.savetxt('outputslab.txt',data,delimiter=',')
 
 #exit()
@@ -133,16 +135,16 @@ print('total curve %d'%n_curve)
 #cubit.cmd('create surface skin curve %d to %d'%(ii,ii+20))
 data = import_elev_data()
 if Plotsquare:
-    plt.scatter(data[:,0],data[:,1],1.0,c=data[:,2],edgecolors='none')
+    #plt.scatter(data[:,0],data[:,1],1.0,c=data[:,2],edgecolors='none')
     XB = [393.3,186.3,-393.3,-186.3,393.3]
     YB = [308.7,-464.0,-308.7,464.0,308.7]
     XB = np.array(XB)/Lon2dis+xc
     YB = np.array(YB)/Lat2dis+yc
-    plt.plot(XB,YB)
+    #plt.plot(XB,YB)
 #Xm,Ym,Zm = generating_contour(data[:,0],data[:,1],data[:,2])
 #plt.contourf(Xm,Ym,Zm)
-    plt.colorbar()
-    plt.show()
+    #plt.colorbar()
+    #plt.show()
 np.savetxt('outputelev.txt',data,delimiter=',')
 
 

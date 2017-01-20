@@ -139,7 +139,7 @@
 
 ! get approximate topography elevation at source long/lat coordinates
 
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,HUGEVAL,TINYVAL,MIDX,MIDY,MIDZ
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,HUGEVAL,TINYVAL,MIDX,MIDY,MIDZ,USE_DISTANCE_CRITERION_TOPO
 
   implicit none
 
@@ -168,9 +168,6 @@
   integer :: iselected,jselected,iface_selected
   integer :: inode,iadjust,jadjust
 
-  ! faster element search
-  logical,parameter :: USE_DISTANCE_CRITERION_FOR_TOPO = .true.
-
   real(kind=CUSTOM_REAL) :: typical_size
   logical :: located_target
 
@@ -178,11 +175,10 @@
   target_elevation = 0.0_CUSTOM_REAL
   target_distmin = HUGEVAL
 
-
   if (num_free_surface_faces > 0) then
 
     ! computes typical size of elements at the surface (uses first element for estimation)
-    if (USE_DISTANCE_CRITERION_FOR_TOPO) then
+    if (USE_DISTANCE_CRITERION_TOPO) then
       ispec = free_surface_ispec(1)
       typical_size =  (xstore(ibool(1,1,1,ispec)) - xstore(ibool(NGLLX,NGLLY,NGLLZ,ispec)))**2 &
                     + (ystore(ibool(1,1,1,ispec)) - ystore(ibool(NGLLX,NGLLY,NGLLZ,ispec)))**2
@@ -204,7 +200,7 @@
       ispec = free_surface_ispec(iface)
 
       ! exclude elements that are too far from target
-      if (USE_DISTANCE_CRITERION_FOR_TOPO) then
+      if (USE_DISTANCE_CRITERION_TOPO) then
         iglob = ibool(MIDX,MIDY,MIDZ,ispec)
         dist = (x_target - xstore(iglob))**2 + (y_target - ystore(iglob))**2
         if (dist > typical_size) cycle
@@ -306,7 +302,7 @@
 
 ! get approximate topography elevation at long/lat coordinates from closest point
 
-  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,HUGEVAL,MIDX,MIDY,MIDZ
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,HUGEVAL,MIDX,MIDY,MIDZ,USE_DISTANCE_CRITERION_TOPO
 
   implicit none
 
@@ -332,9 +328,6 @@
 
   integer :: iface,i,ispec,iglob,igll,jgll,kgll
 
-  ! faster element search
-  logical,parameter :: USE_DISTANCE_CRITERION_FOR_TOPO = .true.
-
   real(kind=CUSTOM_REAL) :: typical_size
   logical :: located_target
 
@@ -342,11 +335,10 @@
   target_elevation = 0.0_CUSTOM_REAL
   target_distmin = HUGEVAL
 
-
   if (num_free_surface_faces > 0) then
 
     ! computes typical size of elements at the surface (uses first element for estimation)
-    if (USE_DISTANCE_CRITERION_FOR_TOPO) then
+    if (USE_DISTANCE_CRITERION_TOPO) then
       ispec = free_surface_ispec(1)
       typical_size =  (xstore(ibool(1,1,1,ispec)) - xstore(ibool(NGLLX,NGLLY,NGLLZ,ispec)))**2 &
                     + (ystore(ibool(1,1,1,ispec)) - ystore(ibool(NGLLX,NGLLY,NGLLZ,ispec)))**2
@@ -365,7 +357,7 @@
       ispec = free_surface_ispec(iface)
 
       ! excludes elements that are too far from target
-      if (USE_DISTANCE_CRITERION_FOR_TOPO) then
+      if (USE_DISTANCE_CRITERION_TOPO) then
         iglob = ibool(MIDX,MIDY,MIDZ,ispec)
         dist = (x_target - xstore(iglob))**2 + (y_target - ystore(iglob))**2
         if (dist > typical_size) cycle

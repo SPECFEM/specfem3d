@@ -475,12 +475,13 @@
   use specfem_par_elastic
   use specfem_par_poroelastic
 
+  use shared_parameters, only: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD
+
   implicit none
 
   ! local parameters
   double precision, dimension(N_SLS) :: tau_sigma_dble
   double precision :: f_c_source
-  double precision :: MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD
   real(kind=CUSTOM_REAL):: scale_factorl
   integer :: i,j,k,ispec,ier
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: scale_factor,scale_factor_kappa
@@ -576,25 +577,6 @@
 
     deallocate(scale_factor)
     deallocate(scale_factor_kappa)
-
-    ! statistics
-    ! user output
-    if (myrank == 0) then
-      write(IMAIN,*)
-      write(IMAIN,*) "Attenuation:"
-      write(IMAIN,*)
-      write(IMAIN,*) "The code uses a constant Q quality factor,"
-      write(IMAIN,*) "but approximated based on a series of Zener standard linear solids (SLS)."
-      write(IMAIN,*) "The approximation is performed in the following frequency band:"
-      write(IMAIN,*)
-      write(IMAIN,*) "  Reference frequency (Hz):",sngl(ATTENUATION_f0_REFERENCE)," period (s):",sngl(1.0/ATTENUATION_f0_REFERENCE)
-      write(IMAIN,*) "  Frequency band min/max (Hz):",sngl(1.0/MAX_ATTENUATION_PERIOD),sngl(1.0/MIN_ATTENUATION_PERIOD)
-      write(IMAIN,*) "  Period band min/max (s):",sngl(MIN_ATTENUATION_PERIOD),sngl(MAX_ATTENUATION_PERIOD)
-      write(IMAIN,*) "  Logarithmic central frequency (Hz):",sngl(f_c_source)," period (s):",sngl(1.0/f_c_source)
-      write(IMAIN,*) "  Using full attenuation with both Q_kappa and Q_mu."
-      write(IMAIN,*)
-      call flush_IMAIN()
-    endif
 
     ! clear memory variables if attenuation
     ! initialize memory variables for attenuation
