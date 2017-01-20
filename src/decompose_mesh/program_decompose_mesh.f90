@@ -41,7 +41,7 @@ program xdecompose_mesh
 ! check usage
   do i=1,3
     call get_command_argument(i,arg(i))
-    if (i <= 3 .and. trim(arg(i)) == "") then
+    if (i <= 3 .and. trim(arg(i)) == "\0") then
       print *, 'Usage: ./xdecompose_mesh  nparts  input_directory output_directory'
       print *
       print *, '  where'

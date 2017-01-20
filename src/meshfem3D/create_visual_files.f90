@@ -137,7 +137,7 @@
     do ipoin = 1,nglob
       write(66,*) sngl(nodes_coords(ipoin,1)),sngl(nodes_coords(ipoin,2)),sngl(nodes_coords(ipoin,3))
     enddo
-    write(66,*) ""
+    write(66,*) "\0"
 
     ! note: indices for vtk start at 0
     write(66,'(a,i12,i12)') "CELLS ",nspec,nspec*9
@@ -146,12 +146,12 @@
             ibool(1,1,1,ispec)-1,ibool(2,1,1,ispec)-1,ibool(2,2,1,ispec)-1,ibool(1,2,1,ispec)-1, &
             ibool(1,1,2,ispec)-1,ibool(2,1,2,ispec)-1,ibool(2,2,2,ispec)-1,ibool(1,2,2,ispec)-1
     enddo
-    write(66,*) ""
+    write(66,*) "\0"
 
     ! type: hexahedrons
     write(66,'(a,i12)') "CELL_TYPES ",nspec
     write(66,'(6i12)') (12,ispec=1,nspec)
-    write(66,*) ""
+    write(66,*) "\0"
 
     write(66,'(a,i12)') "CELL_DATA ",nspec
     write(66,'(a)') "SCALARS elem_val float"
@@ -159,7 +159,7 @@
     do ispec = 1,nspec
       write(66,*) ispec_material_id(ispec)
     enddo
-    write(66,*) ""
+    write(66,*) "\0"
     close(66)
 
   endif
