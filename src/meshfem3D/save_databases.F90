@@ -187,7 +187,7 @@
       ! format:
       ! #material_id #type-keyword #domain-name #tomo-filename #tomo_id #domain_id
       ! format example tomography: -1 tomography elastic tomography_model.xyz 0 2
-      undef_mat_prop(:,:) = ''
+      undef_mat_prop(:,:) = '\0'
       ! material id
       write(undef_mat_prop(1,1),*) mat_id
       ! name

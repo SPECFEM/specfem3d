@@ -430,7 +430,7 @@ contains
   if (n == 0) return
 
   do i=1,n
-    shapeval = ''
+    shapeval = '\0'
     val  = 0e0_CUSTOM_REAL
     valh = 0e0_CUSTOM_REAL
     xc = 0e0_CUSTOM_REAL
