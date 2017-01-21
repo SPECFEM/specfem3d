@@ -59,14 +59,14 @@
     write(IOUT_ENERGY,*) 'set logscale y'
     write(IOUT_ENERGY,*) 'set xlabel "Time step number"'
     write(IOUT_ENERGY,*) 'set ylabel "Energy (J)"'
-    write(IOUT_ENERGY,'(a152)') '#plot "energy.dat" us 1:2 t ''Kinetic Energy'' w l lc 1, "energy.dat" us 1:3 &
-                         &t ''Potential Energy'' w l lc 2, "energy.dat" us 1:4 t ''Total Energy'' w l lc 4'
+    write(IOUT_ENERGY,'(a152)') '#plot "energy.dat" us 1:2 t "Kinetic Energy" w l lc 1, "energy.dat" us 1:3 &
+                         &t "Potential Energy" w l lc 2, "energy.dat" us 1:4 t "Total Energy" w l lc 4'
     write(IOUT_ENERGY,*) '#pause -1 "Hit any key..."'
-    write(IOUT_ENERGY,*) '#plot "energy.dat" us 1:2 t ''Kinetic Energy'' w l lc 1'
+    write(IOUT_ENERGY,*) '#plot "energy.dat" us 1:2 t "Kinetic Energy" w l lc 1'
     write(IOUT_ENERGY,*) '#pause -1 "Hit any key..."'
-    write(IOUT_ENERGY,*) '#plot "energy.dat" us 1:3 t ''Potential Energy'' w l lc 2'
+    write(IOUT_ENERGY,*) '#plot "energy.dat" us 1:3 t "Potential Energy" w l lc 2'
     write(IOUT_ENERGY,*) '#pause -1 "Hit any key..."'
-    write(IOUT_ENERGY,*) 'plot "energy.dat" us 1:4 t ''Total Energy'' w l lc 4'
+    write(IOUT_ENERGY,*) 'plot "energy.dat" us 1:4 t "Total Energy" w l lc 4'
     write(IOUT_ENERGY,*) 'pause -1 "Hit any key..."'
     close(IOUT_ENERGY)
   endif
