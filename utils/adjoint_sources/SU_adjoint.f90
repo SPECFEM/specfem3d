@@ -53,14 +53,14 @@
   i = 1
   do while (1 == 1)
     call getarg(i,arg(i))
-    if (i <= 1 .and. trim(arg(i)) == '') then
+    if (i <= 1 .and. trim(arg(i)) == '\0') then
       print *,'Usage: '
       print *,'  ./xSU_adjoint NPROC'
       print *,'with'
       print *,'  NPROC: total number of partitions'
       stop
     endif
-    if (trim(arg(i)) == '') exit
+    if (trim(arg(i)) == '\0') exit
     if (i == 1) then
       read(arg(i),*,iostat=ios) NPROC
       if (ios /= 0) stop 'Error reading NPROC'

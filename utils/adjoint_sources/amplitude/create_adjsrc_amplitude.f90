@@ -26,7 +26,7 @@ program create_adjsrc_amplitude
   ! reads in file arguments
   do while (1 == 1)
     call getarg(i,arg(i))
-    if (i < 6 .and. trim(arg(i)) == '') then
+    if (i < 6 .and. trim(arg(i)) == '\0') then
       print *,'Usage: '
       print *,'  xcreate_adjsrc_amplitude t1 t2 ifile[0-5] E/N/Z-ascii-files [baz]'
       print *,'with'
@@ -42,7 +42,7 @@ program create_adjsrc_amplitude
       print *,'  [baz]: (optional) back-azimuth, requires ifile = 4 or ifile = 5'
       stop 'create_adjsrc_amplitude t1 t2 ifile[0-5] E/N/Z-ascii-files [baz]'
     endif
-    if (trim(arg(i)) == '') exit
+    if (trim(arg(i)) == '\0') exit
     if (i == 1) then
       read(arg(i),*,iostat=ios) ts
       if (ios /= 0) stop 'Error reading ts'

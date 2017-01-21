@@ -19,7 +19,7 @@
   integer :: npoin,nspec,ipoin,ispec,idum1,idum2,i1,i2,i3,i4
 
 ! filter "quad" from AVS file
-  call system('sed -e ''1,$s/quad//g'' < cubed_sphere_surface.inp > ____tutu')
+  call system('sed -e '\0'1,$s/quad//g'\0' < cubed_sphere_surface.inp > ____tutu')
 
   open(unit=55,file='____tutu',status='old')
 

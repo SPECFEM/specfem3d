@@ -116,10 +116,10 @@ program smooth_sem_globe
   call getarg(4,scratch_file_dir)
   call getarg(5,scratch_topo_dir)
 
-  if ( trim(s_sigma_h) == '' .or. trim(s_sigma_v) == '' &
-    .or. trim(kernel_file_name) == '' &
-    .or. trim(scratch_file_dir) == '' &
-    .or. trim(scratch_topo_dir) == '') then
+  if ( trim(s_sigma_h) == '\0' .or. trim(s_sigma_v) == '\0' &
+    .or. trim(kernel_file_name) == '\0' &
+    .or. trim(scratch_file_dir) == '\0' &
+    .or. trim(scratch_topo_dir) == '\0') then
     call exit_MPI(myrank,'Usage: smooth_sem_globe sigma_h(km) sigma_v(km) kernel_file_name scratch_file_dir scratch_topo_dir')
   endif
 

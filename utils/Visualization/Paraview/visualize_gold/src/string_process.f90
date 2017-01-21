@@ -188,7 +188,7 @@ integer,intent(in) :: nvar
 character(len=80),dimension(2) :: args
 integer :: i,narg
 
-strval=''
+strval='\0'
 do i=1,nvar
   call split_string(slist(i),'=',args,narg)
   if (narg /= 2)cycle

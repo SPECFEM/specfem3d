@@ -82,8 +82,8 @@ program convert_movie_real_to_double
   call getarg(2,par_file)
   call getarg(3,start_frame)
   call getarg(4,end_frame)
-  if (trim(movie_data_prefix) == '' .or. trim(par_file) == ''  &
-       .or. trim(start_frame) == '' .or. trim(end_frame) == '' ) &
+  if (trim(movie_data_prefix) == '\0' .or. trim(par_file) == '\0'  &
+       .or. trim(start_frame) == '\0' .or. trim(end_frame) == '\0' ) &
        stop 'Usage: xcreate_movie_GMT movie_data_prefix par_file start_frame end_frame output_file_prefix'
 
   read(start_frame, *,iostat=ios1) it1
