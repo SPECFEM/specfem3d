@@ -180,7 +180,9 @@ end function get_string
 
 ! seek string value from string list which contain a character '=' that separates
 ! variable name and variable vlue
+
 subroutine seek_string(vname,strval,slist,nvar)
+
 character(len=*),intent(in) :: vname
 character(len=*),intent(out) :: strval
 character(len=*),dimension(*) :: slist
@@ -189,6 +191,7 @@ character(len=80),dimension(2) :: args
 integer :: i,narg
 
 strval='\0'
+
 do i=1,nvar
   call split_string(slist(i),'=',args,narg)
   if (narg /= 2)cycle
@@ -198,10 +201,8 @@ do i=1,nvar
   endif
 enddo
 
-return
-!write(*,'(/,a)')'ERROR: cannot read the string variable "'//vname//'"!'
-!stop
 end subroutine seek_string
+
 !=====================================================
 
 ! get string vector from string list which contain a character '=' that separates

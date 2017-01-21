@@ -75,8 +75,6 @@ program convert_movie_real_to_double
        NPOIN2DMAX_XMIN_XMAX,NPOIN2DMAX_YMIN_YMAX,NGLOB_AB
 
   double precision max_all_frames
-  ! ************** PROGRAM STARTS HERE **************
-
 
   call getarg(1,movie_data_prefix)
   call getarg(2,par_file)
