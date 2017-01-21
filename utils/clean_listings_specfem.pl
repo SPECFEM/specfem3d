@@ -127,13 +127,9 @@ use File::Basename;
 # do not do it for "Poisson''s ratio" in a Fortran print statement
       if(index($line, "Poisson''s") == -1) {
       if(index($line, "Young''s") == -1) {
-      if(index($line, " Energy") == -1) {
-      if(index($line, "macros2\.gnu") == -1) {
-      if(index($line, "gllmesh2\.gnu") == -1) {
+      if(index($line, "''''") == -1) {
         $line =~ s#\"\"#\'\\0\'#ogi;
         $line =~ s#\'\'#\'\\0\'#ogi;
-      }
-      }
       }
       }
       }
