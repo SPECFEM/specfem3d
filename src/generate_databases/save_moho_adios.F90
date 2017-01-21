@@ -83,45 +83,45 @@ subroutine crm_save_moho_adios()
   !-----------------------------------'
   groupsize = 0
   output_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // "/moho.bp"
-  call adios_declare_group(group, group_name, "", 1, ier)
-  call adios_select_method(group, ADIOS_TRANSPORT_METHOD, "", "", ier)
+  call adios_declare_group(group, group_name, '\0', 1, ier)
+  call adios_select_method(group, ADIOS_TRANSPORT_METHOD, '\0', '\0', ier)
 
   !------------------------.
   ! Define ADIOS Variables |
   !------------------------'
-  call define_adios_scalar(group, groupsize, "", "nspec", NSPEC_AB)
-  call define_adios_scalar(group, groupsize, "", STRINGIFY_VAR(nspec2d_moho))
+  call define_adios_scalar(group, groupsize, '\0', "nspec", NSPEC_AB)
+  call define_adios_scalar(group, groupsize, '\0', STRINGIFY_VAR(nspec2d_moho))
 
   local_dim = nspec2d_moho_wmax
   call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, "", &
+                                   local_dim, '\0', &
                                    STRINGIFY_VAR(ibelm_moho_top))
   call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, "", &
+                                   local_dim, '\0', &
                                    STRINGIFY_VAR(ibelm_moho_bot))
 
   local_dim = 3 * NGLLSQUARE * nspec2d_moho_wmax
   call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, "", &
+                                   local_dim, '\0', &
                                    STRINGIFY_VAR(ijk_moho_top))
   call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, "", &
+                                   local_dim, '\0', &
                                    STRINGIFY_VAR(ijk_moho_bot))
 
   local_dim = NDIM * NGLLSQUARE * nspec2d_moho_wmax
   call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, "", &
+                                   local_dim, '\0', &
                                    STRINGIFY_VAR(normal_moho_top))
   call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, "", &
+                                   local_dim, '\0', &
                                    STRINGIFY_VAR(normal_moho_bot))
 
   local_dim = nspec_wmax
   call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, "", &
+                                   local_dim, '\0', &
                                    STRINGIFY_VAR(is_moho_top))
   call define_adios_global_array1D(group, groupsize, &
-                                   local_dim, "", &
+                                   local_dim, '\0', &
                                    STRINGIFY_VAR(is_moho_bot))
 
   !------------------------------------------------------------.
@@ -164,7 +164,7 @@ subroutine crm_save_moho_adios()
   !----------------------------------.
   ! Perform the actual write to disk |
   !----------------------------------'
-  call adios_set_path(handle, "", ier)
+  call adios_set_path(handle, '\0', ier)
   call adios_close(handle, ier)
 end subroutine crm_save_moho_adios
 

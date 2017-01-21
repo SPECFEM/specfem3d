@@ -173,9 +173,9 @@
     if (ATTENUATION) then
       write(IMAIN,*) 'incorporating attenuation using ',N_SLS,' standard linear solids'
       if (USE_OLSEN_ATTENUATION) then
-        write(IMAIN,*) 'using Olsen''s attenuation'
+        write(IMAIN,*) 'using attenuation from Olsen et al.'
       else
-        write(IMAIN,*) 'not using Olsen''s attenuation'
+        write(IMAIN,*) 'not using attenuation from Olsen et al.'
       endif
     else
       write(IMAIN,*) 'no attenuation'

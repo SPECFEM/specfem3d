@@ -120,7 +120,7 @@ subroutine strtok (source_string, delimiter, token)
     isource_len = LEN(saved_string)  ! length of input string from first call
   endif
 
-  token = ''
+  token = '\0'
   ibegin = isaved_start
 
   ! sets first index ibegin to beginning of (next) token

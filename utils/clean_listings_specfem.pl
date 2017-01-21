@@ -123,6 +123,21 @@ use File::Basename;
       $line =~ s#\.true\.#\.true\.#ogi;
       $line =~ s#\.false\.#\.false\.#ogi;
 
+# for null strings, make sure we fully conform to the standard otherwise the IBM xlf compiler refuses to compile
+# do not do it for "Poisson''s ratio" in a Fortran print statement
+      if(index($line, "Poisson''s") == -1) {
+      if(index($line, "Young''s") == -1) {
+      if(index($line, " Energy") == -1) {
+      if(index($line, "macros2\.gnu") == -1) {
+      if(index($line, "gllmesh2\.gnu") == -1) {
+        $line =~ s#\"\"#\'\\0\'#ogi;
+        $line =~ s#\'\'#\'\\0\'#ogi;
+      }
+      }
+      }
+      }
+      }
+
 #
 # known problem: makes the changes also in constant strings, and not only
 # in the code (which is dangerous, but really easier to program...)

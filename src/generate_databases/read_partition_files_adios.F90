@@ -74,7 +74,7 @@ subroutine read_partition_files_adios()
   integer :: icount,j,is,ie,local_dim
   integer :: ier
 
-  undef_matpropl(:) = ''
+  undef_matpropl(:) = '\0'
   sel_num = 0
 
   !-------------------------------------.
@@ -410,7 +410,7 @@ subroutine read_partition_files_adios()
   nspec_cpml = 0
 
   ! fills undef_mat_prop 2D array
-  undef_mat_prop(:,:) = ''
+  undef_mat_prop(:,:) = '\0'
   if (nundefMat_ext_mesh > 0) then
     do icount = 1,nundefMat_ext_mesh
       do j = 1,6
