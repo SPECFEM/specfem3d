@@ -693,8 +693,7 @@
   else
 
     ! allocates dummy gravity arrays
-    allocate( minus_deriv_gravity(0), &
-             minus_g(0), stat=ier)
+    allocate( minus_deriv_gravity(0), minus_g(0), stat=ier)
     if (ier /= 0) stop 'error allocating gravity arrays'
 
   endif
