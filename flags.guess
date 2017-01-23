@@ -86,30 +86,22 @@ case $my_FC in
         # option "-assume buffered_io" is important especially on
         # parallel file systems like SFS 3.2 / Lustre 1.8. If omitted
         # I/O throughput lingers at 2.5 MB/s, with it it can increase to ~44 MB/s
-        # However it does not make much of a difference on NFS mounted volumes or with SFS 3.1.1 / Lustre 1.6.7.1 
+        # However it does not make much of a difference on NFS mounted volumes or with SFS 3.1.1 / Lustre 1.6.7.1
         #
         # optimization report: "-vec-report0" is old and will be replaced by "-qopt-report0 -qopt-report-phase=vec" for v >=15.0
         DEF_FFLAGS="-xHost -fpe0 -ftz -assume buffered_io -assume byterecl -align sequence -std03 -diag-disable 6477 -implicitnone -gen-interfaces -warn all" # -mcmodel=medium -shared-intel
         OPT_FFLAGS="-O3 -check nobounds"
         DEBUG_FFLAGS="-check all -debug -g -O0 -fp-stack-check -traceback -ftrapuv"
-        #
         ;;
     gfortran|*/gfortran|f95|*/f95)
         #
         # GNU gfortran
         #
+        # optimization report: "-fopt-info" or very verbose: "-fopt-info-all"
         DEF_FFLAGS="-std=f2003 -fimplicit-none -frange-check -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -ffpe-trap=invalid,zero,overflow -Wunused -Werror" # -mcmodel=medium
-        OPT_FFLAGS="-O3"
+        OPT_FFLAGS="-O3 -finline-functions"
         DEBUG_FFLAGS="-g -O0 -ggdb -fbacktrace -fbounds-check"
         # useful to track loss of accuracy because of automatic double to single precision conversion:  -Wconversion  (this may generate many warnings...)
-        ;;
-    g95|*/g95)
-        #
-        # g95 (free f95 compiler from http://www.g95.org)
-        #
-        DEF_FFLAGS="-fimplicit-none"
-        OPT_FFLAGS="-O"
-        DEBUG_FFLAGS="-g -O0 -fbounds-check -ftrace"
         ;;
     f90|*/f90)
         case $host_os in
@@ -122,7 +114,7 @@ case $my_FC in
                         DEF_FFLAGS="-W132 -s -cpu:p7 -v -YDEALLOC=ALL"
                         OPT_FFLAGS="-O3"
                         DEBUG_FFLAGS=""
-                    ;;
+                        ;;
                 esac
                 ;;
             irix)
@@ -180,7 +172,7 @@ case $my_FC in
         # when encountering errors: ...relocation truncated to fit: R_PPC_LOCAL24PC...
         # one should also use additional flags:
         # CFLAGS = -Wl,-relax
-        # Note that the above message would only occur on a linux machine not on AIX.
+        # Note that the above message would only occur on a Linux machine not on AIX.
         # "relax" is not an option for the AIX linker and is interpreted in ways that will
         # in binaries that are not executable.
         #
