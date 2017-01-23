@@ -1106,5 +1106,135 @@
   print *,'CPML file "absorbing_surface_file_bottom" has been successfully created'
   print *
 
+! ************* generate "absorbing_surface_file_top" *************
+
+! first count the number of faces that are along that edge
+
+  count_faces_found = 0
+
+! Zmax CPML
+  size_of_model = zmax - zmin
+  limit = zmax - SMALL_RELATIVE_VALUE*size_of_model
+
+! loop on the whole mesh
+  do ispec = 1,nspec
+
+    i1 = ibool(1,ispec)
+    i2 = ibool(2,ispec)
+    i3 = ibool(3,ispec)
+    i4 = ibool(4,ispec)
+    i5 = ibool(5,ispec)
+    i6 = ibool(6,ispec)
+    i7 = ibool(7,ispec)
+    i8 = ibool(8,ispec)
+
+    if (is_Z_CPML(ispec)) then
+
+      already_found_a_face = .false.
+
+! test face 1 (bottom)
+      if (z(i1) > limit .and. z(i2) > limit .and. z(i3) > limit .and. z(i4) > limit) then
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 2 (top)
+      if (z(i5) > limit .and. z(i6) > limit .and. z(i7) > limit .and. z(i8) > limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 3 (left)
+      if (z(i1) > limit .and. z(i4) > limit .and. z(i8) > limit .and. z(i5) > limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 4 (right)
+      if (z(i2) > limit .and. z(i3) > limit .and. z(i7) > limit .and. z(i6) > limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 5 (front)
+      if (z(i1) > limit .and. z(i2) > limit .and. z(i6) > limit .and. z(i5) > limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+! test face 6 (back)
+      if (z(i4) > limit .and. z(i3) > limit .and. z(i7) > limit .and. z(i8) > limit) then
+        if (already_found_a_face) stop 'error: element with two faces on the same PML edge found!'
+        count_faces_found = count_faces_found + 1
+        already_found_a_face = .true.
+      endif
+
+    endif
+
+  enddo
+
+  print *,'found ',count_faces_found,' full faces on PML face Zmax'
+
+!-----------------------------
+
+  open(unit=24,file='absorbing_surface_file_top',status='unknown',action='write')
+
+! write the total number of face elements
+  write(24,*) count_faces_found
+
+! loop on the whole mesh
+  do ispec = 1,nspec
+
+    i1 = ibool(1,ispec)
+    i2 = ibool(2,ispec)
+    i3 = ibool(3,ispec)
+    i4 = ibool(4,ispec)
+    i5 = ibool(5,ispec)
+    i6 = ibool(6,ispec)
+    i7 = ibool(7,ispec)
+    i8 = ibool(8,ispec)
+
+    if (is_Z_CPML(ispec)) then
+
+! for the six faces below it is important to make sure we write the four points
+! in an order for which the normal to the face points outwards
+
+! test face 1 (bottom)
+      if (z(i1) > limit .and. z(i2) > limit .and. z(i3) > limit .and. z(i4) > limit) &
+        write(24,*) ispec,i4,i3,i2,i1
+
+! test face 2 (top)
+      if (z(i5) > limit .and. z(i6) > limit .and. z(i7) > limit .and. z(i8) > limit) &
+        write(24,*) ispec,i5,i6,i7,i8
+
+! test face 3 (left)
+      if (z(i1) > limit .and. z(i4) > limit .and. z(i8) > limit .and. z(i5) > limit) &
+        write(24,*) ispec,i1,i5,i8,i4
+
+! test face 4 (right)
+      if (z(i2) > limit .and. z(i3) > limit .and. z(i7) > limit .and. z(i6) > limit) &
+        write(24,*) ispec,i2,i3,i7,i6
+
+! test face 5 (front)
+      if (z(i1) > limit .and. z(i2) > limit .and. z(i6) > limit .and. z(i5) > limit) &
+        write(24,*) ispec,i1,i2,i6,i5
+
+! test face 6 (back)
+      if (z(i4) > limit .and. z(i3) > limit .and. z(i7) > limit .and. z(i8) > limit) &
+        write(24,*) ispec,i3,i4,i8,i7
+
+    endif
+
+  enddo
+
+  close(24)
+
+  print *,'CPML file "absorbing_surface_file_top" has been successfully created'
+  print *
+
   end program convert_mesh_to_CPML
 
