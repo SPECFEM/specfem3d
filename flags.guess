@@ -190,7 +190,7 @@ case $my_FC in
         # other compilers. There is a small decrease in performance, but generally
         # it is small or negligible compared to other issues like slow I/O.
         #
-        DEF_FFLAGS="-qassert=contig -qhot -q64 -qtune=auto -qarch=auto -qcache=auto -qfree=f90 -qsuffix=f=f90 -qhalt=w -qlanglvl=2003std -g -qsuppress=1518-234 -qsuppress=1518-317 -qsuppress=1518-318 -qsuppress=1500-036"
+        DEF_FFLAGS="-qassert=contig -qhot -q64 -qtune=auto -qarch=auto -qcache=auto -qfree=f90 -qsuffix=f=f90 -qhalt=w -qlanglvl=2003std -qzerosize -g -qsuppress=1518-234 -qsuppress=1518-317 -qsuppress=1518-318 -qsuppress=1500-036"
         OPT_FFLAGS="-O4 -qstrict"
         # Options -qreport -qsource -qlist create a *.lst file containing detailed information about vectorization.
         DEBUG_FFLAGS="-g -O0 -C -qddim -qfullpath -qflttrap=overflow:zerodivide:invalid:enable -qfloat=nans -qinitauto=7FBFFFFF"
