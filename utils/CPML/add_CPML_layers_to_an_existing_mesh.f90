@@ -42,8 +42,8 @@
 ! number of GLL points in each direction, to check for negative Jacobians
   integer, parameter :: NGLLX = 5,NGLLY = NGLLX,NGLLZ = NGLLX
 
-! number of PML layers to add on each side of the mesh
-  integer :: NUMBER_OF_PML_LAYERS_TO_ADD
+! number of PML and non-PML layers to add on each side of the mesh
+  integer :: NUMBER_OF_PML_LAYERS_TO_ADD,NUMBER_OF_TRANSITION_LAYERS_TO_ADD,TOTAL_NUMBER_OF_LAYERS_TO_ADD
 
 ! size of each PML element to add when they are added on the Xmin and Xmax faces, Ymin and Ymax faces, Zmin and/or Zmax faces
   double precision :: SIZE_OF_X_ELEMENT_TO_ADD,SIZE_OF_Y_ELEMENT_TO_ADD,SIZE_OF_Z_ELEMENT_TO_ADD
@@ -107,6 +107,14 @@
   read(*,*) NUMBER_OF_PML_LAYERS_TO_ADD
   if (NUMBER_OF_PML_LAYERS_TO_ADD < 1) stop 'NUMBER_OF_PML_LAYERS_TO_ADD must be >= 1'
   print *
+
+  print *,'enter the number of non-PML transition layers to add between each side of the mesh and the new PMLs &
+                &that will be created (usually 0, 1 or 2) (if you have no idea, just enter 0):'
+  read(*,*) NUMBER_OF_TRANSITION_LAYERS_TO_ADD
+  if (NUMBER_OF_TRANSITION_LAYERS_TO_ADD < 0) stop 'NUMBER_OF_TRANSITION_LAYERS_TO_ADD must be >= 0'
+  print *
+
+  TOTAL_NUMBER_OF_LAYERS_TO_ADD = NUMBER_OF_TRANSITION_LAYERS_TO_ADD + NUMBER_OF_PML_LAYERS_TO_ADD
 
   ADD_ON_THE_XMIN_SURFACE = .true.
   ADD_ON_THE_XMAX_SURFACE = .true.
@@ -490,11 +498,11 @@
   print *,'Total number of elements in the mesh before extension = ',nspec
   print *,'Number of element faces to extend  = ',count_elem_faces_to_extend
   if (count_elem_faces_to_extend == 0) stop 'error: number of element faces to extend detected is zero!'
-! we will add NUMBER_OF_PML_LAYERS_TO_ADD to each of the element faces detected that need to be extended
-  nspec_new = nspec + count_elem_faces_to_extend * NUMBER_OF_PML_LAYERS_TO_ADD
+! we will add TOTAL_NUMBER_OF_LAYERS_TO_ADD to each of the element faces detected that need to be extended
+  nspec_new = nspec + count_elem_faces_to_extend * TOTAL_NUMBER_OF_LAYERS_TO_ADD
 ! and each of these elements will have NGNOD points
 ! (some of them shared with other elements, but we do not care because they will be removed automatically by xdecompose_mesh)
-  npoin_new = npoin + count_elem_faces_to_extend * NUMBER_OF_PML_LAYERS_TO_ADD * NGNOD
+  npoin_new = npoin + count_elem_faces_to_extend * TOTAL_NUMBER_OF_LAYERS_TO_ADD * NGNOD
   print *,'Total number of elements in the mesh after extension = ',nspec_new
   if (icompute_size == 1) then
     mean_distance = sum_of_distances / dble(count_elem_faces_to_extend)
@@ -680,7 +688,7 @@
 
     if (need_to_extend_this_element) then
 
-! create the NUMBER_OF_PML_LAYERS_TO_ADD new elements
+! create the TOTAL_NUMBER_OF_LAYERS_TO_ADD new elements
 
 ! very important remark: it is OK to create duplicates of the mesh points in the loop below (i.e. not to tell the code
 ! that many of these points created are in fact shared between adjacent elements) because "xdecompose_mesh" will remove
@@ -728,7 +736,7 @@
       stop 'wrong index in loop on faces'
     endif
 
-      do iextend = 1,NUMBER_OF_PML_LAYERS_TO_ADD
+      do iextend = 1,TOTAL_NUMBER_OF_LAYERS_TO_ADD
 
         ! create a new element
         elem_counter = elem_counter + 1
