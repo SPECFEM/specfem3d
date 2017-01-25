@@ -23,11 +23,13 @@
 ! with this program; if not, write to the Free Software Foundation, Inc.,
 ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 !
-!=====================================================================
+! The full text of the license is available in file "LICENSE".
+!
+!========================================================================
 
   program add_CPML_layers_to_a_given_mesh
 
-! Dimitri Komatitsch, CNRS Marseille, France, March 2016
+! Dimitri Komatitsch, CNRS Marseille, France, March 2016 and January 2017
 
 ! add PML layers around an existing mesh (i.e. create new elements and new points)
 

@@ -15,7 +15,7 @@ AC_CONFIG_SRCDIR([src/specfem3D/specfem3D.f90])
 AC_CONFIG_HEADER([setup/config.h])
 
 AC_CONFIG_MACRO_DIR([m4])
-m4_include(m4/cit_backports.m4)
+#m4_include(m4/cit_backports.m4)
 
 ############################################################
 
@@ -101,8 +101,10 @@ AC_ARG_WITH([cuda],
 AM_CONDITIONAL([COND_CUDA], [test "$want_cuda" != no])
 AM_CONDITIONAL([COND_CUDA5], [test "$want_cuda" = cuda5])
 AM_CONDITIONAL([COND_CUDA6], [test "$want_cuda" = cuda6])
-# cuda linking for cuda 5x and 6x
-AM_CONDITIONAL([COND_CUDA_PLUS], [test "$want_cuda" = cuda5 -o "$want_cuda" = cuda6])
+AM_CONDITIONAL([COND_CUDA7], [test "$want_cuda" = cuda7])
+AM_CONDITIONAL([COND_CUDA8], [test "$want_cuda" = cuda8])
+# cuda linking for cuda 5x and 6x and 7x and 8x
+AM_CONDITIONAL([COND_CUDA_PLUS], [test "$want_cuda" = cuda5 -o "$want_cuda" = cuda6 -o "$want_cuda" = cuda7 -o "$want_cuda" = cuda8])
 
 ###
 ### ADIOS
