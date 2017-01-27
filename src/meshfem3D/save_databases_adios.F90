@@ -199,7 +199,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
 
   ! undefined material properties
   ! we use a 1D character string for ADIOS read/write
-  undef_matpropl(:) = ''
+  undef_matpropl(:) = '\0'
   icount = 0
   do i = 1,NMATERIALS
     domain_id = material_properties(i,6)
@@ -588,103 +588,103 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   !-----------------------------------'
   groupsize = 0
   output_name = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // "/Database.bp"
-  call adios_declare_group(group, group_name, '', 1, ier)
-  call adios_select_method(group, ADIOS_TRANSPORT_METHOD, '', '', ier)
+  call adios_declare_group(group, group_name, '\0', 1, ier)
+  call adios_select_method(group, ADIOS_TRANSPORT_METHOD, '\0', '\0', ier)
 
   !------------------------.
   ! Define ADIOS Variables |
   !------------------------'
-  call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(ngllx))
-  call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nglly))
-  call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(ngllz))
+  call define_adios_scalar(group, groupsize, '\0', STRINGIFY_VAR(ngllx))
+  call define_adios_scalar(group, groupsize, '\0', STRINGIFY_VAR(nglly))
+  call define_adios_scalar(group, groupsize, '\0', STRINGIFY_VAR(ngllz))
 
-  call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(ngllx_m))
-  call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nglly_m))
-  call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(ngllz_m))
-  call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(ngnod))
-  call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(ngnod2d))
+  call define_adios_scalar(group, groupsize, '\0', STRINGIFY_VAR(ngllx_m))
+  call define_adios_scalar(group, groupsize, '\0', STRINGIFY_VAR(nglly_m))
+  call define_adios_scalar(group, groupsize, '\0', STRINGIFY_VAR(ngllz_m))
+  call define_adios_scalar(group, groupsize, '\0', STRINGIFY_VAR(ngnod))
+  call define_adios_scalar(group, groupsize, '\0', STRINGIFY_VAR(ngnod2d))
 
-  call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nglob))
-  call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nspec))
+  call define_adios_scalar(group, groupsize, '\0', STRINGIFY_VAR(nglob))
+  call define_adios_scalar(group, groupsize, '\0', STRINGIFY_VAR(nspec))
 
-  call define_adios_scalar(group, groupsize, '', "nmaterials",ndef)
-  call define_adios_scalar(group, groupsize, '', "nundef_materials",nundef)
+  call define_adios_scalar(group, groupsize, '\0', "nmaterials",ndef)
+  call define_adios_scalar(group, groupsize, '\0', "nundef_materials",nundef)
 
-  call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nspec2d_xmin))
-  call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nspec2d_xmax))
-  call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nspec2d_ymin))
-  call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nspec2d_ymax))
-  call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nspec2d_bottom))
-  call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nspec2d_top))
+  call define_adios_scalar(group, groupsize, '\0', STRINGIFY_VAR(nspec2d_xmin))
+  call define_adios_scalar(group, groupsize, '\0', STRINGIFY_VAR(nspec2d_xmax))
+  call define_adios_scalar(group, groupsize, '\0', STRINGIFY_VAR(nspec2d_ymin))
+  call define_adios_scalar(group, groupsize, '\0', STRINGIFY_VAR(nspec2d_ymax))
+  call define_adios_scalar(group, groupsize, '\0', STRINGIFY_VAR(nspec2d_bottom))
+  call define_adios_scalar(group, groupsize, '\0', STRINGIFY_VAR(nspec2d_top))
 
-  call define_adios_scalar(group, groupsize, '', "nspec_cpml_total",nspec_cpml_total)
-  if (nspec_cpml_total > 0) call define_adios_scalar(group, groupsize, '', "nspec_cpml",nspec_cpml)
+  call define_adios_scalar(group, groupsize, '\0', "nspec_cpml_total",nspec_cpml_total)
+  if (nspec_cpml_total > 0) call define_adios_scalar(group, groupsize, '\0', "nspec_cpml",nspec_cpml)
 
-  call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nb_interfaces))
-  call define_adios_scalar(group, groupsize, '', STRINGIFY_VAR(nspec_interfaces_max))
+  call define_adios_scalar(group, groupsize, '\0', STRINGIFY_VAR(nb_interfaces))
+  call define_adios_scalar(group, groupsize, '\0', STRINGIFY_VAR(nspec_interfaces_max))
 
   local_dim = 3 * nglob_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(nodes_coords))
+  call define_adios_global_array1D(group, groupsize, local_dim, '\0', STRINGIFY_VAR(nodes_coords))
 
   if (ndef /= 0) then
     local_dim = 16 * ndef
-    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(matpropl))
+    call define_adios_global_array1D(group, groupsize, local_dim, '\0', STRINGIFY_VAR(matpropl))
   endif
 
   if (nundef /= 0) then
     local_dim = 6 * nundef * MAX_STRING_LEN
     ! all processes will have an identical entry, uses "local" variable to store string
-    call define_adios_local_string_1D_array(group, groupsize, local_dim, '', "undef_mat_prop", undef_matpropl(1:local_dim))
+    call define_adios_local_string_1D_array(group, groupsize, local_dim, '\0', "undef_mat_prop", undef_matpropl(1:local_dim))
     ! note: global arrays with strings doesn't work yet... (segmentation fault)
-    !call define_adios_global_array1D(group, groupsize, local_dim, '', "undef_mat_prop",undef_matpropl)
+    !call define_adios_global_array1D(group, groupsize, local_dim, '\0', "undef_mat_prop",undef_matpropl)
   endif
 
   local_dim = 2 * nspec_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(material_index))
+  call define_adios_global_array1D(group, groupsize, local_dim, '\0', STRINGIFY_VAR(material_index))
 
   local_dim = NGLLX_M * NGLLY_M * NGLLZ_M * nspec_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(elmnts_mesh))
+  call define_adios_global_array1D(group, groupsize, local_dim, '\0', STRINGIFY_VAR(elmnts_mesh))
 
   local_dim = nspec2d_xmin_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(ibelm_xmin))
+  call define_adios_global_array1D(group, groupsize, local_dim, '\0', STRINGIFY_VAR(ibelm_xmin))
   local_dim = nspec2d_xmax_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(ibelm_xmax))
+  call define_adios_global_array1D(group, groupsize, local_dim, '\0', STRINGIFY_VAR(ibelm_xmax))
   local_dim = nspec2d_ymin_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(ibelm_ymin))
+  call define_adios_global_array1D(group, groupsize, local_dim, '\0', STRINGIFY_VAR(ibelm_ymin))
   local_dim = nspec2d_ymax_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(ibelm_ymax))
+  call define_adios_global_array1D(group, groupsize, local_dim, '\0', STRINGIFY_VAR(ibelm_ymax))
   local_dim = nspec2d_bottom_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(ibelm_bottom))
+  call define_adios_global_array1D(group, groupsize, local_dim, '\0', STRINGIFY_VAR(ibelm_bottom))
   local_dim = nspec2d_top_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(ibelm_top))
+  call define_adios_global_array1D(group, groupsize, local_dim, '\0', STRINGIFY_VAR(ibelm_top))
 
   local_dim = NGNOD2D * nspec2d_xmin_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(nodes_ibelm_xmin))
+  call define_adios_global_array1D(group, groupsize, local_dim, '\0', STRINGIFY_VAR(nodes_ibelm_xmin))
   local_dim = NGNOD2D * nspec2d_xmax_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(nodes_ibelm_xmax))
+  call define_adios_global_array1D(group, groupsize, local_dim, '\0', STRINGIFY_VAR(nodes_ibelm_xmax))
   local_dim = NGNOD2D * nspec2d_ymin_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(nodes_ibelm_ymin))
+  call define_adios_global_array1D(group, groupsize, local_dim, '\0', STRINGIFY_VAR(nodes_ibelm_ymin))
   local_dim = NGNOD2D * nspec2d_ymax_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(nodes_ibelm_ymax))
+  call define_adios_global_array1D(group, groupsize, local_dim, '\0', STRINGIFY_VAR(nodes_ibelm_ymax))
   local_dim = NGNOD2D * nspec2d_bottom_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(nodes_ibelm_bottom))
+  call define_adios_global_array1D(group, groupsize, local_dim, '\0', STRINGIFY_VAR(nodes_ibelm_bottom))
   local_dim = NGNOD2D * nspec2d_top_wmax
-  call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(nodes_ibelm_top))
+  call define_adios_global_array1D(group, groupsize, local_dim, '\0', STRINGIFY_VAR(nodes_ibelm_top))
 
   if (nspec_CPML_total > 0) then
      local_dim=nspec_CPML
-     call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(CPML_to_spec))
-     call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(CPML_regions))
+     call define_adios_global_array1D(group, groupsize, local_dim, '\0', STRINGIFY_VAR(CPML_to_spec))
+     call define_adios_global_array1D(group, groupsize, local_dim, '\0', STRINGIFY_VAR(CPML_regions))
      local_dim=nspec
-     call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(is_CPML))
+     call define_adios_global_array1D(group, groupsize, local_dim, '\0', STRINGIFY_VAR(is_CPML))
   endif
 
   if (nb_interfaces_wmax > 0) then
     local_dim = nb_interfaces_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(neighbours_mesh))
-    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(num_elmnts_mesh))
+    call define_adios_global_array1D(group, groupsize, local_dim, '\0', STRINGIFY_VAR(neighbours_mesh))
+    call define_adios_global_array1D(group, groupsize, local_dim, '\0', STRINGIFY_VAR(num_elmnts_mesh))
     local_dim = 6 * nb_interfaces_wmax * nspec_interfaces_max_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(interfaces_mesh))
+    call define_adios_global_array1D(group, groupsize, local_dim, '\0', STRINGIFY_VAR(interfaces_mesh))
   endif
 
   !------------------------------------------------------------.
@@ -840,7 +840,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   !----------------------------------.
   ! Perform the actual write to disk |
   !----------------------------------'
-  call adios_set_path(handle, '', ier)
+  call adios_set_path(handle, '\0', ier)
   call adios_close(handle, ier)
 
   !---------------------------.

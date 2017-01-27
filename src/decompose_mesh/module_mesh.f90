@@ -277,7 +277,7 @@ contains
     endif
     allocate(undef_mat_prop(6,count_undef_mat),stat=ier)
     if (ier /= 0) stop 'Error allocating array undef_mat_prop'
-    undef_mat_prop(:,:) = ''
+    undef_mat_prop(:,:) = '\0'
 
     ! reads in defined material properties
     rewind(98,iostat=ier)

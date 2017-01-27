@@ -41,7 +41,7 @@ subroutine read_parameters_tomo()
 
   call get_command_argument(1,s_step_fac)
 
-  if (trim(s_step_fac) == '') then
+  if (trim(s_step_fac) == '\0') then
     call usage()
   endif
 

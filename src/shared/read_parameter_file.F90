@@ -412,7 +412,7 @@
       IMODEL = IMODEL_TOMO
     case ('sep')
       IMODEL = IMODEL_SEP
-      if (trim(SEP_MODEL_DIRECTORY) == '') then
+      if (trim(SEP_MODEL_DIRECTORY) == '\0') then
         stop 'Error using sep model requires defining a SEP_MODEL_DIRECTORY.'
       endif
       !inquire(directory=trim(SEP_MODEL_DIRECTORY), exists=sep_dir_exists)

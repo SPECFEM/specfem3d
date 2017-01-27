@@ -23,8 +23,8 @@ program rotate_adj_src
   call getarg(5,efile)
   call getarg(6,nfile)
 
-  if (trim(bazch) == '' .or. trim(zfile) == '' .or. trim(tfile) == '' .or. &
-       trim(rfile) == '' .or. trim(efile) == '' .or. trim(nfile) == '') then
+  if (trim(bazch) == '\0' .or. trim(zfile) == '\0' .or. trim(tfile) == '\0' .or. &
+       trim(rfile) == '\0' .or. trim(efile) == '\0' .or. trim(nfile) == '\0') then
      stop 'rotate_adj_src baz(radians) zfile tfile rfile efile nfile'
   endif
 

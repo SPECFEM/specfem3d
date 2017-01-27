@@ -252,7 +252,7 @@
 
 #ifdef USE_VTK_INSTEAD_OF_MESH
   ! VTK
-  write(IOVTK,*) ''
+  write(IOVTK,*) '\0'
 #endif
 
   if (np /= npp) stop 'Error: Number of total points are not consistent'
@@ -316,7 +316,7 @@
 
 #ifdef USE_VTK_INSTEAD_OF_MESH
   ! VTK
-  write(IOVTK,*) ''
+  write(IOVTK,*) '\0'
 #endif
 
   ! checks with total number of elements
@@ -331,7 +331,7 @@
   ! type: hexahedrons
   write(IOVTK,'(a,i12)') "CELL_TYPES ",nee
   write(IOVTK,'(6i12)') (12,it=1,nee)
-  write(IOVTK,*) ''
+  write(IOVTK,*) '\0'
 
   ! point data values
   ! data array name
@@ -359,13 +359,13 @@
   do it = 1,npp
       write(IOVTK,*) total_dat(it)
   enddo
-  write(IOVTK,*) ''
+  write(IOVTK,*) '\0'
   close(IOVTK)
 #else
   ! close mesh file
   call close_file()
   ! to avoid compiler warning
-  data_array_name = ''
+  data_array_name = '\0'
 #endif
 
   if (ADIOS_FOR_MESH) then

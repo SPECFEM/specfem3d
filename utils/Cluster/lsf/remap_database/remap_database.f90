@@ -24,9 +24,9 @@ implicit none
   call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
 
   call getarg(1,old_machine_file)
-  if (trim(old_machine_file) == '') call exit_mpi(myrank,'Usage: remap_database old-mach num-slice')
+  if (trim(old_machine_file) == '\0') call exit_mpi(myrank,'Usage: remap_database old-mach num-slice')
   call getarg(2,junk)
-  if (trim(junk) == '') call exit_mpi(myrank,'Usage: remap_database old-mach num-slice')
+  if (trim(junk) == '\0') call exit_mpi(myrank,'Usage: remap_database old-mach num-slice')
   read(junk,*) num_slices
   if (num_slices /= sizeprocs) call exit_mpi(myrank,'number of slices does not match')
 

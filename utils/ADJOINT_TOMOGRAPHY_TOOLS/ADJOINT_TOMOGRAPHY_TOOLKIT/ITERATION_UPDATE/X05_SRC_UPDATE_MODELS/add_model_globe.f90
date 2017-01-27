@@ -321,11 +321,11 @@ subroutine read_parameters()
 
 
 !> Hejun Zhu
-!  if (trim(s_step_fac) == '') then
+!  if (trim(s_step_fac) == '\0') then
 !    call exit_MPI(myrank,'Usage: add_model_globe_tiso step_factor')
 !  endif
-  if (trim(s_step_fac) == '' .or. trim(input_model) == '' &
-      .or. trim(input_kernel) == ''.or. trim(output_model) == '') then
+  if (trim(s_step_fac) == '\0' .or. trim(input_model) == '\0' &
+      .or. trim(input_kernel) == '\0'.or. trim(output_model) == '\0') then
       call exit_MPI(myrank, 'Usage: add model_globe_tiso step_factor input_model input_kernel output_model')
   endif
 ! < Hejun Zhu

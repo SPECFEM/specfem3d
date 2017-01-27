@@ -504,7 +504,7 @@
     do ispec = 1,nspec
       write(IOVTK,*) ispec_material_id(ispec)
     enddo
-    write(IOVTK,*) ''
+    write(IOVTK,*) '\0'
     close(IOVTK)
 
     ! stop mesher

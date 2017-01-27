@@ -27,7 +27,7 @@ program precond_kernels
 
   call getarg(1,input_dir)
 
-  if (trim(input_dir) == '' ) then
+  if (trim(input_dir) == '\0' ) then
      call exit_MPI(myrank,'USAGE: xprecond_kernels input_dir')
   endif
 
