@@ -69,7 +69,7 @@
   ! starts here---------------------------------------------------------------------------------------
   do i = 1, 4
     call getarg(i,arg(i))
-    if (i < 4 .and. trim(arg(i)) == '\0') then
+    if (i < 4 .and. trim(arg(i)) == '') then
       print *
       print *, ' Usage: xcreate_slice_VTK slice_list filename input_dir output_dir'
       print *, ' '
@@ -245,7 +245,7 @@
     i = ibool(1,NGLLY,NGLLZ,ispec)
     write(IOVTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
   enddo
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
 
   ! note: indices for vtk start at 0
   write(IOVTK,'(a,i12,i12)') "CELLS ",nspec,nspec*9
@@ -253,12 +253,12 @@
     write(IOVTK,'(9i12)') 8,(ispec-1)*8,(ispec-1)*8+1,(ispec-1)*8+2,(ispec-1)*8+3, &
           (ispec-1)*8+4,(ispec-1)*8+5,(ispec-1)*8+6,(ispec-1)*8+7
   enddo
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
 
   ! type: hexahedrons
   write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
   write(IOVTK,'(6i12)') (12,ispec=1,nspec)
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
 
   ! writes out gll-data (velocity) for each element point
   write(IOVTK,'(a,i12)') "POINT_DATA ",nspec*8
@@ -289,7 +289,7 @@
     i = ibool(1,NGLLY,NGLLZ,ispec)-1
     write(IOVTK,'(3e18.6)') gll_data(1,NGLLY,NGLLZ,ispec)
   enddo
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
 
   close(IOVTK)
 

@@ -64,7 +64,7 @@
   do i=1,nglob
     write(IOVTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
   enddo
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
 
   ! note: indices for vtk start at 0
   write(IOVTK,'(a,i12,i12)') "CELLS ",nspec,nspec*9
@@ -72,12 +72,12 @@
     write(IOVTK,'(9i12)') 8,ibool(1,1,1,ispec)-1,ibool(NGLLX,1,1,ispec)-1,ibool(NGLLX,NGLLY,1,ispec)-1,ibool(1,NGLLY,1,ispec)-1, &
           ibool(1,1,NGLLZ,ispec)-1,ibool(NGLLX,1,NGLLZ,ispec)-1,ibool(NGLLX,NGLLY,NGLLZ,ispec)-1,ibool(1,NGLLY,NGLLZ,ispec)-1
   enddo
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
 
   ! type: hexahedrons
   write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
   write(IOVTK,'(6i12)') (12,ispec=1,nspec)
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
 
   write(IOVTK,'(a,i12)') "CELL_DATA ",nspec
   write(IOVTK,'(a)') "SCALARS elem_flag integer"
@@ -85,7 +85,7 @@
   do ispec = 1,nspec
     write(IOVTK,*) elem_flag(ispec)
   enddo
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
   close(IOVTK)
 
 
@@ -131,7 +131,7 @@
   do i=1,nglob
     write(IOVTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
   enddo
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
 
   ! note: indices for vtk start at 0
   write(IOVTK,'(a,i12,i12)') "CELLS ",nspec,nspec*9
@@ -139,12 +139,12 @@
     write(IOVTK,'(9i12)') 8,ibool(1,1,1,ispec)-1,ibool(NGLLX,1,1,ispec)-1,ibool(NGLLX,NGLLY,1,ispec)-1,ibool(1,NGLLY,1,ispec)-1, &
           ibool(1,1,NGLLZ,ispec)-1,ibool(NGLLX,1,NGLLZ,ispec)-1,ibool(NGLLX,NGLLY,NGLLZ,ispec)-1,ibool(1,NGLLY,NGLLZ,ispec)-1
   enddo
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
 
   ! type: hexahedrons
   write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
   write(IOVTK,'(6i12)') (12,ispec=1,nspec)
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
 
   write(IOVTK,'(a,i12)') "CELL_DATA ",nspec
   write(IOVTK,'(a)') "SCALARS elem_flag integer"
@@ -156,7 +156,7 @@
       write(IOVTK,*) 0
     endif
   enddo
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
   close(IOVTK)
 
 
@@ -207,7 +207,7 @@
   do i=1,nglob
     write(IOVTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
   enddo
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
 
   ! note: indices for vtk start at 0
   write(IOVTK,'(a,i12,i12)') "CELLS ",nspec,nspec*9
@@ -215,12 +215,12 @@
     write(IOVTK,'(9i12)') 8,ibool(1,1,1,ispec)-1,ibool(NGLLX,1,1,ispec)-1,ibool(NGLLX,NGLLY,1,ispec)-1,ibool(1,NGLLY,1,ispec)-1, &
           ibool(1,1,NGLLZ,ispec)-1,ibool(NGLLX,1,NGLLZ,ispec)-1,ibool(NGLLX,NGLLY,NGLLZ,ispec)-1,ibool(1,NGLLY,NGLLZ,ispec)-1
   enddo
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
 
   ! type: hexahedrons
   write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
   write(IOVTK,'(6i12)') (12,ispec=1,nspec)
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
 
   ! iflag field on global nodeset
   !allocate(mask_ibool(nglob),flag_val(nglob),stat=ier)
@@ -248,7 +248,7 @@
   do i = 1,nglob
       write(IOVTK,*) flag_val(i)
   enddo
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
 
   close(IOVTK)
 
@@ -299,7 +299,7 @@
   do i=1,nglob
     write(IOVTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
   enddo
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
 
   ! note: indices for vtk start at 0
   write(IOVTK,'(a,i12,i12)') "CELLS ",nspec,nspec*9
@@ -307,12 +307,12 @@
     write(IOVTK,'(9i12)') 8,ibool(1,1,1,ispec)-1,ibool(NGLLX,1,1,ispec)-1,ibool(NGLLX,NGLLY,1,ispec)-1,ibool(1,NGLLY,1,ispec)-1, &
           ibool(1,1,NGLLZ,ispec)-1,ibool(NGLLX,1,NGLLZ,ispec)-1,ibool(NGLLX,NGLLY,NGLLZ,ispec)-1,ibool(1,NGLLY,NGLLZ,ispec)-1
   enddo
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
 
   ! type: hexahedrons
   write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
   write(IOVTK,'(6i12)') (12,ispec=1,nspec)
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
 
   ! iflag field on global nodeset
   allocate(mask_ibool(nglob),flag_val(nglob),stat=ier)
@@ -339,7 +339,7 @@
   do i = 1,nglob
       write(IOVTK,*) flag_val(i)
   enddo
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
 
   close(IOVTK)
 
@@ -395,7 +395,7 @@
 
     write(IOVTK,'(3e18.6)') xstore_dummy(iglob),ystore_dummy(iglob),zstore_dummy(iglob)
   enddo
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
 
   close(IOVTK)
 
@@ -442,7 +442,7 @@
   do i=1,nglob
     write(IOVTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
   enddo
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
 
   ! note: indices for vtk start at 0
   write(IOVTK,'(a,i12,i12)') "CELLS ",nspec,nspec*9
@@ -450,12 +450,12 @@
     write(IOVTK,'(9i12)') 8,ibool(1,1,1,ispec)-1,ibool(NGLLX,1,1,ispec)-1,ibool(NGLLX,NGLLY,1,ispec)-1,ibool(1,NGLLY,1,ispec)-1, &
           ibool(1,1,NGLLZ,ispec)-1,ibool(NGLLX,1,NGLLZ,ispec)-1,ibool(NGLLX,NGLLY,NGLLZ,ispec)-1,ibool(1,NGLLY,NGLLZ,ispec)-1
   enddo
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
 
   ! type: hexahedrons
   write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
   write(IOVTK,'(6i12)') (12,ispec=1,nspec)
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
 
   ! vector data for each cell
   write(IOVTK,'(a,i12)') "CELL_DATA ",nspec
@@ -464,7 +464,7 @@
     write(IOVTK,*) elem_vector(1,i),elem_vector(2,i),elem_vector(3,i)
   enddo
 
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
   close(IOVTK)
 
 
@@ -510,7 +510,7 @@
   do i=1,nglob
     write(IOVTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
   enddo
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
 
   ! note: indices for vtk start at 0
   write(IOVTK,'(a,i12,i12)') "CELLS ",nspec,nspec*9
@@ -518,12 +518,12 @@
     write(IOVTK,'(9i12)') 8,ibool(1,1,1,ispec)-1,ibool(NGLLX,1,1,ispec)-1,ibool(NGLLX,NGLLY,1,ispec)-1,ibool(1,NGLLY,1,ispec)-1, &
           ibool(1,1,NGLLZ,ispec)-1,ibool(NGLLX,1,NGLLZ,ispec)-1,ibool(NGLLX,NGLLY,NGLLZ,ispec)-1,ibool(1,NGLLY,NGLLZ,ispec)-1
   enddo
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
 
   ! type: hexahedrons
   write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
   write(IOVTK,'(6i12)') (12,ispec=1,nspec)
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
 
   write(IOVTK,'(a,i12)') "CELL_DATA ",nspec
   write(IOVTK,'(a)') "SCALARS elem_val float"
@@ -531,7 +531,7 @@
   do ispec = 1,nspec
     write(IOVTK,*) elem_flag(ispec)
   enddo
-  write(IOVTK,*) '\0'
+  write(IOVTK,*) ''
   close(IOVTK)
 
 

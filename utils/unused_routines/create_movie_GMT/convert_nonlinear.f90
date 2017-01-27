@@ -18,15 +18,15 @@ program convert_nonlinear
   call getarg(3,ch_power)
   call getarg(4,ch_zmax)
 
-  if (trim(infile) == '\0' .or. trim(outfile) == '\0' ) then
+  if (trim(infile) == '' .or. trim(outfile) == '' ) then
      stop 'Usage: convert_nonlinear infile outfile power [zmax]'
   endif
-  if (trim(ch_power) == '\0') then
+  if (trim(ch_power) == '') then
      power = 0.25
   else
      read(ch_power,*) power
   endif
-  if (trim(ch_zmax) == '\0') then
+  if (trim(ch_zmax) == '') then
      calculate_zmax = .true.
   else
      calculate_zmax = .false.

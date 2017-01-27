@@ -361,7 +361,7 @@
     do ipoin = 1,nglob
       write(IOVTK,*) sngl(x(ipoin)),sngl(y(ipoin)),sngl(z(ipoin))
     enddo
-    write(IOVTK,*) '\0'
+    write(IOVTK,*) ''
 
     ! note: indices for vtk start at 0
     write(IOVTK,'(a,i12,i12)') "CELLS ",nspec,nspec*9
@@ -370,12 +370,12 @@
             ibool(1,ispec)-1,ibool(2,ispec)-1,ibool(4,ispec)-1,ibool(3,ispec)-1, &
             ibool(5,ispec)-1,ibool(6,ispec)-1,ibool(8,ispec)-1,ibool(7,ispec)-1
     enddo
-    write(IOVTK,*) '\0'
+    write(IOVTK,*) ''
 
     ! type: hexahedra
     write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
     write(IOVTK,'(6i12)') (12,ispec=1,nspec)
-    write(IOVTK,*) '\0'
+    write(IOVTK,*) ''
 
     write(IOVTK,'(a,i12)') "CELL_DATA ",nspec
     write(IOVTK,'(a)') "SCALARS skewness float"
@@ -383,7 +383,7 @@
     do ispec = 1,nspec
       write(IOVTK,*) tmp1(ispec)
     enddo
-    write(IOVTK,*) '\0'
+    write(IOVTK,*) ''
     close(IOVTK)
 
     deallocate(tmp1)

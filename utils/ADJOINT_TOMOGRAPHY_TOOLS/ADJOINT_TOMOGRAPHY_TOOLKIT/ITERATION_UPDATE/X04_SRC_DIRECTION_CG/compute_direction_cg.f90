@@ -28,8 +28,8 @@ program xcompute_direction_cg
   call getarg(3,gradient_0_dir)
   call getarg(4,gradient_1_dir)
 
-  if (trim(direction_0_dir) == '\0' .or. trim(direction_1_dir) == '\0' &
-        .or. trim(gradient_0_dir) == '\0' .or. trim(gradient_1_dir) == '\0') then
+  if (trim(direction_0_dir) == '' .or. trim(direction_1_dir) == '' &
+        .or. trim(gradient_0_dir) == '' .or. trim(gradient_1_dir) == '') then
         call exit_MPI(myrank,'USAGE: xcompute_direction_cg direction_0_dir direction_1_dir gradient_0_dir gradient_1_dir')
   endif
 
