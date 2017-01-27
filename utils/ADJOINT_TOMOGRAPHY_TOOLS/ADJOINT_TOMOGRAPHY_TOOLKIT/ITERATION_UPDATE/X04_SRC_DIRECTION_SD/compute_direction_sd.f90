@@ -24,7 +24,7 @@ program xcompute_direction_sd
   call getarg(1,direction_dir)
   call getarg(2,gradient_dir)
 
-  if (trim(direction_dir) == '\0' .or. trim(gradient_dir) == '\0') then
+  if (trim(direction_dir) == '' .or. trim(gradient_dir) == '') then
         call exit_MPI(myrank,'USAGE: xcompute_direction_sd direction_dir gradient_dir')
   endif
 

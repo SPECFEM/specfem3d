@@ -70,9 +70,9 @@ program smooth_specfem_function
   call getarg(8,scratch_file_dir)
   call getarg(9,scratch_topo_dir)
 
-  if (trim(s_nproc_xi) == '\0' .or. trim(s_nproc_eta) == '\0' .or. trim(s_nchunks) == '\0' &
-             .or. trim(s_element_size) == '\0' .or. trim(kernel_file_name) == '\0' &
-             .or. trim(scratch_file_dir) == '\0' .or. trim(scratch_topo_dir) == '\0') then
+  if (trim(s_nproc_xi) == '' .or. trim(s_nproc_eta) == '' .or. trim(s_nchunks) == '' &
+             .or. trim(s_element_size) == '' .or. trim(kernel_file_name) == '' &
+             .or. trim(scratch_file_dir) == '' .or. trim(scratch_topo_dir) == '') then
     call exit_MPI(myrank,'Usage: smooth_sem_fun nproc_xi nproc_eta nchunks element_size_on_surface(km) sigma_h(km) sigma_v(km) kernel_file_name scratch_file_dir scratch_topo_dir')
   endif
 

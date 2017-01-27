@@ -66,7 +66,7 @@ program combine_surf_data
 
   do i = 1, 8
     call get_command_argument(i,arg(i))
-    if (i < 6 .and. trim(arg(i)) == '\0') then
+    if (i < 6 .and. trim(arg(i)) == '') then
       print *, 'Usage: xcombine_surface start_slice end_slice filename surfacename input_dir output_dir high/low-resolution 3D/2D'
       print *, '    or xcombine_surface slice_list filename surfacename input_dir output_dir high/low-resolution 3D/2D'
       print *, ' possible filenames are kappastore(NGLLX,NGLLY,NGLLZ,nspec), alpha_kernel(NGLLX,NGLLY,nspec_surf)'
@@ -79,7 +79,7 @@ program combine_surf_data
   enddo
 
   ! get slice list
-  if (trim(arg(8)) == '\0') then
+  if (trim(arg(8)) == '') then
     num_node = 0
     open(unit = 20, file = trim(arg(1)), status = 'unknown',iostat = ier)
     if (ier /= 0) then

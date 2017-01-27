@@ -77,7 +77,7 @@ program test_partitioning
   allocate(undef_mat_prop(6,count_undef_mat),stat=ier)
   if (ier /= 0) stop 'error allocating array undef_mat_prop'
   mat_prop(:,:) = 0.d0
-  undef_mat_prop(:,:) = '\0'
+  undef_mat_prop(:,:) = ''
 
   num_mat = 1
   mat_prop(1,num_mat) = 2500.d0   ! rho

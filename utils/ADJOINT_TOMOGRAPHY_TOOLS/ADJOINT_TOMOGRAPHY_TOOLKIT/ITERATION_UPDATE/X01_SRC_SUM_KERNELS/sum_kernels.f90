@@ -26,9 +26,9 @@ program sum_kernels
   call getarg(3,eventid)
 
 
-  if (trim(input_dir) == '\0' &
-     .or. trim(output_dir) == '\0' &
-     .or. trim(eventid) == '\0' ) then
+  if (trim(input_dir) == '' &
+     .or. trim(output_dir) == '' &
+     .or. trim(eventid) == '' ) then
      call exit_MPI(myrank,'USAGE: xsum_kernels input_dir output_dir eventid')
   endif
 

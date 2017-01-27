@@ -76,8 +76,8 @@ subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
   call world_duplicate(comm)
 
   groupsize = 0
-  call adios_declare_group(group, group_name, '\0', 0, adios_err)
-  call adios_select_method(group, "MPI", '\0', '\0', adios_err)
+  call adios_declare_group(group, group_name, '', 0, adios_err)
+  call adios_select_method(group, "MPI", '', '', adios_err)
 
   max_global_values(1) = NSPEC_AB
 
@@ -85,120 +85,120 @@ subroutine define_kernel_adios_variables(handle, SAVE_WEIGHTS)
 
   nspec_wmax = max_global_values(1)
 
-  call define_adios_scalar(group, groupsize, '\0', "nspec", NSPEC_AB)
+  call define_adios_scalar(group, groupsize, '', "nspec", NSPEC_AB)
 
   local_dim = NGLLX * NGLLY * NGLLZ * nspec_wmax
 
   if (SAVE_WEIGHTS) then
     call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '\0', "weights_kernel", dummy_kernel)
+                                     '', "weights_kernel", dummy_kernel)
   endif
 
   if (ACOUSTIC_SIMULATION) then
     call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '\0', "rho_ac_kl", dummy_kernel)
+                                     '', "rho_ac_kl", dummy_kernel)
     call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '\0', "kappa_ac_kl", dummy_kernel)
+                                     '', "kappa_ac_kl", dummy_kernel)
     call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '\0', "rhop_ac_kl", dummy_kernel)
+                                     '', "rhop_ac_kl", dummy_kernel)
     call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '\0', "alpha_ac_kl", dummy_kernel)
+                                     '', "alpha_ac_kl", dummy_kernel)
   endif
 
   if (ELASTIC_SIMULATION) then
     if (ANISOTROPIC_KL) then
       if (SAVE_TRANSVERSE_KL) then
         call define_adios_global_array1D(group, groupsize, local_dim, &
-                                         '\0', "alphav_kl", dummy_kernel)
+                                         '', "alphav_kl", dummy_kernel)
         call define_adios_global_array1D(group, groupsize, local_dim, &
-                                         '\0', "alphah_kl", dummy_kernel)
+                                         '', "alphah_kl", dummy_kernel)
         call define_adios_global_array1D(group, groupsize, local_dim, &
-                                         '\0', "betav_kl", dummy_kernel)
+                                         '', "betav_kl", dummy_kernel)
         call define_adios_global_array1D(group, groupsize, local_dim, &
-                                         '\0', "betah_kl", dummy_kernel)
+                                         '', "betah_kl", dummy_kernel)
         call define_adios_global_array1D(group, groupsize, local_dim, &
-                                         '\0', "eta_kl", dummy_kernel)
+                                         '', "eta_kl", dummy_kernel)
         call define_adios_global_array1D(group, groupsize, local_dim, &
-                                         '\0', "alpha_kl", dummy_kernel)
+                                         '', "alpha_kl", dummy_kernel)
         call define_adios_global_array1D(group, groupsize, local_dim, &
-                                         '\0', "beta_kl", dummy_kernel)
+                                         '', "beta_kl", dummy_kernel)
       else
         call define_adios_global_array1D(group, groupsize, local_dim, &
-                                         '\0', "rho_kl", dummy_kernel)
+                                         '', "rho_kl", dummy_kernel)
         call define_adios_global_array1D(group, groupsize, local_dim, &
-                                         '\0', "cijkl_kl", dummy_kernel)
+                                         '', "cijkl_kl", dummy_kernel)
       endif
     else
       call define_adios_global_array1D(group, groupsize, local_dim, &
-                                       '\0', "rho_kl", dummy_kernel)
+                                       '', "rho_kl", dummy_kernel)
       call define_adios_global_array1D(group, groupsize, local_dim, &
-                                       '\0', "mu_kl", dummy_kernel)
+                                       '', "mu_kl", dummy_kernel)
       call define_adios_global_array1D(group, groupsize, local_dim, &
-                                       '\0', "kappa_kl", dummy_kernel)
+                                       '', "kappa_kl", dummy_kernel)
       call define_adios_global_array1D(group, groupsize, local_dim, &
-                                       '\0', "rhop_kl", dummy_kernel)
+                                       '', "rhop_kl", dummy_kernel)
       call define_adios_global_array1D(group, groupsize, local_dim, &
-                                       '\0', "beta_kl", dummy_kernel)
+                                       '', "beta_kl", dummy_kernel)
       call define_adios_global_array1D(group, groupsize, local_dim, &
-                                       '\0', "alpha_kl", dummy_kernel)
+                                       '', "alpha_kl", dummy_kernel)
     endif
     if (SAVE_MOHO_MESH) then
       call define_adios_global_array1D(group, groupsize, local_dim, &
-                                       '\0', "moho_kl", dummy_kernel)
+                                       '', "moho_kl", dummy_kernel)
     endif
   endif
 
   if (POROELASTIC_SIMULATION) then
     call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '\0', "rhot_kl", dummy_kernel)
+                                     '', "rhot_kl", dummy_kernel)
     call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '\0', "rhof_kl", dummy_kernel)
+                                     '', "rhof_kl", dummy_kernel)
     call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '\0', "sm_kl", dummy_kernel)
+                                     '', "sm_kl", dummy_kernel)
     call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '\0', "eta_kl", dummy_kernel)
+                                     '', "eta_kl", dummy_kernel)
     call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '\0', "mufr_kl", dummy_kernel)
+                                     '', "mufr_kl", dummy_kernel)
     call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '\0', "B_kl", dummy_kernel)
+                                     '', "B_kl", dummy_kernel)
     call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '\0', "C_kl", dummy_kernel)
+                                     '', "C_kl", dummy_kernel)
     call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '\0', "M_kl", dummy_kernel)
+                                     '', "M_kl", dummy_kernel)
     call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '\0', "rhofb_kl", dummy_kernel)
+                                     '', "rhofb_kl", dummy_kernel)
     call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '\0', "phi_kl", dummy_kernel)
+                                     '', "phi_kl", dummy_kernel)
     call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '\0', "mufrb_kl", dummy_kernel)
+                                     '', "mufrb_kl", dummy_kernel)
     call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '\0', "Bb_kl", dummy_kernel)
+                                     '', "Bb_kl", dummy_kernel)
     call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '\0', "Cb_kl", dummy_kernel)
+                                     '', "Cb_kl", dummy_kernel)
     call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '\0', "Mb_kl", dummy_kernel)
+                                     '', "Mb_kl", dummy_kernel)
     call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '\0', "rhofbb_kl", dummy_kernel)
+                                     '', "rhofbb_kl", dummy_kernel)
     call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '\0', "phib_kl", dummy_kernel)
+                                     '', "phib_kl", dummy_kernel)
     call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '\0', "cs_kl", dummy_kernel)
+                                     '', "cs_kl", dummy_kernel)
     call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '\0', "cpI_kl", dummy_kernel)
+                                     '', "cpI_kl", dummy_kernel)
     call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '\0', "cpII_kl", dummy_kernel)
+                                     '', "cpII_kl", dummy_kernel)
     call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '\0', "ratio_kl", dummy_kernel)
+                                     '', "ratio_kl", dummy_kernel)
   endif
 
   if (APPROXIMATE_HESS_KL) then
     if (ACOUSTIC_SIMULATION) then
       call define_adios_global_array1D(group, groupsize, local_dim, &
-                                       '\0', "hess_ac_kl", dummy_kernel)
+                                       '', "hess_ac_kl", dummy_kernel)
     endif
     if (ELASTIC_SIMULATION) then
       call define_adios_global_array1D(group, groupsize, local_dim, &
-                                       '\0', "hess_kl", dummy_kernel)
+                                       '', "hess_kl", dummy_kernel)
     endif
   endif
 
