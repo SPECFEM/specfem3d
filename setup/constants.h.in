@@ -231,12 +231,8 @@
 ! to be zero on outer boundary of PML help to improve the accuracy of absorbing low-frequency wave components
 ! in case of long-time simulation.
 
-!! DK DK I tend to disagree with the above second paragraph, enforcing that anyway leads to instabilities
-!! DK DK for sure in the 2D code; I thus add a new flag, SET_NEUMANN_RATHER_THAN_DIRICHLET_FOR_FLUID_PMLs,
-!! DK DK in setup/constants.h.in, set to .false. by default
-
 ! impose Dirichlet conditions for the potential (i.e. Neumann for displacement) on the outer edges of the C-PML layers
-  logical, parameter :: SET_NEUMANN_RATHER_THAN_DIRICHLET_FOR_FLUID_PMLs = .false.
+  logical, parameter :: SET_NEUMANN_RATHER_THAN_DIRICHLET_FOR_FLUID_PMLs = .true.
 
 !!-----------------------------------------------------------
 !!
