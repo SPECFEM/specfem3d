@@ -89,6 +89,7 @@ contains
   subroutine BC_DYNFLT_init(prname,DTglobal,myrank)
 
   use specfem_par, only: nt => NSTEP
+  use constants, only: IMAIN
 
   implicit none
 
@@ -119,9 +120,11 @@ contains
 
   read(IIN_PAR,*) nbfaults
   if (nbfaults == 0) then
+
     if (myrank == 0) write(IMAIN,*) 'No faults found in file DATA/Par_file_faults'
     return
   else if (nbfaults == 1) then
+      write(*,*) 'MYRANL' , myrank , 'there are ',nbfaults
     if (myrank == 0) write(IMAIN,*) 'There is 1 fault in file DATA/Par_file_faults'
   else
     if (myrank == 0) write(IMAIN,*) 'There are ', nbfaults, ' faults in file DATA/Par_file_faults'
@@ -284,9 +287,10 @@ contains
       call swf_init(bc%swf,bc%MU,bc%coord,IIN_PAR)
       if (TPV16) call TPV16_init() !WARNING: ad hoc, initializes T0 and swf
     endif
+!  call load_stress_tpv35
 
   endif
-  bc%T=bc%T0
+  !bc%T=bc%T0
   if (RATE_AND_STATE) then
     call init_dataT(bc%dataT,bc%coord,bc%nglob,NT,dt,8,iflt)
     if (bc%dataT%npoin > 0) then
@@ -400,6 +404,32 @@ contains
     bc%T0(2,:)=bc%T0(2,:)-T2tmp
 
     end subroutine load_stress_drop
+
+    subroutine load_stress_tpv35   !added by kangchen this is specially made for Balochistan Simulation
+
+    use specfem_par, only: prname
+
+    implicit none
+
+    real(kind=CUSTOM_REAL),dimension(bc%nglob) :: stresstmp, mustmp
+    character(len=70) :: filename
+    integer :: ier
+    integer,parameter :: IIN_STR = 122 ! could also use e.g. standard IIN from constants.h
+
+    filename = prname(1:len_trim(prname))//'tpv35_input.bin'
+    write(*,*) prname,bc%nglob
+    open(unit=IIN_STR,file=trim(filename),status='old',action='read',form='unformatted',iostat=ier)
+    read(IIN_STR) stresstmp
+    read(IIN_STR) mustmp
+    close(IIN_STR)
+    !   write(*,*) prname,bc%nglob,'successful'
+
+    bc%T0(1,:)=stresstmp
+    bc%T(1,:) = stresstmp
+    bc%swf%mus = mustmp
+
+    end subroutine load_stress_tpv35
+
 
   end subroutine init_one_fault
 
@@ -1293,7 +1323,8 @@ contains
       dataXZ%sta => bc%rsf%theta
     endif
     dataXZ%d1 => bc%d(1,:)
-    dataXZ%d2 => bc%d(2,:)
+    dataXZ%d2 => bc%swf%mus
+!    dataXZ%d2 => bc%d(2,:)
     dataXZ%v1 => bc%v(1,:)
     dataXZ%v2 => bc%v(2,:)
     dataXZ%t1 => bc%t(1,:)
