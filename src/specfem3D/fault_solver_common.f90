@@ -246,6 +246,8 @@ subroutine compute_R(R,nglob,n)
   s(1,:) =  n(2,:)   ! sx = ny
   s(2,:) = -n(1,:)   ! sy =-nx
   s(3,:) = 0.e0_CUSTOM_REAL
+  ! set the along strike direction when the fault is a horizontal plane.
+  where(abs(s(1,:))+abs(s(2,:))<1e-6) s(1,:) = 1.0
   call normalize_3d_vector(s)
 
   d(1,:) = -s(2,:)*n(3,:) ! dx = -sy*nz
@@ -506,9 +508,9 @@ subroutine store_dataT(dataT,d,v,t,itime)
     dataT%dat(1,i,itime) = d(1,k)
     dataT%dat(2,i,itime) = v(1,k)
     dataT%dat(3,i,itime) = t(1,k)/1.0e6_CUSTOM_REAL
-    dataT%dat(4,i,itime) = -d(2,k)
-    dataT%dat(5,i,itime) = -v(2,k)
-    dataT%dat(6,i,itime) = -t(2,k)/1.0e6_CUSTOM_REAL
+    dataT%dat(4,i,itime) = d(2,k)
+    dataT%dat(5,i,itime) = v(2,k)
+    dataT%dat(6,i,itime) = t(2,k)/1.0e6_CUSTOM_REAL
     dataT%dat(7,i,itime) = t(3,k)/1.0e6_CUSTOM_REAL
   enddo
 
