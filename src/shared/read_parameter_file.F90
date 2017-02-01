@@ -520,7 +520,7 @@
     call bcast_all_string_world(FORCESOLUTION)
     call bcast_all_string_world(CMTSOLUTION)
 
-#idef DEBUG_COUPLED
+#ifdef DEBUG_COUPLED
     include "../../../add_to_read_parameter_file_3.F90"
 #endif
     
