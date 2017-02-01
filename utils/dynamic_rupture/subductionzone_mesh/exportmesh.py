@@ -35,10 +35,20 @@ cubit.cmd('unmerge surf 3')
 cubit.cmd('set node constraint on')
 for iblock in range(1,11,1):
     define_block_hex27(iblock)
+
 cubit.cmd('set node constraint off')
-cubit.cmd('node in surf 3 move 0 0 -0.001')
-cubit.cmd('node in surf 39 move 0 0 0.001')
+cubit.cmd("group 'upp'  add node in surface 39")
+cubit.cmd("group 'lowr' add node in surface 9")
+cubit.cmd("group 'upp' remove node with z_coord < -90000")
+cubit.cmd("group 'lowr' remove node with z_coord < -90000")
+cubit.cmd("nodeset 200 group upp")
+cubit.cmd("nodeset 201 group lowr")
+cubit.cmd('nodeset 201 move 0 0 -0.1')
+cubit.cmd('nodeset 200 move 0 0 0.1')
+
 cubit.cmd('compress all')
+
+
 
 Au = [39]
 Ad = [3]
