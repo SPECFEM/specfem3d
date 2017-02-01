@@ -210,12 +210,17 @@ subroutine compute_forces_acoustic_calling()
 ! There is something to enforce explicitly only in the case of elastic elements, for which a Dirichlet
 ! condition is needed for the displacement vector, which is the vectorial unknown for these elements.
 
+!! DK DK this paragraph seems to be from Zhinan or from ChangHua:
 ! However, enforcing explicitly potential_dot_dot_acoustic, potential_dot_acoustic, potential_acoustic
 ! to be zero on outer boundary of PML help to improve the accuracy of absorbing low-frequency wave components
-! in case of long-time simulation
+! in case of long-time simulation.
 
-! C-PML boundary
-  if (PML_CONDITIONS) then
+!! DK DK I tend to disagree with the above second paragraph, enforcing that anyway leads to instabilities
+!! DK DK for sure in the 2D code; I thus add a new flag, SET_NEUMANN_RATHER_THAN_DIRICHLET_FOR_FLUID_PMLs,
+!! DK DK in setup/constants.h.in, set to .false. by default
+
+! impose Dirichlet conditions for the potential (i.e. Neumann for displacement) on the outer edges of the C-PML layers
+  if (PML_CONDITIONS .and. SET_NEUMANN_RATHER_THAN_DIRICHLET_FOR_FLUID_PMLs) then
     do iface = 1,num_abs_boundary_faces
       ispec = abs_boundary_ispec(iface)
 !!! It is better to move this into do iphase=1,2 loop
