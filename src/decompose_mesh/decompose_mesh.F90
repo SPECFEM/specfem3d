@@ -319,7 +319,7 @@ module decompose_mesh
     endif
     allocate(undef_mat_prop(6,count_undef_mat),stat=ier)
     if (ier /= 0) stop 'Error allocating array undef_mat_prop'
-    undef_mat_prop(:,:) = '\0'
+    undef_mat_prop(:,:) = ''
 
     ! reads in defined material properties
     rewind(98,iostat=ier)
@@ -682,21 +682,39 @@ module decompose_mesh
     print *, '  nspec2D_bottom = ', nspec2D_bottom
 
   ! reads in free_surface boundary files
+
+    ! checks old (now obsolete) naming formats to avoid mistakenly using obsolete files
+    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/free_surface_file', &
+        status='old', form='formatted',iostat=ier)
+    if (ier == 0) then
+      print *, '  "free_surface_file" file name is deprecated!'
+      print *, '  Please rename it to "free_or_absorbing_surface_file_zmax" and restart the run'
+      print *, '  or remove it if it is obsolete'
+      stop 'please rename or remove the input file with obsolete file name'
+    endif
+
+    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_zmax', &
+        status='old', form='formatted',iostat=ier)
+    if (ier == 0) then
+      print *, '  "absorbing_surface_file_zmax" file name is deprecated!'
+      print *, '  Please rename it to "free_or_absorbing_surface_file_zmax" and restart the run'
+      print *, '  or remove it if it is obsolete'
+      stop 'please rename or remove the input file with obsolete file name'
+    endif
+
+    open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/absorbing_surface_file_top', &
+        status='old', form='formatted',iostat=ier)
+    if (ier == 0) then
+      print *, '  "absorbing_surface_file_top" file name is deprecated!'
+      print *, '  Please rename it to "free_or_absorbing_surface_file_zmax" and restart the run'
+      print *, '  or remove it if it is obsolete'
+      stop 'please rename or remove the input file with obsolete file name'
+    endif
+
     file_found = .false.
     open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/free_or_absorbing_surface_file_zmax', &
           status='old', form='formatted',iostat=ier)
-    if (ier /= 0) then
-      ! checks with old naming format (version 2.0 format) to be back-compatible
-      open(unit=98, file=localpath_name(1:len_trim(localpath_name))//'/free_surface_file', &
-          status='old', form='formatted',iostat=ier)
-      if (ier == 0) then
-        file_found = .true.
-        print *, '  Note: free_surface_file name is deprecated!'
-        print *, '        Please use new name: free_or_absorbing_surface_file_zmax'
-      endif
-    else
-      file_found = .true.
-    endif
+    if (ier == 0) file_found = .true.
     if (.not. file_found) then
       nspec2D_top = 0
       print *, '  no free_or_absorbing_surface_file_zmax file found'

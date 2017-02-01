@@ -84,7 +84,12 @@ program xdecompose_mesh_mpi
      print *
      print *
 
-     open(27,file=trim(LOCAL_PATH)//'/../output_paralell_decomp.txt')
+     open(27,file=trim(LOCAL_PATH)//'/../output_parallel_mesh_decomposer.txt')
+     write(27,*)
+     write(27,*) '*********************************************************************'
+     write(27,*) 'Parallel mesh decomposer, by Vadim Monteiller, CNRS Marseille, France'
+     write(27,*) '*********************************************************************'
+     write(27,*)
      write(27,*) ' READING MESH FILES '
      call read_mesh_files()
      write(27,*) ' COMPUTE COMPUTATIONAL LOAD of EACH ELEMENT'

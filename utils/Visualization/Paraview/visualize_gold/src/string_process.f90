@@ -190,7 +190,7 @@ integer,intent(in) :: nvar
 character(len=80),dimension(2) :: args
 integer :: i,narg
 
-strval='\0'
+strval=''
 
 do i=1,nvar
   call split_string(slist(i),'=',args,narg)

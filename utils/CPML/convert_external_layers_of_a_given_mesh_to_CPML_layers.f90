@@ -1106,7 +1106,7 @@
   print *,'CPML file "absorbing_surface_file_bottom" has been successfully created'
   print *
 
-! ************* generate "absorbing_surface_file_top" *************
+! ************* generate "free_or_absorbing_surface_file_zmax" *************
 
 ! first count the number of faces that are along that edge
 
@@ -1181,7 +1181,7 @@
 
 !-----------------------------
 
-  open(unit=24,file='absorbing_surface_file_top',status='unknown',action='write')
+  open(unit=24,file='free_or_absorbing_surface_file_zmax',status='unknown',action='write')
 
 ! write the total number of face elements
   write(24,*) count_faces_found
@@ -1233,7 +1233,7 @@
 
   close(24)
 
-  print *,'CPML file "absorbing_surface_file_top" has been successfully created'
+  print *,'CPML file "free_or_absorbing_surface_file_zmax" has been successfully created'
   print *
 
   end program convert_mesh_to_CPML

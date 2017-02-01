@@ -38,10 +38,16 @@ program xdecompose_mesh
   logical :: BROADCAST_AFTER_READ
   character(len=MAX_STRING_LEN) :: arg(3)
 
+  print *
+  print *,'**********************'
+  print *,'Serial mesh decomposer'
+  print *,'**********************'
+  print *
+
 ! check usage
   do i=1,3
     call get_command_argument(i,arg(i))
-    if (i <= 3 .and. trim(arg(i)) == '\0') then
+    if (i <= 3 .and. trim(arg(i)) == '') then
       print *, 'Usage: ./xdecompose_mesh  nparts  input_directory output_directory'
       print *
       print *, '  where'

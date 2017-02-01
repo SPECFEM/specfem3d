@@ -123,16 +123,22 @@ use File::Basename;
       $line =~ s#\.true\.#\.true\.#ogi;
       $line =~ s#\.false\.#\.false\.#ogi;
 
+## DK DK reverting this because it breaks other compilers, since "\0" is not a true empty strings for other compilers.
+## DK DK see https://github.com/geodynamics/specfem3d/issues/818
 # for null strings, make sure we fully conform to the standard otherwise the IBM xlf compiler refuses to compile
 # do not do it for "Poisson''s ratio" in a Fortran print statement
-      if(index($line, "Poisson''s") == -1) {
-      if(index($line, "Young''s") == -1) {
-      if(index($line, "''''") == -1) {
-        $line =~ s#\"\"#\'\\0\'#ogi;
-        $line =~ s#\'\'#\'\\0\'#ogi;
-      }
-      }
-      }
+#     if(index($line, "Poisson''s") == -1) {
+#     if(index($line, "Young''s") == -1) {
+#     if(index($line, "''''") == -1) {
+#       $line =~ s#\"\"#\'\\0\'#ogi;
+#       $line =~ s#\'\'#\'\\0\'#ogi;
+#     }
+#     }
+#     }
+
+# this is to revert the above fix for IBM xlf, which broke other compilers
+      $line =~ s#\'\\0\'#\'\'#ogi;
+      $line =~ s#\"\\0\"#\'\'#ogi;
 
 #
 # known problem: makes the changes also in constant strings, and not only
@@ -263,6 +269,7 @@ use File::Basename;
       $line =~ s# pml # PML #ogi;
 
 # fix some typos I have found in the different codes
+      $line =~ s#paralell#parallel#ogi;
       $line =~ s#debbug#debug#ogi;
       $line =~ s#familly#family#ogi;
       $line =~ s#warnning#warning#ogi;

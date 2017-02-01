@@ -460,7 +460,7 @@ contains
   if (n == 0) return
 
   do i=1,n
-    shapeval = '\0'
+    shapeval = ''
     val  = 0e0_CUSTOM_REAL
     valh = 0e0_CUSTOM_REAL
     xc = 0e0_CUSTOM_REAL
@@ -1323,8 +1323,7 @@ contains
       dataXZ%sta => bc%rsf%theta
     endif
     dataXZ%d1 => bc%d(1,:)
-    dataXZ%d2 => bc%swf%mus
-!    dataXZ%d2 => bc%d(2,:)
+    dataXZ%d2 => bc%d(2,:)
     dataXZ%v1 => bc%v(1,:)
     dataXZ%v2 => bc%v(2,:)
     dataXZ%t1 => bc%t(1,:)
