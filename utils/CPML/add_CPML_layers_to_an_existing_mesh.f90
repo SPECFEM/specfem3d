@@ -44,6 +44,12 @@
 ! number of GLL points in each direction, to check for negative Jacobians
   integer, parameter :: NGLLX = 5,NGLLY = NGLLX,NGLLZ = NGLLX
 
+! remove all the point multiples in the extruded mesh, i.e. never create the same point twice, reuse the older one instead
+! this is significantly slower but much safer to the codes that will use the extruded mesh later,
+! because that mesh will not contain any artificially-duplicated point (some but not all solvers remove them,
+! it is thus better and safer to remove them here)
+  logical, parameter :: REMOVE_ALL_POINT_MULTIPLES = .false. ! slow version, thus off by default for now
+
 ! number of PML and non-PML layers to add on each side of the mesh
   integer :: NUMBER_OF_PML_LAYERS_TO_ADD,NUMBER_OF_TRANSITION_LAYERS_TO_ADD,TOTAL_NUMBER_OF_LAYERS_TO_ADD
 
@@ -52,12 +58,15 @@
   double precision :: SIZE_OF_XMIN_ELEMENT_TO_ADD,SIZE_OF_YMIN_ELEMENT_TO_ADD,SIZE_OF_ZMIN_ELEMENT_TO_ADD
   double precision :: SIZE_OF_XMAX_ELEMENT_TO_ADD,SIZE_OF_YMAX_ELEMENT_TO_ADD,SIZE_OF_ZMAX_ELEMENT_TO_ADD
 
-  integer :: nspec,npoin,npoin_new,nspec_new,count_elem_faces_to_extend,iextend
+  integer :: nspec,npoin,npoin_new_max,npoin_new_real,nspec_new,count_elem_faces_to_extend,iextend
   integer :: factor_x,factor_y,factor_z
   integer :: ispec,ipoin,iloop_on_X_Y_Z_faces,iloop_on_min_face_then_max_face
   integer :: ipoin_read,ispec_loop
-  integer :: i1,i2,i3,i4,i5,i6,i7,i8,elem_counter,ibool_counter,ia,iflag,iformat,icompute_size
+  integer :: i1,i2,i3,i4,i5,i6,i7,i8,elem_counter,ia,iflag,iformat,icompute_size
   integer :: p1,p2,p3,p4
+
+  double precision :: x_value_to_create,y_value_to_create,z_value_to_create
+  logical :: point_already_exists
 
   double precision, dimension(:), allocatable, target :: x,y,z
   double precision, dimension(:), allocatable :: x_new,y_new,z_new
@@ -78,7 +87,7 @@
   double precision, dimension(NGNOD) :: xelm,yelm,zelm
 
   double precision :: xread,yread,zread,xmin,xmax,ymin,ymax,zmin,zmax,limit,xsize,ysize,zsize
-  double precision :: value_min,value_max,value_size,sum_of_distances,mean_distance
+  double precision :: value_min,value_max,value_size,distance,sum_of_distances,mean_distance,very_small_distance
 
   logical :: ADD_ON_THE_XMIN_SURFACE,ADD_ON_THE_XMAX_SURFACE
   logical :: ADD_ON_THE_YMIN_SURFACE,ADD_ON_THE_YMAX_SURFACE
@@ -500,16 +509,18 @@
   print *,'Total number of elements in the mesh before extension = ',nspec
   print *,'Number of element faces to extend  = ',count_elem_faces_to_extend
   if (count_elem_faces_to_extend == 0) stop 'error: number of element faces to extend detected is zero!'
+
 ! we will add TOTAL_NUMBER_OF_LAYERS_TO_ADD to each of the element faces detected that need to be extended
   nspec_new = nspec + count_elem_faces_to_extend * TOTAL_NUMBER_OF_LAYERS_TO_ADD
-! and each of these elements will have NGNOD points
-! (some of them shared with other elements, but we do not care because they will be removed automatically by xdecompose_mesh)
-  npoin_new = npoin + count_elem_faces_to_extend * TOTAL_NUMBER_OF_LAYERS_TO_ADD * NGNOD
   print *,'Total number of elements in the mesh after extension = ',nspec_new
-  if (icompute_size == 1) then
-    mean_distance = sum_of_distances / dble(count_elem_faces_to_extend)
-    print *,'Computed mean size of the elements to extend = ',mean_distance
-  endif
+
+! and each of these elements will have NGNOD points
+! (some of them shared with other elements, but we will remove the multiples below, thus here it is a maximum
+  npoin_new_max = npoin + count_elem_faces_to_extend * TOTAL_NUMBER_OF_LAYERS_TO_ADD * NGNOD
+
+  mean_distance = sum_of_distances / dble(count_elem_faces_to_extend)
+  very_small_distance = mean_distance / 10000.d0
+  if (icompute_size == 1) print *,'Computed mean size of the elements to extend = ',mean_distance
   print *
 
 ! allocate a new set of elements, i.e. a new ibool()
@@ -528,9 +539,9 @@
   if (minval(ibool) /= 1) stop 'error in minval(ibool)'
 
 ! allocate a new set of points, with multiples
-  allocate(x_new(npoin_new))
-  allocate(y_new(npoin_new))
-  allocate(z_new(npoin_new))
+  allocate(x_new(npoin_new_max))
+  allocate(y_new(npoin_new_max))
+  allocate(z_new(npoin_new_max))
 
 ! copy the original points into the new set
   x_new(1:npoin) = x(1:npoin)
@@ -539,7 +550,7 @@
 
 ! position after which to start to create the new elements
   elem_counter = nspec
-  ibool_counter = npoin
+  npoin_new_real = npoin
 
 ! loop on the whole original mesh
   do ispec = 1,nspec
@@ -746,61 +757,205 @@
         ! use the same material property for the extended elements as for the element being extended
         imaterial_new(elem_counter) = imaterial(ispec)
 
-        ! create a new point
-        ibool_counter = ibool_counter + 1
-        ibool_new(1,elem_counter) = ibool_counter
-        x_new(ibool_counter) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-        y_new(ibool_counter) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-        z_new(ibool_counter) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+        ! create a new point if it does not exist yet, otherwise use the existing one to avoid creating multiples
+        x_value_to_create = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+        y_value_to_create = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+        z_value_to_create = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+        point_already_exists = .false.
+        if (REMOVE_ALL_POINT_MULTIPLES) then
+          do ipoin = 1,npoin_new_real
+            distance = sqrt((x_new(ipoin) - x_value_to_create)**2 + (y_new(ipoin) - y_value_to_create)**2 &
+                          + (z_new(ipoin) - z_value_to_create)**2)
+            if (distance < very_small_distance) then
+              point_already_exists = .true.
+              exit
+            endif
+          enddo
+        endif
+        if (point_already_exists) then
+          ibool_new(1,elem_counter) = ipoin
+        else
+          npoin_new_real = npoin_new_real + 1
+          ibool_new(1,elem_counter) = npoin_new_real
+          x_new(npoin_new_real) = x_value_to_create
+          y_new(npoin_new_real) = y_value_to_create
+          z_new(npoin_new_real) = z_value_to_create
+        endif
 
-        ! create a new point
-        ibool_counter = ibool_counter + 1
-        ibool_new(2,elem_counter) = ibool_counter
-        x_new(ibool_counter) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-        y_new(ibool_counter) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-        z_new(ibool_counter) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+        ! create a new point if it does not exist yet, otherwise use the existing one to avoid creating multiples
+        x_value_to_create = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+        y_value_to_create = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+        z_value_to_create = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+        point_already_exists = .false.
+        if (REMOVE_ALL_POINT_MULTIPLES) then
+          do ipoin = 1,npoin_new_real
+            distance = sqrt((x_new(ipoin) - x_value_to_create)**2 + (y_new(ipoin) - y_value_to_create)**2 &
+                          + (z_new(ipoin) - z_value_to_create)**2)
+            if (distance < very_small_distance) then
+              point_already_exists = .true.
+              exit
+            endif
+          enddo
+        endif
+        if (point_already_exists) then
+          ibool_new(1,elem_counter) = ipoin
+        else
+          npoin_new_real = npoin_new_real + 1
+          ibool_new(2,elem_counter) = npoin_new_real
+          x_new(npoin_new_real) = x_value_to_create
+          y_new(npoin_new_real) = y_value_to_create
+          z_new(npoin_new_real) = z_value_to_create
+        endif
 
-        ! create a new point
-        ibool_counter = ibool_counter + 1
-        ibool_new(3,elem_counter) = ibool_counter
-        x_new(ibool_counter) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-        y_new(ibool_counter) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-        z_new(ibool_counter) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+        ! create a new point if it does not exist yet, otherwise use the existing one to avoid creating multiples
+        x_value_to_create = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+        y_value_to_create = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+        z_value_to_create = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+        point_already_exists = .false.
+        if (REMOVE_ALL_POINT_MULTIPLES) then
+          do ipoin = 1,npoin_new_real
+            distance = sqrt((x_new(ipoin) - x_value_to_create)**2 + (y_new(ipoin) - y_value_to_create)**2 &
+                          + (z_new(ipoin) - z_value_to_create)**2)
+            if (distance < very_small_distance) then
+              point_already_exists = .true.
+              exit
+            endif
+          enddo
+        endif
+        if (point_already_exists) then
+          ibool_new(1,elem_counter) = ipoin
+        else
+          npoin_new_real = npoin_new_real + 1
+          ibool_new(3,elem_counter) = npoin_new_real
+          x_new(npoin_new_real) = x_value_to_create
+          y_new(npoin_new_real) = y_value_to_create
+          z_new(npoin_new_real) = z_value_to_create
+        endif
 
-        ! create a new point
-        ibool_counter = ibool_counter + 1
-        ibool_new(4,elem_counter) = ibool_counter
-        x_new(ibool_counter) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-        y_new(ibool_counter) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-        z_new(ibool_counter) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+        ! create a new point if it does not exist yet, otherwise use the existing one to avoid creating multiples
+        x_value_to_create = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+        y_value_to_create = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+        z_value_to_create = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+        point_already_exists = .false.
+        if (REMOVE_ALL_POINT_MULTIPLES) then
+          do ipoin = 1,npoin_new_real
+            distance = sqrt((x_new(ipoin) - x_value_to_create)**2 + (y_new(ipoin) - y_value_to_create)**2 &
+                          + (z_new(ipoin) - z_value_to_create)**2)
+            if (distance < very_small_distance) then
+              point_already_exists = .true.
+              exit
+            endif
+          enddo
+        endif
+        if (point_already_exists) then
+          ibool_new(1,elem_counter) = ipoin
+        else
+          npoin_new_real = npoin_new_real + 1
+          ibool_new(4,elem_counter) = npoin_new_real
+          x_new(npoin_new_real) = x_value_to_create
+          y_new(npoin_new_real) = y_value_to_create
+          z_new(npoin_new_real) = z_value_to_create
+        endif
 
-        ! create a new point
-        ibool_counter = ibool_counter + 1
-        ibool_new(5,elem_counter) = ibool_counter
-        x_new(ibool_counter) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-        y_new(ibool_counter) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-        z_new(ibool_counter) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+        ! create a new point if it does not exist yet, otherwise use the existing one to avoid creating multiples
+        x_value_to_create = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+        y_value_to_create = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+        z_value_to_create = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+        point_already_exists = .false.
+        if (REMOVE_ALL_POINT_MULTIPLES) then
+          do ipoin = 1,npoin_new_real
+            distance = sqrt((x_new(ipoin) - x_value_to_create)**2 + (y_new(ipoin) - y_value_to_create)**2 &
+                          + (z_new(ipoin) - z_value_to_create)**2)
+            if (distance < very_small_distance) then
+              point_already_exists = .true.
+              exit
+            endif
+          enddo
+        endif
+        if (point_already_exists) then
+          ibool_new(1,elem_counter) = ipoin
+        else
+          npoin_new_real = npoin_new_real + 1
+          ibool_new(5,elem_counter) = npoin_new_real
+          x_new(npoin_new_real) = x_value_to_create
+          y_new(npoin_new_real) = y_value_to_create
+          z_new(npoin_new_real) = z_value_to_create
+        endif
 
-        ! create a new point
-        ibool_counter = ibool_counter + 1
-        ibool_new(6,elem_counter) = ibool_counter
-        x_new(ibool_counter) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-        y_new(ibool_counter) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-        z_new(ibool_counter) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+        ! create a new point if it does not exist yet, otherwise use the existing one to avoid creating multiples
+        x_value_to_create = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+        y_value_to_create = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+        z_value_to_create = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+        point_already_exists = .false.
+        if (REMOVE_ALL_POINT_MULTIPLES) then
+          do ipoin = 1,npoin_new_real
+            distance = sqrt((x_new(ipoin) - x_value_to_create)**2 + (y_new(ipoin) - y_value_to_create)**2 &
+                          + (z_new(ipoin) - z_value_to_create)**2)
+            if (distance < very_small_distance) then
+              point_already_exists = .true.
+              exit
+            endif
+          enddo
+        endif
+        if (point_already_exists) then
+          ibool_new(1,elem_counter) = ipoin
+        else
+          npoin_new_real = npoin_new_real + 1
+          ibool_new(6,elem_counter) = npoin_new_real
+          x_new(npoin_new_real) = x_value_to_create
+          y_new(npoin_new_real) = y_value_to_create
+          z_new(npoin_new_real) = z_value_to_create
+        endif
 
-        ! create a new point
-        ibool_counter = ibool_counter + 1
-        ibool_new(7,elem_counter) = ibool_counter
-        x_new(ibool_counter) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-        y_new(ibool_counter) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-        z_new(ibool_counter) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+        ! create a new point if it does not exist yet, otherwise use the existing one to avoid creating multiples
+        x_value_to_create = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+        y_value_to_create = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+        z_value_to_create = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+        point_already_exists = .false.
+        if (REMOVE_ALL_POINT_MULTIPLES) then
+          do ipoin = 1,npoin_new_real
+            distance = sqrt((x_new(ipoin) - x_value_to_create)**2 + (y_new(ipoin) - y_value_to_create)**2 &
+                          + (z_new(ipoin) - z_value_to_create)**2)
+            if (distance < very_small_distance) then
+              point_already_exists = .true.
+              exit
+            endif
+          enddo
+        endif
+        if (point_already_exists) then
+          ibool_new(1,elem_counter) = ipoin
+        else
+          npoin_new_real = npoin_new_real + 1
+          ibool_new(7,elem_counter) = npoin_new_real
+          x_new(npoin_new_real) = x_value_to_create
+          y_new(npoin_new_real) = y_value_to_create
+          z_new(npoin_new_real) = z_value_to_create
+        endif
 
-        ! create a new point
-        ibool_counter = ibool_counter + 1
-        ibool_new(8,elem_counter) = ibool_counter
-        x_new(ibool_counter) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-        y_new(ibool_counter) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-        z_new(ibool_counter) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+        ! create a new point if it does not exist yet, otherwise use the existing one to avoid creating multiples
+        x_value_to_create = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+        y_value_to_create = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+        z_value_to_create = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+        point_already_exists = .false.
+        if (REMOVE_ALL_POINT_MULTIPLES) then
+          do ipoin = 1,npoin_new_real
+            distance = sqrt((x_new(ipoin) - x_value_to_create)**2 + (y_new(ipoin) - y_value_to_create)**2 &
+                          + (z_new(ipoin) - z_value_to_create)**2)
+            if (distance < very_small_distance) then
+              point_already_exists = .true.
+              exit
+            endif
+          enddo
+        endif
+        if (point_already_exists) then
+          ibool_new(1,elem_counter) = ipoin
+        else
+          npoin_new_real = npoin_new_real + 1
+          ibool_new(8,elem_counter) = npoin_new_real
+          x_new(npoin_new_real) = x_value_to_create
+          y_new(npoin_new_real) = y_value_to_create
+          z_new(npoin_new_real) = z_value_to_create
+        endif
 
 ! now we need to test if the element created is flipped i.e. it has a negative Jacobian,
 ! and if so we will use the mirrored version of that element, which will then have a positive Jacobian
@@ -902,6 +1057,7 @@
   enddo
 
   if (minval(ibool_new) /= 1) stop 'error in minval(ibool_new)'
+  if (maxval(ibool_new) > npoin_new_max) stop 'error in maxval(ibool_new)'
 
 ! deallocate the original arrays
   deallocate(x,y,z)
@@ -909,23 +1065,23 @@
   deallocate(imaterial)
 
 ! reallocate them with the new size
-  allocate(x(npoin_new))
-  allocate(y(npoin_new))
-  allocate(z(npoin_new))
+  allocate(x(npoin_new_real))
+  allocate(y(npoin_new_real))
+  allocate(z(npoin_new_real))
   allocate(imaterial(nspec_new))
   allocate(ibool(NGNOD,nspec_new))
 
 ! make the new ones become the old ones, to prepare for the next iteration of the two nested loops we are in,
 ! i.e. to make sure the next loop will extend the mesh from the new arrays rather than from the old ones
-  x(:) = x_new(:)
-  y(:) = y_new(:)
-  z(:) = z_new(:)
+  x(:) = x_new(1:npoin_new_real)
+  y(:) = y_new(1:npoin_new_real)
+  z(:) = z_new(1:npoin_new_real)
   imaterial(:) = imaterial_new(:)
   ibool(:,:) = ibool_new(:,:)
 
 ! the new number of elements and points becomes the old one, for the same reason
   nspec = nspec_new
-  npoin = npoin_new
+  npoin = npoin_new_real
 
 ! deallocate the new ones, to make sure they can be allocated again in the next iteration of the nested loops we are in
   deallocate(x_new,y_new,z_new)
@@ -933,6 +1089,7 @@
   deallocate(imaterial_new)
 
   if (minval(ibool) /= 1) stop 'error in minval(ibool)'
+  if (maxval(ibool) > npoin) stop 'error in maxval(ibool)'
 
     enddo ! of iloop_on_min_face_then_max_face loop on Xmin then Xmax, or Ymin then Ymax, or Zmin then Zmax
 

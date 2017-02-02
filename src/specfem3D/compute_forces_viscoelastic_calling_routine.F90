@@ -56,7 +56,6 @@ subroutine compute_forces_viscoelastic_calling()
                                      my_neighbours_ext_mesh,myrank)
   endif
 
-
 ! distinguishes two runs: for elements in contact with MPI interfaces, and elements within the partitions
   do iphase = 1,2
 
@@ -203,7 +202,7 @@ subroutine compute_forces_viscoelastic_calling()
     endif
   enddo
 
-!Percy , Fault boundary term B*tau is added to the assembled forces
+! Percy, Fault boundary term B*tau is added to the assembled forces
 !        which at this point are stored in the array 'accel'
   if (SIMULATION_TYPE_DYN) call bc_dynflt_set3d_all(accel,veloc,displ)
   if (SIMULATION_TYPE_KIN) call bc_kinflt_set_all(accel,veloc,displ)
@@ -222,7 +221,7 @@ subroutine compute_forces_viscoelastic_calling()
                                 num_free_surface_faces)
   endif
 
-  ! C-PML boundary
+! impose Dirichlet conditions on the outer edges of the C-PML layers
   if (PML_CONDITIONS) then
     do iface = 1,num_abs_boundary_faces
       ispec = abs_boundary_ispec(iface)
