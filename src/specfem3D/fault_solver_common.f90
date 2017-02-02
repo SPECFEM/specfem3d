@@ -247,7 +247,7 @@ subroutine compute_R(R,nglob,n)
   s(2,:) = -n(1,:)   ! sy =-nx
   s(3,:) = 0.e0_CUSTOM_REAL
   ! set the along strike direction when the fault is a horizontal plane.
-  where(abs(s(1,:))+abs(s(2,:))<1e-6) 
+  where(abs(s(1,:))+abs(s(2,:)) < 1e-6)
       s(1,:) = 1.0
       s(2,:) = 0.0
   endwhere
