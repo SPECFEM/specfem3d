@@ -47,8 +47,8 @@
 ! remove all the point multiples in the extruded mesh, i.e. never create the same point twice, reuse the older one instead
 ! this is significantly slower but much safer to the codes that will use the extruded mesh later,
 ! because that mesh will not contain any artificially-duplicated point (some but not all solvers remove them,
-! it is thus better and safer to remove them here)
-  logical, parameter :: REMOVE_ALL_POINT_MULTIPLES = .false. ! slow version, thus off by default for now
+! it is thus better and safer to remove them here; for sure SPECFEM3D does not remove them, thus we must remove them here)
+  logical, parameter :: REMOVE_ALL_POINT_MULTIPLES = .true. ! slow version using bubble sort, will create a fast version next week
 
 ! number of PML and non-PML layers to add on each side of the mesh
   integer :: NUMBER_OF_PML_LAYERS_TO_ADD,NUMBER_OF_TRANSITION_LAYERS_TO_ADD,TOTAL_NUMBER_OF_LAYERS_TO_ADD
