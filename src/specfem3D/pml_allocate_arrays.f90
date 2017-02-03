@@ -214,10 +214,10 @@
   if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION) then
     allocate(rmemory_coupling_ac_el_displ(3,NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2),stat=ier)
     if (ier /= 0) stop 'error allocating rmemory_coupling_ac_el_displ array'
-    allocate(rmemory_coupling_el_ac_potential_dot_dot(NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2),stat=ier)
+    allocate(rmemory_coupling_el_ac_potential_dot_dot(3,NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2),stat=ier)
     if (ier /= 0) stop 'error allocating rmemory_coupling_el_ac_potential_dot_dot array'
     if (SIMULATION_TYPE == 3) then
-      allocate(rmemory_coupling_el_ac_potential(NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2),stat=ier)
+      allocate(rmemory_coupling_el_ac_potential(3,NGLLX,NGLLY,NGLLZ,num_coupling_ac_el_faces,2),stat=ier)
       if (ier /= 0) stop 'error allocating rmemory_coupling_el_ac_potential array'
     endif
   endif
@@ -304,12 +304,12 @@
 
   if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION) then
     rmemory_coupling_ac_el_displ(:,:,:,:,:,:) = 0._CUSTOM_REAL
-    rmemory_coupling_el_ac_potential_dot_dot(:,:,:,:,:) = 0._CUSTOM_REAL
+    rmemory_coupling_el_ac_potential_dot_dot(:,:,:,:,:,:) = 0._CUSTOM_REAL
   endif
 
   if (SIMULATION_TYPE == 3) then
     if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION) then
-      rmemory_coupling_el_ac_potential(:,:,:,:,:) = 0._CUSTOM_REAL
+      rmemory_coupling_el_ac_potential(:,:,:,:,:,:) = 0._CUSTOM_REAL
     endif
   endif
 
@@ -499,9 +499,9 @@
 
   if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION) then
     if (.not. allocated(rmemory_coupling_ac_el_displ)) allocate(rmemory_coupling_ac_el_displ(3,1,1,1,1,2))
-    if (.not. allocated(rmemory_coupling_el_ac_potential_dot_dot)) allocate(rmemory_coupling_el_ac_potential_dot_dot(1,1,1,1,2))
+    if (.not. allocated(rmemory_coupling_el_ac_potential_dot_dot)) allocate(rmemory_coupling_el_ac_potential_dot_dot(3,1,1,1,1,2))
     if (SIMULATION_TYPE == 3) then
-      if (.not. allocated(rmemory_coupling_el_ac_potential)) allocate(rmemory_coupling_el_ac_potential(1,1,1,1,2))
+      if (.not. allocated(rmemory_coupling_el_ac_potential)) allocate(rmemory_coupling_el_ac_potential(3,1,1,1,1,2))
     endif
   endif
 

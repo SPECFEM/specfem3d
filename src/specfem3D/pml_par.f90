@@ -139,8 +139,8 @@ module pml_par
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:,:), allocatable :: rmemory_coupling_ac_el_displ
 
   ! C-PML contribution to update displacement on elastic/acoustic interface
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_coupling_el_ac_potential
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: rmemory_coupling_el_ac_potential_dot_dot
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:,:), allocatable :: rmemory_coupling_el_ac_potential
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:,:), allocatable :: rmemory_coupling_el_ac_potential_dot_dot
 
   ! --------------------------------------------------------------------------------------------
   ! for adjoint tomography

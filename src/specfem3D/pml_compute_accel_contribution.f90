@@ -414,7 +414,6 @@ subroutine l_parameter_computation(deltat, &
 
   !local variable
   real(kind=CUSTOM_REAL) :: bar_A_0, bar_A_1, bar_A_2, bar_A_3, bar_A_4, bar_A_5
-  real(kind=CUSTOM_REAL) :: beta_xyz_1, beta_xyz_2, beta_xyz_3
 
   coef0_x = 0._CUSTOM_REAL
   coef1_x = 0._CUSTOM_REAL
@@ -426,19 +425,15 @@ subroutine l_parameter_computation(deltat, &
   coef1_z = 0._CUSTOM_REAL
   coef2_z = 0._CUSTOM_REAL
 
+  beta_x = alpha_x + d_x / kappa_x
+  beta_y = alpha_y + d_y / kappa_y
+  beta_z = alpha_z + d_z / kappa_z
+
   if (CPML_region_local == CPML_XYZ) then
 
      if ( abs( alpha_x - alpha_y ) >= min_distance_between_CPML_parameter .and. &
           abs( alpha_x - alpha_z ) >= min_distance_between_CPML_parameter .and. &
           abs( alpha_y - alpha_z ) >= min_distance_between_CPML_parameter) then
-
-       beta_x = alpha_x + d_x / kappa_x
-       beta_y = alpha_y + d_y / kappa_y
-       beta_z = alpha_z + d_z / kappa_z
-
-       beta_xyz_1 = beta_x + beta_y + beta_z
-       beta_xyz_2 = beta_x * beta_y + beta_x * beta_z + beta_y * beta_z
-       beta_xyz_3 = beta_x * beta_y * beta_z
 
        bar_A_0 = kappa_x * kappa_y * kappa_z
        bar_A_1 = bar_A_0 * (beta_x + beta_y + beta_z - alpha_x - alpha_y - alpha_z)
@@ -456,13 +451,6 @@ subroutine l_parameter_computation(deltat, &
                * (beta_x - alpha_z) * (beta_y - alpha_z) * (beta_z - alpha_z) &
                / ((alpha_y - alpha_z) * (alpha_x - alpha_z))
 
-       A_0 = bar_A_0
-       A_1 = bar_A_1
-       A_2 = bar_A_2
-       A_3 = bar_A_3
-       A_4 = bar_A_4
-       A_5 = bar_A_5
-
        call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x)
        call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y)
        call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z)
@@ -474,13 +462,6 @@ subroutine l_parameter_computation(deltat, &
   else if (CPML_region_local == CPML_XY_ONLY) then
 
     if (abs( alpha_x - alpha_y ) >= min_distance_between_CPML_parameter) then
-
-      beta_x = alpha_x + d_x / kappa_x
-      beta_y = alpha_y + d_y / kappa_y
-      beta_z = alpha_z + d_z / kappa_z
-
-      beta_xyz_1 = beta_x + beta_y
-      beta_xyz_2 = beta_x * beta_y
 
       bar_A_0 = kappa_x * kappa_y
       bar_A_1 = bar_A_0 * (beta_x + beta_y - alpha_x - alpha_y)
@@ -494,13 +475,6 @@ subroutine l_parameter_computation(deltat, &
               / (alpha_x - alpha_y)
       bar_A_5 = 0._CUSTOM_REAL
 
-      A_0 = bar_A_0
-      A_1 = bar_A_1
-      A_2 = bar_A_2
-      A_3 = bar_A_3
-      A_4 = bar_A_4
-      A_5 = bar_A_5
-
       call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x)
       call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y)
       call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z)
@@ -511,13 +485,6 @@ subroutine l_parameter_computation(deltat, &
   else if (CPML_region_local == CPML_XZ_ONLY) then
 
     if (abs( alpha_x - alpha_z ) >= min_distance_between_CPML_parameter) then
-
-      beta_x = alpha_x + d_x / kappa_x
-      beta_y = alpha_y + d_y / kappa_y
-      beta_z = alpha_z + d_z / kappa_z
-
-      beta_xyz_1 = beta_x + beta_z
-      beta_xyz_2 = beta_x * beta_z
 
       bar_A_0 = kappa_x * kappa_z
       bar_A_1 = bar_A_0 * (beta_x + beta_z - alpha_x - alpha_z)
@@ -532,13 +499,6 @@ subroutine l_parameter_computation(deltat, &
               * (beta_x - alpha_z) * (beta_z - alpha_z)  &
               / (alpha_x - alpha_z)
 
-      A_0 = bar_A_0
-      A_1 = bar_A_1
-      A_2 = bar_A_2
-      A_3 = bar_A_3
-      A_4 = bar_A_4
-      A_5 = bar_A_5
-
       call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x)
       call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y)
       call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z)
@@ -550,13 +510,6 @@ subroutine l_parameter_computation(deltat, &
   else if (CPML_region_local == CPML_YZ_ONLY) then
 
     if (abs( alpha_y - alpha_z ) >= min_distance_between_CPML_parameter) then
-
-      beta_x = alpha_x + d_x / kappa_x
-      beta_y = alpha_y + d_y / kappa_y
-      beta_z = alpha_z + d_z / kappa_z
-
-      beta_xyz_1 = beta_y + beta_z
-      beta_xyz_2 = beta_y * beta_z
 
       bar_A_0 = kappa_y * kappa_z
       bar_A_1 = bar_A_0 * (beta_y + beta_z - alpha_y - alpha_z)
@@ -570,13 +523,6 @@ subroutine l_parameter_computation(deltat, &
               * (beta_y - alpha_z) * (beta_z - alpha_z)  &
               / (alpha_y - alpha_z)
 
-      A_0 = bar_A_0
-      A_1 = bar_A_1
-      A_2 = bar_A_2
-      A_3 = bar_A_3
-      A_4 = bar_A_4
-      A_5 = bar_A_5
-
       call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x)
       call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y)
       call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z)
@@ -587,10 +533,6 @@ subroutine l_parameter_computation(deltat, &
 
   else if (CPML_region_local == CPML_X_ONLY) then
 
-    beta_x = alpha_x + d_x / kappa_x
-    beta_y = alpha_y + d_y / kappa_y
-    beta_z = alpha_z + d_z / kappa_z
-
     bar_A_0 = kappa_x
     bar_A_1 = bar_A_0 * (beta_x - alpha_x)
     bar_A_2 = - bar_A_0 * alpha_x * (beta_x - alpha_x)
@@ -598,22 +540,11 @@ subroutine l_parameter_computation(deltat, &
     bar_A_4 = 0._CUSTOM_REAL
     bar_A_5 = 0._CUSTOM_REAL
 
-    A_0 = bar_A_0
-    A_1 = bar_A_1
-    A_2 = bar_A_2
-    A_3 = bar_A_3
-    A_4 = bar_A_4
-    A_5 = bar_A_5
-
     call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x)
     call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y)
     call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z)
 
   else if (CPML_region_local == CPML_Y_ONLY) then
-
-    beta_x = alpha_x + d_x / kappa_x
-    beta_y = alpha_y + d_y / kappa_y
-    beta_z = alpha_z + d_z / kappa_z
 
     bar_A_0 = kappa_y
     bar_A_1 = bar_A_0 * (beta_y - alpha_y)
@@ -622,22 +553,11 @@ subroutine l_parameter_computation(deltat, &
     bar_A_4 = bar_A_0 * alpha_y**2 * (beta_y - alpha_y)
     bar_A_5 = 0._CUSTOM_REAL
 
-    A_0 = bar_A_0
-    A_1 = bar_A_1
-    A_2 = bar_A_2
-    A_3 = bar_A_3
-    A_4 = bar_A_4
-    A_5 = bar_A_5
-
     call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x)
     call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y)
     call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z)
 
   else if (CPML_region_local == CPML_Z_ONLY) then
-
-    beta_x = alpha_x + d_x / kappa_x
-    beta_y = alpha_y + d_y / kappa_y
-    beta_z = alpha_z + d_z / kappa_z
 
     bar_A_0 = kappa_z
     bar_A_1 = bar_A_0 * (beta_z - alpha_z)
@@ -646,21 +566,195 @@ subroutine l_parameter_computation(deltat, &
     bar_A_4 = 0._CUSTOM_REAL
     bar_A_5 = bar_A_0 * alpha_z**2 * (beta_z - alpha_z)
 
-    A_0 = bar_A_0
-    A_1 = bar_A_1
-    A_2 = bar_A_2
-    A_3 = bar_A_3
-    A_4 = bar_A_4
-    A_5 = bar_A_5
-
     call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x)
     call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y)
     call compute_convolution_coef(alpha_z, deltat, coef0_z, coef1_z, coef2_z)
 
   endif
 
-end subroutine l_parameter_computation
+  A_0 = bar_A_0
+  A_1 = bar_A_1
+  A_2 = bar_A_2
+  A_3 = bar_A_3
+  A_4 = bar_A_4
+  A_5 = bar_A_5
 
+end subroutine l_parameter_computation
+!
+!=====================================================================
+!
+subroutine l_interface_parameter_computation(deltat, &
+               kappa_x, d_x, alpha_x, &
+               kappa_y, d_y, alpha_y, &
+               CPML_region_local,index_ijk, &
+               A_0, A_1, A_2, A_3, A_4, &
+               coef0_x, coef1_x, coef2_x, &
+               coef0_y, coef1_y, coef2_y)
+
+  use constants, only: CUSTOM_REAL, CPML_XYZ, &
+                       CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
+                       CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY
+  use pml_par, only: min_distance_between_CPML_parameter
+
+  implicit none
+
+  real(kind=CUSTOM_REAL), intent(in) :: deltat
+  real(kind=CUSTOM_REAL) :: kappa_x,d_x,alpha_x,beta_x, &
+                            kappa_y,d_y,alpha_y,beta_y
+  integer, intent(in) :: CPML_region_local,index_ijk
+
+  real(kind=CUSTOM_REAL), intent(out) :: A_0, A_1, A_2, A_3, A_4
+  real(kind=CUSTOM_REAL), intent(out) :: coef0_x, coef1_x, coef2_x, &
+                                         coef0_y, coef1_y, coef2_y
+
+  !local variable
+  real(kind=CUSTOM_REAL) :: bar_A_0, bar_A_1, bar_A_2, bar_A_3, bar_A_4
+
+  integer :: CPML_X_ONLY_TEMP,CPML_Y_ONLY_TEMP,CPML_Z_ONLY_TEMP, &
+             CPML_XY_ONLY_TEMP,CPML_XZ_ONLY_TEMP,CPML_YZ_ONLY_TEMP,CPML_XYZ_TEMP
+
+  if (index_ijk == 12) then
+    CPML_X_ONLY_TEMP = CPML_X_ONLY
+    CPML_Y_ONLY_TEMP = CPML_Y_ONLY
+    CPML_Z_ONLY_TEMP = CPML_Z_ONLY
+    CPML_XY_ONLY_TEMP = CPML_XY_ONLY
+    CPML_XZ_ONLY_TEMP = CPML_XZ_ONLY
+    CPML_YZ_ONLY_TEMP = CPML_YZ_ONLY
+    CPML_XYZ_TEMP = CPML_XYZ
+  else if (index_ijk == 13) then
+    CPML_X_ONLY_TEMP = CPML_X_ONLY
+    CPML_Y_ONLY_TEMP = CPML_Z_ONLY
+    CPML_Z_ONLY_TEMP = CPML_Y_ONLY
+    CPML_XY_ONLY_TEMP = CPML_XZ_ONLY
+    CPML_XZ_ONLY_TEMP = CPML_XY_ONLY
+    CPML_YZ_ONLY_TEMP = CPML_YZ_ONLY
+    CPML_XYZ_TEMP = CPML_XYZ
+  else if (index_ijk == 23) then
+    CPML_X_ONLY_TEMP = CPML_Z_ONLY
+    CPML_Y_ONLY_TEMP = CPML_Y_ONLY
+    CPML_Z_ONLY_TEMP = CPML_X_ONLY
+    CPML_XY_ONLY_TEMP = CPML_YZ_ONLY
+    CPML_XZ_ONLY_TEMP = CPML_XZ_ONLY
+    CPML_YZ_ONLY_TEMP = CPML_XY_ONLY
+    CPML_XYZ_TEMP = CPML_XYZ
+  else
+    stop 'In l_interface_parameter_computation index_ijk must be equal to 12 or 13 or 23'
+  endif
+
+  coef0_x = 0._CUSTOM_REAL
+  coef1_x = 0._CUSTOM_REAL
+  coef2_x = 0._CUSTOM_REAL
+  coef0_y = 0._CUSTOM_REAL
+  coef1_y = 0._CUSTOM_REAL
+  coef2_y = 0._CUSTOM_REAL
+
+  beta_x = alpha_x + d_x / kappa_x
+  beta_y = alpha_y + d_y / kappa_y
+
+  if (CPML_region_local == CPML_XYZ_TEMP) then
+
+    if ( abs( alpha_x - alpha_y ) >= min_distance_between_CPML_parameter) then
+
+      bar_A_0 = kappa_x * kappa_y
+      bar_A_1 = bar_A_0 * (beta_x + beta_y - alpha_x - alpha_y)
+      bar_A_2 = bar_A_0 * (beta_x - alpha_x) * (beta_y - alpha_y - alpha_x) &
+              + bar_A_0 * (beta_y - alpha_y) * (- alpha_y)
+      bar_A_3 = bar_A_0 * alpha_x**2 &
+              * (beta_x - alpha_x) * (beta_y - alpha_x) / (alpha_y - alpha_x)
+      bar_A_4 = bar_A_0 * alpha_y**2 &
+              * (beta_x - alpha_y) * (beta_y - alpha_y) / (alpha_x - alpha_y)
+
+      call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x)
+      call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y)
+
+    else
+      stop 'error occured in l_parameter_computation in CPML_XYZ region'
+    endif
+
+  else if (CPML_region_local == CPML_XY_ONLY_TEMP) then
+
+    if (abs( alpha_x - alpha_y ) >= min_distance_between_CPML_parameter) then
+
+      bar_A_0 = kappa_x * kappa_y
+      bar_A_1 = bar_A_0 * (beta_x + beta_y - alpha_x - alpha_y)
+      bar_A_2 = bar_A_0 * (beta_x - alpha_x) * (beta_y - alpha_y - alpha_x) &
+              - bar_A_0 * (beta_y - alpha_y) * alpha_y
+      bar_A_3 = bar_A_0 * alpha_x**2 &
+              * (beta_x - alpha_x) * (beta_y - alpha_x) / (alpha_y - alpha_x)
+      bar_A_4 = bar_A_0 * alpha_y**2 &
+              * (beta_x - alpha_y) * (beta_y - alpha_y) / (alpha_x - alpha_y)
+
+      call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x)
+      call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y)
+
+    else
+      stop 'error occured in l_parameter_computation in CPML_XY_ONLY region'
+    endif
+
+  else if (CPML_region_local == CPML_XZ_ONLY_TEMP) then
+
+    bar_A_0 = kappa_x
+    bar_A_1 = bar_A_0 * (beta_x - alpha_x)
+    bar_A_2 = bar_A_0 * (beta_x - alpha_x) * (- alpha_x)
+    bar_A_3 = bar_A_0 * alpha_x**2 * (beta_x - alpha_x)
+    bar_A_4 = 0._CUSTOM_REAL
+
+    call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x)
+    call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y)
+
+  else if (CPML_region_local == CPML_YZ_ONLY_TEMP) then
+
+    bar_A_0 = kappa_y
+    bar_A_1 = bar_A_0 * (beta_y- alpha_y)
+    bar_A_2 = bar_A_0 * (beta_y - alpha_y) * (- alpha_y)
+    bar_A_3 = 0._CUSTOM_REAL
+    bar_A_4 = bar_A_0 * alpha_y**2 * (beta_y - alpha_y)
+
+    call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x)
+    call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y)
+
+  else if (CPML_region_local == CPML_X_ONLY_TEMP) then
+
+    bar_A_0 = kappa_x
+    bar_A_1 = bar_A_0 * (beta_x - alpha_x)
+    bar_A_2 = - bar_A_0 * alpha_x * (beta_x - alpha_x)
+    bar_A_3 = bar_A_0 * alpha_x**2 * (beta_x - alpha_x)
+    bar_A_4 = 0._CUSTOM_REAL
+
+    call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x)
+    call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y)
+
+  else if (CPML_region_local == CPML_Y_ONLY_TEMP) then
+
+    bar_A_0 = kappa_y
+    bar_A_1 = bar_A_0 * (beta_y - alpha_y)
+    bar_A_2 = - bar_A_0 * alpha_y * (beta_y - alpha_y)
+    bar_A_3 = 0._CUSTOM_REAL
+    bar_A_4 = bar_A_0 * alpha_y**2 * (beta_y - alpha_y)
+
+    call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x)
+    call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y)
+
+  else if (CPML_region_local == CPML_Z_ONLY_TEMP) then
+
+    bar_A_0 = 1._CUSTOM_REAL
+    bar_A_1 = 0._CUSTOM_REAL
+    bar_A_2 = 0._CUSTOM_REAL
+    bar_A_3 = 0._CUSTOM_REAL
+    bar_A_4 = 0._CUSTOM_REAL
+
+    call compute_convolution_coef(alpha_x, deltat, coef0_x, coef1_x, coef2_x)
+    call compute_convolution_coef(alpha_y, deltat, coef0_y, coef1_y, coef2_y)
+
+  endif
+
+  A_0 = bar_A_0
+  A_1 = bar_A_1
+  A_2 = bar_A_2
+  A_3 = bar_A_3
+  A_4 = bar_A_4
+
+end subroutine l_interface_parameter_computation
 !
 !=====================================================================
 !
