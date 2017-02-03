@@ -552,8 +552,8 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
   alpha_z = alpha_store_z(i,j,k,ispec_CPML)
 
 
-  call lxy_interface_parameter_computation(deltat,kappa_x,d_x,alpha_x,kappa_y,d_y,alpha_y, &
-                                           CPML_region_local,12,A_12,A_13,A_14, &
+  call lxy_interface_parameter_computation(deltat,kappa_y,d_y,alpha_y,kappa_z,d_z,alpha_z, &
+                                           CPML_region_local,23,A_12,A_13,A_14, &
                                            coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2)
   ! displ_x
   rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) = coef0_1 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) + &
@@ -567,6 +567,10 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
   displ_x = A_12 * displ(1,iglob) + A_13 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,1) + &
                                     A_14 * rmemory_coupling_ac_el_displ(1,i,j,k,iface,2)
 
+  call lxy_interface_parameter_computation(deltat,kappa_x,d_x,alpha_x,kappa_z,d_z,alpha_z, &
+                                           CPML_region_local,13,A_12,A_13,A_14, &
+                                           coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2)
+
   ! displ_y
   rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) = coef0_1 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) + &
                                                   coef1_1 * PML_displ_new(2,i,j,k,ispec_CPML) + &
@@ -578,6 +582,10 @@ subroutine pml_compute_memory_variables_acoustic_elastic(ispec_CPML,iface,iglob,
 
   displ_y = A_12 * displ(2,iglob) + A_13 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,1) + &
                                     A_14 * rmemory_coupling_ac_el_displ(2,i,j,k,iface,2)
+
+  call lxy_interface_parameter_computation(deltat,kappa_x,d_x,alpha_x,kappa_y,d_y,alpha_y, &
+                                           CPML_region_local,12,A_12,A_13,A_14, &
+                                           coef0_1,coef1_1,coef2_1,coef0_2,coef1_2,coef2_2)
 
   ! displ_z
   rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) = coef0_1 * rmemory_coupling_ac_el_displ(3,i,j,k,iface,1) + &
@@ -1155,8 +1163,24 @@ subroutine lxy_interface_parameter_computation(deltat,kappa_x,d_x,alpha_x,kappa_
     CPML_XZ_ONLY_TEMP = CPML_XZ_ONLY
     CPML_YZ_ONLY_TEMP = CPML_YZ_ONLY
     CPML_XYZ_TEMP = CPML_XYZ
+  else if (index_ijk == 13) then
+    CPML_X_ONLY_TEMP = CPML_X_ONLY
+    CPML_Y_ONLY_TEMP = CPML_Z_ONLY
+    CPML_Z_ONLY_TEMP = CPML_Y_ONLY
+    CPML_XY_ONLY_TEMP = CPML_XZ_ONLY
+    CPML_XZ_ONLY_TEMP = CPML_XY_ONLY
+    CPML_YZ_ONLY_TEMP = CPML_YZ_ONLY
+    CPML_XYZ_TEMP = CPML_XYZ
+  else if (index_ijk == 23) then
+    CPML_X_ONLY_TEMP = CPML_Z_ONLY
+    CPML_Y_ONLY_TEMP = CPML_Y_ONLY
+    CPML_Z_ONLY_TEMP = CPML_X_ONLY
+    CPML_XY_ONLY_TEMP = CPML_YZ_ONLY
+    CPML_XZ_ONLY_TEMP = CPML_XZ_ONLY
+    CPML_YZ_ONLY_TEMP = CPML_XY_ONLY
+    CPML_XYZ_TEMP = CPML_XYZ
   else
-    stop 'In lxy_interface_parameter_computation index_ijk must be equal to 12'
+    stop 'In lxy_interface_parameter_computation index_ijk must be equal to 12 or 13 or 23'
   endif
 
   beta_x = alpha_x + d_x / kappa_x
