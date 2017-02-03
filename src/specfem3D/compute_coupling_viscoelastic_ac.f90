@@ -66,7 +66,7 @@
   integer,intent(in) :: iphase
 
 ! local parameters
-  real(kind=CUSTOM_REAL) :: pressure
+  real(kind=CUSTOM_REAL) :: pressure_x,pressure_y,pressure_z
   real(kind=CUSTOM_REAL) :: nx,ny,nz,jacobianw
 
   integer :: iface,igll,ispec,iglob
@@ -98,13 +98,17 @@
       iglob = ibool(i,j,k,ispec)
 
       ! acoustic pressure on global point
-      pressure = - potential_dot_dot_acoustic(iglob)
+      pressure_x = - potential_dot_dot_acoustic(iglob)
+      pressure_y = pressure_x
+      pressure_z = pressure_x
 
       ! adjoint wavefield case
       if (SIMULATION_TYPE /= 1 .and. (.not. backward_simulation)) then
         ! handles adjoint runs coupling between adjoint potential and adjoint elastic wavefield
         ! adjoint definition: pressure^\dagger = potential^\dagger
-        pressure = - pressure
+        pressure_x = - pressure_x
+        pressure_y = - pressure_y
+        pressure_z = - pressure_z
       endif
 
       ! CPML overwrite cases
@@ -113,16 +117,18 @@
           if (SIMULATION_TYPE == 1) then
             ispec_CPML = spec_to_CPML(ispec)
             call pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k, &
-                                            pressure,potential_acoustic, &
+                                            pressure_x,pressure_y,pressure_z,potential_acoustic, &
                                             potential_dot_acoustic,potential_dot_dot_acoustic, &
                                             num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential_dot_dot)
-            pressure = - pressure
+            pressure_x = - pressure_x
+            pressure_y = - pressure_y
+            pressure_z = - pressure_z
           endif
 
           if (SIMULATION_TYPE == 3) then
             ispec_CPML = spec_to_CPML(ispec)
             call pml_compute_memory_variables_elastic_acoustic(ispec_CPML,iface,iglob,i,j,k, &
-                                            pressure,potential_acoustic, &
+                                            pressure_x,pressure_y,pressure_z,potential_acoustic, &
                                             potential_dot_acoustic,potential_dot_dot_acoustic, &
                                             num_coupling_ac_el_faces,rmemory_coupling_el_ac_potential_dot_dot)
           endif
@@ -148,9 +154,9 @@
       !          (see e.g. Chaljub & Vilotte, Nissen-Meyer thesis...)
       !          it means you have to calculate and update the acoustic pressure first before
       !          calculating this term...
-      accel(1,iglob) = accel(1,iglob) + jacobianw*nx*pressure
-      accel(2,iglob) = accel(2,iglob) + jacobianw*ny*pressure
-      accel(3,iglob) = accel(3,iglob) + jacobianw*nz*pressure
+      accel(1,iglob) = accel(1,iglob) + jacobianw*nx*pressure_x
+      accel(2,iglob) = accel(2,iglob) + jacobianw*ny*pressure_y
+      accel(3,iglob) = accel(3,iglob) + jacobianw*nz*pressure_z
 
     enddo ! igll
 
