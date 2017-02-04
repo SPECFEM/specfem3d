@@ -87,7 +87,7 @@
   double precision, dimension(NGNOD) :: xelm,yelm,zelm
 
   double precision :: xread,yread,zread,xmin,xmax,ymin,ymax,zmin,zmax,limit,xsize,ysize,zsize
-  double precision :: value_min,value_max,value_size,distance,sum_of_distances,mean_distance,very_small_distance
+  double precision :: value_min,value_max,value_size,sum_of_distances,mean_distance,distance_squared,very_small_distance_squared
 
   logical :: ADD_ON_THE_XMIN_SURFACE,ADD_ON_THE_XMAX_SURFACE
   logical :: ADD_ON_THE_YMIN_SURFACE,ADD_ON_THE_YMAX_SURFACE
@@ -519,7 +519,7 @@
   npoin_new_max = npoin + count_elem_faces_to_extend * TOTAL_NUMBER_OF_LAYERS_TO_ADD * NGNOD
 
   mean_distance = sum_of_distances / dble(count_elem_faces_to_extend)
-  very_small_distance = mean_distance / 10000.d0
+  very_small_distance_squared = (mean_distance / 10000.d0)**2
   if (icompute_size == 1) print *,'Computed mean size of the elements to extend = ',mean_distance
   print *
 
@@ -764,9 +764,9 @@
         point_already_exists = .false.
         if (REMOVE_ALL_POINT_MULTIPLES) then
           do ipoin = 1,npoin_new_real
-            distance = sqrt((x_new(ipoin) - x_value_to_create)**2 + (y_new(ipoin) - y_value_to_create)**2 &
-                          + (z_new(ipoin) - z_value_to_create)**2)
-            if (distance < very_small_distance) then
+            distance_squared = (x_new(ipoin) - x_value_to_create)**2 + (y_new(ipoin) - y_value_to_create)**2 &
+                             + (z_new(ipoin) - z_value_to_create)**2
+            if (distance_squared < very_small_distance_squared) then
               point_already_exists = .true.
               exit
             endif
@@ -789,9 +789,9 @@
         point_already_exists = .false.
         if (REMOVE_ALL_POINT_MULTIPLES) then
           do ipoin = 1,npoin_new_real
-            distance = sqrt((x_new(ipoin) - x_value_to_create)**2 + (y_new(ipoin) - y_value_to_create)**2 &
-                          + (z_new(ipoin) - z_value_to_create)**2)
-            if (distance < very_small_distance) then
+            distance_squared = (x_new(ipoin) - x_value_to_create)**2 + (y_new(ipoin) - y_value_to_create)**2 &
+                             + (z_new(ipoin) - z_value_to_create)**2
+            if (distance_squared < very_small_distance_squared) then
               point_already_exists = .true.
               exit
             endif
@@ -814,9 +814,9 @@
         point_already_exists = .false.
         if (REMOVE_ALL_POINT_MULTIPLES) then
           do ipoin = 1,npoin_new_real
-            distance = sqrt((x_new(ipoin) - x_value_to_create)**2 + (y_new(ipoin) - y_value_to_create)**2 &
-                          + (z_new(ipoin) - z_value_to_create)**2)
-            if (distance < very_small_distance) then
+            distance_squared = (x_new(ipoin) - x_value_to_create)**2 + (y_new(ipoin) - y_value_to_create)**2 &
+                             + (z_new(ipoin) - z_value_to_create)**2
+            if (distance_squared < very_small_distance_squared) then
               point_already_exists = .true.
               exit
             endif
@@ -839,9 +839,9 @@
         point_already_exists = .false.
         if (REMOVE_ALL_POINT_MULTIPLES) then
           do ipoin = 1,npoin_new_real
-            distance = sqrt((x_new(ipoin) - x_value_to_create)**2 + (y_new(ipoin) - y_value_to_create)**2 &
-                          + (z_new(ipoin) - z_value_to_create)**2)
-            if (distance < very_small_distance) then
+            distance_squared = (x_new(ipoin) - x_value_to_create)**2 + (y_new(ipoin) - y_value_to_create)**2 &
+                             + (z_new(ipoin) - z_value_to_create)**2
+            if (distance_squared < very_small_distance_squared) then
               point_already_exists = .true.
               exit
             endif
@@ -864,9 +864,9 @@
         point_already_exists = .false.
         if (REMOVE_ALL_POINT_MULTIPLES) then
           do ipoin = 1,npoin_new_real
-            distance = sqrt((x_new(ipoin) - x_value_to_create)**2 + (y_new(ipoin) - y_value_to_create)**2 &
-                          + (z_new(ipoin) - z_value_to_create)**2)
-            if (distance < very_small_distance) then
+            distance_squared = (x_new(ipoin) - x_value_to_create)**2 + (y_new(ipoin) - y_value_to_create)**2 &
+                             + (z_new(ipoin) - z_value_to_create)**2
+            if (distance_squared < very_small_distance_squared) then
               point_already_exists = .true.
               exit
             endif
@@ -889,9 +889,9 @@
         point_already_exists = .false.
         if (REMOVE_ALL_POINT_MULTIPLES) then
           do ipoin = 1,npoin_new_real
-            distance = sqrt((x_new(ipoin) - x_value_to_create)**2 + (y_new(ipoin) - y_value_to_create)**2 &
-                          + (z_new(ipoin) - z_value_to_create)**2)
-            if (distance < very_small_distance) then
+            distance_squared = (x_new(ipoin) - x_value_to_create)**2 + (y_new(ipoin) - y_value_to_create)**2 &
+                             + (z_new(ipoin) - z_value_to_create)**2
+            if (distance_squared < very_small_distance_squared) then
               point_already_exists = .true.
               exit
             endif
@@ -914,9 +914,9 @@
         point_already_exists = .false.
         if (REMOVE_ALL_POINT_MULTIPLES) then
           do ipoin = 1,npoin_new_real
-            distance = sqrt((x_new(ipoin) - x_value_to_create)**2 + (y_new(ipoin) - y_value_to_create)**2 &
-                          + (z_new(ipoin) - z_value_to_create)**2)
-            if (distance < very_small_distance) then
+            distance_squared = (x_new(ipoin) - x_value_to_create)**2 + (y_new(ipoin) - y_value_to_create)**2 &
+                             + (z_new(ipoin) - z_value_to_create)**2
+            if (distance_squared < very_small_distance_squared) then
               point_already_exists = .true.
               exit
             endif
@@ -939,9 +939,9 @@
         point_already_exists = .false.
         if (REMOVE_ALL_POINT_MULTIPLES) then
           do ipoin = 1,npoin_new_real
-            distance = sqrt((x_new(ipoin) - x_value_to_create)**2 + (y_new(ipoin) - y_value_to_create)**2 &
-                          + (z_new(ipoin) - z_value_to_create)**2)
-            if (distance < very_small_distance) then
+            distance_squared = (x_new(ipoin) - x_value_to_create)**2 + (y_new(ipoin) - y_value_to_create)**2 &
+                             + (z_new(ipoin) - z_value_to_create)**2
+            if (distance_squared < very_small_distance_squared) then
               point_already_exists = .true.
               exit
             endif
