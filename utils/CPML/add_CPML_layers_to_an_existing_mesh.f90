@@ -76,6 +76,13 @@
 
   integer, dimension(:,:), allocatable :: ibool,ibool_new
 
+  integer :: count_def_mat,count_undef_mat,ier,idummy,num_mat
+  integer :: aniso_flag,idomain_id
+
+  real(kind=4) :: vp,vs,rho,qkappa,qmu
+
+  character(len=256) :: line
+
 ! Gauss-Lobatto-Legendre points of integration, to check for negative Jacobians
   double precision xigll(NGLLX)
   double precision yigll(NGLLY)
@@ -219,6 +226,133 @@
 
 ! compute the derivatives of the 3D shape functions for a 8-node element
   call get_shape3D(dershape3D,xigll,yigll,zigll,NGNOD,NGLLX,NGLLY,NGLLZ,NDIM)
+
+! The format of nummaterial_velocity_file must be:
+
+! #(1)material_domain_id #(2)material_id  #(3)rho  #(4)vp   #(5)vs   #(6)Q_kappa   #(7)Q_mu  #(8)anisotropy_flag
+!
+! where
+!     material_domain_id : 1=acoustic / 2=elastic
+!     material_id        : POSITIVE integer identifier corresponding to the identifier of material block
+!     rho                : density
+!     vp                 : P-velocity
+!     vs                 : S-velocity
+!     Q_kappa            : 9999 = no Q_kappa attenuation
+!     Q_mu               : 9999 = no Q_mu attenuation
+!     anisotropy_flag    : 0=no anisotropy/ 1,2,.. check with implementation in aniso_model.f90
+!
+! example:
+!  2   1 2300 2800 1500 9999.0 9999.0 0
+
+! Note that when poroelastic material, this file is a dummy except for material_domain_id & material_id,
+! and that poroelastic materials are actually read from nummaterial_poroelastic_file, because CUBIT
+! cannot support more than 10 attributes
+
+!or
+
+! #(1)material_domain_id #(2)material_id  tomography elastic  #(3)tomography_filename #(4)positive_unique_number
+!
+! where
+!     material_domain_id : 1=acoustic / 2=elastic
+!     material_id        : NEGATIVE integer identifier corresponding to the identifier of material block
+!     tomography_filename: filename of the tomography file
+!     positive_unique_number: a positive unique identifier
+!
+! example:
+!  2  -1 tomography elastic tomo.xyz 1
+
+! read the file a first time to count the total number of materials (both defined and tomographic)
+    count_def_mat = 0
+    count_undef_mat = 0
+    open(unit=98, file='nummaterial_velocity_file', status='old', action='read',form='formatted',iostat=ier)
+    if (ier /= 0) stop 'Error opening nummaterial_velocity_file'
+
+    ! counts materials (defined/undefined)
+    ier = 0
+    do while (ier == 0)
+      ! note: format #material_domain_id #material_id #...
+      read(98,'(A)',iostat=ier) line
+      if (ier /= 0) exit
+
+      ! skip empty/comment lines
+      if (len_trim(line) == 0) cycle
+         if (line(1:1) == '#' .or. line(1:1) == '!') cycle
+
+      read(line,*,iostat=ier) idummy,num_mat
+      if (ier /= 0) exit
+
+      ! checks non-zero material id
+      if (num_mat == 0) stop 'Error in nummaterial_velocity_file: material id 0 found. Material ids must be non-zero.'
+      if (num_mat > 0) then
+        ! positive materials_id: velocity values will be defined
+        count_def_mat = count_def_mat + 1
+      else
+        ! negative materials_id: undefined material properties yet
+        count_undef_mat = count_undef_mat + 1
+      endif
+    enddo
+    close(98)
+
+! read the file a second time to create the materials for the extruded PML layers (both defined and tomographic)
+    open(unit=98, file='nummaterial_velocity_file', status='old', action='read',form='formatted',iostat=ier)
+    if (ier /= 0) stop 'Error opening nummaterial_velocity_file'
+    open(unit=99, file='nummaterial_velocity_file_new', status='unknown', action='write',form='formatted',iostat=ier)
+    if (ier /= 0) stop 'Error opening nummaterial_velocity_file_new'
+
+    ! counts materials (defined/undefined)
+    ier = 0
+    do while (ier == 0)
+      ! note: format #material_domain_id #material_id #...
+      read(98,'(A)',iostat=ier) line
+      if (ier /= 0) exit
+
+      ! skip empty/comment lines
+      if (len_trim(line) == 0) cycle
+         if (line(1:1) == '#' .or. line(1:1) == '!') cycle
+
+      read(line,*,iostat=ier) idummy,num_mat
+      if (ier /= 0) exit
+
+      ! checks non-zero material id
+      if (num_mat > 0) then
+        ! positive materials_id: velocity values will be defined
+       ! reads in defined material properties
+       read(line,*) idomain_id,num_mat,rho,vp,vs,qkappa,qmu,aniso_flag
+
+       ! sanity check: Q factor cannot be equal to zero, thus convert to 9999 to indicate no attenuation
+       ! if users have used 0 to indicate that instead
+       if (qkappa <= 0.000001) qkappa = 9999.
+       if (qmu <= 0.000001) qmu = 9999.
+
+       ! checks material_id bounds
+       if (num_mat < 1 .or. num_mat > count_def_mat) &
+         stop "Error in nummaterial_velocity_file: material id invalid for defined materials."
+
+       ! copy the original material to the new file
+       write(99,*) idomain_id,num_mat,rho,vp,vs,qkappa,qmu,aniso_flag
+
+       ! create new material for the PML, with attenuation off
+       write(99,*) idomain_id,num_mat + count_def_mat,rho,vp,vs,' 9999. 9999. ',aniso_flag
+
+       ! create new material for the transition layer that has PML off (if it exists)
+       ! in this transition layer we purposely put less attenuation in order to smooth out the transition with PML,
+       ! since currently PMLs have no attenuation
+       if (NUMBER_OF_TRANSITION_LAYERS_TO_ADD > 0) &
+            write(99,*) idomain_id,num_mat + 2*count_def_mat,rho,vp,vs,min(3.*qkappa,9999.),min(3.*qmu,9999.),aniso_flag
+
+      else
+        ! negative materials_id: undefined material properties yet
+        ! just copy the line read to the new file
+        write(99,*) line(1:len_trim(line))
+
+      endif
+
+    enddo
+    close(98)
+    close(99)
+
+! replace the old file with the new one
+  call system('mv nummaterial_velocity_file_new nummaterial_velocity_file')
 
 ! open SPECFEM3D_Cartesian mesh file to read the points
   if (iformat == 1) then
@@ -798,7 +932,7 @@
           enddo
         endif
         if (point_already_exists) then
-          ibool_new(1,elem_counter) = ipoin
+          ibool_new(2,elem_counter) = ipoin
         else
           npoin_new_real = npoin_new_real + 1
           ibool_new(2,elem_counter) = npoin_new_real
@@ -823,7 +957,7 @@
           enddo
         endif
         if (point_already_exists) then
-          ibool_new(1,elem_counter) = ipoin
+          ibool_new(3,elem_counter) = ipoin
         else
           npoin_new_real = npoin_new_real + 1
           ibool_new(3,elem_counter) = npoin_new_real
@@ -848,7 +982,7 @@
           enddo
         endif
         if (point_already_exists) then
-          ibool_new(1,elem_counter) = ipoin
+          ibool_new(4,elem_counter) = ipoin
         else
           npoin_new_real = npoin_new_real + 1
           ibool_new(4,elem_counter) = npoin_new_real
@@ -873,7 +1007,7 @@
           enddo
         endif
         if (point_already_exists) then
-          ibool_new(1,elem_counter) = ipoin
+          ibool_new(5,elem_counter) = ipoin
         else
           npoin_new_real = npoin_new_real + 1
           ibool_new(5,elem_counter) = npoin_new_real
@@ -898,7 +1032,7 @@
           enddo
         endif
         if (point_already_exists) then
-          ibool_new(1,elem_counter) = ipoin
+          ibool_new(6,elem_counter) = ipoin
         else
           npoin_new_real = npoin_new_real + 1
           ibool_new(6,elem_counter) = npoin_new_real
@@ -923,7 +1057,7 @@
           enddo
         endif
         if (point_already_exists) then
-          ibool_new(1,elem_counter) = ipoin
+          ibool_new(7,elem_counter) = ipoin
         else
           npoin_new_real = npoin_new_real + 1
           ibool_new(7,elem_counter) = npoin_new_real
@@ -948,7 +1082,7 @@
           enddo
         endif
         if (point_already_exists) then
-          ibool_new(1,elem_counter) = ipoin
+          ibool_new(8,elem_counter) = ipoin
         else
           npoin_new_real = npoin_new_real + 1
           ibool_new(8,elem_counter) = npoin_new_real
