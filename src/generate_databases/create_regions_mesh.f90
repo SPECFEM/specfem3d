@@ -703,10 +703,10 @@ subroutine crm_ext_setup_indexing(ibool, &
 ! gets ibool indexing from local (GLL points) to global points
   call get_global(npointot,xp,yp,zp,ibool,locval,ifseg,nglob,x_min,x_max)
 
-!- we can create a new indirect addressing to reduce cache misses
+! we can create a new indirect addressing to reduce cache misses
   call get_global_indirect_addressing(nspec,nglob,ibool)
 
-!cleanup
+! cleanup
   deallocate(xp,stat=ier); if (ier /= 0) stop 'error in deallocate'
   deallocate(yp,stat=ier); if (ier /= 0) stop 'error in deallocate'
   deallocate(zp,stat=ier); if (ier /= 0) stop 'error in deallocate'

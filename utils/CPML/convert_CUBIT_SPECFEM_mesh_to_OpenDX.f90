@@ -82,6 +82,7 @@
 ! open SPECFEM3D_Cartesian topology file to read the mesh elements
   open(unit=23,file='mesh_file',status='old',action='read')
   read(23,*) nspec
+
   allocate(imat(nspec))
   allocate(ibool(NGNOD,nspec))
 

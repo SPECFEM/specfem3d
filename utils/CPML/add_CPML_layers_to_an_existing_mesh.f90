@@ -52,7 +52,7 @@
   double precision :: SIZE_OF_XMIN_ELEMENT_TO_ADD,SIZE_OF_YMIN_ELEMENT_TO_ADD,SIZE_OF_ZMIN_ELEMENT_TO_ADD
   double precision :: SIZE_OF_XMAX_ELEMENT_TO_ADD,SIZE_OF_YMAX_ELEMENT_TO_ADD,SIZE_OF_ZMAX_ELEMENT_TO_ADD
 
-  integer :: nspec,npoin,npoin_new_max,npoin_new_real,nspec_new,count_elem_faces_to_extend,iextend
+  integer :: nspec,npoin,npoin_new_max,npoin_new_real,npointot,nspec_new,count_elem_faces_to_extend,iextend
   integer :: factor_x,factor_y,factor_z
   integer :: ispec,ipoin,iloop_on_X_Y_Z_faces,iloop_on_min_face_then_max_face
   integer :: ipoin_read,ispec_loop
@@ -60,15 +60,19 @@
   integer :: p1,p2,p3,p4
 
   double precision, dimension(:), allocatable, target :: x,y,z
-  double precision, dimension(:), allocatable :: x_new,y_new,z_new
+  double precision, dimension(:), allocatable :: x_new,y_new,z_new,xp,yp,zp
+  double precision, dimension(:,:), allocatable :: x_copy,y_copy,z_copy
   double precision, dimension(:), pointer :: coord_to_use1,coord_to_use2,coord_to_use3
 
-  integer, dimension(:), allocatable :: imaterial,imaterial_new
+  integer, dimension(:), allocatable :: imaterial,imaterial_new,locval
+
+  logical, dimension(:), allocatable :: ifseg
+
+  integer :: ieoff,ilocnum,iglobnum
 
   integer, dimension(:,:), allocatable :: ibool,ibool_new
 
-  integer :: count_def_mat,count_undef_mat,ier,idummy,num_mat
-  integer :: aniso_flag,idomain_id
+  integer :: count_def_mat,count_undef_mat,ier,idummy,num_mat,aniso_flag,idomain_id,imaterial_values_to_start_from
 
   real(kind=4) :: vp,vs,rho,qkappa,qmu
 
@@ -85,7 +89,7 @@
   double precision, dimension(NGNOD) :: xelm,yelm,zelm
 
   double precision :: xread,yread,zread,xmin,xmax,ymin,ymax,zmin,zmax,limit,xsize,ysize,zsize
-  double precision :: value_min,value_max,value_size,sum_of_distances,mean_distance,very_small_distance_squared
+  double precision :: value_min,value_max,value_size,sum_of_distances,mean_distance,very_small_distance
 
   logical :: ADD_ON_THE_XMIN_SURFACE,ADD_ON_THE_XMAX_SURFACE
   logical :: ADD_ON_THE_YMIN_SURFACE,ADD_ON_THE_YMAX_SURFACE
@@ -646,7 +650,7 @@
   npoin_new_max = npoin + count_elem_faces_to_extend * TOTAL_NUMBER_OF_LAYERS_TO_ADD * NGNOD
 
   mean_distance = sum_of_distances / dble(count_elem_faces_to_extend)
-  very_small_distance_squared = (mean_distance / 10000.d0)**2
+  very_small_distance = mean_distance / 10000.d0
   if (icompute_size == 1) print *,'Computed mean size of the elements to extend = ',mean_distance
   print *
 
@@ -882,12 +886,28 @@
         elem_counter = elem_counter + 1
 
         ! create the material property for the extended elements
-        if (iextend <= NUMBER_OF_TRANSITION_LAYERS_TO_ADD) then
-          ! use new material for the transition layer that has PML off (if it exists)
-          imaterial_new(elem_counter) = imaterial(ispec) + 2*count_def_mat
+        imaterial_values_to_start_from = imaterial(ispec)
+
+        ! if external tomographic model, do not change the value
+        if (imaterial_values_to_start_from < 0) then
+          imaterial_new(elem_counter) = imaterial_values_to_start_from
+
+        ! else change the value to turn off attenuation in the PMLs
         else
-          ! use new material for the PML, with attenuation off
-          imaterial_new(elem_counter) = imaterial(ispec) + count_def_mat
+
+          ! map back this starting value to the interval [1:count_def_mat]
+          do while (imaterial_values_to_start_from > count_def_mat)
+            imaterial_values_to_start_from = imaterial_values_to_start_from - count_def_mat
+          enddo
+
+          if (iextend <= NUMBER_OF_TRANSITION_LAYERS_TO_ADD) then
+            ! use new material for the transition layer that has PML off (if it exists)
+            imaterial_new(elem_counter) = imaterial_values_to_start_from + 2*count_def_mat
+          else
+            ! use new material for the PML, with attenuation off
+            imaterial_new(elem_counter) = imaterial_values_to_start_from + count_def_mat
+          endif
+
         endif
 
         ! create a new point if it does not exist yet, otherwise use the existing one to avoid creating multiples
@@ -1085,21 +1105,55 @@
 ! end of loop on the three sets of faces to first add CPML elements along X, then along Y, then along Z
   enddo
 
+! we must remove all point multiples here using a fast sorting routine
 
+  print *,'beginning of multiple point removal based on sorting...'
 
+  npointot = nspec*NGNOD
 
+  allocate(locval(npointot))
+  allocate(ifseg(npointot))
 
+  allocate(xp(npointot))
+  allocate(yp(npointot))
+  allocate(zp(npointot))
 
-!33333333333333333333333333333333333333333333333333333
+  allocate(x_copy(NGNOD,nspec))
+  allocate(y_copy(NGNOD,nspec))
+  allocate(z_copy(NGNOD,nspec))
 
-! we must REMOVE_ALL_POINT_MULTIPLES here using a quicksort() sorting routine, I will add it soon
+  do ispec=1,nspec
+    ieoff = NGNOD * (ispec-1)
+    ilocnum = 0
+    do ia = 1,NGNOD
+      ilocnum = ilocnum + 1
+      xp(ilocnum+ieoff) = x(ibool(ia,ispec))
+      yp(ilocnum+ieoff) = y(ibool(ia,ispec))
+      zp(ilocnum+ieoff) = z(ibool(ia,ispec))
 
+! create a copy, since the sorting below will destroy the arrays
+      x_copy(ia,ispec) = x(ibool(ia,ispec))
+      y_copy(ia,ispec) = y(ibool(ia,ispec))
+      z_copy(ia,ispec) = z(ibool(ia,ispec))
 
-!33333333333333333333333333333333333333333333333333333
+    enddo
+  enddo
 
+! gets ibool indexing from local (NGNOD_HEX8 points) to global points
+  call get_global(NDIM,npointot,xp,yp,zp,ibool,locval,ifseg,npoin,very_small_distance)
 
+  print *,'done with multiple point removal based on sorting'
+  print *,'found a total of ',npoin,' unique mesh points'
 
-
+! unique global point locations
+  do ispec = 1, nspec
+    do ia = 1,NGNOD
+      iglobnum = ibool(ia,ispec)
+      x(iglobnum) = x_copy(ia,ispec)
+      y(iglobnum) = y_copy(ia,ispec)
+      z(iglobnum) = z_copy(ia,ispec)
+    enddo
+  enddo
 
   if (iformat == 1) then ! write the output in ASCII format
 
@@ -1369,4 +1423,271 @@
   enddo
 
   end subroutine get_shape3D
+
+! ------------------------------------------------------------------
+
+! subroutines to sort indexing arrays based on geometrical coordinates instead of based on topology (because that is much faster)
+
+  subroutine get_global(NDIM,npointot,xp,yp,zp,iglob,locval,ifseg,nglob,SMALLVALTOL)
+
+! this routine MUST be in double precision to avoid sensitivity
+! to roundoff errors in the coordinates of the points
+
+! non-structured global numbering software provided by Paul F. Fischer
+
+! leave sorting subroutines in same source file to allow for inlining
+
+  implicit none
+
+  integer NDIM
+  integer npointot
+  integer nglob
+  integer iglob(npointot),locval(npointot)
+  logical ifseg(npointot)
+  double precision xp(npointot),yp(npointot),zp(npointot)
+
+! geometry tolerance parameter to calculate number of independent grid points
+! small value for double precision and to avoid sensitivity to roundoff
+  double precision SMALLVALTOL
+
+  integer :: ier
+
+  integer, dimension(:), allocatable :: ninseg,idummy
+
+! dynamically allocate arrays
+  allocate(ninseg(npointot),stat=ier)
+  if (ier /= 0) stop 'error allocating array ninseg'
+  allocate(idummy(npointot),stat=ier)
+  if (ier /= 0) stop 'error allocating array idummy'
+
+  call sort_array_coordinates(NDIM,npointot,xp,yp,zp,idummy,iglob,locval,ifseg, &
+                              nglob,ninseg,SMALLVALTOL)
+
+! deallocate arrays
+  deallocate(ninseg)
+  deallocate(idummy)
+
+  end subroutine get_global
+
+! ------------------------------------------------------------------
+
+! subroutines to sort indexing arrays based on geometrical coordinates instead of based on topology (because that is much faster)
+
+  subroutine sort_array_coordinates(NDIM,npointot,x,y,z,ibool,iglob,locval,ifseg,nglob,ninseg,xtol)
+
+! this routine MUST be in double precision to avoid sensitivity
+! to roundoff errors in the coordinates of the points
+!
+! returns: sorted indexing array (ibool),  reordering array (iglob) & number of global points (nglob)
+
+  implicit none
+
+  integer, intent(in) :: NDIM,npointot
+  double precision, dimension(npointot), intent(inout) :: x, y, z
+  integer, dimension(npointot), intent(inout) :: ibool
+
+  integer, dimension(npointot), intent(out) :: iglob, locval, ninseg
+  logical, dimension(npointot), intent(out) :: ifseg
+  integer, intent(out) :: nglob
+  double precision, intent(in) :: xtol
+
+  ! local parameters
+  integer :: i, j
+  integer :: nseg, ioff, iseg, ig
+
+  ! establish initial pointers
+  do i = 1,npointot
+    locval(i) = i
+  enddo
+
+  ifseg(:) = .false.
+
+  nseg = 1
+  ifseg(1) = .true.
+  ninseg(1) = npointot
+
+  do j = 1,NDIM
+
+    ! sort within each segment
+    ioff = 1
+    do iseg = 1,nseg
+      if (j == 1) then
+        ! sort on X
+        call heap_sort_multi(ninseg(iseg), x(ioff), y(ioff), z(ioff), ibool(ioff), locval(ioff))
+      else if (j == 2) then
+        ! then sort on Y for a sublist of given constant X
+        call heap_sort_multi(ninseg(iseg), y(ioff), x(ioff), z(ioff), ibool(ioff), locval(ioff))
+      else
+        ! then sort on Z for a sublist of given constant X and Y
+        call heap_sort_multi(ninseg(iseg), z(ioff), x(ioff), y(ioff), ibool(ioff), locval(ioff))
+      endif
+      ioff = ioff + ninseg(iseg)
+    enddo
+
+    ! check for jumps in current coordinate
+    ! define a tolerance, normalized radius is 1., so let's use a small value
+    if (j == 1) then
+      do i = 2,npointot
+        if (dabs(x(i) - x(i-1)) > xtol) ifseg(i) = .true.
+      enddo
+    else if (j == 2) then
+      do i = 2,npointot
+        if (dabs(y(i) - y(i-1)) > xtol) ifseg(i) = .true.
+      enddo
+    else
+      do i = 2,npointot
+        if (dabs(z(i) - z(i-1)) > xtol) ifseg(i) = .true.
+      enddo
+    endif
+
+    ! count up number of different segments
+    nseg = 0
+    do i = 1,npointot
+      if (ifseg(i)) then
+        nseg = nseg + 1
+        ninseg(nseg) = 1
+      else
+        ninseg(nseg) = ninseg(nseg) + 1
+      endif
+    enddo
+
+  enddo
+
+  ! assign global node numbers (now sorted lexicographically)
+  ig = 0
+  do i = 1,npointot
+    ! eliminate the multiples by using a single (new) point number for all the points that have the same X Y Z after sorting
+    if (ifseg(i)) ig = ig + 1
+    iglob(locval(i)) = ig
+  enddo
+
+  nglob = ig
+
+  end subroutine sort_array_coordinates
+
+!
+!--------------------
+!
+
+
+! sorting routine left here for inlining
+
+! -------------------- library for sorting routine ------------------
+
+! sorting routines put here in same file to allow for inlining
+
+! this directive avoids triggering a random bug in Intel ifort v13 (in the compiler, not in SPECFEM),
+! fixed in later versions of Intel ifort, which also ignore this directive because it was discontinued
+!$DIR NOOPTIMIZE
+  subroutine heap_sort_multi(N, dx, dy, dz, ia, ib)
+
+  implicit none
+  integer, intent(in) :: N
+  double precision, dimension(N), intent(inout) :: dx
+  double precision, dimension(N), intent(inout) :: dy
+  double precision, dimension(N), intent(inout) :: dz
+  integer, dimension(N), intent(inout) :: ia
+  integer, dimension(N), intent(inout) :: ib
+
+  integer :: i
+
+  ! checks if anything to do
+  if (N < 2) return
+
+  ! builds heap
+  do i = N/2, 1, -1
+    call heap_sort_siftdown(i, n)
+  enddo
+
+  ! sorts array
+  do i = N, 2, -1
+    ! swaps last and first entry in this section
+    call dswap(dx, 1, i)
+    call dswap(dy, 1, i)
+    call dswap(dz, 1, i)
+    call iswap(ia, 1, i)
+    call iswap(ib, 1, i)
+    call heap_sort_siftdown(1, i - 1)
+  enddo
+
+  contains
+
+! this directive avoids triggering a random bug in Intel ifort v13 (in the compiler, not in SPECFEM),
+! fixed in later versions of Intel ifort, which also ignore this directive because it was discontinued
+!$DIR NOOPTIMIZE
+    subroutine dswap(A, i, j)
+
+    double precision, dimension(:), intent(inout) :: A
+    integer, intent(in) :: i
+    integer, intent(in) :: j
+
+    double precision :: tmp
+
+    tmp = A(i)
+    A(i) = A(j)
+    A(j) = tmp
+
+    end subroutine
+
+    subroutine iswap(A, i, j)
+
+    integer, dimension(:), intent(inout) :: A
+    integer, intent(in) :: i
+    integer, intent(in) :: j
+
+    integer :: tmp
+
+    tmp = A(i)
+    A(i) = A(j)
+    A(j) = tmp
+
+    end subroutine
+
+! this directive avoids triggering a random bug in Intel ifort v13 (in the compiler, not in SPECFEM),
+! fixed in later versions of Intel ifort, which also ignore this directive because it was discontinued
+!$DIR NOOPTIMIZE
+    subroutine heap_sort_siftdown(start, bottom)
+
+    integer, intent(in) :: start
+    integer, intent(in) :: bottom
+
+    integer :: i, j
+    double precision :: xtmp, ytmp, ztmp
+    integer :: atmp, btmp
+
+    i = start
+    xtmp = dx(i)
+    ytmp = dy(i)
+    ztmp = dz(i)
+    atmp = ia(i)
+    btmp = ib(i)
+
+    j = 2 * i
+    do while (j <= bottom)
+      ! chooses larger value first in this section
+      if (j < bottom) then
+        if (dx(j) <= dx(j+1)) j = j + 1
+      endif
+
+      ! checks if section already smaller than initial value
+      if (dx(j) < xtmp) exit
+
+      dx(i) = dx(j)
+      dy(i) = dy(j)
+      dz(i) = dz(j)
+      ia(i) = ia(j)
+      ib(i) = ib(j)
+      i = j
+      j = 2 * i
+    enddo
+
+    dx(i) = xtmp
+    dy(i) = ytmp
+    dz(i) = ztmp
+    ia(i) = atmp
+    ib(i) = btmp
+
+    end subroutine heap_sort_siftdown
+
+  end subroutine heap_sort_multi
 
