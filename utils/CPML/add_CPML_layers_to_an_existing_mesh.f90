@@ -888,8 +888,14 @@
         ! create a new element
         elem_counter = elem_counter + 1
 
-        ! use the same material property for the extended elements as for the element being extended
-        imaterial_new(elem_counter) = imaterial(ispec)
+        ! create the material property for the extended elements
+        if (iextend <= NUMBER_OF_TRANSITION_LAYERS_TO_ADD) then
+          ! use new material for the transition layer that has PML off (if it exists)
+          imaterial_new(elem_counter) = imaterial(ispec) + 2*count_def_mat
+        else
+          ! use new material for the PML, with attenuation off
+          imaterial_new(elem_counter) = imaterial(ispec) + count_def_mat
+        endif
 
         ! create a new point if it does not exist yet, otherwise use the existing one to avoid creating multiples
         x_value_to_create = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
