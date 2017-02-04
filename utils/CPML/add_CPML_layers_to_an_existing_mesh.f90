@@ -320,16 +320,16 @@
          stop "Error in nummaterial_velocity_file: material id invalid for defined materials."
 
        ! copy the original material to the new file
-       write(99,*) idomain_id,num_mat,rho,vp,vs,qkappa,qmu,aniso_flag
+       write(99,200) idomain_id,num_mat,rho,vp,vs,qkappa,qmu,aniso_flag
 
        ! create new material for the PML, with attenuation off
-       write(99,*) idomain_id,num_mat + count_def_mat,rho,vp,vs,' 9999. 9999. ',aniso_flag
+       write(99,200) idomain_id,num_mat + count_def_mat,rho,vp,vs,9999.,9999.,aniso_flag
 
        ! create new material for the transition layer that has PML off (if it exists)
        ! in this transition layer we purposely put less attenuation in order to smooth out the transition with PML,
        ! since currently PMLs have no attenuation
        if (NUMBER_OF_TRANSITION_LAYERS_TO_ADD > 0) &
-            write(99,*) idomain_id,num_mat + 2*count_def_mat,rho,vp,vs,min(3.*qkappa,9999.),min(3.*qmu,9999.),aniso_flag
+            write(99,200) idomain_id,num_mat + 2*count_def_mat,rho,vp,vs,min(3.*qkappa,9999.),min(3.*qmu,9999.),aniso_flag
 
       else
         ! negative materials_id: undefined material properties yet
@@ -341,6 +341,8 @@
     enddo
     close(98)
     close(99)
+
+ 200 format(i6,1x,i6,1x,f14.6,1x,f14.6,1x,f14.6,1x,f14.6,1x,f14.6,1x,i6)
 
 ! replace the old file with the new one
   call system('mv nummaterial_velocity_file_new nummaterial_velocity_file')
