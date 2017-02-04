@@ -329,11 +329,12 @@
        ! create new material for the PML, with attenuation off
        write(99,200) idomain_id,num_mat + count_def_mat,rho,vp,vs,9999.,9999.,aniso_flag
 
-       ! create new material for the transition layer that has PML off (if it exists)
-       ! in this transition layer we purposely put less attenuation in order to smooth out the transition with PML,
-       ! since currently PMLs have no attenuation
-       if (NUMBER_OF_TRANSITION_LAYERS_TO_ADD > 0) &
-            write(99,200) idomain_id,num_mat + 2*count_def_mat,rho,vp,vs,min(3.*qkappa,9999.),min(3.*qmu,9999.),aniso_flag
+!! DK DK suppressed for now, not really necessary and too complex to handle correctly in the mesh corners
+!      ! create new material for the transition layer that has PML off (if it exists)
+!      ! in this transition layer we purposely put less attenuation in order to smooth out the transition with PML,
+!      ! since currently PMLs have no attenuation
+!      if (NUMBER_OF_TRANSITION_LAYERS_TO_ADD > 0) &
+!           write(99,200) idomain_id,num_mat + 2*count_def_mat,rho,vp,vs,min(3.*qkappa,9999.),min(3.*qmu,9999.),aniso_flag
 
       else
         ! negative materials_id: undefined material properties yet
@@ -900,13 +901,14 @@
             imaterial_values_to_start_from = imaterial_values_to_start_from - count_def_mat
           enddo
 
-          if (iextend <= NUMBER_OF_TRANSITION_LAYERS_TO_ADD) then
-            ! use new material for the transition layer that has PML off (if it exists)
-            imaterial_new(elem_counter) = imaterial_values_to_start_from + 2*count_def_mat
-          else
+!! DK DK suppressed for now, not really necessary and too complex to handle correctly in the mesh corners
+!         if (iextend <= NUMBER_OF_TRANSITION_LAYERS_TO_ADD) then
+!           ! use new material for the transition layer that has PML off (if it exists)
+!           imaterial_new(elem_counter) = imaterial_values_to_start_from + 2*count_def_mat
+!         else
             ! use new material for the PML, with attenuation off
             imaterial_new(elem_counter) = imaterial_values_to_start_from + count_def_mat
-          endif
+!         endif
 
         endif
 
