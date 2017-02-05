@@ -29,14 +29,14 @@
 
   program add_CPML_layers_to_a_given_mesh
 
-! Dimitri Komatitsch, CNRS Marseille, France, March 2016 and January 2017
+! Dimitri Komatitsch, CNRS Marseille, France, March 2016 and February 2017
 
 ! add PML layers around an existing mesh (i.e. create new elements and new points)
 
   implicit none
 
-! this code is for HEX8 only for now
-  integer, parameter :: NGNOD = 8
+! the code only needs HEX8 for the shape functions because it uses a single corner to detect negative Jacobians
+  integer, parameter :: NGNOD_HEX8 = 8
 
 ! we are in 3D
   integer, parameter :: NDIM = 3
@@ -58,6 +58,7 @@
   integer :: ipoin_read,ispec_loop
   integer :: i1,i2,i3,i4,i5,i6,i7,i8,elem_counter,ia,iflag,iformat,icompute_size
   integer :: p1,p2,p3,p4
+  integer :: itype_of_hex,NGNOD
 
   double precision, dimension(:), allocatable, target :: x,y,z
   double precision, dimension(:), allocatable :: x_new,y_new,z_new,xp,yp,zp
@@ -84,11 +85,11 @@
   double precision zigll(NGLLZ)
 
 ! 3D shape function derivatives, to check for negative Jacobians
-  double precision dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
+  double precision dershape3D(NDIM,NGNOD_HEX8,NGLLX,NGLLY,NGLLZ)
 
-  double precision, dimension(NGNOD) :: xelm,yelm,zelm
+  double precision, dimension(NGNOD_HEX8) :: xelm,yelm,zelm
 
-  double precision :: xread,yread,zread,xmin,xmax,ymin,ymax,zmin,zmax,limit,xsize,ysize,zsize
+  double precision :: xmin,xmax,ymin,ymax,zmin,zmax,limit,xsize,ysize,zsize
   double precision :: value_min,value_max,value_size,sum_of_distances,mean_distance,very_small_distance
 
   logical :: ADD_ON_THE_XMIN_SURFACE,ADD_ON_THE_XMAX_SURFACE
@@ -115,6 +116,20 @@
   print *,'3 = exit'
   read(*,*) iformat
   if (iformat /= 1 .and. iformat /= 2) stop 'exiting...'
+  print *
+
+  print *,'1 = the mesh contains HEX8 elements'
+  print *,'2 = the mesh contains HEX27 elements'
+  print *,'3 = exit'
+  read(*,*) itype_of_hex
+  if (itype_of_hex /= 1 .and. itype_of_hex /= 2) stop 'exiting...'
+  if (itype_of_hex == 1) then
+    NGNOD = 8
+  else
+    NGNOD = 27
+    stop 'HEX27 support not implemented yet'
+  endif
+  print *
 
   print *,'enter the number of PML layers to add on each side of the mesh (usually 3, can also be 4):'
   read(*,*) NUMBER_OF_PML_LAYERS_TO_ADD
@@ -220,7 +235,7 @@
   zigll(:) = xigll(:)
 
 ! compute the derivatives of the 3D shape functions for a 8-node element
-  call get_shape3D(dershape3D,xigll,yigll,zigll,NGNOD,NGLLX,NGLLY,NGLLZ,NDIM)
+  call get_shape3D(dershape3D,xigll,yigll,zigll,NGNOD_HEX8,NGLLX,NGLLY,NGLLZ,NDIM)
 
 ! The format of nummaterial_velocity_file must be:
 
@@ -365,10 +380,7 @@
   allocate(z(npoin))
   if (iformat == 1) then
     do ipoin = 1,npoin
-      read(23,*) ipoin_read,xread,yread,zread
-      x(ipoin_read) = xread
-      y(ipoin_read) = yread
-      z(ipoin_read) = zread
+      read(23,*) ipoin_read,x(ipoin_read),y(ipoin_read),z(ipoin_read)
     enddo
   else
     read(23) x
@@ -393,16 +405,7 @@
 ! loop on the whole mesh
   if (iformat == 1) then
     do ispec_loop = 1,nspec
-      read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
-! store the ibool() array read
-      ibool(1,ispec) = i1
-      ibool(2,ispec) = i2
-      ibool(3,ispec) = i3
-      ibool(4,ispec) = i4
-      ibool(5,ispec) = i5
-      ibool(6,ispec) = i6
-      ibool(7,ispec) = i7
-      ibool(8,ispec) = i8
+      read(23,*) ispec,(ibool(ia,ispec), ia = 1,NGNOD)
     enddo
   else
     read(23) ibool
@@ -422,9 +425,7 @@
 ! loop on the whole mesh
   if (iformat == 1) then
     do ispec_loop = 1,nspec
-      read(23,*) ispec,i1
-! store the imaterial() array read
-      imaterial(ispec) = i1
+      read(23,*) ispec,imaterial(ispec)
     enddo
   else
     read(23) imaterial
@@ -1141,7 +1142,7 @@
     enddo
   enddo
 
-! gets ibool indexing from local (NGNOD_HEX8 points) to global points
+! gets ibool indexing from local (NGNOD points) to global points
   call get_global(NDIM,npointot,xp,yp,zp,ibool,locval,ifseg,npoin,very_small_distance)
 
   print *,'done with multiple point removal based on sorting'
