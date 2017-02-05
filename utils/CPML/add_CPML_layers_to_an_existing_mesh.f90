@@ -1174,9 +1174,9 @@
 ! loop on the whole mesh
   do ispec = 1,nspec
     if (NGNOD == 8) then
-      write(23,"9(i9,1x)") ispec,(ibool(ia,ispec), ia = 1,NGNOD)
+      write(23,"(9(i9,1x))") ispec,(ibool(ia,ispec), ia = 1,NGNOD)
     else
-      write(23,"28(i9,1x)") ispec,(ibool(ia,ispec), ia = 1,NGNOD)
+      write(23,"(28(i9,1x))") ispec,(ibool(ia,ispec), ia = 1,NGNOD)
     endif
   enddo
   close(23)
