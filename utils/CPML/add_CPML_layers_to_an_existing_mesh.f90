@@ -45,7 +45,7 @@
   integer, parameter :: NGLLX = 5,NGLLY = NGLLX,NGLLZ = NGLLX
 
 ! number of PML and non-PML layers to add on each side of the mesh
-  integer :: NUMBER_OF_PML_LAYERS_TO_ADD,NUMBER_OF_TRANSITION_LAYERS_TO_ADD,TOTAL_NUMBER_OF_LAYERS_TO_ADD
+  integer :: NUMBER_OF_PML_LAYERS_TO_ADD,NUMBER_OF_TRANSITION_LAYERS_TO_ADD,NUMBER_OF_LAYERS_TO_ADD_IN_THIS_STEP
 
 ! size of each PML element to add when they are added on the Xmin and Xmax faces, Ymin and Ymax faces, Zmin and/or Zmax faces
   double precision :: SIZE_OF_X_ELEMENT_TO_ADD,SIZE_OF_Y_ELEMENT_TO_ADD,SIZE_OF_Z_ELEMENT_TO_ADD
@@ -58,8 +58,7 @@
   integer :: ipoin_read,ispec_loop
   integer :: i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16,i17,i18,i19,i20,i21,i22,i23,i24,i25,i26,i27
   integer :: p1,p2,p3,p4,p5,p6,p7,p8,p9
-  integer :: elem_counter,ia,iflag,iformat,icompute_size
-  integer :: itype_of_hex,NGNOD
+  integer :: elem_counter,ia,iflag,iformat,icompute_size,istep,itype_of_hex,NGNOD
 
   double precision, dimension(:), allocatable, target :: x,y,z
   double precision, dimension(:), allocatable :: x_new,y_new,z_new,xp,yp,zp
@@ -141,8 +140,6 @@
   read(*,*) NUMBER_OF_TRANSITION_LAYERS_TO_ADD
   if (NUMBER_OF_TRANSITION_LAYERS_TO_ADD < 0) stop 'NUMBER_OF_TRANSITION_LAYERS_TO_ADD must be >= 0'
   print *
-
-  TOTAL_NUMBER_OF_LAYERS_TO_ADD = NUMBER_OF_TRANSITION_LAYERS_TO_ADD + NUMBER_OF_PML_LAYERS_TO_ADD
 
   ADD_ON_THE_XMIN_SURFACE = .true.
   ADD_ON_THE_XMAX_SURFACE = .true.
@@ -344,12 +341,11 @@
        ! create new material for the PML, with attenuation off
        write(99,200) idomain_id,num_mat + count_def_mat,rho,vp,vs,9999.,9999.,aniso_flag
 
-!! DK DK suppressed for now, not really necessary and too complex to handle correctly in the mesh corners
-!      ! create new material for the transition layer that has PML off (if it exists)
-!      ! in this transition layer we purposely put less attenuation in order to smooth out the transition with PML,
-!      ! since currently PMLs have no attenuation
-!      if (NUMBER_OF_TRANSITION_LAYERS_TO_ADD > 0) &
-!           write(99,200) idomain_id,num_mat + 2*count_def_mat,rho,vp,vs,min(3.*qkappa,9999.),min(3.*qmu,9999.),aniso_flag
+       ! create new material for the transition layer that has PML off (if it exists)
+       ! in this transition layer we purposely put less attenuation in order to smooth out the transition with PML,
+       ! since currently PMLs have no attenuation
+       if (NUMBER_OF_TRANSITION_LAYERS_TO_ADD > 0) &
+            write(99,200) idomain_id,num_mat + 2*count_def_mat,rho,vp,vs,min(3.*qkappa,9999.),min(3.*qmu,9999.),aniso_flag
 
       else
         ! negative materials_id: undefined material properties yet
@@ -366,6 +362,29 @@
 
 ! replace the old file with the new one
   call system('mv nummaterial_velocity_file_new nummaterial_velocity_file')
+
+! perform two steps: first we create the transition layer (if any), then we create the PML layers
+! we do this in two separate steps in order to be able to easily create a transition layer that uses
+! intermediate Q values, otherwise if doing it in a single step there are difficult problems in the PML mesh corners.
+! The only drawback of using two steps is that the mesh is read from disk and then written to disk twice instead of once.
+
+  do istep = 1,2
+
+    if (istep == 1) then
+      ! do nothing in the first step if the number of layers to create is equal to zero
+      if (NUMBER_OF_TRANSITION_LAYERS_TO_ADD == 0) cycle
+      NUMBER_OF_LAYERS_TO_ADD_IN_THIS_STEP = NUMBER_OF_TRANSITION_LAYERS_TO_ADD
+      print *
+      print *,'creating the transition layer...'
+      print *
+    else
+      NUMBER_OF_LAYERS_TO_ADD_IN_THIS_STEP = NUMBER_OF_PML_LAYERS_TO_ADD
+      print *
+      print *,'creating the PML layer...'
+      print *
+    endif
+
+! ************* read mesh points *************
 
 ! open SPECFEM3D_Cartesian mesh file to read the points
   if (iformat == 1) then
@@ -643,13 +662,13 @@
   print *,'Number of element faces to extend  = ',count_elem_faces_to_extend
   if (count_elem_faces_to_extend == 0) stop 'error: number of element faces to extend detected is zero!'
 
-! we will add TOTAL_NUMBER_OF_LAYERS_TO_ADD to each of the element faces detected that need to be extended
-  nspec_new = nspec + count_elem_faces_to_extend * TOTAL_NUMBER_OF_LAYERS_TO_ADD
+! we will add NUMBER_OF_LAYERS_TO_ADD_IN_THIS_STEP to each of the element faces detected that need to be extended
+  nspec_new = nspec + count_elem_faces_to_extend * NUMBER_OF_LAYERS_TO_ADD_IN_THIS_STEP
   print *,'Total number of elements in the mesh after extension = ',nspec_new
 
 ! and each of these elements will have NGNOD points
 ! (some of them shared with other elements, but we will remove the multiples below, thus here it is a maximum
-  npoin_new_max = npoin + count_elem_faces_to_extend * TOTAL_NUMBER_OF_LAYERS_TO_ADD * NGNOD
+  npoin_new_max = npoin + count_elem_faces_to_extend * NUMBER_OF_LAYERS_TO_ADD_IN_THIS_STEP * NGNOD
 
   mean_distance = sum_of_distances / dble(count_elem_faces_to_extend)
   very_small_distance = mean_distance / 10000.d0
@@ -952,7 +971,7 @@
 
     if (need_to_extend_this_element) then
 
-! create the TOTAL_NUMBER_OF_LAYERS_TO_ADD new elements
+! create the NUMBER_OF_LAYERS_TO_ADD_IN_THIS_STEP new elements
 
 ! very important remark: it is OK to create duplicates of the mesh points in the loop below (i.e. not to tell the code
 ! that many of these points created are in fact shared between adjacent elements) because "xdecompose_mesh" will remove
@@ -1000,7 +1019,7 @@
       stop 'wrong index in loop on faces'
     endif
 
-      do iextend = 1,TOTAL_NUMBER_OF_LAYERS_TO_ADD
+      do iextend = 1,NUMBER_OF_LAYERS_TO_ADD_IN_THIS_STEP
 
         ! create a new element
         elem_counter = elem_counter + 1
@@ -1020,14 +1039,13 @@
             imaterial_values_to_start_from = imaterial_values_to_start_from - count_def_mat
           enddo
 
-!! DK DK suppressed for now, not really necessary and too complex to handle correctly in the mesh corners
-!         if (iextend <= NUMBER_OF_TRANSITION_LAYERS_TO_ADD) then
-!           ! use new material for the transition layer that has PML off (if it exists)
-!           imaterial_new(elem_counter) = imaterial_values_to_start_from + 2*count_def_mat
-!         else
+          if (istep == 1) then
+            ! use new material for the transition layer that has PML off (if it exists)
+            imaterial_new(elem_counter) = imaterial_values_to_start_from + 2*count_def_mat
+          else
             ! use new material for the PML, with attenuation off
             imaterial_new(elem_counter) = imaterial_values_to_start_from + count_def_mat
-!         endif
+          endif
 
         endif
 
@@ -1454,6 +1472,25 @@
   close(23)
 
   endif
+
+    deallocate(x)
+    deallocate(y)
+    deallocate(z)
+    deallocate(imaterial)
+    deallocate(ibool)
+
+    deallocate(locval)
+    deallocate(ifseg)
+
+    deallocate(xp)
+    deallocate(yp)
+    deallocate(zp)
+
+    deallocate(x_copy)
+    deallocate(y_copy)
+    deallocate(z_copy)
+
+  enddo ! of do istep = 1,2
 
 ! output information for the next code (xconvert_external_layers_of_a_given_mesh_to_CPML_layers)
   print *
