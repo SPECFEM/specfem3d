@@ -60,6 +60,8 @@
   integer :: p1,p2,p3,p4,p5,p6,p7,p8,p9
   integer :: elem_counter,ia,iflag,iformat,icompute_size,istep,itype_of_hex,NGNOD
 
+  double precision :: jacobian
+
   double precision, dimension(:), allocatable, target :: x,y,z
   double precision, dimension(:), allocatable :: x_new,y_new,z_new,xp,yp,zp
   double precision, dimension(:,:), allocatable :: x_copy,y_copy,z_copy
@@ -450,6 +452,25 @@
     read(23) imaterial
   endif
   close(23)
+
+! check the mesh read to make sure it contains no negative Jacobians
+  do ispec = 1,nspec
+! check the element for a negative Jacobian
+      do ia = 1,NGNOD_HEX8
+        xelm(ia) = x(ibool(ia,ispec))
+        yelm(ia) = y(ibool(ia,ispec))
+        zelm(ia) = z(ibool(ia,ispec))
+      enddo
+
+      call calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian1,NDIM,NGNOD,NGLLX,NGLLY,NGLLZ,jacobian)
+      if (found_a_negative_jacobian1) then
+        print *,'detected an element with negative Jacobian in the input mesh for element ',ispec, &
+                     ' in which the Jacobian is ',jacobian
+        stop 'error: the mesh read contains a negative Jacobian!'
+      endif
+  enddo
+  print *,'input mesh successfully checked for negative Jacobians, it contains none'
+  print *
 
 ! we need to extend/extrude the existing mesh by adding CPML elements
 ! along the X faces, then along the Y faces, then along the Z faces.
@@ -1235,7 +1256,7 @@
         zelm(ia) = z_new(ibool_new(ia,elem_counter))
       enddo
 
-      call calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian1,NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
+      call calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian1,NDIM,NGNOD,NGLLX,NGLLY,NGLLZ,jacobian)
 
 ! check the mirrored (i.e. flipped/swapped) element for a negative Jacobian
 ! either this one or the non-mirrored one above should be OK, and thus we will select it
@@ -1266,7 +1287,7 @@
       zelm(7) = z_new(ibool_new(3,elem_counter))
       zelm(8) = z_new(ibool_new(4,elem_counter))
 
-      call calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian2,NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
+      call calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian2,NDIM,NGNOD,NGLLX,NGLLY,NGLLZ,jacobian)
 
 ! this should never happen, it is just a safety test
       if (found_a_negative_jacobian1 .and. found_a_negative_jacobian2) &
@@ -1558,7 +1579,7 @@
 !=====================================================================
 !
 
-  subroutine calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian,NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
+  subroutine calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian,NDIM,NGNOD,NGLLX,NGLLY,NGLLZ,jacobian)
 
   implicit none
 
@@ -1569,9 +1590,9 @@
   double precision, dimension(NGNOD) :: xelm,yelm,zelm
   double precision dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
 
-  integer i,j,k,ia
-  double precision xxi,xeta,xgamma,yxi,yeta,ygamma,zxi,zeta,zgamma
-  double precision jacobian
+  integer :: i,j,k,ia
+  double precision :: xxi,xeta,xgamma,yxi,yeta,ygamma,zxi,zeta,zgamma
+  double precision :: jacobian
 
   double precision, parameter :: ZERO = 0.d0
 
@@ -1582,13 +1603,9 @@
 !     do i=1,NGLLX
 ! for this CPML mesh extrusion routine it is sufficient to test the 8 corners of each element to reduce the cost
 ! because we just want to detect if the element is flipped or not, and if so flip it back
-! do k=1,NGLLZ,NGLLZ-1
-!   do j=1,NGLLY,NGLLY-1
-!     do i=1,NGLLX,NGLLX-1
-! it is even sufficient to test a single corner
-  do k=1,1
-    do j=1,1
-      do i=1,1
+  do k=1,NGLLZ,NGLLZ-1
+    do j=1,NGLLY,NGLLY-1
+      do i=1,NGLLX,NGLLX-1
 
       xxi = ZERO
       xeta = ZERO
@@ -1617,7 +1634,10 @@
       jacobian = xxi*(yeta*zgamma-ygamma*zeta) - xeta*(yxi*zgamma-ygamma*zxi) + xgamma*(yxi*zeta-yeta*zxi)
 
 ! check that the Jacobian transform is invertible, i.e. that the Jacobian never becomes negative or null
-      if (jacobian <= ZERO) found_a_negative_jacobian = .true.
+      if (jacobian <= ZERO) then
+        found_a_negative_jacobian = .true.
+        return
+      endif
 
       enddo
     enddo
