@@ -394,6 +394,14 @@
       print *
     endif
 
+    if (NGNOD == 8) then
+      print *,'reading HEX8 input mesh file...'
+      print *
+    else
+      print *,'reading HEX27 input mesh file...'
+      print *
+    endif
+
 ! ************* read mesh points *************
 
 ! open SPECFEM3D_Cartesian mesh file to read the points
