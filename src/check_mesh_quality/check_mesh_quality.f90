@@ -28,7 +28,7 @@
 ! read an external mesh file and display statistics about mesh quality;
 ! and create an OpenDX file showing a given range of elements or a single element
 
-! Dimitri Komatitsch, University of Pau, France, March 2009 and CNRS, Marseille, France, June 2015 and February 2016.
+! Dimitri Komatitsch, University of Pau, France, March 2009 and CNRS, Marseille, France, 2015, 2016, 2017.
 
   program check_mesh_quality
 
@@ -37,8 +37,6 @@
   implicit none
 
 !------------------------------------------------------------------------------------------------
-
-  integer, parameter :: NGNOD = 8                        ! number of control nodes for hexahedral elements (can only be 8 or 27)
 
   character(len=*), parameter :: nodes_coords_file = 'MESH/nodes_coords_file'
   character(len=*), parameter :: mesh_file = 'MESH/mesh_file'
@@ -50,16 +48,16 @@
 
   integer :: NGLOB                    ! number of nodes
   integer :: NSPEC                    ! number of elements
+  integer :: NGNOD                    ! number of control nodes for hexahedral elements (can only be 8 or 27)
 
   double precision, dimension(:), allocatable :: x,y,z
 
   integer, dimension(:,:), allocatable :: ibool
 
-  integer :: i,ispec,iread,iformat,iabove_or_below,ispec_min_edge_length,ispec_max_edge_length, &
-             ispec_begin,ispec_end,ier
+  integer :: i,ia,ispec,iread,iformat,iabove_or_below,ispec_min_edge_length,ispec_max_edge_length, &
+             ispec_begin,ispec_end,ier,itype_of_hex
 
   double precision :: xtmp,ytmp,ztmp
-  integer :: n1,n2,n3,n4,n5,n6,n7,n8
 
 ! for quality of mesh
   double precision :: equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,value_to_use
@@ -82,14 +80,22 @@
   integer :: ntotspecAVS_DX
   logical :: DISPLAY_HISTOGRAM_DISTMEAN
 
-  if (NGNOD /= 8) then
-    print *,'error: check_mesh_quality only supports NGNOD == 8 for now'
-    stop 'thus if NGNOD == 27, just run the solver without checking the mesh with this program'
-  endif
-
   print *
   print *,'This program will produce histograms of mesh quality.'
   print *
+
+  print *,'1 = the mesh contains HEX8 elements'
+  print *,'2 = the mesh contains HEX27 elements'
+  print *,'3 = exit'
+  read(*,*) itype_of_hex
+  if (itype_of_hex /= 1 .and. itype_of_hex /= 2) stop 'exiting...'
+  if (itype_of_hex == 1) then
+    NGNOD = 8
+  else
+    NGNOD = 27
+  endif
+  print *
+
   print *,'1 = also output elements above a certain skewness threshold in OpenDX format in addition to histograms'
   print *,'2 = also output elements above or below a certain element size in OpenDX format in addition to histograms'
   print *,'3 = do not output any OpenDX file, only create histograms'
@@ -199,28 +205,18 @@
   do i = 1,NSPEC
 
       ! gets element connection nodes
-      read(10,*,iostat=ier) iread,n1,n2,n3,n4,n5,n6,n7,n8
+      read(10,*,iostat=ier) iread,(ibool(ia,iread),ia=1,NGNOD)
 
       ! check
       if (ier /= 0) then
-        print *,'error element read:',i,iread,n1,n2,n3,n4,n5,n6,n7,n8
+        print *,'error element read:',i,iread
         stop 'error while reading element connectivity'
       endif
 
-      if (iread < 1 .or. iread > NSPEC .or. min(n1,n2,n3,n4,n5,n6,n7,n8) < 1 .or. max(n1,n2,n3,n4,n5,n6,n7,n8) > NGLOB) then
+      if (iread < 1 .or. iread > NSPEC .or. minval(ibool(:,iread)) < 1 .or. maxval(ibool(:,iread)) > NGLOB) then
         print *,'error at i,iread = ',i,iread
         stop 'wrong input ID for an element'
       endif
-
-      ! stores element nodes
-      ibool(1,iread) = n1
-      ibool(2,iread) = n2
-      ibool(3,iread) = n3
-      ibool(4,iread) = n4
-      ibool(5,iread) = n5
-      ibool(6,iread) = n6
-      ibool(7,iread) = n7
-      ibool(8,iread) = n8
 
   enddo
 
@@ -254,7 +250,7 @@
 
     if (mod(ispec,100000) == 0) print *,'processed ',ispec,' elements out of ',NSPEC
 
-    call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,delta_t, &
+    call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
 
 ! store element number in which the edge of minimum or maximum length is located
@@ -348,7 +344,7 @@
 
 ! loop on all the elements
   do ispec = 1,NSPEC
-    call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,delta_t, &
+    call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
 
 ! store skewness in histogram
@@ -485,7 +481,7 @@
 ! loop on all the elements
   do ispec = 1,NSPEC
 
-    call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,delta_t, &
+    call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
 
     if (iformat == 1) then
@@ -523,7 +519,7 @@
 
 ! ************* generate elements ******************
 
-  write(11,*) 'object 2 class array type int rank 1 shape ',NGNOD,' items ',ntotspecAVS_DX,' data follows'
+  write(11,*) 'object 2 class array type int rank 1 shape 8 items ',ntotspecAVS_DX,' data follows'
 
 ! loop on all the elements
   ispec_begin = 1
@@ -531,7 +527,7 @@
 
   do ispec = ispec_begin,ispec_end
 
-    call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,delta_t, &
+    call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
 
     if (iformat == 1) then
@@ -565,7 +561,7 @@
 ! loop on all the elements
   do ispec = ispec_begin,ispec_end
 
-    call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,delta_t, &
+    call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
 
     if (iformat == 1) then
@@ -604,16 +600,14 @@
 
 ! create mesh quality data for a given 3D spectral element
 
-  subroutine create_mesh_quality_data_3D(x,y,z,ibool,ispec,NSPEC,NGLOB,VP_MAX,delta_t, &
+  subroutine create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
 
   use constants
 
   implicit none
 
-  integer, parameter :: NGNOD = 8                        ! hexahedral elements
-
-  integer :: iface,icorner,ispec,NSPEC,NGLOB,i
+  integer :: NGNOD,iface,icorner,ispec,NSPEC,NGLOB,i
 
   double precision, dimension(NGLOB) :: x,y,z
 
@@ -785,4 +779,319 @@
    diagonal_aspect_ratio = max(dist1,dist2,dist3,dist4) / min(dist1,dist2,dist3,dist4)
 
   end subroutine create_mesh_quality_data_3D
+
+!
+!=====================================================================
+!
+
+! 3D shape functions for 8-node or 27-node element
+
+  subroutine get_shape3D(shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
+
+  use constants
+
+  implicit none
+
+  integer NGNOD
+
+! Gauss-Lobatto-Legendre points of integration
+  double precision xigll(NGLLX)
+  double precision yigll(NGLLY)
+  double precision zigll(NGLLZ)
+
+! 3D shape functions and their derivatives
+  double precision shape3D(NGNOD,NGLLX,NGLLY,NGLLZ)
+  double precision dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
+
+  integer i,j,k,ia
+
+! location of the nodes of the 3D hexahedra elements
+  double precision xi,eta,gamma
+  double precision ra1,ra2,rb1,rb2,rc1,rc2
+
+! for checking the 3D shape functions
+  double precision sumshape,sumdershapexi,sumdershapeeta,sumdershapegamma
+
+  double precision, parameter :: ONE_EIGHTH = 0.125d0
+
+! check that the parameter file is correct
+  if (NGNOD /= 8 .and. NGNOD /= 27) stop 'volume elements should have 8 or 27 control nodes'
+
+! ***
+! *** create 3D shape functions and jacobian
+! ***
+
+  do i=1,NGLLX
+    do j=1,NGLLY
+      do k=1,NGLLZ
+
+        xi = xigll(i)
+        eta = yigll(j)
+        gamma = zigll(k)
+
+        !--- case of a 3D 8-node element (Dhatt-Touzot p. 115)
+        if (NGNOD == 8) then
+
+          ra1 = one + xi
+          ra2 = one - xi
+
+          rb1 = one + eta
+          rb2 = one - eta
+
+          rc1 = one + gamma
+          rc2 = one - gamma
+
+          shape3D(1,i,j,k) = ONE_EIGHTH*ra2*rb2*rc2
+          shape3D(2,i,j,k) = ONE_EIGHTH*ra1*rb2*rc2
+          shape3D(3,i,j,k) = ONE_EIGHTH*ra1*rb1*rc2
+          shape3D(4,i,j,k) = ONE_EIGHTH*ra2*rb1*rc2
+          shape3D(5,i,j,k) = ONE_EIGHTH*ra2*rb2*rc1
+          shape3D(6,i,j,k) = ONE_EIGHTH*ra1*rb2*rc1
+          shape3D(7,i,j,k) = ONE_EIGHTH*ra1*rb1*rc1
+          shape3D(8,i,j,k) = ONE_EIGHTH*ra2*rb1*rc1
+
+          dershape3D(1,1,i,j,k) = - ONE_EIGHTH*rb2*rc2
+          dershape3D(1,2,i,j,k) = ONE_EIGHTH*rb2*rc2
+          dershape3D(1,3,i,j,k) = ONE_EIGHTH*rb1*rc2
+          dershape3D(1,4,i,j,k) = - ONE_EIGHTH*rb1*rc2
+          dershape3D(1,5,i,j,k) = - ONE_EIGHTH*rb2*rc1
+          dershape3D(1,6,i,j,k) = ONE_EIGHTH*rb2*rc1
+          dershape3D(1,7,i,j,k) = ONE_EIGHTH*rb1*rc1
+          dershape3D(1,8,i,j,k) = - ONE_EIGHTH*rb1*rc1
+
+          dershape3D(2,1,i,j,k) = - ONE_EIGHTH*ra2*rc2
+          dershape3D(2,2,i,j,k) = - ONE_EIGHTH*ra1*rc2
+          dershape3D(2,3,i,j,k) = ONE_EIGHTH*ra1*rc2
+          dershape3D(2,4,i,j,k) = ONE_EIGHTH*ra2*rc2
+          dershape3D(2,5,i,j,k) = - ONE_EIGHTH*ra2*rc1
+          dershape3D(2,6,i,j,k) = - ONE_EIGHTH*ra1*rc1
+          dershape3D(2,7,i,j,k) = ONE_EIGHTH*ra1*rc1
+          dershape3D(2,8,i,j,k) = ONE_EIGHTH*ra2*rc1
+
+          dershape3D(3,1,i,j,k) = - ONE_EIGHTH*ra2*rb2
+          dershape3D(3,2,i,j,k) = - ONE_EIGHTH*ra1*rb2
+          dershape3D(3,3,i,j,k) = - ONE_EIGHTH*ra1*rb1
+          dershape3D(3,4,i,j,k) = - ONE_EIGHTH*ra2*rb1
+          dershape3D(3,5,i,j,k) = ONE_EIGHTH*ra2*rb2
+          dershape3D(3,6,i,j,k) = ONE_EIGHTH*ra1*rb2
+          dershape3D(3,7,i,j,k) = ONE_EIGHTH*ra1*rb1
+          dershape3D(3,8,i,j,k) = ONE_EIGHTH*ra2*rb1
+
+        else
+
+          ! note: put further initialization for NGNOD == 27 into subroutine
+          !       to avoid compilation errors in case NGNOD == 8
+          call get_shape3D_27(NGNOD,shape3D,dershape3D,xi,eta,gamma,i,j,k)
+
+        endif
+
+      enddo
+    enddo
+  enddo
+
+!--- check the shape functions and their derivatives
+
+  do i=1,NGLLX
+    do j=1,NGLLY
+      do k=1,NGLLZ
+
+        sumshape = ZERO
+        sumdershapexi = ZERO
+        sumdershapeeta = ZERO
+        sumdershapegamma = ZERO
+
+        do ia=1,NGNOD
+          sumshape = sumshape + shape3D(ia,i,j,k)
+          sumdershapexi = sumdershapexi + dershape3D(1,ia,i,j,k)
+          sumdershapeeta = sumdershapeeta + dershape3D(2,ia,i,j,k)
+          sumdershapegamma = sumdershapegamma + dershape3D(3,ia,i,j,k)
+        enddo
+
+        ! sum of shape functions should be one
+        ! sum of derivative of shape functions should be zero
+        if (abs(sumshape-one) > TINYVAL) stop 'error in 3D shape functions'
+        if (abs(sumdershapexi) > TINYVAL) stop 'error in xi derivative of 3D shape functions'
+        if (abs(sumdershapeeta) > TINYVAL) stop 'error in eta derivative of 3D shape functions'
+        if (abs(sumdershapegamma) > TINYVAL) stop 'error in gamma derivative of 3D shape functions'
+
+      enddo
+    enddo
+  enddo
+
+  end subroutine get_shape3D
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+!--- case of a 3D 27-node element
+
+  subroutine get_shape3D_27(NGNOD,shape3D,dershape3D,xi,eta,gamma,i,j,k)
+
+  use constants
+
+  implicit none
+
+  integer :: NGNOD,i,j,k
+
+! 3D shape functions and their derivatives
+  double precision shape3D(NGNOD,NGLLX,NGLLY,NGLLZ)
+  double precision dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
+
+! location of the nodes of the 3D hexahedra elements
+  double precision xi,eta,gamma
+  double precision l1xi,l2xi,l3xi,l1eta,l2eta,l3eta,l1gamma,l2gamma,l3gamma
+  double precision l1pxi,l2pxi,l3pxi,l1peta,l2peta,l3peta,l1pgamma,l2pgamma,l3pgamma
+
+  l1xi=HALF*xi*(xi-ONE)
+  l2xi=ONE-xi**2
+  l3xi=HALF*xi*(xi+ONE)
+
+  l1pxi=xi-HALF
+  l2pxi=-TWO*xi
+  l3pxi=xi+HALF
+
+  l1eta=HALF*eta*(eta-ONE)
+  l2eta=ONE-eta**2
+  l3eta=HALF*eta*(eta+ONE)
+
+  l1peta=eta-HALF
+  l2peta=-TWO*eta
+  l3peta=eta+HALF
+
+  l1gamma=HALF*gamma*(gamma-ONE)
+  l2gamma=ONE-gamma**2
+  l3gamma=HALF*gamma*(gamma+ONE)
+
+  l1pgamma=gamma-HALF
+  l2pgamma=-TWO*gamma
+  l3pgamma=gamma+HALF
+
+  ! corner nodes
+  shape3D(1,i,j,k)=l1xi*l1eta*l1gamma
+  shape3D(2,i,j,k)=l3xi*l1eta*l1gamma
+  shape3D(3,i,j,k)=l3xi*l3eta*l1gamma
+  shape3D(4,i,j,k)=l1xi*l3eta*l1gamma
+  shape3D(5,i,j,k)=l1xi*l1eta*l3gamma
+  shape3D(6,i,j,k)=l3xi*l1eta*l3gamma
+  shape3D(7,i,j,k)=l3xi*l3eta*l3gamma
+  shape3D(8,i,j,k)=l1xi*l3eta*l3gamma
+
+  dershape3D(1,1,i,j,k)=l1pxi*l1eta*l1gamma
+  dershape3D(1,2,i,j,k)=l3pxi*l1eta*l1gamma
+  dershape3D(1,3,i,j,k)=l3pxi*l3eta*l1gamma
+  dershape3D(1,4,i,j,k)=l1pxi*l3eta*l1gamma
+  dershape3D(1,5,i,j,k)=l1pxi*l1eta*l3gamma
+  dershape3D(1,6,i,j,k)=l3pxi*l1eta*l3gamma
+  dershape3D(1,7,i,j,k)=l3pxi*l3eta*l3gamma
+  dershape3D(1,8,i,j,k)=l1pxi*l3eta*l3gamma
+
+  dershape3D(2,1,i,j,k)=l1xi*l1peta*l1gamma
+  dershape3D(2,2,i,j,k)=l3xi*l1peta*l1gamma
+  dershape3D(2,3,i,j,k)=l3xi*l3peta*l1gamma
+  dershape3D(2,4,i,j,k)=l1xi*l3peta*l1gamma
+  dershape3D(2,5,i,j,k)=l1xi*l1peta*l3gamma
+  dershape3D(2,6,i,j,k)=l3xi*l1peta*l3gamma
+  dershape3D(2,7,i,j,k)=l3xi*l3peta*l3gamma
+  dershape3D(2,8,i,j,k)=l1xi*l3peta*l3gamma
+
+  dershape3D(3,1,i,j,k)=l1xi*l1eta*l1pgamma
+  dershape3D(3,2,i,j,k)=l3xi*l1eta*l1pgamma
+  dershape3D(3,3,i,j,k)=l3xi*l3eta*l1pgamma
+  dershape3D(3,4,i,j,k)=l1xi*l3eta*l1pgamma
+  dershape3D(3,5,i,j,k)=l1xi*l1eta*l3pgamma
+  dershape3D(3,6,i,j,k)=l3xi*l1eta*l3pgamma
+  dershape3D(3,7,i,j,k)=l3xi*l3eta*l3pgamma
+  dershape3D(3,8,i,j,k)=l1xi*l3eta*l3pgamma
+
+  ! midside nodes
+  shape3D(9,i,j,k)=l2xi*l1eta*l1gamma
+  shape3D(10,i,j,k)=l3xi*l2eta*l1gamma
+  shape3D(11,i,j,k)=l2xi*l3eta*l1gamma
+  shape3D(12,i,j,k)=l1xi*l2eta*l1gamma
+  shape3D(13,i,j,k)=l1xi*l1eta*l2gamma
+  shape3D(14,i,j,k)=l3xi*l1eta*l2gamma
+  shape3D(15,i,j,k)=l3xi*l3eta*l2gamma
+  shape3D(16,i,j,k)=l1xi*l3eta*l2gamma
+  shape3D(17,i,j,k)=l2xi*l1eta*l3gamma
+  shape3D(18,i,j,k)=l3xi*l2eta*l3gamma
+  shape3D(19,i,j,k)=l2xi*l3eta*l3gamma
+  shape3D(20,i,j,k)=l1xi*l2eta*l3gamma
+
+  dershape3D(1,9,i,j,k)=l2pxi*l1eta*l1gamma
+  dershape3D(1,10,i,j,k)=l3pxi*l2eta*l1gamma
+  dershape3D(1,11,i,j,k)=l2pxi*l3eta*l1gamma
+  dershape3D(1,12,i,j,k)=l1pxi*l2eta*l1gamma
+  dershape3D(1,13,i,j,k)=l1pxi*l1eta*l2gamma
+  dershape3D(1,14,i,j,k)=l3pxi*l1eta*l2gamma
+  dershape3D(1,15,i,j,k)=l3pxi*l3eta*l2gamma
+  dershape3D(1,16,i,j,k)=l1pxi*l3eta*l2gamma
+  dershape3D(1,17,i,j,k)=l2pxi*l1eta*l3gamma
+  dershape3D(1,18,i,j,k)=l3pxi*l2eta*l3gamma
+  dershape3D(1,19,i,j,k)=l2pxi*l3eta*l3gamma
+  dershape3D(1,20,i,j,k)=l1pxi*l2eta*l3gamma
+
+  dershape3D(2,9,i,j,k)=l2xi*l1peta*l1gamma
+  dershape3D(2,10,i,j,k)=l3xi*l2peta*l1gamma
+  dershape3D(2,11,i,j,k)=l2xi*l3peta*l1gamma
+  dershape3D(2,12,i,j,k)=l1xi*l2peta*l1gamma
+  dershape3D(2,13,i,j,k)=l1xi*l1peta*l2gamma
+  dershape3D(2,14,i,j,k)=l3xi*l1peta*l2gamma
+  dershape3D(2,15,i,j,k)=l3xi*l3peta*l2gamma
+  dershape3D(2,16,i,j,k)=l1xi*l3peta*l2gamma
+  dershape3D(2,17,i,j,k)=l2xi*l1peta*l3gamma
+  dershape3D(2,18,i,j,k)=l3xi*l2peta*l3gamma
+  dershape3D(2,19,i,j,k)=l2xi*l3peta*l3gamma
+  dershape3D(2,20,i,j,k)=l1xi*l2peta*l3gamma
+
+  dershape3D(3,9,i,j,k)=l2xi*l1eta*l1pgamma
+  dershape3D(3,10,i,j,k)=l3xi*l2eta*l1pgamma
+  dershape3D(3,11,i,j,k)=l2xi*l3eta*l1pgamma
+  dershape3D(3,12,i,j,k)=l1xi*l2eta*l1pgamma
+  dershape3D(3,13,i,j,k)=l1xi*l1eta*l2pgamma
+  dershape3D(3,14,i,j,k)=l3xi*l1eta*l2pgamma
+  dershape3D(3,15,i,j,k)=l3xi*l3eta*l2pgamma
+  dershape3D(3,16,i,j,k)=l1xi*l3eta*l2pgamma
+  dershape3D(3,17,i,j,k)=l2xi*l1eta*l3pgamma
+  dershape3D(3,18,i,j,k)=l3xi*l2eta*l3pgamma
+  dershape3D(3,19,i,j,k)=l2xi*l3eta*l3pgamma
+  dershape3D(3,20,i,j,k)=l1xi*l2eta*l3pgamma
+
+  ! side center nodes
+  shape3D(21,i,j,k)=l2xi*l2eta*l1gamma
+  shape3D(22,i,j,k)=l2xi*l1eta*l2gamma
+  shape3D(23,i,j,k)=l3xi*l2eta*l2gamma
+  shape3D(24,i,j,k)=l2xi*l3eta*l2gamma
+  shape3D(25,i,j,k)=l1xi*l2eta*l2gamma
+  shape3D(26,i,j,k)=l2xi*l2eta*l3gamma
+
+  dershape3D(1,21,i,j,k)=l2pxi*l2eta*l1gamma
+  dershape3D(1,22,i,j,k)=l2pxi*l1eta*l2gamma
+  dershape3D(1,23,i,j,k)=l3pxi*l2eta*l2gamma
+  dershape3D(1,24,i,j,k)=l2pxi*l3eta*l2gamma
+  dershape3D(1,25,i,j,k)=l1pxi*l2eta*l2gamma
+  dershape3D(1,26,i,j,k)=l2pxi*l2eta*l3gamma
+
+  dershape3D(2,21,i,j,k)=l2xi*l2peta*l1gamma
+  dershape3D(2,22,i,j,k)=l2xi*l1peta*l2gamma
+  dershape3D(2,23,i,j,k)=l3xi*l2peta*l2gamma
+  dershape3D(2,24,i,j,k)=l2xi*l3peta*l2gamma
+  dershape3D(2,25,i,j,k)=l1xi*l2peta*l2gamma
+  dershape3D(2,26,i,j,k)=l2xi*l2peta*l3gamma
+
+  dershape3D(3,21,i,j,k)=l2xi*l2eta*l1pgamma
+  dershape3D(3,22,i,j,k)=l2xi*l1eta*l2pgamma
+  dershape3D(3,23,i,j,k)=l3xi*l2eta*l2pgamma
+  dershape3D(3,24,i,j,k)=l2xi*l3eta*l2pgamma
+  dershape3D(3,25,i,j,k)=l1xi*l2eta*l2pgamma
+  dershape3D(3,26,i,j,k)=l2xi*l2eta*l3pgamma
+
+  ! center node
+  shape3D(27,i,j,k)=l2xi*l2eta*l2gamma
+
+  dershape3D(1,27,i,j,k)=l2pxi*l2eta*l2gamma
+  dershape3D(2,27,i,j,k)=l2xi*l2peta*l2gamma
+  dershape3D(3,27,i,j,k)=l2xi*l2eta*l2pgamma
+
+  end subroutine get_shape3D_27
 

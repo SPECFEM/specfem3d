@@ -25,7 +25,7 @@
 !
 !=====================================================================
 
-! 3D shape functions for 8-node element
+! 3D shape functions for 8-node or 27-node element
 
   subroutine get_shape3D(myrank,shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
 
