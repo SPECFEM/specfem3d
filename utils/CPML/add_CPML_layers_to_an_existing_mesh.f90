@@ -90,6 +90,7 @@
   double precision dershape3D(NDIM,NGNOD_HEX8,NGLLX,NGLLY,NGLLZ)
 
   double precision, dimension(NGNOD_HEX8) :: xelm,yelm,zelm
+  double precision, dimension(:), allocatable :: x_tmp1,y_tmp1,z_tmp1,x_tmp2,y_tmp2,z_tmp2
 
   double precision :: xmin,xmax,ymin,ymax,zmin,zmax,limit,xsize,ysize,zsize
   double precision :: value_min,value_max,value_size,sum_of_distances,mean_distance,very_small_distance
@@ -131,6 +132,13 @@
     NGNOD = 27
   endif
   print *
+
+  allocate(x_tmp1(NGNOD))
+  allocate(y_tmp1(NGNOD))
+  allocate(z_tmp1(NGNOD))
+  allocate(x_tmp2(NGNOD))
+  allocate(y_tmp2(NGNOD))
+  allocate(z_tmp2(NGNOD))
 
   print *,'enter the number of PML layers to add on each side of the mesh (usually 3, can also be 4):'
   read(*,*) NUMBER_OF_PML_LAYERS_TO_ADD
@@ -464,7 +472,7 @@
 
       call calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian1,NDIM,NGNOD,NGLLX,NGLLY,NGLLZ,jacobian)
       if (found_a_negative_jacobian1) then
-        print *,'detected an element with negative Jacobian in the input mesh for element ',ispec, &
+        print *,'detected an element with negative Jacobian in the input mesh: element ',ispec, &
                      ' in which the Jacobian is ',jacobian
         stop 'error: the mesh read contains a negative Jacobian!'
       endif
@@ -1070,179 +1078,251 @@
 
         endif
 
+! first create the normal element
+
 ! bottom face of HEX8
 
-        npoin_new_real = npoin_new_real + 1
-        ibool_new(1,elem_counter) = npoin_new_real
-        x_new(npoin_new_real) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-        y_new(npoin_new_real) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-        z_new(npoin_new_real) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+        x_tmp1(1) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+        y_tmp1(1) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+        z_tmp1(1) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
-        npoin_new_real = npoin_new_real + 1
-        ibool_new(2,elem_counter) = npoin_new_real
-        x_new(npoin_new_real) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-        y_new(npoin_new_real) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-        z_new(npoin_new_real) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+        x_tmp1(2) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+        y_tmp1(2) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+        z_tmp1(2) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
-        npoin_new_real = npoin_new_real + 1
-        ibool_new(3,elem_counter) = npoin_new_real
-        x_new(npoin_new_real) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-        y_new(npoin_new_real) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-        z_new(npoin_new_real) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+        x_tmp1(3) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+        y_tmp1(3) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+        z_tmp1(3) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
-        npoin_new_real = npoin_new_real + 1
-        ibool_new(4,elem_counter) = npoin_new_real
-        x_new(npoin_new_real) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-        y_new(npoin_new_real) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-        z_new(npoin_new_real) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+        x_tmp1(4) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+        y_tmp1(4) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+        z_tmp1(4) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
 ! top face of HEX8
 
-        npoin_new_real = npoin_new_real + 1
-        ibool_new(5,elem_counter) = npoin_new_real
-        x_new(npoin_new_real) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-        y_new(npoin_new_real) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-        z_new(npoin_new_real) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+        x_tmp1(5) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+        y_tmp1(5) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+        z_tmp1(5) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
-        npoin_new_real = npoin_new_real + 1
-        ibool_new(6,elem_counter) = npoin_new_real
-        x_new(npoin_new_real) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-        y_new(npoin_new_real) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-        z_new(npoin_new_real) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+        x_tmp1(6) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+        y_tmp1(6) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+        z_tmp1(6) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
-        npoin_new_real = npoin_new_real + 1
-        ibool_new(7,elem_counter) = npoin_new_real
-        x_new(npoin_new_real) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-        y_new(npoin_new_real) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-        z_new(npoin_new_real) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+        x_tmp1(7) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+        y_tmp1(7) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+        z_tmp1(7) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
-        npoin_new_real = npoin_new_real + 1
-        ibool_new(8,elem_counter) = npoin_new_real
-        x_new(npoin_new_real) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-        y_new(npoin_new_real) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-        z_new(npoin_new_real) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+        x_tmp1(8) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+        y_tmp1(8) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+        z_tmp1(8) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
         if (NGNOD == 27) then
 
 ! remaining points of bottom face of HEX27
 
-          npoin_new_real = npoin_new_real + 1
-          ibool_new(9,elem_counter) = npoin_new_real
-          x_new(npoin_new_real) = x(p5) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-          y_new(npoin_new_real) = y(p5) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-          z_new(npoin_new_real) = z(p5) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+          x_tmp1(9) = x(p5) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+          y_tmp1(9) = y(p5) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+          z_tmp1(9) = z(p5) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
-          npoin_new_real = npoin_new_real + 1
-          ibool_new(10,elem_counter) = npoin_new_real
-          x_new(npoin_new_real) = x(p6) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-          y_new(npoin_new_real) = y(p6) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-          z_new(npoin_new_real) = z(p6) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+          x_tmp1(10) = x(p6) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+          y_tmp1(10) = y(p6) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+          z_tmp1(10) = z(p6) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
-          npoin_new_real = npoin_new_real + 1
-          ibool_new(11,elem_counter) = npoin_new_real
-          x_new(npoin_new_real) = x(p7) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-          y_new(npoin_new_real) = y(p7) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-          z_new(npoin_new_real) = z(p7) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+          x_tmp1(11) = x(p7) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+          y_tmp1(11) = y(p7) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+          z_tmp1(11) = z(p7) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
-          npoin_new_real = npoin_new_real + 1
-          ibool_new(12,elem_counter) = npoin_new_real
-          x_new(npoin_new_real) = x(p8) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-          y_new(npoin_new_real) = y(p8) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-          z_new(npoin_new_real) = z(p8) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+          x_tmp1(12) = x(p8) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+          y_tmp1(12) = y(p8) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+          z_tmp1(12) = z(p8) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
-          npoin_new_real = npoin_new_real + 1
-          ibool_new(21,elem_counter) = npoin_new_real
-          x_new(npoin_new_real) = x(p9) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
-          y_new(npoin_new_real) = y(p9) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
-          z_new(npoin_new_real) = z(p9) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+          x_tmp1(21) = x(p9) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+          y_tmp1(21) = y(p9) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+          z_tmp1(21) = z(p9) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
 
 ! remaining points of top face of HEX27
 
-          npoin_new_real = npoin_new_real + 1
-          ibool_new(17,elem_counter) = npoin_new_real
-          x_new(npoin_new_real) = x(p5) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-          y_new(npoin_new_real) = y(p5) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-          z_new(npoin_new_real) = z(p5) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+          x_tmp1(17) = x(p5) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+          y_tmp1(17) = y(p5) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+          z_tmp1(17) = z(p5) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
-          npoin_new_real = npoin_new_real + 1
-          ibool_new(18,elem_counter) = npoin_new_real
-          x_new(npoin_new_real) = x(p6) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-          y_new(npoin_new_real) = y(p6) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-          z_new(npoin_new_real) = z(p6) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+          x_tmp1(18) = x(p6) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+          y_tmp1(18) = y(p6) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+          z_tmp1(18) = z(p6) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
-          npoin_new_real = npoin_new_real + 1
-          ibool_new(19,elem_counter) = npoin_new_real
-          x_new(npoin_new_real) = x(p7) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-          y_new(npoin_new_real) = y(p7) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-          z_new(npoin_new_real) = z(p7) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+          x_tmp1(19) = x(p7) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+          y_tmp1(19) = y(p7) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+          z_tmp1(19) = z(p7) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
-          npoin_new_real = npoin_new_real + 1
-          ibool_new(20,elem_counter) = npoin_new_real
-          x_new(npoin_new_real) = x(p8) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-          y_new(npoin_new_real) = y(p8) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-          z_new(npoin_new_real) = z(p8) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+          x_tmp1(20) = x(p8) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+          y_tmp1(20) = y(p8) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+          z_tmp1(20) = z(p8) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
-          npoin_new_real = npoin_new_real + 1
-          ibool_new(26,elem_counter) = npoin_new_real
-          x_new(npoin_new_real) = x(p9) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
-          y_new(npoin_new_real) = y(p9) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
-          z_new(npoin_new_real) = z(p9) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+          x_tmp1(26) = x(p9) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+          y_tmp1(26) = y(p9) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+          z_tmp1(26) = z(p9) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
 
 ! remaining points of middle cutplane (middle "face") of HEX27
 
-          npoin_new_real = npoin_new_real + 1
-          ibool_new(13,elem_counter) = npoin_new_real
-          x_new(npoin_new_real) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
-          y_new(npoin_new_real) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
-          z_new(npoin_new_real) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
+          x_tmp1(13) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+          y_tmp1(13) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+          z_tmp1(13) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
 
-          npoin_new_real = npoin_new_real + 1
-          ibool_new(14,elem_counter) = npoin_new_real
-          x_new(npoin_new_real) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
-          y_new(npoin_new_real) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
-          z_new(npoin_new_real) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
+          x_tmp1(14) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+          y_tmp1(14) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+          z_tmp1(14) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
 
-          npoin_new_real = npoin_new_real + 1
-          ibool_new(15,elem_counter) = npoin_new_real
-          x_new(npoin_new_real) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
-          y_new(npoin_new_real) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
-          z_new(npoin_new_real) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
+          x_tmp1(15) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+          y_tmp1(15) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+          z_tmp1(15) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
 
-          npoin_new_real = npoin_new_real + 1
-          ibool_new(16,elem_counter) = npoin_new_real
-          x_new(npoin_new_real) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
-          y_new(npoin_new_real) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
-          z_new(npoin_new_real) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
+          x_tmp1(16) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+          y_tmp1(16) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+          z_tmp1(16) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
 
-          npoin_new_real = npoin_new_real + 1
-          ibool_new(22,elem_counter) = npoin_new_real
-          x_new(npoin_new_real) = x(p5) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
-          y_new(npoin_new_real) = y(p5) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
-          z_new(npoin_new_real) = z(p5) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
+          x_tmp1(22) = x(p5) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+          y_tmp1(22) = y(p5) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+          z_tmp1(22) = z(p5) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
 
-          npoin_new_real = npoin_new_real + 1
-          ibool_new(23,elem_counter) = npoin_new_real
-          x_new(npoin_new_real) = x(p6) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
-          y_new(npoin_new_real) = y(p6) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
-          z_new(npoin_new_real) = z(p6) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
+          x_tmp1(23) = x(p6) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+          y_tmp1(23) = y(p6) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+          z_tmp1(23) = z(p6) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
 
-          npoin_new_real = npoin_new_real + 1
-          ibool_new(24,elem_counter) = npoin_new_real
-          x_new(npoin_new_real) = x(p7) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
-          y_new(npoin_new_real) = y(p7) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
-          z_new(npoin_new_real) = z(p7) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
+          x_tmp1(24) = x(p7) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+          y_tmp1(24) = y(p7) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+          z_tmp1(24) = z(p7) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
 
-          npoin_new_real = npoin_new_real + 1
-          ibool_new(25,elem_counter) = npoin_new_real
-          x_new(npoin_new_real) = x(p8) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
-          y_new(npoin_new_real) = y(p8) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
-          z_new(npoin_new_real) = z(p8) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
+          x_tmp1(25) = x(p8) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+          y_tmp1(25) = y(p8) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+          z_tmp1(25) = z(p8) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
 
-          npoin_new_real = npoin_new_real + 1
-          ibool_new(27,elem_counter) = npoin_new_real
-          x_new(npoin_new_real) = x(p9) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
-          y_new(npoin_new_real) = y(p9) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
-          z_new(npoin_new_real) = z(p9) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
+          x_tmp1(27) = x(p9) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+          y_tmp1(27) = y(p9) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+          z_tmp1(27) = z(p9) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
+
+        endif
+
+! then create the mirrored element
+
+! bottom face of HEX8
+
+        x_tmp2(1) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+        y_tmp2(1) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+        z_tmp2(1) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+
+        x_tmp2(2) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+        y_tmp2(2) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+        z_tmp2(2) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+
+        x_tmp2(3) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+        y_tmp2(3) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+        z_tmp2(3) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+
+        x_tmp2(4) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+        y_tmp2(4) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+        z_tmp2(4) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+
+! top face of HEX8
+
+        x_tmp2(5) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+        y_tmp2(5) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+        z_tmp2(5) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+
+        x_tmp2(6) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+        y_tmp2(6) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+        z_tmp2(6) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+
+        x_tmp2(7) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+        y_tmp2(7) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+        z_tmp2(7) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+
+        x_tmp2(8) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+        y_tmp2(8) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+        z_tmp2(8) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+
+        if (NGNOD == 27) then
+
+! remaining points of bottom face of HEX27
+
+          x_tmp2(9) = x(p5) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+          y_tmp2(9) = y(p5) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+          z_tmp2(9) = z(p5) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+
+          x_tmp2(10) = x(p6) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+          y_tmp2(10) = y(p6) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+          z_tmp2(10) = z(p6) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+
+          x_tmp2(11) = x(p7) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+          y_tmp2(11) = y(p7) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+          z_tmp2(11) = z(p7) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+
+          x_tmp2(12) = x(p8) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+          y_tmp2(12) = y(p8) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+          z_tmp2(12) = z(p8) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+
+          x_tmp2(21) = x(p9) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-1)
+          y_tmp2(21) = y(p9) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-1)
+          z_tmp2(21) = z(p9) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-1)
+
+! remaining points of top face of HEX27
+
+          x_tmp2(17) = x(p5) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+          y_tmp2(17) = y(p5) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+          z_tmp2(17) = z(p5) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+
+          x_tmp2(18) = x(p6) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+          y_tmp2(18) = y(p6) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+          z_tmp2(18) = z(p6) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+
+          x_tmp2(19) = x(p7) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+          y_tmp2(19) = y(p7) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+          z_tmp2(19) = z(p7) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+
+          x_tmp2(20) = x(p8) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+          y_tmp2(20) = y(p8) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+          z_tmp2(20) = z(p8) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+
+          x_tmp2(26) = x(p9) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*iextend
+          y_tmp2(26) = y(p9) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*iextend
+          z_tmp2(26) = z(p9) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*iextend
+
+! remaining points of middle cutplane (middle "face") of HEX27
+
+          x_tmp2(13) = x(p1) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+          y_tmp2(13) = y(p1) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+          z_tmp2(13) = z(p1) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
+
+          x_tmp2(14) = x(p2) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+          y_tmp2(14) = y(p2) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+          z_tmp2(14) = z(p2) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
+
+          x_tmp2(15) = x(p3) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+          y_tmp2(15) = y(p3) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+          z_tmp2(15) = z(p3) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
+
+          x_tmp2(16) = x(p4) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+          y_tmp2(16) = y(p4) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+          z_tmp2(16) = z(p4) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
+
+          x_tmp2(22) = x(p5) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+          y_tmp2(22) = y(p5) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+          z_tmp2(22) = z(p5) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
+
+          x_tmp2(23) = x(p6) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+          y_tmp2(23) = y(p6) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+          z_tmp2(23) = z(p6) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
+
+          x_tmp2(24) = x(p7) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+          y_tmp2(24) = y(p7) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+          z_tmp2(24) = z(p7) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
+
+          x_tmp2(25) = x(p8) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+          y_tmp2(25) = y(p8) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+          z_tmp2(25) = z(p8) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
+
+          x_tmp2(27) = x(p9) + factor_x*SIZE_OF_X_ELEMENT_TO_ADD*(iextend-0.5d0)
+          y_tmp2(27) = y(p9) + factor_y*SIZE_OF_Y_ELEMENT_TO_ADD*(iextend-0.5d0)
+          z_tmp2(27) = z(p9) + factor_z*SIZE_OF_Z_ELEMENT_TO_ADD*(iextend-0.5d0)
 
         endif
 
@@ -1251,42 +1331,19 @@
 
 ! check the element for a negative Jacobian
       do ia = 1,NGNOD_HEX8
-        xelm(ia) = x_new(ibool_new(ia,elem_counter))
-        yelm(ia) = y_new(ibool_new(ia,elem_counter))
-        zelm(ia) = z_new(ibool_new(ia,elem_counter))
+        xelm(ia) = x_tmp1(ia)
+        yelm(ia) = y_tmp1(ia)
+        zelm(ia) = z_tmp1(ia)
       enddo
-
       call calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian1,NDIM,NGNOD,NGLLX,NGLLY,NGLLZ,jacobian)
 
 ! check the mirrored (i.e. flipped/swapped) element for a negative Jacobian
 ! either this one or the non-mirrored one above should be OK, and thus we will select it
-      xelm(1) = x_new(ibool_new(5,elem_counter))
-      xelm(2) = x_new(ibool_new(6,elem_counter))
-      xelm(3) = x_new(ibool_new(7,elem_counter))
-      xelm(4) = x_new(ibool_new(8,elem_counter))
-      xelm(5) = x_new(ibool_new(1,elem_counter))
-      xelm(6) = x_new(ibool_new(2,elem_counter))
-      xelm(7) = x_new(ibool_new(3,elem_counter))
-      xelm(8) = x_new(ibool_new(4,elem_counter))
-
-      yelm(1) = y_new(ibool_new(5,elem_counter))
-      yelm(2) = y_new(ibool_new(6,elem_counter))
-      yelm(3) = y_new(ibool_new(7,elem_counter))
-      yelm(4) = y_new(ibool_new(8,elem_counter))
-      yelm(5) = y_new(ibool_new(1,elem_counter))
-      yelm(6) = y_new(ibool_new(2,elem_counter))
-      yelm(7) = y_new(ibool_new(3,elem_counter))
-      yelm(8) = y_new(ibool_new(4,elem_counter))
-
-      zelm(1) = z_new(ibool_new(5,elem_counter))
-      zelm(2) = z_new(ibool_new(6,elem_counter))
-      zelm(3) = z_new(ibool_new(7,elem_counter))
-      zelm(4) = z_new(ibool_new(8,elem_counter))
-      zelm(5) = z_new(ibool_new(1,elem_counter))
-      zelm(6) = z_new(ibool_new(2,elem_counter))
-      zelm(7) = z_new(ibool_new(3,elem_counter))
-      zelm(8) = z_new(ibool_new(4,elem_counter))
-
+      do ia = 1,NGNOD_HEX8
+        xelm(ia) = x_tmp2(ia)
+        yelm(ia) = y_tmp2(ia)
+        zelm(ia) = z_tmp2(ia)
+      enddo
       call calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian2,NDIM,NGNOD,NGLLX,NGLLY,NGLLZ,jacobian)
 
 ! this should never happen, it is just a safety test
@@ -1301,48 +1358,21 @@
 ! swap the points so that we use that mirrored element in the final mesh saved to disk instead of the original one
 ! i.e. implement a mirror symmetry here
       if (found_a_negative_jacobian1) then
-        i1 = ibool_new(5,elem_counter)
-        i2 = ibool_new(6,elem_counter)
-        i3 = ibool_new(7,elem_counter)
-        i4 = ibool_new(8,elem_counter)
-        i5 = ibool_new(1,elem_counter)
-        i6 = ibool_new(2,elem_counter)
-        i7 = ibool_new(3,elem_counter)
-        i8 = ibool_new(4,elem_counter)
-
-        ibool_new(1,elem_counter) = i1
-        ibool_new(2,elem_counter) = i2
-        ibool_new(3,elem_counter) = i3
-        ibool_new(4,elem_counter) = i4
-        ibool_new(5,elem_counter) = i5
-        ibool_new(6,elem_counter) = i6
-        ibool_new(7,elem_counter) = i7
-        ibool_new(8,elem_counter) = i8
-
-        if (NGNOD == 27) then
-          i9  = ibool_new(17,elem_counter)
-          i10 = ibool_new(18,elem_counter)
-          i11 = ibool_new(19,elem_counter)
-          i12 = ibool_new(20,elem_counter)
-          i21 = ibool_new(26,elem_counter)
-          i17 = ibool_new(9,elem_counter)
-          i18 = ibool_new(10,elem_counter)
-          i19 = ibool_new(11,elem_counter)
-          i20 = ibool_new(12,elem_counter)
-          i26 = ibool_new(21,elem_counter)
-
-          ibool_new(9,elem_counter)  = i9
-          ibool_new(10,elem_counter) = i10
-          ibool_new(11,elem_counter) = i11
-          ibool_new(12,elem_counter) = i12
-          ibool_new(17,elem_counter) = i17
-          ibool_new(18,elem_counter) = i18
-          ibool_new(19,elem_counter) = i19
-          ibool_new(20,elem_counter) = i20
-          ibool_new(21,elem_counter) = i21
-          ibool_new(26,elem_counter) = i26
-        endif
-
+        do ia = 1,NGNOD
+          npoin_new_real = npoin_new_real + 1
+          ibool_new(ia,elem_counter) = npoin_new_real
+          x_new(npoin_new_real) = x_tmp2(ia)
+          y_new(npoin_new_real) = y_tmp2(ia)
+          z_new(npoin_new_real) = z_tmp2(ia)
+        enddo
+      else
+        do ia = 1,NGNOD
+          npoin_new_real = npoin_new_real + 1
+          ibool_new(ia,elem_counter) = npoin_new_real
+          x_new(npoin_new_real) = x_tmp1(ia)
+          y_new(npoin_new_real) = y_tmp1(ia)
+          z_new(npoin_new_real) = z_tmp1(ia)
+        enddo
       endif
 
       enddo
