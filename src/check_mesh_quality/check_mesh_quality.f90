@@ -80,6 +80,19 @@
   integer :: ntotspecAVS_DX
   logical :: DISPLAY_HISTOGRAM_DISTMEAN
 
+! Gauss-Lobatto-Legendre points of integration, to check for negative Jacobians
+  double precision xigll(NGLLX)
+  double precision yigll(NGLLY)
+  double precision zigll(NGLLZ)
+
+! 3D shape function derivatives, to check for negative Jacobians
+  double precision, dimension(:,:,:,:,:), allocatable :: dershape3D
+
+  double precision, dimension(:), allocatable :: xelm,yelm,zelm
+
+  double precision :: jacobian
+  logical :: found_a_negative_jacobian
+
   print *
   print *,'This program will produce histograms of mesh quality.'
   print *
@@ -142,6 +155,28 @@
       stop 'error: incorrect value to use was entered'
     endif
 
+  endif
+
+! hardwire GLL point location values to avoid having to link with a long library to compute them
+  xigll(:) = (/ -1.d0 , -0.654653670707977d0 , 0.d0 , 0.654653670707977d0 , 1.d0 /)
+  yigll(:) = xigll(:)
+  zigll(:) = xigll(:)
+
+  allocate(dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ))
+
+! compute the derivatives of the 3D shape functions for a 8-node or 27-node element
+  call get_shape3D(dershape3D,xigll,yigll,zigll,NGNOD)
+
+  allocate(xelm(NGNOD))
+  allocate(yelm(NGNOD))
+  allocate(zelm(NGNOD))
+
+  if (NGNOD == 8) then
+    print *
+    print *,'reading HEX8 input mesh file...'
+  else
+    print *
+    print *,'reading HEX27 input mesh file...'
   endif
 
 ! read the mesh
@@ -222,10 +257,29 @@
 
   close(10)
 
+! check the mesh read to make sure it contains no negative Jacobians
+  do ispec = 1,nspec
+! check the element for a negative Jacobian
+      do ia = 1,NGNOD
+        xelm(ia) = x(ibool(ia,ispec))
+        yelm(ia) = y(ibool(ia,ispec))
+        zelm(ia) = z(ibool(ia,ispec))
+      enddo
+
+      call calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian,NDIM,NGNOD,NGLLX,NGLLY,NGLLZ,jacobian)
+      if (found_a_negative_jacobian) then
+        print *,'detected an element with negative Jacobian in the input mesh: element ',ispec, &
+                     ' in which the Jacobian is ',jacobian
+        stop 'error: the mesh read contains a negative Jacobian!'
+      endif
+  enddo
   print *
-  print *,'start computing the minimum and maximum edge size'
+  print *,'input mesh successfully checked for negative Jacobians, it contains none'
 
 ! ************* compute min and max of skewness and ratios ******************
+
+  print *
+  print *,'start computing the minimum and maximum edge size'
 
 ! erase minimum and maximum of quality numbers
   equiangle_skewness_min = + HUGEVAL
@@ -786,7 +840,7 @@
 
 ! 3D shape functions for 8-node or 27-node element
 
-  subroutine get_shape3D(shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
+  subroutine get_shape3D(dershape3D,xigll,yigll,zigll,NGNOD)
 
   use constants
 
@@ -799,8 +853,7 @@
   double precision yigll(NGLLY)
   double precision zigll(NGLLZ)
 
-! 3D shape functions and their derivatives
-  double precision shape3D(NGNOD,NGLLX,NGLLY,NGLLZ)
+! 3D shape function derivatives
   double precision dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
 
   integer i,j,k,ia
@@ -810,7 +863,7 @@
   double precision ra1,ra2,rb1,rb2,rc1,rc2
 
 ! for checking the 3D shape functions
-  double precision sumshape,sumdershapexi,sumdershapeeta,sumdershapegamma
+  double precision sumdershapexi,sumdershapeeta,sumdershapegamma
 
   double precision, parameter :: ONE_EIGHTH = 0.125d0
 
@@ -840,15 +893,6 @@
 
           rc1 = one + gamma
           rc2 = one - gamma
-
-          shape3D(1,i,j,k) = ONE_EIGHTH*ra2*rb2*rc2
-          shape3D(2,i,j,k) = ONE_EIGHTH*ra1*rb2*rc2
-          shape3D(3,i,j,k) = ONE_EIGHTH*ra1*rb1*rc2
-          shape3D(4,i,j,k) = ONE_EIGHTH*ra2*rb1*rc2
-          shape3D(5,i,j,k) = ONE_EIGHTH*ra2*rb2*rc1
-          shape3D(6,i,j,k) = ONE_EIGHTH*ra1*rb2*rc1
-          shape3D(7,i,j,k) = ONE_EIGHTH*ra1*rb1*rc1
-          shape3D(8,i,j,k) = ONE_EIGHTH*ra2*rb1*rc1
 
           dershape3D(1,1,i,j,k) = - ONE_EIGHTH*rb2*rc2
           dershape3D(1,2,i,j,k) = ONE_EIGHTH*rb2*rc2
@@ -881,7 +925,7 @@
 
           ! note: put further initialization for NGNOD == 27 into subroutine
           !       to avoid compilation errors in case NGNOD == 8
-          call get_shape3D_27(NGNOD,shape3D,dershape3D,xi,eta,gamma,i,j,k)
+          call get_shape3D_27(NGNOD,dershape3D,xi,eta,gamma,i,j,k)
 
         endif
 
@@ -895,13 +939,11 @@
     do j=1,NGLLY
       do k=1,NGLLZ
 
-        sumshape = ZERO
         sumdershapexi = ZERO
         sumdershapeeta = ZERO
         sumdershapegamma = ZERO
 
         do ia=1,NGNOD
-          sumshape = sumshape + shape3D(ia,i,j,k)
           sumdershapexi = sumdershapexi + dershape3D(1,ia,i,j,k)
           sumdershapeeta = sumdershapeeta + dershape3D(2,ia,i,j,k)
           sumdershapegamma = sumdershapegamma + dershape3D(3,ia,i,j,k)
@@ -909,7 +951,6 @@
 
         ! sum of shape functions should be one
         ! sum of derivative of shape functions should be zero
-        if (abs(sumshape-one) > TINYVAL) stop 'error in 3D shape functions'
         if (abs(sumdershapexi) > TINYVAL) stop 'error in xi derivative of 3D shape functions'
         if (abs(sumdershapeeta) > TINYVAL) stop 'error in eta derivative of 3D shape functions'
         if (abs(sumdershapegamma) > TINYVAL) stop 'error in gamma derivative of 3D shape functions'
@@ -926,7 +967,7 @@
 
 !--- case of a 3D 27-node element
 
-  subroutine get_shape3D_27(NGNOD,shape3D,dershape3D,xi,eta,gamma,i,j,k)
+  subroutine get_shape3D_27(NGNOD,dershape3D,xi,eta,gamma,i,j,k)
 
   use constants
 
@@ -934,8 +975,7 @@
 
   integer :: NGNOD,i,j,k
 
-! 3D shape functions and their derivatives
-  double precision shape3D(NGNOD,NGLLX,NGLLY,NGLLZ)
+! 3D shape function derivatives
   double precision dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
 
 ! location of the nodes of the 3D hexahedra elements
@@ -968,14 +1008,6 @@
   l3pgamma=gamma+HALF
 
   ! corner nodes
-  shape3D(1,i,j,k)=l1xi*l1eta*l1gamma
-  shape3D(2,i,j,k)=l3xi*l1eta*l1gamma
-  shape3D(3,i,j,k)=l3xi*l3eta*l1gamma
-  shape3D(4,i,j,k)=l1xi*l3eta*l1gamma
-  shape3D(5,i,j,k)=l1xi*l1eta*l3gamma
-  shape3D(6,i,j,k)=l3xi*l1eta*l3gamma
-  shape3D(7,i,j,k)=l3xi*l3eta*l3gamma
-  shape3D(8,i,j,k)=l1xi*l3eta*l3gamma
 
   dershape3D(1,1,i,j,k)=l1pxi*l1eta*l1gamma
   dershape3D(1,2,i,j,k)=l3pxi*l1eta*l1gamma
@@ -1005,18 +1037,6 @@
   dershape3D(3,8,i,j,k)=l1xi*l3eta*l3pgamma
 
   ! midside nodes
-  shape3D(9,i,j,k)=l2xi*l1eta*l1gamma
-  shape3D(10,i,j,k)=l3xi*l2eta*l1gamma
-  shape3D(11,i,j,k)=l2xi*l3eta*l1gamma
-  shape3D(12,i,j,k)=l1xi*l2eta*l1gamma
-  shape3D(13,i,j,k)=l1xi*l1eta*l2gamma
-  shape3D(14,i,j,k)=l3xi*l1eta*l2gamma
-  shape3D(15,i,j,k)=l3xi*l3eta*l2gamma
-  shape3D(16,i,j,k)=l1xi*l3eta*l2gamma
-  shape3D(17,i,j,k)=l2xi*l1eta*l3gamma
-  shape3D(18,i,j,k)=l3xi*l2eta*l3gamma
-  shape3D(19,i,j,k)=l2xi*l3eta*l3gamma
-  shape3D(20,i,j,k)=l1xi*l2eta*l3gamma
 
   dershape3D(1,9,i,j,k)=l2pxi*l1eta*l1gamma
   dershape3D(1,10,i,j,k)=l3pxi*l2eta*l1gamma
@@ -1058,12 +1078,6 @@
   dershape3D(3,20,i,j,k)=l1xi*l2eta*l3pgamma
 
   ! side center nodes
-  shape3D(21,i,j,k)=l2xi*l2eta*l1gamma
-  shape3D(22,i,j,k)=l2xi*l1eta*l2gamma
-  shape3D(23,i,j,k)=l3xi*l2eta*l2gamma
-  shape3D(24,i,j,k)=l2xi*l3eta*l2gamma
-  shape3D(25,i,j,k)=l1xi*l2eta*l2gamma
-  shape3D(26,i,j,k)=l2xi*l2eta*l3gamma
 
   dershape3D(1,21,i,j,k)=l2pxi*l2eta*l1gamma
   dershape3D(1,22,i,j,k)=l2pxi*l1eta*l2gamma
@@ -1087,11 +1101,80 @@
   dershape3D(3,26,i,j,k)=l2xi*l2eta*l3pgamma
 
   ! center node
-  shape3D(27,i,j,k)=l2xi*l2eta*l2gamma
 
   dershape3D(1,27,i,j,k)=l2pxi*l2eta*l2gamma
   dershape3D(2,27,i,j,k)=l2xi*l2peta*l2gamma
   dershape3D(3,27,i,j,k)=l2xi*l2eta*l2pgamma
 
   end subroutine get_shape3D_27
+
+!
+!=====================================================================
+!
+
+  subroutine calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian,NDIM,NGNOD,NGLLX,NGLLY,NGLLZ,jacobian)
+
+  implicit none
+
+  integer :: NDIM,NGNOD,NGLLX,NGLLY,NGLLZ
+
+  logical :: found_a_negative_jacobian
+
+  double precision, dimension(NGNOD) :: xelm,yelm,zelm
+  double precision dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
+
+  integer :: i,j,k,ia
+  double precision :: xxi,xeta,xgamma,yxi,yeta,ygamma,zxi,zeta,zgamma
+  double precision :: jacobian
+
+  double precision, parameter :: ZERO = 0.d0
+
+  found_a_negative_jacobian = .false.
+
+! do k=1,NGLLZ
+!   do j=1,NGLLY
+!     do i=1,NGLLX
+! for this CPML mesh extrusion routine it is sufficient to test the 8 corners of each element to reduce the cost
+! because we just want to detect if the element is flipped or not, and if so flip it back
+  do k=1,NGLLZ,NGLLZ-1
+    do j=1,NGLLY,NGLLY-1
+      do i=1,NGLLX,NGLLX-1
+
+      xxi = ZERO
+      xeta = ZERO
+      xgamma = ZERO
+      yxi = ZERO
+      yeta = ZERO
+      ygamma = ZERO
+      zxi = ZERO
+      zeta = ZERO
+      zgamma = ZERO
+
+      do ia=1,NGNOD
+        xxi = xxi + dershape3D(1,ia,i,j,k)*xelm(ia)
+        xeta = xeta + dershape3D(2,ia,i,j,k)*xelm(ia)
+        xgamma = xgamma + dershape3D(3,ia,i,j,k)*xelm(ia)
+
+        yxi = yxi + dershape3D(1,ia,i,j,k)*yelm(ia)
+        yeta = yeta + dershape3D(2,ia,i,j,k)*yelm(ia)
+        ygamma = ygamma + dershape3D(3,ia,i,j,k)*yelm(ia)
+
+        zxi = zxi + dershape3D(1,ia,i,j,k)*zelm(ia)
+        zeta = zeta + dershape3D(2,ia,i,j,k)*zelm(ia)
+        zgamma = zgamma + dershape3D(3,ia,i,j,k)*zelm(ia)
+      enddo
+
+      jacobian = xxi*(yeta*zgamma-ygamma*zeta) - xeta*(yxi*zgamma-ygamma*zxi) + xgamma*(yxi*zeta-yeta*zxi)
+
+! check that the Jacobian transform is invertible, i.e. that the Jacobian never becomes negative or null
+      if (jacobian <= ZERO) then
+        found_a_negative_jacobian = .true.
+        return
+      endif
+
+      enddo
+    enddo
+  enddo
+
+  end subroutine calc_jacobian
 
