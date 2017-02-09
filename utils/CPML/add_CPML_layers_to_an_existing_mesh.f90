@@ -35,9 +35,6 @@
 
   implicit none
 
-! the code only needs HEX8 for the shape functions because it uses a single corner to detect negative Jacobians
-  integer, parameter :: NGNOD_HEX8 = 8
-
 ! we are in 3D
   integer, parameter :: NDIM = 3
 
@@ -59,8 +56,6 @@
   integer :: i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16,i17,i18,i19,i20,i21,i22,i23,i24,i25,i26,i27
   integer :: p1,p2,p3,p4,p5,p6,p7,p8,p9
   integer :: elem_counter,ia,iflag,iformat,icompute_size,istep,itype_of_hex,NGNOD
-
-  double precision :: jacobian
 
   double precision, dimension(:), allocatable, target :: x,y,z
   double precision, dimension(:), allocatable :: x_new,y_new,z_new,xp,yp,zp
@@ -87,9 +82,12 @@
   double precision zigll(NGLLZ)
 
 ! 3D shape function derivatives, to check for negative Jacobians
-  double precision dershape3D(NDIM,NGNOD_HEX8,NGLLX,NGLLY,NGLLZ)
+  double precision, dimension(:,:,:,:,:), allocatable :: dershape3D
 
-  double precision, dimension(NGNOD_HEX8) :: xelm,yelm,zelm
+  double precision, dimension(:), allocatable :: xelm,yelm,zelm
+
+  double precision :: jacobian
+
   double precision, dimension(:), allocatable :: x_tmp1,y_tmp1,z_tmp1,x_tmp2,y_tmp2,z_tmp2
 
   double precision :: xmin,xmax,ymin,ymax,zmin,zmax,limit,xsize,ysize,zsize
@@ -241,8 +239,14 @@
   yigll(:) = xigll(:)
   zigll(:) = xigll(:)
 
-! compute the derivatives of the 3D shape functions for a 8-node element
-  call get_shape3D(dershape3D,xigll,yigll,zigll,NGNOD_HEX8,NGLLX,NGLLY,NGLLZ,NDIM)
+  allocate(dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ))
+
+! compute the derivatives of the 3D shape functions for a 8-node or 27-node element
+  call get_shape3D(dershape3D,xigll,yigll,zigll,NGNOD,NGLLX,NGLLY,NGLLZ,NDIM)
+
+  allocate(xelm(NGNOD))
+  allocate(yelm(NGNOD))
+  allocate(zelm(NGNOD))
 
 ! The format of nummaterial_velocity_file must be:
 
@@ -472,7 +476,7 @@
 ! check the mesh read to make sure it contains no negative Jacobians
   do ispec = 1,nspec
 ! check the element for a negative Jacobian
-      do ia = 1,NGNOD_HEX8
+      do ia = 1,NGNOD
         xelm(ia) = x(ibool(ia,ispec))
         yelm(ia) = y(ibool(ia,ispec))
         zelm(ia) = z(ibool(ia,ispec))
@@ -1338,7 +1342,7 @@
 ! and if so we will use the mirrored version of that element, which will then have a positive Jacobian
 
 ! check the element for a negative Jacobian
-      do ia = 1,NGNOD_HEX8
+      do ia = 1,NGNOD
         xelm(ia) = x_tmp1(ia)
         yelm(ia) = y_tmp1(ia)
         zelm(ia) = z_tmp1(ia)
@@ -1347,7 +1351,7 @@
 
 ! check the mirrored (i.e. flipped/swapped) element for a negative Jacobian
 ! either this one or the non-mirrored one above should be OK, and thus we will select it
-      do ia = 1,NGNOD_HEX8
+      do ia = 1,NGNOD
         xelm(ia) = x_tmp2(ia)
         yelm(ia) = y_tmp2(ia)
         zelm(ia) = z_tmp2(ia)
@@ -1617,6 +1621,285 @@
 !=====================================================================
 !
 
+! 3D shape functions for 8-node or 27-node element
+
+  subroutine get_shape3D(dershape3D,xigll,yigll,zigll,NGNOD,NGLLX,NGLLY,NGLLZ,NDIM)
+
+  implicit none
+
+! a few useful constants
+  double precision, parameter :: ZERO = 0.d0, ONE = 1.d0, TWO = 2.d0, HALF = 0.5d0
+
+! very small value
+  double precision, parameter :: TINYVAL = 1.d-9
+
+  integer NGNOD,NGLLX,NGLLY,NGLLZ,NDIM
+
+! Gauss-Lobatto-Legendre points of integration
+  double precision xigll(NGLLX)
+  double precision yigll(NGLLY)
+  double precision zigll(NGLLZ)
+
+! 3D shape function derivatives
+  double precision dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
+
+  integer i,j,k,ia
+
+! location of the nodes of the 3D hexahedra elements
+  double precision xi,eta,gamma
+  double precision ra1,ra2,rb1,rb2,rc1,rc2
+
+! for checking the 3D shape functions
+  double precision sumdershapexi,sumdershapeeta,sumdershapegamma
+
+  double precision, parameter :: ONE_EIGHTH = 0.125d0
+
+! check that the parameter file is correct
+  if (NGNOD /= 8 .and. NGNOD /= 27) stop 'volume elements should have 8 or 27 control nodes'
+
+! ***
+! *** create 3D shape functions and jacobian
+! ***
+
+  do i=1,NGLLX
+    do j=1,NGLLY
+      do k=1,NGLLZ
+
+        xi = xigll(i)
+        eta = yigll(j)
+        gamma = zigll(k)
+
+        !--- case of a 3D 8-node element (Dhatt-Touzot p. 115)
+        if (NGNOD == 8) then
+
+          ra1 = one + xi
+          ra2 = one - xi
+
+          rb1 = one + eta
+          rb2 = one - eta
+
+          rc1 = one + gamma
+          rc2 = one - gamma
+
+          dershape3D(1,1,i,j,k) = - ONE_EIGHTH*rb2*rc2
+          dershape3D(1,2,i,j,k) = ONE_EIGHTH*rb2*rc2
+          dershape3D(1,3,i,j,k) = ONE_EIGHTH*rb1*rc2
+          dershape3D(1,4,i,j,k) = - ONE_EIGHTH*rb1*rc2
+          dershape3D(1,5,i,j,k) = - ONE_EIGHTH*rb2*rc1
+          dershape3D(1,6,i,j,k) = ONE_EIGHTH*rb2*rc1
+          dershape3D(1,7,i,j,k) = ONE_EIGHTH*rb1*rc1
+          dershape3D(1,8,i,j,k) = - ONE_EIGHTH*rb1*rc1
+
+          dershape3D(2,1,i,j,k) = - ONE_EIGHTH*ra2*rc2
+          dershape3D(2,2,i,j,k) = - ONE_EIGHTH*ra1*rc2
+          dershape3D(2,3,i,j,k) = ONE_EIGHTH*ra1*rc2
+          dershape3D(2,4,i,j,k) = ONE_EIGHTH*ra2*rc2
+          dershape3D(2,5,i,j,k) = - ONE_EIGHTH*ra2*rc1
+          dershape3D(2,6,i,j,k) = - ONE_EIGHTH*ra1*rc1
+          dershape3D(2,7,i,j,k) = ONE_EIGHTH*ra1*rc1
+          dershape3D(2,8,i,j,k) = ONE_EIGHTH*ra2*rc1
+
+          dershape3D(3,1,i,j,k) = - ONE_EIGHTH*ra2*rb2
+          dershape3D(3,2,i,j,k) = - ONE_EIGHTH*ra1*rb2
+          dershape3D(3,3,i,j,k) = - ONE_EIGHTH*ra1*rb1
+          dershape3D(3,4,i,j,k) = - ONE_EIGHTH*ra2*rb1
+          dershape3D(3,5,i,j,k) = ONE_EIGHTH*ra2*rb2
+          dershape3D(3,6,i,j,k) = ONE_EIGHTH*ra1*rb2
+          dershape3D(3,7,i,j,k) = ONE_EIGHTH*ra1*rb1
+          dershape3D(3,8,i,j,k) = ONE_EIGHTH*ra2*rb1
+
+        else
+
+          ! note: put further initialization for NGNOD == 27 into subroutine
+          !       to avoid compilation errors in case NGNOD == 8
+          call get_shape3D_27(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ,dershape3D,xi,eta,gamma,i,j,k)
+
+        endif
+
+      enddo
+    enddo
+  enddo
+
+!--- check the shape functions and their derivatives
+
+  do i=1,NGLLX
+    do j=1,NGLLY
+      do k=1,NGLLZ
+
+        sumdershapexi = ZERO
+        sumdershapeeta = ZERO
+        sumdershapegamma = ZERO
+
+        do ia=1,NGNOD
+          sumdershapexi = sumdershapexi + dershape3D(1,ia,i,j,k)
+          sumdershapeeta = sumdershapeeta + dershape3D(2,ia,i,j,k)
+          sumdershapegamma = sumdershapegamma + dershape3D(3,ia,i,j,k)
+        enddo
+
+        ! sum of shape functions should be one
+        ! sum of derivative of shape functions should be zero
+        if (abs(sumdershapexi) > TINYVAL) stop 'error in xi derivative of 3D shape functions'
+        if (abs(sumdershapeeta) > TINYVAL) stop 'error in eta derivative of 3D shape functions'
+        if (abs(sumdershapegamma) > TINYVAL) stop 'error in gamma derivative of 3D shape functions'
+
+      enddo
+    enddo
+  enddo
+
+  end subroutine get_shape3D
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+!--- case of a 3D 27-node element
+
+  subroutine get_shape3D_27(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ,dershape3D,xi,eta,gamma,i,j,k)
+
+  implicit none
+
+! a few useful constants
+  double precision, parameter :: ZERO = 0.d0, ONE = 1.d0, TWO = 2.d0, HALF = 0.5d0
+
+  integer :: NDIM,NGNOD,NGLLX,NGLLY,NGLLZ,i,j,k
+
+! 3D shape function derivatives
+  double precision dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
+
+! location of the nodes of the 3D hexahedra elements
+  double precision xi,eta,gamma
+  double precision l1xi,l2xi,l3xi,l1eta,l2eta,l3eta,l1gamma,l2gamma,l3gamma
+  double precision l1pxi,l2pxi,l3pxi,l1peta,l2peta,l3peta,l1pgamma,l2pgamma,l3pgamma
+
+  l1xi=HALF*xi*(xi-ONE)
+  l2xi=ONE-xi**2
+  l3xi=HALF*xi*(xi+ONE)
+
+  l1pxi=xi-HALF
+  l2pxi=-TWO*xi
+  l3pxi=xi+HALF
+
+  l1eta=HALF*eta*(eta-ONE)
+  l2eta=ONE-eta**2
+  l3eta=HALF*eta*(eta+ONE)
+
+  l1peta=eta-HALF
+  l2peta=-TWO*eta
+  l3peta=eta+HALF
+
+  l1gamma=HALF*gamma*(gamma-ONE)
+  l2gamma=ONE-gamma**2
+  l3gamma=HALF*gamma*(gamma+ONE)
+
+  l1pgamma=gamma-HALF
+  l2pgamma=-TWO*gamma
+  l3pgamma=gamma+HALF
+
+  ! corner nodes
+
+  dershape3D(1,1,i,j,k)=l1pxi*l1eta*l1gamma
+  dershape3D(1,2,i,j,k)=l3pxi*l1eta*l1gamma
+  dershape3D(1,3,i,j,k)=l3pxi*l3eta*l1gamma
+  dershape3D(1,4,i,j,k)=l1pxi*l3eta*l1gamma
+  dershape3D(1,5,i,j,k)=l1pxi*l1eta*l3gamma
+  dershape3D(1,6,i,j,k)=l3pxi*l1eta*l3gamma
+  dershape3D(1,7,i,j,k)=l3pxi*l3eta*l3gamma
+  dershape3D(1,8,i,j,k)=l1pxi*l3eta*l3gamma
+
+  dershape3D(2,1,i,j,k)=l1xi*l1peta*l1gamma
+  dershape3D(2,2,i,j,k)=l3xi*l1peta*l1gamma
+  dershape3D(2,3,i,j,k)=l3xi*l3peta*l1gamma
+  dershape3D(2,4,i,j,k)=l1xi*l3peta*l1gamma
+  dershape3D(2,5,i,j,k)=l1xi*l1peta*l3gamma
+  dershape3D(2,6,i,j,k)=l3xi*l1peta*l3gamma
+  dershape3D(2,7,i,j,k)=l3xi*l3peta*l3gamma
+  dershape3D(2,8,i,j,k)=l1xi*l3peta*l3gamma
+
+  dershape3D(3,1,i,j,k)=l1xi*l1eta*l1pgamma
+  dershape3D(3,2,i,j,k)=l3xi*l1eta*l1pgamma
+  dershape3D(3,3,i,j,k)=l3xi*l3eta*l1pgamma
+  dershape3D(3,4,i,j,k)=l1xi*l3eta*l1pgamma
+  dershape3D(3,5,i,j,k)=l1xi*l1eta*l3pgamma
+  dershape3D(3,6,i,j,k)=l3xi*l1eta*l3pgamma
+  dershape3D(3,7,i,j,k)=l3xi*l3eta*l3pgamma
+  dershape3D(3,8,i,j,k)=l1xi*l3eta*l3pgamma
+
+  ! midside nodes
+
+  dershape3D(1,9,i,j,k)=l2pxi*l1eta*l1gamma
+  dershape3D(1,10,i,j,k)=l3pxi*l2eta*l1gamma
+  dershape3D(1,11,i,j,k)=l2pxi*l3eta*l1gamma
+  dershape3D(1,12,i,j,k)=l1pxi*l2eta*l1gamma
+  dershape3D(1,13,i,j,k)=l1pxi*l1eta*l2gamma
+  dershape3D(1,14,i,j,k)=l3pxi*l1eta*l2gamma
+  dershape3D(1,15,i,j,k)=l3pxi*l3eta*l2gamma
+  dershape3D(1,16,i,j,k)=l1pxi*l3eta*l2gamma
+  dershape3D(1,17,i,j,k)=l2pxi*l1eta*l3gamma
+  dershape3D(1,18,i,j,k)=l3pxi*l2eta*l3gamma
+  dershape3D(1,19,i,j,k)=l2pxi*l3eta*l3gamma
+  dershape3D(1,20,i,j,k)=l1pxi*l2eta*l3gamma
+
+  dershape3D(2,9,i,j,k)=l2xi*l1peta*l1gamma
+  dershape3D(2,10,i,j,k)=l3xi*l2peta*l1gamma
+  dershape3D(2,11,i,j,k)=l2xi*l3peta*l1gamma
+  dershape3D(2,12,i,j,k)=l1xi*l2peta*l1gamma
+  dershape3D(2,13,i,j,k)=l1xi*l1peta*l2gamma
+  dershape3D(2,14,i,j,k)=l3xi*l1peta*l2gamma
+  dershape3D(2,15,i,j,k)=l3xi*l3peta*l2gamma
+  dershape3D(2,16,i,j,k)=l1xi*l3peta*l2gamma
+  dershape3D(2,17,i,j,k)=l2xi*l1peta*l3gamma
+  dershape3D(2,18,i,j,k)=l3xi*l2peta*l3gamma
+  dershape3D(2,19,i,j,k)=l2xi*l3peta*l3gamma
+  dershape3D(2,20,i,j,k)=l1xi*l2peta*l3gamma
+
+  dershape3D(3,9,i,j,k)=l2xi*l1eta*l1pgamma
+  dershape3D(3,10,i,j,k)=l3xi*l2eta*l1pgamma
+  dershape3D(3,11,i,j,k)=l2xi*l3eta*l1pgamma
+  dershape3D(3,12,i,j,k)=l1xi*l2eta*l1pgamma
+  dershape3D(3,13,i,j,k)=l1xi*l1eta*l2pgamma
+  dershape3D(3,14,i,j,k)=l3xi*l1eta*l2pgamma
+  dershape3D(3,15,i,j,k)=l3xi*l3eta*l2pgamma
+  dershape3D(3,16,i,j,k)=l1xi*l3eta*l2pgamma
+  dershape3D(3,17,i,j,k)=l2xi*l1eta*l3pgamma
+  dershape3D(3,18,i,j,k)=l3xi*l2eta*l3pgamma
+  dershape3D(3,19,i,j,k)=l2xi*l3eta*l3pgamma
+  dershape3D(3,20,i,j,k)=l1xi*l2eta*l3pgamma
+
+  ! side center nodes
+
+  dershape3D(1,21,i,j,k)=l2pxi*l2eta*l1gamma
+  dershape3D(1,22,i,j,k)=l2pxi*l1eta*l2gamma
+  dershape3D(1,23,i,j,k)=l3pxi*l2eta*l2gamma
+  dershape3D(1,24,i,j,k)=l2pxi*l3eta*l2gamma
+  dershape3D(1,25,i,j,k)=l1pxi*l2eta*l2gamma
+  dershape3D(1,26,i,j,k)=l2pxi*l2eta*l3gamma
+
+  dershape3D(2,21,i,j,k)=l2xi*l2peta*l1gamma
+  dershape3D(2,22,i,j,k)=l2xi*l1peta*l2gamma
+  dershape3D(2,23,i,j,k)=l3xi*l2peta*l2gamma
+  dershape3D(2,24,i,j,k)=l2xi*l3peta*l2gamma
+  dershape3D(2,25,i,j,k)=l1xi*l2peta*l2gamma
+  dershape3D(2,26,i,j,k)=l2xi*l2peta*l3gamma
+
+  dershape3D(3,21,i,j,k)=l2xi*l2eta*l1pgamma
+  dershape3D(3,22,i,j,k)=l2xi*l1eta*l2pgamma
+  dershape3D(3,23,i,j,k)=l3xi*l2eta*l2pgamma
+  dershape3D(3,24,i,j,k)=l2xi*l3eta*l2pgamma
+  dershape3D(3,25,i,j,k)=l1xi*l2eta*l2pgamma
+  dershape3D(3,26,i,j,k)=l2xi*l2eta*l3pgamma
+
+  ! center node
+
+  dershape3D(1,27,i,j,k)=l2pxi*l2eta*l2gamma
+  dershape3D(2,27,i,j,k)=l2xi*l2peta*l2gamma
+  dershape3D(3,27,i,j,k)=l2xi*l2eta*l2pgamma
+
+  end subroutine get_shape3D_27
+
+!
+!=====================================================================
+!
+
   subroutine calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian,NDIM,NGNOD,NGLLX,NGLLY,NGLLZ,jacobian)
 
   implicit none
@@ -1682,92 +1965,6 @@
   enddo
 
   end subroutine calc_jacobian
-
-!
-!=====================================================================
-!
-
-! 3D shape functions for 8-node element
-
-  subroutine get_shape3D(dershape3D,xigll,yigll,zigll,NGNOD,NGLLX,NGLLY,NGLLZ,NDIM)
-
-  implicit none
-
-  integer NGNOD,NGLLX,NGLLY,NGLLZ,NDIM
-
-! Gauss-Lobatto-Legendre points of integration
-  double precision xigll(NGLLX)
-  double precision yigll(NGLLY)
-  double precision zigll(NGLLZ)
-
-! 3D shape functions and their derivatives
-  double precision dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
-
-  integer i,j,k
-
-! location of the nodes of the 3D hexahedra elements
-  double precision xi,eta,gamma
-  double precision ra1,ra2,rb1,rb2,rc1,rc2
-
-  double precision, parameter :: ONE = 1.d0
-  double precision, parameter :: ONE_EIGHTH = 0.125d0
-
-! check that the parameter file is correct
-  if (NGNOD /= 8) stop 'volume elements should have 8 control nodes'
-
-! ***
-! *** create 3D shape functions and jacobian
-! ***
-
-  do i=1,NGLLX
-    do j=1,NGLLY
-      do k=1,NGLLZ
-
-        xi = xigll(i)
-        eta = yigll(j)
-        gamma = zigll(k)
-
-          ra1 = ONE + xi
-          ra2 = ONE - xi
-
-          rb1 = ONE + eta
-          rb2 = ONE - eta
-
-          rc1 = ONE + gamma
-          rc2 = ONE - gamma
-
-          dershape3D(1,1,i,j,k) = - ONE_EIGHTH*rb2*rc2
-          dershape3D(1,2,i,j,k) = ONE_EIGHTH*rb2*rc2
-          dershape3D(1,3,i,j,k) = ONE_EIGHTH*rb1*rc2
-          dershape3D(1,4,i,j,k) = - ONE_EIGHTH*rb1*rc2
-          dershape3D(1,5,i,j,k) = - ONE_EIGHTH*rb2*rc1
-          dershape3D(1,6,i,j,k) = ONE_EIGHTH*rb2*rc1
-          dershape3D(1,7,i,j,k) = ONE_EIGHTH*rb1*rc1
-          dershape3D(1,8,i,j,k) = - ONE_EIGHTH*rb1*rc1
-
-          dershape3D(2,1,i,j,k) = - ONE_EIGHTH*ra2*rc2
-          dershape3D(2,2,i,j,k) = - ONE_EIGHTH*ra1*rc2
-          dershape3D(2,3,i,j,k) = ONE_EIGHTH*ra1*rc2
-          dershape3D(2,4,i,j,k) = ONE_EIGHTH*ra2*rc2
-          dershape3D(2,5,i,j,k) = - ONE_EIGHTH*ra2*rc1
-          dershape3D(2,6,i,j,k) = - ONE_EIGHTH*ra1*rc1
-          dershape3D(2,7,i,j,k) = ONE_EIGHTH*ra1*rc1
-          dershape3D(2,8,i,j,k) = ONE_EIGHTH*ra2*rc1
-
-          dershape3D(3,1,i,j,k) = - ONE_EIGHTH*ra2*rb2
-          dershape3D(3,2,i,j,k) = - ONE_EIGHTH*ra1*rb2
-          dershape3D(3,3,i,j,k) = - ONE_EIGHTH*ra1*rb1
-          dershape3D(3,4,i,j,k) = - ONE_EIGHTH*ra2*rb1
-          dershape3D(3,5,i,j,k) = ONE_EIGHTH*ra2*rb2
-          dershape3D(3,6,i,j,k) = ONE_EIGHTH*ra1*rb2
-          dershape3D(3,7,i,j,k) = ONE_EIGHTH*ra1*rb1
-          dershape3D(3,8,i,j,k) = ONE_EIGHTH*ra2*rb1
-
-      enddo
-    enddo
-  enddo
-
-  end subroutine get_shape3D
 
 ! ------------------------------------------------------------------
 
