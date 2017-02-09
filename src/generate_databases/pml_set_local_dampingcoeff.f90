@@ -1455,15 +1455,15 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
             endif
 
             if (abs(alpha_x - alpha_y) < min_distance_between_CPML_parameter) then
-              stop 'there is error in separation of alpha_x, alpha_y'
+              stop 'there is an error in the separation of alpha_x, alpha_y'
             endif
 
             if (abs(beta_x - alpha_y) < min_distance_between_CPML_parameter) then
-              stop 'there is error in separation of beta_x and alpha_y'
+              stop 'there is an error in the separation of beta_x and alpha_y'
             endif
 
             if (abs(beta_y - alpha_x) < min_distance_between_CPML_parameter) then
-              stop 'there is error in separation of beta_y and alpha_x'
+              stop 'there is an error in the separation of beta_y and alpha_x'
             endif
 
             d_x = (beta_x - alpha_x) * K_x
@@ -1503,15 +1503,15 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
             endif
 
             if (abs(alpha_x - alpha_z) < min_distance_between_CPML_parameter) then
-              stop 'there is error in separation of alpha_x, alpha_z'
+              stop 'there is an error in the separation of alpha_x, alpha_z'
             endif
 
             if (abs(beta_x - alpha_z) < min_distance_between_CPML_parameter) then
-              stop 'there is error in separation of beta_x and alpha_z'
+              stop 'there is an error in the separation of beta_x and alpha_z'
             endif
 
             if (abs(beta_z - alpha_x) < min_distance_between_CPML_parameter) then
-              stop 'there is error in separation of beta_z and alpha_z'
+              stop 'there is an error in the separation of beta_z and alpha_z'
             endif
 
             d_x = (beta_x - alpha_x) * K_x
@@ -1551,15 +1551,15 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
             endif
 
             if (abs(alpha_y - alpha_z) < min_distance_between_CPML_parameter) then
-              stop 'there is error in separation of alpha_y, alpha_z'
+              stop 'there is an error in the separation of alpha_y, alpha_z'
             endif
 
             if (abs(beta_y - alpha_z) < min_distance_between_CPML_parameter) then
-              stop 'there is error in separation of beta_y and alpha_z'
+              stop 'there is an error in the separation of beta_y and alpha_z'
             endif
 
             if (abs(beta_z - alpha_y) < min_distance_between_CPML_parameter) then
-              stop 'there is error in separation of beta_z and alpha_y'
+              stop 'there is an error in the separation of beta_z and alpha_y'
             endif
 
             d_y = (beta_y - alpha_y) * K_y
@@ -1777,17 +1777,17 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
             if (abs(beta_x - alpha_y) < min_distance_between_CPML_parameter .or. &
                 abs(beta_x - alpha_z) < min_distance_between_CPML_parameter) then
-              stop 'there is error in separation of beta_x,alpha_y,alpha_z '
+              stop 'there is an error in the separation of beta_x,alpha_y,alpha_z '
             endif
 
             if (abs(beta_y - alpha_x) < min_distance_between_CPML_parameter .or. &
                 abs(beta_y - alpha_z) < min_distance_between_CPML_parameter) then
-              stop 'there is error in separation of beta_y, alpha_x,alpha_z '
+              stop 'there is an error in the separation of beta_y, alpha_x,alpha_z '
             endif
 
             if (abs(beta_z - alpha_x) < min_distance_between_CPML_parameter .or. &
                 abs(beta_z - alpha_y) < min_distance_between_CPML_parameter) then
-              stop 'there is error in separation of beta_z,alpha_x,alpha_y '
+              stop 'there is an error in the separation of beta_z,alpha_x,alpha_y '
             endif
 
             d_x = (beta_x - alpha_x) * K_x
