@@ -389,12 +389,12 @@
       if (NUMBER_OF_TRANSITION_LAYERS_TO_ADD == 0) cycle
       NUMBER_OF_LAYERS_TO_ADD_IN_THIS_STEP = NUMBER_OF_TRANSITION_LAYERS_TO_ADD
       print *
-      print *,'creating the transition layer...'
+      print *,'about to create the transition layer, will first need to read the input mesh files...'
       print *
     else
       NUMBER_OF_LAYERS_TO_ADD_IN_THIS_STEP = NUMBER_OF_PML_LAYERS_TO_ADD
       print *
-      print *,'creating the PML layer...'
+      print *,'about to create the PML layer, will first need to read the input mesh files...'
       print *
     endif
 
