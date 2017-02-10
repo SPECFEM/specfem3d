@@ -55,7 +55,7 @@
   integer :: ipoin_read,ispec_loop
   integer :: i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16,i17,i18,i19,i20,i21,i22,i23,i24,i25,i26,i27
   integer :: p1,p2,p3,p4,p5,p6,p7,p8,p9
-  integer :: elem_counter,ia,iflag,iformat,icompute_size,istep,itype_of_hex,NGNOD
+  integer :: elem_counter,ia,iflag,iformat,icompute_size,istep,itype_of_hex,NGNOD,icheck_for_negative_Jacobians
 
   double precision, dimension(:), allocatable, target :: x,y,z
   double precision, dimension(:), allocatable :: x_new,y_new,z_new,xp,yp,zp
@@ -233,6 +233,13 @@
       .and. .not. ADD_ON_THE_YMIN_SURFACE .and. .not. ADD_ON_THE_YMAX_SURFACE &
       .and. .not. ADD_ON_THE_ZMIN_SURFACE .and. .not. ADD_ON_THE_ZMAX_SURFACE) &
     stop 'Error: the purpose of this code is to add at least one PML, but you have added none'
+
+  print *,'1 = do not check the input mesh for negative Jacobians (normally safe because it should contain none)'
+  print *,'2 = check the input mesh for negative Jacobians (does not hurt, usually takes less than a minute)'
+  print *,'3 = exit'
+  read(*,*) icheck_for_negative_Jacobians
+  if (icheck_for_negative_Jacobians /= 1 .and. icheck_for_negative_Jacobians /= 2) stop 'exiting...'
+  print *
 
 ! hardwire GLL point location values to avoid having to link with a long library to compute them
   xigll(:) = (/ -1.d0 , -0.654653670707977d0 , 0.d0 , 0.654653670707977d0 , 1.d0 /)
@@ -474,8 +481,9 @@
   close(23)
 
 ! check the mesh read to make sure it contains no negative Jacobians
-  do ispec = 1,nspec
-! check the element for a negative Jacobian
+  if (icheck_for_negative_Jacobians == 2) then
+    do ispec = 1,nspec
+!   check the element for a negative Jacobian
       do ia = 1,NGNOD
         xelm(ia) = x(ibool(ia,ispec))
         yelm(ia) = y(ibool(ia,ispec))
@@ -488,9 +496,10 @@
                      ' in which the Jacobian is ',jacobian
         stop 'error: the mesh read contains a negative Jacobian!'
       endif
-  enddo
-  print *,'input mesh successfully checked for negative Jacobians, it contains none'
-  print *
+    enddo
+    print *,'input mesh successfully checked for negative Jacobians, it contains none'
+    print *
+  endif
 
 ! we need to extend/extrude the existing mesh by adding CPML elements
 ! along the X faces, then along the Y faces, then along the Z faces.
