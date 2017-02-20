@@ -489,7 +489,7 @@ subroutine compute_forces_viscoelastic(iphase, &
           if (ATTENUATION .and. COMPUTE_AND_STORE_STRAIN) then
             ! temporary variables used for fixing attenuation in a consistent way
 
-              if (.not. is_CPML(ispec)) then ! 333333333333333
+              if (.not. is_CPML(ispec)) then
                 duxdxl_att = xixl * tempx1_att(i,j,k) + etaxl * tempx2_att(i,j,k) + gammaxl * tempx3_att(i,j,k)
                 duxdyl_att = xiyl * tempx1_att(i,j,k) + etayl * tempx2_att(i,j,k) + gammayl * tempx3_att(i,j,k)
                 duxdzl_att = xizl * tempx1_att(i,j,k) + etazl * tempx2_att(i,j,k) + gammazl * tempx3_att(i,j,k)
@@ -516,7 +516,7 @@ subroutine compute_forces_viscoelastic(iphase, &
                 epsilondev_xy_loc(i,j,k) = 0.5_CUSTOM_REAL * duxdyl_plus_duydxl_att
                 epsilondev_xz_loc(i,j,k) = 0.5_CUSTOM_REAL * duzdxl_plus_duxdzl_att
                 epsilondev_yz_loc(i,j,k) = 0.5_CUSTOM_REAL * duzdyl_plus_duydzl_att
-              endif ! 333333333333333
+              endif
 
           else
             ! computes deviatoric strain attenuation and/or for kernel calculations
@@ -530,7 +530,7 @@ subroutine compute_forces_viscoelastic(iphase, &
               epsilondev_xz_loc(i,j,k) = 0.5_CUSTOM_REAL * duzdxl_plus_duxdzl
               epsilondev_yz_loc(i,j,k) = 0.5_CUSTOM_REAL * duzdyl_plus_duydzl
             endif
-          endif ! 111111111111111111
+          endif
 
           kappal = kappastore(i,j,k,ispec)
           mul = mustore(i,j,k,ispec)

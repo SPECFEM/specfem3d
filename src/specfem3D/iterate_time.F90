@@ -185,9 +185,7 @@
     endif
 
     ! simulation status output and stability check
-    if (OUTPUT_ENERGY) then
-      if (mod(it,NTSTEP_BETWEEN_OUTPUT_ENERGY) == 0 .or. it == 5 .or. it == NSTEP) call compute_energy()
-    endif
+    if (OUTPUT_ENERGY) call compute_energy()
 
     ! updates wavefields using Newmark time scheme
     if (.not. USE_LDDRK) call update_displacement_scheme()

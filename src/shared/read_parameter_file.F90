@@ -242,13 +242,10 @@
     if (ier /= 0) stop 'Error reading Par_file parameter USE_SOURCE_ENCODING'
 
     !-------------------------------------------------------
-    ! Total energy calculation
+    ! Energy calculation
     !-------------------------------------------------------
     call read_value_logical(OUTPUT_ENERGY, 'OUTPUT_ENERGY', ier)
     if (ier /= 0) stop 'Error reading Par_file parameter OUTPUT_ENERGY'
-
-    call read_value_integer(NTSTEP_BETWEEN_OUTPUT_ENERGY, 'NTSTEP_BETWEEN_OUTPUT_ENERGY', ier)
-    if (ier /= 0) stop 'Error reading Par_file parameter NTSTEP_BETWEEN_OUTPUT_ENERGY'
 
     !-------------------------------------------------------
     ! Adjoint kernel outputs
@@ -495,7 +492,6 @@
     call bcast_all_singlel_world(USE_TRICK_FOR_BETTER_PRESSURE)
     call bcast_all_singlel_world(USE_SOURCE_ENCODING)
     call bcast_all_singlel_world(OUTPUT_ENERGY)
-    call bcast_all_singlei_world(NTSTEP_BETWEEN_OUTPUT_ENERGY)
     call bcast_all_singlel_world(ANISOTROPIC_KL)
     call bcast_all_singlel_world(SAVE_TRANSVERSE_KL)
     call bcast_all_singlel_world(APPROXIMATE_HESS_KL)
