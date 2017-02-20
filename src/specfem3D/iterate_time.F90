@@ -186,8 +186,7 @@
 
     ! simulation status output and stability check
     if (OUTPUT_ENERGY) then
-      if (mod(it,NTSTEP_BETWEEN_OUTPUT_ENERGY) == 0 .or. it == 5 .or. it == NSTEP) &
-        call compute_total_energy()
+      if (mod(it,NTSTEP_BETWEEN_OUTPUT_ENERGY) == 0 .or. it == 5 .or. it == NSTEP) call compute_energy()
     endif
 
     ! updates wavefields using Newmark time scheme
