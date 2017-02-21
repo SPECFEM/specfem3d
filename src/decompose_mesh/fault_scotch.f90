@@ -70,7 +70,7 @@ CONTAINS
     read(101,*) nbfaults
   else
     nbfaults = 0
-    print *, 'Par_file_faults not found: assume no faults'
+    print *, 'Par_file_faults not found: assuming that there are no faults'
   endif
   close(101)
 

@@ -106,7 +106,7 @@ subroutine fault_read_input(prname,myrank)
     read(IIN_PAR,*) nb
     if (myrank == 0) write(IMAIN,*) '  ... reading ', nb,' faults from file DATA/Par_file_faults'
   else
-    if (myrank == 0) write(IMAIN,*) 'File DATA/Par_file_faults not found: assume no faults'
+    if (myrank == 0) write(IMAIN,*) 'File DATA/Par_file_faults not found: assuming that there are no faults'
     close(IIN_PAR)
   endif
 

@@ -38,6 +38,8 @@ subroutine compute_forces_poroelastic_calling()
 
   integer:: iphase
 
+  if (OUTPUT_ENERGY) call exit_MPI(myrank,'calculation of energy currently not implemented for poroelastic media')
+
 ! distinguishes two runs: for elements in contact with MPI interfaces, and elements within the partitions
   do iphase = 1,2
 

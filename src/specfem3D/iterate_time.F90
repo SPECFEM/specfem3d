@@ -53,19 +53,20 @@
   !----  create a Gnuplot script to display the energy curve in log scale
   if (OUTPUT_ENERGY .and. myrank == 0) then
     open(unit=IOUT_ENERGY,file=trim(OUTPUT_FILES)//'plot_energy.gnu',status='unknown',action='write')
-    write(IOUT_ENERGY,*) 'set term wxt'
-    write(IOUT_ENERGY,*) '#set term postscript landscape color solid "Helvetica" 22'
+    write(IOUT_ENERGY,*) 'set terminal x11'
+    write(IOUT_ENERGY,*) '#set terminal wxt'
+    write(IOUT_ENERGY,*) '#set terminal postscript landscape color solid "Helvetica" 22'
     write(IOUT_ENERGY,*) '#set output "energy.ps"'
     write(IOUT_ENERGY,*) 'set logscale y'
     write(IOUT_ENERGY,*) 'set xlabel "Time step number"'
     write(IOUT_ENERGY,*) 'set ylabel "Energy (J)"'
-    write(IOUT_ENERGY,'(a152)') '#plot "energy.dat" us 1:2 t "Kinetic Energy" w l lc 1, "energy.dat" us 1:3 &
+    write(IOUT_ENERGY,'(a152)') 'plot "energy.dat" us 1:2 t "Kinetic Energy" w l lc 1, "energy.dat" us 1:3 &
                          &t "Potential Energy" w l lc 2, "energy.dat" us 1:4 t "Total Energy" w l lc 4'
-    write(IOUT_ENERGY,*) '#pause -1 "Hit any key..."'
-    write(IOUT_ENERGY,*) '#plot "energy.dat" us 1:2 t "Kinetic Energy" w l lc 1'
-    write(IOUT_ENERGY,*) '#pause -1 "Hit any key..."'
-    write(IOUT_ENERGY,*) '#plot "energy.dat" us 1:3 t "Potential Energy" w l lc 2'
-    write(IOUT_ENERGY,*) '#pause -1 "Hit any key..."'
+    write(IOUT_ENERGY,*) 'pause -1 "Hit any key..."'
+    write(IOUT_ENERGY,*) 'plot "energy.dat" us 1:2 t "Kinetic Energy" w l lc 1'
+    write(IOUT_ENERGY,*) 'pause -1 "Hit any key..."'
+    write(IOUT_ENERGY,*) 'plot "energy.dat" us 1:3 t "Potential Energy" w l lc 2'
+    write(IOUT_ENERGY,*) 'pause -1 "Hit any key..."'
     write(IOUT_ENERGY,*) 'plot "energy.dat" us 1:4 t "Total Energy" w l lc 4'
     write(IOUT_ENERGY,*) 'pause -1 "Hit any key..."'
     close(IOUT_ENERGY)

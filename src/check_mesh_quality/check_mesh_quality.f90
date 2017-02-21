@@ -165,7 +165,7 @@
   allocate(dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ))
 
 ! compute the derivatives of the 3D shape functions for a 8-node or 27-node element
-  call get_shape3D(dershape3D,xigll,yigll,zigll,NGNOD)
+  call local_version_of_get_shape3D(dershape3D,xigll,yigll,zigll,NGNOD)
 
   allocate(xelm(NGNOD))
   allocate(yelm(NGNOD))
@@ -304,7 +304,7 @@
 
     if (mod(ispec,100000) == 0) print *,'processed ',ispec,' elements out of ',NSPEC
 
-    call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB,VP_MAX,delta_t, &
+    call local_version_of_create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
 
 ! store element number in which the edge of minimum or maximum length is located
@@ -398,7 +398,7 @@
 
 ! loop on all the elements
   do ispec = 1,NSPEC
-    call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB,VP_MAX,delta_t, &
+    call local_version_of_create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
 
 ! store skewness in histogram
@@ -490,8 +490,9 @@
 
 ! create script for Gnuplot histogram files
   open(unit=14,file='OUTPUT_FILES/plot_mesh_quality_histograms.gnu',status='unknown')
-  write(14,*) 'set term wxt'
-  write(14,*) '#set term gif'
+  write(14,*) 'set terminal x11'
+  write(14,*) '#set terminal wxt'
+  write(14,*) '#set terminal gif'
 
   if (DISPLAY_HISTOGRAM_DISTMEAN) then
     write(14,*) '#set output "mesh_quality_histogram_meansize.gif"'
@@ -535,7 +536,7 @@
 ! loop on all the elements
   do ispec = 1,NSPEC
 
-    call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB,VP_MAX,delta_t, &
+    call local_version_of_create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
 
     if (iformat == 1) then
@@ -581,7 +582,7 @@
 
   do ispec = ispec_begin,ispec_end
 
-    call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB,VP_MAX,delta_t, &
+    call local_version_of_create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
 
     if (iformat == 1) then
@@ -615,7 +616,7 @@
 ! loop on all the elements
   do ispec = ispec_begin,ispec_end
 
-    call create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB,VP_MAX,delta_t, &
+    call local_version_of_create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
 
     if (iformat == 1) then
@@ -654,7 +655,7 @@
 
 ! create mesh quality data for a given 3D spectral element
 
-  subroutine create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB,VP_MAX,delta_t, &
+  subroutine local_version_of_create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB,VP_MAX,delta_t, &
                equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
 
   use constants
@@ -832,7 +833,7 @@
    dist4 = sqrt((xelm(4) - xelm(6))**2 + (yelm(4) - yelm(6))**2 + (zelm(4) - zelm(6))**2)
    diagonal_aspect_ratio = max(dist1,dist2,dist3,dist4) / min(dist1,dist2,dist3,dist4)
 
-  end subroutine create_mesh_quality_data_3D
+  end subroutine local_version_of_create_mesh_quality_data_3D
 
 !
 !=====================================================================
@@ -840,7 +841,7 @@
 
 ! 3D shape functions for 8-node or 27-node element
 
-  subroutine get_shape3D(dershape3D,xigll,yigll,zigll,NGNOD)
+  subroutine local_version_of_get_shape3D(dershape3D,xigll,yigll,zigll,NGNOD)
 
   use constants
 
@@ -925,7 +926,7 @@
 
           ! note: put further initialization for NGNOD == 27 into subroutine
           !       to avoid compilation errors in case NGNOD == 8
-          call get_shape3D_27(NGNOD,dershape3D,xi,eta,gamma,i,j,k)
+          call local_version_of_get_shape3D_27(NGNOD,dershape3D,xi,eta,gamma,i,j,k)
 
         endif
 
@@ -959,7 +960,7 @@
     enddo
   enddo
 
-  end subroutine get_shape3D
+  end subroutine local_version_of_get_shape3D
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -967,7 +968,7 @@
 
 !--- case of a 3D 27-node element
 
-  subroutine get_shape3D_27(NGNOD,dershape3D,xi,eta,gamma,i,j,k)
+  subroutine local_version_of_get_shape3D_27(NGNOD,dershape3D,xi,eta,gamma,i,j,k)
 
   use constants
 
@@ -1106,7 +1107,7 @@
   dershape3D(2,27,i,j,k)=l2xi*l2peta*l2gamma
   dershape3D(3,27,i,j,k)=l2xi*l2eta*l2pgamma
 
-  end subroutine get_shape3D_27
+  end subroutine local_version_of_get_shape3D_27
 
 !
 !=====================================================================

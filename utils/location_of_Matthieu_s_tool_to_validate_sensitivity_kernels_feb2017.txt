@@ -1,0 +1,45 @@
+
+Subject: Tests for SPECFEM3D_GLOBE and ASDF
+From: Matthieu Lefebvre
+Date: 02/21/2017 05:04 PM
+
+Dear all,
+
+Below is the link to the comparison tool.
+
+Best,
+Matthieu
+
+----
+On 2/6/17, 4:43 PM, Matthieu Lefebvre wrote:
+
+    Dear all,
+
+    1. It is half accurate. James did ran allinea map on specfem3d_globe and has shown parallel-hdf5 to produce a lot of network traffic. As a result, it was marked as an item for IBM's CoE team to investigate. They were later confused by the remarks about the optimization of the receivers' location.
+    2. I have shared a utility to validate kernels with Malte. It should be integrated in a Jenkin test very soon. https://github.com/mpbl/CompareAdiosKernels
+    3. See (2). I highly doubt with can use Titan as a CI machine. The way to go is to test independent pieces on relevant but small cases (e.g. regional Greece). We might then define integration tests involving multiple parts of the workflow.
+
+    Best regards,
+    Matthieu
+
+----
+    On 2/3/17, 1:08 PM, Youyi Ruan wrote:
+
+        Dear All,
+
+        Ebru recently reported almost triple runtime (9 min to 25 min with same resolution and length) than usual using latest version of specfem3d_globe and ASDF on Titian. In regard to her reports and to avoid such issue in future, I am writing to collect updates from the whole group about the current existing tests and the tests we need in the following list upon Jeroen's request.
+
+        1, ASDF tests for both correctness and performance. For I/O performance I remember Matthieu have reported that the overhead cost of thousand receivers should within 1 min or so on Titan.   Please let us know if the ASDF tests are exist in current buildbot test otherwise we will need to add the reference ASDF file for test, and maybe timing module to count the I/O cost.   James, Matthieu and David, would you please respond to or comment on this?
+
+        2, ADIOS test. (This part is beyond my knowledge and I will let Matthieu or Dimitri to respond what tests have been implemented and what we need)
+
+        3, Gradient/kernel tests for both correctness and performance. We have discussed this before, it seems a challenge job for buildbot on Tiger, but at least we will need to setup a test on Titan for any major updates.  Matthieu has been working on the testing code comparing two gradients and discussed how to set the threshold on Thursday's group meeting.  Matthieu, would you please give us an update? Thanks.
+
+        Please also comment if you think there is anything else you would suggest for test.
+
+        Best,
+
+        Youyi
+
+
+

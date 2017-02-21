@@ -47,13 +47,13 @@
   real(kind=CUSTOM_REAL) :: duxdxl_plus_duydyl,duxdxl_plus_duzdzl,duydyl_plus_duzdzl
   real(kind=CUSTOM_REAL) :: duxdyl_plus_duydxl,duzdxl_plus_duxdzl,duzdyl_plus_duydzl
 
-  real(kind=CUSTOM_REAL) :: epsilon_xx,epsilon_yy,epsilon_zz,epsilon_xy,epsilon_xz,epsilon_yz
-  real(kind=CUSTOM_REAL) :: sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz
-  real(kind=CUSTOM_REAL) :: vx,vy,vz,pressure
+  double precision :: epsilon_xx,epsilon_yy,epsilon_zz,epsilon_xy,epsilon_xz,epsilon_yz
+  double precision :: sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz
+  double precision :: vx,vy,vz,pressure
 
   real(kind=CUSTOM_REAL) :: hp1,hp2,hp3
 
-  real(kind=CUSTOM_REAL) :: lambdal,mul,lambdalplus2mul,rhol,cpl
+  real(kind=CUSTOM_REAL) :: lambdal,mul,lambdalplus2mul,rhol
   real(kind=CUSTOM_REAL) :: kappal
 
   real(kind=CUSTOM_REAL) :: integration_weight
@@ -166,9 +166,9 @@
             epsilon_xx = duxdxl
             epsilon_yy = duydyl
             epsilon_zz = duzdzl
-            epsilon_xy = 0.5 * duxdyl_plus_duydxl
-            epsilon_xz = 0.5 * duzdxl_plus_duxdzl
-            epsilon_yz = 0.5 * duzdyl_plus_duydzl
+            epsilon_xy = 0.5d0 * duxdyl_plus_duydxl
+            epsilon_xz = 0.5d0 * duzdxl_plus_duxdzl
+            epsilon_yz = 0.5d0 * duzdyl_plus_duydzl
 
             kappal = kappastore(i,j,k,ispec)
             mul = mustore(i,j,k,ispec)
@@ -190,14 +190,13 @@
             integration_weight = wxgll(i)*wygll(j)*wzgll(k)*jacobianl
 
             ! compute kinetic energy  1/2 rho ||v||^2
-            kinetic_energy = kinetic_energy + 0.5d0 * integration_weight * rhol*(veloc(1,iglob)**2 + &
+            kinetic_energy = kinetic_energy + integration_weight * rhol*(veloc(1,iglob)**2 + &
                                  veloc(2,iglob)**2 + veloc(3,iglob)**2)
 
             ! compute potential energy 1/2 sigma_ij epsilon_ij
-            potential_energy = potential_energy + integration_weight * 0.5d0 * &
-              (sigma_xx*epsilon_xx + sigma_xy*epsilon_xy + sigma_xz*epsilon_xz + &
-               sigma_xy*epsilon_xy + sigma_yy*epsilon_yy + sigma_yz*epsilon_yz + &
-               sigma_xz*epsilon_xz + sigma_yz*epsilon_yz + sigma_zz*epsilon_zz)
+            potential_energy = potential_energy + integration_weight * &
+              (sigma_xx*epsilon_xx + sigma_yy*epsilon_yy + sigma_zz*epsilon_zz + &
+               2.d0 * (sigma_xy*epsilon_xy + sigma_xz*epsilon_xz + sigma_yz*epsilon_yz))
 
           enddo
         enddo
@@ -268,7 +267,6 @@
 
             rhol = rhostore(i,j,k,ispec)
             kappal = kappastore(i,j,k,ispec)
-            cpl = sqrt(kappal / rhol)
 
             ! velocity is v = grad(Chi_dot) / rho (Chi_dot being the time derivative of Chi)
             vx = duxdxl / rhol
@@ -281,10 +279,10 @@
             integration_weight = wxgll(i)*wygll(j)*wzgll(k)*jacobianl
 
             ! compute kinetic energy  1/2 rho ||v||^2
-            kinetic_energy = kinetic_energy + integration_weight * 0.5d0 * rhol*(vx**2 + vy**2 + vz**2)
+            kinetic_energy = kinetic_energy + integration_weight * rhol*(vx**2 + vy**2 + vz**2)
 
             ! compute potential energy 1/2 sigma_ij epsilon_ij
-            potential_energy = potential_energy + integration_weight * pressure**2 / (2. * rhol * cpl**2)
+            potential_energy = potential_energy + integration_weight * pressure**2 / kappal
 
           enddo
         enddo
@@ -299,6 +297,8 @@
   enddo
 
 ! compute the total using a reduction between all the processors
+  kinetic_energy = 0.5d0 * kinetic_energy
+  potential_energy = 0.5d0 * potential_energy
   call sum_all_dp(kinetic_energy,kinetic_energy_glob)
   call sum_all_dp(potential_energy,potential_energy_glob)
   total_energy_glob = kinetic_energy_glob + potential_energy_glob

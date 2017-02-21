@@ -308,8 +308,9 @@
     filename = OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//'plot_mesh_quality_histogram.gnu'
 
     open(unit=14,file=trim(filename),status='unknown')
-    write(14,*) 'set term wxt'
-    write(14,*) '#set term gif'
+    write(14,*) 'set terminal x11'
+    write(14,*) '#set terminal wxt'
+    write(14,*) '#set terminal gif'
     write(14,*) '#set output "mesh_quality_histogram.gif"'
     write(14,*)
     write(14,*) 'set xrange [0:1]'
