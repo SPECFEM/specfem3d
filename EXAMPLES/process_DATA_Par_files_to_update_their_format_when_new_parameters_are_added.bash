@@ -25,10 +25,10 @@ USE_TRICK_FOR_BETTER_PRESSURE   = .false.
 USE_SOURCE_ENCODING             = .false.
 
 #
-# total energy calculation
+# Energy calculation
 #
 # to plot total energy curves, for instance to monitor how CPML absorbing layers behave;
-# can be turned OFF in most cases
+# should be turned OFF in most cases because a bit expensive
 OUTPUT_ENERGY                   = .false.
 # every how many time steps we compute energy (which is a bit expensive to compute)
 NTSTEP_BETWEEN_OUTPUT_ENERGY    = 10

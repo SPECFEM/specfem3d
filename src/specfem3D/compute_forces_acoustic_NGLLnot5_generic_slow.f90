@@ -45,8 +45,7 @@
   use specfem_par, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,chi_elem,temp1,temp2,temp3,temp4, &
                          PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl, &
                          PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old, &
-                         PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new, &
-                         OUTPUT_ENERGY,USE_TRICK_FOR_BETTER_PRESSURE,myrank
+                         PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new
 
   use pml_par, only: is_CPML, spec_to_CPML, potential_dot_dot_acoustic_CPML,rmemory_dpotential_dxl,rmemory_dpotential_dyl, &
                      rmemory_dpotential_dzl,rmemory_potential_acoustic, &
@@ -103,9 +102,6 @@
   else
     num_elements = nspec_inner_acoustic
   endif
-
-  if (OUTPUT_ENERGY .and. USE_TRICK_FOR_BETTER_PRESSURE) &
-    call exit_mpi(myrank,'USE_TRICK_FOR_BETTER_PRESSURE not implemented for OUTPUT_ENERGY yet, please turn one of them off')
 
   ! loop over spectral elements
   do ispec_p = 1,num_elements
