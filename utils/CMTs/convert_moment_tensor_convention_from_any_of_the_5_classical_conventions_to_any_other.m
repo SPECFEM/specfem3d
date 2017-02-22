@@ -18,7 +18,7 @@ function [Mout,T] = convert_MT(i1,i2,M)
 %   Mout    6 x n set of moment tensors in basis of i2
 %   T       transformation matrix to change basis of M from i1 to i2: Mout = T*M*T'
 %
-% Convention 1: up-south-east (GCMT) (www.globalcmt.org)
+% Convention 1: up-south-east (GCMT) (www.globalcmt.org), also CMTSOLUTION format
 %   1: up (r), 2: south (theta), 3: east (phi)
 %
 % Convention 2: Aki and Richards (1980, p. 114-115, 118)
