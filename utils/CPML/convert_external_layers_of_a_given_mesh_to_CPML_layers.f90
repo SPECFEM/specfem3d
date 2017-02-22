@@ -27,21 +27,18 @@
 
   program convert_mesh_to_CPML
 
-! Dimitri Komatitsch, CNRS Marseille, France, April 2013
+! Dimitri Komatitsch, CNRS Marseille, France, April 2013 and February 2017
 
 ! convert outer layers of an existing CUBIT mesh file stored in SPECFEM3D_Cartesian format to CPML layers,
 ! i.e., create a 'absorbing_cpml_file' file for that existing mesh
 
   implicit none
 
-! this is for HEX8; the code below also works for HEX27, it then just uses the first 8 points of an element
-! to determine if it belongs to a CPML layer
-  integer, parameter :: NGNOD = 8
-
   integer :: nspec,npoin
   integer :: ispec,ipoin
-  integer :: ipoin_read,ispec_loop,iflag,iformat,iread
-  integer :: i1,i2,i3,i4,i5,i6,i7,i8,number_of_CPML_elements,count_faces_found
+  integer :: ipoin_read,ispec_loop,iflag,iformat,itype_of_hex,iread,NGNOD,ia
+  integer :: i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16,i17,i18,i19,i20,i21,i22,i23,i24,i25,i26,i27
+  integer :: number_of_CPML_elements,count_faces_found
 
   double precision, dimension(:), allocatable :: x,y,z
 
@@ -100,6 +97,18 @@
   print *,'3 = exit'
   read(*,*) iformat
   if (iformat /= 1 .and. iformat /= 2) stop 'exiting...'
+
+  print *,'1 = the mesh contains HEX8 elements'
+  print *,'2 = the mesh contains HEX27 elements'
+  print *,'3 = exit'
+  read(*,*) itype_of_hex
+  if (itype_of_hex /= 1 .and. itype_of_hex /= 2) stop 'exiting...'
+  if (itype_of_hex == 1) then
+    NGNOD = 8
+  else
+    NGNOD = 27
+  endif
+  print *
 
   ADD_ON_THE_XMIN_SURFACE = .true.
   ADD_ON_THE_XMAX_SURFACE = .true.
@@ -320,16 +329,7 @@
 ! loop on the whole mesh
   if (iformat == 1) then
     do ispec_loop = 1,nspec
-      read(23,*) ispec,i1,i2,i3,i4,i5,i6,i7,i8
-! store the ibool() array read
-      ibool(1,ispec) = i1
-      ibool(2,ispec) = i2
-      ibool(3,ispec) = i3
-      ibool(4,ispec) = i4
-      ibool(5,ispec) = i5
-      ibool(6,ispec) = i6
-      ibool(7,ispec) = i7
-      ibool(8,ispec) = i8
+      read(23,*) ispec,(ibool(ia,ispec), ia = 1,NGNOD)
     enddo
   else
     read(23) ibool
@@ -340,6 +340,7 @@
 ! loop on the whole mesh
   do ispec = 1,nspec
 
+! we can use the 8 corners of the element only for the test here, even if the element is HEX27
     i1 = ibool(1,ispec)
     i2 = ibool(2,ispec)
     i3 = ibool(3,ispec)
@@ -477,6 +478,28 @@
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
 
+    if (NGNOD == 27) then
+       i9 = ibool(9,ispec)
+      i10 = ibool(10,ispec)
+      i11 = ibool(11,ispec)
+      i12 = ibool(12,ispec)
+      i13 = ibool(13,ispec)
+      i14 = ibool(14,ispec)
+      i15 = ibool(15,ispec)
+      i16 = ibool(16,ispec)
+      i17 = ibool(17,ispec)
+      i18 = ibool(18,ispec)
+      i19 = ibool(19,ispec)
+      i20 = ibool(20,ispec)
+      i21 = ibool(21,ispec)
+      i22 = ibool(22,ispec)
+      i23 = ibool(23,ispec)
+      i24 = ibool(24,ispec)
+      i25 = ibool(25,ispec)
+      i26 = ibool(26,ispec)
+      i27 = ibool(27,ispec)
+    endif
+
     if (is_X_CPML(ispec)) then
 
       already_found_a_face = .false.
@@ -548,34 +571,86 @@
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
 
+    if (NGNOD == 27) then
+       i9 = ibool(9,ispec)
+      i10 = ibool(10,ispec)
+      i11 = ibool(11,ispec)
+      i12 = ibool(12,ispec)
+      i13 = ibool(13,ispec)
+      i14 = ibool(14,ispec)
+      i15 = ibool(15,ispec)
+      i16 = ibool(16,ispec)
+      i17 = ibool(17,ispec)
+      i18 = ibool(18,ispec)
+      i19 = ibool(19,ispec)
+      i20 = ibool(20,ispec)
+      i21 = ibool(21,ispec)
+      i22 = ibool(22,ispec)
+      i23 = ibool(23,ispec)
+      i24 = ibool(24,ispec)
+      i25 = ibool(25,ispec)
+      i26 = ibool(26,ispec)
+      i27 = ibool(27,ispec)
+    endif
+
     if (is_X_CPML(ispec)) then
 
 ! for the six faces below it is important to make sure we write the four points
 ! in an order for which the normal to the face points outwards
 
 ! test face 1 (bottom)
-      if (x(i1) < limit .and. x(i2) < limit .and. x(i3) < limit .and. x(i4) < limit) &
-        write(24,*) ispec,i4,i3,i2,i1
+      if (x(i1) < limit .and. x(i2) < limit .and. x(i3) < limit .and. x(i4) < limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i4,i3,i2,i1
+        else
+          write(24,"(10(i9,1x))") ispec,i4,i3,i2,i1,i11,i10,i9,i12,i21
+        endif
+      endif
 
 ! test face 2 (top)
-      if (x(i5) < limit .and. x(i6) < limit .and. x(i7) < limit .and. x(i8) < limit) &
-        write(24,*) ispec,i5,i6,i7,i8
+      if (x(i5) < limit .and. x(i6) < limit .and. x(i7) < limit .and. x(i8) < limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i5,i6,i7,i8
+        else
+          write(24,"(10(i9,1x))") ispec,i5,i6,i7,i8,i17,i18,i19,i20,i26
+        endif
+      endif
 
 ! test face 3 (left)
-      if (x(i1) < limit .and. x(i4) < limit .and. x(i8) < limit .and. x(i5) < limit) &
-        write(24,*) ispec,i1,i5,i8,i4
+      if (x(i1) < limit .and. x(i4) < limit .and. x(i8) < limit .and. x(i5) < limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i1,i5,i8,i4
+        else
+          write(24,"(10(i9,1x))") ispec,i1,i5,i8,i4,i13,i20,i16,i12,i25
+        endif
+      endif
 
 ! test face 4 (right)
-      if (x(i2) < limit .and. x(i3) < limit .and. x(i7) < limit .and. x(i6) < limit) &
-        write(24,*) ispec,i2,i3,i7,i6
+      if (x(i2) < limit .and. x(i3) < limit .and. x(i7) < limit .and. x(i6) < limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i2,i3,i7,i6
+        else
+          write(24,"(10(i9,1x))") ispec,i2,i3,i7,i6,i10,i15,i18,i14,i23
+        endif
+      endif
 
 ! test face 5 (front)
-      if (x(i1) < limit .and. x(i2) < limit .and. x(i6) < limit .and. x(i5) < limit) &
-        write(24,*) ispec,i1,i2,i6,i5
+      if (x(i1) < limit .and. x(i2) < limit .and. x(i6) < limit .and. x(i5) < limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i1,i2,i6,i5
+        else
+          write(24,"(10(i9,1x))") ispec,i1,i2,i6,i5,i9,i14,i17,i13,i22
+        endif
+      endif
 
 ! test face 6 (back)
-      if (x(i4) < limit .and. x(i3) < limit .and. x(i7) < limit .and. x(i8) < limit) &
-        write(24,*) ispec,i3,i4,i8,i7
+      if (x(i4) < limit .and. x(i3) < limit .and. x(i7) < limit .and. x(i8) < limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i3,i4,i8,i7
+        else
+          write(24,"(10(i9,1x))") ispec,i3,i4,i8,i7,i11,i16,i19,i15,i24
+        endif
+      endif
 
     endif
 
@@ -607,6 +682,28 @@
     i6 = ibool(6,ispec)
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
+
+    if (NGNOD == 27) then
+       i9 = ibool(9,ispec)
+      i10 = ibool(10,ispec)
+      i11 = ibool(11,ispec)
+      i12 = ibool(12,ispec)
+      i13 = ibool(13,ispec)
+      i14 = ibool(14,ispec)
+      i15 = ibool(15,ispec)
+      i16 = ibool(16,ispec)
+      i17 = ibool(17,ispec)
+      i18 = ibool(18,ispec)
+      i19 = ibool(19,ispec)
+      i20 = ibool(20,ispec)
+      i21 = ibool(21,ispec)
+      i22 = ibool(22,ispec)
+      i23 = ibool(23,ispec)
+      i24 = ibool(24,ispec)
+      i25 = ibool(25,ispec)
+      i26 = ibool(26,ispec)
+      i27 = ibool(27,ispec)
+    endif
 
     if (is_X_CPML(ispec)) then
 
@@ -678,34 +775,86 @@
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
 
+    if (NGNOD == 27) then
+       i9 = ibool(9,ispec)
+      i10 = ibool(10,ispec)
+      i11 = ibool(11,ispec)
+      i12 = ibool(12,ispec)
+      i13 = ibool(13,ispec)
+      i14 = ibool(14,ispec)
+      i15 = ibool(15,ispec)
+      i16 = ibool(16,ispec)
+      i17 = ibool(17,ispec)
+      i18 = ibool(18,ispec)
+      i19 = ibool(19,ispec)
+      i20 = ibool(20,ispec)
+      i21 = ibool(21,ispec)
+      i22 = ibool(22,ispec)
+      i23 = ibool(23,ispec)
+      i24 = ibool(24,ispec)
+      i25 = ibool(25,ispec)
+      i26 = ibool(26,ispec)
+      i27 = ibool(27,ispec)
+    endif
+
     if (is_X_CPML(ispec)) then
 
 ! for the six faces below it is important to make sure we write the four points
 ! in an order for which the normal to the face points outwards
 
 ! test face 1 (bottom)
-      if (x(i1) > limit .and. x(i2) > limit .and. x(i3) > limit .and. x(i4) > limit) &
-        write(24,*) ispec,i4,i3,i2,i1
+      if (x(i1) > limit .and. x(i2) > limit .and. x(i3) > limit .and. x(i4) > limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i4,i3,i2,i1
+        else
+          write(24,"(10(i9,1x))") ispec,i4,i3,i2,i1,i11,i10,i9,i12,i21
+        endif
+      endif
 
 ! test face 2 (top)
-      if (x(i5) > limit .and. x(i6) > limit .and. x(i7) > limit .and. x(i8) > limit) &
-        write(24,*) ispec,i5,i6,i7,i8
+      if (x(i5) > limit .and. x(i6) > limit .and. x(i7) > limit .and. x(i8) > limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i5,i6,i7,i8
+        else
+          write(24,"(10(i9,1x))") ispec,i5,i6,i7,i8,i17,i18,i19,i20,i26
+        endif
+      endif
 
 ! test face 3 (left)
-      if (x(i1) > limit .and. x(i4) > limit .and. x(i8) > limit .and. x(i5) > limit) &
-        write(24,*) ispec,i1,i5,i8,i4
+      if (x(i1) > limit .and. x(i4) > limit .and. x(i8) > limit .and. x(i5) > limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i1,i5,i8,i4
+        else
+          write(24,"(10(i9,1x))") ispec,i1,i5,i8,i4,i13,i20,i16,i12,i25
+        endif
+      endif
 
 ! test face 4 (right)
-      if (x(i2) > limit .and. x(i3) > limit .and. x(i7) > limit .and. x(i6) > limit) &
-        write(24,*) ispec,i2,i3,i7,i6
+      if (x(i2) > limit .and. x(i3) > limit .and. x(i7) > limit .and. x(i6) > limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i2,i3,i7,i6
+        else
+          write(24,"(10(i9,1x))") ispec,i2,i3,i7,i6,i10,i15,i18,i14,i23
+        endif
+      endif
 
 ! test face 5 (front)
-      if (x(i1) > limit .and. x(i2) > limit .and. x(i6) > limit .and. x(i5) > limit) &
-        write(24,*) ispec,i1,i2,i6,i5
+      if (x(i1) > limit .and. x(i2) > limit .and. x(i6) > limit .and. x(i5) > limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i1,i2,i6,i5
+        else
+          write(24,"(10(i9,1x))") ispec,i1,i2,i6,i5,i9,i14,i17,i13,i22
+        endif
+      endif
 
 ! test face 6 (back)
-      if (x(i4) > limit .and. x(i3) > limit .and. x(i7) > limit .and. x(i8) > limit) &
-        write(24,*) ispec,i3,i4,i8,i7
+      if (x(i4) > limit .and. x(i3) > limit .and. x(i7) > limit .and. x(i8) > limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i3,i4,i8,i7
+        else
+          write(24,"(10(i9,1x))") ispec,i3,i4,i8,i7,i11,i16,i19,i15,i24
+        endif
+      endif
 
     endif
 
@@ -737,6 +886,28 @@
     i6 = ibool(6,ispec)
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
+
+    if (NGNOD == 27) then
+       i9 = ibool(9,ispec)
+      i10 = ibool(10,ispec)
+      i11 = ibool(11,ispec)
+      i12 = ibool(12,ispec)
+      i13 = ibool(13,ispec)
+      i14 = ibool(14,ispec)
+      i15 = ibool(15,ispec)
+      i16 = ibool(16,ispec)
+      i17 = ibool(17,ispec)
+      i18 = ibool(18,ispec)
+      i19 = ibool(19,ispec)
+      i20 = ibool(20,ispec)
+      i21 = ibool(21,ispec)
+      i22 = ibool(22,ispec)
+      i23 = ibool(23,ispec)
+      i24 = ibool(24,ispec)
+      i25 = ibool(25,ispec)
+      i26 = ibool(26,ispec)
+      i27 = ibool(27,ispec)
+    endif
 
     if (is_Y_CPML(ispec)) then
 
@@ -808,34 +979,86 @@
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
 
+    if (NGNOD == 27) then
+       i9 = ibool(9,ispec)
+      i10 = ibool(10,ispec)
+      i11 = ibool(11,ispec)
+      i12 = ibool(12,ispec)
+      i13 = ibool(13,ispec)
+      i14 = ibool(14,ispec)
+      i15 = ibool(15,ispec)
+      i16 = ibool(16,ispec)
+      i17 = ibool(17,ispec)
+      i18 = ibool(18,ispec)
+      i19 = ibool(19,ispec)
+      i20 = ibool(20,ispec)
+      i21 = ibool(21,ispec)
+      i22 = ibool(22,ispec)
+      i23 = ibool(23,ispec)
+      i24 = ibool(24,ispec)
+      i25 = ibool(25,ispec)
+      i26 = ibool(26,ispec)
+      i27 = ibool(27,ispec)
+    endif
+
     if (is_Y_CPML(ispec)) then
 
 ! for the six faces below it is important to make sure we write the four points
 ! in an order for which the normal to the face points outwards
 
 ! test face 1 (bottom)
-      if (y(i1) < limit .and. y(i2) < limit .and. y(i3) < limit .and. y(i4) < limit) &
-        write(24,*) ispec,i4,i3,i2,i1
+      if (y(i1) < limit .and. y(i2) < limit .and. y(i3) < limit .and. y(i4) < limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i4,i3,i2,i1
+        else
+          write(24,"(10(i9,1x))") ispec,i4,i3,i2,i1,i11,i10,i9,i12,i21
+        endif
+      endif
 
 ! test face 2 (top)
-      if (y(i5) < limit .and. y(i6) < limit .and. y(i7) < limit .and. y(i8) < limit) &
-        write(24,*) ispec,i5,i6,i7,i8
+      if (y(i5) < limit .and. y(i6) < limit .and. y(i7) < limit .and. y(i8) < limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i5,i6,i7,i8
+        else
+          write(24,"(10(i9,1x))") ispec,i5,i6,i7,i8,i17,i18,i19,i20,i26
+        endif
+      endif
 
 ! test face 3 (left)
-      if (y(i1) < limit .and. y(i4) < limit .and. y(i8) < limit .and. y(i5) < limit) &
-        write(24,*) ispec,i1,i5,i8,i4
+      if (y(i1) < limit .and. y(i4) < limit .and. y(i8) < limit .and. y(i5) < limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i1,i5,i8,i4
+        else
+          write(24,"(10(i9,1x))") ispec,i1,i5,i8,i4,i13,i20,i16,i12,i25
+        endif
+      endif
 
 ! test face 4 (right)
-      if (y(i2) < limit .and. y(i3) < limit .and. y(i7) < limit .and. y(i6) < limit) &
-        write(24,*) ispec,i2,i3,i7,i6
+      if (y(i2) < limit .and. y(i3) < limit .and. y(i7) < limit .and. y(i6) < limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i2,i3,i7,i6
+        else
+          write(24,"(10(i9,1x))") ispec,i2,i3,i7,i6,i10,i15,i18,i14,i23
+        endif
+      endif
 
 ! test face 5 (front)
-      if (y(i1) < limit .and. y(i2) < limit .and. y(i6) < limit .and. y(i5) < limit) &
-        write(24,*) ispec,i1,i2,i6,i5
+      if (y(i1) < limit .and. y(i2) < limit .and. y(i6) < limit .and. y(i5) < limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i1,i2,i6,i5
+        else
+          write(24,"(10(i9,1x))") ispec,i1,i2,i6,i5,i9,i14,i17,i13,i22
+        endif
+      endif
 
 ! test face 6 (back)
-      if (y(i4) < limit .and. y(i3) < limit .and. y(i7) < limit .and. y(i8) < limit) &
-        write(24,*) ispec,i3,i4,i8,i7
+      if (y(i4) < limit .and. y(i3) < limit .and. y(i7) < limit .and. y(i8) < limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i3,i4,i8,i7
+        else
+          write(24,"(10(i9,1x))") ispec,i3,i4,i8,i7,i11,i16,i19,i15,i24
+        endif
+      endif
 
     endif
 
@@ -867,6 +1090,28 @@
     i6 = ibool(6,ispec)
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
+
+    if (NGNOD == 27) then
+       i9 = ibool(9,ispec)
+      i10 = ibool(10,ispec)
+      i11 = ibool(11,ispec)
+      i12 = ibool(12,ispec)
+      i13 = ibool(13,ispec)
+      i14 = ibool(14,ispec)
+      i15 = ibool(15,ispec)
+      i16 = ibool(16,ispec)
+      i17 = ibool(17,ispec)
+      i18 = ibool(18,ispec)
+      i19 = ibool(19,ispec)
+      i20 = ibool(20,ispec)
+      i21 = ibool(21,ispec)
+      i22 = ibool(22,ispec)
+      i23 = ibool(23,ispec)
+      i24 = ibool(24,ispec)
+      i25 = ibool(25,ispec)
+      i26 = ibool(26,ispec)
+      i27 = ibool(27,ispec)
+    endif
 
     if (is_Y_CPML(ispec)) then
 
@@ -938,34 +1183,86 @@
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
 
+    if (NGNOD == 27) then
+       i9 = ibool(9,ispec)
+      i10 = ibool(10,ispec)
+      i11 = ibool(11,ispec)
+      i12 = ibool(12,ispec)
+      i13 = ibool(13,ispec)
+      i14 = ibool(14,ispec)
+      i15 = ibool(15,ispec)
+      i16 = ibool(16,ispec)
+      i17 = ibool(17,ispec)
+      i18 = ibool(18,ispec)
+      i19 = ibool(19,ispec)
+      i20 = ibool(20,ispec)
+      i21 = ibool(21,ispec)
+      i22 = ibool(22,ispec)
+      i23 = ibool(23,ispec)
+      i24 = ibool(24,ispec)
+      i25 = ibool(25,ispec)
+      i26 = ibool(26,ispec)
+      i27 = ibool(27,ispec)
+    endif
+
     if (is_Y_CPML(ispec)) then
 
 ! for the six faces below it is important to make sure we write the four points
 ! in an order for which the normal to the face points outwards
 
 ! test face 1 (bottom)
-      if (y(i1) > limit .and. y(i2) > limit .and. y(i3) > limit .and. y(i4) > limit) &
-        write(24,*) ispec,i4,i3,i2,i1
+      if (y(i1) > limit .and. y(i2) > limit .and. y(i3) > limit .and. y(i4) > limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i4,i3,i2,i1
+        else
+          write(24,"(10(i9,1x))") ispec,i4,i3,i2,i1,i11,i10,i9,i12,i21
+        endif
+      endif
 
 ! test face 2 (top)
-      if (y(i5) > limit .and. y(i6) > limit .and. y(i7) > limit .and. y(i8) > limit) &
-        write(24,*) ispec,i5,i6,i7,i8
+      if (y(i5) > limit .and. y(i6) > limit .and. y(i7) > limit .and. y(i8) > limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i5,i6,i7,i8
+        else
+          write(24,"(10(i9,1x))") ispec,i5,i6,i7,i8,i17,i18,i19,i20,i26
+        endif
+      endif
 
 ! test face 3 (left)
-      if (y(i1) > limit .and. y(i4) > limit .and. y(i8) > limit .and. y(i5) > limit) &
-        write(24,*) ispec,i1,i5,i8,i4
+      if (y(i1) > limit .and. y(i4) > limit .and. y(i8) > limit .and. y(i5) > limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i1,i5,i8,i4
+        else
+          write(24,"(10(i9,1x))") ispec,i1,i5,i8,i4,i13,i20,i16,i12,i25
+        endif
+      endif
 
 ! test face 4 (right)
-      if (y(i2) > limit .and. y(i3) > limit .and. y(i7) > limit .and. y(i6) > limit) &
-        write(24,*) ispec,i2,i3,i7,i6
+      if (y(i2) > limit .and. y(i3) > limit .and. y(i7) > limit .and. y(i6) > limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i2,i3,i7,i6
+        else
+          write(24,"(10(i9,1x))") ispec,i2,i3,i7,i6,i10,i15,i18,i14,i23
+        endif
+      endif
 
 ! test face 5 (front)
-      if (y(i1) > limit .and. y(i2) > limit .and. y(i6) > limit .and. y(i5) > limit) &
-        write(24,*) ispec,i1,i2,i6,i5
+      if (y(i1) > limit .and. y(i2) > limit .and. y(i6) > limit .and. y(i5) > limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i1,i2,i6,i5
+        else
+          write(24,"(10(i9,1x))") ispec,i1,i2,i6,i5,i9,i14,i17,i13,i22
+        endif
+      endif
 
 ! test face 6 (back)
-      if (y(i4) > limit .and. y(i3) > limit .and. y(i7) > limit .and. y(i8) > limit) &
-        write(24,*) ispec,i3,i4,i8,i7
+      if (y(i4) > limit .and. y(i3) > limit .and. y(i7) > limit .and. y(i8) > limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i3,i4,i8,i7
+        else
+          write(24,"(10(i9,1x))") ispec,i3,i4,i8,i7,i11,i16,i19,i15,i24
+        endif
+      endif
 
     endif
 
@@ -997,6 +1294,28 @@
     i6 = ibool(6,ispec)
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
+
+    if (NGNOD == 27) then
+       i9 = ibool(9,ispec)
+      i10 = ibool(10,ispec)
+      i11 = ibool(11,ispec)
+      i12 = ibool(12,ispec)
+      i13 = ibool(13,ispec)
+      i14 = ibool(14,ispec)
+      i15 = ibool(15,ispec)
+      i16 = ibool(16,ispec)
+      i17 = ibool(17,ispec)
+      i18 = ibool(18,ispec)
+      i19 = ibool(19,ispec)
+      i20 = ibool(20,ispec)
+      i21 = ibool(21,ispec)
+      i22 = ibool(22,ispec)
+      i23 = ibool(23,ispec)
+      i24 = ibool(24,ispec)
+      i25 = ibool(25,ispec)
+      i26 = ibool(26,ispec)
+      i27 = ibool(27,ispec)
+    endif
 
     if (is_Z_CPML(ispec)) then
 
@@ -1068,34 +1387,86 @@
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
 
+    if (NGNOD == 27) then
+       i9 = ibool(9,ispec)
+      i10 = ibool(10,ispec)
+      i11 = ibool(11,ispec)
+      i12 = ibool(12,ispec)
+      i13 = ibool(13,ispec)
+      i14 = ibool(14,ispec)
+      i15 = ibool(15,ispec)
+      i16 = ibool(16,ispec)
+      i17 = ibool(17,ispec)
+      i18 = ibool(18,ispec)
+      i19 = ibool(19,ispec)
+      i20 = ibool(20,ispec)
+      i21 = ibool(21,ispec)
+      i22 = ibool(22,ispec)
+      i23 = ibool(23,ispec)
+      i24 = ibool(24,ispec)
+      i25 = ibool(25,ispec)
+      i26 = ibool(26,ispec)
+      i27 = ibool(27,ispec)
+    endif
+
     if (is_Z_CPML(ispec)) then
 
 ! for the six faces below it is important to make sure we write the four points
 ! in an order for which the normal to the face points outwards
 
 ! test face 1 (bottom)
-      if (z(i1) < limit .and. z(i2) < limit .and. z(i3) < limit .and. z(i4) < limit) &
-        write(24,*) ispec,i4,i3,i2,i1
+      if (z(i1) < limit .and. z(i2) < limit .and. z(i3) < limit .and. z(i4) < limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i4,i3,i2,i1
+        else
+          write(24,"(10(i9,1x))") ispec,i4,i3,i2,i1,i11,i10,i9,i12,i21
+        endif
+      endif
 
 ! test face 2 (top)
-      if (z(i5) < limit .and. z(i6) < limit .and. z(i7) < limit .and. z(i8) < limit) &
-        write(24,*) ispec,i5,i6,i7,i8
+      if (z(i5) < limit .and. z(i6) < limit .and. z(i7) < limit .and. z(i8) < limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i5,i6,i7,i8
+        else
+          write(24,"(10(i9,1x))") ispec,i5,i6,i7,i8,i17,i18,i19,i20,i26
+        endif
+      endif
 
 ! test face 3 (left)
-      if (z(i1) < limit .and. z(i4) < limit .and. z(i8) < limit .and. z(i5) < limit) &
-        write(24,*) ispec,i1,i5,i8,i4
+      if (z(i1) < limit .and. z(i4) < limit .and. z(i8) < limit .and. z(i5) < limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i1,i5,i8,i4
+        else
+          write(24,"(10(i9,1x))") ispec,i1,i5,i8,i4,i13,i20,i16,i12,i25
+        endif
+      endif
 
 ! test face 4 (right)
-      if (z(i2) < limit .and. z(i3) < limit .and. z(i7) < limit .and. z(i6) < limit) &
-        write(24,*) ispec,i2,i3,i7,i6
+      if (z(i2) < limit .and. z(i3) < limit .and. z(i7) < limit .and. z(i6) < limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i2,i3,i7,i6
+        else
+          write(24,"(10(i9,1x))") ispec,i2,i3,i7,i6,i10,i15,i18,i14,i23
+        endif
+      endif
 
 ! test face 5 (front)
-      if (z(i1) < limit .and. z(i2) < limit .and. z(i6) < limit .and. z(i5) < limit) &
-        write(24,*) ispec,i1,i2,i6,i5
+      if (z(i1) < limit .and. z(i2) < limit .and. z(i6) < limit .and. z(i5) < limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i1,i2,i6,i5
+        else
+          write(24,"(10(i9,1x))") ispec,i1,i2,i6,i5,i9,i14,i17,i13,i22
+        endif
+      endif
 
 ! test face 6 (back)
-      if (z(i4) < limit .and. z(i3) < limit .and. z(i7) < limit .and. z(i8) < limit) &
-        write(24,*) ispec,i3,i4,i8,i7
+      if (z(i4) < limit .and. z(i3) < limit .and. z(i7) < limit .and. z(i8) < limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i3,i4,i8,i7
+        else
+          write(24,"(10(i9,1x))") ispec,i3,i4,i8,i7,i11,i16,i19,i15,i24
+        endif
+      endif
 
     endif
 
@@ -1127,6 +1498,28 @@
     i6 = ibool(6,ispec)
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
+
+    if (NGNOD == 27) then
+       i9 = ibool(9,ispec)
+      i10 = ibool(10,ispec)
+      i11 = ibool(11,ispec)
+      i12 = ibool(12,ispec)
+      i13 = ibool(13,ispec)
+      i14 = ibool(14,ispec)
+      i15 = ibool(15,ispec)
+      i16 = ibool(16,ispec)
+      i17 = ibool(17,ispec)
+      i18 = ibool(18,ispec)
+      i19 = ibool(19,ispec)
+      i20 = ibool(20,ispec)
+      i21 = ibool(21,ispec)
+      i22 = ibool(22,ispec)
+      i23 = ibool(23,ispec)
+      i24 = ibool(24,ispec)
+      i25 = ibool(25,ispec)
+      i26 = ibool(26,ispec)
+      i27 = ibool(27,ispec)
+    endif
 
     if (is_Z_CPML(ispec)) then
 
@@ -1198,34 +1591,86 @@
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
 
+    if (NGNOD == 27) then
+       i9 = ibool(9,ispec)
+      i10 = ibool(10,ispec)
+      i11 = ibool(11,ispec)
+      i12 = ibool(12,ispec)
+      i13 = ibool(13,ispec)
+      i14 = ibool(14,ispec)
+      i15 = ibool(15,ispec)
+      i16 = ibool(16,ispec)
+      i17 = ibool(17,ispec)
+      i18 = ibool(18,ispec)
+      i19 = ibool(19,ispec)
+      i20 = ibool(20,ispec)
+      i21 = ibool(21,ispec)
+      i22 = ibool(22,ispec)
+      i23 = ibool(23,ispec)
+      i24 = ibool(24,ispec)
+      i25 = ibool(25,ispec)
+      i26 = ibool(26,ispec)
+      i27 = ibool(27,ispec)
+    endif
+
     if (is_Z_CPML(ispec)) then
 
 ! for the six faces below it is important to make sure we write the four points
 ! in an order for which the normal to the face points outwards
 
 ! test face 1 (bottom)
-      if (z(i1) > limit .and. z(i2) > limit .and. z(i3) > limit .and. z(i4) > limit) &
-        write(24,*) ispec,i4,i3,i2,i1
+      if (z(i1) > limit .and. z(i2) > limit .and. z(i3) > limit .and. z(i4) > limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i4,i3,i2,i1
+        else
+          write(24,"(10(i9,1x))") ispec,i4,i3,i2,i1,i11,i10,i9,i12,i21
+        endif
+      endif
 
 ! test face 2 (top)
-      if (z(i5) > limit .and. z(i6) > limit .and. z(i7) > limit .and. z(i8) > limit) &
-        write(24,*) ispec,i5,i6,i7,i8
+      if (z(i5) > limit .and. z(i6) > limit .and. z(i7) > limit .and. z(i8) > limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i5,i6,i7,i8
+        else
+          write(24,"(10(i9,1x))") ispec,i5,i6,i7,i8,i17,i18,i19,i20,i26
+        endif
+      endif
 
 ! test face 3 (left)
-      if (z(i1) > limit .and. z(i4) > limit .and. z(i8) > limit .and. z(i5) > limit) &
-        write(24,*) ispec,i1,i5,i8,i4
+      if (z(i1) > limit .and. z(i4) > limit .and. z(i8) > limit .and. z(i5) > limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i1,i5,i8,i4
+        else
+          write(24,"(10(i9,1x))") ispec,i1,i5,i8,i4,i13,i20,i16,i12,i25
+        endif
+      endif
 
 ! test face 4 (right)
-      if (z(i2) > limit .and. z(i3) > limit .and. z(i7) > limit .and. z(i6) > limit) &
-        write(24,*) ispec,i2,i3,i7,i6
+      if (z(i2) > limit .and. z(i3) > limit .and. z(i7) > limit .and. z(i6) > limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i2,i3,i7,i6
+        else
+          write(24,"(10(i9,1x))") ispec,i2,i3,i7,i6,i10,i15,i18,i14,i23
+        endif
+      endif
 
 ! test face 5 (front)
-      if (z(i1) > limit .and. z(i2) > limit .and. z(i6) > limit .and. z(i5) > limit) &
-        write(24,*) ispec,i1,i2,i6,i5
+      if (z(i1) > limit .and. z(i2) > limit .and. z(i6) > limit .and. z(i5) > limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i1,i2,i6,i5
+        else
+          write(24,"(10(i9,1x))") ispec,i1,i2,i6,i5,i9,i14,i17,i13,i22
+        endif
+      endif
 
 ! test face 6 (back)
-      if (z(i4) > limit .and. z(i3) > limit .and. z(i7) > limit .and. z(i8) > limit) &
-        write(24,*) ispec,i3,i4,i8,i7
+      if (z(i4) > limit .and. z(i3) > limit .and. z(i7) > limit .and. z(i8) > limit) then
+        if (NGNOD == 8) then
+          write(24,*) ispec,i3,i4,i8,i7
+        else
+          write(24,"(10(i9,1x))") ispec,i3,i4,i8,i7,i11,i16,i19,i15,i24
+        endif
+      endif
 
     endif
 

@@ -589,6 +589,7 @@
 ! loop on the whole mesh
   do ispec = 1,nspec
 
+! we can use the 8 corners of the element only for the test here, even if the element is HEX27
     i1 = ibool(1,ispec)
     i2 = ibool(2,ispec)
     i3 = ibool(3,ispec)
