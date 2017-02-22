@@ -54,7 +54,7 @@
   character(len=7) :: dummy
   character(len=MAX_STRING_LEN) :: string
   character(len=MAX_STRING_LEN) :: FORCESOLUTION,path_to_add
-  character(len=MAX_STRING_LEN) :: EXTERNAL_SOURCE_TIME_FUNCTION_filename
+  character(len=MAX_STRING_LEN) :: external_source_time_function_filename
   integer :: ier
 
   ! initializes
@@ -146,10 +146,10 @@
     if (USE_EXTERNAL_SOURCE_FILE) then
       ! gets external STF file name
       read(IIN,"(a)") string
-      EXTERNAL_SOURCE_TIME_FUNCTION_filename = trim(string)
+      external_source_time_function_filename = trim(string)
 
       ! reads in stf values
-      call read_EXTERNAL_SOURCE_TIME_FUNCTION(isource,user_source_time_function,EXTERNAL_SOURCE_TIME_FUNCTION_filename)
+      call read_external_source_time_function(isource,user_source_time_function,external_source_time_function_filename)
     endif
 
   enddo

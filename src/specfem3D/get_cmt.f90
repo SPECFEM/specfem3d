@@ -52,7 +52,7 @@
   integer :: i,itype,istart,iend,ier
   double precision :: t_shift(NSOURCES)
   character(len=256) :: string
-  character(len=MAX_STRING_LEN) :: CMTSOLUTION,path_to_add,EXTERNAL_SOURCE_TIME_FUNCTION_filename
+  character(len=MAX_STRING_LEN) :: CMTSOLUTION,path_to_add,external_source_time_function_filename
 
   ! initializes
   lat(:) = 0.d0
@@ -322,10 +322,10 @@
     if (USE_EXTERNAL_SOURCE_FILE) then
       ! gets external STF file name
       read(IIN,"(a)") string
-      EXTERNAL_SOURCE_TIME_FUNCTION_filename = trim(string)
+      external_source_time_function_filename = trim(string)
 
       ! reads in stf values
-      call read_EXTERNAL_SOURCE_TIME_FUNCTION(isource,user_source_time_function,EXTERNAL_SOURCE_TIME_FUNCTION_filename)
+      call read_external_source_time_function(isource,user_source_time_function,external_source_time_function_filename)
     endif
 
   enddo
