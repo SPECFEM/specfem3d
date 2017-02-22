@@ -15,13 +15,14 @@
  *      Contact info:   Onur TAN,
  *      Istanbul Technical University, Faculty of Mines
  *      Department of Geophysics, Maslak, Istanbul-TURKEY
- *      www.geop.itu.edu.tr/~onur
- *                    tano@itu.edu.tr
+ *
+ *      New address in 2017: onur.tan AT mam.gov.tr
+ *
  *--------------------------------------------------------------------------*/
 
 /*  cmt2aki.c  : Converts Harvard-CMT moment moment tensor elements to Aki&Richard 1980 convention
   by Onur TAN
-  ITU, Dept. of Geophysics, Istanbul, Turkey,10Jan2004
+  ITU, Dept. of Geophysics, Istanbul, Turkey, 10 Jan 2004
 */
 
 // Modified by Dimitri Komatitsch, University of Pau, France, September 2007
