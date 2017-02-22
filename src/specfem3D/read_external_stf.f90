@@ -31,7 +31,7 @@
 
   use constants, only: MAX_STRING_LEN,CUSTOM_REAL,IOSTF
 
-  use shared_parameters, only: NSTEP,DT,NSTEP_STF,NSOURCES_STF
+  use shared_parameters, only: NSTEP,NSTEP_STF,NSOURCES_STF
 
   implicit none
 
