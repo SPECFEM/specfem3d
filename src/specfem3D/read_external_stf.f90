@@ -31,7 +31,7 @@
 
   use constants, only: MAX_STRING_LEN,CUSTOM_REAL,IOSTF
 
-  use shared_parameters, only: NSTEP,NSTEP_STF,NSOURCES_STF
+  use shared_parameters, only: NSTEP,NSTEP_STF,NSOURCES_STF,DT
 
   implicit none
 
@@ -45,6 +45,7 @@
 
   ! local variables below
   integer :: i,ier
+  double precision :: dt_source
   character(len=256) :: line
 
   ! clear the array for that source
@@ -76,6 +77,9 @@
   enddo
   rewind(IOSTF)
 
+  ! subtract one because the first line of the file contains the time step used
+  i = i - 1
+
   if (i < 1) stop 'error: the number of time steps in external_source_time_function_filename is < 1'
 
   if (i > NSTEP_STF) then
@@ -96,6 +100,10 @@
              &equal to the number of time steps in the simulation'
     stop 'Error invalid number of time steps in external source time file'
   endif
+
+  ! read the time step used and check that it is the same as DT used for the code
+  read(IOSTF,*) dt_source
+  if (abs((dt_source - DT) / DT) > 1.d-3) stop 'error: the external source time file does not use the same time step as DT'
 
   ! read the source values
   do i = 1, NSTEP_STF

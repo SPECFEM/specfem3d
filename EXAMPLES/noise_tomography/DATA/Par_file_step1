@@ -173,8 +173,8 @@ USE_RICKER_TIME_FUNCTION        = .false.
 # if .true. you must add a file with your source time function and the file name
 # path relative to lauching directory at the end of CMTSOLUTION or FORCESOURCE file
 # (with multiple sources, one file per source is required).
-# This file must have a single column containing the amplitude of the source at that time step.
-# The code assumes that the value of the time step is DT as defined at the beginning of this Par_file.
+# This file must have a single column containing the amplitude of the source at that time step,
+# and on its first line it must contain the time step used, which must be equal to DT as defined at the beginning of this Par_file (the code will check that).
 # Be sure when this option is .false. to remove the name of stf file in CMTSOLUTION or FORCESOURCE
 USE_EXTERNAL_SOURCE_FILE        = .false.
 
