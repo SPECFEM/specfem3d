@@ -1,0 +1,19 @@
+
+Subject: Re:Re: PML
+From: Zhinan Xie
+Date: 02/22/2017 03:31 AM
+To: Dimitri Komatitsch
+CC: Bence Solymosi, Vadim Monteiller, Paul Cristini, Nathalie Favretto
+
+Hi Dimitri and Bence,
+
+For grazing incidence waves, we can increase the Kappa value to let its maximum be equal to 4 or 6.
+
+And additionally, we can increase the alpha_max value to set it twice bigger.
+
+This can lead to better results at grazing incidence.
+
+Best regards,
+Zhinan
+
+
