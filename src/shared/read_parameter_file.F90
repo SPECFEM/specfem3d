@@ -302,8 +302,8 @@
     call read_value_logical(ADIOS_FOR_KERNELS, 'ADIOS_FOR_KERNELS', ier)
     if (ier /= 0) stop 'Error reading Par_file parameter ADIOS_FOR_KERNELS'
 
-    call read_value_logical(EXTERNAL_STF, 'EXTERNAL_SOURCE_FILE', ier)
-    if (ier /= 0) stop 'Error reading Par_file parameter EXTERNAL_SOURCE_FILE'
+    call read_value_logical(USE_EXTERNAL_SOURCE_FILE, 'USE_EXTERNAL_SOURCE_FILE', ier)
+    if (ier /= 0) stop 'Error reading Par_file parameter USE_EXTERNAL_SOURCE_FILE'
 
 #ifdef DEBUG_COUPLED
       include "../../../add_to_read_parameter_file_1.F90"
@@ -320,7 +320,7 @@
     if (USE_LDDRK .and. INCREASE_CFL_FOR_LDDRK) DT = DT * RATIO_BY_WHICH_TO_INCREASE_IT
 
     ! to be consistent with external source file option turned to on
-    if (EXTERNAL_STF) USE_RICKER_TIME_FUNCTION = .false.
+    if (USE_EXTERNAL_SOURCE_FILE) USE_RICKER_TIME_FUNCTION = .false.
 
     ! see if we are running several independent runs in parallel
     ! if so, add the right directory for that run
@@ -509,7 +509,7 @@
     call bcast_all_singlel_world(ADIOS_FOR_MESH)
     call bcast_all_singlel_world(ADIOS_FOR_FORWARD_ARRAYS)
     call bcast_all_singlel_world(ADIOS_FOR_KERNELS)
-    call bcast_all_singlel_world(EXTERNAL_STF)
+    call bcast_all_singlel_world(USE_EXTERNAL_SOURCE_FILE)
 
 ! broadcast all parameters computed from others
     call bcast_all_singlei_world(IMODEL)
@@ -599,8 +599,8 @@
   endif
 
   ! external STF
-  if (EXTERNAL_STF .and. GPU_MODE) &
-    stop 'EXTERNAL_SOURCE_FILE in GPU_MODE simulation not supported yet'
+  if (USE_EXTERNAL_SOURCE_FILE .and. GPU_MODE) &
+    stop 'USE_EXTERNAL_SOURCE_FILE in GPU_MODE simulation not supported yet'
 
   end subroutine check_simulation_parameters
 
@@ -650,11 +650,12 @@
     enddo
     close(21)
 
-    if (.not. EXTERNAL_STF) then
+    if (.not. USE_EXTERNAL_SOURCE_FILE) then
        if (mod(icounter,NLINES_PER_FORCESOLUTION_SOURCE) /= 0) &
             stop 'Error total number of lines in FORCESOLUTION file should be a multiple of NLINES_PER_FORCESOLUTION_SOURCE'
        NSOURCES = icounter / NLINES_PER_FORCESOLUTION_SOURCE
-    else !! VM VM in case of EXTERNAL_STF we have to read one additional line per source (the name of external source file)
+    else
+!! VM VM in case of USE_EXTERNAL_SOURCE_FILE we have to read one additional line per source (the name of external source file)
        NSOURCES = icounter / (NLINES_PER_FORCESOLUTION_SOURCE+1)
     endif
 
@@ -682,11 +683,11 @@
       if (ier == 0) icounter = icounter + 1
     enddo
     close(21)
-    if (.not. EXTERNAL_STF) then
+    if (.not. USE_EXTERNAL_SOURCE_FILE) then
        if (mod(icounter,NLINES_PER_CMTSOLUTION_SOURCE) /= 0) &
             stop 'Error total number of lines in CMTSOLUTION file should be a multiple of NLINES_PER_CMTSOLUTION_SOURCE'
     else
-       !! VM VM in case of EXTERNAL_STF we have to read one additional line per source (the name of external source file)
+       !! VM VM in case of USE_EXTERNAL_SOURCE_FILE we have to read one additional line per source (the name of external source file)
        NSOURCES = icounter / (NLINES_PER_FORCESOLUTION_SOURCE+1)
     endif
 

@@ -44,7 +44,7 @@
                         USE_FORCE_POINT_SOURCE, &
                         tshift_src,dt,t0, &
                         USE_LDDRK,istage, &
-                        EXTERNAL_STF,user_source_time_function
+                        USE_EXTERNAL_SOURCE_FILE,user_source_time_function
 
   implicit none
 
@@ -110,7 +110,7 @@
           stf = get_stf_poroelastic(time_source_dble,isource)
 
           !! VM VM add external source time function
-          if (EXTERNAL_STF) then
+          if (USE_EXTERNAL_SOURCE_FILE) then
             stf = user_source_time_function(it, isource)
           endif
 
@@ -313,7 +313,7 @@
           stf = get_stf_poroelastic(time_source_dble,isource)
 
           !! VM VM add external source time function
-          if (EXTERNAL_STF) then
+          if (USE_EXTERNAL_SOURCE_FILE) then
             ! time-reversed
             stf = user_source_time_function(NSTEP-it+1, isource)
           endif

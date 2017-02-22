@@ -169,16 +169,14 @@ USE_FORCE_POINT_SOURCE          = .true.
 # to represent a (tilted) FORCESOLUTION force point source or a CMTSOLUTION moment-tensor source.
 USE_RICKER_TIME_FUNCTION        = .true.
 
-# use external source time function.
+# Use an external source time function.
 # if .true. you must add a file with your source time function and the file name
 # path relative to lauching directory at the end of CMTSOLUTION or FORCESOURCE file
 # (with multiple sources, one file per source is required).
-# This file must have 2 columns  :
-#     current_time, amplitude
-# The time step **MUST** be the same as used for simulation.
-# be sure when this option is .false. to remove the name of stf file in
-# CMTSOLUTION or FORCESOURCE
-EXTERNAL_SOURCE_FILE            = .false.
+# This file must have a single column containing the amplitude of the source at that time step.
+# The code assumes that the value of the time step is DT as defined at the beginning of this Par_file.
+# Be sure when this option is .false. to remove the name of stf file in CMTSOLUTION or FORCESOURCE
+USE_EXTERNAL_SOURCE_FILE        = .false.
 
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .false.

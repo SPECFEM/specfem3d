@@ -29,7 +29,7 @@
                     DT,NSOURCES,min_tshift_cmt_original,user_source_time_function)
 
   use constants, only: IIN,IN_DATA_FILES,MAX_STRING_LEN,mygroup,CUSTOM_REAL
-  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,EXTERNAL_STF,NSTEP_STF,NSOURCES_STF
+  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,USE_EXTERNAL_SOURCE_FILE,NSTEP_STF,NSOURCES_STF
 
   implicit none
 
@@ -43,8 +43,8 @@
   double precision, dimension(NSOURCES), intent(out) :: tshift_cmt,hdur,lat,long,depth
   double precision, dimension(6,NSOURCES), intent(out) :: moment_tensor
   !! VM VM use NSTEP_STF, NSOURCES_STF which are always rigth :
-  !! in case of EXTERNAL_STF, it's equal to NSTEP,NSOURCES
-  !! when .not. EXTERNAL_STF it' equal to 1,1.
+  !! in case of USE_EXTERNAL_SOURCE_FILE, they are equal to NSTEP,NSOURCES
+  !! when .not. USE_EXTERNAL_SOURCE_FILE they are equal to 1,1.
   real(kind=CUSTOM_REAL), dimension(NSTEP_STF, NSOURCES_STF), intent(out) :: user_source_time_function
 
   ! local variables below
@@ -52,7 +52,7 @@
   integer :: i,itype,istart,iend,ier
   double precision :: t_shift(NSOURCES)
   character(len=256) :: string
-  character(len=MAX_STRING_LEN) :: CMTSOLUTION,path_to_add,external_stf_filename
+  character(len=MAX_STRING_LEN) :: CMTSOLUTION,path_to_add,external_source_time_function_filename
 
   ! initializes
   lat(:) = 0.d0
@@ -319,13 +319,13 @@
     if (hdur(isource) < 5. * DT) hdur(isource) = 5. * DT
 
     ! reads USER EXTERNAL SOURCE if needed
-    if (EXTERNAL_STF) then
+    if (USE_EXTERNAL_SOURCE_FILE) then
       ! gets external STF file name
       read(IIN,"(a)") string
-      external_stf_filename = trim(string)
+      external_source_time_function_filename = trim(string)
 
       ! reads in stf values
-      call read_external_stf(isource,user_source_time_function,external_stf_filename)
+      call read_external_source_time_function(isource,user_source_time_function,external_source_time_function_filename)
     endif
 
   enddo

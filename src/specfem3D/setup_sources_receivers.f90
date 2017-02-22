@@ -117,7 +117,7 @@
   endif
 
   !! VM VM set the size of user_source_time_function
-  if (EXTERNAL_STF) then
+  if (USE_EXTERNAL_SOURCE_FILE) then
      NSTEP_STF = NSTEP
      NSOURCES_STF = NSOURCES
   else !! We don't need the array user_source_time_function : use a small dummy array
@@ -196,7 +196,7 @@
   endif
 
   !! VM VM for external source the time will begin with simulation
-  if (EXTERNAL_STF) then
+  if (USE_EXTERNAL_SOURCE_FILE) then
     t0 = 0.d0
     ! user output
     if (myrank == 0) then
@@ -1212,7 +1212,7 @@
         endif
 
         !! VM VM add external source time function
-        if (EXTERNAL_STF) stf = user_source_time_function(it, isource)
+        if (USE_EXTERNAL_SOURCE_FILE) stf = user_source_time_function(it, isource)
 
         ! distinguishes between single and double precision for reals
         stf_used = real(stf,kind=CUSTOM_REAL)

@@ -177,6 +177,10 @@ use File::Basename;
       $line =~ s#external_source_time_function#EXTERNAL_SOURCE_TIME_FUNCTION#ogi;
       $line =~ s#sourceTimeFunction#sourceTimeFunction#ogi;
 
+      $line =~ s#external_stf#EXTERNAL_SOURCE_TIME_FUNCTION#ogi;
+      $line =~ s#EXTERNAL_SOURCE_TIME_FUNCTION_filename#external_source_time_function_filename#ogi;
+      $line =~ s#read_EXTERNAL_SOURCE_TIME_FUNCTION#read_external_source_time_function#ogi;
+
       $line =~ s#enddo_LOOP_IJK#ENDDO_LOOP_IJK#ogi;
 
       $line =~ s#spectral-elements#spectral elements#ogi;
@@ -282,6 +286,8 @@ use File::Basename;
       $line =~ s#restauration#restoration#ogi;
       $line =~ s#restaure#restore#ogi;
       $line =~ s#memmory#memory#ogi;
+      $line =~ s# usefull # useful #ogi;
+      $line =~ s# usefull$# useful#ogi;
 
       print FILEF90 "$line\n";
 

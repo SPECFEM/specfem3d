@@ -25,7 +25,7 @@
 !
 !=====================================================================
 
-  subroutine read_external_stf(isource,user_source_time_function,external_stf_filename)
+  subroutine read_external_source_time_function(isource,user_source_time_function,external_source_time_function_filename)
 
 ! reads in an external source time function file
 
@@ -36,46 +36,39 @@
   implicit none
 
   integer,intent(in) :: isource
-  !! VM VM use NSTEP_STF, NSOURCES_STF which are always rigth :
-  !! in case of EXTERNAL_STF, it's equal to NSTEP,NSOURCES
-  !! when .not. EXTERNAL_STF it' equal to 1,1.
-  real(kind=CUSTOM_REAL), dimension(NSTEP_STF, NSOURCES_STF), intent(inout) :: user_source_time_function
+  !! VM VM use NSTEP_STF, NSOURCES_STF which are always OK:
+  !! in case of USE_EXTERNAL_SOURCE_FILE, they are equal to NSTEP,NSOURCES
+  !! when .not. USE_EXTERNAL_SOURCE_FILE they are equal to 1,1.
+  real(kind=CUSTOM_REAL), dimension(NSTEP_STF, NSOURCES_STF), intent(out) :: user_source_time_function
 
-  character(len=MAX_STRING_LEN),intent(in) :: external_stf_filename
+  character(len=MAX_STRING_LEN),intent(in) :: external_source_time_function_filename
 
   ! local variables below
   integer :: i,ier
-  double precision :: time_source,stf_val
-  double precision :: time_source_start,time_source_end,dt_source
-  double precision, parameter :: dt_tol = 1e-6
   character(len=256) :: line
-  logical :: read_next_line
 
-  ! initializes
+  ! clear the array for that source
   user_source_time_function(:,isource) = 0._CUSTOM_REAL
 
   ! opens specified file
-  open(IOSTF,file=trim(external_stf_filename),status='old',action='read',iostat=ier)
+  open(IOSTF,file=trim(external_source_time_function_filename),status='old',action='read',iostat=ier)
   if (ier /= 0) then
-    print *,'Error could not open external source file: ',trim(external_stf_filename)
+    print *,'Error could not open external source file: ',trim(external_source_time_function_filename)
     stop 'Error opening external source time function file'
   endif
-
-  ! debug
-  !print *,'reading stf file: ',trim(external_stf_filename)
 
   ! gets number of file entries
   i = 0
   do while (ier == 0)
     read(IOSTF,"(a256)",iostat=ier) line
-    !print *,i,'stf string: ',line
     if (ier == 0) then
       ! suppress leading white spaces, if any
       line = adjustl(line)
 
       ! skip empty/comment lines
       if (len_trim(line) == 0) cycle
-      if (line(1:1) == '#' .or. line(1:1) == '!') cycle
+      if (line(1:1) == '#' .or. line(1:1) == '!') &
+        stop 'error in format of external_source_time_function_filename, no comments are allowed in it'
 
       ! increases counter
       i = i + 1
@@ -83,9 +76,20 @@
   enddo
   rewind(IOSTF)
 
+  if (i < 1) stop 'error: the number of time steps in external_source_time_function_filename is < 1'
+
+  if (i > NSTEP_STF) then
+    print *
+    print *,'****************************************************************************************'
+    print *,'Warning: external_source_time_function_filename contains more than NSTEP_STF time steps,'
+    print *,'         only the first NSTEP_STF will be read, all the others will be ignored.'
+    print *,'****************************************************************************************'
+    print *
+  endif
+
   ! checks number of time steps read
   if (i < NSTEP) then
-    print *,'Problem when reading external source time file: ', trim(external_stf_filename)
+    print *,'Problem when reading external source time file: ', trim(external_source_time_function_filename)
     print *,'  number of time steps in the simulation = ',NSTEP
     print *,'  number of time steps read from the source time function = ',i
     print *,'Please make sure that the number of time steps in the external source file read is greater or &
@@ -93,62 +97,18 @@
     stop 'Error invalid number of time steps in external source time file'
   endif
 
-  ! reads in external values
-  do i = 1, NSTEP
-    ! reads next valid line
-    read_next_line = .true.
-    do while (read_next_line)
-      read(IOSTF,"(a256)",iostat=ier) line
-
-      ! suppress leading white spaces, if any
-      line = adjustl(line)
-
-      ! skip empty/comment lines
-      if (len_trim(line) == 0) cycle
-      if (line(1:1) == '#' .or. line(1:1) == '!') cycle
-
-      ! checks if done
-      if (ier /= 0) then
-        stop 'Error reading external source time file'
-      else
-        read_next_line = .false.
-      endif
-    enddo
-
-    ! reads in values from line
-    ! format: #time #stf-value
-    read(line,*,iostat=ier) time_source, stf_val
-
-    ! debug
-    !print *,'stf: ',i,time_source,stf_val
-
+  ! read the source values
+  do i = 1, NSTEP_STF
+    read(IOSTF,*,iostat=ier) user_source_time_function(i,isource)
     if (ier /= 0) then
-      print *,'Problem when reading external source time file: ', trim(external_stf_filename)
+      print *,'Problem when reading external source time file: ', trim(external_source_time_function_filename)
       print *,'Please check, file format should be: #time #stf-value'
       stop 'Error reading external source time file with invalid format'
     endif
-
-    ! sets STF
-    user_source_time_function(i,isource) = stf_val
-
-    ! to check time step size
-    if (i == 1) then
-      time_source_start = time_source
-    else if (i == NSTEP) then
-      time_source_end = time_source
-    endif
   enddo
-
-  ! checks if the time steps corresponds to the simulation time step
-  dt_source =  (time_source_end - time_source_start) / dble(NSTEP-1)
-  if (abs(dt_source - DT) > dt_tol ) then
-    print *,'Error in time step in external source file ', trim(external_stf_filename)
-    print *, ' simulation time step ', DT
-    print *, ' source time function read time step ', dt_source
-    stop 'Error invalid time step size in external STF file'
-  endif
 
   ! closes external STF file
   close(IOSTF)
 
-  end subroutine read_external_stf
+  end subroutine read_external_source_time_function
+

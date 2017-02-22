@@ -47,7 +47,7 @@
                         nrec_local,number_receiver_global, &
                         nsources_local,tshift_src,dt,t0,SU_FORMAT, &
                         USE_LDDRK,istage, &
-                        EXTERNAL_STF,user_source_time_function
+                        USE_EXTERNAL_SOURCE_FILE,user_source_time_function
 
 #ifdef DEBUG_COUPLED
     include "../../../add_to_compute_add_sources_viscoelastic_1.F90"
@@ -131,7 +131,7 @@
           stf = get_stf_viscoelastic(time_source_dble,isource)
 
           !! VM VM add external source time function
-          if (EXTERNAL_STF) then
+          if (USE_EXTERNAL_SOURCE_FILE) then
             stf = user_source_time_function(it, isource)
           endif
 
@@ -358,7 +358,7 @@
                         normal_x_noise,normal_y_noise,normal_z_noise, &
                         mask_noise,noise_surface_movie, &
                         nsources_local,tshift_src,dt,t0, &
-                        USE_LDDRK,istage,EXTERNAL_STF,user_source_time_function
+                        USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function
 
 #ifdef DEBUG_COUPLED
     include "../../../add_to_compute_add_sources_viscoelastic_1.F90"
@@ -442,7 +442,7 @@
           stf = get_stf_viscoelastic(time_source_dble,isource)
 
           !! VM VM add external source time function
-          if (EXTERNAL_STF) then
+          if (USE_EXTERNAL_SOURCE_FILE) then
             ! time-reversed
             stf = user_source_time_function(NSTEP-it+1, isource)
           endif
@@ -504,7 +504,7 @@
                         irec_master_noise,noise_surface_movie, &
                         nrec_local,number_receiver_global, &
                         nsources_local,tshift_src,dt,t0,SU_FORMAT, &
-                        USE_LDDRK,istage,EXTERNAL_STF,user_source_time_function
+                        USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function
 
 #ifdef DEBUG_COUPLED
     include "../../../add_to_compute_add_sources_viscoelastic_1.F90"
@@ -576,7 +576,7 @@
         stf = get_stf_viscoelastic(time_source_dble,isource)
 
         !! VM VM add external source time function
-        if (EXTERNAL_STF) then
+        if (USE_EXTERNAL_SOURCE_FILE) then
            stf = user_source_time_function(it, isource)
         endif
 
@@ -746,7 +746,7 @@
         stf = get_stf_viscoelastic(time_source_dble,isource)
 
         !! VM VM add external source time function
-        if (EXTERNAL_STF) then
+        if (USE_EXTERNAL_SOURCE_FILE) then
            stf = user_source_time_function(NSTEP-it+1, isource)
         endif
 

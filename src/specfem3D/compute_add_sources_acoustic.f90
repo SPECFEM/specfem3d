@@ -38,7 +38,8 @@
   use constants
   use specfem_par, only: xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver, &
                         station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
-                        nsources_local,tshift_src,DT,t0,SU_FORMAT,USE_LDDRK,istage,EXTERNAL_STF,user_source_time_function
+                        nsources_local,tshift_src,DT,t0,SU_FORMAT,USE_LDDRK,istage, &
+                        USE_EXTERNAL_SOURCE_FILE,user_source_time_function
 
   implicit none
 
@@ -114,7 +115,7 @@
           stf = get_stf_acoustic(time_source_dble,isource)
 
           !! VM VM add external source time function
-          if (EXTERNAL_STF) then
+          if (USE_EXTERNAL_SOURCE_FILE) then
             stf = user_source_time_function(it, isource)
           endif
 
@@ -306,7 +307,7 @@
                                   b_potential_dot_dot_acoustic)
 
   use constants
-  use specfem_par, only: nsources_local,tshift_src,DT,t0,USE_LDDRK,istage,EXTERNAL_STF,user_source_time_function
+  use specfem_par, only: nsources_local,tshift_src,DT,t0,USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function
 
   implicit none
 
@@ -391,7 +392,7 @@
           stf = get_stf_acoustic(time_source_dble,isource)
 
           !! VM VM add external source time function
-          if (EXTERNAL_STF) then
+          if (USE_EXTERNAL_SOURCE_FILE) then
             ! time-reversed
             stf = user_source_time_function(NSTEP-it+1, isource)
           endif
@@ -434,7 +435,8 @@
   use constants
   use specfem_par, only: xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver, &
                         station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
-                        nsources_local,tshift_src,DT,t0,SU_FORMAT,USE_LDDRK,istage,EXTERNAL_STF,user_source_time_function
+                        nsources_local,tshift_src,DT,t0,SU_FORMAT,USE_LDDRK,istage, &
+                        USE_EXTERNAL_SOURCE_FILE,user_source_time_function
 
   implicit none
 
@@ -498,7 +500,7 @@
         stf = get_stf_acoustic(time_source_dble,isource)
 
         !! VM VM add external source time function
-        if (EXTERNAL_STF) then
+        if (USE_EXTERNAL_SOURCE_FILE) then
            stf = user_source_time_function(it, isource)
         endif
 
@@ -659,7 +661,7 @@
         stf = get_stf_acoustic(time_source_dble,isource)
 
         !! VM VM add external source time function
-        if (EXTERNAL_STF) then
+        if (USE_EXTERNAL_SOURCE_FILE) then
            stf = user_source_time_function(NSTEP-it+1, isource)
         endif
 
