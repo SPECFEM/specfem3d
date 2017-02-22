@@ -16,7 +16,7 @@
  *      Istanbul Technical University, Faculty of Mines
  *      Department of Geophysics, Maslak, Istanbul-TURKEY
  *
- *      New address in 2017: onur.tan AT mam.gov.tr
+ *      New address (in 2017):  onur.tan AT mam.gov.tr    https://en.wikipedia.org/wiki/T%C3%9CB%C4%B0TAK_Marmara_Research_Center
  *
  *--------------------------------------------------------------------------*/
 

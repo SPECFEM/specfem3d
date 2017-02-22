@@ -15,9 +15,9 @@
  *      Contact info:   Onur TAN,
  *      Istanbul Technical University, Faculty of Mines
  *      Department of Geophysics, Maslak, Istanbul-TURKEY
- *      www.geop.itu.edu.tr/~onur
- *                    tano@itu.edu.tr
- *      now (in 2015) at onur.tan@mam.gov.tr https://en.wikipedia.org/wiki/T%C3%9CB%C4%B0TAK_Marmara_Research_Center
+ *
+ *      New address (in 2017):  onur.tan AT mam.gov.tr    https://en.wikipedia.org/wiki/T%C3%9CB%C4%B0TAK_Marmara_Research_Center
+ *
  *--------------------------------------------------------------------------*/
 
 /*  dc2mt.c  : Calculates moment tensor elements from strike/dip/rake
@@ -36,6 +36,7 @@
 // https://github.com/g2e/seizmo/blob/master/cmt/mt2sdr.m
 // Note from Dimitri: I have downloaded them and put them in file seizmo_master_containing_Matlab_codes_for_mt2dc_conversion.zip in this directory.
 // Note from Elliott Sales de Andrade: ObsPy https://github.com/obspy also provides conversion for moment tensors from/to several different bases and strike/dip/rake.
+// Note from Dimitri: we also have a Matlab code from Carl Tape that does that now, in this directory.
 
 #include <stdio.h>
 #include <string.h>
