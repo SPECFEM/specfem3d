@@ -478,28 +478,6 @@
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
 
-    if (NGNOD == 27) then
-       i9 = ibool(9,ispec)
-      i10 = ibool(10,ispec)
-      i11 = ibool(11,ispec)
-      i12 = ibool(12,ispec)
-      i13 = ibool(13,ispec)
-      i14 = ibool(14,ispec)
-      i15 = ibool(15,ispec)
-      i16 = ibool(16,ispec)
-      i17 = ibool(17,ispec)
-      i18 = ibool(18,ispec)
-      i19 = ibool(19,ispec)
-      i20 = ibool(20,ispec)
-      i21 = ibool(21,ispec)
-      i22 = ibool(22,ispec)
-      i23 = ibool(23,ispec)
-      i24 = ibool(24,ispec)
-      i25 = ibool(25,ispec)
-      i26 = ibool(26,ispec)
-      i27 = ibool(27,ispec)
-    endif
-
     if (is_X_CPML(ispec)) then
 
       already_found_a_face = .false.
@@ -683,28 +661,6 @@
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
 
-    if (NGNOD == 27) then
-       i9 = ibool(9,ispec)
-      i10 = ibool(10,ispec)
-      i11 = ibool(11,ispec)
-      i12 = ibool(12,ispec)
-      i13 = ibool(13,ispec)
-      i14 = ibool(14,ispec)
-      i15 = ibool(15,ispec)
-      i16 = ibool(16,ispec)
-      i17 = ibool(17,ispec)
-      i18 = ibool(18,ispec)
-      i19 = ibool(19,ispec)
-      i20 = ibool(20,ispec)
-      i21 = ibool(21,ispec)
-      i22 = ibool(22,ispec)
-      i23 = ibool(23,ispec)
-      i24 = ibool(24,ispec)
-      i25 = ibool(25,ispec)
-      i26 = ibool(26,ispec)
-      i27 = ibool(27,ispec)
-    endif
-
     if (is_X_CPML(ispec)) then
 
       already_found_a_face = .false.
@@ -886,28 +842,6 @@
     i6 = ibool(6,ispec)
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
-
-    if (NGNOD == 27) then
-       i9 = ibool(9,ispec)
-      i10 = ibool(10,ispec)
-      i11 = ibool(11,ispec)
-      i12 = ibool(12,ispec)
-      i13 = ibool(13,ispec)
-      i14 = ibool(14,ispec)
-      i15 = ibool(15,ispec)
-      i16 = ibool(16,ispec)
-      i17 = ibool(17,ispec)
-      i18 = ibool(18,ispec)
-      i19 = ibool(19,ispec)
-      i20 = ibool(20,ispec)
-      i21 = ibool(21,ispec)
-      i22 = ibool(22,ispec)
-      i23 = ibool(23,ispec)
-      i24 = ibool(24,ispec)
-      i25 = ibool(25,ispec)
-      i26 = ibool(26,ispec)
-      i27 = ibool(27,ispec)
-    endif
 
     if (is_Y_CPML(ispec)) then
 
@@ -1091,28 +1025,6 @@
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
 
-    if (NGNOD == 27) then
-       i9 = ibool(9,ispec)
-      i10 = ibool(10,ispec)
-      i11 = ibool(11,ispec)
-      i12 = ibool(12,ispec)
-      i13 = ibool(13,ispec)
-      i14 = ibool(14,ispec)
-      i15 = ibool(15,ispec)
-      i16 = ibool(16,ispec)
-      i17 = ibool(17,ispec)
-      i18 = ibool(18,ispec)
-      i19 = ibool(19,ispec)
-      i20 = ibool(20,ispec)
-      i21 = ibool(21,ispec)
-      i22 = ibool(22,ispec)
-      i23 = ibool(23,ispec)
-      i24 = ibool(24,ispec)
-      i25 = ibool(25,ispec)
-      i26 = ibool(26,ispec)
-      i27 = ibool(27,ispec)
-    endif
-
     if (is_Y_CPML(ispec)) then
 
       already_found_a_face = .false.
@@ -1295,28 +1207,6 @@
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
 
-    if (NGNOD == 27) then
-       i9 = ibool(9,ispec)
-      i10 = ibool(10,ispec)
-      i11 = ibool(11,ispec)
-      i12 = ibool(12,ispec)
-      i13 = ibool(13,ispec)
-      i14 = ibool(14,ispec)
-      i15 = ibool(15,ispec)
-      i16 = ibool(16,ispec)
-      i17 = ibool(17,ispec)
-      i18 = ibool(18,ispec)
-      i19 = ibool(19,ispec)
-      i20 = ibool(20,ispec)
-      i21 = ibool(21,ispec)
-      i22 = ibool(22,ispec)
-      i23 = ibool(23,ispec)
-      i24 = ibool(24,ispec)
-      i25 = ibool(25,ispec)
-      i26 = ibool(26,ispec)
-      i27 = ibool(27,ispec)
-    endif
-
     if (is_Z_CPML(ispec)) then
 
       already_found_a_face = .false.
@@ -1498,28 +1388,6 @@
     i6 = ibool(6,ispec)
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
-
-    if (NGNOD == 27) then
-       i9 = ibool(9,ispec)
-      i10 = ibool(10,ispec)
-      i11 = ibool(11,ispec)
-      i12 = ibool(12,ispec)
-      i13 = ibool(13,ispec)
-      i14 = ibool(14,ispec)
-      i15 = ibool(15,ispec)
-      i16 = ibool(16,ispec)
-      i17 = ibool(17,ispec)
-      i18 = ibool(18,ispec)
-      i19 = ibool(19,ispec)
-      i20 = ibool(20,ispec)
-      i21 = ibool(21,ispec)
-      i22 = ibool(22,ispec)
-      i23 = ibool(23,ispec)
-      i24 = ibool(24,ispec)
-      i25 = ibool(25,ispec)
-      i26 = ibool(26,ispec)
-      i27 = ibool(27,ispec)
-    endif
 
     if (is_Z_CPML(ispec)) then
 
