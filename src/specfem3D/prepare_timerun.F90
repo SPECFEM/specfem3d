@@ -831,10 +831,8 @@
   integer :: ispec,ispec_CPML,NSPEC_CPML_GLOBAL
 
   ! safety stops
-  if (SIMULATION_TYPE /= 1) &
-    stop 'Error C-PML for adjoint simulations not supported yet'
-  if (GPU_MODE) &
-    stop 'Error C-PML only supported in CPU mode for now'
+  if (SIMULATION_TYPE /= 1) stop 'Error C-PML for adjoint simulations not supported yet'
+  if (GPU_MODE) stop 'Error C-PML only supported in CPU mode for now'
 
   ! total number of PML elements
   call sum_all_i(NSPEC_CPML,NSPEC_CPML_GLOBAL)
@@ -854,9 +852,10 @@
   endif
   call synchronize_all()
 
-  ! checks that 8-node mesh elements are used (27-node elements are not supported)
-  if (NGNOD /= NGNOD_EIGHT_CORNERS) &
-    stop 'error: the C-PML code works for 8-node bricks only; should be made more general'
+!! DK DK Feb 2017: I do not think there is any particular reason for that any more, thus commenting it out
+! ! checks that 8-node mesh elements are used (27-node elements are not supported)
+! if (NGNOD /= NGNOD_EIGHT_CORNERS) &
+!   stop 'error: the C-PML code works for 8-node bricks only; should be made more general'
 
   ! allocates and initializes C-PML arrays
   call pml_allocate_arrays()
