@@ -74,8 +74,12 @@
   ! local attenuation parameters
   real(kind=CUSTOM_REAL) :: R_xx_val,R_yy_val
 
+! that trick (USE_TRICK_FOR_BETTER_PRESSURE) is not implemented for the calculation
+! of displacement, velocity nor acceleration vectors in acoustic elements yet;
+! to do so we would need to recompute them using the second integral in time of the
+! current formulas in that case. And to compute kinetic energy, we need the velocity vector...
   if (USE_TRICK_FOR_BETTER_PRESSURE) &
-    call exit_mpi(myrank,'USE_TRICK_FOR_BETTER_PRESSURE not implemented for OUTPUT_ENERGY yet, please turn one of them off')
+    call exit_mpi(myrank,'USE_TRICK_FOR_BETTER_PRESSURE not implemented for OUTPUT_ENERGY, please turn one of them off')
 
   kinetic_energy = 0.d0
   potential_energy = 0.d0
