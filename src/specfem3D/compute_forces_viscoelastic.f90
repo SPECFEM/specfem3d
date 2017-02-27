@@ -796,7 +796,7 @@ subroutine compute_forces_viscoelastic(iphase, &
 
     ! save deviatoric strain for Runge-Kutta scheme
     if (COMPUTE_AND_STORE_STRAIN) then
-      epsilondev_trace(:,:,:,ispec) = epsilondev_trace_loc(:,:,:)
+      if (ATTENUATION) epsilondev_trace(:,:,:,ispec) = epsilondev_trace_loc(:,:,:)
       epsilondev_xx(:,:,:,ispec) = epsilondev_xx_loc(:,:,:)
       epsilondev_yy(:,:,:,ispec) = epsilondev_yy_loc(:,:,:)
       epsilondev_xy(:,:,:,ispec) = epsilondev_xy_loc(:,:,:)
