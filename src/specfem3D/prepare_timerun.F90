@@ -822,7 +822,7 @@
   subroutine prepare_timerun_pml()
 
   use pml_par
-  use specfem_par, only: NGNOD,myrank,SIMULATION_TYPE,GPU_MODE
+  use specfem_par, only: myrank,SIMULATION_TYPE,GPU_MODE
   use constants, only: IMAIN,NGNOD_EIGHT_CORNERS
 
   implicit none
