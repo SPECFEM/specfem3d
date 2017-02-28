@@ -41,9 +41,6 @@
   character(len=*), parameter :: nodes_coords_file = 'MESH/nodes_coords_file'
   character(len=*), parameter :: mesh_file = 'MESH/mesh_file'
 
-  double precision, parameter :: delta_t = 1.d0          ! fictitious value used for compatibility with the subroutine call only
-  double precision, parameter :: VP_MAX  = 1.d0          ! fictitious value used for compatibility with the subroutine call only
-
 !------------------------------------------------------------------------------------------------
 
   integer :: NGLOB                    ! number of nodes
@@ -67,9 +64,6 @@
   double precision :: distance_min,distance_max,distance_mean
   double precision :: distmin,distmax,distmean,min_of_distmean,max_of_distmean
 
-! for stability
-  double precision :: stability
-
 ! for histogram
   integer, parameter :: NCLASS = 40
   integer, dimension(0:NCLASS-1) :: classes_of_histogram_skewness,classes_of_histogram_meansize
@@ -81,9 +75,17 @@
   logical :: DISPLAY_HISTOGRAM_DISTMEAN
 
 ! Gauss-Lobatto-Legendre points of integration, to check for negative Jacobians
-  double precision xigll(NGLLX)
-  double precision yigll(NGLLY)
-  double precision zigll(NGLLZ)
+! we are lazy here and hardwire a fixed value of NGLL = 5 even if someone changes NGLL in setup/constants.h.in
+! in order to be able to hardwire the position of the GLL points for NGLL = 5 below in this routine
+! instead of having to link with a bunch of libraries to compute them; this works fine because
+! we will only use the element corners in this program, i.e. the GLL points that are always -1 and +1,
+! not the others, and thus we do not care. However that is a bit ugly and we should probably
+! update the Makefile one day to just link with the GLL libraries of SPECFEM...
+! this would not change the behavior of this program though...
+  integer, parameter :: local_NGLLX_always_5 = 5,local_NGLLY_always_5 = 5,local_NGLLZ_always_5 = 5
+  double precision xigll(local_NGLLX_always_5)
+  double precision yigll(local_NGLLY_always_5)
+  double precision zigll(local_NGLLZ_always_5)
 
 ! 3D shape function derivatives, to check for negative Jacobians
   double precision, dimension(:,:,:,:,:), allocatable :: dershape3D
@@ -162,10 +164,11 @@
   yigll(:) = xigll(:)
   zigll(:) = xigll(:)
 
-  allocate(dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ))
+  allocate(dershape3D(NDIM,NGNOD,local_NGLLX_always_5,local_NGLLY_always_5,local_NGLLZ_always_5))
 
 ! compute the derivatives of the 3D shape functions for a 8-node or 27-node element
-  call local_version_of_get_shape3D(dershape3D,xigll,yigll,zigll,NGNOD)
+  call local_version_of_get_shape3D(dershape3D,xigll,yigll,zigll,NGNOD, &
+                                 local_NGLLX_always_5,local_NGLLY_always_5,local_NGLLZ_always_5)
 
   allocate(xelm(NGNOD))
   allocate(yelm(NGNOD))
@@ -266,7 +269,8 @@
         zelm(ia) = z(ibool(ia,ispec))
       enddo
 
-      call calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian,NDIM,NGNOD,NGLLX,NGLLY,NGLLZ,jacobian)
+      call local_version_of_calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian,NDIM,NGNOD, &
+                  local_NGLLX_always_5,local_NGLLY_always_5,local_NGLLZ_always_5,jacobian)
       if (found_a_negative_jacobian) then
         print *,'detected an element with negative Jacobian in the input mesh: element ',ispec, &
                      ' in which the Jacobian is ',jacobian
@@ -304,8 +308,8 @@
 
     if (mod(ispec,100000) == 0) print *,'processed ',ispec,' elements out of ',NSPEC
 
-    call local_version_of_create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB,VP_MAX,delta_t, &
-               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
+    call local_version_of_create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB, &
+               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,distmin,distmax,distmean)
 
 ! store element number in which the edge of minimum or maximum length is located
     if (distmin < distance_min) ispec_min_edge_length = ispec
@@ -398,8 +402,8 @@
 
 ! loop on all the elements
   do ispec = 1,NSPEC
-    call local_version_of_create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB,VP_MAX,delta_t, &
-               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
+    call local_version_of_create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB, &
+               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,distmin,distmax,distmean)
 
 ! store skewness in histogram
     iclass = int(equiangle_skewness * dble(NCLASS))
@@ -536,8 +540,8 @@
 ! loop on all the elements
   do ispec = 1,NSPEC
 
-    call local_version_of_create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB,VP_MAX,delta_t, &
-               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
+    call local_version_of_create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB, &
+               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,distmin,distmax,distmean)
 
     if (iformat == 1) then
       value_to_use = equiangle_skewness
@@ -582,8 +586,8 @@
 
   do ispec = ispec_begin,ispec_end
 
-    call local_version_of_create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB,VP_MAX,delta_t, &
-               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
+    call local_version_of_create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB, &
+               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,distmin,distmax,distmean)
 
     if (iformat == 1) then
       value_to_use = equiangle_skewness
@@ -616,8 +620,8 @@
 ! loop on all the elements
   do ispec = ispec_begin,ispec_end
 
-    call local_version_of_create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB,VP_MAX,delta_t, &
-               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
+    call local_version_of_create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB, &
+               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,distmin,distmax,distmean)
 
     if (iformat == 1) then
       value_to_use = equiangle_skewness
@@ -655,8 +659,8 @@
 
 ! create mesh quality data for a given 3D spectral element
 
-  subroutine local_version_of_create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB,VP_MAX,delta_t, &
-               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,stability,distmin,distmax,distmean)
+  subroutine local_version_of_create_mesh_quality_data_3D(x,y,z,ibool,ispec,NGNOD,NSPEC,NGLOB, &
+               equiangle_skewness,edge_aspect_ratio,diagonal_aspect_ratio,distmin,distmax,distmean)
 
   use constants
 
@@ -679,13 +683,6 @@
 
   integer :: count_contributions
 
-! for stability
-  double precision :: stability,VP_MAX,delta_t
-
-! maximum polynomial degree for which we can compute the stability condition
-  integer, parameter :: NGLL_MAX_STABILITY = 15
-  double precision, dimension(NGLL_MAX_STABILITY) :: percent_GLL
-
 ! topology of faces of cube for skewness
   integer faces_topo(6,6)
 
@@ -695,30 +692,6 @@
     yelm(i) = y(ibool(i,ispec))
     zelm(i) = z(ibool(i,ispec))
   enddo
-
-! define percentage of smallest distance between GLL points for NGLL points
-! percentages were computed by calling the GLL points routine for each degree
-  percent_GLL(1) = 100.d0
-  percent_GLL(2) = 100.d0
-  percent_GLL(3) = 50.d0
-  percent_GLL(4) = 27.639320225002102d0
-  percent_GLL(5) = 17.267316464601141d0
-  percent_GLL(6) = 11.747233803526763d0
-  percent_GLL(7) = 8.4888051860716516d0
-  percent_GLL(8) = 6.4129925745196719d0
-  percent_GLL(9) = 5.0121002294269914d0
-  percent_GLL(10) = 4.0233045916770571d0
-  percent_GLL(11) = 3.2999284795970416d0
-  percent_GLL(12) = 2.7550363888558858d0
-  percent_GLL(13) = 2.3345076678918053d0
-  percent_GLL(14) = 2.0032477366369594d0
-  percent_GLL(15) = 1.7377036748080721d0
-
-! convert to real percentage
-  percent_GLL(:) = percent_GLL(:) / 100.d0
-
-! check that the degree is not above the threshold for list of percentages
-  if (NGLLX > NGLL_MAX_STABILITY) stop 'degree too high to compute stability value'
 
 ! define topology of faces of cube for skewness
 
@@ -824,8 +797,6 @@
 ! compute edge aspect ratio
    edge_aspect_ratio = distmax / distmin
 
-   stability = delta_t * VP_MAX / (distmin * percent_GLL(NGLLX))
-
 ! compute diagonal aspect ratio
    dist1 = sqrt((xelm(1) - xelm(7))**2 + (yelm(1) - yelm(7))**2 + (zelm(1) - zelm(7))**2)
    dist2 = sqrt((xelm(2) - xelm(8))**2 + (yelm(2) - yelm(8))**2 + (zelm(2) - zelm(8))**2)
@@ -841,7 +812,8 @@
 
 ! 3D shape functions for 8-node or 27-node element
 
-  subroutine local_version_of_get_shape3D(dershape3D,xigll,yigll,zigll,NGNOD)
+  subroutine local_version_of_get_shape3D(dershape3D,xigll,yigll,zigll,NGNOD, &
+                                 local_NGLLX_always_5,local_NGLLY_always_5,local_NGLLZ_always_5)
 
   use constants
 
@@ -849,13 +821,15 @@
 
   integer NGNOD
 
+  integer :: local_NGLLX_always_5,local_NGLLY_always_5,local_NGLLZ_always_5
+
 ! Gauss-Lobatto-Legendre points of integration
-  double precision xigll(NGLLX)
-  double precision yigll(NGLLY)
-  double precision zigll(NGLLZ)
+  double precision xigll(local_NGLLX_always_5)
+  double precision yigll(local_NGLLY_always_5)
+  double precision zigll(local_NGLLZ_always_5)
 
 ! 3D shape function derivatives
-  double precision dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
+  double precision dershape3D(NDIM,NGNOD,local_NGLLX_always_5,local_NGLLY_always_5,local_NGLLZ_always_5)
 
   integer i,j,k,ia
 
@@ -875,9 +849,9 @@
 ! *** create 3D shape functions and jacobian
 ! ***
 
-  do i=1,NGLLX
-    do j=1,NGLLY
-      do k=1,NGLLZ
+  do i=1,local_NGLLX_always_5
+    do j=1,local_NGLLY_always_5
+      do k=1,local_NGLLZ_always_5
 
         xi = xigll(i)
         eta = yigll(j)
@@ -926,7 +900,8 @@
 
           ! note: put further initialization for NGNOD == 27 into subroutine
           !       to avoid compilation errors in case NGNOD == 8
-          call local_version_of_get_shape3D_27(NGNOD,dershape3D,xi,eta,gamma,i,j,k)
+          call local_version_of_get_shape3D_27(NGNOD,dershape3D,xi,eta,gamma,i,j,k, &
+                                 local_NGLLX_always_5,local_NGLLY_always_5,local_NGLLZ_always_5)
 
         endif
 
@@ -936,9 +911,9 @@
 
 !--- check the shape functions and their derivatives
 
-  do i=1,NGLLX
-    do j=1,NGLLY
-      do k=1,NGLLZ
+  do i=1,local_NGLLX_always_5
+    do j=1,local_NGLLY_always_5
+      do k=1,local_NGLLZ_always_5
 
         sumdershapexi = ZERO
         sumdershapeeta = ZERO
@@ -968,7 +943,8 @@
 
 !--- case of a 3D 27-node element
 
-  subroutine local_version_of_get_shape3D_27(NGNOD,dershape3D,xi,eta,gamma,i,j,k)
+  subroutine local_version_of_get_shape3D_27(NGNOD,dershape3D,xi,eta,gamma,i,j,k, &
+                                 local_NGLLX_always_5,local_NGLLY_always_5,local_NGLLZ_always_5)
 
   use constants
 
@@ -976,8 +952,10 @@
 
   integer :: NGNOD,i,j,k
 
+  integer :: local_NGLLX_always_5,local_NGLLY_always_5,local_NGLLZ_always_5
+
 ! 3D shape function derivatives
-  double precision dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
+  double precision dershape3D(NDIM,NGNOD,local_NGLLX_always_5,local_NGLLY_always_5,local_NGLLZ_always_5)
 
 ! location of the nodes of the 3D hexahedra elements
   double precision xi,eta,gamma
@@ -1113,16 +1091,17 @@
 !=====================================================================
 !
 
-  subroutine calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian,NDIM,NGNOD,NGLLX,NGLLY,NGLLZ,jacobian)
+  subroutine local_version_of_calc_jacobian(xelm,yelm,zelm,dershape3D,found_a_negative_jacobian, &
+                                  NDIM,NGNOD,local_NGLLX_always_5,local_NGLLY_always_5,local_NGLLZ_always_5,jacobian)
 
   implicit none
 
-  integer :: NDIM,NGNOD,NGLLX,NGLLY,NGLLZ
+  integer :: NDIM,NGNOD,local_NGLLX_always_5,local_NGLLY_always_5,local_NGLLZ_always_5
 
   logical :: found_a_negative_jacobian
 
   double precision, dimension(NGNOD) :: xelm,yelm,zelm
-  double precision dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ)
+  double precision dershape3D(NDIM,NGNOD,local_NGLLX_always_5,local_NGLLY_always_5,local_NGLLZ_always_5)
 
   integer :: i,j,k,ia
   double precision :: xxi,xeta,xgamma,yxi,yeta,ygamma,zxi,zeta,zgamma
@@ -1132,14 +1111,14 @@
 
   found_a_negative_jacobian = .false.
 
-! do k=1,NGLLZ
-!   do j=1,NGLLY
-!     do i=1,NGLLX
+! do k=1,local_NGLLZ_always_5
+!   do j=1,local_NGLLY_always_5
+!     do i=1,local_NGLLX_always_5
 ! for this CPML mesh extrusion routine it is sufficient to test the 8 corners of each element to reduce the cost
 ! because we just want to detect if the element is flipped or not, and if so flip it back
-  do k=1,NGLLZ,NGLLZ-1
-    do j=1,NGLLY,NGLLY-1
-      do i=1,NGLLX,NGLLX-1
+  do k=1,local_NGLLZ_always_5,local_NGLLZ_always_5-1
+    do j=1,local_NGLLY_always_5,local_NGLLY_always_5-1
+      do i=1,local_NGLLX_always_5,local_NGLLX_always_5-1
 
       xxi = ZERO
       xeta = ZERO
@@ -1177,5 +1156,5 @@
     enddo
   enddo
 
-  end subroutine calc_jacobian
+  end subroutine local_version_of_calc_jacobian
 
