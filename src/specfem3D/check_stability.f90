@@ -98,6 +98,7 @@
     !  call exit_MPI(myrank,'single forward simulation became unstable and blew up')
 
     ! checks first entry for Not-a-Number (NaN) value
+! this trick checks for NaN (Not a Number), which is not even equal to itself
     if (displ(1,1) /= displ(1,1)) then
       call exit_MPI(myrank,'forward simulation became unstable in elastic domain and blew up')
     endif
@@ -404,19 +405,25 @@
     ! check stability of the code, exit if unstable
     ! negative values can occur with some compilers when the unstable value is greater
     ! than the greatest possible floating-point number of the machine
-    if (Usolidnorm_all > STABILITY_THRESHOLD .or. Usolidnorm_all < 0.0_CUSTOM_REAL &
-     .or. Usolidnormp_all > STABILITY_THRESHOLD .or. Usolidnormp_all < 0.0_CUSTOM_REAL &
-     .or. Usolidnorms_all > STABILITY_THRESHOLD .or. Usolidnorms_all < 0.0_CUSTOM_REAL &
-     .or. Usolidnormw_all > STABILITY_THRESHOLD .or. Usolidnormw_all < 0.0_CUSTOM_REAL) &
+! this trick checks for NaN (Not a Number), which is not even equal to itself
+    if (Usolidnorm_all > STABILITY_THRESHOLD .or. Usolidnorm_all < 0.0_CUSTOM_REAL .or. Usolidnorm_all /= Usolidnorm_all &
+     .or. Usolidnormp_all > STABILITY_THRESHOLD .or. Usolidnormp_all < 0.0_CUSTOM_REAL .or. Usolidnormp_all /= Usolidnormp_all &
+     .or. Usolidnorms_all > STABILITY_THRESHOLD .or. Usolidnorms_all < 0.0_CUSTOM_REAL .or. Usolidnorms_all /= Usolidnorms_all &
+     .or. Usolidnormw_all > STABILITY_THRESHOLD .or. Usolidnormw_all < 0.0_CUSTOM_REAL .or. Usolidnormw_all /= Usolidnormw_all) &
         call exit_MPI(myrank,'forward simulation became unstable and blew up')
 
     ! adjoint simulations
     if (SIMULATION_TYPE == 3) then
+! this trick checks for NaN (Not a Number), which is not even equal to itself
       if (b_Usolidnorm_all > STABILITY_THRESHOLD .or. b_Usolidnorm_all < 0.0_CUSTOM_REAL &
+        .or. b_Usolidnorm_all /= b_Usolidnorm_all &
         .or. b_Usolidnormp_all > STABILITY_THRESHOLD .or. b_Usolidnormp_all < 0.0_CUSTOM_REAL &
+        .or. b_Usolidnormp_all /= b_Usolidnormp_all &
         .or. b_Usolidnorms_all > STABILITY_THRESHOLD .or. b_Usolidnorms_all < 0.0_CUSTOM_REAL &
-        .or. b_Usolidnormw_all > STABILITY_THRESHOLD .or. b_Usolidnormw_all < 0.0_CUSTOM_REAL) &
-        call exit_MPI(myrank,'backward simulation became unstable and blew up')
+        .or. b_Usolidnorms_all /= b_Usolidnorms_all &
+        .or. b_Usolidnormw_all > STABILITY_THRESHOLD .or. b_Usolidnormw_all < 0.0_CUSTOM_REAL &
+        .or. b_Usolidnormw_all /= b_Usolidnormw_all) &
+          call exit_MPI(myrank,'backward simulation became unstable and blew up')
     endif
 
   endif ! myrank
