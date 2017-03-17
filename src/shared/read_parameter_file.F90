@@ -302,6 +302,18 @@
     call read_value_logical(ADIOS_FOR_KERNELS, 'ADIOS_FOR_KERNELS', ier)
     if (ier /= 0) stop 'Error reading Par_file parameter ADIOS_FOR_KERNELS'
 
+  ! ADIOS is very useful for very large simulations (say using 2000 MPI tasks or more)
+  ! but slows down the code if used for simulations that are small or medium size, because of the overhead any library has.
+  if (ADIOS_ENABLED .and. NPROC < 2000) then
+    print *
+    print *,'**************'
+    print *,'**************'
+    print *,'ADIOS significantly slows down small or medium-size runs, which is the case here, please consider turning it off'
+    print *,'**************'
+    print *,'**************'
+    print *
+  endif
+
     call read_value_logical(USE_EXTERNAL_SOURCE_FILE, 'USE_EXTERNAL_SOURCE_FILE', ier)
     if (ier /= 0) stop 'Error reading Par_file parameter USE_EXTERNAL_SOURCE_FILE'
 
