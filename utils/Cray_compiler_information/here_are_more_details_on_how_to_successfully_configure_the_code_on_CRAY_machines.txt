@@ -1,0 +1,219 @@
+
+Subject: Re: [CIG-SEISMO] Cray XC30 installation
+From: Luis Cebamanos
+Date: 03/18/2017 01:21 PM
+To: Dimitri Komatitsch
+CC: Daniel Peter
+
+Hi Dimitri, Daniel,
+
+Thank you very much for your help. Exporting MPI_INC=${CRAY_MPICH2_DIR}/include and FCLIBS=" " solves the configuration problem.
+
+Cheers,
+
+Luis
+
+On 18/03/2017 11:10, Dimitri Komatitsch wrote:
+>
+> Hi Luis,
+>
+> Thanks! It is apparently a classical problem when using the Cray Fortran compiler, not specific to SPECFEM. I found this page https://github.com/mpip/pfft/issues/11 in which people developing a different package (PFFT) seem to be having the same problem.
+>
+> On Piz Daint in Switzerland, which is also a Cray, we fixed that by using the script below, it should work in your case as well. But on another Cray (Titan at Oak Ridge) we do not need that for some reason.
+>
+> Best regards,
+> Dimitri.
+>
+> ================================
+>
+> the following modules are loaded in my case:
+>
+> Currently Loaded Modulefiles:
+>   1) modules/3.2.10.5                       10) dmapp/7.1.0-16.18                19) cray-mpich/7.5.0
+>   2) eswrap/2.0.11-2.2                      11) gni-headers/5.0.7-4.11                20) slurm/16.05.8-1
+>   3) cce/8.5.5                              12) xpmem/2.0.3_geb8008a-2.11              21) ddt/7.0
+>   4) craype-network-aries                   13) job/2.0.2_g98a4850-2.43                22) craype-haswell
+>   5) craype/2.5.8                           14) dvs/2.5_2.0.70_g1ddb68c-2.144          23) cudatoolkit/8.0.54_2.2.8_ga620558-2.1
+>   6) cray-libsci/16.11.1                    15) alps/6.2.5-20.1                24) xalt/daint-2016.11
+>   7) udreg/2.3.2-4.14                       16) rca/2.0.10_g66b76b7-2.51               25) daint-gpu
+>   8) ugni/6.0.13-2.8                        17) atp/2.0.4
+>   9) pmi/5.0.10-1.0000.11050.0.0.ari        18) PrgEnv-cray/6.0.3
+>
+>
+> that is in .bashrc file, i have:
+>
+> module load PrgEnv-cray
+> module load cudatoolkit
+> module load daint-gpu
+>
+>
+> the configuration uses:
+> ..
+>
+> mpif90=ftn
+> mpicc=cc
+> f90=ftn
+> cc=cc
+>
+> # run flags
+> #flags="-eF -em -rm"
+> #cflags="-h list=m"
+>
+> ## memory > 2GB
+> #flags="-eF -em -rm -O3,fp3 -hpic -dynamic"
+> #cflags="-h list=m -hpic -dynamic"
+>
+> # debug flags
+> flags="-g -Rb -eF -rm -eC -eD" # -hfp2"
+> cflags="-g -h list=m"
+>
+> ###
+> ### CUDA
+> ###
+> CUDA_INC="${CRAY_CUDATOOLKIT_DIR}/include"
+> CUDA_LIB="${CRAY_CUDATOOLKIT_DIR}/lib64"
+>
+> ###
+> ### mpi.h / mpif.h
+> ###
+> MPI_INC="${CRAY_MPICH2_DIR}/include"
+>
+> ./configure \
+> --with-cuda=cuda5 CUDA_INC="$CUDA_INC" CUDA_LIB="$CUDA_LIB" MPI_INC="$MPI_INC" \
+> MPIFC=$mpif90 MPICC=$mpicc FC=$f90 CC=$cc CXX=$cc FLAGS_CHECK="$flags" CFLAGS="$cflags"
+>
+> works, but you probably want to use then cuda8 with the right GPU gencode format (sm_60,compute_60).
+>
+>
+> best wishes,
+> daniel
+>
+>
+> > > On Jan 31, 2017, at 6:50 PM, Dimitri Komatitsch wrote:
+> > >
+> > >
+> > > Hi Daniel,
+> > >
+> > >  on Piz Daint the current "configure" script does not work, we type:
+> > >
+> > > module load daint-gpu
+> > >
+> > > and then:
+> > >
+> > > ./configure FC=ftn MPIFC=ftn CC=cc CXX=CC
+> > >
+> > > as indicated at http://user.cscs.ch/compiling_and_optimizing/compiling_your_code/index.html
+> > >
+> > > but the script does not work, we get
+> > >
+> > > configure: error: linking to Fortran libraries from C fails
+> > > See `config.log' for more details
+> > >
+> > > and the error is apparently coming from 32-bit compilation or linking, since in `config.log' it complains about the size of a memory segment:
+> > >
+> > >
+> > > configure:4308: checking for dummy main to link with Fortran libraries
+> > > configure:4342: cc -o conftest -g -O2   conftest.c -L/opt/cray/pe/cce/8.5.5/CC/x86-64/lib/x86-64 -L/opt/gcc/4.8.1/snos/lib64 -L/usr/lib64 -L/lib64 /opt/cray/pe/cce/8.5.5/craylibs/x86-64/libmodules.a /opt/cray/pe/cce/8.5.5/craylibs/x86-64/libomp.a /opt/cray/pe/cce/8.5.5/craylibs/x86-64/libopenacc.a -L/opt/cray/dmapp/default/lib64 -L/opt/cray/pe/mpt/7.5.0/gni/mpich-cray/8.4/lib -L/opt/cray/pe/libsci/16.11.1/CRAY/8.3/x86_64/lib -L/opt/cray/rca/2.0.10_g66b76b7-2.51/lib64 -L/opt/cray/alps/6.2.5-20.1/lib64 -L/opt/cray/xpmem/2.0.3_geb8008a-2.11/lib64 -L/opt/cray/dmapp/7.1.0-16.18/lib64 -L/opt/cray/pe/pmi/5.0.10-1.0000.11050.0.0.ari/lib64 -L/opt/cray/ugni/6.0.13-2.8/lib64 -L/opt/cray/udreg/2.3.2-4.14/lib64 -L/opt/cray/pe/atp/2.0.4/libApp -L/opt/cray/pe/cce/8.5.5/craylibs/x86-64/pkgconfig/../ -L/opt/cray/wlm_detect/1.2.1-3.1/lib64 -lAtpSigHandler -lAtpSigHCommData -lpthread -lmpichf90_cray -lrt -lugni -lpmi -lsci_cray_mpi_mp -lm -lf -lsci_cray_mp -lmpich_cray -lcraymp -lpgas-dmapp -lfi -lu -ldmapp -ludreg -lcray-c++-rts -lcraystdc++ -lxpmem -lalpslli -lwlm_detect -lalpsutil -lrca -lquadmath -lomp -ldl -lmodules -lcraymath -lgfortran -lcsup -latomic -ltcmalloc_minimal -lstdc++ -L/opt/gcc/4.8.1/snos/lib/gcc/x86_64-suse-linux/4.8.1 -L/opt/cray/pe/cce/8.5.5/cray-binutils/x86_64-unknown-linux-gnu/lib >&5
+> > > /opt/cray/pe/cce/8.5.5/craylibs/x86-64/pkgconfig/..//libtcmalloc_minimal.a(tcmalloc.o):(.bss+0x13): multiple definition of `FLAG__namespace_do_not_use_directly_use_DECLARE_bool_instead::FLAGS_tcmalloc_abort_on_large_alloc'
+> > > /opt/cray/pe/cce/8.5.5/craylibs/x86-64/pkgconfig/..//libtcmalloc_minimal.a(tcmalloc.o):(.bss+0x13): first defined here
+> > > /opt/cray/pe/cce/8.5.5/craylibs/x86-64/pkgconfig/..//libtcmalloc_minimal.a(tcmalloc.o): In function `TCMallocImplementation::GetAllocatedSize(void*)':
+> > > tcmalloc.cc:(.text+0x1f0): multiple definition of `TCMallocImplementation::GetAllocatedSize(void*)'
+> > > /opt/cray/pe/cce/8.5.5/craylibs/x86-64/pkgconfig/..//libtcmalloc_minimal.a(tcmalloc.o):tcmalloc.cc:(.text+0x1f0): first defined here
+> > > /opt/cray/pe/cce/8.5.5/craylibs/x86-64/pkgconfig/..//libtcmalloc_minimal.a(tcmalloc.o): In function `TCMallocImplementation::MarkThreadBusy()':
+> > > tcmalloc.cc:(.text+0xb00): multiple definition of `TCMallocImplementation::MarkThreadBusy()'
+> > > /opt/cray/pe/cce/8.5.5/craylibs/x86-64/pkgconfig/..//libtcmalloc_minimal.a(tcmalloc.o):tcmalloc.cc:(.text+0xb00): first defined here
+> > >
+>
+> ================================
+>
+> #!/bin/bash
+>
+> mpif90=ftn
+> mpicc=cc
+> f90=ftn
+> cc=cc
+>
+> # run flags
+> #flags="-eF -em -rm"
+> #cflags="-h list=m"
+>
+> ## memory > 2GB
+> #flags="-eF -em -rm -O3,fp3 -hpic -dynamic"
+> #cflags="-h list=m -hpic -dynamic"
+>
+> # debug flags
+> flags="-g -Rb -eF -rm -eC -eD" # -hfp2"
+> cflags="-g -h list=m"
+>
+> ###
+> ### CUDA
+> ###
+> CUDA_INC="${CRAY_CUDATOOLKIT_DIR}/include"
+> CUDA_LIB="${CRAY_CUDATOOLKIT_DIR}/lib64"
+>
+> ###
+> ### mpi.h / mpif.h
+> ###
+> MPI_INC="${CRAY_MPICH2_DIR}/include"
+>
+> ./configure \
+> --with-cuda=cuda5 CUDA_INC="$CUDA_INC" CUDA_LIB="$CUDA_LIB" MPI_INC="$MPI_INC" \
+> MPIFC=$mpif90 MPICC=$mpicc FC=$f90 CC=$cc CXX=$cc FLAGS_CHECK="$flags" CFLAGS="$cflags"
+>
+> ===================================
+>
+>
+> On 03/18/2017 11:11 AM, Luis Cebamanos wrote:
+>> Hi Dimitri,
+>>
+>> We are getting the following errors:
+>>
+>> checking whether we are using the GNU C compiler... yes
+>> checking whether cc accepts -g... yes
+>> checking for cc option to accept ISO C89... none needed
+>> checking for dummy main to link with Fortran libraries..... unknown
+>> configure: error: in `/home/z01/z01/lcebaman/specfem2d':
+>> configure: error: linking to Fortran libraries from C fails
+>> See `config.log' for more details
+>>
+>> having a look to config.log, I can see the error when checking Fortran libraries:
+>>
+>> configure:4111: checking for dummy main to link with Fortran libraries
+>> configure:4145: cc -o conftest -g -O2   conftest.c -L/opt/cray/cce/8.4.1/CC/x8
+>> 6-64/lib/x86-64 -L/opt/gcc/4.8.1/snos/lib64 /opt/cray/cce/8.4.1/craylibs/x86-64/
+>> libmodules.a /opt/cray/cce/8.4.1/craylibs/x86-64/libomp.a /opt/cray/cce/8.4.1/cr
+>> aylibs/x86-64/libopenacc.a -L/opt/cray/dmapp/default/lib64 -L/opt/cray/mpt/7.2.6
+>> /gni/mpich-cray/8.3/lib -L/opt/cray/libsci/13.2.0/CRAY/8.3/x86_64/lib -L/opt/cra
+>> y/rca/1.0.0-2.0502.57212.2.56.ari/lib64 -L/opt/cray/alps/5.2.3-2.0502.9295.14.14
+>> .ari/lib64 -L/opt/cray/xpmem/0.1-2.0502.57015.1.15.ari/lib64 -L/opt/cray/dmapp/7
+>> .0.1-1.0502.10246.8.47.ari/lib64 -L/opt/cray/pmi/5.0.7-1.0000.10678.155.25.ari/l
+>> ib64 -L/opt/cray/ugni/6.0-1.0502.10245.9.9.ari/lib64 -L/opt/cray/udreg/2.3.2-1.0
+>> 502.9889.2.20.ari/lib64 -L/opt/cray/atp/1.8.3/libApp -L/opt/cray/cce/8.4.1/crayl
+>> ibs/x86-64 -L/opt/cray/wlm_detect/1.0-1.0502.57063.1.1.ari/lib64 -lAtpSigHandler
+>>  -lAtpSigHCommData -lpthread -lmpichf90_cray -lrt -lugni -lpmi -lsci_cray_mpi_mp
+>>  -lm -lf -lsci_cray_mp -lmpich_cray -lcraymp -lpgas-dmapp -lfi -lu -ldmapp -ludr
+>> eg -lcray-c++-rts -lcraystdc++ -lxpmem -lalpslli -lwlm_detect -lalpsutil -lrca -
+>> lquadmath -lomp -lmodules -lcraymath -lgfortran -lcsup -latomic -ltcmalloc_minim
+>> al -lstdc++ -L/opt/gcc/4.8.1/snos/lib/gcc/x86_64-suse-linux/4.8.1 -L/opt/cray/cc
+>> e/8.4.1/cray-binutils/x86_64-unknown-linux-gnu/lib -L//usr/lib64 >&5
+>> /opt/cray/cce/8.4.1/craylibs/x86-64/libtcmalloc_minimal.a(tcmalloc.o):(.bss+0x13
+>> ): multiple definition of `FLAG__namespace_do_not_use_directly_use_DECLARE_bool_
+>> instead::FLAGS_tcmalloc_abort_on_large_alloc'
+>> /opt/cray/cce/8.4.1/craylibs/x86-64/libtcmalloc_minimal.a(tcmalloc.o):(.bss+0x13
+>> ): first defined here
+>> /opt/cray/cce/8.4.1/craylibs/x86-64/libtcmalloc_minimal.a(tcmalloc.o): In functi
+>> on `TCMallocImplementation::GetAllocatedSize(void*)':
+>> tcmalloc.cc:(.text+0x1f0): multiple definition of `TCMallocImplementation::GetAl
+>> locatedSize(void*)'
+>> /opt/cray/cce/8.4.1/craylibs/x86-64/libtcmalloc_minimal.a(tcmalloc.o):tcmalloc.c
+>> c:(.text+0x1f0): first defined here
+>> /opt/cray/cce/8.4.1/craylibs/x86-64/libtcmalloc_minimal.a(tcmalloc.o): In functi
+>> on `TCMallocImplementation::MarkThreadBusy()':
+>>
+>>
+>> Any idea on how to overcome this error? I am surprise nobody has seen it before on a Cray...
+>>
+>> Cheers,
+>> Luis
+
+
