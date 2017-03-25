@@ -7,6 +7,7 @@
 %		dat_dir	["OUTPUT_FILES"] directory containing the files Snapshot*.bin
 %		db_dir	["OUTPUT_FILES/DATABASES_MPI"] directory containing the files proc*fault_db.bin
 %		Dmin	minimum slip to define the rupture area
+%   s_or_d  ['single'] Precision of SPECFEM3D outputs, 'single' or 'double'
 %
 % OUTPUTS	Px	seismic potency along-strike (integral of along-strike slip)
 % 		Pz	seismic potency along-dip (integral of along-dip slip)
@@ -18,17 +19,18 @@
 
 %		fault	[1] fault id
 
-function [Px,Pz,A] = FSEM3D_moment_area(ngll,isnap,data_dir,db_dir,Dmin) %,fault)
+function [Px,Pz,A] = FSEM3D_moment_area(ngll,isnap,data_dir,db_dir,Dmin,s_or_d) %,fault)
 
 if nargin<3, data_dir = 'OUTPUT_FILES'; end
 if nargin<4, db_dir = 'OUTPUT_FILES/DATABASES_MPI'; end
 if nargin<5, Dmin=1e-3; end 
+if nargin<6, s_or_d='single'; end 
 
 %if nargin<6, fault = 1; end
 fault=1;
 
 % read slip
-dat = FSEM3D_snapshot(isnap,data_dir,fault,'single');
+dat = FSEM3D_snapshot(isnap,data_dir,fault,s_or_d);
 Dx=dat.Dx;
 Dz=dat.Dz;
 Z = dat.Z;
@@ -53,8 +55,8 @@ for p=1:nproc
   if (nspec==0), fclose(fid); continue; end % if this proc does not contain the fault, skip to next proc
   dat = fread(fid,nspec*ngll^2+2,'int');
   ibool = dat(2:end-1);
-  dat = fread(fid,nspec*ngll^2+2,'float');
-  jacw = dat(2:end-1)';
+  dat = fread(fid,1,'int');
+  jacw = fread(fid,nspec*ngll^2,s_or_d)';
   fclose(fid);
 
   Dpx = Dx(i0+ibool);
