@@ -163,8 +163,7 @@ subroutine compute_forces_viscoelastic_calling()
                           iphase)
       endif
 
-    !! CD CD
-#ifndef DEBUG_COUPLED
+
       ! note: we will add all source contributions in the first pass, when iphase == 1
       !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
       !
@@ -177,8 +176,7 @@ subroutine compute_forces_viscoelastic_calling()
                                             nrec,islice_selected_rec,ispec_selected_rec, &
                                             nadj_rec_local,adj_sourcearrays, &
                                             NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY)
-#endif
-    !! CD CD
+
     endif ! iphase
 
     ! assemble all the contributions between slices using MPI
