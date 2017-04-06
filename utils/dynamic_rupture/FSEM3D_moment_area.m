@@ -1,30 +1,37 @@
-%FSEM3D_moment_area computes seismic moment and rupture area
+%FSEM3D_moment_area computes seismic moment or potency and rupture area
 %
 % [M,A] = FSEM3D_moment_area(ngll,isnap, [data_dir,db_dir,Dmin])
 %
-% INPUTS	ngll 	number of GLL points per element edge (parameter NGLL of SPECFEM3D)
-%		isnap	last snapshot index in Snapshot*.bin file names (contains final slip)
-%		dat_dir	["OUTPUT_FILES"] directory containing the files Snapshot*.bin
-%		db_dir	["OUTPUT_FILES/DATABASES_MPI"] directory containing the files proc*fault_db.bin
-%		Dmin	minimum slip to define the rupture area
-%   s_or_d  ['single'] Precision of SPECFEM3D outputs, 'single' or 'double'
+% INPUTS
+% ngll 	number of GLL points per element edge (parameter NGLL of SPECFEM3D)
+% isnap	last snapshot index in Snapshot*.bin file names (contains final slip)
+% dat_dir	["OUTPUT_FILES"] directory containing the files Snapshot*.bin
+% db_dir	["OUTPUT_FILES/DATABASES_MPI"] directory containing the files proc*fault_db.bin
+% Dmin	minimum slip to define the rupture area
+% s_or_d  ['single'] Precision of SPECFEM3D outputs, 'single' or 'double'
+% mu_type  [1]  Type of shear modulus setting (see nested function my_mu):
+%     1 = sets mu=1 and outputs Px and Pz are potency
+%     2 = an ad hoc user-defined setting (use it as an example to implement your own)
 %
-% OUTPUTS	Px	seismic potency along-strike (integral of along-strike slip)
-% 		Pz	seismic potency along-dip (integral of along-dip slip)
-%		A	area of regions with slip > Dmin
+% OUTPUTS	
+% Px	seismic potency or moment along-strike (integral of along-strike slip)
+% Pz	seismic potency or moment along-dip (integral of along-dip slip)
+% A	area of regions with slip > Dmin
 %
-% WARNING: implemented only to process the first fault
-% 
+% NOTES 
+% If multiple faults exist, this function only processes the first fault
+%   
 % Jean-Paul Ampuero	ampuero@gps.caltech.edu
 
 %		fault	[1] fault id
 
-function [Px,Pz,A] = FSEM3D_moment_area(ngll,isnap,data_dir,db_dir,Dmin,s_or_d) %,fault)
+function [Px,Pz,A] = FSEM3D_moment_area(ngll,isnap,data_dir,db_dir,Dmin,s_or_d,mu_type) %,fault)
 
 if nargin<3, data_dir = 'OUTPUT_FILES'; end
 if nargin<4, db_dir = 'OUTPUT_FILES/DATABASES_MPI'; end
 if nargin<5, Dmin=1e-3; end 
 if nargin<6, s_or_d='single'; end 
+if nargin<7, mu_type=1; end
 
 %if nargin<6, fault = 1; end
 fault=1;
@@ -61,27 +68,46 @@ for p=1:nproc
 
   Dpx = Dx(i0+ibool);
   Dpz = Dz(i0+ibool);
-   mu=3200*3200*2110;
-  if(Z(i0+ibool)<-4) 
-      mu = 3200*3200*2720;
-  end
-  if(Z(i0+ibool)<-24) 
-          mu = 3700*3700*2790;
-  end
-      if(Z(i0+ibool)<-46)
-          mu = 4550*4550*3380;
-      end
-  
-     
-      
-  Px = Px + jacw*Dpx*mu;
-  if(Z(i0+ibool) < -10.3)
-     % Z(i0+ibool)
-    Pz = Pz + jacw*Dpz*mu;
-  end
+ 
+ % compute area
   Dp2 = Dpx.*Dpx+Dpz.*Dpz;
   A = A + jacw*(Dp2>Dmin^2);
-
+ 
+ % compute potency or moment
+  mu = my_mu(mu_type);
+  Dpx = Dpx.*mu(:);
+  Dpz = Dpz.*mu(:);
+  
+  Px = Px + jacw*Dpx;
+  Pz = Pz + jacw*Dpz;
+  
   i0 = i0+nglob;
+end
 
+%---
+% This is a nested function: it can use and modify all variables of the function above
+function mu=my_mu(mu_type)
+
+switch mu_type
+
+  case 1
+    mu = 1;
+  
+  case 2
+    mu=3200*3200*2110;
+    if (Z(i0+ibool)<-4) 
+      mu = 3200*3200*2720;
+    end
+    if (Z(i0+ibool)<-24) 
+      mu = 3700*3700*2790; 
+    end
+    if(Z(i0+ibool)<-46)
+      mu = 4550*4550*3380;
+    end
+
+  end
+
+end
+
+%---
 end
