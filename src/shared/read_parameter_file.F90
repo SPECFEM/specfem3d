@@ -490,7 +490,11 @@
     call bcast_all_singlei_world(NTSTEP_BETWEEN_FRAMES)
     call bcast_all_singledp_world(HDUR_MOVIE)
     call bcast_all_singlel_world(SAVE_MESH_FILES)
-    call bcast_all_string_world(LOCAL_PATH)
+    if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 ) then
+       call  bcast_all_string_local_world(LOCAL_PATH)
+    else
+       call bcast_all_string_world(LOCAL_PATH)
+    end if
     call bcast_all_singlei_world(NTSTEP_BETWEEN_OUTPUT_INFO)
     call bcast_all_singlei_world(NTSTEP_BETWEEN_OUTPUT_SEISMOS)
     call bcast_all_singlei_world(NTSTEP_BETWEEN_READ_ADJSRC)
