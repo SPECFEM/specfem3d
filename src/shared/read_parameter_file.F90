@@ -494,7 +494,7 @@
        call  bcast_all_string_local_world(LOCAL_PATH)
     else
        call bcast_all_string_world(LOCAL_PATH)
-    end if
+    endif
     call bcast_all_singlei_world(NTSTEP_BETWEEN_OUTPUT_INFO)
     call bcast_all_singlei_world(NTSTEP_BETWEEN_OUTPUT_SEISMOS)
     call bcast_all_singlei_world(NTSTEP_BETWEEN_READ_ADJSRC)
