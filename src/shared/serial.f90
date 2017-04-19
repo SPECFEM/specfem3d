@@ -371,7 +371,7 @@
 
   stringdummy = buffer
 
-  end subroutine bcast_all_string_world
+  end subroutine bcast_all_string_local_world
 !
 !----
 !
