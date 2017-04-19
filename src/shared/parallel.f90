@@ -686,6 +686,25 @@ end module my_mpi
 
   end subroutine bcast_all_string_world
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine bcast_all_string_local_world(buffer)
+
+  use my_mpi
+  use constants, only: MAX_STRING_LEN
+
+  implicit none
+
+  character(len=MAX_STRING_LEN) :: buffer
+
+  integer :: ier
+
+  call MPI_BCAST(buffer,MAX_STRING_LEN,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+
+end subroutine bcast_all_string_local_world
+
 
 !-------------------------------------------------------------------------------------------------
 !
