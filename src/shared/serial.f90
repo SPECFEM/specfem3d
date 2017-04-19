@@ -361,6 +361,21 @@
 !----
 !
 
+  subroutine bcast_all_string_local_world(buffer)
+
+  use constants, only: MAX_STRING_LEN
+
+  implicit none
+
+  character(len=MAX_STRING_LEN) :: buffer,stringdummy
+
+  stringdummy = buffer
+
+  end subroutine bcast_all_string_world
+!
+!----
+!
+
   subroutine gather_all_i(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
 
   implicit none
