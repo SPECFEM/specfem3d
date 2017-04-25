@@ -111,13 +111,10 @@
 
     do isource = 1,NSOURCES
 
-      !   add the source (only if this proc carries the source)
+      ! add the source (only if this proc carries the source)
       if (myrank == islice_selected_source(isource)) then
 
         ispec = ispec_selected_source(isource)
-
-        ! debug
-        !if (it == 1) print *,'debug',myrank, it,'source',isource, ispec,ispec_is_elastic(ispec)
 
         if (ispec_is_elastic(ispec)) then
           ! current time

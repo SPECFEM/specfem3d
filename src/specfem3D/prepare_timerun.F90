@@ -1835,7 +1835,7 @@
           y_meshpoint = ystore(iglob)
           z_meshpoint = zstore(iglob)
 
-          common_multiplying_factor = jacobianl * weight * rhostore(i,j,k,ispec)
+          common_multiplying_factor = jacobianl * weight * rhostore(i,j,k,ispec) * GRAV
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!! beginning of loop on all the data to create
