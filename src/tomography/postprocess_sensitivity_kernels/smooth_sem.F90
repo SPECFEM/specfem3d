@@ -57,6 +57,8 @@
 
 program smooth_sem
 
+  use constants, only: USE_QUADRATURE_RULE_FOR_SMOOTHING
+
   use postprocess_par, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,NGLLSQUARE, &
     MAX_STRING_LEN,IIN,IOUT,GAUSSALPHA,GAUSSBETA,PI,TWO_PI,MAX_KERNEL_NAMES
 
@@ -137,13 +139,11 @@ program smooth_sem
   real(kind=CUSTOM_REAL) :: z_min,z_max
   real(kind=CUSTOM_REAL) :: dim_x,dim_y,dim_z
 
-  logical :: BROADCAST_AFTER_READ, USE_GPU, USE_QUADRATURE_RULE
+  logical :: BROADCAST_AFTER_READ, USE_GPU
 
   call init_mpi()
   call world_size(sizeprocs)
   call world_rank(myrank)
-
-  USE_QUADRATURE_RULE = .false.
 
   if (myrank == 0) print *,"Running XSMOOTH_SEM"
   call synchronize_all()
@@ -172,10 +172,7 @@ program smooth_sem
   call parse_kernel_names(kernel_names_comma_delimited,kernel_names,nker)
   kernel_name = kernel_names(1)
 
-  if (USE_GPU) then
-    call initialize_cuda_device(myrank,ncuda_devices)
-    USE_QUADRATURE_RULE=.true.
-  endif
+  if (USE_GPU) call initialize_cuda_device(myrank,ncuda_devices)
 
   if (nker > 1) then
     if (myrank == 0) then
@@ -538,7 +535,7 @@ program smooth_sem
 
   ! for jacobian and weights
   ! GLL points weights
-  if (USE_QUADRATURE_RULE) then
+  if (USE_QUADRATURE_RULE_FOR_SMOOTHING) then
     call zwgljd(xigll,wxgll,NGLLX,GAUSSALPHA,GAUSSBETA)
     call zwgljd(yigll,wygll,NGLLY,GAUSSALPHA,GAUSSBETA)
     call zwgljd(zigll,wzgll,NGLLZ,GAUSSALPHA,GAUSSBETA)
@@ -595,7 +592,7 @@ program smooth_sem
     allocate(xstore(NGLOB_N),ystore(NGLOB_N),zstore(NGLOB_N),stat=ier)
     if (ier /= 0) stop 'Error allocating array xstore etc.'
 
-    if (USE_QUADRATURE_RULE) then
+    if (USE_QUADRATURE_RULE_FOR_SMOOTHING) then
       allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
       if (ier /= 0) stop 'Error allocating array jacobian'
       allocate(dummy(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
@@ -610,7 +607,7 @@ program smooth_sem
     read(IIN) ystore
     read(IIN) zstore
 
-    if (USE_QUADRATURE_RULE) then
+    if (USE_QUADRATURE_RULE_FOR_SMOOTHING) then
     ! reads in jacobian
       read(IIN) dummy ! xix
       read(IIN) dummy ! xiy
@@ -707,7 +704,7 @@ program smooth_sem
           if (dist_h > sigma_h3_sq .or. dist_v > sigma_v3_sq) cycle
 
           ! integration factors
-          if (USE_QUADRATURE_RULE) then
+          if (USE_QUADRATURE_RULE_FOR_SMOOTHING) then
             factor(:,:,:) = jacobian(:,:,:,ispec2) * wgll_cube(:,:,:)
           endif
 
@@ -725,7 +722,7 @@ program smooth_sem
                                        xx(:,:,:,ispec2),yy(:,:,:,ispec2),zz(:,:,:,ispec2))
 
             ! adds GLL integration weights
-            if (USE_QUADRATURE_RULE) then
+            if (USE_QUADRATURE_RULE_FOR_SMOOTHING) then
               exp_val(:,:,:) = exp_val(:,:,:) * factor(:,:,:)
             endif
 
@@ -747,7 +744,7 @@ program smooth_sem
     deallocate(xx,yy,zz)
     deallocate(cx,cy,cz)
 
-    if (USE_QUADRATURE_RULE) then
+    if (USE_QUADRATURE_RULE_FOR_SMOOTHING) then
       deallocate(jacobian)
       deallocate(dummy)
     endif
