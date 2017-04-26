@@ -303,21 +303,7 @@
 !----
 !
 
-  subroutine bcast_all_singlei_world(buffer)
-
-  implicit none
-
-  integer :: buffer,idummy
-
-  idummy = buffer
-
-  end subroutine bcast_all_singlei_world
-
-!
-!----
-!
-
-  subroutine bcast_all_singlel_world(buffer)
+  subroutine bcast_all_singlel(buffer)
 
   implicit none
 
@@ -325,27 +311,13 @@
 
   ldummy = buffer
 
-  end subroutine bcast_all_singlel_world
+  end subroutine bcast_all_singlel
 
 !
 !----
 !
 
-  subroutine bcast_all_singledp_world(buffer)
-
-  implicit none
-
-  double precision :: buffer,dpdummy
-
-  dpdummy = buffer
-
-  end subroutine bcast_all_singledp_world
-
-!
-!----
-!
-
-  subroutine bcast_all_string_world(buffer)
+  subroutine bcast_all_string(buffer)
 
   use constants, only: MAX_STRING_LEN
 
@@ -355,23 +327,8 @@
 
   stringdummy = buffer
 
-  end subroutine bcast_all_string_world
+  end subroutine bcast_all_string
 
-!
-!----
-!
-
-  subroutine bcast_all_string_local_world(buffer)
-
-  use constants, only: MAX_STRING_LEN
-
-  implicit none
-
-  character(len=MAX_STRING_LEN) :: buffer,stringdummy
-
-  stringdummy = buffer
-
-  end subroutine bcast_all_string_local_world
 !
 !----
 !

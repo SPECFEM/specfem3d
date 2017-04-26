@@ -191,13 +191,14 @@ end subroutine model_sep
 !! \note xyz SEP organized files are expected.
 subroutine read_sep_binary_mpiio(filename, NX, NY, NZ, ni, nj, nk, &
                                  imin, jmin, kmin, var)
-  use mpi
-  ! Parameters
+  use my_mpi
+
+  ! parameters
   character(len=*), intent(in) :: filename
   integer, intent(in) :: NX, NY, NZ, ni, nj, nk, imin, jmin, kmin
   real(kind =4), dimension(:, :, :), intent(inout) :: var
 
-  !Variables
+  ! variables
   integer :: fh
   integer, dimension(3) :: global_sizes, local_sizes, starting_idx
   integer(kind=MPI_OFFSET_KIND) :: displ
@@ -205,19 +206,19 @@ subroutine read_sep_binary_mpiio(filename, NX, NY, NZ, ni, nj, nk, &
   integer :: ier
   integer :: status(MPI_STATUS_SIZE)
 
-  ! Sizes for the subarrays
+  ! sizes for the subarrays
   global_sizes = (/ NX, NY, NZ /)
   local_sizes = (/ ni, nj, nk /)
   starting_idx = (/ imin-1, jmin-1, kmin-1 /)
 
-  call MPI_BARRIER(MPI_COMM_WORLD, ier)
+  call synchronize_all()
 
   ! Create the 3D stencil for values consecutive in X but disjoint in Y and Z.
   call MPI_Type_create_subarray(3, global_sizes, local_sizes, starting_idx, &
                                 MPI_ORDER_FORTRAN, MPI_REAL, subarray_type, ier)
   call MPI_Type_commit(subarray_type, ier)
 
-  call MPI_File_open(MPI_COMM_WORLD, trim(adjustl(filename)), &
+  call MPI_File_open(my_local_mpi_comm_world, trim(adjustl(filename)), &
                      MPI_MODE_RDONLY, MPI_INFO_NULL, fh, ier)
 
   ! View is set to match the stencil

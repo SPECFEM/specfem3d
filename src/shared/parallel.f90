@@ -122,7 +122,6 @@ end module my_mpi
 ! close sub-communicators if needed, if running more than one earthquake from the same job
   call world_unsplit()
 
-! do NOT remove the barrier here, it is critical in order for the failsafe mechanism to work fine when it is activated
   call MPI_BARRIER(MPI_COMM_WORLD,ier)
 
 ! stop all the MPI processes, and exit
@@ -265,17 +264,6 @@ end module my_mpi
 !
 !-------------------------------------------------------------------------------------------------
 
-!
-!---- broadcast using the default communicator for the whole run
-!
-
-!  subroutine bcast_iproc_i(buffer,iproc)
-!  end subroutine bcast_iproc_i
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
   subroutine bcast_all_i(buffer, countval)
 
   use my_mpi
@@ -393,13 +381,6 @@ end module my_mpi
 !-------------------------------------------------------------------------------------------------
 !
 
-!  subroutine bcast_all_singler(buffer)
-!  end subroutine bcast_all_singler
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
   subroutine bcast_all_dp(buffer, countval)
 
   use my_mpi
@@ -437,13 +418,6 @@ end module my_mpi
 !-------------------------------------------------------------------------------------------------
 !
 
-!  subroutine bcast_all_ch(buffer, countval)
-!  end subroutine bcast_all_ch
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
   subroutine bcast_all_ch_array(buffer,countval)
 
     use my_mpi
@@ -457,17 +431,9 @@ end module my_mpi
 
     integer :: ier
 
-    call MPI_BCAST(buffer,MAX_STRING_LEN*countval,MPI_CHARACTER,0,MPI_COMM_WORLD,ier)
-
+    call MPI_BCAST(buffer,MAX_STRING_LEN*countval,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
 
   end subroutine bcast_all_ch_array
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-!  subroutine bcast_all_ch_array2(buffer,ndim1,ndim2,countval)
-!  end subroutine bcast_all_ch_array2
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -486,7 +452,26 @@ end module my_mpi
   end subroutine bcast_all_l_array
 
 !
-!---- broadcast using the communicator to send the mesh and model to other simultaneous runs
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine bcast_all_string(buffer)
+
+  use my_mpi
+  use constants, only: MAX_STRING_LEN
+
+  implicit none
+
+  character(len=MAX_STRING_LEN) :: buffer
+
+  integer :: ier
+
+  call MPI_BCAST(buffer,MAX_STRING_LEN,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+
+  end subroutine bcast_all_string
+
+!
+!---- broadcast to send the mesh and model to other simultaneous runs
 !
 
   subroutine bcast_all_i_for_database(buffer, countval)
@@ -612,99 +597,6 @@ end module my_mpi
   call MPI_BCAST(buffer,countval,MPI_REAL,0,my_local_mpi_comm_for_bcast,ier)
 
   end subroutine bcast_all_r_for_database
-
-!
-!---- broadcast using MPI_COMM_WORLD
-!
-
-  subroutine bcast_all_singlei_world(buffer)
-
-  use my_mpi
-
-  implicit none
-
-  integer :: buffer
-
-  integer :: ier
-
-  call MPI_BCAST(buffer,1,MPI_INTEGER,0,MPI_COMM_WORLD,ier)
-
-  end subroutine bcast_all_singlei_world
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-  subroutine bcast_all_singlel_world(buffer)
-
-  use my_mpi
-
-  implicit none
-
-  logical :: buffer
-
-  integer :: ier
-
-  call MPI_BCAST(buffer,1,MPI_LOGICAL,0,MPI_COMM_WORLD,ier)
-
-  end subroutine bcast_all_singlel_world
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-  subroutine bcast_all_singledp_world(buffer)
-
-  use my_mpi
-
-  implicit none
-
-  double precision :: buffer
-
-  integer :: ier
-
-  call MPI_BCAST(buffer,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ier)
-
-  end subroutine bcast_all_singledp_world
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-  subroutine bcast_all_string_world(buffer)
-
-  use my_mpi
-  use constants, only: MAX_STRING_LEN
-
-  implicit none
-
-  character(len=MAX_STRING_LEN) :: buffer
-
-  integer :: ier
-
-  call MPI_BCAST(buffer,MAX_STRING_LEN,MPI_CHARACTER,0,MPI_COMM_WORLD,ier)
-
-  end subroutine bcast_all_string_world
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-  subroutine bcast_all_string_local_world(buffer)
-
-  use my_mpi
-  use constants, only: MAX_STRING_LEN
-
-  implicit none
-
-  character(len=MAX_STRING_LEN) :: buffer
-
-  integer :: ier
-
-  call MPI_BCAST(buffer,MAX_STRING_LEN,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
-
-end subroutine bcast_all_string_local_world
-
 
 !-------------------------------------------------------------------------------------------------
 !
