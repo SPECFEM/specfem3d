@@ -445,6 +445,8 @@ end subroutine init_tomography_files
     if (has_q_values) then
       ! format: #x #y #z #vp #vs #density #Q_p #Q_s
       read(string_read,*) x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo,qp_tomo,qs_tomo
+      qp_tomography(imat,1) = qp_tomo
+      qs_tomography(imat,1) = qs_tomo
     else
       ! format: #x #y #z #vp #vs #density
       read(string_read,*) x_tomo,y_tomo,z_tomo,vp_tomo,vs_tomo,rho_tomo
