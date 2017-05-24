@@ -43,7 +43,8 @@
     nspec_CPML,is_CPML,CPML_to_spec,CPML_regions,CAVITY_FILE
 
   ! create the different regions of the mesh
-  use constants, only: MF_IN_DATA_FILES,MAX_STRING_LEN,NGNOD_EIGHT_CORNERS,IMAIN,IOVTK,CUSTOM_REAL
+  use constants, only: MF_IN_DATA_FILES,MAX_STRING_LEN,NGNOD_EIGHT_CORNERS,    &
+    IMAIN,IOVTK,CUSTOM_REAL,HUGEVAL
 
   use constants_meshfem3D, only: NSPEC_DOUBLING_SUPERBRICK,NGLOB_DOUBLING_SUPERBRICK, &
     IFLAG_BASEMENT_TOPO,IFLAG_ONE_LAYER_TOPOGRAPHY, &
@@ -115,15 +116,15 @@
 
   !-------------------------------cavity----------------------------------------
   character(len=MAX_STRING_LEN) :: filename
-  integer :: i_spec,i_node,inode
+  integer :: i_cavity,i_spec,i_node,inode
   integer :: nspec_old,nglob_old
   integer :: ios,ncavity
   double precision :: x0,x1,y0,y1,z0,z1,xmid,ymid,zmid
-  double precision :: cavity_x0,cavity_x1,cavity_y0,cavity_y1,cavity_z0,cavity_z1
+  double precision,allocatable,dimension(:) :: cavity_x0,cavity_x1,cavity_y0,cavity_y1,cavity_z0,cavity_z1
   logical,allocatable :: iselmt(:),isnode(:)
   logical,allocatable :: iboun_old(:,:)
   logical, dimension(:,:), allocatable :: iMPIcut_xi_old,iMPIcut_eta_old
-  logical :: cavity_file_exists
+  logical :: cavity_file_exists,incavity
   integer,allocatable :: ibool_old(:,:,:,:),ispec_material_id_old(:)
   integer,allocatable :: ispec_new(:),inode_new(:)
   double precision,allocatable :: nodes_coords_old(:,:)
@@ -579,33 +580,42 @@
       call flush_IMAIN()
     endif
 
-    ! checks that only 1 entry, more not supported yet...
-    if (ncavity > 1) then
-      stop 'Error: only 1 cavity supported so far! Please check your cavity file...'
-    endif
+    !! checks that only 1 entry, more not supported yet...
+    !if (ncavity > 1) then
+    !  stop 'Error: only 1 cavity supported so far! Please check your cavity file...'
+    !endif
 
     ! reads in cavity dimensions
-    if (ncavity == 1) then
+    if (ncavity > 0) then
+      allocate(cavity_x0(ncavity),cavity_x1(ncavity),cavity_y0(ncavity),       &
+      cavity_y1(ncavity),cavity_z0(ncavity),cavity_z1(ncavity))
+      cavity_x0=HUGEVAL; cavity_x1=HUGEVAL
+      cavity_y0=HUGEVAL; cavity_y1=HUGEVAL
+      cavity_z0=HUGEVAL; cavity_z1=HUGEVAL
       ! skip one comment line
       read(111,*)
       !read cavity range
-      read(111,*) cavity_x0,cavity_x1,cavity_y0,cavity_y1,cavity_z0,cavity_z1
+      do i_cavity=1,ncavity
+        read(111,*) cavity_x0(i_cavity),cavity_x1(i_cavity),                   &
+                    cavity_y0(i_cavity),cavity_y1(i_cavity),                   &
+                    cavity_z0(i_cavity),cavity_z1(i_cavity)
 
-      ! user output
-      if (myrank == 0) then
-        write(IMAIN,*)'  cavity range: x min / max = ',cavity_x0,cavity_x1
-        write(IMAIN,*)'                y min / max = ',cavity_y0,cavity_y1
-        write(IMAIN,*)'                z min / max = ',cavity_z0,cavity_z1
-        write(IMAIN,*)
-        call flush_IMAIN()
-      endif
+        ! user output
+        if (myrank == 0) then
+          write(IMAIN,*)'  cavity range: x min / max = ',cavity_x0(i_cavity),cavity_x1(i_cavity)
+          write(IMAIN,*)'                y min / max = ',cavity_y0(i_cavity),cavity_y1(i_cavity)
+          write(IMAIN,*)'                z min / max = ',cavity_z0(i_cavity),cavity_z1(i_cavity)
+          write(IMAIN,*)
+          call flush_IMAIN()
+        endif
+      enddo
     endif
-    ! closes cavity file
+    ! close cavity file
     close(111)
   endif
 
   ! add cavity if necessary
-  if (ncavity == 1) then
+  if (ncavity > 0) then
     ! user output
     if (myrank == 0) then
       write(IMAIN,*) '  creating cavity'
@@ -630,12 +640,18 @@
       ymid = 0.5d0*(y0+y1)
       zmid = 0.5d0*(z0+z1)
 
-      if ((xmid >= cavity_x0 .and. xmid <= cavity_x1) .and. &
-          (ymid >= cavity_y0 .and. ymid <= cavity_y1) .and. &
-          (zmid >= cavity_z0 .and. zmid <= cavity_z1)) then
-        ! deactivate spectral element
-        iselmt(i_spec)=.false.
-      else
+      incavity=.false.
+      cavity: do i_cavity=1,ncavity
+        if ((xmid >= cavity_x0(i_cavity) .and. xmid <= cavity_x1(i_cavity)) .and. &
+            (ymid >= cavity_y0(i_cavity) .and. ymid <= cavity_y1(i_cavity)) .and. &
+            (zmid >= cavity_z0(i_cavity) .and. zmid <= cavity_z1(i_cavity))) then
+          ! deactivate spectral element
+          iselmt(i_spec)=.false.
+          incavity=.true.
+          exit cavity
+        endif
+      enddo cavity
+      if(.not.incavity)then
         ! intact
         ! activate nodes
         do k = 1,NGLLZ_M
@@ -646,7 +662,9 @@
           enddo
         enddo
       endif
-    enddo
+    enddo ! i_spec=1,nspec
+    
+    deallocate(cavity_x0,cavity_x1,cavity_y0,cavity_y1,cavity_z0,cavity_z1)
 
     nspec_old = nspec
     nglob_old = nglob
@@ -720,6 +738,13 @@
         enddo
       endif
     enddo
+   
+    deallocate(iselmt) 
+    deallocate(ispec_new)
+    deallocate(ispec_material_id_old)
+    deallocate(ibool_old)
+    deallocate(iboun_old)
+    deallocate(iMPIcut_xi_old,iMPIcut_eta_old)
 
     ! new coordinates
     do i_node=1,nglob_old
@@ -728,13 +753,17 @@
       endif
     enddo
 
+    deallocate(isnode) 
+    deallocate(inode_new)
+    deallocate(nodes_coords_old)
+
     ! user output
     if (myrank == 0) then
       write(IMAIN,*) '  cavity setup done'
       call flush_IMAIN()
     endif
 
-  endif ! of if (ncavity == 0)
+  endif ! of if (ncavity > 0)
 
 !----------------------------------end cavity-----------------------------------
 
