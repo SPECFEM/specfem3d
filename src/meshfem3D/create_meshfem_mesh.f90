@@ -43,7 +43,7 @@
     nspec_CPML,is_CPML,CPML_to_spec,CPML_regions,CAVITY_FILE
 
   ! create the different regions of the mesh
-  use constants, only: MF_IN_DATA_FILES,MAX_STRING_LEN,NGNOD_EIGHT_CORNERS,    &
+  use constants, only: MF_IN_DATA_FILES,MAX_STRING_LEN,NGNOD_EIGHT_CORNERS, &
     IMAIN,IOVTK,CUSTOM_REAL,HUGEVAL
 
   use constants_meshfem3D, only: NSPEC_DOUBLING_SUPERBRICK,NGLOB_DOUBLING_SUPERBRICK, &
@@ -587,7 +587,7 @@
 
     ! reads in cavity dimensions
     if (ncavity > 0) then
-      allocate(cavity_x0(ncavity),cavity_x1(ncavity),cavity_y0(ncavity),       &
+      allocate(cavity_x0(ncavity),cavity_x1(ncavity),cavity_y0(ncavity), &
       cavity_y1(ncavity),cavity_z0(ncavity),cavity_z1(ncavity))
       cavity_x0=HUGEVAL; cavity_x1=HUGEVAL
       cavity_y0=HUGEVAL; cavity_y1=HUGEVAL
@@ -596,8 +596,8 @@
       read(111,*)
       !read cavity range
       do i_cavity=1,ncavity
-        read(111,*) cavity_x0(i_cavity),cavity_x1(i_cavity),                   &
-                    cavity_y0(i_cavity),cavity_y1(i_cavity),                   &
+        read(111,*) cavity_x0(i_cavity),cavity_x1(i_cavity), &
+                    cavity_y0(i_cavity),cavity_y1(i_cavity), &
                     cavity_z0(i_cavity),cavity_z1(i_cavity)
 
         ! user output
@@ -651,7 +651,7 @@
           exit cavity
         endif
       enddo cavity
-      if(.not.incavity)then
+      if (.not. incavity) then
         ! intact
         ! activate nodes
         do k = 1,NGLLZ_M
@@ -663,7 +663,7 @@
         enddo
       endif
     enddo ! i_spec=1,nspec
-    
+
     deallocate(cavity_x0,cavity_x1,cavity_y0,cavity_y1,cavity_z0,cavity_z1)
 
     nspec_old = nspec
@@ -738,8 +738,8 @@
         enddo
       endif
     enddo
-   
-    deallocate(iselmt) 
+
+    deallocate(iselmt)
     deallocate(ispec_new)
     deallocate(ispec_material_id_old)
     deallocate(ibool_old)
@@ -753,7 +753,7 @@
       endif
     enddo
 
-    deallocate(isnode) 
+    deallocate(isnode)
     deallocate(inode_new)
     deallocate(nodes_coords_old)
 
