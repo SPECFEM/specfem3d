@@ -4,7 +4,9 @@ OBJ		= .o
 
 MAKE		= make
 AR		= ar
-ARFLAGS		= -ruv
+######ARFLAGS		= -ruv
+####### DK DK removed "u" to avoid a warning with GNU gcc
+ARFLAGS		= -rv
 CAT		= cat
 CCS		= @CC@
 CCP		= @MPICC@

@@ -365,7 +365,7 @@ const double                kbalval)              /*+ Desired imbalance ratio  +
 *** - !0  : on error.
 +*/
 
-SCOTCH_stratGraphClusterBuild (
+int SCOTCH_stratGraphClusterBuild (
 SCOTCH_Strat * const        stratptr,             /*+ Strategy to create      +*/
 const SCOTCH_Num            flagval,              /*+ Desired characteristics +*/
 const SCOTCH_Num            pwgtval,              /*+ Threshold part weight   +*/

@@ -590,15 +590,23 @@ FILE * const                stream)
     case STRATTESTMUL :                           /* Multiplication operator */
     case STRATTESTMOD :                           /* Modulus operator        */
       i = (test->data.test[0]->typetest < test->typetest) ? 1 : 0;
-      fprintf (stream, strattestsavepa[i][0]);
+      // DK DK added "%s" to avoid a warning when compiling with GNU gcc
+      // fprintf (stream, strattestsavepa[i][0]);
+      fprintf (stream, "%s", strattestsavepa[i][0]);
       o = stratTestSave (test->data.test[0], stream);
-      fprintf (stream, strattestsavepa[i][1]);
+      // DK DK added "%s" to avoid a warning when compiling with GNU gcc
+      // fprintf (stream, strattestsavepa[i][1]);
+      fprintf (stream, "%s", strattestsavepa[i][1]);
       if (o == 0) {
         fprintf (stream, "%c", strattestsaveop[test->typetest]);
         i = (test->data.test[1]->typetest < test->typetest) ? 1 : 0;
-        fprintf (stream, strattestsavepa[i][0]);
+        // DK DK added "%s" to avoid a warning when compiling with GNU gcc
+        // fprintf (stream, strattestsavepa[i][0]);
+        fprintf (stream, "%s", strattestsavepa[i][0]);
         stratTestSave (test->data.test[1], stream);
-        fprintf (stream, strattestsavepa[i][1]);
+        // DK DK added "%s" to avoid a warning when compiling with GNU gcc
+        // fprintf (stream, strattestsavepa[i][1]);
+        fprintf (stream, "%s", strattestsavepa[i][1]);
       }
       break;
     case STRATTESTVAL :                           /* Constant value */
