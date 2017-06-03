@@ -590,23 +590,23 @@ FILE * const                stream)
     case STRATTESTMUL :                           /* Multiplication operator */
     case STRATTESTMOD :                           /* Modulus operator        */
       i = (test->data.test[0]->typetest < test->typetest) ? 1 : 0;
-      // DK DK added "%s" to avoid a warning when compiling with GNU gcc
+      // DK DK changed to fputs() to avoid a warning when compiling with GNU gcc (note that the arguments then need to be swapped)
       // fprintf (stream, strattestsavepa[i][0]);
-      fprintf (stream, "%s", strattestsavepa[i][0]);
+      fputs (strattestsavepa[i][0], stream);
       o = stratTestSave (test->data.test[0], stream);
-      // DK DK added "%s" to avoid a warning when compiling with GNU gcc
+      // DK DK changed to fputs() to avoid a warning when compiling with GNU gcc (note that the arguments then need to be swapped)
       // fprintf (stream, strattestsavepa[i][1]);
-      fprintf (stream, "%s", strattestsavepa[i][1]);
+      fputs (strattestsavepa[i][1], stream);
       if (o == 0) {
         fprintf (stream, "%c", strattestsaveop[test->typetest]);
         i = (test->data.test[1]->typetest < test->typetest) ? 1 : 0;
-        // DK DK added "%s" to avoid a warning when compiling with GNU gcc
+        // DK DK changed to fputs() to avoid a warning when compiling with GNU gcc (note that the arguments then need to be swapped)
         // fprintf (stream, strattestsavepa[i][0]);
-        fprintf (stream, "%s", strattestsavepa[i][0]);
+        fputs (strattestsavepa[i][0], stream);
         stratTestSave (test->data.test[1], stream);
-        // DK DK added "%s" to avoid a warning when compiling with GNU gcc
+        // DK DK changed to fputs() to avoid a warning when compiling with GNU gcc (note that the arguments then need to be swapped)
         // fprintf (stream, strattestsavepa[i][1]);
-        fprintf (stream, "%s", strattestsavepa[i][1]);
+        fputs (strattestsavepa[i][1], stream);
       }
       break;
     case STRATTESTVAL :                           /* Constant value */
