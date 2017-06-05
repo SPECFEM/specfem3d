@@ -222,10 +222,7 @@
             irec_local = irec_local + 1
             ! reads in **net**.**sta**.**BH**.adj files
             adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
-            call compute_arrays_adjoint_source(myrank,adj_source_file, &
-                                               xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
-                                               adj_sourcearray, xigll,yigll,zigll, &
-                                               it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
+            call compute_arrays_adjoint_source(adj_source_file,irec)
 
             do itime = 1,NTSTEP_BETWEEN_READ_ADJSRC
               adj_sourcearrays(irec_local,itime,:,:,:,:) = adj_sourcearray(itime,:,:,:,:)

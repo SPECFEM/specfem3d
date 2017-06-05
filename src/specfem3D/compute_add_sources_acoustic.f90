@@ -36,9 +36,8 @@
                                   nadj_rec_local,adj_sourcearrays,NTSTEP_BETWEEN_READ_ADJSRC)
 
   use constants
-  use specfem_par, only: xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver, &
-                        station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
-                        nsources_local,tshift_src,DT,t0,SU_FORMAT,USE_LDDRK,istage, &
+  use specfem_par, only:station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
+                        nsources_local,tshift_src,DT,t0,SU_FORMAT,USE_LDDRK,istage,adj_sourcearray, &
                         USE_EXTERNAL_SOURCE_FILE,user_source_time_function,USE_BINARY_FOR_SEISMOGRAMS
 
   implicit none
@@ -71,7 +70,6 @@
     adj_sourcearrays
 
 ! local parameters
-  real(kind=CUSTOM_REAL),dimension(:,:,:,:,:),allocatable:: adj_sourcearray
   real(kind=CUSTOM_REAL) stf_used
 
   double precision :: stf,time_source_dble
@@ -193,10 +191,7 @@
             irec = number_receiver_global(irec_local)
             ! reads in **net**.**sta**.**BH**.adj files
             adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
-            call compute_arrays_adjoint_source(myrank,adj_source_file, &
-                                               xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
-                                               adj_sourcearray, xigll,yigll,zigll, &
-                                               it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
+            call compute_arrays_adjoint_source(adj_source_file,irec)
 
             do itime = 1,NTSTEP_BETWEEN_READ_ADJSRC
               adj_sourcearrays(irec_local,itime,:,:,:,:) = adj_sourcearray(itime,:,:,:,:)
@@ -204,12 +199,7 @@
 
           enddo
         else
-
-          call compute_arrays_adjoint_source_SU(myrank,xi_receiver,eta_receiver,gamma_receiver,adj_sourcearray,adj_sourcearrays, &
-                                           xigll,yigll,zigll, &
-                                           it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC, &
-                                           nrec_local,nrec,number_receiver_global)
-
+          call compute_arrays_adjoint_source_SU()
         endif !if (.not. SU_FORMAT)
 
         deallocate(adj_sourcearray)
@@ -385,16 +375,15 @@
 ! for acoustic solver on GPU
 
   subroutine compute_add_sources_acoustic_GPU(NSPEC_AB, &
-                                  NSOURCES,myrank,it, &
+                                  NSOURCES,it, &
                                   ispec_is_acoustic,SIMULATION_TYPE,NSTEP, &
                                   nrec,islice_selected_rec,ispec_selected_rec, &
                                   nadj_rec_local,adj_sourcearrays, &
                                   NTSTEP_BETWEEN_READ_ADJSRC,Mesh_pointer )
 
   use constants
-  use specfem_par, only: xigll,yigll,zigll,xi_receiver,eta_receiver,gamma_receiver, &
-                        station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
-                        nsources_local,tshift_src,DT,t0,SU_FORMAT,USE_LDDRK,istage, &
+  use specfem_par, only:station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
+                        nsources_local,tshift_src,DT,t0,SU_FORMAT,USE_LDDRK,istage,adj_sourcearray, &
                         USE_EXTERNAL_SOURCE_FILE,user_source_time_function,USE_BINARY_FOR_SEISMOGRAMS
 
   implicit none
@@ -406,7 +395,7 @@
 ! arrays with mesh parameters per slice
 
 ! source
-  integer :: NSOURCES,myrank,it
+  integer :: NSOURCES,it
   logical, dimension(NSPEC_AB) :: ispec_is_acoustic
 
 !adjoint simulations
@@ -421,8 +410,6 @@
     adj_sourcearrays
 
 ! local parameters
-  real(kind=CUSTOM_REAL),dimension(:,:,:,:,:),allocatable:: adj_sourcearray
-
   double precision :: stf,time_source_dble
   double precision, external :: get_stf_acoustic
 
@@ -522,10 +509,7 @@
             irec = number_receiver_global(irec_local)
             ! reads in **net**.**sta**.**BH**.adj files
             adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
-            call compute_arrays_adjoint_source(myrank,adj_source_file, &
-                                               xi_receiver(irec),eta_receiver(irec),gamma_receiver(irec), &
-                                               adj_sourcearray, xigll,yigll,zigll, &
-                                               it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
+            call compute_arrays_adjoint_source(adj_source_file,irec)
 
             do itime = 1,NTSTEP_BETWEEN_READ_ADJSRC
               adj_sourcearrays(irec_local,itime,:,:,:,:) = adj_sourcearray(itime,:,:,:,:)
@@ -533,11 +517,7 @@
 
           enddo
         else
-          call compute_arrays_adjoint_source_SU(myrank,xi_receiver,eta_receiver,gamma_receiver,adj_sourcearray,adj_sourcearrays, &
-                                           xigll,yigll,zigll, &
-                                           it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC, &
-                                           nrec_local,nrec,number_receiver_global)
-
+          call compute_arrays_adjoint_source_SU()
         endif !if (.not. SU_FORMAT)
 
         deallocate(adj_sourcearray)
