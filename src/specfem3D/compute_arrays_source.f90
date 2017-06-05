@@ -182,36 +182,26 @@
 
 !================================================================
 
-  subroutine compute_arrays_adjoint_source(myrank, adj_source_file, &
-                                           xi_receiver,eta_receiver,gamma_receiver, adj_sourcearray, &
-                                           xigll,yigll,zigll, &
-                                           it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC)
+  subroutine compute_arrays_adjoint_source(adj_source_file,irec)
+
+  use specfem_par, only : myrank,xi_receiver,eta_receiver,gamma_receiver,adj_sourcearray, &
+                          xigll,yigll,zigll,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC,it 
 
   use constants
 
   implicit none
 
 ! input
-  integer myrank, NSTEP, it_sub_adj, NTSTEP_BETWEEN_READ_ADJSRC
-
-  double precision xi_receiver, eta_receiver, gamma_receiver
-
+  integer irec
   character(len=*) adj_source_file
 
-! output
-  real(kind=CUSTOM_REAL),dimension(NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ) :: adj_sourcearray
-
 ! Gauss-Lobatto-Legendre points of integration and weights
-  double precision, dimension(NGLLX) :: xigll
-  double precision, dimension(NGLLY) :: yigll
-  double precision, dimension(NGLLZ) :: zigll
-
   double precision :: hxir(NGLLX), hpxir(NGLLX), hetar(NGLLY), hpetar(NGLLY), &
         hgammar(NGLLZ), hpgammar(NGLLZ)
 
   real(kind=CUSTOM_REAL), dimension(NTSTEP_BETWEEN_READ_ADJSRC,NDIM) :: adj_src
 
-  integer icomp, itime, i, j, k, ier, it_start, it_end
+  integer icomp, itime, i, j, k, ier, it_start, it_end, it_sub_adj
   double precision :: junk
   ! note: should have same order as orientation in write_seismograms_to_file()
   character(len=3),dimension(NDIM) :: comp
@@ -223,6 +213,7 @@
   enddo
 
   ! range of the block we need to read
+  it_sub_adj = ceiling( dble(it)/dble(NTSTEP_BETWEEN_READ_ADJSRC) )  
   it_start = NSTEP - it_sub_adj*NTSTEP_BETWEEN_READ_ADJSRC + 1
   it_end   = it_start + NTSTEP_BETWEEN_READ_ADJSRC - 1
 
@@ -260,9 +251,9 @@
   enddo
 
   ! lagrange interpolators for receiver location
-  call lagrange_any(xi_receiver,NGLLX,xigll,hxir,hpxir)
-  call lagrange_any(eta_receiver,NGLLY,yigll,hetar,hpetar)
-  call lagrange_any(gamma_receiver,NGLLZ,zigll,hgammar,hpgammar)
+  call lagrange_any(xi_receiver(irec),NGLLX,xigll,hxir,hpxir)
+  call lagrange_any(eta_receiver(irec),NGLLY,yigll,hetar,hpetar)
+  call lagrange_any(gamma_receiver(irec),NGLLZ,zigll,hgammar,hpgammar)
 
   ! interpolates adjoint source onto GLL points within this element
   do k = 1, NGLLZ
@@ -277,41 +268,28 @@ end subroutine compute_arrays_adjoint_source
 
 !================================================================
 
-subroutine compute_arrays_adjoint_source_SU(myrank,xi_receiver,eta_receiver,gamma_receiver,adj_sourcearray,adj_sourcearrays, &
-                                           xigll,yigll,zigll, &
-                                           it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC, &
-                                           nrec_local,nrec,number_receiver_global)
-
+subroutine compute_arrays_adjoint_source_SU()
+  
+  use specfem_par, only : myrank,xi_receiver,eta_receiver,gamma_receiver,adj_sourcearray,adj_sourcearrays,&
+                          xigll,yigll,zigll,it,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC,nrec_local,number_receiver_global
   use specfem_par_acoustic, only: ACOUSTIC_SIMULATION
   use specfem_par_elastic, only: ELASTIC_SIMULATION
   use constants
 
   implicit none
 
-! input
-  integer myrank, NSTEP, it_sub_adj, NTSTEP_BETWEEN_READ_ADJSRC,nrec_local,nrec
-  integer, dimension(nrec_local) :: number_receiver_global
-  double precision, dimension(nrec) ::  xi_receiver, eta_receiver, gamma_receiver
-
-! output
-  real(kind=CUSTOM_REAL),dimension(NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ) :: adj_sourcearray
-  real(kind=CUSTOM_REAL),dimension(nrec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ):: adj_sourcearrays
-
-
 ! Gauss-Lobatto-Legendre points of integration and weights
-  double precision, dimension(NGLLX) :: xigll
-  double precision, dimension(NGLLY) :: yigll
-  double precision, dimension(NGLLZ) :: zigll
   double precision :: hxir(NGLLX), hpxir(NGLLX), hetar(NGLLY), hpetar(NGLLY), &
         hgammar(NGLLZ), hpgammar(NGLLZ)
   real(kind=CUSTOM_REAL), dimension(NTSTEP_BETWEEN_READ_ADJSRC,NDIM) :: adj_src
   real(kind=CUSTOM_REAL), dimension(NTSTEP_BETWEEN_READ_ADJSRC) :: adj_temp
-  integer i, j, k, ier, irec_local, irec, it_start
+  integer i, j, k, ier, irec_local, irec, it_start, it_sub_adj
 
   ! note: should have same order as orientation in write_seismograms_to_file()
   character(len=MAX_STRING_LEN) :: procname, filename
 
   ! range of the block we need to read
+  it_sub_adj = ceiling( dble(it)/dble(NTSTEP_BETWEEN_READ_ADJSRC) )
   it_start = NSTEP - it_sub_adj*NTSTEP_BETWEEN_READ_ADJSRC
 
   write(procname,"(i4)") myrank

@@ -557,7 +557,7 @@ subroutine compute_forces_viscoelastic_GPU_calling()
       ! note: we will add all source contributions in the first pass, when iphase == 1
       !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
       call compute_add_sources_viscoelastic_GPU(NSPEC_AB, &
-                          NSOURCES,myrank,it, &
+                          NSOURCES,it, &
                           ispec_is_elastic,SIMULATION_TYPE,NSTEP, &
                           nrec,islice_selected_rec,ispec_selected_rec, &
                           nadj_rec_local,adj_sourcearrays, &
