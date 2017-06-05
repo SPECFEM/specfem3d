@@ -282,8 +282,8 @@ subroutine compute_arrays_adjoint_source_SU(myrank,xi_receiver,eta_receiver,gamm
                                            it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC, &
                                            nrec_local,nrec,number_receiver_global)
 
-  use specfem_par_acoustic, only : ACOUSTIC_SIMULATION
-  use specfem_par_elastic, only : ELASTIC_SIMULATION
+  use specfem_par_acoustic, only: ACOUSTIC_SIMULATION
+  use specfem_par_elastic, only: ELASTIC_SIMULATION
   use constants
 
   implicit none
@@ -312,12 +312,12 @@ subroutine compute_arrays_adjoint_source_SU(myrank,xi_receiver,eta_receiver,gamm
   character(len=MAX_STRING_LEN) :: procname, filename
 
   ! range of the block we need to read
-  it_start = NSTEP - it_sub_adj*NTSTEP_BETWEEN_READ_ADJSRC 
+  it_start = NSTEP - it_sub_adj*NTSTEP_BETWEEN_READ_ADJSRC
 
   write(procname,"(i4)") myrank
 
   if (ACOUSTIC_SIMULATION) then
- 
+
     filename = trim(OUTPUT_FILES)//'../SEM/'//trim(adjustl(procname))//'_dp_SU.adj'
     open(unit=IIN_SU1,file=filename,status='old',access='stream',iostat = ier)
     if (ier /= 0) call exit_MPI(myrank,'file '//trim(filename)//' does not exist')
@@ -332,7 +332,7 @@ subroutine compute_arrays_adjoint_source_SU(myrank,xi_receiver,eta_receiver,gamm
        call lagrange_any(xi_receiver(irec),NGLLX,xigll,hxir,hpxir)
        call lagrange_any(eta_receiver(irec),NGLLY,yigll,hetar,hpetar)
        call lagrange_any(gamma_receiver(irec),NGLLZ,zigll,hgammar,hpgammar)
-       
+
        ! interpolates adjoint source onto GLL points within this element
        do k = 1, NGLLZ
          do j = 1, NGLLY

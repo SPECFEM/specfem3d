@@ -209,9 +209,9 @@
           enddo
         else
 
-           call compute_arrays_adjoint_source_SU(myrank,xi_receiver,eta_receiver,gamma_receiver,adj_sourcearray,adj_sourcearrays,&
+           call compute_arrays_adjoint_source_SU(myrank,xi_receiver,eta_receiver,gamma_receiver,adj_sourcearray,adj_sourcearrays, &
                                                  xigll,yigll,zigll, &
-                                                 it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC,&
+                                                 it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC, &
                                                  nrec_local,nrec,number_receiver_global)
 
 
@@ -592,10 +592,10 @@
 
           enddo
         else
- 
-          call compute_arrays_adjoint_source_SU(myrank,xi_receiver,eta_receiver,gamma_receiver,adj_sourcearray,adj_sourcearrays,&
+
+          call compute_arrays_adjoint_source_SU(myrank,xi_receiver,eta_receiver,gamma_receiver,adj_sourcearray,adj_sourcearrays, &
                                                 xigll,yigll,zigll, &
-                                                it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC,&
+                                                it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC, &
                                                 nrec_local,nrec,number_receiver_global)
 
         endif !if (.not. SU_FORMAT)

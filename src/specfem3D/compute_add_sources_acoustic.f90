@@ -190,7 +190,7 @@
           do irec_local = 1, nrec_local
             ! compute source arrays
             ! reads in **net**.**sta**.**BH**.adj files
-            irec = number_receiver_global(irec_local) 
+            irec = number_receiver_global(irec_local)
             ! reads in **net**.**sta**.**BH**.adj files
             adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
             call compute_arrays_adjoint_source(myrank,adj_source_file, &
@@ -533,9 +533,9 @@
 
           enddo
         else
-          call compute_arrays_adjoint_source_SU(myrank,xi_receiver,eta_receiver,gamma_receiver,adj_sourcearray,adj_sourcearrays,&
+          call compute_arrays_adjoint_source_SU(myrank,xi_receiver,eta_receiver,gamma_receiver,adj_sourcearray,adj_sourcearrays, &
                                            xigll,yigll,zigll, &
-                                           it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC,&
+                                           it_sub_adj,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC, &
                                            nrec_local,nrec,number_receiver_global)
 
         endif !if (.not. SU_FORMAT)
