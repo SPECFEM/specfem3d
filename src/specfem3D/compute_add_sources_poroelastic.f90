@@ -44,7 +44,7 @@
                         USE_FORCE_POINT_SOURCE, &
                         tshift_src,dt,t0, &
                         USE_LDDRK,istage, &
-                        USE_EXTERNAL_SOURCE_FILE,user_source_time_function
+                        USE_EXTERNAL_SOURCE_FILE,user_source_time_function,USE_BINARY_FOR_SEISMOGRAMS
 
   implicit none
 
@@ -216,6 +216,7 @@
         !!! read ascii adjoint sources
         irec_local = 0
         do irec = 1, nrec
+          if (USE_BINARY_FOR_SEISMOGRAMS) stop 'Adjoint simulations not supported with .bin format, please use ASCII instead'
           ! compute source arrays
           if (myrank == islice_selected_rec(irec)) then
             irec_local = irec_local + 1
