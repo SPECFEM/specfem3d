@@ -149,9 +149,8 @@
   integer :: ier
 
   real(kind=CUSTOM_REAL) :: xmin,xmax,ymin,ymax,zmin,zmax
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: xmin_ELE,xmax_ELE,ymin_ELE,ymax_ELE,zmin_ELE,zmax_ELE
+
   integer :: imin_temp,imax_temp,jmin_temp,jmax_temp,kmin_temp,kmax_temp
-  integer,dimension(NGLLX*NGLLY*NGLLZ) :: iglob_temp
 
   ! SU_FORMAT parameters
   double precision :: llat,llon,lele,lbur
@@ -159,8 +158,6 @@
 
   ! domains
   integer, dimension(:),allocatable :: idomain,idomain_all
-
-  real(kind=CUSTOM_REAL) :: xstore_loc,ystore_loc,zstore_loc
 
   ! location search
   double precision :: typical_size_squared
@@ -323,26 +320,6 @@
   allocate(idomain(nrec),idomain_all(nrec),stat=ier)
   if (ier /= 0) stop 'Error allocating idomain arrays'
 
-  if (SU_FORMAT) then
-     allocate(xmin_ELE(NSPEC_AB), &
-          xmax_ELE(NSPEC_AB), &
-          ymin_ELE(NSPEC_AB), &
-          ymax_ELE(NSPEC_AB), &
-          zmin_ELE(NSPEC_AB), &
-          zmax_ELE(NSPEC_AB),stat=ier)
-     if (ier /= 0) stop 'error allocating arrays for locating receivers'
-
-     do ispec=1,NSPEC_AB
-        iglob_temp=reshape(ibool(:,:,:,ispec),(/NGLLX*NGLLY*NGLLZ/))
-        xmin_ELE(ispec)=minval(xstore(iglob_temp))
-        xmax_ELE(ispec)=maxval(xstore(iglob_temp))
-        ymin_ELE(ispec)=minval(ystore(iglob_temp))
-        ymax_ELE(ispec)=maxval(ystore(iglob_temp))
-        zmin_ELE(ispec)=minval(zstore(iglob_temp))
-        zmax_ELE(ispec)=maxval(zstore(iglob_temp))
-     enddo
-  endif
-
   ! loop on all the stations
   do irec = 1,nrec
 
@@ -420,8 +397,6 @@
 
     ! reset distance to huge initial value
     distmin_squared = HUGEVAL
-
-    if (.not. SU_FORMAT) then
 
       ! determines closest GLL point
       ispec_selected_rec(irec) = 0
@@ -501,98 +476,6 @@
 
       ! end of loop on all the spectral elements in current slice
       enddo
-
-    else
-
-      ! SeismicUnix format
-      ispec_selected_rec(irec) = 0
-      ix_initial_guess(irec) = 0
-      iy_initial_guess(irec) = 0
-      iz_initial_guess(irec) = 0
-      final_distance(irec) = HUGEVAL
-
-      if ((x_target(irec) >= xmin .and. x_target(irec) <= xmax) .and. &
-          (y_target(irec) >= ymin .and. y_target(irec) <= ymax) .and. &
-          (z_target(irec) >= zmin .and. z_target(irec) <= zmax)) then
-
-        do ispec = 1,NSPEC_AB
-
-          ! exclude elements that are too far from target
-          if (USE_DISTANCE_CRITERION_RECEIVERS) then
-            iglob = ibool(MIDX,MIDY,MIDZ,ispec)
-            dist_squared = (x_target(irec) - dble(xstore(iglob)))**2 &
-                         + (y_target(irec) - dble(ystore(iglob)))**2 &
-                         + (z_target(irec) - dble(zstore(iglob)))**2
-            if (dist_squared > typical_size_squared) cycle
-          endif
-
-           ! the following original implementation is very slow
-           !iglob_temp=reshape(ibool(:,:,:,ispec),(/NGLLX*NGLLY*NGLLZ/))
-           !xmin_ELE=minval(xstore(iglob_temp))
-           !xmax_ELE=maxval(xstore(iglob_temp))
-           !ymin_ELE=minval(ystore(iglob_temp))
-           !ymax_ELE=maxval(ystore(iglob_temp))
-           !zmin_ELE=minval(zstore(iglob_temp))
-           !zmax_ELE=maxval(zstore(iglob_temp))
-           !if ((x_target(irec) >= xmin_ELE .and. x_target(irec) <= xmax_ELE) .and. &
-           !     (y_target(irec) >= ymin_ELE .and. y_target(irec) <= ymax_ELE) .and. &
-           !     (z_target(irec) >= zmin_ELE .and. z_target(irec) <= zmax_ELE)) then
-           !   ! find the element (ispec) that may contain the receiver (irec)
-
-           ! zch this implementation is at least 20 times faster than
-           ! the original implementation
-           if ( (x_target(irec) >= xmin_ELE(ispec) .and. x_target(irec) <= xmax_ELE(ispec)) .and. &
-                (y_target(irec) >= ymin_ELE(ispec) .and. y_target(irec) <= ymax_ELE(ispec)) .and. &
-                (z_target(irec) >= zmin_ELE(ispec) .and. z_target(irec) <= zmax_ELE(ispec))) then
-              ! find the element (ispec) that may contain the receiver (irec)
-
-            ispec_selected_rec(irec) = ispec
-            do k = kmin_temp,kmax_temp
-              do j = jmin_temp,jmax_temp
-                do i = imin_temp,imax_temp
-                  iglob = ibool(i,j,k,ispec)
-                  !  we compare squared distances instead of distances themselves to significantly speed up calculations
-                  xstore_loc=dble(xstore(iglob))
-                  ystore_loc=dble(ystore(iglob))
-                  zstore_loc=dble(zstore(iglob))
-                  dist_squared = ((x_target(irec)-xstore_loc)*(x_target(irec)-xstore_loc) &
-                                + (y_target(irec)-ystore_loc)*(y_target(irec)-ystore_loc) &
-                                + (z_target(irec)-zstore_loc)*(z_target(irec)-zstore_loc))
-                  !dist_squared = ((x_target(irec)-dble(xstore(iglob)))**2 &
-                  !              + (y_target(irec)-dble(ystore(iglob)))**2 &
-                  !              + (z_target(irec)-dble(zstore(iglob)))**2)
-                  if (dist_squared < distmin_squared) then
-                    distmin_squared = dist_squared
-                    ix_initial_guess(irec) = i
-                    iy_initial_guess(irec) = j
-                    iz_initial_guess(irec) = k
-                    !xi_receiver(irec) = dble(ix_initial_guess(irec))
-                    !eta_receiver(irec) = dble(iy_initial_guess(irec))
-                    !gamma_receiver(irec) = dble(iz_initial_guess(irec))
-                    xi_receiver(irec)      = dble(i)
-                    eta_receiver(irec)     = dble(j)
-                    gamma_receiver(irec)   = dble(k)
-                    !x_found(irec) = xstore(iglob)
-                    !y_found(irec) = ystore(iglob)
-                    !z_found(irec) = zstore(iglob)
-                    x_found(irec) = xstore_loc
-                    y_found(irec) = ystore_loc
-                    z_found(irec) = zstore_loc
-
-                  endif
-                enddo
-              enddo
-            enddo
-            final_distance(irec) = dsqrt((x_target(irec)-x_found(irec))*(x_target(irec)-x_found(irec)) &
-                                       + (y_target(irec)-y_found(irec))*(y_target(irec)-y_found(irec)) &
-                                       + (z_target(irec)-z_found(irec))*(z_target(irec)-z_found(irec)))
-            !final_distance(irec) = dsqrt((x_target(irec)-x_found(irec))**2 &
-            !                           + (y_target(irec)-y_found(irec))**2 &
-            !                           + (z_target(irec)-z_found(irec))**2)
-          endif ! if receiver "may" be within this element
-        enddo ! do ispec = 1,NSPEC_AB
-      endif ! if receiver "may" be within this proc
-    endif !if (.not. SU_FORMAT)
 
     if (ispec_selected_rec(irec) == 0) then
       ! receiver is NOT within this proc, assign trivial values
@@ -771,14 +654,6 @@
   ! end of loop on all the stations
   enddo
 
-  if (SU_FORMAT) then
-     deallocate(xmin_ELE, &
-          xmax_ELE, &
-          ymin_ELE, &
-          ymax_ELE, &
-          zmin_ELE, &
-          zmax_ELE)
-  endif
   ! close receiver file
   close(IIN)
 
