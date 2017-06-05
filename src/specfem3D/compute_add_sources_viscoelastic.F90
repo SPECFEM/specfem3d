@@ -37,7 +37,7 @@
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY)
 
   use constants
-  use specfem_par, only:station_name,network_name,adj_source_file, &
+  use specfem_par, only: station_name,network_name,adj_source_file, &
                         num_free_surface_faces,free_surface_ispec, &
                         free_surface_ijk,free_surface_jacobian2Dw, &
                         noise_sourcearray,irec_master_noise, &
@@ -434,7 +434,7 @@
                                                   Mesh_pointer)
 
   use constants
-  use specfem_par, only:station_name,network_name,adj_source_file, &
+  use specfem_par, only: station_name,network_name,adj_source_file, &
                         num_free_surface_faces, &
                         irec_master_noise,noise_surface_movie, &
                         nrec_local,number_receiver_global, &

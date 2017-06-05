@@ -39,7 +39,7 @@
                                              NTSTEP_BETWEEN_READ_ADJSRC)
 
   use constants
-  use specfem_par, only:station_name,network_name,adj_source_file, &
+  use specfem_par, only: station_name,network_name,adj_source_file, &
                         USE_FORCE_POINT_SOURCE, &
                         tshift_src,dt,t0, &
                         USE_LDDRK,istage, &

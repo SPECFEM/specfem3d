@@ -184,8 +184,8 @@
 
   subroutine compute_arrays_adjoint_source(adj_source_file,irec)
 
-  use specfem_par, only : myrank,xi_receiver,eta_receiver,gamma_receiver,adj_sourcearray, &
-                          xigll,yigll,zigll,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC,it 
+  use specfem_par, only: myrank,xi_receiver,eta_receiver,gamma_receiver,adj_sourcearray, &
+                          xigll,yigll,zigll,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC,it
 
   use constants
 
@@ -213,7 +213,7 @@
   enddo
 
   ! range of the block we need to read
-  it_sub_adj = ceiling( dble(it)/dble(NTSTEP_BETWEEN_READ_ADJSRC) )  
+  it_sub_adj = ceiling( dble(it)/dble(NTSTEP_BETWEEN_READ_ADJSRC) )
   it_start = NSTEP - it_sub_adj*NTSTEP_BETWEEN_READ_ADJSRC + 1
   it_end   = it_start + NTSTEP_BETWEEN_READ_ADJSRC - 1
 
@@ -269,8 +269,8 @@ end subroutine compute_arrays_adjoint_source
 !================================================================
 
 subroutine compute_arrays_adjoint_source_SU()
-  
-  use specfem_par, only : myrank,xi_receiver,eta_receiver,gamma_receiver,adj_sourcearray,adj_sourcearrays,&
+
+  use specfem_par, only: myrank,xi_receiver,eta_receiver,gamma_receiver,adj_sourcearray,adj_sourcearrays, &
                           xigll,yigll,zigll,it,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC,nrec_local,number_receiver_global
   use specfem_par_acoustic, only: ACOUSTIC_SIMULATION
   use specfem_par_elastic, only: ELASTIC_SIMULATION

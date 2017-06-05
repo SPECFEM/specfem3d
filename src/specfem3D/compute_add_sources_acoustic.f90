@@ -36,7 +36,7 @@
                                   nadj_rec_local,adj_sourcearrays,NTSTEP_BETWEEN_READ_ADJSRC)
 
   use constants
-  use specfem_par, only:station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
+  use specfem_par, only: station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
                         nsources_local,tshift_src,DT,t0,SU_FORMAT,USE_LDDRK,istage,adj_sourcearray, &
                         USE_EXTERNAL_SOURCE_FILE,user_source_time_function,USE_BINARY_FOR_SEISMOGRAMS
 
@@ -382,7 +382,7 @@
                                   NTSTEP_BETWEEN_READ_ADJSRC,Mesh_pointer )
 
   use constants
-  use specfem_par, only:station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
+  use specfem_par, only: station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
                         nsources_local,tshift_src,DT,t0,SU_FORMAT,USE_LDDRK,istage,adj_sourcearray, &
                         USE_EXTERNAL_SOURCE_FILE,user_source_time_function,USE_BINARY_FOR_SEISMOGRAMS
 
