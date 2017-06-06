@@ -63,6 +63,7 @@ end module constants
   integer :: SIMULATION_TYPE
   integer :: NOISE_TOMOGRAPHY
   logical :: SAVE_FORWARD
+  logical :: INVERSE_FWI_FULL_PROBLEM
 
   integer :: UTM_PROJECTION_ZONE
   logical :: SUPPRESS_UTM_PROJECTION

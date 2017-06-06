@@ -11,6 +11,10 @@ SIMULATION_TYPE                 = 1
 NOISE_TOMOGRAPHY                = 2
 SAVE_FORWARD                    = .true.
 
+# solve a full FWI inverse problem from a single calling program with no I/Os, storing everything in memory,
+# or run a classical forward or adjoint problem only and save the seismograms and/or sensitivity kernels to disk (with costlier I/Os)
+INVERSE_FWI_FULL_PROBLEM        = .false.
+
 # UTM projection parameters
 # Use a negative zone number for the Southern hemisphere:
 # The Northern hemisphere corresponds to zones +1 to +60,
