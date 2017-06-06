@@ -73,6 +73,9 @@
     call read_value_logical(SAVE_FORWARD, 'SAVE_FORWARD', ier)
     if (ier /= 0) stop 'Error reading Par_file parameter SAVE_FORWARD'
 
+    call read_value_logical(INVERSE_FWI_FULL_PROBLEM, 'INVERSE_FWI_FULL_PROBLEM', ier)
+    if (ier /= 0) stop 'Error reading Par_file parameter INVERSE_FWI_FULL_PROBLEM'
+
     call read_value_integer(UTM_PROJECTION_ZONE, 'UTM_PROJECTION_ZONE', ier)
     if (ier /= 0) stop 'Error reading Par_file parameter UTM_PROJECTION_ZONE'
     call read_value_logical(SUPPRESS_UTM_PROJECTION, 'SUPPRESS_UTM_PROJECTION', ier)
@@ -455,6 +458,7 @@
     call bcast_all_singlei(SIMULATION_TYPE)
     call bcast_all_singlei(NOISE_TOMOGRAPHY)
     call bcast_all_singlel(SAVE_FORWARD)
+    call bcast_all_singlel(INVERSE_FWI_FULL_PROBLEM)
     call bcast_all_singlei(UTM_PROJECTION_ZONE)
     call bcast_all_singlel(SUPPRESS_UTM_PROJECTION)
     call bcast_all_singlei(NSTEP)
