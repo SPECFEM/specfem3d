@@ -68,7 +68,7 @@ __device__ double my_atomicAdd(double* address, double val) {
 __global__ void compute_interpolated_dva_plus_seismogram(int nrec_local,
                                                          realw* displ, realw* veloc, realw* accel,
                                                          int* d_ibool,
-                                                         double* hxir, double* hetar, double* hgammar,
+                                                         realw* hxir, realw* hetar, realw* hgammar,
                                                          realw* seismograms_d, realw* seismograms_v, realw* seismograms_a,
                                                          double* nu,
                                                          int* number_receiver_global,
