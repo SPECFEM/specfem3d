@@ -35,7 +35,7 @@
                          USE_BINARY_FOR_SEISMOGRAMS,ibool, &
                          NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
                          sourcearrays,SIMULATION_TYPE,NSTEP, &
-                         nrec,islice_selected_rec,ispec_selected_rec, &
+                         ispec_selected_rec, &
                          nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC, &
                          hxir_store,hetar_store,hgammar_store,source_adjoint,number_receiver_global,nrec_local
 
