@@ -37,7 +37,7 @@
                          sourcearrays,SIMULATION_TYPE,NSTEP, &
                          nrec,islice_selected_rec,ispec_selected_rec, &
                          nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC, &
-                         hxir_store,hetar_store,hgammar_store,source_adjoint
+                         hxir_store,hetar_store,hgammar_store,source_adjoint,number_receiver_global,nrec_local
 
   use specfem_par_poroelastic, only: b_accels_poroelastic,b_accelw_poroelastic,accels_poroelastic,accelw_poroelastic, &
                                       rhoarraystore,phistore,tortstore,ispec_is_poroelastic
@@ -177,16 +177,13 @@
       if (ibool_read_adj_arrays) then
 
         !!! read ascii adjoint sources
-        irec_local = 0
-        do irec = 1, nrec
+        do irec_local = 1, nrec_local
+          irec = number_receiver_global(irec_local)
           if (USE_BINARY_FOR_SEISMOGRAMS) stop 'Adjoint simulations not supported with .bin format, please use ASCII instead'
           ! compute source arrays
-          if (myrank == islice_selected_rec(irec)) then
-            irec_local = irec_local + 1
-            ! reads in **net**.**sta**.**BH**.adj files
-            adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
-            call compute_arrays_adjoint_source(adj_source_file,irec)
-          endif
+          ! reads in **net**.**sta**.**BH**.adj files
+          adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
+          call compute_arrays_adjoint_source(adj_source_file,irec_local)
         enddo
 
       endif ! if (ibool_read_adj_arrays)
@@ -194,46 +191,42 @@
       if (it < NSTEP) then
 
         ! receivers act as sources
-        irec_local = 0
-        do irec = 1,nrec
+        do irec_local = 1, nrec_local
 
-          ! add the source (only if this proc carries the source)
-          if (myrank == islice_selected_rec(irec)) then
-            irec_local = irec_local + 1
+          irec = number_receiver_global(irec_local)
+          ispec = ispec_selected_rec(irec)
+          if (ispec_is_poroelastic(ispec)) then
+            ! adds source array
+            do k = 1,NGLLZ
+              do j = 1,NGLLY
+                do i = 1,NGLLX
+                  iglob = ibool(i,j,k,ispec_selected_rec(irec))
+                  ! get poroelastic parameters of current local GLL
+                  phil = phistore(i,j,k,ispec_selected_rec(irec))
+                  rhol_s = rhoarraystore(1,i,j,k,ispec_selected_rec(irec))
+                  rhol_f = rhoarraystore(2,i,j,k,ispec_selected_rec(irec))
+                  rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
 
-            ispec = ispec_selected_rec(irec)
-            if (ispec_is_poroelastic(ispec)) then
-              ! adds source array
-              do k = 1,NGLLZ
-                do j = 1,NGLLY
-                  do i = 1,NGLLX
-                    iglob = ibool(i,j,k,ispec_selected_rec(irec))
-                    ! get poroelastic parameters of current local GLL
-                    phil = phistore(i,j,k,ispec_selected_rec(irec))
-                    rhol_s = rhoarraystore(1,i,j,k,ispec_selected_rec(irec))
-                    rhol_f = rhoarraystore(2,i,j,k,ispec_selected_rec(irec))
-                    rhol_bar =  (1._CUSTOM_REAL - phil)*rhol_s + phil*rhol_f
+                  ! adjoint source is in the solid phase only since this is the only measurement
+                  ! available
 
-                    ! adjoint source is in the solid phase only since this is the only measurement
-                    ! available
-
-                    ! solid phase
-                    accels_poroelastic(:,iglob) = accels_poroelastic(:,iglob)   + &
-                                      source_adjoint(irec_local,NTSTEP_BETWEEN_READ_ADJSRC -&
-                                                     mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC),:) * &
-                                      hxir_store(irec_local,i)*hetar_store(irec_local,j)*hgammar_store(irec_local,k)
-                    !
-                    ! fluid phase
-                    accelw_poroelastic(:,iglob) = accelw_poroelastic(:,iglob)  &
-                                      - rhol_f/rhol_bar *&
-                                      source_adjoint(irec_local,NTSTEP_BETWEEN_READ_ADJSRC -&
-                                      mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC),:) * &
-                                      hxir_store(irec_local,i)*hetar_store(irec_local,j)*hgammar_store(irec_local,k)
-                  enddo
+                  ! solid phase
+                  accels_poroelastic(:,iglob) = accels_poroelastic(:,iglob)   + &
+                                    source_adjoint(irec_local,NTSTEP_BETWEEN_READ_ADJSRC -&
+                                                   mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC),:) * &
+                                    hxir_store(irec_local,i)*hetar_store(irec_local,j)*hgammar_store(irec_local,k)
+                  !
+                  ! fluid phase
+                  accelw_poroelastic(:,iglob) = accelw_poroelastic(:,iglob)  &
+                                    - rhol_f/rhol_bar *&
+                                    source_adjoint(irec_local,NTSTEP_BETWEEN_READ_ADJSRC -&
+                                    mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC),:) * &
+                                    hxir_store(irec_local,i)*hetar_store(irec_local,j)*hgammar_store(irec_local,k)
                 enddo
               enddo
-            endif ! ispec_is_poroelastic
-          endif
+            enddo
+          endif ! ispec_is_poroelastic
+
         enddo ! nrec
 
       endif ! it

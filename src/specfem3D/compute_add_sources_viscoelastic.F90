@@ -156,11 +156,10 @@
           if (USE_BINARY_FOR_SEISMOGRAMS) stop 'Adjoint simulations not supported with .bin format, please use SU format instead'
           !!! read ascii adjoint sources
           do irec_local = 1, nrec_local
-            ! compute source arrays
             ! reads in **net**.**sta**.**BH**.adj files
             irec = number_receiver_global(irec_local)
             adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
-            call compute_arrays_adjoint_source(adj_source_file,irec)
+            call compute_arrays_adjoint_source(adj_source_file,irec_local)
           enddo
         else
            call compute_arrays_adjoint_source_SU()
@@ -479,11 +478,10 @@
           if (USE_BINARY_FOR_SEISMOGRAMS) stop 'Adjoint simulations not supported with .bin format, please use SU format instead'
           !!! read ascii adjoint sources
           do irec_local = 1, nrec_local
-            ! compute source arrays
             ! reads in **net**.**sta**.**BH**.adj files
             irec = number_receiver_global(irec_local)
             adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
-            call compute_arrays_adjoint_source(adj_source_file,irec)
+            call compute_arrays_adjoint_source(adj_source_file,irec_local)
           enddo
         else
           call compute_arrays_adjoint_source_SU()
