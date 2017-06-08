@@ -372,7 +372,7 @@ subroutine compute_forces_viscoelastic_backward_calling()
       ! note: we will add all source contributions in the first pass, when iphase == 1
       !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
       call compute_add_sources_viscoelastic_backward()
- 
+
     endif ! iphase
 
     ! assemble all the contributions between slices using MPI
@@ -546,7 +546,7 @@ subroutine compute_forces_viscoelastic_GPU_calling()
       ! note: we will add all source contributions in the first pass, when iphase == 1
       !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
       call compute_add_sources_viscoelastic_GPU()
- 
+
     endif ! iphase
 
     ! assemble all the contributions between slices using MPI

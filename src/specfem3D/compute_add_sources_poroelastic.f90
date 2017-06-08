@@ -31,15 +31,15 @@
 
   use constants
   use specfem_par, only: station_name,network_name,adj_source_file,USE_FORCE_POINT_SOURCE, &
-                         tshift_src,dt,t0,USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function,&
+                         tshift_src,dt,t0,USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function, &
                          USE_BINARY_FOR_SEISMOGRAMS,ibool, &
-                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
-                         sourcearrays,SIMULATION_TYPE,NSTEP,&
-                         nrec,islice_selected_rec,ispec_selected_rec,&
-                         nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,&
+                         NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
+                         sourcearrays,SIMULATION_TYPE,NSTEP, &
+                         nrec,islice_selected_rec,ispec_selected_rec, &
+                         nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC, &
                          hxir_store,hetar_store,hgammar_store,source_adjoint
 
-  use specfem_par_poroelastic, only : b_accels_poroelastic,b_accelw_poroelastic,accels_poroelastic,accelw_poroelastic,&
+  use specfem_par_poroelastic, only: b_accels_poroelastic,b_accelw_poroelastic,accels_poroelastic,accelw_poroelastic, &
                                       rhoarraystore,phistore,tortstore,ispec_is_poroelastic
 
   implicit none

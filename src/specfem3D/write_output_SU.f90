@@ -147,7 +147,7 @@ if (SAVE_SEISMOGRAMS_DISPLACEMENT) then
 
 endif
 
-if (SAVE_SEISMOGRAMS_PRESSURE) then 
+if (SAVE_SEISMOGRAMS_PRESSURE) then
  ! write seismograms (dz)
   open(unit=IOUT_SU, file=trim(final_LOCAL_PATH)//trim(procname)//'_dp_SU', &
        status='unknown', access='direct', recl=4, iostat=ier)

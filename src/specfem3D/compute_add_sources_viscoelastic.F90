@@ -34,13 +34,13 @@
                         free_surface_ijk,free_surface_jacobian2Dw,noise_sourcearray,irec_master_noise, &
                         normal_x_noise,normal_y_noise,normal_z_noise,mask_noise,noise_surface_movie, &
                         nrec_local,number_receiver_global,nsources_local,tshift_src,dt,t0,SU_FORMAT, &
-                        USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function,&
-                        USE_BINARY_FOR_SEISMOGRAMS,NSPEC_AB,NGLOB_AB,ibool,NSOURCES,myrank,it,islice_selected_source,&
+                        USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function, &
+                        USE_BINARY_FOR_SEISMOGRAMS,NSPEC_AB,NGLOB_AB,ibool,NSOURCES,myrank,it,islice_selected_source, &
                         ispec_selected_source,sourcearrays,SIMULATION_TYPE,NSTEP, &
                         nrec,islice_selected_rec,ispec_selected_rec,nadj_rec_local, &
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY,hxir_store,hetar_store,hgammar_store,source_adjoint
 
-  use specfem_par_elastic, only : accel,ispec_is_elastic
+  use specfem_par_elastic, only: accel,ispec_is_elastic
 
 #ifdef DEBUG_COUPLED
     include "../../../add_to_compute_add_sources_viscoelastic_1.F90"
@@ -244,12 +244,12 @@
                         normal_x_noise,normal_y_noise,normal_z_noise, &
                         mask_noise,noise_surface_movie, &
                         nsources_local,tshift_src,dt,t0, &
-                        USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function,&
+                        USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function, &
                         NSPEC_AB,NGLOB_AB,ibool, &
-                        NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
+                        NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
                         sourcearrays,SIMULATION_TYPE,NSTEP,NOISE_TOMOGRAPHY
 
-  use specfem_par_elastic, only : b_accel,ispec_is_elastic
+  use specfem_par_elastic, only: b_accel,ispec_is_elastic
 
 #ifdef DEBUG_COUPLED
     include "../../../add_to_compute_add_sources_viscoelastic_1.F90"
@@ -371,10 +371,10 @@
                         irec_master_noise,noise_surface_movie, &
                         nrec_local,number_receiver_global, &
                         nsources_local,tshift_src,dt,t0,SU_FORMAT, &
-                        USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function,USE_BINARY_FOR_SEISMOGRAMS,&
-                        NSOURCES,it,SIMULATION_TYPE,NSTEP,&
-                        nrec,islice_selected_rec,&
-                        nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY,&
+                        USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function,USE_BINARY_FOR_SEISMOGRAMS, &
+                        NSOURCES,it,SIMULATION_TYPE,NSTEP, &
+                        nrec,islice_selected_rec, &
+                        nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         Mesh_pointer,source_adjoint
 
 
@@ -494,10 +494,10 @@
 
       if (it < NSTEP) then
         call add_sources_el_sim_type_2_or_3(Mesh_pointer, &
-                                            source_adjoint,&
+                                            source_adjoint, &
                                             nrec, &
                                             nadj_rec_local, &
-                                            NTSTEP_BETWEEN_READ_ADJSRC,&
+                                            NTSTEP_BETWEEN_READ_ADJSRC, &
                                             it)
       endif ! it
     endif ! nadj_rec_local

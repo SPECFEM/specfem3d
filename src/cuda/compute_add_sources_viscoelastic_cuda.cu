@@ -230,7 +230,7 @@ __global__ void add_sources_el_SIM_TYPE_2_OR_3_kernel(realw* accel,
                                                       realw* source_adjoint,
                                                       realw* xir_store,
                                                       realw* etar_store,
-                                                      realw* gammar_store,                                                    
+                                                      realw* gammar_store,
                                                       int* d_ibool,
                                                       int* ispec_is_elastic,
                                                       int* ispec_selected_rec,
@@ -274,7 +274,7 @@ void FC_FUNC_(add_sources_el_sim_type_2_or_3,
                                               realw* h_source_adjoint,
                                               int* nrec,
                                               int* nadj_rec_local,
-                                              int* NTSTEP_BETWEEN_READ_ADJSRC, 
+                                              int* NTSTEP_BETWEEN_READ_ADJSRC,
                                               int* it) {
 
   TRACE("\tadd_sources_el_sim_type_2_or_3");
