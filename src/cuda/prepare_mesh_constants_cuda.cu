@@ -132,7 +132,8 @@ void FC_FUNC_(prepare_constants_device,
                                         int* USE_MESH_COLORING_GPU_f,
                                         int* nspec_acoustic,int* nspec_elastic,
                                         int* h_myrank,
-                                        int* SAVE_FORWARD) {
+                                        int* SAVE_FORWARD,
+                                        realw* h_xir,realw* h_etar, realw* h_gammar) {
 
   TRACE("prepare_constants_device");
 
@@ -329,11 +330,14 @@ void FC_FUNC_(prepare_constants_device,
   // size(ispec_selected_rec) = nrec
   if (mp->nrec_local > 0){
     copy_todevice_int((void**)&mp->d_number_receiver_global,h_number_receiver_global,mp->nrec_local);
+    copy_todevice_realw((void**)&mp->d_hxir,h_xir,5*mp->nrec_local);
+    copy_todevice_realw((void**)&mp->d_hetar,h_etar,5*mp->nrec_local);
+    copy_todevice_realw((void**)&mp->d_hgammar,h_gammar,5*mp->nrec_local);
   }
   copy_todevice_int((void**)&mp->d_ispec_selected_rec,h_ispec_selected_rec,(*nrec));
 
 
-#ifdef USE_MESH_COLORING_GPU
+#ifdef USE_MESH_COLORING_GPUX
   mp->use_mesh_coloring_gpu = 1;
   if (! *USE_MESH_COLORING_GPU_f) exit_on_error("error with USE_MESH_COLORING_GPU constant; please re-compile\n");
 #else
@@ -1154,7 +1158,8 @@ void FC_FUNC_(prepare_sim2_or_3_const_device,
                                               int* islice_selected_rec,
                                               int* islice_selected_rec_size,
                                               int* nadj_rec_local,
-                                              int* nrec) {
+                                              int* nrec,
+                                              int* NTSTEP_BETWEEN_READ_ADJSRC) {
 
   TRACE("prepare_sim2_or_3_const_device");
 
@@ -1163,11 +1168,13 @@ void FC_FUNC_(prepare_sim2_or_3_const_device,
   // adjoint source arrays
   mp->nadj_rec_local = *nadj_rec_local;
   if (mp->nadj_rec_local > 0){
-    print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_adj_sourcearrays,
-                                       (mp->nadj_rec_local)*3*NGLL3*sizeof(realw)),6003);
 
     print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_pre_computed_irec,
                                        (mp->nadj_rec_local)*sizeof(int)),6004);
+
+    print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_source_adjoint,
+                                       (mp->nadj_rec_local)*3*sizeof(realw)*(*NTSTEP_BETWEEN_READ_ADJSRC)),6005);
+
 
     // prepares local irec array:
     // the irec_local variable needs to be precomputed (as
@@ -1191,9 +1198,6 @@ void FC_FUNC_(prepare_sim2_or_3_const_device,
                                        (mp->nadj_rec_local)*sizeof(int),cudaMemcpyHostToDevice),6010);
     free(h_pre_computed_irec);
 
-    // temporary array to prepare extracted source array values
-    mp->h_adj_sourcearrays_slice = (realw*) malloc( (mp->nadj_rec_local)*3*NGLL3*sizeof(realw) );
-    if (mp->h_adj_sourcearrays_slice == NULL) exit_on_error("h_adj_sourcearrays_slice not allocated\n");
   }
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
@@ -1450,7 +1454,12 @@ TRACE("prepare_cleanup_device");
   cudaFree(mp->d_ispec_selected_source);
 
   // receivers
-  if (mp->nrec_local > 0) cudaFree(mp->d_number_receiver_global);
+  if (mp->nrec_local > 0){
+    cudaFree(mp->d_number_receiver_global);
+    cudaFree(mp->d_hxir);
+    cudaFree(mp->d_hetar);
+    cudaFree(mp->d_hgammar);
+    }
   cudaFree(mp->d_ispec_selected_rec);
 
   // ACOUSTIC arrays
@@ -1612,9 +1621,8 @@ TRACE("prepare_cleanup_device");
   // purely adjoint & kernel array
   if (mp->simulation_type == 2 || mp->simulation_type == 3){
     if (mp->nadj_rec_local > 0){
-      cudaFree(mp->d_adj_sourcearrays);
       cudaFree(mp->d_pre_computed_irec);
-      free(mp->h_adj_sourcearrays_slice);
+      cudaFree(mp->d_source_adjoint);
     }
   }
 

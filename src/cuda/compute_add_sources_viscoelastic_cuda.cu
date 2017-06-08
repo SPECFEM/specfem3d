@@ -224,13 +224,18 @@ TRACE("\tadd_source_master_rec_noise_cu");
 /* ----------------------------------------------------------------------------------------------- */
 
 __global__ void add_sources_el_SIM_TYPE_2_OR_3_kernel(realw* accel,
-                                                     int nrec,
-                                                     realw* adj_sourcearrays,
-                                                     int* d_ibool,
-                                                     int* ispec_is_elastic,
-                                                     int* ispec_selected_rec,
-                                                     int* pre_computed_irec,
-                                                     int nadj_rec_local) {
+                                                      int nrec,
+                                                      int it,
+                                                      int NSTEP_BETWEEN_ADJSRC,
+                                                      realw* source_adjoint,
+                                                      realw* xir_store,
+                                                      realw* etar_store,
+                                                      realw* gammar_store,                                                    
+                                                      int* d_ibool,
+                                                      int* ispec_is_elastic,
+                                                      int* ispec_selected_rec,
+                                                      int* pre_computed_irec,
+                                                      int nadj_rec_local) {
 
   int irec_local = blockIdx.x + gridDim.x*blockIdx.y;
 
@@ -245,11 +250,17 @@ __global__ void add_sources_el_SIM_TYPE_2_OR_3_kernel(realw* accel,
       int j = threadIdx.y;
       int k = threadIdx.z;
       int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
+      realw xir    = xir_store[INDEX2(nadj_rec_local,irec_local,i)];
+      realw etar   = etar_store[INDEX2(nadj_rec_local,irec_local,j)];
+      realw gammar = gammar_store[INDEX2(nadj_rec_local,irec_local,k)];
+      realw source_adj = source_adjoint[INDEX3(nadj_rec_local,NSTEP_BETWEEN_ADJSRC,irec_local,it,0)];
+
+      realw lagrange =   xir * etar * gammar ;
 
       // atomic operations are absolutely necessary for correctness!
-      atomicAdd(&accel[3*iglob],adj_sourcearrays[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,0,irec_local)]);
-      atomicAdd(&accel[1+3*iglob], adj_sourcearrays[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,1,irec_local)]);
-      atomicAdd(&accel[2+3*iglob],adj_sourcearrays[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,2,irec_local)]);
+      atomicAdd(&accel[3*iglob],source_adjoint[INDEX3(nadj_rec_local,NSTEP_BETWEEN_ADJSRC,irec_local,it,0)]*lagrange);
+      atomicAdd(&accel[1+3*iglob],source_adjoint[INDEX3(nadj_rec_local,NSTEP_BETWEEN_ADJSRC,irec_local,it,1)]*lagrange);
+      atomicAdd(&accel[2+3*iglob],source_adjoint[INDEX3(nadj_rec_local,NSTEP_BETWEEN_ADJSRC,irec_local,it,2)]*lagrange);
     } // ispec_is_elastic
   }
 
@@ -260,14 +271,11 @@ __global__ void add_sources_el_SIM_TYPE_2_OR_3_kernel(realw* accel,
 extern "C"
 void FC_FUNC_(add_sources_el_sim_type_2_or_3,
               ADD_SOURCES_EL_SIM_TYPE_2_OR_3)(long* Mesh_pointer,
-                                               realw* h_adj_sourcearrays,
-                                               int* h_ispec_is_elastic,
-                                               int* h_ispec_selected_rec,
-                                               int* nrec,
-                                               int* time_index,
-                                               int* h_islice_selected_rec,
-                                               int* nadj_rec_local,
-                                               int* NTSTEP_BETWEEN_READ_ADJSRC) {
+                                              realw* h_source_adjoint,
+                                              int* nrec,
+                                              int* nadj_rec_local,
+                                              int* NTSTEP_BETWEEN_READ_ADJSRC, 
+                                              int* it) {
 
   TRACE("\tadd_sources_el_sim_type_2_or_3");
 
@@ -282,64 +290,20 @@ void FC_FUNC_(add_sources_el_sim_type_2_or_3,
   dim3 grid(num_blocks_x,num_blocks_y,1);
   dim3 threads(5,5,5);
 
-  // build slice of adj_sourcearrays because full array is *very* large.
-  // note: this extracts array values for local adjoint sources at given time step "time_index"
-  //          from large adj_sourcearrays array into h_adj_sourcearrays_slice
-  int ispec,i,j,k,irec_local,it_index;
-
-  it_index = (*time_index) - 1;
-  irec_local = 0;
-
-  for(int irec = 0; irec < *nrec; irec++) {
-    if (mp->myrank == h_islice_selected_rec[irec]) {
-      // takes only elastic sources
-      ispec = h_ispec_selected_rec[irec] - 1;
-
-      // only for elastic elements
-      if (h_ispec_is_elastic[ispec]){
-
-        for(k=0;k<NGLLX;k++) {
-          for(j=0;j<NGLLX;j++) {
-            for(i=0;i<NGLLX;i++) {
-
-              mp->h_adj_sourcearrays_slice[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,0,irec_local)]
-                      = h_adj_sourcearrays[INDEX6(*nadj_rec_local,
-                                                  *NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLX,
-                                                  irec_local,it_index,0,i,j,k)];
-
-              mp->h_adj_sourcearrays_slice[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,1,irec_local)]
-                      = h_adj_sourcearrays[INDEX6(*nadj_rec_local,
-                                                  *NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLX,
-                                                  irec_local,it_index,1,i,j,k)];
-
-              mp->h_adj_sourcearrays_slice[INDEX5(NGLLX,NGLLX,NGLLX,NDIM,i,j,k,2,irec_local)]
-                      = h_adj_sourcearrays[INDEX6(*nadj_rec_local,
-                                                  *NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLX,
-                                                  irec_local,it_index,2,i,j,k)];
-            }
-          }
-        }
-      } // h_ispec_is_elastic
-
-      // increases local receivers counter
-      irec_local++;
-    }
-  }
-  // check all local sources were added
-  if (irec_local != mp->nadj_rec_local) exit_on_error("irec_local not equal to nadj_rec_local\n");
-
+  int it_index = *NTSTEP_BETWEEN_READ_ADJSRC - (*it-1) % *NTSTEP_BETWEEN_READ_ADJSRC - 1 ;
   // copies extracted array values onto GPU
-  print_CUDA_error_if_any(cudaMemcpy(mp->d_adj_sourcearrays, mp->h_adj_sourcearrays_slice,
-                                    (mp->nadj_rec_local)*3*NGLL3*sizeof(realw),cudaMemcpyHostToDevice),98001);
+  if ( (*it-1) % *NTSTEP_BETWEEN_READ_ADJSRC==0) print_CUDA_error_if_any(cudaMemcpy(mp->d_source_adjoint,h_source_adjoint,
+                                                                mp->nadj_rec_local*3*sizeof(realw)*(*NTSTEP_BETWEEN_READ_ADJSRC),cudaMemcpyHostToDevice),99099);
 
 
-  // the irec_local variable needs to be precomputed (as
-  // h_pre_comp..), because normally it is in the loop updating accel,
-  // and due to how it's incremented, it cannot be parallelized
+
 
   add_sources_el_SIM_TYPE_2_OR_3_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_accel,
-                                                                               *nrec,
-                                                                               mp->d_adj_sourcearrays,
+                                                                               *nrec,it_index,*NTSTEP_BETWEEN_READ_ADJSRC,
+                                                                               mp->d_source_adjoint,
+                                                                               mp->d_hxir,
+                                                                               mp->d_hetar,
+                                                                               mp->d_hgammar,
                                                                                mp->d_ibool,
                                                                                mp->d_ispec_is_elastic,
                                                                                mp->d_ispec_selected_rec,

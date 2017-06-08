@@ -168,14 +168,7 @@ subroutine compute_forces_viscoelastic_calling()
       !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
       !
       ! adds source term (single-force/moment-tensor solution)
-      call compute_add_sources_viscoelastic(NSPEC_AB,NGLOB_AB,accel, &
-                                            ibool, &
-                                            NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
-                                            sourcearrays, &
-                                            ispec_is_elastic,SIMULATION_TYPE,NSTEP, &
-                                            nrec,islice_selected_rec,ispec_selected_rec, &
-                                            nadj_rec_local,adj_sourcearrays, &
-                                            NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY)
+      call compute_add_sources_viscoelastic()
 
     endif ! iphase
 
@@ -378,12 +371,8 @@ subroutine compute_forces_viscoelastic_backward_calling()
       ! adds source term (single-force/moment-tensor solution)
       ! note: we will add all source contributions in the first pass, when iphase == 1
       !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
-      call compute_add_sources_viscoelastic_backward( NSPEC_AB,NGLOB_AB, &
-                          ibool, &
-                          NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
-                          sourcearrays, &
-                          ispec_is_elastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
-                          b_accel,NOISE_TOMOGRAPHY)
+      call compute_add_sources_viscoelastic_backward()
+ 
     endif ! iphase
 
     ! assemble all the contributions between slices using MPI
@@ -556,13 +545,8 @@ subroutine compute_forces_viscoelastic_GPU_calling()
       ! adds source term (single-force/moment-tensor solution)
       ! note: we will add all source contributions in the first pass, when iphase == 1
       !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
-      call compute_add_sources_viscoelastic_GPU(NSPEC_AB, &
-                          NSOURCES,it, &
-                          ispec_is_elastic,SIMULATION_TYPE,NSTEP, &
-                          nrec,islice_selected_rec,ispec_selected_rec, &
-                          nadj_rec_local,adj_sourcearrays, &
-                          NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
-                          Mesh_pointer)
+      call compute_add_sources_viscoelastic_GPU()
+ 
     endif ! iphase
 
     ! assemble all the contributions between slices using MPI

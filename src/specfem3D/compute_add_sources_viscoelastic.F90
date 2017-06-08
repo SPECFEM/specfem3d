@@ -27,26 +27,20 @@
 
 ! for elastic solver
 
-  subroutine compute_add_sources_viscoelastic(NSPEC_AB,NGLOB_AB,accel, &
-                        ibool, &
-                        NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
-                        sourcearrays, &
-                        ispec_is_elastic,SIMULATION_TYPE,NSTEP, &
-                        nrec,islice_selected_rec,ispec_selected_rec, &
-                        nadj_rec_local,adj_sourcearrays, &
-                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY)
+  subroutine compute_add_sources_viscoelastic()
 
   use constants
-  use specfem_par, only: station_name,network_name,adj_source_file, &
-                        num_free_surface_faces,free_surface_ispec, &
-                        free_surface_ijk,free_surface_jacobian2Dw, &
-                        noise_sourcearray,irec_master_noise, &
-                        normal_x_noise,normal_y_noise,normal_z_noise, &
-                        mask_noise,noise_surface_movie, &
-                        nrec_local,number_receiver_global, &
-                        nsources_local,tshift_src,dt,t0,SU_FORMAT, &
-                        USE_LDDRK,istage,adj_sourcearray, &
-                        USE_EXTERNAL_SOURCE_FILE,user_source_time_function,USE_BINARY_FOR_SEISMOGRAMS
+  use specfem_par, only: station_name,network_name,adj_source_file,num_free_surface_faces,free_surface_ispec, &
+                        free_surface_ijk,free_surface_jacobian2Dw,noise_sourcearray,irec_master_noise, &
+                        normal_x_noise,normal_y_noise,normal_z_noise,mask_noise,noise_surface_movie, &
+                        nrec_local,number_receiver_global,nsources_local,tshift_src,dt,t0,SU_FORMAT, &
+                        USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function,&
+                        USE_BINARY_FOR_SEISMOGRAMS,NSPEC_AB,NGLOB_AB,ibool,NSOURCES,myrank,it,islice_selected_source,&
+                        ispec_selected_source,sourcearrays,SIMULATION_TYPE,NSTEP, &
+                        nrec,islice_selected_rec,ispec_selected_rec,nadj_rec_local, &
+                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY,hxir_store,hetar_store,hgammar_store,source_adjoint
+
+  use specfem_par_elastic, only : accel,ispec_is_elastic
 
 #ifdef DEBUG_COUPLED
     include "../../../add_to_compute_add_sources_viscoelastic_1.F90"
@@ -54,39 +48,14 @@
 
   implicit none
 
-  integer :: NSPEC_AB,NGLOB_AB
-
-! displacement and acceleration
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: accel
-
-! arrays with mesh parameters per slice
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
-
-! source
-  integer :: NSOURCES,myrank,it
-  integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
-  real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
-
-  logical, dimension(NSPEC_AB) :: ispec_is_elastic
-
-!adjoint simulations
-  integer:: SIMULATION_TYPE,NSTEP
-  integer:: nrec
-  integer,dimension(nrec) :: islice_selected_rec,ispec_selected_rec
-  integer:: nadj_rec_local
-  logical :: ibool_read_adj_arrays
-  integer :: it_sub_adj,itime,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY
-  real(kind=CUSTOM_REAL),dimension(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ):: &
-    adj_sourcearrays
-
 ! local parameters
   real(kind=CUSTOM_REAL) stf_used
-
+  logical ibool_read_adj_arrays
   double precision :: stf,time_source_dble
   double precision,external :: get_stf_viscoelastic
 
-  integer :: isource,iglob,i,j,k,ispec
-  integer :: irec_local,irec, ier
+  integer :: isource,iglob,i,j,k,ispec,it_sub_adj
+  integer :: irec_local,irec
 
 #ifdef DEBUG_COUPLED
     include "../../../add_to_compute_add_sources_viscoelastic_2.F90"
@@ -183,10 +152,6 @@
       ! this must be done carefully, otherwise the adjoint sources may be added twice
       if (ibool_read_adj_arrays) then
 
-        ! allocates temporary source array
-        allocate(adj_sourcearray(NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
-        if (ier /= 0) stop 'error allocating array adj_sourcearray'
-
         if (.not. SU_FORMAT) then
           if (USE_BINARY_FOR_SEISMOGRAMS) stop 'Adjoint simulations not supported with .bin format, please use SU format instead'
           !!! read ascii adjoint sources
@@ -196,20 +161,11 @@
             irec = number_receiver_global(irec_local)
             adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
             call compute_arrays_adjoint_source(adj_source_file,irec)
-
-            do itime = 1,NTSTEP_BETWEEN_READ_ADJSRC
-              adj_sourcearrays(irec_local,itime,:,:,:,:) = adj_sourcearray(itime,:,:,:,:)
-            enddo
-
           enddo
         else
-
            call compute_arrays_adjoint_source_SU()
-
-
         endif !if (.not. SU_FORMAT)
 
-        deallocate(adj_sourcearray)
       endif ! if (ibool_read_adj_arrays)
 
 
@@ -232,9 +188,8 @@
                     iglob = ibool(i,j,k,ispec_selected_rec(irec))
 
                     accel(:,iglob) = accel(:,iglob)  &
-                              + adj_sourcearrays(irec_local, &
-                              NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC), &
-                              :,i,j,k)
+                              + source_adjoint(irec_local,NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC),:) * &
+                                hxir_store(irec_local,i)*hetar_store(irec_local,j)*hgammar_store(irec_local,k)
                   enddo
                 enddo
               enddo
@@ -281,12 +236,7 @@
 !=====================================================================
 ! for elastic solver
 
-  subroutine compute_add_sources_viscoelastic_backward( NSPEC_AB,NGLOB_AB, &
-                        ibool, &
-                        NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
-                        sourcearrays, &
-                        ispec_is_elastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
-                        b_accel,NOISE_TOMOGRAPHY)
+  subroutine compute_add_sources_viscoelastic_backward()
 
   use constants
   use specfem_par, only: num_free_surface_faces,free_surface_ispec, &
@@ -294,30 +244,18 @@
                         normal_x_noise,normal_y_noise,normal_z_noise, &
                         mask_noise,noise_surface_movie, &
                         nsources_local,tshift_src,dt,t0, &
-                        USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function
+                        USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function,&
+                        NSPEC_AB,NGLOB_AB,ibool, &
+                        NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
+                        sourcearrays,SIMULATION_TYPE,NSTEP,NOISE_TOMOGRAPHY
+
+  use specfem_par_elastic, only : b_accel,ispec_is_elastic
 
 #ifdef DEBUG_COUPLED
     include "../../../add_to_compute_add_sources_viscoelastic_1.F90"
 #endif
 
   implicit none
-
-  integer :: NSPEC_AB,NGLOB_AB
-
-! arrays with mesh parameters per slice
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
-
-! source
-  integer :: NSOURCES,myrank,it
-  integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
-  real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
-
-  logical, dimension(NSPEC_AB) :: ispec_is_elastic
-
-!adjoint simulations
-  integer:: SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_ADJOINT):: b_accel
-  integer :: NOISE_TOMOGRAPHY
 
 ! local parameters
   real(kind=CUSTOM_REAL) stf_used
@@ -425,21 +363,20 @@
 !=====================================================================
 ! for elastic solver on GPU
 
-  subroutine compute_add_sources_viscoelastic_GPU(NSPEC_AB, &
-                                                  NSOURCES,it, &
-                                                  ispec_is_elastic,SIMULATION_TYPE,NSTEP, &
-                                                  nrec,islice_selected_rec,ispec_selected_rec, &
-                                                  nadj_rec_local,adj_sourcearrays, &
-                                                  NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
-                                                  Mesh_pointer)
+  subroutine compute_add_sources_viscoelastic_GPU()
 
   use constants
   use specfem_par, only: station_name,network_name,adj_source_file, &
                         num_free_surface_faces, &
                         irec_master_noise,noise_surface_movie, &
                         nrec_local,number_receiver_global, &
-                        nsources_local,tshift_src,dt,t0,SU_FORMAT,adj_sourcearray, &
-                        USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function,USE_BINARY_FOR_SEISMOGRAMS
+                        nsources_local,tshift_src,dt,t0,SU_FORMAT, &
+                        USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function,USE_BINARY_FOR_SEISMOGRAMS,&
+                        NSOURCES,it,SIMULATION_TYPE,NSTEP,&
+                        nrec,islice_selected_rec,&
+                        nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY,&
+                        Mesh_pointer,source_adjoint
+
 
 #ifdef DEBUG_COUPLED
     include "../../../add_to_compute_add_sources_viscoelastic_1.F90"
@@ -447,35 +384,15 @@
 
   implicit none
 
-  integer :: NSPEC_AB
-
-! arrays with mesh parameters per slice
-
-! source
-  integer :: NSOURCES,it
-
-  logical, dimension(NSPEC_AB) :: ispec_is_elastic
-
-  ! adjoint simulations
-  integer:: SIMULATION_TYPE,NSTEP
-  integer(kind=8) :: Mesh_pointer
-  integer:: nrec
-  integer,dimension(nrec) :: islice_selected_rec,ispec_selected_rec
-  integer:: nadj_rec_local
-  logical :: ibool_read_adj_arrays
-  integer :: it_sub_adj,itime,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY
-  real(kind=CUSTOM_REAL),dimension(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ):: &
-    adj_sourcearrays
-
   ! local parameters
   double precision :: stf,time_source_dble
   double precision,external :: get_stf_viscoelastic
-
+  logical ibool_read_adj_arrays
   ! for GPU_MODE
   double precision, dimension(NSOURCES) :: stf_pre_compute
 
-  integer :: isource
-  integer :: irec_local,irec, ier
+  integer :: isource,it_sub_adj
+  integer :: irec_local,irec
 
 #ifdef DEBUG_COUPLED
     include "../../../add_to_compute_add_sources_viscoelastic_2.F90"
@@ -558,10 +475,6 @@
       ! this must be done carefully, otherwise the adjoint sources may be added twice
       if (ibool_read_adj_arrays) then
 
-        ! allocates temporary source array
-        allocate(adj_sourcearray(NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
-        if (ier /= 0) stop 'error allocating array adj_sourcearray'
-
         if (.not. SU_FORMAT) then
           if (USE_BINARY_FOR_SEISMOGRAMS) stop 'Adjoint simulations not supported with .bin format, please use SU format instead'
           !!! read ascii adjoint sources
@@ -571,30 +484,21 @@
             irec = number_receiver_global(irec_local)
             adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
             call compute_arrays_adjoint_source(adj_source_file,irec)
-
-            do itime = 1,NTSTEP_BETWEEN_READ_ADJSRC
-              adj_sourcearrays(irec_local,itime,:,:,:,:) = adj_sourcearray(itime,:,:,:,:)
-            enddo
-
           enddo
         else
-
           call compute_arrays_adjoint_source_SU()
-
         endif !if (.not. SU_FORMAT)
 
-        deallocate(adj_sourcearray)
       endif ! if (ibool_read_adj_arrays)
 
 
       if (it < NSTEP) then
-        call add_sources_el_sim_type_2_or_3(Mesh_pointer,adj_sourcearrays, &
-                                            ispec_is_elastic, &
-                                            ispec_selected_rec, &
+        call add_sources_el_sim_type_2_or_3(Mesh_pointer, &
+                                            source_adjoint,&
                                             nrec, &
-                                            NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC), &
-                                            islice_selected_rec,nadj_rec_local, &
-                                            NTSTEP_BETWEEN_READ_ADJSRC)
+                                            nadj_rec_local, &
+                                            NTSTEP_BETWEEN_READ_ADJSRC,&
+                                            it)
       endif ! it
     endif ! nadj_rec_local
   endif !adjoint

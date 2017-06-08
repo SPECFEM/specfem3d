@@ -182,26 +182,20 @@
 
 !================================================================
 
-  subroutine compute_arrays_adjoint_source(adj_source_file,irec)
+  subroutine compute_arrays_adjoint_source(adj_source_file,irec_local)
 
-  use specfem_par, only: myrank,xi_receiver,eta_receiver,gamma_receiver,adj_sourcearray, &
-                          xigll,yigll,zigll,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC,it
+  use specfem_par, only: myrank,source_adjoint,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC,it
 
   use constants
 
   implicit none
 
 ! input
-  integer irec
+  integer irec_local
   character(len=*) adj_source_file
 
-! Gauss-Lobatto-Legendre points of integration and weights
-  double precision :: hxir(NGLLX), hpxir(NGLLX), hetar(NGLLY), hpetar(NGLLY), &
-        hgammar(NGLLZ), hpgammar(NGLLZ)
-
-  real(kind=CUSTOM_REAL), dimension(NTSTEP_BETWEEN_READ_ADJSRC,NDIM) :: adj_src
-
-  integer icomp, itime, i, j, k, ier, it_start, it_end, it_sub_adj
+! local
+  integer icomp, itime, ier, it_start, it_end, it_sub_adj
   double precision :: junk
   ! note: should have same order as orientation in write_seismograms_to_file()
   character(len=3),dimension(NDIM) :: comp
@@ -216,8 +210,6 @@
   it_sub_adj = ceiling( dble(it)/dble(NTSTEP_BETWEEN_READ_ADJSRC) )
   it_start = NSTEP - it_sub_adj*NTSTEP_BETWEEN_READ_ADJSRC + 1
   it_end   = it_start + NTSTEP_BETWEEN_READ_ADJSRC - 1
-
-  adj_src(:,:) = 0._CUSTOM_REAL
 
   ! loops over components
   do icomp = 1, NDIM
@@ -239,7 +231,7 @@
     enddo
     !! read the block we need
     do itime = it_start, it_end
-      read(IIN,*,iostat=ier) junk, adj_src(itime-it_start+1,icomp)
+      read(IIN,*,iostat=ier) junk, source_adjoint(irec_local,itime-it_start+1,icomp)
       !!! used to check whether we read the correct block
       ! if (icomp==1)      print *, junk, adj_src(itime-it_start+1,icomp)
       if (ier /= 0) &
@@ -250,40 +242,20 @@
 
   enddo
 
-  ! lagrange interpolators for receiver location
-  call lagrange_any(xi_receiver(irec),NGLLX,xigll,hxir,hpxir)
-  call lagrange_any(eta_receiver(irec),NGLLY,yigll,hetar,hpetar)
-  call lagrange_any(gamma_receiver(irec),NGLLZ,zigll,hgammar,hpgammar)
-
-  ! interpolates adjoint source onto GLL points within this element
-  do k = 1, NGLLZ
-    do j = 1, NGLLY
-      do i = 1, NGLLX
-        adj_sourcearray(:,:,i,j,k) = hxir(i) * hetar(j) * hgammar(k) * adj_src(:,:)
-      enddo
-    enddo
-  enddo
-
 end subroutine compute_arrays_adjoint_source
 
 !================================================================
 
 subroutine compute_arrays_adjoint_source_SU()
 
-  use specfem_par, only: myrank,xi_receiver,eta_receiver,gamma_receiver,adj_sourcearray,adj_sourcearrays, &
-                          xigll,yigll,zigll,it,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC,nrec_local,number_receiver_global
+  use specfem_par, only: myrank,source_adjoint,it,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC,nrec_local
   use specfem_par_acoustic, only: ACOUSTIC_SIMULATION
   use specfem_par_elastic, only: ELASTIC_SIMULATION
   use constants
 
   implicit none
-
-! Gauss-Lobatto-Legendre points of integration and weights
-  double precision :: hxir(NGLLX), hpxir(NGLLX), hetar(NGLLY), hpetar(NGLLY), &
-        hgammar(NGLLZ), hpgammar(NGLLZ)
-  real(kind=CUSTOM_REAL), dimension(NTSTEP_BETWEEN_READ_ADJSRC,NDIM) :: adj_src
   real(kind=CUSTOM_REAL), dimension(NTSTEP_BETWEEN_READ_ADJSRC) :: adj_temp
-  integer i, j, k, ier, irec_local, irec, it_start, it_sub_adj
+  integer :: ier, irec_local, it_start, it_sub_adj
 
   ! note: should have same order as orientation in write_seismograms_to_file()
   character(len=MAX_STRING_LEN) :: procname, filename
@@ -300,28 +272,10 @@ subroutine compute_arrays_adjoint_source_SU()
     open(unit=IIN_SU1,file=filename,status='old',access='stream',iostat = ier)
     if (ier /= 0) call exit_MPI(myrank,'file '//trim(filename)//' does not exist')
     do irec_local = 1,nrec_local
-       irec = number_receiver_global(irec_local)
        read(IIN_SU1,pos=4*((irec_local-1)*(60+NSTEP) + 60 + it_start)+1 ) adj_temp
-       adj_src(:,1)=adj_temp(:)
-       adj_src(:,2)=0.0  !TRIVIAL
-       adj_src(:,3)=0.0  !TRIVIAL
-
-       ! lagrange interpolators for receiver location
-       call lagrange_any(xi_receiver(irec),NGLLX,xigll,hxir,hpxir)
-       call lagrange_any(eta_receiver(irec),NGLLY,yigll,hetar,hpetar)
-       call lagrange_any(gamma_receiver(irec),NGLLZ,zigll,hgammar,hpgammar)
-
-       ! interpolates adjoint source onto GLL points within this element
-       do k = 1, NGLLZ
-         do j = 1, NGLLY
-           do i = 1, NGLLX
-             adj_sourcearray(:,:,i,j,k) = hxir(i) * hetar(j) * hgammar(k) * adj_src(:,:)
-           enddo
-         enddo
-       enddo
-
-       adj_sourcearrays(irec_local,:,:,:,:,:) = adj_sourcearray(:,:,:,:,:)
-
+       source_adjoint(irec_local,:,1) = adj_temp(:)
+       source_adjoint(irec_local,:,2) = 0.0  !TRIVIAL
+       source_adjoint(irec_local,:,3) = 0.0  !TRIVIAL
     enddo
     close(IIN_SU1)
 
@@ -340,30 +294,13 @@ subroutine compute_arrays_adjoint_source_SU()
     if (ier /= 0) call exit_MPI(myrank,'file '//trim(filename)//' does not exist')
 
     do irec_local = 1,nrec_local
-       irec = number_receiver_global(irec_local)
 
        read(IIN_SU1,pos=4*((irec_local-1)*(60+NSTEP) + 60 + it_start)+1 ) adj_temp
-       adj_src(:,1)=adj_temp(:)
+       source_adjoint(irec_local,:,1)=adj_temp(:)
        read(IIN_SU2,pos=4*((irec_local-1)*(60+NSTEP) + 60 + it_start)+1 ) adj_temp
-       adj_src(:,2)=adj_temp(:)
+       source_adjoint(irec_local,:,2)=adj_temp(:)
        read(IIN_SU3,pos=4*((irec_local-1)*(60+NSTEP) + 60 + it_start)+1 ) adj_temp
-       adj_src(:,3)=adj_temp(:)
-
-       ! lagrange interpolators for receiver location
-       call lagrange_any(xi_receiver(irec),NGLLX,xigll,hxir,hpxir)
-       call lagrange_any(eta_receiver(irec),NGLLY,yigll,hetar,hpetar)
-       call lagrange_any(gamma_receiver(irec),NGLLZ,zigll,hgammar,hpgammar)
-
-       ! interpolates adjoint source onto GLL points within this element
-       do k = 1, NGLLZ
-         do j = 1, NGLLY
-           do i = 1, NGLLX
-             adj_sourcearray(:,:,i,j,k) = hxir(i) * hetar(j) * hgammar(k) * adj_src(:,:)
-           enddo
-         enddo
-       enddo
-
-       adj_sourcearrays(irec_local,:,:,:,:,:) = adj_sourcearray(:,:,:,:,:)
+       source_adjoint(irec_local,:,3)=adj_temp(:)
 
     enddo
 

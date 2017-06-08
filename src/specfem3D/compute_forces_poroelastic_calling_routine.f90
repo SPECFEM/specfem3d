@@ -197,16 +197,8 @@ subroutine compute_forces_poroelastic_calling()
       ! note: we will add all source contributions in the first pass, when iphase == 1
       !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
       !
-      call compute_add_sources_poroelastic( NSPEC_AB,NGLOB_AB, &
-                          accels_poroelastic,accelw_poroelastic, &
-                          rhoarraystore,phistore,tortstore, &
-                          ibool, &
-                          NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
-                          sourcearrays, &
-                          ispec_is_poroelastic,SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
-                          nrec,islice_selected_rec,ispec_selected_rec, &
-                          nadj_rec_local,adj_sourcearrays,b_accels_poroelastic,b_accelw_poroelastic, &
-                          NTSTEP_BETWEEN_READ_ADJSRC)
+      call compute_add_sources_poroelastic()
+
     endif ! iphase
 
     ! assemble all the contributions between slices using MPI

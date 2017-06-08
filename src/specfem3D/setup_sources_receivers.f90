@@ -850,22 +850,15 @@
     endif
 
     ! initializes adjoint sources
-    allocate(adj_sourcearrays(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) stop 'error allocating array adj_sourcearrays'
-    adj_sourcearrays(:,:,:,:,:,:) = 0._CUSTOM_REAL
+
+    allocate(source_adjoint(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM),stat=ier)
+    if (ier /= 0) stop 'error allocating array source_adjoint'
 
     ! note:
     ! computes adjoint sources in chunks/blocks during time iterations.
     ! we moved it to compute_add_sources_viscoelastic.f90 & compute_add_sources_acoustic.f90,
     ! because we may need to read in adjoint sources block by block
 
-  else
-    ! (SIMULATION_TYPE == 1)
-    ! allocate dummy array in order to be able to use it as a subroutine argument, even if unused
-    nadj_rec_local = 0
-    NTSTEP_BETWEEN_READ_ADJSRC = 0
-    allocate(adj_sourcearrays(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
-    if (ier /= 0) stop 'error allocating dummy array adj_sourcearrays'
   endif
 
   ! user info

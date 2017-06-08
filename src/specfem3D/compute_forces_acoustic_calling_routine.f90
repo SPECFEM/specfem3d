@@ -172,13 +172,7 @@ subroutine compute_forces_acoustic_calling()
       ! note: we will add all source contributions in the first pass, when iphase == 1
       !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
       !
-      call compute_add_sources_acoustic(NSPEC_AB,NGLOB_AB,potential_dot_dot_acoustic, &
-                          ibool, &
-                          NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
-                          sourcearrays,kappastore,ispec_is_acoustic, &
-                          SIMULATION_TYPE,NSTEP, &
-                          nrec,islice_selected_rec,ispec_selected_rec, &
-                          nadj_rec_local,adj_sourcearrays,NTSTEP_BETWEEN_READ_ADJSRC)
+      call compute_add_sources_acoustic()
     endif ! iphase
 
     ! assemble all the contributions between slices using MPI
@@ -414,12 +408,8 @@ subroutine compute_forces_acoustic_backward_calling()
       ! note: we will add all source contributions in the first pass, when iphase == 1
       !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
       !
-      call compute_add_sources_acoustic_backward(NSPEC_AB, &
-                                    ibool, &
-                                    NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
-                                    sourcearrays,kappastore,ispec_is_acoustic, &
-                                    SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
-                                    b_potential_dot_dot_acoustic)
+      call compute_add_sources_acoustic_backward()
+
     endif ! iphase
 
     ! assemble all the contributions between slices using MPI
@@ -549,12 +539,7 @@ subroutine compute_forces_acoustic_GPU_calling()
       ! note: we will add all source contributions in the first pass, when iphase == 1
       !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
       !
-      call compute_add_sources_acoustic_GPU(NSPEC_AB, &
-                                    NSOURCES,it, &
-                                    ispec_is_acoustic,SIMULATION_TYPE,NSTEP, &
-                                    nrec,islice_selected_rec,ispec_selected_rec, &
-                                    nadj_rec_local,adj_sourcearrays, &
-                                    NTSTEP_BETWEEN_READ_ADJSRC,Mesh_pointer)
+      call compute_add_sources_acoustic_GPU()
     endif ! iphase
 
     ! assemble all the contributions between slices using MPI

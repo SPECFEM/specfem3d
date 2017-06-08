@@ -72,7 +72,7 @@
 
   allocate(rtmpseis(NSTEP),stat=ier)
   if (ier /= 0) stop 'error allocating rtmpseis array'
-
+if (SAVE_SEISMOGRAMS_DISPLACEMENT) then
   ! write seismograms (dx)
   open(unit=IOUT_SU, file=trim(final_LOCAL_PATH)//trim(procname)//'_dx_SU', &
        status='unknown', access='direct', recl=4, iostat=ier)
@@ -144,6 +144,34 @@
 
   enddo
   close(IOUT_SU)
+
+endif
+
+if (SAVE_SEISMOGRAMS_PRESSURE) then 
+ ! write seismograms (dz)
+  open(unit=IOUT_SU, file=trim(final_LOCAL_PATH)//trim(procname)//'_dp_SU', &
+       status='unknown', access='direct', recl=4, iostat=ier)
+
+  if (ier /= 0) stop 'error opening ***_dp_SU file'
+
+  do irec_local = 1,nrec_local
+    irec = number_receiver_global(irec_local)
+
+    ! write section header
+    call write_SU_header(irec_local,irec,nrec,NSTEP,DT,dx, &
+                         x_found(irec),y_found(irec),z_found(irec),x_found_source,y_found_source,z_found_source)
+
+    ! convert trace to real 4-byte
+    rtmpseis(1:NSTEP) = seismograms_p(1,irec_local,1:NSTEP)
+    do i=1,NSTEP
+      write(IOUT_SU,rec=irec_local*60+(irec_local-1)*NSTEP+i) rtmpseis(i)
+    enddo
+
+  enddo
+  close(IOUT_SU)
+
+endif
+
 
   end subroutine write_output_SU
 

@@ -234,14 +234,14 @@ typedef texture<float, cudaTextureType1D, cudaReadModeElementType> realw_texture
 //   however, compiler tends to use texture loads for restricted memory arrays, which might slow down performance
 //
 // non-restricted (default)
-typedef const realw* realw_const_p;
+//typedef const realw* realw_const_p;
 // restricted
-//typedef const realw* __restrict__ realw_const_p;
+typedef const realw* __restrict__ realw_const_p;
 //
 // non-restricted (default)
-typedef realw* realw_p;
+//typedef realw* realw_p;
 // restricted
-//typedef realw* __restrict__ realw_p;
+typedef realw* __restrict__ realw_p;
 
 // wrapper for global memory load function
 // usage:  val = get_global_cr( &A[index] );
@@ -408,11 +408,11 @@ typedef struct mesh_ {
   realw* d_station_seismo_field;
   realw* h_station_seismo_field;
 
-  double* d_hxir, *d_hetar, *d_hgammar;
+  realw* d_hxir, *d_hetar, *d_hgammar;
   double* d_dxd, *d_dyd, *d_dzd;
   double* d_vxd, *d_vyd, *d_vzd;
   double* d_axd, *d_ayd, *d_azd;
-  realw* d_seismograms_d, *d_seismograms_v, *d_seismograms_a;
+  realw* d_seismograms_d, *d_seismograms_v, *d_seismograms_a, *d_seismograms_p;
   double* d_nu;
 
   realw* h_seismograms_d_it;
@@ -421,6 +421,7 @@ typedef struct mesh_ {
 
   // adjoint receivers/sources
   int nadj_rec_local;
+  realw* d_source_adjoint;
   realw* d_adj_sourcearrays;
   realw* h_adj_sourcearrays_slice;
   int* d_pre_computed_irec;

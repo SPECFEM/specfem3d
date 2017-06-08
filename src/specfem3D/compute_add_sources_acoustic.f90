@@ -27,56 +27,30 @@
 
 ! for acoustic solver
 
-  subroutine compute_add_sources_acoustic(NSPEC_AB,NGLOB_AB,potential_dot_dot_acoustic, &
-                                  ibool, &
-                                  NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
-                                  sourcearrays,kappastore,ispec_is_acoustic, &
-                                  SIMULATION_TYPE,NSTEP, &
-                                  nrec,islice_selected_rec,ispec_selected_rec, &
-                                  nadj_rec_local,adj_sourcearrays,NTSTEP_BETWEEN_READ_ADJSRC)
+  subroutine compute_add_sources_acoustic()
 
   use constants
   use specfem_par, only: station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
-                        nsources_local,tshift_src,DT,t0,SU_FORMAT,USE_LDDRK,istage,adj_sourcearray, &
-                        USE_EXTERNAL_SOURCE_FILE,user_source_time_function,USE_BINARY_FOR_SEISMOGRAMS
+                         nsources_local,tshift_src,DT,t0,SU_FORMAT,USE_LDDRK,istage,source_adjoint, &
+                         hxir_store,hetar_store,hgammar_store,USE_EXTERNAL_SOURCE_FILE,&
+                         user_source_time_function,USE_BINARY_FOR_SEISMOGRAMS,&
+                         ibool,NSOURCES,myrank,it,ispec_selected_source,islice_selected_source,&
+                         sourcearrays,kappastore,SIMULATION_TYPE,NSTEP, &
+                         nrec,islice_selected_rec,ispec_selected_rec, &
+                         nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC
+
+  use specfem_par_acoustic, only : potential_dot_dot_acoustic,ispec_is_acoustic
 
   implicit none
 
-  integer :: NSPEC_AB,NGLOB_AB
-
-! displacement and acceleration
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: potential_dot_dot_acoustic
-
-! arrays with mesh parameters per slice
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
-
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: kappastore
-
-! source
-  integer :: NSOURCES,myrank,it
-  integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
-  real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
-
-  logical, dimension(NSPEC_AB) :: ispec_is_acoustic
-
-!adjoint simulations
-  integer:: SIMULATION_TYPE,NSTEP
-  integer:: nrec
-  integer,dimension(nrec) :: islice_selected_rec,ispec_selected_rec
-  integer:: nadj_rec_local
-  logical :: ibool_read_adj_arrays
-  integer :: it_sub_adj,itime,NTSTEP_BETWEEN_READ_ADJSRC
-  real(kind=CUSTOM_REAL),dimension(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ):: &
-    adj_sourcearrays
-
 ! local parameters
   real(kind=CUSTOM_REAL) stf_used
-
+  logical :: ibool_read_adj_arrays
   double precision :: stf,time_source_dble
   double precision,external :: get_stf_acoustic
 
-  integer :: isource,iglob,ispec,i,j,k,ier
-  integer :: irec_local,irec
+  integer :: isource,iglob,ispec,i,j,k
+  integer :: irec_local,irec,it_sub_adj
 
 ! forward simulations
   if (SIMULATION_TYPE == 1 .and. nsources_local > 0) then
@@ -177,10 +151,6 @@
       ! this must be done carefully, otherwise the adjoint sources may be added twice
       if (ibool_read_adj_arrays) then
 
-        ! allocates temporary source array
-        allocate(adj_sourcearray(NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
-        if (ier /= 0) stop 'error allocating array adj_sourcearray'
-
         if (.not. SU_FORMAT) then
 
           if (USE_BINARY_FOR_SEISMOGRAMS) stop 'Adjoint simulations not supported with .bin format, please use SU format instead'
@@ -193,16 +163,11 @@
             adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
             call compute_arrays_adjoint_source(adj_source_file,irec)
 
-            do itime = 1,NTSTEP_BETWEEN_READ_ADJSRC
-              adj_sourcearrays(irec_local,itime,:,:,:,:) = adj_sourcearray(itime,:,:,:,:)
-            enddo
-
           enddo
         else
           call compute_arrays_adjoint_source_SU()
         endif !if (.not. SU_FORMAT)
 
-        deallocate(adj_sourcearray)
       endif ! if (ibool_read_adj_arrays)
 
       if (it < NSTEP) then
@@ -227,9 +192,8 @@
                     ! note: we take the first component of the adj_sourcearrays
                     !          the idea is to have e.g. a pressure source, where all 3 components would be the same
                     potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
-                               + adj_sourcearrays(irec_local, &
-                                                  NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC), &
-                                                  1,i,j,k)
+                                + source_adjoint(irec_local,NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC),1) * &
+                                hxir_store(irec_local,i)*hetar_store(irec_local,j)*hgammar_store(irec_local,k)
                   enddo
                 enddo
               enddo
@@ -248,35 +212,16 @@
 
 ! for acoustic solver for back propagation wave field
 
-  subroutine compute_add_sources_acoustic_backward(NSPEC_AB, &
-                                  ibool, &
-                                  NSOURCES,myrank,it,islice_selected_source,ispec_selected_source, &
-                                  sourcearrays,kappastore,ispec_is_acoustic, &
-                                  SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT, &
-                                  b_potential_dot_dot_acoustic)
+  subroutine compute_add_sources_acoustic_backward()
 
   use constants
-  use specfem_par, only: nsources_local,tshift_src,DT,t0,USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function
+  use specfem_par, only: nsources_local,tshift_src,DT,t0,USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function, &
+                         ibool,NSOURCES,myrank,it,islice_selected_source,ispec_selected_source,&
+                         sourcearrays,kappastore,SIMULATION_TYPE,NSTEP
+
+  use specfem_par_acoustic, only : ispec_is_acoustic,b_potential_dot_dot_acoustic
 
   implicit none
-
-  integer :: NSPEC_AB
-
-! arrays with mesh parameters per slice
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
-
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: kappastore
-
-! source
-  integer :: NSOURCES,myrank,it
-  integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
-  real(kind=CUSTOM_REAL), dimension(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrays
-
-  logical, dimension(NSPEC_AB) :: ispec_is_acoustic
-
-!adjoint simulations
-  integer:: SIMULATION_TYPE,NSTEP,NGLOB_ADJOINT
-  real(kind=CUSTOM_REAL),dimension(NGLOB_ADJOINT):: b_potential_dot_dot_acoustic
 
 ! local parameters
   real(kind=CUSTOM_REAL) stf_used
@@ -374,48 +319,27 @@
 
 ! for acoustic solver on GPU
 
-  subroutine compute_add_sources_acoustic_GPU(NSPEC_AB, &
-                                  NSOURCES,it, &
-                                  ispec_is_acoustic,SIMULATION_TYPE,NSTEP, &
-                                  nrec,islice_selected_rec,ispec_selected_rec, &
-                                  nadj_rec_local,adj_sourcearrays, &
-                                  NTSTEP_BETWEEN_READ_ADJSRC,Mesh_pointer )
+  subroutine compute_add_sources_acoustic_GPU()
 
   use constants
   use specfem_par, only: station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
-                        nsources_local,tshift_src,DT,t0,SU_FORMAT,USE_LDDRK,istage,adj_sourcearray, &
-                        USE_EXTERNAL_SOURCE_FILE,user_source_time_function,USE_BINARY_FOR_SEISMOGRAMS
+                         nsources_local,tshift_src,DT,t0,SU_FORMAT,USE_LDDRK,istage,source_adjoint, &
+                         USE_EXTERNAL_SOURCE_FILE,user_source_time_function,USE_BINARY_FOR_SEISMOGRAMS, &
+                         NSOURCES,it,SIMULATION_TYPE,NSTEP,nrec, &
+                         nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,Mesh_pointer
 
   implicit none
 
-  integer :: NSPEC_AB
-
-! displacement and acceleration
-
-! arrays with mesh parameters per slice
-
-! source
-  integer :: NSOURCES,it
-  logical, dimension(NSPEC_AB) :: ispec_is_acoustic
-
-!adjoint simulations
-  integer:: SIMULATION_TYPE,NSTEP
-  integer(kind=8) :: Mesh_pointer
-  integer:: nrec
-  integer,dimension(nrec) :: islice_selected_rec,ispec_selected_rec
-  integer:: nadj_rec_local
-  logical :: ibool_read_adj_arrays
-  integer :: it_sub_adj,itime,NTSTEP_BETWEEN_READ_ADJSRC
-  real(kind=CUSTOM_REAL),dimension(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ):: &
-    adj_sourcearrays
-
 ! local parameters
+  logical :: ibool_read_adj_arrays
+  integer :: it_sub_adj
+
   double precision :: stf,time_source_dble
   double precision, external :: get_stf_acoustic
 
   double precision, dimension(NSOURCES) :: stf_pre_compute
 
-  integer :: isource,ier
+  integer :: isource
   integer :: irec_local,irec
 
 ! forward simulations
@@ -496,10 +420,6 @@
       ! this must be done carefully, otherwise the adjoint sources may be added twice
       if (ibool_read_adj_arrays) then
 
-        ! allocates temporary source array
-        allocate(adj_sourcearray(NTSTEP_BETWEEN_READ_ADJSRC,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
-        if (ier /= 0) stop 'error allocating array adj_sourcearray'
-
         if (.not. SU_FORMAT) then
 
           if (USE_BINARY_FOR_SEISMOGRAMS) stop 'Adjoint simulations not supported with .bin format, please use SU format instead'
@@ -511,28 +431,17 @@
             adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
             call compute_arrays_adjoint_source(adj_source_file,irec)
 
-            do itime = 1,NTSTEP_BETWEEN_READ_ADJSRC
-              adj_sourcearrays(irec_local,itime,:,:,:,:) = adj_sourcearray(itime,:,:,:,:)
-            enddo
-
           enddo
         else
           call compute_arrays_adjoint_source_SU()
         endif !if (.not. SU_FORMAT)
 
-        deallocate(adj_sourcearray)
       endif ! if (ibool_read_adj_arrays)
 
       if (it < NSTEP) then
         ! receivers act as sources
         ! on GPU
-        call add_sources_ac_sim_2_or_3_cuda(Mesh_pointer,adj_sourcearrays, &
-                                           ispec_is_acoustic, &
-                                           ispec_selected_rec, &
-                                           nrec, &
-                                           NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC), &
-                                           islice_selected_rec,nadj_rec_local, &
-                                           NTSTEP_BETWEEN_READ_ADJSRC)
+        call add_sources_ac_sim_2_or_3_cuda(Mesh_pointer,source_adjoint,nrec,nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,it)
       endif ! it
     endif ! nadj_rec_local > 0
   endif

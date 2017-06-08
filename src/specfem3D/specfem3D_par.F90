@@ -153,7 +153,7 @@ module specfem_par
 
 ! Lagrange interpolators at receivers
   double precision, dimension(:), allocatable :: hxir,hetar,hpxir,hpetar,hgammar,hpgammar
-  double precision, dimension(:,:), allocatable :: hxir_store,hetar_store,hgammar_store
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: hxir_store,hetar_store,hgammar_store
 
 ! proc numbers for MPI
   integer :: myrank, sizeprocs
@@ -243,8 +243,7 @@ module specfem_par
 
   ! adjoint sources
   character(len=MAX_STRING_LEN) :: adj_source_file
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: adj_sourcearray
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:,:,:), allocatable :: adj_sourcearrays
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: source_adjoint
   integer :: nadj_rec_local
   ! adjoint source frechet derivatives
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: Mxx_der,Myy_der, &
