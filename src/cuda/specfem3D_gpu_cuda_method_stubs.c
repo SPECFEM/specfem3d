@@ -807,31 +807,19 @@ void FC_FUNC_(kernel_3_b_acoustic_cuda,
 // src/cuda/write_seismograms_cuda.cu
 //
 
-void FC_FUNC_(transfer_seismograms_el_from_d,
-              TRANSFER_SEISMOGRAMS_EL_FROM_D)(int* nrec_local,
-                                              long* Mesh_pointer_f,
-                                              realw* seismograms_d,
-                                              realw* seismograms_v,
-                                              realw* seismograms_a,
-                                              int* it) {}
-
-void FC_FUNC_(transfer_station_el_from_device,
-              TRANSFER_STATION_EL_FROM_DEVICE)(realw* displ,realw* veloc,realw* accel,
-                                                   realw* b_displ, realw* b_veloc, realw* b_accel,
-                                                   long* Mesh_pointer_f,int* number_receiver_global,
-                                                   int* ispec_selected_rec,int* ispec_selected_source,
-                                                   int* h_ibool) {}
-
-void FC_FUNC_(transfer_station_ac_from_device,
-              TRANSFER_STATION_AC_FROM_DEVICE)(realw* potential_acoustic,
-                                                realw* potential_dot_acoustic,
-                                                realw* potential_dot_dot_acoustic,
-                                                realw* b_potential_acoustic,
-                                                realw* b_potential_dot_acoustic,
-                                                realw* b_potential_dot_dot_acoustic,
-                                                long* Mesh_pointer_f,
-                                                int* number_receiver_global,
-                                                int* ispec_selected_rec,
-                                                int* ispec_selected_source,
-                                                int* h_ibool) {}
+void FC_FUNC_(compute_seismograms_cuda,
+              COMPUTE_SEISMOGRAMS_CUDA)(long* Mesh_pointer_f,
+                                        realw* seismograms_d,
+                                        realw* seismograms_v,
+                                        realw* seismograms_a,
+                                        realw* seismograms_p,
+                                        int* itf,
+                                        int* NSTEPf,
+                                        int* ELASTIC_SIMULATION,
+                                        int* ACOUSTIC_SIMULATION,
+                                        int* USE_TRICK_FOR_BETTER_PRESSURE,
+                                        int* SAVE_SEISMOGRAMS_DISPLACEMENT,
+                                        int* SAVE_SEISMOGRAMS_VELOCITY,
+                                        int* SAVE_SEISMOGRAMS_ACCELERATION,
+                                        int* SAVE_SEISMOGRAMS_PRESSURE) {}
 
