@@ -133,7 +133,8 @@ void FC_FUNC_(prepare_constants_device,
                                         int* nspec_acoustic,int* nspec_elastic,
                                         int* h_myrank,
                                         int* SAVE_FORWARD,
-                                        realw* h_xir,realw* h_etar, realw* h_gammar) {
+                                        realw* h_xir,realw* h_etar, realw* h_gammar,double * nu,
+                                        int* islice_selected_rec,int* NSTEP) {
 
   TRACE("prepare_constants_device");
 
@@ -333,9 +334,32 @@ void FC_FUNC_(prepare_constants_device,
     copy_todevice_realw((void**)&mp->d_hxir,h_xir,5*mp->nrec_local);
     copy_todevice_realw((void**)&mp->d_hetar,h_etar,5*mp->nrec_local);
     copy_todevice_realw((void**)&mp->d_hgammar,h_gammar,5*mp->nrec_local);
-  }
-  copy_todevice_int((void**)&mp->d_ispec_selected_rec,h_ispec_selected_rec,(*nrec));
 
+    float* h_nu;
+    h_nu=(float*)malloc(9 * sizeof(float) * mp->nrec_local);
+
+    for (int i=0;i < mp->nrec_local;i++)
+      {
+      if ( mp->myrank == islice_selected_rec[i])
+        {
+         for (int j=0;j < 9;j++) h_nu[j + 9*i] = (float)nu[j + 9*h_number_receiver_global[i]];
+        }
+      }
+    copy_todevice_realw((void**)&mp->d_nu,h_nu,3*3*(*nrec_local));
+    free(h_nu);
+
+    print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_d,3*(*NSTEP)*(*nrec_local)*sizeof(realw)),8101);
+    print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_v,3*(*NSTEP)*(*nrec_local)*sizeof(realw)),8101);
+    print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_a,3*(*NSTEP)*(*nrec_local)*sizeof(realw)),8101);
+    print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_p,3*(*NSTEP)*(*nrec_local)*sizeof(realw)),8101);
+    int * ispec_selected_rec_loc;
+    ispec_selected_rec_loc = (int*)malloc(sizeof(int)*mp->nrec_local);
+    int irec_loc=0;
+    for(int i=0;i<*nrec;i++) { if ( mp->myrank == islice_selected_rec[i]){ ispec_selected_rec_loc[irec_loc] = h_ispec_selected_rec[i];irec_loc = irec_loc+1;}}
+    copy_todevice_int((void**)&mp->d_ispec_selected_rec_loc,ispec_selected_rec_loc,mp->nrec_local);
+    free(ispec_selected_rec_loc);
+  }
+    copy_todevice_int((void**)&mp->d_ispec_selected_rec,h_ispec_selected_rec,(*nrec));
 
 #ifdef USE_MESH_COLORING_GPUX
   mp->use_mesh_coloring_gpu = 1;
@@ -1154,12 +1178,7 @@ void FC_FUNC_(prepare_fields_elastic_adj_dev,
 
 extern "C"
 void FC_FUNC_(prepare_sim2_or_3_const_device,
-              PREPARE_SIM2_OR_3_CONST_DEVICE)(long* Mesh_pointer,
-                                              int* islice_selected_rec,
-                                              int* islice_selected_rec_size,
-                                              int* nadj_rec_local,
-                                              int* nrec,
-                                              int* NTSTEP_BETWEEN_READ_ADJSRC) {
+              PREPARE_SIM2_OR_3_CONST_DEVICE)(long* Mesh_pointer,int *nadj_rec_local, int* NTSTEP_BETWEEN_READ_ADJSRC) {
 
   TRACE("prepare_sim2_or_3_const_device");
 
@@ -1168,36 +1187,8 @@ void FC_FUNC_(prepare_sim2_or_3_const_device,
   // adjoint source arrays
   mp->nadj_rec_local = *nadj_rec_local;
   if (mp->nadj_rec_local > 0){
-
-    print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_pre_computed_irec,
-                                       (mp->nadj_rec_local)*sizeof(int)),6004);
-
     print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_source_adjoint,
                                        (mp->nadj_rec_local)*3*sizeof(realw)*(*NTSTEP_BETWEEN_READ_ADJSRC)),6005);
-
-
-    // prepares local irec array:
-    // the irec_local variable needs to be precomputed (as
-    // h_pre_comp..), because normally it is in the loop updating accel,
-    // and due to how it's incremented, it cannot be parallelized
-    int* h_pre_computed_irec = (int*) malloc( (mp->nadj_rec_local)*sizeof(int) );
-    if (h_pre_computed_irec == NULL) exit_on_error("prepare_sim2_or_3_const_device: h_pre_computed_irec not allocated\n");
-
-    int irec_local = 0;
-    for(int irec = 0; irec < *nrec; irec++) {
-      if (mp->myrank == islice_selected_rec[irec]) {
-        irec_local++;
-        h_pre_computed_irec[irec_local-1] = irec;
-      }
-    }
-    // checks if all local receivers have been found
-    if (irec_local != mp->nadj_rec_local) exit_on_error("prepare_sim2_or_3_const_device: irec_local not equal\n");
-
-    // copies values onto GPU
-    print_CUDA_error_if_any(cudaMemcpy(mp->d_pre_computed_irec,h_pre_computed_irec,
-                                       (mp->nadj_rec_local)*sizeof(int),cudaMemcpyHostToDevice),6010);
-    free(h_pre_computed_irec);
-
   }
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
@@ -1459,8 +1450,14 @@ TRACE("prepare_cleanup_device");
     cudaFree(mp->d_hxir);
     cudaFree(mp->d_hetar);
     cudaFree(mp->d_hgammar);
+    cudaFree(mp->d_nu);
+    cudaFree(mp->d_seismograms_d);
+    cudaFree(mp->d_seismograms_v);
+    cudaFree(mp->d_seismograms_a);
+    cudaFree(mp->d_seismograms_p);
+    cudaFree(mp->d_ispec_selected_rec_loc);
     }
-  cudaFree(mp->d_ispec_selected_rec);
+    cudaFree(mp->d_ispec_selected_rec);
 
   // ACOUSTIC arrays
   if (*ACOUSTIC_SIMULATION ){
@@ -1621,7 +1618,6 @@ TRACE("prepare_cleanup_device");
   // purely adjoint & kernel array
   if (mp->simulation_type == 2 || mp->simulation_type == 3){
     if (mp->nadj_rec_local > 0){
-      cudaFree(mp->d_pre_computed_irec);
       cudaFree(mp->d_source_adjoint);
     }
   }

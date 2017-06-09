@@ -25,7 +25,7 @@
 !
 !=====================================================================
 
-  subroutine write_output_SU()
+  subroutine write_output_SU(seismograms,istore)
 
 ! writes out seismograms in SU (Seismic Unix) format
 
@@ -36,6 +36,11 @@
 
   implicit none
 
+  ! arguments
+  integer :: istore
+  real(kind=CUSTOM_REAL), dimension(NDIM,nrec_local,NSTEP) :: seismograms
+
+  ! local parameters
   character(len=MAX_STRING_LEN) :: procname,final_LOCAL_PATH
   integer :: irec_local,irec
 
@@ -44,7 +49,12 @@
 
   real(kind=4),dimension(:),allocatable :: rtmpseis
   real :: dx
-  integer :: i,ier
+  integer :: ier
+
+  ! arrays for Seismic Unix header
+  integer, dimension(28) :: header1
+  real(kind=4), dimension(30) :: header4
+  integer(kind=2) :: header2(2),header3(2)
 
   allocate(x_found(nrec),y_found(nrec),z_found(nrec),stat=ier)
   if (ier /= 0) stop 'error allocating arrays x_found y_found z_found'
@@ -72,106 +82,99 @@
 
   allocate(rtmpseis(NSTEP),stat=ier)
   if (ier /= 0) stop 'error allocating rtmpseis array'
-if (SAVE_SEISMOGRAMS_DISPLACEMENT) then
-  ! write seismograms (dx)
-  open(unit=IOUT_SU, file=trim(final_LOCAL_PATH)//trim(procname)//'_dx_SU', &
-       status='unknown', access='direct', recl=4, iostat=ier)
 
-  if (ier /= 0) stop 'error opening ***_dx_SU file'
+  ! deletes old files
+  open(unit=IIN_SU1,file=trim(final_LOCAL_PATH)//trim(procname)//'_dx_SU')
+  close(IIN_SU1,status='delete')
+  open(unit=IIN_SU1,file=trim(final_LOCAL_PATH)//trim(procname)//'_dy_SU')
+  close(IIN_SU1,status='delete')
+  open(unit=IIN_SU1,file=trim(final_LOCAL_PATH)//trim(procname)//'_dz_SU')
+  close(IIN_SU1,status='delete')
+  open(unit=IIN_SU1,file=trim(final_LOCAL_PATH)//trim(procname)//'_vx_SU')
+  close(IIN_SU1,status='delete')
+  open(unit=IIN_SU1,file=trim(final_LOCAL_PATH)//trim(procname)//'_vy_SU')
+  close(IIN_SU1,status='delete')
+  open(unit=IIN_SU1,file=trim(final_LOCAL_PATH)//trim(procname)//'_vz_SU')
+  close(IIN_SU1,status='delete')
+  open(unit=IIN_SU1,file=trim(final_LOCAL_PATH)//trim(procname)//'_ax_SU')
+  close(IIN_SU1,status='delete')
+  open(unit=IIN_SU1,file=trim(final_LOCAL_PATH)//trim(procname)//'_ay_SU')
+  close(IIN_SU1,status='delete')
+  open(unit=IIN_SU1,file=trim(final_LOCAL_PATH)//trim(procname)//'_az_SU')
+  close(IIN_SU1,status='delete')
+  open(unit=IIN_SU1,file=trim(final_LOCAL_PATH)//trim(procname)//'_p_SU')
+  close(IIN_SU1,status='delete')
 
-  ! receiver interval
-  if (nrec > 1) then
-    dx = SNGL(x_found(2)-x_found(1))
-  else
-    dx = 0.0
+  if (istore==1) then
+    ! open seismograms displacement
+    open(unit=IIN_SU1, file=trim(final_LOCAL_PATH)//trim(procname)//'_dx_SU', &
+         status='unknown', access='stream', iostat=ier)
+    if (ier /= 0) stop 'error opening ***_dx_SU file'
+    open(unit=IIN_SU2, file=trim(final_LOCAL_PATH)//trim(procname)//'_dy_SU', &
+         status='unknown', access='stream', iostat=ier)
+    if (ier /= 0) stop 'error opening ***_dy_SU file'
+    open(unit=IIN_SU3, file=trim(final_LOCAL_PATH)//trim(procname)//'_dz_SU', &
+         status='unknown', access='stream', iostat=ier)
+    if (ier /= 0) stop 'error opening ***_dz_SU file'
+  else if (istore==2) then
+    ! open seismograms velocity
+    open(unit=IIN_SU1, file=trim(final_LOCAL_PATH)//trim(procname)//'_vx_SU', &
+         status='unknown', access='stream', iostat=ier)
+    if (ier /= 0) stop 'error opening ***_vx_SU file'
+    open(unit=IIN_SU2, file=trim(final_LOCAL_PATH)//trim(procname)//'_vy_SU', &
+         status='unknown', access='stream', iostat=ier)
+    if (ier /= 0) stop 'error opening ***_vy_SU file'
+    open(unit=IIN_SU3, file=trim(final_LOCAL_PATH)//trim(procname)//'_vz_SU', &
+         status='unknown', access='stream', iostat=ier)
+    if (ier /= 0) stop 'error opening ***_vz_SU file'
+  else if (istore==3) then
+    ! open seismograms acceleration
+    open(unit=IIN_SU1, file=trim(final_LOCAL_PATH)//trim(procname)//'_ax_SU', &
+         status='unknown', access='stream', iostat=ier)
+    if (ier /= 0) stop 'error opening ***_ax_SU file'
+    open(unit=IIN_SU2, file=trim(final_LOCAL_PATH)//trim(procname)//'_ay_SU', &
+         status='unknown', access='stream', iostat=ier)
+    if (ier /= 0) stop 'error opening ***_ay_SU file'
+    open(unit=IIN_SU3, file=trim(final_LOCAL_PATH)//trim(procname)//'_az_SU', &
+         status='unknown', access='stream', iostat=ier)
+    if (ier /= 0) stop 'error opening ***_az_SU file'
+  else 
+     ! open seismogram pressure
+    open(unit=IIN_SU1, file=trim(final_LOCAL_PATH)//trim(procname)//'_p_SU', &
+         status='unknown', access='stream', iostat=ier)
+    if (ier /= 0) stop 'error opening ***_p_SU file'
   endif
 
-  do irec_local = 1,nrec_local
-    irec = number_receiver_global(irec_local)
 
-    ! write section header
-    call write_SU_header(irec_local,irec,nrec,NSTEP,DT,dx, &
-                          x_found(irec),y_found(irec),z_found(irec),x_found_source,y_found_source,z_found_source)
+    ! receiver interval
+    if (nrec > 1) then
+      dx = SNGL(x_found(2)-x_found(1))
+    else
+      dx = 0.0
+    endif
 
-    ! convert trace to real 4-byte
-    rtmpseis(1:NSTEP) = seismograms_d(1,irec_local,1:NSTEP)
-    do i=1,NSTEP
-      write(IOUT_SU,rec=irec_local*60+(irec_local-1)*NSTEP+i) rtmpseis(i)
+    do irec_local = 1,nrec_local
+      irec = number_receiver_global(irec_local)
+
+      ! write section header
+      call write_SU_header(irec,dx,header1,header2,header3,header4, &
+                           x_found(irec),y_found(irec),z_found(irec),x_found_source,y_found_source,z_found_source)
+
+      write(IIN_SU1,pos=4*(irec_local-1)*(60+NSTEP) + 1 ) header1,header2,header3,header4,seismograms(1,irec_local,:)
+
+      if (istore/=4) then
+        write(IIN_SU2,pos=4*(irec_local-1)*(60+NSTEP) + 1 ) header1,header2,header3,header4,seismograms(2,irec_local,:)
+        write(IIN_SU3,pos=4*(irec_local-1)*(60+NSTEP) + 1 ) header1,header2,header3,header4,seismograms(3,irec_local,:)
+      endif
+
     enddo
 
-  enddo
-  close(IOUT_SU)
+  close(IIN_SU1)
 
-  ! write seismograms (dy)
-  open(unit=IOUT_SU, file=trim(final_LOCAL_PATH)//trim(procname)//'_dy_SU', &
-       status='unknown', access='direct', recl=4, iostat=ier)
-
-  if (ier /= 0) stop 'error opening ***_dy_SU file'
-
-  do irec_local = 1,nrec_local
-    irec = number_receiver_global(irec_local)
-
-    ! write section header
-    call write_SU_header(irec_local,irec,nrec,NSTEP,DT,dx, &
-                         x_found(irec),y_found(irec),z_found(irec),x_found_source,y_found_source,z_found_source)
-
-    ! convert trace to real 4-byte
-    rtmpseis(1:NSTEP) = seismograms_d(2,irec_local,1:NSTEP)
-    do i=1,NSTEP
-      write(IOUT_SU,rec=irec_local*60+(irec_local-1)*NSTEP+i) rtmpseis(i)
-    enddo
-  enddo
-  close(IOUT_SU)
-
-  ! write seismograms (dz)
-  open(unit=IOUT_SU, file=trim(final_LOCAL_PATH)//trim(procname)//'_dz_SU', &
-       status='unknown', access='direct', recl=4, iostat=ier)
-
-  if (ier /= 0) stop 'error opening ***_dz_SU file'
-
-  do irec_local = 1,nrec_local
-    irec = number_receiver_global(irec_local)
-
-    ! write section header
-    call write_SU_header(irec_local,irec,nrec,NSTEP,DT,dx, &
-                         x_found(irec),y_found(irec),z_found(irec),x_found_source,y_found_source,z_found_source)
-
-    ! convert trace to real 4-byte
-    rtmpseis(1:NSTEP) = seismograms_d(3,irec_local,1:NSTEP)
-    do i=1,NSTEP
-      write(IOUT_SU,rec=irec_local*60+(irec_local-1)*NSTEP+i) rtmpseis(i)
-    enddo
-
-  enddo
-  close(IOUT_SU)
-
-endif
-
-if (SAVE_SEISMOGRAMS_PRESSURE) then
- ! write seismograms (dz)
-  open(unit=IOUT_SU, file=trim(final_LOCAL_PATH)//trim(procname)//'_dp_SU', &
-       status='unknown', access='direct', recl=4, iostat=ier)
-
-  if (ier /= 0) stop 'error opening ***_dp_SU file'
-
-  do irec_local = 1,nrec_local
-    irec = number_receiver_global(irec_local)
-
-    ! write section header
-    call write_SU_header(irec_local,irec,nrec,NSTEP,DT,dx, &
-                         x_found(irec),y_found(irec),z_found(irec),x_found_source,y_found_source,z_found_source)
-
-    ! convert trace to real 4-byte
-    rtmpseis(1:NSTEP) = seismograms_p(1,irec_local,1:NSTEP)
-    do i=1,NSTEP
-      write(IOUT_SU,rec=irec_local*60+(irec_local-1)*NSTEP+i) rtmpseis(i)
-    enddo
-
-  enddo
-  close(IOUT_SU)
-
-endif
-
+  if (istore/=4) then
+    close(IIN_SU2)
+    close(IIN_SU3)
+  endif
 
   end subroutine write_output_SU
 
@@ -179,53 +182,58 @@ endif
 !------------------------------------------------------------------------------------------------------
 !
 
-  subroutine write_SU_header(irec_local,irec,nrec,NSTEP,DT,dx, &
+  subroutine write_SU_header(irec,dx,header1,header2,header3,header4, &
                              x_found,y_found,z_found,x_found_source,y_found_source,z_found_source)
 
 
   use constants
 
+  use specfem_par, only : nrec,NSTEP,DT
+
   implicit none
 
-  integer :: irec_local,irec,nrec
-  integer :: NSTEP
+  integer :: irec
   double precision :: x_found,y_found,z_found
   double precision :: x_found_source,y_found_source,z_found_source
-  double precision :: DT
   real :: dx
 
-  ! local parameters
-  integer(kind=2) :: header2(2)
+! Arrays for Seismic Unix header
+  integer, dimension(28) :: header1
+  real(kind=4), dimension(30) :: header4
+  integer(kind=2) :: header2(2),header3(2)
+
+  header1(:)=0
+  header2(:)=0
+  header3(:)=0
+  header4(:)=0.0
 
   ! write SU headers (refer to Seismic Unix for details)
-  write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+1)  irec                          ! receiver ID
-  write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+10) NINT(x_found-x_found_source)  ! offset
-  write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+11) NINT(z_found)
+  header1(1) = irec                          ! receiver ID
+  header1(10)= NINT(x_found-x_found_source)  ! offset
+  header1(11)= NINT(z_found)
 
-  write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+13) NINT(z_found_source)                ! source location
-  write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+19) NINT(x_found_source)                ! source location
-  write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+20) NINT(y_found_source)                ! source location
+  header1(13)= NINT(z_found_source)                ! source location
+  header1(19)= NINT(x_found_source)                ! source location
+  header1(20)= NINT(y_found_source)                ! source location
 
-  write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+21) NINT(x_found)           ! receiver location xr
-  write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+22) NINT(y_found)           ! receiver location zr
+  header1(21)= NINT(x_found)           ! receiver location xr
+  header1(22)= NINT(y_found)           ! receiver location zr
 
-  if (nrec > 1) write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+48) dx ! receiver interval
+  if (nrec > 1) header4(18)= dx ! receiver interval
 
   ! time steps
   header2(1)=0  ! dummy
   header2(2)=int(NSTEP, kind=2)
-  write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+29) header2
 
   ! time increment
   if (NINT(DT*1.0d6) < 65536) then
-    header2(1)=NINT(DT*1.0d6, kind=2)  ! deltat (unit: 10^{-6} second)
+    header3(1)=NINT(DT*1.0d6, kind=2)  ! deltat (unit: 10^{-6} second)
   else if (NINT(DT*1.0d3) < 65536) then
-    header2(1)=NINT(DT*1.0d3, kind=2)  ! deltat (unit: 10^{-3} second)
+    header3(1)=NINT(DT*1.0d3, kind=2)  ! deltat (unit: 10^{-3} second)
   else
-    header2(1)=NINT(DT, kind=2)  ! deltat (unit: 10^{0} second)
+    header3(1)=NINT(DT, kind=2)  ! deltat (unit: 10^{0} second)
   endif
-  header2(2)=0  ! dummy
-  write(IOUT_SU,rec=(irec_local-1)*60+(irec_local-1)*NSTEP+30) header2
+  header3(2)=0  ! dummy
 
   end subroutine write_SU_header
 

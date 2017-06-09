@@ -74,43 +74,14 @@
   ! - ispec_selected_source   -> element containing source position, which becomes an adjoint "receiver"
 
   ! gets resulting array values onto CPU
-  if (GPU_MODE) then
-    if (nrec_local > 0) then
-      ! this transfers fields only in elements with stations for efficiency
-      if (ACOUSTIC_SIMULATION) then
-        ! only copy corresponding elements to CPU host
-        ! timing: Elapsed time: 5.230904e-04
-        call transfer_station_ac_from_device(potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
-                        b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
-                        Mesh_pointer,number_receiver_global, &
-                        ispec_selected_rec,ispec_selected_source,ibool)
-
-        ! alternative: transfers whole fields
-        ! timing: Elapsed time: 4.138947e-03
-        !call transfer_fields_ac_from_device(NGLOB_AB,potential_acoustic, &
-        !          potential_dot_acoustic,potential_dot_dot_acoustic,Mesh_pointer)
-      endif
-
-      ! this transfers fields only in elements with stations for efficiency
-      if (ELASTIC_SIMULATION) then
-        if (USE_CUDA_SEISMOGRAMS) then
-          call transfer_seismograms_el_from_d(nrec_local,Mesh_pointer, &
-                                             seismograms_d,seismograms_v,seismograms_a, &
-                                             it)
-        else
-          call transfer_station_el_from_device(displ,veloc,accel, &
-                                              b_displ,b_veloc,b_accel, &
-                                              Mesh_pointer,number_receiver_global, &
-                                              ispec_selected_rec,ispec_selected_source, &
-                                              ibool)
-        endif
-        ! alternative: transfers whole fields
-        !  call transfer_fields_el_from_device(NDIM*NGLOB_AB,displ,veloc, accel, Mesh_pointer)
-      endif
-    endif
+  if (GPU_MODE .and. nrec_local > 0 ) then     
+    call compute_seismograms_cuda(Mesh_pointer,seismograms_d,seismograms_v,seismograms_a,&
+                                  seismograms_p,it,NSTEP,ELASTIC_SIMULATION,ACOUSTIC_SIMULATION,&
+                                  USE_TRICK_FOR_BETTER_PRESSURE,SAVE_SEISMOGRAMS_DISPLACEMENT,&
+                                  SAVE_SEISMOGRAMS_VELOCITY,SAVE_SEISMOGRAMS_ACCELERATION,SAVE_SEISMOGRAMS_PRESSURE) 
   endif
 
-  if (.not. GPU_MODE .or. (GPU_MODE .and. (.not. USE_CUDA_SEISMOGRAMS))) then
+  if (.not. GPU_MODE ) then
 
     do irec_local = 1,nrec_local
 
@@ -349,13 +320,13 @@
     if (SIMULATION_TYPE == 2) then
       ! adjoint simulations
       if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
-        call write_adj_seismograms_to_file(myrank,seismograms_d,number_receiver_global,nrec_local,it,DT,NSTEP,t0,1)
+        call write_adj_seismograms_to_file(seismograms_d,1)
       if (SAVE_SEISMOGRAMS_VELOCITY) &
-        call write_adj_seismograms_to_file(myrank,seismograms_v,number_receiver_global,nrec_local,it,DT,NSTEP,t0,2)
+        call write_adj_seismograms_to_file(seismograms_v,2)
       if (SAVE_SEISMOGRAMS_ACCELERATION) &
-        call write_adj_seismograms_to_file(myrank,seismograms_a,number_receiver_global,nrec_local,it,DT,NSTEP,t0,3)
+        call write_adj_seismograms_to_file(seismograms_a,3)
       if (SAVE_SEISMOGRAMS_PRESSURE) &
-        call write_adj_seismograms_to_file(myrank,seismograms_p,number_receiver_global,nrec_local,it,DT,NSTEP,t0,4)
+        call write_adj_seismograms_to_file(seismograms_p,4)
     else
       ! forward & kernel simulations
       if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
@@ -371,8 +342,16 @@
 
   ! write ONE binary file for all receivers (nrec_local) within one proc
   ! SU format, with 240-byte-header for each trace
-  if ((mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0 .or. it == NSTEP) .and. SU_FORMAT) &
-    call write_output_SU()
+  if ((mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0 .or. it == NSTEP) .and. SU_FORMAT) then
+    if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
+      call write_output_SU(seismograms_d,1)
+    if (SAVE_SEISMOGRAMS_VELOCITY) &
+      call write_output_SU(seismograms_v,2)
+    if (SAVE_SEISMOGRAMS_ACCELERATION) &
+      call write_output_SU(seismograms_a,3)
+    if (SAVE_SEISMOGRAMS_PRESSURE) &
+      call write_output_SU(seismograms_p,4)
+  endif
 
   end subroutine write_seismograms
 
@@ -385,9 +364,9 @@
 
   use constants
 
-  use specfem_par, only: myrank,number_receiver_global,station_name,network_name, &
+  use specfem_par, only: myrank,number_receiver_global, &
           nrec,nrec_local,islice_selected_rec, &
-          it,DT,NSTEP,t0,SIMULATION_TYPE,WRITE_SEISMOGRAMS_BY_MASTER,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_SEISMOGRAMS
+          NSTEP,WRITE_SEISMOGRAMS_BY_MASTER,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_SEISMOGRAMS
 
   implicit none
 
@@ -445,10 +424,7 @@
       ! writes out this seismogram
       one_seismogram = seismograms(:,irec_local,:)
 
-      call write_one_seismogram(one_seismogram,irec, &
-                                station_name,network_name,nrec, &
-                                DT,t0,it,NSTEP,SIMULATION_TYPE, &
-                                myrank,component,istore)
+      call write_one_seismogram(one_seismogram,irec,component,istore)
 
     enddo ! nrec_local
 
@@ -520,10 +496,7 @@
             total_seismos = total_seismos + 1
 
             ! writes out this seismogram
-            call write_one_seismogram(one_seismogram,irec, &
-                                      station_name,network_name,nrec, &
-                                      DT,t0,it,NSTEP,SIMULATION_TYPE, &
-                                      myrank,component,istore)
+            call write_one_seismogram(one_seismogram,irec,component,istore)
 
           enddo ! nrec_local_received
         endif ! if (nrec_local_received > 0)
@@ -566,24 +539,17 @@
 
 !=====================================================================
 
-  subroutine write_one_seismogram(one_seismogram,irec, &
-              station_name,network_name,nrec, &
-              DT,t0,it,NSTEP,SIMULATION_TYPE, &
-              myrank,component,istore)
+  subroutine write_one_seismogram(one_seismogram,irec,component,istore)
 
   use constants
 
+  use specfem_par, only: DT,t0,it,NSTEP,SIMULATION_TYPE,myrank,station_name,network_name
+
   implicit none
 
-  integer, intent(in) :: NSTEP,it,SIMULATION_TYPE,istore
+  integer, intent(in) :: istore
   real(kind=CUSTOM_REAL), dimension(NDIM,NSTEP) :: one_seismogram
-
-  integer myrank
-  double precision t0,DT
-
-  integer :: nrec,irec
-  character(len=MAX_LENGTH_STATION_NAME), dimension(nrec) :: station_name
-  character(len=MAX_LENGTH_NETWORK_NAME), dimension(nrec) :: network_name
+  integer :: irec
   character(len=1) component
 
   ! local parameters
@@ -641,18 +607,16 @@
 
 ! write adjoint seismograms (displacement) to text files
 
-  subroutine write_adj_seismograms_to_file(myrank,seismograms,number_receiver_global, &
-                                           nrec_local,it,DT,NSTEP,t0,istore)
+  subroutine write_adj_seismograms_to_file(seismograms,istore)
 
   use constants, only: CUSTOM_REAL,NDIM,MAX_STRING_LEN,IOUT,OUTPUT_FILES
 
+  use specfem_par, only : myrank,number_receiver_global,nrec_local,it,DT,NSTEP,t0
+
   implicit none
 
-  integer :: myrank
-  integer :: nrec_local,NSTEP,it,istore
-  integer, dimension(nrec_local) :: number_receiver_global
+  integer :: istore
   real(kind=CUSTOM_REAL), dimension(NDIM,nrec_local,NSTEP) :: seismograms
-  double precision :: t0,DT
 
   ! local parameters
   integer :: irec,irec_local

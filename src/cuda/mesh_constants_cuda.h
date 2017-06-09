@@ -403,28 +403,19 @@ typedef struct mesh_ {
 
   // receivers
   int* d_number_receiver_global;
+  int* d_ispec_selected_rec_loc;
   int* d_ispec_selected_rec;
   int nrec_local;
   realw* d_station_seismo_field;
   realw* h_station_seismo_field;
 
   realw* d_hxir, *d_hetar, *d_hgammar;
-  double* d_dxd, *d_dyd, *d_dzd;
-  double* d_vxd, *d_vyd, *d_vzd;
-  double* d_axd, *d_ayd, *d_azd;
   realw* d_seismograms_d, *d_seismograms_v, *d_seismograms_a, *d_seismograms_p;
-  double* d_nu;
-
-  realw* h_seismograms_d_it;
-  realw* h_seismograms_v_it;
-  realw* h_seismograms_a_it;
+  realw* d_nu;
 
   // adjoint receivers/sources
   int nadj_rec_local;
   realw* d_source_adjoint;
-  realw* d_adj_sourcearrays;
-  realw* h_adj_sourcearrays_slice;
-  int* d_pre_computed_irec;
 
   // surface elements (to save for noise tomography and acoustic simulations)
   int* d_free_surface_ispec;

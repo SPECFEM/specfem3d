@@ -233,17 +233,14 @@ __global__ void add_sources_el_SIM_TYPE_2_OR_3_kernel(realw* accel,
                                                       realw* gammar_store,
                                                       int* d_ibool,
                                                       int* ispec_is_elastic,
-                                                      int* ispec_selected_rec,
-                                                      int* pre_computed_irec,
+                                                      int* ispec_selected_recloc,
                                                       int nadj_rec_local) {
 
   int irec_local = blockIdx.x + gridDim.x*blockIdx.y;
 
   if (irec_local < nadj_rec_local) { // when nrec > 65535, but mod(nspec_top,2) > 0, we end up with an extra block.
 
-    int irec = pre_computed_irec[irec_local];
-
-    int ispec = ispec_selected_rec[irec]-1;
+    int ispec = ispec_selected_recloc[irec_local]-1;
 
     if (ispec_is_elastic[ispec]){
       int i = threadIdx.x;
@@ -253,7 +250,6 @@ __global__ void add_sources_el_SIM_TYPE_2_OR_3_kernel(realw* accel,
       realw xir    = xir_store[INDEX2(nadj_rec_local,irec_local,i)];
       realw etar   = etar_store[INDEX2(nadj_rec_local,irec_local,j)];
       realw gammar = gammar_store[INDEX2(nadj_rec_local,irec_local,k)];
-      realw source_adj = source_adjoint[INDEX3(nadj_rec_local,NSTEP_BETWEEN_ADJSRC,irec_local,it,0)];
 
       realw lagrange =   xir * etar * gammar ;
 
@@ -306,8 +302,7 @@ void FC_FUNC_(add_sources_el_sim_type_2_or_3,
                                                                                mp->d_hgammar,
                                                                                mp->d_ibool,
                                                                                mp->d_ispec_is_elastic,
-                                                                               mp->d_ispec_selected_rec,
-                                                                               mp->d_pre_computed_irec,
+                                                                               mp->d_ispec_selected_rec_loc,
                                                                                mp->nadj_rec_local);
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING

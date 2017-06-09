@@ -268,7 +268,7 @@ subroutine compute_arrays_adjoint_source_SU()
 
   if (ACOUSTIC_SIMULATION) then
 
-    filename = trim(OUTPUT_FILES)//'../SEM/'//trim(adjustl(procname))//'_dp_SU.adj'
+    filename = trim(OUTPUT_FILES)//'../SEM/'//trim(adjustl(procname))//'_p_SU.adj'
     open(unit=IIN_SU1,file=filename,status='old',access='stream',iostat = ier)
     if (ier /= 0) call exit_MPI(myrank,'file '//trim(filename)//' does not exist')
     do irec_local = 1,nrec_local

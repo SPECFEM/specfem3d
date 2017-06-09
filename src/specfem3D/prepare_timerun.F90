@@ -1332,7 +1332,9 @@
                                 SIMULATION_TYPE, &
                                 USE_MESH_COLORING_GPU, &
                                 nspec_acoustic,nspec_elastic, &
-                                myrank,SAVE_FORWARD)
+                                myrank,SAVE_FORWARD, &
+                                hxir_store,hetar_store,hgammar_store,nu,&
+                                islice_selected_rec,NSTEP)
 
 
   ! prepares fields on GPU for acoustic simulations
@@ -1412,9 +1414,7 @@
 
   ! prepares needed receiver array for adjoint runs
   if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) &
-    call prepare_sim2_or_3_const_device(Mesh_pointer, &
-                                islice_selected_rec,size(islice_selected_rec), &
-                                nadj_rec_local,nrec)
+    call prepare_sim2_or_3_const_device(Mesh_pointer,nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC)
 
   ! prepares fields on GPU for noise simulations
   if (NOISE_TOMOGRAPHY > 0) then

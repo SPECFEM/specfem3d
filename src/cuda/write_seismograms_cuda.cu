@@ -25,491 +25,241 @@
  ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  !
  !=====================================================================
- */
+*/
 
 #include "mesh_constants_cuda.h"
 
 /* ----------------------------------------------------------------------------------------------- */
 
-// ELASTIC simulations
+__global__ void compute_elastic_seismogram_kernel(int nrec_local,
+                                                  realw* field,
+                                                  int* d_ibool,
+                                                  realw* hxir, realw* hetar, realw* hgammar,
+                                                  realw* seismograms,
+                                                  realw* nu,
+                                                  int* ispec_selected_rec_loc,
+                                                  int it)
+{
 
-/* ----------------------------------------------------------------------------------------------- */
-
-//fortran code snippet...
-/*
-  ! gets global number of that receiver
-  irec = number_receiver_global(irec_local)
-
-  ! gets local receiver interpolators
-  ! (1-D Lagrange interpolators)
-  hxir(:) = hxir_store(irec_local,:)
-  hetar(:) = hetar_store(irec_local,:)
-  hgammar(:) = hgammar_store(irec_local,:)
-*/
-
-/* ----------------------------------------------------------------------------------------------- */
-
-// unused...
-/*
-__device__ double my_atomicAdd(double* address, double val) {
-
-    unsigned long long int* address_as_ull = (unsigned long long int*)address;
-    unsigned long long int old = *address_as_ull, assumed;
-    do{
-      assumed = old;
-      old = atomicCAS(address_as_ull, assumed, __double_as_longlong(val + __longlong_as_double(assumed)));
-    } while (assumed != old);
-    return __longlong_as_double(old);
-}
-*/
-
-/* ----------------------------------------------------------------------------------------------- */
-
-__global__ void compute_interpolated_dva_plus_seismogram(int nrec_local,
-                                                         realw* displ, realw* veloc, realw* accel,
-                                                         int* d_ibool,
-                                                         realw* hxir, realw* hetar, realw* hgammar,
-                                                         realw* seismograms_d, realw* seismograms_v, realw* seismograms_a,
-                                                         double* nu,
-                                                         int* number_receiver_global,
-                                                         int* ispec_selected_rec) {
   int irec_local = blockIdx.x + blockIdx.y*gridDim.x;
-  int i = threadIdx.x;
-  int j = threadIdx.y;
-  int k = threadIdx.z;
-  int ijk = i+5*(j+5*(k));
+  int tx = threadIdx.x;
 
-  // we do the **d variable reduction in shared memory, because the
-  // atomicAdd() should be faster on the shared memory registers
-  // according to
-  // http://supercomputingblog.com/cuda/cuda-tutorial-4-atomic-operations/
-  __shared__ double sh_dxd[NGLL3];
-  __shared__ double sh_dyd[NGLL3];
-  __shared__ double sh_dzd[NGLL3];
-  __shared__ double sh_vxd[NGLL3];
-  __shared__ double sh_vyd[NGLL3];
-  __shared__ double sh_vzd[NGLL3];
-  __shared__ double sh_axd[NGLL3];
-  __shared__ double sh_ayd[NGLL3];
-  __shared__ double sh_azd[NGLL3];
+  // local index
+  int K = (tx/NGLL2);
+  int J = ((tx-K*NGLL2)/NGLLX);
+  int I = (tx-K*NGLL2-J*NGLLX);
+
+  __shared__ realw sh_dxd[NGLL3_PADDED];
+  __shared__ realw sh_dyd[NGLL3_PADDED];
+  __shared__ realw sh_dzd[NGLL3_PADDED];
+
 
   if (irec_local < nrec_local) {
-    int irec = number_receiver_global[irec_local]-1;
-    int ispec = ispec_selected_rec[irec]-1;
 
-    int iglob = d_ibool[ijk+NGLL3_PADDED*ispec]-1;
+    int ispec = ispec_selected_rec_loc[irec_local] - 1;
 
-    double hlagrange = hxir[irec_local + nrec_local*i]*hetar[irec_local + nrec_local*j]*hgammar[irec_local + nrec_local*k];
-    sh_dxd[ijk] = hlagrange*displ[0+3*iglob];
-    sh_dyd[ijk] = hlagrange*displ[1+3*iglob];
-    sh_dzd[ijk] = hlagrange*displ[2+3*iglob];
+    sh_dxd[tx] = 0;
+    sh_dyd[tx] = 0;
+    sh_dzd[tx] = 0;
 
-    sh_vxd[ijk] = hlagrange*veloc[0+3*iglob];
-    sh_vyd[ijk] = hlagrange*veloc[1+3*iglob];
-    sh_vzd[ijk] = hlagrange*veloc[2+3*iglob];
+    if (tx < NGLL3) {
+      realw hlagrange = hxir[irec_local + nrec_local*I]*hetar[irec_local + nrec_local*J]*hgammar[irec_local + nrec_local*K];
+      int iglob = iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,I,J,K,ispec)]-1;
 
-    sh_axd[ijk] = hlagrange*accel[0+3*iglob];
-    sh_ayd[ijk] = hlagrange*accel[1+3*iglob];
-    sh_azd[ijk] = hlagrange*accel[2+3*iglob];
+      sh_dxd[tx] = hlagrange * field[0 + 3*iglob];
+      sh_dyd[tx] = hlagrange * field[1 + 3*iglob];
+      sh_dzd[tx] = hlagrange * field[2 + 3*iglob];
 
-    // the reduction has to skip the first element (we don't need to
-    // add element 0 to itself) This reduction serializes the code,
-    // but it should be fast enough --- it can be made faster with a
-    // proper reduction algorithm.
+      //debug
+      //if (tx == 0) printf("thread %d %d %d - %f %f %f\n",ispec,iglob,irec_local,hlagrange,field[0 + 2*iglob],field[1 + 2*iglob]);
+    }
     __syncthreads();
 
-    // if (ijk>0) {
-    // reduction needs to be done atomically to avoid race conditions
-      // atomicAdd(&sh_dxd[0],sh_dxd[ijk]);
-      // atomicAdd(&sh_dyd[0],sh_dyd[ijk]);
-      // atomicAdd(&sh_dzd[0],sh_dzd[ijk]);
+    // reduction
+    for (unsigned int s=1; s<NGLL3_PADDED ; s *= 2) {
+      if (tx % (2*s) == 0){ sh_dxd[tx] += sh_dxd[tx + s];
+                            sh_dyd[tx] += sh_dyd[tx + s];
+                            sh_dzd[tx] += sh_dzd[tx + s];}
+      __syncthreads();
+    }
 
-      // atomicAdd(&sh_vxd[0],sh_vxd[ijk]);
-      // atomicAdd(&sh_vyd[0],sh_vyd[ijk]);
-      // atomicAdd(&sh_vzd[0],sh_vzd[ijk]);
+    if (tx == 0) {seismograms[0+3*irec_local+3*nrec_local*it] = nu[0+3*(0+3*irec_local)]*sh_dxd[0] + nu[0+3*(1+3*irec_local)]*sh_dyd[0] + nu[0+3*(2+3*irec_local)]*sh_dzd[0];}
+    if (tx == 1) {seismograms[1+3*irec_local+3*nrec_local*it] = nu[1+3*(0+3*irec_local)]*sh_dxd[0] + nu[1+3*(1+3*irec_local)]*sh_dyd[0] + nu[1+3*(2+3*irec_local)]*sh_dzd[0];}
+    if (tx == 2) {seismograms[2+3*irec_local+3*nrec_local*it] = nu[2+3*(0+3*irec_local)]*sh_dxd[0] + nu[2+3*(1+3*irec_local)]*sh_dyd[0] + nu[2+3*(2+3*irec_local)]*sh_dzd[0];}
+  }
+}
 
-      // atomicAdd(&sh_axd[0],sh_axd[ijk]);
-      // atomicAdd(&sh_ayd[0],sh_ayd[ijk]);
-      // atomicAdd(&sh_azd[0],sh_azd[ijk]);
-    // }
-    // __syncthreads();
-    if (ijk==0) {
-      // a loop in thread 0 is 4 times faster than atomic operations
-      for(int i=1;i<125;i++) {
-        sh_dxd[0] += sh_dxd[i];
-        sh_dyd[0] += sh_dyd[i];
-        sh_dzd[0] += sh_dzd[i];
+/* ----------------------------------------------------------------------------------------------- */
 
-        sh_vxd[0] += sh_vxd[i];
-        sh_vyd[0] += sh_vyd[i];
-        sh_vzd[0] += sh_vzd[i];
+__global__ void compute_acoustic_seismogram_kernel(int nrec_local,
+                                                   realw* pressure,
+                                                   int* d_ibool,
+                                                   realw* hxir, realw* hetar, realw* hgammar,
+                                                   realw* seismograms,
+                                                   int* ispec_selected_rec_loc,
+                                                   int it){
 
-        sh_axd[0] += sh_axd[i];
-        sh_ayd[0] += sh_ayd[i];
-        sh_azd[0] += sh_azd[i];
+  int irec_local = blockIdx.x + blockIdx.y*gridDim.x;
+  int tx = threadIdx.x;
+
+  // local index
+  int K = (tx/NGLL2);
+  int J = ((tx-K*NGLL2)/NGLLX);
+  int I = (tx-K*NGLL2-J*NGLLX);
+
+  __shared__ realw sh_dxd[NGLL3_PADDED];
+
+  if (irec_local < nrec_local) {
+
+    int ispec = ispec_selected_rec_loc[irec_local]-1;
+
+    sh_dxd[tx] = 0;
+
+    if (tx < NGLL3) {
+
+      realw hlagrange = hxir[irec_local + nrec_local*I]*hetar[irec_local + nrec_local*J]*hgammar[irec_local + nrec_local*K];
+      int iglob = iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,I,J,K,ispec)]-1;
+
+      sh_dxd[tx] = hlagrange*pressure[iglob];
+    }
+    __syncthreads();
+
+    for (unsigned int s=1; s<NGLL3_PADDED ; s *= 2) {
+      if (tx % (2*s) == 0) sh_dxd[tx] += sh_dxd[tx + s];
+      __syncthreads();
+    }
+
+    // Signe moins car pression = -potential_dot_dot
+   if (tx == 0) {seismograms[0+3*irec_local+3*nrec_local*it] = -sh_dxd[0];}
+   if (tx == 1) {seismograms[1+3*irec_local+3*nrec_local*it] = 0;}
+   if (tx == 2) {seismograms[2+3*irec_local+3*nrec_local*it] = 0;}
+  }
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+
+extern "C"
+void FC_FUNC_(compute_seismograms_cuda,
+              COMPUTE_SEISMOGRAMS_CUDA)(long* Mesh_pointer_f,
+                                        realw* seismograms_d,
+                                        realw* seismograms_v,
+                                        realw* seismograms_a,
+                                        realw* seismograms_p,
+                                        int* itf,
+                                        int* NSTEPf,
+                                        int* ELASTIC_SIMULATION,
+                                        int* ACOUSTIC_SIMULATION,
+                                        int* USE_TRICK_FOR_BETTER_PRESSURE,
+                                        int* SAVE_SEISMOGRAMS_DISPLACEMENT,
+                                        int* SAVE_SEISMOGRAMS_VELOCITY,
+                                        int* SAVE_SEISMOGRAMS_ACCELERATION,
+                                        int* SAVE_SEISMOGRAMS_PRESSURE) {
+
+// compute_seismograms
+  TRACE("compute_seismograms_cuda");
+
+  Mesh* mp = (Mesh*)(*Mesh_pointer_f); // get Mesh from fortran integer wrapper
+
+  //checks if anything to do
+  if (mp->nrec_local == 0) return;
+
+  int num_blocks_x, num_blocks_y;
+  get_blocks_xy(mp->nrec_local,&num_blocks_x,&num_blocks_y);
+
+  dim3 grid(num_blocks_x,num_blocks_y);
+  dim3 threads(NGLL3_PADDED,1,1);
+
+  int it = *itf - 1 ;
+  int NSTEP = *NSTEPf;
+
+  // warnings
+  if (it == 0){
+
+    if (*SAVE_SEISMOGRAMS_DISPLACEMENT || *SAVE_SEISMOGRAMS_VELOCITY || *SAVE_SEISMOGRAMS_ACCELERATION){
+      // warnings
+      if (! *ELASTIC_SIMULATION)
+        printf("\nWarning: Wrong type of seismogram for a pure fluid simulation, use pressure in seismotype\n");
+      if (*ELASTIC_SIMULATION && *ACOUSTIC_SIMULATION)
+        printf("\nWarning: Coupled elastic/fluid simulation has only valid displacement seismograms in elastic domain for GPU simulation\n\n");}
+
+
+    if (*SAVE_SEISMOGRAMS_PRESSURE){
+      if (! *ACOUSTIC_SIMULATION)
+        printf("\nWarning: Wrong type of seismogram for a pure elastic simulation, use displ veloc or accel in seismotype\n");
+      if (*ELASTIC_SIMULATION && *ACOUSTIC_SIMULATION)
+        printf("\nWarning: Coupled elastic/fluid simulation has only valid pressure seismograms in fluid domain for GPU simulation\n\n");}
+
+    }
+
+
+  // todo: for coupled simulations, one should check in which domain the receiver lies to output displacement
+  //       similar to what routine compute_vector_one_element(..) is doing
+
+  // computes current seismograms value
+
+  if (*SAVE_SEISMOGRAMS_DISPLACEMENT)
+      compute_elastic_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
+                                                                               mp->d_displ,
+                                                                               mp->d_ibool,
+                                                                               mp->d_hxir,mp->d_hetar,mp->d_hgammar,
+                                                                               mp->d_seismograms_d,
+                                                                               mp->d_nu,
+                                                                               mp->d_ispec_selected_rec_loc,
+                                                                               it);
+
+  if (*SAVE_SEISMOGRAMS_VELOCITY)
+      compute_elastic_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
+                                                                               mp->d_veloc,
+                                                                               mp->d_ibool,
+                                                                               mp->d_hxir,mp->d_hetar,mp->d_hgammar,
+                                                                               mp->d_seismograms_v,
+                                                                               mp->d_nu,
+                                                                               mp->d_ispec_selected_rec_loc,
+                                                                               it);
+
+  if (*SAVE_SEISMOGRAMS_ACCELERATION)
+      compute_elastic_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
+                                                                               mp->d_accel,
+                                                                               mp->d_ibool,
+                                                                               mp->d_hxir,mp->d_hetar,mp->d_hgammar,
+                                                                               mp->d_seismograms_a,
+                                                                               mp->d_nu,
+                                                                               mp->d_ispec_selected_rec_loc,
+                                                                               it);
+  if (*SAVE_SEISMOGRAMS_PRESSURE){
+
+      if (*USE_TRICK_FOR_BETTER_PRESSURE){
+        compute_acoustic_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
+                                                                                  mp->d_potential_acoustic,
+                                                                                  mp->d_ibool,
+                                                                                  mp->d_hxir,mp->d_hetar,mp->d_hgammar,
+                                                                                  mp->d_seismograms_p,
+                                                                                  mp->d_ispec_selected_rec_loc,
+                                                                                  it);
+      }else{
+        compute_acoustic_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
+                                                                                  mp->d_potential_dot_dot_acoustic,
+                                                                                  mp->d_ibool,
+                                                                                  mp->d_hxir,mp->d_hetar,mp->d_hgammar,
+                                                                                  mp->d_seismograms_p,
+                                                                                  mp->d_ispec_selected_rec_loc,
+                                                                                  it);
 
       }
-
-      seismograms_d[0+3*irec_local] = nu[0+3*(0+3*irec)]*sh_dxd[0] + nu[0+3*(1+3*irec)]*sh_dyd[0] + nu[0+3*(2+3*irec)]*sh_dzd[0];
-      seismograms_d[1+3*irec_local] = nu[1+3*(0+3*irec)]*sh_dxd[0] + nu[1+3*(1+3*irec)]*sh_dyd[0] + nu[1+3*(2+3*irec)]*sh_dzd[0];
-      seismograms_d[2+3*irec_local] = nu[2+3*(0+3*irec)]*sh_dxd[0] + nu[2+3*(1+3*irec)]*sh_dyd[0] + nu[2+3*(2+3*irec)]*sh_dzd[0];
-
-      seismograms_v[0+3*irec_local] = nu[0+3*(0+3*irec)]*sh_vxd[0] + nu[0+3*(1+3*irec)]*sh_vyd[0] + nu[0+3*(2+3*irec)]*sh_vzd[0];
-      seismograms_v[1+3*irec_local] = nu[1+3*(0+3*irec)]*sh_vxd[0] + nu[1+3*(1+3*irec)]*sh_vyd[0] + nu[1+3*(2+3*irec)]*sh_vzd[0];
-      seismograms_v[2+3*irec_local] = nu[2+3*(0+3*irec)]*sh_vxd[0] + nu[2+3*(1+3*irec)]*sh_vyd[0] + nu[2+3*(2+3*irec)]*sh_vzd[0];
-
-      seismograms_a[0+3*irec_local] = nu[0+3*(0+3*irec)]*sh_axd[0] + nu[0+3*(1+3*irec)]*sh_ayd[0] + nu[0+3*(2+3*irec)]*sh_azd[0];
-      seismograms_a[1+3*irec_local] = nu[1+3*(0+3*irec)]*sh_axd[0] + nu[1+3*(1+3*irec)]*sh_ayd[0] + nu[1+3*(2+3*irec)]*sh_azd[0];
-      seismograms_a[2+3*irec_local] = nu[2+3*(0+3*irec)]*sh_axd[0] + nu[2+3*(1+3*irec)]*sh_ayd[0] + nu[2+3*(2+3*irec)]*sh_azd[0];
-
-    }
-  }
-}
-
-
-/* ----------------------------------------------------------------------------------------------- */
-
-extern "C"
-void FC_FUNC_(transfer_seismograms_el_from_d,
-              TRANSFER_SEISMOGRAMS_EL_FROM_D)(int* nrec_local,
-                                              long* Mesh_pointer_f,
-                                              realw* seismograms_d,
-                                              realw* seismograms_v,
-                                              realw* seismograms_a,
-                                              int* it) {
-
-// transfers seismograms from device to host
-
-  TRACE("\ttransfer_seismograms_el_from_d");
-
-  Mesh* mp = (Mesh*)(*Mesh_pointer_f); // get Mesh from fortran integer wrapper
-
-  int num_blocks_x, num_blocks_y;
-  get_blocks_xy(*nrec_local,&num_blocks_x,&num_blocks_y);
-
-  dim3 grid(num_blocks_x,num_blocks_y);
-  dim3 threads(5,5,5);
-
-  // double h_debug[125]; for(int i=0;i<125;i++) h_debug[i] = 0;
-  // double* d_debug; cudaMalloc((void**)&d_debug,125*sizeof(double));
-  // cudaMemcpy(d_debug,h_debug,125*sizeof(double),cudaMemcpyHostToDevice);
-  // Cuda timing
-  // cudaEvent_t start, stop;
-  // realw time;
-  // cudaEventCreate(&start);
-  // cudaEventCreate(&stop);
-  // cudaEventRecord( start, 0);
-
-  compute_interpolated_dva_plus_seismogram<<<grid,threads,0,mp->compute_stream>>>(*nrec_local,
-                                                                                  mp->d_displ,mp->d_veloc,mp->d_accel,
-                                                                                  mp->d_ibool,
-                                                                                  mp->d_hxir, mp->d_hetar, mp->d_hgammar,
-                                                                                  mp->d_seismograms_d,
-                                                                                  mp->d_seismograms_v,
-                                                                                  mp->d_seismograms_a,
-                                                                                  mp->d_nu,
-                                                                                  mp->d_number_receiver_global,
-                                                                                  mp->d_ispec_selected_rec
-                                                                                  );
-
-  // cudaMemcpy(h_debug,d_debug,125*sizeof(double),cudaMemcpyDeviceToHost);
-
-  // (cudaMemcpy implicitly synchronizes all other cuda operations)
-  print_CUDA_error_if_any(cudaMemcpy(mp->h_seismograms_d_it,mp->d_seismograms_d,sizeof(realw)*3* *nrec_local,cudaMemcpyDeviceToHost),72001);
-  print_CUDA_error_if_any(cudaMemcpy(mp->h_seismograms_v_it,mp->d_seismograms_v,sizeof(realw)*3* *nrec_local,cudaMemcpyDeviceToHost),72002);
-  print_CUDA_error_if_any(cudaMemcpy(mp->h_seismograms_a_it,mp->d_seismograms_a,sizeof(realw)*3* *nrec_local,cudaMemcpyDeviceToHost),72003);
-
-  // cudaEventRecord( stop, 0);
-  // cudaEventSynchronize( stop );
-  // cudaEventElapsedTime( &time, start, stop );
-  // cudaEventDestroy( start );
-  // cudaEventDestroy( stop );
-  // printf("seismogram Execution Time: %f ms\n",time);
-
-  // if (abs(mp->h_seismograms_d_it[0]) < 1e-25) printf("seismo1_x=%e\n",mp->h_seismograms_d_it[0]);
-  // if (abs(mp->h_seismograms_d_it[1]) < 1e-25) printf("seismo1_y=%e\n",mp->h_seismograms_d_it[1]);
-
-  // if (abs(mp->h_seismograms_d_it[2]) < 1e-25) {
-
-  // printf("%d:seismo1_z=%e\n",*it,mp->h_seismograms_d_it[2]);
-
-  // }
-
-
-  memcpy(&seismograms_d[3**nrec_local*(*it-1)],mp->h_seismograms_d_it,3* *nrec_local*sizeof(realw));
-  memcpy(&seismograms_v[3**nrec_local*(*it-1)],mp->h_seismograms_v_it,3* *nrec_local*sizeof(realw));
-  memcpy(&seismograms_a[3**nrec_local*(*it-1)],mp->h_seismograms_a_it,3* *nrec_local*sizeof(realw));
-
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-__global__ void transfer_stations_fields_from_device_kernel(int* number_receiver_global,
-                                                            int* ispec_selected_rec,
-                                                            int* d_ibool,
-                                                            realw* station_seismo_field,
-                                                            realw* desired_field,
-                                                            int nrec_local) {
-  int blockID = blockIdx.x + blockIdx.y*gridDim.x;
-  if (blockID<nrec_local) {
-    int irec = number_receiver_global[blockID]-1;
-    int ispec = ispec_selected_rec[irec]-1;
-
-    int iglob = d_ibool[threadIdx.x + NGLL3_PADDED*ispec]-1;
-
-    station_seismo_field[3*NGLL3*blockID + 3*threadIdx.x+0] = desired_field[3*iglob];
-    station_seismo_field[3*NGLL3*blockID + 3*threadIdx.x+1] = desired_field[3*iglob+1];
-    station_seismo_field[3*NGLL3*blockID + 3*threadIdx.x+2] = desired_field[3*iglob+2];
-  }
-}
-
-
-/* ----------------------------------------------------------------------------------------------- */
-
-void transfer_field_from_device(Mesh* mp, realw* d_field,realw* h_field,
-                                int* number_receiver_global,
-                                int* d_ispec_selected,
-                                int* h_ispec_selected,
-                                int* h_ibool) {
-
-TRACE("\ttransfer_field_from_device");
-
-  // checks if anything to do
-  if (mp->nrec_local == 0) return;
-
-  int blocksize = NGLL3;
-
-  int num_blocks_x, num_blocks_y;
-  get_blocks_xy(mp->nrec_local,&num_blocks_x,&num_blocks_y);
-
-  dim3 grid(num_blocks_x,num_blocks_y);
-  dim3 threads(blocksize,1,1);
-
-  // prepare field transfer array on device
-  transfer_stations_fields_from_device_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_number_receiver_global,
-                                                                                      d_ispec_selected,
-                                                                                      mp->d_ibool,
-                                                                                      mp->d_station_seismo_field,
-                                                                                      d_field,
-                                                                                      mp->nrec_local);
-
-  // (cudaMemcpy implicitly synchronizes all other cuda operations)
-  print_CUDA_error_if_any(cudaMemcpy(mp->h_station_seismo_field,mp->d_station_seismo_field,
-                                    (3*NGLL3)*(mp->nrec_local)*sizeof(realw),cudaMemcpyDeviceToHost),71001);
-
-  int irec_local;
-  for(irec_local=0;irec_local<mp->nrec_local;irec_local++) {
-    int irec = number_receiver_global[irec_local] - 1;
-    int ispec = h_ispec_selected[irec] - 1;
-
-    for(int i=0;i<NGLL3;i++) {
-      int iglob = h_ibool[i+NGLL3*ispec] - 1;
-      h_field[0+3*iglob] = mp->h_station_seismo_field[0+3*i+irec_local*NGLL3*3];
-      h_field[1+3*iglob] = mp->h_station_seismo_field[1+3*i+irec_local*NGLL3*3];
-      h_field[2+3*iglob] = mp->h_station_seismo_field[2+3*i+irec_local*NGLL3*3];
-    }
-
-  }
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("transfer_field_from_device");
-#endif
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-extern "C"
-void FC_FUNC_(transfer_station_el_from_device,
-              TRANSFER_STATION_EL_FROM_DEVICE)(realw* displ,realw* veloc,realw* accel,
-                                                   realw* b_displ, realw* b_veloc, realw* b_accel,
-                                                   long* Mesh_pointer_f,int* number_receiver_global,
-                                                   int* ispec_selected_rec,int* ispec_selected_source,
-                                                   int* h_ibool) {
-TRACE("transfer_station_el_from_device");
-
-  Mesh* mp = (Mesh*)(*Mesh_pointer_f); // get Mesh from fortran integer wrapper
-
-  // checks if anything to do
-  if (mp->nrec_local == 0) return;
-
-  if (mp->simulation_type == 1) {
-    transfer_field_from_device(mp,mp->d_displ,displ, number_receiver_global,
-             mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
-    transfer_field_from_device(mp,mp->d_veloc,veloc, number_receiver_global,
-             mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
-    transfer_field_from_device(mp,mp->d_accel,accel, number_receiver_global,
-             mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
-  }
-  else if (mp->simulation_type == 2) {
-    transfer_field_from_device(mp,mp->d_displ,displ, number_receiver_global,
-             mp->d_ispec_selected_source, ispec_selected_source, h_ibool);
-    transfer_field_from_device(mp,mp->d_veloc,veloc, number_receiver_global,
-             mp->d_ispec_selected_source, ispec_selected_source, h_ibool);
-    transfer_field_from_device(mp,mp->d_accel,accel, number_receiver_global,
-             mp->d_ispec_selected_source, ispec_selected_source, h_ibool);
-  }
-  else if (mp->simulation_type == 3) {
-    transfer_field_from_device(mp,mp->d_b_displ,b_displ, number_receiver_global,
-             mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
-    transfer_field_from_device(mp,mp->d_b_veloc,b_veloc, number_receiver_global,
-             mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
-    transfer_field_from_device(mp,mp->d_b_accel,b_accel, number_receiver_global,
-             mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
+    
   }
 
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-// ACOUSTIC simulations
-
-/* ----------------------------------------------------------------------------------------------- */
-
-__global__ void transfer_stations_fields_acoustic_from_device_kernel(int* number_receiver_global,
-                                                                     int* ispec_selected_rec,
-                                                                     int* d_ibool,
-                                                                     realw* station_seismo_potential,
-                                                                     realw* desired_potential) {
-
-  int blockID = blockIdx.x + blockIdx.y*gridDim.x;
-  int nodeID = threadIdx.x + blockID*blockDim.x;
-
-  int irec = number_receiver_global[blockID]-1;
-  int ispec = ispec_selected_rec[irec]-1;
-
-  int iglob = d_ibool[threadIdx.x + NGLL3_PADDED*ispec]-1;
-
-  //if (threadIdx.x == 0) printf("node acoustic: %i %i %i %i %i %e \n",blockID,nodeID,irec,ispec,iglob,desired_potential[iglob]);
-
-  station_seismo_potential[nodeID] = desired_potential[iglob];
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-void transfer_field_acoustic_from_device(Mesh* mp,
-                                         realw* d_potential,
-                                         realw* h_potential,
-                                         int* number_receiver_global,
-                                         int* d_ispec_selected,
-                                         int* h_ispec_selected,
-                                         int* h_ibool) {
-
-TRACE("transfer_field_acoustic_from_device");
-
-  int irec_local,irec,ispec,iglob,j;
-
-  // checks if anything to do
-  if (mp->nrec_local < 1) return;
-
-  // sets up kernel dimensions
-  int blocksize = NGLL3;
-
-  int num_blocks_x, num_blocks_y;
-  get_blocks_xy(mp->nrec_local,&num_blocks_x,&num_blocks_y);
-
-  dim3 grid(num_blocks_x,num_blocks_y);
-  dim3 threads(blocksize,1,1);
-
-  // prepare field transfer array on device
-  transfer_stations_fields_acoustic_from_device_kernel<<<grid,threads>>>(mp->d_number_receiver_global,
-                                                                         d_ispec_selected,
-                                                                         mp->d_ibool,
-                                                                         mp->d_station_seismo_potential,
-                                                                         d_potential);
-
-
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("transfer_field_acoustic_from_device kernel");
-#endif
-
-  // (cudaMemcpy implicitly synchronizes all other cuda operations)
-  print_CUDA_error_if_any(cudaMemcpy(mp->h_station_seismo_potential,mp->d_station_seismo_potential,
-                                     mp->nrec_local*NGLL3*sizeof(realw),cudaMemcpyDeviceToHost),55000);
-
-  //printf("copy local receivers: %i \n",mp->nrec_local);
-
-  for(irec_local=0; irec_local < mp->nrec_local; irec_local++) {
-    irec = number_receiver_global[irec_local]-1;
-    ispec = h_ispec_selected[irec]-1;
-
-    // copy element values
-    // note: iglob may vary and can be irregularly accessing the h_potential array
-    for(j=0; j < NGLL3; j++){
-      iglob = h_ibool[j+NGLL3*ispec]-1;
-      h_potential[iglob] = mp->h_station_seismo_potential[j+irec_local*NGLL3];
-    }
-
-    // copy each station element's points to working array
-    // note: this works if iglob values would be all aligned...
-    //memcpy(&(h_potential[iglob]),&(mp->h_station_seismo_potential[irec_local*NGLL3]),NGLL3*sizeof(realw));
-
-  }
-#ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  exit_on_cuda_error("transfer_field_acoustic_from_device");
-#endif
-}
-
-/* ----------------------------------------------------------------------------------------------- */
-
-extern "C"
-void FC_FUNC_(transfer_station_ac_from_device,
-              TRANSFER_STATION_AC_FROM_DEVICE)(realw* potential_acoustic,
-                                                realw* potential_dot_acoustic,
-                                                realw* potential_dot_dot_acoustic,
-                                                realw* b_potential_acoustic,
-                                                realw* b_potential_dot_acoustic,
-                                                realw* b_potential_dot_dot_acoustic,
-                                                long* Mesh_pointer_f,
-                                                int* number_receiver_global,
-                                                int* ispec_selected_rec,
-                                                int* ispec_selected_source,
-                                                int* h_ibool) {
-
-TRACE("transfer_station_ac_from_device");
-  //double start_time = get_time();
-
-  Mesh* mp = (Mesh*)(*Mesh_pointer_f); // get Mesh from fortran integer wrapper
-
-  // checks if anything to do
-  if (mp->nrec_local == 0) return;
-
-  if (mp->simulation_type == 1) {
-    transfer_field_acoustic_from_device(mp,mp->d_potential_acoustic,potential_acoustic,
-                                        number_receiver_global,
-                                        mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
-    transfer_field_acoustic_from_device(mp,mp->d_potential_dot_acoustic,potential_dot_acoustic,
-                                        number_receiver_global,
-                                        mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
-    transfer_field_acoustic_from_device(mp,mp->d_potential_dot_dot_acoustic,potential_dot_dot_acoustic,
-                                        number_receiver_global,
-                                        mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
-  }
-  else if (mp->simulation_type == 2) {
-    transfer_field_acoustic_from_device(mp,mp->d_potential_acoustic,potential_acoustic,
-                                        number_receiver_global,
-                                        mp->d_ispec_selected_source, ispec_selected_source, h_ibool);
-    transfer_field_acoustic_from_device(mp,mp->d_potential_dot_acoustic,potential_dot_acoustic,
-                                        number_receiver_global,
-                                        mp->d_ispec_selected_source, ispec_selected_source, h_ibool);
-    transfer_field_acoustic_from_device(mp,mp->d_potential_dot_dot_acoustic,potential_dot_dot_acoustic,
-                                        number_receiver_global,
-                                        mp->d_ispec_selected_source, ispec_selected_source, h_ibool);
-  }
-  else if (mp->simulation_type == 3) {
-    transfer_field_acoustic_from_device(mp,mp->d_b_potential_acoustic,b_potential_acoustic,
-                                        number_receiver_global,
-                                        mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
-    transfer_field_acoustic_from_device(mp,mp->d_b_potential_dot_acoustic,b_potential_dot_acoustic,
-                                        number_receiver_global,
-                                        mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
-    transfer_field_acoustic_from_device(mp,mp->d_b_potential_dot_dot_acoustic,b_potential_dot_dot_acoustic,
-                                        number_receiver_global,
-                                        mp->d_ispec_selected_rec, ispec_selected_rec, h_ibool);
+  if (it == NSTEP - 1 ){
+    int size = mp->nrec_local*NSTEP;
+    // (cudaMemcpy implicitly synchronizes all other cuda operations)
+    if (*SAVE_SEISMOGRAMS_DISPLACEMENT) print_CUDA_error_if_any(cudaMemcpy(seismograms_d,mp->d_seismograms_d,sizeof(realw)* 3 * size,cudaMemcpyDeviceToHost),72001);
+    if (*SAVE_SEISMOGRAMS_VELOCITY)     print_CUDA_error_if_any(cudaMemcpy(seismograms_v,mp->d_seismograms_v,sizeof(realw)* 3 * size,cudaMemcpyDeviceToHost),72002);
+    if (*SAVE_SEISMOGRAMS_ACCELERATION) print_CUDA_error_if_any(cudaMemcpy(seismograms_a,mp->d_seismograms_a,sizeof(realw)* 3 * size,cudaMemcpyDeviceToHost),72003);
+    if (*SAVE_SEISMOGRAMS_PRESSURE)     print_CUDA_error_if_any(cudaMemcpy(seismograms_p,mp->d_seismograms_p,sizeof(realw)* 3 * size,cudaMemcpyDeviceToHost),72004);
   }
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
-  //double end_time = get_time();
-  //printf("Elapsed time: %e\n",end_time-start_time);
-  exit_on_cuda_error("transfer_station_ac_from_device");
+  exit_on_cuda_error("after compute_seismograms_cuda");
 #endif
 }
 

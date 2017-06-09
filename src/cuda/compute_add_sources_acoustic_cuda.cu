@@ -98,7 +98,7 @@ void FC_FUNC_(compute_add_sources_ac_cuda,
 
   // copies pre-computed source time factors onto GPU
   print_CUDA_error_if_any(cudaMemcpy(mp->d_stf_pre_compute,h_stf_pre_compute,
-                                     NSOURCES*sizeof(double),cudaMemcpyHostToDevice),18);
+                                     NSOURCES*sizeof(double),cudaMemcpyHostToDevice),1877);
 
   int num_blocks_x, num_blocks_y;
   get_blocks_xy(NSOURCES,&num_blocks_x,&num_blocks_y);
@@ -182,8 +182,7 @@ __global__ void add_sources_ac_SIM_TYPE_2_OR_3_kernel(realw* potential_dot_dot_a
                                                       realw* gammar_store,
                                                       int* d_ibool,
                                                       int* ispec_is_acoustic,
-                                                      int* ispec_selected_rec,
-                                                      int* pre_computed_irec,
+                                                      int* ispec_selected_recloc,
                                                       int nadj_rec_local,
                                                       realw* kappastore) {
 
@@ -192,9 +191,7 @@ __global__ void add_sources_ac_SIM_TYPE_2_OR_3_kernel(realw* potential_dot_dot_a
   // because of grid shape, irec_local can be too big
   if (irec_local < nadj_rec_local) {
 
-    int irec = pre_computed_irec[irec_local];
-
-    int ispec = ispec_selected_rec[irec]-1;
+    int ispec = ispec_selected_recloc[irec_local]-1;
     if (ispec_is_acoustic[ispec]){
       int i = threadIdx.x;
       int j = threadIdx.y;
@@ -268,8 +265,7 @@ void FC_FUNC_(add_sources_ac_sim_2_or_3_cuda,
                                                                                 mp->d_hgammar,
                                                                                 mp->d_ibool,
                                                                                 mp->d_ispec_is_acoustic,
-                                                                                mp->d_ispec_selected_rec,
-                                                                                mp->d_pre_computed_irec,
+                                                                                mp->d_ispec_selected_rec_loc,
                                                                                 mp->nadj_rec_local,
                                                                                 mp->d_kappastore);
 
