@@ -1333,7 +1333,7 @@
                                 USE_MESH_COLORING_GPU, &
                                 nspec_acoustic,nspec_elastic, &
                                 myrank,SAVE_FORWARD, &
-                                hxir_store,hetar_store,hgammar_store,nu,&
+                                hxir_store,hetar_store,hgammar_store,nu, &
                                 islice_selected_rec,NSTEP)
 
 

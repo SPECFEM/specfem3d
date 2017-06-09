@@ -71,11 +71,11 @@
   ! - ispec_selected_source   -> element containing source position, which becomes an adjoint "receiver"
 
   ! gets resulting array values onto CPU
-  if (GPU_MODE .and. nrec_local > 0 ) then     
-    call compute_seismograms_cuda(Mesh_pointer,seismograms_d,seismograms_v,seismograms_a,&
-                                  seismograms_p,it,NSTEP,ELASTIC_SIMULATION,ACOUSTIC_SIMULATION,&
-                                  USE_TRICK_FOR_BETTER_PRESSURE,SAVE_SEISMOGRAMS_DISPLACEMENT,&
-                                  SAVE_SEISMOGRAMS_VELOCITY,SAVE_SEISMOGRAMS_ACCELERATION,SAVE_SEISMOGRAMS_PRESSURE) 
+  if (GPU_MODE .and. nrec_local > 0 ) then
+    call compute_seismograms_cuda(Mesh_pointer,seismograms_d,seismograms_v,seismograms_a, &
+                                  seismograms_p,it,NSTEP,ELASTIC_SIMULATION,ACOUSTIC_SIMULATION, &
+                                  USE_TRICK_FOR_BETTER_PRESSURE,SAVE_SEISMOGRAMS_DISPLACEMENT, &
+                                  SAVE_SEISMOGRAMS_VELOCITY,SAVE_SEISMOGRAMS_ACCELERATION,SAVE_SEISMOGRAMS_PRESSURE)
   endif
 
   if (.not. GPU_MODE ) then
@@ -608,7 +608,7 @@
 
   use constants, only: CUSTOM_REAL,NDIM,MAX_STRING_LEN,IOUT,OUTPUT_FILES
 
-  use specfem_par, only : myrank,number_receiver_global,nrec_local,it,DT,NSTEP,t0
+  use specfem_par, only: myrank,number_receiver_global,nrec_local,it,DT,NSTEP,t0
 
   implicit none
 

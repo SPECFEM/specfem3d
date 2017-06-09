@@ -105,7 +105,7 @@
   open(unit=IIN_SU1,file=trim(final_LOCAL_PATH)//trim(procname)//'_p_SU')
   close(IIN_SU1,status='delete')
 
-  if (istore==1) then
+  if (istore == 1) then
     ! open seismograms displacement
     open(unit=IIN_SU1, file=trim(final_LOCAL_PATH)//trim(procname)//'_dx_SU', &
          status='unknown', access='stream', iostat=ier)
@@ -116,7 +116,7 @@
     open(unit=IIN_SU3, file=trim(final_LOCAL_PATH)//trim(procname)//'_dz_SU', &
          status='unknown', access='stream', iostat=ier)
     if (ier /= 0) stop 'error opening ***_dz_SU file'
-  else if (istore==2) then
+  else if (istore == 2) then
     ! open seismograms velocity
     open(unit=IIN_SU1, file=trim(final_LOCAL_PATH)//trim(procname)//'_vx_SU', &
          status='unknown', access='stream', iostat=ier)
@@ -127,7 +127,7 @@
     open(unit=IIN_SU3, file=trim(final_LOCAL_PATH)//trim(procname)//'_vz_SU', &
          status='unknown', access='stream', iostat=ier)
     if (ier /= 0) stop 'error opening ***_vz_SU file'
-  else if (istore==3) then
+  else if (istore == 3) then
     ! open seismograms acceleration
     open(unit=IIN_SU1, file=trim(final_LOCAL_PATH)//trim(procname)//'_ax_SU', &
          status='unknown', access='stream', iostat=ier)
@@ -138,7 +138,7 @@
     open(unit=IIN_SU3, file=trim(final_LOCAL_PATH)//trim(procname)//'_az_SU', &
          status='unknown', access='stream', iostat=ier)
     if (ier /= 0) stop 'error opening ***_az_SU file'
-  else 
+  else
      ! open seismogram pressure
     open(unit=IIN_SU1, file=trim(final_LOCAL_PATH)//trim(procname)//'_p_SU', &
          status='unknown', access='stream', iostat=ier)
@@ -162,7 +162,7 @@
 
       write(IIN_SU1,pos=4*(irec_local-1)*(60+NSTEP) + 1 ) header1,header2,header3,header4,seismograms(1,irec_local,:)
 
-      if (istore/=4) then
+      if (istore /= 4) then
         write(IIN_SU2,pos=4*(irec_local-1)*(60+NSTEP) + 1 ) header1,header2,header3,header4,seismograms(2,irec_local,:)
         write(IIN_SU3,pos=4*(irec_local-1)*(60+NSTEP) + 1 ) header1,header2,header3,header4,seismograms(3,irec_local,:)
       endif
@@ -171,7 +171,7 @@
 
   close(IIN_SU1)
 
-  if (istore/=4) then
+  if (istore /= 4) then
     close(IIN_SU2)
     close(IIN_SU3)
   endif
@@ -188,7 +188,7 @@
 
   use constants
 
-  use specfem_par, only : nrec,NSTEP,DT
+  use specfem_par, only: nrec,NSTEP,DT
 
   implicit none
 

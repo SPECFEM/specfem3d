@@ -246,7 +246,7 @@ void FC_FUNC_(compute_seismograms_cuda,
                                                                                   it);
 
       }
-    
+
   }
 
   if (it == NSTEP - 1 ){
