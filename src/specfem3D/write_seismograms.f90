@@ -52,9 +52,6 @@
   real(kind=CUSTOM_REAL):: stf_deltat
   double precision :: stf
 
-  ! TODO: Test and Fix CUDA seismograms code.
-  logical, parameter :: USE_CUDA_SEISMOGRAMS = .false.
-
   ! checks if anything to do
   if (.not. (nrec_local > 0 .or. (WRITE_SEISMOGRAMS_BY_MASTER .and. myrank == 0))) return
 
