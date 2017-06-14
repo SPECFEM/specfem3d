@@ -337,12 +337,13 @@ void FC_FUNC_(prepare_constants_device,
 
     float* h_nu;
     h_nu=(float*)malloc(9 * sizeof(float) * mp->nrec_local);
-
-    for (int i=0;i < mp->nrec_local;i++)
+    int irec_loc=0;
+    for (int i=0;i < (*nrec);i++)
       {
       if ( mp->myrank == islice_selected_rec[i])
         {
-         for (int j=0;j < 9;j++) h_nu[j + 9*i] = (float)nu[j + 9*h_number_receiver_global[i]];
+         for (int j=0;j < 9;j++) h_nu[j + 9*irec_loc] = (float)nu[j + 9*i];
+         irec_loc = irec_loc + 1;
         }
       }
     copy_todevice_realw((void**)&mp->d_nu,h_nu,3*3*(*nrec_local));
@@ -354,7 +355,7 @@ void FC_FUNC_(prepare_constants_device,
     print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_p,3*(*NSTEP)*(*nrec_local)*sizeof(realw)),8101);
     int * ispec_selected_rec_loc;
     ispec_selected_rec_loc = (int*)malloc(sizeof(int)*mp->nrec_local);
-    int irec_loc=0;
+    irec_loc=0;
     for(int i=0;i<*nrec;i++) { if ( mp->myrank == islice_selected_rec[i]){ ispec_selected_rec_loc[irec_loc] = h_ispec_selected_rec[i];irec_loc = irec_loc+1;}}
     copy_todevice_int((void**)&mp->d_ispec_selected_rec_loc,ispec_selected_rec_loc,mp->nrec_local);
     free(ispec_selected_rec_loc);
