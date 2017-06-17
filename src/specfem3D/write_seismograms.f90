@@ -313,7 +313,8 @@
   endif
 
   ! write the current or final seismograms
-  if ((mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0 .or. it == NSTEP) .and. .not. SU_FORMAT) then
+  if ((mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0 .or. it == NSTEP) .and. .not. SU_FORMAT &
+       .and. .not. INVERSE_FWI_FULL_PROBLEM) then
     if (SIMULATION_TYPE == 2) then
       ! adjoint simulations
       if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
@@ -339,7 +340,8 @@
 
   ! write ONE binary file for all receivers (nrec_local) within one proc
   ! SU format, with 240-byte-header for each trace
-  if ((mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0 .or. it == NSTEP) .and. SU_FORMAT) then
+  if ((mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0 .or. it == NSTEP) .and. SU_FORMAT &
+        .and. .not. INVERSE_FWI_FULL_PROBLEM) then
     if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
       call write_output_SU(seismograms_d,1)
     if (SAVE_SEISMOGRAMS_VELOCITY) &
