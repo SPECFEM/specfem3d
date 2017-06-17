@@ -227,6 +227,9 @@
     call read_value_logical(SAVE_SEISMOGRAMS_PRESSURE, 'SAVE_SEISMOGRAMS_PRESSURE', ier)
     if (ier /= 0) stop 'Error reading Par_file parameter SAVE_SEISMOGRAMS_PRESSURE'
 
+    call read_value_logical(SAVE_SEISMOGRAMS_IN_ADJOINT_RUN, 'SAVE_SEISMOGRAMS_IN_ADJOINT_RUN', ier)
+    if (ier /= 0) stop 'Error reading Par_file parameter SAVE_SEISMOGRAMS_IN_ADJOINT_RUN'
+
     call read_value_logical(USE_BINARY_FOR_SEISMOGRAMS, 'USE_BINARY_FOR_SEISMOGRAMS', ier)
     if (ier /= 0) stop 'Error reading Par_file parameter USE_BINARY_FOR_SEISMOGRAMS'
     call read_value_logical(SU_FORMAT, 'SU_FORMAT', ier)
@@ -504,6 +507,7 @@
     call bcast_all_singlel(SAVE_SEISMOGRAMS_VELOCITY)
     call bcast_all_singlel(SAVE_SEISMOGRAMS_ACCELERATION)
     call bcast_all_singlel(SAVE_SEISMOGRAMS_PRESSURE)
+    call bcast_all_singlel(SAVE_SEISMOGRAMS_IN_ADJOINT_RUN)
     call bcast_all_singlel(USE_BINARY_FOR_SEISMOGRAMS)
     call bcast_all_singlel(SU_FORMAT)
     call bcast_all_singlel(WRITE_SEISMOGRAMS_BY_MASTER)
