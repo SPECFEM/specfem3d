@@ -37,7 +37,7 @@
                          ibool,NSOURCES,myrank,it,ispec_selected_source,islice_selected_source, &
                          sourcearrays,kappastore,SIMULATION_TYPE,NSTEP, &
                          nrec,islice_selected_rec,ispec_selected_rec, &
-                         nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC
+                         nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC, INVERSE_FWI_FULL_PROBLEM
 
   use specfem_par_acoustic, only: potential_dot_dot_acoustic,ispec_is_acoustic
 
@@ -149,7 +149,7 @@
       ! we first do calculations for the boudaries, and then start communication
       ! with other partitions while we calculate for the inner part
       ! this must be done carefully, otherwise the adjoint sources may be added twice
-      if (ibool_read_adj_arrays) then
+      if (ibool_read_adj_arrays .and. .not. INVERSE_FWI_FULL_PROBLEM) then
 
         if (.not. SU_FORMAT) then
 
@@ -324,7 +324,8 @@
                          nsources_local,tshift_src,DT,t0,SU_FORMAT,USE_LDDRK,istage,source_adjoint, &
                          USE_EXTERNAL_SOURCE_FILE,user_source_time_function,USE_BINARY_FOR_SEISMOGRAMS, &
                          NSOURCES,it,SIMULATION_TYPE,NSTEP,nrec, &
-                         nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,Mesh_pointer
+                         nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,Mesh_pointer,&
+                         INVERSE_FWI_FULL_PROBLEM
 
   implicit none
 
@@ -416,7 +417,7 @@
       ! we first do calculations for the boudaries, and then start communication
       ! with other partitions while we calculate for the inner part
       ! this must be done carefully, otherwise the adjoint sources may be added twice
-      if (ibool_read_adj_arrays) then
+      if (ibool_read_adj_arrays .and. .not. INVERSE_FWI_FULL_PROBLEM) then
 
         if (.not. SU_FORMAT) then
 

@@ -38,7 +38,8 @@
                         USE_BINARY_FOR_SEISMOGRAMS,NSPEC_AB,NGLOB_AB,ibool,NSOURCES,myrank,it,islice_selected_source, &
                         ispec_selected_source,sourcearrays,SIMULATION_TYPE,NSTEP, &
                         nrec,islice_selected_rec,ispec_selected_rec,nadj_rec_local, &
-                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY,hxir_store,hetar_store,hgammar_store,source_adjoint
+                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY,hxir_store,hetar_store,hgammar_store,source_adjoint,&
+                        INVERSE_FWI_FULL_PROBLEM
 
   use specfem_par_elastic, only: accel,ispec_is_elastic
 
@@ -150,7 +151,7 @@
       ! we first do calculations for the boudaries, and then start communication
       ! with other partitions while calculate for the inner part
       ! this must be done carefully, otherwise the adjoint sources may be added twice
-      if (ibool_read_adj_arrays) then
+      if (ibool_read_adj_arrays .and. .not. INVERSE_FWI_FULL_PROBLEM) then
 
         if (.not. SU_FORMAT) then
           if (USE_BINARY_FOR_SEISMOGRAMS) stop 'Adjoint simulations not supported with .bin format, please use SU format instead'
@@ -374,7 +375,7 @@
                         NSOURCES,it,SIMULATION_TYPE,NSTEP, &
                         nrec,islice_selected_rec, &
                         nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
-                        Mesh_pointer,source_adjoint
+                        Mesh_pointer,source_adjoint, INVERSE_FWI_FULL_PROBLEM
 
 
 #ifdef DEBUG_COUPLED
@@ -472,7 +473,7 @@
       ! we first do calculations for the boudaries, and then start communication
       ! with other partitions while calculate for the inner part
       ! this must be done carefully, otherwise the adjoint sources may be added twice
-      if (ibool_read_adj_arrays) then
+      if (ibool_read_adj_arrays .and. .not. INVERSE_FWI_FULL_PROBLEM) then
 
         if (.not. SU_FORMAT) then
           if (USE_BINARY_FOR_SEISMOGRAMS) stop 'Adjoint simulations not supported with .bin format, please use SU format instead'
