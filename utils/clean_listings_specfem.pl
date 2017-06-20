@@ -273,6 +273,7 @@ use File::Basename;
       $line =~ s# pml # PML #ogi;
 
 # fix some typos I have found in the different codes
+      $line =~ s#accordig#according#ogi;
       $line =~ s#paralell#parallel#ogi;
       $line =~ s#debbug#debug#ogi;
       $line =~ s#familly#family#ogi;
