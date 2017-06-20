@@ -38,7 +38,7 @@
                         USE_BINARY_FOR_SEISMOGRAMS,NSPEC_AB,NGLOB_AB,ibool,NSOURCES,myrank,it,islice_selected_source, &
                         ispec_selected_source,sourcearrays,SIMULATION_TYPE,NSTEP, &
                         nrec,islice_selected_rec,ispec_selected_rec,nadj_rec_local, &
-                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY,hxir_store,hetar_store,hgammar_store,source_adjoint,&
+                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY,hxir_store,hetar_store,hgammar_store,source_adjoint, &
                         INVERSE_FWI_FULL_PROBLEM
 
   use specfem_par_elastic, only: accel,ispec_is_elastic

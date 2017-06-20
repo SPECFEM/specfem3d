@@ -324,7 +324,7 @@
                          nsources_local,tshift_src,DT,t0,SU_FORMAT,USE_LDDRK,istage,source_adjoint, &
                          USE_EXTERNAL_SOURCE_FILE,user_source_time_function,USE_BINARY_FOR_SEISMOGRAMS, &
                          NSOURCES,it,SIMULATION_TYPE,NSTEP,nrec, &
-                         nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,Mesh_pointer,&
+                         nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,Mesh_pointer, &
                          INVERSE_FWI_FULL_PROBLEM
 
   implicit none
