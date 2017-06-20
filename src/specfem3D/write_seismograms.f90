@@ -71,14 +71,14 @@
   ! - ispec_selected_source   -> element containing source position, which becomes an adjoint "receiver"
 
   ! gets resulting array values onto CPU
-  if (GPU_MODE .and. nrec_local > 0 ) then
+  if (GPU_MODE .and. nrec_local > 0 .and. (.not.(SIMULATION_TYPE==3 .and. (.not. SAVE_SEISMOGRAMS_IN_ADJOINT_RUN)) )) then
     call compute_seismograms_cuda(Mesh_pointer,seismograms_d,seismograms_v,seismograms_a, &
                                   seismograms_p,it,NSTEP,ELASTIC_SIMULATION,ACOUSTIC_SIMULATION, &
                                   USE_TRICK_FOR_BETTER_PRESSURE,SAVE_SEISMOGRAMS_DISPLACEMENT, &
                                   SAVE_SEISMOGRAMS_VELOCITY,SAVE_SEISMOGRAMS_ACCELERATION,SAVE_SEISMOGRAMS_PRESSURE)
   endif
 
-  if (.not. GPU_MODE ) then
+  if (.not. GPU_MODE .and. (.not.(SIMULATION_TYPE==3 .and. (.not. SAVE_SEISMOGRAMS_IN_ADJOINT_RUN)) ) ) then
 
     do irec_local = 1,nrec_local
 
@@ -313,43 +313,43 @@
   endif
 
   ! write the current or final seismograms
-  if ((mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0 .or. it == NSTEP) .and. .not. SU_FORMAT &
-       .and. .not. INVERSE_FWI_FULL_PROBLEM) then
-    if (SIMULATION_TYPE == 2) then
-      ! adjoint simulations
+  if ((mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0 .or. it == NSTEP) &
+       .and. .not. INVERSE_FWI_FULL_PROBLEM &
+       .and. (.not.(SIMULATION_TYPE==3 .and. (.not. SAVE_SEISMOGRAMS_IN_ADJOINT_RUN)) )) then
+    if (.not. SU_FORMAT) then
+      if (SIMULATION_TYPE == 2) then
+        ! adjoint simulations
+        if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
+          call write_adj_seismograms_to_file(seismograms_d,1)
+        if (SAVE_SEISMOGRAMS_VELOCITY) &
+          call write_adj_seismograms_to_file(seismograms_v,2)
+        if (SAVE_SEISMOGRAMS_ACCELERATION) &
+          call write_adj_seismograms_to_file(seismograms_a,3)
+        if (SAVE_SEISMOGRAMS_PRESSURE) &
+          call write_adj_seismograms_to_file(seismograms_p,4)
+      else
+        ! forward & kernel simulations
+        if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
+          call write_seismograms_to_file(seismograms_d,1)
+        if (SAVE_SEISMOGRAMS_VELOCITY) &
+          call write_seismograms_to_file(seismograms_v,2)
+        if (SAVE_SEISMOGRAMS_ACCELERATION) &
+          call write_seismograms_to_file(seismograms_a,3)
+        if (SAVE_SEISMOGRAMS_PRESSURE) &
+          call write_seismograms_to_file(seismograms_p,4)
+      endif
+    else ! SU_format
+    ! write ONE binary file for all receivers (nrec_local) within one proc
+    ! SU format, with 240-byte-header for each trace
       if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
-        call write_adj_seismograms_to_file(seismograms_d,1)
+        call write_output_SU(seismograms_d,1)
       if (SAVE_SEISMOGRAMS_VELOCITY) &
-        call write_adj_seismograms_to_file(seismograms_v,2)
+        call write_output_SU(seismograms_v,2)
       if (SAVE_SEISMOGRAMS_ACCELERATION) &
-        call write_adj_seismograms_to_file(seismograms_a,3)
+        call write_output_SU(seismograms_a,3)
       if (SAVE_SEISMOGRAMS_PRESSURE) &
-        call write_adj_seismograms_to_file(seismograms_p,4)
-    else
-      ! forward & kernel simulations
-      if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
-        call write_seismograms_to_file(seismograms_d,1)
-      if (SAVE_SEISMOGRAMS_VELOCITY) &
-        call write_seismograms_to_file(seismograms_v,2)
-      if (SAVE_SEISMOGRAMS_ACCELERATION) &
-        call write_seismograms_to_file(seismograms_a,3)
-      if (SAVE_SEISMOGRAMS_PRESSURE) &
-        call write_seismograms_to_file(seismograms_p,4)
+        call write_output_SU(seismograms_p,4)
     endif
-  endif
-
-  ! write ONE binary file for all receivers (nrec_local) within one proc
-  ! SU format, with 240-byte-header for each trace
-  if ((mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0 .or. it == NSTEP) .and. SU_FORMAT &
-        .and. .not. INVERSE_FWI_FULL_PROBLEM) then
-    if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
-      call write_output_SU(seismograms_d,1)
-    if (SAVE_SEISMOGRAMS_VELOCITY) &
-      call write_output_SU(seismograms_v,2)
-    if (SAVE_SEISMOGRAMS_ACCELERATION) &
-      call write_output_SU(seismograms_a,3)
-    if (SAVE_SEISMOGRAMS_PRESSURE) &
-      call write_output_SU(seismograms_p,4)
   endif
 
   end subroutine write_seismograms
