@@ -38,7 +38,7 @@
   use create_regions_mesh_ext_par
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_get_model_4.F90"
+    include "../../add_to_get_model_4.F90"
 #endif
 
   implicit none
@@ -88,7 +88,7 @@
   end select
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_get_model_1.F90"
+    include "../../add_to_get_model_1.F90"
 #endif
 
   ! get MPI starting time
@@ -99,7 +99,7 @@
   do ispec = 1, nspec
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_get_model_2.F90"
+    include "../../add_to_get_model_2.F90"
 #endif
 
     ! loops over all GLL points in element
@@ -160,7 +160,7 @@
           zmesh = zstore_dummy(iglob)
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_get_model_3.F90"
+    include "../../add_to_get_model_3.F90"
 #endif
 
           ! material index 1: associated material number
@@ -197,7 +197,7 @@
             mustore(i,j,k,ispec) = rho*vs*vs
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_get_model_5.F90"
+    include "../../add_to_get_model_5.F90"
 #endif
 
             ! attenuation
@@ -383,7 +383,7 @@
   use create_regions_mesh_ext_par
 
 #ifdef DEBUG_COUPLED
-  include "../../../add_to_get_model_9.F90"
+  include "../../add_to_get_model_9.F90"
 #endif
 
   implicit none
@@ -416,7 +416,7 @@
   logical :: has_tomo_value
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_get_model_7.F90"
+    include "../../add_to_get_model_7.F90"
 #endif
 
   ! use acoustic domains for simulation
@@ -448,7 +448,7 @@
                        phi,tort,kxx,kxy,kxz,kyy,kyz,kzz)
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_get_model_8.F90"
+    include "../../add_to_get_model_8.F90"
 #endif
 
   case (IMODEL_1D_PREM)

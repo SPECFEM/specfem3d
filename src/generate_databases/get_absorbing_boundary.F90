@@ -42,7 +42,7 @@
   use create_regions_mesh_ext_par
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_get_absorbing_boundary_5.F90"
+    include "../../add_to_get_absorbing_boundary_5.F90"
 #endif
 
   implicit none
@@ -88,7 +88,7 @@
   integer  :: ispec,ispec2D,icorner,itop,iabsval,iface,igll,i,j,igllfree,ifree
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_get_absorbing_boundary_1.F90"
+    include "../../add_to_get_absorbing_boundary_1.F90"
 #endif
 
   ! abs face counter
@@ -119,7 +119,7 @@
                             iface)
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_get_absorbing_boundary_2.F90"
+    include "../../add_to_get_absorbing_boundary_2.F90"
 #endif
 
     ! ijk indices of GLL points for face id
@@ -144,7 +144,7 @@
         normal_face(:,i,j) = lnormal(:)
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_get_absorbing_boundary_3.F90"
+    include "../../add_to_get_absorbing_boundary_3.F90"
 #endif
 
       enddo
@@ -168,7 +168,7 @@
   enddo ! nspec2D_xmin
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_get_absorbing_boundary_4.F90"
+    include "../../add_to_get_absorbing_boundary_4.F90"
 #endif
 
   ! xmax
@@ -194,7 +194,7 @@
                               iface)
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_get_absorbing_boundary_2.F90"
+    include "../../add_to_get_absorbing_boundary_2.F90"
 #endif
 
     ! ijk indices of GLL points on face
@@ -260,7 +260,7 @@
                               iface)
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_get_absorbing_boundary_2.F90"
+    include "../../add_to_get_absorbing_boundary_2.F90"
 #endif
 
     ! ijk indices of GLL points on face
@@ -326,7 +326,7 @@
                               iface)
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_get_absorbing_boundary_2.F90"
+    include "../../add_to_get_absorbing_boundary_2.F90"
 #endif
 
     ! ijk indices of GLL points on face
@@ -392,7 +392,7 @@
                               iface)
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_get_absorbing_boundary_2.F90"
+    include "../../add_to_get_absorbing_boundary_2.F90"
 #endif
 
     ! ijk indices of GLL points on face
@@ -478,7 +478,7 @@
                               iface)
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_get_absorbing_boundary_2.F90"
+    include "../../add_to_get_absorbing_boundary_2.F90"
 #endif
 
     ! ijk indices of GLL points on face

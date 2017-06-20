@@ -181,7 +181,7 @@
   integer :: nglob_dummy
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_generate_databases_par.F90"
+    include "../../add_to_generate_databases_par.F90"
 #endif
 
 ! Gauss-Lobatto-Legendre points and weights of integration

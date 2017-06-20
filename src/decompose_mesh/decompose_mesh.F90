@@ -1094,7 +1094,7 @@ module decompose_mesh
     if (ier /= 0) stop 'Error allocating array my_nb_interfaces'
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_decompose_mesh_1.F90"
+    include "../../add_to_decompose_mesh_1.F90"
 #endif
 
     ! writes out Database file for each partition
@@ -1212,7 +1212,7 @@ module decompose_mesh
     deallocate(is_CPML,stat=ier); if (ier /= 0) stop 'Error deallocating array is_CPML'
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_decompose_mesh_2.F90"
+    include "../../add_to_decompose_mesh_2.F90"
 #endif
 
     print *, 'partitions: '

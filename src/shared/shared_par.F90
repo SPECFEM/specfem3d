@@ -145,7 +145,7 @@ end module constants
   logical :: ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, ADIOS_FOR_KERNELS
 
 #ifdef DEBUG_COUPLED
-include "../../../add_to_shared_par.F90"
+include "../../add_to_shared_par.F90"
 #endif
 
   end module shared_input_parameters

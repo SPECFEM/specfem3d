@@ -426,7 +426,7 @@
     use constants, only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC, NGLLX, NGLLY, NGLLZ, NDIM, ZERO
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_save_databases_4.F90"
+    include "../../add_to_save_databases_4.F90"
 #endif
 
     implicit none
@@ -476,7 +476,7 @@
     double precision  :: z_bottom
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_save_databases_1.F90"
+    include "../../add_to_save_databases_1.F90"
 #else
 ! this is useless and is there just to avoid a compiler warning, will be removed later
   z_bottom = maxval(xgrid)
@@ -487,7 +487,7 @@
     z_bottom = 0.
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_save_databases_2.F90"
+    include "../../add_to_save_databases_2.F90"
 #endif
 
     open(IIN_database, file = 'MESH/nummaterial_velocity_file',status='unknown',action='write',iostat=ier)
@@ -584,7 +584,7 @@
     close(IIN_database)
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_save_databases_3.F90"
+    include "../../add_to_save_databases_3.F90"
 #endif
 
   end subroutine save_output_mesh_files_as_cubit

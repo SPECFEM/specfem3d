@@ -44,7 +44,7 @@
   use specfem_par_elastic, only: accel,ispec_is_elastic
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_compute_add_sources_viscoelastic_1.F90"
+    include "../../add_to_compute_add_sources_viscoelastic_1.F90"
 #endif
 
   implicit none
@@ -59,7 +59,7 @@
   integer :: irec_local,irec
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_compute_add_sources_viscoelastic_2.F90"
+    include "../../add_to_compute_add_sources_viscoelastic_2.F90"
 #endif
 
   ! forward simulations
@@ -252,7 +252,7 @@
   use specfem_par_elastic, only: b_accel,ispec_is_elastic
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_compute_add_sources_viscoelastic_1.F90"
+    include "../../add_to_compute_add_sources_viscoelastic_1.F90"
 #endif
 
   implicit none
@@ -266,7 +266,7 @@
   integer :: isource,iglob,i,j,k,ispec
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_compute_add_sources_viscoelastic_2.F90"
+    include "../../add_to_compute_add_sources_viscoelastic_2.F90"
 #endif
 
 ! NOTE: adjoint sources and backward wavefield timing:
@@ -379,7 +379,7 @@
 
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_compute_add_sources_viscoelastic_1.F90"
+    include "../../add_to_compute_add_sources_viscoelastic_1.F90"
 #endif
 
   implicit none
@@ -395,7 +395,7 @@
   integer :: irec_local,irec
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_compute_add_sources_viscoelastic_2.F90"
+    include "../../add_to_compute_add_sources_viscoelastic_2.F90"
 #endif
 
   ! forward simulations

@@ -324,7 +324,7 @@
     if (ier /= 0) stop 'Error reading Par_file parameter USE_EXTERNAL_SOURCE_FILE'
 
 #ifdef DEBUG_COUPLED
-      include "../../../add_to_read_parameter_file_1.F90"
+      include "../../add_to_read_parameter_file_1.F90"
 #endif
 
     ! closes parameter file
@@ -349,7 +349,7 @@
       LOCAL_PATH = path_to_add(1:len_trim(path_to_add))//LOCAL_PATH(1:len_trim(LOCAL_PATH))
       TOMOGRAPHY_PATH = path_to_add(1:len_trim(path_to_add))//TOMOGRAPHY_PATH(1:len_trim(TOMOGRAPHY_PATH))
 #ifdef DEBUG_COUPLED
-      include "../../../add_to_read_parameter_file_2.F90"
+      include "../../add_to_read_parameter_file_2.F90"
 #endif
     endif
 
@@ -541,7 +541,7 @@
     call bcast_all_string(CMTSOLUTION)
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_read_parameter_file_3.F90"
+    include "../../add_to_read_parameter_file_3.F90"
 #endif
 
   endif ! of if (BROADCAST_AFTER_READ) then

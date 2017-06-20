@@ -483,7 +483,7 @@
   if (ier /= 0) stop 'Error allocating array abs_boundary_ispec etc.'
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_read_mesh_databases.F90"
+    include "../../add_to_read_mesh_databases.F90"
 #endif
 
   if (num_abs_boundary_faces > 0) then

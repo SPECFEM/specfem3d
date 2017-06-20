@@ -40,7 +40,7 @@
   use constants
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_compute_stacey_viscoelastic_9.F90"
+    include "../../add_to_compute_stacey_viscoelastic_9.F90"
 #endif
 
   implicit none
@@ -80,7 +80,7 @@
   integer :: ispec,iglob,i,j,k,iface,igll
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_compute_stacey_viscoelastic_1.F90"
+    include "../../add_to_compute_stacey_viscoelastic_1.F90"
 #endif
 
   ! only add these contributions in first pass
@@ -111,7 +111,7 @@
         vz = veloc(3,iglob)
 
 #ifdef DEBUG_COUPLED
-  include "../../../add_to_compute_stacey_viscoelastic_2.F90"
+  include "../../add_to_compute_stacey_viscoelastic_2.F90"
 #endif
 
         ! gets associated normal
@@ -128,7 +128,7 @@
         tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
 
 #ifdef DEBUG_COUPLED
-  include "../../../add_to_compute_stacey_viscoelastic_3.F90"
+  include "../../add_to_compute_stacey_viscoelastic_3.F90"
 #endif
 
         ! gets associated, weighted jacobian
@@ -147,7 +147,7 @@
         endif !adjoint
 
 #ifdef DEBUG_COUPLED
-  include "../../../add_to_compute_stacey_viscoelastic_4.F90"
+  include "../../add_to_compute_stacey_viscoelastic_4.F90"
 #endif
 
       enddo
@@ -161,7 +161,7 @@
   endif
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_compute_stacey_viscoelastic_5.F90"
+    include "../../add_to_compute_stacey_viscoelastic_5.F90"
 #endif
 
   end subroutine compute_stacey_viscoelastic
@@ -252,7 +252,7 @@
   end subroutine compute_stacey_viscoelastic_backward
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_compute_stacey_viscoelastic_6.F90"
+    include "../../add_to_compute_stacey_viscoelastic_6.F90"
 #endif
 
 !
@@ -271,7 +271,7 @@
   use constants
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_compute_stacey_viscoelastic_10.F90"
+    include "../../add_to_compute_stacey_viscoelastic_10.F90"
 #endif
 
   implicit none
@@ -294,7 +294,7 @@
   integer(kind=8) :: Mesh_pointer
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_compute_stacey_viscoelastic_7.F90"
+    include "../../add_to_compute_stacey_viscoelastic_7.F90"
 #endif
 
   ! only add these contributions in first pass
@@ -319,11 +319,11 @@
   endif
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_compute_stacey_viscoelastic_8.F90"
+    include "../../add_to_compute_stacey_viscoelastic_8.F90"
 #endif
 
   end subroutine compute_stacey_viscoelastic_GPU
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_compute_stacey_viscoelastic_11.F90"
+    include "../../add_to_compute_stacey_viscoelastic_11.F90"
 #endif

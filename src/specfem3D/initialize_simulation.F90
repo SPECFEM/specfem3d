@@ -127,7 +127,7 @@
   call create_name_database(prname,myrank,LOCAL_PATH)
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_initialize_simulation.F90"
+    include "../../add_to_initialize_simulation.F90"
 #endif
 
 ! read the value of NSPEC_AB and NGLOB_AB because we need it to define some array sizes below

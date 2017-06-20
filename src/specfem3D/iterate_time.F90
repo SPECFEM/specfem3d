@@ -39,7 +39,7 @@
   implicit none
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_iterate_time_5.F90"
+    include "../../add_to_iterate_time_5.F90"
 #endif
 
   ! for EXACT_UNDOING_TO_DISK
@@ -73,7 +73,7 @@
   endif
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_iterate_time_1.F90"
+    include "../../add_to_iterate_time_1.F90"
 #endif
 
   ! open the file in which we will store the energy curve
@@ -110,7 +110,7 @@
   time_start = wtime()
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_iterate_time_6.F90"
+    include "../../add_to_iterate_time_6.F90"
 #endif
 
   ! *********************************************************
@@ -279,7 +279,7 @@
     endif
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_iterate_time_2.F90"
+    include "../../add_to_iterate_time_2.F90"
 #endif
 
   !
@@ -294,7 +294,7 @@
   call it_print_elapsed_time()
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_iterate_time_3.F90"
+    include "../../add_to_iterate_time_3.F90"
 #endif
 
   ! Transfer fields from GPU card to host for further analysis
@@ -310,7 +310,7 @@
 !
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_iterate_time_4.F90"
+    include "../../add_to_iterate_time_4.F90"
 #endif
 
 !

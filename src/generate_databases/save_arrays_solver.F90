@@ -45,7 +45,7 @@
   use create_regions_mesh_ext_par
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_save_arrays_solver_3.F90"
+    include "../../add_to_save_arrays_solver_3.F90"
 #endif
 
   implicit none
@@ -324,7 +324,7 @@
   if (SAVE_MESH_FILES) call save_arrays_solver_files(nspec,nglob,ibool)
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_save_arrays_solver_1.F90"
+    include "../../add_to_save_arrays_solver_1.F90"
 #endif
 
   ! cleanup
@@ -374,7 +374,7 @@
   use create_regions_mesh_ext_par
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_save_arrays_solver_3.F90"
+    include "../../add_to_save_arrays_solver_3.F90"
 #endif
 
   implicit none
@@ -665,7 +665,7 @@
   endif  !if (SAVE_MESH_FILES_ADDITIONAL)
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_save_arrays_solver_2.F90"
+    include "../../add_to_save_arrays_solver_2.F90"
 #endif
 
 

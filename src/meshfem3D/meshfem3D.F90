@@ -280,7 +280,7 @@
   call synchronize_all()
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_meshfem3D_1.F90"
+    include "../../add_to_meshfem3D_1.F90"
 #endif
 
   ! read the mesh parameter file (Data/meshfem3D_files/Mesh_Par_file)
@@ -581,6 +581,6 @@
   end subroutine meshfem3D
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_meshfem3D_2.F90"
+    include "../../add_to_meshfem3D_2.F90"
 #endif
 

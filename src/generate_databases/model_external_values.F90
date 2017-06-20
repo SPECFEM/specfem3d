@@ -76,7 +76,7 @@
   use constants
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_model_external_values_4.F90"
+    include "../../add_to_model_external_values_4.F90"
 #endif
 
   implicit none
@@ -94,7 +94,7 @@
 ! ADD YOUR MODEL HERE
 !
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_model_external_values_1.F90"
+    include "../../add_to_model_external_values_1.F90"
 #endif
 
 !---
@@ -132,7 +132,7 @@
 !
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_model_external_values_2.F90"
+    include "../../add_to_model_external_values_2.F90"
 #endif
 
 !
@@ -148,7 +148,7 @@
   use create_regions_mesh_ext_par
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_model_external_values_4.F90"
+    include "../../add_to_model_external_values_4.F90"
 #endif
 
 !  use external_model
@@ -183,7 +183,7 @@
 !---
 
 #ifdef DEBUG_COUPLED
-    include "../../../add_to_model_external_values_3.F90"
+    include "../../add_to_model_external_values_3.F90"
 #endif
 
   ! GLL point location converted to real
