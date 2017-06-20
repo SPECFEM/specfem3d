@@ -1211,7 +1211,7 @@ end subroutine compute_N_rayleigh
 ! The convention is FFT --> e^(-iwt)
 ! numerical factor for Plancherel theorem: planch_fac = dble(NPT * dt * dt)
 
-  use constants
+  use constants, only: CUSTOM_REAL
 
   implicit none
 
