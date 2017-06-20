@@ -1273,11 +1273,11 @@ real(kind=dp) function iasp91_sub(r0, param, idom)
   else if (idom == 3) then ! R120 < r <= RMOHO
      vp = 8.78541 - 0.74953  * x
      vs = 6.706231- 2.248585 * x
-     rho =2.691 + 0.6924*x 
+     rho =2.691 + 0.6924*x
      Qmu = 600.0
      Qkappa = 57827.0
 
-     ! MvD: keeping this test for old bug [18] !! VM VM commented for coupling 
+     ! MvD: keeping this test for old bug [18] !! VM VM commented for coupling
 !!$     if (rho < 3.319 .or. rho > 3.372) then
 !!$        if (lpr) then
 !!$            write(6,*) R120 / 1000., RMOHO / 1000.

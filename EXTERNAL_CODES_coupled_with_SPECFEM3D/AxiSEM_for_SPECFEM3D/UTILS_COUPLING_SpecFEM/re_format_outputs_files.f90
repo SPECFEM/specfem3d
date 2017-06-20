@@ -548,7 +548,7 @@ program re_format_outputs_files
 
   call mpi_bcast(recip_KH_integral,1,MPI_LOGICAL,0,MPI_COMM_WORLD,ierr)
 
-  ! not usefull ??
+  ! not useful ??
   if (myrank > 0) then
     allocate(working_axisem_dir(nsim))
 

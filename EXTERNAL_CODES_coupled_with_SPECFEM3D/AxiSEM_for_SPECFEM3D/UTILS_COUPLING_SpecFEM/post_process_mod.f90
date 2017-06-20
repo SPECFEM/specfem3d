@@ -396,7 +396,7 @@
 !=================================================================================================================!
 !
 
-      subroutine rotate2cartesian_with_source_in_pole_stress()
+      subroutine rotate2Cartesian_with_source_in_pole_stress()
         use global_parameters
 
         integer irec,i,j,k
@@ -454,7 +454,7 @@
               enddo
            enddo
 
-           ! stress in cartesian coordinates
+           ! stress in Cartesian coordinates
            stress_rec(irec,1)=tmp1(1,1)
            stress_rec(irec,2)=tmp1(2,2)
            stress_rec(irec,3)=tmp1(3,3)
@@ -464,13 +464,13 @@
            !write(*,*) '2 ', stress_rec(irec,:)
         enddo
 
-      end subroutine rotate2cartesian_with_source_in_pole_stress
+      end subroutine rotate2Cartesian_with_source_in_pole_stress
 
 !
 !=================================================================================================================!
 !
 
-      subroutine rotate2cartesian_with_source_in_pole_deriv()
+      subroutine rotate2Cartesian_with_source_in_pole_deriv()
         use global_parameters
 
         integer irec,i,j,k
@@ -526,7 +526,7 @@
               enddo
            enddo
 
-           ! deriv in cartesian coordinates
+           ! deriv in Cartesian coordinates
 
            deriv_rec(irec,1) = tmp1(1,1)
            deriv_rec(irec,2) = tmp1(1,2)
@@ -542,7 +542,7 @@
 
         enddo
 
-      end subroutine rotate2cartesian_with_source_in_pole_deriv
+      end subroutine rotate2Cartesian_with_source_in_pole_deriv
 
 !
 !=================================================================================================================!
@@ -596,7 +596,7 @@
               enddo
            enddo
 
-           ! valocity in cartesian
+           ! valocity in Cartesian
            data_rec(irec,1)=tmp(1)
            data_rec(irec,2)=tmp(2)
            data_rec(irec,3)=tmp(3)
@@ -634,7 +634,7 @@
               enddo
            enddo
 
-           ! valocity in cartesian
+           ! valocity in Cartesian
            data_rec(irec,1)=tmp(1)
            data_rec(irec,2)=tmp(2)
            data_rec(irec,3)=tmp(3)
@@ -672,7 +672,7 @@
               enddo
            enddo
 
-           ! valocity in cartesian with azi rotation
+           ! valocity in Cartesian with azi rotation
            data_rec(irec,1)=tmp(1)
            data_rec(irec,2)=tmp(2)
            data_rec(irec,3)=tmp(3)
@@ -729,7 +729,7 @@
               enddo
            enddo
 
-           ! stress in cartesian
+           ! stress in Cartesian
            stress_rec(irec,1)=tmp1(1,1)
            stress_rec(irec,2)=tmp1(2,2)
            stress_rec(irec,3)=tmp1(3,3)
@@ -850,7 +850,7 @@
               enddo
            enddo
 
-           ! stress in cartesian
+           ! stress in Cartesian
            stress_rec(irec,1)=tmp1(1,1)
            stress_rec(irec,2)=tmp1(2,2)
            stress_rec(irec,3)=tmp1(3,3)
@@ -973,7 +973,7 @@
               enddo
            enddo
 
-           ! stress in cartesian
+           ! stress in Cartesian
            stress_rec(irec,1)=tmp1(1,1)
            stress_rec(irec,2)=tmp1(2,2)
            stress_rec(irec,3)=tmp1(3,3)
@@ -1055,7 +1055,7 @@
 !=================================================================================================================!
 !
 
-      subroutine rotate2cartesian_with_source_in_pole()
+      subroutine rotate2Cartesian_with_source_in_pole()
         use global_parameters
         integer irec,i,k
         real(kind=SINGLE_REAL) tmp(3),B(3,3),veloc(3)
@@ -1090,13 +1090,13 @@
               enddo
            enddo
 
-           ! valocity in cartesian
+           ! valocity in Cartesian
            data_rec(irec,1)=tmp(1)
            data_rec(irec,2)=tmp(2)
            data_rec(irec,3)=tmp(3)
 
         enddo
-      end subroutine rotate2cartesian_with_source_in_pole
+      end subroutine rotate2Cartesian_with_source_in_pole
 
 !
 !=================================================================================================================!

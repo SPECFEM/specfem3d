@@ -99,7 +99,7 @@ module writing_mod
 
 !!$    do irec=1,nbrec
 !!$
-!!$       ! stress cartesian
+!!$       ! stress Cartesian
 !!$       st(1,1)=stress_rec(irec,1)
 !!$       st(1,2)=stress_rec(irec,4)
 !!$       st(1,3)=stress_rec(irec,5)
@@ -133,7 +133,7 @@ module writing_mod
 !!$          enddo
 !!$       enddo
 !!$
-!!$       ! stress in cartesian
+!!$       ! stress in Cartesian
 !!$       stress_rec(irec,1)=tmp1(1,1)
 !!$       stress_rec(irec,2)=tmp1(2,2)
 !!$       stress_rec(irec,3)=tmp1(3,3)

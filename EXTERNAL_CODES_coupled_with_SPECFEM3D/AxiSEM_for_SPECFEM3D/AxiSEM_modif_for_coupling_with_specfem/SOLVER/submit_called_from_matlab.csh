@@ -423,7 +423,7 @@ foreach isim (${srcapp})
         if ( $serial == 'true' ) then
            ./axisem >& $outputname &
         else if ( $serial == 'false' ) then
-            $mpiruncmd -n $nodnum ./axisem 
+            $mpiruncmd -n $nodnum ./axisem
         else
             echo 'ERROR: value for SERIAL in make_axisem.macros should be either "true" or "false"'
             echo "SERIAL = $serial"

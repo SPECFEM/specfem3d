@@ -363,7 +363,7 @@ subroutine def_reference_spherical_grid_discont
   integer :: npts
   integer :: iz
 
-  ! FIRST DEFINE PARAMETERS FOR ASSOCIATED CYLINDRICAL/CARTESIAN GRID
+  ! FIRST DEFINE PARAMETERS FOR ASSOCIATED CYLINDRICAL/Cartesian GRID
 
   ns = ns_glob ! inherited from discont_meshing routine
   nz = nz_glob ! inherited from discont_meshing routine

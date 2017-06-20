@@ -237,7 +237,7 @@
            call  compute_3D_cyl()
            !if (irecmin < 10 .and. irecmax > 10) write(*,*) '1',data_rec(10,2)
 
-           call rotate2cartesian_with_source_in_pole()
+           call rotate2Cartesian_with_source_in_pole()
 
            !if (irecmin < 10 .and. irecmax > 10) write(*,*) '2',data_rec(10,2)
 
@@ -519,7 +519,7 @@
            call compute_stress_3D_cyl()
 
 
-           call rotate2cartesian_with_source_in_pole_stress()
+           call rotate2Cartesian_with_source_in_pole_stress()
 
            call rotate_back_source_stress() ! cartesien dans le repere tereste global
 
@@ -744,7 +744,7 @@
 !
 
       call compute_3D_cyl()
-      call rotate2cartesian_with_source_in_pole()
+      call rotate2Cartesian_with_source_in_pole()
 
       data_tmpKH_rec(:,:,isim) = data_rec(:,:)
       data_rec = 0.
@@ -1191,7 +1191,7 @@
 !
 
       call compute_deriv_3D_cyl()
-      call rotate2cartesian_with_source_in_pole_deriv()
+      call rotate2Cartesian_with_source_in_pole_deriv()
 
       deriv_tmpKH_rec(:,:,isim) = deriv_rec(:,:)
       data_rec  = 0.
