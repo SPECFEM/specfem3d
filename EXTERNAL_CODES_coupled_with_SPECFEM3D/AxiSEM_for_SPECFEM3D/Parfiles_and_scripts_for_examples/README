@@ -1,0 +1,8 @@
+The files in 'For_example_1st_for_validation/' or in 'For_example_2nd_w_moment_option/' contains parameters files, scripts, CMT solution, stations, etc.,
+corresponding to the concerned example.
+
+If you want to be sure to run the same concerned example, put all the files - except 'inparam_mesh' - in the directory SOLVER of Axisem, and put 'inparam_mesh' in directory MESHER.
+
+!! UPDATE ==> those inparam_files have to be modified now, you have to add  "RECIP_KH_INTEGRAL   true" (or false), after the line of "INFO_DIR"
+!! => cf files in 'For_example_4th_force_for_KH_int/II-Run_inverse_AxiSEM_for_bound_storage' for the good format
+!! And check and verify all the param and script files

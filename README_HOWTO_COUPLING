@@ -1,0 +1,36 @@
+compilation 
+
+run configure file ex:
+
+./configure FC=ifort MPIFC=mpif90 CC=icc
+
+
+modify specfem3d_Git_devel/setup/constants.h
+line 191 
+logical, parameter :: USE_SOURCES_RECEIVERS_Z = .true.
+
+modify Makefile : add 
+DEBUG_COUPLED_FLAG=-DDEBUG_COUPLED -DUSE_VTK_INSTEAD_OF_MESH
+at line 32
+
+modify specfem3d_Git_devel/src/meshfem3D/save_databases.F90
+line 112 
+logical, parameter :: SAVE_MESH_AS_CUBIT = .true.
+
+
+make all -j 8 
+
+
+compile tools used for Input/Ouput Specfem to Axisem and Axisem to spefem
+
+DSM_FOR_SPECFEM3D/EXTERNAL_CODES_coupled_with_SPECFEM3D/AxiSEM_for_SPECFEM3D/UTILS_COUPLING_SpecFEM
+
+make all 
+(config.h compiler options )
+
+2 executables : 
+xexpand_2D_3D 
+xreformat
+
+
+

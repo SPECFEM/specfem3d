@@ -1,0 +1,14 @@
+in the file input_box.txt
+depth(km) lat(degre) lon(degre)
+
+
+in STATIONS axisem file we have
+ lat (degre) lon(degre)  depth(km)
+
+
+for specfem, we have in input station te be converted
+radius(km)  lat(degre) lon(degre)
+
+
+in the file ParMeshchunk
+lon(degre) lat(degre) azi(degre)

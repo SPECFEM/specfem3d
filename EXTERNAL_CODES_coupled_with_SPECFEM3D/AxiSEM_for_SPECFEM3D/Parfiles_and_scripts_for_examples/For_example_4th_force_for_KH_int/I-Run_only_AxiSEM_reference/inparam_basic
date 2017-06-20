@@ -1,0 +1,51 @@
+################# INPUT FILE FOR AXISEM (SOLVER) ###############################
+
+# Choose simulation type, allowed options:
+# single: Simulation of one elemental source. Set inparam_source for the
+#         exact type
+# moment: Full moment tensor, needs four parallel simulations. Set the depth in
+#         inparam_source and modify the moment tensor in the file CMTSOLUTION 
+#         before postprocessing.
+# force:  Horizontal and vertical single force as two parallel simulations. Used
+#         to compute backward kernel wavefields as needed for Instaseis
+
+SIMULATION_TYPE   moment
+
+######################## SIMULATION PARAMETERS ################################
+# Choose desired seismogram length 
+
+SEISMOGRAM_LENGTH  1800.
+
+# Receiver file type, allowed options:
+# colatlon: Colatitude and Longitude for each station.
+# stations: SPECFEM-style stations file with latitude, longitude
+#           and station name (default)
+# database: One station at each GLL point, arbitrary station locations 
+#           can be reconstructed from this.
+
+RECFILE_TYPE      stations 
+
+
+############################# MODEL / MESH ####################################
+# Choose Mesh (local subdirname in SOLVER/MESHES directory)
+# N.B. The mesh controls the velocity model and the number of CPUs
+
+MESHNAME           TEST_KH
+
+# Use lateral heterogeneities (aka 2.5D model).
+# The model has to be described in inparam_hetero (default: false)
+
+LAT_HETEROGENEITY  false 
+
+
+# Include viscoelastic attenuation (details in inparam_advanced)
+ATTENUATION         false
+
+######################## WAVEFIELD SNAPSHOTS ##################################
+# Save wavefield snapshots for visualization (default: false)
+# more details in inparam_advanced
+# Be sure to set the SOURCE_FUNCTION (inparam_advanced) to gauss_0 to avoid 
+# aliasing and HF artifacts.
+
+SAVE_SNAPSHOTS         true  
+

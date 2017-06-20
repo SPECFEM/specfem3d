@@ -1,0 +1,19 @@
+# Basic source type
+# monopoles:   mrr, explosion, mtt_p_mpp, vertforce
+# dipoles:     mtr, mpr, thetaforce, phiforce
+# quadrupoles: mtp, mtt_m_mpp
+SOURCE_TYPE       mrr
+
+# depth of the source in kilometer
+SOURCE_DEPTH      100.0
+
+# latitude of the source in degree
+SOURCE_LAT         90.0
+
+# longitude of the source in degree
+SOURCE_LON          0.0
+
+# Amplitude of the source
+# units: - moment tensor: Nm
+#        - force source:  N
+SOURCE_AMPLITUDE   1E20

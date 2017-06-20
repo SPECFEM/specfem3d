@@ -268,6 +268,19 @@ APPROXIMATE_HESS_KL             = .false.
 SAVE_MOHO_MESH                  = .false.
 
 #-----------------------------------------------------------
+#
+# Coupling with an external code (DSM, AxiSEM, or FK)
+#
+#-----------------------------------------------------------
+
+COUPLE_WITH_EXTERNAL_CODE       = .false.
+EXTERNAL_CODE_TYPE              = 3   # 1 = DSM, 2 = AxiSEM, 3 = FK
+MESH_A_CHUNK_OF_THE_EARTH       = .false.
+TRACTION_PATH                   = ./DATA/AxiSEM_tractions/3/
+FKMODEL_FILE                    = FKmodel
+RECIPROCITY_AND_KH_INTEGRAL     = .false.  # does not work yet
+
+#-----------------------------------------------------------
 
 # Dimitri Komatitsch, July 2014, CNRS Marseille, France:
 # added the ability to run several calculations (several earthquakes)

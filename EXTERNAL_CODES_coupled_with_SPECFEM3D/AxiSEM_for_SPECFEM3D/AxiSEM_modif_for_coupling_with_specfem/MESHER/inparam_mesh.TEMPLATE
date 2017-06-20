@@ -1,0 +1,84 @@
+####### INPUT FILE FOR AXISEM MESHER ##########################################
+
+#### BACKGROUND MODELS:
+# prem_iso:               Isotropic continental PREM model
+# prem_iso_solid:         like 'prem_iso', replace fluid outer core with vs=vp/sqrt(3)
+# prem_iso_onecrust:      like 'prem_iso' but extend lower crust to surface
+# prem_iso_light:         like 'prem_iso' but with mantle material extended to surface
+# prem_iso_solid_light:   like 'prem_iso_light', but in fluid outer core vs=vp/sqrt(3)
+#
+# prem_ani:               Isotropic continental PREM model
+# prem_ani_onecrust:      like 'prem_ani' but extend lower crust to surface
+# prem_ani_light:         like 'prem_ani' but with mantle material extended to surface
+# 
+# ak135               AK135 (Isotropic, PREM attenuation)
+# ak135f              AK135 (Isotropic, own attenuation)
+# iasp91:             Isotropic IASP91 model with PREM density and attenuation
+# external:           Layered external model, give file name in EXT_MODEL, the 
+#                     inner core needs to be big enough, check VTK output.
+
+BACKGROUND_MODEL    prem_iso
+
+# EXT_MODEL           layer_solid.bm
+
+# Override the Q parameters (attenuation) of the external model with the given 
+# reference model values (allowed: prem, ak135f, default: none)
+# OVERRIDE_EXT_Q    prem
+
+# Dominant period [s]
+DOMINANT_PERIOD     50.0
+
+# Number of slices in the mesh decomposition in latitude and radius.
+# The resulting number of processors is NTHETA_SLICES * NRADIAL_SLICES
+# To ensure good scaling, use at least approximately 500 elements per core, see 'nelem' in
+# mesh_params.h
+# (will be overwritten if ONLY_SUGGEST_NPROC is set true)
+NTHETA_SLICES       2
+NRADIAL_SLICES      1 
+
+# will not generate a mesh, but only suggested numbers for NTHETA_SLICES for optimal mesh
+# decomposition
+ONLY_SUGGEST_NTHETA false
+
+# write vtk files of the generated mesh and its model parameters 
+WRITE_VTK           true
+
+# write out the 1D velocity model into files that can be used with AxiSEM and 
+# other software (TauP, YSpec, Mineos)
+WRITE_1DMODEL       true
+
+
+# Nr of coarsening layers
+# 3 is a reasonable choice for models with crust, otherwise 2
+# Check the vtk output. No coarsening layer should be at the surface or
+# at the solid-fluid boundary
+COARSENING_LAYERS   3
+
+############### FOR THE INCLINED ##############################################
+# Polynomial order of basis for GLL points inside elements (default: 4)
+# NPOL                4
+
+# Mesh element shrinking factor at the axes to avoid artifacts from axial 
+# integration scheme (default: 0.7) 
+# AXIS_SHRINKING_FACTOR  0.7
+
+# Shrinking factor for fluid elements
+# Outer Core P-Waves see a lot more dispersion error than in the
+# mantle, due to beeing on the resolution edge. But as the fluid is
+# really cheap, we can just make the elements smaller... (default: 0.9)
+# FLUID_SHRINKING_FACTOR   0.9
+
+# Number of elements per DOMINANT wavelength (default: 1.5)
+# EL_PER_LAMBDA      1.5
+
+# Courant number (default: 0.6)
+# COURANT_NR          0.6
+
+# Surface radius (default: 6.371e+6
+# RADIUS             6.371e+6   
+
+# Save mesh debug files (WARNING: large) (default: false)
+# SAVE_DEBUG_FILES     false
+
+# Write excessive info output (WARNING: for the inclined)
+# VERBOSE              false

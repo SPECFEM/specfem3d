@@ -1,0 +1,119 @@
+    Reading inparam_basic...    Reading param_post_processing... Simulations: 
+           1 MZZ
+   source type:monopole   mrr       
+   source time function:gauss_0
+   simulation  type:moment          
+   magnitude:  1.0000000E+20
+   receivers:           4
+   source period:   5.000000    
+   time steps:       46232
+   rotate recs?cyl
+   shift factor of stf:   16.19676    
+   shift factor in samples (dt, dtseis, dtstrain):         416         416
+          13
+ 
+ Simulations:            2 MXX_P_MYY
+   source type:monopole   mtt_p_mpp 
+   source time function:gauss_0
+   simulation  type:moment          
+   magnitude:  1.0000000E+20
+   receivers:           4
+   source period:   5.000000    
+   time steps:       46232
+   rotate recs?cyl
+   shift factor of stf:   16.19676    
+   shift factor in samples (dt, dtseis, dtstrain):         416         416
+          13
+ 
+ Simulations:            3 MXZ_MYZ
+   source type:dipole     mtr       
+   source time function:gauss_0
+   simulation  type:moment          
+   magnitude:  1.0000000E+20
+   receivers:           4
+   source period:   5.000000    
+   time steps:       46232
+   rotate recs?cyl
+   shift factor of stf:   16.19676    
+   shift factor in samples (dt, dtseis, dtstrain):         416         416
+          13
+ 
+ Simulations:            4 MXY_MXX_M_MYY
+   source type:quadpole   mtp       
+   source time function:gauss_0
+   simulation  type:moment          
+   magnitude:  1.0000000E+20
+   receivers:           4
+   source period:   5.000000    
+   time steps:       46232
+   rotate recs?cyl
+   shift factor of stf:   16.19676    
+   shift factor in samples (dt, dtseis, dtstrain):         416         416
+          13
+ 
+ receiver components: NEZ
+ 
+   reading CMTSOLUTION file....
+ Original moment tensor: (Mrr, Mtt, Mpp, Mrt, Mrp, Mtp)
+ 0.47100E+18 0.38100E+16-0.47400E+18 0.39900E+17-0.80500E+17-0.12300E+18
+ magnitudes of each run:
+  1.0000000E+20  1.0000000E+20  1.0000000E+20  1.0000000E+20
+ Mij scaled:
+ 0.47100E-02 0.38100E-04-0.47400E-02 0.39900E-03-0.80500E-03-0.12300E-02
+           1 Simulation is mrr, prefact:  4.7100000E-03  0.0000000E+00
+  4.7100000E-03
+ Mij phi prefactor:  4.7100000E-03  0.0000000E+00  4.7100000E-03
+ Mij scaled:
+ 0.47100E-02 0.38100E-04-0.47400E-02 0.39900E-03-0.80500E-03-0.12300E-02
+           2 Simulation is mpp, prefact: -4.7019003E-03  0.0000000E+00
+ -4.7019003E-03
+ Mij phi prefactor: -4.7019003E-03  0.0000000E+00 -4.7019003E-03
+ Mij scaled:
+ 0.47100E-02 0.38100E-04-0.47400E-02 0.39900E-03-0.80500E-03-0.12300E-02
+           3 Simulation is mtr, prefact: -3.9900359E-04  8.0499821E-04
+ -3.9900359E-04
+ Mij phi prefactor: -3.9900359E-04  8.0499821E-04 -3.9900359E-04
+ Mij scaled:
+ 0.47100E-02 0.38100E-04-0.47400E-02 0.39900E-03-0.80500E-03-0.12300E-02
+           4 Simulation is mtp, prefact:  4.7781221E-03 -2.4599577E-03
+  4.7781221E-03
+ Mij phi prefactor:  4.7781221E-03 -2.4599577E-03  4.7781221E-03
+ ishift1:   16.19676      0.0000000E+00  3.893449902534485E-002
+ ishift:   416.000220448935              416
+ opened MZZ/Data/S0001_SY_disp.dat
+ opened MXX_P_MYY/Data/S0001_SY_disp.dat
+ opened MXZ_MYZ/Data/S0001_SY_disp.dat
+ opened MXY_MXX_M_MYY/Data/S0001_SY_disp.dat
+ ROTATIONS
+  1.978234037563763E-002   151.537484494522     
+   90.0000001517820        179.999747738354     
+  writing seismograms into joint directory: negative time
+ opened MZZ/Data/S0002_SY_disp.dat
+ opened MXX_P_MYY/Data/S0002_SY_disp.dat
+ opened MXZ_MYZ/Data/S0002_SY_disp.dat
+ opened MXY_MXX_M_MYY/Data/S0002_SY_disp.dat
+ ROTATIONS
+  1.978234037563763E-002   151.537484494522     
+   90.0000001517820        179.999747738354     
+  writing seismograms into joint directory: negative time
+ opened MZZ/Data/S0003_SY_disp.dat
+ opened MXX_P_MYY/Data/S0003_SY_disp.dat
+ opened MXZ_MYZ/Data/S0003_SY_disp.dat
+ opened MXY_MXX_M_MYY/Data/S0003_SY_disp.dat
+ ROTATIONS
+  1.978234037563763E-002   151.537484494522     
+   90.0000001517820        179.999747738354     
+  writing seismograms into joint directory: negative time
+ opened MZZ/Data/S0004_SY_disp.dat
+ opened MXX_P_MYY/Data/S0004_SY_disp.dat
+ opened MXZ_MYZ/Data/S0004_SY_disp.dat
+ opened MXY_MXX_M_MYY/Data/S0004_SY_disp.dat
+ ROTATIONS
+  1.978234037563763E-002   151.537484494522     
+   90.0000001517820        179.999747738354     
+  writing seismograms into joint directory: negative time
+ writing google earth kml file for plotting earthquake and receiver locations/se
+ ismograms...
+ Check it out: ./Data_Postprocessing/googleearth_src_rec_seis.kml
+ writing matlab input files for record sections...
+  DONE with seismogram post processing!

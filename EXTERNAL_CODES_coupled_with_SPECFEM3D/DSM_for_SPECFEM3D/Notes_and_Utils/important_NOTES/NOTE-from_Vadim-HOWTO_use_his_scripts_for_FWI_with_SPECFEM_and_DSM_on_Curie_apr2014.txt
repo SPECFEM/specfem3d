@@ -1,0 +1,39 @@
+
+Subject: scripts for Full Waveform Inversion (FWI)
+From: Vadim MONTEILLER
+Date: 09/04/2014 15:39
+To: ywang
+CC: Sebastien Chevrot, Dimitri Komatitsch
+
+Hi Yi,
+
+you will find some example of scripts for Full Waveform Inversion (FWI) on the Curie machine,
+
+/ccc/scratch/cont003/gen6351/vmont/NEW_INVERSION_SYNTH/run/inversion_fwi_model_liss
+
+I think you can read all files in this directory.
+
+This is an synthetic example for FWI example  made for our paper2.
+
+To run the FWI you have to submit the bacth : msub_lance_invesion_gamma_FWI_liss_gauss_3_sub_it.sh
+
+
+All the fortan codes you need and shells scripts are in:
+
+/ccc/scratch/cont003/gen6351/vmont/NEW_INVERSION_SYNTH/codes
+
+Take a look at the scripts and ask me I you need help.
+
+Sebastien told me that you want to performs some testes for real data. I computed the tractions for the 24/05/2012 event  reccorded by the first profile. You will find them in :
+
+  /ccc/store/cont003/gen6351/vmont/pyrope/Tract_201205242247A/
+
+This tractions and velocity not filterd and not convloved. In the directory
+
+
+/ccc/scratch/cont003/gen6351/vmont/compute_tractions_for_pyrope
+
+You will find scripts to compute the gradient for real data (msub_run_simu_adj.sh).
+
+Vadim
+

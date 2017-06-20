@@ -1,0 +1,74 @@
+
+Remark about the cost of the different parts:
+---------------------------------------------
+
+Quand je fais le processus complet, la partie 1 (calcul des coefs) prend ~20% du temps et dans cette partie, dcsymbl0 pend 80% du temps.
+
+Ensuite il y a la partie 2 (lecture des coefs) qui prend ~50% du temps, et la les I/O peuvent nous permettre de gagner encore un peu.
+
+Le reste du temps (qu'on peut nommer partie 3) c'est aussi des I/O, ca consiste a passer de la base de donnees produite par DSM
+a celle de SPECFEM3D.
+
+Si on resume :
+
++ 20% du temps : calcul des coeffs
+
++ 50% : lecture des coeffs
+
++ 30% : reformatage des sorties pour se mettre dans la database specfem (FFT + distribution des tractions sur chaque tranche de SPECFEM3D)
+
+
+Things to do:
+-------------
+
+- for Vadim:
+------------
+
+ * Je crois que ce qu'il faut faire maintenant c'est rendre les ecritures sur disque non bloquantes (d'une part) et paralleles (d'autre part) car c'est dans les MPI_ALLGATHERV() et dans les ecritures sur disque pour chaque l qu'on doit perdre beaucoup de temps maintenant je pense
+(sachant que l va souvent jusqu'a 20000, i.e. on le fait 20000 fois de suite).
+
+Pour faire cela, on va pouvoir supprimer tous les MPI_ALLGATHERV() (completement) et utiliser un systeme de fichiers parallele tel que MPI-IO, HDF5, ParallelNetCDF ou bien ADIOS.
+
+ * faire un flag qui permet soit:
+    -- de faire le calcul pour les 6 sources elementaires.
+    -- de faire le calcul pour 1 tenseur des moments donne.
+
+ * fusionner les parties 2 et 3 du code maintenant qu'on a de bonnes perfs
+
+ * il faudra aussi ajouter le cas SH, qui d'apres Nobuaki est beaucoup plus simple.
+
+ * a terme il faudra reformuler le pb en tenant compte de la discontinuite au niveau de la source
+   dans le systeme d'equations (mettre une interface fictive, voir comment sont defini les conditions de raccord)
+   et non pas seulement dans le terme source.
+
+* ecrire un nouveau fichier flags.guess qui prennent en compte les procs nehalem (pour specfem3D)
+
+* ecrire un script qui fasse le calcul des noyaux, au choix: forme d'onde, temps, amplitude
+
+* ecrire la deconvolution en fortran
+
+* ajouter la possibilite d'utiliser la forme d'onde et au temps dans les inversions
+
+- for Dimitri:
+--------------
+
+  *
+
+
+======================================================================
+======================================================================
+======================================================================
+
+DONE:  (move items from the list above to here once they are done and committed)
+-----
+
+  * Help to port and optimize the code on IBM Blue Gene at IDRIS.
+
+  * Avec Vadim on regardera la premiere partie du code (calcul des coefs) la semaine
+prochaine pour voir si on ne peut pas vectoriser quelques boucles la aussi.
+
+  * Vadim : dire a Dimitri dans quelle partie du nouveau code optimise on passe maintenant
+le plus de temps de calcul ; comme ca Dimitri pourra regarder cette partie-la et voir si on peut l'optimiser
+
+  * run the code on IDRIS Blue Gene and on CURIE
+

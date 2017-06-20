@@ -1,0 +1,40 @@
+VM VM 29.03.2013-------------------------------------------------------------------------------------
+DSM package for computing the traction in order to use the hybrid methode DSM/SPECFEM3D.
+
+The process consists  in 4 main steps :
+
+1. Compute expansion coefficients for P-SV waves
+   TraPSV_MPI_write
+
+2. Projection of the expension coefficients into the spherical harmonics
+    TraPSV_MPI_read  : for vetical faces
+    TraPSV_MPI_read_zmin : zmin face
+
+3. perform frequency to time tranformation
+    FFT_MPI_FACES_VERT  : for vertical faces
+    FFT_MPI_FACES_ZMIN  : zmin face
+
+4. change the output format to be consistent with the SPECFEM inputs
+    ChangeFormat_disp  : velocity  vertical faces
+    ChangeFormat  : tractions  vertical faces
+    ChangeFormat_zmin_disp :  velocity zmin
+    ChangeFormat_zmin  : tractions zmin
+
+
+Note :
+   TraPSV_MPI_read_zmin was optimised by Dimitri Komatitsch (> x5 speed up)
+   some shells scripts that I use are in shells/
+
+TO DO :
+ -- optimization of TraPSV_MPI_read ini the sams way than  TraPSV_MPI_read_zmin
+ -- check how to optimize TraPSV_MPI_write, but it's difficults because of too few comments in the code
+ -- For now I didn't success to write a correct Makefile that compile all the package. I use install.sh
+ -- Add a benchmark
+
+VM VM--------------------------------------------------------------------------------------------------------
+
+VM VM 26.06.2013---------------------------------------------------------------------------------------------
+
+1/ Fixed bugs : I merged CCRT and IDRIS version of DSM that I used for the real DATA from PYROPE 
+2/ I added a new tool in Part4 : Interf_SPECFEM3D_DSM. This is the interface that read the DSM output and create SPECFEM3D inputs for simulation run.
+3/ I added a HYBRID SPECFEM3D verion. We will (Sebastien and I) this version to develop all tools for the full wave form inversion and we will commit them in the official SPECFEM version once we checked all inversion process. 

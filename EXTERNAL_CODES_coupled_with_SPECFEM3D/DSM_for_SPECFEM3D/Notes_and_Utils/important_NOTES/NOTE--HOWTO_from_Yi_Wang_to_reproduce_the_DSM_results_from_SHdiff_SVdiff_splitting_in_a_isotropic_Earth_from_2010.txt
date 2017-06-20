@@ -1,0 +1,55 @@
+
+Subject:
+Re: questions regarding 'SHdiff-SVdiff splitting in a isotropic Earth'
+From:
+ywang <ywang@irap.omp.eu>
+Date:
+01/06/2014 18:43
+To:
+a.ferreira@ucl.ac.uk
+CC:
+Dimitri Komatitsch <komatitsch@lma.cnrs-mrs.fr>, Sebastien Chevrot <Sebastien.Chevrot@irap.omp.eu>
+
+Dear Laura,
+
+     The attachments are the tar.bz2 package of my DSM computation for smoothed model (d410 and d670). In this DSM package, you can using " mpirun -np  (number of processors)  ./xdsmti <data/input_IASP91_regular_nocrust_nod410_nod670.inf"  command to submit the MPI computation after compiling. The input files for this  smoothed model is ./data/input_IASP91_regular_nocrust_nod410_nod670.inf. The difference from original Takeuchi's DSM version is that we using the high precise Gauss quadrature instead of the old Simpson quadrature.
+     The other thing you should notice is that the choice for ITYPE_SEISMOGRAMS in dsmti.F90 codes(This integer variable is used for choosing the :1 = displacement,  2 = velocity computation . In my case i choose ITYPE_SEISMOGRAMS = 2 for velocity computation and then i use SAC to do the time integration and ONLY highpass filter (command : highpass butter corner 0.00666666667 npoles 6 passes 2 ) . You can try to do our modified DSM computation as reference. If you have any problem, please contact me.
+
+    Best wishes.
+
+
+                                                                                                                                                                                                               Wang Yi
+
+? 01-06-2014 00:02,Dimitri Komatitsch ??:
+> Dear Laura,
+>
+> Thank you very much for your email. Let me cc our new PhD student, Yi
+> Wang, who can send you all the input files and filtering routines
+> because he has redone that calculation recently (last month) using the
+> DSM code.
+>
+> Please note that we did not use the classical IASP91 model, we used a
+> filtered / modified version (no crust, and smoothed d410 and d670). I do
+> not remember having problems with high frequencies; we did filter very
+> low frequencies a little bit (not much) because one of the 1D codes had
+> small problems computing them (DSM or GEMINI, I do not remember).
+> Absolute amplitudes do not matter, i.e. even if they are small the
+> calculation is as accurate as if they were high because the wave
+> equation is linear.
+>
+> Yi, could you please send Laura all the input files and scripts for DSM
+> for that calculation?
+>
+> Thanks,
+> Best wishes,
+>
+> Dimitri.
+>
+> On 29/05/2014 13:19, Laura Parisi (ENV) wrote:
+>> Dear Dimitri, my name is Laura Parisi and I am a PhD student in seismology working with Ana Ferreira (in Cc). I hope to not bother you too much with this email where I would like to ask you something about your work published in JGR in 2010 ('SHdiff-SVdiff splitting in a isotropic Earth'). I tried to reproduce your results, in particular figure 2 (left side) and 3, where you used your modified version of IASP91 model without any other perturbation in the D''. I have obtained a good match for figure 2 (seismograms in displacement at epicentral distance of 100?) but I am still struggling with figure 3 (seismograms in velocity at epicentral distance from 90? to 120?). For figure 2, the only processing I did is the convolution with the source function you indicate in the paper and using the script contained in the specfem package. For figure 3, I derivate to obtain the velocity seismograms but for epicentral distance larger than 104? I obtain seismograms containing very high frequencies (I think because the displacement amplitudes are very small). Then, I tried various filters to eliminate this effects but I couldn't obtain your same results. I suppose you did filter the seismograms in figure 3 but guessing exactly how is difficult! If you could advice me regarding the processing to obtain the results shown in figure 3, it would be very appreciated! :) Many thanks. Best regards, Laura --------------------------------------------------------------- --------------------------------------------------------------- Ph.D. student in Seismology School of Environmental Sciences University of East Anglia Norwich Research Park Norwich, NR4 7TJ, UK --------------------------------------------------------------- ---------------------------------------------------------------
+
+
+
+
+Attachments:
+DSM_cleaned_smooth_model_0_1hz.tar.bz2  3,3 MB
