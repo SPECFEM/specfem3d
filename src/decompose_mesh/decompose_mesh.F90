@@ -1093,9 +1093,7 @@ module decompose_mesh
     allocate(my_nb_interfaces(0:ninterfaces-1),stat=ier)
     if (ier /= 0) stop 'Error allocating array my_nb_interfaces'
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_decompose_mesh_1.F90"
-#endif
+    if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) open(124,file='Numglob2loc_elmn.txt')
 
     ! writes out Database file for each partition
     do ipart = 0, nparts-1
@@ -1211,9 +1209,7 @@ module decompose_mesh
     deallocate(CPML_regions,stat=ier); if (ier /= 0) stop 'Error deallocating array CPML_regions'
     deallocate(is_CPML,stat=ier); if (ier /= 0) stop 'Error deallocating array is_CPML'
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_decompose_mesh_2.F90"
-#endif
+    if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) close(124)
 
     print *, 'partitions: '
     print *, '  num = ',nparts

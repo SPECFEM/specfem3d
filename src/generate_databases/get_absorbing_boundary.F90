@@ -41,9 +41,7 @@
 
   use create_regions_mesh_ext_par
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_get_absorbing_boundary_5.F90"
-#endif
+  use shared_parameters, only: COUPLE_WITH_EXTERNAL_CODE,MESH_A_CHUNK_OF_THE_EARTH,EXTERNAL_CODE_TYPE,EXTERNAL_CODE_IS_DSM
 
   implicit none
 
@@ -87,9 +85,36 @@
   real(kind=CUSTOM_REAL),dimension(NGNOD2D_FOUR_CORNERS) :: xcoord,ycoord,zcoord
   integer  :: ispec,ispec2D,icorner,itop,iabsval,iface,igll,i,j,igllfree,ifree
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_get_absorbing_boundary_1.F90"
-#endif
+  !! CD CD
+  !! additional local parameters For coupling with DSM
+  integer :: ier
+
+  logical, dimension(:,:),allocatable :: iboun   ! pll
+
+  ! corner locations for faces
+  real(kind=CUSTOM_REAL), dimension(:,:,:),allocatable :: xcoord_iboun,ycoord_iboun,zcoord_iboun
+  character(len=27) namefile
+
+  ! sets flag in array iboun for elements with an absorbing boundary faces
+  if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) then
+
+    ! allocate temporary flag array
+    allocate(iboun(6,nspec), &
+             xcoord_iboun(NGNOD2D,6,nspec), &
+             ycoord_iboun(NGNOD2D,6,nspec), &
+             zcoord_iboun(NGNOD2D,6,nspec),stat=ier)
+    if (ier /= 0) stop 'not enough memory to allocate arrays'
+
+    iboun(:,:) = .false.
+
+    if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then
+       write(namefile,'(a17,i6.6,a4)') 'xmin_gll_for_dsm_',myrank,'.txt'
+       open(123,file=namefile)
+       write(123,*) nspec2D_xmin
+    endif
+
+  endif
+  !! CD CD
 
   ! abs face counter
   iabsval = 0
@@ -115,12 +140,9 @@
     ! sets face id of reference element associated with this face
     call get_element_face_id(ispec,xcoord,ycoord,zcoord, &
                             ibool,nspec,nglob_dummy, &
-                            xstore_dummy,ystore_dummy,zstore_dummy, &
-                            iface)
+                            xstore_dummy,ystore_dummy,zstore_dummy,iface)
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_get_absorbing_boundary_2.F90"
-#endif
+    if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
 
     ! ijk indices of GLL points for face id
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLZ)
@@ -143,9 +165,8 @@
                                       lnormal )
         normal_face(:,i,j) = lnormal(:)
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_get_absorbing_boundary_3.F90"
-#endif
+        if ( COUPLE_WITH_EXTERNAL_CODE .and. (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) ) write(123,'(i10,3f20.10)') &
+             ispec, xstore_dummy(ibool(i,j,1,ispec)), ystore_dummy(ibool(i,j,1,ispec)), zstore_dummy(ibool(i,j,1,ispec))
 
       enddo
     enddo
@@ -167,9 +188,7 @@
 
   enddo ! nspec2D_xmin
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_get_absorbing_boundary_4.F90"
-#endif
+  if ( COUPLE_WITH_EXTERNAL_CODE .and. (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) ) close(123)
 
   ! xmax
   ijk_face(:,:,:) = 0
@@ -190,12 +209,9 @@
     ! sets face id of reference element associated with this face
     call get_element_face_id(ispec,xcoord,ycoord,zcoord, &
                               ibool,nspec,nglob_dummy, &
-                              xstore_dummy,ystore_dummy,zstore_dummy, &
-                              iface)
+                              xstore_dummy,ystore_dummy,zstore_dummy,iface)
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_get_absorbing_boundary_2.F90"
-#endif
+    if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
 
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLZ)
@@ -256,12 +272,9 @@
     ! sets face id of reference element associated with this face
     call get_element_face_id(ispec,xcoord,ycoord,zcoord, &
                               ibool,nspec,nglob_dummy, &
-                              xstore_dummy,ystore_dummy,zstore_dummy, &
-                              iface)
+                              xstore_dummy,ystore_dummy,zstore_dummy,iface)
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_get_absorbing_boundary_2.F90"
-#endif
+    if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
 
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLY,NGLLZ)
@@ -322,12 +335,9 @@
     ! sets face id of reference element associated with this face
     call get_element_face_id(ispec,xcoord,ycoord,zcoord, &
                               ibool,nspec,nglob_dummy, &
-                              xstore_dummy,ystore_dummy,zstore_dummy, &
-                              iface)
+                              xstore_dummy,ystore_dummy,zstore_dummy,iface)
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_get_absorbing_boundary_2.F90"
-#endif
+    if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
 
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLY,NGLLZ)
@@ -388,12 +398,9 @@
     ! sets face id of reference element associated with this face
     call get_element_face_id(ispec,xcoord,ycoord,zcoord, &
                               ibool,nspec,nglob_dummy, &
-                              xstore_dummy,ystore_dummy,zstore_dummy, &
-                              iface)
+                              xstore_dummy,ystore_dummy,zstore_dummy,iface)
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_get_absorbing_boundary_2.F90"
-#endif
+    if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
 
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLY)
@@ -474,12 +481,9 @@
     ! sets face id of reference element associated with this face
     call get_element_face_id(ispec,xcoord,ycoord,zcoord, &
                               ibool,nspec,nglob_dummy, &
-                              xstore_dummy,ystore_dummy,zstore_dummy, &
-                              iface)
+                              xstore_dummy,ystore_dummy,zstore_dummy,iface)
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_get_absorbing_boundary_2.F90"
-#endif
+    if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
 
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLY)

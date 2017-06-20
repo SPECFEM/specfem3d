@@ -180,9 +180,13 @@
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: zstore_dummy
   integer :: nglob_dummy
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_generate_databases_par.F90"
-#endif
+! *********************************************************************************
+! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
+! material properties at global points for the elastic case
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: rhostore_dummy
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: kappastore_dummy
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: mustore_dummy
+! *********************************************************************************
 
 ! Gauss-Lobatto-Legendre points and weights of integration
   double precision, dimension(:), allocatable :: xigll,yigll,zigll,wxgll,wygll,wzgll

@@ -75,9 +75,7 @@
 
   use constants
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_model_external_values_4.F90"
-#endif
+  use shared_parameters, only: COUPLE_WITH_EXTERNAL_CODE,MESH_A_CHUNK_OF_THE_EARTH
 
   implicit none
 
@@ -93,9 +91,8 @@
 !
 ! ADD YOUR MODEL HERE
 !
-#ifdef DEBUG_COUPLED
-    include "../../add_to_model_external_values_1.F90"
-#endif
+
+  if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) call read_external_model_for_coupling_or_chunk()
 
 !---
 
@@ -131,9 +128,66 @@
 !
 !
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_model_external_values_2.F90"
-#endif
+  subroutine read_external_model_for_coupling_or_chunk()
+
+  use external_model !! VM VM custom subroutine for coupling with DSM
+
+  implicit none
+
+    character(len=256):: filename
+    integer i,cc
+    double precision aa,bb
+
+    filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'/coeff_poly_deg12'
+    open(27,file=trim(filename))
+    read(27,*) ndeg_poly
+    allocate(smooth_vp(0:ndeg_poly),smooth_vs(0:ndeg_poly))
+    do i=ndeg_poly,0,-1
+       read(27,*) aa,bb,cc
+       smooth_vp(i) = aa
+       smooth_vs(i) = bb
+       ! write(*,*) a,b
+    enddo
+
+    filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'/model_1D.in'
+    open(27,file=trim(filename))
+    read(27,*) nlayer,ncoeff
+    allocate(vpv_1D(nlayer,ncoeff))
+    allocate(vsv_1D(nlayer,ncoeff))
+    allocate(density_1D(nlayer,ncoeff))
+    allocate(zlayer(nlayer))
+    do i=1,nlayer
+       read(27,*) zlayer(i)
+       read(27,*) vpv_1D(i,:)
+       read(27,*) vsv_1D(i,:)
+       read(27,*) density_1D(i,:)
+    enddo
+    read(27,*) ZREF
+    read(27,*) OLON,OLAT
+
+  end subroutine read_external_model_for_coupling_or_chunk
+
+!----------------------------------------------------------------
+!! !! ================= VM VM custom subroutine for DSM coupling
+!----------------------------------------------------------------
+
+  subroutine FindLayer(x,y,z)
+
+    use external_model
+    implicit none
+    integer il
+    double precision radius
+    double precision :: x,y,z
+    radius =  dsqrt(x**2 + y**2 + (z+zref)**2) / 1000.d0
+
+    il = 1
+    do while (radius > zlayer(il) .and. il < nlayer)
+       il = il + 1
+    enddo
+    il = il - 1
+    ilayer = il
+
+  end subroutine FindLayer
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -147,11 +201,7 @@
 
   use create_regions_mesh_ext_par
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_model_external_values_4.F90"
-#endif
-
-!  use external_model
+  use shared_parameters, only: COUPLE_WITH_EXTERNAL_CODE,MESH_A_CHUNK_OF_THE_EARTH
 
   implicit none
 
@@ -182,9 +232,18 @@
 !
 !---
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_model_external_values_3.F90"
-#endif
+  ! local parameters
+  double precision :: radius
+
+  ! GLL point location converted to real
+  x = xmesh
+  y = ymesh
+  z = zmesh
+
+  if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) then
+    call  model_1D(x,y,z,rho,vp,vs,radius)
+    return
+  endif
 
   ! GLL point location converted to real
   x = xmesh

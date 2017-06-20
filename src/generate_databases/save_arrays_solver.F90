@@ -42,11 +42,10 @@
     nglob_interface_PML_acoustic,points_interface_PML_acoustic, &
     nglob_interface_PML_elastic,points_interface_PML_elastic, &
     STACEY_ABSORBING_CONDITIONS,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT,USE_MESH_COLORING_GPU
+
   use create_regions_mesh_ext_par
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_save_arrays_solver_3.F90"
-#endif
+  use shared_parameters, only: COUPLE_WITH_EXTERNAL_CODE,MESH_A_CHUNK_OF_THE_EARTH
 
   implicit none
 
@@ -323,9 +322,10 @@
   ! stores arrays in binary files
   if (SAVE_MESH_FILES) call save_arrays_solver_files(nspec,nglob,ibool)
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_save_arrays_solver_1.F90"
-#endif
+  ! if SAVE_MESH_FILES is true then the files have already been saved, no need to save them again
+  if ((COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) .and. .not. SAVE_MESH_FILES) then
+    call save_arrays_solver_files(nspec,nglob,ibool)
+  endif
 
   ! cleanup
   deallocate(ibool_interfaces_ext_mesh_dummy,stat=ier)
@@ -371,11 +371,10 @@
   subroutine save_arrays_solver_files(nspec,nglob,ibool)
 
   use generate_databases_par, only: myrank,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT,FOUR_THIRDS
+
   use create_regions_mesh_ext_par
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_save_arrays_solver_3.F90"
-#endif
+  use shared_parameters, only: COUPLE_WITH_EXTERNAL_CODE,MESH_A_CHUNK_OF_THE_EARTH
 
   implicit none
 
@@ -664,9 +663,25 @@
 
   endif  !if (SAVE_MESH_FILES_ADDITIONAL)
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_save_arrays_solver_2.F90"
-#endif
+  if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) then
+    !if (num_abs_boundary_faces > 0) then
+    filename = prname(1:len_trim(prname))//'absorb_dsm'
+    open(IOUT,file=filename(1:len_trim(filename)),status='unknown',form='unformatted',iostat=ier)
+    if (ier /= 0) stop 'error opening file absorb_dsm'
+    write(IOUT) num_abs_boundary_faces
+    write(IOUT) abs_boundary_ispec
+    write(IOUT) abs_boundary_ijk
+    write(IOUT) abs_boundary_jacobian2Dw
+    write(IOUT) abs_boundary_normal
+    close(IOUT)
 
+    filename = prname(1:len_trim(prname))//'inner'
+    open(IOUT,file=filename(1:len_trim(filename)),status='unknown',form='unformatted',iostat=ier)
+    write(IOUT) ispec_is_inner
+    write(IOUT) ispec_is_elastic
+    close(IOUT)
+
+  endif ! of if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH)
 
   end subroutine save_arrays_solver_files
+

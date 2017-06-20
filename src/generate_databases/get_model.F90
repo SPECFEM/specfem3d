@@ -37,9 +37,7 @@
 
   use create_regions_mesh_ext_par
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_get_model_4.F90"
-#endif
+  use shared_parameters, only: COUPLE_WITH_EXTERNAL_CODE,MESH_A_CHUNK_OF_THE_EARTH,EXTERNAL_CODE_TYPE,EXTERNAL_CODE_IS_FK
 
   implicit none
 
@@ -81,15 +79,45 @@
 
   ! prepares external model values if needed
   select case (IMODEL)
-  case (IMODEL_USER_EXTERNAL )
+  case (IMODEL_USER_EXTERNAL)
     call model_external_broadcast(myrank)
-  case (IMODEL_SALTON_TROUGH )
+  case (IMODEL_SALTON_TROUGH)
     call model_salton_trough_broadcast(myrank)
   end select
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_get_model_1.F90"
-#endif
+  if (COUPLE_WITH_EXTERNAL_CODE) then
+
+  if (COUPLE_WITH_EXTERNAL_CODE .and. EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_FK .and. MESH_A_CHUNK_OF_THE_EARTH) &
+    stop 'coupling with EXTERNAL_CODE_IS_FK is incompatible with MESH_A_CHUNK_OF_THE_EARTH because of Earth curvature not honored'
+
+!! VM VM for coupling with DSM
+!! find the layer in which the middle of the element is located
+  if (myrank == 0) then
+     write(IMAIN,*)
+     write(IMAIN,*)
+     write(IMAIN,*) '         USING A HYBRID METHOD (CODE COUPLED WITH AN EXTERNAL CODE)'
+     write(IMAIN,*)
+     write(IMAIN,*) '         EXTERNAL CODE ', EXTERNAL_CODE_TYPE
+     write(IMAIN,*)
+     write(IMAIN,*)
+  endif
+  if (EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_FK) then
+     if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH  ) then
+
+        if ((NGLLX == 5) .and. (NGLLY == 5) .and. (NGLLZ == 5)) then
+           ! gets xyz coordinates of GLL point
+           iglob = ibool(3,3,3,1)
+           xmesh = xstore_dummy(iglob)
+           ymesh = ystore_dummy(iglob)
+           zmesh = zstore_dummy(iglob)
+           call FindLayer(xmesh,ymesh,zmesh)
+        else
+           stop 'bad number of GLL points for coupling with an external code'
+        endif
+     endif
+  endif
+
+  endif
 
   ! get MPI starting time
   time_start = wtime()
@@ -98,9 +126,15 @@
   ! each spectral element in input mesh
   do ispec = 1, nspec
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_get_model_2.F90"
-#endif
+  if (EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_FK) then
+     if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) then
+        iglob = ibool(3,3,3,ispec)
+        xmesh = xstore_dummy(iglob)
+        ymesh = ystore_dummy(iglob)
+        zmesh = zstore_dummy(iglob)
+        call FindLayer(xmesh,ymesh,zmesh)
+     endif
+  endif
 
     ! loops over all GLL points in element
     do k = 1, NGLLZ
@@ -159,9 +193,12 @@
           ymesh = ystore_dummy(iglob)
           zmesh = zstore_dummy(iglob)
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_get_model_3.F90"
-#endif
+          !! VM VM for coupling with DSM
+          !! find the layer in which the middle of the element is located
+          if (EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_FK) then
+            if ((COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) .and. &
+              (i == 3 .and. j == 3 .and. k == 3)) call FindLayer(xmesh,ymesh,zmesh)
+          endif
 
           ! material index 1: associated material number
           ! 1 = acoustic, 2 = elastic, 3 = poroelastic, -1 = undefined tomographic
@@ -195,10 +232,6 @@
             ! kappa, mu
             kappastore(i,j,k,ispec) = rho*( vp*vp - FOUR_THIRDS*vs*vs )
             mustore(i,j,k,ispec) = rho*vs*vs
-
-#ifdef DEBUG_COUPLED
-    include "../../add_to_get_model_5.F90"
-#endif
 
             ! attenuation
             qkappa_attenuation_store(i,j,k,ispec) = qkappa_atten
@@ -382,9 +415,7 @@
 
   use create_regions_mesh_ext_par
 
-#ifdef DEBUG_COUPLED
-  include "../../add_to_get_model_9.F90"
-#endif
+  use shared_parameters, only: COUPLE_WITH_EXTERNAL_CODE,EXTERNAL_CODE_TYPE,EXTERNAL_CODE_IS_FK
 
   implicit none
 
@@ -415,9 +446,17 @@
   integer :: iundef,imaterial_PB
   logical :: has_tomo_value
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_get_model_7.F90"
-#endif
+! *********************************************************************************
+! added by Ping Tong (TP / Tong Ping) for the FK3D calculation, local parameters
+   real(kind=CUSTOM_REAL) :: tem1,tem2,ratio_x,ratio
+
+!  flag indicating whether we smooth the model on the edges to make it 1D on the edges to match the FK calculation
+   logical, parameter :: SMOOTH_THE_MODEL_EDGES_FOR_FK = .false.
+
+! if the flag SMOOTH_THE_MODEL_EDGES_FOR_FK above is true, do we smooth the Moho only, or the rest of the model as well
+! if the flag SMOOTH_THE_MODEL_EDGES_FOR_FK above is false, then this flag is ignored
+   logical, parameter :: SMOOTH_THE_MOHO_ONLY_FOR_FK = .false.
+! *********************************************************************************
 
   ! use acoustic domains for simulation
   logical,parameter :: USE_PURE_ACOUSTIC_MOD = .false.
@@ -447,9 +486,93 @@
                        rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
                        phi,tort,kxx,kxy,kxz,kyy,kyz,kzz)
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_get_model_8.F90"
-#endif
+! *********************************************************************************
+! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
+! for smoothing the boundary portions of the model
+
+  if (COUPLE_WITH_EXTERNAL_CODE .and. EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_FK .and. SMOOTH_THE_MODEL_EDGES_FOR_FK) then
+
+    if (.not. SMOOTH_THE_MOHO_ONLY_FOR_FK) then
+
+        ratio = 1.0
+
+! fast anomaly
+        if (imaterial_id == 4) then
+        tem1 = (-8.0/20.0)*xmesh + 100000.0
+        tem2 = (-8.0/20.0)*xmesh + 140000.0
+        if (zmesh > tem1 .and. zmesh < tem2) then
+        if (xmesh < 30000.0) then
+        ratio_x = 1.0 + 0.04*xmesh/30000.0
+        else if (xmesh > 170000.0) then
+        ratio_x = 1.0 + 0.04*(200000.0-xmesh)/30000.0
+        else
+        ratio_x = 1.04
+        endif
+        if (ymesh < 30000.0) then
+           ratio = 1.0 + 0.04*ymesh/30000.0
+        else if (ymesh > 170000.0) then
+           ratio = 1.0 + 0.04*(200000.0-ymesh)/30000.0
+        else
+           ratio = 1.04
+        endif
+        if (ratio_x < ratio) then
+            ratio = ratio_x
+        endif
+        rho = rho*ratio
+        vp  = vp *ratio
+        vs  = vs *ratio
+        endif
+        endif
+! slow anomaly
+        if (imaterial_id == 3) then
+        tem1 = (-8.0/20.0)*xmesh + 140000.0
+        tem2 = (-8.0/20.0)*xmesh + 155000.0
+        if (zmesh > tem1 .and. zmesh < tem2) then
+        if (xmesh < 30000.0) then
+        ratio_x = 1.0 - 0.06*xmesh/30000.0
+        else if (xmesh > 170000.0) then
+        ratio_x = 1.0 - 0.06*(200000.0-xmesh)/30000.0
+        else
+        ratio_x = 0.94
+        endif
+        if (ymesh < 30000.0) then
+           ratio = 1.0 - 0.06*ymesh/30000.0
+        else if (ymesh > 170000.0) then
+           ratio = 1.0 - 0.06*(200000.0-ymesh)/30000.0
+        else
+           ratio = 0.94
+        endif
+        if (ratio_x > ratio) then
+            ratio = ratio_x
+        endif
+        rho = rho*ratio
+        vp  = vp *ratio
+        vs  = vs *ratio
+        endif
+        endif
+
+    endif ! of if (.not. SMOOTH_THE_MOHO_ONLY_FOR_FK) then
+
+! Moho section
+         if (imaterial_id == 1) then
+         tem1 = 160000.0
+         tem2 = 170000.0
+         if (zmesh > tem1 .and. zmesh < tem2) then
+           if (ymesh < 30000.0) then
+               vp  = ((30000.0-ymesh)/30000.0)*5800.0 + (ymesh/30000.0)*8080.0
+               vs  = ((30000.0-ymesh)/30000.0)*3198.0 + (ymesh/30000.0)*4485.0
+               rho = ((30000.0-ymesh)/30000.0)*2600.0 + (ymesh/30000.0)*3380.0
+           else if (ymesh > 170000.0) then
+               vp  = ((200000.0-ymesh)/30000.0)*5800.0+((ymesh-170000.0)/30000.0)*8080.0
+               vs  = ((200000.0-ymesh)/30000.0)*3198.0+((ymesh-170000.0)/30000.0)*4485.0
+               rho = ((200000.0-ymesh)/30000.0)*2600.0+((ymesh-170000.0)/30000.0)*3380.0
+           endif
+         endif
+         endif
+
+  endif ! of if (SMOOTH_THE_MODEL_EDGES_FOR_FK) then
+
+! *********************************************************************************
 
   case (IMODEL_1D_PREM)
     ! 1D model profile from PREM

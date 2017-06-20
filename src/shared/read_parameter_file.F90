@@ -323,9 +323,44 @@
     call read_value_logical(USE_EXTERNAL_SOURCE_FILE, 'USE_EXTERNAL_SOURCE_FILE', ier)
     if (ier /= 0) stop 'Error reading Par_file parameter USE_EXTERNAL_SOURCE_FILE'
 
-#ifdef DEBUG_COUPLED
-      include "../../add_to_read_parameter_file_1.F90"
-#endif
+ call read_value_logical(COUPLE_WITH_EXTERNAL_CODE, 'COUPLE_WITH_EXTERNAL_CODE', ier)
+ if (ier /= 0) stop 'Error reading Par_file parameter COUPLE_WITH_EXTERNAL_CODE'
+
+ call read_value_integer(EXTERNAL_CODE_TYPE,'EXTERNAL_CODE_TYPE',ier)
+ if (ier /= 0) stop 'Error reading Par_file parameter EXTERNAL_CODE_TYPE'
+
+ call read_value_logical(MESH_A_CHUNK_OF_THE_EARTH,'MESH_A_CHUNK_OF_THE_EARTH',ier)
+ if (ier /= 0) stop 'Error reading Par_file parameter MESH_A_CHUNK_OF_THE_EARTH'
+
+ call read_value_string(TRACTION_PATH, 'TRACTION_PATH', ier)
+ if (ier /= 0) stop 'Error reading Par_file parameter TRACTION_PATH'
+
+ if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_FK) then
+    call read_value_string(FKMODEL_FILE,'FKMODEL_FILE',ier)
+    if (ier /= 0) stop 'Error reading Par_file parameter FKMODEL_FILE'
+ endif
+
+! check the type of external code to couple with, if any
+  if (MESH_A_CHUNK_OF_THE_EARTH .and. .not. COUPLE_WITH_EXTERNAL_CODE) &
+    stop 'MESH_A_CHUNK_OF_THE_EARTH only available with COUPLE_WITH_EXTERNAL_CODE for now, easy to change but not done yet'
+
+  if (COUPLE_WITH_EXTERNAL_CODE) then
+    if (EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_DSM .and. &
+       EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_AXISEM .and. &
+       EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_FK) stop 'Error incorrect value of EXTERNAL_CODE_TYPE read'
+
+    if ( (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM ) .and. &
+         (.not. MESH_A_CHUNK_OF_THE_EARTH) ) stop 'Error, coupling with DSM only works with a Earth chunk mesh'
+
+
+    if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_FK .and. MESH_A_CHUNK_OF_THE_EARTH) &
+         stop 'Error: coupling with F-K is for models with a flat surface (Earth flattening), &
+                     &thus turn MESH_A_CHUNK_OF_THE_EARTH off'
+
+    if ((EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_AXISEM) .and. CUT_SOLUTION_FOR_VISU) &
+         stop 'Error: the use of cut_solution_for_visu is only available for coupling with AxiSEM'
+
+  endif
 
     ! closes parameter file
     call close_parameter_file()
@@ -348,9 +383,7 @@
       write(path_to_add,"('run',i4.4,'/')") mygroup + 1
       LOCAL_PATH = path_to_add(1:len_trim(path_to_add))//LOCAL_PATH(1:len_trim(LOCAL_PATH))
       TOMOGRAPHY_PATH = path_to_add(1:len_trim(path_to_add))//TOMOGRAPHY_PATH(1:len_trim(TOMOGRAPHY_PATH))
-#ifdef DEBUG_COUPLED
-      include "../../add_to_read_parameter_file_2.F90"
-#endif
+      TRACTION_PATH = path_to_add(1:len_trim(path_to_add))//TRACTION_PATH(1:len_trim(TRACTION_PATH))
     endif
 
     ! noise simulations:
@@ -540,9 +573,11 @@
     call bcast_all_string(FORCESOLUTION)
     call bcast_all_string(CMTSOLUTION)
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_read_parameter_file_3.F90"
-#endif
+    call bcast_all_singlel(COUPLE_WITH_EXTERNAL_CODE)
+    call bcast_all_singlel(MESH_A_CHUNK_OF_THE_EARTH)
+    call bcast_all_singlei(EXTERNAL_CODE_TYPE)
+    call bcast_all_string(TRACTION_PATH)
+    call bcast_all_string(FKMODEL_FILE)
 
   endif ! of if (BROADCAST_AFTER_READ) then
 

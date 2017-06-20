@@ -482,9 +482,73 @@
            abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
   if (ier /= 0) stop 'Error allocating array abs_boundary_ispec etc.'
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_read_mesh_databases.F90"
-#endif
+  !!!! VM VM & CD CD !! For coupling with external codes
+  if (COUPLE_WITH_EXTERNAL_CODE) then
+
+    if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then
+
+      allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)) !! CD CD : cf for deallocate
+      allocate(Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
+      if (old_DSM_coupling_from_Vadim) then
+        open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'vel.bin',status='old', &
+             action='read',form='unformatted',iostat=ier)
+        open(unit=IIN_tract_dsm,file=dsmname(1:len_trim(dsmname))//'tract.bin',status='old', &
+             action='read',form='unformatted',iostat=ier)
+      else
+        !! To verify for NOBU version (normally, remains empty)
+      endif
+
+    else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
+
+      allocate(Veloc_axisem(3,NGLLSQUARE*num_abs_boundary_faces))
+      allocate(Tract_axisem(3,NGLLSQUARE*num_abs_boundary_faces))
+      open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'sol_axisem',status='old', &
+           action='read',form='unformatted',iostat=ier)
+      write(*,*) 'OPENING ', dsmname(1:len_trim(dsmname))//'sol_axisem'
+
+      !! CD CD add this :
+      if (CUT_SOLUTION_FOR_VISU) then
+
+        allocate(Displ_axisem_time(3,NGLLSQUARE*num_abs_boundary_faces,NSTEP))
+        allocate(Tract_axisem_time(3,NGLLSQUARE*num_abs_boundary_faces,NSTEP))
+        allocate(Tract_specfem_time(3,NGLLSQUARE*num_abs_boundary_faces,NSTEP))
+        allocate(Displ_specfem_time(3,NGLLSQUARE*num_abs_boundary_faces,NSTEP))
+
+        if (.not. SAVE_RUN_BOUN_FOR_KH_INTEGRAL) then
+        !! We only read Specfem Tract and Displ, and Axisem Displ (Axisem Tract is read in compute_stacey_visco...)
+        !! This is only for KH integral
+        !! The unit numbers are here temporary
+          open(unit=IIN_displ_axisem,file=dsmname(1:len_trim(dsmname))//'axisem_displ_for_int_KH', &
+            status='old',action='read',form='unformatted',iostat=ier)
+
+          open(unit=237,file=dsmname(1:len_trim(dsmname))//'specfem_displ_for_int_KH', &
+            status='old',action='read',form='unformatted',iostat=ier)
+
+          open(unit=238,file=dsmname(1:len_trim(dsmname))//'specfem_tract_for_int_KH', &
+            status='old',action='read',form='unformatted',iostat=ier)
+
+          write(*,*) 'OPENING ', dsmname(1:len_trim(dsmname))//'axisem_displ_for_int_KH, and the specfem disp and tract'
+        endif
+
+      endif
+
+    endif
+
+  else
+    allocate(Veloc_dsm_boundary(1,1,1,1))
+    allocate(Tract_dsm_boundary(1,1,1,1))
+    allocate(Veloc_axisem(1,1))
+    allocate(Tract_axisem(1,1))
+  endif
+
+  !! CD CD add this :
+  !! We perform a first run of Specfem to save displacement and tractions of Specfem for the computation of KH integral
+  !! The displ, tract, and veloc of Axisem have also to be stored
+  if (SAVE_RUN_BOUN_FOR_KH_INTEGRAL) then
+    open(unit=237,file=dsmname(1:len_trim(dsmname))//'specfem_displ_for_int_KH',form='unformatted')
+    open(unit=238,file=dsmname(1:len_trim(dsmname))//'specfem_tract_for_int_KH',form='unformatted')
+    write(*,*) 'OPENING ', dsmname(1:len_trim(dsmname))//'specfem_displ_for_int_KH, and the specfem tract to SAVE IT'
+  endif
 
   if (num_abs_boundary_faces > 0) then
     if (I_should_read_the_database) then

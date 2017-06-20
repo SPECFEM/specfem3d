@@ -144,9 +144,41 @@ end module constants
   logical :: ADIOS_ENABLED
   logical :: ADIOS_FOR_DATABASES, ADIOS_FOR_MESH, ADIOS_FOR_FORWARD_ARRAYS, ADIOS_FOR_KERNELS
 
-#ifdef DEBUG_COUPLED
-include "../../add_to_shared_par.F90"
-#endif
+!!-----------------------------------------------------------
+!!
+!! For coupling with EXTERNAL CODE
+!!
+!!-----------------------------------------------------------
+
+! add support for AXISEM and FK as external codes, not only DSM
+  integer, parameter :: EXTERNAL_CODE_IS_DSM    = 1
+  integer, parameter :: EXTERNAL_CODE_IS_AXISEM = 2
+  integer, parameter :: EXTERNAL_CODE_IS_FK     = 3
+
+! Big storage version of coupling with DSM (will always set to .false. after the light storage version will be validated)
+  logical, parameter :: old_DSM_coupling_from_Vadim = .true.
+
+! First run to store on boundaries for using reciprocty calculate Kirchoff-Helmholtz integral
+  logical, parameter :: SAVE_RUN_BOUN_FOR_KH_INTEGRAL = .false.
+
+! for subroutine compute_vol_or_surf_integral_on_whole_domain
+  integer, parameter :: Surf_or_vol_integral    = 1  !!! 1 = Surface integral, 2 = Volume, 3 = Both
+
+! some old tests (currently unstable; do not remove them though, we might fix this one day)
+  integer, parameter :: IIN_veloc_dsm = 51, IIN_tract_dsm = 52, Ntime_step_dsm = 100
+  integer, parameter :: IIN_displ_axisem = 54
+
+!!
+!!-----------------------------------------------------------
+!!
+
+  ! external code coupling (DSM, AxiSEM)
+  logical :: COUPLE_WITH_EXTERNAL_CODE
+  integer :: EXTERNAL_CODE_TYPE
+  character(len=MAX_STRING_LEN) :: TRACTION_PATH
+  character(len=MAX_STRING_LEN) :: FKMODEL_FILE
+  logical :: MESH_A_CHUNK_OF_THE_EARTH
+  logical :: CUT_SOLUTION_FOR_VISU
 
   end module shared_input_parameters
 

@@ -737,9 +737,7 @@ contains
                                       glob2loc_nodes_parts, glob2loc_nodes, &
                                       part, num_modele, NGNOD, num_phase)
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_part_decompose_mesh_1.F90"
-#endif
+  use shared_parameters, only: COUPLE_WITH_EXTERNAL_CODE,MESH_A_CHUNK_OF_THE_EARTH
 
     implicit none
 
@@ -795,9 +793,8 @@ contains
              ! # ispec_local # material_index_1 # material_index_2 # corner_id1 # corner_id2 # ... # corner_id27
              write(IIN_database) glob2loc_elmnts(i)+1,num_modele(1,i+1),num_modele(2,i+1),(loc_nodes(k)+1, k=0,NGNOD-1)
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_part_decompose_mesh_2.F90"
-#endif
+             ! writes out to file Numglob2loc_elmn.txt
+             if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) write(124,*) i+1,glob2loc_elmnts(i)+1,iproc
 
           endif
        enddo

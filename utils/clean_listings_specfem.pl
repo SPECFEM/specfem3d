@@ -273,6 +273,9 @@ use File::Basename;
       $line =~ s# pml # PML #ogi;
 
 # fix some typos I have found in the different codes
+      $line =~ s#vecotr#vector#ogi;
+      $line =~ s#computse#compute#ogi;
+      $line =~ s#indicies#indices#ogi;
       $line =~ s#accordig#according#ogi;
       $line =~ s#paralell#parallel#ogi;
       $line =~ s#debbug#debug#ogi;

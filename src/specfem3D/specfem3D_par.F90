@@ -80,9 +80,14 @@ module specfem_par
   integer, dimension(:), allocatable :: free_surface_ispec
   integer :: num_free_surface_faces
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_specfem3D_par_1.F90"
-#endif
+! for couple with external code : DSM and AxiSEM (added by VM) for the moment
+  integer :: it_dsm, it_fk
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: Veloc_dsm_boundary, Tract_dsm_boundary
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: Veloc_axisem, Tract_axisem
+
+  !! CD CD add this : for cut_solution_for_visu
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: Displ_axisem_time, Tract_axisem_time
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: Displ_specfem_time, Tract_specfem_time
 
 ! attenuation
   integer :: NSPEC_ATTENUATION_AB
@@ -365,9 +370,26 @@ module specfem_par_elastic
   integer, dimension(:), allocatable :: b_request_send_vector_ext_mesh
   integer, dimension(:), allocatable :: b_request_recv_vector_ext_mesh
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_specfem3D_par_2.F90"
-#endif
+! *********************************************************************************
+! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
+! FK elastic
+  integer :: npt,nlayer,kpsv
+  integer :: NF_FOR_STORING, NF_FOR_FFT, NPOW_FOR_FFT, NP_RESAMP, NPOW_FOR_INTERP
+  integer :: NPTS_STORED, NPTS_INTERP
+  integer, parameter :: NTIME_BETWEEN_FFT=1  !! not used anymore
+  integer,dimension(:),allocatable :: nbdglb
+  real(kind=CUSTOM_REAL),dimension(:,:),allocatable :: vxbd,vybd,vzbd,txxbd,txybd,txzbd,tyybd,tyzbd,tzzbd
+  real(kind=CUSTOM_REAL) :: p,phi_FK,theta_FK,xx0,yy0,zz0,ff0,tg,tt0,tmax_fk,df_fk ! source
+  real(kind=CUSTOM_REAL),dimension(:),allocatable :: al_FK,be_FK,mu_FK,h_FK,tmp_for_interp ! model
+  complex(kind=8), dimension(:,:), allocatable :: VX_f, VY_f, VZ_f, TX_f, TY_f, TZ_f
+  real(kind=CUSTOM_REAL),dimension(:,:),allocatable :: VX_t, VY_t, VZ_t, TX_t, TY_t, TZ_t
+  complex(kind=8), dimension(:), allocatable :: WKS_CMPLX_FOR_FFT
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: WKS_REAL_FOR_FFT
+  real(kind=CUSTOM_REAL), dimension(:), allocatable ::  vx_FK,vy_FK,vz_FK,tx_FK,ty_FK,tz_FK
+  logical :: stag
+  real(kind=CUSTOM_REAL),dimension(:),allocatable  :: xx,yy,zz,xi1,xim,bdlambdamu
+  real(kind=CUSTOM_REAL),dimension(:),allocatable  :: nmx,nmy,nmz  !! normal
+! *********************************************************************************
 
   ! LDDRK time scheme
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: displ_lddrk,veloc_lddrk

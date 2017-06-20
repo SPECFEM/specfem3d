@@ -43,9 +43,7 @@
 
   use specfem_par_elastic, only: accel,ispec_is_elastic
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_compute_add_sources_viscoelastic_1.F90"
-#endif
+  use shared_parameters, only: COUPLE_WITH_EXTERNAL_CODE
 
   implicit none
 
@@ -58,9 +56,9 @@
   integer :: isource,iglob,i,j,k,ispec,it_sub_adj
   integer :: irec_local,irec
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_compute_add_sources_viscoelastic_2.F90"
-#endif
+! no source inside the mesh if we are coupling with DSM
+! because the source is precisely the wavefield coming from the DSM traction file
+  if (COUPLE_WITH_EXTERNAL_CODE .and. SIMULATION_TYPE == 1) return
 
   ! forward simulations
   if (SIMULATION_TYPE == 1 .and. NOISE_TOMOGRAPHY == 0 .and. nsources_local > 0) then
@@ -251,9 +249,7 @@
 
   use specfem_par_elastic, only: b_accel,ispec_is_elastic
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_compute_add_sources_viscoelastic_1.F90"
-#endif
+  use shared_parameters, only: COUPLE_WITH_EXTERNAL_CODE
 
   implicit none
 
@@ -265,9 +261,9 @@
 
   integer :: isource,iglob,i,j,k,ispec
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_compute_add_sources_viscoelastic_2.F90"
-#endif
+! no source inside the mesh if we are coupling with DSM
+! because the source is precisely the wavefield coming from the DSM traction file
+  if (COUPLE_WITH_EXTERNAL_CODE .and. SIMULATION_TYPE == 1) return
 
 ! NOTE: adjoint sources and backward wavefield timing:
 !             idea is to start with the backward field b_displ,.. at time (T)
@@ -377,10 +373,7 @@
                         nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
                         Mesh_pointer,source_adjoint, INVERSE_FWI_FULL_PROBLEM
 
-
-#ifdef DEBUG_COUPLED
-    include "../../add_to_compute_add_sources_viscoelastic_1.F90"
-#endif
+  use shared_parameters, only: COUPLE_WITH_EXTERNAL_CODE
 
   implicit none
 
@@ -394,9 +387,9 @@
   integer :: isource,it_sub_adj
   integer :: irec_local,irec
 
-#ifdef DEBUG_COUPLED
-    include "../../add_to_compute_add_sources_viscoelastic_2.F90"
-#endif
+! no source inside the mesh if we are coupling with DSM
+! because the source is precisely the wavefield coming from the DSM traction file
+  if (COUPLE_WITH_EXTERNAL_CODE .and. SIMULATION_TYPE == 1) return
 
   ! forward simulations
   if (SIMULATION_TYPE == 1 .and. NOISE_TOMOGRAPHY == 0 .and. nsources_local > 0) then

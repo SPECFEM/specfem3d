@@ -1515,7 +1515,7 @@
 !      n = Input
 !         Length of X
 !      I = Output
-!         Sorted Indicies of vecotr X
+!         Sorted indices of vector X
 !
 !      Example:
 !         X = [ 4 3 1 2 ] on Input
