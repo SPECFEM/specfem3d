@@ -320,8 +320,8 @@
     print *
   endif
 
-    call read_value_logical(USE_EXTERNAL_SOURCE_FILE, 'USE_EXTERNAL_SOURCE_FILE', ier)
-    if (ier /= 0) stop 'Error reading Par_file parameter USE_EXTERNAL_SOURCE_FILE'
+ call read_value_logical(USE_EXTERNAL_SOURCE_FILE, 'USE_EXTERNAL_SOURCE_FILE', ier)
+ if (ier /= 0) stop 'Error reading Par_file parameter USE_EXTERNAL_SOURCE_FILE'
 
  call read_value_logical(COUPLE_WITH_EXTERNAL_CODE, 'COUPLE_WITH_EXTERNAL_CODE', ier)
  if (ier /= 0) stop 'Error reading Par_file parameter COUPLE_WITH_EXTERNAL_CODE'
@@ -359,7 +359,6 @@
 
     if ((EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_AXISEM) .and. CUT_SOLUTION_FOR_VISU) &
          stop 'Error: the use of cut_solution_for_visu is only available for coupling with AxiSEM'
-
   endif
 
     ! closes parameter file

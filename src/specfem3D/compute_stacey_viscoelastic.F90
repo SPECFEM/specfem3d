@@ -1211,9 +1211,11 @@ end subroutine compute_N_rayleigh
 ! The convention is FFT --> e^(-iwt)
 ! numerical factor for Plancherel theorem: planch_fac = dble(NPT * dt * dt)
 
+  use constants
+
   implicit none
 
-      integer, parameter :: CUSTOM_REAL = 4, CUSTOM_CMPLX = 8
+      integer, parameter :: CUSTOM_CMPLX = 8
 
       integer :: n
       integer :: lblock,k,FK,jh,ii,istart
@@ -1323,9 +1325,11 @@ end subroutine compute_N_rayleigh
 
 ! inverse Fourier transform -- calls FFT
 
+  use constants
+
   implicit none
 
-      integer, parameter :: CUSTOM_CMPLX = 8,CUSTOM_REAL = 4
+      integer, parameter :: CUSTOM_CMPLX = 8
 
       integer :: npow, nsmp, nhalf
       real(kind=CUSTOM_REAL)  :: dtt,zign
