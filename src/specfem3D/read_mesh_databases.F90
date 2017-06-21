@@ -506,8 +506,8 @@
            action='read',form='unformatted',iostat=ier)
       write(*,*) 'OPENING ', dsmname(1:len_trim(dsmname))//'sol_axisem'
 
-      !! CD CD add this :
-      if (CUT_SOLUTION_FOR_VISU) then
+      !! CD CD added this
+      if (RECIPROCITY_AND_KH_INTEGRAL) then
 
         allocate(Displ_axisem_time(3,NGLLSQUARE*num_abs_boundary_faces,NSTEP))
         allocate(Tract_axisem_time(3,NGLLSQUARE*num_abs_boundary_faces,NSTEP))

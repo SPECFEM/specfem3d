@@ -320,25 +320,27 @@
     print *
   endif
 
- call read_value_logical(USE_EXTERNAL_SOURCE_FILE, 'USE_EXTERNAL_SOURCE_FILE', ier)
- if (ier /= 0) stop 'Error reading Par_file parameter USE_EXTERNAL_SOURCE_FILE'
+  call read_value_logical(USE_EXTERNAL_SOURCE_FILE, 'USE_EXTERNAL_SOURCE_FILE', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter USE_EXTERNAL_SOURCE_FILE'
 
- call read_value_logical(COUPLE_WITH_EXTERNAL_CODE, 'COUPLE_WITH_EXTERNAL_CODE', ier)
- if (ier /= 0) stop 'Error reading Par_file parameter COUPLE_WITH_EXTERNAL_CODE'
+  call read_value_logical(COUPLE_WITH_EXTERNAL_CODE, 'COUPLE_WITH_EXTERNAL_CODE', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter COUPLE_WITH_EXTERNAL_CODE'
 
- call read_value_integer(EXTERNAL_CODE_TYPE,'EXTERNAL_CODE_TYPE',ier)
- if (ier /= 0) stop 'Error reading Par_file parameter EXTERNAL_CODE_TYPE'
+  call read_value_integer(EXTERNAL_CODE_TYPE,'EXTERNAL_CODE_TYPE',ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter EXTERNAL_CODE_TYPE'
 
- call read_value_logical(MESH_A_CHUNK_OF_THE_EARTH,'MESH_A_CHUNK_OF_THE_EARTH',ier)
- if (ier /= 0) stop 'Error reading Par_file parameter MESH_A_CHUNK_OF_THE_EARTH'
+  call read_value_logical(MESH_A_CHUNK_OF_THE_EARTH,'MESH_A_CHUNK_OF_THE_EARTH',ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter MESH_A_CHUNK_OF_THE_EARTH'
 
- call read_value_string(TRACTION_PATH, 'TRACTION_PATH', ier)
- if (ier /= 0) stop 'Error reading Par_file parameter TRACTION_PATH'
+  call read_value_string(TRACTION_PATH, 'TRACTION_PATH', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter TRACTION_PATH'
 
- if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_FK) then
-    call read_value_string(FKMODEL_FILE,'FKMODEL_FILE',ier)
-    if (ier /= 0) stop 'Error reading Par_file parameter FKMODEL_FILE'
- endif
+  ! this one is only used when EXTERNAL_CODE_IS_FK, but we read it anyway because we later broadcast it to the other nodes
+  call read_value_string(FKMODEL_FILE,'FKMODEL_FILE',ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter FKMODEL_FILE'
+
+  call read_value_logical(RECIPROCITY_AND_KH_INTEGRAL,'RECIPROCITY_AND_KH_INTEGRAL',ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter RECIPROCITY_AND_KH_INTEGRAL'
 
 ! check the type of external code to couple with, if any
   if (MESH_A_CHUNK_OF_THE_EARTH .and. .not. COUPLE_WITH_EXTERNAL_CODE) &
@@ -357,8 +359,8 @@
          stop 'Error: coupling with F-K is for models with a flat surface (Earth flattening), &
                      &thus turn MESH_A_CHUNK_OF_THE_EARTH off'
 
-    if ((EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_AXISEM) .and. CUT_SOLUTION_FOR_VISU) &
-         stop 'Error: the use of cut_solution_for_visu is only available for coupling with AxiSEM'
+    if ((EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_AXISEM) .and. RECIPROCITY_AND_KH_INTEGRAL) &
+         stop 'Error: the use of RECIPROCITY_AND_KH_INTEGRAL is only available for coupling with AxiSEM for now'
   endif
 
     ! closes parameter file
@@ -577,6 +579,7 @@
     call bcast_all_singlei(EXTERNAL_CODE_TYPE)
     call bcast_all_string(TRACTION_PATH)
     call bcast_all_string(FKMODEL_FILE)
+    call bcast_all_singlel(RECIPROCITY_AND_KH_INTEGRAL)
 
   endif ! of if (BROADCAST_AFTER_READ) then
 

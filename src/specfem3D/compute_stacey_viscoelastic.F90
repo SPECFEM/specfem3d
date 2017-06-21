@@ -45,7 +45,7 @@
 
   use shared_parameters, only: COUPLE_WITH_EXTERNAL_CODE, &
                   EXTERNAL_CODE_TYPE,EXTERNAL_CODE_IS_DSM,EXTERNAL_CODE_IS_AXISEM,EXTERNAL_CODE_IS_FK, &
-                  old_DSM_coupling_from_Vadim,CUT_SOLUTION_FOR_VISU,SAVE_RUN_BOUN_FOR_KH_INTEGRAL,Ntime_step_dsm
+                  old_DSM_coupling_from_Vadim,RECIPROCITY_AND_KH_INTEGRAL,SAVE_RUN_BOUN_FOR_KH_INTEGRAL,Ntime_step_dsm
 
 ! *********************************************************************************
 ! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
@@ -145,7 +145,7 @@
         call read_axisem_file(Veloc_axisem,Tract_axisem,num_abs_boundary_faces*NGLLSQUARE)
 
         !! CD CD add this
-        if (CUT_SOLUTION_FOR_VISU) Tract_axisem_time(:,:,it) = Tract_axisem(:,:)
+        if (RECIPROCITY_AND_KH_INTEGRAL) Tract_axisem_time(:,:,it) = Tract_axisem(:,:)
      endif
 
   else if ( EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_FK) then

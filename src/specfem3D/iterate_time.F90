@@ -75,7 +75,7 @@
   endif
 
  !! CD CD adds this (temporary)
-  if (CUT_SOLUTION_FOR_VISU) open(unit=158,file='KH_integral',status='unknown')
+  if (RECIPROCITY_AND_KH_INTEGRAL) open(unit=158,file='KH_integral',status='unknown')
 
   ! open the file in which we will store the energy curve
   if (OUTPUT_ENERGY .and. myrank == 0) &
@@ -434,7 +434,7 @@
     endif
 
     !! CD CD add this : under validation option
-    if (CUT_SOLUTION_FOR_VISU) then
+    if (RECIPROCITY_AND_KH_INTEGRAL) then
       if (.not. SAVE_RUN_BOUN_FOR_KH_INTEGRAL) then
         call surface_or_volume_integral_on_whole_domain()
         write(158,*) it*DT, integral_boun(1), integral_boun(2), integral_boun(3)
@@ -453,7 +453,7 @@
   call it_print_elapsed_time()
 
   !! CD CD added this
-  if (CUT_SOLUTION_FOR_VISU) then
+  if (RECIPROCITY_AND_KH_INTEGRAL) then
     close(158)
     close(237)
     close(238)
@@ -499,7 +499,7 @@
   ! NOTE : 'f_integrandloc' have to be defined at all 'iglob'
   ! (all the points of the surface, or all the point of the volume)
 
-  if ( CUT_SOLUTION_FOR_VISU ) then
+  if (RECIPROCITY_AND_KH_INTEGRAL) then
 
     allocate(f_integrand_KH(3,NGLLSQUARE*num_abs_boundary_faces), stat=ier)
 
@@ -620,7 +620,7 @@
 
   endif
 
-  if ( CUT_SOLUTION_FOR_VISU ) deallocate(f_integrand_KH)
+  if (RECIPROCITY_AND_KH_INTEGRAL) deallocate(f_integrand_KH)
 
   end subroutine surface_or_volume_integral_on_whole_domain
 
@@ -699,7 +699,7 @@
 
   use constants
 
-  use specfem_par, only: it, Displ_axisem_time, CUT_SOLUTION_FOR_VISU, IIN_displ_axisem
+  use specfem_par, only: it, Displ_axisem_time, RECIPROCITY_AND_KH_INTEGRAL, IIN_displ_axisem
 
   implicit none
 
@@ -711,7 +711,7 @@
 
   read(IIN_displ_axisem) Displ_axisem
 
-  if (CUT_SOLUTION_FOR_VISU) Displ_axisem_time(:,:,it) = Displ_axisem(:,:)
+  if (RECIPROCITY_AND_KH_INTEGRAL) Displ_axisem_time(:,:,it) = Displ_axisem(:,:)
 
   end subroutine read_axisem_disp_file
 
@@ -723,7 +723,7 @@
 
   use constants
 
-  use specfem_par, only: it, Displ_specfem_time, CUT_SOLUTION_FOR_VISU, num_abs_boundary_faces
+  use specfem_par, only: it, Displ_specfem_time, RECIPROCITY_AND_KH_INTEGRAL, num_abs_boundary_faces
 
   implicit none
 
@@ -742,7 +742,7 @@
     enddo
   enddo
 
-  if (CUT_SOLUTION_FOR_VISU)  Displ_specfem_time(:,:,it) = Displ_specfem(:,:)
+  if (RECIPROCITY_AND_KH_INTEGRAL) Displ_specfem_time(:,:,it) = Displ_specfem(:,:)
 
   end subroutine read_specfem_disp_file
 
@@ -754,7 +754,7 @@
 
   use constants
 
-  use specfem_par, only: it, Tract_specfem_time, CUT_SOLUTION_FOR_VISU, num_abs_boundary_faces
+  use specfem_par, only: it, Tract_specfem_time, RECIPROCITY_AND_KH_INTEGRAL, num_abs_boundary_faces
 
   implicit none
 
@@ -767,13 +767,11 @@
 
   do iface = 1,num_abs_boundary_faces
     do igll = 1,NGLLSQUARE
-
       read(237) Tract_specfem(1,igll*iface), Tract_specfem(3,igll*iface), Tract_specfem(3,igll*iface)
-
     enddo
   enddo
 
-  if (CUT_SOLUTION_FOR_VISU)  Tract_specfem_time(:,:,it) = Tract_specfem(:,:)
+  if (RECIPROCITY_AND_KH_INTEGRAL) Tract_specfem_time(:,:,it) = Tract_specfem(:,:)
 
   end subroutine read_specfem_tract_file
 

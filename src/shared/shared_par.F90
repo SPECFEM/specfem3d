@@ -178,7 +178,7 @@ end module constants
   character(len=MAX_STRING_LEN) :: TRACTION_PATH
   character(len=MAX_STRING_LEN) :: FKMODEL_FILE
   logical :: MESH_A_CHUNK_OF_THE_EARTH
-  logical :: CUT_SOLUTION_FOR_VISU
+  logical :: RECIPROCITY_AND_KH_INTEGRAL
 
   end module shared_input_parameters
 

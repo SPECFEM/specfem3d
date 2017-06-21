@@ -9,7 +9,7 @@ include ./config.h
 
 objs =  global_parameters_mod.o rotation_matrix_mod.o mpi_mod.o reading_inputs_mod.o  interpol_mod.o post_process_mod.o  writing_mod.o reading_fields_mod.o gll_library.o  program_expand_2D_to_3D.o 
 
-objs1 = re_format_outputs_files.o
+objs1 = reformat_output_files.o
 
 objs2 = create_stations.o 
 
