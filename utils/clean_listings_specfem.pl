@@ -189,6 +189,9 @@ use File::Basename;
       $line =~ s#hessian#Hessian#ogi;
       $line =~ s#cartesian#Cartesian#ogi;
 
+# convert the GNU license from version 2+ to version 3 (we switched in June 2017)
+      $line =~ s#either version 2 of the License#either version 3 of the License#ogi;
+
 # for spaces around comparisons we exclude that file because it contains print statements that print
 # XML file lines and thus it contains many < and > characters that must not be changed
       if($basename_obtained ne 'write_output_ASDF.f90') {
