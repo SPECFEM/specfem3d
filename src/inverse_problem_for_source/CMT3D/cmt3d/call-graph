@@ -1,0 +1,75 @@
+
+cmt3d_constants.f90 =======
+  PI, SCALE_DELTA/DEPTH/MOMENT/CTIME/HDUR,SCALE_PAR
+  NDATAMAX,NRECMAX,NWINMAX,NPARMAX
+  EPS2/5,IOPAR,IOWIN,IOINV,DEBUG
+
+cmt3d_variables.f90 =======
+  cmt_file,new_cmt_file,npar,ddelta/depth/moment
+  flexwin_out_file
+  weigh_data_files,comp_z/r/t_weight,az_exp_weight,pnl/rayleigh/love_dist_weight
+  station_correction,zero_trace_inversion,double_couple_inversion,lambda
+  write_new_syn
+
+  cmt_par,new_cmt_par(NPARMAX)
+  nfiles,nwin_total,nwins(NRECMAX),data_weights(NWINMAX)
+
+cmt3d_flexwin.f90 ======
+  program cmt3d_flexwin
+    call set_parameters(par_file) --> 1st part of cmt3d_variables
+    call get_cmt(cmt_file,yr,mo,jda,ho,mi,sec,t_cmt,hdur,elat,elon,depth, &
+          moment_tensor) --> cmt_par
+    call rotate_cmt(cmt_par,utm_zone,utm_center_x,utm_center_y,1)
+    call setup_data_weights() --> nfiles, nwin_all, nwins(:), data_weights(:)
+    call setup_matrix(A,b,npar) --> A,b
+    call invert_cmt(A,b,dm,npar) --> dm, new_cmt_par
+    call rotate_cmt(new_cmt_par,utm_zone,utm_center_x,utm_center_y,-1)
+    call write_new_cmtsolution(cmt_file,new_cmt_file,new_cmt_par)
+    call variance_reduction(dm,npar) --> write_new_syn, etc
+
+cmt3d_sub.f90 =====
+    subroutine set_parameters(par_file)
+
+    subroutine setup_data_weights
+      nfiles,nwin_total,nwins(1:nfiles),
+      call read_sac_info(syn_file, data_file, &
+            kstnm(i),kcmpnm(i),knetwk(i),azimuth(i),dist_deg(i),dist_km(i))
+      call compute_data_weights(kcmpnm,azimuth,dist_km,data_weights) --> data_weights(1:nwin_total)
+
+    subroutine setup_matrix(A,b,npar)
+      call compute_A_b(syn_file,data_file,data_weights(nwint),tstart,tend,A1,b1,npar)
+
+   subroutine invert_cmt(A,b,dm,npar)
+
+   subroutine variance_reduction(dm,npar)
+      call compute_new_syn(data_files,syn_files,npts,b,dt,dm,data,syn,new_syn)
+      call check_criteria(data,new_syn,is,ie,d,tshift_new,cc_new,dlna_new)
+
+
+cmt3d_sub2.f90 =====
+
+     subroutine read_sac_info(file_s, file_o, kstnm, kcmpnm, knetwk,azimuth, dist_deg, dist_km) <-kstnm, kcmpnm, knetwk, az, dist for weights
+       rsac1(), distaz()
+     subroutine compute_data_weights(kcmpnm,azimuth,dist_km,data_weights) 
+     subroutine compute_A_b(syn_file,data_file,data_weight,tstart,tend,tshift,A1,b1,npar)
+     subroutine get_f_df(npar,A,b,m,lam,mstart,fij,f0)
+     subroutine compute_new_syn(data_file,syn_file,npts,b,dt,dm)
+     subroutine calc_criteria(d,s,npts,i1,i2,dt,tshift,cc_max,dlnA)
+
+cmt3d_sub3.f90 ======
+
+     subroutine  write_new_cmtsolution(cmt_file,new_cmt_file,new_par_all)
+     subroutine gaussian_elimination(A,n,b,x,singular)
+     subroutine xcorr_calc(d,s,npts,i1,i2,ishift,cc_max)
+
+cmt3d_utils.f90 =====
+
+    subroutine mij(m,epsilon,s1,d1,r1,s2,d2,r2,m0,m00,iflag)
+       sub jacobi(), tdl(), azih()
+    subroutine sdr2moment(sphif,sdlt,slmda,moment,mrr,mtt,mpp,mrt,mrp,mtp)
+
+get_cmt.f90 =====
+    subroutine get_cmt(cmt_file,yr,mo,jda,ho,mi,sec, t_cmt,hdur,elat,elon,depth,moment_tensor)
+
+libsacio.a ====
+    rsac1(), wsac0(), distaz()

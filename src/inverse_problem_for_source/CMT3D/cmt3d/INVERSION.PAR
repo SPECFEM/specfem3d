@@ -1,0 +1,24 @@
+CMTSOLUTION
+CMTSOLUTION_NEW
+6   .false.                  -- npar[, global_coord]
+0.5 0.5  1.0e22             -- dlocation,ddepth,dmoment(dyne.cm)
+flexwin.out
+.true. .false.                   -- weigh_data_files[, read_weight_from_file]
+2 2 1  0.5  1.15 0.55 0.78       -- weights of data comp, az(exp), dist(exp)
+.true.                         -- station_correction        
+.true.  .false. 0.0             -- zero_trace, double_couple, lambda_damping
+.false.                        -- write_new_syn
+
+Note:
+1. Filtering data and synthetics is no longer an option, because you are supposed to run your data/syn through pre-processing and filter them with the right frequency bands, and then go through the windowing code (flexwin) with filter turned off
+2. Envelope inversion is no longer included since they are rarely used in real inversions.
+3. All auxilliary functionalities, such as padding the sac headers with information, outputing the time shifts and amplitude ratios, and writing the filtered data and synthetics have been eliminated since they are either done in flexwin or can be very easily accomplished by simple scripts. The gist of the program is Gaussian elimination to solve the least square problem.
+4. If you want to invert either only surface waves or body waves make sure you set the optimal parameters in flexwin.
+5. How do the weights work:
+
+          data_weights(nwint) =  cmp_weight(nwint) &
+               * (dist/REF_DIST) ** dist_exp_weight(nwint) &
+               / ( naz(k) ** az_exp_weight)
+ where component weights are applied linearly, distance and azimuth weights are applied exponentially. naz(k) is the number of traces available in a particular azimuth, therefore one can set az_exp_weight to be 0 to mute out the azimuthal effect, same thing with distance weights, and component weights.
+6. Now weights are allowed to be computed outside the program (for instance by a python script that gathers flexwin output information and calculate weights accordingly) by setting read_weights_from file and write time shift, weight information after the start and end of window in flexwin.out file
+7. To be more precise with epicenter location, I introduced utm coordinates for basin code, and for global code, proper rotation to global coordinates. Therefore script that calculates derivative cmt solutions need to be modified accordingly.

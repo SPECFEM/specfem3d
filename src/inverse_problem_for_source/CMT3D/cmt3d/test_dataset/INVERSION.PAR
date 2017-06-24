@@ -1,0 +1,22 @@
+CMTSOLUTION
+CMTSOLUTION_NEW
+7                              -- npar : number of parameters inverted
+0.0025 1.0  1.0e22             -- ddelta,ddepth,dmoment
+flexwin_T006_T030.output
+.false.                         -- weigh_data_files
+2 2 1  0  1.15 0.55 0.78       -- weights of data comp, az(exp), dist(exp)
+.false.                         -- station_correction        
+.false.  .false. 0.0            -- zero_trace, double_couple, lambda_damping
+.false.                        -- write_new_syn
+
+Note:
+1. Filtering data and synthetics is no longer an option, because you are supposed to run your data/syn through pre-processing and filter them with the right frequency bands, and then go through the windowing code (flexwin) with filtering turned off
+2. Envelope inversion is no longer included since they are rarely used in real inversions.
+3. All auxilliary functionalities, such as padding the sac headers with information, outputing the time shifts and amplitude ratios, and writing the filtered data and synthetics have been eliminated since they are either done in flexwin or can be very easily accomplished by simple scripts. The gist of the program is Gaussian elimination to solve the problem.
+4. If you want to invert either only surface waves or body waves make sure you set the optimal parameters in flexwin.
+5. How do the weights work:
+
+          data_weights(nwint) =  cmp_weight(nwint) &
+               * (dist/REF_DIST) ** dist_exp_weight(nwint) &
+               / ( naz(k) ** az_exp_weight)
+ where component weights are applied linearly, distance and azimuth weights are applied exponentially. naz(k)-1 is the number of traces available in a particular azimuth, therefore one can set az_exp_weight to be 0 to mute out the azimuthal effect, same thing with distance weights, and component weights.

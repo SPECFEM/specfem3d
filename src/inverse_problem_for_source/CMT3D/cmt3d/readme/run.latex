@@ -1,0 +1,2 @@
+pdflatex readme.tex
+acroread readme.pdf &

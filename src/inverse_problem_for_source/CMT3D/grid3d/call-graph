@@ -1,0 +1,74 @@
+
+grid3d_constants ====
+  pi,r2d,d2r, nmw_max,nst_max,ndip_max,nrake_max,nmec_max
+  nrecmax,nwinmax,ndatamax,nm
+  par_name(1:nm)
+  eps2,eps5,iopar,iowin,iogrd
+  nregions,ref_dist,debug
+
+grid3d_variables ====
+
+  cmt_file,dmoment
+  flexwin_out_file
+  weigh_data_files,comp_z/r/t_weight,az_exp_weight,
+    pnl/rayleigh/love_dist_weight
+  station_correction
+  global_search,ncalc
+  s_strike/dip/rake/mw,e_strike/dip/rake/mw,d_strike/dip/rake/mw
+  write_new_cmt
+
+  nfiles,nwin_total,nwins(nrecmax)
+  data_weights(nwinmax)
+  data/syn(ndatamax),dsyn(nm,ndatamax)
+  mij(nm,nmec_max),misfit(nmec_max)
+  data_file,syn_file
+
+
+grid3d_flexwin ====
+  call set_parameters(par_file)
+  call setup_data_weights()
+  call grid_search()
+
+grid3d_sub ====
+  subroutine set_parameters(par_file) ---
+    call get_cmt(cmt_file,yr,mo,jda,ho,mi,sec, &
+            t_cmt,hdur,elat,elon,depth,moment_tensor)
+  subroutine setup_data_weights ---
+    call read_sac_info(...)
+    call compute_data_weights(...)
+  subroutine grid_search ---
+    n_strike,n_dip,n_rake,n_mw
+    call compute_mij_from_sdr(s_strike,d_strike,n_strike,&
+            s_dip,d_dip,n_dip,s_rake,d_rake,n_rake,s_mw,d_mw,n_mw,mij)
+    call add_misfit(data_file,syn_file,&
+            data_weights(1:nw),tstart(1:nw),tend(1:nw),nw, &
+            mij,misfit,n_total)
+    call select_best_solution(icalc,misfit,n_strike,n_dip,n_rake,n_mw,&
+            s_strike,s_dip,s_rake,s_mw,strike,dip,rake,mw)
+    call sdr2moment(strike,dip,rake,moment,&
+            mijn(1),mijn(2),mijn(3),mijn(4),mijn(5),mijn(6))
+    call write_new_cmtsolution(cmt_file,new_cmt_file,mijn)
+
+grid3d_sub2 ====
+    subroutine read_sac_info(...) <-- rsac1(),getfhv()
+    subroutine compute_data_weights(...)
+    subroutine compute_mij_from_sdr(s_strike,d_strike,n_strike,&
+            s_dip,d_dip,n_dip,s_rake,d_rake,n_rake,s_mw,d_mw,n_mw,mij)
+    subroutine add_misfit(data_file,syn_file,&
+            data_weight,tstart,tend,nw, &
+            mij,misfit,n_total)
+        call xcorr_calc(data,syn,npts,iss,iee,ishift,cc)
+    subroutine select_best_solution(icalc,misfit,n_strike,n_dip,n_rake,n_mw,&
+            s_strike,s_dip,s_rake,s_mw,strike,dip,rake,mw)
+
+grid3d_sub3 ===
+    subroutine xcorr_calc(dd,ss,npts,i1,i2,ishift,cc_max)
+    subroutine  write_new_cmtsolution(cmt_file,new_cmt_file,mijn)
+    subroutine sdr2moment(phif,dlt,lmda,moment,mrr,mtt,mpp,mrt,mrp,mtp)
+
+
+distaz.f ===
+   subroutine distaz(elat,elon,slat,slon,azm,bzm,ddg,dkm)
+
+
+

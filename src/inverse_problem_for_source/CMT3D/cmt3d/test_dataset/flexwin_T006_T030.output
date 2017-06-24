@@ -1,0 +1,99 @@
+24
+data_T006_T030/GSC.CI.BHR.sac.d
+syn_T006_T030/GSC.CI.BHR
+           1
+    7.5450    46.1450
+data_T006_T030/GSC.CI.BHT.sac.d
+syn_T006_T030/GSC.CI.BHT
+           2
+   -0.0550    44.5950
+   44.5950    76.8450
+data_T006_T030/GSC.CI.BHZ.sac.d
+syn_T006_T030/GSC.CI.BHZ
+           2
+   14.2450    44.0450
+   45.3450    96.6950
+data_T006_T030/LAF.CI.BHR.sac.d
+syn_T006_T030/LAF.CI.BHR
+           1
+  -14.8550    40.5950
+data_T006_T030/LAF.CI.BHT.sac.d
+syn_T006_T030/LAF.CI.BHT
+           1
+  -13.2550    48.7450
+data_T006_T030/LAF.CI.BHZ.sac.d
+syn_T006_T030/LAF.CI.BHZ
+           1
+  -11.7550    48.1450
+data_T006_T030/LFP.CI.BHR.sac.d
+syn_T006_T030/LFP.CI.BHR
+           1
+  -15.1050    39.5950
+data_T006_T030/LFP.CI.BHT.sac.d
+syn_T006_T030/LFP.CI.BHT
+           1
+  -12.5550    50.9950
+data_T006_T030/LFP.CI.BHZ.sac.d
+syn_T006_T030/LFP.CI.BHZ
+           1
+  -19.7050    34.2450
+data_T006_T030/MOP.CI.BHR.sac.d
+syn_T006_T030/MOP.CI.BHR
+           1
+  -12.2550    47.5950
+data_T006_T030/MOP.CI.BHT.sac.d
+syn_T006_T030/MOP.CI.BHT
+           1
+   -9.0050    48.9450
+data_T006_T030/MOP.CI.BHZ.sac.d
+syn_T006_T030/MOP.CI.BHZ
+           1
+  -11.1050    49.7450
+data_T006_T030/PAS.CI.BHR.sac.d
+syn_T006_T030/PAS.CI.BHR
+           1
+  -14.2050    24.7450
+data_T006_T030/PAS.CI.BHT.sac.d
+syn_T006_T030/PAS.CI.BHT
+           1
+  -13.7050    28.1950
+data_T006_T030/PAS.CI.BHZ.sac.d
+syn_T006_T030/PAS.CI.BHZ
+           1
+  -13.1550    18.0950
+data_T006_T030/PDE.CI.BHR.sac.d
+syn_T006_T030/PDE.CI.BHR
+           1
+  -13.2050    59.4450
+data_T006_T030/PDE.CI.BHT.sac.d
+syn_T006_T030/PDE.CI.BHT
+           1
+  -10.4050    42.9450
+data_T006_T030/PDE.CI.BHZ.sac.d
+syn_T006_T030/PDE.CI.BHZ
+           1
+  -12.6550    54.8450
+data_T006_T030/RPV.CI.BHR.sac.d
+syn_T006_T030/RPV.CI.BHR
+           1
+  -12.7050    33.3450
+data_T006_T030/RPV.CI.BHT.sac.d
+syn_T006_T030/RPV.CI.BHT
+           1
+  -11.1550    44.3950
+data_T006_T030/RPV.CI.BHZ.sac.d
+syn_T006_T030/RPV.CI.BHZ
+           1
+   -7.8550    23.0950
+data_T006_T030/TOV.CI.BHR.sac.d
+syn_T006_T030/TOV.CI.BHR
+           1
+  -13.2550    36.0950
+data_T006_T030/TOV.CI.BHT.sac.d
+syn_T006_T030/TOV.CI.BHT
+           1
+  -11.5550    37.2950
+data_T006_T030/TOV.CI.BHZ.sac.d
+syn_T006_T030/TOV.CI.BHZ
+           1
+  -14.7050    52.4950

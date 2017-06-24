@@ -1,0 +1,13 @@
+CMTSOLUTION
+1.0e22                         -- dmoment
+flexwin.out
+.true.                         -- weigh_data_files
+2 2 1  0.5  1.15 0.55 0.78       -- weights of data comp, az(exp), dist(exp)
+.true.  6.0                       -- station_correction
+.true. 3                      -- global_search, ncalc (=1 if local search)
+0 180 10
+0 90 10
+-180 180 20
+4.0 4.3 0.1                    -- only valid with local search
+.true.                         -- write cmt-file-new
+
