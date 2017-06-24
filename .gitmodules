@@ -7,6 +7,3 @@
 [submodule "src/inverse_problem_for_source/pyCMT3D"]
 	path = src/inverse_problem_for_source/pyCMT3D
 	url = https://github.com/wjlei1990/pycmt3d
-[submodule "src/inverse_problem_for_source/CMT3D"]
-	path = src/inverse_problem_for_source/CMT3D
-	url = https://github.com/UTCompSeismo/GRD_CMT3D
