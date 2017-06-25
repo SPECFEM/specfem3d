@@ -220,6 +220,10 @@ cuda_inverse_problem_for_model_STUBS = \
 	$O/specfem3D_gpu_cuda_method_stubs.cudacc.o \
 	$(EMPTY_MACRO)
 
+cuda_inverse_problem_for_model_DEVICE_OBJ = \
+	$O/cuda_device_obj.o \
+	$(EMPTY_MACRO)
+
 ifeq ($(CUDA),yes)
 inverse_problem_for_model_OBJECTS += $(cuda_inverse_problem_for_model_OBJECTS)
 ifeq ($(CUDA_PLUS),yes)
@@ -273,15 +277,15 @@ ifeq ($(CUDA),yes)
 ## cuda version
 ifeq ($(CUDA_PLUS),yes)
 ## cuda 5x & 6x version
-INFO_CUDA="building xinverse_problem_for_model with CUDA support"
+INFO_CUDA_INVERSE_PROBLEM="building xinverse_problem_for_model with CUDA support"
 else
 ## cuda 4 version
-INFO_CUDA="building xinverse_problem_for_model with CUDA 4 support"
+INFO_CUDA_INVERSE_PROBLEM="building xinverse_problem_for_model with CUDA 4 support"
 endif
 
 ${E}/xinverse_problem_for_model: $(inverse_problem_for_model_OBJECTS) $(inverse_problem_for_model_SHARED_OBJECTS)
 	@echo ""
-	@echo $(INFO_CUDA)
+	@echo $(INFO_CUDA_INVERSE_PROBLEM)
 	@echo ""
 	${FCLINK} -o ${E}/xinverse_problem_for_model $(inverse_problem_for_model_OBJECTS) $(inverse_problem_for_model_SHARED_OBJECTS) $(MPILIBS) $(CUDA_LINK)
 	@echo ""

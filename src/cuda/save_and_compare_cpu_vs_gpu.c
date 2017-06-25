@@ -113,12 +113,12 @@ void get_max_from_surface_file_(int* nodes_per_iterationf,int* NSTEP) {
 
   float* vector = (float*)malloc(nodes_per_iteration*sizeof(float));
   float max_val;
-  int i;
+  int i,idummy;
   max_val = 0.0;
   for(it=0;it<*NSTEP;it++) {
     int pos = (sizeof(float)*nodes_per_iteration)*(it);
     fseek(fp,pos,SEEK_SET);
-    fread(vector,sizeof(float),nodes_per_iteration,fp);
+    idummy = fread(vector,sizeof(float),nodes_per_iteration,fp);
     for(i=0;i<nodes_per_iteration;i++) {
       max_val = MAX(max_val,vector[i]);
     }
@@ -204,7 +204,7 @@ void compare_surface_files_(int* bytes_per_iteration, int* number_of_iterations)
 
   float* gpu_vector = (float*)malloc(*bytes_per_iteration);
   float* cpu_vector = (float*)malloc(*bytes_per_iteration);
-  int i,it,error_count=0;
+  int i,it,idummy,error_count=0;
   for(it=0;it<*number_of_iterations;it++) {
     int pos = (*bytes_per_iteration)*(it);
 
@@ -212,8 +212,8 @@ void compare_surface_files_(int* bytes_per_iteration, int* number_of_iterations)
     fseek(fp_gpu,pos,SEEK_SET);
 
     int number_of_nodes = *bytes_per_iteration/sizeof(float);
-    fread(cpu_vector,sizeof(float),number_of_nodes,fp_cpu);
-    fread(gpu_vector,sizeof(float),number_of_nodes,fp_gpu);
+    idummy = fread(cpu_vector,sizeof(float),number_of_nodes,fp_cpu);
+    idummy = fread(gpu_vector,sizeof(float),number_of_nodes,fp_gpu);
     int size = number_of_nodes;
     float gpu_min_val=10;
     float gpu_max_val=0;
@@ -251,7 +251,7 @@ void compare_fvector_(float* vector, int* size, int* id, int* cpu_or_gpu) {
   else {
     sprintf(cmp_filename, "debug_output_cpu_%d.dat",*id);
   }
-  fopen(cmp_filename, "rb");
+// DK DK duplicated statement and not cast to void, commenting it out  fopen(cmp_filename, "rb");
   /* read the values */
   if ((fp=fopen(cmp_filename, "rb"))==NULL) {
     printf("Cannot open comparison file %s.\n",cmp_filename);
@@ -295,7 +295,7 @@ void compare_ivector_(int* vector, int* size, int* id, int* cpu_or_gpu) {
   else {
     sprintf(cmp_filename, "debug_output_cpu_%d.dat",*id);
   }
-  fopen(cmp_filename, "rb");
+// DK DK duplicated statement and not cast to void, commenting it out  fopen(cmp_filename, "rb");
   /* read the values */
   if ((fp=fopen(cmp_filename, "rb"))==NULL) {
     printf("Cannot open comparison file %s.\n",cmp_filename);

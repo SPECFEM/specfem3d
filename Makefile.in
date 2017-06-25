@@ -256,8 +256,8 @@ DEFAULT = \
 	$(EMPTY_MACRO)
 
 ifeq ($(MPI),yes)
-DEFAULT += $E/xdecompose_mesh_mpi
-DEFAULT += $E/xinverse_problem_for_model
+DEFAULT += xdecompose_mesh_mpi
+DEFAULT += xinverse_problem_for_model
 SUBDIRS += inverse_problem_for_model
 endif
 
