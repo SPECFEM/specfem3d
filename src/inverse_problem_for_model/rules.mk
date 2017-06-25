@@ -369,13 +369,6 @@ $O/%.spec.o: $S/%.F90 $O/specfem3D_par.spec_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 ###
-### CUDA 5 only
-###
-
-$(cuda_inverse_problem_for_model_DEVICE_OBJ): $(cuda_OBJECTS)
-	${NVCCLINK} -o $(cuda_inverse_problem_for_model_DEVICE_OBJ) $(cuda_OBJECTS)
-
-###
 ### ADIOS compilation
 ###
 

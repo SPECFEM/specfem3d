@@ -218,6 +218,8 @@ $O/model_gll.gen.o: $O/generate_databases_par.gen.o
 $O/model_ipati.gen.o: $O/generate_databases_par.gen.o
 ifeq ($(MPI),yes)
 $O/model_sep.mpi_gen.o: $O/generate_databases_par.gen.o
+else
+$O/model_sep.nompi_gen.o: $O/generate_databases_par.gen.o
 endif
 $O/model_salton_trough.gen.o: $O/generate_databases_par.gen.o
 $O/pml_set_local_dampingcoeff.gen.o: $O/generate_databases_par.gen.o
