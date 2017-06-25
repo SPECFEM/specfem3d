@@ -260,7 +260,7 @@ subroutine define_boundaries
 ! Defines number, size (number of elements) and allocates arrays
 ! pertaining to the solid-fluid boundaries.
 ! The actual arrays needed by the solver
-! are computed in define_my_boundary_neighbour.
+! are computed in define_my_boundary_neighbor.
 
   integer           :: j,ipol,ibelem
   real(kind=dp)     :: dmax, rbound
@@ -337,7 +337,7 @@ subroutine define_boundaries
 
      write(6,*)'allocating boundary arrays....',nbelemmax; call flush(6)
 
-     allocate(my_neighbour(nbelemmax,nbcnd))
+     allocate(my_neighbor(nbelemmax,nbcnd))
      allocate(bdry_above_el(nbelemmax/2,nbcnd),bdry_below_el(nbelemmax/2,nbcnd))
      allocate(bdry_solid_el(nbelemmax/2,nbcnd),bdry_fluid_el(nbelemmax/2,nbcnd))
      allocate(bdry_s(0:npol,nbelemmax/2,nbcnd),bdry_z(0:npol,nbelemmax/2,nbcnd))
@@ -353,7 +353,7 @@ subroutine define_boundaries
      allocate(bdry_locnum_solid(0:npol,nbelemmax/2,nbcnd))
      allocate(bdry_locnum_fluid(0:npol,nbelemmax/2,nbcnd))
 
-     call define_my_boundary_neighbour
+     call define_my_boundary_neighbor
 
   else ! only solid
      return
@@ -369,7 +369,7 @@ subroutine define_boundaries
      enddo
      close(67660)
 
-     open(unit=67661,file=diagpath(1:lfdiag)//"/bdry_el_neighbours.dat")
+     open(unit=67661,file=diagpath(1:lfdiag)//"/bdry_el_neighbors.dat")
      open(unit=67662,file=diagpath(1:lfdiag)//"/bdry_el_above_below.dat")
      open(unit=67666,file=diagpath(1:lfdiag)//"/bdry_el_solid_fluid.dat")
      open(unit= 7775,file=diagpath(1:lfdiag)//"/bdry_globcoord_solel.dat")
@@ -383,7 +383,7 @@ subroutine define_boundaries
      open(unit=67675,file=diagpath(1:lfdiag)//"/bdry_loc_solid_fluid.dat")
      do j=1,nbcnd
         do ibelem=1,nbelem(j)
-           write(67661,*)belem(ibelem,j),belem(my_neighbour(ibelem,j),j)
+           write(67661,*)belem(ibelem,j),belem(my_neighbor(ibelem,j),j)
         enddo
         do ibelem=1,nbelem(j)/2
            write(67662,*)bdry_above_el(ibelem,j),bdry_below_el(ibelem,j)
@@ -398,9 +398,9 @@ subroutine define_boundaries
 
            write(7777,*)sgll(npol/2,npol/2,bdry_above_el(ibelem,j)), &
                         zgll(npol/2,npol/2,bdry_above_el(ibelem,j)),bdry_above_el(ibelem,j)
-           write(7778,*)sgll(npol/2,npol/2,bdry_below_el(my_neighbour(ibelem,j),j)), &
-                           zgll(npol/2,npol/2,bdry_below_el(my_neighbour(ibelem,j),j)), &
-                           bdry_below_el(my_neighbour(ibelem,j),j)
+           write(7778,*)sgll(npol/2,npol/2,bdry_below_el(my_neighbor(ibelem,j),j)), &
+                           zgll(npol/2,npol/2,bdry_below_el(my_neighbor(ibelem,j),j)), &
+                           bdry_below_el(my_neighbor(ibelem,j),j)
 
            do ipol=0,npol
               write(67671,*)bdry_s(ipol,ibelem,j),bdry_z(ipol,ibelem,j)
@@ -518,9 +518,9 @@ end subroutine define_boundaries
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------
-subroutine define_my_boundary_neighbour
+subroutine define_my_boundary_neighbor
 ! Defines & computes all arrays needed to identify the elements hugging
-! all solid-fluid boundaries, their respective cross-boundary neighbours,
+! all solid-fluid boundaries, their respective cross-boundary neighbors,
 ! their respective global-global numbers, their respective flobal/slobal
 ! numbers and s,z coordinates of all GLL points on the boundaries.
 ! This will be used in the database to store for the solver.
@@ -569,7 +569,7 @@ subroutine define_my_boundary_neighbour
            hertheta = thetacom(herel)
            dist = dabs(hertheta-mytheta)*rbound
            if (dist < tolerance .and. myel /= herel ) then
-               my_neighbour(ibelem,j) = jbelem
+               my_neighbor(ibelem,j) = jbelem
                foundone = .true.
                exit
            endif
@@ -586,7 +586,7 @@ subroutine define_my_boundary_neighbour
                  distmin = dist
               endif
            enddo
-           my_neighbour(ibelem,j) = jbelemmin
+           my_neighbor(ibelem,j) = jbelemmin
         endif
         call flush(6)
      enddo
@@ -611,13 +611,13 @@ subroutine define_my_boundary_neighbour
 
          ! easy check
          if (dump_mesh_info_files) &
-         write(6565,*)'Bdry partners:',j,ibelem,my_neighbour(ibelem,j), &
-                                    my_neighbour(my_neighbour(ibelem,j),j)
-         if ( ibelem /= my_neighbour(my_neighbour(ibelem,j),j) ) then
+         write(6565,*)'Bdry partners:',j,ibelem,my_neighbor(ibelem,j), &
+                                    my_neighbor(my_neighbor(ibelem,j),j)
+         if ( ibelem /= my_neighbor(my_neighbor(ibelem,j),j) ) then
             write(6,*)'Problem in boundary-partner mapping:'
             write(6,*)'Me:',ibelem
             write(6,*)"My partner's partner:", &
-                       my_neighbour(my_neighbour(ibelem,j),j)
+                       my_neighbor(my_neighbor(ibelem,j),j)
             stop
          endif
 
@@ -626,9 +626,9 @@ subroutine define_my_boundary_neighbour
                        zcom(belem(ibelem,j))*router/1000.,ibelem
 
          if (dump_mesh_info_files) &
-         write(6465,16)scom(belem(my_neighbour(ibelem,j),j))*router/1000., &
-                       zcom(belem(my_neighbour(ibelem,j),j))*router/1000., &
-                       my_neighbour(ibelem,j)
+         write(6465,16)scom(belem(my_neighbor(ibelem,j),j))*router/1000., &
+                       zcom(belem(my_neighbor(ibelem,j),j))*router/1000., &
+                       my_neighbor(ibelem,j)
 
 16       format(2(1pe12.4),i4)
 
@@ -638,8 +638,8 @@ subroutine define_my_boundary_neighbour
              ! I am above
              rup=rmin_el(belem(ibelem,j))*router/1000.d0
              thetaup=thetacom(belem(ibelem,j))*180.d0/pi
-             rdown=rmax_el(belem(my_neighbour(ibelem,j),j))*router/1000.d0
-             thetadown=thetacom(belem(my_neighbour(ibelem,j),j))*180.d0/pi
+             rdown=rmax_el(belem(my_neighbor(ibelem,j),j))*router/1000.d0
+             thetadown=thetacom(belem(my_neighbor(ibelem,j),j))*180.d0/pi
              abovecount= abovecount+1
 
              !================================================================
@@ -648,7 +648,7 @@ subroutine define_my_boundary_neighbour
 
              ! global element number
              bdry_above_el(abovecount,j)=belem(ibelem,j)
-             bdry_below_el(abovecount,j)=belem(my_neighbour(ibelem,j),j)
+             bdry_below_el(abovecount,j)=belem(my_neighbor(ibelem,j),j)
 
              ! solid/fluid element & jpol numbers: these arrays are the ones needed
              ! in the time stepping algorithm to map between boundary and
@@ -656,7 +656,7 @@ subroutine define_my_boundary_neighbour
              if (solid(belem(ibelem,j))) then ! Solid above
                 bdry_solid_el(abovecount,j)=inv_ielem_solid(belem(ibelem,j))
                 bdry_fluid_el(abovecount,j)=&
-                                  inv_ielem_fluid(belem(my_neighbour(ibelem,j),j))
+                                  inv_ielem_fluid(belem(my_neighbor(ibelem,j),j))
                 bdry_jpol_solid(abovecount,j)=0
                 if (zcom(belem(ibelem,j)) < 0.d0) bdry_jpol_solid(abovecount,j)=npol
                 bdry_jpol_fluid(abovecount,j)=npol
@@ -664,7 +664,7 @@ subroutine define_my_boundary_neighbour
 
              else !Fluid above
                 bdry_solid_el(abovecount,j)=&
-                                  inv_ielem_solid(belem(my_neighbour(ibelem,j),j))
+                                  inv_ielem_solid(belem(my_neighbor(ibelem,j),j))
                 bdry_fluid_el(abovecount,j)=inv_ielem_fluid(belem(ibelem,j))
 
                 bdry_jpol_solid(abovecount,j)=npol
@@ -676,11 +676,11 @@ subroutine define_my_boundary_neighbour
                 ! very crude way to accomodate the case of having the buffer layer just
                 ! below the ICB. ...i.e., the jpol indices are switched for 45 < theta <
                 ! 135 deg
-                if (eltypeg(belem(my_neighbour(ibelem,j),j)) /= 'curved') then
+                if (eltypeg(belem(my_neighbor(ibelem,j),j)) /= 'curved') then
                    if (dump_mesh_info_screen) write(6,*)'ELTYPE:',j,abovecount, &
-                          eltypeg(belem(my_neighbour(ibelem,j),j))
-                   if ( scom(belem(my_neighbour(ibelem,j),j)) >&
-                        abs(zcom(belem(my_neighbour(ibelem,j),j))) ) then
+                          eltypeg(belem(my_neighbor(ibelem,j),j))
+                   if ( scom(belem(my_neighbor(ibelem,j),j)) >&
+                        abs(zcom(belem(my_neighbor(ibelem,j),j))) ) then
                       bdry_jpol_solid(abovecount,j)=abs(bdry_jpol_solid(abovecount,j)-npol)
                    endif
                 endif
@@ -708,10 +708,10 @@ subroutine define_my_boundary_neighbour
                 endif
 
                 ! global number below
-                ipt_glob_be = (belem(my_neighbour(ibelem,j),j)-1)* &
+                ipt_glob_be = (belem(my_neighbor(ibelem,j),j)-1)* &
                               (npol+1)**2 + npol*(npol+1) + ipol + 1
                 if (zcom(belem(ibelem,j)) < 0.) then  ! south
-                     ipt_glob_be = (belem(my_neighbour(ibelem,j),j)-1)* &
+                     ipt_glob_be = (belem(my_neighbor(ibelem,j),j)-1)* &
                                    (npol+1)**2  + ipol + 1
                 endif
 
@@ -724,21 +724,21 @@ subroutine define_my_boundary_neighbour
                                       (npol+1)**2 + npol*(npol+1) + ipol + 1
                    endif
                    ! flobal number below
-                   ipt_flob_be=(inv_ielem_fluid(belem(my_neighbour(ibelem,j),j))-1)*&
+                   ipt_flob_be=(inv_ielem_fluid(belem(my_neighbor(ibelem,j),j))-1)*&
                                  (npol+1)**2 + npol*(npol+1) + ipol + 1
                     if (zcom(belem(ibelem,j)) < 0.) then  ! south
                       ipt_flob_be = &
-                           (inv_ielem_fluid(belem(my_neighbour(ibelem,j),j))-1)* &
+                           (inv_ielem_fluid(belem(my_neighbor(ibelem,j),j))-1)* &
                            (npol+1)**2 + ipol + 1
                    endif
 
                    ! Fluid above
-                else ! take my neighbour below
+                else ! take my neighbor below
                    ! slobal number below
-                   ipt_slob_be = (inv_ielem_solid(belem(my_neighbour(ibelem,j),j))-1)* &
+                   ipt_slob_be = (inv_ielem_solid(belem(my_neighbor(ibelem,j),j))-1)* &
                         (npol+1)**2 + npol*(npol+1) + ipol+1
                    if (zcom(belem(ibelem,j)) < 0.) then  ! south
-                        ipt_slob_be = (inv_ielem_solid(belem(my_neighbour(ibelem,j),j))-1) &
+                        ipt_slob_be = (inv_ielem_solid(belem(my_neighbor(ibelem,j),j))-1) &
                         * (npol+1)**2 + ipol + 1
                    endif
                    ! flobal number above
@@ -794,14 +794,14 @@ subroutine define_my_boundary_neighbour
          ! I am below (only for output check)
             rdown=rmax_el(belem(ibelem,j))*router/1000.d0
             thetadown=thetacom(belem(ibelem,j))*180.d0/pi
-            rup=rmin_el(belem(my_neighbour(ibelem,j),j))*router/1000.d0
-            thetaup=thetacom(belem(my_neighbour(ibelem,j),j))*180.d0/pi
+            rup=rmin_el(belem(my_neighbor(ibelem,j),j))*router/1000.d0
+            thetaup=thetacom(belem(my_neighbor(ibelem,j),j))*180.d0/pi
          endif
 
          if (dump_mesh_info_files) write(131313,30)rup,rdown,thetaup,thetadown
 
-         if ( ibelem /= my_neighbour(my_neighbour(ibelem,j),j) ) then
-           write(6,*)'ibelem different from my neighbour)',ibelem,j,nbelem(j)
+         if ( ibelem /= my_neighbor(my_neighbor(ibelem,j),j) ) then
+           write(6,*)'ibelem different from my neighbor)',ibelem,j,nbelem(j)
            stop
          endif
 
@@ -817,7 +817,7 @@ subroutine define_my_boundary_neighbour
 
 30 format(12(1pe12.5,2x))
 
-end subroutine define_my_boundary_neighbour
+end subroutine define_my_boundary_neighbor
 !-----------------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------------------------

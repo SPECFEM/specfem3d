@@ -1427,7 +1427,7 @@ end subroutine check_solid_fluid_boundaries
 
 !-----------------------------------------------------------------------------------------
 !> This routine returns the smallest grid-spacing
-!! between two neighbouring points in the meridional plane.
+!! between two neighboring points in the meridional plane.
 subroutine compute_hmin_meri(hmin)
 
   use data_mesh, only: nelem, npol

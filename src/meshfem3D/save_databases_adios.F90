@@ -141,7 +141,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   integer, dimension(:,:), allocatable :: nodes_ibelm_xmin, nodes_ibelm_xmax, &
                                           nodes_ibelm_ymin, nodes_ibelm_ymax, &
                                           nodes_ibelm_bottom, nodes_ibelm_top
-  integer, dimension(:), allocatable :: neighbours_mesh, num_elmnts_mesh
+  integer, dimension(:), allocatable :: neighbors_mesh, num_elmnts_mesh
   integer, dimension(:,:,:), allocatable :: interfaces_mesh
   integer, dimension(:,:), allocatable :: elmnts_mesh
   integer :: interface_num, ispec_interface
@@ -368,17 +368,17 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
 
     nspec_interfaces_max = maxval(nspec_interface)
 
-    call safe_alloc(neighbours_mesh, nb_interfaces, "neighbours_mesh")
+    call safe_alloc(neighbors_mesh, nb_interfaces, "neighbors_mesh")
     call safe_alloc(num_elmnts_mesh, nb_interfaces, "num_elmnts_mesh")
     call safe_alloc(interfaces_mesh, 6, nspec_interfaces_max, nb_interfaces, "interfaces_mesh")
 
     interface_num = 1
-    neighbours_mesh(:) = 0
+    neighbors_mesh(:) = 0
     num_elmnts_mesh(:) = 0
     interfaces_mesh(:,:,:) = 0
 
     if (interfaces(W)) then
-      neighbours_mesh(interface_num) = addressing(iproc_xi-1,iproc_eta)
+      neighbors_mesh(interface_num) = addressing(iproc_xi-1,iproc_eta)
       num_elmnts_mesh(interface_num) = nspec_interface(W)
       ispec_interface = 1
       do ispec = 1,nspec
@@ -400,7 +400,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
     endif
 
     if (interfaces(E)) then
-      neighbours_mesh(interface_num) = addressing(iproc_xi+1,iproc_eta)
+      neighbors_mesh(interface_num) = addressing(iproc_xi+1,iproc_eta)
       num_elmnts_mesh(interface_num) = nspec_interface(E)
       ispec_interface = 1
       do ispec = 1,nspec
@@ -422,7 +422,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
     endif
 
     if (interfaces(S)) then
-      neighbours_mesh(interface_num) = addressing(iproc_xi,iproc_eta-1)
+      neighbors_mesh(interface_num) = addressing(iproc_xi,iproc_eta-1)
       num_elmnts_mesh(interface_num) = nspec_interface(S)
       ispec_interface = 1
       do ispec = 1,nspec
@@ -444,7 +444,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
     endif
 
     if (interfaces(N)) then
-      neighbours_mesh(interface_num) = addressing(iproc_xi,iproc_eta+1)
+      neighbors_mesh(interface_num) = addressing(iproc_xi,iproc_eta+1)
       num_elmnts_mesh(interface_num) = nspec_interface(N)
       ispec_interface = 1
       do ispec = 1,nspec
@@ -466,7 +466,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
     endif
 
     if (interfaces(NW)) then
-      neighbours_mesh(interface_num) = addressing(iproc_xi-1,iproc_eta+1)
+      neighbors_mesh(interface_num) = addressing(iproc_xi-1,iproc_eta+1)
       num_elmnts_mesh(interface_num) = nspec_interface(NW)
       ispec_interface = 1
       do ispec = 1,nspec
@@ -486,7 +486,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
     endif
 
     if (interfaces(NE)) then
-      neighbours_mesh(interface_num) = addressing(iproc_xi+1,iproc_eta+1)
+      neighbors_mesh(interface_num) = addressing(iproc_xi+1,iproc_eta+1)
       num_elmnts_mesh(interface_num) = nspec_interface(NE)
       ispec_interface = 1
       do ispec = 1,nspec
@@ -506,7 +506,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
     endif
 
     if (interfaces(SE)) then
-      neighbours_mesh(interface_num) = addressing(iproc_xi+1,iproc_eta-1)
+      neighbors_mesh(interface_num) = addressing(iproc_xi+1,iproc_eta-1)
       num_elmnts_mesh(interface_num) = nspec_interface(SE)
       ispec_interface = 1
       do ispec = 1,nspec
@@ -526,7 +526,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
     endif
 
     if (interfaces(SW)) then
-      neighbours_mesh(interface_num) = addressing(iproc_xi-1,iproc_eta-1)
+      neighbors_mesh(interface_num) = addressing(iproc_xi-1,iproc_eta-1)
       num_elmnts_mesh(interface_num) = nspec_interface(SW)
       ispec_interface = 1
       do ispec = 1,nspec
@@ -546,7 +546,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
     endif
   else
     ! only one MPI process
-    call safe_alloc(neighbours_mesh, nb_interfaces, "neighbours_mesh")
+    call safe_alloc(neighbors_mesh, nb_interfaces, "neighbors_mesh")
     call safe_alloc(num_elmnts_mesh, nb_interfaces, "num_elmnts_mesh")
     call safe_alloc(interfaces_mesh, 6, nspec_interfaces_max, nb_interfaces, "interfaces_mesh")
   endif
@@ -681,7 +681,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
 
   if (nb_interfaces_wmax > 0) then
     local_dim = nb_interfaces_wmax
-    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(neighbours_mesh))
+    call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(neighbors_mesh))
     call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(num_elmnts_mesh))
     local_dim = 6 * nb_interfaces_wmax * nspec_interfaces_max_wmax
     call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(interfaces_mesh))
@@ -831,7 +831,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   ! MPI interfaces
   if (nb_interfaces > 0) then
     local_dim = nb_interfaces_wmax
-    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(neighbours_mesh))
+    call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(neighbors_mesh))
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(num_elmnts_mesh))
     local_dim = 6 * nb_interfaces_wmax * nspec_interfaces_max_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, STRINGIFY_VAR(interfaces_mesh))
@@ -853,7 +853,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   call safe_dealloc(nodes_ibelm_bottom, "nodes_ibelm_bottom")
   call safe_dealloc(nodes_ibelm_top, "nodes_ibelm_top")
 
-  call safe_dealloc(neighbours_mesh, "neighbours_mesh")
+  call safe_dealloc(neighbors_mesh, "neighbors_mesh")
   call safe_dealloc(num_elmnts_mesh, "num_elmnts_mesh")
   call safe_dealloc(interfaces_mesh, "interfaces_mesh")
   call safe_dealloc(elmnts_mesh, "elmnts_mesh")

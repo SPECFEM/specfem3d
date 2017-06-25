@@ -53,7 +53,7 @@
                       num_interfaces_ext_mesh, &
                       max_nibool_interfaces_ext_mesh, &
                       nibool_interfaces_ext_mesh, &
-                      my_neighbours_ext_mesh, &
+                      my_neighbors_ext_mesh, &
                       ibool_interfaces_ext_mesh)
   endif
 
@@ -67,7 +67,7 @@
                               num_interfaces_ext_mesh, &
                               max_nibool_interfaces_ext_mesh, &
                               nibool_interfaces_ext_mesh, &
-                              my_neighbours_ext_mesh, &
+                              my_neighbors_ext_mesh, &
                               ibool_interfaces_ext_mesh, &
                               CROSS_SECTION_X,CROSS_SECTION_Y,CROSS_SECTION_Z, &
                               xstore,ystore,zstore,myrank)

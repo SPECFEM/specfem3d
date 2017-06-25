@@ -273,10 +273,10 @@
   endif
 
   ! allocates interfaces
-  allocate(my_neighbours_ext_mesh(num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) stop 'Error allocating array my_neighbours_ext_mesh'
-  allocate(my_nelmnts_neighbours_ext_mesh(num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) stop 'Error allocating array my_nelmnts_neighbours_ext_mesh'
+  allocate(my_neighbors_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) stop 'Error allocating array my_neighbors_ext_mesh'
+  allocate(my_nelmnts_neighbors_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) stop 'Error allocating array my_nelmnts_neighbors_ext_mesh'
   allocate(my_interfaces_ext_mesh(6,max_interface_size_ext_mesh,num_interfaces_ext_mesh),stat=ier)
   if (ier /= 0) stop 'Error allocating array my_interfaces_ext_mesh'
   allocate(ibool_interfaces_ext_mesh(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh),stat=ier)
@@ -290,10 +290,10 @@
     ! where
     !     process_interface_id = rank of (neighbor) process to share MPI interface with
     !     number_of_elements_on_interface = number of interface elements
-    read(IIN) my_neighbours_ext_mesh(num_interface), my_nelmnts_neighbours_ext_mesh(num_interface)
+    read(IIN) my_neighbors_ext_mesh(num_interface), my_nelmnts_neighbors_ext_mesh(num_interface)
 
     ! loops over interface elements
-    do ie = 1, my_nelmnts_neighbours_ext_mesh(num_interface)
+    do ie = 1, my_nelmnts_neighbors_ext_mesh(num_interface)
       ! format: #(1)spectral_element_id  #(2)interface_type  #(3)node_id1  #(4)node_id2 #(5)...
       !
       ! interface types:

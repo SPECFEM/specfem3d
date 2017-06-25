@@ -38,7 +38,7 @@
 subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
                                         APPROXIMATE_OCEAN_LOAD, &
                                        ibool, num_interfaces_ext_mesh, &
-                                       my_neighbours_ext_mesh, &
+                                       my_neighbors_ext_mesh, &
                                        nibool_interfaces_ext_mesh, &
                                        max_interface_size_ext_mesh, &
                                        ibool_interfaces_ext_mesh, &
@@ -80,7 +80,7 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
   ! MPI interfaces
   integer :: num_interfaces_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh) :: my_neighbours_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh) :: my_neighbors_ext_mesh
   integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
   integer :: max_interface_size_ext_mesh
   integer, dimension(NGLLX * NGLLX * max_interface_size_ext_mesh, &
@@ -601,7 +601,7 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
                              STRINGIFY_VAR(max_nibool_interfaces_ext_mesh))
     local_dim = num_interfaces_ext_mesh_wmax
     call define_adios_global_array1D(group, groupsize, local_dim, &
-                                     '', STRINGIFY_VAR(my_neighbours_ext_mesh))
+                                     '', STRINGIFY_VAR(my_neighbors_ext_mesh))
     call define_adios_global_array1D(group, groupsize, local_dim, &
                                  '', STRINGIFY_VAR(nibool_interfaces_ext_mesh))
     local_dim = max_nibool_interfaces_ext_mesh_wmax &
@@ -1096,7 +1096,7 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
     call adios_write(handle, STRINGIFY_VAR(max_nibool_interfaces_ext_mesh), ier)
     local_dim = num_interfaces_ext_mesh_wmax
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
-                                     STRINGIFY_VAR(my_neighbours_ext_mesh))
+                                     STRINGIFY_VAR(my_neighbors_ext_mesh))
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                  STRINGIFY_VAR(nibool_interfaces_ext_mesh))
     local_dim = max_nibool_interfaces_ext_mesh_wmax &

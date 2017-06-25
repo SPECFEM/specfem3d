@@ -93,7 +93,7 @@
                         num_interfaces_ext_mesh, &
                         max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh, &
-                        my_neighbours_ext_mesh, &
+                        my_neighbors_ext_mesh, &
                         ibool_interfaces_ext_mesh_dummy )
 
   deallocate(ibool)

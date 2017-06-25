@@ -32,7 +32,7 @@
                             num_interfaces_ext_mesh, &
                             max_nibool_interfaces_ext_mesh, &
                             nibool_interfaces_ext_mesh, &
-                            my_neighbours_ext_mesh, &
+                            my_neighbors_ext_mesh, &
                             ibool_interfaces_ext_mesh)
 
 ! detects surface (points/elements) of model based upon valence
@@ -58,7 +58,7 @@
   integer :: max_nibool_interfaces_ext_mesh
   integer,dimension(num_interfaces_ext_mesh):: nibool_interfaces_ext_mesh
   integer,dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh):: ibool_interfaces_ext_mesh
-  integer,dimension(num_interfaces_ext_mesh) :: my_neighbours_ext_mesh
+  integer,dimension(num_interfaces_ext_mesh) :: my_neighbors_ext_mesh
 
 !local parameters
   integer, dimension(:), allocatable :: valence_external_mesh
@@ -92,7 +92,7 @@
   call assemble_MPI_scalar_i_blocking(NPROC,nglob,valence_external_mesh, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbours_ext_mesh)
+                        my_neighbors_ext_mesh)
 
 ! determines spectral elements containing surface points
   do ispec = 1, nspec
@@ -215,7 +215,7 @@
                             num_interfaces_ext_mesh, &
                             max_nibool_interfaces_ext_mesh, &
                             nibool_interfaces_ext_mesh, &
-                            my_neighbours_ext_mesh, &
+                            my_neighbors_ext_mesh, &
                             ibool_interfaces_ext_mesh, &
                             x_section,y_section,z_section, &
                             xstore,ystore,zstore,myrank)
@@ -247,7 +247,7 @@
   integer :: max_nibool_interfaces_ext_mesh
   integer,dimension(num_interfaces_ext_mesh):: nibool_interfaces_ext_mesh
   integer,dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh):: ibool_interfaces_ext_mesh
-  integer,dimension(num_interfaces_ext_mesh) :: my_neighbours_ext_mesh
+  integer,dimension(num_interfaces_ext_mesh) :: my_neighbors_ext_mesh
 
 ! specified x,y,z - coordinates
   real(kind=CUSTOM_REAL):: x_section,y_section,z_section
@@ -337,7 +337,7 @@
   call assemble_MPI_scalar_i_blocking(NPROC,nglob,valence_external_mesh, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbours_ext_mesh)
+                        my_neighbors_ext_mesh)
 
 
 ! determines spectral elements containing surface points
@@ -657,7 +657,7 @@
                             iglob_is_image_surface, &
                             num_iglob_image_surface, &
                             num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                            nibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
+                            nibool_interfaces_ext_mesh,my_neighbors_ext_mesh, &
                             ibool_interfaces_ext_mesh, &
                             section_xorg,section_yorg,section_zorg, &
                             section_nx,section_ny,section_nz, &
@@ -685,7 +685,7 @@
   integer :: max_nibool_interfaces_ext_mesh
   integer,dimension(num_interfaces_ext_mesh):: nibool_interfaces_ext_mesh
   integer,dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh):: ibool_interfaces_ext_mesh
-  integer,dimension(num_interfaces_ext_mesh) :: my_neighbours_ext_mesh
+  integer,dimension(num_interfaces_ext_mesh) :: my_neighbors_ext_mesh
 
 ! specified x,y,z - coordinates  of cross-section origin and normal to cross-section
   real(kind=CUSTOM_REAL):: section_xorg,section_yorg,section_zorg
@@ -739,7 +739,7 @@
   call assemble_MPI_scalar_i_blocking(NPROC,nglob,valence_external_mesh, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbours_ext_mesh)
+                        my_neighbors_ext_mesh)
 
 
 ! determines spectral elements containing points on surface

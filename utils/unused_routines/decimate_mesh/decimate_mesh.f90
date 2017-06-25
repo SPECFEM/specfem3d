@@ -28,7 +28,7 @@
   integer, dimension(:), allocatable  :: nnodes_elmnts
   integer, dimension(:), allocatable  :: nodes_elmnts
 
-  integer  :: ispec, inode, ispec_neighbours, ispec_neighbours_sub
+  integer  :: ispec, inode, ispec_neighbors, ispec_neighbors_sub
   integer  :: nnodes_ext_mesh_sub
   integer  :: i, j, k
   integer  :: ix, iy, iz
@@ -123,7 +123,7 @@ enddo
     elmnts_ext_mesh(:,:) = elmnts_ext_mesh(:,:) - 1
 
     allocate(xadj(1:nelmnts_ext_mesh+1))
-    allocate(adjncy(1:MAX_NEIGHBOURS*nelmnts_ext_mesh))
+    allocate(adjncy(1:MAX_neighborS*nelmnts_ext_mesh))
     allocate(nnodes_elmnts(1:nnodes_ext_mesh))
     allocate(nodes_elmnts(1:NSIZE*nnodes_ext_mesh))
 
@@ -385,20 +385,20 @@ enddo
 
       temporary_nodes_lookup(:,:,:) = 0
 
-      do ispec_neighbours = xadj(ispec), xadj(ispec+1)-1
-        if ( adjncy(ispec_neighbours) < ispec ) then
-          do ispec_neighbours_sub = (adjncy(ispec_neighbours)-1)*NSUB*NSUB*NSUB + 1, adjncy(ispec_neighbours)*NSUB*NSUB*NSUB
+      do ispec_neighbors = xadj(ispec), xadj(ispec+1)-1
+        if ( adjncy(ispec_neighbors) < ispec ) then
+          do ispec_neighbors_sub = (adjncy(ispec_neighbors)-1)*NSUB*NSUB*NSUB + 1, adjncy(ispec_neighbors)*NSUB*NSUB*NSUB
 
             do ix = 1, NSUB+1
             do iy = 1, NSUB+1
             do iz = 1, NSUB+1
               do inode = 1, ESIZE
                 if ( sqrt( &
-                  (temporary_nodes(1,ix,iy,iz)-nodes_coords_ext_mesh_sub(1,elmnts_ext_mesh_sub(inode,ispec_neighbours_sub)))**2 + &
-                  (temporary_nodes(2,ix,iy,iz)-nodes_coords_ext_mesh_sub(2,elmnts_ext_mesh_sub(inode,ispec_neighbours_sub)))**2 + &
-                  (temporary_nodes(3,ix,iy,iz)-nodes_coords_ext_mesh_sub(3,elmnts_ext_mesh_sub(inode,ispec_neighbours_sub)))**2 ) &
+                  (temporary_nodes(1,ix,iy,iz)-nodes_coords_ext_mesh_sub(1,elmnts_ext_mesh_sub(inode,ispec_neighbors_sub)))**2 + &
+                  (temporary_nodes(2,ix,iy,iz)-nodes_coords_ext_mesh_sub(2,elmnts_ext_mesh_sub(inode,ispec_neighbors_sub)))**2 + &
+                  (temporary_nodes(3,ix,iy,iz)-nodes_coords_ext_mesh_sub(3,elmnts_ext_mesh_sub(inode,ispec_neighbors_sub)))**2 ) &
  < xtol ) then
-                  temporary_nodes_lookup(ix,iy,iz) = elmnts_ext_mesh_sub(inode,ispec_neighbours_sub)
+                  temporary_nodes_lookup(ix,iy,iz) = elmnts_ext_mesh_sub(inode,ispec_neighbors_sub)
                 endif
 
               enddo
@@ -501,13 +501,13 @@ enddo
     integer, intent(in)  :: nnodes
     integer, dimension(0:esize*nelmnts-1), intent(in)  :: elmnts
     integer, dimension(0:nelmnts)  :: xadj
-    integer, dimension(0:MAX_NEIGHBOURS*nelmnts-1)  :: adjncy
+    integer, dimension(0:MAX_neighborS*nelmnts-1)  :: adjncy
     integer, dimension(0:nnodes-1)  :: nnodes_elmnts
     integer, dimension(0:nsize*nnodes-1)  :: nodes_elmnts
     integer, intent(in)  :: ncommonnodes
 
     integer  :: i, j, k, l, m, nb_edges
-    logical  ::  is_neighbour
+    logical  ::  is_neighbor
     integer  :: num_node, n
     integer  :: elem_base, elem_target
     integer  :: connectivity
@@ -516,7 +516,7 @@ enddo
 
     !allocate(xadj(0:nelmnts))
     xadj(:) = 0
-    !allocate(adjncy(0:MAX_NEIGHBOURS*nelmnts-1))
+    !allocate(adjncy(0:MAX_neighborS*nelmnts-1))
     adjncy(:) = 0
     !allocate(nnodes_elmnts(0:nnodes-1))
     nnodes_elmnts(:) = 0
@@ -536,7 +536,7 @@ enddo
 
     print *, 'nnodes_elmnts'
 
-    ! checking which elements are neighbours ('ncommonnodes' criteria)
+    ! checking which elements are neighbors ('ncommonnodes' criteria)
     do j = 0, nnodes-1
        do k = 0, nnodes_elmnts(j)-1
           do l = k+1, nnodes_elmnts(j)-1
@@ -555,21 +555,21 @@ enddo
 
              if ( connectivity >= ncommonnodes) then
 
-                is_neighbour = .false.
+                is_neighbor = .false.
 
                 do m = 0, xadj(nodes_elmnts(k+j*nsize))
-                   if (.not. is_neighbour ) then
-                      if ( adjncy(nodes_elmnts(k+j*nsize)*MAX_NEIGHBOURS+m) == nodes_elmnts(l+j*nsize) ) then
-                         is_neighbour = .true.
+                   if (.not. is_neighbor ) then
+                      if ( adjncy(nodes_elmnts(k+j*nsize)*MAX_neighborS+m) == nodes_elmnts(l+j*nsize) ) then
+                         is_neighbor = .true.
 
 
                       endif
                    endif
                 enddo
-                if (.not. is_neighbour ) then
-                   adjncy(nodes_elmnts(k+j*nsize)*MAX_NEIGHBOURS+xadj(nodes_elmnts(k+j*nsize))) = nodes_elmnts(l+j*nsize)
+                if (.not. is_neighbor ) then
+                   adjncy(nodes_elmnts(k+j*nsize)*MAX_neighborS+xadj(nodes_elmnts(k+j*nsize))) = nodes_elmnts(l+j*nsize)
                    xadj(nodes_elmnts(k+j*nsize)) = xadj(nodes_elmnts(k+j*nsize)) + 1
-                   adjncy(nodes_elmnts(l+j*nsize)*MAX_NEIGHBOURS+xadj(nodes_elmnts(l+j*nsize))) = nodes_elmnts(k+j*nsize)
+                   adjncy(nodes_elmnts(l+j*nsize)*MAX_neighborS+xadj(nodes_elmnts(l+j*nsize))) = nodes_elmnts(k+j*nsize)
                    xadj(nodes_elmnts(l+j*nsize)) = xadj(nodes_elmnts(l+j*nsize)) + 1
                 endif
              endif
@@ -582,7 +582,7 @@ enddo
        k = xadj(i)
        xadj(i) = nb_edges
        do j = 0, k-1
-          adjncy(nb_edges) = adjncy(i*MAX_NEIGHBOURS+j)
+          adjncy(nb_edges) = adjncy(i*MAX_neighborS+j)
           nb_edges = nb_edges + 1
        enddo
     enddo

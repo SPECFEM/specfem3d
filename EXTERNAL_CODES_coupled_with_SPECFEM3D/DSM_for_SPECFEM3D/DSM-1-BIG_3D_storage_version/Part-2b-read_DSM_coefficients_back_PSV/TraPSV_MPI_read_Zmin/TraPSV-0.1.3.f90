@@ -1007,7 +1007,7 @@
 ! le futur quelqu'un fait tourner le code sur un centre regional, il va
 ! plutot utiliser 100 procs. Dans l'immediat pour nos deux prochains papiers, on
 ! va faire tous les calculs sur les centres nationaux, donc ce n'est pas crucial
-! de faire l'optimisation maintenant, mais il faudra y penser a terme.
+! de faire l'optimization maintenant, mais il faudra y penser a terme.
 
 !! DK DK not a good idea to put indices when working on the whole array
 !! DK DK because some compilers will then perform loops instead of memory copies

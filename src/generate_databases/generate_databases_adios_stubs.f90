@@ -142,7 +142,7 @@ end subroutine read_partition_files_adios
 subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
                                              APPROXIMATE_OCEAN_LOAD, &
                                              ibool, num_interfaces_ext_mesh, &
-                                             my_neighbours_ext_mesh, &
+                                             my_neighbors_ext_mesh, &
                                              nibool_interfaces_ext_mesh, &
                                              max_interface_size_ext_mesh, &
                                              ibool_interfaces_ext_mesh, &
@@ -156,7 +156,7 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
   logical :: APPROXIMATE_OCEAN_LOAD
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
   integer :: num_interfaces_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh) :: my_neighbours_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh) :: my_neighbors_ext_mesh
   integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
   integer :: max_interface_size_ext_mesh
   integer, dimension(NGLLX * NGLLX * max_interface_size_ext_mesh, &
@@ -170,7 +170,7 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
   unused_i4 = nglob
   unused_l  = APPROXIMATE_OCEAN_LOAD
   unused_i4 = ibool(1,1,1,1)
-  unused_i4 = my_neighbours_ext_mesh(1)
+  unused_i4 = my_neighbors_ext_mesh(1)
   unused_i4 = nibool_interfaces_ext_mesh(1)
   unused_i4 = ibool_interfaces_ext_mesh(1,1)
   unused_l  = SAVE_MESH_FILES

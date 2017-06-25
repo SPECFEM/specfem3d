@@ -856,7 +856,7 @@ subroutine define_search_sflobal_index
 
   integer :: iproc, ielg, iel, ipol, jpol, ipt, nelmax_solid, nelmax_fluid
   integer :: il, nprocbmax_solid, nprocbmax_fluid
-  integer :: nsearch, nneighbours
+  integer :: nsearch, nneighbors
   integer, allocatable :: nbelong2_solid(:,:), nbelong2_fluid(:,:)
 
   nelmax_solid = maxval(nel_solid)
@@ -868,11 +868,11 @@ subroutine define_search_sflobal_index
   allocate(nbelong_solid(nglobslob))
 
   if (nradialslices == 1) then
-     nneighbours = 2
+     nneighbors = 2
   else
-     nneighbours = 8
+     nneighbors = 8
   endif
-  allocate(nbelong2_solid(1:nneighbours,nglobslob))
+  allocate(nbelong2_solid(1:nneighbors,nglobslob))
 
   nbelong2_solid(:,:) = -1
   nbelong_solid(:)    =  0
@@ -893,8 +893,8 @@ subroutine define_search_sflobal_index
                   if (nbelong2_solid(nsearch,iglob_solid(ipt)) == iproc) &
                         cycle outer
                   nsearch = nsearch + 1
-                  if (nsearch == nneighbours + 1) then
-                     write(6,*) 'ERROR: too many neighbours in solid'
+                  if (nsearch == nneighbors + 1) then
+                     write(6,*) 'ERROR: too many neighbors in solid'
                      stop
                   endif
                enddo
@@ -907,13 +907,13 @@ subroutine define_search_sflobal_index
   enddo !iproc
 
   if (dump_mesh_info_screen) then
-      write(6,*) 'Maximum number of neighbours in the solid:', nprocbmax_solid
+      write(6,*) 'Maximum number of neighbors in the solid:', nprocbmax_solid
   endif
 
   allocate(lprocb_solid(nprocbmax_solid,nglobslob))
 
   do ipt=1, nglobslob
-     do il = 1, nneighbours
+     do il = 1, nneighbors
         if (nbelong2_solid(il,ipt) /= -1) then
            lprocb_solid(il,ipt) = nbelong2_solid(il,ipt)
            nprocb_solid(ipt) = il
@@ -927,7 +927,7 @@ subroutine define_search_sflobal_index
   ! fluid
   if (have_fluid) then
      allocate(nbelong_fluid(nglobflob))
-     allocate(nbelong2_fluid(1:nneighbours,nglobflob))
+     allocate(nbelong2_fluid(1:nneighbors,nglobflob))
 
      nbelong2_fluid(:,:) = -1
      nbelong_fluid(:)    = 0
@@ -948,8 +948,8 @@ subroutine define_search_sflobal_index
                     if (nbelong2_fluid(nsearch,iglob_fluid(ipt)) == iproc) &
                           cycle outerfl
                     nsearch = nsearch + 1
-                    if (nsearch == nneighbours + 1) then
-                       write(6,*) 'ERROR: too many neighbours in fluid'
+                    if (nsearch == nneighbors + 1) then
+                       write(6,*) 'ERROR: too many neighbors in fluid'
                        stop
                     endif
                  enddo
@@ -962,12 +962,12 @@ subroutine define_search_sflobal_index
      enddo
 
      if (dump_mesh_info_screen) then
-         write(6,*) 'Maximum number of neighbours in the solid:', nprocbmax_solid
+         write(6,*) 'Maximum number of neighbors in the solid:', nprocbmax_solid
      endif
      allocate(lprocb_fluid(nprocbmax_fluid,nglobflob))
 
      do ipt=1, nglobflob
-        do il = 1, nneighbours
+        do il = 1, nneighbors
            if (nbelong2_fluid(il,ipt) /= -1) then
               lprocb_fluid(il,ipt) = nbelong2_fluid(il,ipt)
               nprocb_fluid(ipt) = il
@@ -1027,7 +1027,7 @@ subroutine partition_sflobal_index
   integer :: ipdes, ipsrc, imsg
 
   integer, dimension(:), allocatable        :: ibin_solid
-  integer, dimension(:,:), allocatable      :: myneighbours_solid
+  integer, dimension(:,:), allocatable      :: myneighbors_solid
   integer, dimension(:,:), allocatable      :: sizemsg_solid
   integer, dimension(:,:), allocatable      :: index_msg_solid
   integer, dimension(:,:,:), allocatable    :: global_index_msg_solid
@@ -1037,7 +1037,7 @@ subroutine partition_sflobal_index
   integer :: sizerecvpmax_solid, sizesendpmax_solid
 
   integer, dimension(:), allocatable        :: ibin_fluid
-  integer, dimension(:,:), allocatable      :: myneighbours_fluid
+  integer, dimension(:,:), allocatable      :: myneighbors_fluid
   integer, dimension(:,:), allocatable      :: sizemsg_fluid
   integer, dimension(:,:), allocatable      :: index_msg_fluid
   integer, dimension(:,:,:), allocatable    :: global_index_msg_fluid
@@ -1046,7 +1046,7 @@ subroutine partition_sflobal_index
 
   integer :: sizebinmax_fluid, sizemsgmax_fluid
   integer :: sizerecvpmax_fluid, sizesendpmax_fluid
-  integer :: nneighbours, inbr
+  integer :: nneighbors, inbr
   real(kind=dp), dimension(:), allocatable  :: sort_buf
 
 
@@ -1058,12 +1058,12 @@ subroutine partition_sflobal_index
   endif
 
   if (nradialslices == 1) then
-     nneighbours = 2
+     nneighbors = 2
   else
-     nneighbours = 8
+     nneighbors = 8
   endif
 
-  if (dump_mesh_info_screen) write(6,*) 'nneighbours', nneighbours
+  if (dump_mesh_info_screen) write(6,*) 'nneighbors', nneighbors
 
   ! SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS SOLID SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
 
@@ -1104,10 +1104,10 @@ subroutine partition_sflobal_index
   enddo
   deallocate(ibin_solid)
 
-  allocate(sizemsg_solid(0:nproc-1,nneighbours))
+  allocate(sizemsg_solid(0:nproc-1,nneighbors))
   sizemsg_solid = 0
-  allocate(myneighbours_solid(0:nproc-1,nneighbours))
-  myneighbours_solid = -1
+  allocate(myneighbors_solid(0:nproc-1,nneighbors))
+  myneighbors_solid = -1
 
   do iproct = 0, nproc - 1
      do ipt = 1, sizebin_solid(iproct)
@@ -1116,18 +1116,18 @@ subroutine partition_sflobal_index
            do ibel = 1, nprocb_solid(ig)
               ipdes = lprocb_solid(ibel,ig)
               if (ipdes /= iproct) then
-                 ! find first empty neighbour location
-                 do inbr=1, nneighbours
-                    if (myneighbours_solid(iproct,inbr) == ipdes .or. &
-                        myneighbours_solid(iproct,inbr) == -1) exit
+                 ! find first empty neighbor location
+                 do inbr=1, nneighbors
+                    if (myneighbors_solid(iproct,inbr) == ipdes .or. &
+                        myneighbors_solid(iproct,inbr) == -1) exit
                  enddo
                  if (inbr > 8) then
-                    write(6,*) 'ERORR: having more then 8 neighbours (+myself)'
+                    write(6,*) 'ERORR: having more then 8 neighbors (+myself)'
                     write(6,*) '       check mesh decomposition in the solid)'
                     write(6,*) '       iproct = ', iproct
                     stop
                  endif
-                 if (myneighbours_solid(iproct,inbr) == -1) myneighbours_solid(iproct,inbr) = ipdes
+                 if (myneighbors_solid(iproct,inbr) == -1) myneighbors_solid(iproct,inbr) = ipdes
                  sizemsg_solid(iproct,inbr) = sizemsg_solid(iproct,inbr) + 1
               endif
            enddo
@@ -1135,19 +1135,19 @@ subroutine partition_sflobal_index
      enddo
   enddo
 
-  ! sort neighbours and messaging array according to processor number
-  allocate(sort_buf(nneighbours))
+  ! sort neighbors and messaging array according to processor number
+  allocate(sort_buf(nneighbors))
   do iproct = 0, nproc - 1
-     if (any(myneighbours_solid(iproct,:) == -1)) then
-        inbr = minval(minloc(myneighbours_solid(iproct,:))) - 1
+     if (any(myneighbors_solid(iproct,:) == -1)) then
+        inbr = minval(minloc(myneighbors_solid(iproct,:))) - 1
      else
-        inbr = nneighbours
+        inbr = nneighbors
      endif
-     sort_buf(1:inbr) = dble(myneighbours_solid(iproct,1:inbr))
-     call mergesort_3(sort_buf(1:inbr), il=myneighbours_solid(iproct,1:inbr), &
+     sort_buf(1:inbr) = dble(myneighbors_solid(iproct,1:inbr))
+     call mergesort_3(sort_buf(1:inbr), il=myneighbors_solid(iproct,1:inbr), &
                       il2=sizemsg_solid(iproct,1:inbr), p=1)
      if (dump_mesh_info_screen) &
-         write(6,'(100(i4))') myneighbours_solid(iproct,1:inbr)
+         write(6,'(100(i4))') myneighbors_solid(iproct,1:inbr)
   enddo
   deallocate(sort_buf)
 
@@ -1163,10 +1163,10 @@ subroutine partition_sflobal_index
   sizemsgmax_solid = maxval(maxval(sizemsg_solid,DIM=1))
   if (dump_mesh_info_screen) write(6,*) 'size msg max solid is ' , sizemsgmax_solid
 
-  allocate(index_msg_solid(0:nproc-1,nneighbours))
+  allocate(index_msg_solid(0:nproc-1,nneighbors))
   index_msg_solid = 0
 
-  allocate(global_index_msg_solid(sizemsgmax_solid,0:nproc-1,nneighbours))
+  allocate(global_index_msg_solid(sizemsgmax_solid,0:nproc-1,nneighbors))
   global_index_msg_solid = -1
 
   do iproct = 0, nproc-1
@@ -1177,8 +1177,8 @@ subroutine partition_sflobal_index
               ipdes = lprocb_solid(ibel,ig)
               if (ipdes /= iproct) then
 
-                 do inbr=1, nneighbours
-                    if (ipdes == myneighbours_solid(iproct,inbr)) exit
+                 do inbr=1, nneighbors
+                    if (ipdes == myneighbors_solid(iproct,inbr)) exit
                  enddo
 
                  index_msg_solid(iproct,inbr) = index_msg_solid(iproct,inbr) + 1
@@ -1201,8 +1201,8 @@ subroutine partition_sflobal_index
   sizesendp_solid(0:nproc-1) = 0
 
   do iproct = 0, nproc-1
-     do inbr=1, nneighbours
-        ipsrc = myneighbours_solid(iproct,inbr)
+     do inbr=1, nneighbors
+        ipsrc = myneighbors_solid(iproct,inbr)
         if (ipsrc == -1) exit
      enddo
      sizerecvp_solid(iproct) = inbr - 1
@@ -1211,8 +1211,8 @@ subroutine partition_sflobal_index
   ! somewhat redundant, but makes sure symmetry of the communication
   do iproct = 0, nproc -1
      do ipdes = 0, nproc-1
-        do inbr=1, nneighbours
-           ipsrc = myneighbours_solid(ipdes,inbr)
+        do inbr=1, nneighbors
+           ipsrc = myneighbors_solid(ipdes,inbr)
            if (ipsrc == iproct) sizesendp_solid(iproct) = sizesendp_solid(iproct) + 1
         enddo
      enddo
@@ -1241,8 +1241,8 @@ subroutine partition_sflobal_index
 
   do iproct = 0, nproc-1
      ip = 0
-     do inbr=1, nneighbours
-        ipsrc = myneighbours_solid(iproct,inbr)
+     do inbr=1, nneighbors
+        ipsrc = myneighbors_solid(iproct,inbr)
         if (ipsrc == -1) exit
         ip = ip + 1
         listrecvp_solid(ip,iproct) = ipsrc
@@ -1253,8 +1253,8 @@ subroutine partition_sflobal_index
   do iproct = 0, nproc -1
      ip = 0
      do ipdes = 0, nproc-1
-        do inbr=1, nneighbours
-           ipsrc = myneighbours_solid(ipdes,inbr)
+        do inbr=1, nneighbors
+           ipsrc = myneighbors_solid(ipdes,inbr)
            if (ipsrc == iproct) then
               ip = ip + 1
               listsendp_solid(ip,iproct) = ipdes
@@ -1283,8 +1283,8 @@ subroutine partition_sflobal_index
   sizemsgsendp_solid = 0
 
   do iproct = 0, nproc-1
-     do inbr=1, nneighbours
-        ipsrc = myneighbours_solid(iproct,inbr)
+     do inbr=1, nneighbors
+        ipsrc = myneighbors_solid(iproct,inbr)
         if (ipsrc == -1) exit
         sizemsgrecvp_solid(inbr,iproct) = sizemsg_solid(iproct,inbr)
      enddo
@@ -1293,8 +1293,8 @@ subroutine partition_sflobal_index
   ! somewhat redundant, but makes sure symmetry of the communication
   do iproct = 0, nproc -1
      do ipdes = 0, nproc-1
-        do inbr=1, nneighbours
-           ipsrc = myneighbours_solid(ipdes,inbr)
+        do inbr=1, nneighbors
+           ipsrc = myneighbors_solid(ipdes,inbr)
            if (ipsrc == iproct) then
               sizemsgsendp_solid(inbr,ipdes) = sizemsg_solid(ipdes,inbr)
            endif
@@ -1340,10 +1340,10 @@ subroutine partition_sflobal_index
         do ip=1, sizerecvp_solid(iproct)
            ipsrc = listrecvp_solid(ip,iproct)
            do ipt = 1, sizemsgrecvp_solid(ip,iproct)
-              do inbr=1, nneighbours
-                 if (iproct == myneighbours_solid(ipsrc,inbr)) exit
+              do inbr=1, nneighbors
+                 if (iproct == myneighbors_solid(ipsrc,inbr)) exit
               enddo
-              if (inbr > nneighbours) exit
+              if (inbr > nneighbors) exit
               ig = global_index_msg_solid(ipt,ipsrc,inbr)
               glocal_index_msg_recvp_solid(ipt,ip,iproct) = slob2sloc(ig)
            enddo
@@ -1354,10 +1354,10 @@ subroutine partition_sflobal_index
         do ip = 1, sizesendp_solid(iproct)
            ipdes = listsendp_solid(ip,iproct)
            do ipt = 1, sizemsgsendp_solid(ip,iproct)
-              do inbr=1, nneighbours
-                 if (ipdes == myneighbours_solid(iproct,inbr)) exit
+              do inbr=1, nneighbors
+                 if (ipdes == myneighbors_solid(iproct,inbr)) exit
               enddo
-              if (inbr > nneighbours) exit
+              if (inbr > nneighbors) exit
               ig = global_index_msg_solid(ipt,iproct,inbr)
               glocal_index_msg_sendp_solid(ipt,ip,iproct) = slob2sloc(ig)
            enddo
@@ -1367,7 +1367,7 @@ subroutine partition_sflobal_index
   enddo
 
   deallocate(slob2sloc)
-  deallocate(myneighbours_solid)
+  deallocate(myneighbors_solid)
   deallocate(global_index_msg_solid)
 
   if (any(glocal_index_msg_sendp_solid /= glocal_index_msg_recvp_solid)) then
@@ -1428,10 +1428,10 @@ subroutine partition_sflobal_index
      enddo
      deallocate(ibin_fluid)
 
-     allocate(sizemsg_fluid(0:nproc-1,nneighbours))
+     allocate(sizemsg_fluid(0:nproc-1,nneighbors))
      sizemsg_fluid = 0
-     allocate(myneighbours_fluid(0:nproc-1,nneighbours))
-     myneighbours_fluid = -1
+     allocate(myneighbors_fluid(0:nproc-1,nneighbors))
+     myneighbors_fluid = -1
 
      do iproct = 0, nproc - 1
         do ipt = 1, sizebin_fluid(iproct)
@@ -1440,18 +1440,18 @@ subroutine partition_sflobal_index
               do ibel = 1, nprocb_fluid(ig)
                  ipdes = lprocb_fluid(ibel,ig)
                  if (ipdes /= iproct) then
-                    ! find first empty neighbour location
-                    do inbr=1, nneighbours
-                       if (myneighbours_fluid(iproct,inbr) == ipdes .or. &
-                           myneighbours_fluid(iproct,inbr) == -1) exit
+                    ! find first empty neighbor location
+                    do inbr=1, nneighbors
+                       if (myneighbors_fluid(iproct,inbr) == ipdes .or. &
+                           myneighbors_fluid(iproct,inbr) == -1) exit
                     enddo
                     if (inbr > 8) then
-                       write(6,*) 'ERORR: having more then 8 neighbours (+myself)'
+                       write(6,*) 'ERORR: having more then 8 neighbors (+myself)'
                        write(6,*) '       check mesh decomposition in the fluid)'
                        write(6,*) '       iproct = ', iproct
                        stop
                     endif
-                    if (myneighbours_fluid(iproct,inbr) == -1) myneighbours_fluid(iproct,inbr) = ipdes
+                    if (myneighbors_fluid(iproct,inbr) == -1) myneighbors_fluid(iproct,inbr) = ipdes
                     sizemsg_fluid(iproct,inbr) = sizemsg_fluid(iproct,inbr) + 1
                  endif
               enddo
@@ -1459,19 +1459,19 @@ subroutine partition_sflobal_index
         enddo
      enddo
 
-     ! sort neighbours and messaging array according to processor number
-     allocate(sort_buf(nneighbours))
+     ! sort neighbors and messaging array according to processor number
+     allocate(sort_buf(nneighbors))
      do iproct = 0, nproc - 1
-        if (any(myneighbours_fluid(iproct,:) == -1)) then
-           inbr = minval(minloc(myneighbours_fluid(iproct,:))) - 1
+        if (any(myneighbors_fluid(iproct,:) == -1)) then
+           inbr = minval(minloc(myneighbors_fluid(iproct,:))) - 1
         else
-           inbr = nneighbours
+           inbr = nneighbors
         endif
-        sort_buf(1:inbr) = dble(myneighbours_fluid(iproct,1:inbr))
-        call mergesort_3(sort_buf(1:inbr), il=myneighbours_fluid(iproct,1:inbr), &
+        sort_buf(1:inbr) = dble(myneighbors_fluid(iproct,1:inbr))
+        call mergesort_3(sort_buf(1:inbr), il=myneighbors_fluid(iproct,1:inbr), &
                          il2=sizemsg_fluid(iproct,1:inbr), p=1)
         if (dump_mesh_info_screen) &
-           write(6,'(100(i4))') myneighbours_fluid(iproct,1:inbr)
+           write(6,'(100(i4))') myneighbors_fluid(iproct,1:inbr)
      enddo
      deallocate(sort_buf)
 
@@ -1488,9 +1488,9 @@ subroutine partition_sflobal_index
 
      if (dump_mesh_info_screen) write(6,*) 'size msg max fluid is ' , sizemsgmax_fluid
 
-     allocate(index_msg_fluid(0:nproc-1,nneighbours))
+     allocate(index_msg_fluid(0:nproc-1,nneighbors))
      index_msg_fluid = 0
-     allocate(global_index_msg_fluid(sizemsgmax_fluid,0:nproc-1,nneighbours))
+     allocate(global_index_msg_fluid(sizemsgmax_fluid,0:nproc-1,nneighbors))
      global_index_msg_fluid = -1
 
      do iproct = 0, nproc-1
@@ -1501,8 +1501,8 @@ subroutine partition_sflobal_index
                  ipdes = lprocb_fluid(ibel,ig)
                  if (ipdes /= iproct) then
 
-                    do inbr=1, nneighbours
-                       if (ipdes == myneighbours_fluid(iproct,inbr)) exit
+                    do inbr=1, nneighbors
+                       if (ipdes == myneighbors_fluid(iproct,inbr)) exit
                     enddo
 
                     index_msg_fluid(iproct,inbr) = index_msg_fluid(iproct,inbr) + 1
@@ -1525,8 +1525,8 @@ subroutine partition_sflobal_index
      sizesendp_fluid = 0
 
      do iproct = 0, nproc-1
-        do inbr=1, nneighbours
-           ipsrc = myneighbours_fluid(iproct,inbr)
+        do inbr=1, nneighbors
+           ipsrc = myneighbors_fluid(iproct,inbr)
            if (ipsrc == -1) exit
         enddo
         sizerecvp_fluid(iproct) = inbr - 1
@@ -1535,8 +1535,8 @@ subroutine partition_sflobal_index
      ! somewhat redundant, but makes sure symmetry of the communication
      do iproct = 0, nproc -1
         do ipdes = 0, nproc-1
-           do inbr=1, nneighbours
-              ipsrc = myneighbours_fluid(ipdes,inbr)
+           do inbr=1, nneighbors
+              ipsrc = myneighbors_fluid(ipdes,inbr)
               if (ipsrc == iproct) sizesendp_fluid(iproct) = sizesendp_fluid(iproct) + 1
            enddo
         enddo
@@ -1567,8 +1567,8 @@ subroutine partition_sflobal_index
 
      do iproct = 0, nproc-1
         ip = 0
-        do inbr=1, nneighbours
-           ipsrc = myneighbours_fluid(iproct,inbr)
+        do inbr=1, nneighbors
+           ipsrc = myneighbors_fluid(iproct,inbr)
            if (ipsrc == -1) exit
            ip = ip + 1
            listrecvp_fluid(ip,iproct) = ipsrc
@@ -1579,8 +1579,8 @@ subroutine partition_sflobal_index
      do iproct = 0, nproc -1
         ip = 0
         do ipdes = 0, nproc-1
-           do inbr=1, nneighbours
-              ipsrc = myneighbours_fluid(ipdes,inbr)
+           do inbr=1, nneighbors
+              ipsrc = myneighbors_fluid(ipdes,inbr)
               if (ipsrc == iproct) then
                  ip = ip + 1
                  listsendp_fluid(ip,iproct) = ipdes
@@ -1610,8 +1610,8 @@ subroutine partition_sflobal_index
      sizemsgsendp_fluid = 0
 
      do iproct = 0, nproc-1
-        do inbr=1, nneighbours
-           ipsrc = myneighbours_fluid(iproct,inbr)
+        do inbr=1, nneighbors
+           ipsrc = myneighbors_fluid(iproct,inbr)
            if (ipsrc == -1) exit
            sizemsgrecvp_fluid(inbr,iproct) = sizemsg_fluid(iproct,inbr)
         enddo
@@ -1620,8 +1620,8 @@ subroutine partition_sflobal_index
      ! somewhat redundant, but makes sure symmetry of the communication
      do iproct = 0, nproc -1
         do ipdes = 0, nproc-1
-           do inbr=1, nneighbours
-              ipsrc = myneighbours_fluid(ipdes,inbr)
+           do inbr=1, nneighbors
+              ipsrc = myneighbors_fluid(ipdes,inbr)
               if (ipsrc == iproct) then
                  sizemsgsendp_fluid(inbr,ipdes) = sizemsg_fluid(ipdes,inbr)
               endif
@@ -1667,10 +1667,10 @@ subroutine partition_sflobal_index
            do ip=1, sizerecvp_fluid(iproct)
               ipsrc = listrecvp_fluid(ip,iproct)
               do ipt = 1, sizemsgrecvp_fluid(ip,iproct)
-                 do inbr=1, nneighbours
-                    if (iproct == myneighbours_fluid(ipsrc,inbr)) exit
+                 do inbr=1, nneighbors
+                    if (iproct == myneighbors_fluid(ipsrc,inbr)) exit
                  enddo
-                 if (inbr > nneighbours) exit
+                 if (inbr > nneighbors) exit
                  ig = global_index_msg_fluid(ipt,ipsrc,inbr)
                  glocal_index_msg_recvp_fluid(ipt,ip,iproct) = flob2floc(ig)
               enddo
@@ -1681,10 +1681,10 @@ subroutine partition_sflobal_index
            do ip = 1, sizesendp_fluid(iproct)
               ipdes = listsendp_fluid(ip,iproct)
               do ipt = 1, sizemsgsendp_fluid(ip,iproct)
-                 do inbr=1, nneighbours
-                    if (ipdes == myneighbours_fluid(iproct,inbr)) exit
+                 do inbr=1, nneighbors
+                    if (ipdes == myneighbors_fluid(iproct,inbr)) exit
                  enddo
-                 if (inbr > nneighbours) exit
+                 if (inbr > nneighbors) exit
                  ig = global_index_msg_fluid(ipt,iproct,inbr)
                  glocal_index_msg_sendp_fluid(ipt,ip,iproct) = flob2floc(ig)
               enddo
@@ -1693,7 +1693,7 @@ subroutine partition_sflobal_index
         call flush(6)
      enddo
 
-     deallocate(myneighbours_fluid)
+     deallocate(myneighbors_fluid)
      deallocate(global_index_msg_fluid)
 
      if (any(glocal_index_msg_sendp_fluid /= glocal_index_msg_recvp_fluid)) then
@@ -1789,7 +1789,7 @@ subroutine define_local_bdry_elem
         if (solid(belem(iel,j))) then
 
            myielglob = belem(iel,j)
-           herielglob = belem(my_neighbour(iel,j),j)
+           herielglob = belem(my_neighbor(iel,j),j)
 
            myproc =  el2proc(myielglob)
            herproc = el2proc(herielglob)

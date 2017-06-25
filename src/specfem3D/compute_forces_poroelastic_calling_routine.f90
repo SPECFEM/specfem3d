@@ -210,7 +210,7 @@ subroutine compute_forces_poroelastic_calling()
                         buffer_send_vector_ext_mesh_w,buffer_recv_vector_ext_mesh_w, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbours_ext_mesh, &
+                        my_neighbors_ext_mesh, &
                         request_send_vector_ext_mesh_s,request_recv_vector_ext_mesh_s, &
                         request_send_vector_ext_mesh_w,request_recv_vector_ext_mesh_w)
 
@@ -222,7 +222,7 @@ subroutine compute_forces_poroelastic_calling()
                         b_buffer_send_vector_ext_meshw,b_buffer_recv_vector_ext_meshw, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbours_ext_mesh, &
+                        my_neighbors_ext_mesh, &
                         b_request_send_vector_ext_meshs,b_request_recv_vector_ext_meshs, &
                         b_request_send_vector_ext_meshw,b_request_recv_vector_ext_meshw)
       endif !adjoint

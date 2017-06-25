@@ -275,7 +275,7 @@ contains
              if (ipart(iE_n) /= myrank+1) then    !! it's not my element
                 do i1 = 1, NGNOD                    !! loop over edges on my element
                    in1 = elmnts(i1,iE_loc)
-                   do i2 = 1, NGNOD                 !! loop over edges on my neighbour element
+                   do i2 = 1, NGNOD                 !! loop over edges on my neighbor element
                       in2 = elmnts_glob(i2,iE_n)    !! pb on utilise elmnts_glob
                       if (in1 == in2 ) then         !! it's common edge
                          k = k + 1
@@ -437,7 +437,7 @@ contains
              call store_new_element(New_element, nb_element_stored, stored_elements)
           enddo
        enddo
-       nb_neigh(iE_loc) = nb_element_stored  !! number of neighbour of iE_loc element
+       nb_neigh(iE_loc) = nb_element_stored  !! number of neighbor of iE_loc element
     enddo
     size_adjacency = sum(nb_neigh(:))
 
@@ -455,7 +455,7 @@ contains
              call store_new_element(New_element, nb_element_stored, stored_elements)
           enddo
        enddo
-       id_adjcy(iE_loc) = id_adjcy(iE_loc-1) + nb_element_stored  !! number of neighbour of iE_loc element
+       id_adjcy(iE_loc) = id_adjcy(iE_loc-1) + nb_element_stored  !! number of neighbor of iE_loc element
        adjcy(id_adjcy(iE_loc-1)+1:id_adjcy(iE_loc))=stored_elements(1:nb_element_stored)
     enddo
 

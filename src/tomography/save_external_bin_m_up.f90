@@ -46,7 +46,7 @@
                     free_surface_normal,free_surface_jacobian2Dw, &
                     free_surface_ijk,free_surface_ispec, &
                     num_free_surface_faces, &
-                    num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
+                    num_interfaces_ext_mesh,my_neighbors_ext_mesh,nibool_interfaces_ext_mesh, &
                     max_nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                     prname,SAVE_MESH_FILES, &
                     ANISOTROPY,NSPEC_ANISO, &
@@ -114,7 +114,7 @@
 
 ! MPI interfaces
   integer :: num_interfaces_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh) :: my_neighbours_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh) :: my_neighbors_ext_mesh
   integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
   integer :: max_nibool_interfaces_ext_mesh
   integer, dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
@@ -256,7 +256,7 @@
   write(IOUT) num_interfaces_ext_mesh
   if (num_interfaces_ext_mesh > 0) then
     write(IOUT) max_nibool_interfaces_ext_mesh
-    write(IOUT) my_neighbours_ext_mesh
+    write(IOUT) my_neighbors_ext_mesh
     write(IOUT) nibool_interfaces_ext_mesh
     write(IOUT) ibool_interfaces_ext_mesh
   endif

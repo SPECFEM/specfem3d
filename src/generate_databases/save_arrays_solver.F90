@@ -28,7 +28,7 @@
 ! for external mesh
 
   subroutine save_arrays_solver_ext_mesh(nspec,nglob,APPROXIMATE_OCEAN_LOAD,ibool, &
-                    num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
+                    num_interfaces_ext_mesh,my_neighbors_ext_mesh,nibool_interfaces_ext_mesh, &
                     max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
                     SAVE_MESH_FILES,ANISOTROPY)
 
@@ -56,7 +56,7 @@
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
   ! MPI interfaces
   integer :: num_interfaces_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh) :: my_neighbours_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh) :: my_neighbors_ext_mesh
   integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
   integer :: max_interface_size_ext_mesh
   integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
@@ -254,7 +254,7 @@
   write(IOUT) num_interfaces_ext_mesh
   if (num_interfaces_ext_mesh > 0) then
     write(IOUT) max_nibool_interfaces_ext_mesh
-    write(IOUT) my_neighbours_ext_mesh
+    write(IOUT) my_neighbors_ext_mesh
     write(IOUT) nibool_interfaces_ext_mesh
     write(IOUT) ibool_interfaces_ext_mesh_dummy
   endif

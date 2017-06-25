@@ -389,7 +389,7 @@ program smooth_sem
 
   ! checks if Gaussian support exceeds slice dimensions
   if (sigma_h3 >= dim_x .or. sigma_h3 >= dim_y .or. sigma_v3 >= dim_z) then
-    ! Gaussian support is likely larger than the direct neighbour and has support in a much wider area
+    ! Gaussian support is likely larger than the direct neighbor and has support in a much wider area
     ! user output
     if (myrank == 0) then
       print *,'  using large Gaussian with respect to slice dimension for smoothing'
@@ -417,18 +417,18 @@ program smooth_sem
     ! skip own process slice, has already been added
     if (iproc == myrank) cycle
 
-    ! checks if slice is a direct neighbour
+    ! checks if slice is a direct neighbor
     do_include_slice = .false.
     do i = 1,num_interfaces_ext_mesh
-      if (iproc == my_neighbours_ext_mesh(i)) then
-        ! found a neighbour slice
+      if (iproc == my_neighbors_ext_mesh(i)) then
+        ! found a neighbor slice
         do_include_slice = .true.
         exit
       endif
     enddo
 
     if (.not. do_include_slice) then
-      ! note: Gaussian support might be larger than closest neighbour slices
+      ! note: Gaussian support might be larger than closest neighbor slices
       !       we add all slices close enough to still have an influence
 
       ! checks distances to this slice

@@ -114,7 +114,7 @@ subroutine read_mesh_databases_adios()
              local_dim_free_surface_normal, local_dim_coupling_ac_el_ispec, &
              local_dim_coupling_ac_el_ijk, &
              local_dim_coupling_ac_el_jacobian2Dw, &
-             local_dim_coupling_ac_el_normal, local_dim_my_neighbours_ext_mesh, &
+             local_dim_coupling_ac_el_normal, local_dim_my_neighbors_ext_mesh, &
              local_dim_nibool_interfaces_ext_mesh, &
              local_dim_ibool_interfaces_ext_mesh, &
              local_dim_ispec_is_inner, local_dim_phase_ispec_inner_acoustic, &
@@ -538,8 +538,8 @@ subroutine read_mesh_databases_adios()
                           local_dim_coupling_el_po_normal, ier)
   endif
   if (num_interfaces_ext_mesh > 0) then
-    call adios_get_scalar(handle, "my_neighbours_ext_mesh/local_dim", &
-                          local_dim_my_neighbours_ext_mesh,ier)
+    call adios_get_scalar(handle, "my_neighbors_ext_mesh/local_dim", &
+                          local_dim_my_neighbors_ext_mesh,ier)
     call adios_get_scalar(handle, "nibool_interfaces_ext_mesh/local_dim", &
                           local_dim_nibool_interfaces_ext_mesh,ier)
     call adios_get_scalar(handle, "ibool_interfaces_ext_mesh_dummy/local_dim", &
@@ -894,9 +894,9 @@ subroutine read_mesh_databases_adios()
   if (ier /= 0) stop 'error allocating array coupling_el_po_normal etc.'
 
   ! MPI interfaces
-  allocate(my_neighbours_ext_mesh(num_interfaces_ext_mesh), &
+  allocate(my_neighbors_ext_mesh(num_interfaces_ext_mesh), &
            nibool_interfaces_ext_mesh(num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) stop 'error allocating array my_neighbours_ext_mesh etc.'
+  if (ier /= 0) stop 'error allocating array my_neighbors_ext_mesh etc.'
   if (num_interfaces_ext_mesh > 0) then
     allocate(ibool_interfaces_ext_mesh(max_nibool_interfaces_ext_mesh, &
                                        num_interfaces_ext_mesh),stat=ier)
@@ -1450,13 +1450,13 @@ subroutine read_mesh_databases_adios()
 
   ! MPI interfaces
   if (num_interfaces_ext_mesh > 0) then
-    start(1) = local_dim_my_neighbours_ext_mesh * myrank
+    start(1) = local_dim_my_neighbors_ext_mesh * myrank
     count_ad(1) = num_interfaces_ext_mesh
     sel_num = sel_num+1
     sel => selections(sel_num)
     call adios_selection_boundingbox (sel , 1, start, count_ad)
-    call adios_schedule_read(handle, sel, "my_neighbours_ext_mesh/array", 0, 1, &
-                             my_neighbours_ext_mesh, ier)
+    call adios_schedule_read(handle, sel, "my_neighbors_ext_mesh/array", 0, 1, &
+                             my_neighbors_ext_mesh, ier)
     call adios_schedule_read(handle, sel, "nibool_interfaces_ext_mesh/array", 0, 1, &
                              nibool_interfaces_ext_mesh, ier)
 

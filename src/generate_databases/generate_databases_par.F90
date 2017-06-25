@@ -89,8 +89,8 @@
   integer  :: num_interfaces_ext_mesh
   integer  :: max_interface_size_ext_mesh
   integer  :: nmat_ext_mesh, nundefMat_ext_mesh
-  integer, dimension(:), allocatable  :: my_neighbours_ext_mesh
-  integer, dimension(:), allocatable  :: my_nelmnts_neighbours_ext_mesh
+  integer, dimension(:), allocatable  :: my_neighbors_ext_mesh
+  integer, dimension(:), allocatable  :: my_nelmnts_neighbors_ext_mesh
 
   integer, dimension(:,:,:), allocatable  :: my_interfaces_ext_mesh
   integer, dimension(:,:), allocatable  :: ibool_interfaces_ext_mesh
