@@ -43,7 +43,7 @@ contains
        if (DEBUG_MODE) then
           write(IIDD, *)
           write(IIDD, *)
-          write(IIDD, *) 'READING INPUT FD MODEL FROM DISK FOR CIJKL '
+          write(IIDD, *) 'READING INPUT FD MODEL FROM DISK FOR C_IJKL'
           write(IIDD, *)
           write(IIDD, *)
           write(IIDD, *)    'Family parameter:',  trim(inversion_param%param_family)
@@ -1024,12 +1024,12 @@ contains
                                                xcrd_fd,       ycrd_fd,       zcrd_fd, &
                                                  nx_fd,         ny_fd,         nz_fd, &
                                                  model_fd(:,:,:,ipar),           val)
-                      !* Get tensors components
+                      ! Get tensors components
                       cval(ipar) = val
 
                    enddo
 
-                   !* store cij
+                   ! store c_ij
                    c11store(i,j,k,ispec) = cval(1)
                    c12store(i,j,k,ispec) = cval(2)
                    c13store(i,j,k,ispec) = cval(3)

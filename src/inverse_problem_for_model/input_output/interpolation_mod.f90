@@ -1,5 +1,7 @@
 module interpolation_mod
 
+  use constants, only: CUSTOM_REAL
+
   implicit none
 
   !**************************************************
@@ -13,7 +15,8 @@ module interpolation_mod
   integer, parameter :: dp = selected_real_kind(8)
 
   !*** Custom precision
-  integer, parameter :: cp = selected_real_kind(4)
+!!!!!!!! DK DK  integer, parameter :: cp = selected_real_kind(4)
+  integer, parameter :: cp = CUSTOM_REAL
 
   !*** Special precision
   integer, parameter :: hp = selected_real_kind(8)
@@ -485,7 +488,9 @@ contains
 !--------------------------------------------------------------------------------
 
 !================================================================================
+
 ! Trilinear interpolation
+
   subroutine trilin_interp(x,y,z,valx,valy,valz,nx,ny,nz,valin,valout)!,indx,indy,indz)
 
     !*** Size of grid
