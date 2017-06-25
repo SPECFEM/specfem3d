@@ -52,27 +52,27 @@ contains
   !-----------------------------------------------
   ! Creating dual graph (adjacency is defined by 'ncommonnodes' between two elements).
   !-----------------------------------------------
-  subroutine mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, elmnts, &
-                                    xadj, adjncy, nnodes_elmnts, nodes_elmnts, max_neighbour, ncommonnodes, NGNOD)
+  subroutine mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbor, elmnts, &
+                                    xadj, adjncy, nnodes_elmnts, nodes_elmnts, max_neighbor, ncommonnodes, NGNOD)
 
     implicit none
     integer, intent(in)  :: nspec
     integer, intent(in)  :: nnodes
     integer, intent(in)  :: nsize
-    integer, intent(in)  :: sup_neighbour
+    integer, intent(in)  :: sup_neighbor
     integer, intent(in)  :: NGNOD
     integer, dimension(0:NGNOD*nspec-1), intent(in)  :: elmnts
 
     integer, dimension(0:nspec)  :: xadj
-    integer, dimension(0:sup_neighbour*nspec-1)  :: adjncy
+    integer, dimension(0:sup_neighbor*nspec-1)  :: adjncy
     integer, dimension(0:nnodes-1)  :: nnodes_elmnts
     integer, dimension(0:nsize*nnodes-1)  :: nodes_elmnts
-    integer, intent(out) :: max_neighbour
+    integer, intent(out) :: max_neighbor
     integer, intent(in)  :: ncommonnodes
 
     ! local parameters
     integer  :: i, j, k, l, m, nb_edges
-    logical  :: is_neighbour
+    logical  :: is_neighbor
     integer  :: num_node, n
     integer  :: elem_base, elem_target
     integer  :: connectivity
@@ -90,7 +90,7 @@ contains
        nnodes_elmnts(elmnts(i)) = nnodes_elmnts(elmnts(i)) + 1
     enddo
 
-    ! checking which elements are neighbours ('ncommonnodes' criteria)
+    ! checking which elements are neighbors ('ncommonnodes' criteria)
     do j = 0, nnodes-1
        do k = 0, nnodes_elmnts(j)-1
           do l = k+1, nnodes_elmnts(j)-1
@@ -109,43 +109,43 @@ contains
 
              if (connectivity >= ncommonnodes) then
 
-                is_neighbour = .false.
+                is_neighbor = .false.
 
                 do m = 0, xadj(nodes_elmnts(k+j*nsize))
-                   if (.not. is_neighbour) then
-                      if (adjncy(nodes_elmnts(k+j*nsize)*sup_neighbour+m) == nodes_elmnts(l+j*nsize)) then
-                         is_neighbour = .true.
+                   if (.not. is_neighbor) then
+                      if (adjncy(nodes_elmnts(k+j*nsize)*sup_neighbor+m) == nodes_elmnts(l+j*nsize)) then
+                         is_neighbor = .true.
                       endif
                    endif
                 enddo
-                if (.not. is_neighbour) then
-                   adjncy(nodes_elmnts(k+j*nsize)*sup_neighbour &
+                if (.not. is_neighbor) then
+                   adjncy(nodes_elmnts(k+j*nsize)*sup_neighbor &
                           + xadj(nodes_elmnts(k+j*nsize))) = nodes_elmnts(l+j*nsize)
 
                    xadj(nodes_elmnts(k+j*nsize)) = xadj(nodes_elmnts(k+j*nsize)) + 1
-                   if (xadj(nodes_elmnts(k+j*nsize)) > sup_neighbour) &
-                    stop 'ERROR: too many neighbours per element, error in the mesh or in the code.'
+                   if (xadj(nodes_elmnts(k+j*nsize)) > sup_neighbor) &
+                    stop 'ERROR: too many neighbors per element, error in the mesh or in the code.'
 
-                   adjncy(nodes_elmnts(l+j*nsize)*sup_neighbour &
+                   adjncy(nodes_elmnts(l+j*nsize)*sup_neighbor &
                           + xadj(nodes_elmnts(l+j*nsize))) = nodes_elmnts(k+j*nsize)
 
                    xadj(nodes_elmnts(l+j*nsize)) = xadj(nodes_elmnts(l+j*nsize)) + 1
-                   if (xadj(nodes_elmnts(l+j*nsize)) > sup_neighbour) &
-                    stop 'ERROR: too many neighbours per element, error in the mesh or in the code.'
+                   if (xadj(nodes_elmnts(l+j*nsize)) > sup_neighbor) &
+                    stop 'ERROR: too many neighbors per element, error in the mesh or in the code.'
                 endif
              endif
           enddo
        enddo
     enddo
 
-    max_neighbour = maxval(xadj)
+    max_neighbor = maxval(xadj)
 
     ! making adjacency arrays compact (to be used for partitioning)
     do i = 0, nspec-1
        k = xadj(i)
        xadj(i) = nb_edges
        do j = 0, k-1
-          adjncy(nb_edges) = adjncy(i*sup_neighbour+j)
+          adjncy(nb_edges) = adjncy(i*sup_neighbor+j)
           nb_edges = nb_edges + 1
        enddo
     enddo
@@ -281,18 +281,18 @@ contains
 
   ! Elements with undefined material are considered as elastic elements.
   !--------------------------------------------------
-   subroutine build_interfaces(nspec, sup_neighbour, part, elmnts, xadj, adjncy, &
+   subroutine build_interfaces(nspec, sup_neighbor, part, elmnts, xadj, adjncy, &
                               tab_interfaces, tab_size_interfaces, ninterfaces, &
                               nparts, NGNOD)
 
     implicit none
     integer, intent(in)  :: nspec
     integer, intent(in)  :: NGNOD
-    integer, intent(in) :: sup_neighbour
+    integer, intent(in) :: sup_neighbor
     integer, dimension(0:nspec-1), intent(in)  :: part
     integer, dimension(0:NGNOD*nspec-1), intent(in)  :: elmnts
     integer, dimension(0:nspec), intent(in)  :: xadj
-    integer, dimension(0:sup_neighbour*nspec-1), intent(in)  :: adjncy
+    integer, dimension(0:sup_neighbor*nspec-1), intent(in)  :: adjncy
     integer, dimension(:),pointer  :: tab_size_interfaces, tab_interfaces
     integer, intent(out)  :: ninterfaces
 
@@ -839,7 +839,7 @@ contains
     num_interface = 0
 
     if (num_phase == 1) then
-    ! counts number of interfaces to neighbouring partitions
+    ! counts number of interfaces to neighboring partitions
        my_interfaces(:) = 0
        my_nb_interfaces(:) = 0
 
@@ -1125,14 +1125,14 @@ contains
 
   subroutine poro_elastic_repartitioning (nspec, nnodes, elmnts, &
                         nb_materials, num_material, mat_prop, &
-                        sup_neighbour, nsize, &
+                        sup_neighbor, nsize, &
                         nproc, part, NGNOD)
 
     implicit none
 
     integer, intent(in) :: nspec, NGNOD
     integer, intent(in) :: nnodes, nproc, nb_materials
-    integer, intent(in) :: sup_neighbour
+    integer, intent(in) :: sup_neighbor
     integer, intent(in) :: nsize
 
     integer, dimension(1:nspec), intent(in)  :: num_material
@@ -1153,7 +1153,7 @@ contains
     integer, dimension(:), allocatable  :: adjncy
     integer, dimension(:), allocatable  :: nnodes_elmnts
     integer, dimension(:), allocatable  :: nodes_elmnts
-    integer  :: max_neighbour
+    integer  :: max_neighbor
 
     integer  :: i, iface, ier
     integer  :: el, el_adj
@@ -1178,15 +1178,15 @@ contains
     ! gets neighbors by 4 common nodes (face)
     allocate(xadj(0:nspec),stat=ier)
     if (ier /= 0) stop 'error allocating array xadj'
-    allocate(adjncy(0:sup_neighbour*nspec-1),stat=ier)
+    allocate(adjncy(0:sup_neighbor*nspec-1),stat=ier)
     if (ier /= 0) stop 'error allocating array adjncy'
     allocate(nnodes_elmnts(0:nnodes-1),stat=ier)
     if (ier /= 0) stop 'error allocating array nnodes_elmnts'
     allocate(nodes_elmnts(0:nsize*nnodes-1),stat=ier)
     if (ier /= 0) stop 'error allocating array nodes_elmnts'
-    call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, &
+    call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbor, &
                                 elmnts, xadj, adjncy, nnodes_elmnts, &
-                                nodes_elmnts, max_neighbour, 4, NGNOD)
+                                nodes_elmnts, max_neighbor, 4, NGNOD)
 
     ! counts coupled elements
     nfaces_coupled = 0
@@ -1255,7 +1255,7 @@ contains
   !--------------------------------------------------
 
   subroutine moho_surface_repartitioning (nspec, nnodes, elmnts, &
-                        sup_neighbour, nsize, nproc, part, &
+                        sup_neighbor, nsize, nproc, part, &
                         nspec2D_moho,ibelm_moho,nodes_ibelm_moho, NGNOD, NGNOD2D)
 
     implicit none
@@ -1267,7 +1267,7 @@ contains
     integer, intent(in)  :: nnodes, nproc
 
     ! maximum number of neighours and max number of elements-that-contain-the-same-node
-    integer, intent(in) :: sup_neighbour
+    integer, intent(in) :: sup_neighbor
     integer, intent(in) :: nsize
 
     ! Control nodes for surface and volume elements
@@ -1295,7 +1295,7 @@ contains
     integer, dimension(:), allocatable  :: adjncy
     integer, dimension(:), allocatable  :: nnodes_elmnts
     integer, dimension(:), allocatable  :: nodes_elmnts
-    integer  :: max_neighbour
+    integer  :: max_neighbor
 
     integer  :: i, j, iface, inode, ispec2D, counter
     integer  :: el, el_adj
@@ -1351,20 +1351,20 @@ contains
     print *,'  moho elements = ',counter
 
     ! gets neighbors by 4 common nodes (face)
-    ! contains number of adjacent elements (neighbours)
+    ! contains number of adjacent elements (neighbors)
     allocate(xadj(0:nspec),stat=ier)
     if (ier /= 0) stop 'error allocating array xadj'
     ! contains all element id indices of adjacent elements
-    allocate(adjncy(0:sup_neighbour*nspec-1),stat=ier)
+    allocate(adjncy(0:sup_neighbor*nspec-1),stat=ier)
     if (ier /= 0) stop 'error allocating array adjncy'
     allocate(nnodes_elmnts(0:nnodes-1),stat=ier)
     if (ier /= 0) stop 'error allocating array nnodes_elmnts'
     allocate(nodes_elmnts(0:nsize*nnodes-1),stat=ier)
     if (ier /= 0) stop 'error allocating array nodes_elmnts'
 
-    call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, &
+    call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbor, &
                         elmnts, xadj, adjncy, nnodes_elmnts, &
-                        nodes_elmnts, max_neighbour, 4, NGNOD)
+                        nodes_elmnts, max_neighbor, 4, NGNOD)
 
     ! counts coupled elements
     nfaces_coupled = 0

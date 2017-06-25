@@ -87,8 +87,8 @@ module decompose_mesh
   integer :: nb_edges
 
   integer :: ispec, inode
-  integer :: max_neighbour   ! real maximum number of neighbours per element
-  integer :: sup_neighbour   ! majoration (overestimate) of the maximum number of neighbours per element
+  integer :: max_neighbor   ! real maximum number of neighbors per element
+  integer :: sup_neighbor   ! majoration (overestimate) of the maximum number of neighbors per element
 
   integer :: ipart, nnodes_loc, nspec_local,ncommonnodes
   integer :: num_elmnt, num_node, num_mat
@@ -858,15 +858,15 @@ module decompose_mesh
     ! free temporary array
     deallocate(used_nodes_elmnts)
 
-! majoration (overestimate) of the maximum number of neighbours per element
+! majoration (overestimate) of the maximum number of neighbors per element
 !! DK DK nfaces is a constant equal to 6 (number of faces of a cube).
 !! DK DK I have no idea how this formula works; it was designed by Nicolas Le Goff
-    sup_neighbour = NGNOD_EIGHT_CORNERS * nsize - (NGNOD_EIGHT_CORNERS + (NGNOD_EIGHT_CORNERS/2 - 1)*nfaces)
+    sup_neighbor = NGNOD_EIGHT_CORNERS * nsize - (NGNOD_EIGHT_CORNERS + (NGNOD_EIGHT_CORNERS/2 - 1)*nfaces)
 
     ! checks that no underestimation
-    if (sup_neighbour < nsize) sup_neighbour = nsize
+    if (sup_neighbor < nsize) sup_neighbor = nsize
 
-    print *, '  nsize = ',nsize, 'sup_neighbour = ', sup_neighbour
+    print *, '  nsize = ',nsize, 'sup_neighbor = ', sup_neighbor
 
   end subroutine check_valence
 
@@ -887,7 +887,7 @@ module decompose_mesh
     ! determines maximum neighbors based on "ncommonnodes" common nodes
     allocate(xadj(1:nspec+1),stat=ier)
     if (ier /= 0) stop 'Error allocating array xadj'
-    allocate(adjncy(1:sup_neighbour*nspec),stat=ier)
+    allocate(adjncy(1:sup_neighbor*nspec),stat=ier)
     if (ier /= 0) stop 'Error allocating array adjncy'
     allocate(nnodes_elmnts(1:nnodes),stat=ier)
     if (ier /= 0) stop 'Error allocating array nnodes_elmnts'
@@ -896,14 +896,14 @@ module decompose_mesh
 
     print *, 'mesh2dual:'
     ncommonnodes = 1
-    call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbour, elmnts, xadj, adjncy, nnodes_elmnts, &
-         nodes_elmnts, max_neighbour, ncommonnodes, NGNOD)
+    call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbor, elmnts, xadj, adjncy, nnodes_elmnts, &
+         nodes_elmnts, max_neighbor, ncommonnodes, NGNOD)
 
     ! user output
-    print *, '  max_neighbour = ',max_neighbour
+    print *, '  max_neighbor = ',max_neighbor
 
 !! DK DK Oct 2012: added this safety test
-    if (max_neighbour > sup_neighbour) stop 'found max_neighbour > sup_neighbour in domain decomposition'
+    if (max_neighbor > sup_neighbor) stop 'found max_neighbor > sup_neighbor in domain decomposition'
 
     nb_edges = xadj(nspec+1)
 
@@ -1040,7 +1040,7 @@ module decompose_mesh
     if (PORO_INTERFACE_REPARTITIONING) then
       call poro_elastic_repartitioning (nspec, nnodes, elmnts, &
                        count_def_mat, num_material , mat_prop, &
-                       sup_neighbour, nsize, &
+                       sup_neighbor, nsize, &
                        nparts, part, NGNOD)
     endif
 
@@ -1053,7 +1053,7 @@ module decompose_mesh
     ! re-partitioning puts moho-surface coupled elements into same partition
 ! (the risk being to break the nice load balancing created by the domain decomposer for high-performance computing)
     if (SAVE_MOHO_MESH) call moho_surface_repartitioning (nspec, nnodes, elmnts, &
-                                        sup_neighbour, nsize, nparts, part, &
+                                        sup_neighbor, nsize, nparts, part, &
                                         nspec2D_moho,ibelm_moho,nodes_ibelm_moho, NGNOD, NGNOD2D)
 
     ! local number of each element for each partition
@@ -1065,13 +1065,13 @@ module decompose_mesh
 
     ! MPI interfaces
     ! acoustic/elastic/poroelastic boundaries will be split into different MPI partitions
-    call build_interfaces(nspec, sup_neighbour, part, elmnts, &
+    call build_interfaces(nspec, sup_neighbor, part, elmnts, &
                              xadj, adjncy, tab_interfaces, &
                              tab_size_interfaces, ninterfaces, &
                              nparts, NGNOD)
 
     ! obsolete: from when we wanted acoustic/elastic boundaries NOT to be separated into different MPI partitions
-    ! call build_interfaces_no_ac_el_sep(nspec, sup_neighbour, part, elmnts, &
+    ! call build_interfaces_no_ac_el_sep(nspec, sup_neighbor, part, elmnts, &
     !                           xadj, adjncy, tab_interfaces, &
     !                           tab_size_interfaces, ninterfaces, &
     !                           count_def_mat, mat_prop(3,:), mat(1,:), nparts, NGNOD)

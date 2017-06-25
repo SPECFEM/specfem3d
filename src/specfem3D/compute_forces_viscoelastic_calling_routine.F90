@@ -49,11 +49,11 @@ subroutine compute_forces_viscoelastic_calling()
     call synchronize_MPI_vector_blocking_ord(NPROC,NGLOB_AB,displ, &
                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                     my_neighbours_ext_mesh,myrank)
+                                     my_neighbors_ext_mesh,myrank)
     call synchronize_MPI_vector_blocking_ord(NPROC,NGLOB_AB,veloc, &
                                      num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                                      nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                                     my_neighbours_ext_mesh,myrank)
+                                     my_neighbors_ext_mesh,myrank)
   endif
 
 ! distinguishes two runs: for elements in contact with MPI interfaces, and elements within the partitions
@@ -179,7 +179,7 @@ subroutine compute_forces_viscoelastic_calling()
                buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
                num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-               my_neighbours_ext_mesh, &
+               my_neighbors_ext_mesh, &
                request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
 
     else
@@ -189,7 +189,7 @@ subroutine compute_forces_viscoelastic_calling()
                             max_nibool_interfaces_ext_mesh, &
                             nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                             request_send_vector_ext_mesh,request_recv_vector_ext_mesh, &
-                            my_neighbours_ext_mesh,myrank)
+                            my_neighbors_ext_mesh,myrank)
     endif
   enddo
 
@@ -383,7 +383,7 @@ subroutine compute_forces_viscoelastic_backward_calling()
                  b_buffer_send_vector_ext_mesh,b_buffer_recv_vector_ext_mesh, &
                  num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                  nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                 my_neighbours_ext_mesh, &
+                 my_neighbors_ext_mesh, &
                  b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh)
     else
       ! waits for send/receive requests to be completed and assembles values
@@ -393,7 +393,7 @@ subroutine compute_forces_viscoelastic_backward_calling()
                              max_nibool_interfaces_ext_mesh, &
                              nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                              b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh, &
-                             my_neighbours_ext_mesh,myrank)
+                             my_neighbors_ext_mesh,myrank)
     endif
   enddo
 
@@ -481,7 +481,7 @@ subroutine compute_forces_viscoelastic_GPU_calling()
                   buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
                   num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                   nibool_interfaces_ext_mesh, &
-                  my_neighbours_ext_mesh, &
+                  my_neighbors_ext_mesh, &
                   request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
 
       ! transfers MPI buffers onto GPU
@@ -568,7 +568,7 @@ subroutine compute_forces_viscoelastic_GPU_calling()
                         b_buffer_send_vector_ext_mesh,b_buffer_recv_vector_ext_mesh, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh, &
-                        my_neighbours_ext_mesh, &
+                        my_neighbors_ext_mesh, &
                         b_request_send_vector_ext_mesh,b_request_recv_vector_ext_mesh)
       endif !adjoint
 
@@ -612,7 +612,7 @@ subroutine compute_forces_viscoelastic_GPU_calling()
     !              buffer_send_vector_ext_mesh,buffer_recv_vector_ext_mesh, &
     !              num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
     !              nibool_interfaces_ext_mesh, &
-    !              my_neighbours_ext_mesh, &
+    !              my_neighbors_ext_mesh, &
     !              request_send_vector_ext_mesh,request_recv_vector_ext_mesh)
 
     ! transfers MPI buffers onto GPU

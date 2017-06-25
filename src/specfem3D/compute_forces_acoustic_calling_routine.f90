@@ -182,7 +182,7 @@ subroutine compute_forces_acoustic_calling()
                         buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbours_ext_mesh, &
+                        my_neighbors_ext_mesh, &
                         request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh)
     else
 
@@ -420,7 +420,7 @@ subroutine compute_forces_acoustic_backward_calling()
                       b_buffer_send_scalar_ext_mesh,b_buffer_recv_scalar_ext_mesh, &
                       num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                       nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                      my_neighbours_ext_mesh, &
+                      my_neighbors_ext_mesh, &
                       b_request_send_scalar_ext_mesh,b_request_recv_scalar_ext_mesh)
 
     else
@@ -553,7 +553,7 @@ subroutine compute_forces_acoustic_GPU_calling()
                         buffer_send_scalar_ext_mesh,buffer_recv_scalar_ext_mesh, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh, &
-                        my_neighbours_ext_mesh, &
+                        my_neighbors_ext_mesh, &
                         request_send_scalar_ext_mesh,request_recv_scalar_ext_mesh)
 
       ! adjoint simulations
@@ -567,7 +567,7 @@ subroutine compute_forces_acoustic_GPU_calling()
                           b_buffer_send_scalar_ext_mesh,b_buffer_recv_scalar_ext_mesh, &
                           num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                           nibool_interfaces_ext_mesh, &
-                          my_neighbours_ext_mesh, &
+                          my_neighbors_ext_mesh, &
                           b_request_send_scalar_ext_mesh,b_request_recv_scalar_ext_mesh)
 
       endif

@@ -730,21 +730,21 @@
   ! MPI interfaces
   if (I_should_read_the_database) read(27) num_interfaces_ext_mesh
   call bcast_all_i_for_database(num_interfaces_ext_mesh, 1)
-  allocate(my_neighbours_ext_mesh(num_interfaces_ext_mesh), &
+  allocate(my_neighbors_ext_mesh(num_interfaces_ext_mesh), &
            nibool_interfaces_ext_mesh(num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) stop 'Error allocating array my_neighbours_ext_mesh etc.'
+  if (ier /= 0) stop 'Error allocating array my_neighbors_ext_mesh etc.'
   if (num_interfaces_ext_mesh > 0) then
     if (I_should_read_the_database) read(27) max_nibool_interfaces_ext_mesh
     call bcast_all_i_for_database(max_nibool_interfaces_ext_mesh, 1)
     allocate(ibool_interfaces_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
     if (ier /= 0) stop 'Error allocating array ibool_interfaces_ext_mesh'
     if (I_should_read_the_database) then
-      read(27) my_neighbours_ext_mesh
+      read(27) my_neighbors_ext_mesh
       read(27) nibool_interfaces_ext_mesh
       read(27) ibool_interfaces_ext_mesh
     endif
-    if (size(my_neighbours_ext_mesh) > 0) &
-      call bcast_all_i_for_database(my_neighbours_ext_mesh(1), size(my_neighbours_ext_mesh))
+    if (size(my_neighbors_ext_mesh) > 0) &
+      call bcast_all_i_for_database(my_neighbors_ext_mesh(1), size(my_neighbors_ext_mesh))
     if (size(nibool_interfaces_ext_mesh) > 0) &
       call bcast_all_i_for_database(nibool_interfaces_ext_mesh(1), size(nibool_interfaces_ext_mesh))
     if (size(ibool_interfaces_ext_mesh) > 0) &

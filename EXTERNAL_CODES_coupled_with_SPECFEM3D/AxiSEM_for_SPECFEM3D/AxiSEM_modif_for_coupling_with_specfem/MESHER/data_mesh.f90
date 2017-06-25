@@ -58,7 +58,7 @@ module data_mesh
   integer                               :: nbcnd    ! Number of boundaries
   integer, dimension(:),allocatable     :: nbelem
   integer, dimension(:,:), allocatable  :: belem    ! List of boundary elements
-  integer, dimension(:,:),allocatable   :: my_neighbour
+  integer, dimension(:,:),allocatable   :: my_neighbor
 
   ! Solid-fluid boundary arrays (needed by solver)
   integer, dimension(:,:),allocatable  :: bdry_above_el, bdry_below_el

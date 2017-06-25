@@ -256,7 +256,9 @@ DEFAULT = \
 	$(EMPTY_MACRO)
 
 ifeq ($(MPI),yes)
-DEFAULT += $E/xdecompose_mesh_mpi
+DEFAULT += xdecompose_mesh_mpi
+DEFAULT += xinverse_problem_for_model
+SUBDIRS += inverse_problem_for_model
 endif
 
 default: $(DEFAULT)
@@ -309,12 +311,14 @@ help:
 	@echo "    xmeshfem3D"
 	@echo "    xgenerate_databases"
 	@echo "    xspecfem3D"
+	@echo "    xinverse_problem_for_model"
 	@echo ""
 	@echo "defaults:"
 	@echo "    xdecompose_mesh"
 	@echo "    xmeshfem3D"
 	@echo "    xgenerate_databases"
 	@echo "    xspecfem3D"
+	@echo "    xinverse_problem_for_model"
 	@echo ""
 	@echo "    xcombine_surf_data"
 	@echo "    xcombine_vol_data"

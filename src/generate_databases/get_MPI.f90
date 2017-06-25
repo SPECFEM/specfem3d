@@ -27,11 +27,11 @@
 
   subroutine get_MPI(myrank,nglob,nspec,ibool, &
                     nelmnts_ext_mesh,elmnts_ext_mesh, &
-                    my_nelmnts_neighbours_ext_mesh, my_interfaces_ext_mesh, &
+                    my_nelmnts_neighbors_ext_mesh, my_interfaces_ext_mesh, &
                     ibool_interfaces_ext_mesh, &
                     nibool_interfaces_ext_mesh, &
                     num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
-                    my_neighbours_ext_mesh)
+                    my_neighbors_ext_mesh)
 
 ! sets up the MPI interface for communication between partitions
   use generate_databases_par, only: NPROC,NGNOD,NGLLX,NGLLY,NGLLZ,SMALLVAL_TOL,IMAIN
@@ -50,11 +50,11 @@
 
   integer :: num_interfaces_ext_mesh,max_interface_size_ext_mesh
 
-  integer, dimension(num_interfaces_ext_mesh) :: my_nelmnts_neighbours_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh) :: my_nelmnts_neighbors_ext_mesh
   integer, dimension(6,max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: &
     my_interfaces_ext_mesh
 
-  integer, dimension(num_interfaces_ext_mesh) :: my_neighbours_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh) :: my_neighbors_ext_mesh
 
   integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
   integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: &
@@ -88,7 +88,7 @@
   call prepare_assemble_MPI( nelmnts_ext_mesh,elmnts_ext_mesh, &
                             ibool,nglob, &
                             num_interfaces_ext_mesh, max_interface_size_ext_mesh, &
-                            my_nelmnts_neighbours_ext_mesh, my_interfaces_ext_mesh, &
+                            my_nelmnts_neighbors_ext_mesh, my_interfaces_ext_mesh, &
                             ibool_interfaces_ext_mesh, &
                             nibool_interfaces_ext_mesh,NGNOD )
 
@@ -203,12 +203,12 @@
   call assemble_MPI_scalar_i_blocking(NPROC,nglob,test_flag, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_dummy, &
-                        my_neighbours_ext_mesh)
+                        my_neighbors_ext_mesh)
   ! CUSTOM_REAL arrays
   call assemble_MPI_scalar_blocking(NPROC,nglob,test_flag_cr, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_dummy, &
-                        my_neighbours_ext_mesh)
+                        my_neighbors_ext_mesh)
 
   ! checks number of interface points
   i = 0

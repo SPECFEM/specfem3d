@@ -270,7 +270,7 @@
     call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_acoustic, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbours_ext_mesh)
+                        my_neighbors_ext_mesh)
 
     ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
     where(rmass_acoustic <= 0._CUSTOM_REAL) rmass_acoustic = 1._CUSTOM_REAL
@@ -307,15 +307,15 @@
     call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmassx, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbours_ext_mesh)
+                        my_neighbors_ext_mesh)
     call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmassy, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbours_ext_mesh)
+                        my_neighbors_ext_mesh)
     call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmassz, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbours_ext_mesh)
+                        my_neighbors_ext_mesh)
 
     ! fill mass matrix with fictitious non-zero values to make sure it can be inverted globally
     where(rmassx <= 0._CUSTOM_REAL) rmassx = 1._CUSTOM_REAL
@@ -330,7 +330,7 @@
       call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_ocean_load, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbours_ext_mesh)
+                        my_neighbors_ext_mesh)
       where(rmass_ocean_load <= 0._CUSTOM_REAL) rmass_ocean_load = 1._CUSTOM_REAL
       rmass_ocean_load(:) = 1._CUSTOM_REAL / rmass_ocean_load(:)
     endif
@@ -340,12 +340,12 @@
     call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_solid_poroelastic, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbours_ext_mesh)
+                        my_neighbors_ext_mesh)
 
     call assemble_MPI_scalar_blocking(NPROC,NGLOB_AB,rmass_fluid_poroelastic, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
-                        my_neighbours_ext_mesh)
+                        my_neighbors_ext_mesh)
 
     ! fills mass matrix with fictitious non-zero values to make sure it can be inverted globally
     where(rmass_solid_poroelastic <= 0._CUSTOM_REAL) rmass_solid_poroelastic = 1._CUSTOM_REAL

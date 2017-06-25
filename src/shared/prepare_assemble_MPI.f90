@@ -28,14 +28,14 @@
   subroutine prepare_assemble_MPI (nelmnts,knods, &
                                    ibool,npoin, &
                                    ninterface, max_interface_size, &
-                                   my_nelmnts_neighbours, my_interfaces, &
+                                   my_nelmnts_neighbors, my_interfaces, &
                                    ibool_interfaces_ext_mesh, &
                                    nibool_interfaces_ext_mesh,NGNOD )
 
 ! returns: ibool_interfaces_ext_mesh with the global indices (as defined in ibool)
 !              nibool_interfaces_ext_mesh with the number of points in ibool_interfaces_ext_mesh
 !
-! for all points on the interface defined by ninterface, my_nelmnts_neighbours and my_interfaces
+! for all points on the interface defined by ninterface, my_nelmnts_neighbors and my_interfaces
 
   use constants
 
@@ -57,7 +57,7 @@
 ! MPI interfaces
   integer  :: ninterface
   integer  :: max_interface_size
-  integer, dimension(ninterface)  :: my_nelmnts_neighbours
+  integer, dimension(ninterface)  :: my_nelmnts_neighbors
   integer, dimension(6,max_interface_size,ninterface)  :: my_interfaces
 
   integer, dimension(NGLLX*NGLLX*max_interface_size,ninterface) :: ibool_interfaces_ext_mesh
@@ -87,7 +87,7 @@
     mask_ibool_ext_mesh(:) = .false.
 
     ! loops over number of elements on interface
-    do ispec_interface = 1, my_nelmnts_neighbours(num_interface)
+    do ispec_interface = 1, my_nelmnts_neighbors(num_interface)
       ! spectral element on interface
       ispec = my_interfaces(1,ispec_interface,num_interface)
       ! type of interface: (1) corner point, (2) edge, (4) face

@@ -1012,7 +1012,7 @@ subroutine save_new_databases()
                         abs_boundary_ijk,abs_boundary_ispec,num_abs_boundary_faces, &
                         free_surface_normal,free_surface_jacobian2Dw, &
                         free_surface_ijk,free_surface_ispec,num_free_surface_faces, &
-                        num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
+                        num_interfaces_ext_mesh,my_neighbors_ext_mesh,nibool_interfaces_ext_mesh, &
                         max_nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         prname_new,SAVE_MESH_FILES,ANISOTROPY,NSPEC_ANISO, &
                         c11store,c12store,c13store,c14store,c15store,c16store, &

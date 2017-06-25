@@ -35,7 +35,7 @@
       nnodes_ext_mesh,nelmnts_ext_mesh, &
       nodes_coords_ext_mesh, elmnts_ext_mesh, &
       max_memory_size,num_interfaces_ext_mesh, max_interface_size_ext_mesh, &
-      my_neighbours_ext_mesh, my_nelmnts_neighbours_ext_mesh, &
+      my_neighbors_ext_mesh, my_nelmnts_neighbors_ext_mesh, &
       my_interfaces_ext_mesh, &
       ibool_interfaces_ext_mesh, nibool_interfaces_ext_mesh, &
       STACEY_ABSORBING_CONDITIONS, nspec2D_xmin, nspec2D_xmax, &
@@ -140,11 +140,11 @@
   endif
   call get_MPI(myrank,nglob_dummy,nspec,ibool, &
                nelmnts_ext_mesh,elmnts_ext_mesh, &
-               my_nelmnts_neighbours_ext_mesh, my_interfaces_ext_mesh, &
+               my_nelmnts_neighbors_ext_mesh, my_interfaces_ext_mesh, &
                ibool_interfaces_ext_mesh, &
                nibool_interfaces_ext_mesh, &
                num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
-               my_neighbours_ext_mesh)
+               my_neighbors_ext_mesh)
 
   !SURENDRA (setting up parallel fault)
   if (PARALLEL_FAULT .and. ANY_FAULT) then
@@ -199,7 +199,7 @@
                              nspec,ibool,NPROC, &
                              nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                              num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
-                             my_neighbours_ext_mesh)
+                             my_neighbors_ext_mesh)
 
 ! locates inner and outer elements
   call synchronize_all()
@@ -256,13 +256,13 @@
   if (ADIOS_FOR_MESH) then
     call save_arrays_solver_ext_mesh_adios(nspec,nglob,APPROXIMATE_OCEAN_LOAD, &
                                            ibool,num_interfaces_ext_mesh, &
-                                           my_neighbours_ext_mesh, &
+                                           my_neighbors_ext_mesh, &
                                            nibool_interfaces_ext_mesh, &
                                            max_interface_size_ext_mesh, &
                                            ibool_interfaces_ext_mesh,SAVE_MESH_FILES,ANISOTROPY)
   else
     call save_arrays_solver_ext_mesh(nspec,nglob_dummy,APPROXIMATE_OCEAN_LOAD,ibool, &
-                                     num_interfaces_ext_mesh,my_neighbours_ext_mesh,nibool_interfaces_ext_mesh, &
+                                     num_interfaces_ext_mesh,my_neighbors_ext_mesh,nibool_interfaces_ext_mesh, &
                                      max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
                                      SAVE_MESH_FILES,ANISOTROPY)
   endif

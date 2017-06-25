@@ -192,7 +192,7 @@ module specfem_par
 ! for assembling in case of external mesh
   integer :: num_interfaces_ext_mesh
   integer :: max_nibool_interfaces_ext_mesh
-  integer, dimension(:), allocatable :: my_neighbours_ext_mesh
+  integer, dimension(:), allocatable :: my_neighbors_ext_mesh
   integer, dimension(:), allocatable :: nibool_interfaces_ext_mesh
   integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: buffer_send_vector_ext_mesh

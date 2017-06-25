@@ -710,11 +710,11 @@ subroutine domain_decomposition_theta_r(attributed, nprocl, nthetal, nrl, &
         nicb = 0
 
         ! take the upper most layer in the fluid (CMB) and account to the
-        ! processor having the solid neighbour
+        ! processor having the solid neighbor
         do iel = 1, nbelem(1)
            if (fluid(belem(iel,1)) .and. el2thetaslel(belem(iel,1)) == itheta &
                    .and. .not. attributed(belem(iel,1))) then
-               iproc = el2proc(belem(my_neighbour(iel,1),1))
+               iproc = el2proc(belem(my_neighbor(iel,1),1))
                if (iprocb(1) == iproc .or. iprocb(1) == -1) then
                   iprocb(1) = iproc
                   procel_fluid(mycountb(1), iproc) = belem(iel,1)
@@ -733,11 +733,11 @@ subroutine domain_decomposition_theta_r(attributed, nprocl, nthetal, nrl, &
      else if (nbcnd == 2) then
 
         ! take the lower most layer in the fluid (ICB) and account to the
-        ! processor having the solid neighbour
+        ! processor having the solid neighbor
         do iel = 1, nbelem(2)
            if (fluid(belem(iel,2)) .and. el2thetaslel(belem(iel,2)) == itheta &
                    .and. .not. attributed(belem(iel,2))) then
-               iproc = el2proc(belem(my_neighbour(iel,2),2))
+               iproc = el2proc(belem(my_neighbor(iel,2),2))
                if (iprocb(1) == iproc .or. iprocb(1) == -1) then
                   iprocb(1) = iproc
                   procel_fluid(mycountb(1), iproc) = belem(iel,2)
@@ -756,11 +756,11 @@ subroutine domain_decomposition_theta_r(attributed, nprocl, nthetal, nrl, &
         nicb = mycountb(1) + mycountb(2) - 2
 
         ! take the upper most layer in the fluid (CMB) and account to the
-        ! processor having the solid neighbour
+        ! processor having the solid neighbor
         do iel = 1, nbelem(1)
            if (fluid(belem(iel,1)) .and. el2thetaslel(belem(iel,1)) == itheta &
                    .and. .not. attributed(belem(iel,1))) then
-               iproc = el2proc(belem(my_neighbour(iel,1),1))
+               iproc = el2proc(belem(my_neighbor(iel,1),1))
                if (iprocb(1) == iproc .or. iprocb(1) == -1) then
                   iprocb(1) = iproc
                   procel_fluid(mycountb(1), iproc) = belem(iel,1)
@@ -1113,7 +1113,7 @@ subroutine decompose_inner_cube_opt(central_count, attributed, nthetal, &
       write(6,*)
       write(6,*)' < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > '
       write(6,*)'CENTRAL LINEAR DOMAIN: decomposing using an '
-      write(6,*)'      optimisation scheme!'
+      write(6,*)'      optimization scheme!'
       write(6,*)'ndivs,nthetal:',ndivs,nthetal
       write(6,*)' = => each processor should have el=',ndivs**2/nthetal*2
       write(6,*)' < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > '
@@ -1224,7 +1224,7 @@ subroutine decompose_inner_cube_opt(central_count, attributed, nthetal, &
       proc_iq_max = (proc == - 1)
 
       ! initialize all elements within two elements distance of the last
-      ! processor to this proc, as otherwise they had two neighbours
+      ! processor to this proc, as otherwise they had two neighbors
       ! relevant at high frequencies and lots of procs only
       if (ip > 0) then
           do is = 0, ndivs - 1, 1
@@ -1460,7 +1460,7 @@ logical function test_decomp(ndivs, proc, npart, nproc2)
   integer, intent(in)     :: ndivs, proc(0:ndivs-1,0:ndivs-1), &
                              nproc2, npart
   integer                 :: is, iz, idx, idz, ip, nelem(0:nproc2), &
-                             neighbour_buff
+                             neighbor_buff
 
   !test processor bounds
   do is = 0, ndivs - 1, 1
@@ -1489,22 +1489,22 @@ logical function test_decomp(ndivs, proc, npart, nproc2)
       endif
   enddo
 
-  !test number of neighbours from different domains
+  !test number of neighbors from different domains
   do is = 0, ndivs - 1, 1
       do iz = 0, ndivs - 1, 1
-          neighbour_buff = - 1
+          neighbor_buff = - 1
           do idx = -1, 1, 1
               do idz = -1, 1, 1
                   if ((is + idx < 0) .or. (iz + idz < 0) .or. &
                           (is + idx > ndivs - 1) .or. (iz + idz > ndivs - 1)) then
                       continue
                   else if (proc(is + idx,iz + idz) /= proc(is,iz)) then
-                      if (neighbour_buff == -1) then
-                          neighbour_buff = proc(is + idx,iz + idz)
-                      else if (neighbour_buff /= proc(is + idx,iz + idz)) then
+                      if (neighbor_buff == -1) then
+                          neighbor_buff = proc(is + idx,iz + idz)
+                      else if (neighbor_buff /= proc(is + idx,iz + idz)) then
                           call ascii_print_markregion(ndivs, proc, is, iz)
                           write(6,*) 'Problem: element (', is, ',', iz, &
-                                     ') has neighbours from two other regions!'
+                                     ') has neighbors from two other regions!'
                           stop
                       endif
                   endif

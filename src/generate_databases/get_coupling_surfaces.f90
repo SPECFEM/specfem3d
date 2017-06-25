@@ -28,7 +28,7 @@
   subroutine get_coupling_surfaces(myrank,nspec,ibool,NPROC, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
                         num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
-                        my_neighbours_ext_mesh)
+                        my_neighbors_ext_mesh)
 
 ! determines coupling surface for acoustic-elastic domains
 ! based on ispec_is_acoustic, ispec_is_elastic and ispec_is_poroelastic arrays
@@ -45,7 +45,7 @@
 
 ! MPI communication
   integer :: num_interfaces_ext_mesh,max_interface_size_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh) :: my_neighbours_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh) :: my_neighbors_ext_mesh
   integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: &
             ibool_interfaces_ext_mesh
   integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
@@ -126,7 +126,7 @@
     call assemble_MPI_scalar_i_blocking(NPROC,nglob_dummy,acoustic_flag, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy, &
-                        my_neighbours_ext_mesh)
+                        my_neighbors_ext_mesh)
   endif
 
   ! sums elastic flags
@@ -134,7 +134,7 @@
     call assemble_MPI_scalar_i_blocking(NPROC,nglob_dummy,elastic_flag, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy, &
-                        my_neighbours_ext_mesh)
+                        my_neighbors_ext_mesh)
   endif
 
   ! sums poroelastic flags
@@ -142,7 +142,7 @@
     call assemble_MPI_scalar_i_blocking(NPROC,nglob_dummy,poroelastic_flag, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                         nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh_dummy, &
-                        my_neighbours_ext_mesh)
+                        my_neighbors_ext_mesh)
   endif
 
   ! determines common faces between different domains

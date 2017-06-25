@@ -37,8 +37,8 @@ subroutine read_partition_files_adios()
     elmnts_ext_mesh,nelmnts_ext_mesh,mat_ext_mesh, &
     ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
     nodes_ibelm_xmin,nodes_ibelm_xmax,nodes_ibelm_ymin,nodes_ibelm_ymax,nodes_ibelm_bottom,nodes_ibelm_top, &
-    num_interfaces_ext_mesh,my_neighbours_ext_mesh,my_interfaces_ext_mesh,ibool_interfaces_ext_mesh,nibool_interfaces_ext_mesh, &
-    my_nelmnts_neighbours_ext_mesh,max_interface_size_ext_mesh, &
+    num_interfaces_ext_mesh,my_neighbors_ext_mesh,my_interfaces_ext_mesh,ibool_interfaces_ext_mesh,nibool_interfaces_ext_mesh, &
+    my_nelmnts_neighbors_ext_mesh,max_interface_size_ext_mesh, &
     nmat_ext_mesh,nnodes_ext_mesh
 
   use adios_read_mod
@@ -61,7 +61,7 @@ subroutine read_partition_files_adios()
              local_dim_ibelm_ymax,      local_dim_nodes_ibelm_ymax, &
              local_dim_ibelm_bottom,    local_dim_nodes_ibelm_bottom, &
              local_dim_ibelm_top,       local_dim_nodes_ibelm_top, &
-             local_dim_neighbours_mesh, local_dim_num_elmnts_mesh, &
+             local_dim_neighbors_mesh, local_dim_num_elmnts_mesh, &
              local_dim_interfaces_mesh
 
   integer :: comm
@@ -187,10 +187,10 @@ subroutine read_partition_files_adios()
            nodes_ibelm_top(NGNOD2D,nspec2D_top_ext),stat=ier)
   if (ier /= 0) stop 'error allocating array ibelm_top etc.'
   ! allocates interfaces
-  allocate(my_neighbours_ext_mesh(num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) stop 'error allocating array my_neighbours_ext_mesh'
-  allocate(my_nelmnts_neighbours_ext_mesh(num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) stop 'error allocating array my_nelmnts_neighbours_ext_mesh'
+  allocate(my_neighbors_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) stop 'error allocating array my_neighbors_ext_mesh'
+  allocate(my_nelmnts_neighbors_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) stop 'error allocating array my_nelmnts_neighbors_ext_mesh'
   allocate(my_interfaces_ext_mesh(6,max_interface_size_ext_mesh, &
                                   num_interfaces_ext_mesh),stat=ier)
   if (ier /= 0) stop 'error allocating array my_interfaces_ext_mesh'
@@ -227,7 +227,7 @@ subroutine read_partition_files_adios()
   call adios_get_scalar(handle, "nodes_ibelm_top/local_dim", local_dim_nodes_ibelm_top, ier)
 
   if (num_interfaces_ext_mesh > 0) then
-    call adios_get_scalar(handle, "neighbours_mesh/local_dim", local_dim_neighbours_mesh, ier)
+    call adios_get_scalar(handle, "neighbors_mesh/local_dim", local_dim_neighbors_mesh, ier)
     call adios_get_scalar(handle, "num_elmnts_mesh/local_dim", local_dim_num_elmnts_mesh, ier)
     call adios_get_scalar(handle, "interfaces_mesh/local_dim", local_dim_interfaces_mesh, ier)
   endif
@@ -377,19 +377,19 @@ subroutine read_partition_files_adios()
 
   ! MPI interfaces
   if (num_interfaces_ext_mesh > 0) then
-    start(1) = local_dim_neighbours_mesh * myrank
+    start(1) = local_dim_neighbors_mesh * myrank
     count(1) = num_interfaces_ext_mesh
     sel_num = sel_num+1
     sel => selections(sel_num)
     call adios_selection_boundingbox (sel , 1, start, count)
-    call adios_schedule_read(handle, sel, "neighbours_mesh/array", 0, 1, my_neighbours_ext_mesh, ier)
+    call adios_schedule_read(handle, sel, "neighbors_mesh/array", 0, 1, my_neighbors_ext_mesh, ier)
 
     start(1) = local_dim_num_elmnts_mesh * myrank
     count(1) = num_interfaces_ext_mesh
     sel_num = sel_num+1
     sel => selections(sel_num)
     call adios_selection_boundingbox (sel , 1, start, count)
-    call adios_schedule_read(handle, sel, "num_elmnts_mesh/array", 0, 1, my_nelmnts_neighbours_ext_mesh, ier)
+    call adios_schedule_read(handle, sel, "num_elmnts_mesh/array", 0, 1, my_nelmnts_neighbors_ext_mesh, ier)
 
     start(1) = local_dim_interfaces_mesh * myrank
     count(1) = 6 * num_interfaces_ext_mesh * max_interface_size_ext_mesh

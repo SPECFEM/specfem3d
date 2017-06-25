@@ -101,7 +101,7 @@
 
   use specfem_par, only: NGLOB_AB,NSPEC_AB,NPROC,ibool,xstore,ystore,zstore, &
                         num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
+                        nibool_interfaces_ext_mesh,my_neighbors_ext_mesh, &
                         ibool_interfaces_ext_mesh,myrank
 
   use constants, only: HUGEVAL,NGLLX,NGLLY,NGLLZ,IMAIN
@@ -160,7 +160,7 @@
                             iglob_is_image_surface, &
                             num_iglob_image_surface, &
                             num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
-                            nibool_interfaces_ext_mesh,my_neighbours_ext_mesh, &
+                            nibool_interfaces_ext_mesh,my_neighbors_ext_mesh, &
                             ibool_interfaces_ext_mesh, &
                             section_xorg,section_yorg,section_zorg, &
                             section_nx,section_ny,section_nz, &

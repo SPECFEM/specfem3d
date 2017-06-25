@@ -253,23 +253,19 @@ specfem3D_SHARED_OBJECTS += $(adios_specfem3D_PREOBJECTS)
 #### rules for executables
 ####
 
-####
-#### rules for executables
-####
-
 ifeq ($(CUDA),yes)
 ## cuda version
 ifeq ($(CUDA_PLUS),yes)
 ## cuda 5x & 6x version
-INFO_CUDA="building xspecfem3D with CUDA support"
+INFO_CUDA_SPECFEM="building xspecfem3D with CUDA support"
 else
 ## cuda 4 version
-INFO_CUDA="building xspecfem3D with CUDA 4 support"
+INFO_CUDA_SPECFEM="building xspecfem3D with CUDA 4 support"
 endif
 
 ${E}/xspecfem3D: $(specfem3D_OBJECTS) $(specfem3D_SHARED_OBJECTS)
 	@echo ""
-	@echo $(INFO_CUDA)
+	@echo $(INFO_CUDA_SPECFEM)
 	@echo ""
 	${FCLINK} -o ${E}/xspecfem3D $(specfem3D_OBJECTS) $(specfem3D_SHARED_OBJECTS) $(MPILIBS) $(CUDA_LINK)
 	@echo ""

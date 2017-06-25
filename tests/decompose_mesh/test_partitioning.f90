@@ -48,7 +48,7 @@ program test_partitioning
 
   ! initializes
   nsize = 0
-  sup_neighbour = 0
+  sup_neighbor = 0
 
   ! valence routine
   call check_valence()

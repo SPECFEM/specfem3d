@@ -170,7 +170,7 @@
   ! skipping acoustic-elastic coupling surfaces
 
   ! MPI interfaces
-  ! my_neighbours_ext_mesh,nibool_interfaces_ext_mesh
+  ! my_neighbors_ext_mesh,nibool_interfaces_ext_mesh
   memory_size = memory_size + 2.d0*num_interfaces_ext_mesh*dble(SIZE_INTEGER)
 
   ! ibool_interfaces_ext_mesh
