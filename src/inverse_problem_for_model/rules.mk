@@ -220,10 +220,6 @@ cuda_inverse_problem_for_model_STUBS = \
 	$O/specfem3D_gpu_cuda_method_stubs.cudacc.o \
 	$(EMPTY_MACRO)
 
-cuda_inverse_problem_for_model_DEVICE_OBJ = \
-	$O/cuda_device_obj.o \
-	$(EMPTY_MACRO)
-
 ifeq ($(CUDA),yes)
 inverse_problem_for_model_OBJECTS += $(cuda_inverse_problem_for_model_OBJECTS)
 ifeq ($(CUDA_PLUS),yes)
