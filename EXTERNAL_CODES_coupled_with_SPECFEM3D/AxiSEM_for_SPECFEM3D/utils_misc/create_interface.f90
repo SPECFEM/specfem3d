@@ -66,11 +66,12 @@
 
    close(10)
 
+   open(10,file='interf.txt')
 
    select case (code)
 
    case ('fla')
-      open(10,file='interf.txt')
+
       zc=z
       yc = ymin - dy
       do j = 1, ny
