@@ -873,11 +873,11 @@ contains
           case('input_fd_model')
              read(line(ipos0:ipos1),*)  inversion_param%input_fd_model
 
-          case ('tapper')
-             inversion_param%use_tapper=.true.
-             read(line(ipos0:ipos1),*) inversion_param%xmin_tapper, inversion_param%xmax_tapper, &
-                                       inversion_param%ymin_tapper, inversion_param%ymax_tapper, &
-                                       inversion_param%zmin_tapper, inversion_param%zmax_tapper
+          case ('taper')
+             inversion_param%use_taper=.true.
+             read(line(ipos0:ipos1),*) inversion_param%xmin_taper, inversion_param%xmax_taper, &
+                                       inversion_param%ymin_taper, inversion_param%ymax_taper, &
+                                       inversion_param%zmin_taper, inversion_param%zmax_taper
 
           case('shin_precond')
              read(line(ipos0:ipos1),*) inversion_param%shin_precond
@@ -1274,7 +1274,7 @@ contains
        call MPI_BCAST(inversion_param%output_model,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(inversion_param%input_fd_model,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(inversion_param%input_sem_model,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(inversion_param%use_tapper, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+       call MPI_BCAST(inversion_param%use_taper, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(inversion_param%shin_precond, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(inversion_param%z2_precond, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(inversion_param%dump_model_at_each_iteration, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
@@ -1282,13 +1282,13 @@ contains
        call MPI_BCAST(inversion_param%dump_descent_direction_at_each_iteration, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(inversion_param%param_family, MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
 
-       ! user tapper on gradient (MASK)
-       call MPI_BCAST(inversion_param%xmin_tapper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(inversion_param%xmax_tapper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(inversion_param%ymin_tapper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(inversion_param%ymax_tapper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(inversion_param%zmin_tapper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(inversion_param%zmax_tapper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+       ! user taper on gradient (MASK)
+       call MPI_BCAST(inversion_param%xmin_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+       call MPI_BCAST(inversion_param%xmax_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+       call MPI_BCAST(inversion_param%ymin_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+       call MPI_BCAST(inversion_param%ymax_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+       call MPI_BCAST(inversion_param%zmin_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+       call MPI_BCAST(inversion_param%zmax_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
 
     enddo
 

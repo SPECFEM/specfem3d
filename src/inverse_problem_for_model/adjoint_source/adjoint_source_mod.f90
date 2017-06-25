@@ -66,7 +66,7 @@ contains
     call allocate_adjoint_source_working_arrays()
 
 
-    call tapper_window_W(w_tap,10,30,nstep_data-30,nstep_data-10,nstep_data,1.)  !!!! WARNGING HARDCODED !!!!!!!!!!!!!!!!
+    call taper_window_W(w_tap,10,30,nstep_data-30,nstep_data-10,nstep_data,1._CUSTOM_REAL)  !!!! WARNGING HARDCODED !!!!!!!!!!!!
 
 
     do irec_local = 1, nrec_local

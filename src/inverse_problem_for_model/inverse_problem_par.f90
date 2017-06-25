@@ -77,7 +77,7 @@ module inverse_problem_par
      logical                                                                  :: only_forward=.false.
 
      !! for precond FWI
-     logical                                                                  :: use_tapper=.false.
+     logical                                                                  :: use_taper=.false.
      logical                                                                  :: shin_precond=.false.
      logical                                                                  :: z2_precond=.false.
 
@@ -86,10 +86,10 @@ module inverse_problem_par
      logical                                                                  :: dump_gradient_at_each_iteration=.true.
      logical                                                                  :: dump_descent_direction_at_each_iteration=.true.
 
-     !! user defined tapper
-     real(kind=CUSTOM_REAL)                                                   :: xmin_tapper, xmax_tapper
-     real(kind=CUSTOM_REAL)                                                   :: ymin_tapper, ymax_tapper
-     real(kind=CUSTOM_REAL)                                                   :: zmin_tapper, zmax_tapper
+     !! user defined taper
+     real(kind=CUSTOM_REAL)                                                   :: xmin_taper, xmax_taper
+     real(kind=CUSTOM_REAL)                                                   :: ymin_taper, ymax_taper
+     real(kind=CUSTOM_REAL)                                                   :: zmin_taper, zmax_taper
 
      !! cost (need to move in type inver)
      real(kind=CUSTOM_REAL)                                                   :: total_current_cost, total_previous_cost

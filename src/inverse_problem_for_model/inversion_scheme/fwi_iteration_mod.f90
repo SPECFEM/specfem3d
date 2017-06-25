@@ -155,7 +155,7 @@ contains
        ! test for exiting ------------------------------------------------------------
        if (flag_wolfe) then
 
-          ! define preconditionnner or tapper on gradients
+          ! define preconditionnner or taper on gradients
           call SetPrecond(iter_inverse, inversion_param, current_gradient, fwi_precond)
 
           ! store new model and gradient in l-bfgs history for the choosen family parameter
@@ -284,7 +284,7 @@ contains
     ! add penalty tern on cost function
     ! Q0 = Q0 + Penalty
 
-    ! define preconditionnner or tapper on gradients
+    ! define preconditionnner or taper on gradients
     call SetPrecond(0, inversion_param, initial_gradient, fwi_precond)
 
     ! store new model and gradient in l-bfgs history for the choosen family parameter

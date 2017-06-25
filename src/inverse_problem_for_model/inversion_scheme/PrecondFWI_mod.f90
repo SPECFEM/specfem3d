@@ -18,18 +18,18 @@ contains
     type(inver),                                               intent(in)    :: inversion_param
     integer,                                                   intent(in)    :: iter_inverse
     real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable, intent(inout) :: current_gradient, fwi_precond
-    real(kind=CUSTOM_REAL)                                                   :: tapper, x,y,z
+    real(kind=CUSTOM_REAL)                                                   :: taper, x,y,z
     integer                                                                  :: i,j,k,ispec, iglob
 
-    if (inversion_param%use_tapper) then
+    if (inversion_param%use_taper) then
 
        if (DEBUG_MODE) then
           write(IIDD,*)
           write(IIDD,*) '       iteration FWI : ', iter_inverse
           write(IIDD,*)
-          write(IIDD,*) ' ADD TAPPER X:',  inversion_param%xmin_tapper,   inversion_param%xmax_tapper
-          write(IIDD,*) ' ADD TAPPER Y:',  inversion_param%ymin_tapper,   inversion_param%ymax_tapper
-          write(IIDD,*) ' ADD TAPPER Z:',  inversion_param%zmin_tapper,   inversion_param%zmax_tapper
+          write(IIDD,*) ' ADD taper X:',  inversion_param%xmin_taper,   inversion_param%xmax_taper
+          write(IIDD,*) ' ADD taper Y:',  inversion_param%ymin_taper,   inversion_param%ymax_taper
+          write(IIDD,*) ' ADD taper Z:',  inversion_param%zmin_taper,   inversion_param%zmax_taper
           write(IIDD,*)
           write(IIDD,*)
        endif
@@ -45,17 +45,17 @@ contains
                    y=ystore(iglob)
                    z=zstore(iglob)
 
-                   tapper = 1.
+                   taper = 1.
 
-                   if (x > inversion_param%xmin_tapper .and. x < inversion_param%xmax_tapper .and. &
-                       y > inversion_param%ymin_tapper .and. y < inversion_param%ymax_tapper .and. &
-                       z > inversion_param%zmin_tapper .and. z < inversion_param%zmax_tapper ) then
-                      tapper = 1.
+                   if (x > inversion_param%xmin_taper .and. x < inversion_param%xmax_taper .and. &
+                       y > inversion_param%ymin_taper .and. y < inversion_param%ymax_taper .and. &
+                       z > inversion_param%zmin_taper .and. z < inversion_param%zmax_taper ) then
+                      taper = 1.
                    else
-                      tapper = 0.
+                      taper = 0.
                    endif
 
-                   current_gradient(i,j,k,ispec,:) = tapper *   current_gradient(i,j,k,ispec,:)
+                   current_gradient(i,j,k,ispec,:) = taper *   current_gradient(i,j,k,ispec,:)
 
                 enddo
              enddo
