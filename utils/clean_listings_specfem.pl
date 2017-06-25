@@ -275,7 +275,13 @@ use File::Basename;
 
       $line =~ s# pml # PML #ogi;
 
-# fix some typos I have found in the different codes
+# fix some typos I have found in the different codes, or non-US spelling
+      $line =~ s#optimisation#optimization#ogi;
+      $line =~ s#analitical#analytical#ogi;
+      $line =~ s#communIcation#communication#ogi;
+      $line =~ s# in orfer # in order #ogi;
+      $line =~ s#aloow#allow#ogi;
+      $line =~ s#neighbour#neighbor#ogi;
       $line =~ s#vecotr#vector#ogi;
       $line =~ s#computse#compute#ogi;
       $line =~ s#indicies#indices#ogi;

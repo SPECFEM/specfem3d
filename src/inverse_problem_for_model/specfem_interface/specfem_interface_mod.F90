@@ -1,0 +1,1105 @@
+module specfem_interface
+
+
+  !! IMPORT SPECFEM ALL VARAIBLES
+  use specfem_par
+  use shared_parameters
+  use specfem_par_acoustic
+  use specfem_par_elastic
+  use specfem_par_poroelastic
+
+  !! IMPORT inverse_problem VARIABLES
+  use inverse_problem_par
+
+  !! IMPORT inverse problem modules
+  use adjoint_source
+  use input_output
+
+
+  implicit none
+
+
+  !! Arrays for saving GPU kernels because at each GPU run the kernels are set to 0 and to perform
+  !! summation over sources we need to use those temporarry arrays
+  real(kind=CUSTOM_REAL), private, dimension(:,:,:,:),   allocatable :: rho_ac_kl_GPU, kappa_ac_kl_GPU
+  real(kind=CUSTOM_REAL), private, dimension(:,:,:,:),   allocatable :: rho_kl_GPU, kappa_kl_GPU, mu_kl_GPU
+  real(kind=CUSTOM_REAL), private, dimension(:,:,:,:,:), allocatable :: cijkl_kl_GPU
+
+contains
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!----------------------------------------------------------------------------------------------------------------------------------
+!> call specfem solver for forward problem only
+!----------------------------------------------------------------------------------------------------------------------------------
+  subroutine ComputeSismosPerSource(isource, acqui_simu, iter_inverse, myrank)
+
+    integer,                                        intent(in)    ::  isource, iter_inverse, myrank
+    type(acqui),  dimension(:), allocatable,        intent(inout) ::  acqui_simu
+    character(len=MAX_LEN_STRING)                                 ::  name_file_tmp
+
+    !! set the parameters to perform the forward simulation
+    SIMULATION_TYPE=1
+    SAVE_FORWARD=.true.
+    COMPUTE_AND_STORE_STRAIN = .false.
+
+    !! forward solver ------------------------------------------------------------------------------------------------
+    call InitSpecfemForOneRun(acqui_simu, isource, iter_inverse)
+    call iterate_time()
+    call FinalizeSpecfemForOneRun(acqui_simu, isource)
+
+    select case ( trim(acqui_simu(isource)%component(1)) )
+
+    case('UX', 'UY', 'UZ')
+       !! array seismogram in displacement
+       name_file_tmp = trim(acqui_simu(isource)%data_file_gather)
+       call write_bin_sismo_on_disk(isource, acqui_simu, seismograms_d,  name_file_tmp, myrank)
+
+    case('PR')
+       !! array seismogram in pressure
+       name_file_tmp = trim(acqui_simu(isource)%data_file_gather)
+       call write_bin_sismo_on_disk(isource, acqui_simu, seismograms_p,  name_file_tmp, myrank)
+
+    case default
+
+       write(*,*) ' ERROR Component not knwon : ', trim(acqui_simu(isource)%component(1))
+       stop
+
+    end select
+
+  end subroutine ComputeSismosPerSource
+
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!----------------------------------------------------------------------------------------------------------------------------------
+!> call specfem solver for computing gradient
+!----------------------------------------------------------------------------------------------------------------------------------
+  subroutine ComputeGradientPerSource(isource, iter_inverse, acqui_simu,  inversion_param)
+
+    integer,                                        intent(in)    ::  isource, iter_inverse
+    type(acqui),  dimension(:), allocatable,        intent(inout) ::  acqui_simu
+    type(inver),                                    intent(inout) ::  inversion_param
+
+#ifdef DEBUG_COUPLED
+    logical                              :: save_COUPLE_WITH_EXTERNAL_CODE
+    save_COUPLE_WITH_EXTERNAL_CODE=COUPLE_WITH_EXTERNAL_CODE
+#endif
+
+    if (myrank == 0) write(INVERSE_LOG_FILE,*) '  - > Compute gradient for source :', isource , ' iteration : ', iter_inverse
+
+    !! choose parameters to perform the forward simulation
+    SIMULATION_TYPE=1
+    SAVE_FORWARD=.true.
+    COMPUTE_AND_STORE_STRAIN = .false.
+
+    !! forward solver ------------------------------------------------------------------------------------------------
+    call InitSpecfemForOneRun(acqui_simu, isource, iter_inverse)
+    call iterate_time()
+    call FinalizeSpecfemForOneRun(acqui_simu, isource)
+
+
+    !! define adjoint sources ----------------------------------------------------------------------------------
+    call write_adjoint_sources_for_specfem(acqui_simu, inversion_param, isource, myrank)
+
+    !! choose parameters to perform both the forward and adjoint simulation
+    SIMULATION_TYPE=3
+    SAVE_FORWARD=.false.
+    COMPUTE_AND_STORE_STRAIN=.true.
+    APPROXIMATE_HESS_KL=.true.
+
+    !! forward and adjoint runs --------------------------------------------------------------------------------------
+    call InitSpecfemForOneRun(acqui_simu, isource, iter_inverse)
+
+#ifdef DEBUG_COUPLED
+    COUPLE_WITH_EXTERNAL_CODE=.false.  !! do not use coupling since the direct run is runining in backward from boundary
+#endif
+
+    call iterate_time()
+    call FinalizeSpecfemForOneRun(acqui_simu, isource)
+
+#ifdef DEBUG_COUPLED
+       COUPLE_WITH_EXTERNAL_CODE=save_COUPLE_WITH_EXTERNAL_CODE  !! restore the initial value of variable
+#endif
+
+  end subroutine ComputeGradientPerSource
+
+
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!----------------------------------------------------------------------------------------------------------------------------------
+!> initialize specfem before each call for the source isource
+!----------------------------------------------------------------------------------------------------------------------------------
+  subroutine InitSpecfemForOneRun(acqui_simu, isource, iter_inverse)
+
+    integer,                                        intent(in)    ::  isource, iter_inverse
+    type(acqui),  dimension(:), allocatable,        intent(in)    ::  acqui_simu
+
+    integer                                                       :: irec,ier
+    integer                                                       :: icomp, it, irec_local
+    real(kind=CUSTOM_REAL)                                        :: DT
+    double precision                                              :: DT_dble
+    character(len=256)                                            :: name_file
+    character(len=MAX_STRING_LEN)                                 :: TRAC_PATH, dsname
+    integer(kind=8)                                               :: filesize
+
+    if (myrank == 0 .and. DEBUG_MODE) write(INVERSE_LOG_FILE,*) ' initialize source number  : ', isource
+
+    ! time discretization -----------------------------------------------------------------------------------------------------------
+    NSTEP = acqui_simu(isource)%Nt_data
+    DT = acqui_simu(isource)%dt_data
+    DT_dble = DT
+
+    deltat = real(DT,kind=CUSTOM_REAL)
+    deltatover2 = deltat/2._CUSTOM_REAL
+    deltatsqover2 = deltat*deltat/2._CUSTOM_REAL
+    b_deltat = - real(DT,kind=CUSTOM_REAL)
+    b_deltatover2 = b_deltat/2._CUSTOM_REAL
+    b_deltatsqover2 = b_deltat*b_deltat/2._CUSTOM_REAL
+
+    ! prepare source (only one source allowed for now) -----------------------------------------------------------------------------
+    NSOURCES=1
+    select case (acqui_simu(isource)%source_type)
+
+    case ('moment')
+       nsources_local =  acqui_simu(isource)%nsources_local
+       sourcearrays(1,:,:,:,:)=acqui_simu(isource)%sourcearray(:,:,:,:)
+       islice_selected_source(1)=acqui_simu(isource)%islice_slected_source
+       ispec_selected_source(1)=acqui_simu(isource)%ispec_selected_source
+       PRINT_SOURCE_TIME_FUNCTION=.true.
+       t0 = - 1.2d0 * (acqui_simu(isource)%t_shift - 1.d0/acqui_simu(isource)%hdur)
+       hdur(1)=acqui_simu(isource)%hdur
+
+       if (DEBUG_MODE) then
+          write (IIDD , *)
+          write (IIDD , *) 'islice , ispec : ', islice_selected_source(1), ispec_selected_source(1)
+          write (IIDD , *)
+       endif
+       COUPLE_WITH_EXTERNAL_CODE=.false.
+    case('axisem')
+       TRAC_PATH=acqui_simu(isource)%traction_dir
+       call create_name_database(dsname,myrank,TRAC_PATH)
+       ! open traction file
+       open(unit=IIN_veloc_dsm,file=dsname(1:len_trim(dsname))//'sol_axisem',status='old', &
+            action='read',form='unformatted',iostat=ier)
+       write(*,*) 'OPENING ', dsname(1:len_trim(dsname))//'sol_axisem'
+       COUPLE_WITH_EXTERNAL_CODE=.true.
+       EXTERNAL_CODE_TYPE = EXTERNAL_CODE_IS_AXISEM
+    case('fk')
+       FKMODEL_FILE=acqui_simu(isource)%source_file
+       COUPLE_WITH_EXTERNAL_CODE=.true.
+       EXTERNAL_CODE_TYPE = EXTERNAL_CODE_IS_FK
+    case default
+       write(*,*) 'source ', acqui_simu(isource)%source_type, 'Not yet '
+       stop
+
+    end select
+
+    ! prepare receiver for the current source --------------------------------------------------------------------------------------
+    !! store current variables
+    nrec=acqui_simu(isource)%nsta_tot
+    nrec_local=acqui_simu(isource)%nsta_slice
+    nadj_rec_local=0                        !! by default dummy 0
+
+    !! de-allocation
+    if (allocated(islice_selected_rec)) deallocate(islice_selected_rec)
+    if (allocated(ispec_selected_rec))  deallocate(ispec_selected_rec)
+    if (allocated(xi_receiver)) deallocate(xi_receiver)
+    if (allocated(eta_receiver)) deallocate(eta_receiver)
+    if (allocated(gamma_receiver)) deallocate(gamma_receiver)
+    if (allocated(station_name)) deallocate(station_name)
+    if (allocated(network_name)) deallocate(network_name)
+    if (allocated(nu)) deallocate(nu)
+
+    !! re-allocation
+    allocate(islice_selected_rec(nrec),ispec_selected_rec(nrec))
+    allocate(xi_receiver(nrec),eta_receiver(nrec),gamma_receiver(nrec))
+    allocate(station_name(nrec),network_name(nrec))
+    allocate(nu(NDIM,NDIM,nrec))
+
+    !! store current arrays
+    islice_selected_rec(:)=acqui_simu(isource)%islice_selected_rec(:)
+    ispec_selected_rec(:)=acqui_simu(isource)%ispec_selected_rec(:)
+    xi_receiver(:)=acqui_simu(isource)%xi_rec(:)
+    eta_receiver(:)=acqui_simu(isource)%eta_rec(:)
+    gamma_receiver(:)=acqui_simu(isource)%gamma_rec(:)
+    station_name(:)=acqui_simu(isource)%station_name
+    network_name(:)=acqui_simu(isource)%network_name
+
+    ! X coordinate - East
+    nu(1,1,:) = 1.d0
+    nu(1,2,:) = 0.d0
+    nu(1,3,:) = 0.d0
+    ! Y coordinate - North
+    nu(2,1,:) = 0.d0
+    nu(2,2,:) = 1.d0
+    nu(2,3,:) = 0.d0
+    ! Z coordinate - Vertical
+    nu(3,1,:) = 0.d0
+    nu(3,2,:) = 0.d0
+    nu(3,3,:) = 1.d0
+
+    if (nrec_local > 0) then
+
+       if (DEBUG_MODE) then
+          write(IIDD,*)
+          write(IIDD,*)  'init_specfem_for_one_run nrec_local :', nrec_local
+          write(IIDD,*)
+       endif
+
+       if (allocated(hxir_store)) deallocate(hxir_store)
+       if (allocated(hetar_store)) deallocate(hetar_store)
+       if (allocated(hgammar_store)) deallocate(hgammar_store)
+       if (allocated(hpxir_store)) deallocate(hpxir_store)
+       if (allocated(hpetar_store)) deallocate(hpetar_store)
+       if (allocated(hpgammar_store)) deallocate(hpgammar_store)
+       if (allocated(number_receiver_global)) deallocate(number_receiver_global)
+
+
+       nadj_rec_local = nrec_local
+
+       allocate(hxir_store(nrec_local,NGLLX), &
+            hetar_store(nrec_local,NGLLY), &
+            hgammar_store(nrec_local,NGLLZ), &
+            hpxir_store(nrec_local,NGLLX), &
+            hpetar_store(nrec_local,NGLLY), &
+            hpgammar_store(nrec_local,NGLLZ))
+
+       allocate(number_receiver_global(nrec_local))
+       number_receiver_global(:)=acqui_simu(isource)%number_receiver_global(1:nrec_local)
+
+       do irec=1, nrec_local
+          hxir_store(irec,:)=acqui_simu(isource)%hxi(:,irec)
+          hetar_store(irec,:)=acqui_simu(isource)%heta(:,irec)
+          hgammar_store(irec,:)=acqui_simu(isource)%hgamma(:,irec)
+          hpxir_store(irec,:)=acqui_simu(isource)%hpxi(:,irec)
+          hpetar_store(irec,:)=acqui_simu(isource)%hpeta(:,irec)
+          hpgammar_store(irec,:)=acqui_simu(isource)%hpgamma(:,irec)
+       enddo
+
+       if (allocated(seismograms_d)) deallocate(seismograms_d)
+       if (allocated(seismograms_v)) deallocate(seismograms_v)
+       if (allocated(seismograms_a)) deallocate(seismograms_a)
+       if (allocated(seismograms_p)) deallocate(seismograms_p)
+
+       ! allocate seismogram array
+       allocate(seismograms_d(NDIM,nrec_local,NSTEP),stat=ier)
+       if (ier /= 0) stop 'error allocating array seismograms_d'
+       allocate(seismograms_v(NDIM,nrec_local,NSTEP),stat=ier)
+       if (ier /= 0) stop 'error allocating array seismograms_v'
+       allocate(seismograms_a(NDIM,nrec_local,NSTEP),stat=ier)
+       if (ier /= 0) stop 'error allocating array seismograms_a'
+       allocate(seismograms_p(NDIM,nrec_local,NSTEP),stat=ier)
+       if (ier /= 0) stop 'error allocating array seismograms_p'
+
+       ! initialize seismograms
+       seismograms_d(:,:,:) = 0._CUSTOM_REAL
+       seismograms_v(:,:,:) = 0._CUSTOM_REAL
+       seismograms_a(:,:,:) = 0._CUSTOM_REAL
+       seismograms_p(:,:,:) = 0._CUSTOM_REAL
+
+    else
+       if (allocated(seismograms_d)) deallocate(seismograms_d)
+       if (allocated(seismograms_v)) deallocate(seismograms_v)
+       if (allocated(seismograms_a)) deallocate(seismograms_a)
+       if (allocated(seismograms_p)) deallocate(seismograms_p)
+
+       ! allocate seismogram array
+       allocate(seismograms_d(NDIM,1,1),stat=ier)
+       if (ier /= 0) stop 'error allocating array seismograms_d'
+       allocate(seismograms_v(NDIM,1,1),stat=ier)
+       if (ier /= 0) stop 'error allocating array seismograms_v'
+       allocate(seismograms_a(NDIM,1,1),stat=ier)
+       if (ier /= 0) stop 'error allocating array seismograms_a'
+       allocate(seismograms_p(NDIM,1,1),stat=ier)
+       if (ier /= 0) stop 'error allocating array seismograms_p'
+
+    endif
+
+    !! this is to skip writing seismogram on disk by specffem (both forward and ajoint)
+    !! do not change
+    NTSTEP_BETWEEN_OUTPUT_SEISMOS=NSTEP
+    INVERSE_FWI_FULL_PROBLEM= .true.
+
+    ! initializes adjoint sources --------------------------------------------------------------------------------------------------
+    if (allocated(source_adjoint)) deallocate(source_adjoint)
+    allocate(source_adjoint(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM),stat=ier)
+    if (ier /= 0) stop 'error allocating array adj_sourcearrays'
+    source_adjoint(:,:,:) = 0._CUSTOM_REAL
+    if (SIMULATION_TYPE == 3) then
+       do icomp=1,NDIM
+          do it=1,NTSTEP_BETWEEN_OUTPUT_SEISMOS
+             do irec_local=1, nadj_rec_local
+                source_adjoint(irec_local, it, icomp) = acqui_simu(isource)%adjoint_sources(icomp,irec_local,it)
+             enddo
+          enddo
+       enddo
+    endif
+
+
+    ! manage the storage in memory and in disk the simulaed wavefields
+    !! with GPU we have to be carrefull of warning for seismogram not all things are allowed and this make the code crashes
+    if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION ) then
+
+       SAVE_SEISMOGRAMS_DISPLACEMENT =.true.
+       SAVE_SEISMOGRAMS_VELOCITY     =.false.
+       SAVE_SEISMOGRAMS_ACCELERATION =.false.
+       SAVE_SEISMOGRAMS_PRESSURE     =.true.
+
+    else
+
+       if (ACOUSTIC_SIMULATION) then
+          SAVE_SEISMOGRAMS_PRESSURE     =.true.
+          SAVE_SEISMOGRAMS_DISPLACEMENT =.false.
+          SAVE_SEISMOGRAMS_VELOCITY     =.false.
+          SAVE_SEISMOGRAMS_ACCELERATION =.false.
+       endif
+
+       if (ELASTIC_SIMULATION) then
+          SAVE_SEISMOGRAMS_PRESSURE      =.false.
+          SAVE_SEISMOGRAMS_DISPLACEMENT  =.true.
+          SAVE_SEISMOGRAMS_VELOCITY      =.false.
+          SAVE_SEISMOGRAMS_ACCELERATION  =.false.
+       endif
+
+    endif
+
+    !! clean arrays ----------------------------------------------------------------------------------------------------------------
+    ! reset all forward wavefields----------------------------------------------------------------------------------------------------
+    call prepare_timerun_init_wavefield()  !! routine from specfem
+    ! memory variables if attenuation
+    if (ATTENUATION) then
+        ! clear memory variables if attenuation
+       ! initialize memory variables for attenuation
+       epsilondev_trace(:,:,:,:) = 0._CUSTOM_REAL
+       epsilondev_xx(:,:,:,:) = 0._CUSTOM_REAL
+       epsilondev_yy(:,:,:,:) = 0._CUSTOM_REAL
+       epsilondev_xy(:,:,:,:) = 0._CUSTOM_REAL
+       epsilondev_xz(:,:,:,:) = 0._CUSTOM_REAL
+       epsilondev_yz(:,:,:,:) = 0._CUSTOM_REAL
+
+       R_trace(:,:,:,:,:) = 0._CUSTOM_REAL
+       R_xx(:,:,:,:,:) = 0._CUSTOM_REAL
+       R_yy(:,:,:,:,:) = 0._CUSTOM_REAL
+       R_xy(:,:,:,:,:) = 0._CUSTOM_REAL
+       R_xz(:,:,:,:,:) = 0._CUSTOM_REAL
+       R_yz(:,:,:,:,:) = 0._CUSTOM_REAL
+
+       if (FIX_UNDERFLOW_PROBLEM) then
+          R_trace(:,:,:,:,:) = VERYSMALLVAL
+          R_xx(:,:,:,:,:) = VERYSMALLVAL
+          R_yy(:,:,:,:,:) = VERYSMALLVAL
+          R_xy(:,:,:,:,:) = VERYSMALLVAL
+          R_xz(:,:,:,:,:) = VERYSMALLVAL
+          R_yz(:,:,:,:,:) = VERYSMALLVAL
+       endif
+    endif
+
+    ! reaset all adjoint wavefield   -------------------------------------------------------------------------------------------------
+    ! elastic domain
+    if (ELASTIC_SIMULATION) then
+       ! from prepare_timerun_lddrk() --
+       if (SIMULATION_TYPE == 3) then
+          b_R_xx_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+          b_R_yy_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+          b_R_xy_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+          b_R_xz_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+          b_R_yz_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+          b_R_trace_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+          if (FIX_UNDERFLOW_PROBLEM) then
+             b_R_xx_lddrk(:,:,:,:,:) = VERYSMALLVAL
+             b_R_yy_lddrk(:,:,:,:,:) = VERYSMALLVAL
+             b_R_xy_lddrk(:,:,:,:,:) = VERYSMALLVAL
+             b_R_xz_lddrk(:,:,:,:,:) = VERYSMALLVAL
+             b_R_yz_lddrk(:,:,:,:,:) = VERYSMALLVAL
+             b_R_trace_lddrk(:,:,:,:,:) = VERYSMALLVAL
+          endif
+       endif
+
+       ! reconstructed/backward elastic wavefields
+       b_displ = 0._CUSTOM_REAL
+       b_veloc = 0._CUSTOM_REAL
+       b_accel = 0._CUSTOM_REAL
+       if (FIX_UNDERFLOW_PROBLEM) b_displ = VERYSMALLVAL
+
+       ! memory variables if attenuation
+       if (ATTENUATION) then
+          b_R_trace = 0._CUSTOM_REAL
+          b_R_xx = 0._CUSTOM_REAL
+          b_R_yy = 0._CUSTOM_REAL
+          b_R_xy = 0._CUSTOM_REAL
+          b_R_xz = 0._CUSTOM_REAL
+          b_R_yz = 0._CUSTOM_REAL
+          b_epsilondev_trace = 0._CUSTOM_REAL
+          b_epsilondev_xx = 0._CUSTOM_REAL
+          b_epsilondev_yy = 0._CUSTOM_REAL
+          b_epsilondev_xy = 0._CUSTOM_REAL
+          b_epsilondev_xz = 0._CUSTOM_REAL
+          b_epsilondev_yz = 0._CUSTOM_REAL
+
+          if (FIX_UNDERFLOW_PROBLEM) then
+             b_R_trace(:,:,:,:,:) = VERYSMALLVAL
+             b_R_xx(:,:,:,:,:) = VERYSMALLVAL
+             b_R_yy(:,:,:,:,:) = VERYSMALLVAL
+             b_R_xy(:,:,:,:,:) = VERYSMALLVAL
+             b_R_xz(:,:,:,:,:) = VERYSMALLVAL
+             b_R_yz(:,:,:,:,:) = VERYSMALLVAL
+          endif
+
+       endif
+    endif
+
+    ! acoustic domain
+    if (ACOUSTIC_SIMULATION) then
+       ! reconstructed/backward acoustic potentials
+       b_potential_acoustic = 0._CUSTOM_REAL
+       b_potential_dot_acoustic = 0._CUSTOM_REAL
+       b_potential_dot_dot_acoustic = 0._CUSTOM_REAL
+       if (FIX_UNDERFLOW_PROBLEM) b_potential_acoustic = VERYSMALLVAL
+    endif
+
+    ! poroelastic domain
+    if (POROELASTIC_SIMULATION) then
+       b_displs_poroelastic = 0._CUSTOM_REAL
+       b_velocs_poroelastic = 0._CUSTOM_REAL
+       b_accels_poroelastic = 0._CUSTOM_REAL
+       b_displw_poroelastic = 0._CUSTOM_REAL
+       b_velocw_poroelastic = 0._CUSTOM_REAL
+       b_accelw_poroelastic = 0._CUSTOM_REAL
+       if (FIX_UNDERFLOW_PROBLEM) b_displs_poroelastic = VERYSMALLVAL
+       if (FIX_UNDERFLOW_PROBLEM) b_displw_poroelastic = VERYSMALLVAL
+    endif
+
+
+    !! open boundary files ----------------------------------------------------------------------------------------------
+    if (STACEY_ABSORBING_CONDITIONS) then
+
+       if (SIMULATION_TYPE == 3 ) then  !! read only open
+
+          ! opens existing files
+          if (ELASTIC_SIMULATION .and. num_abs_boundary_faces > 0 ) then
+
+             ! size of single record
+             b_reclen_field = CUSTOM_REAL * NDIM * NGLLSQUARE * num_abs_boundary_faces
+             ! check integer size limit: size of b_reclen_field must fit onto an 4-byte integer
+             if (num_abs_boundary_faces > 2147483646 / (CUSTOM_REAL * NDIM * NGLLSQUARE)) then
+                print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_field
+                print *,'  ',CUSTOM_REAL, NDIM, NGLLSQUARE, num_abs_boundary_faces
+                print *,'bit size fortran: ',bit_size(b_reclen_field)
+                call exit_MPI(myrank,"error b_reclen_field integer limit")
+             endif
+             ! total file size
+             filesize = b_reclen_field
+             filesize = filesize * NSTEP
+             call open_file_abs_r(IOABS,trim(prname)//'absorb_field.bin', &
+                  len_trim(trim(prname)//'absorb_field.bin'), filesize)
+          endif
+
+          if (ACOUSTIC_SIMULATION .and. num_abs_boundary_faces > 0 ) then
+
+             ! size of single record
+             b_reclen_potential = CUSTOM_REAL * NGLLSQUARE * num_abs_boundary_faces
+             ! check integer size limit: size of b_reclen_potential must fit onto an 4-byte integer
+             if (num_abs_boundary_faces > 2147483646 / (CUSTOM_REAL * NGLLSQUARE)) then
+                print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_potential
+                print *,'  ',CUSTOM_REAL, NGLLSQUARE, num_abs_boundary_faces
+                print *,'bit size fortran: ',bit_size(b_reclen_potential)
+                call exit_MPI(myrank,"error b_reclen_potential integer limit")
+             endif
+             ! total file size (two lines to implicitly convert to 8-byte integers)
+             filesize = b_reclen_potential
+             filesize = filesize*NSTEP
+             call open_file_abs_r(IOABS_AC,trim(prname)//'absorb_potential.bin', &
+                  len_trim(trim(prname)//'absorb_potential.bin'), filesize)
+          endif
+
+       else  !!! write open
+
+          if (SAVE_FORWARD .and. num_abs_boundary_faces > 0) then
+
+             ! opens new file
+             if (ELASTIC_SIMULATION .and. num_abs_boundary_faces > 0  ) then
+                ! size of single record
+                b_reclen_field = CUSTOM_REAL * NDIM * NGLLSQUARE * num_abs_boundary_faces
+                ! check integer size limit: size of b_reclen_field must fit onto an 4-byte integer
+                if (num_abs_boundary_faces > 2147483646 / (CUSTOM_REAL * NDIM * NGLLSQUARE)) then
+                   print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_field
+                   print *,'  ',CUSTOM_REAL, NDIM, NGLLSQUARE, num_abs_boundary_faces
+                   print *,'bit size fortran: ',bit_size(b_reclen_field)
+                   call exit_MPI(myrank,"error b_reclen_field integer limit")
+                endif
+                ! total file size
+                filesize = b_reclen_field
+                filesize = filesize * NSTEP
+                call open_file_abs_w(IOABS,trim(prname)//'absorb_field.bin', &
+                     len_trim(trim(prname)//'absorb_field.bin'), filesize)
+             endif
+
+             if (ACOUSTIC_SIMULATION .and. num_abs_boundary_faces > 0 ) then
+                ! size of single record
+                b_reclen_potential = CUSTOM_REAL * NGLLSQUARE * num_abs_boundary_faces
+                ! check integer size limit: size of b_reclen_potential must fit onto an 4-byte integer
+                if (num_abs_boundary_faces > 2147483646 / (CUSTOM_REAL * NGLLSQUARE)) then
+                   print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_potential
+                   print *,'  ',CUSTOM_REAL, NGLLSQUARE, num_abs_boundary_faces
+                   print *,'bit size fortran: ',bit_size(b_reclen_potential)
+                   call exit_MPI(myrank,"error b_reclen_potential integer limit")
+                endif
+                ! total file size (two lines to implicitly convert to 8-byte integers)
+                filesize = b_reclen_potential
+                filesize = filesize*NSTEP
+                call open_file_abs_w(IOABS_AC,trim(prname)//'absorb_potential.bin', &
+                     len_trim(trim(prname)//'absorb_potential.bin'), filesize)
+             endif
+
+          endif
+       endif
+    endif
+
+    !! reallocate all GPU memory according the fortran arrays
+    if (GPU_MODE) call prepare_timerun_GPU()
+
+    !! open new log file for specfem -----------------------------------------------------------------------------------------------
+    if (myrank == 0 .and. SIMULATION_TYPE == 1) then
+       close(IMAIN)
+       write(name_file,'(a15,i5.5,a1,i5.5,a4)') '/output_solver_',isource,'_',iter_inverse,'.txt'
+       open(unit=IMAIN,file=trim(OUTPUT_FILES)//trim(name_file),status='unknown')
+    endif
+
+    !! info on mesh and parameters ---------------
+    if (SIMULATION_TYPE == 1) then
+       if (ELASTIC_SIMULATION) then
+          call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
+               ibool,xstore,ystore,zstore, &
+               kappastore,mustore,rho_vp,rho_vs, &
+               DT_dble,model_speed_max,min_resolved_period, &
+               LOCAL_PATH,SAVE_MESH_FILES)
+       else if (ACOUSTIC_SIMULATION) then
+          allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+          if (ier /= 0) stop 'error allocating array rho_vp'
+          allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+          if (ier /= 0) stop 'error allocating array rho_vs'
+          rho_vp = sqrt( kappastore / rhostore ) * rhostore
+          rho_vs = 0.0_CUSTOM_REAL
+          call check_mesh_resolution(myrank,NSPEC_AB,NGLOB_AB, &
+               ibool,xstore,ystore,zstore, &
+               kappastore,mustore,rho_vp,rho_vs, &
+               DT_dble,model_speed_max,min_resolved_period, &
+               LOCAL_PATH,SAVE_MESH_FILES)
+          deallocate(rho_vp,rho_vs)
+       endif
+    endif
+
+  end subroutine InitSpecfemForOneRun
+
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!-----------------------------------------------------------------------------------------------------------------------------------
+!> finalize, specfem after running each sources
+!-----------------------------------------------------------------------------------------------------------------------------------
+  subroutine  FinalizeSpecfemForOneRun(acqui_simu, isource)
+
+    integer,                                        intent(in)    :: isource
+    type(acqui),  dimension(:), allocatable,        intent(in)    :: acqui_simu
+    integer                                                       :: ier
+
+
+    !! manage files due to coupling with axisem -----------------------------------------------------
+    select case (acqui_simu(isource)%source_type)
+
+    case('axisem')
+       close(IIN_veloc_dsm)
+
+    case('fk', 'moment', 'force')
+       !! nothing to do for the moment
+
+    case default   !! for stopping if any problem with source_type
+       write(*,*) 'source ', acqui_simu(isource)%source_type, 'Not yet '
+       stop
+
+    end select
+
+
+    !! finalize specfem run --------------------------------------------------------------------------
+    if (SIMULATION_TYPE == 1 .and. SAVE_FORWARD) then
+       open(unit=IOUT,file=prname(1:len_trim(prname))//'save_forward_arrays.bin', &
+            status='unknown',form='unformatted',iostat=ier)
+       if (ier /= 0) then
+          print *,'error: opening save_forward_arrays.bin'
+          print *,'path: ',prname(1:len_trim(prname))//'save_forward_arrays.bin'
+          call exit_mpi(myrank,'error opening file save_forward_arrays.bin')
+       endif
+
+       if (ACOUSTIC_SIMULATION) then
+          write(IOUT) potential_acoustic
+          write(IOUT) potential_dot_acoustic
+          write(IOUT) potential_dot_dot_acoustic
+       endif
+
+       if (ELASTIC_SIMULATION) then
+          write(IOUT) displ
+          write(IOUT) veloc
+          write(IOUT) accel
+
+          if (ATTENUATION) then
+             write(IOUT) R_trace
+             write(IOUT) R_xx
+             write(IOUT) R_yy
+             write(IOUT) R_xy
+             write(IOUT) R_xz
+             write(IOUT) R_yz
+             write(IOUT) epsilondev_trace
+             write(IOUT) epsilondev_xx
+             write(IOUT) epsilondev_yy
+             write(IOUT) epsilondev_xy
+             write(IOUT) epsilondev_xz
+             write(IOUT) epsilondev_yz
+          endif
+       endif
+
+       if (POROELASTIC_SIMULATION) then
+          write(IOUT) displs_poroelastic
+          write(IOUT) velocs_poroelastic
+          write(IOUT) accels_poroelastic
+          write(IOUT) displw_poroelastic
+          write(IOUT) velocw_poroelastic
+          write(IOUT) accelw_poroelastic
+       endif
+
+       close(IOUT)
+    endif
+
+    if (ELASTIC_SIMULATION .and. (SIMULATION_TYPE == 3 .or. SAVE_FORWARD) .and. num_abs_boundary_faces > 0) then
+       call close_file_abs(IOABS)
+    endif
+
+    if (ACOUSTIC_SIMULATION .and. (SIMULATION_TYPE == 3 .or. SAVE_FORWARD) .and. num_abs_boundary_faces > 0) then
+       call close_file_abs(IOABS_AC)
+    endif
+
+    if (GPU_MODE .and. SIMULATION_TYPE == 3) then
+
+       if (ACOUSTIC_SIMULATION) then
+          rho_ac_kl_GPU(:,:,:,:)=rho_ac_kl_GPU(:,:,:,:)+rho_ac_kl(:,:,:,:)
+          kappa_ac_kl_GPU(:,:,:,:)=kappa_ac_kl_GPU(:,:,:,:)+kappa_ac_kl(:,:,:,:)
+       endif
+
+       if (ELASTIC_SIMULATION) then
+          rho_kl_GPU(:,:,:,:)=rho_kl_GPU(:,:,:,:)+rho_kl(:,:,:,:)
+          if (ANISOTROPIC_KL) then
+             cijkl_kl_GPU(:,:,:,:,:)=cijkl_kl_GPU(:,:,:,:,:)+cijkl_kl(:,:,:,:,:)
+          else
+             kappa_kl_GPU(:,:,:,:)=kappa_kl_GPU(:,:,:,:)+kappa_kl(:,:,:,:)
+             mu_kl_GPU(:,:,:,:)= mu_kl_GPU(:,:,:,:)+ mu_kl(:,:,:,:)
+          endif
+
+       endif
+
+    endif
+
+
+  end subroutine FinalizeSpecfemForOneRun
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!-----------------------------------------------------------------------------------------------------------------------------------
+! Initialize for one step FWI
+!-----------------------------------------------------------------------------------------------------------------------------------
+  subroutine InitForOneStepFWI(inversion_param)
+
+    type(inver),                                    intent(inout) :: inversion_param
+
+    !! reset cost function
+    inversion_param%total_current_cost = 0._CUSTOM_REAL
+
+    !! reset kenels  ----------------------------
+
+    ! acoustic domain
+    if (ACOUSTIC_SIMULATION) then
+       rho_ac_kl(:,:,:,:)=0._CUSTOM_REAL
+       kappa_ac_kl(:,:,:,:)=0._CUSTOM_REAL
+
+       if (GPU_MODE) then
+          rho_ac_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
+          kappa_ac_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
+       endif
+
+    endif
+
+    ! elastic domain
+    if (ELASTIC_SIMULATION) then
+
+       rho_kl(:,:,:,:)   = 0._CUSTOM_REAL
+       if (GPU_MODE)  rho_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
+
+       if (ANISOTROPIC_KL) then
+          cijkl_kl(:,:,:,:,:) = 0._CUSTOM_REAL
+          if (GPU_MODE) cijkl_kl_GPU(:,:,:,:,:)=0._CUSTOM_REAL
+       else
+          mu_kl(:,:,:,:)    = 0._CUSTOM_REAL
+          kappa_kl(:,:,:,:) = 0._CUSTOM_REAL
+
+          if (GPU_MODE) then
+             kappa_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
+             mu_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
+          endif
+
+       endif
+
+       if (APPROXIMATE_HESS_KL) then
+          hess_kl(:,:,:,:)   = 0._CUSTOM_REAL
+          !! VM VM TODO SHIN preconditionner and GPU support
+          !Shin_hess_kappa_kl(:,:,:,:)   = 0._CUSTOM_REAL
+          !Shin_hess_mu_kl(:,:,:,:)   = 0._CUSTOM_REAL
+          !Shin_hess_rho_kl(:,:,:,:)   = 0._CUSTOM_REAL
+       endif
+
+    endif
+
+  end subroutine InitForOneStepFWI
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!--------------------------------------------------------------------------------------------------------------------------
+!> General initialization for specfem in order to do FWI.  Directly some specfem subroutines are called to initialize modeling
+!----------------------------------------------------------------------------------------------------------------------------
+  subroutine InitializeSpecfemForInversion()
+
+    use specfem_par
+    use shared_parameters
+    use specfem_par_elastic
+    !use time_iteration_mod (not yet used)
+
+    implicit none
+
+
+    !! following subroutines are directly from specfem3D git devel version--------------------------------------------------
+    call initialize_simulation()     !! here : we need to initialize with NGLOB_ADJ=NSPEC_ADJ=NSPEC_STRAIN_ONLY=1
+
+    !! creating dummy inputs : STATION, CMTSOLUTION, STATION_ADJOINT and SEM
+    !! to be able to run the specfem subroutines that initialize solver.
+    !! In anyway, we will use correct parameters for FWI by initializing before each call to specfem solver
+    if (myrank == 0) call CreateInitDummyFiles()
+
+    !! thus store right values hat are not been correctly initialized :
+    NGLOB_ADJOINT = NGLOB_AB
+    NSPEC_ADJOINT = NSPEC_AB
+    NSPEC_STRAIN_ONLY = NSPEC_AB
+
+    !! enforce to allocate all arrays for both adjoint and direct simulation
+    SIMULATION_TYPE=3
+    APPROXIMATE_HESS_KL=.true. !! test preconditionner
+    PRINT_SOURCE_TIME_FUNCTION=.true.
+
+    call read_mesh_databases()
+    call read_mesh_databases_moho()
+    call read_mesh_databases_adjoint()
+    call setup_GLL_points()
+    call detect_mesh_surfaces()
+    call setup_sources_receivers()  !! we have one dummy source and STATION_ADJOINT to set up without crashes
+
+    SIMULATION_TYPE=1               !! here we need to prepare the fisrt run
+    SAVE_FORWARD=.true.             !! which is mandatory direct and need to save forward wavefield
+
+    call prepare_timerun()          !! absord boundary are opened here
+
+    !! we need to clean the GPU memory because we will change arrays
+    if (GPU_MODE)  call prepare_cleanup_device(Mesh_pointer,ACOUSTIC_SIMULATION,ELASTIC_SIMULATION, &
+            STACEY_ABSORBING_CONDITIONS,NOISE_TOMOGRAPHY,COMPUTE_AND_STORE_STRAIN, &
+            ATTENUATION,ANISOTROPY,APPROXIMATE_OCEAN_LOAD, &
+            APPROXIMATE_HESS_KL)
+    !!---------------------------------------------------------------------------------------------------------------------
+    !! this is specific prepare_timerun version for FWI (subroutine defined below)
+    call PrepareTimerunInverseProblem()          !! absord boundary are closed here
+    !! TODO
+    !!if (USE_UNDO_ATT) call prepare_time_iteration() !! allocate arrays for store saving snapshots and displacement
+    !-----------------------------------------------------------------------------------------------------------------------
+
+
+  end subroutine InitializeSpecfemForInversion
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!---------------------------------------------------------------------------------
+!> specfific prepare_timerun for FWI (it is actually missing initialization
+!! done in prepare_timerun when SIMULATION_TYPE=1. Here we add all
+!! actions performed for SIMULATION_TYPE=3. (We cannot call directly
+!! use prepare_timerun with  SIMULATION_TYPE=3 at first time.
+!---------------------------------------------------------------------------------
+  subroutine PrepareTimerunInverseProblem()
+    use specfem_par
+    use shared_parameters
+    use specfem_par_acoustic
+    use specfem_par_elastic
+    use specfem_par_poroelastic
+
+    integer  :: ier
+
+    ! from initialize_simulation_adjoint
+    NSPEC_ADJOINT = NSPEC_AB
+    NGLOB_ADJOINT = NGLOB_AB
+
+    ! from prepare_timerun_constants() -----------------------------------------------
+    b_deltat = - real(DT,kind=CUSTOM_REAL)
+    b_deltatover2 = b_deltat/2._CUSTOM_REAL
+    b_deltatsqover2 = b_deltat*b_deltat/2._CUSTOM_REAL
+
+    ! from prepare_timerun_lddrk() -------------------------------------------------
+    if (ELASTIC_SIMULATION) then
+       allocate(b_R_xx_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+            b_R_yy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+            b_R_xy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+            b_R_xz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
+            b_R_yz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS),stat=ier)
+       if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
+
+       allocate(b_R_trace_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK,N_SLS))
+       if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
+
+       if (SIMULATION_TYPE == 3) then
+          b_R_xx_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+          b_R_yy_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+          b_R_xy_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+          b_R_xz_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+          b_R_yz_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+          b_R_trace_lddrk(:,:,:,:,:) = 0._CUSTOM_REAL
+          if (FIX_UNDERFLOW_PROBLEM) then
+             b_R_xx_lddrk(:,:,:,:,:) = VERYSMALLVAL
+             b_R_yy_lddrk(:,:,:,:,:) = VERYSMALLVAL
+             b_R_xy_lddrk(:,:,:,:,:) = VERYSMALLVAL
+             b_R_xz_lddrk(:,:,:,:,:) = VERYSMALLVAL
+             b_R_yz_lddrk(:,:,:,:,:) = VERYSMALLVAL
+             b_R_trace_lddrk(:,:,:,:,:) = VERYSMALLVAL
+          endif
+       endif
+    endif
+
+    !! from prepare_timerun_adjoint()-----------------------------------------------------------------
+    ! attenuation backward memories
+    if (ATTENUATION .and. SIMULATION_TYPE == 3) then
+       ! precompute Runge-Kutta coefficients if attenuation
+       call get_attenuation_memory_values(tau_sigma,b_deltat,b_alphaval,b_betaval,b_gammaval)
+    endif
+
+    ! elastic domain
+    if (ELASTIC_SIMULATION) then
+       rho_kl(:,:,:,:)   = 0._CUSTOM_REAL
+
+       if (ANISOTROPIC_KL) then
+          cijkl_kl(:,:,:,:,:) = 0._CUSTOM_REAL
+       else
+          mu_kl(:,:,:,:)    = 0._CUSTOM_REAL
+          kappa_kl(:,:,:,:) = 0._CUSTOM_REAL
+       endif
+
+       if (APPROXIMATE_HESS_KL) then
+          hess_kl(:,:,:,:)   = 0._CUSTOM_REAL
+          !! VM VM SHIN
+          !Shin_hess_kappa_kl(:,:,:,:)   = 0._CUSTOM_REAL
+          !Shin_hess_mu_kl(:,:,:,:)   = 0._CUSTOM_REAL
+          !Shin_hess_rho_kl(:,:,:,:)   = 0._CUSTOM_REAL
+       endif
+
+       ! reconstructed/backward elastic wavefields
+       b_displ = 0._CUSTOM_REAL
+       b_veloc = 0._CUSTOM_REAL
+       b_accel = 0._CUSTOM_REAL
+       if (FIX_UNDERFLOW_PROBLEM) b_displ = VERYSMALLVAL
+
+       ! memory variables if attenuation
+       if (ATTENUATION) then
+          b_R_trace = 0._CUSTOM_REAL
+          b_R_xx = 0._CUSTOM_REAL
+          b_R_yy = 0._CUSTOM_REAL
+          b_R_xy = 0._CUSTOM_REAL
+          b_R_xz = 0._CUSTOM_REAL
+          b_R_yz = 0._CUSTOM_REAL
+          b_epsilondev_trace = 0._CUSTOM_REAL
+          b_epsilondev_xx = 0._CUSTOM_REAL
+          b_epsilondev_yy = 0._CUSTOM_REAL
+          b_epsilondev_xy = 0._CUSTOM_REAL
+          b_epsilondev_xz = 0._CUSTOM_REAL
+          b_epsilondev_yz = 0._CUSTOM_REAL
+       endif
+
+       ! moho kernels
+       if (SAVE_MOHO_MESH) moho_kl(:,:) = 0._CUSTOM_REAL
+    endif
+
+    ! acoustic domain
+    if (ACOUSTIC_SIMULATION) then
+       rho_ac_kl(:,:,:,:)   = 0._CUSTOM_REAL
+       kappa_ac_kl(:,:,:,:) = 0._CUSTOM_REAL
+
+       if (APPROXIMATE_HESS_KL) then
+          hess_ac_kl(:,:,:,:)   = 0._CUSTOM_REAL
+          !! VM VM SHIN
+          !Shin_hess_kappa_kl(:,:,:,:)   = 0._CUSTOM_REAL
+          !Shin_hess_mu_kl(:,:,:,:)   = 0._CUSTOM_REAL
+          !Shin_hess_rho_kl(:,:,:,:)   = 0._CUSTOM_REAL
+       endif
+
+       ! reconstructed/backward acoustic potentials
+       b_potential_acoustic = 0._CUSTOM_REAL
+       b_potential_dot_acoustic = 0._CUSTOM_REAL
+       b_potential_dot_dot_acoustic = 0._CUSTOM_REAL
+       if (FIX_UNDERFLOW_PROBLEM) b_potential_acoustic = VERYSMALLVAL
+
+    endif
+
+    ! poroelastic domain
+    if (POROELASTIC_SIMULATION) then
+       rhot_kl(:,:,:,:)   = 0._CUSTOM_REAL
+       rhof_kl(:,:,:,:)   = 0._CUSTOM_REAL
+       sm_kl(:,:,:,:)   = 0._CUSTOM_REAL
+       eta_kl(:,:,:,:)   = 0._CUSTOM_REAL
+       mufr_kl(:,:,:,:)    = 0._CUSTOM_REAL
+       B_kl(:,:,:,:) = 0._CUSTOM_REAL
+       C_kl(:,:,:,:) = 0._CUSTOM_REAL
+       M_kl(:,:,:,:) = 0._CUSTOM_REAL
+
+       !if (APPROXIMATE_HESS_KL) &
+       !  hess_kl(:,:,:,:)   = 0._CUSTOM_REAL
+
+       ! reconstructed/backward elastic wavefields
+       b_displs_poroelastic = 0._CUSTOM_REAL
+       b_velocs_poroelastic = 0._CUSTOM_REAL
+       b_accels_poroelastic = 0._CUSTOM_REAL
+       b_displw_poroelastic = 0._CUSTOM_REAL
+       b_velocw_poroelastic = 0._CUSTOM_REAL
+       b_accelw_poroelastic = 0._CUSTOM_REAL
+       if (FIX_UNDERFLOW_PROBLEM) b_displs_poroelastic = VERYSMALLVAL
+       if (FIX_UNDERFLOW_PROBLEM) b_displw_poroelastic = VERYSMALLVAL
+
+    endif
+
+    ! initialize Moho boundary index
+    if (SAVE_MOHO_MESH .and. SIMULATION_TYPE == 3) then
+       ispec2D_moho_top = 0
+       ispec2D_moho_bot = 0
+    endif
+
+    ! close absorb files : close here because we will open at each new specfem run
+    if (ELASTIC_SIMULATION .and. (SIMULATION_TYPE == 3 .or. SAVE_FORWARD) .and. num_abs_boundary_faces > 0) &
+                        call close_file_abs(IOABS)
+    if (ACOUSTIC_SIMULATION .and. (SIMULATION_TYPE == 3 .or. SAVE_FORWARD) .and. num_abs_boundary_faces > 0) &
+                        call close_file_abs(IOABS_AC)
+
+    !! allocate arrays for saving the kernel computed by GPU in CPU memory in order to perform summation over sources.
+    if (GPU_MODE) then
+       if (ACOUSTIC_SIMULATION) then
+          allocate(rho_ac_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB), kappa_ac_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+          rho_ac_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
+          kappa_ac_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
+       endif
+
+       if (ELASTIC_SIMULATION) then
+          allocate(rho_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB),kappa_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+               mu_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+          rho_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
+          kappa_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
+          mu_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
+       endif
+
+       if (ANISOTROPIC_KL) then
+          allocate(cijkl_kl_GPU(21,NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+          cijkl_kl_GPU(:,:,:,:,:)=0._CUSTOM_REAL
+       endif
+    endif
+
+
+  end subroutine PrepareTimerunInverseProblem
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!-----------------------------------------------------------------------------------------------------------------------------------
+!>  copy summed GPU kernel overs sources in specfem CPU arrays
+!!
+!!
+!-----------------------------------------------------------------------------------------------------------------------------------
+  subroutine TransfertKernelFromGPUArrays()
+
+    if (ACOUSTIC_SIMULATION) then
+       rho_ac_kl(:,:,:,:)=rho_ac_kl_GPU(:,:,:,:)
+       kappa_ac_kl(:,:,:,:)=kappa_ac_kl_GPU(:,:,:,:)
+    endif
+
+    if (ELASTIC_SIMULATION) then
+
+       rho_kl(:,:,:,:)=rho_kl_GPU(:,:,:,:)
+
+       if (ANISOTROPIC_KL) then
+          cijkl_kl(:,:,:,:,:)=cijkl_kl_GPU(:,:,:,:,:)
+       else
+          kappa_kl(:,:,:,:)=kappa_kl_GPU(:,:,:,:)
+          mu_kl(:,:,:,:)=mu_kl_GPU(:,:,:,:)
+       endif
+
+    endif
+
+  end subroutine TransfertKernelFromGPUArrays
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!-----------------------------------------------------------------------------------------------------------------------------------
+!> create dummy file in order to initialize specfem before setting the right parameters
+!! need to imporve this by using because that files are not working for every cases.
+!! may be use the flag INVERSE_FWI_FULL_PROBLEM
+!-----------------------------------------------------------------------------------------------------------------------------------
+  subroutine CreateInitDummyFiles()
+
+    use specfem_par
+
+
+    integer                                               :: i
+
+
+    open(666,file=trim(prefix_to_path)//'SEM/XX.S0001.BXX.adj')
+    open(667,file=trim(prefix_to_path)//'SEM/XX.S0001.BXY.adj')
+    open(668,file=trim(prefix_to_path)//'SEM/XX.S0001.BXZ.adj')
+
+    do i = 1, NSTEP
+       write(666,*) (i-1)*dt,0.
+       write(667,*) (i-1)*dt,0.
+       write(668,*) (i-1)*dt,0.
+    enddo
+
+    close(666)
+    close(667)
+    close(668)
+
+    open(666,file=trim(prefix_to_path)//'SEM/XX.S0001.HXX.adj')
+    open(667,file=trim(prefix_to_path)//'SEM/XX.S0001.HXY.adj')
+    open(668,file=trim(prefix_to_path)//'SEM/XX.S0001.HXZ.adj')
+
+    do i = 1, NSTEP
+       write(666,*) (i-1)*dt,0.
+       write(667,*) (i-1)*dt,0.
+       write(668,*) (i-1)*dt,0.
+    enddo
+
+    close(666)
+    close(667)
+    close(668)
+
+    open(666,file=trim(prefix_to_path)//'SEM/XX.S0001.FXX.adj')
+    open(667,file=trim(prefix_to_path)//'SEM/XX.S0001.FXY.adj')
+    open(668,file=trim(prefix_to_path)//'SEM/XX.S0001.FXZ.adj')
+
+    do i = 1, NSTEP
+       write(666,*) (i-1)*dt,0.
+       write(667,*) (i-1)*dt,0.
+       write(668,*) (i-1)*dt,0.
+    enddo
+
+    close(666)
+    close(667)
+    close(668)
+
+    !! pb il faut ecrire une station qui appartient au maillage pour initialiser le solver specfem
+    !! : j'ai mis des points au hasard pour l'instant ...
+    open(666,file=trim(prefix_to_path)//'DATA/STATIONS')
+    open(667,file=trim(prefix_to_path)//'DATA/STATIONS_ADJOINT')
+
+    write(666,'(a82)') 'S0001  XX 1100 4100 0 0 '
+    write(666,'(a82)') 'S0001  XX 4100 1100 0 0 '
+    write(666,'(a82)') 'S0001  XX    0    0 0 0 '
+    write(666,'(a82)') 'S0001  XX 1000 1000 0 0 '
+
+    write(667,'(a82)') 'S0001  XX 1100 3100 0 0 '
+    write(667,'(a82)') 'S0001  XX 4100 1100 0 0 '
+    write(667,'(a82)') 'S0001  XX    0    0 0 0 '
+    write(667,'(a82)') 'S0001  XX 1000 1000 0 0 '
+
+    close(666)
+    close(667)
+
+  end subroutine CreateInitDummyFiles
+
+
+
+end module specfem_interface

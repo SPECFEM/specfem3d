@@ -1,0 +1,299 @@
+module  inversion_scheme
+
+  !! IMPORT VARIABLES FROM SPECFEM -------------------------------------------------------------------------------------------------
+  use specfem_par, only: CUSTOM_REAL, NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, myrank
+  !---------------------------------------------------------------------------------------------------------------------------------
+
+  use inverse_problem_par
+
+  implicit none
+
+  integer,                private                                        ::  ierror
+  integer,                private                                        ::  Ninvpar, Mbfgs
+
+  !! size(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar, Mbfgs
+  real(kind=CUSTOM_REAL), private,  dimension(:,:,:,:,:,:), allocatable  ::  bfgs_stored_gradient
+  real(kind=CUSTOM_REAL), private,  dimension(:,:,:,:,:,:), allocatable  ::  bfgs_stored_model
+
+  !! for l-bfgs working arrays
+  real(kind=CUSTOM_REAL), private,  dimension(:,:,:,:,:),   allocatable  ::  wks_1, wks_2
+  real(kind=CUSTOM_REAL), private,  dimension(0:1000)                    ::  ak_store, pk_store
+
+
+  public  :: AllocateArraysForInversion, DeAllocateArraysForInversion, wolfe_rules, ComputeDescentDirection
+  private :: L_BFGS_GENERIC
+
+
+contains
+
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!--------------------------------------------------------------------------
+!> allocate arrays for inversion
+!-------------------------------------------------------------------------
+  subroutine AllocateArraysForInversion(inversion_param)
+
+    type(inver),                           intent(in)      :: inversion_param
+
+    Ninvpar=inversion_param%NinvPar
+    Mbfgs=inversion_param%max_history_bfgs
+
+    allocate(bfgs_stored_gradient(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar, 0:Mbfgs),stat=ierror)
+    if (ierror /= 0) call exit_MPI(myrank,"error allocation bfgs_stored_gradient in AllocateArraysForInversion subroutine")
+
+    allocate(bfgs_stored_model(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar, 0:Mbfgs),stat=ierror)
+    if (ierror /= 0) call exit_MPI(myrank,"error allocation bfgs_stored_model in AllocateArraysForInversion subroutine")
+
+    allocate(wks_1(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ierror)
+    if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_1 in AllocateArraysForInversion subroutine")
+
+    allocate(wks_2(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ierror)
+    if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_2 in AllocateArraysForInversion subroutine")
+
+    bfgs_stored_gradient(:,:,:,:,:,:) = 0._CUSTOM_REAL
+    bfgs_stored_model(:,:,:,:,:,:) = 0._CUSTOM_REAL
+    wks_1(:,:,:,:,:) = 0._CUSTOM_REAL
+    wks_2(:,:,:,:,:) = 0._CUSTOM_REAL
+
+  end subroutine AllocateArraysForInversion
+!----------------------------------------------------------------------------------------------------------------------------------
+  subroutine DeAllocateArraysForInversion()
+
+    deallocate(bfgs_stored_gradient)
+    deallocate(bfgs_stored_model)
+    deallocate(wks_1)
+    deallocate(wks_2)
+
+  end subroutine DeAllocateArraysForInversion
+!----------------------------------------------------------------------------------------------------------------------------------
+  subroutine ComputeDescentDirection(current_iteration, descent_direction, fwi_precond)
+
+    real(kind=CUSTOM_REAL),  dimension(:,:,:,:,:),   allocatable, intent(inout)  :: descent_direction, fwi_precond
+    integer,                                                      intent(in)     :: current_iteration
+    integer                                                                      :: ilast, ipar
+
+    ilast = mod(current_iteration, Mbfgs)
+
+    if (current_iteration == 0 .or. USE_GRADIENT_OPTIM) then
+
+       do ipar = 1, Ninvpar
+          descent_direction(:,:,:,:,ipar) =  -fwi_precond(:,:,:,:,ipar) *  bfgs_stored_gradient(:,:,:,:,ipar,ilast)
+       enddo
+
+    else
+
+       call L_BFGS_GENERIC(current_iteration, descent_direction, fwi_precond)
+
+    endif
+
+  end subroutine ComputeDescentDirection
+
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!--------------------------------------------------------------------------
+!> l-bfgs generic routine
+!-------------------------------------------------------------------------
+  subroutine L_BFGS_GENERIC(current_iteration, descent_direction, fwi_precond)
+
+    real(kind=CUSTOM_REAL),  dimension(:,:,:,:,:),   allocatable, intent(inout)  :: descent_direction, fwi_precond
+    integer,                                                      intent(in)     :: current_iteration
+    integer                                                                      :: k, imin, imax
+    real(kind=CUSTOM_REAL)                                                       :: ak, pk, norme_yiter, beta
+
+    !! define boundary loop
+    imin = 0
+    if (current_iteration >= Mbfgs) then
+       imax = Mbfgs-1
+    else
+       imax = current_iteration - 1
+    endif
+
+    !! initialize L-BFGS
+    ak_store(:)=0._CUSTOM_REAL
+    pk_store(:)=0._CUSTOM_REAL
+    descent_direction(:,:,:,:,:) = bfgs_stored_gradient(:,:,:,:,:,imax+1)
+
+    wks_1(:,:,:,:,:) = bfgs_stored_gradient(:,:,:,:,:,imax+1) -  bfgs_stored_gradient(:,:,:,:,:,imax)
+    call Parallel_ComputeL2normSquare(wks_1, Ninvpar, norme_yiter)
+
+
+    do k = imax, imin, -1
+
+       wks_1(:,:,:,:,:) = bfgs_stored_gradient(:,:,:,:,:,k+1) -  bfgs_stored_gradient(:,:,:,:,:,k)
+       wks_2(:,:,:,:,:) = bfgs_stored_model(:,:,:,:,:,k+1)    -  bfgs_stored_model(:,:,:,:,:,k)
+
+       call Parallel_ComputeInnerProduct(wks_1, wks_2, Ninvpar, pk)
+       pk_store(k) = 1._CUSTOM_REAL / pk
+
+       call Parallel_ComputeInnerProduct(wks_2, descent_direction, Ninvpar, ak)
+       ak_store(k) = pk_store(k) * ak
+
+       descent_direction(:,:,:,:,:) = descent_direction(:,:,:,:,:) - ak_store(k) * wks_1(:,:,:,:,:)
+
+    enddo
+
+    !! Nocedal's default preconditionning
+    k=imax
+    pk = 1._CUSTOM_REAL / (pk_store(k) * norme_yiter)
+    descent_direction(:,:,:,:,:) = pk * descent_direction(:,:,:,:,:)
+
+    !! customer preconditionning
+    descent_direction(:,:,:,:,:) =  fwi_precond(:,:,:,:,:) * descent_direction(:,:,:,:,:)
+
+    do k = imin, imax
+
+       wks_1(:,:,:,:,:) = bfgs_stored_gradient(:,:,:,:,:,k+1) -  bfgs_stored_gradient(:,:,:,:,:,k)
+
+       call Parallel_ComputeInnerProduct(wks_1, descent_direction, Ninvpar, beta)
+       beta = pk_store(k) * beta
+
+       descent_direction(:,:,:,:,:) = descent_direction(:,:,:,:,:) + &
+            (ak_store(k) - beta) * (bfgs_stored_model(:,:,:,:,:,k+1)    -  bfgs_stored_model(:,:,:,:,:,k))
+
+    enddo
+
+    descent_direction(:,:,:,:,:) = -1._CUSTOM_REAL * descent_direction(:,:,:,:,:)
+
+  end subroutine L_BFGS_GENERIC
+  !----------------------------------------------------------------------------------------------------------
+  subroutine wolfe_rules(mwl1, mwl2, q0, qt, qp0, vqpt, step_length, td, tg, flag_wolfe)
+
+    implicit none
+    real(kind=CUSTOM_REAL), intent(in)    :: mwl1, mwl2, q0, qt, qp0, vqpt
+    real(kind=CUSTOM_REAL), intent(inout) :: step_length, td, tg
+    logical,                intent(inout) :: flag_wolfe
+    real(kind=CUSTOM_REAL)                :: qpt
+
+    if (DEBUG_MODE) write(IIDD,*) ' WOLFE RULES ', mwl1, mwl2, q0, qt, &
+         qp0, vqpt, step_length, td, tg, flag_wolfe
+
+    if (myrank == 0)  write(INVERSE_LOG_FILE,*)
+
+    qpt = (qt - q0) / step_length
+
+    if (mwl2*qp0 <= vqpt .and. qpt <= mwl1*qp0 ) then
+       flag_wolfe=.true.
+       if (myrank == 0) write(INVERSE_LOG_FILE,*) '   --- > Wolfe  rules :  step accepted '
+       return
+    endif
+
+    if (mwl1*qp0 < qpt) then
+       td=step_length
+       if (myrank == 0) write(INVERSE_LOG_FILE,*) '   --- > Wolfe rules :  right step update'
+    endif
+
+    if (qpt <= mwl1*qp0 .and. vqpt < mwl2 *qp0) then
+       tg=step_length
+       if (myrank == 0) write(INVERSE_LOG_FILE,*) '   --- > Wolfe rules:  left step update '
+    endif
+
+    if (td == 0.) then
+       step_length = 2.*step_length
+       if (myrank == 0) write(INVERSE_LOG_FILE,*) '   --- > Wolfe rules :  step too small '
+    else
+       step_length = 0.5*(td+tg)
+       if (myrank == 0) write(INVERSE_LOG_FILE,*) '   --- > Wolfe rules :  step too big '
+    endif
+    if (myrank == 0)  write(INVERSE_LOG_FILE,*)
+  end subroutine wolfe_rules
+
+  !-------------------------------------------------------------------------------------------------
+  subroutine StoreModelAndGradientForLBFGS(models_to_store, gradients_to_store, iteration_to_store)
+
+    integer,                                                   intent(in) :: iteration_to_store
+    real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable, intent(in) :: models_to_store, gradients_to_store
+    integer                                                               :: k
+
+    if (iteration_to_store <= Mbfgs ) then
+
+       bfgs_stored_model(:,:,:,:,:,iteration_to_store) = models_to_store(:,:,:,:,:)
+       bfgs_stored_gradient(:,:,:,:,:,iteration_to_store) = gradients_to_store(:,:,:,:,:)
+
+    else
+
+       do k = 0, Mbfgs-1
+          bfgs_stored_model(:,:,:,:,:,k) = bfgs_stored_model(:,:,:,:,:,k+1)
+          bfgs_stored_gradient(:,:,:,:,:,k) = bfgs_stored_gradient(:,:,:,:,:,k+1)
+       enddo
+       bfgs_stored_model(:,:,:,:,:,Mbfgs) = models_to_store(:,:,:,:,:)
+       bfgs_stored_gradient(:,:,:,:,:,Mbfgs) = gradients_to_store(:,:,:,:,:)
+
+    endif
+
+  end subroutine StoreModelAndGradientForLBFGS
+  !---------------------------------------------------------------------------------------------
+
+  subroutine Parallel_ComputeInnerProduct(vect1, vect2, Niv, qp)
+
+    use specfem_par, only: NSPEC_AB,  jacobian, wxgll, wygll, wzgll
+
+    real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable, intent(in)    :: vect1, vect2
+    real(kind=CUSTOM_REAL),                                    intent(inout) :: qp
+    integer,                                                   intent(in)    :: Niv
+    real(kind=CUSTOM_REAL)                                                   :: jacobianl, weight, qp_tmp
+    integer                                                                  :: ipar, i, j, k, ispec
+
+    qp=0._CUSTOM_REAL
+
+    do ipar=1, Niv
+       do ispec = 1, NSPEC_AB
+
+          do k=1,NGLLZ
+             do j=1,NGLLY
+                do i=1,NGLLX
+                   weight = wxgll(i)*wygll(j)*wzgll(k)
+                   jacobianl = jacobian(i,j,k,ispec)
+                   qp = qp + jacobianl * weight * vect1(i,j,k,ispec,ipar) * vect2(i,j,k,ispec,ipar)
+                enddo
+             enddo
+          enddo
+       enddo
+    enddo
+
+    qp_tmp=qp
+    qp=0.
+    call sum_all_all_cr(qp_tmp, qp)
+
+  end subroutine Parallel_ComputeInnerProduct
+  !---------------------------------------------------------------------------------------------
+
+
+   subroutine Parallel_ComputeL2normSquare(vect1 , Niv, qp)
+
+     use specfem_par, only: NSPEC_AB,  jacobian, wxgll, wygll, wzgll
+
+     real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable, intent(in)    :: vect1
+     real(kind=CUSTOM_REAL),                                    intent(inout) :: qp
+     integer,                                                   intent(in)    :: Niv
+     real(kind=CUSTOM_REAL)                                                   :: jacobianl, weight, qp_tmp
+     integer                                                                  :: ipar, i, j, k, ispec
+
+     qp=0._CUSTOM_REAL
+
+     do ipar=1,Niv
+        do ispec = 1, NSPEC_AB
+
+           do k=1,NGLLZ
+              do j=1,NGLLY
+                 do i=1,NGLLX
+                    weight = wxgll(i)*wygll(j)*wzgll(k)
+                    jacobianl = jacobian(i,j,k,ispec)
+                    qp = qp + jacobianl * weight * vect1(i,j,k,ispec,ipar) **2
+                 enddo
+              enddo
+           enddo
+        enddo
+     enddo
+
+     qp_tmp=qp
+     qp=0.
+     call sum_all_all_cr(qp_tmp, qp)
+
+  end subroutine Parallel_ComputeL2normSquare
+  !---------------------------------------------------------------------------------------------
+
+  !---------------------------------------------------------------------------------------------
+  !---------------------------------------------------------------------------------------------
+  !---------------------------------------------------------------------------------------------
+  !---------------------------------------------------------------------------------------------
+  !---------------------------------------------------------------------------------------------
+
+end module inversion_scheme
