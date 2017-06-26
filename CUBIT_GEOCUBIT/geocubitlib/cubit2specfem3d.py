@@ -551,10 +551,10 @@ class mesh(object, mesh_tools):
                                              cubit.get_block_attribute_value(
                                                     block, 6)
                                     # for q to be valid: it must be positive
-                                    if qk < 0 or qmu < 0:
-                                        print 'error, Q value invalid:', \
-                                            qk, qmu
-                                        break
+                                        if qk < 0 or qmu < 0:
+                                            print 'error, Q value invalid:', \
+                                               qk, qmu
+                                            break
                     elif flag < 0:
                         # interface/tomography domain
                         # velocity model
