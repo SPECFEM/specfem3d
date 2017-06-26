@@ -12,7 +12,7 @@ import string
 
 from paraview import servermanager
 
-## input: 
+## input:
 if len(sys.argv) == 2:
     filename = str(sys.argv[1])
     number = ""

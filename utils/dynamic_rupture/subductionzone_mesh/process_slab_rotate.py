@@ -17,17 +17,17 @@ Lonmin = 136
 Lonmax = 150
 xc = 0.5*(Lonmin+Lonmax)
 yc = 0.5*(Latmin+Latmax)
-Lat2dis = 100.0 
+Lat2dis = 100.0
 # The true latitude to distance conversion ratio should be 111.195km=1deg.
 #We will reflect that at the end of the exportmesh.py by scaling the model
-#up by a factor of 1.1195. The reason we don't do it here is that it will 
+#up by a factor of 1.1195. The reason we don't do it here is that it will
 #change the whole script of mesh generation.
 Lon2dis = 76.0
 Meshsize = 4.0 # mesh size set to 4.0 km
 radius = 1000.0
 cuttingdepth = -100.0
 refine_slab = False # refine mesh near the subduction interface , can be very slow
-Mesh = False # set to true to trigger meshing 
+Mesh = False # set to true to trigger meshing
 rotate =-15
 Plotsquare=False
 # rotate function doesn't seem to work
@@ -67,7 +67,7 @@ def import_slab_data():
 #    filename = './aluslab.xyz'
     data = np.loadtxt(filename)
     data = data[np.bitwise_not(np.isnan(data[:,2])),:]
-    data = data[np.bitwise_and(np.bitwise_and(data[:,1]>=Latmin, data[:,1]<=Latmax),data[:,2]>-250)] # select data between latitude 45 and 50 degree and depth above 250km 
+    data = data[np.bitwise_and(np.bitwise_and(data[:,1]>=Latmin, data[:,1]<=Latmax),data[:,2]>-250)] # select data between latitude 45 and 50 degree and depth above 250km
     return data
 
 
@@ -99,7 +99,7 @@ np.savetxt('outputslab.txt',data,delimiter=',')
 #exit()
 
 N,D = data.shape
-X = range(0,N,5) # down sampling 
+X = range(0,N,5) # down sampling
 data = data[X,:]
 xc = np.mean(data[:,0])
 yc = np.mean(data[:,1])
@@ -149,7 +149,7 @@ np.savetxt('outputelev.txt',data,delimiter=',')
 
 
 N2,D = data.shape
-X = range(0,N2,10) # down sampling 
+X = range(0,N2,10) # down sampling
 data = data[X,:]
 data[:,0]=data[:,0]-xc
 data[:,1]=data[:,1]-yc
@@ -161,7 +161,7 @@ print(N2)
 start = N+1
 start_curve = n_curve+1
 for ii in range(0,N2):
-    vert = "create vertex x "+str(data[ii,0]*Lon2dis)+" y "+str(data[ii,1]*Lat2dis)+" z "+str(data[ii,2]/1000.0) # the topography profile longitude latitude and depth.depth are minus signed and of unit meters. A crude conversion of 1 degree=100 km , should be improved later. 
+    vert = "create vertex x "+str(data[ii,0]*Lon2dis)+" y "+str(data[ii,1]*Lat2dis)+" z "+str(data[ii,2]/1000.0) # the topography profile longitude latitude and depth.depth are minus signed and of unit meters. A crude conversion of 1 degree=100 km , should be improved later.
     cubit.cmd(vert)
     if(ii<N2-1):
         if(data[ii,1]!=data[ii+1,1]):
@@ -171,7 +171,7 @@ for ii in range(0,N2):
                 cubit.cmd(cc)
                 n_curve = n_curve+1
             start = N+ii+2
-         
+
 print('total curve %d'%n_curve)
 
 cubit.cmd('delete vertex  all')
@@ -198,7 +198,7 @@ cubit.cmd('compress all')
 cubit.cmd("merge all")
 if True:
 
-# make wrapping sphere not working 
+# make wrapping sphere not working
     cubit.cmd("create sphere radius {0}".format(radius))
 #cubit.cmd("section volume 3 with zplane offset 0 reverse")
 

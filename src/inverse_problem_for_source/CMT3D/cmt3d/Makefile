@@ -1,5 +1,5 @@
 F90 = gfortran
-F90_FLAGS = -O3 
+F90_FLAGS = -O3
 F77 = gfortran
 F77_FLAGS = -ffixed-line-length-132
 
@@ -26,7 +26,7 @@ $(CMT_F90_OBJ): $(OBJ_DIR)/%.o : %.f90
 	$(F90) -o $@ $(F90_FLAGS) -c $*.f90 -I $(MOD_DIR) -J$(MOD_DIR)
 
 $(CMT_F77_OBJ): $(OBJ_DIR)/%.o : %.f
-	$(F77) -o $@ $(F77_FLAGS) -c $*.f 
+	$(F77) -o $@ $(F77_FLAGS) -c $*.f
 
 
 

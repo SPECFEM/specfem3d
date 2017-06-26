@@ -1,7 +1,7 @@
 # Makefile
 
 #############################################################
-## modify to match your compiler defaults 
+## modify to match your compiler defaults
 
 # compilers
 F90 = gfortran
@@ -12,7 +12,7 @@ FLAGS = #-Wall
 #############################################################
 
 
-LIB_OBJS = create_adjsrc_amplitude.o rw_ascfile_c.o 
+LIB_OBJS = create_adjsrc_amplitude.o rw_ascfile_c.o
 
 # targets
 all: xcreate_adjsrc_amplitude

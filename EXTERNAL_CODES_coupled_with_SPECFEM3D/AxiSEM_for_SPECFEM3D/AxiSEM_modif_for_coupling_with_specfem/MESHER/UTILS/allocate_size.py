@@ -15,7 +15,7 @@ for line in f_in:
 
     # find allocate statements
     if line.find('allocate') > 0:
-        
+
         # make sure its allocate and not allocated or deallocate
         if line.find('allocated') != -1 or line.find('deallocate') != -1:
             continue
@@ -30,13 +30,13 @@ for line in f_in:
 
         varname = line.split('allocate(')[-1]
         varname = varname.split('(')[0]
-        
+
         dims = line.split('allocate('+ varname + '(')[-1]
         dims = dims.rstrip()
         dims = dims[:-2]
 
         ndims = dims.count(',') + 1
-        
+
         if ndims < mindims:
             if verbose:
                 print 'ndims < mindims, continuing'

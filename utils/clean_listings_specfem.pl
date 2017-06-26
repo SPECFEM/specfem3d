@@ -85,7 +85,7 @@
 use File::Basename;
 
 # when using this "find" command from Perl we need to use \\ instead of \ below otherwise Perl tries to interpret it
-      @objects = `find . -name '.git' -prune -o -name 'm4' -prune -o -path './utils/ADJOINT_TOMOGRAPHY_TOOLS/flexwin' -prune -o -type f -regextype posix-extended -regex '.*\\.(fh|f90|F90|h\\.in)' -print`;
+      @objects = `find . -name '.git' -prune -o -name 'm4' -prune -o -path './utils/ADJOINT_TOMOGRAPHY_TOOLS/flexwin' -prune -o -type f -regextype posix-extended -regex '.*\\.(fh|f90|F90|h\\.in|fh\\.in)' -print`;
 
       foreach $name (@objects) {
             chop $name;
@@ -327,10 +327,11 @@ use File::Basename;
 # read and clean all these files in the current directory and subdirectories
 #
 
-#     @objects = `ls *.c *.cu *.h *.h.in *.fh */*.c */*.cu */*.h */*.h.in */*.fh */*/*.c */*/*.cu */*/*.h */*/*.h.in */*/*.fh */*/*/*.c */*/*/*.cu */*/*/*.h */*/*/*.h.in */*/*/*.fh`;
-# when using this "find" command from Perl we need to use \\ instead of \ below otherwise Perl tries to interpret it
-# purposely excluding Python files from this list, since (I think) Python can use tabs for indentation (?) and thus they should not be converted to two spaces (?)
-      @objects = `find . -type f -name \\*Par_file\\* -print -o -name '.git' -prune -o -name 'm4' -prune -o -path './utils/ADJOINT_TOMOGRAPHY_TOOLS/flexwin' -prune -o -type f -regextype posix-extended -regex '.*\\.(bash|c|csh|cu|fh|f90|F90|h|h\\.in|pl|tex|txt|sh)' -print`;
+# When using this "find" command from Perl we need to use \\ instead of \ below otherwise Perl tries to interpret it.
+# Purposely excluding Python files from this list, since Python can use tabs for indentation.
+# Also make sure we exclude clean_listings_specfem.pl, i.e. this script, from the list, otherwise the script will clean itself and change the list of typos etc to the new one!
+
+      @objects = `find . -type f -name \\*Par_file\\* -print -o -name '.git' -prune -o -name 'm4' -prune -o -samefile './utils/clean_listings_specfem.pl' -prune -o -path './utils/ADJOINT_TOMOGRAPHY_TOOLS/flexwin' -prune -o -type f -regextype posix-extended -regex '.*\\.(bash|c|csh|cu|fh|f90|F90|h|h\\.in|fh\\.in|pl|tex|txt|sh)' -print`;
 
       foreach $name (@objects) {
             chop $name;
@@ -347,6 +348,51 @@ use File::Basename;
 
 # suppress trailing white spaces and carriage return
       $line =~ s/\s*$//;
+
+# convert the GNU license from version 2+ to version 3 (we switched in June 2017)
+      $line =~ s#either version 2 of the License#either version 3 of the License#ogi;
+
+      print FILEC "$line\n";
+
+      }
+
+            close(FILEDEPART);
+            close(FILEC);
+
+      }
+
+            system("rm -f _____temp08_____");
+
+################################################################################################
+################################################################################################
+################################################################################################
+
+#
+# in the case of Python files, Makefiles and rules.mk files, do NOT expand the tabs into white spaces
+#
+
+# when using this "find" command from Perl we need to use \\ instead of \ below otherwise Perl tries to interpret it
+      @objects = `find . -type f -name \\*Par_file\\* -print -o -name '.git' -prune -o -name 'm4' -prune -o -path './utils/ADJOINT_TOMOGRAPHY_TOOLS/flexwin' -prune -o -type f -regextype posix-extended -regex '.*\\.(py)' -print -o -type f -regextype posix-extended -regex '.*Makefile*' -print -o -type f -regextype posix-extended -regex '.*Makefile\\.in' -print -o -type f -regextype posix-extended -regex '.*rules\\.mk' -print`;
+
+      foreach $name (@objects) {
+            chop $name;
+# create a copy of the input file
+            system("cp $name _____temp08_____");
+            $cname = $name;
+#           print STDOUT "Cleaning $cname ...\n";
+            print STDOUT "On va changer $cname ...\n";
+
+            open(FILEDEPART,"<_____temp08_____");
+            open(FILEC,">$cname");
+
+# open the input C file
+      while($line = <FILEDEPART>) {
+
+# suppress trailing white spaces and carriage return
+      $line =~ s/\s*$//;
+
+# convert the GNU license from version 2+ to version 3 (we switched in June 2017)
+      $line =~ s#either version 2 of the License#either version 3 of the License#ogi;
 
       print FILEC "$line\n";
 
@@ -369,7 +415,6 @@ use File::Basename;
 #  Authors : David Luet, Princeton University, USA and Dimitri Komatitsch, CNRS, France, February 2015; "find" command from Elliott Sales de Andrade
 #
 
-#     @objects = `ls *.txt *.c *.cu *.h *.h.in *.fh */*.c */*.cu */*.h */*.h.in */*.fh */*/*.c */*/*.cu */*/*.h */*/*.h.in */*/*.fh */*/*/*.c */*/*/*.cu */*/*/*.h */*/*/*.h.in */*/*/*.fh *.f90 *.F90 *.h *.h.in *.fh */*.f90 */*.F90 */*.h */*.h.in */*.fh */*/*.f90 */*/*.F90 */*/*.h */*/*.h.in */*/*.fh */*/*/*.f90 */*/*/*.F90 */*/*/*.h */*/*/*.h.in */*/*/*.fh */*.txt */*/*.txt */*/*/*.txt */*.tex */*/*.tex */*/*/*.tex *.sh */*.sh */*/*.sh */*/*/*.sh *.csh */*.csh */*/*.csh */*/*/*.csh *.bash */*.bash */*/*.bash */*/*/*.bash *.pl */*.pl */*/*.pl */*/*/*.pl *.py */*.py */*/*.py */*/*/*.py`;
 # when using this "find" command from Perl we need to use \\ instead of \ below otherwise Perl tries to interpret it
       @objects = `find . -type f -name \\*Par_file\\* -print -o -name '.git' -prune -o -name 'm4' -prune -o -path './utils/ADJOINT_TOMOGRAPHY_TOOLS/flexwin' -prune -o -type f -regextype posix-extended -regex '.*\\.(bash|c|csh|cu|fh|f90|F90|h|h\\.in|pl|py|tex|txt|sh)' -print`;
 

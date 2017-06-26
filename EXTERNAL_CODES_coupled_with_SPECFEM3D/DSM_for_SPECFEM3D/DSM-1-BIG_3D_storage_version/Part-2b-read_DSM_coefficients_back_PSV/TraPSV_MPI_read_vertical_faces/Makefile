@@ -3,7 +3,7 @@ BIN=../../bin
 
 include ../../config.h
 
-program = $(BIN)/xTraPSV_MPI_read_ceof_vert_PSV 
+program = $(BIN)/xTraPSV_MPI_read_ceof_vert_PSV
 
 objs =   trial.o  others.o TraPSV-0.1.3.o
 

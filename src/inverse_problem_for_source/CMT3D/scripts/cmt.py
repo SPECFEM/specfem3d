@@ -7,7 +7,7 @@ from numpy import *
 # read cmt_par[0:npar] from cmt file
 def read_cmt(cmt_file,cmt_par,npar,utm=0,nevent=1,scale_par=array([1.0e22,1.0e22,1.0e22,1.0e22,1.0e22,1.0e22,1,1,1,1,1]),utm_center=[0.,0.]):
 
-# check inputs 
+# check inputs
   if npar not in [6,7,9,10,11]:
     print 'npar=6,7,9,10,11';   return -1
   if size(cmt_par) != npar*nevent:
@@ -34,7 +34,7 @@ def read_cmt(cmt_file,cmt_par,npar,utm=0,nevent=1,scale_par=array([1.0e22,1.0e22
     print 'Error utm zone'; return -3
 
 
-  for i in range(0,nevent):  
+  for i in range(0,nevent):
     j=i*13 # start line of i'th subevent
     mrr=float(ref_lines[j+7].rstrip('\n').split()[1])
     mtt=float(ref_lines[j+8].rstrip('\n').split()[1])
@@ -45,7 +45,7 @@ def read_cmt(cmt_file,cmt_par,npar,utm=0,nevent=1,scale_par=array([1.0e22,1.0e22
     depth=float(ref_lines[j+6].rstrip('\n').split()[1])
     lat=float(ref_lines[j+4].rstrip('\n').split()[1])
     lon=float(ref_lines[j+5].rstrip('\n').split()[1])
-    tshift=float(ref_lines[j+2].rstrip('\n').split()[2])  
+    tshift=float(ref_lines[j+2].rstrip('\n').split()[2])
     hdur=float(ref_lines[j+3].rstrip('\n').split()[2])
 
 # rotate to appropriate coordinates
@@ -63,14 +63,14 @@ def read_cmt(cmt_file,cmt_par,npar,utm=0,nevent=1,scale_par=array([1.0e22,1.0e22
       depth=loc_x; lon=loc_y; lat=loc_z
 #    else: # utm=0, global code, local [R, T, P]
 #      depth=R_EARTH-depth; lon=0.; lat=0.
-    
+
     a=array([mrr,mtt,mpp,mrt,mrp,mtp,depth,lon,lat,tshift,hdur])
 
     if nevent == 1:
       cmt_par[0:npar]=a[0:npar]/scale_par[0:npar]
     else:
       cmt_par[0:npar,i]=a[0:npar]/scale_par[0:npar]
-  
+
   return 0
 
 # -------------------------------------------------------
@@ -120,11 +120,11 @@ def write_cmt(cmt_file,cmt_par,npar,ref_cmt_file,utm=0,nevent=1,utm_center=[0.,0
     depth=float(ref_lines[j+6].rstrip('\n').split()[1])
     lat=float(ref_lines[j+4].rstrip('\n').split()[1])
     lon=float(ref_lines[j+5].rstrip('\n').split()[1])
-    tshift=float(ref_lines[j+2].rstrip('\n').split()[2])  
+    tshift=float(ref_lines[j+2].rstrip('\n').split()[2])
     hdur=float(ref_lines[j+3].rstrip('\n').split()[2])
- 
+
     f.write(''.join(ref_lines[j:j+2]))
-    if npar > 10: 
+    if npar > 10:
       hdur=cmt_par_unscaled[10]
     if npar > 9:
       tshift=cmt_par_unscaled[9]
@@ -157,7 +157,7 @@ def write_cmt(cmt_file,cmt_par,npar,ref_cmt_file,utm=0,nevent=1,utm_center=[0.,0
         [lon, lat, r]=xyz2sph(loc[0],loc[1],loc[2])
         depth=R_EARTH-r
         mloc=rotate_cmt(lon,lat,mloc[0],mloc[1],mloc[2],mloc[3],mloc[4],mloc[5],local2global=False)
- 
+
     mloc = floor(mloc/exponent)*exponent
 
     f.write('time shift:%12.4f\n' % (tshift))
@@ -166,11 +166,11 @@ def write_cmt(cmt_file,cmt_par,npar,ref_cmt_file,utm=0,nevent=1,utm_center=[0.,0
     f.write('longitude:%13.4f\n' % (lon))
     f.write('depth:%17.4f\n' % (depth))
     f.write("Mrr:     %14.9g\n" % (mloc[0]))
-    f.write("Mtt:     %14.9g\n" % (mloc[1]))        
-    f.write("Mpp:     %14.9g\n" % (mloc[2]))        
-    f.write("Mrt:     %14.9g\n" % (mloc[3]))        
-    f.write("Mrp:     %14.9g\n" % (mloc[4]))        
-    f.write("Mtp:     %14.9g\n" % (mloc[5]))        
+    f.write("Mtt:     %14.9g\n" % (mloc[1]))
+    f.write("Mpp:     %14.9g\n" % (mloc[2]))
+    f.write("Mrt:     %14.9g\n" % (mloc[3]))
+    f.write("Mrp:     %14.9g\n" % (mloc[4]))
+    f.write("Mtp:     %14.9g\n" % (mloc[5]))
 
   f.close()
   print 'Writing cmt file '+cmt_file
@@ -183,7 +183,7 @@ def diff_cmt_files(cmt1,cmt2,npar,utm=0):
   if npar not in [6,7,9,10,11]:
     print 'Error npar: 6,7,9,10,11'
     return -1
-  
+
   [istat,out]=commands.getstatusoutput('wc '+cmt1)
   if istat != 0:
     print 'Error reading '+cmt1; return 1
@@ -218,7 +218,7 @@ def diff_cmt_files(cmt1,cmt2,npar,utm=0):
 # ------------------------------------
 
 def get_cmt(cmt_file,info='veryshort'):
-  
+
   if not os.path.isfile(cmt_file):
     sys.exit('Check if '+cmt_file+' exists or not')
 
@@ -290,17 +290,17 @@ def mij2dc(M):
 # dlocation mean different things for utm = 0, and utm in [1,60], and dlocation should be set to the same value as ddepth for utm=-1
 def gen_cmt_der(cmt,npar=9,dmoment=1e22,ddepth=1,dlocation=0.05,utm=0,nevent=1,ext=['Mrr','Mtt','Mpp','Mrt','Mrp','Mtp','dep','lon','lat']):
 
- # ddepth and dlocation are in terms of kms  
+ # ddepth and dlocation are in terms of kms
   if not os.path.isfile(cmt):
     print 'Check if '+cmt_file+' exists or not'; return -1
 
   if utm > 60 or utm < -1:
-    print 'Check utm in [-1,60]'; return -2 
+    print 'Check utm in [-1,60]'; return -2
 #  elif utm == 0:
 #    ext[6]='rrr'; ext[7]='ttt'; ext[8]='ppp'
  #   ext=['Mrr','Mtt','Mpp','Mrt','Mrp','Mtp','rrr','sss','eee']
   elif utm == -1:
-    ext[0]='Mxx'; ext[1]='Myy'; ext[2]='Mzz'; ext[3]='Mxy'; ext[4]='Mxz'; ext[5]='Myz'; 
+    ext[0]='Mxx'; ext[1]='Myy'; ext[2]='Mzz'; ext[3]='Mxy'; ext[4]='Mxz'; ext[5]='Myz';
     ext[6]='xxx'; ext[7]='yyy'; ext[8]='zzz'
     if npar < 9:
       print 'utm == -1 requires npar >= 9'; return -2
@@ -321,9 +321,9 @@ def gen_cmt_der(cmt,npar=9,dmoment=1e22,ddepth=1,dlocation=0.05,utm=0,nevent=1,e
   for k in range(0,nevent):
 
     if nevent == 1:
-      depth=cmt_par[6]; x=cmt_par[7];  y=cmt_par[8] 
+      depth=cmt_par[6]; x=cmt_par[7];  y=cmt_par[8]
     else:
-      depth=cmt_par[6,k]; x=cmt_par[7,k];  y=cmt_par[8,k]  
+      depth=cmt_par[6,k]; x=cmt_par[7,k];  y=cmt_par[8,k]
     dnew=depth+ddepth; xnew=x+dlocation; ynew=y+dlocation # name holders again
     print depth, ddepth, dnew
 
@@ -391,7 +391,7 @@ def sem_der_script(cmt,run_script,npar,out_dir,utm=0,nevent=1,ext=['Mrr','Mtt','
     print 'check if '+run_script+' exists or not'; return -1
   if not os.path.isdir(out_dir):
     os.system('mkdir -p '+out_dir)
-  
+
   if utm > 60 or utm < -1:
     print 'Check utm in [-1,60]'; return -2
   elif utm == 0:
@@ -437,7 +437,7 @@ def sem_der_script(cmt,run_script,npar,out_dir,utm=0,nevent=1,ext=['Mrr','Mtt','
   lines+='done\n'
   if len(out) > 22:
     lines+=''.join(out[22:])
-  
+
   file(run_script,'w').write(lines)
   print '  finished writing run script '+run_script+'\n'
   return 0

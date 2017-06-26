@@ -6,7 +6,7 @@ def usage():
     print "compare_results filename1 filename2"
 
 def diff_measure(x1,x2):
-    measure = alg.norm(x1 - x2)/alg.norm(x1 + x2) 
+    measure = alg.norm(x1 - x2)/alg.norm(x1 + x2)
     return measure
 
 
@@ -23,6 +23,6 @@ def main(argv):
         col2 = dat2[:,index]
         diff = diff_measure(col1, col2);
         print "the difference between the 2 files for column ", index, " is : ",diff
-    
-if __name__=="__main__": 
+
+if __name__=="__main__":
     main(sys.argv[1:])

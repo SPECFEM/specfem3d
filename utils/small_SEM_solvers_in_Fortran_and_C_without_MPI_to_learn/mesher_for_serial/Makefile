@@ -11,7 +11,7 @@
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
+# the Free Software Foundation; either version 3 of the License, or
 # (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
@@ -37,9 +37,9 @@ FLAGS_NO_CHECK = -std=gnu -fimplicit-none -frange-check -O3 -Waliasing -Wampersa
 #FLAGS_NO_CHECK = -O1 -vec-report0 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check all -traceback -align sequence -fpe0 -ftz
 
 FCFLAGS =
-MPILIBS = 
+MPILIBS =
 FLAGS_CHECK = $(FLAGS_NO_CHECK)
-FCFLAGS_f90 = 
+FCFLAGS_f90 =
 
 FCCOMPILE_CHECK = ${FC} ${FCFLAGS} $(FLAGS_CHECK)
 FCCOMPILE_NO_CHECK = ${FC} ${FCFLAGS} $(FLAGS_NO_CHECK)
@@ -48,7 +48,7 @@ MPIFCCOMPILE_NO_CHECK = ${MPIFC} ${FCFLAGS} $(FLAGS_NO_CHECK) $(MPIFLAGS)
 
 CC = gcc
 CFLAGS = -g -O2
-CPPFLAGS = -I. 
+CPPFLAGS = -I.
 
 AR = ar
 ARFLAGS = cru

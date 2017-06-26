@@ -3,7 +3,7 @@ BIN=../bin
 
 include ../config.h
 
-program = $(BIN)/xcreate_inputs_files 
+program = $(BIN)/xcreate_inputs_files
 program1 = $(BIN)/xcreate_all_inputs
 
 objs =   param_reader.o create_inputs_files.o
@@ -32,5 +32,5 @@ $(program1): $(objs1)
 clean:
 	rm -f $(program) $(program1) $(objs) *.lst *.o
 
-all: $(program) $(program1) 
+all: $(program) $(program1)
 

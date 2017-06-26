@@ -41,26 +41,26 @@ clean:
 cleanobj:
 	rm -rf *.o *__genmod.*90 *.mod
 
-# OBJECTS:  
+# OBJECTS:
 
-convert_external_layers_of_a_given_mesh_to_CPML_layers.o: convert_external_layers_of_a_given_mesh_to_CPML_layers.f90 
+convert_external_layers_of_a_given_mesh_to_CPML_layers.o: convert_external_layers_of_a_given_mesh_to_CPML_layers.f90
 	${F90} $(FFLAGS) -c -o convert_external_layers_of_a_given_mesh_to_CPML_layers.o convert_external_layers_of_a_given_mesh_to_CPML_layers.f90
 
-add_CPML_layers_to_an_existing_mesh.o: add_CPML_layers_to_an_existing_mesh.f90 
+add_CPML_layers_to_an_existing_mesh.o: add_CPML_layers_to_an_existing_mesh.f90
 	${F90} $(FFLAGS) -c -o add_CPML_layers_to_an_existing_mesh.o add_CPML_layers_to_an_existing_mesh.f90
 
-convert_CUBIT_SPECFEM_mesh_to_OpenDX.o: convert_CUBIT_SPECFEM_mesh_to_OpenDX.f90 
+convert_CUBIT_SPECFEM_mesh_to_OpenDX.o: convert_CUBIT_SPECFEM_mesh_to_OpenDX.f90
 	${F90} $(FFLAGS) -c -o convert_CUBIT_SPECFEM_mesh_to_OpenDX.o convert_CUBIT_SPECFEM_mesh_to_OpenDX.f90
 
-shuffle_existing_mesh_for_tests.o: shuffle_existing_mesh_for_tests.f90 
+shuffle_existing_mesh_for_tests.o: shuffle_existing_mesh_for_tests.f90
 	${F90} $(FFLAGS) -c -o shuffle_existing_mesh_for_tests.o shuffle_existing_mesh_for_tests.f90
 
-convert_mesh_files_from_ASCII_to_binary.o: convert_mesh_files_from_ASCII_to_binary.f90 
+convert_mesh_files_from_ASCII_to_binary.o: convert_mesh_files_from_ASCII_to_binary.f90
 	${F90} $(FFLAGS) -c -o convert_mesh_files_from_ASCII_to_binary.o convert_mesh_files_from_ASCII_to_binary.f90
 
-convert_mesh_files_from_binary_to_ASCII.o: convert_mesh_files_from_binary_to_ASCII.f90 
+convert_mesh_files_from_binary_to_ASCII.o: convert_mesh_files_from_binary_to_ASCII.f90
 	${F90} $(FFLAGS) -c -o convert_mesh_files_from_binary_to_ASCII.o convert_mesh_files_from_binary_to_ASCII.f90
 
-check_the_CPML_flag_file_obtained.o: check_the_CPML_flag_file_obtained.f90 
+check_the_CPML_flag_file_obtained.o: check_the_CPML_flag_file_obtained.f90
 	${F90} $(FFLAGS) -c -o check_the_CPML_flag_file_obtained.o check_the_CPML_flag_file_obtained.f90
 

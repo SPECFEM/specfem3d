@@ -1,9 +1,9 @@
 # Makefile
 
 #############################################################
-## modify to match your compiler defaults 
+## modify to match your compiler defaults
 
-F90 = gfortran 
+F90 = gfortran
 CC = gcc
 
 #############################################################
@@ -29,10 +29,10 @@ $(F90OBJ) : %.o : %.f90
 	$(F90)  $(F90FLAGS) -c $*.f90
 
 $(COBJ): %.o : %.c
-	$(CC) $(CCFLAGS) -c $*.c 
+	$(CC) $(CCFLAGS) -c $*.c
 
-clean: 
-	\rm -f $(OBJS) *~ *.o 
+clean:
+	\rm -f $(OBJS) *~ *.o
 
 cleanall:
 	\rm -f $(OBJS)  *.o *~

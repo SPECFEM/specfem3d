@@ -2,7 +2,7 @@
 
 import cubit
 import boundary_definition
-import cubit2specfem3d 
+import cubit2specfem3d
 import math
 import os
 import sys
@@ -47,9 +47,9 @@ y.append(-0.1)   #y8
 z=[z_surf]*4
 
 ####################  bulk ###########################################
-for i in range(len(xbulk)): 
-   vert="create vertex x "+str(xbulk[i])+" y "+str(ybulk[i])+" z "+str(zbulk[i]) 
-   cubit.cmd(vert) 
+for i in range(len(xbulk)):
+   vert="create vertex x "+str(xbulk[i])+" y "+str(ybulk[i])+" z "+str(zbulk[i])
+   cubit.cmd(vert)
 
 ################  Loading fault points profile#############################
 for i in range(len(x)):
@@ -62,24 +62,24 @@ bulk1="create curve vertex 1 2"
 bulk2="create curve vertex 2 3"
 bulk3="create curve vertex 3 4"
 bulk4="create curve vertex 4 1"
- 
+
 fault_up="create curve spline vertex 5 6 7"
-fault_down="create curve spline vertex 5 8 7" 
+fault_down="create curve spline vertex 5 8 7"
 
 cubit.cmd(bulk1)
 cubit.cmd(bulk2)
 cubit.cmd(bulk3)
 cubit.cmd(bulk4)
 
-cubit.cmd(fault_up) 
-cubit.cmd(fault_down) 
+cubit.cmd(fault_up)
+cubit.cmd(fault_down)
 
 surface="create surface curve 1 2 3 4 5 6"
 cubit.cmd(surface)
 
-cubit.cmd("sweep surface 1  vector 0  0 -1 distance "+str(21*km)) 
-cubit.cmd("sweep curve 5 vector 0 0 -1 distance "+str(21*km)) 
-cubit.cmd("sweep curve 6 vector 0 0 -1 distance "+str(21*km)) 
+cubit.cmd("sweep surface 1  vector 0  0 -1 distance "+str(21*km))
+cubit.cmd("sweep curve 5 vector 0 0 -1 distance "+str(21*km))
+cubit.cmd("sweep curve 6 vector 0 0 -1 distance "+str(21*km))
 
 #####################################################
 elementsize = 1000
@@ -95,7 +95,7 @@ cubit.cmd("unmerge surface 2 3")
 
 ########### Fault elements and nodes ###############
 
-os.system('mkdir -p MESH') 
+os.system('mkdir -p MESH')
 
 Au = [2]
 Ad = [3]
@@ -104,31 +104,31 @@ faultA = fault_input(1,Au,Ad)
 
 #  FOR THE BULK (Seismic wave propagation part for SPECFEM3D)
 
-###### This is boundary_definition.py of GEOCUBIT 
-#..... which extracts the bounding faces and defines them into blocks 
-#boundary_definition.entities=['face'] # this is a deprecated boundary definition function 
-#boundary_definition.define_bc(boundary_definition.entities,parallel=True) 
-entities=['face'] 
+###### This is boundary_definition.py of GEOCUBIT
+#..... which extracts the bounding faces and defines them into blocks
+#boundary_definition.entities=['face'] # this is a deprecated boundary definition function
+#boundary_definition.define_bc(boundary_definition.entities,parallel=True)
+entities=['face']
 define_parallel_bc(entities) # in absorbing_boundary.py
- 
-#### Define material properties for the 2 volumes ################ 
-cubit.cmd('#### DEFINE MATERIAL PROPERTIES #######################') 
- 
-# Material properties in concordance with tpv5 benchmark. 
 
-cubit.cmd('block 1 name "elastic 1" ')        # material region  
-cubit.cmd('block 1 attribute count 6') 
-cubit.cmd('block 1 attribute index 1 1')      # flag for fault side 1 
-cubit.cmd('block 1 attribute index 2 6000')   # vp 
-cubit.cmd('block 1 attribute index 3 3464')    # vs 
-cubit.cmd('block 1 attribute index 4 2670')   # rho 
-cubit.cmd('block 1 attribute index 5 13')     # q flag (see constants.h: iattenuation_ ... ) 
-cubit.cmd('block 1 attribute index 6 0')     # q flag (see constants.h: iattenuation_ ... ) 
+#### Define material properties for the 2 volumes ################
+cubit.cmd('#### DEFINE MATERIAL PROPERTIES #######################')
+
+# Material properties in concordance with tpv5 benchmark.
+
+cubit.cmd('block 1 name "elastic 1" ')        # material region
+cubit.cmd('block 1 attribute count 6')
+cubit.cmd('block 1 attribute index 1 1')      # flag for fault side 1
+cubit.cmd('block 1 attribute index 2 6000')   # vp
+cubit.cmd('block 1 attribute index 3 3464')    # vs
+cubit.cmd('block 1 attribute index 4 2670')   # rho
+cubit.cmd('block 1 attribute index 5 13')     # q flag (see constants.h: iattenuation_ ... )
+cubit.cmd('block 1 attribute index 6 0')     # q flag (see constants.h: iattenuation_ ... )
 
 
-#### Export to SPECFEM3D format using cubit2specfem3d.py of GEOCUBIT 
- 
-cubit2specfem3d.export2SPECFEM3D('MESH')  
- 
-# all files needed by SCOTCH are now in directory MESH 
+#### Export to SPECFEM3D format using cubit2specfem3d.py of GEOCUBIT
+
+cubit2specfem3d.export2SPECFEM3D('MESH')
+
+# all files needed by SCOTCH are now in directory MESH
 

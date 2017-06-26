@@ -12,7 +12,7 @@ def checkjump(time):
             tail = np.fromfile(f1,dtype=np.int32,count=1)
         if(i==8):
             print "shear stress",max(data)
-    
+
     with open(prefix+'Snapshot%s_F1.bin'%str(time),'r') as f:
         for i in range(1,9):
             header = np.fromfile(f,dtype=np.int32,count=1)
@@ -26,7 +26,7 @@ def checkjump(time):
                 Dmax1 = max(abs(data))
             if( i == 6):
                 print "slip veloc on 1",max(abs(data))
-    
+
     with open(prefix+'Snapshot%s_F2.bin'%str(time),'r') as f:
         for i in range(1,9):
             header = np.fromfile(f,dtype=np.int32,count=1)
@@ -62,7 +62,7 @@ def checkjump(time):
                 Dmax = max(abs(data[A]))
                 if(Dmax>0.1):
                     supershear = True
-                else: 
+                else:
                     supershear = False
 
 

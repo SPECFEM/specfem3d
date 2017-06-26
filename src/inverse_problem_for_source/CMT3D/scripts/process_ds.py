@@ -106,26 +106,26 @@ if (windowing and not bandpass):
   sys.exit('pass bands -t has to be set before windowing (-w)')
 if (windowing):
   meas_dir=meas_dir+ext
-  input_flexwin='INPUT_FLEXWIN'+ext 
+  input_flexwin='INPUT_FLEXWIN'+ext
 #if (preprocess and bandpass): # only clean up directories if preprocessing is done
 #  os.system('rm -rf '+new_datadir+'/*')
 #  os.system('rm -rf '+new_syndir+'/*')
 #channel name
 if chan == 'LH':
   sps='20'
-else: 
+else:
   sps='1'
   resp_dir='/data2/Datalib/global_resp/'
-  
+
 #padding zeros
 if (regional_data):
   bb=-40
 else:
-  bb=-100 
+  bb=-100
 if (bandpass):
   bb=-float(tmin)*3.0
 bb2=bb+1.0 # to make sure cut range is inside [b,e]
-  
+
 #########  obtain data/syn list (sort by station) ##################
 nfile=0; outfile='out_ds.tmp'; os.system('rm -f '+outfile)
 data_list=[]; syn_list=[]; all_syn_list=[]; hole_list=[]; comp_list=[]
@@ -170,7 +170,7 @@ for dd in os.popen('saclst kstnm knetwk kcmpnm khole f '+datadir+'/*'+chan+'[ZEN
     data_list.append(dat[0]); syn_list.append(syn[0]) # ENZ components
     hole_list.append(hole); comp_list.append(cmp)
     nfile=nfile+1
-      
+
 if der_syn:
   for i in range(0,len(syn_list)):
     all_syn_list.append(syn_list[i]+' '+' '.join(glob.glob(syn_list[i]+'.???')))
@@ -180,7 +180,7 @@ print "**** Total number of matching traces ", nfile, " *****"
 
 ############ preprocessing data and synthetics ################
 if preprocess:
-    
+
   print '**** pre-processing data and synthetics ****'
   data_cmd='process_data_new.pl -m '+cmt+' -p --model='+model_name
   print data_cmd+' data_files'
@@ -207,11 +207,11 @@ if bandpass:
   print '**** cutting data and synthetics ****'
   sac_input='cuterr fillz\n' # this should be redundant
   for i in range(0,nfile):
-    data=data_list[i]; syn=syn_list[i]; allsyn=all_syn_list[i].rstrip()   
+    data=data_list[i]; syn=syn_list[i]; allsyn=all_syn_list[i].rstrip()
 
     [db,de,ddt]=os.popen('saclst b e delta f '+data).readline().split()[1:]
     [sb,se,sdt]=os.popen('saclst b e delta f '+syn).readline().split()[1:]
-    
+
     if (float(ddt)-float(sdt)) > eps:
       sys.exit('check dt for '+data+' and '+syn)
     else:
@@ -227,7 +227,7 @@ if bandpass:
   error=os.system(data_cmd+' '+' '.join(data_list)+'>>'+outfile)
   if (error != 0):
     sys.exit('Error bandpass filtering data '+str(error1))
-    
+
   f=open('syn.command','w')
   syn_cmd='process_syn_new.pl -S -l t3/t4 -d '+new_syndir+' -t '+tmin+'/'+tmax+' -f -s '+sps+' --model='+model_name
   print syn_cmd+' all_syn_files'
@@ -283,7 +283,7 @@ if windowing:
           flexwin_dict[key]=j
           print 'Keeping '+data2+' instead of '+data1+', determined by SNR', snr2, snr1
         else:
-          print 'Keeping '+data1+' over '+data2+', determined by SNR', snr1, snr2 
+          print 'Keeping '+data1+' over '+data2+', determined by SNR', snr1, snr2
       else:
         flexwin_dict[key]=j
     else:
@@ -298,7 +298,7 @@ if windowing:
   f=open(input_flexwin,'w')
   f.write(outstring)
   f.close()
-  
+
   if (not os.path.isdir(meas_dir)):
     print 'mkdir '+meas_dir
     os.mkdir(meas_dir)

@@ -49,7 +49,7 @@ fileinput.close()
 print '#done points: '+str(count)
 print ''
 
-cubit.cmd('Display')    
+cubit.cmd('Display')
 
 # creates smooth spline curves for surface
 print '#creating curves...'
@@ -62,7 +62,7 @@ for i in range(1,count+1):
 print '#done curves: '+str(countcurves)
 print ''
 
-cubit.cmd('Display')    
+cubit.cmd('Display')
 cubit.cmd('pause')
 
 # creates surface
@@ -70,7 +70,7 @@ print '#creating skin surface...'
 cubit.cmd('create surface skin curve all')
 
 
-cubit.cmd('Display')    
+cubit.cmd('Display')
 cubit.cmd('pause')
 
 # cleans up

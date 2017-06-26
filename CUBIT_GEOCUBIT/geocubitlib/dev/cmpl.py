@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #############################################################################
-# cpml.py                                                    
+# cpml.py
 # this file is part of GEOCUBIT                                             #
 #                                                                           #
 # Created by Emanuele Casarotti                                             #
@@ -10,7 +10,7 @@
 #                                                                           #
 # This program is free software; you can redistribute it and/or modify      #
 # it under the terms of the GNU General Public License as published by      #
-# the Free Software Foundation; either version 2 of the License, or         #
+# the Free Software Foundation; either version 3 of the License, or         #
 # (at your option) any later version.                                       #
 #                                                                           #
 # This program is distributed in the hope that it will be useful,           #
@@ -39,7 +39,7 @@ def create_single_pml(n,coord,operator,limit,normal,distance,layers):
     idv1=cubit.get_last_id('volume')+1
     if normal=='0 0 -1':
         txt="create element extrude face in surface with %s %s %s direction %s distance %s layers %s"
-        cmd=txt % (coord,operator,limit,normal,distance,layers)    
+        cmd=txt % (coord,operator,limit,normal,distance,layers)
     else:
         txt="create element extrude face in (surf in vol %s) with %s %s %s direction %s distance %s layers %s"
         cmd=txt % (n,coord,operator,limit,normal,distance,layers)
@@ -117,7 +117,7 @@ def mesh_cpml(list_vol,remesh=True,refinement=None,top_surf=None,size=None):
         cubit.cmd('mesh vol all')
         try:
             for refdepth in refinement:
-                cubit.cmd('refine surf '+top_surf+' numsplit 1 bias 1 depth '+str(refdepth)) 
+                cubit.cmd('refine surf '+top_surf+' numsplit 1 bias 1 depth '+str(refdepth))
         except:
             print 'DEBUG: error in refinement cpml'
         xmin=xmin-size
@@ -138,7 +138,7 @@ def mesh_cpml(list_vol,remesh=True,refinement=None,top_surf=None,size=None):
         cubit.cmd(txt)
 
 
-    
+
 def collecting_cpml(ip,size=None,cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,cpuy=1,cubfiles=False,decimate=False,layers=2):
     import glob
     import re
@@ -147,8 +147,8 @@ def collecting_cpml(ip,size=None,cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,
     if not size:
         print 'cpml size must be specified'
         return
-        
-        
+
+
     boundary_dict={}
     ##
     try:
@@ -158,7 +158,7 @@ def collecting_cpml(ip,size=None,cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,
     #
     xmin,xmax,ymin,ymax,listfull=map_boundary(cpuxmin,cpuxmax,cpuymin,cpuymax,cpux,cpuy)
     #
-    if cubfiles:        
+    if cubfiles:
         nf,listip,filenames,cubflag=importing_cubfiles(cubfiles)
     else:
         nf=0
@@ -180,11 +180,11 @@ def collecting_cpml(ip,size=None,cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,
                 ip=0
         if decimate: cubit.cmd('export mesh "decimated_before_cmpl.e" dimension 3 block all overwrite')
     else:
-        if decimate: 
+        if decimate:
             cubit.cmd('refine volume all numsplit 1 bias 1.0 depth 1 ')
             cubit.cmd('export mesh "decimated_before_cmpl.e" dimension 3 block all overwrite')
 
-    
+
     #
     #
     #print boundary_dict
@@ -193,7 +193,7 @@ def collecting_cpml(ip,size=None,cpuxmin=0,cpuxmax=1,cpuymin=0,cpuymax=1,cpux=1,
         ty=cubit.get_block_element_type(block)
         if ty == 'HEX8':
             cubit.cmd('block '+str(block)+' name "vol'+str(block)+'"')
-            
+
     list_vol=list(cubit.parse_cubit_list('volume','all'))
     create_pml(xmin=xmin,xmax=xmax,ymax=ymax,ymin=ymin,zmin=zmin,zmax=zmax,size=size,layers=layers,vol=list_vol)
 

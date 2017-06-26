@@ -2,7 +2,7 @@
 
 import cubit
 import boundary_definition
-import cubit2specfem3d 
+import cubit2specfem3d
 import math
 import os
 import sys
@@ -40,19 +40,19 @@ zbulk=[]
 
 # Bulk points ###
 xbulk.append(-10*km-L)    #x1
-xbulk.append(250*km+L)    #x2  
+xbulk.append(250*km+L)    #x2
 xbulk.append(250*km+L)    #x3
 xbulk.append(-10*km-L)    #x4
 
 zbulk.append(0*km)   #y1
-zbulk.append(0*km)   #y2   
+zbulk.append(0*km)   #y2
 zbulk.append(-50*km-D) #y3
 zbulk.append(-50*km-D) #y4
 
 ybulk=[y_vert]*4
 
 ### CRACKS ##########
-x.append(0*km)                      #x5  
+x.append(0*km)                      #x5
 x.append(4*km/math.tan(dip1))       #x6  = x11 (triple joint)
 x.append(x[1]+8*km/math.tan(dip2))  #x7
 x.append(x[2])                      #x8  = x7 (kink point)
@@ -67,7 +67,7 @@ z.append(-26*km+h1)  #z6  (triple join - up)
 z.append(-18*km+h1)  #z7  (kink point - up)
 z.append(-18*km-h1)  #z8  (kink point - down)
 z.append(0)          #z9
-z.append(0)          #z10 = z9 
+z.append(0)          #z10 = z9
 z.append(-26*km-h1)  #z11 (triple join - down)
 z.append(0)          #z12
 z.append(0)          #z13
@@ -76,9 +76,9 @@ y=[y_vert]*9
 #####
 
 ####################  bulk ###########################################
-for i in range(len(xbulk)): 
-   vert="create vertex x "+str(xbulk[i])+" y "+str(ybulk[i])+" z "+str(zbulk[i]) 
-   cubit.cmd(vert) 
+for i in range(len(xbulk)):
+   vert="create vertex x "+str(xbulk[i])+" y "+str(ybulk[i])+" z "+str(zbulk[i])
+   cubit.cmd(vert)
 
 ################  Loading fault points profile#############################
 for i in range(len(x)):
@@ -89,7 +89,7 @@ for i in range(len(x)):
 
 bulk1="create curve vertex 1 9"   #c1
 bulk2="create curve vertex 10 12" #c2
-bulk3="create curve vertex 13 2"  #c3   
+bulk3="create curve vertex 13 2"  #c3
 bulk4="create curve vertex 2 3"   #c4
 bulk5="create curve vertex 3 4"   #c5
 bulk6="create curve vertex 4 1"   #c6
@@ -105,22 +105,22 @@ fault_up_A1="create curve spline vertex 5 6"       #c7
 fault_up_A2="create curve spline vertex 6 12"      #c8
 
 fault_down_A1="create curve spline vertex 5 11"    #c9
-fault_down_A2="create curve spline vertex 11 13"   #c10 
+fault_down_A2="create curve spline vertex 11 13"   #c10
 
 fault_up_BC1="create curve vertex 9 7"     #c11
 fault_up_BC2="create curve vertex 7 6"     #c12
 fault_down_BC1="create curve vertex 10 8"  #c13
 fault_down_BC2="create curve vertex 8 6"   #c14
- 
-cubit.cmd(fault_up_A1) 
-cubit.cmd(fault_up_A2) 
-cubit.cmd(fault_down_A1) 
-cubit.cmd(fault_down_A2) 
 
-cubit.cmd(fault_up_BC1) 
-cubit.cmd(fault_up_BC2) 
-cubit.cmd(fault_down_BC1) 
-cubit.cmd(fault_down_BC2) 
+cubit.cmd(fault_up_A1)
+cubit.cmd(fault_up_A2)
+cubit.cmd(fault_down_A1)
+cubit.cmd(fault_down_A2)
+
+cubit.cmd(fault_up_BC1)
+cubit.cmd(fault_up_BC2)
+cubit.cmd(fault_down_BC1)
+cubit.cmd(fault_down_BC2)
 
 surface="create surface curve 1 11 12 7 9 10 3 4 5 6"
 cubit.cmd(surface)
@@ -128,8 +128,8 @@ cubit.cmd(surface)
 surface="create surface curve 2 13 14 8"
 cubit.cmd(surface)
 
-cubit.cmd("sweep surface 1 vector 0 1 0 distance "+str(Dy)) 
-cubit.cmd("sweep surface 2 vector 0 1 0 distance "+str(Dy)) 
+cubit.cmd("sweep surface 1 vector 0 1 0 distance "+str(Dy))
+cubit.cmd("sweep surface 2 vector 0 1 0 distance "+str(Dy))
 
 ###  fault crack (Not necessary here) ###
 # FAULT A
@@ -143,7 +143,7 @@ cubit.cmd('curve 13 14 merge off')
 #####################################################
 elementsize = 2000  #(2500)
 
-# IMPRINTING 
+# IMPRINTING
 cubit.cmd("imprint all")
 # MERGING
 cubit.cmd("merge all")
@@ -163,44 +163,44 @@ cubit.cmd("mesh volume 1 2 ")
 #SAVING FAULT NODES AND ELEMENTS.
 os.system('mkdir -p MESH')
 ########## FAULT A ##############################################################
-Au = [8,15] #face_up 
-Ad = [6,7]  #face_down 
+Au = [8,15] #face_up
+Ad = [6,7]  #face_down
 faultA = fault_input(1,Au,Ad)
 
 ########## FAULT BC ##############################################################
-BCu = [9,10]   #face_up 
-BCd = [14,17]  #face_down 
+BCu = [9,10]   #face_up
+BCd = [14,17]  #face_down
 faultBC = fault_input(2,BCu,BCd)
 
 ### Exporting the mesh to cubit.
-boundary_definition.entities=['face'] 
-boundary_definition.define_bc(boundary_definition.entities,parallel=True) 
- 
-#### Define material properties for the 2 volumes ################ 
-cubit.cmd('#### DEFINE MATERIAL PROPERTIES #######################') 
- 
-# Material properties in concordance with tpv5 benchmark. 
- 
-cubit.cmd('block 1 name "elastic 1" ')        # material region  
-cubit.cmd('block 1 attribute count 5') 
-cubit.cmd('block 1 attribute index 1 1')      # flag for fault domain 1 
-cubit.cmd('block 1 attribute index 2 5477.2')   # vp 
-cubit.cmd('block 1 attribute index 3 3162.3')    # vs 
-cubit.cmd('block 1 attribute index 4 3000')   # rho 
+boundary_definition.entities=['face']
+boundary_definition.define_bc(boundary_definition.entities,parallel=True)
+
+#### Define material properties for the 2 volumes ################
+cubit.cmd('#### DEFINE MATERIAL PROPERTIES #######################')
+
+# Material properties in concordance with tpv5 benchmark.
+
+cubit.cmd('block 1 name "elastic 1" ')        # material region
+cubit.cmd('block 1 attribute count 5')
+cubit.cmd('block 1 attribute index 1 1')      # flag for fault domain 1
+cubit.cmd('block 1 attribute index 2 5477.2')   # vp
+cubit.cmd('block 1 attribute index 3 3162.3')    # vs
+cubit.cmd('block 1 attribute index 4 3000')   # rho
 cubit.cmd('block 1 attribute index 5 13')     # Q flag (see constants.h: IATTENUATION_ ... )
 
-# Material properties in concordance with tpv5 benchmark. 
- 
-cubit.cmd('block 2 name "elastic 2" ')        # material region  
-cubit.cmd('block 2 attribute count 5') 
-cubit.cmd('block 2 attribute index 1 1')      # flag for fault domain 2 
-cubit.cmd('block 2 attribute index 2 5477.2')   # vp 
-cubit.cmd('block 2 attribute index 3 3162.3')    # vs 
-cubit.cmd('block 2 attribute index 4 3000')   # rho 
+# Material properties in concordance with tpv5 benchmark.
+
+cubit.cmd('block 2 name "elastic 2" ')        # material region
+cubit.cmd('block 2 attribute count 5')
+cubit.cmd('block 2 attribute index 1 1')      # flag for fault domain 2
+cubit.cmd('block 2 attribute index 2 5477.2')   # vp
+cubit.cmd('block 2 attribute index 3 3162.3')    # vs
+cubit.cmd('block 2 attribute index 4 3000')   # rho
 cubit.cmd('block 2 attribute index 5 13')     # Q flag (see constants.h: IATTENUATION_ ... )
 
-#### Export to SPECFEM3D format using cubit2specfem3d.py of GEOCUBIT 
- 
-cubit2specfem3d.export2SPECFEM3D('MESH')  
- 
-# all files needed by SCOTCH are now in directory MESH 
+#### Export to SPECFEM3D format using cubit2specfem3d.py of GEOCUBIT
+
+cubit2specfem3d.export2SPECFEM3D('MESH')
+
+# all files needed by SCOTCH are now in directory MESH

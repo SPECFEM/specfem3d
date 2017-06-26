@@ -1,5 +1,5 @@
 F90 = gfortran
-F90_FLAGS = -O3 
+F90_FLAGS = -O3
 F77 = gfortran
 F77_FLAGS = -ffixed-line-length-132
 
@@ -23,12 +23,12 @@ $(GRD_SRC) : $(GRD_SRC).f90 $(GRD_OBJ)
 	$(F90) -o $(BIN_DIR)/$@ $(F90_FLAGS) $@.f90 -I $(MOD_DIR) $(GRD_OBJ) $(LIB)
 
 # notice that theortically you need to put the mod dependence here
-$(GRD_F90_OBJ): $(OBJ_DIR)/%.o : %.f90 
+$(GRD_F90_OBJ): $(OBJ_DIR)/%.o : %.f90
 	$(F90) -o $@ $(F90_FLAGS) -c $*.f90 -I $(MOD_DIR) -J$(MOD_DIR)
 #	@ \mv -f *.mod $(MOD_DIR)
 
 $(GRD_F77_OBJ): $(OBJ_DIR)/%.o : %.f
-	$(F77) -o $@ $(F77_FLAGS) -c $*.f 
+	$(F77) -o $@ $(F77_FLAGS) -c $*.f
 
 
 

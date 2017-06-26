@@ -65,7 +65,7 @@ else:
   print "reading in topography surface"
   # reads in topography points and creates sheet surface
   execfile("./read_topo.py")
-  # clear 
+  # clear
   cubit.cmd('reset')
   # now reopen the cubit file
   cubit.cmd('open "topo.cub"')
@@ -82,7 +82,7 @@ cubit.cmd('regularize volume 1')
 print "#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
 print "#creating brick..."
 
-# creates temporary brick volume 
+# creates temporary brick volume
 # new brick volume (depth will become 1/2 * 20,000 = 10,000 m)
 cubit.cmd('brick x 15000 y 22000 z 20000')
 
@@ -137,7 +137,7 @@ cubit.cmd('save as "topo_3.cub" overwrite')
 
 #############################################################
 #
-# 4. step: create mesh 
+# 4. step: create mesh
 #
 #############################################################
 print "#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
@@ -145,7 +145,7 @@ print "#initial meshing..."
 print "#(will take around 7 min)"
 
 # optional: refining mesh at surface
-#   
+#
 # note: refining using ACIS surface format takes a long time ... (up to 3 hours)
 DO_TOPO_REFINEMENT = False
 
@@ -178,11 +178,11 @@ else:
   # sets meshing type
   # explicitly sets scheme for topography surface
   cubit.cmd('surface 12 submap smooth off')
-  cubit.cmd('surface 12 scheme submap')  
+  cubit.cmd('surface 12 scheme submap')
   # uses a sweep algorithm in vertical (Z) direction
   cubit.cmd('volume all scheme sweep Vector 0 0 1')
   # initial coarse mesh
-  cubit.cmd('mesh volume all')  
+  cubit.cmd('mesh volume all')
   # optional smoothing to improve mesh quality (takes up to 5 min)
   cubit.cmd('volume all smooth scheme condition number beta 1.0 cpu 5')
   cubit.cmd('smooth volume all')

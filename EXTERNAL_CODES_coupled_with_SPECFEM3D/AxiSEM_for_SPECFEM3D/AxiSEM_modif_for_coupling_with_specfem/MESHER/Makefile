@@ -31,15 +31,15 @@ ifeq ($(strip $(USE_NETCDF)),true)
        INCLUDE = -I /usr/include
    endif
 else
-   LIBS = 
-   INCLUDE = 
+   LIBS =
+   INCLUDE =
 endif
 
 
 
-# cancel m2c implicit rule 
-%.o : %.mod 
- 
+# cancel m2c implicit rule
+%.o : %.mod
+
 
 all: $(PROG)
 
@@ -47,7 +47,7 @@ $(PROG): $(OBJS)
 	$(FC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 clean:
-	rm -f $(PROG) $(OBJS) *.M *.mod *.d *.il core 
+	rm -f $(PROG) $(OBJS) *.M *.mod *.d *.il core
 
 .SUFFIXES: $(SUFFIXES) .f90 .F90
 
@@ -58,53 +58,53 @@ clean:
 	$(FC) $(FFLAGS) -c $(INCLUDE) $<
 
 analytic_mapping.o: analytic_semi_mapping.o analytic_spheroid_mapping.o \
-	data_mesh.o subpar_mapping.o Makefile ../make_axisem.macros 
-analytic_semi_mapping.o: global_parameters.o Makefile ../make_axisem.macros 
-analytic_spheroid_mapping.o: global_parameters.o Makefile ../make_axisem.macros 
-clocks.o:  Makefile ../make_axisem.macros 
-clocks_wrapper_mesher.o: clocks.o data_time.o Makefile ../make_axisem.macros 
-data_bkgrdmodel.o: global_parameters.o Makefile ../make_axisem.macros 
-data_coarse.o:  Makefile ../make_axisem.macros 
-data_diag.o:  Makefile ../make_axisem.macros 
-data_gllmesh.o: global_parameters.o Makefile ../make_axisem.macros 
-data_grid.o: global_parameters.o Makefile ../make_axisem.macros 
-data_mesh.o: global_parameters.o Makefile ../make_axisem.macros 
-data_numbering.o:  Makefile ../make_axisem.macros 
-data_pdb.o: global_parameters.o Makefile ../make_axisem.macros 
-data_spec.o: global_parameters.o Makefile ../make_axisem.macros 
-data_time.o: global_parameters.o Makefile ../make_axisem.macros 
+	data_mesh.o subpar_mapping.o Makefile ../make_axisem.macros
+analytic_semi_mapping.o: global_parameters.o Makefile ../make_axisem.macros
+analytic_spheroid_mapping.o: global_parameters.o Makefile ../make_axisem.macros
+clocks.o:  Makefile ../make_axisem.macros
+clocks_wrapper_mesher.o: clocks.o data_time.o Makefile ../make_axisem.macros
+data_bkgrdmodel.o: global_parameters.o Makefile ../make_axisem.macros
+data_coarse.o:  Makefile ../make_axisem.macros
+data_diag.o:  Makefile ../make_axisem.macros
+data_gllmesh.o: global_parameters.o Makefile ../make_axisem.macros
+data_grid.o: global_parameters.o Makefile ../make_axisem.macros
+data_mesh.o: global_parameters.o Makefile ../make_axisem.macros
+data_numbering.o:  Makefile ../make_axisem.macros
+data_pdb.o: global_parameters.o Makefile ../make_axisem.macros
+data_spec.o: global_parameters.o Makefile ../make_axisem.macros
+data_time.o: global_parameters.o Makefile ../make_axisem.macros
 discont_meshing.o: background_models.o data_bkgrdmodel.o data_diag.o \
 	data_grid.o data_spec.o global_parameters.o model_discontinuities.o \
-	splib.o Makefile ../make_axisem.macros 
+	splib.o Makefile ../make_axisem.macros
 gllmeshgen.o: analytic_mapping.o data_diag.o data_gllmesh.o data_mesh.o \
-	data_spec.o splib.o Makefile ../make_axisem.macros 
-global_parameters.o:  Makefile ../make_axisem.macros 
+	data_spec.o splib.o Makefile ../make_axisem.macros
+global_parameters.o:  Makefile ../make_axisem.macros
 input.o: background_models.o data_bkgrdmodel.o data_coarse.o data_diag.o \
-	data_grid.o data_mesh.o data_spec.o global_parameters.o Makefile ../make_axisem.macros 
-interpolation.o: global_parameters.o Makefile ../make_axisem.macros 
+	data_grid.o data_mesh.o data_spec.o global_parameters.o Makefile ../make_axisem.macros
+interpolation.o: global_parameters.o Makefile ../make_axisem.macros
 main.o: clocks.o clocks_wrapper_mesher.o data_bkgrdmodel.o data_grid.o \
 	data_mesh.o data_time.o discont_meshing.o gllmeshgen.o input.o \
 	mesh_info.o meshgen.o numbering.o parallelization.o pdb.o \
-	test_bkgrdmodel.o Makefile ../make_axisem.macros 
+	test_bkgrdmodel.o Makefile ../make_axisem.macros
 mesh_info.o: data_bkgrdmodel.o data_diag.o data_gllmesh.o data_grid.o \
-	data_mesh.o data_numbering.o data_spec.o global_parameters.o Makefile ../make_axisem.macros 
+	data_mesh.o data_numbering.o data_spec.o global_parameters.o Makefile ../make_axisem.macros
 meshgen.o: analytic_spheroid_mapping.o data_bkgrdmodel.o data_coarse.o \
 	data_diag.o data_grid.o data_mesh.o data_numbering.o data_pdb.o \
-	data_spec.o global_parameters.o numbering.o Makefile ../make_axisem.macros 
+	data_spec.o global_parameters.o numbering.o Makefile ../make_axisem.macros
 model_discontinuities.o: background_models.o data_bkgrdmodel.o data_diag.o \
-	data_grid.o global_parameters.o Makefile ../make_axisem.macros 
+	data_grid.o global_parameters.o Makefile ../make_axisem.macros
 numbering.o: clocks.o data_diag.o data_gllmesh.o data_grid.o data_mesh.o \
-	data_numbering.o data_spec.o data_time.o sorting.o Makefile ../make_axisem.macros 
+	data_numbering.o data_spec.o data_time.o sorting.o Makefile ../make_axisem.macros
 parallelization.o: data_bkgrdmodel.o data_coarse.o data_diag.o data_gllmesh.o \
 	data_grid.o data_mesh.o data_pdb.o data_spec.o sorting.o \
-	test_bkgrdmodel.o Makefile ../make_axisem.macros 
+	test_bkgrdmodel.o Makefile ../make_axisem.macros
 pdb.o: background_models.o clocks.o data_bkgrdmodel.o data_diag.o \
 	data_gllmesh.o data_grid.o data_mesh.o data_numbering.o data_pdb.o \
-	data_spec.o data_time.o global_parameters.o numbering.o sorting.o Makefile ../make_axisem.macros 
-sorting.o: clocks.o data_time.o global_parameters.o Makefile ../make_axisem.macros 
-splib.o: global_parameters.o Makefile ../make_axisem.macros 
-subpar_mapping.o: global_parameters.o Makefile ../make_axisem.macros 
-background_models.o: global_parameters.o interpolation.o Makefile ../make_axisem.macros 
+	data_spec.o data_time.o global_parameters.o numbering.o sorting.o Makefile ../make_axisem.macros
+sorting.o: clocks.o data_time.o global_parameters.o Makefile ../make_axisem.macros
+splib.o: global_parameters.o Makefile ../make_axisem.macros
+subpar_mapping.o: global_parameters.o Makefile ../make_axisem.macros
+background_models.o: global_parameters.o interpolation.o Makefile ../make_axisem.macros
 test_bkgrdmodel.o: background_models.o data_bkgrdmodel.o data_diag.o \
 	data_gllmesh.o data_grid.o data_mesh.o data_spec.o \
-	global_parameters.o Makefile ../make_axisem.macros 
+	global_parameters.o Makefile ../make_axisem.macros

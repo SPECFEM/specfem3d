@@ -1,8 +1,8 @@
 #!python
 # Retrieving absorbing boundaries.
 #    P. Galvez (ETH-Zurich, 10.09.2011):
-#    This function is based on Emmanuele Cassarotti , boundary_definition.py routine. 
-#    
+#    This function is based on Emmanuele Cassarotti , boundary_definition.py routine.
+#
 #    It returns absorbing_surf,absorbing_surf_xmin,absorbing_surf_xmax,
 #    absorbing_surf_ymin,absorbing_surf_ymax,absorbing_surf_bottom,topo_surf
 #    where absorbing_surf is the list of all the absorbing boundary surf
@@ -11,21 +11,21 @@
 #    absorbing_surf_bottom is the list of the absorbing boundary surfaces that correspond to z=zmin
 
 class abs_surface:
-   def __init__(self,xmin,xmax,ymin,ymax): 
+   def __init__(self,xmin,xmax,ymin,ymax):
        self.xmin = xmin
        self.xmax = xmax
        self.ymin = ymin
        self.ymax = ymax
 
 class abs_surface_topo:
-   def __init__(self,xmin,xmax,ymin,ymax,bottom,topo): 
+   def __init__(self,xmin,xmax,ymin,ymax,bottom,topo):
        self.xmin = xmin
        self.xmax = xmax
        self.ymin = ymin
        self.ymax = ymax
        self.bottom = bottom
        self.topo = topo
- 
+
 # Emmanuele Cassarotti function for Parallel absorbing boundaries.
 # WARNING : absorbing.surf deleted due to CUBIT 13.0 does not allow elements beloging to diferent blocks.
 
@@ -55,12 +55,12 @@ def define_parallel_absorbing_surf():
     absorbing_surf_ymax=[]
     absorbing_surf_bottom=[]
     top_surf=[]
-    
-    
+
+
     list_vol=cubit.parse_cubit_list("volume","all")
     init_n_vol=len(list_vol)
     zmax_box=cubit.get_total_bounding_box("volume",list_vol)[7]
-    zmin_box=cubit.get_total_bounding_box("volume",list_vol)[6] #it is the z_min of the box ... box= xmin,xmax,d,ymin,ymax,d,zmin...    
+    zmin_box=cubit.get_total_bounding_box("volume",list_vol)[6] #it is the z_min of the box ... box= xmin,xmax,d,ymin,ymax,d,zmin...
     xmin_box=cubit.get_total_bounding_box("volume",list_vol)[0]
     xmax_box=cubit.get_total_bounding_box("volume",list_vol)[1]
     ymin_box=cubit.get_total_bounding_box("volume",list_vol)[3]
@@ -78,17 +78,17 @@ def define_parallel_absorbing_surf():
     x_len = abs( xmax_box - xmin_box)
     y_len = abs( ymax_box - ymin_box)
     z_len = abs( zmax_box - zmin_box)
-    
+
     print '##boundary box: '
     print '##  x length: ' + str(x_len)
     print '##  y length: ' + str(y_len)
     print '##  z length: ' + str(z_len)
-    
-    # tolerance parameters 
+
+    # tolerance parameters
     absorbing_surface_distance_tolerance=0.005
     topographic_surface_distance_tolerance=0.001
     topographic_surface_normal_tolerance=0.2
-        
+
     for k in list_surf:
         center_point = cubit.get_center_point("surface", k)
         if abs((center_point[0] - xmin_box)/x_len) <= absorbing_surface_distance_tolerance:
@@ -103,7 +103,7 @@ def define_parallel_absorbing_surf():
              print 'center_point[2]' + str(center_point[2])
              print 'kz:' + str(k)
              absorbing_surf_bottom.append(k)
-                       
+
         else:
             sbox=cubit.get_bounding_box('surface',k)
             dz=abs((sbox[7] - zmax_box)/z_len)
@@ -131,7 +131,7 @@ def define_top_bottom_absorbing_surf(zmin_box,zmax_box):
             sys.exit()
     absorbing_surf_bottom=[]
     top_surf = []
-    
+
     list_vol=cubit.parse_cubit_list("volume","all")
     init_n_vol=len(list_vol)
 #   TO DO : Make zmin_box work properly.
@@ -142,7 +142,7 @@ def define_top_bottom_absorbing_surf(zmin_box,zmax_box):
     ymin_box=cubit.get_total_bounding_box("volume",list_vol)[3]
     ymax_box=cubit.get_total_bounding_box("volume",list_vol)[4]
     list_surf=cubit.parse_cubit_list("surface","all")
-   
+
     print '##boundary box: '
     print '##  x min: ' + str(xmin_box)
     print '##  y min: ' + str(ymin_box)
@@ -155,13 +155,13 @@ def define_top_bottom_absorbing_surf(zmin_box,zmax_box):
     x_len = abs( xmax_box - xmin_box)
     y_len = abs( ymax_box - ymin_box)
     z_len = abs( zmax_box - zmin_box)
-    
+
     print '##boundary box: '
     print '##  x length: ' + str(x_len)
     print '##  y length: ' + str(y_len)
     print '##  z length: ' + str(z_len)
-    
-    # tolerance parameters 
+
+    # tolerance parameters
     absorbing_surface_distance_tolerance=0.005
     topographic_surface_distance_tolerance=0.001
     topographic_surface_normal_tolerance=0.2
@@ -172,7 +172,7 @@ def define_top_bottom_absorbing_surf(zmin_box,zmax_box):
              print 'center_point[2]' + str(center_point[2])
              print 'kz:' + str(k)
              absorbing_surf_bottom.append(k)
-   
+
         else:
             sbox=cubit.get_bounding_box('surface',k)
             dz=abs((sbox[7] - zmax_box)/z_len)
@@ -181,7 +181,7 @@ def define_top_bottom_absorbing_surf(zmin_box,zmax_box):
             dn=abs(zn-1)
             if dz <= topographic_surface_distance_tolerance and dn < topographic_surface_normal_tolerance:
                 top_surf.append(k)
-    
+
     return absorbing_surf_bottom,top_surf
 
 
@@ -207,15 +207,15 @@ def build_block(vol_list,name):
        v_other=Set(vol_list)-Set([v])
        command= 'block '+str(id_block)+' hex in vol '+str(v)
        command = command.replace("["," ").replace("]"," ")
-       cubit.cmd(command) 
+       cubit.cmd(command)
        command = "block "+str(id_block)+" name '"+n+"'"
        cubit.cmd(command)
 
 
 def define_block():
-    """ 
+    """
      Renumbering number of volumes from 1 to NVOLUMES.
-    """ 
+    """
     try:
             cubit.cmd('comment')
     except:
@@ -231,7 +231,7 @@ def define_block():
     list_name=map(lambda x: 'vol'+x,map(str,list_vol))
     return list_vol,list_name
 
- 
+
 def build_block_side(surf_list,name,obj='surface'):
     try:
             cubit.cmd('comment')
@@ -245,7 +245,7 @@ def build_block_side(surf_list,name,obj='surface'):
                 sys.exit()
     id_nodeset=cubit.get_next_nodeset_id()
     id_block=cubit.get_next_block_id()
-    
+
     if obj == 'hex':
         txt='hex in node in surface'
         txt1='block '+str(id_block)+ ' '+ txt +' '+str(list(surf_list))
@@ -266,14 +266,14 @@ def build_block_side(surf_list,name,obj='surface'):
         # do not execute: block id might be wrong
         print "##block "+str(id_block)+" name '"+name+"_notsupported (only hex,face,edge,node)'"
         txt2=''
-   
- 
+
+
     cubit.cmd(txt1)
     cubit.cmd(txt2)
 
 
 def define_bc(entities,zmin,zmax,self):
-     # Temporal : Variable zmin should be obtained automatically. 
+     # Temporal : Variable zmin should be obtained automatically.
      xmin = self.xmin
      xmax = self.xmax
      ymin = self.ymin
@@ -328,7 +328,7 @@ def define_boundaries(entities,xmin,xmax,ymin,ymax,zmin,zmax):
          build_block_side(topo,entity+'_topo',obj=entity)
 
 def define_bc_topo(entities,self):
-     # Temporal : Variable zmin should be obtained automatically. 
+     # Temporal : Variable zmin should be obtained automatically.
      xmin = self.xmin
      xmax = self.xmax
      ymin = self.ymin

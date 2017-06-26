@@ -24,7 +24,7 @@ dy = 28
 src_ind=0
 for src_y in range(0, nsrc_y):
     for src_x in range(0, nsrc_x):
-	
+
 	src_x_loc = (x_init-1)*dl + src_x*dx*dl
 	src_y_loc = (y_init-1)*dl + src_y*dy*dl
 
