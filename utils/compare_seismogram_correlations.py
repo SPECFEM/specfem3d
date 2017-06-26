@@ -40,14 +40,14 @@ def get_cross_correlation_timeshift(x,y,dt):
 
     # cross-correlation array
     crosscorrelation = np.correlate(x, y, mode='full')
-    
+
     # index of maximum (between [0,2 * signal_length - 1]
     indexmax = np.argmax(crosscorrelation)
 
     # position (negative -> signal shifted to right, positive -> signal shifted to left)
     # time lag (will have steps of dt)
     lag = (indexmax + 1) - signal_length
-    
+
     # subsample precision
     maxval = crosscorrelation[indexmax]
 
@@ -73,7 +73,7 @@ def get_cross_correlation_timeshift(x,y,dt):
         peak_shift = 0.5 * (val_left - val_right) / (val_left - 2.0*maxval + val_right)
     else:
         peak_shift = 0.0
-    
+
     # adds subsample shift
     lag += peak_shift
 
@@ -148,14 +148,14 @@ def plot_correlations(out_dir,ref_dir):
 
     # counter
     n = 0
-    
+
     for f in files:
         # build reference and synthetics file names
         # specfem file: **network**.**station**.**comp**.sem.ascii
-        fname = os.path.basename(f)        
+        fname = os.path.basename(f)
         names = str.split(fname,".")
-        
-        # trace 
+
+        # trace
         net = names[0]
         sta = names[1]
         cha = names[2]
@@ -239,7 +239,7 @@ def plot_correlations(out_dir,ref_dir):
                 print("** warning: comparing zero traces")
                 corr_mat = 1.0
         corr = np.min(corr_mat)
-        
+
         # time shift
         if fac_norm > 0.0:
           # shift (in s) by cross correlation
@@ -255,7 +255,7 @@ def plot_correlations(out_dir,ref_dir):
                 # windowed signals
                 x = ref[i:i+window_length]
                 y = syn[i:i+window_length]
-                
+
                 # correlations
                 corr_win = np.corrcoef(x, y)
                 corr_w = np.min(corr_win)
@@ -309,7 +309,7 @@ def plot_correlations(out_dir,ref_dir):
     else:
         print("              no poor correlations found")
     print ""
-    
+
     print("L2-error    : values 0.0 perfect, > %.2f poor match" % TOL_ERR)
     if err_max > TOL_ERR:
         print("              poor matching seismograms found")

@@ -6,7 +6,7 @@ import subprocess
 def setparameter(stress, depth):
     with open('./Par_file_faults','rw') as f1:
         content1 = f1.readlines()
-    f2 =  open('./Par_file_faults_new','w') 
+    f2 =  open('./Par_file_faults_new','w')
     s1 = "TAG1"
     s2 = "TAG2"
     s3 = "TAG3"
@@ -76,7 +76,7 @@ def main():
     (a,b) = bisect_search(64e6,70e6,70e3)
     (a,b) = bisect_search(63e6,69e6,65e3)
     (a,b) = bisect_search(62e6,68e6,60e3)
-    
+
     print (a,b)
 
 

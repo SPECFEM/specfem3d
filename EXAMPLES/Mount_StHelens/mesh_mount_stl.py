@@ -4,7 +4,7 @@
 # script uses STL surface formats
 #
 # note: this script seems only to work with CUBIT version 12.2
-#      
+#
 # ( try out script mesh_mount.py when using a different CUBIT version)
 #
 #############################################################
@@ -44,7 +44,7 @@ print "         meshing will take around 2 min"
 print ""
 
 # note: this is a workaround to use STL file formats rather than ACIS formats.
-#          for our purpose to create a simple mesh, this STL formats are faster 
+#          for our purpose to create a simple mesh, this STL formats are faster
 
 # uses developer commands
 cubit.cmd('set developer commands on')
@@ -64,7 +64,7 @@ cubit.cmd('brick x 15000 y 22000 z 20000')
 cubit.cmd('volume 1 move x 561738. y 5116370. z 0 ')
 # saves as STL body
 cubit.cmd('export stl ascii "topo_brick.stl" overwrite')
-# clear 
+# clear
 cubit.cmd('reset')
 #checks if new file available
 if not os.path.exists("topo_brick.stl"):
@@ -89,7 +89,7 @@ else:
   print "reading in topography surface"
   # reads in topography points and creates sheet surface
   execfile("./read_topo.py")
-  # clear 
+  # clear
   cubit.cmd('reset')
   # now reopen the cubit file
   cubit.cmd('import stl "topo.stl" merge stitch')
@@ -107,7 +107,7 @@ cubit.cmd('version')
 # exports as STL only surfaces which will create new volume
 cubit.cmd('export stl ascii "topo_vol.stl" surface 9 5 6 8 11 13 overwrite')
 
-# clear 
+# clear
 cubit.cmd('reset')
 #checks if new file available
 if not os.path.exists("topo_vol.stl"):
@@ -129,10 +129,10 @@ if not os.path.exists("topo_vol2.stl"):
   print "error creating new STL file topo_vol2.stl, please check manually..."
   print ""
   cubit.cmd('pause')
-  
+
 #############################################################
 #
-# 4. step: import STL volume and create mesh 
+# 4. step: import STL volume and create mesh
 #
 #############################################################
 

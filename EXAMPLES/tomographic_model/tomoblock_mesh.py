@@ -55,7 +55,7 @@ print "#### DEFINE MATERIAL PROPERTIES #######################"
 cubit.cmd('block '+str(id_block)+' name "elastic tomography_model.xyz 1" ')        # elastic material region
 cubit.cmd('block '+str(id_block)+' attribute count 2')
 cubit.cmd('block '+str(id_block)+' attribute index 1 -1')      # flag for material: -1 for 1. undefined material
-cubit.cmd('block '+str(id_block)+' attribute index 2 2')      # flag for tomographic model 
+cubit.cmd('block '+str(id_block)+' attribute index 2 2')      # flag for tomographic model
 
 # acoustic model
 #cubit.cmd('block '+str(id_block)+' name "acoustic tomographic 1" ')       # acoustic material region

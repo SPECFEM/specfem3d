@@ -8,7 +8,7 @@ try:
     cubit.init([""])
 except:
     pass
-    
+
 
 
 cubit.cmd('reset')

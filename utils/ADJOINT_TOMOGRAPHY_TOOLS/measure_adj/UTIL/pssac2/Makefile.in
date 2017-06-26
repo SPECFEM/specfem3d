@@ -250,7 +250,7 @@ uninstall-binPROGRAMS:
 
 clean-binPROGRAMS:
 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
-pssac2$(EXEEXT): $(pssac2_OBJECTS) $(pssac2_DEPENDENCIES) 
+pssac2$(EXEEXT): $(pssac2_OBJECTS) $(pssac2_DEPENDENCIES)
 	@rm -f pssac2$(EXEEXT)
 	$(LINK) $(pssac2_OBJECTS) $(pssac2_LDADD) $(LIBS)
 

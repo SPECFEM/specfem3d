@@ -11,7 +11,7 @@
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
+# the Free Software Foundation; either version 3 of the License, or
 # (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
@@ -181,12 +181,12 @@ inverse_problem_for_model_MODULES = \
 	$(EMPTY_MACRO)
 
 
-### 
+###
 ### MPI
 ###
 inverse_problem_for_model_SHARED_OBJECTS += $(COND_MPI_OBJECTS)
 
-### 
+###
 ### OPENMP
 ###
 inverse_problem_for_model_SHARED_OBJECTS += $(COND_OPENMP_OBJECTS)
@@ -392,7 +392,7 @@ $O/%.spec_noadios.o: $S/%.f90 $O/specfem3D_par.spec_module.o
 $O/%.openmp.o: $S/%.f90 ${SETUP}/constants.h
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-############################################ 
+############################################
 
 ###
 ### Main program compilation (part added by DK and VM)
@@ -404,14 +404,14 @@ $O/program_inverse_problem.o: $S/program_inverse_problem.f90 $(program_inverse_p
 $O/inverse_problem_main.o: $S/inverse_problem_main.f90 $(program_inverse_problem_SHARED_OBJECTS) ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
 	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $(program_inverse_problem_SHARED_OBJECTS) $S/inverse_problem_main.f90 -c -o $O/inverse_problem_main.o
 
-# add here all complilation for local modules 
+# add here all complilation for local modules
 $O/inverse_problem_par.o: $S/inverse_problem_par.f90 $(program_inverse_problem_SHARED_OBJECTS) ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
 	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $(program_inverse_problem_SHARED_OBJECTS) $S/inverse_problem_par.f90 -c -o $O/inverse_problem_par.o
 
 $O/parallel_for_inverse_problem.o: $S/parallel_for_inverse_problem.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
 	${MPIFCCOMPILE_CHECK} $(FCFLAGS_f90) $(program_inverse_problem_SHARED_OBJECTS) $S/parallel_for_inverse_problem.f90 -c -o $O/parallel_for_inverse_problem.o
 
-# additionals tools for mesh 
+# additionals tools for mesh
 $O/mesh_tools_mod.o : $S/input_output/mesh_tools_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
 	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/input_output/mesh_tools_mod.f90 -c -o $O/mesh_tools_mod.o
 
@@ -426,19 +426,19 @@ $O/IO_model_mod.o : $S/input_output/IO_model_mod.f90 ${SETUP}/constants.h $O/sha
 $O/input_output_mod.o: $S/input_output/input_output_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
 	${MPIFCCOMPILE_CHECK} $(FCFLAGS_f90) $S/input_output/input_output_mod.f90 -c -o $O/input_output_mod.o
 
-# some signal processing tools need for define adjoint sources 
+# some signal processing tools need for define adjoint sources
 $O/signal_processing_mod.o: $S/adjoint_source/signal_processing_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
 	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/adjoint_source/signal_processing_mod.f90 -c -o $O/signal_processing_mod.o
 
-# adjoint source module 
+# adjoint source module
 $O/adjoint_source_mod.o: $S/adjoint_source/adjoint_source_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
 	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/adjoint_source/adjoint_source_mod.f90 -c -o $O/adjoint_source_mod.o
 
-# regularization module 
+# regularization module
 $O/regularization_SEM_mod.o: $S/regularization/regularization_SEM_mod.f90 $O/read_partition_files.gen.o  ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
 	${MPIFCCOMPILE_CHECK} $(FCFLAGS_f90) $S/regularization/regularization_SEM_mod.f90 -c -o $O/regularization_SEM_mod.o
 
-# inversion schemes modules 
+# inversion schemes modules
 $O/inversion_scheme_mod.o: $S/inversion_scheme/inversion_scheme_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
 	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/inversion_scheme/inversion_scheme_mod.f90 -c -o $O/inversion_scheme_mod.o
 
@@ -452,11 +452,11 @@ $O/fwi_iteration_mod.o : $S/inversion_scheme/fwi_iteration_mod.f90 ${SETUP}/cons
 $O/PrecondFWI_mod.o : $S/inversion_scheme/PrecondFWI_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
 	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/inversion_scheme/PrecondFWI_mod.f90 -c -o $O/PrecondFWI_mod.o
 
-# projection on finite-difference (FD) grid 
+# projection on finite-difference (FD) grid
 $O/projection_on_FD_grid_mod.o: $S/projection_on_FD_grid/projection_on_FD_grid_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
 	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/projection_on_FD_grid/projection_on_FD_grid_mod.f90 -c -o $O/projection_on_FD_grid_mod.o
 
-# specfem interface to compile at the end 
+# specfem interface to compile at the end
 $O/specfem_interface_mod.o: $S/specfem_interface/specfem_interface_mod.F90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
 	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/specfem_interface/specfem_interface_mod.F90 -c -o $O/specfem_interface_mod.o
 

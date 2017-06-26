@@ -1,7 +1,7 @@
 # Makefile
 
 #############################################################
-## modify to match your compiler defaults 
+## modify to match your compiler defaults
 CXX=g++
 
 ## modify to match your library paths

@@ -37,7 +37,7 @@ clean : $(CLEAN)
 TraPSV_write_coef_mpi :
 	(cd TraPSV_MPI_write_computes_coefs_with_FEM; make)
 
-TraPSV_read_coef_mpi_vert : 
+TraPSV_read_coef_mpi_vert :
 	(cd TraPSV_MPI_vertical_faces; make)
 
 TraPSV_MPI_read_Zmin :
@@ -61,7 +61,7 @@ ChangeFormat_disp :
 ChangeFormat :
 	(cd ChangeFormat; make)
 
-cleanTraPSV_read_coef_mpi_vert : 
+cleanTraPSV_read_coef_mpi_vert :
 	(cd TraPSV_MPI_vertical_faces; make clean)
 
 cleanTraPSV_MPI_read_Zmin :

@@ -17,7 +17,7 @@ MOD_DIR = mod
 OBJ_DIR = obj
 BIN_DIR = .
 #MAIN = wave2d wave2d_2 wave2d_3 wave2d_4 test_smooth
-MAIN = wave2d wave2d_2 
+MAIN = wave2d wave2d_2
 MOD_FLAG = module
 
 MOD_OBJ = $(patsubst %,$(OBJ_DIR)/%.o,$(MOD))
@@ -31,10 +31,10 @@ $(MAIN) : % : $(SRC_DIR)/%.f90 $(F90_OBJ) $(MOD_OBJ)
 	$(F90) -o $(BIN_DIR)/$* $(F90_FLAGS) $(SRC_DIR)/$*.f90 -I$(MOD_FLAG) -J$(MOD_DIR) $(OBJ)
 
 $(F90_OBJ): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.f90
-	$(F90) -o $@ $(F90_FLAGS) -c $(SRC_DIR)/$*.f90 
+	$(F90) -o $@ $(F90_FLAGS) -c $(SRC_DIR)/$*.f90
 
 $(MOD_OBJ): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.f90
-	$(F90) -o $@ $(F90_FLAGS) -c $(SRC_DIR)/$*.f90 -I$(MOD_FLAG) -J$(MOD_DIR) 
+	$(F90) -o $@ $(F90_FLAGS) -c $(SRC_DIR)/$*.f90 -I$(MOD_FLAG) -J$(MOD_DIR)
 
 .PHONY : clean
 

@@ -86,14 +86,14 @@ for o,a in opts:
 
 if (not os.path.isdir(datadir) or not os.path.isdir(syndir)):
   sys.exit(datadir+' '+syndir+' exist or not')
-    
+
 # clean tmp files
 os.system('rm -f data.tmp '+datadir+'/*.c '+syndir+'/*.c '+syndir+'/*.c??')
 
 #channel name
 if regional_data:
   chan='BH'; sps='20'
-else: 
+else:
   chan='LH'; sps='1.0'
 #padding zeros
 bb=-40
@@ -131,7 +131,7 @@ for dd in os.popen('saclst kstnm knetwk kcmpnm khole f '+datadir+'/*'+chan+'[ZEN
     data_list.append(dat[0]); syn_list.append(syn[0])
     hole_list.append(hole); comp_list.append(cmp)
     nsta=nsta+1
-      
+
 if der_syn:
   for i in range(0,len(syn_list)):
     all_syn_list.append(syn_list[i]+' '+' '.join(glob.glob(syn_list[i]+'.???')))
@@ -141,7 +141,7 @@ print "**** Total number of matching traces ", nsta, " *****"
 
 ############ preprocessing data and synthetics ################
 if preprocess:
-    
+
   print '**** pre-processing data and synthetics ****'
   error1=os.system('process_syn_new.pl  -S -m '+cmt+' -p -s '+sps+' '+' '.join(data_list)+'>/dev/null')
 #  print 'process_syn_new.pl -S -m '+cmt+' -p -s '+sps+' '+' '.join(data_list)
@@ -167,7 +167,7 @@ if bandpass:
     data=data_list[i]; syn=syn_list[i]; allsyn=all_syn_list[i].rstrip()
     new_data_list.append(new_datadir+'/'+os.path.basename(data)+'.c')
     new_syn_list.append(new_syndir+'/'+os.path.basename(syn)+'.c')
- 
+
     [db,de,ddt]=os.popen('saclst b e delta f '+data).readline().split()[1:]
     [sb,se,sdt]=os.popen('saclst b e delta f '+syn).readline().split()[1:]
     if (float(ddt)-float(sdt)) > 0.001:
@@ -252,7 +252,7 @@ if windowing:
   f=open('INPUT_flexwin','w')
   f.write(outstring.rstrip('\n'))
   f.close()
-  
+
   if (not os.path.isdir('MEASURE')):
     os.mkdir('MEASURE')
 

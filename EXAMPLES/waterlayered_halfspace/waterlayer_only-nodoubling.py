@@ -12,7 +12,7 @@
 
 import cubit
 import boundary_definition
-import cubit2specfem3d 
+import cubit2specfem3d
 
 import os
 import sys
@@ -68,7 +68,7 @@ cubit.cmd('mesh volume 1')
 cubit.cmd('volume 5 size '+str(elementsize))
 cubit.cmd('mesh volume 5')
 
-#### End of meshing 
+#### End of meshing
 
 ###### This is boundary_definition.py of GEOCUBIT
 #..... which extracts the bounding faces and defines them into blocks
@@ -105,7 +105,7 @@ cubit.cmd('save as "meshing.cub" overwrite')
 #### Export to SPECFEM3D format using cubit2specfem3d.py of GEOCUBIT
 
 os.system('mkdir -p MESH')
-cubit2specfem3d.export2SPECFEM3D('MESH') 
+cubit2specfem3d.export2SPECFEM3D('MESH')
 
 # all files needed by SCOTCH are now in directory MESH
 

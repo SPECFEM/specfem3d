@@ -9,7 +9,7 @@
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
+# the Free Software Foundation; either version 3 of the License, or
 # (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
@@ -34,7 +34,7 @@ FC_COMPILE = ${FC} ${FFLAGS}
 CC = gcc
 CFLAGS = -g -O3 -Werror -Wall -pedantic-errors
 LDFLAGS = -lm
-CC_COMPILE = ${CC} ${CFLAGS} 
+CC_COMPILE = ${CC} ${CFLAGS}
 BIN = ../bin
 
 # default targets for the pure Fortran version
@@ -53,15 +53,15 @@ clean:
 
 ${BIN}/visualize_par.o: visualize_par.f90
 	${FC_COMPILE} -c -o ${BIN}/visualize_par.o visualize_par.f90
-	
+
 ${BIN}/string_process.o: string_process.f90
 	${FC_COMPILE} -c -o ${BIN}/string_process.o string_process.f90
 
 ${BIN}/visualize.o: visualize.f90
 	${FC_COMPILE} -c -o ${BIN}/visualize.o visualize.f90
-	
+
 ${BIN}/read_input.o: read_input.f90
-	${FC_COMPILE} -c -o ${BIN}/read_input.o read_input.f90	
+	${FC_COMPILE} -c -o ${BIN}/read_input.o read_input.f90
 
 
 ${BIN}/visualize_collect.o: visualize_collect.f90
@@ -74,5 +74,5 @@ ${BIN}/write_vtu.o: write_vtu.f90
 	${FC_COMPILE} -c -o ${BIN}/write_vtu.o write_vtu.f90
 
 ${BIN}/cfunc4fortran.o: cfunc4fortran.c
-	${CC_COMPILE} -c -o ${BIN}/cfunc4fortran.o cfunc4fortran.c 
+	${CC_COMPILE} -c -o ${BIN}/cfunc4fortran.o cfunc4fortran.c
 

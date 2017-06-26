@@ -1,6 +1,6 @@
-F90 = ifort 
+F90 = ifort
 #F90_FLAGS = -O2
-F90_FLAGS = -O2 
+F90_FLAGS = -O2
 # first is for FFT, second is for bandpass filter
 LIB = -L/opt/seismo-util/lib -lfftw3 -lDSacLib
 
@@ -27,10 +27,10 @@ $(MAIN) : % : $(SRC_DIR)/%.f90 $(F90_OBJ) $(MOD_OBJ)
 	$(F90) -o $(BIN_DIR)/$* $(F90_FLAGS) $(SRC_DIR)/$*.f90 -$(MOD_FLAG) $(MOD_DIR) $(OBJ) $(LIB)
 
 $(F90_OBJ): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.f90
-	$(F90) -o $@ $(F90_FLAGS) -c $(SRC_DIR)/$*.f90 
+	$(F90) -o $@ $(F90_FLAGS) -c $(SRC_DIR)/$*.f90
 
 $(MOD_OBJ): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.f90
-	$(F90) -o $@ $(F90_FLAGS) -c $(SRC_DIR)/$*.f90 -$(MOD_FLAG) $(MOD_DIR) 
+	$(F90) -o $@ $(F90_FLAGS) -c $(SRC_DIR)/$*.f90 -$(MOD_FLAG) $(MOD_DIR)
 
 .PHONY : clean
 

@@ -1,10 +1,10 @@
 #!python
 # Opening fault cracks
 # Input : surface up and down.
-import cubit 
+import cubit
 
 class fault_input:
-   def __init__(self,id,surface_u,surface_d): 
+   def __init__(self,id,surface_u,surface_d):
        self.id = id
        self.surface_u = surface_u
        self.surface_d = surface_d
@@ -21,12 +21,12 @@ class fault_input:
        if not (len(quads_Au)==len(quads_Ad)):
            print 'Number of elements for each fauld side up and down do not concide'
            sys.exit('goodbye')
-           
+
        save_elements_nodes(self.name,quads_Au,quads_Ad)
 
 
 def save_cracks(name,list_surface_up,list_surface_down):
-   quads_fault_up = [] 
+   quads_fault_up = []
    quads_fault_down = []
    for surface in list_surface_up   :
        quads_fault = cubit.get_surface_quads(surface)
@@ -47,22 +47,22 @@ def unpack_list(fault_list):
         el=list(fault_list[i])
         for j in el:
             list_fault.append(j)
-    return list_fault 
-          
+    return list_fault
+
 def save_elements_nodes(name,quads_fault_u,quads_fault_d):
    fault_file = open(name,'w')
    txt =''
    list_hex=cubit.parse_cubit_list('hex','all')
    txt='%10i %10i\n' % (len(quads_fault_u),len(quads_fault_d))
    fault_file.write(txt)
-   
-   dic_quads_fault_u = dict(zip(quads_fault_u,quads_fault_u)) 
-   dic_quads_fault_d = dict(zip(quads_fault_d,quads_fault_d)) 
-   
+
+   dic_quads_fault_u = dict(zip(quads_fault_u,quads_fault_u))
+   dic_quads_fault_d = dict(zip(quads_fault_d,quads_fault_d))
+
    # FAULT SIDE DOWN
   # fault_file.write('upsurface')
-   for h in list_hex: 
-       faces = cubit.get_sub_elements('hex',h,2)  
+   for h in list_hex:
+       faces = cubit.get_sub_elements('hex',h,2)
        for f in faces:
            if dic_quads_fault_d.has_key(f):
 	      cubit.silent_cmd('group "nf" add Node in face '+str(f))
@@ -83,17 +83,17 @@ def save_elements_nodes(name,quads_fault_u,quads_fault_d):
 		      txt='%10i %10i %10i %10i %10i \n' % (h,nodes[0],\
 				                                                      nodes[1],nodes[2],nodes[3])
 
- 
+
 
 
               fault_file.write(txt)
 
    # FAULT SIDE UP
  #  fault_file.write('downsurface')
-   for h in list_hex: 
-       faces = cubit.get_sub_elements('hex',h,2)  
+   for h in list_hex:
+       faces = cubit.get_sub_elements('hex',h,2)
        for f in faces:
-           if dic_quads_fault_u.has_key(f): 
+           if dic_quads_fault_u.has_key(f):
        	      cubit.silent_cmd('group "nf" add Node in face '+str(f))
 	      group1 = cubit.get_id_from_name("nf")
 	      nodes = cubit.get_group_nodes(group1)
@@ -110,7 +110,7 @@ def save_elements_nodes(name,quads_fault_u,quads_fault_d):
 		      txt='%10i %10i %10i %10i %10i \n' % (h,nodes[0],\
 				                                                      nodes[1],nodes[2],nodes[3])
 
- 
+
 
               fault_file.write(txt)
 

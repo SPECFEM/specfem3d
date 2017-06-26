@@ -15,7 +15,7 @@ def rotate_matrix(lon,lat):
   R[2,0]=cos(th)
   R[2,1]=-sin(th)
   R[2,2]=0
-  
+
   return R
 
 def rotate_cmt(lon,lat,mrr,mtt,mpp,mrt,mrp,mtp,local2global=True):

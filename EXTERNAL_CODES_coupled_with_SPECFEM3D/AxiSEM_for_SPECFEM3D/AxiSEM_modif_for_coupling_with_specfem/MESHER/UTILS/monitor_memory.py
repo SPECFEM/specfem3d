@@ -19,7 +19,7 @@ import argparse
 
 parser = argparse.ArgumentParser(description='Monitor memory usage of AxiSEM Mesher.')
 
-parser.add_argument('-q', action="store", dest="queue", default="local", 
+parser.add_argument('-q', action="store", dest="queue", default="local",
                     choices=('local', 'lsf'), help="local (default) or queue")
 
 results = parser.parse_args()
@@ -50,7 +50,7 @@ while True:
         rtime = p.stdout.read().strip()
     elif queue == 'lsf':
         rtime = p.stdout.read().rstrip()
-    
+
     if mem == '':
         break
     else:
@@ -79,4 +79,4 @@ try:
     print 'Maximum of Memory usage: ', max, ' GB'
 except ValueError:
     print 'Problem: Mesher seems not to be running!'
-    
+

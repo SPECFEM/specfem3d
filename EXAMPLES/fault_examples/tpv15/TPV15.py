@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-# Percy. Script for TPV14-TPV15 SCEC benchmarks. 
+# Percy. Script for TPV14-TPV15 SCEC benchmarks.
 
 import cubit
-import cubit2specfem3d 
+import cubit2specfem3d
 import math
 import os
 import sys
@@ -15,7 +15,7 @@ cubit.cmd('reset')
 km = 1000
 z_surf=0*km
 R = math.pi/180
-h = 0.1 
+h = 0.1
 q = math.sqrt(3)
 ####  initializing coordinates x,y,z
 x=[]     # fault
@@ -65,9 +65,9 @@ y.append(-50-(12*km/q)*math.sin(R*30)-h)   #y12
 z=[z_surf]*12
 
 ####################  bulk ###########################################
-for i in range(len(xbulk)): 
-   vert="create vertex x "+str(xbulk[i])+" y "+str(ybulk[i])+" z "+str(zbulk[i]) 
-   cubit.cmd(vert) 
+for i in range(len(xbulk)):
+   vert="create vertex x "+str(xbulk[i])+" y "+str(ybulk[i])+" z "+str(zbulk[i])
+   cubit.cmd(vert)
 
 ################  Loading fault points profile#############################
 for i in range(len(x)):
@@ -90,26 +90,26 @@ cubit.cmd(bulk4)
 cubit.cmd(bulk5)
 cubit.cmd(bulk6)
 
-#### Main Fault ############################## 
+#### Main Fault ##############################
 fault_up_r="create curve spline vertex 5 6 "    #c7
 fault_up_l="create curve spline vertex 6 7"     #c8
 
-fault_down_r="create curve spline vertex 5 8"   #c9 
+fault_down_r="create curve spline vertex 5 8"   #c9
 fault_down_l="create curve spline vertex 8 7"   #c10
 
 
-cubit.cmd(fault_up_r) 
-cubit.cmd(fault_up_l) 
+cubit.cmd(fault_up_r)
+cubit.cmd(fault_up_l)
 cubit.cmd(fault_down_r)
 cubit.cmd(fault_down_l)
- 
 
-#### Branch Fault ############################# 
-fault_up="create curve spline vertex 9 10 11"    #c11 
+
+#### Branch Fault #############################
+fault_up="create curve spline vertex 9 10 11"    #c11
 fault_down="create curve spline vertex 9 12 11"  #c12
 
-cubit.cmd(fault_up) 
-cubit.cmd(fault_down) 
+cubit.cmd(fault_up)
+cubit.cmd(fault_down)
 ###############################################
 
 surface1="create surface curve 2 1 6 5 4 7 8 9 12"
@@ -117,8 +117,8 @@ cubit.cmd(surface1)
 surface2="create surface curve 3 10 11"
 cubit.cmd(surface2)
 
-cubit.cmd("sweep surface 1  vector 0  0 -1 distance "+str(30*km)) 
-cubit.cmd("sweep surface 2  vector 0  0 -1 distance "+str(30*km)) 
+cubit.cmd("sweep surface 1  vector 0  0 -1 distance "+str(30*km))
+cubit.cmd("sweep surface 2  vector 0  0 -1 distance "+str(30*km))
 
 
 ######## Chuncks ########################################
@@ -142,9 +142,9 @@ zchunk=[z_surf]*4
 
 
 ####################  chunck ###########################################
-for i in range(len(xchunk)): 
-   vert="create vertex x "+str(xchunk[i])+" y "+str(ychunk[i])+" z "+str(zchunk[i]) 
-   cubit.cmd(vert) 
+for i in range(len(xchunk)):
+   vert="create vertex x "+str(xchunk[i])+" y "+str(ychunk[i])+" z "+str(zchunk[i])
+   cubit.cmd(vert)
 
 ########### creating chuncks ############################################
 
@@ -161,16 +161,16 @@ cubit.cmd(chunk4)
 surface1="create surface curve 37 38 39 40"
 cubit.cmd(surface1)
 
-cubit.cmd("sweep surface 17  vector 0  0 -1 distance "+str(30*km)) 
+cubit.cmd("sweep surface 17  vector 0  0 -1 distance "+str(30*km))
 
-cubit.cmd('subtract volume 1 2 from 3 keep') 
-cubit.cmd('delete volume 3') 
+cubit.cmd('subtract volume 1 2 from 3 keep')
+cubit.cmd('delete volume 3')
 
-#######  lateral faces of chuncks  #### 
-cubit.cmd('create surface skin curve 15 90')   
-cubit.cmd('create surface skin curve 25 92')   
-cubit.cmd('create surface skin curve 27 93')   
-cubit.cmd('create surface skin curve 29 91')   
+#######  lateral faces of chuncks  ####
+cubit.cmd('create surface skin curve 15 90')
+cubit.cmd('create surface skin curve 25 92')
+cubit.cmd('create surface skin curve 27 93')
+cubit.cmd('create surface skin curve 29 91')
 
 ### webcutting 4 chuncks ####
 cubit.cmd("create body loft surface 45 48")
@@ -181,8 +181,8 @@ cubit.cmd("create body loft surface 46 45")
 #####################################################
 cubit.cmd('delete volume 4')
 
-cubit.cmd('imprint all') 
-cubit.cmd('merge all') 
+cubit.cmd('imprint all')
+cubit.cmd('merge all')
 
 ## meshing inner solids ###
 h_size = 300
@@ -224,7 +224,7 @@ cubit.cmd('mesh volume 11')
 ########### Fault elements and nodes ###############
 
 ### Main Fault ####################################################################
-os.system('mkdir -p MESH') 
+os.system('mkdir -p MESH')
 
 Au = [6,7]   # A_up
 Ad = [5,14]  # A_down
@@ -239,79 +239,79 @@ faultB = fault_input(2,Bu,Bd)
 
 ##  FOR THE BULK (Seismic wave propagation part for SPECFEM3D)
 
-####### This is boundary_definition.py of GEOCUBIT 
-##..... which extracts the bounding faces and defines them into blocks 
-entities=['face'] 
-define_parallel_bc(entities) 
- 
-#### Define material properties for the 2 volumes ################ 
-cubit.cmd('#### DEFINE MATERIAL PROPERTIES #######################') 
- 
-# Material properties in concordance with tpv14-15 benchmark. 
- 
-cubit.cmd('block 1 name "elastic 1" ')        # material region  
-cubit.cmd('block 1 attribute count 6') 
-cubit.cmd('block 1 attribute index 1 1')      # flag for fault side 1 
-cubit.cmd('block 1 attribute index 2 6000')   # vp 
-cubit.cmd('block 1 attribute index 3 3464')    # vs 
-cubit.cmd('block 1 attribute index 4 2670')   # rho 
+####### This is boundary_definition.py of GEOCUBIT
+##..... which extracts the bounding faces and defines them into blocks
+entities=['face']
+define_parallel_bc(entities)
+
+#### Define material properties for the 2 volumes ################
+cubit.cmd('#### DEFINE MATERIAL PROPERTIES #######################')
+
+# Material properties in concordance with tpv14-15 benchmark.
+
+cubit.cmd('block 1 name "elastic 1" ')        # material region
+cubit.cmd('block 1 attribute count 6')
+cubit.cmd('block 1 attribute index 1 1')      # flag for fault side 1
+cubit.cmd('block 1 attribute index 2 6000')   # vp
+cubit.cmd('block 1 attribute index 3 3464')    # vs
+cubit.cmd('block 1 attribute index 4 2670')   # rho
 cubit.cmd('block 1 attribute index 5 13')     # Q flag (see constants.h: IATTENUATION_ ... )
 cubit.cmd('block 1 attribute index 6 0')     # Aniso (see constants.h: IATTENUATION_ ... )
 
 
-cubit.cmd('block 2 name "elastic 2" ')        # material region  
-cubit.cmd('block 2 attribute count 6') 
-cubit.cmd('block 2 attribute index 1 1')      # flag for fault side 1 
-cubit.cmd('block 2 attribute index 2 6000')   # vp 
-cubit.cmd('block 2 attribute index 3 3464')    # vs 
-cubit.cmd('block 2 attribute index 4 2670')   # rho 
-cubit.cmd('block 2 attribute index 5 13')     # Q flag (see constants.h: IATTENUATION_ ... ) 
+cubit.cmd('block 2 name "elastic 2" ')        # material region
+cubit.cmd('block 2 attribute count 6')
+cubit.cmd('block 2 attribute index 1 1')      # flag for fault side 1
+cubit.cmd('block 2 attribute index 2 6000')   # vp
+cubit.cmd('block 2 attribute index 3 3464')    # vs
+cubit.cmd('block 2 attribute index 4 2670')   # rho
+cubit.cmd('block 2 attribute index 5 13')     # Q flag (see constants.h: IATTENUATION_ ... )
 cubit.cmd('block 2 attribute index 6 0')     # Aniso flag (see constants.h: IATTENUATION_ ... )
 
-# Material properties in concordance with tpv14-15 benchmark chuncks. 
- 
- 
-cubit.cmd('block 3 name "elastic 3" ')        # material region  
-cubit.cmd('block 3 attribute count 6') 
-cubit.cmd('block 3 attribute index 1 1')      # flag for fault side 1 
-cubit.cmd('block 3 attribute index 2 6000')   # vp 
-cubit.cmd('block 3 attribute index 3 3464')    # vs 
-cubit.cmd('block 3 attribute index 4 2670')   # rho 
-cubit.cmd('block 3 attribute index 5 13')     # Q flag (see constants.h: IATTENUATION_ ... ) 
+# Material properties in concordance with tpv14-15 benchmark chuncks.
+
+
+cubit.cmd('block 3 name "elastic 3" ')        # material region
+cubit.cmd('block 3 attribute count 6')
+cubit.cmd('block 3 attribute index 1 1')      # flag for fault side 1
+cubit.cmd('block 3 attribute index 2 6000')   # vp
+cubit.cmd('block 3 attribute index 3 3464')    # vs
+cubit.cmd('block 3 attribute index 4 2670')   # rho
+cubit.cmd('block 3 attribute index 5 13')     # Q flag (see constants.h: IATTENUATION_ ... )
 cubit.cmd('block 3 attribute index 6 0')     # Aniso flag (see constants.h: IATTENUATION_ ... )
 
 
-cubit.cmd('block 4 name "elastic 4" ')        # material region  
-cubit.cmd('block 4 attribute count 6') 
-cubit.cmd('block 4 attribute index 1 1')      # flag for fault side 1 
-cubit.cmd('block 4 attribute index 2 6000')   # vp 
-cubit.cmd('block 4 attribute index 3 3464')    # vs 
-cubit.cmd('block 4 attribute index 4 2670')   # rho 
-cubit.cmd('block 4 attribute index 5 13')     # Q flag (see constants.h: IATTENUATION_ ... ) 
+cubit.cmd('block 4 name "elastic 4" ')        # material region
+cubit.cmd('block 4 attribute count 6')
+cubit.cmd('block 4 attribute index 1 1')      # flag for fault side 1
+cubit.cmd('block 4 attribute index 2 6000')   # vp
+cubit.cmd('block 4 attribute index 3 3464')    # vs
+cubit.cmd('block 4 attribute index 4 2670')   # rho
+cubit.cmd('block 4 attribute index 5 13')     # Q flag (see constants.h: IATTENUATION_ ... )
 cubit.cmd('block 4 attribute index 6 0')     # Aniso flag (see constants.h: IATTENUATION_ ... )
 
 
-cubit.cmd('block 5 name "elastic 5" ')        # material region  
-cubit.cmd('block 5 attribute count 6') 
-cubit.cmd('block 5 attribute index 1 1')      # flag for fault side 1 
-cubit.cmd('block 5 attribute index 2 6000')   # vp 
-cubit.cmd('block 5 attribute index 3 3464')    # vs 
-cubit.cmd('block 5 attribute index 4 2670')   # rho 
-cubit.cmd('block 5 attribute index 5 13')     # Q flag (see constants.h: IATTENUATION_ ... ) 
-cubit.cmd('block 5 attribute index 6 0')     # Q flag (see constants.h: IATTENUATION_ ... ) 
+cubit.cmd('block 5 name "elastic 5" ')        # material region
+cubit.cmd('block 5 attribute count 6')
+cubit.cmd('block 5 attribute index 1 1')      # flag for fault side 1
+cubit.cmd('block 5 attribute index 2 6000')   # vp
+cubit.cmd('block 5 attribute index 3 3464')    # vs
+cubit.cmd('block 5 attribute index 4 2670')   # rho
+cubit.cmd('block 5 attribute index 5 13')     # Q flag (see constants.h: IATTENUATION_ ... )
+cubit.cmd('block 5 attribute index 6 0')     # Q flag (see constants.h: IATTENUATION_ ... )
 
 
-cubit.cmd('block 6 name "elastic 6" ')        # material region  
-cubit.cmd('block 6 attribute count 6') 
-cubit.cmd('block 6 attribute index 1 1')      # flag for fault side 1 
-cubit.cmd('block 6 attribute index 2 6000')   # vp 
-cubit.cmd('block 6 attribute index 3 3464')    # vs 
-cubit.cmd('block 6 attribute index 4 2670')   # rho 
-cubit.cmd('block 6 attribute index 6 0')     # Q flag (see constants.h: IATTENUATION_ ... ) 
+cubit.cmd('block 6 name "elastic 6" ')        # material region
+cubit.cmd('block 6 attribute count 6')
+cubit.cmd('block 6 attribute index 1 1')      # flag for fault side 1
+cubit.cmd('block 6 attribute index 2 6000')   # vp
+cubit.cmd('block 6 attribute index 3 3464')    # vs
+cubit.cmd('block 6 attribute index 4 2670')   # rho
+cubit.cmd('block 6 attribute index 6 0')     # Q flag (see constants.h: IATTENUATION_ ... )
 
-#### Export to SPECFEM3D format using cubit2specfem3d.py of GEOCUBIT 
- 
-cubit2specfem3d.export2SPECFEM3D('MESH')  
- 
-# all files needed by SCOTCH are now in directory MESH 
+#### Export to SPECFEM3D format using cubit2specfem3d.py of GEOCUBIT
+
+cubit2specfem3d.export2SPECFEM3D('MESH')
+
+# all files needed by SCOTCH are now in directory MESH
 
