@@ -330,8 +330,7 @@ use File::Basename;
 # When using this "find" command from Perl we need to use \\ instead of \ below otherwise Perl tries to interpret it.
 # Purposely excluding Python files from this list, since Python can use tabs for indentation.
 # Also make sure we exclude clean_listings_specfem.pl, i.e. this script, from the list, otherwise the script will clean itself and change the list of typos etc to the new one!
-
-      @objects = `find . -type f -name \\*Par_file\\* -print -o -name '.git' -prune -o -name 'm4' -prune -o -samefile './utils/clean_listings_specfem.pl' -prune -o -path './utils/ADJOINT_TOMOGRAPHY_TOOLS/flexwin' -prune -o -type f -regextype posix-extended -regex '.*\\.(bash|c|csh|cu|fh|f90|F90|h|h\\.in|fh\\.in|pl|tex|txt|sh)' -print`;
+      @objects = `find . -type f -name \\*Par_file\\* -print -o -name '.git' -prune -o -name 'm4' -prune -o -wholename './utils/clean_listings_specfem.pl' -prune -o -path './utils/ADJOINT_TOMOGRAPHY_TOOLS/flexwin' -prune -o -type f -regextype posix-extended -regex '.*\\.(bash|c|cpp|zsh|csh|cu|fh|f90|F90|h|h\\.in|fh\\.in|pl|tex|txt|sh)' -print`;
 
       foreach $name (@objects) {
             chop $name;
@@ -379,8 +378,7 @@ use File::Basename;
 # create a copy of the input file
             system("cp $name _____temp08_____");
             $cname = $name;
-#           print STDOUT "Cleaning $cname ...\n";
-            print STDOUT "On va changer $cname ...\n";
+            print STDOUT "Cleaning $cname ...\n";
 
             open(FILEDEPART,"<_____temp08_____");
             open(FILEC,">$cname");
