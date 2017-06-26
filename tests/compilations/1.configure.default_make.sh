@@ -16,10 +16,10 @@ echo >> $testdir/results.log
 rm -rf config.log config.status
 rm -rf ./bin ./obj ./setup ./OUTPUT_FILES ./DATA
 
-# default configuration
+# default configuration for parallel version (with MPI)
 # (out-of-source compilation)
-echo "configuration: $srcdir/configure" >> $testdir/results.log
-$srcdir/configure >> $testdir/results.log 2>&1
+echo "configuration: $srcdir/configure --with-mpi" >> $testdir/results.log
+$srcdir/configure  --with-mpi >> $testdir/results.log 2>&1
 
 # checks exit code
 if [[ $? -ne 0 ]]; then
@@ -48,5 +48,6 @@ if [[ $? -ne 0 ]]; then
   exit 1
 fi
 
+echo "" >> $testdir/results.log
 echo "successful compilation" >> $testdir/results.log
 

@@ -5,8 +5,8 @@ echo
 echo "                          S P E C F E M 3 D   -   Tests"
 echo
 echo "---------------------------------------------------------------------------------"
-echo "This script is running a set of compilation and unit tests in directory tests/"
-echo "It will take a short while to execute, grab a coffee and enjoy ;)"
+echo "This script runs a set of compilation and unit tests in directory tests/"
+echo "It may take a few minutes to execute."
 echo
 echo "Please consider adding more test units to this directory here ..."
 echo "Contributions can be sent to: $(tput bold)http://github.com/geodynamics/specfem3d$(tput sgr0)"
