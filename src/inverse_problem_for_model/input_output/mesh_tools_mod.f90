@@ -148,14 +148,14 @@ contains
        write(INVERSE_LOG_FILE,*)
        write(INVERSE_LOG_FILE,*) ' ... locate stations in specfem mesh :'
        write(INVERSE_LOG_FILE,*)
-       flush(INVERSE_LOG_FILE)
+       call flush_iunit(INVERSE_LOG_FILE)
     endif
 
     NSRC=acqui_simu(1)%nsrc_tot
     do isource = 1, NSRC
        if (myrank == 0) then
             write(INVERSE_LOG_FILE,*) ' ... locate stations for source ', isource
-            flush(INVERSE_LOG_FILE)
+            call flush_iunit(INVERSE_LOG_FILE)
        endif
        NSTA = acqui_simu(isource)%nsta_tot
        allocate(acqui_simu(isource)%xi_rec(NSTA), &
@@ -195,7 +195,7 @@ contains
           endif
 
           if (DEBUG_MODE) then
-             flush(IIDD)
+             call flush_iunit(IIDD)
              if (distance_from_target > 1000. ) then
                 write (IIDD, '(a29,f20.5,5x,i5)') 'WARNING : error location sta ', distance_from_target, ireceiver
                 write (IIDD, '(a17,3f20.5)') 'desired position :', x_to_locate, y_to_locate, z_to_locate
@@ -272,7 +272,7 @@ contains
        write(INVERSE_LOG_FILE,*)
        write(INVERSE_LOG_FILE,*) ' ... locate stations passed '
        write(INVERSE_LOG_FILE,*)
-       flush(INVERSE_LOG_FILE)
+       call flush_iunit(INVERSE_LOG_FILE)
     endif
   end subroutine locate_receiver
 

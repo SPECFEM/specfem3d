@@ -99,13 +99,13 @@ contains
        call get_stations(acqui_simu)
     endif
 
-    if (myrank == 0) flush(INVERSE_LOG_FILE)
+    if (myrank == 0) call flush_iunit(INVERSE_LOG_FILE)
 
     call bcast_all_acqui(acqui_simu,  inversion_param, myrank)
     call locate_source(acqui_simu, myrank)
     call locate_receiver(acqui_simu, myrank)
 
-    if (myrank == 0) flush(INVERSE_LOG_FILE)
+    if (myrank == 0) call flush_iunit(INVERSE_LOG_FILE)
 
     !! not need to read data for only forward simulation
     if (.not. inversion_param%only_forward) call read_data_gather(acqui_simu, myrank)
@@ -116,7 +116,7 @@ contains
        call create_name_database_inversion(acqui_simu(isrc)%prname_inversion, myrank, isrc, LOCAL_PATH)
     enddo
 
-    if (myrank == 0) flush(INVERSE_LOG_FILE)
+    if (myrank == 0) call flush_iunit(INVERSE_LOG_FILE)
 
     !!! We can read input model from external files instead of get model stored in specfem databases -----------------------------
     !!! otherwise the model read from mesher cubit or meshfem3D is kept.
@@ -221,7 +221,7 @@ contains
     write(6,*)
     write(6,*) '      SETUP INVERSION : ', NUMBER_OF_SIMULTANEOUS_RUNS, 'rank : ', myrank, ' group : ', mygroup
     write(6,*)
-    flush(6)
+    call flush_iunit(6)
 
     if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
        write(prefix_to_path,"('run',i4.4,'/')") mygroup + 1
@@ -229,7 +229,7 @@ contains
        acqui_file_ref='./DATA/inverse_problem/acqui_file.txt'
        if (myrank == 0) then
           write(6,*) ' DISTRIBUTION OF SOURCES '
-          flush(6)
+          call flush_iunit(6)
           !! only one process must do I/O (myrank=0, mygroup=0)
           if (mygroup == 0) call read_and_distribute_sources_for_simultaneous_runs(NUMBER_OF_SIMULTANEOUS_RUNS, acqui_file_ref)
        endif
@@ -268,7 +268,7 @@ contains
     write(6,*)
     write(6,*)  ' NUMBER OF SIMULTANEOUS RUN > 0 '
     write(6,*)
-    flush(6)
+    call flush_iunit(6)
     number_of_sources_in_acqui_file_ref=0
     open(666,file=trim(acqui_file_ref))
     do
@@ -324,7 +324,7 @@ contains
        endif
        write(777, '(a)') trim(line)
        write(6,*) trim(line)
-       flush(6)
+       call flush_iunit(6)
     enddo
 999  close(666)
     close(777)

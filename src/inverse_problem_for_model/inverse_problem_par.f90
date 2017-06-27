@@ -45,7 +45,7 @@ module inverse_problem_par
   !! useful files id
   integer,                       public, parameter  :: IINN=667, IIDD=668
   !!! verbose debug mode
-  logical,                       public, parameter  :: DEBUG_MODE=.true.
+  logical,                       public, parameter  :: DEBUG_MODE=.false.
   !!! write kernels on disk
   logical,                       public, parameter  :: SAVE_KERNEL=.false.
   !!! use fast code and undoing_attenuation for adjoints (in developmement ... not working yet)
@@ -281,5 +281,30 @@ module inverse_problem_par
      double precision,                      dimension(:,:),       allocatable :: hxi, heta, hgamma
 
   end type profd !-----------------------------------------------------------------------------------------------------------------
+
+
+  ! -------------------------------------------------------------------------------------------------
+  !
+  ! I/O wrapper function
+  !
+  !-------------------------------------------------------------------------------------------------
+
+  subroutine flush_iunit(iunit)
+
+    implicit none
+    
+    integer, intent(in) :: iunit
+
+    ! note: Fortran2003 includes a FLUSH statement
+    !          which is implemented by most compilers by now
+    !
+    ! otherwise:
+    !   a) comment out the line below
+    !   b) try to use instead: call flush(iunit)
+    
+    flush(iunit)
+    
+  end subroutine flush_iunit
+
 
 end module inverse_problem_par

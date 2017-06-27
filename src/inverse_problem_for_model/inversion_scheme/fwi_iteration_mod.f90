@@ -56,7 +56,7 @@ contains
        write(INVERSE_LOG_FILE,*) '           ***   FWI ITERATION  : ', iter_inverse,'  ***'
        write(INVERSE_LOG_FILE,*) '           *********************************************'
        write(INVERSE_LOG_FILE,*)
-       !! DK DK commented out because not Fortran standard, gfortran rejects it  call flush(INVERSE_LOG_FILE)
+       call flush_iunit(INVERSE_LOG_FILE)
     endif
 
 
@@ -111,7 +111,7 @@ contains
           write(INVERSE_LOG_FILE,*) '*** WOLFE SUB-ITERATION FWI ITERATION  : ', iter_wolfe
           write(INVERSE_LOG_FILE,*)'    TRY STEP :', step_length, ' ***'
           write(INVERSE_LOG_FILE,*)
-          !! DK DK commented out because not Fortran standard, gfortran rejects it  call flush(INVERSE_LOG_FILE)
+          call flush_iunit(INVERSE_LOG_FILE)
        endif
 
        ! update model for choosen family
@@ -146,7 +146,7 @@ contains
        !information about costs at current sub-iteration
        if (myrank == 0) then
           write(OUTPUT_FWI_LOG, '(2i10, 2x, 5e20.10 )')  iter_inverse, iter_wolfe, step_length, Qt, Q0, Qpt, Qp0
-          !! DK DK commented out because not Fortran standard, gfortran rejects it  call flush(OUTPUT_FWI_LOG)
+          call flush_iunit(OUTPUT_FWI_LOG)
        endif
 
        ! apply wolfe's rules ---------------------------------------------------------
@@ -172,7 +172,7 @@ contains
           if (myrank == 0) then
              write(OUTPUT_ITERATION_FILE,'(i5,"|",e15.8,"|",e15.8,"|",e12.5,"|",e12.5,"|",i3)')  &
              1+iter_inverse, Q0, NormGrad, Q0/inversion_param%Cost_init, NormGrad/inversion_param%Norm_grad_init, iter_wolfe
-             !! DK DK commented out because not Fortran standard, gfortran rejects it  call flush(OUTPUT_ITERATION_FILE)
+             call flush_iunit(OUTPUT_ITERATION_FILE)
              write(INVERSE_LOG_FILE,*)
              write(INVERSE_LOG_FILE,*) ' Cost fuction  : ', Q0,  '   relative cost :', 100*Q0/inversion_param%Cost_init,'%'
              write(INVERSE_LOG_FILE,*) ' Gradient Norm :', NormGrad, '   relative grad :', &
@@ -248,7 +248,7 @@ contains
        write(INVERSE_LOG_FILE,*) '          ***      INITIALIZE FWI ITERATIONS        ***'
        write(INVERSE_LOG_FILE,*) '          *********************************************'
        write(INVERSE_LOG_FILE,*)
-       !! DK DK commented out because not Fortran standard, gfortran rejects it  call flush(INVERSE_LOG_FILE)
+       call flush_iunit(INVERSE_LOG_FILE)
     endif
 
     ! compute cost function and gradient---------
@@ -295,8 +295,8 @@ contains
        write(INVERSE_LOG_FILE,*)
        write(INVERSE_LOG_FILE,*)
        write(INVERSE_LOG_FILE,*) ' Initial Cost function : ', inversion_param%Cost_init
-      write(INVERSE_LOG_FILE,*)  ' Initial Gradient Norm :', inversion_param%Norm_grad_init
-       !! DK DK commented out because not Fortran standard, gfortran rejects it  call flush(INVERSE_LOG_FILE)
+       write(INVERSE_LOG_FILE,*)  ' Initial Gradient Norm :', inversion_param%Norm_grad_init
+       call flush_iunit(INVERSE_LOG_FILE)
     endif
   end subroutine InitializeOptimIteration
 
