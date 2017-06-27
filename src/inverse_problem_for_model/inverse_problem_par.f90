@@ -282,7 +282,7 @@ module inverse_problem_par
 
   end type profd !-----------------------------------------------------------------------------------------------------------------
 
-contains 
+contains
   ! -------------------------------------------------------------------------------------------------
   !
   ! I/O wrapper function
@@ -292,7 +292,7 @@ contains
   subroutine flush_iunit(iunit)
 
     implicit none
-    
+
     integer, intent(in) :: iunit
 
     ! note: Fortran2003 includes a FLUSH statement
@@ -301,10 +301,10 @@ contains
     ! otherwise:
     !   a) comment out the line below
     !   b) try to use instead: call flush(iunit)
-    
+
     flush(iunit)
-    
+
   end subroutine flush_iunit
-  
+
 
 end module inverse_problem_par
