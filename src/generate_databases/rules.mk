@@ -217,7 +217,7 @@ $O/model_external_values.gen.o: $O/generate_databases_par.gen.o
 $O/model_gll.gen.o: $O/generate_databases_par.gen.o
 $O/model_ipati.gen.o: $O/generate_databases_par.gen.o
 ifeq ($(MPI),yes)
-$O/model_sep.mpi_gen.o: $O/generate_databases_par.gen.o
+$O/model_sep.mpi_gen.o: $O/generate_databases_par.gen.o $O/parallel.sharedmpi.o
 else
 $O/model_sep.nompi_gen.o: $O/generate_databases_par.gen.o
 endif
