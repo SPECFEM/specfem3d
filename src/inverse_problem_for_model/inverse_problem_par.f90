@@ -282,7 +282,7 @@ module inverse_problem_par
 
   end type profd !-----------------------------------------------------------------------------------------------------------------
 
-
+contains 
   ! -------------------------------------------------------------------------------------------------
   !
   ! I/O wrapper function
@@ -305,6 +305,6 @@ module inverse_problem_par
     flush(iunit)
     
   end subroutine flush_iunit
-
+  
 
 end module inverse_problem_par
