@@ -436,6 +436,7 @@ __global__ void compute_kernels_acoustic_kernel(int* ispec_is_acoustic,
                                                 realw* d_xix,realw* d_xiy,realw* d_xiz,
                                                 realw* d_etax,realw* d_etay,realw* d_etaz,
                                                 realw* d_gammax,realw* d_gammay,realw* d_gammaz,
+						                        realw* potential_acoustic, 
                                                 realw* potential_dot_dot_acoustic,
                                                 realw* b_potential_acoustic,
                                                 realw* b_potential_dot_dot_acoustic,
@@ -468,7 +469,7 @@ __global__ void compute_kernels_acoustic_kernel(int* ispec_is_acoustic,
       // copy field values
       iglob = d_ibool[ijk_ispec_padded] - 1;
       scalar_field_displ[ijk] = b_potential_acoustic[iglob];
-      scalar_field_accel[ijk] = potential_dot_dot_acoustic[iglob];
+      scalar_field_accel[ijk] = potential_acoustic[iglob];
     }
   }
 
@@ -496,13 +497,13 @@ __global__ void compute_kernels_acoustic_kernel(int* ispec_is_acoustic,
                             rhol,gravity);
 
     // density kernel
-    rho_ac_kl[ijk_ispec] -= deltat * rhol * (accel_elm[0]*b_displ_elm[0] +
+    rho_ac_kl[ijk_ispec] += deltat * rhol * (accel_elm[0]*b_displ_elm[0] +
                                              accel_elm[1]*b_displ_elm[1] +
                                              accel_elm[2]*b_displ_elm[2]);
 
     // bulk modulus kernel
     kappal = kappastore[ijk_ispec];
-    kappa_ac_kl[ijk_ispec] -= deltat / kappal * potential_dot_dot_acoustic[iglob]
+    kappa_ac_kl[ijk_ispec] += deltat / kappal * potential_acoustic[iglob]
                                               * b_potential_dot_dot_acoustic[iglob];
   } // active
 }
@@ -536,6 +537,7 @@ TRACE("compute_kernels_acoustic_cuda");
                                                     mp->d_xix,mp->d_xiy,mp->d_xiz,
                                                     mp->d_etax,mp->d_etay,mp->d_etaz,
                                                     mp->d_gammax,mp->d_gammay,mp->d_gammaz,
+						                            mp->d_potential_acoustic,
                                                     mp->d_potential_dot_dot_acoustic,
                                                     mp->d_b_potential_acoustic,
                                                     mp->d_b_potential_dot_dot_acoustic,

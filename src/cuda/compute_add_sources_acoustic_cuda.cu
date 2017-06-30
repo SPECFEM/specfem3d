@@ -215,8 +215,9 @@ __global__ void add_sources_ac_SIM_TYPE_2_OR_3_kernel(realw* potential_dot_dot_a
       //
       // note: we take the first component of the adj_sourcearrays
 
-      realw stf = - source_adj * xir * etar * gammar / kappal;
-
+      //realw stf = - source_adj * xir * etar * gammar / kappal;
+      // VM VM : change the adjoint source to be consistent with CPU code
+      realw stf = source_adj * xir * etar * gammar;
       atomicAdd(&potential_dot_dot_acoustic[iglob],stf);
 
                 //+adj_sourcearrays[INDEX6(nadj_rec_local,NTSTEP_BETWEEN_ADJSRC,3,5,5,
