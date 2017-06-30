@@ -19,7 +19,7 @@ rm -rf ./bin ./obj ./setup ./OUTPUT_FILES ./DATA
 # default configuration for parallel version (with MPI)
 # (out-of-source compilation)
 echo "configuration: $srcdir/configure --with-mpi" >> $testdir/results.log
-$srcdir/configure  --with-mpi >> $testdir/results.log 2>&1
+$srcdir/configure --with-mpi >> $testdir/results.log 2>&1
 
 # checks exit code
 if [[ $? -ne 0 ]]; then

@@ -392,5 +392,21 @@ See e.g. \cite{BlKoChLoXi16}. \\
 \noindent
 However in practice for technical reasons it is approximated based on the sum of different Generalized Zener body mechanisms
 and thus the code outputs the band in which the approximation is very good, outside of that range it can be less accurate.
-The logarithmic center of that frequency band is the \texttt{ATTENUATION\_f0} parameter defined (in Hz) in input file \texttt{DATA/Par\_file}.
+The logarithmic center of that frequency band is the \texttt{ATTENUATION\_f0} parameter defined (in Hz) in input file \texttt{DATA/Par\_file}. \\
+
+\noindent
+Regarding attenuation (viscoelasticity), in the Par\_file you need to select the number of standard linear solids (N\_SLS) to use to mimic a constant $Q$ quality factor.
+Using N\_SLS = 3 is always safe. If (and only if) you know what you are doing, you can try to reduce that in order to reduce the cost of the simulations.
+Figure~\ref{fig:selectNSLS} shows values that you can consider using (again, if and only if you know what you are doing). That table has been created by Zhinan Xie using
+a comparison between results obtained with a truly-constant $Q$ and results obtained with its approximation based on N\_SLS standard linear solids.
+The comparison is performed using the time-frequency misfit and goodness-of-fit criteria proposed by \cite{Kristekova_2009}.
+The table is drawn for a dimensionless parameter representing the distance of propagation.
+%%
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=5in]{figures/minimum_number_of_SLS_that_can_be_used_in_viscoelastic_simulation.png}
+\caption{Table showing how you can select a value of N\_SLS smaller than 3, if and only if you know what you are doing.}
+\label{fig:selectNSLS}
+\end{figure}
+%%
 
