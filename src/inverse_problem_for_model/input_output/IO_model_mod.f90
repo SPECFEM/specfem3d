@@ -164,77 +164,31 @@ contains
        !! bcast to others groups
        if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
 
-          wks_model_cij(:,:,:,:)= c11store(:,:,:,:)
-          call sum_all_all_cr_for_simulatenous_runs(wks_model_cij(1,1,1,1), c11store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
-
-          wks_model_cij(:,:,:,:)= c12store(:,:,:,:)
-          call sum_all_all_cr_for_simulatenous_runs(wks_model_cij(1,1,1,1), c12store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
-
-          wks_model_cij(:,:,:,:)= c13store(:,:,:,:)
-          call sum_all_all_cr_for_simulatenous_runs(wks_model_cij(1,1,1,1), c13store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
-
-          wks_model_cij(:,:,:,:)= c14store(:,:,:,:)
-          call sum_all_all_cr_for_simulatenous_runs(wks_model_cij(1,1,1,1), c14store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
-
-          wks_model_cij(:,:,:,:)= c15store(:,:,:,:)
-          call sum_all_all_cr_for_simulatenous_runs(wks_model_cij(1,1,1,1), c15store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
-
-          wks_model_cij(:,:,:,:)= c16store(:,:,:,:)
-          call sum_all_all_cr_for_simulatenous_runs(wks_model_cij(1,1,1,1), c16store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
-
-          wks_model_cij(:,:,:,:)= c22store(:,:,:,:)
-          call sum_all_all_cr_for_simulatenous_runs(wks_model_cij(1,1,1,1), c22store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
-
-          wks_model_cij(:,:,:,:)= c23store(:,:,:,:)
-          call sum_all_all_cr_for_simulatenous_runs(wks_model_cij(1,1,1,1), c23store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
-
-          wks_model_cij(:,:,:,:)= c24store(:,:,:,:)
-          call sum_all_all_cr_for_simulatenous_runs(wks_model_cij(1,1,1,1), c24store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
-
-          wks_model_cij(:,:,:,:)= c25store(:,:,:,:)
-          call sum_all_all_cr_for_simulatenous_runs(wks_model_cij(1,1,1,1), c25store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
-
-          wks_model_cij(:,:,:,:)= c26store(:,:,:,:)
-          call sum_all_all_cr_for_simulatenous_runs(wks_model_cij(1,1,1,1), c26store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
-
-          wks_model_cij(:,:,:,:)= c33store(:,:,:,:)
-          call sum_all_all_cr_for_simulatenous_runs(wks_model_cij(1,1,1,1), c33store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
-
-          wks_model_cij(:,:,:,:)= c34store(:,:,:,:)
-          call sum_all_all_cr_for_simulatenous_runs(wks_model_cij(1,1,1,1), c34store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
-
-          wks_model_cij(:,:,:,:)= c35store(:,:,:,:)
-          call sum_all_all_cr_for_simulatenous_runs(wks_model_cij(1,1,1,1), c35store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
-
-          wks_model_cij(:,:,:,:)= c36store(:,:,:,:)
-          call sum_all_all_cr_for_simulatenous_runs(wks_model_cij(1,1,1,1), c36store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
-
-          wks_model_cij(:,:,:,:)= c44store(:,:,:,:)
-          call sum_all_all_cr_for_simulatenous_runs(wks_model_cij(1,1,1,1), c44store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
-
-          wks_model_cij(:,:,:,:)= c45store(:,:,:,:)
-          call sum_all_all_cr_for_simulatenous_runs(wks_model_cij(1,1,1,1), c45store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
-
-          wks_model_cij(:,:,:,:)= c46store(:,:,:,:)
-          call sum_all_all_cr_for_simulatenous_runs(wks_model_cij(1,1,1,1), c46store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
-
-          wks_model_cij(:,:,:,:)= c55store(:,:,:,:)
-          call sum_all_all_cr_for_simulatenous_runs(wks_model_cij(1,1,1,1), c55store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
-
-          wks_model_cij(:,:,:,:)= c56store(:,:,:,:)
-          call sum_all_all_cr_for_simulatenous_runs(wks_model_cij(1,1,1,1), c56store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
-
-          wks_model_cij(:,:,:,:)= c66store(:,:,:,:)
-          call sum_all_all_cr_for_simulatenous_runs(wks_model_cij(1,1,1,1), c66store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
-
-          wks_model_cij(:,:,:,:)= rhostore(:,:,:,:)
-          call sum_all_all_cr_for_simulatenous_runs(wks_model_cij(1,1,1,1), rhostore(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
-
-          wks_model_cij(:,:,:,:)= rho_vp(:,:,:,:)
-          call sum_all_all_cr_for_simulatenous_runs(wks_model_cij(1,1,1,1), rho_vp(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
-
-          wks_model_cij(:,:,:,:)= rho_vs(:,:,:,:)
-          call sum_all_all_cr_for_simulatenous_runs(wks_model_cij(1,1,1,1), rho_vs(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
+         
+          call bcast_all_cr_for_database(c11store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
+          call bcast_all_cr_for_database(c12store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
+          call bcast_all_cr_for_database(c13store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
+          call bcast_all_cr_for_database(c14store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
+          call bcast_all_cr_for_database(c15store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
+          call bcast_all_cr_for_database(c16store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
+          call bcast_all_cr_for_database(c22store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
+          call bcast_all_cr_for_database(c23store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
+          call bcast_all_cr_for_database(c24store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
+          call bcast_all_cr_for_database(c25store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
+          call bcast_all_cr_for_database(c26store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
+          call bcast_all_cr_for_database(c33store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
+          call bcast_all_cr_for_database(c34store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
+          call bcast_all_cr_for_database(c35store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
+          call bcast_all_cr_for_database(c36store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
+          call bcast_all_cr_for_database(c44store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
+          call bcast_all_cr_for_database(c45store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
+          call bcast_all_cr_for_database(c46store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
+          call bcast_all_cr_for_database(c55store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
+          call bcast_all_cr_for_database(c56store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
+          call bcast_all_cr_for_database(c66store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
+          call bcast_all_cr_for_database(rhostore(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
+          call bcast_all_cr_for_database(rho_vp(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
+          call bcast_all_cr_for_database(rho_vs(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
 
        endif
 
@@ -303,17 +257,12 @@ contains
        if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
 
           if (ACOUSTIC_SIMULATION) then
-
-             wks_model_vp(:,:,:,:)= kappastore(:,:,:,:)
-             call sum_all_all_cr_for_simulatenous_runs(wks_model_vp(1,1,1,1), kappastore(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
-             wks_model_rh(:,:,:,:)=rhostore(:,:,:,:)
-             call sum_all_all_cr_for_simulatenous_runs(wks_model_rh(1,1,1,1), rhostore(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
-
+             call bcast_all_cr_for_database(kappastore(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
+             call bcast_all_cr_for_database(rhostore(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
           endif
 
           if (ELASTIC_SIMULATION) then
-             wks_model_vs(:,:,:,:)=mustore(:,:,:,:)
-             call sum_all_all_cr_for_simulatenous_runs(wks_model_vs(1,1,1,1), mustore(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
+             call bcast_all_cr_for_database(mustore(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
           endif
 
        endif

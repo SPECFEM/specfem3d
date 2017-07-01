@@ -309,7 +309,12 @@ contains
     type(inver),                                    intent(inout) :: inversion_param
     real(kind=CUSTOM_REAL),                         intent(in)    :: step_length
     integer                                                       :: ipar
-
+    
+    real(kind=CUSTOM_REAL)                                        :: vmin, vmin_glob
+    real(kind=CUSTOM_REAL)                                        :: vmax, vmax_glob
+    real(kind=CUSTOM_REAL)                                        :: vmin_glob0
+    real(kind=CUSTOM_REAL)                                        :: vmax_glob0
+    
     !! Here we are in log of parameter as by default in specfem
     current_model(:,:,:,:,:) = initial_model(:,:,:,:,:) * exp(step_length * descent_direction(:,:,:,:,:))
 
@@ -320,16 +325,27 @@ contains
        write(INVERSE_LOG_FILE,*)
        write(INVERSE_LOG_FILE,*) '    - > update model :  '
        write(INVERSE_LOG_FILE,*)
-       do ipar=1, inversion_param%NinvPar
-          write(INVERSE_LOG_FILE,*) ' Parameter :', ipar,'   MAX :', maxval(current_model(:,:,:,:,ipar)), &
-               '  MIN :',minval(current_model(:,:,:,:,ipar))
-          write(INVERSE_LOG_FILE,*) 'max pert / starting model : ', &
-               100*maxval( abs(current_model(:,:,:,:,ipar) - prior_model(:,:,:,:,ipar)) / prior_model(:,:,:,:,ipar) ), '%'
-          write(INVERSE_LOG_FILE,*) 'max pert / previous model : ', &
-               100*maxval( abs(current_model(:,:,:,:,ipar) - initial_model(:,:,:,:,ipar)) / initial_model(:,:,:,:,ipar) ), '%'
-          write(INVERSE_LOG_FILE,*)
-       enddo
-    endif
+    end if
+
+    do ipar=1, inversion_param%NinvPar
+
+       vmin =   minval(current_model(:,:,:,:,ipar))
+       vmax  =  maxval(current_model(:,:,:,:,ipar))
+       call min_all_cr(vmin,vmin_glob)
+       call max_all_cr(vmax,vmax_glob)
+       
+       vmin =   maxval( abs(current_model(:,:,:,:,ipar) - initial_model(:,:,:,:,ipar)) /   initial_model(:,:,:,:,ipar) )
+       vmax  =  maxval( abs(current_model(:,:,:,:,ipar) - prior_model(:,:,:,:,ipar)) /   prior_model(:,:,:,:,ipar) )
+       call max_all_cr(vmin,vmin_glob0)
+       call max_all_cr(vmax,vmax_glob0)
+       
+       if (myrank == 0) then 
+          write(INVERSE_LOG_FILE,*) '     Parameter :', ipar,'   MIN :',vmin_glob ,'  MAX :',vmax_glob
+          write(INVERSE_LOG_FILE,*) '            max pert / starting model : ', 100*vmax_glob0,' %'
+          write(INVERSE_LOG_FILE,*) '            max pert / previous model : ', 100*vmin_glob0,' %'
+       end if
+    enddo
+    
 
   end subroutine UpdateModel
 
