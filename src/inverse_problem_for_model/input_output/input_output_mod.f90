@@ -722,6 +722,7 @@ contains
 
     if (myrank == 0) then
        write(INVERSE_LOG_FILE,*) '       ALLOCATE  acquisition structure for ', NSRC, ' sources '
+       write(INVERSE_LOG_FILE,*)
     endif
 
     !! 2/ allocate and store type(acqui) acqui_simu
@@ -791,6 +792,13 @@ contains
                                             acqui_simu(isrc)%component(2), &
                                             acqui_simu(isrc)%component(3)
 
+                 if (myrank == 0) then
+                    write(INVERSE_LOG_FILE,*) 'source', isrc,  ' components : ', &
+                         trim(acqui_simu(isrc)%component(1)),&
+                         trim(acqui_simu(isrc)%component(2)),&
+                         trim(acqui_simu(isrc)%component(3))
+                 end if
+
               case ('NSTEP')
                  read(line(ipos0:ipos1),*) acqui_simu(isrc)%Nt_data
 
@@ -810,6 +818,7 @@ contains
 999 close(666)
 
     if (myrank == 0) then
+       write(INVERSE_LOG_FILE,*)
        write(INVERSE_LOG_FILE,*)
        write(INVERSE_LOG_FILE,*) '     READING acquisition passed '
        write(INVERSE_LOG_FILE,*)
