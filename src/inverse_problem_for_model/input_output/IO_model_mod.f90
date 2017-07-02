@@ -896,6 +896,7 @@ contains
                    CIJ(1,1)=rho*vp*vp  !! will be overwrite
                    CIJ(4,4)=rho*vs*vs
                    CIJ(1,3)=CIJ(1,1)-2.*CIJ(4,4)+(de-ep)*CIJ(1,1)+2.*gm*CIJ(4,4)
+                   CIJ(2,3)=CIJ(1,3)
                    CIJ(3,3)=CIJ(1,1)*(1.-ep)
                    CIJ(1,1)=CIJ(3,3)
                    CIJ(2,2)=CIJ(1,1)
@@ -948,8 +949,8 @@ contains
        do i=1,ny_fd
           ycrd_fd(i) = oy_fd + hy_fd * real(i-1)
        enddo
-       do j=1,nz_fd
-          zcrd_fd(i) = oz_fd + hz_fd * real(i-1)
+       do i=1,nz_fd
+          zcrd_fd(i) = oz_fd + hz_fd * real(i-1)  
        enddo
 
        !! PROJECT FD MODEL IN SEM GRID
