@@ -794,10 +794,10 @@ contains
 
                  if (myrank == 0) then
                     write(INVERSE_LOG_FILE,*) 'source', isrc,  ' components : ', &
-                         trim(acqui_simu(isrc)%component(1)),' ',&
-                         trim(acqui_simu(isrc)%component(2)),' ',&
+                         trim(acqui_simu(isrc)%component(1)),' ', &
+                         trim(acqui_simu(isrc)%component(2)),' ', &
                          trim(acqui_simu(isrc)%component(3))
-                 end if
+                 endif
 
               case ('NSTEP')
                  read(line(ipos0:ipos1),*) acqui_simu(isrc)%Nt_data

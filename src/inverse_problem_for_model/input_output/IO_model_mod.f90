@@ -164,7 +164,7 @@ contains
        !! bcast to others groups
        if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
 
-         
+
           call bcast_all_cr_for_database(c11store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
           call bcast_all_cr_for_database(c12store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
           call bcast_all_cr_for_database(c13store(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_ANISO)
@@ -950,7 +950,7 @@ contains
           ycrd_fd(i) = oy_fd + hy_fd * real(i-1)
        enddo
        do i=1,nz_fd
-          zcrd_fd(i) = oz_fd + hz_fd * real(i-1)  
+          zcrd_fd(i) = oz_fd + hz_fd * real(i-1)
        enddo
 
        !! PROJECT FD MODEL IN SEM GRID
