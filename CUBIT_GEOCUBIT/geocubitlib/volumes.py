@@ -567,6 +567,17 @@ def layercake_volume_ascii_regulargrid_mpiregularmap(filename=None,
             ner = cubit.get_error_count()
             create_volume(inz, inz + 1, method=cfg.volumecreation_method)
             ner2 = cubit.get_error_count()
+            if ner != ner2:
+                if cfg.volumecreation_method != 'loft':
+                    ner = cubit.get_error_count()
+                    create_volume(inz, inz + 1, method='loft')
+                    ner2 = cubit.get_error_count()
+                    if ner != ner2:
+                        print 'ERROR creating volume'
+                        break
+                else:
+                    print 'ERROR creating volume'
+                    break
         if ner == ner2 and not cfg.debug_geometry:
             # cubitcommand= 'del surface 1 to '+ str( cfg.nz )
             cubitcommand = 'del surface all'
