@@ -898,10 +898,10 @@ contains
                    CIJ(1,3)=CIJ(1,1)-2.*CIJ(4,4)+(de-ep)*CIJ(1,1)+2.*gm*CIJ(4,4)
                    CIJ(2,3)=CIJ(1,3)
                    CIJ(3,3)=CIJ(1,1)*(1.-ep)
-                   CIJ(1,1)=CIJ(3,3)
+                   CIJ(1,1)=CIJ(1,1)*(1.+ep)
                    CIJ(2,2)=CIJ(1,1)
                    CIJ(6,6)=CIJ(4,4)*(1.+gm)
-                   CIJ(4,4)=CIJ(6,6)
+                   CIJ(4,4)=CIJ(4,4)*(1.-gm)
                    CIJ(5,5)=CIJ(4,4)
                    CIJ(1,2)=CIJ(1,1)-2.*CIJ(6,6)
 
