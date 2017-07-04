@@ -157,24 +157,24 @@
     if (myrank == 0) then
 
        open(85,file=trim(FKMODEL_FILE))
-       read(85,'(I16)')  kpsv
-       read(85,'(I16)')  nlayer
+       read(85,*)  kpsv
+       read(85,*)  nlayer
        allocate(al_FK(nlayer), be_FK(nlayer), mu_FK(nlayer), h_FK(nlayer))
 
        do i = 1,nlayer !! loop on layers
-          read(85,'(F32.10)') al_FK(i)           !! vp
-          read(85,'(F32.10)') be_FK(i)           !! vs
-          read(85,'(F32.10)') mu_FK(i)           !! mu
-          read(85,'(F32.10)') h_FK(i)            !! heigth of layer
+          read(85,*) al_FK(i)           !! vp
+          read(85,*) be_FK(i)           !! vs
+          read(85,*) mu_FK(i)           !! mu
+          read(85,*) h_FK(i)            !! heigth of layer
        enddo
 
-       read(85,'(F32.10)') phi_FK              !! phi
-       read(85,'(F32.10)') theta_FK            !! theta
-       read(85,'(F32.10)') ff0                 !!
-       read(85,'(F32.10)') xx0
-       read(85,'(F32.10)') yy0
-       read(85,'(F32.10)') zz0                 !! todo put automatically an acceptable position?
-       read(85,'(F32.10)') tt0                 !! set t0
+       read(85,*) phi_FK              !! phi
+       read(85,*) theta_FK            !! theta
+       read(85,*) ff0                 !!
+       read(85,*) xx0
+       read(85,*) yy0
+       read(85,*) zz0                 !! todo put automatically an acceptable position?
+       read(85,*) tt0                 !! set t0
        read(85,*)          tmax_fk             !! read tmax_fk for time window FK computation
                                                !! (be careful to choose it in order to avoid aliasing)
        read(85,*) stag
