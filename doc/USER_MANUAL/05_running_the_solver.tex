@@ -62,7 +62,8 @@ magnitude.}
 %
 The \texttt{CMTSOLUTION} file should be edited in the following way:
 \begin{itemize}
-\item Set the latitude or UTM $x$ coordinate, longitude or UTM $y$ coordinate, depth of the source (in km).
+\item Set the latitude or UTM $x$ coordinate, longitude or UTM $y$ coordinate, depth of the source (in km). Remark: In principle in the international CMTSOLUTION format in geophysics
+the depth is given in kilometers; however for users in other fields (non-destructive testing, medical imaging, near-surface studies...) who may prefer to give the position of the source (rather than its depth from the surface) we provide an option called USE\_SOURCES\_RECEIVERS\_Z in the Par\_file, and if so that position is read from CMTSOLUTION in meters rather than kilometers (and again, it is then the true position in the mesh, not the depth). When option USE\_SOURCES\_RECEIVERS\_Z in the Par\_file is on, this remark applies to the position of the receivers as well.
 \item Set the \texttt{time shift} parameter equal to $0.0$ (the solver
 will not run otherwise.) The time shift parameter would simply apply
 an overall time shift to the synthetics, something that can be done
