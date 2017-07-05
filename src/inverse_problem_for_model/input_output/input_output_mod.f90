@@ -540,7 +540,7 @@ contains
               end select
            enddo
         enddo
-        open(IINN,file=trim(adjustl(name_file_to_write)), access='direct', recl=CUSTOM_REAL*Nt*NSTA)
+        open(IINN,file=trim(adjustl(name_file_to_write)), access='direct', recl=CUSTOM_REAL*Nt*NSTA, status='replace')
 
         !! write only the asked component or pressure
         irec=0
@@ -589,7 +589,7 @@ contains
           allocate(Gather(NSTA,Nt,NDIM))
           Gather(:,:,:) = 0._CUSTOM_REAL
           ! read gather file
-          open(IINN,file=trim(adjustl(acqui_simu(isource)%data_file_gather)), access='direct', recl=CUSTOM_REAL*Nt*NSTA)
+          open(IINN,file=trim(adjustl(acqui_simu(isource)%data_file_gather)), access='direct', recl=CUSTOM_REAL*Nt*NSTA,status='old')
           !! read only the asked component or pressure
           irec=0
           do idim=1,NDIM
