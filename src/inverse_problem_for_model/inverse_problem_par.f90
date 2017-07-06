@@ -45,7 +45,7 @@ module inverse_problem_par
   !! useful files id
   integer,                       public, parameter  :: IINN=667, IIDD=668
   !!! verbose debug mode
-  logical,                       public, parameter  :: DEBUG_MODE=.false.
+  logical,                       public, parameter  :: DEBUG_MODE=.true.
   !!! write kernels on disk
   logical,                       public, parameter  :: SAVE_KERNEL=.false.
   !!! use fast code and undoing_attenuation for adjoints (in developmement ... not working yet)
@@ -158,6 +158,9 @@ module inverse_problem_par
      character(len= MAX_LEN_STRING)                                            :: traction_dir
      !! source time function
      real(kind=CUSTOM_REAL),                  dimension(:,:),  allocatable     :: source_wavelet
+     real(kind=CUSTOM_REAL)                                                    :: fl_src, fh_src
+     character(len= MAX_LEN_STRING)                                            :: source_wavelet_file
+     logical                                                                   :: external_source_wavelet=.false.
      !! by default do not convolve residuals by wavelet
      logical                                                                   :: convlove_residuals_by_wavelet=.false.
 

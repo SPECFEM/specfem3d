@@ -675,6 +675,9 @@ contains
        acqui_simu(isource)%freqcy_to_invert(:,1,:)=fl
        acqui_simu(isource)%freqcy_to_invert(:,2,:)=fh
 
+       acqui_simu(isource)%fl_src=fl
+       acqui_simu(isource)%fh_src=fh
+
     enddo
 
     if (myrank == 0) write(INVERSE_LOG_FILE,'(a25//)') '... reading data : passed'
@@ -799,6 +802,10 @@ contains
                          trim(acqui_simu(isrc)%component(3))
                  endif
 
+              case('source_wavelet')
+                 acqui_simu(isrc)%source_wavelet_file=trim(adjustl(line(ipos0:ipos1)))
+                 acqui_simu(isrc)%external_source_wavelet=.true.
+                
               case ('NSTEP')
                  read(line(ipos0:ipos1),*) acqui_simu(isrc)%Nt_data
 
@@ -1005,8 +1012,10 @@ contains
     integer                                                :: isource, istation, nsta
     character(len=MAX_LEN_STRING)                          :: line, station_name, network_name
     real(kind=CUSTOM_REAL)                                 :: y, x, z, stbur
+
     write(INVERSE_LOG_FILE,*)
     write(INVERSE_LOG_FILE,*) '     READING stations '
+
     ! loop on all sources
     do isource = 1, NSRC
        ! open station file
@@ -1047,8 +1056,9 @@ contains
     ! locals
     character(len=MAX_LEN_STRING)                          :: string
     integer                                                :: isource, ier
-
-
+    integer                                                :: i
+    real(kind=CUSTOM_REAL)                                 :: dt_dummy
+    
     write(INVERSE_LOG_FILE,*)
     write(INVERSE_LOG_FILE,*) '     READING sources parameters '
 
@@ -1182,13 +1192,22 @@ contains
           !write(*,*)  acqui_simu(isource)%Mxy
           close(IINN)
 
-          ! to be consistent with secfem
+          ! to be consistent with specfem
           acqui_simu(isource)%Mxx = acqui_simu(isource)%Mxx * 1.d-7
           acqui_simu(isource)%Myy = acqui_simu(isource)%Myy * 1.d-7
           acqui_simu(isource)%Mzz = acqui_simu(isource)%Mzz * 1.d-7
           acqui_simu(isource)%Mxy = acqui_simu(isource)%Mxy * 1.d-7
           acqui_simu(isource)%Mxz = acqui_simu(isource)%Mxz * 1.d-7
           acqui_simu(isource)%Myz = acqui_simu(isource)%Myz * 1.d-7
+
+          if (acqui_simu(isource)%external_source_wavelet) then
+             allocate(acqui_simu(isource)%source_wavelet(acqui_simu(isource)%Nt_data,1))
+             open(IINN, file=trim(acqui_simu(isource)%source_wavelet_file))
+             do i=1,acqui_simu(isource)%Nt_data
+                read(IINN, *) dt_dummy, acqui_simu(isource)%source_wavelet(i,1)
+             end do
+             close(IINN)
+          end if
 
        case('force')
           print *, 'Abort not implemented yet : FORCESOLUTIN in source ',isource
@@ -1237,7 +1256,7 @@ contains
        call MPI_BCAST(acqui_simu(i)%station_file,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(acqui_simu(i)%event_name,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(acqui_simu(i)%component, 6,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
-
+       
        call MPI_BCAST(acqui_simu(i)%Nt_data,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(acqui_simu(i)%dt_data,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
 
@@ -1259,6 +1278,13 @@ contains
 
        call MPI_BCAST(acqui_simu(i)%t_shift,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(acqui_simu(i)%hdur,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+       call MPI_BCAST(acqui_simu(i)%source_wavelet_file, MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+       
+       call MPI_BCAST(acqui_simu(i)%external_source_wavelet, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+       if (acqui_simu(i)%external_source_wavelet) then
+          if (myrank > 0) allocate(acqui_simu(i)%source_wavelet(acqui_simu(i)%Nt_data,1))
+           call MPI_BCAST(acqui_simu(i)%source_wavelet,acqui_simu(i)%Nt_data, CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+       end if
 
        ! stations
        if (myrank == 0) nsta_tot=acqui_simu(i)%nsta_tot

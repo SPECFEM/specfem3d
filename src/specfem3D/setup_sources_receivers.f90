@@ -959,8 +959,22 @@
         hpgammar_store(irec_local,:) = hpgammar(:)
       endif
     enddo
+  else  
+    ! VM VM need to allocate Lagrange interpolators for receivers with 0 because it is used 
+    ! in calling subroutines parmeters. (otherwise it can be crash at runtime).
+    allocate(hxir_store(nrec_local,NGLLX), &
+             hetar_store(nrec_local,NGLLY), &
+             hgammar_store(nrec_local,NGLLZ),stat=ier)
+    if (ier /= 0) stop 'error allocating array hxir_store etc.'
+    ! allocates derivatives
+    if (SIMULATION_TYPE == 2) then
+      allocate(hpxir_store(nrec_local,NGLLX), &
+               hpetar_store(nrec_local,NGLLY), &
+               hpgammar_store(nrec_local,NGLLZ),stat=ier)
+      if (ier /= 0) stop 'error allocating array hpxir_store'
+    endif
   endif ! nrec_local > 0
-
+    
   end subroutine setup_receivers_precompute_intp
 
 !

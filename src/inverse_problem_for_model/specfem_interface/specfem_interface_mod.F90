@@ -14,6 +14,7 @@ module specfem_interface
   !! IMPORT inverse problem modules
   use adjoint_source
   use input_output
+  use signal_processing
 
 
   implicit none
@@ -30,10 +31,11 @@ contains
 !----------------------------------------------------------------------------------------------------------------------------------
 !> call specfem solver for forward problem only
 !----------------------------------------------------------------------------------------------------------------------------------
-  subroutine ComputeSismosPerSource(isource, acqui_simu, iter_inverse, myrank)
+  subroutine ComputeSismosPerSource(isource, acqui_simu, iter_inverse, inversion_param, myrank)
 
     integer,                                        intent(in)    ::  isource, iter_inverse, myrank
     type(acqui),  dimension(:), allocatable,        intent(inout) ::  acqui_simu
+    type(inver),                                    intent(inout) ::  inversion_param
     character(len=MAX_LEN_STRING)                                 ::  name_file_tmp
 
     !! set the parameters to perform the forward simulation
@@ -42,7 +44,7 @@ contains
     COMPUTE_AND_STORE_STRAIN = .false.
 
     !! forward solver ------------------------------------------------------------------------------------------------
-    call InitSpecfemForOneRun(acqui_simu, isource, iter_inverse)
+    call InitSpecfemForOneRun(acqui_simu, isource, inversion_param, iter_inverse)
     call iterate_time()
     call FinalizeSpecfemForOneRun(acqui_simu, isource)
 
@@ -90,13 +92,14 @@ contains
     COMPUTE_AND_STORE_STRAIN = .false.
 
     !! forward solver ------------------------------------------------------------------------------------------------
-    call InitSpecfemForOneRun(acqui_simu, isource, iter_inverse)
+    call InitSpecfemForOneRun(acqui_simu, isource, inversion_param, iter_inverse)
     call iterate_time()
     call FinalizeSpecfemForOneRun(acqui_simu, isource)
 
 
     !! define adjoint sources ----------------------------------------------------------------------------------
     call write_adjoint_sources_for_specfem(acqui_simu, inversion_param, isource, myrank)
+    if (DEBUG_MODE) call dump_adjoint_sources(iter_inverse, acqui_simu, myrank)
 
     !! choose parameters to perform both the forward and adjoint simulation
     SIMULATION_TYPE=3
@@ -105,7 +108,7 @@ contains
     APPROXIMATE_HESS_KL=.true.
 
     !! forward and adjoint runs --------------------------------------------------------------------------------------
-    call InitSpecfemForOneRun(acqui_simu, isource, iter_inverse)
+    call InitSpecfemForOneRun(acqui_simu, isource, inversion_param, iter_inverse)
 
 #ifdef DEBUG_COUPLED
     COUPLE_WITH_EXTERNAL_CODE=.false.  !! do not use coupling since the direct run is runining in backward from boundary
@@ -125,9 +128,10 @@ contains
 !----------------------------------------------------------------------------------------------------------------------------------
 !> initialize specfem before each call for the source isource
 !----------------------------------------------------------------------------------------------------------------------------------
-  subroutine InitSpecfemForOneRun(acqui_simu, isource, iter_inverse)
+  subroutine InitSpecfemForOneRun(acqui_simu, isource, inversion_param, iter_inverse)
 
     integer,                                        intent(in)    ::  isource, iter_inverse
+    type(inver),                                    intent(in)    ::  inversion_param
     type(acqui),  dimension(:), allocatable,        intent(in)    ::  acqui_simu
 
     integer                                                       :: irec,ier
@@ -137,6 +141,7 @@ contains
     character(len=256)                                            :: name_file
     character(len=MAX_STRING_LEN)                                 :: TRAC_PATH, dsname
     integer(kind=8)                                               :: filesize
+    real(kind=CUSTOM_REAL), dimension(:), allocatable             :: raw_stf, filt_stf
 
     if (myrank == 0 .and. DEBUG_MODE) write(INVERSE_LOG_FILE,*) ' initialize source number  : ', isource
 
@@ -144,6 +149,7 @@ contains
     NSTEP = acqui_simu(isource)%Nt_data
     DT = acqui_simu(isource)%dt_data
     DT_dble = DT
+    NSTEP_STF = 1
 
     deltat = real(DT,kind=CUSTOM_REAL)
     deltatover2 = deltat/2._CUSTOM_REAL
@@ -154,6 +160,8 @@ contains
 
     ! prepare source (only one source allowed for now) -----------------------------------------------------------------------------
     NSOURCES=1
+    NSOURCES_STF=1
+    USE_EXTERNAL_SOURCE_FILE=.false.
     select case (acqui_simu(isource)%source_type)
 
     case ('moment')
@@ -164,6 +172,25 @@ contains
        PRINT_SOURCE_TIME_FUNCTION=.true.
        t0 = - 1.2d0 * (acqui_simu(isource)%t_shift - 1.d0/acqui_simu(isource)%hdur)
        hdur(1)=acqui_simu(isource)%hdur
+       
+       if (acqui_simu(isource)%external_source_wavelet) then
+          USE_EXTERNAL_SOURCE_FILE=.true.
+          NSTEP_STF = NSTEP
+          if (allocated(user_source_time_function)) deallocate(user_source_time_function)
+          allocate(user_source_time_function(NSTEP_STF, NSOURCES_STF),stat=ier)
+          if (ier /= 0) stop ' error in allocating user_source_time_function'
+          if (inversion_param%only_forward) then 
+             user_source_time_function(:,1)=acqui_simu(isource)%source_wavelet(:,1)
+          else 
+             !! filter the user stf 
+             allocate(raw_stf(NSTEP), filt_stf(NSTEP))
+             raw_stf(:)=acqui_simu(isource)%source_wavelet(:,1)
+             call bwfilt (raw_stf, filt_stf, &
+                  DT, NSTEP, 1, 4, acqui_simu(isource)%fl_src, acqui_simu(isource)%fh_src)
+             user_source_time_function(:,1)=filt_stf(:)
+             deallocate(raw_stf, filt_stf)
+          end if
+       end if
 
        if (DEBUG_MODE) then
           write (IIDD , *)
@@ -294,6 +321,25 @@ contains
        seismograms_p(:,:,:) = 0._CUSTOM_REAL
 
     else
+
+
+       if (allocated(hxir_store)) deallocate(hxir_store)
+       if (allocated(hetar_store)) deallocate(hetar_store)
+       if (allocated(hgammar_store)) deallocate(hgammar_store)
+       if (allocated(hpxir_store)) deallocate(hpxir_store)
+       if (allocated(hpetar_store)) deallocate(hpetar_store)
+       if (allocated(hpgammar_store)) deallocate(hpgammar_store)
+       if (allocated(number_receiver_global)) deallocate(number_receiver_global)
+
+       allocate(hxir_store(0,0), &
+            hetar_store(0,0), &
+            hgammar_store(0,0), &
+            hpxir_store(0,0), &
+            hpetar_store(0,0), &
+            hpgammar_store(0,0))
+
+       allocate(number_receiver_global(0))
+
        if (allocated(seismograms_d)) deallocate(seismograms_d)
        if (allocated(seismograms_v)) deallocate(seismograms_v)
        if (allocated(seismograms_a)) deallocate(seismograms_a)

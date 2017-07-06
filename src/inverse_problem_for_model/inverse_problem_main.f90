@@ -116,7 +116,7 @@ subroutine inverse_problem_main()
      endif
 
      do isource = 1, acqui_simu(1)%nsrc_tot
-        call ComputeSismosPerSource(isource, acqui_simu, 0, myrank)
+        call ComputeSismosPerSource(isource, acqui_simu, 0, inversion_param, myrank)
      enddo
 
      !! writing model in SEM mesh : (rho, vp, vs) or cijkl.
