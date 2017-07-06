@@ -204,6 +204,8 @@
     !-------------------------------------------------------
     ! Sources
     !-------------------------------------------------------
+    call read_value_logical(USE_SOURCES_RECEIVERS_Z, 'USE_SOURCES_RECEIVERS_Z', ier)
+    if (ier /= 0) stop 'Error reading Par_file parameter USE_SOURCES_RECEIVERS_Z'
     call read_value_logical(USE_FORCE_POINT_SOURCE, 'USE_FORCE_POINT_SOURCE', ier)
     if (ier /= 0) stop 'Error reading Par_file parameter USE_FORCE_POINT_SOURCE'
     call read_value_logical(USE_RICKER_TIME_FUNCTION, 'USE_RICKER_TIME_FUNCTION', ier)
@@ -535,6 +537,7 @@
     call bcast_all_singlei(NTSTEP_BETWEEN_OUTPUT_INFO)
     call bcast_all_singlei(NTSTEP_BETWEEN_OUTPUT_SEISMOS)
     call bcast_all_singlei(NTSTEP_BETWEEN_READ_ADJSRC)
+    call bcast_all_singlel(USE_SOURCES_RECEIVERS_Z)
     call bcast_all_singlel(USE_FORCE_POINT_SOURCE)
     call bcast_all_singlel(USE_RICKER_TIME_FUNCTION)
     call bcast_all_singlel(SAVE_SEISMOGRAMS_DISPLACEMENT)

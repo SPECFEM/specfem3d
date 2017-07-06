@@ -46,6 +46,7 @@
 
   use constants
 
+  use specfem_par, only: USE_SOURCES_RECEIVERS_Z
   use specfem_par_acoustic, only: ispec_is_acoustic
   use specfem_par_elastic, only: ispec_is_elastic
   use specfem_par_poroelastic, only: ispec_is_poroelastic

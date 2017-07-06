@@ -156,6 +156,9 @@ NTSTEP_BETWEEN_OUTPUT_INFO      = 100
 #
 #-----------------------------------------------------------
 
+# sources and receivers Z coordinates given directly (i.e. as their true position) instead of as their depth
+USE_SOURCES_RECEIVERS_Z         = .false.
+
 # use a (tilted) FORCESOLUTION force point source (or several) instead of a CMTSOLUTION moment-tensor source.
 # This can be useful e.g. for oil industry foothills simulations or asteroid simulations
 # in which the source is a vertical force, normal force, tilted force, impact etc.
