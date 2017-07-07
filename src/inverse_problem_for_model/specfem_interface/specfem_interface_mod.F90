@@ -99,7 +99,20 @@ contains
 
     !! define adjoint sources ----------------------------------------------------------------------------------
     call write_adjoint_sources_for_specfem(acqui_simu, inversion_param, isource, myrank)
-    if (DEBUG_MODE) call dump_adjoint_sources(iter_inverse, acqui_simu, myrank)
+
+    !! dump synthetics and adjoint sources to ckeck
+    if (VERBOSE_MODE .or. DEBUG_MODE) then 
+       call dump_adjoint_sources(iter_inverse, acqui_simu, myrank)
+
+       select case (trim(acqui_simu(isource)%component(1)))
+       case('UX', 'UY', 'UZ')
+          call dump_seismograms(iter_inverse, seismograms_d, acqui_simu, myrank)
+          call dump_filtered_data(iter_inverse,acqui_simu(isource)%synt_traces, acqui_simu, myrank)
+       case('PR')
+          call dump_seismograms(iter_inverse, seismograms_p, acqui_simu, myrank)
+          call dump_filtered_data(iter_inverse,acqui_simu(isource)%synt_traces, acqui_simu, myrank)
+       end select
+    end if
 
     !! choose parameters to perform both the forward and adjoint simulation
     SIMULATION_TYPE=3
@@ -142,7 +155,8 @@ contains
     character(len=MAX_STRING_LEN)                                 :: TRAC_PATH, dsname
     integer(kind=8)                                               :: filesize
     real(kind=CUSTOM_REAL), dimension(:), allocatable             :: raw_stf, filt_stf
-
+    character(len=MAX_LEN_STRING)                                 :: name_file_tmp, ch_to_add
+    
     if (myrank == 0 .and. DEBUG_MODE) write(INVERSE_LOG_FILE,*) ' initialize source number  : ', isource
 
     ! time discretization -----------------------------------------------------------------------------------------------------------
@@ -187,8 +201,21 @@ contains
              raw_stf(:)=acqui_simu(isource)%source_wavelet(:,1)
              call bwfilt (raw_stf, filt_stf, &
                   DT, NSTEP, 1, 4, acqui_simu(isource)%fl_src, acqui_simu(isource)%fh_src)
+             call apodise_sig(filt_stf, NSTEP, 2.5)
              user_source_time_function(:,1)=filt_stf(:)
              deallocate(raw_stf, filt_stf)
+
+             !! write STF used to check
+             if (VERBOSE_MODE .and. myrank==0) then 
+                 write(ch_to_add,'(a10,i4.4,a1,i4.4,a4)') '_stf_used_',isource,'_',iter_inverse,'.txt'
+                 name_file_tmp = trim(acqui_simu(isource)%data_file_gather)//trim(adjustl(ch_to_add))
+                 open(IINN,file=trim(adjustl(name_file_tmp)))
+                 do it=1, NSTEP
+                    write(IINN,*) (it-1) * DT, user_source_time_function(it,1)
+                 end do
+                 close(IINN)
+             end if
+
           end if
        end if
 

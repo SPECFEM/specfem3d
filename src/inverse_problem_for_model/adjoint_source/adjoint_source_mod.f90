@@ -47,6 +47,8 @@ contains
 
     real(kind=CUSTOM_REAL)                                      :: cost_function, cost_function_reduced
     real(kind=CUSTOM_REAL)                                      :: cost_function_rec
+    
+    integer                                                     :: lw, i0, i1, i2, i3
 
 
     !! gets channel names for displacement
@@ -65,8 +67,14 @@ contains
 
     call allocate_adjoint_source_working_arrays()
 
-
-    call taper_window_W(w_tap,10,30,nstep_data-30,nstep_data-10,nstep_data,1._CUSTOM_REAL)  !!!! WARNGING HARDCODED !!!!!!!!!!!!
+    !! define taper on adjoint sources (if not window selected by user)
+    lw=0.02*nstep_data  !!!! WARNGING HARDCODED !!!!!!!!!!!!
+    i0=10
+    i1=i0 + lw 
+    i3=nstep_data-10
+    i2=i3 - lw
+    call taper_window_W(w_tap,i0,i1,i2,i3,nstep_data,1._CUSTOM_REAL) 
+    !! to do define user window 
 
 
     do irec_local = 1, nrec_local
@@ -219,7 +227,7 @@ contains
 
           !! store the adjoint source
           elastic_adjoint_source(icomp,:) = filfil_residuals(:)
-          acqui_simu(isource)%adjoint_sources(icomp,irec_local,:) = filfil_residuals(:)
+          acqui_simu(isource)%adjoint_sources(icomp,irec_local,:) = filfil_residuals(:)*w_tap(:)
        enddo
 
        !!----------------------------------------------------------------------------------------------------
@@ -276,33 +284,46 @@ contains
        cost_function = cost_function + cost_value
 
        !! store adjoint source
-       acqui_simu(isource)%adjoint_sources(1,irec_local,:)=filfil_residuals(:)
+       acqui_simu(isource)%adjoint_sources(1,irec_local,:)=filfil_residuals(:)*w_tap(:)
 
     case ('L2_OIL_INDUSTRY')
 
-       !! filter data
+       !! filter the data
        fil_residuals(:)=0._CUSTOM_REAL
        fl=acqui_simu(isource)%freqcy_to_invert(icomp,1,irec_local)
        fh=acqui_simu(isource)%freqcy_to_invert(icomp,2,irec_local)
        raw_residuals(:)= acqui_simu(isource)%data_traces(irec_local,:,icomp)
        call bwfilt(raw_residuals, fil_residuals, dt_data, nstep_data, irek_filter, norder_filter, fl, fh)
- 
+
+       !! save filtered data 
+       acqui_simu(isource)%synt_traces(icomp, irec_local,:)= fil_residuals(:)
+
        !! save residuals because the adjoint source is not residuals
        residuals_for_cost(:) = - (seismograms_p(icomp,irec_local,:) - fil_residuals(:)) 
        
-       !! store filtered residuals in pressure  (name of arrays can be misleading)
-       raw_residuals(:)=residuals_for_cost(:)
+       !! filter the residuals to avoid numerical artifacts with spurious high frequencies 
+       call  bwfilt(residuals_for_cost, fil_residuals, dt_data, nstep_data, irek_filter, norder_filter, fl, fh) 
+       !! store filtered residuals in pressure 
+       residuals_for_cost(:)=fil_residuals(:)
+
+       !!! not optimal but just to test 
+       raw_residuals(:)= acqui_simu(isource)%data_traces(irec_local,:,icomp)
+       call bwfilt(raw_residuals, fil_residuals, dt_data, nstep_data, irek_filter, norder_filter, fl, fh)
+       raw_residuals(:)= - (seismograms_p(icomp,irec_local,:) - fil_residuals(:))
 
        !! compute second time derivative of raw_residuals
        call FD2nd(raw_residuals, dt_data, NSTEP_DATA)
-
+       
+       !! two times filter to kill spurious high frecquencies in source 
+       call  bwfilt(raw_residuals, fil_residuals, dt_data, nstep_data, irek_filter, norder_filter, fl, fh) 
+       call  bwfilt(fil_residuals, raw_residuals, dt_data, nstep_data, irek_filter, norder_filter, fl, fh) 
        
        !! compute cost 
        cost_value=sum(residuals_for_cost(:)**2) * 0.5 * dt_data
        cost_function = cost_function + cost_value
 
        !! store adjoint source
-       acqui_simu(isource)%adjoint_sources(1,irec_local,:)=raw_residuals(:)
+       acqui_simu(isource)%adjoint_sources(1,irec_local,:)=raw_residuals(:)*w_tap(:)
        
 
     case default

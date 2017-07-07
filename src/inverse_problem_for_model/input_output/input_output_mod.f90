@@ -423,7 +423,46 @@ contains
     enddo
 
   end subroutine dump_adjoint_sources
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!----------------------------------------------------------------
+! master write synthetics gather to check
+!----------------------------------------------------------------
+  subroutine dump_seismograms(iter, array_to_write,  acqui_simu, myrank)
 
+    integer,                                                intent(in)    :: iter, myrank
+    real(kind=CUSTOM_REAL),  dimension(:,:,:), allocatable, intent(in)    :: array_to_write
+    type(acqui),  dimension(:), allocatable,                intent(inout) :: acqui_simu
+
+    integer                                                               :: isource
+    character(len=MAX_LEN_STRING)                                         :: name_file_tmp, ch_to_add
+
+    do isource=1, acqui_simu(1)%nsrc_tot
+       write(ch_to_add,'(i4.4,a4)') iter,'_dir'
+       name_file_tmp = trim(acqui_simu(isource)%data_file_gather)//trim(adjustl(ch_to_add))
+       call  write_bin_sismo_on_disk(isource, acqui_simu, array_to_write, name_file_tmp, myrank)
+    enddo
+    
+  end subroutine dump_seismograms
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!----------------------------------------------------------------
+! master write synthetics gather to check
+!----------------------------------------------------------------
+  subroutine dump_filtered_data(iter, array_to_write,  acqui_simu, myrank)
+
+    integer,                                                intent(in)    :: iter, myrank
+    real(kind=CUSTOM_REAL),  dimension(:,:,:), allocatable, intent(in)    :: array_to_write
+    type(acqui),  dimension(:), allocatable,                intent(inout) :: acqui_simu
+
+    integer                                                               :: isource
+    character(len=MAX_LEN_STRING)                                         :: name_file_tmp, ch_to_add
+
+    do isource=1, acqui_simu(1)%nsrc_tot
+       write(ch_to_add,'(i4.4,a4)') iter,'_fil'
+       name_file_tmp = trim(acqui_simu(isource)%data_file_gather)//trim(adjustl(ch_to_add))
+       call  write_bin_sismo_on_disk(isource, acqui_simu, array_to_write, name_file_tmp, myrank)
+    enddo
+    
+  end subroutine dump_filtered_data
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !----------------------------------------------------------------
 ! master write waveform synthetic data gather (need to choose between write_bin_sismo_on_disk or write_gather_on_disk)
@@ -607,6 +646,8 @@ contains
           NSTA_LOC=acqui_simu(isource)%nsta_slice
           allocate(acqui_simu(isource)%data_traces(NSTA_LOC,Nt,NDIM))
           allocate(acqui_simu(isource)%adjoint_sources(NDIM, NSTA_LOC, Nt))
+          if (VERBOSE_MODE .or. DEBUG_MODE)  allocate(acqui_simu(isource)%synt_traces(NDIM, NSTA_LOC, Nt))
+
           irec_local=0
           do irec = 1, NSTA
              if (acqui_simu(isource)%islice_selected_rec(irec) == myrank) then
@@ -652,6 +693,9 @@ contains
                 Nt=acqui_simu(isource)%Nt_data
                 allocate(Gather_loc(NSTA_LOC,Nt,NDIM),acqui_simu(isource)%data_traces(NSTA_LOC,Nt,NDIM), &
                      acqui_simu(isource)%adjoint_sources(NDIM, NSTA_LOC, Nt))
+
+                if(VERBOSE_MODE .or. DEBUG_MODE) allocate(acqui_simu(isource)%synt_traces(NDIM, NSTA_LOC, Nt))
+
                 if (DEBUG_MODE) write(IIDD,*) 'myrank ',myrank,' wait for 0 :', NSTA_LOC,Nt
                 tag   = MPI_ANY_TAG
                 call MPI_RECV(Gather_loc,Nt*NSTA_LOC*NDIM,CUSTOM_MPI_TYPE, 0, tag, my_local_mpi_comm_world, status,  ier)
@@ -932,6 +976,12 @@ contains
           write(INVERSE_LOG_FILE,*) '     Nb tot sources ', acqui_simu(1)%nsrc_tot
           write(INVERSE_LOG_FILE,*)
        endif
+
+       if (VERBOSE_MODE .or. DEBUG_MODE) then
+          inversion_param%dump_model_at_each_iteration=.true.
+          inversion_param%dump_gradient_at_each_iteration=.true.
+          inversion_param%dump_descent_direction_at_each_iteration=.true.
+       end if
 
   end subroutine read_inver_file
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -45,7 +45,9 @@ module inverse_problem_par
   !! useful files id
   integer,                       public, parameter  :: IINN=667, IIDD=668
   !!! verbose debug mode
-  logical,                       public, parameter  :: DEBUG_MODE=.true.
+  logical,                       public, parameter  :: DEBUG_MODE=.false.
+  !!! verbose mode for with outputs for checking the FWI
+  logical,                       public, parameter  :: VERBOSE_MODE=.true.
   !!! write kernels on disk
   logical,                       public, parameter  :: SAVE_KERNEL=.false.
   !!! use fast code and undoing_attenuation for adjoints (in developmement ... not working yet)
@@ -210,8 +212,10 @@ module inverse_problem_par
      !! ----------------- waveform data local in MPI slice -----------------
      !! file contains the waveform
      character(len= MAX_LEN_STRING)                                            :: data_file_gather
-     !! traces stored in memory (NCOMP,NSTA, NT, NCOMP)
+     !! traces stored in memory (NCOMP,NSTA, NT)
      real(kind=CUSTOM_REAL),                  dimension(:,:,:),   allocatable  :: data_traces
+     !! synthetics stored in memory (NCOMP,NSTA, NT)
+     real(kind=CUSTOM_REAL),                  dimension(:,:,:),   allocatable  :: synt_traces
      !! stored adjoint sources (NCOMP,NSTA, NT)
      real(kind=CUSTOM_REAL),                  dimension(:,:,:),   allocatable  :: adjoint_sources
      !! window used for FWI (NCOMP,2,NSTA)
