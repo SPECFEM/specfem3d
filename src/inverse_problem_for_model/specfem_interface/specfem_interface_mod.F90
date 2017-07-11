@@ -62,7 +62,7 @@ contains
 
     case default
 
-       write(*,*) ' ERROR Component not knwon : ', trim(acqui_simu(isource)%component(1))
+       write(*,*) ' ERROR Component not known : ', trim(acqui_simu(isource)%component(1))
        stop
 
     end select
@@ -388,6 +388,7 @@ contains
     !! do not change
     NTSTEP_BETWEEN_OUTPUT_SEISMOS=NSTEP
     INVERSE_FWI_FULL_PROBLEM= .true.
+    NTSTEP_BETWEEN_READ_ADJSRC=NSTEP
 
     ! initializes adjoint sources --------------------------------------------------------------------------------------------------
     if (allocated(source_adjoint)) deallocate(source_adjoint)

@@ -42,22 +42,11 @@ contains
     integer                                                     :: icomp
     integer                                                     :: irec, irec_local, ispec
 
-    character(len=3),          dimension(NDIM)                  :: comp
-    character(len=3)                                            :: pressure
-
     real(kind=CUSTOM_REAL)                                      :: cost_function, cost_function_reduced
     real(kind=CUSTOM_REAL)                                      :: cost_function_rec
     
     integer                                                     :: lw, i0, i1, i2, i3
 
-
-    !! gets channel names for displacement
-    do icomp=1,NDIM
-       call write_channel_name(icomp,comp(icomp))
-    enddo
-
-    !! gets channel name for pressure
-    call write_channel_name(4, pressure)
 
     nstep_data = acqui_simu(isource)%Nt_data
     dt_data = acqui_simu(isource)%dt_data
@@ -83,8 +72,6 @@ contains
        ispec = acqui_simu(isource)%ispec_selected_rec(irec)
        cost_function_rec=0.
 
-
-
        !! ALLOW TO CHOOSE COMPONENT :
        !! UX UY UZ (check if in solid region)
        !! Pr (check if in fluid region)
@@ -93,7 +80,7 @@ contains
        if (ELASTIC_SIMULATION) then
           if (ispec_is_elastic(ispec)) then
 
-             !---------------------------------------------------------------------------------------------------------------
+             !! ---------------------------------------------------------------------------------------------------------------
              !! compute adjoint source according to cost L2 function
              call compute_elastic_adjoint_source_displacement(irec_local, isource, acqui_simu, cost_function)
 
@@ -155,6 +142,21 @@ contains
 !-----------------------------------------------------------------------------------------------------------------------------------
 ! define adjoint sources
 !-----------------------------------------------------------------------------------------------------------------------------------
+!
+! to implement a new cost function and adjoint source : 
+!
+!    1 /   define character to name your cost function and adjout source type :  acqui_simu(isource)%adjoint_source_type
+!
+!    2/    add a case for your new adjoint source 
+!
+!    3/    compute the adjoint source whcih is stored in acqui(isource)%adjoint_sources(NCOM, NREC_LOCAL, NT)
+!          note that this arrays will be directly use be specfem as adjoint source thus you need to 
+!          do any proccessing here : filter, rotation, ....
+!
+!    4/    compute the cost function and store it in cost_function variable (you have to perform sommation over sources)
+!
+!
+!
   subroutine compute_elastic_adjoint_source_displacement(irec_local, isource, acqui_simu, cost_function)
 
 
@@ -217,7 +219,7 @@ contains
 
           !! TO DO : cross correlate filfil_residuals by source time function (if need)
           !! if (acqui_simu(isource)%convlove_residuals_by_wavelet) then
-          !!    signal(:) =  filfil_residuals(:);
+          !!    signal(:) =  filfil_residuals(:)
           !!    call crosscor_by_wavelet(wavelet, signal, filfil_residuals, nstep, nw)
           !! endif
 
@@ -260,7 +262,7 @@ contains
     !!     signal(:) = seismograms_d(icomp,irec_local,:)
     !!     call convolution_by_wavelet(wavelet, signal, seismograms_d(icomp,irec_local,:), nstep, nw)
     !! endif
-    !! for acoustics need - sign (eg : Luo et al Geophysics 2013)
+    !! for acoustics need - sign (eg : Luo and Tromp Geophysics 2013)
 
     select case (trim(adjustl(acqui_simu(isource)%adjoint_source_type)))
 
@@ -298,32 +300,19 @@ contains
        !! save filtered data 
        acqui_simu(isource)%synt_traces(icomp, irec_local,:)= fil_residuals(:)
 
-       !! save residuals because the adjoint source is not residuals
-       residuals_for_cost(:) = - (seismograms_p(icomp,irec_local,:) - fil_residuals(:)) 
-       
-       !! filter the residuals to avoid numerical artifacts with spurious high frequencies 
-       call  bwfilt(residuals_for_cost, fil_residuals, dt_data, nstep_data, irek_filter, norder_filter, fl, fh) 
-       !! store filtered residuals in pressure 
-       residuals_for_cost(:)=fil_residuals(:)
-
-       !!! not optimal but just to test 
-       raw_residuals(:)= acqui_simu(isource)%data_traces(irec_local,:,icomp)
-       call bwfilt(raw_residuals, fil_residuals, dt_data, nstep_data, irek_filter, norder_filter, fl, fh)
-       raw_residuals(:)= - (seismograms_p(icomp,irec_local,:) - fil_residuals(:))
-
-       !! compute second time derivative of raw_residuals
-       call FD2nd(raw_residuals, dt_data, NSTEP_DATA)
-       
-       !! two times filter to kill spurious high frecquencies in source 
-       call  bwfilt(raw_residuals, fil_residuals, dt_data, nstep_data, irek_filter, norder_filter, fl, fh) 
-       call  bwfilt(fil_residuals, raw_residuals, dt_data, nstep_data, irek_filter, norder_filter, fl, fh) 
+       !! save residuals for adjoint source. Note we use the difference between 
+       !! obseved pressure and computed pressure, not the approach in Luo and Tromp Gepohysics 2013
+       !! which define the adjoint source as " minus second time derivatives of previous residuals " 
+       !! We consider that the forward modeling is writen in pressure thus 
+       !! the adjoint is rho*displacement potential. 
+       residuals_for_cost(:) =  (seismograms_p(icomp,irec_local,:) - fil_residuals(:)) 
        
        !! compute cost 
        cost_value=sum(residuals_for_cost(:)**2) * 0.5 * dt_data
        cost_function = cost_function + cost_value
 
        !! store adjoint source
-       acqui_simu(isource)%adjoint_sources(1,irec_local,:)=raw_residuals(:)*w_tap(:)
+       acqui_simu(isource)%adjoint_sources(1,irec_local,:)=residuals_for_cost(:)*w_tap(:)
        
 
     case default
