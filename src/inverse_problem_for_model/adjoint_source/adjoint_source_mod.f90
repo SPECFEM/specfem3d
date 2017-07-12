@@ -305,7 +305,7 @@ contains
        !! which define the adjoint source as " minus second time derivatives of previous residuals " 
        !! We consider that the forward modeling is writen in pressure thus 
        !! the adjoint is rho*displacement potential. 
-       residuals_for_cost(:) =  (seismograms_p(icomp,irec_local,:) - fil_residuals(:)) 
+       residuals_for_cost(:) =  - (seismograms_p(icomp,irec_local,:) - fil_residuals(:)) 
        
        !! compute cost 
        cost_value=sum(residuals_for_cost(:)**2) * 0.5 * dt_data

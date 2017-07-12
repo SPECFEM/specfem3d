@@ -79,10 +79,11 @@ contains
     type(acqui),  dimension(:), allocatable,        intent(inout) ::  acqui_simu
     type(inver),                                    intent(inout) ::  inversion_param
 
-#ifdef DEBUG_COUPLED
-    logical                              :: save_COUPLE_WITH_EXTERNAL_CODE
+
+    logical                                                       :: save_COUPLE_WITH_EXTERNAL_CODE
+
     save_COUPLE_WITH_EXTERNAL_CODE=COUPLE_WITH_EXTERNAL_CODE
-#endif
+
 
     if (myrank == 0) write(INVERSE_LOG_FILE,*) '  - > Compute gradient for source :', isource , ' iteration : ', iter_inverse
 
@@ -123,16 +124,16 @@ contains
     !! forward and adjoint runs --------------------------------------------------------------------------------------
     call InitSpecfemForOneRun(acqui_simu, isource, inversion_param, iter_inverse)
 
-#ifdef DEBUG_COUPLED
+
     COUPLE_WITH_EXTERNAL_CODE=.false.  !! do not use coupling since the direct run is runining in backward from boundary
-#endif
+
 
     call iterate_time()
     call FinalizeSpecfemForOneRun(acqui_simu, isource)
 
-#ifdef DEBUG_COUPLED
-       COUPLE_WITH_EXTERNAL_CODE=save_COUPLE_WITH_EXTERNAL_CODE  !! restore the initial value of variable
-#endif
+
+    COUPLE_WITH_EXTERNAL_CODE=save_COUPLE_WITH_EXTERNAL_CODE  !! restore the initial value of variable
+
 
   end subroutine ComputeGradientPerSource
 
@@ -192,6 +193,7 @@ contains
           NSTEP_STF = NSTEP
           if (allocated(user_source_time_function)) deallocate(user_source_time_function)
           allocate(user_source_time_function(NSTEP_STF, NSOURCES_STF),stat=ier)
+          USE_TRICK_FOR_BETTER_PRESSURE=.true.
           if (ier /= 0) stop ' error in allocating user_source_time_function'
           if (inversion_param%only_forward) then 
              user_source_time_function(:,1)=acqui_simu(isource)%source_wavelet(:,1)
