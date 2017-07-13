@@ -57,7 +57,7 @@ module inverse_problem_par
   !!! test for some preconditionners (in developmement if useful need to move elsewhere)
   !!logical,                       public             :: USE_PRECOND_OIL_INDUSTRY=.false.
   !!! if needed use stepest descent instead of l-bfgs (if useful need to move elsewhere)
-  logical,                       public             :: USE_GRADIENT_OPTIM=.false.
+  logical,                       public             :: USE_GRADIENT_OPTIM=.true.
 
   ! ------------------------------  global parameters for fwi ---------------------------------------------------------------------
   !! name for outputs files
