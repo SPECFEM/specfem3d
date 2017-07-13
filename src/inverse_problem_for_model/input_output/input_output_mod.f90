@@ -919,80 +919,83 @@ contains
        !! DIFFERENT ITEM TO READ ---------------------------------------------
        select case (trim(keyw))
 
-          case ('Niter')
-              read(line(ipos0:ipos1),*)  inversion_param%Niter
+       case ('Niter')
+          read(line(ipos0:ipos1),*)  inversion_param%Niter
 
-           case('Niter_wolfe')
-              read(line(ipos0:ipos1),*)  inversion_param%Niter_wolfe
+       case('Niter_wolfe')
+          read(line(ipos0:ipos1),*)  inversion_param%Niter_wolfe
+          
+       case('max_history_bfgs')
+          read(line(ipos0:ipos1),*)  inversion_param%max_history_bfgs
+          
+       case('param_family')
+          read(line(ipos0:ipos1),*) inversion_param%param_family
 
-          case('param_family')
-             read(line(ipos0:ipos1),*) inversion_param%param_family
+       case('fl')
+          read(line(ipos0:ipos1),*) fl
+          
+       case('fh')
+          read(line(ipos0:ipos1),*) fh
+          
+       case('input_sem_model')
+          read(line(ipos0:ipos1),*)  inversion_param%input_sem_model
+          
+       case('output_model')
+          read(line(ipos0:ipos1),*)  inversion_param%output_model
+          
+       case('input_fd_model')
+          read(line(ipos0:ipos1),*)  inversion_param%input_fd_model
+          
+       case ('taper')
+          inversion_param%use_taper=.true.
+          read(line(ipos0:ipos1),*) inversion_param%xmin_taper, inversion_param%xmax_taper, &
+               inversion_param%ymin_taper, inversion_param%ymax_taper, &
+               inversion_param%zmin_taper, inversion_param%zmax_taper
+          
+       case('shin_precond')
+          read(line(ipos0:ipos1),*) inversion_param%shin_precond
+          
+       case('z2_precond')
+          read(line(ipos0:ipos1),*) inversion_param%z2_precond
+          
+       case('relat_grad')
+          read(line(ipos0:ipos1),*) inversion_param%relat_grad
 
-          case('fl')
-             read(line(ipos0:ipos1),*) fl
+       case('relat_cost')
+          read(line(ipos0:ipos1),*) inversion_param%relat_cost
 
-          case('fh')
-             read(line(ipos0:ipos1),*) fh
+       case('dump_model_at_each_iteration')
+          read(line(ipos0:ipos1),*) inversion_param%dump_model_at_each_iteration
 
-          case('input_sem_model')
-             read(line(ipos0:ipos1),*)  inversion_param%input_sem_model
+       case('dump_gradient_at_each_iteration')
+          read(line(ipos0:ipos1),*) inversion_param%dump_gradient_at_each_iteration
 
-          case('output_model')
-             read(line(ipos0:ipos1),*)  inversion_param%output_model
+       case('dump_descent_direction_at_each_iteration')
+          read(line(ipos0:ipos1),*) inversion_param%dump_descent_direction_at_each_iteration
+             
+       case default
+          write(*,*) 'ERROR KEY WORD NOT MATCH : ', trim(keyw), ' in file ', trim(inver_file)
+          exit
+          
+       end select
 
-          case('input_fd_model')
-             read(line(ipos0:ipos1),*)  inversion_param%input_fd_model
+    enddo
 
-          case ('taper')
-             inversion_param%use_taper=.true.
-             read(line(ipos0:ipos1),*) inversion_param%xmin_taper, inversion_param%xmax_taper, &
-                                       inversion_param%ymin_taper, inversion_param%ymax_taper, &
-                                       inversion_param%zmin_taper, inversion_param%zmax_taper
-
-          case('shin_precond')
-             read(line(ipos0:ipos1),*) inversion_param%shin_precond
-
-          case('z2_precond')
-             read(line(ipos0:ipos1),*) inversion_param%z2_precond
-
-          case('relat_grad')
-             read(line(ipos0:ipos1),*) inversion_param%relat_grad
-
-          case('relat_cost')
-             read(line(ipos0:ipos1),*) inversion_param%relat_cost
-
-          case('dump_model_at_each_iteration')
-             read(line(ipos0:ipos1),*) inversion_param%dump_model_at_each_iteration
-
-          case('dump_gradient_at_each_iteration')
-             read(line(ipos0:ipos1),*) inversion_param%dump_gradient_at_each_iteration
-
-          case('dump_descent_direction_at_each_iteration')
-              read(line(ipos0:ipos1),*) inversion_param%dump_descent_direction_at_each_iteration
-
-          case default
-             write(*,*) 'ERROR KEY WORD NOT MATCH : ', trim(keyw), ' in file ', trim(inver_file)
-             exit
-
-          end select
-
-       enddo
-
-99     close(666)
-
-       if (myrank == 0) then
-          write(INVERSE_LOG_FILE,*)
-          write(INVERSE_LOG_FILE,*) '     READ  ', trim(inver_file)
-          write(INVERSE_LOG_FILE,*) '     Nb tot sources ', acqui_simu(1)%nsrc_tot
-          write(INVERSE_LOG_FILE,*)
-       endif
-
-       if (VERBOSE_MODE .or. DEBUG_MODE) then
-          inversion_param%dump_model_at_each_iteration=.true.
-          inversion_param%dump_gradient_at_each_iteration=.true.
-          inversion_param%dump_descent_direction_at_each_iteration=.true.
-       end if
-
+99  close(666)
+    
+    if (myrank == 0) then
+       write(INVERSE_LOG_FILE,*)
+       write(INVERSE_LOG_FILE,*) '     READ  ', trim(inver_file)
+       write(INVERSE_LOG_FILE,*) '     Nb tot sources ', acqui_simu(1)%nsrc_tot
+       write(INVERSE_LOG_FILE,*)
+    endif
+    
+    if (VERBOSE_MODE .or. DEBUG_MODE) then
+       inversion_param%dump_model_at_each_iteration=.true.
+       inversion_param%dump_gradient_at_each_iteration=.true.
+       inversion_param%dump_descent_direction_at_each_iteration=.true.
+    end if
+    
   end subroutine read_inver_file
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !-----------------------------------------------------------------

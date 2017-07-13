@@ -105,6 +105,29 @@ contains
 !!$       end select
 !!$    endif
 
+    if (myrank == 0) then
+
+       write(INVERSE_LOG_FILE,*) '*************************************************************************'
+       write(INVERSE_LOG_FILE,*) ' FAMILY PARAMETER USED ', trim(inversion_param%param_family) 
+       write(INVERSE_LOG_FILE,*)
+       write(INVERSE_LOG_FILE,*)
+       write(INVERSE_LOG_FILE,*) 
+       
+       if (ACOUSTIC_SIMULATION .and. .not. ELASTIC_SIMULATION) then
+          write(INVERSE_LOG_FILE,*)
+          write(INVERSE_LOG_FILE,*)  ' Pure Acoustic : '
+          write(INVERSE_LOG_FILE,*)  ' Nb inverse param :', inversion_param%NinvPar
+          write(INVERSE_LOG_FILE,*)  ' Nb param :', inversion_param%NfamilyPar
+          write(INVERSE_LOG_FILE,*)
+       else
+          write(INVERSE_LOG_FILE,*)
+          write(INVERSE_LOG_FILE,*)  
+          write(INVERSE_LOG_FILE,*)  ' Nb inverse param :', inversion_param%NinvPar
+          write(INVERSE_LOG_FILE,*)  ' Nb param :', inversion_param%NfamilyPar
+       end if
+       write(INVERSE_LOG_FILE,*) '*************************************************************************'
+       
+    endif
 
   end subroutine PrepareArraysfamilyParam
 

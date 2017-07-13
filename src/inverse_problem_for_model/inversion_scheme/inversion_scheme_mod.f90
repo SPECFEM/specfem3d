@@ -106,6 +106,15 @@ contains
        imax = current_iteration - 1
     endif
 
+    if (VERBOSE_MODE .and. myrank == 0) then
+       write(INVERSE_LOG_FILE,*)
+       write(INVERSE_LOG_FILE,*)
+       write(INVERSE_LOG_FILE,*) '  Calling l-bfgs, iter  :', current_iteration
+       write(INVERSE_LOG_FILE,*) '  Loops :',imin, imax
+       write(INVERSE_LOG_FILE,*) 
+       write(INVERSE_LOG_FILE,*)
+    end if
+
     !! initialize L-BFGS
     ak_store(:)=0._CUSTOM_REAL
     pk_store(:)=0._CUSTOM_REAL
@@ -120,7 +129,7 @@ contains
        wks_1(:,:,:,:,:) = bfgs_stored_gradient(:,:,:,:,:,k+1) -  bfgs_stored_gradient(:,:,:,:,:,k)
        wks_2(:,:,:,:,:) = bfgs_stored_model(:,:,:,:,:,k+1)    -  bfgs_stored_model(:,:,:,:,:,k)
 
-       call Parallel_ComputeInnerProduct(wks_1, wks_2, Ninvpar, pk)
+       call Parallel_ComputeInnerProduct(wks_2, wks_1, Ninvpar, pk)
        pk_store(k) = 1._CUSTOM_REAL / pk
 
        call Parallel_ComputeInnerProduct(wks_2, descent_direction, Ninvpar, ak)
@@ -141,12 +150,13 @@ contains
     do k = imin, imax
 
        wks_1(:,:,:,:,:) = bfgs_stored_gradient(:,:,:,:,:,k+1) -  bfgs_stored_gradient(:,:,:,:,:,k)
+       wks_2(:,:,:,:,:) = bfgs_stored_model(:,:,:,:,:,k+1)    -  bfgs_stored_model(:,:,:,:,:,k)
 
        call Parallel_ComputeInnerProduct(wks_1, descent_direction, Ninvpar, beta)
        beta = pk_store(k) * beta
 
        descent_direction(:,:,:,:,:) = descent_direction(:,:,:,:,:) + &
-            (ak_store(k) - beta) * (bfgs_stored_model(:,:,:,:,:,k+1)    -  bfgs_stored_model(:,:,:,:,:,k))
+            (ak_store(k) - beta) *  wks_2(:,:,:,:,:)
 
     enddo
 
@@ -204,10 +214,29 @@ contains
 
     if (iteration_to_store <= Mbfgs ) then
 
+       if (VERBOSE_MODE .and. myrank == 0) then
+          write(INVERSE_LOG_FILE,*)
+          write(INVERSE_LOG_FILE,*)
+          write(INVERSE_LOG_FILE,*) '  Storing iterations in l-bfgs memmory ', iteration_to_store
+          write(INVERSE_LOG_FILE,*) '  Total  iteration to store :', Mbfgs
+          write(INVERSE_LOG_FILE,*) 
+          write(INVERSE_LOG_FILE,*)
+       end if
+
        bfgs_stored_model(:,:,:,:,:,iteration_to_store) = models_to_store(:,:,:,:,:)
        bfgs_stored_gradient(:,:,:,:,:,iteration_to_store) = gradients_to_store(:,:,:,:,:)
 
     else
+
+       if (VERBOSE_MODE .and. myrank == 0) then
+          write(INVERSE_LOG_FILE,*)
+          write(INVERSE_LOG_FILE,*)
+          write(INVERSE_LOG_FILE,*) '  Storing iterations in l-bfgs memmory ', iteration_to_store
+          write(INVERSE_LOG_FILE,*) '  Shifting previous arrays and store in ', Mbfgs, ' index ' 
+          write(INVERSE_LOG_FILE,*) '  Total  iteration to store :', Mbfgs
+          write(INVERSE_LOG_FILE,*) 
+          write(INVERSE_LOG_FILE,*)
+       end if
 
        do k = 0, Mbfgs-1
           bfgs_stored_model(:,:,:,:,:,k) = bfgs_stored_model(:,:,:,:,:,k+1)
