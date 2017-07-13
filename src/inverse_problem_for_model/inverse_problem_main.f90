@@ -133,7 +133,7 @@ subroutine inverse_problem_main()
         write(INVERSE_LOG_FILE,*)
         write(INVERSE_LOG_FILE,*)  '        Specfem inverse problem : L-BFGS FWI ...  '
         write(INVERSE_LOG_FILE,*)  '        with family parameters  : ', trim(inversion_param%param_family)
-        write(INVERSE_LOG_FILE,*)
+        write(INVERSE_LOG_FILE,*)  '        memmory needed  ', inversion_param%%max_history_bfgs
         write(INVERSE_LOG_FILE,*)
         write(INVERSE_LOG_FILE,*)
         write(INVERSE_LOG_FILE,*)
