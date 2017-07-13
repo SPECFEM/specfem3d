@@ -232,7 +232,9 @@
 
             ! new expression
             ! density kernel
-            rhol = rhostore(i,j,k,ispec)
+            !rhol = rhostore(i,j,k,ispec)
+            !! VM VM try with 1/rho
+            rhol = 1._CUSTOM_REAL / rhostore(i,j,k,ispec)
             rho_ac_kl(i,j,k,ispec) =  rho_ac_kl(i,j,k,ispec) &
                       + deltat * rhol * (accel_elm(1,i,j,k) * b_displ_elm(1,i,j,k) &
                                        + accel_elm(2,i,j,k) * b_displ_elm(2,i,j,k) &

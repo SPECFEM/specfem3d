@@ -45,7 +45,16 @@ contains
                    y=ystore(iglob)
                    z=zstore(iglob)
 
-                   taper = 1.
+!!$                   taperx = 1.
+!!$                   tapery = 1.
+!!$                   taperz = 1.
+!!$                   
+!!$   if (x < inversion_param%xmin_taper) taperx = cos_taper(inversion_param%xmin_taper, inversion_param%xmin_taper, x)
+!!$   if (x > inversion_param%xmax_taper) taperx = cos_taper(inversion_param%xmax_taper, inversion_param%xmax, x)
+!!$   if (y < inversion_param%ymin_taper) tapery = cos_taper(inversion_param%ymin_taper, inversion_param%xmin_taper, y)
+!!$   if (y > inversion_param%ymax_taper) tapery = cos_taper(inversion_param%ymax_taper, inversion_param%xmax, y)
+!!$   if (z < inversion_param%zmin_taper) taperz = cos_taper(inversion_param%zmin_taper, inversion_param%xmin_taper, z)
+!!$   if (z > inversion_param%zmax_taper) taperz = cos_taper(inversion_param%zmax_taper, , z)
 
                    if (x > inversion_param%xmin_taper .and. x < inversion_param%xmax_taper .and. &
                        y > inversion_param%ymin_taper .and. y < inversion_param%ymax_taper .and. &

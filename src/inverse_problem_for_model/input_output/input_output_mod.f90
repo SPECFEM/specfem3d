@@ -73,6 +73,8 @@ contains
     integer                                                        :: isrc
     character(len=MAX_LEN_STRING)                                  :: name_file
     character(len=MAX_LEN_STRING)                                  :: acqui_file, inver_file
+    real(kind=CUSTOM_REAL)                                         :: elemsize_min_glob,elemsize_max_glob
+    real(kind=CUSTOM_REAL)                                         :: distance_min_glob,distance_max_glob
 
     if (myrank == 0) then
        write(INVERSE_LOG_FILE,*)
@@ -160,6 +162,14 @@ contains
 
     endif
 
+    !! get dimension of mesh 
+    call check_mesh_distances(myrank,NSPEC_AB,NGLOB_AB, &
+         ibool,xstore,ystore,zstore,                    &
+         inversion_param%xmin,inversion_param%xmax,     &
+         inversion_param%ymin,inversion_param%ymax,     &
+         inversion_param%zmin,inversion_param%zmax,     &
+         elemsize_min_glob,elemsize_max_glob,           &
+         distance_min_glob,distance_max_glob)
 
     !!-------------------------------------------------------------------------------------------------------------------------
 
@@ -1260,7 +1270,7 @@ contains
           end if
 
        case('force')
-          print *, 'Abort not implemented yet : FORCESOLUTIN in source ',isource
+          print *, 'Abort not implemented yet : FORCESOLUTION in source ',isource
           stop
 
        case default
