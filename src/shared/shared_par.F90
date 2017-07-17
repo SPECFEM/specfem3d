@@ -99,10 +99,12 @@ end module constants
   ! absorbing boundaries
   logical :: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE
   double precision :: f0_FOR_PML
-
   logical :: STACEY_ABSORBING_CONDITIONS,STACEY_INSTEAD_OF_FREE_SURFACE
-  ! To use bottom free surface instead of absorbing stacey condition
+  ! To use a bottom free surface instead of absorbing Stacey or PML condition
   logical :: BOTTOM_FREE_SURFACE
+
+! sources and receivers Z coordinates given directly instead of with depth
+  logical :: USE_SOURCES_RECEIVERS_Z
 
   ! for simultaneous runs from the same batch job
   integer :: NUMBER_OF_SIMULTANEOUS_RUNS

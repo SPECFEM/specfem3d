@@ -26,8 +26,8 @@ SUPPRESS_UTM_PROJECTION         = .true.
 NPROC                           = 4
 
 # time step parameters
-NSTEP                           = 100
-DT                              = 0.05
+NSTEP                           = 2400
+DT                              = 0.11
 
 #-----------------------------------------------------------
 #
@@ -156,6 +156,9 @@ NTSTEP_BETWEEN_OUTPUT_INFO      = 100
 #
 #-----------------------------------------------------------
 
+# sources and receivers Z coordinates given directly (i.e. as their true position) instead of as their depth
+USE_SOURCES_RECEIVERS_Z         = .false.
+
 # use a (tilted) FORCESOLUTION force point source (or several) instead of a CMTSOLUTION moment-tensor source.
 # This can be useful e.g. for oil industry foothills simulations or asteroid simulations
 # in which the source is a vertical force, normal force, tilted force, impact etc.
@@ -167,11 +170,11 @@ NTSTEP_BETWEEN_OUTPUT_INFO      = 100
 # - the components of a (non necessarily unitary) direction vector for the force source in the E/N/Z_UP basis.
 # The direction vector is made unitary internally in the code and thus only its direction matters here;
 # its norm is ignored and the norm of the force used is the factor force source times the source time function.
-USE_FORCE_POINT_SOURCE          = .false.
+USE_FORCE_POINT_SOURCE          = .true.
 
 # set to true to use a Ricker source time function instead of the source time functions set by default
 # to represent a (tilted) FORCESOLUTION force point source or a CMTSOLUTION moment-tensor source.
-USE_RICKER_TIME_FUNCTION        = .false.
+USE_RICKER_TIME_FUNCTION        = .true.
 
 # Use an external source time function.
 # if .true. you must add a file with your source time function and the file name
@@ -238,7 +241,7 @@ USE_TRICK_FOR_BETTER_PRESSURE   = .false.
 #-----------------------------------------------------------
 # to plot total energy curves, for instance to monitor how CPML absorbing layers behave;
 # should be turned OFF in most cases because a bit expensive
-OUTPUT_ENERGY                   = .false.
+OUTPUT_ENERGY                   = .true.
 # every how many time steps we compute energy (which is a bit expensive to compute)
 NTSTEP_BETWEEN_OUTPUT_ENERGY    = 10
 
