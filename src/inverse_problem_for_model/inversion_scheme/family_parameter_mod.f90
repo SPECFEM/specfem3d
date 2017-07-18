@@ -136,6 +136,7 @@ contains
 !--------------------------------------------------------------------------
 !conversion from inversion parameters to inversion  specfem parameters
 !-------------------------------------------------------------------------
+
   subroutine InvertParam2Specfem(inversion_param, model)
     use input_output
 
@@ -171,7 +172,7 @@ contains
              case('rho_vp')
                 rhostore(:,:,:,ispec) = model(:,:,:,ispec,1)
                 rho_vp(:,:,:,ispec)   = model(:,:,:,ispec,2) * rhostore(:,:,:,ispec)
-                kappastore(:,:,:,ispec) = rhostore(:,:,:,ispec) * ( model(:,:,:,ispec,1)**2 -  &
+                kappastore(:,:,:,ispec) = rhostore(:,:,:,ispec) * (model(:,:,:,ispec,1)**2 -  &
                      FOUR_THIRDS*( rho_vs(:,:,:,ispec) / rhostore(:,:,:,ispec)**2))
 
              case('vp_vs')
@@ -247,6 +248,7 @@ contains
 !--------------------------------------------------------------------------
 ! conversion from specfem parameters to inversion parameters
 !-------------------------------------------------------------------------
+
   subroutine SpecfemParam2Invert(inversion_param, model)
     type(inver),                                                  intent(in)      :: inversion_param
     real(kind=CUSTOM_REAL),   dimension(:,:,:,:,:), allocatable,  intent(inout)   :: model
@@ -344,10 +346,11 @@ contains
 
   end subroutine SpecfemParam2Invert
 
-  !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  !--------------------------------------------------------------------------
-  ! store the current gradient in the inversion family parameter
-  !-------------------------------------------------------------------------
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!--------------------------------------------------------------------------
+! store the current gradient in the inversion family parameter
+!-------------------------------------------------------------------------
+
   subroutine StoreGradientInfamilyParam(inversion_param, gradient)
 
     type(inver),                                                  intent(in)      :: inversion_param

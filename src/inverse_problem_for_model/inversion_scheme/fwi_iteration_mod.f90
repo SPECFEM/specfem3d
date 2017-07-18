@@ -304,6 +304,10 @@ contains
 !-------------------------------------------------------------------------------------------------------------
 ! compute current model form initial model and descent direction for a given step length
 !-------------------------------------------------------------------------------------------------------------
+!
+! Since Specfem compute kernel for log of parameter, here we use this convention by default
+! BE CAAREFUL : the model is stored in parameter and *NOT* log parameter in spesfem mesh (rhostore, kappastore, ...)
+!
   subroutine UpdateModel(inversion_param, step_length)
 
     type(inver),                                    intent(inout) :: inversion_param
@@ -315,7 +319,8 @@ contains
     real(kind=CUSTOM_REAL)                                        :: vmin_glob0
     real(kind=CUSTOM_REAL)                                        :: vmax_glob0
 
-    !! Here we are in log of parameter as by default in specfem
+    !! Here descent_diretion is in log of parameter as by default in specfem
+    !! and we compute current_model not in log
     current_model(:,:,:,:,:) = initial_model(:,:,:,:,:) * exp(step_length * descent_direction(:,:,:,:,:))
 
     !! store the model on specfem arrays to perform next simulation
@@ -353,6 +358,7 @@ contains
 !-------------------------------------------------------------------------------------------------------------
 ! compute initial guess for step length to try for line search
 !-------------------------------------------------------------------------------------------------------------
+
   subroutine InitialGuessStep(inversion_param, step_length)
 
     type(inver),                                    intent(in)    :: inversion_param
