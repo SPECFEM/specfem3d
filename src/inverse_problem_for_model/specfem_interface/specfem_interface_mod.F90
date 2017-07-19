@@ -150,7 +150,7 @@ contains
 
     integer                                                       :: irec,ier
     integer                                                       :: icomp, it, irec_local
-    real(kind=CUSTOM_REAL)                                        :: DT
+    real(kind=CUSTOM_REAL)                                        :: DT, lw_tap
     double precision                                              :: DT_dble
     character(len=256)                                            :: name_file
     character(len=MAX_STRING_LEN)                                 :: TRAC_PATH, dsname
@@ -203,7 +203,8 @@ contains
              raw_stf(:)=acqui_simu(isource)%source_wavelet(:,1)
              call bwfilt (raw_stf, filt_stf, &
                   DT, NSTEP, 1, 4, acqui_simu(isource)%fl_src, acqui_simu(isource)%fh_src)
-             call apodise_sig(filt_stf, NSTEP, 2.5)
+             lw_tap = 2.5_CUSTOM_REAL 
+             call apodise_sig(filt_stf, NSTEP, lw_tap)
              user_source_time_function(:,1)=filt_stf(:)
              deallocate(raw_stf, filt_stf)
 
