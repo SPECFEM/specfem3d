@@ -162,13 +162,13 @@ contains
 
     endif
 
-    !! get dimension of mesh 
+    !! get dimension of mesh
     call check_mesh_distances(myrank,NSPEC_AB,NGLOB_AB, &
-         ibool,xstore,ystore,zstore,                    &
-         inversion_param%xmin,inversion_param%xmax,     &
-         inversion_param%ymin,inversion_param%ymax,     &
-         inversion_param%zmin,inversion_param%zmax,     &
-         elemsize_min_glob,elemsize_max_glob,           &
+         ibool,xstore,ystore,zstore, &
+         inversion_param%xmin,inversion_param%xmax, &
+         inversion_param%ymin,inversion_param%ymax, &
+         inversion_param%zmin,inversion_param%zmax, &
+         elemsize_min_glob,elemsize_max_glob, &
          distance_min_glob,distance_max_glob)
 
     !!-------------------------------------------------------------------------------------------------------------------------
@@ -451,7 +451,7 @@ contains
        name_file_tmp = trim(acqui_simu(isource)%data_file_gather)//trim(adjustl(ch_to_add))
        call  write_bin_sismo_on_disk(isource, acqui_simu, array_to_write, name_file_tmp, myrank)
     enddo
-    
+
   end subroutine dump_seismograms
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !----------------------------------------------------------------
@@ -471,7 +471,7 @@ contains
        name_file_tmp = trim(acqui_simu(isource)%data_file_gather)//trim(adjustl(ch_to_add))
        call  write_bin_sismo_on_disk(isource, acqui_simu, array_to_write, name_file_tmp, myrank)
     enddo
-    
+
   end subroutine dump_filtered_data
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !----------------------------------------------------------------
@@ -705,7 +705,7 @@ contains
                 allocate(Gather_loc(NSTA_LOC,Nt,NDIM),acqui_simu(isource)%data_traces(NSTA_LOC,Nt,NDIM), &
                      acqui_simu(isource)%adjoint_sources(NDIM, NSTA_LOC, Nt))
 
-                if(VERBOSE_MODE .or. DEBUG_MODE) allocate(acqui_simu(isource)%synt_traces(NDIM, NSTA_LOC, Nt))
+                if (VERBOSE_MODE .or. DEBUG_MODE) allocate(acqui_simu(isource)%synt_traces(NDIM, NSTA_LOC, Nt))
 
                 if (DEBUG_MODE) write(IIDD,*) 'myrank ',myrank,' wait for 0 :', NSTA_LOC,Nt
                 tag   = MPI_ANY_TAG
@@ -860,7 +860,7 @@ contains
               case('source_wavelet')
                  acqui_simu(isrc)%source_wavelet_file=trim(adjustl(line(ipos0:ipos1)))
                  acqui_simu(isrc)%external_source_wavelet=.true.
-                
+
               case ('NSTEP')
                  read(line(ipos0:ipos1),*) acqui_simu(isrc)%Nt_data
 
@@ -925,40 +925,40 @@ contains
 
        case('Niter_wolfe')
           read(line(ipos0:ipos1),*)  inversion_param%Niter_wolfe
-          
+
        case('max_history_bfgs')
           read(line(ipos0:ipos1),*)  inversion_param%max_history_bfgs
-          
+
        case('param_family')
           read(line(ipos0:ipos1),*) inversion_param%param_family
 
        case('fl')
           read(line(ipos0:ipos1),*) fl
-          
+
        case('fh')
           read(line(ipos0:ipos1),*) fh
-          
+
        case('input_sem_model')
           read(line(ipos0:ipos1),*)  inversion_param%input_sem_model
-          
+
        case('output_model')
           read(line(ipos0:ipos1),*)  inversion_param%output_model
-          
+
        case('input_fd_model')
           read(line(ipos0:ipos1),*)  inversion_param%input_fd_model
-          
+
        case ('taper')
           inversion_param%use_taper=.true.
           read(line(ipos0:ipos1),*) inversion_param%xmin_taper, inversion_param%xmax_taper, &
                inversion_param%ymin_taper, inversion_param%ymax_taper, &
                inversion_param%zmin_taper, inversion_param%zmax_taper
-          
+
        case('shin_precond')
           read(line(ipos0:ipos1),*) inversion_param%shin_precond
-          
+
        case('z2_precond')
           read(line(ipos0:ipos1),*) inversion_param%z2_precond
-          
+
        case('relat_grad')
           read(line(ipos0:ipos1),*) inversion_param%relat_grad
 
@@ -973,30 +973,30 @@ contains
 
        case('dump_descent_direction_at_each_iteration')
           read(line(ipos0:ipos1),*) inversion_param%dump_descent_direction_at_each_iteration
-             
+
        case default
           write(*,*) 'ERROR KEY WORD NOT MATCH : ', trim(keyw), ' in file ', trim(inver_file)
           exit
-          
+
        end select
 
     enddo
 
 99  close(666)
-    
+
     if (myrank == 0) then
        write(INVERSE_LOG_FILE,*)
        write(INVERSE_LOG_FILE,*) '     READ  ', trim(inver_file)
        write(INVERSE_LOG_FILE,*) '     Nb tot sources ', acqui_simu(1)%nsrc_tot
        write(INVERSE_LOG_FILE,*)
     endif
-    
+
     if (VERBOSE_MODE .or. DEBUG_MODE) then
        inversion_param%dump_model_at_each_iteration=.true.
        inversion_param%dump_gradient_at_each_iteration=.true.
        inversion_param%dump_descent_direction_at_each_iteration=.true.
-    end if
-    
+    endif
+
   end subroutine read_inver_file
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !-----------------------------------------------------------------
@@ -1122,7 +1122,7 @@ contains
     integer                                                :: isource, ier
     integer                                                :: i
     real(kind=CUSTOM_REAL)                                 :: dt_dummy
-    
+
     write(INVERSE_LOG_FILE,*)
     write(INVERSE_LOG_FILE,*) '     READING sources parameters '
 
@@ -1269,9 +1269,9 @@ contains
              open(IINN, file=trim(acqui_simu(isource)%source_wavelet_file))
              do i=1,acqui_simu(isource)%Nt_data
                 read(IINN, *) dt_dummy, acqui_simu(isource)%source_wavelet(i,1)
-             end do
+             enddo
              close(IINN)
-          end if
+          endif
 
        case('force')
           print *, 'Abort not implemented yet : FORCESOLUTION in source ',isource
@@ -1320,7 +1320,7 @@ contains
        call MPI_BCAST(acqui_simu(i)%station_file,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(acqui_simu(i)%event_name,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(acqui_simu(i)%component, 6,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
-       
+
        call MPI_BCAST(acqui_simu(i)%Nt_data,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(acqui_simu(i)%dt_data,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
 
@@ -1343,12 +1343,12 @@ contains
        call MPI_BCAST(acqui_simu(i)%t_shift,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(acqui_simu(i)%hdur,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(acqui_simu(i)%source_wavelet_file, MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
-       
+
        call MPI_BCAST(acqui_simu(i)%external_source_wavelet, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
        if (acqui_simu(i)%external_source_wavelet) then
           if (myrank > 0) allocate(acqui_simu(i)%source_wavelet(acqui_simu(i)%Nt_data,1))
            call MPI_BCAST(acqui_simu(i)%source_wavelet,acqui_simu(i)%Nt_data, CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
-       end if
+       endif
 
        ! stations
        if (myrank == 0) nsta_tot=acqui_simu(i)%nsta_tot

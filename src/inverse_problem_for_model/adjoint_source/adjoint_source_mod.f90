@@ -44,7 +44,7 @@ contains
 
     real(kind=CUSTOM_REAL)                                      :: cost_function, cost_function_reduced
     real(kind=CUSTOM_REAL)                                      :: cost_function_rec
-    
+
     integer                                                     :: lw, i0, i1, i2, i3
 
 
@@ -59,11 +59,11 @@ contains
     !! define taper on adjoint sources (if not window selected by user)
     lw=0.02*nstep_data  !!!! WARNGING HARDCODED !!!!!!!!!!!!
     i0=10
-    i1=i0 + lw 
+    i1=i0 + lw
     i3=nstep_data-10
     i2=i3 - lw
-    call taper_window_W(w_tap,i0,i1,i2,i3,nstep_data,1._CUSTOM_REAL) 
-    !! to do define user window 
+    call taper_window_W(w_tap,i0,i1,i2,i3,nstep_data,1._CUSTOM_REAL)
+    !! to do define user window
 
 
     do irec_local = 1, nrec_local
@@ -143,14 +143,14 @@ contains
 ! define adjoint sources
 !-----------------------------------------------------------------------------------------------------------------------------------
 !
-! to implement a new cost function and adjoint source : 
+! to implement a new cost function and adjoint source :
 !
 !    1 /   define character to name your cost function and adjout source type :  acqui_simu(isource)%adjoint_source_type
 !
-!    2/    add a case for your new adjoint source 
+!    2/    add a case for your new adjoint source
 !
 !    3/    compute the adjoint source whcih is stored in acqui(isource)%adjoint_sources(NCOM, NREC_LOCAL, NT)
-!          note that this arrays will be directly use be specfem as adjoint source thus you need to 
+!          note that this arrays will be directly use be specfem as adjoint source thus you need to
 !          do any proccessing here : filter, rotation, ....
 !
 !    4/    compute the cost function and store it in cost_function variable (you have to perform sommation over sources)
@@ -297,23 +297,23 @@ contains
        raw_residuals(:)= acqui_simu(isource)%data_traces(irec_local,:,icomp)
        call bwfilt(raw_residuals, fil_residuals, dt_data, nstep_data, irek_filter, norder_filter, fl, fh)
 
-       !! save filtered data 
+       !! save filtered data
        acqui_simu(isource)%synt_traces(icomp, irec_local,:)= fil_residuals(:)
 
-       !! save residuals for adjoint source. Note we use the difference between 
+       !! save residuals for adjoint source. Note we use the difference between
        !! obseved pressure and computed pressure, not the approach in Luo and Tromp Gepohysics 2013
-       !! which define the adjoint source as " minus second time derivatives of previous residuals " 
-       !! We consider that the forward modeling is writen in pressure thus 
-       !! the adjoint is rho*displacement potential. 
-       residuals_for_cost(:) =  - (seismograms_p(icomp,irec_local,:) - fil_residuals(:)) 
-       
-       !! compute cost 
+       !! which define the adjoint source as " minus second time derivatives of previous residuals "
+       !! We consider that the forward modeling is writen in pressure thus
+       !! the adjoint is rho*displacement potential.
+       residuals_for_cost(:) =  - (seismograms_p(icomp,irec_local,:) - fil_residuals(:))
+
+       !! compute cost
        cost_value=sum(residuals_for_cost(:)**2) * 0.5 * dt_data
        cost_function = cost_function + cost_value
 
        !! store adjoint source
        acqui_simu(isource)%adjoint_sources(1,irec_local,:)=residuals_for_cost(:)*w_tap(:)
-       
+
 
     case default
 

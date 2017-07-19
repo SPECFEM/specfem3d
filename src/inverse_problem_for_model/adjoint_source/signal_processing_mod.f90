@@ -282,7 +282,7 @@ module signal_processing
   end subroutine FD2nd
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !-----------------------------------------------------------------------------------------------------------------------------------
-!> aposidation of signal 
+!> aposidation of signal
 !-----------------------------------------------------------------------------------------------------------------------------------
   subroutine apodise_sig(signal, nt, lwa)
     implicit none
@@ -301,7 +301,7 @@ module signal_processing
     wh = 1._CUSTOM_REAL
     call taper_window_W(w_tap,i0,i1,i2,i3,nt,wh)
     signal(:) = signal(:)*w_tap(:)
-   
+
     deallocate(w_tap)
 
   end subroutine Apodise_sig

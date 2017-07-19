@@ -48,7 +48,7 @@ contains
 !!$                   taperx = 1.
 !!$                   tapery = 1.
 !!$                   taperz = 1.
-!!$                   
+!!$
 !!$   if (x < inversion_param%xmin_taper) taperx = cos_taper(inversion_param%xmin_taper, inversion_param%xmin_taper, x)
 !!$   if (x > inversion_param%xmax_taper) taperx = cos_taper(inversion_param%xmax_taper, inversion_param%xmax, x)
 !!$   if (y < inversion_param%ymin_taper) tapery = cos_taper(inversion_param%ymin_taper, inversion_param%xmin_taper, y)

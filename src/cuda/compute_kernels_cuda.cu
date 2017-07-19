@@ -496,7 +496,7 @@ __global__ void compute_kernels_acoustic_kernel(int* ispec_is_acoustic,
                             d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,
                             rhol,gravity);
 
-    // density kernel 
+    // density kernel
     rho_ac_kl[ijk_ispec] += deltat * rhol * (accel_elm[0]*b_displ_elm[0] +
                                              accel_elm[1]*b_displ_elm[1] +
                                              accel_elm[2]*b_displ_elm[2]);

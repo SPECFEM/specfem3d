@@ -111,9 +111,9 @@ contains
        write(INVERSE_LOG_FILE,*)
        write(INVERSE_LOG_FILE,*) '  Calling l-bfgs, iter  :', current_iteration
        write(INVERSE_LOG_FILE,*) '  Loops :',imin, imax
-       write(INVERSE_LOG_FILE,*) 
        write(INVERSE_LOG_FILE,*)
-    end if
+       write(INVERSE_LOG_FILE,*)
+    endif
 
     !! initialize L-BFGS
     ak_store(:)=0._CUSTOM_REAL
@@ -217,11 +217,11 @@ contains
        if (VERBOSE_MODE .and. myrank == 0) then
           write(INVERSE_LOG_FILE,*)
           write(INVERSE_LOG_FILE,*)
-          write(INVERSE_LOG_FILE,*) '  Storing iterations in l-bfgs memmory ', iteration_to_store
+          write(INVERSE_LOG_FILE,*) '  Storing iterations in l-bfgs memory ', iteration_to_store
           write(INVERSE_LOG_FILE,*) '  Total  iteration to store :', Mbfgs
-          write(INVERSE_LOG_FILE,*) 
           write(INVERSE_LOG_FILE,*)
-       end if
+          write(INVERSE_LOG_FILE,*)
+       endif
 
        ! we use log of model because in specfem we compute kernels in log
        bfgs_stored_model(:,:,:,:,:,iteration_to_store) = log(models_to_store(:,:,:,:,:))
@@ -232,12 +232,12 @@ contains
        if (VERBOSE_MODE .and. myrank == 0) then
           write(INVERSE_LOG_FILE,*)
           write(INVERSE_LOG_FILE,*)
-          write(INVERSE_LOG_FILE,*) '  Storing iterations in l-bfgs memmory ', iteration_to_store
-          write(INVERSE_LOG_FILE,*) '  Shifting previous arrays and store in ', Mbfgs, ' index ' 
+          write(INVERSE_LOG_FILE,*) '  Storing iterations in l-bfgs memory ', iteration_to_store
+          write(INVERSE_LOG_FILE,*) '  Shifting previous arrays and store in ', Mbfgs, ' index '
           write(INVERSE_LOG_FILE,*) '  Total  iteration to store :', Mbfgs
-          write(INVERSE_LOG_FILE,*) 
           write(INVERSE_LOG_FILE,*)
-       end if
+          write(INVERSE_LOG_FILE,*)
+       endif
 
        do k = 0, Mbfgs-1
           bfgs_stored_model(:,:,:,:,:,k) = bfgs_stored_model(:,:,:,:,:,k+1)

@@ -121,7 +121,7 @@ module inverse_problem_par
      real(kind=CUSTOM_REAL)                                                   :: ymin_taper, ymax_taper
      real(kind=CUSTOM_REAL)                                                   :: zmin_taper, zmax_taper
 
-     !! domain boundary 
+     !! domain boundary
      real(kind=CUSTOM_REAL)                                                   :: xmin, xmax
      real(kind=CUSTOM_REAL)                                                   :: ymin, ymax
      real(kind=CUSTOM_REAL)                                                   :: zmin, zmax
@@ -133,7 +133,7 @@ module inverse_problem_par
      real(kind=CUSTOM_REAL)                                                   :: adjust, penalty
      real(kind=CUSTOM_REAL)                                                   :: Cost_init, Norm_grad_init
 
-     !!  cost function for each sources 
+     !!  cost function for each sources
      real(kind=CUSTOM_REAL), dimension(:), allocatable                        :: current_cost, previous_cost
      real(kind=CUSTOM_REAL), dimension(:), allocatable                        :: current_cost_prime, previous_cost_prime
 
