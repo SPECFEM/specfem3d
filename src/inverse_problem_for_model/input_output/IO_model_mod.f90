@@ -1003,7 +1003,7 @@ contains
                    c66store(i,j,k,ispec) = cval(21)
 
                    !* Useless but easier to read and to use after
-                   c11 =  cval(1);     c12 =  cval(7);    c33 = cval(12);
+                   c11 =  cval(1);     c22 =  cval(7);    c33 = cval(12);
                    c12 =  cval(2);     c13 =  cval(3);    c23 = cval(8);
                    c44 = cval(16);     c55 = cval(19);    c66 = cval(21);
                    rho = cval(22);
