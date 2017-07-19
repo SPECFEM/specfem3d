@@ -290,6 +290,7 @@ module signal_processing
     real(kind=CUSTOM_REAL),                            intent(in)     :: lwa
     real(kind=CUSTOM_REAL), dimension(:), allocatable, intent(inout)  :: signal
     real(kind=CUSTOM_REAL), dimension(:), allocatable                 :: w_tap
+    real(kind=CUSTOM_REAL)                                            :: wh
     integer                                                           :: i0, i1, i2, i3
 
     allocate(w_tap(nt))
@@ -297,7 +298,8 @@ module signal_processing
     i1 = (lwa/100.) * nt + i0
     i3 = nt-1
     i2 = i3  - (lwa/100.) * nt
-    call taper_window_W(w_tap,i0,i1,i2,i3,nt,1.)
+    wh = 1._CUSTOM_REAL
+    call taper_window_W(w_tap,i0,i1,i2,i3,nt,wh)
     signal(:) = signal(:)*w_tap(:)
    
     deallocate(w_tap)
