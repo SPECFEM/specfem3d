@@ -123,6 +123,9 @@ use File::Basename;
       $line =~ s#\.true\.#\.true\.#ogi;
       $line =~ s#\.false\.#\.false\.#ogi;
 
+# switch to Fortran2008 standard
+      $line =~ s#call\s*getarg\(#call get_command_argument\(#ogi;
+
 ## DK DK reverting this because it breaks other compilers, since "\0" is not a true empty strings for other compilers.
 ## DK DK see https://github.com/geodynamics/specfem3d/issues/818
 # for null strings, make sure we fully conform to the standard otherwise the IBM xlf compiler refuses to compile
@@ -290,6 +293,9 @@ use File::Basename;
       $line =~ s#accordig#according#ogi;
       $line =~ s#paralell#parallel#ogi;
       $line =~ s#debbug#debug#ogi;
+# do not suppress the white space here because it would then change "debugging" for instance
+      $line =~ s#debugg #debug #ogi;
+      $line =~ s#debugg$#debug#ogi;
       $line =~ s#familly#family#ogi;
       $line =~ s#warnning#warning#ogi;
       $line =~ s#elemement#element#ogi;
