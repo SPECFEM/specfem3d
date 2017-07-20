@@ -275,7 +275,9 @@ use File::Basename;
 
       $line =~ s# pml # PML #ogi;
 
-# fix some typos I have found in the different codes, or non-US spelling
+# fix some typos I have found in the different codes, or non-US spelling.
+# also switch to US spelling in order to have the same standard in all files.
+      $line =~ s#regularisation#regularization#ogi;
       $line =~ s#optimisation#optimization#ogi;
       $line =~ s#analitical#analytical#ogi;
       $line =~ s#communIcation#communication#ogi;
