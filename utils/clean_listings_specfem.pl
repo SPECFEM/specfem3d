@@ -285,6 +285,8 @@ use File::Basename;
       $line =~ s#analitical#analytical#ogi;
       $line =~ s#communIcation#communication#ogi;
       $line =~ s# in orfer # in order #ogi;
+      $line =~ s# stepest # steepest #ogi;
+      $line =~ s# stepest$# steepest#ogi;
       $line =~ s#aloow#allow#ogi;
       $line =~ s#neighbour#neighbor#ogi;
       $line =~ s#vecotr#vector#ogi;
