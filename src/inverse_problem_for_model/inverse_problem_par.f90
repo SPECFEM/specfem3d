@@ -37,7 +37,7 @@ module inverse_problem_par
 
   !! ------------------------------ compialtion config parameters -----------------------------------------------------------------
 
-  !! maximum line length alllowed in input files
+  !! maximum line length allowed in input files
   integer,                       public, parameter  :: MAX_LEN_STRING=256
   !! log file for inversion
   integer,                       public, parameter  :: INVERSE_LOG_FILE=6666, OUTPUT_ITERATION_FILE=6667
@@ -83,10 +83,10 @@ module inverse_problem_par
      real(kind=CUSTOM_REAL)                                                   :: relat_cost=1.e-1
 
      !!---- TUNING PARAMETERS FOR INVERSION -------------
-     !! --- for l-bfgs
+     !! --- for L-BFGS
      integer                                                                  :: max_history_bfgs = 10
 
-     !!--- for wolfe line search
+     !!--- for Wolfe line search
      real(kind=CUSTOM_REAL)                                                   :: m1 = 0.01, m2 = 0.7
      real(kind=CUSTOM_REAL)                                                   :: current_step_length = 1.
 
@@ -100,23 +100,23 @@ module inverse_problem_par
      logical                                                                  :: input_sem_model=.false.
      logical                                                                  :: input_fd_model=.false.
 
-     !! write FWI solution on disk
+     !! write FWI solution to disk (or not)
      logical                                                                  :: output_model=.true.
 
-     !! what to do FWI or just forward
+     !! what to do: FWI, or just forward modeling
      logical                                                                  :: only_forward=.false.
 
-     !! for precond FWI
+     !! for preconditioning of FWI
      logical                                                                  :: use_taper=.false.
      logical                                                                  :: shin_precond=.false.
      logical                                                                  :: z2_precond=.false.
 
-     !! flags to choose if the user want to dump some wavefileds
+     !! flags to choose if the user wants to dump some wave fields
      logical                                                                  :: dump_model_at_each_iteration=.true.
      logical                                                                  :: dump_gradient_at_each_iteration=.true.
      logical                                                                  :: dump_descent_direction_at_each_iteration=.true.
 
-     !! user defined taper
+     !! user-defined taper
      real(kind=CUSTOM_REAL)                                                   :: xmin_taper, xmax_taper
      real(kind=CUSTOM_REAL)                                                   :: ymin_taper, ymax_taper
      real(kind=CUSTOM_REAL)                                                   :: zmin_taper, zmax_taper
@@ -126,14 +126,14 @@ module inverse_problem_par
      real(kind=CUSTOM_REAL)                                                   :: ymin, ymax
      real(kind=CUSTOM_REAL)                                                   :: zmin, zmax
 
-     !! cost (need to move in type inver)
+     !! cost (need to move it in type inver one day)
      real(kind=CUSTOM_REAL)                                                   :: total_current_cost, total_previous_cost
      real(kind=CUSTOM_REAL)                                                   :: total_current_prim, total_previous_prim
      real(kind=CUSTOM_REAL)                                                   :: penalty_term, damping_term
      real(kind=CUSTOM_REAL)                                                   :: adjust, penalty
      real(kind=CUSTOM_REAL)                                                   :: Cost_init, Norm_grad_init
 
-     !!  cost function for each sources
+     !!  cost function for each source
      real(kind=CUSTOM_REAL), dimension(:), allocatable                        :: current_cost, previous_cost
      real(kind=CUSTOM_REAL), dimension(:), allocatable                        :: current_cost_prime, previous_cost_prime
 
@@ -318,5 +318,5 @@ contains
 
   end subroutine flush_iunit
 
-
 end module inverse_problem_par
+
