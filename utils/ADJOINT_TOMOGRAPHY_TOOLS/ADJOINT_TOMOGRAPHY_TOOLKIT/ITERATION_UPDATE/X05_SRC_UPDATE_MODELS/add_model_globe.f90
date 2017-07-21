@@ -312,11 +312,11 @@ subroutine read_parameters()
   ! subjective step length to multiply to the gradient
   !step_fac = 0.03
 
-  call getarg(1,s_step_fac)
+  call get_command_argument(1,s_step_fac)
 !> Hejun Zhu
-  call getarg(2,input_model)
-  call getarg(3,input_kernel)
-  call getarg(4,output_model)
+  call get_command_argument(2,input_model)
+  call get_command_argument(3,input_kernel)
+  call get_command_argument(4,output_model)
 ! < Hejun Zhu
 
 

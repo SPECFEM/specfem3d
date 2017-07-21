@@ -24,7 +24,7 @@ program create_adjsrc_traveltime
 
   ! reads in file arguments
   do while (1 == 1)
-    call getarg(i,arg(i))
+    call get_command_argument(i,arg(i))
     if (i < 6 .and. trim(arg(i)) == '') then
       print *,'Usage: '
       print *,'  xcreate_adjsrc_traveltime t1 t2 ifile[0-5] E/N/Z-ascii-files [baz]'

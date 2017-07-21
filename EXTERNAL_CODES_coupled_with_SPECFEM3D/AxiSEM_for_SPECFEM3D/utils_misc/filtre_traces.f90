@@ -9,13 +9,13 @@
     irek=1
     norder=4
 
-!!$    call getarg(1,arg)
+!!$    call get_command_argument(1,arg)
 !!$    indat=trim(arg)
-!!$    call getarg(2,arg)
+!!$    call get_command_argument(2,arg)
 !!$    insyn=trim(arg)
-    call getarg(1,arg)
+    call get_command_argument(1,arg)
     read(arg,*) fl
-    call getarg(2,arg)
+    call get_command_argument(2,arg)
     read(arg,*) fh
     indat='wksis.txt'
     call read_npts(indat,npts)

@@ -16,12 +16,12 @@ program rotate_adj_src
 
 
   ! read in arguments
-  call getarg(1,bazch)
-  call getarg(2,zfile)
-  call getarg(3,tfile)
-  call getarg(4,rfile)
-  call getarg(5,efile)
-  call getarg(6,nfile)
+  call get_command_argument(1,bazch)
+  call get_command_argument(2,zfile)
+  call get_command_argument(3,tfile)
+  call get_command_argument(4,rfile)
+  call get_command_argument(5,efile)
+  call get_command_argument(6,nfile)
 
   if (trim(bazch) == '' .or. trim(zfile) == '' .or. trim(tfile) == '' .or. &
        trim(rfile) == '' .or. trim(efile) == '' .or. trim(nfile) == '') then

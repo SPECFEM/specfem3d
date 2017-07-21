@@ -33,11 +33,11 @@ program sem_model_slice
   call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
 
   ! input arguments
-  call getarg(1,xyz_infile)
-  call getarg(2,topo_dir)
-  call getarg(3,model_dir)
-  call getarg(4,data_name)
-  call getarg(5,gmt_outfile)
+  call get_command_argument(1,xyz_infile)
+  call get_command_argument(2,topo_dir)
+  call get_command_argument(3,model_dir)
+  call get_command_argument(4,data_name)
+  call get_command_argument(5,gmt_outfile)
 
   ! read points to be interpolated
   open(11,file=xyz_infile,iostat=ios)

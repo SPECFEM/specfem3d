@@ -110,11 +110,11 @@ program smooth_sem_globe
   call mpi_barrier(MPI_COMM_WORLD,ier)
 
   ! arguments
-  call getarg(1,s_sigma_h)
-  call getarg(2,s_sigma_v)
-  call getarg(3,kernel_file_name)
-  call getarg(4,scratch_file_dir)
-  call getarg(5,scratch_topo_dir)
+  call get_command_argument(1,s_sigma_h)
+  call get_command_argument(2,s_sigma_v)
+  call get_command_argument(3,kernel_file_name)
+  call get_command_argument(4,scratch_file_dir)
+  call get_command_argument(5,scratch_topo_dir)
 
   if ( trim(s_sigma_h) == '' .or. trim(s_sigma_v) == '' &
     .or. trim(kernel_file_name) == '' &

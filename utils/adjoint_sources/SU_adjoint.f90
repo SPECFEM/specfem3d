@@ -52,7 +52,7 @@
   ! reads in file arguments
   i = 1
   do while (1 == 1)
-    call getarg(i,arg(i))
+    call get_command_argument(i,arg(i))
     if (i <= 1 .and. trim(arg(i)) == '') then
       print *,'Usage: '
       print *,'  ./xSU_adjoint NPROC'

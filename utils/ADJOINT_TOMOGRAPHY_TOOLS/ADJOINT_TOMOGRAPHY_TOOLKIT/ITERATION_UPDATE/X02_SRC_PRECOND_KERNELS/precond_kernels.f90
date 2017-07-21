@@ -25,7 +25,7 @@ program precond_kernels
   call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
 
 
-  call getarg(1,input_dir)
+  call get_command_argument(1,input_dir)
 
   if (trim(input_dir) == '' ) then
      call exit_MPI(myrank,'USAGE: xprecond_kernels input_dir')

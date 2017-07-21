@@ -68,7 +68,7 @@
 
   ! starts here---------------------------------------------------------------------------------------
   do i = 1, 4
-    call getarg(i,arg(i))
+    call get_command_argument(i,arg(i))
     if (i < 4 .and. trim(arg(i)) == '') then
       print *
       print *, ' Usage: xcreate_slice_VTK slice_list filename input_dir output_dir'

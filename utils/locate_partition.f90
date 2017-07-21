@@ -67,7 +67,7 @@
   print *,'----------------------------'
 
   do i = 1, 4
-    call getarg(i,arg(i))
+    call get_command_argument(i,arg(i))
     if (i <= 4 .and. trim(arg(i)) == '') then
       print *, 'Usage: '
       print *, '        xlocate_partition x y z Databases_directory'

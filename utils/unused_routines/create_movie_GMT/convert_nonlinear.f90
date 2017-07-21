@@ -13,10 +13,10 @@ program convert_nonlinear
 
 
 
-  call getarg(1,infile)
-  call getarg(2,outfile)
-  call getarg(3,ch_power)
-  call getarg(4,ch_zmax)
+  call get_command_argument(1,infile)
+  call get_command_argument(2,outfile)
+  call get_command_argument(3,ch_power)
+  call get_command_argument(4,ch_zmax)
 
   if (trim(infile) == '' .or. trim(outfile) == '' ) then
      stop 'Usage: convert_nonlinear infile outfile power [zmax]'

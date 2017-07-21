@@ -95,7 +95,7 @@ subroutine pinputTra_Part2(ifrequ_min,ifrequ_max,inputdir,outputDir,psvmodel,mod
   real(kind(0d0)) :: tlen,r0min,r0max,r0delta
   real(kind(0d0)) :: r0lat,r0lon,m1,m2,m3,m4,m5,m6
   integer :: imin,imax,itranslat,ifrequ_min,ifrequ_max
-  call getarg(1,inputIASP)
+  call get_command_argument(1,inputIASP)
   if (trim(inputIASP) == '') then
      write(*,*) 'input file not specified:  cancel '
      stop

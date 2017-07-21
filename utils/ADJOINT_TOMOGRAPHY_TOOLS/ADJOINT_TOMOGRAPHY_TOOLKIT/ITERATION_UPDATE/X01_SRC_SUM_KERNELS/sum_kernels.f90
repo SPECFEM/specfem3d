@@ -21,9 +21,9 @@ program sum_kernels
   call MPI_COMM_SIZE(MPI_COMM_WORLD,sizeprocs,ier)
   call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
 
-  call getarg(1,input_dir)
-  call getarg(2,output_dir)
-  call getarg(3,eventid)
+  call get_command_argument(1,input_dir)
+  call get_command_argument(2,output_dir)
+  call get_command_argument(3,eventid)
 
 
   if (trim(input_dir) == '' &

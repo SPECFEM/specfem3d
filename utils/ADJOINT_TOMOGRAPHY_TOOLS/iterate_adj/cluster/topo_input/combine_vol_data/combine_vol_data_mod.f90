@@ -56,7 +56,7 @@
   print *
 
   do i = 1, 6
-    call getarg(i,arg(i))
+    call get_command_argument(i,arg(i))
     if (trim(arg(i)) == '') then
       print *, 'Usage: xcombine_data slice_list filename input_topo_dir input_kernel_dir output_dir high/low-resolution'
       print *, ' possible filenames are '

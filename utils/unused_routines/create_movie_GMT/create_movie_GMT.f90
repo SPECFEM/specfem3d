@@ -100,11 +100,11 @@ program create_movie_GMT
   ! ************** PROGRAM STARTS HERE **************
 
 
-  call getarg(1,movie_data_prefix)
-  call getarg(2,par_file)
-  call getarg(3,start_frame)
-  call getarg(4,end_frame)
-  call getarg(5,output_file_prefix)
+  call get_command_argument(1,movie_data_prefix)
+  call get_command_argument(2,par_file)
+  call get_command_argument(3,start_frame)
+  call get_command_argument(4,end_frame)
+  call get_command_argument(5,output_file_prefix)
   if (trim(movie_data_prefix) == '' .or. trim(par_file) == ''  &
        .or. trim(start_frame) == '' .or. trim(end_frame) == '' &
        .or. trim(output_file_prefix) == '') &

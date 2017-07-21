@@ -33,11 +33,11 @@ call MPI_COMM_SIZE(MPI_COMM_WORLD,sizeprocs,ier)
 call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
 
 ! read input file
-call getarg(1,xyz_infile)
-call getarg(2,topo_dir)
-call getarg(3,model_dir)
-call getarg(4,filename)
-call getarg(5,gmt_outfile)
+call get_command_argument(1,xyz_infile)
+call get_command_argument(2,topo_dir)
+call get_command_argument(3,model_dir)
+call get_command_argument(4,filename)
+call get_command_argument(5,gmt_outfile)
 
 ! read interpolate points
 if ( myrank == 0) then

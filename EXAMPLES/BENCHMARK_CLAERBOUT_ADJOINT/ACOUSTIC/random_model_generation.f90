@@ -32,7 +32,7 @@ program random_model
 
   !! input parameters
   if ( iargc() /= 1 ) stop 'Usage: ./xrandom_model percent [must be small enough (~1d-5) for F*dm=S(m+dm)-S(m) to be valid]'
-  j=1;  call getarg(j, arg); read(arg,*,iostat=ios) percent;   if (ios /= 0) stop 'Error reading percent'
+  j=1;  call get_command_argument(j, arg); read(arg,*,iostat=ios) percent;   if (ios /= 0) stop 'Error reading percent'
 
   ! processors name
   write(prname,'(a,i6.6,a)') trim(LOCAL_PATH)//'proc',myrank,'_'

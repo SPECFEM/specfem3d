@@ -45,8 +45,8 @@ program xcompute_direction_lbfgs
   call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
 
   ! read in parameters
-  call getarg(1,s_iter_start)
-  call getarg(2,s_iter_current)
+  call get_command_argument(1,s_iter_start)
+  call get_command_argument(2,s_iter_current)
   read(s_iter_start,*) iter_start
   read(s_iter_current,*) iter_current
   if (myrank == 0) print *, 'starting iteration for this period band:',iter_start

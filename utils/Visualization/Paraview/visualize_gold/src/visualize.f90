@@ -57,7 +57,7 @@ if (iargc() <= 0) then
 endif
 
 write(*,'(a)',advance='no')'reading main input file...'
-call getarg(1,inp_fname)
+call get_command_argument(1,inp_fname)
 
 call read_input(inp_fname)
 write(*,'(a)')'complete!'

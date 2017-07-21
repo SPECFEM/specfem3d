@@ -23,8 +23,8 @@ program adj_seismogram
 
   !! input parameters
   if ( iargc() /= 2 ) stop 'Usage: ./xadj NSTEP DT'
-  j=1;  call getarg(j, arg); read(arg,*,iostat=ios) NSTEP;   if (ios /= 0) stop 'Error reading NSTEP'
-  j=2;  call getarg(j, arg); read(arg,*,iostat=ios)    DT;   if (ios /= 0) stop 'Error reading DT'
+  j=1;  call get_command_argument(j, arg); read(arg,*,iostat=ios) NSTEP;   if (ios /= 0) stop 'Error reading NSTEP'
+  j=2;  call get_command_argument(j, arg); read(arg,*,iostat=ios)    DT;   if (ios /= 0) stop 'Error reading DT'
 
   !!!! read NSTEP from seismograms
   !!!filename=trim(adjustl(procname))//"_dx_SU"

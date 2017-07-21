@@ -9,7 +9,7 @@ subroutine pinputTra(outputDir,psvmodel,modelname,stationsinf,tlen,imin,imax,r0m
   integer :: imin,imax,ifrqmin,ifrqmax,itranslat,myrank
 
 
-  call getarg(1,inputIASP)
+  call get_command_argument(1,inputIASP)
   if (trim(inputIASP) == '') then
      write(*,*) 'input file not specified:  cancel '
      stop

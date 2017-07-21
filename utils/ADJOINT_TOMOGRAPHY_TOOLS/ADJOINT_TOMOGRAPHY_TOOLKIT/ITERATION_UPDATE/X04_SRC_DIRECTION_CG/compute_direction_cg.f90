@@ -23,10 +23,10 @@ program xcompute_direction_cg
   call MPI_COMM_SIZE(MPI_COMM_WORLD,sizeprocs,ier)
   call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
 
-  call getarg(1,direction_0_dir)
-  call getarg(2,direction_1_dir)
-  call getarg(3,gradient_0_dir)
-  call getarg(4,gradient_1_dir)
+  call get_command_argument(1,direction_0_dir)
+  call get_command_argument(2,direction_1_dir)
+  call get_command_argument(3,gradient_0_dir)
+  call get_command_argument(4,gradient_1_dir)
 
   if (trim(direction_0_dir) == '' .or. trim(direction_1_dir) == '' &
         .or. trim(gradient_0_dir) == '' .or. trim(gradient_1_dir) == '') then

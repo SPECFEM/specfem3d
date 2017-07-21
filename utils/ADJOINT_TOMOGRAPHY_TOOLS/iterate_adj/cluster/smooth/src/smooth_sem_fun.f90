@@ -60,15 +60,15 @@ program smooth_specfem_function
   call MPI_COMM_RANK(MPI_COMM_WORLD,myrank,ier)
 
   ! input arguments (nchunks=0 means basin code!)
-  call getarg(1,s_nproc_xi)
-  call getarg(2,s_nproc_eta)
-  call getarg(3,s_nchunks)
-  call getarg(4,s_element_size)
-  call getarg(5,s_sigma_h)
-  call getarg(6,s_sigma_v)
-  call getarg(7,kernel_file_name)
-  call getarg(8,scratch_file_dir)
-  call getarg(9,scratch_topo_dir)
+  call get_command_argument(1,s_nproc_xi)
+  call get_command_argument(2,s_nproc_eta)
+  call get_command_argument(3,s_nchunks)
+  call get_command_argument(4,s_element_size)
+  call get_command_argument(5,s_sigma_h)
+  call get_command_argument(6,s_sigma_v)
+  call get_command_argument(7,kernel_file_name)
+  call get_command_argument(8,scratch_file_dir)
+  call get_command_argument(9,scratch_topo_dir)
 
   if (trim(s_nproc_xi) == '' .or. trim(s_nproc_eta) == '' .or. trim(s_nchunks) == '' &
              .or. trim(s_element_size) == '' .or. trim(kernel_file_name) == '' &
