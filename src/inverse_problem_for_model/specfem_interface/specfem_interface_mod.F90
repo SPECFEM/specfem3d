@@ -1129,6 +1129,21 @@ contains
     close(667)
     close(668)
 
+    open(666,file=trim(prefix_to_path)//'SEM/XX.S0001.CXX.adj')
+    open(667,file=trim(prefix_to_path)//'SEM/XX.S0001.CXY.adj')
+    open(668,file=trim(prefix_to_path)//'SEM/XX.S0001.CXZ.adj')
+
+    do i = 1, NSTEP
+       write(666,*) (i-1)*dt,0.
+       write(667,*) (i-1)*dt,0.
+       write(668,*) (i-1)*dt,0.
+    enddo
+
+    close(666)
+    close(667)
+    close(668)
+
+    
     open(666,file=trim(prefix_to_path)//'SEM/XX.S0001.HXX.adj')
     open(667,file=trim(prefix_to_path)//'SEM/XX.S0001.HXY.adj')
     open(668,file=trim(prefix_to_path)//'SEM/XX.S0001.HXZ.adj')

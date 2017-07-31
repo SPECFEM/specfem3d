@@ -1142,8 +1142,12 @@ subroutine compute_N_rayleigh(alpha, beta, mu, H, nlayer, om, p, ht, Nmat)
   Emat(4,3) = Emat(3,1)
   Emat(4,4) = Emat(3,1)
 
-  if (ht > sum(h(1:nlayer-1))) stop 'Z point is located in the air above the surface rather than in the solid!'
-
+  if (ht > sum(h(1:nlayer-1))) then
+     write(*,*) ' FK error '
+     write(*,*) ' Z point is located in the air above the surface rather than in the solid!'
+     write(*,*) ' current z :', ht, ' max z allowed : ',  sum(h(1:nlayer-1))
+     stop
+  end if
   ! figure out the location z with respect to layer stack
   if (ht <= 0) then ! in lower half space
      Gmat = 0.
