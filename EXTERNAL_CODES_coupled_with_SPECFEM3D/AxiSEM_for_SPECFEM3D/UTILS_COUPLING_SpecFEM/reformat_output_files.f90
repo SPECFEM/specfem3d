@@ -1070,43 +1070,43 @@ end program re_format_outputs_files
 
 
 
-subroutine interpolate(padi,zero_pad,dat_int,dat,n00,n0,nt,n,dt)
-  implicit none
-  integer m,nt,n,n0,n00,i
-  real dat(n)
-  double complex  zero_pad(n0),padi(n00)
-  double precision dat_int(nt),value_debb
-  real dt
-  real, parameter :: pi=3.141592653589793
-
-  dat_int=0.
-  zero_pad=0.
-  padi=0.
-  value_debb=dat(1)
-  padi(1:n)=dat(:)
-  !write(399,*) '------------'
-  !write(399,*) padi(:)
-  call fft(padi,n00,1)
-  m=n00 / 2
-  zero_pad(1:m)=padi(1:m)
-  !write(399,*) zero_pad(1),zero_pad(m/2),zero_pad(m), zero_pad(m+1),zero_pad(n0)
-  call fft(zero_pad,n0,-1)
-  !write(399,*) zero_pad(1),zero_pad(m/2),zero_pad(m), zero_pad(m+1),zero_pad(n0)
-  dat_int(:)=real(zero_pad(1:nt)) /real(m)
-
-   !do i=1,nt
-   !write(499,*) dat_int(i)
-   !enddo
-   !do i=1,n
-   ! write(399,*) dat(i)
-   !enddo
-  !! debug
-  !dat_int(:)=value_debb
-  ! divide by m works but I don't know why.
-  ! * 2.*pi * (dt)
-  !write(*,*) pi, dt , 2.*pi / (dt)
-
-end subroutine interpolate
+!!$subroutine interpolate(padi,zero_pad,dat_int,dat,n00,n0,nt,n,dt)
+!!$  implicit none
+!!$  integer m,nt,n,n0,n00,i
+!!$  real dat(n)
+!!$  double complex  zero_pad(n0),padi(n00)
+!!$  double precision dat_int(nt),value_debb
+!!$  real dt
+!!$  real, parameter :: pi=3.141592653589793
+!!$
+!!$  dat_int=0.
+!!$  zero_pad=0.
+!!$  padi=0.
+!!$  value_debb=dat(1)
+!!$  padi(1:n)=dat(:)
+!!$  !write(399,*) '------------'
+!!$  !write(399,*) padi(:)
+!!$  call fft(padi,n00,1)
+!!$  m=n00 / 2
+!!$  zero_pad(1:m)=padi(1:m)
+!!$  !write(399,*) zero_pad(1),zero_pad(m/2),zero_pad(m), zero_pad(m+1),zero_pad(n0)
+!!$  call fft(zero_pad,n0,-1)
+!!$  !write(399,*) zero_pad(1),zero_pad(m/2),zero_pad(m), zero_pad(m+1),zero_pad(n0)
+!!$  dat_int(:)=real(zero_pad(1:nt)) /real(m)
+!!$
+!!$   !do i=1,nt
+!!$   !write(499,*) dat_int(i)
+!!$   !enddo
+!!$   !do i=1,n
+!!$   ! write(399,*) dat(i)
+!!$   !enddo
+!!$  !! debug
+!!$  !dat_int(:)=value_debb
+!!$  ! divide by m works but I don't know why.
+!!$  ! * 2.*pi * (dt)
+!!$  !write(*,*) pi, dt , 2.*pi / (dt)
+!!$
+!!$end subroutine interpolate
 
 
 !-----------------------------------------
