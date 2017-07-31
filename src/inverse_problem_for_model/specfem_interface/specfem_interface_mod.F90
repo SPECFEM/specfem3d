@@ -1143,7 +1143,7 @@ contains
     close(667)
     close(668)
 
-    
+
     open(666,file=trim(prefix_to_path)//'SEM/XX.S0001.HXX.adj')
     open(667,file=trim(prefix_to_path)//'SEM/XX.S0001.HXY.adj')
     open(668,file=trim(prefix_to_path)//'SEM/XX.S0001.HXZ.adj')

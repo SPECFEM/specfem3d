@@ -1147,7 +1147,7 @@ subroutine compute_N_rayleigh(alpha, beta, mu, H, nlayer, om, p, ht, Nmat)
      write(*,*) ' Z point is located in the air above the surface rather than in the solid!'
      write(*,*) ' current z :', ht, ' max z allowed : ',  sum(h(1:nlayer-1))
      stop
-  end if
+  endif
   ! figure out the location z with respect to layer stack
   if (ht <= 0) then ! in lower half space
      Gmat = 0.
