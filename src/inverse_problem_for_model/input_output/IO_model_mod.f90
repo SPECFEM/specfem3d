@@ -1016,7 +1016,7 @@ contains
                    !  For now, use Fedorov (1968) approximation
                    kappa  = ((c11 + c22 + c33) + 2._CUSTOM_REAL * (c12 + c13 + c23)) / 9._CUSTOM_REAL
                    mu     =  ( 2._CUSTOM_REAL * (c11 + c22 + c33 - c12 - c23 - c13) &
-                             + 3._CUSTOM_REAL * (c44 + c55 + c66) ) / 30._CUSTOM_REAL
+                             + 6._CUSTOM_REAL * (c44 + c55 + c66) ) / 30._CUSTOM_REAL
 
                    lambda = kappa - (2._CUSTOM_REAL * mu /3._CUSTOM_REAL)
                    vp     = sqrt((lambda + 2._CUSTOM_REAL * mu) / rho)
