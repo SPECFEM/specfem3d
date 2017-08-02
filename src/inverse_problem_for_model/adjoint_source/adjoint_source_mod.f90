@@ -183,7 +183,7 @@ contains
 
     select case (trim(adjustl(acqui_simu(isource)%adjoint_source_type)))
 
-    case ('L2_FWI_TELESEISMIC', 'L2_OIL_INDUSTRY')
+    case ('L2_FWI_TELESEISMIC')
 
        do icomp = 1, NDIM
 
@@ -234,10 +234,31 @@ contains
 
        !!----------------------------------------------------------------------------------------------------
 
-       !case ('L2_OIL_INDUSTRY')
-          !! filter the source wavelet then the synthetics are in the good frequency range
-          !! need just to filter the data trace
+       case ('L2_OIL_INDUSTRY')
+          
+          do icomp = 1, NDIM
 
+             !! filter the data
+             fil_residuals(:)=0._CUSTOM_REAL
+             fl=acqui_simu(isource)%freqcy_to_invert(icomp,1,irec_local)
+             fh=acqui_simu(isource)%freqcy_to_invert(icomp,2,irec_local)
+             raw_residuals(:)= acqui_simu(isource)%data_traces(irec_local,:,icomp)
+             call bwfilt(raw_residuals, fil_residuals, dt_data, nstep_data, irek_filter, norder_filter, fl, fh)
+             
+             !! save filtered data
+             acqui_simu(isource)%synt_traces(icomp, irec_local,:)= fil_residuals(:)
+
+             !! adjoint source 
+             raw_residuals(:)= seismograms_d(icomp,irec_local,:) - fil_residuals(:)
+
+             !! compute cost
+             cost_value=sum(raw_residuals(:)**2) * 0.5 * dt_data
+             cost_function = cost_function + cost_value
+
+             ! store adjoint source
+             acqui_simu(isource)%adjoint_sources(icomp,irec_local,:)=raw_residuals(:)*w_tap(:) 
+
+          end do
 
        case default
 
