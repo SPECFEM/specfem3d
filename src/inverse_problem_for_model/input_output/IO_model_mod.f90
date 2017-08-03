@@ -12,7 +12,7 @@ module IO_model
   use specfem_par, only: CUSTOM_REAL,  NGLLX, NGLLY, NGLLZ, NSPEC_AB,  myrank, mygroup, &
                          rhostore, mustore, kappastore, FOUR_THIRDS, PI
 
-  use specfem_par_elastic, only: rho_vp, rho_vs, ELASTIC_SIMULATION,  NSPEC_ANISO, rho_vs, rho_vs, &
+  use specfem_par_elastic, only: rho_vp, rho_vs, ELASTIC_SIMULATION,  NSPEC_ANISO, &
                                   c11store,c12store,c13store,c14store,c15store,c16store, &
                                   c22store,c23store,c24store,c25store,c26store,c33store, &
                                   c34store,c35store,c36store,c44store,c45store,c46store, &
