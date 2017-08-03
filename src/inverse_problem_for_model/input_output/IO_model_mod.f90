@@ -759,7 +759,7 @@ contains
        open(4444,file=trim(model_file),access='direct',recl=CUSTOM_REAL*nx_fd*ny_fd*nz_fd)
        do i=1,nb_model_to_read
           read(4444,rec=i) model_fd(:,:,:,i)
-       end do
+       enddo
     endif
 
     call bcast_all_singlei(nx_fd)
