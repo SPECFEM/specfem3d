@@ -756,9 +756,10 @@ contains
 
        allocate(model_fd(nx_fd,ny_fd,nz_fd, nb_model_to_read))
 
-       open(4444,file=trim(model_file),access='direct',recl=CUSTOM_REAL*nx_fd*ny_fd*nz_fd*nb_model_to_read)
-       read(4444,rec=1) model_fd
-
+       open(4444,file=trim(model_file),access='direct',recl=CUSTOM_REAL*nx_fd*ny_fd*nz_fd)
+       do i=1,nb_model_to_read
+          read(4444,rec=i) model_fd(:,:,:,i)
+       enddo
     endif
 
     call bcast_all_singlei(nx_fd)
@@ -1016,7 +1017,7 @@ contains
                    !  For now, use Fedorov (1968) approximation
                    kappa  = ((c11 + c22 + c33) + 2._CUSTOM_REAL * (c12 + c13 + c23)) / 9._CUSTOM_REAL
                    mu     =  ( 2._CUSTOM_REAL * (c11 + c22 + c33 - c12 - c23 - c13) &
-                             + 3._CUSTOM_REAL * (c44 + c55 + c66) ) / 30._CUSTOM_REAL
+                             + 6._CUSTOM_REAL * (c44 + c55 + c66) ) / 30._CUSTOM_REAL
 
                    lambda = kappa - (2._CUSTOM_REAL * mu /3._CUSTOM_REAL)
                    vp     = sqrt((lambda + 2._CUSTOM_REAL * mu) / rho)
