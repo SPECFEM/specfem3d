@@ -756,9 +756,10 @@ contains
 
        allocate(model_fd(nx_fd,ny_fd,nz_fd, nb_model_to_read))
 
-       open(4444,file=trim(model_file),access='direct',recl=CUSTOM_REAL*nx_fd*ny_fd*nz_fd*nb_model_to_read)
-       read(4444,rec=1) model_fd
-
+       open(4444,file=trim(model_file),access='direct',recl=CUSTOM_REAL*nx_fd*ny_fd*nz_fd)
+       do i=1,nb_model_to_read
+          read(4444,rec=i) model_fd(:,:,:,i)
+       end do
     endif
 
     call bcast_all_singlei(nx_fd)
