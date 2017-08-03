@@ -760,6 +760,7 @@ contains
        do i=1,nb_model_to_read
           read(4444,rec=i) model_fd(:,:,:,i)
        enddo
+       close(4444)
     endif
 
     call bcast_all_singlei(nx_fd)
