@@ -1025,7 +1025,7 @@ contains
 
                    kappastore(i,j,k,ispec) = kappa
                    mustore(i,j,k,ispec)    = mu
-                   
+
                    !* Store stacey
                    rho_vp(i,j,k,ispec)   = rho * vp
                    rho_vs(i,j,k,ispec)   = rho * vs
