@@ -263,6 +263,8 @@ contains
 
           if (ELASTIC_SIMULATION) then
              call bcast_all_cr_for_database(mustore(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
+             call bcast_all_cr_for_database(rho_vs(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
+             call bcast_all_cr_for_database(rho_vp(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
           endif
 
        endif
