@@ -549,8 +549,8 @@ contains
 
     !*** x2 - x1
     x2x1 = 1./(valx(kx+1) - valx(kx))
-    y2y1 = 1./(valy(ky+1) - valy(kx))
-    z2z1 = 1./(valz(kz+1) - valz(kx))
+    y2y1 = 1./(valy(ky+1) - valy(ky))
+    z2z1 = 1./(valz(kz+1) - valz(kz))
 
     !*** Factors
     facx1y1z1 = xix2*yiy2*ziz2 * x1x2*y1y2*z1z2 * valin(kx,ky,kz)
