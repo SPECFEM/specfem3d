@@ -256,10 +256,8 @@ contains
        !! bcast to others groups
        if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
 
-          if (ACOUSTIC_SIMULATION) then
-             call bcast_all_cr_for_database(kappastore(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
-             call bcast_all_cr_for_database(rhostore(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
-          endif
+          call bcast_all_cr_for_database(kappastore(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
+          call bcast_all_cr_for_database(rhostore(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
 
           if (ELASTIC_SIMULATION) then
              call bcast_all_cr_for_database(mustore(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
