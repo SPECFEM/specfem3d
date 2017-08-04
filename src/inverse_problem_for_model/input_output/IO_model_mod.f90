@@ -971,7 +971,7 @@ contains
                    !             are computed only once per gll)
                    do ipar=1,22
 
-                      call trilin_interp(xstore(iglob), xstore(iglob), xstore(iglob), &
+                      call trilin_interp(xstore(iglob), ystore(iglob), zstore(iglob), &
                                                xcrd_fd,       ycrd_fd,       zcrd_fd, &
                                                  nx_fd,         ny_fd,         nz_fd, &
                                                  model_fd(:,:,:,ipar),           val)
@@ -1022,6 +1022,9 @@ contains
                    lambda = kappa - (2._CUSTOM_REAL * mu /3._CUSTOM_REAL)
                    vp     = sqrt((lambda + 2._CUSTOM_REAL * mu) / rho)
                    vs     = sqrt(mu / rho)
+
+                   kappastore(i,j,k,ispec) = kappa
+                   mustore(i,j,k,ispec)    = mu
 
                    !* Store stacey
                    rho_vp(i,j,k,ispec)   = rho * vp
