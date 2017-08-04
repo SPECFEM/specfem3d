@@ -716,7 +716,7 @@ contains
 
     use specfem_par, only: myrank, xstore, ystore, zstore, rhostore, ibool, &
          NGLLX, NGLLY, NGLLZ, NSPEC_AB, FOUR_THIRDS, MAX_STRING_LEN
-    use specfem_par_elastic, only: rho_vp, rho_vs
+    !use specfem_par_elastic, only: rho_vp, rho_vs  here i commented because they are already called in head of module
     use interpolation_mod, only: trilin_interp
 
     implicit none
@@ -1043,6 +1043,10 @@ contains
        stop
 
     end select
+
+    !! free memory
+    if (allocated(fd_model)) deallocate(fd_model)
+    
   end subroutine import_FD_model_ANISO
 
 !#################################################################################################################################
