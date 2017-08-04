@@ -12,7 +12,7 @@ module IO_model
   use specfem_par, only: CUSTOM_REAL,  NGLLX, NGLLY, NGLLZ, NSPEC_AB,  myrank, mygroup, &
                          rhostore, mustore, kappastore, FOUR_THIRDS, PI
 
-  use specfem_par_elastic, only: rho_vp, rho_vs, ELASTIC_SIMULATION,  NSPEC_ANISO, rho_vs, rho_vs, &
+  use specfem_par_elastic, only: rho_vp, rho_vs, ELASTIC_SIMULATION,  NSPEC_ANISO, &
                                   c11store,c12store,c13store,c14store,c15store,c16store, &
                                   c22store,c23store,c24store,c25store,c26store,c33store, &
                                   c34store,c35store,c36store,c44store,c45store,c46store, &
@@ -716,7 +716,7 @@ contains
 
     use specfem_par, only: myrank, xstore, ystore, zstore, rhostore, ibool, &
          NGLLX, NGLLY, NGLLZ, NSPEC_AB, FOUR_THIRDS, MAX_STRING_LEN
-    use specfem_par_elastic, only: rho_vp, rho_vs
+    !use specfem_par_elastic, only: rho_vp, rho_vs  here i commented because they are already called in head of module
     use interpolation_mod, only: trilin_interp
 
     implicit none
@@ -760,6 +760,7 @@ contains
        do i=1,nb_model_to_read
           read(4444,rec=i) model_fd(:,:,:,i)
        enddo
+       close(4444)
     endif
 
     call bcast_all_singlei(nx_fd)
@@ -1042,6 +1043,10 @@ contains
        stop
 
     end select
+
+    !! free memory
+    if (allocated(model_fd)) deallocate(model_fd)
+
   end subroutine import_FD_model_ANISO
 
 !#################################################################################################################################
