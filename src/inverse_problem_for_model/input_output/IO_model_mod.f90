@@ -1045,7 +1045,7 @@ contains
     end select
 
     !! free memory
-    if (allocated(fd_model)) deallocate(fd_model)
+    if (allocated(model_fd)) deallocate(model_fd)
     
   end subroutine import_FD_model_ANISO
 
