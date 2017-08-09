@@ -1141,8 +1141,8 @@ contains
           mu_kl(:,:,:,:)=mu_kl_GPU(:,:,:,:)
           if (APPROXIMATE_HESS_KL) then
              hess_rho_kl(:,:,:,:)=hess_rho_kl_GPU(:,:,:,:)
-             hess_kappa_kl(:,:,:,:)=kappa_kl_GPU(:,:,:,:)
-             hess_mu_kl(:,:,:,:)=mu_kl_GPU(:,:,:,:)
+             hess_kappa_kl(:,:,:,:)=hess_kappa_kl_GPU(:,:,:,:)
+             hess_mu_kl(:,:,:,:)=hess_mu_kl_GPU(:,:,:,:)
           end if
        endif
 

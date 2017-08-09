@@ -506,8 +506,9 @@ void FC_FUNC_(transfer_kernels_hess_el_tohost,
 				      cudaMemcpyDeviceToHost),70203);
 
   print_CUDA_error_if_any(cudaMemcpy(h_hess_mu_kl,mp->d_hess_mu_el_kl,NGLL3*(*NSPEC_AB)*sizeof(realw),
-				      cudaMemcpyDeviceToHost),70204);
+				     cudaMemcpyDeviceToHost),70204);
 
+  //printf("%e %e \n",h_hess_kappa_kl[125], h_hess_mu_kl[125]);
 }
 
 /* ----------------------------------------------------------------------------------------------- */

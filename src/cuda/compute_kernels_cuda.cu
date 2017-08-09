@@ -186,7 +186,9 @@ __global__ void compute_kernels_cudakernel(int* ispec_is_elastic,
       // bulk modulus kernel
       kappa_kl[ijk_ispec] += deltat*(9*epsilon_trace_over_3[ijk_ispec]*
                                      b_epsilon_trace_over_3[ijk_ispec]);
-
+      /*if (ijk_ispec==100){
+	printf(" Kernel, %e  %e \n",b_epsilondev_xx[ijk_ispec], b_epsilondev_yy[ijk_ispec]);
+	}*/
     }
   }
 }
@@ -589,21 +591,25 @@ __global__ void compute_kernels_hess_el_cudakernel(int* ispec_is_elastic,
                                               accel[3*iglob+2]*b_accel[3*iglob+2]);
 
       //
-	hess_rho_kl[ijk_ispec] += deltat * (b_veloc[3*iglob]  *b_veloc[3*iglob]+
-                                            b_veloc[3*iglob+1]*b_veloc[3*iglob+1]+
-                                            b_veloc[3*iglob+2]*b_veloc[3*iglob+2]);
+      hess_rho_kl[ijk_ispec] += deltat * (b_veloc[3*iglob]  *b_veloc[3*iglob]+
+					  b_veloc[3*iglob+1]*b_veloc[3*iglob+1]+
+					  b_veloc[3*iglob+2]*b_veloc[3*iglob+2]);
 
-        hess_mu_kl[ijk_ispec] += deltat * (b_epsilondev_xx[ijk_ispec]*b_epsilondev_xx[ijk_ispec]+
-                                           b_epsilondev_yy[ijk_ispec]*b_epsilondev_yy[ijk_ispec]+
-                                          (b_epsilondev_xx[ijk_ispec]+b_epsilondev_yy[ijk_ispec])*
-                                          (b_epsilondev_xx[ijk_ispec]+b_epsilondev_yy[ijk_ispec])+
-                                       2*(b_epsilondev_xy[ijk_ispec]*b_epsilondev_xy[ijk_ispec]+
-                                          b_epsilondev_xz[ijk_ispec]*b_epsilondev_xz[ijk_ispec]+
-                                          b_epsilondev_yz[ijk_ispec]*b_epsilondev_yz[ijk_ispec]));
+      hess_mu_kl[ijk_ispec] += deltat * (b_epsilondev_xx[ijk_ispec]*b_epsilondev_xx[ijk_ispec]+
+					 b_epsilondev_yy[ijk_ispec]*b_epsilondev_yy[ijk_ispec]+
+					(b_epsilondev_xx[ijk_ispec]+b_epsilondev_yy[ijk_ispec])*
+					(b_epsilondev_xx[ijk_ispec]+b_epsilondev_yy[ijk_ispec])+
+				      2*(b_epsilondev_xy[ijk_ispec]*b_epsilondev_xy[ijk_ispec]+
+                                         b_epsilondev_xz[ijk_ispec]*b_epsilondev_xz[ijk_ispec]+
+                                         b_epsilondev_yz[ijk_ispec]*b_epsilondev_yz[ijk_ispec]));
 	
-        hess_kappa_kl[ijk_ispec] += deltat*(9*b_epsilon_trace_over_3[ijk_ispec]*
-                                              b_epsilon_trace_over_3[ijk_ispec]);		     
-       //
+      hess_kappa_kl[ijk_ispec] += deltat*(9*b_epsilon_trace_over_3[ijk_ispec]*
+                                            b_epsilon_trace_over_3[ijk_ispec]);		     
+	
+      /*if (ijk_ispec==100){
+	  printf(" Hessian %e  %e \n",b_epsilondev_xx[ijk_ispec], b_epsilondev_yy[ijk_ispec]);
+	  }*/
+	
     }
   }
 }
