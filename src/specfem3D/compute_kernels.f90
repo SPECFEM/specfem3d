@@ -372,9 +372,11 @@
 
   implicit none
   ! local parameters
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: b_accel_elm,accel_elm
+  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: b_accel_elm,accel_elm,b_veloc_elm
+  real(kind=CUSTOM_REAL), dimension(5) :: b_epsilondev_loc
   integer :: i,j,k,ispec,iglob
-
+  real(kind=CUSTOM_REAL) :: kappal,rhol
+  
   ! updates kernels on GPU
   if (GPU_MODE) then
 
@@ -406,6 +408,13 @@
                       xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                       ibool,rhostore,GRAVITY)
 
+      ! backward fields: displacement vector
+      call compute_gradient_in_acoustic(ispec,NSPEC_ADJOINT,NGLOB_ADJOINT, &
+                      b_potential_dot_acoustic, b_veloc_elm, &
+                      hprime_xx,hprime_yy,hprime_zz, &
+                      xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                      ibool,rhostore,GRAVITY)
+
       do k = 1, NGLLZ
         do j = 1, NGLLY
           do i = 1, NGLLX
@@ -415,6 +424,18 @@
             ! term with adjoint acceleration and backward/reconstructed acceleration
             hess_ac_kl(i,j,k,ispec) =  hess_ac_kl(i,j,k,ispec) &
                + deltat * dot_product(accel_elm(:,i,j,k), b_accel_elm(:,i,j,k))
+
+            rhol = rhostore(i,j,k,ispec)
+            hess_rho_ac_kl(i,j,k,ispec) =  hess_rho_ac_kl(i,j,k,ispec) &
+                      + deltat * rhol * (b_veloc_elm(1,i,j,k) * b_veloc_elm(1,i,j,k) &
+                                       + b_veloc_elm(2,i,j,k) * b_veloc_elm(2,i,j,k) &
+                                       + b_veloc_elm(3,i,j,k) * b_veloc_elm(3,i,j,k))
+
+            kappal = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
+            hess_kappa_ac_kl(i,j,k,ispec) = hess_kappa_ac_kl(i,j,k,ispec) &
+                                  + deltat * kappal  &
+                                  * b_potential_dot_acoustic(iglob) &
+                                  * b_potential_dot_acoustic(iglob)
 
           enddo
         enddo
@@ -427,11 +448,31 @@
         do j = 1, NGLLY
           do i = 1, NGLLX
             iglob = ibool(i,j,k,ispec)
+            
+            b_epsilondev_loc(1) = b_epsilondev_xx(i,j,k,ispec)
+            b_epsilondev_loc(2) = b_epsilondev_yy(i,j,k,ispec)
+            b_epsilondev_loc(3) = b_epsilondev_xy(i,j,k,ispec)
+            b_epsilondev_loc(4) = b_epsilondev_xz(i,j,k,ispec)
+            b_epsilondev_loc(5) = b_epsilondev_yz(i,j,k,ispec)
 
             ! approximates Hessian
             ! term with adjoint acceleration and backward/reconstructed acceleration
             hess_kl(i,j,k,ispec) =  hess_kl(i,j,k,ispec) &
                + deltat * dot_product(accel(:,iglob), b_accel(:,iglob))
+
+            !! preconditionning kernels (Shin et al 2001)
+            hess_rho_kl(i,j,k,ispec) =  hess_rho_kl(i,j,k,ispec) &
+                + deltat * dot_product(b_veloc(:,iglob), b_veloc(:,iglob))
+
+            hess_mu_kl(i,j,k,ispec) = hess_mu_kl(i,j,k,ispec) &
+                 + deltat * (b_epsilondev_loc(1)*b_epsilondev_loc(1) + b_epsilondev_loc(2)*b_epsilondev_loc(2) &
+                 + (b_epsilondev_loc(1)+b_epsilondev_loc(2)) * (b_epsilondev_loc(1)+b_epsilondev_loc(2)) &
+                 + 2 * (b_epsilondev_loc(3)*b_epsilondev_loc(3) + b_epsilondev_loc(4)*b_epsilondev_loc(4) + &
+                 b_epsilondev_loc(5)*b_epsilondev_loc(5)) )
+
+            hess_kappa_kl(i,j,k,ispec) = hess_kappa_kl(i,j,k,ispec) &
+                     + deltat * (9 * b_epsilon_trace_over_3(i,j,k,ispec) &
+                     * b_epsilon_trace_over_3(i,j,k,ispec))
 
           enddo
         enddo

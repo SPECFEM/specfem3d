@@ -955,7 +955,7 @@ contains
 
        case('shin_precond')
           read(line(ipos0:ipos1),*) inversion_param%shin_precond
-
+         
        case('z2_precond')
           read(line(ipos0:ipos1),*) inversion_param%z2_precond
 

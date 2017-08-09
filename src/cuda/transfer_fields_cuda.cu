@@ -484,7 +484,12 @@ void FC_FUNC_(transfer_kernels_ac_to_host,
 
 extern "C"
 void FC_FUNC_(transfer_kernels_hess_el_tohost,
-              TRANSFER_KERNELS_HESS_EL_TOHOST)(long* Mesh_pointer,realw* h_hess_kl,int* NSPEC_AB) {
+              TRANSFER_KERNELS_HESS_EL_TOHOST)(long* Mesh_pointer,
+					       realw* h_hess_kl,
+					       realw* h_hess_rho_kl, 
+					       realw* h_hess_kappa_kl,
+					       realw* h_hess_mu_kl,
+					       int* NSPEC_AB) {
 
   TRACE("transfer_kernels_hess_el_tohost");
 
@@ -493,13 +498,27 @@ void FC_FUNC_(transfer_kernels_hess_el_tohost,
 
   print_CUDA_error_if_any(cudaMemcpy(h_hess_kl,mp->d_hess_el_kl,NGLL3*(*NSPEC_AB)*sizeof(realw),
                                      cudaMemcpyDeviceToHost),70201);
+  
+  print_CUDA_error_if_any(cudaMemcpy(h_hess_rho_kl,mp->d_hess_rho_el_kl,NGLL3*(*NSPEC_AB)*sizeof(realw),
+                                     cudaMemcpyDeviceToHost),70202);
+  
+  print_CUDA_error_if_any(cudaMemcpy(h_hess_kappa_kl,mp->d_hess_kappa_el_kl,NGLL3*(*NSPEC_AB)*sizeof(realw),
+				      cudaMemcpyDeviceToHost),70203);
+
+  print_CUDA_error_if_any(cudaMemcpy(h_hess_mu_kl,mp->d_hess_mu_el_kl,NGLL3*(*NSPEC_AB)*sizeof(realw),
+				      cudaMemcpyDeviceToHost),70204);
+
 }
 
 /* ----------------------------------------------------------------------------------------------- */
 
 extern "C"
 void FC_FUNC_(transfer_kernels_hess_ac_tohost,
-              TRANSFER_KERNELS_HESS_AC_TOHOST)(long* Mesh_pointer,realw* h_hess_ac_kl,int* NSPEC_AB) {
+              TRANSFER_KERNELS_HESS_AC_TOHOST)(long* Mesh_pointer,
+					       realw* h_hess_ac_kl,
+					       realw* h_hess_rho_ac_kl,
+					       realw* h_hess_kappa_ac_kl,
+					       int* NSPEC_AB) {
 
   TRACE("transfer_kernels_hess_ac_tohost");
 
@@ -507,7 +526,14 @@ void FC_FUNC_(transfer_kernels_hess_ac_tohost,
   Mesh* mp = (Mesh*)(*Mesh_pointer);
 
   print_CUDA_error_if_any(cudaMemcpy(h_hess_ac_kl,mp->d_hess_ac_kl,NGLL3*(*NSPEC_AB)*sizeof(realw),
-                                     cudaMemcpyDeviceToHost),70202);
+                                     cudaMemcpyDeviceToHost),70212);
+
+  print_CUDA_error_if_any(cudaMemcpy(h_hess_rho_ac_kl,mp->d_hess_rho_ac_kl,NGLL3*(*NSPEC_AB)*sizeof(realw),
+                                     cudaMemcpyDeviceToHost),70213);
+
+  print_CUDA_error_if_any(cudaMemcpy(h_hess_kappa_ac_kl,mp->d_hess_kappa_ac_kl,NGLL3*(*NSPEC_AB)*sizeof(realw),
+                                     cudaMemcpyDeviceToHost),70214);
+
 }
 
 // unused...

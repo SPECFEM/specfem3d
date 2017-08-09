@@ -13,11 +13,11 @@ module precond_mod
 
 contains
 
-  subroutine SetPrecond(iter_inverse, inversion_param, current_gradient, fwi_precond)
+  subroutine SetPrecond(iter_inverse, inversion_param, current_gradient, hess_approxim, fwi_precond)
 
     type(inver),                                               intent(in)    :: inversion_param
     integer,                                                   intent(in)    :: iter_inverse
-    real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable, intent(inout) :: current_gradient, fwi_precond
+    real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable, intent(inout) :: current_gradient, fwi_precond, hess_approxim
     real(kind=CUSTOM_REAL)                                                   :: taper, x,y,z
     integer                                                                  :: i,j,k,ispec, iglob
 
@@ -101,6 +101,22 @@ contains
 
 
     endif
+
+    if (inversion_param%shin_precond .and. iter_inverse == 0) then
+ 
+       if (DEBUG_MODE) then
+          write(IIDD,*)
+          write(IIDD,*) '       iteration FWI : ', iter_inverse
+          write(IIDD,*)
+          write(IIDD,*) '             define Shin Precond :'
+          write(IIDD,*)
+          write(IIDD,*)
+       endif
+       
+       fwi_precond(:,:,:,:,:) = 1._CUSTOM_REAL / abs(hess_approxim(:,:,:,:,:))
+       
+
+    end if
 
 
   end subroutine SetPrecond

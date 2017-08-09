@@ -16,7 +16,7 @@ module fwi_iteration
   real(kind=CUSTOM_REAL), private, dimension(:,:,:,:,:), allocatable :: initial_model, current_model, prior_model
   real(kind=CUSTOM_REAL), private, dimension(:,:,:,:,:), allocatable :: initial_gradient, current_gradient
   real(kind=CUSTOM_REAL), private, dimension(:,:,:,:,:), allocatable :: descent_direction
-  real(kind=CUSTOM_REAL), private,  dimension(:,:,:,:,:),allocatable :: fwi_precond
+  real(kind=CUSTOM_REAL), private,  dimension(:,:,:,:,:),allocatable :: fwi_precond, hess_approxim
 
   !! for line search
   real(kind=CUSTOM_REAL), private                                    :: Q0, Qt, Qp0, Qpt
@@ -133,7 +133,7 @@ contains
        inversion_param%total_current_cost=Qt
 
        ! store current gradient in choosen family parameter
-       call StoreGradientInfamilyParam(inversion_param, current_gradient)
+       call StoreGradientInfamilyParam(inversion_param, current_gradient, hess_approxim)
 
        ! compute regularization term and gradient for choosen family !! VM VM TODO
        ! call AddRegularization(inversion_param, regularization_fd, current_model, current_gradient)
@@ -156,7 +156,7 @@ contains
        if (flag_wolfe) then
 
           ! define preconditionnner or taper on gradients
-          call SetPrecond(iter_inverse, inversion_param, current_gradient, fwi_precond)
+          call SetPrecond(iter_inverse, inversion_param, current_gradient, hess_approxim, fwi_precond)
 
           ! store new model and gradient in l-bfgs history for the choosen family parameter
           call StoreModelAndGradientForLBFGS(current_model, current_gradient, iter_inverse+1)
@@ -238,6 +238,7 @@ contains
     type(acqui),  dimension(:), allocatable,        intent(inout) :: acqui_simu
     type(inver),                                    intent(inout) :: inversion_param
     integer                                                       :: isource,  iter_inverse
+    character(len=MAX_LEN_STRING)                                             :: prefix_name
 
     iter_inverse=0
 
@@ -270,7 +271,7 @@ contains
     ! store initial model in choosen family parameter
     call  SpecfemParam2Invert(inversion_param, initial_model)
     ! store initial gradient in choosen family parameter
-    call StoreGradientInFamilyParam(inversion_param, initial_gradient)
+    call StoreGradientInFamilyParam(inversion_param, initial_gradient, hess_approxim)
 
     ! store intial values of cost function
     inversion_param%Cost_init=inversion_param%total_current_cost
@@ -285,7 +286,14 @@ contains
     ! Q0 = Q0 + Penalty
 
     ! define preconditionnner or taper on gradients
-    call SetPrecond(0, inversion_param, initial_gradient, fwi_precond)
+    call SetPrecond(iter_inverse, inversion_param, initial_gradient, hess_approxim, fwi_precond)
+    ! write precond on disk 
+    if (mygroup <= 0 .and. VERBOSE_MODE) then
+       prefix_name='precond'
+       call DumpArray(fwi_precond, inversion_param, iter_inverse, prefix_name)
+       prefix_name='Hess_app'
+       call DumpArray(hess_approxim, inversion_param, iter_inverse, prefix_name)
+    end if
 
     ! store new model and gradient in l-bfgs history for the choosen family parameter
     call StoreModelAndGradientForLBFGS(initial_model, initial_gradient, 0)
@@ -414,6 +422,10 @@ contains
     allocate(fwi_precond(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ierror)
     if (ierror /= 0) call exit_MPI(myrank,"error allocation fwi_precond in AllocatememoryForFWI subroutine")
     fwi_precond(:,:,:,:,:) = 1._CUSTOM_REAL
+
+    allocate(hess_approxim(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ierror)
+    if (ierror /= 0) call exit_MPI(myrank,"error allocation hess_approxim in AllocatememoryForFWI subroutine")
+    hess_approxim(:,:,:,:,:) = 1._CUSTOM_REAL
 
     allocate(inversion_param%current_cost_prime(NSRC),  inversion_param%previous_cost_prime(NSRC))
     allocate(inversion_param%current_cost(NSRC),  inversion_param%previous_cost(NSRC))

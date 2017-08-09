@@ -593,8 +593,14 @@ void FC_FUNC_(prepare_fields_acoustic_adj_dev,
   // preconditioner
   if (*APPROXIMATE_HESS_KL ){
     print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_hess_ac_kl),size*sizeof(realw)),3030);
+    print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_hess_rho_ac_kl),size*sizeof(realw)),3032);
+    print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_hess_kappa_ac_kl),size*sizeof(realw)),3033);
+    
     // initializes with zeros
     print_CUDA_error_if_any(cudaMemset(mp->d_hess_ac_kl,0,size*sizeof(realw)),3031);
+    print_CUDA_error_if_any(cudaMemset(mp->d_hess_rho_ac_kl,0,size*sizeof(realw)),3034);
+    print_CUDA_error_if_any(cudaMemset(mp->d_hess_kappa_ac_kl,0,size*sizeof(realw)),3035);
+	
   }
 
   // mpi buffer
@@ -1160,6 +1166,15 @@ void FC_FUNC_(prepare_fields_elastic_adj_dev,
     size = NGLL3 * mp->NSPEC_AB; // note: non-aligned; if align, check memcpy below and indexing
     print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_hess_el_kl),size*sizeof(realw)),5450);
     print_CUDA_error_if_any(cudaMemset(mp->d_hess_el_kl,0,size*sizeof(realw)),5451);
+
+    print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_hess_rho_el_kl),size*sizeof(realw)),5452);
+    print_CUDA_error_if_any(cudaMemset(mp->d_hess_rho_el_kl,0,size*sizeof(realw)),5453);
+
+    print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_hess_kappa_el_kl),size*sizeof(realw)),5454);
+    print_CUDA_error_if_any(cudaMemset(mp->d_hess_kappa_el_kl,0,size*sizeof(realw)),5455);
+
+    print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_hess_mu_el_kl),size*sizeof(realw)),5456);
+    print_CUDA_error_if_any(cudaMemset(mp->d_hess_mu_el_kl,0,size*sizeof(realw)),5457);
   }
 
   // debug
@@ -1485,7 +1500,11 @@ TRACE("prepare_cleanup_device");
       cudaFree(mp->d_b_potential_dot_dot_acoustic);
       cudaFree(mp->d_rho_ac_kl);
       cudaFree(mp->d_kappa_ac_kl);
-      if (*APPROXIMATE_HESS_KL) cudaFree(mp->d_hess_ac_kl);
+      if (*APPROXIMATE_HESS_KL) {
+	cudaFree(mp->d_hess_ac_kl);
+	cudaFree(mp->d_hess_rho_ac_kl);
+	cudaFree(mp->d_hess_kappa_ac_kl);
+      }
     }
 
 
@@ -1536,7 +1555,12 @@ TRACE("prepare_cleanup_device");
         cudaFree(mp->d_mu_kl);
         cudaFree(mp->d_kappa_kl);
       }
-      if (*APPROXIMATE_HESS_KL) cudaFree(mp->d_hess_el_kl);
+      if (*APPROXIMATE_HESS_KL) {
+	cudaFree(mp->d_hess_el_kl);
+	cudaFree(mp->d_hess_rho_el_kl);
+	cudaFree(mp->d_hess_kappa_el_kl);
+	cudaFree(mp->d_hess_mu_el_kl);
+      }
     }
 
     if (*COMPUTE_AND_STORE_STRAIN ){
