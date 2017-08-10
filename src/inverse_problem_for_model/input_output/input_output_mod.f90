@@ -955,6 +955,9 @@ contains
 
        case('shin_precond')
           read(line(ipos0:ipos1),*) inversion_param%shin_precond
+
+       case('energy_precond')
+          read(line(ipos0:ipos1),*) inversion_param%energy_precond
          
        case('z2_precond')
           read(line(ipos0:ipos1),*) inversion_param%z2_precond
@@ -1376,6 +1379,7 @@ contains
        call MPI_BCAST(inversion_param%input_sem_model,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(inversion_param%use_taper, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(inversion_param%shin_precond, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+       call MPI_BCAST(inversion_param%energy_precond, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(inversion_param%z2_precond, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(inversion_param%dump_model_at_each_iteration, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(inversion_param%dump_gradient_at_each_iteration, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
