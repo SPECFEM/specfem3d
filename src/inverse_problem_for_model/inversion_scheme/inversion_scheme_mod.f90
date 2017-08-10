@@ -139,6 +139,10 @@ contains
 
        wks_1(:,:,:,:,:) = bfgs_stored_gradient(:,:,:,:,:,k+1) -  bfgs_stored_gradient(:,:,:,:,:,k)
        wks_2(:,:,:,:,:) = bfgs_stored_model(:,:,:,:,:,k+1)    -  bfgs_stored_model(:,:,:,:,:,k)
+       
+       ! Liu and Nocedal 1989 (Mathematical programming)
+       ! Diagonal_prec(:,:,:,:,:) =  Diagonal_prec(:,:,:,:,:) +  (wks_1(:,:,:,:,:)*wks_2(:,:,:,:,:)) /(wks_1(:,:,:,:,:)**2)
+       ! 
 
        call Parallel_ComputeInnerProduct(wks_2, wks_1, Ninvpar, pk)
        pk_store(k) = 1._CUSTOM_REAL / pk
@@ -157,6 +161,9 @@ contains
 
     !! customer preconditionning
     descent_direction(:,:,:,:,:) =  fwi_precond(:,:,:,:,:) * descent_direction(:,:,:,:,:)
+    
+    !! diagonal precoditionner 
+    !!descent_direction(:,:,:,:,:) =  Diagonal_prec(:,:,:,:,:) *  descent_direction(:,:,:,:,:)
 
     do k = imin, imax
 

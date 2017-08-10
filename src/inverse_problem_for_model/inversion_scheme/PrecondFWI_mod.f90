@@ -118,6 +118,24 @@ contains
 
     end if
 
+    
+    if (inversion_param%energy_precond .and. iter_inverse == 0) then
+ 
+       if (DEBUG_MODE) then
+          write(IIDD,*)
+          write(IIDD,*) '       iteration FWI : ', iter_inverse
+          write(IIDD,*)
+          write(IIDD,*) '             define energy Precond :'
+          write(IIDD,*)
+          write(IIDD,*)
+       endif
+       
+       do i=1,inversion_param%NinvPar
+          fwi_precond(:,:,:,:,i) = 1._CUSTOM_REAL / abs(hess_approxim(:,:,:,:,1))
+       end do
+
+    end if
+
 
   end subroutine SetPrecond
 

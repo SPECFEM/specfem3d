@@ -45,7 +45,7 @@ module inverse_problem_par
   !! useful files id
   integer,                       public, parameter  :: IINN=667, IIDD=668
   !!! verbose debug mode
-  logical,                       public, parameter  :: DEBUG_MODE=.false.
+  logical,                       public, parameter  :: DEBUG_MODE=.true.
   !!! verbose mode for with outputs for checking the FWI
   logical,                       public, parameter  :: VERBOSE_MODE=.true.
   !!! write kernels on disk
@@ -110,6 +110,7 @@ module inverse_problem_par
      logical                                                                  :: use_taper=.false.
      logical                                                                  :: shin_precond=.false.
      logical                                                                  :: z2_precond=.false.
+     logical                                                                  :: energy_precond=.false.
 
      !! flags to choose if the user wants to dump some wave fields
      logical                                                                  :: dump_model_at_each_iteration=.true.
