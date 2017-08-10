@@ -37,7 +37,8 @@
 
   use create_regions_mesh_ext_par
 
-  use shared_parameters, only: COUPLE_WITH_EXTERNAL_CODE,MESH_A_CHUNK_OF_THE_EARTH,EXTERNAL_CODE_TYPE,EXTERNAL_CODE_IS_FK
+  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH, &
+                                      INJECTION_TECHNIQUE_TYPE,INJECTION_TECHNIQUE_IS_FK
 
   implicit none
 
@@ -85,24 +86,26 @@
     call model_salton_trough_broadcast(myrank)
   end select
 
-  if (COUPLE_WITH_EXTERNAL_CODE) then
+  if (COUPLE_WITH_INJECTION_TECHNIQUE) then
 
-  if (COUPLE_WITH_EXTERNAL_CODE .and. EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_FK .and. MESH_A_CHUNK_OF_THE_EARTH) &
-    stop 'coupling with EXTERNAL_CODE_IS_FK is incompatible with MESH_A_CHUNK_OF_THE_EARTH because of Earth curvature not honored'
+  if (COUPLE_WITH_INJECTION_TECHNIQUE .and. INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_FK .and. &
+         MESH_A_CHUNK_OF_THE_EARTH) &
+    stop 'coupling with INJECTION_TECHNIQUE_IS_FK is incompatible with MESH_A_CHUNK_OF_THE_EARTH &
+                      &because of Earth curvature not honored'
 
 !! VM VM for coupling with DSM
 !! find the layer in which the middle of the element is located
   if (myrank == 0) then
      write(IMAIN,*)
      write(IMAIN,*)
-     write(IMAIN,*) '         USING A HYBRID METHOD (CODE COUPLED WITH AN EXTERNAL CODE)'
+     write(IMAIN,*) '         USING A HYBRID METHOD (THE CODE IS COUPLED WITH AN INJECTION TECHNIQUE)'
      write(IMAIN,*)
-     write(IMAIN,*) '         EXTERNAL CODE ', EXTERNAL_CODE_TYPE
+     write(IMAIN,*) '         INJECTION TECHNIQUE TYPE = ', INJECTION_TECHNIQUE_TYPE
      write(IMAIN,*)
      write(IMAIN,*)
   endif
-  if (EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_FK) then
-     if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH  ) then
+  if (INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_FK) then
+     if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
 
         if ((NGLLX == 5) .and. (NGLLY == 5) .and. (NGLLZ == 5)) then
            ! gets xyz coordinates of GLL point
@@ -126,8 +129,8 @@
   ! each spectral element in input mesh
   do ispec = 1, nspec
 
-  if (EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_FK) then
-     if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) then
+  if (INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_FK) then
+     if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
         iglob = ibool(3,3,3,ispec)
         xmesh = xstore_dummy(iglob)
         ymesh = ystore_dummy(iglob)
@@ -195,8 +198,8 @@
 
           !! VM VM for coupling with DSM
           !! find the layer in which the middle of the element is located
-          if (EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_FK) then
-            if ((COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) .and. &
+          if (INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_FK) then
+            if ((COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) .and. &
               (i == 3 .and. j == 3 .and. k == 3)) call FindLayer(xmesh,ymesh,zmesh)
           endif
 
@@ -415,7 +418,7 @@
 
   use create_regions_mesh_ext_par
 
-  use shared_parameters, only: COUPLE_WITH_EXTERNAL_CODE,EXTERNAL_CODE_TYPE,EXTERNAL_CODE_IS_FK
+  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,INJECTION_TECHNIQUE_TYPE,INJECTION_TECHNIQUE_IS_FK
 
   implicit none
 
@@ -490,7 +493,8 @@
 ! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
 ! for smoothing the boundary portions of the model
 
-  if (COUPLE_WITH_EXTERNAL_CODE .and. EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_FK .and. SMOOTH_THE_MODEL_EDGES_FOR_FK) then
+  if (COUPLE_WITH_INJECTION_TECHNIQUE .and. INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_FK .and. &
+               SMOOTH_THE_MODEL_EDGES_FOR_FK) then
 
     if (.not. SMOOTH_THE_MOHO_ONLY_FOR_FK) then
 

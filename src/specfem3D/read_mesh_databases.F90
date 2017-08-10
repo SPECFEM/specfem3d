@@ -483,9 +483,9 @@
   if (ier /= 0) stop 'Error allocating array abs_boundary_ispec etc.'
 
   !!!! VM VM & CD CD !! For coupling with external codes
-  if (COUPLE_WITH_EXTERNAL_CODE) then
+  if (COUPLE_WITH_INJECTION_TECHNIQUE) then
 
-    if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then
+    if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM) then
 
       allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)) !! CD CD : cf for deallocate
       allocate(Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
@@ -498,7 +498,7 @@
         !! To verify for NOBU version (normally, remains empty)
       endif
 
-    else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
+    else if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_AXISEM) then
 
       allocate(Veloc_axisem(3,NGLLSQUARE*num_abs_boundary_faces))
       allocate(Tract_axisem(3,NGLLSQUARE*num_abs_boundary_faces))

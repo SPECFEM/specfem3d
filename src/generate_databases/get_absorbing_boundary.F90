@@ -41,7 +41,8 @@
 
   use create_regions_mesh_ext_par
 
-  use shared_parameters, only: COUPLE_WITH_EXTERNAL_CODE,MESH_A_CHUNK_OF_THE_EARTH,EXTERNAL_CODE_TYPE,EXTERNAL_CODE_IS_DSM
+  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH, &
+                                  INJECTION_TECHNIQUE_TYPE,INJECTION_TECHNIQUE_IS_DSM
 
   implicit none
 
@@ -96,7 +97,7 @@
   character(len=27) namefile
 
   ! sets flag in array iboun for elements with an absorbing boundary faces
-  if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) then
+  if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
 
     ! allocate temporary flag array
     allocate(iboun(6,nspec), &
@@ -107,7 +108,7 @@
 
     iboun(:,:) = .false.
 
-    if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then
+    if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM) then
        write(namefile,'(a17,i6.6,a4)') 'xmin_gll_for_dsm_',myrank,'.txt'
        open(123,file=namefile)
        write(123,*) nspec2D_xmin
@@ -142,7 +143,7 @@
                             ibool,nspec,nglob_dummy, &
                             xstore_dummy,ystore_dummy,zstore_dummy,iface)
 
-    if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
+    if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
 
     ! ijk indices of GLL points for face id
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLZ)
@@ -165,8 +166,9 @@
                                       lnormal )
         normal_face(:,i,j) = lnormal(:)
 
-        if ( COUPLE_WITH_EXTERNAL_CODE .and. (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) ) write(123,'(i10,3f20.10)') &
-             ispec, xstore_dummy(ibool(i,j,1,ispec)), ystore_dummy(ibool(i,j,1,ispec)), zstore_dummy(ibool(i,j,1,ispec))
+        if ( COUPLE_WITH_INJECTION_TECHNIQUE .and. INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM ) &
+              write(123,'(i10,3f20.10)') ispec, xstore_dummy(ibool(i,j,1,ispec)), ystore_dummy(ibool(i,j,1,ispec)), &
+                                                    zstore_dummy(ibool(i,j,1,ispec))
 
       enddo
     enddo
@@ -188,7 +190,7 @@
 
   enddo ! nspec2D_xmin
 
-  if ( COUPLE_WITH_EXTERNAL_CODE .and. (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) ) close(123)
+  if ( COUPLE_WITH_INJECTION_TECHNIQUE .and. (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM) ) close(123)
 
   ! xmax
   ijk_face(:,:,:) = 0
@@ -211,7 +213,7 @@
                               ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy,iface)
 
-    if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
+    if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
 
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLZ)
@@ -274,7 +276,7 @@
                               ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy,iface)
 
-    if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
+    if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
 
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLY,NGLLZ)
@@ -337,7 +339,7 @@
                               ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy,iface)
 
-    if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
+    if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
 
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLY,NGLLZ)
@@ -400,7 +402,7 @@
                               ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy,iface)
 
-    if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
+    if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
 
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLY)
@@ -483,7 +485,7 @@
                               ibool,nspec,nglob_dummy, &
                               xstore_dummy,ystore_dummy,zstore_dummy,iface)
 
-    if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
+    if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) iboun(iface,ispec) = .true.
 
     ! ijk indices of GLL points on face
     call get_element_face_gll_indices(iface,ijk_face,NGLLX,NGLLY)

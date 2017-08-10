@@ -614,7 +614,8 @@
 
   use constants, only: NGLLX, NGLLY, NGLLZ, NDIM, R_EARTH, PI, ZERO, TINYVAL
 
-  use shared_parameters, only: old_DSM_coupling_from_Vadim, EXTERNAL_CODE_IS_AXISEM, EXTERNAL_CODE_IS_DSM,EXTERNAL_CODE_TYPE
+  use shared_parameters, only: old_DSM_coupling_from_Vadim, INJECTION_TECHNIQUE_IS_AXISEM, &
+                                   INJECTION_TECHNIQUE_IS_DSM,INJECTION_TECHNIQUE_TYPE
 
   implicit none
 
@@ -1072,8 +1073,8 @@
           !
           ! (must be after write_gllz_points to know the value of ilayer)
 
-          if ( ( ( EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM .and. (.not. old_DSM_coupling_from_Vadim) ) .or. &
-                 ( EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM                                        ) ) .and. &
+          if ( ( ( INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM .and. (.not. old_DSM_coupling_from_Vadim) ) .or. &
+                 ( INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_AXISEM                                        ) ) .and. &
                ( istore_for_new_outputs > 0 ) ) then
 
 
@@ -1328,7 +1329,8 @@
 
   use constants, only: NGLLX, NGLLY, NGLLZ, NDIM, R_EARTH, PI, ZERO, TINYVAL
 
-  use shared_parameters, only: old_DSM_coupling_from_Vadim, EXTERNAL_CODE_IS_AXISEM, EXTERNAL_CODE_IS_DSM,EXTERNAL_CODE_TYPE
+  use shared_parameters, only: old_DSM_coupling_from_Vadim, INJECTION_TECHNIQUE_IS_AXISEM, &
+                                  INJECTION_TECHNIQUE_IS_DSM,INJECTION_TECHNIQUE_TYPE
 
   implicit none
 
@@ -1871,8 +1873,8 @@
           !
           ! (must be after write_gllz_points to know the value of ilayer)
 
-          if ( ( ( EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM .and. (.not. old_DSM_coupling_from_Vadim) ) .or. &
-                 ( EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM                                        ) ) .and. &
+          if ( ( ( INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM .and. (.not. old_DSM_coupling_from_Vadim) ) .or. &
+                 ( INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_AXISEM                                        ) ) .and. &
                ( istore_for_new_outputs > 0 ) ) then
 
 
@@ -2500,7 +2502,7 @@
 
   use constants, only: NGLLX, NGLLY, NGLLZ
 
-  use shared_parameters, only: EXTERNAL_CODE_TYPE,EXTERNAL_CODE_IS_DSM, EXTERNAL_CODE_IS_AXISEM
+  use shared_parameters, only: INJECTION_TECHNIQUE_TYPE,INJECTION_TECHNIQUE_IS_DSM, INJECTION_TECHNIQUE_IS_AXISEM
 
   implicit none
 
@@ -2543,10 +2545,10 @@
 
           ! CF 'earth_chunk_HEX8_Mesher' and 'earth_chunk_HEX27_Mesher' to see files whose units are 91 and 92
 
-          if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then
+          if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM) then
             write(92,1000) xstore(i,j,k), ystore(i,j,k), zstore(i,j,k)
 
-          else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
+          else if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_AXISEM) then
             write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,1,ilayer,updown(k)
 
           endif
@@ -2576,10 +2578,10 @@
       do j=jmin,jmax
         do i=imin,imax
 
-          if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then
+          if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM) then
             write(92,1000) xstore(i,j,k), ystore(i,j,k), zstore(i,j,k)
 
-          else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
+          else if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_AXISEM) then
             write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,2,ilayer,updown(k)
 
           endif
@@ -2609,10 +2611,10 @@
       do j=jmin,jmax
         do i=imin,imax
 
-          if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then
+          if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM) then
             write(92,1000) xstore(i,j,k), ystore(i,j,k), zstore(i,j,k)
 
-          else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
+          else if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_AXISEM) then
             write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,3,ilayer,updown(k)
 
           endif
@@ -2642,10 +2644,10 @@
       do j=jmin,jmax
         do i=imin,imax
 
-          if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then
+          if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM) then
             write(92,1000) xstore(i,j,k), ystore(i,j,k), zstore(i,j,k)
 
-          else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
+          else if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_AXISEM) then
             write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,4,ilayer,updown(k)
 
           endif
@@ -2675,10 +2677,10 @@
       do j=jmin,jmax
         do i=imin,imax
 
-          if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then
+          if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM) then
             write(92,1000) xstore(i,j,k), ystore(i,j,k), zstore(i,j,k)
 
-          else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
+          else if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_AXISEM) then
             write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,5,ilayer,updown(k)
 
           endif

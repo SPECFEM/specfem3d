@@ -127,7 +127,7 @@
   call create_name_database(prname,myrank,LOCAL_PATH)
 
 ! for coupling with EXTERNAL CODE !! CD CD modify here
-  if (COUPLE_WITH_EXTERNAL_CODE .or. SAVE_RUN_BOUN_FOR_KH_INTEGRAL) then
+  if (COUPLE_WITH_INJECTION_TECHNIQUE .or. SAVE_RUN_BOUN_FOR_KH_INTEGRAL) then
      call create_name_database(dsmname,myrank,TRACTION_PATH)
   endif
 
@@ -137,7 +137,7 @@
      write(IMAIN,*) '      **** USING HYBRID METHOD  ****'
      write(IMAIN,*) '**********************************************'
      write(IMAIN,*)
-     write(IMAIN,*) ' create name database ',COUPLE_WITH_EXTERNAL_CODE
+     write(IMAIN,*) ' create name database ',COUPLE_WITH_INJECTION_TECHNIQUE
      write(IMAIN,*)
      write(IMAIN,*) '**********************************************'
   endif
