@@ -153,9 +153,9 @@ end module constants
 !!-----------------------------------------------------------
 
 ! add support for AXISEM and FK as external codes, not only DSM
-  integer, parameter :: EXTERNAL_CODE_IS_DSM    = 1
-  integer, parameter :: EXTERNAL_CODE_IS_AXISEM = 2
-  integer, parameter :: EXTERNAL_CODE_IS_FK     = 3
+  integer, parameter :: INJECTION_TECHNIQUE_IS_DSM    = 1
+  integer, parameter :: INJECTION_TECHNIQUE_IS_AXISEM = 2
+  integer, parameter :: INJECTION_TECHNIQUE_IS_FK     = 3
 
 ! Big storage version of coupling with DSM (will always set to .false. after the light storage version will be validated)
   logical, parameter :: old_DSM_coupling_from_Vadim = .true.
@@ -175,8 +175,8 @@ end module constants
 !!
 
   ! external code coupling (DSM, AxiSEM)
-  logical :: COUPLE_WITH_EXTERNAL_CODE
-  integer :: EXTERNAL_CODE_TYPE
+  logical :: COUPLE_WITH_INJECTION_TECHNIQUE
+  integer :: INJECTION_TECHNIQUE_TYPE
   character(len=MAX_STRING_LEN) :: TRACTION_PATH
   character(len=MAX_STRING_LEN) :: FKMODEL_FILE
   logical :: MESH_A_CHUNK_OF_THE_EARTH

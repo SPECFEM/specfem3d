@@ -45,7 +45,7 @@
 
   use create_regions_mesh_ext_par
 
-  use shared_parameters, only: COUPLE_WITH_EXTERNAL_CODE,MESH_A_CHUNK_OF_THE_EARTH
+  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH
 
   implicit none
 
@@ -323,7 +323,7 @@
   if (SAVE_MESH_FILES) call save_arrays_solver_files(nspec,nglob,ibool)
 
   ! if SAVE_MESH_FILES is true then the files have already been saved, no need to save them again
-  if ((COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) .and. .not. SAVE_MESH_FILES) then
+  if ((COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) .and. .not. SAVE_MESH_FILES) then
     call save_arrays_solver_files(nspec,nglob,ibool)
   endif
 
@@ -374,7 +374,7 @@
 
   use create_regions_mesh_ext_par
 
-  use shared_parameters, only: COUPLE_WITH_EXTERNAL_CODE,MESH_A_CHUNK_OF_THE_EARTH
+  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH
 
   implicit none
 
@@ -663,7 +663,7 @@
 
   endif  !if (SAVE_MESH_FILES_ADDITIONAL)
 
-  if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH) then
+  if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
     !if (num_abs_boundary_faces > 0) then
     filename = prname(1:len_trim(prname))//'absorb_dsm'
     open(IOUT,file=filename(1:len_trim(filename)),status='unknown',form='unformatted',iostat=ier)
@@ -681,7 +681,7 @@
     write(IOUT) ispec_is_elastic
     close(IOUT)
 
-  endif ! of if (COUPLE_WITH_EXTERNAL_CODE .or. MESH_A_CHUNK_OF_THE_EARTH)
+  endif ! of if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH)
 
   end subroutine save_arrays_solver_files
 

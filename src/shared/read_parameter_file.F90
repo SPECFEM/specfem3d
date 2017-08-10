@@ -325,11 +325,11 @@
   call read_value_logical(USE_EXTERNAL_SOURCE_FILE, 'USE_EXTERNAL_SOURCE_FILE', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter USE_EXTERNAL_SOURCE_FILE'
 
-  call read_value_logical(COUPLE_WITH_EXTERNAL_CODE, 'COUPLE_WITH_EXTERNAL_CODE', ier)
-  if (ier /= 0) stop 'Error reading Par_file parameter COUPLE_WITH_EXTERNAL_CODE'
+  call read_value_logical(COUPLE_WITH_INJECTION_TECHNIQUE, 'COUPLE_WITH_INJECTION_TECHNIQUE', ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter COUPLE_WITH_INJECTION_TECHNIQUE'
 
-  call read_value_integer(EXTERNAL_CODE_TYPE,'EXTERNAL_CODE_TYPE',ier)
-  if (ier /= 0) stop 'Error reading Par_file parameter EXTERNAL_CODE_TYPE'
+  call read_value_integer(INJECTION_TECHNIQUE_TYPE,'INJECTION_TECHNIQUE_TYPE',ier)
+  if (ier /= 0) stop 'Error reading Par_file parameter INJECTION_TECHNIQUE_TYPE'
 
   call read_value_logical(MESH_A_CHUNK_OF_THE_EARTH,'MESH_A_CHUNK_OF_THE_EARTH',ier)
   if (ier /= 0) stop 'Error reading Par_file parameter MESH_A_CHUNK_OF_THE_EARTH'
@@ -337,7 +337,7 @@
   call read_value_string(TRACTION_PATH, 'TRACTION_PATH', ier)
   if (ier /= 0) stop 'Error reading Par_file parameter TRACTION_PATH'
 
-  ! this one is only used when EXTERNAL_CODE_IS_FK, but we read it anyway because we later broadcast it to the other nodes
+  ! this one is only used when INJECTION_TECHNIQUE_IS_FK, but we read it anyway because we later broadcast it to the other nodes
   call read_value_string(FKMODEL_FILE,'FKMODEL_FILE',ier)
   if (ier /= 0) stop 'Error reading Par_file parameter FKMODEL_FILE'
 
@@ -345,23 +345,23 @@
   if (ier /= 0) stop 'Error reading Par_file parameter RECIPROCITY_AND_KH_INTEGRAL'
 
 ! check the type of external code to couple with, if any
-  if (MESH_A_CHUNK_OF_THE_EARTH .and. .not. COUPLE_WITH_EXTERNAL_CODE) &
-    stop 'MESH_A_CHUNK_OF_THE_EARTH only available with COUPLE_WITH_EXTERNAL_CODE for now, easy to change but not done yet'
+  if (MESH_A_CHUNK_OF_THE_EARTH .and. .not. COUPLE_WITH_INJECTION_TECHNIQUE) &
+    stop 'MESH_A_CHUNK_OF_THE_EARTH only available with COUPLE_WITH_INJECTION_TECHNIQUE for now, easy to change but not done yet'
 
-  if (COUPLE_WITH_EXTERNAL_CODE) then
-    if (EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_DSM .and. &
-       EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_AXISEM .and. &
-       EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_FK) stop 'Error incorrect value of EXTERNAL_CODE_TYPE read'
+  if (COUPLE_WITH_INJECTION_TECHNIQUE) then
+    if (INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_DSM .and. &
+       INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_AXISEM .and. &
+       INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_FK) stop 'Error incorrect value of INJECTION_TECHNIQUE_TYPE read'
 
-    if ( (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM ) .and. &
+    if ( (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM ) .and. &
          (.not. MESH_A_CHUNK_OF_THE_EARTH) ) stop 'Error, coupling with DSM only works with a Earth chunk mesh'
 
 
-    if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_FK .and. MESH_A_CHUNK_OF_THE_EARTH) &
+    if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_FK .and. MESH_A_CHUNK_OF_THE_EARTH) &
          stop 'Error: coupling with F-K is for models with a flat surface (Earth flattening), &
                      &thus turn MESH_A_CHUNK_OF_THE_EARTH off'
 
-    if ((EXTERNAL_CODE_TYPE /= EXTERNAL_CODE_IS_AXISEM) .and. RECIPROCITY_AND_KH_INTEGRAL) &
+    if ((INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_AXISEM) .and. RECIPROCITY_AND_KH_INTEGRAL) &
          stop 'Error: the use of RECIPROCITY_AND_KH_INTEGRAL is only available for coupling with AxiSEM for now'
   endif
 
@@ -577,9 +577,9 @@
     call bcast_all_string(FORCESOLUTION)
     call bcast_all_string(CMTSOLUTION)
 
-    call bcast_all_singlel(COUPLE_WITH_EXTERNAL_CODE)
+    call bcast_all_singlel(COUPLE_WITH_INJECTION_TECHNIQUE)
     call bcast_all_singlel(MESH_A_CHUNK_OF_THE_EARTH)
-    call bcast_all_singlei(EXTERNAL_CODE_TYPE)
+    call bcast_all_singlei(INJECTION_TECHNIQUE_TYPE)
     call bcast_all_string(TRACTION_PATH)
     call bcast_all_string(FKMODEL_FILE)
     call bcast_all_singlel(RECIPROCITY_AND_KH_INTEGRAL)

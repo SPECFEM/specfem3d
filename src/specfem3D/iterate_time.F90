@@ -117,7 +117,7 @@
 !  initial setup for future FK3D calculations
 ! ********************************************
 
-  if (COUPLE_WITH_EXTERNAL_CODE .and. EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_FK .and. SIMULATION_TYPE == 1) then
+  if (COUPLE_WITH_INJECTION_TECHNIQUE .and. INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_FK .and. SIMULATION_TYPE == 1) then
 
     call nbound(NSPEC_AB,num_abs_boundary_faces,abs_boundary_ispec,ispec_is_elastic,npt)
 
@@ -477,7 +477,7 @@
 
   use specfem_par
 
-  use shared_parameters, only: COUPLE_WITH_EXTERNAL_CODE, EXTERNAL_CODE_TYPE
+  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE, INJECTION_TECHNIQUE_TYPE
 
   implicit none
 
@@ -654,7 +654,7 @@
 !---
 !---
 
-  if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then
+  if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM) then
 
     if (old_DSM_coupling_from_Vadim) then
 
@@ -662,7 +662,7 @@
       !! for 2D light version
     endif
 
-  else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
+  else if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_AXISEM) then
 
     call read_axisem_disp_file(num_abs_boundary_faces*NGLLSQUARE)
     call read_specfem_tract_file(NGLLSQUARE*num_abs_boundary_faces)

@@ -80,9 +80,9 @@ contains
     type(inver),                                    intent(inout) ::  inversion_param
 
 
-    logical                                                       :: save_COUPLE_WITH_EXTERNAL_CODE
+    logical                                                       :: save_COUPLE_WITH_INJECTION_TECHNIQUE
 
-    save_COUPLE_WITH_EXTERNAL_CODE=COUPLE_WITH_EXTERNAL_CODE
+    save_COUPLE_WITH_INJECTION_TECHNIQUE = COUPLE_WITH_INJECTION_TECHNIQUE
 
 
     if (myrank == 0) write(INVERSE_LOG_FILE,*) '  - > Compute gradient for source :', isource , ' iteration : ', iter_inverse
@@ -125,14 +125,14 @@ contains
     call InitSpecfemForOneRun(acqui_simu, isource, inversion_param, iter_inverse)
 
 
-    COUPLE_WITH_EXTERNAL_CODE=.false.  !! do not use coupling since the direct run is runining in backward from boundary
+    COUPLE_WITH_INJECTION_TECHNIQUE = .false.  !! do not use coupling since the direct run is runining in backward from boundary
 
 
     call iterate_time()
     call FinalizeSpecfemForOneRun(acqui_simu, isource)
 
 
-    COUPLE_WITH_EXTERNAL_CODE=save_COUPLE_WITH_EXTERNAL_CODE  !! restore the initial value of variable
+    COUPLE_WITH_INJECTION_TECHNIQUE = save_COUPLE_WITH_INJECTION_TECHNIQUE  !! restore the initial value of variable
 
 
   end subroutine ComputeGradientPerSource
@@ -227,7 +227,7 @@ contains
           write (IIDD , *) 'islice , ispec : ', islice_selected_source(1), ispec_selected_source(1)
           write (IIDD , *)
        endif
-       COUPLE_WITH_EXTERNAL_CODE=.false.
+       COUPLE_WITH_INJECTION_TECHNIQUE = .false.
     case('axisem')
        TRAC_PATH=acqui_simu(isource)%traction_dir
        call create_name_database(dsname,myrank,TRAC_PATH)
@@ -235,12 +235,12 @@ contains
        open(unit=IIN_veloc_dsm,file=dsname(1:len_trim(dsname))//'sol_axisem',status='old', &
             action='read',form='unformatted',iostat=ier)
        write(*,*) 'OPENING ', dsname(1:len_trim(dsname))//'sol_axisem'
-       COUPLE_WITH_EXTERNAL_CODE=.true.
-       EXTERNAL_CODE_TYPE = EXTERNAL_CODE_IS_AXISEM
+       COUPLE_WITH_INJECTION_TECHNIQUE = .true.
+       INJECTION_TECHNIQUE_TYPE = INJECTION_TECHNIQUE_IS_AXISEM
     case('fk')
        FKMODEL_FILE=acqui_simu(isource)%source_file
-       COUPLE_WITH_EXTERNAL_CODE=.true.
-       EXTERNAL_CODE_TYPE = EXTERNAL_CODE_IS_FK
+       COUPLE_WITH_INJECTION_TECHNIQUE = .true.
+       INJECTION_TECHNIQUE_TYPE = INJECTION_TECHNIQUE_IS_FK
     case default
        write(*,*) 'source ', acqui_simu(isource)%source_type, 'Not yet '
        stop

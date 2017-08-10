@@ -838,7 +838,7 @@ subroutine read_mesh_databases_adios()
   stop 'COUPLE w/ external code: ADIOS support not fully implemented yet'
 
   !! CD CD !! For coupling with DSM
-  if (COUPLE_WITH_EXTERNAL_CODE) then
+  if (COUPLE_WITH_INJECTION_TECHNIQUE) then
     allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
     allocate(Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
 

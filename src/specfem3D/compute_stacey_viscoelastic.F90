@@ -43,8 +43,8 @@
 
   use specfem_par_elastic, only: displ
 
-  use shared_parameters, only: COUPLE_WITH_EXTERNAL_CODE, &
-                  EXTERNAL_CODE_TYPE,EXTERNAL_CODE_IS_DSM,EXTERNAL_CODE_IS_AXISEM,EXTERNAL_CODE_IS_FK, &
+  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE, &
+                  INJECTION_TECHNIQUE_TYPE,INJECTION_TECHNIQUE_IS_DSM,INJECTION_TECHNIQUE_IS_AXISEM,INJECTION_TECHNIQUE_IS_FK, &
                   old_DSM_coupling_from_Vadim,RECIPROCITY_AND_KH_INTEGRAL,SAVE_RUN_BOUN_FOR_KH_INTEGRAL,Ntime_step_dsm
 
 ! *********************************************************************************
@@ -125,9 +125,9 @@
   integer :: kaxisem, ip
 
 
-  if (COUPLE_WITH_EXTERNAL_CODE) then
+  if (COUPLE_WITH_INJECTION_TECHNIQUE) then
      ipt = 0
-    if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then
+    if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM) then
 
       if (old_DSM_coupling_from_Vadim) then
         if (iphase == 1) then
@@ -139,7 +139,7 @@
         !! MODIFS DE NOBU 2D
       endif
 
-   else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
+   else if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_AXISEM) then
 
       if (iphase == 1) then
         call read_axisem_file(Veloc_axisem,Tract_axisem,num_abs_boundary_faces*NGLLSQUARE)
@@ -148,7 +148,7 @@
         if (RECIPROCITY_AND_KH_INTEGRAL) Tract_axisem_time(:,:,it) = Tract_axisem(:,:)
      endif
 
-  else if ( EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_FK) then
+  else if ( INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_FK) then
      if (iphase == 1) then
 
         !! find indices
@@ -220,14 +220,14 @@ endif
         vz = veloc(3,iglob)
 
           !! CD CD !! For coupling with EXTERNAL CODE
-          if (COUPLE_WITH_EXTERNAL_CODE) then
+          if (COUPLE_WITH_INJECTION_TECHNIQUE) then
 
-            if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then  !! To verify for NOBU version
+            if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM) then  !! To verify for NOBU version
               vx = vx - Veloc_dsm_boundary(1,it_dsm,igll,iface)
               vy = vy - Veloc_dsm_boundary(2,it_dsm,igll,iface)
               vz = vz - Veloc_dsm_boundary(3,it_dsm,igll,iface)
 
-            else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then !! VM VM add AxiSEM
+            else if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_AXISEM) then !! VM VM add AxiSEM
                 kaxisem = igll + NGLLSQUARE*(iface - 1)
                 vx = vx - Veloc_axisem(1,kaxisem)
                 vy = vy - Veloc_axisem(2,kaxisem)
@@ -238,7 +238,7 @@ endif
 
 ! *********************************************************************************
 ! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
-          if (COUPLE_WITH_EXTERNAL_CODE .and. EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_FK) then
+          if (COUPLE_WITH_INJECTION_TECHNIQUE .and. INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_FK) then
             ipt = ipt + 1
 
 !! DEBUGVM pour eviter de stocker pour profiler la vitesse de FK
@@ -271,14 +271,14 @@ endif
         tz = rho_vp(i,j,k,ispec)*vn*nz + rho_vs(i,j,k,ispec)*(vz-vn*nz)
 
           !! CD CD !! For coupling with DSM
-          if (COUPLE_WITH_EXTERNAL_CODE) then
+          if (COUPLE_WITH_INJECTION_TECHNIQUE) then
 
-            if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_DSM) then    !! To verify for NOBU version
+            if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM) then    !! To verify for NOBU version
               tx = tx - Tract_dsm_boundary(1,it_dsm,igll,iface)
               ty = ty - Tract_dsm_boundary(2,it_dsm,igll,iface)
               tz = tz - Tract_dsm_boundary(3,it_dsm,igll,iface)
 
-            else if (EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_AXISEM) then
+            else if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_AXISEM) then
                 tx = tx - Tract_axisem(1,kaxisem)
                 ty = ty - Tract_axisem(2,kaxisem)
                 tz = tz - Tract_axisem(3,kaxisem)
@@ -288,7 +288,7 @@ endif
 
 ! *********************************************************************************
 ! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
-          if (COUPLE_WITH_EXTERNAL_CODE .and. EXTERNAL_CODE_TYPE == EXTERNAL_CODE_IS_FK) then
+          if (COUPLE_WITH_INJECTION_TECHNIQUE .and. INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_FK) then
             tx = tx - tx_FK(ipt)
             ty = ty - ty_FK(ipt)
             tz = tz - tz_FK(ipt)
@@ -326,7 +326,7 @@ endif
     call write_abs(IOABS,b_absorb_field,b_reclen_field,it)
   endif
 
-  if (COUPLE_WITH_EXTERNAL_CODE) then !! To verify for NOBU version
+  if (COUPLE_WITH_INJECTION_TECHNIQUE) then !! To verify for NOBU version
     if (iphase == 1) it_dsm = it_dsm + 1
     !! TODO: maybe call integrand_for_computing_Kirchoff_Helmholtz_integral here
   endif
@@ -488,7 +488,7 @@ endif
 
   use constants
 
-  use shared_parameters, only: COUPLE_WITH_EXTERNAL_CODE,old_DSM_coupling_from_Vadim,Ntime_step_dsm
+  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,old_DSM_coupling_from_Vadim,Ntime_step_dsm
 
   implicit none
 
@@ -518,7 +518,7 @@ endif
 
   integer :: it_dsm
 
-  if (COUPLE_WITH_EXTERNAL_CODE) then
+  if (COUPLE_WITH_INJECTION_TECHNIQUE) then
     if (old_DSM_coupling_from_Vadim) then
       if (iphase == 1) then
         if (mod(it_dsm,Ntime_step_dsm+1) == 0 .or. it == 1) then
@@ -554,7 +554,7 @@ endif
 
   !! CD CD : begin
   !! For coupling with DSM
-  if (COUPLE_WITH_EXTERNAL_CODE) then !! To verify for NOBU version
+  if (COUPLE_WITH_INJECTION_TECHNIQUE) then !! To verify for NOBU version
     if (iphase == 1) then
       it_dsm = it_dsm + 1
     endif
