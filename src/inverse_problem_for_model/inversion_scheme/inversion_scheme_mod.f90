@@ -261,6 +261,14 @@ contains
     integer,                                                   intent(in)    :: Niv
     real(kind=CUSTOM_REAL)                                                   :: jacobianl, weight, qp_tmp
     integer                                                                  :: ipar, i, j, k, ispec
+    real(kind=CUSTOM_REAL)                                                   :: coeff_n1, coeff_n2
+  
+    !! try normalization to avoid numerical errors 
+    call Parallel_ComputeL2normSquare(vect1 , Niv, coeff_n1)
+    call Parallel_ComputeL2normSquare(vect2 , Niv, coeff_n2)
+
+    wks_1(:,:,:,:,:) = vect1(:,:,:,:,:) / sqrt(coeff_n1)
+    wks_2(:,:,:,:,:) = vect2(:,:,:,:,:) / sqrt(coeff_n2)
 
     qp=0._CUSTOM_REAL
 
@@ -272,14 +280,15 @@ contains
                 do i=1,NGLLX
                    weight = wxgll(i)*wygll(j)*wzgll(k)
                    jacobianl = jacobian(i,j,k,ispec)
-                   qp = qp + jacobianl * weight * vect1(i,j,k,ispec,ipar) * vect2(i,j,k,ispec,ipar)
+                   qp = qp + jacobianl * weight * wks_1(i,j,k,ispec,ipar) * wks_2(i,j,k,ispec,ipar)
+                   !qp = qp + jacobianl * weight * vect1(i,j,k,ispec,ipar) * vect2(i,j,k,ispec,ipar)
                 enddo
              enddo
           enddo
        enddo
     enddo
 
-    qp_tmp=qp
+    qp_tmp=qp * sqrt(coeff_n1) * sqrt(coeff_n2)
     qp=0.
     call sum_all_all_cr(qp_tmp, qp)
 
