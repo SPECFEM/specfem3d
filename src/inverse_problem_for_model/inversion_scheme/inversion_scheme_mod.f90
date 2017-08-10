@@ -19,6 +19,8 @@ module  inversion_scheme
   real(kind=CUSTOM_REAL), private,  dimension(:,:,:,:,:),   allocatable  ::  wks_1, wks_2
   real(kind=CUSTOM_REAL), private,  dimension(0:1000)                    ::  ak_store, pk_store
 
+  !! for normalization
+  real(kind=CUSTOM_REAL), private,  dimension(:,:,:,:,:),   allocatable  ::  wks_1n, wks_2n
 
   public  :: AllocateArraysForInversion, DeAllocateArraysForInversion, wolfe_rules, ComputeDescentDirection
   private :: L_BFGS_GENERIC
@@ -49,10 +51,19 @@ contains
     allocate(wks_2(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ierror)
     if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_2 in AllocateArraysForInversion subroutine")
 
+    allocate(wks_1n(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ierror)
+    if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_1n in AllocateArraysForInversion subroutine")
+
+    allocate(wks_2n(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ierror)
+    if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_2n in AllocateArraysForInversion subroutine")
+
     bfgs_stored_gradient(:,:,:,:,:,:) = 0._CUSTOM_REAL
     bfgs_stored_model(:,:,:,:,:,:) = 0._CUSTOM_REAL
     wks_1(:,:,:,:,:) = 0._CUSTOM_REAL
     wks_2(:,:,:,:,:) = 0._CUSTOM_REAL
+    wks_1n(:,:,:,:,:) = 0._CUSTOM_REAL
+    wks_2n(:,:,:,:,:) = 0._CUSTOM_REAL
+    
 
   end subroutine AllocateArraysForInversion
 !----------------------------------------------------------------------------------------------------------------------------------
@@ -267,8 +278,8 @@ contains
     call Parallel_ComputeL2normSquare(vect1 , Niv, coeff_n1)
     call Parallel_ComputeL2normSquare(vect2 , Niv, coeff_n2)
 
-    wks_1(:,:,:,:,:) = vect1(:,:,:,:,:) / sqrt(coeff_n1)
-    wks_2(:,:,:,:,:) = vect2(:,:,:,:,:) / sqrt(coeff_n2)
+    wks_1n(:,:,:,:,:) = vect1(:,:,:,:,:) / sqrt(coeff_n1)
+    wks_2n(:,:,:,:,:) = vect2(:,:,:,:,:) / sqrt(coeff_n2)
 
     qp=0._CUSTOM_REAL
 
@@ -280,7 +291,7 @@ contains
                 do i=1,NGLLX
                    weight = wxgll(i)*wygll(j)*wzgll(k)
                    jacobianl = jacobian(i,j,k,ispec)
-                   qp = qp + jacobianl * weight * wks_1(i,j,k,ispec,ipar) * wks_2(i,j,k,ispec,ipar)
+                   qp = qp + jacobianl * weight * wks_1n(i,j,k,ispec,ipar) * wks_2n(i,j,k,ispec,ipar)
                    !qp = qp + jacobianl * weight * vect1(i,j,k,ispec,ipar) * vect2(i,j,k,ispec,ipar)
                 enddo
              enddo
