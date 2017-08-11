@@ -253,7 +253,7 @@ contains
              !! define energy renormalisation
              if (current_iter==0) then
                 acqui_simu(isource)%weight_trace(icomp,irec_local)=100._CUSTOM_REAL / &
-                     (sum( acqui_simu(isource)%data_traces(irec_local,:,icomp))**2) *0.5*dt_data)
+                    ((sum( acqui_simu(isource)%data_traces(irec_local,:,icomp) )**2) *0.5*dt_data)
              end if
 
              !! adjoint source 
