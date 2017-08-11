@@ -279,14 +279,19 @@ contains
     integer,                                                   intent(in)    :: Niv
     real(kind=CUSTOM_REAL)                                                   :: jacobianl, weight, qp_tmp
     integer                                                                  :: ipar, i, j, k, ispec
-    real(kind=CUSTOM_REAL)                                                   :: coeff_n1, coeff_n2
+    real(kind=CUSTOM_REAL)                                                   :: coeff, coeff_n1, coeff_n2
   
     !! try normalization to avoid numerical errors 
-    call Parallel_ComputeL2normSquare(vect1 , Niv, coeff_n1)
-    call Parallel_ComputeL2normSquare(vect2 , Niv, coeff_n2)
+    !call Parallel_ComputeL2normSquare(vect1 , Niv, coeff_n1)
+    !call Parallel_ComputeL2normSquare(vect2 , Niv, coeff_n2)
 
-    wks_1n(:,:,:,:,:) = vect1(:,:,:,:,:) / sqrt(coeff_n1)
-    wks_2n(:,:,:,:,:) = vect2(:,:,:,:,:) / sqrt(coeff_n2)
+    coeff=maxval(abs(vect1(:,:,:,:,:)))
+    call max_all_all_cr(coeff, coeff_n1)
+    wks_1n(:,:,:,:,:) = vect1(:,:,:,:,:) / coeff_n1
+    
+    coeff=maxval(abs(vect2(:,:,:,:,:)))
+    call max_all_all_cr(coeff, coeff_n2)
+    wks_2n(:,:,:,:,:) = vect2(:,:,:,:,:) / coeff_n2
 
     qp=0._CUSTOM_REAL
 
@@ -306,7 +311,7 @@ contains
        enddo
     enddo
 
-    qp_tmp=qp * sqrt(coeff_n1) * sqrt(coeff_n2)
+    qp_tmp=qp * coeff_n1 * coeff_n2
     qp=0.
     call sum_all_all_cr(qp_tmp, qp)
 

@@ -46,10 +46,12 @@ contains
     real(kind=CUSTOM_REAL)                                      :: cost_function_rec
 
     integer                                                     :: lw, i0, i1, i2, i3
-
+    integer                                                     :: current_iter
 
     nstep_data = acqui_simu(isource)%Nt_data
     dt_data = acqui_simu(isource)%dt_data
+
+    current_iter=inversion_param%current_iteration 
 
     !! initialize cost function for each MPI porcess
     cost_function  = 0._CUSTOM_REAL
@@ -82,7 +84,7 @@ contains
 
              !! ---------------------------------------------------------------------------------------------------------------
              !! compute adjoint source according to cost L2 function
-             call compute_elastic_adjoint_source_displacement(irec_local, isource, acqui_simu, cost_function)
+             call compute_elastic_adjoint_source_displacement(irec_local, isource, current_iter, acqui_simu, cost_function)
 
           endif
        endif
@@ -157,10 +159,10 @@ contains
 !
 !
 !
-  subroutine compute_elastic_adjoint_source_displacement(irec_local, isource, acqui_simu, cost_function)
+  subroutine compute_elastic_adjoint_source_displacement(irec_local, isource, current_iter, acqui_simu, cost_function)
 
 
-    integer,                                     intent(in)    :: isource, irec_local
+    integer,                                     intent(in)    :: isource, irec_local, current_iter
     type(acqui),  dimension(:), allocatable,     intent(inout) :: acqui_simu
     real(kind=CUSTOM_REAL),                      intent(inout) :: cost_function
     integer                                                    :: icomp
@@ -248,15 +250,23 @@ contains
              !! save filtered data
              acqui_simu(isource)%synt_traces(icomp, irec_local,:)= fil_residuals(:)
 
+             !! define energy renormalisation
+             if (current_iter==0) then
+                acqui_simu(isource)%weigth_trace(icomp,irec_local)=100._CUSTOM_REAL / &
+                     (sum((seismograms_d(icomp,irec_local,:))**2) *0.5*dt_data)
+             end if
+
              !! adjoint source 
-             raw_residuals(:)= seismograms_d(icomp,irec_local,:) - fil_residuals(:)
+             raw_residuals(:)= (seismograms_d(icomp,irec_local,:) - fil_residuals(:))*&
+                  acqui_simu(isource)%weigth_trace(icomp,irec_local)
 
              !! compute cost
              cost_value=sum(raw_residuals(:)**2) * 0.5 * dt_data
              cost_function = cost_function + cost_value
 
              ! store adjoint source
-             acqui_simu(isource)%adjoint_sources(icomp,irec_local,:)=raw_residuals(:)*w_tap(:) 
+             acqui_simu(isource)%adjoint_sources(icomp,irec_local,:)=raw_residuals(:)*w_tap(:)*&
+                  acqui_simu(isource)%weigth_trace(icomp,irec_local)
 
           end do
 

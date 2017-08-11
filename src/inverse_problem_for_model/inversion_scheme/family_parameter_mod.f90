@@ -366,10 +366,13 @@ contains
           rho_kl(:,:,:,ispec) = - rho_kl(:,:,:,ispec) * &
                rho_vs(:,:,:,ispec) * rho_vs(:,:,:,ispec) /  mustore(:,:,:,ispec)
 
+          !! store preconditionner kernels 
           if (inversion_param%shin_precond) then
              hess_rho_kl(:,:,:,ispec) = - hess_rho_kl(:,:,:,ispec) * &
                   rho_vs(:,:,:,ispec) * rho_vs(:,:,:,ispec) /  mustore(:,:,:,ispec)
-
+          else if (inversion_param%energy_precond) then 
+             !! energy precond : same for all family 
+             hess_approxim(:,:,:,ispec,1)= hess_rho_kl(:,:,:,ispec)
           end if
 
           if (ANISOTROPIC_KL) then
@@ -472,10 +475,6 @@ contains
                         (3._CUSTOM_REAL * kappastore(:,:,:,ispec)) * hess_kappa_kl(:,:,:,ispec))
                 end if
 
-                if (inversion_param%energy_precond) then
-                   hess_approxim(:,:,:,ispec,1)= hess_rho_kl(:,:,:,ispec)
-                end if
-
 !!$             case('rho_lambda_mu')
 !!$                gradient(:,:,:,ispec,1)=
 !!$                gradient(:,:,:,ispec,2)=
@@ -511,6 +510,11 @@ contains
        endif
 
        if (ispec_is_acoustic(ispec)) then
+          
+          if (inversion_param%energy_precond)then 
+             !! energy precond : same for all family 
+             hess_approxim(:,:,:,ispec,1)= hess_rho_ac_kl(:,:,:,ispec)
+          end if
 
           select case(trim(adjustl(inversion_param%param_family)))
 

@@ -70,6 +70,7 @@ contains
     flag_wolfe = .false.
     finished = .false.
     Niv=inversion_param%NinvPar
+    inversion_param%current_iteration=iter_inverse
 
     ! compute and store descent direction
     call ComputeDescentDirection(iter_inverse, descent_direction, fwi_precond)

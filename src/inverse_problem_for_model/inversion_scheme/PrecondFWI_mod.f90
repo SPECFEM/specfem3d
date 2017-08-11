@@ -19,6 +19,7 @@ contains
     integer,                                                   intent(in)    :: iter_inverse
     real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable, intent(inout) :: current_gradient, fwi_precond, hess_approxim
     real(kind=CUSTOM_REAL)                                                   :: taper, x,y,z
+    real(kind=CUSTOM_REAL)                                                   :: nrme_coef_tmp, nrme_coef
     integer                                                                  :: i,j,k,ispec, iglob
 
     if (inversion_param%use_taper) then
@@ -129,9 +130,13 @@ contains
           write(IIDD,*)
           write(IIDD,*)
        endif
-       
+
+       !! normalisation of preconditionner
+       nrme_coef_tmp=maxval(abs(hess_approxim(:,:,:,:,1)))
+       call max_all_all_cr(nrme_coef_tmp, nrme_coef)
+
        do i=1,inversion_param%NinvPar
-          fwi_precond(:,:,:,:,i) = 1._CUSTOM_REAL / abs(hess_approxim(:,:,:,:,1))
+          fwi_precond(:,:,:,:,i) = nrme_coef / abs(hess_approxim(:,:,:,:,1))
        end do
 
     end if

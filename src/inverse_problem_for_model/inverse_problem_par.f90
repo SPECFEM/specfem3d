@@ -137,6 +137,7 @@ module inverse_problem_par
      !!  cost function for each source
      real(kind=CUSTOM_REAL), dimension(:), allocatable                        :: current_cost, previous_cost
      real(kind=CUSTOM_REAL), dimension(:), allocatable                        :: current_cost_prime, previous_cost_prime
+     integer                                                                  :: current_iteration=0
 
      !! --- here add parameters for other methods (further developments)
 
@@ -228,6 +229,8 @@ module inverse_problem_par
      real(kind=CUSTOM_REAL),                  dimension(:,:,:),   allocatable  :: window_to_invert
      !! low-high frequency used for FWI (NCOMP,2,NSTA)
      real(kind=CUSTOM_REAL),                  dimension(:,:,:),   allocatable  :: freqcy_to_invert
+     !! weigth on each trace used for FWI (NCOMP,NSTA)
+     real(kind=CUSTOM_REAL),                  dimension(:,:),     allocatable  :: weigth_trace
      !! gather time sampling
      real(kind=CUSTOM_REAL)                                                    :: dt_data
      !! number of samples
