@@ -252,13 +252,13 @@ contains
 
              !! define energy renormalisation
              if (current_iter==0) then
-                acqui_simu(isource)%weigth_trace(icomp,irec_local)=100._CUSTOM_REAL / &
+                acqui_simu(isource)%weight_trace(icomp,irec_local)=100._CUSTOM_REAL / &
                      (sum((seismograms_d(icomp,irec_local,:))**2) *0.5*dt_data)
              end if
 
              !! adjoint source 
              raw_residuals(:)= (seismograms_d(icomp,irec_local,:) - fil_residuals(:))*&
-                  acqui_simu(isource)%weigth_trace(icomp,irec_local)
+                  acqui_simu(isource)%weight_trace(icomp,irec_local)
 
              !! compute cost
              cost_value=sum(raw_residuals(:)**2) * 0.5 * dt_data
@@ -266,7 +266,7 @@ contains
 
              ! store adjoint source
              acqui_simu(isource)%adjoint_sources(icomp,irec_local,:)=raw_residuals(:)*w_tap(:)*&
-                  acqui_simu(isource)%weigth_trace(icomp,irec_local)
+                  acqui_simu(isource)%weight_trace(icomp,irec_local)
 
           end do
 

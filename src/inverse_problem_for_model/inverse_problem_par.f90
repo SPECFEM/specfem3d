@@ -230,7 +230,7 @@ module inverse_problem_par
      !! low-high frequency used for FWI (NCOMP,2,NSTA)
      real(kind=CUSTOM_REAL),                  dimension(:,:,:),   allocatable  :: freqcy_to_invert
      !! weigth on each trace used for FWI (NCOMP,NSTA)
-     real(kind=CUSTOM_REAL),                  dimension(:,:),     allocatable  :: weigth_trace
+     real(kind=CUSTOM_REAL),                  dimension(:,:),     allocatable  :: weight_trace
      !! gather time sampling
      real(kind=CUSTOM_REAL)                                                    :: dt_data
      !! number of samples

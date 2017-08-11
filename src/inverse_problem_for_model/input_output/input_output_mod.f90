@@ -657,8 +657,8 @@ contains
           NSTA_LOC=acqui_simu(isource)%nsta_slice
           allocate(acqui_simu(isource)%data_traces(NSTA_LOC,Nt,NDIM))
           allocate(acqui_simu(isource)%adjoint_sources(NDIM, NSTA_LOC, Nt))
-          allocate(acqui_simu(isource)%weigth_trace(NDIM, NSTA_LOC))
-          acqui_simu(isource)%weigth_trace(:,:)=1._CUSTOM_REAL
+          allocate(acqui_simu(isource)%weight_trace(NDIM, NSTA_LOC))
+          acqui_simu(isource)%weight_trace(:,:)=1._CUSTOM_REAL
 
           if (VERBOSE_MODE .or. DEBUG_MODE)  allocate(acqui_simu(isource)%synt_traces(NDIM, NSTA_LOC, Nt))
 
@@ -706,7 +706,7 @@ contains
                 NSTA_LOC=acqui_simu(isource)%nsta_slice
                 Nt=acqui_simu(isource)%Nt_data
                 allocate(Gather_loc(NSTA_LOC,Nt,NDIM),acqui_simu(isource)%data_traces(NSTA_LOC,Nt,NDIM), &
-                     acqui_simu(isource)%adjoint_sources(NDIM, NSTA_LOC, Nt))
+                     acqui_simu(isource)%adjoint_sources(NDIM, NSTA_LOC, Nt), acqui_simu(isource)%weight_trace(NDIM, NSTA_LOC))
 
                 if (VERBOSE_MODE .or. DEBUG_MODE) allocate(acqui_simu(isource)%synt_traces(NDIM, NSTA_LOC, Nt))
 
