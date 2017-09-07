@@ -782,8 +782,8 @@ end subroutine FK3D
        write(IMAIN,*)  '  Total time length used for FK = ', t0+(npts2-1)*dt_fk
        write(IMAIN,*)  '  Number of samples stored for FK solution ',  NF_FOR_STORING
        write(IMAIN,*)  '  FK time step  ', dt_fk
-       write(IMAIN,,*) '  FK frequency step ' , df
-       write(IMAIN? *) '  power of 2 for FFT : ', lnpts2
+       write(IMAIN,*) '  FK frequency step ' , df
+       write(IMAIN,*) '  power of 2 for FFT : ', lnpts2
        call flush_IMAIN()
     endif
 
