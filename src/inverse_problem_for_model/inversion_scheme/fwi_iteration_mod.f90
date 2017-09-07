@@ -46,7 +46,7 @@ contains
     real(kind=CUSTOM_REAL)                                        :: NormGrad
     integer                                                       :: iter_wolfe, isource, Niv
     logical                                                       :: flag_wolfe
-
+    logical                                                       :: ModelIsSuitable
 
     if (myrank == 0) then
        write(INVERSE_LOG_FILE,*)
@@ -69,6 +69,7 @@ contains
     iter_wolfe = 0
     flag_wolfe = .false.
     finished = .false.
+    ModelIsSuitable = .true.
     Niv=inversion_param%NinvPar
     inversion_param%current_iteration=iter_inverse
 
@@ -116,8 +117,12 @@ contains
        endif
 
        ! update model for choosen family
-       call UpdateModel(inversion_param, step_length)
-
+       call UpdateModel(inversion_param, step_length, ModelIsSuitable)
+       ! if model is not suitable for modeling then try smaller step
+       if (.not. ModelIsSuitable) then 
+          step_length = 0.5 * step_length
+          cycle
+       end if
        ! compute cost function and gradient---------
        call InitForOneStepFWI(inversion_param)
        do isource=1,acqui_simu(1)%nsrc_tot
@@ -317,9 +322,10 @@ contains
 ! Since Specfem compute kernel for log of parameter, here we use this convention by default
 ! BE CAAREFUL : the model is stored in parameter and *NOT* log parameter in spesfem mesh (rhostore, kappastore, ...)
 !
-  subroutine UpdateModel(inversion_param, step_length)
+  subroutine UpdateModel(inversion_param, step_length, ModelIsSuitable)
 
     type(inver),                                    intent(inout) :: inversion_param
+    logical,                                        intent(inout) :: ModelIsSuitable
     real(kind=CUSTOM_REAL),                         intent(in)    :: step_length
     integer                                                       :: ipar
 
@@ -334,6 +340,8 @@ contains
 
     !! store the model on specfem arrays to perform next simulation
     call InvertParam2Specfem(inversion_param, current_model)
+
+    call CheckModelSuitabilityForModeling(ModelIsSuitable)
 
     if (myrank == 0) then
        write(INVERSE_LOG_FILE,*)
@@ -362,7 +370,24 @@ contains
 
 
   end subroutine UpdateModel
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!-------------------------------------------------------------------------------------------------------------
+! test if we can saftely perform a simulation in new model :: todo finish this subroutine 
+!-------------------------------------------------------------------------------------------------------------
+  subroutine  CheckModelSuitabilityForModeling(ModelIsSuitable)
+    
+    ModelIsSuitable=.true.
 
+    
+
+    !! Check poisson ratio
+    
+    
+    !! Check cfl 
+
+    
+
+  end subroutine CheckModelSuitabilityForModeling
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !-------------------------------------------------------------------------------------------------------------
 ! compute initial guess for step length to try for line search

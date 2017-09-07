@@ -109,7 +109,7 @@
 
   ! stores mesh files as cubit for single process run
   ! todo: we could put this parameter into the Mesh_Par_file
-  logical, parameter :: SAVE_MESH_AS_CUBIT = .false.
+  logical, parameter :: SAVE_MESH_AS_CUBIT = .true.
 
   !------------------------------------------------------------------
 
