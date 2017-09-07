@@ -379,6 +379,7 @@ module specfem_par_elastic
   integer, parameter :: NTIME_BETWEEN_FFT=1  !! not used anymore
   integer,dimension(:),allocatable :: nbdglb
   real(kind=CUSTOM_REAL),dimension(:,:),allocatable :: vxbd,vybd,vzbd,txxbd,txybd,txzbd,tyybd,tyzbd,tzzbd
+  real(kind=CUSTOM_REAL) :: Z_REF_for_FK
   real(kind=CUSTOM_REAL) :: p,phi_FK,theta_FK,xx0,yy0,zz0,ff0,tg,tt0,tmax_fk,df_fk ! source
   real(kind=CUSTOM_REAL),dimension(:),allocatable :: al_FK,be_FK,mu_FK,h_FK,tmp_for_interp ! model
   complex(kind=8), dimension(:,:), allocatable :: VX_f, VY_f, VZ_f, TX_f, TY_f, TZ_f

@@ -165,7 +165,7 @@ contains
     integer,                                     intent(in)    :: isource, irec_local, current_iter
     type(acqui),  dimension(:), allocatable,     intent(inout) :: acqui_simu
     real(kind=CUSTOM_REAL),                      intent(inout) :: cost_function
-    integer                                                    :: icomp
+    integer                                                    :: icomp, icomp_tmp
     !!----------------------------------------------------------------------------------------------------
     !! store residuals and filter  ---------------------------
 
@@ -252,8 +252,10 @@ contains
 
              !! define energy renormalisation
              if (current_iter==0) then
-                acqui_simu(isource)%weight_trace(icomp,irec_local)=100._CUSTOM_REAL / &
-                    ((sum( acqui_simu(isource)%data_traces(irec_local,:,icomp) )**2) *0.5*dt_data)
+                do icomp_tmp = 1, NDIM
+                   acqui_simu(isource)%weight_trace(icomp,irec_local)=100._CUSTOM_REAL / &
+                        ((sum( acqui_simu(isource)%synt_traces(irec_local,:,icomp_tmp) )**2) *0.5*dt_data)
+                end do
              end if
 
              !! adjoint source 
