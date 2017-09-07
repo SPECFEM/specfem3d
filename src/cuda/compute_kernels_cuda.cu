@@ -187,8 +187,8 @@ __global__ void compute_kernels_cudakernel(int* ispec_is_elastic,
       kappa_kl[ijk_ispec] += deltat*(9*epsilon_trace_over_3[ijk_ispec]*
                                      b_epsilon_trace_over_3[ijk_ispec]);
       /*if (ijk_ispec==100){
-	printf(" Kernel, %e  %e \n",b_epsilondev_xx[ijk_ispec], b_epsilondev_yy[ijk_ispec]);
-	}*/
+  printf(" Kernel, %e  %e \n",b_epsilondev_xx[ijk_ispec], b_epsilondev_yy[ijk_ispec]);
+  }*/
     }
   }
 }
@@ -564,13 +564,13 @@ __global__ void compute_kernels_hess_el_cudakernel(int* ispec_is_elastic,
                                                    int* d_ibool,
                                                    realw* accel,
                                                    realw* b_accel,
-						   realw* b_veloc,
-						   realw* b_epsilondev_xx,realw* b_epsilondev_yy,realw* b_epsilondev_xy,
-						   realw* b_epsilondev_xz,realw* b_epsilondev_yz,realw* b_epsilon_trace_over_3,
+               realw* b_veloc,
+               realw* b_epsilondev_xx,realw* b_epsilondev_yy,realw* b_epsilondev_xy,
+               realw* b_epsilondev_xz,realw* b_epsilondev_yz,realw* b_epsilon_trace_over_3,
                                                    realw* hess_kl,
-						   realw* hess_rho_kl,
-						   realw* hess_kappa_kl,
-						   realw* hess_mu_kl,
+               realw* hess_rho_kl,
+               realw* hess_kappa_kl,
+               realw* hess_mu_kl,
                                                    realw deltat,
                                                    int NSPEC_AB) {
 
@@ -592,24 +592,24 @@ __global__ void compute_kernels_hess_el_cudakernel(int* ispec_is_elastic,
 
       //
       hess_rho_kl[ijk_ispec] += deltat * (b_veloc[3*iglob]  *b_veloc[3*iglob]+
-					  b_veloc[3*iglob+1]*b_veloc[3*iglob+1]+
-					  b_veloc[3*iglob+2]*b_veloc[3*iglob+2]);
+            b_veloc[3*iglob+1]*b_veloc[3*iglob+1]+
+            b_veloc[3*iglob+2]*b_veloc[3*iglob+2]);
 
       hess_mu_kl[ijk_ispec] += deltat * (b_epsilondev_xx[ijk_ispec]*b_epsilondev_xx[ijk_ispec]+
-					 b_epsilondev_yy[ijk_ispec]*b_epsilondev_yy[ijk_ispec]+
-					(b_epsilondev_xx[ijk_ispec]+b_epsilondev_yy[ijk_ispec])*
-					(b_epsilondev_xx[ijk_ispec]+b_epsilondev_yy[ijk_ispec])+
-				      2*(b_epsilondev_xy[ijk_ispec]*b_epsilondev_xy[ijk_ispec]+
+           b_epsilondev_yy[ijk_ispec]*b_epsilondev_yy[ijk_ispec]+
+          (b_epsilondev_xx[ijk_ispec]+b_epsilondev_yy[ijk_ispec])*
+          (b_epsilondev_xx[ijk_ispec]+b_epsilondev_yy[ijk_ispec])+
+              2*(b_epsilondev_xy[ijk_ispec]*b_epsilondev_xy[ijk_ispec]+
                                          b_epsilondev_xz[ijk_ispec]*b_epsilondev_xz[ijk_ispec]+
                                          b_epsilondev_yz[ijk_ispec]*b_epsilondev_yz[ijk_ispec]));
-	
+
       hess_kappa_kl[ijk_ispec] += deltat*(9*b_epsilon_trace_over_3[ijk_ispec]*
-                                            b_epsilon_trace_over_3[ijk_ispec]);		     
-	
+                                            b_epsilon_trace_over_3[ijk_ispec]);
+
       /*if (ijk_ispec==100){
-	  printf(" Hessian %e  %e \n",b_epsilondev_xx[ijk_ispec], b_epsilondev_yy[ijk_ispec]);
-	  }*/
-	
+    printf(" Hessian %e  %e \n",b_epsilondev_xx[ijk_ispec], b_epsilondev_yy[ijk_ispec]);
+    }*/
+
     }
   }
 }
@@ -620,16 +620,16 @@ __global__ void compute_kernels_hess_ac_cudakernel(int* ispec_is_acoustic,
                                                    int* d_ibool,
                                                    realw* potential_dot_dot_acoustic,
                                                    realw* b_potential_dot_dot_acoustic,
-						   realw* b_potential_dot_acoustic,
+               realw* b_potential_dot_acoustic,
                                                    realw* rhostore,
-						   realw* kappastore,
+               realw* kappastore,
                                                    realw* d_hprime_xx,
                                                    realw* d_xix,realw* d_xiy,realw* d_xiz,
                                                    realw* d_etax,realw* d_etay,realw* d_etaz,
                                                    realw* d_gammax,realw* d_gammay,realw* d_gammaz,
                                                    realw* hess_kl,
-						   realw* hess_rho_ac_kl,
-						   realw* hess_kappa_ac_kl,
+               realw* hess_rho_ac_kl,
+               realw* hess_kappa_ac_kl,
                                                    realw deltat,
                                                    int NSPEC_AB,
                                                    int gravity) {
@@ -702,13 +702,13 @@ __global__ void compute_kernels_hess_ac_cudakernel(int* ispec_is_acoustic,
                                             accel_elm[1]*b_accel_elm[1] +
                                             accel_elm[2]*b_accel_elm[2]);
     //
-   
+
     hess_rho_ac_kl[ijk_ispec] += deltat * rhol * (b_veloc_elm[0]*b_veloc_elm[0] +
-						  b_veloc_elm[1]*b_veloc_elm[1] +
-						  b_veloc_elm[2]*b_veloc_elm[2]);
-    kappal = kappastore[ijk_ispec]; 
+              b_veloc_elm[1]*b_veloc_elm[1] +
+              b_veloc_elm[2]*b_veloc_elm[2]);
+    kappal = kappastore[ijk_ispec];
     hess_kappa_ac_kl[ijk_ispec] += deltat / kappal * b_potential_dot_acoustic[iglob]
-                                                   * b_potential_dot_acoustic[iglob];				     
+                                                   * b_potential_dot_acoustic[iglob];
      //
 
   } // active
@@ -740,17 +740,17 @@ void FC_FUNC_(compute_kernels_hess_cuda,
                                                          mp->d_ibool,
                                                          mp->d_accel,
                                                          mp->d_b_accel,
-							 mp->d_b_veloc,
-							 mp->d_b_epsilondev_xx,
-							 mp->d_b_epsilondev_yy,
-							 mp->d_b_epsilondev_xy,
-							 mp->d_b_epsilondev_xz,
-							 mp->d_b_epsilondev_yz,
-							 mp->d_b_epsilon_trace_over_3,
+               mp->d_b_veloc,
+               mp->d_b_epsilondev_xx,
+               mp->d_b_epsilondev_yy,
+               mp->d_b_epsilondev_xy,
+               mp->d_b_epsilondev_xz,
+               mp->d_b_epsilondev_yz,
+               mp->d_b_epsilon_trace_over_3,
                                                          mp->d_hess_el_kl,
-							 mp->d_hess_rho_el_kl,
-							 mp->d_hess_kappa_el_kl,
-							 mp->d_hess_mu_el_kl,
+               mp->d_hess_rho_el_kl,
+               mp->d_hess_kappa_el_kl,
+               mp->d_hess_mu_el_kl,
                                                          deltat,
                                                          mp->NSPEC_AB);
   }
@@ -760,16 +760,16 @@ void FC_FUNC_(compute_kernels_hess_cuda,
                                                          mp->d_ibool,
                                                          mp->d_potential_dot_dot_acoustic,
                                                          mp->d_b_potential_dot_dot_acoustic,
-							 mp->d_b_potential_dot_acoustic,
+               mp->d_b_potential_dot_acoustic,
                                                          mp->d_rhostore,
-							 mp->d_kappastore,
+               mp->d_kappastore,
                                                          mp->d_hprime_xx,
                                                          mp->d_xix,mp->d_xiy,mp->d_xiz,
                                                          mp->d_etax,mp->d_etay,mp->d_etaz,
                                                          mp->d_gammax,mp->d_gammay,mp->d_gammaz,
                                                          mp->d_hess_ac_kl,
-							 mp->d_hess_rho_ac_kl,
-							 mp->d_hess_kappa_ac_kl,
+               mp->d_hess_rho_ac_kl,
+               mp->d_hess_kappa_ac_kl,
                                                          deltat,
                                                          mp->NSPEC_AB,
                                                          mp->gravity);

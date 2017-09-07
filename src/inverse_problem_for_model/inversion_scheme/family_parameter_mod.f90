@@ -11,10 +11,10 @@ module family_parameter
                                    c22store,c23store,c24store,c25store,c26store,c33store, &
                                    c34store,c35store,c36store,c44store,c45store,c46store, &
                                    c55store,c56store,c66store, &
-                                   ispec_is_elastic, ELASTIC_SIMULATION, & 
+                                   ispec_is_elastic, ELASTIC_SIMULATION, &
                                    hess_rho_kl, hess_mu_kl, hess_kappa_kl
 
-  use specfem_par_acoustic, only: ispec_is_acoustic, rho_ac_kl, kappa_ac_kl,  &
+  use specfem_par_acoustic, only: ispec_is_acoustic, rho_ac_kl, kappa_ac_kl, &
                                   hess_rho_ac_kl, hess_kappa_ac_kl, ACOUSTIC_SIMULATION
 
   !---------------------------------------------------------------------------------------------------------------------------------
@@ -366,14 +366,14 @@ contains
           rho_kl(:,:,:,ispec) = - rho_kl(:,:,:,ispec) * &
                rho_vs(:,:,:,ispec) * rho_vs(:,:,:,ispec) /  mustore(:,:,:,ispec)
 
-          !! store preconditionner kernels 
+          !! store preconditionner kernels
           if (inversion_param%shin_precond) then
              hess_rho_kl(:,:,:,ispec) = - hess_rho_kl(:,:,:,ispec) * &
                   rho_vs(:,:,:,ispec) * rho_vs(:,:,:,ispec) /  mustore(:,:,:,ispec)
-          else if (inversion_param%energy_precond) then 
-             !! energy precond : same for all family 
+          else if (inversion_param%energy_precond) then
+             !! energy precond : same for all family
              hess_approxim(:,:,:,ispec,1)= hess_rho_kl(:,:,:,ispec)
-          end if
+          endif
 
           if (ANISOTROPIC_KL) then
 
@@ -394,7 +394,7 @@ contains
              if (inversion_param%shin_precond) then
                 hess_mu_kl(:,:,:,ispec)  =  - 2._CUSTOM_REAL *  mustore(:,:,:,ispec) * hess_mu_kl(:,:,:,ispec)
                 hess_kappa_kl(:,:,:,ispec) = - kappastore(:,:,:,ispec) * hess_kappa_kl(:,:,:,ispec)
-             end if
+             endif
 
              !---------------------put kernel in the choosen family---------------------------------------------------------
              select case(trim(adjustl(inversion_param%param_family)))
@@ -409,7 +409,7 @@ contains
                    hess_approxim(:,:,:,ispec,1)=2._CUSTOM_REAL * (1._CUSTOM_REAL &
                         + 4._CUSTOM_REAL * mustore(:,:,:,ispec) / (3._CUSTOM_REAL * kappastore(:,:,:,ispec) ) ) &
                         * hess_kappa_kl(:,:,:,ispec)
-                end if
+                endif
 
              case('rho_vp')
 
@@ -420,14 +420,14 @@ contains
                 gradient(:,:,:,ispec,2)=2._CUSTOM_REAL * (1._CUSTOM_REAL &
                 + 4._CUSTOM_REAL * mustore(:,:,:,ispec) / (3._CUSTOM_REAL * kappastore(:,:,:,ispec) ) ) * kappa_kl(:,:,:,ispec)
 
-                
+
                 if (inversion_param%shin_precond) then
                    hess_approxim(:,:,:,ispec,1)=hess_rho_kl(:,:,:,ispec) + hess_kappa_kl(:,:,:,ispec) + hess_mu_kl(:,:,:,ispec)
 
                    hess_approxim(:,:,:,ispec,2)=2._CUSTOM_REAL * (1._CUSTOM_REAL &
                         + 4._CUSTOM_REAL * mustore(:,:,:,ispec) / (3._CUSTOM_REAL * kappastore(:,:,:,ispec) ) ) &
                         * hess_kappa_kl(:,:,:,ispec)
-                end if
+                endif
 
              case('vp_vs')
 
@@ -444,11 +444,11 @@ contains
                    hess_approxim(:,:,:,ispec,1)=2._CUSTOM_REAL * (1._CUSTOM_REAL &
                         + 4._CUSTOM_REAL * mustore(:,:,:,ispec) / (3._CUSTOM_REAL * kappastore(:,:,:,ispec) ) ) &
                         * hess_kappa_kl(:,:,:,ispec)
-                   
+
                    hess_approxim(:,:,:,ispec,2)=2._CUSTOM_REAL * (hess_mu_kl(:,:,:,ispec) &
                         - 4._CUSTOM_REAL * mustore(:,:,:,ispec) / &
                         (3._CUSTOM_REAL * kappastore(:,:,:,ispec)) * hess_kappa_kl(:,:,:,ispec))
-                end if
+                endif
 
              case('rho_vp_vs')
 
@@ -469,11 +469,11 @@ contains
                    hess_approxim(:,:,:,ispec,2)=2._CUSTOM_REAL * (1._CUSTOM_REAL &
                         + 4._CUSTOM_REAL * mustore(:,:,:,ispec) / (3._CUSTOM_REAL * kappastore(:,:,:,ispec) ) ) &
                         * hess_kappa_kl(:,:,:,ispec)
-                   
+
                    hess_approxim(:,:,:,ispec,3)=2._CUSTOM_REAL * (hess_mu_kl(:,:,:,ispec) &
                         - 4._CUSTOM_REAL * mustore(:,:,:,ispec) / &
                         (3._CUSTOM_REAL * kappastore(:,:,:,ispec)) * hess_kappa_kl(:,:,:,ispec))
-                end if
+                endif
 
 !!$             case('rho_lambda_mu')
 !!$                gradient(:,:,:,ispec,1)=
@@ -494,7 +494,7 @@ contains
                    hess_approxim(:,:,:,ispec,1)=hess_rho_kl(:,:,:,ispec)
                    hess_approxim(:,:,:,ispec,2)=hess_kappa_kl(:,:,:,ispec)
                    hess_approxim(:,:,:,ispec,3)=hess_mu_kl(:,:,:,ispec)
-                end if
+                endif
 
              case default
 
@@ -510,11 +510,11 @@ contains
        endif
 
        if (ispec_is_acoustic(ispec)) then
-          
-          if (inversion_param%energy_precond)then 
-             !! energy precond : same for all family 
+
+          if (inversion_param%energy_precond) then
+             !! energy precond : same for all family
              hess_approxim(:,:,:,ispec,1)= hess_rho_ac_kl(:,:,:,ispec)
-          end if
+          endif
 
           select case(trim(adjustl(inversion_param%param_family)))
 
@@ -525,7 +525,7 @@ contains
 
              if (inversion_param%shin_precond) then
                 hess_approxim(:,:,:,ispec,1) = 2._CUSTOM_REAL * hess_kappa_ac_kl(:,:,:,ispec)
-             end if
+             endif
 
           case('rho_vp', 'rho_vp_vs')
 
@@ -538,7 +538,7 @@ contains
              if (inversion_param%shin_precond) then
                 hess_approxim(:,:,:,ispec,1) = hess_rho_ac_kl(:,:,:,ispec) + hess_kappa_ac_kl(:,:,:,ispec)
                 hess_approxim(:,:,:,ispec,2) = 2._CUSTOM_REAL * hess_kappa_ac_kl(:,:,:,ispec)
-             end if
+             endif
 
           case('rho_kappa', 'rho_kappa_mu')
              gradient(:,:,:,ispec,1) = rho_ac_kl(:,:,:,ispec)
@@ -547,7 +547,7 @@ contains
              if (inversion_param%shin_precond) then
                 hess_approxim(:,:,:,ispec,1) = hess_rho_ac_kl(:,:,:,ispec)
                 hess_approxim(:,:,:,ispec,2) = hess_kappa_ac_kl(:,:,:,ispec)
-             end if
+             endif
 
           case default
 
@@ -586,12 +586,12 @@ contains
        wks(:,:,:,:)=kappa_ac_kl(:,:,:,:)
        call sum_all_all_cr_for_simulatenous_runs(wks(1,1,1,1), kappa_ac_kl(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
 
-       if (APPROXIMATE_HESS_KL) then 
+       if (APPROXIMATE_HESS_KL) then
           wks(:,:,:,:)=hess_rho_ac_kl(:,:,:,:)
           call sum_all_all_cr_for_simulatenous_runs(wks(1,1,1,1), hess_rho_ac_kl(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
           wks(:,:,:,:)=hess_kappa_ac_kl(:,:,:,:)
           call sum_all_all_cr_for_simulatenous_runs(wks(1,1,1,1), hess_kappa_ac_kl(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
-       end if
+       endif
 
     endif
 
@@ -599,12 +599,12 @@ contains
 
        wks(:,:,:,:)=rho_kl(:,:,:,:)
        call sum_all_all_cr_for_simulatenous_runs(wks(1,1,1,1), rho_kl(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
-       
-       if (APPROXIMATE_HESS_KL) then 
+
+       if (APPROXIMATE_HESS_KL) then
           wks(:,:,:,:)=hess_rho_kl(:,:,:,:)
           call sum_all_all_cr_for_simulatenous_runs(wks(1,1,1,1), hess_rho_kl(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
-       end if
-       
+       endif
+
 
        if (ANISOTROPIC_KL) then
           wks1(:,:,:,:,:)= cijkl_kl(:,:,:,:,:)
@@ -615,16 +615,16 @@ contains
           wks(:,:,:,:)=kappa_kl(:,:,:,:)
           call sum_all_all_cr_for_simulatenous_runs(wks(1,1,1,1), kappa_kl(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
 
-            if (APPROXIMATE_HESS_KL) then 
+            if (APPROXIMATE_HESS_KL) then
                wks(:,:,:,:)=hess_mu_kl(:,:,:,:)
                call sum_all_all_cr_for_simulatenous_runs(wks(1,1,1,1), hess_mu_kl(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
                wks(:,:,:,:)=hess_kappa_kl(:,:,:,:)
                call sum_all_all_cr_for_simulatenous_runs(wks(1,1,1,1), hess_kappa_kl(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
-            end if
+            endif
 
        endif
 
-     
+
 
     endif
 

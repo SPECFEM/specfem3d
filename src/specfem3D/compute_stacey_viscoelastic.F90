@@ -1085,13 +1085,13 @@ end subroutine FK3D
 
   deallocate(fvec,coeff, field_f, field, dtmp)
   deallocate(tmp_f1, tmp_f2, tmp_f3, tmp_t1, tmp_t2, tmp_t3)
-  
+
   if (myrank == 0) then
      write(IMAIN,*)
-     write(IMAIN,*) " FK computing passed " 
+     write(IMAIN,*) " FK computing passed "
      write(IMAIN,*)
      call flush_IMAIN()
-  end if
+  endif
 
 end subroutine FK
 

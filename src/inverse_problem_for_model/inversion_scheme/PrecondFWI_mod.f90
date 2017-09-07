@@ -104,7 +104,7 @@ contains
     endif
 
     if (inversion_param%shin_precond .and. iter_inverse == 0) then
- 
+
        if (DEBUG_MODE) then
           write(IIDD,*)
           write(IIDD,*) '       iteration FWI : ', iter_inverse
@@ -113,15 +113,15 @@ contains
           write(IIDD,*)
           write(IIDD,*)
        endif
-       
+
        fwi_precond(:,:,:,:,:) = 1._CUSTOM_REAL / abs(hess_approxim(:,:,:,:,:))
-       
 
-    end if
 
-    
+    endif
+
+
     if (inversion_param%energy_precond .and. iter_inverse == 0) then
- 
+
        if (DEBUG_MODE) then
           write(IIDD,*)
           write(IIDD,*) '       iteration FWI : ', iter_inverse
@@ -137,9 +137,9 @@ contains
 
        do i=1,inversion_param%NinvPar
           fwi_precond(:,:,:,:,i) = nrme_coef / abs(hess_approxim(:,:,:,:,1))
-       end do
+       enddo
 
-    end if
+    endif
 
 
   end subroutine SetPrecond

@@ -1003,7 +1003,7 @@
          hess_ac_kl(:,:,:,:)   = 0._CUSTOM_REAL
          hess_rho_ac_kl(:,:,:,:)   = 0._CUSTOM_REAL
          hess_kappa_ac_kl(:,:,:,:)   = 0._CUSTOM_REAL
-      end if
+      endif
 
       ! reconstructed/backward acoustic potentials
       b_potential_acoustic = 0._CUSTOM_REAL
