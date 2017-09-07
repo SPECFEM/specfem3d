@@ -293,13 +293,13 @@ contains
 
     ! define preconditionnner or taper on gradients
     call SetPrecond(iter_inverse, inversion_param, initial_gradient, hess_approxim, fwi_precond)
-    ! write precond on disk 
+    ! write precond on disk
     if (mygroup <= 0 .and. VERBOSE_MODE) then
        prefix_name='precond'
        call DumpArray(fwi_precond, inversion_param, iter_inverse, prefix_name)
        prefix_name='Hess_app'
        call DumpArray(hess_approxim, inversion_param, iter_inverse, prefix_name)
-    end if
+    endif
 
     ! store new model and gradient in l-bfgs history for the choosen family parameter
     call StoreModelAndGradientForLBFGS(initial_model, initial_gradient, 0)

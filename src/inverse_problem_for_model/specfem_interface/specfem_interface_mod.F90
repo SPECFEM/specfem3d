@@ -758,7 +758,7 @@ contains
           if (APPROXIMATE_HESS_KL) then
              hess_rho_ac_kl_GPU(:,:,:,:)=hess_rho_ac_kl_GPU(:,:,:,:)+hess_rho_ac_kl(:,:,:,:)
              hess_kappa_ac_kl_GPU(:,:,:,:)=hess_kappa_ac_kl_GPU(:,:,:,:)+hess_kappa_ac_kl(:,:,:,:)
-          end if
+          endif
        endif
 
        if (ELASTIC_SIMULATION) then
@@ -772,7 +772,7 @@ contains
                 hess_rho_kl_GPU(:,:,:,:)=hess_rho_kl_GPU(:,:,:,:)+hess_rho_kl(:,:,:,:)
                 hess_kappa_kl_GPU(:,:,:,:)=hess_kappa_kl_GPU(:,:,:,:)+hess_kappa_kl(:,:,:,:)
                 hess_mu_kl_GPU(:,:,:,:)= hess_mu_kl_GPU(:,:,:,:)+ hess_mu_kl(:,:,:,:)
-             end if
+             endif
           endif
 
        endif
@@ -827,7 +827,7 @@ contains
        endif
 
        if (APPROXIMATE_HESS_KL) then
-          if (ELASTIC_SIMULATION) then 
+          if (ELASTIC_SIMULATION) then
 
              hess_kl(:,:,:,:)   = 0._CUSTOM_REAL
              hess_kappa_kl(:,:,:,:)   = 0._CUSTOM_REAL
@@ -838,9 +838,9 @@ contains
                 hess_kappa_kl_GPU(:,:,:,:)   = 0._CUSTOM_REAL
                 hess_mu_kl_GPU(:,:,:,:)   = 0._CUSTOM_REAL
                 hess_rho_kl_GPU(:,:,:,:)   = 0._CUSTOM_REAL
-             end if
+             endif
 
-          end if
+          endif
           if (ACOUSTIC_SIMULATION) then
 
              hess_ac_kl(:,:,:,:)   = 0._CUSTOM_REAL
@@ -850,9 +850,9 @@ contains
              if (GPU_MODE) then
                  hess_rho_ac_kl_GPU(:,:,:,:)   = 0._CUSTOM_REAL
                  hess_kappa_ac_kl_GPU(:,:,:,:)   = 0._CUSTOM_REAL
-             end if
+             endif
 
-          end if
+          endif
        endif
 
     endif
@@ -1090,7 +1090,7 @@ contains
           kappa_ac_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
           if (APPROXIMATE_HESS_KL) then
              allocate(hess_rho_ac_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB),hess_kappa_ac_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-          end if
+          endif
        endif
 
        if (ELASTIC_SIMULATION) then
@@ -1102,7 +1102,7 @@ contains
           if (APPROXIMATE_HESS_KL) then
              allocate(hess_rho_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB),hess_kappa_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
                   hess_mu_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-          end if
+          endif
        endif
 
        if (ANISOTROPIC_KL) then
@@ -1127,13 +1127,13 @@ contains
        if (APPROXIMATE_HESS_KL) then
           hess_rho_ac_kl(:,:,:,:)=hess_rho_ac_kl_GPU(:,:,:,:)
           hess_kappa_ac_kl(:,:,:,:)=hess_kappa_ac_kl_GPU(:,:,:,:)
-       end if
+       endif
     endif
 
     if (ELASTIC_SIMULATION) then
 
        rho_kl(:,:,:,:)=rho_kl_GPU(:,:,:,:)
-       
+
        if (ANISOTROPIC_KL) then
           cijkl_kl(:,:,:,:,:)=cijkl_kl_GPU(:,:,:,:,:)
        else
@@ -1143,7 +1143,7 @@ contains
              hess_rho_kl(:,:,:,:)=hess_rho_kl_GPU(:,:,:,:)
              hess_kappa_kl(:,:,:,:)=hess_kappa_kl_GPU(:,:,:,:)
              hess_mu_kl(:,:,:,:)=hess_mu_kl_GPU(:,:,:,:)
-          end if
+          endif
        endif
 
     endif

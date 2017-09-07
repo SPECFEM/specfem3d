@@ -376,7 +376,7 @@
   real(kind=CUSTOM_REAL), dimension(5) :: b_epsilondev_loc
   integer :: i,j,k,ispec,iglob
   real(kind=CUSTOM_REAL) :: kappal,rhol
-  
+
   ! updates kernels on GPU
   if (GPU_MODE) then
 
@@ -448,7 +448,7 @@
         do j = 1, NGLLY
           do i = 1, NGLLX
             iglob = ibool(i,j,k,ispec)
-            
+
             b_epsilondev_loc(1) = b_epsilondev_xx(i,j,k,ispec)
             b_epsilondev_loc(2) = b_epsilondev_yy(i,j,k,ispec)
             b_epsilondev_loc(3) = b_epsilondev_xy(i,j,k,ispec)

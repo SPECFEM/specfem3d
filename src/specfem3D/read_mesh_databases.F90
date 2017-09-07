@@ -1120,7 +1120,7 @@
       allocate(hess_rho_kl(0,0,0,0),stat=ier)
       allocate(hess_mu_kl(0,0,0,0),stat=ier)
       allocate(hess_kappa_kl(0,0,0,0),stat=ier)
-      
+
       if (ier /= 0) stop 'Error allocating dummy array hess_kl'
     endif
 

@@ -51,7 +51,7 @@ contains
     nstep_data = acqui_simu(isource)%Nt_data
     dt_data = acqui_simu(isource)%dt_data
 
-    current_iter=inversion_param%current_iteration 
+    current_iter=inversion_param%current_iteration
 
     !! initialize cost function for each MPI porcess
     cost_function  = 0._CUSTOM_REAL
@@ -237,7 +237,7 @@ contains
        !!----------------------------------------------------------------------------------------------------
 
        case ('L2_OIL_INDUSTRY')
-          
+
           do icomp = 1, NDIM
 
              !! filter the data
@@ -246,19 +246,19 @@ contains
              fh=acqui_simu(isource)%freqcy_to_invert(icomp,2,irec_local)
              raw_residuals(:)= acqui_simu(isource)%data_traces(irec_local,:,icomp)
              call bwfilt(raw_residuals, fil_residuals, dt_data, nstep_data, irek_filter, norder_filter, fl, fh)
-             
+
              !! save filtered data
              acqui_simu(isource)%synt_traces(icomp, irec_local,:)= fil_residuals(:)
 
              !! define energy renormalisation
-             if (current_iter==0) then
+             if (current_iter == 0) then
                 do icomp_tmp = 1, NDIM
                    acqui_simu(isource)%weight_trace(icomp,irec_local)=100._CUSTOM_REAL / &
                         ((sum( acqui_simu(isource)%synt_traces(irec_local,:,icomp_tmp) )**2) *0.5*dt_data)
-                end do
-             end if
+                enddo
+             endif
 
-             !! adjoint source 
+             !! adjoint source
              raw_residuals(:)= (seismograms_d(icomp,irec_local,:) - fil_residuals(:))*&
                   acqui_simu(isource)%weight_trace(icomp,irec_local)
 
@@ -270,7 +270,7 @@ contains
              acqui_simu(isource)%adjoint_sources(icomp,irec_local,:)=raw_residuals(:)*w_tap(:)*&
                   acqui_simu(isource)%weight_trace(icomp,irec_local)
 
-          end do
+          enddo
 
        case default
 

@@ -63,7 +63,7 @@ contains
     wks_2(:,:,:,:,:) = 0._CUSTOM_REAL
     wks_1n(:,:,:,:,:) = 0._CUSTOM_REAL
     wks_2n(:,:,:,:,:) = 0._CUSTOM_REAL
-    
+
 
   end subroutine AllocateArraysForInversion
 !----------------------------------------------------------------------------------------------------------------------------------
@@ -139,10 +139,10 @@ contains
 
        wks_1(:,:,:,:,:) = bfgs_stored_gradient(:,:,:,:,:,k+1) -  bfgs_stored_gradient(:,:,:,:,:,k)
        wks_2(:,:,:,:,:) = bfgs_stored_model(:,:,:,:,:,k+1)    -  bfgs_stored_model(:,:,:,:,:,k)
-       
+
        ! Liu and Nocedal 1989 (Mathematical programming)
        ! Diagonal_prec(:,:,:,:,:) =  Diagonal_prec(:,:,:,:,:) +  (wks_1(:,:,:,:,:)*wks_2(:,:,:,:,:)) /(wks_1(:,:,:,:,:)**2)
-       ! 
+       !
 
        call Parallel_ComputeInnerProduct(wks_2, wks_1, Ninvpar, pk)
        pk_store(k) = 1._CUSTOM_REAL / pk
@@ -161,8 +161,8 @@ contains
 
     !! customer preconditionning
     descent_direction(:,:,:,:,:) =  fwi_precond(:,:,:,:,:) * descent_direction(:,:,:,:,:)
-    
-    !! diagonal precoditionner 
+
+    !! diagonal precoditionner
     !!descent_direction(:,:,:,:,:) =  Diagonal_prec(:,:,:,:,:) *  descent_direction(:,:,:,:,:)
 
     do k = imin, imax
@@ -280,15 +280,15 @@ contains
     real(kind=CUSTOM_REAL)                                                   :: jacobianl, weight, qp_tmp
     integer                                                                  :: ipar, i, j, k, ispec
     real(kind=CUSTOM_REAL)                                                   :: coeff, coeff_n1, coeff_n2
-  
-    !! try normalization to avoid numerical errors 
+
+    !! try normalization to avoid numerical errors
     !call Parallel_ComputeL2normSquare(vect1 , Niv, coeff_n1)
     !call Parallel_ComputeL2normSquare(vect2 , Niv, coeff_n2)
 
     coeff=maxval(abs(vect1(:,:,:,:,:)))
     call max_all_all_cr(coeff, coeff_n1)
     wks_1n(:,:,:,:,:) = vect1(:,:,:,:,:) / coeff_n1
-    
+
     coeff=maxval(abs(vect2(:,:,:,:,:)))
     call max_all_all_cr(coeff, coeff_n2)
     wks_2n(:,:,:,:,:) = vect2(:,:,:,:,:) / coeff_n2

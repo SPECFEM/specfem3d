@@ -780,9 +780,9 @@ contains
 
     if (myrank > 0)  allocate(model_fd(nx_fd, ny_fd, nz_fd, nb_model_to_read))
     call bcast_all_cr(model_fd,nx_fd*ny_fd*nz_fd*nb_model_to_read)
-   
-    if (myrank == 0) write(INVERSE_LOG_FILE, *) '     MPI Bcast full elastic tensor, size : ',nx_fd*ny_fd*nz_fd*nb_model_to_read 
-   
+
+    if (myrank == 0) write(INVERSE_LOG_FILE, *) '     MPI Bcast full elastic tensor, size : ',nx_fd*ny_fd*nz_fd*nb_model_to_read
+
     !! check if fd model is bigger than SEM model ------------------------
     ! get mesh properties
     xmin=minval(xstore)
