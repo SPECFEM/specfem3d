@@ -1,0 +1,466 @@
+
+ **********************
+ Serial mesh decomposer
+ **********************
+
+ total number of nodes:
+   nnodes =        17238
+ total number of spectral elements:
+   nspec =        15000
+ materials:
+   num_mat =            1
+   num_mat =            2
+   defined =            2 undefined =            0
+   no poroelastic material file found
+ absorbing boundaries:
+   nspec2D_xmin =          600
+   nspec2D_xmax =          600
+   nspec2D_ymin =          300
+   nspec2D_ymax =          300
+   nspec2D_bottom =         1250
+   nspec2D_top =         1250
+   no absorbing_cpml_file file found
+   no moho_surface_file file found
+ Par_file_faults not found: assuming that there are no faults
+ node valence:  min =            1  max =            8
+   nsize =            8 sup_neighbor =           38
+ mesh2dual:
+   max_neighbor =           26
+ partitions:
+   num =           16
+
+ Databases files in directory: DATABASES_MPI/
+ finished successfully
+
+ *** Minimum period resolved =    8.342277
+ saving VTK files for Courant number and minimum period
+ *** Maximum suggested time step =   0.1538808
+rm: No match.
+rm: No match.
+mpif90 -O3  -c  global_parameters.f90
+mpif90 -O3  -c  data_diag.f90
+mpif90 -O3  -c  clocks.f90
+mpif90 -O3  -c  data_coarse.f90
+mpif90 -O3  -c  data_numbering.f90
+mpif90 -O3  -c  interpolation.f90
+mpif90 -O3  -c  data_bkgrdmodel.f90
+mpif90 -O3  -c  data_gllmesh.f90
+mpif90 -O3  -c  data_grid.f90
+mpif90 -O3  -c  data_mesh.f90
+mpif90 -O3  -c  data_spec.f90
+mpif90 -O3  -c  analytic_semi_mapping.f90
+mpif90 -O3  -c  analytic_spheroid_mapping.f90
+mpif90 -O3  -c  subpar_mapping.f90
+mpif90 -O3  -c  data_time.f90
+mpif90 -O3  -c  data_pdb.f90
+mpif90 -O3  -c  splib.f90
+mpif90 -O3  -c  mesh_info.f90
+mpif90 -O3  -c  sorting.f90
+mpif90 -O3  -c  background_models.F90
+mpif90 -O3  -c  clocks_wrapper_mesher.f90
+mpif90 -O3  -c  analytic_mapping.f90
+mpif90 -O3  -c  gllmeshgen.f90
+mpif90 -O3  -c  numbering.f90
+mpif90 -O3  -c  meshgen.f90
+mpif90 -O3  -c  test_bkgrdmodel.F90
+mpif90 -O3  -c  model_discontinuities.f90
+mpif90 -O3  -c  input.f90
+mpif90 -O3  -c  pdb.f90
+mpif90 -O3  -c  discont_meshing.f90
+mpif90 -O3  -c  parallelization.f90
+mpif90 -O3  -c  main.f90
+mpif90 -O3  -o xmesh background_models.o test_bkgrdmodel.o analytic_mapping.o analytic_semi_mapping.o analytic_spheroid_mapping.o clocks.o clocks_wrapper_mesher.o data_bkgrdmodel.o data_coarse.o data_diag.o data_gllmesh.o data_grid.o data_mesh.o data_numbering.o data_pdb.o data_spec.o data_time.o discont_meshing.o gllmeshgen.o global_parameters.o input.o interpolation.o main.o mesh_info.o meshgen.o model_discontinuities.o numbering.o parallelization.o pdb.o sorting.o splib.o subpar_mapping.o
+xmesh submitted, output in "OUTPUT"
+After the run, move the mesh to a new directory <meshdir> via:
+./movemesh <meshdir>
+This will be located in ../SOLVER/MESHES/<meshdir>
+Moving mesh from . to ../SOLVER/MESHES/ak135_10
+MESHER finished smoothly...
+Moving mesh to /mnt/Data1/vmont/svn_lma/DSM_FOR_SPECFEM3D/EXAMPLES_Vadim_inversion_framework_and_coupling/coupling_with_an_external_code/small_example_coupling_axisem_specfem_script/run_axisem/SOLVER/MESHES/ak135_10
+ak135
+Contents in /mnt/Data1/vmont/svn_lma/DSM_FOR_SPECFEM3D/EXAMPLES_Vadim_inversion_framework_and_coupling/coupling_with_an_external_code/small_example_coupling_axisem_specfem_script/run_axisem/SOLVER/MESHES/ak135_10 :
+1dmodel_axisem.bm
+1dmodel_yspec.bm
+Code
+inparam_mesh
+mesh_courant.vtk
+meshdb.dat0000
+meshdb.dat0001
+meshdb.dat0002
+meshdb.dat0003
+meshdb.dat0004
+meshdb.dat0005
+meshdb.dat0006
+meshdb.dat0007
+meshdb.dat0008
+meshdb.dat0009
+meshdb.dat0010
+meshdb.dat0011
+meshdb.dat0012
+meshdb.dat0013
+meshdb.dat0014
+meshdb.dat0015
+mesh_domaindecomposition_cell.vtk
+mesh_domaindecomposition.vtk
+mesh_dt.vtk
+mesh_eltype.vtk
+mesh_hmax.vtk
+mesh_hmin.vtk
+mesh_params.h
+mesh_period.vtk
+mesh_pts_wavelength.vtk
+mesh_Qka.vtk
+mesh_Qmu.vtk
+mesh_rho.vtk
+mesh_vp.vtk
+mesh_vs.vtk
+OUTPUT
+radial_velocity.dat
+Total size: 99M .
+DONE.
+fatal: Not a git repository (or any parent up to mount point /mnt/Data1)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Using mesh  MESHES/ak135_10
+copying mesh_params.h from  MESHES/ak135_10
+mpif90 -O3  -Dsolver -c  data_proc.f90
+mpif90 -O3  -Dsolver -c  global_parameters.f90
+mpif90 -O3  -Dsolver -c  clocks.f90
+mpif90 -O3  -Dsolver -c  kdtree2.f90
+gcc -O3    -c -o ftz.o ftz.c
+gcc -O3    -c -o pthread.o pthread.c
+cd UTILS; make
+make[1]: Entering directory `/mnt/Data1/vmont/svn_lma/DSM_FOR_SPECFEM3D/EXAMPLES_Vadim_inversion_framework_and_coupling/coupling_with_an_external_code/small_example_coupling_axisem_specfem_script/run_axisem/SOLVER/UTILS'
+mpif90 -O3   -c nc_postroutines.F90
+mpif90 -O3   -c field_transform.F90
+mpif90 -O3  -Dsolver -c  interpolation.f90
+mpif90 -O3  -Dsolver -c  list.f90
+mpif90 -O3  -Dsolver -c  data_io.f90
+mpif90 -O3  -Dsolver -c  data_spec.f90
+mpif90 -O3  -Dsolver -c  data_time.f90
+mpif90 -O3  -Dsolver -c  data_source.f90
+mpif90 -O3  -Dsolver -c  analytic_semi_mapping.f90
+mpif90 -O3  -Dsolver -c  subpar_mapping.f90
+mpif90 -O3  -Dsolver -c  apply_masks.f90
+mpif90 -O3  -Dsolver -c  data_pointwise.f90
+mpif90 -O3  -Dsolver -c  data_heterogeneous.f90
+mpif90 -O3  -Dsolver -c  data_matr.f90
+mpif90 -O3  field_transform.o -o xfield_transform
+mpif90 -O3   -c post_processing.F90
+mpif90 -O3  -Dsolver -c  data_mesh.f90
+mpif90 -O3  -Dsolver -c  nc_helpers.F90
+mpif90 -O3  -Dsolver -c  clocks_wrapper_solver.f90
+mpif90 -O3  -Dsolver -c  background_models.F90
+mpif90 -O3  -Dsolver -c  data_comm.f90
+mpif90 -O3  -Dsolver -c  analytic_spheroid_mapping.f90
+mpif90 -O3  -Dsolver -c  nc_snapshots.F90
+mpif90 -O3  -Dsolver -c  unrolled_loops.f90
+mpif90 -O3  -Dsolver -c  rotations.f90
+mpif90 -O3  -Dsolver -c  commpi.F90
+mpif90 -O3  -Dsolver -c  analytic_mapping.f90
+mpif90 -O3  -Dsolver -c  pointwise_derivatives.f90
+mpif90 -O3  -Dsolver -c  stiffness_fluid.f90
+mpif90 -O3  -Dsolver -c  utlity.f90
+mpif90 -O3  -Dsolver -c  commun.F90
+mpif90 -O3  -Dsolver -c  nc_routines.F90
+mpif90 -O3  -Dsolver -c  coupling_mod.f90
+mpif90 -O3  -Dsolver -c  meshes_io.F90
+mpif90 -O3  -Dsolver -c  seismograms.f90
+mpif90 -O3  -Dsolver -c  source.f90
+mpif90 -O3  -Dsolver -c  wavefields_io.f90
+mpif90 -O3  -Dsolver -c  get_mesh.f90
+mpif90 -O3  -Dsolver -c  lateral_heterogeneities.F90
+mpif90 -O3  -Dsolver -c  def_grid.f90
+mpif90 -O3  -Dsolver -c  attenuation.f90
+mpif90 -O3  -Dsolver -c  parameters.F90
+mpif90 -O3  -Dsolver -c  stiffness_di.f90
+mpif90 -O3  -Dsolver -c  stiffness_mono.f90
+mpif90 -O3  -Dsolver -c  stiffness_quad.f90
+mpif90 -O3  post_processing.o nc_postroutines.o -o xpost_processing
+make[1]: Leaving directory `/mnt/Data1/vmont/svn_lma/DSM_FOR_SPECFEM3D/EXAMPLES_Vadim_inversion_framework_and_coupling/coupling_with_an_external_code/small_example_coupling_axisem_specfem_script/run_axisem/SOLVER/UTILS'
+mpif90 -O3  -Dsolver -c  get_model.F90
+mpif90 -O3  -Dsolver -c  def_precomp_terms.f90
+mpif90 -O3  -Dsolver -c  time_evol_wave.F90
+mpif90 -O3  -Dsolver -c  main.f90
+mpif90 -O3  -o axisem background_models.o commpi.o commun.o get_model.o lateral_heterogeneities.o meshes_io.o nc_helpers.o nc_routines.o nc_snapshots.o parameters.o time_evol_wave.o analytic_mapping.o analytic_semi_mapping.o analytic_spheroid_mapping.o apply_masks.o attenuation.o clocks.o clocks_wrapper_solver.o data_comm.o data_heterogeneous.o data_io.o data_matr.o data_mesh.o data_pointwise.o data_proc.o data_source.o data_spec.o data_time.o def_grid.o def_precomp_terms.o get_mesh.o global_parameters.o interpolation.o kdtree2.o list.o main.o pointwise_derivatives.o rotations.o seismograms.o source.o stiffness_di.o stiffness_fluid.o stiffness_mono.o stiffness_quad.o subpar_mapping.o unrolled_loops.o utlity.o coupling_mod.o wavefields_io.o ftz.o pthread.o
+Receiver file type: stations
+Source file: inparam_source, Receiver file: STATIONS
+source names: ./
+source components: explosion
+Create the run directory  1
+copying make_axisem.macros from ../
+
+Setting up simulation ./
+creating ./Info
+copying crucial files for the simulation...
+cp: '/mnt/Data1/vmont/svn_lma/DSM_FOR_SPECFEM3D/EXAMPLES_Vadim_inversion_framework_and_coupling/coupling_with_an_external_code/small_example_coupling_axisem_specfem_script/run_axisem/SOLVER/input_box.txt' and '.././input_box.txt' are the same file
+preparing job on 16 nodes...
+    Initialized run for nproc =   16
+
+ MAIN: Welcome to AxiSEM!
+
+     CLOCKS module Clocks.F90,v 3.0 2014/10/19
+     Realtime clock resolution=  9.999999747378752E-005 (       10000  ticks/sec
+ )
+     Simulation started on 07/27/2017 at 12h 08min
+
+ MAIN: Reading parameters..................................
+    Reading inparam_basic... done
+ done
+    Reading runinfo...  done
+
+        ///////////////////////////////////////////////////////////////
+        //                                                           //
+        //                  A   x   i   S   E   M                    //
+        //                                                           //
+        //                                                           //
+        //         Parallel spectral-element solution to             //
+        //                                                           //
+        //           3-D seismic wave propagation for                //
+        //                                                           //
+        //          axially symmetric background models              //
+        //                                                           //
+        //               in a spherical 2-D domain                   //
+        //                                                           //
+        //                                                           //
+        //  Authors : Tarje Nissen-Meyer (Oxford University)         //
+        //              Martin van Driel (ETH Zurich)                //
+        //                 Simon Stahler (LMU Munich)                //
+        //                Kasra Hosseini (LMU Munich)                //
+        //               Stefanie Hempel (University of Muenster)    //
+        //            Alexandre Fournier (IPG Paris)                 //
+        //                   Tony Dahlen (Princeton University)      //
+        //                                                           //
+        //   Contact:     info@axisem.info                           //
+        //   Information: www.axisem.info                            //
+        //                                                           //
+
+        //                                                           //
+        //     If you are publishing results obtained with this      //
+        //          code, please cite this paper:                    //
+        //                                                           //
+        // (1) T. Nissen-Meyer, M. van Driel, S. C. Staehler,        //
+        //     K. Hosseini, S. Hempel, L. Auer, A. Colombi           //
+        //     and A. Fournier:                                      //
+        //     "AxiSEM: broadband 3-D seismic wavefields in          //
+        //              axisymmetric media"                          //
+        //     Solid Earth, 5, 425-445, 2014                         //
+        //     doi:10.5194/se-5-425-2014                             //
+        //                                                           //
+        //       Comprehensive description of the underlying         //
+        //           numerical analysis can be found in:             //
+        //                                                           //
+        // (2) Tarje Nissen-Meyer, F. A. Dahlen, A Fournier (2007)   //
+        //     "Spherical-earth Frechet sensitivity kernels"         //
+        //     Geophysical Journal International 168(3),1051-1066.   //
+        //     doi:10.1111/j.1365-246X.2006.03123.x                  //
+        //                                                           //
+        // (3) Tarje Nissen-Meyer, A Fournier, F. A. Dahlen (2007)   //
+        //     "A two-dimensional spectral-element method for        //
+        //        computing spherical-earth seismograms -            //
+        //        I. Moment-tensor source"                           //
+        //     Geophysical Journal International 168(3), 1067-1092.  //
+        //     doi:10.1111/j.1365-246X.2006.03121.x                  //
+        //                                                           //
+        // (4) Tarje Nissen-Meyer, A Fournier, F. A. Dahlen (2007)   //
+        //     "A two-dimensional spectral-element method for        //
+        //        computing spherical-earth seismograms -            //
+        //        II.  Waves in solid-fluid media"                   //
+        //     Geophysical Journal International 174(3), 873-888.    //
+        //     doi:10.1111/j.1365-246X.2008.03813.x                  //
+        //                                                           //
+        // (5) Martin van Driel and Tarje Nissen-Meyer (2014)        //
+        //     "Seismic wave propagation in fully anisotropic        //
+        //        axisymmetric media"                                //
+        //      Geophysical Journal International 199 (2): 880-893.  //
+        //      doi: 10.1093/gji/ggu269                              //
+        //                                                           //
+        // (6) Martin van Driel and Tarje Nissen-Meyer (2014)        //
+        //     "Optimized visco-elastic wave propagation for         //
+        //        weakly dissipative media"                          //
+        //      Geophysical Journal International 199 (2): 1078-1093.//
+        //      doi: 10.1093/gji/ggu314                              //
+        //                                                           //
+        //                                                           //
+        //  January 2015: version 1.2                                //
+        //                                                           //
+        ///////////////////////////////////////////////////////////////
+
+         ==  ==  ==  ==  ==  == =  I N P U T    P A R A M E T E R S ==  ==  ==  ==  ==  ==  == =
+            Data I/O path:                      ./Data
+            Info I/O path:                      ./Info
+            Simulation length [s]:               1600.000
+            Enforced time step [s]:               0.000
+            Enforced source period [s]:          10.000
+            Simulation type:                    single
+            Receiver file type:                 stations
+            Sum seismograms?                     F
+            Sum wavefields?                      F
+            Time extrapolation scheme:          newmark2
+            Seismogram sampling rate [s]:         0.000
+            Dump kin./pot. energy?               F
+            Dump global snaps?                   F
+            Dump strain?                         T
+            Wavefield dumping type:             coupling_box
+            First GLL to save in strains:        0
+            Last GLL to save in strains:         4
+            First GLL to save in strains:        0
+            Last GLL to save in strains:         4
+            Samples per period for strains:       8.000
+            Source dumping type:                mask
+            Add heterogeneous region?            F
+            Perform extensive mesh tests?        F
+            Output format (seism., wavefields): binary
+         ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == =
+Processor-specific output is written to: output_proc < PROC ID > .dat
+All potential error messages will appear here...
+
+  WARNING: Overriding min. source period with:  10.000 seconds
+
+    44444444444444444444444444444444444444444444444444444444444444
+    444   Running the solver time loop with SINGLE PRECISION   444
+    44444444444444444444444444444444444444444444444444444444444444
+
+      small value is:  1.0000000E-06
+ MAIN: Reading mesh database...............................
+    Reading inparam_advanced...   Proc 00 opening database Mesh/meshdb.dat0000
+   Proc 01 opening database Mesh/meshdb.dat0001
+   Proc 02 opening database Mesh/meshdb.dat0002
+   Proc 03 opening database Mesh/meshdb.dat0003
+   Proc 04 opening database Mesh/meshdb.dat0004
+   Proc 05 opening database Mesh/meshdb.dat0005
+   Proc 06 opening database Mesh/meshdb.dat0006
+   Proc 07 opening database Mesh/meshdb.dat0007
+   Proc 08 opening database Mesh/meshdb.dat0008
+   Proc 09 opening database Mesh/meshdb.dat0009
+   Proc 10 opening database Mesh/meshdb.dat0010
+   Proc 11 opening database Mesh/meshdb.dat0011
+   Proc 12 opening database Mesh/meshdb.dat0012
+   Proc 13 opening database Mesh/meshdb.dat0013
+   Proc 14 opening database Mesh/meshdb.dat0014
+   Proc 15 opening database Mesh/meshdb.dat0015
+   Reading databases: see processor output for details.
+
+   General numerical input/output parameters ==  ==  ==  ==  ==  ==  ==  ==
+     grid pts/wavelngth =   1.50000000000000
+     source period [s]  =   10.0000000000000
+     courant number     =  0.600000023841858
+     time step [s]      =  7.412234515496853E-002
+   Background model: ak135
+Model has radius   6371000.00
+ m
+
+   Background model ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==
+ ==  ==  ==  ==  == =
+     bkgrdmodel = ak135
+     radius [m] =    6371000.00000000
+     have_fluid =  T
+
+   Min/max grid spacing ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==
+ ==  ==  ==  == =
+     hmin (global) [m]   :    989.082846483845
+     hmax (global) [m]   :    14009.0646593999
+     min_distance_dim [m]:    98.9082846483845
+
+   Axialogy ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==
+ ==  ==  ==  ==  ==  ==  == =
+     Proc 00 has   196 axial elements (   140 solid,  56 fluid)
+     Proc 01 has     4 axial elements (     4 solid,   0 fluid)
+     Proc 02 has     4 axial elements (     4 solid,   0 fluid)
+     Proc 03 has     4 axial elements (     4 solid,   0 fluid)
+     Proc 04 has     4 axial elements (     4 solid,   0 fluid)
+     Proc 05 has     4 axial elements (     4 solid,   0 fluid)
+     Proc 06 has     4 axial elements (     4 solid,   0 fluid)
+     Proc 07 has     4 axial elements (     4 solid,   0 fluid)
+     Proc 08 has     4 axial elements (     4 solid,   0 fluid)
+     Proc 09 has     4 axial elements (     4 solid,   0 fluid)
+     Proc 10 has     4 axial elements (     4 solid,   0 fluid)
+     Proc 11 has     4 axial elements (     4 solid,   0 fluid)
+     Proc 12 has     4 axial elements (     4 solid,   0 fluid)
+     Proc 13 has     4 axial elements (     4 solid,   0 fluid)
+     Proc 14 has     4 axial elements (     4 solid,   0 fluid)
+     Proc 15 has   196 axial elements (   140 solid,  56 fluid)
+
+     Global total axial elements:         448
+     Global solid axial elements:         336
+     Global fluid axial elements:         112
+
+   setting s coordinate identical to zero along axis...
+   Proc 00 closing database Mesh/meshdb.dat0000
+   Proc 01 closing database Mesh/meshdb.dat0001
+   Proc 02 closing database Mesh/meshdb.dat0002
+   Proc 03 closing database Mesh/meshdb.dat0003
+   Proc 04 closing database Mesh/meshdb.dat0004
+   Proc 05 closing database Mesh/meshdb.dat0005
+   Proc 06 closing database Mesh/meshdb.dat0006
+   Proc 07 closing database Mesh/meshdb.dat0007
+   Proc 08 closing database Mesh/meshdb.dat0008
+   Proc 09 closing database Mesh/meshdb.dat0009
+   Proc 10 closing database Mesh/meshdb.dat0010
+   Proc 11 closing database Mesh/meshdb.dat0011
+   Proc 12 closing database Mesh/meshdb.dat0012
+   Proc 13 closing database Mesh/meshdb.dat0013
+   Proc 14 closing database Mesh/meshdb.dat0014
+   Proc 15 closing database Mesh/meshdb.dat0015
+
+ MAIN: Initializing grid...................................
+   Proc 00 counted sent/received GLL points,   779
+   Proc 01 counted sent/received GLL points,  1670
+   Proc 02 counted sent/received GLL points,  1870
+   Proc 03 counted sent/received GLL points,  2060
+   Proc 04 counted sent/received GLL points,  2100
+   Proc 05 counted sent/received GLL points,  2010
+   Proc 06 counted sent/received GLL points,  1910
+   Proc 08 counted sent/received GLL points,  1760
+   Proc 09 counted sent/received GLL points,  1910
+   Proc 10 counted sent/received GLL points,  2010
+   Proc 11 counted sent/received GLL points,  2100
+   Proc 12 counted sent/received GLL points,  2060
+   Proc 07 counted sent/received GLL points,  1760
+
+   Proc 13 counted sent/received GLL points,  1870
+   Proc 14 counted sent/received GLL points,  1670
+   Proc 15 counted sent/received GLL points,   779
+   Proc 01 counted sent/received GLL points,   560
+   Proc 02 counted sent/received GLL points,   560
+   Proc 03 counted sent/received GLL points,   560
+   Proc 04 counted sent/received GLL points,   560
+   Proc 00 counted sent/received GLL points,   280
+   Proc 07 counted sent/received GLL points,   560
+   Proc 06 counted sent/received GLL points,   560
+   Proc 08 counted sent/received GLL points,   560
+   Proc 09 counted sent/received GLL points,   560
+   Proc 05 counted sent/received GLL points,   560
+   Proc 10 counted sent/received GLL points,   560
+   Proc 11 counted sent/received GLL points,   560
+   Proc 12 counted sent/received GLL points,   560
+   Proc 15 counted sent/received GLL points,   280
+   Proc 13 counted sent/received GLL points,   560
+   Proc 14 counted sent/received GLL points,   560
+
+ MAIN: Starting wave preparation...........................
+
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ ++++++++    SEISMIC WAVE PROPAGATION: SOLID-FLUID CASE  ++++++++
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    Reading inparam_source...
+Proc 07   Source not along the axis!
+Proc 07   ...therefore applying rotations to source and receivers.
+
+   *****************GIVEN SOURCE PARAMETERS*****************
+      Magnitude [Nm]:             1.000E+20
+      Excitation type:        monopole    explosion
+      Depth [km]:                 1.000E+01
+      Colat. [deg]:               1.710E+01
+      Long. [deg]:                5.600E+00
+      Source time function:       gauss_0
+      Dom. period mesh [s]:         10.0000
+   *********************************************************
+
+
+   Need to rotate the source to the north pole!
+   .... therefore computing rotation matrix and its transpose
+
+  Computing numerical parameters...
+
+    Using time step precalculated by the mesher:
+

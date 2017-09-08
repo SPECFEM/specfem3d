@@ -1,0 +1,33 @@
+#######################################################
+event_name : FK1
+fk : ./DATA/DATA_SYNTHS/1/FKmodel_0_20
+station_file : ./DATA/DATA_SYNTHS/1/STATIONS
+data_file : ./DATA/DATA_SYNTHS/1/Gather.bin
+component : X Y Z
+NSTEP : 2000
+DT : 0.01
+#######################################################
+event_name : FK2
+fk : ./DATA/DATA_SYNTHS/2/FKmodel_90_20
+station_file : ./DATA/DATA_SYNTHS/2/STATIONS
+data_file : ./DATA/DATA_SYNTHS/2/Gather.bin
+component : X Y Z
+NSTEP : 2000
+DT : 0.01
+########################################################
+event_name : FK3
+fk : ./DATA/DATA_SYNTHS/3/FKmodel_180_20
+station_file : ./DATA/DATA_SYNTHS/3/STATIONS
+data_file : ./DATA/DATA_SYNTHS/3/Gather.bin
+component : X Y Z
+NSTEP : 2000
+DT : 0.01
+#######################################################
+event_name : FK4
+fk : ./DATA/DATA_SYNTHS/4/FKmodel_270_20
+station_file : ./DATA/DATA_SYNTHS/4/STATIONS
+data_file : ./DATA/DATA_SYNTHS/4/Gather.bin
+component : X Y Z
+NSTEP : 2000
+DT : 0.01
+
