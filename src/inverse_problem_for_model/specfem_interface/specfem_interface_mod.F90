@@ -1363,16 +1363,18 @@ contains
     dt_suggested = dt_suggested_glob
     call min_all_cr(dt_suggested,dt_suggested_glob)
 
-    !! CHECK POISSON RATION OF NEW MODEL 
-    if (poissonmin_glob < -1.0000001d0 .or. poissonmax_glob > 0.50000001d0) then
-       ModelIsSuitable=.false.
+    if (myrank == 0 ) then
+       !! CHECK POISSON RATION OF NEW MODEL 
+       if (poissonmin_glob < -1.0000001d0 .or. poissonmax_glob > 0.50000001d0) then
+          ModelIsSuitable=.false.
+       end if
+       
+       !! CHECK STABILITY FOR NEW MODEL 
+       if (DT > dt_suggested) then 
+          ModelIsSuitable=.false.
+       end if
     end if
-
-    !! CHECK STABILITY FOR NEW MODEL 
-    if (DT > dt_suggested) then 
-       ModelIsSuitable=.false.
-    end if
-
+    call bcast_all_singlel(ModelIsSuitable)
     
     if (ELASTIC_SIMULATION) then
        !! nothing to do 
