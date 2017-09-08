@@ -1,7 +1,7 @@
 module fwi_iteration
 
   !! IMPORT VARIABLES FROM SPECFEM -------------------------------------------------------------------------------------------------
-  use specfem_par, only: CUSTOM_REAL, NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, GPU_MODE, myrank
+  use specfem_par, only: CUSTOM_REAL, NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, NSPEC_AB, GPU_MODE 
   !---------------------------------------------------------------------------------------------------------------------------------
 
   use inverse_problem_par
@@ -119,7 +119,8 @@ contains
        ! update model for choosen family
        call UpdateModel(inversion_param, step_length, ModelIsSuitable)
        ! if model is not suitable for modeling then try smaller step
-       if (.not. ModelIsSuitable) then 
+       if (.not. ModelIsSuitable) then
+          write(*,*) 'Model new is not suitable for simulation ', myrank  
           step_length = 0.5 * step_length
           cycle
        end if
@@ -347,6 +348,11 @@ contains
        write(INVERSE_LOG_FILE,*)
        write(INVERSE_LOG_FILE,*) '    - > update model :  '
        write(INVERSE_LOG_FILE,*)
+       if (.not. ModelIsSuitable) then 
+           write(INVERSE_LOG_FILE,*)
+           write(INVERSE_LOG_FILE,*) '    - > updated model not suitable for simulation : divide step by 2  '
+           write(INVERSE_LOG_FILE,*)
+        end if
     endif
 
     do ipar=1, inversion_param%NinvPar
@@ -370,24 +376,6 @@ contains
 
 
   end subroutine UpdateModel
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!-------------------------------------------------------------------------------------------------------------
-! test if we can saftely perform a simulation in new model :: todo finish this subroutine 
-!-------------------------------------------------------------------------------------------------------------
-  subroutine  CheckModelSuitabilityForModeling(ModelIsSuitable)
-    
-    ModelIsSuitable=.true.
-
-    
-
-    !! Check poisson ratio
-    
-    
-    !! Check cfl 
-
-    
-
-  end subroutine CheckModelSuitabilityForModeling
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !-------------------------------------------------------------------------------------------------------------
 ! compute initial guess for step length to try for line search
