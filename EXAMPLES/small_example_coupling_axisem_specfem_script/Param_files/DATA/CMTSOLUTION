@@ -1,0 +1,13 @@
+SYN  2017 3 27 14 31 3.5839 5.6 72.9 10 1.0 1.0 synth_event_,1
+event name:       synth_event_,1
+time shift:       0
+half duration:    1
+latorUTM:       5.6
+longorUTM:      72.9
+depth:           10
+Mrr:       30
+Mtt:       10
+Mpp:       0
+Mrt:       30
+Mrp:       10
+Mtp:       0

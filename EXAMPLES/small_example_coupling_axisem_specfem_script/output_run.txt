@@ -1,0 +1,2839 @@
+ 
+ **********************
+ Serial mesh decomposer
+ **********************
+ 
+ total number of nodes: 
+   nnodes =        17238
+ total number of spectral elements:
+   nspec =        15000
+ materials:
+   num_mat =            1
+   num_mat =            2
+   defined =            2 undefined =            0
+   no poroelastic material file found
+ absorbing boundaries:
+   nspec2D_xmin =          600
+   nspec2D_xmax =          600
+   nspec2D_ymin =          300
+   nspec2D_ymax =          300
+   nspec2D_bottom =         1250
+   nspec2D_top =         1250
+   no absorbing_cpml_file file found
+   no moho_surface_file file found
+ Par_file_faults not found: assuming that there are no faults
+ node valence:  min =            1  max =            8
+   nsize =            8 sup_neighbor =           38
+ mesh2dual:
+   max_neighbor =           26
+ partitions: 
+   num =           16
+ 
+ Databases files in directory: DATABASES_MPI/
+ finished successfully
+ 
+ *** Minimum period resolved =    8.342277    
+ saving VTK files for Courant number and minimum period
+ *** Maximum suggested time step =   0.1538808    
+rm: No match.
+rm: No match.
+mpif90 -O3  -c  global_parameters.f90
+mpif90 -O3  -c  data_diag.f90
+mpif90 -O3  -c  clocks.f90
+mpif90 -O3  -c  data_coarse.f90
+mpif90 -O3  -c  data_numbering.f90
+mpif90 -O3  -c  interpolation.f90
+mpif90 -O3  -c  data_bkgrdmodel.f90
+mpif90 -O3  -c  data_gllmesh.f90
+mpif90 -O3  -c  data_grid.f90
+mpif90 -O3  -c  data_mesh.f90
+mpif90 -O3  -c  data_spec.f90
+mpif90 -O3  -c  analytic_semi_mapping.f90
+mpif90 -O3  -c  analytic_spheroid_mapping.f90
+mpif90 -O3  -c  subpar_mapping.f90
+mpif90 -O3  -c  data_time.f90
+mpif90 -O3  -c  data_pdb.f90
+mpif90 -O3  -c  splib.f90
+mpif90 -O3  -c  mesh_info.f90
+mpif90 -O3  -c  sorting.f90
+mpif90 -O3  -c  background_models.F90
+mpif90 -O3  -c  clocks_wrapper_mesher.f90
+mpif90 -O3  -c  analytic_mapping.f90
+mpif90 -O3  -c  gllmeshgen.f90
+mpif90 -O3  -c  numbering.f90
+mpif90 -O3  -c  meshgen.f90
+mpif90 -O3  -c  test_bkgrdmodel.F90
+mpif90 -O3  -c  model_discontinuities.f90
+mpif90 -O3  -c  input.f90
+mpif90 -O3  -c  pdb.f90
+mpif90 -O3  -c  discont_meshing.f90
+mpif90 -O3  -c  parallelization.f90
+mpif90 -O3  -c  main.f90
+mpif90 -O3  -o xmesh background_models.o test_bkgrdmodel.o analytic_mapping.o analytic_semi_mapping.o analytic_spheroid_mapping.o clocks.o clocks_wrapper_mesher.o data_bkgrdmodel.o data_coarse.o data_diag.o data_gllmesh.o data_grid.o data_mesh.o data_numbering.o data_pdb.o data_spec.o data_time.o discont_meshing.o gllmeshgen.o global_parameters.o input.o interpolation.o main.o mesh_info.o meshgen.o model_discontinuities.o numbering.o parallelization.o pdb.o sorting.o splib.o subpar_mapping.o 
+xmesh submitted, output in "OUTPUT"
+After the run, move the mesh to a new directory <meshdir> via:
+./movemesh <meshdir>
+This will be located in ../SOLVER/MESHES/<meshdir>
+Moving mesh from . to ../SOLVER/MESHES/ak135_10
+MESHER finished smoothly...
+Moving mesh to /mnt/Data1/vmont/svn_lma/DSM_FOR_SPECFEM3D/EXAMPLES_Vadim_inversion_framework_and_coupling/coupling_with_an_external_code/small_example_coupling_axisem_specfem_script/run_axisem/SOLVER/MESHES/ak135_10
+ak135
+Contents in /mnt/Data1/vmont/svn_lma/DSM_FOR_SPECFEM3D/EXAMPLES_Vadim_inversion_framework_and_coupling/coupling_with_an_external_code/small_example_coupling_axisem_specfem_script/run_axisem/SOLVER/MESHES/ak135_10 :
+1dmodel_axisem.bm
+1dmodel_yspec.bm
+Code
+inparam_mesh
+mesh_courant.vtk
+meshdb.dat0000
+meshdb.dat0001
+meshdb.dat0002
+meshdb.dat0003
+meshdb.dat0004
+meshdb.dat0005
+meshdb.dat0006
+meshdb.dat0007
+meshdb.dat0008
+meshdb.dat0009
+meshdb.dat0010
+meshdb.dat0011
+meshdb.dat0012
+meshdb.dat0013
+meshdb.dat0014
+meshdb.dat0015
+mesh_domaindecomposition_cell.vtk
+mesh_domaindecomposition.vtk
+mesh_dt.vtk
+mesh_eltype.vtk
+mesh_hmax.vtk
+mesh_hmin.vtk
+mesh_params.h
+mesh_period.vtk
+mesh_pts_wavelength.vtk
+mesh_Qka.vtk
+mesh_Qmu.vtk
+mesh_rho.vtk
+mesh_vp.vtk
+mesh_vs.vtk
+OUTPUT
+radial_velocity.dat
+Total size: 99M	. 
+DONE.
+fatal: Not a git repository (or any parent up to mount point /mnt/Data1)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+Using mesh  MESHES/ak135_10
+copying mesh_params.h from  MESHES/ak135_10
+mpif90 -O3  -Dsolver -c  data_proc.f90
+mpif90 -O3  -Dsolver -c  global_parameters.f90
+mpif90 -O3  -Dsolver -c  clocks.f90
+mpif90 -O3  -Dsolver -c  kdtree2.f90
+gcc -O3    -c -o ftz.o ftz.c
+gcc -O3    -c -o pthread.o pthread.c
+cd UTILS; make
+make[1]: Entering directory `/mnt/Data1/vmont/svn_lma/DSM_FOR_SPECFEM3D/EXAMPLES_Vadim_inversion_framework_and_coupling/coupling_with_an_external_code/small_example_coupling_axisem_specfem_script/run_axisem/SOLVER/UTILS'
+mpif90 -O3   -c nc_postroutines.F90
+mpif90 -O3   -c field_transform.F90
+mpif90 -O3  -Dsolver -c  interpolation.f90
+mpif90 -O3  -Dsolver -c  list.f90
+mpif90 -O3  -Dsolver -c  data_io.f90
+mpif90 -O3  -Dsolver -c  data_spec.f90
+mpif90 -O3  -Dsolver -c  data_time.f90
+mpif90 -O3  -Dsolver -c  data_source.f90
+mpif90 -O3  -Dsolver -c  analytic_semi_mapping.f90
+mpif90 -O3  -Dsolver -c  subpar_mapping.f90
+mpif90 -O3  -Dsolver -c  apply_masks.f90
+mpif90 -O3  -Dsolver -c  data_pointwise.f90
+mpif90 -O3  -Dsolver -c  data_heterogeneous.f90
+mpif90 -O3  -Dsolver -c  data_matr.f90
+mpif90 -O3  field_transform.o -o xfield_transform 
+mpif90 -O3   -c post_processing.F90
+mpif90 -O3  -Dsolver -c  data_mesh.f90
+mpif90 -O3  -Dsolver -c  nc_helpers.F90
+mpif90 -O3  -Dsolver -c  clocks_wrapper_solver.f90
+mpif90 -O3  -Dsolver -c  background_models.F90
+mpif90 -O3  -Dsolver -c  data_comm.f90
+mpif90 -O3  -Dsolver -c  analytic_spheroid_mapping.f90
+mpif90 -O3  -Dsolver -c  nc_snapshots.F90
+mpif90 -O3  -Dsolver -c  unrolled_loops.f90
+mpif90 -O3  -Dsolver -c  rotations.f90
+mpif90 -O3  -Dsolver -c  commpi.F90
+mpif90 -O3  -Dsolver -c  analytic_mapping.f90
+mpif90 -O3  -Dsolver -c  pointwise_derivatives.f90
+mpif90 -O3  -Dsolver -c  stiffness_fluid.f90
+mpif90 -O3  -Dsolver -c  utlity.f90
+mpif90 -O3  -Dsolver -c  commun.F90
+mpif90 -O3  -Dsolver -c  nc_routines.F90
+mpif90 -O3  -Dsolver -c  coupling_mod.f90
+mpif90 -O3  -Dsolver -c  meshes_io.F90
+mpif90 -O3  -Dsolver -c  seismograms.f90
+mpif90 -O3  -Dsolver -c  source.f90
+mpif90 -O3  -Dsolver -c  wavefields_io.f90
+mpif90 -O3  -Dsolver -c  get_mesh.f90
+mpif90 -O3  -Dsolver -c  lateral_heterogeneities.F90
+mpif90 -O3  -Dsolver -c  def_grid.f90
+mpif90 -O3  -Dsolver -c  attenuation.f90
+mpif90 -O3  -Dsolver -c  parameters.F90
+mpif90 -O3  -Dsolver -c  stiffness_di.f90
+mpif90 -O3  -Dsolver -c  stiffness_mono.f90
+mpif90 -O3  -Dsolver -c  stiffness_quad.f90
+mpif90 -O3  post_processing.o nc_postroutines.o -o xpost_processing 
+make[1]: Leaving directory `/mnt/Data1/vmont/svn_lma/DSM_FOR_SPECFEM3D/EXAMPLES_Vadim_inversion_framework_and_coupling/coupling_with_an_external_code/small_example_coupling_axisem_specfem_script/run_axisem/SOLVER/UTILS'
+mpif90 -O3  -Dsolver -c  get_model.F90
+mpif90 -O3  -Dsolver -c  def_precomp_terms.f90
+mpif90 -O3  -Dsolver -c  time_evol_wave.F90
+mpif90 -O3  -Dsolver -c  main.f90
+mpif90 -O3  -o axisem background_models.o commpi.o commun.o get_model.o lateral_heterogeneities.o meshes_io.o nc_helpers.o nc_routines.o nc_snapshots.o parameters.o time_evol_wave.o analytic_mapping.o analytic_semi_mapping.o analytic_spheroid_mapping.o apply_masks.o attenuation.o clocks.o clocks_wrapper_solver.o data_comm.o data_heterogeneous.o data_io.o data_matr.o data_mesh.o data_pointwise.o data_proc.o data_source.o data_spec.o data_time.o def_grid.o def_precomp_terms.o get_mesh.o global_parameters.o interpolation.o kdtree2.o list.o main.o pointwise_derivatives.o rotations.o seismograms.o source.o stiffness_di.o stiffness_fluid.o stiffness_mono.o stiffness_quad.o subpar_mapping.o unrolled_loops.o utlity.o coupling_mod.o wavefields_io.o ftz.o pthread.o 
+Receiver file type: stations
+Source file: inparam_source, Receiver file: STATIONS
+source names: ./
+source components: explosion
+Create the run directory  1
+copying make_axisem.macros from ../
+
+Setting up simulation ./
+creating ./Info
+copying crucial files for the simulation...
+cp: â€˜/mnt/Data1/vmont/svn_lma/DSM_FOR_SPECFEM3D/EXAMPLES_Vadim_inversion_framework_and_coupling/coupling_with_an_external_code/small_example_coupling_axisem_specfem_script/run_axisem/SOLVER/input_box.txtâ€™ and â€˜.././input_box.txtâ€™ are the same file
+preparing job on 16 nodes...
+    Initialized run for nproc =   16
+
+ MAIN: Welcome to AxiSEM!
+
+     CLOCKS module Clocks.F90,v 3.0 2014/10/19
+     Realtime clock resolution=  9.999999747378752E-005 (       10000  ticks/sec
+ )
+     Simulation started on 07/27/2017 at 12h 08min
+
+ MAIN: Reading parameters..................................
+    Reading inparam_basic... done
+ done
+    Reading runinfo...  done
+
+        ///////////////////////////////////////////////////////////////
+        //                                                           //
+        //                  A   x   i   S   E   M                    //
+        //                                                           //
+        //                                                           //
+        //         Parallel spectral-element solution to             //
+        //                                                           //
+        //           3-D seismic wave propagation for                //
+        //                                                           //
+        //          axially symmetric background models              //
+        //                                                           //
+        //               in a spherical 2-D domain                   //
+        //                                                           //
+        //                                                           //
+        //  Authors : Tarje Nissen-Meyer (Oxford University)         //
+        //              Martin van Driel (ETH Zurich)                //
+        //                 Simon Stahler (LMU Munich)                //
+        //                Kasra Hosseini (LMU Munich)                //
+        //               Stefanie Hempel (University of Muenster)    //
+        //            Alexandre Fournier (IPG Paris)                 //
+        //                   Tony Dahlen (Princeton University)      //
+        //                                                           //
+        //   Contact:     info@axisem.info                           //
+        //   Information: www.axisem.info                            //
+        //                                                           //
+
+        //                                                           //
+        //     If you are publishing results obtained with this      //
+        //          code, please cite this paper:                    //
+        //                                                           //
+        // (1) T. Nissen-Meyer, M. van Driel, S. C. Staehler,        //
+        //     K. Hosseini, S. Hempel, L. Auer, A. Colombi           //
+        //     and A. Fournier:                                      //
+        //     "AxiSEM: broadband 3-D seismic wavefields in          //
+        //              axisymmetric media"                          //
+        //     Solid Earth, 5, 425-445, 2014                         //
+        //     doi:10.5194/se-5-425-2014                             //
+        //                                                           //
+        //       Comprehensive description of the underlying         //
+        //           numerical analysis can be found in:             //
+        //                                                           //
+        // (2) Tarje Nissen-Meyer, F. A. Dahlen, A Fournier (2007)   //
+        //     "Spherical-earth Frechet sensitivity kernels"         //
+        //     Geophysical Journal International 168(3),1051-1066.   //
+        //     doi:10.1111/j.1365-246X.2006.03123.x                  //
+        //                                                           //
+        // (3) Tarje Nissen-Meyer, A Fournier, F. A. Dahlen (2007)   //
+        //     "A two-dimensional spectral-element method for        //
+        //        computing spherical-earth seismograms -            //
+        //        I. Moment-tensor source"                           //
+        //     Geophysical Journal International 168(3), 1067-1092.  //
+        //     doi:10.1111/j.1365-246X.2006.03121.x                  //
+        //                                                           //
+        // (4) Tarje Nissen-Meyer, A Fournier, F. A. Dahlen (2007)   //
+        //     "A two-dimensional spectral-element method for        //
+        //        computing spherical-earth seismograms -            //
+        //        II.  Waves in solid-fluid media"                   //
+        //     Geophysical Journal International 174(3), 873-888.    //
+        //     doi:10.1111/j.1365-246X.2008.03813.x                  //
+        //                                                           //
+        // (5) Martin van Driel and Tarje Nissen-Meyer (2014)        //
+        //     "Seismic wave propagation in fully anisotropic        //
+        //        axisymmetric media"                                //
+        //      Geophysical Journal International 199 (2): 880-893.  //
+        //      doi: 10.1093/gji/ggu269                              //
+        //                                                           //
+        // (6) Martin van Driel and Tarje Nissen-Meyer (2014)        //
+        //     "Optimized visco-elastic wave propagation for         //
+        //        weakly dissipative media"                          //
+        //      Geophysical Journal International 199 (2): 1078-1093.//
+        //      doi: 10.1093/gji/ggu314                              //
+        //                                                           //
+        //                                                           //
+        //  January 2015: version 1.2                                //
+        //                                                           //
+        ///////////////////////////////////////////////////////////////
+
+         ==  ==  ==  ==  ==  == =  I N P U T    P A R A M E T E R S ==  ==  ==  ==  ==  ==  == =
+            Data I/O path:                      ./Data              
+            Info I/O path:                      ./Info              
+            Simulation length [s]:               1600.000
+            Enforced time step [s]:               0.000
+            Enforced source period [s]:          10.000
+            Simulation type:                    single
+            Receiver file type:                 stations
+            Sum seismograms?                     F
+            Sum wavefields?                      F
+            Time extrapolation scheme:          newmark2
+            Seismogram sampling rate [s]:         0.000
+            Dump kin./pot. energy?               F
+            Dump global snaps?                   F
+            Dump strain?                         T
+            Wavefield dumping type:             coupling_box
+            First GLL to save in strains:        0
+            Last GLL to save in strains:         4
+            First GLL to save in strains:        0
+            Last GLL to save in strains:         4
+            Samples per period for strains:       8.000
+            Source dumping type:                mask
+            Add heterogeneous region?            F
+            Perform extensive mesh tests?        F
+            Output format (seism., wavefields): binary
+         ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == =
+Processor-specific output is written to: output_proc < PROC ID > .dat
+All potential error messages will appear here...
+ 
+  WARNING: Overriding min. source period with:  10.000 seconds
+
+    44444444444444444444444444444444444444444444444444444444444444
+    444   Running the solver time loop with SINGLE PRECISION   444
+    44444444444444444444444444444444444444444444444444444444444444
+
+      small value is:  1.0000000E-06
+ MAIN: Reading mesh database...............................
+    Reading inparam_advanced...   Proc 00 opening database Mesh/meshdb.dat0000
+   Proc 01 opening database Mesh/meshdb.dat0001
+   Proc 02 opening database Mesh/meshdb.dat0002
+   Proc 03 opening database Mesh/meshdb.dat0003
+   Proc 04 opening database Mesh/meshdb.dat0004
+   Proc 05 opening database Mesh/meshdb.dat0005
+   Proc 06 opening database Mesh/meshdb.dat0006
+   Proc 07 opening database Mesh/meshdb.dat0007
+   Proc 08 opening database Mesh/meshdb.dat0008
+   Proc 09 opening database Mesh/meshdb.dat0009
+   Proc 10 opening database Mesh/meshdb.dat0010
+   Proc 11 opening database Mesh/meshdb.dat0011
+   Proc 12 opening database Mesh/meshdb.dat0012
+   Proc 13 opening database Mesh/meshdb.dat0013
+   Proc 14 opening database Mesh/meshdb.dat0014
+   Proc 15 opening database Mesh/meshdb.dat0015
+   Reading databases: see processor output for details.
+ 
+   General numerical input/output parameters ==  ==  ==  ==  ==  ==  ==  == 
+     grid pts/wavelngth =   1.50000000000000     
+     source period [s]  =   10.0000000000000     
+     courant number     =  0.600000023841858     
+     time step [s]      =  7.412234515496853E-002
+   Background model: ak135
+Model has radius   6371000.00
+ m
+ 
+   Background model ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  
+ ==  ==  ==  ==  == =
+     bkgrdmodel = ak135
+     radius [m] =    6371000.00000000     
+     have_fluid =  T
+ 
+   Min/max grid spacing ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  
+ ==  ==  ==  == =
+     hmin (global) [m]   :    989.082846483845     
+     hmax (global) [m]   :    14009.0646593999     
+     min_distance_dim [m]:    98.9082846483845     
+ 
+   Axialogy ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  
+ ==  ==  ==  ==  ==  ==  == =
+     Proc 00 has   196 axial elements (   140 solid,  56 fluid)
+     Proc 01 has     4 axial elements (     4 solid,   0 fluid)
+     Proc 02 has     4 axial elements (     4 solid,   0 fluid)
+     Proc 03 has     4 axial elements (     4 solid,   0 fluid)
+     Proc 04 has     4 axial elements (     4 solid,   0 fluid)
+     Proc 05 has     4 axial elements (     4 solid,   0 fluid)
+     Proc 06 has     4 axial elements (     4 solid,   0 fluid)
+     Proc 07 has     4 axial elements (     4 solid,   0 fluid)
+     Proc 08 has     4 axial elements (     4 solid,   0 fluid)
+     Proc 09 has     4 axial elements (     4 solid,   0 fluid)
+     Proc 10 has     4 axial elements (     4 solid,   0 fluid)
+     Proc 11 has     4 axial elements (     4 solid,   0 fluid)
+     Proc 12 has     4 axial elements (     4 solid,   0 fluid)
+     Proc 13 has     4 axial elements (     4 solid,   0 fluid)
+     Proc 14 has     4 axial elements (     4 solid,   0 fluid)
+     Proc 15 has   196 axial elements (   140 solid,  56 fluid)
+ 
+     Global total axial elements:         448
+     Global solid axial elements:         336
+     Global fluid axial elements:         112
+ 
+   setting s coordinate identical to zero along axis...
+   Proc 00 closing database Mesh/meshdb.dat0000
+   Proc 01 closing database Mesh/meshdb.dat0001
+   Proc 02 closing database Mesh/meshdb.dat0002
+   Proc 03 closing database Mesh/meshdb.dat0003
+   Proc 04 closing database Mesh/meshdb.dat0004
+   Proc 05 closing database Mesh/meshdb.dat0005
+   Proc 06 closing database Mesh/meshdb.dat0006
+   Proc 07 closing database Mesh/meshdb.dat0007
+   Proc 08 closing database Mesh/meshdb.dat0008
+   Proc 09 closing database Mesh/meshdb.dat0009
+   Proc 10 closing database Mesh/meshdb.dat0010
+   Proc 11 closing database Mesh/meshdb.dat0011
+   Proc 12 closing database Mesh/meshdb.dat0012
+   Proc 13 closing database Mesh/meshdb.dat0013
+   Proc 14 closing database Mesh/meshdb.dat0014
+   Proc 15 closing database Mesh/meshdb.dat0015
+ 
+ MAIN: Initializing grid...................................
+   Proc 00 counted sent/received GLL points,   779
+   Proc 01 counted sent/received GLL points,  1670
+   Proc 02 counted sent/received GLL points,  1870
+   Proc 03 counted sent/received GLL points,  2060
+   Proc 04 counted sent/received GLL points,  2100
+   Proc 05 counted sent/received GLL points,  2010
+   Proc 06 counted sent/received GLL points,  1910
+   Proc 08 counted sent/received GLL points,  1760
+   Proc 09 counted sent/received GLL points,  1910
+   Proc 10 counted sent/received GLL points,  2010
+   Proc 11 counted sent/received GLL points,  2100
+   Proc 12 counted sent/received GLL points,  2060
+   Proc 07 counted sent/received GLL points,  1760
+ 
+   Proc 13 counted sent/received GLL points,  1870
+   Proc 14 counted sent/received GLL points,  1670
+   Proc 15 counted sent/received GLL points,   779
+   Proc 01 counted sent/received GLL points,   560
+   Proc 02 counted sent/received GLL points,   560
+   Proc 03 counted sent/received GLL points,   560
+   Proc 04 counted sent/received GLL points,   560
+   Proc 00 counted sent/received GLL points,   280
+   Proc 07 counted sent/received GLL points,   560
+   Proc 06 counted sent/received GLL points,   560
+   Proc 08 counted sent/received GLL points,   560
+   Proc 09 counted sent/received GLL points,   560
+   Proc 05 counted sent/received GLL points,   560
+   Proc 10 counted sent/received GLL points,   560
+   Proc 11 counted sent/received GLL points,   560
+   Proc 12 counted sent/received GLL points,   560
+   Proc 15 counted sent/received GLL points,   280
+   Proc 13 counted sent/received GLL points,   560
+   Proc 14 counted sent/received GLL points,   560
+ 
+ MAIN: Starting wave preparation...........................
+ 
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ ++++++++    SEISMIC WAVE PROPAGATION: SOLID-FLUID CASE  ++++++++
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    Reading inparam_source...
+Proc 07   Source not along the axis!
+Proc 07   ...therefore applying rotations to source and receivers.
+ 
+   *****************GIVEN SOURCE PARAMETERS*****************
+      Magnitude [Nm]:             1.000E+20
+      Excitation type:        monopole    explosion 
+      Depth [km]:                 1.000E+01
+      Colat. [deg]:               1.710E+01
+      Long. [deg]:                5.600E+00
+      Source time function:       gauss_0
+      Dom. period mesh [s]:         10.0000
+   *********************************************************
+ 
+ 
+   Need to rotate the source to the north pole!
+   .... therefore computing rotation matrix and its transpose
+
+  Computing numerical parameters...
+
+    Using time step precalculated by the mesher:
+
+ùéW˜®ù²?
+ 
+     WARNING: Using larger period than necessary by mesh!
+     Chosen/minimal period   [s]: 10.000 10.000
+ 
+     desired simulation length  :  1600.00   seconds
+     offered simulation length  :  1600.00   seconds
+     number time loop iterations:   21586
+ 
+     desired seismogram sampling:     0.00   seconds
+     offered seismogram sampling:     0.07   seconds
+     ...that is, every          :       1 timesteps
+     number of samples          :   21587
+ 
+     Number of snapshots        :      81
+     ...approximately every     :   20.00   seconds
+     ...that is, every          :     269 timesteps
+ 
+   *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+   SOURCE TIME function: gauss_0
+    dumping wavefields at sampling rate and deltat:   8.43200520292908     
+   1.18595752247950     
+    coarsest dump every          16 th time step, dt:   1.18595752247950     
+ 
+   SHIFT FACTOR of source time function [s]:   15.41745    
+    # SEM, seis, coarse points per shift factor:   208.0000       208.0000    
+   13.00000    
+    # simul. half widths per shift factor:   1.541745    
+   *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+ 
+ 
+     Number of wavefield dumps  :    1350
+     ...approximately every     :    1.19   seconds
+     ...that is, every          :      16  timestep
+     Define limitation of GLL points in the dumped fields:
+       ibeg=           0 iend=           4
+       jbeg=           0 jend=           4
+       # points saved within an element:          25
+ 
+  ::::::::: BACKGROUND MODEL & PRECOMPUTED MATRICES:::::::
+    allocate elastic fields....
+    define background model....
+    model is anisotropic....
+    filling mesh with elastic properties...
+ done with big mesh loop to define model
+    define mass matrix....
+    solid mass matrix...
+    assemble solid mass matrix...
+    compute inverse solid mass matrix...
+    fluid mass matrix...
+    assemble fluid mass matrix...
+    compute inverse fluid mass matrix...
+    define precomputed matrices for pointwise derivatives...
+    define solid stiffness terms....
+    define fluid stiffness terms....
+    define solid-fluid boundary terms....
+    ...defined all precomputed arrays
+    ...deallocated unnecessary elastic arrays
+  :::::::DONE BACKGROUND MODEL & PRECOMPUTED MATRICES:::::
+  *****************************************
+     Welcome to the source term calculator 
+  *****************************************
+  locating the source....
+   computing MONOPOLE Source with...
+   ...moment tensor elements for explosion 
+   Proc 00  found it:
+     depth asked for [km]:   10.0000000000000     
+     depth offered   [km]:   10.0000000000056     
+     difference      [km]:  5.587935447692871E-012
+     source element      :          513        1569
+     SECOND source element and jpol index:         641           4
+        s, z:   0.000000000000000E+000   6360999.99999999     
+   ...masked the source
+   dumping strain mesh and associated fields...
+   Coupling : FORCE GLL boundaries to:
+     ipol=           0           4
+     jpol=           0           4
+  number of elements with non-zero source term: 5
+  *********************************
+     End of source term calculator
+  *********************************
+   dumping solid submesh for kernel wavefields...
+   dumping fluid submesh for kernel wavefields...
+   strain dump: Global strain tensor and velocity fields
+   ....no need to dump anything else.
+   dumping mesh for xdmf snapshots...
+    construction of mapping for xdmf plotting...
+    ...fluid part...
+    ...solid part...
+    ...collecting coordinates...
+    .... finished construction of mapping for xdmf plotting
+    .... constructing grid for xdmf plotting
+    .... writing grid + header of xdmf to file
+   locating surface elements and generic receivers...
+   ensuring uniqueness in generic receiver locations...
+   Proc 00 has the  epicenter at    0.000 degrees.
+   Proc 07 has the    equator at   90.000 degrees.
+   Proc 15 has the   antipode at  180.000 degrees.
+   Communicating local element numbers
+   communicating local numbers of surface elements...
+   Proc:    0, first elem:         1, last elem:       128
+   Proc:    1, first elem:       129, last elem:       256
+   Proc:    2, first elem:       257, last elem:       384
+   Proc:    3, first elem:       385, last elem:       512
+   Proc:    4, first elem:       513, last elem:       640
+   Proc:    5, first elem:       641, last elem:       768
+   Proc:    6, first elem:       769, last elem:       896
+   Proc:    7, first elem:       897, last elem:      1024
+   Proc:    8, first elem:      1025, last elem:      1152
+   Proc:    9, first elem:      1153, last elem:      1280
+   Proc:   10, first elem:      1281, last elem:      1408
+   Proc:   11, first elem:      1409, last elem:      1536
+   Proc:   12, first elem:      1537, last elem:      1664
+   Proc:   13, first elem:      1665, last elem:      1792
+   Proc:   14, first elem:      1793, last elem:      1920
+   Proc:   15, first elem:      1921, last elem:      2048
+   global number of surface elements:        2048
+   reading receiver colatitudes and longitudes from STATIONS...
+   ...counted number of stations:           6
+   Rotating receivers and source to pole-centered system...
+ 
+
+   Proc 00 has   0 out of     6 receivers
+
+   Proc 01 has   2 out of     6 receivers
+
+   Proc 02 has   0 out of     6 receivers
+
+   Proc 03 has   1 out of     6 receivers
+
+   Proc 04 has   0 out of     6 receivers
+
+   Proc 05 has   0 out of     6 receivers
+
+   Proc 06 has   2 out of     6 receivers
+
+   Proc 07 has   0 out of     6 receivers
+
+   Proc 08 has   0 out of     6 receivers
+
+   Proc 09 has   1 out of     6 receivers
+
+   Proc 10 has   0 out of     6 receivers
+
+   Proc 11 has   0 out of     6 receivers
+
+   Proc 12 has   0 out of     6 receivers
+
+   Proc 13 has   0 out of     6 receivers
+
+   Proc 14 has   0 out of     6 receivers
+
+   Proc 15 has   0 out of     6 receivers
+   WARNING:Proc 01  rec. location file/mesh:   17.100   17.099
+   Proc 01 opening receiver file:           1 0001
+   Proc 06 opening receiver file:           1 0005
+   WARNING:Proc 03  rec. location file/mesh:   44.266   44.262
+   Proc 03 opening receiver file:           1 0004
+   WARNING:Proc 06  rec. location file/mesh:   72.200   72.204
+   Proc 06 opening receiver file:           2 0006
+   WARNING:Proc 01  rec. location file/mesh:   17.100   17.099
+   Proc 01 opening receiver file:           2 0002
+   WARNING:Proc 09  rec. location file/mesh:  102.284  102.290
+   Proc 09 opening receiver file:           1 0003
+ 
+   maximal receiver location error [m]:   640.324607367218     
+ 
+   Calculating prefactors for cylindrical components...
+ Proc 09 Checking solid message-passing...
+ Proc 10 Checking solid message-passing...
+ Proc 06 Checking solid message-passing...
+ Proc 05 Checking solid message-passing...
+ Proc 08 Checking solid message-passing...
+ 
+   checking input parameters for consistency...
+ Proc 07 Checking solid message-passing...
+ Proc 00 Checking solid message-passing...
+ Proc 15 Checking solid message-passing...
+ Proc 02 Checking solid message-passing...
+ Proc 13 Checking solid message-passing...
+ Proc 12 Checking solid message-passing...
+ Proc 04 Checking solid message-passing...
+ Proc 14 Checking solid message-passing...
+ Proc 03 Checking solid message-passing...
+ Proc 01 Checking solid message-passing...
+ Proc 11 Checking solid message-passing...
+ Proc 00 Checking fluid message-passing...
+ Proc 08 Checking fluid message-passing...
+ Proc 03 Checking fluid message-passing...
+ Proc 15 Checking fluid message-passing...
+ Proc 09 Checking fluid message-passing...
+ Proc 10 Checking fluid message-passing...
+ Proc 02 Checking fluid message-passing...
+ Proc 06 Checking fluid message-passing...
+ Proc 01 Checking fluid message-passing...
+ Proc 13 Checking fluid message-passing...
+ Proc 12 Checking fluid message-passing...
+ Proc 04 Checking fluid message-passing...
+ Proc 14 Checking fluid message-passing...
+ Proc 05 Checking fluid message-passing...
+ Proc 11 Checking fluid message-passing...
+ Proc 07 Checking fluid message-passing...
+ 
+ :::::::::::::::: SIMULATION PARAMETERS::::::::::::::::::::::::
+   Code information_____________________________________
+      svn revision      :   GIT_VERSION       
+      username          :   vmont             
+      hostname          :   precision         
+      compiler          :   ifort             
+      compilerversion   :           1310      
+      FFLAGS            :   FFLAGS = -O3 #-march=native -fopenmp               
+      CFLAGS            :   CFLAGS = -O3 #-march=native                        
+      LDFLAGS           :   LDFLAGS = -O3 #-march=native -fopenmp              
+      OpenMP            :                  no 
+   Global mesh information______________________________
+      Background model  :   ak135             
+      # discontinuities :             9
+      Have fluid region ?             T
+      Outer rad.     [m]:   6.37100E+06
+      Inner rad.     [m]:   1.15970E+06
+      Polynomial order  :             4
+      # control nodes   :         20133
+      Total elements    :          6512
+      Total # points    :        162800
+      # global numbers  :        105385
+      # axial elements  :             4
+      # curved elements :          5872
+      # linear elements :           512
+      # mixed elements  :           128
+      Min. distance  [m]:   9.89083E+01
+      Min. distance/r0  :   1.55248E-05
+   Grid spacing, velocities etc.________________________
+      Min. (pre,comp)[m]:    9.891E+02    9.891E+02
+      Max. (pre,comp)[m]:    1.401E+04    1.401E+04
+      Min. vp[m/s], r[m]:    5.800E+03    6.361E+06
+      Min. vs[m/s], r[m]:    0.000E+00    3.444E+06
+      Max. vp[m/s], r[m]:    1.366E+04    3.479E+06
+      Max. vs[m/s], r[m]:    7.281E+03    3.479E+06
+      Max. lead time [s]:   2.08805E+00
+      r [m], theta [deg]:    1.134E+06    4.429E+01
+      Min. lead time [s]:   7.53348E-01
+      r [m], theta [deg]:    3.087E+06    6.287E+01
+   Solid-Fluid configuration____________________________
+      S/F elements      :          5456     1056
+      S/F # points      :        136400    26400
+      S/F global numbers:         88362    17217
+      S/F # axial elems :             4        0
+      # S/F boundary els:            48
+      S/F curved elems  :          4832     1040
+      S/F linear elems  :           512        0
+      S/F mixed elements:           112       16
+   Solid message passing_________________________________
+      # processors      :            16
+      max. sent messages:             2
+      max. sent size    :           738
+      nax. recv messages:             2
+      max. recv size    :           738
+   Fluid message passing_________________________________
+      max. sent messages:             2
+      max. sent size    :           225
+      nax. recv messages:             2
+      max. recv size    :           225
+   Source information___________________________________
+      Source type       :   monopole  explosion 
+      Source depth   [m]:   6.36100E+06
+      Source colat [deg]:   1.71000E+01
+      Source long  [deg]:   5.60000E+00
+      Magnitude    [N/m]:   1.00000E+20
+      Source time fct   :              gauss_0
+      Dom. period    [s]:   1.00000E+01
+   Receiver information___________________________________
+       Receiver file type             stations
+       Sum seismograms  :             F
+   General numerical parameters_________________________
+      # elems/wavelength:   1.50000E+00
+      Courant number    :   6.00000E-01
+      Time step [s]     :   7.41223E-02
+      # iterations      :         21586
+      seismo length [s] :   1.60000E+03
+      time extrapolation:             newmark2
+   Input/Output information_____________________________
+      Output data path  :               ./Data
+      Output info path  :               ./Info
+          Sum wavefields:             F
+      Dump energy       :             F
+      XDMF VTK          :             T
+      snap interval [s] :   2.00000E+01
+      # snaps           :           269
+      Dump wavefields   :             T
+      Dumping type      :         coupling_box
+      dump interval [s] :   1.18596E+00
+      # wavefield dumps :            16
+      Need fluid displ. :             T
+ 
+ :::::::::::::::: END SIMULATION PARAMETERS::::::::::::::::::::
+ 
+ 
+   wrote general simulation info into "simulation.info"
+   Writing post processing input file: param_post_processing
+   ... mainly based on guessing from the current simulation, make sure to edit!
+     ... wrote file param_post_processing
+ done preparing waves.
+          15 r min/max:   6100.60380000000        6371.00000003310     
+          15 th min/max:   42.2927713241000        52.7520753321000     
+          15 rotate since source is not beneath north pole
+           2 r min/max:   6100.60380000000        6371.00000003310     
+           2 th min/max:   42.2927713241000        52.7520753321000     
+           2 rotate since source is not beneath north pole
+          13 r min/max:   6100.60380000000        6371.00000003310     
+          13 th min/max:   42.2927713241000        52.7520753321000     
+          13 rotate since source is not beneath north pole
+           5 r min/max:   6100.60380000000        6371.00000003310     
+           5 th min/max:   42.2927713241000        52.7520753321000     
+           5 rotate since source is not beneath north pole
+           3 r min/max:   6100.60380000000        6371.00000003310     
+           3 th min/max:   42.2927713241000        52.7520753321000     
+           3 rotate since source is not beneath north pole
+           9 r min/max:   6100.60380000000        6371.00000003310     
+           9 th min/max:   42.2927713241000        52.7520753321000     
+           9 rotate since source is not beneath north pole
+          10 r min/max:   6100.60380000000        6371.00000003310     
+          10 th min/max:   42.2927713241000        52.7520753321000     
+          10 rotate since source is not beneath north pole
+          14 r min/max:   6100.60380000000        6371.00000003310     
+          14 th min/max:   42.2927713241000        52.7520753321000     
+          14 rotate since source is not beneath north pole
+          11 r min/max:   6100.60380000000        6371.00000003310     
+          11 th min/max:   42.2927713241000        52.7520753321000     
+          11 rotate since source is not beneath north pole
+           8 r min/max:   6100.60380000000        6371.00000003310     
+           8 th min/max:   42.2927713241000        52.7520753321000     
+           8 rotate since source is not beneath north pole
+           6 r min/max:   6100.60380000000        6371.00000003310     
+           6 th min/max:   42.2927713241000        52.7520753321000     
+           6 rotate since source is not beneath north pole
+          12 r min/max:   6100.60380000000        6371.00000003310     
+          12 th min/max:   42.2927713241000        52.7520753321000     
+          12 rotate since source is not beneath north pole
+           4 r min/max:   6100.60380000000        6371.00000003310     
+           4 th min/max:   42.2927713241000        52.7520753321000     
+           4 rotate since source is not beneath north pole
+           0 r min/max:   6100.60380000000        6371.00000003310     
+           0 th min/max:   42.2927713241000        52.7520753321000     
+           0 rotate since source is not beneath north pole
+           7 r min/max:   6100.60380000000        6371.00000003310     
+           7 th min/max:   42.2927713241000        52.7520753321000     
+           7 rotate since source is not beneath north pole
+           5 r min/max after rotation:   6100.60380000000     
+   6371.00000003310     
+           5 th min/max after rotation:   25.2280286079816     
+   35.8414533437662     
+          15 r min/max after rotation:   6100.60380000000     
+   6371.00000003310     
+          15 th min/max after rotation:   25.2280286079816     
+   35.8414533437662     
+           2 r min/max after rotation:   6100.60380000000     
+   6371.00000003310     
+           2 th min/max after rotation:   25.2280286079816     
+   35.8414533437662     
+          13 r min/max after rotation:   6100.60380000000     
+   6371.00000003310     
+          13 th min/max after rotation:   25.2280286079816     
+   35.8414533437662     
+           9 r min/max after rotation:   6100.60380000000     
+   6371.00000003310     
+           9 th min/max after rotation:   25.2280286079816     
+   35.8414533437662     
+          10 r min/max after rotation:   6100.60380000000     
+   6371.00000003310     
+          10 th min/max after rotation:   25.2280286079816     
+          14 r min/max after rotation:   6100.60380000000     
+   6371.00000003310     
+          14 th min/max after rotation:   25.2280286079816     
+   35.8414533437662     
+   35.8414533437662     
+          11 r min/max after rotation:   6100.60380000000     
+   6371.00000003310     
+          11 th min/max after rotation:   25.2280286079816     
+   35.8414533437662     
+           6 r min/max after rotation:   6100.60380000000     
+   6371.00000003310     
+           6 th min/max after rotation:   25.2280286079816     
+   35.8414533437662     
+           8 r min/max after rotation:   6100.60380000000     
+   6371.00000003310     
+           8 th min/max after rotation:   25.2280286079816     
+   35.8414533437662     
+          12 r min/max after rotation:   6100.60380000000     
+   6371.00000003310     
+          12 th min/max after rotation:   25.2280286079816     
+   35.8414533437662     
+           0 r min/max after rotation:   6100.60380000000     
+   6371.00000003310     
+           0 th min/max after rotation:   25.2280286079816     
+   35.8414533437662     
+           4 r min/max after rotation:   6100.60380000000     
+   6371.00000003310     
+           4 th min/max after rotation:   25.2280286079816     
+   35.8414533437662     
+           3 r min/max after rotation:   6100.60380000000     
+   6371.00000003310     
+           3 th min/max after rotation:   25.2280286079816     
+   35.8414533437662     
+           1 r min/max:   6100.60380000000        6371.00000003310     
+           1 th min/max:   42.2927713241000        52.7520753321000     
+           1 rotate since source is not beneath north pole
+           7 r min/max after rotation:   6100.60380000000     
+   6371.00000003310     
+           7 th min/max after rotation:   25.2280286079816     
+   35.8414533437662     
+           9 locate GLL points within heterogeneous regions & 
+           5 locate GLL points within heterogeneous regions & 
+          15 locate GLL points within heterogeneous regions & 
+           2 locate GLL points within heterogeneous regions & 
+          10 locate GLL points within heterogeneous regions & 
+          13 locate GLL points within heterogeneous regions & 
+          14 locate GLL points within heterogeneous regions & 
+           1 r min/max after rotation:   6100.60380000000     
+   6371.00000003310     
+           1 th min/max after rotation:   25.2280286079816     
+   35.8414533437662     
+           3 locate GLL points within heterogeneous regions & 
+           6 locate GLL points within heterogeneous regions & 
+          11 locate GLL points within heterogeneous regions & 
+           8 locate GLL points within heterogeneous regions & 
+          12 locate GLL points within heterogeneous regions & 
+           0 locate GLL points within heterogeneous regions & 
+           4 locate GLL points within heterogeneous regions & 
+           7 locate GLL points within heterogeneous regions & 
+           1 locate GLL points within heterogeneous regions & 
+           7 DONE loading box points
+           0 DONE loading box points
+           4 DONE loading box points
+           3 DONE loading box points
+           1 DONE loading box points
+           2 DONE loading box points
+           6 DONE loading box points
+          12 DONE loading box points
+           8 DONE loading box points
+          13 DONE loading box points
+           9 DONE loading box points
+          15 DONE loading box points
+           5 DONE loading box points
+          11 DONE loading box points
+          14 DONE loading box points
+          10 DONE loading box points
+ MAIN: Deallocating arrays not needed in the time loop.....
+   deallocating large mesh arrays...
+   Done deallocating mesh arrays.
+ MAIN: Starting wave propagation...........................
+ 
+ TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+ TTTT  2nd-order, acceleration-driven Newmark time scheme TTTTT
+ TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+ 
+ ************ S T A R T I N G   T I M E   L O O P *************
+ 
+ Writing global xdmf snap to file:           1
+ 
+  time step:   100; t=    7.41 s (  0.5%)
+  time step:   200; t=   14.82 s (  0.9%)
+ 
+ Writing global xdmf snap to file:           2
+ 
+  time step:   300; t=   22.24 s (  1.4%)
+  time step:   400; t=   29.65 s (  1.9%)
+  time step:   500; t=   37.06 s (  2.3%)
+ 
+ Writing global xdmf snap to file:           3
+ 
+  time step:   600; t=   44.47 s (  2.8%)
+  time step:   700; t=   51.89 s (  3.2%)
+  time step:   800; t=   59.30 s (  3.7%)
+ 
+ Writing global xdmf snap to file:           4
+ 
+  time step:   900; t=   66.71 s (  4.2%)
+  time step:  1000; t=   74.12 s (  4.6%)
+ 
+ Writing global xdmf snap to file:           5
+ 
+  time step:  1100; t=   81.53 s (  5.1%)
+  time step:  1200; t=   88.95 s (  5.6%)
+  time step:  1300; t=   96.36 s (  6.0%)
+ 
+ Writing global xdmf snap to file:           6
+ 
+  time step:  1400; t=  103.77 s (  6.5%)
+  time step:  1500; t=  111.18 s (  6.9%)
+  time step:  1600; t=  118.60 s (  7.4%)
+ 
+ Writing global xdmf snap to file:           7
+ 
+  time step:  1700; t=  126.01 s (  7.9%)
+  time step:  1800; t=  133.42 s (  8.3%)
+ 
+ Writing global xdmf snap to file:           8
+ 
+  time step:  1900; t=  140.83 s (  8.8%)
+  time step:  2000; t=  148.24 s (  9.3%)
+  time step:  2100; t=  155.66 s (  9.7%)
+ 
+ Writing global xdmf snap to file:           9
+ 
+  time step:  2200; t=  163.07 s ( 10.2%)
+  time step:  2300; t=  170.48 s ( 10.7%)
+  time step:  2400; t=  177.89 s ( 11.1%)
+ 
+ Writing global xdmf snap to file:          10
+ 
+  time step:  2500; t=  185.31 s ( 11.6%)
+  time step:  2600; t=  192.72 s ( 12.0%)
+ 
+ Writing global xdmf snap to file:          11
+ 
+  time step:  2700; t=  200.13 s ( 12.5%)
+  time step:  2800; t=  207.54 s ( 13.0%)
+  time step:  2900; t=  214.95 s ( 13.4%)
+ 
+ Writing global xdmf snap to file:          12
+ 
+  time step:  3000; t=  222.37 s ( 13.9%)
+  time step:  3100; t=  229.78 s ( 14.4%)
+  time step:  3200; t=  237.19 s ( 14.8%)
+ 
+ Writing global xdmf snap to file:          13
+ 
+  time step:  3300; t=  244.60 s ( 15.3%)
+  time step:  3400; t=  252.02 s ( 15.8%)
+ 
+ Writing global xdmf snap to file:          14
+ 
+  time step:  3500; t=  259.43 s ( 16.2%)
+  time step:  3600; t=  266.84 s ( 16.7%)
+  time step:  3700; t=  274.25 s ( 17.1%)
+ 
+ Writing global xdmf snap to file:          15
+ 
+  time step:  3800; t=  281.66 s ( 17.6%)
+  time step:  3900; t=  289.08 s ( 18.1%)
+  time step:  4000; t=  296.49 s ( 18.5%)
+ 
+ Writing global xdmf snap to file:          16
+ 
+  time step:  4100; t=  303.90 s ( 19.0%)
+  time step:  4200; t=  311.31 s ( 19.5%)
+  time step:  4300; t=  318.73 s ( 19.9%)
+ 
+ Writing global xdmf snap to file:          17
+ 
+  time step:  4400; t=  326.14 s ( 20.4%)
+  time step:  4500; t=  333.55 s ( 20.8%)
+ 
+ Writing global xdmf snap to file:          18
+ 
+  time step:  4600; t=  340.96 s ( 21.3%)
+  time step:  4700; t=  348.38 s ( 21.8%)
+  time step:  4800; t=  355.79 s ( 22.2%)
+ 
+ Writing global xdmf snap to file:          19
+ 
+  time step:  4900; t=  363.20 s ( 22.7%)
+  time step:  5000; t=  370.61 s ( 23.2%)
+  time step:  5100; t=  378.02 s ( 23.6%)
+ 
+ Writing global xdmf snap to file:          20
+ 
+  time step:  5200; t=  385.44 s ( 24.1%)
+  time step:  5300; t=  392.85 s ( 24.6%)
+ 
+ Writing global xdmf snap to file:          21
+ 
+  time step:  5400; t=  400.26 s ( 25.0%)
+  time step:  5500; t=  407.67 s ( 25.5%)
+  time step:  5600; t=  415.09 s ( 25.9%)
+ 
+ Writing global xdmf snap to file:          22
+ 
+  time step:  5700; t=  422.50 s ( 26.4%)
+  time step:  5800; t=  429.91 s ( 26.9%)
+  time step:  5900; t=  437.32 s ( 27.3%)
+ 
+ Writing global xdmf snap to file:          23
+ 
+  time step:  6000; t=  444.73 s ( 27.8%)
+  time step:  6100; t=  452.15 s ( 28.3%)
+ 
+ Writing global xdmf snap to file:          24
+ 
+  time step:  6200; t=  459.56 s ( 28.7%)
+  time step:  6300; t=  466.97 s ( 29.2%)
+  time step:  6400; t=  474.38 s ( 29.6%)
+ 
+ Writing global xdmf snap to file:          25
+ 
+  time step:  6500; t=  481.80 s ( 30.1%)
+  time step:  6600; t=  489.21 s ( 30.6%)
+  time step:  6700; t=  496.62 s ( 31.0%)
+ 
+ Writing global xdmf snap to file:          26
+ 
+  time step:  6800; t=  504.03 s ( 31.5%)
+  time step:  6900; t=  511.44 s ( 32.0%)
+ 
+ Writing global xdmf snap to file:          27
+ 
+  time step:  7000; t=  518.86 s ( 32.4%)
+  time step:  7100; t=  526.27 s ( 32.9%)
+  time step:  7200; t=  533.68 s ( 33.4%)
+ 
+ Writing global xdmf snap to file:          28
+ 
+  time step:  7300; t=  541.09 s ( 33.8%)
+  time step:  7400; t=  548.51 s ( 34.3%)
+  time step:  7500; t=  555.92 s ( 34.7%)
+ 
+ Writing global xdmf snap to file:          29
+ 
+  time step:  7600; t=  563.33 s ( 35.2%)
+  time step:  7700; t=  570.74 s ( 35.7%)
+  time step:  7800; t=  578.15 s ( 36.1%)
+ 
+ Writing global xdmf snap to file:          30
+ 
+  time step:  7900; t=  585.57 s ( 36.6%)
+  time step:  8000; t=  592.98 s ( 37.1%)
+ 
+ Writing global xdmf snap to file:          31
+ 
+  time step:  8100; t=  600.39 s ( 37.5%)
+  time step:  8200; t=  607.80 s ( 38.0%)
+  time step:  8300; t=  615.22 s ( 38.5%)
+ 
+ Writing global xdmf snap to file:          32
+ 
+  time step:  8400; t=  622.63 s ( 38.9%)
+  time step:  8500; t=  630.04 s ( 39.4%)
+  time step:  8600; t=  637.45 s ( 39.8%)
+ 
+ Writing global xdmf snap to file:          33
+ 
+  time step:  8700; t=  644.86 s ( 40.3%)
+  time step:  8800; t=  652.28 s ( 40.8%)
+ 
+ Writing global xdmf snap to file:          34
+ 
+  time step:  8900; t=  659.69 s ( 41.2%)
+  time step:  9000; t=  667.10 s ( 41.7%)
+  time step:  9100; t=  674.51 s ( 42.2%)
+ 
+ Writing global xdmf snap to file:          35
+ 
+  time step:  9200; t=  681.93 s ( 42.6%)
+  time step:  9300; t=  689.34 s ( 43.1%)
+  time step:  9400; t=  696.75 s ( 43.5%)
+ 
+ Writing global xdmf snap to file:          36
+ 
+  time step:  9500; t=  704.16 s ( 44.0%)
+  time step:  9600; t=  711.57 s ( 44.5%)
+ 
+ Writing global xdmf snap to file:          37
+ 
+  time step:  9700; t=  718.99 s ( 44.9%)
+  time step:  9800; t=  726.40 s ( 45.4%)
+  time step:  9900; t=  733.81 s ( 45.9%)
+ 
+ Writing global xdmf snap to file:          38
+ 
+  time step: 10000; t=  741.22 s ( 46.3%)
+  time step: 10100; t=  748.64 s ( 46.8%)
+  time step: 10200; t=  756.05 s ( 47.3%)
+ 
+ Writing global xdmf snap to file:          39
+ 
+  time step: 10300; t=  763.46 s ( 47.7%)
+  time step: 10400; t=  770.87 s ( 48.2%)
+ 
+ Writing global xdmf snap to file:          40
+ 
+  time step: 10500; t=  778.28 s ( 48.6%)
+  time step: 10600; t=  785.70 s ( 49.1%)
+  time step: 10700; t=  793.11 s ( 49.6%)
+ 
+ Writing global xdmf snap to file:          41
+ 
+  time step: 10800; t=  800.52 s ( 50.0%)
+  time step: 10900; t=  807.93 s ( 50.5%)
+  time step: 11000; t=  815.35 s ( 51.0%)
+ 
+ Writing global xdmf snap to file:          42
+ 
+  time step: 11100; t=  822.76 s ( 51.4%)
+  time step: 11200; t=  830.17 s ( 51.9%)
+ 
+ Writing global xdmf snap to file:          43
+ 
+  time step: 11300; t=  837.58 s ( 52.3%)
+  time step: 11400; t=  844.99 s ( 52.8%)
+  time step: 11500; t=  852.41 s ( 53.3%)
+ 
+ Writing global xdmf snap to file:          44
+ 
+  time step: 11600; t=  859.82 s ( 53.7%)
+  time step: 11700; t=  867.23 s ( 54.2%)
+  time step: 11800; t=  874.64 s ( 54.7%)
+ 
+ Writing global xdmf snap to file:          45
+ 
+  time step: 11900; t=  882.06 s ( 55.1%)
+  time step: 12000; t=  889.47 s ( 55.6%)
+  time step: 12100; t=  896.88 s ( 56.1%)
+ 
+ Writing global xdmf snap to file:          46
+ 
+  time step: 12200; t=  904.29 s ( 56.5%)
+  time step: 12300; t=  911.70 s ( 57.0%)
+ 
+ Writing global xdmf snap to file:          47
+ 
+  time step: 12400; t=  919.12 s ( 57.4%)
+  time step: 12500; t=  926.53 s ( 57.9%)
+  time step: 12600; t=  933.94 s ( 58.4%)
+ 
+ Writing global xdmf snap to file:          48
+ 
+  time step: 12700; t=  941.35 s ( 58.8%)
+  time step: 12800; t=  948.77 s ( 59.3%)
+  time step: 12900; t=  956.18 s ( 59.8%)
+ 
+ Writing global xdmf snap to file:          49
+ 
+  time step: 13000; t=  963.59 s ( 60.2%)
+  time step: 13100; t=  971.00 s ( 60.7%)
+ 
+ Writing global xdmf snap to file:          50
+ 
+  time step: 13200; t=  978.41 s ( 61.2%)
+  time step: 13300; t=  985.83 s ( 61.6%)
+  time step: 13400; t=  993.24 s ( 62.1%)
+ 
+ Writing global xdmf snap to file:          51
+ 
+  time step: 13500; t= 1000.65 s ( 62.5%)
+  time step: 13600; t= 1008.06 s ( 63.0%)
+  time step: 13700; t= 1015.48 s ( 63.5%)
+ 
+ Writing global xdmf snap to file:          52
+ 
+  time step: 13800; t= 1022.89 s ( 63.9%)
+  time step: 13900; t= 1030.30 s ( 64.4%)
+ 
+ Writing global xdmf snap to file:          53
+ 
+  time step: 14000; t= 1037.71 s ( 64.9%)
+  time step: 14100; t= 1045.13 s ( 65.3%)
+  time step: 14200; t= 1052.54 s ( 65.8%)
+ 
+ Writing global xdmf snap to file:          54
+ 
+  time step: 14300; t= 1059.95 s ( 66.2%)
+  time step: 14400; t= 1067.36 s ( 66.7%)
+  time step: 14500; t= 1074.77 s ( 67.2%)
+ 
+ Writing global xdmf snap to file:          55
+ 
+  time step: 14600; t= 1082.19 s ( 67.6%)
+  time step: 14700; t= 1089.60 s ( 68.1%)
+ 
+ Writing global xdmf snap to file:          56
+ 
+  time step: 14800; t= 1097.01 s ( 68.6%)
+  time step: 14900; t= 1104.42 s ( 69.0%)
+  time step: 15000; t= 1111.84 s ( 69.5%)
+ 
+ Writing global xdmf snap to file:          57
+ 
+  time step: 15100; t= 1119.25 s ( 70.0%)
+  time step: 15200; t= 1126.66 s ( 70.4%)
+  time step: 15300; t= 1134.07 s ( 70.9%)
+ 
+ Writing global xdmf snap to file:          58
+ 
+  time step: 15400; t= 1141.48 s ( 71.3%)
+  time step: 15500; t= 1148.90 s ( 71.8%)
+  time step: 15600; t= 1156.31 s ( 72.3%)
+ 
+ Writing global xdmf snap to file:          59
+ 
+  time step: 15700; t= 1163.72 s ( 72.7%)
+  time step: 15800; t= 1171.13 s ( 73.2%)
+ 
+ Writing global xdmf snap to file:          60
+ 
+  time step: 15900; t= 1178.55 s ( 73.7%)
+  time step: 16000; t= 1185.96 s ( 74.1%)
+  time step: 16100; t= 1193.37 s ( 74.6%)
+ 
+ Writing global xdmf snap to file:          61
+ 
+  time step: 16200; t= 1200.78 s ( 75.0%)
+  time step: 16300; t= 1208.19 s ( 75.5%)
+  time step: 16400; t= 1215.61 s ( 76.0%)
+ 
+ Writing global xdmf snap to file:          62
+ 
+  time step: 16500; t= 1223.02 s ( 76.4%)
+  time step: 16600; t= 1230.43 s ( 76.9%)
+ 
+ Writing global xdmf snap to file:          63
+ 
+  time step: 16700; t= 1237.84 s ( 77.4%)
+  time step: 16800; t= 1245.26 s ( 77.8%)
+  time step: 16900; t= 1252.67 s ( 78.3%)
+ 
+ Writing global xdmf snap to file:          64
+ 
+  time step: 17000; t= 1260.08 s ( 78.8%)
+  time step: 17100; t= 1267.49 s ( 79.2%)
+  time step: 17200; t= 1274.90 s ( 79.7%)
+ 
+ Writing global xdmf snap to file:          65
+ 
+  time step: 17300; t= 1282.32 s ( 80.1%)
+  time step: 17400; t= 1289.73 s ( 80.6%)
+ 
+ Writing global xdmf snap to file:          66
+ 
+  time step: 17500; t= 1297.14 s ( 81.1%)
+  time step: 17600; t= 1304.55 s ( 81.5%)
+  time step: 17700; t= 1311.97 s ( 82.0%)
+ 
+ Writing global xdmf snap to file:          67
+ 
+  time step: 17800; t= 1319.38 s ( 82.5%)
+  time step: 17900; t= 1326.79 s ( 82.9%)
+  time step: 18000; t= 1334.20 s ( 83.4%)
+ 
+ Writing global xdmf snap to file:          68
+ 
+  time step: 18100; t= 1341.61 s ( 83.9%)
+  time step: 18200; t= 1349.03 s ( 84.3%)
+ 
+ Writing global xdmf snap to file:          69
+ 
+  time step: 18300; t= 1356.44 s ( 84.8%)
+  time step: 18400; t= 1363.85 s ( 85.2%)
+  time step: 18500; t= 1371.26 s ( 85.7%)
+ 
+ Writing global xdmf snap to file:          70
+ 
+  time step: 18600; t= 1378.68 s ( 86.2%)
+  time step: 18700; t= 1386.09 s ( 86.6%)
+  time step: 18800; t= 1393.50 s ( 87.1%)
+ 
+ Writing global xdmf snap to file:          71
+ 
+  time step: 18900; t= 1400.91 s ( 87.6%)
+  time step: 19000; t= 1408.32 s ( 88.0%)
+ 
+ Writing global xdmf snap to file:          72
+ 
+  time step: 19100; t= 1415.74 s ( 88.5%)
+  time step: 19200; t= 1423.15 s ( 88.9%)
+  time step: 19300; t= 1430.56 s ( 89.4%)
+ 
+ Writing global xdmf snap to file:          73
+ 
+  time step: 19400; t= 1437.97 s ( 89.9%)
+  time step: 19500; t= 1445.39 s ( 90.3%)
+  time step: 19600; t= 1452.80 s ( 90.8%)
+ 
+ Writing global xdmf snap to file:          74
+ 
+  time step: 19700; t= 1460.21 s ( 91.3%)
+  time step: 19800; t= 1467.62 s ( 91.7%)
+  time step: 19900; t= 1475.03 s ( 92.2%)
+ 
+ Writing global xdmf snap to file:          75
+ 
+  time step: 20000; t= 1482.45 s ( 92.7%)
+  time step: 20100; t= 1489.86 s ( 93.1%)
+ 
+ Writing global xdmf snap to file:          76
+ 
+  time step: 20200; t= 1497.27 s ( 93.6%)
+  time step: 20300; t= 1504.68 s ( 94.0%)
+  time step: 20400; t= 1512.10 s ( 94.5%)
+ 
+ Writing global xdmf snap to file:          77
+ 
+  time step: 20500; t= 1519.51 s ( 95.0%)
+  time step: 20600; t= 1526.92 s ( 95.4%)
+  time step: 20700; t= 1534.33 s ( 95.9%)
+ 
+ Writing global xdmf snap to file:          78
+ 
+  time step: 20800; t= 1541.74 s ( 96.4%)
+  time step: 20900; t= 1549.16 s ( 96.8%)
+ 
+ Writing global xdmf snap to file:          79
+ 
+  time step: 21000; t= 1556.57 s ( 97.3%)
+  time step: 21100; t= 1563.98 s ( 97.7%)
+  time step: 21200; t= 1571.39 s ( 98.2%)
+ 
+ Writing global xdmf snap to file:          80
+ 
+  time step: 21300; t= 1578.81 s ( 98.7%)
+  time step: 21400; t= 1586.22 s ( 99.1%)
+  time step: 21500; t= 1593.63 s ( 99.6%)
+ 
+ Writing global xdmf snap to file:          81
+ 
+ 
+          Summary of timing measurements:
+ 
+                                           calls        t_call       t_total t_frac
+CLOCKS: Time loop routine                      1    235.445394    235.445394  0.985
+CLOCKS: Assembly/MPI routines              86344      0.000857     74.027998  0.310
+CLOCKS:  > Only MPI routine                86350      0.000179     15.433500  0.065
+CLOCKS:  > Only solid MPI_WAIT             43176      0.000161      6.971700  0.029
+CLOCKS:  > Only fluid MPI_WAIT             43174      0.000038      1.649900  0.007
+CLOCKS: Stiffness routine                  43172      0.001998     86.241798  0.361
+CLOCKS: Dump routine                       21587      0.001114     24.049499  0.101
+CLOCKS: Total measured time:     238.931994
+ 
+ MAIN: Finishing xdmf xml file...
+  ==  ==  ==  == =PROGRAM axisem FINISHED ==  ==  ==  ==  ==  == =
+Job running in directory ./
+To convolve and sum seismograms, run ./post_processing.csh after the simulations in:
+/mnt/Data1/vmont/svn_lma/DSM_FOR_SPECFEM3D/EXAMPLES_Vadim_inversion_framework_and_coupling/coupling_with_an_external_code/small_example_coupling_axisem_specfem_script/run_axisem/SOLVER/1
+.... the post-processing input file param_post_processing is generated in the solver
+.... based on guesses. Edit please.
+ ~ ~ ~ ~ ~ ~ ~ h a n g   o n   &   l o o s e ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+  ROTATION MATRIX 
+  0.951231397038538      -9.758289975914969E-002  0.292636988370758     
+  9.326905395356092E-002  0.995227399981831       2.869330758229174E-002
+ -0.294040325232305       0.000000000000000E+000  0.955793014798330     
+ 
+ -2.617694830787321E-002 -0.675358699724751       0.737024690280713     
+  0.999657324975557      -1.768488994206043E-002  1.929967073424508E-002
+  0.000000000000000E+000  0.737277336810125       0.675590207615659     
+           0           0           0           4
+           0
+ 
+           1           0           0           4
+           0
+ 
+           2         901           0           4
+         901
+ 
+           3         236           0           4
+        1137
+ 
+           4           0           0           4
+        1137
+ 
+           5           0           0           4
+        1137
+ 
+           6           0           0           4
+        1137
+ 
+           7           0           0           4
+        1137
+ 
+           8           0           0           4
+        1137
+ 
+           9           0           0           4
+        1137
+ 
+          10           0           0           4
+        1137
+ 
+          11           0           0           4
+        1137
+ 
+          12           0           0           4
+        1137
+ 
+          13           0           0           4
+        1137
+ 
+          14           0           0           4
+        1137
+ 
+          15           0           0           4
+        1137
+ 
+         100       76250        1137 connect
+         200       76250        1137 connect
+         300       76250        1137 connect
+         400       76250        1137 connect
+         500       76250        1137 connect
+         600       76250        1137 connect
+         700       76250        1137 connect
+         800       76250        1137 connect
+         900       76250        1137 connect
+        1000       76250        1137 connect
+        1100       76250        1137 connect
+        1200       76250        1137 connect
+        1300       76250        1137 connect
+        1400       76250        1137 connect
+        1500       76250        1137 connect
+        1600       76250        1137 connect
+        1700       76250        1137 connect
+        1800       76250        1137 connect
+        1900       76250        1137 connect
+        2000       76250        1137 connect
+        2100       76250        1137 connect
+        2200       76250        1137 connect
+        2300       76250        1137 connect
+        2400       76250        1137 connect
+        2500       76250        1137 connect
+        2600       76250        1137 connect
+        2700       76250        1137 connect
+        2800       76250        1137 connect
+        2900       76250        1137 connect
+        3000       76250        1137 connect
+        3100       76250        1137 connect
+        3200       76250        1137 connect
+        3300       76250        1137 connect
+        3400       76250        1137 connect
+        3500       76250        1137 connect
+        3600       76250        1137 connect
+        3700       76250        1137 connect
+        3800       76250        1137 connect
+        3900       76250        1137 connect
+        4000       76250        1137 connect
+        4100       76250        1137 connect
+        4200       76250        1137 connect
+        4300       76250        1137 connect
+        4400       76250        1137 connect
+        4500       76250        1137 connect
+        4600       76250        1137 connect
+        4700       76250        1137 connect
+        4800       76250        1137 connect
+        4900       76250        1137 connect
+        5000       76250        1137 connect
+        5100       76250        1137 connect
+        5200       76250        1137 connect
+        5300       76250        1137 connect
+        5400       76250        1137 connect
+        5500       76250        1137 connect
+        5600       76250        1137 connect
+        5700       76250        1137 connect
+        5800       76250        1137 connect
+        5900       76250        1137 connect
+        6000       76250        1137 connect
+        6100       76250        1137 connect
+        6200       76250        1137 connect
+        6300       76250        1137 connect
+        6400       76250        1137 connect
+        6500       76250        1137 connect
+        6600       76250        1137 connect
+        6700       76250        1137 connect
+        6800       76250        1137 connect
+        6900       76250        1137 connect
+        7000       76250        1137 connect
+        7100       76250        1137 connect
+        7200       76250        1137 connect
+        7300       76250        1137 connect
+        7400       76250        1137 connect
+        7500       76250        1137 connect
+        7600       76250        1137 connect
+        7700       76250        1137 connect
+        7800       76250        1137 connect
+        7900       76250        1137 connect
+        8000       76250        1137 connect
+        8100       76250        1137 connect
+        8200       76250        1137 connect
+        8300       76250        1137 connect
+        8400       76250        1137 connect
+        8500       76250        1137 connect
+        8600       76250        1137 connect
+        8700       76250        1137 connect
+        8800       76250        1137 connect
+        8900       76250        1137 connect
+        9000       76250        1137 connect
+        9100       76250        1137 connect
+        9200       76250        1137 connect
+        9300       76250        1137 connect
+        9400       76250        1137 connect
+        9500       76250        1137 connect
+        9600       76250        1137 connect
+        9700       76250        1137 connect
+        9800       76250        1137 connect
+        9900       76250        1137 connect
+       10000       76250        1137 connect
+       10100       76250        1137 connect
+       10200       76250        1137 connect
+       10300       76250        1137 connect
+       10400       76250        1137 connect
+       10500       76250        1137 connect
+       10600       76250        1137 connect
+       10700       76250        1137 connect
+       10800       76250        1137 connect
+       10900       76250        1137 connect
+       11000       76250        1137 connect
+       11100       76250        1137 connect
+       11200       76250        1137 connect
+       11300       76250        1137 connect
+       11400       76250        1137 connect
+       11500       76250        1137 connect
+       11600       76250        1137 connect
+       11700       76250        1137 connect
+       11800       76250        1137 connect
+       11900       76250        1137 connect
+       12000       76250        1137 connect
+       12100       76250        1137 connect
+       12200       76250        1137 connect
+       12300       76250        1137 connect
+       12400       76250        1137 connect
+       12500       76250        1137 connect
+       12600       76250        1137 connect
+       12700       76250        1137 connect
+       12800       76250        1137 connect
+       12900       76250        1137 connect
+       13000       76250        1137 connect
+       13100       76250        1137 connect
+       13200       76250        1137 connect
+       13300       76250        1137 connect
+       13400       76250        1137 connect
+       13500       76250        1137 connect
+       13600       76250        1137 connect
+       13700       76250        1137 connect
+       13800       76250        1137 connect
+       13900       76250        1137 connect
+       14000       76250        1137 connect
+       14100       76250        1137 connect
+       14200       76250        1137 connect
+       14300       76250        1137 connect
+       14400       76250        1137 connect
+       14500       76250        1137 connect
+       14600       76250        1137 connect
+       14700       76250        1137 connect
+       14800       76250        1137 connect
+       14900       76250        1137 connect
+       15000       76250        1137 connect
+       15100       76250        1137 connect
+       15200       76250        1137 connect
+       15300       76250        1137 connect
+       15400       76250        1137 connect
+       15500       76250        1137 connect
+       15600       76250        1137 connect
+       15700       76250        1137 connect
+       15800       76250        1137 connect
+       15900       76250        1137 connect
+       16000       76250        1137 connect
+       16100       76250        1137 connect
+       16200       76250        1137 connect
+       16300       76250        1137 connect
+       16400       76250        1137 connect
+       16500       76250        1137 connect
+       16600       76250        1137 connect
+       16700       76250        1137 connect
+       16800       76250        1137 connect
+       16900       76250        1137 connect
+       17000       76250        1137 connect
+       17100       76250        1137 connect
+       17200       76250        1137 connect
+       17300       76250        1137 connect
+       17400       76250        1137 connect
+       17500       76250        1137 connect
+       17600       76250        1137 connect
+       17700       76250        1137 connect
+       17800       76250        1137 connect
+       17900       76250        1137 connect
+       18000       76250        1137 connect
+       18100       76250        1137 connect
+       18200       76250        1137 connect
+       18300       76250        1137 connect
+       18400       76250        1137 connect
+       18500       76250        1137 connect
+       18600       76250        1137 connect
+       18700       76250        1137 connect
+       18800       76250        1137 connect
+       18900       76250        1137 connect
+       19000       76250        1137 connect
+       19100       76250        1137 connect
+       19200       76250        1137 connect
+       19300       76250        1137 connect
+       19400       76250        1137 connect
+       19500       76250        1137 connect
+       19600       76250        1137 connect
+       19700       76250        1137 connect
+       19800       76250        1137 connect
+       19900       76250        1137 connect
+       20000       76250        1137 connect
+       20100       76250        1137 connect
+       20200       76250        1137 connect
+       20300       76250        1137 connect
+       20400       76250        1137 connect
+       20500       76250        1137 connect
+       20600       76250        1137 connect
+       20700       76250        1137 connect
+       20800       76250        1137 connect
+       20900       76250        1137 connect
+       21000       76250        1137 connect
+       21100       76250        1137 connect
+       21200       76250        1137 connect
+       21300       76250        1137 connect
+       21400       76250        1137 connect
+       21500       76250        1137 connect
+       21600       76250        1137 connect
+       21700       76250        1137 connect
+       21800       76250        1137 connect
+       21900       76250        1137 connect
+       22000       76250        1137 connect
+       22100       76250        1137 connect
+       22200       76250        1137 connect
+       22300       76250        1137 connect
+       22400       76250        1137 connect
+       22500       76250        1137 connect
+       22600       76250        1137 connect
+       22700       76250        1137 connect
+       22800       76250        1137 connect
+       22900       76250        1137 connect
+       23000       76250        1137 connect
+       23100       76250        1137 connect
+       23200       76250        1137 connect
+       23300       76250        1137 connect
+       23400       76250        1137 connect
+       23500       76250        1137 connect
+       23600       76250        1137 connect
+       23700       76250        1137 connect
+       23800       76250        1137 connect
+       23900       76250        1137 connect
+       24000       76250        1137 connect
+       24100       76250        1137 connect
+       24200       76250        1137 connect
+       24300       76250        1137 connect
+       24400       76250        1137 connect
+       24500       76250        1137 connect
+       24600       76250        1137 connect
+       24700       76250        1137 connect
+       24800       76250        1137 connect
+       24900       76250        1137 connect
+       25000       76250        1137 connect
+       25100       76250        1137 connect
+       25200       76250        1137 connect
+       25300       76250        1137 connect
+       25400       76250        1137 connect
+       25500       76250        1137 connect
+       25600       76250        1137 connect
+       25700       76250        1137 connect
+       25800       76250        1137 connect
+       25900       76250        1137 connect
+       26000       76250        1137 connect
+       26100       76250        1137 connect
+       26200       76250        1137 connect
+       26300       76250        1137 connect
+       26400       76250        1137 connect
+       26500       76250        1137 connect
+       26600       76250        1137 connect
+       26700       76250        1137 connect
+       26800       76250        1137 connect
+       26900       76250        1137 connect
+       27000       76250        1137 connect
+       27100       76250        1137 connect
+       27200       76250        1137 connect
+       27300       76250        1137 connect
+       27400       76250        1137 connect
+       27500       76250        1137 connect
+       27600       76250        1137 connect
+       27700       76250        1137 connect
+       27800       76250        1137 connect
+       27900       76250        1137 connect
+       28000       76250        1137 connect
+       28100       76250        1137 connect
+       28200       76250        1137 connect
+       28300       76250        1137 connect
+       28400       76250        1137 connect
+       28500       76250        1137 connect
+       28600       76250        1137 connect
+       28700       76250        1137 connect
+       28800       76250        1137 connect
+       28900       76250        1137 connect
+       29000       76250        1137 connect
+       29100       76250        1137 connect
+       29200       76250        1137 connect
+       29300       76250        1137 connect
+       29400       76250        1137 connect
+       29500       76250        1137 connect
+       29600       76250        1137 connect
+       29700       76250        1137 connect
+       29800       76250        1137 connect
+       29900       76250        1137 connect
+       30000       76250        1137 connect
+       30100       76250        1137 connect
+       30200       76250        1137 connect
+       30300       76250        1137 connect
+       30400       76250        1137 connect
+       30500       76250        1137 connect
+       30600       76250        1137 connect
+       30700       76250        1137 connect
+       30800       76250        1137 connect
+       30900       76250        1137 connect
+       31000       76250        1137 connect
+       31100       76250        1137 connect
+       31200       76250        1137 connect
+       31300       76250        1137 connect
+       31400       76250        1137 connect
+       31500       76250        1137 connect
+       31600       76250        1137 connect
+       31700       76250        1137 connect
+       31800       76250        1137 connect
+       31900       76250        1137 connect
+       32000       76250        1137 connect
+       32100       76250        1137 connect
+       32200       76250        1137 connect
+       32300       76250        1137 connect
+       32400       76250        1137 connect
+       32500       76250        1137 connect
+       32600       76250        1137 connect
+       32700       76250        1137 connect
+       32800       76250        1137 connect
+       32900       76250        1137 connect
+       33000       76250        1137 connect
+       33100       76250        1137 connect
+       33200       76250        1137 connect
+       33300       76250        1137 connect
+       33400       76250        1137 connect
+       33500       76250        1137 connect
+       33600       76250        1137 connect
+       33700       76250        1137 connect
+       33800       76250        1137 connect
+       33900       76250        1137 connect
+       34000       76250        1137 connect
+       34100       76250        1137 connect
+       34200       76250        1137 connect
+       34300       76250        1137 connect
+       34400       76250        1137 connect
+       34500       76250        1137 connect
+       34600       76250        1137 connect
+       34700       76250        1137 connect
+       34800       76250        1137 connect
+       34900       76250        1137 connect
+       35000       76250        1137 connect
+       35100       76250        1137 connect
+       35200       76250        1137 connect
+       35300       76250        1137 connect
+       35400       76250        1137 connect
+       35500       76250        1137 connect
+       35600       76250        1137 connect
+       35700       76250        1137 connect
+       35800       76250        1137 connect
+       35900       76250        1137 connect
+       36000       76250        1137 connect
+       36100       76250        1137 connect
+       36200       76250        1137 connect
+       36300       76250        1137 connect
+       36400       76250        1137 connect
+       36500       76250        1137 connect
+       36600       76250        1137 connect
+       36700       76250        1137 connect
+       36800       76250        1137 connect
+       36900       76250        1137 connect
+       37000       76250        1137 connect
+       37100       76250        1137 connect
+       37200       76250        1137 connect
+       37300       76250        1137 connect
+       37400       76250        1137 connect
+       37500       76250        1137 connect
+       37600       76250        1137 connect
+       37700       76250        1137 connect
+       37800       76250        1137 connect
+       37900       76250        1137 connect
+       38000       76250        1137 connect
+       38100       76250        1137 connect
+       38200       76250        1137 connect
+       38300       76250        1137 connect
+       38400       76250        1137 connect
+       38500       76250        1137 connect
+       38600       76250        1137 connect
+       38700       76250        1137 connect
+       38800       76250        1137 connect
+       38900       76250        1137 connect
+       39000       76250        1137 connect
+       39100       76250        1137 connect
+       39200       76250        1137 connect
+       39300       76250        1137 connect
+       39400       76250        1137 connect
+       39500       76250        1137 connect
+       39600       76250        1137 connect
+       39700       76250        1137 connect
+       39800       76250        1137 connect
+       39900       76250        1137 connect
+       40000       76250        1137 connect
+       40100       76250        1137 connect
+       40200       76250        1137 connect
+       40300       76250        1137 connect
+       40400       76250        1137 connect
+       40500       76250        1137 connect
+       40600       76250        1137 connect
+       40700       76250        1137 connect
+       40800       76250        1137 connect
+       40900       76250        1137 connect
+       41000       76250        1137 connect
+       41100       76250        1137 connect
+       41200       76250        1137 connect
+       41300       76250        1137 connect
+       41400       76250        1137 connect
+       41500       76250        1137 connect
+       41600       76250        1137 connect
+       41700       76250        1137 connect
+       41800       76250        1137 connect
+       41900       76250        1137 connect
+       42000       76250        1137 connect
+       42100       76250        1137 connect
+       42200       76250        1137 connect
+       42300       76250        1137 connect
+       42400       76250        1137 connect
+       42500       76250        1137 connect
+       42600       76250        1137 connect
+       42700       76250        1137 connect
+       42800       76250        1137 connect
+       42900       76250        1137 connect
+       43000       76250        1137 connect
+       43100       76250        1137 connect
+       43200       76250        1137 connect
+       43300       76250        1137 connect
+       43400       76250        1137 connect
+       43500       76250        1137 connect
+       43600       76250        1137 connect
+       43700       76250        1137 connect
+       43800       76250        1137 connect
+       43900       76250        1137 connect
+       44000       76250        1137 connect
+       44100       76250        1137 connect
+       44200       76250        1137 connect
+       44300       76250        1137 connect
+       44400       76250        1137 connect
+       44500       76250        1137 connect
+       44600       76250        1137 connect
+       44700       76250        1137 connect
+       44800       76250        1137 connect
+       44900       76250        1137 connect
+       45000       76250        1137 connect
+       45100       76250        1137 connect
+       45200       76250        1137 connect
+       45300       76250        1137 connect
+       45400       76250        1137 connect
+       45500       76250        1137 connect
+       45600       76250        1137 connect
+       45700       76250        1137 connect
+       45800       76250        1137 connect
+       45900       76250        1137 connect
+       46000       76250        1137 connect
+       46100       76250        1137 connect
+       46200       76250        1137 connect
+       46300       76250        1137 connect
+       46400       76250        1137 connect
+       46500       76250        1137 connect
+       46600       76250        1137 connect
+       46700       76250        1137 connect
+       46800       76250        1137 connect
+       46900       76250        1137 connect
+       47000       76250        1137 connect
+       47100       76250        1137 connect
+       47200       76250        1137 connect
+       47300       76250        1137 connect
+       47400       76250        1137 connect
+       47500       76250        1137 connect
+       47600       76250        1137 connect
+       47700       76250        1137 connect
+       47800       76250        1137 connect
+       47900       76250        1137 connect
+       48000       76250        1137 connect
+       48100       76250        1137 connect
+       48200       76250        1137 connect
+       48300       76250        1137 connect
+       48400       76250        1137 connect
+       48500       76250        1137 connect
+       48600       76250        1137 connect
+       48700       76250        1137 connect
+       48800       76250        1137 connect
+       48900       76250        1137 connect
+       49000       76250        1137 connect
+       49100       76250        1137 connect
+       49200       76250        1137 connect
+       49300       76250        1137 connect
+       49400       76250        1137 connect
+       49500       76250        1137 connect
+       49600       76250        1137 connect
+       49700       76250        1137 connect
+       49800       76250        1137 connect
+       49900       76250        1137 connect
+       50000       76250        1137 connect
+       50100       76250        1137 connect
+       50200       76250        1137 connect
+       50300       76250        1137 connect
+       50400       76250        1137 connect
+       50500       76250        1137 connect
+       50600       76250        1137 connect
+       50700       76250        1137 connect
+       50800       76250        1137 connect
+       50900       76250        1137 connect
+       51000       76250        1137 connect
+       51100       76250        1137 connect
+       51200       76250        1137 connect
+       51300       76250        1137 connect
+       51400       76250        1137 connect
+       51500       76250        1137 connect
+       51600       76250        1137 connect
+       51700       76250        1137 connect
+       51800       76250        1137 connect
+       51900       76250        1137 connect
+       52000       76250        1137 connect
+       52100       76250        1137 connect
+       52200       76250        1137 connect
+       52300       76250        1137 connect
+       52400       76250        1137 connect
+       52500       76250        1137 connect
+       52600       76250        1137 connect
+       52700       76250        1137 connect
+       52800       76250        1137 connect
+       52900       76250        1137 connect
+       53000       76250        1137 connect
+       53100       76250        1137 connect
+       53200       76250        1137 connect
+       53300       76250        1137 connect
+       53400       76250        1137 connect
+       53500       76250        1137 connect
+       53600       76250        1137 connect
+       53700       76250        1137 connect
+       53800       76250        1137 connect
+       53900       76250        1137 connect
+       54000       76250        1137 connect
+       54100       76250        1137 connect
+       54200       76250        1137 connect
+       54300       76250        1137 connect
+       54400       76250        1137 connect
+       54500       76250        1137 connect
+       54600       76250        1137 connect
+       54700       76250        1137 connect
+       54800       76250        1137 connect
+       54900       76250        1137 connect
+       55000       76250        1137 connect
+       55100       76250        1137 connect
+       55200       76250        1137 connect
+       55300       76250        1137 connect
+       55400       76250        1137 connect
+       55500       76250        1137 connect
+       55600       76250        1137 connect
+       55700       76250        1137 connect
+       55800       76250        1137 connect
+       55900       76250        1137 connect
+       56000       76250        1137 connect
+       56100       76250        1137 connect
+       56200       76250        1137 connect
+       56300       76250        1137 connect
+       56400       76250        1137 connect
+       56500       76250        1137 connect
+       56600       76250        1137 connect
+       56700       76250        1137 connect
+       56800       76250        1137 connect
+       56900       76250        1137 connect
+       57000       76250        1137 connect
+       57100       76250        1137 connect
+       57200       76250        1137 connect
+       57300       76250        1137 connect
+       57400       76250        1137 connect
+       57500       76250        1137 connect
+       57600       76250        1137 connect
+       57700       76250        1137 connect
+       57800       76250        1137 connect
+       57900       76250        1137 connect
+       58000       76250        1137 connect
+       58100       76250        1137 connect
+       58200       76250        1137 connect
+       58300       76250        1137 connect
+       58400       76250        1137 connect
+       58500       76250        1137 connect
+       58600       76250        1137 connect
+       58700       76250        1137 connect
+       58800       76250        1137 connect
+       58900       76250        1137 connect
+       59000       76250        1137 connect
+       59100       76250        1137 connect
+       59200       76250        1137 connect
+       59300       76250        1137 connect
+       59400       76250        1137 connect
+       59500       76250        1137 connect
+       59600       76250        1137 connect
+       59700       76250        1137 connect
+       59800       76250        1137 connect
+       59900       76250        1137 connect
+       60000       76250        1137 connect
+       60100       76250        1137 connect
+       60200       76250        1137 connect
+       60300       76250        1137 connect
+       60400       76250        1137 connect
+       60500       76250        1137 connect
+       60600       76250        1137 connect
+       60700       76250        1137 connect
+       60800       76250        1137 connect
+       60900       76250        1137 connect
+       61000       76250        1137 connect
+       61100       76250        1137 connect
+       61200       76250        1137 connect
+       61300       76250        1137 connect
+       61400       76250        1137 connect
+       61500       76250        1137 connect
+       61600       76250        1137 connect
+       61700       76250        1137 connect
+       61800       76250        1137 connect
+       61900       76250        1137 connect
+       62000       76250        1137 connect
+       62100       76250        1137 connect
+       62200       76250        1137 connect
+       62300       76250        1137 connect
+       62400       76250        1137 connect
+       62500       76250        1137 connect
+       62600       76250        1137 connect
+       62700       76250        1137 connect
+       62800       76250        1137 connect
+       62900       76250        1137 connect
+       63000       76250        1137 connect
+       63100       76250        1137 connect
+       63200       76250        1137 connect
+       63300       76250        1137 connect
+       63400       76250        1137 connect
+       63500       76250        1137 connect
+       63600       76250        1137 connect
+       63700       76250        1137 connect
+       63800       76250        1137 connect
+       63900       76250        1137 connect
+       64000       76250        1137 connect
+       64100       76250        1137 connect
+       64200       76250        1137 connect
+       64300       76250        1137 connect
+       64400       76250        1137 connect
+       64500       76250        1137 connect
+       64600       76250        1137 connect
+       64700       76250        1137 connect
+       64800       76250        1137 connect
+       64900       76250        1137 connect
+       65000       76250        1137 connect
+       65100       76250        1137 connect
+       65200       76250        1137 connect
+       65300       76250        1137 connect
+       65400       76250        1137 connect
+       65500       76250        1137 connect
+       65600       76250        1137 connect
+       65700       76250        1137 connect
+       65800       76250        1137 connect
+       65900       76250        1137 connect
+       66000       76250        1137 connect
+       66100       76250        1137 connect
+       66200       76250        1137 connect
+       66300       76250        1137 connect
+       66400       76250        1137 connect
+       66500       76250        1137 connect
+       66600       76250        1137 connect
+       66700       76250        1137 connect
+       66800       76250        1137 connect
+       66900       76250        1137 connect
+       67000       76250        1137 connect
+       67100       76250        1137 connect
+       67200       76250        1137 connect
+       67300       76250        1137 connect
+       67400       76250        1137 connect
+       67500       76250        1137 connect
+       67600       76250        1137 connect
+       67700       76250        1137 connect
+       67800       76250        1137 connect
+       67900       76250        1137 connect
+       68000       76250        1137 connect
+       68100       76250        1137 connect
+       68200       76250        1137 connect
+       68300       76250        1137 connect
+       68400       76250        1137 connect
+       68500       76250        1137 connect
+       68600       76250        1137 connect
+       68700       76250        1137 connect
+       68800       76250        1137 connect
+       68900       76250        1137 connect
+       69000       76250        1137 connect
+       69100       76250        1137 connect
+       69200       76250        1137 connect
+       69300       76250        1137 connect
+       69400       76250        1137 connect
+       69500       76250        1137 connect
+       69600       76250        1137 connect
+       69700       76250        1137 connect
+       69800       76250        1137 connect
+       69900       76250        1137 connect
+       70000       76250        1137 connect
+       70100       76250        1137 connect
+       70200       76250        1137 connect
+       70300       76250        1137 connect
+       70400       76250        1137 connect
+       70500       76250        1137 connect
+       70600       76250        1137 connect
+       70700       76250        1137 connect
+       70800       76250        1137 connect
+       70900       76250        1137 connect
+       71000       76250        1137 connect
+       71100       76250        1137 connect
+       71200       76250        1137 connect
+       71300       76250        1137 connect
+       71400       76250        1137 connect
+       71500       76250        1137 connect
+       71600       76250        1137 connect
+       71700       76250        1137 connect
+       71800       76250        1137 connect
+       71900       76250        1137 connect
+       72000       76250        1137 connect
+       72100       76250        1137 connect
+       72200       76250        1137 connect
+       72300       76250        1137 connect
+       72400       76250        1137 connect
+       72500       76250        1137 connect
+       72600       76250        1137 connect
+       72700       76250        1137 connect
+       72800       76250        1137 connect
+       72900       76250        1137 connect
+       73000       76250        1137 connect
+       73100       76250        1137 connect
+       73200       76250        1137 connect
+       73300       76250        1137 connect
+       73400       76250        1137 connect
+       73500       76250        1137 connect
+       73600       76250        1137 connect
+       73700       76250        1137 connect
+       73800       76250        1137 connect
+       73900       76250        1137 connect
+       74000       76250        1137 connect
+       74100       76250        1137 connect
+       74200       76250        1137 connect
+       74300       76250        1137 connect
+       74400       76250        1137 connect
+       74500       76250        1137 connect
+       74600       76250        1137 connect
+       74700       76250        1137 connect
+       74800       76250        1137 connect
+       74900       76250        1137 connect
+       75000       76250        1137 connect
+       75100       76250        1137 connect
+       75200       76250        1137 connect
+       75300       76250        1137 connect
+       75400       76250        1137 connect
+       75500       76250        1137 connect
+       75600       76250        1137 connect
+       75700       76250        1137 connect
+       75800       76250        1137 connect
+       75900       76250        1137 connect
+       76000       76250        1137 connect
+       76100       76250        1137 connect
+       76200       76250        1137 connect
+ Before mpi           0
+ INISDE ALLOC MPI 
+           1        1350       76250          16           0           4
+        1137  0.951231397038538       9.326905395356092E-002
+ -0.294040325232305      -9.758289975914969E-002  0.995227399981831     
+  0.000000000000000E+000  0.292636988370758       2.869330758229174E-002
+  0.955793014798330       0.951231397038538      -9.758289975914969E-002
+  0.292636988370758       9.326905395356092E-002  0.995227399981831     
+  2.869330758229174E-002 -0.294040325232305       0.000000000000000E+000
+  0.955793014798330      -2.617694830787321E-002  0.999657324975557     
+  0.000000000000000E+000 -0.675358699724751      -1.768488994206043E-002
+  0.737277336810125       0.737024690280713       1.929967073424508E-002
+  0.675590207615659      -2.617694830787321E-002 -0.675358699724751     
+  0.737024690280713       0.999657324975557      -1.768488994206043E-002
+  1.929967073424508E-002  0.000000000000000E+000  0.737277336810125     
+  0.675590207615659     
+ Before mpi           1
+ Before mpi           8
+ Before mpi           9
+ Before mpi          12
+ Before mpi           3
+ Before mpi           4
+ Before mpi           2
+ Before mpi           7
+ Before mpi          11
+ Before mpi          15
+ Before mpi           6
+ Before mpi          10
+ Before mpi           5
+ Before mpi          14
+ Before mpi          13
+ After alloc and bcast            1
+ After mpi           1
+  src_type(:,1)            1 monopole  
+  src_type(:,2)            1 explosion 
+ After alloc and bcast            8
+ After mpi           8
+  src_type(:,1)            8 monopole  
+  src_type(:,2)            8 explosion 
+ After alloc and bcast            6
+ After mpi           6
+  src_type(:,1)            6 monopole  
+  src_type(:,2)            6 explosion 
+ After alloc and bcast            7
+ After mpi           7
+  src_type(:,1)            7 monopole  
+  src_type(:,2)            7 explosion 
+ After alloc and bcast            9
+ After mpi           9
+  src_type(:,1)            9 monopole  
+  src_type(:,2)            9 explosion 
+ After alloc and bcast           14
+ After mpi          14
+  src_type(:,1)           14 monopole  
+  src_type(:,2)           14 explosion 
+ After alloc and bcast            5
+ After mpi           5
+  src_type(:,1)            5 monopole  
+  src_type(:,2)            5 explosion 
+ After alloc and bcast           11
+ After mpi          11
+  src_type(:,1)           11 monopole  
+  src_type(:,2)           11 explosion 
+ After alloc and bcast           13
+ After mpi          13
+  src_type(:,1)           13 monopole  
+  src_type(:,2)           13 explosion 
+ After alloc and bcast            0
+ After mpi           0
+  src_type(:,1)            0 monopole  
+  src_type(:,2)            0 explosion 
+ After alloc and bcast            4
+ After mpi           4
+  src_type(:,1)            4 monopole  
+  src_type(:,2)            4 explosion 
+ After alloc and bcast           12
+ After mpi          12
+  src_type(:,1)           12 monopole  
+  src_type(:,2)           12 explosion 
+ After alloc and bcast            3
+ After mpi           3
+  src_type(:,1)            3 monopole  
+  src_type(:,2)            3 explosion 
+ After alloc and bcast           15
+ After mpi          15
+  src_type(:,1)           15 monopole  
+  src_type(:,2)           15 explosion 
+ After alloc and bcast            2
+ After mpi           2
+  src_type(:,1)            2 monopole  
+  src_type(:,2)            2 explosion 
+ After alloc and bcast           10
+ After mpi          10
+  src_type(:,1)           10 monopole  
+  src_type(:,2)           10 explosion 
+ nbrec to write       76250
+ nbrec to read         1137
+ nt to write         1350
+           1
+           2
+ monopole => not up
+           3
+           1
+           2
+           3
+           4
+ monopole => not up
+           5
+           6
+ monopole => not up
+ ../../../DATABASES_MPI/proc000000_absorb_dsm
+ ../../../DATABASES_MPI/proc000001_absorb_dsm
+ ../../../DATABASES_MPI/proc000002_absorb_dsm
+ ../../../DATABASES_MPI/proc000003_absorb_dsm
+ ../../../DATABASES_MPI/proc000004_absorb_dsm
+ ../../../DATABASES_MPI/proc000005_absorb_dsm
+ ../../../DATABASES_MPI/proc000006_absorb_dsm
+ ../../../DATABASES_MPI/proc000007_absorb_dsm
+ ../../../DATABASES_MPI/proc000008_absorb_dsm
+ ../../../DATABASES_MPI/proc000009_absorb_dsm
+ ../../../DATABASES_MPI/proc000010_absorb_dsm
+ ../../../DATABASES_MPI/proc000011_absorb_dsm
+ ../../../DATABASES_MPI/proc000012_absorb_dsm
+ ../../../DATABASES_MPI/proc000013_absorb_dsm
+ ../../../DATABASES_MPI/proc000014_absorb_dsm
+ ../../../DATABASES_MPI/proc000015_absorb_dsm
+ ../../../DATABASES_MPI/proc000000_absorb_dsm
+         149
+ ../../../DATABASES_MPI/proc000001_absorb_dsm
+         144
+ ../../../DATABASES_MPI/proc000002_absorb_dsm
+         145
+ ../../../DATABASES_MPI/proc000003_absorb_dsm
+         155
+ ../../../DATABASES_MPI/proc000004_absorb_dsm
+         307
+ ../../../DATABASES_MPI/proc000005_absorb_dsm
+         169
+ ../../../DATABASES_MPI/proc000006_absorb_dsm
+         303
+ ../../../DATABASES_MPI/proc000007_absorb_dsm
+         148
+ ../../../DATABASES_MPI/proc000008_absorb_dsm
+         207
+ ../../../DATABASES_MPI/proc000009_absorb_dsm
+         255
+ ../../../DATABASES_MPI/proc000010_absorb_dsm
+         294
+ ../../../DATABASES_MPI/proc000011_absorb_dsm
+         162
+ ../../../DATABASES_MPI/proc000012_absorb_dsm
+         229
+ ../../../DATABASES_MPI/proc000013_absorb_dsm
+          78
+ ../../../DATABASES_MPI/proc000014_absorb_dsm
+          86
+ ../../../DATABASES_MPI/proc000015_absorb_dsm
+         219
+ openning .//Data/stress_Sg23_out
+  time step   0.1000000    
+ READING OK        1350       76250
+  dt    1.185958    
+  itmin         3001
+  itmax         6000
+  nb         3000
+  ntime_interp                   3000
+ ../../../DATABASES_MPI/proc000000_absorb_dsm
+         149
+  dt    1.185958    
+  itmin         3001
+  itmax         6000
+  nb         3000
+  ntime_interp                   3000
+ ../../../DATABASES_MPI/proc000001_absorb_dsm
+         144
+  dt    1.185958    
+  itmin         3001
+  itmax         6000
+  nb         3000
+  ntime_interp                   3000
+ ../../../DATABASES_MPI/proc000002_absorb_dsm
+         145
+  dt    1.185958    
+  itmin         3001
+  itmax         6000
+  nb         3000
+  ntime_interp                   3000
+ ../../../DATABASES_MPI/proc000003_absorb_dsm
+         155
+  dt    1.185958    
+  itmin         3001
+  itmax         6000
+  nb         3000
+  ntime_interp                   3000
+ ../../../DATABASES_MPI/proc000004_absorb_dsm
+         307
+  dt    1.185958    
+  itmin         3001
+  itmax         6000
+  nb         3000
+  ntime_interp                   3000
+ ../../../DATABASES_MPI/proc000005_absorb_dsm
+         169
+  dt    1.185958    
+  itmin         3001
+  itmax         6000
+  nb         3000
+  ntime_interp                   3000
+  dt    1.185958    
+  itmin         3001
+  itmax         6000
+  nb         3000
+ ../../../DATABASES_MPI/proc000006_absorb_dsm
+         303
+  ntime_interp                   3000
+ ../../../DATABASES_MPI/proc000007_absorb_dsm
+  dt    1.185958    
+  itmin         3001
+  itmax         6000
+  nb         3000
+  ntime_interp                   3000
+         148
+  dt    1.185958    
+  itmin         3001
+  itmax         6000
+  nb         3000
+  ntime_interp                   3000
+ ../../../DATABASES_MPI/proc000008_absorb_dsm
+         207
+  dt    1.185958    
+  itmin         3001
+  itmax         6000
+  nb         3000
+  ntime_interp                   3000
+ ../../../DATABASES_MPI/proc000009_absorb_dsm
+ ../../../DATABASES_MPI/proc000010_absorb_dsm
+  dt    1.185958    
+  itmin         3001
+  itmax         6000
+  nb         3000
+  ntime_interp                   3000
+         255
+ ../../../DATABASES_MPI/proc000011_absorb_dsm
+         294
+  dt    1.185958    
+  itmin         3001
+  itmax         6000
+  nb         3000
+  ntime_interp                   3000
+         162
+  dt    1.185958    
+  itmin         3001
+  itmax         6000
+  nb         3000
+  ntime_interp                   3000
+  dt    1.185958    
+  itmin         3001
+  itmax         6000
+  nb         3000
+  ntime_interp                   3000
+  dt    1.185958    
+  itmin         3001
+  itmax         6000
+  nb         3000
+  ntime_interp                   3000
+ ../../../DATABASES_MPI/proc000013_absorb_dsm
+          78
+ ../../../DATABASES_MPI/proc000015_absorb_dsm
+         219
+ ../../../DATABASES_MPI/proc000012_absorb_dsm
+         229
+ ../../../DATABASES_MPI/proc000014_absorb_dsm
+          86
+ reading          100  /         1350
+ reading          200  /         1350
+ reading          300  /         1350
+ reading          400  /         1350
+ reading          500  /         1350
+ reading          600  /         1350
+ reading          700  /         1350
+ reading          800  /         1350
+ reading          900  /         1350
+ reading         1000  /         1350
+ reading         1100  /         1350
+ reading         1200  /         1350
+ reading         1300  /         1350
+ ../../../DATA/AxiSEM_tractions/1/                                              
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+ ../../../DATA/AxiSEM_tractions/1/                                              
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+ ../../../DATA/AxiSEM_tractions/1/                                              
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                           
+ ../../../DATA/AxiSEM_tractions/1//proc000009_                                  
+                                                                                
+                                                                                
+ ../../../DATA/AxiSEM_tractions/1/                                              
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                           
+ ../../../DATA/AxiSEM_tractions/1//proc000011_                                  
+                                                                                
+                                                                                
+ ../../../DATA/AxiSEM_tractions/1/                                              
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+ ../../../DATA/AxiSEM_tractions/1/                                              
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+ ../../../DATA/AxiSEM_tractions/1/                                              
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+ ../../../DATA/AxiSEM_tractions/1/                                              
+ ../../../DATA/AxiSEM_tractions/1/                                              
+                                                                                
+                                                                                
+                                                                                
+                           
+ ../../../DATA/AxiSEM_tractions/1//proc000010_                                  
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                     10
+                           
+ ../../../DATA/AxiSEM_tractions/1//proc000001_                                  
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                      1
+ ../../../DATA/AxiSEM_tractions/1/                                              
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                           
+ ../../../DATA/AxiSEM_tractions/1//proc000007_                                  
+                                                                                
+                                                                                
+                                                                                
+                           
+ ../../../DATA/AxiSEM_tractions/1//proc000006_                                  
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                      6
+ ../../../DATA/AxiSEM_tractions/1/                                              
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                           
+ ../../../DATA/AxiSEM_tractions/1//proc000015_                                  
+                                                                                
+                           
+ ../../../DATA/AxiSEM_tractions/1//proc000012_                                  
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                     12
+                                                                                
+                                                                                
+                                                                                
+                                      9
+                                                                                
+                                                                                
+                                                                                
+                                     11
+                                                                                
+                           
+ ../../../DATA/AxiSEM_tractions/1//proc000013_                                  
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                     13
+ ../../../DATA/AxiSEM_tractions/1/                                              
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                           
+ ../../../DATA/AxiSEM_tractions/1//proc000014_                                  
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                     14
+                           
+ ../../../DATA/AxiSEM_tractions/1//proc000000_                                  
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                      0
+ ../../../DATA/AxiSEM_tractions/1/                                              
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                           
+ ../../../DATA/AxiSEM_tractions/1//proc000002_                                  
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                      2
+ ../../../DATA/AxiSEM_tractions/1/                                              
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                           
+ ../../../DATA/AxiSEM_tractions/1//proc000003_                                  
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                      3
+ ../../../DATA/AxiSEM_tractions/1/                                              
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                           
+ ../../../DATA/AxiSEM_tractions/1//proc000004_                                  
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                      4
+ ../../../DATA/AxiSEM_tractions/1/                                              
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                           
+ ../../../DATA/AxiSEM_tractions/1//proc000005_                                  
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                      5
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                           
+ ../../../DATA/AxiSEM_tractions/1//proc000008_                                  
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                      8
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                      7
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                     15
+ time step   0.1000000            3000
+           0   9.900002             100        3000
+           0   19.90004             200        3000
+           0   29.90008             300        3000
+           0   39.89996             400        3000
+           0   49.89981             500        3000
+           0   59.89966             600        3000
+           0   69.89951             700        3000
+           0   79.89935             800        3000
+           0   89.89920             900        3000
+           0   99.89905            1000        3000
+           0   109.8989            1100        3000
+           0   119.8987            1200        3000
+           0   129.8987            1300        3000
+           0   139.8993            1400        3000
+           0   149.8999            1500        3000
+           0   159.9006            1600        3000
+ nbrec           13        1950                  3000
+           0   169.9012            1700        3000
+           0   179.9018            1800        3000
+ nbrec           14        2150                  3000
+           0   189.9024            1900        3000
+           0   199.9030            2000        3000
+           0   209.9036            2100        3000
+           0   219.9042            2200        3000
+           0   229.9048            2300        3000
+           0   239.9054            2400        3000
+           0   249.9061            2500        3000
+           0   259.9066            2600        3000
+           0   269.9073            2700        3000
+           0   279.9079            2800        3000
+           0   289.9085            2900        3000
+ nbrec            2        3625                  3000
+ nbrec            1        3600                  3000
+           0   299.9091            3000        3000
+ nbrec            0        3725                  3000
+ nbrec            7        3700                  3000
+ nbrec            3        3875                  3000
+ nbrec           11        4050                  3000
+ nbrec            5        4225                  3000
+ nbrec            8        5175                  3000
+ nbrec           15        5475                  3000
+ nbrec           12        5725                  3000
+ nbrec            9        6375                  3000
+ nbrec           10        7350                  3000
+ nbrec            4        7675                  3000
+ nbrec            6        7575                  3000
+           5           0
+           4           0
+          15           0
+          12           0
+           3           0
+           6           0
+          13           0
+          14           0
+           1           0
+           7           0
+          10           0
+          11           0
+           9           0
+           2           0
+           8           0
+           0           0
+           6           0
+           8           0
+           0           0
+           4           0
+           1           0
+           7           0
+           3           0
+           2           0
+          15           0
+           9           0
+          13           0
+          10           0
+          11           0
+          12           0
+           5           0
+          14           0
+ OPENING ./DATA/AxiSEM_tractions/1//proc000000_sol_axisem
+ OPENING ./DATA/AxiSEM_tractions/1//proc000003_sol_axisem
+ OPENING ./DATA/AxiSEM_tractions/1//proc000008_sol_axisem
+ OPENING ./DATA/AxiSEM_tractions/1//proc000009_sol_axisem
+ OPENING ./DATA/AxiSEM_tractions/1//proc000010_sol_axisem
+ OPENING ./DATA/AxiSEM_tractions/1//proc000011_sol_axisem
+ OPENING ./DATA/AxiSEM_tractions/1//proc000012_sol_axisem
+ OPENING ./DATA/AxiSEM_tractions/1//proc000013_sol_axisem
+ OPENING ./DATA/AxiSEM_tractions/1//proc000001_sol_axisem
+ OPENING ./DATA/AxiSEM_tractions/1//proc000002_sol_axisem
+ OPENING ./DATA/AxiSEM_tractions/1//proc000004_sol_axisem
+ OPENING ./DATA/AxiSEM_tractions/1//proc000005_sol_axisem
+ OPENING ./DATA/AxiSEM_tractions/1//proc000006_sol_axisem
+ OPENING ./DATA/AxiSEM_tractions/1//proc000007_sol_axisem
+ OPENING ./DATA/AxiSEM_tractions/1//proc000014_sol_axisem
+ OPENING ./DATA/AxiSEM_tractions/1//proc000015_sol_axisem
+./create_one_snapshot.sh: line 38: ../../specfem3d_Git_devel/bin/xcombine_vol_data_vtk: No such file or directory
+./create_one_snapshot.sh: line 38: ../../specfem3d_Git_devel/bin/xcombine_vol_data_vtk: No such file or directory
+./create_one_snapshot.sh: line 38: ../../specfem3d_Git_devel/bin/xcombine_vol_data_vtk: No such file or directory
+./create_one_snapshot.sh: line 38: ../../specfem3d_Git_devel/bin/xcombine_vol_data_vtk: No such file or directory
+./create_one_snapshot.sh: line 38: ../../specfem3d_Git_devel/bin/xcombine_vol_data_vtk: No such file or directory
+./create_one_snapshot.sh: line 38: ../../specfem3d_Git_devel/bin/xcombine_vol_data_vtk: No such file or directory
+./create_one_snapshot.sh: line 38: ../../specfem3d_Git_devel/bin/xcombine_vol_data_vtk: No such file or directory
+./create_one_snapshot.sh: line 38: ../../specfem3d_Git_devel/bin/xcombine_vol_data_vtk: No such file or directory
+./create_one_snapshot.sh: line 38: ../../specfem3d_Git_devel/bin/xcombine_vol_data_vtk: No such file or directory
+./create_one_snapshot.sh: line 38: ../../specfem3d_Git_devel/bin/xcombine_vol_data_vtk: No such file or directory
+./create_one_snapshot.sh: line 38: ../../specfem3d_Git_devel/bin/xcombine_vol_data_vtk: No such file or directory
+./create_one_snapshot.sh: line 38: ../../specfem3d_Git_devel/bin/xcombine_vol_data_vtk: No such file or directory
+./create_one_snapshot.sh: line 38: ../../specfem3d_Git_devel/bin/xcombine_vol_data_vtk: No such file or directory
+./create_one_snapshot.sh: line 38: ../../specfem3d_Git_devel/bin/xcombine_vol_data_vtk: No such file or directory
+./create_one_snapshot.sh: line 38: ../../specfem3d_Git_devel/bin/xcombine_vol_data_vtk: No such file or directory

@@ -1,0 +1,12 @@
+launch run_this_example_by_script.sh bash script after changing the roodir : DSM_FOR_SPECFEM directory absolute path
+
+all the parameters are filled using matalb_gui in directory ../small_exemple_coupling_axisem_specfem_matlab_gui and saved in Param_files directory
+
+clean_all.sh remove all computations 
+
+to vizualize snapshot open velocity_Z_it*.vtk with paraview
+
+
+*** THIS EXEMPLE REQUIRE 15 Go DISK TO STORE ALL FILES NEEDED TO RUN THE HYBRID METHOD *****
+
+in 16 cores of  Intel(R) Xeon(R)  E5-2650 v3  the whole run takes about 15 minutes

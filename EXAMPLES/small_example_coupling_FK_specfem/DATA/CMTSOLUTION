@@ -1,0 +1,13 @@
+XXXX2011 11 11 11 11 11 11  11 11     11.1111 111.1 1.1 1.1 EVENT1 EVENT111
+event name:     SYNTHEVENT001
+time shift:      0.0
+half duration:   0.1
+latitude:        2000.0
+longitude:     200.0
+depth:         -10.0
+Mrr:       1e23
+Mtt:       1e23
+Mpp:       1e23
+Mrt:       0
+Mrp:       0
+Mtp:       0

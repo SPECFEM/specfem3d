@@ -1,0 +1,53 @@
+compile specfem 
+run configure file ex:
+
+./configure FC=ifort MPIFC=mpif90 CC=icc
+
+
+with option :
+
+you need to add this folowing line in Makefile in specfem3d_Git_devel directory 
+
+DEBUG_COUPLED_FLAG=-DDEBUG_COUPLED -DUSE_VTK_INSTEAD_OF_MESH
+
+type 
+
+make all 
+
+
+fill the binary path in the script run_this_example.sh and then run it in 16 mpi processes
+
+
+the model for fk is defined in DATA/FKmodel
+
+wihch is read in add_to_iterate_time_6.F90 line 39
+
+for each layer specify :
+vp
+vs
+mu
+height of layer 
+
+then specify planewave parameters
+phi
+theta
+frequency maximum for fk 
+x
+y
+z
+fk_time_window_length (in second)  (be carreful to use engouh because of alisaing but not too lot because of memory)
+F : must be allways ending by F
+
+
+
+note that the fk soltution is stored at 10 Hz sample rate. (hardcoded for now)
+
+create_mesh.sh : creation of mesh 
+
+run_direct.sh  : run direct problem for data synthetics data creation 
+
+visualize_model.sh vp  : to create vtk for vp model visualization
+
+create_one_snapshot.sh  800 : create on snapshot for vz at 800th time step
+
+create_all_snapshots.sh : to create all snapshots 

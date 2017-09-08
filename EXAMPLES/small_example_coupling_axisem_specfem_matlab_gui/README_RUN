@@ -1,0 +1,26 @@
+this example show how to use the hybrid axisem/specfem code. 
+After instalation and compilation run in matlab 
+
+Hybrid_Axisem_Specfem
+
+in menu file->import config 
+  load chunk_param_exemple_1.mat
+
+this is an exemple of 10° x 5° x 240 km chunk for 10 s minmum period. 
+
+  click on :
+   -- Read Stations 
+       then load stations.profil1
+   -- mesh 
+   -- decompose (choose the number of proc for specfem) 
+   -- database
+
+   then prepare databases for tractions 
+   
+    --MESH (AxiSEM) use 10s dominand period and choose number of mpi processes for axisem
+    --SOLVE give a name for running directory that not exist yet. (It will be created)
+     --choose the time window and time step to store tractions 
+
+ 
+
+**** THIS EXEMPLE REQUIRE 15 Go DISK TO STORE ALL FILES NEEDED TO RUN THE HYBRID METHOD *****
