@@ -1,0 +1,4 @@
+this directory contains all input to run specfem 
+
+   there is 2 Par_file because we launch mesher with one proc, after we use scotch to decompose the mesh instead using manual mesh decomposer. 
+   model_1D.in contains 1D model that shoul correspond to the Axisem one. 
