@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 
 
-# specfem binaries directory 
+# specfem binaries directory
 specfem_bin=/mnt/Data1/vmont/GIT/specfem3d/bin/
 
 # get the number of processors, ignoring comments in the Par_file
 NPROC=`grep ^NPROC DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2 | cut -d \# -f 1`
 
 
-# creating mesh with meshfem 
+# creating mesh with meshfem
 echo
 echo "  creating  mesh..."
 echo
