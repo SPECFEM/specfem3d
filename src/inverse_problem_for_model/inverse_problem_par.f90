@@ -45,7 +45,7 @@ module inverse_problem_par
   !! useful files id
   integer,                       public, parameter  :: IINN=667, IIDD=668
   !!! verbose debug mode
-  logical,                       public, parameter  :: DEBUG_MODE=.true.
+  logical,                       public, parameter  :: DEBUG_MODE=.false.
   !!! verbose mode for with outputs for checking the FWI
   logical,                       public, parameter  :: VERBOSE_MODE=.true.
   !!! write kernels on disk
@@ -94,7 +94,7 @@ module inverse_problem_par
      real(kind=CUSTOM_REAL), dimension(:), allocatable                        :: reg_family, damp_family
 
      !! max perturbation allowed for initial guest step length relative to gradient max value
-     real(kind=CUSTOM_REAL)                                                   :: max_relative_pert = 0.01 ! (1%)
+     real(kind=CUSTOM_REAL)                                                   :: max_relative_pert = 0.1 ! (1%)
 
      !! we can import model from disk
      logical                                                                  :: input_sem_model=.false.

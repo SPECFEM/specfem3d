@@ -932,6 +932,9 @@ contains
        case('max_history_bfgs')
           read(line(ipos0:ipos1),*)  inversion_param%max_history_bfgs
 
+       case('max_relative_pert')
+           read(line(ipos0:ipos1),*)  inversion_param%max_relative_pert
+
        case('param_family')
           read(line(ipos0:ipos1),*) inversion_param%param_family
 
@@ -1375,6 +1378,7 @@ contains
        call MPI_BCAST(inversion_param%max_history_bfgs,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(fl,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(fh,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+       call MPI_BCAST(inversion_param%max_relative_pert,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(inversion_param%relat_grad,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(inversion_param%relat_cost,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(inversion_param%output_model,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
