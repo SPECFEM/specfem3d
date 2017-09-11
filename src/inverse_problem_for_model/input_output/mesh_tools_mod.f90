@@ -901,7 +901,7 @@ contains
         where(rmass_acoustic <= 0._CUSTOM_REAL) rmass_acoustic = 1._CUSTOM_REAL
         rmass_acoustic(:) = 1._CUSTOM_REAL / rmass_acoustic(:)
         ! not needed anymore
-        deallocate(rmassz_acoustic)
+        if (STACEY_ABSORBING_CONDITIONS) deallocate(rmassz_acoustic)
      endif
 
    end subroutine create_mass_matrices_Stacey_duplication_routine
