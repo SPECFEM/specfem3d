@@ -742,11 +742,11 @@ contains
        close(IOUT)
     endif
 
-    if (ELASTIC_SIMULATION .and. (SIMULATION_TYPE == 3 .or. SAVE_FORWARD) .and. num_abs_boundary_faces > 0) then
+    if (ELASTIC_SIMULATION .and. (SIMULATION_TYPE == 3 .or. SAVE_FORWARD) .and. STACEY_ABSORBING_CONDITIONS) then
        call close_file_abs(IOABS)
     endif
 
-    if (ACOUSTIC_SIMULATION .and. (SIMULATION_TYPE == 3 .or. SAVE_FORWARD) .and. num_abs_boundary_faces > 0) then
+    if (ACOUSTIC_SIMULATION .and. (SIMULATION_TYPE == 3 .or. SAVE_FORWARD) .and. STACEY_ABSORBING_CONDITIONS) then
        call close_file_abs(IOABS_AC)
     endif
 
@@ -1188,6 +1188,7 @@ contains
     if (ELASTIC_SIMULATION) then
        ! nothing to do
     else if (ACOUSTIC_SIMULATION) then
+       allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
        if (ier /= 0) stop 'error allocating array rho_vp'
        allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
        if (ier /= 0) stop 'error allocating array rho_vs'
