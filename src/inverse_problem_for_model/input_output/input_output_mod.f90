@@ -31,7 +31,7 @@ module input_output
                                   LOCAL_PATH, xigll, yigll, zigll, &
                                   ibool, xstore, ystore, zstore, &
                                   xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, &
-                                  myrank
+                                  myrank, USE_SOURCES_RECEIVERS_Z
 
 
 
@@ -1109,7 +1109,11 @@ contains
           read(line, *) station_name, network_name, y, x, z, stbur
           acqui_simu(isource)%position_station(1,istation)=x
           acqui_simu(isource)%position_station(2,istation)=y
-          acqui_simu(isource)%position_station(3,istation)=z
+          if (USE_SOURCES_RECEIVERS_Z) then
+            acqui_simu(isource)%position_station(3,istation) = stbur
+          else
+            acqui_simu(isource)%position_station(3,istation) = z
+          endif
           acqui_simu(isource)%station_name(istation)=trim(adjustl(station_name))
           acqui_simu(isource)%network_name(istation)=trim(adjustl(network_name))
        enddo
