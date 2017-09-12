@@ -1151,14 +1151,14 @@ contains
   end subroutine TransfertKernelFromGPUArrays
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !-------------------------------------------------------------------------------------------------------------
-! test if we can saftely perform a simulation in new model  
+! test if we can saftely perform a simulation in new model
 !-------------------------------------------------------------------------------------------------------------
   subroutine  CheckModelSuitabilityForModeling(ModelIsSuitable)
-    
-    
+
+
 
     logical, intent(in out) :: ModelIsSuitable
-    
+
     ! local parameters
     real(kind=CUSTOM_REAL) :: vpmin,vpmax,vsmin,vsmax,vpmin_glob,vpmax_glob,vsmin_glob,vsmax_glob
     real(kind=CUSTOM_REAL) :: poissonmin,poissonmax,poissonmin_glob,poissonmax_glob
@@ -1183,24 +1183,24 @@ contains
 
     !********************************************************************************
 
-    !!! dummy arrays for acosutic case if needed 
-    !!! occurs when not purely elastic simulation 
+    !!! dummy arrays for acosutic case if needed
+    !!! occurs when not purely elastic simulation
     if (ELASTIC_SIMULATION) then
        ! nothing to do
-    elseif (ACOUSTIC_SIMULATION) then
+    else if (ACOUSTIC_SIMULATION) then
        if (ier /= 0) stop 'error allocating array rho_vp'
        allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
        if (ier /= 0) stop 'error allocating array rho_vs'
        rho_vp = sqrt( kappastore / rhostore ) * rhostore
-       rho_vs = 0.0_CUSTOM_REAL   
-    end if
+       rho_vs = 0.0_CUSTOM_REAL
+    endif
 
 
     ModelIsSuitable=.true.
 
     vpmin_glob = HUGEVAL
     vpmax_glob = -HUGEVAL
-    
+
     vsmin_glob = HUGEVAL
     vsmax_glob = -HUGEVAL
 
@@ -1226,43 +1226,43 @@ contains
     pmax_glob = -HUGEVAL
 
     dt_suggested_glob = HUGEVAL
-    
+
     has_vs_zero = .false.
 
     do ispec = 1,  NSPEC_AB
 
-       !! min max in element 
+       !! min max in element
        call  get_vpvs_minmax(vpmin, vpmax, vsmin, vsmax, poissonmin, poissonmax, &
             ispec, has_vs_zero, &
                              NSPEC_AB, kappastore, mustore, rho_vp, rho_vs)
-    
+
        !! min/max for whole cpu partition
        vpmin_glob = min(vpmin_glob, vpmin)
        vpmax_glob = max(vpmax_glob, vpmax)
-       
+
        vsmin_glob = min(vsmin_glob, vsmin)
        vsmax_glob = max(vsmax_glob, vsmax)
-       
+
        poissonmin_glob = min(poissonmin_glob,poissonmin)
        poissonmax_glob = max(poissonmax_glob,poissonmax)
-       
+
        ! computes minimum and maximum size of this grid cell
        call get_elem_minmaxsize(elemsize_min,elemsize_max,ispec, &
             NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
-       
+
        elemsize_min_glob = min(elemsize_min_glob, elemsize_min)
        elemsize_max_glob = max(elemsize_max_glob, elemsize_max)
 
-       
+
        ! estimation of minimum period resolved
        ! based on average GLL distance within element and minimum velocity
        !
        ! rule of thumb (Komatitsch et al. 2005):
        ! "average number of points per minimum wavelength in an element should be around 5."
-       
+
        ! average distance between GLL points within this element
        avg_distance = elemsize_max / ( NGLLX - 1)  ! since NGLLX = NGLLY = NGLLZ
-       
+
        ! largest possible minimum period such that number of points per minimum wavelength
        ! npts = ( min(vpmin,vsmin)  * pmax ) / avg_distance  is about ~ NPTS_PER_WAVELENGTH
        !
@@ -1274,43 +1274,43 @@ contains
        vel_min = min( vpmin,vsmin)
        pmax = avg_distance / vel_min * NPTS_PER_WAVELENGTH
        pmax_glob = max(pmax_glob,pmax)
-       
+
        ! computes minimum and maximum distance of neighbor GLL points in this grid cell
        call get_GLL_minmaxdistance(distance_min,distance_max,ispec, &
             NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
-       
+
        distance_min_glob = min(distance_min_glob, distance_min)
        distance_max_glob = max(distance_max_glob, distance_max)
-       
+
        ! Courant number
        ! based on minimum GLL point distance and maximum velocity
        ! i.e. on the maximum ratio of ( velocity / gridsize )
        cmax = max(vpmax,vsmax) * DT / distance_min
        cmax_glob = max(cmax_glob,cmax)
-   
-   
+
+
        ! suggested timestep
        vel_max = max( vpmax,vsmax )
        dt_suggested = COURANT_SUGGESTED * distance_min / vel_max
        dt_suggested_glob = min( dt_suggested_glob, dt_suggested)
 
 
-    end do
-    
+    enddo
+
     ! Vp velocity
     vpmin = vpmin_glob
     vpmax = vpmax_glob
     call min_all_cr(vpmin,vpmin_glob)
     call max_all_cr(vpmax,vpmax_glob)
-    
+
     ! Vs velocity
     vsmin = vsmin_glob
     if (has_vs_zero) vsmin = 0.0
-    
+
     vsmax = vsmax_glob
     call min_all_cr(vsmin,vsmin_glob)
     call max_all_cr(vsmax,vsmax_glob)
-    
+
     ! Poisson's ratio
     poissonmin = poissonmin_glob
     poissonmax = poissonmax_glob
@@ -1349,7 +1349,7 @@ contains
     y_max = y_max_glob
     call min_all_cr(y_min,y_min_glob)
     call max_all_cr(y_max,y_max_glob)
-    
+
     z_min = z_min_glob
     z_max = z_max_glob
     call min_all_cr(z_min,z_min_glob)
@@ -1364,23 +1364,23 @@ contains
     call min_all_cr(dt_suggested,dt_suggested_glob)
 
     if (myrank == 0 ) then
-       !! CHECK POISSON RATION OF NEW MODEL 
+       !! CHECK POISSON RATION OF NEW MODEL
        if (poissonmin_glob < -1.0000001d0 .or. poissonmax_glob > 0.50000001d0) then
           ModelIsSuitable=.false.
-       end if
-       
-       !! CHECK STABILITY FOR NEW MODEL 
-       if (DT > dt_suggested) then 
+       endif
+
+       !! CHECK STABILITY FOR NEW MODEL
+       if (DT > dt_suggested) then
           ModelIsSuitable=.false.
-       end if
-    end if
+       endif
+    endif
     call bcast_all_singlel(ModelIsSuitable)
-    
+
     if (ELASTIC_SIMULATION) then
-       !! nothing to do 
-    else if (ACOUSTIC_SIMULATION)  then 
+       !! nothing to do
+    else if (ACOUSTIC_SIMULATION) then
        deallocate(rho_vp,rho_vs)
-    end if
+    endif
 
   end subroutine CheckModelSuitabilityForModeling
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

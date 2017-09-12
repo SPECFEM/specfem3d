@@ -1,7 +1,7 @@
 module fwi_iteration
 
   !! IMPORT VARIABLES FROM SPECFEM -------------------------------------------------------------------------------------------------
-  use specfem_par, only: CUSTOM_REAL, NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, NSPEC_AB, GPU_MODE 
+  use specfem_par, only: CUSTOM_REAL, NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, NSPEC_AB, GPU_MODE
   !---------------------------------------------------------------------------------------------------------------------------------
 
   use inverse_problem_par
@@ -120,10 +120,10 @@ contains
        call UpdateModel(inversion_param, step_length, ModelIsSuitable)
        ! if model is not suitable for modeling then try smaller step
        if (.not. ModelIsSuitable) then
-          write(*,*) 'Model new is not suitable for simulation ', myrank  
+          write(*,*) 'Model new is not suitable for simulation ', myrank
           step_length = 0.5 * step_length
           cycle
-       end if
+       endif
        ! compute cost function and gradient---------
        call InitForOneStepFWI(inversion_param)
        do isource=1,acqui_simu(1)%nsrc_tot
@@ -348,11 +348,11 @@ contains
        write(INVERSE_LOG_FILE,*)
        write(INVERSE_LOG_FILE,*) '    - > update model :  '
        write(INVERSE_LOG_FILE,*)
-       if (.not. ModelIsSuitable) then 
+       if (.not. ModelIsSuitable) then
            write(INVERSE_LOG_FILE,*)
            write(INVERSE_LOG_FILE,*) '    - > updated model not suitable for simulation : divide step by 2  '
            write(INVERSE_LOG_FILE,*)
-        end if
+        endif
     endif
 
     do ipar=1, inversion_param%NinvPar
