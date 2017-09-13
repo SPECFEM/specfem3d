@@ -134,7 +134,7 @@ module inverse_problem_par
      real(kind=CUSTOM_REAL)                                                   :: adjust, penalty
      real(kind=CUSTOM_REAL)                                                   :: Cost_init, Norm_grad_init
 
-     !!  cost function for each source
+     !!  cost function for each event
      real(kind=CUSTOM_REAL), dimension(:), allocatable                        :: current_cost, previous_cost
      real(kind=CUSTOM_REAL), dimension(:), allocatable                        :: current_cost_prime, previous_cost_prime
      integer                                                                  :: current_iteration=0
@@ -146,9 +146,9 @@ module inverse_problem_par
   ! ACQUISITION STRUCTURE  ---------------------------------------------------------------------------------------------------------
   type, public :: acqui
 
-     !!------------------  source general parameters ----------------------
-     !! number total of sources
-     integer                                                                   :: nsrc_tot
+     !!------------------  event general parameters ----------------------
+     !! number total of events
+     integer                                                                   :: nevent_tot
      !! id for the event
      character(len= MAX_LEN_STRING)                                            :: event_name
      !! name for outputs files
@@ -167,7 +167,7 @@ module inverse_problem_par
      character(len= MAX_LEN_STRING)                                            :: traction_dir
      !! source time function
      real(kind=CUSTOM_REAL),                  dimension(:,:),  allocatable     :: source_wavelet
-     real(kind=CUSTOM_REAL)                                                    :: fl_src, fh_src
+     real(kind=CUSTOM_REAL)                                                    :: fl_event, fh_event
      character(len= MAX_LEN_STRING)                                            :: source_wavelet_file
      logical                                                                   :: external_source_wavelet=.false.
      !! by default do not convolve residuals by wavelet
@@ -176,7 +176,7 @@ module inverse_problem_par
      !! --------------------- source parameter specific for Specfem ---------------------
      !! time parameters needed for specfem
      real(kind=CUSTOM_REAL)                                                    :: t_shift, hdur
-     !! number if sources in my slice
+     !! number of sources in my slice
      integer                                                                   :: nsources_local
      !! MPI slice contains source
      integer                                                                   :: islice_slected_source

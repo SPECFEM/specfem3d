@@ -21,7 +21,7 @@ module specfem_interface
 
 
   !! Arrays for saving GPU kernels because at each GPU run the kernels are set to 0 and to perform
-  !! summation over sources we need to use those temporarry arrays
+  !! summation over events we need to use those temporarry arrays
   real(kind=CUSTOM_REAL), private, dimension(:,:,:,:),   allocatable :: rho_ac_kl_GPU, kappa_ac_kl_GPU
   real(kind=CUSTOM_REAL), private, dimension(:,:,:,:),   allocatable :: rho_kl_GPU, kappa_kl_GPU, mu_kl_GPU
   real(kind=CUSTOM_REAL), private, dimension(:,:,:,:),   allocatable :: hess_rho_ac_kl_GPU, hess_kappa_ac_kl_GPU
@@ -33,9 +33,9 @@ contains
 !----------------------------------------------------------------------------------------------------------------------------------
 !> call specfem solver for forward problem only
 !----------------------------------------------------------------------------------------------------------------------------------
-  subroutine ComputeSismosPerSource(isource, acqui_simu, iter_inverse, inversion_param, myrank)
+  subroutine ComputeSismosPerEvent(ievent, acqui_simu, iter_inverse, inversion_param, myrank)
 
-    integer,                                        intent(in)    ::  isource, iter_inverse, myrank
+    integer,                                        intent(in)    ::  ievent, iter_inverse, myrank
     type(acqui),  dimension(:), allocatable,        intent(inout) ::  acqui_simu
     type(inver),                                    intent(inout) ::  inversion_param
     character(len=MAX_LEN_STRING)                                 ::  name_file_tmp
@@ -46,38 +46,38 @@ contains
     COMPUTE_AND_STORE_STRAIN = .false.
 
     !! forward solver ------------------------------------------------------------------------------------------------
-    call InitSpecfemForOneRun(acqui_simu, isource, inversion_param, iter_inverse)
+    call InitSpecfemForOneRun(acqui_simu, ievent, inversion_param, iter_inverse)
     call iterate_time()
-    call FinalizeSpecfemForOneRun(acqui_simu, isource)
+    call FinalizeSpecfemForOneRun(acqui_simu, ievent)
 
-    select case ( trim(acqui_simu(isource)%component(1)) )
+    select case ( trim(acqui_simu(ievent)%component(1)) )
 
     case('UX', 'UY', 'UZ')
        !! array seismogram in displacement
-       name_file_tmp = trim(acqui_simu(isource)%data_file_gather)
-       call write_bin_sismo_on_disk(isource, acqui_simu, seismograms_d,  name_file_tmp, myrank)
+       name_file_tmp = trim(acqui_simu(ievent)%data_file_gather)
+       call write_bin_sismo_on_disk(ievent, acqui_simu, seismograms_d,  name_file_tmp, myrank)
 
     case('PR')
        !! array seismogram in pressure
-       name_file_tmp = trim(acqui_simu(isource)%data_file_gather)
-       call write_bin_sismo_on_disk(isource, acqui_simu, seismograms_p,  name_file_tmp, myrank)
+       name_file_tmp = trim(acqui_simu(ievent)%data_file_gather)
+       call write_bin_sismo_on_disk(ievent, acqui_simu, seismograms_p,  name_file_tmp, myrank)
 
     case default
 
-       write(*,*) ' ERROR Component not known : ', trim(acqui_simu(isource)%component(1))
+       write(*,*) ' ERROR Component not known : ', trim(acqui_simu(ievent)%component(1))
        stop
 
     end select
 
-  end subroutine ComputeSismosPerSource
+  end subroutine ComputeSismosPerEvent
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !----------------------------------------------------------------------------------------------------------------------------------
 !> call specfem solver for computing gradient
 !----------------------------------------------------------------------------------------------------------------------------------
-  subroutine ComputeGradientPerSource(isource, iter_inverse, acqui_simu,  inversion_param)
+  subroutine ComputeGradientPerEvent(ievent, iter_inverse, acqui_simu,  inversion_param)
 
-    integer,                                        intent(in)    ::  isource, iter_inverse
+    integer,                                        intent(in)    ::  ievent, iter_inverse
     type(acqui),  dimension(:), allocatable,        intent(inout) ::  acqui_simu
     type(inver),                                    intent(inout) ::  inversion_param
 
@@ -87,7 +87,7 @@ contains
     save_COUPLE_WITH_INJECTION_TECHNIQUE = COUPLE_WITH_INJECTION_TECHNIQUE
 
 
-    if (myrank == 0) write(INVERSE_LOG_FILE,*) '  - > Compute gradient for source :', isource , ' iteration : ', iter_inverse
+    if (myrank == 0) write(INVERSE_LOG_FILE,*) '  - > Compute gradient for event :', ievent , ' iteration : ', iter_inverse
 
     !! choose parameters to perform the forward simulation
     SIMULATION_TYPE=1
@@ -95,25 +95,25 @@ contains
     COMPUTE_AND_STORE_STRAIN = .false.
 
     !! forward solver ------------------------------------------------------------------------------------------------
-    call InitSpecfemForOneRun(acqui_simu, isource, inversion_param, iter_inverse)
+    call InitSpecfemForOneRun(acqui_simu, ievent, inversion_param, iter_inverse)
     call iterate_time()
-    call FinalizeSpecfemForOneRun(acqui_simu, isource)
+    call FinalizeSpecfemForOneRun(acqui_simu, ievent)
 
 
     !! define adjoint sources ----------------------------------------------------------------------------------
-    call write_adjoint_sources_for_specfem(acqui_simu, inversion_param, isource, myrank)
+    call write_adjoint_sources_for_specfem(acqui_simu, inversion_param, ievent, myrank)
 
     !! dump synthetics and adjoint sources to ckeck
     if (VERBOSE_MODE .or. DEBUG_MODE) then
        call dump_adjoint_sources(iter_inverse, acqui_simu, myrank)
 
-       select case (trim(acqui_simu(isource)%component(1)))
+       select case (trim(acqui_simu(ievent)%component(1)))
        case('UX', 'UY', 'UZ')
           call dump_seismograms(iter_inverse, seismograms_d, acqui_simu, myrank)
-          call dump_filtered_data(iter_inverse,acqui_simu(isource)%synt_traces, acqui_simu, myrank)
+          call dump_filtered_data(iter_inverse,acqui_simu(ievent)%synt_traces, acqui_simu, myrank)
        case('PR')
           call dump_seismograms(iter_inverse, seismograms_p, acqui_simu, myrank)
-          call dump_filtered_data(iter_inverse,acqui_simu(isource)%synt_traces, acqui_simu, myrank)
+          call dump_filtered_data(iter_inverse,acqui_simu(ievent)%synt_traces, acqui_simu, myrank)
        end select
     endif
 
@@ -124,29 +124,29 @@ contains
     APPROXIMATE_HESS_KL=.true.
 
     !! forward and adjoint runs --------------------------------------------------------------------------------------
-    call InitSpecfemForOneRun(acqui_simu, isource, inversion_param, iter_inverse)
+    call InitSpecfemForOneRun(acqui_simu, ievent, inversion_param, iter_inverse)
 
 
     COUPLE_WITH_INJECTION_TECHNIQUE = .false.  !! do not use coupling since the direct run is runining in backward from boundary
 
 
     call iterate_time()
-    call FinalizeSpecfemForOneRun(acqui_simu, isource)
+    call FinalizeSpecfemForOneRun(acqui_simu, ievent)
 
 
     COUPLE_WITH_INJECTION_TECHNIQUE = save_COUPLE_WITH_INJECTION_TECHNIQUE  !! restore the initial value of variable
 
 
-  end subroutine ComputeGradientPerSource
+  end subroutine ComputeGradientPerEvent
 
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !----------------------------------------------------------------------------------------------------------------------------------
-!> initialize specfem before each call for the source isource
+!> initialize specfem before each call for the event ievent
 !----------------------------------------------------------------------------------------------------------------------------------
-  subroutine InitSpecfemForOneRun(acqui_simu, isource, inversion_param, iter_inverse)
+  subroutine InitSpecfemForOneRun(acqui_simu, ievent, inversion_param, iter_inverse)
 
-    integer,                                        intent(in)    ::  isource, iter_inverse
+    integer,                                        intent(in)    ::  ievent, iter_inverse
     type(inver),                                    intent(in)    ::  inversion_param
     type(acqui),  dimension(:), allocatable,        intent(in)    ::  acqui_simu
 
@@ -160,11 +160,11 @@ contains
     real(kind=CUSTOM_REAL), dimension(:), allocatable             :: raw_stf, filt_stf
     character(len=MAX_LEN_STRING)                                 :: name_file_tmp, ch_to_add
 
-    if (myrank == 0 .and. DEBUG_MODE) write(INVERSE_LOG_FILE,*) ' initialize source number  : ', isource
+    if (myrank == 0 .and. DEBUG_MODE) write(INVERSE_LOG_FILE,*) ' initialize event number  : ', ievent
 
     ! time discretization -----------------------------------------------------------------------------------------------------------
-    NSTEP = acqui_simu(isource)%Nt_data
-    DT = acqui_simu(isource)%dt_data
+    NSTEP = acqui_simu(ievent)%Nt_data
+    DT = acqui_simu(ievent)%dt_data
     DT_dble = DT
     NSTEP_STF = 1
 
@@ -179,18 +179,18 @@ contains
     NSOURCES=1
     NSOURCES_STF=1
     USE_EXTERNAL_SOURCE_FILE=.false.
-    select case (acqui_simu(isource)%source_type)
+    select case (acqui_simu(ievent)%source_type)
 
     case ('moment')
-       nsources_local =  acqui_simu(isource)%nsources_local
-       sourcearrays(1,:,:,:,:)=acqui_simu(isource)%sourcearray(:,:,:,:)
-       islice_selected_source(1)=acqui_simu(isource)%islice_slected_source
-       ispec_selected_source(1)=acqui_simu(isource)%ispec_selected_source
+       nsources_local =  acqui_simu(ievent)%nsources_local
+       sourcearrays(1,:,:,:,:)=acqui_simu(ievent)%sourcearray(:,:,:,:)
+       islice_selected_source(1)=acqui_simu(ievent)%islice_slected_source
+       ispec_selected_source(1)=acqui_simu(ievent)%ispec_selected_source
        PRINT_SOURCE_TIME_FUNCTION=.true.
-       t0 = - 1.2d0 * (acqui_simu(isource)%t_shift - 1.d0/acqui_simu(isource)%hdur)
-       hdur(1)=acqui_simu(isource)%hdur
+       t0 = - 1.2d0 * (acqui_simu(ievent)%t_shift - 1.d0/acqui_simu(ievent)%hdur)
+       hdur(1)=acqui_simu(ievent)%hdur
 
-       if (acqui_simu(isource)%external_source_wavelet) then
+       if (acqui_simu(ievent)%external_source_wavelet) then
           USE_EXTERNAL_SOURCE_FILE=.true.
           NSTEP_STF = NSTEP
           if (allocated(user_source_time_function)) deallocate(user_source_time_function)
@@ -198,13 +198,13 @@ contains
           USE_TRICK_FOR_BETTER_PRESSURE=.true.
           if (ier /= 0) stop ' error in allocating user_source_time_function'
           if (inversion_param%only_forward) then
-             user_source_time_function(:,1)=acqui_simu(isource)%source_wavelet(:,1)
+             user_source_time_function(:,1)=acqui_simu(ievent)%source_wavelet(:,1)
           else
              !! filter the user stf
              allocate(raw_stf(NSTEP), filt_stf(NSTEP))
-             raw_stf(:)=acqui_simu(isource)%source_wavelet(:,1)
+             raw_stf(:)=acqui_simu(ievent)%source_wavelet(:,1)
              call bwfilt (raw_stf, filt_stf, &
-                  DT, NSTEP, 1, 4, acqui_simu(isource)%fl_src, acqui_simu(isource)%fh_src)
+                  DT, NSTEP, 1, 4, acqui_simu(ievent)%fl_event, acqui_simu(ievent)%fh_event)
              lw_tap = 2.5_CUSTOM_REAL
              call apodise_sig(filt_stf, NSTEP, lw_tap)
              user_source_time_function(:,1)=filt_stf(:)
@@ -212,8 +212,8 @@ contains
 
              !! write STF used to check
              if (VERBOSE_MODE .and. myrank == 0) then
-                 write(ch_to_add,'(a10,i4.4,a1,i4.4,a4)') '_stf_used_',isource,'_',iter_inverse,'.txt'
-                 name_file_tmp = trim(acqui_simu(isource)%data_file_gather)//trim(adjustl(ch_to_add))
+                 write(ch_to_add,'(a10,i4.4,a1,i4.4,a4)') '_stf_used_',ievent,'_',iter_inverse,'.txt'
+                 name_file_tmp = trim(acqui_simu(ievent)%data_file_gather)//trim(adjustl(ch_to_add))
                  open(IINN,file=trim(adjustl(name_file_tmp)))
                  do it=1, NSTEP
                     write(IINN,*) (it-1) * DT, user_source_time_function(it,1)
@@ -231,7 +231,7 @@ contains
        endif
        COUPLE_WITH_INJECTION_TECHNIQUE = .false.
     case('axisem')
-       TRAC_PATH=acqui_simu(isource)%traction_dir
+       TRAC_PATH=acqui_simu(ievent)%traction_dir
        call create_name_database(dsname,myrank,TRAC_PATH)
        ! open traction file
        open(unit=IIN_veloc_dsm,file=dsname(1:len_trim(dsname))//'sol_axisem',status='old', &
@@ -240,19 +240,19 @@ contains
        COUPLE_WITH_INJECTION_TECHNIQUE = .true.
        INJECTION_TECHNIQUE_TYPE = INJECTION_TECHNIQUE_IS_AXISEM
     case('fk')
-       FKMODEL_FILE=acqui_simu(isource)%source_file
+       FKMODEL_FILE=acqui_simu(ievent)%source_file
        COUPLE_WITH_INJECTION_TECHNIQUE = .true.
        INJECTION_TECHNIQUE_TYPE = INJECTION_TECHNIQUE_IS_FK
     case default
-       write(*,*) 'source ', acqui_simu(isource)%source_type, 'Not yet '
+       write(*,*) 'source ', acqui_simu(ievent)%source_type, 'Not yet '
        stop
 
     end select
 
-    ! prepare receiver for the current source --------------------------------------------------------------------------------------
+    ! prepare receiver for the current event --------------------------------------------------------------------------------------
     !! store current variables
-    nrec=acqui_simu(isource)%nsta_tot
-    nrec_local=acqui_simu(isource)%nsta_slice
+    nrec=acqui_simu(ievent)%nsta_tot
+    nrec_local=acqui_simu(ievent)%nsta_slice
     nadj_rec_local=0                        !! by default dummy 0
 
     !! de-allocation
@@ -272,13 +272,13 @@ contains
     allocate(nu(NDIM,NDIM,nrec))
 
     !! store current arrays
-    islice_selected_rec(:)=acqui_simu(isource)%islice_selected_rec(:)
-    ispec_selected_rec(:)=acqui_simu(isource)%ispec_selected_rec(:)
-    xi_receiver(:)=acqui_simu(isource)%xi_rec(:)
-    eta_receiver(:)=acqui_simu(isource)%eta_rec(:)
-    gamma_receiver(:)=acqui_simu(isource)%gamma_rec(:)
-    station_name(:)=acqui_simu(isource)%station_name
-    network_name(:)=acqui_simu(isource)%network_name
+    islice_selected_rec(:)=acqui_simu(ievent)%islice_selected_rec(:)
+    ispec_selected_rec(:)=acqui_simu(ievent)%ispec_selected_rec(:)
+    xi_receiver(:)=acqui_simu(ievent)%xi_rec(:)
+    eta_receiver(:)=acqui_simu(ievent)%eta_rec(:)
+    gamma_receiver(:)=acqui_simu(ievent)%gamma_rec(:)
+    station_name(:)=acqui_simu(ievent)%station_name
+    network_name(:)=acqui_simu(ievent)%network_name
 
     ! X coordinate - East
     nu(1,1,:) = 1.d0
@@ -320,15 +320,15 @@ contains
             hpgammar_store(nrec_local,NGLLZ))
 
        allocate(number_receiver_global(nrec_local))
-       number_receiver_global(:)=acqui_simu(isource)%number_receiver_global(1:nrec_local)
+       number_receiver_global(:)=acqui_simu(ievent)%number_receiver_global(1:nrec_local)
 
        do irec=1, nrec_local
-          hxir_store(irec,:)=acqui_simu(isource)%hxi(:,irec)
-          hetar_store(irec,:)=acqui_simu(isource)%heta(:,irec)
-          hgammar_store(irec,:)=acqui_simu(isource)%hgamma(:,irec)
-          hpxir_store(irec,:)=acqui_simu(isource)%hpxi(:,irec)
-          hpetar_store(irec,:)=acqui_simu(isource)%hpeta(:,irec)
-          hpgammar_store(irec,:)=acqui_simu(isource)%hpgamma(:,irec)
+          hxir_store(irec,:)=acqui_simu(ievent)%hxi(:,irec)
+          hetar_store(irec,:)=acqui_simu(ievent)%heta(:,irec)
+          hgammar_store(irec,:)=acqui_simu(ievent)%hgamma(:,irec)
+          hpxir_store(irec,:)=acqui_simu(ievent)%hpxi(:,irec)
+          hpetar_store(irec,:)=acqui_simu(ievent)%hpeta(:,irec)
+          hpgammar_store(irec,:)=acqui_simu(ievent)%hpgamma(:,irec)
        enddo
 
        if (allocated(seismograms_d)) deallocate(seismograms_d)
@@ -404,7 +404,7 @@ contains
        do icomp=1,NDIM
           do it=1,NTSTEP_BETWEEN_OUTPUT_SEISMOS
              do irec_local=1, nadj_rec_local
-                source_adjoint(irec_local, it, icomp) = acqui_simu(isource)%adjoint_sources(icomp,irec_local,it)
+                source_adjoint(irec_local, it, icomp) = acqui_simu(ievent)%adjoint_sources(icomp,irec_local,it)
              enddo
           enddo
        enddo
@@ -636,7 +636,7 @@ contains
     !! open new log file for specfem -----------------------------------------------------------------------------------------------
     if (myrank == 0 .and. SIMULATION_TYPE == 1) then
        close(IMAIN)
-       write(name_file,'(a15,i5.5,a1,i5.5,a4)') '/output_solver_',isource,'_',iter_inverse,'.txt'
+       write(name_file,'(a15,i5.5,a1,i5.5,a4)') '/output_solver_',ievent,'_',iter_inverse,'.txt'
        open(unit=IMAIN,file=trim(OUTPUT_FILES)//trim(name_file),status='unknown')
     endif
 
@@ -668,17 +668,17 @@ contains
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !-----------------------------------------------------------------------------------------------------------------------------------
-!> finalize, specfem after running each sources
+!> finalize, specfem after running each event
 !-----------------------------------------------------------------------------------------------------------------------------------
-  subroutine  FinalizeSpecfemForOneRun(acqui_simu, isource)
+  subroutine  FinalizeSpecfemForOneRun(acqui_simu, ievent)
 
-    integer,                                        intent(in)    :: isource
+    integer,                                        intent(in)    :: ievent
     type(acqui),  dimension(:), allocatable,        intent(in)    :: acqui_simu
     integer                                                       :: ier
 
 
     !! manage files due to coupling with axisem -----------------------------------------------------
-    select case (acqui_simu(isource)%source_type)
+    select case (acqui_simu(ievent)%source_type)
 
     case('axisem')
        close(IIN_veloc_dsm)
@@ -687,7 +687,7 @@ contains
        !! nothing to do for the moment
 
     case default   !! for stopping if any problem with source_type
-       write(*,*) 'source ', acqui_simu(isource)%source_type, 'Not yet '
+       write(*,*) 'source ', acqui_simu(ievent)%source_type, 'Not yet '
        stop
 
     end select
@@ -1082,7 +1082,7 @@ contains
     if (ACOUSTIC_SIMULATION .and. (SIMULATION_TYPE == 3 .or. SAVE_FORWARD) .and. num_abs_boundary_faces > 0) &
                         call close_file_abs(IOABS_AC)
 
-    !! allocate arrays for saving the kernel computed by GPU in CPU memory in order to perform summation over sources.
+    !! allocate arrays for saving the kernel computed by GPU in CPU memory in order to perform summation over events.
     if (GPU_MODE) then
        if (ACOUSTIC_SIMULATION) then
           allocate(rho_ac_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB), kappa_ac_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
@@ -1115,7 +1115,7 @@ contains
   end subroutine PrepareTimerunInverseProblem
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !-----------------------------------------------------------------------------------------------------------------------------------
-!>  copy summed GPU kernel overs sources in specfem CPU arrays
+!>  copy summed GPU kernel overs events in specfem CPU arrays
 !!
 !!
 !-----------------------------------------------------------------------------------------------------------------------------------

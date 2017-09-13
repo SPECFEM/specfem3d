@@ -32,7 +32,7 @@ contains
     type(acqui), allocatable, dimension(:), intent(inout)  :: acqui_simu
     integer,                                intent(in)     :: myrank
 
-    integer                                                :: isource, nsrc_local, NSRC
+    integer                                                :: ievent, nsrc_local, NEVENT
     integer                                                :: ispec_selected_source, islice_selected_source
     double precision                                       :: xi_source, eta_source, gamma_source
     double precision                                       :: x_found,  y_found,  z_found
@@ -53,7 +53,7 @@ contains
        write(INVERSE_LOG_FILE,*) ' ... locate sources in specfem mesh :'
     endif
 
-    NSRC=acqui_simu(1)%nsrc_tot
+    NEVENT=acqui_simu(1)%nevent_tot
 
     ! get mesh properties (mandatory before calling locate_point_in_mesh)
     call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
@@ -62,11 +62,11 @@ contains
          elemsize_min_glob,elemsize_max_glob, &
          distance_min_glob,distance_max_glob)
 
-    do isource = 1, NSRC
+    do ievent = 1, NEVENT
 
-       x_to_locate = acqui_simu(isource)%Xs
-       y_to_locate = acqui_simu(isource)%Ys
-       z_to_locate = acqui_simu(isource)%Zs
+       x_to_locate = acqui_simu(ievent)%Xs
+       y_to_locate = acqui_simu(ievent)%Ys
+       z_to_locate = acqui_simu(ievent)%Zs
 
        call locate_point_in_mesh(x_to_locate, y_to_locate, z_to_locate, iaddx, iaddy, iaddz, elemsize_max_glob, &
             ispec_selected_source, xi_source, eta_source, gamma_source, x_found, y_found, z_found, myrank)
@@ -75,27 +75,27 @@ contains
             xi_source, eta_source, gamma_source, ispec_selected_source, islice_selected_source, distance_from_target, myrank)
 
        if (myrank == 0) then
-          write(INVERSE_LOG_FILE, 200) isource, islice_selected_source, ispec_selected_source, distance_from_target
+          write(INVERSE_LOG_FILE, 200) ievent, islice_selected_source, ispec_selected_source, distance_from_target
           if (DEBUG_MODE) write(INVERSE_LOG_FILE, 300) x_to_locate, y_to_locate, z_to_locate, x_found, y_found, z_found
        endif
 
        ! store in structure acqui
-       acqui_simu(isource)%islice_slected_source=islice_selected_source
-       acqui_simu(isource)%ispec_selected_source=ispec_selected_source
+       acqui_simu(ievent)%islice_slected_source=islice_selected_source
+       acqui_simu(ievent)%ispec_selected_source=ispec_selected_source
 
-       allocate(acqui_simu(isource)%sourcearray(NDIM,NGLLX,NGLLY,NGLLZ))
+       allocate(acqui_simu(ievent)%sourcearray(NDIM,NGLLX,NGLLY,NGLLZ))
        nsrc_local=0
       ! compute source array
        if (myrank == islice_selected_source) then
           nsrc_local = nsrc_local + 1
           call compute_source_coeff(xi_source, eta_source, gamma_source, &
-               acqui_simu(isource)%ispec_selected_source, acqui_simu(isource)%sourcearray, &
-               acqui_simu(isource)%Mxx, acqui_simu(isource)%Myy, acqui_simu(isource)%Mzz, &
-               acqui_simu(isource)%Mxy, acqui_simu(isource)%Mxz, acqui_simu(isource)%Myz, &
-               acqui_simu(isource)%Fx, acqui_simu(isource)%Fy, acqui_simu(isource)%Fz, &
-               acqui_simu(isource)%source_type)
+               acqui_simu(ievent)%ispec_selected_source, acqui_simu(ievent)%sourcearray, &
+               acqui_simu(ievent)%Mxx, acqui_simu(ievent)%Myy, acqui_simu(ievent)%Mzz, &
+               acqui_simu(ievent)%Mxy, acqui_simu(ievent)%Mxz, acqui_simu(ievent)%Myz, &
+               acqui_simu(ievent)%Fx, acqui_simu(ievent)%Fy, acqui_simu(ievent)%Fz, &
+               acqui_simu(ievent)%source_type)
        endif
-       acqui_simu(isource)%nsources_local=nsrc_local
+       acqui_simu(ievent)%nsources_local=nsrc_local
 
     enddo
 
@@ -116,7 +116,7 @@ contains
     type(acqui), allocatable, dimension(:), intent(inout)  :: acqui_simu
     integer,                                intent(in)     :: myrank
 
-    integer                                                :: isource, ireceiver, nsta_slice, irec_local, NSTA, NSRC
+    integer                                                :: ievent, ireceiver, nsta_slice, irec_local, NSTA, NEVENT
     integer                                                :: ispec_selected, islice_selected
     double precision                                       :: xi_receiver, eta_receiver, gamma_receiver
     double precision                                       :: x_found,  y_found,  z_found
@@ -151,31 +151,31 @@ contains
        call flush_iunit(INVERSE_LOG_FILE)
     endif
 
-    NSRC=acqui_simu(1)%nsrc_tot
-    do isource = 1, NSRC
+    NEVENT=acqui_simu(1)%nevent_tot
+    do ievent = 1, NEVENT
        if (myrank == 0) then
-            write(INVERSE_LOG_FILE,*) ' ... locate stations for source ', isource
+            write(INVERSE_LOG_FILE,*) ' ... locate stations for event ', ievent
             call flush_iunit(INVERSE_LOG_FILE)
        endif
-       NSTA = acqui_simu(isource)%nsta_tot
-       allocate(acqui_simu(isource)%xi_rec(NSTA), &
-                acqui_simu(isource)%eta_rec(NSTA), &
-                acqui_simu(isource)%gamma_rec(NSTA))
+       NSTA = acqui_simu(ievent)%nsta_tot
+       allocate(acqui_simu(ievent)%xi_rec(NSTA), &
+                acqui_simu(ievent)%eta_rec(NSTA), &
+                acqui_simu(ievent)%gamma_rec(NSTA))
 
-       allocate(acqui_simu(isource)%islice_selected_rec(NSTA), &
-                acqui_simu(isource)%ispec_selected_rec(NSTA), &
-                acqui_simu(isource)%number_receiver_global(NSTA))
+       allocate(acqui_simu(ievent)%islice_selected_rec(NSTA), &
+                acqui_simu(ievent)%ispec_selected_rec(NSTA), &
+                acqui_simu(ievent)%number_receiver_global(NSTA))
 
-       acqui_simu(isource)%number_receiver_global(:)=-1
-       acqui_simu(isource)%ispec_selected_rec(:)=-1
-       acqui_simu(isource)%islice_selected_rec(:)=-1
+       acqui_simu(ievent)%number_receiver_global(:)=-1
+       acqui_simu(ievent)%ispec_selected_rec(:)=-1
+       acqui_simu(ievent)%islice_selected_rec(:)=-1
 
        nsta_slice=0
        do ireceiver = 1, NSTA
 
-          x_to_locate = acqui_simu(isource)%position_station(1,ireceiver)
-          y_to_locate = acqui_simu(isource)%position_station(2,ireceiver)
-          z_to_locate = acqui_simu(isource)%position_station(3,ireceiver)
+          x_to_locate = acqui_simu(ievent)%position_station(1,ireceiver)
+          y_to_locate = acqui_simu(ievent)%position_station(2,ireceiver)
+          z_to_locate = acqui_simu(ievent)%position_station(3,ireceiver)
 
           call locate_point_in_mesh(x_to_locate, y_to_locate, z_to_locate, iaddx, iaddy, iaddz, elemsize_max_glob, &
                ispec_selected, xi_receiver, eta_receiver, gamma_receiver, x_found, y_found, z_found, myrank)
@@ -183,15 +183,15 @@ contains
           call locate_MPI_slice_and_bcast_to_all(x_to_locate, y_to_locate, z_to_locate, x_found, y_found, z_found, &
                xi_receiver, eta_receiver, gamma_receiver, ispec_selected, islice_selected,  distance_from_target, myrank)
 
-          acqui_simu(isource)%xi_rec(ireceiver)=xi_receiver
-          acqui_simu(isource)%eta_rec(ireceiver)=eta_receiver
-          acqui_simu(isource)%gamma_rec(ireceiver)=gamma_receiver
-          acqui_simu(isource)%islice_selected_rec(ireceiver)=islice_selected
-          acqui_simu(isource)%ispec_selected_rec(ireceiver)=ispec_selected
+          acqui_simu(ievent)%xi_rec(ireceiver)=xi_receiver
+          acqui_simu(ievent)%eta_rec(ireceiver)=eta_receiver
+          acqui_simu(ievent)%gamma_rec(ireceiver)=gamma_receiver
+          acqui_simu(ievent)%islice_selected_rec(ireceiver)=islice_selected
+          acqui_simu(ievent)%ispec_selected_rec(ireceiver)=ispec_selected
 
           if (myrank == islice_selected) then
              nsta_slice=nsta_slice+1
-             acqui_simu(isource)%number_receiver_global(nsta_slice)=ireceiver
+             acqui_simu(ievent)%number_receiver_global(nsta_slice)=ireceiver
           endif
 
           if (DEBUG_MODE) then
@@ -214,53 +214,53 @@ contains
 
        enddo
 
-       acqui_simu(isource)%nsta_slice=nsta_slice
+       acqui_simu(ievent)%nsta_slice=nsta_slice
 
     enddo
 
     ! store local information
-    do isource = 1, NSRC
+    do ievent = 1, NEVENT
 
-       if (acqui_simu(isource)%nsta_slice > 0) then
-          allocate(acqui_simu(isource)%hxi(NGLLX,acqui_simu(isource)%nsta_slice))
-          allocate(acqui_simu(isource)%heta(NGLLY,acqui_simu(isource)%nsta_slice))
-          allocate(acqui_simu(isource)%hgamma(NGLLZ,acqui_simu(isource)%nsta_slice))
-          allocate(acqui_simu(isource)%hpxi(NGLLX,acqui_simu(isource)%nsta_slice))
-          allocate(acqui_simu(isource)%hpeta(NGLLY,acqui_simu(isource)%nsta_slice))
-          allocate(acqui_simu(isource)%hpgamma(NGLLZ,acqui_simu(isource)%nsta_slice))
-          allocate(acqui_simu(isource)%freqcy_to_invert(NDIM,2,acqui_simu(isource)%nsta_slice))
+       if (acqui_simu(ievent)%nsta_slice > 0) then
+          allocate(acqui_simu(ievent)%hxi(NGLLX,acqui_simu(ievent)%nsta_slice))
+          allocate(acqui_simu(ievent)%heta(NGLLY,acqui_simu(ievent)%nsta_slice))
+          allocate(acqui_simu(ievent)%hgamma(NGLLZ,acqui_simu(ievent)%nsta_slice))
+          allocate(acqui_simu(ievent)%hpxi(NGLLX,acqui_simu(ievent)%nsta_slice))
+          allocate(acqui_simu(ievent)%hpeta(NGLLY,acqui_simu(ievent)%nsta_slice))
+          allocate(acqui_simu(ievent)%hpgamma(NGLLZ,acqui_simu(ievent)%nsta_slice))
+          allocate(acqui_simu(ievent)%freqcy_to_invert(NDIM,2,acqui_simu(ievent)%nsta_slice))
        else
-          allocate(acqui_simu(isource)%hxi(1,1))
-          allocate(acqui_simu(isource)%heta(1,1))
-          allocate(acqui_simu(isource)%hgamma(1,1))
-          allocate(acqui_simu(isource)%hpxi(1,1))
-          allocate(acqui_simu(isource)%hpeta(1,1))
-          allocate(acqui_simu(isource)%hpgamma(1,1))
-          allocate(acqui_simu(isource)%freqcy_to_invert(NDIM,2,1))
+          allocate(acqui_simu(ievent)%hxi(1,1))
+          allocate(acqui_simu(ievent)%heta(1,1))
+          allocate(acqui_simu(ievent)%hgamma(1,1))
+          allocate(acqui_simu(ievent)%hpxi(1,1))
+          allocate(acqui_simu(ievent)%hpeta(1,1))
+          allocate(acqui_simu(ievent)%hpgamma(1,1))
+          allocate(acqui_simu(ievent)%freqcy_to_invert(NDIM,2,1))
        endif
 
        irec_local=0
-       do ireceiver=1, acqui_simu(isource)%nsta_tot
-          if (myrank == acqui_simu(isource)%islice_selected_rec(ireceiver)) then
+       do ireceiver=1, acqui_simu(ievent)%nsta_tot
+          if (myrank == acqui_simu(ievent)%islice_selected_rec(ireceiver)) then
 
              irec_local = irec_local + 1
 
-             xi_receiver=acqui_simu(isource)%xi_rec(ireceiver)
-             eta_receiver=acqui_simu(isource)%eta_rec(ireceiver)
-             gamma_receiver=acqui_simu(isource)%gamma_rec(ireceiver)
+             xi_receiver=acqui_simu(ievent)%xi_rec(ireceiver)
+             eta_receiver=acqui_simu(ievent)%eta_rec(ireceiver)
+             gamma_receiver=acqui_simu(ievent)%gamma_rec(ireceiver)
 
              ! compute Lagrange polynomials at the source location
              call lagrange_any(xi_receiver,NGLLX,xigll,hxis,hpxis)
              call lagrange_any(eta_receiver,NGLLY,yigll,hetas,hpetas)
              call lagrange_any(gamma_receiver,NGLLZ,zigll,hgammas,hpgammas)
 
-             acqui_simu(isource)%hxi(:,irec_local)=hxis(:)
-             acqui_simu(isource)%heta(:,irec_local)=hetas(:)
-             acqui_simu(isource)%hgamma(:,irec_local)=hgammas(:)
+             acqui_simu(ievent)%hxi(:,irec_local)=hxis(:)
+             acqui_simu(ievent)%heta(:,irec_local)=hetas(:)
+             acqui_simu(ievent)%hgamma(:,irec_local)=hgammas(:)
 
-             acqui_simu(isource)%hpxi(:,irec_local)=hpxis(:)
-             acqui_simu(isource)%hpeta(:,irec_local)=hpetas(:)
-             acqui_simu(isource)%hpgamma(:,irec_local)=hpgammas(:)
+             acqui_simu(ievent)%hpxi(:,irec_local)=hpxis(:)
+             acqui_simu(ievent)%hpeta(:,irec_local)=hpetas(:)
+             acqui_simu(ievent)%hpgamma(:,irec_local)=hpgammas(:)
 
 
           endif

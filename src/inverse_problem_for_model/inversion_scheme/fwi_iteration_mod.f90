@@ -44,7 +44,7 @@ contains
     !! locals
     real(kind=CUSTOM_REAL)                                        :: mwl1, mwl2, td, tg, step_length
     real(kind=CUSTOM_REAL)                                        :: NormGrad
-    integer                                                       :: iter_wolfe, isource, Niv
+    integer                                                       :: iter_wolfe, ievent, Niv
     logical                                                       :: flag_wolfe
     logical                                                       :: ModelIsSuitable
 
@@ -126,8 +126,8 @@ contains
        endif
        ! compute cost function and gradient---------
        call InitForOneStepFWI(inversion_param)
-       do isource=1,acqui_simu(1)%nsrc_tot
-          call ComputeGradientPerSource(isource, iter_inverse, acqui_simu, inversion_param)
+       do ievent=1,acqui_simu(1)%nevent_tot
+          call ComputeGradientPerEvent(ievent, iter_inverse, acqui_simu, inversion_param)
        enddo
        if (GPU_MODE) call TransfertKernelFromGPUArrays()
 
@@ -244,7 +244,7 @@ contains
 
     type(acqui),  dimension(:), allocatable,        intent(inout) :: acqui_simu
     type(inver),                                    intent(inout) :: inversion_param
-    integer                                                       :: isource,  iter_inverse
+    integer                                                       :: ievent,  iter_inverse
     character(len=MAX_LEN_STRING)                                             :: prefix_name
 
     iter_inverse=0
@@ -262,8 +262,8 @@ contains
     ! compute cost function and gradient---------
     call InitForOneStepFWI(inversion_param)
 
-    do isource=1,acqui_simu(1)%nsrc_tot
-       call ComputeGradientPerSource(isource, iter_inverse, acqui_simu, inversion_param)
+    do ievent=1,acqui_simu(1)%nevent_tot
+       call ComputeGradientPerEvent(ievent, iter_inverse, acqui_simu, inversion_param)
     enddo
     if (GPU_MODE) call TransfertKernelFromGPUArrays()
 
@@ -401,10 +401,10 @@ contains
 !-------------------------------------------------------------------------------------------------------------
 ! Prepare and allocate all arrays used in inverse problem
 !-------------------------------------------------------------------------------------------------------------
-  subroutine AllocatememoryForFWI(inversion_param, nsrc)
+  subroutine AllocatememoryForFWI(inversion_param, nevent)
 
     type(inver),                                    intent(inout) :: inversion_param
-    integer,                                        intent(in)    :: nsrc
+    integer,                                        intent(in)    :: nevent
     integer                                                       :: ierror, Ninvpar
 
     call PrepareArraysfamilyParam(inversion_param)
@@ -441,8 +441,8 @@ contains
     if (ierror /= 0) call exit_MPI(myrank,"error allocation hess_approxim in AllocatememoryForFWI subroutine")
     hess_approxim(:,:,:,:,:) = 1._CUSTOM_REAL
 
-    allocate(inversion_param%current_cost_prime(NSRC),  inversion_param%previous_cost_prime(NSRC))
-    allocate(inversion_param%current_cost(NSRC),  inversion_param%previous_cost(NSRC))
+    allocate(inversion_param%current_cost_prime(nevent),  inversion_param%previous_cost_prime(nevent))
+    allocate(inversion_param%current_cost(nevent),  inversion_param%previous_cost(nevent))
 
   end subroutine AllocatememoryForFWI
 
