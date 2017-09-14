@@ -263,13 +263,11 @@ contains
     if (allocated(gamma_receiver)) deallocate(gamma_receiver)
     if (allocated(station_name)) deallocate(station_name)
     if (allocated(network_name)) deallocate(network_name)
-    if (allocated(nu)) deallocate(nu)
 
     !! re-allocation
     allocate(islice_selected_rec(nrec),ispec_selected_rec(nrec))
     allocate(xi_receiver(nrec),eta_receiver(nrec),gamma_receiver(nrec))
     allocate(station_name(nrec),network_name(nrec))
-    allocate(nu(NDIM,NDIM,nrec))
 
     !! store current arrays
     islice_selected_rec(:)=acqui_simu(ievent)%islice_selected_rec(:)
@@ -279,19 +277,6 @@ contains
     gamma_receiver(:)=acqui_simu(ievent)%gamma_rec(:)
     station_name(:)=acqui_simu(ievent)%station_name
     network_name(:)=acqui_simu(ievent)%network_name
-
-    ! X coordinate - East
-    nu(1,1,:) = 1.d0
-    nu(1,2,:) = 0.d0
-    nu(1,3,:) = 0.d0
-    ! Y coordinate - North
-    nu(2,1,:) = 0.d0
-    nu(2,2,:) = 1.d0
-    nu(2,3,:) = 0.d0
-    ! Z coordinate - Vertical
-    nu(3,1,:) = 0.d0
-    nu(3,2,:) = 0.d0
-    nu(3,3,:) = 1.d0
 
     if (nrec_local > 0) then
 

@@ -8,7 +8,6 @@
 !                and CNRS / University of Marseille, France
 !                 (there are currently many more authors!)
 ! (c) Princeton University and CNRS / University of Marseille, July 2012
-!
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
 ! the Free Software Foundation; either version 3 of the License, or
@@ -29,41 +28,29 @@
 !----  locate_source finds the correct position of the source
 !----
 
-  subroutine locate_source(ibool,NSOURCES,myrank,NSPEC_AB,NGLOB_AB,NGNOD, &
-                           xstore,ystore,zstore,xigll,yigll,zigll,NPROC, &
-                           tshift_src,min_tshift_src_original,yr,jda,ho,mi,utm_x_source,utm_y_source, &
-                           DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
+  subroutine locate_source(NSOURCES,tshift_src,min_tshift_src_original,yr,jda,ho,mi,utm_x_source,utm_y_source, &
+                           hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
                            islice_selected_source,ispec_selected_source, &
-                           xi_source,eta_source,gamma_source, &
-                           nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
-                           ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
-                           num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+                           xi_source,eta_source,gamma_source)
 
   use constants
 
   use specfem_par, only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION, &
       UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,USE_SOURCES_RECEIVERS_Z, &
       factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP, &
-      user_source_time_function,NSTEP_STF,NSOURCES_STF,USE_EXTERNAL_SOURCE_FILE,USE_TRICK_FOR_BETTER_PRESSURE
+      user_source_time_function,NSTEP_STF,NSOURCES_STF,USE_EXTERNAL_SOURCE_FILE,USE_TRICK_FOR_BETTER_PRESSURE,&
+      ibool,myrank,NSPEC_AB,NGLOB_AB,NGNOD,xstore,ystore,zstore,xigll,yigll,zigll,NPROC, &
+      DT,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh,num_free_surface_faces,free_surface_ispec,free_surface_ijk
+
+  use specfem_par_acoustic, only: ispec_is_acoustic
+  use specfem_par_elastic, only: ispec_is_elastic
+  use specfem_par_poroelastic, only: ispec_is_poroelastic
+
 
   implicit none
 
-  integer,intent(in) :: NPROC
-  integer,intent(in) :: NSPEC_AB,NGLOB_AB,NSOURCES,NGNOD
-
-  double precision,intent(in) :: DT
-
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
-
-  integer,intent(in) :: myrank
-
-  ! arrays containing coordinates of the points
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(in) :: xstore,ystore,zstore
-
-  logical, dimension(NSPEC_AB),intent(in) :: ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic
-
+  integer,intent(in) :: NSOURCES
   integer,intent(inout) :: yr,jda,ho,mi
-
   double precision,dimension(NSOURCES),intent(inout) :: tshift_src
   double precision,intent(inout) :: min_tshift_src_original
   double precision :: sec
@@ -71,17 +58,11 @@
   integer iprocloop
 
   integer i,j,k,ispec,iglob,isource
-  integer imin,imax,jmin,jmax,kmin,kmax
   integer iproc(1)
 
   double precision, dimension(NSOURCES),intent(inout) :: utm_x_source,utm_y_source
   double precision dist_squared
   double precision xi,eta,gamma,dx,dy,dz,dxi,deta
-
-  ! Gauss-Lobatto-Legendre points of integration
-  double precision xigll(NGLLX)
-  double precision yigll(NGLLY)
-  double precision zigll(NGLLZ)
 
   ! topology of the control points of the surface element
   integer iax,iay,iaz
@@ -124,8 +105,6 @@
   double precision, dimension(NGATHER_SOURCES,0:NPROC-1) :: x_found_source_all,y_found_source_all,z_found_source_all
   double precision, dimension(NGATHER_SOURCES,0:NPROC-1) :: final_distance_source_all
 
-  double precision, dimension(3,3,NGATHER_SOURCES,0:NPROC-1) :: nu_source_all
-
   double precision, dimension(:), allocatable :: tmp_local
   double precision, dimension(:,:),allocatable :: tmp_all_local
 
@@ -139,7 +118,6 @@
 
   ! positioning
   double precision, dimension(NSOURCES),intent(inout) :: xi_source,eta_source,gamma_source
-  double precision, dimension(3,3,NSOURCES),intent(inout) :: nu_source
 
   double precision, dimension(NSOURCES) :: x_found_source,y_found_source,z_found_source
   double precision, dimension(NSOURCES) :: elevation
@@ -147,17 +125,6 @@
 
   integer, dimension(:), allocatable :: tmp_i_local
   integer, dimension(:,:),allocatable :: tmp_i_all_local
-
-  ! for surface locating and normal computing with external mesh
-  integer :: pt0_ix,pt0_iy,pt0_iz,pt1_ix,pt1_iy,pt1_iz,pt2_ix,pt2_iy,pt2_iz
-  real(kind=CUSTOM_REAL), dimension(3) :: u_vector,v_vector,w_vector
-
-  logical, dimension(NGLOB_AB),intent(in) :: iglob_is_surface_external_mesh
-  logical, dimension(NSPEC_AB),intent(in) :: ispec_is_surface_external_mesh
-
-  integer,intent(in) :: num_free_surface_faces
-  integer, dimension(num_free_surface_faces),intent(in) :: free_surface_ispec
-  integer, dimension(3,NGLLSQUARE,num_free_surface_faces),intent(in) :: free_surface_ijk
 
   integer ix_initial_guess_source,iy_initial_guess_source,iz_initial_guess_source
   integer ier
@@ -300,20 +267,6 @@
     call bcast_all_dp(altitude_source,1)
     elevation(isource) = altitude_source(1)
 
-    ! orientation consistent with the UTM projection
-    ! East
-    nu_source(1,1,isource) = 1.d0
-    nu_source(1,2,isource) = 0.d0
-    nu_source(1,3,isource) = 0.d0
-    ! North
-    nu_source(2,1,isource) = 0.d0
-    nu_source(2,2,isource) = 1.d0
-    nu_source(2,3,isource) = 0.d0
-    ! Vertical
-    nu_source(3,1,isource) = 0.d0
-    nu_source(3,2,isource) = 0.d0
-    nu_source(3,3,isource) = 1.d0
-
     x_target_source = utm_x_source(isource)
     y_target_source = utm_y_source(isource)
 
@@ -348,42 +301,9 @@
         if (dist_squared > typical_size_squared) cycle
       endif
 
-      ! define the interval in which we look for points
-      if (USE_FORCE_POINT_SOURCE) then
-        !imin = 1
-        !imax = NGLLX
-
-        !jmin = 1
-        !jmax = NGLLY
-
-        !kmin = 1
-        !kmax = NGLLZ
-        !! VM VM exclude edges to ensure this point is not shared with other elements
-        !! otherwise a error location on source can occur in the case of a force point source (FORCESOLUTION)
-        imin = 2
-        imax = NGLLX - 1
-
-        jmin = 2
-        jmax = NGLLY - 1
-
-        kmin = 2
-        kmax = NGLLZ - 1
-      else
-        ! loop only on points inside the element
-        ! exclude edges to ensure this point is not shared with other elements
-        imin = 2
-        imax = NGLLX - 1
-
-        jmin = 2
-        jmax = NGLLY - 1
-
-        kmin = 2
-        kmax = NGLLZ - 1
-      endif
-
-      do k = kmin,kmax
-        do j = jmin,jmax
-          do i = imin,imax
+      do k = 2,NGLLZ - 1
+        do j = 2,NGLLY - 1
+          do i = 2,NGLLX - 1
 
             iglob = ibool(i,j,k,ispec)
 
@@ -409,10 +329,6 @@
               x_found_source(isource) = xstore(iglob)
               y_found_source(isource) = ystore(iglob)
               z_found_source(isource) = zstore(iglob)
-
-              ! compute final distance between asked and found (converted to km)
-              final_distance_source(isource) = dsqrt((x_target_source-x_found_source(isource))**2 + &
-                (y_target_source-y_found_source(isource))**2 + (z_target_source-z_found_source(isource))**2)
 
             endif
 
@@ -450,146 +366,6 @@
     eta_source(isource) = dble(iy_initial_guess_source)
     gamma_source(isource) = dble(iz_initial_guess_source)
 
-    ! get normal to the face of the hexahedra if receiver is on the surface
-    if ((.not. SOURCES_CAN_BE_BURIED) .and. .not. (ispec_selected_source(isource) == 0)) then
-
-      ! note: at this point, xi_source,.. are in range [1.0d0,NGLLX/Y/Z] for point sources only,
-      !            for non-point sources the range is limited to [2.0d0,NGLLX/Y/Z - 1]
-      if (.not. USE_FORCE_POINT_SOURCE) call exit_MPI(myrank,'error locate source: no point source at surface')
-
-      ! initialize indices
-      pt0_ix = -1
-      pt0_iy = -1
-      pt0_iz = -1
-      pt1_ix = -1
-      pt1_iy = -1
-      pt1_iz = -1
-      pt2_ix = -1
-      pt2_iy = -1
-      pt2_iz = -1
-
-      ! we get two vectors of the face (three points) to compute the normal
-      if (nint(xi_source(isource)) == 1 .and. &
-         iglob_is_surface_external_mesh(ibool(1,2,2,ispec_selected_source(isource)))) then
-        pt0_ix = 1
-        pt0_iy = NGLLY
-        pt0_iz = 1
-        pt1_ix = 1
-        pt1_iy = 1
-        pt1_iz = 1
-        pt2_ix = 1
-        pt2_iy = NGLLY
-        pt2_iz = NGLLZ
-      endif
-      if (nint(xi_source(isource)) == NGLLX .and. &
-         iglob_is_surface_external_mesh(ibool(NGLLX,2,2,ispec_selected_source(isource)))) then
-        pt0_ix = NGLLX
-        pt0_iy = 1
-        pt0_iz = 1
-        pt1_ix = NGLLX
-        pt1_iy = NGLLY
-        pt1_iz = 1
-        pt2_ix = NGLLX
-        pt2_iy = 1
-        pt2_iz = NGLLZ
-      endif
-      if (nint(eta_source(isource)) == 1 .and. &
-         iglob_is_surface_external_mesh(ibool(2,1,2,ispec_selected_source(isource)))) then
-        pt0_ix = 1
-        pt0_iy = 1
-        pt0_iz = 1
-        pt1_ix = NGLLX
-        pt1_iy = 1
-        pt1_iz = 1
-        pt2_ix = 1
-        pt2_iy = 1
-        pt2_iz = NGLLZ
-      endif
-      if (nint(eta_source(isource)) == NGLLY .and. &
-         iglob_is_surface_external_mesh(ibool(2,NGLLY,2,ispec_selected_source(isource)))) then
-        pt0_ix = NGLLX
-        pt0_iy = NGLLY
-        pt0_iz = 1
-        pt1_ix = 1
-        pt1_iy = NGLLY
-        pt1_iz = 1
-        pt2_ix = NGLLX
-        pt2_iy = NGLLY
-        pt2_iz = NGLLZ
-      endif
-      if (nint(gamma_source(isource)) == 1 .and. &
-         iglob_is_surface_external_mesh(ibool(2,2,1,ispec_selected_source(isource)))) then
-        pt0_ix = NGLLX
-        pt0_iy = 1
-        pt0_iz = 1
-        pt1_ix = 1
-        pt1_iy = 1
-        pt1_iz = 1
-        pt2_ix = NGLLX
-        pt2_iy = NGLLY
-        pt2_iz = 1
-      endif
-      if (nint(gamma_source(isource)) == NGLLZ .and. &
-         iglob_is_surface_external_mesh(ibool(2,2,NGLLZ,ispec_selected_source(isource)))) then
-        pt0_ix = 1
-        pt0_iy = 1
-        pt0_iz = NGLLZ
-        pt1_ix = NGLLX
-        pt1_iy = 1
-        pt1_iz = NGLLZ
-        pt2_ix = 1
-        pt2_iy = NGLLY
-        pt2_iz = NGLLZ
-      endif
-
-      if (pt0_ix < 0 .or. pt0_iy < 0 .or. pt0_iz < 0 .or. &
-         pt1_ix < 0 .or. pt1_iy < 0 .or. pt1_iz < 0 .or. &
-         pt2_ix < 0 .or. pt2_iy < 0 .or. pt2_iz < 0) then
-        call exit_mpi(myrank,'error in computing normal for sources.')
-      endif
-
-      u_vector(1) = xstore(ibool(pt1_ix,pt1_iy,pt1_iz,ispec_selected_source(isource))) &
-         - xstore(ibool(pt0_ix,pt0_iy,pt0_iz,ispec_selected_source(isource)))
-      u_vector(2) = ystore(ibool(pt1_ix,pt1_iy,pt1_iz,ispec_selected_source(isource))) &
-         - ystore(ibool(pt0_ix,pt0_iy,pt0_iz,ispec_selected_source(isource)))
-      u_vector(3) = zstore(ibool(pt1_ix,pt1_iy,pt1_iz,ispec_selected_source(isource))) &
-         - zstore(ibool(pt0_ix,pt0_iy,pt0_iz,ispec_selected_source(isource)))
-      v_vector(1) = xstore(ibool(pt2_ix,pt2_iy,pt2_iz,ispec_selected_source(isource))) &
-         - xstore(ibool(pt0_ix,pt0_iy,pt0_iz,ispec_selected_source(isource)))
-      v_vector(2) = ystore(ibool(pt2_ix,pt2_iy,pt2_iz,ispec_selected_source(isource))) &
-         - ystore(ibool(pt0_ix,pt0_iy,pt0_iz,ispec_selected_source(isource)))
-      v_vector(3) = zstore(ibool(pt2_ix,pt2_iy,pt2_iz,ispec_selected_source(isource))) &
-         - zstore(ibool(pt0_ix,pt0_iy,pt0_iz,ispec_selected_source(isource)))
-
-      ! cross product
-      w_vector(1) = u_vector(2)*v_vector(3) - u_vector(3)*v_vector(2)
-      w_vector(2) = u_vector(3)*v_vector(1) - u_vector(1)*v_vector(3)
-      w_vector(3) = u_vector(1)*v_vector(2) - u_vector(2)*v_vector(1)
-
-      ! normalize vector w
-      w_vector(:) = w_vector(:)/sqrt(w_vector(1)**2+w_vector(2)**2+w_vector(3)**2)
-
-      ! build the two other vectors for a direct base: we normalize u, and v=w^u
-      u_vector(:) = u_vector(:)/sqrt(u_vector(1)**2+u_vector(2)**2+u_vector(3)**2)
-      v_vector(1) = w_vector(2)*u_vector(3) - w_vector(3)*u_vector(2)
-      v_vector(2) = w_vector(3)*u_vector(1) - w_vector(1)*u_vector(3)
-      v_vector(3) = w_vector(1)*u_vector(2) - w_vector(2)*u_vector(1)
-
-      ! build rotation matrice nu for seismograms
-      ! East (u)
-      nu_source(1,1,isource) = u_vector(1)
-      nu_source(1,2,isource) = v_vector(1)
-      nu_source(1,3,isource) = w_vector(1)
-      ! North (v)
-      nu_source(2,1,isource) = u_vector(2)
-      nu_source(2,2,isource) = v_vector(2)
-      nu_source(2,3,isource) = w_vector(2)
-      ! Vertical (w)
-      nu_source(3,1,isource) = u_vector(3)
-      nu_source(3,2,isource) = v_vector(3)
-      nu_source(3,3,isource) = w_vector(3)
-
-    endif ! of if (.not. SOURCES_CAN_BE_BURIED)
 
 ! *******************************************
 ! find the best (xi,eta,gamma) for the source
@@ -696,9 +472,6 @@
       y_found_source(isource) = y
       z_found_source(isource) = z
 
-      ! compute final distance between asked and found (converted to km)
-      final_distance_source(isource) = dsqrt((x_target_source-x_found_source(isource))**2 + &
-        (y_target_source-y_found_source(isource))**2 + (z_target_source-z_found_source(isource))**2)
     else
 
       ! takes initial GLL point guess and uses actual location interpolators, in range [-1,1]
@@ -708,6 +481,10 @@
       gamma_source(isource) = zigll(iz_initial_guess_source)
 
     endif ! USE_BEST_LOCATION_FOR_SOURCE
+
+    ! compute final distance between asked and found (converted to km)
+    final_distance_source(isource) = dsqrt((x_target_source-x_found_source(isource))**2 + &
+                (y_target_source-y_found_source(isource))**2 + (z_target_source-z_found_source(isource))**2)
 
   ! end of loop on all the sources
   enddo
@@ -777,13 +554,6 @@
     call gather_all_dp(tmp_local,ng,tmp_all_local,ng,NPROC)
     z_found_source_all(1:ng,:) = tmp_all_local(:,:)
 
-    do i=1,3
-      do j=1,3
-        tmp_local(:) = nu_source(i,j,ns:ne)
-        call gather_all_dp(tmp_local,ng,tmp_all_local,ng,NPROC)
-        nu_source_all(i,j,1:ng,:) = tmp_all_local(:,:)
-      enddo
-    enddo
     deallocate(tmp_local,tmp_all_local)
 
     ! this is executed by main process only
@@ -816,8 +586,6 @@
             x_found_source(isource) = x_found_source_all(is,iprocloop)
             y_found_source(isource) = y_found_source_all(is,iprocloop)
             z_found_source(isource) = z_found_source_all(is,iprocloop)
-            ! orientation
-            nu_source(:,:,isource) = nu_source_all(:,:,is,iprocloop)
             ! domain (elastic/acoustic/poroelastic)
             idomain(isource) = idomain_all(is,iprocloop)
           endif
@@ -867,9 +635,6 @@
           write(IMAIN,*) '  component of direction vector in North direction: ',comp_dir_vect_source_N(isource)
           write(IMAIN,*) '  component of direction vector in Vertical direction: ',comp_dir_vect_source_Z_UP(isource)
           write(IMAIN,*)
-          write(IMAIN,*) '  nu1 = ',nu_source(1,:,isource)
-          write(IMAIN,*) '  nu2 = ',nu_source(2,:,isource)
-          write(IMAIN,*) '  nu3 = ',nu_source(3,:,isource)
           write(IMAIN,*)
           write(IMAIN,*) '  at (x,y,z) coordinates = ',x_found_source(isource),y_found_source(isource),z_found_source(isource)
         else

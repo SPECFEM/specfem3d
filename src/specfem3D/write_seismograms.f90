@@ -40,8 +40,6 @@
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: displ_element,veloc_element,accel_element
   ! interpolated wavefield values
   double precision :: dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd
-  ! receiver position
-  double precision :: xi_r,eta_r,gamma_r
 
   integer :: irec_local,irec
   integer :: iglob,ispec,i,j,k
@@ -111,15 +109,9 @@
         ! adjoint "receivers" are located at CMT source positions
         ! note: we take here xi_source,.. when FASTER_RECEIVERS_POINTS_ONLY is set
         ispec = ispec_selected_source(irec)
-        xi_r = xi_source(irec)
-        eta_r = eta_source(irec)
-        gamma_r = gamma_source(irec)
       else
         ! receiver located at station positions
         ispec = ispec_selected_rec(irec)
-        xi_r = xi_receiver(irec)
-        eta_r = eta_receiver(irec)
-        gamma_r = gamma_receiver(irec)
       endif
 
       ! calculates interpolated wavefield values at receiver positions
@@ -133,7 +125,6 @@
           ! interpolates displ/veloc/accel at receiver locations
           call compute_interpolated_dva_viscoelast(displ,veloc,accel,NGLOB_AB, &
                                         ispec,NSPEC_AB,ibool, &
-                                        xi_r,eta_r,gamma_r, &
                                         hxir,hetar,hgammar, &
                                         dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
         endif ! elastic
@@ -165,7 +156,6 @@
           call compute_interpolated_dva_acoust(displ_element,veloc_element,accel_element, &
                                                potential_dot_dot_acoustic,potential_acoustic,NGLOB_AB, &
                                                ispec,NSPEC_AB,ibool, &
-                                               xi_r,eta_r,gamma_r, &
                                                hxir,hetar,hgammar, &
                                                dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd,USE_TRICK_FOR_BETTER_PRESSURE)
         endif ! acoustic
@@ -175,7 +165,6 @@
           ! interpolates displ/veloc/accel at receiver locations
           call compute_interpolated_dva_viscoelast(displs_poroelastic,velocs_poroelastic,accels_poroelastic,NGLOB_AB, &
                                         ispec,NSPEC_AB,ibool, &
-                                        xi_r,eta_r,gamma_r, &
                                         hxir,hetar,hgammar, &
                                         dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
         endif ! poroelastic
@@ -189,7 +178,6 @@
           ! backward field: interpolates displ/veloc/accel at receiver locations
           call compute_interpolated_dva_viscoelast(b_displ,b_veloc,b_accel,NGLOB_ADJOINT, &
                                         ispec,NSPEC_AB,ibool, &
-                                        xi_r,eta_r,gamma_r, &
                                         hxir,hetar,hgammar, &
                                         dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
         endif ! elastic
@@ -221,7 +209,6 @@
           call compute_interpolated_dva_acoust(displ_element,veloc_element,accel_element, &
                                                b_potential_dot_dot_acoustic,b_potential_acoustic,NGLOB_ADJOINT, &
                                                ispec,NSPEC_AB,ibool, &
-                                               xi_r,eta_r,gamma_r, &
                                                hxir,hetar,hgammar, &
                                                dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd,USE_TRICK_FOR_BETTER_PRESSURE)
         endif ! acoustic
@@ -272,35 +259,20 @@
         endif ! elastic
       endif
 
-      ! store North, East and Vertical components
-      if (SIMULATION_TYPE == 2) then
-        ! adjoint simulations
-        ! adjoint "receiver" N/E/Z orientations given by nu_source array
-        if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
-          seismograms_d(:,irec_local,it) = real(nu_source(:,1,irec)*dxd &
-                                              + nu_source(:,2,irec)*dyd &
-                                              + nu_source(:,3,irec)*dzd,kind=CUSTOM_REAL)
+      if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
+        seismograms_d(1,irec_local,it) = real(dxd,kind=CUSTOM_REAL)
+        seismograms_d(2,irec_local,it) = real(dyd,kind=CUSTOM_REAL)
+        seismograms_d(3,irec_local,it) = real(dzd,kind=CUSTOM_REAL)
 
-        if (SAVE_SEISMOGRAMS_VELOCITY) &
-          seismograms_v(:,irec_local,it) = real(nu_source(:,1,irec)*vxd &
-                                              + nu_source(:,2,irec)*vyd &
-                                              + nu_source(:,3,irec)*vzd,kind=CUSTOM_REAL)
+      if (SAVE_SEISMOGRAMS_VELOCITY) &
+        seismograms_v(1,irec_local,it) = real(vxd,kind=CUSTOM_REAL)
+        seismograms_v(2,irec_local,it) = real(vyd,kind=CUSTOM_REAL)
+        seismograms_v(3,irec_local,it) = real(vzd,kind=CUSTOM_REAL)
 
-        if (SAVE_SEISMOGRAMS_ACCELERATION) &
-          seismograms_a(:,irec_local,it) = real(nu_source(:,1,irec)*axd &
-                                              + nu_source(:,2,irec)*ayd &
-                                              + nu_source(:,3,irec)*azd,kind=CUSTOM_REAL)
-      else
-        ! forward & kernel simulations
-        if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
-          seismograms_d(:,irec_local,it) = real(nu(:,1,irec)*dxd + nu(:,2,irec)*dyd + nu(:,3,irec)*dzd,kind=CUSTOM_REAL)
-
-        if (SAVE_SEISMOGRAMS_VELOCITY) &
-          seismograms_v(:,irec_local,it) = real(nu(:,1,irec)*vxd + nu(:,2,irec)*vyd + nu(:,3,irec)*vzd,kind=CUSTOM_REAL)
-
-        if (SAVE_SEISMOGRAMS_ACCELERATION) &
-          seismograms_a(:,irec_local,it) = real(nu(:,1,irec)*axd + nu(:,2,irec)*ayd + nu(:,3,irec)*azd,kind=CUSTOM_REAL)
-      endif
+      if (SAVE_SEISMOGRAMS_ACCELERATION) &
+        seismograms_a(1,irec_local,it) = real(axd,kind=CUSTOM_REAL)
+        seismograms_a(2,irec_local,it) = real(ayd,kind=CUSTOM_REAL)
+        seismograms_a(3,irec_local,it) = real(azd,kind=CUSTOM_REAL)
 
       ! only one scalar in the case of pressure
       if (SAVE_SEISMOGRAMS_PRESSURE) seismograms_p(1,irec_local,it) = real(pd,kind=CUSTOM_REAL)

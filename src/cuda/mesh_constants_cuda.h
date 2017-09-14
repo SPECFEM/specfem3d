@@ -411,7 +411,6 @@ typedef struct mesh_ {
 
   realw* d_hxir, *d_hetar, *d_hgammar;
   realw* d_seismograms_d, *d_seismograms_v, *d_seismograms_a, *d_seismograms_p;
-  realw* d_nu;
 
   // adjoint receivers/sources
   int nadj_rec_local;

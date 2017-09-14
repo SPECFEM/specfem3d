@@ -105,7 +105,7 @@
            hdur_Gaussian(NSOURCES), &
            utm_x_source(NSOURCES), &
            utm_y_source(NSOURCES), &
-           nu_source(3,3,NSOURCES), stat=ier)
+           stat=ier)
   if (ier /= 0) stop 'error allocating arrays for sources'
 
   if (USE_FORCE_POINT_SOURCE) then
@@ -132,15 +132,10 @@
 !
 ! returns:  islice_selected_source & ispec_selected_source,
 !                xi_source, eta_source & gamma_source
-  call locate_source(ibool,NSOURCES,myrank,NSPEC_AB,NGLOB_AB,NGNOD, &
-          xstore,ystore,zstore,xigll,yigll,zigll,NPROC, &
-          tshift_src,min_tshift_src_original,yr,jda,ho,mi,utm_x_source,utm_y_source, &
-          DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
+  call locate_source(NSOURCES,tshift_src,min_tshift_src_original,yr,jda,ho,mi,utm_x_source,utm_y_source, &
+          hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
           islice_selected_source,ispec_selected_source, &
-          xi_source,eta_source,gamma_source, &
-          nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
-          ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
-          num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+          xi_source,eta_source,gamma_source)
 
   if (abs(minval(tshift_src)) > TINYVAL) call exit_MPI(myrank,'one tshift_src must be zero, others must be positive')
 
@@ -462,18 +457,15 @@
            gamma_receiver(nrec), &
            station_name(nrec), &
            network_name(nrec), &
-           nu(NDIM,NDIM,nrec),stat=ier)
+           stat=ier)
   if (ier /= 0) stop 'error allocating arrays for receivers'
 
   ! locate receivers in the mesh
-  call locate_receivers(ibool,myrank,NSPEC_AB,NGLOB_AB,NGNOD, &
-                        xstore,ystore,zstore,xigll,yigll,zigll,filtered_rec_filename, &
-                        nrec,islice_selected_rec,ispec_selected_rec, &
-                        xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu, &
-                        NPROC,utm_x_source(1),utm_y_source(1), &
-                        UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
-                        iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
-                        num_free_surface_faces,free_surface_ispec,free_surface_ijk,SU_FORMAT)
+
+  ! locate receivers in the mesh
+  call locate_receivers(filtered_rec_filename,nrec,islice_selected_rec,ispec_selected_rec,&
+                        xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,&
+                        utm_x_source(1),utm_y_source(1))
 
   ! count number of receivers located in this slice
   nrec_local = 0
@@ -702,11 +694,9 @@
 
                   ! we use an tilted force defined by its magnitude and the projections
                   ! of an arbitrary (non-unitary) direction vector on the E/N/Z_UP basis
-                  sourcearrayd(:,i,j,k) = factor_force_source(isource) * hlagrange * &
-                                          ( nu_source(1,:,isource) * comp_x + &
-                                            nu_source(2,:,isource) * comp_y + &
-                                            nu_source(3,:,isource) * comp_z )
-
+                  sourcearrayd(1,i,j,k) = factor_force_source(isource) * hlagrange * comp_x 
+                  sourcearrayd(2,i,j,k) = factor_force_source(isource) * hlagrange * comp_y
+                  sourcearrayd(3,i,j,k) = factor_force_source(isource) * hlagrange * comp_z
                 endif
               enddo
             enddo

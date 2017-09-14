@@ -1268,7 +1268,7 @@
 
     ! sets up noise source for master receiver station
     call read_parameters_noise(myrank,nrec,NSTEP,NGLLSQUARE*num_free_surface_faces, &
-                               islice_selected_rec,xi_receiver,eta_receiver,gamma_receiver,nu, &
+                               islice_selected_rec,xi_receiver,eta_receiver,gamma_receiver, &
                                noise_sourcearray,xigll,yigll,zigll, &
                                ibool, &
                                xstore,ystore,zstore, &
@@ -1339,7 +1339,7 @@
                                 USE_MESH_COLORING_GPU, &
                                 nspec_acoustic,nspec_elastic, &
                                 myrank,SAVE_FORWARD, &
-                                hxir_store,hetar_store,hgammar_store,nu, &
+                                hxir_store,hetar_store,hgammar_store, &
                                 islice_selected_rec,NSTEP)
 
 
