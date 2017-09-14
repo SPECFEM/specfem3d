@@ -38,7 +38,7 @@
   use specfem_par, only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION, &
       UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,USE_SOURCES_RECEIVERS_Z, &
       factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP, &
-      user_source_time_function,NSTEP_STF,NSOURCES_STF,USE_EXTERNAL_SOURCE_FILE,USE_TRICK_FOR_BETTER_PRESSURE,&
+      user_source_time_function,NSTEP_STF,NSOURCES_STF,USE_EXTERNAL_SOURCE_FILE,USE_TRICK_FOR_BETTER_PRESSURE, &
       ibool,myrank,NSPEC_AB,NGLOB_AB,NGNOD,xstore,ystore,zstore,xigll,yigll,zigll,NPROC, &
       DT,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh,num_free_surface_faces,free_surface_ispec,free_surface_ijk
 

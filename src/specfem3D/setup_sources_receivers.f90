@@ -463,8 +463,8 @@
   ! locate receivers in the mesh
 
   ! locate receivers in the mesh
-  call locate_receivers(filtered_rec_filename,nrec,islice_selected_rec,ispec_selected_rec,&
-                        xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,&
+  call locate_receivers(filtered_rec_filename,nrec,islice_selected_rec,ispec_selected_rec, &
+                        xi_receiver,eta_receiver,gamma_receiver,station_name,network_name, &
                         utm_x_source(1),utm_y_source(1))
 
   ! count number of receivers located in this slice
@@ -694,7 +694,7 @@
 
                   ! we use an tilted force defined by its magnitude and the projections
                   ! of an arbitrary (non-unitary) direction vector on the E/N/Z_UP basis
-                  sourcearrayd(1,i,j,k) = factor_force_source(isource) * hlagrange * comp_x 
+                  sourcearrayd(1,i,j,k) = factor_force_source(isource) * hlagrange * comp_x
                   sourcearrayd(2,i,j,k) = factor_force_source(isource) * hlagrange * comp_y
                   sourcearrayd(3,i,j,k) = factor_force_source(isource) * hlagrange * comp_z
                 endif

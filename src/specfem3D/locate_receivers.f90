@@ -29,14 +29,14 @@
 !---- locate_receivers finds the correct position of the receivers
 !----
   subroutine locate_receivers(rec_filename,nrec,islice_selected_rec,ispec_selected_rec, &
-                              xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,&
+                              xi_receiver,eta_receiver,gamma_receiver,station_name,network_name, &
                               utm_x_source,utm_y_source)
 
   use constants
 
-  use specfem_par, only: USE_SOURCES_RECEIVERS_Z,ibool,myrank,NSPEC_AB,NGLOB_AB,NGNOD,&
-                         xstore,ystore,zstore,xigll,yigll,zigll,NPROC,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,&
-                         iglob_is_surface_external_mesh,ispec_is_surface_external_mesh,&
+  use specfem_par, only: USE_SOURCES_RECEIVERS_Z,ibool,myrank,NSPEC_AB,NGLOB_AB,NGNOD, &
+                         xstore,ystore,zstore,xigll,yigll,zigll,NPROC,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+                         iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
                          num_free_surface_faces,free_surface_ispec,free_surface_ijk,SU_FORMAT
   use specfem_par_acoustic, only: ispec_is_acoustic
   use specfem_par_elastic, only: ispec_is_elastic
@@ -403,7 +403,7 @@
     endif
 
   ! *****************************
-  ! find the best (xi,eta,gamma) 
+  ! find the best (xi,eta,gamma)
   ! *****************************
 
     ispec_iterate = ispec_selected_rec(irec)
