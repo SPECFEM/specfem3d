@@ -29,13 +29,13 @@
 !---- locate_receivers finds the correct position of the receivers
 !----
   subroutine locate_receivers(rec_filename,nrec,islice_selected_rec,ispec_selected_rec, &
-                              xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,&
+                              xi_receiver,eta_receiver,gamma_receiver,station_name,network_name, &
                               utm_x_source,utm_y_source)
 
   use constants
 
-  use specfem_par, only: USE_SOURCES_RECEIVERS_Z,ibool,myrank,NSPEC_AB,NGLOB_AB,&
-                         xstore,ystore,zstore,NPROC,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,&
+  use specfem_par, only: USE_SOURCES_RECEIVERS_Z,ibool,myrank,NSPEC_AB,NGLOB_AB, &
+                         xstore,ystore,zstore,NPROC,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
                          num_free_surface_faces,free_surface_ispec,free_surface_ijk,SU_FORMAT
 
   implicit none
@@ -265,13 +265,13 @@
     endif
 
     call locate_point_in_mesh(x_target(irec), y_target(irec), z_target(irec), elemsize_max_glob, &
-            ispec_selected_rec(irec), xi_receiver(irec), eta_receiver(irec), gamma_receiver(irec),&
+            ispec_selected_rec(irec), xi_receiver(irec), eta_receiver(irec), gamma_receiver(irec), &
             x_found(irec), y_found(irec), z_found(irec), idomain(irec))
 
     ! synchronize all the processes to make sure all the estimates are available
     call synchronize_all()
 
-    call locate_MPI_slice_and_bcast_to_all(x_target(irec), y_target(irec), z_target(irec),&
+    call locate_MPI_slice_and_bcast_to_all(x_target(irec), y_target(irec), z_target(irec), &
                                            x_found(irec), y_found(irec), z_found(irec), &
                                            xi_receiver(irec), eta_receiver(irec), gamma_receiver(irec), &
                                            ispec_selected_rec(irec), islice_selected_rec(irec), &
@@ -697,7 +697,7 @@
        ispec_selected, xi_found, eta_found, gamma_found, x_found, y_found, z_found, domain)
 
   use constants
-  use specfem_par, only: ibool,myrank,NSPEC_AB,NGNOD,&
+  use specfem_par, only: ibool,myrank,NSPEC_AB,NGNOD, &
                          xstore,ystore,zstore,xigll,yigll,zigll
   use specfem_par_acoustic, only: ispec_is_acoustic
   use specfem_par_elastic, only: ispec_is_elastic
