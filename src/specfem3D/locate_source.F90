@@ -39,12 +39,8 @@
       UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,USE_SOURCES_RECEIVERS_Z, &
       factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP, &
       user_source_time_function,NSTEP_STF,NSOURCES_STF,USE_EXTERNAL_SOURCE_FILE,USE_TRICK_FOR_BETTER_PRESSURE, &
-      ibool,myrank,NSPEC_AB,NGLOB_AB,NGNOD,xstore,ystore,zstore,xigll,yigll,zigll,NPROC, &
-      DT,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh,num_free_surface_faces,free_surface_ispec,free_surface_ijk
-
-  use specfem_par_acoustic, only: ispec_is_acoustic
-  use specfem_par_elastic, only: ispec_is_elastic
-  use specfem_par_poroelastic, only: ispec_is_poroelastic
+      ibool,myrank,NSPEC_AB,NGLOB_AB,xstore,ystore,zstore,NPROC, &
+      DT,num_free_surface_faces,free_surface_ispec,free_surface_ijk
 
 
   implicit none
@@ -55,39 +51,14 @@
   double precision,intent(inout) :: min_tshift_src_original
   double precision :: sec
 
-  integer iprocloop
-
-  integer i,j,k,ispec,iglob,isource
+  integer isource
   integer iproc(1)
 
   double precision, dimension(NSOURCES),intent(inout) :: utm_x_source,utm_y_source
-  double precision dist_squared
-  double precision xi,eta,gamma,dx,dy,dz,dxi,deta
-
-  ! topology of the control points of the surface element
-  integer iax,iay,iaz
-  integer iaddx(NGNOD),iaddy(NGNOD),iaddz(NGNOD)
-
-  ! coordinates of the control points of the surface element
-  double precision xelm(NGNOD),yelm(NGNOD),zelm(NGNOD)
-
-  integer iter_loop
-
-  integer ia
-  double precision x,y,z
-  double precision xix,xiy,xiz
-  double precision etax,etay,etaz
-  double precision gammax,gammay,gammaz
-  double precision dgamma
-
   double precision final_distance_source(NSOURCES)
-
   double precision x_target_source,y_target_source,z_target_source
-
   double precision,dimension(1) :: altitude_source,distmin_ele
-
   double precision,dimension(NPROC) :: distmin_ele_all,elevation_all
-
   real(kind=CUSTOM_REAL) :: xloc,yloc,loc_ele,loc_distmin
 
   integer,intent(inout) :: islice_selected_source(NSOURCES)
@@ -98,16 +69,6 @@
 
   ! sources
   integer,intent(inout) :: ispec_selected_source(NSOURCES)
-  integer :: ngather, ns, ne, ig, is, ng
-
-  integer, dimension(NGATHER_SOURCES,0:NPROC-1) :: ispec_selected_source_all
-  double precision, dimension(NGATHER_SOURCES,0:NPROC-1) :: xi_source_all,eta_source_all,gamma_source_all
-  double precision, dimension(NGATHER_SOURCES,0:NPROC-1) :: x_found_source_all,y_found_source_all,z_found_source_all
-  double precision, dimension(NGATHER_SOURCES,0:NPROC-1) :: final_distance_source_all
-
-  double precision, dimension(:), allocatable :: tmp_local
-  double precision, dimension(:,:),allocatable :: tmp_all_local
-
   double precision :: f0,t0_ricker
 
   ! CMTs
@@ -118,26 +79,15 @@
 
   ! positioning
   double precision, dimension(NSOURCES),intent(inout) :: xi_source,eta_source,gamma_source
-
   double precision, dimension(NSOURCES) :: x_found_source,y_found_source,z_found_source
   double precision, dimension(NSOURCES) :: elevation
-  double precision :: distmin_squared,distmin_not_squared
-
-  integer, dimension(:), allocatable :: tmp_i_local
-  integer, dimension(:,:),allocatable :: tmp_i_all_local
-
-  integer ix_initial_guess_source,iy_initial_guess_source,iz_initial_guess_source
-  integer ier
 
   integer, dimension(NSOURCES) :: idomain
-  integer, dimension(NGATHER_SOURCES,0:NPROC-1) :: idomain_all
 
   double precision, external :: get_cmt_scalar_moment
   double precision, external :: get_cmt_moment_magnitude
 
   ! location search
-  logical :: located_target
-  double precision :: typical_size_squared
   real(kind=CUSTOM_REAL) :: distance_min_glob,distance_max_glob
   real(kind=CUSTOM_REAL) :: elemsize_min_glob,elemsize_max_glob
   real(kind=CUSTOM_REAL) :: x_min_glob,x_max_glob
@@ -188,23 +138,12 @@
   call bcast_all_singledp(min_tshift_src_original)
   call bcast_all_cr(user_source_time_function,NSOURCES_STF*NSTEP_STF)
 
-  ! define topology of the control element
-  call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
-
   ! compute typical size of elements
-  if (USE_DISTANCE_CRITERION_SOURCES) then
-    ! gets mesh dimensions
-    call check_mesh_distances(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-                              x_min_glob,x_max_glob,y_min_glob,y_max_glob,z_min_glob,z_max_glob, &
-                              elemsize_min_glob,elemsize_max_glob, &
-                              distance_min_glob,distance_max_glob)
-
-    ! sets typical element size for search
-    typical_size_squared =  elemsize_max_glob
-
-    ! use 10 times the distance as a criterion for source detection
-    typical_size_squared = (10. * typical_size_squared)**2
-  endif
+  ! gets mesh dimensions
+  call check_mesh_distances(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
+                            x_min_glob,x_max_glob,y_min_glob,y_max_glob,z_min_glob,z_max_glob, &
+                            elemsize_min_glob,elemsize_max_glob, &
+                            distance_min_glob,distance_max_glob)
 
   ! get MPI starting time
   time_start = wtime()
@@ -279,322 +218,21 @@
       z_target_source =  - depth(isource)*1000.0d0 + elevation(isource)
     endif
 
-    ! set distance to huge initial value
-    distmin_squared = HUGEVAL
-
-    ! flag to check that we located at least one target element
-    located_target = .false.
-
-    ispec_selected_source(isource) = 0
-    ix_initial_guess_source = 1
-    iy_initial_guess_source = 1
-    iz_initial_guess_source = 1
-
-    do ispec = 1,NSPEC_AB
-
-      ! exclude elements that are too far from target
-      if (USE_DISTANCE_CRITERION_SOURCES) then
-        iglob = ibool(MIDX,MIDY,MIDZ,ispec)
-        dist_squared = (x_target_source - dble(xstore(iglob)))**2 &
-                     + (y_target_source - dble(ystore(iglob)))**2 &
-                     + (z_target_source - dble(zstore(iglob)))**2
-        if (dist_squared > typical_size_squared) cycle
-      endif
-
-      do k = 2,NGLLZ - 1
-        do j = 2,NGLLY - 1
-          do i = 2,NGLLX - 1
-
-            iglob = ibool(i,j,k,ispec)
-
-            if (.not. SOURCES_CAN_BE_BURIED) then
-              if ((.not. iglob_is_surface_external_mesh(iglob)) .or. (.not. ispec_is_surface_external_mesh(ispec))) then
-                cycle
-              endif
-            endif
-
-            ! keep this point if it is closer to the source
-            !  we compare squared distances instead of distances themselves to significantly speed up calculations
-            dist_squared = (x_target_source - dble(xstore(iglob)))**2 &
-                         + (y_target_source - dble(ystore(iglob)))**2 &
-                         + (z_target_source - dble(zstore(iglob)))**2
-            if (dist_squared < distmin_squared) then
-              distmin_squared = dist_squared
-              ispec_selected_source(isource) = ispec
-              ix_initial_guess_source = i
-              iy_initial_guess_source = j
-              iz_initial_guess_source = k
-              located_target = .true.
-
-              x_found_source(isource) = xstore(iglob)
-              y_found_source(isource) = ystore(iglob)
-              z_found_source(isource) = zstore(iglob)
-
-            endif
-
-          enddo
-        enddo
-      enddo
-
-    ! end of loop on all the elements in current slice
-    enddo
-
-    ! if we have not located a target element, the source is not in this slice
-    ! therefore use first element only for fictitious iterative search
-    if (.not. located_target) then
-      ispec_selected_source(isource) = 1
-      ix_initial_guess_source = 1
-      iy_initial_guess_source = 1
-      iz_initial_guess_source = 1
-      final_distance_source(isource) = HUGEVAL
-    endif
-
-    ! sets whether acoustic (1) or elastic (2)
-    if (ispec_is_acoustic( ispec_selected_source(isource) )) then
-      idomain(isource) = IDOMAIN_ACOUSTIC
-    else if (ispec_is_elastic( ispec_selected_source(isource) )) then
-      idomain(isource) = IDOMAIN_ELASTIC
-    else if (ispec_is_poroelastic( ispec_selected_source(isource) )) then
-      idomain(isource) = IDOMAIN_POROELASTIC
-    else
-      idomain(isource) = 0
-    endif
-
-    ! store xi,eta,gamma and x,y,z of point found
-    ! note: here they have range [1.0d0,NGLLX/Y/Z]
-    xi_source(isource) = dble(ix_initial_guess_source)
-    eta_source(isource) = dble(iy_initial_guess_source)
-    gamma_source(isource) = dble(iz_initial_guess_source)
+    call locate_point_in_mesh(x_target_source, y_target_source, z_target_source, elemsize_max_glob, &
+            ispec_selected_source(isource), xi_source(isource), eta_source(isource), gamma_source(isource),&
+            x_found_source(isource), y_found_source(isource), z_found_source(isource), idomain(isource))
 
 
-! *******************************************
-! find the best (xi,eta,gamma) for the source
-! *******************************************
+    ! synchronize all the processes to make sure all the estimates are available
+    call synchronize_all()
 
-    ! this tries to find best location
-    if (USE_BEST_LOCATION_FOR_SOURCE) then
-
-      ! uses actual location interpolators, in range [-1,1]
-      xi = xigll(ix_initial_guess_source)
-      eta = yigll(iy_initial_guess_source)
-      gamma = zigll(iz_initial_guess_source)
-
-      ! define coordinates of the control points of the element
-      do ia=1,NGNOD
-        iax = 0
-        iay = 0
-        iaz = 0
-        if (iaddx(ia) == 0) then
-          iax = 1
-        else if (iaddx(ia) == 1) then
-          iax = (NGLLX+1)/2
-        else if (iaddx(ia) == 2) then
-          iax = NGLLX
-        else
-          call exit_MPI(myrank,'incorrect value of iaddx')
-        endif
-
-        if (iaddy(ia) == 0) then
-          iay = 1
-        else if (iaddy(ia) == 1) then
-          iay = (NGLLY+1)/2
-        else if (iaddy(ia) == 2) then
-          iay = NGLLY
-        else
-          call exit_MPI(myrank,'incorrect value of iaddy')
-        endif
-
-        if (iaddz(ia) == 0) then
-          iaz = 1
-        else if (iaddz(ia) == 1) then
-          iaz = (NGLLZ+1)/2
-        else if (iaddz(ia) == 2) then
-          iaz = NGLLZ
-        else
-          call exit_MPI(myrank,'incorrect value of iaddz')
-        endif
-
-        iglob = ibool(iax,iay,iaz,ispec_selected_source(isource))
-        xelm(ia) = dble(xstore(iglob))
-        yelm(ia) = dble(ystore(iglob))
-        zelm(ia) = dble(zstore(iglob))
-
-      enddo
-
-      ! iterate to solve the non linear system
-      do iter_loop = 1,NUM_ITER
-
-        ! recompute jacobian for the new point
-        call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
-           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,NGNOD)
-
-        ! compute distance to target location
-        dx = - (x - x_target_source)
-        dy = - (y - y_target_source)
-        dz = - (z - z_target_source)
-
-        ! compute increments
-        dxi  = xix*dx + xiy*dy + xiz*dz
-        deta = etax*dx + etay*dy + etaz*dz
-        dgamma = gammax*dx + gammay*dy + gammaz*dz
-
-        ! update values
-        xi = xi + dxi
-        eta = eta + deta
-        gamma = gamma + dgamma
-
-        ! impose that we stay in that element
-        ! (useful if user gives a receiver outside the mesh for instance)
-        ! we can go slightly outside the [1,1] segment since with finite elements
-        ! the polynomial solution is defined everywhere
-        ! this can be useful for convergence of itertive scheme with distorted elements.
-        ! this is purposely set to 1.10, do *NOT* set it back to 1.00 because 1.10 gives more accurate locations
-        if (xi > 1.10d0) xi = 1.10d0
-        if (xi < -1.10d0) xi = -1.10d0
-        if (eta > 1.10d0) eta = 1.10d0
-        if (eta < -1.10d0) eta = -1.10d0
-        if (gamma > 1.10d0) gamma = 1.10d0
-        if (gamma < -1.10d0) gamma = -1.10d0
-
-      enddo
-
-      ! compute final coordinates of point found
-      call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
-                              xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,NGNOD)
-
-      ! store xi,eta,gamma and x,y,z of point found
-      ! note: xi/eta/gamma will be in range [-1,1]
-      xi_source(isource) = xi
-      eta_source(isource) = eta
-      gamma_source(isource) = gamma
-
-      x_found_source(isource) = x
-      y_found_source(isource) = y
-      z_found_source(isource) = z
-
-    else
-
-      ! takes initial GLL point guess and uses actual location interpolators, in range [-1,1]
-      ! note: xi/eta/gamma will be in range [-1,1]
-      xi_source(isource) = xigll(ix_initial_guess_source)
-      eta_source(isource) = yigll(iy_initial_guess_source)
-      gamma_source(isource) = zigll(iz_initial_guess_source)
-
-    endif ! USE_BEST_LOCATION_FOR_SOURCE
-
-    ! compute final distance between asked and found (converted to km)
-    final_distance_source(isource) = dsqrt((x_target_source-x_found_source(isource))**2 + &
-                (y_target_source-y_found_source(isource))**2 + (z_target_source-z_found_source(isource))**2)
-
+    call locate_MPI_slice_and_bcast_to_all(x_target_source, y_target_source, z_target_source,&
+                                           x_found_source(isource), y_found_source(isource), z_found_source(isource), &
+                                           xi_source(isource), eta_source(isource), gamma_source(isource), &
+                                           ispec_selected_source(isource), islice_selected_source(isource), &
+                                           final_distance_source(isource), idomain(isource))
   ! end of loop on all the sources
   enddo
-
-  ! now gather information from all the nodes
-  !
-  ! note: gathering source information is done here for bins of NGATHER_SOURCES
-  !       to save memory for very large number of sources
-
-  ! number of gather bins
-  ngather = NSOURCES/NGATHER_SOURCES
-  if (mod(NSOURCES,NGATHER_SOURCES) /= 0) ngather = ngather+1
-
-  ! loops over single bin
-  do ig = 1, ngather
-    ! source index start
-    ns = (ig-1) * NGATHER_SOURCES + 1
-    ! source index end
-    ne = min(ig*NGATHER_SOURCES, NSOURCES)
-    ! number of gathering sources
-    ng = ne - ns + 1
-
-    ispec_selected_source_all(:,:) = -1
-
-    ! avoids warnings about temporary creations of arrays for function call by compiler
-    allocate(tmp_i_local(ng),tmp_i_all_local(ng,0:NPROC-1),stat=ier)
-    if (ier /= 0) stop 'error allocating array tmp_i_local'
-    tmp_i_local(:) = ispec_selected_source(ns:ne)
-    call gather_all_i(tmp_i_local,ng,tmp_i_all_local,ng,NPROC)
-    ispec_selected_source_all(1:ng,:) = tmp_i_all_local(:,:)
-
-    ! acoustic/elastic domain
-    tmp_i_local(:) = idomain(ns:ne)
-    call gather_all_i(tmp_i_local,ng,tmp_i_all_local,ng,NPROC)
-    idomain_all(1:ng,:) = tmp_i_all_local(:,:)
-
-    deallocate(tmp_i_local,tmp_i_all_local)
-
-    ! avoids warnings about temporary creations of arrays for function call by compiler
-    allocate(tmp_local(ng),tmp_all_local(ng,0:NPROC-1),stat=ier)
-    if (ier /= 0) stop 'error allocating array tmp_local'
-    tmp_local(:) = xi_source(ns:ne)
-    call gather_all_dp(tmp_local,ng,tmp_all_local,ng,NPROC)
-    xi_source_all(1:ng,:) = tmp_all_local(:,:)
-
-    tmp_local(:) = eta_source(ns:ne)
-    call gather_all_dp(tmp_local,ng,tmp_all_local,ng,NPROC)
-    eta_source_all(1:ng,:) = tmp_all_local(:,:)
-
-    tmp_local(:) = gamma_source(ns:ne)
-    call gather_all_dp(tmp_local,ng,tmp_all_local,ng,NPROC)
-    gamma_source_all(1:ng,:) = tmp_all_local(:,:)
-
-    tmp_local(:) = final_distance_source(ns:ne)
-    call gather_all_dp(tmp_local,ng,tmp_all_local,ng,NPROC)
-    final_distance_source_all(1:ng,:) = tmp_all_local(:,:)
-
-    tmp_local(:) = x_found_source(ns:ne)
-    call gather_all_dp(tmp_local,ng,tmp_all_local,ng,NPROC)
-    x_found_source_all(1:ng,:) = tmp_all_local(:,:)
-
-    tmp_local(:) = y_found_source(ns:ne)
-    call gather_all_dp(tmp_local,ng,tmp_all_local,ng,NPROC)
-    y_found_source_all(1:ng,:) = tmp_all_local(:,:)
-
-    tmp_local(:) = z_found_source(ns:ne)
-    call gather_all_dp(tmp_local,ng,tmp_all_local,ng,NPROC)
-    z_found_source_all(1:ng,:) = tmp_all_local(:,:)
-
-    deallocate(tmp_local,tmp_all_local)
-
-    ! this is executed by main process only
-    if (myrank == 0) then
-
-      ! check that the gather operation went well
-      if (any(ispec_selected_source_all(1:ng,:) == -1)) call exit_MPI(myrank,'gather operation failed for source')
-
-      ! loop on all the sources
-      do is = 1,ng
-        ! global source index (between 1 and NSOURCES)
-        isource = ns + is - 1
-
-        ! loop on all the results to determine the best slice
-        distmin_not_squared = HUGEVAL
-        do iprocloop = 0,NPROC-1
-          if (final_distance_source_all(is,iprocloop) < distmin_not_squared) then
-            ! minimum distance
-            distmin_not_squared = final_distance_source_all(is,iprocloop)
-
-            ! stores best source information
-            ! slice and element
-            islice_selected_source(isource) = iprocloop
-            ispec_selected_source(isource) = ispec_selected_source_all(is,iprocloop)
-            ! source positioning (inside element)
-            xi_source(isource) = xi_source_all(is,iprocloop)
-            eta_source(isource) = eta_source_all(is,iprocloop)
-            gamma_source(isource) = gamma_source_all(is,iprocloop)
-            ! location
-            x_found_source(isource) = x_found_source_all(is,iprocloop)
-            y_found_source(isource) = y_found_source_all(is,iprocloop)
-            z_found_source(isource) = z_found_source_all(is,iprocloop)
-            ! domain (elastic/acoustic/poroelastic)
-            idomain(isource) = idomain_all(is,iprocloop)
-          endif
-        enddo
-        ! stores minimum distance to desired location
-        final_distance_source(isource) = distmin_not_squared
-      enddo
-    endif !myrank
-  enddo ! ngather
 
   if (myrank == 0) then
 
@@ -820,20 +458,11 @@
     write(IMAIN,*)
     call flush_IMAIN()
 
-    ! sets new utm coordinates for best locations
-    utm_x_source(:) = x_found_source(:)
-    utm_y_source(:) = y_found_source(:)
-
   endif     ! end of section executed by main process only
 
-  ! main process broadcasts the results to all the slices
-  call bcast_all_i(islice_selected_source,NSOURCES)
-  call bcast_all_i(ispec_selected_source,NSOURCES)
-  call bcast_all_dp(xi_source,NSOURCES)
-  call bcast_all_dp(eta_source,NSOURCES)
-  call bcast_all_dp(gamma_source,NSOURCES)
-  call bcast_all_dp(utm_x_source,NSOURCES)
-  call bcast_all_dp(utm_y_source,NSOURCES)
+  ! sets new utm coordinates for best locations
+  utm_x_source(:) = x_found_source(:)
+  utm_y_source(:) = y_found_source(:)
 
   ! elapsed time since beginning of source detection
   if (myrank == 0) then
