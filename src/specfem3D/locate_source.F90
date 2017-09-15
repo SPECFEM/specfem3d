@@ -220,14 +220,14 @@
     endif
 
     call locate_point_in_mesh(x_target_source, y_target_source, z_target_source, elemsize_max_glob, &
-            ispec_selected_source(isource), xi_source(isource), eta_source(isource), gamma_source(isource),&
+            ispec_selected_source(isource), xi_source(isource), eta_source(isource), gamma_source(isource), &
             x_found_source(isource), y_found_source(isource), z_found_source(isource), idomain(isource))
 
 
     ! synchronize all the processes to make sure all the estimates are available
     call synchronize_all()
 
-    call locate_MPI_slice_and_bcast_to_all(x_target_source, y_target_source, z_target_source,&
+    call locate_MPI_slice_and_bcast_to_all(x_target_source, y_target_source, z_target_source, &
                                            x_found_source(isource), y_found_source(isource), z_found_source(isource), &
                                            xi_source(isource), eta_source(isource), gamma_source(isource), &
                                            ispec_selected_source(isource), islice_selected_source(isource), &
