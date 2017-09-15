@@ -25,16 +25,17 @@
 !
 !=====================================================================
 
-  subroutine get_cmt(yr,jda,ho,mi,sec,tshift_cmt,hdur,lat,long,depth,moment_tensor, &
+  subroutine get_cmt(CMTSOLUTION,yr,jda,ho,mi,sec,tshift_cmt,hdur,lat,long,depth,moment_tensor, &
                     DT,NSOURCES,min_tshift_cmt_original,user_source_time_function)
 
-  use constants, only: IIN,IN_DATA_FILES,MAX_STRING_LEN,mygroup,CUSTOM_REAL
-  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,USE_EXTERNAL_SOURCE_FILE,NSTEP_STF,NSOURCES_STF
+  use constants, only: IIN,IN_DATA_FILES,MAX_STRING_LEN,CUSTOM_REAL
+  use shared_parameters, only: USE_EXTERNAL_SOURCE_FILE,NSTEP_STF,NSOURCES_STF
 
   implicit none
 
 !--- input or output arguments of the subroutine below
 
+  character(len=MAX_STRING_LEN), intent(in) :: CMTSOLUTION
   integer, intent(in) :: NSOURCES
   double precision, intent(in) :: DT
 
@@ -52,7 +53,7 @@
   integer :: i,itype,istart,iend,ier
   double precision :: t_shift(NSOURCES)
   character(len=256) :: string
-  character(len=MAX_STRING_LEN) :: CMTSOLUTION,path_to_add,external_source_time_function_filename
+  character(len=MAX_STRING_LEN) :: external_source_time_function_filename
 
   ! initializes
   lat(:) = 0.d0
@@ -66,16 +67,6 @@
 !
 !---- read hypocenter info
 !
-  CMTSOLUTION = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'CMTSOLUTION'
-! see if we are running several independent runs in parallel
-! if so, add the right directory for that run
-! (group numbers start at zero, but directory names start at run0001, thus we add one)
-! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
-  if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
-    write(path_to_add,"('run',i4.4,'/')") mygroup + 1
-    CMTSOLUTION = path_to_add(1:len_trim(path_to_add))//CMTSOLUTION(1:len_trim(CMTSOLUTION))
-  endif
-
   open(unit = IIN,file=trim(CMTSOLUTION),status='old',action='read',iostat=ier)
   if (ier /= 0) then
     print *,'Error opening file: ',trim(CMTSOLUTION)

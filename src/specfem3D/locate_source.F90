@@ -28,7 +28,7 @@
 !----  locate_source finds the correct position of the source
 !----
 
-  subroutine locate_source(NSOURCES,tshift_src,min_tshift_src_original,yr,jda,ho,mi,utm_x_source,utm_y_source, &
+  subroutine locate_source(filename,NSOURCES,tshift_src,min_tshift_src_original,yr,jda,ho,mi,utm_x_source,utm_y_source, &
                            hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
                            islice_selected_source,ispec_selected_source, &
                            xi_source,eta_source,gamma_source)
@@ -45,6 +45,7 @@
 
   implicit none
 
+  character(len=MAX_STRING_LEN), intent(in) :: filename
   integer,intent(in) :: NSOURCES
   integer,intent(inout) :: yr,jda,ho,mi
   double precision,dimension(NSOURCES),intent(inout) :: tshift_src
@@ -109,7 +110,7 @@
     ! point forces
     if (myrank == 0) then
       ! only master process reads in FORCESOLUTION file
-      call get_force(tshift_src,hdur,lat,long,depth,NSOURCES,min_tshift_src_original,factor_force_source, &
+      call get_force(filename,tshift_src,hdur,lat,long,depth,NSOURCES,min_tshift_src_original,factor_force_source, &
                      comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP, &
                      user_source_time_function)
     endif
@@ -122,7 +123,7 @@
     ! CMT moment tensors
     if (myrank == 0) then
       ! only master process reads in CMTSOLUTION file
-      call get_cmt(yr,jda,ho,mi,sec,tshift_src,hdur,lat,long,depth,moment_tensor, &
+      call get_cmt(filename,yr,jda,ho,mi,sec,tshift_src,hdur,lat,long,depth,moment_tensor, &
                    DT,NSOURCES,min_tshift_src_original,user_source_time_function)
     endif
     ! broadcasts specific moment tensor infos
@@ -219,14 +220,14 @@
     endif
 
     call locate_point_in_mesh(x_target_source, y_target_source, z_target_source, elemsize_max_glob, &
-            ispec_selected_source(isource), xi_source(isource), eta_source(isource), gamma_source(isource), &
+            ispec_selected_source(isource), xi_source(isource), eta_source(isource), gamma_source(isource),&
             x_found_source(isource), y_found_source(isource), z_found_source(isource), idomain(isource))
 
 
     ! synchronize all the processes to make sure all the estimates are available
     call synchronize_all()
 
-    call locate_MPI_slice_and_bcast_to_all(x_target_source, y_target_source, z_target_source, &
+    call locate_MPI_slice_and_bcast_to_all(x_target_source, y_target_source, z_target_source,&
                                            x_found_source(isource), y_found_source(isource), z_found_source(isource), &
                                            xi_source(isource), eta_source(isource), gamma_source(isource), &
                                            ispec_selected_source(isource), islice_selected_source(isource), &

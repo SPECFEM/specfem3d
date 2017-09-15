@@ -25,7 +25,7 @@
 !
 !=====================================================================
 
-  subroutine compute_arrays_source(ispec_selected_source,sourcearray, &
+  subroutine compute_arrays_source_cmt(ispec_selected_source,sourcearray, &
                                    xi_source,eta_source,gamma_source, &
                                    Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
                                    xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
@@ -139,12 +139,12 @@
   ! distinguish between single and double precision for reals
   sourcearray(:,:,:,:) = real(sourcearrayd(:,:,:,:), kind=CUSTOM_REAL)
 
-  end subroutine compute_arrays_source
+  end subroutine compute_arrays_source_cmt
 
 ! =======================================================================
 
 ! compute array for acoustic source
-  subroutine compute_arrays_source_acoustic(sourcearray,hxis,hetas,hgammas,factor_source)
+  subroutine compute_arrays_source_forcesolution(sourcearray,hxis,hetas,hgammas,factor_source,comp_x,comp_y,comp_z)
 
   use constants
 
@@ -152,33 +152,32 @@
 
   real(kind=CUSTOM_REAL) :: factor_source
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearray
-
-! local parameters
-! source arrays
-  double precision, dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrayd
   double precision, dimension(NGLLX) :: hxis
   double precision, dimension(NGLLY) :: hetas
   double precision, dimension(NGLLZ) :: hgammas
+  double precision :: comp_x,comp_y,comp_z
+
+! local parameters
   integer :: i,j,k
+  double precision :: hlagrange
 
 ! initializes
   sourcearray(:,:,:,:) = 0._CUSTOM_REAL
-  sourcearrayd(:,:,:,:) = 0.d0
 
 ! calculates source array for interpolated location
   do k=1,NGLLZ
     do j=1,NGLLY
       do i=1,NGLLX
+        hlagrange = hxis(i) * hetas(j) * hgammas(k) * dble(factor_source)
         ! identical source array components in x,y,z-direction
-        sourcearrayd(:,i,j,k) = hxis(i)*hetas(j)*hgammas(k)*dble(factor_source)
+        sourcearray(1,i,j,k) = real(hlagrange*comp_x,kind=CUSTOM_REAL)
+        sourcearray(2,i,j,k) = real(hlagrange*comp_y,kind=CUSTOM_REAL)
+        sourcearray(3,i,j,k) = real(hlagrange*comp_z,kind=CUSTOM_REAL)
       enddo
     enddo
   enddo
 
-! distinguish between single and double precision for reals
-  sourcearray(:,:,:,:) = real(sourcearrayd(:,:,:,:),kind=CUSTOM_REAL)
-
-  end subroutine compute_arrays_source_acoustic
+  end subroutine compute_arrays_source_forcesolution
 
 !================================================================
 

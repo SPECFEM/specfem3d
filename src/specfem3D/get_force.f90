@@ -25,16 +25,17 @@
 !
 !=====================================================================
 
-  subroutine get_force(tshift_force,hdur,lat,long,depth,NSOURCES,min_tshift_force_original,factor_force_source, &
+  subroutine get_force(FORCESOLUTION,tshift_force,hdur,lat,long,depth,NSOURCES,min_tshift_force_original,factor_force_source, &
                       comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP,user_source_time_function)
 
-  use constants, only: IIN,IN_DATA_FILES,MAX_STRING_LEN,TINYVAL,mygroup,CUSTOM_REAL
-  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,USE_EXTERNAL_SOURCE_FILE,NSTEP_STF,NSOURCES_STF
+  use constants, only: IIN,IN_DATA_FILES,MAX_STRING_LEN,TINYVAL,CUSTOM_REAL
+  use shared_parameters, only: USE_EXTERNAL_SOURCE_FILE,NSTEP_STF,NSOURCES_STF
 
   implicit none
 
 !--- input or output arguments of the subroutine below
 
+  character(len=MAX_STRING_LEN), intent(in) :: FORCESOLUTION
   integer, intent(in) :: NSOURCES
 
   double precision, intent(out) :: min_tshift_force_original
@@ -53,7 +54,6 @@
   double precision :: length
   character(len=7) :: dummy
   character(len=MAX_STRING_LEN) :: string
-  character(len=MAX_STRING_LEN) :: FORCESOLUTION,path_to_add
   character(len=MAX_STRING_LEN) :: external_source_time_function_filename
   integer :: ier
 
@@ -72,16 +72,6 @@
 !
 !---- read info
 !
-  FORCESOLUTION = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'FORCESOLUTION'
-! see if we are running several independent runs in parallel
-! if so, add the right directory for that run
-! (group numbers start at zero, but directory names start at run0001, thus we add one)
-! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
-  if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
-    write(path_to_add,"('run',i4.4,'/')") mygroup + 1
-    FORCESOLUTION = path_to_add(1:len_trim(path_to_add))//FORCESOLUTION(1:len_trim(FORCESOLUTION))
-  endif
-
   open(unit=IIN,file=trim(FORCESOLUTION),status='old',action='read',iostat=ier)
   if (ier /= 0) then
     print *,'Error opening file: ',trim(FORCESOLUTION)

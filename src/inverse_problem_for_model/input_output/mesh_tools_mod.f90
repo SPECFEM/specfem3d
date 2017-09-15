@@ -622,7 +622,7 @@ contains
 
           endif
 
-          call compute_arrays_source(ispec,interparray, xi, eta, gamma, &
+          call compute_arrays_source_cmt(ispec,interparray, xi, eta, gamma, &
                Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
                xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                xigll,yigll,zigll,NSPEC_AB)
@@ -637,7 +637,7 @@ contains
           ! where Mxx=Myy=Mzz, others Mxy,.. = zero, in equivalent elastic media
           ! (and getting rid of 1/sqrt(2) factor from scalar moment tensor definition above)
           factor_source = factor_source * sqrt(2.0) / sqrt(3.0)
-          call compute_arrays_source_acoustic(interparray,hxis,hetas,hgammas,factor_source)
+          call compute_arrays_source_forcesolution(interparray,hxis,hetas,hgammas,factor_source,1.0d0,1.0d0,1.0d0)
 
        else
           write(*,*) ' ABORT INVERSION: POINT SOURCE IS NOT IN ELASTIC OR ACOUSTIC DOMAIN'
@@ -651,7 +651,7 @@ contains
 
        else if (ispec_is_acoustic(ispec)) then
 
-          call compute_arrays_source_acoustic(interparray,hxis,hetas,hgammas,factor_source)
+          call compute_arrays_source_forcesolution(interparray,hxis,hetas,hgammas,factor_source,1.0d0,1.0d0,1.0d0)
 
        else
           write(*,*) ' ABORT INVERSION: POINT SOURCE IS NOT IN ELASTIC OR ACOUSTIC DOMAIN'

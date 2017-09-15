@@ -244,12 +244,6 @@
     if (ier /= 0) stop 'Error reading Par_file parameter USE_TRICK_FOR_BETTER_PRESSURE'
 
     !-------------------------------------------------------
-    ! Source encoding
-    !-------------------------------------------------------
-    call read_value_logical(USE_SOURCE_ENCODING, 'USE_SOURCE_ENCODING', ier)
-    if (ier /= 0) stop 'Error reading Par_file parameter USE_SOURCE_ENCODING'
-
-    !-------------------------------------------------------
     ! Energy calculation
     !-------------------------------------------------------
     call read_value_logical(OUTPUT_ENERGY, 'OUTPUT_ENERGY', ier)
@@ -550,7 +544,6 @@
     call bcast_all_singlel(WRITE_SEISMOGRAMS_BY_MASTER)
     call bcast_all_singlel(SAVE_ALL_SEISMOS_IN_ONE_FILE)
     call bcast_all_singlel(USE_TRICK_FOR_BETTER_PRESSURE)
-    call bcast_all_singlel(USE_SOURCE_ENCODING)
     call bcast_all_singlel(OUTPUT_ENERGY)
     call bcast_all_singlei(NTSTEP_BETWEEN_OUTPUT_ENERGY)
     call bcast_all_singlel(ANISOTROPIC_KL)
