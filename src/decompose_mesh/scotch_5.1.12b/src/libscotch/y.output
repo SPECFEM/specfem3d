@@ -1,0 +1,1240 @@
+Terminals unused in grammar
+
+   VALSTRAT
+   VALPARAM
+   VALTEST
+
+
+Grammar
+
+    0 $accept: STRAT $end
+
+    1 STRAT: STRATSELECT
+
+    2 STRATSELECT: STRATSELECT '|' STRATEMPTY
+    3            | STRATEMPTY
+
+    4 STRATEMPTY: STRATCONCAT
+    5           | /* empty */
+
+    6 STRATCONCAT: STRATCONCAT STRATTEST
+    7            | STRATTEST
+
+    8 $@1: /* empty */
+
+    9 $@2: /* empty */
+
+   10 STRATTEST: $@1 '/' TEST $@2 '?' STRATSELECT STRATTESTELSE ';'
+   11          | STRATGROUP
+
+   12 STRATTESTELSE: ':' STRATSELECT
+   13              | /* empty */
+
+   14 STRATGROUP: '(' STRATSELECT ')'
+   15           | STRATMETHOD
+
+   16 $@3: /* empty */
+
+   17 STRATMETHOD: METHODNAME $@3 METHODPARAM
+
+   18 $@4: /* empty */
+
+   19 $@5: /* empty */
+
+   20 METHODPARAM: $@4 '{' PARAMLIST $@5 '}'
+   21            | /* empty */
+
+   22 PARAMLIST: PARAMLIST ',' PARAMPARAM
+   23          | PARAMPARAM
+
+   24 @6: /* empty */
+
+   25 PARAMPARAM: PARAMNAME @6 '=' PARAMVAL
+
+   26 PARAMVAL: VALCASE
+   27         | VALSDOUBLE
+   28         | VALSINT
+   29         | VALSTRING
+
+   30 @7: /* empty */
+
+   31 PARAMVAL: @7 STRATSELECT
+   32         | error
+
+   33 TEST: TESTOR
+
+   34 TESTOR: TESTOR '|' TESTAND
+   35       | TESTAND
+
+   36 TESTAND: TESTAND '&' TESTNOT
+   37        | TESTNOT
+
+   38 TESTNOT: '!' TESTNOT
+   39        | '(' TESTOR ')'
+   40        | TESTREL
+
+   41 TESTREL: TESTEXPR1 TESTRELOP TESTEXPR1
+
+   42 TESTRELOP: '<'
+   43          | '='
+   44          | '>'
+
+   45 TESTEXPR1: TESTEXPR1 TESTEXPR1OP TESTEXPR2
+   46          | TESTEXPR2
+
+   47 TESTEXPR1OP: '+'
+   48            | '-'
+
+   49 TESTEXPR2: TESTEXPR2 TESTEXPR2OP TESTEXPR3
+   50          | TESTEXPR3
+
+   51 TESTEXPR2OP: '*'
+
+   52 TESTEXPR3: TESTEXPR3 TESTEXPR3OP TESTEXPR4
+   53          | TESTEXPR4
+
+   54 TESTEXPR3OP: '%'
+
+   55 TESTEXPR4: '(' TESTEXPR1 ')'
+   56          | TESTVAL
+   57          | TESTVAR
+
+   58 TESTVAL: VALSDOUBLE
+   59        | VALSINT
+
+   60 TESTVAR: PARAMNAME
+
+   61 VALSDOUBLE: TESTEXPR1OP VALDOUBLE
+   62           | VALDOUBLE
+
+   63 VALSINT: TESTEXPR1OP VALINT
+   64        | VALINT
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+'!' (33) 38
+'%' (37) 54
+'&' (38) 36
+'(' (40) 14 39 55
+')' (41) 14 39 55
+'*' (42) 51
+'+' (43) 47
+',' (44) 22
+'-' (45) 48
+'/' (47) 10
+':' (58) 12
+';' (59) 10
+'<' (60) 42
+'=' (61) 25 43
+'>' (62) 44
+'?' (63) 10
+'{' (123) 20
+'|' (124) 2 34
+'}' (125) 20
+error (256) 32
+METHODNAME (258) 17
+PARAMNAME (259) 25 60
+VALCASE (260) 26
+VALDOUBLE (261) 61 62
+VALINT (262) 63 64
+VALSTRING (263) 29
+VALSTRAT (264)
+VALPARAM (265)
+VALTEST (266)
+
+
+Nonterminals, with rules where they appear
+
+$accept (31)
+    on left: 0
+STRAT (32)
+    on left: 1, on right: 0
+STRATSELECT (33)
+    on left: 2 3, on right: 1 2 10 12 14 31
+STRATEMPTY (34)
+    on left: 4 5, on right: 2 3
+STRATCONCAT (35)
+    on left: 6 7, on right: 4 6
+STRATTEST (36)
+    on left: 10 11, on right: 6 7
+$@1 (37)
+    on left: 8, on right: 10
+$@2 (38)
+    on left: 9, on right: 10
+STRATTESTELSE (39)
+    on left: 12 13, on right: 10
+STRATGROUP (40)
+    on left: 14 15, on right: 11
+STRATMETHOD (41)
+    on left: 17, on right: 15
+$@3 (42)
+    on left: 16, on right: 17
+METHODPARAM (43)
+    on left: 20 21, on right: 17
+$@4 (44)
+    on left: 18, on right: 20
+$@5 (45)
+    on left: 19, on right: 20
+PARAMLIST (46)
+    on left: 22 23, on right: 20 22
+PARAMPARAM (47)
+    on left: 25, on right: 22 23
+@6 (48)
+    on left: 24, on right: 25
+PARAMVAL (49)
+    on left: 26 27 28 29 31 32, on right: 25
+@7 (50)
+    on left: 30, on right: 31
+TEST (51)
+    on left: 33, on right: 10
+TESTOR (52)
+    on left: 34 35, on right: 33 34 39
+TESTAND (53)
+    on left: 36 37, on right: 34 35 36
+TESTNOT (54)
+    on left: 38 39 40, on right: 36 37 38
+TESTREL (55)
+    on left: 41, on right: 40
+TESTRELOP (56)
+    on left: 42 43 44, on right: 41
+TESTEXPR1 (57)
+    on left: 45 46, on right: 41 45 55
+TESTEXPR1OP (58)
+    on left: 47 48, on right: 45 61 63
+TESTEXPR2 (59)
+    on left: 49 50, on right: 45 46 49
+TESTEXPR2OP (60)
+    on left: 51, on right: 49
+TESTEXPR3 (61)
+    on left: 52 53, on right: 49 50 52
+TESTEXPR3OP (62)
+    on left: 54, on right: 52
+TESTEXPR4 (63)
+    on left: 55 56 57, on right: 52 53
+TESTVAL (64)
+    on left: 58 59, on right: 56
+TESTVAR (65)
+    on left: 60, on right: 57
+VALSDOUBLE (66)
+    on left: 61 62, on right: 27 58
+VALSINT (67)
+    on left: 63 64, on right: 28 59
+
+
+state 0
+
+    0 $accept: . STRAT $end
+
+    METHODNAME  shift, and go to state 1
+    '('         shift, and go to state 2
+
+    '/'       reduce using rule 8 ($@1)
+    $default  reduce using rule 5 (STRATEMPTY)
+
+    STRAT        go to state 3
+    STRATSELECT  go to state 4
+    STRATEMPTY   go to state 5
+    STRATCONCAT  go to state 6
+    STRATTEST    go to state 7
+    $@1          go to state 8
+    STRATGROUP   go to state 9
+    STRATMETHOD  go to state 10
+
+
+state 1
+
+   17 STRATMETHOD: METHODNAME . $@3 METHODPARAM
+
+    $default  reduce using rule 16 ($@3)
+
+    $@3  go to state 11
+
+
+state 2
+
+   14 STRATGROUP: '(' . STRATSELECT ')'
+
+    METHODNAME  shift, and go to state 1
+    '('         shift, and go to state 2
+
+    '/'       reduce using rule 8 ($@1)
+    $default  reduce using rule 5 (STRATEMPTY)
+
+    STRATSELECT  go to state 12
+    STRATEMPTY   go to state 5
+    STRATCONCAT  go to state 6
+    STRATTEST    go to state 7
+    $@1          go to state 8
+    STRATGROUP   go to state 9
+    STRATMETHOD  go to state 10
+
+
+state 3
+
+    0 $accept: STRAT . $end
+
+    $end  shift, and go to state 13
+
+
+state 4
+
+    1 STRAT: STRATSELECT .
+    2 STRATSELECT: STRATSELECT . '|' STRATEMPTY
+
+    '|'  shift, and go to state 14
+
+    $default  reduce using rule 1 (STRAT)
+
+
+state 5
+
+    3 STRATSELECT: STRATEMPTY .
+
+    $default  reduce using rule 3 (STRATSELECT)
+
+
+state 6
+
+    4 STRATEMPTY: STRATCONCAT .
+    6 STRATCONCAT: STRATCONCAT . STRATTEST
+
+    METHODNAME  shift, and go to state 1
+    '('         shift, and go to state 2
+
+    '/'       reduce using rule 8 ($@1)
+    $default  reduce using rule 4 (STRATEMPTY)
+
+    STRATTEST    go to state 15
+    $@1          go to state 8
+    STRATGROUP   go to state 9
+    STRATMETHOD  go to state 10
+
+
+state 7
+
+    7 STRATCONCAT: STRATTEST .
+
+    $default  reduce using rule 7 (STRATCONCAT)
+
+
+state 8
+
+   10 STRATTEST: $@1 . '/' TEST $@2 '?' STRATSELECT STRATTESTELSE ';'
+
+    '/'  shift, and go to state 16
+
+
+state 9
+
+   11 STRATTEST: STRATGROUP .
+
+    $default  reduce using rule 11 (STRATTEST)
+
+
+state 10
+
+   15 STRATGROUP: STRATMETHOD .
+
+    $default  reduce using rule 15 (STRATGROUP)
+
+
+state 11
+
+   17 STRATMETHOD: METHODNAME $@3 . METHODPARAM
+
+    '{'       reduce using rule 18 ($@4)
+    $default  reduce using rule 21 (METHODPARAM)
+
+    METHODPARAM  go to state 17
+    $@4          go to state 18
+
+
+state 12
+
+    2 STRATSELECT: STRATSELECT . '|' STRATEMPTY
+   14 STRATGROUP: '(' STRATSELECT . ')'
+
+    '|'  shift, and go to state 14
+    ')'  shift, and go to state 19
+
+
+state 13
+
+    0 $accept: STRAT $end .
+
+    $default  accept
+
+
+state 14
+
+    2 STRATSELECT: STRATSELECT '|' . STRATEMPTY
+
+    METHODNAME  shift, and go to state 1
+    '('         shift, and go to state 2
+
+    '/'       reduce using rule 8 ($@1)
+    $default  reduce using rule 5 (STRATEMPTY)
+
+    STRATEMPTY   go to state 20
+    STRATCONCAT  go to state 6
+    STRATTEST    go to state 7
+    $@1          go to state 8
+    STRATGROUP   go to state 9
+    STRATMETHOD  go to state 10
+
+
+state 15
+
+    6 STRATCONCAT: STRATCONCAT STRATTEST .
+
+    $default  reduce using rule 6 (STRATCONCAT)
+
+
+state 16
+
+   10 STRATTEST: $@1 '/' . TEST $@2 '?' STRATSELECT STRATTESTELSE ';'
+
+    PARAMNAME  shift, and go to state 21
+    VALDOUBLE  shift, and go to state 22
+    VALINT     shift, and go to state 23
+    '('        shift, and go to state 24
+    '!'        shift, and go to state 25
+    '+'        shift, and go to state 26
+    '-'        shift, and go to state 27
+
+    TEST         go to state 28
+    TESTOR       go to state 29
+    TESTAND      go to state 30
+    TESTNOT      go to state 31
+    TESTREL      go to state 32
+    TESTEXPR1    go to state 33
+    TESTEXPR1OP  go to state 34
+    TESTEXPR2    go to state 35
+    TESTEXPR3    go to state 36
+    TESTEXPR4    go to state 37
+    TESTVAL      go to state 38
+    TESTVAR      go to state 39
+    VALSDOUBLE   go to state 40
+    VALSINT      go to state 41
+
+
+state 17
+
+   17 STRATMETHOD: METHODNAME $@3 METHODPARAM .
+
+    $default  reduce using rule 17 (STRATMETHOD)
+
+
+state 18
+
+   20 METHODPARAM: $@4 . '{' PARAMLIST $@5 '}'
+
+    '{'  shift, and go to state 42
+
+
+state 19
+
+   14 STRATGROUP: '(' STRATSELECT ')' .
+
+    $default  reduce using rule 14 (STRATGROUP)
+
+
+state 20
+
+    2 STRATSELECT: STRATSELECT '|' STRATEMPTY .
+
+    $default  reduce using rule 2 (STRATSELECT)
+
+
+state 21
+
+   60 TESTVAR: PARAMNAME .
+
+    $default  reduce using rule 60 (TESTVAR)
+
+
+state 22
+
+   62 VALSDOUBLE: VALDOUBLE .
+
+    $default  reduce using rule 62 (VALSDOUBLE)
+
+
+state 23
+
+   64 VALSINT: VALINT .
+
+    $default  reduce using rule 64 (VALSINT)
+
+
+state 24
+
+   39 TESTNOT: '(' . TESTOR ')'
+   55 TESTEXPR4: '(' . TESTEXPR1 ')'
+
+    PARAMNAME  shift, and go to state 21
+    VALDOUBLE  shift, and go to state 22
+    VALINT     shift, and go to state 23
+    '('        shift, and go to state 24
+    '!'        shift, and go to state 25
+    '+'        shift, and go to state 26
+    '-'        shift, and go to state 27
+
+    TESTOR       go to state 43
+    TESTAND      go to state 30
+    TESTNOT      go to state 31
+    TESTREL      go to state 32
+    TESTEXPR1    go to state 44
+    TESTEXPR1OP  go to state 34
+    TESTEXPR2    go to state 35
+    TESTEXPR3    go to state 36
+    TESTEXPR4    go to state 37
+    TESTVAL      go to state 38
+    TESTVAR      go to state 39
+    VALSDOUBLE   go to state 40
+    VALSINT      go to state 41
+
+
+state 25
+
+   38 TESTNOT: '!' . TESTNOT
+
+    PARAMNAME  shift, and go to state 21
+    VALDOUBLE  shift, and go to state 22
+    VALINT     shift, and go to state 23
+    '('        shift, and go to state 24
+    '!'        shift, and go to state 25
+    '+'        shift, and go to state 26
+    '-'        shift, and go to state 27
+
+    TESTNOT      go to state 45
+    TESTREL      go to state 32
+    TESTEXPR1    go to state 33
+    TESTEXPR1OP  go to state 34
+    TESTEXPR2    go to state 35
+    TESTEXPR3    go to state 36
+    TESTEXPR4    go to state 37
+    TESTVAL      go to state 38
+    TESTVAR      go to state 39
+    VALSDOUBLE   go to state 40
+    VALSINT      go to state 41
+
+
+state 26
+
+   47 TESTEXPR1OP: '+' .
+
+    $default  reduce using rule 47 (TESTEXPR1OP)
+
+
+state 27
+
+   48 TESTEXPR1OP: '-' .
+
+    $default  reduce using rule 48 (TESTEXPR1OP)
+
+
+state 28
+
+   10 STRATTEST: $@1 '/' TEST . $@2 '?' STRATSELECT STRATTESTELSE ';'
+
+    $default  reduce using rule 9 ($@2)
+
+    $@2  go to state 46
+
+
+state 29
+
+   33 TEST: TESTOR .
+   34 TESTOR: TESTOR . '|' TESTAND
+
+    '|'  shift, and go to state 47
+
+    $default  reduce using rule 33 (TEST)
+
+
+state 30
+
+   35 TESTOR: TESTAND .
+   36 TESTAND: TESTAND . '&' TESTNOT
+
+    '&'  shift, and go to state 48
+
+    $default  reduce using rule 35 (TESTOR)
+
+
+state 31
+
+   37 TESTAND: TESTNOT .
+
+    $default  reduce using rule 37 (TESTAND)
+
+
+state 32
+
+   40 TESTNOT: TESTREL .
+
+    $default  reduce using rule 40 (TESTNOT)
+
+
+state 33
+
+   41 TESTREL: TESTEXPR1 . TESTRELOP TESTEXPR1
+   45 TESTEXPR1: TESTEXPR1 . TESTEXPR1OP TESTEXPR2
+
+    '='  shift, and go to state 49
+    '<'  shift, and go to state 50
+    '>'  shift, and go to state 51
+    '+'  shift, and go to state 26
+    '-'  shift, and go to state 27
+
+    TESTRELOP    go to state 52
+    TESTEXPR1OP  go to state 53
+
+
+state 34
+
+   61 VALSDOUBLE: TESTEXPR1OP . VALDOUBLE
+   63 VALSINT: TESTEXPR1OP . VALINT
+
+    VALDOUBLE  shift, and go to state 54
+    VALINT     shift, and go to state 55
+
+
+state 35
+
+   46 TESTEXPR1: TESTEXPR2 .
+   49 TESTEXPR2: TESTEXPR2 . TESTEXPR2OP TESTEXPR3
+
+    '*'  shift, and go to state 56
+
+    $default  reduce using rule 46 (TESTEXPR1)
+
+    TESTEXPR2OP  go to state 57
+
+
+state 36
+
+   50 TESTEXPR2: TESTEXPR3 .
+   52 TESTEXPR3: TESTEXPR3 . TESTEXPR3OP TESTEXPR4
+
+    '%'  shift, and go to state 58
+
+    $default  reduce using rule 50 (TESTEXPR2)
+
+    TESTEXPR3OP  go to state 59
+
+
+state 37
+
+   53 TESTEXPR3: TESTEXPR4 .
+
+    $default  reduce using rule 53 (TESTEXPR3)
+
+
+state 38
+
+   56 TESTEXPR4: TESTVAL .
+
+    $default  reduce using rule 56 (TESTEXPR4)
+
+
+state 39
+
+   57 TESTEXPR4: TESTVAR .
+
+    $default  reduce using rule 57 (TESTEXPR4)
+
+
+state 40
+
+   58 TESTVAL: VALSDOUBLE .
+
+    $default  reduce using rule 58 (TESTVAL)
+
+
+state 41
+
+   59 TESTVAL: VALSINT .
+
+    $default  reduce using rule 59 (TESTVAL)
+
+
+state 42
+
+   20 METHODPARAM: $@4 '{' . PARAMLIST $@5 '}'
+
+    PARAMNAME  shift, and go to state 60
+
+    PARAMLIST   go to state 61
+    PARAMPARAM  go to state 62
+
+
+state 43
+
+   34 TESTOR: TESTOR . '|' TESTAND
+   39 TESTNOT: '(' TESTOR . ')'
+
+    '|'  shift, and go to state 47
+    ')'  shift, and go to state 63
+
+
+state 44
+
+   41 TESTREL: TESTEXPR1 . TESTRELOP TESTEXPR1
+   45 TESTEXPR1: TESTEXPR1 . TESTEXPR1OP TESTEXPR2
+   55 TESTEXPR4: '(' TESTEXPR1 . ')'
+
+    ')'  shift, and go to state 64
+    '='  shift, and go to state 49
+    '<'  shift, and go to state 50
+    '>'  shift, and go to state 51
+    '+'  shift, and go to state 26
+    '-'  shift, and go to state 27
+
+    TESTRELOP    go to state 52
+    TESTEXPR1OP  go to state 53
+
+
+state 45
+
+   38 TESTNOT: '!' TESTNOT .
+
+    $default  reduce using rule 38 (TESTNOT)
+
+
+state 46
+
+   10 STRATTEST: $@1 '/' TEST $@2 . '?' STRATSELECT STRATTESTELSE ';'
+
+    '?'  shift, and go to state 65
+
+
+state 47
+
+   34 TESTOR: TESTOR '|' . TESTAND
+
+    PARAMNAME  shift, and go to state 21
+    VALDOUBLE  shift, and go to state 22
+    VALINT     shift, and go to state 23
+    '('        shift, and go to state 24
+    '!'        shift, and go to state 25
+    '+'        shift, and go to state 26
+    '-'        shift, and go to state 27
+
+    TESTAND      go to state 66
+    TESTNOT      go to state 31
+    TESTREL      go to state 32
+    TESTEXPR1    go to state 33
+    TESTEXPR1OP  go to state 34
+    TESTEXPR2    go to state 35
+    TESTEXPR3    go to state 36
+    TESTEXPR4    go to state 37
+    TESTVAL      go to state 38
+    TESTVAR      go to state 39
+    VALSDOUBLE   go to state 40
+    VALSINT      go to state 41
+
+
+state 48
+
+   36 TESTAND: TESTAND '&' . TESTNOT
+
+    PARAMNAME  shift, and go to state 21
+    VALDOUBLE  shift, and go to state 22
+    VALINT     shift, and go to state 23
+    '('        shift, and go to state 24
+    '!'        shift, and go to state 25
+    '+'        shift, and go to state 26
+    '-'        shift, and go to state 27
+
+    TESTNOT      go to state 67
+    TESTREL      go to state 32
+    TESTEXPR1    go to state 33
+    TESTEXPR1OP  go to state 34
+    TESTEXPR2    go to state 35
+    TESTEXPR3    go to state 36
+    TESTEXPR4    go to state 37
+    TESTVAL      go to state 38
+    TESTVAR      go to state 39
+    VALSDOUBLE   go to state 40
+    VALSINT      go to state 41
+
+
+state 49
+
+   43 TESTRELOP: '=' .
+
+    $default  reduce using rule 43 (TESTRELOP)
+
+
+state 50
+
+   42 TESTRELOP: '<' .
+
+    $default  reduce using rule 42 (TESTRELOP)
+
+
+state 51
+
+   44 TESTRELOP: '>' .
+
+    $default  reduce using rule 44 (TESTRELOP)
+
+
+state 52
+
+   41 TESTREL: TESTEXPR1 TESTRELOP . TESTEXPR1
+
+    PARAMNAME  shift, and go to state 21
+    VALDOUBLE  shift, and go to state 22
+    VALINT     shift, and go to state 23
+    '('        shift, and go to state 68
+    '+'        shift, and go to state 26
+    '-'        shift, and go to state 27
+
+    TESTEXPR1    go to state 69
+    TESTEXPR1OP  go to state 34
+    TESTEXPR2    go to state 35
+    TESTEXPR3    go to state 36
+    TESTEXPR4    go to state 37
+    TESTVAL      go to state 38
+    TESTVAR      go to state 39
+    VALSDOUBLE   go to state 40
+    VALSINT      go to state 41
+
+
+state 53
+
+   45 TESTEXPR1: TESTEXPR1 TESTEXPR1OP . TESTEXPR2
+
+    PARAMNAME  shift, and go to state 21
+    VALDOUBLE  shift, and go to state 22
+    VALINT     shift, and go to state 23
+    '('        shift, and go to state 68
+    '+'        shift, and go to state 26
+    '-'        shift, and go to state 27
+
+    TESTEXPR1OP  go to state 34
+    TESTEXPR2    go to state 70
+    TESTEXPR3    go to state 36
+    TESTEXPR4    go to state 37
+    TESTVAL      go to state 38
+    TESTVAR      go to state 39
+    VALSDOUBLE   go to state 40
+    VALSINT      go to state 41
+
+
+state 54
+
+   61 VALSDOUBLE: TESTEXPR1OP VALDOUBLE .
+
+    $default  reduce using rule 61 (VALSDOUBLE)
+
+
+state 55
+
+   63 VALSINT: TESTEXPR1OP VALINT .
+
+    $default  reduce using rule 63 (VALSINT)
+
+
+state 56
+
+   51 TESTEXPR2OP: '*' .
+
+    $default  reduce using rule 51 (TESTEXPR2OP)
+
+
+state 57
+
+   49 TESTEXPR2: TESTEXPR2 TESTEXPR2OP . TESTEXPR3
+
+    PARAMNAME  shift, and go to state 21
+    VALDOUBLE  shift, and go to state 22
+    VALINT     shift, and go to state 23
+    '('        shift, and go to state 68
+    '+'        shift, and go to state 26
+    '-'        shift, and go to state 27
+
+    TESTEXPR1OP  go to state 34
+    TESTEXPR3    go to state 71
+    TESTEXPR4    go to state 37
+    TESTVAL      go to state 38
+    TESTVAR      go to state 39
+    VALSDOUBLE   go to state 40
+    VALSINT      go to state 41
+
+
+state 58
+
+   54 TESTEXPR3OP: '%' .
+
+    $default  reduce using rule 54 (TESTEXPR3OP)
+
+
+state 59
+
+   52 TESTEXPR3: TESTEXPR3 TESTEXPR3OP . TESTEXPR4
+
+    PARAMNAME  shift, and go to state 21
+    VALDOUBLE  shift, and go to state 22
+    VALINT     shift, and go to state 23
+    '('        shift, and go to state 68
+    '+'        shift, and go to state 26
+    '-'        shift, and go to state 27
+
+    TESTEXPR1OP  go to state 34
+    TESTEXPR4    go to state 72
+    TESTVAL      go to state 38
+    TESTVAR      go to state 39
+    VALSDOUBLE   go to state 40
+    VALSINT      go to state 41
+
+
+state 60
+
+   25 PARAMPARAM: PARAMNAME . @6 '=' PARAMVAL
+
+    $default  reduce using rule 24 (@6)
+
+    @6  go to state 73
+
+
+state 61
+
+   20 METHODPARAM: $@4 '{' PARAMLIST . $@5 '}'
+   22 PARAMLIST: PARAMLIST . ',' PARAMPARAM
+
+    ','  shift, and go to state 74
+
+    $default  reduce using rule 19 ($@5)
+
+    $@5  go to state 75
+
+
+state 62
+
+   23 PARAMLIST: PARAMPARAM .
+
+    $default  reduce using rule 23 (PARAMLIST)
+
+
+state 63
+
+   39 TESTNOT: '(' TESTOR ')' .
+
+    $default  reduce using rule 39 (TESTNOT)
+
+
+state 64
+
+   55 TESTEXPR4: '(' TESTEXPR1 ')' .
+
+    $default  reduce using rule 55 (TESTEXPR4)
+
+
+state 65
+
+   10 STRATTEST: $@1 '/' TEST $@2 '?' . STRATSELECT STRATTESTELSE ';'
+
+    METHODNAME  shift, and go to state 1
+    '('         shift, and go to state 2
+
+    '/'       reduce using rule 8 ($@1)
+    $default  reduce using rule 5 (STRATEMPTY)
+
+    STRATSELECT  go to state 76
+    STRATEMPTY   go to state 5
+    STRATCONCAT  go to state 6
+    STRATTEST    go to state 7
+    $@1          go to state 8
+    STRATGROUP   go to state 9
+    STRATMETHOD  go to state 10
+
+
+state 66
+
+   34 TESTOR: TESTOR '|' TESTAND .
+   36 TESTAND: TESTAND . '&' TESTNOT
+
+    '&'  shift, and go to state 48
+
+    $default  reduce using rule 34 (TESTOR)
+
+
+state 67
+
+   36 TESTAND: TESTAND '&' TESTNOT .
+
+    $default  reduce using rule 36 (TESTAND)
+
+
+state 68
+
+   55 TESTEXPR4: '(' . TESTEXPR1 ')'
+
+    PARAMNAME  shift, and go to state 21
+    VALDOUBLE  shift, and go to state 22
+    VALINT     shift, and go to state 23
+    '('        shift, and go to state 68
+    '+'        shift, and go to state 26
+    '-'        shift, and go to state 27
+
+    TESTEXPR1    go to state 77
+    TESTEXPR1OP  go to state 34
+    TESTEXPR2    go to state 35
+    TESTEXPR3    go to state 36
+    TESTEXPR4    go to state 37
+    TESTVAL      go to state 38
+    TESTVAR      go to state 39
+    VALSDOUBLE   go to state 40
+    VALSINT      go to state 41
+
+
+state 69
+
+   41 TESTREL: TESTEXPR1 TESTRELOP TESTEXPR1 .
+   45 TESTEXPR1: TESTEXPR1 . TESTEXPR1OP TESTEXPR2
+
+    '+'  shift, and go to state 26
+    '-'  shift, and go to state 27
+
+    $default  reduce using rule 41 (TESTREL)
+
+    TESTEXPR1OP  go to state 53
+
+
+state 70
+
+   45 TESTEXPR1: TESTEXPR1 TESTEXPR1OP TESTEXPR2 .
+   49 TESTEXPR2: TESTEXPR2 . TESTEXPR2OP TESTEXPR3
+
+    '*'  shift, and go to state 56
+
+    $default  reduce using rule 45 (TESTEXPR1)
+
+    TESTEXPR2OP  go to state 57
+
+
+state 71
+
+   49 TESTEXPR2: TESTEXPR2 TESTEXPR2OP TESTEXPR3 .
+   52 TESTEXPR3: TESTEXPR3 . TESTEXPR3OP TESTEXPR4
+
+    '%'  shift, and go to state 58
+
+    $default  reduce using rule 49 (TESTEXPR2)
+
+    TESTEXPR3OP  go to state 59
+
+
+state 72
+
+   52 TESTEXPR3: TESTEXPR3 TESTEXPR3OP TESTEXPR4 .
+
+    $default  reduce using rule 52 (TESTEXPR3)
+
+
+state 73
+
+   25 PARAMPARAM: PARAMNAME @6 . '=' PARAMVAL
+
+    '='  shift, and go to state 78
+
+
+state 74
+
+   22 PARAMLIST: PARAMLIST ',' . PARAMPARAM
+
+    PARAMNAME  shift, and go to state 60
+
+    PARAMPARAM  go to state 79
+
+
+state 75
+
+   20 METHODPARAM: $@4 '{' PARAMLIST $@5 . '}'
+
+    '}'  shift, and go to state 80
+
+
+state 76
+
+    2 STRATSELECT: STRATSELECT . '|' STRATEMPTY
+   10 STRATTEST: $@1 '/' TEST $@2 '?' STRATSELECT . STRATTESTELSE ';'
+
+    '|'  shift, and go to state 14
+    ':'  shift, and go to state 81
+
+    $default  reduce using rule 13 (STRATTESTELSE)
+
+    STRATTESTELSE  go to state 82
+
+
+state 77
+
+   45 TESTEXPR1: TESTEXPR1 . TESTEXPR1OP TESTEXPR2
+   55 TESTEXPR4: '(' TESTEXPR1 . ')'
+
+    ')'  shift, and go to state 64
+    '+'  shift, and go to state 26
+    '-'  shift, and go to state 27
+
+    TESTEXPR1OP  go to state 53
+
+
+state 78
+
+   25 PARAMPARAM: PARAMNAME @6 '=' . PARAMVAL
+
+    error      shift, and go to state 83
+    VALCASE    shift, and go to state 84
+    VALDOUBLE  shift, and go to state 22
+    VALINT     shift, and go to state 23
+    VALSTRING  shift, and go to state 85
+    '+'        shift, and go to state 26
+    '-'        shift, and go to state 27
+
+    METHODNAME  reduce using rule 30 (@7)
+    '|'         reduce using rule 30 (@7)
+    '/'         reduce using rule 30 (@7)
+    '('         reduce using rule 30 (@7)
+    '}'         reduce using rule 30 (@7)
+    ','         reduce using rule 30 (@7)
+
+    PARAMVAL     go to state 86
+    @7           go to state 87
+    TESTEXPR1OP  go to state 34
+    VALSDOUBLE   go to state 88
+    VALSINT      go to state 89
+
+
+state 79
+
+   22 PARAMLIST: PARAMLIST ',' PARAMPARAM .
+
+    $default  reduce using rule 22 (PARAMLIST)
+
+
+state 80
+
+   20 METHODPARAM: $@4 '{' PARAMLIST $@5 '}' .
+
+    $default  reduce using rule 20 (METHODPARAM)
+
+
+state 81
+
+   12 STRATTESTELSE: ':' . STRATSELECT
+
+    METHODNAME  shift, and go to state 1
+    '('         shift, and go to state 2
+
+    '/'       reduce using rule 8 ($@1)
+    $default  reduce using rule 5 (STRATEMPTY)
+
+    STRATSELECT  go to state 90
+    STRATEMPTY   go to state 5
+    STRATCONCAT  go to state 6
+    STRATTEST    go to state 7
+    $@1          go to state 8
+    STRATGROUP   go to state 9
+    STRATMETHOD  go to state 10
+
+
+state 82
+
+   10 STRATTEST: $@1 '/' TEST $@2 '?' STRATSELECT STRATTESTELSE . ';'
+
+    ';'  shift, and go to state 91
+
+
+state 83
+
+   32 PARAMVAL: error .
+
+    $default  reduce using rule 32 (PARAMVAL)
+
+
+state 84
+
+   26 PARAMVAL: VALCASE .
+
+    $default  reduce using rule 26 (PARAMVAL)
+
+
+state 85
+
+   29 PARAMVAL: VALSTRING .
+
+    $default  reduce using rule 29 (PARAMVAL)
+
+
+state 86
+
+   25 PARAMPARAM: PARAMNAME @6 '=' PARAMVAL .
+
+    $default  reduce using rule 25 (PARAMPARAM)
+
+
+state 87
+
+   31 PARAMVAL: @7 . STRATSELECT
+
+    METHODNAME  shift, and go to state 1
+    '('         shift, and go to state 2
+
+    '/'       reduce using rule 8 ($@1)
+    $default  reduce using rule 5 (STRATEMPTY)
+
+    STRATSELECT  go to state 92
+    STRATEMPTY   go to state 5
+    STRATCONCAT  go to state 6
+    STRATTEST    go to state 7
+    $@1          go to state 8
+    STRATGROUP   go to state 9
+    STRATMETHOD  go to state 10
+
+
+state 88
+
+   27 PARAMVAL: VALSDOUBLE .
+
+    $default  reduce using rule 27 (PARAMVAL)
+
+
+state 89
+
+   28 PARAMVAL: VALSINT .
+
+    $default  reduce using rule 28 (PARAMVAL)
+
+
+state 90
+
+    2 STRATSELECT: STRATSELECT . '|' STRATEMPTY
+   12 STRATTESTELSE: ':' STRATSELECT .
+
+    '|'  shift, and go to state 14
+
+    $default  reduce using rule 12 (STRATTESTELSE)
+
+
+state 91
+
+   10 STRATTEST: $@1 '/' TEST $@2 '?' STRATSELECT STRATTESTELSE ';' .
+
+    $default  reduce using rule 10 (STRATTEST)
+
+
+state 92
+
+    2 STRATSELECT: STRATSELECT . '|' STRATEMPTY
+   31 PARAMVAL: @7 STRATSELECT .
+
+    '|'  shift, and go to state 14
+
+    $default  reduce using rule 31 (PARAMVAL)

@@ -402,7 +402,6 @@ typedef struct mesh_ {
   int* d_ispec_selected_source;
 
   // receivers
-  int* d_number_receiver_global;
   int* d_ispec_selected_rec_loc;
   int* d_ispec_selected_rec;
   int nrec_local;

@@ -35,7 +35,7 @@
   use constants
 
   use specfem_par, only: USE_SOURCES_RECEIVERS_Z,ibool,myrank,NSPEC_AB,NGLOB_AB, &
-                         xstore,ystore,zstore,NPROC,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+                         xstore,ystore,zstore,NPROC,SUPPRESS_UTM_PROJECTION,INVERSE_FWI_FULL_PROBLEM, &
                          num_free_surface_faces,free_surface_ispec,free_surface_ijk,SU_FORMAT
 
   implicit none
@@ -124,7 +124,7 @@
   if (ier /= 0) call exit_mpi(myrank,'error opening file '//trim(rec_filename))
 
   ! checks if station locations already available
-  if (SU_FORMAT) then
+  if (SU_FORMAT .and. (.not. INVERSE_FWI_FULL_PROBLEM) ) then
     ! checks if file with station infos located from previous run exists
     inquire(file=trim(OUTPUT_FILES)//'/SU_stations_info.bin',exist=SU_station_file_exists)
     if (SU_station_file_exists) then
@@ -200,11 +200,9 @@
            x_found(nrec), &
            y_found(nrec), &
            z_found(nrec), &
-           final_distance(nrec),stat=ier)
+           final_distance(nrec), &
+           idomain(nrec),stat=ier)
   if (ier /= 0) stop 'Error allocating arrays for locating receivers'
-
-  allocate(idomain(nrec),stat=ier)
-  if (ier /= 0) stop 'Error allocating idomain array'
 
   ! loop on all the stations
   do irec = 1,nrec
@@ -215,8 +213,7 @@
     if (ier /= 0) call exit_mpi(myrank, 'Error reading station file '//trim(rec_filename))
 
     ! convert station location to UTM
-    call utm_geo(stlon(irec),stlat(irec),stutm_x(irec),stutm_y(irec), &
-                UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
+    call utm_geo(stlon(irec),stlat(irec),stutm_x(irec),stutm_y(irec),ILONGLAT2UTM)
 
     ! compute horizontal distance between source and receiver in km
     horiz_dist(irec) = dsqrt((stutm_y(irec)-utm_y_source)**2 &
@@ -436,6 +433,7 @@
   deallocate(y_found)
   deallocate(z_found)
   deallocate(final_distance)
+  deallocate(idomain)
 
   ! synchronize all the processes to make sure everybody has finished
   call synchronize_all()
@@ -446,108 +444,91 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine station_filter(SUPPRESS_UTM_PROJECTION,UTM_PROJECTION_ZONE, &
-                            myrank,filename,filtered_filename,nfilter, &
-                            LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
+  subroutine station_filter(filename,filtered_filename,nfilter)
 
   use constants
+  use specfem_par, only : SUPPRESS_UTM_PROJECTION,myrank,xstore,ystore
 
   implicit none
 
-! input
-  logical :: SUPPRESS_UTM_PROJECTION
-  integer :: UTM_PROJECTION_ZONE
-  integer :: myrank
+  ! input
   character(len=*) :: filename,filtered_filename
-  double precision :: LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
 
-! output
+  ! output
   integer :: nfilter
 
-  integer :: nrec, nrec_filtered
+  ! local
+  integer,dimension(1) :: nrec, nrec_filtered
   integer :: ier
   double precision :: stlat,stlon,stele,stbur,stutm_x,stutm_y
   double precision :: minlat,minlon,maxlat,maxlon
   character(len=MAX_LENGTH_STATION_NAME) :: station_name
   character(len=MAX_LENGTH_NETWORK_NAME) :: network_name
   character(len=MAX_STRING_LEN) :: dummystring
+  real(kind=CUSTOM_REAL):: minl,maxl,min_all,max_all
+  double precision :: LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
 
+  ! gets model dimensions
+  minl = minval( xstore )
+  maxl = maxval( xstore )
+  call min_all_all_cr(minl,min_all)
+  call max_all_all_cr(maxl,max_all)
+  LONGITUDE_MIN = min_all
+  LONGITUDE_MAX = max_all
+
+  minl = minval( ystore )
+  maxl = maxval( ystore )
+  call min_all_all_cr(minl,min_all)
+  call max_all_all_cr(maxl,max_all)
+  LATITUDE_MIN = min_all
+  LATITUDE_MAX = max_all
+
+  ! initialization
   nrec = 0
   nrec_filtered = 0
 
-  ! counts number of lines in stations file
-  open(unit=IIN, file=trim(filename), status = 'old', iostat = ier)
-  if (ier /= 0) call exit_mpi(myrank, 'No file '//trim(filename)//', exit')
-  do while (ier == 0)
-    read(IIN,"(a)",iostat=ier) dummystring
-    if (ier /= 0) exit
+  if (myrank==0) then
 
-    if (len_trim(dummystring) > 0) nrec = nrec + 1
-  enddo
-  close(IIN)
-
-  ! reads in station locations
-  open(unit=IIN, file=trim(filename), status = 'old', iostat = ier)
-  do while (ier == 0)
-    read(IIN,"(a)",iostat=ier) dummystring
-    if (ier /= 0) exit
-
-    ! counts number of stations in min/max region
-    if (len_trim(dummystring) > 0) then
-      dummystring = trim(dummystring)
-      read(dummystring, *) station_name, network_name, stlat, stlon, stele, stbur
-
-      ! convert station location to UTM
-      call utm_geo(stlon,stlat,stutm_x,stutm_y, &
-           UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
-
-      ! counts stations within lon/lat region
-      if (stutm_y >= LATITUDE_MIN .and. stutm_y <= LATITUDE_MAX .and. &
-          stutm_x >= LONGITUDE_MIN .and. stutm_x <= LONGITUDE_MAX) &
-        nrec_filtered = nrec_filtered + 1
-    endif
-  enddo
-  close(IIN)
-
-  ! writes out filtered stations file
-  if (myrank == 0) then
-    open(unit=IIN,file=trim(filename),status='old',action='read',iostat=ier)
+    ! counts number of stations in stations file, filter them and output the list of active stations in STATIONS_FILTERED file
+    open(unit=IIN, file=trim(filename), status = 'old', iostat = ier)
+    if (ier /= 0) call exit_mpi(myrank, 'No file '//trim(filename)//', exit')
     open(unit=IOUT,file=trim(filtered_filename),status='unknown')
     do while (ier == 0)
       read(IIN,"(a)",iostat=ier) dummystring
       if (ier /= 0) exit
 
       if (len_trim(dummystring) > 0) then
+        nrec(1) = nrec(1) + 1
         dummystring = trim(dummystring)
         read(dummystring, *) station_name, network_name, stlat, stlon, stele, stbur
 
         ! convert station location to UTM
-        call utm_geo(stlon,stlat,stutm_x,stutm_y, &
-             UTM_PROJECTION_ZONE,ILONGLAT2UTM,SUPPRESS_UTM_PROJECTION)
+        call utm_geo(stlon,stlat,stutm_x,stutm_y,ILONGLAT2UTM)
 
-        if (stutm_y >= LATITUDE_MIN .and. stutm_y <= LATITUDE_MAX .and. &
-           stutm_x >= LONGITUDE_MIN .and. stutm_x <= LONGITUDE_MAX) then
-
+        ! counts stations within lon/lat region
+        if (stutm_y >= LATITUDE_MIN .and. stutm_y <= LATITUDE_MAX .and.&
+            stutm_x >= LONGITUDE_MIN .and. stutm_x <= LONGITUDE_MAX) then
+          nrec_filtered(1) = nrec_filtered(1) + 1
           ! with specific format
           write(IOUT,'(a10,1x,a10,4e18.6)') &
                             trim(station_name),trim(network_name), &
                             sngl(stlat),sngl(stlon),sngl(stele),sngl(stbur)
-
         endif
       endif
     enddo
+
     close(IIN)
     close(IOUT)
 
     write(IMAIN,*)
-    write(IMAIN,*) 'there are ',nrec,' stations in file ', trim(filename)
-    write(IMAIN,*) 'saving ',nrec_filtered,' stations inside the model in file ', trim(filtered_filename)
-    write(IMAIN,*) 'excluding ',nrec - nrec_filtered,' stations located outside the model'
+    write(IMAIN,*) 'there are ',nrec(1),' stations in file ', trim(filename)
+    write(IMAIN,*) 'saving ',nrec_filtered(1),' stations inside the model in file ', trim(filtered_filename)
+    write(IMAIN,*) 'excluding ',nrec(1) - nrec_filtered(1),' stations located outside the model'
     write(IMAIN,*)
 
-    if (nrec_filtered < 1) then
+    if (nrec_filtered(1) < 1) then
       write(IMAIN,*) 'error filtered stations:'
-      write(IMAIN,*) '  simulation needs at least 1 station but got ',nrec_filtered
+      write(IMAIN,*) '  simulation needs at least 1 station but got ',nrec_filtered(1)
       write(IMAIN,*)
       write(IMAIN,*) '  check that stations in file '//trim(filename)//' are within'
 
@@ -556,10 +537,8 @@
         write(IMAIN,*) '    longitude min/max: ',LONGITUDE_MIN,LONGITUDE_MAX
       else
         ! convert edge locations from UTM back to lat/lon
-        call utm_geo(minlon,minlat,LONGITUDE_MIN,LATITUDE_MIN, &
-             UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
-        call utm_geo(maxlon,maxlat,LONGITUDE_MAX,LATITUDE_MAX, &
-             UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
+        call utm_geo(minlon,minlat,LONGITUDE_MIN,LATITUDE_MIN,IUTM2LONGLAT)
+        call utm_geo(maxlon,maxlat,LONGITUDE_MAX,LATITUDE_MAX,IUTM2LONGLAT)
         write(IMAIN,*) '    longitude min/max: ',minlon,maxlon
         write(IMAIN,*) '    latitude min/max : ',minlat,maxlat
         write(IMAIN,*) '    UTM x min/max: ',LONGITUDE_MIN,LONGITUDE_MAX
@@ -569,9 +548,12 @@
       write(IMAIN,*)
     endif
 
-  endif
+  endif ! myrank==0
 
-  nfilter = nrec_filtered
+  call bcast_all_i(nrec,1)
+  call bcast_all_i(nrec_filtered,1)
+
+  nfilter = nrec_filtered(1)
 
   end subroutine station_filter
 

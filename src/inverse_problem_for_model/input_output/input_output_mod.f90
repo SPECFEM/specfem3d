@@ -31,7 +31,7 @@ module input_output
                                   LOCAL_PATH, xigll, yigll, zigll, &
                                   ibool, xstore, ystore, zstore, &
                                   xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, &
-                                  myrank, USE_SOURCES_RECEIVERS_Z
+                                  myrank, USE_SOURCES_RECEIVERS_Z,INVERSE_FWI_FULL_PROBLEM
 
 
 
@@ -79,7 +79,7 @@ contains
     if (myrank == 0) then
        write(INVERSE_LOG_FILE,*)
        write(INVERSE_LOG_FILE,*) '          *********************************************'
-       write(INVERSE_LOG_FILE,*) '          ***       READING IMPUT PARAMETERS        ***'
+       write(INVERSE_LOG_FILE,*) '          ***       READING INPUT PARAMETERS        ***'
        write(INVERSE_LOG_FILE,*) '          *********************************************'
        write(INVERSE_LOG_FILE,*)
     endif
@@ -105,7 +105,7 @@ contains
 
     call bcast_all_acqui(acqui_simu,  inversion_param, myrank)
     call locate_source(acqui_simu, myrank)
-    call locate_receiver(acqui_simu, myrank)
+  !  call locate_receiver(acqui_simu, myrank)
 
     if (myrank == 0) call flush_iunit(INVERSE_LOG_FILE)
 
@@ -1082,225 +1082,88 @@ contains
 
     type(acqui), allocatable, dimension(:), intent(inout)  :: acqui_simu
 
-    integer                                                :: ievent, istation, nsta
-    character(len=MAX_LEN_STRING)                          :: line, station_name, network_name
-    real(kind=CUSTOM_REAL)                                 :: y, x, z, stbur
-
+    integer                                                :: ievent, irec, nsta, nrec_loc
+    character(len=MAX_LEN_STRING)                          :: rec_filename,filtered_rec_filename
     write(INVERSE_LOG_FILE,*)
     write(INVERSE_LOG_FILE,*) '     READING stations '
+
+    INVERSE_FWI_FULL_PROBLEM = .true.
 
     ! loop on all events
     do ievent = 1, NEVENT
        ! open station file
-       open(IINN,file=trim(adjustl(acqui_simu(ievent)%station_file)))
-       ! count number of stations related to event ievent
-       nsta=0
-       do
-          read(IINN,'(a)', end=99) line
-          nsta=nsta+1
-       enddo
-       99 close(IINN)
+       rec_filename=trim(adjustl(acqui_simu(ievent)%station_file))
+       filtered_rec_filename=rec_filename(1:len_trim(rec_filename))//'_FILTERED'
+
+       call station_filter(rec_filename,filtered_rec_filename,nsta)
+
        acqui_simu(ievent)%nsta_tot=nsta
        allocate(acqui_simu(ievent)%station_name(nsta),acqui_simu(ievent)%network_name(nsta))
        allocate(acqui_simu(ievent)%position_station(3,nsta))
-       open(IINN,file=trim(adjustl(acqui_simu(ievent)%station_file)))
-       do istation=1,nsta
-          read(IINN,'(a)') line
-          read(line, *) station_name, network_name, y, x, z, stbur
-          acqui_simu(ievent)%position_station(1,istation)=x
-          acqui_simu(ievent)%position_station(2,istation)=y
-          if (USE_SOURCES_RECEIVERS_Z) then
-            acqui_simu(ievent)%position_station(3,istation) = stbur
-          else
-            acqui_simu(ievent)%position_station(3,istation) = z
-          endif
-          acqui_simu(ievent)%station_name(istation)=trim(adjustl(station_name))
-          acqui_simu(ievent)%network_name(istation)=trim(adjustl(network_name))
+       allocate(acqui_simu(ievent)%xi_rec(nsta), &
+                acqui_simu(ievent)%eta_rec(nsta), &
+                acqui_simu(ievent)%gamma_rec(nsta))
+       allocate(acqui_simu(ievent)%islice_selected_rec(nsta), &
+                acqui_simu(ievent)%ispec_selected_rec(nsta), &
+                acqui_simu(ievent)%number_receiver_global(nsta))
+
+       ! reads STATIONS_FILTERED file, locates receivers in the mesh and compute Lagrange interpolators
+       call locate_receivers(filtered_rec_filename,nsta,acqui_simu(ievent)%islice_selected_rec,&
+                             acqui_simu(ievent)%ispec_selected_rec, &
+                             acqui_simu(ievent)%xi_rec,acqui_simu(ievent)%eta_rec,acqui_simu(ievent)%gamma_rec,&
+                             acqui_simu(ievent)%station_name,acqui_simu(ievent)%network_name,1.0d0,1.0d0)
+
+       nrec_loc = 0 
+       do irec = 1, nsta
+         if (myrank == acqui_simu(ievent)%islice_selected_rec(irec)) then
+             nrec_loc=nrec_loc+1
+             acqui_simu(ievent)%number_receiver_global(nrec_loc)=irec
+         endif
        enddo
-       close(IINN)
+
+       acqui_simu(ievent)%nsta_slice=nrec_loc
+
+       if (acqui_simu(ievent)%nsta_slice > 0) then
+          allocate(acqui_simu(ievent)%hxi    (NGLLX,nrec_loc))
+          allocate(acqui_simu(ievent)%heta   (NGLLY,nrec_loc))
+          allocate(acqui_simu(ievent)%hgamma (NGLLZ,nrec_loc))
+          allocate(acqui_simu(ievent)%hpxi   (NGLLX,nrec_loc))
+          allocate(acqui_simu(ievent)%hpeta  (NGLLY,nrec_loc))
+          allocate(acqui_simu(ievent)%hpgamma(NGLLZ,nrec_loc))
+          allocate(acqui_simu(ievent)%freqcy_to_invert(NDIM,2,nrec_loc))
+       else
+          allocate(acqui_simu(ievent)%hxi    (1,1))
+          allocate(acqui_simu(ievent)%heta   (1,1))
+          allocate(acqui_simu(ievent)%hgamma (1,1))
+          allocate(acqui_simu(ievent)%hpxi   (1,1))
+          allocate(acqui_simu(ievent)%hpeta  (1,1))
+          allocate(acqui_simu(ievent)%hpgamma(1,1))
+          allocate(acqui_simu(ievent)%freqcy_to_invert(NDIM,2,1))
+       endif
+
+       nrec_loc = 0
+       do irec=1, acqui_simu(ievent)%nsta_tot
+          if (myrank == acqui_simu(ievent)%islice_selected_rec(irec)) then
+
+             nrec_loc = nrec_loc + 1
+
+             ! compute Lagrange polynomials at the receiver location
+             call lagrange_any(acqui_simu(ievent)%xi_rec(irec),NGLLX,xigll,&
+                               acqui_simu(ievent)%hxi(1,nrec_loc),acqui_simu(ievent)%hpxi(1,nrec_loc))
+             call lagrange_any(acqui_simu(ievent)%eta_rec(irec),NGLLY,yigll,&
+                               acqui_simu(ievent)%heta(1,nrec_loc),acqui_simu(ievent)%hpeta(1,nrec_loc))
+             call lagrange_any(acqui_simu(ievent)%gamma_rec(irec),NGLLZ,zigll,&
+                               acqui_simu(ievent)%hgamma(1,nrec_loc),acqui_simu(ievent)%hpgamma(1,nrec_loc))
+
+          endif
+       enddo
+
     enddo
 
     write(INVERSE_LOG_FILE,*) '     READING stations passed '
     write(INVERSE_LOG_FILE,*)
 
  end subroutine get_stations
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!------------------------------------------------------------
-! read source parameter file
-!------------------------------------------------------------
-  subroutine get_point_source(acqui_simu)
-    type(acqui), allocatable, dimension(:), intent(inout)  :: acqui_simu
-    ! locals
-    character(len=MAX_LEN_STRING)                          :: string
-    integer                                                :: ievent, ier
-    integer                                                :: i
-    real(kind=CUSTOM_REAL)                                 :: dt_dummy
-
-    write(INVERSE_LOG_FILE,*)
-    write(INVERSE_LOG_FILE,*) '     READING sources parameters '
-
-    do ievent=1,acqui_simu(1)%nevent_tot
-
-       select case (acqui_simu(ievent)%source_type)
-
-       case('moment')
-          open(IINN,file=trim(acqui_simu(ievent)%source_file),status='old',action='read',iostat=ier)
-          if (ier /= 0) then
-             print *,'Error opening file: ',trim(acqui_simu(ievent)%source_file)
-             stop 'Error opening CMTSOLUTION file'
-          endif
-
-
-          ! gets header line
-          read(IINN,"(a256)",iostat=ier) string
-          if (ier /= 0) then
-             print *, 'Error reading header line in event ',ievent
-             stop 'Error reading header line in station in CMTSOLUTION file'
-          endif
-
-          ! skips empty lines
-          do while (len_trim(string) == 0)
-             read(IINN,"(a256)",iostat=ier) string
-             if (ier /= 0) then
-                print *, 'Error reading header line in event ',ievent
-                stop 'Error reading header line in station in CMTSOLUTION file'
-             endif
-          enddo
-
-          ! ignore line with event name
-          read(IINN,"(a)",iostat=ier) string
-          if (ier /= 0) then
-             print *, 'Error reading event name in event ',ievent
-             stop 'Error reading event name in station in CMTSOLUTION file'
-          endif
-
-          ! read time shift
-          read(IINN,"(a)",iostat=ier) string
-          if (ier /= 0) then
-             print *, 'Error reading time shift in event ',ievent
-             stop 'Error reading time shift in station in CMTSOLUTION file'
-          endif
-          read(string(12:len_trim(string)),*) acqui_simu(ievent)%t_shift
-          !write(*,*) 'read t_shift ' , acqui_simu(ievent)%t_shift
-          ! read half duration
-          read(IINN,"(a)",iostat=ier) string
-          if (ier /= 0) then
-             print *, 'Error reading half duration in event ',ievent
-             stop 'Error reading half duration in station in CMTSOLUTION file'
-          endif
-          read(string(15:len_trim(string)),*) acqui_simu(ievent)%hdur
-          !write(*,*) 'read hdur ' , acqui_simu(ievent)%hdur
-          ! read latitude
-          read(IINN,"(a)",iostat=ier) string
-          if (ier /= 0) then
-             print *, 'Error reading latitude in event ',ievent
-             stop 'Error reading latitude in station in CMTSOLUTION file'
-          endif
-          read(string(10:len_trim(string)),*) acqui_simu(ievent)%Ys
-          !write(*,*) 'read Ys ' , acqui_simu(ievent)%Ys
-          ! read longitude
-          read(IINN,"(a)",iostat=ier) string
-          if (ier /= 0) then
-             print *, 'Error reading longitude in event ',ievent
-             stop 'Error reading longitude in station in CMTSOLUTION file'
-          endif
-          read(string(11:len_trim(string)),*) acqui_simu(ievent)%Xs
-          !write(*,*) 'read Xs ' , acqui_simu(ievent)%Xs
-          ! read depth
-          read(IINN,"(a)",iostat=ier) string
-          if (ier /= 0) then
-             print *, 'Error reading depth in event ',ievent
-             stop 'Error reading depth in station in CMTSOLUTION file'
-          endif
-          read(string(7:len_trim(string)),*) acqui_simu(ievent)%Zs
-          !write(*,*) 'read Zs ' , acqui_simu(ievent)%Zs
-
-          ! seismic moment tensor
-          ! CMTSOLUTION: components given in dyne-cm
-          ! read Mrr
-          read(IINN,"(a)",iostat=ier) string
-          if (ier /= 0) then
-             print *, 'Error reading Mrr in event ',ievent
-             stop 'Error reading Mrr in station in CMTSOLUTION file'
-          endif
-          read(string(5:len_trim(string)),*)  acqui_simu(ievent)%Mzz
-          !write(*,*)  acqui_simu(ievent)%Mzz
-          ! read Mtt
-          read(IINN,"(a)",iostat=ier) string
-          if (ier /= 0) then
-             print *, 'Error reading Mtt in event ',ievent
-             stop 'Error reading Mtt in station in CMTSOLUTION file'
-          endif
-          read(string(5:len_trim(string)),*) acqui_simu(ievent)%Myy
-          !write(*,*)  acqui_simu(ievent)%Myy
-          ! read Mpp
-          read(IINN,"(a)",iostat=ier) string
-          if (ier /= 0) then
-             print *, 'Error reading Mpp in event ',ievent
-             stop 'Error reading Mpp in station in CMTSOLUTION file'
-          endif
-          read(string(5:len_trim(string)),*) acqui_simu(ievent)%Mxx
-          !write(*,*)  acqui_simu(ievent)%Mxx
-          ! read Mrt
-          read(IINN,"(a)",iostat=ier) string
-          if (ier /= 0) then
-             print *, 'Error reading Mrt in event ',ievent
-             stop 'Error reading Mrt in station in CMTSOLUTION file'
-          endif
-          read(string(5:len_trim(string)),*) acqui_simu(ievent)%Myz
-          acqui_simu(ievent)%Myz = - acqui_simu(ievent)%Myz
-          !write(*,*)  acqui_simu(ievent)%Myz
-          ! read Mrp
-          read(IINN,"(a)",iostat=ier) string
-          if (ier /= 0) then
-             print *, 'Error reading Mrp in event ',ievent
-             stop 'Error reading Mrp in station in CMTSOLUTION file'
-          endif
-          read(string(5:len_trim(string)),*) acqui_simu(ievent)%Mxz
-          !write(*,*)  acqui_simu(ievent)%Mxz
-          ! read Mtp
-          read(IINN,"(a)",iostat=ier) string
-          if (ier /= 0) then
-             print *, 'Error reading Mtp in event ',ievent
-             stop 'Error reading Mtp in station in CMTSOLUTION file'
-          endif
-          read(string(5:len_trim(string)),*) acqui_simu(ievent)%Mxy
-          acqui_simu(ievent)%Mxy = - acqui_simu(ievent)%Mxy
-          !write(*,*)  acqui_simu(ievent)%Mxy
-          close(IINN)
-
-          ! to be consistent with specfem
-          acqui_simu(ievent)%Mxx = acqui_simu(ievent)%Mxx * 1.d-7
-          acqui_simu(ievent)%Myy = acqui_simu(ievent)%Myy * 1.d-7
-          acqui_simu(ievent)%Mzz = acqui_simu(ievent)%Mzz * 1.d-7
-          acqui_simu(ievent)%Mxy = acqui_simu(ievent)%Mxy * 1.d-7
-          acqui_simu(ievent)%Mxz = acqui_simu(ievent)%Mxz * 1.d-7
-          acqui_simu(ievent)%Myz = acqui_simu(ievent)%Myz * 1.d-7
-
-          if (acqui_simu(ievent)%external_source_wavelet) then
-             allocate(acqui_simu(ievent)%source_wavelet(acqui_simu(ievent)%Nt_data,1))
-             open(IINN, file=trim(acqui_simu(ievent)%source_wavelet_file))
-             do i=1,acqui_simu(ievent)%Nt_data
-                read(IINN, *) dt_dummy, acqui_simu(ievent)%source_wavelet(i,1)
-             enddo
-             close(IINN)
-          endif
-
-       case('force')
-          print *, 'Abort not implemented yet : FORCESOLUTION in event ',ievent
-          stop
-
-       case default
-          !! nothing to do
-
-       end select
-
-
-    enddo
-
-    write(INVERSE_LOG_FILE,*) '     READING sources parameters passed '
-
-  end subroutine get_point_source
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !---------------------------------------------------------------

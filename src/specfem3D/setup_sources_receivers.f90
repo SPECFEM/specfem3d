@@ -386,30 +386,12 @@
   integer :: irec,isource,ier
   character(len=MAX_STRING_LEN) :: path_to_add
 
-  real(kind=CUSTOM_REAL):: minl,maxl,min_all,max_all
-  double precision :: LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
-
   ! user output
   if (myrank == 0) then
     write(IMAIN,*)
     write(IMAIN,*) 'receivers:'
     call flush_IMAIN()
   endif
-
-  ! gets model dimensions
-  minl = minval( xstore )
-  maxl = maxval( xstore )
-  call min_all_all_cr(minl,min_all)
-  call max_all_all_cr(maxl,max_all)
-  LONGITUDE_MIN = min_all
-  LONGITUDE_MAX = max_all
-
-  minl = minval( ystore )
-  maxl = maxval( ystore )
-  call min_all_all_cr(minl,min_all)
-  call max_all_all_cr(maxl,max_all)
-  LATITUDE_MIN = min_all
-  LATITUDE_MAX = max_all
 
   ! reads in station file
   if (SIMULATION_TYPE == 1) then
@@ -430,8 +412,7 @@
     filtered_rec_filename = path_to_add(1:len_trim(path_to_add))//filtered_rec_filename(1:len_trim(filtered_rec_filename))
   endif
 
-  call station_filter(SUPPRESS_UTM_PROJECTION,UTM_PROJECTION_ZONE,myrank,rec_filename,filtered_rec_filename,nrec, &
-                      LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
+  call station_filter(rec_filename,filtered_rec_filename,nrec)
 
   if (nrec < 1) call exit_MPI(myrank,'need at least one receiver')
   call synchronize_all()

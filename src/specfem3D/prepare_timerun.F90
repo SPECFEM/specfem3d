@@ -1333,7 +1333,7 @@
                                 ispec_is_inner, &
                                 NSOURCES, nsources_local, &
                                 sourcearrays, islice_selected_source, ispec_selected_source, &
-                                number_receiver_global, ispec_selected_rec, &
+                                ispec_selected_rec, &
                                 nrec, nrec_local, &
                                 SIMULATION_TYPE, &
                                 USE_MESH_COLORING_GPU, &

@@ -536,7 +536,7 @@ contains
        if (SIMULATION_TYPE == 3 ) then  !! read only open
 
           ! opens existing files
-          if (ELASTIC_SIMULATION .and. num_abs_boundary_faces > 0 ) then
+          if (ELASTIC_SIMULATION) then
 
              ! size of single record
              b_reclen_field = CUSTOM_REAL * NDIM * NGLLSQUARE * num_abs_boundary_faces
@@ -554,7 +554,7 @@ contains
                   len_trim(trim(prname)//'absorb_field.bin'), filesize)
           endif
 
-          if (ACOUSTIC_SIMULATION .and. num_abs_boundary_faces > 0 ) then
+          if (ACOUSTIC_SIMULATION) then
 
              ! size of single record
              b_reclen_potential = CUSTOM_REAL * NGLLSQUARE * num_abs_boundary_faces
@@ -574,10 +574,10 @@ contains
 
        else  !!! write open
 
-          if (SAVE_FORWARD .and. num_abs_boundary_faces > 0) then
+          if (SAVE_FORWARD) then
 
              ! opens new file
-             if (ELASTIC_SIMULATION .and. num_abs_boundary_faces > 0  ) then
+             if (ELASTIC_SIMULATION) then
                 ! size of single record
                 b_reclen_field = CUSTOM_REAL * NDIM * NGLLSQUARE * num_abs_boundary_faces
                 ! check integer size limit: size of b_reclen_field must fit onto an 4-byte integer
@@ -594,7 +594,7 @@ contains
                      len_trim(trim(prname)//'absorb_field.bin'), filesize)
              endif
 
-             if (ACOUSTIC_SIMULATION .and. num_abs_boundary_faces > 0 ) then
+             if (ACOUSTIC_SIMULATION) then
                 ! size of single record
                 b_reclen_potential = CUSTOM_REAL * NGLLSQUARE * num_abs_boundary_faces
                 ! check integer size limit: size of b_reclen_potential must fit onto an 4-byte integer
@@ -1062,9 +1062,9 @@ contains
     endif
 
     ! close absorb files : close here because we will open at each new specfem run
-    if (ELASTIC_SIMULATION .and. (SIMULATION_TYPE == 3 .or. SAVE_FORWARD) .and. num_abs_boundary_faces > 0) &
+    if (ELASTIC_SIMULATION .and. (SIMULATION_TYPE == 3 .or. SAVE_FORWARD) .and. STACEY_ABSORBING_CONDITIONS) &
                         call close_file_abs(IOABS)
-    if (ACOUSTIC_SIMULATION .and. (SIMULATION_TYPE == 3 .or. SAVE_FORWARD) .and. num_abs_boundary_faces > 0) &
+    if (ACOUSTIC_SIMULATION .and. (SIMULATION_TYPE == 3 .or. SAVE_FORWARD) .and. STACEY_ABSORBING_CONDITIONS) &
                         call close_file_abs(IOABS_AC)
 
     !! allocate arrays for saving the kernel computed by GPU in CPU memory in order to perform summation over events.
