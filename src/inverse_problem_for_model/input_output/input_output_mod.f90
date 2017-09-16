@@ -1166,6 +1166,185 @@ contains
  end subroutine get_stations
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!------------------------------------------------------------
+! read source parameter file
+!------------------------------------------------------------
+  subroutine get_point_source(acqui_simu)
+    type(acqui), allocatable, dimension(:), intent(inout)  :: acqui_simu
+    ! locals
+    character(len=MAX_LEN_STRING)                          :: string
+    integer                                                :: ievent, ier
+    integer                                                :: i
+    real(kind=CUSTOM_REAL)                                 :: dt_dummy
+
+    write(INVERSE_LOG_FILE,*)
+    write(INVERSE_LOG_FILE,*) '     READING sources parameters '
+
+    do ievent=1,acqui_simu(1)%nevent_tot
+
+       select case (acqui_simu(ievent)%source_type)
+
+       case('moment')
+          open(IINN,file=trim(acqui_simu(ievent)%source_file),status='old',action='read',iostat=ier)
+          if (ier /= 0) then
+             print *,'Error opening file: ',trim(acqui_simu(ievent)%source_file)
+             stop 'Error opening CMTSOLUTION file'
+          endif
+
+
+          ! gets header line
+          read(IINN,"(a256)",iostat=ier) string
+          if (ier /= 0) then
+             print *, 'Error reading header line in event ',ievent
+             stop 'Error reading header line in station in CMTSOLUTION file'
+          endif
+
+          ! skips empty lines
+          do while (len_trim(string) == 0)
+             read(IINN,"(a256)",iostat=ier) string
+             if (ier /= 0) then
+                print *, 'Error reading header line in event ',ievent
+                stop 'Error reading header line in station in CMTSOLUTION file'
+             endif
+          enddo
+
+          ! ignore line with event name
+          read(IINN,"(a)",iostat=ier) string
+          if (ier /= 0) then
+             print *, 'Error reading event name in event ',ievent
+             stop 'Error reading event name in station in CMTSOLUTION file'
+          endif
+
+          ! read time shift
+          read(IINN,"(a)",iostat=ier) string
+          if (ier /= 0) then
+             print *, 'Error reading time shift in event ',ievent
+             stop 'Error reading time shift in station in CMTSOLUTION file'
+          endif
+          read(string(12:len_trim(string)),*) acqui_simu(ievent)%t_shift
+          !write(*,*) 'read t_shift ' , acqui_simu(ievent)%t_shift
+          ! read half duration
+          read(IINN,"(a)",iostat=ier) string
+          if (ier /= 0) then
+             print *, 'Error reading half duration in event ',ievent
+             stop 'Error reading half duration in station in CMTSOLUTION file'
+          endif
+          read(string(15:len_trim(string)),*) acqui_simu(ievent)%hdur
+          !write(*,*) 'read hdur ' , acqui_simu(ievent)%hdur
+          ! read latitude
+          read(IINN,"(a)",iostat=ier) string
+          if (ier /= 0) then
+             print *, 'Error reading latitude in event ',ievent
+             stop 'Error reading latitude in station in CMTSOLUTION file'
+          endif
+          read(string(10:len_trim(string)),*) acqui_simu(ievent)%Ys
+          !write(*,*) 'read Ys ' , acqui_simu(ievent)%Ys
+          ! read longitude
+          read(IINN,"(a)",iostat=ier) string
+          if (ier /= 0) then
+             print *, 'Error reading longitude in event ',ievent
+             stop 'Error reading longitude in station in CMTSOLUTION file'
+          endif
+          read(string(11:len_trim(string)),*) acqui_simu(ievent)%Xs
+          !write(*,*) 'read Xs ' , acqui_simu(ievent)%Xs
+          ! read depth
+          read(IINN,"(a)",iostat=ier) string
+          if (ier /= 0) then
+             print *, 'Error reading depth in event ',ievent
+             stop 'Error reading depth in station in CMTSOLUTION file'
+          endif
+          read(string(7:len_trim(string)),*) acqui_simu(ievent)%Zs
+          !write(*,*) 'read Zs ' , acqui_simu(ievent)%Zs
+
+          ! seismic moment tensor
+          ! CMTSOLUTION: components given in dyne-cm
+          ! read Mrr
+          read(IINN,"(a)",iostat=ier) string
+          if (ier /= 0) then
+             print *, 'Error reading Mrr in event ',ievent
+             stop 'Error reading Mrr in station in CMTSOLUTION file'
+          endif
+          read(string(5:len_trim(string)),*)  acqui_simu(ievent)%Mzz
+          !write(*,*)  acqui_simu(ievent)%Mzz
+          ! read Mtt
+          read(IINN,"(a)",iostat=ier) string
+          if (ier /= 0) then
+             print *, 'Error reading Mtt in event ',ievent
+             stop 'Error reading Mtt in station in CMTSOLUTION file'
+          endif
+          read(string(5:len_trim(string)),*) acqui_simu(ievent)%Myy
+          !write(*,*)  acqui_simu(ievent)%Myy
+          ! read Mpp
+          read(IINN,"(a)",iostat=ier) string
+          if (ier /= 0) then
+             print *, 'Error reading Mpp in event ',ievent
+             stop 'Error reading Mpp in station in CMTSOLUTION file'
+          endif
+          read(string(5:len_trim(string)),*) acqui_simu(ievent)%Mxx
+          !write(*,*)  acqui_simu(ievent)%Mxx
+          ! read Mrt
+          read(IINN,"(a)",iostat=ier) string
+          if (ier /= 0) then
+             print *, 'Error reading Mrt in event ',ievent
+             stop 'Error reading Mrt in station in CMTSOLUTION file'
+          endif
+          read(string(5:len_trim(string)),*) acqui_simu(ievent)%Myz
+          acqui_simu(ievent)%Myz = - acqui_simu(ievent)%Myz
+          !write(*,*)  acqui_simu(ievent)%Myz
+          ! read Mrp
+          read(IINN,"(a)",iostat=ier) string
+          if (ier /= 0) then
+             print *, 'Error reading Mrp in event ',ievent
+             stop 'Error reading Mrp in station in CMTSOLUTION file'
+          endif
+          read(string(5:len_trim(string)),*) acqui_simu(ievent)%Mxz
+          !write(*,*)  acqui_simu(ievent)%Mxz
+          ! read Mtp
+          read(IINN,"(a)",iostat=ier) string
+          if (ier /= 0) then
+             print *, 'Error reading Mtp in event ',ievent
+             stop 'Error reading Mtp in station in CMTSOLUTION file'
+          endif
+          read(string(5:len_trim(string)),*) acqui_simu(ievent)%Mxy
+          acqui_simu(ievent)%Mxy = - acqui_simu(ievent)%Mxy
+          !write(*,*)  acqui_simu(ievent)%Mxy
+          close(IINN)
+
+          ! to be consistent with specfem
+          acqui_simu(ievent)%Mxx = acqui_simu(ievent)%Mxx * 1.d-7
+          acqui_simu(ievent)%Myy = acqui_simu(ievent)%Myy * 1.d-7
+          acqui_simu(ievent)%Mzz = acqui_simu(ievent)%Mzz * 1.d-7
+          acqui_simu(ievent)%Mxy = acqui_simu(ievent)%Mxy * 1.d-7
+          acqui_simu(ievent)%Mxz = acqui_simu(ievent)%Mxz * 1.d-7
+          acqui_simu(ievent)%Myz = acqui_simu(ievent)%Myz * 1.d-7
+
+          if (acqui_simu(ievent)%external_source_wavelet) then
+             allocate(acqui_simu(ievent)%source_wavelet(acqui_simu(ievent)%Nt_data,1))
+             open(IINN, file=trim(acqui_simu(ievent)%source_wavelet_file))
+             do i=1,acqui_simu(ievent)%Nt_data
+                read(IINN, *) dt_dummy, acqui_simu(ievent)%source_wavelet(i,1)
+             enddo
+             close(IINN)
+          endif
+
+       case('force')
+          print *, 'Abort not implemented yet : FORCESOLUTION in event ',ievent
+          stop
+
+       case default
+          !! nothing to do
+
+       end select
+
+
+    enddo
+
+    write(INVERSE_LOG_FILE,*) '     READING sources parameters passed '
+
+  end subroutine get_point_source
+
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !---------------------------------------------------------------
 ! MPI BCAST of acqui_simu
 !---------------------------------------------------------------
