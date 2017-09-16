@@ -1108,12 +1108,12 @@ contains
                 acqui_simu(ievent)%number_receiver_global(nsta))
 
        ! reads STATIONS_FILTERED file, locates receivers in the mesh and compute Lagrange interpolators
-       call locate_receivers(filtered_rec_filename,nsta,acqui_simu(ievent)%islice_selected_rec,&
+       call locate_receivers(filtered_rec_filename,nsta,acqui_simu(ievent)%islice_selected_rec, &
                              acqui_simu(ievent)%ispec_selected_rec, &
-                             acqui_simu(ievent)%xi_rec,acqui_simu(ievent)%eta_rec,acqui_simu(ievent)%gamma_rec,&
+                             acqui_simu(ievent)%xi_rec,acqui_simu(ievent)%eta_rec,acqui_simu(ievent)%gamma_rec, &
                              acqui_simu(ievent)%station_name,acqui_simu(ievent)%network_name,1.0d0,1.0d0)
 
-       nrec_loc = 0 
+       nrec_loc = 0
        do irec = 1, nsta
          if (myrank == acqui_simu(ievent)%islice_selected_rec(irec)) then
              nrec_loc=nrec_loc+1
@@ -1148,11 +1148,11 @@ contains
              nrec_loc = nrec_loc + 1
 
              ! compute Lagrange polynomials at the receiver location
-             call lagrange_any(acqui_simu(ievent)%xi_rec(irec),NGLLX,xigll,&
+             call lagrange_any(acqui_simu(ievent)%xi_rec(irec),NGLLX,xigll, &
                                acqui_simu(ievent)%hxi(1,nrec_loc),acqui_simu(ievent)%hpxi(1,nrec_loc))
-             call lagrange_any(acqui_simu(ievent)%eta_rec(irec),NGLLY,yigll,&
+             call lagrange_any(acqui_simu(ievent)%eta_rec(irec),NGLLY,yigll, &
                                acqui_simu(ievent)%heta(1,nrec_loc),acqui_simu(ievent)%hpeta(1,nrec_loc))
-             call lagrange_any(acqui_simu(ievent)%gamma_rec(irec),NGLLZ,zigll,&
+             call lagrange_any(acqui_simu(ievent)%gamma_rec(irec),NGLLZ,zigll, &
                                acqui_simu(ievent)%hgamma(1,nrec_loc),acqui_simu(ievent)%hpgamma(1,nrec_loc))
 
           endif

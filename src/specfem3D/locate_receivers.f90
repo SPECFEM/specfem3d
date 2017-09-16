@@ -447,7 +447,7 @@
   subroutine station_filter(filename,filtered_filename,nfilter)
 
   use constants
-  use specfem_par, only : SUPPRESS_UTM_PROJECTION,myrank,xstore,ystore
+  use specfem_par, only: SUPPRESS_UTM_PROJECTION,myrank,xstore,ystore
 
   implicit none
 
@@ -487,7 +487,7 @@
   nrec = 0
   nrec_filtered = 0
 
-  if (myrank==0) then
+  if (myrank == 0) then
 
     ! counts number of stations in stations file, filter them and output the list of active stations in STATIONS_FILTERED file
     open(unit=IIN, file=trim(filename), status = 'old', iostat = ier)
@@ -506,7 +506,7 @@
         call utm_geo(stlon,stlat,stutm_x,stutm_y,ILONGLAT2UTM)
 
         ! counts stations within lon/lat region
-        if (stutm_y >= LATITUDE_MIN .and. stutm_y <= LATITUDE_MAX .and.&
+        if (stutm_y >= LATITUDE_MIN .and. stutm_y <= LATITUDE_MAX .and. &
             stutm_x >= LONGITUDE_MIN .and. stutm_x <= LONGITUDE_MAX) then
           nrec_filtered(1) = nrec_filtered(1) + 1
           ! with specific format
@@ -548,7 +548,7 @@
       write(IMAIN,*)
     endif
 
-  endif ! myrank==0
+  endif ! myrank == 0
 
   call bcast_all_i(nrec,1)
   call bcast_all_i(nrec_filtered,1)

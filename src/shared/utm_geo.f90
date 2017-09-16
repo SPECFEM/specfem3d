@@ -87,7 +87,7 @@
 ! 3 degrees away from both zone boundary.
 !
   use constants, only: PI,ILONGLAT2UTM,IUTM2LONGLAT
-  use shared_input_parameters, only : UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION
+  use shared_input_parameters, only: UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION
 
   implicit none
 
