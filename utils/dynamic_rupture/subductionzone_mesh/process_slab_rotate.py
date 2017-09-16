@@ -8,28 +8,37 @@ import math
 import numpy as np
 #import matplotlib.pyplot as plt
 
-
 cubit.init([''])
 cubit.cmd('reset')
-Latmin = 33
+
+
+#-- BEGIN user settings ----------------------
+
+Latmin = 33          # regional box limits
 Latmax = 44
 Lonmin = 136
 Lonmax = 150
-xc = 0.5*(Lonmin+Lonmax)
-yc = 0.5*(Latmin+Latmax)
-Lat2dis = 100.0
+Lat2dis = 100.0      # latitude to km conversion factor
 # The true latitude to distance conversion ratio should be 111.195km=1deg.
 #We will reflect that at the end of the exportmesh.py by scaling the model
 #up by a factor of 1.1195. The reason we don't do it here is that it will
 #change the whole script of mesh generation.
-Lon2dis = 76.0
-Meshsize = 4.0 # mesh size set to 4.0 km
-radius = 1000.0
-cuttingdepth = -100.0
-refine_slab = False # refine mesh near the subduction interface , can be very slow
-Mesh = False # set to true to trigger meshing
-rotate =-15
+Lon2dis = 76.0       # longitude to km conversion factor
+Meshsize = 4.0       # mesh size in km
+radius = 1000.0      # radius of semi-spherical absorbing boundary in km
+zcutBottom = 100.0   # bottom depth of the fault in km
+zcutTop = 2.0        # steepen the fault surface above this depth in km
+refine_slab = False  # refine mesh near the subduction interface. Can be very slow
+rotate = -15         # set this to minus average strike. Approximately aligns the trench with the Y axis to facilitate meshing
+Mesh = False         # set to true to trigger meshing
 Plotsquare=False
+
+#-- END user settings ----------------------
+
+
+xc = 0.5*(Lonmin+Lonmax)
+yc = 0.5*(Latmin+Latmax)
+
 # rotate function doesn't seem to work
 #def rotate(X,deg):
 #    rad = math.radians(deg)
@@ -39,9 +48,9 @@ Plotsquare=False
 #    return Y
 
 def surf(z):#this function modifies the slab geometry at surface
-    c = 5.0e-2
+    c = 0.5/zcutTop #5.0e-2
     f = -math.log(math.exp(-c*z)-1)/c
-    f = max(f,cuttingdepth)
+    f = max(f,-zcutBottom)
     return f
 
 
