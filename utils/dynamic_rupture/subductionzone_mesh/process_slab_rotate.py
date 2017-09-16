@@ -14,9 +14,10 @@ cubit.cmd('reset')
 
 #-- BEGIN user settings ----------------------
 
+FaultFileName = './kur_slab1.0_clip.xyz'  # fault surface file: longitude, latitude, depth (in km, negative)
 #FaultFileName = './alu_slab1.0_clip.xyz'
-FaultFileName = './kur_slab1.0_clip.xyz'
 #FaultFileName = './aluslab.xyz'
+
 Latmin = 33          # regional box limits
 Latmax = 44
 Lonmin = 136
