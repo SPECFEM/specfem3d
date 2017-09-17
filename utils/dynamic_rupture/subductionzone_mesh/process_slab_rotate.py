@@ -28,7 +28,7 @@ Lat2dis = 100.0      # latitude to km conversion factor
                      # by a factor of 1.1195. The reason we don't do that here is that it would
                      # change the whole mesh generation script.
 Lon2dis = 76.0       # longitude to km conversion factor
-zcutBottom = 100.0   # bottom depth of the fault in km
+zcutBottom = 100.0   # bottom depth of the fault in km, preliminary value (the final depth is set in exportmesh.py)
 zcutTop = 2.0        # steepen the fault surface above this depth in km
                      # to avoid elements with small angles at the trench
                      # Use the matlab script demo_subduction_smoothing.m to explore this feature
