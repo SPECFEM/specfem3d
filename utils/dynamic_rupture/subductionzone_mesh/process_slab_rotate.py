@@ -87,7 +87,7 @@ def import_elev_data():
 def import_slab_data(filename):
     data = np.loadtxt(filename)
     data = data[np.bitwise_not(np.isnan(data[:,2])),:]
-    data = data[np.bitwise_and(np.bitwise_and(data[:,1]>=Latmin, data[:,1]<=Latmax),data[:,2]>-zcutBottom*1.2)] 
+    data = data[np.bitwise_and(np.bitwise_and(data[:,1]>=Latmin, data[:,1]<=Latmax),data[:,2]>-zcutBottom*1.2)]
     return data
 
 
@@ -183,7 +183,7 @@ print(N2)
 start = N+1
 start_curve = n_curve+1
 for ii in range(0,N2):
-    vert = "create vertex x "+str(data[ii,0]*Lon2dis)+" y "+str(data[ii,1]*Lat2dis)+" z "+str(data[ii,2]/1000.0) 
+    vert = "create vertex x "+str(data[ii,0]*Lon2dis)+" y "+str(data[ii,1]*Lat2dis)+" z "+str(data[ii,2]/1000.0)
     # topography file: longitude, latitude and depth
     # depths are negative and in meters
     cubit.cmd(vert)
@@ -234,7 +234,7 @@ if True:
     cubit.cmd('project surface 12 onto surf 13 imprint keepcurve keepbody')
     loft_surf = np.array([[1,15],[2,16],[4,18],[5,20],[7,23],[9,25],[10,27],[12,29]])
     cubit.cmd("save as 'slab_rotate_before_loft.cub' overwrite")
-    
+
     exit()
 #--- Everything below this line is currently ignored. The rest of the meshing is completed by two other scripts.
 
