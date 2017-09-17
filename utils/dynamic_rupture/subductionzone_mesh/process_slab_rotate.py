@@ -28,14 +28,18 @@ Lat2dis = 100.0      # latitude to km conversion factor
                      # by a factor of 1.1195. The reason we don't do that here is that it would
                      # change the whole mesh generation script.
 Lon2dis = 76.0       # longitude to km conversion factor
-Meshsize = 4.0       # mesh size in km
-radius = 1000.0      # radius of semi-spherical absorbing boundary in km
 zcutBottom = 100.0   # bottom depth of the fault in km
 zcutTop = 2.0        # steepen the fault surface above this depth in km
                      # to avoid elements with small angles at the trench
                      # Use the matlab script demo_subduction_smoothing.m to explore this feature
-refine_slab = False  # refine the mesh near the subduction interface. Can be very slow
 rotate = -15         # set this to minus average strike. Approximately aligns the trench with the Y axis to facilitate meshing
+# dimensions (in km) of the box containing the fault:
+xLim = 600           # along the X axis of the rotated frame (it must fit inside the lat-lon box)
+yLim = 800           # along the Y axis of the rotated frame (it must fit inside the lat-lon box)
+zLim = 250           # depth (it must be deeper than zcutBottom)
+radius = 1000.0      # radius of semi-spherical absorbing boundary in km
+Meshsize = 4.0       # mesh size in km
+refine_slab = False  # refine the mesh near the subduction interface. Can be very slow
 Mesh = False         # set to true to trigger meshing
 Plotsquare=False
 
@@ -83,8 +87,7 @@ def import_elev_data():
 def import_slab_data(filename):
     data = np.loadtxt(filename)
     data = data[np.bitwise_not(np.isnan(data[:,2])),:]
-   # select data between latitude 45 and 50 degree and depth above 250km
-    data = data[np.bitwise_and(np.bitwise_and(data[:,1]>=Latmin, data[:,1]<=Latmax),data[:,2]>-250)] 
+    data = data[np.bitwise_and(np.bitwise_and(data[:,1]>=Latmin, data[:,1]<=Latmax),data[:,2]>-zcutBottom*1.2)] 
     return data
 
 
@@ -203,30 +206,24 @@ cubit.cmd('create surface skin curve {0} to {1}'.format(n_curve_slab+1,n_curve))
 #for ii in range(1,n_curve,20):#
 #cubit.cmd('create surface skin curve %d to %d'%(ii,ii+20))
 cubit.cmd("delete curve all")
+
 cubit.cmd('set node constraint on')
-cubit.cmd('create brick x 600 y 800 z 400')
-cubit.cmd("save as 'slab_rotate.cub' overwrite")
 
+# create a box and cut it using fault and topography smooth surfaces
+cubit.cmd('create brick x {0} y {1} z {2}'.format(xLim,yLim,zLim*2))
 # rotate to align the trench (on average) with the Y axis
-cubit.cmd('vol 3  move 0 0 -50')
 cubit.cmd('rotate vol 3 about 0 0 0 direction 0 0 1 angle {0}'.format(rotate))
-
-# cut the block using fault and topography smooth surfaces
 cubit.cmd("save as 'slab_rotate.cub' overwrite")
 cubit.cmd('webcut vol 3 with sheet body 2')
 cubit.cmd('delete vol 4')
 cubit.cmd('webcut vol 3 with sheet body 1')
 cubit.cmd('delete vol 1 2')
 cubit.cmd('compress all')
-#cubit.cmd("vol all move -100 -350 0")
 cubit.cmd("merge all")
+
 if True:
 
-# make wrapping sphere not working
     cubit.cmd("create sphere radius {0}".format(radius))
-#cubit.cmd("section volume 3 with zplane offset 0 reverse")
-
-#!python
     cubit.cmd('project surface 1 onto surf 13 imprint keepcurve keepbody')
     cubit.cmd('project surface 2 onto surf 13 imprint keepcurve keepbody')
     cubit.cmd('project surface 4 onto surf 13 imprint keepcurve keepbody')
@@ -237,7 +234,9 @@ if True:
     cubit.cmd('project surface 12 onto surf 13 imprint keepcurve keepbody')
     loft_surf = np.array([[1,15],[2,16],[4,18],[5,20],[7,23],[9,25],[10,27],[12,29]])
     cubit.cmd("save as 'slab_rotate_before_loft.cub' overwrite")
+    
     exit()
+#--- Everything below this line is currently ignored. The rest of the meshing is completed by two other scripts.
 
     for ii in range(0,8):
         cubit.cmd('create volume loft surface {0} {1}'.format(loft_surf[ii,0],loft_surf[ii,1]))
