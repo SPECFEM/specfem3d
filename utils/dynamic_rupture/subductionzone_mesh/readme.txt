@@ -1,12 +1,12 @@
 To generate a subduction zone mesh with Trelis for dynamic rupture simulations in SPECFEM3D:
 
 0. Include the path to cubit.py in your $PYTHONPATH environment variable.
-   Create in this directory a file "etopo2.xyz" containing the topography of your region of interest
+   Create in this directory a file "etopo2.xyz" containing the topography of the region of interest
    or a global topography file, e.g. https://www.ngdc.noaa.gov/mgg/global/etopo2.html
    (3 columns: longitude, latitude, elevation in meters)
    Create in this directory a file containing the fault geometry 
    (3 columns: longitude, latitude, elevation in km)
-   Modify the user parameters in file process_slab_rotate.py following the guidelines therein
+   Modify the user parameters in file process_slab_rotate.py and exportmesh.py following the guidelines therein
 
 1. In the linux shell, run:
      python process_slab_rotate.py
