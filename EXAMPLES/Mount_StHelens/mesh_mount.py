@@ -1,3 +1,6 @@
+#!python
+#!python
+#!/usr/bin/python
 #!/usr/bin/env python
 #############################################################
 #
@@ -10,20 +13,30 @@
 #############################################################
 import cubit
 cubit.init([""])
+
+
 try:
-	from geocubitlib import boundary_definition
-	from geocubitlib import cubit2specfem3d
+
+from geocubitlib import boundary_definition, exportlib
+from geocubitlib import cubit2specfem3d
+
 except:
-    import boundary_definition
-	import cubit2specfem3d
+
+import boundary_definition
+import cubit2specfem3d
+
 
 import os
 import sys
 import os.path
 import time
 
+
+
+
 # time stamp
 print "#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
+
 
 # working directory
 cwd = os.getcwd()
@@ -209,7 +222,6 @@ print "#done meshing..."
 cubit.cmd('save as "topo_4.cub" overwrite')
 
 #### End of meshing
-
 ###### This is boundary_definition.py of GEOCUBIT
 #..... which extracts the bounding faces and defines them into blocks
 boundary_definition.entities=['face']
@@ -217,8 +229,6 @@ boundary_definition.define_bc(boundary_definition.entities,parallel=True)
 
 #### Define material properties for the 3 volumes ################
 cubit.cmd('#### DEFINE MATERIAL PROPERTIES #######################')
-
-
 cubit.cmd('block 1 name "elastic 1" ')        # elastic material region
 cubit.cmd('block 1 attribute count 6')
 cubit.cmd('block 1 attribute index 1 1')      # flag for material: 1 for 1. material
@@ -226,7 +236,7 @@ cubit.cmd('block 1 attribute index 2 2800')   # vp
 cubit.cmd('block 1 attribute index 3 1500')   # vs
 cubit.cmd('block 1 attribute index 4 2300')   # rho
 cubit.cmd('block 1 attribute index 5 150.0')  # Qmu
-cubit.cmd('block 1 attribute index 6 0 ')      # anisotropy_flag
+cubit.cmd('block 1 attribute index 6 0 ')     # anisotropy_flag
 
 # optional saves backups
 cubit.cmd('export mesh "top.e" dimension 3 overwrite')
@@ -241,3 +251,5 @@ cubit2specfem3d.export2SPECFEM3D('MESH')
 
 # time stamp
 print "#" + time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
+
+
