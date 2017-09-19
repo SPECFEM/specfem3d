@@ -594,6 +594,18 @@
   double precision, dimension(NGLLZ) :: hgammas,hpgammas
   double precision :: norm,comp_x,comp_y,comp_z
 
+  logical :: does_source_encoding
+
+  ! for source encoding (acoustic sources only so far)
+  if (USE_SOURCE_ENCODING) then
+    allocate(pm1_source_encoding(NSOURCES),stat=ier)
+  else
+    allocate(pm1_source_encoding(1),stat=ier)
+  endif
+  if (ier /= 0) stop 'error allocating arrays for sources'
+  pm1_source_encoding(:) = 1._CUSTOM_REAL
+  does_source_encoding = .false.
+
   ! forward simulations
   if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
     allocate(sourcearray(NDIM,NGLLX,NGLLY,NGLLZ), &
@@ -673,6 +685,18 @@
             ! where Mxx=Myy=Mzz, others Mxy,.. = zero, in equivalent elastic media
             ! (and getting rid of 1/sqrt(2) factor from scalar moment tensor definition above)
             factor_source = factor_source * sqrt(2.0) / sqrt(3.0)
+
+            ! source encoding
+            comp_x = 1.0d0
+            ! determines factor +/-1 depending on sign of moment tensor
+            comp_y = 1.0d0
+            ! (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources,
+            comp_z = 1.0d0
+            !   Geophysics, 74 (6), WCC177-WCC188.)
+            if (USE_SOURCE_ENCODING) then
+              pm1_source_encoding(isource) = sign(1.0d0,Mxx(isource))
+              does_source_encoding = .true.
+            endif
 
             comp_x = 1.0d0
             comp_y = 1.0d0
@@ -789,6 +813,21 @@
     ! we moved it to compute_add_sources_viscoelastic.f90 & compute_add_sources_acoustic.f90,
     ! because we may need to read in adjoint sources block by block
 
+  endif
+
+  ! user info
+  if (USE_SOURCE_ENCODING) then
+    if (myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*) 'using source encoding:'
+      if (does_source_encoding) then
+        write(IMAIN,*) '  sources have been encoded'
+      else
+        write(IMAIN,*) '  source encoding has no effect (only supported for acoustic sources)'
+      endif
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
   endif
 
   end subroutine setup_sources_precompute_arrays

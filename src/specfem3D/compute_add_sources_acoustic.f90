@@ -489,7 +489,7 @@
 ! returns source time function value for specified time
 
   use specfem_par, only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION,USE_TRICK_FOR_BETTER_PRESSURE, &
-                         hdur,hdur_Gaussian,DT
+                         USE_SOURCE_ENCODING,pm1_source_encoding,hdur,hdur_Gaussian,DT
 
   implicit none
 
@@ -568,6 +568,9 @@
 
     ! quasi-Heaviside
     ! stf = comp_source_time_function(time_source_dble,hdur_Gaussian(isource))
+
+    ! source encoding
+    if (USE_SOURCE_ENCODING) stf = stf * pm1_source_encoding(isource)
 
   endif ! USE_FORCE_POINT_SOURCE
 
