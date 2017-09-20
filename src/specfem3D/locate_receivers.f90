@@ -56,7 +56,6 @@
   double precision, allocatable, dimension(:) :: x_target,y_target,z_target
   double precision, allocatable, dimension(:) :: x_found,y_found,z_found
   integer :: irec
-  double precision, dimension(NDIM,NDIM) :: nu_temp
 
   ! timer MPI
   double precision, external :: wtime
@@ -207,7 +206,7 @@
            final_distance(nrec), &
            idomain(nrec),stat=ier)
   if (ier /= 0) stop 'Error allocating arrays for locating receivers'
- print*,'lolol'
+
   ! loop on all the stations to read the file
   if (myrank==0) then
     do irec = 1,nrec
@@ -215,7 +214,7 @@
       if (ier /= 0) call exit_mpi(myrank, 'Error reading station file '//trim(rec_filename))
     enddo
   endif
- print*,'lolol0'
+
   ! broadcast values to other slices
   call bcast_all_ch_array(station_name,nrec,MAX_LENGTH_STATION_NAME)
   call bcast_all_ch_array(network_name,nrec,MAX_LENGTH_NETWORK_NAME)
@@ -223,8 +222,6 @@
   call bcast_all_dp(stlon,nrec)
   call bcast_all_dp(stele,nrec)
   call bcast_all_dp(stbur,nrec)
-
-  print*,'lololol'
 
   ! loop on all the stations to locate the stations
   do irec = 1,nrec
@@ -237,7 +234,7 @@
 
     call locate_point_in_mesh(x_target(irec), y_target(irec), z_target(irec), RECEIVERS_CAN_BE_BURIED, elemsize_max_glob, &
             ispec_selected_rec(irec), xi_receiver(irec), eta_receiver(irec), gamma_receiver(irec), &
-            x_found(irec), y_found(irec), z_found(irec), idomain(irec),nu_temp)
+            x_found(irec), y_found(irec), z_found(irec), idomain(irec),nu(:,:,irec))
 
     ! synchronize all the processes to make sure all the estimates are available
     call synchronize_all()
@@ -246,9 +243,7 @@
                                            x_found(irec), y_found(irec), z_found(irec), &
                                            xi_receiver(irec), eta_receiver(irec), gamma_receiver(irec), &
                                            ispec_selected_rec(irec), islice_selected_rec(irec), &
-                                           final_distance(irec), idomain(irec),nu_temp)
-
-    nu(:,:,irec) = nu_temp(:,:) 
+                                           final_distance(irec), idomain(irec),nu(:,:,irec))
 
   enddo ! loop over stations
 

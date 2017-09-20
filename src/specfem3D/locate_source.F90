@@ -67,7 +67,6 @@
   ! sources
   integer,intent(inout) :: ispec_selected_source(NSOURCES)
   double precision :: f0,t0_ricker
-  double precision, dimension(NDIM,NDIM) :: nu_temp
 
   ! CMTs
   double precision, dimension(NSOURCES),intent(inout) :: hdur
@@ -187,11 +186,9 @@
     x_target_source = utm_x_source(isource)
     y_target_source = utm_y_source(isource)
 
-
     call locate_point_in_mesh(x_target_source, y_target_source, z_target_source, SOURCES_CAN_BE_BURIED, elemsize_max_glob, &
             ispec_selected_source(isource), xi_source(isource), eta_source(isource), gamma_source(isource), &
-            x_found_source(isource), y_found_source(isource), z_found_source(isource), idomain(isource),nu_temp)
-
+            x_found_source(isource), y_found_source(isource), z_found_source(isource), idomain(isource),nu_source(:,:,isource))
 
     ! synchronize all the processes to make sure all the estimates are available
     call synchronize_all()
@@ -200,9 +197,7 @@
                                            x_found_source(isource), y_found_source(isource), z_found_source(isource), &
                                            xi_source(isource), eta_source(isource), gamma_source(isource), &
                                            ispec_selected_source(isource), islice_selected_source(isource), &
-                                           final_distance_source(isource), idomain(isource),nu_temp)
-
-    nu_source(:,:,isource) = nu_temp(:,:) 
+                                           final_distance_source(isource), idomain(isource),nu_source(:,:,isource))
 
   enddo ! end of loop on all the sources
 
