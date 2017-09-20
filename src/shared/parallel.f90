@@ -418,20 +418,19 @@ end module my_mpi
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine bcast_all_ch_array(buffer,countval)
+  subroutine bcast_all_ch_array(buffer,countval,STRING_LEN)
 
     use my_mpi
-    use constants, only: MAX_STRING_LEN
 
     implicit none
 
-    integer :: countval
+    integer :: countval, STRING_LEN
 
-    character(len=MAX_STRING_LEN), dimension(MAX_STRING_LEN*countval) :: buffer
+    character(len=STRING_LEN), dimension(countval) :: buffer
 
     integer :: ier
 
-    call MPI_BCAST(buffer,MAX_STRING_LEN*countval,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(buffer,STRING_LEN*countval,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
 
   end subroutine bcast_all_ch_array
 

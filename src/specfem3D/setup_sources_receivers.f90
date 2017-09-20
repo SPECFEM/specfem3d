@@ -106,6 +106,7 @@
            hdur_Gaussian(NSOURCES), &
            utm_x_source(NSOURCES), &
            utm_y_source(NSOURCES), &
+           nu_source(NDIM,NDIM,NSOURCES), &
            stat=ier)
   if (ier /= 0) stop 'error allocating arrays for sources'
 
@@ -144,18 +145,15 @@
     SOURCE_FILE = path_to_add(1:len_trim(path_to_add))//SOURCE_FILE(1:len_trim(SOURCE_FILE))
   endif
 
-! locate sources in the mesh
-!
-! returns:  islice_selected_source & ispec_selected_source,
-!                xi_source, eta_source & gamma_source
+  ! locate sources in the mesh
   call locate_source(SOURCE_FILE,NSOURCES,tshift_src,min_tshift_src_original,yr,jda,ho,mi,utm_x_source,utm_y_source, &
           hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
           islice_selected_source,ispec_selected_source, &
-          xi_source,eta_source,gamma_source)
+          xi_source,eta_source,gamma_source,nu_source)
 
   if (abs(minval(tshift_src)) > TINYVAL) call exit_MPI(myrank,'one tshift_src must be zero, others must be positive')
 
-! filter source time function by Gaussian with hdur = HDUR_MOVIE when outputing movies or shakemaps
+  ! filter source time function by Gaussian with hdur = HDUR_MOVIE when outputing movies or shakemaps
   if (MOVIE_SURFACE .or. MOVIE_VOLUME .or. CREATE_SHAKEMAP) then
     hdur = sqrt(hdur**2 + HDUR_MOVIE**2)
     if (myrank == 0) then
@@ -436,12 +434,13 @@
            gamma_receiver(nrec), &
            station_name(nrec), &
            network_name(nrec), &
+           nu(NDIM,NDIM,nrec), &
            stat=ier)
   if (ier /= 0) stop 'error allocating arrays for receivers'
 
   ! locate receivers in the mesh
   call locate_receivers(filtered_rec_filename,nrec,islice_selected_rec,ispec_selected_rec, &
-                        xi_receiver,eta_receiver,gamma_receiver,station_name,network_name, &
+                        xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu, &
                         utm_x_source(1),utm_y_source(1))
 
   ! count number of receivers located in this slice

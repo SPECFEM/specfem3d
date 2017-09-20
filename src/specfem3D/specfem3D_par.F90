@@ -111,6 +111,7 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: sourcearray
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: sourcearrays
   double precision, dimension(:), allocatable :: Mxx,Myy,Mzz,Mxy,Mxz,Myz
+  double precision, dimension(:,:,:), allocatable :: nu_source
   double precision, dimension(:), allocatable :: xi_source,eta_source,gamma_source
   double precision, dimension(:), allocatable :: tshift_src,hdur,hdur_Gaussian
   double precision, dimension(:), allocatable :: utm_x_source,utm_y_source
@@ -132,6 +133,7 @@ module specfem_par
   integer, dimension(:), allocatable :: number_receiver_global
   double precision, dimension(:), allocatable :: xi_receiver,eta_receiver,gamma_receiver
   double precision, dimension(:,:), allocatable :: hpxir_store,hpetar_store,hpgammar_store
+  double precision, dimension(:,:,:), allocatable :: nu
 
 ! timing information for the stations
   character(len=MAX_LENGTH_STATION_NAME), allocatable, dimension(:) :: station_name

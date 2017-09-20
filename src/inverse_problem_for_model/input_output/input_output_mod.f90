@@ -1080,6 +1080,8 @@ contains
 !------------------------------------------------------------
   subroutine get_stations(acqui_simu)
 
+    use constants, only : NDIM
+
     type(acqui), allocatable, dimension(:), intent(inout)  :: acqui_simu
 
     integer                                                :: ievent, irec, nsta, nrec_loc
@@ -1105,13 +1107,14 @@ contains
                 acqui_simu(ievent)%gamma_rec(nsta))
        allocate(acqui_simu(ievent)%islice_selected_rec(nsta), &
                 acqui_simu(ievent)%ispec_selected_rec(nsta), &
-                acqui_simu(ievent)%number_receiver_global(nsta))
+                acqui_simu(ievent)%number_receiver_global(nsta), &
+                acqui_simu(ievent)%nu(NDIM,NDIM,nsta))
 
        ! reads STATIONS_FILTERED file, locates receivers in the mesh and compute Lagrange interpolators
        call locate_receivers(filtered_rec_filename,nsta,acqui_simu(ievent)%islice_selected_rec, &
                              acqui_simu(ievent)%ispec_selected_rec, &
                              acqui_simu(ievent)%xi_rec,acqui_simu(ievent)%eta_rec,acqui_simu(ievent)%gamma_rec, &
-                             acqui_simu(ievent)%station_name,acqui_simu(ievent)%network_name,1.0d0,1.0d0)
+                             acqui_simu(ievent)%station_name,acqui_simu(ievent)%network_name,acqui_simu(ievent)%nu,1.0d0,1.0d0)
 
        nrec_loc = 0
        do irec = 1, nsta

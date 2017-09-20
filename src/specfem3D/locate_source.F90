@@ -31,7 +31,7 @@
   subroutine locate_source(filename,NSOURCES,tshift_src,min_tshift_src_original,yr,jda,ho,mi,utm_x_source,utm_y_source, &
                            hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
                            islice_selected_source,ispec_selected_source, &
-                           xi_source,eta_source,gamma_source)
+                           xi_source,eta_source,gamma_source,nu_source)
 
   use constants
 
@@ -39,8 +39,7 @@
       UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,USE_SOURCES_RECEIVERS_Z, &
       factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP, &
       user_source_time_function,NSTEP_STF,NSOURCES_STF,USE_EXTERNAL_SOURCE_FILE,USE_TRICK_FOR_BETTER_PRESSURE, &
-      ibool,myrank,NSPEC_AB,NGLOB_AB,xstore,ystore,zstore,NPROC, &
-      DT,num_free_surface_faces,free_surface_ispec,free_surface_ijk
+      ibool,myrank,NSPEC_AB,NGLOB_AB,xstore,ystore,zstore,DT
 
 
   implicit none
@@ -51,16 +50,13 @@
   double precision,dimension(NSOURCES),intent(inout) :: tshift_src
   double precision,intent(inout) :: min_tshift_src_original
   double precision :: sec
+  double precision, dimension(NDIM,NDIM,NSOURCES),intent(out) :: nu_source
 
   integer isource
-  integer iproc(1)
 
   double precision, dimension(NSOURCES),intent(inout) :: utm_x_source,utm_y_source
   double precision final_distance_source(NSOURCES)
   double precision x_target_source,y_target_source,z_target_source
-  double precision,dimension(1) :: altitude_source,distmin_ele
-  double precision,dimension(NPROC) :: distmin_ele_all,elevation_all
-  real(kind=CUSTOM_REAL) :: xloc,yloc,loc_ele,loc_distmin
 
   integer,intent(inout) :: islice_selected_source(NSOURCES)
 
@@ -71,6 +67,7 @@
   ! sources
   integer,intent(inout) :: ispec_selected_source(NSOURCES)
   double precision :: f0,t0_ricker
+  double precision, dimension(NDIM,NDIM) :: nu_temp
 
   ! CMTs
   double precision, dimension(NSOURCES),intent(inout) :: hdur
@@ -162,65 +159,38 @@
     endif
   endif
 
+  !
+  ! r -> z, theta -> -y, phi -> x
+  !
+  !  Mrr =  Mzz
+  !  Mtt =  Myy
+  !  Mpp =  Mxx
+  !  Mrt = -Myz
+  !  Mrp =  Mxz
+  !  Mtp = -Mxy
+
+  ! get the moment tensor
+  Mzz(:) = + moment_tensor(1,:)
+  Mxx(:) = + moment_tensor(3,:)
+  Myy(:) = + moment_tensor(2,:)
+  Mxz(:) = + moment_tensor(5,:)
+  Myz(:) = - moment_tensor(4,:)
+  Mxy(:) = - moment_tensor(6,:)
+
   ! loop on all the sources
   do isource = 1,NSOURCES
 
-    !
-    ! r -> z, theta -> -y, phi -> x
-    !
-    !  Mrr =  Mzz
-    !  Mtt =  Myy
-    !  Mpp =  Mxx
-    !  Mrt = -Myz
-    !  Mrp =  Mxz
-    !  Mtp = -Mxy
-
-    ! get the moment tensor
-    Mzz(isource) = + moment_tensor(1,isource)
-    Mxx(isource) = + moment_tensor(3,isource)
-    Myy(isource) = + moment_tensor(2,isource)
-    Mxz(isource) = + moment_tensor(5,isource)
-    Myz(isource) = - moment_tensor(4,isource)
-    Mxy(isource) = - moment_tensor(6,isource)
-
-    ! gets UTM x,y
-    call utm_geo(long(isource),lat(isource),utm_x_source(isource),utm_y_source(isource),ILONGLAT2UTM)
-
-    ! get approximate topography elevation at source long/lat coordinates
-    xloc = utm_x_source(isource)
-    yloc = utm_y_source(isource)
-    call get_topo_elevation_free(xloc,yloc,loc_ele,loc_distmin, &
-                              NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-                              num_free_surface_faces,free_surface_ispec,free_surface_ijk)
-    altitude_source(1) = loc_ele
-    distmin_ele(1) = loc_distmin
-
-    !  MPI communications to determine the best slice
-    call gather_all_dp(distmin_ele,1,distmin_ele_all,1,NPROC)
-    call gather_all_dp(altitude_source,1,elevation_all,1,NPROC)
-
-    if (myrank == 0) then
-      iproc = minloc(distmin_ele_all)
-      altitude_source(1) = elevation_all(iproc(1))
-    endif
-    call bcast_all_dp(altitude_source,1)
-    elevation(isource) = altitude_source(1)
-
+    ! get z target coordinate, depending on the topography
+    if (.not. USE_SOURCES_RECEIVERS_Z) depth(isource) = depth(isource)*1000.0d0
+    call get_elevation_and_z_coordinate(long(isource),lat(isource),utm_x_source(isource),utm_y_source(isource),z_target_source,&
+                                        elevation(isource),depth(isource))
     x_target_source = utm_x_source(isource)
     y_target_source = utm_y_source(isource)
 
-    ! source Z coordinate
-    if (USE_SOURCES_RECEIVERS_Z) then
-      ! alternative: depth is given as z value directly
-      z_target_source = depth(isource)
-    else
-      ! depth in CMTSOLUTION given in km
-      z_target_source =  - depth(isource)*1000.0d0 + elevation(isource)
-    endif
 
-    call locate_point_in_mesh(x_target_source, y_target_source, z_target_source, elemsize_max_glob, &
+    call locate_point_in_mesh(x_target_source, y_target_source, z_target_source, SOURCES_CAN_BE_BURIED, elemsize_max_glob, &
             ispec_selected_source(isource), xi_source(isource), eta_source(isource), gamma_source(isource), &
-            x_found_source(isource), y_found_source(isource), z_found_source(isource), idomain(isource))
+            x_found_source(isource), y_found_source(isource), z_found_source(isource), idomain(isource),nu_temp)
 
 
     ! synchronize all the processes to make sure all the estimates are available
@@ -230,9 +200,11 @@
                                            x_found_source(isource), y_found_source(isource), z_found_source(isource), &
                                            xi_source(isource), eta_source(isource), gamma_source(isource), &
                                            ispec_selected_source(isource), islice_selected_source(isource), &
-                                           final_distance_source(isource), idomain(isource))
-  ! end of loop on all the sources
-  enddo
+                                           final_distance_source(isource), idomain(isource),nu_temp)
+
+    nu_source(:,:,isource) = nu_temp(:,:) 
+
+  enddo ! end of loop on all the sources
 
   if (myrank == 0) then
 
@@ -273,6 +245,9 @@
           write(IMAIN,*) '  component of direction vector in North direction: ',comp_dir_vect_source_N(isource)
           write(IMAIN,*) '  component of direction vector in Vertical direction: ',comp_dir_vect_source_Z_UP(isource)
           write(IMAIN,*)
+          write(IMAIN,*) '  nu1 = ',nu_source(1,:,isource)
+          write(IMAIN,*) '  nu2 = ',nu_source(2,:,isource)
+          write(IMAIN,*) '  nu3 = ',nu_source(3,:,isource)
           write(IMAIN,*)
           write(IMAIN,*) '  at (x,y,z) coordinates = ',x_found_source(isource),y_found_source(isource),z_found_source(isource)
         else
@@ -376,9 +351,9 @@
           write(IMAIN,*) '         UTM y: ',utm_y_source(isource)
         endif
         if (USE_SOURCES_RECEIVERS_Z) then
-          write(IMAIN,*) '         z: ',depth(isource),' km'
+          write(IMAIN,*) '         z: ',depth(isource),' m'
         else
-          write(IMAIN,*) '         depth: ',depth(isource),' km'
+          write(IMAIN,*) '         depth: ',depth(isource)/1000.0,' km'
           write(IMAIN,*) 'topo elevation: ',elevation(isource)
         endif
 
@@ -405,10 +380,7 @@
 
         ! add warning if estimate is poor
         ! (usually means source outside the mesh given by the user)
-!! DK DK warning: this should be made a relative distance rather than absolute, now that we use the code at many different scales
-!! DK DK warning: this should be made a relative distance rather than absolute, now that we use the code at many different scales
-!! DK DK warning: this should be made a relative distance rather than absolute, now that we use the code at many different scales
-        if (final_distance_source(isource) > 3000.d0) then
+        if (final_distance_source(isource) > elemsize_max_glob) then
           write(IMAIN,*)
           write(IMAIN,*) '*****************************************************'
           write(IMAIN,*) '*****************************************************'

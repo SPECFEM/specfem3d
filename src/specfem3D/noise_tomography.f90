@@ -235,7 +235,7 @@ end module user_noise_distribution
 
 ! read parameters
   subroutine read_parameters_noise(myrank,nrec,NSTEP,nmovie_points, &
-                                   islice_selected_rec,xi_receiver,eta_receiver,gamma_receiver, &
+                                   islice_selected_rec,xi_receiver,eta_receiver,gamma_receiver,nu, &
                                    noise_sourcearray,xigll,yigll,zigll, &
                                    ibool, &
                                    xstore,ystore,zstore, &
@@ -260,6 +260,7 @@ end module user_noise_distribution
   double precision, dimension(NGLLX) :: xigll
   double precision, dimension(NGLLY) :: yigll
   double precision, dimension(NGLLZ) :: zigll
+  double precision, dimension(NDIM,NDIM,nrec) :: nu
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB_VAL) :: xstore,ystore,zstore
 
   integer :: num_free_surface_faces
@@ -306,7 +307,7 @@ end module user_noise_distribution
   if (myrank == islice_selected_rec(irec_master_noise) .or. myrank == 0) then ! myrank == 0 is used for output only
     call compute_arrays_source_noise(myrank, &
               xi_receiver(irec_master_noise),eta_receiver(irec_master_noise),gamma_receiver(irec_master_noise), &
-              noise_sourcearray, xigll,yigll,zigll,NSTEP)
+              nu(:,:,irec_master_noise),noise_sourcearray, xigll,yigll,zigll,NSTEP)
   endif
 
   ! noise distribution and noise direction
@@ -456,7 +457,7 @@ end module user_noise_distribution
 ! read and construct the "source" (source time function based upon noise spectrum)
 ! for "ensemble forward source"
   subroutine compute_arrays_source_noise(myrank, &
-                                         xi_noise,eta_noise,gamma_noise,noise_sourcearray, &
+                                         xi_noise,eta_noise,gamma_noise,nu_single,noise_sourcearray, &
                                          xigll,yigll,zigll,NSTEP)
 
   use constants
@@ -468,6 +469,7 @@ end module user_noise_distribution
   double precision, dimension(NGLLX) :: xigll
   double precision, dimension(NGLLY) :: yigll
   double precision, dimension(NGLLZ) :: zigll
+  double precision, dimension(NDIM,NDIM) :: nu_single  ! rotation matrix at the master receiver
   ! output parameters
   real(kind=CUSTOM_REAL) :: noise_sourcearray(NDIM,NGLLX,NGLLY,NGLLZ,NSTEP)
   ! local parameters
@@ -520,7 +522,9 @@ end module user_noise_distribution
 
   ! rotates to Cartesian
   do itime = 1, NSTEP
-    noise_src_u(:,itime) =  noise_src(itime) * nu_master(:)
+    noise_src_u(:,itime) = nu_single(1,:) * noise_src(itime) * nu_master(1) & 
+                         + nu_single(2,:) * noise_src(itime) * nu_master(2) &
+                         + nu_single(3,:) * noise_src(itime) * nu_master(3)
   enddo
 
   ! receiver interpolators

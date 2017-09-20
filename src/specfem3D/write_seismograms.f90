@@ -49,6 +49,7 @@
   real(kind=CUSTOM_REAL),dimension(NDIM):: eps_m_s
   real(kind=CUSTOM_REAL):: stf_deltat
   double precision :: stf
+  double precision,dimension(NDIM,NDIM) :: rotation_seismo
 
   ! checks if anything to do
   if (.not. (nrec_local > 0 .or. (WRITE_SEISMOGRAMS_BY_MASTER .and. myrank == 0))) return
@@ -259,20 +260,25 @@
         endif ! elastic
       endif
 
+      if (SIMULATION_TYPE == 2) then
+        ! adjoint simulations
+        ! adjoint "receiver" N/E/Z orientations given by nu_source array
+        rotation_seismo(:,:)=nu_source(:,:,irec)
+      else
+        rotation_seismo(:,:)=nu(:,:,irec)
+      endif
+
       if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
-        seismograms_d(1,irec_local,it) = real(dxd,kind=CUSTOM_REAL)
-        seismograms_d(2,irec_local,it) = real(dyd,kind=CUSTOM_REAL)
-        seismograms_d(3,irec_local,it) = real(dzd,kind=CUSTOM_REAL)
+        seismograms_d(:,irec_local,it) = real(rotation_seismo(:,1)*dxd + rotation_seismo(:,2)*dyd &
+                                         + rotation_seismo(:,3)*dzd,kind=CUSTOM_REAL)
 
       if (SAVE_SEISMOGRAMS_VELOCITY) &
-        seismograms_v(1,irec_local,it) = real(vxd,kind=CUSTOM_REAL)
-        seismograms_v(2,irec_local,it) = real(vyd,kind=CUSTOM_REAL)
-        seismograms_v(3,irec_local,it) = real(vzd,kind=CUSTOM_REAL)
+        seismograms_v(:,irec_local,it) = real(rotation_seismo(:,1)*vxd + rotation_seismo(:,2)*vyd &
+                                         + rotation_seismo(:,3)*vzd,kind=CUSTOM_REAL)
 
       if (SAVE_SEISMOGRAMS_ACCELERATION) &
-        seismograms_a(1,irec_local,it) = real(axd,kind=CUSTOM_REAL)
-        seismograms_a(2,irec_local,it) = real(ayd,kind=CUSTOM_REAL)
-        seismograms_a(3,irec_local,it) = real(azd,kind=CUSTOM_REAL)
+        seismograms_a(:,irec_local,it) = real(rotation_seismo(:,1)*axd + rotation_seismo(:,2)*ayd &
+                                         + rotation_seismo(:,3)*azd,kind=CUSTOM_REAL)
 
       ! only one scalar in the case of pressure
       if (SAVE_SEISMOGRAMS_PRESSURE) seismograms_p(1,irec_local,it) = real(pd,kind=CUSTOM_REAL)

@@ -714,6 +714,7 @@ contains
 !--------------------------------------------------------------------------------------------------------------------
   subroutine  import_FD_model_ANISO(fd_grid)
 
+    use constants, only : MAX_STRING_LEN
     use specfem_par, only: myrank, xstore, ystore, zstore, rhostore, ibool, &
          NGLLX, NGLLY, NGLLZ, NSPEC_AB, FOUR_THIRDS, MAX_STRING_LEN
     !use specfem_par_elastic, only: rho_vp, rho_vs  here i commented because they are already called in head of module
@@ -776,7 +777,7 @@ contains
     call bcast_all_singlecr(hy_fd)
     call bcast_all_singlecr(hz_fd)
 
-    call bcast_all_ch_array(type_model,1)
+    call bcast_all_ch_array(type_model,1,MAX_STRING_LEN)
 
     if (myrank > 0)  allocate(model_fd(nx_fd, ny_fd, nz_fd, nb_model_to_read))
     call bcast_all_cr(model_fd,nx_fd*ny_fd*nz_fd*nb_model_to_read)

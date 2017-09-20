@@ -133,7 +133,7 @@ void FC_FUNC_(prepare_constants_device,
                                         int* nspec_acoustic,int* nspec_elastic,
                                         int* h_myrank,
                                         int* SAVE_FORWARD,
-                                        realw* h_xir,realw* h_etar, realw* h_gammar,
+                                        realw* h_xir,realw* h_etar, realw* h_gammar,double * nu,
                                         int* islice_selected_rec,int* NSTEP) {
 
   TRACE("prepare_constants_device");
@@ -333,13 +333,27 @@ void FC_FUNC_(prepare_constants_device,
     copy_todevice_realw((void**)&mp->d_hetar,h_etar,5*mp->nrec_local);
     copy_todevice_realw((void**)&mp->d_hgammar,h_gammar,5*mp->nrec_local);
 
+    float* h_nu;
+    h_nu=(float*)malloc(9 * sizeof(float) * mp->nrec_local);
+    int irec_loc=0;
+    for (int i=0;i < (*nrec);i++)
+      {
+      if ( mp->myrank == islice_selected_rec[i])
+        {
+         for (int j=0;j < 9;j++) h_nu[j + 9*irec_loc] = (float)nu[j + 9*i];
+         irec_loc = irec_loc + 1;
+        }
+      }
+    copy_todevice_realw((void**)&mp->d_nu,h_nu,3*3*(*nrec_local));
+    free(h_nu);
+
     print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_d,3*(*NSTEP)*(*nrec_local)*sizeof(realw)),8101);
     print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_v,3*(*NSTEP)*(*nrec_local)*sizeof(realw)),8101);
     print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_a,3*(*NSTEP)*(*nrec_local)*sizeof(realw)),8101);
     print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_p,3*(*NSTEP)*(*nrec_local)*sizeof(realw)),8101);
     int * ispec_selected_rec_loc;
     ispec_selected_rec_loc = (int*)malloc(sizeof(int)*mp->nrec_local);
-    int irec_loc=0;
+    irec_loc=0;
     for(int i=0;i<*nrec;i++) { if ( mp->myrank == islice_selected_rec[i]){ ispec_selected_rec_loc[irec_loc] = h_ispec_selected_rec[i];irec_loc = irec_loc+1;}}
     copy_todevice_int((void**)&mp->d_ispec_selected_rec_loc,ispec_selected_rec_loc,mp->nrec_local);
     free(ispec_selected_rec_loc);
@@ -1453,6 +1467,7 @@ TRACE("prepare_cleanup_device");
     cudaFree(mp->d_seismograms_v);
     cudaFree(mp->d_seismograms_a);
     cudaFree(mp->d_seismograms_p);
+    cudaFree(mp->d_nu);
     cudaFree(mp->d_ispec_selected_rec_loc);
     }
     cudaFree(mp->d_ispec_selected_rec);

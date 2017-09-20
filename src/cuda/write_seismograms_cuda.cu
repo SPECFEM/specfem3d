@@ -36,6 +36,7 @@ __global__ void compute_elastic_seismogram_kernel(int nrec_local,
                                                   int* d_ibool,
                                                   realw* hxir, realw* hetar, realw* hgammar,
                                                   realw* seismograms,
+                                                  realw* nu,
                                                   int* ispec_selected_rec_loc,
                                                   int it)
 {
@@ -81,10 +82,10 @@ __global__ void compute_elastic_seismogram_kernel(int nrec_local,
                             sh_dzd[tx] += sh_dzd[tx + s];}
       __syncthreads();
     }
-
-    if (tx == 0) {seismograms[0+3*irec_local+3*nrec_local*it] = sh_dxd[0];}
-    if (tx == 1) {seismograms[1+3*irec_local+3*nrec_local*it] = sh_dyd[0];}
-    if (tx == 2) {seismograms[2+3*irec_local+3*nrec_local*it] = sh_dzd[0];}
+ 
+    if (tx == 0) {seismograms[0+3*irec_local+3*nrec_local*it] = nu[0+3*(0+3*irec_local)]*sh_dxd[0] + nu[0+3*(1+3*irec_local)]*sh_dyd[0] + nu[0+3*(2+3*irec_local)]*sh_dzd[0];}
+    if (tx == 1) {seismograms[1+3*irec_local+3*nrec_local*it] = nu[1+3*(0+3*irec_local)]*sh_dxd[0] + nu[1+3*(1+3*irec_local)]*sh_dyd[0] + nu[1+3*(2+3*irec_local)]*sh_dzd[0];}
+    if (tx == 2) {seismograms[2+3*irec_local+3*nrec_local*it] = nu[2+3*(0+3*irec_local)]*sh_dxd[0] + nu[2+3*(1+3*irec_local)]*sh_dyd[0] + nu[2+3*(2+3*irec_local)]*sh_dzd[0];}
   }
 }
 
@@ -202,6 +203,7 @@ void FC_FUNC_(compute_seismograms_cuda,
                                                                                mp->d_ibool,
                                                                                mp->d_hxir,mp->d_hetar,mp->d_hgammar,
                                                                                mp->d_seismograms_d,
+                                                                               mp->d_nu,
                                                                                mp->d_ispec_selected_rec_loc,
                                                                                it);
 
@@ -211,6 +213,7 @@ void FC_FUNC_(compute_seismograms_cuda,
                                                                                mp->d_ibool,
                                                                                mp->d_hxir,mp->d_hetar,mp->d_hgammar,
                                                                                mp->d_seismograms_v,
+                                                                               mp->d_nu,
                                                                                mp->d_ispec_selected_rec_loc,
                                                                                it);
 
@@ -220,6 +223,7 @@ void FC_FUNC_(compute_seismograms_cuda,
                                                                                mp->d_ibool,
                                                                                mp->d_hxir,mp->d_hetar,mp->d_hgammar,
                                                                                mp->d_seismograms_a,
+                                                                               mp->d_nu,
                                                                                mp->d_ispec_selected_rec_loc,
                                                                                it);
   if (*SAVE_SEISMOGRAMS_PRESSURE){
