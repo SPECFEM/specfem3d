@@ -419,8 +419,17 @@ contains
     double precision,       dimension(NGLLY)                                :: hetas,hpetas
     double precision,       dimension(NGLLZ)                                :: hgammas,hpgammas
     real(kind=CUSTOM_REAL)                                                  :: factor_source
-
+    double precision,       dimension(NDIM,NDIM)                            :: nu_source
     factor_source = 1.
+    nu_source(1,1) = 1.0
+    nu_source(1,2) = 0.0
+    nu_source(1,3) = 0.0
+    nu_source(2,1) = 0.0
+    nu_source(2,2) = 1.0
+    nu_source(2,3) = 0.0
+    nu_source(3,1) = 0.0
+    nu_source(3,2) = 0.0
+    nu_source(3,3) = 1.0
 
     ! compute Lagrange polynomials at the source location
     call lagrange_any(xi,NGLLX,xigll,hxis,hpxis)
@@ -467,7 +476,7 @@ contains
           ! where Mxx=Myy=Mzz, others Mxy,.. = zero, in equivalent elastic media
           ! (and getting rid of 1/sqrt(2) factor from scalar moment tensor definition above)
           factor_source = factor_source * sqrt(2.0) / sqrt(3.0)
-          call compute_arrays_source_forcesolution(interparray,hxis,hetas,hgammas,factor_source,1.0d0,1.0d0,1.0d0)
+          call compute_arrays_source_forcesolution(interparray,hxis,hetas,hgammas,factor_source,1.0d0,1.0d0,1.0d0,nu_source)
 
        else
           write(*,*) ' ABORT INVERSION: POINT SOURCE IS NOT IN ELASTIC OR ACOUSTIC DOMAIN'
@@ -481,7 +490,7 @@ contains
 
        else if (ispec_is_acoustic(ispec)) then
 
-          call compute_arrays_source_forcesolution(interparray,hxis,hetas,hgammas,factor_source,1.0d0,1.0d0,1.0d0)
+          call compute_arrays_source_forcesolution(interparray,hxis,hetas,hgammas,factor_source,1.0d0,1.0d0,1.0d0,nu_source)
 
        else
           write(*,*) ' ABORT INVERSION: POINT SOURCE IS NOT IN ELASTIC OR ACOUSTIC DOMAIN'

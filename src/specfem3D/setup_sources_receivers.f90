@@ -659,7 +659,8 @@
           ! source array interpolated on all element GLL points
           ! we use an tilted force defined by its magnitude and the projections
           ! of an arbitrary (non-unitary) direction vector on the E/N/Z_UP basis
-          call compute_arrays_source_forcesolution(sourcearray,hxis,hetas,hgammas,factor_source,comp_x,comp_y,comp_z)
+          call compute_arrays_source_forcesolution(sourcearray,hxis,hetas,hgammas,factor_source,&
+                                                   comp_x,comp_y,comp_z,nu_source(:,:,isource))
 
         else ! use of CMTSOLUTION files
 
@@ -702,7 +703,8 @@
             comp_z = 1.0d0
 
             ! source array interpolated on all element GLL points
-            call compute_arrays_source_forcesolution(sourcearray,hxis,hetas,hgammas,factor_source,comp_x,comp_y,comp_z)
+            call compute_arrays_source_forcesolution(sourcearray,hxis,hetas,hgammas,factor_source,&
+                                                     comp_x,comp_y,comp_z,nu_source(:,:,isource))
           endif
 
         endif

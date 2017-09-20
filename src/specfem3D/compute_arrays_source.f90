@@ -144,7 +144,7 @@
 ! =======================================================================
 
 ! compute array for acoustic source
-  subroutine compute_arrays_source_forcesolution(sourcearray,hxis,hetas,hgammas,factor_source,comp_x,comp_y,comp_z)
+  subroutine compute_arrays_source_forcesolution(sourcearray,hxis,hetas,hgammas,factor_source,comp_x,comp_y,comp_z,nu_source)
 
   use constants
 
@@ -156,6 +156,7 @@
   double precision, dimension(NGLLY) :: hetas
   double precision, dimension(NGLLZ) :: hgammas
   double precision :: comp_x,comp_y,comp_z
+  double precision, dimension(NDIM,NDIM) :: nu_source
 
 ! local parameters
   integer :: i,j,k
@@ -170,9 +171,9 @@
       do i=1,NGLLX
         hlagrange = hxis(i) * hetas(j) * hgammas(k) * dble(factor_source)
         ! identical source array components in x,y,z-direction
-        sourcearray(1,i,j,k) = real(hlagrange*comp_x,kind=CUSTOM_REAL)
-        sourcearray(2,i,j,k) = real(hlagrange*comp_y,kind=CUSTOM_REAL)
-        sourcearray(3,i,j,k) = real(hlagrange*comp_z,kind=CUSTOM_REAL)
+        sourcearray(:,i,j,k) =  hlagrange * ( nu_source(1,:) * comp_x + &
+                                              nu_source(2,:) * comp_y + &
+                                              nu_source(3,:) * comp_z )
       enddo
     enddo
   enddo
