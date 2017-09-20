@@ -1080,7 +1080,7 @@ contains
 !------------------------------------------------------------
   subroutine get_stations(acqui_simu)
 
-    use constants, only : NDIM
+    use constants, only: NDIM
 
     type(acqui), allocatable, dimension(:), intent(inout)  :: acqui_simu
 

@@ -116,7 +116,7 @@
 
 
   ! opens STATIONS or STATIONS_ADJOINT file
-  if (myrank==0) then
+  if (myrank == 0) then
     open(unit=IIN,file=trim(rec_filename),status='old',action='read',iostat=ier)
     if (ier /= 0) call exit_mpi(myrank,'error opening file '//trim(rec_filename))
   endif
@@ -126,7 +126,7 @@
     ! checks if file with station infos located from previous run exists
     inquire(file=trim(OUTPUT_FILES)//'/SU_stations_info.bin',exist=SU_station_file_exists)
     if (SU_station_file_exists) then
-      if (myrank==0) then
+      if (myrank == 0) then
         do irec=1,nrec
           read(IIN,*,iostat=ier) station_name(irec),network_name(irec),llat,llon,lele,lbur
           if (ier /= 0) call exit_mpi(myrank, 'Error reading station file '//trim(rec_filename))
@@ -208,7 +208,7 @@
   if (ier /= 0) stop 'Error allocating arrays for locating receivers'
 
   ! loop on all the stations to read the file
-  if (myrank==0) then
+  if (myrank == 0) then
     do irec = 1,nrec
       read(IIN,*,iostat=ier) station_name(irec),network_name(irec),stlat(irec),stlon(irec),stele(irec),stbur(irec)
       if (ier /= 0) call exit_mpi(myrank, 'Error reading station file '//trim(rec_filename))
@@ -227,7 +227,7 @@
   do irec = 1,nrec
 
     ! get z target coordinate, depending on the topography
-    call get_elevation_and_z_coordinate(stlon(irec),stlat(irec),stutm_x(irec),stutm_y(irec),z_target(irec),&
+    call get_elevation_and_z_coordinate(stlon(irec),stlat(irec),stutm_x(irec),stutm_y(irec),z_target(irec), &
                                         elevation(irec),stbur(irec))
     x_target(irec) = stutm_x(irec)
     y_target(irec) = stutm_y(irec)
@@ -809,7 +809,7 @@
         enddo
       enddo
     enddo
-  
+
   enddo
 
   ! get the rotation matrix that will be used to rotate-- source force vector/receiver seismogram --if the point is on the surface
@@ -926,7 +926,7 @@
   end subroutine locate_point_in_mesh
 
 !--------------------------------------------------------------------------------------------------------------------
-!  Define the rotation matrix in the selected point 
+!  Define the rotation matrix in the selected point
 !--------------------------------------------------------------------------------------------------------------------
   subroutine define_rotation_matrix(POINT_CAN_BE_BURIED,ix_initial_guess,iy_initial_guess,iz_initial_guess,ispec_selected,nu)
 
@@ -1077,7 +1077,7 @@
     v_vector(2) = w_vector(3)*u_vector(1) - w_vector(1)*u_vector(3)
     v_vector(3) = w_vector(1)*u_vector(2) - w_vector(2)*u_vector(1)
 
-    ! build rotation matrice nu 
+    ! build rotation matrice nu
     !     East (u)
     nu(1,1) = u_vector(1)
     nu(1,2) = v_vector(1)
@@ -1091,6 +1091,6 @@
     nu(3,2) = v_vector(3)
     nu(3,3) = w_vector(3)
 
-  endif 
+  endif
 
   end subroutine define_rotation_matrix

@@ -181,7 +181,7 @@
 
     ! get z target coordinate, depending on the topography
     if (.not. USE_SOURCES_RECEIVERS_Z) depth(isource) = depth(isource)*1000.0d0
-    call get_elevation_and_z_coordinate(long(isource),lat(isource),utm_x_source(isource),utm_y_source(isource),z_target_source,&
+    call get_elevation_and_z_coordinate(long(isource),lat(isource),utm_x_source(isource),utm_y_source(isource),z_target_source, &
                                         elevation(isource),depth(isource))
     x_target_source = utm_x_source(isource)
     y_target_source = utm_y_source(isource)

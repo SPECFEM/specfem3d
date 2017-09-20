@@ -522,7 +522,7 @@ end module user_noise_distribution
 
   ! rotates to Cartesian
   do itime = 1, NSTEP
-    noise_src_u(:,itime) = nu_single(1,:) * noise_src(itime) * nu_master(1) & 
+    noise_src_u(:,itime) = nu_single(1,:) * noise_src(itime) * nu_master(1) &
                          + nu_single(2,:) * noise_src(itime) * nu_master(2) &
                          + nu_single(3,:) * noise_src(itime) * nu_master(3)
   enddo

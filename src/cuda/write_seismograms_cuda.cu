@@ -82,7 +82,7 @@ __global__ void compute_elastic_seismogram_kernel(int nrec_local,
                             sh_dzd[tx] += sh_dzd[tx + s];}
       __syncthreads();
     }
- 
+
     if (tx == 0) {seismograms[0+3*irec_local+3*nrec_local*it] = nu[0+3*(0+3*irec_local)]*sh_dxd[0] + nu[0+3*(1+3*irec_local)]*sh_dyd[0] + nu[0+3*(2+3*irec_local)]*sh_dzd[0];}
     if (tx == 1) {seismograms[1+3*irec_local+3*nrec_local*it] = nu[1+3*(0+3*irec_local)]*sh_dxd[0] + nu[1+3*(1+3*irec_local)]*sh_dyd[0] + nu[1+3*(2+3*irec_local)]*sh_dzd[0];}
     if (tx == 2) {seismograms[2+3*irec_local+3*nrec_local*it] = nu[2+3*(0+3*irec_local)]*sh_dxd[0] + nu[2+3*(1+3*irec_local)]*sh_dyd[0] + nu[2+3*(2+3*irec_local)]*sh_dzd[0];}
