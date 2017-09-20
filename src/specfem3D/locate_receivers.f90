@@ -654,7 +654,7 @@
        distance_from_target = HUGEVAL
 
        do iproc=0, NPROC-1
-         if (distance_from_target >= distance_from_target_all(1,iproc)) then
+         if (distance_from_target > distance_from_target_all(1,iproc)) then
            distance_from_target =  distance_from_target_all(1,iproc)
            islice_selected_dummy(1) = iproc
            ispec_selected_dummy(1) = ispec_selected_all(1,iproc)
