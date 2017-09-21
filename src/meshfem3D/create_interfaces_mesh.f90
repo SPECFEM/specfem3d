@@ -30,7 +30,7 @@
   use meshfem3D_par, only: myrank,INTERFACES_FILE, &
     number_of_interfaces, &
     SUPPRESS_UTM_PROJECTION, &
-    UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,UTM_PROJECTION_ZONE,Z_DEPTH_BLOCK, &
+    UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK, &
     max_npx_interface,max_npy_interface, &
     npx_element_steps,npy_element_steps, &
     number_of_layers,ner_layer,iproc_xi_current,iproc_eta_current,NPROC_XI,NPROC_ETA, &
@@ -87,7 +87,7 @@
   character(len=12) :: str_unit
   character(len=12),parameter :: str_unit_m = "(m)",str_unit_deg = "(deg)"
 
-  logical :: SUPPRESS_UTM_PROJECTION_BOTTOM,SUPPRESS_UTM_PROJECTION_TOP
+  logical :: SUPPRESS_UTM_PROJECTION_BOTTOM,SUPPRESS_UTM_PROJECTION_TOP,SUPPRESS_UTM_PROJECTION_COPY
 
   ! conversion factor:
   ! at equator earth circumference 40,075,161.2 divided by 360.0 degree
@@ -144,19 +144,19 @@
     write(IMAIN,*) '  origin UTM minimum x/y        (m) = ',sngl(min_x_all),sngl(min_y_all)
     if (.not. SUPPRESS_UTM_PROJECTION) then
       ! project x and y in UTM back to long/lat since topo file is in long/lat
-      call utm_geo(long,lat,min_x_all,min_y_all, &
-                  UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
+      call utm_geo(long,lat,min_x_all,min_y_all,IUTM2LONGLAT)
       write(IMAIN,*) '                     lat/lon  (deg) = ',sngl(lat),sngl(long)
     endif
     write(IMAIN,*) '  origin UTM maximum x/y        (m) = ',sngl(max_x_all),sngl(max_y_all)
     if (.not. SUPPRESS_UTM_PROJECTION) then
-      call utm_geo(long,lat,max_x_all,max_y_all, &
-                   UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
+      call utm_geo(long,lat,max_x_all,max_y_all,IUTM2LONGLAT)
       write(IMAIN,*) '                     lat/lon  (deg) = ',sngl(lat),sngl(long)
     endif
     write(IMAIN,*)
     call flush_IMAIN()
   endif
+
+  SUPPRESS_UTM_PROJECTION_COPY=SUPPRESS_UTM_PROJECTION
 
   ! loop on all the layers
   ! note: number of layers and number of interfaces are equal
@@ -295,7 +295,8 @@
 
         ! get bottom interface value
         ! project x and y in UTM back to long/lat since topo file is in long/lat
-        call utm_geo(long,lat,x_current,y_current,UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION_BOTTOM)
+        SUPPRESS_UTM_PROJECTION = SUPPRESS_UTM_PROJECTION_BOTTOM
+        call utm_geo(long,lat,x_current,y_current,IUTM2LONGLAT)
 
         ! get coordinate of corner in bathy/topo model
         icornerlong = int((long - orig_x_interface_bottom) / spacing_x_interface_bottom) + 1
@@ -330,7 +331,8 @@
 
         ! get top interface value
         ! project x and y in UTM back to long/lat since topo file is in long/lat
-        call utm_geo(long,lat,x_current,y_current,UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION_TOP)
+        SUPPRESS_UTM_PROJECTION = SUPPRESS_UTM_PROJECTION_TOP
+        call utm_geo(long,lat,x_current,y_current,IUTM2LONGLAT)
 
         ! debug
         !if (long < 138.d0) print *,'long:',long,lat,x_current,y_current,'rank',myrank,ix,iy,'xi/eta',xin,etan
@@ -435,6 +437,8 @@
 
     interface_bottom(:,:) = interface_top(:,:)
   enddo
+
+  SUPPRESS_UTM_PROJECTION = SUPPRESS_UTM_PROJECTION_COPY
 
   ! free memory
   deallocate(interface_top,interface_bottom)

@@ -127,6 +127,8 @@ inverse_problem_for_model_OBJECTS = \
 	$O/inversion_scheme_mod.o \
 	$O/family_parameter_mod.o \
 	$O/projection_on_FD_grid_mod.o \
+	$O/regularization_FD_mod.o \
+	$O/regularization_interface.o \
 	$O/PrecondFWI_mod.o \
 	$O/specfem_interface_mod.o \
 	$O/fwi_iteration_mod.o \
@@ -455,6 +457,12 @@ $O/PrecondFWI_mod.o : $S/inversion_scheme/PrecondFWI_mod.f90 ${SETUP}/constants.
 # projection on finite-difference (FD) grid
 $O/projection_on_FD_grid_mod.o: $S/projection_on_FD_grid/projection_on_FD_grid_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
 	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/projection_on_FD_grid/projection_on_FD_grid_mod.f90 -c -o $O/projection_on_FD_grid_mod.o
+
+$O/regularization_FD_mod.o:  $S/regularization/regularization_FD_mod.f90  ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
+	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/regularization/regularization_FD_mod.f90 -c -o $O/regularization_FD_mod.o
+
+$O/regularization_interface.o:  $S/regularization/regularization_interface.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
+	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/regularization/regularization_interface.f90 -c -o $O/regularization_interface.o
 
 # specfem interface to compile at the end
 $O/specfem_interface_mod.o: $S/specfem_interface/specfem_interface_mod.F90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)

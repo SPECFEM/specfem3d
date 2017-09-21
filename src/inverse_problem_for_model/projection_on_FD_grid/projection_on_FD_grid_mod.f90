@@ -23,6 +23,99 @@ module projection_on_FD_grid
 
   real(kind=CUSTOM_REAL), private, dimension(:,:,:), allocatable   :: valence , valence_tmp, model_on_FD_grid_tmp
 contains
+!!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!--------------------------------------------------------------------------------------------------------------------
+!  Projection FD grid model on SEM mesh 
+!--------------------------------------------------------------------------------------------------------------------
+subroutine Project_model_FD_grid2SEM(model_on_SEM_mesh, model_on_FD_grid, myrank)
+
+  integer,                                                 intent(in)    :: myrank
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable, intent(inout) :: model_on_SEM_mesh
+  real(kind=CUSTOM_REAL), dimension(:,:,:),   allocatable, intent(inout) :: model_on_FD_grid
+
+  integer                                                :: ispec, iglob, i_fd, j_fd, k_fd
+  real(kind=CUSTOM_REAL)                                 :: vinterp, v1, v2, v3, v4, v5, v6, v7, v8
+  real(kind=CUSTOM_REAL)                                 :: x_sem, y_sem, z_sem
+  real(kind=CUSTOM_REAL)                                 :: x_loc, y_loc, z_loc
+  
+  
+  if (myrank == 0) then
+     write(INVERSE_LOG_FILE,*)
+     write(INVERSE_LOG_FILE,*) '    - > projection FD grid / SEM mesh  '
+     write(INVERSE_LOG_FILE,*)
+  end if
+
+
+  do ispec =1, NSPEC_AB
+ 
+     do kgg = 1, NGLLZ
+        do jgg = 1, NGLLY
+           do igg = 1, NGLLX
+
+              iglob = ibool(igg,jgg,kgg,ispec)
+              x_sem = xstore(iglob)
+              y_sem = ystore(iglob)
+              z_sem = zstore(iglob)
+
+              !! get value of model on FD grid by trilinear interpolation 
+              i_fd = floor((x_sem -  ox_fd_proj)/ hx_fd_proj) + 1
+              j_fd = floor((y_sem -  oy_fd_proj)/ hy_fd_proj)  + 1
+              k_fd = floor((z_sem -  oz_fd_proj)/ hz_fd_proj) + 1
+              
+              if (i_fd <= nx_fd_proj .and. j_fd <=  ny_fd_proj .and. k_fd <= nz_fd_proj .and. &
+                   i_fd > 0          .and. j_fd > 0            .and. k_fd > 0          ) then
+
+                 v1 = model_on_FD_grid(i_fd,     j_fd,     k_fd    )
+                 v2 = v1; v3 = v1; v4 = v1; v5 = v1; v6 = v1; v7 = v1; v8 = v1
+                 
+                 if (i_fd < nx_fd_proj) v2 = model_on_FD_grid(i_fd + 1, j_fd,     k_fd    )
+                 if (i_fd < nx_fd_proj .and. j_fd < ny_fd_proj) v3 = model_on_FD_grid(i_fd + 1, j_fd + 1, k_fd    )
+                 if (j_fd < ny_fd_proj) v4 = model_on_FD_grid(i_fd,     j_fd + 1, k_fd    )
+
+                 if (k_fd < nz_fd_proj) then 
+                    v5 = model_on_FD_grid(i_fd,     j_fd,     k_fd + 1)
+                    if (i_fd < nx_fd_proj) v6 = model_on_FD_grid(i_fd + 1, j_fd,     k_fd + 1)
+                    if (i_fd < nx_fd_proj .and. j_fd < ny_fd_proj)   v7 = model_on_FD_grid(i_fd + 1, j_fd + 1, k_fd + 1)
+                    if (j_fd < ny_fd_proj) v8 = model_on_FD_grid(i_fd,     j_fd + 1, k_fd + 1)
+                 end if
+
+                 x_loc = x_sem - (ox_fd_proj + real( i_fd - 1, CUSTOM_REAL) * hx_fd_proj) 
+                 y_loc = y_sem - (oy_fd_proj + real( j_fd - 1, CUSTOM_REAL) * hy_fd_proj)
+                 z_loc = z_sem - (oz_fd_proj + real( k_fd - 1, CUSTOM_REAL) * hz_fd_proj)
+
+                 call TrilinearInterp(Vinterp, x_loc, y_loc, z_loc, v1, v2, v3, v4, v5, v6, v7, v8, &
+                      hx_fd_proj, hy_fd_proj, hz_fd_proj)
+              else
+
+                 Vinterp=0.
+
+              end if
+              
+              model_on_SEM_mesh(igg,jgg,kgg,ispec)=Vinterp
+
+           end do
+        end do
+     end do
+  end do
+
+
+end subroutine Project_model_FD_grid2SEM
+
+!!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!--------------------------------------------------------------------------------------------------------------------
+!  read fd grid parameters !!
+!--------------------------------------------------------------------------------------------------------------------
+subroutine read_fd_grid_parameters_for_projection()
+
+  ! read fd grid parameters !!
+  open(676,file='fd_proj_grid.txt')
+  read(676, *)  ox_fd_proj, oy_fd_proj, oz_fd_proj
+  read(676, *)  hx_fd_proj, hy_fd_proj, hz_fd_proj
+  read(676, *)  nx_fd_proj, ny_fd_proj, nz_fd_proj
+  close(676)
+
+
+end subroutine read_fd_grid_parameters_for_projection
 
 !!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !--------------------------------------------------------------------------------------------------------------------
@@ -55,14 +148,10 @@ contains
     double precision,        dimension(NGLLZ)              :: hgammas, hpgammas
     integer                                                :: nb_fd_point_loc
     integer, dimension(:,:,:), allocatable                 :: point_already_found
-    double precision, dimension(:,:,:), allocatable         :: xi_in_fd, eta_in_fd, gamma_in_fd
+    double precision, dimension(:,:,:), allocatable        :: xi_in_fd, eta_in_fd, gamma_in_fd
 
     ! read fd grid parameters !!
-    open(676,file='fd_proj_grid.txt')
-    read(676, *)  ox_fd_proj, oy_fd_proj, oz_fd_proj
-    read(676, *)  hx_fd_proj, hy_fd_proj, hz_fd_proj
-    read(676, *)  nx_fd_proj, ny_fd_proj, nz_fd_proj
-    close(676)
+    call read_fd_grid_parameters_for_projection()
 
     ! get mesh properties (mandatory before calling locate_point_in_mesh)
     call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
@@ -107,19 +196,26 @@ contains
              enddo
           enddo
        enddo
-       if (DEBUG_MODE) then
-          write(IIDD,*) ispec, NSPEC_AB
-          write(IIDD,*) xmin, xmax
-          write(IIDD,*) ymin, ymax
-          write(IIDD,*) zmin, zmax
-          write(IIDD,*)
-       endif
+      
        kmin =  1+ (zmin  - oz_fd_proj) / hz_fd_proj
        kmax =  1+ (zmax  - oz_fd_proj) / hz_fd_proj
        jmin =  1+ (ymin  - oy_fd_proj) / hy_fd_proj
        jmax =  1+ (ymax  - oy_fd_proj) / hy_fd_proj
        imin =  1+ (xmin  - ox_fd_proj) / hx_fd_proj
        imax =  1+ (xmax  - ox_fd_proj) / hx_fd_proj
+
+        if (DEBUG_MODE) then
+          write(IIDD,*) ' projection SEM2FD : boundary element'
+          write(IIDD,*) ispec, NSPEC_AB
+          write(IIDD,*) xmin, xmax
+          write(IIDD,*) ymin, ymax
+          write(IIDD,*) zmin, zmax
+          write(IIDD,*) 
+          write(IIDD,*) imin, imax
+          write(IIDD,*) jmin, jmax
+          write(IIDD,*) kmin, kmax
+          write(IIDD,*)
+       endif
 
        !! loop on fd grid to count the numbers of point in fd grid that live in my mesh partition
        do kfd = kmin, kmax
@@ -376,7 +472,7 @@ contains
            do jgg = 1,NGLLY
               do igg = 1,NGLLX
                  iglob = ibool(igg,jgg,kgg,ispec)
-                 val = val + hxis(igg)*hetas(jgg)*hgammas(kgg)*model_on_SEM_mesh(igg,jgg,kgg,ispec)
+                 val = val + hxis(igg)*hetas(jgg)*hgammas(kgg)*dble(model_on_SEM_mesh(igg,jgg,kgg,ispec))
               enddo
            enddo
         enddo
@@ -405,7 +501,8 @@ contains
            do jfd = 1, projection_fd%ny
               do ifd = 1, projection_fd%nx
                  if (valence(ifd, jfd, kfd) < 1.d0 ) then
-                    write(*,*) 'Projection failled : Warning point ', ifd, jfd, kfd, ' not found '
+                    !write(*,*) 'Projection failled : Warning point ', ifd, jfd, kfd, ' not found '
+                    !write(*,*)  ox_fd_proj+(ifd-1)*hx_fd_proj, oy_fd_proj+(jfd-1)*hy_fd_proj, oz_fd_proj+(kfd-1)*hz_fd_proj
 !!$                    write(IIDD,*)  ifd, jfd, kfd, valence(ifd, jfd, kfd)
                  else
                     model_on_FD_grid(ifd, jfd, kfd) = model_on_FD_grid(ifd, jfd, kfd) / valence(ifd, jfd, kfd)
@@ -937,6 +1034,35 @@ contains
     z_found = z
 
   end subroutine locate_point_in_element
+
+
+  
+!!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!--------------------------------------------------------------------------------------------------------------------
+!  trilinear interpolation 
+!--------------------------------------------------------------------------------------------------------------------
+subroutine TrilinearInterp(Vinterp,  x_loc, y_loc, z_loc, v1, v2, v3, v4, v5, v6, v7, v8, lx, ly, lz)
+ 
+  real(kind=CUSTOM_REAL), intent(inout) :: Vinterp
+  real(kind=CUSTOM_REAL), intent(in)    :: x_loc, y_loc, z_loc
+  real(kind=CUSTOM_REAL), intent(in)    :: v1, v2, v3, v4, v5, v6, v7, v8, lx, ly, lz
+  real(kind=CUSTOM_REAL)                :: dx, dy, dz
+
+  dx = x_loc / lx
+  dy = y_loc / ly
+  dz = z_loc / lz
+
+  Vinterp = &
+  v1 * (1._CUSTOM_REAL - dx) * (1._CUSTOM_REAL - dy) * (1._CUSTOM_REAL - dz) + &
+  v2 *                   dx  * (1._CUSTOM_REAL - dy) * (1._CUSTOM_REAL - dz) + &
+  v3 *                   dx  *                   dy  * (1._CUSTOM_REAL - dz) + &
+  v4 * (1._CUSTOM_REAL - dx) *                   dy  * (1._CUSTOM_REAL - dz) + &
+  v5 * (1._CUSTOM_REAL - dx) * (1._CUSTOM_REAL - dy) *                   dz  + &
+  v6 *                   dx  * (1._CUSTOM_REAL - dy) *                   dz  + &
+  v7 *                   dx  *                   dy  *                   dz  + &
+  v8 * (1._CUSTOM_REAL - dx) *                   dy  *                   dz
+  
+end subroutine TrilinearInterp
 
 
 end module projection_on_FD_grid

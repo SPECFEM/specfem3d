@@ -157,13 +157,6 @@
 
 ! sources
 
-! flag to exclude elements that are too far from target in source detection
-  logical, parameter :: USE_DISTANCE_CRITERION_SOURCES = .true.
-
-! interpolates position to find the best possible location for the source, between GLL points if needed.
-! note: this can be turned off to speedup location search and locate the source at the closest GLL point instead.
-  logical, parameter :: USE_BEST_LOCATION_FOR_SOURCE = .true.
-
 ! flag to print the details of source location
   logical, parameter :: SHOW_DETAILS_LOCATE_SOURCE = .false.
 
@@ -181,12 +174,6 @@
   double precision, parameter :: SOURCE_DECAY_MIMIC_TRIANGLE = 1.628d0
 
 ! receivers
-
-! flag to exclude elements that are too far from target in receiver detection
-  logical, parameter :: USE_DISTANCE_CRITERION_RECEIVERS = .true.
-
-! no Lagrange interpolation for seismograms (we then take the value at the closest NGLL point, which is less accurate but faster)
-  logical, parameter :: FASTER_RECEIVERS_POINTS_ONLY = .false.
 
 ! use this t0 as earliest starting time rather than the automatically calculated one
 ! (must be positive and bigger than the automatically one to be effective;

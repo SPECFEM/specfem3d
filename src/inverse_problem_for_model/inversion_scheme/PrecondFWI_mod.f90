@@ -19,6 +19,7 @@ contains
     integer,                                                   intent(in)    :: iter_inverse
     real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable, intent(inout) :: current_gradient, fwi_precond, hess_approxim
     real(kind=CUSTOM_REAL)                                                   :: taper, x,y,z
+    real(kind=CUSTOM_REAL)                                                   :: a, z1, z2, dl
     real(kind=CUSTOM_REAL)                                                   :: nrme_coef_tmp, nrme_coef
     integer                                                                  :: i,j,k,ispec, iglob
 
@@ -102,6 +103,45 @@ contains
 
 
     endif
+
+   if (inversion_param%z_precond .and. iter_inverse == 0) then
+        a =inversion_param%aPrc 
+        z1=inversion_param%zPrc1
+        z2=inversion_param%zPrc2
+        dl = abs(z1 -z2)
+        if (DEBUG_MODE) then
+          write(IIDD,*)
+          write(IIDD,*) '       iteration FWI : ', iter_inverse
+          write(IIDD,*)
+          write(IIDD,*) '             define Z Precond :'
+          write(IIDD,*)
+          write(IIDD,*)
+       endif
+
+       do ispec=1, NSPEC_ADJOINT
+          do k=1,NGLLZ
+             do j=1,NGLLY
+                do i=1,NGLLX
+
+                   iglob=ibool(i,j,k,ispec)
+                   z=zstore(iglob)
+
+                   if ( z >= z1) then 
+                       fwi_precond(i,j,k,ispec,:) = 1.e-8  !! small value to reduce perturbation at subsurface
+                   else if ( z <= z1 .and. z >= z2) then 
+                       fwi_precond(i,j,k,ispec,:) = exp(- 0.5 * (a *( z - z1 - dl) / (0.5* dl )**2)  )
+                   else
+                        fwi_precond(i,j,k,ispec,:) = z / z2
+                   end if
+                enddo
+             enddo
+          enddo
+       enddo
+
+
+    endif
+
+
 
     if (inversion_param%shin_precond .and. iter_inverse == 0) then
 

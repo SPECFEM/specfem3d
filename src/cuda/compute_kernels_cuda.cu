@@ -703,6 +703,7 @@ __global__ void compute_kernels_hess_ac_cudakernel(int* ispec_is_acoustic,
                                             accel_elm[2]*b_accel_elm[2]);
     //
 
+
     hess_rho_ac_kl[ijk_ispec] += deltat * rhol * (b_veloc_elm[0]*b_veloc_elm[0] +
               b_veloc_elm[1]*b_veloc_elm[1] +
               b_veloc_elm[2]*b_veloc_elm[2]);

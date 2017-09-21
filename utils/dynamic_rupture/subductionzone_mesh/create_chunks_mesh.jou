@@ -10,8 +10,9 @@ create volume loft surface 7 23
 delete vol 3 to 11
 compress all
 merge all
-merge surf 44 54 tolerance 10  #dirty operation
-merge surf 31 49 tolerance 10  #dirty operation
+#dirty operation. Set large tolerance (10 km) to force the merge between boundaries of spherical chunks
+merge surf 44 54 tolerance 10  
+merge surf 31 49 tolerance 10  
 
 compress all
 vol all size 8

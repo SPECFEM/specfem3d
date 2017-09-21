@@ -172,7 +172,7 @@
 ! returns precomputed mass matrix in rmass array
 
   use generate_databases_par, only: &
-    APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
+    APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY, &
     NX_TOPO,NY_TOPO,itopo_bathy,myrank, &
     NGLLX,NGLLY,NGLLZ,CUSTOM_REAL,SIZE_REAL,NGLLSQUARE,IMAIN, &
     MINIMUM_THICKNESS_3D_OCEANS,RHO_APPROXIMATE_OCEAN_LOAD
@@ -237,8 +237,7 @@
             yloc = ystore_dummy(iglobnum)
 
             call get_topo_bathy_elevation(xloc,yloc,loc_elevation, &
-                                        itopo_bathy,NX_TOPO,NY_TOPO, &
-                                        UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION)
+                                        itopo_bathy,NX_TOPO,NY_TOPO)
 
             elevation = dble(loc_elevation)
 

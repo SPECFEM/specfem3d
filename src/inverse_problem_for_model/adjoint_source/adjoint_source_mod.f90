@@ -31,11 +31,11 @@ contains
 !-----------------------------------------------------------------------------------------------------------------------------------
 !  Write adjoint sources in SEM directory
 !-----------------------------------------------------------------------------------------------------------------------------------
-  subroutine write_adjoint_sources_for_specfem(acqui_simu,  inversion_param, isource, myrank)
+  subroutine write_adjoint_sources_for_specfem(acqui_simu,  inversion_param, ievent, myrank)
 
     implicit none
 
-    integer,                                     intent(in)     :: myrank, isource
+    integer,                                     intent(in)     :: myrank, ievent
     type(inver),                                 intent(inout)  :: inversion_param
     type(acqui),  dimension(:), allocatable,     intent(inout)  :: acqui_simu
 
@@ -48,8 +48,8 @@ contains
     integer                                                     :: lw, i0, i1, i2, i3
     integer                                                     :: current_iter
 
-    nstep_data = acqui_simu(isource)%Nt_data
-    dt_data = acqui_simu(isource)%dt_data
+    nstep_data = acqui_simu(ievent)%Nt_data
+    dt_data = acqui_simu(ievent)%dt_data
 
     current_iter=inversion_param%current_iteration
 
@@ -71,7 +71,7 @@ contains
     do irec_local = 1, nrec_local
 
        irec = number_receiver_global(irec_local)
-       ispec = acqui_simu(isource)%ispec_selected_rec(irec)
+       ispec = acqui_simu(ievent)%ispec_selected_rec(irec)
        cost_function_rec=0.
 
        !! ALLOW TO CHOOSE COMPONENT :
@@ -84,13 +84,13 @@ contains
 
              !! ---------------------------------------------------------------------------------------------------------------
              !! compute adjoint source according to cost L2 function
-             call compute_elastic_adjoint_source_displacement(irec_local, isource, current_iter, acqui_simu, cost_function)
+             call compute_elastic_adjoint_source_displacement(irec_local, ievent, current_iter, acqui_simu, cost_function)
 
           endif
        endif
 
        !! IN FLUIDS WITH need to save pressure and store the second time derivative of residuals
-       !! raw_residuals(:)=seismograms_p(icomp,irec_local,:) - acqui_simu(isource)%data_traces(irec_local,:,icomp)
+       !! raw_residuals(:)=seismograms_p(icomp,irec_local,:) - acqui_simu(ievent)%data_traces(irec_local,:,icomp)
        !! in fluid only one component : the pressure
        icomp=1
        if (ACOUSTIC_SIMULATION) then
@@ -98,7 +98,7 @@ contains
 
              !! ---------------------------------------------------------------------------------------------------------------
              !! compute adjoint source according to cost L2 function
-             call compute_acoustic_adjoint_source_pressure_dot_dot(icomp, irec_local, isource, acqui_simu, cost_function)
+             call compute_acoustic_adjoint_source_pressure_dot_dot(icomp, irec_local, ievent, acqui_simu, cost_function)
 
           endif
 
@@ -115,10 +115,10 @@ contains
     inversion_param%total_current_cost =inversion_param%total_current_cost + cost_function_reduced
 
     !! save cost function for the current source
-    inversion_param%current_cost(isource) = cost_function_reduced
+    inversion_param%current_cost(ievent) = cost_function_reduced
 
     if (myrank == 0) then
-       write(INVERSE_LOG_FILE,*) '      Cost function for this source : ', cost_function_reduced
+       write(INVERSE_LOG_FILE,*) '      Cost function for this event : ', cost_function_reduced
     endif
 
     call deallocate_adjoint_source_working_arrays()
@@ -147,11 +147,11 @@ contains
 !
 ! to implement a new cost function and adjoint source :
 !
-!    1 /   define character to name your cost function and adjout source type :  acqui_simu(isource)%adjoint_source_type
+!    1 /   define character to name your cost function and adjoint source type :  acqui_simu(ievent)%adjoint_source_type
 !
 !    2/    add a case for your new adjoint source
 !
-!    3/    compute the adjoint source whcih is stored in acqui(isource)%adjoint_sources(NCOM, NREC_LOCAL, NT)
+!    3/    compute the adjoint source whcih is stored in acqui(ievent)%adjoint_sources(NCOM, NREC_LOCAL, NT)
 !          note that this arrays will be directly use be specfem as adjoint source thus you need to
 !          do any proccessing here : filter, rotation, ....
 !
@@ -159,10 +159,10 @@ contains
 !
 !
 !
-  subroutine compute_elastic_adjoint_source_displacement(irec_local, isource, current_iter, acqui_simu, cost_function)
+  subroutine compute_elastic_adjoint_source_displacement(irec_local, ievent, current_iter, acqui_simu, cost_function)
 
 
-    integer,                                     intent(in)    :: isource, irec_local, current_iter
+    integer,                                     intent(in)    :: ievent, irec_local, current_iter
     type(acqui),  dimension(:), allocatable,     intent(inout) :: acqui_simu
     real(kind=CUSTOM_REAL),                      intent(inout) :: cost_function
     integer                                                    :: icomp !, icomp_tmp
@@ -170,7 +170,7 @@ contains
     !! store residuals and filter  ---------------------------
 
     !! TO DO : convolve seismograms_d(icomp,irec_local,:) by source time function stf (if need)
-    !! if (acqui_simu(isource)%convlove_residuals_by_wavelet) then
+    !! if (acqui_simu(ievent)%convlove_residuals_by_wavelet) then
     !!     signal(:) = seismograms_d(icomp,irec_local,:)
     !!     call convolution_by_wavelet(wavelet, signal, seismograms_d(icomp,irec_local,:), nstep, nw)
     !! endif
@@ -183,24 +183,24 @@ contains
     !!   -- rotation to change components
     !!
 
-    select case (trim(adjustl(acqui_simu(isource)%adjoint_source_type)))
+    select case (trim(adjustl(acqui_simu(ievent)%adjoint_source_type)))
 
     case ('L2_FWI_TELESEISMIC')
 
        do icomp = 1, NDIM
 
-          raw_residuals(:)=seismograms_d(icomp,irec_local,:) - acqui_simu(isource)%data_traces(irec_local,:,icomp)
+          raw_residuals(:)=seismograms_d(icomp,irec_local,:) - acqui_simu(ievent)%data_traces(irec_local,:,icomp)
 
           fil_residuals(:)=0._CUSTOM_REAL
           filfil_residuals(:)=0._CUSTOM_REAL
-          fl=acqui_simu(isource)%freqcy_to_invert(icomp,1,irec_local)
-          fh=acqui_simu(isource)%freqcy_to_invert(icomp,2,irec_local)
+          fl=acqui_simu(ievent)%freqcy_to_invert(icomp,1,irec_local)
+          fh=acqui_simu(ievent)%freqcy_to_invert(icomp,2,irec_local)
           call bwfilt (raw_residuals, fil_residuals, dt_data, nstep_data, irek_filter, norder_filter, fl, fh)
           call bwfilt (fil_residuals, filfil_residuals, dt_data, nstep_data, irek_filter, norder_filter, fl, fh)
 
 
           !! TO DO : cross correlate filfil_residuals by source time function (if need)
-          !! if (acqui_simu(isource)%convlove_residuals_by_wavelet) then
+          !! if (acqui_simu(ievent)%convlove_residuals_by_wavelet) then
           !!    signal(:) =  filfil_residuals(:);
           !!    call crosscor_by_wavelet(wavelet, signal, filfil_residuals, nstep, nw)
           !! endif
@@ -209,8 +209,8 @@ contains
           !! TO DO : choose component to invert
 
           !! remove component if not used
-          if (trim(acqui_simu(isource)%component(icomp)) == '0' .or. &
-               trim(acqui_simu(isource)%component(icomp)) == '  ' ) then
+          if (trim(acqui_simu(ievent)%component(icomp)) == '0' .or. &
+               trim(acqui_simu(ievent)%component(icomp)) == '  ' ) then
              filfil_residuals(:)=0._CUSTOM_REAL
              fil_residuals(:)=0._CUSTOM_REAL
           endif
@@ -220,7 +220,7 @@ contains
           cost_function = cost_function + cost_value
 
           !! TO DO : cross correlate filfil_residuals by source time function (if need)
-          !! if (acqui_simu(isource)%convlove_residuals_by_wavelet) then
+          !! if (acqui_simu(ievent)%convlove_residuals_by_wavelet) then
           !!    signal(:) =  filfil_residuals(:)
           !!    call crosscor_by_wavelet(wavelet, signal, filfil_residuals, nstep, nw)
           !! endif
@@ -231,7 +231,7 @@ contains
 
           !! store the adjoint source
           elastic_adjoint_source(icomp,:) = filfil_residuals(:)
-          acqui_simu(isource)%adjoint_sources(icomp,irec_local,:) = filfil_residuals(:)*w_tap(:)
+          acqui_simu(ievent)%adjoint_sources(icomp,irec_local,:) = filfil_residuals(:)*w_tap(:)
        enddo
 
        !!----------------------------------------------------------------------------------------------------
@@ -242,34 +242,34 @@ contains
 
              !! filter the data
              fil_residuals(:)=0._CUSTOM_REAL
-             fl=acqui_simu(isource)%freqcy_to_invert(icomp,1,irec_local)
-             fh=acqui_simu(isource)%freqcy_to_invert(icomp,2,irec_local)
-             raw_residuals(:)= acqui_simu(isource)%data_traces(irec_local,:,icomp)
+             fl=acqui_simu(ievent)%freqcy_to_invert(icomp,1,irec_local)
+             fh=acqui_simu(ievent)%freqcy_to_invert(icomp,2,irec_local)
+             raw_residuals(:)= acqui_simu(ievent)%data_traces(irec_local,:,icomp)
              call bwfilt(raw_residuals, fil_residuals, dt_data, nstep_data, irek_filter, norder_filter, fl, fh)
 
              !! save filtered data
-             acqui_simu(isource)%synt_traces(icomp, irec_local,:)= fil_residuals(:)
+             acqui_simu(ievent)%synt_traces(icomp, irec_local,:)= fil_residuals(:)
 
              !! define energy renormalisation
              if (current_iter == 0) then
 !!$                do icomp_tmp = 1, NDIM
-!!$                   acqui_simu(isource)%weight_trace(icomp,irec_local)=100._CUSTOM_REAL / &
-!!$                        ((sum( acqui_simu(isource)%synt_traces(irec_local,:,icomp_tmp) )**2) *0.5*dt_data)
+!!$                   acqui_simu(ievent)%weight_trace(icomp,irec_local)=100._CUSTOM_REAL / &
+!!$                        ((sum( acqui_simu(ievent)%synt_traces(irec_local,:,icomp_tmp) )**2) *0.5*dt_data)
 !!$                enddo
-                acqui_simu(isource)%weight_trace(icomp,irec_local)=1._CUSTOM_REAL
+                acqui_simu(ievent)%weight_trace(icomp,irec_local)=1._CUSTOM_REAL
              endif
 
              !! adjoint source
              raw_residuals(:)= (seismograms_d(icomp,irec_local,:) - fil_residuals(:))*&
-                  acqui_simu(isource)%weight_trace(icomp,irec_local)
+                  acqui_simu(ievent)%weight_trace(icomp,irec_local)
 
              !! compute cost
              cost_value=sum(raw_residuals(:)**2) * 0.5 * dt_data
              cost_function = cost_function + cost_value
 
              ! store adjoint source
-             acqui_simu(isource)%adjoint_sources(icomp,irec_local,:)=raw_residuals(:)*w_tap(:)*&
-                  acqui_simu(isource)%weight_trace(icomp,irec_local)
+             acqui_simu(ievent)%adjoint_sources(icomp,irec_local,:)=raw_residuals(:)*w_tap(:)*&
+                  acqui_simu(ievent)%weight_trace(icomp,irec_local)
 
           enddo
 
@@ -285,23 +285,23 @@ contains
 !-----------------------------------------------------------------------------------------------------------------------------------
 ! define adjoint sources
 !-----------------------------------------------------------------------------------------------------------------------------------
-  subroutine compute_acoustic_adjoint_source_pressure_dot_dot(icomp, irec_local, isource, acqui_simu, cost_function)
+  subroutine compute_acoustic_adjoint_source_pressure_dot_dot(icomp, irec_local, ievent, acqui_simu, cost_function)
 
-    integer,                                     intent(in)    :: isource, icomp, irec_local
+    integer,                                     intent(in)    :: ievent, icomp, irec_local
     type(acqui),  dimension(:), allocatable,     intent(inout) :: acqui_simu
     real(kind=CUSTOM_REAL),                      intent(inout) :: cost_function
     !!--------------------------------------------------------------------------------------------------
     !! TO DO : convolve seismograms_d(icomp,irec_local,:) by source time function stf (if need)
-    !! if (acqui_simu(isource)%convlove_residuals_by_wavelet) then
+    !! if (acqui_simu(ievent)%convlove_residuals_by_wavelet) then
     !!     signal(:) = seismograms_d(icomp,irec_local,:)
     !!     call convolution_by_wavelet(wavelet, signal, seismograms_d(icomp,irec_local,:), nstep, nw)
     !! endif
     !! for acoustics need - sign (eg : Luo and Tromp Geophysics 2013)
 
-    select case (trim(adjustl(acqui_simu(isource)%adjoint_source_type)))
+    select case (trim(adjustl(acqui_simu(ievent)%adjoint_source_type)))
 
     case ('L2_FWI_TELESEISMIC')
-       raw_residuals(:)=-(seismograms_p(icomp,irec_local,:) - acqui_simu(isource)%data_traces(irec_local,:,icomp))
+       raw_residuals(:)=-(seismograms_p(icomp,irec_local,:) - acqui_simu(ievent)%data_traces(irec_local,:,icomp))
        residuals_for_cost(:) = raw_residuals(:) !! save residuals because the adjoint source is not residuals
 
        !! compute second time derivative of raw_residuals
@@ -309,8 +309,8 @@ contains
 
        fil_residuals(:)=0._CUSTOM_REAL
        filfil_residuals(:)=0._CUSTOM_REAL
-       fl=acqui_simu(isource)%freqcy_to_invert(icomp,1,irec_local)
-       fh=acqui_simu(isource)%freqcy_to_invert(icomp,2,irec_local)
+       fl=acqui_simu(ievent)%freqcy_to_invert(icomp,1,irec_local)
+       fh=acqui_simu(ievent)%freqcy_to_invert(icomp,2,irec_local)
        call bwfilt (raw_residuals, fil_residuals, dt_data, nstep_data, irek_filter, norder_filter, fl, fh)
        call bwfilt (fil_residuals, filfil_residuals, dt_data, nstep_data, irek_filter, norder_filter, fl, fh)
 
@@ -320,19 +320,19 @@ contains
        cost_function = cost_function + cost_value
 
        !! store adjoint source
-       acqui_simu(isource)%adjoint_sources(1,irec_local,:)=filfil_residuals(:)*w_tap(:)
+       acqui_simu(ievent)%adjoint_sources(1,irec_local,:)=filfil_residuals(:)*w_tap(:)
 
     case ('L2_OIL_INDUSTRY')
 
        !! filter the data
        fil_residuals(:)=0._CUSTOM_REAL
-       fl=acqui_simu(isource)%freqcy_to_invert(icomp,1,irec_local)
-       fh=acqui_simu(isource)%freqcy_to_invert(icomp,2,irec_local)
-       raw_residuals(:)= acqui_simu(isource)%data_traces(irec_local,:,icomp)
+       fl=acqui_simu(ievent)%freqcy_to_invert(icomp,1,irec_local)
+       fh=acqui_simu(ievent)%freqcy_to_invert(icomp,2,irec_local)
+       raw_residuals(:)= acqui_simu(ievent)%data_traces(irec_local,:,icomp)
        call bwfilt(raw_residuals, fil_residuals, dt_data, nstep_data, irek_filter, norder_filter, fl, fh)
 
        !! save filtered data
-       acqui_simu(isource)%synt_traces(icomp, irec_local,:)= fil_residuals(:)
+       acqui_simu(ievent)%synt_traces(icomp, irec_local,:)= fil_residuals(:)
 
        !! save residuals for adjoint source. Note we use the difference between
        !! obseved pressure and computed pressure, not the approach in Luo and Tromp Gepohysics 2013
@@ -346,7 +346,7 @@ contains
        cost_function = cost_function + cost_value
 
        !! store adjoint source
-       acqui_simu(isource)%adjoint_sources(1,irec_local,:)=residuals_for_cost(:)*w_tap(:)
+       acqui_simu(ievent)%adjoint_sources(1,irec_local,:)=residuals_for_cost(:)*w_tap(:)
 
 
     case default
@@ -355,7 +355,7 @@ contains
     !-------------------------------------------------------------------------------------------------
 
     !! TO DO : cross correlate filfil_residuals by source time function (if need)
-    !! if (acqui_simu(isource)%convlove_residuals_by_wavelet) then
+    !! if (acqui_simu(ievent)%convlove_residuals_by_wavelet) then
     !!    signal(:) =  filfil_residuals(:);
     !!    call crosscor_by_wavelet(wavelet, signal, filfil_residuals, nstep, nw)
     !! endif

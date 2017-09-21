@@ -110,8 +110,8 @@ module specfem_par
   integer, dimension(:), allocatable :: islice_selected_source,ispec_selected_source
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: sourcearray
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: sourcearrays
-  double precision, dimension(:,:,:), allocatable :: nu_source
   double precision, dimension(:), allocatable :: Mxx,Myy,Mzz,Mxy,Mxz,Myz
+  double precision, dimension(:,:,:), allocatable :: nu_source
   double precision, dimension(:), allocatable :: xi_source,eta_source,gamma_source
   double precision, dimension(:), allocatable :: tshift_src,hdur,hdur_Gaussian
   double precision, dimension(:), allocatable :: utm_x_source,utm_y_source
@@ -119,11 +119,12 @@ module specfem_par
   double precision :: t0
   real(kind=CUSTOM_REAL) :: stf_used_total
   integer :: nsources_local
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: user_source_time_function
   ! source encoding
   ! for acoustic sources: takes +/- 1 sign, depending on sign(Mxx)
   ! [ = sign(Myy) = sign(Mzz) since they have to be equal in the acoustic setting]
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: pm1_source_encoding
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: user_source_time_function
+
 
 ! receiver information
   character(len=MAX_STRING_LEN) :: rec_filename,filtered_rec_filename,dummystring
@@ -132,9 +133,9 @@ module specfem_par
   integer, dimension(:), allocatable :: number_receiver_global
   double precision, dimension(:), allocatable :: xi_receiver,eta_receiver,gamma_receiver
   double precision, dimension(:,:), allocatable :: hpxir_store,hpetar_store,hpgammar_store
+  double precision, dimension(:,:,:), allocatable :: nu
 
 ! timing information for the stations
-  double precision, allocatable, dimension(:,:,:) :: nu
   character(len=MAX_LENGTH_STATION_NAME), allocatable, dimension(:) :: station_name
   character(len=MAX_LENGTH_NETWORK_NAME), allocatable, dimension(:) :: network_name
 

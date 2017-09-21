@@ -244,6 +244,7 @@
     if (ier /= 0) stop 'Error reading Par_file parameter USE_TRICK_FOR_BETTER_PRESSURE'
 
     !-------------------------------------------------------
+    !-------------------------------------------------------
     ! Source encoding
     !-------------------------------------------------------
     call read_value_logical(USE_SOURCE_ENCODING, 'USE_SOURCE_ENCODING', ier)

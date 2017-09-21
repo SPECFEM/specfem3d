@@ -159,16 +159,14 @@
 !---
 !
 
-  subroutine bcast_all_ch_array(buffer,countval)
-
-    use constants, only: MAX_STRING_LEN
+  subroutine bcast_all_ch_array(buffer,countval,STRING_LEN)
 
     implicit none
 
-    integer :: countval
+    integer :: countval,STRING_LEN
 
-    character(len=MAX_STRING_LEN), dimension(MAX_STRING_LEN*countval) :: buffer
-    character(len=MAX_STRING_LEN) :: unused_ch
+    character(len=STRING_LEN), dimension(countval) :: buffer
+    character(len=STRING_LEN) :: unused_ch
 
     unused_ch=buffer(1)
 

@@ -1,3 +1,4 @@
+#!python
 #!/usr/bin/env python
 
 ###########################################################################
@@ -9,11 +10,13 @@
 import cubit
 cubit.init([""])
 try:
-	from geocubitlib import boundary_definition
-	from geocubitlib import cubit2specfem3d
+
+from geocubitlib import boundary_definition
+from geocubitlib import cubit2specfem3d
 except:
-    import boundary_definition
-	import cubit2specfem3d
+
+ import boundary_definition
+import cubit2specfem3d
 
 import os
 import sys
@@ -114,6 +117,7 @@ os.system('mkdir -p MESH')
 cubit2specfem3d.export2SPECFEM3D('MESH')
 
 # all files needed by SCOTCH are now in directory MESH
+
 
 
 

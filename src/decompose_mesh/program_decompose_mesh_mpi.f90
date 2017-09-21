@@ -487,7 +487,7 @@ subroutine send_mesh_to_all(myrank)
   call bcast_all_i(nodes_ibelm_moho,NGNOD2D*nspec2D_moho)
   call bcast_all_i(cpml_to_spec, nspec_cpml)
   call bcast_all_i(cpml_regions, nspec_cpml)
-  call bcast_all_ch_array(undef_mat_prop,6*count_undef_mat)
+  call bcast_all_ch_array(undef_mat_prop,6*count_undef_mat,MAX_STRING_LEN)
   call bcast_all_l_array(is_cpml, nspec_glob)
 
 

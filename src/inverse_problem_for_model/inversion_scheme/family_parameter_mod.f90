@@ -143,7 +143,8 @@ contains
     use input_output
 
     type(inver),                                                  intent(in)      :: inversion_param
-    real(kind=CUSTOM_REAL),   dimension(:,:,:,:,:), allocatable,  intent(inout)   :: model
+    real(kind=CUSTOM_REAL),   dimension(:,:,:,:,:), allocatable,  intent(in)      :: model
+
 
     do ispec = 1, NSPEC_AB  !!
        ! elastic simulations
@@ -163,9 +164,9 @@ contains
              !! you just need to store it in array gradient ....
 
           else
-
+             
              select case(trim(adjustl(inversion_param%param_family)))
-
+               
              case('vp')
                 rho_vp(:,:,:,ispec)  = model(:,:,:,ispec,1) * rhostore(:,:,:,ispec)
                 kappastore(:,:,:,ispec) = rhostore(:,:,:,ispec) * ( model(:,:,:,ispec,1)**2 -  &
@@ -185,6 +186,7 @@ contains
                 mustore(:,:,:,ispec) = rhostore(:,:,:,ispec) * model(:,:,:,ispec,2)**2
 
              case('rho_vp_vs')
+               
                 rhostore(:,:,:,ispec) = model(:,:,:,ispec,1)
                 rho_vp(:,:,:,ispec)   = model(:,:,:,ispec,2) * rhostore(:,:,:,ispec)
                 rho_vs(:,:,:,ispec)   = model(:,:,:,ispec,3) * rhostore(:,:,:,ispec)
@@ -348,6 +350,111 @@ contains
 
   end subroutine SpecfemParam2Invert
 
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!--------------------------------------------------------------------------
+! conversion from specfem parameters to inversion parameters
+!-------------------------------------------------------------------------
+
+  subroutine SpecfemPrior2Invert(inversion_param, model)
+    type(inver),                                                  intent(inout)   :: inversion_param
+    real(kind=CUSTOM_REAL),   dimension(:,:,:,:,:), allocatable,  intent(inout)   :: model
+
+    do ispec = 1, NSPEC_AB  !!
+       ! elastic simulations
+       if (ispec_is_elastic(ispec)) then  !! we need to process element by element because we need to do this test
+                                          !! because we can use both elastic or acoustic elements (also proelastic)
+
+          if (ANISOTROPIC_KL) then
+
+             write(*,*) ' IF YOU NEED family FROM 21 ELASTIC COEFFICIENTS &
+                  &FEEL FREE TO DO IT ..... cijkl_kl are already computed by specfem &
+                  &you just need to store it in array model .... in &
+                  &code  : family_parameter_module.f90 subroutine SpecfemParam2Invert'
+             stop
+
+             !! IF YOU NEED family FROM 21 ELASTIC COEFFICIENTS
+             !! FEEL FREE TO DO IT ..... cijkl_kl are already computed by specfem
+             !! you just need to store it in array gradient ....
+
+          else
+
+             select case(trim(adjustl(inversion_param%param_family)))
+
+             case('vp')
+                model(:,:,:,ispec,1) = inversion_param%prior_model(:,:,:,ispec,1)
+
+             case('rho_vp')
+                model(:,:,:,ispec,1) = inversion_param%prior_model(:,:,:,ispec,1)
+                model(:,:,:,ispec,2) = inversion_param%prior_model(:,:,:,ispec,2)
+
+             case('vp_vs')
+                model(:,:,:,ispec,1) = inversion_param%prior_model(:,:,:,ispec,1)
+                model(:,:,:,ispec,2) = inversion_param%prior_model(:,:,:,ispec,2)
+
+             case('rho_vp_vs')
+                model(:,:,:,ispec,1) = inversion_param%prior_model(:,:,:,ispec,1)
+                model(:,:,:,ispec,2) = inversion_param%prior_model(:,:,:,ispec,2)
+                model(:,:,:,ispec,3) = inversion_param%prior_model(:,:,:,ispec,3)
+
+!!$             case('rho_lambda_mu')
+!!$                model(:,:,:,ispec,1) =
+!!$                model(:,:,:,ispec,2) =
+!!$                model(:,:,:,ispec,3) =
+
+!!$             case ('rho_ip_is')
+!!$                model(:,:,:,ispec,1) =
+!!$                model(:,:,:,ispec,2) =
+!!$                model(:,:,:,ispec,3) =
+
+!!$             case('rho_kappa_mu')
+!!$                model(:,:,:,ispec,1) = rhostore(:,:,:,ispec)
+!!$                model(:,:,:,ispec,2) = kappastore(:,:,:,ispec)
+!!$                model(:,:,:,ispec,3) = mustore(:,:,:,ispec)
+
+
+             case default
+
+                write(*,*) 'Error : unknonwn family for elastic case ',trim(adjustl(inversion_param%param_family))
+                stop
+
+             end select
+
+          endif
+
+       endif
+
+       if (ispec_is_acoustic(ispec)) then
+
+          select case(trim(adjustl(inversion_param%param_family)))
+
+          case('vp', 'vp_vs')
+             model(:,:,:,ispec,1) = inversion_param%prior_model(:,:,:,ispec,1)
+
+          case('rho_vp', 'rho_vp_vs')
+             model(:,:,:,ispec,1) = inversion_param%prior_model(:,:,:,ispec,1)
+             model(:,:,:,ispec,2) = inversion_param%prior_model(:,:,:,ispec,2)
+
+!!$          case('rho_kappa', 'rho_kappa_mu')
+!!$             model(:,:,:,ispec,1) = rhostore(:,:,:,ispec)
+!!$             model(:,:,:,ispec,2) = kappastore(:,:,:,ispec)
+
+          case default
+
+              write(*,*) 'Error : unknonwn family for acoustic case ',trim(adjustl(inversion_param%param_family))
+              stop
+
+          end select
+
+
+       endif
+
+    enddo
+
+    !! clear memory since we do not need it any more 
+    deallocate(inversion_param%prior_model)
+
+  end subroutine SpecfemPrior2Invert
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !--------------------------------------------------------------------------
 ! store the current gradient in the inversion family parameter
@@ -460,7 +567,7 @@ contains
                 + 4._CUSTOM_REAL * mustore(:,:,:,ispec) / (3._CUSTOM_REAL * kappastore(:,:,:,ispec) ) ) * kappa_kl(:,:,:,ispec)
 
                 !!vs
-                gradient(:,:,:,ispec,3)=2._CUSTOM_REAL * (mu_kl(:,:,:,ispec) &
+                gradient(:,:,:,ispec,3)=2._CUSTOM_REAL * (   mu_kl(:,:,:,ispec) &
                 - 4._CUSTOM_REAL * mustore(:,:,:,ispec) / (3._CUSTOM_REAL * kappastore(:,:,:,ispec)) * kappa_kl(:,:,:,ispec))
 
                 if (inversion_param%shin_precond) then

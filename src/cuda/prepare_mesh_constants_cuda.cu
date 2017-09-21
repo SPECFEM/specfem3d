@@ -126,7 +126,7 @@ void FC_FUNC_(prepare_constants_device,
                                         int* NSOURCES, int* nsources_local_f,
                                         realw* h_sourcearrays,
                                         int* h_islice_selected_source, int* h_ispec_selected_source,
-                                        int* h_number_receiver_global, int* h_ispec_selected_rec,
+                                        int* h_ispec_selected_rec,
                                         int* nrec,int* nrec_local,
                                         int* SIMULATION_TYPE,
                                         int* USE_MESH_COLORING_GPU_f,
@@ -327,10 +327,8 @@ void FC_FUNC_(prepare_constants_device,
   // receiver stations
   mp->nrec_local = *nrec_local; // number of receiver located in this partition
   // note that:
-  // size(number_receiver_global) = nrec_local
   // size(ispec_selected_rec) = nrec
   if (mp->nrec_local > 0){
-    copy_todevice_int((void**)&mp->d_number_receiver_global,h_number_receiver_global,mp->nrec_local);
     copy_todevice_realw((void**)&mp->d_hxir,h_xir,5*mp->nrec_local);
     copy_todevice_realw((void**)&mp->d_hetar,h_etar,5*mp->nrec_local);
     copy_todevice_realw((void**)&mp->d_hgammar,h_gammar,5*mp->nrec_local);
@@ -1462,15 +1460,14 @@ TRACE("prepare_cleanup_device");
 
   // receivers
   if (mp->nrec_local > 0){
-    cudaFree(mp->d_number_receiver_global);
     cudaFree(mp->d_hxir);
     cudaFree(mp->d_hetar);
     cudaFree(mp->d_hgammar);
-    cudaFree(mp->d_nu);
     cudaFree(mp->d_seismograms_d);
     cudaFree(mp->d_seismograms_v);
     cudaFree(mp->d_seismograms_a);
     cudaFree(mp->d_seismograms_p);
+    cudaFree(mp->d_nu);
     cudaFree(mp->d_ispec_selected_rec_loc);
     }
     cudaFree(mp->d_ispec_selected_rec);

@@ -5,7 +5,7 @@
 !                                                                                                                                  !
 !                                                                                                                                  !
 !                   -- read all sources   (tractions, moment, forces, ...)                                                         !
-!                   -- read all stations  (list of stations and position for each sources )                                        !
+!                   -- read all stations  (list of stations and position for each event )                                        !
 !                   -- read all data      (components to be inverted)                                                              !
 !                                                                                                                                  !
 !    all information is stored in type : acqui                                                                                     !
@@ -31,7 +31,7 @@ module input_output
                                   LOCAL_PATH, xigll, yigll, zigll, &
                                   ibool, xstore, ystore, zstore, &
                                   xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, &
-                                  myrank
+                                  myrank, USE_SOURCES_RECEIVERS_Z,INVERSE_FWI_FULL_PROBLEM
 
 
 
@@ -49,10 +49,10 @@ module input_output
              WirteOutputs
 
   PRIVATE :: read_acqui_file, read_inver_file, store_default_acqui_values, is_blank_line, bcast_all_acqui, &
-             get_stations, read_data_gather, create_name_database_inversion, read_and_distribute_sources_for_simultaneous_runs
+             get_stations, read_data_gather, create_name_database_inversion, read_and_distribute_events_for_simultaneous_runs
 
   !! DEFINITION OF PRIVATE VARIABLES
-  integer,                PRIVATE       :: NSRC
+  integer,                PRIVATE       :: NEVENT
   real(kind=CUSTOM_REAL), PRIVATE       :: fl, fh
 contains
 
@@ -70,7 +70,7 @@ contains
     type(inver),                                     intent(inout) ::  inversion_param
 
     ! locals
-    integer                                                        :: isrc
+    integer                                                        :: ievent
     character(len=MAX_LEN_STRING)                                  :: name_file
     character(len=MAX_LEN_STRING)                                  :: acqui_file, inver_file
     real(kind=CUSTOM_REAL)                                         :: elemsize_min_glob,elemsize_max_glob
@@ -79,7 +79,7 @@ contains
     if (myrank == 0) then
        write(INVERSE_LOG_FILE,*)
        write(INVERSE_LOG_FILE,*) '          *********************************************'
-       write(INVERSE_LOG_FILE,*) '          ***       READING IMPUT PARAMETERS        ***'
+       write(INVERSE_LOG_FILE,*) '          ***       READING INPUT PARAMETERS        ***'
        write(INVERSE_LOG_FILE,*) '          *********************************************'
        write(INVERSE_LOG_FILE,*)
     endif
@@ -105,7 +105,7 @@ contains
 
     call bcast_all_acqui(acqui_simu,  inversion_param, myrank)
     call locate_source(acqui_simu, myrank)
-    call locate_receiver(acqui_simu, myrank)
+  !  call locate_receiver(acqui_simu, myrank)
 
     if (myrank == 0) call flush_iunit(INVERSE_LOG_FILE)
 
@@ -114,8 +114,8 @@ contains
 
 
     !! create name for outputs
-    do isrc=1,acqui_simu(1)%nsrc_tot
-       call create_name_database_inversion(acqui_simu(isrc)%prname_inversion, myrank, isrc, LOCAL_PATH)
+    do ievent=1,acqui_simu(1)%nevent_tot
+       call create_name_database_inversion(acqui_simu(ievent)%prname_inversion, myrank, ievent, LOCAL_PATH)
     enddo
 
     if (myrank == 0) call flush_iunit(INVERSE_LOG_FILE)
@@ -197,37 +197,37 @@ contains
        write(IIDD,*) '######################################################'
        write(IIDD,*)
        write(IIDD,*) 'MYRANK :' ,myrank, ' READ : '
-       do isrc=1,acqui_simu(1)%nsrc_tot
+       do ievent=1,acqui_simu(1)%nevent_tot
           write(IIDD,*)
-          write(IIDD,*) 'src ',isrc
-          write(IIDD,'(a)') trim(acqui_simu(isrc)%event_name)
-          write(IIDD,'(a)') trim(acqui_simu(isrc)%source_file)
-          write(IIDD,'(a)') trim(acqui_simu(isrc)%station_file)
-          write(IIDD,'(a)') trim(acqui_simu(isrc)%data_file_gather)
+          write(IIDD,*) 'event ',ievent
+          write(IIDD,'(a)') trim(acqui_simu(ievent)%event_name)
+          write(IIDD,'(a)') trim(acqui_simu(ievent)%source_file)
+          write(IIDD,'(a)') trim(acqui_simu(ievent)%station_file)
+          write(IIDD,'(a)') trim(acqui_simu(ievent)%data_file_gather)
           write(IIDD,*) ' EVENT POSITION : '
-          write(IIDD,*) acqui_simu(isrc)%Xs,acqui_simu(isrc)%Ys, acqui_simu(isrc)%Zs
+          write(IIDD,*) acqui_simu(ievent)%Xs,acqui_simu(ievent)%Ys, acqui_simu(ievent)%Zs
 
-          select case (trim(adjustl(acqui_simu(isrc)%source_type)))
+          select case (trim(adjustl(acqui_simu(ievent)%source_type)))
           case ('moment')
              write(IIDD,*) ' MOMENT TENSOR : '
-             write(IIDD,*) acqui_simu(isrc)%Mxx,acqui_simu(isrc)%Myy, acqui_simu(isrc)%Mzz
-             write(IIDD,*) acqui_simu(isrc)%Mxy,acqui_simu(isrc)%Myz, acqui_simu(isrc)%Myz
+             write(IIDD,*) acqui_simu(ievent)%Mxx,acqui_simu(ievent)%Myy, acqui_simu(ievent)%Mzz
+             write(IIDD,*) acqui_simu(ievent)%Mxy,acqui_simu(ievent)%Myz, acqui_simu(ievent)%Myz
           case ('force')
              write(IIDD,*) ' FORCE : '
-             write(IIDD,*) acqui_simu(isrc)%Fx,acqui_simu(isrc)%Fy, acqui_simu(isrc)%Fz
+             write(IIDD,*) acqui_simu(ievent)%Fx,acqui_simu(ievent)%Fy, acqui_simu(ievent)%Fz
           end select
 
-          write(IIDD,*) 'total station     :', acqui_simu(isrc)%nsta_tot
-          write(IIDD,*) 'stations in slice :',acqui_simu(isrc)%nsta_slice
-          if (acqui_simu(isrc)%nsta_slice > 0 .and. .not. inversion_param%only_forward) then
-             write(IIDD,*) 'Check data stored : ', acqui_simu(isrc)%nsta_slice, acqui_simu(isrc)%Nt_data
-             write(name_file,'(a16,i8.8,a1,i8.8)') 'Check_read_data_',isrc,'_',myrank
+          write(IIDD,*) 'total station     :', acqui_simu(ievent)%nsta_tot
+          write(IIDD,*) 'stations in slice :',acqui_simu(ievent)%nsta_slice
+          if (acqui_simu(ievent)%nsta_slice > 0 .and. .not. inversion_param%only_forward) then
+             write(IIDD,*) 'Check data stored : ', acqui_simu(ievent)%nsta_slice, acqui_simu(ievent)%Nt_data
+             write(name_file,'(a16,i8.8,a1,i8.8)') 'Check_read_data_',ievent,'_',myrank
              write(IIDD,'(a,a)') 'Data that was read are dumped in file for checking: ',trim(name_file)
              open(IINN,file=trim(name_file),access='direct', &
-                  recl=CUSTOM_REAL*acqui_simu(isrc)%nsta_slice*acqui_simu(isrc)%Nt_data)
-             write(IINN,rec=1)  acqui_simu(isrc)%data_traces(:,:,1)
-             write(IINN,rec=2)  acqui_simu(isrc)%data_traces(:,:,2)
-             write(IINN,rec=3)  acqui_simu(isrc)%data_traces(:,:,3)
+                  recl=CUSTOM_REAL*acqui_simu(ievent)%nsta_slice*acqui_simu(ievent)%Nt_data)
+             write(IINN,rec=1)  acqui_simu(ievent)%data_traces(:,:,1)
+             write(IINN,rec=2)  acqui_simu(ievent)%data_traces(:,:,2)
+             write(IINN,rec=3)  acqui_simu(ievent)%data_traces(:,:,3)
              close(IINN)
           endif
        enddo
@@ -254,10 +254,10 @@ contains
        inversion_param%input_acqui_file=trim(prefix_to_path)//'/DATA/inverse_problem/acqui_file.txt'
        acqui_file_ref='./DATA/inverse_problem/acqui_file.txt'
        if (myrank == 0) then
-          write(6,*) ' DISTRIBUTION OF SOURCES '
+          write(6,*) ' DISTRIBUTION OF EVENTS '
           call flush_iunit(6)
           !! only one process must do I/O (myrank=0, mygroup=0)
-          if (mygroup == 0) call read_and_distribute_sources_for_simultaneous_runs(NUMBER_OF_SIMULTANEOUS_RUNS, acqui_file_ref)
+          if (mygroup == 0) call read_and_distribute_events_for_simultaneous_runs(NUMBER_OF_SIMULTANEOUS_RUNS, acqui_file_ref)
        endif
     else
        prefix_to_path='./'
@@ -279,15 +279,15 @@ contains
   end subroutine SetUpInversion
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !--------------------------------------------------------------------------------------------------------------------
-! read acqui_file, count source then distribute over groups and rewrite suitable acqui_file for each group
+! read acqui_file, count events then distribute over groups and rewrite suitable acqui_file for each group
 !--------------------------------------------------------------------------------------------------------------------
-  subroutine read_and_distribute_sources_for_simultaneous_runs(NUMBER_OF_SIMULTANEOUS_RUNS, acqui_file_ref)
+  subroutine read_and_distribute_events_for_simultaneous_runs(NUMBER_OF_SIMULTANEOUS_RUNS, acqui_file_ref)
     character(len=MAX_LEN_STRING),       intent(in)       :: acqui_file_ref
     integer,                             intent(in)       :: NUMBER_OF_SIMULTANEOUS_RUNS
-    integer                                               :: number_of_sources_in_acqui_file_ref
-    integer                                               :: nsrc_per_group, nsrc_remained
-    integer                                               :: igroup, isrc_in_group, isrc, isrc_global
-    integer,  dimension(:),     allocatable               :: nsrc_in_group
+    integer                                               :: number_of_events_in_acqui_file_ref
+    integer                                               :: nevent_per_group, nevent_remained
+    integer                                               :: igroup, ievent_in_group, ievent, ievent_global
+    integer,  dimension(:),     allocatable               :: nevent_in_group
     character(len=MAX_LEN_STRING)                         :: line, prefix_to_path_tmp
 
 
@@ -295,32 +295,32 @@ contains
     write(6,*)  ' NUMBER OF SIMULTANEOUS RUN > 0 '
     write(6,*)
     call flush_iunit(6)
-    number_of_sources_in_acqui_file_ref=0
+    number_of_events_in_acqui_file_ref=0
     open(666,file=trim(acqui_file_ref))
     do
        read(666,'(a)',end=99) line
        !! no significant line
        if (is_blank_line(line)) cycle
        !! new event
-       if (INDEX(line,'event_name') > 0) number_of_sources_in_acqui_file_ref=number_of_sources_in_acqui_file_ref+1
+       if (INDEX(line,'event_name') > 0) number_of_events_in_acqui_file_ref=number_of_events_in_acqui_file_ref+1
     enddo
 99  close(666)
 
 
-    nsrc_per_group = number_of_sources_in_acqui_file_ref / NUMBER_OF_SIMULTANEOUS_RUNS
-    nsrc_remained =  mod( number_of_sources_in_acqui_file_ref, NUMBER_OF_SIMULTANEOUS_RUNS)
+    nevent_per_group = number_of_events_in_acqui_file_ref / NUMBER_OF_SIMULTANEOUS_RUNS
+    nevent_remained =  mod( number_of_events_in_acqui_file_ref, NUMBER_OF_SIMULTANEOUS_RUNS)
 
-    allocate(nsrc_in_group(NUMBER_OF_SIMULTANEOUS_RUNS))
-    do isrc=1,NUMBER_OF_SIMULTANEOUS_RUNS
-       if (isrc <= nsrc_remained) then
-          nsrc_in_group(isrc)= nsrc_per_group+1
+    allocate(nevent_in_group(NUMBER_OF_SIMULTANEOUS_RUNS))
+    do ievent=1,NUMBER_OF_SIMULTANEOUS_RUNS
+       if (ievent <= nevent_remained) then
+          nevent_in_group(ievent)= nevent_per_group+1
        else
-          nsrc_in_group(isrc)= nsrc_per_group
+          nevent_in_group(ievent)= nevent_per_group
        endif
     enddo
 
-    isrc_global = 0
-    isrc_in_group=0
+    ievent_global = 0
+    ievent_in_group=0
     igroup=1
     open(666,file=trim(acqui_file_ref))
     write(prefix_to_path_tmp,"('run',i4.4,'/')") igroup
@@ -332,21 +332,21 @@ contains
 
        !! new event
        if (INDEX(line,'event_name') > 0) then
-           isrc_global = isrc_global + 1
+           ievent_global = ievent_global + 1
            write(6,*)
-           write(6,*) '   next event ', isrc_global
-           isrc_in_group=isrc_in_group+1
+           write(6,*) '   next event ', ievent_global
+           ievent_in_group=ievent_in_group+1
 
        endif
 
-       !! write lines related to the current source
-       if (isrc_in_group > nsrc_in_group(igroup)) then
+       !! write lines related to the current event
+       if (ievent_in_group > nevent_in_group(igroup)) then
           igroup=igroup+1
           write(6,*) ' group ', igroup
           write(prefix_to_path_tmp,"('run',i4.4,'/')") igroup
           close(777)
           open(777, file=trim(prefix_to_path_tmp)//'DATA/inverse_problem/acqui_file.txt')
-          isrc_in_group=1
+          ievent_in_group=1
        endif
        write(777, '(a)') trim(line)
        write(6,*) trim(line)
@@ -354,18 +354,18 @@ contains
     enddo
 999  close(666)
     close(777)
-    deallocate(nsrc_in_group)
+    deallocate(nevent_in_group)
 
-  end subroutine read_and_distribute_sources_for_simultaneous_runs
+  end subroutine read_and_distribute_events_for_simultaneous_runs
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !--------------------------------------------------------------------------------------------------------------------
 !  ! create the name of the database for inverse problem
 !--------------------------------------------------------------------------------------------------------------------
-  subroutine create_name_database_inversion(prname,iproc,isource,LOCAL_PATH)
+  subroutine create_name_database_inversion(prname,iproc,ievent,LOCAL_PATH)
 
     implicit none
 
-    integer,                       intent(in)   :: iproc, isource
+    integer,                       intent(in)   :: iproc, ievent
     ! name of the database file
     character(len=MAX_LEN_STRING), intent(inout) :: prname
     character(len=MAX_STRING_LEN), intent(in   ) :: LOCAL_PATH
@@ -373,7 +373,7 @@ contains
     character(len=MAX_STRING_LEN)                :: procname
 
     ! create the name for the database of the current slide and region
-    write(procname,"('/proc',i6.6,'_',i6.6,'_')") iproc,isource
+    write(procname,"('/proc',i6.6,'_',i6.6,'_')") iproc,ievent
     ! create full name with path
     prname = LOCAL_PATH(1:len_trim(LOCAL_PATH)) // procname
 
@@ -439,13 +439,13 @@ contains
     integer,                                     intent(in)    :: iter, myrank
     type(acqui),  dimension(:), allocatable,     intent(inout) :: acqui_simu
 
-    integer                                                    :: isource
+    integer                                                    :: ievent
     character(len=MAX_LEN_STRING)                              :: name_file_tmp, ch_to_add
 
-    do isource=1, acqui_simu(1)%nsrc_tot
+    do ievent=1, acqui_simu(1)%nevent_tot
        write(ch_to_add,'(i4.4,a4)') iter,'_adj'
-       name_file_tmp = trim(acqui_simu(isource)%data_file_gather)//trim(adjustl(ch_to_add))
-       call  write_bin_sismo_on_disk(isource, acqui_simu, acqui_simu(isource)%adjoint_sources,  name_file_tmp, myrank)
+       name_file_tmp = trim(acqui_simu(ievent)%data_file_gather)//trim(adjustl(ch_to_add))
+       call  write_bin_sismo_on_disk(ievent, acqui_simu, acqui_simu(ievent)%adjoint_sources,  name_file_tmp, myrank)
     enddo
 
   end subroutine dump_adjoint_sources
@@ -459,13 +459,13 @@ contains
     real(kind=CUSTOM_REAL),  dimension(:,:,:), allocatable, intent(in)    :: array_to_write
     type(acqui),  dimension(:), allocatable,                intent(inout) :: acqui_simu
 
-    integer                                                               :: isource
+    integer                                                               :: ievent
     character(len=MAX_LEN_STRING)                                         :: name_file_tmp, ch_to_add
 
-    do isource=1, acqui_simu(1)%nsrc_tot
+    do ievent=1, acqui_simu(1)%nevent_tot
        write(ch_to_add,'(i4.4,a4)') iter,'_dir'
-       name_file_tmp = trim(acqui_simu(isource)%data_file_gather)//trim(adjustl(ch_to_add))
-       call  write_bin_sismo_on_disk(isource, acqui_simu, array_to_write, name_file_tmp, myrank)
+       name_file_tmp = trim(acqui_simu(ievent)%data_file_gather)//trim(adjustl(ch_to_add))
+       call  write_bin_sismo_on_disk(ievent, acqui_simu, array_to_write, name_file_tmp, myrank)
     enddo
 
   end subroutine dump_seismograms
@@ -479,13 +479,13 @@ contains
     real(kind=CUSTOM_REAL),  dimension(:,:,:), allocatable, intent(in)    :: array_to_write
     type(acqui),  dimension(:), allocatable,                intent(inout) :: acqui_simu
 
-    integer                                                               :: isource
+    integer                                                               :: ievent
     character(len=MAX_LEN_STRING)                                         :: name_file_tmp, ch_to_add
 
-    do isource=1, acqui_simu(1)%nsrc_tot
+    do ievent=1, acqui_simu(1)%nevent_tot
        write(ch_to_add,'(i4.4,a4)') iter,'_fil'
-       name_file_tmp = trim(acqui_simu(isource)%data_file_gather)//trim(adjustl(ch_to_add))
-       call  write_bin_sismo_on_disk(isource, acqui_simu, array_to_write, name_file_tmp, myrank)
+       name_file_tmp = trim(acqui_simu(ievent)%data_file_gather)//trim(adjustl(ch_to_add))
+       call  write_bin_sismo_on_disk(ievent, acqui_simu, array_to_write, name_file_tmp, myrank)
     enddo
 
   end subroutine dump_filtered_data
@@ -493,12 +493,12 @@ contains
 !----------------------------------------------------------------
 ! master write waveform synthetic data gather (need to choose between write_bin_sismo_on_disk or write_gather_on_disk)
 !----------------------------------------------------------------
-  subroutine write_bin_sismo_on_disk(isource, acqui_simu, array_to_write, name_file_to_write, myrank)
+  subroutine write_bin_sismo_on_disk(ievent, acqui_simu, array_to_write, name_file_to_write, myrank)
 
     use my_mpi             !! module from specfem
     include "precision.h"  !! from specfem
 
-    integer,                                                intent(in)    :: myrank, isource
+    integer,                                                intent(in)    :: myrank, ievent
     character(len=MAX_LEN_STRING),                          intent(in)    :: name_file_to_write
     real(kind=CUSTOM_REAL),  dimension(:,:,:), allocatable, intent(in)    :: array_to_write
     type(acqui),             dimension(:),     allocatable, intent(inout) :: acqui_simu
@@ -510,12 +510,12 @@ contains
     integer                                                               :: status(MPI_STATUS_SIZE)
 
      if (myrank == 0) then
-        write(INVERSE_LOG_FILE,*) '  ... Writing  synthetic data gather for source :  ', isource
+        write(INVERSE_LOG_FILE,*) '  ... Writing  synthetic data gather for event :  ', ievent
      endif
 
      if (myrank == 0) then
-        NSTA=acqui_simu(isource)%nsta_tot
-        Nt=acqui_simu(isource)%Nt_data
+        NSTA=acqui_simu(ievent)%nsta_tot
+        Nt=acqui_simu(ievent)%Nt_data
         allocate(Gather(NSTA,Nt,NDIM))
      endif
 
@@ -527,7 +527,7 @@ contains
            ! count the receiver in slice irank
            nsta_irank=0
            do irec = 1,  NSTA
-              if (acqui_simu(isource)%islice_selected_rec(irec) == irank) nsta_irank = nsta_irank + 1
+              if (acqui_simu(ievent)%islice_selected_rec(irec) == irank) nsta_irank = nsta_irank + 1
            enddo
            if (nsta_irank > 0) then
               allocate(Gather_loc(nsta_irank,Nt,NDIM))  !! data to receive
@@ -549,17 +549,17 @@ contains
               deallocate(irec_global)
            endif
         else
-           if (myrank == irank .and. acqui_simu(isource)%nsta_slice > 0) then
-              NSTA_LOC=acqui_simu(isource)%nsta_slice
-              Nt=acqui_simu(isource)%Nt_data
+           if (myrank == irank .and. acqui_simu(ievent)%nsta_slice > 0) then
+              NSTA_LOC=acqui_simu(ievent)%nsta_slice
+              Nt=acqui_simu(ievent)%Nt_data
               allocate(Gather_loc(NSTA_LOC,Nt,NDIM))
               allocate(irec_global(NSTA_LOC))
               do irec_local = 1, NSTA_LOC
-                 irec_global(irec_local) = acqui_simu(isource)%number_receiver_global(irec_local)
+                 irec_global(irec_local) = acqui_simu(ievent)%number_receiver_global(irec_local)
 
                  !! choose the rigth seismograms_*
                  do icomp=1,NDIM
-                    select case (trim(acqui_simu(isource)%component(icomp)))
+                    select case (trim(acqui_simu(ievent)%component(icomp)))
                     case ('PR')
                        Gather_loc(irec_local,:,icomp)=array_to_write(1,irec_local,:)
                     case ('UX')
@@ -591,17 +591,17 @@ contains
      !!  write gather file
      if (myrank == 0) then
         do icomp=1,NDIM
-           do irec_local = 1, acqui_simu(isource)%nsta_slice
+           do irec_local = 1, acqui_simu(ievent)%nsta_slice
               !! choose the rigth seismograms_*
-              select case (trim(acqui_simu(isource)%component(icomp)))
+              select case (trim(acqui_simu(ievent)%component(icomp)))
               case ('PR')
-                 Gather(acqui_simu(isource)%number_receiver_global(irec_local),:,icomp) = array_to_write(1,irec_local,:)
+                 Gather(acqui_simu(ievent)%number_receiver_global(irec_local),:,icomp) = array_to_write(1,irec_local,:)
               case ('UX')
-                 Gather(acqui_simu(isource)%number_receiver_global(irec_local),:,icomp) = array_to_write(1,irec_local,:)
+                 Gather(acqui_simu(ievent)%number_receiver_global(irec_local),:,icomp) = array_to_write(1,irec_local,:)
               case ('UY')
-                 Gather(acqui_simu(isource)%number_receiver_global(irec_local),:,icomp) = array_to_write(2,irec_local,:)
+                 Gather(acqui_simu(ievent)%number_receiver_global(irec_local),:,icomp) = array_to_write(2,irec_local,:)
               case ('UZ')
-                 Gather(acqui_simu(isource)%number_receiver_global(irec_local),:,icomp) = array_to_write(3,irec_local,:)
+                 Gather(acqui_simu(ievent)%number_receiver_global(irec_local),:,icomp) = array_to_write(3,irec_local,:)
               end select
            enddo
         enddo
@@ -611,7 +611,7 @@ contains
         irec=0
         do idim=1,NDIM
 
-           select case (trim(acqui_simu(isource)%component(idim)))
+           select case (trim(acqui_simu(ievent)%component(idim)))
            case('UX', 'UY', 'UZ', 'PR')
               irec=irec+1
               write(IINN,rec=irec) Gather(:,:,idim)
@@ -636,31 +636,31 @@ contains
     integer,                                     intent(in)    :: myrank
     type(acqui),  dimension(:), allocatable,     intent(inout) :: acqui_simu
 
-    integer                                                    :: isource, idim, NSTA, NSTA_LOC, Nt, irec, irec_local
+    integer                                                    :: ievent, idim, NSTA, NSTA_LOC, Nt, irec, irec_local
     integer                                                    :: tag, ier, nsta_irank, irank
     real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable      :: Gather, Gather_loc
     integer                                                    :: status(MPI_STATUS_SIZE)
 
     if (myrank == 0) write(INVERSE_LOG_FILE,'(/a17)') '... reading data '
 
-    do isource = 1, acqui_simu(1)%nsrc_tot
+    do ievent = 1, acqui_simu(1)%nevent_tot
 
 
        if (myrank == 0) then
 
-          NSTA=acqui_simu(isource)%nsta_tot
-          Nt=acqui_simu(isource)%Nt_data
+          NSTA=acqui_simu(ievent)%nsta_tot
+          Nt=acqui_simu(ievent)%Nt_data
 
           allocate(Gather(NSTA,Nt,NDIM))
           Gather(:,:,:) = 0._CUSTOM_REAL
           ! read gather file
-          open(IINN,file=trim(adjustl(acqui_simu(isource)%data_file_gather)), access='direct', &
+          open(IINN,file=trim(adjustl(acqui_simu(ievent)%data_file_gather)), access='direct', &
                recl=CUSTOM_REAL*Nt*NSTA,status='old')
           !! read only the asked component or pressure
           irec=0
           do idim=1,NDIM
 
-             select case (trim(acqui_simu(isource)%component(idim)))
+             select case (trim(acqui_simu(ievent)%component(idim)))
              case('UX', 'UY', 'UZ', 'PR')
                 irec=irec+1
                 read(IINN,rec=irec) Gather(:,:,idim)
@@ -670,19 +670,19 @@ contains
           close(IINN)
 
           !! store data gather in my slice if needed
-          NSTA_LOC=acqui_simu(isource)%nsta_slice
-          allocate(acqui_simu(isource)%data_traces(NSTA_LOC,Nt,NDIM))
-          allocate(acqui_simu(isource)%adjoint_sources(NDIM, NSTA_LOC, Nt))
-          allocate(acqui_simu(isource)%weight_trace(NDIM, NSTA_LOC))
-          acqui_simu(isource)%weight_trace(:,:)=1._CUSTOM_REAL
+          NSTA_LOC=acqui_simu(ievent)%nsta_slice
+          allocate(acqui_simu(ievent)%data_traces(NSTA_LOC,Nt,NDIM))
+          allocate(acqui_simu(ievent)%adjoint_sources(NDIM, NSTA_LOC, Nt))
+          allocate(acqui_simu(ievent)%weight_trace(NDIM, NSTA_LOC))
+          acqui_simu(ievent)%weight_trace(:,:)=1._CUSTOM_REAL
 
-          if (VERBOSE_MODE .or. DEBUG_MODE)  allocate(acqui_simu(isource)%synt_traces(NDIM, NSTA_LOC, Nt))
+          if (VERBOSE_MODE .or. DEBUG_MODE)  allocate(acqui_simu(ievent)%synt_traces(NDIM, NSTA_LOC, Nt))
 
           irec_local=0
           do irec = 1, NSTA
-             if (acqui_simu(isource)%islice_selected_rec(irec) == myrank) then
+             if (acqui_simu(ievent)%islice_selected_rec(irec) == myrank) then
                 irec_local=irec_local+1
-                acqui_simu(isource)%data_traces(irec_local,:,:)=Gather(irec, :, :)
+                acqui_simu(ievent)%data_traces(irec_local,:,:)=Gather(irec, :, :)
              endif
           enddo
        endif
@@ -695,7 +695,7 @@ contains
              ! count the receiver in slice irank
              nsta_irank=0
              do irec = 1,  NSTA
-                if (acqui_simu(isource)%islice_selected_rec(irec) == irank) nsta_irank = nsta_irank + 1
+                if (acqui_simu(ievent)%islice_selected_rec(irec) == irank) nsta_irank = nsta_irank + 1
              enddo
 
              ! if there is receiver in slice irank then MPI send data
@@ -703,7 +703,7 @@ contains
                 allocate(Gather_loc(nsta_irank,Nt,NDIM))  !! data to send
                 irec_local=0
                 do irec = 1, NSTA
-                   if (acqui_simu(isource)%islice_selected_rec(irec) == irank) then
+                   if (acqui_simu(ievent)%islice_selected_rec(irec) == irank) then
                       irec_local = irec_local + 1
                       Gather_loc(irec_local, :, :) = Gather(irec, :, :) !! store data to send
                    endif
@@ -718,19 +718,19 @@ contains
 
           else !! then receive gather
 
-             if (myrank == irank .and. acqui_simu(isource)%nsta_slice > 0) then
-                NSTA_LOC=acqui_simu(isource)%nsta_slice
-                Nt=acqui_simu(isource)%Nt_data
-                allocate(Gather_loc(NSTA_LOC,Nt,NDIM),acqui_simu(isource)%data_traces(NSTA_LOC,Nt,NDIM), &
-                     acqui_simu(isource)%adjoint_sources(NDIM, NSTA_LOC, Nt), acqui_simu(isource)%weight_trace(NDIM, NSTA_LOC))
+             if (myrank == irank .and. acqui_simu(ievent)%nsta_slice > 0) then
+                NSTA_LOC=acqui_simu(ievent)%nsta_slice
+                Nt=acqui_simu(ievent)%Nt_data
+                allocate(Gather_loc(NSTA_LOC,Nt,NDIM),acqui_simu(ievent)%data_traces(NSTA_LOC,Nt,NDIM), &
+                     acqui_simu(ievent)%adjoint_sources(NDIM, NSTA_LOC, Nt), acqui_simu(ievent)%weight_trace(NDIM, NSTA_LOC))
 
-                if (VERBOSE_MODE .or. DEBUG_MODE) allocate(acqui_simu(isource)%synt_traces(NDIM, NSTA_LOC, Nt))
+                if (VERBOSE_MODE .or. DEBUG_MODE) allocate(acqui_simu(ievent)%synt_traces(NDIM, NSTA_LOC, Nt))
 
                 if (DEBUG_MODE) write(IIDD,*) 'myrank ',myrank,' wait for 0 :', NSTA_LOC,Nt
                 tag   = MPI_ANY_TAG
                 call MPI_RECV(Gather_loc,Nt*NSTA_LOC*NDIM,CUSTOM_MPI_TYPE, 0, tag, my_local_mpi_comm_world, status,  ier)
                 !! store in acqui_simu
-                acqui_simu(isource)%data_traces(:,:,:)=Gather_loc(:,:,:)
+                acqui_simu(ievent)%data_traces(:,:,:)=Gather_loc(:,:,:)
                 deallocate(Gather_loc)
              endif
 
@@ -746,11 +746,11 @@ contains
        !! set other parameters (in futrue work need to read any additional files)
 
        !! set frequency to invert
-       acqui_simu(isource)%freqcy_to_invert(:,1,:)=fl
-       acqui_simu(isource)%freqcy_to_invert(:,2,:)=fh
+       acqui_simu(ievent)%freqcy_to_invert(:,1,:)=fl
+       acqui_simu(ievent)%freqcy_to_invert(:,2,:)=fh
 
-       acqui_simu(isource)%fl_src=fl
-       acqui_simu(isource)%fh_src=fh
+       acqui_simu(ievent)%fl_event=fl
+       acqui_simu(ievent)%fh_event=fh
 
     enddo
 
@@ -770,17 +770,17 @@ contains
 
     ! locals
     character(len=MAX_LEN_STRING)                              :: line, keyw, line_to_read
-    integer                                                    :: ipos0, ipos1, isrc
+    integer                                                    :: ipos0, ipos1, ievent
     integer                                                    :: ier
     if (DEBUG_MODE)  write(IIDD,*) '       MYGROUP  ', mygroup, '    MYRANK ', myrank
-    NSRC=0
+    NEVENT=0
     if (myrank == 0) then
        write(INVERSE_LOG_FILE,*)
        write(INVERSE_LOG_FILE,*) '     READING acquisition'
        write(INVERSE_LOG_FILE,*)
     endif
 
-    !! 1/ read to count the number of sources
+    !! 1/ read to count the number of events
     open(666,file=trim(acqui_file),iostat=ier)
     if (ier /= 0) then
        write(*,*) ' error opening  ', trim(acqui_file), ' mygoup ', mygroup
@@ -792,28 +792,28 @@ contains
        read(666,'(a)',end=99) line
        if (DEBUG_MODE) write(IIDD,'(a)') trim(line)
        if (is_blank_line(line)) cycle                 !! no significant line
-       if (INDEX(line,'event_name') > 0) NSRC=NSRC+1  !! new event
+       if (INDEX(line,'event_name') > 0) NEVENT=NEVENT+1  !! new event
 
     enddo
 99  close(666)
 
     if (myrank == 0) then
-       write(INVERSE_LOG_FILE,*) '       ALLOCATE  acquisition structure for ', NSRC, ' sources '
+       write(INVERSE_LOG_FILE,*) '       ALLOCATE  acquisition structure for ', NEVENT, ' events '
        write(INVERSE_LOG_FILE,*)
     endif
 
     !! 2/ allocate and store type(acqui) acqui_simu
-    if (NSRC > 0) then
-       allocate(acqui_simu(NSRC))
+    if (NEVENT > 0) then
+       allocate(acqui_simu(NEVENT))
     else
         allocate(acqui_simu(1))
-       write(*,*) 'ERROR NO SOURCES FOUND IN ACQUISITION FILE ',myrank, mygroup, trim(acqui_file)
+       write(*,*) 'ERROR NO EVENTS FOUND IN ACQUISITION FILE ',myrank, mygroup, trim(acqui_file)
        stop
     endif
 
-    ! open source file
+    ! open event file
     open(666,file=trim(acqui_file))
-    isrc=0
+    ievent=0
     do    !! loop on all lines
 
         !! READ AND STORE ALL ITEM RELATED TO EVENT -------------------------------
@@ -833,58 +833,58 @@ contains
            select case (trim(keyw))
 
               case('event_name')
-                 isrc=isrc+1
-                 acqui_simu(isrc)%event_name=trim(adjustl(line(ipos0:ipos1)))
-                 acqui_simu(isrc)%nsrc_tot=NSRC
-                 call store_default_acqui_values(acqui_simu, isrc)
+                 ievent=ievent+1
+                 acqui_simu(ievent)%event_name=trim(adjustl(line(ipos0:ipos1)))
+                 acqui_simu(ievent)%nevent_tot=NEVENT
+                 call store_default_acqui_values(acqui_simu, ievent)
 
               case('moment', 'force')
-                 acqui_simu(isrc)%source_file=trim(adjustl(line(ipos0:ipos1)))
-                 acqui_simu(isrc)%source_type=trim(adjustl(keyw))
-                 acqui_simu(isrc)%adjoint_source_type='L2_OIL_INDUSTRY'
+                 acqui_simu(ievent)%source_file=trim(adjustl(line(ipos0:ipos1)))
+                 acqui_simu(ievent)%source_type=trim(adjustl(keyw))
+                 acqui_simu(ievent)%adjoint_source_type='L2_OIL_INDUSTRY'
 
               case('axisem', 'dsm', 'plane', 'fk')
-                 acqui_simu(isrc)%source_file=trim(adjustl(line(ipos0:ipos1)))
-                 acqui_simu(isrc)%source_type=trim(adjustl(keyw))
-                 acqui_simu(isrc)%adjoint_source_type='L2_FWI_TELESEISMIC'
+                 acqui_simu(ievent)%source_file=trim(adjustl(line(ipos0:ipos1)))
+                 acqui_simu(ievent)%source_type=trim(adjustl(keyw))
+                 acqui_simu(ievent)%adjoint_source_type='L2_FWI_TELESEISMIC'
 
               case('traction_dir')
-                 acqui_simu(isrc)%traction_dir=trim(adjustl(line(ipos0:ipos1)))
+                 acqui_simu(ievent)%traction_dir=trim(adjustl(line(ipos0:ipos1)))
 
               case('station_file')
-                 acqui_simu(isrc)%station_file=trim(adjustl(line(ipos0:ipos1)))
+                 acqui_simu(ievent)%station_file=trim(adjustl(line(ipos0:ipos1)))
 
               case('data_file')
-                 acqui_simu(isrc)%data_file_gather=trim(adjustl(line(ipos0:ipos1)))
+                 acqui_simu(ievent)%data_file_gather=trim(adjustl(line(ipos0:ipos1)))
 
               case ('component')
                  !! initiallize components
-                 acqui_simu(isrc)%component(1)='  '
-                 acqui_simu(isrc)%component(2)='  '
-                 acqui_simu(isrc)%component(3)='  '
+                 acqui_simu(ievent)%component(1)='  '
+                 acqui_simu(ievent)%component(2)='  '
+                 acqui_simu(ievent)%component(3)='  '
                  !need to add '00' in case of mising components (because fortran cannot let the missing component to '  ')
                  line_to_read=line(ipos0:ipos1)//' 00 00 00'
 
-                 read(line_to_read,*)  acqui_simu(isrc)%component(1), &
-                                            acqui_simu(isrc)%component(2), &
-                                            acqui_simu(isrc)%component(3)
+                 read(line_to_read,*)  acqui_simu(ievent)%component(1), &
+                                            acqui_simu(ievent)%component(2), &
+                                            acqui_simu(ievent)%component(3)
 
                  if (myrank == 0) then
-                    write(INVERSE_LOG_FILE,*) 'source', isrc,  ' components : ', &
-                         trim(acqui_simu(isrc)%component(1)),' ', &
-                         trim(acqui_simu(isrc)%component(2)),' ', &
-                         trim(acqui_simu(isrc)%component(3))
+                    write(INVERSE_LOG_FILE,*) 'event', ievent,  ' components : ', &
+                         trim(acqui_simu(ievent)%component(1)),' ', &
+                         trim(acqui_simu(ievent)%component(2)),' ', &
+                         trim(acqui_simu(ievent)%component(3))
                  endif
 
               case('source_wavelet')
-                 acqui_simu(isrc)%source_wavelet_file=trim(adjustl(line(ipos0:ipos1)))
-                 acqui_simu(isrc)%external_source_wavelet=.true.
+                 acqui_simu(ievent)%source_wavelet_file=trim(adjustl(line(ipos0:ipos1)))
+                 acqui_simu(ievent)%external_source_wavelet=.true.
 
               case ('NSTEP')
-                 read(line(ipos0:ipos1),*) acqui_simu(isrc)%Nt_data
+                 read(line(ipos0:ipos1),*) acqui_simu(ievent)%Nt_data
 
               case ('DT')
-                 read(line(ipos0:ipos1),*) acqui_simu(isrc)%dt_data
+                 read(line(ipos0:ipos1),*) acqui_simu(ievent)%dt_data
 
               case default
                  write(*,*) 'ERROR KEY WORD NOT MATCH : ', trim(keyw), ' in file ', trim(acqui_file)
@@ -1042,7 +1042,7 @@ contains
     if (myrank == 0) then
        write(INVERSE_LOG_FILE,*)
        write(INVERSE_LOG_FILE,*) '     READ  ', trim(inver_file)
-       write(INVERSE_LOG_FILE,*) '     Nb tot sources ', acqui_simu(1)%nsrc_tot
+       write(INVERSE_LOG_FILE,*) '     Nb tot events ', acqui_simu(1)%nevent_tot
        write(INVERSE_LOG_FILE,*)
     endif
 
@@ -1057,36 +1057,36 @@ contains
 !-----------------------------------------------------------------
 ! define default values
 !----------------------------------------------------------------
-  subroutine store_default_acqui_values(acqui_simu, isrc)
+  subroutine store_default_acqui_values(acqui_simu, ievent)
     type(acqui), allocatable, dimension(:), intent(inout)  :: acqui_simu
-    integer,                                intent(in)     :: isrc
+    integer,                                intent(in)     :: ievent
 
-    acqui_simu(isrc)%source_file  ='none'
-    acqui_simu(isrc)%traction_dir ='none'
-    acqui_simu(isrc)%data_file_gather ='none'
-    acqui_simu(isrc)%source_type  ='none'
-    acqui_simu(isrc)%station_file ='none'
-    acqui_simu(isrc)%adjoint_source_type='none'
+    acqui_simu(ievent)%source_file  ='none'
+    acqui_simu(ievent)%traction_dir ='none'
+    acqui_simu(ievent)%data_file_gather ='none'
+    acqui_simu(ievent)%source_type  ='none'
+    acqui_simu(ievent)%station_file ='none'
+    acqui_simu(ievent)%adjoint_source_type='none'
 
-    acqui_simu(isrc)%Xs=0.d0
-    acqui_simu(isrc)%Ys=0.d0
-    acqui_simu(isrc)%Zs=0.d0
+    acqui_simu(ievent)%Xs=0.d0
+    acqui_simu(ievent)%Ys=0.d0
+    acqui_simu(ievent)%Zs=0.d0
 
-    acqui_simu(isrc)%Mxx=0.d0
-    acqui_simu(isrc)%Myy=0.d0
-    acqui_simu(isrc)%Mzz=0.d0
-    acqui_simu(isrc)%Mxy=0.d0
-    acqui_simu(isrc)%Mxz=0.d0
-    acqui_simu(isrc)%Myz=0.d0
+    acqui_simu(ievent)%Mxx=0.d0
+    acqui_simu(ievent)%Myy=0.d0
+    acqui_simu(ievent)%Mzz=0.d0
+    acqui_simu(ievent)%Mxy=0.d0
+    acqui_simu(ievent)%Mxz=0.d0
+    acqui_simu(ievent)%Myz=0.d0
 
-    acqui_simu(isrc)%Fx=0.d0
-    acqui_simu(isrc)%Fy=0.d0
-    acqui_simu(isrc)%Fz=0.d0
+    acqui_simu(ievent)%Fx=0.d0
+    acqui_simu(ievent)%Fy=0.d0
+    acqui_simu(ievent)%Fz=0.d0
 
-    acqui_simu(isrc)%t_shift=0.d0
-    acqui_simu(isrc)%hdur=0.d0
+    acqui_simu(ievent)%t_shift=0.d0
+    acqui_simu(ievent)%hdur=0.d0
 
-    acqui_simu(isrc)%nsources_local=0
+    acqui_simu(ievent)%nsources_local=0
 
   end subroutine store_default_acqui_values
 
@@ -1126,46 +1126,94 @@ contains
 !------------------------------------------------------------
   subroutine get_stations(acqui_simu)
 
+    use constants, only: NDIM
+
     type(acqui), allocatable, dimension(:), intent(inout)  :: acqui_simu
 
-    integer                                                :: isource, istation, nsta
-    character(len=MAX_LEN_STRING)                          :: line, station_name, network_name
-    real(kind=CUSTOM_REAL)                                 :: y, x, z, stbur
-
+    integer                                                :: ievent, irec, nsta, nrec_loc
+    character(len=MAX_LEN_STRING)                          :: rec_filename,filtered_rec_filename
     write(INVERSE_LOG_FILE,*)
     write(INVERSE_LOG_FILE,*) '     READING stations '
 
-    ! loop on all sources
-    do isource = 1, NSRC
+    INVERSE_FWI_FULL_PROBLEM = .true.
+
+    ! loop on all events
+    do ievent = 1, NEVENT
        ! open station file
-       open(IINN,file=trim(adjustl(acqui_simu(isource)%station_file)))
-       ! count number of stations related to source isource
-       nsta=0
-       do
-          read(IINN,'(a)', end=99) line
-          nsta=nsta+1
+       rec_filename=trim(adjustl(acqui_simu(ievent)%station_file))
+       filtered_rec_filename=rec_filename(1:len_trim(rec_filename))//'_FILTERED'
+
+       call station_filter(rec_filename,filtered_rec_filename,nsta)
+
+       acqui_simu(ievent)%nsta_tot=nsta
+       allocate(acqui_simu(ievent)%station_name(nsta),acqui_simu(ievent)%network_name(nsta))
+       allocate(acqui_simu(ievent)%position_station(3,nsta))
+       allocate(acqui_simu(ievent)%xi_rec(nsta), &
+                acqui_simu(ievent)%eta_rec(nsta), &
+                acqui_simu(ievent)%gamma_rec(nsta))
+       allocate(acqui_simu(ievent)%islice_selected_rec(nsta), &
+                acqui_simu(ievent)%ispec_selected_rec(nsta), &
+                acqui_simu(ievent)%number_receiver_global(nsta), &
+                acqui_simu(ievent)%nu(NDIM,NDIM,nsta))
+
+       ! reads STATIONS_FILTERED file, locates receivers in the mesh and compute Lagrange interpolators
+       call locate_receivers(filtered_rec_filename,nsta,acqui_simu(ievent)%islice_selected_rec, &
+                             acqui_simu(ievent)%ispec_selected_rec, &
+                             acqui_simu(ievent)%xi_rec,acqui_simu(ievent)%eta_rec,acqui_simu(ievent)%gamma_rec, &
+                             acqui_simu(ievent)%station_name,acqui_simu(ievent)%network_name,acqui_simu(ievent)%nu,1.0d0,1.0d0)
+
+       nrec_loc = 0
+       do irec = 1, nsta
+         if (myrank == acqui_simu(ievent)%islice_selected_rec(irec)) then
+             nrec_loc=nrec_loc+1
+             acqui_simu(ievent)%number_receiver_global(nrec_loc)=irec
+         endif
        enddo
-       99 close(IINN)
-       acqui_simu(isource)%nsta_tot=nsta
-       allocate(acqui_simu(isource)%station_name(nsta),acqui_simu(isource)%network_name(nsta))
-       allocate(acqui_simu(isource)%position_station(3,nsta))
-       open(IINN,file=trim(adjustl(acqui_simu(isource)%station_file)))
-       do istation=1,nsta
-          read(IINN,'(a)') line
-          read(line, *) station_name, network_name, y, x, z, stbur
-          acqui_simu(isource)%position_station(1,istation)=x
-          acqui_simu(isource)%position_station(2,istation)=y
-          acqui_simu(isource)%position_station(3,istation)=z
-          acqui_simu(isource)%station_name(istation)=trim(adjustl(station_name))
-          acqui_simu(isource)%network_name(istation)=trim(adjustl(network_name))
+
+       acqui_simu(ievent)%nsta_slice=nrec_loc
+
+       if (acqui_simu(ievent)%nsta_slice > 0) then
+          allocate(acqui_simu(ievent)%hxi    (NGLLX,nrec_loc))
+          allocate(acqui_simu(ievent)%heta   (NGLLY,nrec_loc))
+          allocate(acqui_simu(ievent)%hgamma (NGLLZ,nrec_loc))
+          allocate(acqui_simu(ievent)%hpxi   (NGLLX,nrec_loc))
+          allocate(acqui_simu(ievent)%hpeta  (NGLLY,nrec_loc))
+          allocate(acqui_simu(ievent)%hpgamma(NGLLZ,nrec_loc))
+          allocate(acqui_simu(ievent)%freqcy_to_invert(NDIM,2,nrec_loc))
+       else
+          allocate(acqui_simu(ievent)%hxi    (1,1))
+          allocate(acqui_simu(ievent)%heta   (1,1))
+          allocate(acqui_simu(ievent)%hgamma (1,1))
+          allocate(acqui_simu(ievent)%hpxi   (1,1))
+          allocate(acqui_simu(ievent)%hpeta  (1,1))
+          allocate(acqui_simu(ievent)%hpgamma(1,1))
+          allocate(acqui_simu(ievent)%freqcy_to_invert(NDIM,2,1))
+       endif
+
+       nrec_loc = 0
+       do irec=1, acqui_simu(ievent)%nsta_tot
+          if (myrank == acqui_simu(ievent)%islice_selected_rec(irec)) then
+
+             nrec_loc = nrec_loc + 1
+
+             ! compute Lagrange polynomials at the receiver location
+             call lagrange_any(acqui_simu(ievent)%xi_rec(irec),NGLLX,xigll, &
+                               acqui_simu(ievent)%hxi(1,nrec_loc),acqui_simu(ievent)%hpxi(1,nrec_loc))
+             call lagrange_any(acqui_simu(ievent)%eta_rec(irec),NGLLY,yigll, &
+                               acqui_simu(ievent)%heta(1,nrec_loc),acqui_simu(ievent)%hpeta(1,nrec_loc))
+             call lagrange_any(acqui_simu(ievent)%gamma_rec(irec),NGLLZ,zigll, &
+                               acqui_simu(ievent)%hgamma(1,nrec_loc),acqui_simu(ievent)%hpgamma(1,nrec_loc))
+
+          endif
        enddo
-       close(IINN)
+
     enddo
 
     write(INVERSE_LOG_FILE,*) '     READING stations passed '
     write(INVERSE_LOG_FILE,*)
 
  end subroutine get_stations
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !------------------------------------------------------------
 ! read source parameter file
@@ -1174,21 +1222,21 @@ contains
     type(acqui), allocatable, dimension(:), intent(inout)  :: acqui_simu
     ! locals
     character(len=MAX_LEN_STRING)                          :: string
-    integer                                                :: isource, ier
+    integer                                                :: ievent, ier
     integer                                                :: i
     real(kind=CUSTOM_REAL)                                 :: dt_dummy
 
     write(INVERSE_LOG_FILE,*)
     write(INVERSE_LOG_FILE,*) '     READING sources parameters '
 
-    do isource=1,acqui_simu(1)%nsrc_tot
+    do ievent=1,acqui_simu(1)%nevent_tot
 
-       select case (acqui_simu(isource)%source_type)
+       select case (acqui_simu(ievent)%source_type)
 
        case('moment')
-          open(IINN,file=trim(acqui_simu(isource)%source_file),status='old',action='read',iostat=ier)
+          open(IINN,file=trim(acqui_simu(ievent)%source_file),status='old',action='read',iostat=ier)
           if (ier /= 0) then
-             print *,'Error opening file: ',trim(acqui_simu(isource)%source_file)
+             print *,'Error opening file: ',trim(acqui_simu(ievent)%source_file)
              stop 'Error opening CMTSOLUTION file'
           endif
 
@@ -1196,7 +1244,7 @@ contains
           ! gets header line
           read(IINN,"(a256)",iostat=ier) string
           if (ier /= 0) then
-             print *, 'Error reading header line in source ',isource
+             print *, 'Error reading header line in event ',ievent
              stop 'Error reading header line in station in CMTSOLUTION file'
           endif
 
@@ -1204,7 +1252,7 @@ contains
           do while (len_trim(string) == 0)
              read(IINN,"(a256)",iostat=ier) string
              if (ier /= 0) then
-                print *, 'Error reading header line in source ',isource
+                print *, 'Error reading header line in event ',ievent
                 stop 'Error reading header line in station in CMTSOLUTION file'
              endif
           enddo
@@ -1212,124 +1260,124 @@ contains
           ! ignore line with event name
           read(IINN,"(a)",iostat=ier) string
           if (ier /= 0) then
-             print *, 'Error reading event name in source ',isource
+             print *, 'Error reading event name in event ',ievent
              stop 'Error reading event name in station in CMTSOLUTION file'
           endif
 
           ! read time shift
           read(IINN,"(a)",iostat=ier) string
           if (ier /= 0) then
-             print *, 'Error reading time shift in source ',isource
+             print *, 'Error reading time shift in event ',ievent
              stop 'Error reading time shift in station in CMTSOLUTION file'
           endif
-          read(string(12:len_trim(string)),*) acqui_simu(isource)%t_shift
-          !write(*,*) 'read t_shift ' , acqui_simu(isource)%t_shift
+          read(string(12:len_trim(string)),*) acqui_simu(ievent)%t_shift
+          !write(*,*) 'read t_shift ' , acqui_simu(ievent)%t_shift
           ! read half duration
           read(IINN,"(a)",iostat=ier) string
           if (ier /= 0) then
-             print *, 'Error reading half duration in source ',isource
+             print *, 'Error reading half duration in event ',ievent
              stop 'Error reading half duration in station in CMTSOLUTION file'
           endif
-          read(string(15:len_trim(string)),*) acqui_simu(isource)%hdur
-          !write(*,*) 'read hdur ' , acqui_simu(isource)%hdur
+          read(string(15:len_trim(string)),*) acqui_simu(ievent)%hdur
+          !write(*,*) 'read hdur ' , acqui_simu(ievent)%hdur
           ! read latitude
           read(IINN,"(a)",iostat=ier) string
           if (ier /= 0) then
-             print *, 'Error reading latitude in source ',isource
+             print *, 'Error reading latitude in event ',ievent
              stop 'Error reading latitude in station in CMTSOLUTION file'
           endif
-          read(string(10:len_trim(string)),*) acqui_simu(isource)%Ys
-          !write(*,*) 'read Ys ' , acqui_simu(isource)%Ys
+          read(string(10:len_trim(string)),*) acqui_simu(ievent)%Ys
+          !write(*,*) 'read Ys ' , acqui_simu(ievent)%Ys
           ! read longitude
           read(IINN,"(a)",iostat=ier) string
           if (ier /= 0) then
-             print *, 'Error reading longitude in source ',isource
+             print *, 'Error reading longitude in event ',ievent
              stop 'Error reading longitude in station in CMTSOLUTION file'
           endif
-          read(string(11:len_trim(string)),*) acqui_simu(isource)%Xs
-          !write(*,*) 'read Xs ' , acqui_simu(isource)%Xs
+          read(string(11:len_trim(string)),*) acqui_simu(ievent)%Xs
+          !write(*,*) 'read Xs ' , acqui_simu(ievent)%Xs
           ! read depth
           read(IINN,"(a)",iostat=ier) string
           if (ier /= 0) then
-             print *, 'Error reading depth in source ',isource
+             print *, 'Error reading depth in event ',ievent
              stop 'Error reading depth in station in CMTSOLUTION file'
           endif
-          read(string(7:len_trim(string)),*) acqui_simu(isource)%Zs
-          !write(*,*) 'read Zs ' , acqui_simu(isource)%Zs
+          read(string(7:len_trim(string)),*) acqui_simu(ievent)%Zs
+          !write(*,*) 'read Zs ' , acqui_simu(ievent)%Zs
 
           ! seismic moment tensor
           ! CMTSOLUTION: components given in dyne-cm
           ! read Mrr
           read(IINN,"(a)",iostat=ier) string
           if (ier /= 0) then
-             print *, 'Error reading Mrr in source ',isource
+             print *, 'Error reading Mrr in event ',ievent
              stop 'Error reading Mrr in station in CMTSOLUTION file'
           endif
-          read(string(5:len_trim(string)),*)  acqui_simu(isource)%Mzz
-          !write(*,*)  acqui_simu(isource)%Mzz
+          read(string(5:len_trim(string)),*)  acqui_simu(ievent)%Mzz
+          !write(*,*)  acqui_simu(ievent)%Mzz
           ! read Mtt
           read(IINN,"(a)",iostat=ier) string
           if (ier /= 0) then
-             print *, 'Error reading Mtt in source ',isource
+             print *, 'Error reading Mtt in event ',ievent
              stop 'Error reading Mtt in station in CMTSOLUTION file'
           endif
-          read(string(5:len_trim(string)),*) acqui_simu(isource)%Myy
-          !write(*,*)  acqui_simu(isource)%Myy
+          read(string(5:len_trim(string)),*) acqui_simu(ievent)%Myy
+          !write(*,*)  acqui_simu(ievent)%Myy
           ! read Mpp
           read(IINN,"(a)",iostat=ier) string
           if (ier /= 0) then
-             print *, 'Error reading Mpp in source ',isource
+             print *, 'Error reading Mpp in event ',ievent
              stop 'Error reading Mpp in station in CMTSOLUTION file'
           endif
-          read(string(5:len_trim(string)),*) acqui_simu(isource)%Mxx
-          !write(*,*)  acqui_simu(isource)%Mxx
+          read(string(5:len_trim(string)),*) acqui_simu(ievent)%Mxx
+          !write(*,*)  acqui_simu(ievent)%Mxx
           ! read Mrt
           read(IINN,"(a)",iostat=ier) string
           if (ier /= 0) then
-             print *, 'Error reading Mrt in source ',isource
+             print *, 'Error reading Mrt in event ',ievent
              stop 'Error reading Mrt in station in CMTSOLUTION file'
           endif
-          read(string(5:len_trim(string)),*) acqui_simu(isource)%Myz
-          acqui_simu(isource)%Myz = - acqui_simu(isource)%Myz
-          !write(*,*)  acqui_simu(isource)%Myz
+          read(string(5:len_trim(string)),*) acqui_simu(ievent)%Myz
+          acqui_simu(ievent)%Myz = - acqui_simu(ievent)%Myz
+          !write(*,*)  acqui_simu(ievent)%Myz
           ! read Mrp
           read(IINN,"(a)",iostat=ier) string
           if (ier /= 0) then
-             print *, 'Error reading Mrp in source ',isource
+             print *, 'Error reading Mrp in event ',ievent
              stop 'Error reading Mrp in station in CMTSOLUTION file'
           endif
-          read(string(5:len_trim(string)),*) acqui_simu(isource)%Mxz
-          !write(*,*)  acqui_simu(isource)%Mxz
+          read(string(5:len_trim(string)),*) acqui_simu(ievent)%Mxz
+          !write(*,*)  acqui_simu(ievent)%Mxz
           ! read Mtp
           read(IINN,"(a)",iostat=ier) string
           if (ier /= 0) then
-             print *, 'Error reading Mtp in source ',isource
+             print *, 'Error reading Mtp in event ',ievent
              stop 'Error reading Mtp in station in CMTSOLUTION file'
           endif
-          read(string(5:len_trim(string)),*) acqui_simu(isource)%Mxy
-          acqui_simu(isource)%Mxy = - acqui_simu(isource)%Mxy
-          !write(*,*)  acqui_simu(isource)%Mxy
+          read(string(5:len_trim(string)),*) acqui_simu(ievent)%Mxy
+          acqui_simu(ievent)%Mxy = - acqui_simu(ievent)%Mxy
+          !write(*,*)  acqui_simu(ievent)%Mxy
           close(IINN)
 
           ! to be consistent with specfem
-          acqui_simu(isource)%Mxx = acqui_simu(isource)%Mxx * 1.d-7
-          acqui_simu(isource)%Myy = acqui_simu(isource)%Myy * 1.d-7
-          acqui_simu(isource)%Mzz = acqui_simu(isource)%Mzz * 1.d-7
-          acqui_simu(isource)%Mxy = acqui_simu(isource)%Mxy * 1.d-7
-          acqui_simu(isource)%Mxz = acqui_simu(isource)%Mxz * 1.d-7
-          acqui_simu(isource)%Myz = acqui_simu(isource)%Myz * 1.d-7
+          acqui_simu(ievent)%Mxx = acqui_simu(ievent)%Mxx * 1.d-7
+          acqui_simu(ievent)%Myy = acqui_simu(ievent)%Myy * 1.d-7
+          acqui_simu(ievent)%Mzz = acqui_simu(ievent)%Mzz * 1.d-7
+          acqui_simu(ievent)%Mxy = acqui_simu(ievent)%Mxy * 1.d-7
+          acqui_simu(ievent)%Mxz = acqui_simu(ievent)%Mxz * 1.d-7
+          acqui_simu(ievent)%Myz = acqui_simu(ievent)%Myz * 1.d-7
 
-          if (acqui_simu(isource)%external_source_wavelet) then
-             allocate(acqui_simu(isource)%source_wavelet(acqui_simu(isource)%Nt_data,1))
-             open(IINN, file=trim(acqui_simu(isource)%source_wavelet_file))
-             do i=1,acqui_simu(isource)%Nt_data
-                read(IINN, *) dt_dummy, acqui_simu(isource)%source_wavelet(i,1)
+          if (acqui_simu(ievent)%external_source_wavelet) then
+             allocate(acqui_simu(ievent)%source_wavelet(acqui_simu(ievent)%Nt_data,1))
+             open(IINN, file=trim(acqui_simu(ievent)%source_wavelet_file))
+             do i=1,acqui_simu(ievent)%Nt_data
+                read(IINN, *) dt_dummy, acqui_simu(ievent)%source_wavelet(i,1)
              enddo
              close(IINN)
           endif
 
        case('force')
-          print *, 'Abort not implemented yet : FORCESOLUTION in source ',isource
+          print *, 'Abort not implemented yet : FORCESOLUTION in event ',ievent
           stop
 
        case default
@@ -1345,6 +1393,7 @@ contains
   end subroutine get_point_source
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !---------------------------------------------------------------
 ! MPI BCAST of acqui_simu
 !---------------------------------------------------------------
@@ -1357,15 +1406,15 @@ contains
     integer,                                intent(in)     :: myrank
     integer                                                :: nsta_tot, i,ier
 
-    if (myrank == 0) NSRC=acqui_simu(1)%nsrc_tot
-    call MPI_BCAST(NSRC,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
+    if (myrank == 0) NEVENT=acqui_simu(1)%nevent_tot
+    call MPI_BCAST(NEVENT,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
 
-    if (myrank > 0) allocate(acqui_simu(NSRC))
+    if (myrank > 0) allocate(acqui_simu(NEVENT))
 
-    do i=1,NSRC
+    do i=1,NEVENT
 
-       ! sources
-       acqui_simu(i)%nsrc_tot=NSRC
+       ! events
+       acqui_simu(i)%nevent_tot=NEVENT
        ! bcast file paths
        call MPI_BCAST(acqui_simu(i)%source_file,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(acqui_simu(i)%traction_dir,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)

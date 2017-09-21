@@ -41,7 +41,7 @@
 ! use iway = ILONGLAT2UTM for long/lat to UTM, IUTM2LONGLAT for UTM to lat/long
 ! a list of UTM zones of the world is available at www.dmap.co.uk/utmworld.htm
 
-  subroutine utm_geo(rlon4,rlat4,rx4,ry4,UTM_PROJECTION_ZONE,iway,SUPPRESS_UTM_PROJECTION)
+  subroutine utm_geo(rlon4,rlat4,rx4,ry4,iway)
 
 !
 !---- CAMx v6.10 2014/04/02
@@ -87,13 +87,13 @@
 ! 3 degrees away from both zone boundary.
 !
   use constants, only: PI,ILONGLAT2UTM,IUTM2LONGLAT
+  use shared_input_parameters, only: UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION
 
   implicit none
 
 ! input/output parameters
   double precision :: rx4,ry4,rlon4,rlat4
-  integer, intent(in) :: UTM_PROJECTION_ZONE,iway
-  logical, intent(in) :: SUPPRESS_UTM_PROJECTION
+  integer, intent(in) :: iway
 
 ! local parameters
 

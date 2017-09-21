@@ -20,7 +20,7 @@ module  inversion_scheme
   real(kind=CUSTOM_REAL), private,  dimension(0:1000)                    ::  ak_store, pk_store
 
   !! for normalization
-  real(kind=CUSTOM_REAL), private,  dimension(:,:,:,:,:),   allocatable  ::  wks_1n, wks_2n
+  real(kind=8), private,  dimension(:,:,:,:,:),   allocatable  ::  wks_1n, wks_2n
 
   public  :: AllocateArraysForInversion, DeAllocateArraysForInversion, wolfe_rules, ComputeDescentDirection
   private :: L_BFGS_GENERIC
@@ -277,9 +277,12 @@ contains
     real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable, intent(in)    :: vect1, vect2
     real(kind=CUSTOM_REAL),                                    intent(inout) :: qp
     integer,                                                   intent(in)    :: Niv
-    real(kind=CUSTOM_REAL)                                                   :: jacobianl, weight, qp_tmp
+    real(kind=CUSTOM_REAL)                                                   :: qp_tmp_single
+    ! try double precision
+    real(kind=8)                                                             :: jacobianl, weight, qp_tmp
     integer                                                                  :: ipar, i, j, k, ispec
     real(kind=CUSTOM_REAL)                                                   :: coeff, coeff_n1, coeff_n2
+    real(kind=8)                                                             :: coeff_n1_dp, coeff_n2_dp 
 
     !! try normalization to avoid numerical errors
     !call Parallel_ComputeL2normSquare(vect1 , Niv, coeff_n1)
@@ -287,13 +290,18 @@ contains
 
     coeff=maxval(abs(vect1(:,:,:,:,:)))
     call max_all_all_cr(coeff, coeff_n1)
+    if (coeff_n1==0._CUSTOM_REAL) coeff_n1=1._CUSTOM_REAL
     wks_1n(:,:,:,:,:) = vect1(:,:,:,:,:) / coeff_n1
 
     coeff=maxval(abs(vect2(:,:,:,:,:)))
     call max_all_all_cr(coeff, coeff_n2)
+    if (coeff_n2==0._CUSTOM_REAL) coeff_n2=1._CUSTOM_REAL
     wks_2n(:,:,:,:,:) = vect2(:,:,:,:,:) / coeff_n2
 
-    qp=0._CUSTOM_REAL
+    coeff_n1_dp = coeff_n1
+    coeff_n2_dp = coeff_n2
+
+    qp_tmp=0._CUSTOM_REAL
 
     do ipar=1, Niv
        do ispec = 1, NSPEC_AB
@@ -303,7 +311,7 @@ contains
                 do i=1,NGLLX
                    weight = wxgll(i)*wygll(j)*wzgll(k)
                    jacobianl = jacobian(i,j,k,ispec)
-                   qp = qp + jacobianl * weight * wks_1n(i,j,k,ispec,ipar) * wks_2n(i,j,k,ispec,ipar)
+                   qp_tmp = qp_tmp + jacobianl * weight * wks_1n(i,j,k,ispec,ipar) * wks_2n(i,j,k,ispec,ipar)
                    !qp = qp + jacobianl * weight * vect1(i,j,k,ispec,ipar) * vect2(i,j,k,ispec,ipar)
                 enddo
              enddo
@@ -311,9 +319,9 @@ contains
        enddo
     enddo
 
-    qp_tmp=qp * coeff_n1 * coeff_n2
+    qp_tmp_single = qp_tmp * coeff_n1_dp * coeff_n2_dp
     qp=0.
-    call sum_all_all_cr(qp_tmp, qp)
+    call sum_all_all_cr(qp_tmp_single, qp)
 
   end subroutine Parallel_ComputeInnerProduct
   !---------------------------------------------------------------------------------------------
@@ -325,11 +333,22 @@ contains
 
      real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable, intent(in)    :: vect1
      real(kind=CUSTOM_REAL),                                    intent(inout) :: qp
-     integer,                                                   intent(in)    :: Niv
-     real(kind=CUSTOM_REAL)                                                   :: jacobianl, weight, qp_tmp
-     integer                                                                  :: ipar, i, j, k, ispec
+     integer,                                         intent(in)    :: Niv
+     real(kind=CUSTOM_REAL)                                         :: coeff, coeff_n1
+     real(kind=CUSTOM_REAL)                                         :: qp_tmp
+     real(kind=8)                                                   :: jacobianl, weight, qp_dp, coeff_n1_dp
+     integer                                                        :: ipar, i, j, k, ispec
 
-     qp=0._CUSTOM_REAL
+     qp=0.d0
+     qp_dp=0.d0
+ 
+     coeff=maxval(abs(vect1(:,:,:,:,:)))
+     call max_all_all_cr(coeff, coeff_n1)
+
+     if (coeff_n1==0._CUSTOM_REAL) coeff_n1=1._CUSTOM_REAL
+
+     wks_1n(:,:,:,:,:) = vect1(:,:,:,:,:) / coeff_n1
+     coeff_n1_dp=coeff_n1
 
      do ipar=1,Niv
         do ispec = 1, NSPEC_AB
@@ -339,14 +358,14 @@ contains
                  do i=1,NGLLX
                     weight = wxgll(i)*wygll(j)*wzgll(k)
                     jacobianl = jacobian(i,j,k,ispec)
-                    qp = qp + jacobianl * weight * vect1(i,j,k,ispec,ipar) **2
+                    qp_dp = qp_dp + jacobianl * weight * wks_1n(i,j,k,ispec,ipar) **2
                  enddo
               enddo
            enddo
         enddo
      enddo
 
-     qp_tmp=qp
+     qp_tmp = qp_dp * coeff_n1_dp * coeff_n1_dp
      qp=0.
      call sum_all_all_cr(qp_tmp, qp)
 

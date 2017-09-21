@@ -18,7 +18,6 @@ module fwi_iteration
   real(kind=CUSTOM_REAL), private, dimension(:,:,:,:,:), allocatable :: regularization_penalty, gradient_regularization_penalty 
   real(kind=CUSTOM_REAL), private, dimension(:,:,:,:,:), allocatable :: descent_direction
   real(kind=CUSTOM_REAL), private,  dimension(:,:,:,:,:),allocatable :: fwi_precond, hess_approxim
-  
 
   !! for line search
   real(kind=CUSTOM_REAL), private                                    :: Q0, Qt, Qp0, Qpt
@@ -33,11 +32,11 @@ contains
 ! perform one step for optimization scheme iterations
 !-------------------------------------------------------------------------------------------------------------
 
-  subroutine OneIterationOptim(iter_inverse, finished, acqui_simu, inversion_param) !, regularization_fd)
+  subroutine OneIterationOptim(iter_inverse, finished, acqui_simu, inversion_param) !!!!!! , regularization_fd)
 
     implicit none
 
-    !type(regul),  dimension(:), allocatable,        intent(in)    :: regularization_fd
+!!!!!!    type(regul),  dimension(:), allocatable,        intent(in)    :: regularization_fd
     type(inver),                                    intent(inout) :: inversion_param
     type(acqui),  dimension(:), allocatable,        intent(inout) :: acqui_simu
     integer,                                        intent(in)    :: iter_inverse
@@ -46,7 +45,7 @@ contains
     !! locals
     real(kind=CUSTOM_REAL)                                        :: mwl1, mwl2, td, tg, step_length
     real(kind=CUSTOM_REAL)                                        :: NormGrad
-    integer                                                       :: iter_wolfe, isource, Niv
+    integer                                                       :: iter_wolfe, ievent, Niv
     logical                                                       :: flag_wolfe
     logical                                                       :: ModelIsSuitable
     character(len=MAX_LEN_STRING)                                 :: prefix_name
@@ -123,15 +122,14 @@ contains
        call UpdateModel(inversion_param, step_length, ModelIsSuitable)
        ! if model is not suitable for modeling then try smaller step
        if (.not. ModelIsSuitable) then
-          write(*,*) 'Model new is not suitable for simulation ', myrank, step_length
-          step_length = 0.1 * step_length
-          write(*,*) ' I am using new step : ', step_length
+          write(*,*) 'Model new is not suitable for simulation ', myrank
+          step_length = 0.5 * step_length
           cycle
        endif
        ! compute cost function and gradient---------
        call InitForOneStepFWI(inversion_param)
-       do isource=1,acqui_simu(1)%nsrc_tot
-          call ComputeGradientPerSource(isource, iter_inverse, acqui_simu, inversion_param)
+       do ievent=1,acqui_simu(1)%nevent_tot
+          call ComputeGradientPerEvent(ievent, iter_inverse, acqui_simu, inversion_param)
        enddo
        if (GPU_MODE) call TransfertKernelFromGPUArrays()
 
@@ -140,7 +138,8 @@ contains
 
        ! communicate gradient and cost function to all simultaneous runs
        call mpi_sum_grad_all_to_all_simultaneous_runs(Qt)
-       
+       ! store curent cost after reducion over groups
+       inversion_param%total_current_cost=Qt
 
        ! store current gradient in choosen family parameter
        call StoreGradientInfamilyParam(inversion_param, current_gradient, hess_approxim)
@@ -267,8 +266,8 @@ contains
 
     type(acqui),  dimension(:), allocatable,        intent(inout) :: acqui_simu
     type(inver),                                    intent(inout) :: inversion_param
-    integer                                                       :: isource,  iter_inverse
-    character(len=MAX_LEN_STRING)                                 :: prefix_name
+    integer                                                       :: ievent,  iter_inverse
+    character(len=MAX_LEN_STRING)                                             :: prefix_name
 
     iter_inverse=0
 
@@ -302,20 +301,20 @@ contains
     
     ! compute cost function and gradient---------
     call InitForOneStepFWI(inversion_param)
- 
-    do isource=1,acqui_simu(1)%nsrc_tot
-       call ComputeGradientPerSource(isource, iter_inverse, acqui_simu, inversion_param)
+
+    do ievent=1,acqui_simu(1)%nevent_tot
+       call ComputeGradientPerEvent(ievent, iter_inverse, acqui_simu, inversion_param)
     enddo
     if (GPU_MODE) call TransfertKernelFromGPUArrays()
-    
+
     ! store current value of cost function
     Q0=inversion_param%total_current_cost
-    
+
     ! communicate gradient and cost function to all simultaneous runs
     call mpi_sum_grad_all_to_all_simultaneous_runs(Q0)
     ! store cost after reduction over groups
     inversion_param%total_current_cost=Q0
-    
+
     ! store initial model in choosen family parameter
     call  SpecfemParam2Invert(inversion_param, initial_model)
     ! store initial gradient in choosen family parameter
@@ -356,7 +355,7 @@ contains
         prefix_name='Regul'
        call DumpArray(regularization_penalty, inversion_param, iter_inverse, prefix_name)
     endif
-    
+
     ! store new model and gradient in l-bfgs history for the choosen family parameter
     call StoreModelAndGradientForLBFGS(initial_model, initial_gradient, 0)
     if (myrank == 0) then
@@ -364,7 +363,7 @@ contains
             0, inversion_param%Cost_init, inversion_param%Norm_grad_init, 1., 1.
        write(INVERSE_LOG_FILE,*)
        write(INVERSE_LOG_FILE,*)
-       write(INVERSE_LOG_FILE,*)  ' Initial Cost function : ', inversion_param%Cost_init
+       write(INVERSE_LOG_FILE,*) ' Initial Cost function : ', inversion_param%Cost_init
        write(INVERSE_LOG_FILE,*)  ' Initial Gradient Norm :', inversion_param%Norm_grad_init
        call flush_iunit(INVERSE_LOG_FILE)
     endif
@@ -411,24 +410,10 @@ contains
         endif
     endif
 
-    write(*,*) " size current_model ", size(current_model)
-
     do ipar=1, inversion_param%NinvPar
 
-       vmax = 0. 
-       vmin = 1.e20
-       !write(*,*) NSPEC_AB, NSPEC_ADJOINT
-       do ispec = 1, NSPEC_ADJOINT
-          do kgll = 1, NGLLZ
-             do jgll = 1, NGLLY
-                do igll = 1, NGLLX
-                   vmin =   min(vmin, current_model(igll,jgll,kgll,ispec,ipar))
-                   vmax  =  max(vmax, current_model(igll,jgll,kgll,ispec,ipar))
-                end do
-             end do
-          end do
-       end do
-       write(*,*) ipar, ' Min Max :', vmin, vmax  
+       vmin =   minval(current_model(:,:,:,:,ipar))
+       vmax  =  maxval(current_model(:,:,:,:,ipar))
        call min_all_cr(vmin,vmin_glob)
        call max_all_cr(vmax,vmax_glob)
 
@@ -472,23 +457,16 @@ contains
 !-------------------------------------------------------------------------------------------------------------
 ! Prepare and allocate all arrays used in inverse problem
 !-------------------------------------------------------------------------------------------------------------
-  subroutine AllocatememoryForFWI(inversion_param, nsrc)
+  subroutine AllocatememoryForFWI(inversion_param, nevent)
 
     type(inver),                                    intent(inout) :: inversion_param
-    integer,                                        intent(in)    :: nsrc
+    integer,                                        intent(in)    :: nevent
     integer                                                       :: ierror, Ninvpar
 
     call PrepareArraysfamilyParam(inversion_param)
 
     Ninvpar =inversion_param%NinvPar
 
-    
-    if (myrank == 0) then
-          write(INVERSE_LOG_FILE,*) '  '
-          write(INVERSE_LOG_FILE,*) '  allocate arrays for fwi iterations ', Ninvpar        
-          write(INVERSE_LOG_FILE,*) '  '        
-          call flush_iunit(INVERSE_LOG_FILE)
-       endif
     !! allocate arrays for inversion scheme
     call AllocateArraysForInversion(inversion_param)
 
@@ -519,17 +497,8 @@ contains
     if (ierror /= 0) call exit_MPI(myrank,"error allocation hess_approxim in AllocatememoryForFWI subroutine")
     hess_approxim(:,:,:,:,:) = 1._CUSTOM_REAL
 
-    allocate(regularization_penalty(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ierror)
-    if (ierror /= 0) call exit_MPI(myrank,"error allocation regularization_penalty in AllocatememoryForFWI subroutine")
-    regularization_penalty(:,:,:,:,:) = 0._CUSTOM_REAL 
-
-    allocate(gradient_regularization_penalty(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ierror)
-    if (ierror /= 0) call exit_MPI(myrank,"error allocation gradient_regularization_penalty in AllocatememoryForFWI subroutine")
-    gradient_regularization_penalty(:,:,:,:,:) = 0._CUSTOM_REAL
-
-
-    allocate(inversion_param%current_cost_prime(NSRC),  inversion_param%previous_cost_prime(NSRC))
-    allocate(inversion_param%current_cost(NSRC),  inversion_param%previous_cost(NSRC))
+    allocate(inversion_param%current_cost_prime(nevent),  inversion_param%previous_cost_prime(nevent))
+    allocate(inversion_param%current_cost(nevent),  inversion_param%previous_cost(nevent))
 
   end subroutine AllocatememoryForFWI
 
