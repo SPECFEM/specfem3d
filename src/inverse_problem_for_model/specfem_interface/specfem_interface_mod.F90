@@ -1188,7 +1188,7 @@ contains
     if (ELASTIC_SIMULATION) then
        ! nothing to do
     else if (ACOUSTIC_SIMULATION) then
-       if (ier /= 0) stop 'error allocating array rho_vp'
+       !if (ier /= 0) stop 'error allocating array rho_vp'
        allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
        if (ier /= 0) stop 'error allocating array rho_vs'
        rho_vp = sqrt( kappastore / rhostore ) * rhostore
@@ -1234,7 +1234,7 @@ contains
        !! min max in element
        call  get_vpvs_minmax(vpmin, vpmax, vsmin, vsmax, poissonmin, poissonmax, &
             ispec, has_vs_zero, &
-                             NSPEC_AB, kappastore, mustore, rho_vp, rho_vs)
+            NSPEC_AB, kappastore, mustore, rho_vp, rho_vs)
 
        !! min/max for whole cpu partition
        vpmin_glob = min(vpmin_glob, vpmin)
@@ -1364,15 +1364,26 @@ contains
     call min_all_cr(dt_suggested,dt_suggested_glob)
 
     if (myrank == 0 ) then
-       !! CHECK POISSON RATION OF NEW MODEL
+       !! CHECK POISSON'S RATIO OF NEW MODEL
        if (poissonmin_glob < -1.0000001d0 .or. poissonmax_glob > 0.50000001d0) then
           ModelIsSuitable=.false.
+          write(*,*) " Bad Poisson's ratio :", poissonmin_glob, poissonmax_glob
        endif
 
        !! CHECK STABILITY FOR NEW MODEL
        if (DT > dt_suggested) then
           ModelIsSuitable=.false.
+          write(*,*) " Bad DT :", DT, "  dt_suggested :",  dt_suggested
        endif
+
+        write(INVERSE_LOG_FILE,*) " "
+        write(INVERSE_LOG_FILE,*) "  Model After Update "
+        write(INVERSE_LOG_FILE,*) " "
+        write(INVERSE_LOG_FILE,*) "  VP :", vpmin_glob , vpmax_glob 
+        write(INVERSE_LOG_FILE,*) "  VS :", vsmin_glob,  vsmax_glob 
+        write(INVERSE_LOG_FILE,*) "  "
+        write(INVERSE_LOG_FILE,*) "  Poisson's ratio :",poissonmin_glob, poissonmax_glob
+        call flush_iunit(INVERSE_LOG_FILE)
     endif
     call bcast_all_singlel(ModelIsSuitable)
 
