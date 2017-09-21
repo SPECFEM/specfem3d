@@ -160,6 +160,22 @@ contains
 
        endif
 
+       
+       if (inversion_param%input_SEM_prior) then
+
+          if (myrank == 0) then
+             write(INVERSE_LOG_FILE,*)
+             write(INVERSE_LOG_FILE,*) '          *********************************************'
+             write(INVERSE_LOG_FILE,*) '          ***   READING EXTERNAL SEM PRIOR MODEL    ***'
+             write(INVERSE_LOG_FILE,*) '          *********************************************'
+             write(INVERSE_LOG_FILE,*)
+          endif
+
+          call ReadInputSEMpriormodel(inversion_param)
+
+       endif
+
+
     endif
 
     !! get dimension of mesh
@@ -947,6 +963,9 @@ contains
        case('input_sem_model')
           read(line(ipos0:ipos1),*)  inversion_param%input_sem_model
 
+       case('input_sem_prior')
+          read(line(ipos0:ipos1),*)  inversion_param%input_sem_prior
+
        case('output_model')
           read(line(ipos0:ipos1),*)  inversion_param%output_model
 
@@ -968,6 +987,14 @@ contains
        case('z2_precond')
           read(line(ipos0:ipos1),*) inversion_param%z2_precond
 
+       case('z_precond')
+          read(line(ipos0:ipos1),*) inversion_param%aPrc, &
+                                    inversion_param%zPrc1, &
+                                    inversion_param%zPrc2
+
+          inversion_param%z_precond=.true.
+
+       
        case('relat_grad')
           read(line(ipos0:ipos1),*) inversion_param%relat_grad
 
@@ -982,6 +1009,25 @@ contains
 
        case('dump_descent_direction_at_each_iteration')
           read(line(ipos0:ipos1),*) inversion_param%dump_descent_direction_at_each_iteration
+
+       case('use_tk_fd_regularisation')
+          read(line(ipos0:ipos1),*) inversion_param%weight_Tikonov
+          inversion_param%use_regularisation_FD_Tikonov=.true.
+   
+       case('use_tk_sem_regularisation')
+          allocate(inversion_param%smooth_weight(inversion_param%NinvPar))
+          read(line(ipos0:ipos1),*) inversion_param%smooth_weight(1), &
+                                    inversion_param%smooth_weight(2), &
+                                    inversion_param%smooth_weight(3)
+
+          inversion_param%use_regularisation_SEM_Tikonov=.true.
+
+       case('use_tk_sem_damping')
+          allocate(inversion_param%damp_weight(inversion_param%NinvPar))
+          read(line(ipos0:ipos1),*) inversion_param%damp_weight(1), &
+                                    inversion_param%damp_weight(2), &
+                                    inversion_param%damp_weight(3)
+          inversion_param%use_damping_SEM_Tikonov=.true.
 
        case default
           write(*,*) 'ERROR KEY WORD NOT MATCH : ', trim(keyw), ' in file ', trim(inver_file)
@@ -1371,37 +1417,60 @@ contains
        call MPI_BCAST(acqui_simu(i)%station_name, nsta_tot* MAX_LENGTH_STATION_NAME,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(acqui_simu(i)%network_name, nsta_tot* MAX_LENGTH_NETWORK_NAME,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(acqui_simu(i)%position_station, 3*nsta_tot,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
-
-       ! inverse params
-       call MPI_BCAST(inversion_param%Niter,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(inversion_param%Niter_wolfe,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(inversion_param%max_history_bfgs,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(fl,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(fh,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(inversion_param%max_relative_pert,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(inversion_param%relat_grad,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(inversion_param%relat_cost,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(inversion_param%output_model,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(inversion_param%input_fd_model,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(inversion_param%input_sem_model,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(inversion_param%use_taper, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(inversion_param%shin_precond, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(inversion_param%energy_precond, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(inversion_param%z2_precond, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(inversion_param%dump_model_at_each_iteration, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(inversion_param%dump_gradient_at_each_iteration, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(inversion_param%dump_descent_direction_at_each_iteration, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(inversion_param%param_family, MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
-
-       ! user taper on gradient (MASK)
-       call MPI_BCAST(inversion_param%xmin_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(inversion_param%xmax_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(inversion_param%ymin_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(inversion_param%ymax_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(inversion_param%zmin_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(inversion_param%zmax_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
-
     enddo
+
+    ! inverse params
+    call MPI_BCAST(inversion_param%Niter,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%Niter_wolfe,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%max_history_bfgs,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(fl,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(fh,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%max_relative_pert,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%relat_grad,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%aPrc,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%zPrc1,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%zPrc2,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%relat_cost,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%weight_Tikonov,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%use_damping_SEM_Tikonov,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%use_regularisation_FD_Tikonov,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%use_regularisation_SEM_Tikonov,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+
+    if (myrank >0 .and. inversion_param%use_regularisation_SEM_Tikonov ) then 
+       allocate(inversion_param%smooth_weight(inversion_param%NinvPar))
+    end if
+    if (inversion_param%use_regularisation_SEM_Tikonov) &
+    call MPI_BCAST(inversion_param%smooth_weight(1),inversion_param%NinvPar,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+
+    if (myrank >0 .and. inversion_param%use_damping_SEM_Tikonov ) then 
+       allocate(inversion_param%damp_weight(inversion_param%NinvPar))
+    end if
+    if (inversion_param%use_damping_SEM_Tikonov) &
+    call MPI_BCAST(inversion_param%damp_weight(1),inversion_param%NinvPar,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+
+    call MPI_BCAST(inversion_param%output_model,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%input_fd_model,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%input_sem_model,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%input_sem_prior,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%use_taper, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%shin_precond, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%energy_precond, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%z2_precond, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%z_precond, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier) 
+    call MPI_BCAST(inversion_param%dump_model_at_each_iteration, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%dump_gradient_at_each_iteration, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%dump_descent_direction_at_each_iteration, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%param_family, MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+    
+    ! user taper on gradient (MASK)
+    call MPI_BCAST(inversion_param%xmin_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%xmax_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%ymin_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%ymax_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%zmin_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%zmax_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+    
+   
 
   end subroutine bcast_all_acqui
 
