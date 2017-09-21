@@ -275,6 +275,79 @@ contains
     call create_mass_matrices_Stacey_duplication_routine()
 
   end subroutine ReadInputSEMmodel
+
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!--------------------------------------------------------------------------------------------------------------------
+! read sem model already decomposed in NROC files
+!--------------------------------------------------------------------------------------------------------------------
+  subroutine ReadInputSEMpriormodel(inversion_param)
+
+    type(inver),                                                intent(inout) :: inversion_param
+    character(len=256)                                                        :: path_file,name_file
+
+    real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable                   :: wks_model
+    !real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable                   :: wks_model_cij
+
+    !! rwriting SEM model stored in mesh and in (rho,vp,vs) for isotropic case
+    !! and in cijkl for anisotropic case.
+
+    if (ANISOTROPY) then
+
+       write(*,*) " Aniso Not implemented yet for prior model "
+       stop
+
+    else
+       
+       allocate(wks_model(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ierror)
+       if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_model in ReadInputSEMpriormodel subroutine, IO_model_mod")
+       
+       allocate(inversion_param%prior_model(NGLLX,NGLLY,NGLLZ,NSPEC_AB, inversion_param%NinvPar), stat=ierror)
+       if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_model_vp in ReadInputSEMmodel subroutine, IO_model_mod")
+
+      
+       
+       if (mygroup <= 0) then !! only the fisrt group read model and need to bcast at all other
+          !! read input model
+          path_file='OUTPUT_FILES/DATABASES_MPI/proc'
+          write(name_file,'(i6.6,a19)') myrank, '_model_vp_prior.bin'
+          path_file=(trim(path_file))//trim(name_file)
+          open(888,file=trim(path_file),form='unformatted')
+          read(888) wks_model
+          close(888)
+          inversion_param%prior_model(:,:,:,:,1)=wks_model(:,:,:,:)
+
+          path_file='OUTPUT_FILES/DATABASES_MPI/proc'
+          write(name_file,'(i6.6,a19)') myrank, '_model_vs_prior.bin'
+          path_file=(trim(path_file))//trim(name_file)
+          open(888,file=trim(path_file),form='unformatted')
+          read(888) wks_model
+          close(888)
+          inversion_param%prior_model(:,:,:,:,2)=wks_model(:,:,:,:)
+          
+          path_file='OUTPUT_FILES/DATABASES_MPI/proc'
+          write(name_file,'(i6.6,a19)') myrank, '_model_rh_prior.bin'
+          path_file=(trim(path_file))//trim(name_file)
+          open(888,file=trim(path_file),form='unformatted')
+          read(888) wks_model
+          close(888)
+          inversion_param%prior_model(:,:,:,:,3)=wks_model(:,:,:,:)
+
+       end if
+       
+       !! bcast to others groups
+       if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
+
+          call bcast_all_cr_for_database(inversion_param%prior_model(1,1,1,1,1), &
+               NGLLX*NGLLY*NGLLZ*NSPEC_AB*inversion_param%NinvPar)
+         
+       endif
+
+       deallocate(wks_model)
+
+    end if
+
+  end subroutine ReadInputSEMpriormodel
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !--------------------------------------------------------------------------------------------------------------------
 ! write sem model decomposed in NROC files
