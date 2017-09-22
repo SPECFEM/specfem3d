@@ -505,8 +505,7 @@ contains
         Nt=acqui_simu(ievent)%Nt_data
         allocate(Gather(NSTA,Nt,NDIM))
      endif
-      ! not sure if need this sync
-        call synchronize_all()
+
      do irank = 1, NPROC-1
 
         if (myrank == 0) then
@@ -714,7 +713,6 @@ contains
              endif
 
           endif
-
 
        enddo
 
