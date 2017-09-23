@@ -55,11 +55,17 @@ contains
     case('UX', 'UY', 'UZ')
        !! array seismogram in displacement
        name_file_tmp = trim(acqui_simu(ievent)%data_file_gather)
+      
+       write(INVERSE_LOG_FILE,*) '  ... Writing simulated data gather for event :', ievent
+
        call write_bin_sismo_on_disk(ievent, acqui_simu, seismograms_d,  name_file_tmp, myrank)
 
     case('PR')
        !! array seismogram in pressure
        name_file_tmp = trim(acqui_simu(ievent)%data_file_gather)
+
+       write(INVERSE_LOG_FILE,*) '  ... Writing simulated data gather for event :  ', ievent
+
        call write_bin_sismo_on_disk(ievent, acqui_simu, seismograms_p,  name_file_tmp, myrank)
 
     case default
@@ -105,15 +111,15 @@ contains
 
     !! dump synthetics and adjoint sources to ckeck
     if (VERBOSE_MODE .or. DEBUG_MODE) then
-       call dump_adjoint_sources(iter_inverse, acqui_simu, myrank)
+       call dump_adjoint_sources(iter_inverse, ievent, acqui_simu, myrank)
 
        select case (trim(acqui_simu(ievent)%component(1)))
        case('UX', 'UY', 'UZ')
-          call dump_seismograms(iter_inverse, seismograms_d, acqui_simu, myrank)
-          call dump_filtered_data(iter_inverse,acqui_simu(ievent)%synt_traces, acqui_simu, myrank)
+          call dump_seismograms(iter_inverse, ievent, seismograms_d, acqui_simu, myrank)
+          call dump_filtered_data(iter_inverse,ievent,acqui_simu(ievent)%synt_traces, acqui_simu, myrank)
        case('PR')
-          call dump_seismograms(iter_inverse, seismograms_p, acqui_simu, myrank)
-          call dump_filtered_data(iter_inverse,acqui_simu(ievent)%synt_traces, acqui_simu, myrank)
+          call dump_seismograms(iter_inverse, ievent, seismograms_p, acqui_simu, myrank)
+          call dump_filtered_data(iter_inverse,ievent,acqui_simu(ievent)%synt_traces, acqui_simu, myrank)
        end select
     endif
 

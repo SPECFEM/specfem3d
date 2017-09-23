@@ -64,13 +64,15 @@ contains
 !-------------------------------------------------------------------------------------------------------------------
   subroutine init_input_output_mod(inversion_param, acqui_simu, myrank)
 
+    use my_mpi             !! module from specfem
+    include "precision.h"  !! from specfem
 
     integer,                                         intent(in)    ::  myrank
     type(acqui),  dimension(:), allocatable,         intent(inout) ::  acqui_simu
     type(inver),                                     intent(inout) ::  inversion_param
 
     ! locals
-    integer                                                        :: ievent
+    integer                                                        :: ievent,ier
     character(len=MAX_LEN_STRING)                                  :: name_file
     character(len=MAX_LEN_STRING)                                  :: acqui_file, inver_file
     real(kind=CUSTOM_REAL)                                         :: elemsize_min_glob,elemsize_max_glob
@@ -98,8 +100,13 @@ contains
        call read_acqui_file(acqui_file, acqui_simu, myrank)
        call read_inver_file(inver_file, acqui_simu, inversion_param, myrank)
        call get_point_source(acqui_simu)
-       call get_stations(acqui_simu)
     endif
+
+    if (myrank == 0) NEVENT=acqui_simu(1)%nevent_tot
+    call MPI_BCAST(NEVENT,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
+    if (myrank > 0) allocate(acqui_simu(NEVENT))
+
+    call get_stations(acqui_simu)
 
     if (myrank == 0) call flush_iunit(INVERSE_LOG_FILE)
 
@@ -418,59 +425,59 @@ contains
 ! master write adjoint sources gather to check
 !----------------------------------------------------------------
 
-  subroutine dump_adjoint_sources(iter, acqui_simu, myrank)
+  subroutine dump_adjoint_sources(iter, ievent, acqui_simu, myrank)
 
-    integer,                                     intent(in)    :: iter, myrank
+    integer,                                     intent(in)    :: iter, ievent, myrank
     type(acqui),  dimension(:), allocatable,     intent(inout) :: acqui_simu
 
-    integer                                                    :: ievent
     character(len=MAX_LEN_STRING)                              :: name_file_tmp, ch_to_add
 
-    do ievent=1, acqui_simu(1)%nevent_tot
-       write(ch_to_add,'(i4.4,a4)') iter,'_adj'
-       name_file_tmp = trim(acqui_simu(ievent)%data_file_gather)//trim(adjustl(ch_to_add))
-       call  write_bin_sismo_on_disk(ievent, acqui_simu, acqui_simu(ievent)%adjoint_sources,  name_file_tmp, myrank)
-    enddo
+    write(ch_to_add,'(i4.4,a4)') iter,'_adj'
+    name_file_tmp = trim(acqui_simu(ievent)%data_file_gather)//trim(adjustl(ch_to_add))
+
+    write(INVERSE_LOG_FILE,*) '  ... Writing adjoint sources gather for event :', ievent
+
+    call  write_bin_sismo_on_disk(ievent, acqui_simu, acqui_simu(ievent)%adjoint_sources,  name_file_tmp, myrank)
 
   end subroutine dump_adjoint_sources
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !----------------------------------------------------------------
 ! master write synthetics gather to check
 !----------------------------------------------------------------
-  subroutine dump_seismograms(iter, array_to_write,  acqui_simu, myrank)
+  subroutine dump_seismograms(iter, ievent, array_to_write,  acqui_simu, myrank)
 
-    integer,                                                intent(in)    :: iter, myrank
+    integer,                                                intent(in)    :: iter, ievent, myrank
     real(kind=CUSTOM_REAL),  dimension(:,:,:), allocatable, intent(in)    :: array_to_write
     type(acqui),  dimension(:), allocatable,                intent(inout) :: acqui_simu
 
-    integer                                                               :: ievent
     character(len=MAX_LEN_STRING)                                         :: name_file_tmp, ch_to_add
 
-    do ievent=1, acqui_simu(1)%nevent_tot
-       write(ch_to_add,'(i4.4,a4)') iter,'_dir'
-       name_file_tmp = trim(acqui_simu(ievent)%data_file_gather)//trim(adjustl(ch_to_add))
-       call  write_bin_sismo_on_disk(ievent, acqui_simu, array_to_write, name_file_tmp, myrank)
-    enddo
+    write(ch_to_add,'(i4.4,a4)') iter,'_dir'
+    name_file_tmp = trim(acqui_simu(ievent)%data_file_gather)//trim(adjustl(ch_to_add))
+
+    write(INVERSE_LOG_FILE,*) '  ... Writing synthetic data gather for event :  ', ievent
+
+    call  write_bin_sismo_on_disk(ievent, acqui_simu, array_to_write, name_file_tmp, myrank)
 
   end subroutine dump_seismograms
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !----------------------------------------------------------------
 ! master write synthetics gather to check
 !----------------------------------------------------------------
-  subroutine dump_filtered_data(iter, array_to_write,  acqui_simu, myrank)
+  subroutine dump_filtered_data(iter, ievent, array_to_write,  acqui_simu, myrank)
 
-    integer,                                                intent(in)    :: iter, myrank
+    integer,                                                intent(in)    :: iter,ievent,myrank
     real(kind=CUSTOM_REAL),  dimension(:,:,:), allocatable, intent(in)    :: array_to_write
     type(acqui),  dimension(:), allocatable,                intent(inout) :: acqui_simu
 
-    integer                                                               :: ievent
     character(len=MAX_LEN_STRING)                                         :: name_file_tmp, ch_to_add
 
-    do ievent=1, acqui_simu(1)%nevent_tot
-       write(ch_to_add,'(i4.4,a4)') iter,'_fil'
-       name_file_tmp = trim(acqui_simu(ievent)%data_file_gather)//trim(adjustl(ch_to_add))
-       call  write_bin_sismo_on_disk(ievent, acqui_simu, array_to_write, name_file_tmp, myrank)
-    enddo
+    write(ch_to_add,'(i4.4,a4)') iter,'_fil'
+    name_file_tmp = trim(acqui_simu(ievent)%data_file_gather)//trim(adjustl(ch_to_add))
+
+    write(INVERSE_LOG_FILE,*) '  ... Writing filtered data gather for event :  ', ievent
+
+    call  write_bin_sismo_on_disk(ievent, acqui_simu, array_to_write, name_file_tmp, myrank)
 
   end subroutine dump_filtered_data
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -494,20 +501,14 @@ contains
     integer                                                               :: status(MPI_STATUS_SIZE)
 
      if (myrank == 0) then
-        write(INVERSE_LOG_FILE,*) '  ... Writing  synthetic data gather for event :  ', ievent
-     endif
-
-     if (myrank == 0) then
         NSTA=acqui_simu(ievent)%nsta_tot
         Nt=acqui_simu(ievent)%Nt_data
         allocate(Gather(NSTA,Nt,NDIM))
      endif
 
-
      do irank = 1, NPROC-1
 
         if (myrank == 0) then
-
            ! count the receiver in slice irank
            nsta_irank=0
            do irec = 1,  NSTA
@@ -518,16 +519,13 @@ contains
               allocate(irec_global(nsta_irank))
               irec_local=0
               tag   = MPI_ANY_TAG
-
               call MPI_RECV(Gather_loc, Nt*nsta_irank*NDIM, CUSTOM_MPI_TYPE, irank, tag, my_local_mpi_comm_world, status,  ier)
               call MPI_RECV(irec_global, nsta_irank, MPI_INTEGER, irank, tag, my_local_mpi_comm_world, status,  ier)
-
               do icomp=1,NDIM
                  do irec_local = 1, nsta_irank
                     Gather(irec_global(irec_local), :, icomp) = Gather_loc(irec_local, :, icomp)
                  enddo
               enddo
-
 
               deallocate(Gather_loc)
               deallocate(irec_global)
@@ -538,11 +536,12 @@ contains
               Nt=acqui_simu(ievent)%Nt_data
               allocate(Gather_loc(NSTA_LOC,Nt,NDIM))
               allocate(irec_global(NSTA_LOC))
+
               do irec_local = 1, NSTA_LOC
                  irec_global(irec_local) = acqui_simu(ievent)%number_receiver_global(irec_local)
-
                  !! choose the rigth seismograms_*
                  do icomp=1,NDIM
+
                     select case (trim(acqui_simu(ievent)%component(icomp)))
                     case ('PR')
                        Gather_loc(irec_local,:,icomp)=array_to_write(1,irec_local,:)
@@ -554,24 +553,21 @@ contains
                        Gather_loc(irec_local,:,icomp)=array_to_write(3,irec_local,:)
                     end select
                  enddo
-
               enddo
 
               tag    = 2001
               call MPI_SEND(Gather_loc,  Nt*NSTA_LOC*NDIM, CUSTOM_MPI_TYPE, 0, tag, my_local_mpi_comm_world, ier)
               call MPI_SEND(irec_global, NSTA_LOC, CUSTOM_MPI_TYPE, 0, tag, my_local_mpi_comm_world, ier)
-
+              deallocate(Gather_loc)
               deallocate(irec_global)
            endif
 
         endif
 
-        !! not sure if need this sync
+        ! not sure if need this sync
         call synchronize_all()
 
      enddo
-
-
      !!  write gather file
      if (myrank == 0) then
         do icomp=1,NDIM
@@ -659,7 +655,6 @@ contains
           allocate(acqui_simu(ievent)%adjoint_sources(NDIM, NSTA_LOC, Nt))
           allocate(acqui_simu(ievent)%weight_trace(NDIM, NSTA_LOC))
           acqui_simu(ievent)%weight_trace(:,:)=1._CUSTOM_REAL
-
           if (VERBOSE_MODE .or. DEBUG_MODE)  allocate(acqui_simu(ievent)%synt_traces(NDIM, NSTA_LOC, Nt))
 
           irec_local=0
@@ -707,7 +702,6 @@ contains
                 Nt=acqui_simu(ievent)%Nt_data
                 allocate(Gather_loc(NSTA_LOC,Nt,NDIM),acqui_simu(ievent)%data_traces(NSTA_LOC,Nt,NDIM), &
                      acqui_simu(ievent)%adjoint_sources(NDIM, NSTA_LOC, Nt), acqui_simu(ievent)%weight_trace(NDIM, NSTA_LOC))
-
                 if (VERBOSE_MODE .or. DEBUG_MODE) allocate(acqui_simu(ievent)%synt_traces(NDIM, NSTA_LOC, Nt))
 
                 if (DEBUG_MODE) write(IIDD,*) 'myrank ',myrank,' wait for 0 :', NSTA_LOC,Nt
@@ -719,7 +713,6 @@ contains
              endif
 
           endif
-
 
        enddo
 
@@ -1093,12 +1086,16 @@ contains
 
     ! loop on all events
     do ievent = 1, NEVENT
-       ! open station file
-       rec_filename=trim(adjustl(acqui_simu(ievent)%station_file))
-       filtered_rec_filename=rec_filename(1:len_trim(rec_filename))//'_FILTERED'
+       ! only slice 0 will read the STATIONS files
+       if (myrank==0) then
+         rec_filename=trim(adjustl(acqui_simu(ievent)%station_file))
+         filtered_rec_filename=rec_filename(1:len_trim(rec_filename))//'_FILTERED'
+       else
+         rec_filename='dummy_string'
+         filtered_rec_filename='dummy_string'
+       endif
 
        call station_filter(rec_filename,filtered_rec_filename,nsta)
-
        acqui_simu(ievent)%nsta_tot=nsta
        allocate(acqui_simu(ievent)%station_name(nsta),acqui_simu(ievent)%network_name(nsta))
        allocate(acqui_simu(ievent)%position_station(3,nsta))
@@ -1115,7 +1112,6 @@ contains
                              acqui_simu(ievent)%ispec_selected_rec, &
                              acqui_simu(ievent)%xi_rec,acqui_simu(ievent)%eta_rec,acqui_simu(ievent)%gamma_rec, &
                              acqui_simu(ievent)%station_name,acqui_simu(ievent)%network_name,acqui_simu(ievent)%nu,1.0d0,1.0d0)
-
        nrec_loc = 0
        do irec = 1, nsta
          if (myrank == acqui_simu(ievent)%islice_selected_rec(irec)) then
@@ -1125,7 +1121,6 @@ contains
        enddo
 
        acqui_simu(ievent)%nsta_slice=nrec_loc
-
        if (acqui_simu(ievent)%nsta_slice > 0) then
           allocate(acqui_simu(ievent)%hxi    (NGLLX,nrec_loc))
           allocate(acqui_simu(ievent)%heta   (NGLLY,nrec_loc))
@@ -1358,12 +1353,10 @@ contains
     type(acqui), allocatable, dimension(:), intent(inout)  :: acqui_simu
     type(inver),                            intent(inout)  :: inversion_param
     integer,                                intent(in)     :: myrank
-    integer                                                :: nsta_tot, i,ier
+    integer                                                :: i,ier
 
     if (myrank == 0) NEVENT=acqui_simu(1)%nevent_tot
     call MPI_BCAST(NEVENT,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
-
-    if (myrank > 0) allocate(acqui_simu(NEVENT))
 
     do i=1,NEVENT
 
@@ -1409,17 +1402,19 @@ contains
        endif
 
        ! stations
-       if (myrank == 0) nsta_tot=acqui_simu(i)%nsta_tot
-       call  MPI_BCAST(nsta_tot,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
-       acqui_simu(i)%nsta_tot=nsta_tot
-       if (myrank > 0) then
-          allocate(acqui_simu(i)%station_name(nsta_tot),acqui_simu(i)%network_name(nsta_tot))
-          allocate(acqui_simu(i)%position_station(3,nsta_tot))
-       endif
 
-       call MPI_BCAST(acqui_simu(i)%station_name, nsta_tot* MAX_LENGTH_STATION_NAME,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(acqui_simu(i)%network_name, nsta_tot* MAX_LENGTH_NETWORK_NAME,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
-       call MPI_BCAST(acqui_simu(i)%position_station, 3*nsta_tot,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+!       if (myrank == 0) nsta_tot=acqui_simu(i)%nsta_tot
+!       call  MPI_BCAST(nsta_tot,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
+!       acqui_simu(i)%nsta_tot=nsta_tot
+!       if (myrank > 0) then
+!          allocate(acqui_simu(i)%station_name(nsta_tot),acqui_simu(i)%network_name(nsta_tot))
+!          allocate(acqui_simu(i)%position_station(3,nsta_tot))
+!       endif
+
+!       call MPI_BCAST(acqui_simu(i)%station_name, nsta_tot* MAX_LENGTH_STATION_NAME,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+!       call MPI_BCAST(acqui_simu(i)%network_name, nsta_tot* MAX_LENGTH_NETWORK_NAME,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+!       call MPI_BCAST(acqui_simu(i)%position_station, 3*nsta_tot,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+
 
        ! inverse params
        call MPI_BCAST(inversion_param%Niter,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
