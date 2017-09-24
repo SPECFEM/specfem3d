@@ -77,9 +77,8 @@
   use specfem_par_movie
   implicit none
 
-  double precision :: t0_acoustic,min_tshift_src_original
-  integer :: yr,jda,ho,mi
-  integer :: isource,ispec,ier
+  double precision :: min_tshift_src_original
+  integer :: isource,ier
   character(len=MAX_STRING_LEN) :: SOURCE_FILE,path_to_add
 
   ! user output
@@ -115,8 +114,13 @@
              comp_dir_vect_source_E(NSOURCES), &
              comp_dir_vect_source_N(NSOURCES), &
              comp_dir_vect_source_Z_UP(NSOURCES),stat=ier)
-    if (ier /= 0) stop 'error allocating arrays for force point sources'
+  else
+    allocate(factor_force_source(1), &
+             comp_dir_vect_source_E(1), &
+             comp_dir_vect_source_N(1), &
+             comp_dir_vect_source_Z_UP(1),stat=ier)
   endif
+  if (ier /= 0) stop 'error allocating arrays for force point sources'
 
   !! VM VM set the size of user_source_time_function
   if (USE_EXTERNAL_SOURCE_FILE) then
@@ -146,10 +150,48 @@
   endif
 
   ! locate sources in the mesh
-  call locate_source(SOURCE_FILE,NSOURCES,tshift_src,min_tshift_src_original,yr,jda,ho,mi,utm_x_source,utm_y_source, &
-          hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
-          islice_selected_source,ispec_selected_source, &
-          xi_source,eta_source,gamma_source,nu_source)
+  call locate_source(SOURCE_FILE,tshift_src,min_tshift_src_original,utm_x_source,utm_y_source, &
+                     hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
+                     islice_selected_source,ispec_selected_source, &
+                     factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP,&
+                     xi_source,eta_source,gamma_source,nu_source,user_source_time_function)
+
+  call define_stf_constants(hdur,hdur_gaussian,tshift_src,min_tshift_src_original,islice_selected_source,ispec_selected_source,t0)
+
+  ! count number of sources located in this slice
+  nsources_local = 0
+  do isource = 1, NSOURCES
+    if (myrank == islice_selected_source(isource)) nsources_local = nsources_local + 1
+  enddo
+
+  ! checks if source is in an acoustic element and exactly on the free surface because pressure is zero there
+  call setup_sources_check_acoustic()
+
+  ! prints source time functions to output files
+  if (PRINT_SOURCE_TIME_FUNCTION) call print_stf_file()
+
+  end subroutine setup_sources
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+  subroutine define_stf_constants(hdur,hdur_gaussian,tshift_src,min_tshift_src_original,&
+                                  islice_selected_source,ispec_selected_source,t0)
+
+  use constants
+  use specfem_par, only : myrank,NSOURCES,MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,HDUR_MOVIE,&
+                          USE_RICKER_TIME_FUNCTION,USE_EXTERNAL_SOURCE_FILE
+  use specfem_par_acoustic, only : ispec_is_acoustic
+  use specfem_par_movie
+
+  implicit none
+
+  double precision, dimension(NSOURCES) :: tshift_src,hdur,hdur_gaussian
+  double precision :: min_tshift_src_original,t0
+  integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
+  !local
+  double precision :: t0_acoustic
+  integer :: isource,ispec
 
   if (abs(minval(tshift_src)) > TINYVAL) call exit_MPI(myrank,'one tshift_src must be zero, others must be positive')
 
@@ -191,11 +233,11 @@
 
   ! point force sources will start depending on the frequency given by hdur
   !if (USE_FORCE_POINT_SOURCE .or. USE_RICKER_TIME_FUNCTION) then
-!! COMMENTED BY FS FS -> account for the case USE_FORCE_POINT_SOURCE but NOT using a ricker (i.e. using a Gaussian),
-! in this case the above defined t0 = - 2.0d0 * minval(tshift_src(:) - hdur(:)) is correct
-! (analogous to using error function in case of moment tensor sources). You only need to be aware that hdur=0
-! then has a different behaviour for point forces (compared with moment tensor sources):
-! then hdur is set to TINYVAL and NOT to 5*DT as in case of moment tensor source (Heaviside)
+  !! COMMENTED BY FS FS -> account for the case USE_FORCE_POINT_SOURCE but NOT using a ricker (i.e. using a Gaussian),
+  ! in this case the above defined t0 = - 2.0d0 * minval(tshift_src(:) - hdur(:)) is correct
+  ! (analogous to using error function in case of moment tensor sources). You only need to be aware that hdur=0
+  ! then has a different behaviour for point forces (compared with moment tensor sources):
+  ! then hdur is set to TINYVAL and NOT to 5*DT as in case of moment tensor source (Heaviside)
   if (USE_RICKER_TIME_FUNCTION) then !! ADDED BY FS FS
     ! note: point force sources will give the dominant frequency in hdur,
     !       thus the main period is 1/hdur.
@@ -270,19 +312,7 @@
     call exit_mpi(myrank,'error negative USER_T0 parameter in constants.h')
   endif
 
-  ! count number of sources located in this slice
-  nsources_local = 0
-  do isource = 1, NSOURCES
-    if (myrank == islice_selected_source(isource)) nsources_local = nsources_local + 1
-  enddo
-
-  ! checks if source is in an acoustic element and exactly on the free surface because pressure is zero there
-  call setup_sources_check_acoustic()
-
-  ! prints source time functions to output files
-  if (PRINT_SOURCE_TIME_FUNCTION) call print_stf_file()
-
-  end subroutine setup_sources
+  end subroutine define_stf_constants
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -632,12 +662,13 @@
 
           ! note: for use_force_point_source xi/eta/gamma are also in the range [-1,1], for exact positioning
 
+          factor_source = factor_force_source(isource)
           ! elastic source
           if (ispec_is_elastic(ispec)) then
             ! length of component vector
-            norm = sqrt( comp_dir_vect_source_E(isource)**2 &
-                       + comp_dir_vect_source_N(isource)**2 &
-                       + comp_dir_vect_source_Z_UP(isource)**2 )
+            norm = dsqrt( comp_dir_vect_source_E(isource)**2 &
+                        + comp_dir_vect_source_N(isource)**2 &
+                        + comp_dir_vect_source_Z_UP(isource)**2 )
             ! checks norm of component vector
             if (norm < TINYVAL) then
               call exit_MPI(myrank,'error force point source: component vector has (almost) zero norm')
@@ -667,11 +698,10 @@
           ! elastic or poroelastic moment tensor source
           if (ispec_is_elastic(ispec) .or. ispec_is_poroelastic(ispec)) then
             call compute_arrays_source_cmt(ispec,sourcearray, &
-                                           xi_source(isource),eta_source(isource),gamma_source(isource), &
+                                           hxis,hetas,hgammas,hpxis,hpetas,hpgammas, &
                                            Mxx(isource),Myy(isource),Mzz(isource), &
                                            Mxy(isource),Mxz(isource),Myz(isource), &
-                                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                                           xigll,yigll,zigll,NSPEC_AB)
+                                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,NSPEC_AB)
           endif
 
           ! acoustic case

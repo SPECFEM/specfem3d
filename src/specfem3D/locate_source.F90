@@ -28,29 +28,29 @@
 !----  locate_source finds the correct position of the source
 !----
 
-  subroutine locate_source(filename,NSOURCES,tshift_src,min_tshift_src_original,yr,jda,ho,mi,utm_x_source,utm_y_source, &
+  subroutine locate_source(filename,tshift_src,min_tshift_src_original,utm_x_source,utm_y_source, &
                            hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
                            islice_selected_source,ispec_selected_source, &
-                           xi_source,eta_source,gamma_source,nu_source)
+                           factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP, &
+                           xi_source,eta_source,gamma_source,nu_source,user_source_time_function)
 
   use constants
 
   use specfem_par, only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION, &
       UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,USE_SOURCES_RECEIVERS_Z, &
-      factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP, &
-      user_source_time_function,NSTEP_STF,NSOURCES_STF,USE_EXTERNAL_SOURCE_FILE,USE_TRICK_FOR_BETTER_PRESSURE, &
-      ibool,myrank,NSPEC_AB,NGLOB_AB,xstore,ystore,zstore,DT
+      NSTEP_STF,NSOURCES_STF,USE_EXTERNAL_SOURCE_FILE,USE_TRICK_FOR_BETTER_PRESSURE, &
+      ibool,myrank,NSPEC_AB,NGLOB_AB,xstore,ystore,zstore,DT,NSOURCES
 
 
   implicit none
 
   character(len=MAX_STRING_LEN), intent(in) :: filename
-  integer,intent(in) :: NSOURCES
-  integer,intent(inout) :: yr,jda,ho,mi
   double precision,dimension(NSOURCES),intent(inout) :: tshift_src
   double precision,intent(inout) :: min_tshift_src_original
-  double precision :: sec
   double precision, dimension(NDIM,NDIM,NSOURCES),intent(out) :: nu_source
+  double precision, dimension(NSOURCES) :: factor_force_source
+  double precision, dimension(NSOURCES) :: comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP
+  real(kind=CUSTOM_REAL), dimension(NSTEP_STF,NSOURCES_STF) :: user_source_time_function
 
   integer isource
 
@@ -119,7 +119,7 @@
     ! CMT moment tensors
     if (myrank == 0) then
       ! only master process reads in CMTSOLUTION file
-      call get_cmt(filename,yr,jda,ho,mi,sec,tshift_src,hdur,lat,long,depth,moment_tensor, &
+      call get_cmt(filename,tshift_src,hdur,lat,long,depth,moment_tensor, &
                    DT,NSOURCES,min_tshift_src_original,user_source_time_function)
     endif
     ! broadcasts specific moment tensor infos

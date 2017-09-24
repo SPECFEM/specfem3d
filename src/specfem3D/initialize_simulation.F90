@@ -40,8 +40,8 @@
 
   include 'version.fh'
 
-  integer :: ier
-  logical :: BROADCAST_AFTER_READ
+  integer ier
+  logical BROADCAST_AFTER_READ
 
   ! myrank is the rank of each process, between 0 and NPROC-1.
   ! as usual in MPI, process 0 is in charge of coordinating everything

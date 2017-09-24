@@ -2,7 +2,7 @@ module mesh_tools
 
 
 
-  use specfem_par, only: CUSTOM_REAL, HUGEVAL, NGNOD, NUM_ITER, NPROC, MAX_STRING_LEN, &
+  use specfem_par, only: CUSTOM_REAL, HUGEVAL, TINYVAL, NGNOD, NUM_ITER, NPROC, MAX_STRING_LEN, &
                          NGLLX, NGLLY, NGLLZ, NDIM, NSPEC_AB, NGLOB_AB, MIDX, MIDY, MIDZ, &
                          LOCAL_PATH, xigll, yigll, zigll, &
                          ibool, xstore, ystore, zstore, &
@@ -17,95 +17,10 @@ module mesh_tools
   implicit none
 
 
-  PUBLIC  ::  locate_source, locate_point_in_mesh, compute_source_coeff, locate_MPI_slice_and_bcast_to_all, &
+  PUBLIC  ::  locate_point_in_mesh, compute_source_coeff, locate_MPI_slice_and_bcast_to_all, &
               create_mass_matrices_Stacey_duplication_routine,  compute_force_elastic_arrays_source
 
 contains
-
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!--------------------------------------------------------------------------------------------------------------------
-! locate sources
-!--------------------------------------------------------------------------------------------------------------------
-  subroutine locate_source(acqui_simu, myrank)
-
-    type(acqui), allocatable, dimension(:), intent(inout)  :: acqui_simu
-    integer,                                intent(in)     :: myrank
-
-    integer                                                :: ievent, nsrc_local, NEVENT
-    integer                                                :: ispec_selected_source, islice_selected_source
-    double precision                                       :: xi_source, eta_source, gamma_source
-    double precision                                       :: x_found,  y_found,  z_found
-    double precision                                       :: x_to_locate, y_to_locate, z_to_locate
-    real(kind=CUSTOM_REAL)                                 :: distance_min_glob,distance_max_glob
-    real(kind=CUSTOM_REAL)                                 :: elemsize_min_glob,elemsize_max_glob
-    real(kind=CUSTOM_REAL)                                 :: x_min_glob,x_max_glob
-    real(kind=CUSTOM_REAL)                                 :: y_min_glob,y_max_glob
-    real(kind=CUSTOM_REAL)                                 :: z_min_glob,z_max_glob
-    integer,                 dimension(NGNOD)              :: iaddx,iaddy,iaddz
-    double precision                                       :: distance_from_target
-
-200 format('         SOURCE : ', i5, '  LOCATED IN SLICE : ', i5, '  ELEMENT :', i10, '  ERROR IN LOCATION :', e15.6)
-300 format('         REAL POSITION : ', 3f20.5, '  FOUND POSITION : ', 3f20.5)
-
-    if (myrank == 0) then
-       write(INVERSE_LOG_FILE,*)
-       write(INVERSE_LOG_FILE,*) ' ... locate sources in specfem mesh :'
-    endif
-
-    NEVENT=acqui_simu(1)%nevent_tot
-
-    ! get mesh properties (mandatory before calling locate_point_in_mesh)
-    call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
-    call check_mesh_distances(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-         x_min_glob,x_max_glob,y_min_glob,y_max_glob,z_min_glob,z_max_glob, &
-         elemsize_min_glob,elemsize_max_glob, &
-         distance_min_glob,distance_max_glob)
-
-    do ievent = 1, NEVENT
-
-       x_to_locate = acqui_simu(ievent)%Xs
-       y_to_locate = acqui_simu(ievent)%Ys
-       z_to_locate = acqui_simu(ievent)%Zs
-
-       call locate_point_in_mesh(x_to_locate, y_to_locate, z_to_locate, iaddx, iaddy, iaddz, elemsize_max_glob, &
-            ispec_selected_source, xi_source, eta_source, gamma_source, x_found, y_found, z_found, myrank)
-
-       call locate_MPI_slice_and_bcast_to_all(x_to_locate, y_to_locate, z_to_locate, x_found, y_found, z_found, &
-            xi_source, eta_source, gamma_source, ispec_selected_source, islice_selected_source, distance_from_target, myrank)
-
-       if (myrank == 0) then
-          write(INVERSE_LOG_FILE, 200) ievent, islice_selected_source, ispec_selected_source, distance_from_target
-          if (DEBUG_MODE) write(INVERSE_LOG_FILE, 300) x_to_locate, y_to_locate, z_to_locate, x_found, y_found, z_found
-       endif
-
-       ! store in structure acqui
-       acqui_simu(ievent)%islice_slected_source=islice_selected_source
-       acqui_simu(ievent)%ispec_selected_source=ispec_selected_source
-
-       allocate(acqui_simu(ievent)%sourcearray(NDIM,NGLLX,NGLLY,NGLLZ))
-       nsrc_local=0
-      ! compute source array
-       if (myrank == islice_selected_source) then
-          nsrc_local = nsrc_local + 1
-          call compute_source_coeff(xi_source, eta_source, gamma_source, &
-               acqui_simu(ievent)%ispec_selected_source, acqui_simu(ievent)%sourcearray, &
-               acqui_simu(ievent)%Mxx, acqui_simu(ievent)%Myy, acqui_simu(ievent)%Mzz, &
-               acqui_simu(ievent)%Mxy, acqui_simu(ievent)%Mxz, acqui_simu(ievent)%Myz, &
-               acqui_simu(ievent)%Fx, acqui_simu(ievent)%Fy, acqui_simu(ievent)%Fz, &
-               acqui_simu(ievent)%source_type)
-       endif
-       acqui_simu(ievent)%nsources_local=nsrc_local
-
-    enddo
-
-    if (myrank == 0) then
-       write(INVERSE_LOG_FILE,*) ' ... locate sources passed'
-       write(INVERSE_LOG_FILE,*)
-    endif
-
-  end subroutine locate_source
-
 
 !!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !--------------------------------------------------------------------------------------------------------------------
@@ -406,31 +321,23 @@ contains
 !---------------------------------------------------------------
 ! compute lagrange interpolation for point
 !---------------------------------------------------------------
-  subroutine  compute_source_coeff(xi,eta,gamma,ispec,interparray,Mxx,Myy,Mzz,Mxy,Mxz,Myz,Fx,Fy,Fz,type)
+  subroutine  compute_source_coeff(xi,eta,gamma,ispec,interparray,Mxx,Myy,Mzz,Mxy,Mxz,Myz,factor_source,Fx,Fy,Fz,type,nu_source)
 
-    real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable, intent(inout)  :: interparray
-    double precision,                                        intent(in)     :: xi, eta, gamma
-    double precision,                                        intent(in)     :: Mxx,Myy,Mzz,Mxy,Mxz,Myz
-    double precision,                                        intent(in)     :: Fx,Fy,Fz
-    integer,                                                 intent(in)     :: ispec
-    character(len=10),                                       intent(in)     :: type
+    real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ),intent(out)    :: interparray
+    double precision,                                         intent(in)     :: xi, eta, gamma
+    double precision,                                         intent(in)     :: Mxx,Myy,Mzz,Mxy,Mxz,Myz
+    double precision,                                         intent(in)     :: factor_source
+    double precision,                                         intent(in)     :: Fx,Fy,Fz
+    double precision,       dimension(NDIM,NDIM)                             :: nu_source
+    integer,                                                  intent(in)     :: ispec
+    character(len=10),                                        intent(in)     :: type
 
-    double precision,       dimension(NGLLX)                                :: hxis,hpxis
-    double precision,       dimension(NGLLY)                                :: hetas,hpetas
-    double precision,       dimension(NGLLZ)                                :: hgammas,hpgammas
-    real(kind=CUSTOM_REAL)                                                  :: factor_source
-    double precision,       dimension(NDIM,NDIM)                            :: nu_source
-    factor_source = 1.
-    nu_source(1,1) = 1.0
-    nu_source(1,2) = 0.0
-    nu_source(1,3) = 0.0
-    nu_source(2,1) = 0.0
-    nu_source(2,2) = 1.0
-    nu_source(2,3) = 0.0
-    nu_source(3,1) = 0.0
-    nu_source(3,2) = 0.0
-    nu_source(3,3) = 1.0
-
+    ! local
+    double precision,       dimension(NGLLX)                                 :: hxis,hpxis
+    double precision,       dimension(NGLLY)                                 :: hetas,hpetas
+    double precision,       dimension(NGLLZ)                                 :: hgammas,hpgammas
+    double precision                                                         :: norm,comp_x,comp_y,comp_z
+    real(kind=CUSTOM_REAL)                                                   :: factor
     ! compute Lagrange polynomials at the source location
     call lagrange_any(xi,NGLLX,xigll,hxis,hpxis)
     call lagrange_any(eta,NGLLY,yigll,hetas,hpetas)
@@ -441,42 +348,24 @@ contains
     case ('moment')
        if (ispec_is_elastic(ispec)) then
 
-          if (DEBUG_MODE) then
-
-             write ( IIDD, * )
-             write ( IIDD, * ) 'COMPUTE SOURCE ARRAY FOR MOMENT TENSOR'
-             write ( IIDD, * )
-             write ( IIDD, * ) ' element ', ispec
-             write ( IIDD, * )
-             write ( IIDD, * ) ' tensor :', Mxx, Myy, Mzz, Mxy, Myz, Myz
-             write ( IIDD, * )
-             write ( IIDD, * )
-             write ( IIDD, * ) ' xi eta gamma :', xi, eta, gamma
-             write ( IIDD, * )
-             write ( IIDD, * ) ' xigll ', xigll
-             write ( IIDD, * ) ' yigll ', yigll
-             write ( IIDD, * ) ' zigll ', zigll
-             write ( IIDD, * )
-             write ( IIDD, * )
-
-          endif
-
-          call compute_arrays_source_cmt(ispec,interparray, xi, eta, gamma, &
+          factor = 1.0
+          call compute_arrays_source_cmt(ispec,interparray,&
+               hxis,hetas,hgammas,hpxis,hpetas,hpgammas,&
                Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
                xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-               xigll,yigll,zigll,NSPEC_AB)
+               NSPEC_AB)
 
        else if (ispec_is_acoustic(ispec)) then
           ! scalar moment of moment tensor values read in from CMTSOLUTION
           ! note: M0 by Dahlen and Tromp, eq. 5.91
-          factor_source = 1.0/sqrt(2.0) * sqrt( Mxx**2 + Myy**2 + Mzz**2 &
+          factor = 1.0/sqrt(2.0) * sqrt( Mxx**2 + Myy**2 + Mzz**2 &
                + 2*( Myz**2 + Mxz**2 + Mxy**2) )
 
           ! scales source such that it would be equivalent to explosion source moment tensor,
           ! where Mxx=Myy=Mzz, others Mxy,.. = zero, in equivalent elastic media
           ! (and getting rid of 1/sqrt(2) factor from scalar moment tensor definition above)
-          factor_source = factor_source * sqrt(2.0) / sqrt(3.0)
-          call compute_arrays_source_forcesolution(interparray,hxis,hetas,hgammas,factor_source,1.0d0,1.0d0,1.0d0,nu_source)
+          factor = factor * sqrt(2.0) / sqrt(3.0)
+          call compute_arrays_source_forcesolution(interparray,hxis,hetas,hgammas,factor,1.0d0,1.0d0,1.0d0,nu_source)
 
        else
           write(*,*) ' ABORT INVERSION: POINT SOURCE IS NOT IN ELASTIC OR ACOUSTIC DOMAIN'
@@ -486,16 +375,25 @@ contains
     case('force')
        if (ispec_is_elastic(ispec)) then
 
-          call compute_force_elastic_arrays_source(interparray,Fx,Fy,Fz,hxis, hetas, hgammas)
-
+         ! length of component vector
+         norm = dsqrt( Fx**2 + Fy**2 + Fz**2 )
+         ! checks norm of component vector
+         if (norm < TINYVAL) stop 'error force point source: component vector has (almost) zero norm'
+         
+         ! normalizes given component vector
+         comp_x = Fx/norm
+         comp_y = Fy/norm
+         comp_z = Fz/norm
        else if (ispec_is_acoustic(ispec)) then
-
-          call compute_arrays_source_forcesolution(interparray,hxis,hetas,hgammas,factor_source,1.0d0,1.0d0,1.0d0,nu_source)
-
+         comp_x = 1.0d0
+         comp_y = 1.0d0
+         comp_z = 1.0d0
        else
           write(*,*) ' ABORT INVERSION: POINT SOURCE IS NOT IN ELASTIC OR ACOUSTIC DOMAIN'
           stop
        endif
+       factor = sngl (factor_source)
+       call compute_arrays_source_forcesolution(interparray,hxis,hetas,hgammas,factor,comp_x,comp_y,comp_z,nu_source)
 
     case default
 

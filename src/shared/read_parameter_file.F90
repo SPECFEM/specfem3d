@@ -42,8 +42,7 @@
 
   character(len=MAX_STRING_LEN) :: MODEL
 
-  double precision :: minval_hdur
-  character(len=MAX_STRING_LEN) :: CMTSOLUTION,FORCESOLUTION
+  character(len=MAX_STRING_LEN) :: sources_filename
 
   character(len=MAX_STRING_LEN) :: path_to_add
 
@@ -288,18 +287,18 @@
     call read_value_logical(GPU_MODE, 'GPU_MODE', ier)
     if (ier /= 0) stop 'Error reading Par_file parameter GPU_MODE'
 
-  !> Read ADIOS related flags from the Par_file
-  !! \param ADIOS_ENABLED Main flag to decide if ADIOS is used. If setted to
-  !!                      false no other parameter is taken into account.
-  !! \param ADIOS_FOR_DATABASES Flag to indicate if the databases are written
-  !!                            and read with the help of ADIOS.
-  !! \param ADIOS_FOR_MESH flag to indicate if the mesh (generate database) is
-  !!                       written using ADIOS.
-  !! \param ADIOS_FOR_FORWARD_ARRAYS flag to indicate if the solver forward arrays
-  !!                                 are written using ADIOS.
-  !! \param ADIOS_FOR_KERNELS flag to indicate if the kernels are saved using
-  !!                          adios
-  !! \author MPBL
+    !> Read ADIOS related flags from the Par_file
+    !! \param ADIOS_ENABLED Main flag to decide if ADIOS is used. If setted to
+    !!                      false no other parameter is taken into account.
+    !! \param ADIOS_FOR_DATABASES Flag to indicate if the databases are written
+    !!                            and read with the help of ADIOS.
+    !! \param ADIOS_FOR_MESH flag to indicate if the mesh (generate database) is
+    !!                       written using ADIOS.
+    !! \param ADIOS_FOR_FORWARD_ARRAYS flag to indicate if the solver forward arrays
+    !!                                 are written using ADIOS.
+    !! \param ADIOS_FOR_KERNELS flag to indicate if the kernels are saved using
+    !!                          adios
+    !! \author MPBL
     call read_value_logical(ADIOS_ENABLED, 'ADIOS_ENABLED', ier)
     if (ier /= 0) stop 'Error reading Par_file parameter ADIOS_ENABLED'
     call read_value_logical(ADIOS_FOR_DATABASES, 'ADIOS_FOR_DATABASES', ier)
@@ -311,60 +310,60 @@
     call read_value_logical(ADIOS_FOR_KERNELS, 'ADIOS_FOR_KERNELS', ier)
     if (ier /= 0) stop 'Error reading Par_file parameter ADIOS_FOR_KERNELS'
 
-  ! ADIOS is very useful for very large simulations (say using 2000 MPI tasks or more)
-  ! but slows down the code if used for simulations that are small or medium size, because of the overhead any library has.
-  if (ADIOS_ENABLED .and. NPROC < 2000) then
-    print *
-    print *,'**************'
-    print *,'**************'
-    print *,'ADIOS significantly slows down small or medium-size runs, which is the case here, please consider turning it off'
-    print *,'**************'
-    print *,'**************'
-    print *
-  endif
+    ! ADIOS is very useful for very large simulations (say using 2000 MPI tasks or more)
+    ! but slows down the code if used for simulations that are small or medium size, because of the overhead any library has.
+    if (ADIOS_ENABLED .and. NPROC < 2000) then
+      print *
+      print *,'**************'
+      print *,'**************'
+      print *,'ADIOS significantly slows down small or medium-size runs, which is the case here, please consider turning it off'
+      print *,'**************'
+      print *,'**************'
+      print *
+    endif
 
-  call read_value_logical(USE_EXTERNAL_SOURCE_FILE, 'USE_EXTERNAL_SOURCE_FILE', ier)
-  if (ier /= 0) stop 'Error reading Par_file parameter USE_EXTERNAL_SOURCE_FILE'
+    call read_value_logical(USE_EXTERNAL_SOURCE_FILE, 'USE_EXTERNAL_SOURCE_FILE', ier)
+    if (ier /= 0) stop 'Error reading Par_file parameter USE_EXTERNAL_SOURCE_FILE'
 
-  call read_value_logical(COUPLE_WITH_INJECTION_TECHNIQUE, 'COUPLE_WITH_INJECTION_TECHNIQUE', ier)
-  if (ier /= 0) stop 'Error reading Par_file parameter COUPLE_WITH_INJECTION_TECHNIQUE'
+    call read_value_logical(COUPLE_WITH_INJECTION_TECHNIQUE, 'COUPLE_WITH_INJECTION_TECHNIQUE', ier)
+    if (ier /= 0) stop 'Error reading Par_file parameter COUPLE_WITH_INJECTION_TECHNIQUE'
 
-  call read_value_integer(INJECTION_TECHNIQUE_TYPE,'INJECTION_TECHNIQUE_TYPE',ier)
-  if (ier /= 0) stop 'Error reading Par_file parameter INJECTION_TECHNIQUE_TYPE'
+    call read_value_integer(INJECTION_TECHNIQUE_TYPE,'INJECTION_TECHNIQUE_TYPE',ier)
+    if (ier /= 0) stop 'Error reading Par_file parameter INJECTION_TECHNIQUE_TYPE'
 
-  call read_value_logical(MESH_A_CHUNK_OF_THE_EARTH,'MESH_A_CHUNK_OF_THE_EARTH',ier)
-  if (ier /= 0) stop 'Error reading Par_file parameter MESH_A_CHUNK_OF_THE_EARTH'
+    call read_value_logical(MESH_A_CHUNK_OF_THE_EARTH,'MESH_A_CHUNK_OF_THE_EARTH',ier)
+    if (ier /= 0) stop 'Error reading Par_file parameter MESH_A_CHUNK_OF_THE_EARTH'
 
-  call read_value_string(TRACTION_PATH, 'TRACTION_PATH', ier)
-  if (ier /= 0) stop 'Error reading Par_file parameter TRACTION_PATH'
+    call read_value_string(TRACTION_PATH, 'TRACTION_PATH', ier)
+    if (ier /= 0) stop 'Error reading Par_file parameter TRACTION_PATH'
 
-  ! this one is only used when INJECTION_TECHNIQUE_IS_FK, but we read it anyway because we later broadcast it to the other nodes
-  call read_value_string(FKMODEL_FILE,'FKMODEL_FILE',ier)
-  if (ier /= 0) stop 'Error reading Par_file parameter FKMODEL_FILE'
+    ! this one is only used when INJECTION_TECHNIQUE_IS_FK, but we read it anyway because we later broadcast it to the other nodes
+    call read_value_string(FKMODEL_FILE,'FKMODEL_FILE',ier)
+    if (ier /= 0) stop 'Error reading Par_file parameter FKMODEL_FILE'
 
-  call read_value_logical(RECIPROCITY_AND_KH_INTEGRAL,'RECIPROCITY_AND_KH_INTEGRAL',ier)
-  if (ier /= 0) stop 'Error reading Par_file parameter RECIPROCITY_AND_KH_INTEGRAL'
+    call read_value_logical(RECIPROCITY_AND_KH_INTEGRAL,'RECIPROCITY_AND_KH_INTEGRAL',ier)
+    if (ier /= 0) stop 'Error reading Par_file parameter RECIPROCITY_AND_KH_INTEGRAL'
 
-! check the type of external code to couple with, if any
-  if (MESH_A_CHUNK_OF_THE_EARTH .and. .not. COUPLE_WITH_INJECTION_TECHNIQUE) &
-    stop 'MESH_A_CHUNK_OF_THE_EARTH only available with COUPLE_WITH_INJECTION_TECHNIQUE for now, easy to change but not done yet'
+    ! check the type of external code to couple with, if any
+    if (MESH_A_CHUNK_OF_THE_EARTH .and. .not. COUPLE_WITH_INJECTION_TECHNIQUE) &
+      stop 'MESH_A_CHUNK_OF_THE_EARTH only available with COUPLE_WITH_INJECTION_TECHNIQUE for now, easy to change but not done yet'
 
-  if (COUPLE_WITH_INJECTION_TECHNIQUE) then
-    if (INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_DSM .and. &
-       INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_AXISEM .and. &
-       INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_FK) stop 'Error incorrect value of INJECTION_TECHNIQUE_TYPE read'
+    if (COUPLE_WITH_INJECTION_TECHNIQUE) then
+      if (INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_DSM .and. &
+         INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_AXISEM .and. &
+         INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_FK) stop 'Error incorrect value of INJECTION_TECHNIQUE_TYPE read'
 
-    if ( (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM ) .and. &
-         (.not. MESH_A_CHUNK_OF_THE_EARTH) ) stop 'Error, coupling with DSM only works with a Earth chunk mesh'
+      if ( (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM ) .and. &
+           (.not. MESH_A_CHUNK_OF_THE_EARTH) ) stop 'Error, coupling with DSM only works with a Earth chunk mesh'
 
 
-    if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_FK .and. MESH_A_CHUNK_OF_THE_EARTH) &
-         stop 'Error: coupling with F-K is for models with a flat surface (Earth flattening), &
-                     &thus turn MESH_A_CHUNK_OF_THE_EARTH off'
+      if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_FK .and. MESH_A_CHUNK_OF_THE_EARTH) &
+           stop 'Error: coupling with F-K is for models with a flat surface (Earth flattening), &
+                       &thus turn MESH_A_CHUNK_OF_THE_EARTH off'
 
-    if ((INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_AXISEM) .and. RECIPROCITY_AND_KH_INTEGRAL) &
-         stop 'Error: the use of RECIPROCITY_AND_KH_INTEGRAL is only available for coupling with AxiSEM for now'
-  endif
+      if ((INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_AXISEM) .and. RECIPROCITY_AND_KH_INTEGRAL) &
+           stop 'Error: the use of RECIPROCITY_AND_KH_INTEGRAL is only available for coupling with AxiSEM for now'
+    endif
 
     ! closes parameter file
     call close_parameter_file()
@@ -421,8 +420,24 @@
       stop 'Error elements should have 8 or 27 control nodes, please modify NGNOD in Par_file and recompile solver'
     endif
 
-    ! determines number of sources depending on number of lines in source file
-    call get_number_of_sources(minval_hdur,FORCESOLUTION,CMTSOLUTION)
+
+    ! get the name of the file describing the sources
+    if (USE_FORCE_POINT_SOURCE) then
+      sources_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'FORCESOLUTION'
+    else
+      sources_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'CMTSOLUTION'
+    endif
+    ! see if we are running several independent runs in parallel
+    ! if so, add the right directory for that run
+    ! (group numbers start at zero, but directory names start at run0001, thus we add one)
+    ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
+    if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+      write(path_to_add,"('run',i4.4,'/')") mygroup + 1
+      sources_filename = path_to_add(1:len_trim(path_to_add))//sources_filename(1:len_trim(sources_filename))
+    endif
+
+    ! determines number of sources depending on number of lines in sources file
+    call get_number_of_sources(sources_filename)
 
     ! converts all string characters to lowercase
     irange = iachar('a') - iachar('A')
@@ -490,10 +505,9 @@
 
   endif ! of if (myrank == 0) then
 
-! read from a single processor (the master) and then use MPI to broadcast to others
-! to avoid an I/O bottleneck in the case of very large runs
+  ! read from a single processor (the master) and then use MPI to broadcast to others
+  ! to avoid an I/O bottleneck in the case of very large runs
   if (BROADCAST_AFTER_READ) then
-
     call bcast_all_singlei(NPROC)
     call bcast_all_singlei(SIMULATION_TYPE)
     call bcast_all_singlei(NOISE_TOMOGRAPHY)
@@ -509,8 +523,8 @@
     call bcast_all_string(SEP_MODEL_DIRECTORY)
     call bcast_all_singlel(APPROXIMATE_OCEAN_LOAD)
     call bcast_all_singlel(TOPOGRAPHY)
-    call bcast_all_singlel(ATTENUATION)
-    call bcast_all_singlel(ANISOTROPY)
+    call bcast_all_singlel(ATTENUATION)  
+    call bcast_all_singlel(ANISOTROPY)  
     call bcast_all_singlel(GRAVITY)
     call bcast_all_singledp(ATTENUATION_f0_REFERENCE)
     call bcast_all_singledp(MIN_ATTENUATION_PERIOD)
@@ -569,14 +583,11 @@
     call bcast_all_singlel(ADIOS_FOR_KERNELS)
     call bcast_all_singlel(USE_EXTERNAL_SOURCE_FILE)
 
-! broadcast all parameters computed from others
+    ! broadcast all parameters computed from others
     call bcast_all_singlei(IMODEL)
     call bcast_all_singlei(NGNOD2D)
 
     call bcast_all_singlei(NSOURCES)
-    call bcast_all_singledp(minval_hdur)
-    call bcast_all_string(FORCESOLUTION)
-    call bcast_all_string(CMTSOLUTION)
 
     call bcast_all_singlel(COUPLE_WITH_INJECTION_TECHNIQUE)
     call bcast_all_singlel(MESH_A_CHUNK_OF_THE_EARTH)
@@ -669,39 +680,27 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine get_number_of_sources(minval_hdur,FORCESOLUTION,CMTSOLUTION)
+  subroutine get_number_of_sources(sources_filename)
 
 ! determines number of sources depending on number of lines in source file
 
-  use constants, only: mygroup,IN_DATA_FILES,HUGEVAL,TINYVAL, &
+  use constants, only: IN_DATA_FILES,HUGEVAL,TINYVAL, &
     NLINES_PER_CMTSOLUTION_SOURCE,NLINES_PER_FORCESOLUTION_SOURCE
   use shared_parameters
 
   implicit none
 
-  double precision,intent(out) :: minval_hdur
-  character(len=MAX_STRING_LEN),intent(out) :: CMTSOLUTION,FORCESOLUTION
+  character(len=MAX_STRING_LEN),intent(in) :: sources_filename
 
   ! local variables
-  integer :: icounter,isource,idummy,ier
-  double precision :: hdur
+  integer                       :: icounter,isource,idummy,ier
+  double precision              :: hdur, minval_hdur
   character(len=MAX_STRING_LEN) :: dummystring
-  character(len=MAX_STRING_LEN) :: path_to_add
 
   if (USE_FORCE_POINT_SOURCE) then
     ! compute the total number of sources in the FORCESOLUTION file
     ! there are NLINES_PER_FORCESOLUTION_SOURCE lines per source in that file
-    FORCESOLUTION = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'FORCESOLUTION'
-! see if we are running several independent runs in parallel
-! if so, add the right directory for that run
-! (group numbers start at zero, but directory names start at run0001, thus we add one)
-! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
-    if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
-      write(path_to_add,"('run',i4.4,'/')") mygroup + 1
-      FORCESOLUTION = path_to_add(1:len_trim(path_to_add))//FORCESOLUTION(1:len_trim(FORCESOLUTION))
-    endif
-
-    open(unit=21,file=trim(FORCESOLUTION),status='old',action='read',iostat=ier)
+    open(unit=21,file=trim(sources_filename),status='old',action='read',iostat=ier)
     if (ier /= 0) stop 'Error opening FORCESOLUTION file'
 
     icounter = 0
@@ -712,12 +711,12 @@
     close(21)
 
     if (.not. USE_EXTERNAL_SOURCE_FILE) then
-       if (mod(icounter,NLINES_PER_FORCESOLUTION_SOURCE) /= 0) &
-            stop 'Error total number of lines in FORCESOLUTION file should be a multiple of NLINES_PER_FORCESOLUTION_SOURCE'
-       NSOURCES = icounter / NLINES_PER_FORCESOLUTION_SOURCE
+      if (mod(icounter,NLINES_PER_FORCESOLUTION_SOURCE) /= 0) &
+        stop 'Error total number of lines in FORCESOLUTION file should be a multiple of NLINES_PER_FORCESOLUTION_SOURCE'
+      NSOURCES = icounter / NLINES_PER_FORCESOLUTION_SOURCE
     else
-!! VM VM in case of USE_EXTERNAL_SOURCE_FILE we have to read one additional line per source (the name of external source file)
-       NSOURCES = icounter / (NLINES_PER_FORCESOLUTION_SOURCE+1)
+      !! VM VM in case of USE_EXTERNAL_SOURCE_FILE we have to read one additional line per source (the name of external source file)
+      NSOURCES = icounter / (NLINES_PER_FORCESOLUTION_SOURCE+1)
     endif
 
     if (NSOURCES < 1) stop 'Error need at least one source in FORCESOLUTION file'
@@ -725,17 +724,7 @@
   else
     ! compute the total number of sources in the CMTSOLUTION file
     ! there are NLINES_PER_CMTSOLUTION_SOURCE lines per source in that file
-    CMTSOLUTION = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'CMTSOLUTION'
-! see if we are running several independent runs in parallel
-! if so, add the right directory for that run
-! (group numbers start at zero, but directory names start at run0001, thus we add one)
-! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
-    if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
-      write(path_to_add,"('run',i4.4,'/')") mygroup + 1
-      CMTSOLUTION = path_to_add(1:len_trim(path_to_add))//CMTSOLUTION(1:len_trim(CMTSOLUTION))
-    endif
-
-    open(unit=21,file=trim(CMTSOLUTION),status='old',action='read',iostat=ier)
+    open(unit=21,file=trim(sources_filename),status='old',action='read',iostat=ier)
     if (ier /= 0) stop 'Error opening CMTSOLUTION file'
 
     icounter = 0
@@ -756,7 +745,7 @@
     if (NSOURCES < 1) stop 'Error need at least one source in CMTSOLUTION file'
 
     ! compute the minimum value of hdur in CMTSOLUTION file
-    open(unit=21,file=trim(CMTSOLUTION),status='old',action='read')
+    open(unit=21,file=trim(sources_filename),status='old',action='read')
     minval_hdur = HUGEVAL
     do isource = 1,NSOURCES
 

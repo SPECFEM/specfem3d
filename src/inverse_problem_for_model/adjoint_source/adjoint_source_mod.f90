@@ -67,9 +67,7 @@ contains
     call taper_window_W(w_tap,i0,i1,i2,i3,nstep_data,1._CUSTOM_REAL)
     !! to do define user window
 
-
     do irec_local = 1, nrec_local
-
        irec = number_receiver_global(irec_local)
        ispec = acqui_simu(ievent)%ispec_selected_rec(irec)
        cost_function_rec=0.

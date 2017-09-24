@@ -25,7 +25,7 @@
 !
 !=====================================================================
 
-  subroutine get_cmt(CMTSOLUTION,yr,jda,ho,mi,sec,tshift_cmt,hdur,lat,long,depth,moment_tensor, &
+  subroutine get_cmt(CMTSOLUTION,tshift_cmt,hdur,lat,long,depth,moment_tensor, &
                     DT,NSOURCES,min_tshift_cmt_original,user_source_time_function)
 
   use constants, only: IIN,IN_DATA_FILES,MAX_STRING_LEN,CUSTOM_REAL
@@ -38,9 +38,8 @@
   character(len=MAX_STRING_LEN), intent(in) :: CMTSOLUTION
   integer, intent(in) :: NSOURCES
   double precision, intent(in) :: DT
-
-  integer, intent(out) :: yr,jda,ho,mi
-  double precision, intent(out) :: sec,min_tshift_cmt_original
+ 
+  double precision, intent(out) :: min_tshift_cmt_original
   double precision, dimension(NSOURCES), intent(out) :: tshift_cmt,hdur,lat,long,depth
   double precision, dimension(6,NSOURCES), intent(out) :: moment_tensor
   !! VM VM use NSTEP_STF, NSOURCES_STF which are always rigth :
@@ -49,7 +48,8 @@
   real(kind=CUSTOM_REAL), dimension(NSTEP_STF, NSOURCES_STF), intent(out) :: user_source_time_function
 
   ! local variables below
-  integer :: mo,da,julian_day,isource
+  integer :: mo,da,julian_day,isource,yr,jda,ho,mi
+  double precision :: sec
   integer :: i,itype,istart,iend,ier
   double precision :: t_shift(NSOURCES)
   character(len=256) :: string
