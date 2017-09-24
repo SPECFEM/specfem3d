@@ -102,9 +102,10 @@ contains
 
     !! forward solver ------------------------------------------------------------------------------------------------
     call InitSpecfemForOneRun(acqui_simu, ievent, inversion_param, iter_inverse)
-    call iterate_time()
-    call FinalizeSpecfemForOneRun(acqui_simu, ievent)
 
+    call iterate_time()
+
+    call FinalizeSpecfemForOneRun(acqui_simu, ievent)
 
     !! define adjoint sources ----------------------------------------------------------------------------------
     call write_adjoint_sources_for_specfem(acqui_simu, inversion_param, ievent, myrank)
@@ -128,10 +129,8 @@ contains
     SAVE_FORWARD=.false.
     COMPUTE_AND_STORE_STRAIN=.true.
     APPROXIMATE_HESS_KL=.true.
-
     !! forward and adjoint runs --------------------------------------------------------------------------------------
     call InitSpecfemForOneRun(acqui_simu, ievent, inversion_param, iter_inverse)
-
 
     COUPLE_WITH_INJECTION_TECHNIQUE = .false.  !! do not use coupling since the direct run is runining in backward from boundary
 
@@ -156,7 +155,7 @@ contains
     type(inver),                                    intent(in)    ::  inversion_param
     type(acqui),  dimension(:), allocatable,        intent(in)    ::  acqui_simu
 
-    integer                                                       :: irec,ier
+    integer                                                       :: irec,isrc,ier
     integer                                                       :: icomp, it, irec_local
     real(kind=CUSTOM_REAL)                                        :: DT, lw_tap
     double precision                                              :: DT_dble
@@ -182,38 +181,60 @@ contains
     b_deltatsqover2 = b_deltat*b_deltat/2._CUSTOM_REAL
 
     ! prepare source (only one source allowed for now) -----------------------------------------------------------------------------
-    NSOURCES=1
-    NSOURCES_STF=1
-    USE_EXTERNAL_SOURCE_FILE=.false.
+    NSOURCES = acqui_simu(ievent)%nsources_local
+    if (USE_EXTERNAL_SOURCE_FILE) then
+      NSOURCES_STF = NSOURCES
+      NSTEP_STF    = NSTEP
+    else
+      NSOURCES_STF = 1
+      NSTEP_STF    = 1
+    endif
+
     select case (acqui_simu(ievent)%source_type)
 
-    case ('moment')
+    case ('moment','force')
        nsources_local =  acqui_simu(ievent)%nsources_local
-       sourcearrays(1,:,:,:,:)=acqui_simu(ievent)%sourcearray(:,:,:,:)
-       islice_selected_source(1)=acqui_simu(ievent)%islice_slected_source
-       ispec_selected_source(1)=acqui_simu(ievent)%ispec_selected_source
-       PRINT_SOURCE_TIME_FUNCTION=.true.
-       t0 = - 1.2d0 * (acqui_simu(ievent)%t_shift - 1.d0/acqui_simu(ievent)%hdur)
-       hdur(1)=acqui_simu(ievent)%hdur
+       if (allocated(sourcearrays)) deallocate(sourcearrays)
+       if (allocated(islice_selected_source)) deallocate(islice_selected_source)
+       if (allocated(ispec_selected_source)) deallocate(ispec_selected_source)
+       if (allocated(hdur)) deallocate(hdur)
+       if (allocated(hdur_gaussian)) deallocate(hdur_gaussian)
+       if (allocated(tshift_src)) deallocate(tshift_src)
 
-       if (acqui_simu(ievent)%external_source_wavelet) then
-          USE_EXTERNAL_SOURCE_FILE=.true.
-          NSTEP_STF = NSTEP
+       allocate(sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ))
+       allocate(islice_selected_source(NSOURCES))
+       allocate(ispec_selected_source(NSOURCES))
+       allocate(hdur(NSOURCES))
+       allocate(hdur_gaussian(NSOURCES))
+       allocate(tshift_src(NSOURCES))
+
+       sourcearrays(:,:,:,:,:)=acqui_simu(ievent)%sourcearrays(:,:,:,:,:)
+       islice_selected_source(:)=acqui_simu(ievent)%islice_selected_source(:)
+       ispec_selected_source(:)=acqui_simu(ievent)%ispec_selected_source(:)
+       PRINT_SOURCE_TIME_FUNCTION=.true.
+       t0 = acqui_simu(ievent)%t0 
+       hdur(:)=acqui_simu(ievent)%hdur(:)
+       hdur_gaussian(:)=acqui_simu(ievent)%hdur_gaussian(:)
+       tshift_src(:)=acqui_simu(ievent)%tshift(:)
+
+       if (USE_EXTERNAL_SOURCE_FILE) then
           if (allocated(user_source_time_function)) deallocate(user_source_time_function)
           allocate(user_source_time_function(NSTEP_STF, NSOURCES_STF),stat=ier)
-          USE_TRICK_FOR_BETTER_PRESSURE=.true.
           if (ier /= 0) stop ' error in allocating user_source_time_function'
           if (inversion_param%only_forward) then
-             user_source_time_function(:,1)=acqui_simu(ievent)%source_wavelet(:,1)
+             user_source_time_function(:,:)=acqui_simu(ievent)%user_source_time_function(:,:)
           else
-             !! filter the user stf
+             !! filter the user stf  
+             !! EB EB Warning, filtering may be done each time we are switching events
              allocate(raw_stf(NSTEP), filt_stf(NSTEP))
-             raw_stf(:)=acqui_simu(ievent)%source_wavelet(:,1)
-             call bwfilt (raw_stf, filt_stf, &
-                  DT, NSTEP, 1, 4, acqui_simu(ievent)%fl_event, acqui_simu(ievent)%fh_event)
-             lw_tap = 2.5_CUSTOM_REAL
-             call apodise_sig(filt_stf, NSTEP, lw_tap)
-             user_source_time_function(:,1)=filt_stf(:)
+             do isrc=1,NSOURCES
+               raw_stf(:)=acqui_simu(ievent)%user_source_time_function(:,isrc)
+               call bwfilt (raw_stf, filt_stf, &
+                    DT, NSTEP, 1, 4, acqui_simu(ievent)%fl_event, acqui_simu(ievent)%fh_event)
+               lw_tap = 2.5_CUSTOM_REAL
+               call apodise_sig(filt_stf, NSTEP, lw_tap)
+               user_source_time_function(:,isrc)=filt_stf(:)
+             enddo
              deallocate(raw_stf, filt_stf)
 
              !! write STF used to check
@@ -232,7 +253,7 @@ contains
 
        if (DEBUG_MODE) then
           write (IIDD , *)
-          write (IIDD , *) 'islice , ispec : ', islice_selected_source(1), ispec_selected_source(1)
+          write (IIDD , *) 'first source islice , ispec : ', islice_selected_source(1), ispec_selected_source(1)
           write (IIDD , *)
        endif
        COUPLE_WITH_INJECTION_TECHNIQUE = .false.
@@ -890,7 +911,6 @@ contains
     call setup_GLL_points()
     call detect_mesh_surfaces()
     call setup_sources_receivers()  !! we have one dummy source and STATION_ADJOINT to set up without crashes
-
     SIMULATION_TYPE=1               !! here we need to prepare the fisrt run
     SAVE_FORWARD=.true.             !! which is mandatory direct and need to save forward wavefield
 

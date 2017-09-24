@@ -157,33 +157,24 @@ module inverse_problem_par
      character(len= MAX_LEN_STRING)                                            :: source_file
      !! kind of source to be used ('moment', 'force', 'axisem', 'dsm', 'fk')
      character(len=10)                                                         :: source_type
-     !! position of source in case of internal point source
-     real(kind=CUSTOM_REAL)                                                    :: Xs,Ys,Zs
-     !! Moment Tensor in case of moment point source
-     double precision                                                          :: Mxx,Myy,Mzz,Mxy,Mxz,Myz
-     !! Force in case of force point source
-     double precision                                                          :: Fx,Fy,Fz
      !! traction directory in case of AxiSem or DSM coupling
      character(len= MAX_LEN_STRING)                                            :: traction_dir
      !! source time function
-     real(kind=CUSTOM_REAL),                  dimension(:,:),  allocatable     :: source_wavelet
      real(kind=CUSTOM_REAL)                                                    :: fl_event, fh_event
-     character(len= MAX_LEN_STRING)                                            :: source_wavelet_file
-     logical                                                                   :: external_source_wavelet=.false.
-     !! by default do not convolve residuals by wavelet
-     logical                                                                   :: convlove_residuals_by_wavelet=.false.
-
+     real(kind=CUSTOM_REAL), dimension(:,:), allocatable                       :: user_source_time_function
      !! --------------------- source parameter specific for Specfem ---------------------
      !! time parameters needed for specfem
-     real(kind=CUSTOM_REAL)                                                    :: t_shift, hdur
+     double precision, dimension(:), allocatable                               :: tshift, hdur, hdur_gaussian
+     !! total number of sources
+     integer                                                                   :: nsources_tot
      !! number of sources in my slice
      integer                                                                   :: nsources_local
      !! MPI slice contains source
-     integer                                                                   :: islice_slected_source
+     integer, dimension(:), allocatable                                        :: islice_selected_source
      !! ispec element contains source
-     integer                                                                   :: ispec_selected_source
-     real(kind=CUSTOM_REAL),                  dimension(:,:,:,:), allocatable  :: sourcearray
-
+     integer, dimension(:), allocatable                                        :: ispec_selected_source
+     real(kind=CUSTOM_REAL),dimension(:,:,:,:,:), allocatable                   :: sourcearrays
+     double precision                                                          :: t0
      !! ------------------- station general parameters ----------------------------------
      !! stations (in specfem format)
      character(len= MAX_LEN_STRING)                                            :: station_file
