@@ -24,7 +24,7 @@ module input_output
   !! IMPORT VARIABLES FROM SPECFEM ---------------------------------------------------------
   use constants, only: mygroup
 
-  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS, BROADCAST_SAME_MESH_AND_MODEL, ANISOTROPY,&
+  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS, BROADCAST_SAME_MESH_AND_MODEL, ANISOTROPY, &
                                NSOURCES, NSOURCES_STF, NSTEP, NSTEP_STF
 
   use specfem_par, only: CUSTOM_REAL, HUGEVAL, NGNOD, NUM_ITER, NPROC, MAX_STRING_LEN, &
@@ -32,7 +32,7 @@ module input_output
                          LOCAL_PATH, xigll, yigll, zigll, &
                          ibool, xstore, ystore, zstore, &
                          xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, &
-                         myrank, USE_SOURCES_RECEIVERS_Z,INVERSE_FWI_FULL_PROBLEM,&
+                         myrank, USE_SOURCES_RECEIVERS_Z,INVERSE_FWI_FULL_PROBLEM, &
                          USE_FORCE_POINT_SOURCE,USE_EXTERNAL_SOURCE_FILE
 
 
@@ -735,7 +735,7 @@ contains
     write(INVERSE_LOG_FILE,*)
 
     ! only master reads acqui file
-    if (myrank==0) then
+    if (myrank == 0) then
 
       !! 1/ read to count the number of events
       open(666,file=trim(acqui_file),iostat=ier)
@@ -849,7 +849,7 @@ contains
 
 999  close(666)
 
-    endif ! myrank==0
+    endif ! myrank == 0
 
     write(INVERSE_LOG_FILE,*)
     write(INVERSE_LOG_FILE,*)
@@ -892,7 +892,7 @@ contains
     integer                                                    :: ipos0,ipos1,ier
 
     ! only master reads inver_file
-    if (myrank==0) then
+    if (myrank == 0) then
 
       open(666, file=trim(inver_file))
       do
@@ -979,7 +979,7 @@ contains
       enddo
 99   close(666)
 
-   endif !myrank==0
+   endif !myrank == 0
 
    write(INVERSE_LOG_FILE,*)
    write(INVERSE_LOG_FILE,*) '     READ  ', trim(inver_file)
@@ -992,7 +992,7 @@ contains
      inversion_param%dump_descent_direction_at_each_iteration=.true.
    endif
 
-   ! master broadcasts read values 
+   ! master broadcasts read values
    call MPI_BCAST(inversion_param%Niter,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%Niter_wolfe,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%max_history_bfgs,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
@@ -1034,7 +1034,7 @@ contains
 
     acqui_simu(ievent)%tshift=0.d0
     acqui_simu(ievent)%hdur=0.d0
-    acqui_simu(ievent)%hdur_gaussian=0.d0
+    acqui_simu(ievent)%hdur_Gaussian=0.d0
     acqui_simu(ievent)%nsources_local=0
 
   end subroutine store_default_acqui_values
@@ -1089,7 +1089,7 @@ contains
     ! loop on all events
     do ievent = 1, NEVENT
        ! only slice 0 will read the STATIONS files
-       if (myrank==0) then
+       if (myrank == 0) then
          rec_filename          = trim(adjustl(acqui_simu(ievent)%station_file))
          filtered_rec_filename = rec_filename(1:len_trim(rec_filename))//'_FILTERED'
        else
@@ -1176,7 +1176,7 @@ contains
 
     type(acqui), allocatable, dimension(:), intent(inout)     :: acqui_simu
     ! locals
-    character(len=MAX_STRING_LEN)                             :: filename 
+    character(len=MAX_STRING_LEN)                             :: filename
     integer                                                   :: ievent,isrc,ier,nsrc_loc
     double precision                                          :: min_tshift
     double precision, dimension(:), allocatable               :: utm_x_source,utm_y_source
@@ -1197,7 +1197,7 @@ contains
        case('moment','force')
 
          ! only slice 0 will read the sources files
-         if (myrank==0) then
+         if (myrank == 0) then
            filename = trim(adjustl(acqui_simu(ievent)%source_file))
            call get_number_of_sources(filename)
          endif
@@ -1216,7 +1216,7 @@ contains
                   stat=ier)
          if (ier /= 0) stop 'error allocating arrays for sources'
          allocate(utm_x_source(NSOURCES),utm_y_source(NSOURCES),Mxx(NSOURCES), &
-                  Myy(NSOURCES),Mzz(NSOURCES),Mxy(NSOURCES),Mxz(NSOURCES),Myz(NSOURCES),&
+                  Myy(NSOURCES),Mzz(NSOURCES),Mxy(NSOURCES),Mxz(NSOURCES),Myz(NSOURCES), &
                   xi_source(NSOURCES),eta_source(NSOURCES),gamma_source(NSOURCES),nu_source(NDIM,NDIM,NSOURCES),stat=ier)
          if (ier /= 0) stop 'error allocating utm source arrays'
 
@@ -1240,19 +1240,19 @@ contains
          allocate(acqui_simu(ievent)%user_source_time_function(NSTEP_STF, NSOURCES_STF),stat=ier)
          if (ier /= 0) stop 'error allocating arrays for user sources time function'
 
-         call locate_source(filename,acqui_simu(ievent)%tshift,min_tshift,&
-                            utm_x_source,utm_y_source,&
-                            acqui_simu(ievent)%hdur,Mxx,Myy,Mzz,&
+         call locate_source(filename,acqui_simu(ievent)%tshift,min_tshift, &
+                            utm_x_source,utm_y_source, &
+                            acqui_simu(ievent)%hdur,Mxx,Myy,Mzz, &
                             Mxy,Mxz,Myz, &
                             acqui_simu(ievent)%islice_selected_source,acqui_simu(ievent)%ispec_selected_source, &
-                            factor_force_source,Fx,Fy,Fz,&
-                            xi_source,eta_source,gamma_source,&
+                            factor_force_source,Fx,Fy,Fz, &
+                            xi_source,eta_source,gamma_source, &
                             nu_source,acqui_simu(ievent)%user_source_time_function)
 
          deallocate(utm_x_source,utm_y_source)
 
-         call define_stf_constants(acqui_simu(ievent)%hdur,acqui_simu(ievent)%hdur_gaussian,acqui_simu(ievent)%tshift,&
-                                   min_tshift,acqui_simu(ievent)%islice_selected_source,acqui_simu(ievent)%ispec_selected_source,&
+         call define_stf_constants(acqui_simu(ievent)%hdur,acqui_simu(ievent)%hdur_Gaussian,acqui_simu(ievent)%tshift, &
+                                   min_tshift,acqui_simu(ievent)%islice_selected_source,acqui_simu(ievent)%ispec_selected_source, &
                                    acqui_simu(ievent)%t0)
 
          nsrc_loc = 0
@@ -1260,14 +1260,14 @@ contains
            if (myrank == acqui_simu(ievent)%islice_selected_source(isrc)) then
              nsrc_loc = nsrc_loc + 1
              call compute_source_coeff(xi_source(isrc), eta_source(isrc), gamma_source(isrc), &
-                                       acqui_simu(ievent)%ispec_selected_source(isrc),&
-                                       interparray,Mxx(isrc),Myy(isrc),Mzz(isrc),Mxy(isrc),&
-                                       Mxz(isrc),Myz(isrc),factor_force_source(isrc),Fx(isrc),Fy(isrc),Fz(isrc),&
+                                       acqui_simu(ievent)%ispec_selected_source(isrc), &
+                                       interparray,Mxx(isrc),Myy(isrc),Mzz(isrc),Mxy(isrc), &
+                                       Mxz(isrc),Myz(isrc),factor_force_source(isrc),Fx(isrc),Fy(isrc),Fz(isrc), &
                                        acqui_simu(ievent)%source_type,nu_source(:,:,isrc))
              acqui_simu(ievent)%sourcearrays(isrc,:,:,:,:) = interparray(:,:,:,:)
            endif
          enddo
-    
+
          acqui_simu(ievent)%nsources_local = nsrc_loc
 
          deallocate(Mxx,Myy,Mzz,Mxy,Mxz,Myz,xi_source,eta_source,gamma_source,nu_source)

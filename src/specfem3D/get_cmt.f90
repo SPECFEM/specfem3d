@@ -38,7 +38,7 @@
   character(len=MAX_STRING_LEN), intent(in) :: CMTSOLUTION
   integer, intent(in) :: NSOURCES
   double precision, intent(in) :: DT
- 
+
   double precision, intent(out) :: min_tshift_cmt_original
   double precision, dimension(NSOURCES), intent(out) :: tshift_cmt,hdur,lat,long,depth
   double precision, dimension(6,NSOURCES), intent(out) :: moment_tensor

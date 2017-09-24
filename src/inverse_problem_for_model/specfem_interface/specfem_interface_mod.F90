@@ -55,7 +55,7 @@ contains
     case('UX', 'UY', 'UZ')
        !! array seismogram in displacement
        name_file_tmp = trim(acqui_simu(ievent)%data_file_gather)
-      
+
        write(INVERSE_LOG_FILE,*) '  ... Writing simulated data gather for event :', ievent
 
        call write_bin_sismo_on_disk(ievent, acqui_simu, seismograms_d,  name_file_tmp, myrank)
@@ -198,23 +198,23 @@ contains
        if (allocated(islice_selected_source)) deallocate(islice_selected_source)
        if (allocated(ispec_selected_source)) deallocate(ispec_selected_source)
        if (allocated(hdur)) deallocate(hdur)
-       if (allocated(hdur_gaussian)) deallocate(hdur_gaussian)
+       if (allocated(hdur_Gaussian)) deallocate(hdur_Gaussian)
        if (allocated(tshift_src)) deallocate(tshift_src)
 
        allocate(sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ))
        allocate(islice_selected_source(NSOURCES))
        allocate(ispec_selected_source(NSOURCES))
        allocate(hdur(NSOURCES))
-       allocate(hdur_gaussian(NSOURCES))
+       allocate(hdur_Gaussian(NSOURCES))
        allocate(tshift_src(NSOURCES))
 
        sourcearrays(:,:,:,:,:)=acqui_simu(ievent)%sourcearrays(:,:,:,:,:)
        islice_selected_source(:)=acqui_simu(ievent)%islice_selected_source(:)
        ispec_selected_source(:)=acqui_simu(ievent)%ispec_selected_source(:)
        PRINT_SOURCE_TIME_FUNCTION=.true.
-       t0 = acqui_simu(ievent)%t0 
+       t0 = acqui_simu(ievent)%t0
        hdur(:)=acqui_simu(ievent)%hdur(:)
-       hdur_gaussian(:)=acqui_simu(ievent)%hdur_gaussian(:)
+       hdur_Gaussian(:)=acqui_simu(ievent)%hdur_Gaussian(:)
        tshift_src(:)=acqui_simu(ievent)%tshift(:)
 
        if (USE_EXTERNAL_SOURCE_FILE) then
@@ -224,7 +224,7 @@ contains
           if (inversion_param%only_forward) then
              user_source_time_function(:,:)=acqui_simu(ievent)%user_source_time_function(:,:)
           else
-             !! filter the user stf  
+             !! filter the user stf
              !! EB EB Warning, filtering may be done each time we are switching events
              allocate(raw_stf(NSTEP), filt_stf(NSTEP))
              do isrc=1,NSOURCES

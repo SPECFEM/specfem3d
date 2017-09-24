@@ -153,10 +153,10 @@
   call locate_source(SOURCE_FILE,tshift_src,min_tshift_src_original,utm_x_source,utm_y_source, &
                      hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
                      islice_selected_source,ispec_selected_source, &
-                     factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP,&
+                     factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP, &
                      xi_source,eta_source,gamma_source,nu_source,user_source_time_function)
 
-  call define_stf_constants(hdur,hdur_gaussian,tshift_src,min_tshift_src_original,islice_selected_source,ispec_selected_source,t0)
+  call define_stf_constants(hdur,hdur_Gaussian,tshift_src,min_tshift_src_original,islice_selected_source,ispec_selected_source,t0)
 
   ! count number of sources located in this slice
   nsources_local = 0
@@ -175,18 +175,18 @@
 !
 !-------------------------------------------------------------------------------------------------
 !
-  subroutine define_stf_constants(hdur,hdur_gaussian,tshift_src,min_tshift_src_original,&
+  subroutine define_stf_constants(hdur,hdur_Gaussian,tshift_src,min_tshift_src_original, &
                                   islice_selected_source,ispec_selected_source,t0)
 
   use constants
-  use specfem_par, only : myrank,NSOURCES,MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,HDUR_MOVIE,&
+  use specfem_par, only: myrank,NSOURCES,MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,HDUR_MOVIE, &
                           USE_RICKER_TIME_FUNCTION,USE_EXTERNAL_SOURCE_FILE
-  use specfem_par_acoustic, only : ispec_is_acoustic
+  use specfem_par_acoustic, only: ispec_is_acoustic
   use specfem_par_movie
 
   implicit none
 
-  double precision, dimension(NSOURCES) :: tshift_src,hdur,hdur_gaussian
+  double precision, dimension(NSOURCES) :: tshift_src,hdur,hdur_Gaussian
   double precision :: min_tshift_src_original,t0
   integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
   !local

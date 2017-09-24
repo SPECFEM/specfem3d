@@ -349,8 +349,8 @@ contains
        if (ispec_is_elastic(ispec)) then
 
           factor = 1.0
-          call compute_arrays_source_cmt(ispec,interparray,&
-               hxis,hetas,hgammas,hpxis,hpetas,hpgammas,&
+          call compute_arrays_source_cmt(ispec,interparray, &
+               hxis,hetas,hgammas,hpxis,hpetas,hpgammas, &
                Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
                xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                NSPEC_AB)
@@ -379,7 +379,7 @@ contains
          norm = dsqrt( Fx**2 + Fy**2 + Fz**2 )
          ! checks norm of component vector
          if (norm < TINYVAL) stop 'error force point source: component vector has (almost) zero norm'
-         
+
          ! normalizes given component vector
          comp_x = Fx/norm
          comp_y = Fy/norm

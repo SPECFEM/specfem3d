@@ -164,7 +164,7 @@ module inverse_problem_par
      real(kind=CUSTOM_REAL), dimension(:,:), allocatable                       :: user_source_time_function
      !! --------------------- source parameter specific for Specfem ---------------------
      !! time parameters needed for specfem
-     double precision, dimension(:), allocatable                               :: tshift, hdur, hdur_gaussian
+     double precision, dimension(:), allocatable                               :: tshift, hdur, hdur_Gaussian
      !! total number of sources
      integer                                                                   :: nsources_tot
      !! number of sources in my slice
