@@ -128,12 +128,10 @@
   endif
 
   ! frees dynamically allocated memory
-  if (USE_FORCE_POINT_SOURCE) then
-    deallocate(factor_force_source)
-    deallocate(comp_dir_vect_source_E)
-    deallocate(comp_dir_vect_source_N)
-    deallocate(comp_dir_vect_source_Z_UP)
-  endif
+  deallocate(factor_force_source)
+  deallocate(comp_dir_vect_source_E)
+  deallocate(comp_dir_vect_source_N)
+  deallocate(comp_dir_vect_source_Z_UP)
 
   ! mass matrices
   if (ELASTIC_SIMULATION) then

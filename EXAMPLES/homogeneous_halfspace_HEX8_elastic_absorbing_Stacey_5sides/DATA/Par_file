@@ -188,10 +188,6 @@ USE_EXTERNAL_SOURCE_FILE        = .false.
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .false.
 
-# (for acoustic simulations only) determines source encoding factor +/-1 depending on sign of moment tensor
-# (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources, Geophysics, 74 (6), WCC177-WCC188.)
-USE_SOURCE_ENCODING             = .false.
-
 #-----------------------------------------------------------
 #
 # Seismograms
@@ -236,9 +232,20 @@ USE_TRICK_FOR_BETTER_PRESSURE   = .false.
 
 #-----------------------------------------------------------
 #
+# Source encoding
+#
+#-----------------------------------------------------------
+
+# (for acoustic simulations only for now) determines source encoding factor +/-1 depending on sign of moment tensor
+# (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources, Geophysics, 74 (6), WCC177-WCC188.)
+USE_SOURCE_ENCODING             = .false.
+
+#-----------------------------------------------------------
+#
 # Energy calculation
 #
 #-----------------------------------------------------------
+
 # to plot energy curves, for instance to monitor how CPML absorbing layers behave;
 # should be turned OFF in most cases because a bit expensive
 OUTPUT_ENERGY                   = .false.
@@ -330,7 +337,7 @@ NUMBER_OF_SIMULTANEOUS_RUNS     = 1
 # In that case there is no need to duplicate the mesh and model file database (the content of the DATABASES_MPI
 # directories) in each of the run0001, run0002,... directories, it is sufficient to have one in run0001
 # and the code will broadcast it to the others)
-BROADCAST_SAME_MESH_AND_MODEL   = .false.
+BROADCAST_SAME_MESH_AND_MODEL   = .true.
 
 #-----------------------------------------------------------
 

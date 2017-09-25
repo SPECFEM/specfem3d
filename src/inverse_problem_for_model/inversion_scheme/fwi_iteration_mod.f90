@@ -49,6 +49,7 @@ contains
     logical                                                       :: flag_wolfe
     logical                                                       :: ModelIsSuitable
     character(len=MAX_LEN_STRING)                                 :: prefix_name
+    real(kind=CUSTOM_REAL)                                        :: tmp_val
 
     if (myrank == 0) then
        write(INVERSE_LOG_FILE,*)
@@ -122,8 +123,8 @@ contains
        call UpdateModel(inversion_param, step_length, ModelIsSuitable)
        ! if model is not suitable for modeling then try smaller step
        if (.not. ModelIsSuitable) then
-          write(*,*) 'Model new is not suitable for simulation ', myrank
-          step_length = 0.5 * step_length
+          ! write(*,*) 'Model new is not suitable for simulation ', myrank
+          step_length = 0.45 * (tg + step_length)
           cycle
        endif
        ! compute cost function and gradient---------
@@ -133,13 +134,17 @@ contains
        enddo
        if (GPU_MODE) call TransfertKernelFromGPUArrays()
 
-       ! store current value of cost function
+       ! store current value of cost function for reduction
        Qt=inversion_param%total_current_cost
-
        ! communicate gradient and cost function to all simultaneous runs
        call mpi_sum_grad_all_to_all_simultaneous_runs(Qt)
-       ! store curent cost after reducion over groups
-       inversion_param%total_current_cost=Qt
+
+       !! compute standard deviation on data
+       tmp_val =  inversion_param%nb_data_std
+       call sum_all_all_cr_for_simulatenous_runs(tmp_val, inversion_param%nb_data_std,1)
+       tmp_val =  inversion_param%data_std
+       call sum_all_all_cr_for_simulatenous_runs(tmp_val, inversion_param%data_std,1)
+       inversion_param%data_std = sqrt(inversion_param%data_std / inversion_param%nb_data_std)
 
        ! store current gradient in choosen family parameter
        call StoreGradientInfamilyParam(inversion_param, current_gradient, hess_approxim)
@@ -151,17 +156,19 @@ contains
        ! add penalty tern on cost function
        call Parallel_ComputeL2normSquare(regularization_penalty, inversion_param%NinvPar, inversion_param%cost_penalty)
        Qt = Qt + 0.5 * inversion_param%weight_Tikonov * inversion_param%cost_penalty 
-       inversion_param%total_current_cost=Qt
        current_gradient(:,:,:,:,:) = current_gradient(:,:,:,:,:) + &
             inversion_param%weight_Tikonov * gradient_regularization_penalty(:,:,:,:,:)
+       ! store current cost funtion value 
+       inversion_param%total_current_cost=Qt
 
        ! compute q'(t) = grad . descent_direction for line search
        call Parallel_ComputeInnerProduct(current_gradient, descent_direction, Niv, Qpt)
 
        !information about costs at current sub-iteration
        if (myrank == 0) then
-          write(OUTPUT_FWI_LOG, '(2i10, 2x, 6e20.10 )')  iter_inverse, iter_wolfe, step_length, Qt, Q0, Qpt, Qp0, &
-                0.5 * inversion_param%weight_Tikonov * inversion_param%cost_penalty
+          write(OUTPUT_FWI_LOG, '(2i10, 2x, 8e20.10 )')  iter_inverse, iter_wolfe, step_length, Qt, Q0, Qpt, Qp0, &
+                Qt - 0.5 * inversion_param%weight_Tikonov * inversion_param%cost_penalty, &
+                0.5 * inversion_param%weight_Tikonov * inversion_param%cost_penalty,  inversion_param%data_std
           call flush_iunit(OUTPUT_FWI_LOG)
        endif
 
@@ -206,6 +213,7 @@ contains
              write(INVERSE_LOG_FILE,*) ' Cost fuction  : ', Q0,  '   relative cost :', 100*Q0/inversion_param%Cost_init,'%'
              write(INVERSE_LOG_FILE,*) ' Gradient Norm :', NormGrad, '   relative grad :', &
                   100*NormGrad/inversion_param%Norm_grad_init, '%'
+             write(INVERSE_LOG_FILE,*) ' Data std :', inversion_param%data_std
           endif
 
 
@@ -267,8 +275,9 @@ contains
     type(acqui),  dimension(:), allocatable,        intent(inout) :: acqui_simu
     type(inver),                                    intent(inout) :: inversion_param
     integer                                                       :: ievent,  iter_inverse
-    character(len=MAX_LEN_STRING)                                             :: prefix_name
-
+    character(len=MAX_LEN_STRING)                                 :: prefix_name
+    real(kind=CUSTOM_REAL)                                        :: tmp_val 
+    
     iter_inverse=0
 
 
@@ -282,7 +291,7 @@ contains
     endif
 
     ! initialize regularisation 
-    call SetUpRegularization(inversion_param, myrank)
+    call SetUpRegularization(inversion_param, acqui_simu, myrank)
     ! compute volume of domain 
     regularization_penalty(:,:,:,:,:)=1._CUSTOM_REAL
     call Parallel_ComputeL2normSquare(regularization_penalty, inversion_param%NinvPar, inversion_param%volume_domain)
@@ -307,13 +316,17 @@ contains
     enddo
     if (GPU_MODE) call TransfertKernelFromGPUArrays()
 
-    ! store current value of cost function
+    ! store current value of cost function for reduction 
     Q0=inversion_param%total_current_cost
-
     ! communicate gradient and cost function to all simultaneous runs
     call mpi_sum_grad_all_to_all_simultaneous_runs(Q0)
-    ! store cost after reduction over groups
-    inversion_param%total_current_cost=Q0
+    
+    !! compute standard deviation on data
+    tmp_val =  inversion_param%nb_data_std
+    call sum_all_all_cr_for_simulatenous_runs(tmp_val, inversion_param%nb_data_std,1)
+    tmp_val =  inversion_param%data_std
+    call sum_all_all_cr_for_simulatenous_runs(tmp_val, inversion_param%data_std,1)
+    inversion_param%data_std = sqrt(inversion_param%data_std / inversion_param%nb_data_std)
 
     ! store initial model in choosen family parameter
     call  SpecfemParam2Invert(inversion_param, initial_model)
@@ -334,16 +347,19 @@ contains
     ! add penalty tern on cost function
     call Parallel_ComputeL2normSquare(regularization_penalty, inversion_param%NinvPar, inversion_param%cost_penalty)
     Q0 = Q0 + 0.5 *  inversion_param%weight_Tikonov * inversion_param%cost_penalty
-    inversion_param%total_current_cost=Q0
     initial_gradient(:,:,:,:,:) = initial_gradient(:,:,:,:,:) + &
          inversion_param%weight_Tikonov * gradient_regularization_penalty(:,:,:,:,:)
  
+   ! store cost function value
+    inversion_param%total_current_cost=Q0
+
     ! store intial values of cost function
     inversion_param%Cost_init=inversion_param%total_current_cost
     call Parallel_ComputeL2normSquare(initial_gradient, inversion_param%NinvPar, inversion_param%Norm_grad_init)
     
     ! define preconditionnner or taper on gradients
     call SetPrecond(iter_inverse, inversion_param, initial_gradient, hess_approxim, fwi_precond)
+
     ! write precond on disk
     if (mygroup <= 0 .and. VERBOSE_MODE) then
        prefix_name='precond'
@@ -352,21 +368,27 @@ contains
        call DumpArray(hess_approxim, inversion_param, iter_inverse, prefix_name)
        prefix_name='Grad_Regul'
        call DumpArray(gradient_regularization_penalty, inversion_param, iter_inverse, prefix_name)
-        prefix_name='Regul'
+       prefix_name='Regul'
        call DumpArray(regularization_penalty, inversion_param, iter_inverse, prefix_name)
+       prefix_name='Spatial_damp'
+       descent_direction(:,:,:,:,1)=spatial_damping(:,:,:,:) !! use as temporary working array 
+       call DumpArray(descent_direction, inversion_param, iter_inverse, prefix_name)
     endif
 
     ! store new model and gradient in l-bfgs history for the choosen family parameter
     call StoreModelAndGradientForLBFGS(initial_model, initial_gradient, 0)
+
     if (myrank == 0) then
        write(OUTPUT_ITERATION_FILE,'(i5,"|",e15.8,"|",e15.8,"|",e12.5,"|",e12.5,"|")')  &
             0, inversion_param%Cost_init, inversion_param%Norm_grad_init, 1., 1.
        write(INVERSE_LOG_FILE,*)
        write(INVERSE_LOG_FILE,*)
        write(INVERSE_LOG_FILE,*) ' Initial Cost function : ', inversion_param%Cost_init
-       write(INVERSE_LOG_FILE,*)  ' Initial Gradient Norm :', inversion_param%Norm_grad_init
+       write(INVERSE_LOG_FILE,*) ' Initial Gradient Norm :', inversion_param%Norm_grad_init
+       write(INVERSE_LOG_FILE,*) 'Initial Data std :', inversion_param%data_std
        call flush_iunit(INVERSE_LOG_FILE)
     endif
+
   end subroutine InitializeOptimIteration
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -383,7 +405,7 @@ contains
     logical,                                        intent(inout) :: ModelIsSuitable
     real(kind=CUSTOM_REAL),                         intent(in)    :: step_length
     integer                                                       :: ipar
-    integer                                                       :: igll, jgll, kgll, ispec
+    !integer                                                       :: igll, jgll, kgll, ispec
 
     real(kind=CUSTOM_REAL)                                        :: vmin, vmin_glob
     real(kind=CUSTOM_REAL)                                        :: vmax, vmax_glob
@@ -402,10 +424,10 @@ contains
     if (myrank == 0) then
        write(INVERSE_LOG_FILE,*)
        write(INVERSE_LOG_FILE,*) '    - > update model :  '
-       write(INVERSE_LOG_FILE,*)
+       !write(INVERSE_LOG_FILE,*)
        if (.not. ModelIsSuitable) then
            write(INVERSE_LOG_FILE,*)
-           write(INVERSE_LOG_FILE,*) '    - > updated model not suitable for simulation : divide step by 2  '
+           write(INVERSE_LOG_FILE,*) '    - > updated model not suitable for simulation trying smaller step  '
            write(INVERSE_LOG_FILE,*)
         endif
     endif
@@ -423,13 +445,18 @@ contains
        call max_all_cr(vmax,vmax_glob0)
 
        if (myrank == 0) then
-          write(INVERSE_LOG_FILE,*) '     Parameter :', ipar,'   MIN :',vmin_glob ,'  MAX :',vmax_glob
-          write(INVERSE_LOG_FILE,*) '            max pert / starting model : ', 100*vmax_glob0,' %'
-          write(INVERSE_LOG_FILE,*) '            max pert / previous model : ', 100*vmin_glob0,' %'
+
+          write(INVERSE_LOG_FILE,'( a13, i2, 2(a8, f12.5), a19, f10.6,  a14, f10.6)') &
+               '  Parameter :', ipar,'   MIN :',vmin_glob ,'   MAX :',vmax_glob, &
+               ' max pert,  prior :', 100*vmax_glob0, ' % previous  :', 100*vmin_glob0,' %'
+          
+          !write(INVERSE_LOG_FILE,*) '            max pert / starting model : ', 100*vmax_glob0,' %'
+          !write(INVERSE_LOG_FILE,*) '            max pert / previous model : ', 100*vmin_glob0,' %'
+
           call flush_iunit(INVERSE_LOG_FILE)
        endif
     enddo
-
+    if (myrank == 0) write(INVERSE_LOG_FILE,*)
 
   end subroutine UpdateModel
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -467,6 +494,13 @@ contains
 
     Ninvpar =inversion_param%NinvPar
 
+    
+    if (myrank == 0) then
+          write(INVERSE_LOG_FILE,*) '  '
+          write(INVERSE_LOG_FILE,*) '  allocate arrays for fwi iterations ', Ninvpar        
+          write(INVERSE_LOG_FILE,*) '  '        
+          call flush_iunit(INVERSE_LOG_FILE)
+       endif
     !! allocate arrays for inversion scheme
     call AllocateArraysForInversion(inversion_param)
 
@@ -497,8 +531,17 @@ contains
     if (ierror /= 0) call exit_MPI(myrank,"error allocation hess_approxim in AllocatememoryForFWI subroutine")
     hess_approxim(:,:,:,:,:) = 1._CUSTOM_REAL
 
-    allocate(inversion_param%current_cost_prime(nevent),  inversion_param%previous_cost_prime(nevent))
-    allocate(inversion_param%current_cost(nevent),  inversion_param%previous_cost(nevent))
+    allocate(regularization_penalty(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ierror)
+    if (ierror /= 0) call exit_MPI(myrank,"error allocation regularization_penalty in AllocatememoryForFWI subroutine")
+    regularization_penalty(:,:,:,:,:) = 0._CUSTOM_REAL 
+
+    allocate(gradient_regularization_penalty(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ierror)
+    if (ierror /= 0) call exit_MPI(myrank,"error allocation gradient_regularization_penalty in AllocatememoryForFWI subroutine")
+    gradient_regularization_penalty(:,:,:,:,:) = 0._CUSTOM_REAL
+
+
+    allocate(inversion_param%current_cost_prime(NEVENT),  inversion_param%previous_cost_prime(NEVENT))
+    allocate(inversion_param%current_cost(NEVENT),  inversion_param%previous_cost(NEVENT))
 
   end subroutine AllocatememoryForFWI
 

@@ -71,8 +71,6 @@
 
   integer :: ier
 
-  real(kind=CUSTOM_REAL) :: xmin,xmax,ymin,ymax,zmin,zmax
-
   ! SU_FORMAT parameters
   double precision :: llat,llon,lele,lbur
   logical :: SU_station_file_exists
@@ -101,11 +99,6 @@
     write(IMAIN,*)
     call flush_IMAIN()
   endif
-
-  ! dimension of model in current proc
-  xmin=minval(xstore(:));          xmax=maxval(xstore(:))
-  ymin=minval(ystore(:));          ymax=maxval(ystore(:))
-  zmin=minval(zstore(:));          zmax=maxval(zstore(:))
 
   ! compute typical size of elements
   ! gets mesh dimensions
@@ -621,9 +614,9 @@
 
     allocate(ispec_selected_all(1,0:NPROC-1),domain_all(1,0:NPROC-1))
 
-    distance_from_target = sqrt( (x_to_locate - x_found)**2&
-                                +(y_to_locate - y_found)**2&
-                                +(z_to_locate - z_found)**2)
+    distance_from_target = dsqrt( (x_to_locate - x_found)**2&
+                                 +(y_to_locate - y_found)**2&
+                                 +(z_to_locate - z_found)**2)
 
     !! it's just to avoid compiler error
     distance_from_target_dummy(1)=distance_from_target

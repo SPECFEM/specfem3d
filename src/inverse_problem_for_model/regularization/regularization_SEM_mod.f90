@@ -4539,6 +4539,57 @@ subroutine compute_2nd_derivative_with_lagrange_polynomials(derivative_of_field,
 
 end subroutine compute_2nd_derivative_with_lagrange_polynomials
 
+!!
+!! variable damping regualrisation for trying to kill suprious variations close to the point sources  
+subroutine compute_spatial_damping_for_source_singularities(acqui_simu, inversion_param, spatial_damping)
 
+   type(inver),                                                    intent(inout) :: inversion_param
+   type(acqui),            dimension(:),       allocatable,        intent(inout) :: acqui_simu
+   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable,        intent(inout) :: spatial_damping 
+   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable                       :: spatial_damping_tmp
+   integer                                                                       :: ievent, iglob, ispec, i, j, k
+   real(kind=CUSTOM_REAL)                                                        :: xgll, ygll, zgll
+   real(kind=CUSTOM_REAL)                                                        :: distance_from_source, value_of_damping
+
+   do ispec = 1, NSPEC_AB
+      
+      do k = 1, NGLLZ
+         do j = 1, NGLLY
+            do i = 1, NGLLX
+               iglob=ibool(i,j,k,ispec)
+               xgll=xstore(iglob)
+               ygll=ystore(iglob)
+               zgll=zstore(iglob)
+               !! compute distance form sources 
+               do ievent = 1, acqui_simu(1)%nevent_tot
+                  if (trim(acqui_simu(ievent)%source_type)=='moment' .or. trim(acqui_simu(ievent)%source_type)=='force') then 
+                     
+                     distance_from_source = sqrt(  (acqui_simu(ievent)%Xs - xgll)**2 + & 
+                                                   (acqui_simu(ievent)%Ys - ygll)**2 + &
+                                                   (acqui_simu(ievent)%Zs - zgll)**2)
+
+                     value_of_damping = inversion_param%min_damp + &
+                                        (inversion_param%max_damp - inversion_param%min_damp )*&
+                          exp(-0.5 * (distance_from_source/(inversion_param%distance_from_source/3.))**2 ) 
+                     
+                     spatial_damping(i,j,k,ispec) = max(spatial_damping(i,j,k,ispec), value_of_damping)
+                     !write(*,*) inversion_param%max_damp,  inversion_param%min_damp, inversion_param%distance_from_source, value_of_damping 
+                  end if
+               end do
+
+            end do
+         end do
+      end do
+
+   end do
+
+   if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) then 
+      allocate(spatial_damping_tmp(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+      spatial_damping_tmp(:,:,:,:)=spatial_damping(:,:,:,:)
+      call max_all_all_cr_for_simulatenous_runs(spatial_damping_tmp(1,1,1,1), spatial_damping(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
+      deallocate(spatial_damping_tmp)
+   end if
+
+end subroutine compute_spatial_damping_for_source_singularities
 
 end module regularization
