@@ -58,7 +58,9 @@ module inverse_problem_par
   !!logical,                       public             :: USE_PRECOND_OIL_INDUSTRY=.false.
   !!! if needed use steepest descent instead of l-bfgs (if useful need to move elsewhere)
   logical,                       public             :: USE_GRADIENT_OPTIM=.false.
-
+  !! use simplified station location instead of specfem subroutin which can be problematic with a
+  !! big number of stations
+  logical,                       public             :: USE_LIGHT_STATIONS=.true.
   ! ------------------------------  global parameters for fwi ---------------------------------------------------------------------
   !! name for outputs files
   character(len=MAX_STRING_LEN), public             :: prname_specfem
@@ -146,12 +148,13 @@ module inverse_problem_par
      real(kind=CUSTOM_REAL)                                                   :: ymin, ymax
      real(kind=CUSTOM_REAL)                                                   :: zmin, zmax
 
-     !! cost (need to move it in type inver one day)
+     !! cost 
      real(kind=CUSTOM_REAL)                                                   :: total_current_cost, total_previous_cost
      real(kind=CUSTOM_REAL)                                                   :: total_current_prim, total_previous_prim
      real(kind=CUSTOM_REAL)                                                   :: penalty_term, damping_term
      real(kind=CUSTOM_REAL)                                                   :: adjust, penalty
      real(kind=CUSTOM_REAL)                                                   :: Cost_init, Norm_grad_init
+     real(kind=CUSTOM_REAL)                                                   :: data_std, nb_data_std
 
      !!  cost function for each event
      real(kind=CUSTOM_REAL), dimension(:), allocatable                        :: current_cost, previous_cost
@@ -165,10 +168,13 @@ module inverse_problem_par
      logical                                                                  :: use_regularisation_FD_Tikonov=.false.
      logical                                                                  :: use_regularisation_SEM_Tikonov=.false.
      logical                                                                  :: use_damping_SEM_Tikonov=.false.
+     logical                                                                  :: use_variable_SEM_damping=.false.
      real(kind=CUSTOM_REAL)                                                   :: weight_Tikonov=0.1
      real(kind=CUSTOM_REAL)                                                   :: cost_penalty
      real(kind=CUSTOM_REAL)                                                   :: volume_domain 
-      real(kind=CUSTOM_REAL),  dimension(:), allocatable                      :: smooth_weight, damp_weight
+     real(kind=CUSTOM_REAL)                                                   :: min_damp=1., max_damp=10. 
+     real(kind=CUSTOM_REAL)                                                   :: distance_from_source=100.
+     real(kind=CUSTOM_REAL),  dimension(:), allocatable                       :: smooth_weight, damp_weight
      !! prior model 
      real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable                :: prior_model
 

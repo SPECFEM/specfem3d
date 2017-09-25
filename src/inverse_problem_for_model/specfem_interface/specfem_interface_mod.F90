@@ -779,7 +779,8 @@ contains
 
     !! reset cost function
     inversion_param%total_current_cost = 0._CUSTOM_REAL
-
+    inversion_param%data_std = 0._CUSTOM_REAL
+    inversion_param%nb_data_std = 0._CUSTOM_REAL
     !! reset kenels  ----------------------------
 
     ! acoustic domain

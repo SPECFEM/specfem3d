@@ -22,6 +22,7 @@ module adjoint_source
   real(kind=CUSTOM_REAL), private                                   :: fl, fh
   real(kind=CUSTOM_REAL), private                                   :: dt_data
   real(kind=CUSTOM_REAL), private                                   :: cost_value
+  real(kind=CUSTOM_REAL), private                                   :: data_std, nb_data_std
   integer,                private                                   :: norder_filter=4, irek_filter=1
   integer,                private                                   :: nstep_data
 
@@ -44,6 +45,7 @@ contains
 
     real(kind=CUSTOM_REAL)                                      :: cost_function, cost_function_reduced
     real(kind=CUSTOM_REAL)                                      :: cost_function_rec
+    
 
     integer                                                     :: lw, i0, i1, i2, i3
     integer                                                     :: current_iter
@@ -55,6 +57,8 @@ contains
 
     !! initialize cost function for each MPI porcess
     cost_function  = 0._CUSTOM_REAL
+    data_std = 0._CUSTOM_REAL
+    nb_data_std =  0._CUSTOM_REAL
 
     call allocate_adjoint_source_working_arrays()
 
@@ -110,12 +114,20 @@ contains
     !! compute cost function   : allreduce cost_function
     cost_function_reduced=0._CUSTOM_REAL
     call sum_all_all_cr(cost_function, cost_function_reduced)
-
-    !! add the cost function over all sources
+    !! add the cost function over all sources in group
     inversion_param%total_current_cost =inversion_param%total_current_cost + cost_function_reduced
+
+    cost_function_reduced=0._CUSTOM_REAL
+    call sum_all_all_cr(data_std, cost_function_reduced)
+    inversion_param%data_std = inversion_param%data_std + data_std
+
+    cost_function_reduced=0._CUSTOM_REAL
+    call sum_all_all_cr(nb_data_std, cost_function_reduced)
+    inversion_param%nb_data_std = inversion_param%nb_data_std + nb_data_std
 
     !! save cost function for the current source
     inversion_param%current_cost(ievent) = cost_function_reduced
+    
 
     if (myrank == 0) then
        write(INVERSE_LOG_FILE,*) '      Cost function for this event : ', cost_function_reduced
@@ -267,6 +279,10 @@ contains
              cost_value=sum(raw_residuals(:)**2) * 0.5 * dt_data
              cost_function = cost_function + cost_value
 
+             !! compute standard deviation 
+             data_std = data_std + sum(raw_residuals(:)**2)
+             nb_data_std = nb_data_std + size(raw_residuals(:))
+             
              ! store adjoint source
              acqui_simu(ievent)%adjoint_sources(icomp,irec_local,:)=raw_residuals(:)*w_tap(:)*&
                   acqui_simu(ievent)%weight_trace(icomp,irec_local)

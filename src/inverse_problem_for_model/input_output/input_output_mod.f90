@@ -82,6 +82,7 @@ contains
        write(INVERSE_LOG_FILE,*) '          ***       READING INPUT PARAMETERS        ***'
        write(INVERSE_LOG_FILE,*) '          *********************************************'
        write(INVERSE_LOG_FILE,*)
+       call flush_iunit(INVERSE_LOG_FILE)
     endif
 
 
@@ -98,14 +99,19 @@ contains
        call read_acqui_file(acqui_file, acqui_simu, myrank)
        call read_inver_file(inver_file, acqui_simu, inversion_param, myrank)
        call get_point_source(acqui_simu)
-       call get_stations(acqui_simu)
+       !! we call routine that reads from one process and bcast to the other 
+       if (USE_LIGHT_STATIONS)  call get_stations_light(acqui_simu)
     endif
+
+    !! we call specfem routine that use all process in same time
+    if (.not. USE_LIGHT_STATIONS) call get_stations(acqui_simu, myrank)
 
     if (myrank == 0) call flush_iunit(INVERSE_LOG_FILE)
 
     call bcast_all_acqui(acqui_simu,  inversion_param, myrank)
     call locate_source(acqui_simu, myrank)
-  !  call locate_receiver(acqui_simu, myrank)
+    if (USE_LIGHT_STATIONS) call locate_receiver_light(acqui_simu, myrank)
+
 
     if (myrank == 0) call flush_iunit(INVERSE_LOG_FILE)
 
@@ -1029,6 +1035,10 @@ contains
                                     inversion_param%damp_weight(3)
           inversion_param%use_damping_SEM_Tikonov=.true.
 
+       case('use_tk_sem_vairiable_damping')
+          read(line(ipos0:ipos1),*) inversion_param%min_damp,inversion_param%max_damp, inversion_param%distance_from_source
+          inversion_param%use_variable_SEM_damping=.true.
+
        case default
           write(*,*) 'ERROR KEY WORD NOT MATCH : ', trim(keyw), ' in file ', trim(inver_file)
           exit
@@ -1044,6 +1054,7 @@ contains
        write(INVERSE_LOG_FILE,*) '     READ  ', trim(inver_file)
        write(INVERSE_LOG_FILE,*) '     Nb tot events ', acqui_simu(1)%nevent_tot
        write(INVERSE_LOG_FILE,*)
+       call flush_iunit(INVERSE_LOG_FILE)
     endif
 
     if (VERBOSE_MODE .or. DEBUG_MODE) then
@@ -1051,6 +1062,17 @@ contains
        inversion_param%dump_gradient_at_each_iteration=.true.
        inversion_param%dump_descent_direction_at_each_iteration=.true.
     endif
+
+    !! check constistancy of inputs
+    if ( inversion_param%use_variable_SEM_damping  .and. .not.(inversion_param%use_damping_SEM_Tikonov)) then
+       allocate(inversion_param%damp_weight(inversion_param%NinvPar))
+       inversion_param%damp_weight(:)=1.
+       inversion_param%use_damping_SEM_Tikonov=.true.
+       write(INVERSE_LOG_FILE,*)
+       write(INVERSE_LOG_FILE,*) ' turning on : use_tk_sem_damping because use_tk_sem_vairiable_damping is asked'
+       write(INVERSE_LOG_FILE,*)
+       call flush_iunit(INVERSE_LOG_FILE)
+    end if
 
   end subroutine read_inver_file
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1124,17 +1146,20 @@ contains
 !------------------------------------------------------------
 ! read station file in specfem format
 !------------------------------------------------------------
-  subroutine get_stations(acqui_simu)
+  subroutine get_stations(acqui_simu, myrank)
 
     use constants, only: NDIM
 
     type(acqui), allocatable, dimension(:), intent(inout)  :: acqui_simu
+    integer,                                intent(in)     :: myrank
 
     integer                                                :: ievent, irec, nsta, nrec_loc
     character(len=MAX_LEN_STRING)                          :: rec_filename,filtered_rec_filename
-    write(INVERSE_LOG_FILE,*)
-    write(INVERSE_LOG_FILE,*) '     READING stations '
-
+    if (myrank==0) then 
+       write(INVERSE_LOG_FILE,*)
+       write(INVERSE_LOG_FILE,*) '     READING stations '
+       call flush_iunit(INVERSE_LOG_FILE)
+    end if
     INVERSE_FWI_FULL_PROBLEM = .true.
 
     ! loop on all events
@@ -1155,12 +1180,14 @@ contains
                 acqui_simu(ievent)%ispec_selected_rec(nsta), &
                 acqui_simu(ievent)%number_receiver_global(nsta), &
                 acqui_simu(ievent)%nu(NDIM,NDIM,nsta))
-
+       
+      
        ! reads STATIONS_FILTERED file, locates receivers in the mesh and compute Lagrange interpolators
        call locate_receivers(filtered_rec_filename,nsta,acqui_simu(ievent)%islice_selected_rec, &
-                             acqui_simu(ievent)%ispec_selected_rec, &
-                             acqui_simu(ievent)%xi_rec,acqui_simu(ievent)%eta_rec,acqui_simu(ievent)%gamma_rec, &
-                             acqui_simu(ievent)%station_name,acqui_simu(ievent)%network_name,acqui_simu(ievent)%nu,1.0d0,1.0d0)
+            acqui_simu(ievent)%ispec_selected_rec, &
+            acqui_simu(ievent)%xi_rec,acqui_simu(ievent)%eta_rec,acqui_simu(ievent)%gamma_rec, &
+            acqui_simu(ievent)%station_name,acqui_simu(ievent)%network_name,acqui_simu(ievent)%nu,1.0d0,1.0d0)
+   
 
        nrec_loc = 0
        do irec = 1, nsta
@@ -1213,7 +1240,60 @@ contains
     write(INVERSE_LOG_FILE,*)
 
  end subroutine get_stations
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!------------------------------------------------------------
+! read station file in specfem format
+!------------------------------------------------------------
+  subroutine get_stations_light(acqui_simu)
 
+    type(acqui), allocatable, dimension(:), intent(inout)  :: acqui_simu
+
+    integer                                                :: ievent, istation, nsta
+    character(len=MAX_LEN_STRING)                          :: line, station_name, network_name
+    real(kind=CUSTOM_REAL)                                 :: y, x, z, stbur
+
+    write(INVERSE_LOG_FILE,*)
+    write(INVERSE_LOG_FILE,*) '     READING stations '
+    call flush_iunit(INVERSE_LOG_FILE)
+
+    ! loop on all sources
+    do ievent = 1, NEVENT
+       ! open station file
+       open(IINN,file=trim(adjustl(acqui_simu(ievent)%station_file)))
+       ! count number of stations related to source isource
+       nsta=0
+       do
+          read(IINN,'(a)', end=99) line
+          nsta=nsta+1
+       enddo
+       99 close(IINN)
+       acqui_simu(ievent)%nsta_tot=nsta
+       allocate(acqui_simu(ievent)%station_name(nsta),acqui_simu(ievent)%network_name(nsta))
+       allocate(acqui_simu(ievent)%position_station(3,nsta))
+       allocate(acqui_simu(ievent)%nu(NDIM,NDIM,nsta))
+       acqui_simu(ievent)%nu(:,:,:)=0.
+       open(IINN,file=trim(adjustl(acqui_simu(ievent)%station_file)))
+       do istation=1,nsta
+          read(IINN,'(a)') line
+          read(line, *) station_name, network_name, y, x, z, stbur
+          acqui_simu(ievent)%position_station(1,istation)=x
+          acqui_simu(ievent)%position_station(2,istation)=y
+          acqui_simu(ievent)%position_station(3,istation)=z
+          acqui_simu(ievent)%station_name(istation)=trim(adjustl(station_name))
+          acqui_simu(ievent)%network_name(istation)=trim(adjustl(network_name))
+          acqui_simu(ievent)%nu(1,1,istation)=1.
+          acqui_simu(ievent)%nu(2,2,istation)=1.
+          acqui_simu(ievent)%nu(3,3,istation)=1.
+       enddo
+      
+       close(IINN)
+    enddo
+
+    write(INVERSE_LOG_FILE,*) '     READING stations passed '
+    write(INVERSE_LOG_FILE,*)
+    call flush_iunit(INVERSE_LOG_FILE)
+
+  end subroutine get_stations_light
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !------------------------------------------------------------
 ! read source parameter file
@@ -1228,6 +1308,7 @@ contains
 
     write(INVERSE_LOG_FILE,*)
     write(INVERSE_LOG_FILE,*) '     READING sources parameters '
+    call flush_iunit(INVERSE_LOG_FILE)
 
     do ievent=1,acqui_simu(1)%nevent_tot
 
@@ -1461,11 +1542,14 @@ contains
        if (myrank > 0) then
           allocate(acqui_simu(i)%station_name(nsta_tot),acqui_simu(i)%network_name(nsta_tot))
           allocate(acqui_simu(i)%position_station(3,nsta_tot))
+          allocate(acqui_simu(i)%nu(NDIM,NDIM,nsta_tot))
        endif
 
        call MPI_BCAST(acqui_simu(i)%station_name, nsta_tot* MAX_LENGTH_STATION_NAME,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(acqui_simu(i)%network_name, nsta_tot* MAX_LENGTH_NETWORK_NAME,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(acqui_simu(i)%position_station, 3*nsta_tot,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+       call MPI_BCAST(acqui_simu(i)%nu, NDIM*NDIM*nsta_tot, MPI_DOUBLE_PRECISION,0,my_local_mpi_comm_world,ier)
+
     enddo
 
     ! inverse params
@@ -1482,6 +1566,10 @@ contains
     call MPI_BCAST(inversion_param%relat_cost,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
     call MPI_BCAST(inversion_param%weight_Tikonov,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
     call MPI_BCAST(inversion_param%use_damping_SEM_Tikonov,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%use_variable_SEM_damping,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%min_damp,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%max_damp,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+    call MPI_BCAST(inversion_param%distance_from_source,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
     call MPI_BCAST(inversion_param%use_regularisation_FD_Tikonov,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
     call MPI_BCAST(inversion_param%use_regularisation_SEM_Tikonov,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
 
