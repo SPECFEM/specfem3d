@@ -101,7 +101,7 @@ contains
 
     call get_point_source(acqui_simu)
 
-    call flush_iunit(INVERSE_LOG_FILE)
+    if (myrank == 0) call flush_iunit(INVERSE_LOG_FILE)
 
 !    call bcast_all_acqui(acqui_simu,  inversion_param, myrank)
 !    call locate_source(acqui_simu, myrank)
