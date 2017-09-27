@@ -196,6 +196,8 @@ module inverse_problem_par
      character(len= MAX_LEN_STRING)                                            :: source_file
      !! kind of source to be used ('moment', 'force', 'axisem', 'dsm', 'fk')
      character(len=10)                                                         :: source_type
+     !! position of source in case of internal point source
+     double precision, dimension(:), allocatable                               :: Xs,Ys,Zs
      !! traction directory in case of AxiSem or DSM coupling
      character(len= MAX_LEN_STRING)                                            :: traction_dir
      !! source time function

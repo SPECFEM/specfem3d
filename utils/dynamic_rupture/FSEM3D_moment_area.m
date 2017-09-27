@@ -7,7 +7,7 @@
 % isnap	last snapshot index in Snapshot*.bin file names (contains final slip)
 % dat_dir	["OUTPUT_FILES"] directory containing the files Snapshot*.bin
 % db_dir	["OUTPUT_FILES/DATABASES_MPI"] directory containing the files proc*fault_db.bin
-% Dmin	minimum slip to define the rupture area
+% Dmin	  [1e-3] minimum slip to define the rupture area
 % s_or_d  ['single'] Precision of SPECFEM3D outputs, 'single' or 'double'
 % mu_type  [1]  Type of shear modulus setting (see nested function my_mu):
 %     1 = sets mu=1 and outputs Px and Pz are potency
@@ -71,12 +71,14 @@ for p=1:nproc
  
  % compute area
   Dp2 = Dpx.*Dpx+Dpz.*Dpz;
-  A = A + jacw*(Dp2>Dmin^2);
+  rup_mask = (Dp2>Dmin^2);
+  A = A + jacw*rup_mask;
  
  % compute potency or moment
   mu = my_mu(mu_type);
-  Dpx = Dpx.*mu(:);
-  Dpz = Dpz.*mu(:);
+  mu = mu(:).*rup_mask(:);
+  Dpx = Dpx.*mu;
+  Dpz = Dpz.*mu;
   
   Px = Px + jacw*Dpx;
   Pz = Pz + jacw*Dpz;

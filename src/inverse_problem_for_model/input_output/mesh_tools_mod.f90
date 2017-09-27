@@ -17,8 +17,9 @@ module mesh_tools
   implicit none
 
 
-  PUBLIC  ::  locate_point_in_mesh, compute_source_coeff, locate_MPI_slice_and_bcast_to_all, &
-              create_mass_matrices_Stacey_duplication_routine,  compute_force_elastic_arrays_source
+  PUBLIC  ::  compute_source_coeff,create_mass_matrices_Stacey_duplication_routine,  compute_force_elastic_arrays_source
+
+  PRIVATE ::  locate_point_in_mesh, locate_MPI_slice_and_bcast_to_all
 
 contains
 
