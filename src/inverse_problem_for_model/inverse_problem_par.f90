@@ -201,6 +201,12 @@ module inverse_problem_par
      !! source time function
      real(kind=CUSTOM_REAL)                                                    :: fl_event, fh_event
      real(kind=CUSTOM_REAL), dimension(:,:), allocatable                       :: user_source_time_function
+     !! use external source time function 
+     character(len= MAX_LEN_STRING)                                            :: source_wavelet_file
+     logical                                                                   :: external_source_wavelet=.false.
+     !! position of source in case of internal point source
+     real(kind=CUSTOM_REAL)                                                    :: Xs, Ys, Zs
+
      !! --------------------- source parameter specific for Specfem ---------------------
      !! time parameters needed for specfem
      double precision, dimension(:), allocatable                               :: tshift, hdur, hdur_Gaussian
@@ -212,7 +218,7 @@ module inverse_problem_par
      integer, dimension(:), allocatable                                        :: islice_selected_source
      !! ispec element contains source
      integer, dimension(:), allocatable                                        :: ispec_selected_source
-     real(kind=CUSTOM_REAL),dimension(:,:,:,:,:), allocatable                   :: sourcearrays
+     real(kind=CUSTOM_REAL),dimension(:,:,:,:,:), allocatable                  :: sourcearrays
      double precision                                                          :: t0
      !! ------------------- station general parameters ----------------------------------
      !! stations (in specfem format)

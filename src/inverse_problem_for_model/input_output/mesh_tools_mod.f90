@@ -27,84 +27,84 @@ contains
 !--------------------------------------------------------------------------------------------------------------------
 ! locate sources
 !--------------------------------------------------------------------------------------------------------------------
-  subroutine locate_source(acqui_simu, myrank)
-
-    type(acqui), allocatable, dimension(:), intent(inout)  :: acqui_simu
-    integer,                                intent(in)     :: myrank
-
-    integer                                                :: ievent, nsrc_local, NEVENT
-    integer                                                :: ispec_selected_source, islice_selected_source
-    double precision                                       :: xi_source, eta_source, gamma_source
-    double precision                                       :: x_found,  y_found,  z_found
-    double precision                                       :: x_to_locate, y_to_locate, z_to_locate
-    real(kind=CUSTOM_REAL)                                 :: distance_min_glob,distance_max_glob
-    real(kind=CUSTOM_REAL)                                 :: elemsize_min_glob,elemsize_max_glob
-    real(kind=CUSTOM_REAL)                                 :: x_min_glob,x_max_glob
-    real(kind=CUSTOM_REAL)                                 :: y_min_glob,y_max_glob
-    real(kind=CUSTOM_REAL)                                 :: z_min_glob,z_max_glob
-    integer,                 dimension(NGNOD)              :: iaddx,iaddy,iaddz
-    double precision                                       :: distance_from_target
-
-200 format('         SOURCE : ', i5, '  LOCATED IN SLICE : ', i5, '  ELEMENT :', i10, '  ERROR IN LOCATION :', e15.6)
-300 format('         REAL POSITION : ', 3f20.5, '  FOUND POSITION : ', 3f20.5)
-
-    if (myrank == 0) then
-       write(INVERSE_LOG_FILE,*)
-       write(INVERSE_LOG_FILE,*) ' ... locate sources in specfem mesh :'
-    endif
-
-    NEVENT=acqui_simu(1)%nevent_tot
-
-    ! get mesh properties (mandatory before calling locate_point_in_mesh)
-    call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
-    call check_mesh_distances(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-         x_min_glob,x_max_glob,y_min_glob,y_max_glob,z_min_glob,z_max_glob, &
-         elemsize_min_glob,elemsize_max_glob, &
-         distance_min_glob,distance_max_glob)
-
-    do ievent = 1, NEVENT
-
-       x_to_locate = acqui_simu(ievent)%Xs
-       y_to_locate = acqui_simu(ievent)%Ys
-       z_to_locate = acqui_simu(ievent)%Zs
-
-       call locate_point_in_mesh(x_to_locate, y_to_locate, z_to_locate, iaddx, iaddy, iaddz, elemsize_max_glob, &
-            ispec_selected_source, xi_source, eta_source, gamma_source, x_found, y_found, z_found, myrank)
-
-       call locate_MPI_slice_and_bcast_to_all(x_to_locate, y_to_locate, z_to_locate, x_found, y_found, z_found, &
-            xi_source, eta_source, gamma_source, ispec_selected_source, islice_selected_source, distance_from_target, myrank)
-
-       if (myrank == 0) then
-          write(INVERSE_LOG_FILE, 200) ievent, islice_selected_source, ispec_selected_source, distance_from_target
-          if (DEBUG_MODE) write(INVERSE_LOG_FILE, 300) x_to_locate, y_to_locate, z_to_locate, x_found, y_found, z_found
-       endif
-
-       ! store in structure acqui
-       acqui_simu(ievent)%islice_slected_source=islice_selected_source
-       acqui_simu(ievent)%ispec_selected_source=ispec_selected_source
-
-       allocate(acqui_simu(ievent)%sourcearray(NDIM,NGLLX,NGLLY,NGLLZ))
-       nsrc_local=0
-      ! compute source array
-       if (myrank == islice_selected_source) then
-          nsrc_local = nsrc_local + 1
-          call compute_source_coeff(xi_source, eta_source, gamma_source, &
-               acqui_simu(ievent)%ispec_selected_source, acqui_simu(ievent)%sourcearray, &
-               acqui_simu(ievent)%Mxx, acqui_simu(ievent)%Myy, acqui_simu(ievent)%Mzz, &
-               acqui_simu(ievent)%Mxy, acqui_simu(ievent)%Mxz, acqui_simu(ievent)%Myz, &
-               acqui_simu(ievent)%Fx, acqui_simu(ievent)%Fy, acqui_simu(ievent)%Fz, &
-               acqui_simu(ievent)%source_type)
-       endif
-       acqui_simu(ievent)%nsources_local=nsrc_local
-
-    enddo
-
-    if (myrank == 0) then
-       write(INVERSE_LOG_FILE,*) ' ... locate sources passed'
-       write(INVERSE_LOG_FILE,*)
-    endif
-
-  end subroutine locate_source
+!!$  subroutine locate_source(acqui_simu, myrank)
+!!$
+!!$    type(acqui), allocatable, dimension(:), intent(inout)  :: acqui_simu
+!!$    integer,                                intent(in)     :: myrank
+!!$
+!!$    integer                                                :: ievent, nsrc_local, NEVENT
+!!$    integer                                                :: ispec_selected_source, islice_selected_source
+!!$    double precision                                       :: xi_source, eta_source, gamma_source
+!!$    double precision                                       :: x_found,  y_found,  z_found
+!!$    double precision                                       :: x_to_locate, y_to_locate, z_to_locate
+!!$    real(kind=CUSTOM_REAL)                                 :: distance_min_glob,distance_max_glob
+!!$    real(kind=CUSTOM_REAL)                                 :: elemsize_min_glob,elemsize_max_glob
+!!$    real(kind=CUSTOM_REAL)                                 :: x_min_glob,x_max_glob
+!!$    real(kind=CUSTOM_REAL)                                 :: y_min_glob,y_max_glob
+!!$    real(kind=CUSTOM_REAL)                                 :: z_min_glob,z_max_glob
+!!$    integer,                 dimension(NGNOD)              :: iaddx,iaddy,iaddz
+!!$    double precision                                       :: distance_from_target
+!!$
+!!$200 format('         SOURCE : ', i5, '  LOCATED IN SLICE : ', i5, '  ELEMENT :', i10, '  ERROR IN LOCATION :', e15.6)
+!!$300 format('         REAL POSITION : ', 3f20.5, '  FOUND POSITION : ', 3f20.5)
+!!$
+!!$    if (myrank == 0) then
+!!$       write(INVERSE_LOG_FILE,*)
+!!$       write(INVERSE_LOG_FILE,*) ' ... locate sources in specfem mesh :'
+!!$    endif
+!!$
+!!$    NEVENT=acqui_simu(1)%nevent_tot
+!!$
+!!$    ! get mesh properties (mandatory before calling locate_point_in_mesh)
+!!$    call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
+!!$    call check_mesh_distances(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
+!!$         x_min_glob,x_max_glob,y_min_glob,y_max_glob,z_min_glob,z_max_glob, &
+!!$         elemsize_min_glob,elemsize_max_glob, &
+!!$         distance_min_glob,distance_max_glob)
+!!$
+!!$    do ievent = 1, NEVENT
+!!$
+!!$       x_to_locate = acqui_simu(ievent)%Xs
+!!$       y_to_locate = acqui_simu(ievent)%Ys
+!!$       z_to_locate = acqui_simu(ievent)%Zs
+!!$
+!!$       call locate_point_in_mesh(x_to_locate, y_to_locate, z_to_locate, iaddx, iaddy, iaddz, elemsize_max_glob, &
+!!$            ispec_selected_source, xi_source, eta_source, gamma_source, x_found, y_found, z_found, myrank)
+!!$
+!!$       call locate_MPI_slice_and_bcast_to_all(x_to_locate, y_to_locate, z_to_locate, x_found, y_found, z_found, &
+!!$            xi_source, eta_source, gamma_source, ispec_selected_source, islice_selected_source, distance_from_target, myrank)
+!!$
+!!$       if (myrank == 0) then
+!!$          write(INVERSE_LOG_FILE, 200) ievent, islice_selected_source, ispec_selected_source, distance_from_target
+!!$          if (DEBUG_MODE) write(INVERSE_LOG_FILE, 300) x_to_locate, y_to_locate, z_to_locate, x_found, y_found, z_found
+!!$       endif
+!!$
+!!$       ! store in structure acqui
+!!$       acqui_simu(ievent)%islice_slected_source=islice_selected_source
+!!$       acqui_simu(ievent)%ispec_selected_source=ispec_selected_source
+!!$
+!!$       allocate(acqui_simu(ievent)%sourcearray(NDIM,NGLLX,NGLLY,NGLLZ))
+!!$       nsrc_local=0
+!!$      ! compute source array
+!!$       if (myrank == islice_selected_source) then
+!!$          nsrc_local = nsrc_local + 1
+!!$          call compute_source_coeff(xi_source, eta_source, gamma_source, &
+!!$               acqui_simu(ievent)%ispec_selected_source, acqui_simu(ievent)%sourcearray, &
+!!$               acqui_simu(ievent)%Mxx, acqui_simu(ievent)%Myy, acqui_simu(ievent)%Mzz, &
+!!$               acqui_simu(ievent)%Mxy, acqui_simu(ievent)%Mxz, acqui_simu(ievent)%Myz, &
+!!$               acqui_simu(ievent)%Fx, acqui_simu(ievent)%Fy, acqui_simu(ievent)%Fz, &
+!!$               acqui_simu(ievent)%source_type)
+!!$       endif
+!!$       acqui_simu(ievent)%nsources_local=nsrc_local
+!!$
+!!$    enddo
+!!$
+!!$    if (myrank == 0) then
+!!$       write(INVERSE_LOG_FILE,*) ' ... locate sources passed'
+!!$       write(INVERSE_LOG_FILE,*)
+!!$    endif
+!!$
+!!$  end subroutine locate_source
 
 
 !!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -5,7 +5,7 @@
 !                                                                                                                                  !
 !                                                                                                                                  !
 !                   -- read all sources   (tractions, moment, forces, ...)                                                         !
-!                   -- read all stations  (list of stations and position for each event )                                        !
+!                   -- read all stations  (list of stations and position for each event )                                          !
 !                   -- read all data      (components to be inverted)                                                              !
 !                                                                                                                                  !
 !    all information is stored in type : acqui                                                                                     !
@@ -95,16 +95,20 @@ contains
        open(IIDD,file=trim(prefix_to_path)//trim(name_file))
     endif
 
+    !! read inversion input file for general configuration 
     call read_acqui_file(acqui_file, acqui_simu, myrank)
     call read_inver_file(inver_file, acqui_simu, inversion_param, myrank)
+
+
     call get_stations(acqui_simu)
     call get_point_source(acqui_simu)
+   
 
     if (myrank == 0) call flush_iunit(INVERSE_LOG_FILE)
 
 !    call bcast_all_acqui(acqui_simu,  inversion_param, myrank)
 !    call locate_source(acqui_simu, myrank)
-  !  call locate_receiver(acqui_simu, myrank)
+!    call locate_receiver(acqui_simu, myrank)
 
     if (myrank == 0) call flush_iunit(INVERSE_LOG_FILE)
 
@@ -203,18 +207,18 @@ contains
           write(IIDD,'(a)') trim(acqui_simu(ievent)%source_file)
           write(IIDD,'(a)') trim(acqui_simu(ievent)%station_file)
           write(IIDD,'(a)') trim(acqui_simu(ievent)%data_file_gather)
-          write(IIDD,*) ' EVENT POSITION : '
-          write(IIDD,*) acqui_simu(ievent)%Xs,acqui_simu(ievent)%Ys, acqui_simu(ievent)%Zs
+!!$          write(IIDD,*) ' EVENT POSITION : '
+!!$          write(IIDD,*) acqui_simu(ievent)%Xs,acqui_simu(ievent)%Ys, acqui_simu(ievent)%Zs
 
-          select case (trim(adjustl(acqui_simu(ievent)%source_type)))
-          case ('moment')
-             write(IIDD,*) ' MOMENT TENSOR : '
-             write(IIDD,*) acqui_simu(ievent)%Mxx,acqui_simu(ievent)%Myy, acqui_simu(ievent)%Mzz
-             write(IIDD,*) acqui_simu(ievent)%Mxy,acqui_simu(ievent)%Myz, acqui_simu(ievent)%Myz
-          case ('force')
-             write(IIDD,*) ' FORCE : '
-             write(IIDD,*) acqui_simu(ievent)%Fx,acqui_simu(ievent)%Fy, acqui_simu(ievent)%Fz
-          end select
+!!$          select case (trim(adjustl(acqui_simu(ievent)%source_type)))
+!!$          case ('moment')
+!!$             write(IIDD,*) ' MOMENT TENSOR : '
+!!$             write(IIDD,*) acqui_simu(ievent)%Mxx,acqui_simu(ievent)%Myy, acqui_simu(ievent)%Mzz
+!!$             write(IIDD,*) acqui_simu(ievent)%Mxy,acqui_simu(ievent)%Myz, acqui_simu(ievent)%Myz
+!!$          case ('force')
+!!$             write(IIDD,*) ' FORCE : '
+!!$             write(IIDD,*) acqui_simu(ievent)%Fx,acqui_simu(ievent)%Fy, acqui_simu(ievent)%Fz
+!!$          end select
 
           write(IIDD,*) 'total station     :', acqui_simu(ievent)%nsta_tot
           write(IIDD,*) 'stations in slice :',acqui_simu(ievent)%nsta_slice
@@ -776,13 +780,13 @@ contains
     if (DEBUG_MODE)  write(IIDD,*) '       MYGROUP  ', mygroup, '    MYRANK ', myrank
     NEVENT=0
 
-    if (myrank ==0) then 
-    write(INVERSE_LOG_FILE,*)
-    write(INVERSE_LOG_FILE,*) '     READING acquisition'
-    write(INVERSE_LOG_FILE,*)
-    end if
+  
     ! only master reads acqui file
     if (myrank == 0) then
+  
+       write(INVERSE_LOG_FILE,*)
+       write(INVERSE_LOG_FILE,*) '     READING acquisition'
+       write(INVERSE_LOG_FILE,*)
 
       !! 1/ read to count the number of events
       open(666,file=trim(acqui_file),iostat=ier)
@@ -800,7 +804,7 @@ contains
 
       enddo
 99    close(666)
-
+      
       write(INVERSE_LOG_FILE,*) '       ALLOCATE  acquisition structure for ', NEVENT, ' events '
       write(INVERSE_LOG_FILE,*)
 
@@ -843,7 +847,14 @@ contains
               case('moment', 'force')
                  acqui_simu(ievent)%source_file=trim(adjustl(line(ipos0:ipos1)))
                  acqui_simu(ievent)%source_type=trim(adjustl(keyw))
+                 acqui_simu(ievent)%adjoint_source_type='none'
+                 
+              case('shot')
+                 acqui_simu(ievent)%source_type=trim(adjustl(keyw))
+                 line_to_read=line(ipos0:ipos1)
+                 read(line_to_read,*) acqui_simu(ievent)%Xs, acqui_simu(ievent)%Ys, acqui_simu(ievent)%Zs
                  acqui_simu(ievent)%adjoint_source_type='L2_OIL_INDUSTRY'
+                 
 
               case('axisem', 'dsm', 'plane', 'fk')
                  acqui_simu(ievent)%source_file=trim(adjustl(line(ipos0:ipos1)))
@@ -898,16 +909,14 @@ contains
 
        enddo
 
-999  close(666)
+999    close(666)
 
-   
-
-    write(INVERSE_LOG_FILE,*)
-    write(INVERSE_LOG_FILE,*)
-    write(INVERSE_LOG_FILE,*) '     READING acquisition passed '
-    write(INVERSE_LOG_FILE,*)
-
-end if
+       write(INVERSE_LOG_FILE,*)
+       write(INVERSE_LOG_FILE,*)
+       write(INVERSE_LOG_FILE,*) '     READING acquisition passed '
+       write(INVERSE_LOG_FILE,*)
+    
+ end if
 
     ! master broadcasts read values
     call MPI_BCAST(NEVENT,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
@@ -923,6 +932,8 @@ end if
        call MPI_BCAST(acqui_simu(ievent)%component,6,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(acqui_simu(ievent)%Nt_data,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(acqui_simu(ievent)%dt_data,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+       call MPI_BCAST(acqui_simu(ievent)%source_wavelet_file, MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+       call MPI_BCAST(acqui_simu(ievent)%external_source_wavelet, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
     enddo
 
   end subroutine read_acqui_file
@@ -1043,7 +1054,6 @@ end if
           read(line(ipos0:ipos1),*) inversion_param%smooth_weight(1), &
                                     inversion_param%smooth_weight(2), &
                                     inversion_param%smooth_weight(3)
-
           inversion_param%use_regularisation_SEM_Tikonov=.true.
 
        case('use_tk_sem_damping')
@@ -1363,7 +1373,30 @@ end if
          deallocate(Mxx,Myy,Mzz,Mxy,Mxz,Myz,xi_source,eta_source,gamma_source,nu_source)
          deallocate(factor_force_source,Fx,Fy,Fz)
 
-       case default
+      case('shot')
+
+         
+         !! read source stf for shot 
+!!$         if (acqui_simu(ievent)%external_source_wavelet) then
+!!$            allocate(acqui_simu(ievent)%user_source_time_function(acqui_simu(ievent)%Nt_data,1))
+!!$            open(IINN, file=trim(acqui_simu(ievent)%source_wavelet_file))
+!!$            if (myrank == 0) then 
+!!$               do i=1,acqui_simu(isource)%Nt_data
+!!$                  read(IINN, *) dt_dummy, acqui_simu(ievent)%user_source_time_function(i,1)
+!!$               enddo
+!!$               close(IINN)
+!!$            end if
+!!$         else 
+!!$            write(*,*) "ERROR : shot source type is mandatory used with external source time function"
+!!$            stop
+!!$         endif
+!!$
+!!$         end if
+!!$         !! bcst to the other
+!!$         call MPI_BCAST(acqui_simu(ievent)%source_wavelet,acqui_simu(ievent)%Nt_data, &
+!!$CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+
+      case default
           !! nothing to do
 
        end select
@@ -1435,13 +1468,13 @@ end if
 !       endif
 
        ! stations
-       if (myrank == 0) nsta_tot=acqui_simu(i)%nsta_tot
-       call  MPI_BCAST(nsta_tot,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
-       acqui_simu(i)%nsta_tot=nsta_tot
-       if (myrank > 0) then
-          allocate(acqui_simu(i)%station_name(nsta_tot),acqui_simu(i)%network_name(nsta_tot))
-          allocate(acqui_simu(i)%position_station(3,nsta_tot))
-       endif
+!!$       if (myrank == 0) nsta_tot=acqui_simu(i)%nsta_tot
+!!$       call  MPI_BCAST(nsta_tot,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
+!!$       acqui_simu(i)%nsta_tot=nsta_tot
+!!$       if (myrank > 0) then
+!!$          allocate(acqui_simu(i)%station_name(nsta_tot),acqui_simu(i)%network_name(nsta_tot))
+!!$          allocate(acqui_simu(i)%position_station(3,nsta_tot))
+!!$       endif
 
 !       if (myrank == 0) nsta_tot=acqui_simu(i)%nsta_tot
 !       call  MPI_BCAST(nsta_tot,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)

@@ -4573,7 +4573,8 @@ subroutine compute_spatial_damping_for_source_singularities(acqui_simu, inversio
                           exp(-0.5 * (distance_from_source/(inversion_param%distance_from_source/3.))**2 ) 
                      
                      spatial_damping(i,j,k,ispec) = max(spatial_damping(i,j,k,ispec), value_of_damping)
-                     !write(*,*) inversion_param%max_damp,  inversion_param%min_damp, inversion_param%distance_from_source, value_of_damping 
+                     !write(*,*) inversion_param%max_damp,  inversion_param%min_damp, 
+                     !inversion_param%distance_from_source, value_of_damping 
                   end if
                end do
 
