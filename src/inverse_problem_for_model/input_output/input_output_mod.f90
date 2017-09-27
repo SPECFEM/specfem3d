@@ -820,12 +820,13 @@ contains
               case('moment', 'force')
                  acqui_simu(ievent)%source_file=trim(adjustl(line(ipos0:ipos1)))
                  acqui_simu(ievent)%source_type=trim(adjustl(keyw))
-                 acqui_simu(ievent)%adjoint_source_type='none'
+                 acqui_simu(ievent)%adjoint_source_type='L2_OIL_INDUSTRY'
                  
               case('shot')
                  acqui_simu(ievent)%source_type=trim(adjustl(keyw))
-                 line_to_read=line(ipos0:ipos1)
-                 read(line_to_read,*) acqui_simu(ievent)%Xs, acqui_simu(ievent)%Ys, acqui_simu(ievent)%Zs
+                 read(line(ipos0:ipos1),*) acqui_simu(ievent)%xshot, &
+                                           acqui_simu(ievent)%yshot, &
+                                           acqui_simu(ievent)%zshot
                  acqui_simu(ievent)%adjoint_source_type='L2_OIL_INDUSTRY'
 
               case('axisem', 'dsm', 'plane', 'fk')
@@ -895,11 +896,15 @@ contains
        call MPI_BCAST(acqui_simu(ievent)%data_file_gather,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(acqui_simu(ievent)%source_type,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(acqui_simu(ievent)%source_file,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+       call MPI_BCAST(acqui_simu(ievent)%source_wavelet_file, MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(acqui_simu(ievent)%adjoint_source_type,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(acqui_simu(ievent)%event_name,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(acqui_simu(ievent)%component,6,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(acqui_simu(ievent)%Nt_data,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(acqui_simu(ievent)%dt_data,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+       call MPI_BCAST(acqui_simu(ievent)%xshot,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+       call MPI_BCAST(acqui_simu(ievent)%yshot,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+       call MPI_BCAST(acqui_simu(ievent)%zshot,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
     enddo
 
   end subroutine read_acqui_file
@@ -1051,7 +1056,7 @@ end if
      inversion_param%dump_gradient_at_each_iteration=.true.
      inversion_param%dump_descent_direction_at_each_iteration=.true.
    endif
-
+                 
    ! master broadcasts read values
    call MPI_BCAST(inversion_param%Niter,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%Niter_wolfe,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
@@ -1068,6 +1073,29 @@ end if
    call MPI_BCAST(inversion_param%shin_precond,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%energy_precond,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%z2_precond,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+   call MPI_BCAST(inversion_param%z_precond, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier) 
+   call MPI_BCAST(inversion_param%use_regularisation_FD_Tikonov,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+   call MPI_BCAST(inversion_param%use_regularisation_SEM_Tikonov,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+   call MPI_BCAST(inversion_param%aPrc,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+   call MPI_BCAST(inversion_param%zPrc1,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+   call MPI_BCAST(inversion_param%zPrc2,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+   call MPI_BCAST(inversion_param%relat_cost,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+   call MPI_BCAST(inversion_param%weight_Tikonov,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+   call MPI_BCAST(inversion_param%use_damping_SEM_Tikonov,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+   call MPI_BCAST(inversion_param%use_variable_SEM_damping,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+   call MPI_BCAST(inversion_param%min_damp,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+   call MPI_BCAST(inversion_param%max_damp,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+   call MPI_BCAST(inversion_param%distance_from_source,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+   if (myrank >0 .and. inversion_param%use_regularisation_SEM_Tikonov ) then 
+      allocate(inversion_param%smooth_weight(inversion_param%NinvPar))
+    end if
+    if (inversion_param%use_regularisation_SEM_Tikonov) &
+     call MPI_BCAST(inversion_param%smooth_weight(1),inversion_param%NinvPar,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+    if (myrank >0 .and. inversion_param%use_damping_SEM_Tikonov ) then 
+       allocate(inversion_param%damp_weight(inversion_param%NinvPar))
+    end if
+    if (inversion_param%use_damping_SEM_Tikonov) &
+   call MPI_BCAST(inversion_param%damp_weight(1),inversion_param%NinvPar,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%param_family,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%xmin_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%xmax_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
@@ -1260,6 +1288,9 @@ end if
     real(kind=CUSTOM_REAL) :: y_min_glob,y_max_glob
     real(kind=CUSTOM_REAL) :: z_min_glob,z_max_glob
 
+    real(kind=CUSTOM_REAL) :: dt_dummy
+    integer :: it
+
     if (myrank == 0) then
       write(INVERSE_LOG_FILE,*)
       write(INVERSE_LOG_FILE,*) '     READING and LOCATING sources  '
@@ -1287,8 +1318,13 @@ end if
           ! NSOURCES has been updated in get_number_of_sources for slice 0, thus
           ! we broadcast it to other slices
           call MPI_BCAST(NSOURCES,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
-
-        case default
+          
+         case('shot')
+            !! in case of shot we assume that we have only one point source 
+            NSOURCES=1
+            !! and we manatoru use external stf
+            USE_EXTERNAL_SOURCE_FILE=.true.
+         case default
           !! define here the way the number of sources is obtained
 
       end select
@@ -1394,6 +1430,37 @@ end if
           enddo
 
           deallocate(lat,long,depth,moment_tensor)
+
+        case ('shot')
+
+           !! set point source 
+           acqui_simu(ievent)%Xs(:)=acqui_simu(ievent)%xshot
+           acqui_simu(ievent)%Ys(:)=acqui_simu(ievent)%yshot
+           acqui_simu(ievent)%Zs(:)=acqui_simu(ievent)%zshot
+           x_target_source(:)=acqui_simu(ievent)%xshot
+           y_target_source(:)=acqui_simu(ievent)%yshot
+           z_target_source(:)=acqui_simu(ievent)%zshot
+           
+           !! define shot mechanism 
+           Mzz(:)=1.
+           Mxx(:)=1.
+           Myy(:)=1.
+           Mxz(:)=0.
+           Myz(:)=0.
+           Mxy(:)=0.
+           
+           !! read source time function 
+           if (myrank==0) then
+              open(IINN, file=trim(acqui_simu(ievent)%source_wavelet_file))
+              do it=1,acqui_simu(ievent)%Nt_data
+                 read(IINN, *) dt_dummy, acqui_simu(ievent)%user_source_time_function(it,1)
+              enddo
+              close(IINN)
+           end if
+           
+           call MPI_BCAST(acqui_simu(ievent)%user_source_time_function,acqui_simu(ievent)%Nt_data, &
+                CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+           USE_FORCE_POINT_SOURCE=.false.
 
         case default
           !! define here reading of source file, and define accordingly the arrays :

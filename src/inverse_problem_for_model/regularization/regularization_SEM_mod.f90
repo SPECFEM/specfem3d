@@ -4547,7 +4547,7 @@ subroutine compute_spatial_damping_for_source_singularities(acqui_simu, inversio
    type(acqui),            dimension(:),       allocatable,        intent(inout) :: acqui_simu
    real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable,        intent(inout) :: spatial_damping 
    real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable                       :: spatial_damping_tmp
-   integer                                                                       :: ievent, iglob, ispec, i, j, k
+   integer                                                                       :: isrc, ievent, iglob, ispec, i, j, k
    real(kind=CUSTOM_REAL)                                                        :: xgll, ygll, zgll
    real(kind=CUSTOM_REAL)                                                        :: distance_from_source, value_of_damping
 
@@ -4562,19 +4562,22 @@ subroutine compute_spatial_damping_for_source_singularities(acqui_simu, inversio
                zgll=zstore(iglob)
                !! compute distance form sources 
                do ievent = 1, acqui_simu(1)%nevent_tot
-                  if (trim(acqui_simu(ievent)%source_type)=='moment' .or. trim(acqui_simu(ievent)%source_type)=='force') then 
+                  if (trim(acqui_simu(ievent)%source_type)=='moment' .or. trim(acqui_simu(ievent)%source_type)=='force' .or.&
+                     trim(acqui_simu(ievent)%source_type)=='shot' ) then 
                      
-                     distance_from_source = sqrt(  (acqui_simu(ievent)%Xs - xgll)**2 + & 
-                                                   (acqui_simu(ievent)%Ys - ygll)**2 + &
-                                                   (acqui_simu(ievent)%Zs - zgll)**2)
+                     do isrc = 1, acqui_simu(ievent)%nsources_local
+                        distance_from_source = sqrt(  (acqui_simu(ievent)%Xs(isrc) - xgll)**2 + & 
+                                                      (acqui_simu(ievent)%Ys(isrc) - ygll)**2 + &
+                                                      (acqui_simu(ievent)%Zs(isrc) - zgll)**2)
 
-                     value_of_damping = inversion_param%min_damp + &
-                                        (inversion_param%max_damp - inversion_param%min_damp )*&
-                          exp(-0.5 * (distance_from_source/(inversion_param%distance_from_source/3.))**2 ) 
+                        value_of_damping = inversion_param%min_damp + &
+                                           (inversion_param%max_damp - inversion_param%min_damp )*&
+                              exp(-0.5 * (distance_from_source/(inversion_param%distance_from_source/3.))**2 ) 
                      
-                     spatial_damping(i,j,k,ispec) = max(spatial_damping(i,j,k,ispec), value_of_damping)
-                     !write(*,*) inversion_param%max_damp,  inversion_param%min_damp, 
-                     !inversion_param%distance_from_source, value_of_damping 
+                        spatial_damping(i,j,k,ispec) = max(spatial_damping(i,j,k,ispec), value_of_damping)
+                        !write(*,*) inversion_param%max_damp,  inversion_param%min_damp, 
+                        !inversion_param%distance_from_source, value_of_damping 
+                     end do
                   end if
                end do
 

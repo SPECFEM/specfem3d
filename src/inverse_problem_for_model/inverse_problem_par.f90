@@ -206,8 +206,9 @@ module inverse_problem_par
      !! use external source time function 
      character(len= MAX_LEN_STRING)                                            :: source_wavelet_file
      logical                                                                   :: external_source_wavelet=.false.
-     !! position of source in case of internal point source
-     real(kind=CUSTOM_REAL)                                                    :: Xs, Ys, Zs
+     !! in case of exploration geophysics, 
+     !! saving temporary shot point to be able to read it directly in acqui_file
+     real(kind=CUSTOM_REAL)                                                    :: xshot, yshot, zshot
 
      !! --------------------- source parameter specific for Specfem ---------------------
      !! time parameters needed for specfem
