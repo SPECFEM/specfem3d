@@ -29,7 +29,7 @@ module input_output
 
   use specfem_par, only: CUSTOM_REAL, HUGEVAL, NGNOD, NUM_ITER, NPROC, MAX_STRING_LEN, &
                          NGLLX, NGLLY, NGLLZ, NDIM, NSPEC_AB, NGLOB_AB, MIDX, MIDY, MIDZ, &
-                         LOCAL_PATH, xigll, yigll, zigll, DT,&
+                         LOCAL_PATH, xigll, yigll, zigll, DT, &
                          ibool, xstore, ystore, zstore, &
                          xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, &
                          myrank, USE_SOURCES_RECEIVERS_Z,INVERSE_FWI_FULL_PROBLEM, &
@@ -861,7 +861,7 @@ contains
 
     endif ! myrank == 0
 
-    if (myrank == 0) then                 
+    if (myrank == 0) then
       write(INVERSE_LOG_FILE,*)
       write(INVERSE_LOG_FILE,*)
       write(INVERSE_LOG_FILE,*) '     READING acquisition passed '
@@ -1221,7 +1221,7 @@ contains
                               x_min_glob,x_max_glob,y_min_glob,y_max_glob,z_min_glob,z_max_glob, &
                               elemsize_min_glob,elemsize_max_glob, &
                               distance_min_glob,distance_max_glob)
-    
+
     do ievent=1,acqui_simu(1)%nevent_tot
 
       ! 1/ Get the number of sources
@@ -1258,8 +1258,8 @@ contains
                acqui_simu(ievent)%Zs(NSOURCES), &
                stat=ier)
       if (ier /= 0) stop 'error allocating arrays for sources'
-      allocate(Mxx(NSOURCES),Myy(NSOURCES),Mzz(NSOURCES),Mxy(NSOURCES),Mxz(NSOURCES),Myz(NSOURCES),&
-               x_target_source(NSOURCES),y_target_source(NSOURCES),z_target_source(NSOURCES),&
+      allocate(Mxx(NSOURCES),Myy(NSOURCES),Mzz(NSOURCES),Mxy(NSOURCES),Mxz(NSOURCES),Myz(NSOURCES), &
+               x_target_source(NSOURCES),y_target_source(NSOURCES),z_target_source(NSOURCES), &
                xi_source(NSOURCES),eta_source(NSOURCES),gamma_source(NSOURCES),nu_source(NDIM,NDIM,NSOURCES),stat=ier)
       if (ier /= 0) stop 'error allocating utm source arrays'
 
@@ -1288,14 +1288,14 @@ contains
       select case (acqui_simu(ievent)%source_type)
 
         case('moment','force')
-          
+
           allocate(lat(NSOURCES),long(NSOURCES),depth(NSOURCES),moment_tensor(6,NSOURCES))
           ! read all the sources
           if (USE_FORCE_POINT_SOURCE) then
             ! point forces
             if (myrank == 0) then
               ! only master process reads in FORCESOLUTION file
-              call get_force(filename,acqui_simu(ievent)%tshift,acqui_simu(ievent)%hdur,&
+              call get_force(filename,acqui_simu(ievent)%tshift,acqui_simu(ievent)%hdur, &
                              lat,long,depth,NSOURCES,min_tshift,factor_force_source, &
                              Fx,Fy,Fz,acqui_simu(ievent)%user_source_time_function)
             endif
@@ -1337,7 +1337,7 @@ contains
 
             ! get z target coordinate, depending on the topography
             if (.not. USE_SOURCES_RECEIVERS_Z) depth(isrc) = depth(isrc)*1000.0d0
-            call get_elevation_and_z_coordinate(long(isrc),lat(isrc),x_target_source(isrc),y_target_source(isrc),&
+            call get_elevation_and_z_coordinate(long(isrc),lat(isrc),x_target_source(isrc),y_target_source(isrc), &
                                                 z_target_source(isrc),elevation,depth(isrc))
 
           enddo
@@ -1358,7 +1358,7 @@ contains
       ! loop on all the sources
       do isrc = 1,NSOURCES
 
-        call locate_point_in_mesh(x_target_source(isrc), y_target_source(isrc), z_target_source(isrc),&
+        call locate_point_in_mesh(x_target_source(isrc), y_target_source(isrc), z_target_source(isrc), &
                 SOURCES_CAN_BE_BURIED, elemsize_max_glob, &
                 acqui_simu(ievent)%ispec_selected_source(isrc), xi_source(isrc), eta_source(isrc), gamma_source(isrc), &
                 acqui_simu(ievent)%Xs(isrc), acqui_simu(ievent)%Ys(isrc), acqui_simu(ievent)%Zs(isrc), &
