@@ -181,8 +181,8 @@ contains
     b_deltatsqover2 = b_deltat*b_deltat/2._CUSTOM_REAL
 
     ! prepare source (only one source allowed for now) -----------------------------------------------------------------------------
-    NSOURCES = acqui_simu(ievent)%nsources_tot  !! VM VM replace nsource_loc by nsource_tot since all arrays below 
-    if (USE_EXTERNAL_SOURCE_FILE) then          !! are using nsource_tot  
+    NSOURCES = acqui_simu(ievent)%nsources_tot  !! VM VM replace nsource_loc by nsource_tot since all arrays below
+    if (USE_EXTERNAL_SOURCE_FILE) then          !! are using nsource_tot
       NSOURCES_STF = NSOURCES
       NSTEP_STF    = NSTEP
     else
@@ -208,7 +208,7 @@ contains
        allocate(hdur_Gaussian(NSOURCES))
        allocate(tshift_src(NSOURCES))
        sourcearrays(:,:,:,:,:)=acqui_simu(ievent)%sourcearrays(:,:,:,:,:)
-      
+
 
        islice_selected_source(:)=acqui_simu(ievent)%islice_selected_source(:)
        ispec_selected_source(:)=acqui_simu(ievent)%ispec_selected_source(:)
@@ -457,7 +457,7 @@ contains
     !! clean arrays ----------------------------------------------------------------------------------------------------------------
     ! reset all forward wavefields----------------------------------------------------------------------------------------------------
     call prepare_timerun_init_wavefield()  !! routine from specfem
-   
+
     ! memory variables if attenuation
     if (ATTENUATION) then
         ! clear memory variables if attenuation
@@ -680,7 +680,7 @@ contains
           deallocate(rho_vp,rho_vs)
        endif
     endif
-   
+
   end subroutine InitSpecfemForOneRun
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

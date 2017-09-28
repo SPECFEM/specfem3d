@@ -67,7 +67,7 @@ module inverse_problem_par
   character(len=8),              public             :: prefix_to_path='./'
 
 !################################################# STRUCTURES ######################################################################
- 
+
   ! PROJECTION IN FD GRID STRUCTURE -----------------------------------------------------------------------------------------------
   type, public :: profd
 
@@ -114,7 +114,7 @@ module inverse_problem_par
 
      !! we can import model from disk
      logical                                                                  :: input_sem_model = .false.
-     logical                                                                  :: input_sem_prior = .false. 
+     logical                                                                  :: input_sem_prior = .false.
      logical                                                                  :: input_fd_model = .false.
 
      !! write FWI solution to disk (or not)
@@ -148,7 +148,7 @@ module inverse_problem_par
      real(kind=CUSTOM_REAL)                                                   :: ymin, ymax
      real(kind=CUSTOM_REAL)                                                   :: zmin, zmax
 
-     !! cost 
+     !! cost
      real(kind=CUSTOM_REAL)                                                   :: total_current_cost, total_previous_cost
      real(kind=CUSTOM_REAL)                                                   :: total_current_prim, total_previous_prim
      real(kind=CUSTOM_REAL)                                                   :: penalty_term, damping_term
@@ -161,21 +161,21 @@ module inverse_problem_par
      real(kind=CUSTOM_REAL), dimension(:), allocatable                        :: current_cost_prime, previous_cost_prime
      integer                                                                  :: current_iteration = 0
 
-     !! projection in fd grid 
+     !! projection in fd grid
      type(profd)                                                              :: projection_fd
-     
-     !! regularisation  
-     logical                                                                  :: use_regularisation_FD_Tikonov=.false.
-     logical                                                                  :: use_regularisation_SEM_Tikonov=.false.
+
+     !! regularization
+     logical                                                                  :: use_regularization_FD_Tikonov=.false.
+     logical                                                                  :: use_regularization_SEM_Tikonov=.false.
      logical                                                                  :: use_damping_SEM_Tikonov=.false.
      logical                                                                  :: use_variable_SEM_damping=.false.
      real(kind=CUSTOM_REAL)                                                   :: weight_Tikonov=0.1
      real(kind=CUSTOM_REAL)                                                   :: cost_penalty
-     real(kind=CUSTOM_REAL)                                                   :: volume_domain 
-     real(kind=CUSTOM_REAL)                                                   :: min_damp=1., max_damp=10. 
+     real(kind=CUSTOM_REAL)                                                   :: volume_domain
+     real(kind=CUSTOM_REAL)                                                   :: min_damp=1., max_damp=10.
      real(kind=CUSTOM_REAL)                                                   :: distance_from_source=100.
      real(kind=CUSTOM_REAL),  dimension(:), allocatable                       :: smooth_weight, damp_weight
-     !! prior model 
+     !! prior model
      real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable                :: prior_model
 
      !! --- here add parameters for other methods (further developments)
@@ -203,10 +203,10 @@ module inverse_problem_par
      !! source time function
      real(kind=CUSTOM_REAL)                                                    :: fl_event, fh_event
      real(kind=CUSTOM_REAL), dimension(:,:), allocatable                       :: user_source_time_function
-     !! use external source time function 
+     !! use external source time function
      character(len= MAX_LEN_STRING)                                            :: source_wavelet_file
      logical                                                                   :: external_source_wavelet=.false.
-     !! in case of exploration geophysics, 
+     !! in case of exploration geophysics,
      !! saving temporary shot point to be able to read it directly in acqui_file
      real(kind=CUSTOM_REAL)                                                    :: xshot, yshot, zshot, shot_ampl
 

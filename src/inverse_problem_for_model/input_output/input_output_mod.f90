@@ -155,7 +155,7 @@ contains
 
        endif
 
-       
+
        if (inversion_param%input_SEM_prior) then
 
           if (myrank == 0) then
@@ -821,7 +821,7 @@ contains
                  acqui_simu(ievent)%source_file=trim(adjustl(line(ipos0:ipos1)))
                  acqui_simu(ievent)%source_type=trim(adjustl(keyw))
                  acqui_simu(ievent)%adjoint_source_type='L2_OIL_INDUSTRY'
-                 
+
               case('shot')
                  acqui_simu(ievent)%source_type=trim(adjustl(keyw))
                  read(line(ipos0:ipos1),*) acqui_simu(ievent)%xshot, &
@@ -1002,7 +1002,7 @@ contains
 
           inversion_param%z_precond=.true.
 
-       
+
        case('relat_grad')
           read(line(ipos0:ipos1),*) inversion_param%relat_grad
 
@@ -1018,16 +1018,16 @@ contains
        case('dump_descent_direction_at_each_iteration')
           read(line(ipos0:ipos1),*) inversion_param%dump_descent_direction_at_each_iteration
 
-       case('use_tk_fd_regularisation')
+       case('use_tk_fd_regularization')
           read(line(ipos0:ipos1),*) inversion_param%weight_Tikonov
-          inversion_param%use_regularisation_FD_Tikonov=.true.
-   
-       case('use_tk_sem_regularisation')
+          inversion_param%use_regularization_FD_Tikonov=.true.
+
+       case('use_tk_sem_regularization')
           allocate(inversion_param%smooth_weight(inversion_param%NinvPar))
           read(line(ipos0:ipos1),*) inversion_param%smooth_weight(1), &
                                     inversion_param%smooth_weight(2), &
                                     inversion_param%smooth_weight(3)
-          inversion_param%use_regularisation_SEM_Tikonov=.true.
+          inversion_param%use_regularization_SEM_Tikonov=.true.
 
        case('use_tk_sem_damping')
           allocate(inversion_param%damp_weight(inversion_param%NinvPar))
@@ -1054,14 +1054,14 @@ contains
    write(INVERSE_LOG_FILE,*) '     READ  ', trim(inver_file)
    write(INVERSE_LOG_FILE,*) '     Nb tot events ', acqui_simu(1)%nevent_tot
    write(INVERSE_LOG_FILE,*)
-end if
+endif
 
    if (VERBOSE_MODE .or. DEBUG_MODE) then
      inversion_param%dump_model_at_each_iteration=.true.
      inversion_param%dump_gradient_at_each_iteration=.true.
      inversion_param%dump_descent_direction_at_each_iteration=.true.
    endif
-                 
+
    ! master broadcasts read values
    call MPI_BCAST(inversion_param%Niter,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%Niter_wolfe,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
@@ -1074,14 +1074,14 @@ end if
    call MPI_BCAST(inversion_param%output_model,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%input_fd_model,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%input_sem_model,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
-   call MPI_BCAST(inversion_param%input_sem_prior,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)    
+   call MPI_BCAST(inversion_param%input_sem_prior,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%use_taper,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%shin_precond,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%energy_precond,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%z2_precond,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
-   call MPI_BCAST(inversion_param%z_precond, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier) 
-   call MPI_BCAST(inversion_param%use_regularisation_FD_Tikonov,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
-   call MPI_BCAST(inversion_param%use_regularisation_SEM_Tikonov,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+   call MPI_BCAST(inversion_param%z_precond, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+   call MPI_BCAST(inversion_param%use_regularization_FD_Tikonov,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+   call MPI_BCAST(inversion_param%use_regularization_SEM_Tikonov,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%aPrc,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%zPrc1,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%zPrc2,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
@@ -1092,14 +1092,14 @@ end if
    call MPI_BCAST(inversion_param%min_damp,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%max_damp,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%distance_from_source,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
-   if (myrank >0 .and. inversion_param%use_regularisation_SEM_Tikonov ) then 
+   if (myrank > 0 .and. inversion_param%use_regularization_SEM_Tikonov ) then
       allocate(inversion_param%smooth_weight(inversion_param%NinvPar))
-    end if
-    if (inversion_param%use_regularisation_SEM_Tikonov) &
+    endif
+    if (inversion_param%use_regularization_SEM_Tikonov) &
      call MPI_BCAST(inversion_param%smooth_weight(1),inversion_param%NinvPar,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
-    if (myrank >0 .and. inversion_param%use_damping_SEM_Tikonov ) then 
+    if (myrank > 0 .and. inversion_param%use_damping_SEM_Tikonov ) then
        allocate(inversion_param%damp_weight(inversion_param%NinvPar))
-    end if
+    endif
     if (inversion_param%use_damping_SEM_Tikonov) &
    call MPI_BCAST(inversion_param%damp_weight(1),inversion_param%NinvPar,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%param_family,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
@@ -1319,9 +1319,9 @@ end if
           ! NSOURCES has been updated in get_number_of_sources for slice 0, thus
           ! we broadcast it to other slices
           call MPI_BCAST(NSOURCES,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
-          
+
          case('shot')
-            !! in case of shot we assume that we have only one point source 
+            !! in case of shot we assume that we have only one point source
             NSOURCES=1
             !! and we manatoru use external stf
             USE_EXTERNAL_SOURCE_FILE=.true.
@@ -1371,7 +1371,7 @@ end if
       allocate(acqui_simu(ievent)%user_source_time_function(NSTEP_STF, NSOURCES_STF),stat=ier)
       if (ier /= 0) stop 'error allocating arrays for user sources time function'
 
-       
+
 
       ! 3/ Read the file describing the sources
       select case (acqui_simu(ievent)%source_type)
@@ -1435,31 +1435,31 @@ end if
 
         case ('shot')
 
-           !! set point source 
+           !! set point source
            acqui_simu(ievent)%Xs(:)=acqui_simu(ievent)%xshot
            acqui_simu(ievent)%Ys(:)=acqui_simu(ievent)%yshot
            acqui_simu(ievent)%Zs(:)=acqui_simu(ievent)%zshot
            x_target_source(:)=acqui_simu(ievent)%xshot
            y_target_source(:)=acqui_simu(ievent)%yshot
            z_target_source(:)=acqui_simu(ievent)%zshot
-           
-           !! define shot mechanism 
+
+           !! define shot mechanism
            Mzz(:)=acqui_simu(ievent)%shot_ampl * 1.d-7
            Mxx(:)=acqui_simu(ievent)%shot_ampl * 1.d-7
            Myy(:)=acqui_simu(ievent)%shot_ampl * 1.d-7
            Mxz(:)=0.
            Myz(:)=0.
            Mxy(:)=0.
-           
-           !! read source time function 
-           if (myrank==0) then
+
+           !! read source time function
+           if (myrank == 0) then
               open(IINN, file=trim(acqui_simu(ievent)%source_wavelet_file))
               do it=1,acqui_simu(ievent)%Nt_data
                  read(IINN, *) dt_dummy, acqui_simu(ievent)%user_source_time_function(it,1)
               enddo
               close(IINN)
-           end if
-           
+           endif
+
            call MPI_BCAST(acqui_simu(ievent)%user_source_time_function,acqui_simu(ievent)%Nt_data, &
                 CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
            USE_FORCE_POINT_SOURCE=.false.
@@ -1471,7 +1471,7 @@ end if
           !  - x_target_source,y_target_source,z_target_source,min_tshift,user_source_time_function,hdur
            write(*,*) " Your source is not implemented "
            stop
-           
+
       end select
 
 
@@ -1507,13 +1507,13 @@ end if
       do isrc=1, NSOURCES
         if (myrank == acqui_simu(ievent)%islice_selected_source(isrc)) then
           nsrc_loc = nsrc_loc + 1
-          !! Warning in this subroutine you must add your case for source source 
+          !! Warning in this subroutine you must add your case for source source
           call compute_source_coeff(xi_source(isrc), eta_source(isrc), gamma_source(isrc), &
                                     acqui_simu(ievent)%ispec_selected_source(isrc), &
                                     interparray,Mxx(isrc),Myy(isrc),Mzz(isrc),Mxy(isrc), &
                                     Mxz(isrc),Myz(isrc),factor_force_source(isrc),Fx(isrc),Fy(isrc),Fz(isrc), &
                                     acqui_simu(ievent)%source_type,nu_source(:,:,isrc))
-          acqui_simu(ievent)%sourcearrays(isrc,:,:,:,:) = interparray(:,:,:,:) 
+          acqui_simu(ievent)%sourcearrays(isrc,:,:,:,:) = interparray(:,:,:,:)
         endif
       enddo
 

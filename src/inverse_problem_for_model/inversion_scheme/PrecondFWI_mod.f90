@@ -105,7 +105,7 @@ contains
     endif
 
    if (inversion_param%z_precond .and. iter_inverse == 0) then
-        a =inversion_param%aPrc 
+        a =inversion_param%aPrc
         z1=inversion_param%zPrc1
         z2=inversion_param%zPrc2
         dl = abs(z1 -z2)
@@ -126,13 +126,13 @@ contains
                    iglob=ibool(i,j,k,ispec)
                    z=zstore(iglob)
 
-                   if ( z >= z1) then 
+                   if ( z >= z1) then
                        fwi_precond(i,j,k,ispec,:) = 1.e-8  !! small value to reduce perturbation at subsurface
-                   else if ( z <= z1 .and. z >= z2) then 
+                   else if ( z <= z1 .and. z >= z2) then
                        fwi_precond(i,j,k,ispec,:) = exp(- 0.5 * (a *( z - z1 - dl) / (0.5* dl )**2)  )
                    else
                         fwi_precond(i,j,k,ispec,:) = z / z2
-                   end if
+                   endif
                 enddo
              enddo
           enddo

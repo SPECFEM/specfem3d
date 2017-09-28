@@ -45,7 +45,7 @@ contains
 
     real(kind=CUSTOM_REAL)                                      :: cost_function, cost_function_reduced
     real(kind=CUSTOM_REAL)                                      :: cost_function_rec
-    
+
 
     integer                                                     :: lw, i0, i1, i2, i3
     integer                                                     :: current_iter
@@ -130,10 +130,10 @@ contains
     call sum_all_all_cr(nb_data_std, cost_function_reduced)
     inversion_param%nb_data_std = inversion_param%nb_data_std + nb_data_std
 
-   
-    
 
-   
+
+
+
 
     call deallocate_adjoint_source_working_arrays()
 
@@ -281,10 +281,10 @@ contains
              cost_value=sum(raw_residuals(:)**2) * 0.5 * dt_data
              cost_function = cost_function + cost_value
 
-             !! compute standard deviation 
+             !! compute standard deviation
              data_std = data_std + sum(raw_residuals(:)**2)
              nb_data_std = nb_data_std + size(raw_residuals(:))
-             
+
              ! store adjoint source
              acqui_simu(ievent)%adjoint_sources(icomp,irec_local,:)=raw_residuals(:)*w_tap(:)*&
                   acqui_simu(ievent)%weight_trace(icomp,irec_local)

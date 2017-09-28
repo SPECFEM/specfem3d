@@ -379,11 +379,11 @@ contains
 !!$       ! impose that we stay in that element
 !!$       ! (useful if user gives a point outside the mesh for instance)
 !!$       if (xi > 1.d0) xi     =  1.d0
-!!$       if (xi < -1.d0) xi     = -1.d0
+!!$       if (xi <-1.d0) xi     = -1.d0
 !!$       if (eta > 1.d0) eta    =  1.d0
-!!$       if (eta < -1.d0) eta    = -1.d0
+!!$       if (eta <-1.d0) eta    = -1.d0
 !!$       if (gamma > 1.d0) gamma  =  1.d0
-!!$       if (gamma < -1.d0) gamma  = -1.d0
+!!$       if (gamma <-1.d0) gamma  = -1.d0
 !!$
 !!$    enddo
 !!$
