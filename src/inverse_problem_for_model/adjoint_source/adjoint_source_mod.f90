@@ -114,7 +114,14 @@ contains
     call sum_all_all_cr(cost_function, cost_function_reduced)
     !! add the cost function over all sources in group
     inversion_param%total_current_cost =inversion_param%total_current_cost + cost_function_reduced
+    !! save cost function for the current source
+    inversion_param%current_cost(ievent) = cost_function_reduced
 
+    if (myrank == 0) then
+       write(INVERSE_LOG_FILE,*) '      Cost function for this event : ', cost_function_reduced
+    endif
+
+    !! standard deviation on data
     cost_function_reduced=0._CUSTOM_REAL
     call sum_all_all_cr(data_std, cost_function_reduced)
     inversion_param%data_std = inversion_param%data_std + data_std
@@ -123,13 +130,10 @@ contains
     call sum_all_all_cr(nb_data_std, cost_function_reduced)
     inversion_param%nb_data_std = inversion_param%nb_data_std + nb_data_std
 
-    !! save cost function for the current source
-    inversion_param%current_cost(ievent) = cost_function_reduced
+   
     
 
-    if (myrank == 0) then
-       write(INVERSE_LOG_FILE,*) '      Cost function for this event : ', cost_function_reduced
-    endif
+   
 
     call deallocate_adjoint_source_working_arrays()
 

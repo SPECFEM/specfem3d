@@ -181,8 +181,8 @@ contains
     b_deltatsqover2 = b_deltat*b_deltat/2._CUSTOM_REAL
 
     ! prepare source (only one source allowed for now) -----------------------------------------------------------------------------
-    NSOURCES = acqui_simu(ievent)%nsources_local
-    if (USE_EXTERNAL_SOURCE_FILE) then
+    NSOURCES = acqui_simu(ievent)%nsources_tot  !! VM VM replace nsource_loc by nsource_tot since all arrays below 
+    if (USE_EXTERNAL_SOURCE_FILE) then          !! are using nsource_tot  
       NSOURCES_STF = NSOURCES
       NSTEP_STF    = NSTEP
     else
@@ -192,7 +192,7 @@ contains
 
     select case (acqui_simu(ievent)%source_type)
 
-    case ('moment','force')
+    case ('moment','force','shot')
        nsources_local =  acqui_simu(ievent)%nsources_local
        if (allocated(sourcearrays)) deallocate(sourcearrays)
        if (allocated(islice_selected_source)) deallocate(islice_selected_source)
@@ -207,8 +207,9 @@ contains
        allocate(hdur(NSOURCES))
        allocate(hdur_Gaussian(NSOURCES))
        allocate(tshift_src(NSOURCES))
-
        sourcearrays(:,:,:,:,:)=acqui_simu(ievent)%sourcearrays(:,:,:,:,:)
+      
+
        islice_selected_source(:)=acqui_simu(ievent)%islice_selected_source(:)
        ispec_selected_source(:)=acqui_simu(ievent)%ispec_selected_source(:)
        PRINT_SOURCE_TIME_FUNCTION=.true.
@@ -456,6 +457,7 @@ contains
     !! clean arrays ----------------------------------------------------------------------------------------------------------------
     ! reset all forward wavefields----------------------------------------------------------------------------------------------------
     call prepare_timerun_init_wavefield()  !! routine from specfem
+   
     ! memory variables if attenuation
     if (ATTENUATION) then
         ! clear memory variables if attenuation
@@ -678,7 +680,7 @@ contains
           deallocate(rho_vp,rho_vs)
        endif
     endif
-
+   
   end subroutine InitSpecfemForOneRun
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -698,7 +700,7 @@ contains
     case('axisem')
        close(IIN_veloc_dsm)
 
-    case('fk', 'moment', 'force')
+    case('fk', 'moment', 'force', 'shot')
        !! nothing to do for the moment
 
     case default   !! for stopping if any problem with source_type

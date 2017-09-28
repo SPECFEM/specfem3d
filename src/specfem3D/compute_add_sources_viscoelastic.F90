@@ -78,17 +78,17 @@
             time_source_dble = dble(it-1)*DT - t0 - tshift_src(isource)
           endif
 
-          ! determines source time function value
-          stf = get_stf_viscoelastic(time_source_dble,isource)
-
-          !! VM VM add external source time function
+          !! add external source time function
           if (USE_EXTERNAL_SOURCE_FILE) then
-            stf = user_source_time_function(it, isource)
+             stf = user_source_time_function(it, isource)
+          else
+             ! determines source time function value
+             stf = get_stf_viscoelastic(time_source_dble,isource)
           endif
 
           ! distinguishes between single and double precision for reals
           stf_used = real(stf,kind=CUSTOM_REAL)
-
+          
           ! adds source array
           do k=1,NGLLZ
             do j=1,NGLLY
@@ -308,13 +308,13 @@
             time_source_dble = dble(NSTEP-it)*DT - t0 - tshift_src(isource)
           endif
 
-          ! determines source time function value
-          stf = get_stf_viscoelastic(time_source_dble,isource)
-
-          !! VM VM add external source time function
+          !! add external source time function
           if (USE_EXTERNAL_SOURCE_FILE) then
-            ! time-reversed
-            stf = user_source_time_function(NSTEP-it+1, isource)
+             ! time-reversed
+             stf = user_source_time_function(NSTEP-it+1, isource)
+          else
+             ! determines source time function value
+             stf = get_stf_viscoelastic(time_source_dble,isource)
           endif
 
           ! distinguishes between single and double precision for reals
@@ -403,12 +403,12 @@
           time_source_dble = dble(it-1)*DT - t0 - tshift_src(isource)
         endif
 
-        ! determines source time function value
-        stf = get_stf_viscoelastic(time_source_dble,isource)
-
-        !! VM VM add external source time function
+        !! add external source time function
         if (USE_EXTERNAL_SOURCE_FILE) then
            stf = user_source_time_function(it, isource)
+        else
+           ! determines source time function value
+           stf = get_stf_viscoelastic(time_source_dble,isource)
         endif
 
         ! stores precomputed source time function factor
@@ -511,12 +511,12 @@
           time_source_dble = dble(NSTEP-it)*DT - t0 - tshift_src(isource)
         endif
 
-        ! determines source time function value
-        stf = get_stf_viscoelastic(time_source_dble,isource)
-
-        !! VM VM add external source time function
+        !! add external source time function
         if (USE_EXTERNAL_SOURCE_FILE) then
            stf = user_source_time_function(NSTEP-it+1, isource)
+        else
+           ! determines source time function value
+           stf = get_stf_viscoelastic(time_source_dble,isource)
         endif
 
         ! stores precomputed source time function factor

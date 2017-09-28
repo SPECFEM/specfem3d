@@ -33,7 +33,7 @@ module input_output
                          ibool, xstore, ystore, zstore, &
                          xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, &
                          myrank, USE_SOURCES_RECEIVERS_Z,INVERSE_FWI_FULL_PROBLEM, &
-                         USE_FORCE_POINT_SOURCE,USE_EXTERNAL_SOURCE_FILE
+                         USE_FORCE_POINT_SOURCE,USE_EXTERNAL_SOURCE_FILE, USE_RICKER_TIME_FUNCTION
 
 
   use specfem_par_elastic, only: ispec_is_elastic
@@ -826,7 +826,8 @@ contains
                  acqui_simu(ievent)%source_type=trim(adjustl(keyw))
                  read(line(ipos0:ipos1),*) acqui_simu(ievent)%xshot, &
                                            acqui_simu(ievent)%yshot, &
-                                           acqui_simu(ievent)%zshot
+                                           acqui_simu(ievent)%zshot, &
+                                           acqui_simu(ievent)%shot_ampl
                  acqui_simu(ievent)%adjoint_source_type='L2_OIL_INDUSTRY'
 
               case('axisem', 'dsm', 'plane', 'fk')
@@ -905,6 +906,7 @@ contains
        call MPI_BCAST(acqui_simu(ievent)%xshot,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(acqui_simu(ievent)%yshot,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
        call MPI_BCAST(acqui_simu(ievent)%zshot,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+       call MPI_BCAST(acqui_simu(ievent)%shot_ampl,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
     enddo
 
   end subroutine read_acqui_file
@@ -968,6 +970,9 @@ contains
 
         case('input_sem_model')
            read(line(ipos0:ipos1),*)  inversion_param%input_sem_model
+
+       case('input_sem_prior')
+          read(line(ipos0:ipos1),*)  inversion_param%input_sem_prior
 
         case('output_model')
            read(line(ipos0:ipos1),*)  inversion_param%output_model
@@ -1069,6 +1074,7 @@ end if
    call MPI_BCAST(inversion_param%output_model,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%input_fd_model,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%input_sem_model,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+   call MPI_BCAST(inversion_param%input_sem_prior,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)    
    call MPI_BCAST(inversion_param%use_taper,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%shin_precond,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%energy_precond,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
@@ -1119,11 +1125,6 @@ end if
     acqui_simu(ievent)%source_type  ='none'
     acqui_simu(ievent)%station_file ='none'
     acqui_simu(ievent)%adjoint_source_type='none'
-
-    acqui_simu(ievent)%tshift=0.d0
-    acqui_simu(ievent)%hdur=0.d0
-    acqui_simu(ievent)%hdur_Gaussian=0.d0
-    acqui_simu(ievent)%nsources_local=0
 
   end subroutine store_default_acqui_values
 
@@ -1324,6 +1325,7 @@ end if
             NSOURCES=1
             !! and we manatoru use external stf
             USE_EXTERNAL_SOURCE_FILE=.true.
+            USE_RICKER_TIME_FUNCTION=.false.
          case default
           !! define here the way the number of sources is obtained
 
@@ -1442,9 +1444,9 @@ end if
            z_target_source(:)=acqui_simu(ievent)%zshot
            
            !! define shot mechanism 
-           Mzz(:)=1.
-           Mxx(:)=1.
-           Myy(:)=1.
+           Mzz(:)=acqui_simu(ievent)%shot_ampl * 1.d-7
+           Mxx(:)=acqui_simu(ievent)%shot_ampl * 1.d-7
+           Myy(:)=acqui_simu(ievent)%shot_ampl * 1.d-7
            Mxz(:)=0.
            Myz(:)=0.
            Mxy(:)=0.
@@ -1467,7 +1469,9 @@ end if
           !  - factor_force_source,Fx,Fy,Fz  if USE_FORCE_POINT_SOURCE==.true.
           !  - Mxx,Myy,Mzz,Mxz,Myz,Mxy       if USE_FORCE_POINT_SOURCE==.false.
           !  - x_target_source,y_target_source,z_target_source,min_tshift,user_source_time_function,hdur
-
+           write(*,*) " Your source is not implemented "
+           stop
+           
       end select
 
 
@@ -1503,16 +1507,18 @@ end if
       do isrc=1, NSOURCES
         if (myrank == acqui_simu(ievent)%islice_selected_source(isrc)) then
           nsrc_loc = nsrc_loc + 1
+          !! Warning in this subroutine you must add your case for source source 
           call compute_source_coeff(xi_source(isrc), eta_source(isrc), gamma_source(isrc), &
                                     acqui_simu(ievent)%ispec_selected_source(isrc), &
                                     interparray,Mxx(isrc),Myy(isrc),Mzz(isrc),Mxy(isrc), &
                                     Mxz(isrc),Myz(isrc),factor_force_source(isrc),Fx(isrc),Fy(isrc),Fz(isrc), &
                                     acqui_simu(ievent)%source_type,nu_source(:,:,isrc))
-          acqui_simu(ievent)%sourcearrays(isrc,:,:,:,:) = interparray(:,:,:,:)
+          acqui_simu(ievent)%sourcearrays(isrc,:,:,:,:) = interparray(:,:,:,:) 
         endif
       enddo
 
       acqui_simu(ievent)%nsources_local = nsrc_loc
+      acqui_simu(ievent)%nsources_tot = NSOURCES
 
       deallocate(Mxx,Myy,Mzz,Mxy,Mxz,Myz,xi_source,eta_source,gamma_source,nu_source)
       deallocate(factor_force_source,Fx,Fy,Fz)

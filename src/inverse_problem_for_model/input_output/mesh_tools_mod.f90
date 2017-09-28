@@ -431,7 +431,7 @@ contains
 
     select case (trim(adjustl(type)))
 
-    case ('moment')
+    case ('moment', 'shot')
        if (ispec_is_elastic(ispec)) then
 
           factor = 1.0
@@ -482,6 +482,8 @@ contains
        call compute_arrays_source_forcesolution(interparray,hxis,hetas,hgammas,factor,comp_x,comp_y,comp_z,nu_source)
 
     case default
+       write(*,*) " Your source is not implemented in compute_source_coeff subroutine "
+       stop
 
     end select
 

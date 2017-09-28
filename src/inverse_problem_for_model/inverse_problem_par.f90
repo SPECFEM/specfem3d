@@ -208,7 +208,7 @@ module inverse_problem_par
      logical                                                                   :: external_source_wavelet=.false.
      !! in case of exploration geophysics, 
      !! saving temporary shot point to be able to read it directly in acqui_file
-     real(kind=CUSTOM_REAL)                                                    :: xshot, yshot, zshot
+     real(kind=CUSTOM_REAL)                                                    :: xshot, yshot, zshot, shot_ampl
 
      !! --------------------- source parameter specific for Specfem ---------------------
      !! time parameters needed for specfem
