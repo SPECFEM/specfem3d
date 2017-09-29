@@ -32,14 +32,14 @@ contains
 ! perform one step for optimization scheme iterations
 !-------------------------------------------------------------------------------------------------------------
 
-  subroutine OneIterationOptim(iter_inverse, finished, acqui_simu, inversion_param) !!!!!! , regularization_fd)
+  subroutine OneIterationOptim(iter_inverse, iter_frq, finished, acqui_simu, inversion_param) !!!!!! , regularization_fd)
 
     implicit none
 
 !!!!!!    type(regul),  dimension(:), allocatable,        intent(in)    :: regularization_fd
     type(inver),                                    intent(inout) :: inversion_param
     type(acqui),  dimension(:), allocatable,        intent(inout) :: acqui_simu
-    integer,                                        intent(in)    :: iter_inverse
+    integer,                                        intent(in)    :: iter_inverse, iter_frq
     logical,                                        intent(inout) :: finished
 
     !! locals
@@ -75,6 +75,7 @@ contains
     ModelIsSuitable = .true.
     Niv=inversion_param%NinvPar
     inversion_param%current_iteration=iter_inverse
+    inversion_param%current_ifrq=iter_frq
 
     ! compute and store descent direction
     call ComputeDescentDirection(iter_inverse, descent_direction, fwi_precond)
@@ -268,24 +269,31 @@ contains
 ! initialize optimization scheme iterations
 !-------------------------------------------------------------------------------------------------------------
 
-  subroutine InitializeOptimIteration(acqui_simu, inversion_param)
+  subroutine InitializeOptimIteration(iter_frq, acqui_simu, inversion_param)
 
     implicit none
 
     type(acqui),  dimension(:), allocatable,        intent(inout) :: acqui_simu
     type(inver),                                    intent(inout) :: inversion_param
-    integer                                                       :: ievent,  iter_inverse
+    integer,                                        intent(in)    :: iter_frq
+    integer                                                       :: ievent,  iter_inverse, ipar
     character(len=MAX_LEN_STRING)                                 :: prefix_name
     real(kind=CUSTOM_REAL)                                        :: tmp_val 
     
     iter_inverse=0
-
+    inversion_param%current_ifrq=iter_frq
 
     if (myrank == 0) then
        write(INVERSE_LOG_FILE,*)
        write(INVERSE_LOG_FILE,*) '          *********************************************'
        write(INVERSE_LOG_FILE,*) '          ***      INITIALIZE FWI ITERATIONS        ***'
        write(INVERSE_LOG_FILE,*) '          *********************************************'
+       write(INVERSE_LOG_FILE,*)
+       write(INVERSE_LOG_FILE,*)
+       write(INVERSE_LOG_FILE,*)
+       write(INVERSE_LOG_FILE,*)  '          frequncy band :',iter_frq,  acqui_simu(1)%fl_event(iter_frq), &
+            acqui_simu(1)%fh_event(iter_frq)
+       write(INVERSE_LOG_FILE,*)
        write(INVERSE_LOG_FILE,*)
        call flush_iunit(INVERSE_LOG_FILE)
     endif
@@ -337,9 +345,18 @@ contains
        ! save specif read prior model in family 
        call  SpecfemPrior2Invert(inversion_param, prior_model)
     else 
-       ! save starting model read as prior model
-       prior_model(:,:,:,:,:) = initial_model(:,:,:,:,:)
+       ! save starting model read as prior model for the first frequency group
+       if (iter_frq==1) prior_model(:,:,:,:,:) = initial_model(:,:,:,:,:)
     end if
+    
+    !! compute reference mean model
+    if (inversion_param%use_damping_SEM_Tikonov .and. inversion_param%input_SEM_prior) then
+       do ipar =1, inversion_param%NinvPar
+            inversion_param%damp_weight(ipar) = inversion_param%damp_weight(ipar) * &
+                 (size(prior_model(:,:,:,:,ipar)) / sum(prior_model(:,:,:,:,ipar)))**2 
+       end do
+    end if
+
     ! compute regularization term and gradient for choosen family 
     call AddRegularization(inversion_param, initial_model, prior_model, regularization_penalty, &
          gradient_regularization_penalty,&
@@ -379,6 +396,14 @@ contains
     call StoreModelAndGradientForLBFGS(initial_model, initial_gradient, 0)
 
     if (myrank == 0) then
+       write(OUTPUT_FWI_LOG,*) 
+       write(OUTPUT_FWI_LOG,*) '  FREQUENCY GROUP :',  acqui_simu(1)%fl_event(iter_frq), &
+            acqui_simu(1)%fh_event(iter_frq)
+       write(OUTPUT_FWI_LOG,*) 
+       write(OUTPUT_ITERATION_FILE,*)
+       write(OUTPUT_ITERATION_FILE,*) '  FREQUENCY GROUP :',  acqui_simu(1)%fl_event(iter_frq), &
+            acqui_simu(1)%fh_event(iter_frq)
+       write(OUTPUT_ITERATION_FILE,*)
        write(OUTPUT_ITERATION_FILE,'(i5,"|",e15.8,"|",e15.8,"|",e12.5,"|",e12.5,"|")')  &
             0, inversion_param%Cost_init, inversion_param%Norm_grad_init, 1., 1.
        write(INVERSE_LOG_FILE,*)
@@ -387,6 +412,7 @@ contains
        write(INVERSE_LOG_FILE,*) ' Initial Gradient Norm :', inversion_param%Norm_grad_init
        write(INVERSE_LOG_FILE,*) 'Initial Data std :', inversion_param%data_std
        call flush_iunit(INVERSE_LOG_FILE)
+       call flush_iunit(OUTPUT_ITERATION_FILE)
     endif
 
   end subroutine InitializeOptimIteration

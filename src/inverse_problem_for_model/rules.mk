@@ -120,6 +120,7 @@ inverse_problem_for_model_OBJECTS = \
 	$O/parallel_for_inverse_problem.o \
 	$O/adjoint_source_mod.o \
 	$O/mesh_tools_mod.o \
+	$O/Teleseismic_IO.o \
 	$O/interpolation_mod.o \
 	$O/IO_model_mod.o \
 	$O/input_output_mod.o \
@@ -419,6 +420,10 @@ $O/mesh_tools_mod.o : $S/input_output/mesh_tools_mod.f90 ${SETUP}/constants.h $O
 
 $O/interpolation_mod.o : $S/input_output/interpolation_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
 	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/input_output/interpolation_mod.f90 -c -o $O/interpolation_mod.o
+
+# IO for teleseismic case 
+$O/Teleseismic_IO.o : $S/input_output/Teleseismic_IO.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
+	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/input_output/Teleseismic_IO.f90 -c -o $O/Teleseismic_IO.o
 
 # import or export model
 $O/IO_model_mod.o : $S/input_output/IO_model_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
