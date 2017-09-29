@@ -99,7 +99,7 @@ module inverse_problem_par
      real(kind=CUSTOM_REAL)                                                   :: relat_grad = 1.e-3
      real(kind=CUSTOM_REAL)                                                   :: relat_cost = 1.e-1
 
-     !! use filter band pass for inversion  
+     !! use filter band pass for inversion
      integer                                                                  :: Nifrq=1
      logical                                                                  :: use_band_pass_filter=.false.
 
@@ -291,23 +291,23 @@ module inverse_problem_par
      character(len= MAX_LEN_STRING)                                            :: adjoint_source_type
 
      !! ---------------------- information needed for teleseismic fwi -----------------------------
-     !! for rotation matrices 
+     !! for rotation matrices
      real(kind=CUSTOM_REAL)                                                    :: Origin_chunk_lat,  Origin_chunk_lon
      real(kind=CUSTOM_REAL)                                                    :: event_lat,  event_lon, event_depth
-     !! window for inversion  
+     !! window for inversion
      logical                                                                   :: is_time_pick
      logical                                                                   :: time_window
      real(kind=CUSTOM_REAL)                                                    :: time_before_pick, time_after_pick
-     
+
      !! stations network
      character(len= MAX_LEN_STRING)                                            :: station_coord_system
-     !! station list 
+     !! station list
      real(kind=CUSTOM_REAL), dimension(:,:), allocatable                       :: read_station_position
      real(kind=CUSTOM_REAL), dimension(:), allocatable                         :: time_pick
-     
+
      !! traction directory in case of AxiSem or DSM coupling
      character(len= MAX_LEN_STRING)                                            :: traction_dir
-     
+
 
   end type acqui !-----------------------------------------------------------------------------------------------------------------
 

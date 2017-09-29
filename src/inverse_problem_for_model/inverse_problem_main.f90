@@ -144,7 +144,7 @@ subroutine inverse_problem_main()
      !! initialize specifics arrays for optimization
      call AllocatememoryForFWI(inversion_param, acqui_simu(1)%nevent_tot)
 
-     !! loop on frequencies 
+     !! loop on frequencies
      do iter_frq = 1, inversion_param%Nifrq
 
         !! initialize (reset) optimization
@@ -154,15 +154,15 @@ subroutine inverse_problem_main()
         do iter_inverse = 0,  inversion_param%Niter
 
            call OneIterationOptim(iter_inverse, iter_frq, finished, acqui_simu, inversion_param) !!!!!! , regularization_fd)
-           
+
            if (finished) exit
 
         enddo
-        
+
         !! write model in disk
         call WirteOutputs(inversion_param)
 
-     end do
+     enddo
 
      !----------------------------------------------------------------------------------------------------------------
      if (myrank == 0) then

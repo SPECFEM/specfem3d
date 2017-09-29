@@ -498,7 +498,7 @@ contains
     character(len=MAX_LEN_STRING)                                             :: prefix_name
     integer                                                                   :: global_iter
 
-    global_iter = inversion_param%current_ifrq * 10000  + iter_inverse  
+    global_iter = inversion_param%current_ifrq * 10000  + iter_inverse
 
     if (inversion_param%dump_model_at_each_iteration) then
        prefix_name='model'

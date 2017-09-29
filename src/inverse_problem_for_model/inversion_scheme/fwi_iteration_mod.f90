@@ -344,20 +344,20 @@ contains
     if (inversion_param%input_SEM_prior) then
        ! save specif read prior model in family
        call  SpecfemPrior2Invert(inversion_param, prior_model)
-    else 
+    else
        ! save starting model read as prior model for the first frequency group
-       if (iter_frq==1) prior_model(:,:,:,:,:) = initial_model(:,:,:,:,:)
-    end if
-    
+       if (iter_frq == 1) prior_model(:,:,:,:,:) = initial_model(:,:,:,:,:)
+    endif
+
     !! compute reference mean model
     if (inversion_param%use_damping_SEM_Tikonov .and. inversion_param%input_SEM_prior) then
        do ipar =1, inversion_param%NinvPar
             inversion_param%damp_weight(ipar) = inversion_param%damp_weight(ipar) * &
-                 (size(prior_model(:,:,:,:,ipar)) / sum(prior_model(:,:,:,:,ipar)))**2 
-       end do
-    end if
+                 (size(prior_model(:,:,:,:,ipar)) / sum(prior_model(:,:,:,:,ipar)))**2
+       enddo
+    endif
 
-    ! compute regularization term and gradient for choosen family 
+    ! compute regularization term and gradient for choosen family
     call AddRegularization(inversion_param, initial_model, prior_model, regularization_penalty, &
          gradient_regularization_penalty, &
          myrank)
@@ -396,10 +396,10 @@ contains
     call StoreModelAndGradientForLBFGS(initial_model, initial_gradient, 0)
 
     if (myrank == 0) then
-       write(OUTPUT_FWI_LOG,*) 
+       write(OUTPUT_FWI_LOG,*)
        write(OUTPUT_FWI_LOG,*) '  FREQUENCY GROUP :',  acqui_simu(1)%fl_event(iter_frq), &
             acqui_simu(1)%fh_event(iter_frq)
-       write(OUTPUT_FWI_LOG,*) 
+       write(OUTPUT_FWI_LOG,*)
        write(OUTPUT_ITERATION_FILE,*)
        write(OUTPUT_ITERATION_FILE,*) '  FREQUENCY GROUP :',  acqui_simu(1)%fl_event(iter_frq), &
             acqui_simu(1)%fh_event(iter_frq)

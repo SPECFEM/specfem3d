@@ -263,7 +263,7 @@ contains
           do icomp = 1, NDIM
 
              !! get data ------------------------
-             if (use_band_pass_filter) then 
+             if (use_band_pass_filter) then
                 !! filter the data
                 fil_residuals(:)=0._CUSTOM_REAL
                 fl=acqui_simu(ievent)%fl_event(current_ifrq)
@@ -274,10 +274,10 @@ contains
 
                 !! save filtered data
                 acqui_simu(ievent)%synt_traces(icomp, irec_local,:)=  data_trace_to_use(:)
-                
+
              else
                 data_trace_to_use(:)=acqui_simu(ievent)%data_traces(irec_local,:,icomp)
-             end if
+             endif
 
              !! define energy renormalisation
              if (current_iter == 0) then
@@ -298,10 +298,10 @@ contains
              cost_value=sum(residuals(:)**2) * 0.5 * dt_data
              cost_function = cost_function + cost_value
 
-             !! compute raw standard deviation 
+             !! compute raw standard deviation
              data_std = data_std + sum((seismograms_d(icomp,irec_local,:) - data_trace_to_use(:))**2 )
              nb_data_std = nb_data_std + size(residuals(:))
-             
+
              ! store adjoint source
              acqui_simu(ievent)%adjoint_sources(icomp,irec_local,:)=residuals(:)*w_tap(:)*&
                   acqui_simu(ievent)%weight_trace(icomp,irec_local)
@@ -359,7 +359,7 @@ contains
 
     case ('L2_OIL_INDUSTRY')
 
-       if (use_band_pass_filter) then 
+       if (use_band_pass_filter) then
           !! filter the data
           fil_residuals(:)=0._CUSTOM_REAL
           fl=acqui_simu(ievent)%fl_event(current_ifrq)
@@ -369,9 +369,9 @@ contains
 
           !! save filtered data
           acqui_simu(ievent)%synt_traces(icomp, irec_local,:)= fil_residuals(:)
-       else 
+       else
           fil_residuals(:)=acqui_simu(ievent)%data_traces(irec_local,:,icomp)
-       end if
+       endif
 
        !! save residuals for adjoint source. Note we use the difference between
        !! obseved pressure and computed pressure, not the approach in Luo and Tromp Gepohysics 2013

@@ -1,25 +1,25 @@
 module Teleseismic_IO_mod
 
-  ! from specfem 
+  ! from specfem
   use constants, only: mygroup
   use specfem_par, only: CUSTOM_REAL, NGLLX, NGLLY, NGLLZ, NGNOD
 
-  ! from inversion 
+  ! from inversion
   use inverse_problem_par
   use mesh_tools
 
   integer, private :: NEVENT
-contains 
-  
+contains
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !-------------------------------------------------------------------------------------------------------------------
-!> reading event file information for teleseismic inversion 
+!> reading event file information for teleseismic inversion
 !-------------------------------------------------------------------------------------------------------------------
   subroutine read_acqui_teleseismic_file(acqui_file, acqui_simu, myrank)
 
     use my_mpi             !! module from specfem
     include "precision.h"  !! from specfem
-    
+
     character(len=MAX_LEN_STRING),                  intent(in) ::  acqui_file
     integer,                                        intent(in) ::  myrank
     type(acqui),  dimension(:), allocatable,     intent(inout) ::  acqui_simu
@@ -29,7 +29,7 @@ contains
     character(len=MAX_LEN_STRING)                              :: line, keyw !, line_to_read
     integer                                                    :: ipos0, ipos1, ievent
     integer                                                    :: ier
-    
+
     if (myrank == 0) then
        write(INVERSE_LOG_FILE,*)
        write(INVERSE_LOG_FILE,*) '     READING teleseismic acquisition file '
@@ -39,7 +39,7 @@ contains
     NEVENT=0
     ! only master reads acqui file
     if (myrank == 0) then
-       do 
+       do
           !! 1/ read to count the number of events
           open(666,file=trim(acqui_file),iostat=ier)
           if (ier /= 0) then
@@ -47,14 +47,14 @@ contains
           else
              if (DEBUG_MODE) write(IIDD,*) ' opening  ', trim(acqui_file), ' mygoup ', mygroup
           endif
-          
+
           read(666,'(a)',end=99) line
           if (DEBUG_MODE) write(IIDD,'(a)') trim(line)
           !if (is_blank_line(line)) cycle                     !! no significant line
           if (INDEX(line,'event_name') > 0) NEVENT=NEVENT+1  !! new event
-       end do
+       enddo
 99     close(666)
-       
+
        !! 2/ allocate and store type(acqui) acqui_simu
        if (NEVENT > 0) then
           allocate(acqui_simu(NEVENT))
@@ -63,66 +63,66 @@ contains
           write(*,*) 'ERROR NO EVENTS FOUND IN ACQUISITION FILE ',myrank, mygroup, trim(acqui_file)
           stop
        endif
-       
+
        ! open event file
        open(666,file=trim(acqui_file))
        ievent=0
-       do 
+       do
           read(666,'(a)',end=999) line
           !if (is_blank_line(line)) cycle
           ! INDICES TO READ line -----------------------------------------------
           ipos0=index(line,':')+1
           ipos1=index(line,'#')-1
           if (ipos1 < 0 ) ipos1=len_trim(line)
-          
+
           !! STORE KEYWORD ITEM -------------------------------------------------
           keyw=trim(adjustl(line(1:ipos0-2)))
           select case (trim(keyw))
-             
+
           case('event_name')
              ievent=ievent+1
              !! this name is the name of file contains all information on teleseismic event
              acqui_simu(ievent)%event_name=trim(adjustl(line(ipos0:ipos1)))
              acqui_simu(ievent)%nevent_tot=NEVENT
 
-             !! to do define this routine  .... for reading all info for event 
+             !! to do define this routine  .... for reading all info for event
              call read_one_teleseismic_event()
-            
+
           end select
-       end do
+       enddo
 
 999    close(666)
 
-    end if
+    endif
 
-    
+
     ! master broadcasts read values
     call MPI_BCAST(NEVENT,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
     if (myrank > 0) allocate(acqui_simu(NEVENT))
     do ievent = 1, NEVENT
        call MPI_BCAST(acqui_simu(ievent)%event_name,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
-    end do
+    enddo
 
-    !! to do do not forget to bcast all acqui_simu structure to other mpi slices  
+    !! to do do not forget to bcast all acqui_simu structure to other MPI slices
     !! ......
-    
-    
+
+
 
   end subroutine read_acqui_teleseismic_file
 
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !-------------------------------------------------------------------------------------------------------------------
-!> subroutine to read one event file 
+!> subroutine to read one event file
 !-------------------------------------------------------------------------------------------------------------------
   subroutine read_one_teleseismic_event()
 
     !! reading input event teleseismic file
-    
+
     !!
     !!
     write(*,*) ' teleseismic event is under construction then we cannnot provide it for now ....'
-    !! need to compute cartesian coordinate of stations : acqui_simu(ievent)%position_station(3,nsta_tot)
+    !! need to compute Cartesian coordinate of stations : acqui_simu(ievent)%position_station(3,nsta_tot)
     !!
     !!
 
@@ -130,13 +130,13 @@ contains
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !-------------------------------------------------------------------------------------------------------------------
-!> store arrays that needed for specfem to be able to use stations in mesh 
+!> store arrays that needed for specfem to be able to use stations in mesh
 !-------------------------------------------------------------------------------------------------------------------
   subroutine setup_teleseismic_stations(acqui_simu, myrank)
-    
-    !! from  acqui_simu%position_station assumed to be in cartesian coordinate
+
+    !! from  acqui_simu%position_station assumed to be in Cartesian coordinate
     !!
-    !! compute all arrays specific to specfem : 
+    !! compute all arrays specific to specfem :
     !!
     !! xi_rec,eta_rec,gamma_rec
     !! islice_selected_rec
@@ -168,7 +168,7 @@ contains
     double precision,        dimension(NGLLY)              :: hetas,hpetas
     double precision,        dimension(NGLLZ)              :: hgammas,hpgammas
     double precision                                       :: distance_from_target
-    
+
 
     ! get mesh properties (mandatory before calling locate_point_in_mesh)
     call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
@@ -255,10 +255,10 @@ contains
        acqui_simu(ievent)%nsta_slice=nsta_slice
 
     enddo
-    
+
    ! store local information
     do ievent = 1, NEVENT
-       
+
        if (acqui_simu(ievent)%nsta_slice > 0) then
           allocate(acqui_simu(ievent)%hxi(NGLLX,acqui_simu(ievent)%nsta_slice))
           allocate(acqui_simu(ievent)%heta(NGLLY,acqui_simu(ievent)%nsta_slice))
@@ -280,13 +280,13 @@ contains
        irec_local=0
        do ireceiver=1, acqui_simu(ievent)%nsta_tot
           if (myrank == acqui_simu(ievent)%islice_selected_rec(ireceiver)) then
-             
+
              irec_local = irec_local + 1
-             
+
              xi_receiver=acqui_simu(ievent)%xi_rec(ireceiver)
              eta_receiver=acqui_simu(ievent)%eta_rec(ireceiver)
              gamma_receiver=acqui_simu(ievent)%gamma_rec(ireceiver)
-             
+
              ! compute Lagrange polynomials at the source location
              call lagrange_any(xi_receiver,NGLLX,xigll,hxis,hpxis)
              call lagrange_any(eta_receiver,NGLLY,yigll,hetas,hpetas)
@@ -305,7 +305,7 @@ contains
        enddo
 
     enddo
-    
+
     if (myrank == 0) then
        write(INVERSE_LOG_FILE,*)
        write(INVERSE_LOG_FILE,*) ' ... locate stations passed '

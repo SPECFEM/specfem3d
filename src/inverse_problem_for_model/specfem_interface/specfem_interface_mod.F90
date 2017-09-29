@@ -227,7 +227,7 @@ contains
           else
              !! filter the user stf
              !! EB EB Warning, filtering may be done each time we are switching events
-             if (inversion_param%use_band_pass_filter) then 
+             if (inversion_param%use_band_pass_filter) then
                 allocate(raw_stf(NSTEP), filt_stf(NSTEP))
                 do isrc=1,NSOURCES
                    raw_stf(:)=acqui_simu(ievent)%user_source_time_function(:,isrc)
@@ -241,7 +241,7 @@ contains
                 deallocate(raw_stf, filt_stf)
               else
                  user_source_time_function(:,:)=acqui_simu(ievent)%user_source_time_function(:,:)
-              end if
+              endif
              !! write STF used to check
              if (VERBOSE_MODE .and. myrank == 0) then
                  write(ch_to_add,'(a10,i4.4,a1,i4.4,a4)') '_stf_used_',ievent,'_',iter_inverse,'.txt'
