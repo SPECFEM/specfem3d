@@ -344,7 +344,6 @@ contains
     if (inversion_param%input_SEM_prior) then
        ! save specif read prior model in family
        call  SpecfemPrior2Invert(inversion_param, prior_model)
-<<<<<<< HEAD
     else 
        ! save starting model read as prior model for the first frequency group
        if (iter_frq==1) prior_model(:,:,:,:,:) = initial_model(:,:,:,:,:)
@@ -359,13 +358,6 @@ contains
     end if
 
     ! compute regularization term and gradient for choosen family 
-=======
-    else
-       ! save starting model read as prior model
-       prior_model(:,:,:,:,:) = initial_model(:,:,:,:,:)
-    endif
-    ! compute regularization term and gradient for choosen family
->>>>>>> e63d891980ae00bd082c3e15f6edbfaa5bba68d1
     call AddRegularization(inversion_param, initial_model, prior_model, regularization_penalty, &
          gradient_regularization_penalty, &
          myrank)

@@ -141,14 +141,6 @@ contains
     call sum_all_all_cr(nb_data_std, cost_function_reduced)
     inversion_param%nb_data_std = inversion_param%nb_data_std + nb_data_std
 
-<<<<<<< HEAD
-=======
-
-
-
-
-
->>>>>>> e63d891980ae00bd082c3e15f6edbfaa5bba68d1
     call deallocate_adjoint_source_working_arrays()
 
   end subroutine write_adjoint_sources_for_specfem
@@ -306,17 +298,10 @@ contains
              cost_value=sum(residuals(:)**2) * 0.5 * dt_data
              cost_function = cost_function + cost_value
 
-<<<<<<< HEAD
              !! compute raw standard deviation 
              data_std = data_std + sum((seismograms_d(icomp,irec_local,:) - data_trace_to_use(:))**2 )
              nb_data_std = nb_data_std + size(residuals(:))
              
-=======
-             !! compute standard deviation
-             data_std = data_std + sum(raw_residuals(:)**2)
-             nb_data_std = nb_data_std + size(raw_residuals(:))
-
->>>>>>> e63d891980ae00bd082c3e15f6edbfaa5bba68d1
              ! store adjoint source
              acqui_simu(ievent)%adjoint_sources(icomp,irec_local,:)=residuals(:)*w_tap(:)*&
                   acqui_simu(ievent)%weight_trace(icomp,irec_local)

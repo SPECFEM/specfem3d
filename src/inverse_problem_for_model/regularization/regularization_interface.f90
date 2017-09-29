@@ -40,21 +40,12 @@ contains
             write(INVERSE_LOG_FILE,*)
             write(INVERSE_LOG_FILE,*)
             write(INVERSE_LOG_FILE,*)
-<<<<<<< HEAD
          end if
       end if
       
       
       if ( inversion_param%use_damping_SEM_Tikonov .or. inversion_param%use_variable_SEM_damping) then 
          if (.not. allocated(spatial_damping)) allocate(spatial_damping(NGLLX, NGLLY, NGLLZ, NSPEC_AB))
-=======
-         endif
-      endif
-
-
-      if ( inversion_param%use_damping_SEM_Tikonov .or. inversion_param%use_variable_SEM_damping) then
-         allocate(spatial_damping(NGLLX, NGLLY, NGLLZ, NSPEC_AB))
->>>>>>> e63d891980ae00bd082c3e15f6edbfaa5bba68d1
          spatial_damping(:,:,:,:)=min(1._CUSTOM_REAL, inversion_param%min_damp)
       endif
 

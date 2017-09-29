@@ -1103,12 +1103,7 @@ contains
           read(line(ipos0:ipos1),*) inversion_param%smooth_weight(1), &
                                     inversion_param%smooth_weight(2), &
                                     inversion_param%smooth_weight(3)
-<<<<<<< HEAD
-          inversion_param%use_regularisation_SEM_Tikonov=.true.
-          
-=======
           inversion_param%use_regularization_SEM_Tikonov=.true.
->>>>>>> e63d891980ae00bd082c3e15f6edbfaa5bba68d1
 
        case('use_tk_sem_damping')
           allocate(inversion_param%damp_weight(inversion_param%NinvPar))
