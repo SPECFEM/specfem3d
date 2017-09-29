@@ -65,6 +65,7 @@ module inverse_problem_par
   !! name for outputs files
   character(len=MAX_STRING_LEN), public             :: prname_specfem
   character(len=8),              public             :: prefix_to_path='./'
+  character(len=MAX_STRING_LEN), public             :: type_input='exploration'
 
 !################################################# STRUCTURES ######################################################################
 
@@ -97,6 +98,10 @@ module inverse_problem_par
      integer                                                                  :: Niter_wolfe = 10
      real(kind=CUSTOM_REAL)                                                   :: relat_grad = 1.e-3
      real(kind=CUSTOM_REAL)                                                   :: relat_cost = 1.e-1
+
+     !! use filter band pass for inversion
+     integer                                                                  :: Nifrq=1
+     logical                                                                  :: use_band_pass_filter=.false.
 
      !!---- TUNING PARAMETERS FOR INVERSION -------------
      !! --- for L-BFGS
@@ -141,7 +146,7 @@ module inverse_problem_par
      real(kind=CUSTOM_REAL)                                                   :: zmin_taper, zmax_taper
 
      !! parameters for z_precond
-     real(kind=CUSTOM_REAL)                                                   :: zPrc1=-200, zPrc2=-400., aPrc=3.
+     real(kind=CUSTOM_REAL)                                                   :: zPrc1=-200., zPrc2=-400., aPrc=3.
 
      !! domain boundary
      real(kind=CUSTOM_REAL)                                                   :: xmin, xmax
@@ -159,7 +164,10 @@ module inverse_problem_par
      !!  cost function for each event
      real(kind=CUSTOM_REAL), dimension(:), allocatable                        :: current_cost, previous_cost
      real(kind=CUSTOM_REAL), dimension(:), allocatable                        :: current_cost_prime, previous_cost_prime
+     real(kind=CUSTOM_REAL)                                                   :: prior_data_std=1.
      integer                                                                  :: current_iteration = 0
+     integer                                                                  :: current_ifrq = 0
+     real(kind=CUSTOM_REAL)                                                   :: nb_traces_tot, window_lenght
 
      !! projection in fd grid
      type(profd)                                                              :: projection_fd
@@ -198,10 +206,10 @@ module inverse_problem_par
      character(len=10)                                                         :: source_type
      !! position of source in case of internal point source
      double precision, dimension(:), allocatable                               :: Xs,Ys,Zs
-     !! traction directory in case of AxiSem or DSM coupling
-     character(len= MAX_LEN_STRING)                                            :: traction_dir
      !! source time function
-     real(kind=CUSTOM_REAL)                                                    :: fl_event, fh_event
+     logical                                                                   :: band_pass_filter=.false.
+     integer                                                                   :: Nfrq=1
+     real(kind=CUSTOM_REAL), dimension(:), allocatable                         :: fl_event, fh_event
      real(kind=CUSTOM_REAL), dimension(:,:), allocatable                       :: user_source_time_function
      !! use external source time function
      character(len= MAX_LEN_STRING)                                            :: source_wavelet_file
@@ -281,6 +289,25 @@ module inverse_problem_par
 
      !! adjoint source to use
      character(len= MAX_LEN_STRING)                                            :: adjoint_source_type
+
+     !! ---------------------- information needed for teleseismic fwi -----------------------------
+     !! for rotation matrices
+     real(kind=CUSTOM_REAL)                                                    :: Origin_chunk_lat,  Origin_chunk_lon
+     real(kind=CUSTOM_REAL)                                                    :: event_lat,  event_lon, event_depth
+     !! window for inversion
+     logical                                                                   :: is_time_pick
+     logical                                                                   :: time_window
+     real(kind=CUSTOM_REAL)                                                    :: time_before_pick, time_after_pick
+
+     !! stations network
+     character(len= MAX_LEN_STRING)                                            :: station_coord_system
+     !! station list
+     real(kind=CUSTOM_REAL), dimension(:,:), allocatable                       :: read_station_position
+     real(kind=CUSTOM_REAL), dimension(:), allocatable                         :: time_pick
+
+     !! traction directory in case of AxiSem or DSM coupling
+     character(len= MAX_LEN_STRING)                                            :: traction_dir
+
 
   end type acqui !-----------------------------------------------------------------------------------------------------------------
 

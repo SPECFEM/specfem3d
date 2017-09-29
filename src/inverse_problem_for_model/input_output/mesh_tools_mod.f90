@@ -112,296 +112,296 @@ contains
 !--------------------------------------------------------------------------------------------------------------------
 !  locate MPI slice which contains the point and bcast to all  (TODO PUT IT ON OTHER MODULE)
 !--------------------------------------------------------------------------------------------------------------------
-!!$  subroutine locate_MPI_slice_and_bcast_to_all(x_to_locate, y_to_locate, z_to_locate, x_found, y_found, z_found, &
-!!$       xi, eta, gamma, ispec_selected, islice_selected, distance_from_target, myrank)
-!!$
-!!$    integer,                                        intent(in)        :: myrank
-!!$    integer,                                        intent(inout)     :: ispec_selected, islice_selected
-!!$    double precision,                               intent(in)        :: x_to_locate, y_to_locate, z_to_locate
-!!$    double precision,                               intent(inout)     :: x_found,  y_found,  z_found
-!!$    double precision,                               intent(inout)     :: xi, eta, gamma, distance_from_target
-!!$
-!!$    double precision,   dimension(:,:), allocatable                   :: distance_from_target_all
-!!$    double precision,   dimension(:,:), allocatable                   :: xi_all, eta_all, gamma_all
-!!$    double precision,   dimension(:,:), allocatable                   ::  x_found_all, y_found_all, z_found_all
-!!$    integer,            dimension(:,:), allocatable                   :: ispec_selected_all
-!!$    integer                                                           :: iproc
-!!$
-!!$    !! to avoid compler error when calling gather_all*
-!!$    double precision,  dimension(1)                                   :: distance_from_target_dummy
-!!$    double precision,  dimension(1)                                   :: xi_dummy, eta_dummy, gamma_dummy
-!!$    double precision,  dimension(1)                                   :: x_found_dummy, y_found_dummy, z_found_dummy
-!!$    integer,           dimension(1)                                   :: ispec_selected_dummy, islice_selected_dummy
-!!$
-!!$
-!!$    allocate(distance_from_target_all(1,0:NPROC-1), &
-!!$             xi_all(1,0:NPROC-1), &
-!!$             eta_all(1,0:NPROC-1), &
-!!$             gamma_all(1,0:NPROC-1), &
-!!$             x_found_all(1,0:NPROC-1), &
-!!$             y_found_all(1,0:NPROC-1), &
-!!$             z_found_all(1,0:NPROC-1))
-!!$
-!!$    allocate(ispec_selected_all(1,0:NPROC-1))
-!!$
-!!$    distance_from_target = sqrt( (x_to_locate - x_found)**2&
-!!$                                +(y_to_locate - y_found)**2&
-!!$                                +(z_to_locate - z_found)**2)
-!!$
-!!$    !! it's just to avoid compiler error
-!!$    distance_from_target_dummy(1)=distance_from_target
-!!$    xi_dummy(1)=xi
-!!$    eta_dummy(1)=eta
-!!$    gamma_dummy(1)=gamma
-!!$    ispec_selected_dummy(1)=ispec_selected
-!!$    x_found_dummy(1)=x_found
-!!$    y_found_dummy(1)=y_found
-!!$    z_found_dummy(1)=z_found
-!!$
-!!$    ! gather all on myrank=0
-!!$    call gather_all_dp(distance_from_target_dummy, 1, distance_from_target_all, 1, NPROC)
-!!$    call gather_all_dp(xi_dummy,    1,  xi_all,    1,  NPROC)
-!!$    call gather_all_dp(eta_dummy,   1,  eta_all,   1,  NPROC)
-!!$    call gather_all_dp(gamma_dummy, 1,  gamma_all, 1,  NPROC)
-!!$    call gather_all_dp(x_found_dummy, 1,  x_found_all, 1,  NPROC)
-!!$    call gather_all_dp(y_found_dummy, 1,  y_found_all, 1,  NPROC)
-!!$    call gather_all_dp(z_found_dummy, 1,  z_found_all, 1,  NPROC)
-!!$    call gather_all_i(ispec_selected_dummy, 1, ispec_selected_all, 1, NPROC)
-!!$
-!!$    ! find the slice and element to put the source
-!!$    if (myrank == 0) then
-!!$
-!!$       distance_from_target = HUGEVAL
-!!$
-!!$       do iproc=0, NPROC-1
-!!$          if (distance_from_target >= distance_from_target_all(1,iproc)) then
-!!$             distance_from_target =  distance_from_target_all(1,iproc)
-!!$             islice_selected_dummy(1) = iproc
-!!$             ispec_selected_dummy(1) = ispec_selected_all(1,iproc)
-!!$             xi_dummy(1)    = xi_all(1,iproc)
-!!$             eta_dummy(1)   = eta_all(1,iproc)
-!!$             gamma_dummy(1) = gamma_all(1,iproc)
-!!$             distance_from_target_dummy(1)=distance_from_target
-!!$             x_found_dummy(1)=x_found_all(1,iproc)
-!!$             y_found_dummy(1)=y_found_all(1,iproc)
-!!$             z_found_dummy(1)=z_found_all(1,iproc)
-!!$          endif
-!!$       enddo
-!!$
-!!$    endif
-!!$
-!!$    ! bcast form myrank=0
-!!$    call bcast_all_i(islice_selected_dummy,1)
-!!$    call bcast_all_i(ispec_selected_dummy,1)
-!!$    call bcast_all_dp(xi_dummy,1)
-!!$    call bcast_all_dp(eta_dummy,1)
-!!$    call bcast_all_dp(gamma_dummy,1)
-!!$    call bcast_all_dp(distance_from_target_dummy,1)
-!!$    call bcast_all_dp(distance_from_target_all,NPROC)
-!!$    call bcast_all_dp(x_found_dummy,1)
-!!$    call bcast_all_dp(y_found_dummy,1)
-!!$    call bcast_all_dp(z_found_dummy,1)
-!!$
-!!$    !! it was just to avoid compler error
-!!$    islice_selected=islice_selected_dummy(1)
-!!$    ispec_selected=ispec_selected_dummy(1)
-!!$    xi=xi_dummy(1)
-!!$    eta=eta_dummy(1)
-!!$    gamma=gamma_dummy(1)
-!!$    x_found=x_found_dummy(1)
-!!$    y_found=y_found_dummy(1)
-!!$    z_found=z_found_dummy(1)
-!!$    distance_from_target=distance_from_target_dummy(1)
-!!$
-!!$    deallocate(distance_from_target_all, xi_all, eta_all, gamma_all, x_found_all, y_found_all, z_found_all)
-!!$    deallocate(ispec_selected_all)
-!!$
-!!$  end subroutine locate_MPI_slice_and_bcast_to_all
+  subroutine get_MPI_slice_and_bcast_to_all(x_to_locate, y_to_locate, z_to_locate, x_found, y_found, z_found, &
+       xi, eta, gamma, ispec_selected, islice_selected, distance_from_target, myrank)
+
+    integer,                                        intent(in)        :: myrank
+    integer,                                        intent(inout)     :: ispec_selected, islice_selected
+    double precision,                               intent(in)        :: x_to_locate, y_to_locate, z_to_locate
+    double precision,                               intent(inout)     :: x_found,  y_found,  z_found
+    double precision,                               intent(inout)     :: xi, eta, gamma, distance_from_target
+
+    double precision,   dimension(:,:), allocatable                   :: distance_from_target_all
+    double precision,   dimension(:,:), allocatable                   :: xi_all, eta_all, gamma_all
+    double precision,   dimension(:,:), allocatable                   ::  x_found_all, y_found_all, z_found_all
+    integer,            dimension(:,:), allocatable                   :: ispec_selected_all
+    integer                                                           :: iproc
+
+    !! to avoid compler error when calling gather_all*
+    double precision,  dimension(1)                                   :: distance_from_target_dummy
+    double precision,  dimension(1)                                   :: xi_dummy, eta_dummy, gamma_dummy
+    double precision,  dimension(1)                                   :: x_found_dummy, y_found_dummy, z_found_dummy
+    integer,           dimension(1)                                   :: ispec_selected_dummy, islice_selected_dummy
+
+
+    allocate(distance_from_target_all(1,0:NPROC-1), &
+             xi_all(1,0:NPROC-1), &
+             eta_all(1,0:NPROC-1), &
+             gamma_all(1,0:NPROC-1), &
+             x_found_all(1,0:NPROC-1), &
+             y_found_all(1,0:NPROC-1), &
+             z_found_all(1,0:NPROC-1))
+
+    allocate(ispec_selected_all(1,0:NPROC-1))
+
+    distance_from_target = sqrt( (x_to_locate - x_found)**2&
+                                +(y_to_locate - y_found)**2&
+                                +(z_to_locate - z_found)**2)
+
+    !! it's just to avoid compiler error
+    distance_from_target_dummy(1)=distance_from_target
+    xi_dummy(1)=xi
+    eta_dummy(1)=eta
+    gamma_dummy(1)=gamma
+    ispec_selected_dummy(1)=ispec_selected
+    x_found_dummy(1)=x_found
+    y_found_dummy(1)=y_found
+    z_found_dummy(1)=z_found
+
+    ! gather all on myrank=0
+    call gather_all_dp(distance_from_target_dummy, 1, distance_from_target_all, 1, NPROC)
+    call gather_all_dp(xi_dummy,    1,  xi_all,    1,  NPROC)
+    call gather_all_dp(eta_dummy,   1,  eta_all,   1,  NPROC)
+    call gather_all_dp(gamma_dummy, 1,  gamma_all, 1,  NPROC)
+    call gather_all_dp(x_found_dummy, 1,  x_found_all, 1,  NPROC)
+    call gather_all_dp(y_found_dummy, 1,  y_found_all, 1,  NPROC)
+    call gather_all_dp(z_found_dummy, 1,  z_found_all, 1,  NPROC)
+    call gather_all_i(ispec_selected_dummy, 1, ispec_selected_all, 1, NPROC)
+
+    ! find the slice and element to put the source
+    if (myrank == 0) then
+
+       distance_from_target = HUGEVAL
+
+       do iproc=0, NPROC-1
+          if (distance_from_target >= distance_from_target_all(1,iproc)) then
+             distance_from_target =  distance_from_target_all(1,iproc)
+             islice_selected_dummy(1) = iproc
+             ispec_selected_dummy(1) = ispec_selected_all(1,iproc)
+             xi_dummy(1)    = xi_all(1,iproc)
+             eta_dummy(1)   = eta_all(1,iproc)
+             gamma_dummy(1) = gamma_all(1,iproc)
+             distance_from_target_dummy(1)=distance_from_target
+             x_found_dummy(1)=x_found_all(1,iproc)
+             y_found_dummy(1)=y_found_all(1,iproc)
+             z_found_dummy(1)=z_found_all(1,iproc)
+          endif
+       enddo
+
+    endif
+
+    ! bcast form myrank=0
+    call bcast_all_i(islice_selected_dummy,1)
+    call bcast_all_i(ispec_selected_dummy,1)
+    call bcast_all_dp(xi_dummy,1)
+    call bcast_all_dp(eta_dummy,1)
+    call bcast_all_dp(gamma_dummy,1)
+    call bcast_all_dp(distance_from_target_dummy,1)
+    call bcast_all_dp(distance_from_target_all,NPROC)
+    call bcast_all_dp(x_found_dummy,1)
+    call bcast_all_dp(y_found_dummy,1)
+    call bcast_all_dp(z_found_dummy,1)
+
+    !! it was just to avoid compler error
+    islice_selected=islice_selected_dummy(1)
+    ispec_selected=ispec_selected_dummy(1)
+    xi=xi_dummy(1)
+    eta=eta_dummy(1)
+    gamma=gamma_dummy(1)
+    x_found=x_found_dummy(1)
+    y_found=y_found_dummy(1)
+    z_found=z_found_dummy(1)
+    distance_from_target=distance_from_target_dummy(1)
+
+    deallocate(distance_from_target_all, xi_all, eta_all, gamma_all, x_found_all, y_found_all, z_found_all)
+    deallocate(ispec_selected_all)
+
+  end subroutine get_MPI_slice_and_bcast_to_all
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !--------------------------------------------------------------------------------------------------------------------
 !  locate point in mesh.
 !--------------------------------------------------------------------------------------------------------------------
-!!$  subroutine locate_point_in_mesh(x_to_locate, y_to_locate, z_to_locate, iaddx, iaddy, iaddz, elemsize_max_glob, &
-!!$       ispec_selected, xi_found, eta_found, gamma_found, x_found, y_found, z_found, myrank)
-!!$
-!!$    double precision,                   intent(in)     :: x_to_locate, y_to_locate, z_to_locate
-!!$    real(kind=CUSTOM_REAL),             intent(in)     :: elemsize_max_glob
-!!$    integer,                            intent(in)     :: myrank
-!!$    integer,          dimension(NGNOD), intent(in)     :: iaddx,iaddy,iaddz
-!!$    double precision,                   intent(inout)  :: x_found,  y_found,  z_found
-!!$    double precision,                   intent(inout)  :: xi_found, eta_found, gamma_found
-!!$    integer,                            intent(inout)  :: ispec_selected
-!!$
-!!$    ! locals
-!!$    integer                                            :: iter_loop , ispec, iglob, i, j, k
-!!$    double precision                                   :: x_target, y_target, z_target
-!!$    ! location search
-!!$    logical                                            :: located_target
-!!$    double precision                                   :: typical_size_squared, dist_squared
-!!$    double precision                                   :: distmin_squared
-!!$    double precision                                   :: x,y,z
-!!$    double precision                                   :: xi,eta,gamma,dx,dy,dz,dxi,deta
-!!$    double precision                                   :: xixs,xiys,xizs
-!!$    double precision                                   :: etaxs,etays,etazs
-!!$    double precision                                   :: gammaxs,gammays,gammazs, dgamma
-!!$    ! coordinates of the control points of the surface element
-!!$    double precision, dimension(NGNOD)                 :: xelm,yelm,zelm
-!!$    integer                                            :: ia,iax,iay,iaz
-!!$    integer                                            :: ix_initial_guess, iy_initial_guess, iz_initial_guess
-!!$
-!!$    ! sets typical element size for search
-!!$    typical_size_squared =  elemsize_max_glob
-!!$    ! use 10 times the distance as a criterion for source detection
-!!$    typical_size_squared = (10. * typical_size_squared)**2
-!!$
-!!$    ! INITIALIZE LOCATION --------
-!!$    x_target=x_to_locate
-!!$    y_target=y_to_locate
-!!$    z_target=z_to_locate
-!!$    ! flag to check that we located at least one target element
-!!$    located_target = .false.
-!!$    ispec_selected   = 1    !! first element by default
-!!$    ix_initial_guess = 1
-!!$    iy_initial_guess = 1
-!!$    iz_initial_guess = 1
-!!$    ! set distance to huge initial value
-!!$    distmin_squared = HUGEVAL
-!!$
-!!$    !! find the element candidate that may contain the target point
-!!$    do ispec = 1, NSPEC_AB
-!!$
-!!$       iglob = ibool(MIDX,MIDY,MIDZ,ispec)
-!!$       dist_squared = (x_target- dble(xstore(iglob)))**2 &
-!!$            + (y_target - dble(ystore(iglob)))**2 &
-!!$            + (z_target - dble(zstore(iglob)))**2
-!!$       if (dist_squared > typical_size_squared) cycle ! exclude elements that are too far from target
-!!$
-!!$       ! find closest GLL point form target
-!!$       do k=2, NGLLZ-1
-!!$          do j=2, NGLLY-1
-!!$             do i=2, NGLLX-1
-!!$
-!!$                iglob=ibool(i,j,k,ispec)
-!!$                dist_squared = (x_target - dble(xstore(iglob)))**2 &
-!!$                     + (y_target - dble(ystore(iglob)))**2 &
-!!$                     + (z_target - dble(zstore(iglob)))**2
-!!$
-!!$                if (dist_squared < distmin_squared) then
-!!$
-!!$                   distmin_squared = dist_squared
-!!$                   ispec_selected  = ispec
-!!$                   ix_initial_guess = i
-!!$                   iy_initial_guess = j
-!!$                   iz_initial_guess = k
-!!$                   located_target = .true.
-!!$
-!!$                   x_found = xstore(iglob)
-!!$                   y_found = ystore(iglob)
-!!$                   z_found = zstore(iglob)
-!!$
-!!$                endif
-!!$
-!!$             enddo
-!!$          enddo
-!!$       enddo
-!!$
-!!$    enddo
-!!$
-!!$    ! general coordinate of initial guess
-!!$    xi    = xigll(ix_initial_guess)
-!!$    eta   = yigll(iy_initial_guess)
-!!$    gamma = zigll(iz_initial_guess)
-!!$
-!!$    ! define coordinates of the control points of the element
-!!$    do ia=1,NGNOD
-!!$       iax = 0
-!!$       iay = 0
-!!$       iaz = 0
-!!$       if (iaddx(ia) == 0) then
-!!$          iax = 1
-!!$       else if (iaddx(ia) == 1) then
-!!$          iax = (NGLLX+1)/2
-!!$       else if (iaddx(ia) == 2) then
-!!$          iax = NGLLX
-!!$       else
-!!$          call exit_MPI(myrank,'incorrect value of iaddx')
-!!$       endif
-!!$
-!!$       if (iaddy(ia) == 0) then
-!!$          iay = 1
-!!$       else if (iaddy(ia) == 1) then
-!!$          iay = (NGLLY+1)/2
-!!$       else if (iaddy(ia) == 2) then
-!!$          iay = NGLLY
-!!$       else
-!!$          call exit_MPI(myrank,'incorrect value of iaddy')
-!!$       endif
-!!$
-!!$       if (iaddz(ia) == 0) then
-!!$          iaz = 1
-!!$       else if (iaddz(ia) == 1) then
-!!$          iaz = (NGLLZ+1)/2
-!!$       else if (iaddz(ia) == 2) then
-!!$          iaz = NGLLZ
-!!$       else
-!!$          call exit_MPI(myrank,'incorrect value of iaddz')
-!!$       endif
-!!$
-!!$       iglob = ibool(iax,iay,iaz,ispec_selected)
-!!$       xelm(ia) = dble(xstore(iglob))
-!!$       yelm(ia) = dble(ystore(iglob))
-!!$       zelm(ia) = dble(zstore(iglob))
-!!$
-!!$    enddo
-!!$
-!!$    ! iterate to solve the non linear system
-!!$    do iter_loop = 1, NUM_ITER
-!!$
-!!$     ! recompute jacobian for the new point
-!!$       call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
-!!$            xixs,xiys,xizs,etaxs,etays,etazs,gammaxs,gammays,gammazs,NGNOD)
-!!$
-!!$       ! compute distance to target location
-!!$       dx = - (x - x_target)
-!!$       dy = - (y - y_target)
-!!$       dz = - (z - z_target)
-!!$
-!!$       ! compute increments
-!!$       dxi  = xixs*dx + xiys*dy + xizs*dz
-!!$       deta = etaxs*dx + etays*dy + etazs*dz
-!!$       dgamma = gammaxs*dx + gammays*dy + gammazs*dz
-!!$
-!!$       ! update values
-!!$       xi = xi + dxi
-!!$       eta = eta + deta
-!!$       gamma = gamma + dgamma
-!!$
-!!$       ! impose that we stay in that element
-!!$       ! (useful if user gives a point outside the mesh for instance)
-!!$       if (xi > 1.d0) xi     =  1.d0
-!!$       if (xi <-1.d0) xi     = -1.d0
-!!$       if (eta > 1.d0) eta    =  1.d0
-!!$       if (eta <-1.d0) eta    = -1.d0
-!!$       if (gamma > 1.d0) gamma  =  1.d0
-!!$       if (gamma <-1.d0) gamma  = -1.d0
-!!$
-!!$    enddo
-!!$
-!!$    ! compute final coordinates of point found
-!!$    call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
-!!$         xixs,xiys,xizs,etaxs,etays,etazs,gammaxs,gammays,gammazs,NGNOD)
-!!$
-!!$    ! store xi,eta,gamma and x,y,z of point found
-!!$    ! note: xi/eta/gamma will be in range [-1,1]
-!!$    xi_found = xi
-!!$    eta_found = eta
-!!$    gamma_found = gamma
-!!$
-!!$    x_found = x
-!!$    y_found = y
-!!$    z_found = z
-!!$
-!!$  end subroutine locate_point_in_mesh
+  subroutine get_point_in_mesh(x_to_locate, y_to_locate, z_to_locate, iaddx, iaddy, iaddz, elemsize_max_glob, &
+       ispec_selected, xi_found, eta_found, gamma_found, x_found, y_found, z_found, myrank)
+
+    double precision,                   intent(in)     :: x_to_locate, y_to_locate, z_to_locate
+    real(kind=CUSTOM_REAL),             intent(in)     :: elemsize_max_glob
+    integer,                            intent(in)     :: myrank
+    integer,          dimension(NGNOD), intent(in)     :: iaddx,iaddy,iaddz
+    double precision,                   intent(inout)  :: x_found,  y_found,  z_found
+    double precision,                   intent(inout)  :: xi_found, eta_found, gamma_found
+    integer,                            intent(inout)  :: ispec_selected
+
+    ! locals
+    integer                                            :: iter_loop , ispec, iglob, i, j, k
+    double precision                                   :: x_target, y_target, z_target
+    ! location search
+    logical                                            :: located_target
+    double precision                                   :: typical_size_squared, dist_squared
+    double precision                                   :: distmin_squared
+    double precision                                   :: x,y,z
+    double precision                                   :: xi,eta,gamma,dx,dy,dz,dxi,deta
+    double precision                                   :: xixs,xiys,xizs
+    double precision                                   :: etaxs,etays,etazs
+    double precision                                   :: gammaxs,gammays,gammazs, dgamma
+    ! coordinates of the control points of the surface element
+    double precision, dimension(NGNOD)                 :: xelm,yelm,zelm
+    integer                                            :: ia,iax,iay,iaz
+    integer                                            :: ix_initial_guess, iy_initial_guess, iz_initial_guess
+
+    ! sets typical element size for search
+    typical_size_squared =  elemsize_max_glob
+    ! use 10 times the distance as a criterion for source detection
+    typical_size_squared = (10. * typical_size_squared)**2
+
+    ! INITIALIZE LOCATION --------
+    x_target=x_to_locate
+    y_target=y_to_locate
+    z_target=z_to_locate
+    ! flag to check that we located at least one target element
+    located_target = .false.
+    ispec_selected   = 1    !! first element by default
+    ix_initial_guess = 1
+    iy_initial_guess = 1
+    iz_initial_guess = 1
+    ! set distance to huge initial value
+    distmin_squared = HUGEVAL
+
+    !! find the element candidate that may contain the target point
+    do ispec = 1, NSPEC_AB
+
+       iglob = ibool(MIDX,MIDY,MIDZ,ispec)
+       dist_squared = (x_target- dble(xstore(iglob)))**2 &
+            + (y_target - dble(ystore(iglob)))**2 &
+            + (z_target - dble(zstore(iglob)))**2
+       if (dist_squared > typical_size_squared) cycle ! exclude elements that are too far from target
+
+       ! find closest GLL point form target
+       do k=2, NGLLZ-1
+          do j=2, NGLLY-1
+             do i=2, NGLLX-1
+
+                iglob=ibool(i,j,k,ispec)
+                dist_squared = (x_target - dble(xstore(iglob)))**2 &
+                     + (y_target - dble(ystore(iglob)))**2 &
+                     + (z_target - dble(zstore(iglob)))**2
+
+                if (dist_squared < distmin_squared) then
+
+                   distmin_squared = dist_squared
+                   ispec_selected  = ispec
+                   ix_initial_guess = i
+                   iy_initial_guess = j
+                   iz_initial_guess = k
+                   located_target = .true.
+
+                   x_found = xstore(iglob)
+                   y_found = ystore(iglob)
+                   z_found = zstore(iglob)
+
+                endif
+
+             enddo
+          enddo
+       enddo
+
+    enddo
+
+    ! general coordinate of initial guess
+    xi    = xigll(ix_initial_guess)
+    eta   = yigll(iy_initial_guess)
+    gamma = zigll(iz_initial_guess)
+
+    ! define coordinates of the control points of the element
+    do ia=1,NGNOD
+       iax = 0
+       iay = 0
+       iaz = 0
+       if (iaddx(ia) == 0) then
+          iax = 1
+       else if (iaddx(ia) == 1) then
+          iax = (NGLLX+1)/2
+       else if (iaddx(ia) == 2) then
+          iax = NGLLX
+       else
+          call exit_MPI(myrank,'incorrect value of iaddx')
+       endif
+
+       if (iaddy(ia) == 0) then
+          iay = 1
+       else if (iaddy(ia) == 1) then
+          iay = (NGLLY+1)/2
+       else if (iaddy(ia) == 2) then
+          iay = NGLLY
+       else
+          call exit_MPI(myrank,'incorrect value of iaddy')
+       endif
+
+       if (iaddz(ia) == 0) then
+          iaz = 1
+       else if (iaddz(ia) == 1) then
+          iaz = (NGLLZ+1)/2
+       else if (iaddz(ia) == 2) then
+          iaz = NGLLZ
+       else
+          call exit_MPI(myrank,'incorrect value of iaddz')
+       endif
+
+       iglob = ibool(iax,iay,iaz,ispec_selected)
+       xelm(ia) = dble(xstore(iglob))
+       yelm(ia) = dble(ystore(iglob))
+       zelm(ia) = dble(zstore(iglob))
+
+    enddo
+
+    ! iterate to solve the non linear system
+    do iter_loop = 1, NUM_ITER
+
+     ! recompute jacobian for the new point
+       call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
+            xixs,xiys,xizs,etaxs,etays,etazs,gammaxs,gammays,gammazs,NGNOD)
+
+       ! compute distance to target location
+       dx = - (x - x_target)
+       dy = - (y - y_target)
+       dz = - (z - z_target)
+
+       ! compute increments
+       dxi  = xixs*dx + xiys*dy + xizs*dz
+       deta = etaxs*dx + etays*dy + etazs*dz
+       dgamma = gammaxs*dx + gammays*dy + gammazs*dz
+
+       ! update values
+       xi = xi + dxi
+       eta = eta + deta
+       gamma = gamma + dgamma
+
+       ! impose that we stay in that element
+       ! (useful if user gives a point outside the mesh for instance)
+       if (xi > 1.d0) xi     =  1.d0
+       if (xi < -1.d0) xi     = -1.d0
+       if (eta > 1.d0) eta    =  1.d0
+       if (eta < -1.d0) eta    = -1.d0
+       if (gamma > 1.d0) gamma  =  1.d0
+       if (gamma < -1.d0) gamma  = -1.d0
+
+    enddo
+
+    ! compute final coordinates of point found
+    call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
+         xixs,xiys,xizs,etaxs,etays,etazs,gammaxs,gammays,gammazs,NGNOD)
+
+    ! store xi,eta,gamma and x,y,z of point found
+    ! note: xi/eta/gamma will be in range [-1,1]
+    xi_found = xi
+    eta_found = eta
+    gamma_found = gamma
+
+    x_found = x
+    y_found = y
+    z_found = z
+
+  end subroutine get_point_in_mesh
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !---------------------------------------------------------------

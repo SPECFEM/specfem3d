@@ -17,15 +17,18 @@ module adjoint_source
   !! PRIVATE ATTRIBUTE -------------------------------------------------------------------------------------------------------------
   real(kind=CUSTOM_REAL), private, dimension(:,:), allocatable      :: elastic_adjoint_source, elastic_misfit
   real(kind=CUSTOM_REAL), private, dimension(:), allocatable        :: raw_residuals, fil_residuals, filfil_residuals
+  real(kind=CUSTOM_REAL), private, dimension(:), allocatable        :: residuals, data_trace_to_use, wkstmp
   real(kind=CUSTOM_REAL), private, dimension(:), allocatable        :: residuals_for_cost
   real(kind=CUSTOM_REAL), private, dimension(:), allocatable        :: signal, w_tap
   real(kind=CUSTOM_REAL), private                                   :: fl, fh
   real(kind=CUSTOM_REAL), private                                   :: dt_data
   real(kind=CUSTOM_REAL), private                                   :: cost_value
-  real(kind=CUSTOM_REAL), private                                   :: data_std, nb_data_std
+  real(kind=CUSTOM_REAL), private                                   :: prior_data_std, data_std, nb_data_std
+  real(kind=CUSTOM_REAL), private                                   :: nb_traces_tot, window_lenght
   integer,                private                                   :: norder_filter=4, irek_filter=1
   integer,                private                                   :: nstep_data
-
+  integer,                private                                   :: current_ifrq
+  logical,                private                                   :: use_band_pass_filter
 
 contains
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -54,6 +57,10 @@ contains
     dt_data = acqui_simu(ievent)%dt_data
 
     current_iter=inversion_param%current_iteration
+    current_ifrq=inversion_param%current_ifrq
+    use_band_pass_filter=inversion_param%use_band_pass_filter
+    prior_data_std = inversion_param%prior_data_std
+    nb_traces_tot =  inversion_param%nb_traces_tot
 
     !! initialize cost function for each MPI porcess
     cost_function  = 0._CUSTOM_REAL
@@ -119,6 +126,10 @@ contains
 
     if (myrank == 0) then
        write(INVERSE_LOG_FILE,*) '      Cost function for this event : ', cost_function_reduced
+       write(INVERSE_LOG_FILE,*) '     weight on data : ', 1._CUSTOM_REAL/prior_data_std
+       write(INVERSE_LOG_FILE,*) '     number of traces  : ',  nb_traces_tot
+       write(INVERSE_LOG_FILE,*) '     total weight      : ',   1._CUSTOM_REAL/&
+            nb_traces_tot/sqrt(prior_data_std)/sqrt(nstep_data*dt_data)
     endif
 
     !! standard deviation on data
@@ -130,27 +141,24 @@ contains
     call sum_all_all_cr(nb_data_std, cost_function_reduced)
     inversion_param%nb_data_std = inversion_param%nb_data_std + nb_data_std
 
-
-
-
-
-
     call deallocate_adjoint_source_working_arrays()
 
   end subroutine write_adjoint_sources_for_specfem
 
 !----------------------------------------------------------------------------------------------------------------------------------
   subroutine deallocate_adjoint_source_working_arrays()
-    deallocate(raw_residuals, fil_residuals,  filfil_residuals, w_tap, signal, residuals_for_cost, elastic_adjoint_source, &
-         elastic_misfit)
+    deallocate(residuals, raw_residuals, fil_residuals,  filfil_residuals, w_tap, signal, residuals_for_cost, &
+         elastic_adjoint_source, &
+         elastic_misfit, data_trace_to_use, wkstmp)
   end subroutine deallocate_adjoint_source_working_arrays
 
 !----------------------------------------------------------------------------------------------------------------------------------
   subroutine  allocate_adjoint_source_working_arrays()
 
-    allocate(raw_residuals(nstep_data), fil_residuals(nstep_data), filfil_residuals(nstep_data), &
+    allocate(residuals(nstep_data), raw_residuals(nstep_data), fil_residuals(nstep_data), filfil_residuals(nstep_data), &
          w_tap(nstep_data), signal(nstep_data), residuals_for_cost(nstep_data), &
-         elastic_adjoint_source(NDIM,nstep_data), elastic_misfit(NDIM,nstep_data))
+         elastic_adjoint_source(NDIM,nstep_data), elastic_misfit(NDIM,nstep_data), &
+         data_trace_to_use(nstep_data), wkstmp(nstep_data))
 
   end subroutine allocate_adjoint_source_working_arrays
 
@@ -254,15 +262,22 @@ contains
 
           do icomp = 1, NDIM
 
-             !! filter the data
-             fil_residuals(:)=0._CUSTOM_REAL
-             fl=acqui_simu(ievent)%freqcy_to_invert(icomp,1,irec_local)
-             fh=acqui_simu(ievent)%freqcy_to_invert(icomp,2,irec_local)
-             raw_residuals(:)= acqui_simu(ievent)%data_traces(irec_local,:,icomp)
-             call bwfilt(raw_residuals, fil_residuals, dt_data, nstep_data, irek_filter, norder_filter, fl, fh)
+             !! get data ------------------------
+             if (use_band_pass_filter) then
+                !! filter the data
+                fil_residuals(:)=0._CUSTOM_REAL
+                fl=acqui_simu(ievent)%fl_event(current_ifrq)
+                fh=acqui_simu(ievent)%fh_event(current_ifrq)
 
-             !! save filtered data
-             acqui_simu(ievent)%synt_traces(icomp, irec_local,:)= fil_residuals(:)
+                wkstmp(:)= acqui_simu(ievent)%data_traces(irec_local,:,icomp)
+                call bwfilt(wkstmp, data_trace_to_use, dt_data, nstep_data, irek_filter, norder_filter, fl, fh)
+
+                !! save filtered data
+                acqui_simu(ievent)%synt_traces(icomp, irec_local,:)=  data_trace_to_use(:)
+
+             else
+                data_trace_to_use(:)=acqui_simu(ievent)%data_traces(irec_local,:,icomp)
+             endif
 
              !! define energy renormalisation
              if (current_iter == 0) then
@@ -270,23 +285,25 @@ contains
 !!$                   acqui_simu(ievent)%weight_trace(icomp,irec_local)=100._CUSTOM_REAL / &
 !!$                        ((sum( acqui_simu(ievent)%synt_traces(irec_local,:,icomp_tmp) )**2) *0.5*dt_data)
 !!$                enddo
-                acqui_simu(ievent)%weight_trace(icomp,irec_local)=1._CUSTOM_REAL
+                window_lenght =  nstep_data * dt_data
+                acqui_simu(ievent)%weight_trace(icomp,irec_local)=1._CUSTOM_REAL/prior_data_std/&
+                     sqrt(nb_traces_tot)/sqrt(window_lenght)
              endif
 
-             !! adjoint source
-             raw_residuals(:)= (seismograms_d(icomp,irec_local,:) - fil_residuals(:))*&
+             !! compute residuals residuals
+             residuals(:)= (seismograms_d(icomp,irec_local,:) - data_trace_to_use(:))*&
                   acqui_simu(ievent)%weight_trace(icomp,irec_local)
 
              !! compute cost
-             cost_value=sum(raw_residuals(:)**2) * 0.5 * dt_data
+             cost_value=sum(residuals(:)**2) * 0.5 * dt_data
              cost_function = cost_function + cost_value
 
-             !! compute standard deviation
-             data_std = data_std + sum(raw_residuals(:)**2)
-             nb_data_std = nb_data_std + size(raw_residuals(:))
+             !! compute raw standard deviation
+             data_std = data_std + sum((seismograms_d(icomp,irec_local,:) - data_trace_to_use(:))**2 )
+             nb_data_std = nb_data_std + size(residuals(:))
 
              ! store adjoint source
-             acqui_simu(ievent)%adjoint_sources(icomp,irec_local,:)=raw_residuals(:)*w_tap(:)*&
+             acqui_simu(ievent)%adjoint_sources(icomp,irec_local,:)=residuals(:)*w_tap(:)*&
                   acqui_simu(ievent)%weight_trace(icomp,irec_local)
 
           enddo
@@ -342,15 +359,19 @@ contains
 
     case ('L2_OIL_INDUSTRY')
 
-       !! filter the data
-       fil_residuals(:)=0._CUSTOM_REAL
-       fl=acqui_simu(ievent)%freqcy_to_invert(icomp,1,irec_local)
-       fh=acqui_simu(ievent)%freqcy_to_invert(icomp,2,irec_local)
-       raw_residuals(:)= acqui_simu(ievent)%data_traces(irec_local,:,icomp)
-       call bwfilt(raw_residuals, fil_residuals, dt_data, nstep_data, irek_filter, norder_filter, fl, fh)
+       if (use_band_pass_filter) then
+          !! filter the data
+          fil_residuals(:)=0._CUSTOM_REAL
+          fl=acqui_simu(ievent)%fl_event(current_ifrq)
+          fh=acqui_simu(ievent)%fh_event(current_ifrq)
+          raw_residuals(:)= acqui_simu(ievent)%data_traces(irec_local,:,icomp)
+          call bwfilt(raw_residuals, fil_residuals, dt_data, nstep_data, irek_filter, norder_filter, fl, fh)
 
-       !! save filtered data
-       acqui_simu(ievent)%synt_traces(icomp, irec_local,:)= fil_residuals(:)
+          !! save filtered data
+          acqui_simu(ievent)%synt_traces(icomp, irec_local,:)= fil_residuals(:)
+       else
+          fil_residuals(:)=acqui_simu(ievent)%data_traces(irec_local,:,icomp)
+       endif
 
        !! save residuals for adjoint source. Note we use the difference between
        !! obseved pressure and computed pressure, not the approach in Luo and Tromp Gepohysics 2013

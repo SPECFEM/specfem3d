@@ -227,17 +227,21 @@ contains
           else
              !! filter the user stf
              !! EB EB Warning, filtering may be done each time we are switching events
-             allocate(raw_stf(NSTEP), filt_stf(NSTEP))
-             do isrc=1,NSOURCES
-               raw_stf(:)=acqui_simu(ievent)%user_source_time_function(:,isrc)
-               call bwfilt (raw_stf, filt_stf, &
-                    DT, NSTEP, 1, 4, acqui_simu(ievent)%fl_event, acqui_simu(ievent)%fh_event)
-               lw_tap = 2.5_CUSTOM_REAL
-               call apodise_sig(filt_stf, NSTEP, lw_tap)
-               user_source_time_function(:,isrc)=filt_stf(:)
-             enddo
-             deallocate(raw_stf, filt_stf)
-
+             if (inversion_param%use_band_pass_filter) then
+                allocate(raw_stf(NSTEP), filt_stf(NSTEP))
+                do isrc=1,NSOURCES
+                   raw_stf(:)=acqui_simu(ievent)%user_source_time_function(:,isrc)
+                   call bwfilt (raw_stf, filt_stf, &
+                        DT, NSTEP, 1, 4, acqui_simu(ievent)%fl_event(inversion_param%current_ifrq), &
+                                         acqui_simu(ievent)%fh_event(inversion_param%current_ifrq))
+                   lw_tap = 2.5_CUSTOM_REAL
+                   call apodise_sig(filt_stf, NSTEP, lw_tap)
+                   user_source_time_function(:,isrc)=filt_stf(:)
+                enddo
+                deallocate(raw_stf, filt_stf)
+              else
+                 user_source_time_function(:,:)=acqui_simu(ievent)%user_source_time_function(:,:)
+              endif
              !! write STF used to check
              if (VERBOSE_MODE .and. myrank == 0) then
                  write(ch_to_add,'(a10,i4.4,a1,i4.4,a4)') '_stf_used_',ievent,'_',iter_inverse,'.txt'

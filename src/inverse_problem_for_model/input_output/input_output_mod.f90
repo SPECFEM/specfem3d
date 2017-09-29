@@ -5,7 +5,7 @@
 !                                                                                                                                  !
 !                                                                                                                                  !
 !                   -- read all sources   (tractions, moment, forces, ...)                                                         !
-!                   -- read all stations  (list of stations and position for each event )                                        !
+!                   -- read all stations  (list of stations and position for each event )                                          !
 !                   -- read all data      (components to be inverted)                                                              !
 !                                                                                                                                  !
 !    all information is stored in type : acqui                                                                                     !
@@ -43,6 +43,7 @@ module input_output
   use inverse_problem_par
   use mesh_tools
   use IO_model
+  use Teleseismic_IO_mod
 
   implicit none
 
@@ -53,8 +54,10 @@ module input_output
              get_stations, read_data_gather, create_name_database_inversion, read_and_distribute_events_for_simultaneous_runs
 
   !! DEFINITION OF PRIVATE VARIABLES
-  integer,                PRIVATE       :: NEVENT
-  real(kind=CUSTOM_REAL), PRIVATE       :: fl, fh
+  integer,                PRIVATE                                   :: NEVENT, NIFRQ
+  real(kind=CUSTOM_REAL), PRIVATE, dimension(:), allocatable        :: fl, fh
+  real(kind=CUSTOM_REAL), PRIVATE                                   :: nb_traces_tot
+  logical,                PRIVATE                                   :: use_band_pass_filter
 contains
 
 !################################## ROUTINES THAT CAN BE CALLED FROM MAIN  #########################################################
@@ -93,20 +96,44 @@ contains
        open(IIDD,file=trim(prefix_to_path)//trim(name_file))
     endif
 
-    call read_acqui_file(acqui_file, acqui_simu, myrank)
-    call read_inver_file(inver_file, acqui_simu, inversion_param, myrank)
-    call get_stations(acqui_simu)
-    call get_point_source(acqui_simu)
+
+    !! select input file that we want to read ----------------------------------------
+    select case(trim(adjustl(type_input)))
+
+    case('exploration')
+
+       call read_acqui_file(acqui_file, acqui_simu, myrank)
+       call read_inver_file(inver_file, acqui_simu, inversion_param, myrank)
+       call get_stations(acqui_simu)     !! stations are based in specfem format
+       call get_point_source(acqui_simu) !! sources can be read in specfem format
+
+    case('teleseismic')
+
+       !! this is purely teleseismic case : we don not have sources in
+       !! mesh so we don't need to read and locate sources
+       call read_acqui_teleseismic_file(acqui_file, acqui_simu, myrank)
+       call read_inver_file(inver_file, acqui_simu, inversion_param, myrank)
+       call setup_teleseismic_stations(acqui_simu, myrank)
+
+    case default
+
+       write(*,*) ' Abort : We do not know what is :', trim(adjustl(type_input))
+       stop
+
+    end select
+    !! -------------------------------------------------------------------------------
 
     if (myrank == 0) call flush_iunit(INVERSE_LOG_FILE)
 
 !    call bcast_all_acqui(acqui_simu,  inversion_param, myrank)
 !    call locate_source(acqui_simu, myrank)
-  !  call locate_receiver(acqui_simu, myrank)
+!    call locate_receiver(acqui_simu, myrank)
 
     !! not need to read data for only forward simulation
-    if (.not. inversion_param%only_forward) call read_data_gather(acqui_simu, myrank)
-
+    if (.not. inversion_param%only_forward) then
+       call read_data_gather(acqui_simu, myrank)
+       inversion_param%nb_traces_tot=nb_traces_tot
+    endif
 
     !! create name for outputs
     do ievent=1,acqui_simu(1)%nevent_tot
@@ -390,6 +417,7 @@ contains
     type(inver),                                    intent(inout) :: inversion_param
     character(len=MAX_LEN_STRING),                  intent(inout) :: mode_running
     integer                                                       :: ier
+    character(len=MAX_LEN_STRING)                                 :: arg
 
     if (myrank == 0) then
        call get_command_argument(1, mode_running)
@@ -406,8 +434,30 @@ contains
        inversion_param%only_forward=.false.
 
     case default
-
+       write(*,*) 'Not know what is : ', mode_running
+       stop
     end select
+
+    !! check if there is something else
+     if (myrank == 0) then
+       call get_command_argument(2, arg)
+    endif
+    call MPI_BCAST(arg,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+
+    if (len_trim(arg) > 0) then
+       type_input=trim(adjustl(arg))
+       select case(type_input)
+       case('exploration')
+          ! ok
+       case('teleseismic')
+          ! ok
+       case default
+           write(*,*) 'Not know what is : ', type_input
+           stop
+       end select
+    endif
+
+
 
   end subroutine get_mode_running
 
@@ -618,6 +668,9 @@ contains
     integer                                                    :: tag, ier, nsta_irank, irank
     real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable      :: Gather, Gather_loc
     integer                                                    :: status(MPI_STATUS_SIZE)
+    real(kind=CUSTOM_REAL)                                     :: dummy_real
+
+    nb_traces_tot=0.
 
     if (myrank == 0) write(INVERSE_LOG_FILE,'(/a17)') '... reading data '
 
@@ -639,6 +692,7 @@ contains
 
              select case (trim(acqui_simu(ievent)%component(idim)))
              case('UX', 'UY', 'UZ', 'PR')
+                nb_traces_tot=nb_traces_tot+NSTA
                 irec=irec+1
                 read(IINN,rec=irec) Gather(:,:,idim)
 
@@ -721,13 +775,29 @@ contains
        !! set other parameters (in futrue work need to read any additional files)
 
        !! set frequency to invert
-       acqui_simu(ievent)%freqcy_to_invert(:,1,:)=fl
-       acqui_simu(ievent)%freqcy_to_invert(:,2,:)=fh
+       !!acqui_simu(ievent)%freqcy_to_invert(:,1,:)=fl
+       !!acqui_simu(ievent)%freqcy_to_invert(:,2,:)=fh
 
-       acqui_simu(ievent)%fl_event=fl
-       acqui_simu(ievent)%fh_event=fh
+       !! get band pass filter values if needed
+       if ( use_band_pass_filter) then
+          acqui_simu(ievent)%Nfrq=NIFRQ
+          acqui_simu(ievent)%band_pass_filter=use_band_pass_filter
+          allocate(acqui_simu(ievent)%fl_event(acqui_simu(ievent)%Nfrq))
+          allocate(acqui_simu(ievent)%fh_event(acqui_simu(ievent)%Nfrq))
+          acqui_simu(ievent)%fl_event(:)=fl(:)
+          acqui_simu(ievent)%fh_event(:)=fh(:)
+          !! WARNING WARNING
+          !! this is for telesismic case for now only one
+          !! frequency is allowed (todo fix it)
+          acqui_simu(ievent)%freqcy_to_invert(:,1,:)=fl(1)
+          acqui_simu(ievent)%freqcy_to_invert(:,2,:)=fh(1)
+       endif
 
     enddo
+
+    call MPI_BCAST(nb_traces_tot,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+    dummy_real=nb_traces_tot
+    call sum_all_all_cr_for_simulatenous_runs(dummy_real,nb_traces_tot,1)
 
     if (myrank == 0) write(INVERSE_LOG_FILE,'(a25//)') '... reading data : passed'
 
@@ -962,11 +1032,17 @@ contains
         case('param_family')
            read(line(ipos0:ipos1),*) inversion_param%param_family
 
+        case('use_frequency_band_pass_filter')
+           inversion_param%use_band_pass_filter=.true.
+           read(line(ipos0:ipos1),*) inversion_param%Nifrq
+           allocate(fl(inversion_param%Nifrq))
+           allocate(fh(inversion_param%Nifrq))
+
         case('fl')
-           read(line(ipos0:ipos1),*) fl
+           read(line(ipos0:ipos1),*) fl(:)
 
         case('fh')
-           read(line(ipos0:ipos1),*) fh
+           read(line(ipos0:ipos1),*) fh(:)
 
         case('input_sem_model')
            read(line(ipos0:ipos1),*)  inversion_param%input_sem_model
@@ -1035,10 +1111,16 @@ contains
                                     inversion_param%damp_weight(2), &
                                     inversion_param%damp_weight(3)
           inversion_param%use_damping_SEM_Tikonov=.true.
+          !! we have read standard deviation for model
+          !! then need to change
+          inversion_param%damp_weight(:) = 1. / inversion_param%damp_weight(:)**2
 
        case('use_tk_sem_vairiable_damping')
           read(line(ipos0:ipos1),*) inversion_param%min_damp,inversion_param%max_damp, inversion_param%distance_from_source
           inversion_param%use_variable_SEM_damping=.true.
+
+       case('prior_data_std')
+          read(line(ipos0:ipos1),*) inversion_param%prior_data_std
 
        case default
           write(*,*) 'ERROR KEY WORD NOT MATCH : ', trim(keyw), ' in file ', trim(inver_file)
@@ -1066,8 +1148,18 @@ endif
    call MPI_BCAST(inversion_param%Niter,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%Niter_wolfe,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%max_history_bfgs,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
-   call MPI_BCAST(fl,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
-   call MPI_BCAST(fh,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+
+   !! band pass filter
+   call MPI_BCAST(inversion_param%use_band_pass_filter,1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
+   if (inversion_param%use_band_pass_filter) then
+      call MPI_BCAST(inversion_param%Nifrq, 1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
+      if (myrank > 0) then
+         allocate(fl(inversion_param%Nifrq), fh(inversion_param%Nifrq))
+      endif
+      call MPI_BCAST(fl,inversion_param%Nifrq,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+      call MPI_BCAST(fh,inversion_param%Nifrq,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+   endif
+   call MPI_BCAST(inversion_param%prior_data_std,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%max_relative_pert,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%relat_grad,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%relat_cost,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
@@ -1109,6 +1201,10 @@ endif
    call MPI_BCAST(inversion_param%ymax_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%zmin_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%zmax_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+
+   !! set private values
+   use_band_pass_filter=inversion_param%use_band_pass_filter
+   NIFRQ=inversion_param%Nifrq
 
   end subroutine read_inver_file
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
