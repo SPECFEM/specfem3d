@@ -25,7 +25,7 @@ module projection_on_FD_grid
 contains
 !!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !--------------------------------------------------------------------------------------------------------------------
-!  Projection FD grid model on SEM mesh 
+!  Projection FD grid model on SEM mesh
 !--------------------------------------------------------------------------------------------------------------------
 subroutine Project_model_FD_grid2SEM(model_on_SEM_mesh, model_on_FD_grid, myrank)
 
@@ -37,17 +37,17 @@ subroutine Project_model_FD_grid2SEM(model_on_SEM_mesh, model_on_FD_grid, myrank
   real(kind=CUSTOM_REAL)                                 :: vinterp, v1, v2, v3, v4, v5, v6, v7, v8
   real(kind=CUSTOM_REAL)                                 :: x_sem, y_sem, z_sem
   real(kind=CUSTOM_REAL)                                 :: x_loc, y_loc, z_loc
-  
-  
+
+
   if (myrank == 0) then
      write(INVERSE_LOG_FILE,*)
      write(INVERSE_LOG_FILE,*) '    - > projection FD grid / SEM mesh  '
      write(INVERSE_LOG_FILE,*)
-  end if
+  endif
 
 
   do ispec =1, NSPEC_AB
- 
+
      do kgg = 1, NGLLZ
         do jgg = 1, NGLLY
            do igg = 1, NGLLX
@@ -57,29 +57,29 @@ subroutine Project_model_FD_grid2SEM(model_on_SEM_mesh, model_on_FD_grid, myrank
               y_sem = ystore(iglob)
               z_sem = zstore(iglob)
 
-              !! get value of model on FD grid by trilinear interpolation 
+              !! get value of model on FD grid by trilinear interpolation
               i_fd = floor((x_sem -  ox_fd_proj)/ hx_fd_proj) + 1
               j_fd = floor((y_sem -  oy_fd_proj)/ hy_fd_proj)  + 1
               k_fd = floor((z_sem -  oz_fd_proj)/ hz_fd_proj) + 1
-              
-              if (i_fd <= nx_fd_proj .and. j_fd <=  ny_fd_proj .and. k_fd <= nz_fd_proj .and. &
-                   i_fd > 0          .and. j_fd > 0            .and. k_fd > 0          ) then
+
+              if (i_fd <= nx_fd_proj .and. j_fd <= ny_fd_proj .and. k_fd <= nz_fd_proj .and. &
+                   i_fd > 0 .and. j_fd > 0 .and. k_fd > 0          ) then
 
                  v1 = model_on_FD_grid(i_fd,     j_fd,     k_fd    )
                  v2 = v1; v3 = v1; v4 = v1; v5 = v1; v6 = v1; v7 = v1; v8 = v1
-                 
+
                  if (i_fd < nx_fd_proj) v2 = model_on_FD_grid(i_fd + 1, j_fd,     k_fd    )
                  if (i_fd < nx_fd_proj .and. j_fd < ny_fd_proj) v3 = model_on_FD_grid(i_fd + 1, j_fd + 1, k_fd    )
                  if (j_fd < ny_fd_proj) v4 = model_on_FD_grid(i_fd,     j_fd + 1, k_fd    )
 
-                 if (k_fd < nz_fd_proj) then 
+                 if (k_fd < nz_fd_proj) then
                     v5 = model_on_FD_grid(i_fd,     j_fd,     k_fd + 1)
                     if (i_fd < nx_fd_proj) v6 = model_on_FD_grid(i_fd + 1, j_fd,     k_fd + 1)
                     if (i_fd < nx_fd_proj .and. j_fd < ny_fd_proj)   v7 = model_on_FD_grid(i_fd + 1, j_fd + 1, k_fd + 1)
                     if (j_fd < ny_fd_proj) v8 = model_on_FD_grid(i_fd,     j_fd + 1, k_fd + 1)
-                 end if
+                 endif
 
-                 x_loc = x_sem - (ox_fd_proj + real( i_fd - 1, CUSTOM_REAL) * hx_fd_proj) 
+                 x_loc = x_sem - (ox_fd_proj + real( i_fd - 1, CUSTOM_REAL) * hx_fd_proj)
                  y_loc = y_sem - (oy_fd_proj + real( j_fd - 1, CUSTOM_REAL) * hy_fd_proj)
                  z_loc = z_sem - (oz_fd_proj + real( k_fd - 1, CUSTOM_REAL) * hz_fd_proj)
 
@@ -89,14 +89,14 @@ subroutine Project_model_FD_grid2SEM(model_on_SEM_mesh, model_on_FD_grid, myrank
 
                  Vinterp=0.
 
-              end if
-              
+              endif
+
               model_on_SEM_mesh(igg,jgg,kgg,ispec)=Vinterp
 
-           end do
-        end do
-     end do
-  end do
+           enddo
+        enddo
+     enddo
+  enddo
 
 
 end subroutine Project_model_FD_grid2SEM
@@ -196,7 +196,7 @@ end subroutine read_fd_grid_parameters_for_projection
              enddo
           enddo
        enddo
-      
+
        kmin =  1+ (zmin  - oz_fd_proj) / hz_fd_proj
        kmax =  1+ (zmax  - oz_fd_proj) / hz_fd_proj
        jmin =  1+ (ymin  - oy_fd_proj) / hy_fd_proj
@@ -210,7 +210,7 @@ end subroutine read_fd_grid_parameters_for_projection
           write(IIDD,*) xmin, xmax
           write(IIDD,*) ymin, ymax
           write(IIDD,*) zmin, zmax
-          write(IIDD,*) 
+          write(IIDD,*)
           write(IIDD,*) imin, imax
           write(IIDD,*) jmin, jmax
           write(IIDD,*) kmin, kmax
@@ -1036,13 +1036,13 @@ end subroutine read_fd_grid_parameters_for_projection
   end subroutine locate_point_in_element
 
 
-  
+
 !!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !--------------------------------------------------------------------------------------------------------------------
-!  trilinear interpolation 
+!  trilinear interpolation
 !--------------------------------------------------------------------------------------------------------------------
 subroutine TrilinearInterp(Vinterp,  x_loc, y_loc, z_loc, v1, v2, v3, v4, v5, v6, v7, v8, lx, ly, lz)
- 
+
   real(kind=CUSTOM_REAL), intent(inout) :: Vinterp
   real(kind=CUSTOM_REAL), intent(in)    :: x_loc, y_loc, z_loc
   real(kind=CUSTOM_REAL), intent(in)    :: v1, v2, v3, v4, v5, v6, v7, v8, lx, ly, lz
@@ -1061,7 +1061,7 @@ subroutine TrilinearInterp(Vinterp,  x_loc, y_loc, z_loc, v1, v2, v3, v4, v5, v6
   v6 *                   dx  * (1._CUSTOM_REAL - dy) *                   dz  + &
   v7 *                   dx  *                   dy  *                   dz  + &
   v8 * (1._CUSTOM_REAL - dx) *                   dy  *                   dz
-  
+
 end subroutine TrilinearInterp
 
 

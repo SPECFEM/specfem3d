@@ -282,7 +282,7 @@ contains
     real(kind=8)                                                             :: jacobianl, weight, qp_tmp
     integer                                                                  :: ipar, i, j, k, ispec
     real(kind=CUSTOM_REAL)                                                   :: coeff, coeff_n1, coeff_n2
-    real(kind=8)                                                             :: coeff_n1_dp, coeff_n2_dp 
+    real(kind=8)                                                             :: coeff_n1_dp, coeff_n2_dp
 
     !! try normalization to avoid numerical errors
     !call Parallel_ComputeL2normSquare(vect1 , Niv, coeff_n1)
@@ -290,12 +290,12 @@ contains
 
     coeff=maxval(abs(vect1(:,:,:,:,:)))
     call max_all_all_cr(coeff, coeff_n1)
-    if (coeff_n1==0._CUSTOM_REAL) coeff_n1=1._CUSTOM_REAL
+    if (coeff_n1 == 0._CUSTOM_REAL) coeff_n1=1._CUSTOM_REAL
     wks_1n(:,:,:,:,:) = vect1(:,:,:,:,:) / coeff_n1
 
     coeff=maxval(abs(vect2(:,:,:,:,:)))
     call max_all_all_cr(coeff, coeff_n2)
-    if (coeff_n2==0._CUSTOM_REAL) coeff_n2=1._CUSTOM_REAL
+    if (coeff_n2 == 0._CUSTOM_REAL) coeff_n2=1._CUSTOM_REAL
     wks_2n(:,:,:,:,:) = vect2(:,:,:,:,:) / coeff_n2
 
     coeff_n1_dp = coeff_n1
@@ -341,11 +341,11 @@ contains
 
      qp=0.d0
      qp_dp=0.d0
- 
+
      coeff=maxval(abs(vect1(:,:,:,:,:)))
      call max_all_all_cr(coeff, coeff_n1)
 
-     if (coeff_n1==0._CUSTOM_REAL) coeff_n1=1._CUSTOM_REAL
+     if (coeff_n1 == 0._CUSTOM_REAL) coeff_n1=1._CUSTOM_REAL
 
      wks_1n(:,:,:,:,:) = vect1(:,:,:,:,:) / coeff_n1
      coeff_n1_dp=coeff_n1

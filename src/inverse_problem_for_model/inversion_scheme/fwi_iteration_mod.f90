@@ -15,7 +15,7 @@ module fwi_iteration
 
   real(kind=CUSTOM_REAL), private, dimension(:,:,:,:,:), allocatable :: initial_model, current_model, prior_model
   real(kind=CUSTOM_REAL), private, dimension(:,:,:,:,:), allocatable :: initial_gradient, current_gradient
-  real(kind=CUSTOM_REAL), private, dimension(:,:,:,:,:), allocatable :: regularization_penalty, gradient_regularization_penalty 
+  real(kind=CUSTOM_REAL), private, dimension(:,:,:,:,:), allocatable :: regularization_penalty, gradient_regularization_penalty
   real(kind=CUSTOM_REAL), private, dimension(:,:,:,:,:), allocatable :: descent_direction
   real(kind=CUSTOM_REAL), private,  dimension(:,:,:,:,:),allocatable :: fwi_precond, hess_approxim
 
@@ -150,16 +150,16 @@ contains
        ! store current gradient in choosen family parameter
        call StoreGradientInfamilyParam(inversion_param, current_gradient, hess_approxim)
 
-       ! compute regularization term and gradient for choosen family 
+       ! compute regularization term and gradient for choosen family
        call AddRegularization(inversion_param, current_model, prior_model, regularization_penalty, &
             gradient_regularization_penalty, &
             myrank)
        ! add penalty tern on cost function
        call Parallel_ComputeL2normSquare(regularization_penalty, inversion_param%NinvPar, inversion_param%cost_penalty)
-       Qt = Qt + 0.5 * inversion_param%weight_Tikonov * inversion_param%cost_penalty 
+       Qt = Qt + 0.5 * inversion_param%weight_Tikonov * inversion_param%cost_penalty
        current_gradient(:,:,:,:,:) = current_gradient(:,:,:,:,:) + &
             inversion_param%weight_Tikonov * gradient_regularization_penalty(:,:,:,:,:)
-       ! store current cost funtion value 
+       ! store current cost funtion value
        inversion_param%total_current_cost=Qt
 
        ! compute q'(t) = grad . descent_direction for line search
@@ -278,8 +278,8 @@ contains
     integer,                                        intent(in)    :: iter_frq
     integer                                                       :: ievent,  iter_inverse, ipar
     character(len=MAX_LEN_STRING)                                 :: prefix_name
-    real(kind=CUSTOM_REAL)                                        :: tmp_val 
-    
+    real(kind=CUSTOM_REAL)                                        :: tmp_val
+
     iter_inverse=0
     inversion_param%current_ifrq=iter_frq
 
@@ -298,9 +298,9 @@ contains
        call flush_iunit(INVERSE_LOG_FILE)
     endif
 
-    ! initialize regularisation 
+    ! initialize regularization
     call SetUpRegularization(inversion_param, acqui_simu, myrank)
-    ! compute volume of domain 
+    ! compute volume of domain
     regularization_penalty(:,:,:,:,:)=1._CUSTOM_REAL
     call Parallel_ComputeL2normSquare(regularization_penalty, inversion_param%NinvPar, inversion_param%volume_domain)
     inversion_param%volume_domain = inversion_param%volume_domain / inversion_param%NinvPar
@@ -310,12 +310,12 @@ contains
        write(INVERSE_LOG_FILE,*) '      Volume of domain : ',  inversion_param%volume_domain
        write(INVERSE_LOG_FILE,*)
        call flush_iunit(INVERSE_LOG_FILE)
-    end if
+    endif
 
-    
-    !! compute normalize coefficient Tikonov weight 
+
+    !! compute normalize coefficient Tikonov weight
     inversion_param%weight_Tikonov = 1. / inversion_param%volume_domain
-    
+
     ! compute cost function and gradient---------
     call InitForOneStepFWI(inversion_param)
 
@@ -324,11 +324,11 @@ contains
     enddo
     if (GPU_MODE) call TransfertKernelFromGPUArrays()
 
-    ! store current value of cost function for reduction 
+    ! store current value of cost function for reduction
     Q0=inversion_param%total_current_cost
     ! communicate gradient and cost function to all simultaneous runs
     call mpi_sum_grad_all_to_all_simultaneous_runs(Q0)
-    
+
     !! compute standard deviation on data
     tmp_val =  inversion_param%nb_data_std
     call sum_all_all_cr_for_simulatenous_runs(tmp_val, inversion_param%nb_data_std,1)
@@ -340,10 +340,11 @@ contains
     call  SpecfemParam2Invert(inversion_param, initial_model)
     ! store initial gradient in choosen family parameter
     call StoreGradientInFamilyParam(inversion_param, initial_gradient, hess_approxim)
-    
-    if (inversion_param%input_SEM_prior) then 
-       ! save specif read prior model in family 
+
+    if (inversion_param%input_SEM_prior) then
+       ! save specif read prior model in family
        call  SpecfemPrior2Invert(inversion_param, prior_model)
+<<<<<<< HEAD
     else 
        ! save starting model read as prior model for the first frequency group
        if (iter_frq==1) prior_model(:,:,:,:,:) = initial_model(:,:,:,:,:)
@@ -358,22 +359,29 @@ contains
     end if
 
     ! compute regularization term and gradient for choosen family 
+=======
+    else
+       ! save starting model read as prior model
+       prior_model(:,:,:,:,:) = initial_model(:,:,:,:,:)
+    endif
+    ! compute regularization term and gradient for choosen family
+>>>>>>> e63d891980ae00bd082c3e15f6edbfaa5bba68d1
     call AddRegularization(inversion_param, initial_model, prior_model, regularization_penalty, &
-         gradient_regularization_penalty,&
+         gradient_regularization_penalty, &
          myrank)
     ! add penalty tern on cost function
     call Parallel_ComputeL2normSquare(regularization_penalty, inversion_param%NinvPar, inversion_param%cost_penalty)
     Q0 = Q0 + 0.5 *  inversion_param%weight_Tikonov * inversion_param%cost_penalty
     initial_gradient(:,:,:,:,:) = initial_gradient(:,:,:,:,:) + &
          inversion_param%weight_Tikonov * gradient_regularization_penalty(:,:,:,:,:)
- 
+
    ! store cost function value
     inversion_param%total_current_cost=Q0
 
     ! store intial values of cost function
     inversion_param%Cost_init=inversion_param%total_current_cost
     call Parallel_ComputeL2normSquare(initial_gradient, inversion_param%NinvPar, inversion_param%Norm_grad_init)
-    
+
     ! define preconditionnner or taper on gradients
     call SetPrecond(iter_inverse, inversion_param, initial_gradient, hess_approxim, fwi_precond)
 
@@ -388,7 +396,7 @@ contains
        prefix_name='Regul'
        call DumpArray(regularization_penalty, inversion_param, iter_inverse, prefix_name)
        prefix_name='Spatial_damp'
-       descent_direction(:,:,:,:,1)=spatial_damping(:,:,:,:) !! use as temporary working array 
+       descent_direction(:,:,:,:,1)=spatial_damping(:,:,:,:) !! use as temporary working array
        call DumpArray(descent_direction, inversion_param, iter_inverse, prefix_name)
     endif
 
@@ -475,7 +483,7 @@ contains
           write(INVERSE_LOG_FILE,'( a13, i2, 2(a8, f12.5), a19, f10.6,  a14, f10.6)') &
                '  Parameter :', ipar,'   MIN :',vmin_glob ,'   MAX :',vmax_glob, &
                ' max pert,  prior :', 100*vmax_glob0, ' % previous  :', 100*vmin_glob0,' %'
-          
+
           !write(INVERSE_LOG_FILE,*) '            max pert / starting model : ', 100*vmax_glob0,' %'
           !write(INVERSE_LOG_FILE,*) '            max pert / previous model : ', 100*vmin_glob0,' %'
 
@@ -520,11 +528,11 @@ contains
 
     Ninvpar =inversion_param%NinvPar
 
-    
+
     if (myrank == 0) then
           write(INVERSE_LOG_FILE,*) '  '
-          write(INVERSE_LOG_FILE,*) '  allocate arrays for fwi iterations ', Ninvpar        
-          write(INVERSE_LOG_FILE,*) '  '        
+          write(INVERSE_LOG_FILE,*) '  allocate arrays for fwi iterations ', Ninvpar
+          write(INVERSE_LOG_FILE,*) '  '
           call flush_iunit(INVERSE_LOG_FILE)
        endif
     !! allocate arrays for inversion scheme
@@ -559,7 +567,7 @@ contains
 
     allocate(regularization_penalty(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ierror)
     if (ierror /= 0) call exit_MPI(myrank,"error allocation regularization_penalty in AllocatememoryForFWI subroutine")
-    regularization_penalty(:,:,:,:,:) = 0._CUSTOM_REAL 
+    regularization_penalty(:,:,:,:,:) = 0._CUSTOM_REAL
 
     allocate(gradient_regularization_penalty(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ierror)
     if (ierror /= 0) call exit_MPI(myrank,"error allocation gradient_regularization_penalty in AllocatememoryForFWI subroutine")

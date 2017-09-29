@@ -164,9 +164,9 @@ contains
              !! you just need to store it in array gradient ....
 
           else
-             
+
              select case(trim(adjustl(inversion_param%param_family)))
-               
+
              case('vp')
                 rho_vp(:,:,:,ispec)  = model(:,:,:,ispec,1) * rhostore(:,:,:,ispec)
                 kappastore(:,:,:,ispec) = rhostore(:,:,:,ispec) * ( model(:,:,:,ispec,1)**2 -  &
@@ -186,7 +186,7 @@ contains
                 mustore(:,:,:,ispec) = rhostore(:,:,:,ispec) * model(:,:,:,ispec,2)**2
 
              case('rho_vp_vs')
-               
+
                 rhostore(:,:,:,ispec) = model(:,:,:,ispec,1)
                 rho_vp(:,:,:,ispec)   = model(:,:,:,ispec,2) * rhostore(:,:,:,ispec)
                 rho_vs(:,:,:,ispec)   = model(:,:,:,ispec,3) * rhostore(:,:,:,ispec)
@@ -450,7 +450,7 @@ contains
 
     enddo
 
-    !! clear memory since we do not need it any more 
+    !! clear memory since we do not need it any more
     deallocate(inversion_param%prior_model)
 
   end subroutine SpecfemPrior2Invert

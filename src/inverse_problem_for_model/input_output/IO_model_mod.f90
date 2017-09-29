@@ -297,15 +297,15 @@ contains
        stop
 
     else
-       
+
        allocate(wks_model(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ierror)
        if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_model in ReadInputSEMpriormodel subroutine, IO_model_mod")
-       
+
        allocate(inversion_param%prior_model(NGLLX,NGLLY,NGLLZ,NSPEC_AB, inversion_param%NinvPar), stat=ierror)
        if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_model_vp in ReadInputSEMmodel subroutine, IO_model_mod")
 
-      
-       
+
+
        if (mygroup <= 0) then !! only the fisrt group read model and need to bcast at all other
           !! read input model
           path_file='OUTPUT_FILES/DATABASES_MPI/proc'
@@ -323,7 +323,7 @@ contains
           read(888) wks_model
           close(888)
           inversion_param%prior_model(:,:,:,:,2)=wks_model(:,:,:,:)
-          
+
           path_file='OUTPUT_FILES/DATABASES_MPI/proc'
           write(name_file,'(i6.6,a19)') myrank, '_model_rh_prior.bin'
           path_file=(trim(path_file))//trim(name_file)
@@ -332,19 +332,19 @@ contains
           close(888)
           inversion_param%prior_model(:,:,:,:,3)=wks_model(:,:,:,:)
 
-       end if
-       
+       endif
+
        !! bcast to others groups
        if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
 
           call bcast_all_cr_for_database(inversion_param%prior_model(1,1,1,1,1), &
                NGLLX*NGLLY*NGLLZ*NSPEC_AB*inversion_param%NinvPar)
-         
+
        endif
 
        deallocate(wks_model)
 
-    end if
+    endif
 
   end subroutine ReadInputSEMpriormodel
 

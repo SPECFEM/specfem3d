@@ -8,9 +8,9 @@ module regularization_interface
 
   implicit none
 
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: spatial_damping 
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: spatial_damping
 
-contains 
+contains
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     subroutine SetUpRegularization(inversion_param, acqui_simu, myrank)
@@ -20,55 +20,64 @@ contains
       type(acqui),  dimension(:), allocatable,        intent(inout) :: acqui_simu
 
       !! ----------- FD GRID BASED REGULARIZATION ----------
-      if (inversion_param%use_regularisation_FD_Tikonov) then 
-         if (myrank==0) then 
-            write(INVERSE_LOG_FILE,*) 
-            write(INVERSE_LOG_FILE,*)
-            write(INVERSE_LOG_FILE,*) '   INITIALIZE TIKONOV FD BASED REGULARISATION  :', inversion_param%weight_Tikonov
+      if (inversion_param%use_regularization_FD_Tikonov) then
+         if (myrank == 0) then
             write(INVERSE_LOG_FILE,*)
             write(INVERSE_LOG_FILE,*)
+            write(INVERSE_LOG_FILE,*) '   INITIALIZE TIKONOV FD BASED regularization  :', inversion_param%weight_Tikonov
             write(INVERSE_LOG_FILE,*)
-         end if
+            write(INVERSE_LOG_FILE,*)
+            write(INVERSE_LOG_FILE,*)
+         endif
          call setup_FD_regularization(inversion_param%projection_fd, myrank)
-      end if
+      endif
 
-      if (inversion_param%use_regularisation_SEM_Tikonov) then
-         if (myrank==0) then 
-            write(INVERSE_LOG_FILE,*) 
-            write(INVERSE_LOG_FILE,*)
-            write(INVERSE_LOG_FILE,*) '   INITIALIZE TIKONOV SEM BASED REGULARISATION  :', inversion_param%weight_Tikonov
+      if (inversion_param%use_regularization_SEM_Tikonov) then
+         if (myrank == 0) then
             write(INVERSE_LOG_FILE,*)
             write(INVERSE_LOG_FILE,*)
+            write(INVERSE_LOG_FILE,*) '   INITIALIZE TIKONOV SEM BASED regularization  :', inversion_param%weight_Tikonov
             write(INVERSE_LOG_FILE,*)
+            write(INVERSE_LOG_FILE,*)
+            write(INVERSE_LOG_FILE,*)
+<<<<<<< HEAD
          end if
       end if
       
       
       if ( inversion_param%use_damping_SEM_Tikonov .or. inversion_param%use_variable_SEM_damping) then 
          if (.not. allocated(spatial_damping)) allocate(spatial_damping(NGLLX, NGLLY, NGLLZ, NSPEC_AB))
+=======
+         endif
+      endif
+
+
+      if ( inversion_param%use_damping_SEM_Tikonov .or. inversion_param%use_variable_SEM_damping) then
+         allocate(spatial_damping(NGLLX, NGLLY, NGLLZ, NSPEC_AB))
+>>>>>>> e63d891980ae00bd082c3e15f6edbfaa5bba68d1
          spatial_damping(:,:,:,:)=min(1._CUSTOM_REAL, inversion_param%min_damp)
-      end if
+      endif
 
       if (inversion_param%use_damping_SEM_Tikonov) then
-         if (myrank==0) then 
-            write(INVERSE_LOG_FILE,*) 
+         if (myrank == 0) then
+            write(INVERSE_LOG_FILE,*)
             write(INVERSE_LOG_FILE,*)
             write(INVERSE_LOG_FILE,*) '   INITIALIZE TIKONOV SEM BASED DAMPING  :', inversion_param%weight_Tikonov
             write(INVERSE_LOG_FILE,*)
             write(INVERSE_LOG_FILE,*)
             write(INVERSE_LOG_FILE,*)
-         end if
-      end if
+         endif
+      endif
 
       if (inversion_param%use_variable_SEM_damping) then
-         if (myrank==0) then 
+         if (myrank == 0) then
             write(INVERSE_LOG_FILE,*)
             write(INVERSE_LOG_FILE,*) '   COMPUTE VARIABLE DAMPING  :', inversion_param%min_damp, inversion_param%max_damp, &
                  inversion_param%distance_from_source
             write(INVERSE_LOG_FILE,*)
-         end if
+         endif
          call compute_spatial_damping_for_source_singularities(acqui_simu, inversion_param, spatial_damping)
-      end if
+      endif
 
 
     end subroutine SetUpRegularization
@@ -77,7 +86,7 @@ contains
   subroutine AddRegularization(inversion_param, model, prior_model, regul_penalty, gradient_regul_penalty, myrank)
 
     type(inver),                                               intent(inout) :: inversion_param
-    integer,                                                   intent(in)    :: myrank 
+    integer,                                                   intent(in)    :: myrank
     real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable, intent(inout) :: model, prior_model
     real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable, intent(inout) :: regul_penalty, gradient_regul_penalty
     real(kind=CUSTOM_REAL), dimension(:,:,:,:),   allocatable                :: model_on_sem, regul_on_sem, gradient_regul_on_sem
@@ -89,17 +98,17 @@ contains
     gradient_regul_penalty(:,:,:,:,:)= 0._CUSTOM_REAL
 
     !! ----------- FD GRID BASED REGULARIZATION ----------
-    if (inversion_param%use_regularisation_FD_Tikonov) then
+    if (inversion_param%use_regularization_FD_Tikonov) then
 
-       if (myrank==0) then 
-          write(INVERSE_LOG_FILE,*) 
-          write(INVERSE_LOG_FILE,*)
-          write(INVERSE_LOG_FILE,*) '   USE TIKONOV FD BASED REGULARISATION  :', inversion_param%weight_Tikonov
+       if (myrank == 0) then
           write(INVERSE_LOG_FILE,*)
           write(INVERSE_LOG_FILE,*)
+          write(INVERSE_LOG_FILE,*) '   USE TIKONOV FD BASED regularization  :', inversion_param%weight_Tikonov
           write(INVERSE_LOG_FILE,*)
-       end if
-    
+          write(INVERSE_LOG_FILE,*)
+          write(INVERSE_LOG_FILE,*)
+       endif
+
        allocate(model_on_sem(NGLLX, NGLLY, NGLLZ, NSPEC_AB))
        allocate(regul_on_sem(NGLLX, NGLLY, NGLLZ, NSPEC_AB))
        allocate(gradient_regul_on_sem(NGLLX, NGLLY, NGLLZ, NSPEC_AB))
@@ -110,21 +119,21 @@ contains
                                   inversion_param%projection_fd, myrank, ipar)
           regul_penalty(:,:,:,:,ipar) = regul_on_sem(:,:,:,:)
           gradient_regul_penalty(:,:,:,:,ipar) = gradient_regul_on_sem(:,:,:,:)
-          
-       end do
+
+       enddo
        deallocate(model_on_sem, regul_on_sem, gradient_regul_on_sem)
-    end if
+    endif
 
     !! ----------------- SEM BASED REGULARIZATION --------
-    if (inversion_param%use_regularisation_SEM_Tikonov) then
-       if (myrank==0) then 
-          write(INVERSE_LOG_FILE,*) 
-          write(INVERSE_LOG_FILE,*)
-          write(INVERSE_LOG_FILE,*) '   USE TIKONOV SEM BASED REGULARISATION  :', inversion_param%weight_Tikonov
+    if (inversion_param%use_regularization_SEM_Tikonov) then
+       if (myrank == 0) then
           write(INVERSE_LOG_FILE,*)
           write(INVERSE_LOG_FILE,*)
+          write(INVERSE_LOG_FILE,*) '   USE TIKONOV SEM BASED regularization  :', inversion_param%weight_Tikonov
           write(INVERSE_LOG_FILE,*)
-       end if
+          write(INVERSE_LOG_FILE,*)
+          write(INVERSE_LOG_FILE,*)
+       endif
 
        allocate(model_on_sem(NGLLX, NGLLY, NGLLZ, NSPEC_AB))
        allocate(regul_on_sem(NGLLX, NGLLY, NGLLZ, NSPEC_AB))
@@ -139,31 +148,31 @@ contains
           regul_penalty(:,:,:,:,ipar) = regul_penalty(:,:,:,:,ipar) + &
                sqrt(inversion_param%smooth_weight(ipar))*regul_on_sem(:,:,:,:)
 
-          !! gradient with respect ot the log parameter but with penalty of parameter 
+          !! gradient with respect ot the log parameter but with penalty of parameter
           !! thus need to multiply by the model parameter
           gradient_regul_penalty(:,:,:,:,ipar) = gradient_regul_penalty(:,:,:,:,ipar) + &
                inversion_param%smooth_weight(ipar)* &
                gradient_regul_on_sem(:,:,:,:)*model(:,:,:,:,ipar)
 
-       end do
+       enddo
 
        deallocate(model_on_sem, regul_on_sem, gradient_regul_on_sem)
 
-    end if
+    endif
 
 
     if (inversion_param%use_damping_SEM_Tikonov) then
-       if (myrank==0) then 
-          write(INVERSE_LOG_FILE,*) 
+       if (myrank == 0) then
+          write(INVERSE_LOG_FILE,*)
           write(INVERSE_LOG_FILE,*)
           write(INVERSE_LOG_FILE,*) '   USE TIKONOV SEM BASED DAMPING  :', inversion_param%weight_Tikonov
           write(INVERSE_LOG_FILE,*)         inversion_param%damp_weight(:)
           write(INVERSE_LOG_FILE,*)
           write(INVERSE_LOG_FILE,*)
-       end if
+       endif
        do ipar =1, inversion_param%NinvPar
 
-          !! directly damp the log 
+          !! directly damp the log
           !regul_penalty(:,:,:,:,ipar) =  log(model(:,:,:,:,ipar)) - log(prior_model(:,:,:,:,ipar))
           !gradient_regul_penalty(:,:,:,:,ipar) =  log(model(:,:,:,:,ipar)) -  log(prior_model(:,:,:,:,ipar))
 
@@ -176,16 +185,16 @@ contains
           gradient_regul_penalty(:,:,:,:,ipar) =   gradient_regul_penalty(:,:,:,:,ipar) + &
                inversion_param%damp_weight(ipar) * spatial_damping(:,:,:,:) * &
                ( model(:,:,:,:,ipar) -  prior_model(:,:,:,:,ipar) ) * model(:,:,:,:,ipar)
-       end do
+       enddo
 
-       !!TO DO : we can add damping on vp and vp/vs to avoid non physical (non numerical) models 
-       !! need to us family parameter selector 
+       !!TO DO : we can add damping on vp and vp/vs to avoid non physical (non numerical) models
+       !! need to us family parameter selector
        !regul_penalty(:,:,:,:,2) = ( model(:,:,:,:,2) / model(:,:,:,:,3) - sqrt(3.))
        !gradient_regul_penalty(:,:,:,:,2) = gradient_regul_penalty(:,:,:,:,2) +  (model(:,:,:,:,2) / model(:,:,:,:,3))**2
        !gradient_regul_penalty(:,:,:,:,3) = gradient_regul_penalty(:,:,:,:,3) -  (model(:,:,:,:,2) / model(:,:,:,:,3))**2
 
-    end if
-    
+    endif
+
   end subroutine AddRegularization
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

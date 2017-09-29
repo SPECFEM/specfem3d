@@ -88,7 +88,7 @@
 
           ! distinguishes between single and double precision for reals
           stf_used = real(stf,kind=CUSTOM_REAL)
-          
+
           ! adds source array
           do k=1,NGLLZ
             do j=1,NGLLY
