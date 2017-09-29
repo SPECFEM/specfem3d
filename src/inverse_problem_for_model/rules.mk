@@ -423,7 +423,7 @@ $O/interpolation_mod.o : $S/input_output/interpolation_mod.f90 ${SETUP}/constant
 
 # IO for teleseismic case 
 $O/Teleseismic_IO.o : $S/input_output/Teleseismic_IO.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
-	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/input_output/Teleseismic_IO.f90 -c -o $O/Teleseismic_IO.o
+	${MPIFCCOMPILE_CHECK} $(FCFLAGS_f90) $S/input_output/Teleseismic_IO.f90 -c -o $O/Teleseismic_IO.o
 
 # import or export model
 $O/IO_model_mod.o : $S/input_output/IO_model_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
