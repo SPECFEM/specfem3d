@@ -110,6 +110,8 @@
 
 // Gauss-Lobatto-Legendre
 #define NGLLX 5
+#define NGLLY 5
+#define NGLLZ 5
 #define NGLL2 25
 #define NGLL3 125 // no padding: requires same size as in fortran for NGLLX * NGLLY * NGLLZ
 

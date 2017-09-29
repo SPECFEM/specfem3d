@@ -72,7 +72,7 @@ __global__ void compute_add_sources_acoustic_kernel(realw* potential_dot_dot_aco
 
         // debug: without atomic operation
         //      potential_dot_dot_acoustic[iglob] +=
-        //                -sourcearrays[INDEX5(NSOURCES, 3, 5, 5,isource, 0, i,j,k)]*stf/kappal;
+        //                -sourcearrays[INDEX5(NSOURCES, 3, NGLLX,NGLLX,isource, 0, i,j,k)]*stf/kappal;
       }
     }
   }
@@ -104,7 +104,7 @@ void FC_FUNC_(compute_add_sources_ac_cuda,
   get_blocks_xy(NSOURCES,&num_blocks_x,&num_blocks_y);
 
   dim3 grid(num_blocks_x,num_blocks_y);
-  dim3 threads(5,5,5);
+  dim3 threads(NGLLX,NGLLY,NGLLZ);
 
   compute_add_sources_acoustic_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_dot_dot_acoustic,
                                                                               mp->d_ibool,
@@ -147,7 +147,7 @@ void FC_FUNC_(compute_add_sources_ac_s3_cuda,
   get_blocks_xy(NSOURCES,&num_blocks_x,&num_blocks_y);
 
   dim3 grid(num_blocks_x,num_blocks_y);
-  dim3 threads(5,5,5);
+  dim3 threads(NGLLX,NGLLY,NGLLZ);
 
   compute_add_sources_acoustic_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_dot_dot_acoustic,
                                                                               mp->d_ibool,
@@ -199,7 +199,7 @@ __global__ void add_sources_ac_SIM_TYPE_2_OR_3_kernel(realw* potential_dot_dot_a
 
       int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
 
-      realw kappal = kappastore[INDEX4(5,5,5,i,j,k,ispec)];
+      realw kappal = kappastore[INDEX4(NGLLX,NGLLY,NGLLZ,i,j,k,ispec)];
       realw xir    = xir_store[INDEX2(nadj_rec_local,irec_local,i)];
       realw etar   = etar_store[INDEX2(nadj_rec_local,irec_local,j)];
       realw gammar = gammar_store[INDEX2(nadj_rec_local,irec_local,k)];
@@ -251,7 +251,7 @@ void FC_FUNC_(add_sources_ac_sim_2_or_3_cuda,
   get_blocks_xy(mp->nadj_rec_local,&num_blocks_x,&num_blocks_y);
 
   dim3 grid(num_blocks_x,num_blocks_y,1);
-  dim3 threads(5,5,5);
+  dim3 threads(NGLLX,NGLLY,NGLLZ);
   int it_index = *NTSTEP_BETWEEN_READ_ADJSRC - (*it-1) % *NTSTEP_BETWEEN_READ_ADJSRC - 1 ;
   // copies extracted array values onto GPU
   if ( (*it-1) % *NTSTEP_BETWEEN_READ_ADJSRC==0) print_CUDA_error_if_any(cudaMemcpy(mp->d_source_adjoint,h_source_adjoint,

@@ -143,11 +143,6 @@ void FC_FUNC_(prepare_constants_device,
   if (mp == NULL) exit_on_error("error allocating mesh pointer");
   *Mesh_pointer = (long)mp;
 
-  // checks if NGLLX == 5
-  if (*h_NGLLX != NGLLX ){
-    exit_on_error("NGLLX must be 5 for CUDA devices");
-  }
-
   // sets processes mpi rank
   mp->myrank = *h_myrank;
 
@@ -329,9 +324,9 @@ void FC_FUNC_(prepare_constants_device,
   // note that:
   // size(ispec_selected_rec) = nrec
   if (mp->nrec_local > 0){
-    copy_todevice_realw((void**)&mp->d_hxir,h_xir,5*mp->nrec_local);
-    copy_todevice_realw((void**)&mp->d_hetar,h_etar,5*mp->nrec_local);
-    copy_todevice_realw((void**)&mp->d_hgammar,h_gammar,5*mp->nrec_local);
+    copy_todevice_realw((void**)&mp->d_hxir,h_xir,NGLLX*mp->nrec_local);
+    copy_todevice_realw((void**)&mp->d_hetar,h_etar,NGLLY*mp->nrec_local);
+    copy_todevice_realw((void**)&mp->d_hgammar,h_gammar,NGLLZ*mp->nrec_local);
 
     float* h_nu;
     h_nu=(float*)malloc(9 * sizeof(float) * mp->nrec_local);
@@ -1429,6 +1424,7 @@ TRACE("prepare_cleanup_device");
   cudaFree(mp->d_gammax);
   cudaFree(mp->d_gammay);
   cudaFree(mp->d_gammaz);
+  cudaFree(mp->d_kappav);
   cudaFree(mp->d_muv);
 
   // absorbing boundaries
