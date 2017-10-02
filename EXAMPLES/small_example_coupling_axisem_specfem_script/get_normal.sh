@@ -1,12 +1,12 @@
-# number of processors 
+# number of processors
 declare -i NPROC
 NPROC=$1
 NPROC="$NPROC-1"
 
-# database directory 
+# database directory
 DATABASES_MPI=DATABASES_MPI
 
-# create output file 
+# create output file
 outfile=" normals.txt"
 rm $outfile
 touch $outfile
@@ -21,7 +21,7 @@ done
 
 echo
 echo " Wrote  " $outfile " file "
-echo 
-echo " X, Y, Z, NX, NY, NZ, iproc"  
 echo
-echo 
+echo " X, Y, Z, NX, NY, NZ, iproc"
+echo
+echo

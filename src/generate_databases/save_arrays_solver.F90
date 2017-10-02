@@ -703,11 +703,11 @@
              ny = abs_boundary_normal(2,igll,iface)
              nz = abs_boundary_normal(3,igll,iface)
 
-             write(IOUT,*) xstore_dummy(iglob), ystore_dummy(iglob), zstore_dummy(iglob), nx, ny, nz 
+             write(IOUT,*) xstore_dummy(iglob), ystore_dummy(iglob), zstore_dummy(iglob), nx, ny, nz
 
-          end do
-       end if
-    end do
+          enddo
+       endif
+    enddo
     close(IOUT)
   endif ! of if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH)
 

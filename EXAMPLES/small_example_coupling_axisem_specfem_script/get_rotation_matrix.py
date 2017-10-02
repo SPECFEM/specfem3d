@@ -1,13 +1,13 @@
 # -*-coding:Latin-1 -*
-from math import * 
+from math import *
 from numpy import *
 
 
 
-# ################################# functions ################################ 
-# ################################# functions ################################ 
-# ################################# functions ################################ 
-# ################################# functions ################################ 
+# ################################# functions ################################
+# ################################# functions ################################
+# ################################# functions ################################
+# ################################# functions ################################
 
 #----------------------------------------------------------------------------
 # compute 3D rotation matrix with respect to axis for rotation_angle in degree
@@ -23,12 +23,12 @@ def rotation_with_respect_to_axis(axis, rotation_angle):
     uy=axis[1]/norme_axis
     uz=axis[2]/norme_axis
 
-    # compute cos and sin 
+    # compute cos and sin
     c=cos(deg2rad * rotation_angle)
     s=sin(deg2rad * rotation_angle)
     R=zeros((3,3))
 
-    # rotation matrix 
+    # rotation matrix
     R[0,0]=(ux**2 + (1.-ux**2)*c)
     R[0,1]=(ux*uy*(1.-c)-uz*s)
     R[0,2]=(ux*uz*(1.-c)+uy*s)
@@ -44,25 +44,25 @@ def rotation_with_respect_to_axis(axis, rotation_angle):
     return R
 #
 #----------------------------------------------------------------------------
-# compute 3D rotation matrix to change coordiante spheric - cartesian 
+# compute 3D rotation matrix to change coordiante spheric - cartesian
 # in order to switch specfem local coordiante - axisem global coordiantes
 #
 def general_matrix_rotation(lon, lat, azi):
     # angles in radian
     cla=(90.-lat) * 3.1415926535897932 / 180.
     lo=lon * 3.1415926535897932 / 180.
-   
+
     # compute rotation matrix without azimuth rotation of chunk
     R=zeros((3,3))
 
     R[0,0]=-sin(lo)
     R[1,0]=cos(lo)
     R[2,0]=0.
-    
+
     R[0,1]=-cos(cla)*cos(lo)
     R[1,1]=-cos(cla)*sin(lo)
     R[2,1]=sin(cla)
-    
+
     R[0,2]=sin(cla)*cos(lo)
     R[1,2]=sin(cla)*sin(lo)
     R[2,2]=cos(cla)
@@ -85,7 +85,7 @@ def general_matrix_rotation(lon, lat, azi):
                 k+=1
             i+=1
         j+=1
-        
+
     return rot
 #----------------------------------------------------------------------
 def Cartesian2spheric(Rotation, point):
@@ -108,7 +108,7 @@ def Cartesian2spheric(Rotation, point):
     Spoint[0]=longitude/deg2rad
     Spoint[1]=latitude/deg2rad
     Spoint[2]=radius/1000.
-    
+
     return Spoint
 
 def Cartesian2spheric1(Rotation, point):
@@ -131,7 +131,7 @@ def Cartesian2spheric1(Rotation, point):
     #Spoint[0]=longitude/deg2rad
     #Spoint[1]=latitude/deg2rad
     #Spoint[2]=radius/1000.
-    
+
     return Spoint
 
 ########################################################## MAIN #############################################################
@@ -141,11 +141,11 @@ def Cartesian2spheric1(Rotation, point):
 ########################################################## MAIN #############################################################
 ########################################################## MAIN #############################################################
 
-# constants 
+# constants
 RADIUS_EARTH=6371000.
 
 # 1/ --- READING CHUNK PARAMETER --------
-# hardcoded file that contains position of chunk 
+# hardcoded file that contains position of chunk
 chunk_parameter_file="MESH/ParFileMeshChunk"
 
 fid=open(chunk_parameter_file,"r")
@@ -163,7 +163,7 @@ chunk_azimuth_in_degree=float(line[2])
 
 # 2/ ------ COMPUTING ROTATION MATRIX -------------
 print"\n computing rotation matrix for chunk :"
-print "    long :"+str(chunk_longitue_in_degree),"  lat :"+str(chunk_latitude_in_degree)+"   azimuth :"+str(chunk_azimuth_in_degree)+"\n\n" 
+print "    long :"+str(chunk_longitue_in_degree),"  lat :"+str(chunk_latitude_in_degree)+"   azimuth :"+str(chunk_azimuth_in_degree)+"\n\n"
 Rotation_matrix=general_matrix_rotation(chunk_longitue_in_degree, chunk_latitude_in_degree, chunk_azimuth_in_degree)
 print "\n rotation matrix : \n"
 print Rotation_matrix
@@ -171,7 +171,7 @@ print Rotation_matrix
 
 
 # 3/ ------ CARTESIAN TO SPHERIC TRANSFORMATION ---------
-# hardcoded file contains gll points 
+# hardcoded file contains gll points
 list_file="normals.txt"
 fid=open(list_file,"r")
 list_of_ggl_point=fid.readlines()
