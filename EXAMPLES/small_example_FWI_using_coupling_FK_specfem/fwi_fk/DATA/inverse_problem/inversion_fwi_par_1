@@ -1,0 +1,10 @@
+# number of iteration 
+Niter : 10 
+# low frequency 
+fl : 0.001
+# high frequency 
+fh : 0.5
+penalty_term : 0.
+damping_term : 0.
+# tapper : mask xmin xmax ymin ymax zmin zmax
+tapper : 1000. 30000. 1000. 30000. -4500. 8500.

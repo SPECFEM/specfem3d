@@ -1,0 +1,50 @@
+#                ACQUISITION file inverse problem , it is the source-receiver description
+#
+#
+# IMPORTANT       the lines begin with # is a commented line
+#                 you can also put # at the end of regular line to write comment
+#
+#
+#  items to set  MUST APPEARS IN THIS ORDER, : ARE NECESSARY FOR SETING VALUES
+#
+#  1/ 'event name'         : 19090191818                 # put the id of event
+#  2/ 'force' or 'moment' or 'axisem' or 'fk' or 'plane wave' or 'dsm'  : folowed by the file containing information about source
+#  3/ 'station list' : STATION file in specfem format
+#  4/ 'data file:' : list of seismograms to be used for inversion binary file (number of step, time step, number of stations must be coherent with station list, NSTEP and DT)
+#  5/ component : X Y Z or put 0 for remove one component eg: component : 0 0 Z just for inverting the vertical component
+#  6/ NSTEP : number of time step for both simulation and data storage
+#  7/ DT    : time step for both simulation in data storage
+#
+#
+#######################################################
+event_name : FK1
+fk : ./DATA/DATA_SYNTHS/1/FKmodel_0_20
+station_file : ./DATA/DATA_SYNTHS/1/STATIONS
+data_file : ./DATA/DATA_SYNTHS/1/Gather.bin
+component : UX UY UZ
+NSTEP : 2000
+DT : 0.01
+#######################################################
+event_name : FK2
+fk : ./DATA/DATA_SYNTHS/2/FKmodel_90_20
+station_file : ./DATA/DATA_SYNTHS/2/STATIONS
+data_file : ./DATA/DATA_SYNTHS/2/Gather.bin
+component : UX UY UZ
+NSTEP : 2000
+DT : 0.01
+########################################################
+event_name : FK3
+fk : ./DATA/DATA_SYNTHS/3/FKmodel_180_20
+station_file : ./DATA/DATA_SYNTHS/3/STATIONS
+data_file : ./DATA/DATA_SYNTHS/3/Gather.bin
+component : UX UY UZ
+NSTEP : 2000
+DT : 0.01
+#######################################################
+event_name : FK4
+fk : ./DATA/DATA_SYNTHS/4/FKmodel_270_20
+station_file : ./DATA/DATA_SYNTHS/4/STATIONS
+data_file : ./DATA/DATA_SYNTHS/4/Gather.bin
+component : UX UY UZ
+NSTEP : 2000
+DT : 0.01

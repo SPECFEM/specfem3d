@@ -963,6 +963,9 @@
 
       if (APPROXIMATE_HESS_KL) then
         hess_kl(:,:,:,:)   = 0._CUSTOM_REAL
+        hess_rho_kl(:,:,:,:)   = 0._CUSTOM_REAL
+        hess_mu_kl(:,:,:,:)   = 0._CUSTOM_REAL
+        hess_kappa_kl(:,:,:,:)   = 0._CUSTOM_REAL
       endif
 
       ! reconstructed/backward elastic wavefields
@@ -996,8 +999,11 @@
       rho_ac_kl(:,:,:,:)   = 0._CUSTOM_REAL
       kappa_ac_kl(:,:,:,:) = 0._CUSTOM_REAL
 
-      if (APPROXIMATE_HESS_KL) &
-        hess_ac_kl(:,:,:,:)   = 0._CUSTOM_REAL
+      if (APPROXIMATE_HESS_KL) then
+         hess_ac_kl(:,:,:,:)   = 0._CUSTOM_REAL
+         hess_rho_ac_kl(:,:,:,:)   = 0._CUSTOM_REAL
+         hess_kappa_ac_kl(:,:,:,:)   = 0._CUSTOM_REAL
+      endif
 
       ! reconstructed/backward acoustic potentials
       b_potential_acoustic = 0._CUSTOM_REAL
@@ -1327,7 +1333,7 @@
                                 ispec_is_inner, &
                                 NSOURCES, nsources_local, &
                                 sourcearrays, islice_selected_source, ispec_selected_source, &
-                                number_receiver_global, ispec_selected_rec, &
+                                ispec_selected_rec, &
                                 nrec, nrec_local, &
                                 SIMULATION_TYPE, &
                                 USE_MESH_COLORING_GPU, &

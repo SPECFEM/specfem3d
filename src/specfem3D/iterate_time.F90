@@ -52,6 +52,9 @@
   ! timing
   double precision, external :: wtime
 
+  !! for FK point for intialization injected wavefield
+  real(kind=CUSTOM_REAL) :: Xmin_box, Xmax_box, Ymin_box, Ymax_box, Zmin_box, Zmax_box
+
   !----  create a Gnuplot script to display the energy curve in log scale
   if (OUTPUT_ENERGY .and. myrank == 0) then
     open(unit=IOUT_ENERGY,file=trim(OUTPUT_FILES)//'plot_energy.gnu',status='unknown',action='write')
@@ -81,34 +84,6 @@
   if (OUTPUT_ENERGY .and. myrank == 0) &
     open(unit=IOUT_ENERGY,file=trim(OUTPUT_FILES)//'energy.dat',status='unknown',action='write')
 
-!
-!   s t a r t   t i m e   i t e r a t i o n s
-!
-
-  ! synchronize all processes to make sure everybody is ready to start time loop
-  call synchronize_all()
-  if (myrank == 0) write(IMAIN,*) 'All processes are synchronized before time loop'
-
-  if (myrank == 0) then
-    write(IMAIN,*)
-    write(IMAIN,*) 'Starting time iteration loop...'
-    write(IMAIN,*)
-    call flush_IMAIN()
-  endif
-
-  ! create an empty file to monitor the start of the simulation
-  if (myrank == 0) then
-    open(unit=IOUT,file=trim(OUTPUT_FILES)//'/starttimeloop.txt',status='unknown',action='write')
-    write(IOUT,*) 'hello, starting time loop'
-    close(IOUT)
-  endif
-
-  ! initialize variables for writing seismograms
-  seismo_offset = it_begin-1
-  seismo_current = 0
-
-  ! get MPI starting time
-  time_start = wtime()
 
 ! *********************************************************************************
 ! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
@@ -120,6 +95,9 @@
   if (COUPLE_WITH_INJECTION_TECHNIQUE .and. INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_FK .and. SIMULATION_TYPE == 1) then
 
     call nbound(NSPEC_AB,num_abs_boundary_faces,abs_boundary_ispec,ispec_is_elastic,npt)
+
+    !! compute the bottom midle point of the domain
+
 
     !! VM VM dealocate in case of severals runs occurs in inverse_problem program
     if (allocated(nbdglb)) deallocate(nbdglb)
@@ -136,11 +114,8 @@
     if (allocated(TY_t))   deallocate(TY_t)
     if (allocated(TZ_t))   deallocate(TZ_t)
 
-    !! VM VM the folowing arrays are not necessary since we use spline interpolation
+    !! allocate memory for FK solution
     if (npt > 0) then
-
-       !! VM VM this is not used anymore
-       it_fk=0
 
        allocate(nbdglb(npt))
        allocate(vx_FK(npt),vy_FK(npt),vz_FK(npt),tx_FK(npt),ty_FK(npt),tz_FK(npt))
@@ -152,38 +127,15 @@
 
     endif
 
-!############################## FK model input: from top layer to bottom layer
+    call FindBoundaryBox(Xmin_box, Xmax_box, Ymin_box, Ymax_box, Zmin_box, Zmax_box)
 
     if (myrank == 0) then
 
-       open(85,file=trim(FKMODEL_FILE))
-       read(85,*)  kpsv
-       read(85,*)  nlayer
-       allocate(al_FK(nlayer), be_FK(nlayer), mu_FK(nlayer), h_FK(nlayer))
-
-       do i = 1,nlayer !! loop on layers
-          read(85,*) al_FK(i)           !! vp
-          read(85,*) be_FK(i)           !! vs
-          read(85,*) mu_FK(i)           !! mu
-          read(85,*) h_FK(i)            !! heigth of layer
-       enddo
-
-       read(85,*) phi_FK              !! phi
-       read(85,*) theta_FK            !! theta
-       read(85,*) ff0                 !!
-       read(85,*) xx0
-       read(85,*) yy0
-       read(85,*) zz0                 !! todo put automatically an acceptable position?
-       read(85,*) tt0                 !! set t0
-       read(85,*)          tmax_fk             !! read tmax_fk for time window FK computation
-                                               !! (be careful to choose it in order to avoid aliasing)
-       read(85,*) stag
-       close(85)
-
+       call ReadFKModelInput(Xmin_box, Xmax_box, Ymin_box, Ymax_box, Zmin_box)
 
     endif
 
-!############################
+    ! send FK parameters to others MPI slices
 
     call bcast_all_singlei(kpsv)
     call bcast_all_singlei(nlayer)
@@ -199,6 +151,7 @@
     call bcast_all_singlecr(yy0)
     call bcast_all_singlecr(zz0)
     call bcast_all_singlecr(tt0)
+    call bcast_all_singlecr(Z_REF_for_FK)
     call bcast_all_singlecr(tmax_fk)
     call bcast_all_singlel(stag)
 
@@ -214,10 +167,14 @@
 
     tg  = 1.d0/ff0
 
+    !-------------------------------------------------------------
+    ! get MPI starting time for FK
+    time_start = wtime()
+
     if (npt > 0) then
 
        call find_size_of_working_arrays(deltat, tmax_fk, NF_FOR_STORING, NF_FOR_FFT, NPOW_FOR_INTERP, NP_RESAMP, DF_FK)
-       if (myrank == 0) write(*,*) 'ALLOCATE SAVED ARRAYS ', NF_FOR_STORING, NF_FOR_FFT, npt
+       if (myrank == 0) write(IMAIN,*) 'ALLOCATE SAVED ARRAYS ', NF_FOR_STORING, NF_FOR_FFT, npt
 
        !! arrays for storing FK solution --------------------------------------------
 
@@ -245,7 +202,7 @@
        if (ier /= 0) stop 'error while allocating TZ_t'
        TZ_t(:,:)=0._CUSTOM_REAL
 
-       !-------------------------------------------------------------
+
 
        call FK3D(myrank, NSPEC_AB, ibool, abs_boundary_ijk, abs_boundary_normal, &
             abs_boundary_ispec, num_abs_boundary_faces, ispec_is_elastic, kpsv, nlayer, nstep, npt, nbdglb, &
@@ -257,6 +214,17 @@
 
     call synchronize_all()
 
+    !-------------------------------------------------------------
+    ! get MPI ending ting time for FK
+    time_start = wtime() - time_start
+    if (myrank == 0) then
+       write(IMAIN, *)
+       write(IMAIN, '(a35,1x, f20.2, a7)')  " Elapsed time for FK computation : ",  time_start, " sec. "
+       write(IMAIN, *)
+       write(IMAIN,*) " ********************************************** "
+       call flush_IMAIN()
+    endif
+
     deallocate(al_FK, be_FK, mu_FK, h_FK)
 
  endif
@@ -264,9 +232,35 @@
 ! *****************************************************
 ! * end of initial setup for future FK3D calculations *
 ! *****************************************************
-
 ! *********************************************************************************
 
+!
+!   s t a r t   t i m e   i t e r a t i o n s
+!
+
+  ! synchronize all processes to make sure everybody is ready to start time loop
+  call synchronize_all()
+  if (myrank == 0) write(IMAIN,*) 'All processes are synchronized before time loop'
+
+  if (myrank == 0) then
+    write(IMAIN,*)
+    write(IMAIN,*) 'Starting time iteration loop...'
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
+
+  ! create an empty file to monitor the start of the simulation
+  if (myrank == 0) then
+    open(unit=IOUT,file=trim(OUTPUT_FILES)//'/starttimeloop.txt',status='unknown',action='write')
+    write(IOUT,*) 'hello, starting time loop'
+    close(IOUT)
+  endif
+
+  ! initialize variables for writing seismograms
+  seismo_offset = it_begin-1
+  seismo_current = 0
+
+  ! *********************************************************************************
 
   ! *********************************************************
   ! ************* MAIN LOOP OVER THE TIME STEPS *************
@@ -330,6 +324,9 @@
     endif
 
   endif ! of if (EXACT_UNDOING_TO_DISK)
+
+  ! get MPI starting
+  time_start = wtime()
 
   it_begin = 1
   it_end = NSTEP
@@ -839,8 +836,10 @@
 
     ! approximative Hessian for preconditioning kernels
     if (APPROXIMATE_HESS_KL) then
-      if (ELASTIC_SIMULATION) call transfer_kernels_hess_el_tohost(Mesh_pointer,hess_kl,NSPEC_AB)
-      if (ACOUSTIC_SIMULATION) call transfer_kernels_hess_ac_tohost(Mesh_pointer,hess_ac_kl,NSPEC_AB)
+      if (ELASTIC_SIMULATION) &
+           call transfer_kernels_hess_el_tohost(Mesh_pointer,hess_kl,hess_rho_kl,hess_kappa_kl,hess_mu_kl,NSPEC_AB)
+      if (ACOUSTIC_SIMULATION) &
+           call transfer_kernels_hess_ac_tohost(Mesh_pointer,hess_ac_kl, hess_rho_ac_kl,hess_kappa_ac_kl,NSPEC_AB)
     endif
 
   endif
@@ -963,3 +962,222 @@
   endif
 
   end subroutine it_read_forward_arrays
+
+  !!==============================================================================================================================
+  !! VM VM READING INPUT FILE FOR FK MODEL ----------------------------------------------------------------------
+  subroutine ReadFKModelInput(Xmin_box, Xmax_box, Ymin_box, Ymax_box, Zmin_box)
+    use specfem_par
+    use specfem_par_elastic
+
+    real(kind=CUSTOM_REAL), intent(in) :: Xmin_box, Xmax_box, Ymin_box, Ymax_box, Zmin_box
+    integer                :: ioerr
+    character(len=100)     :: keyword, keyvalue, line
+    character(len=100)     :: keyword_tmp, incident_wave
+
+    real(kind=CUSTOM_REAL) :: rho_layer, vp_layer, vs_layer, ztop_layer
+    real(kind=CUSTOM_REAL) :: Radius_box, wave_length_at_bottom
+    real(kind=CUSTOM_REAL), dimension(:), allocatable  :: rho_fk_input, vp_fk_input, vs_fk_input, ztop_fk_input
+    integer,  dimension(:), allocatable  :: ilayer_fk_input
+    integer  :: ilayer
+    logical  :: position_of_wavefront_not_read
+
+    !!--------------------------------------------------------------
+    ! # model description :
+    ! NLAYER   n # number of layers
+    ! LAYER 1  rho, vp ,vs, ztop
+    ! LAYER 2  rho, vp, vs, ztop
+    ! ...
+    ! LAYER n  rho, vp, vs, ztop  # homogenoeus half-space
+    ! #
+    ! # incident wave description:
+    ! INCIDENT_WAVE  "p" or "sv"
+    ! BACK_AZITUTH    bazi
+    ! INCIDENCE       inc
+    ! ORIGIN_WAVEFRONT xx0, yy0, zz0
+    ! ORIGIN_TIME      tt0
+    ! FREQUENCY_MAX    ff0
+    ! TIME_WINDOW      tmax_fk
+    !!----------------------------------------------------------------
+
+    !! set default values
+    tt0=0.
+    tmax_fk=128.
+    ff0=0.1
+    kpsv=1
+    position_of_wavefront_not_read=.true.
+    stag=.false.
+
+    !! READING input file
+    open(85,file=trim(FKMODEL_FILE))
+    do
+       read(85, fmt='(a100)',iostat=ioerr) line
+       !call remove_begin_blanks(line)
+       if (ioerr < 0) exit
+       if (len(trim(line)) < 1 .or. line(1:1) == '#') cycle
+       read(line,*) keyword, keyvalue
+       select case(trim(keyword))
+
+       case('NLAYER')
+          read(line, *) keyword_tmp, nlayer
+          allocate(al_FK(nlayer), be_FK(nlayer), mu_FK(nlayer), h_FK(nlayer))
+          allocate(rho_fk_input(nlayer), vp_fk_input(nlayer), vs_fk_input(nlayer), ztop_fk_input(nlayer+1), &
+               ilayer_fk_input(nlayer+1))
+          ilayer_fk_input(:)=-1
+
+       case('LAYER')
+          read(line, *) keyword_tmp, ilayer, rho_layer, vp_layer, vs_layer, ztop_layer
+          ilayer_fk_input(ilayer)=ilayer
+          rho_fk_input(ilayer)=rho_layer
+          vp_fk_input(ilayer)=vp_layer
+          vs_fk_input(ilayer)=vs_layer
+          ztop_fk_input(ilayer)=ztop_layer
+
+       case('INCIDENT_WAVE')
+           read(line,*)  keyword_tmp, incident_wave
+
+           select case(trim(incident_wave))
+              case ('p', 'P')
+                 kpsv=1
+              case('sv','SV')
+                 kpsv=2
+              case default
+                 kpsv=1
+              end select
+
+       case('BACK_AZIMUTH')
+          read(line,*)  keyword_tmp, phi_FK
+          phi_FK = - phi_FK - 90.
+
+       case('AZIMUTH')
+          read(line,*)  keyword_tmp, phi_FK
+          phi_FK = 90. - phi_FK
+
+       case('TAKE_OFF')
+          read(line,*)  keyword_tmp, theta_FK
+
+       case('ORIGIN_WAVEFRONT')
+           read(line,*)  keyword_tmp, xx0, yy0, zz0
+           position_of_wavefront_not_read=.false.
+
+        case('ORIGIN_TIME')
+           read(line,*)  keyword_tmp, tt0
+
+       case('FREQUENCY_MAX')
+          read(line,*)  keyword_tmp, ff0
+
+       case('TIME_WINDOW')
+          read(line,*)  keyword_tmp, tmax_fk
+
+       end select
+    !!------------------------------------------------------------------------------------------------------
+    enddo
+
+    if (allocated(ilayer_fk_input)) then
+
+
+
+       ilayer_fk_input(nlayer+1) = ilayer_fk_input(nlayer)
+       ztop_fk_input(nlayer+1)=ztop_fk_input(nlayer)
+       Z_ref_for_FK=ztop_fk_input(nlayer)
+       do ilayer=1, nlayer
+          al_FK(ilayer) = vp_fk_input(ilayer)
+          be_FK(ilayer) = vs_fk_input(ilayer)
+          mu_FK(ilayer) = rho_fk_input(ilayer) * vs_fk_input(ilayer)**2
+          h_FK(ilayer) =  ztop_fk_input(ilayer) - ztop_fk_input(ilayer+1)
+
+          if (ilayer_fk_input(ilayer) == -1) then
+             write(*,*) " ERROR READING FK INPUT FILE "
+             write(*,*) " MISSING LAYER ", ilayer
+             stop
+          endif
+       enddo
+
+       deallocate(ilayer_fk_input, rho_fk_input, vp_fk_input, vs_fk_input, ztop_fk_input)
+
+    else
+
+       write(*,*) " ERROR READING FK INPUT FILE "
+       write(*,*) " NOT BE ABLE TO READ MODEL PROPERTIES "
+       stop
+
+    endif
+
+    !! compute position of wave front
+    if (position_of_wavefront_not_read) then
+       xx0=0.5*(Xmin_box + Xmax_box)
+       yy0=0.5*(Ymin_box + Ymax_box)
+       Radius_box = sqrt( (Xmin_box - xx0)**2 + (Ymin_box - yy0)**2)
+
+       if (kpsv == 1) then
+          wave_length_at_bottom = al_FK(nlayer) / ff0
+       else if (kpsv == 2) then
+          wave_length_at_bottom = be_FK(nlayer) / ff0
+       endif
+
+       zz0 = Zmin_box - Radius_box * sin ( abs (theta_FK) * (acos(-1.d0) / 180.d0)  ) -  &
+             wave_length_at_bottom * cos ( abs (theta_FK) * (acos(-1.d0) / 180.d0)  ) -  &
+             Z_ref_for_FK
+
+    endif
+
+    write(IMAIN,*) " ********************************************** "
+    write(IMAIN,*) "         USING FK INJECTION TECHNIQUE           "
+    write(IMAIN,*) " ********************************************** "
+
+    write(IMAIN,*)
+    write(IMAIN,*) "         Model : " , nlayer , " layers "
+    write(IMAIN,*)
+
+    do ilayer =1, nlayer
+       write(IMAIN,'(a7, i3, 3(a6,2x,f8.3), 3x, a9, f18.5 )') &
+            'layer ' , ilayer, &
+            " rho  =",   mu_FK(ilayer) /  be_FK(ilayer)**2, &
+            " vp   =",   al_FK(ilayer), &
+            " vs   =",   be_FK(ilayer), &
+            " Height =", h_FK(ilayer)
+    enddo
+
+    write(IMAIN,*)
+    write(IMAIN,*)
+    write(IMAIN,*)  " Phi FK :",   phi_FK
+    write(IMAIN,*)  " theta FK :", theta_FK
+    write(IMAIN,*)
+
+    write(IMAIN,*)
+    write(IMAIN,*) " Origin wavefront point FK :", xx0, yy0, zz0
+    write(IMAIN,*) " time shift  FK :", tt0
+    write(IMAIN,*) " Z reference for FK routine : ", Z_ref_for_FK
+    write(IMAIN,*) " Window for FK computing : ", tmax_fk
+    write(IMAIN,*) " freqnecy max :", ff0
+    write(IMAIN,*) " type of incmoming wave (1=p), (2=sv) :",kpsv
+    write(IMAIN,*)
+    write(IMAIN,*)
+    write(IMAIN,*)
+
+    call flush_IMAIN()
+  end subroutine ReadFKModelInput
+
+  !! ----------------------------------
+  subroutine FindBoundaryBox(Xmin_box, Xmax_box, Ymin_box, Ymax_box, Zmin_box, Zmax_box)
+    use specfem_par
+
+    real(kind=CUSTOM_REAL), intent(in out) :: Xmin_box, Xmax_box, Ymin_box, Ymax_box, Zmin_box, Zmax_box
+    real(kind=CUSTOM_REAL)                 :: Xmin_loc, Xmax_loc, Ymin_loc, Ymax_loc, Zmin_loc, Zmax_loc
+
+    Xmin_loc = minval (xstore(:))
+    Xmax_loc = maxval (xstore(:))
+    Ymin_loc = minval (ystore(:))
+    Ymax_loc = maxval (ystore(:))
+    Zmin_loc = minval (zstore(:))
+    Zmax_loc = maxval (zstore(:))
+
+    call min_all_all_cr(Xmin_loc, Xmin_box)
+    call max_all_all_cr(Xmax_loc, Xmax_box)
+    call min_all_all_cr(Ymin_loc, Ymin_box)
+    call max_all_all_cr(Ymax_loc, Ymax_box)
+    call min_all_all_cr(Zmin_loc, Zmin_box)
+    call max_all_all_cr(Zmax_loc, Zmax_box)
+
+
+  end subroutine FindBoundaryBox
+  !!==============================================================================================================================

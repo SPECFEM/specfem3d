@@ -65,8 +65,7 @@
 !
 
   subroutine get_topo_bathy_elevation(x_target,y_target,target_elevation, &
-                                itopo_bathy,NX_TOPO,NY_TOPO, &
-                                UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION)
+                                itopo_bathy,NX_TOPO,NY_TOPO)
 
 ! finds elevation from topography file
 
@@ -81,9 +80,6 @@
   integer :: NX_TOPO,NY_TOPO
   integer, dimension(NX_TOPO,NY_TOPO) :: itopo_bathy
 
-  integer :: UTM_PROJECTION_ZONE
-  logical :: SUPPRESS_UTM_PROJECTION
-
   ! local parameters
   double precision :: xval,yval,long,lat
   double precision :: long_corner,lat_corner,ratio_xi,ratio_eta
@@ -94,7 +90,7 @@
   yval = dble(y_target)
 
   ! project x and y in UTM back to long/lat since topo file is in long/lat
-  call utm_geo(long,lat,xval,yval,UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
+  call utm_geo(long,lat,xval,yval,IUTM2LONGLAT)
 
   ! get coordinate of corner in bathy/topo model
   icornerlong = int((long - ORIG_LONG_TOPO) / DEGREES_PER_CELL_TOPO) + 1

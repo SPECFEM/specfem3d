@@ -1,0 +1,7 @@
+Niter : 10
+fl : 0.001
+fh : 5.
+penalty_term : 0.
+damping_term : 0.
+tapper : 1000. 30000. 1000. 30000. -4500. 8500.
+input_model : .true.

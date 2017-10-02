@@ -110,8 +110,8 @@ module specfem_par
   integer, dimension(:), allocatable :: islice_selected_source,ispec_selected_source
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: sourcearray
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: sourcearrays
-  double precision, dimension(:,:,:), allocatable :: nu_source
   double precision, dimension(:), allocatable :: Mxx,Myy,Mzz,Mxy,Mxz,Myz
+  double precision, dimension(:,:,:), allocatable :: nu_source
   double precision, dimension(:), allocatable :: xi_source,eta_source,gamma_source
   double precision, dimension(:), allocatable :: tshift_src,hdur,hdur_Gaussian
   double precision, dimension(:), allocatable :: utm_x_source,utm_y_source
@@ -119,11 +119,12 @@ module specfem_par
   double precision :: t0
   real(kind=CUSTOM_REAL) :: stf_used_total
   integer :: nsources_local
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: user_source_time_function
   ! source encoding
   ! for acoustic sources: takes +/- 1 sign, depending on sign(Mxx)
   ! [ = sign(Myy) = sign(Mzz) since they have to be equal in the acoustic setting]
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: pm1_source_encoding
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: user_source_time_function
+
 
 ! receiver information
   character(len=MAX_STRING_LEN) :: rec_filename,filtered_rec_filename,dummystring
@@ -132,9 +133,9 @@ module specfem_par
   integer, dimension(:), allocatable :: number_receiver_global
   double precision, dimension(:), allocatable :: xi_receiver,eta_receiver,gamma_receiver
   double precision, dimension(:,:), allocatable :: hpxir_store,hpetar_store,hpgammar_store
+  double precision, dimension(:,:,:), allocatable :: nu
 
 ! timing information for the stations
-  double precision, allocatable, dimension(:,:,:) :: nu
   character(len=MAX_LENGTH_STATION_NAME), allocatable, dimension(:) :: station_name
   character(len=MAX_LENGTH_NETWORK_NAME), allocatable, dimension(:) :: network_name
 
@@ -352,7 +353,7 @@ module specfem_par_elastic
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: cijkl_kl
 
   ! approximate Hessian
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: hess_kl
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: hess_kl, hess_rho_kl, hess_mu_kl, hess_kappa_kl
 
   ! topographic (Moho) kernel
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:,:),allocatable :: &
@@ -379,6 +380,7 @@ module specfem_par_elastic
   integer, parameter :: NTIME_BETWEEN_FFT=1  !! not used anymore
   integer,dimension(:),allocatable :: nbdglb
   real(kind=CUSTOM_REAL),dimension(:,:),allocatable :: vxbd,vybd,vzbd,txxbd,txybd,txzbd,tyybd,tyzbd,tzzbd
+  real(kind=CUSTOM_REAL) :: Z_REF_for_FK
   real(kind=CUSTOM_REAL) :: p,phi_FK,theta_FK,xx0,yy0,zz0,ff0,tg,tt0,tmax_fk,df_fk ! source
   real(kind=CUSTOM_REAL),dimension(:),allocatable :: al_FK,be_FK,mu_FK,h_FK,tmp_for_interp ! model
   complex(kind=8), dimension(:,:), allocatable :: VX_f, VY_f, VZ_f, TX_f, TY_f, TZ_f
@@ -457,7 +459,7 @@ module specfem_par_acoustic
     rhop_ac_kl, alpha_ac_kl
 
   ! approximate Hessian
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: hess_ac_kl
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: hess_ac_kl, hess_rho_ac_kl, hess_kappa_ac_kl
 
   ! absorbing stacey wavefield parts
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: b_absorb_potential

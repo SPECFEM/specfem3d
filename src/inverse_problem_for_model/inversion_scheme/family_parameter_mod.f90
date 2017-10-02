@@ -1,7 +1,7 @@
 module family_parameter
 
   !! IMPORT VARIABLES FROM SPECFEM -------------------------------------------------------------------------------------------------
-  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,  ANISOTROPIC_KL, ANISOTROPY
+  use shared_parameters, only: NUMBER_OF_SIMULTANEOUS_RUNS,  ANISOTROPIC_KL, ANISOTROPY, APPROXIMATE_HESS_KL
 
   use specfem_par, only: CUSTOM_REAL, NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, NSPEC_AB, myrank, &
                                    rhostore, mustore, kappastore, FOUR_THIRDS
@@ -11,9 +11,11 @@ module family_parameter
                                    c22store,c23store,c24store,c25store,c26store,c33store, &
                                    c34store,c35store,c36store,c44store,c45store,c46store, &
                                    c55store,c56store,c66store, &
-                                   ispec_is_elastic, ELASTIC_SIMULATION
+                                   ispec_is_elastic, ELASTIC_SIMULATION, &
+                                   hess_rho_kl, hess_mu_kl, hess_kappa_kl
 
-  use specfem_par_acoustic, only: ispec_is_acoustic, rho_ac_kl, kappa_ac_kl,  ACOUSTIC_SIMULATION
+  use specfem_par_acoustic, only: ispec_is_acoustic, rho_ac_kl, kappa_ac_kl, &
+                                  hess_rho_ac_kl, hess_kappa_ac_kl, ACOUSTIC_SIMULATION
 
   !---------------------------------------------------------------------------------------------------------------------------------
   use inverse_problem_par
@@ -141,7 +143,8 @@ contains
     use input_output
 
     type(inver),                                                  intent(in)      :: inversion_param
-    real(kind=CUSTOM_REAL),   dimension(:,:,:,:,:), allocatable,  intent(inout)   :: model
+    real(kind=CUSTOM_REAL),   dimension(:,:,:,:,:), allocatable,  intent(in)      :: model
+
 
     do ispec = 1, NSPEC_AB  !!
        ! elastic simulations
@@ -183,6 +186,7 @@ contains
                 mustore(:,:,:,ispec) = rhostore(:,:,:,ispec) * model(:,:,:,ispec,2)**2
 
              case('rho_vp_vs')
+
                 rhostore(:,:,:,ispec) = model(:,:,:,ispec,1)
                 rho_vp(:,:,:,ispec)   = model(:,:,:,ispec,2) * rhostore(:,:,:,ispec)
                 rho_vs(:,:,:,ispec)   = model(:,:,:,ispec,3) * rhostore(:,:,:,ispec)
@@ -346,15 +350,120 @@ contains
 
   end subroutine SpecfemParam2Invert
 
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!--------------------------------------------------------------------------
+! conversion from specfem parameters to inversion parameters
+!-------------------------------------------------------------------------
+
+  subroutine SpecfemPrior2Invert(inversion_param, model)
+    type(inver),                                                  intent(inout)   :: inversion_param
+    real(kind=CUSTOM_REAL),   dimension(:,:,:,:,:), allocatable,  intent(inout)   :: model
+
+    do ispec = 1, NSPEC_AB  !!
+       ! elastic simulations
+       if (ispec_is_elastic(ispec)) then  !! we need to process element by element because we need to do this test
+                                          !! because we can use both elastic or acoustic elements (also proelastic)
+
+          if (ANISOTROPIC_KL) then
+
+             write(*,*) ' IF YOU NEED family FROM 21 ELASTIC COEFFICIENTS &
+                  &FEEL FREE TO DO IT ..... cijkl_kl are already computed by specfem &
+                  &you just need to store it in array model .... in &
+                  &code  : family_parameter_module.f90 subroutine SpecfemParam2Invert'
+             stop
+
+             !! IF YOU NEED family FROM 21 ELASTIC COEFFICIENTS
+             !! FEEL FREE TO DO IT ..... cijkl_kl are already computed by specfem
+             !! you just need to store it in array gradient ....
+
+          else
+
+             select case(trim(adjustl(inversion_param%param_family)))
+
+             case('vp')
+                model(:,:,:,ispec,1) = inversion_param%prior_model(:,:,:,ispec,1)
+
+             case('rho_vp')
+                model(:,:,:,ispec,1) = inversion_param%prior_model(:,:,:,ispec,1)
+                model(:,:,:,ispec,2) = inversion_param%prior_model(:,:,:,ispec,2)
+
+             case('vp_vs')
+                model(:,:,:,ispec,1) = inversion_param%prior_model(:,:,:,ispec,1)
+                model(:,:,:,ispec,2) = inversion_param%prior_model(:,:,:,ispec,2)
+
+             case('rho_vp_vs')
+                model(:,:,:,ispec,1) = inversion_param%prior_model(:,:,:,ispec,1)
+                model(:,:,:,ispec,2) = inversion_param%prior_model(:,:,:,ispec,2)
+                model(:,:,:,ispec,3) = inversion_param%prior_model(:,:,:,ispec,3)
+
+!!$             case('rho_lambda_mu')
+!!$                model(:,:,:,ispec,1) =
+!!$                model(:,:,:,ispec,2) =
+!!$                model(:,:,:,ispec,3) =
+
+!!$             case ('rho_ip_is')
+!!$                model(:,:,:,ispec,1) =
+!!$                model(:,:,:,ispec,2) =
+!!$                model(:,:,:,ispec,3) =
+
+!!$             case('rho_kappa_mu')
+!!$                model(:,:,:,ispec,1) = rhostore(:,:,:,ispec)
+!!$                model(:,:,:,ispec,2) = kappastore(:,:,:,ispec)
+!!$                model(:,:,:,ispec,3) = mustore(:,:,:,ispec)
+
+
+             case default
+
+                write(*,*) 'Error : unknonwn family for elastic case ',trim(adjustl(inversion_param%param_family))
+                stop
+
+             end select
+
+          endif
+
+       endif
+
+       if (ispec_is_acoustic(ispec)) then
+
+          select case(trim(adjustl(inversion_param%param_family)))
+
+          case('vp', 'vp_vs')
+             model(:,:,:,ispec,1) = inversion_param%prior_model(:,:,:,ispec,1)
+
+          case('rho_vp', 'rho_vp_vs')
+             model(:,:,:,ispec,1) = inversion_param%prior_model(:,:,:,ispec,1)
+             model(:,:,:,ispec,2) = inversion_param%prior_model(:,:,:,ispec,2)
+
+!!$          case('rho_kappa', 'rho_kappa_mu')
+!!$             model(:,:,:,ispec,1) = rhostore(:,:,:,ispec)
+!!$             model(:,:,:,ispec,2) = kappastore(:,:,:,ispec)
+
+          case default
+
+              write(*,*) 'Error : unknonwn family for acoustic case ',trim(adjustl(inversion_param%param_family))
+              stop
+
+          end select
+
+
+       endif
+
+    enddo
+
+    !! clear memory since we do not need it any more
+    deallocate(inversion_param%prior_model)
+
+  end subroutine SpecfemPrior2Invert
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !--------------------------------------------------------------------------
 ! store the current gradient in the inversion family parameter
 !-------------------------------------------------------------------------
 
-  subroutine StoreGradientInfamilyParam(inversion_param, gradient)
+  subroutine StoreGradientInfamilyParam(inversion_param, gradient, hess_approxim)
 
     type(inver),                                                  intent(in)      :: inversion_param
-    real(kind=CUSTOM_REAL),   dimension(:,:,:,:,:), allocatable,  intent(inout)   :: gradient
+    real(kind=CUSTOM_REAL),   dimension(:,:,:,:,:), allocatable,  intent(inout)   :: gradient, hess_approxim
 
     do ispec = 1, NSPEC_AB  !!
        ! elastic simulations
@@ -363,6 +472,15 @@ contains
           !! get kernel in element ispec
           rho_kl(:,:,:,ispec) = - rho_kl(:,:,:,ispec) * &
                rho_vs(:,:,:,ispec) * rho_vs(:,:,:,ispec) /  mustore(:,:,:,ispec)
+
+          !! store preconditionner kernels
+          if (inversion_param%shin_precond) then
+             hess_rho_kl(:,:,:,ispec) = - hess_rho_kl(:,:,:,ispec) * &
+                  rho_vs(:,:,:,ispec) * rho_vs(:,:,:,ispec) /  mustore(:,:,:,ispec)
+          else if (inversion_param%energy_precond) then
+             !! energy precond : same for all family
+             hess_approxim(:,:,:,ispec,1)= hess_rho_kl(:,:,:,ispec)
+          endif
 
           if (ANISOTROPIC_KL) then
 
@@ -380,6 +498,11 @@ contains
              mu_kl(:,:,:,ispec)  =  - 2._CUSTOM_REAL *  mustore(:,:,:,ispec) * mu_kl(:,:,:,ispec)
              kappa_kl(:,:,:,ispec) = - kappastore(:,:,:,ispec) * kappa_kl(:,:,:,ispec)
 
+             if (inversion_param%shin_precond) then
+                hess_mu_kl(:,:,:,ispec)  =  - 2._CUSTOM_REAL *  mustore(:,:,:,ispec) * hess_mu_kl(:,:,:,ispec)
+                hess_kappa_kl(:,:,:,ispec) = - kappastore(:,:,:,ispec) * hess_kappa_kl(:,:,:,ispec)
+             endif
+
              !---------------------put kernel in the choosen family---------------------------------------------------------
              select case(trim(adjustl(inversion_param%param_family)))
 
@@ -389,6 +512,12 @@ contains
                 gradient(:,:,:,ispec,1)= 2._CUSTOM_REAL * (1._CUSTOM_REAL &
                 + 4._CUSTOM_REAL * mustore(:,:,:,ispec) / (3._CUSTOM_REAL * kappastore(:,:,:,ispec) ) ) * kappa_kl(:,:,:,ispec)
 
+                if (inversion_param%shin_precond) then
+                   hess_approxim(:,:,:,ispec,1)=2._CUSTOM_REAL * (1._CUSTOM_REAL &
+                        + 4._CUSTOM_REAL * mustore(:,:,:,ispec) / (3._CUSTOM_REAL * kappastore(:,:,:,ispec) ) ) &
+                        * hess_kappa_kl(:,:,:,ispec)
+                endif
+
              case('rho_vp')
 
                 !! rho
@@ -397,6 +526,15 @@ contains
                 !! vp
                 gradient(:,:,:,ispec,2)=2._CUSTOM_REAL * (1._CUSTOM_REAL &
                 + 4._CUSTOM_REAL * mustore(:,:,:,ispec) / (3._CUSTOM_REAL * kappastore(:,:,:,ispec) ) ) * kappa_kl(:,:,:,ispec)
+
+
+                if (inversion_param%shin_precond) then
+                   hess_approxim(:,:,:,ispec,1)=hess_rho_kl(:,:,:,ispec) + hess_kappa_kl(:,:,:,ispec) + hess_mu_kl(:,:,:,ispec)
+
+                   hess_approxim(:,:,:,ispec,2)=2._CUSTOM_REAL * (1._CUSTOM_REAL &
+                        + 4._CUSTOM_REAL * mustore(:,:,:,ispec) / (3._CUSTOM_REAL * kappastore(:,:,:,ispec) ) ) &
+                        * hess_kappa_kl(:,:,:,ispec)
+                endif
 
              case('vp_vs')
 
@@ -408,6 +546,17 @@ contains
                 gradient(:,:,:,ispec,2)= 2._CUSTOM_REAL * (mu_kl(:,:,:,ispec) &
                 - 4._CUSTOM_REAL * mustore(:,:,:,ispec) / (3._CUSTOM_REAL * kappastore(:,:,:,ispec)) * kappa_kl(:,:,:,ispec))
 
+                if (inversion_param%shin_precond) then
+
+                   hess_approxim(:,:,:,ispec,1)=2._CUSTOM_REAL * (1._CUSTOM_REAL &
+                        + 4._CUSTOM_REAL * mustore(:,:,:,ispec) / (3._CUSTOM_REAL * kappastore(:,:,:,ispec) ) ) &
+                        * hess_kappa_kl(:,:,:,ispec)
+
+                   hess_approxim(:,:,:,ispec,2)=2._CUSTOM_REAL * (hess_mu_kl(:,:,:,ispec) &
+                        - 4._CUSTOM_REAL * mustore(:,:,:,ispec) / &
+                        (3._CUSTOM_REAL * kappastore(:,:,:,ispec)) * hess_kappa_kl(:,:,:,ispec))
+                endif
+
              case('rho_vp_vs')
 
                 !! rho
@@ -418,9 +567,20 @@ contains
                 + 4._CUSTOM_REAL * mustore(:,:,:,ispec) / (3._CUSTOM_REAL * kappastore(:,:,:,ispec) ) ) * kappa_kl(:,:,:,ispec)
 
                 !!vs
-                gradient(:,:,:,ispec,3)=2._CUSTOM_REAL * (mu_kl(:,:,:,ispec) &
+                gradient(:,:,:,ispec,3)=2._CUSTOM_REAL * (   mu_kl(:,:,:,ispec) &
                 - 4._CUSTOM_REAL * mustore(:,:,:,ispec) / (3._CUSTOM_REAL * kappastore(:,:,:,ispec)) * kappa_kl(:,:,:,ispec))
 
+                if (inversion_param%shin_precond) then
+                   hess_approxim(:,:,:,ispec,1)=hess_rho_kl(:,:,:,ispec) + hess_kappa_kl(:,:,:,ispec) + hess_mu_kl(:,:,:,ispec)
+
+                   hess_approxim(:,:,:,ispec,2)=2._CUSTOM_REAL * (1._CUSTOM_REAL &
+                        + 4._CUSTOM_REAL * mustore(:,:,:,ispec) / (3._CUSTOM_REAL * kappastore(:,:,:,ispec) ) ) &
+                        * hess_kappa_kl(:,:,:,ispec)
+
+                   hess_approxim(:,:,:,ispec,3)=2._CUSTOM_REAL * (hess_mu_kl(:,:,:,ispec) &
+                        - 4._CUSTOM_REAL * mustore(:,:,:,ispec) / &
+                        (3._CUSTOM_REAL * kappastore(:,:,:,ispec)) * hess_kappa_kl(:,:,:,ispec))
+                endif
 
 !!$             case('rho_lambda_mu')
 !!$                gradient(:,:,:,ispec,1)=
@@ -437,6 +597,11 @@ contains
                 gradient(:,:,:,ispec,2)=kappa_kl(:,:,:,ispec)
                 gradient(:,:,:,ispec,3)=mu_kl(:,:,:,ispec)
 
+                if (inversion_param%shin_precond) then
+                   hess_approxim(:,:,:,ispec,1)=hess_rho_kl(:,:,:,ispec)
+                   hess_approxim(:,:,:,ispec,2)=hess_kappa_kl(:,:,:,ispec)
+                   hess_approxim(:,:,:,ispec,3)=hess_mu_kl(:,:,:,ispec)
+                endif
 
              case default
 
@@ -453,12 +618,21 @@ contains
 
        if (ispec_is_acoustic(ispec)) then
 
+          if (inversion_param%energy_precond) then
+             !! energy precond : same for all family
+             hess_approxim(:,:,:,ispec,1)= hess_rho_ac_kl(:,:,:,ispec)
+          endif
+
           select case(trim(adjustl(inversion_param%param_family)))
 
           case('vp', 'vp_vs')
 
              !! vp
              gradient(:,:,:,ispec,1) = 2._CUSTOM_REAL * kappa_ac_kl(:,:,:,ispec)
+
+             if (inversion_param%shin_precond) then
+                hess_approxim(:,:,:,ispec,1) = 2._CUSTOM_REAL * hess_kappa_ac_kl(:,:,:,ispec)
+             endif
 
           case('rho_vp', 'rho_vp_vs')
 
@@ -468,9 +642,19 @@ contains
              !! vp
              gradient(:,:,:,ispec,2) = 2._CUSTOM_REAL * kappa_ac_kl(:,:,:,ispec)
 
+             if (inversion_param%shin_precond) then
+                hess_approxim(:,:,:,ispec,1) = hess_rho_ac_kl(:,:,:,ispec) + hess_kappa_ac_kl(:,:,:,ispec)
+                hess_approxim(:,:,:,ispec,2) = 2._CUSTOM_REAL * hess_kappa_ac_kl(:,:,:,ispec)
+             endif
+
           case('rho_kappa', 'rho_kappa_mu')
              gradient(:,:,:,ispec,1) = rho_ac_kl(:,:,:,ispec)
              gradient(:,:,:,ispec,2) = kappa_ac_kl(:,:,:,ispec)
+
+             if (inversion_param%shin_precond) then
+                hess_approxim(:,:,:,ispec,1) = hess_rho_ac_kl(:,:,:,ispec)
+                hess_approxim(:,:,:,ispec,2) = hess_kappa_ac_kl(:,:,:,ispec)
+             endif
 
           case default
 
@@ -509,12 +693,25 @@ contains
        wks(:,:,:,:)=kappa_ac_kl(:,:,:,:)
        call sum_all_all_cr_for_simulatenous_runs(wks(1,1,1,1), kappa_ac_kl(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
 
+       if (APPROXIMATE_HESS_KL) then
+          wks(:,:,:,:)=hess_rho_ac_kl(:,:,:,:)
+          call sum_all_all_cr_for_simulatenous_runs(wks(1,1,1,1), hess_rho_ac_kl(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
+          wks(:,:,:,:)=hess_kappa_ac_kl(:,:,:,:)
+          call sum_all_all_cr_for_simulatenous_runs(wks(1,1,1,1), hess_kappa_ac_kl(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
+       endif
+
     endif
 
     if (ELASTIC_SIMULATION) then
 
        wks(:,:,:,:)=rho_kl(:,:,:,:)
        call sum_all_all_cr_for_simulatenous_runs(wks(1,1,1,1), rho_kl(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
+
+       if (APPROXIMATE_HESS_KL) then
+          wks(:,:,:,:)=hess_rho_kl(:,:,:,:)
+          call sum_all_all_cr_for_simulatenous_runs(wks(1,1,1,1), hess_rho_kl(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
+       endif
+
 
        if (ANISOTROPIC_KL) then
           wks1(:,:,:,:,:)= cijkl_kl(:,:,:,:,:)
@@ -524,7 +721,17 @@ contains
           call sum_all_all_cr_for_simulatenous_runs(wks(1,1,1,1), mu_kl(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
           wks(:,:,:,:)=kappa_kl(:,:,:,:)
           call sum_all_all_cr_for_simulatenous_runs(wks(1,1,1,1), kappa_kl(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
+
+            if (APPROXIMATE_HESS_KL) then
+               wks(:,:,:,:)=hess_mu_kl(:,:,:,:)
+               call sum_all_all_cr_for_simulatenous_runs(wks(1,1,1,1), hess_mu_kl(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
+               wks(:,:,:,:)=hess_kappa_kl(:,:,:,:)
+               call sum_all_all_cr_for_simulatenous_runs(wks(1,1,1,1), hess_kappa_kl(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
+            endif
+
        endif
+
+
 
     endif
 

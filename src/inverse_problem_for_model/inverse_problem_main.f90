@@ -67,7 +67,7 @@ subroutine inverse_problem_main()
   type(inver)                            :: inversion_param
   type(profd)                            :: projection_fd
 
-  integer                                :: isource, iter_inverse
+  integer                                :: ievent, iter_inverse, iter_frq
   logical                                :: finished
   character(len=MAX_LEN_STRING)          :: mode_running
 
@@ -81,7 +81,7 @@ subroutine inverse_problem_main()
   !! select which mode to run : only direct or FWI
   call get_mode_running(mode_running, inversion_param)
 
-  !! open log files, distribute sources if simultaneous simu, get acquisition file
+  !! open log files, distribute events if simultaneous simu, get acquisition file
   call SetUpInversion(inversion_param, myrank)
 
   !! intialize inversion (initialize_simulation read_parameter_file read_mesh_* prepare_time_run )
@@ -113,10 +113,11 @@ subroutine inverse_problem_main()
         write(INVERSE_LOG_FILE,*)
         write(INVERSE_LOG_FILE,*)
         write(INVERSE_LOG_FILE,*)
+        call flush_iunit(INVERSE_LOG_FILE)
      endif
 
-     do isource = 1, acqui_simu(1)%nsrc_tot
-        call ComputeSismosPerSource(isource, acqui_simu, 0, inversion_param, myrank)
+     do ievent = 1, acqui_simu(1)%nevent_tot
+        call ComputeSismosPerEvent(ievent, acqui_simu, 0, inversion_param, myrank)
      enddo
 
      !! writing model in SEM mesh : (rho, vp, vs) or cijkl.
@@ -137,21 +138,29 @@ subroutine inverse_problem_main()
         write(INVERSE_LOG_FILE,*)
         write(INVERSE_LOG_FILE,*)
         write(INVERSE_LOG_FILE,*)
-        !! DK DK commented out because not Fortran standard, gfortran rejects it  call flush(INVERSE_LOG_FILE)
+        call flush_iunit(INVERSE_LOG_FILE)
      endif
 
      !! initialize specifics arrays for optimization
-     call AllocatememoryForFWI(inversion_param, acqui_simu(1)%nsrc_tot)
+     call AllocatememoryForFWI(inversion_param, acqui_simu(1)%nevent_tot)
 
-     !! initialize optimization
-     call InitializeOptimIteration(acqui_simu, inversion_param)
+     !! loop on frequencies
+     do iter_frq = 1, inversion_param%Nifrq
 
-     !! iterations
-     do iter_inverse = 0,  inversion_param%Niter
+        !! initialize (reset) optimization
+        call InitializeOptimIteration(iter_frq, acqui_simu, inversion_param)
 
-        call OneIterationOptim(iter_inverse, finished, acqui_simu, inversion_param) !!!!!! , regularization_fd)
+        !! loop on optimization iterations
+        do iter_inverse = 0,  inversion_param%Niter
 
-        if (finished) exit
+           call OneIterationOptim(iter_inverse, iter_frq, finished, acqui_simu, inversion_param) !!!!!! , regularization_fd)
+
+           if (finished) exit
+
+        enddo
+
+        !! write model in disk
+        call WirteOutputs(inversion_param)
 
      enddo
 
@@ -169,12 +178,8 @@ subroutine inverse_problem_main()
         write(INVERSE_LOG_FILE,*)
         write(INVERSE_LOG_FILE,*) '--------------------------------------------------------------------------'
         write(INVERSE_LOG_FILE,*)
-        !! DK DK commented out because not Fortran standard, gfortran rejects it  call flush(INVERSE_LOG_FILE)
+        call flush_iunit(INVERSE_LOG_FILE)
      endif
-
-
-     !! write model in disk
-     call WirteOutputs(inversion_param)
 
   case default
 

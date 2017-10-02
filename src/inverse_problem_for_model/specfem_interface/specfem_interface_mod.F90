@@ -21,9 +21,11 @@ module specfem_interface
 
 
   !! Arrays for saving GPU kernels because at each GPU run the kernels are set to 0 and to perform
-  !! summation over sources we need to use those temporarry arrays
+  !! summation over events we need to use those temporarry arrays
   real(kind=CUSTOM_REAL), private, dimension(:,:,:,:),   allocatable :: rho_ac_kl_GPU, kappa_ac_kl_GPU
   real(kind=CUSTOM_REAL), private, dimension(:,:,:,:),   allocatable :: rho_kl_GPU, kappa_kl_GPU, mu_kl_GPU
+  real(kind=CUSTOM_REAL), private, dimension(:,:,:,:),   allocatable :: hess_rho_ac_kl_GPU, hess_kappa_ac_kl_GPU
+  real(kind=CUSTOM_REAL), private, dimension(:,:,:,:),   allocatable :: hess_rho_kl_GPU, hess_kappa_kl_GPU, hess_mu_kl_GPU
   real(kind=CUSTOM_REAL), private, dimension(:,:,:,:,:), allocatable :: cijkl_kl_GPU
 
 contains
@@ -31,9 +33,9 @@ contains
 !----------------------------------------------------------------------------------------------------------------------------------
 !> call specfem solver for forward problem only
 !----------------------------------------------------------------------------------------------------------------------------------
-  subroutine ComputeSismosPerSource(isource, acqui_simu, iter_inverse, inversion_param, myrank)
+  subroutine ComputeSismosPerEvent(ievent, acqui_simu, iter_inverse, inversion_param, myrank)
 
-    integer,                                        intent(in)    ::  isource, iter_inverse, myrank
+    integer,                                        intent(in)    ::  ievent, iter_inverse, myrank
     type(acqui),  dimension(:), allocatable,        intent(inout) ::  acqui_simu
     type(inver),                                    intent(inout) ::  inversion_param
     character(len=MAX_LEN_STRING)                                 ::  name_file_tmp
@@ -44,38 +46,44 @@ contains
     COMPUTE_AND_STORE_STRAIN = .false.
 
     !! forward solver ------------------------------------------------------------------------------------------------
-    call InitSpecfemForOneRun(acqui_simu, isource, inversion_param, iter_inverse)
+    call InitSpecfemForOneRun(acqui_simu, ievent, inversion_param, iter_inverse)
     call iterate_time()
-    call FinalizeSpecfemForOneRun(acqui_simu, isource)
+    call FinalizeSpecfemForOneRun(acqui_simu, ievent)
 
-    select case ( trim(acqui_simu(isource)%component(1)) )
+    select case ( trim(acqui_simu(ievent)%component(1)) )
 
     case('UX', 'UY', 'UZ')
        !! array seismogram in displacement
-       name_file_tmp = trim(acqui_simu(isource)%data_file_gather)
-       call write_bin_sismo_on_disk(isource, acqui_simu, seismograms_d,  name_file_tmp, myrank)
+       name_file_tmp = trim(acqui_simu(ievent)%data_file_gather)
+
+       write(INVERSE_LOG_FILE,*) '  ... Writing simulated data gather for event :', ievent
+
+       call write_bin_sismo_on_disk(ievent, acqui_simu, seismograms_d,  name_file_tmp, myrank)
 
     case('PR')
        !! array seismogram in pressure
-       name_file_tmp = trim(acqui_simu(isource)%data_file_gather)
-       call write_bin_sismo_on_disk(isource, acqui_simu, seismograms_p,  name_file_tmp, myrank)
+       name_file_tmp = trim(acqui_simu(ievent)%data_file_gather)
+
+       write(INVERSE_LOG_FILE,*) '  ... Writing simulated data gather for event :  ', ievent
+
+       call write_bin_sismo_on_disk(ievent, acqui_simu, seismograms_p,  name_file_tmp, myrank)
 
     case default
 
-       write(*,*) ' ERROR Component not known : ', trim(acqui_simu(isource)%component(1))
+       write(*,*) ' ERROR Component not known : ', trim(acqui_simu(ievent)%component(1))
        stop
 
     end select
 
-  end subroutine ComputeSismosPerSource
+  end subroutine ComputeSismosPerEvent
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !----------------------------------------------------------------------------------------------------------------------------------
 !> call specfem solver for computing gradient
 !----------------------------------------------------------------------------------------------------------------------------------
-  subroutine ComputeGradientPerSource(isource, iter_inverse, acqui_simu,  inversion_param)
+  subroutine ComputeGradientPerEvent(ievent, iter_inverse, acqui_simu,  inversion_param)
 
-    integer,                                        intent(in)    ::  isource, iter_inverse
+    integer,                                        intent(in)    ::  ievent, iter_inverse
     type(acqui),  dimension(:), allocatable,        intent(inout) ::  acqui_simu
     type(inver),                                    intent(inout) ::  inversion_param
 
@@ -85,7 +93,7 @@ contains
     save_COUPLE_WITH_INJECTION_TECHNIQUE = COUPLE_WITH_INJECTION_TECHNIQUE
 
 
-    if (myrank == 0) write(INVERSE_LOG_FILE,*) '  - > Compute gradient for source :', isource , ' iteration : ', iter_inverse
+    if (myrank == 0) write(INVERSE_LOG_FILE,*) '  - > Compute gradient for event :', ievent , ' iteration : ', iter_inverse
 
     !! choose parameters to perform the forward simulation
     SIMULATION_TYPE=1
@@ -93,25 +101,26 @@ contains
     COMPUTE_AND_STORE_STRAIN = .false.
 
     !! forward solver ------------------------------------------------------------------------------------------------
-    call InitSpecfemForOneRun(acqui_simu, isource, inversion_param, iter_inverse)
-    call iterate_time()
-    call FinalizeSpecfemForOneRun(acqui_simu, isource)
+    call InitSpecfemForOneRun(acqui_simu, ievent, inversion_param, iter_inverse)
 
+    call iterate_time()
+
+    call FinalizeSpecfemForOneRun(acqui_simu, ievent)
 
     !! define adjoint sources ----------------------------------------------------------------------------------
-    call write_adjoint_sources_for_specfem(acqui_simu, inversion_param, isource, myrank)
+    call write_adjoint_sources_for_specfem(acqui_simu, inversion_param, ievent, myrank)
 
     !! dump synthetics and adjoint sources to ckeck
     if (VERBOSE_MODE .or. DEBUG_MODE) then
-       call dump_adjoint_sources(iter_inverse, acqui_simu, myrank)
+       call dump_adjoint_sources(iter_inverse, ievent, acqui_simu, myrank)
 
-       select case (trim(acqui_simu(isource)%component(1)))
+       select case (trim(acqui_simu(ievent)%component(1)))
        case('UX', 'UY', 'UZ')
-          call dump_seismograms(iter_inverse, seismograms_d, acqui_simu, myrank)
-          call dump_filtered_data(iter_inverse,acqui_simu(isource)%synt_traces, acqui_simu, myrank)
+          call dump_seismograms(iter_inverse, ievent, seismograms_d, acqui_simu, myrank)
+          call dump_filtered_data(iter_inverse,ievent,acqui_simu(ievent)%synt_traces, acqui_simu, myrank)
        case('PR')
-          call dump_seismograms(iter_inverse, seismograms_p, acqui_simu, myrank)
-          call dump_filtered_data(iter_inverse,acqui_simu(isource)%synt_traces, acqui_simu, myrank)
+          call dump_seismograms(iter_inverse, ievent, seismograms_p, acqui_simu, myrank)
+          call dump_filtered_data(iter_inverse,ievent,acqui_simu(ievent)%synt_traces, acqui_simu, myrank)
        end select
     endif
 
@@ -120,35 +129,33 @@ contains
     SAVE_FORWARD=.false.
     COMPUTE_AND_STORE_STRAIN=.true.
     APPROXIMATE_HESS_KL=.true.
-
     !! forward and adjoint runs --------------------------------------------------------------------------------------
-    call InitSpecfemForOneRun(acqui_simu, isource, inversion_param, iter_inverse)
-
+    call InitSpecfemForOneRun(acqui_simu, ievent, inversion_param, iter_inverse)
 
     COUPLE_WITH_INJECTION_TECHNIQUE = .false.  !! do not use coupling since the direct run is runining in backward from boundary
 
 
     call iterate_time()
-    call FinalizeSpecfemForOneRun(acqui_simu, isource)
+    call FinalizeSpecfemForOneRun(acqui_simu, ievent)
 
 
     COUPLE_WITH_INJECTION_TECHNIQUE = save_COUPLE_WITH_INJECTION_TECHNIQUE  !! restore the initial value of variable
 
 
-  end subroutine ComputeGradientPerSource
+  end subroutine ComputeGradientPerEvent
 
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !----------------------------------------------------------------------------------------------------------------------------------
-!> initialize specfem before each call for the source isource
+!> initialize specfem before each call for the event ievent
 !----------------------------------------------------------------------------------------------------------------------------------
-  subroutine InitSpecfemForOneRun(acqui_simu, isource, inversion_param, iter_inverse)
+  subroutine InitSpecfemForOneRun(acqui_simu, ievent, inversion_param, iter_inverse)
 
-    integer,                                        intent(in)    ::  isource, iter_inverse
+    integer,                                        intent(in)    ::  ievent, iter_inverse
     type(inver),                                    intent(in)    ::  inversion_param
     type(acqui),  dimension(:), allocatable,        intent(in)    ::  acqui_simu
 
-    integer                                                       :: irec,ier
+    integer                                                       :: irec,isrc,ier
     integer                                                       :: icomp, it, irec_local
     real(kind=CUSTOM_REAL)                                        :: DT, lw_tap
     double precision                                              :: DT_dble
@@ -158,11 +165,11 @@ contains
     real(kind=CUSTOM_REAL), dimension(:), allocatable             :: raw_stf, filt_stf
     character(len=MAX_LEN_STRING)                                 :: name_file_tmp, ch_to_add
 
-    if (myrank == 0 .and. DEBUG_MODE) write(INVERSE_LOG_FILE,*) ' initialize source number  : ', isource
+    if (myrank == 0 .and. DEBUG_MODE) write(INVERSE_LOG_FILE,*) ' initialize event number  : ', ievent
 
     ! time discretization -----------------------------------------------------------------------------------------------------------
-    NSTEP = acqui_simu(isource)%Nt_data
-    DT = acqui_simu(isource)%dt_data
+    NSTEP = acqui_simu(ievent)%Nt_data
+    DT = acqui_simu(ievent)%dt_data
     DT_dble = DT
     NSTEP_STF = 1
 
@@ -174,44 +181,71 @@ contains
     b_deltatsqover2 = b_deltat*b_deltat/2._CUSTOM_REAL
 
     ! prepare source (only one source allowed for now) -----------------------------------------------------------------------------
-    NSOURCES=1
-    NSOURCES_STF=1
-    USE_EXTERNAL_SOURCE_FILE=.false.
-    select case (acqui_simu(isource)%source_type)
+    NSOURCES = acqui_simu(ievent)%nsources_tot  !! VM VM replace nsource_loc by nsource_tot since all arrays below
+    if (USE_EXTERNAL_SOURCE_FILE) then          !! are using nsource_tot
+      NSOURCES_STF = NSOURCES
+      NSTEP_STF    = NSTEP
+    else
+      NSOURCES_STF = 1
+      NSTEP_STF    = 1
+    endif
 
-    case ('moment')
-       nsources_local =  acqui_simu(isource)%nsources_local
-       sourcearrays(1,:,:,:,:)=acqui_simu(isource)%sourcearray(:,:,:,:)
-       islice_selected_source(1)=acqui_simu(isource)%islice_slected_source
-       ispec_selected_source(1)=acqui_simu(isource)%ispec_selected_source
+    select case (acqui_simu(ievent)%source_type)
+
+    case ('moment','force','shot')
+       nsources_local =  acqui_simu(ievent)%nsources_local
+       if (allocated(sourcearrays)) deallocate(sourcearrays)
+       if (allocated(islice_selected_source)) deallocate(islice_selected_source)
+       if (allocated(ispec_selected_source)) deallocate(ispec_selected_source)
+       if (allocated(hdur)) deallocate(hdur)
+       if (allocated(hdur_Gaussian)) deallocate(hdur_Gaussian)
+       if (allocated(tshift_src)) deallocate(tshift_src)
+
+       allocate(sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ))
+       allocate(islice_selected_source(NSOURCES))
+       allocate(ispec_selected_source(NSOURCES))
+       allocate(hdur(NSOURCES))
+       allocate(hdur_Gaussian(NSOURCES))
+       allocate(tshift_src(NSOURCES))
+       sourcearrays(:,:,:,:,:)=acqui_simu(ievent)%sourcearrays(:,:,:,:,:)
+
+
+       islice_selected_source(:)=acqui_simu(ievent)%islice_selected_source(:)
+       ispec_selected_source(:)=acqui_simu(ievent)%ispec_selected_source(:)
        PRINT_SOURCE_TIME_FUNCTION=.true.
-       t0 = - 1.2d0 * (acqui_simu(isource)%t_shift - 1.d0/acqui_simu(isource)%hdur)
-       hdur(1)=acqui_simu(isource)%hdur
+       t0 = acqui_simu(ievent)%t0
+       hdur(:)=acqui_simu(ievent)%hdur(:)
+       hdur_Gaussian(:)=acqui_simu(ievent)%hdur_Gaussian(:)
+       tshift_src(:)=acqui_simu(ievent)%tshift(:)
 
-       if (acqui_simu(isource)%external_source_wavelet) then
-          USE_EXTERNAL_SOURCE_FILE=.true.
-          NSTEP_STF = NSTEP
+       if (USE_EXTERNAL_SOURCE_FILE) then
           if (allocated(user_source_time_function)) deallocate(user_source_time_function)
           allocate(user_source_time_function(NSTEP_STF, NSOURCES_STF),stat=ier)
-          USE_TRICK_FOR_BETTER_PRESSURE=.true.
           if (ier /= 0) stop ' error in allocating user_source_time_function'
           if (inversion_param%only_forward) then
-             user_source_time_function(:,1)=acqui_simu(isource)%source_wavelet(:,1)
+             user_source_time_function(:,:)=acqui_simu(ievent)%user_source_time_function(:,:)
           else
              !! filter the user stf
-             allocate(raw_stf(NSTEP), filt_stf(NSTEP))
-             raw_stf(:)=acqui_simu(isource)%source_wavelet(:,1)
-             call bwfilt (raw_stf, filt_stf, &
-                  DT, NSTEP, 1, 4, acqui_simu(isource)%fl_src, acqui_simu(isource)%fh_src)
-             lw_tap = 2.5_CUSTOM_REAL
-             call apodise_sig(filt_stf, NSTEP, lw_tap)
-             user_source_time_function(:,1)=filt_stf(:)
-             deallocate(raw_stf, filt_stf)
-
+             !! EB EB Warning, filtering may be done each time we are switching events
+             if (inversion_param%use_band_pass_filter) then
+                allocate(raw_stf(NSTEP), filt_stf(NSTEP))
+                do isrc=1,NSOURCES
+                   raw_stf(:)=acqui_simu(ievent)%user_source_time_function(:,isrc)
+                   call bwfilt (raw_stf, filt_stf, &
+                        DT, NSTEP, 1, 4, acqui_simu(ievent)%fl_event(inversion_param%current_ifrq), &
+                                         acqui_simu(ievent)%fh_event(inversion_param%current_ifrq))
+                   lw_tap = 2.5_CUSTOM_REAL
+                   call apodise_sig(filt_stf, NSTEP, lw_tap)
+                   user_source_time_function(:,isrc)=filt_stf(:)
+                enddo
+                deallocate(raw_stf, filt_stf)
+              else
+                 user_source_time_function(:,:)=acqui_simu(ievent)%user_source_time_function(:,:)
+              endif
              !! write STF used to check
              if (VERBOSE_MODE .and. myrank == 0) then
-                 write(ch_to_add,'(a10,i4.4,a1,i4.4,a4)') '_stf_used_',isource,'_',iter_inverse,'.txt'
-                 name_file_tmp = trim(acqui_simu(isource)%data_file_gather)//trim(adjustl(ch_to_add))
+                 write(ch_to_add,'(a10,i4.4,a1,i4.4,a4)') '_stf_used_',ievent,'_',iter_inverse,'.txt'
+                 name_file_tmp = trim(acqui_simu(ievent)%data_file_gather)//trim(adjustl(ch_to_add))
                  open(IINN,file=trim(adjustl(name_file_tmp)))
                  do it=1, NSTEP
                     write(IINN,*) (it-1) * DT, user_source_time_function(it,1)
@@ -224,12 +258,12 @@ contains
 
        if (DEBUG_MODE) then
           write (IIDD , *)
-          write (IIDD , *) 'islice , ispec : ', islice_selected_source(1), ispec_selected_source(1)
+          write (IIDD , *) 'first source islice , ispec : ', islice_selected_source(1), ispec_selected_source(1)
           write (IIDD , *)
        endif
        COUPLE_WITH_INJECTION_TECHNIQUE = .false.
     case('axisem')
-       TRAC_PATH=acqui_simu(isource)%traction_dir
+       TRAC_PATH=acqui_simu(ievent)%traction_dir
        call create_name_database(dsname,myrank,TRAC_PATH)
        ! open traction file
        open(unit=IIN_veloc_dsm,file=dsname(1:len_trim(dsname))//'sol_axisem',status='old', &
@@ -238,19 +272,19 @@ contains
        COUPLE_WITH_INJECTION_TECHNIQUE = .true.
        INJECTION_TECHNIQUE_TYPE = INJECTION_TECHNIQUE_IS_AXISEM
     case('fk')
-       FKMODEL_FILE=acqui_simu(isource)%source_file
+       FKMODEL_FILE=acqui_simu(ievent)%source_file
        COUPLE_WITH_INJECTION_TECHNIQUE = .true.
        INJECTION_TECHNIQUE_TYPE = INJECTION_TECHNIQUE_IS_FK
     case default
-       write(*,*) 'source ', acqui_simu(isource)%source_type, 'Not yet '
+       write(*,*) 'source ', acqui_simu(ievent)%source_type, 'Not yet '
        stop
 
     end select
 
-    ! prepare receiver for the current source --------------------------------------------------------------------------------------
+    ! prepare receiver for the current event --------------------------------------------------------------------------------------
     !! store current variables
-    nrec=acqui_simu(isource)%nsta_tot
-    nrec_local=acqui_simu(isource)%nsta_slice
+    nrec=acqui_simu(ievent)%nsta_tot
+    nrec_local=acqui_simu(ievent)%nsta_slice
     nadj_rec_local=0                        !! by default dummy 0
 
     !! de-allocation
@@ -270,26 +304,14 @@ contains
     allocate(nu(NDIM,NDIM,nrec))
 
     !! store current arrays
-    islice_selected_rec(:)=acqui_simu(isource)%islice_selected_rec(:)
-    ispec_selected_rec(:)=acqui_simu(isource)%ispec_selected_rec(:)
-    xi_receiver(:)=acqui_simu(isource)%xi_rec(:)
-    eta_receiver(:)=acqui_simu(isource)%eta_rec(:)
-    gamma_receiver(:)=acqui_simu(isource)%gamma_rec(:)
-    station_name(:)=acqui_simu(isource)%station_name
-    network_name(:)=acqui_simu(isource)%network_name
-
-    ! X coordinate - East
-    nu(1,1,:) = 1.d0
-    nu(1,2,:) = 0.d0
-    nu(1,3,:) = 0.d0
-    ! Y coordinate - North
-    nu(2,1,:) = 0.d0
-    nu(2,2,:) = 1.d0
-    nu(2,3,:) = 0.d0
-    ! Z coordinate - Vertical
-    nu(3,1,:) = 0.d0
-    nu(3,2,:) = 0.d0
-    nu(3,3,:) = 1.d0
+    islice_selected_rec(:)=acqui_simu(ievent)%islice_selected_rec(:)
+    ispec_selected_rec(:)=acqui_simu(ievent)%ispec_selected_rec(:)
+    xi_receiver(:)=acqui_simu(ievent)%xi_rec(:)
+    eta_receiver(:)=acqui_simu(ievent)%eta_rec(:)
+    gamma_receiver(:)=acqui_simu(ievent)%gamma_rec(:)
+    station_name(:)=acqui_simu(ievent)%station_name
+    network_name(:)=acqui_simu(ievent)%network_name
+    nu(:,:,:)=acqui_simu(ievent)%nu(:,:,:)
 
     if (nrec_local > 0) then
 
@@ -318,15 +340,15 @@ contains
             hpgammar_store(nrec_local,NGLLZ))
 
        allocate(number_receiver_global(nrec_local))
-       number_receiver_global(:)=acqui_simu(isource)%number_receiver_global(1:nrec_local)
+       number_receiver_global(:)=acqui_simu(ievent)%number_receiver_global(1:nrec_local)
 
        do irec=1, nrec_local
-          hxir_store(irec,:)=acqui_simu(isource)%hxi(:,irec)
-          hetar_store(irec,:)=acqui_simu(isource)%heta(:,irec)
-          hgammar_store(irec,:)=acqui_simu(isource)%hgamma(:,irec)
-          hpxir_store(irec,:)=acqui_simu(isource)%hpxi(:,irec)
-          hpetar_store(irec,:)=acqui_simu(isource)%hpeta(:,irec)
-          hpgammar_store(irec,:)=acqui_simu(isource)%hpgamma(:,irec)
+          hxir_store(irec,:)=acqui_simu(ievent)%hxi(:,irec)
+          hetar_store(irec,:)=acqui_simu(ievent)%heta(:,irec)
+          hgammar_store(irec,:)=acqui_simu(ievent)%hgamma(:,irec)
+          hpxir_store(irec,:)=acqui_simu(ievent)%hpxi(:,irec)
+          hpetar_store(irec,:)=acqui_simu(ievent)%hpeta(:,irec)
+          hpgammar_store(irec,:)=acqui_simu(ievent)%hpgamma(:,irec)
        enddo
 
        if (allocated(seismograms_d)) deallocate(seismograms_d)
@@ -402,7 +424,7 @@ contains
        do icomp=1,NDIM
           do it=1,NTSTEP_BETWEEN_OUTPUT_SEISMOS
              do irec_local=1, nadj_rec_local
-                source_adjoint(irec_local, it, icomp) = acqui_simu(isource)%adjoint_sources(icomp,irec_local,it)
+                source_adjoint(irec_local, it, icomp) = acqui_simu(ievent)%adjoint_sources(icomp,irec_local,it)
              enddo
           enddo
        enddo
@@ -439,6 +461,7 @@ contains
     !! clean arrays ----------------------------------------------------------------------------------------------------------------
     ! reset all forward wavefields----------------------------------------------------------------------------------------------------
     call prepare_timerun_init_wavefield()  !! routine from specfem
+
     ! memory variables if attenuation
     if (ATTENUATION) then
         ! clear memory variables if attenuation
@@ -549,7 +572,7 @@ contains
        if (SIMULATION_TYPE == 3 ) then  !! read only open
 
           ! opens existing files
-          if (ELASTIC_SIMULATION .and. num_abs_boundary_faces > 0 ) then
+          if (ELASTIC_SIMULATION) then
 
              ! size of single record
              b_reclen_field = CUSTOM_REAL * NDIM * NGLLSQUARE * num_abs_boundary_faces
@@ -567,7 +590,7 @@ contains
                   len_trim(trim(prname)//'absorb_field.bin'), filesize)
           endif
 
-          if (ACOUSTIC_SIMULATION .and. num_abs_boundary_faces > 0 ) then
+          if (ACOUSTIC_SIMULATION) then
 
              ! size of single record
              b_reclen_potential = CUSTOM_REAL * NGLLSQUARE * num_abs_boundary_faces
@@ -587,10 +610,10 @@ contains
 
        else  !!! write open
 
-          if (SAVE_FORWARD .and. num_abs_boundary_faces > 0) then
+          if (SAVE_FORWARD) then
 
              ! opens new file
-             if (ELASTIC_SIMULATION .and. num_abs_boundary_faces > 0  ) then
+             if (ELASTIC_SIMULATION) then
                 ! size of single record
                 b_reclen_field = CUSTOM_REAL * NDIM * NGLLSQUARE * num_abs_boundary_faces
                 ! check integer size limit: size of b_reclen_field must fit onto an 4-byte integer
@@ -607,7 +630,7 @@ contains
                      len_trim(trim(prname)//'absorb_field.bin'), filesize)
              endif
 
-             if (ACOUSTIC_SIMULATION .and. num_abs_boundary_faces > 0 ) then
+             if (ACOUSTIC_SIMULATION) then
                 ! size of single record
                 b_reclen_potential = CUSTOM_REAL * NGLLSQUARE * num_abs_boundary_faces
                 ! check integer size limit: size of b_reclen_potential must fit onto an 4-byte integer
@@ -634,7 +657,7 @@ contains
     !! open new log file for specfem -----------------------------------------------------------------------------------------------
     if (myrank == 0 .and. SIMULATION_TYPE == 1) then
        close(IMAIN)
-       write(name_file,'(a15,i5.5,a1,i5.5,a4)') '/output_solver_',isource,'_',iter_inverse,'.txt'
+       write(name_file,'(a15,i5.5,a1,i5.5,a4)') '/output_solver_',ievent,'_',iter_inverse,'.txt'
        open(unit=IMAIN,file=trim(OUTPUT_FILES)//trim(name_file),status='unknown')
     endif
 
@@ -666,26 +689,26 @@ contains
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !-----------------------------------------------------------------------------------------------------------------------------------
-!> finalize, specfem after running each sources
+!> finalize, specfem after running each event
 !-----------------------------------------------------------------------------------------------------------------------------------
-  subroutine  FinalizeSpecfemForOneRun(acqui_simu, isource)
+  subroutine  FinalizeSpecfemForOneRun(acqui_simu, ievent)
 
-    integer,                                        intent(in)    :: isource
+    integer,                                        intent(in)    :: ievent
     type(acqui),  dimension(:), allocatable,        intent(in)    :: acqui_simu
     integer                                                       :: ier
 
 
     !! manage files due to coupling with axisem -----------------------------------------------------
-    select case (acqui_simu(isource)%source_type)
+    select case (acqui_simu(ievent)%source_type)
 
     case('axisem')
        close(IIN_veloc_dsm)
 
-    case('fk', 'moment', 'force')
+    case('fk', 'moment', 'force', 'shot')
        !! nothing to do for the moment
 
     case default   !! for stopping if any problem with source_type
-       write(*,*) 'source ', acqui_simu(isource)%source_type, 'Not yet '
+       write(*,*) 'source ', acqui_simu(ievent)%source_type, 'Not yet '
        stop
 
     end select
@@ -740,11 +763,11 @@ contains
        close(IOUT)
     endif
 
-    if (ELASTIC_SIMULATION .and. (SIMULATION_TYPE == 3 .or. SAVE_FORWARD) .and. num_abs_boundary_faces > 0) then
+    if (ELASTIC_SIMULATION .and. (SIMULATION_TYPE == 3 .or. SAVE_FORWARD) .and. STACEY_ABSORBING_CONDITIONS) then
        call close_file_abs(IOABS)
     endif
 
-    if (ACOUSTIC_SIMULATION .and. (SIMULATION_TYPE == 3 .or. SAVE_FORWARD) .and. num_abs_boundary_faces > 0) then
+    if (ACOUSTIC_SIMULATION .and. (SIMULATION_TYPE == 3 .or. SAVE_FORWARD) .and. STACEY_ABSORBING_CONDITIONS) then
        call close_file_abs(IOABS_AC)
     endif
 
@@ -753,6 +776,10 @@ contains
        if (ACOUSTIC_SIMULATION) then
           rho_ac_kl_GPU(:,:,:,:)=rho_ac_kl_GPU(:,:,:,:)+rho_ac_kl(:,:,:,:)
           kappa_ac_kl_GPU(:,:,:,:)=kappa_ac_kl_GPU(:,:,:,:)+kappa_ac_kl(:,:,:,:)
+          if (APPROXIMATE_HESS_KL) then
+             hess_rho_ac_kl_GPU(:,:,:,:)=hess_rho_ac_kl_GPU(:,:,:,:)+hess_rho_ac_kl(:,:,:,:)
+             hess_kappa_ac_kl_GPU(:,:,:,:)=hess_kappa_ac_kl_GPU(:,:,:,:)+hess_kappa_ac_kl(:,:,:,:)
+          endif
        endif
 
        if (ELASTIC_SIMULATION) then
@@ -762,6 +789,11 @@ contains
           else
              kappa_kl_GPU(:,:,:,:)=kappa_kl_GPU(:,:,:,:)+kappa_kl(:,:,:,:)
              mu_kl_GPU(:,:,:,:)= mu_kl_GPU(:,:,:,:)+ mu_kl(:,:,:,:)
+             if (APPROXIMATE_HESS_KL) then
+                hess_rho_kl_GPU(:,:,:,:)=hess_rho_kl_GPU(:,:,:,:)+hess_rho_kl(:,:,:,:)
+                hess_kappa_kl_GPU(:,:,:,:)=hess_kappa_kl_GPU(:,:,:,:)+hess_kappa_kl(:,:,:,:)
+                hess_mu_kl_GPU(:,:,:,:)= hess_mu_kl_GPU(:,:,:,:)+ hess_mu_kl(:,:,:,:)
+             endif
           endif
 
        endif
@@ -780,7 +812,8 @@ contains
 
     !! reset cost function
     inversion_param%total_current_cost = 0._CUSTOM_REAL
-
+    inversion_param%data_std = 0._CUSTOM_REAL
+    inversion_param%nb_data_std = 0._CUSTOM_REAL
     !! reset kenels  ----------------------------
 
     ! acoustic domain
@@ -816,11 +849,32 @@ contains
        endif
 
        if (APPROXIMATE_HESS_KL) then
-          hess_kl(:,:,:,:)   = 0._CUSTOM_REAL
-          !! VM VM TODO SHIN preconditionner and GPU support
-          !Shin_hess_kappa_kl(:,:,:,:)   = 0._CUSTOM_REAL
-          !Shin_hess_mu_kl(:,:,:,:)   = 0._CUSTOM_REAL
-          !Shin_hess_rho_kl(:,:,:,:)   = 0._CUSTOM_REAL
+          if (ELASTIC_SIMULATION) then
+
+             hess_kl(:,:,:,:)   = 0._CUSTOM_REAL
+             hess_kappa_kl(:,:,:,:)   = 0._CUSTOM_REAL
+             hess_mu_kl(:,:,:,:)   = 0._CUSTOM_REAL
+             hess_rho_kl(:,:,:,:)   = 0._CUSTOM_REAL
+
+             if (GPU_MODE) then
+                hess_kappa_kl_GPU(:,:,:,:)   = 0._CUSTOM_REAL
+                hess_mu_kl_GPU(:,:,:,:)   = 0._CUSTOM_REAL
+                hess_rho_kl_GPU(:,:,:,:)   = 0._CUSTOM_REAL
+             endif
+
+          endif
+          if (ACOUSTIC_SIMULATION) then
+
+             hess_ac_kl(:,:,:,:)   = 0._CUSTOM_REAL
+             hess_kappa_ac_kl(:,:,:,:)   = 0._CUSTOM_REAL
+             hess_rho_ac_kl(:,:,:,:)   = 0._CUSTOM_REAL
+
+             if (GPU_MODE) then
+                 hess_rho_ac_kl_GPU(:,:,:,:)   = 0._CUSTOM_REAL
+                 hess_kappa_ac_kl_GPU(:,:,:,:)   = 0._CUSTOM_REAL
+             endif
+
+          endif
        endif
 
     endif
@@ -864,7 +918,6 @@ contains
     call setup_GLL_points()
     call detect_mesh_surfaces()
     call setup_sources_receivers()  !! we have one dummy source and STATION_ADJOINT to set up without crashes
-
     SIMULATION_TYPE=1               !! here we need to prepare the fisrt run
     SAVE_FORWARD=.true.             !! which is mandatory direct and need to save forward wavefield
 
@@ -1045,17 +1098,20 @@ contains
     endif
 
     ! close absorb files : close here because we will open at each new specfem run
-    if (ELASTIC_SIMULATION .and. (SIMULATION_TYPE == 3 .or. SAVE_FORWARD) .and. num_abs_boundary_faces > 0) &
+    if (ELASTIC_SIMULATION .and. (SIMULATION_TYPE == 3 .or. SAVE_FORWARD) .and. STACEY_ABSORBING_CONDITIONS) &
                         call close_file_abs(IOABS)
-    if (ACOUSTIC_SIMULATION .and. (SIMULATION_TYPE == 3 .or. SAVE_FORWARD) .and. num_abs_boundary_faces > 0) &
+    if (ACOUSTIC_SIMULATION .and. (SIMULATION_TYPE == 3 .or. SAVE_FORWARD) .and. STACEY_ABSORBING_CONDITIONS) &
                         call close_file_abs(IOABS_AC)
 
-    !! allocate arrays for saving the kernel computed by GPU in CPU memory in order to perform summation over sources.
+    !! allocate arrays for saving the kernel computed by GPU in CPU memory in order to perform summation over events.
     if (GPU_MODE) then
        if (ACOUSTIC_SIMULATION) then
           allocate(rho_ac_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB), kappa_ac_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
           rho_ac_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
           kappa_ac_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
+          if (APPROXIMATE_HESS_KL) then
+             allocate(hess_rho_ac_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB),hess_kappa_ac_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+          endif
        endif
 
        if (ELASTIC_SIMULATION) then
@@ -1064,6 +1120,10 @@ contains
           rho_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
           kappa_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
           mu_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
+          if (APPROXIMATE_HESS_KL) then
+             allocate(hess_rho_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB),hess_kappa_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
+                  hess_mu_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+          endif
        endif
 
        if (ANISOTROPIC_KL) then
@@ -1076,7 +1136,7 @@ contains
   end subroutine PrepareTimerunInverseProblem
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !-----------------------------------------------------------------------------------------------------------------------------------
-!>  copy summed GPU kernel overs sources in specfem CPU arrays
+!>  copy summed GPU kernel overs events in specfem CPU arrays
 !!
 !!
 !-----------------------------------------------------------------------------------------------------------------------------------
@@ -1085,6 +1145,10 @@ contains
     if (ACOUSTIC_SIMULATION) then
        rho_ac_kl(:,:,:,:)=rho_ac_kl_GPU(:,:,:,:)
        kappa_ac_kl(:,:,:,:)=kappa_ac_kl_GPU(:,:,:,:)
+       if (APPROXIMATE_HESS_KL) then
+          hess_rho_ac_kl(:,:,:,:)=hess_rho_ac_kl_GPU(:,:,:,:)
+          hess_kappa_ac_kl(:,:,:,:)=hess_kappa_ac_kl_GPU(:,:,:,:)
+       endif
     endif
 
     if (ELASTIC_SIMULATION) then
@@ -1096,11 +1160,251 @@ contains
        else
           kappa_kl(:,:,:,:)=kappa_kl_GPU(:,:,:,:)
           mu_kl(:,:,:,:)=mu_kl_GPU(:,:,:,:)
+          if (APPROXIMATE_HESS_KL) then
+             hess_rho_kl(:,:,:,:)=hess_rho_kl_GPU(:,:,:,:)
+             hess_kappa_kl(:,:,:,:)=hess_kappa_kl_GPU(:,:,:,:)
+             hess_mu_kl(:,:,:,:)=hess_mu_kl_GPU(:,:,:,:)
+          endif
        endif
 
     endif
 
   end subroutine TransfertKernelFromGPUArrays
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!-------------------------------------------------------------------------------------------------------------
+! test if we can saftely perform a simulation in new model
+!-------------------------------------------------------------------------------------------------------------
+  subroutine  CheckModelSuitabilityForModeling(ModelIsSuitable)
+
+
+
+    logical, intent(in out) :: ModelIsSuitable
+
+    ! local parameters
+    real(kind=CUSTOM_REAL) :: vpmin,vpmax,vsmin,vsmax,vpmin_glob,vpmax_glob,vsmin_glob,vsmax_glob
+    real(kind=CUSTOM_REAL) :: poissonmin,poissonmax,poissonmin_glob,poissonmax_glob
+    real(kind=CUSTOM_REAL) :: distance_min,distance_max,distance_min_glob,distance_max_glob
+    real(kind=CUSTOM_REAL) :: elemsize_min,elemsize_max,elemsize_min_glob,elemsize_max_glob
+    real(kind=CUSTOM_REAL) :: x_min,x_max,x_min_glob,x_max_glob
+    real(kind=CUSTOM_REAL) :: y_min,y_max,y_min_glob,y_max_glob
+    real(kind=CUSTOM_REAL) :: z_min,z_max,z_min_glob,z_max_glob
+    real(kind=CUSTOM_REAL) :: cmax,cmax_glob,pmax,pmax_glob
+    real(kind=CUSTOM_REAL) :: dt_suggested,dt_suggested_glob,avg_distance
+    real(kind=CUSTOM_REAL) :: vel_min,vel_max
+    integer                :: ispec, ier
+    logical                :: has_vs_zero
+
+    !********************************************************************************
+
+    ! empirical choice for distorted elements to estimate time step and period resolved:
+    ! Courant number for time step estimate
+    real(kind=CUSTOM_REAL),parameter :: COURANT_SUGGESTED = 0.5
+    ! number of points per minimum wavelength for minimum period estimate
+    real(kind=CUSTOM_REAL),parameter :: NPTS_PER_WAVELENGTH = 5
+
+    !********************************************************************************
+
+    !!! dummy arrays for acosutic case if needed
+    !!! occurs when not purely elastic simulation
+    if (ELASTIC_SIMULATION) then
+       ! nothing to do
+    else if (ACOUSTIC_SIMULATION) then
+       allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+       if (ier /= 0) stop 'error allocating array rho_vp'
+       allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+       if (ier /= 0) stop 'error allocating array rho_vs'
+       rho_vp = sqrt( kappastore / rhostore ) * rhostore
+       rho_vs = 0.0_CUSTOM_REAL
+    endif
+
+
+    ModelIsSuitable=.true.
+
+    vpmin_glob = HUGEVAL
+    vpmax_glob = -HUGEVAL
+
+    vsmin_glob = HUGEVAL
+    vsmax_glob = -HUGEVAL
+
+    poissonmin_glob = HUGEVAL
+    poissonmax_glob = -HUGEVAL
+
+    distance_min_glob = HUGEVAL
+    distance_max_glob = -HUGEVAL
+
+    x_min_glob = HUGEVAL
+    x_max_glob = -HUGEVAL
+
+    y_min_glob = HUGEVAL
+    y_max_glob = -HUGEVAL
+
+    z_min_glob = HUGEVAL
+    z_max_glob = -HUGEVAL
+
+    elemsize_min_glob = HUGEVAL
+    elemsize_max_glob = -HUGEVAL
+
+    cmax_glob = -HUGEVAL
+    pmax_glob = -HUGEVAL
+
+    dt_suggested_glob = HUGEVAL
+
+    has_vs_zero = .false.
+
+    do ispec = 1,  NSPEC_AB
+
+       !! min max in element
+       call  get_vpvs_minmax(vpmin, vpmax, vsmin, vsmax, poissonmin, poissonmax, &
+            ispec, has_vs_zero, &
+                             NSPEC_AB, kappastore, mustore, rho_vp, rho_vs)
+
+       !! min/max for whole cpu partition
+       vpmin_glob = min(vpmin_glob, vpmin)
+       vpmax_glob = max(vpmax_glob, vpmax)
+
+       vsmin_glob = min(vsmin_glob, vsmin)
+       vsmax_glob = max(vsmax_glob, vsmax)
+
+       poissonmin_glob = min(poissonmin_glob,poissonmin)
+       poissonmax_glob = max(poissonmax_glob,poissonmax)
+
+       ! computes minimum and maximum size of this grid cell
+       call get_elem_minmaxsize(elemsize_min,elemsize_max,ispec, &
+            NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
+
+       elemsize_min_glob = min(elemsize_min_glob, elemsize_min)
+       elemsize_max_glob = max(elemsize_max_glob, elemsize_max)
+
+
+       ! estimation of minimum period resolved
+       ! based on average GLL distance within element and minimum velocity
+       !
+       ! rule of thumb (Komatitsch et al. 2005):
+       ! "average number of points per minimum wavelength in an element should be around 5."
+
+       ! average distance between GLL points within this element
+       avg_distance = elemsize_max / ( NGLLX - 1)  ! since NGLLX = NGLLY = NGLLZ
+
+       ! largest possible minimum period such that number of points per minimum wavelength
+       ! npts = ( min(vpmin,vsmin)  * pmax ) / avg_distance  is about ~ NPTS_PER_WAVELENGTH
+       !
+       ! note: obviously, this estimation depends on the choice of points per wavelength
+       !          which is empirical at the moment.
+       !          also, keep in mind that the minimum period is just an estimation and
+       !          there is no such sharp cut-off period for valid synthetics.
+       !          seismograms become just more and more inaccurate for periods shorter than this estimate.
+       vel_min = min( vpmin,vsmin)
+       pmax = avg_distance / vel_min * NPTS_PER_WAVELENGTH
+       pmax_glob = max(pmax_glob,pmax)
+
+       ! computes minimum and maximum distance of neighbor GLL points in this grid cell
+       call get_GLL_minmaxdistance(distance_min,distance_max,ispec, &
+            NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore)
+
+       distance_min_glob = min(distance_min_glob, distance_min)
+       distance_max_glob = max(distance_max_glob, distance_max)
+
+       ! Courant number
+       ! based on minimum GLL point distance and maximum velocity
+       ! i.e. on the maximum ratio of ( velocity / gridsize )
+       cmax = max(vpmax,vsmax) * DT / distance_min
+       cmax_glob = max(cmax_glob,cmax)
+
+
+       ! suggested timestep
+       vel_max = max( vpmax,vsmax )
+       dt_suggested = COURANT_SUGGESTED * distance_min / vel_max
+       dt_suggested_glob = min( dt_suggested_glob, dt_suggested)
+
+
+    enddo
+
+    ! Vp velocity
+    vpmin = vpmin_glob
+    vpmax = vpmax_glob
+    call min_all_cr(vpmin,vpmin_glob)
+    call max_all_cr(vpmax,vpmax_glob)
+
+    ! Vs velocity
+    vsmin = vsmin_glob
+    if (has_vs_zero) vsmin = 0.0
+
+    vsmax = vsmax_glob
+    call min_all_cr(vsmin,vsmin_glob)
+    call max_all_cr(vsmax,vsmax_glob)
+
+    ! Poisson's ratio
+    poissonmin = poissonmin_glob
+    poissonmax = poissonmax_glob
+    call min_all_cr(poissonmin,poissonmin_glob)
+    call max_all_cr(poissonmax,poissonmax_glob)
+
+    ! GLL point distance
+    distance_min = distance_min_glob
+    distance_max = distance_max_glob
+    call min_all_cr(distance_min,distance_min_glob)
+    call max_all_cr(distance_max,distance_max_glob)
+
+    ! element size
+    elemsize_min = elemsize_min_glob
+    elemsize_max = elemsize_max_glob
+    call min_all_cr(elemsize_min,elemsize_min_glob)
+    call max_all_cr(elemsize_max,elemsize_max_glob)
+
+    ! model dimensions
+    x_min_glob = minval(xstore)
+    x_max_glob = maxval(xstore)
+
+    y_min_glob = minval(ystore)
+    y_max_glob = maxval(ystore)
+
+    z_min_glob = minval(zstore)
+    z_max_glob = maxval(zstore)
+
+    ! min and max dimensions of the model
+    x_min = x_min_glob
+    x_max = x_max_glob
+    call min_all_cr(x_min,x_min_glob)
+    call max_all_cr(x_max,x_max_glob)
+
+    y_min = y_min_glob
+    y_max = y_max_glob
+    call min_all_cr(y_min,y_min_glob)
+    call max_all_cr(y_max,y_max_glob)
+
+    z_min = z_min_glob
+    z_max = z_max_glob
+    call min_all_cr(z_min,z_min_glob)
+    call max_all_cr(z_max,z_max_glob)
+
+    ! minimum period
+    pmax = pmax_glob
+    call max_all_cr(pmax,pmax_glob)
+
+    ! time step
+    dt_suggested = dt_suggested_glob
+    call min_all_cr(dt_suggested,dt_suggested_glob)
+
+    if (myrank == 0 ) then
+       !! CHECK POISSON'S RATIO OF NEW MODEL
+       if (poissonmin_glob < -1.0000001d0 .or. poissonmax_glob > 0.50000001d0) then
+          ModelIsSuitable=.false.
+       endif
+
+       !! CHECK STABILITY FOR NEW MODEL
+       if (DT > dt_suggested) then
+          ModelIsSuitable=.false.
+       endif
+    endif
+    call bcast_all_singlel(ModelIsSuitable)
+
+    if (ELASTIC_SIMULATION) then
+       !! nothing to do
+    else if (ACOUSTIC_SIMULATION) then
+       deallocate(rho_vp,rho_vs)
+    endif
+
+  end subroutine CheckModelSuitabilityForModeling
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !-----------------------------------------------------------------------------------------------------------------------------------
 !> create dummy file in order to initialize specfem before setting the right parameters
@@ -1181,11 +1485,18 @@ contains
     write(666,'(a82)') 'S0001  XX 4100 1100 0 0 '
     write(666,'(a82)') 'S0001  XX    0    0 0 0 '
     write(666,'(a82)') 'S0001  XX 1000 1000 0 0 '
+    write(666,'(a82)') 'S0001  XX 1000 4100 0 0 '
+    write(666,'(a82)') 'S0001  XX  100 4100 0 0 '
+    write(666,'(a82)') 'S0001  XX 4100  100 0 0 '
 
     write(667,'(a82)') 'S0001  XX 1100 3100 0 0 '
     write(667,'(a82)') 'S0001  XX 4100 1100 0 0 '
     write(667,'(a82)') 'S0001  XX    0    0 0 0 '
     write(667,'(a82)') 'S0001  XX 1000 1000 0 0 '
+    write(667,'(a82)') 'S0001  XX 1000 4100 0 0 '
+    write(667,'(a82)') 'S0001  XX  100 4100 0 0 '
+    write(667,'(a82)') 'S0001  XX 4100 100 0 0 '
+
 
     close(666)
     close(667)

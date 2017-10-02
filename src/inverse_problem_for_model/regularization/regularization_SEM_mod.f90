@@ -4289,4 +4289,311 @@ contains
 
   end subroutine write_in_disk_this
 
+
+
+
+!!!========================== NEW WAY TO DERIVATE ===================
+
+subroutine compute_lapalacian_of_field(field, laplacian_of_field)
+
+  real(kind=CUSTOM_REAL),dimension(:,:,:,:),      allocatable, intent(in)    :: field
+  real(kind=CUSTOM_REAL),dimension(:,:,:,:),      allocatable, intent(inout) :: laplacian_of_field
+
+  real(kind=CUSTOM_REAL),dimension(:,:,:,:,:),    allocatable                :: field_wkstmp
+  real(kind=CUSTOM_REAL),dimension(:,:,:,:,:),    allocatable                :: derivative_of_field
+  real(kind=CUSTOM_REAL),dimension(:,:,:,:,:),    allocatable                :: second_derivative_of_field
+
+
+
+  allocate(field_wkstmp(3,NGLLX, NGLLY, NGLLZ, NSPEC_AB), &
+           derivative_of_field(3,NGLLX, NGLLY, NGLLZ, NSPEC_AB), &
+           second_derivative_of_field(3,NGLLX, NGLLY, NGLLZ, NSPEC_AB) )
+
+  field_wkstmp(1,:,:,:,:) = field(:,:,:,:)
+  field_wkstmp(2,:,:,:,:) = field(:,:,:,:)
+  field_wkstmp(3,:,:,:,:) = field(:,:,:,:)
+  call compute_mean_values_on_edge(field_wkstmp)
+  call compute_derivative_with_lagrange_polynomials(derivative_of_field, field_wkstmp)
+
+  call compute_mean_values_on_edge(derivative_of_field)
+  call compute_2nd_derivative_with_lagrange_polynomials(second_derivative_of_field, derivative_of_field)
+
+  call compute_mean_values_on_edge(second_derivative_of_field)
+
+  laplacian_of_field(:,:,:,:) = second_derivative_of_field(1,:,:,:,:) + &
+                                second_derivative_of_field(2,:,:,:,:) + &
+                                second_derivative_of_field(3,:,:,:,:)
+
+  deallocate(field_wkstmp, derivative_of_field, second_derivative_of_field)
+
+end subroutine compute_lapalacian_of_field
+
+!===================
+subroutine compute_bi_laplacian_of_field(field, laplacian_of_field, bi_laplacian_of_field)
+  real(kind=CUSTOM_REAL),dimension(:,:,:,:),      allocatable, intent(in)    :: field
+  real(kind=CUSTOM_REAL),dimension(:,:,:,:),      allocatable, intent(inout) :: laplacian_of_field, bi_laplacian_of_field
+  call compute_lapalacian_of_field(field, laplacian_of_field)
+  call compute_lapalacian_of_field(laplacian_of_field, bi_laplacian_of_field)
+
+end subroutine compute_bi_laplacian_of_field
+
+
+!!===============
+!!===============
+!!===============
+subroutine compute_derivative_with_lagrange_polynomials(derivative_of_field, field_to_derivate)
+
+   use specfem_par, only: xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, hprime_xx
+
+   implicit none
+   !! size (NDIM,NGLLX, NGLLY, NGLLZ, NSPEC_AB)
+   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),     allocatable, intent(in)     :: field_to_derivate
+   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),     allocatable, intent(inout)  :: derivative_of_field
+
+
+   double precision, dimension(NGLLX, NGLLY, NGLLZ)              :: F
+   double precision, dimension(NDIM, NGLLX, NGLLY, NGLLZ)        :: DF
+   double precision                                              :: hp1, hp2, hp3
+   double precision                                              :: tempx1l, tempx2l, tempx3l
+   double precision                                              :: xixl,xiyl,xizl
+   double precision                                              :: etaxl,etayl,etazl
+   double precision                                              :: gammaxl,gammayl,gammazl
+   integer                                                       :: ispec, i, j, k, l
+
+
+   do ispec =1, NSPEC_AB
+
+      !! store field in local array
+      do k=1,NGLLZ
+         do j=1,NGLLY
+            do i=1,NGLLX
+               !iglob=ibool(i,j,k,ispec)
+               F(i,j,k)=field_to_derivate(1,i,j,k,ispec)
+            enddo
+         enddo
+      enddo
+
+      !! derivative of field based on lagrange polynomials
+      do k=1,NGLLZ
+         do j=1,NGLLY
+            do i=1,NGLLX
+
+               !iglob = ibool(i,j,k,ispec)
+
+               tempx1l = 0.
+               tempx2l = 0.
+               tempx3l = 0.
+
+               do l=1,NGLLX
+
+                  hp1 = hprime_xx(i,l)
+                  tempx1l = tempx1l + F(l,j,k)*hp1
+
+                  hp2 = hprime_xx(j,l)
+                  tempx2l = tempx2l + F(i,l,k)*hp2
+
+                  hp3 = hprime_xx(k,l)
+                  tempx3l = tempx3l + F(i,j,l)*hp3
+
+               enddo
+
+               xixl = xix(i,j,k,ispec)
+               xiyl = xiy(i,j,k,ispec)
+               xizl = xiz(i,j,k,ispec)
+               etaxl = etax(i,j,k,ispec)
+               etayl = etay(i,j,k,ispec)
+               etazl = etaz(i,j,k,ispec)
+               gammaxl = gammax(i,j,k,ispec)
+               gammayl = gammay(i,j,k,ispec)
+               gammazl = gammaz(i,j,k,ispec)
+
+               dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l  ! df/dx
+               dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l  ! df/dy
+               dF(3,i,j,k) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l  ! df/dz
+
+          enddo
+       enddo
+    enddo
+
+    !! get derivative of field from  local array
+    do k=1,NGLLZ
+       do j=1,NGLLY
+          do i=1,NGLLX
+             derivative_of_field(1,i,j,k,ispec)= dF(1,i,j,k)
+             derivative_of_field(2,i,j,k,ispec)= dF(2,i,j,k)
+             derivative_of_field(3,i,j,k,ispec)= dF(3,i,j,k)
+          enddo
+       enddo
+    enddo
+
+ enddo
+
+
+end subroutine compute_derivative_with_lagrange_polynomials
+!!============
+subroutine compute_2nd_derivative_with_lagrange_polynomials(derivative_of_field, field_to_derivate)
+
+   use specfem_par, only: xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, hprime_xx
+
+   implicit none
+   !! size (NDIM, NGLLX, NGLLY, NGLLZ, NSPEC_AB)
+   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),     allocatable, intent(in)     :: field_to_derivate
+   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:),     allocatable, intent(inout)  :: derivative_of_field
+
+
+   double precision, dimension(NDIM, NGLLX, NGLLY, NGLLZ)        :: F
+   double precision, dimension(NDIM, NGLLX, NGLLY, NGLLZ)        :: DF
+   double precision                                              :: hp1, hp2, hp3
+   double precision                                              :: tempx1l, tempx2l, tempx3l
+   double precision                                              :: tempy1l, tempy2l, tempy3l
+   double precision                                              :: tempz1l, tempz2l, tempz3l
+   double precision                                              :: xixl,xiyl,xizl
+   double precision                                              :: etaxl,etayl,etazl
+   double precision                                              :: gammaxl,gammayl,gammazl
+   integer                                                       :: ispec, i, j, k, l
+
+   do ispec =1, NSPEC_AB
+
+      !! store field in local array
+      do k=1,NGLLZ
+         do j=1,NGLLY
+            do i=1,NGLLX
+               F(1,i,j,k)=field_to_derivate(1,i,j,k,ispec)
+               F(2,i,j,k)=field_to_derivate(2,i,j,k,ispec)
+               F(3,i,j,k)=field_to_derivate(3,i,j,k,ispec)
+            enddo
+         enddo
+      enddo
+
+      !! derivative of field based on lagrange polynomials
+      do k=1,NGLLZ
+         do j=1,NGLLY
+            do i=1,NGLLX
+
+               !iglob = ibool(i,j,k,ispec)
+
+               tempx1l = 0.
+               tempx2l = 0.
+               tempx3l = 0.
+
+               tempy1l = 0.
+               tempy2l = 0.
+               tempy3l = 0.
+
+               tempz1l = 0.
+               tempz2l = 0.
+               tempz3l = 0
+
+               do l=1,NGLLX
+
+                  hp1 = hprime_xx(i,l)
+                  tempx1l = tempx1l + F(1,l,j,k)*hp1
+                  tempy1l = tempy1l + F(2,l,j,k)*hp1
+                  tempz1l = tempz1l + F(3,l,j,k)*hp1
+
+                  hp2 = hprime_xx(j,l)
+                  tempx2l = tempx2l + F(1,i,l,k)*hp2
+                  tempy2l = tempy2l + F(2,i,l,k)*hp2
+                  tempz2l = tempz2l + F(3,i,l,k)*hp2
+
+                  hp3 = hprime_xx(k,l)
+                  tempx3l = tempx3l + F(1,i,j,l)*hp3
+                  tempy3l = tempy3l + F(2,i,j,l)*hp3
+                  tempz3l = tempz3l + F(3,i,j,l)*hp3
+
+
+               enddo
+
+               xixl = xix(i,j,k,ispec)
+               xiyl = xiy(i,j,k,ispec)
+               xizl = xiz(i,j,k,ispec)
+               etaxl = etax(i,j,k,ispec)
+               etayl = etay(i,j,k,ispec)
+               etazl = etaz(i,j,k,ispec)
+               gammaxl = gammax(i,j,k,ispec)
+               gammayl = gammay(i,j,k,ispec)
+               gammazl = gammaz(i,j,k,ispec)
+
+               dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l  ! (df/dx) / dx
+               dF(2,i,j,k) = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l  ! (df/dy) / dy
+               dF(3,i,j,k) = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l  ! (df/dz) / dz
+
+          enddo
+       enddo
+    enddo
+
+    !! get derivative of field from  local array
+    do k=1,NGLLZ
+       do j=1,NGLLY
+          do i=1,NGLLX
+             derivative_of_field(1,i,j,k,ispec)= dF(1,i,j,k)
+             derivative_of_field(2,i,j,k,ispec)= dF(2,i,j,k)
+             derivative_of_field(3,i,j,k,ispec)= dF(3,i,j,k)
+          enddo
+       enddo
+    enddo
+
+ enddo
+
+
+
+end subroutine compute_2nd_derivative_with_lagrange_polynomials
+
+!!
+!! variable damping regualrisation for trying to kill suprious variations close to the point sources
+subroutine compute_spatial_damping_for_source_singularities(acqui_simu, inversion_param, spatial_damping)
+
+   type(inver),                                                    intent(inout) :: inversion_param
+   type(acqui),            dimension(:),       allocatable,        intent(inout) :: acqui_simu
+   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable,        intent(inout) :: spatial_damping
+   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable                       :: spatial_damping_tmp
+   integer                                                                       :: isrc, ievent, iglob, ispec, i, j, k
+   real(kind=CUSTOM_REAL)                                                        :: xgll, ygll, zgll
+   real(kind=CUSTOM_REAL)                                                        :: distance_from_source, value_of_damping
+
+   do ispec = 1, NSPEC_AB
+
+      do k = 1, NGLLZ
+         do j = 1, NGLLY
+            do i = 1, NGLLX
+               iglob=ibool(i,j,k,ispec)
+               xgll=xstore(iglob)
+               ygll=ystore(iglob)
+               zgll=zstore(iglob)
+               !! compute distance form sources
+               do ievent = 1, acqui_simu(1)%nevent_tot
+                  if (trim(acqui_simu(ievent)%source_type) == 'moment' .or. trim(acqui_simu(ievent)%source_type) == 'force' .or. &
+                     trim(acqui_simu(ievent)%source_type) == 'shot' ) then
+
+                     do isrc = 1, acqui_simu(ievent)%nsources_local
+                        distance_from_source = sqrt(  (acqui_simu(ievent)%Xs(isrc) - xgll)**2 + &
+                                                      (acqui_simu(ievent)%Ys(isrc) - ygll)**2 + &
+                                                      (acqui_simu(ievent)%Zs(isrc) - zgll)**2)
+
+                        value_of_damping = inversion_param%min_damp + &
+                                           (inversion_param%max_damp - inversion_param%min_damp )*&
+                              exp(-0.5 * (distance_from_source/(inversion_param%distance_from_source/3.))**2 )
+
+                        spatial_damping(i,j,k,ispec) = max(spatial_damping(i,j,k,ispec), value_of_damping)
+                        !write(*,*) inversion_param%max_damp,  inversion_param%min_damp,
+                        !inversion_param%distance_from_source, value_of_damping
+                     enddo
+                  endif
+               enddo
+
+            enddo
+         enddo
+      enddo
+
+   enddo
+
+   if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
+      allocate(spatial_damping_tmp(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+      spatial_damping_tmp(:,:,:,:)=spatial_damping(:,:,:,:)
+      call max_all_all_cr_for_simulatenous_runs(spatial_damping_tmp(1,1,1,1), spatial_damping(1,1,1,1), NGLLX*NGLLY*NGLLZ*NSPEC_AB)
+      deallocate(spatial_damping_tmp)
+   endif
+
+end subroutine compute_spatial_damping_for_source_singularities
+
 end module regularization

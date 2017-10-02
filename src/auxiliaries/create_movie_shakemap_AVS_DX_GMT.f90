@@ -673,8 +673,7 @@
           do ilocnum = 1,NGNOD2D_FOUR_CORNERS_AVS_DX
             ibool_number = iglob(ilocnum+ieoff)
             if (.not. mask_point(ibool_number)) then
-              call utm_geo(long,lat,xp_save(ilocnum+ieoff),yp_save(ilocnum+ieoff), &
-                      UTM_PROJECTION_ZONE,IUTM2LONGLAT,SUPPRESS_UTM_PROJECTION)
+              call utm_geo(long,lat,xp_save(ilocnum+ieoff),yp_save(ilocnum+ieoff),IUTM2LONGLAT)
               write(11,*) sngl(long),sngl(lat),sngl(field_display(ilocnum+ieoff))
             endif
             mask_point(ibool_number) = .true.

@@ -606,9 +606,9 @@ subroutine FK3D(myrank, NSPEC_AB, ibool, abs_boundary_ijk, abs_boundary_normal, 
 
   use constants
 
-  use specfem_par, only: xstore,ystore,zstore,kappastore,mustore,rhostore
+  use specfem_par, only: xstore, ystore, zstore, kappastore, mustore, rhostore
   use specfem_par_elastic, only: xx, yy, zz, xi1, xim, bdlambdamu, &
-                                   nmx, nmy, nmz
+                                   nmx, nmy, nmz,  Z_REF_for_FK
 
   implicit none
 
@@ -678,7 +678,7 @@ subroutine FK3D(myrank, NSPEC_AB, ibool, abs_boundary_ijk, abs_boundary_normal, 
 
                  xx(ipt) = xstore(iglob)
                  yy(ipt) = ystore(iglob)
-                 zz(ipt) = zstore(iglob)
+                 zz(ipt) = zstore(iglob) -  Z_REF_for_FK  !! VM VM put z in FK system of coordinate
 
                  nmx(ipt) = abs_boundary_normal(1,igll,iface)
                  nmy(ipt) = abs_boundary_normal(2,igll,iface)
@@ -771,22 +771,26 @@ end subroutine FK3D
     NPOW_FOR_FFT = lnpts2
 
     dt_fk=1./(df*(npts2-1))
-    if (myrank == 0) write(*,*) ' DT_FK ', dt_fk, ' df ' , df, 'npts2 ',npts2, 'lnpts2 ', lnpts2
 
     !! number of points for resmpled vector
     npoints2 = NP_RESAMP*(npts2-1)+1
 
     if (myrank == 0) then
-       print *
-       print *, ' entering the FK synthetics program .... '
-       print *, '   model = ', nlayer
-       print *, '   source = ',x0, y0, z0
-       print *, '   azimuth ', phi
-       print *, '   number of points used for FFT = ', npts2
-       print *, '   total time length = ',t0,dt_fk,t0+(npts2-1)*dt_fk
-       print *,  '  Number of samples stored for FK solution ',  NF_FOR_STORING
+       write(IMAIN,*)
+       write(IMAIN,*)  '       Entering the FK synthetics program .... '
+       write(IMAIN,*)  '  Number of points used for FFT = ', npts2
+       write(IMAIN,*)  '  Total time length used for FK = ', t0+(npts2-1)*dt_fk
+       write(IMAIN,*)  '  Number of samples stored for FK solution ',  NF_FOR_STORING
+       write(IMAIN,*)  '  FK time step  ', dt_fk
+       write(IMAIN,*) '  FK frequency step ' , df
+       write(IMAIN,*) '  power of 2 for FFT : ', lnpts2
+       call flush_IMAIN()
     endif
 
+    !! check if dt_fk is compatible with dt_specfem
+    !!
+    !!
+    !!
 
     allocate(fvec(nf2),stat=ier)
     fvec=0.
@@ -827,14 +831,14 @@ end subroutine FK3D
 
     nn=int(-t0/dt) ! what if this is not an integer number?
 
-  if (myrank == 0) print *, '   starting from ',nn,' points before time 0'
+  if (myrank == 0) write(IMAIN,*) '   starting from ',nn,' points before time 0'
 
   if (kpsv == 1) then
 
      ! for C_3=i sin(inc) (u=[sin(inc), cos(inc)])
      C_3=cmplx(0,1.)*p*al(nlayer)  ! amp. of incoming P in the bot. layer
      eta_p=sqrt(1./al(nlayer)**2-p**2) ! vertical slowness for lower layer
-     if (myrank == 0) print *, 'Incoming P : C_3,  p, eta = ', C_3, p, eta_p
+     if (myrank == 0) write(IMAIN,*) 'Incoming P : C_3,  p, eta = ', C_3, p, eta_p
 
      N_mat(:,:) =(0.0,0.0)
 
@@ -960,7 +964,7 @@ end subroutine FK3D
      ! for C_2= sin(inc) (u=[cos(inc), sin(inc)])
      C_1= p*be(nlayer)  ! amp. of incoming S in the bot. layer
      eta_s=sqrt(1./be(nlayer)**2-p**2) ! vertical slowness for lower layer
-     if (myrank == 0) print *, 'Incoming S :  C_1,  p, eta = ', C_1, p, eta_s
+     if (myrank == 0) write(IMAIN,*) 'Incoming S :  C_1,  p, eta = ', C_1, p, eta_s
 
      N_mat(:,:) =(0.0,0.0)
 
@@ -1081,6 +1085,13 @@ end subroutine FK3D
 
   deallocate(fvec,coeff, field_f, field, dtmp)
   deallocate(tmp_f1, tmp_f2, tmp_f3, tmp_t1, tmp_t2, tmp_t3)
+
+  if (myrank == 0) then
+     write(IMAIN,*)
+     write(IMAIN,*) " FK computing passed "
+     write(IMAIN,*)
+     call flush_IMAIN()
+  endif
 
 end subroutine FK
 

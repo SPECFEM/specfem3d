@@ -7,6 +7,12 @@ import sys
 from save_fault_nodes_elements import *
 from absorbing_boundary import *
 
+#-- BEGIN user settings ----------------------
+
+zcutBottom = 90.0   # bottom depth of the fault in km. Can be shallower than in process_slab_rotate.py
+
+#-- END user settings ----------------------
+
 def export_block(nb,vp,vs,rho,count=6,Q=9999):
     cubit.cmd('block {0}  name "elastic {0}" '.format(nb))        # material region
     cubit.cmd('block {0} attribute count {1}'.format(nb,count))
@@ -26,9 +32,8 @@ def define_block_hex27(i):
 cubit.init([''])
 #cubit.cmd('open "tpv29.cub"')
 cubit.cmd('open "slab_rotate.cub"')
-cubit.cmd('vol all scale 1000')
-cubit.cmd('vol all scale 1.11195')
-#This reflects the fact that 1deg=111.195km
+cubit.cmd('vol all scale 1000')  # convert from km to meters
+cubit.cmd('vol all scale 1.11195')  # 1 deg = 111.195 km
 ########### Fault elements and nodes ###############
 os.system('mkdir -p MESH')
 cubit.cmd('unmerge surf 3')
@@ -39,8 +44,10 @@ for iblock in range(1,11,1):
 cubit.cmd('set node constraint off')
 cubit.cmd("group 'upp'  add node in surface 39")
 cubit.cmd("group 'lowr' add node in surface 9")
-cubit.cmd("group 'upp' remove node with z_coord < -90000")
-cubit.cmd("group 'lowr' remove node with z_coord < -90000")
+cc = "group 'upp' remove node with z_coord < -"+str(zcutBottom*1000)
+cubit.cmd(cc)
+cc = "group 'lowr' remove node with z_coord < -"+str(zcutBottom*1000)
+cubit.cmd(cc)
 cubit.cmd("nodeset 200 group upp")
 cubit.cmd("nodeset 201 group lowr")
 cubit.cmd('nodeset 201 move 0 0 -0.1')

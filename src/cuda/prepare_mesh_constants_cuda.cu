@@ -126,7 +126,7 @@ void FC_FUNC_(prepare_constants_device,
                                         int* NSOURCES, int* nsources_local_f,
                                         realw* h_sourcearrays,
                                         int* h_islice_selected_source, int* h_ispec_selected_source,
-                                        int* h_number_receiver_global, int* h_ispec_selected_rec,
+                                        int* h_ispec_selected_rec,
                                         int* nrec,int* nrec_local,
                                         int* SIMULATION_TYPE,
                                         int* USE_MESH_COLORING_GPU_f,
@@ -142,11 +142,6 @@ void FC_FUNC_(prepare_constants_device,
   Mesh* mp = (Mesh*) malloc( sizeof(Mesh) );
   if (mp == NULL) exit_on_error("error allocating mesh pointer");
   *Mesh_pointer = (long)mp;
-
-  // checks if NGLLX == 5
-  if (*h_NGLLX != NGLLX ){
-    exit_on_error("NGLLX must be 5 for CUDA devices");
-  }
 
   // sets processes mpi rank
   mp->myrank = *h_myrank;
@@ -327,13 +322,11 @@ void FC_FUNC_(prepare_constants_device,
   // receiver stations
   mp->nrec_local = *nrec_local; // number of receiver located in this partition
   // note that:
-  // size(number_receiver_global) = nrec_local
   // size(ispec_selected_rec) = nrec
   if (mp->nrec_local > 0){
-    copy_todevice_int((void**)&mp->d_number_receiver_global,h_number_receiver_global,mp->nrec_local);
-    copy_todevice_realw((void**)&mp->d_hxir,h_xir,5*mp->nrec_local);
-    copy_todevice_realw((void**)&mp->d_hetar,h_etar,5*mp->nrec_local);
-    copy_todevice_realw((void**)&mp->d_hgammar,h_gammar,5*mp->nrec_local);
+    copy_todevice_realw((void**)&mp->d_hxir,h_xir,NGLLX*mp->nrec_local);
+    copy_todevice_realw((void**)&mp->d_hetar,h_etar,NGLLY*mp->nrec_local);
+    copy_todevice_realw((void**)&mp->d_hgammar,h_gammar,NGLLZ*mp->nrec_local);
 
     float* h_nu;
     h_nu=(float*)malloc(9 * sizeof(float) * mp->nrec_local);
@@ -593,8 +586,14 @@ void FC_FUNC_(prepare_fields_acoustic_adj_dev,
   // preconditioner
   if (*APPROXIMATE_HESS_KL ){
     print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_hess_ac_kl),size*sizeof(realw)),3030);
+    print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_hess_rho_ac_kl),size*sizeof(realw)),3032);
+    print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_hess_kappa_ac_kl),size*sizeof(realw)),3033);
+
     // initializes with zeros
     print_CUDA_error_if_any(cudaMemset(mp->d_hess_ac_kl,0,size*sizeof(realw)),3031);
+    print_CUDA_error_if_any(cudaMemset(mp->d_hess_rho_ac_kl,0,size*sizeof(realw)),3034);
+    print_CUDA_error_if_any(cudaMemset(mp->d_hess_kappa_ac_kl,0,size*sizeof(realw)),3035);
+
   }
 
   // mpi buffer
@@ -1160,6 +1159,15 @@ void FC_FUNC_(prepare_fields_elastic_adj_dev,
     size = NGLL3 * mp->NSPEC_AB; // note: non-aligned; if align, check memcpy below and indexing
     print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_hess_el_kl),size*sizeof(realw)),5450);
     print_CUDA_error_if_any(cudaMemset(mp->d_hess_el_kl,0,size*sizeof(realw)),5451);
+
+    print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_hess_rho_el_kl),size*sizeof(realw)),5452);
+    print_CUDA_error_if_any(cudaMemset(mp->d_hess_rho_el_kl,0,size*sizeof(realw)),5453);
+
+    print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_hess_kappa_el_kl),size*sizeof(realw)),5454);
+    print_CUDA_error_if_any(cudaMemset(mp->d_hess_kappa_el_kl,0,size*sizeof(realw)),5455);
+
+    print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_hess_mu_el_kl),size*sizeof(realw)),5456);
+    print_CUDA_error_if_any(cudaMemset(mp->d_hess_mu_el_kl,0,size*sizeof(realw)),5457);
   }
 
   // debug
@@ -1416,6 +1424,7 @@ TRACE("prepare_cleanup_device");
   cudaFree(mp->d_gammax);
   cudaFree(mp->d_gammay);
   cudaFree(mp->d_gammaz);
+  cudaFree(mp->d_kappav);
   cudaFree(mp->d_muv);
 
   // absorbing boundaries
@@ -1447,15 +1456,14 @@ TRACE("prepare_cleanup_device");
 
   // receivers
   if (mp->nrec_local > 0){
-    cudaFree(mp->d_number_receiver_global);
     cudaFree(mp->d_hxir);
     cudaFree(mp->d_hetar);
     cudaFree(mp->d_hgammar);
-    cudaFree(mp->d_nu);
     cudaFree(mp->d_seismograms_d);
     cudaFree(mp->d_seismograms_v);
     cudaFree(mp->d_seismograms_a);
     cudaFree(mp->d_seismograms_p);
+    cudaFree(mp->d_nu);
     cudaFree(mp->d_ispec_selected_rec_loc);
     }
     cudaFree(mp->d_ispec_selected_rec);
@@ -1485,7 +1493,11 @@ TRACE("prepare_cleanup_device");
       cudaFree(mp->d_b_potential_dot_dot_acoustic);
       cudaFree(mp->d_rho_ac_kl);
       cudaFree(mp->d_kappa_ac_kl);
-      if (*APPROXIMATE_HESS_KL) cudaFree(mp->d_hess_ac_kl);
+      if (*APPROXIMATE_HESS_KL) {
+  cudaFree(mp->d_hess_ac_kl);
+  cudaFree(mp->d_hess_rho_ac_kl);
+  cudaFree(mp->d_hess_kappa_ac_kl);
+      }
     }
 
 
@@ -1536,7 +1548,12 @@ TRACE("prepare_cleanup_device");
         cudaFree(mp->d_mu_kl);
         cudaFree(mp->d_kappa_kl);
       }
-      if (*APPROXIMATE_HESS_KL) cudaFree(mp->d_hess_el_kl);
+      if (*APPROXIMATE_HESS_KL) {
+  cudaFree(mp->d_hess_el_kl);
+  cudaFree(mp->d_hess_rho_el_kl);
+  cudaFree(mp->d_hess_kappa_el_kl);
+  cudaFree(mp->d_hess_mu_el_kl);
+      }
     }
 
     if (*COMPUTE_AND_STORE_STRAIN ){

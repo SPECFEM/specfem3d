@@ -203,8 +203,7 @@ FC_FUNC_(param_read,PARAM_READ)(char * string_read, int * string_read_len, char 
     *ierr = 0;
     return;
   }
-  // If no keyword matches, print out error and die.
-  printf("No match in parameter file for keyword '%s'\n", namecopy);
+  // If no keyword matches, set the error flag
   free(namecopy);
   regfree(&compiled_pattern);
   *ierr = 1;

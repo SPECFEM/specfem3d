@@ -110,6 +110,8 @@
 
 // Gauss-Lobatto-Legendre
 #define NGLLX 5
+#define NGLLY 5
+#define NGLLZ 5
 #define NGLL2 25
 #define NGLL3 125 // no padding: requires same size as in fortran for NGLLX * NGLLY * NGLLZ
 
@@ -402,7 +404,6 @@ typedef struct mesh_ {
   int* d_ispec_selected_source;
 
   // receivers
-  int* d_number_receiver_global;
   int* d_ispec_selected_rec_loc;
   int* d_ispec_selected_rec;
   int nrec_local;
@@ -410,8 +411,7 @@ typedef struct mesh_ {
   realw* h_station_seismo_field;
 
   realw* d_hxir, *d_hetar, *d_hgammar;
-  realw* d_seismograms_d, *d_seismograms_v, *d_seismograms_a, *d_seismograms_p;
-  realw* d_nu;
+  realw* d_seismograms_d, *d_seismograms_v, *d_seismograms_a, *d_seismograms_p, *d_nu;
 
   // adjoint receivers/sources
   int nadj_rec_local;
@@ -508,7 +508,7 @@ typedef struct mesh_ {
   realw* d_sigma_kl;
 
   // approximative hessian for preconditioning kernels
-  realw* d_hess_el_kl;
+  realw* d_hess_el_kl, *d_hess_rho_el_kl, *d_hess_mu_el_kl, *d_hess_kappa_el_kl;
 
   // oceans
   realw* d_rmass_ocean_load;
@@ -556,7 +556,7 @@ typedef struct mesh_ {
   realw* d_kappa_ac_kl;
 
   // approximative hessian for preconditioning kernels
-  realw* d_hess_ac_kl;
+  realw* d_hess_ac_kl, *d_hess_rho_ac_kl, *d_hess_kappa_ac_kl;
 
   // coupling acoustic-elastic
   int* d_coupling_ac_el_ispec;

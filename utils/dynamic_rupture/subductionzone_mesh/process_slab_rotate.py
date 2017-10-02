@@ -8,28 +8,47 @@ import math
 import numpy as np
 #import matplotlib.pyplot as plt
 
-
 cubit.init([''])
 cubit.cmd('reset')
-Latmin = 33
+
+
+#-- BEGIN user settings ----------------------
+
+FaultFileName = './kur_slab1.0_clip.xyz'  # fault surface file: longitude, latitude, depth (in km, negative)
+#FaultFileName = './alu_slab1.0_clip.xyz'
+#FaultFileName = './aluslab.xyz'
+
+Latmin = 33          # regional box limits
 Latmax = 44
 Lonmin = 136
 Lonmax = 150
+Lat2dis = 100.0      # latitude to km conversion factor
+                     # The true latitude to distance conversion ratio should be 111.195 km = 1 deg.
+                     # We will reflect that at the end of exportmesh.py by scaling up the model
+                     # by a factor of 1.1195. The reason we don't do that here is that it would
+                     # change the whole mesh generation script.
+Lon2dis = 76.0       # longitude to km conversion factor
+zcutBottom = 100.0   # bottom depth of the fault in km, preliminary value (the final depth is set in exportmesh.py)
+zcutTop = 2.0        # steepen the fault surface above this depth in km
+                     # to avoid elements with small angles at the trench
+                     # Use the matlab script demo_subduction_smoothing.m to explore this feature
+rotate = -15         # set this to minus average strike. Approximately aligns the trench with the Y axis to facilitate meshing
+# dimensions (in km) of the box containing the fault:
+xLim = 600           # along the X axis of the rotated frame (it must fit inside the lat-lon box)
+yLim = 800           # along the Y axis of the rotated frame (it must fit inside the lat-lon box)
+zLim = 250           # depth (it must be deeper than zcutBottom)
+radius = 1000.0      # radius of semi-spherical absorbing boundary in km
+Meshsize = 4.0       # mesh size in km
+refine_slab = False  # refine the mesh near the subduction interface. Can be very slow
+Mesh = False         # set to true to trigger meshing
+Plotsquare=False
+
+#-- END user settings ----------------------
+
+
 xc = 0.5*(Lonmin+Lonmax)
 yc = 0.5*(Latmin+Latmax)
-Lat2dis = 100.0
-# The true latitude to distance conversion ratio should be 111.195km=1deg.
-#We will reflect that at the end of the exportmesh.py by scaling the model
-#up by a factor of 1.1195. The reason we don't do it here is that it will
-#change the whole script of mesh generation.
-Lon2dis = 76.0
-Meshsize = 4.0 # mesh size set to 4.0 km
-radius = 1000.0
-cuttingdepth = -100.0
-refine_slab = False # refine mesh near the subduction interface , can be very slow
-Mesh = False # set to true to trigger meshing
-rotate =-15
-Plotsquare=False
+
 # rotate function doesn't seem to work
 #def rotate(X,deg):
 #    rad = math.radians(deg)
@@ -38,10 +57,14 @@ Plotsquare=False
 #    Y[:,1] = - X[:,0]* math.sin(rad) + X[:,1]*math.cos(rad)
 #    return Y
 
-def surf(z):#this function modifies the slab geometry at surface
-    c = 5.0e-2
+# this function modifies the slab geometry near the surface
+# by making the fault dip angle steeper above depth "z"
+# to avoid elements with small angles at the trench.
+# See demo_subduction_smoothing.m
+def surf(z):
+    c = 2.0/zcutTop
     f = -math.log(math.exp(-c*z)-1)/c
-    f = max(f,cuttingdepth)
+    f = max(f,-zcutBottom)
     return f
 
 
@@ -61,13 +84,10 @@ def import_elev_data():
     return data
 
 
-def import_slab_data():
-    filename = './alu_slab1.0_clip.xyz'
-    filename = './kur_slab1.0_clip.xyz'
-#    filename = './aluslab.xyz'
+def import_slab_data(filename):
     data = np.loadtxt(filename)
     data = data[np.bitwise_not(np.isnan(data[:,2])),:]
-    data = data[np.bitwise_and(np.bitwise_and(data[:,1]>=Latmin, data[:,1]<=Latmax),data[:,2]>-250)] # select data between latitude 45 and 50 degree and depth above 250km
+    data = data[np.bitwise_and(np.bitwise_and(data[:,1]>=Latmin, data[:,1]<=Latmax),data[:,2]>-zcutBottom*1.2)]
     return data
 
 
@@ -78,7 +98,7 @@ def generating_contour(X,Y,Z):
     Zm = griddata(X,Y,Z,xi,yi)
     return Xm,Ym,Zm
 
-data = import_slab_data()
+data = import_slab_data(FaultFileName)
 
 #plt.scatter(data[:,0],data[:,1],1.0,c=data[:,2],edgecolors='none')
 
@@ -101,8 +121,8 @@ np.savetxt('outputslab.txt',data,delimiter=',')
 N,D = data.shape
 X = range(0,N,5) # down sampling
 data = data[X,:]
-xc = np.mean(data[:,0])
-yc = np.mean(data[:,1])
+#xc = np.mean(data[:,0])
+#yc = np.mean(data[:,1])
 xc = 0.5*(Lonmax+Lonmin)
 yc = 0.5*(Latmax+Latmin)
 data[:,0]=data[:,0]-xc
@@ -110,6 +130,7 @@ data[:,1]=data[:,1]-yc
 #data[:,0:2] = rotate(data[:,0:2],45)
 N,D = data.shape
 
+# falt surface: create one spline per latitude
 print(N)
 start = 1
 n_curve = 0
@@ -156,12 +177,15 @@ data[:,1]=data[:,1]-yc
 #data[:,0:2] = rotate(data[:,0:2],45)
 N2,D = data.shape
 
+# topography surface: create one spline per latitude
 print(N2)
 #exit()
 start = N+1
 start_curve = n_curve+1
 for ii in range(0,N2):
-    vert = "create vertex x "+str(data[ii,0]*Lon2dis)+" y "+str(data[ii,1]*Lat2dis)+" z "+str(data[ii,2]/1000.0) # the topography profile longitude latitude and depth.depth are minus signed and of unit meters. A crude conversion of 1 degree=100 km , should be improved later.
+    vert = "create vertex x "+str(data[ii,0]*Lon2dis)+" y "+str(data[ii,1]*Lat2dis)+" z "+str(data[ii,2]/1000.0)
+    # topography file: longitude, latitude and depth
+    # depths are negative and in meters
     cubit.cmd(vert)
     if(ii<N2-1):
         if(data[ii,1]!=data[ii+1,1]):
@@ -174,6 +198,7 @@ for ii in range(0,N2):
 
 print('total curve %d'%n_curve)
 
+# create fault and topography surfaces
 cubit.cmd('delete vertex  all')
 cubit.cmd('create surface skin curve {0} to {1}'.format(1,n_curve_slab))
 cubit.cmd('create surface skin curve {0} to {1}'.format(n_curve_slab+1,n_curve))
@@ -181,28 +206,24 @@ cubit.cmd('create surface skin curve {0} to {1}'.format(n_curve_slab+1,n_curve))
 #for ii in range(1,n_curve,20):#
 #cubit.cmd('create surface skin curve %d to %d'%(ii,ii+20))
 cubit.cmd("delete curve all")
+
 cubit.cmd('set node constraint on')
-cubit.cmd('create brick x 600 y 800 z 400')
-cubit.cmd("save as 'slab_rotate.cub' overwrite")
 
-cubit.cmd('vol 3  move 0 0 -50')
+# create a box and cut it using fault and topography smooth surfaces
+cubit.cmd('create brick x {0} y {1} z {2}'.format(xLim,yLim,zLim*2))
+# rotate to align the trench (on average) with the Y axis
 cubit.cmd('rotate vol 3 about 0 0 0 direction 0 0 1 angle {0}'.format(rotate))
-
 cubit.cmd("save as 'slab_rotate.cub' overwrite")
 cubit.cmd('webcut vol 3 with sheet body 2')
 cubit.cmd('delete vol 4')
 cubit.cmd('webcut vol 3 with sheet body 1')
 cubit.cmd('delete vol 1 2')
 cubit.cmd('compress all')
-#cubit.cmd("vol all move -100 -350 0")
 cubit.cmd("merge all")
+
 if True:
 
-# make wrapping sphere not working
     cubit.cmd("create sphere radius {0}".format(radius))
-#cubit.cmd("section volume 3 with zplane offset 0 reverse")
-
-#!python
     cubit.cmd('project surface 1 onto surf 13 imprint keepcurve keepbody')
     cubit.cmd('project surface 2 onto surf 13 imprint keepcurve keepbody')
     cubit.cmd('project surface 4 onto surf 13 imprint keepcurve keepbody')
@@ -213,7 +234,9 @@ if True:
     cubit.cmd('project surface 12 onto surf 13 imprint keepcurve keepbody')
     loft_surf = np.array([[1,15],[2,16],[4,18],[5,20],[7,23],[9,25],[10,27],[12,29]])
     cubit.cmd("save as 'slab_rotate_before_loft.cub' overwrite")
+
     exit()
+#--- Everything below this line is currently ignored. The rest of the meshing is completed by two other scripts.
 
     for ii in range(0,8):
         cubit.cmd('create volume loft surface {0} {1}'.format(loft_surf[ii,0],loft_surf[ii,1]))

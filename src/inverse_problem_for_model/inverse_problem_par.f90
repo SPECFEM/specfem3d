@@ -45,7 +45,7 @@ module inverse_problem_par
   !! useful files id
   integer,                       public, parameter  :: IINN=667, IIDD=668
   !!! verbose debug mode
-  logical,                       public, parameter  :: DEBUG_MODE=.false.
+  logical,                       public, parameter  :: DEBUG_MODE=.true.
   !!! verbose mode for with outputs for checking the FWI
   logical,                       public, parameter  :: VERBOSE_MODE=.true.
   !!! write kernels on disk
@@ -58,58 +58,82 @@ module inverse_problem_par
   !!logical,                       public             :: USE_PRECOND_OIL_INDUSTRY=.false.
   !!! if needed use steepest descent instead of l-bfgs (if useful need to move elsewhere)
   logical,                       public             :: USE_GRADIENT_OPTIM=.false.
-
+  !! use simplified station location instead of specfem subroutin which can be problematic with a
+  !! big number of stations
+  logical,                       public             :: USE_LIGHT_STATIONS=.true.
   ! ------------------------------  global parameters for fwi ---------------------------------------------------------------------
   !! name for outputs files
   character(len=MAX_STRING_LEN), public             :: prname_specfem
   character(len=8),              public             :: prefix_to_path='./'
+  character(len=MAX_STRING_LEN), public             :: type_input='exploration'
 
 !################################################# STRUCTURES ######################################################################
+
+  ! PROJECTION IN FD GRID STRUCTURE -----------------------------------------------------------------------------------------------
+  type, public :: profd
+
+     integer                                                                  :: nx, ny, nz
+     real(kind=CUSTOM_REAL)                                                   :: hx, hy, hz
+     real(kind=CUSTOM_REAL)                                                   :: ox, oy, oz
+
+     integer                                                                  :: nb_fd_point
+     integer,                               dimension(:),         allocatable :: ispec_selected
+     integer,                               dimension(:,:),       allocatable :: index_on_fd_grid
+     double precision,                      dimension(:,:),       allocatable :: hxi, heta, hgamma
+
+  end type profd !-----------------------------------------------------------------------------------------------------------------
 
   ! INVERSION PARAMETERS STRUCTURE -------------------------------------------------------------------------------------------------
   type, public :: inver
 
      character(len= MAX_LEN_STRING)                                           :: input_acqui_file
      character(len= MAX_LEN_STRING)                                           :: input_inver_file
-     character(len= MAX_LEN_STRING)                                           :: param_family='rho_vp_vs'
-     integer                                                                  :: NfamilyPar=3
-     integer                                                                  :: NinvPar=3
+     character(len= MAX_LEN_STRING)                                           :: param_family = "rho_vp_vs"
+     integer                                                                  :: NfamilyPar = 3
+     integer                                                                  :: NinvPar = 3
      integer, dimension(:), allocatable                                       :: Index_Invert
 
      !! stopping criteria
      integer                                                                  :: Niter = 100
      integer                                                                  :: Niter_wolfe = 10
-     real(kind=CUSTOM_REAL)                                                   :: relat_grad=1.e-3
-     real(kind=CUSTOM_REAL)                                                   :: relat_cost=1.e-1
+     real(kind=CUSTOM_REAL)                                                   :: relat_grad = 1.e-3
+     real(kind=CUSTOM_REAL)                                                   :: relat_cost = 1.e-1
+
+     !! use filter band pass for inversion
+     integer                                                                  :: Nifrq=1
+     logical                                                                  :: use_band_pass_filter=.false.
 
      !!---- TUNING PARAMETERS FOR INVERSION -------------
      !! --- for L-BFGS
      integer                                                                  :: max_history_bfgs = 10
 
      !!--- for Wolfe line search
-     real(kind=CUSTOM_REAL)                                                   :: m1 = 0.01, m2 = 0.7
+     real(kind=CUSTOM_REAL)                                                   :: m1 = 1.e-4, m2 = 0.9
      real(kind=CUSTOM_REAL)                                                   :: current_step_length = 1.
 
      !! weight for regularization on family parameters
      real(kind=CUSTOM_REAL), dimension(:), allocatable                        :: reg_family, damp_family
 
      !! max perturbation allowed for initial guest step length relative to gradient max value
-     real(kind=CUSTOM_REAL)                                                   :: max_relative_pert = 0.01 ! (1%)
+     real(kind=CUSTOM_REAL)                                                   :: max_relative_pert = 0.05 ! (5%)
 
      !! we can import model from disk
-     logical                                                                  :: input_sem_model=.false.
-     logical                                                                  :: input_fd_model=.false.
+     logical                                                                  :: input_sem_model = .false.
+     logical                                                                  :: input_sem_prior = .false.
+     logical                                                                  :: input_fd_model = .false.
 
      !! write FWI solution to disk (or not)
-     logical                                                                  :: output_model=.true.
+     logical                                                                  :: output_model = .true.
 
      !! what to do: FWI, or just forward modeling
-     logical                                                                  :: only_forward=.false.
+     logical                                                                  :: only_forward = .false.
 
      !! for preconditioning of FWI
      logical                                                                  :: use_taper=.false.
      logical                                                                  :: shin_precond=.false.
      logical                                                                  :: z2_precond=.false.
+     logical                                                                  :: z_precond=.false.
+     logical                                                                  :: energy_precond=.false.
 
      !! flags to choose if the user wants to dump some wave fields
      logical                                                                  :: dump_model_at_each_iteration=.true.
@@ -121,21 +145,46 @@ module inverse_problem_par
      real(kind=CUSTOM_REAL)                                                   :: ymin_taper, ymax_taper
      real(kind=CUSTOM_REAL)                                                   :: zmin_taper, zmax_taper
 
+     !! parameters for z_precond
+     real(kind=CUSTOM_REAL)                                                   :: zPrc1=-200., zPrc2=-400., aPrc=3.
+
      !! domain boundary
      real(kind=CUSTOM_REAL)                                                   :: xmin, xmax
      real(kind=CUSTOM_REAL)                                                   :: ymin, ymax
      real(kind=CUSTOM_REAL)                                                   :: zmin, zmax
 
-     !! cost (need to move it in type inver one day)
+     !! cost
      real(kind=CUSTOM_REAL)                                                   :: total_current_cost, total_previous_cost
      real(kind=CUSTOM_REAL)                                                   :: total_current_prim, total_previous_prim
      real(kind=CUSTOM_REAL)                                                   :: penalty_term, damping_term
      real(kind=CUSTOM_REAL)                                                   :: adjust, penalty
      real(kind=CUSTOM_REAL)                                                   :: Cost_init, Norm_grad_init
+     real(kind=CUSTOM_REAL)                                                   :: data_std, nb_data_std
 
-     !!  cost function for each source
+     !!  cost function for each event
      real(kind=CUSTOM_REAL), dimension(:), allocatable                        :: current_cost, previous_cost
      real(kind=CUSTOM_REAL), dimension(:), allocatable                        :: current_cost_prime, previous_cost_prime
+     real(kind=CUSTOM_REAL)                                                   :: prior_data_std=1.
+     integer                                                                  :: current_iteration = 0
+     integer                                                                  :: current_ifrq = 0
+     real(kind=CUSTOM_REAL)                                                   :: nb_traces_tot, window_lenght
+
+     !! projection in fd grid
+     type(profd)                                                              :: projection_fd
+
+     !! regularization
+     logical                                                                  :: use_regularization_FD_Tikonov=.false.
+     logical                                                                  :: use_regularization_SEM_Tikonov=.false.
+     logical                                                                  :: use_damping_SEM_Tikonov=.false.
+     logical                                                                  :: use_variable_SEM_damping=.false.
+     real(kind=CUSTOM_REAL)                                                   :: weight_Tikonov=0.1
+     real(kind=CUSTOM_REAL)                                                   :: cost_penalty
+     real(kind=CUSTOM_REAL)                                                   :: volume_domain
+     real(kind=CUSTOM_REAL)                                                   :: min_damp=1., max_damp=10.
+     real(kind=CUSTOM_REAL)                                                   :: distance_from_source=100.
+     real(kind=CUSTOM_REAL),  dimension(:), allocatable                       :: smooth_weight, damp_weight
+     !! prior model
+     real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable                :: prior_model
 
      !! --- here add parameters for other methods (further developments)
 
@@ -144,9 +193,9 @@ module inverse_problem_par
   ! ACQUISITION STRUCTURE  ---------------------------------------------------------------------------------------------------------
   type, public :: acqui
 
-     !!------------------  source general parameters ----------------------
-     !! number total of sources
-     integer                                                                   :: nsrc_tot
+     !!------------------  event general parameters ----------------------
+     !! number total of events
+     integer                                                                   :: nevent_tot
      !! id for the event
      character(len= MAX_LEN_STRING)                                            :: event_name
      !! name for outputs files
@@ -156,32 +205,32 @@ module inverse_problem_par
      !! kind of source to be used ('moment', 'force', 'axisem', 'dsm', 'fk')
      character(len=10)                                                         :: source_type
      !! position of source in case of internal point source
-     real(kind=CUSTOM_REAL)                                                    :: Xs,Ys,Zs
-     !! Moment Tensor in case of moment point source
-     double precision                                                          :: Mxx,Myy,Mzz,Mxy,Mxz,Myz
-     !! Force in case of force point source
-     double precision                                                          :: Fx,Fy,Fz
-     !! traction directory in case of AxiSem or DSM coupling
-     character(len= MAX_LEN_STRING)                                            :: traction_dir
+     double precision, dimension(:), allocatable                               :: Xs,Ys,Zs
      !! source time function
-     real(kind=CUSTOM_REAL),                  dimension(:,:),  allocatable     :: source_wavelet
-     real(kind=CUSTOM_REAL)                                                    :: fl_src, fh_src
+     logical                                                                   :: band_pass_filter=.false.
+     integer                                                                   :: Nfrq=1
+     real(kind=CUSTOM_REAL), dimension(:), allocatable                         :: fl_event, fh_event
+     real(kind=CUSTOM_REAL), dimension(:,:), allocatable                       :: user_source_time_function
+     !! use external source time function
      character(len= MAX_LEN_STRING)                                            :: source_wavelet_file
      logical                                                                   :: external_source_wavelet=.false.
-     !! by default do not convolve residuals by wavelet
-     logical                                                                   :: convlove_residuals_by_wavelet=.false.
+     !! in case of exploration geophysics,
+     !! saving temporary shot point to be able to read it directly in acqui_file
+     real(kind=CUSTOM_REAL)                                                    :: xshot, yshot, zshot, shot_ampl
 
      !! --------------------- source parameter specific for Specfem ---------------------
      !! time parameters needed for specfem
-     real(kind=CUSTOM_REAL)                                                    :: t_shift, hdur
-     !! number if sources in my slice
+     double precision, dimension(:), allocatable                               :: tshift, hdur, hdur_Gaussian
+     !! total number of sources
+     integer                                                                   :: nsources_tot
+     !! number of sources in my slice
      integer                                                                   :: nsources_local
      !! MPI slice contains source
-     integer                                                                   :: islice_slected_source
+     integer, dimension(:), allocatable                                        :: islice_selected_source
      !! ispec element contains source
-     integer                                                                   :: ispec_selected_source
-     real(kind=CUSTOM_REAL),                  dimension(:,:,:,:), allocatable  :: sourcearray
-
+     integer, dimension(:), allocatable                                        :: ispec_selected_source
+     real(kind=CUSTOM_REAL),dimension(:,:,:,:,:), allocatable                  :: sourcearrays
+     double precision                                                          :: t0
      !! ------------------- station general parameters ----------------------------------
      !! stations (in specfem format)
      character(len= MAX_LEN_STRING)                                            :: station_file
@@ -207,6 +256,8 @@ module inverse_problem_par
      integer                                                                   :: nsta_slice
      !! global numbering of stations located in my slice
      integer,                                 dimension(:),       allocatable  :: number_receiver_global
+     !! rotation matrix for the seismograms
+     double precision,                        dimension(:,:,:),   allocatable  :: nu
      !! interpolation along x direction
      double precision,                        dimension(:,:),     allocatable  :: hxi, hpxi
      !! interpolation along y direction
@@ -227,6 +278,8 @@ module inverse_problem_par
      real(kind=CUSTOM_REAL),                  dimension(:,:,:),   allocatable  :: window_to_invert
      !! low-high frequency used for FWI (NCOMP,2,NSTA)
      real(kind=CUSTOM_REAL),                  dimension(:,:,:),   allocatable  :: freqcy_to_invert
+     !! weigth on each trace used for FWI (NCOMP,NSTA)
+     real(kind=CUSTOM_REAL),                  dimension(:,:),     allocatable  :: weight_trace
      !! gather time sampling
      real(kind=CUSTOM_REAL)                                                    :: dt_data
      !! number of samples
@@ -236,6 +289,25 @@ module inverse_problem_par
 
      !! adjoint source to use
      character(len= MAX_LEN_STRING)                                            :: adjoint_source_type
+
+     !! ---------------------- information needed for teleseismic fwi -----------------------------
+     !! for rotation matrices
+     real(kind=CUSTOM_REAL)                                                    :: Origin_chunk_lat,  Origin_chunk_lon
+     real(kind=CUSTOM_REAL)                                                    :: event_lat,  event_lon, event_depth
+     !! window for inversion
+     logical                                                                   :: is_time_pick
+     logical                                                                   :: time_window
+     real(kind=CUSTOM_REAL)                                                    :: time_before_pick, time_after_pick
+
+     !! stations network
+     character(len= MAX_LEN_STRING)                                            :: station_coord_system
+     !! station list
+     real(kind=CUSTOM_REAL), dimension(:,:), allocatable                       :: read_station_position
+     real(kind=CUSTOM_REAL), dimension(:), allocatable                         :: time_pick
+
+     !! traction directory in case of AxiSem or DSM coupling
+     character(len= MAX_LEN_STRING)                                            :: traction_dir
+
 
   end type acqui !-----------------------------------------------------------------------------------------------------------------
 
@@ -279,20 +351,6 @@ module inverse_problem_par
      integer                                                                  :: nReg, nNei, MaxOrder
 
   end type regul !-----------------------------------------------------------------------------------------------------------------
-
-  ! PROJECTION IN FD GRID STRUCTURE -----------------------------------------------------------------------------------------------
-  type, public :: profd
-
-     integer                                                                  :: nx, ny, nz
-     real(kind=CUSTOM_REAL)                                                   :: hx, hy, hz
-     real(kind=CUSTOM_REAL)                                                   :: ox, oy, oz
-
-     integer                                                                  :: nb_fd_point
-     integer,                               dimension(:),         allocatable :: ispec_selected
-     integer,                               dimension(:,:),       allocatable :: index_on_fd_grid
-     double precision,                      dimension(:,:),       allocatable :: hxi, heta, hgamma
-
-  end type profd !-----------------------------------------------------------------------------------------------------------------
 
 contains
   ! -------------------------------------------------------------------------------------------------

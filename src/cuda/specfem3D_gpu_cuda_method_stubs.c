@@ -494,7 +494,7 @@ void FC_FUNC_(prepare_constants_device,
                                         int* NSOURCES, int* nsources_local_f,
                                         realw* h_sourcearrays,
                                         int* h_islice_selected_source, int* h_ispec_selected_source,
-                                        int* h_number_receiver_global, int* h_ispec_selected_rec,
+                                        int* h_ispec_selected_rec,
                                         int* nrec,int* nrec_local,
                                         int* SIMULATION_TYPE,
                                         int* USE_MESH_COLORING_GPU_f,
@@ -732,10 +732,19 @@ void FC_FUNC_(transfer_kernels_ac_to_host,
               TRANSFER_KERNELS_AC_TO_HOST)(long* Mesh_pointer,realw* h_rho_ac_kl,realw* h_kappa_ac_kl,int* NSPEC_AB) {}
 
 void FC_FUNC_(transfer_kernels_hess_el_tohost,
-              TRANSFER_KERNELS_HESS_EL_TOHOST)(long* Mesh_pointer,realw* h_hess_kl,int* NSPEC_AB) {}
+              TRANSFER_KERNELS_HESS_EL_TOHOST)(long* Mesh_pointer,
+                 realw* h_hess_kl,
+                 realw* h_hess_rho_kl,
+                 realw* h_hess_kappa_kl,
+                 realw* h_hess_mu_kl,
+                 int* NSPEC_AB) {}
 
 void FC_FUNC_(transfer_kernels_hess_ac_tohost,
-              TRANSFER_KERNELS_HESS_AC_TOHOST)(long* Mesh_pointer,realw* h_hess_ac_kl,int* NSPEC_AB) {}
+              TRANSFER_KERNELS_HESS_AC_TOHOST)(long* Mesh_pointer,
+                 realw* h_hess_ac_kl,
+                 realw* h_hess_rho_ac_kl,
+                 realw* h_hess_kappa_ac_kl,
+                 int* NSPEC_AB) {}
 
 void FC_FUNC_(transfer_compute_kernel_answers_from_device,
               TRANSFER_COMPUTE_KERNEL_ANSWERS_FROM_DEVICE)(long* Mesh_pointer,

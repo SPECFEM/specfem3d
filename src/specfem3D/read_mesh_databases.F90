@@ -1110,10 +1110,17 @@
     ! preconditioner
     if (APPROXIMATE_HESS_KL) then
       allocate(hess_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+      allocate(hess_rho_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+      allocate(hess_kappa_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+      allocate(hess_mu_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
       if (ier /= 0) stop 'Error allocating array hess_kl'
     else
       ! dummy allocation
       allocate(hess_kl(0,0,0,0),stat=ier)
+      allocate(hess_rho_kl(0,0,0,0),stat=ier)
+      allocate(hess_mu_kl(0,0,0,0),stat=ier)
+      allocate(hess_kappa_kl(0,0,0,0),stat=ier)
+
       if (ier /= 0) stop 'Error allocating dummy array hess_kl'
     endif
 
@@ -1182,10 +1189,14 @@
     ! preconditioner
     if (APPROXIMATE_HESS_KL) then
       allocate(hess_ac_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+      allocate(hess_rho_ac_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+      allocate(hess_kappa_ac_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
       if (ier /= 0) stop 'Error allocating array hess_ac_kl'
     else
       ! dummy allocation
       allocate(hess_ac_kl(0,0,0,0),stat=ier)
+      allocate(hess_rho_ac_kl(0,0,0,0),stat=ier)
+      allocate(hess_kappa_ac_kl(0,0,0,0),stat=ier)
       if (ier /= 0) stop 'Error allocating dummy array hess_ac_kl'
     endif
 

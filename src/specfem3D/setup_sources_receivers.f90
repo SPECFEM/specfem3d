@@ -77,9 +77,9 @@
   use specfem_par_movie
   implicit none
 
-  double precision :: t0_acoustic,min_tshift_src_original
-  integer :: yr,jda,ho,mi
-  integer :: isource,ispec,ier
+  double precision :: min_tshift_src_original
+  integer :: isource,ier
+  character(len=MAX_STRING_LEN) :: SOURCE_FILE,path_to_add
 
   ! user output
   if (myrank == 0) then
@@ -105,7 +105,8 @@
            hdur_Gaussian(NSOURCES), &
            utm_x_source(NSOURCES), &
            utm_y_source(NSOURCES), &
-           nu_source(3,3,NSOURCES), stat=ier)
+           nu_source(NDIM,NDIM,NSOURCES), &
+           stat=ier)
   if (ier /= 0) stop 'error allocating arrays for sources'
 
   if (USE_FORCE_POINT_SOURCE) then
@@ -113,8 +114,13 @@
              comp_dir_vect_source_E(NSOURCES), &
              comp_dir_vect_source_N(NSOURCES), &
              comp_dir_vect_source_Z_UP(NSOURCES),stat=ier)
-    if (ier /= 0) stop 'error allocating arrays for force point sources'
+  else
+    allocate(factor_force_source(1), &
+             comp_dir_vect_source_E(1), &
+             comp_dir_vect_source_N(1), &
+             comp_dir_vect_source_Z_UP(1),stat=ier)
   endif
+  if (ier /= 0) stop 'error allocating arrays for force point sources'
 
   !! VM VM set the size of user_source_time_function
   if (USE_EXTERNAL_SOURCE_FILE) then
@@ -128,23 +134,68 @@
   allocate(user_source_time_function(NSTEP_STF, NSOURCES_STF),stat=ier)
   if (ier /= 0) stop 'error allocating arrays for user sources time function'
 
-! locate sources in the mesh
+  if (USE_FORCE_POINT_SOURCE) then
+    SOURCE_FILE = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'FORCESOLUTION'
+  else
+    SOURCE_FILE = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'CMTSOLUTION'
+  endif
+
+  ! see if we are running several independent runs in parallel
+  ! if so, add the right directory for that run
+  ! (group numbers start at zero, but directory names start at run0001, thus we add one)
+  ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
+  if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+    write(path_to_add,"('run',i4.4,'/')") mygroup + 1
+    SOURCE_FILE = path_to_add(1:len_trim(path_to_add))//SOURCE_FILE(1:len_trim(SOURCE_FILE))
+  endif
+
+  ! locate sources in the mesh
+  call locate_source(SOURCE_FILE,tshift_src,min_tshift_src_original,utm_x_source,utm_y_source, &
+                     hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
+                     islice_selected_source,ispec_selected_source, &
+                     factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP, &
+                     xi_source,eta_source,gamma_source,nu_source,user_source_time_function)
+
+  call define_stf_constants(hdur,hdur_Gaussian,tshift_src,min_tshift_src_original,islice_selected_source,ispec_selected_source,t0)
+
+  ! count number of sources located in this slice
+  nsources_local = 0
+  do isource = 1, NSOURCES
+    if (myrank == islice_selected_source(isource)) nsources_local = nsources_local + 1
+  enddo
+
+  ! checks if source is in an acoustic element and exactly on the free surface because pressure is zero there
+  call setup_sources_check_acoustic()
+
+  ! prints source time functions to output files
+  if (PRINT_SOURCE_TIME_FUNCTION) call print_stf_file()
+
+  end subroutine setup_sources
+
 !
-! returns:  islice_selected_source & ispec_selected_source,
-!                xi_source, eta_source & gamma_source
-  call locate_source(ibool,NSOURCES,myrank,NSPEC_AB,NGLOB_AB,NGNOD, &
-          xstore,ystore,zstore,xigll,yigll,zigll,NPROC, &
-          tshift_src,min_tshift_src_original,yr,jda,ho,mi,utm_x_source,utm_y_source, &
-          DT,hdur,Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
-          islice_selected_source,ispec_selected_source, &
-          xi_source,eta_source,gamma_source, &
-          nu_source,iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
-          ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic, &
-          num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+!-------------------------------------------------------------------------------------------------
+!
+  subroutine define_stf_constants(hdur,hdur_Gaussian,tshift_src,min_tshift_src_original, &
+                                  islice_selected_source,ispec_selected_source,t0)
+
+  use constants
+  use specfem_par, only: myrank,NSOURCES,MOVIE_SURFACE,MOVIE_VOLUME,CREATE_SHAKEMAP,HDUR_MOVIE, &
+                          USE_RICKER_TIME_FUNCTION,USE_EXTERNAL_SOURCE_FILE
+  use specfem_par_acoustic, only: ispec_is_acoustic
+  use specfem_par_movie
+
+  implicit none
+
+  double precision, dimension(NSOURCES) :: tshift_src,hdur,hdur_Gaussian
+  double precision :: min_tshift_src_original,t0
+  integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
+  !local
+  double precision :: t0_acoustic
+  integer :: isource,ispec
 
   if (abs(minval(tshift_src)) > TINYVAL) call exit_MPI(myrank,'one tshift_src must be zero, others must be positive')
 
-! filter source time function by Gaussian with hdur = HDUR_MOVIE when outputing movies or shakemaps
+  ! filter source time function by Gaussian with hdur = HDUR_MOVIE when outputing movies or shakemaps
   if (MOVIE_SURFACE .or. MOVIE_VOLUME .or. CREATE_SHAKEMAP) then
     hdur = sqrt(hdur**2 + HDUR_MOVIE**2)
     if (myrank == 0) then
@@ -182,11 +233,11 @@
 
   ! point force sources will start depending on the frequency given by hdur
   !if (USE_FORCE_POINT_SOURCE .or. USE_RICKER_TIME_FUNCTION) then
-!! COMMENTED BY FS FS -> account for the case USE_FORCE_POINT_SOURCE but NOT using a ricker (i.e. using a Gaussian),
-! in this case the above defined t0 = - 2.0d0 * minval(tshift_src(:) - hdur(:)) is correct
-! (analogous to using error function in case of moment tensor sources). You only need to be aware that hdur=0
-! then has a different behaviour for point forces (compared with moment tensor sources):
-! then hdur is set to TINYVAL and NOT to 5*DT as in case of moment tensor source (Heaviside)
+  !! COMMENTED BY FS FS -> account for the case USE_FORCE_POINT_SOURCE but NOT using a ricker (i.e. using a Gaussian),
+  ! in this case the above defined t0 = - 2.0d0 * minval(tshift_src(:) - hdur(:)) is correct
+  ! (analogous to using error function in case of moment tensor sources). You only need to be aware that hdur=0
+  ! then has a different behaviour for point forces (compared with moment tensor sources):
+  ! then hdur is set to TINYVAL and NOT to 5*DT as in case of moment tensor source (Heaviside)
   if (USE_RICKER_TIME_FUNCTION) then !! ADDED BY FS FS
     ! note: point force sources will give the dominant frequency in hdur,
     !       thus the main period is 1/hdur.
@@ -261,19 +312,7 @@
     call exit_mpi(myrank,'error negative USER_T0 parameter in constants.h')
   endif
 
-  ! count number of sources located in this slice
-  nsources_local = 0
-  do isource = 1, NSOURCES
-    if (myrank == islice_selected_source(isource)) nsources_local = nsources_local + 1
-  enddo
-
-  ! checks if source is in an acoustic element and exactly on the free surface because pressure is zero there
-  call setup_sources_check_acoustic()
-
-  ! prints source time functions to output files
-  if (PRINT_SOURCE_TIME_FUNCTION) call print_stf_file()
-
-  end subroutine setup_sources
+  end subroutine define_stf_constants
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -375,9 +414,6 @@
   integer :: irec,isource,ier
   character(len=MAX_STRING_LEN) :: path_to_add
 
-  real(kind=CUSTOM_REAL):: minl,maxl,min_all,max_all
-  double precision :: LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
-
   ! user output
   if (myrank == 0) then
     write(IMAIN,*)
@@ -385,61 +421,29 @@
     call flush_IMAIN()
   endif
 
-  ! gets model dimensions
-  minl = minval( xstore )
-  maxl = maxval( xstore )
-  call min_all_all_cr(minl,min_all)
-  call max_all_all_cr(maxl,max_all)
-  LONGITUDE_MIN = min_all
-  LONGITUDE_MAX = max_all
-
-  minl = minval( ystore )
-  maxl = maxval( ystore )
-  call min_all_all_cr(minl,min_all)
-  call max_all_all_cr(maxl,max_all)
-  LATITUDE_MIN = min_all
-  LATITUDE_MAX = max_all
-
   ! reads in station file
   if (SIMULATION_TYPE == 1) then
     rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS'
     filtered_rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS_FILTERED'
-
-    ! see if we are running several independent runs in parallel
-    ! if so, add the right directory for that run
-    ! (group numbers start at zero, but directory names start at run0001, thus we add one)
-    ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
-    if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
-      write(path_to_add,"('run',i4.4,'/')") mygroup + 1
-      rec_filename = path_to_add(1:len_trim(path_to_add))//rec_filename(1:len_trim(rec_filename))
-      filtered_rec_filename = path_to_add(1:len_trim(path_to_add))//filtered_rec_filename(1:len_trim(filtered_rec_filename))
-    endif
-
-    call station_filter(SUPPRESS_UTM_PROJECTION,UTM_PROJECTION_ZONE,myrank,rec_filename,filtered_rec_filename,nrec, &
-                        LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
-
-    if (nrec < 1) call exit_MPI(myrank,'need at least one receiver')
-    call synchronize_all()
-
   else
     rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS_ADJOINT'
     filtered_rec_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'STATIONS_ADJOINT_FILTERED'
-
-    ! see if we are running several independent runs in parallel
-    ! if so, add the right directory for that run
-    ! (group numbers start at zero, but directory names start at run0001, thus we add one)
-    ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
-    if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
-      write(path_to_add,"('run',i4.4,'/')") mygroup + 1
-      rec_filename = path_to_add(1:len_trim(path_to_add))//rec_filename(1:len_trim(rec_filename))
-      filtered_rec_filename = path_to_add(1:len_trim(path_to_add))//filtered_rec_filename(1:len_trim(filtered_rec_filename))
-    endif
-
-    call station_filter(SUPPRESS_UTM_PROJECTION,UTM_PROJECTION_ZONE,myrank,rec_filename,filtered_rec_filename,nrec, &
-                        LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX)
-    if (nrec < 1) call exit_MPI(myrank, 'adjoint simulation needs at least one receiver')
-    call synchronize_all()
   endif
+
+  ! see if we are running several independent runs in parallel
+  ! if so, add the right directory for that run
+  ! (group numbers start at zero, but directory names start at run0001, thus we add one)
+  ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
+  if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+    write(path_to_add,"('run',i4.4,'/')") mygroup + 1
+    rec_filename = path_to_add(1:len_trim(path_to_add))//rec_filename(1:len_trim(rec_filename))
+    filtered_rec_filename = path_to_add(1:len_trim(path_to_add))//filtered_rec_filename(1:len_trim(filtered_rec_filename))
+  endif
+
+  call station_filter(rec_filename,filtered_rec_filename,nrec)
+
+  if (nrec < 1) call exit_MPI(myrank,'need at least one receiver')
+  call synchronize_all()
 
   if (myrank == 0) then
     write(IMAIN,*)
@@ -452,8 +456,6 @@
     call flush_IMAIN()
   endif
 
-  if (nrec < 1) call exit_MPI(myrank,'need at least one receiver')
-
   ! allocate memory for receiver arrays, i.e. stations given in STATIONS file
   allocate(islice_selected_rec(nrec), &
            ispec_selected_rec(nrec), &
@@ -462,18 +464,14 @@
            gamma_receiver(nrec), &
            station_name(nrec), &
            network_name(nrec), &
-           nu(NDIM,NDIM,nrec),stat=ier)
+           nu(NDIM,NDIM,nrec), &
+           stat=ier)
   if (ier /= 0) stop 'error allocating arrays for receivers'
 
   ! locate receivers in the mesh
-  call locate_receivers(ibool,myrank,NSPEC_AB,NGLOB_AB,NGNOD, &
-                        xstore,ystore,zstore,xigll,yigll,zigll,filtered_rec_filename, &
-                        nrec,islice_selected_rec,ispec_selected_rec, &
+  call locate_receivers(filtered_rec_filename,nrec,islice_selected_rec,ispec_selected_rec, &
                         xi_receiver,eta_receiver,gamma_receiver,station_name,network_name,nu, &
-                        NPROC,utm_x_source(1),utm_y_source(1), &
-                        UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION, &
-                        iglob_is_surface_external_mesh,ispec_is_surface_external_mesh, &
-                        num_free_surface_faces,free_surface_ispec,free_surface_ijk,SU_FORMAT)
+                        utm_x_source(1),utm_y_source(1))
 
   ! count number of receivers located in this slice
   nrec_local = 0
@@ -615,7 +613,6 @@
 
   integer :: isource,ispec
   integer :: irec
-  integer :: i,j,k
   integer :: icomp,itime,nadj_files_found,nadj_files_found_tot,ier
 
   character(len=3),dimension(NDIM) :: comp
@@ -624,9 +621,6 @@
   double precision, dimension(NGLLX) :: hxis,hpxis
   double precision, dimension(NGLLY) :: hetas,hpetas
   double precision, dimension(NGLLZ) :: hgammas,hpgammas
-
-  double precision, dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrayd
-  double precision :: hlagrange
   double precision :: norm,comp_x,comp_y,comp_z
 
   logical :: does_source_encoding
@@ -668,63 +662,46 @@
 
           ! note: for use_force_point_source xi/eta/gamma are also in the range [-1,1], for exact positioning
 
-          ! initializes source array
-          sourcearrayd(:,:,:,:) = 0.0d0
+          factor_source = factor_force_source(isource)
+          ! elastic source
+          if (ispec_is_elastic(ispec)) then
+            ! length of component vector
+            norm = dsqrt( comp_dir_vect_source_E(isource)**2 &
+                        + comp_dir_vect_source_N(isource)**2 &
+                        + comp_dir_vect_source_Z_UP(isource)**2 )
+            ! checks norm of component vector
+            if (norm < TINYVAL) then
+              call exit_MPI(myrank,'error force point source: component vector has (almost) zero norm')
+            endif
+            ! normalizes given component vector
+            comp_x = comp_dir_vect_source_E(isource)/norm
+            comp_y = comp_dir_vect_source_N(isource)/norm
+            comp_z = comp_dir_vect_source_Z_UP(isource)/norm
+          endif
 
-          ! calculates source array for interpolated location
-          do k=1,NGLLZ
-            do j=1,NGLLY
-              do i=1,NGLLX
-                hlagrange = hxis(i) * hetas(j) * hgammas(k)
+          ! acoustic source
+          ! identical source array components in x,y,z-direction
+          if (ispec_is_acoustic(ispec)) then
+            comp_x = 1.0d0
+            comp_y = 1.0d0
+            comp_z = 1.0d0
+          endif
 
-                ! acoustic source
-                ! identical source array components in x,y,z-direction
-                if (ispec_is_acoustic(ispec)) then
-                  sourcearrayd(:,i,j,k) = factor_force_source(isource) * hlagrange
-                endif
-
-                ! elastic source
-                if (ispec_is_elastic(ispec)) then
-                  ! length of component vector
-                  norm = sqrt( comp_dir_vect_source_E(isource)**2 &
-                             + comp_dir_vect_source_N(isource)**2 &
-                             + comp_dir_vect_source_Z_UP(isource)**2 )
-
-                  ! checks norm of component vector
-                  if (norm < TINYVAL) then
-                    call exit_MPI(myrank,'error force point source: component vector has (almost) zero norm')
-                  endif
-
-                  ! normalizes given component vector
-                  comp_x = comp_dir_vect_source_E(isource)/norm
-                  comp_y = comp_dir_vect_source_N(isource)/norm
-                  comp_z = comp_dir_vect_source_Z_UP(isource)/norm
-
-                  ! we use an tilted force defined by its magnitude and the projections
-                  ! of an arbitrary (non-unitary) direction vector on the E/N/Z_UP basis
-                  sourcearrayd(:,i,j,k) = factor_force_source(isource) * hlagrange * &
-                                          ( nu_source(1,:,isource) * comp_x + &
-                                            nu_source(2,:,isource) * comp_y + &
-                                            nu_source(3,:,isource) * comp_z )
-
-                endif
-              enddo
-            enddo
-          enddo
-
-          ! distinguish between single and double precision for reals
-          sourcearray(:,:,:,:) = real(sourcearrayd(:,:,:,:),kind=CUSTOM_REAL)
+          ! source array interpolated on all element GLL points
+          ! we use an tilted force defined by its magnitude and the projections
+          ! of an arbitrary (non-unitary) direction vector on the E/N/Z_UP basis
+          call compute_arrays_source_forcesolution(sourcearray,hxis,hetas,hgammas,factor_source, &
+                                                   comp_x,comp_y,comp_z,nu_source(:,:,isource))
 
         else ! use of CMTSOLUTION files
 
           ! elastic or poroelastic moment tensor source
           if (ispec_is_elastic(ispec) .or. ispec_is_poroelastic(ispec)) then
-            call compute_arrays_source(ispec,sourcearray, &
-                                       xi_source(isource),eta_source(isource),gamma_source(isource), &
-                                       Mxx(isource),Myy(isource),Mzz(isource), &
-                                       Mxy(isource),Mxz(isource),Myz(isource), &
-                                       xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                                       xigll,yigll,zigll,NSPEC_AB)
+            call compute_arrays_source_cmt(ispec,sourcearray, &
+                                           hxis,hetas,hgammas,hpxis,hpetas,hpgammas, &
+                                           Mxx(isource),Myy(isource),Mzz(isource), &
+                                           Mxy(isource),Mxz(isource),Myz(isource), &
+                                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,NSPEC_AB)
           endif
 
           ! acoustic case
@@ -740,16 +717,24 @@
             factor_source = factor_source * sqrt(2.0) / sqrt(3.0)
 
             ! source encoding
+            comp_x = 1.0d0
             ! determines factor +/-1 depending on sign of moment tensor
+            comp_y = 1.0d0
             ! (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources,
+            comp_z = 1.0d0
             !   Geophysics, 74 (6), WCC177-WCC188.)
             if (USE_SOURCE_ENCODING) then
               pm1_source_encoding(isource) = sign(1.0d0,Mxx(isource))
               does_source_encoding = .true.
             endif
 
+            comp_x = 1.0d0
+            comp_y = 1.0d0
+            comp_z = 1.0d0
+
             ! source array interpolated on all element GLL points
-            call compute_arrays_source_acoustic(sourcearray,hxis,hetas,hgammas,factor_source)
+            call compute_arrays_source_forcesolution(sourcearray,hxis,hetas,hgammas,factor_source, &
+                                                     comp_x,comp_y,comp_z,nu_source(:,:,isource))
           endif
 
         endif

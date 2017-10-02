@@ -270,7 +270,7 @@ void FC_FUNC_(compute_coupling_el_ac_cuda,
   if (iphase != 1) return;
 
   // way 1: exact blocksize to match NGLLSQUARE
-  int blocksize = 25;
+  int blocksize = NGLL2;
 
   int num_blocks_x, num_blocks_y;
   get_blocks_xy(num_coupling_ac_el_faces,&num_blocks_x,&num_blocks_y);
