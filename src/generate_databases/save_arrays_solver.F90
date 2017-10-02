@@ -387,7 +387,8 @@
   integer,dimension(:),allocatable :: v_tmp_i
   integer :: ier,i
   integer, dimension(:), allocatable :: iglob_tmp
-  integer :: j,inum
+  integer :: iface, igll,  ispec, iglob, j, k, inum
+  real(kind=CUSTOM_REAL) :: nx,ny,nz
   character(len=MAX_STRING_LEN) :: filename
 
   logical,parameter :: SAVE_MESH_FILES_ADDITIONAL = .true.
@@ -681,6 +682,33 @@
     write(IOUT) ispec_is_elastic
     close(IOUT)
 
+    !! VM VM write an ascii file for instaseis input
+    filename = prname(1:len_trim(prname))//'normal.txt'
+    open(IOUT,file=filename(1:len_trim(filename)),status='unknown',iostat=ier)
+    write(IOUT, *) ' number of points :', num_abs_boundary_faces*NGLLSQUARE
+
+    do iface = 1,num_abs_boundary_faces
+       ispec = abs_boundary_ispec(iface)
+       if (ispec_is_elastic(ispec)) then
+          do igll = 1,NGLLSQUARE
+
+             ! gets local indices for GLL point
+             i = abs_boundary_ijk(1,igll,iface)
+             j = abs_boundary_ijk(2,igll,iface)
+             k = abs_boundary_ijk(3,igll,iface)
+
+             iglob = ibool(i,j,k,ispec)
+
+             nx = abs_boundary_normal(1,igll,iface)
+             ny = abs_boundary_normal(2,igll,iface)
+             nz = abs_boundary_normal(3,igll,iface)
+
+             write(IOUT,*) xstore_dummy(iglob), ystore_dummy(iglob), zstore_dummy(iglob), nx, ny, nz 
+
+          end do
+       end if
+    end do
+    close(IOUT)
   endif ! of if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH)
 
   end subroutine save_arrays_solver_files
