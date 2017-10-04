@@ -3139,7 +3139,7 @@ end subroutine write_recdepth_dsm
   ! matrice de rotation complexe
   R(1,1)=(ux**2 + (1.d0-ux**2)*c)
   R(1,2)=(ux*uy*(1.d0-c)-uz*s)
-  R(1,3)=(ux*uy*(1.d0-c)+uy*s)
+  R(1,3)=(ux*uz*(1.d0-c)+uy*s)
 
   R(2,1)=(ux*uy*(1.d0-c)+uz*s)
   R(2,2)=(uy**2+(1.d0-uy**2)*c)

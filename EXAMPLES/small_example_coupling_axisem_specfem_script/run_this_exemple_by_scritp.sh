@@ -13,11 +13,18 @@ rootdir=/mnt/Data1/vmont/GIT/specfem3d/
 
 ########################    TRACTION DATABASES GENERATION   ########################################################
 
-axisem_sources=$rootdir/EXTERNAL_CODES_coupled_with_SPECFEM3D/AxiSEM_for_SPECFEM3D/AxiSEM_modif_for_coupling_with_specfem
+# directory containing axisem modified for specfem coupling
+axisem_sources=$rootdir/EXTERNAL_PACKAGES_coupled_with_SPECFEM3D/AxiSEM_for_SPECFEM3D/AxiSEM_modif_for_coupling_with_specfem
+
+# directory containing utils for coupling axisem/specfem
+axisem_utils_coupling=$rootdir/EXTERNAL_PACKAGES_coupled_with_SPECFEM3D/AxiSEM_for_SPECFEM3D/UTILS_COUPLING_SpecFEM
 
 # ------------- copy inputs files for specfem  ------------
 cp -r Param_files/DATA DATA
 cp -r Param_files/MESH MESH
+
+# ------------ create traction directory ----
+mkdir -p  DATA/AxiSEM_tractions/1
 
 nproc_specfem=`grep ^NPROC DATA/Par_file_several_proc | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`
 
@@ -35,7 +42,7 @@ cp  Param_files/inputs_files_for_axisem/*.par run_axisem/SOLVER/.
 
 # --------------- CREATE INPUTS FOR SPECFEM -----------------
 
-# run internal mesher (must be in serila mode in order to use scotch decomposer)-----------------
+# run internal mesher (must be in serial mode in order to use scotch decomposer)-----------------
 cp DATA/Par_file_one_proc DATA/Par_file  # copy Par_file for serial mode
 mpirun -np 1 $rootdir/bin/xmeshfem3D
 
@@ -49,6 +56,11 @@ cp Numglob2loc_elmn.txt MESH/.
 grep peri OUTPUT_FILES/output_generate_databases.txt
 grep sugg OUTPUT_FILES/output_generate_databases.txt
 
+#--------------------------FOR FURTHER DEVELOPEMENTS------------------------------------
+# get info abouts normals -----------------
+./get_normal.sh $nproc_specfem
+
+#---------------------------------------------------------------------------------------
 
 
 # ------------------ RUNNING AXISEM ----------------------------
@@ -66,12 +78,12 @@ cp ../../MESH/list_ggl* .
 ./add_line_number_in_points_lists.sh
 ./submit_called_from_matlab.csh  $RUN_AXI_SOLVER
 
-# reconstruc 3D wavefield on chunk edges from 2D axisem solution
+# reconstruct 3D wavefield on chunk edges from 2D axisem solution
 cd $RUN_AXI_SOLVER
-mpirun -np $nproc_specfem $rootdir/EXTERNAL_CODES_coupled_with_SPECFEM3D/AxiSEM_for_SPECFEM3D/UTILS_COUPLING_SpecFEM/xexpand_2D_3D
+mpirun -np $nproc_specfem $axisem_utils_coupling/xexpand_2D_3D
 
 # interpolation of axisem solution for specfem time step
-mpirun -np $nproc_specfem $rootdir/EXTERNAL_CODES_coupled_with_SPECFEM3D/AxiSEM_for_SPECFEM3D/UTILS_COUPLING_SpecFEM/xreformat
+mpirun -np $nproc_specfem $axisem_utils_coupling/xreformat
 
 # back to the launching directory
 cd ../../../
