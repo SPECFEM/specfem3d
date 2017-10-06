@@ -267,8 +267,8 @@ contains
     real(kind=dp) :: baz
 
     baz = deg2rad * bazi
-    ve = -vr * sin(baz) + vt * cos(baz)
-    vn = -vr * cos(baz) - vt * sin(baz)
+    ve = -vr * sin(baz) - vt * cos(baz)
+    vn = -vr * cos(baz) + vt * sin(baz)
     vz = vz2
 
   end subroutine rotate_ZRT_to_ZNE
@@ -287,8 +287,8 @@ contains
     inc = deg2rad * inci
 
     vl =  vz*cos(inc) - ve*sin(baz)*sin(inc) - vn*cos(baz)*sin(inc)
-    vq = -vz*sin(inc) - ve*sin(baz)*cos(inc) - vn*cos(baz)*cos(inc)
-    vt =              + ve*cos(baz)          - vn*sin(baz)
+    vq =  vz*sin(inc) + ve*sin(baz)*cos(inc) + vn*cos(baz)*cos(inc)
+    vt =              - ve*cos(baz)          + vn*sin(baz)
 
   end subroutine rotate_ZNE_to_LQT
 
@@ -305,9 +305,9 @@ contains
     baz = deg2rad * bazi
     inc = deg2rad * inci
 
-    vz =  vl*cos(inc)          - vq*sin(inc)
-    ve = -vl*sin(baz)*sin(inc) - vq*sin(baz)*cos(inc) + vt*cos(baz)
-    vn = -vl*cos(baz)*sin(inc) - vq*cos(baz)*cos(inc) - vt*sin(baz)
+    vz =  vl*cos(inc)          + vq*sin(inc)
+    ve = -vl*sin(baz)*sin(inc) + vq*sin(baz)*cos(inc) - vt*cos(baz)
+    vn = -vl*cos(baz)*sin(inc) + vq*cos(baz)*cos(inc) + vt*sin(baz)
 
   end subroutine rotate_LQT_to_ZNE
 
@@ -324,7 +324,7 @@ contains
     inc = deg2rad * inci
 
     vl =  vz * cos(inc) + vr * sin(inc)
-    vq = -vz * sin(inc) + vr * cos(inc)
+    vq =  vz * sin(inc) - vr * cos(inc)
     vt2 = vt
 
   end subroutine rotate_ZRT_to_LQT
@@ -341,8 +341,8 @@ contains
 
     inc = deg2rad * inci
 
-    vz = vl * cos(inc) - vq * sin(inc)
-    vr = vl * sin(inc) + vq * cos(inc)
+    vz = vl * cos(inc) + vq * sin(inc)
+    vr = vl * sin(inc) - vq * cos(inc)
     vt = vt2
   end subroutine rotate_LQT_to_ZRT
 !--------------------------------------------------------------------------------
