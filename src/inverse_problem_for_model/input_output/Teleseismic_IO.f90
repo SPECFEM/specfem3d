@@ -7,8 +7,9 @@ module Teleseismic_IO_mod
   ! from inversion
   use inverse_problem_par
   use mesh_tools
-
+  use passive_imaging_format_mod, only: gather, read_pif_header_file, read_binary_data
   integer, private :: NEVENT
+
 contains
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -315,5 +316,5 @@ contains
 
   end subroutine setup_teleseismic_stations
 
-
+  
 end module Teleseismic_IO_mod
