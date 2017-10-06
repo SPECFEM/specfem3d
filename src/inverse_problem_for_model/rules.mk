@@ -120,8 +120,10 @@ inverse_problem_for_model_OBJECTS = \
 	$O/parallel_for_inverse_problem.o \
 	$O/adjoint_source_mod.o \
 	$O/mesh_tools_mod.o \
-	$O/Teleseismic_IO.o \
 	$O/interpolation_mod.o \
+	$O/rotations_mod.o \
+	$O/passive_imaging_format_mod.o \
+	$O/Teleseismic_IO.o \
 	$O/IO_model_mod.o \
 	$O/input_output_mod.o \
 	$O/regularization_SEM_mod.o \
@@ -422,6 +424,12 @@ $O/interpolation_mod.o : $S/input_output/interpolation_mod.f90 ${SETUP}/constant
 	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/input_output/interpolation_mod.f90 -c -o $O/interpolation_mod.o
 
 # IO for teleseismic case
+$O/rotations_mod.o : $S/adjoint_source/rotations_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
+	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/adjoint_source/rotations_mod.f90 -c -o $O/rotations_mod.o
+
+$O/passive_imaging_format_mod.o : $S/input_output/passive_imaging_format_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
+	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/input_output/passive_imaging_format_mod.f90 -c -o $O/passive_imaging_format_mod.o
+
 $O/Teleseismic_IO.o : $S/input_output/Teleseismic_IO.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
 	${MPIFCCOMPILE_CHECK} $(FCFLAGS_f90) $S/input_output/Teleseismic_IO.f90 -c -o $O/Teleseismic_IO.o
 
