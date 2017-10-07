@@ -280,21 +280,21 @@ contains
     case('moment')
        call read_cmt_solution_file(mygather%hdr%source_components, mygather%source)
        ! Just in case, determine local coordinate (useful for local point source)
-       call local_mesh_coordinate(mygather%src%lat, &
-                                  mygather%src%lon, &
-                                  mygather%src%ele, &
-                                  mygather%src%x,   &
-                                  mygather%src%y,   &
-                                  mygather%src%z)
+       call local_mesh_coordinate(mygather%source%lat, &
+                                  mygather%source%lon, &
+                                  mygather%source%ele, &
+                                  mygather%source%x,   &
+                                  mygather%source%y,   &
+                                  mygather%source%z)
     case('force')
        call read_force_solution_file(mygather%hdr%source_components, mygather%source)
        ! Just in case, determine local coordinate (useful for local point source)
-       call local_mesh_coordinate(mygather%src%lat, &
-                                  mygather%src%lon, &
-                                  mygather%src%ele, &
-                                  mygather%src%x,   &
-                                  mygather%src%y,   &
-                                  mygather%src%z)
+       call local_mesh_coordinate(mygather%source%lat, &
+                                  mygather%source%lon, &
+                                  mygather%source%ele, &
+                                  mygather%source%x,   &
+                                  mygather%source%y,   &
+                                  mygather%source%z)
     case default
        write(6,*)'WARNING : source_type undefined !'
     end select
@@ -469,10 +469,10 @@ contains
   subroutine read_binary_source_signature(filename,nt,stf)
 
     character(len=*),                     intent(in)  :: filename
-    integer(kind=si),                     intent(in)  :: nrec, nt
-    integer(kind=si)                                  :: nsize, it
-    real(kind=sp),    dimension(nrec,nt)              :: stfs
-    real(kind=cp),    dimension(nrec,nt), intent(out) :: stf
+    integer(kind=si),                     intent(in)  :: nt
+    integer(kind=si)                                  :: nsize
+    real(kind=sp),    dimension(nt)              :: stfs
+    real(kind=cp),    dimension(nt), intent(out) :: stf
 
     write(6,*)'Read binary source signature: '
     write(6,*)'    filename, nt = ',trim(adjustl(filename)),nt
@@ -495,10 +495,10 @@ contains
   subroutine write_binary_source_signature(filename,nt,stf)
 
     character(len=*),                     intent(in)  :: filename
-    integer(kind=si),                     intent(in)  :: nrec, nt
-    integer(kind=si)                                  :: nsize, it
-    real(kind=sp),    dimension(nrec,nt)              :: stfs
-    real(kind=cp),    dimension(nrec,nt), intent(in)  :: stf
+    integer(kind=si),                     intent(in)  :: nt
+    integer(kind=si)                                  :: nsize
+    real(kind=sp),    dimension(nt)              :: stfs
+    real(kind=cp),    dimension(nt), intent(in)  :: stf
 
     write(6,*)'Write binary source signature: '
     write(6,*)'    filename, nt = ',trim(adjustl(filename)),nt
@@ -512,7 +512,7 @@ contains
     
     write(6,*)'Done!'
 
-  end subroutine read_binary_source_signature
+  end subroutine write_binary_source_signature
   !--------------------------------------------------------------------------------
 
   !================================================================================
@@ -585,7 +585,6 @@ contains
     real(kind=dp), intent(out) :: dist, baz
 
     real(kind=dp) :: dx, dy
-    real(kind=dp) :: r=6371000._dp
     
     !*** Compute distance in degree and in km
     dx   = src_x-sta_x
@@ -602,7 +601,7 @@ contains
        baz = baz
     end if
 
-  end subroutine calc_delta_dist_baz
+  end subroutine calc_dist_baz_cart
   !--------------------------------------------------------------------------------
 
   
@@ -662,9 +661,9 @@ contains
     ncomp        = len(trim(adjustl(data_comp)))
     
     do i = 1, ncomp
-       write(component(i),*)upcase(data_type),upcase(data_comp(i))
+       write(component(i),*)upcase(data_type),upcase(data_comp(i:i))
     end do
-
+    
   end subroutine get_data_component
   !--------------------------------------------------------------------------------
                                     

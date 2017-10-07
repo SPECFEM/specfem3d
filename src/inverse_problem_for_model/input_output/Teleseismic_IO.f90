@@ -7,7 +7,9 @@ module Teleseismic_IO_mod
   ! from inversion
   use inverse_problem_par
   use mesh_tools
-  use passive_imaging_format_mod, only: gather, read_pif_header_file, read_binary_data
+  use passive_imaging_format_mod, only: gather, read_pif_header_file, read_binary_data,   &
+                                        read_binary_source_signature, get_data_component, &
+                                        calc_delta_dist_baz, calc_dist_baz_cart, lowcase
   integer, private :: NEVENT
 
 contains
@@ -27,7 +29,7 @@ contains
 
 
     ! locals
-    character(len=MAX_LEN_STRING)                              :: line, keyw !, line_to_read
+    character(len=MAX_LEN_STRING)                              :: line, keyw, filename !, line_to_read
     integer                                                    :: ipos0, ipos1, ievent
     integer                                                    :: ier, nsta, nt, ncomp
 
@@ -108,7 +110,7 @@ contains
              acqui_simu(ievent)%Origin_chunk_lon     = mygather(ievent)%hdr%mesh_origin(2)
              acqui_simu(ievent)%Origin_chunk_azi     = mygather(ievent)%hdr%mesh_origin(3)
              acqui_simu(ievent)%is_time_pick         = mygather(ievent)%hdr%is_pick
-             acqui_simu(ievent)%is_time_window       = mygather(ievent)%hdr%is_window
+             acqui_simu(ievent)%time_window          = mygather(ievent)%hdr%is_window
              acqui_simu(ievent)%time_before_pick     = mygather(ievent)%hdr%tbef
              acqui_simu(ievent)%time_after_pick      = mygather(ievent)%hdr%taft
              acqui_simu(ievent)%station_coord_system = mygather(ievent)%hdr%coord_sys
@@ -118,10 +120,10 @@ contains
              if (acqui_simu(ievent)%source_wavelet_file /= 'undef') then
                 acqui_simu(ievent)%external_source_wavelet=.true.
                 ! note sure if i should use this one.. 
-                allocate(user_source_time_function(1,nt)) 
-                call read_binary_source_signature(acqui_simu(ievent)%source_wavelet_file,
+                allocate(acqui_simu(ievent)%user_source_time_function(1,nt)) 
+                call read_binary_source_signature(acqui_simu(ievent)%source_wavelet_file, &
                                                                                       nt, &
-                                                          user_source_time_function(1,:))
+                                       acqui_simu(ievent)%user_source_time_function(1,:))
              end if
              
              select case (lowcase(acqui_simu(ievent)%source_type_modeling))
@@ -136,13 +138,13 @@ contains
                                        acqui_simu(ievent)%component)
              
              ! Fill source informations
-             acqui_simu(ievent)%event_lat   = mygather(ievent)%src%lat
-             acqui_simu(ievent)%event_lon   = mygather(ievent)%src%lon
-             acqui_simu(ievent)%event_depth = mygather(ievent)%src%ele
-             acqui_simu(ievent)%xshot       = mygather(ievent)%src%x
-             acqui_simu(ievent)%yshot       = mygather(ievent)%src%y
-             !acqui_simu(ievent)%zshot       = mygather(ievent)%src%z  !use ele instead of z because it
-             acqui_simu(ievent)%zshot       = mygather(ievent)%src%ele !is given wrt to earth surface
+             acqui_simu(ievent)%event_lat   = mygather(ievent)%source%lat
+             acqui_simu(ievent)%event_lon   = mygather(ievent)%source%lon
+             acqui_simu(ievent)%event_depth = mygather(ievent)%source%ele
+             acqui_simu(ievent)%xshot       = mygather(ievent)%source%x
+             acqui_simu(ievent)%yshot       = mygather(ievent)%source%y
+             !acqui_simu(ievent)%zshot       = mygather(ievent)%source%z  !use ele instead of z because it
+             acqui_simu(ievent)%zshot       = mygather(ievent)%source%ele !is given wrt to earth surface
              
              ! Allocate stations array and fill arrays
              allocate(acqui_simu(ievent)%station_name(nsta))
