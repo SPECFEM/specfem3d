@@ -204,6 +204,17 @@ module inverse_problem_par
      character(len= MAX_LEN_STRING)                                            :: source_file
      !! kind of source to be used ('moment', 'force', 'axisem', 'dsm', 'fk')
      character(len=10)                                                         :: source_type
+     !!
+     !! SB SB add source_type_physical and source_type_modeling to distinguish
+     !!       between the method used for modeling (local point source(s), injection)
+     !!       and the physical type of source ('moment' or 'force') describe by cmt
+     !!       or force files. I will use them instead of the above source_type that mix
+     !!       these informations.
+     !!
+     !! kind of source to be used ('moment', 'force')
+     character(len=10)                                                         :: source_type_physical
+     !! kind of source to be used ('pointsource', 'finitefault','axisem', 'dsm', 'fk')
+     character(len=10)                                                         :: source_type_modeling
      !! position of source in case of internal point source
      double precision, dimension(:), allocatable                               :: Xs,Ys,Zs
      !! source time function

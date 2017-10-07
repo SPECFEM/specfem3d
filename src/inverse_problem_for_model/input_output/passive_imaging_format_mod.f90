@@ -17,6 +17,7 @@ module passive_imaging_format_mod
   real(kind=dp), dimension(:), allocatable :: inc
   real(kind=dp), dimension(:), allocatable :: gcarc
   real(kind=dp), dimension(:), allocatable :: dist
+  real(kind=dp), dimension(:), allocatable :: stf
 
   !*** Some parameters for IO
   integer(kind=si),   private :: iunit=12, io_err, debug_level=0  
@@ -31,7 +32,8 @@ module passive_imaging_format_mod
      character(len=256) :: modeling_tool     = 'undef'  ! kind of modeling (pointsource,
                                                         !    finitesource, Axisem, FK, PW)
      character(len=256) :: modeling_path     = 'undef'  ! repository of tractions or parameter file
-                                                        !    or STF file
+                                                        !    or STF file for point source
+     character(len=256) :: estimated_src     = 'undef'  ! repository of tractions or parameter file
      character(len=1)   :: data_type         = 'v'      ! kind of data (d=displacement, !
                                                         ! v=velocities, a=acceleration)
      character(len=3)   :: data_comp         = 'zen'    ! data coordinate system (geo 'zen'),
@@ -273,18 +275,35 @@ contains
     close(iunit)
     write(6,*)'Done!'
 
-    ! Read CMT file if needeed
+    ! Read CMT file if needed
     select case (mygather%hdr%source_type)
     case('moment')
        call read_cmt_solution_file(mygather%hdr%source_components, mygather%source)
-       ! check if point source in case convert lat/lon src to local mesh coordinates
+       ! Just in case, determine local coordinate (useful for local point source)
+       call local_mesh_coordinate(mygather%src%lat, &
+                                  mygather%src%lon, &
+                                  mygather%src%ele, &
+                                  mygather%src%x,   &
+                                  mygather%src%y,   &
+                                  mygather%src%z)
     case('force')
        call read_force_solution_file(mygather%hdr%source_components, mygather%source)
-       ! check if point source in case convert lat/lon src to local mesh coordinates
+       ! Just in case, determine local coordinate (useful for local point source)
+       call local_mesh_coordinate(mygather%src%lat, &
+                                  mygather%src%lon, &
+                                  mygather%src%ele, &
+                                  mygather%src%x,   &
+                                  mygather%src%y,   &
+                                  mygather%src%z)
     case default
        write(6,*)'WARNING : source_type undefined !'
     end select
-    
+
+!!!! Not here.... since only header
+    ! Read source estimated time function
+    !if (mygather%hdr%estimated_stf /= 'undef') then
+    !    call read_binary_source_signature(filename,nt,stf)
+    !end if
     
   end subroutine read_pif_header_file
   !--------------------------------------------------------------------------------
@@ -446,6 +465,57 @@ contains
   !--------------------------------------------------------------------------------
 
   !================================================================================
+  ! Read one binary gather  
+  subroutine read_binary_source_signature(filename,nt,stf)
+
+    character(len=*),                     intent(in)  :: filename
+    integer(kind=si),                     intent(in)  :: nrec, nt
+    integer(kind=si)                                  :: nsize, it
+    real(kind=sp),    dimension(nrec,nt)              :: stfs
+    real(kind=cp),    dimension(nrec,nt), intent(out) :: stf
+
+    write(6,*)'Read binary source signature: '
+    write(6,*)'    filename, nt = ',trim(adjustl(filename)),nt
+
+    nsize = nt * sp
+    
+    open(iunit,file=trim(adjustl(filename)),access='direct',recl=nsize,status='old')
+    read(iunit,rec=1)stfs(:)
+    close(iunit)
+
+    stf = real(stfs,kind=cp)
+    
+    write(6,*)'Done!'
+
+  end subroutine read_binary_source_signature
+  !--------------------------------------------------------------------------------
+
+  !================================================================================
+  ! Read one binary gather  
+  subroutine write_binary_source_signature(filename,nt,stf)
+
+    character(len=*),                     intent(in)  :: filename
+    integer(kind=si),                     intent(in)  :: nrec, nt
+    integer(kind=si)                                  :: nsize, it
+    real(kind=sp),    dimension(nrec,nt)              :: stfs
+    real(kind=cp),    dimension(nrec,nt), intent(in)  :: stf
+
+    write(6,*)'Write binary source signature: '
+    write(6,*)'    filename, nt = ',trim(adjustl(filename)),nt
+
+    nsize = nt * sp
+    stfs  = real(stf,kind=sp)
+    
+    open(iunit,file=trim(adjustl(filename)),access='direct',recl=nsize,status='replace')
+    write(iunit,rec=1)stfs(:)
+    close(iunit)
+    
+    write(6,*)'Done!'
+
+  end subroutine read_binary_source_signature
+  !--------------------------------------------------------------------------------
+
+  !================================================================================
   ! Write one binary gather  
   subroutine write_binary_data(filename,nrec,nt,data)
 
@@ -506,6 +576,36 @@ contains
   end subroutine calc_delta_dist_baz
   !--------------------------------------------------------------------------------
 
+  ! ================================================================================
+  ! Compute epicentral distance, baz and dit from stations/source informations
+  !                   for now, only a spherical Earth of radius = 6371 km
+  subroutine calc_dist_baz_cart(src_x,src_y,sta_x,sta_y,dist,baz)
+
+    real(kind=dp), intent(in)  :: src_x, src_y, sta_x, sta_y
+    real(kind=dp), intent(out) :: dist, baz
+
+    real(kind=dp) :: dx, dy
+    real(kind=dp) :: r=6371000._dp
+    
+    !*** Compute distance in degree and in km
+    dx   = src_x-sta_x
+    dy   = src_y-sta_y
+    dist = sqrt(dx*dx + dy*dy)
+
+    !*** Compute back-azimuth
+    baz  = rad2deg * atan2(dx,dy)
+    if (baz >= 360._dp) then
+       baz = baz -360._dp
+    else if (baz < 0._dp) then
+       baz = baz +360._dp
+    else
+       baz = baz
+    end if
+
+  end subroutine calc_delta_dist_baz
+  !--------------------------------------------------------------------------------
+
+  
   !================================================================================
   ! Make sur that everything is upper case...
   function upcase(strin) result(strout)
@@ -546,5 +646,27 @@ contains
   end function lowcase
   !--------------------------------------------------------------------------------  
 
+  !================================================================================
+  ! Give data comp in XX format (ex: vz)
+  subroutine get_data_component(data_type, data_comp, ncomp, component)
 
+    character(len=1), intent(in) :: data_type
+    character(len=3), intent(in) :: data_comp
+    
+    character(len=2), dimension(3), intent(out) :: component
+    integer(kind=si),               intent(out) :: ncomp
+
+    integer(kind=si) :: i
+
+    component(:) = '  '
+    ncomp        = len(trim(adjustl(data_comp)))
+    
+    do i = 1, ncomp
+       write(component(i),*)upcase(data_type),upcase(data_comp(i))
+    end do
+
+  end subroutine get_data_component
+  !--------------------------------------------------------------------------------
+                                    
+    
 end module passive_imaging_format_mod

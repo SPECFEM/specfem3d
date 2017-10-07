@@ -323,8 +323,8 @@ contains
 
     inc = deg2rad * inci
 
-    vl =  vz * cos(inc) + vr * sin(inc)
-    vq =  vz * sin(inc) - vr * cos(inc)
+    vl  = vz * cos(inc) + vr * sin(inc)
+    vq  = vz * sin(inc) - vr * cos(inc)
     vt2 = vt
 
   end subroutine rotate_ZRT_to_LQT
@@ -344,6 +344,7 @@ contains
     vz = vl * cos(inc) + vq * sin(inc)
     vr = vl * sin(inc) - vq * cos(inc)
     vt = vt2
+    
   end subroutine rotate_LQT_to_ZRT
 !--------------------------------------------------------------------------------
 
