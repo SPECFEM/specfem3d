@@ -8,36 +8,115 @@ module elastic_tensor_tools_mod
   
 contains
 
+  !================================================================================
+  ! Define rotation matrix with euler angles 
   subroutine define_rotation_matrix
 
 
   end subroutine define_rotation_matrix
+  !--------------------------------------------------------------------------------
 
+  !================================================================================
+  ! Define bond rotation matrix to rotate a voigt tensor
+  !    (see e.g. Auld 1973, for bond matrix definition)
+  subroutine define_bond_matrix
+
+
+  end subroutine define_bond_matrix
+  !--------------------------------------------------------------------------------
+
+  !================================================================================
+  ! Rotation of second order tensor (not efficient but corresponds to definition)
+  subroutine rotate_second_order_tensor
+
+
+  end subroutine rotate_second_order_tensor
+  !--------------------------------------------------------------------------------
+
+  !================================================================================
+  ! Rotation of second order tensor (very not efficient but corresponds to definition)
   subroutine rotate_fourth_order_tensor
 
 
   end subroutine rotate_fourth_order_tensor
+  !--------------------------------------------------------------------------------
+  
+  !================================================================================
+  ! Rotation of fourth order tensor in voigt matrix with bond matrix
+  !    (see e.g. Auld 1973, for bond matrix definition)
+  subroutine rotate_tensor_with_bond_matrix
 
-  subroutine get_dilatational_stiffness_tensor
 
+  end subroutine rotate_tensor_with_bond_matrix
+  !--------------------------------------------------------------------------------
+  
+  !================================================================================
+  ! Get dilatational stiffness tensor according to Browaeys and Chevrot (2004)
+  !   (four-rank stiffness tensor has two two-rank tensors contractions)  
+  subroutine get_dilatational_stiffness_tensor(cij,dilatational)
 
+    real(kind=cp), dimension(6,6), intent(in)  :: cij
+    real(kind=cp), dimension(6,6), intent(out) :: dilatational
+
+    ! First column
+    dilatational(1,1) = cij(1,1) + cij(1,2) +cij(1,3) 
+    dilatational(2,1) = cij(1,6) + cij(2,6) +cij(3,6) 
+    dilatational(3,1) = cij(1,5) + cij(2,5) +cij(3,5) 
+
+    ! Second column
+    dilatational(1,2) = dilatational(2,1)
+    dilatational(2,2) = cij(1,2) + cij(2,2) + cij(3,2) 
+    dilatational(3,2) = cij(1,4) + cij(2,4) + cij(3,4)
+
+    ! Thirs column
+    dilatational(1,3) = dilatational(3,1)
+    dilatational(2,3) = dilatational(3,2)
+    dilatational(3,3) = cij(1,3) + cij(2,3) + cij(3,3) 
+    
   end subroutine get_dilatational_stiffness_tensor
+  !--------------------------------------------------------------------------------
 
-  subroutine get_voigt_stiffness_tensor
+  !================================================================================
+  ! Get voigt stiffness tensor according to Browaeys and Chevrot (2004)
+  subroutine get_voigt_stiffness_tensor(cij,voigt)
+    
+    real(kind=cp), dimension(6,6), intent(in)  :: cij
+    real(kind=cp), dimension(6,6), intent(out) :: voigt
+    
+    ! First column
+    voigt(1,1) = cij(1,1) + cij(6,6) +cij(5,5) 
+    voigt(2,1) = cij(1,6) + cij(2,6) +cij(4,5) 
+    voigt(3,1) = cij(1,5) + cij(3,5) +cij(4,6) 
 
+    ! Second column
+    voigt(1,2) = voigt(2,1)
+    voigt(2,2) = cij(6,6) + cij(2,2) + cij(4,4) 
+    voigt(3,2) = cij(2,4) + cij(3,4) + cij(5,6)
 
+    ! Thirs column
+    voigt(1,3) = voigt(3,1)
+    voigt(2,3) = voigt(3,2)
+    voigt(3,3) = cij(5,5) + cij(4,4) + cij(3,3) 
+    
   end subroutine get_voigt_stiffness_tensor
+  !--------------------------------------------------------------------------------
 
+  !================================================================================
+  ! Pass from elastic tensor to the elastic vector defined by Browaeys and Chevrot (2004)
   subroutine elastic_tensor_to_elastic_vector
 
 
   end subroutine elastic_tensor_to_elastic_vector
+  !--------------------------------------------------------------------------------
 
+  !================================================================================
+  ! Pass from elastic vector to elastic tensor (see Browaeys and Chevrot (2004))
   subroutine elastic_vector_to_elastic_tensor
 
 
   end subroutine elastic_vector_to_elastic_tensor
-
+  !--------------------------------------------------------------------------------
+  
   !================================================================================
   ! Pass triclinic elastic vector to isotropic one according to fedorov (1968)
   subroutine get_isotropic_part_fedorov(triclinic,isotropic)
