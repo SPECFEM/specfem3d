@@ -27,16 +27,57 @@ contains
 
   !================================================================================
   ! Rotation of second order tensor (not efficient but corresponds to definition)
-  subroutine rotate_second_order_tensor
+  subroutine rotate_second_order_tensor(rotmat,cij,cij_r)
+    
+    real(kind=cp), dimension(3,3), intent(in)  :: cij
+    real(kind=cp), dimension(3,3), intent(in)  :: rotmat
+    real(kind=cp), dimension(3,3), intent(out) :: cij_r
 
+    integer(kind=si) :: i, j, ip, jp
 
+    do jp = 1, 3
+       do ip = 1, 3
+          do j = 1, 3
+             do i = 1, 3
+                cij_r(ip,jp) = cij_r(ip,jp) + rotmat(ip,i)*rotmat(jp,j)*cij(i,j)
+             end do
+          end do
+       end do
+    end do
+    
   end subroutine rotate_second_order_tensor
   !--------------------------------------------------------------------------------
 
   !================================================================================
   ! Rotation of second order tensor (very not efficient but corresponds to definition)
-  subroutine rotate_fourth_order_tensor
+  subroutine rotate_fourth_order_tensor(rotmat,cijkl,cijkl_r)
 
+    real(kind=cp), dimension(3,3,3,3), intent(in)  :: cijkl
+    real(kind=cp),     dimension(3,3), intent(in)  :: rotmat
+    real(kind=cp), dimension(3,3,3,3), intent(out) :: cijkl_r
+
+    integer(kind=si) :: i, j, k, l, ip, jp, kp, lp
+
+    do kp = 1, 3
+       do lp = 1, 3
+          do jp = 1, 3
+             do ip = 1, 3
+                do l = 1, 3
+                   do k = 1, 3
+                      do j = 1, 3
+                         do i = 1, 3
+                            cijkl_r(ip,jp,kp,lp) = cijkl_r(ip,jp,kp,lp)        &
+                                                 + rotmat(ip,i) * rotmat(jp,j) &
+                                                 * rotmat(kp,k) * rotmat(lp,l) * cijkl(i,j,k,l)
+                         end do
+                      end do
+                   end do
+                end do
+             end do
+          end do
+       end do
+    end do
+    
 
   end subroutine rotate_fourth_order_tensor
   !--------------------------------------------------------------------------------
@@ -68,7 +109,7 @@ contains
     dilatational(2,2) = cij(1,2) + cij(2,2) + cij(3,2) 
     dilatational(3,2) = cij(1,4) + cij(2,4) + cij(3,4)
 
-    ! Thirs column
+    ! Third column
     dilatational(1,3) = dilatational(3,1)
     dilatational(2,3) = dilatational(3,2)
     dilatational(3,3) = cij(1,3) + cij(2,3) + cij(3,3) 
@@ -93,7 +134,7 @@ contains
     voigt(2,2) = cij(6,6) + cij(2,2) + cij(4,4) 
     voigt(3,2) = cij(2,4) + cij(3,4) + cij(5,6)
 
-    ! Thirs column
+    ! Third column
     voigt(1,3) = voigt(3,1)
     voigt(2,3) = voigt(3,2)
     voigt(3,3) = cij(5,5) + cij(4,4) + cij(3,3) 
