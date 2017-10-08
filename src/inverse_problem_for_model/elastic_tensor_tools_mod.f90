@@ -307,37 +307,37 @@ contains
        allocate(ind_vec2tens(4,21))
        
        ! Group 1
-       ind_vec2tens(1:4,1)  = (\ 1, 1, 1, 1 \)
-       ind_vec2tens(1:4,2)  = (\ 2, 2, 2, 2 \)
-       ind_vec2tens(1:4,3)  = (\ 3, 3, 3, 3 \)
+       ind_vec2tens(1:4,1)  = (/ 1, 1, 1, 1 /)
+       ind_vec2tens(1:4,2)  = (/ 2, 2, 2, 2 /)
+       ind_vec2tens(1:4,3)  = (/ 3, 3, 3, 3 /)
        
        ! Group 2
-       ind_vec2tens(1:4,4)  = (\ 2, 2, 3, 3 \)
-       ind_vec2tens(1:4,5)  = (\ 1, 1, 3, 3 \)
-       ind_vec2tens(1:4,6)  = (\ 1, 1, 2, 2 \)
+       ind_vec2tens(1:4,4)  = (/ 2, 2, 3, 3 /)
+       ind_vec2tens(1:4,5)  = (/ 1, 1, 3, 3 /)
+       ind_vec2tens(1:4,6)  = (/ 1, 1, 2, 2 /)
        
        ! Group 3
-       ind_vec2tens(1:4,7)  = (\ 2, 3, 2, 3 \)
-       ind_vec2tens(1:4,8)  = (\ 1, 3, 1, 3 \)
-       ind_vec2tens(1:4,9)  = (\ 1, 2, 1, 2 \)
+       ind_vec2tens(1:4,7)  = (/ 2, 3, 2, 3 /)
+       ind_vec2tens(1:4,8)  = (/ 1, 3, 1, 3 /)
+       ind_vec2tens(1:4,9)  = (/ 1, 2, 1, 2 /)
        
        ! Group 4
-       ind_vec2tens(1:4,10) = (\ 1, 1, 2, 3 \)
-       ind_vec2tens(1:4,11) = (\ 2, 2, 1, 3 \)
-       ind_vec2tens(1:4,12) = (\ 3, 3, 1, 2 \)
+       ind_vec2tens(1:4,10) = (/ 1, 1, 2, 3 /)
+       ind_vec2tens(1:4,11) = (/ 2, 2, 1, 3 /)
+       ind_vec2tens(1:4,12) = (/ 3, 3, 1, 2 /)
        
        ! Group 5
-       ind_vec2tens(1:4,13) = (\ 3, 3, 2, 3 \)
-       ind_vec2tens(1:4,14) = (\ 1, 1, 1, 3 \)
-       ind_vec2tens(1:4,15) = (\ 2, 2, 1, 2 \)
-       ind_vec2tens(1:4,16) = (\ 2, 2, 2, 3 \)
-       ind_vec2tens(1:4,17) = (\ 3, 3, 1, 3 \)
-       ind_vec2tens(1:4,18) = (\ 1, 1, 1, 2 \)
+       ind_vec2tens(1:4,13) = (/ 3, 3, 2, 3 /)
+       ind_vec2tens(1:4,14) = (/ 1, 1, 1, 3 /)
+       ind_vec2tens(1:4,15) = (/ 2, 2, 1, 2 /)
+       ind_vec2tens(1:4,16) = (/ 2, 2, 2, 3 /)
+       ind_vec2tens(1:4,17) = (/ 3, 3, 1, 3 /)
+       ind_vec2tens(1:4,18) = (/ 1, 1, 1, 2 /)
        
        ! Group 6
-       ind_vec2tens(1:4,19) = (\ 1, 3, 1, 2 \)
-       ind_vec2tens(1:4,20) = (\ 2, 3, 1, 2 \)
-       ind_vec2tens(1:4,21) = (\ 2, 3, 1, 3 \)
+       ind_vec2tens(1:4,19) = (/ 1, 3, 1, 2 /)
+       ind_vec2tens(1:4,20) = (/ 2, 3, 1, 2 /)
+       ind_vec2tens(1:4,21) = (/ 2, 3, 1, 3 /)
 
     end if
        
@@ -348,37 +348,37 @@ contains
        allocate(ind_vec2tens_voigt(2,21))
        
        ! Group 1
-       ind_vec2tens_voigt(1:2,1)  = (\ 1, 1 \)
-       ind_vec2tens_voigt(1:2,2)  = (\ 2, 2 \)
-       ind_vec2tens_voigt(1:2,3)  = (\ 3, 3 \)
+       ind_vec2tens_voigt(1:2,1)  = (/ 1, 1 /)
+       ind_vec2tens_voigt(1:2,2)  = (/ 2, 2 /)
+       ind_vec2tens_voigt(1:2,3)  = (/ 3, 3 /)
        
        ! Group 2
-       ind_vec2tens_voigt(1:2,4)  = (\ 2, 3 \)
-       ind_vec2tens_voigt(1:2,5)  = (\ 1, 3 \)
-       ind_vec2tens_voigt(1:2,6)  = (\ 1, 2 \)
+       ind_vec2tens_voigt(1:2,4)  = (/ 2, 3 /)
+       ind_vec2tens_voigt(1:2,5)  = (/ 1, 3 /)
+       ind_vec2tens_voigt(1:2,6)  = (/ 1, 2 /)
        
        ! Group 3
-       ind_vec2tens_voigt(1:2,7)  = (\ 4, 4 \)
-       ind_vec2tens_voigt(1:2,8)  = (\ 5, 5 \)
-       ind_vec2tens_voigt(1:2,9)  = (\ 6, 6 \)
+       ind_vec2tens_voigt(1:2,7)  = (/ 4, 4 /)
+       ind_vec2tens_voigt(1:2,8)  = (/ 5, 5 /)
+       ind_vec2tens_voigt(1:2,9)  = (/ 6, 6 /)
        
        ! Group 4
-       ind_vec2tens_voigt(1:2,10) = (\ 1, 4 \)
-       ind_vec2tens_voigt(1:2,11) = (\ 2, 5 \)
-       ind_vec2tens_voigt(1:2,12) = (\ 3, 6 \)
+       ind_vec2tens_voigt(1:2,10) = (/ 1, 4 /)
+       ind_vec2tens_voigt(1:2,11) = (/ 2, 5 /)
+       ind_vec2tens_voigt(1:2,12) = (/ 3, 6 /)
        
        ! Group 5
-       ind_vec2tens_voigt(1:2,13) = (\ 3, 4 \)
-       ind_vec2tens_voigt(1:2,14) = (\ 1, 5 \)
-       ind_vec2tens_voigt(1:2,15) = (\ 2, 6 \)
-       ind_vec2tens_voigt(1:2,16) = (\ 2, 4 \)
-       ind_vec2tens_voigt(1:2,17) = (\ 3, 5 \)
-       ind_vec2tens_voigt(1:2,18) = (\ 1, 6 \)
+       ind_vec2tens_voigt(1:2,13) = (/ 3, 4 /)
+       ind_vec2tens_voigt(1:2,14) = (/ 1, 5 /)
+       ind_vec2tens_voigt(1:2,15) = (/ 2, 6 /)
+       ind_vec2tens_voigt(1:2,16) = (/ 2, 4 /)
+       ind_vec2tens_voigt(1:2,17) = (/ 3, 5 /)
+       ind_vec2tens_voigt(1:2,18) = (/ 1, 6 /)
        
        ! Group 6
-       ind_vec2tens_voigt(1:2,19) = (\ 5, 6 \)
-       ind_vec2tens_voigt(1:2,20) = (\ 4, 6 \)
-       ind_vec2tens_voigt(1:2,21) = (\ 4, 5 \)
+       ind_vec2tens_voigt(1:2,19) = (/ 5, 6 /)
+       ind_vec2tens_voigt(1:2,20) = (/ 4, 6 /)
+       ind_vec2tens_voigt(1:2,21) = (/ 4, 5 /)
 
     end if
        
