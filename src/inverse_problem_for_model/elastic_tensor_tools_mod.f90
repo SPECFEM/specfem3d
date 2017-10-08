@@ -4,7 +4,7 @@ module elastic_tensor_tools_mod
 
   implicit none
 
-  integer(kind=si), dimension(:,:)  :: ind_vec2tens, ind_vec2tens_voigt
+  integer(kind=si), dimension(:,:), allocatable :: ind_vec2tens, ind_vec2tens_voigt
   
 contains
 
@@ -155,7 +155,7 @@ contains
        dkl = delta(k,l)
        
        !*** Fill elastic vector
-       tensor(ipar) = (c11 - 2._cp*c66) * dij*dkl + c66 * (dik*djl) + dil*djk) &
+       tensor(ipar) = (c11 - 2._cp*c66) * dij*dkl + c66 * (dik*djl + dil*djk) &
             + (c13 - c11 + 2._cp*c66) * (dij*sksl + dkl*sisj)                  &
             + (c44 - c66) * (dik*sjsl + dil*sjsk + djk*sisl + djl*sisk)        &
             + (c11 + c33 - 2._cp*c13 - 4._cp*c44)*sisjsksl
@@ -168,9 +168,9 @@ contains
 
   !================================================================================
   ! Define hexagonal tensor with analytical fromula from thomsen parameters
-  subroutine define_hexagonal_tensor_2(c33,c66,eps,delta,gamma,s,tensor)
+  subroutine define_hexagonal_tensor_2(c33,c44,eps,del,gam,s,tensor)
 
-    real(kind=cp), intent(in)               :: c33, c66, c13, eps, delta, gamma
+    real(kind=cp), intent(in)               :: c33, c44, eps, del, gam
     real(kind=cp), dimension(3), intent(in) :: s
     
     real(kind=cp), dimension(21), intent(out) :: tensor
@@ -220,11 +220,11 @@ contains
        
        !*** Fill elastic vector
        tensor(ipar) = c33 * dij*dkl + c44 * (dik*djl + dil*djk - 2._cp*dij*dkl) &
-            + 2._cp * eps * c33 * (dij*dkl - dij*sksl - dkl*sisj + sisjsks(l))  &
-            + delta * c33 * (dij*sksl + dkl*sisj - 2._cp*sisjsksl)              &
-            + 2._cp * gamma * c44 * (-2._cp*dij*dkl + dik*djl + dil*djk         &
-                                     +2._cp*dij*sksl + 2._cp*dkl*sisj           &
-                                     - dik*sjsl - dil*sjsk - djk*sisl - djl*sisk)
+            + 2._cp * eps * c33 * (dij*dkl - dij*sksl - dkl*sisj + sisjsksl)    &
+            +         del * c33 * (dij*sksl + dkl*sisj - 2._cp*sisjsksl)        &
+            + 2._cp * gam * c44 * (-2._cp*dij*dkl + dik*djl + dil*djk           &
+                                   +2._cp*dij*sksl + 2._cp*dkl*sisj             &
+                                   - dik*sjsl - dil*sjsk - djk*sisl - djl*sisk)
                               
     end do
     
@@ -412,11 +412,11 @@ contains
     real(kind=cp), dimension(3), intent(in)  :: s
     real(kind=cp),               intent(out) :: th, ph
     
-    real(kind=cp) :: thrad, phrad, r, h
+    real(kind=cp) :: thrad, phrad, r
 
     r = sqrt(s(1)*s(1) + s(2)*s(2) + s(3)*s(3))
     ph = atan2(s(1),s(2))
-    th = acos(z/r)
+    th = acos(s(3)/r)
     
     th = thrad*rad2deg
     ph = phrad*rad2deg
@@ -426,10 +426,11 @@ contains
   
   !================================================================================
   ! Small function for kronecker delta function
-  integer(kind=si) function delta(i,j)
+  function delta(i,j) result(d)
 
     integer(kind=si), intent(in) :: i, j
-
+    integer(kind=si)             :: d
+    
     if (i==j) then
        d = 1
     else

@@ -122,6 +122,8 @@ inverse_problem_for_model_OBJECTS = \
 	$O/mesh_tools_mod.o \
 	$O/interpolation_mod.o \
 	$O/rotations_mod.o \
+	$O/elastic_tensor_tools_mod.o \
+	$O/anisotropic_parametrisation_mod.o \
 	$O/passive_imaging_format_mod.o \
 	$O/Teleseismic_IO.o \
 	$O/IO_model_mod.o \
@@ -432,6 +434,13 @@ $O/passive_imaging_format_mod.o : $S/input_output/passive_imaging_format_mod.f90
 
 $O/Teleseismic_IO.o : $S/input_output/Teleseismic_IO.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
 	${MPIFCCOMPILE_CHECK} $(FCFLAGS_f90) $S/input_output/Teleseismic_IO.f90 -c -o $O/Teleseismic_IO.o
+
+# modules for full anisotropy and tensor related operations
+$O/elastic_tensor_tools_mod.o : $S/elastic_tensor_tools_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
+	${MPIFCCOMPILE_CHECK} $(FCFLAGS_f90) $S/elastic_tensor_tools_mod.f90 -c -o $O/elastic_tensor_tools_mod.o
+
+$O/anisotropic_parametrisation_mod.o : $S/anisotropic_parametrisation_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
+	${MPIFCCOMPILE_CHECK} $(FCFLAGS_f90) $S/anisotropic_parametrisation_mod.f90 -c -o $O/anisotropic_parametrisation_mod.o
 
 # import or export model
 $O/IO_model_mod.o : $S/input_output/IO_model_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
