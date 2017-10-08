@@ -9,8 +9,39 @@ module elastic_tensor_tools_mod
 contains
 
   !================================================================================
-  ! Define rotation matrix with euler angles 
-  subroutine define_rotation_matrix
+  ! Define rotation matrix with euler angles :
+  !    a = angle from   x-axis (rotation around   z-axis), (xyz       ->    x'y'z') 
+  !    b = angle from  z'-axis (rotation around  y'-axis), (x'y'z'    -> x''y''z'')
+  !    c = angle from y''-axis (rotation around x''-axis), (x''y''z'' ->       XYZ)
+  ! Rotmat = matrix from ref xyz (e.g. cartesian or vti) to rotated new one
+  subroutine define_rotation_matrix(a0,b0,c0,rotmat,rotmat_t)
+
+    real(kind=dp),    intent(in) :: a0, b0, c0
+    real(kind=dp)                :: a, b, c
+    real(kind=dp), dimension(3,3), intent(out) :: rotmat, rotmat_t
+
+    !* Pass in radian
+    a = deg2rad * a0
+    b = deg2rad * b0
+    c = deg2rad * c0
+
+    !* First column
+    rotmat(1,1) =  cos(a) * sin(b)
+    rotmat(2,1) = -sin(a) * cos(c) + cos(a) * cos(b) * sin(c)
+    rotmat(3,1) =  sin(a) * sin(c) + cos(a) * cos(b) * cos(c)
+
+    !* Second column
+    rotmat(1,2) =  sin(a) * sin(b)
+    rotmat(2,2) =  cos(a) * cos(c) + sin(a) * cos(b) * sin(c)
+    rotmat(3,2) = -cos(a) * sin(c) + sin(a) * cos(b) * cos(c)
+
+    !* Third column
+    rotmat(1,3) =  cos(b)
+    rotmat(2,3) = -sin(b) * sin(c)   
+    rotmat(3,3) = -sin(b) * cos(c)
+
+    !* Define reverse rotation
+    rotmat_t    = transpose(rotmat)
 
 
   end subroutine define_rotation_matrix
@@ -25,13 +56,33 @@ contains
   end subroutine define_bond_matrix
   !--------------------------------------------------------------------------------
 
+
+  !================================================================================
+  ! Rotation of first order tensor (vector actually)
+  subroutine rotate_vector(rotmat,vi,vi_r)
+    
+    real(kind=dp), dimension(3),   intent(in)  :: vi
+    real(kind=dp), dimension(3,3), intent(in)  :: rotmat
+    real(kind=dp), dimension(3),   intent(out) :: vi_r
+
+    integer(kind=si) :: i, ip
+
+    do ip = 1, 3
+       do i = 1, 3
+          vi_r(ip) = vi_r(ip) + rotmat(ip,i)*vi(i)
+       end do
+    end do
+        
+  end subroutine rotate_vector
+  !--------------------------------------------------------------------------------
+  
   !================================================================================
   ! Rotation of second order tensor (not efficient but corresponds to definition)
   subroutine rotate_second_order_tensor(rotmat,cij,cij_r)
     
-    real(kind=cp), dimension(3,3), intent(in)  :: cij
-    real(kind=cp), dimension(3,3), intent(in)  :: rotmat
-    real(kind=cp), dimension(3,3), intent(out) :: cij_r
+    real(kind=dp), dimension(3,3), intent(in)  :: cij
+    real(kind=dp), dimension(3,3), intent(in)  :: rotmat
+    real(kind=dp), dimension(3,3), intent(out) :: cij_r
 
     integer(kind=si) :: i, j, ip, jp
 
@@ -52,9 +103,9 @@ contains
   ! Rotation of second order tensor (very not efficient but corresponds to definition)
   subroutine rotate_fourth_order_tensor(rotmat,cijkl,cijkl_r)
 
-    real(kind=cp), dimension(3,3,3,3), intent(in)  :: cijkl
-    real(kind=cp),     dimension(3,3), intent(in)  :: rotmat
-    real(kind=cp), dimension(3,3,3,3), intent(out) :: cijkl_r
+    real(kind=dp), dimension(3,3,3,3), intent(in)  :: cijkl
+    real(kind=dp),     dimension(3,3), intent(in)  :: rotmat
+    real(kind=dp), dimension(3,3,3,3), intent(out) :: cijkl_r
 
     integer(kind=si) :: i, j, k, l, ip, jp, kp, lp
 
@@ -96,8 +147,8 @@ contains
   !   (four-rank stiffness tensor has two two-rank tensors contractions)  
   subroutine get_dilatational_stiffness_tensor(cij,dilatational)
 
-    real(kind=cp), dimension(6,6), intent(in)  :: cij
-    real(kind=cp), dimension(6,6), intent(out) :: dilatational
+    real(kind=dp), dimension(6,6), intent(in)  :: cij
+    real(kind=dp), dimension(6,6), intent(out) :: dilatational
 
     ! First column
     dilatational(1,1) = cij(1,1) + cij(1,2) +cij(1,3) 
@@ -121,8 +172,8 @@ contains
   ! Get voigt stiffness tensor according to Browaeys and Chevrot (2004)
   subroutine get_voigt_stiffness_tensor(cij,voigt)
     
-    real(kind=cp), dimension(6,6), intent(in)  :: cij
-    real(kind=cp), dimension(6,6), intent(out) :: voigt
+    real(kind=dp), dimension(6,6), intent(in)  :: cij
+    real(kind=dp), dimension(6,6), intent(out) :: voigt
     
     ! First column
     voigt(1,1) = cij(1,1) + cij(6,6) +cij(5,5) 
@@ -162,22 +213,22 @@ contains
   ! Pass triclinic elastic vector to isotropic one according to fedorov (1968)
   subroutine get_isotropic_part_fedorov(triclinic,isotropic)
 
-    real(kind=cp), dimension(21), intent(in)  :: triclinic
-    real(kind=cp), dimension(21), intent(out) :: isotropic
+    real(kind=dp), dimension(21), intent(in)  :: triclinic
+    real(kind=dp), dimension(21), intent(out) :: isotropic
 
-    real(kind=cp) :: kappa, mu, lambda, c11, c22, c33, c23, c13, c12, c44, c55, c66, lp2m
+    real(kind=dp) :: kappa, mu, lambda, c11, c22, c33, c23, c13, c12, c44, c55, c66, lp2m
 
     c11 = triclinic(1);   c22=triclinic(2);   c33=triclinic(3);
     c23 = triclinic(4);   c13=triclinic(5);   c12=triclinic(6);
     c44 = triclinic(7);   c55=triclinic(8);   c66=triclinic(9);
 
-    kappa  = (c11 + c22 + c33 + 2._cp*(c12 + c13 + c23)) / 9._cp
-    mu     = (2._cp*(c11 + c22 + c33 - c12 - c23 - c13) + 6._cp * (c44 + c55 + c66)) / 30._cp
-    lambda = kappa - (2._cp*mu /3._cp)
+    kappa  = (c11 + c22 + c33 + 2._dp*(c12 + c13 + c23)) / 9._dp
+    mu     = (2._dp*(c11 + c22 + c33 - c12 - c23 - c13) + 6._dp * (c44 + c55 + c66)) / 30._dp
+    lambda = kappa - (2._dp*mu /3._dp)
 
-    lp2m = lambda + 2._cp * mu
+    lp2m = lambda + 2._dp * mu
     
-    isotropic(:)   = 0._cp
+    isotropic(:)   = 0._dp
     isotropic(1:3) = lp2m
     isotropic(4:6) = lambda
     isotropic(7:9) = mu
@@ -189,13 +240,13 @@ contains
   ! Define isotropic tensor with analytical formula (not efficient but still usefull)
   subroutine define_isotropic_tensor_1(lambda,mu,tensor)
 
-    real(kind=cp), intent(in)                 :: lambda, mu
-    real(kind=cp), dimension(21), intent(out) :: tensor
+    real(kind=dp), intent(in)                 :: lambda, mu
+    real(kind=dp), dimension(21), intent(out) :: tensor
 
     integer(kind=si) :: ipar, i, j, k, l
     integer(kind=si) :: dij, dik, dil, djk, djl, dkl
 
-    tensor(:) = 0._cp
+    tensor(:) = 0._dp
     
     !* Loop over cij components
     do ipar = 1, 9  ! not necessary to go until 21 here
@@ -226,19 +277,19 @@ contains
   ! Define hexagonal tensor with analytical fromula from cij values
   subroutine define_hexagonal_tensor_1(c11,c33,c44,c66,c13,s,tensor)
 
-    real(kind=cp), intent(in)               :: c11, c33, c44, c66, c13
-    real(kind=cp), dimension(3), intent(in) :: s
+    real(kind=dp), intent(in)               :: c11, c33, c44, c66, c13
+    real(kind=dp), dimension(3), intent(in) :: s
     
-    real(kind=cp), dimension(21), intent(out) :: tensor
+    real(kind=dp), dimension(21), intent(out) :: tensor
 
     integer(kind=si) :: ipar, i, j, k, l
     integer(kind=si) :: dij, dik, dil, djk, djl, dkl
-    real(kind=cp)    :: si, sj, sk, sl
-    real(kind=cp)    :: sisj, sksl, sjsk, sisl, sisk, sjsl
-    real(kind=cp)    :: sisjsk, sisjsl, sisksl, sjsksl, sisjsksl
+    real(kind=dp)    :: si, sj, sk, sl
+    real(kind=dp)    :: sisj, sksl, sjsk, sisl, sisk, sjsl
+    real(kind=dp)    :: sisjsk, sisjsl, sisksl, sjsksl, sisjsksl
     
     !*** Init
-    tensor(:) = 0._cp
+    tensor(:) = 0._dp
 
     !*** Precompute direction cosines
     si = s(i)
@@ -275,10 +326,10 @@ contains
        dkl = delta(k,l)
        
        !*** Fill elastic vector
-       tensor(ipar) = (c11 - 2._cp*c66) * dij*dkl + c66 * (dik*djl + dil*djk) &
-            + (c13 - c11 + 2._cp*c66) * (dij*sksl + dkl*sisj)                  &
+       tensor(ipar) = (c11 - 2._dp*c66) * dij*dkl + c66 * (dik*djl + dil*djk) &
+            + (c13 - c11 + 2._dp*c66) * (dij*sksl + dkl*sisj)                  &
             + (c44 - c66) * (dik*sjsl + dil*sjsk + djk*sisl + djl*sisk)        &
-            + (c11 + c33 - 2._cp*c13 - 4._cp*c44)*sisjsksl
+            + (c11 + c33 - 2._dp*c13 - 4._dp*c44)*sisjsksl
        
     end do
     
@@ -290,19 +341,19 @@ contains
   ! Define hexagonal tensor with analytical fromula from thomsen parameters
   subroutine define_hexagonal_tensor_2(c33,c44,eps,del,gam,s,tensor)
 
-    real(kind=cp), intent(in)               :: c33, c44, eps, del, gam
-    real(kind=cp), dimension(3), intent(in) :: s
+    real(kind=dp), intent(in)               :: c33, c44, eps, del, gam
+    real(kind=dp), dimension(3), intent(in) :: s
     
-    real(kind=cp), dimension(21), intent(out) :: tensor
+    real(kind=dp), dimension(21), intent(out) :: tensor
 
     integer(kind=si) :: ipar, i, j, k, l
     integer(kind=si) :: dij, dik, dil, djk, djl, dkl
-    real(kind=cp)    :: si, sj, sk, sl
-    real(kind=cp)    :: sisj, sksl, sjsk, sisl, sisk, sjsl
-    real(kind=cp)    :: sisjsk, sisjsl, sisksl, sjsksl, sisjsksl
+    real(kind=dp)    :: si, sj, sk, sl
+    real(kind=dp)    :: sisj, sksl, sjsk, sisl, sisk, sjsl
+    real(kind=dp)    :: sisjsk, sisjsl, sisksl, sjsksl, sisjsksl
     
     !*** Init
-    tensor(:) = 0._cp
+    tensor(:) = 0._dp
 
     !*** Precompute direction cosines
     si = s(i)
@@ -339,11 +390,11 @@ contains
        dkl = delta(k,l)
        
        !*** Fill elastic vector
-       tensor(ipar) = c33 * dij*dkl + c44 * (dik*djl + dil*djk - 2._cp*dij*dkl) &
-            + 2._cp * eps * c33 * (dij*dkl - dij*sksl - dkl*sisj + sisjsksl)    &
-            +         del * c33 * (dij*sksl + dkl*sisj - 2._cp*sisjsksl)        &
-            + 2._cp * gam * c44 * (-2._cp*dij*dkl + dik*djl + dil*djk           &
-                                   +2._cp*dij*sksl + 2._cp*dkl*sisj             &
+       tensor(ipar) = c33 * dij*dkl + c44 * (dik*djl + dil*djk - 2._dp*dij*dkl) &
+            + 2._dp * eps * c33 * (dij*dkl - dij*sksl - dkl*sisj + sisjsksl)    &
+            +         del * c33 * (dij*sksl + dkl*sisj - 2._dp*sisjsksl)        &
+            + 2._dp * gam * c44 * (-2._dp*dij*dkl + dik*djl + dil*djk           &
+                                   +2._dp*dij*sksl + 2._dp*dkl*sisj             &
                                    - dik*sjsl - dil*sjsk - djk*sisl - djl*sisk)
                               
     end do
@@ -356,21 +407,21 @@ contains
   !    a, b, and c are normal vector to the three mirror symmetry planes
   subroutine define_orthorhombic_tensor1(c11,c22,c33,c23,c13,c12,c44,c55,c66,a,b,c,tensor)
 
-    real(kind=cp), intent(in)               :: c11, c22, c33, c44, c55, c66, c13, c23, c12
-    real(kind=cp), dimension(3), intent(in) :: a, b, c
+    real(kind=dp), intent(in)               :: c11, c22, c33, c44, c55, c66, c13, c23, c12
+    real(kind=dp), dimension(3), intent(in) :: a, b, c
     
-    real(kind=cp), dimension(21), intent(out) :: tensor
+    real(kind=dp), dimension(21), intent(out) :: tensor
 
     integer(kind=si) :: ipar, i, j, k, l
     integer(kind=si) :: dij, dik, dil, djk, djl, dkl
-    real(kind=cp)    :: aiajakal, bibjbkbl, cicjckcl
-    real(kind=cp)    :: aiaj, akal, bibj, bkbl
-    real(kind=cp)    :: aiak, aial, ajal, ajak
-    real(kind=cp)    :: bibk, bibl, bjbl, bjbk
-    real(kind=cp)    :: ai, aj, ak, al, bi, bj, bk, bl, ci, cj, ck, cl
+    real(kind=dp)    :: aiajakal, bibjbkbl, cicjckcl
+    real(kind=dp)    :: aiaj, akal, bibj, bkbl
+    real(kind=dp)    :: aiak, aial, ajal, ajak
+    real(kind=dp)    :: bibk, bibl, bjbl, bjbk
+    real(kind=dp)    :: ai, aj, ak, al, bi, bj, bk, bl, ci, cj, ck, cl
     
     !*** Init
-    tensor(:) = 0._cp
+    tensor(:) = 0._dp
 
     !*** Precompute direction cosines
     ai = a(i);   aj = a(j);   ak = a(k);   al = a(l);
@@ -509,10 +560,10 @@ contains
   ! Get direction cosines (th = dip angle from vertical, ph = azimuth from north (y))
   subroutine get_direction_cosines(th,ph,s)
 
-    real(kind=cp),               intent(in)  :: th, ph
-    real(kind=cp), dimension(3), intent(out) :: s
+    real(kind=dp),               intent(in)  :: th, ph
+    real(kind=dp), dimension(3), intent(out) :: s
     
-    real(kind=cp) :: thrad, phrad
+    real(kind=dp) :: thrad, phrad
 
     thrad = th*deg2rad
     phrad = ph*deg2rad
@@ -529,10 +580,10 @@ contains
   !     (th = dip angle from vertical, ph = azimuth from north (y))
   subroutine get_symmetry_angles(s,th,ph)
 
-    real(kind=cp), dimension(3), intent(in)  :: s
-    real(kind=cp),               intent(out) :: th, ph
+    real(kind=dp), dimension(3), intent(in)  :: s
+    real(kind=dp),               intent(out) :: th, ph
     
-    real(kind=cp) :: thrad, phrad, r
+    real(kind=dp) :: thrad, phrad, r
 
     r = sqrt(s(1)*s(1) + s(2)*s(2) + s(3)*s(3))
     ph = atan2(s(1),s(2))
@@ -559,5 +610,51 @@ contains
 
   end function delta
   !--------------------------------------------------------------------------------
+
+
+  !================================================================================
+  ! Compute square norm of a second order tensor
+  function square_norm_tensor_2(tensor) result(norm)
+
+    real(kind=dp), dimension(3,3), intent(in) :: tensor
+    real(kind=dp)                             :: norm
+
+    integer(kind=si) :: i, j
+
+    norm = 0._dp
+
+    do j = 1, 3
+       do i = 1, 3
+          norm = norm + tensor(i,j)*tensor(i,j)
+       end do
+    end do
+        
+  end function square_norm_tensor_2
+  !--------------------------------------------------------------------------------
+
+  !================================================================================
+  ! Compute square norm of a second order tensor
+  function square_norm_tensor_4(tensor) result(norm)
+
+    real(kind=dp), dimension(3,3,3,3), intent(in) :: tensor
+    real(kind=dp)                                 :: norm
+
+    integer(kind=si) :: i, j, k, l
+
+    norm = 0._dp
+
+    do l = 1,3
+       do k = 1, 3
+          do j = 1, 3
+             do i = 1, 3
+                norm = norm + tensor(i,j,k,l)*tensor(i,j,k,l)
+             end do
+          end do
+       end do
+    end do
+    
+  end function square_norm_tensor_4
+  !--------------------------------------------------------------------------------
+    
   
 end module elastic_tensor_tools_mod
