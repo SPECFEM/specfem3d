@@ -1148,5 +1148,97 @@ contains
 
   end function kelvin_tensor_to_voigt_matrix
   !--------------------------------------------------------------------------------
+
+  !================================================================================
+  ! Define projections of elastic tensor (Broawaeys and Cehvrot (2004))
+  !   (appendix A)
+  subroutine projection_to_higher_symmetry_class(vi,proj_type,vp,vd,dev)
+
+    character(len=*), intent(in)              :: proj_type 
+    
+    real(kind=dp), dimension(21), intent(in)  :: vi      ! input vector
+    real(kind=dp), dimension(21), intent(out) :: vp, vd  ! projected and deviation vectors   
+
+    real(kind=dp), intent(out) :: dev
+
+    real(kind=dp) :: inv_sqrt_2, sqrt_2, inv_15 
+
+    ! Constants
+    sqrt_2     = sqrt(2._dp)
+    inv_sqrt_2 = 1._dp / sqrt_2
+    inv_15     = 1._dp / 15._dp
+    
+    ! First ensure vp = 0
+    vp(:) = 0._dp
+
+    ! Project vector on higher symmetry space
+    select case(trim(adjustl(proj_type)))  !! can add low case to ensure
+    case('monoclinic')
+       ! Projection matrix M1 is unitary execpt for i=10,11,13,14,16,17,19,20
+       vp(:)  = vi
+       vp(10) = 0._dp
+       vp(11) = 0._dp
+       vp(13) = 0._dp
+       vp(14) = 0._dp
+       vp(16) = 0._dp
+       vp(17) = 0._dp
+       vp(19) = 0._dp
+       vp(20) = 0._dp
+    case('orthorhombic')
+       ! Projection matrix M2 is unitary execpt for i >= 10
+       vp(:)     = vi
+       vp(10:21) = 0._dp 
+    case('tetragonal')
+       ! Projection matrix M3 and (v1=v2,v4=v5,v7=v8) 
+       vp(1) = (vi(1) + vi(2)) * 0.5_dp
+       vp(2) =  vp(1)
+       vp(3) =  vi(3)
+       vp(4) = (vi(4) + vi(5)) * 0.5_dp
+       vp(5) =  vp(4)
+       vp(6) =  vi(6)
+       vp(7) = (vi(7) + vi(8)) * 0.5_dp
+       vp(8) =  vp(7)
+       vp(9) =  vi(9)
+    case('hexagonal')
+       vp(1) = (vi(1) + vi(2)) * 0.375_dp + vi(6) * inv_sqrt_2 * 0.25_dp + vi(9) * 0.25_dp 
+       vp(2) =  vp(1)
+       vp(3) =  vi(3)
+       vp(4) = (vi(4) + vi(5)) * 0.5_dp
+       vp(5) =  vp(4)
+       vp(6) = (vi(1) + vi(2)) * inv_sqrt_2 * 0.25_dp + vi(6) * 0.75_dp - vi(9) * inv_sqrt_2 * 0.5_dp
+       vp(7) = (vi(7) + vi(8)) * 0.5_dp
+       vp(8) =  vp(7)
+       vp(9) = (vi(1) + vi(2)) * 0.25_dp - vi(6) * inv_sqrt_2 * 0.5_dp + vi(9) * 0.5_dp 
+    case('isotropic')
+       vp(1) = ((vi(1) + vi(2) + vi(3)) * 3._dp  &
+             +  (vi(4) + vi(5) + vi(6)) * sqrt_2 &
+             +  (vi(7) + vi(8) + vi(9)) * 2._dp) * inv_15
+       vp(2) =   vp(1)
+       vp(3) =   vp(1)
+       vp(4) = ((vi(1) + vi(2) + vi(3)) * sqrt_2 &
+             +  (vi(4) + vi(5) + vi(6)) * 4._dp  &
+             -  (vi(7) + vi(8) + vi(9)) * sqrt_2) * inv_15
+       vp(5) =   vp(4)
+       vp(6) =   vp(4)
+       vp(7) = ((vi(1) + vi(2) + vi(3)) * 2._dp  &
+             -  (vi(4) + vi(5) + vi(6)) * sqrt_2 &
+             +  (vi(7) + vi(8) + vi(9)) * 3._dp) * inv_15
+       vp(8) =   vp(7)
+       vp(9) =   vp(7)
+    end select
+
+    ! Get deviation vector and norm of projection residual
+    vd  = vi-vp
+    dev = sqrt(sum(vd*vd))
+
+  end subroutine projection_to_higher_symmetry_class
+  !--------------------------------------------------------------------------------
+
+  
+  !================================================================================
+  ! Check tensor decomposition
+  !   - get a tensor
+  !   - rotate it
+  !   
   
 end module elastic_tensor_tools_mod
