@@ -289,10 +289,10 @@ contains
   !================================================================================
   ! Get dilatational stiffness tensor according to Browaeys and Chevrot (2004)
   !   (four-rank stiffness tensor has two two-rank tensors contractions)  
-  subroutine get_dilatational_stiffness_tensor(cij,dilatational)
+  function get_dilatational_stiffness_tensor(cij) result(dilatational)
 
     real(kind=dp), dimension(6,6), intent(in)  :: cij
-    real(kind=dp), dimension(6,6), intent(out) :: dilatational
+    real(kind=dp), dimension(6,6)              :: dilatational
 
     ! First column
     dilatational(1,1) = cij(1,1) + cij(1,2) +cij(1,3) 
@@ -309,15 +309,15 @@ contains
     dilatational(2,3) = dilatational(3,2)
     dilatational(3,3) = cij(1,3) + cij(2,3) + cij(3,3) 
     
-  end subroutine get_dilatational_stiffness_tensor
+  end function get_dilatational_stiffness_tensor
   !--------------------------------------------------------------------------------
 
   !================================================================================
   ! Get voigt stiffness tensor according to Browaeys and Chevrot (2004)
-  subroutine get_voigt_stiffness_tensor(cij,voigt)
+  function get_voigt_stiffness_tensor(cij) result(voigt)
     
     real(kind=dp), dimension(6,6), intent(in)  :: cij
-    real(kind=dp), dimension(6,6), intent(out) :: voigt
+    real(kind=dp), dimension(6,6)              :: voigt
     
     ! First column
     voigt(1,1) = cij(1,1) + cij(6,6) +cij(5,5) 
@@ -334,7 +334,7 @@ contains
     voigt(2,3) = voigt(3,2)
     voigt(3,3) = cij(5,5) + cij(4,4) + cij(3,3) 
     
-  end subroutine get_voigt_stiffness_tensor
+  end function get_voigt_stiffness_tensor
   !--------------------------------------------------------------------------------
 
   !================================================================================
@@ -1234,6 +1234,64 @@ contains
   end subroutine projection_to_higher_symmetry_class
   !--------------------------------------------------------------------------------
 
+
+  !================================================================================
+  ! Find symmetry axis of tensor
+  subroutine determine_tensor_symmetry_axis(cij)
+
+    real(kind=dp), dimension(6,6), intent(in) :: cij
+    real(kind=dp), dimension(6,6)             :: dij, vij ! dilatational and voigt
+
+    ! Get dilatational and voigt contraction tensors
+    dij = get_dilatational_stiffness_tensor(cij)
+    vij = get_voigt_stiffness_tensor(cij)
+
+    ! Determine eigenvalues and eigenvectors of dij and vij
+    !  done with iterative jacobi algorithm
+    
+        
+  end subroutine determine_tensor_symmetry_axis
+  !--------------------------------------------------------------------------------
+
+  !================================================================================
+  ! Sort eigenvalues and eigenvectors in decreasing order
+  subroutine sort_eigenvalues_eigenvectors(lambda,vector)
+
+    real(kind=dp), dimension(:),   allocatable, intent(inout) :: lambda ! eigenvalues
+    real(kind=dp), dimension(:,:), allocatable, intent(inout) :: vector ! eigenvectors
+
+    integer(kind=si) :: n, m, i
+    integer(kind=si), dimension(:), allocatable :: j
+
+    n = size(lambda)
+    m = size(vector,1)
+
+    do i = 1, n-1
+       j = maxloc(lambda) + i - 1 
+       if (j(1) /= i) then
+          call myswap(lambda(i),lambda(j(1)),1)
+          call myswap(vector(:,i),vector(:,j(1)),m)
+       end if
+    end do
+    
+  end subroutine sort_eigenvalues_eigenvectors
+  !--------------------------------------------------------------------------------
+
+  !================================================================================
+  ! Swap two values
+  subroutine myswap(a,b,n) 
+
+    integer(kind=si), intent(in) :: n
+    
+    real(kind=dp), dimension(n), intent(inout) :: a, b
+    real(kind=dp), dimension(n)                :: c
+
+    c(:) = a(:)
+    a(:) = b(:)
+    b(:) = c(:)
+    
+  end subroutine myswap
+  !--------------------------------------------------------------------------------
   
   !================================================================================
   ! Check tensor decomposition
