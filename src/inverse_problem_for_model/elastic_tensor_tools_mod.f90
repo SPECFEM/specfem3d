@@ -760,12 +760,12 @@ contains
   
   !================================================================================
   ! Compute square norm of vector
-  function square_norm_tensor_2(vector) result(norm)
+  function square_norm_vector(vector) result(norm)
 
     real(kind=dp), dimension(3), intent(in) :: vector
     real(kind=dp)                           :: norm
 
-    integer(kind=si) :: i, j
+    integer(kind=si) :: i
 
     norm = 0._dp
 
@@ -773,7 +773,7 @@ contains
        norm = norm + vector(i)*vector(i)
     end do
             
-  end function square_norm_tensor_2
+  end function square_norm_vector
   !--------------------------------------------------------------------------------
 
   !================================================================================
@@ -846,11 +846,11 @@ contains
 
   !================================================================================
   ! Transform second order voigt tensor to fourth order tensor
-  subroutine transform_tensor_fourth_to_second_order !(cij,cijkl)
+  subroutine transform_tensor_second_to_fourth_order !(cij,cijkl)
     
 
 
-  end subroutine transform_tensor_fourth_to_second_order
+  end subroutine transform_tensor_second_to_fourth_order
   !--------------------------------------------------------------------------------
 
   
