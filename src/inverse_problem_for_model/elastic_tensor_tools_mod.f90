@@ -43,7 +43,6 @@ contains
     !* Define reverse rotation
     rotmat_t    = transpose(rotmat)
 
-
   end subroutine define_rotation_matrix
   !--------------------------------------------------------------------------------
 
@@ -104,7 +103,6 @@ contains
     bond(5,6) = rotmat(1,1)*rotmat(3,2) + rotmat(1,2)*rotmat(3,1)
     bond(6,6) = rotmat(1,1)*rotmat(2,2) + rotmat(1,2)*rotmat(2,1)
 
-
   end subroutine define_bond_stress_matrix
   !--------------------------------------------------------------------------------
   
@@ -164,7 +162,6 @@ contains
     bond(4,6) = rotmat(2,2)*rotmat(3,1) + rotmat(2,1)*rotmat(3,2)
     bond(5,6) = rotmat(1,1)*rotmat(3,2) + rotmat(1,2)*rotmat(3,1)
     bond(6,6) = rotmat(1,1)*rotmat(2,2) + rotmat(1,2)*rotmat(2,1)
-
 
   end subroutine define_bond_strain_matrix
   !--------------------------------------------------------------------------------
@@ -723,7 +720,7 @@ contains
   !--------------------------------------------------------------------------------
 
   !================================================================================
-  ! Get angles of symétry axis from direction cosines
+  ! Get angles of symetry axis from direction cosines
   !     (th = dip angle from vertical, ph = azimuth from north (y))
   subroutine get_symmetry_angles(s,th,ph)
 
@@ -821,37 +818,335 @@ contains
   !--------------------------------------------------------------------------------
 
   !================================================================================
-  ! Pass a voigt tensor to elastic vector
-  subroutine transform_voigt_tensor_to_vector
+  ! Pass a voigt matrix to elastic vector
+  function transform_voigt_matrix_to_vector(cij) result(vi)
 
+    real(kind=dp), dimension(6,6), intent(in) :: cij
+    real(kind=dp), dimension(21)              :: vi
+    
+    real(kind=dp) :: sqrt_two, two_sqrt_two
+    
+    ! Constants
+    sqrt_two     = sqrt(2._dp)
+    two_sqrt_two = 2._dp * sqrt_two
 
-  end subroutine transform_voigt_tensor_to_vector
+    ! Group 1
+    vi( 1) = cij(1,1)
+    vi( 2) = cij(2,2)
+    vi( 3) = cij(3,3)
+    
+    ! Group 2
+    vi( 4) = cij(2,3) * sqrt_two
+    vi( 5) = cij(1,3) * sqrt_two
+    vi( 6) = cij(1,2) * sqrt_two
+    
+    ! Group 3
+    vi( 7) = cij(4,4)
+    vi( 8) = cij(5,5)
+    vi( 9) = cij(6,6)
+    
+    ! Group 4
+    vi(10) = cij(1,4)
+    vi(11) = cij(2,5)
+    vi(12) = cij(3,6)
+    
+    ! Group 5
+    vi(13) = cij(3,4)
+    vi(14) = cij(1,5)
+    vi(15) = cij(2,6)
+    vi(16) = cij(2,4)
+    vi(17) = cij(3,5)
+    vi(18) = cij(1,6)
+    
+    ! Group 6
+    vi(19) = cij(5,6) * two_sqrt_two
+    vi(20) = cij(4,6) * two_sqrt_two
+    vi(21) = cij(4,5) * two_sqrt_two
+    
+  end function transform_voigt_matrix_to_vector
   !--------------------------------------------------------------------------------
+
+  !================================================================================
+  ! Pass a voigt tensor to elastic vector
+  function transform_kelvin_tensor_to_vector(cij) result(vi)
+
+    real(kind=dp), dimension(6,6), intent(in) :: cij
+    real(kind=dp), dimension(21)              :: vi
+    
+    real(kind=dp) :: sqrt_two
+    
+    ! Constants
+    sqrt_two     = sqrt(2._dp)
+
+    ! Group 1
+    vi( 1) = cij(1,1)
+    vi( 2) = cij(2,2)
+    vi( 3) = cij(3,3)
+    
+    ! Group 2
+    vi( 4) = cij(2,3) * sqrt_two
+    vi( 5) = cij(1,3) * sqrt_two
+    vi( 6) = cij(1,2) * sqrt_two
+    
+    ! Group 3
+    vi( 7) = cij(4,4)
+    vi( 8) = cij(5,5)
+    vi( 9) = cij(6,6)
+    
+    ! Group 4
+    vi(10) = cij(1,4) * sqrt_two
+    vi(11) = cij(2,5) * sqrt_two
+    vi(12) = cij(3,6) * sqrt_two
+    
+    ! Group 5
+    vi(13) = cij(3,4) * sqrt_two
+    vi(14) = cij(1,5) * sqrt_two
+    vi(15) = cij(2,6) * sqrt_two
+    vi(16) = cij(2,4) * sqrt_two
+    vi(17) = cij(3,5) * sqrt_two
+    vi(18) = cij(1,6) * sqrt_two
+    
+    ! Group 6
+    vi(19) = cij(5,6) * sqrt_two
+    vi(20) = cij(4,6) * sqrt_two
+    vi(21) = cij(4,5) * sqrt_two
+    
+  end function transform_kelvin_tensor_to_vector
+  !--------------------------------------------------------------------------------
+
 
   !================================================================================
   ! Pass an elastic vector to a voigt tensor
-  subroutine transform_vector_to_voigt_tensor
+  !   (see Browaeys and Chevrot (2004)
+  function transform_vector_to_voigt_tensor(vi) result(cij)
 
+    real(kind=dp), dimension(21),  intent(in)  :: vi
+    real(kind=dp), dimension(6,6)              :: cij
+    
+    real(kind=dp) :: inv_sqrt_two, inv_two_sqrt_two
 
-  end subroutine transform_vector_to_voigt_tensor
+    ! Constants
+    inv_sqrt_two     = 1._dp / sqrt(2._dp)
+    inv_two_sqrt_two = 0.5_dp * inv_sqrt_two
+     
+    ! First column
+    cij(1,1) = vi( 1)
+    cij(2,1) = vi( 6) * inv_sqrt_two
+    cij(3,1) = vi( 5) * inv_sqrt_two
+    cij(4,1) = vi(10) * 0.5_dp
+    cij(5,1) = vi(14) * 0.5_dp
+    cij(6,1) = vi(18) * 0.5_dp
+
+    ! Second column
+    cij(1,2) = cij(2,1)
+    cij(2,2) = vi( 2)
+    cij(3,2) = vi( 4) * inv_sqrt_two
+    cij(4,2) = vi(16) * 0.5_dp
+    cij(5,2) = vi(11) * 0.5_dp
+    cij(6,2) = vi(15) * 0.5_dp
+
+    ! Third column
+    cij(1,3) = cij(3,1)
+    cij(2,3) = cij(3,2)
+    cij(3,3) = vi( 3)
+    cij(4,3) = vi(13) * 0.5_dp
+    cij(5,3) = vi(17) * 0.5_dp
+    cij(6,3) = vi(12) * 0.5_dp
+
+    ! Fourth column
+    cij(1,4) = cij(4,1)
+    cij(2,4) = cij(4,2)
+    cij(3,4) = cij(4,3)
+    cij(4,4) = vi(7)  * 0.5_dp
+    cij(5,4) = vi(21) * inv_two_sqrt_two
+    cij(6,4) = vi(20) * inv_two_sqrt_two
+
+    ! Fifth column
+    cij(1,5) = cij(5,1)
+    cij(2,5) = cij(5,2)
+    cij(3,5) = cij(5,3)
+    cij(4,5) = cij(5,4)
+    cij(5,5) = vi( 8) * 0.5_dp
+    cij(6,5) = vi(19) * inv_two_sqrt_two
+
+    ! Sixth column
+    cij(1,6) = cij(6,1)
+    cij(2,6) = cij(6,2)
+    cij(3,6) = cij(6,3)
+    cij(4,6) = cij(6,4)
+    cij(5,6) = cij(6,5)
+    cij(6,6) = vi( 9) * 0.5_dp
+
+  end function transform_vector_to_voigt_tensor
+  !--------------------------------------------------------------------------------
+
+  !================================================================================
+  ! Get Voigt m index from ij
+  function voigt_index(i,j) result(m)
+
+    integer(kind=si), intent(in) :: i, j
+    integer(kind=si)             :: m, dij
+
+    dij = delta(i,j) 
+
+    m = dij*i + (1-dij)*(9-i-j) 
+
+  end function voigt_index
   !--------------------------------------------------------------------------------
   
   !================================================================================
-  ! Transform fourth order tensor to second order voigt tensor
-  subroutine transform_tensor_fourth_to_second_order !(cijkl,cij)
+  ! Transform fourth order tensor to second order voigt matrix
+  function transform_tensor_fourth_to_voigt_matrix(cijkl) result(cij)
 
+    real(kind=dp), dimension(3,3,3,3), intent(in) :: cijkl
+    real(kind=dp), dimension(3,3)                 :: cij
+    
+    ! First column
+    cij(1,1) =  cijkl(1,1,1,1)
+    cij(2,1) = (cijkl(2,2,1,1) + cijkl(1,1,2,2)) * 0.5_dp
+    cij(3,1) = (cijkl(3,3,1,1) + cijkl(1,1,3,3)) * 0.5_dp
+    cij(4,1) = (cijkl(2,3,1,1) + cijkl(3,2,1,1) + &
+                cijkl(1,1,2,3) + cijkl(1,1,3,2)) * 0.25_dp
+    cij(5,1) = (cijkl(1,3,1,1) + cijkl(3,1,1,1) + &
+                cijkl(1,1,1,3) + cijkl(1,1,3,1)) * 0.25_dp
+    cij(6,1) = (cijkl(1,2,1,1) + cijkl(2,1,1,1) + &
+                cijkl(1,1,2,1) + cijkl(1,1,1,2)) * 0.25_dp
 
-  end subroutine transform_tensor_fourth_to_second_order
+    ! Second column
+    cij(1,2) =  cij(2,1)
+    cij(2,2) =  cijkl(2,2,2,2)
+    cij(3,2) = (cijkl(3,3,2,2) + cijkl(2,2,3,3)) * 0.5_dp
+    cij(4,2) = (cijkl(2,3,2,2) + cijkl(3,2,2,2) + &
+                cijkl(2,2,2,3) + cijkl(2,2,3,2)) * 0.25_dp
+    cij(5,2) = (cijkl(1,3,2,2) + cijkl(3,1,2,2) + &
+                cijkl(2,2,1,3) + cijkl(2,2,3,1)) * 0.25_dp
+    cij(6,2) = (cijkl(1,2,2,2) + cijkl(2,1,2,2) + &
+                cijkl(2,2,1,2) + cijkl(2,2,2,1)) * 0.25_dp
+
+    ! Third column
+    cij(1,3) =  cij(3,1)
+    cij(2,3) =  cij(3,2)
+    cij(3,3) =  cijkl(3,3,3,3)
+    cij(4,3) = (cijkl(2,3,3,3) + cijkl(3,2,3,3) + &
+                cijkl(3,3,2,3) + cijkl(3,3,3,2)) * 0.25_dp
+    cij(5,3) = (cijkl(1,3,3,3) + cijkl(3,1,3,3) + &
+                cijkl(3,3,1,3) + cijkl(3,3,3,1)) * 0.25_dp
+    cij(6,3) = (cijkl(1,2,3,3) + cijkl(2,1,3,3) + &
+                cijkl(3,3,1,2) + cijkl(3,3,2,1)) * 0.25_dp
+
+    ! Fourth column
+    cij(1,4) =  cij(4,1)
+    cij(2,4) =  cij(4,2)
+    cij(3,4) =  cij(3,4)
+    cij(4,4) = (cijkl(2,3,2,3) + cijkl(2,3,3,2) + &
+                cijkl(3,2,2,3) + cijkl(3,2,3,2)) * 0.25_dp
+    cij(5,4) = (cijkl(1,3,2,3) + cijkl(3,1,2,3) + &
+                cijkl(1,3,3,2) + cijkl(3,1,3,2) + &
+                cijkl(2,3,1,3) + cijkl(2,3,3,1) + &
+                cijkl(3,2,1,3) + cijkl(3,2,3,1)) * 0.125_dp
+    cij(6,4) = (cijkl(1,2,2,3) + cijkl(2,1,2,3) + &
+                cijkl(1,2,3,2) + cijkl(2,1,3,2) + &
+                cijkl(2,3,1,2) + cijkl(2,3,2,1) + &
+                cijkl(3,2,1,2) + cijkl(3,2,2,1)) * 0.125_dp
+    
+    ! Fifth column
+    cij(1,5) =  cij(5,1)
+    cij(2,5) =  cij(5,2)
+    cij(3,5) =  cij(5,3)
+    cij(4,5) =  cij(5,4)
+    cij(5,5) = (cijkl(1,3,1,3) + cijkl(1,3,3,1) + &
+                cijkl(3,1,1,3) + cijkl(3,1,3,1)) * 0.25_dp
+    cij(6,5) = (cijkl(1,3,2,3) + cijkl(3,1,2,3) + &
+                cijkl(1,3,3,2) + cijkl(3,1,3,2) + &
+                cijkl(2,3,1,3) + cijkl(2,3,3,1) + &
+                cijkl(3,2,1,3) + cijkl(3,2,3,1)) * 0.125_dp
+
+    ! Sixth column
+    cij(1,6) =  cij(6,1)
+    cij(2,6) =  cij(6,2)
+    cij(3,6) =  cij(6,3)
+    cij(4,6) =  cij(6,4)
+    cij(5,6) =  cij(6,5)
+    cij(6,6) = (cijkl(2,1,2,1) + cijkl(2,1,1,2) +  &
+                cijkl(1,2,2,1) + cijkl(1,2,2,1)) * 0.25_dp
+    
+  end function transform_tensor_fourth_to_voigt_matrix
   !--------------------------------------------------------------------------------
 
   !================================================================================
   ! Transform second order voigt tensor to fourth order tensor
-  subroutine transform_tensor_second_to_fourth_order !(cij,cijkl)
-    
+  function transform_voigt_matrix_to_fourth_order_tensor(cmn) result(cijkl)
 
+    real(kind=dp), dimension(3,3),    intent(in) :: cmn
+    real(kind=dp), dimension(3,3,3,3)            :: cijkl
 
-  end subroutine transform_tensor_second_to_fourth_order
+    integer(kind=si) :: i, j, k, l, m, n
+
+    ! Make tensor
+    cijkl = 0._dp
+    do l = 1, 3
+       do k = 1, 3
+
+          ! Get second index
+          n = voigt_index(k,l)
+          
+          do j = 1, 3
+             do i = 1, 3
+
+                ! Get first index
+                m = voigt_index(i,j)                
+
+                ! Fill tensor
+                cijkl(i,j,k,l) = cmn(m,n)
+                
+             end do
+          end do
+       end do
+    end do
+
+  end function transform_voigt_matrix_to_fourth_order_tensor
   !--------------------------------------------------------------------------------
 
+  !================================================================================
+  ! Transfrom voigt matrix 6x6 to kelvin tensor 6x6
+  function voigt_matrix_to_kelvin_tensor(voigt) result(kelvin)
+
+    real(kind=dp), dimension(6,6), intent(in) :: voigt
+    real(kind=dp), dimension(6,6)             :: kelvin
+    
+    real(kind=dp) :: sqrt_two
+    
+    ! Constants
+    sqrt_two     = sqrt(2._dp)
+
+    ! Transform
+    kelvin(1:3,1:3) = voigt(1:3,1:3)
+    kelvin(1:3,4:6) = voigt(1:3,4:6) * sqrt_two
+    kelvin(4:6,1:3) = voigt(4:6,1:3) * sqrt_two
+    kelvin(4:6,4:6) = voigt(4:6,4:6) * 2._dp
+
+  end function voigt_matrix_to_kelvin_tensor
+  !--------------------------------------------------------------------------------
+
+  !================================================================================
+  ! Transfrom voigt matrix 6x6 to kelvin tensor 6x6
+  function kelvin_tensor_to_voigt_matrix(kelvin) result(voigt)
+
+    real(kind=dp), dimension(6,6), intent(in) :: kelvin
+    real(kind=dp), dimension(6,6)             :: voigt
+    
+    real(kind=dp) :: inv_sqrt_two
+    
+    ! Constants
+    inv_sqrt_two = 1._dp / sqrt(2._dp)
+
+    ! Transform
+    voigt(1:3,1:3) = kelvin(1:3,1:3)
+    voigt(1:3,4:6) = kelvin(1:3,4:6) * inv_sqrt_two
+    voigt(4:6,1:3) = kelvin(4:6,1:3) * inv_sqrt_two
+    voigt(4:6,4:6) = kelvin(4:6,4:6) * 0.5_dp
+
+  end function kelvin_tensor_to_voigt_matrix
+  !--------------------------------------------------------------------------------
   
 end module elastic_tensor_tools_mod
