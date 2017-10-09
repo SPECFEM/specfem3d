@@ -48,14 +48,126 @@ contains
   !--------------------------------------------------------------------------------
 
   !================================================================================
-  ! Define bond rotation matrix to rotate a voigt tensor
-  !    (see e.g. Auld 1973, for bond matrix definition)
-  subroutine define_bond_matrix
+  ! Define bond rotation matrices to rotate a voigt tensor
+  !    (see e.g. Auld 1973, for bond matrix definition secion D pages 73-76)
+  ! HERE THE STRESS ONE => can be used to rotate the stress vector or stiffness tensor
+  subroutine define_bond_stress_matrix(rotmat,bond)
+
+    real(kind=dp), dimension(3,3), intent(in)  :: rotmat
+    real(kind=dp), dimension(6,6), intent(out) :: bond  
+
+    ! First column
+    bond(1,1) = rotmat(1,1)*rotmat(1,1)
+    bond(2,1) = rotmat(2,1)*rotmat(2,1)
+    bond(3,1) = rotmat(3,1)*rotmat(3,1)
+    bond(4,1) = rotmat(2,1)*rotmat(3,1)
+    bond(5,1) = rotmat(3,1)*rotmat(1,1)
+    bond(6,1) = rotmat(1,1)*rotmat(2,1)
+    
+    ! Second column
+    bond(1,2) = rotmat(1,2)*rotmat(1,2)
+    bond(2,2) = rotmat(2,2)*rotmat(2,2)
+    bond(3,2) = rotmat(3,2)*rotmat(3,2)
+    bond(4,2) = rotmat(2,2)*rotmat(3,2)
+    bond(5,2) = rotmat(3,2)*rotmat(1,2)
+    bond(6,2) = rotmat(1,2)*rotmat(2,2)
+
+    ! Third column
+    bond(1,3) = rotmat(1,3)*rotmat(1,3)
+    bond(2,3) = rotmat(2,3)*rotmat(2,3)
+    bond(3,3) = rotmat(3,3)*rotmat(3,3)
+    bond(4,3) = rotmat(2,3)*rotmat(3,3)
+    bond(5,3) = rotmat(3,3)*rotmat(1,3)
+    bond(6,3) = rotmat(1,3)*rotmat(2,3)
+
+    ! Fourth column
+    bond(1,4) = 2._dp*rotmat(1,2)*rotmat(1,3)
+    bond(2,4) = 2._dp*rotmat(2,2)*rotmat(2,3)
+    bond(3,4) = 2._dp*rotmat(3,2)*rotmat(3,3)
+    bond(4,4) = rotmat(2,2)*rotmat(3,3) + rotmat(2,3)*rotmat(3,2)
+    bond(5,4) = rotmat(1,2)*rotmat(3,3) + rotmat(1,3)*rotmat(3,2)
+    bond(6,4) = rotmat(1,2)*rotmat(2,3) + rotmat(1,3)*rotmat(2,2)
+
+    ! Fifth column
+    bond(1,5) = 2._dp*rotmat(1,3)*rotmat(1,1)
+    bond(2,5) = 2._dp*rotmat(2,3)*rotmat(2,1)
+    bond(3,5) = 2._dp*rotmat(3,3)*rotmat(3,1)
+    bond(4,5) = rotmat(2,1)*rotmat(3,3) + rotmat(2,3)*rotmat(3,1)
+    bond(5,5) = rotmat(1,3)*rotmat(3,1) + rotmat(1,1)*rotmat(3,3)
+    bond(6,5) = rotmat(1,3)*rotmat(2,1) + rotmat(1,1)*rotmat(2,3)
+
+    ! Sixth column
+    bond(1,6) = 2._dp*rotmat(1,1)*rotmat(1,2)
+    bond(2,6) = 2._dp*rotmat(2,1)*rotmat(2,2)
+    bond(3,6) = 2._dp*rotmat(3,1)*rotmat(3,2)
+    bond(4,6) = rotmat(2,2)*rotmat(3,1) + rotmat(2,1)*rotmat(3,2)
+    bond(5,6) = rotmat(1,1)*rotmat(3,2) + rotmat(1,2)*rotmat(3,1)
+    bond(6,6) = rotmat(1,1)*rotmat(2,2) + rotmat(1,2)*rotmat(2,1)
 
 
-  end subroutine define_bond_matrix
+  end subroutine define_bond_stress_matrix
   !--------------------------------------------------------------------------------
+  
+  !================================================================================
+  ! Define bond rotation matrices to rotate a voigt tensor
+  !    (see e.g. Auld 1973, for bond matrix definition secion D pages 73-76)
+  ! HERE THE STRAIN ONE => can be used to rotate the strain vector or compliance tensor
+  subroutine define_bond_strain_matrix(rotmat,bond)
 
+    real(kind=dp), dimension(3,3), intent(in)  :: rotmat
+    real(kind=dp), dimension(6,6), intent(out) :: bond  
+    
+    ! First column
+    bond(1,1) = rotmat(1,1)*rotmat(1,1)
+    bond(2,1) = rotmat(2,1)*rotmat(2,1)
+    bond(3,1) = rotmat(3,1)*rotmat(3,1)
+    bond(4,1) = 2._dp*rotmat(2,1)*rotmat(3,1)
+    bond(5,1) = 2._dp*rotmat(3,1)*rotmat(1,1)
+    bond(6,1) = 2._dp*rotmat(1,1)*rotmat(2,1)
+    
+    ! Second column
+    bond(1,2) = rotmat(1,2)*rotmat(1,2)
+    bond(2,2) = rotmat(2,2)*rotmat(2,2)
+    bond(3,2) = rotmat(3,2)*rotmat(3,2)
+    bond(4,2) = 2._dp*rotmat(2,2)*rotmat(3,2)
+    bond(5,2) = 2._dp*rotmat(3,2)*rotmat(1,2)
+    bond(6,2) = 2._dp*rotmat(1,2)*rotmat(2,2)
+
+    ! Third column
+    bond(1,3) = rotmat(1,3)*rotmat(1,3)
+    bond(2,3) = rotmat(2,3)*rotmat(2,3)
+    bond(3,3) = rotmat(3,3)*rotmat(3,3)
+    bond(4,3) = 2._dp*rotmat(2,3)*rotmat(3,3)
+    bond(5,3) = 2._dp*rotmat(3,3)*rotmat(1,3)
+    bond(6,3) = 2._dp*rotmat(1,3)*rotmat(2,3)
+
+    ! Fourth column
+    bond(1,4) = rotmat(1,2)*rotmat(1,3)
+    bond(2,4) = rotmat(2,2)*rotmat(2,3)
+    bond(3,4) = rotmat(3,2)*rotmat(3,3)
+    bond(4,4) = rotmat(2,2)*rotmat(3,3) + rotmat(2,3)*rotmat(3,2)
+    bond(5,4) = rotmat(1,2)*rotmat(3,3) + rotmat(1,3)*rotmat(3,2)
+    bond(6,4) = rotmat(1,2)*rotmat(2,3) + rotmat(1,3)*rotmat(2,2)
+
+    ! Fifth column
+    bond(1,5) = rotmat(1,3)*rotmat(1,1)
+    bond(2,5) = rotmat(2,3)*rotmat(2,1)
+    bond(3,5) = rotmat(3,3)*rotmat(3,1)
+    bond(4,5) = rotmat(2,1)*rotmat(3,3) + rotmat(2,3)*rotmat(3,1)
+    bond(5,5) = rotmat(1,3)*rotmat(3,1) + rotmat(1,1)*rotmat(3,3)
+    bond(6,5) = rotmat(1,3)*rotmat(2,1) + rotmat(1,1)*rotmat(2,3)
+
+    ! Sixth column
+    bond(1,6) = rotmat(1,1)*rotmat(1,2)
+    bond(2,6) = rotmat(2,1)*rotmat(2,2)
+    bond(3,6) = rotmat(3,1)*rotmat(3,2)
+    bond(4,6) = rotmat(2,2)*rotmat(3,1) + rotmat(2,1)*rotmat(3,2)
+    bond(5,6) = rotmat(1,1)*rotmat(3,2) + rotmat(1,2)*rotmat(3,1)
+    bond(6,6) = rotmat(1,1)*rotmat(2,2) + rotmat(1,2)*rotmat(2,1)
+
+
+  end subroutine define_bond_strain_matrix
+  !--------------------------------------------------------------------------------
 
   !================================================================================
   ! Rotation of first order tensor (vector actually)
@@ -67,6 +179,8 @@ contains
 
     integer(kind=si) :: i, ip
 
+    vi_r = 0._dp
+    
     do ip = 1, 3
        do i = 1, 3
           vi_r(ip) = vi_r(ip) + rotmat(ip,i)*vi(i)
@@ -86,6 +200,8 @@ contains
 
     integer(kind=si) :: i, j, ip, jp
 
+    cij_r = 0._dp
+    
     do jp = 1, 3
        do ip = 1, 3
           do j = 1, 3
@@ -109,6 +225,8 @@ contains
 
     integer(kind=si) :: i, j, k, l, ip, jp, kp, lp
 
+    cijkl_r = 0._dp
+    
     do kp = 1, 3
        do lp = 1, 3
           do jp = 1, 3
@@ -136,9 +254,38 @@ contains
   !================================================================================
   ! Rotation of fourth order tensor in voigt matrix with bond matrix
   !    (see e.g. Auld 1973, for bond matrix definition)
-  subroutine rotate_tensor_with_bond_matrix
+  subroutine rotate_tensor_with_bond_matrix(tensor,bond,tensor_r)
 
+    real(kind=dp), dimension(6,6), intent(in)  :: tensor
+    real(kind=dp), dimension(6,6), intent(in)  :: bond
+    real(kind=dp), dimension(6,6), intent(out) :: tensor_r
+    
+    real(kind=dp), dimension(6,6)  :: tensor_tmp, bond_t
+    integer(kind=si)               :: i, j, k
 
+    ! Get transpose of bond
+    bond_t = transpose(bond)
+
+    ! First comute CM^t
+    tensor_tmp = 0._dp
+    do j = 1, 6
+       do k = 1, 6
+          do i = 1,6
+             tensor_tmp(i,j) = tensor_tmp(i,j) + tensor(i,k) * bond_t(k,j)
+          end do
+       end do
+    end do
+
+    ! Then Compute M*(CM^t)
+    tensor_r = 0._dp
+    do j = 1, 6
+       do k = 1, 6
+          do i = 1,6
+             tensor_r(i,j) = tensor_r(i,j) + bond_t(i,j) * tensor_tmp(k,j) 
+          end do
+       end do
+    end do
+    
   end subroutine rotate_tensor_with_bond_matrix
   !--------------------------------------------------------------------------------
   
@@ -610,7 +757,24 @@ contains
 
   end function delta
   !--------------------------------------------------------------------------------
+  
+  !================================================================================
+  ! Compute square norm of vector
+  function square_norm_tensor_2(vector) result(norm)
 
+    real(kind=dp), dimension(3), intent(in) :: vector
+    real(kind=dp)                           :: norm
+
+    integer(kind=si) :: i, j
+
+    norm = 0._dp
+
+    do i = 1, 3
+       norm = norm + vector(i)*vector(i)
+    end do
+            
+  end function square_norm_tensor_2
+  !--------------------------------------------------------------------------------
 
   !================================================================================
   ! Compute square norm of a second order tensor
@@ -655,6 +819,39 @@ contains
     
   end function square_norm_tensor_4
   !--------------------------------------------------------------------------------
+
+  !================================================================================
+  ! Pass a voigt tensor to elastic vector
+  subroutine transform_voigt_tensor_to_vector
+
+
+  end subroutine transform_voigt_tensor_to_vector
+  !--------------------------------------------------------------------------------
+
+  !================================================================================
+  ! Pass an elastic vector to a voigt tensor
+  subroutine transform_vector_to_voigt_tensor
+
+
+  end subroutine transform_vector_to_voigt_tensor
+  !--------------------------------------------------------------------------------
+  
+  !================================================================================
+  ! Transform fourth order tensor to second order voigt tensor
+  subroutine transform_tensor_fourth_to_second_order !(cijkl,cij)
+
+
+  end subroutine transform_tensor_fourth_to_second_order
+  !--------------------------------------------------------------------------------
+
+  !================================================================================
+  ! Transform second order voigt tensor to fourth order tensor
+  subroutine transform_tensor_fourth_to_second_order !(cij,cijkl)
     
+
+
+  end subroutine transform_tensor_fourth_to_second_order
+  !--------------------------------------------------------------------------------
+
   
 end module elastic_tensor_tools_mod

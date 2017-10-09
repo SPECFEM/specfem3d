@@ -1147,15 +1147,16 @@ contains
     cos_theta = cos(theta * PI / 180.)
     sin_theta = sin(theta * PI / 180.)
 
-    A(1,1)=cos_theta*cos_phi
-    A(1,2)=-sin_phi
-    A(1,3)=sin_theta*sin_phi
-    A(2,1)=cos_theta*sin_phi
-    A(2,2)=cos_phi
-    A(2,3)=sin_theta*sin_phi
-    A(3,1)=-sin_theta
-    A(3,2)=0.
-    A(3,3)=cos_theta
+    ! SB SB doublon a supprimer
+!!$    A(1,1)=cos_theta*cos_phi
+!!$    A(1,2)=-sin_phi
+!!$    A(1,3)=sin_theta*sin_phi
+!!$    A(2,1)=cos_theta*sin_phi
+!!$    A(2,2)=cos_phi
+!!$    A(2,3)=sin_theta*sin_phi
+!!$    A(3,1)=-sin_theta
+!!$    A(3,2)=0.
+!!$    A(3,3)=cos_theta
 
     a(1,1) = cos_theta*cos_phi
     a(1,2) = -sin_phi
