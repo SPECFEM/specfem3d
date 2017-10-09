@@ -292,7 +292,7 @@ contains
   function get_dilatational_stiffness_tensor(cij) result(dilatational)
 
     real(kind=dp), dimension(6,6), intent(in)  :: cij
-    real(kind=dp), dimension(6,6)              :: dilatational
+    real(kind=dp), dimension(3,3)              :: dilatational
 
     ! First column
     dilatational(1,1) = cij(1,1) + cij(1,2) +cij(1,3) 
@@ -317,7 +317,7 @@ contains
   function get_voigt_stiffness_tensor(cij) result(voigt)
     
     real(kind=dp), dimension(6,6), intent(in)  :: cij
-    real(kind=dp), dimension(6,6)              :: voigt
+    real(kind=dp), dimension(3,3)              :: voigt
     
     ! First column
     voigt(1,1) = cij(1,1) + cij(6,6) +cij(5,5) 
@@ -1240,7 +1240,7 @@ contains
   subroutine determine_tensor_symmetry_axis(cij)
 
     real(kind=dp), dimension(6,6), intent(in) :: cij
-    real(kind=dp), dimension(6,6)             :: dij, vij ! dilatational and voigt
+    real(kind=dp), dimension(3,3)             :: dij, vij ! dilatational and voigt
 
     ! Get dilatational and voigt contraction tensors
     dij = get_dilatational_stiffness_tensor(cij)
