@@ -315,7 +315,8 @@ module inverse_problem_par
      character(len= MAX_LEN_STRING)                                            :: station_coord_system
      !! station list
      real(kind=CUSTOM_REAL), dimension(:,:), allocatable                       :: read_station_position
-     real(kind=CUSTOM_REAL), dimension(:), allocatable                         :: time_pick
+     real(kind=CUSTOM_REAL), dimension(:), allocatable                         :: time_pick, baz, inc
+     real(kind=CUSTOM_REAL), dimension(:), allocatable                         :: dist, gcarc
 
      !! traction directory in case of AxiSem or DSM coupling
      character(len= MAX_LEN_STRING)                                            :: traction_dir

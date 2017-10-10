@@ -577,8 +577,7 @@ contains
   !--------------------------------------------------------------------------------
 
   ! ================================================================================
-  ! Compute epicentral distance, baz and dit from stations/source informations
-  !                   for now, only a spherical Earth of radius = 6371 km
+  ! Compute offset and baz from stations/source informations
   subroutine calc_dist_baz_cart(src_x,src_y,sta_x,sta_y,dist,baz)
 
     real(kind=dp), intent(in)  :: src_x, src_y, sta_x, sta_y
