@@ -1,11 +1,11 @@
 module elastic_tensor_tools_mod
   
-  use interpolation_mod, only: si, sp, di, dp, cp, hp, deg2rad, rad2deg
+  use interpolation_mod, only: si, sp, di, dp, cp, hp, deg2rad, rad2deg, pi
 
   implicit none
 
   integer(kind=si), dimension(:,:), allocatable :: ind_vec2tens, ind_vec2tens_voigt
-  
+
 contains
 
   !================================================================================
@@ -50,10 +50,10 @@ contains
   ! Define bond rotation matrices to rotate a voigt tensor
   !    (see e.g. Auld 1973, for bond matrix definition secion D pages 73-76)
   ! HERE THE STRESS ONE => can be used to rotate the stress vector or stiffness tensor
-  subroutine define_bond_stress_matrix(rotmat,bond)
+  function define_bond_stress_matrix(rotmat) result(bond)
 
     real(kind=dp), dimension(3,3), intent(in)  :: rotmat
-    real(kind=dp), dimension(6,6), intent(out) :: bond  
+    real(kind=dp), dimension(6,6)              :: bond  
 
     ! First column
     bond(1,1) = rotmat(1,1)*rotmat(1,1)
@@ -103,17 +103,17 @@ contains
     bond(5,6) = rotmat(1,1)*rotmat(3,2) + rotmat(1,2)*rotmat(3,1)
     bond(6,6) = rotmat(1,1)*rotmat(2,2) + rotmat(1,2)*rotmat(2,1)
 
-  end subroutine define_bond_stress_matrix
+  end function define_bond_stress_matrix
   !--------------------------------------------------------------------------------
   
   !================================================================================
   ! Define bond rotation matrices to rotate a voigt tensor
   !    (see e.g. Auld 1973, for bond matrix definition secion D pages 73-76)
   ! HERE THE STRAIN ONE => can be used to rotate the strain vector or compliance tensor
-  subroutine define_bond_strain_matrix(rotmat,bond)
+  function define_bond_strain_matrix(rotmat) result(bond)
 
     real(kind=dp), dimension(3,3), intent(in)  :: rotmat
-    real(kind=dp), dimension(6,6), intent(out) :: bond  
+    real(kind=dp), dimension(6,6)              :: bond  
     
     ! First column
     bond(1,1) = rotmat(1,1)*rotmat(1,1)
@@ -163,7 +163,7 @@ contains
     bond(5,6) = rotmat(1,1)*rotmat(3,2) + rotmat(1,2)*rotmat(3,1)
     bond(6,6) = rotmat(1,1)*rotmat(2,2) + rotmat(1,2)*rotmat(2,1)
 
-  end subroutine define_bond_strain_matrix
+  end function define_bond_strain_matrix
   !--------------------------------------------------------------------------------
 
   !================================================================================
@@ -189,11 +189,11 @@ contains
   
   !================================================================================
   ! Rotation of second order tensor (not efficient but corresponds to definition)
-  subroutine rotate_second_order_tensor(rotmat,cij,cij_r)
+  function rotate_second_order_tensor(rotmat,cij) result(cij_r)
     
     real(kind=dp), dimension(3,3), intent(in)  :: cij
     real(kind=dp), dimension(3,3), intent(in)  :: rotmat
-    real(kind=dp), dimension(3,3), intent(out) :: cij_r
+    real(kind=dp), dimension(3,3)              :: cij_r
 
     integer(kind=si) :: i, j, ip, jp
 
@@ -209,7 +209,7 @@ contains
        end do
     end do
     
-  end subroutine rotate_second_order_tensor
+  end function rotate_second_order_tensor
   !--------------------------------------------------------------------------------
 
   !================================================================================
@@ -251,11 +251,11 @@ contains
   !================================================================================
   ! Rotation of fourth order tensor in voigt matrix with bond matrix
   !    (see e.g. Auld 1973, for bond matrix definition)
-  subroutine rotate_tensor_with_bond_matrix(tensor,bond,tensor_r)
+  function rotate_tensor_with_bond_matrix(bond,tensor) result(tensor_r)
 
     real(kind=dp), dimension(6,6), intent(in)  :: tensor
     real(kind=dp), dimension(6,6), intent(in)  :: bond
-    real(kind=dp), dimension(6,6), intent(out) :: tensor_r
+    real(kind=dp), dimension(6,6)              :: tensor_r
     
     real(kind=dp), dimension(6,6)  :: tensor_tmp, bond_t
     integer(kind=si)               :: i, j, k
@@ -278,12 +278,12 @@ contains
     do j = 1, 6
        do k = 1, 6
           do i = 1,6
-             tensor_r(i,j) = tensor_r(i,j) + bond_t(i,j) * tensor_tmp(k,j) 
+             tensor_r(i,j) = tensor_r(i,j) + bond(i,k) * tensor_tmp(k,j) 
           end do
        end do
     end do
-    
-  end subroutine rotate_tensor_with_bond_matrix
+
+  end function rotate_tensor_with_bond_matrix
   !--------------------------------------------------------------------------------
   
   !================================================================================
@@ -335,22 +335,6 @@ contains
     voigt(3,3) = cij(5,5) + cij(4,4) + cij(3,3) 
     
   end function get_voigt_stiffness_tensor
-  !--------------------------------------------------------------------------------
-
-  !================================================================================
-  ! Pass from elastic tensor to the elastic vector defined by Browaeys and Chevrot (2004)
-  subroutine elastic_tensor_to_elastic_vector
-
-
-  end subroutine elastic_tensor_to_elastic_vector
-  !--------------------------------------------------------------------------------
-
-  !================================================================================
-  ! Pass from elastic vector to elastic tensor (see Browaeys and Chevrot (2004))
-  subroutine elastic_vector_to_elastic_tensor
-
-
-  end subroutine elastic_vector_to_elastic_tensor
   !--------------------------------------------------------------------------------
   
   !================================================================================
@@ -729,7 +713,7 @@ contains
     
     real(kind=dp) :: thrad, phrad, r
 
-    r = sqrt(s(1)*s(1) + s(2)*s(2) + s(3)*s(3))
+    r  = sqrt(s(1)*s(1) + s(2)*s(2) + s(3)*s(3))
     ph = atan2(s(1),s(2))
     th = acos(s(3)/r)
     
@@ -841,22 +825,22 @@ contains
     vi( 6) = cij(1,2) * sqrt_two
     
     ! Group 3
-    vi( 7) = cij(4,4)
-    vi( 8) = cij(5,5)
-    vi( 9) = cij(6,6)
+    vi( 7) = cij(4,4) * 2._dp
+    vi( 8) = cij(5,5) * 2._dp
+    vi( 9) = cij(6,6) * 2._dp
     
     ! Group 4
-    vi(10) = cij(1,4)
-    vi(11) = cij(2,5)
-    vi(12) = cij(3,6)
+    vi(10) = cij(1,4) * 2._dp
+    vi(11) = cij(2,5) * 2._dp
+    vi(12) = cij(3,6) * 2._dp
     
     ! Group 5
-    vi(13) = cij(3,4)
-    vi(14) = cij(1,5)
-    vi(15) = cij(2,6)
-    vi(16) = cij(2,4)
-    vi(17) = cij(3,5)
-    vi(18) = cij(1,6)
+    vi(13) = cij(3,4) * 2._dp
+    vi(14) = cij(1,5) * 2._dp
+    vi(15) = cij(2,6) * 2._dp
+    vi(16) = cij(2,4) * 2._dp
+    vi(17) = cij(3,5) * 2._dp
+    vi(18) = cij(1,6) * 2._dp
     
     ! Group 6
     vi(19) = cij(5,6) * two_sqrt_two
@@ -1280,24 +1264,125 @@ contains
 
   !================================================================================
   ! Find symmetry axis of tensor
-  subroutine determine_tensor_symmetry_axis(cij)
+  subroutine determine_tensor_symmetry_axis(cij,scc)
 
     real(kind=dp), dimension(6,6), intent(in) :: cij
-    real(kind=dp), dimension(3,3)             :: dij, vij ! dilatational and voigt
+    real(kind=dp), dimension(3,3)             :: dij, vij     ! dilatational and voigt
     real(kind=dp), dimension(3,3)             :: v_dij, v_vij ! dilatational and voigt
 
-    real(kind=dp), dimension(3)             :: l_dij, l_vij ! dilatational and voigt
+    real(kind=dp), dimension(3)              :: l_dij, l_vij  ! dilatational and voigt
+    real(kind=dp), dimension(3)              :: bss, dvm      ! bissectrix vector, deviation
+    real(kind=dp), dimension(3,3)            :: t, sct        ! angle matrix, test SCC
+    real(kind=dp), dimension(21)             :: vi, vd, vp    ! elastic vectors
+    real(kind=dp), dimension(6,6)            :: bond          ! bond matrix for rotation
+
+    real(kind=dp), dimension(6,6)            :: cij_r         ! rotated cij
+
+    real(kind=dp), dimension(3,3), intent(out) :: scc         ! rotation matrix to cristal frame
 
     real(kind=dp), parameter :: tol=1e-9
+
+    real(kind=dp)    :: val, norm
+    integer(kind=si) :: i, j, pos, p
+
+    integer(kind=si), dimension(3,3) :: perm
+    integer(kind=si), dimension(3)   :: npos
+    
+    ! Define permutation matrix
+    perm(:,1) = (/ 1, 2, 3/)
+    perm(:,2) = (/ 2, 3, 1/)
+    perm(:,3) = (/ 3, 1, 2/)
     
     ! Get dilatational and voigt contraction tensors
     dij = get_dilatational_stiffness_tensor(cij)
     vij = get_voigt_stiffness_tensor(cij)
 
     ! Determine eigenvalues and eigenvectors of dij and vij
-    !  done with iterative jacobi algorithm
     call jacobi_eigenvalue_decomposition(dij,3,tol,l_dij,v_dij)
     call jacobi_eigenvalue_decomposition(vij,3,tol,l_vij,v_vij)
+
+    ! Form angle matrix between eigenvectors of dij and vij
+    do j = 1, 3
+       do i = 1, 3
+
+          ! compute angle between vector pair
+          val = sum(v_dij(:,j)*v_vij(:,i))
+          if (abs(val) >= 1._dp) then  
+             val = sign(1._dp,val)
+          end if
+
+          ! ensure domain of angle and assign
+          val = acos(val)
+          if (val > 0.5*pi) then
+             val = val - pi
+          end if
+          t(i,j) = val
+
+       end do
+    end do
+    
+    ! Associate v_vij eigenvectors to v_dij
+    npos = minloc(abs(t),dim=1)
+    
+    ! Follow graham-smith method to define and orthonormal basis
+    !   from bissectrix vector between closest pair of eigenvectors (dij and vij)
+    ! First direction (init graham-schmidt)
+    bss(:)   = v_dij(:,1) + sign(1._dp,t(npos(1),1))*v_vij(:,npos(1))
+    norm     = sqrt(sum(bss*bss))
+    scc(:,1) = bss / norm
+    
+    ! Second direction (one graham-schmidt iteration)
+    bss(:)   = v_dij(:,2) + sign(1._dp,t(npos(2),2))*v_vij(:,npos(2))
+    bss(:)   = bss(:) - sum(scc(:,1)*bss(:))*scc(:,1)
+    norm     = sqrt(sum(bss*bss))
+    scc(:,2) = bss / norm
+
+    ! Third one: take a cross product to form a right-handed basis
+    bss(1) = scc(2,1) * scc(3,2) - scc(2,2)*scc(3,1)
+    bss(2) = scc(1,2) * scc(3,1) - scc(1,1)*scc(3,2)
+    bss(3) = scc(1,1) * scc(2,2) - scc(1,2)*scc(2,1)
+    norm     = sqrt(sum(bss*bss))
+    scc(:,3) = bss  / norm
+    
+
+    ! Now check for best hexagonal symetry fit
+    ! Basis transfer
+    scc=transpose(scc)
+
+    ! Loop over permutations ((123),(231),(312))
+    do p = 1, 3
+       
+       ! New SCC from permutation
+       npos(:) = perm(p,:)
+       do i = 1, 3
+          sct(i,:) = scc(npos(i),:)
+       end do
+
+       !! Here rotation for checks with full tensor representation
+       !! Rotate with full tensor description
+       !! cijkl=transform_voigt_matrix_to_fourth_order_tensor(cij)
+       !! cijkl_r=rotate_fourth_order_tensor(sct,cijkl)
+       !! cij_r=transform_tensor_fourth_to_voigt_matrix(cijkl_r)
+
+       ! Rotate with Bond matrix
+       bond  = define_bond_stress_matrix(sct)
+       cij_r = rotate_tensor_with_bond_matrix(bond,cij)
+       
+       ! Projection on hexagonal symetry
+       vi = transform_voigt_matrix_to_vector(cij)
+       call projection_to_higher_symmetry_class(vi,'hexagonal',vp,vd,dvm(p))
+                
+    end do
+    
+    ! Choose permutation
+    pos = minloc(dvm,dim=1)
+    scc = cshift(scc,shift=pos,dim=1)  ! to check...
+    
+    ! Do the rotation
+    bond = define_bond_stress_matrix(scc)
+    cij_r  = rotate_tensor_with_bond_matrix(bond,cij)
+    vi   = transform_voigt_matrix_to_vector(cij)
+    call projection_to_higher_symmetry_class(vi,'hexagonal',vp,vd,dvm(p))
 
   end subroutine determine_tensor_symmetry_axis
   !--------------------------------------------------------------------------------
