@@ -1,5 +1,5 @@
 /*
- !=====================================================================
+ !========================================================================
  !
  !               S p e c f e m 3 D  V e r s i o n  3 . 0
  !               ---------------------------------------
@@ -10,6 +10,10 @@
  !                 (there are currently many more authors!)
  ! (c) Princeton University and CNRS / University of Marseille, July 2012
  !
+ ! This software is a computer program whose purpose is to solve
+ ! the viscoelastic anisotropic or poroelastic wave equation
+ ! using a spectral-element method (SEM).
+ !
  ! This program is free software; you can redistribute it and/or modify
  ! it under the terms of the GNU General Public License as published by
  ! the Free Software Foundation; either version 3 of the License, or
@@ -17,22 +21,24 @@
  !
  ! This program is distributed in the hope that it will be useful,
  ! but WITHOUT ANY WARRANTY; without even the implied warranty of
- ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  ! GNU General Public License for more details.
  !
  ! You should have received a copy of the GNU General Public License along
  ! with this program; if not, write to the Free Software Foundation, Inc.,
  ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  !
- !=====================================================================
+ ! The full text of the license is available in file "LICENSE".
+ !
+ !========================================================================
  */
 
 /*
 
-by Dennis McRitchie (Princeton University, USA)
+ by Dennis McRitchie (Princeton University, USA) and others
 
  January 7, 2010 - par_file parsing
- May 25, 2011 - Updated to support multi-word values
+ June 1, 2011 - Updated to support multi-word values; also a few bug fixes.
  ..
  You'll notice that the heart of the parser is a complex regular
  expression that is compiled within the C code, and then used to split
@@ -101,7 +107,7 @@ FC_FUNC_(param_open,PARAM_OPEN)(char * filename, int * length, int * ierr)
     fncopy[blank - fncopy] = '\0';
   }
   if ((fid = fopen(fncopy, "r")) == NULL) {
-// DK DK purposely suppressed this      printf("Can't open '%s'\n", fncopy);
+    // DK DK purposely suppressed this for NUMBER_OF_SIMULTANEOUS_RUNS     printf("Can't open '%s'\n", fncopy);
     *ierr = 1;
     return;
   }
@@ -120,6 +126,7 @@ FC_FUNC_(param_read,PARAM_READ)(char * string_read, int * string_read_len, char 
 {
   char * namecopy;
   char * blank;
+  char * namecopy2;
   int status;
   regex_t compiled_pattern;
   char line[LINE_MAX];
@@ -135,6 +142,15 @@ FC_FUNC_(param_read,PARAM_READ)(char * string_read, int * string_read_len, char 
   if (blank != NULL) {
     namecopy[blank - namecopy] = '\0';
   }
+
+  // Then get rid of any dot-terminated prefix.
+  namecopy2 = strchr(namecopy, '.');
+  if (namecopy2 != NULL) {
+    namecopy2 += 1;
+  } else {
+    namecopy2 = namecopy;
+  }
+
   /* Regular expression for parsing lines from param file.
    ** Good luck reading this regular expression.  Basically, the lines of
    ** the parameter file should be of the form 'parameter = value',
@@ -180,11 +196,12 @@ FC_FUNC_(param_read,PARAM_READ)(char * string_read, int * string_read_len, char 
       regfree(&compiled_pattern);
       return;
     }
-    //    printf("Line read = %s\n", line);
+    // printf("Line read = %s\n", line);
     // If we have a match, extract the keyword from the line.
     keyword = strndup(line+parameter[1].rm_so, parameter[1].rm_eo-parameter[1].rm_so);
+
     // If the keyword is not the one we're looking for, check the next line.
-    if (strcmp(keyword, namecopy) != 0) {
+    if (strcmp(keyword, namecopy2) != 0) {
       free(keyword);
       continue;
     }
@@ -192,12 +209,15 @@ FC_FUNC_(param_read,PARAM_READ)(char * string_read, int * string_read_len, char 
     regfree(&compiled_pattern);
     // If it matches, extract the value from the line.
     value = strndup(line+parameter[2].rm_so, parameter[2].rm_eo-parameter[2].rm_so);
+
     // Clear out the return string with blanks, copy the value into it, and return.
     memset(string_read, ' ', *string_read_len);
+
     value_len = strlen(value);
     if (value_len > (size_t)*string_read_len)
       value_len = *string_read_len;
     strncpy(string_read, value, value_len);
+
     free(value);
     free(namecopy);
     *ierr = 0;
