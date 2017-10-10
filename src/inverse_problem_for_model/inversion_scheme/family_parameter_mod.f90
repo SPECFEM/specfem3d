@@ -234,7 +234,7 @@ contains
 
           case default
 
-             write(*,*) 'Error : unknonwn family for acoustic case ',trim(adjustl(inversion_param%param_family))
+             write(*,*) 'Error : unknown family for acoustic case ',trim(adjustl(inversion_param%param_family))
              stop
 
           end select
@@ -503,7 +503,7 @@ contains
                 hess_kappa_kl(:,:,:,ispec) = - kappastore(:,:,:,ispec) * hess_kappa_kl(:,:,:,ispec)
              endif
 
-             !---------------------put kernel in the choosen family---------------------------------------------------------
+             !---------------------put kernel in the chosen family---------------------------------------------------------
              select case(trim(adjustl(inversion_param%param_family)))
 
              case('vp')
