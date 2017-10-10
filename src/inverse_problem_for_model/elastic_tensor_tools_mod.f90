@@ -983,7 +983,7 @@ contains
   function transform_tensor_fourth_to_voigt_matrix(cijkl) result(cij)
 
     real(kind=dp), dimension(3,3,3,3), intent(in) :: cijkl
-    real(kind=dp), dimension(3,3)                 :: cij
+    real(kind=dp), dimension(6,6)                 :: cij
     
     ! First column
     cij(1,1) =  cijkl(1,1,1,1)
