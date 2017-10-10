@@ -1,7 +1,6 @@
 module rotations_mod
 
-  use precision_mod
-  use constants_mod
+  use interpolation_mod, only: si, sp, di, dp, cp, hp, deg2rad, rad2deg
   implicit none
 
 
@@ -123,9 +122,9 @@ contains
     rotc_t = transpose(rotc)
 
     !* Data in geographic coordinate at real position
-    X1 = rotc_t(1,1)*vz + rotc_t(1,2)*vn + rotc_t(1,3)*ve
-    Y1 = rotc_t(2,1)*vz + rotc_t(2,2)*vn + rotc_t(2,3)*ve
-    Z1 = rotc_t(3,1)*vz + rotc_t(3,2)*vn + rotc_t(3,3)*ve
+    X1 = rotc_t(1,1)*vz2 + rotc_t(1,2)*vn + rotc_t(1,3)*ve
+    Y1 = rotc_t(2,1)*vz2 + rotc_t(2,2)*vn + rotc_t(2,3)*ve
+    Z1 = rotc_t(3,1)*vz2 + rotc_t(3,2)*vn + rotc_t(3,3)*ve
 
     !* From local mesh to global eath
     X2 = rotmat(1,1)*X1 + rotmat(1,2)*Y1 + rotmat(1,3)*Z1
@@ -242,97 +241,110 @@ contains
 ! Rotation of components
   subroutine rotate_ZNE_to_ZRT(vz,vn,ve,vz2,vr,vt,nrec,nt,bazi)
 
+    integer(kind=si), intent(in) :: nt, nrec
+    real(kind=dp),    intent(in) :: bazi
+        
     real(kind=dp), dimension(nrec,nt),  intent(in) :: vz,  vn, ve
     real(kind=dp), dimension(nrec,nt), intent(out) :: vz2, vr, vt
-    real(kind=dp), intent(in) :: bazi
-    integer(kind=si), intent(in) :: nt, nrec
+
     real(kind=dp) :: baz
 
     baz = deg2rad * bazi
     vr = -ve * sin(baz) - vn * cos(baz)
-    vt =  ve * cos(baz) - vn * sin(baz)
+    vt = -ve * cos(baz) + vn * sin(baz)
     vz2 = vz
 
   end subroutine rotate_ZNE_to_ZRT
 
   subroutine rotate_ZRT_to_ZNE(vz2,vr,vt,vz,vn,ve,nrec,nt,bazi)
 
+    integer(kind=si), intent(in) :: nt, nrec
+    real(kind=dp),    intent(in) :: bazi
+    
     real(kind=dp), dimension(nrec,nt),  intent(in) :: vz2, vr, vt
     real(kind=dp), dimension(nrec,nt), intent(out) :: vz,  vn, ve
-    real(kind=dp), intent(in) :: bazi
-    integer(kind=si), intent(in) :: nt, nrec
+
     real(kind=dp) :: baz
 
     baz = deg2rad * bazi
-    ve = -vr * sin(baz) + vt * cos(baz)
-    vn = -vr * cos(baz) - vt * sin(baz)
+    ve = -vr * sin(baz) - vt * cos(baz)
+    vn = -vr * cos(baz) + vt * sin(baz)
     vz = vz2
 
   end subroutine rotate_ZRT_to_ZNE
 
   subroutine rotate_ZNE_to_LQT(vz,vn,ve,vl,vq,vt,nrec,nt,bazi,inci)
 
+    integer(kind=si), intent(in) :: nt, nrec
+    real(kind=dp),    intent(in) :: bazi, inci
+
     real(kind=dp), dimension(nrec,nt),  intent(in) :: vz, vn, ve
     real(kind=dp), dimension(nrec,nt), intent(out) :: vl, vq, vt
-    real(kind=dp), intent(in) :: bazi, inci
-    integer(kind=si), intent(in) :: nt, nrec
+
     real(kind=dp) :: baz, inc
 
     baz = deg2rad * bazi
     inc = deg2rad * inci
 
     vl =  vz*cos(inc) - ve*sin(baz)*sin(inc) - vn*cos(baz)*sin(inc)
-    vq = -vz*sin(inc) - ve*sin(baz)*cos(inc) - vn*cos(baz)*cos(inc)
-    vt =              + ve*cos(baz)          - vn*sin(baz)
+    vq =  vz*sin(inc) + ve*sin(baz)*cos(inc) + vn*cos(baz)*cos(inc)
+    vt =              - ve*cos(baz)          + vn*sin(baz)
 
   end subroutine rotate_ZNE_to_LQT
 
   subroutine rotate_LQT_to_ZNE(vl,vq,vt,vz,vn,ve,nrec,nt,bazi,inci)
 
+    integer(kind=si), intent(in) :: nt, nrec
+    real(kind=dp), intent(in)    :: bazi, inci
+
     real(kind=dp), dimension(nrec,nt), intent(out) :: vz, vn, ve
     real(kind=dp), dimension(nrec,nt),  intent(in) :: vl, vq, vt
-    real(kind=dp), intent(in) :: bazi, inci
-    integer(kind=si), intent(in) :: nt, nrec
+
     real(kind=dp) :: baz, inc
 
     baz = deg2rad * bazi
     inc = deg2rad * inci
 
-    vz =  vl*cos(inc)          - vq*sin(inc)
-    ve = -vl*sin(baz)*sin(inc) - vq*sin(baz)*cos(inc) + vt*cos(baz)
-    vn = -vl*cos(baz)*sin(inc) - vq*cos(baz)*cos(inc) - vt*sin(baz)
+    vz =  vl*cos(inc)          + vq*sin(inc)
+    ve = -vl*sin(baz)*sin(inc) + vq*sin(baz)*cos(inc) - vt*cos(baz)
+    vn = -vl*cos(baz)*sin(inc) + vq*cos(baz)*cos(inc) + vt*sin(baz)
 
   end subroutine rotate_LQT_to_ZNE
 
   subroutine rotate_ZRT_to_LQT(vz,vr,vt,vl,vq,vt2,nrec,nt,inci)
 
+    integer(kind=si), intent(in) :: nt, nrec
+    real(kind=dp), intent(in)    :: inci
+    
     real(kind=dp), dimension(nrec,nt),  intent(in) :: vz, vr, vt
     real(kind=dp), dimension(nrec,nt), intent(out) :: vl, vq, vt2
-    real(kind=dp), intent(in) :: inci
-    integer(kind=si), intent(in) :: nt, nrec
+    
     real(kind=dp) :: inc
 
     inc = deg2rad * inci
 
-    vl =  vz * cos(inc) + vr * sin(inc)
-    vq = -vz * sin(inc) + vr * cos(inc)
+    vl  = vz * cos(inc) + vr * sin(inc)
+    vq  = vz * sin(inc) - vr * cos(inc)
     vt2 = vt
 
   end subroutine rotate_ZRT_to_LQT
 
   subroutine rotate_LQT_to_ZRT(vl,vq,vt2,vz,vr,vt,nrec,nt,inci)
 
+    integer(kind=si), intent(in) :: nt, nrec
+    real(kind=dp), intent(in)    :: inci
+        
     real(kind=dp), dimension(nrec,nt), intent(out) :: vz, vr, vt
     real(kind=dp), dimension(nrec,nt),  intent(in) :: vl, vq, vt2
-    real(kind=dp), intent(in) :: inci
-    integer(kind=si), intent(in) :: nt, nrec
+
     real(kind=dp) :: inc
 
     inc = deg2rad * inci
 
-    vz = vl * cos(inc) - vq * sin(inc)
-    vr = vl * sin(inc) + vq * cos(inc)
+    vz = vl * cos(inc) + vq * sin(inc)
+    vr = vl * sin(inc) - vq * cos(inc)
     vt = vt2
+    
   end subroutine rotate_LQT_to_ZRT
 !--------------------------------------------------------------------------------
 
