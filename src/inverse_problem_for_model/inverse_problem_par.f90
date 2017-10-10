@@ -212,9 +212,9 @@ module inverse_problem_par
      !!       these informations.
      !!
      !! kind of source to be used ('moment', 'force')
-     character(len=10)                                                         :: source_type_physical
+     character(len=256)                                                         :: source_type_physical
      !! kind of source to be used ('pointsource', 'finitefault','axisem', 'dsm', 'fk')
-     character(len=10)                                                         :: source_type_modeling
+     character(len=256)                                                         :: source_type_modeling
      !! position of source in case of internal point source
      double precision, dimension(:), allocatable                               :: Xs,Ys,Zs
      !! source time function
