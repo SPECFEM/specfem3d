@@ -1234,6 +1234,49 @@ contains
   end subroutine projection_to_higher_symmetry_class
   !--------------------------------------------------------------------------------
 
+  !================================================================================
+  ! Projection of an anisotropic vector onto the isotropic subspace
+  !   use vector + cij contractions to define viso and elastic constant K and G
+  subroutine projection_to_isotropic_symmetry(vi,di,vo,vp,vd,dev,k,g)
+    
+    real(kind=dp), dimension(3,3), intent(in)  :: di, vo ! dilatational and voigt
+    real(kind=dp), dimension(21),  intent(in)  :: vi      ! input vector
+    real(kind=dp), dimension(21),  intent(out) :: vp, vd  ! projected and deviation vectors   
+
+    integer(kind=si) :: i
+    
+    real(kind=dp), intent(out) :: dev, k, g
+    real(kind=dp) :: disum, vosum
+
+    ! Get isotropic constants
+    disum = 0._dp
+    vosum = 0._dp
+    do i=1,3
+       disum = disum + di(i,i)
+       vosum = vosum + vo(i,i)
+    end do
+    k = disum / 9._dp
+    g = 0.1_dp * vosum - disum / 30._dp
+
+    !Isotropic projectred vector
+    vp    = 0._dp
+    vp(1) = k + 4._dp * g / 3._dp
+    vp(2) = vp(1)
+    vp(3) = vp(1)
+    vp(4) = sqrt(2._dp) * (k - 2._dp * g / 3._dp)
+    vp(5) = vp(4)
+    vp(6) = vp(4)
+    vp(7) = 2._dp * g
+    vp(8) = vp(7)
+    vp(9) = vp(7)
+    
+    ! Difference to get deviation
+    vd  = vi - vp
+    dev = sqrt(sum(vd*vd))
+
+  end subroutine projection_to_isotropic_symmetry
+  !--------------------------------------------------------------------------------
+
 
   !================================================================================
   ! Find symmetry axis of tensor
@@ -1241,56 +1284,186 @@ contains
 
     real(kind=dp), dimension(6,6), intent(in) :: cij
     real(kind=dp), dimension(3,3)             :: dij, vij ! dilatational and voigt
+    real(kind=dp), dimension(3,3)             :: v_dij, v_vij ! dilatational and voigt
 
+    real(kind=dp), dimension(3)             :: l_dij, l_vij ! dilatational and voigt
+
+    real(kind=dp), parameter :: tol=1e-9
+    
     ! Get dilatational and voigt contraction tensors
     dij = get_dilatational_stiffness_tensor(cij)
     vij = get_voigt_stiffness_tensor(cij)
 
     ! Determine eigenvalues and eigenvectors of dij and vij
     !  done with iterative jacobi algorithm
-    
-        
+    call jacobi_eigenvalue_decomposition(dij,3,tol,l_dij,v_dij)
+    call jacobi_eigenvalue_decomposition(vij,3,tol,l_vij,v_vij)
+
   end subroutine determine_tensor_symmetry_axis
   !--------------------------------------------------------------------------------
 
   !================================================================================
-  ! Sort eigenvalues and eigenvectors in decreasing order
-  subroutine sort_eigenvalues_eigenvectors(lambda,vector)
+  ! Jacobi eigenvalue decomposition Ax = lx
+  subroutine jacobi_eigenvalue_decomposition(a,n,tol,lambda,vector)
 
-    real(kind=dp), dimension(:),   allocatable, intent(inout) :: lambda ! eigenvalues
-    real(kind=dp), dimension(:,:), allocatable, intent(inout) :: vector ! eigenvectors
+    integer(kind=si), intent(in) :: n
 
-    integer(kind=si) :: n, m, i
-    integer(kind=si), dimension(:), allocatable :: j
+    real(kind=dp), dimension(n,n), intent(in)    :: a      ! input matrix
+    
+    real(kind=dp), dimension(n),     intent(out) :: lambda ! eigenvalues
+    real(kind=dp), dimension(n,n),   intent(out) :: vector ! eigenvectors (P)
 
-    n = size(lambda)
-    m = size(vector,1)
+    real(kind=dp), dimension(n,n)                :: as     ! as = PtAP
 
-    do i = 1, n-1
-       j = maxloc(lambda) + i - 1 
-       if (j(1) /= i) then
-          call myswap(lambda(i),lambda(j(1)),1)
-          call myswap(vector(:,i),vector(:,j(1)),m)
+    integer(kind=si), parameter :: max_iter=50
+    
+    integer(kind=si) :: i, j, iter
+    real(kind=dp)    :: mu, tol
+
+    ! Copy a in a*
+    as(:,:) = a(:,:)
+        
+    ! Initialize P to identity matrix (eigenvectors)
+    vector(:,:) = 0._dp
+    do i = 1, n
+       vector(i,i) = 1._dp
+    end do
+
+    ! Iterate
+    do iter = 1, max_iter
+
+       ! New threshold
+       mu = threshold(as,n)
+
+       ! Sweep over the matrix
+       do i = 1, n-1
+          do j= i+1, n
+             if (abs(as(i,j)) >= mu) then
+                call jacobi_rotate(as,vector,n,i,j)
+             end if
+          end do
+       end do
+
+       ! Check convergence criterion
+       if (mu <= tol) then
+          exit
        end if
     end do
     
-  end subroutine sort_eigenvalues_eigenvectors
-  !--------------------------------------------------------------------------------
+    ! Get eigenvalues and eigenvectors and sort
+    do i = 1, n
+       lambda(i) = as(i,i)
+    end do
+    call sort_eigenvalues_eigenvectors(lambda,vector,n)
 
-  !================================================================================
-  ! Swap two values
-  subroutine myswap(a,b,n) 
 
-    integer(kind=si), intent(in) :: n
+  contains
+
+    subroutine jacobi_rotate(a,p,n,k,l)
+
+      integer(kind=si), intent(in) :: n, k, l
+      real(kind=dp), dimension(n,n), intent(inout) :: p ! eigenvectors (P)
+      real(kind=dp), dimension(n,n), intent(inout) :: a     ! as = PtAP
+      
+      integer(kind=si) :: i
+      real(kind=dp)    :: adiff, t, c, s, tau, temp, phi
+
+      real(kind=dp), parameter :: smallval=1e-36_dp
+      
+      adiff = a(l,l)-a(k,k)
+
+      if (abs(a(k,l)) < abs(adiff)*smallval) then
+         t   = a(k,l) / adiff
+      else
+         phi = 0.5_dp * adiff / a(k,l)
+         t   = 1._dp / (abs(phi) + sqrt(phi*phi + 1._dp))
+         if (phi < 0._dp) then
+            t = -t
+         end if
+      end if
+      c      = 1._dp / sqrt(t*t + 1._dp)
+      s      = t * c
+      tau    = s / (1._dp +c)
+      temp   = a(k,l)
+      a(k,l) = 0._dp
+      a(k,k) = a(k,k) - t*temp
+      a(l,l) = a(l,l) + t*temp
+      do i = 1, k-1            ! if i < k
+         temp   = a(i,k)
+         a(i,k) = temp   - s*(a(i,l) + tau*temp)
+         a(i,l) = a(i,l) + s*(temp   - tau*a(i,l))
+      end do
+      do i = k+1, l-1            ! if k < i < l
+         temp   = a(k,i)
+         a(k,i) = temp   - s*(a(i,l) + tau*a(k,i))
+         a(i,l) = a(i,l) + s*(temp   - tau*a(i,l))
+      end do
+      do i = l+1, n            ! if i > l
+         temp   = a(k,i)
+         a(k,i) = temp   - s*(a(l,i) + tau*temp)
+         a(l,i) = a(l,i) + s*(temp   - tau*a(l,i))
+      end do
+      do i = 1, n              ! if i < k
+         temp   = p(i,k)
+         p(i,k) = temp   - s*(p(i,l) + tau*p(i,k))
+         p(i,l) = p(i,l) + s*(temp   - tau*p(i,l))
+      end do
+
+    end subroutine jacobi_rotate
     
-    real(kind=dp), dimension(n), intent(inout) :: a, b
-    real(kind=dp), dimension(n)                :: c
+    subroutine sort_eigenvalues_eigenvectors(lambda,vector,n)
 
-    c(:) = a(:)
-    a(:) = b(:)
-    b(:) = c(:)
+      integer(kind=si), intent(in) :: n
+      real(kind=dp), dimension(n),   intent(inout) :: lambda ! eigenvalues
+      real(kind=dp), dimension(n,n), intent(inout) :: vector ! eigenvectors
+      
+      integer(kind=si), dimension(:), allocatable :: j
+      
+      do i = 1, n-1
+         j = maxloc(lambda(i:n)) + i - 1 
+         if (j(1) /= i) then
+            call myswap(lambda(i),lambda(j(1)),1)
+            call myswap(vector(:,i),vector(:,j(1)),n)
+         end if
+      end do
+      
+    end subroutine sort_eigenvalues_eigenvectors
     
-  end subroutine myswap
+    subroutine myswap(a,b,n) 
+      
+      integer(kind=si), intent(in) :: n
+      
+      real(kind=dp), dimension(n), intent(inout) :: a, b
+      real(kind=dp), dimension(n)                :: c
+      
+      c(:) = a(:)
+      a(:) = b(:)
+      b(:) = c(:)
+      
+    end subroutine myswap
+
+    function threshold(a,n) result(norm)
+
+      integer(kind=si) :: n
+      real(kind=dp), dimension(n,n), intent(inout) :: a     ! as = PtAP
+
+      real(kind=dp) :: norm
+
+      integer(kind=si) :: i, j
+
+      norm = 0._dp
+
+      do i = 1, n-1
+         do j = i+1, n
+            norm = norm + abs(a(i,j))
+         end do
+      end do
+      
+      norm = 0.5_dp * norm  / n / (n-1) 
+
+    end function threshold
+    
+  end subroutine jacobi_eigenvalue_decomposition
   !--------------------------------------------------------------------------------
   
   !================================================================================
