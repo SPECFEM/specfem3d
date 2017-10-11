@@ -286,13 +286,13 @@ contains
 !!$                        ((sum( acqui_simu(ievent)%synt_traces(irec_local,:,icomp_tmp) )**2) *0.5*dt_data)
 !!$                enddo
                 window_lenght =  nstep_data * dt_data
-                acqui_simu(ievent)%weight_trace(icomp,irec_local)=1._CUSTOM_REAL/prior_data_std/&
+                acqui_simu(ievent)%weight_trace(icomp,irec_local,1)=1._CUSTOM_REAL/prior_data_std/&
                      sqrt(nb_traces_tot)/sqrt(window_lenght)
              endif
 
              !! compute residuals residuals
              residuals(:)= (seismograms_d(icomp,irec_local,:) - data_trace_to_use(:))*&
-                  acqui_simu(ievent)%weight_trace(icomp,irec_local)
+                  acqui_simu(ievent)%weight_trace(icomp,irec_local,1)
 
              !! compute cost
              cost_value=sum(residuals(:)**2) * 0.5 * dt_data
@@ -304,7 +304,7 @@ contains
 
              ! store adjoint source
              acqui_simu(ievent)%adjoint_sources(icomp,irec_local,:)=residuals(:)*w_tap(:)*&
-                  acqui_simu(ievent)%weight_trace(icomp,irec_local)
+                  acqui_simu(ievent)%weight_trace(icomp,irec_local,1)
 
           enddo
 

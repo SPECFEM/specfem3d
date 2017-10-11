@@ -54,10 +54,12 @@ module input_output
              get_stations, read_data_gather, create_name_database_inversion, read_and_distribute_events_for_simultaneous_runs
 
   !! DEFINITION OF PRIVATE VARIABLES
-  integer,                PRIVATE                                   :: NEVENT, NIFRQ
+  integer,                PRIVATE                                   :: NEVENT, NIFRQ, ncomp_read, ncomp_inv
   real(kind=CUSTOM_REAL), PRIVATE, dimension(:), allocatable        :: fl, fh
   real(kind=CUSTOM_REAL), PRIVATE                                   :: nb_traces_tot
   logical,                PRIVATE                                   :: use_band_pass_filter
+  logical, dimension(8) :: is_component_read, is_component_inv
+  integer, dimension(8) :: id_component_read, id_component_inv
 contains
 
 !################################## ROUTINES THAT CAN BE CALLED FROM MAIN  #########################################################
@@ -746,7 +748,7 @@ contains
                       Gather_loc(irec_local, :, :) = Gather(irec, :, :) !! store data to send
                    endif
                 enddo
-                if (DEBUG_MODE) write(IIDD,*) 'myrank ', myrank , 'send to ', irank, ' :' , nsta_irank, Nt
+                  if (DEBUG_MODE) write(IIDD,*) 'myrank ', myrank , 'send to ', irank, ' :' , nsta_irank, Nt
                 tag    = 2001
                 call MPI_SEND(Gather_loc, Nt*nsta_irank*NDIM, CUSTOM_MPI_TYPE, irank, tag, my_local_mpi_comm_world, ier)
 
@@ -834,9 +836,12 @@ contains
     character(len=1)                                           :: data_comp, data_type
     character(len=2)                                           :: full_comp
     character(len=3)                                           :: all_comp
+    character(len=1)                                           :: data_comp_inv, data_type_inv
+    character(len=2)                                           :: full_comp_inv
+    character(len=3)                                           :: all_comp_inv
     integer                                                    :: it1, it2, it3, it4
-
-    nb_traces_tot=0.
+   
+    nb_traces_tot=0
     
     if (myrank == 0) write(INVERSE_LOG_FILE,'(/a17)') '... reading data '
 
@@ -847,10 +852,11 @@ contains
           NSTA=acqui_simu(ievent)%nsta_tot
           Nt=acqui_simu(ievent)%Nt_data
           
-          allocate(Gather(NSTA,Nt,NDIM))
-          Gather(:,:,:) = 0._CUSTOM_REAL
+          allocate(Gather_tmp(NSTA,Nt,NDIM))
+          Gather_tmp(:,:,:) = 0._CUSTOM_REAL
 
           !! Read pif gather file component by conponent
+          ncomp_read = 0
           do idim=1,NDIM
 
              ! Get data components
@@ -859,12 +865,26 @@ contains
              data_comp      = full_comp(2:2)
              all_comp(idim:idim) = data_comp
              
-             write(filename,*)trim(acqui_simu(ievent)%event_rep),'/fsismo_',full_comp,'.bin'
+             write(filename,*)trim(acqui_simu(ievent)%event_rep),'/fsismo_',&
+                  trim(adjustl(full_comp)),'.bin'
              
              ! Read data
-             call read_binary_data(filename, nsta, nt, gather(:,:,idim))
-             nb_traces_tot = nb_traces_tot + nsta
-            
+             if (trim(full_comp) /= '') then
+                call read_binary_data(filename, nsta, nt, gather(:,:,idim))
+                nb_traces_tot = nb_traces_tot + nsta
+                ncomp_read = ncomp_read +1
+             end if
+
+             ! Update booleans
+             if (data_comp == 'x') is_component_read(1)=.true.; id_component_read(1)=idim
+             if (data_comp == 'y') is_component_read(2)=.true.; id_component_read(2)=idim
+             if (data_comp == 'z') is_component_read(3)=.true.; id_component_read(3)=idim
+             if (data_comp == 'r') is_component_read(4)=.true.; id_component_read(4)=idim
+             if (data_comp == 't') is_component_read(5)=.true.; id_component_read(5)=idim
+             if (data_comp == 'l') is_component_read(6)=.true.; id_component_read(6)=idim
+             if (data_comp == 'q') is_component_read(7)=.true.; id_component_read(7)=idim
+             if (data_comp == 'p') is_component_read(8)=.true.; id_component_read(8)=idim
+             
           end do  
           
           !! store data gather in my slice if needed
@@ -894,12 +914,52 @@ contains
                      + acqui_simu(ievent)%time_after_pick &
                      + acqui_simu(ievent)%time_before_pick) /  acqui_simu(ievent)%dt_data))
                 call taper_window_W(weight_loc,it1,it2,it3,it4,nt,W)
-                acqui_simu(ievent)%weight_trace(:,irec,:) = weight_loc(:)
+                do idim=1,ndim
+                   acqui_simu(ievent)%weight_trace(idim,irec,:) = weight_loc(:)
+                end do
              end do
           end if
 
           ! manage inverted data (use weight_trace to select wich parameter)
+          ncomp_inv = 0
+          do idim = 1, ndim
+
+             full_comp_inv           = lowcase(trim(inversion_param%component(idim)))
+             data_type_inv           = full_comp_inv(1:1)
+             data_comp_inv           = full_comp_inv(2:2)
+             all_comp_inv(idim:idim) = data_comp_inv
+
+             if (trim(full_comp_inv) /= '') then
+                ncomp_inv = ncomp_inv + 1
+
+                if (data_type == 'd') inversion_param%get_synthetic_displacement=.true.
+                if (data_type == 'v') inversion_param%get_synthetic_velocity=.true.
+                if (data_type == 'a') inversion_param%get_synthetic_acceleration=.true.
+                if (data_type == 'p') inversion_param%get_synthetic_pressure=.true.
+
+                if  (data_type_inv /= data_type) then
+                   write(6,*)'CATASTROPHIC ERROR'
+                   write(6,*)'requested type of inverted data is different from observed data'
+                   write(6,*)'integration of differentiation of observed not implemented yet'
+                   write(6,*)'NOW STOP'
+                   stop
+                end if
+
+                ! Update booleans
+                if (data_comp_inv == 'x') is_component_inv(1)=.true.; id_component_inv(1)=idim
+                if (data_comp_inv == 'y') is_component_inv(2)=.true.; id_component_inv(2)=idim
+                if (data_comp_inv == 'z') is_component_inv(3)=.true.; id_component_inv(3)=idim
+                if (data_comp_inv == 'r') is_component_inv(4)=.true.; id_component_inv(4)=idim
+                if (data_comp_inv == 't') is_component_inv(5)=.true.; id_component_inv(5)=idim
+                if (data_comp_inv == 'l') is_component_inv(6)=.true.; id_component_inv(6)=idim
+                if (data_comp_inv == 'q') is_component_inv(7)=.true.; id_component_inv(7)=idim
+                if (data_comp_inv == 'p') is_component_inv(8)=.true.; id_component_inv(8)=idim
+             end if
+          end do
+
           
+                   
+                
                     !! No rotations here, we keep data in their own system...
 !!$          ! Rotate from original data coordinate system ((x,y,z),(zen),(rtz)) to mesh one (xyz)
 !!$          select case (trim(all_comp))
@@ -1358,6 +1418,11 @@ contains
        case('prior_data_std')
           read(line(ipos0:ipos1),*) inversion_param%prior_data_std
 
+       case('data_to_invert')
+          read(line(ipos0:ipos1),*) inversion_param%component
+
+       case('apply_src_weighting_to_gradient') 
+          read(line(ipos0:ipos1),*) inversion_param%is_src_weigh_gradient
        case default
           write(*,*) 'ERROR KEY WORD NOT MATCH : ', trim(keyw), ' in file ', trim(inver_file)
           exit
@@ -1437,6 +1502,9 @@ endif
    call MPI_BCAST(inversion_param%ymax_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%zmin_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%zmax_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+
+   call MPI_BCAST(inversion_param%component,6,mpi_character,0,my_local_mpi_comm_world,ier)
+   call MPI_BCAST(inversion_param%is_src_weigh_gradient,1,mpi_logical,0,my_local_mpi_comm_world,ier)
 
    !! set private values
    use_band_pass_filter=inversion_param%use_band_pass_filter
