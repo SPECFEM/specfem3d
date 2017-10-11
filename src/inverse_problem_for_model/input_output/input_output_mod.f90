@@ -99,7 +99,6 @@ contains
 
     !! select input file that we want to read ----------------------------------------
     select case(trim(adjustl(type_input)))
-
     case('exploration')
 
        call read_acqui_file(acqui_file, acqui_simu, myrank)
@@ -131,8 +130,16 @@ contains
 
     !! not need to read data for only forward simulation
     if (.not. inversion_param%only_forward) then
-       call read_data_gather(acqui_simu, myrank)
-       inversion_param%nb_traces_tot=nb_traces_tot
+
+       select case (trim(adjustl(type_input)))
+       case('teleseismic')
+          call read_pif_data_gather(acqui_simu, myrank)
+          inversion_param%nb_traces_tot=nb_traces_tot
+       case default
+          call read_data_gather(acqui_simu, myrank)
+          inversion_param%nb_traces_tot=nb_traces_tot
+       end select
+       
     endif
 
     !! create name for outputs
