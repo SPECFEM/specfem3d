@@ -189,7 +189,7 @@ module inverse_problem_par
      !! inverted components
      character(len=2),                       dimension(3)                     :: component
 
-     logical(len=1)                                                           :: is_src_weigh_gradient=.false.
+     logical                                                                  :: is_src_weigh_gradient=.false.
 
      
      !! --- here add parameters for other methods (further developments)
