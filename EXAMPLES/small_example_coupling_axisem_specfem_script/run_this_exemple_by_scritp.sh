@@ -4,9 +4,9 @@
 rootdir=/mnt/Data1/vmont/GIT/specfem3d/
 
 # choose exemple to run
-# for box that reach the free surface 
+# for box that reach the free surface
 Param=Param_files
-# for buried box 
+# for buried box
 #Param=Param_files_for_buried_box
 
 #

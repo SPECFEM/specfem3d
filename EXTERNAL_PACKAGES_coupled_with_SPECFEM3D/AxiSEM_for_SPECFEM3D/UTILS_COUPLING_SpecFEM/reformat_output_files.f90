@@ -137,14 +137,14 @@ program re_format_outputs_files
         max_spec_glob=max(max_spec_glob,ispec_glob)
      enddo
 89  close(90)
-     
+
      open(10,file='../'//trim(input_point_file_cart))
      read(10,*) nb_point
 
      allocate(xp(nb_point),yp(nb_point),zp(nb_point))
      allocate(inum_glob(nb_point))
      allocate(igll_glob(nb_point),jgll_glob(nb_point),kgll_glob(nb_point))
-     allocate(indx_rec(5,5,5,max_spec_glob,6))  !! 
+     allocate(indx_rec(5,5,5,max_spec_glob,6))  !!
      allocate(iboun_gll(nb_point))
      indx_rec=0
 

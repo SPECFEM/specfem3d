@@ -763,20 +763,20 @@ contains
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !---------------------------------------------------------------
-! trilinear interpolation with cheking 
-!---------------------------------------------------------------   
+! trilinear interpolation with cheking
+!---------------------------------------------------------------
    subroutine Get_value_by_trilinear_interp(interpolated_value,  x, y, z, regular_grid_array, nx, ny, nz, ox, oy, oz, hx, hy, hz)
-     
+
       real(kind=CUSTOM_REAL),                                intent(inout)  :: interpolated_value
       real(kind=CUSTOM_REAL),                                intent(in)     :: x, y, z
       real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable, intent(in)     :: regular_grid_array
-      real(kind=CUSTOM_REAL),                                intent(in)     :: ox, oy, oz, hx, hy, hz                    
+      real(kind=CUSTOM_REAL),                                intent(in)     :: ox, oy, oz, hx, hy, hz
       integer,                                               intent(in)     :: nx, ny, nz
 
       real(kind=CUSTOM_REAL)                                                :: x_loc, y_loc, z_loc
       real(kind=CUSTOM_REAL)                                                :: v1, v2, v3, v4, v5, v6, v7, v8
-      integer                                                               :: i,j,k 
-      
+      integer                                                               :: i,j,k
+
       i = floor((x -  ox)/ hx) + 1
       j = floor((y -  oy)/ hy) + 1
       k = floor((z -  oz)/ hz) + 1
@@ -809,7 +809,7 @@ contains
       else
          write(*,*) " ERROR , point : ",x,y,z," is outside fd grid"
          stop
-      end if
+      endif
 
     end subroutine Get_value_by_trilinear_interp
 !!----------------------------------------------------------------------------------------------------------
@@ -819,7 +819,7 @@ contains
      real(kind=CUSTOM_REAL), intent(in)    :: x_loc, y_loc, z_loc
      real(kind=CUSTOM_REAL), intent(in)    :: v1, v2, v3, v4, v5, v6, v7, v8, lx, ly, lz
      real(kind=CUSTOM_REAL)                :: dx, dy, dz
-     
+
      dx = x_loc / lx
      dy = y_loc / ly
      dz = z_loc / lz
@@ -833,7 +833,7 @@ contains
           v6 *                   dx  * (1._CUSTOM_REAL - dy) *                   dz  + &
           v7 *                   dx  *                   dy  *                   dz  + &
           v8 * (1._CUSTOM_REAL - dx) *                   dy  *                   dz
-     
+
    end subroutine TrilinrInterp
 
 end module mesh_tools

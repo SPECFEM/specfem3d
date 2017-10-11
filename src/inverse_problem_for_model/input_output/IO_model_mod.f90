@@ -684,7 +684,7 @@ contains
     real(kind=CUSTOM_REAL)                                :: xmin_glob, xmax_glob
     real(kind=CUSTOM_REAL)                                :: ymin_glob, ymax_glob
     real(kind=CUSTOM_REAL)                                :: zmin_glob, zmax_glob
-    real(kind=CUSTOM_REAL)                                :: xp, yp, zp 
+    real(kind=CUSTOM_REAL)                                :: xp, yp, zp
     real(kind=CUSTOM_REAL)                                :: rh_interp, vp_interp, vs_interp
 
     !! READ FD MODEL :: TODO only the group 0 must read this and then bcast to other
@@ -771,7 +771,7 @@ contains
                 ii = 1+ floor( (xstore(iglob) - ox_fd)/hx_fd)
                 jj = 1+ floor( (ystore(iglob) - oy_fd)/hy_fd)
                 kk = 1+ floor( (zstore(iglob) - oz_fd)/hz_fd)
-                
+
                 xp=xstore(iglob)
                 yp=ystore(iglob)
                 zp=zstore(iglob)
@@ -779,9 +779,9 @@ contains
                 !! trilinear interpolation
                 call Get_value_by_trilinear_interp(rh_interp, xp, yp, zp, rho_fd, &
                      nx_fd, ny_fd, nz_fd, ox_fd, oy_fd, oz_fd, hx_fd, hy_fd, hz_fd)
-                call Get_value_by_trilinear_interp(vp_interp, xp, yp, zp, vp_fd , &
+                call Get_value_by_trilinear_interp(vp_interp, xp, yp, zp, vp_fd, &
                      nx_fd, ny_fd, nz_fd, ox_fd, oy_fd, oz_fd, hx_fd, hy_fd, hz_fd)
-                call Get_value_by_trilinear_interp(vs_interp, xp, yp, zp, vs_fd , &
+                call Get_value_by_trilinear_interp(vs_interp, xp, yp, zp, vs_fd, &
                      nx_fd, ny_fd, nz_fd, ox_fd, oy_fd, oz_fd, hx_fd, hy_fd, hz_fd)
 
                 rhostore(i,j,k,ispec) = rh_interp
