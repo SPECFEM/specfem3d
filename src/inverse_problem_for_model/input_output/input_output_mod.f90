@@ -852,8 +852,8 @@ contains
           NSTA=acqui_simu(ievent)%nsta_tot
           Nt=acqui_simu(ievent)%Nt_data
           
-          allocate(Gather_tmp(NSTA,Nt,NDIM))
-          Gather_tmp(:,:,:) = 0._CUSTOM_REAL
+          allocate(Gather(NSTA,Nt,NDIM))
+          Gather(:,:,:) = 0._CUSTOM_REAL
 
           !! Read pif gather file component by conponent
           ncomp_read = 0
