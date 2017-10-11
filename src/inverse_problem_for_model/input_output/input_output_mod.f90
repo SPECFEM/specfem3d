@@ -738,7 +738,7 @@ contains
                       Gather_loc(irec_local, :, :) = Gather(irec, :, :) !! store data to send
                    endif
                 enddo
-                  if (DEBUG_MODE) write(IIDD,*) 'myrank ', myrank , 'send to ', irank, ' :' , nsta_irank, Nt
+                if (DEBUG_MODE) write(IIDD,*) 'myrank ', myrank , 'send to ', irank, ' :' , nsta_irank, Nt
                 tag    = 2001
                 call MPI_SEND(Gather_loc, Nt*nsta_irank*NDIM, CUSTOM_MPI_TYPE, irank, tag, my_local_mpi_comm_world, ier)
 

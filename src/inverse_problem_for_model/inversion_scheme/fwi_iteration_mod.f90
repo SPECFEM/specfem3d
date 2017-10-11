@@ -337,7 +337,7 @@ contains
     inversion_param%data_std = sqrt(inversion_param%data_std / inversion_param%nb_data_std)
 
     ! store initial model in choosen family parameter
-    call  SpecfemParam2Invert(inversion_param, initial_model)
+    call SpecfemParam2Invert(inversion_param, initial_model)
     ! store initial gradient in choosen family parameter
     call StoreGradientInFamilyParam(inversion_param, initial_gradient, hess_approxim)
 

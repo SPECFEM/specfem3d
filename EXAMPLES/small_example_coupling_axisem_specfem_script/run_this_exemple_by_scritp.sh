@@ -19,9 +19,12 @@ axisem_sources=$rootdir/EXTERNAL_PACKAGES_coupled_with_SPECFEM3D/AxiSEM_for_SPEC
 # directory containing utils for coupling axisem/specfem
 axisem_utils_coupling=$rootdir/EXTERNAL_PACKAGES_coupled_with_SPECFEM3D/AxiSEM_for_SPECFEM3D/UTILS_COUPLING_SpecFEM
 
+# choose exemple to run 
+#Param=Param_
+Param=Param_files_for_buried_box
 # ------------- copy inputs files for specfem  ------------
-cp -r Param_files/DATA DATA
-cp -r Param_files/MESH MESH
+cp -r $Param/DATA DATA
+cp -r $Param/MESH MESH
 
 # ------------ create traction directory ----
 mkdir -p  DATA/AxiSEM_tractions/1

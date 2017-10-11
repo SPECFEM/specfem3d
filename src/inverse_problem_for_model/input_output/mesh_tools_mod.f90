@@ -758,4 +758,82 @@ contains
    end subroutine compute_force_elastic_arrays_source
 
 
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!---------------------------------------------------------------
+! trilinear interpolation with cheking 
+!---------------------------------------------------------------   
+   subroutine Get_value_by_trilinear_interp(interpolated_value,  x, y, z, regular_grid_array, nx, ny, nz, ox, oy, oz, hx, hy, hz)
+     
+      real(kind=CUSTOM_REAL),                                intent(inout)  :: interpolated_value
+      real(kind=CUSTOM_REAL),                                intent(in)     :: x, y, z
+      real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable, intent(in)     :: regular_grid_array
+      real(kind=CUSTOM_REAL),                                intent(in)     :: ox, oy, oz, hx, hy, hz                    
+      integer,                                               intent(in)     :: nx, ny, nz
+
+      real(kind=CUSTOM_REAL)                                                :: x_loc, y_loc, z_loc
+      real(kind=CUSTOM_REAL)                                                :: v1, v2, v3, v4, v5, v6, v7, v8
+      integer                                                               :: i,j,k 
+      
+      i = floor((x -  ox)/ hx) + 1
+      j = floor((y -  oy)/ hy) + 1
+      k = floor((z -  oz)/ hz) + 1
+
+      if (i <= nx .and. j <= ny .and. k <= nz .and. &
+           i > 0 .and. j > 0 .and. k > 0          ) then
+         !! the point is insde regular_grid_array
+
+         !! defaults values
+         v1 = regular_grid_array(i,     j,     k    )
+         v2 = v1; v3 = v1; v4 = v1; v5 = v1; v6 = v1; v7 = v1; v8 = v1
+
+         if (i < nx) v2 = regular_grid_array(i + 1, j,     k    )
+         if (i < nx .and. j < ny) v3 = regular_grid_array(i + 1, j + 1, k    )
+         if (j < ny) v4 = regular_grid_array(i,     j + 1, k    )
+
+         if (k < nz) then
+            v5 = regular_grid_array(i,     j,     k + 1)
+            if (i < nx) v6 = regular_grid_array(i + 1, j,     k + 1)
+            if (i < nx .and. j < ny)   v7 = regular_grid_array(i + 1, j + 1, k + 1)
+            if (j < ny) v8 = regular_grid_array(i,     j + 1, k + 1)
+         endif
+
+         x_loc = x - (ox + real( i - 1, CUSTOM_REAL) * hx)
+         y_loc = y - (oy + real( j - 1, CUSTOM_REAL) * hy)
+         z_loc = z - (oz + real( k - 1, CUSTOM_REAL) * hz)
+
+         call TrilinrInterp(interpolated_value, x_loc, y_loc, z_loc, v1, v2, v3, v4, v5, v6, v7, v8, &
+              hx, hy, hz)
+      else
+         write(*,*) " ERROR , point : ",x,y,z," is outside fd grid"
+         stop
+      end if
+
+    end subroutine Get_value_by_trilinear_interp
+!!----------------------------------------------------------------------------------------------------------
+   subroutine TrilinrInterp(Vinterp,  x_loc, y_loc, z_loc, v1, v2, v3, v4, v5, v6, v7, v8, lx, ly, lz)
+
+     real(kind=CUSTOM_REAL), intent(inout) :: Vinterp
+     real(kind=CUSTOM_REAL), intent(in)    :: x_loc, y_loc, z_loc
+     real(kind=CUSTOM_REAL), intent(in)    :: v1, v2, v3, v4, v5, v6, v7, v8, lx, ly, lz
+     real(kind=CUSTOM_REAL)                :: dx, dy, dz
+     
+     dx = x_loc / lx
+     dy = y_loc / ly
+     dz = z_loc / lz
+
+     Vinterp = &
+          v1 * (1._CUSTOM_REAL - dx) * (1._CUSTOM_REAL - dy) * (1._CUSTOM_REAL - dz) + &
+          v2 *                   dx  * (1._CUSTOM_REAL - dy) * (1._CUSTOM_REAL - dz) + &
+          v3 *                   dx  *                   dy  * (1._CUSTOM_REAL - dz) + &
+          v4 * (1._CUSTOM_REAL - dx) *                   dy  * (1._CUSTOM_REAL - dz) + &
+          v5 * (1._CUSTOM_REAL - dx) * (1._CUSTOM_REAL - dy) *                   dz  + &
+          v6 *                   dx  * (1._CUSTOM_REAL - dy) *                   dz  + &
+          v7 *                   dx  *                   dy  *                   dz  + &
+          v8 * (1._CUSTOM_REAL - dx) *                   dy  *                   dz
+     
+   end subroutine TrilinrInterp
+
 end module mesh_tools

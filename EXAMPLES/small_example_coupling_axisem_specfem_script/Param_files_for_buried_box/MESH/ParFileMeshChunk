@@ -1,0 +1,14 @@
+# domain extension longitud, latitud (not used with axisem)
+ 1. 1.  
+# domain center longitud, latitud, azimuth 
+ 1.5  45.0 0.0 
+# depth (not used with axisem) 
+ 1.
+# number of elements (not used with axisem) 
+1 1 1
+# background model 1D 
+ak135 
+# the domain is burried ? 
+.true.
+# radius of top
+6271.0
