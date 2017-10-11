@@ -3,8 +3,14 @@
 # FILL directory where is installed specfem3d (git devel version)
 rootdir=/mnt/Data1/vmont/GIT/specfem3d/
 
+# choose exemple to run
+# for box that reach the free surface 
+Param=Param_files
+# for buried box 
+#Param=Param_files_for_buried_box
+
 #
-#     ALL INPUTS FILES NEEDED TO RUN THIS SCRIPT ARE IN ./Param_files
+#     ALL INPUTS FILES NEEDED TO RUN THIS SCRIPT ARE IN ./Param_files or ./Param_files_for_buried_box
 #
 #
 #
@@ -19,9 +25,7 @@ axisem_sources=$rootdir/EXTERNAL_PACKAGES_coupled_with_SPECFEM3D/AxiSEM_for_SPEC
 # directory containing utils for coupling axisem/specfem
 axisem_utils_coupling=$rootdir/EXTERNAL_PACKAGES_coupled_with_SPECFEM3D/AxiSEM_for_SPECFEM3D/UTILS_COUPLING_SpecFEM
 
-# choose exemple to run 
-#Param=Param_
-Param=Param_files_for_buried_box
+
 # ------------- copy inputs files for specfem  ------------
 cp -r $Param/DATA DATA
 cp -r $Param/MESH MESH

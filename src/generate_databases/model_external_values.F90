@@ -91,7 +91,6 @@
 !
 ! ADD YOUR MODEL HERE
 !
-
   if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) call read_external_model_for_coupling_or_chunk()
 
 !---
@@ -148,6 +147,9 @@
        smooth_vs(i) = bb
        ! write(*,*) a,b
     enddo
+    close(27)
+
+    !write(*,*) " Reading 1D model "
 
     filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'/model_1D.in'
     open(27,file=trim(filename))
@@ -164,6 +166,7 @@
     enddo
     read(27,*) ZREF
     read(27,*) OLON,OLAT
+    close(27)
 
   end subroutine read_external_model_for_coupling_or_chunk
 
@@ -179,7 +182,6 @@
     double precision radius
     double precision :: x,y,z
     radius =  dsqrt(x**2 + y**2 + (z+zref)**2) / 1000.d0
-
     il = 1
     do while (radius > zlayer(il) .and. il < nlayer)
        il = il + 1

@@ -1,4 +1,6 @@
-launch run_this_example_by_script.sh bash script after changing the roodir : git-devel version oof specfem  directory absolute path name 
+launch run_this_example_by_script.sh bash script after changing the roodir : git-devel version of specfem  directory absolute path name 
+and choose Param_files  or Param_files_for_buried_box.
+
 
 all the parameters are filled and saved in Param_files directory
 

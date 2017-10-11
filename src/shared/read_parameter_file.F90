@@ -559,6 +559,13 @@
       write(*,*)
     endif
 
+    call read_value_logical(ANISOTROPIC_VELOCITY_KL, 'ANISOTROPIC_VELOCITY_KL', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'ANISOTROPIC_VELOCITY_KL         = .false.'
+      write(*,*)
+    endif
+
     call read_value_logical(APPROXIMATE_HESS_KL, 'APPROXIMATE_HESS_KL', ier)
     if (ier /= 0) then
       some_parameters_missing_from_Par_file = .true.

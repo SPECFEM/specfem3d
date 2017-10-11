@@ -260,6 +260,10 @@ NTSTEP_BETWEEN_READ_ADJSRC      = 0
 # default is .false. to compute isotropic kernels (related to alpha and beta)
 ANISOTROPIC_KL                  = .false.
 
+# this parameter must be set to .true. to compute anisotropic kernels for 
+# cost function using velocity observable rather than displacement 
+ANISOTROPIC_VELOCITY_KL         = .false.
+
 # compute transverse isotropic kernels (alpha_v,alpha_h,beta_v,beta_h,eta,rho)
 # rather than fully anisotropic kernels in case ANISOTROPIC_KL is set to .true.
 SAVE_TRANSVERSE_KL              = .false.
