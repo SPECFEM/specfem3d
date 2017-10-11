@@ -894,7 +894,7 @@ contains
                      + acqui_simu(ievent)%time_after_pick &
                      + acqui_simu(ievent)%time_before_pick) /  acqui_simu(ievent)%dt_data))
                 call taper_window_W(weight_loc,it1,it2,it3,it4,nt,W)
-                acqui_simu(ievent)%weight_trace(idim,irec,:) = weight_loc(:)
+                acqui_simu(ievent)%weight_trace(:,irec,:) = weight_loc(:)
              end do
           end if
 

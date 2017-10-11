@@ -190,7 +190,11 @@ module inverse_problem_par
      character(len=2),                       dimension(3)                     :: component
      
      !! --- here add parameters for other methods (further developments)
-
+     logical                                                                  :: get_synthetic_pressure=.true.
+     logical                                                                  :: get_synthetic_displacement=.true.
+     logical                                                                  :: get_synthetic_velocity=.true.
+     logical                                                                  :: get_synthetic_acceleration=.true.
+     
   end type inver !------------------------------------------------------------------------------------------------------------------
 
   ! ACQUISITION STRUCTURE  ---------------------------------------------------------------------------------------------------------
