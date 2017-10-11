@@ -7,8 +7,11 @@ module Teleseismic_IO_mod
   ! from inversion
   use inverse_problem_par
   use mesh_tools
-
+  use passive_imaging_format_mod, only: gather, read_pif_header_file, read_binary_data, &
+                                        read_binary_source_signature, get_data_component, &
+                                        calc_delta_dist_baz, calc_dist_baz_cart, lowcase
   integer, private :: NEVENT
+
 contains
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -26,9 +29,11 @@ contains
 
 
     ! locals
-    character(len=MAX_LEN_STRING)                              :: line, keyw !, line_to_read
+    character(len=MAX_LEN_STRING)                              :: line, keyw, filename !, line_to_read
     integer                                                    :: ipos0, ipos1, ievent
-    integer                                                    :: ier
+    integer                                                    :: ier, nsta, nt, ncomp
+
+    type(gather), dimension(:), allocatable :: mygather
 
     if (myrank == 0) then
        write(INVERSE_LOG_FILE,*)
@@ -58,6 +63,7 @@ contains
        !! 2/ allocate and store type(acqui) acqui_simu
        if (NEVENT > 0) then
           allocate(acqui_simu(NEVENT))
+          allocate(mygather(NEVENT))
        else
           allocate(acqui_simu(1))
           write(*,*) 'ERROR NO EVENTS FOUND IN ACQUISITION FILE ',myrank, mygroup, trim(acqui_file)
@@ -80,13 +86,85 @@ contains
           select case (trim(keyw))
 
           case('event_name')
-             ievent=ievent+1
-             !! this name is the name of file contains all information on teleseismic event
-             acqui_simu(ievent)%event_name=trim(adjustl(line(ipos0:ipos1)))
-             acqui_simu(ievent)%nevent_tot=NEVENT
 
-             !! to do define this routine  .... for reading all info for event
-             call read_one_teleseismic_event()
+             ievent=ievent+1
+
+             !*** Read pif header file
+             call read_pif_header_file(filename,mygather(ievent))
+
+             !*** Fill acquisition structure
+             ! Get primary informations
+             nsta = mygather(ievent)%hdr%nsta
+             nt   = mygather(ievent)%hdr%nt
+
+             ! Fill primary informations from header
+             acqui_simu(ievent)%nevent_tot           = NEVENT
+             acqui_simu(ievent)%nsta_tot             = nsta
+             acqui_simu(ievent)%Nt_data              = nt
+             acqui_simu(ievent)%dt_data              = mygather(ievent)%hdr%dt
+             acqui_simu(ievent)%event_name           = mygather(ievent)%hdr%event_name
+             acqui_simu(ievent)%source_type_physical = mygather(ievent)%hdr%source_type
+             acqui_simu(ievent)%source_type_modeling = mygather(ievent)%hdr%modeling_tool
+             acqui_simu(ievent)%source_file          = mygather(ievent)%hdr%modeling_path
+             acqui_simu(ievent)%Origin_chunk_lat     = mygather(ievent)%hdr%mesh_origin(1)
+             acqui_simu(ievent)%Origin_chunk_lon     = mygather(ievent)%hdr%mesh_origin(2)
+             acqui_simu(ievent)%Origin_chunk_azi     = mygather(ievent)%hdr%mesh_origin(3)
+             acqui_simu(ievent)%is_time_pick         = mygather(ievent)%hdr%is_pick
+             acqui_simu(ievent)%time_window          = mygather(ievent)%hdr%is_window
+             acqui_simu(ievent)%time_before_pick     = mygather(ievent)%hdr%tbef
+             acqui_simu(ievent)%time_after_pick      = mygather(ievent)%hdr%taft
+             acqui_simu(ievent)%station_coord_system = mygather(ievent)%hdr%coord_sys
+             acqui_simu(ievent)%source_wavelet_file  = mygather(ievent)%hdr%estimated_src
+
+             ! Some checks about source wavelet and traction
+             if (acqui_simu(ievent)%source_wavelet_file /= 'undef') then
+                acqui_simu(ievent)%external_source_wavelet=.true.
+                ! note sure if i should use this one..
+                allocate(acqui_simu(ievent)%user_source_time_function(1,nt))
+                call read_binary_source_signature(acqui_simu(ievent)%source_wavelet_file, &
+                                                                                      nt, &
+                                       acqui_simu(ievent)%user_source_time_function(1,:))
+             endif
+
+             select case (lowcase(acqui_simu(ievent)%source_type_modeling))
+             case('axisem','dsm')
+                acqui_simu(ievent)%traction_dir = mygather(ievent)%hdr%modeling_path
+             end select
+
+             ! Determine which components
+             call get_data_component(mygather(ievent)%hdr%data_type, &
+                                     mygather(ievent)%hdr%data_comp, &
+                                                              ncomp, &
+                                       acqui_simu(ievent)%component)
+
+             ! Fill source informations
+             acqui_simu(ievent)%event_lat   = mygather(ievent)%source%lat
+             acqui_simu(ievent)%event_lon   = mygather(ievent)%source%lon
+             acqui_simu(ievent)%event_depth = mygather(ievent)%source%ele
+             acqui_simu(ievent)%xshot       = mygather(ievent)%source%x
+             acqui_simu(ievent)%yshot       = mygather(ievent)%source%y
+             !acqui_simu(ievent)%zshot       = mygather(ievent)%source%z  !use ele instead of z because it
+             acqui_simu(ievent)%zshot       = mygather(ievent)%source%ele !is given wrt to earth surface
+
+             ! Allocate stations array and fill arrays
+             allocate(acqui_simu(ievent)%station_name(nsta))
+             allocate(acqui_simu(ievent)%network_name(nsta))
+             allocate(acqui_simu(ievent)%position_station(3,nsta))
+             acqui_simu(ievent)%station_name(:)       = mygather(ievent)%stations(:)%name
+             acqui_simu(ievent)%network_name(:)       = mygather(ievent)%stations(:)%ntwk
+             acqui_simu(ievent)%position_station(1,:) = mygather(ievent)%stations(:)%x
+             acqui_simu(ievent)%position_station(2,:) = mygather(ievent)%stations(:)%y
+             ! again, i'm not sure here between z and ele... use ele for now
+             ! acqui_simu(ievent)%position_station(3,:) = mygather(ievent)%stations(:)%z
+             acqui_simu(ievent)%position_station(3,:) = mygather(ievent)%stations(:)%ele
+
+             ! Use time picks if needed
+             if (acqui_simu(ievent)%is_time_pick) then
+                allocate(acqui_simu(ievent)%time_pick(nsta))
+                acqui_simu(ievent)%time_pick(:) = mygather(ievent)%stations(:)%tpick
+             endif
+
+             ! Compute baz etc.
 
           end select
        enddo
