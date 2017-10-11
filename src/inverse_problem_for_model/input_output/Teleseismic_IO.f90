@@ -175,7 +175,6 @@ contains
              endif
 
              ! Compute baz etc.
-<<<<<<< HEAD
              allocate(acqui_simu(ievent)%baz(nsta))
              allocate(acqui_simu(ievent)%dist(nsta))
              allocate(acqui_simu(ievent)%gcarc(nsta)) !! not used great circle arc not used
@@ -211,9 +210,7 @@ contains
              !!acqui_simu(ievent)%baz(:) = acqui_simu(ievent)%baz(:) &
              !!                          - acqui_simu(ievent)%Origin_chunk_azi
              
-=======
 
->>>>>>> f91e614e36fa8cdf7f90173e56c6b8b43854308d
           end select
        enddo
 
