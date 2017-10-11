@@ -313,7 +313,7 @@ module inverse_problem_par
 
      !! ---------------------- information needed for teleseismic fwi -----------------------------
      !! for rotation matrices
-     real(kind=CUSTOM_REAL)                                                    :: Origin_chunk_lat,  &
+     real(kind=CUSTOM_REAL)                                                    :: Origin_chunk_lat, &
           Origin_chunk_lon, Origin_chunk_azi
      real(kind=CUSTOM_REAL)                                                    :: event_lat,  event_lon, event_depth
      !! window for inversion

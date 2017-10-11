@@ -53,12 +53,12 @@ program re_format_outputs_files
   integer itime_decimate, ntime_decimate,decimate_time
   real current_time_step,current_time_step_half
   integer, allocatable :: flag_boundary_xmin(:),flag_boundary_xmax(:),flag_boundary_ymin(:)&
-       ,flag_boundary_ymax(:),flag_boundary_zmin(:)
-  integer n2d_xmin,n2d_xmax,n2d_ymin,n2d_ymax,n2d_zmin,i_code_face,ispec2D
-  integer max_spec,ispec_glob,max_spec_local,iproc,ispec_global
+       ,flag_boundary_ymax(:),flag_boundary_zmin(:),flag_boundary_zmax(:)
+  integer n2d_xmin,n2d_xmax,n2d_ymin,n2d_ymax,n2d_zmin,n2d_zmax,i_code_face,ispec2D
+  integer max_spec,ispec_glob,max_spec_local,max_spec_glob,iproc,ispec_global
   integer, allocatable :: IndLoc2Glob(:,:),IndSpec_face(:,:)
 !
-  integer nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NTIMESTEP
+  integer nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,nspec2D_top,NTIMESTEP
   integer MAX_MUN_ABS_BOUNDARY_FACES,IER,IFACE,IGLL,NGLLSQUARE,J,K,NUM_ABS_BOUNDARY_FACES
   integer KK,is
   integer, allocatable :: IND_REC2FACE(:,:,:),ABS_BOUNDARY_ISPEC(:), &
@@ -129,13 +129,22 @@ program re_format_outputs_files
      read(10,'(a)') TRACT_PATH
      close(10)
 
+     !! count number of global elements
+     open(90,file=trim(meshdirectory)//'/Numglob2loc_elmn.txt')
+     max_spec_glob=0
+     do
+        read(90,*,end=89) ispec_glob,ispec,iproc
+        max_spec_glob=max(max_spec_glob,ispec_glob)
+     enddo
+89  close(90)
+
      open(10,file='../'//trim(input_point_file_cart))
      read(10,*) nb_point
 
      allocate(xp(nb_point),yp(nb_point),zp(nb_point))
      allocate(inum_glob(nb_point))
      allocate(igll_glob(nb_point),jgll_glob(nb_point),kgll_glob(nb_point))
-     allocate(indx_rec(5,5,5,nb_point,5))  !! faux c'est pas nb_point mais nspec
+     allocate(indx_rec(5,5,5,max_spec_glob,6))  !!
      allocate(iboun_gll(nb_point))
      indx_rec=0
 
@@ -165,18 +174,21 @@ program re_format_outputs_files
      read(91,*) n2d_ymin
      read(91,*) n2d_ymax
      read(91,*) n2d_zmin
+     read(91,*) n2d_zmax
      close(91)
      nspec2d_xmin=n2d_xmin
      nspec2d_xmax=n2d_xmax
      nspec2d_ymin=n2d_ymin
      nspec2d_ymax=n2d_ymax
      nspec2d_bottom=n2d_zmin
+     nspec2D_top=n2d_zmax
 
      allocate(flag_boundary_xmin(n2d_xmin))
      allocate(flag_boundary_xmax(n2d_xmax))
      allocate(flag_boundary_ymin(n2d_ymin))
      allocate(flag_boundary_ymax(n2d_ymax))
      allocate(flag_boundary_zmin(n2d_zmin))
+     allocate(flag_boundary_zmax(n2d_zmax))
 
      max_spec = 0
 
@@ -187,11 +199,12 @@ program re_format_outputs_files
         if (code_face == 3) flag_boundary_ymin(ispec2D)=ispec
         if (code_face == 4) flag_boundary_ymax(ispec2D)=ispec
         if (code_face == 5) flag_boundary_zmin(ispec2D)=ispec
+        if (code_face == 6) flag_boundary_zmax(ispec2D)=ispec
         max_spec = max(max_spec,ispec)
      enddo
 100  close(90)
 
-     allocate(IndSpec_face(max_spec,5))
+     allocate(IndSpec_face(max_spec,6))
      IndSpec_face(:,:) = 0
      open(90,file=trim(meshdirectory)//'/flags_boundary.txt')  ! table de correspondance ispec2D < - > ispec
 
@@ -273,6 +286,7 @@ program re_format_outputs_files
            if (abs_boundary_ijk(2,igll,iface) == 1) code_face=3
            if (abs_boundary_ijk(2,igll,iface) == 5) code_face=4
            if (abs_boundary_ijk(3,igll,iface) == 1) code_face=5
+           if (abs_boundary_ijk(3,igll,iface) == 5) code_face=6
            if (code_face == 0) then
               write(*,*) 'wrong face '
               stop

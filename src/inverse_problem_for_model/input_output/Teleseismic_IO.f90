@@ -7,7 +7,7 @@ module Teleseismic_IO_mod
   ! from inversion
   use inverse_problem_par
   use mesh_tools
-  use passive_imaging_format_mod, only: gather, read_pif_header_file, read_binary_data,   &
+  use passive_imaging_format_mod, only: gather, read_pif_header_file, read_binary_data, &
                                         read_binary_source_signature, get_data_component, &
                                         calc_delta_dist_baz, calc_dist_baz_cart, lowcase
   use signal_processing, only: taper_window_W
@@ -37,7 +37,7 @@ contains
     double precision                                           :: baz, dist, gcarc
     
     type(gather), dimension(:), allocatable :: mygather
-    
+
     if (myrank == 0) then
        write(INVERSE_LOG_FILE,*)
        write(INVERSE_LOG_FILE,*) '     READING teleseismic acquisition file '
@@ -91,17 +91,17 @@ contains
 
           select case (trim(keyw))
           case('event_name')
-             
+
              ievent=ievent+1
 
              !*** Read pif header file
              call read_pif_header_file(filename,mygather(ievent))
-             
+
              !*** Fill acquisition structure
              ! Get primary informations
              nsta = mygather(ievent)%hdr%nsta
              nt   = mygather(ievent)%hdr%nt
-             
+
              ! Fill primary informations from header
              acqui_simu(ievent)%nevent_tot           = NEVENT
              acqui_simu(ievent)%nsta_tot             = nsta
@@ -124,14 +124,14 @@ contains
              ! Some checks about source wavelet and traction
              if (acqui_simu(ievent)%source_wavelet_file /= 'undef') then
                 acqui_simu(ievent)%external_source_wavelet=.true.
-                ! note sure if i should use this one.. 
-                allocate(acqui_simu(ievent)%user_source_time_function(1,nt)) 
+                ! note sure if i should use this one..
+                allocate(acqui_simu(ievent)%user_source_time_function(1,nt))
                 call read_binary_source_signature(acqui_simu(ievent)%source_wavelet_file, &
                                                                                       nt, &
                                        acqui_simu(ievent)%user_source_time_function(1,:))
              end if
              
-             select case (adjustl(trim(acqui_simu(ievent)%source_type_modeling)))
+             select case (lowcase(adjustl(trim(acqui_simu(ievent)%source_type_modeling))))
              case('axisem','dsm')
                 acqui_simu(ievent)%traction_dir = mygather(ievent)%hdr%modeling_path
              end select
@@ -141,7 +141,7 @@ contains
                                      mygather(ievent)%hdr%data_comp, &
                                                               ncomp, &
                                        acqui_simu(ievent)%component)
-             
+
              ! Fill source informations
              acqui_simu(ievent)%event_lat   = mygather(ievent)%source%lat
              acqui_simu(ievent)%event_lon   = mygather(ievent)%source%lon
@@ -150,7 +150,7 @@ contains
              acqui_simu(ievent)%yshot       = mygather(ievent)%source%y
              !acqui_simu(ievent)%zshot       = mygather(ievent)%source%z  !use ele instead of z because it
              acqui_simu(ievent)%zshot       = mygather(ievent)%source%ele !is given wrt to earth surface
-             
+
              ! Allocate stations array and fill arrays
              allocate(acqui_simu(ievent)%station_name(nsta))
              allocate(acqui_simu(ievent)%network_name(nsta))
@@ -172,9 +172,10 @@ contains
              if (acqui_simu(ievent)%is_time_pick) then
                 allocate(acqui_simu(ievent)%time_pick(nsta))
                 acqui_simu(ievent)%time_pick(:) = mygather(ievent)%stations(:)%tpick
-             end if
+             endif
 
              ! Compute baz etc.
+<<<<<<< HEAD
              allocate(acqui_simu(ievent)%baz(nsta))
              allocate(acqui_simu(ievent)%dist(nsta))
              allocate(acqui_simu(ievent)%gcarc(nsta)) !! not used great circle arc not used
@@ -210,6 +211,9 @@ contains
              !!acqui_simu(ievent)%baz(:) = acqui_simu(ievent)%baz(:) &
              !!                          - acqui_simu(ievent)%Origin_chunk_azi
              
+=======
+
+>>>>>>> f91e614e36fa8cdf7f90173e56c6b8b43854308d
           end select
        enddo
 
@@ -524,5 +528,5 @@ contains
 
   end subroutine setup_teleseismic_stations
 
-  
+
 end module Teleseismic_IO_mod

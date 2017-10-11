@@ -265,6 +265,10 @@ ANISOTROPIC_KL                  = .false.
 # rather than fully anisotropic kernels in case ANISOTROPIC_KL is set to .true.
 SAVE_TRANSVERSE_KL              = .false.
 
+# this parameter must be set to .true. to compute anisotropic kernels for
+# cost function using velocity observable rather than displacement
+ANISOTROPIC_VELOCITY_KL         = .false.
+
 # outputs approximate Hessian for preconditioning
 APPROXIMATE_HESS_KL             = .false.
 

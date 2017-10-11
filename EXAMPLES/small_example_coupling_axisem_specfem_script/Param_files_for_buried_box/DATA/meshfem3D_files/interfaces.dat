@@ -1,0 +1,31 @@
+# number of interfaces (created by matlab xspemfem_gui)
+4
+#
+# We describe each interface below, structured as a 2D-grid, with several parameters : 
+# number of points along XI and ETA, minimal XI ETA coordinates 
+# and spacing between points which must be constant.
+# Then the records contain the Z coordinates of the NXI x NETA points.
+#
+# SUPPRESS_UTM_PROJECTION  NXI  NETA LONG_MIN   LAT_MIN    SPACING_XI SPACING_ETA
+# interface number 4
+.true. 25 50 -277987.25 -555974.5 23165.6042 22692.8367
+discon._210km
+# interface number 3
+.true. 25 50 -277987.25 -555974.5 23165.6042 22692.8367
+Moho_35km
+# interface number 2
+.true. 25 50 -277987.25 -555974.5 23165.6042 22692.8367
+CRUST_20km
+# interface number 1
+.true. 25 50 -277987.25 -555974.5 23165.6042 22692.8367
+TOPO
+#
+# for each layer, we give the number of spectral elements in the vertical direction (begins with bottom
+# layer number 4
+2
+# layer number 3
+8
+# layer number 2
+1
+# layer number 1
+1

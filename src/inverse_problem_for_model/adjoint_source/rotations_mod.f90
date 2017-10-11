@@ -243,7 +243,7 @@ contains
 
     integer(kind=si), intent(in) :: nt, nrec
     real(kind=dp),    intent(in) :: bazi
-        
+
     real(kind=dp), dimension(nrec,nt),  intent(in) :: vz,  vn, ve
     real(kind=dp), dimension(nrec,nt), intent(out) :: vz2, vr, vt
 
@@ -260,7 +260,7 @@ contains
 
     integer(kind=si), intent(in) :: nt, nrec
     real(kind=dp),    intent(in) :: bazi
-    
+
     real(kind=dp), dimension(nrec,nt),  intent(in) :: vz2, vr, vt
     real(kind=dp), dimension(nrec,nt), intent(out) :: vz,  vn, ve
 
@@ -315,10 +315,10 @@ contains
 
     integer(kind=si), intent(in) :: nt, nrec
     real(kind=dp), intent(in)    :: inci
-    
+
     real(kind=dp), dimension(nrec,nt),  intent(in) :: vz, vr, vt
     real(kind=dp), dimension(nrec,nt), intent(out) :: vl, vq, vt2
-    
+
     real(kind=dp) :: inc
 
     inc = deg2rad * inci
@@ -333,7 +333,7 @@ contains
 
     integer(kind=si), intent(in) :: nt, nrec
     real(kind=dp), intent(in)    :: inci
-        
+
     real(kind=dp), dimension(nrec,nt), intent(out) :: vz, vr, vt
     real(kind=dp), dimension(nrec,nt),  intent(in) :: vl, vq, vt2
 
@@ -344,7 +344,7 @@ contains
     vz = vl * cos(inc) + vq * sin(inc)
     vr = vl * sin(inc) - vq * cos(inc)
     vt = vt2
-    
+
   end subroutine rotate_LQT_to_ZRT
 !--------------------------------------------------------------------------------
 

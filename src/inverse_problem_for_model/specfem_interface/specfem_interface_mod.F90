@@ -435,6 +435,7 @@ contains
     !! with GPU we have to be carrefull of warning for seismogram not all things are allowed and this make the code crashes
     if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION ) then
 
+       !! todo recuperer inversion_paral%get_synthetics_**
        SAVE_SEISMOGRAMS_DISPLACEMENT =.true.
        SAVE_SEISMOGRAMS_VELOCITY     =.false.
        SAVE_SEISMOGRAMS_ACCELERATION =.false.
