@@ -133,7 +133,7 @@ contains
 
        select case (trim(adjustl(type_input)))
        case('teleseismic')
-          call read_pif_data_gather(acqui_simu, myrank)
+          call read_pif_data_gather(acqui_simu, inversion_param, myrank)
           inversion_param%nb_traces_tot=nb_traces_tot
        case default
           call read_data_gather(acqui_simu, myrank)

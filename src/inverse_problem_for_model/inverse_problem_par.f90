@@ -198,6 +198,8 @@ module inverse_problem_par
      integer                                                                   :: nevent_tot
      !! id for the event
      character(len= MAX_LEN_STRING)                                            :: event_name
+     !! name of pif event repository
+     character(len= MAX_LEN_STRING)                                            :: event_rep
      !! name for outputs files
      character(len= MAX_LEN_STRING)                                            :: prname_inversion
      !! file contains source parameter for 'moment' or 'fk' or axisem traction
@@ -291,6 +293,8 @@ module inverse_problem_par
      real(kind=CUSTOM_REAL),                  dimension(:,:,:),   allocatable  :: freqcy_to_invert
      !! weigth on each trace used for FWI (NCOMP,NSTA)
      real(kind=CUSTOM_REAL),                  dimension(:,:),     allocatable  :: weight_trace
+     !! weigth on each trace used for FWI (NCOMP,NSTA,NT)
+     real(kind=CUSTOM_REAL),                  dimension(:,:),     allocatable  :: weight_trace_time
      !! gather time sampling
      real(kind=CUSTOM_REAL)                                                    :: dt_data
      !! number of samples

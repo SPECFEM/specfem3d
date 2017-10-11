@@ -10,6 +10,7 @@ module Teleseismic_IO_mod
   use passive_imaging_format_mod, only: gather, read_pif_header_file, read_binary_data,   &
                                         read_binary_source_signature, get_data_component, &
                                         calc_delta_dist_baz, calc_dist_baz_cart, lowcase
+  use signal_processing_mod, only: taper_window_W
   integer, private :: NEVENT
 
 contains
@@ -86,6 +87,7 @@ contains
           !! STORE KEYWORD ITEM -------------------------------------------------
           keyw     = trim(adjustl(line(1:ipos0-2)))
           filename = trim(adjustl(line(ipos0:ipos1)))
+          acqui_simu(ievent)%event_rep = trim(adjustl(filename))
 
           select case (trim(keyw))
           case('event_name')
@@ -93,7 +95,6 @@ contains
              ievent=ievent+1
 
              !*** Read pif header file
-          
              call read_pif_header_file(filename,mygather(ievent))
              
              !*** Fill acquisition structure
@@ -233,6 +234,8 @@ contains
        ! broadcast strings
        call mpi_bcast(acqui_simu(ievent)%event_name,           max_len_string, mpi_character, 0, &
             my_local_mpi_comm_world, ier)
+       call mpi_bcast(acqui_simu(ievent)%event_rep,            max_len_string, mpi_character, 0, &
+            my_local_mpi_comm_world, ier)
        call mpi_bcast(acqui_simu(ievent)%source_type_physical,            256, mpi_character, 0, &
             my_local_mpi_comm_world, ier)
        call mpi_bcast(acqui_simu(ievent)%source_type_modeling,            256, mpi_character, 0, &
@@ -337,20 +340,25 @@ contains
 !----------------------------------------------------------------
 ! master read waveform data gather and bcast to MPI slice concerned
 !----------------------------------------------------------------
-  subroutine read_pif_data_gather(acqui_simu, myrank)
+  subroutine read_pif_data_gather(acqui_simu, inversion_param, myrank)
 
     use my_mpi             !! module from specfem
     include "precision.h"  !! from specfem
 
     integer,                                     intent(in)    :: myrank
     type(acqui),  dimension(:), allocatable,     intent(inout) :: acqui_simu
+    type(inver),                                 intent(inout) :: inversion_param
 
     integer                                                    :: ievent, idim, NSTA, NSTA_LOC, Nt, irec, irec_local
     integer                                                    :: tag, ier, nsta_irank, irank
     real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable      :: Gather, Gather_loc
     integer                                                    :: status(MPI_STATUS_SIZE)
-    real(kind=CUSTOM_REAL)                                     :: dummy_real
-
+    real(kind=CUSTOM_REAL)                                     :: dummy_real, W
+    character(len=MAX_LEN_STRING)                              :: filename
+    character(len=1)                                           :: data_comp
+    character(len=2)                                           :: full_comp
+    character(len=3)                                           :: all_comp
+    integer                                                    :: it1, it2, it3, it4
     nb_traces_tot=0.
 
     if (myrank == 0) write(INVERSE_LOG_FILE,'(/a17)') '... reading data '
@@ -361,89 +369,93 @@ contains
 
           NSTA=acqui_simu(ievent)%nsta_tot
           Nt=acqui_simu(ievent)%Nt_data
-
+          
           allocate(Gather(NSTA,Nt,NDIM))
           Gather(:,:,:) = 0._CUSTOM_REAL
-          ! read gather file
-          open(IINN,file=trim(adjustl(acqui_simu(ievent)%data_file_gather)), access='direct', &
-               recl=CUSTOM_REAL*Nt*NSTA,status='old')
-          !! read only the asked component or pressure
-          irec=0
+
+          !! Read pif gather file component by conponent
           do idim=1,NDIM
 
-             ! First check if displacement, velocity, acceleration or pressure
-             select case (lowcase(trim(acqui_simu(ievent)%component(idim))))
-             case('d')
-
-             case('v')
-
-             case('a')
-                
-             case('p')
-
-             end select
-
-             ! Check available data
-             select case (lowcase(trim(acqui_simu(ievent)%component(idim))))
-             case('z')
-
-             case('x','y')
-
-             case('r','t')
-
-             case('l','q')
-
-             end select
+             ! Get data components
+             full_comp      = lowcase(trim(acqui_simu(ievent)%component(idim))
+             data_type      = full_comp(1:1)
+             data_comp      = full_comp(2:2)
+             all_comp(idim) = data_comp
              
-             nb_traces_tot=nb_traces_tot+NSTA
-             irec=irec+1
-             read(IINN,rec=irec) Gather(:,:,idim)
+             write(filename,*)trim(acqui_simu(ievent)%event_rep),'/fsismo_',full_comp,'.bin'
              
-             ! Rotate from original data coordinate system ((x,y,z),(zen),(rtz)) to mesh one (xyz)
-             select case (lowcase(trim(acqui_simu(ievent)%component(idim))))
-             case('xyz')  ! data are already in the mesh coordinate system
-                
-                ! Data rotation not required
-                
-             case('zen')  ! data are in standard coordinate system
+             ! Read data
+             call read_binary_data(filename, nsta, nt, gather(:,:,idim))
+             nb_traces_tot = nb_traces_tot + nsta
+       
+          end do
 
-                ! Data rotation required to pass in mesh system (zen -> xyz)
-                call define_mesh_rotation_matrix(lat0,lon0,azi0)
-                call rotate_comp_glob2mesh(vz2, vn, ve, stalat, stalon, nt, nsta, vx, vy, vz)
-
-             case('rtz')  !  dataare in the souce receiver coordinate system
-
-                ! Data rotation required (baz-azi) (rtz -> zne)
-                call rotate_ZRT_to_ZNE(vz2,vr,vt,vz,vn,ve,nrec,nt,bazi)
-                
-                ! Data rotation required to pass in mesh system (zen -> xyz)
-                call define_mesh_rotation_matrix(lat0,lon0,azi0)
-                call rotate_comp_glob2mesh(vz2, vn, ve, stalat, stalon, nt, nsta, vx, vy, vz)
-                
-             case('lqt')  ! data are in the ray coordinate system
-
-                ! Data rotation required (baz-azi and incidence angle) (rtz -> zen)
-                call rotate_LQT_to_ZNE(vl,vq,vt,vz,vn,ve,nrec,nt,bazi,inci)
-                
-                ! Data rotation required to pass in mesh system (zen -> xyz)
-                call define_mesh_rotation_matrix(lat0,lon0,azi0)
-                call rotate_comp_glob2mesh(vz2, vn, ve, stalat, stalon, nt, nsta, vx, vy, vz)
-                
-             end select
-
-
-             end select
-          enddo
-          close(IINN)
-
+          !! No rotations here, we keep data in their own system...
+!!$          ! Rotate from original data coordinate system ((x,y,z),(zen),(rtz)) to mesh one (xyz)
+!!$          select case (trim(all_comp))
+!!$          case('x','y','z','xy','xz','zx','yx','xyz','xzy','yxz','yzx','zxy','zyx')
+!!$
+!!$             ! Data are already in the mesh coordinate system
+!!$             ! Data rotation not required
+!!$
+!!$          case('e','n','z','en','ez','ze','ne','enz','ezn','nez','nze','zen','zne')
+!!$             
+!!$             ! Data are in standard coordinate system
+!!$             ! Data rotation required to pass in mesh system (zen -> xyz)
+!!$             call define_mesh_rotation_matrix(lat0,lon0,azi0)
+!!$             call rotate_comp_glob2mesh(vz2, vn, ve, stalat, stalon, nt, nsta, vx, vy, vz)
+!!$
+!!$          case('r','t','z','rt','rz','zrx','yx','xyz','xzy','yxz','yzx','zxy','zyx')
+!!$
+!!$             ! Data are in the souce receiver coordinate system
+!!$             ! Data rotation required (baz-azi) (rtz -> zne)
+!!$             call rotate_ZRT_to_ZNE(vz2,vr,vt,vz,vn,ve,nrec,nt,bazi)
+!!$                
+!!$             ! Data rotation required to pass in mesh system (zen -> xyz)
+!!$             call define_mesh_rotation_matrix(lat0,lon0,azi0)
+!!$             call rotate_comp_glob2mesh(vz2, vn, ve, stalat, stalon, nt, nsta, vx, vy, vz)
+!!$                
+!!$          case('x','y','z','xy','xz','zx','yx','xyz','xzy','yxz','yzx','zxy','zyx')
+!!$
+!!$             ! Data are in the ray coordinate system
+!!$             ! Data rotation required (baz-azi and incidence angle) (rtz -> zen)
+!!$             call rotate_LQT_to_ZNE(vl,vq,vt,vz,vn,ve,nrec,nt,bazi,inci)
+!!$                
+!!$             ! Data rotation required to pass in mesh system (zen -> xyz)
+!!$             call define_mesh_rotation_matrix(lat0,lon0,azi0)
+!!$             call rotate_comp_glob2mesh(vz2, vn, ve, stalat, stalon, nt, nsta, vx, vy, vz)
+!!$             
+!!$          end select
+    
+          
           !! store data gather in my slice if needed
           NSTA_LOC=acqui_simu(ievent)%nsta_slice
-          allocate(acqui_simu(ievent)%data_traces(NSTA_LOC,Nt,NDIM))
-          allocate(acqui_simu(ievent)%adjoint_sources(NDIM, NSTA_LOC, Nt))
-          allocate(acqui_simu(ievent)%weight_trace(NDIM, NSTA_LOC))
-          acqui_simu(ievent)%weight_trace(:,:)=1._CUSTOM_REAL
-          if (VERBOSE_MODE .or. DEBUG_MODE)  allocate(acqui_simu(ievent)%synt_traces(NDIM, NSTA_LOC, Nt))
+          !!!!!!!!!!!!!!!!! Pourquoi qdjoint sources et data traces sont dans un ordre different ?
+          allocate(acqui_simu(ievent)%data_traces(ndim,nsta_loc,nt))
+          allocate(acqui_simu(ievent)%adjoint_sources(ndim,nsta_loc,nt))
+          allocate(acqui_simu(ievent)%weight_trace_time(ndim,nsta_loc,nt))
+          acqui_simu(ievent)%weight_trace_time(idim,:,:) = 1._CUSTOM_REAL
 
+          ! manage data taper here
+          if (acqui_simu(ievent)%is_time_pick) then
+             ! HARCODED CAN USE W TO WIGHT GRADIENT BETWEEN THEM !!!!
+             W = 1._custom_real
+             !
+             do irec = 1, nsta
+                it1 = int(floor(acqui_simu(ievent)%time_pick / acqui_simu(ievent)%dt_data ))
+                it2 = int(floor((acqui_simu(ievent)%time_pick - acqui_simu(ievent)%time_before_pick)  / &
+                     acqui_simu(ievent)%dt_data))
+                it3 = int(ceiling((acqui_simu(ievent)%time_pick + acqui_simu(ievent)%time_after_pick) / &
+                     acqui_simu(ievent)%dt_data))
+                it4 = int(ceiling((acqui_simu(ievent)%time_pick + acqui_simu(ievent)%time_after_pick + &
+                     acqui_simu(ievent)%time_before_pick) /  acqui_simu(ievent)%dt_data))
+                call taper_window_W(acqui_simu(ievent)%weight_trace_time(idim,irec,:), &
+                     it1,it2,it3,it4,nt,W)
+             end do
+          end if
+          
+          
+          if (VERBOSE_MODE .or. DEBUG_MODE)  allocate(acqui_simu(ievent)%synt_traces(NDIM, NSTA_LOC, Nt))
           irec_local=0
           do irec = 1, NSTA
              if (acqui_simu(ievent)%islice_selected_rec(irec) == myrank) then
@@ -452,18 +464,18 @@ contains
              endif
           enddo
        endif
-
+       
        ! send gather to other MPI slices
        do irank = 1, NPROC-1
-
+          
           if (myrank == 0) then !! then send
-
+             
              ! count the receiver in slice irank
              nsta_irank=0
              do irec = 1,  NSTA
                 if (acqui_simu(ievent)%islice_selected_rec(irec) == irank) nsta_irank = nsta_irank + 1
              enddo
-
+             
              ! if there is receiver in slice irank then MPI send data
              if (nsta_irank > 0) then
                 allocate(Gather_loc(nsta_irank,Nt,NDIM))  !! data to send
@@ -474,23 +486,23 @@ contains
                       Gather_loc(irec_local, :, :) = Gather(irec, :, :) !! store data to send
                    endif
                 enddo
-                  if (DEBUG_MODE) write(IIDD,*) 'myrank ', myrank , 'send to ', irank, ' :' , nsta_irank, Nt
+                if (DEBUG_MODE) write(IIDD,*) 'myrank ', myrank , 'send to ', irank, ' :' , nsta_irank, Nt
                 tag    = 2001
                 call MPI_SEND(Gather_loc, Nt*nsta_irank*NDIM, CUSTOM_MPI_TYPE, irank, tag, my_local_mpi_comm_world, ier)
-
+                
                 deallocate(Gather_loc)
-
+                
              endif
-
+             
           else !! then receive gather
-
+             
              if (myrank == irank .and. acqui_simu(ievent)%nsta_slice > 0) then
                 NSTA_LOC=acqui_simu(ievent)%nsta_slice
                 Nt=acqui_simu(ievent)%Nt_data
                 allocate(Gather_loc(NSTA_LOC,Nt,NDIM),acqui_simu(ievent)%data_traces(NSTA_LOC,Nt,NDIM), &
                      acqui_simu(ievent)%adjoint_sources(NDIM, NSTA_LOC, Nt), acqui_simu(ievent)%weight_trace(NDIM, NSTA_LOC))
                 if (VERBOSE_MODE .or. DEBUG_MODE) allocate(acqui_simu(ievent)%synt_traces(NDIM, NSTA_LOC, Nt))
-
+                
                 if (DEBUG_MODE) write(IIDD,*) 'myrank ',myrank,' wait for 0 :', NSTA_LOC,Nt
                 tag   = MPI_ANY_TAG
                 call MPI_RECV(Gather_loc,Nt*NSTA_LOC*NDIM,CUSTOM_MPI_TYPE, 0, tag, my_local_mpi_comm_world, status,  ier)
@@ -498,22 +510,22 @@ contains
                 acqui_simu(ievent)%data_traces(:,:,:)=Gather_loc(:,:,:)
                 deallocate(Gather_loc)
              endif
-
+             
           endif
-
-
+          
+          
        enddo
-
+       
        if (myrank == 0) deallocate(Gather)
-
+       
        call synchronize_all()
-
+       
        !! set other parameters (in futrue work need to read any additional files)
-
+       
        !! set frequency to invert
        !!acqui_simu(ievent)%freqcy_to_invert(:,1,:)=fl
        !!acqui_simu(ievent)%freqcy_to_invert(:,2,:)=fh
-
+       
        !! get band pass filter values if needed
        if ( use_band_pass_filter) then
           acqui_simu(ievent)%Nfrq=NIFRQ
@@ -528,7 +540,7 @@ contains
           acqui_simu(ievent)%freqcy_to_invert(:,1,:)=fl(1)
           acqui_simu(ievent)%freqcy_to_invert(:,2,:)=fh(1)
        endif
-
+       
     enddo
 
     call MPI_BCAST(nb_traces_tot,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
@@ -537,7 +549,7 @@ contains
 
     if (myrank == 0) write(INVERSE_LOG_FILE,'(a25//)') '... reading data : passed'
 
-  end subroutine read_data_gather
+  end subroutine read_pif_data_gather
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   
