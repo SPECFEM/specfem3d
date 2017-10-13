@@ -320,4 +320,239 @@ contains
   !--------------------------------------------------------------------------------
 
 
+ !================================================================================
+  ! Routine computing full cij tensor components from reference orthorhombic parameters
+  !     param 1 : (c11,c22,c33,c44,c55,c66,c23,c13,c12,a(1:3),b(1:3),c(1:3),rho)
+  subroutine partial_derivative_param_ref_ortho(partial_derivative,physical_param)
+
+    real(kind=cp), dimension (19),     intent(in) :: physical_param
+    real(kind=cp), dimension (19,22), intent(out) :: partial_derivative
+
+    integer(kind=si)            :: i, j, k, l, m, ipar
+    integer(kind=si)            :: dij, dik, dil, djk, djl, dkl, dim, djm, dkm, dlm
+    real(kind=cp)               :: rho, c11, c22, c33, c44, c55, c66, c23, c13, c12
+    real(kind=cp)               :: ai, aj, ak, al
+    real(kind=cp)               :: bi, bj, bk, bl
+    real(kind=cp)               :: ci, cj, ck, cl
+    real(kind=cp)               :: aiajakal, bibjbkbl, cicjckcl
+    real(kind=cp)               :: aiaj, akal, bibj, bkbl
+    real(kind=cp)               :: aiak, aial, ajal, ajak
+    real(kind=cp)               :: bibk, bibl, bjbl, bjbk
+    real(kind=cp), dimension(3) :: a, b, c
+
+    !* Get direction vector and parameters
+    c11    = physical_param(1)
+    c22    = physical_param(2)
+    c33    = physical_param(3)
+    c44    = physical_param(4)
+    c55    = physical_param(5)
+    c66    = physical_param(6)
+    c23    = physical_param(7)
+    c12    = physical_param(8)
+    c13    = physical_param(9)
+    a(1:3) = physical_param(10:12)
+    b(1:3) = physical_param(13:15)
+    c(1:3) = physical_param(16:18)
+    rho    = physical_param(19)
+
+    !* Loop over cij components
+    do ipar = 1, 21
+
+       !*** Get stiffness indexes
+       i = ind_vec2tens(1,ipar)
+       j = ind_vec2tens(2,ipar)
+       k = ind_vec2tens(3,ipar)
+       l = ind_vec2tens(4,ipar)
+
+       !*** Precompute direction cosines
+       ai = a(i);   aj = a(j);   ak = a(k);   al = a(l);
+       bi = b(i);   bj = b(j);   bk = b(k);   bl = b(l);
+       ci = c(i);   cj = c(j);   ck = c(k);   cl = c(l);
+       
+       aiaj = ai*aj;   akal = ak*al;   aiak = ai*ak;   aial = ai*al;
+       bibj = bi*bj;   bkbl = bk*bl;   ajal = aj*al;   ajak = aj*ak;
+       bibk = bi*bk;   bibl = bi*bl;   bjbl = bj*bl;   bjbk = bj*bk;
+
+       aiajak = ai*aj*ak
+       aiajal = ai*aj*al
+       aiakal = ai*ak*al
+       ajakal = aj*ak*al
+
+       bibjbk = bi*bj*bk
+       bibjbl = bi*bj*bl
+       bibkbl = bi*bk*bl
+       bjbkbl = bj*bk*bl
+       
+       cicjck = ci*cj*ck
+       cicjcl = ci*cj*cl
+       cickcl = ci*ck*cl
+       cjckcl = cj*ck*cl
+       
+       aiajakal = ai*aj*ak*al
+       bibjbkbl = bi*bj*bk*bl
+       cicjckcl = ci*cj*ck*cl
+
+       !*** Get kroneckers delta symbols
+       dij = delta(i,j)
+       dik = delta(i,k)
+       dil = delta(i,l)
+       djk = delta(j,k)
+       djl = delta(j,l)
+       dkl = delta(k,l)
+
+       !*** Compute wrt vti components
+       ! dcij_dc11
+       partial_derivative(1,ipar) = aiajakal
+       
+       ! dcij_dc22
+       partial_derivative(2,ipar) = bibjbkbl
+ 
+       ! dcij_dc33
+       partial_derivative(3,ipar) = cicjckcl
+
+       ! dcij_dc44
+       partial_derivative(4,ipar) = (dik*djl + dil*djk)                           &
+                                  - (aiak*djl + aial*djk + ajal*dik + ajak*dil)   &
+                                  + 2._dp*(aiajakal - bibjbkbl - cicjckcl)
+
+       ! dcij_dc55
+       partial_derivative(5,ipar) = (dik*djl + dil*djk)                           &
+                                  - (bibk*djl + bibl*djk + bjbl*dik + bjbk*dil)   &
+                                  + 2._dp*(-aiajakal + bibjbkbl - cicjckcl)
+       
+       ! dcij_dc66
+       partial_derivative(6,ipar) = (dik*djl + dil*djk)                           &
+                                  - (cick*djl + cicl*djk + cjcl*dik + cjck*dil)   &
+                                  + 2._dp*(-aiajakal - bibjbkbl + cicjckcl)
+       
+       ! dcij_dc23
+       partial_derivative(7,ipar) =  dij*dkl - (aiaj*dkl + dij*akal) &
+                                             + (aiajakal - bibjbkbl - cicjckcl)
+
+       ! dcij_dc13
+       partial_derivative(8,ipar) =  dij*dkl - (bibj*dkl + dij*bkbl) &
+                                             + (-aiajakal + bibjbkbl - cicjckcl)
+
+       ! dcij_dc12
+       partial_derivative(9,ipar) = -dij*dkl + (bibj*dkl + dij*bkbl) &
+                                             + (-aiajakal - bibjbkbl + cicjckcl)
+
+
+       !*** Compute wrt direction cosines components
+       ! dcij_da1
+       m   = 1
+       dim = delta(i,m)
+       djm = delta(j,m)
+       dkm = delta(k,m)
+       dlm = delta(l,m)
+       
+       partial_derivative(10,ipar) = &
+            + (c12 - c23) * (ai*djm*dkl + aj*dim*dkl + dij*ak*dlm + dij*al*dkm) &
+            + (c66 - c44) * (ai*djl*dkm + ak*djl*dim + al*djk*dim + ai*djk*dlm + al*dik*djm + aj*dik*dim + ak*dil*djm + aj*dil*dkm) &
+            + (c11 - c13 + c23 - c12 + 2._dp*( c44 - c55 - c66)) * (aiajak*dlm +  aiajal*dkm + aiakal*djm + ajakal*dim)
+
+       ! dcij_da2
+       m   = 2
+       dim = delta(i,m)
+       djm = delta(j,m)
+       dkm = delta(k,m)
+       dlm = delta(l,m)
+       
+       partial_derivative(11,ipar) = &
+            + (c12 - c23) * (ai*djm*dkl + aj*dim*dkl + dij*ak*dlm + dij*al*dkm) &
+            + (c66 - c44) * (ai*djl*dkm + ak*djl*dim + al*djk*dim + ai*djk*dlm + al*dik*djm + aj*dik*dim + ak*dil*djm + aj*dil*dkm) &
+            + (c11 - c13 + c23 - c12 + 2._dp*( c44 - c55 - c66)) * (aiajak*dlm +  aiajal*dkm + aiakal*djm + ajakal*dim)
+
+       ! dcij_da3
+       m   = 3
+       dim = delta(i,m)
+       djm = delta(j,m)
+       dkm = delta(k,m)
+       dlm = delta(l,m)
+       
+       partial_derivative(12,ipar) = &
+            + (c12 - c23) * (ai*djm*dkl + aj*dim*dkl + dij*ak*dlm + dij*al*dkm) &
+            + (c66 - c44) * (ai*djl*dkm + ak*djl*dim + al*djk*dim + ai*djk*dlm + al*dik*djm + aj*dik*dim + ak*dil*djm + aj*dil*dkm) &
+            + (c11 - c13 + c23 - c12 + 2._dp*( c44 - c55 - c66)) * (aiajak*dlm +  aiajal*dkm + aiakal*djm + ajakal*dim)
+
+       ! dcij_db1
+       m   = 1
+       dim = delta(i,m)
+       djm = delta(j,m)
+       dkm = delta(k,m)
+       dlm = delta(l,m)
+       
+       partial_derivative(13,ipar) = &
+            + (c12 - c23) * (bi*djm*dkl + bj*dim*dkl + dij*bk*dlm + dij*bl*dkm) &
+            + (c66 - c55) * (bi*djl*dkm + bk*djl*dim + bl*djk*dim + bi*djk*dlm + bl*dik*djm + bj*dik*dim + bk*dil*djm + bj*dil*dkm) &
+            + (c22 + c13 - c23 - c12 + 2._dp*(-c44 + c55 - c66)) * (bibjbk*dlm +  bibjbl*dkm + bibkbl*djm + bjbkbl*dim)
+
+       ! dcij_db2
+       m   = 2
+       dim = delta(i,m)
+       djm = delta(j,m)
+       dkm = delta(k,m)
+       dlm = delta(l,m)
+       
+       partial_derivative(14,ipar) = &
+            + (c12 - c23) * (bi*djm*dkl + bj*dim*dkl + dij*bk*dlm + dij*bl*dkm) &
+            + (c66 - c55) * (bi*djl*dkm + bk*djl*dim + bl*djk*dim + bi*djk*dlm + bl*dik*djm + bj*dik*dim + bk*dil*djm + bj*dil*dkm) &
+            + (c22 + c13 - c23 - c12 + 2._dp*(-c44 + c55 - c66)) * (bibjbk*dlm +  bibjbl*dkm + bibkbl*djm + bjbkbl*dim)
+
+       ! dcij_db3
+       m   = 3
+       dim = delta(i,m)
+       djm = delta(j,m)
+       dkm = delta(k,m)
+       dlm = delta(l,m)
+       
+       partial_derivative(15,ipar) = &
+            + (c12 - c23) * (bi*djm*dkl + bj*dim*dkl + dij*bk*dlm + dij*bl*dkm) &
+            + (c66 - c55) * (bi*djl*dkm + bk*djl*dim + bl*djk*dim + bi*djk*dlm + bl*dik*djm + bj*dik*dim + bk*dil*djm + bj*dil*dkm) &
+            + (c22 + c13 - c23 - c12 + 2._dp*(-c44 + c55 - c66)) * (bibjbk*dlm +  bibjbl*dkm + bibkbl*djm + bjbkbl*dim)
+
+       ! dcij_dc1
+       m   = 1
+       dim = delta(i,m)
+       djm = delta(j,m)
+       dkm = delta(k,m)
+       dlm = delta(l,m)
+       
+       partial_derivative(16,ipar) = &
+            + (c33 - c13 - c23 + c12 + 2._dp*(-c44 - c55 + c66)) * (cicjck*dlm + cicjcl*dkm + cickcl*djm + cjckcl*dim)
+
+       ! dcij_dc2
+       m   = 1
+       dim = delta(i,m)
+       djm = delta(j,m)
+       dkm = delta(k,m)
+       dlm = delta(l,m)
+       
+       partial_derivative(17,ipar) = &
+            + (c33 - c13 - c23 + c12 + 2._dp*(-c44 - c55 + c66)) * (cicjck*dlm + cicjcl*dkm + cickcl*djm + cjckcl*dim)
+       
+       ! dcij_dc3
+       m   = 1
+       dim = delta(i,m)
+       djm = delta(j,m)
+       dkm = delta(k,m)
+       dlm = delta(l,m)
+       
+       partial_derivative(18,ipar) = &
+            + (c33 - c13 - c23 + c12 + 2._dp*(-c44 - c55 + c66)) * (cicjck*dlm + cicjcl*dkm + cickcl*djm + cjckcl*dim)
+
+       ! dcij_drho
+       partial_derivative(19,ipar) = 0._cp
+
+    enddo
+
+    !*** Finally determine density partial derivatives
+    partial_derivative(19,1:21) = 0._cp
+    partial_derivative(19,  22) = 1._cp
+
+
+  end subroutine partial_derivative_param_ref_ortho
+  !--------------------------------------------------------------------------------
+  
+
 end module anisotropic_parametrisation_mod
