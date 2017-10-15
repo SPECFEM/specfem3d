@@ -1588,6 +1588,10 @@ contains
           
        case('apply_src_weighting_to_gradient') 
           read(line(ipos0:ipos1),*) inversion_param%is_src_weigh_gradient
+
+       case('convolve_synth_with_wavelet')
+          read(line(ipos0:ipos1),*) inversion_param%convolution_by_wavelet
+          
        case default
           write(*,*) 'ERROR KEY WORD NOT MATCH : ', trim(keyw), ' in file ', trim(inver_file)
           exit
@@ -1673,6 +1677,7 @@ endif
    call MPI_BCAST(inversion_param%inverted_data_sys,3,mpi_character,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%inverted_data_type,1,mpi_character,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%is_src_weigh_gradient,1,mpi_logical,0,my_local_mpi_comm_world,ier)
+   call MPI_BCAST(inversion_param%convolution_by_wavelet,1,mpi_logical,0,my_local_mpi_comm_world,ier)
 
    !! set private values
    use_band_pass_filter=inversion_param%use_band_pass_filter

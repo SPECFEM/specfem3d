@@ -192,7 +192,7 @@ module inverse_problem_par
      logical, dimension(3)                                                    :: inverted_data_comp
      character                                                                :: inverted_data_type
      logical                                                                  :: is_src_weigh_gradient=.false.
-
+     logical                                                                  :: convolution_by_wavelet
      
      !! --- here add parameters for other methods (further developments)
      logical                                                                  :: get_synthetic_pressure=.true.
@@ -242,7 +242,6 @@ module inverse_problem_par
      !! in case of exploration geophysics,
      !! saving temporary shot point to be able to read it directly in acqui_file
      real(kind=CUSTOM_REAL)                                                    :: xshot, yshot, zshot, shot_ampl
-
      !! --------------------- source parameter specific for Specfem ---------------------
      !! time parameters needed for specfem
      double precision, dimension(:), allocatable                               :: tshift, hdur, hdur_Gaussian
