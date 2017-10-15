@@ -9,7 +9,8 @@ module Teleseismic_IO_mod
   use mesh_tools
   use passive_imaging_format_mod, only: gather, read_pif_header_file, read_binary_data, &
                                         read_binary_source_signature, get_data_component, &
-                                        calc_delta_dist_baz, calc_dist_baz_cart, lowcase
+                                        calc_delta_dist_baz, calc_dist_baz_cart, lowcase, &
+                                        write_binary_data
   use signal_processing, only: taper_window_W
   integer, private :: NEVENT
 
@@ -32,7 +33,7 @@ contains
     ! locals
     character(len=MAX_LEN_STRING)                              :: line, keyw, filename !, line_to_read
     integer                                                    :: ipos0, ipos1, ievent
-    integer                                                    :: ier, nsta, nt, ncomp, ista
+    integer                                                    :: ier, nsta, nt, ista
 
     double precision                                           :: baz, dist, gcarc
     
@@ -137,11 +138,15 @@ contains
              end select
 
              ! Determine which components
-             call get_data_component(mygather(ievent)%hdr%data_type, &
-                                     mygather(ievent)%hdr%data_comp, &
-                                                              ncomp, &
-                                       acqui_simu(ievent)%component)
-
+             !call get_data_component(mygather(ievent)%hdr%data_type, &
+             !                        mygather(ievent)%hdr%data_comp, &
+             !                                                 ncomp, &
+             !                          acqui_simu(ievent)%component)
+             acqui_simu(ievent)%read_data_sys  = mygather(ievent)%hdr%data_comp
+             acqui_simu(ievent)%read_data_comp = mygather(ievent)%hdr%is_comp
+             acqui_simu(ievent)%read_data_type = mygather(ievent)%hdr%data_type
+             
+             
              ! Fill source informations
              acqui_simu(ievent)%event_lat   = mygather(ievent)%source%lat
              acqui_simu(ievent)%event_lon   = mygather(ievent)%source%lon
@@ -165,7 +170,7 @@ contains
              acqui_simu(ievent)%position_station(3,:) = mygather(ievent)%stations(:)%ele
              acqui_simu(ievent)%read_station_position(1,:) = mygather(ievent)%stations(:)%lat
              acqui_simu(ievent)%read_station_position(2,:) = mygather(ievent)%stations(:)%lon
-             acqui_simu(ievent)%read_station_position(2,:) = mygather(ievent)%stations(:)%ele
+             acqui_simu(ievent)%read_station_position(3,:) = mygather(ievent)%stations(:)%ele
 
 
              ! Use time picks if needed
@@ -249,9 +254,13 @@ contains
             my_local_mpi_comm_world, ier)
        call mpi_bcast(acqui_simu(ievent)%traction_dir,         max_len_string, mpi_character, 0, &
             my_local_mpi_comm_world, ier)
-       call mpi_bcast(acqui_simu(ievent)%component,                         6, mpi_character, 0, &
-            my_local_mpi_comm_world, ier) 
-
+       !call mpi_bcast(acqui_simu(ievent)%component,                         6, mpi_character, 0, &
+       !     my_local_mpi_comm_world, ier) 
+       call mpi_bcast(acqui_simu(ievent)%read_data_sys,                     3, mpi_character, 0, &
+            my_local_mpi_comm_world, ier)
+       call mpi_bcast(acqui_simu(ievent)%read_data_type,                    1, mpi_character, 0, &
+            my_local_mpi_comm_world, ier)
+       
        ! broadcast reals
        call mpi_bcast(acqui_simu(ievent)%dt_data,             1, custom_mpi_type, 0, &
             my_local_mpi_comm_world, ier)
@@ -284,7 +293,9 @@ contains
             my_local_mpi_comm_world, ier)
        call mpi_bcast(acqui_simu(ievent)%time_window,         1, mpi_logical, 0, &
             my_local_mpi_comm_world, ier)
-
+       call mpi_bcast(acqui_simu(ievent)%read_data_comp,      3, mpi_logical, 0, &
+            my_local_mpi_comm_world, ier)
+       
        ! conditional broadcasts for wavelet
        if (acqui_simu(ievent)%source_wavelet_file /= 'undef') then
           ! Source time functions

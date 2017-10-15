@@ -37,7 +37,8 @@ module passive_imaging_format_mod
      character(len=1)   :: data_type         = 'v'      ! kind of data (d=displacement, !
                                                         ! v=velocities, a=acceleration)
      character(len=3)   :: data_comp         = 'zen'    ! data coordinate system (geo 'zen'),
-                                                        !    (local 'xyz'), (rotated 'zrt' or 'lqt')
+                                                        !    (local 'zxy'), (rotated 'zrt' or 'lqt')
+     logical, dimension(3) :: is_comp        = (/ .true., .true., .true. /)  ! actual components available
      character(len=3)   :: coord_sys         = 'geo'    ! stations coordinate system 'geo' or 'car'
 
      real(kind=dp), dimension(3) :: mesh_origin = (/0._dp,0._dp,0._dp/) ! mesh top center geographic coordinates

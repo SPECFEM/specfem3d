@@ -46,46 +46,58 @@ contains
   subroutine rotate_comp_mesh2glob(vx, vy, vz, stalat, stalon, nt, nsta, vz2, vn, ve)
 
     integer(kind=si), intent(in) :: nt, nsta
-    real(kind=dp),    intent(in) :: stalat, stalon
+    real(kind=cp),  dimension(nsta),   intent(in) :: stalat, stalon
 
-    real(kind=dp), dimension(nsta,nt),  intent(in) :: vx, vy, vz
-    real(kind=dp), dimension(nsta,nt), intent(out) :: vn, ve, vz2
+    real(kind=cp), dimension(nsta,nt),  intent(in) :: vx, vy, vz
+    real(kind=cp), dimension(nsta,nt), intent(out) :: vn, ve, vz2
 
     real(kind=dp), dimension(nsta,nt) :: X1, Y1, Z1
     real(kind=dp), dimension(nsta,nt) :: X2, Y2, Z2
 
-    real(kind=dp) :: lat, lon
+    real(kind=dp), dimension(nsta) :: lat, lon
 
+    integer(kind=si) :: ista
+    
     !* Pass in radian
     lat = deg2rad * stalat
     lon = deg2rad * stalon
 
-    !* Equivalence of local and global Cartesian coordinates at (lat=0, lon=0)
-    X2 = vz
-    Y2 = vx
-    Z2 = vy
+    do ista=1,nsta
+       
+       !* Equivalence of local and global Cartesian coordinates at (lat=0, lon=0)
+       X2(ista,:) = vz(ista,:)
+       Y2(ista,:) = vx(ista,:)
+       Z2(ista,:) = vy(ista,:)
+       
+       !* From local mesh to global eath
+       X1(ista,:) = rotmat_t(1,1)*X2(ista,:) + rotmat_t(1,2)*Y2(ista,:) &
+            + rotmat_t(1,3)*Z2(ista,:)
+       Y1(ista,:) = rotmat_t(2,1)*X2(ista,:) + rotmat_t(2,2)*Y2(ista,:) &
+            + rotmat_t(2,3)*Z2(ista,:)
+       Z1(ista,:) = rotmat_t(3,1)*X2(ista,:) + rotmat_t(3,2)*Y2(ista,:) &
+            + rotmat_t(3,3)*Z2(ista,:)
+       
+       !* Define rotation matrix
+       rotc(1,1) =  cos(lat(ista)) * cos(lon(ista))
+       rotc(1,2) =  cos(lat(ista)) * sin(lon(ista))
+       rotc(1,3) =  sin(lat(ista))
+       rotc(2,1) = -sin(lat(ista)) * cos(lon(ista))
+       rotc(2,2) = -sin(lat(ista)) * sin(lon(ista))
+       rotc(2,3) =  cos(lat(ista))
+       rotc(3,1) = -sin(lon(ista))
+       rotc(3,2) =  cos(lon(ista))
+       rotc(3,3) =  0._dp
+       
+       !* Data in geographic coordinate at real position
+       vz2(ista,:) = rotc(1,1)*X1(ista,:) + rotc(1,2)*Y1(ista,:) &
+            + rotc(1,3)*Z1(ista,:)
+       vn(ista,:)  = rotc(2,1)*X1(ista,:) + rotc(2,2)*Y1(ista,:) &
+            + rotc(2,3)*Z1(ista,:)
+       ve(ista,:)  = rotc(3,1)*X1(ista,:) + rotc(3,2)*Y1(ista,:) &
+            + rotc(3,3)*Z1(ista,:)
 
-    !* From local mesh to global eath
-    X1 = rotmat_t(1,1)*X2 + rotmat_t(1,2)*Y2 + rotmat_t(1,3)*Z2
-    Y1 = rotmat_t(2,1)*X2 + rotmat_t(2,2)*Y2 + rotmat_t(2,3)*Z2
-    Z1 = rotmat_t(3,1)*X2 + rotmat_t(3,2)*Y2 + rotmat_t(3,3)*Z2
-
-    !* Define rotation matrix
-    rotc(1,1) =  cos(lat) * cos(lon)
-    rotc(1,2) =  cos(lat) * sin(lon)
-    rotc(1,3) =  sin(lat)
-    rotc(2,1) = -sin(lat) * cos(lon)
-    rotc(2,2) = -sin(lat) * sin(lon)
-    rotc(2,3) =  cos(lat)
-    rotc(3,1) = -sin(lon)
-    rotc(3,2) =  cos(lon)
-    rotc(3,3) =  0._dp
-
-    !* Data in geographic coordinate at real position
-    vz2 = rotc(1,1)*X1 + rotc(1,2)*Y1 + rotc(1,3)*Z1
-    vn  = rotc(2,1)*X1 + rotc(2,2)*Y1 + rotc(2,3)*Z1
-    ve  = rotc(3,1)*X1 + rotc(3,2)*Y1 + rotc(3,3)*Z1
-
+    end do
+       
   end subroutine rotate_comp_mesh2glob
 !--------------------------------------------------------------------------------
 
@@ -95,47 +107,59 @@ contains
   subroutine rotate_comp_glob2mesh(vz2, vn, ve, stalat, stalon, nt, nsta, vx, vy, vz)
 
     integer(kind=si), intent(in) :: nt, nsta
-    real(kind=dp),    intent(in) :: stalat, stalon
+    real(kind=cp),  dimension(nsta),   intent(in) :: stalat, stalon
 
-    real(kind=dp), dimension(nsta,nt), intent(out) :: vx, vy, vz
-    real(kind=dp), dimension(nsta,nt),  intent(in) :: vn, ve, vz2
+    real(kind=cp), dimension(nsta,nt), intent(out) :: vx, vy, vz
+    real(kind=cp), dimension(nsta,nt),  intent(in) :: vn, ve, vz2
 
     real(kind=dp), dimension(nsta,nt) :: X1, Y1, Z1
     real(kind=dp), dimension(nsta,nt) :: X2, Y2, Z2
 
-    real(kind=dp) :: lat, lon
+    real(kind=dp), dimension(nsta) :: lat, lon
+    
+    integer(kind=si) :: ista
 
     !* Pass in radian
     lat = deg2rad * stalat
     lon = deg2rad * stalon
 
-    !* Define rotation matrix
-    rotc(1,1) =  cos(lat) * cos(lon)
-    rotc(1,2) =  cos(lat) * sin(lon)
-    rotc(1,3) =  sin(lat)
-    rotc(2,1) = -sin(lat) * cos(lon)
-    rotc(2,2) = -sin(lat) * sin(lon)
-    rotc(2,3) =  cos(lat)
-    rotc(3,1) = -sin(lon)
-    rotc(3,2) =  cos(lon)
-    rotc(3,3) =  0._dp
-    rotc_t = transpose(rotc)
+    do ista=1,nsta
 
-    !* Data in geographic coordinate at real position
-    X1 = rotc_t(1,1)*vz2 + rotc_t(1,2)*vn + rotc_t(1,3)*ve
-    Y1 = rotc_t(2,1)*vz2 + rotc_t(2,2)*vn + rotc_t(2,3)*ve
-    Z1 = rotc_t(3,1)*vz2 + rotc_t(3,2)*vn + rotc_t(3,3)*ve
+       !* Define rotation matrix
+       rotc(1,1) =  cos(lat(ista)) * cos(lon(ista))
+       rotc(1,2) =  cos(lat(ista)) * sin(lon(ista))
+       rotc(1,3) =  sin(lat(ista))
+       rotc(2,1) = -sin(lat(ista)) * cos(lon(ista))
+       rotc(2,2) = -sin(lat(ista)) * sin(lon(ista))
+       rotc(2,3) =  cos(lat(ista))
+       rotc(3,1) = -sin(lon(ista))
+       rotc(3,2) =  cos(lon(ista))
+       rotc(3,3) =  0._dp
+       rotc_t = transpose(rotc)
+       
+       !* Data in geographic coordinate at real position
+       X1(ista,:) = rotc_t(1,1)*vz2(ista,:) + rotc_t(1,2)*vn(ista,:) &
+            + rotc_t(1,3)*ve(ista,:)
+       Y1(ista,:) = rotc_t(2,1)*vz2(ista,:) + rotc_t(2,2)*vn(ista,:) &
+            + rotc_t(2,3)*ve(ista,:)
+       Z1(ista,:) = rotc_t(3,1)*vz2(ista,:) + rotc_t(3,2)*vn(ista,:) &
+            + rotc_t(3,3)*ve(ista,:)
+       
+       !* From local mesh to global eath
+       X2(ista,:) = rotmat(1,1)*X1(ista,:) + rotmat(1,2)*Y1(ista,:) &
+            + rotmat(1,3)*Z1(ista,:)
+       Y2(ista,:) = rotmat(2,1)*X1(ista,:) + rotmat(2,2)*Y1(ista,:) &
+            + rotmat(2,3)*Z1(ista,:)
+       Z2(ista,:) = rotmat(3,1)*X1(ista,:) + rotmat(3,2)*Y1(ista,:) &
+            + rotmat(3,3)*Z1(ista,:)
 
-    !* From local mesh to global eath
-    X2 = rotmat(1,1)*X1 + rotmat(1,2)*Y1 + rotmat(1,3)*Z1
-    Y2 = rotmat(2,1)*X1 + rotmat(2,2)*Y1 + rotmat(2,3)*Z1
-    Z2 = rotmat(3,1)*X1 + rotmat(3,2)*Y1 + rotmat(3,3)*Z1
+       !* Equivalence of local and global Cartesian coordinates at (lat=0, lon=0)
+       vz(ista,:) = X2(ista,:)
+       vx(ista,:) = Y2(ista,:)
+       vy(ista,:) = Z2(ista,:)
 
-    !* Equivalence of local and global Cartesian coordinates at (lat=0, lon=0)
-    vz = X2
-    vx = Y2
-    vy = Z2
-
+    end do
+       
   end subroutine rotate_comp_glob2mesh
 !--------------------------------------------------------------------------------
 
@@ -241,110 +265,131 @@ contains
 ! Rotation of components
   subroutine rotate_ZNE_to_ZRT(vz,vn,ve,vz2,vr,vt,nrec,nt,bazi)
 
-    integer(kind=si), intent(in) :: nt, nrec
-    real(kind=dp),    intent(in) :: bazi
+    integer(kind=si), intent(in)                :: nt, nrec
+    real(kind=cp), dimension(nrec),   intent(in) :: bazi
 
-    real(kind=dp), dimension(nrec,nt),  intent(in) :: vz,  vn, ve
-    real(kind=dp), dimension(nrec,nt), intent(out) :: vz2, vr, vt
+    real(kind=cp), dimension(nrec,nt),  intent(in) :: vz,  vn, ve
+    real(kind=cp), dimension(nrec,nt), intent(out) :: vz2, vr, vt
 
-    real(kind=dp) :: baz
+    real(kind=dp), dimension(nrec) :: baz
 
+    integer(kind=si) :: it
+    
     baz = deg2rad * bazi
-    vr = -ve * sin(baz) - vn * cos(baz)
-    vt = -ve * cos(baz) + vn * sin(baz)
-    vz2 = vz
 
+    do it = 1, nt
+       vr(:,it) = -ve(:,it) * sin(baz(:)) - vn(:,it) * cos(baz(:))
+       vt(:,it) = -ve(:,it) * cos(baz(:)) + vn(:,it) * sin(baz(:))
+       vz2(:,it) = vz(:,it)
+    end do
+       
   end subroutine rotate_ZNE_to_ZRT
 
   subroutine rotate_ZRT_to_ZNE(vz2,vr,vt,vz,vn,ve,nrec,nt,bazi)
 
     integer(kind=si), intent(in) :: nt, nrec
-    real(kind=dp),    intent(in) :: bazi
+    real(kind=cp), dimension(nrec),   intent(in) :: bazi
 
-    real(kind=dp), dimension(nrec,nt),  intent(in) :: vz2, vr, vt
-    real(kind=dp), dimension(nrec,nt), intent(out) :: vz,  vn, ve
+    real(kind=cp), dimension(nrec,nt),  intent(in) :: vz2, vr, vt
+    real(kind=cp), dimension(nrec,nt), intent(out) :: vz,  vn, ve
 
-    real(kind=dp) :: baz
+    real(kind=dp), dimension(nrec) :: baz
+    integer(kind=si) :: it
 
     baz = deg2rad * bazi
-    ve = -vr * sin(baz) - vt * cos(baz)
-    vn = -vr * cos(baz) + vt * sin(baz)
-    vz = vz2
 
+    do it = 1, nt
+       ve(:,it) = -vr(:,it) * sin(baz(:)) - vt(:,it) * cos(baz(:))
+       vn(:,it) = -vr(:,it) * cos(baz(:)) + vt(:,it) * sin(baz(:))
+       vz(:,it) = vz2(:,it)
+    end do
+    
   end subroutine rotate_ZRT_to_ZNE
 
   subroutine rotate_ZNE_to_LQT(vz,vn,ve,vl,vq,vt,nrec,nt,bazi,inci)
 
     integer(kind=si), intent(in) :: nt, nrec
-    real(kind=dp),    intent(in) :: bazi, inci
+    real(kind=cp), dimension(nrec),   intent(in) :: bazi, inci
 
-    real(kind=dp), dimension(nrec,nt),  intent(in) :: vz, vn, ve
-    real(kind=dp), dimension(nrec,nt), intent(out) :: vl, vq, vt
+    real(kind=cp), dimension(nrec,nt),  intent(in) :: vz, vn, ve
+    real(kind=cp), dimension(nrec,nt), intent(out) :: vl, vq, vt
 
-    real(kind=dp) :: baz, inc
+    real(kind=dp), dimension(nrec) :: baz, inc
+    integer(kind=si) :: it
 
     baz = deg2rad * bazi
     inc = deg2rad * inci
 
-    vl =  vz*cos(inc) - ve*sin(baz)*sin(inc) - vn*cos(baz)*sin(inc)
-    vq =  vz*sin(inc) + ve*sin(baz)*cos(inc) + vn*cos(baz)*cos(inc)
-    vt =              - ve*cos(baz)          + vn*sin(baz)
-
+    do it = 1, nt
+       vl(:,it) =  vz(:,it)*cos(inc(:)) - ve(:,it)*sin(baz(:))*sin(inc(:)) - vn(:,it)*cos(baz(:))*sin(inc(:))
+       vq(:,it) =  vz(:,it)*sin(inc(:)) + ve(:,it)*sin(baz(:))*cos(inc(:)) + vn(:,it)*cos(baz(:))*cos(inc(:))
+       vt(:,it) =              - ve(:,it)*cos(baz(:))          + vn(:,it)*sin(baz(:))
+    end do
+    
   end subroutine rotate_ZNE_to_LQT
 
   subroutine rotate_LQT_to_ZNE(vl,vq,vt,vz,vn,ve,nrec,nt,bazi,inci)
 
     integer(kind=si), intent(in) :: nt, nrec
-    real(kind=dp), intent(in)    :: bazi, inci
+    real(kind=cp),  dimension(nrec), intent(in)    :: bazi, inci
 
-    real(kind=dp), dimension(nrec,nt), intent(out) :: vz, vn, ve
-    real(kind=dp), dimension(nrec,nt),  intent(in) :: vl, vq, vt
+    real(kind=cp), dimension(nrec,nt), intent(out) :: vz, vn, ve
+    real(kind=cp), dimension(nrec,nt),  intent(in) :: vl, vq, vt
 
-    real(kind=dp) :: baz, inc
+    real(kind=dp),  dimension(nrec) :: baz, inc
+    integer(kind=si) :: it
 
     baz = deg2rad * bazi
     inc = deg2rad * inci
 
-    vz =  vl*cos(inc)          + vq*sin(inc)
-    ve = -vl*sin(baz)*sin(inc) + vq*sin(baz)*cos(inc) - vt*cos(baz)
-    vn = -vl*cos(baz)*sin(inc) + vq*cos(baz)*cos(inc) + vt*sin(baz)
-
+    do it = 1, nt
+       vz(:,it) =  vl(:,it)*cos(inc(:))          + vq(:,it)*sin(inc(:))
+       ve(:,it) = -vl(:,it)*sin(baz(:))*sin(inc(:)) + vq(:,it)*sin(baz(:))*cos(inc(:)) - vt(:,it)*cos(baz(:))
+       vn(:,it) = -vl(:,it)*cos(baz(:))*sin(inc(:)) + vq(:,it)*cos(baz(:))*cos(inc(:)) + vt(:,it)*sin(baz(:))
+    end do
+    
   end subroutine rotate_LQT_to_ZNE
 
   subroutine rotate_ZRT_to_LQT(vz,vr,vt,vl,vq,vt2,nrec,nt,inci)
 
     integer(kind=si), intent(in) :: nt, nrec
-    real(kind=dp), intent(in)    :: inci
+    real(kind=cp),  dimension(nrec), intent(in)    :: inci
 
-    real(kind=dp), dimension(nrec,nt),  intent(in) :: vz, vr, vt
-    real(kind=dp), dimension(nrec,nt), intent(out) :: vl, vq, vt2
+    real(kind=cp), dimension(nrec,nt),  intent(in) :: vz, vr, vt
+    real(kind=cp), dimension(nrec,nt), intent(out) :: vl, vq, vt2
 
-    real(kind=dp) :: inc
+    real(kind=dp), dimension(nrec) :: inc
+    integer(kind=si) :: it
 
     inc = deg2rad * inci
 
-    vl  = vz * cos(inc) + vr * sin(inc)
-    vq  = vz * sin(inc) - vr * cos(inc)
-    vt2 = vt
-
+    do it = 1, nt
+       vl(:,it)  = vz(:,it) * cos(inc(:)) + vr(:,it) * sin(inc(:))
+       vq(:,it) = vz(:,it) * sin(inc(:)) - vr(:,it) * cos(inc(:))
+       vt2(:,it) = vt(:,it)
+    end do
+    
   end subroutine rotate_ZRT_to_LQT
 
   subroutine rotate_LQT_to_ZRT(vl,vq,vt2,vz,vr,vt,nrec,nt,inci)
 
     integer(kind=si), intent(in) :: nt, nrec
-    real(kind=dp), intent(in)    :: inci
+    real(kind=cp), dimension(nrec), intent(in)    :: inci
 
-    real(kind=dp), dimension(nrec,nt), intent(out) :: vz, vr, vt
-    real(kind=dp), dimension(nrec,nt),  intent(in) :: vl, vq, vt2
+    real(kind=cp), dimension(nrec,nt), intent(out) :: vz, vr, vt
+    real(kind=cp), dimension(nrec,nt),  intent(in) :: vl, vq, vt2
 
-    real(kind=dp) :: inc
+    real(kind=dp), dimension(nrec) :: inc
+    integer(kind=si) :: it
 
     inc = deg2rad * inci
 
-    vz = vl * cos(inc) + vq * sin(inc)
-    vr = vl * sin(inc) - vq * cos(inc)
-    vt = vt2
-
+    do it = 1, nt
+       vz(:,it) = vl(:,it) * cos(inc(:)) + vq(:,it) * sin(inc(:))
+       vr(:,it) = vl(:,it) * sin(inc(:)) - vq(:,it) * cos(inc(:))
+       vt(:,it) = vt2(:,it)
+    end do
+    
   end subroutine rotate_LQT_to_ZRT
 !--------------------------------------------------------------------------------
 

@@ -44,7 +44,7 @@ module input_output
   use mesh_tools
   use IO_model
   use Teleseismic_IO_mod
-
+  use rotations_mod
   implicit none
 
   PUBLIC  :: init_input_output_mod, SetUpInversion, get_mode_running, dump_adjoint_sources, write_bin_sismo_on_disk, &
@@ -833,14 +833,16 @@ contains
     integer                                                    :: status(MPI_STATUS_SIZE)
     real(kind=CUSTOM_REAL)                                     :: dummy_real, W
     character(len=MAX_LEN_STRING)                              :: filename
-    character(len=1)                                           :: data_comp, data_type
-    character(len=2)                                           :: full_comp
-    character(len=3)                                           :: all_comp
-    character(len=1)                                           :: data_comp_inv, data_type_inv
-    character(len=2)                                           :: full_comp_inv
-    character(len=3)                                           :: all_comp_inv
+    logical                                                    :: data_comp_inv, data_comp_read
+    character(len=1)                                           :: data_type_inv, data_type_read
+    character(len=3)                                           :: data_sys_inv, data_sys_read
     integer                                                    :: it1, it2, it3, it4
-   
+    double precision                                           :: lat0, lon0, azi0
+
+    lat0 = acqui_simu(ievent)%Origin_chunk_lat
+    lon0 = acqui_simu(ievent)%Origin_chunk_lon
+    azi0 = acqui_simu(ievent)%Origin_chunk_azi
+
     nb_traces_tot=0
     
     if (myrank == 0) write(INVERSE_LOG_FILE,'(/a17)') '... reading data '
@@ -857,49 +859,35 @@ contains
 
           !! Read pif gather file component by conponent
           ncomp_read = 0
+          data_type_read = acqui_simu(ievent)%read_data_type
           do idim=1,NDIM
 
-             ! Get data components
-             full_comp      = lowcase(trim(acqui_simu(ievent)%component(idim)))
-             data_type      = full_comp(1:1)
-             data_comp      = full_comp(2:2)
-             all_comp(idim:idim) = data_comp
-             
+             ! Check type of data
+             data_sys_read  = acqui_simu(ievent)%read_data_sys(idim:idim)
+             data_comp_read  = acqui_simu(ievent)%read_data_comp(idim)
+                          
              write(filename,*)trim(acqui_simu(ievent)%event_rep),'/fsismo_',&
-                  trim(adjustl(full_comp)),'.bin'
+                  trim(adjustl(data_type_read)),trim(adjustl(data_sys_read)),'.bin'
              
              ! Read data
-             if (trim(full_comp) /= '') then
+             if (data_comp_read) then
                 call read_binary_data(filename, nsta, nt, gather(:,:,idim))
                 nb_traces_tot = nb_traces_tot + nsta
                 ncomp_read = ncomp_read +1
              end if
 
-             ! Update booleans
-             if (data_comp == 'x') is_component_read(1)=.true.; id_component_read(1)=idim
-             if (data_comp == 'y') is_component_read(2)=.true.; id_component_read(2)=idim
-             if (data_comp == 'z') is_component_read(3)=.true.; id_component_read(3)=idim
-             if (data_comp == 'r') is_component_read(4)=.true.; id_component_read(4)=idim
-             if (data_comp == 't') is_component_read(5)=.true.; id_component_read(5)=idim
-             if (data_comp == 'l') is_component_read(6)=.true.; id_component_read(6)=idim
-             if (data_comp == 'q') is_component_read(7)=.true.; id_component_read(7)=idim
-             if (data_comp == 'p') is_component_read(8)=.true.; id_component_read(8)=idim
-             
           end do  
           
           !! store data gather in my slice if needed
           NSTA_LOC=acqui_simu(ievent)%nsta_slice
-          !!!!!!!!!!!!!!!!! Pourquoi qdjoint sources et data traces sont dans un ordre different ?
           allocate(acqui_simu(ievent)%data_traces(ndim,nsta_loc,nt))
           allocate(acqui_simu(ievent)%adjoint_sources(ndim,nsta_loc,nt))
           allocate(acqui_simu(ievent)%weight_trace(ndim,nsta_loc,nt))
-          acqui_simu(ievent)%weight_trace(:,:,:) = 1._CUSTOM_REAL
-
-          ! manage data taper here
+          acqui_simu(ievent)%weight_trace(:,:,:) = 1._custom_real
+          
+          !! manage data taper here        
+          ! first windowing
           if (acqui_simu(ievent)%is_time_pick) then
-             ! HARCODED CAN USE W TO WIGHT GRADIENT BETWEEN THEM !!!!
-             W = 1._custom_real
-             !
              allocate(weight_loc(nt))
              do irec = 1, nsta
                 weight_loc(:) = 1._custom_real
@@ -919,84 +907,80 @@ contains
                 end do
              end do
           end if
+          
+          ! then gradient weighting
+          if (inversion_param%is_src_weigh_gradient) then ! we take the maximum value of gather
+             acqui_simu(ievent)%weight_trace(:,:,:) = 1._custom_real / maxval(abs(gather))
+          else
+             acqui_simu(ievent)%weight_trace(:,:,:) = 1._custom_real
+          end if
 
           ! manage inverted data (use weight_trace to select wich parameter)
           ncomp_inv = 0
-          do idim = 1, ndim
+          data_type_inv = inversion_param%inverted_data_type
+          if  (data_type_inv /= data_type_read) then
+             write(6,*)'CATASTROPHIC ERROR'
+             write(6,*)'requested type of inverted data is different from observed data'
+             write(6,*)'integration of differentiation of observed not implemented yet'
+             write(6,*)'NOW STOP'
+             stop
+          end if
+          if (data_type_inv == 'd') inversion_param%get_synthetic_displacement = .true.
+          if (data_type_inv == 'v') inversion_param%get_synthetic_velocity     = .true.
+          if (data_type_inv == 'a') inversion_param%get_synthetic_acceleration = .true.
+          if (data_type_inv == 'p') inversion_param%get_synthetic_pressure     = .true.
 
-             full_comp_inv           = lowcase(trim(inversion_param%component(idim)))
-             data_type_inv           = full_comp_inv(1:1)
-             data_comp_inv           = full_comp_inv(2:2)
-             all_comp_inv(idim:idim) = data_comp_inv
+          ! mute non_inverted data
+          do idim=1,ndim
 
-             if (trim(full_comp_inv) /= '') then
-                ncomp_inv = ncomp_inv + 1
+             ! Check type of data
+             data_sys_inv  = inversion_param%inverted_data_sys(idim:idim)
+             data_comp_inv = inversion_param%inverted_data_comp(idim)                
 
-                if (data_type == 'd') inversion_param%get_synthetic_displacement=.true.
-                if (data_type == 'v') inversion_param%get_synthetic_velocity=.true.
-                if (data_type == 'a') inversion_param%get_synthetic_acceleration=.true.
-                if (data_type == 'p') inversion_param%get_synthetic_pressure=.true.
-
-                if  (data_type_inv /= data_type) then
-                   write(6,*)'CATASTROPHIC ERROR'
-                   write(6,*)'requested type of inverted data is different from observed data'
-                   write(6,*)'integration of differentiation of observed not implemented yet'
-                   write(6,*)'NOW STOP'
-                   stop
-                end if
-
-                ! Update booleans
-                if (data_comp_inv == 'x') is_component_inv(1)=.true.; id_component_inv(1)=idim
-                if (data_comp_inv == 'y') is_component_inv(2)=.true.; id_component_inv(2)=idim
-                if (data_comp_inv == 'z') is_component_inv(3)=.true.; id_component_inv(3)=idim
-                if (data_comp_inv == 'r') is_component_inv(4)=.true.; id_component_inv(4)=idim
-                if (data_comp_inv == 't') is_component_inv(5)=.true.; id_component_inv(5)=idim
-                if (data_comp_inv == 'l') is_component_inv(6)=.true.; id_component_inv(6)=idim
-                if (data_comp_inv == 'q') is_component_inv(7)=.true.; id_component_inv(7)=idim
-                if (data_comp_inv == 'p') is_component_inv(8)=.true.; id_component_inv(8)=idim
+             if (.not.data_comp_inv) then
+                acqui_simu(ievent)%weight_trace(idim,:,:) = 0._custom_real
              end if
+
           end do
 
-          
-                   
-                
-                    !! No rotations here, we keep data in their own system...
-!!$          ! Rotate from original data coordinate system ((x,y,z),(zen),(rtz)) to mesh one (xyz)
-!!$          select case (trim(all_comp))
-!!$          case('x','y','z','xy','xz','zx','yx','xyz','xzy','yxz','yzx','zxy','zyx')
-!!$
-!!$             ! Data are already in the mesh coordinate system
-!!$             ! Data rotation not required
-!!$
-!!$          case('e','n','z','en','ez','ze','ne','enz','ezn','nez','nze','zen','zne')
-!!$             
-!!$             ! Data are in standard coordinate system
-!!$             ! Data rotation required to pass in mesh system (zen -> xyz)
-!!$             call define_mesh_rotation_matrix(lat0,lon0,azi0)
-!!$             call rotate_comp_glob2mesh(vz2, vn, ve, stalat, stalon, nt, nsta, vx, vy, vz)
-!!$
-!!$          case('r','t','z','rt','rz','zrx','yx','xyz','xzy','yxz','yzx','zxy','zyx')
-!!$
-!!$             ! Data are in the souce receiver coordinate system
-!!$             ! Data rotation required (baz-azi) (rtz -> zne)
-!!$             call rotate_ZRT_to_ZNE(vz2,vr,vt,vz,vn,ve,nrec,nt,bazi)
-!!$                
-!!$             ! Data rotation required to pass in mesh system (zen -> xyz)
-!!$             call define_mesh_rotation_matrix(lat0,lon0,azi0)
-!!$             call rotate_comp_glob2mesh(vz2, vn, ve, stalat, stalon, nt, nsta, vx, vy, vz)
-!!$                
-!!$          case('x','y','z','xy','xz','zx','yx','xyz','xzy','yxz','yzx','zxy','zyx')
-!!$
-!!$             ! Data are in the ray coordinate system
-!!$             ! Data rotation required (baz-azi and incidence angle) (rtz -> zen)
-!!$             call rotate_LQT_to_ZNE(vl,vq,vt,vz,vn,ve,nrec,nt,bazi,inci)
-!!$                
-!!$             ! Data rotation required to pass in mesh system (zen -> xyz)
-!!$             call define_mesh_rotation_matrix(lat0,lon0,azi0)
-!!$             call rotate_comp_glob2mesh(vz2, vn, ve, stalat, stalon, nt, nsta, vx, vy, vz)
-!!$             
-!!$          end select
-          
+          ! pass from data system to local mesh
+          select case (acqui_simu(ievent)%read_data_sys)
+          case ('xyz')
+             ! nothing to do
+          case('enz')
+             ! Data are in standard coordinate system
+             ! Data rotation required to pass in mesh system (zen -> xyz)
+             call define_mesh_rotation_matrix(lat0,lon0,azi0)
+             call rotate_comp_glob2mesh(gather(:,:,3), gather(:,:,2), gather(:,:,1), &
+                  acqui_simu(ievent)%read_station_position(1,:),                     &
+                  acqui_simu(ievent)%read_station_position(2,:),                     &
+                  nt, nsta, gather(:,:,1), gather(:,:,2), gather(:,:,3))
+          case('rtz')
+             ! Data are in the souce receiver coordinate system
+             ! Data rotation required (baz-azi) (rtz -> zne)
+             call rotate_ZRT_to_ZNE(gather(:,:,3), gather(:,:,1), gather(:,:,2),     &
+                  gather(:,:,3), gather(:,:,2), gather(:,:,1),                       &
+                  nsta,nt,acqui_simu(ievent)%baz)
+             ! Data rotation required to pass in mesh system (zen -> xyz)
+             call define_mesh_rotation_matrix(lat0, lon0, azi0)
+             call rotate_comp_glob2mesh(gather(:,:,3), gather(:,:,2), gather(:,:,1), &
+                  acqui_simu(ievent)%read_station_position(1,:),                     &
+                  acqui_simu(ievent)%read_station_position(2,:),                     &
+                  nt, nsta, gather(:,:,1), gather(:,:,2), gather(:,:,3))
+          case('qtl')
+             !! Data are in the ray coordinate system
+             !! Data rotation required (baz-azi and incidence angle) (rtz -> zen)
+             !call rotate_LQT_to_ZNE(vl,vq,vt,vz,vn,ve,nrec,nt,bazi,inci)
+             !   
+             !! Data rotation required to pass in mesh system (zen -> xyz)
+             !call define_mesh_rotation_matrix(lat0,lon0,azi0)
+             !call rotate_comp_glob2mesh(vz2, vn, ve, stalat, stalon, nt, nsta, vx, vy, vz)
+             write(6,*)'CATASTROPHIC ERROR'
+             write(6,*)'qtl is not implemented yet'
+             write(6,*)'NOW STOP'
+             stop
+          end select
+                     
           if (VERBOSE_MODE .or. DEBUG_MODE)  allocate(acqui_simu(ievent)%synt_traces(NDIM, NSTA_LOC, Nt))
           irec_local=0
           do irec = 1, NSTA
@@ -1093,8 +1077,183 @@ contains
 
   end subroutine read_pif_data_gather
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!!! WARNING TO BE CONSISTENT I UED NAME FILE TO WRITE TO CHOOSE BETWENN DATA AND ADJOINT SOURCES
+    subroutine write_pif_data_gather(ievent, acqui_simu, inversion_param, array_to_write, name_file_to_write, myrank)
 
-  
+    use my_mpi             !! module from specfem
+    include "precision.h"  !! from specfem
+
+    integer,                                                intent(in)    :: myrank, ievent
+    character(len=MAX_LEN_STRING)                                         :: filename
+    real(kind=CUSTOM_REAL),  dimension(:,:,:), allocatable, intent(in)    :: array_to_write
+    type(acqui),             dimension(:),     allocatable, intent(inout) :: acqui_simu
+    character(len=MAX_LEN_STRING),                          intent(in)    :: name_file_to_write
+    type(inver),                                               intent(in) :: inversion_param
+
+    integer                                                               :: idim, NSTA, NSTA_LOC, Nt, irec, irec_local
+    integer                                                               :: tag, ier, nsta_irank, irank, icomp
+    real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable                 :: Gather, Gather_loc
+    integer,                dimension(:),     allocatable                 :: irec_global
+    integer                                                               :: status(MPI_STATUS_SIZE)
+    double precision                                           :: lat0, lon0, azi0
+
+    character(len=1)                                           :: data_type
+    logical                                                    :: data_comp
+    character(len=3)                                           :: data_sys
+    
+    lat0 = acqui_simu(ievent)%Origin_chunk_lat
+    lon0 = acqui_simu(ievent)%Origin_chunk_lon
+    azi0 = acqui_simu(ievent)%Origin_chunk_azi
+    
+     if (myrank == 0) then
+        NSTA=acqui_simu(ievent)%nsta_tot
+        Nt=acqui_simu(ievent)%Nt_data
+        allocate(Gather(NSTA,Nt,NDIM))
+     endif
+      ! not sure if need this sync
+        call synchronize_all()
+     do irank = 1, NPROC-1
+
+        if (myrank == 0) then
+           ! count the receiver in slice irank
+           nsta_irank=0
+           do irec = 1,  NSTA
+              if (acqui_simu(ievent)%islice_selected_rec(irec) == irank) nsta_irank = nsta_irank + 1
+           enddo
+           if (nsta_irank > 0) then
+              allocate(Gather_loc(nsta_irank,Nt,NDIM))  !! data to receive
+              allocate(irec_global(nsta_irank))
+              irec_local=0
+              tag   = MPI_ANY_TAG
+              call MPI_RECV(Gather_loc, Nt*nsta_irank*NDIM, CUSTOM_MPI_TYPE, irank, tag, my_local_mpi_comm_world, status,  ier)
+              call MPI_RECV(irec_global, nsta_irank, MPI_INTEGER, irank, tag, my_local_mpi_comm_world, status,  ier)
+              do icomp=1,NDIM
+                 do irec_local = 1, nsta_irank
+                    Gather(irec_global(irec_local), :, icomp) = Gather_loc(irec_local, :, icomp)
+                 enddo
+              enddo
+
+              deallocate(Gather_loc)
+              deallocate(irec_global)
+           endif
+        else
+           if (myrank == irank .and. acqui_simu(ievent)%nsta_slice > 0) then
+              NSTA_LOC=acqui_simu(ievent)%nsta_slice
+              Nt=acqui_simu(ievent)%Nt_data
+              allocate(Gather_loc(NSTA_LOC,Nt,NDIM))
+              allocate(irec_global(NSTA_LOC))
+
+              do irec_local = 1, NSTA_LOC
+                 irec_global(irec_local) = acqui_simu(ievent)%number_receiver_global(irec_local)
+                 !! choose the rigth seismograms_*
+                 do icomp=1,NDIM
+                       Gather_loc(irec_local,:,icomp)=array_to_write(icomp,irec_local,:)
+                 enddo
+              enddo
+
+              tag    = 2001
+              call MPI_SEND(Gather_loc,  Nt*NSTA_LOC*NDIM, CUSTOM_MPI_TYPE, 0, tag, my_local_mpi_comm_world, ier)
+              call MPI_SEND(irec_global, NSTA_LOC, CUSTOM_MPI_TYPE, 0, tag, my_local_mpi_comm_world, ier)
+              deallocate(Gather_loc)
+              deallocate(irec_global)
+           endif
+
+        endif
+
+        ! not sure if need this sync
+        call synchronize_all()
+
+     enddo
+     !!  write gather file
+     if (myrank == 0) then
+        do icomp=1,NDIM
+           do irec_local = 1, acqui_simu(ievent)%nsta_slice
+              !! choose the rigth seismograms_*
+              Gather(acqui_simu(ievent)%number_receiver_global(irec_local),:,icomp) = array_to_write(icomp,irec_local,:)
+           enddo
+        enddo
+        
+        !! write only the asked component or pressure
+        select case (trim(adjustl(name_file_to_write)))
+        case('adjoint_source')
+           ! we write adjoint sources in the inverted data system (write all))
+           irec=0
+           data_type = inversion_param%inverted_data_type
+           do idim=1,ndim
+              data_sys  = inversion_param%inverted_data_sys(idim:idim)
+              data_comp = inversion_param%inverted_data_comp(idim)
+              write(filename,*)trim(acqui_simu(ievent)%event_rep),'/adjoint_src_fsismo_',&
+                   trim(adjustl(data_type)),trim(adjustl(data_sys)),'.bin'
+              call write_binary_data(filename,nsta,nt,gather(:,:,idim))
+           end do
+        case('data')
+           ! we write data the read data system (write all)
+           irec=0
+           data_type = acqui_simu(ievent)%read_data_type
+
+           ! perform rotations
+          select case (acqui_simu(ievent)%read_data_sys)
+          case ('xyz')
+             ! nothing to do
+          case('enz')
+             ! Data are in standard coordinate system
+             ! Data rotation required to pass in mesh system (zen -> xyz)
+             call define_mesh_rotation_matrix(lat0,lon0,azi0)
+             call rotate_comp_mesh2glob(gather(:,:,1), gather(:,:,2), gather(:,:,3), &
+                  acqui_simu(ievent)%read_station_position(1,:),                     &
+                  acqui_simu(ievent)%read_station_position(2,:),                     &
+                  nt, nsta, gather(:,:,3), gather(:,:,2), gather(:,:,1))
+          case('rtz')
+             ! Data are in the souce receiver coordinate system
+             ! Data rotation required (baz-azi) (rtz -> zne)
+             ! Data rotation required to pass in mesh system (zen -> xyz)
+             call define_mesh_rotation_matrix(lat0,lon0,azi0)
+             call rotate_comp_mesh2glob(gather(:,:,1), gather(:,:,2), gather(:,:,3), &
+                  acqui_simu(ievent)%read_station_position(1,:),                     &
+                  acqui_simu(ievent)%read_station_position(2,:),                     &
+                  nt, nsta, gather(:,:,3), gather(:,:,2), gather(:,:,1))
+             call rotate_ZNE_to_ZRT(gather(:,:,3), gather(:,:,2), gather(:,:,1),     &
+                  gather(:,:,3), gather(:,:,1), gather(:,:,2),                       &
+                  nsta,nt,acqui_simu(ievent)%baz)
+          case('qtl')
+             !! Data are in the ray coordinate system
+             !! Data rotation required (baz-azi and incidence angle) (rtz -> zen)
+             !call rotate_LQT_to_ZNE(vl,vq,vt,vz,vn,ve,nrec,nt,bazi,inci)
+             !   
+             !! Data rotation required to pass in mesh system (zen -> xyz)
+             !call define_mesh_rotation_matrix(lat0,lon0,azi0)
+             !call rotate_comp_glob2mesh(vz2, vn, ve, stalat, stalon, nt, nsta, vx, vy, vz)
+             write(6,*)'CATASTROPHIC ERROR'
+             write(6,*)'qtl is not implemented yet'
+             write(6,*)'NOW STOP'
+             stop
+          end select
+           do idim=1,ndim
+              data_sys  = acqui_simu(ievent)%read_data_sys(idim:idim)
+              data_comp = acqui_simu(ievent)%read_data_comp(idim)
+              write(filename,*)trim(acqui_simu(ievent)%event_rep),'/output_fsismo_', &
+                   trim(adjustl(data_type)),trim(adjustl(data_sys)),'.bin'
+              call write_binary_data(filename,nsta,nt,gather(:,:,idim))
+           end do
+        case default
+           ! write as it stands
+           ! we write adjoint sources in the inverted data system (write all))
+           irec=0
+           data_type = inversion_param%inverted_data_type
+           do idim=1,ndim
+              data_sys  = inversion_param%inverted_data_sys(idim:idim)
+              data_comp = inversion_param%inverted_data_comp(idim)
+              if (idim==1) write(filename,*)trim(acqui_simu(ievent)%event_rep),'/unknown_fsismo_1.bin'
+              if (idim==2) write(filename,*)trim(acqui_simu(ievent)%event_rep),'/unknown_fsismo_2.bin'
+              if (idim==3) write(filename,*)trim(acqui_simu(ievent)%event_rep),'/unknown_fsismo_3.bin'
+              call write_binary_data(filename,nsta,nt,gather(:,:,idim))
+           end do
+        end select
+        deallocate(Gather)
+     endif
+
+   end subroutine write_pif_data_gather
+
 
 
   
@@ -1418,9 +1577,15 @@ contains
        case('prior_data_std')
           read(line(ipos0:ipos1),*) inversion_param%prior_data_std
 
-       case('data_to_invert')
-          read(line(ipos0:ipos1),*) inversion_param%component
+       case('data_to_invert_type')
+          read(line(ipos0:ipos1),*) inversion_param%inverted_data_type
 
+       case('data_to_invert_system')
+          read(line(ipos0:ipos1),*) inversion_param%inverted_data_sys
+
+       case('data_to_invert_is_component')
+          read(line(ipos0:ipos1),*) inversion_param%inverted_data_comp
+          
        case('apply_src_weighting_to_gradient') 
           read(line(ipos0:ipos1),*) inversion_param%is_src_weigh_gradient
        case default
@@ -1503,7 +1668,10 @@ endif
    call MPI_BCAST(inversion_param%zmin_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%zmax_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
 
-   call MPI_BCAST(inversion_param%component,6,mpi_character,0,my_local_mpi_comm_world,ier)
+   !call MPI_BCAST(inversion_param%component,6,mpi_character,0,my_local_mpi_comm_world,ier)
+   call MPI_BCAST(inversion_param%inverted_data_comp,3,mpi_logical,0,my_local_mpi_comm_world,ier)
+   call MPI_BCAST(inversion_param%inverted_data_sys,3,mpi_character,0,my_local_mpi_comm_world,ier)
+   call MPI_BCAST(inversion_param%inverted_data_type,1,mpi_character,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%is_src_weigh_gradient,1,mpi_logical,0,my_local_mpi_comm_world,ier)
 
    !! set private values

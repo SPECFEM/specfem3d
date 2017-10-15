@@ -334,6 +334,10 @@ contains
     real(kind=cp)               :: ai, aj, ak, al
     real(kind=cp)               :: bi, bj, bk, bl
     real(kind=cp)               :: ci, cj, ck, cl
+    real(kind=cp)               :: ajakal, bjbkbl, cjckcl
+    real(kind=cp)               :: aiakal, bibkbl, cickcl
+    real(kind=cp)               :: aiajal, bibjbl, cicjcl
+    real(kind=cp)               :: aiajak, bibjbk, cicjck
     real(kind=cp)               :: aiajakal, bibjbkbl, cicjckcl
     real(kind=cp)               :: aiaj, akal, bibj, bkbl
     real(kind=cp)               :: aiak, aial, ajal, ajak
@@ -421,8 +425,9 @@ contains
                                   + 2._dp*(-aiajakal + bibjbkbl - cicjckcl)
        
        ! dcij_dc66
-       partial_derivative(6,ipar) = (dik*djl + dil*djk)                           &
-                                  - (cick*djl + cicl*djk + cjcl*dik + cjck*dil)   &
+       partial_derivative(6,ipar) = -(dik*djl + dil*djk)                           &
+                                  + (aiak*djl + aial*djk + ajal*dik + ajak*dil)    &
+                                  + (bibk*djl + bibl*djk + bjbl*dik + bjbk*dil)    &
                                   + 2._dp*(-aiajakal - bibjbkbl + cicjckcl)
        
        ! dcij_dc23

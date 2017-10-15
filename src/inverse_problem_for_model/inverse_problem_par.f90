@@ -188,7 +188,9 @@ module inverse_problem_par
 
      !! inverted components
      character(len=2),                       dimension(3)                     :: component
-
+     character(len=3)                                                         :: inverted_data_sys
+     logical, dimension(3)                                                    :: inverted_data_comp
+     character                                                                :: inverted_data_type
      logical                                                                  :: is_src_weigh_gradient=.false.
 
      
@@ -310,7 +312,9 @@ module inverse_problem_par
      integer                                                                   :: Nt_data
      !! components used
      character(len=2),                        dimension(3)                     :: component
-
+     character(len=3)                                                          :: read_data_sys
+     logical, dimension(3)                                                     :: read_data_comp
+     character                                                                 :: read_data_type
      !! adjoint source to use
      character(len= MAX_LEN_STRING)                                            :: adjoint_source_type
 
