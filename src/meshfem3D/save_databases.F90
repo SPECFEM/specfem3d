@@ -652,10 +652,10 @@
        if (buried_box) then
           read(90,'(a)') line
           read(90,*) radius_of_box_top
-           radius_of_box_top =  radius_of_box_top * 1000. 
+           radius_of_box_top =  radius_of_box_top * 1000.
        else
           radius_of_box_top = 6371000.
-       end if
+       endif
        model1D_file = 'MESH/'//trim(model1D_file)
        close(90)
 
@@ -982,7 +982,7 @@
           enddo
        enddo
 
-       if (buried_box) then 
+       if (buried_box) then
           ! top
           do ielm=1,nspec2D_TOP
 
@@ -998,7 +998,7 @@
              xelm(6)=xgrid(2,1,2,ispec)
              xelm(7)=xgrid(2,2,2,ispec)
              xelm(8)=xgrid(1,2,2,ispec)
-             
+
              yelm(1)=ygrid(1,1,1,ispec)
              yelm(2)=ygrid(2,1,1,ispec)
              yelm(3)=ygrid(2,2,1,ispec)
@@ -1007,7 +1007,7 @@
              yelm(6)=ygrid(2,1,2,ispec)
              yelm(7)=ygrid(2,2,2,ispec)
              yelm(8)=ygrid(1,2,2,ispec)
-             
+
              zelm(1)=zgrid(1,1,1,ispec)
              zelm(2)=zgrid(2,1,1,ispec)
              zelm(3)=zgrid(2,2,1,ispec)
@@ -1016,20 +1016,20 @@
              zelm(6)=zgrid(2,1,2,ispec)
              zelm(7)=zgrid(2,2,2,ispec)
              zelm(8)=zgrid(1,2,2,ispec)
-             
+
              call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
              zstore(:,:,:) = zstore(:,:,:) + radius_of_box_top !6371000.
              call Cartesian2spheric(xstore,ystore,zstore,rotation_matrix,longitud,latitud,radius,deg2rad)
              zstore(:,:,:) = zstore(:,:,:) - radius_of_box_top !6371000.
              call find_layer_in_axisem_model(ilayer,updown,radius(3,3,:),zlayer,nlayer)
-             
+
              imin = 1
              imax = NGLLX
              jmin = 1
              jmax = NGLLY
              kmin = NGLLZ
              kmax = NGLLZ
-             
+
              do k=kmin,kmax
                 do j=jmin,jmax
                    do i=imin,imax
@@ -1041,7 +1041,7 @@
              enddo
           enddo
        endif
-       
+
 
 
        close(89)
