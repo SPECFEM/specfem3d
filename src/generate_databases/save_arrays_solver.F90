@@ -703,7 +703,7 @@
              ny = abs_boundary_normal(2,igll,iface)
              nz = abs_boundary_normal(3,igll,iface)
 
-             write(IOUT,*) xstore_dummy(iglob), ystore_dummy(iglob), zstore_dummy(iglob), nx, ny, nz
+             write(IOUT,'(6f25.10)') xstore_dummy(iglob), ystore_dummy(iglob), zstore_dummy(iglob), nx, ny, nz
 
           enddo
        endif
