@@ -447,9 +447,10 @@
                                    NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
       else
         read(27) ibool
-        close(27)
       endif
     endif
+
+    if (.not. ADIOS_FOR_MESH) close(27)
 
     ! calculates totals
     if (HIGH_RESOLUTION_MESH) then
