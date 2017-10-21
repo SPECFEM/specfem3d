@@ -95,7 +95,7 @@
   do i = 1, command_argument_count()
     call get_command_argument(i,arg(i))
   enddo
- 
+
   call read_args(arg, MAX_NUM_NODES, node_list, num_node, filename, indir, outdir, ires)
 
   if (ires == 0) then
@@ -108,7 +108,7 @@
   print *, node_list(1:num_node)
 
   mesh_file = trim(outdir) // '/' // trim(filename)//'.vtk'
- 
+
   ! counts total number of points (all slices)
   npp = 0
   nee = 0
@@ -258,7 +258,7 @@
   allocate(celltype(nee))
   celltype=12
 
-  call write_unstructured_mesh(mesh_file,len_trim(mesh_file), 1, npp, pts, nee, celltype, conn,&
+  call write_unstructured_mesh(mesh_file,len_trim(mesh_file), 1, npp, pts, nee, celltype, conn, &
                              filename,len_trim(filename),total_dat)
 
   call finalize_mpi()
@@ -697,7 +697,7 @@
     conn(6,ne +n) = num_ibool(iglob6) -1 + np
     conn(7,ne +n) = num_ibool(iglob7) -1 + np
     conn(8,ne +n) = num_ibool(iglob8) -1 + np
-    
+
   enddo
 
   ! elements written
