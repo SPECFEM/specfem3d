@@ -448,7 +448,7 @@
     num_device = mygroup
   else
     num_device = myrank
-  endif 
+  endif
 
   ! initializes GPU and outputs info to files for all processes
   call initialize_cuda_device(num_device,ncuda_devices)

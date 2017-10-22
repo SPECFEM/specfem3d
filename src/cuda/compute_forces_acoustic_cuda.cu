@@ -391,7 +391,7 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
     if (k==1) d_b_potential_dot_dot_acoustic[iglob] = texfetch_potential_dot_dot<3>(iglob) + sum_terms;
 #else
     if (k==0) d_potential_dot_dot_acoustic[iglob] += sum_terms;
-    if (k==1) d_b_potential_dot_dot_acoustic[iglob] += sum_terms; 
+    if (k==1) d_b_potential_dot_dot_acoustic[iglob] += sum_terms;
 #endif // USE_TEXTURES_FIELDS
 #else  // MESH_COLORING
     //mesh coloring
