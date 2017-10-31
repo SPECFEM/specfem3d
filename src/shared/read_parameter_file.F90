@@ -310,6 +310,22 @@
       write(*,*)
     endif
 
+    call read_value_logical(UNDO_ATTENUATION_AND_OR_PML, 'UNDO_ATTENUATION_AND_OR_PML', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'UNDO_ATTENUATION_AND_OR_PML     = .false.'
+      write(*,*)
+    endif
+!! DK DK temporary, will soon be implemented
+    if (UNDO_ATTENUATION_AND_OR_PML) stop 'error: UNDO_ATTENUATION_AND_OR_PML not implemented in this code yet'
+
+    call read_value_integer(NT_DUMP_ATTENUATION, 'NT_DUMP_ATTENUATION', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'NT_DUMP_ATTENUATION             = 500'
+      write(*,*)
+    endif
+
     !-------------------------------------------------------
     ! Visualization
     !-------------------------------------------------------

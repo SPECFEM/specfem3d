@@ -68,6 +68,9 @@ end module constants
   integer :: UTM_PROJECTION_ZONE
   logical :: SUPPRESS_UTM_PROJECTION
 
+  logical :: UNDO_ATTENUATION_AND_OR_PML
+  integer :: NT_DUMP_ATTENUATION
+
   ! number of time steps
   integer :: NSTEP
   double precision :: DT
