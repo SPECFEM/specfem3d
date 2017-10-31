@@ -823,7 +823,7 @@
 
   use pml_par
   use specfem_par, only: myrank,SIMULATION_TYPE,GPU_MODE
-  use constants, only: IMAIN,NGNOD_EIGHT_CORNERS
+  use constants, only: IMAIN,NGNOD_EIGHT_CORNERS,UNDO_ATTENUATION_AND_OR_PML
 
   implicit none
 
@@ -831,8 +831,10 @@
   integer :: ispec,ispec_CPML,NSPEC_CPML_GLOBAL
 
   ! safety stops
-  if (SIMULATION_TYPE /= 1) stop 'Error C-PML for adjoint simulations not supported yet'
-  if (GPU_MODE) stop 'Error C-PML only supported in CPU mode for now'
+  if (SIMULATION_TYPE /= 1 .and. .not. UNDO_ATTENUATION_AND_OR_PML) &
+          stop 'Error: PMLs for adjoint runs require the flag UNDO_ATTENUATION_AND_OR_PML to be set'
+
+  if (GPU_MODE) stop 'Error: PMLs only supported in CPU mode for now'
 
   ! total number of PML elements
   call sum_all_i(NSPEC_CPML,NSPEC_CPML_GLOBAL)
