@@ -5,10 +5,10 @@
  !               ---------------------------------------
  !
  !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
- !                        Princeton University, USA
- !                and CNRS / University of Marseille, France
+ !                              CNRS, France
+ !                       and Princeton University, USA
  !                 (there are currently many more authors!)
- ! (c) Princeton University and CNRS / University of Marseille, July 2012
+ !                           (c) October 2017
  !
  ! This software is a computer program whose purpose is to solve
  ! the viscoelastic anisotropic or poroelastic wave equation

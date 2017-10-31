@@ -4,10 +4,10 @@
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
-!                        Princeton University, USA
-!                and CNRS / University of Marseille, France
+!                              CNRS, France
+!                       and Princeton University, USA
 !                 (there are currently many more authors!)
-! (c) Princeton University and CNRS / University of Marseille, July 2012
+!                           (c) October 2017
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -45,10 +45,7 @@
 
 !----------- parameters that can be changed by the user -----------
 
-!! DK DK added this temporarily here to make SPECFEM3D and SPECFEM3D_GLOBE much more similar
-!! DK DK in terms of the structure of their main time iteration loop; these are future features
-!! DK DK that are missing in this code but implemented in the other and that could thus be cut and pasted one day
-  logical, parameter :: UNDO_ATTENUATION = .false.
+  logical, parameter :: UNDO_ATTENUATION_AND_OR_PML = .false.
   logical, parameter :: EXACT_UNDOING_TO_DISK = .false.
   integer, parameter :: IFILE_FOR_EXACT_UNDOING = 244
   logical, parameter :: VTK_MODE = .false.
