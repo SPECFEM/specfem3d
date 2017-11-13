@@ -424,7 +424,7 @@ use File::Basename;
 #
 
 # when using this "find" command from Perl we need to use \\ instead of \ below otherwise Perl tries to interpret it
-      @objects = `find . -type f -name \\*Par_file\\* -print -o -name '.git' -prune -o -name 'm4' -prune -o -path './utils/ADJOINT_TOMOGRAPHY_TOOLS/flexwin' -prune -o -type f -regextype posix-extended -regex '.*\\.(bash|c|cpp|zsh|csh|cu|fh|f90|F90|h|h\\.in|fh\\.in|pl|py|tex|txt|sh)' -print`;
+      @objects = `find . -type f -name \\*Par_file\\* -print -o -name '.git' -prune -o -name 'm4' -prune -o -path './utils/ADJOINT_TOMOGRAPHY_TOOLS/flexwin' -prune -o -path './HDR_Vadim' -prune -o -type f -regextype posix-extended -regex '.*\\.(bash|c|cpp|zsh|csh|cu|fh|f90|F90|h|h\\.in|fh\\.in|pl|py|tex|txt|sh)' -print`;
 
       system("rm -f _____temp08_____ _____temp09_____");
 
