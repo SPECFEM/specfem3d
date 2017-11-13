@@ -88,6 +88,10 @@ xcombine_vol_data: $E/xcombine_vol_data
 combine_vol_data_vtk: xcombine_vol_data_vtk
 xcombine_vol_data_vtk: $E/xcombine_vol_data_vtk
 
+combine_vol_data_vtk_bin: xcombine_vol_data_vtk_bin
+xcombine_vol_data_vtk_bin: $E/xcombine_vol_data_vtk_bin
+
+
 create_movie_shakemap_AVS_DX_GMT: xcreate_movie_shakemap_AVS_DX_GMT
 xcreate_movie_shakemap_AVS_DX_GMT: $E/xcreate_movie_shakemap_AVS_DX_GMT
 
@@ -182,6 +186,27 @@ endif
 $E/xcombine_vol_data_vtk: $(xcombine_vol_data_vtk_OBJECTS) $(xcombine_vol_data_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
 	@echo ""
 	@echo "building xcombine_vol_data_vtk"
+	@echo ""
+	${FCLINK} -o $@ $+ $(MPILIBS)
+	@echo ""
+
+
+
+##
+## xcombine_vol_data_vtk_bin
+##
+xcombine_vol_data_vtk_bin_OBJECTS = \
+	$O/combine_vol_data_vtk_binary.aux.o \
+	$O/combine_vol_data_impl.aux.o \
+	$O/vtk_writer.aux.o \
+	$(EMPTY_MACRO)
+
+xcombine_vol_data_vtk_bin_OBJECTS += \
+	$O/combine_vol_data_adios_stubs.aux_noadios.o
+
+$E/xcombine_vol_data_vtk_bin: $(xcombine_vol_data_vtk_bin_OBJECTS) $(xcombine_vol_data_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
+	@echo ""
+	@echo "building xcombine_vol_data_vtk_bin"
 	@echo ""
 	${FCLINK} -o $@ $+ $(MPILIBS)
 	@echo ""
@@ -300,6 +325,8 @@ $O/%.aux.o: $S/%.f90 $O/shared_par.shared_module.o
 $O/%.aux_vtk.o: $S/%.F90 $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $< $(FC_DEFINE)USE_VTK_INSTEAD_OF_MESH
 
+$O/%.aux.o: $S/%.c ${SETUP}/config.h
+	${CC} -c $(CPPFLAGS) $(CFLAGS) $(MPI_INCLUDES) -o $@ $<
 
 ###
 ### ADIOS compilation

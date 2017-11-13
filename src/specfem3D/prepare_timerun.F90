@@ -4,10 +4,10 @@
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
-!                        Princeton University, USA
-!                and CNRS / University of Marseille, France
+!                              CNRS, France
+!                       and Princeton University, USA
 !                 (there are currently many more authors!)
-! (c) Princeton University and CNRS / University of Marseille, July 2012
+!                           (c) October 2017
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -822,7 +822,7 @@
   subroutine prepare_timerun_pml()
 
   use pml_par
-  use specfem_par, only: myrank,SIMULATION_TYPE,GPU_MODE
+  use specfem_par, only: myrank,SIMULATION_TYPE,GPU_MODE,UNDO_ATTENUATION_AND_OR_PML
   use constants, only: IMAIN,NGNOD_EIGHT_CORNERS
 
   implicit none
@@ -831,8 +831,10 @@
   integer :: ispec,ispec_CPML,NSPEC_CPML_GLOBAL
 
   ! safety stops
-  if (SIMULATION_TYPE /= 1) stop 'Error C-PML for adjoint simulations not supported yet'
-  if (GPU_MODE) stop 'Error C-PML only supported in CPU mode for now'
+  if (SIMULATION_TYPE /= 1 .and. .not. UNDO_ATTENUATION_AND_OR_PML) &
+          stop 'Error: PMLs for adjoint runs require the flag UNDO_ATTENUATION_AND_OR_PML to be set'
+
+  if (GPU_MODE) stop 'Error: PMLs only supported in CPU mode for now'
 
   ! total number of PML elements
   call sum_all_i(NSPEC_CPML,NSPEC_CPML_GLOBAL)
