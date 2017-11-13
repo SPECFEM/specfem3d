@@ -31,6 +31,7 @@
   subroutine meshfem3D()
 
   use meshfem3D_par
+  use chunk_earth_mod
 
   implicit none
 
@@ -282,6 +283,7 @@
   ! if meshing a chunk of the Earth, call a specific internal mesher designed specifically for that
   ! CD CD change this to have also the possibility to use a chunk without coupling
   if (MESH_A_CHUNK_OF_THE_EARTH) then
+
     ! user output
     if (myrank == 0) then
       write(IMAIN,*)
@@ -290,6 +292,20 @@
       call flush_IMAIN()
     endif
 
+    !! VM VM : new way to mesh and store mesh in geocubit format
+    if (myrank==0) then  !! serial mesh and use decompose_mesh after
+       call mesh_chunk_earth()
+       write(*,*) 'Done creating a chunk of the earth Mesh (HEX8 elements), see directory MESH/'
+    end if
+    ! make sure everybody is synchronized
+    call synchronize_all()
+    return
+    !call bcast_input_param_to_all()
+    !call read_mesh_parameter_file()
+    
+   
+    !! VM VM old way to create  MESH_A_CHUNK_OF_THE_EARTH, but still some routines that will 
+    !! move in the new way thus not remove for now 
     if (NGNOD == 8) then
       ! creates mesh in MESH/
       call earth_chunk_HEX8_Mesher(NGNOD)

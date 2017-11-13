@@ -866,7 +866,7 @@ end subroutine FK3D
            stf_coeff=exp(-(om*tg/2)**2)   !! apodization window
            stf_coeff=stf_coeff*exp(cmplx(0,-1)*om*tdelay)
 
-           !! zz(ip) is the height of point with respec to the lower layer
+           !! zz(ip) is the height of point with respect to the lower layer
            call compute_N_rayleigh(al,be,mu,H,nlayer,om,p,zz(ip),N_mat)
 
            dx_f=N_mat(1,2)*coeff(1,ii)+N_mat(1,4)*coeff(2,ii)+N_mat(1,3)*C_3  ! y_1

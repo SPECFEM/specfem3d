@@ -626,8 +626,8 @@
     endif
 
     ! check the type of external code to couple with, if any
-    if (MESH_A_CHUNK_OF_THE_EARTH .and. .not. COUPLE_WITH_INJECTION_TECHNIQUE) &
-      stop 'MESH_A_CHUNK_OF_THE_EARTH only available with COUPLE_WITH_INJECTION_TECHNIQUE for now, easy to change but not done yet'
+    !if (MESH_A_CHUNK_OF_THE_EARTH .and. .not. COUPLE_WITH_INJECTION_TECHNIQUE) &
+    !  stop 'MESH_A_CHUNK_OF_THE_EARTH only available with COUPLE_WITH_INJECTION_TECHNIQUE for now, easy to change but not done yet'
 
     if (COUPLE_WITH_INJECTION_TECHNIQUE) then
       if (INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_DSM .and. &

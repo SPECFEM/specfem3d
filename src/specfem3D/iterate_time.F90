@@ -1115,7 +1115,7 @@
        endif
 
        zz0 = Zmin_box - Radius_box * sin ( abs (theta_FK) * (acos(-1.d0) / 180.d0)  ) -  &
-             wave_length_at_bottom * cos ( abs (theta_FK) * (acos(-1.d0) / 180.d0)  ) -  &
+             3.*wave_length_at_bottom * cos ( abs (theta_FK) * (acos(-1.d0) / 180.d0)  ) -  &
              Z_ref_for_FK
 
     endif

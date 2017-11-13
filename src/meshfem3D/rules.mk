@@ -53,6 +53,7 @@ meshfem3D_OBJECTS = \
 	$O/get_flags_boundaries.mesh.o \
 	$O/get_MPI_cutplanes_eta.mesh.o \
 	$O/get_MPI_cutplanes_xi.mesh.o \
+	$O/chunk_earth_mesh_mod.mesh.o \
 	$O/meshfem3D.mesh.o \
 	$O/meshfem3D_par.mesh.o \
 	$O/program_meshfem3D.mesh.o \
@@ -146,7 +147,7 @@ $E/xmeshfem3D: $(XMESHFEM_OBJECTS)
 ###
 
 
-$O/meshfem3D.mesh.o: $O/meshfem3D_par.mesh.o
+$O/meshfem3D.mesh.o: $O/meshfem3D_par.mesh.o $O/chunk_earth_mesh_mod.mesh.o
 $O/create_meshfem_mesh.mesh.o: $O/meshfem3D_par.mesh.o
 $O/create_CPML_regions.mesh.o: $O/meshfem3D_par.mesh.o
 $O/create_interfaces_mesh.mesh.o: $O/meshfem3D_par.mesh.o
