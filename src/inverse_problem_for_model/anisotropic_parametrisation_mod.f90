@@ -452,9 +452,11 @@ contains
        dlm = delta(l,m)
        
        partial_derivative(10,ipar) = &
-            + (c12 - c23) * (ai*djm*dkl + aj*dim*dkl + dij*ak*dlm + dij*al*dkm) &
-            + (c66 - c44) * (ai*djl*dkm + ak*djl*dim + al*djk*dim + ai*djk*dlm + al*dik*djm + aj*dik*dim + ak*dil*djm + aj*dil*dkm) &
-            + (c11 - c13 + c23 - c12 + 2._dp*( c44 - c55 - c66)) * (aiajak*dlm +  aiajal*dkm + aiakal*djm + ajakal*dim)
+            + (c12 - c23) * (ai*djm*dkl + aj*dim*dkl + dij*ak*dlm + dij*al*dkm)  &
+            + (c66 - c44) * (ai*djl*dkm + ak*djl*dim + al*djk*dim + ai*djk*dlm + &
+            al*dik*djm + aj*dik*dim + ak*dil*djm + aj*dil*dkm) &
+            + (c11 - c13 + c23 - c12 + 2._dp*( c44 - c55 - c66)) * (aiajak*dlm +  &
+            aiajal*dkm + aiakal*djm + ajakal*dim)
 
        ! dcij_da2
        m   = 2
@@ -465,8 +467,10 @@ contains
        
        partial_derivative(11,ipar) = &
             + (c12 - c23) * (ai*djm*dkl + aj*dim*dkl + dij*ak*dlm + dij*al*dkm) &
-            + (c66 - c44) * (ai*djl*dkm + ak*djl*dim + al*djk*dim + ai*djk*dlm + al*dik*djm + aj*dik*dim + ak*dil*djm + aj*dil*dkm) &
-            + (c11 - c13 + c23 - c12 + 2._dp*( c44 - c55 - c66)) * (aiajak*dlm +  aiajal*dkm + aiakal*djm + ajakal*dim)
+            + (c66 - c44) * (ai*djl*dkm + ak*djl*dim + al*djk*dim + ai*djk*dlm + &
+            al*dik*djm + aj*dik*dim + ak*dil*djm + aj*dil*dkm) &
+            + (c11 - c13 + c23 - c12 + 2._dp*( c44 - c55 - c66)) * &
+            (aiajak*dlm +  aiajal*dkm + aiakal*djm + ajakal*dim)
 
        ! dcij_da3
        m   = 3
@@ -477,8 +481,10 @@ contains
        
        partial_derivative(12,ipar) = &
             + (c12 - c23) * (ai*djm*dkl + aj*dim*dkl + dij*ak*dlm + dij*al*dkm) &
-            + (c66 - c44) * (ai*djl*dkm + ak*djl*dim + al*djk*dim + ai*djk*dlm + al*dik*djm + aj*dik*dim + ak*dil*djm + aj*dil*dkm) &
-            + (c11 - c13 + c23 - c12 + 2._dp*( c44 - c55 - c66)) * (aiajak*dlm +  aiajal*dkm + aiakal*djm + ajakal*dim)
+            + (c66 - c44) * (ai*djl*dkm + ak*djl*dim + al*djk*dim + ai*djk*dlm + &
+            al*dik*djm + aj*dik*dim + ak*dil*djm + aj*dil*dkm) &
+            + (c11 - c13 + c23 - c12 + 2._dp*( c44 - c55 - c66)) * (aiajak*dlm + &
+            aiajal*dkm + aiakal*djm + ajakal*dim)
 
        ! dcij_db1
        m   = 1
@@ -489,8 +495,10 @@ contains
        
        partial_derivative(13,ipar) = &
             + (c12 - c23) * (bi*djm*dkl + bj*dim*dkl + dij*bk*dlm + dij*bl*dkm) &
-            + (c66 - c55) * (bi*djl*dkm + bk*djl*dim + bl*djk*dim + bi*djk*dlm + bl*dik*djm + bj*dik*dim + bk*dil*djm + bj*dil*dkm) &
-            + (c22 + c13 - c23 - c12 + 2._dp*(-c44 + c55 - c66)) * (bibjbk*dlm +  bibjbl*dkm + bibkbl*djm + bjbkbl*dim)
+            + (c66 - c55) * (bi*djl*dkm + bk*djl*dim + bl*djk*dim + bi*djk*dlm + &
+            bl*dik*djm + bj*dik*dim + bk*dil*djm + bj*dil*dkm) &
+            + (c22 + c13 - c23 - c12 + 2._dp*(-c44 + c55 - c66)) * (bibjbk*dlm +  &
+            bibjbl*dkm + bibkbl*djm + bjbkbl*dim)
 
        ! dcij_db2
        m   = 2
@@ -501,8 +509,10 @@ contains
        
        partial_derivative(14,ipar) = &
             + (c12 - c23) * (bi*djm*dkl + bj*dim*dkl + dij*bk*dlm + dij*bl*dkm) &
-            + (c66 - c55) * (bi*djl*dkm + bk*djl*dim + bl*djk*dim + bi*djk*dlm + bl*dik*djm + bj*dik*dim + bk*dil*djm + bj*dil*dkm) &
-            + (c22 + c13 - c23 - c12 + 2._dp*(-c44 + c55 - c66)) * (bibjbk*dlm +  bibjbl*dkm + bibkbl*djm + bjbkbl*dim)
+            + (c66 - c55) * (bi*djl*dkm + bk*djl*dim + bl*djk*dim + bi*djk*dlm + &
+            bl*dik*djm + bj*dik*dim + bk*dil*djm + bj*dil*dkm) &
+            + (c22 + c13 - c23 - c12 + 2._dp*(-c44 + c55 - c66)) * (bibjbk*dlm +  &
+            bibjbl*dkm + bibkbl*djm + bjbkbl*dim)
 
        ! dcij_db3
        m   = 3
@@ -513,8 +523,10 @@ contains
        
        partial_derivative(15,ipar) = &
             + (c12 - c23) * (bi*djm*dkl + bj*dim*dkl + dij*bk*dlm + dij*bl*dkm) &
-            + (c66 - c55) * (bi*djl*dkm + bk*djl*dim + bl*djk*dim + bi*djk*dlm + bl*dik*djm + bj*dik*dim + bk*dil*djm + bj*dil*dkm) &
-            + (c22 + c13 - c23 - c12 + 2._dp*(-c44 + c55 - c66)) * (bibjbk*dlm +  bibjbl*dkm + bibkbl*djm + bjbkbl*dim)
+            + (c66 - c55) * (bi*djl*dkm + bk*djl*dim + bl*djk*dim + bi*djk*dlm + &
+            bl*dik*djm + bj*dik*dim + bk*dil*djm + bj*dil*dkm) &
+            + (c22 + c13 - c23 - c12 + 2._dp*(-c44 + c55 - c66)) * (bibjbk*dlm +  &
+            bibjbl*dkm + bibkbl*djm + bjbkbl*dim)
 
        ! dcij_dc1
        m   = 1
@@ -524,7 +536,8 @@ contains
        dlm = delta(l,m)
        
        partial_derivative(16,ipar) = &
-            + (c33 - c13 - c23 + c12 + 2._dp*(-c44 - c55 + c66)) * (cicjck*dlm + cicjcl*dkm + cickcl*djm + cjckcl*dim)
+            + (c33 - c13 - c23 + c12 + 2._dp*(-c44 - c55 + c66)) * &
+            (cicjck*dlm + cicjcl*dkm + cickcl*djm + cjckcl*dim)
 
        ! dcij_dc2
        m   = 1
@@ -534,7 +547,8 @@ contains
        dlm = delta(l,m)
        
        partial_derivative(17,ipar) = &
-            + (c33 - c13 - c23 + c12 + 2._dp*(-c44 - c55 + c66)) * (cicjck*dlm + cicjcl*dkm + cickcl*djm + cjckcl*dim)
+            + (c33 - c13 - c23 + c12 + 2._dp*(-c44 - c55 + c66)) * &
+            (cicjck*dlm + cicjcl*dkm + cickcl*djm + cjckcl*dim)
        
        ! dcij_dc3
        m   = 1
@@ -544,7 +558,8 @@ contains
        dlm = delta(l,m)
        
        partial_derivative(18,ipar) = &
-            + (c33 - c13 - c23 + c12 + 2._dp*(-c44 - c55 + c66)) * (cicjck*dlm + cicjcl*dkm + cickcl*djm + cjckcl*dim)
+            + (c33 - c13 - c23 + c12 + 2._dp*(-c44 - c55 + c66)) * &
+            (cicjck*dlm + cicjcl*dkm + cickcl*djm + cjckcl*dim)
 
        ! dcij_drho
        partial_derivative(19,ipar) = 0._cp

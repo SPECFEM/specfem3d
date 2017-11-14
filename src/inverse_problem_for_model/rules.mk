@@ -116,12 +116,12 @@ inverse_problem_for_model_OBJECTS = \
 	$O/write_output_SU.spec.o \
 	$O/write_seismograms.spec.o \
 	$O/inverse_problem_par.o \
+	$O/interpolation_mod.o \
+	$O/rotations_mod.o \
 	$O/signal_processing_mod.o \
 	$O/parallel_for_inverse_problem.o \
 	$O/adjoint_source_mod.o \
 	$O/mesh_tools_mod.o \
-	$O/interpolation_mod.o \
-	$O/rotations_mod.o \
 	$O/elastic_tensor_tools_mod.o \
 	$O/anisotropic_parametrisation_mod.o \
 	$O/passive_imaging_format_mod.o \

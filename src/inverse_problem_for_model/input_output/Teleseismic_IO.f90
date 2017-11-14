@@ -31,7 +31,7 @@ contains
 
 
     ! locals
-    character(len=MAX_LEN_STRING)                              :: line, keyw, filename !, line_to_read
+    character(len=MAX_LEN_STRING)                              :: line, keyw, filename, val !, line_to_read
     integer                                                    :: ipos0, ipos1, ievent
     integer                                                    :: ier, nsta, nt, ista
 
@@ -87,14 +87,17 @@ contains
 
           !! STORE KEYWORD ITEM -------------------------------------------------
           keyw     = trim(adjustl(line(1:ipos0-2)))
-          filename = trim(adjustl(line(ipos0:ipos1)))
-          acqui_simu(ievent)%event_rep = trim(adjustl(filename))
+          val      = trim(adjustl(line(ipos0:ipos1)))
 
           select case (trim(keyw))
+          case('event_rep')
+             ievent=ievent+1
+             acqui_simu(ievent)%event_rep = trim(adjustl(val))
+             cycle
           case('event_name')
 
-             ievent=ievent+1
-
+             write(filename,*)trim(acqui_simu(ievent)%event_rep),'/',trim(val)
+             
              !*** Read pif header file
              call read_pif_header_file(filename,mygather(ievent))
 
@@ -301,17 +304,21 @@ contains
           ! Source time functions
           call mpi_bcast(acqui_simu(ievent)%external_source_wavelet, 1, mpi_logical, 0, &
                my_local_mpi_comm_world, ier)
-          allocate(acqui_simu(ievent)%user_source_time_function(1,acqui_simu(ievent)%nt_data)) 
+          if (myrank > 0) then
+             allocate(acqui_simu(ievent)%user_source_time_function(1,acqui_simu(ievent)%nt_data))
+          end if
           call mpi_bcast(acqui_simu(ievent)%user_source_time_function, &
                          acqui_simu(ievent)%nt_data,                   &
                          custom_mpi_type, 0, my_local_mpi_comm_world, ier)
        end if
 
        ! conditional broadcast for allocatable arrays
-       allocate(acqui_simu(ievent)%station_name(acqui_simu(ievent)%nsta_tot))
-       allocate(acqui_simu(ievent)%network_name(acqui_simu(ievent)%nsta_tot))
-       allocate(acqui_simu(ievent)%position_station(3,acqui_simu(ievent)%nsta_tot))
-       allocate(acqui_simu(ievent)%read_station_position(3,acqui_simu(ievent)%nsta_tot))
+       if (myrank >0) then
+          allocate(acqui_simu(ievent)%station_name(acqui_simu(ievent)%nsta_tot))
+          allocate(acqui_simu(ievent)%network_name(acqui_simu(ievent)%nsta_tot))
+          allocate(acqui_simu(ievent)%position_station(3,acqui_simu(ievent)%nsta_tot))
+          allocate(acqui_simu(ievent)%read_station_position(3,acqui_simu(ievent)%nsta_tot))
+       end if
        !! actually geographic coord
        nsta = acqui_simu(ievent)%nsta_tot
 
@@ -326,23 +333,35 @@ contains
             my_local_mpi_comm_world, ier)
 
        if (acqui_simu(ievent)%is_time_pick) then
-          allocate(acqui_simu(ievent)%time_pick(nsta))
+          if (myrank >0) then
+             allocate(acqui_simu(ievent)%time_pick(nsta))
+          end if
           call mpi_bcast(acqui_simu(ievent)%time_pick,      nsta, custom_mpi_type, 0, &
                my_local_mpi_comm_world, ier)
        end if
-       allocate(acqui_simu(ievent)%baz(nsta))
-       allocate(acqui_simu(ievent)%dist(nsta))
-       allocate(acqui_simu(ievent)%gcarc(nsta))
+       if (myrank >0) then
+          allocate(acqui_simu(ievent)%baz(nsta))
+          allocate(acqui_simu(ievent)%dist(nsta))
+          allocate(acqui_simu(ievent)%gcarc(nsta))
+       end if
        call mpi_bcast(acqui_simu(ievent)%baz,               nsta, custom_mpi_type, 0, &
             my_local_mpi_comm_world, ier)
        call mpi_bcast(acqui_simu(ievent)%gcarc,             nsta, custom_mpi_type, 0, &
             my_local_mpi_comm_world, ier)
        call mpi_bcast(acqui_simu(ievent)%dist,              nsta, custom_mpi_type, 0, &
             my_local_mpi_comm_world, ier)
+
+
+       !! Needed to fit previous definition of source_type
+       acqui_simu(ievent)%source_type      = trim(adjustl(acqui_simu(ievent)%source_type_modeling))
+       acqui_simu(ievent)%data_file_gather = acqui_simu(ievent)%event_rep
+       
     enddo
 
     !! to do do not forget to bcast all acqui_simu structure to other MPI slices
     !! ......
+
+
 
 
 
@@ -375,7 +394,7 @@ contains
     integer,                                intent(in)     :: myrank
 
     integer                                                :: ievent, ireceiver, nsta_slice, irec_local, NSTA, NEVENT
-    integer                                                :: ispec_selected, islice_selected
+    integer                                                :: ispec_selected, islice_selected, idim
     double precision                                       :: xi_receiver, eta_receiver, gamma_receiver
     double precision                                       :: x_found,  y_found,  z_found
     double precision                                       :: x_to_locate, y_to_locate, z_to_locate
@@ -424,11 +443,18 @@ contains
        allocate(acqui_simu(ievent)%islice_selected_rec(NSTA), &
                 acqui_simu(ievent)%ispec_selected_rec(NSTA), &
                 acqui_simu(ievent)%number_receiver_global(NSTA))
-
+       
        acqui_simu(ievent)%number_receiver_global(:)=-1
        acqui_simu(ievent)%ispec_selected_rec(:)=-1
        acqui_simu(ievent)%islice_selected_rec(:)=-1
 
+       !! SB SB si je comprends bien ce sont des matrices de rotations ?
+       allocate(acqui_simu(ievent)%nu(NDIM,NDIM,nsta))
+       acqui_simu(ievent)%nu(:,:,:)=0.
+       do idim = 1, NDIM
+          acqui_simu(ievent)%nu(idim,idim,:)=1.
+       end do
+       
        nsta_slice=0
        do ireceiver = 1, NSTA
 

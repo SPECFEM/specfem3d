@@ -272,7 +272,7 @@ contains
           ! Data rotation required (baz-azi) (rtz -> zne)
           ! Data rotation required to pass in mesh system (zen -> xyz)
           call define_mesh_rotation_matrix(lat0,lon0,azi0)
-           call rotate_comp_mesh2glob(trace_cal_2(1,:), trace_cal_2(2,:), trace_cal_2(3,:), &
+          call rotate_comp_mesh2glob(trace_cal_2(1,:), trace_cal_2(2,:), trace_cal_2(3,:), &
                acqui_simu(ievent)%read_station_position(1,irec_glob),                     &
                acqui_simu(ievent)%read_station_position(2,irec_glob),                     &
                nstep_data, 1, trace_cal_1(3,:), trace_cal_1(2,:), trace_cal_1(1,:))

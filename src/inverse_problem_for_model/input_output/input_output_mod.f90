@@ -1182,7 +1182,7 @@ contains
            do idim=1,ndim
               data_sys  = inversion_param%inverted_data_sys(idim:idim)
               data_comp = inversion_param%inverted_data_comp(idim)
-              write(filename,*)trim(acqui_simu(ievent)%event_rep),'/adjoint_src_fsismo_',&
+              write(filename,*)trim(acqui_simu(ievent)%data_file_gather),'/adjoint_src_fsismo_',&
                    trim(adjustl(data_type)),trim(adjustl(data_sys)),'.bin'
               call write_binary_data(filename,nsta,nt,gather(:,:,idim))
            end do
@@ -1228,12 +1228,12 @@ contains
              write(6,*)'NOW STOP'
              stop
           end select
-           do idim=1,ndim
-              data_sys  = acqui_simu(ievent)%read_data_sys(idim:idim)
-              data_comp = acqui_simu(ievent)%read_data_comp(idim)
-              write(filename,*)trim(acqui_simu(ievent)%event_rep),'/output_fsismo_', &
-                   trim(adjustl(data_type)),trim(adjustl(data_sys)),'.bin'
-              call write_binary_data(filename,nsta,nt,gather(:,:,idim))
+          do idim=1,ndim
+             data_sys  = acqui_simu(ievent)%read_data_sys(idim:idim)
+             data_comp = acqui_simu(ievent)%read_data_comp(idim)
+             write(filename,*)trim(acqui_simu(ievent)%data_file_gather),'/output_fsismo_', &
+                  trim(adjustl(data_type)),trim(adjustl(data_sys)),'.bin'
+             call write_binary_data(filename,nsta,nt,gather(:,:,idim))
            end do
         case default
            ! write as it stands
@@ -1252,6 +1252,10 @@ contains
         deallocate(Gather)
      endif
 
+     ! to be sure... there is a bug somewhere...
+     call synchronize_all()
+
+     
    end subroutine write_pif_data_gather
 
 

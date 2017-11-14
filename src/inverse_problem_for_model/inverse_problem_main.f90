@@ -120,6 +120,8 @@ subroutine inverse_problem_main()
         call ComputeSismosPerEvent(ievent, acqui_simu, 0, inversion_param, myrank)
      enddo
 
+     call synchronize_all_world()
+     
      !! writing model in SEM mesh : (rho, vp, vs) or cijkl.
      if (inversion_param%output_model)  call WriteOuptutSEMmodel(inversion_param)
 
@@ -186,6 +188,10 @@ subroutine inverse_problem_main()
      if (myrank == 0) write(*,*) ' ERROR :', trim(mode_running),  ':  option not defined '
 
   end select
+
+  ! parce que sinon je dois mettre un rpint...
+  call synchronize_all_world()
+
 
 end subroutine inverse_problem_main
 
