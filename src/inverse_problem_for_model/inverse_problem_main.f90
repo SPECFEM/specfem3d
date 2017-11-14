@@ -93,8 +93,10 @@ subroutine inverse_problem_main()
   !! set up projection on fd grid if asked (for snapshot, movie, smoothing ...)
   if (PROJ_ON_FD) call compute_interpolation_coeff_FD_SEM(projection_fd, myrank)
 
-
-
+  !to remove SB
+  print *,'check iidd ',IIDD
+  call flush(6)
+  
   !!!##############################################################################################################################
   !!! -------------------------------  different running mode : forward or FWI ----------------------------------------------------
   !!!##############################################################################################################################
@@ -188,10 +190,17 @@ subroutine inverse_problem_main()
      if (myrank == 0) write(*,*) ' ERROR :', trim(mode_running),  ':  option not defined '
 
   end select
-
+  
+  
+  !! SB
+  close(IIDD)
+  if (myrank == 0) then
+     close(OUTPUT_ITERATION_FILE)
+     close(INVERSE_LOG_FILE)
+     close(OUTPUT_FWI_LOG)
+  end if
   ! parce que sinon je dois mettre un rpint...
   call synchronize_all_world()
-
 
 end subroutine inverse_problem_main
 

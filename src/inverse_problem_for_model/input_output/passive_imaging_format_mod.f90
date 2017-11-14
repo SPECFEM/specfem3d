@@ -529,7 +529,6 @@ contains
     write(6,*)'    filename, nrec, nt = ',trim(adjustl(filename)),nrec,nt
 
     nsize = nrec * sp
-    iunit =iunit+1
     open(iunit,file=trim(adjustl(filename)),access='direct',recl=nsize,status='replace')
     do it = 1, nt
        write(iunit,rec=it)real(data(:,it),kind=sp)
