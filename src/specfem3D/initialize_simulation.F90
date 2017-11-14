@@ -4,10 +4,10 @@
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
-!                        Princeton University, USA
-!                and CNRS / University of Marseille, France
+!                              CNRS, France
+!                       and Princeton University, USA
 !                 (there are currently many more authors!)
-! (c) Princeton University and CNRS / University of Marseille, July 2012
+!                           (c) October 2017
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -422,7 +422,7 @@
   implicit none
 
   ! local parameters
-  integer :: ncuda_devices,ncuda_devices_min,ncuda_devices_max
+  integer :: ncuda_devices,num_device,ncuda_devices_min,ncuda_devices_max
 
   ! GPU_MODE now defined in Par_file
   if (myrank == 0) then
@@ -444,8 +444,14 @@
 
   if (POROELASTIC_SIMULATION) stop 'poroelastic simulations on GPUs not supported yet'
 
+  if (NPROC == 1 .and. NUMBER_OF_SIMULTANEOUS_RUNS > 1 ) then
+    num_device = mygroup
+  else
+    num_device = myrank
+  endif
+
   ! initializes GPU and outputs info to files for all processes
-  call initialize_cuda_device(myrank,ncuda_devices)
+  call initialize_cuda_device(num_device,ncuda_devices)
 
   ! collects min/max of local devices found for statistics
   call synchronize_all()

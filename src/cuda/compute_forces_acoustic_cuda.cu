@@ -5,10 +5,10 @@
  !               ---------------------------------------
  !
  !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
- !                        Princeton University, USA
- !                and CNRS / University of Marseille, France
+ !                              CNRS, France
+ !                       and Princeton University, USA
  !                 (there are currently many more authors!)
- ! (c) Princeton University and CNRS / University of Marseille, July 2012
+ !                           (c) October 2017
  !
  ! This program is free software; you can redistribute it and/or modify
  ! it under the terms of the GNU General Public License as published by
@@ -94,6 +94,398 @@ extern realw_texture d_hprime_xx_tex;
 
 /* ----------------------------------------------------------------------------------------------- */
 
+template<int FORWARD_OR_ADJOINT> __global__ void
+#ifdef USE_LAUNCH_BOUNDS
+// adds compiler specification
+__launch_bounds__(NGLL3_PADDED,LAUNCH_MIN_BLOCKS_ACOUSTIC)
+#endif
+Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
+                       const int* d_ibool,
+                       const int* d_phase_ispec_inner_acoustic,
+                       const int num_phase_ispec_acoustic,
+                       const int d_iphase,
+                       realw_const_p d_potential_acoustic,
+                       realw_p d_potential_dot_dot_acoustic,
+                       realw_const_p d_b_potential_acoustic,
+                       realw_p d_b_potential_dot_dot_acoustic,
+                       const int nb_field,
+                       realw* d_xix,realw* d_xiy,realw* d_xiz,
+                       realw* d_etax,realw* d_etay,realw* d_etaz,
+                       realw* d_gammax,realw* d_gammay,realw* d_gammaz,
+                       realw_const_p d_hprime_xx,
+                       realw_const_p hprimewgll_xx,
+                       realw_const_p wgllwgll_xy,realw_const_p wgllwgll_xz,realw_const_p wgllwgll_yz,
+                       realw* d_rhostore,
+                       const int use_mesh_coloring_gpu,
+                       const int gravity,
+                       realw_const_p minus_g,
+                       realw* d_kappastore,
+                       realw_const_p wgll_cube){
+
+  // block-id == number of local element id in phase_ispec array
+  int bx = blockIdx.y*gridDim.x+blockIdx.x;
+
+  // thread-id == GLL node id
+  // note: use only NGLL^3 = 125 active threads, plus 3 inactive/ghost threads,
+  //       because we used memory padding from NGLL^3 = 125 to 128 to get coalescent memory accesses;
+  //       to avoid execution branching and the need of registers to store an active state variable,
+  //       the thread ids are put in valid range
+  int tx = threadIdx.x;
+
+  int I,J,K;
+  int iglob,offset;
+  int working_element;
+
+  realw temp1l,temp2l,temp3l;
+  realw xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl;
+  realw jacobianl;
+
+  realw dpotentialdxl,dpotentialdyl,dpotentialdzl;
+  realw fac1,fac2,fac3;
+  realw rho_invl,kappa_invl;
+
+  realw sum_terms;
+  realw gravity_term;
+
+  __shared__ realw s_dummy_loc[2*NGLL3];
+
+  __shared__ realw s_temp1[NGLL3];
+  __shared__ realw s_temp2[NGLL3];
+  __shared__ realw s_temp3[NGLL3];
+
+  __shared__ realw sh_hprime_xx[NGLL2];
+  __shared__ realw sh_hprimewgll_xx[NGLL2];
+
+// arithmetic intensity: ratio of number-of-arithmetic-operations / number-of-bytes-accessed-on-DRAM
+//
+// hand-counts on floating-point operations: counts addition/subtraction/multiplication/division
+//                                           no counts for operations on indices in for-loops (compiler will likely unrool loops)
+//
+//                                           counts accesses to global memory, but no shared memory or register loads/stores
+//                                           float has 4 bytes
+
+// counts: for simulations without gravity, without mesh_coloring
+//         counts floating-point operations (FLOP) per thread
+//         counts global memory accesses in bytes (BYTES) per block
+// 2 FLOP
+//
+// 0 BYTES
+
+  // checks if anything to do
+  if (bx >= nb_blocks_to_compute) return;
+
+  // limits thread ids to range [0,125-1]
+  if (tx >= NGLL3) tx = NGLL3-1;
+
+// counts:
+// + 1 FLOP
+//
+// + 0 BYTE
+
+  // spectral-element id
+#ifdef USE_MESH_COLORING_GPU
+  working_element = bx;
+#else
+  //mesh coloring
+  if (use_mesh_coloring_gpu ){
+    working_element = bx;
+  }else{
+    // iphase-1 and working_element-1 for Fortran->C array conventions
+    working_element = d_phase_ispec_inner_acoustic[bx + num_phase_ispec_acoustic*(d_iphase-1)]-1;
+  }
+#endif
+
+  // local padded index
+  offset = working_element*NGLL3_PADDED + tx;
+
+  // global index
+  iglob = d_ibool[offset] - 1;
+
+// counts:
+// + 7 FLOP
+//
+// + 2 float * 128 threads = 1024 BYTE
+
+  // loads potential values into shared memory
+  if (threadIdx.x < NGLL3) {
+#ifdef USE_TEXTURES_FIELDS
+    s_dummy_loc[tx] = texfetch_potential<FORWARD_OR_ADJOINT>(iglob);
+    if (nb_field==2) s_dummy_loc[NGLL3+tx] = texfetch_potential<3>(iglob);
+#else
+    // changing iglob indexing to match fortran row changes fast style
+    s_dummy_loc[tx] = d_potential_acoustic[iglob];
+    if (nb_field==2) s_dummy_loc[NGLL3+tx] = d_b_potential_acoustic[iglob];
+
+#endif
+  }
+
+// counts:
+// + 0 FLOP
+//
+// + 1 float * 125 threads = 500 BYTE
+
+  // gravity
+  if (gravity ){
+    kappa_invl = 1.f / d_kappastore[working_element*NGLL3 + tx];
+  }
+
+  // local index
+  K = (tx/NGLL2);
+  J = ((tx-K*NGLL2)/NGLLX);
+  I = (tx-K*NGLL2-J*NGLLX);
+
+// counts:
+// + 8 FLOP
+//
+// + 0 BYTES
+
+  // note: loads mesh values here to give compiler possibility to overlap memory fetches with some computations;
+  //       arguments defined as realw* instead of const realw* __restrict__ to avoid that the compiler
+  //       loads all memory by texture loads (arrays accesses are coalescent, thus no need for texture reads)
+  //
+  // calculates laplacian
+  xixl = d_xix[offset];
+  xiyl = d_xiy[offset];
+  xizl = d_xiz[offset];
+  etaxl = d_etax[offset];
+  etayl = d_etay[offset];
+  etazl = d_etaz[offset];
+  gammaxl = d_gammax[offset];
+  gammayl = d_gammay[offset];
+  gammazl = d_gammaz[offset];
+
+  jacobianl = 1.f / (xixl*(etayl*gammazl-etazl*gammayl)
+                    -xiyl*(etaxl*gammazl-etazl*gammaxl)
+                    +xizl*(etaxl*gammayl-etayl*gammaxl));
+
+  // density (reciproc)
+  rho_invl = 1.f / d_rhostore[offset];
+
+// counts:
+// + 16 FLOP
+//
+// + 10 float * 128 threads = 5120 BYTE
+
+  // loads hprime into shared memory
+  if (tx < NGLL2) {
+#ifdef USE_TEXTURES_CONSTANTS
+    sh_hprime_xx[tx] = tex1Dfetch(d_hprime_xx_tex,tx);
+#else
+    sh_hprime_xx[tx] = d_hprime_xx[tx];
+#endif
+    // loads hprimewgll into shared memory
+    sh_hprimewgll_xx[tx] = hprimewgll_xx[tx];
+  }
+
+// counts:
+// + 0 FLOP
+//
+// + 2 * 1 float * 25 threads = 200 BYTE
+
+  // synchronize all the threads (one thread for each of the NGLL grid points of the
+  // current spectral element) because we need the whole element to be ready in order
+  // to be able to compute the matrix products along cut planes of the 3D element below
+  __syncthreads();
+
+  // summed terms with added gll weights
+  fac1 = wgllwgll_yz[K*NGLLX+J];
+  fac2 = wgllwgll_xz[K*NGLLX+I];
+  fac3 = wgllwgll_xy[J*NGLLX+I];
+
+  // We make a loop over direct and adjoint wavefields inside the GPU kernel to increase arithmetic intensity
+  for (int k = 0 ; k < nb_field ; k++){
+
+  // computes first matrix product
+  temp1l = 0.f;
+  temp2l = 0.f;
+  temp3l = 0.f;
+
+  for (int l=0;l<NGLLX;l++) {
+    //assumes that hprime_xx = hprime_yy = hprime_zz
+    // 1. cut-plane along xi-direction
+    temp1l += s_dummy_loc[NGLL3*k+K*NGLL2+J*NGLLX+l] * sh_hprime_xx[l*NGLLX+I];
+    // 2. cut-plane along eta-direction
+    temp2l += s_dummy_loc[NGLL3*k+K*NGLL2+l*NGLLX+I] * sh_hprime_xx[l*NGLLX+J];
+    // 3. cut-plane along gamma-direction
+    temp3l += s_dummy_loc[NGLL3*k+l*NGLL2+J*NGLLX+I] * sh_hprime_xx[l*NGLLX+K];
+  }
+
+// counts:
+// + NGLLX * 3 * 8 FLOP = 120 FLOP
+//
+// + 0 BYTE
+
+  // compute derivatives of ux, uy and uz with respect to x, y and z
+  // derivatives of potential
+  dpotentialdxl = xixl*temp1l + etaxl*temp2l + gammaxl*temp3l;
+  dpotentialdyl = xiyl*temp1l + etayl*temp2l + gammayl*temp3l;
+  dpotentialdzl = xizl*temp1l + etazl*temp2l + gammazl*temp3l;
+
+// counts:
+// + 3 * 5 FLOP = 15 FLOP
+//
+// + 0 BYTE
+
+  // form the dot product with the test vector
+  if (threadIdx.x < NGLL3) {
+    s_temp1[tx] = jacobianl * rho_invl * (dpotentialdxl*xixl + dpotentialdyl*xiyl + dpotentialdzl*xizl);
+    s_temp2[tx] = jacobianl * rho_invl * (dpotentialdxl*etaxl + dpotentialdyl*etayl + dpotentialdzl*etazl);
+    s_temp3[tx] = jacobianl * rho_invl * (dpotentialdxl*gammaxl + dpotentialdyl*gammayl + dpotentialdzl*gammazl);
+  }
+
+  // pre-computes gravity sum term
+  if (gravity ){
+    // uses potential definition: s = grad(chi)
+    //
+    // gravity term: 1/kappa grad(chi) * g
+    // assumes that g only acts in (negative) z-direction
+    gravity_term = minus_g[iglob] * kappa_invl * jacobianl * wgll_cube[tx] * dpotentialdzl;
+  }
+
+// counts:
+// + 3 * 7 FLOP = 21 FLOP
+//
+// + 0 BYTE
+
+  // synchronize all the threads (one thread for each of the NGLL grid points of the
+  // current spectral element) because we need the whole element to be ready in order
+  // to be able to compute the matrix products along cut planes of the 3D element below
+  __syncthreads();
+
+  // computes second matrix product
+  temp1l = 0.f;
+  temp2l = 0.f;
+  temp3l = 0.f;
+
+  for (int l=0;l<NGLLX;l++) {
+    //assumes hprimewgll_xx = hprimewgll_yy = hprimewgll_zz
+    // 1. cut-plane along xi-direction
+    temp1l += s_temp1[K*NGLL2+J*NGLLX+l] * sh_hprimewgll_xx[I*NGLLX+l];
+    // 2. cut-plane along eta-direction
+    temp2l += s_temp2[K*NGLL2+l*NGLLX+I] * sh_hprimewgll_xx[J*NGLLX+l];
+    // 3. cut-plane along gamma-direction
+    temp3l += s_temp3[l*NGLL2+J*NGLLX+I] * sh_hprimewgll_xx[K*NGLLX+l];
+  }
+
+// counts:
+// + NGLLX * 3 * 8 FLOP = 120 FLOP
+//
+// + 0 BYTE
+
+  sum_terms = -(fac1*temp1l + fac2*temp2l + fac3*temp3l);
+
+  // adds gravity contribution
+  if (gravity) sum_terms += gravity_term;
+
+// counts:
+// + 3 * 2 FLOP + 6 FLOP = 12 FLOP
+//
+// + 3 float * 128 threads = 1536 BYTE
+
+  // assembles potential array
+  if (threadIdx.x < NGLL3) {
+#ifdef USE_MESH_COLORING_GPU
+  // no atomic operation needed, colors don't share global points between elements
+#ifdef USE_TEXTURES_FIELDS
+    if (k==0) d_potential_dot_dot_acoustic[iglob] = texfetch_potential_dot_dot<FORWARD_OR_ADJOINT>(iglob) + sum_terms;
+    if (k==1) d_b_potential_dot_dot_acoustic[iglob] = texfetch_potential_dot_dot<3>(iglob) + sum_terms;
+#else
+    if (k==0) d_potential_dot_dot_acoustic[iglob] += sum_terms;
+    if (k==1) d_b_potential_dot_dot_acoustic[iglob] += sum_terms;
+#endif // USE_TEXTURES_FIELDS
+#else  // MESH_COLORING
+    //mesh coloring
+    if (use_mesh_coloring_gpu ){
+      // no atomic operation needed, colors don't share global points between elements
+#ifdef USE_TEXTURES_FIELDS
+    if (k==0) d_potential_dot_dot_acoustic[iglob] = texfetch_potential_dot_dot<FORWARD_OR_ADJOINT>(iglob) + sum_terms;
+    if (k==1) d_b_potential_dot_dot_acoustic[iglob] = texfetch_potential_dot_dot<3>(iglob) + sum_terms;
+#else
+        if (k==0) d_potential_dot_dot_acoustic[iglob] += sum_terms;
+        if (k==1) d_b_potential_dot_dot_acoustic[iglob] += sum_terms;
+#endif // USE_TEXTURES_FIELDS
+    }else{
+          if (k==0) atomicAdd(&d_potential_dot_dot_acoustic[iglob],sum_terms);
+          if (k==1) atomicAdd(&d_b_potential_dot_dot_acoustic[iglob],sum_terms);
+    }
+#endif // MESH_COLORING
+  }
+} //loop over k (forward and adjoint wavefield)
+
+// counts:
+// + 1 FLOP
+//
+// + 1 float * 125 threads = 500 BYTE
+
+// -----------------
+// total of: 323 FLOP per thread
+//           ~ 128 * 323 = 41344 FLOP per block
+//
+//           8880 BYTE DRAM accesses per block
+//
+//           -> arithmetic intensity: 41344 FLOP / 8880 BYTES ~ 4.66 FLOP/BYTE (hand-count)
+//
+// -----------------
+//
+// nvprof: nvprof --metrics flops_sp ./xspecfem3D
+//         -> 322631424 FLOPS (Single) floating-point operations for 20736 elements
+//         -> 15559 FLOP per block
+//
+//         -> arithmetic intensity: ~ 15559 / 8880 flop/byte = 1.75 flop/byte
+//
+// roofline model: Tesla K20x
+// ---------------------------
+//   for a Kepler K20x card, the peak single-precision performance is about 3.95 TFlop/s.
+//   global memory access has a bandwidth of ~ 250 GB/s.
+//   thus there should be about 16 flop to hide a single byte memory access (3950./250. ~ 15.8 flop/byte = arithmetic intensity).
+//
+//   memory bandwidth: 250 GB/s
+//   single-precision peak performance: 3.95 TFlop/s -> corner arithmetic intensity = 3950 / 250 ~ 15.8 flop/byte
+//
+//   note:
+//     using dense matrix-matrix multiplication (SGEMM) leads to "practical" peak performance of around 2.9 TFlops.
+//     (http://www.nvidia.com/docs/IO/122874/K20-and-K20X-application-performance-technical-brief.pdf)
+//
+//   acoustic kernel has an arithmetic intensity of: hand-counts   ~ 4.66 flop/byte
+//                                                   nvprof-counts ~ 1.75 flop/byte
+//
+//   -> we can only achieve about: (hand-counts)   29% of the peak performance
+//                                 (nvprof-counts) 11% of the peak performance
+//
+//                              i.e.               11% x theoretical peak performance ~ 440 GFlop/s.
+//                                                 11% x "pratical"  peak performance ~ 320 GFlop/s.
+//
+//   CUDA_TIMING: we achieve about 224 GFlop/s (1 mpi process, 20736 elements)
+//                -> that is about 8% of the "practical" peak. (or 70% of the theoretical arithmetic intensity)
+//
+//                this might be due to the first compute code block (before first syncthreads), where
+//                the partial arithmetic intensity is lower than for the total routine.
+//
+// roofline model: Tesla K20c (Kepler architecture: http://www.nvidia.com/content/tesla/pdf/Tesla-KSeries-Overview-LR.pdf)
+// ---------------------------
+//   memory bandwidth: 208 GB/s
+//   single-precision peak performance: 3.52 TFlop/s -> corner arithmetic intensity = 3520 / 208 ~ 16.9 flop/byte
+//
+//   we can only achieve about: (hand-counts)   27% of the peak performance -> 970.6 GFlop/s
+//                              (nvprof-counts) 10% of the peak performance -> 364.5 GFlop/s - measured: 229.631 GFlop/s
+//
+// roofline model: nVidia GT 650m  http://www.gpuzoo.com/GPU-NVIDIA/GeForce_GT_650M_DDR3.html
+// ---------------------------
+//   memory bandwidth: 28.8 GB/s
+//   single-precision peak performance: 625.6 GFlop/s -> corner arithmetic intensity = 625.6 / 28.8 ~ 21.7 flop/byte
+//
+//   we can only achieve about: (hand-counts)   21% of the peak performance -> 132.6 GFlop/s
+//                              (nvprof-counts)  8% of the peak performance ->  50.5 GFlop/s - measured: 52.1907 GFlop/s
+//
+//
+//
+// better performance ideas and improvements are welcome :)
+
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+//Reference kernel, solving a single wavefield
+/*
 template<int FORWARD_OR_ADJOINT> __global__ void
 #ifdef USE_LAUNCH_BOUNDS
 // adds compiler specification
@@ -397,80 +789,11 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
 #endif // MESH_COLORING
   }
 
-// counts:
-// + 1 FLOP
-//
-// + 1 float * 125 threads = 500 BYTE
 
-// -----------------
-// total of: 323 FLOP per thread
-//           ~ 128 * 323 = 41344 FLOP per block
-//
-//           8880 BYTE DRAM accesses per block
-//
-//           -> arithmetic intensity: 41344 FLOP / 8880 BYTES ~ 4.66 FLOP/BYTE (hand-count)
-//
-// -----------------
-//
-// nvprof: nvprof --metrics flops_sp ./xspecfem3D
-//         -> 322631424 FLOPS (Single) floating-point operations for 20736 elements
-//         -> 15559 FLOP per block
-//
-//         -> arithmetic intensity: ~ 15559 / 8880 flop/byte = 1.75 flop/byte
-//
-// roofline model: Tesla K20x
-// ---------------------------
-//   for a Kepler K20x card, the peak single-precision performance is about 3.95 TFlop/s.
-//   global memory access has a bandwidth of ~ 250 GB/s.
-//   thus there should be about 16 flop to hide a single byte memory access (3950./250. ~ 15.8 flop/byte = arithmetic intensity).
-//
-//   memory bandwidth: 250 GB/s
-//   single-precision peak performance: 3.95 TFlop/s -> corner arithmetic intensity = 3950 / 250 ~ 15.8 flop/byte
-//
-//   note:
-//     using dense matrix-matrix multiplication (SGEMM) leads to "practical" peak performance of around 2.9 TFlops.
-//     (http://www.nvidia.com/docs/IO/122874/K20-and-K20X-application-performance-technical-brief.pdf)
-//
-//   acoustic kernel has an arithmetic intensity of: hand-counts   ~ 4.66 flop/byte
-//                                                   nvprof-counts ~ 1.75 flop/byte
-//
-//   -> we can only achieve about: (hand-counts)   29% of the peak performance
-//                                 (nvprof-counts) 11% of the peak performance
-//
-//                              i.e.               11% x theoretical peak performance ~ 440 GFlop/s.
-//                                                 11% x "pratical"  peak performance ~ 320 GFlop/s.
-//
-//   CUDA_TIMING: we achieve about 224 GFlop/s (1 mpi process, 20736 elements)
-//                -> that is about 8% of the "practical" peak. (or 70% of the theoretical arithmetic intensity)
-//
-//                this might be due to the first compute code block (before first syncthreads), where
-//                the partial arithmetic intensity is lower than for the total routine.
-//
-// roofline model: Tesla K20c (Kepler architecture: http://www.nvidia.com/content/tesla/pdf/Tesla-KSeries-Overview-LR.pdf)
-// ---------------------------
-//   memory bandwidth: 208 GB/s
-//   single-precision peak performance: 3.52 TFlop/s -> corner arithmetic intensity = 3520 / 208 ~ 16.9 flop/byte
-//
-//   we can only achieve about: (hand-counts)   27% of the peak performance -> 970.6 GFlop/s
-//                              (nvprof-counts) 10% of the peak performance -> 364.5 GFlop/s - measured: 229.631 GFlop/s
-//
-// roofline model: nVidia GT 650m  http://www.gpuzoo.com/GPU-NVIDIA/GeForce_GT_650M_DDR3.html
-// ---------------------------
-//   memory bandwidth: 28.8 GB/s
-//   single-precision peak performance: 625.6 GFlop/s -> corner arithmetic intensity = 625.6 / 28.8 ~ 21.7 flop/byte
-//
-//   we can only achieve about: (hand-counts)   21% of the peak performance -> 132.6 GFlop/s
-//                              (nvprof-counts)  8% of the peak performance ->  50.5 GFlop/s - measured: 52.1907 GFlop/s
-//
-//
-//
-// better performance ideas and improvements are welcome :)
 
-}
 
-/* ----------------------------------------------------------------------------------------------- */
 
-/*
+
 
 // kernel useful for optimization: stripped-down version
 //                                 acoustic kernel without gravity and without mesh coloring
@@ -703,8 +1026,32 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
   if (CUDA_TIMING ){
     start_timing_cuda(&start,&stop);
   }
+  int nb_field = mp->simulation_type == 3 ? 2 : 1 ;
 
-  // forward wavefields -> FORWARD_OR_ADJOINT == 1
+  //This kernel treats both forward and adjoint wavefield within the same call, to increase performance ( ~37% faster for pure acoustic simulations )
+  Kernel_2_acoustic_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
+                                                                    d_ibool,
+                                                                    mp->d_phase_ispec_inner_acoustic,
+                                                                    mp->num_phase_ispec_acoustic,
+                                                                    d_iphase,
+                                                                    mp->d_potential_acoustic, mp->d_potential_dot_dot_acoustic,
+                                                                    mp->d_b_potential_acoustic, mp->d_b_potential_dot_dot_acoustic,
+                                                                    nb_field,
+                                                                    d_xix, d_xiy, d_xiz,
+                                                                    d_etax, d_etay, d_etaz,
+                                                                    d_gammax, d_gammay, d_gammaz,
+                                                                    mp->d_hprime_xx,
+                                                                    mp->d_hprimewgll_xx,
+                                                                    mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
+                                                                    d_rhostore,
+                                                                    mp->use_mesh_coloring_gpu,
+                                                                    mp->gravity,
+                                                                    mp->d_minus_g,
+                                                                    d_kappastore,
+                                                                    mp->d_wgll_cube);
+
+/* // Call to reference kernel, solving a single wavefield
+ // forward wavefields -> FORWARD_OR_ADJOINT == 1
   Kernel_2_acoustic_impl<1><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
                                                                     d_ibool,
                                                                     mp->d_phase_ispec_inner_acoustic,
@@ -723,28 +1070,7 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
                                                                     mp->d_minus_g,
                                                                     d_kappastore,
                                                                     mp->d_wgll_cube);
-
-  if (mp->simulation_type == 3) {
-    // backward/reconstructed wavefields -> FORWARD_OR_ADJOINT == 3
-    Kernel_2_acoustic_impl<3><<<grid,threads,0,mp->compute_stream>>>(nb_blocks_to_compute,
-                                                                      d_ibool,
-                                                                      mp->d_phase_ispec_inner_acoustic,
-                                                                      mp->num_phase_ispec_acoustic,
-                                                                      d_iphase,
-                                                                      mp->d_b_potential_acoustic, mp->d_b_potential_dot_dot_acoustic,
-                                                                      d_xix, d_xiy, d_xiz,
-                                                                      d_etax, d_etay, d_etaz,
-                                                                      d_gammax, d_gammay, d_gammaz,
-                                                                      mp->d_hprime_xx,
-                                                                      mp->d_hprimewgll_xx,
-                                                                      mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
-                                                                      d_rhostore,
-                                                                      mp->use_mesh_coloring_gpu,
-                                                                      mp->gravity,
-                                                                      mp->d_minus_g,
-                                                                      d_kappastore,
-                                                                      mp->d_wgll_cube);
-  }
+*/
 
   // Cuda timing
   if (CUDA_TIMING ){

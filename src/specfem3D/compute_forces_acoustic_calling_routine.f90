@@ -4,10 +4,10 @@
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
-!                        Princeton University, USA
-!                and CNRS / University of Marseille, France
+!                              CNRS, France
+!                       and Princeton University, USA
 !                 (there are currently many more authors!)
-! (c) Princeton University and CNRS / University of Marseille, July 2012
+!                           (c) October 2017
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -598,25 +598,26 @@ subroutine compute_forces_acoustic_GPU_calling()
     endif
   enddo
 
- ! divides pressure with mass matrix
-  call kernel_3_a_acoustic_cuda(Mesh_pointer)
-
 ! update velocity
 ! note: Newmark finite-difference time scheme with acoustic domains:
 ! (see e.g. Hughes, 1987; Chaljub et al., 2003)
 !
 ! chi(t+delta_t) = chi(t) + delta_t chi_dot(t) + 1/2 delta_t**2 chi_dot_dot(t)
-! chi_dot(t+delta_t) = chi_dot(t) + 1/2 delta_t chi_dot_dot(t) + 1/2 DELTA_T CHI_DOT_DOT( T + DELTA_T )
-! chi_dot_dot(t+delta_t) = 1/M_acoustic( -K_acoustic chi(t+delta) + B_acoustic u(t+delta_t) + f(t+delta_t) )
+! chi_dot(t+delta_t) = chi_dot(t) + 1/2 delta_t chi_dot_dot(t) + 1/2 DELTA_T
+! CHI_DOT_DOT( T + DELTA_T )
+! chi_dot_dot(t+delta_t) = 1/M_acoustic( -K_acoustic chi(t+delta) + B_acoustic
+! u(t+delta_t) + f(t+delta_t) )
 !
 ! where
-!   chi, chi_dot, chi_dot_dot are acoustic (fluid) potentials ( dotted with respect to time)
+!   chi, chi_dot, chi_dot_dot are acoustic (fluid) potentials ( dotted with
+!   respect to time)
 !   M is mass matrix, K stiffness matrix and B boundary term
 !   f denotes a source term
 !
 ! corrector:
 ! updates the chi_dot term which requires chi_dot_dot(t+delta)
-  call kernel_3_b_acoustic_cuda(Mesh_pointer,deltatover2,b_deltatover2)
+
+  call kernel_3_acoustic_cuda(Mesh_pointer,deltatover2,b_deltatover2)
 
 ! enforces free surface (zeroes potentials at free surface)
   call acoustic_enforce_free_surf_cuda(Mesh_pointer,STACEY_INSTEAD_OF_FREE_SURFACE)

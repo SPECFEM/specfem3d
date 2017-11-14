@@ -4,10 +4,10 @@
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
-!                        Princeton University, USA
-!                and CNRS / University of Marseille, France
+!                              CNRS, France
+!                       and Princeton University, USA
 !                 (there are currently many more authors!)
-! (c) Princeton University and CNRS / University of Marseille, July 2012
+!                           (c) October 2017
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -307,6 +307,22 @@
     if (ier /= 0) then
       some_parameters_missing_from_Par_file = .true.
       write(*,'(a)') 'BOTTOM_FREE_SURFACE             = .false.'
+      write(*,*)
+    endif
+
+    call read_value_logical(UNDO_ATTENUATION_AND_OR_PML, 'UNDO_ATTENUATION_AND_OR_PML', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'UNDO_ATTENUATION_AND_OR_PML     = .false.'
+      write(*,*)
+    endif
+!! DK DK temporary, will soon be implemented
+    if (UNDO_ATTENUATION_AND_OR_PML) stop 'error: UNDO_ATTENUATION_AND_OR_PML not implemented in this code yet'
+
+    call read_value_integer(NT_DUMP_ATTENUATION, 'NT_DUMP_ATTENUATION', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'NT_DUMP_ATTENUATION             = 500'
       write(*,*)
     endif
 

@@ -4,10 +4,10 @@
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
-!                        Princeton University, USA
-!                and CNRS / University of Marseille, France
+!                              CNRS, France
+!                       and Princeton University, USA
 !                 (there are currently many more authors!)
-! (c) Princeton University and CNRS / University of Marseille, July 2012
+!                           (c) October 2017
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -45,12 +45,15 @@
 
 !----------- parameters that can be changed by the user -----------
 
-!! DK DK added this temporarily here to make SPECFEM3D and SPECFEM3D_GLOBE much more similar
-!! DK DK in terms of the structure of their main time iteration loop; these are future features
-!! DK DK that are missing in this code but implemented in the other and that could thus be cut and pasted one day
-  logical, parameter :: UNDO_ATTENUATION = .false.
+! for validation of undoing of attenuation versus an exact solution saved to disk
+! should never be needed any more, it was developed and used for Figure 3 of
+! D. Komatitsch, Z. Xie, E. Bozdag, E. Sales de Andrade, D. Peter, Q. Liu and J. Tromp,
+! Anelastic sensitivity kernels with parsimonious storage for adjoint tomography and full waveform inversion,
+! Geophysical Journal International, vol. 206(3), p. 1467-1478, doi: 10.1093/gji/ggw224 (2016).
   logical, parameter :: EXACT_UNDOING_TO_DISK = .false.
+! ID of the huge file in which we dump all the time steps of the simulation
   integer, parameter :: IFILE_FOR_EXACT_UNDOING = 244
+
   logical, parameter :: VTK_MODE = .false.
 
 ! set to .false.  if running on a Beowulf-type machine with local disks

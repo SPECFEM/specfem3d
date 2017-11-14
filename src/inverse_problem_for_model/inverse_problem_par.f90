@@ -4,10 +4,10 @@
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
-!                        Princeton University, USA
-!                and CNRS / University of Marseille, France
+!                              CNRS, France
+!                       and Princeton University, USA
 !                 (there are currently many more authors!)
-! (c) Princeton University and CNRS / University of Marseille, July 2012
+!                           (c) October 2017
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -50,8 +50,8 @@ module inverse_problem_par
   logical,                       public, parameter  :: VERBOSE_MODE=.true.
   !!! write kernels on disk
   logical,                       public, parameter  :: SAVE_KERNEL=.false.
-  !!! use fast code and undoing_attenuation for adjoints (in developmement ... not working yet)
-  logical,                       public, parameter  :: USE_UNDO_ATT=.false.
+  !!! use fast code and undoing_attenuation for adjoints (under development ... does not work yet)
+  logical,                       public, parameter  :: USE_UNDO_ATTENUATION_AND_OR_PML=.false.
   !!! projection on FD grid for outputs (in developmement if useful need to move elsewhere)
   logical,                       public             :: PROJ_ON_FD=.false.
   !!! test for some preconditionners (in developmement if useful need to move elsewhere)

@@ -4,10 +4,10 @@
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
-!                        Princeton University, USA
-!                and CNRS / University of Marseille, France
+!                              CNRS, France
+!                       and Princeton University, USA
 !                 (there are currently many more authors!)
-! (c) Princeton University and CNRS / University of Marseille, July 2012
+!                           (c) October 2017
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -496,12 +496,14 @@
     double precision  :: deg2rad
     double precision  :: ANGULAR_WIDTH_ETA_RAD, ANGULAR_WIDTH_XI_RAD
     double precision  :: lat_center_chunk, lon_center_chunk, chunk_depth, chunk_azi
+    double precision  :: radius_of_box_top
 
     integer :: ielm, j,k, imin,imax,jmin,jmax,kmin,kmax
-    integer  nel_lat, nel_lon, nel_depth
+    integer :: nel_lat, nel_lon, nel_depth
+    logical :: buried_box
 
-    character(len=10) line
-    character(len=250) model1D_file
+    character(len=10)  :: line
+    character(len=250) :: model1D_file
 
 1000 format(3f30.10)
 
@@ -645,6 +647,15 @@
        read(90,*) nel_lon,nel_lat, nel_depth
        read(90,'(a)') line
        read(90,'(a)') model1D_file
+       read(90,'(a)') line
+       read(90,*) buried_box
+       if (buried_box) then
+          read(90,'(a)') line
+          read(90,*) radius_of_box_top
+           radius_of_box_top =  radius_of_box_top * 1000.
+       else
+          radius_of_box_top = 6371000.
+       endif
        model1D_file = 'MESH/'//trim(model1D_file)
        close(90)
 
@@ -661,7 +672,7 @@
           write(88,'(4f20.10)') density(i,:)
        enddo
        z_bottom = minval(zgrid(:,:,:,:))
-       write(88,*)  6371000.+z_bottom
+       write(88,*)  radius_of_box_top + z_bottom!6371000.+z_bottom
        write(88,*)  lon_center_chunk,  lat_center_chunk,  chunk_azi
        close(88)
 
@@ -678,6 +689,7 @@
        write(90,*)  nspec2D_ymin
        write(90,*)  nspec2D_ymax
        write(90,*)  nspec2D_bottom
+       write(90,*)  nspec2D_top
        close(90)
 
        ! xmin
@@ -715,9 +727,9 @@
           zelm(8)=zgrid(1,2,2,ispec)
 
           call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
-          zstore(:,:,:) = zstore(:,:,:) + 6371000.
+          zstore(:,:,:) = zstore(:,:,:) + radius_of_box_top !6371000.
           call Cartesian2spheric(xstore,ystore,zstore,rotation_matrix,longitud,latitud,radius,deg2rad)
-          zstore(:,:,:) = zstore(:,:,:) - 6371000.
+          zstore(:,:,:) = zstore(:,:,:) -radius_of_box_top ! 6371000.
           call find_layer_in_axisem_model(ilayer,updown,radius(3,3,:),zlayer,nlayer)
 
           imin = 1
@@ -773,9 +785,9 @@
           zelm(8)=zgrid(1,2,2,ispec)
 
           call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
-          zstore(:,:,:) = zstore(:,:,:) + 6371000.
+          zstore(:,:,:) = zstore(:,:,:) + radius_of_box_top !6371000.
           call Cartesian2spheric(xstore,ystore,zstore,rotation_matrix,longitud,latitud,radius,deg2rad)
-          zstore(:,:,:) = zstore(:,:,:) - 6371000.
+          zstore(:,:,:) = zstore(:,:,:) -radius_of_box_top ! 6371000.
           call find_layer_in_axisem_model(ilayer,updown,radius(3,3,:),zlayer,nlayer)
 
           imin = NGLLX
@@ -831,9 +843,9 @@
           zelm(8)=zgrid(1,2,2,ispec)
 
           call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
-          zstore(:,:,:) = zstore(:,:,:) + 6371000.
+          zstore(:,:,:) = zstore(:,:,:) + radius_of_box_top !6371000.
           call Cartesian2spheric(xstore,ystore,zstore,rotation_matrix,longitud,latitud,radius,deg2rad)
-          zstore(:,:,:) = zstore(:,:,:) - 6371000.
+          zstore(:,:,:) = zstore(:,:,:) - radius_of_box_top !6371000.
           call find_layer_in_axisem_model(ilayer,updown,radius(3,3,:),zlayer,nlayer)
 
           imin = 1
@@ -889,9 +901,9 @@
           zelm(8)=zgrid(1,2,2,ispec)
 
           call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
-          zstore(:,:,:) = zstore(:,:,:) + 6371000.
+          zstore(:,:,:) = zstore(:,:,:) + radius_of_box_top !6371000.
           call Cartesian2spheric(xstore,ystore,zstore,rotation_matrix,longitud,latitud,radius,deg2rad)
-          zstore(:,:,:) = zstore(:,:,:) - 6371000.
+          zstore(:,:,:) = zstore(:,:,:) - radius_of_box_top !6371000.
           call find_layer_in_axisem_model(ilayer,updown,radius(3,3,:),zlayer,nlayer)
 
           imin = 1
@@ -947,9 +959,9 @@
           zelm(8)=zgrid(1,2,2,ispec)
 
           call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
-          zstore(:,:,:) = zstore(:,:,:) + 6371000.
+          zstore(:,:,:) = zstore(:,:,:) + radius_of_box_top ! 6371000.
           call Cartesian2spheric(xstore,ystore,zstore,rotation_matrix,longitud,latitud,radius,deg2rad)
-          zstore(:,:,:) = zstore(:,:,:) - 6371000.
+          zstore(:,:,:) = zstore(:,:,:) - radius_of_box_top ! 6371000.
           call find_layer_in_axisem_model(ilayer,updown,radius(3,3,:),zlayer,nlayer)
 
           imin = 1
@@ -969,6 +981,68 @@
              enddo
           enddo
        enddo
+
+       if (buried_box) then
+          ! top
+          do ielm=1,nspec2D_TOP
+
+             ispec=ibelm_top(ielm)
+
+             write(89,*) ispec,ielm,6
+
+             xelm(1)=xgrid(1,1,1,ispec)
+             xelm(2)=xgrid(2,1,1,ispec)
+             xelm(3)=xgrid(2,2,1,ispec)
+             xelm(4)=xgrid(1,2,1,ispec)
+             xelm(5)=xgrid(1,1,2,ispec)
+             xelm(6)=xgrid(2,1,2,ispec)
+             xelm(7)=xgrid(2,2,2,ispec)
+             xelm(8)=xgrid(1,2,2,ispec)
+
+             yelm(1)=ygrid(1,1,1,ispec)
+             yelm(2)=ygrid(2,1,1,ispec)
+             yelm(3)=ygrid(2,2,1,ispec)
+             yelm(4)=ygrid(1,2,1,ispec)
+             yelm(5)=ygrid(1,1,2,ispec)
+             yelm(6)=ygrid(2,1,2,ispec)
+             yelm(7)=ygrid(2,2,2,ispec)
+             yelm(8)=ygrid(1,2,2,ispec)
+
+             zelm(1)=zgrid(1,1,1,ispec)
+             zelm(2)=zgrid(2,1,1,ispec)
+             zelm(3)=zgrid(2,2,1,ispec)
+             zelm(4)=zgrid(1,2,1,ispec)
+             zelm(5)=zgrid(1,1,2,ispec)
+             zelm(6)=zgrid(2,1,2,ispec)
+             zelm(7)=zgrid(2,2,2,ispec)
+             zelm(8)=zgrid(1,2,2,ispec)
+
+             call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
+             zstore(:,:,:) = zstore(:,:,:) + radius_of_box_top !6371000.
+             call Cartesian2spheric(xstore,ystore,zstore,rotation_matrix,longitud,latitud,radius,deg2rad)
+             zstore(:,:,:) = zstore(:,:,:) - radius_of_box_top !6371000.
+             call find_layer_in_axisem_model(ilayer,updown,radius(3,3,:),zlayer,nlayer)
+
+             imin = 1
+             imax = NGLLX
+             jmin = 1
+             jmax = NGLLY
+             kmin = NGLLZ
+             kmax = NGLLZ
+
+             do k=kmin,kmax
+                do j=jmin,jmax
+                   do i=imin,imax
+                      write(92,'(3f25.10,i10,6i3)') xstore(i,j,k),ystore(i,j,k),zstore(i,j,k),ispec,i,j,k,6, &
+                           ilayer,updown(k)
+                      write(91,1000) radius(i,j,k), latitud(i,j,k), longitud(i,j,k)
+                   enddo
+                enddo
+             enddo
+          enddo
+       endif
+
+
 
        close(89)
        close(91)

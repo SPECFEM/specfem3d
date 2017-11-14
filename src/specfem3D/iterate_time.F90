@@ -4,10 +4,10 @@
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
-!                        Princeton University, USA
-!                and CNRS / University of Marseille, France
+!                              CNRS, France
+!                       and Princeton University, USA
 !                 (there are currently many more authors!)
-! (c) Princeton University and CNRS / University of Marseille, July 2012
+!                           (c) October 2017
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -270,8 +270,8 @@
 
     if (GPU_MODE) call exit_MPI(myrank,'EXACT_UNDOING_TO_DISK not supported for GPUs')
 
-    if (UNDO_ATTENUATION) &
-      call exit_MPI(myrank,'EXACT_UNDOING_TO_DISK needs UNDO_ATTENUATION to be off because it computes the kernel directly instead')
+    if (UNDO_ATTENUATION_AND_OR_PML) call exit_MPI(myrank,'EXACT_UNDOING_TO_DISK needs UNDO_ATTENUATION_AND_OR_PML &
+               &to be off because it computes the kernel directly instead')
 
     if (SIMULATION_TYPE == 1 .and. .not. SAVE_FORWARD) &
       call exit_MPI(myrank,'EXACT_UNDOING_TO_DISK requires SAVE_FORWARD if SIMULATION_TYPE == 1')

@@ -4,10 +4,10 @@
 !               ---------------------------------------
 !
 !     Main historical authors: Dimitri Komatitsch and Jeroen Tromp
-!                        Princeton University, USA
-!                and CNRS / University of Marseille, France
+!                              CNRS, France
+!                       and Princeton University, USA
 !                 (there are currently many more authors!)
-! (c) Princeton University and CNRS / University of Marseille, July 2012
+!                           (c) October 2017
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
@@ -703,7 +703,7 @@
              ny = abs_boundary_normal(2,igll,iface)
              nz = abs_boundary_normal(3,igll,iface)
 
-             write(IOUT,*) xstore_dummy(iglob), ystore_dummy(iglob), zstore_dummy(iglob), nx, ny, nz
+             write(IOUT,'(6f25.10)') xstore_dummy(iglob), ystore_dummy(iglob), zstore_dummy(iglob), nx, ny, nz
 
           enddo
        endif
