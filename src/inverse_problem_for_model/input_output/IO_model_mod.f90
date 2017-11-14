@@ -745,7 +745,7 @@ contains
     call max_all_all_cr(xmax,xmax_glob)
 
     call min_all_all_cr(ymin,ymin_glob)
-    call max_all_cr(ymax,ymax_glob)
+    call max_all_all_cr(ymax,ymax_glob)
 
     call min_all_all_cr(zmin,zmin_glob)
     call max_all_all_cr(zmax,zmax_glob)
