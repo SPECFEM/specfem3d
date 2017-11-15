@@ -94,7 +94,6 @@ contains
           case('event_rep')
              ievent=ievent+1
              acqui_simu(ievent)%event_rep = trim(adjustl(val))
-             cycle
           case('event_name')
 
              write(filename,*)trim(acqui_simu(ievent)%event_rep),'/',trim(val)
@@ -123,7 +122,7 @@ contains
              acqui_simu(ievent)%time_window          = mygather(ievent)%hdr%is_window
              acqui_simu(ievent)%time_before_pick     = mygather(ievent)%hdr%tbef
              acqui_simu(ievent)%time_after_pick      = mygather(ievent)%hdr%taft
-             acqui_simu(ievent)%station_coord_system = mygather(ievent)%hdr%coord_sys
+             acqui_simu(ievent)%station_coord_system = trim(adjustl(mygather(ievent)%hdr%coord_sys))
              acqui_simu(ievent)%source_wavelet_file  = trim(adjustl(mygather(ievent)%hdr%estimated_src))
 
              ! Some checks about source wavelet and traction
@@ -301,7 +300,7 @@ contains
             my_local_mpi_comm_world, ier)
        
        ! conditional broadcasts for wavelet
-       if (acqui_simu(ievent)%source_wavelet_file /= 'undef') then
+       if (trim(adjustl(acqui_simu(ievent)%source_wavelet_file)) /= 'undef') then
           ! Source time functions
           call mpi_bcast(acqui_simu(ievent)%external_source_wavelet, 1, mpi_logical, 0, &
                my_local_mpi_comm_world, ier)
@@ -325,7 +324,7 @@ contains
 
        call mpi_bcast(acqui_simu(ievent)%station_name, MAX_LENGTH_STATION_NAME*nsta, mpi_character, 0, &
             my_local_mpi_comm_world, ier)
-       call mpi_bcast(acqui_simu(ievent)%network_name, MAX_LENGTH_STATION_NAME*nsta, mpi_character, 0, &
+       call mpi_bcast(acqui_simu(ievent)%network_name, MAX_LENGTH_NETWORK_NAME*nsta, mpi_character, 0, &
             my_local_mpi_comm_world, ier)
        
        call mpi_bcast(acqui_simu(ievent)%position_station,      3*nsta, custom_mpi_type, 0, &

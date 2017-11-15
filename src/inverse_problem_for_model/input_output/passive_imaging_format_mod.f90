@@ -36,7 +36,7 @@ module passive_imaging_format_mod
      character(len=256) :: estimated_src     = 'undef'  ! repository of tractions or parameter file
      character(len=1)   :: data_type         = 'v'      ! kind of data (d=displacement, !
                                                         ! v=velocities, a=acceleration)
-     character(len=3)   :: data_comp         = 'zen'    ! data coordinate system (geo 'zen'),
+     character(len=3)   :: data_comp         = 'enz'    ! data coordinate system (geo 'zen'),
                                                         !    (local 'zxy'), (rotated 'zrt' or 'lqt')
      logical, dimension(3) :: is_comp        = (/ .true., .true., .true. /)  ! actual components available
      character(len=3)   :: coord_sys         = 'geo'    ! stations coordinate system 'geo' or 'car'
@@ -65,8 +65,8 @@ module passive_imaging_format_mod
   !*** Define type for one station information
   type station_type
 
-     character(len=8) :: name = 'undef' ! name of station
-     character(len=8) :: ntwk = 'undef' ! name of network
+     character(len=5) :: name = 'undef' ! name of station
+     character(len=5) :: ntwk = 'undef' ! name of network
 
      real(kind=dp) :: x=0._dp,     y=0._dp,   z=0._dp    ! local Cartesian coordinates
      real(kind=dp) :: lat=0._dp, lon=0._dp, ele=0._dp    ! geographic coordinates
