@@ -93,10 +93,6 @@ subroutine inverse_problem_main()
   !! set up projection on fd grid if asked (for snapshot, movie, smoothing ...)
   if (PROJ_ON_FD) call compute_interpolation_coeff_FD_SEM(projection_fd, myrank)
 
-  !to remove SB
-  print *,'check iidd ',IIDD
-  call flush(6)
-  
   !!!##############################################################################################################################
   !!! -------------------------------  different running mode : forward or FWI ----------------------------------------------------
   !!!##############################################################################################################################
