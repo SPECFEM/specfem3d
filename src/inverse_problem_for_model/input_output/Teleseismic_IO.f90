@@ -48,15 +48,15 @@ contains
     NEVENT=0
     ! only master reads acqui file
     if (myrank == 0) then
-       do
-          !! 1/ read to count the number of events
-          open(666,file=trim(acqui_file),iostat=ier)
-          if (ier /= 0) then
-             write(*,*) ' error opening  ', trim(acqui_file), ' mygoup ', mygroup
-          else
-             if (DEBUG_MODE) write(IIDD,*) ' opening  ', trim(acqui_file), ' mygoup ', mygroup
-          endif
+       !! 1/ read to count the number of events
+       open(666,file=trim(acqui_file),iostat=ier)
+       if (ier /= 0) then
+          write(*,*) ' error opening  ', trim(acqui_file), ' mygoup ', mygroup
+       else
+          if (DEBUG_MODE) write(IIDD,*) ' opening  ', trim(acqui_file), ' mygoup ', mygroup
+       endif
 
+       do
           read(666,'(a)',end=99) line
           if (DEBUG_MODE) write(IIDD,'(a)') trim(line)
           !if (is_blank_line(line)) cycle                     !! no significant line
@@ -70,6 +70,7 @@ contains
           allocate(mygather(NEVENT))
        else
           allocate(acqui_simu(1))
+          allocate(mygather(1))
           write(*,*) 'ERROR NO EVENTS FOUND IN ACQUISITION FILE ',myrank, mygroup, trim(acqui_file)
           stop
        endif
@@ -111,10 +112,10 @@ contains
              acqui_simu(ievent)%nsta_tot             = nsta
              acqui_simu(ievent)%Nt_data              = nt
              acqui_simu(ievent)%dt_data              = mygather(ievent)%hdr%dt
-             acqui_simu(ievent)%event_name           = mygather(ievent)%hdr%event_name
-             acqui_simu(ievent)%source_type_physical = mygather(ievent)%hdr%source_type
-             acqui_simu(ievent)%source_type_modeling = mygather(ievent)%hdr%modeling_tool
-             acqui_simu(ievent)%source_file          = mygather(ievent)%hdr%modeling_path
+             acqui_simu(ievent)%event_name           = trim(adjustl(mygather(ievent)%hdr%event_name))
+             acqui_simu(ievent)%source_type_physical = trim(adjustl(mygather(ievent)%hdr%source_type))
+             acqui_simu(ievent)%source_type_modeling = trim(adjustl(mygather(ievent)%hdr%modeling_tool))
+             acqui_simu(ievent)%source_file          = trim(adjustl(mygather(ievent)%hdr%modeling_path))
              acqui_simu(ievent)%Origin_chunk_lat     = mygather(ievent)%hdr%mesh_origin(1)
              acqui_simu(ievent)%Origin_chunk_lon     = mygather(ievent)%hdr%mesh_origin(2)
              acqui_simu(ievent)%Origin_chunk_azi     = mygather(ievent)%hdr%mesh_origin(3)
@@ -123,10 +124,10 @@ contains
              acqui_simu(ievent)%time_before_pick     = mygather(ievent)%hdr%tbef
              acqui_simu(ievent)%time_after_pick      = mygather(ievent)%hdr%taft
              acqui_simu(ievent)%station_coord_system = mygather(ievent)%hdr%coord_sys
-             acqui_simu(ievent)%source_wavelet_file  = mygather(ievent)%hdr%estimated_src
+             acqui_simu(ievent)%source_wavelet_file  = trim(adjustl(mygather(ievent)%hdr%estimated_src))
 
              ! Some checks about source wavelet and traction
-             if (acqui_simu(ievent)%source_wavelet_file /= 'undef') then
+             if (trim(adjustl(acqui_simu(ievent)%source_wavelet_file)) /= 'undef') then
                 acqui_simu(ievent)%external_source_wavelet=.true.
                 ! note sure if i should use this one..
                 allocate(acqui_simu(ievent)%user_source_time_function(1,nt))

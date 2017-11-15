@@ -65,8 +65,8 @@ module passive_imaging_format_mod
   !*** Define type for one station information
   type station_type
 
-     character(len=5) :: name = 'undef' ! name of station
-     character(len=5) :: ntwk = 'undef' ! name of network
+     character(len=8) :: name = 'undef' ! name of station
+     character(len=8) :: ntwk = 'undef' ! name of network
 
      real(kind=dp) :: x=0._dp,     y=0._dp,   z=0._dp    ! local Cartesian coordinates
      real(kind=dp) :: lat=0._dp, lon=0._dp, ele=0._dp    ! geographic coordinates
