@@ -119,7 +119,7 @@ subroutine inverse_problem_main()
      enddo
 
      call synchronize_all_world()
-     
+
      !! writing model in SEM mesh : (rho, vp, vs) or cijkl.
      if (inversion_param%output_model)  call WriteOuptutSEMmodel(inversion_param)
 
@@ -186,15 +186,15 @@ subroutine inverse_problem_main()
      if (myrank == 0) write(*,*) ' ERROR :', trim(mode_running),  ':  option not defined '
 
   end select
-  
-  
+
+
   !! SB
   close(IIDD)
   if (myrank == 0) then
      close(OUTPUT_ITERATION_FILE)
      close(INVERSE_LOG_FILE)
      close(OUTPUT_FWI_LOG)
-  end if
+  endif
   ! parce que sinon je dois mettre un rpint...
   call synchronize_all_world()
 

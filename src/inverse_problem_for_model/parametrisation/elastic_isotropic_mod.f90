@@ -1,5 +1,5 @@
 module elastic_isotropic_mod
-  
+
   implicit none
 
 contains
@@ -11,7 +11,7 @@ contains
     real, dimension(:,:,:,:,:), allocatable, intent(out) :: param_out
     param_out(:,:,:,:,1) = param_in(:,:,:,:,1)
     param_out(:,:,:,:,2) = sqrt((param_in(:,:,:,:,2) + 2.*param_in(:,:,:,:,3)) / param_in(:,:,:,:,1))
-    param_out(:,:,:,:,3) = sqrt(param_in(:,:,:,:,3) / param_in(:,:,:,:,1)) 
+    param_out(:,:,:,:,3) = sqrt(param_in(:,:,:,:,3) / param_in(:,:,:,:,1))
   end function rho_lambda_mu_to_rho_vp_vs
 
   function gradient_for_rho_vp_vs(param_in,grad_in,grad_out)
@@ -40,7 +40,7 @@ contains
     real, dimension(:,:,:,:,:), allocatable, intent(in)  :: param_in
     real, dimension(:,:,:,:,:), allocatable, intent(out) :: param_out
     param_out(:,:,:,:,1) = param_in(:,:,:,:,1)   ! rho
-    param_out(:,:,:,:,2) = sqrt((param_in(:,:,:,:,2) + 2.*param_in(:,:,:,:,3)) * param_in(:,:,:,:,1)) 
+    param_out(:,:,:,:,2) = sqrt((param_in(:,:,:,:,2) + 2.*param_in(:,:,:,:,3)) * param_in(:,:,:,:,1))
     param_out(:,:,:,:,2) = sqrt(param_in(:,:,:,:,3) * param_in(:,:,:,:,1))
   end function rho_lambda_mu_to_rho_ip_is
 
@@ -71,7 +71,7 @@ contains
     real, dimension(:,:,:,:,:), allocatable, intent(out) :: param_out
     param_out(:,:,:,:,1) = param_in(:,:,:,:,1)
     param_out(:,:,:,:,2) = sqrt((param_in(:,:,:,:,2) + 2.*param_in(:,:,:,:,3)/3.) / param_in(:,:,:,:,1))
-    param_out(:,:,:,:,3) = sqrt(param_in(:,:,:,:,3) / param_in(:,:,:,:,1)) 
+    param_out(:,:,:,:,3) = sqrt(param_in(:,:,:,:,3) / param_in(:,:,:,:,1))
   end function rho_lambda_mu_to_rho_vb_vs
 
   function gradient_for_rho_vb_vs(param_in,grad_in,grad_out)
@@ -101,7 +101,7 @@ contains
     real, dimension(:,:,:,:,:), allocatable, intent(out) :: param_out
     param_out(:,:,:,:,1) = param_in(:,:,:,:,1)
     param_out(:,:,:,:,2) = param_in(:,:,:,:,2) + 2.*param_in(:,:,:,:,3))/ 3.
-    param_out(:,:,:,:,3) = param_in(:,:,:,:,3) 
+    param_out(:,:,:,:,3) = param_in(:,:,:,:,3)
   end function rho_lambda_mu_to_rho_kappa_mu
 
   function gradient_for_rho_kappa_mu(param_in,grad_in,grad_out)
@@ -181,8 +181,8 @@ contains
     real, dimension(:,:,:,:,:), allocatable, intent(in)  :: param_in
     real, dimension(:,:,:,:,:), allocatable, intent(out) :: param_out
     param_out(:,:,:,:,1) = param_in(:,:,:,:,1)
-    param_out(:,:,:,:,2) = param_in(:,:,:,:,1) * param_in(:,:,:,:,2)**2 * (param_in(:,:,:,:,3)**2 -2.) 
-    param_out(:,:,:,:,3) = param_in(:,:,:,:,1) * param_in(:,:,:,:,2)**2 
+    param_out(:,:,:,:,2) = param_in(:,:,:,:,1) * param_in(:,:,:,:,2)**2 * (param_in(:,:,:,:,3)**2 -2.)
+    param_out(:,:,:,:,3) = param_in(:,:,:,:,1) * param_in(:,:,:,:,2)**2
   end function rho_vpovervs_vs_to_rho_lambda_mu
   !--------------------------------------------------------------------------------
 

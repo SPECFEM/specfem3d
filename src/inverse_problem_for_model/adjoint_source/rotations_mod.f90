@@ -57,18 +57,18 @@ contains
     real(kind=dp), dimension(nsta) :: lat, lon
 
     integer(kind=si) :: ista
-    
+
     !* Pass in radian
     lat = deg2rad * stalat
     lon = deg2rad * stalon
 
     do ista=1,nsta
-       
+
        !* Equivalence of local and global Cartesian coordinates at (lat=0, lon=0)
        X2(ista,:) = vz(ista,:)
        Y2(ista,:) = vx(ista,:)
        Z2(ista,:) = vy(ista,:)
-       
+
        !* From local mesh to global eath
        X1(ista,:) = rotmat_t(1,1)*X2(ista,:) + rotmat_t(1,2)*Y2(ista,:) &
             + rotmat_t(1,3)*Z2(ista,:)
@@ -76,7 +76,7 @@ contains
             + rotmat_t(2,3)*Z2(ista,:)
        Z1(ista,:) = rotmat_t(3,1)*X2(ista,:) + rotmat_t(3,2)*Y2(ista,:) &
             + rotmat_t(3,3)*Z2(ista,:)
-       
+
        !* Define rotation matrix
        rotc(1,1) =  cos(lat(ista)) * cos(lon(ista))
        rotc(1,2) =  cos(lat(ista)) * sin(lon(ista))
@@ -87,7 +87,7 @@ contains
        rotc(3,1) = -sin(lon(ista))
        rotc(3,2) =  cos(lon(ista))
        rotc(3,3) =  0._dp
-       
+
        !* Data in geographic coordinate at real position
        vz2(ista,:) = rotc(1,1)*X1(ista,:) + rotc(1,2)*Y1(ista,:) &
             + rotc(1,3)*Z1(ista,:)
@@ -96,8 +96,8 @@ contains
        ve(ista,:)  = rotc(3,1)*X1(ista,:) + rotc(3,2)*Y1(ista,:) &
             + rotc(3,3)*Z1(ista,:)
 
-    end do
-       
+    enddo
+
   end subroutine rotate_comp_mesh2glob
 !--------------------------------------------------------------------------------
 
@@ -116,7 +116,7 @@ contains
     real(kind=dp), dimension(nsta,nt) :: X2, Y2, Z2
 
     real(kind=dp), dimension(nsta) :: lat, lon
-    
+
     integer(kind=si) :: ista
 
     !* Pass in radian
@@ -136,7 +136,7 @@ contains
        rotc(3,2) =  cos(lon(ista))
        rotc(3,3) =  0._dp
        rotc_t = transpose(rotc)
-       
+
        !* Data in geographic coordinate at real position
        X1(ista,:) = rotc_t(1,1)*vz2(ista,:) + rotc_t(1,2)*vn(ista,:) &
             + rotc_t(1,3)*ve(ista,:)
@@ -144,7 +144,7 @@ contains
             + rotc_t(2,3)*ve(ista,:)
        Z1(ista,:) = rotc_t(3,1)*vz2(ista,:) + rotc_t(3,2)*vn(ista,:) &
             + rotc_t(3,3)*ve(ista,:)
-       
+
        !* From local mesh to global eath
        X2(ista,:) = rotmat(1,1)*X1(ista,:) + rotmat(1,2)*Y1(ista,:) &
             + rotmat(1,3)*Z1(ista,:)
@@ -158,8 +158,8 @@ contains
        vx(ista,:) = Y2(ista,:)
        vy(ista,:) = Z2(ista,:)
 
-    end do
-       
+    enddo
+
   end subroutine rotate_comp_glob2mesh
 !--------------------------------------------------------------------------------
 
@@ -274,15 +274,15 @@ contains
     real(kind=dp), dimension(nrec) :: baz
 
     integer(kind=si) :: it
-    
+
     baz = deg2rad * bazi
 
     do it = 1, nt
        vr(:,it) = -ve(:,it) * sin(baz(:)) - vn(:,it) * cos(baz(:))
        vt(:,it) = -ve(:,it) * cos(baz(:)) + vn(:,it) * sin(baz(:))
        vz2(:,it) = vz(:,it)
-    end do
-       
+    enddo
+
   end subroutine rotate_ZNE_to_ZRT
 
   subroutine rotate_ZRT_to_ZNE(vz2,vr,vt,vz,vn,ve,nrec,nt,bazi)
@@ -302,8 +302,8 @@ contains
        ve(:,it) = -vr(:,it) * sin(baz(:)) - vt(:,it) * cos(baz(:))
        vn(:,it) = -vr(:,it) * cos(baz(:)) + vt(:,it) * sin(baz(:))
        vz(:,it) = vz2(:,it)
-    end do
-    
+    enddo
+
   end subroutine rotate_ZRT_to_ZNE
 
   subroutine rotate_ZNE_to_LQT(vz,vn,ve,vl,vq,vt,nrec,nt,bazi,inci)
@@ -324,8 +324,8 @@ contains
        vl(:,it) =  vz(:,it)*cos(inc(:)) - ve(:,it)*sin(baz(:))*sin(inc(:)) - vn(:,it)*cos(baz(:))*sin(inc(:))
        vq(:,it) =  vz(:,it)*sin(inc(:)) + ve(:,it)*sin(baz(:))*cos(inc(:)) + vn(:,it)*cos(baz(:))*cos(inc(:))
        vt(:,it) =              - ve(:,it)*cos(baz(:))          + vn(:,it)*sin(baz(:))
-    end do
-    
+    enddo
+
   end subroutine rotate_ZNE_to_LQT
 
   subroutine rotate_LQT_to_ZNE(vl,vq,vt,vz,vn,ve,nrec,nt,bazi,inci)
@@ -346,8 +346,8 @@ contains
        vz(:,it) =  vl(:,it)*cos(inc(:))          + vq(:,it)*sin(inc(:))
        ve(:,it) = -vl(:,it)*sin(baz(:))*sin(inc(:)) + vq(:,it)*sin(baz(:))*cos(inc(:)) - vt(:,it)*cos(baz(:))
        vn(:,it) = -vl(:,it)*cos(baz(:))*sin(inc(:)) + vq(:,it)*cos(baz(:))*cos(inc(:)) + vt(:,it)*sin(baz(:))
-    end do
-    
+    enddo
+
   end subroutine rotate_LQT_to_ZNE
 
   subroutine rotate_ZRT_to_LQT(vz,vr,vt,vl,vq,vt2,nrec,nt,inci)
@@ -367,8 +367,8 @@ contains
        vl(:,it)  = vz(:,it) * cos(inc(:)) + vr(:,it) * sin(inc(:))
        vq(:,it) = vz(:,it) * sin(inc(:)) - vr(:,it) * cos(inc(:))
        vt2(:,it) = vt(:,it)
-    end do
-    
+    enddo
+
   end subroutine rotate_ZRT_to_LQT
 
   subroutine rotate_LQT_to_ZRT(vl,vq,vt2,vz,vr,vt,nrec,nt,inci)
@@ -388,8 +388,8 @@ contains
        vz(:,it) = vl(:,it) * cos(inc(:)) + vq(:,it) * sin(inc(:))
        vr(:,it) = vl(:,it) * sin(inc(:)) - vq(:,it) * cos(inc(:))
        vt(:,it) = vt2(:,it)
-    end do
-    
+    enddo
+
   end subroutine rotate_LQT_to_ZRT
 !--------------------------------------------------------------------------------
 

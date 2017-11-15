@@ -86,41 +86,41 @@
         call compute_anisotropic_kernels_for_velocity_data(b_veloc, b_accel, displ, veloc)
 
      else
-     
+
         do ispec = 1, NSPEC_AB
-           
+
            ! elastic domains
            if (ispec_is_elastic(ispec)) then
-              
+
               do k = 1, NGLLZ
                  do j = 1, NGLLY
                     do i = 1, NGLLX
                        iglob = ibool(i,j,k,ispec)
-                       
+
                        epsilondev_loc(1) = epsilondev_xx(i,j,k,ispec)
                        epsilondev_loc(2) = epsilondev_yy(i,j,k,ispec)
                        epsilondev_loc(3) = epsilondev_xy(i,j,k,ispec)
                        epsilondev_loc(4) = epsilondev_xz(i,j,k,ispec)
                        epsilondev_loc(5) = epsilondev_yz(i,j,k,ispec)
-                       
+
                        b_epsilondev_loc(1) = b_epsilondev_xx(i,j,k,ispec)
                        b_epsilondev_loc(2) = b_epsilondev_yy(i,j,k,ispec)
                        b_epsilondev_loc(3) = b_epsilondev_xy(i,j,k,ispec)
                        b_epsilondev_loc(4) = b_epsilondev_xz(i,j,k,ispec)
                        b_epsilondev_loc(5) = b_epsilondev_yz(i,j,k,ispec)
-                       
+
                        rho_kl(i,j,k,ispec) =  rho_kl(i,j,k,ispec) &
                             + deltat * dot_product(accel(:,iglob), b_displ(:,iglob))
-                       
+
                        ! For anisotropic kernels
                        if (ANISOTROPIC_KL) then
-                          
+
                           call compute_strain_product(prod,epsilon_trace_over_3(i,j,k,ispec),epsilondev_loc, &
                                b_epsilon_trace_over_3(i,j,k,ispec),b_epsilondev_loc)
                           cijkl_kl(:,i,j,k,ispec) = cijkl_kl(:,i,j,k,ispec) + deltat * prod(:)
-                          
+
                        else
-                          
+
                           ! isotropic kernels
                           ! note: takes displacement from backward/reconstructed (forward) field b_displ
                           !          and acceleration from adjoint field accel (containing adjoint sources)
@@ -133,16 +133,16 @@
                           ! and forward acceleration, that is the symmetric form of what is calculated here
                           ! however, this kernel expression is symmetric with regards
                           ! to interchange adjoint - forward field
-                          
+
                           ! kernel for shear modulus, see e.g. Tromp et al. (2005), equation (17)
                           ! note: multiplication with 2*mu(x) will be done after the time loop
-                          
+
                           mu_kl(i,j,k,ispec) =  mu_kl(i,j,k,ispec) &
                                + deltat * (epsilondev_loc(1)*b_epsilondev_loc(1) + epsilondev_loc(2)*b_epsilondev_loc(2) &
                                + (epsilondev_loc(1)+epsilondev_loc(2)) * (b_epsilondev_loc(1)+b_epsilondev_loc(2)) &
                                + 2 * (epsilondev_loc(3)*b_epsilondev_loc(3) + epsilondev_loc(4)*b_epsilondev_loc(4) + &
                                epsilondev_loc(5)*b_epsilondev_loc(5)) )
-                          
+
                           ! kernel for bulk modulus, see e.g. Tromp et al. (2005), equation (18)
                           ! note: multiplication with kappa(x) will be done after the time loop
                           kappa_kl(i,j,k,ispec) = kappa_kl(i,j,k,ispec) &
@@ -153,11 +153,11 @@
                  enddo
               enddo
            endif !ispec_is_elastic
-           
-        end do
 
-     end if ! anisotropic_velociy_kl
-  
+        enddo
+
+     endif ! anisotropic_velociy_kl
+
 
   else
     ! updates kernels on GPU
@@ -559,13 +559,13 @@
          xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, CUSTOM_REAL, &
          nglob_ab, ndim, deltat
     use specfem_par_elastic, only: ispec_is_elastic, rho_kl, cijkl_kl
-    
-    
+
+
     real(kind=CUSTOM_REAL), dimension(ndim,nglob_ab), intent(in) :: vsem_fwd, asem_fwd
     real(kind=CUSTOM_REAL), dimension(ndim,nglob_ab), intent(in) :: dsem_adj, vsem_adj
-    
+
     integer                :: i, j, k, ielem, iglob   ! ,l
-    
+
     real(kind=CUSTOM_REAL) :: dxil_dxl, dxil_dyl, dxil_dzl
     real(kind=CUSTOM_REAL) :: detal_dxl, detal_dyl, detal_dzl
     real(kind=CUSTOM_REAL) :: dgaml_dxl, dgaml_dyl, dgaml_dzl
@@ -581,13 +581,13 @@
     real(kind=CUSTOM_REAL) :: dux_dxl, dux_dyl, dux_dzl
     real(kind=CUSTOM_REAL) :: duy_dxl, duy_dyl, duy_dzl
     real(kind=CUSTOM_REAL) :: duz_dxl, duz_dyl, duz_dzl
-    real(kind=CUSTOM_REAL) :: dux_dyl_plus_duy_dxl      
+    real(kind=CUSTOM_REAL) :: dux_dyl_plus_duy_dxl
     real(kind=CUSTOM_REAL) :: duz_dxl_plus_dux_dzl, duz_dyl_plus_duy_dzl
-    
+
     real(kind=CUSTOM_REAL) :: dvx_dxl, dvx_dyl, dvx_dzl
     real(kind=CUSTOM_REAL) :: dvy_dxl, dvy_dyl, dvy_dzl
     real(kind=CUSTOM_REAL) :: dvz_dxl, dvz_dyl, dvz_dzl
-    real(kind=CUSTOM_REAL) :: dvx_dyl_plus_dvy_dxl     
+    real(kind=CUSTOM_REAL) :: dvx_dyl_plus_dvy_dxl
     real(kind=CUSTOM_REAL) :: dvz_dxl_plus_dvx_dzl, dvz_dyl_plus_dvy_dzl
 
     real(kind=CUSTOM_REAL) :: fac
@@ -595,7 +595,7 @@
     real(kind=CUSTOM_REAL), dimension(3,ngllx,nglly,ngllz) :: vadj_gll, afwd_gll
     real(kind=CUSTOM_REAL), dimension(3,ngllx,nglly,ngllz) :: vsem_fwd_gll, dsem_adj_gll
 
-    !*** Loop over gll points
+    !*** Loop over GLL points
     do ielem=1,nspec_ab
 
        if (ispec_is_elastic(ielem)) then
@@ -615,17 +615,17 @@
                    afwd_gll(2,i,j,k) = asem_fwd(2,iglob)
                    afwd_gll(3,i,j,k) = asem_fwd(3,iglob)
 
-                   dsem_adj_gll(1,i,j,k) = dsem_adj(1,iglob) 
+                   dsem_adj_gll(1,i,j,k) = dsem_adj(1,iglob)
                    dsem_adj_gll(2,i,j,k) = dsem_adj(2,iglob)
                    dsem_adj_gll(3,i,j,k) = dsem_adj(3,iglob)
 
-                   vsem_fwd_gll(1,i,j,k) = vsem_fwd(1,iglob) 
+                   vsem_fwd_gll(1,i,j,k) = vsem_fwd(1,iglob)
                    vsem_fwd_gll(2,i,j,k) = vsem_fwd(2,iglob)
                    vsem_fwd_gll(3,i,j,k) = vsem_fwd(3,iglob)
 
-                end do
-             end do
-          end do
+                enddo
+             enddo
+          enddo
 
           do k=1,ngllz
              do j=1,nglly
@@ -779,7 +779,7 @@
                    duy_dgaml = duy_dgaml + dsem_adj_gll(2,i,j,5) * fac
                    duz_dgaml = duz_dgaml + dsem_adj_gll(3,i,j,5) * fac
 
-                   !*** Get local derivatives of ref square coord wrt cartesian ones (jacobian)
+                   !*** Get local derivatives of ref square coord wrt Cartesian ones (jacobian)
                    dxil_dxl  = xix(i,j,k,ielem)
                    dxil_dyl  = xiy(i,j,k,ielem)
                    dxil_dzl  = xiz(i,j,k,ielem)
@@ -845,15 +845,15 @@
 
                    !* c14
                    cijkl_kl(4,i,j,k,ielem) = cijkl_kl(4,i,j,k,ielem) &
-                        +(dvx_dxl * duz_dyl_plus_duy_dzl + dvz_dyl_plus_dvy_dzl * dux_dxl)*deltat     
+                        +(dvx_dxl * duz_dyl_plus_duy_dzl + dvz_dyl_plus_dvy_dzl * dux_dxl)*deltat
 
                    !* c15
                    cijkl_kl(5,i,j,k,ielem) = cijkl_kl(5,i,j,k,ielem) &
-                        +(dvx_dxl * duz_dxl_plus_dux_dzl + dvz_dxl_plus_dvx_dzl * dux_dxl)*deltat   
+                        +(dvx_dxl * duz_dxl_plus_dux_dzl + dvz_dxl_plus_dvx_dzl * dux_dxl)*deltat
 
                    !* c16
                    cijkl_kl(6,i,j,k,ielem) = cijkl_kl(6,i,j,k,ielem) &
-                        +(dvx_dxl * dux_dyl_plus_duy_dxl + dvx_dyl_plus_dvy_dxl * dux_dxl)*deltat   
+                        +(dvx_dxl * dux_dyl_plus_duy_dxl + dvx_dyl_plus_dvy_dxl * dux_dxl)*deltat
 
                    !* c22
                    cijkl_kl(7,i,j,k,ielem) = cijkl_kl(7,i,j,k,ielem) + dvy_dyl*duy_dyl*deltat
@@ -915,12 +915,12 @@
                    !* c66
                    cijkl_kl(21,i,j,k,ielem) = cijkl_kl(21,i,j,k,ielem) &
                         + dvx_dyl_plus_dvy_dxl * dux_dyl_plus_duy_dxl*deltat
-                end do
-             end do
-          end do
+                enddo
+             enddo
+          enddo
 
-       end if ! ispec_is_elastic
+       endif ! ispec_is_elastic
 
-    end do
+    enddo
 
   end subroutine compute_anisotropic_kernels_for_velocity_data

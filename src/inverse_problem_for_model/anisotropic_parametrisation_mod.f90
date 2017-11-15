@@ -372,7 +372,7 @@ contains
        ai = a(i);   aj = a(j);   ak = a(k);   al = a(l);
        bi = b(i);   bj = b(j);   bk = b(k);   bl = b(l);
        ci = c(i);   cj = c(j);   ck = c(k);   cl = c(l);
-       
+
        aiaj = ai*aj;   akal = ak*al;   aiak = ai*ak;   aial = ai*al;
        bibj = bi*bj;   bkbl = bk*bl;   ajal = aj*al;   ajak = aj*ak;
        bibk = bi*bk;   bibl = bi*bl;   bjbl = bj*bl;   bjbk = bj*bk;
@@ -386,12 +386,12 @@ contains
        bibjbl = bi*bj*bl
        bibkbl = bi*bk*bl
        bjbkbl = bj*bk*bl
-       
+
        cicjck = ci*cj*ck
        cicjcl = ci*cj*cl
        cickcl = ci*ck*cl
        cjckcl = cj*ck*cl
-       
+
        aiajakal = ai*aj*ak*al
        bibjbkbl = bi*bj*bk*bl
        cicjckcl = ci*cj*ck*cl
@@ -407,10 +407,10 @@ contains
        !*** Compute wrt vti components
        ! dcij_dc11
        partial_derivative(1,ipar) = aiajakal
-       
+
        ! dcij_dc22
        partial_derivative(2,ipar) = bibjbkbl
- 
+
        ! dcij_dc33
        partial_derivative(3,ipar) = cicjckcl
 
@@ -423,13 +423,13 @@ contains
        partial_derivative(5,ipar) = (dik*djl + dil*djk)                           &
                                   - (bibk*djl + bibl*djk + bjbl*dik + bjbk*dil)   &
                                   + 2._dp*(-aiajakal + bibjbkbl - cicjckcl)
-       
+
        ! dcij_dc66
        partial_derivative(6,ipar) = -(dik*djl + dil*djk)                           &
                                   + (aiak*djl + aial*djk + ajal*dik + ajak*dil)    &
                                   + (bibk*djl + bibl*djk + bjbl*dik + bjbk*dil)    &
                                   + 2._dp*(-aiajakal - bibjbkbl + cicjckcl)
-       
+
        ! dcij_dc23
        partial_derivative(7,ipar) =  dij*dkl - (aiaj*dkl + dij*akal) &
                                              + (aiajakal - bibjbkbl - cicjckcl)
@@ -450,7 +450,7 @@ contains
        djm = delta(j,m)
        dkm = delta(k,m)
        dlm = delta(l,m)
-       
+
        partial_derivative(10,ipar) = &
             + (c12 - c23) * (ai*djm*dkl + aj*dim*dkl + dij*ak*dlm + dij*al*dkm)  &
             + (c66 - c44) * (ai*djl*dkm + ak*djl*dim + al*djk*dim + ai*djk*dlm + &
@@ -464,7 +464,7 @@ contains
        djm = delta(j,m)
        dkm = delta(k,m)
        dlm = delta(l,m)
-       
+
        partial_derivative(11,ipar) = &
             + (c12 - c23) * (ai*djm*dkl + aj*dim*dkl + dij*ak*dlm + dij*al*dkm) &
             + (c66 - c44) * (ai*djl*dkm + ak*djl*dim + al*djk*dim + ai*djk*dlm + &
@@ -478,7 +478,7 @@ contains
        djm = delta(j,m)
        dkm = delta(k,m)
        dlm = delta(l,m)
-       
+
        partial_derivative(12,ipar) = &
             + (c12 - c23) * (ai*djm*dkl + aj*dim*dkl + dij*ak*dlm + dij*al*dkm) &
             + (c66 - c44) * (ai*djl*dkm + ak*djl*dim + al*djk*dim + ai*djk*dlm + &
@@ -492,7 +492,7 @@ contains
        djm = delta(j,m)
        dkm = delta(k,m)
        dlm = delta(l,m)
-       
+
        partial_derivative(13,ipar) = &
             + (c12 - c23) * (bi*djm*dkl + bj*dim*dkl + dij*bk*dlm + dij*bl*dkm) &
             + (c66 - c55) * (bi*djl*dkm + bk*djl*dim + bl*djk*dim + bi*djk*dlm + &
@@ -506,7 +506,7 @@ contains
        djm = delta(j,m)
        dkm = delta(k,m)
        dlm = delta(l,m)
-       
+
        partial_derivative(14,ipar) = &
             + (c12 - c23) * (bi*djm*dkl + bj*dim*dkl + dij*bk*dlm + dij*bl*dkm) &
             + (c66 - c55) * (bi*djl*dkm + bk*djl*dim + bl*djk*dim + bi*djk*dlm + &
@@ -520,7 +520,7 @@ contains
        djm = delta(j,m)
        dkm = delta(k,m)
        dlm = delta(l,m)
-       
+
        partial_derivative(15,ipar) = &
             + (c12 - c23) * (bi*djm*dkl + bj*dim*dkl + dij*bk*dlm + dij*bl*dkm) &
             + (c66 - c55) * (bi*djl*dkm + bk*djl*dim + bl*djk*dim + bi*djk*dlm + &
@@ -534,7 +534,7 @@ contains
        djm = delta(j,m)
        dkm = delta(k,m)
        dlm = delta(l,m)
-       
+
        partial_derivative(16,ipar) = &
             + (c33 - c13 - c23 + c12 + 2._dp*(-c44 - c55 + c66)) * &
             (cicjck*dlm + cicjcl*dkm + cickcl*djm + cjckcl*dim)
@@ -545,18 +545,18 @@ contains
        djm = delta(j,m)
        dkm = delta(k,m)
        dlm = delta(l,m)
-       
+
        partial_derivative(17,ipar) = &
             + (c33 - c13 - c23 + c12 + 2._dp*(-c44 - c55 + c66)) * &
             (cicjck*dlm + cicjcl*dkm + cickcl*djm + cjckcl*dim)
-       
+
        ! dcij_dc3
        m   = 1
        dim = delta(i,m)
        djm = delta(j,m)
        dkm = delta(k,m)
        dlm = delta(l,m)
-       
+
        partial_derivative(18,ipar) = &
             + (c33 - c13 - c23 + c12 + 2._dp*(-c44 - c55 + c66)) * &
             (cicjck*dlm + cicjcl*dkm + cickcl*djm + cjckcl*dim)
@@ -573,6 +573,6 @@ contains
 
   end subroutine partial_derivative_param_ref_ortho
   !--------------------------------------------------------------------------------
-  
+
 
 end module anisotropic_parametrisation_mod

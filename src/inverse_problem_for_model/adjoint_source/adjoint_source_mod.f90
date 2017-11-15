@@ -183,7 +183,7 @@ contains
 !
 !
 !
-  subroutine compute_elastic_adjoint_source_displacement(irec_local, ievent, current_iter, acqui_simu, cost_function,&
+  subroutine compute_elastic_adjoint_source_displacement(irec_local, ievent, current_iter, acqui_simu, cost_function, &
        inversion_param)
 
 
@@ -191,9 +191,9 @@ contains
     type(acqui),  dimension(:), allocatable,     intent(inout) :: acqui_simu
     real(kind=CUSTOM_REAL),                      intent(inout) :: cost_function
     integer                                                    :: icomp, idim, irec_glob !, icomp_tmp
-    real(kind=custom_real), dimension(:), allocatable          :: wavelet, filfil_residuals_tmp, tmpl
-    real(kind=custom_real), dimension(:,:), allocatable        :: trace_cal_1, trace_cal_2
-    real(kind=custom_real), dimension(:,:), allocatable        :: trace_obs_1, trace_obs_2
+    real(kind=CUSTOM_REAL), dimension(:), allocatable          :: wavelet, filfil_residuals_tmp, tmpl
+    real(kind=CUSTOM_REAL), dimension(:,:), allocatable        :: trace_cal_1, trace_cal_2
+    real(kind=CUSTOM_REAL), dimension(:,:), allocatable        :: trace_obs_1, trace_obs_2
     double precision                                           :: lat0, lon0, azi0
     type(inver),                                 intent(inout) :: inversion_param
 
@@ -219,15 +219,15 @@ contains
     case ('L2_FWI_TELESEISMIC')
 
        ! Define temporary trace vector
-       if (.not.allocated(trace_cal_1)) allocate(trace_cal_1(3,nstep_data))
-       if (.not.allocated(trace_cal_2)) allocate(trace_cal_2(3,nstep_data))
-       if (.not.allocated(trace_obs_1)) allocate(trace_obs_1(3,nstep_data))
-       if (.not.allocated(trace_obs_2)) allocate(trace_obs_2(3,nstep_data))
+       if (.not. allocated(trace_cal_1)) allocate(trace_cal_1(3,nstep_data))
+       if (.not. allocated(trace_cal_2)) allocate(trace_cal_2(3,nstep_data))
+       if (.not. allocated(trace_obs_1)) allocate(trace_obs_1(3,nstep_data))
+       if (.not. allocated(trace_obs_2)) allocate(trace_obs_2(3,nstep_data))
        lat0 = acqui_simu(ievent)%Origin_chunk_lat
        lon0 = acqui_simu(ievent)%Origin_chunk_lon
        azi0 = acqui_simu(ievent)%Origin_chunk_azi
        irec_glob = acqui_simu(ievent)%number_receiver_global(irec_local)
-       
+
        do idim = 1, ndim
 
           ! Get data
@@ -236,18 +236,18 @@ contains
 
           trace_obs_1(idim,:) = acqui_simu(ievent)%data_traces(irec_local,:,idim)
           trace_obs_2(idim,:) = acqui_simu(ievent)%data_traces(irec_local,:,idim)
-          
-          ! Convolve synthetic data with wavelet      
+
+          ! Convolve synthetic data with wavelet
           if (inversion_param%convolution_by_wavelet) then
-             if (.not.allocated(wavelet))   allocate(wavelet(nstep_data))
+             if (.not. allocated(wavelet))   allocate(wavelet(nstep_data))
              wavelet = acqui_simu(ievent)%user_source_time_function(1,:)
              call myconvolution(trace_cal_2(idim,:),wavelet,nstep_data,nstep_data,tmpl,0)
              trace_cal_1(idim,:) = tmpl * dt_data
-          end if
+          endif
 
-       end do
-       
-       ! Do rotation of data (would be easier is lat and lon are split over mpi slices)
+       enddo
+
+       ! Do rotation of data (would be easier is lat and lon are split over MPI slices)
        select case (inversion_param%inverted_data_sys)
        case ('xyz')
           ! Do nothing
@@ -258,12 +258,12 @@ contains
           ! Data rotation required to pass in mesh system (zen -> xyz)
           call define_mesh_rotation_matrix(lat0,lon0,azi0)
           call rotate_comp_mesh2glob(trace_cal_2(1,:), trace_cal_2(2,:), trace_cal_2(3,:), &
-               acqui_simu(ievent)%read_station_position(1,irec_glob),                     &
-               acqui_simu(ievent)%read_station_position(2,irec_glob),                     &
+               acqui_simu(ievent)%read_station_position(1,irec_glob), &
+               acqui_simu(ievent)%read_station_position(2,irec_glob), &
                nstep_data, 1, trace_cal_1(3,:), trace_cal_1(2,:), trace_cal_1(1,:))
           call rotate_comp_mesh2glob(trace_obs_2(1,:), trace_obs_2(2,:), trace_obs_2(3,:), &
-               acqui_simu(ievent)%read_station_position(1,irec_glob),                     &
-               acqui_simu(ievent)%read_station_position(2,irec_glob),                     &
+               acqui_simu(ievent)%read_station_position(1,irec_glob), &
+               acqui_simu(ievent)%read_station_position(2,irec_glob), &
                nstep_data, 1, trace_obs_1(3,:), trace_obs_1(2,:), trace_obs_1(1,:))
        case('rtz')
           trace_cal_2 = trace_cal_1
@@ -273,21 +273,21 @@ contains
           ! Data rotation required to pass in mesh system (zen -> xyz)
           call define_mesh_rotation_matrix(lat0,lon0,azi0)
           call rotate_comp_mesh2glob(trace_cal_2(1,:), trace_cal_2(2,:), trace_cal_2(3,:), &
-               acqui_simu(ievent)%read_station_position(1,irec_glob),                     &
-               acqui_simu(ievent)%read_station_position(2,irec_glob),                     &
+               acqui_simu(ievent)%read_station_position(1,irec_glob), &
+               acqui_simu(ievent)%read_station_position(2,irec_glob), &
                nstep_data, 1, trace_cal_1(3,:), trace_cal_1(2,:), trace_cal_1(1,:))
           call rotate_comp_mesh2glob(trace_obs_2(1,:), trace_obs_2(2,:), trace_obs_2(3,:), &
-               acqui_simu(ievent)%read_station_position(1,irec_glob),                     &
-               acqui_simu(ievent)%read_station_position(2,irec_glob),                     &
+               acqui_simu(ievent)%read_station_position(1,irec_glob), &
+               acqui_simu(ievent)%read_station_position(2,irec_glob), &
                nstep_data, 1, trace_obs_1(3,:), trace_obs_1(2,:), trace_obs_1(1,:))
 
           trace_cal_2 = trace_cal_1
           trace_obs_2 = trace_obs_1
-          call rotate_ZNE_to_ZRT(trace_cal_2(3,:), trace_cal_2(2,:), trace_cal_2(1,:),     &
-               trace_cal_1(3,:), trace_cal_1(1,:), trace_cal_1(2,:),                       &
+          call rotate_ZNE_to_ZRT(trace_cal_2(3,:), trace_cal_2(2,:), trace_cal_2(1,:), &
+               trace_cal_1(3,:), trace_cal_1(1,:), trace_cal_1(2,:), &
                1,nstep_data,acqui_simu(ievent)%baz(irec_glob))
-          call rotate_ZNE_to_ZRT(trace_obs_2(3,:), trace_obs_2(2,:), trace_obs_2(1,:),     &
-               trace_obs_1(3,:), trace_obs_1(1,:), trace_obs_1(2,:),                       &
+          call rotate_ZNE_to_ZRT(trace_obs_2(3,:), trace_obs_2(2,:), trace_obs_2(1,:), &
+               trace_obs_1(3,:), trace_obs_1(1,:), trace_obs_1(2,:), &
                1,nstep_data,acqui_simu(ievent)%baz(irec_glob))
        case('qtl')
           trace_cal_2 = trace_cal_1
@@ -315,18 +315,18 @@ contains
           ! Apply weighting
           fil_residuals(:) = fil_residuals(:) * acqui_simu(ievent)%weight_trace(idim,irec_glob,:)
           filfil_residuals(:) = filfil_residuals(:) * acqui_simu(ievent)%weight_trace(idim,irec_glob,:)**2
-          
+
           !! compute cost function value
           cost_value=sum(fil_residuals(:)**2) * 0.5 * dt_data
           cost_function = cost_function + cost_value
 
           ! Finally cross-correlate residuals with wavelet
           if (inversion_param%convolution_by_wavelet) then
-             if (.not.allocated(filfil_residuals_tmp)) allocate(filfil_residuals_tmp(nstep_data))
+             if (.not. allocated(filfil_residuals_tmp)) allocate(filfil_residuals_tmp(nstep_data))
              filfil_residuals_tmp(:) = filfil_residuals(:)
              call mycorrelation(filfil_residuals_tmp,wavelet,nstep_data,nstep_data,tmpl,0)
              filfil_residuals = tmpl * dt_data
-          end if
+          endif
 
           !! store the adjoint source
           elastic_adjoint_source(icomp,:) = filfil_residuals(:)

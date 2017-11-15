@@ -36,7 +36,7 @@ contains
     integer                                                    :: ier, nsta, nt, ista
 
     double precision                                           :: baz, dist, gcarc
-    
+
     type(gather), dimension(:), allocatable :: mygather
 
     if (myrank == 0) then
@@ -97,7 +97,7 @@ contains
           case('event_name')
 
              write(filename,*)trim(acqui_simu(ievent)%event_rep),'/',trim(val)
-             
+
              !*** Read pif header file
              call read_pif_header_file(filename,mygather(ievent))
 
@@ -133,8 +133,8 @@ contains
                 call read_binary_source_signature(acqui_simu(ievent)%source_wavelet_file, &
                                                                                       nt, &
                                        acqui_simu(ievent)%user_source_time_function(1,:))
-             end if
-             
+             endif
+
              select case (lowcase(adjustl(trim(acqui_simu(ievent)%source_type_modeling))))
              case('axisem','dsm')
                 acqui_simu(ievent)%traction_dir = mygather(ievent)%hdr%modeling_path
@@ -148,8 +148,8 @@ contains
              acqui_simu(ievent)%read_data_sys  = mygather(ievent)%hdr%data_comp
              acqui_simu(ievent)%read_data_comp = mygather(ievent)%hdr%is_comp
              acqui_simu(ievent)%read_data_type = mygather(ievent)%hdr%data_type
-             
-             
+
+
              ! Fill source informations
              acqui_simu(ievent)%event_lat   = mygather(ievent)%source%lat
              acqui_simu(ievent)%event_lon   = mygather(ievent)%source%lon
@@ -190,34 +190,34 @@ contains
              select case(trim(adjustl(acqui_simu(ievent)%source_type_modeling)))
              case('pointsource') ! then local source
                 do ista = 1, nsta
-                   call calc_dist_baz_cart(mygather(ievent)%source%x,           &
-                                           mygather(ievent)%source%y,           &
-                                           mygather(ievent)%stations(ista)%x,   &
-                                           mygather(ievent)%stations(ista)%y,   &       
-                                           dist,                               & 
+                   call calc_dist_baz_cart(mygather(ievent)%source%x, &
+                                           mygather(ievent)%source%y, &
+                                           mygather(ievent)%stations(ista)%x, &
+                                           mygather(ievent)%stations(ista)%y, &
+                                           dist, &
                                            baz)
-                   acqui_simu(ievent)%baz(ista)  = real(baz,kind=custom_real)
-                   acqui_simu(ievent)%dist(ista) = real(dist,kind=custom_real)
-                end do
+                   acqui_simu(ievent)%baz(ista)  = real(baz,kind=CUSTOM_REAL)
+                   acqui_simu(ievent)%dist(ista) = real(dist,kind=CUSTOM_REAL)
+                enddo
              case('fk','axisem','dsm') ! then teleseismic source
                 do ista = 1, nsta
-                   call calc_delta_dist_baz(mygather(ievent)%source%lat,           &
-                                            mygather(ievent)%source%lon,           &
-                                            mygather(ievent)%stations(ista)%lat,   &
-                                            mygather(ievent)%stations(ista)%lon,   &
-                                            gcarc,                                 &
-                                            dist,                                  & 
+                   call calc_delta_dist_baz(mygather(ievent)%source%lat, &
+                                            mygather(ievent)%source%lon, &
+                                            mygather(ievent)%stations(ista)%lat, &
+                                            mygather(ievent)%stations(ista)%lon, &
+                                            gcarc, &
+                                            dist, &
                                             baz)
                    acqui_simu(ievent)%gcarc(ista) = gcarc
                    acqui_simu(ievent)%dist(ista)  = dist
                    acqui_simu(ievent)%baz(ista)   = baz
-                end do
+                enddo
              end select
 
              ! Correct back-azimuth from mesh orientation (to check, depends on how we considere azi)
              !!acqui_simu(ievent)%baz(:) = acqui_simu(ievent)%baz(:) &
              !!                          - acqui_simu(ievent)%Origin_chunk_azi
-             
+
 
           end select
        enddo
@@ -258,12 +258,12 @@ contains
        call mpi_bcast(acqui_simu(ievent)%traction_dir,         max_len_string, mpi_character, 0, &
             my_local_mpi_comm_world, ier)
        !call mpi_bcast(acqui_simu(ievent)%component,                         6, mpi_character, 0, &
-       !     my_local_mpi_comm_world, ier) 
+       !     my_local_mpi_comm_world, ier)
        call mpi_bcast(acqui_simu(ievent)%read_data_sys,                     3, mpi_character, 0, &
             my_local_mpi_comm_world, ier)
        call mpi_bcast(acqui_simu(ievent)%read_data_type,                    1, mpi_character, 0, &
             my_local_mpi_comm_world, ier)
-       
+
        ! broadcast reals
        call mpi_bcast(acqui_simu(ievent)%dt_data,             1, custom_mpi_type, 0, &
             my_local_mpi_comm_world, ier)
@@ -290,7 +290,7 @@ contains
        call mpi_bcast(acqui_simu(ievent)%zshot,               1, custom_mpi_type, 0, &
             my_local_mpi_comm_world, ier)
 
-       
+
        ! broadcast logicals
        call mpi_bcast(acqui_simu(ievent)%is_time_pick,        1, mpi_logical, 0, &
             my_local_mpi_comm_world, ier)
@@ -298,7 +298,7 @@ contains
             my_local_mpi_comm_world, ier)
        call mpi_bcast(acqui_simu(ievent)%read_data_comp,      3, mpi_logical, 0, &
             my_local_mpi_comm_world, ier)
-       
+
        ! conditional broadcasts for wavelet
        if (trim(adjustl(acqui_simu(ievent)%source_wavelet_file)) /= 'undef') then
           ! Source time functions
@@ -306,19 +306,19 @@ contains
                my_local_mpi_comm_world, ier)
           if (myrank > 0) then
              allocate(acqui_simu(ievent)%user_source_time_function(1,acqui_simu(ievent)%nt_data))
-          end if
+          endif
           call mpi_bcast(acqui_simu(ievent)%user_source_time_function, &
-                         acqui_simu(ievent)%nt_data,                   &
+                         acqui_simu(ievent)%nt_data, &
                          custom_mpi_type, 0, my_local_mpi_comm_world, ier)
-       end if
+       endif
 
        ! conditional broadcast for allocatable arrays
-       if (myrank >0) then
+       if (myrank > 0) then
           allocate(acqui_simu(ievent)%station_name(acqui_simu(ievent)%nsta_tot))
           allocate(acqui_simu(ievent)%network_name(acqui_simu(ievent)%nsta_tot))
           allocate(acqui_simu(ievent)%position_station(3,acqui_simu(ievent)%nsta_tot))
           allocate(acqui_simu(ievent)%read_station_position(3,acqui_simu(ievent)%nsta_tot))
-       end if
+       endif
        !! actually geographic coord
        nsta = acqui_simu(ievent)%nsta_tot
 
@@ -326,24 +326,24 @@ contains
             my_local_mpi_comm_world, ier)
        call mpi_bcast(acqui_simu(ievent)%network_name, MAX_LENGTH_NETWORK_NAME*nsta, mpi_character, 0, &
             my_local_mpi_comm_world, ier)
-       
+
        call mpi_bcast(acqui_simu(ievent)%position_station,      3*nsta, custom_mpi_type, 0, &
             my_local_mpi_comm_world, ier)
        call mpi_bcast(acqui_simu(ievent)%read_station_position, 3*nsta, custom_mpi_type, 0, &
             my_local_mpi_comm_world, ier)
 
        if (acqui_simu(ievent)%is_time_pick) then
-          if (myrank >0) then
+          if (myrank > 0) then
              allocate(acqui_simu(ievent)%time_pick(nsta))
-          end if
+          endif
           call mpi_bcast(acqui_simu(ievent)%time_pick,      nsta, custom_mpi_type, 0, &
                my_local_mpi_comm_world, ier)
-       end if
-       if (myrank >0) then
+       endif
+       if (myrank > 0) then
           allocate(acqui_simu(ievent)%baz(nsta))
           allocate(acqui_simu(ievent)%dist(nsta))
           allocate(acqui_simu(ievent)%gcarc(nsta))
-       end if
+       endif
        call mpi_bcast(acqui_simu(ievent)%baz,               nsta, custom_mpi_type, 0, &
             my_local_mpi_comm_world, ier)
        call mpi_bcast(acqui_simu(ievent)%gcarc,             nsta, custom_mpi_type, 0, &
@@ -355,7 +355,7 @@ contains
        !! Needed to fit previous definition of source_type
        acqui_simu(ievent)%source_type      = trim(adjustl(acqui_simu(ievent)%source_type_modeling))
        acqui_simu(ievent)%data_file_gather = acqui_simu(ievent)%event_rep
-       
+
     enddo
 
     !! to do do not forget to bcast all acqui_simu structure to other MPI slices
@@ -443,7 +443,7 @@ contains
        allocate(acqui_simu(ievent)%islice_selected_rec(NSTA), &
                 acqui_simu(ievent)%ispec_selected_rec(NSTA), &
                 acqui_simu(ievent)%number_receiver_global(NSTA))
-       
+
        acqui_simu(ievent)%number_receiver_global(:)=-1
        acqui_simu(ievent)%ispec_selected_rec(:)=-1
        acqui_simu(ievent)%islice_selected_rec(:)=-1
@@ -453,8 +453,8 @@ contains
        acqui_simu(ievent)%nu(:,:,:)=0.
        do idim = 1, NDIM
           acqui_simu(ievent)%nu(idim,idim,:)=1.
-       end do
-       
+       enddo
+
        nsta_slice=0
        do ireceiver = 1, NSTA
 

@@ -58,34 +58,34 @@ contains
        call write_pif_data_gather(ievent, acqui_simu, inversion_param, seismograms_d, name_file_tmp, myrank)
 
     case default
-       
+
        select case ( trim(acqui_simu(ievent)%component(1)) )
 
        case('UX', 'UY', 'UZ')
           !! array seismogram in displacement
           name_file_tmp = trim(acqui_simu(ievent)%data_file_gather)
-          
+
           write(INVERSE_LOG_FILE,*) '  ... Writing simulated data gather for event :', ievent
-          
+
           call write_bin_sismo_on_disk(ievent, acqui_simu, seismograms_d,  name_file_tmp, myrank)
-          
+
        case('PR')
           !! array seismogram in pressure
           name_file_tmp = trim(acqui_simu(ievent)%data_file_gather)
-          
+
           write(INVERSE_LOG_FILE,*) '  ... Writing simulated data gather for event :  ', ievent
-          
+
           call write_bin_sismo_on_disk(ievent, acqui_simu, seismograms_p,  name_file_tmp, myrank)
-          
+
        case default
-          
+
           write(*,*) ' ERROR Component not known : ', trim(acqui_simu(ievent)%component(1))
           stop
-          
+
        end select
 
     end select
-       
+
   end subroutine ComputeSismosPerEvent
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -127,12 +127,12 @@ contains
 
        name_file_tmp = 'adjoint_source'
        call write_pif_data_gather(ievent, acqui_simu, inversion_param, acqui_simu(ievent)%synt_traces, name_file_tmp, myrank)
-       
+
     case default
        !! dump synthetics and adjoint sources to ckeck
        if (VERBOSE_MODE .or. DEBUG_MODE) then
           call dump_adjoint_sources(iter_inverse, ievent, acqui_simu, myrank)
-          
+
           select case (trim(acqui_simu(ievent)%component(1)))
           case('UX', 'UY', 'UZ')
              call dump_seismograms(iter_inverse, ievent, seismograms_d, acqui_simu, myrank)
@@ -144,7 +144,7 @@ contains
        endif
 
     end select
-    
+
     !! choose parameters to perform both the forward and adjoint simulation
     SIMULATION_TYPE=3
     SAVE_FORWARD=.false.

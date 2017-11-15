@@ -37,6 +37,6 @@
 
   ! MPI finish
   call finalize_mpi()
- 
+
 end program inverse_problem
 

@@ -193,13 +193,13 @@ module inverse_problem_par
      character                                                                :: inverted_data_type
      logical                                                                  :: is_src_weigh_gradient=.false.
      logical                                                                  :: convolution_by_wavelet
-     
+
      !! --- here add parameters for other methods (further developments)
      logical                                                                  :: get_synthetic_pressure=.true.
      logical                                                                  :: get_synthetic_displacement=.true.
      logical                                                                  :: get_synthetic_velocity=.true.
      logical                                                                  :: get_synthetic_acceleration=.true.
-     
+
   end type inver !------------------------------------------------------------------------------------------------------------------
 
   ! ACQUISITION STRUCTURE  ---------------------------------------------------------------------------------------------------------
