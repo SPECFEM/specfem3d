@@ -186,7 +186,19 @@ module inverse_problem_par
      !! prior model
      real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable                :: prior_model
 
+     !! inverted components
+     character(len=2),                       dimension(3)                     :: component
+     character(len=3)                                                         :: inverted_data_sys
+     logical, dimension(3)                                                    :: inverted_data_comp
+     character                                                                :: inverted_data_type
+     logical                                                                  :: is_src_weigh_gradient=.false.
+     logical                                                                  :: convolution_by_wavelet
+
      !! --- here add parameters for other methods (further developments)
+     logical                                                                  :: get_synthetic_pressure=.true.
+     logical                                                                  :: get_synthetic_displacement=.true.
+     logical                                                                  :: get_synthetic_velocity=.true.
+     logical                                                                  :: get_synthetic_acceleration=.true.
 
   end type inver !------------------------------------------------------------------------------------------------------------------
 
@@ -198,6 +210,8 @@ module inverse_problem_par
      integer                                                                   :: nevent_tot
      !! id for the event
      character(len= MAX_LEN_STRING)                                            :: event_name
+     !! name of pif event repository
+     character(len= MAX_LEN_STRING)                                            :: event_rep
      !! name for outputs files
      character(len= MAX_LEN_STRING)                                            :: prname_inversion
      !! file contains source parameter for 'moment' or 'fk' or axisem traction
@@ -228,7 +242,6 @@ module inverse_problem_par
      !! in case of exploration geophysics,
      !! saving temporary shot point to be able to read it directly in acqui_file
      real(kind=CUSTOM_REAL)                                                    :: xshot, yshot, zshot, shot_ampl
-
      !! --------------------- source parameter specific for Specfem ---------------------
      !! time parameters needed for specfem
      double precision, dimension(:), allocatable                               :: tshift, hdur, hdur_Gaussian
@@ -289,15 +302,18 @@ module inverse_problem_par
      real(kind=CUSTOM_REAL),                  dimension(:,:,:),   allocatable  :: window_to_invert
      !! low-high frequency used for FWI (NCOMP,2,NSTA)
      real(kind=CUSTOM_REAL),                  dimension(:,:,:),   allocatable  :: freqcy_to_invert
-     !! weigth on each trace used for FWI (NCOMP,NSTA)
-     real(kind=CUSTOM_REAL),                  dimension(:,:),     allocatable  :: weight_trace
+     !! weigth on each trace used for FWI (NCOMP,NSTA,NT)
+     real(kind=CUSTOM_REAL),                  dimension(:,:,:),   allocatable  :: weight_trace
+
      !! gather time sampling
      real(kind=CUSTOM_REAL)                                                    :: dt_data
      !! number of samples
      integer                                                                   :: Nt_data
      !! components used
      character(len=2),                        dimension(3)                     :: component
-
+     character(len=3)                                                          :: read_data_sys
+     logical, dimension(3)                                                     :: read_data_comp
+     character                                                                 :: read_data_type
      !! adjoint source to use
      character(len= MAX_LEN_STRING)                                            :: adjoint_source_type
 
@@ -315,7 +331,8 @@ module inverse_problem_par
      character(len= MAX_LEN_STRING)                                            :: station_coord_system
      !! station list
      real(kind=CUSTOM_REAL), dimension(:,:), allocatable                       :: read_station_position
-     real(kind=CUSTOM_REAL), dimension(:), allocatable                         :: time_pick
+     real(kind=CUSTOM_REAL), dimension(:), allocatable                         :: time_pick, baz, inc
+     real(kind=CUSTOM_REAL), dimension(:), allocatable                         :: dist, gcarc
 
      !! traction directory in case of AxiSem or DSM coupling
      character(len= MAX_LEN_STRING)                                            :: traction_dir

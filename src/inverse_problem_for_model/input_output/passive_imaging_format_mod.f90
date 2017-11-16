@@ -20,7 +20,7 @@ module passive_imaging_format_mod
   real(kind=dp), dimension(:), allocatable :: stf
 
   !*** Some parameters for IO
-  integer(kind=si),   private :: iunit=12, io_err, debug_level=0
+  integer(kind=si),   private :: iunit=34, io_err, debug_level=0
   character(len=256), private :: line, keyword, keyval
 
   !*** Define type for station file header
@@ -36,8 +36,9 @@ module passive_imaging_format_mod
      character(len=256) :: estimated_src     = 'undef'  ! repository of tractions or parameter file
      character(len=1)   :: data_type         = 'v'      ! kind of data (d=displacement, !
                                                         ! v=velocities, a=acceleration)
-     character(len=3)   :: data_comp         = 'zen'    ! data coordinate system (geo 'zen'),
-                                                        !    (local 'xyz'), (rotated 'zrt' or 'lqt')
+     character(len=3)   :: data_comp         = 'enz'    ! data coordinate system (geo 'zen'),
+                                                        !    (local 'zxy'), (rotated 'zrt' or 'lqt')
+     logical, dimension(3) :: is_comp        = (/ .true., .true., .true. /)  ! actual components available
      character(len=3)   :: coord_sys         = 'geo'    ! stations coordinate system 'geo' or 'car'
 
      real(kind=dp), dimension(3) :: mesh_origin = (/0._dp,0._dp,0._dp/) ! mesh top center geographic coordinates
@@ -121,7 +122,7 @@ contains
     type(gather),     intent(out) :: mygather
     integer(kind=si) :: k
 
-    write(6,*)'Read PIF-file header from ',filename,' ...'
+    write(6,*)'Read PIF-file header from ',trim(adjustl(filename)),' ...'
     open(iunit, file=trim(adjustl(filename)), status='old',action='read', iostat=io_err)
 
     if (io_err /= 0) then
@@ -150,8 +151,7 @@ contains
           read(keyval,*) mygather%hdr%source_type
           write(*,*)'    source_type ',trim(adjustl(mygather%hdr%source_type))
        case('source_components')
-          keyval  = lowcase(keyval)
-          read(keyval,*) mygather%hdr%source_components
+          read(line,*)keyval, mygather%hdr%source_components
           write(*,*)'    receiver_component ',trim(adjustl(mygather%hdr%source_components))
        case('modeling_tool')
           read(line,*) keyval, mygather%hdr%modeling_tool, mygather%hdr%modeling_path
@@ -316,6 +316,7 @@ contains
     type(source_type),  intent(out) :: cmt
 
     write(6,*)'Read CMT solution file ...'
+    print *,filename
     open(iunit, file=trim(adjustl(filename)), status='old',action='read', iostat=io_err)
     if (io_err /= 0) then
        write(6,*)'CMT solution file: ',trim(adjustl(filename)),' does not exist!'
@@ -347,29 +348,29 @@ contains
 
        select case(trim(keyword))
        case('event')
-          read(line,*) keyword, keyval, cmt%name
+          read(line,*) keyword, cmt%name
        case('time')
           read(line,*) keyword, keyval, cmt%tshift
        case('half')
           read(line,*) keyword, keyval, cmt%hdur
-       case('latitude:')
-          read(line,*) keyword, keyval, cmt%lat
-       case('longitude:')
-          read(line,*) keyword, keyval, cmt%lon
+       case('latitude:','latorUTM:')
+          read(line,*) keyword, cmt%lat
+       case('longitude:','lonorUTM:')
+          read(line,*) keyword, cmt%lon
        case('depth:')
-          read(line,*) keyword, keyval, cmt%ele
-       case('mrr:')
-          read(line,*) keyword, keyval, cmt%m(1)
-       case('mtt:')
-          read(line,*) keyword, keyval, cmt%m(2)
-       case('mpp:')
-          read(line,*) keyword, keyval, cmt%m(3)
-       case('mrt:')
-          read(line,*) keyword, keyval, cmt%m(6)
-       case('mrp:')
-          read(line,*) keyword, keyval, cmt%m(5)
-       case('mtp:')
-          read(line,*) keyword, keyval, cmt%m(4)
+          read(line,*) keyword, cmt%ele
+       case('mrr:','Mrr:')
+          read(line,*) keyword, cmt%m(1)
+       case('mtt:','Mtt:')
+          read(line,*) keyword, cmt%m(2)
+       case('mpp:','Mpp:')
+          read(line,*) keyword, cmt%m(3)
+       case('mrt:','Mrt:')
+          read(line,*) keyword, cmt%m(6)
+       case('mrp:','Mrp:')
+          read(line,*) keyword, cmt%m(5)
+       case('mtp:','Mtp:')
+          read(line,*) keyword, cmt%m(4)
        end select
 
     enddo
@@ -522,7 +523,7 @@ contains
     character(len=*),                     intent(in) :: filename
     integer(kind=si),                     intent(in) :: nrec, nt
     integer(kind=si)                                 :: nsize, it
-    real(kind=cp), dimension(nrec,nt), intent(inout) :: data
+    real(kind=cp), dimension(nrec,nt), intent(in) :: data
 
     write(6,*)'Write binary data: '
     write(6,*)'    filename, nrec, nt = ',trim(adjustl(filename)),nrec,nt
@@ -577,8 +578,7 @@ contains
   !--------------------------------------------------------------------------------
 
   ! ================================================================================
-  ! Compute epicentral distance, baz and dit from stations/source informations
-  !                   for now, only a spherical Earth of radius = 6371 km
+  ! Compute offset and baz from stations/source informations
   subroutine calc_dist_baz_cart(src_x,src_y,sta_x,sta_y,dist,baz)
 
     real(kind=dp), intent(in)  :: src_x, src_y, sta_x, sta_y
