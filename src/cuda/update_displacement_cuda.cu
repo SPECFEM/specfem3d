@@ -312,9 +312,9 @@ __global__ void kernel_3_cuda_device(realw* veloc,
       b_accel[3*id+1] = ay;
       b_accel[3*id+2] = az;
 
-      b_veloc[3*id]   += deltatover2*ax;
-      b_veloc[3*id+1] += deltatover2*ay;
-      b_veloc[3*id+2] += deltatover2*az;
+      b_veloc[3*id]   += b_deltatover2*ax;
+      b_veloc[3*id+1] += b_deltatover2*ay;
+      b_veloc[3*id+2] += b_deltatover2*az;
 
     }
 

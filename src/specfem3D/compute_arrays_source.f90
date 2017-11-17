@@ -301,3 +301,120 @@ subroutine compute_arrays_adjoint_source_SU()
 
 end subroutine compute_arrays_adjoint_source_SU
 
+
+subroutine compute_arrays_source_forcesolution_fluid(ispec_selected_source,sourcearray, &
+                                   hxis,hetas,hgammas,hpxis,hpetas,hpgammas, &
+                                   factor_source, comp_x,comp_y,comp_z, nu_source, &
+                                   xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,nspec)
+  use constants
+
+  implicit none
+
+  integer :: ispec_selected_source,nspec
+
+  real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearray
+  double precision, dimension(NGLLX) :: hxis,hpxis
+  double precision, dimension(NGLLY) :: hetas,hpetas
+  double precision, dimension(NGLLZ) :: hgammas,hpgammas
+  double precision, dimension(NDIM,NDIM) :: nu_source
+  double precision :: comp_x,comp_y,comp_z
+  real(kind=CUSTOM_REAL) :: factor_source
+  
+  double precision :: FX, FY, FZ
+
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz
+
+  ! local parameters
+  double precision :: xixd,xiyd,xizd,etaxd,etayd,etazd,gammaxd,gammayd,gammazd
+
+  ! source arrays
+  double precision, dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearrayd
+
+  double precision :: hlagrange
+  double precision :: dsrc_dx, dsrc_dy, dsrc_dz
+  double precision :: dxis_dx, detas_dx, dgammas_dx
+  double precision :: dxis_dy, detas_dy, dgammas_dy
+  double precision :: dxis_dz, detas_dz, dgammas_dz
+
+  integer :: k,l,m
+
+  dxis_dx = ZERO
+  dxis_dy = ZERO
+  dxis_dz = ZERO
+  detas_dx = ZERO
+  detas_dy = ZERO
+  detas_dz = ZERO
+  dgammas_dx = ZERO
+  dgammas_dy = ZERO
+  dgammas_dz = ZERO
+
+  do m = 1,NGLLZ
+     do l = 1,NGLLY
+        do k = 1,NGLLX
+
+           xixd    = dble(xix(k,l,m,ispec_selected_source))
+           xiyd    = dble(xiy(k,l,m,ispec_selected_source))
+           xizd    = dble(xiz(k,l,m,ispec_selected_source))
+           etaxd   = dble(etax(k,l,m,ispec_selected_source))
+           etayd   = dble(etay(k,l,m,ispec_selected_source))
+           etazd   = dble(etaz(k,l,m,ispec_selected_source))
+           gammaxd = dble(gammax(k,l,m,ispec_selected_source))
+           gammayd = dble(gammay(k,l,m,ispec_selected_source))
+           gammazd = dble(gammaz(k,l,m,ispec_selected_source))
+
+           hlagrange = hxis(k) * hetas(l) * hgammas(m)
+
+           dxis_dx = dxis_dx + hlagrange * xixd
+           dxis_dy = dxis_dy + hlagrange * xiyd
+           dxis_dz = dxis_dz + hlagrange * xizd
+
+           detas_dx = detas_dx + hlagrange * etaxd
+           detas_dy = detas_dy + hlagrange * etayd
+           detas_dz = detas_dz + hlagrange * etazd
+
+           dgammas_dx = dgammas_dx + hlagrange * gammaxd
+           dgammas_dy = dgammas_dy + hlagrange * gammayd
+           dgammas_dz = dgammas_dz + hlagrange * gammazd
+
+       enddo
+     enddo
+  enddo
+
+  FX = factor_source *(nu_source(1,1)*comp_x + nu_source(1,2)*comp_y +  nu_source(1,3)*comp_z) 
+  FY = factor_source *(nu_source(2,1)*comp_x + nu_source(2,2)*comp_y +  nu_source(2,3)*comp_z) 
+  FZ = factor_source *(nu_source(3,1)*comp_x + nu_source(3,2)*comp_y +  nu_source(3,3)*comp_z) 
+
+! calculate source array
+  sourcearrayd(:,:,:,:) = ZERO
+  do m = 1,NGLLZ
+     do l = 1,NGLLY
+        do k = 1,NGLLX
+
+           dsrc_dx = (hpxis(k)*dxis_dx)*hetas(l)*hgammas(m) + hxis(k)*(hpetas(l)*detas_dx)*hgammas(m) + &
+                                                                hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dx)
+           dsrc_dy = (hpxis(k)*dxis_dy)*hetas(l)*hgammas(m) + hxis(k)*(hpetas(l)*detas_dy)*hgammas(m) + &
+                                                                hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dy)
+           dsrc_dz = (hpxis(k)*dxis_dz)*hetas(l)*hgammas(m) + hxis(k)*(hpetas(l)*detas_dz)*hgammas(m) + &
+                                                                hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dz)
+           !! for now fixed force direction and stf is defined after
+           sourcearrayd(:,k,l,m) = sourcearrayd(:,k,l,m) + (FX*dsrc_dx + FY*dsrc_dy + FZ*dsrc_dz)
+          
+           !! to do :
+           !!  this is for time changing force direction 
+           !! sourcearrayd(1,k,l,m) = sourcearrayd(1,k,l,m) +  dsrc_dx  * (stf_comp_x(t))  
+           !! sourcearrayd(2,k,l,m) = sourcearrayd(2,k,l,m) +  dsrc_dy  * (stf_comp_y(t)) 
+           !! sourcearrayd(3,k,l,m) = sourcearrayd(3,k,l,m) +  dsrc_dz  * (stf_comp_z(t))  
+           !!
+           !! after we need to add : sum(sourcearrayd(:,k,l,m)) to acoustic potential 
+           !! or sourcearrayd(1,k,l,m) * stf_comp_x(t) + 
+           !!    sourcearrayd(2,k,l,m) * stf_comp_y(t) + 
+           !!    sourcearrayd(3,k,l,m) * stf_comp_z(t) 
+           !!
+
+       enddo
+     enddo
+  enddo
+
+  ! distinguish between single and double precision for reals
+  sourcearray(:,:,:,:) = real(sourcearrayd(:,:,:,:), kind=CUSTOM_REAL)
+end subroutine compute_arrays_source_forcesolution_fluid

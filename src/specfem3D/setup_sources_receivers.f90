@@ -679,20 +679,30 @@
             comp_z = comp_dir_vect_source_Z_UP(isource)/norm
           endif
 
-          ! acoustic source
-          ! identical source array components in x,y,z-direction
-          if (ispec_is_acoustic(ispec)) then
-            comp_x = 1.0d0
-            comp_y = 1.0d0
-            comp_z = 1.0d0
-          endif
-
-          ! source array interpolated on all element GLL points
-          ! we use an tilted force defined by its magnitude and the projections
-          ! of an arbitrary (non-unitary) direction vector on the E/N/Z_UP basis
-          call compute_arrays_source_forcesolution(sourcearray,hxis,hetas,hgammas,factor_source, &
+         
+          if (ispec_is_acoustic(ispec) .and. DIPOLE_SOURCE_IN_FLUID) then
+             ! length of component vector
+             norm = dsqrt( comp_dir_vect_source_E(isource)**2 &
+                  + comp_dir_vect_source_N(isource)**2 &
+                  + comp_dir_vect_source_Z_UP(isource)**2 )
+             comp_x = comp_dir_vect_source_E(isource)/norm
+             comp_y = comp_dir_vect_source_N(isource)/norm
+             comp_z = comp_dir_vect_source_Z_UP(isource)/norm
+             write(*,*) " DIPOLE FLUID ", comp_x, comp_y, comp_z
+            call compute_arrays_source_forcesolution_fluid(ispec, sourcearray, hxis,hetas,hgammas,hpxis,hpetas,hpgammas, &
+                 factor_source,comp_x,comp_y,comp_z,nu_source(:,:,isource),xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,NSPEC_AB)
+          else
+           ! acoustic source
+           ! identical source array components in x,y,z-direction
+           ! source array interpolated on all element GLL points
+           ! we use an tilted force defined by its magnitude and the projections
+           ! of an arbitrary (non-unitary) direction vector on the E/N/Z_UP basis
+           comp_x = 1.0d0
+           comp_y = 1.0d0
+           comp_z = 1.0d0
+           call compute_arrays_source_forcesolution(sourcearray,hxis,hetas,hgammas,factor_source, &
                                                    comp_x,comp_y,comp_z,nu_source(:,:,isource))
-
+          end if
         else ! use of CMTSOLUTION files
 
           ! elastic or poroelastic moment tensor source

@@ -138,6 +138,9 @@ end module constants
   ! external source time function
   logical :: USE_EXTERNAL_SOURCE_FILE
 
+  ! dipole source in fluids 
+  logical :: DIPOLE_SOURCE_IN_FLUID
+
   logical :: USE_TRICK_FOR_BETTER_PRESSURE,USE_SOURCE_ENCODING,OUTPUT_ENERGY
   logical :: ANISOTROPIC_KL,SAVE_TRANSVERSE_KL,APPROXIMATE_HESS_KL,SAVE_MOHO_MESH
   logical :: ANISOTROPIC_VELOCITY_KL
