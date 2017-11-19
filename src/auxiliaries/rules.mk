@@ -91,6 +91,8 @@ xcombine_vol_data_vtk: $E/xcombine_vol_data_vtk
 combine_vol_data_vtk_bin: xcombine_vol_data_vtk_bin
 xcombine_vol_data_vtk_bin: $E/xcombine_vol_data_vtk_bin
 
+project_and_combine_vol_data_on_regular_grid: xproject_and_combine_vol_data_on_regular_grid
+xproject_and_combine_vol_data_on_regular_grid: $E/xproject_and_combine_vol_data_on_regular_grid
 
 create_movie_shakemap_AVS_DX_GMT: xcreate_movie_shakemap_AVS_DX_GMT
 xcreate_movie_shakemap_AVS_DX_GMT: $E/xcreate_movie_shakemap_AVS_DX_GMT
@@ -183,15 +185,6 @@ xcombine_vol_data_vtk_OBJECTS += \
 	$O/combine_vol_data_adios_stubs.aux_noadios.o
 endif
 
-$E/xcombine_vol_data_vtk: $(xcombine_vol_data_vtk_OBJECTS) $(xcombine_vol_data_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
-	@echo ""
-	@echo "building xcombine_vol_data_vtk"
-	@echo ""
-	${FCLINK} -o $@ $+ $(MPILIBS)
-	@echo ""
-
-
-
 ##
 ## xcombine_vol_data_vtk_bin
 ##
@@ -210,6 +203,51 @@ $E/xcombine_vol_data_vtk_bin: $(xcombine_vol_data_vtk_bin_OBJECTS) $(xcombine_vo
 	@echo ""
 	${FCLINK} -o $@ $+ $(MPILIBS)
 	@echo ""
+
+##
+## xproject_and_combine_vol_data_on_regular_grid
+##
+xproject_and_combine_vol_data_on_regular_grid_OBJECTS = \
+	$O/assemble_MPI_scalar.shared.o \
+	$O/check_mesh_resolution.shared.o \
+	$O/create_name_database.shared.o \
+	$O/define_derivation_matrices.shared.o \
+	$O/detect_surface.shared.o \
+	$O/exit_mpi.shared.o \
+	$O/force_ftz.cc.o \
+	$O/get_attenuation_model.shared.o \
+	$O/get_element_face.shared.o \
+	$O/get_jacobian_boundaries.shared.o \
+	$O/get_shape3D.shared.o \
+	$O/gll_library.shared.o \
+	$O/hex_nodes.shared.o \
+	$O/lagrange_poly.shared.o \
+	$O/netlib_specfun_erf.shared.o \
+	$O/prepare_assemble_MPI.shared.o \
+	$O/read_topo_bathy_file.shared.o \
+	$O/recompute_jacobian.shared.o \
+	$O/save_header_file.shared.o \
+	$O/sort_array_coordinates.shared.o \
+	$O/utm_geo.shared.o \
+	$O/write_VTK_data.shared.o \
+	$O/parallel_for_inverse_problem.o \
+	$O/project_and_combine_vol_data_on_regular_grid.aux.o \
+	$O/specfem3D_par.spec_module.o \
+	$O/inverse_problem_par.o \
+	$O/projection_on_FD_grid_mod.o \
+	$O/vtk_writer.aux.o \
+	$(EMPTY_MACRO)
+
+xproject_and_combine_vol_data_on_regular_grid_OBJECTS += \
+	$O/combine_vol_data_adios_stubs.aux_noadios.o
+
+$E/xproject_and_combine_vol_data_on_regular_grid: $(xproject_and_combine_vol_data_on_regular_grid_OBJECTS) $(xcombine_vol_data_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
+	@echo ""
+	@echo "building xproject_and_combine_vol_data_on_regular_grid"
+	@echo ""
+	${FCLINK} -o $@ $+ $(MPILIBS)
+	@echo ""
+
 
 #######################################
 
@@ -299,6 +337,16 @@ endif
 
 # xcombine_vol_data_vtk
 $O/combine_vol_data.aux_vtk.o: $O/combine_vol_data_impl.aux.o
+
+# xcombine_vol_data_vtk_bin
+$O/combine_vol_data_vtk_binary.aux.o:  $O/combine_vol_data_impl.aux.o
+
+# xproject_and_combine_vol_data_on_regular_grid
+$O/project_and_combine_vol_data_on_regular_grid.aux.o: \
+	$O/specfem3D_par.spec_module.o \
+	$O/inverse_problem_par.o \
+	$O/projection_on_FD_grid_mod.o
+
 
 ifeq ($(ADIOS),yes)
 $O/combine_vol_data.aux_vtk.o: $O/combine_vol_data_adios_impl.aux_adios.o

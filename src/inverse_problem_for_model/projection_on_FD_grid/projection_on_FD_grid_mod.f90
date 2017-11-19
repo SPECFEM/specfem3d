@@ -107,6 +107,16 @@ end subroutine Project_model_FD_grid2SEM
 !--------------------------------------------------------------------------------------------------------------------
 subroutine read_fd_grid_parameters_for_projection()
 
+  integer ier
+
+  ! read fd grid parameters !!
+  open(676,file='fd_proj_grid.txt',iostat=ier)
+
+  if (ier /= 0) then
+    print *,'Error opening file "fd_proj_grid.txt", that defines properties of the regular grid'
+    stop
+  endif
+
   ! read fd grid parameters !!
   open(676,file='fd_proj_grid.txt')
   read(676, *)  ox_fd_proj, oy_fd_proj, oz_fd_proj
