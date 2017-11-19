@@ -109,7 +109,6 @@ subroutine read_fd_grid_parameters_for_projection()
 
   integer ier
 
-  ! read fd grid parameters !!
   open(676,file='fd_proj_grid.txt',iostat=ier)
 
   if (ier /= 0) then
@@ -118,7 +117,6 @@ subroutine read_fd_grid_parameters_for_projection()
   endif
 
   ! read fd grid parameters !!
-  open(676,file='fd_proj_grid.txt')
   read(676, *)  ox_fd_proj, oy_fd_proj, oz_fd_proj
   read(676, *)  hx_fd_proj, hy_fd_proj, hz_fd_proj
   read(676, *)  nx_fd_proj, ny_fd_proj, nz_fd_proj
