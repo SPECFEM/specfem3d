@@ -185,6 +185,13 @@ xcombine_vol_data_vtk_OBJECTS += \
 	$O/combine_vol_data_adios_stubs.aux_noadios.o
 endif
 
+$E/xcombine_vol_data_vtk: $(xcombine_vol_data_vtk_OBJECTS) $(xcombine_vol_data_SHARED_OBJECTS) $(COND_MPI_OBJECTS)
+	@echo ""
+	@echo "building xcombine_vol_data_vtk"
+	@echo ""
+	${FCLINK} -o $@ $+ $(MPILIBS)
+	@echo ""
+
 ##
 ## xcombine_vol_data_vtk_bin
 ##
