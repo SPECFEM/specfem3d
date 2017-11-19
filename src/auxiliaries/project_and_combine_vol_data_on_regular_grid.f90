@@ -28,13 +28,13 @@
   program project_and_combine_vol_data_on_regular_grid
 
 ! combines the database files on several slices, project it on a regular grid
-! and saves it in a binary file that can be read with Paraview in RAW format 
+! and saves it in a binary file that can be read with Paraview in RAW format
 !
 ! works for external, unregular meshes
 
   use constants
   use shared_parameters
-  use specfem_par, only:  xigll, yigll, zigll, wxgll, wygll, wzgll
+  use specfem_par, only: xigll, yigll, zigll, wxgll, wygll, wzgll
 
   use projection_on_FD_grid
 
@@ -62,7 +62,7 @@
   call world_size(sizeprocs)
   call world_rank(myrank)
 
-  if (myrank==0) then
+  if (myrank == 0) then
     print *
     print *,'Projecting volumetric data on a regular grid'
     print *
@@ -114,11 +114,11 @@
   call compute_interpolation_coeff_FD_SEM(projection_fd, myrank)
   allocate(model_on_FD_grid(projection_fd%nx, projection_fd%ny, projection_fd%nz))
 
-  if (myrank==0) then
+  if (myrank == 0) then
     print *, 'Grid size is : ',projection_fd%nx, projection_fd%ny, projection_fd%nz
   endif
 
-  ! Get data to project 
+  ! Get data to project
   allocate(data_sp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) stop 'error allocating single precision data array'
    if (CUSTOM_REAL == SIZE_DOUBLE) then
@@ -155,7 +155,7 @@
   call Project_model_SEM2FD_grid(data_sp, model_on_FD_grid, projection_fd, myrank)
 
   ! Write output on a fortran binary file
-  if (myrank==0) then
+  if (myrank == 0) then
     open(unit = 28,file = trim(outdir)//trim(data_filename) // '_projected.bin',status='unknown', &
           action='write',form ='unformatted',iostat=ier)
     write(28) model_on_FD_grid
