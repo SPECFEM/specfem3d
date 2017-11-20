@@ -501,7 +501,7 @@
 !!
 !!  if .true. this will change the way taht force solution is set in fluid region 
 !!  triying to put a dipole in fluids.  
-!!  if .false. the behavoiur of code remain inchanged 
+!!  if .false. the behaviour of code remain inchanged 
 !!
 !!-----------
 
