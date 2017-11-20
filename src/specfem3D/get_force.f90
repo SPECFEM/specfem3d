@@ -29,7 +29,7 @@
                       comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP,user_source_time_function)
 
   use constants, only: IIN,IN_DATA_FILES,MAX_STRING_LEN,TINYVAL,CUSTOM_REAL
-  use shared_parameters, only: USE_EXTERNAL_SOURCE_FILE,NSTEP_STF,NSOURCES_STF,DIPOLE_SOURCE_IN_FLUID
+  use shared_parameters, only: USE_EXTERNAL_SOURCE_FILE,NSTEP_STF,NSOURCES_STF
 
   implicit none
 
@@ -132,10 +132,6 @@
     read(IIN,"(a)") string
     read(string(32:len_trim(string)),*) comp_dir_vect_source_Z_UP(isource)
     
-    ! VM VM new option for dipole in fluids  
-    read(IIN,"(a)") string
-    read(string(21:len_trim(string)),*) DIPOLE_SOURCE_IN_FLUID
-
     ! reads USER EXTERNAL SOURCE if needed
     if (USE_EXTERNAL_SOURCE_FILE) then
       ! gets external STF file name
