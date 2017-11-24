@@ -36,7 +36,7 @@ contains
 !> read input fd model
 !--------------------------------------------------------------------------------------------------------------------
   subroutine ReadInputFDmodel(inversion_param)
-    type(inver),                                                intent(in)    :: inversion_param
+    type(inver),                                                intent(inout) :: inversion_param
     character(len=MAX_STRING_LEN)                                             :: fd_grid_model
     if (ANISOTROPY) then
 
@@ -52,7 +52,7 @@ contains
 
        !! HRDCODED NAME FOR NOW
        fd_grid_model='fd_grid.txt'
-       call import_FD_model_ANISO(fd_grid_model)
+       call import_FD_model_ANISO(fd_grid_model, inversion_param)
 
     else
 
@@ -376,41 +376,48 @@ contains
           write(INVERSE_LOG_FILE, *)    '     Family Parameter :',  trim(inversion_param%param_family)
           write(INVERSE_LOG_FILE, *)
        endif
-       if (mygroup <= 0) then !! only the fisrt group write the  model and need to bcast at all other
-          path_file='OUTPUT_FILES/DATABASES_MPI/proc'
 
+       if (trim(inversion_param%type_aniso) == "VTI") then
+     
+          call write_vti_sem_model(ifrq)
+          
+       else
+          
+          if (mygroup <= 0) then !! only the fisrt group write the  model and need to bcast at all other
+             path_file='OUTPUT_FILES/DATABASES_MPI/proc'
+             write(name_file,'(i6.6,a1,i6.6,a21)') myrank,'_', ifrq , '_model_cij_output.bin'
+             path_file=(trim(path_file))//trim(name_file)
+             open(888,file=trim(path_file),form='unformatted')
+             !! 21 coefs elastic tensor
+             write(888)  c11store
+             write(888)  c12store
+             write(888)  c13store
+             write(888)  c14store
+             write(888)  c15store
+             write(888)  c16store
+             write(888)  c22store
+             write(888)  c23store
+             write(888)  c24store
+             write(888)  c25store
+             write(888)  c26store
+             write(888)  c33store
+             write(888)  c34store
+             write(888)  c35store
+             write(888)  c36store
+             write(888)  c44store
+             write(888)  c45store
+             write(888)  c46store
+             write(888)  c55store
+             write(888)  c56store
+             write(888)  c66store
+             !! add density
+             write(888)  rhostore
+             !! for stacey (those arrays are always defined in specfem)
+             write(888)  rho_vp
+             write(888)  rho_vs
+             close(888)
 
-          write(name_file,'(i6.6,a1,i6.6,a21)') myrank,'_', ifrq , '_model_cij_output.bin'
-          open(888,file=trim(path_file),form='unformatted')
-          !! 21 coefs elastic tensor
-          write(888)  c11store
-          write(888)  c12store
-          write(888)  c13store
-          write(888)  c14store
-          write(888)  c15store
-          write(888)  c16store
-          write(888)  c22store
-          write(888)  c23store
-          write(888)  c24store
-          write(888)  c25store
-          write(888)  c26store
-          write(888)  c33store
-          write(888)  c34store
-          write(888)  c35store
-          write(888)  c36store
-          write(888)  c44store
-          write(888)  c45store
-          write(888)  c46store
-          write(888)  c55store
-          write(888)  c56store
-          write(888)  c66store
-          !! add density
-          write(888)  rhostore
-          !! for stacey (those arrays are always defined in specfem)
-          write(888)  rho_vp
-          write(888)  rho_vs
-          close(888)
-
+          end if
        endif
 
     else
@@ -804,7 +811,7 @@ contains
 !--------------------------------------------------------------------------------------------------------------------
 !  ! inport model from FD grid  store in current anisotropic specfem model
 !--------------------------------------------------------------------------------------------------------------------
-  subroutine  import_FD_model_ANISO(fd_grid)
+  subroutine import_FD_model_ANISO(fd_grid, inversion_param)
 
     use constants, only: MAX_STRING_LEN
     use specfem_par, only: myrank, xstore, ystore, zstore, rhostore, ibool, &
@@ -813,7 +820,7 @@ contains
     use interpolation_mod, only: trilin_interp
 
     implicit none
-
+    type(inver),                           intent(inout)    :: inversion_param
     character(len=MAX_STRING_LEN),            intent(in)    :: fd_grid
     character(len=MAX_STRING_LEN)                           :: model_file, type_model
     real(kind=CUSTOM_REAL)                                  :: ox_fd, oy_fd, oz_fd
@@ -906,6 +913,14 @@ contains
     select case(trim(adjustl(type_model)))
 
     case('VTI') ! rho, vp, vs, epsillon, delta, gamma (oil-industry like)
+       inversion_param%type_aniso="VTI"
+       if (myrank==0) then 
+          write(INVERSE_LOG_FILE,*)
+          write(INVERSE_LOG_FILE,*) '          *********************************************'
+          write(INVERSE_LOG_FILE,*) '          ***         READING FD VTI MODEL          ***'
+          write(INVERSE_LOG_FILE,*) '          *********************************************'
+          write(INVERSE_LOG_FILE,*)
+       endif
 
        !! PROJECT FD MODEL IN SEM GRID
        do ispec=1,NSPEC_AB
@@ -933,7 +948,7 @@ contains
 
                    c11store(i,j,k,ispec) = (1._CUSTOM_REAL+2._CUSTOM_REAL*ep)* rho * vp * vp
                    c12store(i,j,k,ispec) = -2*(2*gm+1)*vs*vs*rho + (1._CUSTOM_REAL+2._CUSTOM_REAL*ep)* rho * vp * vp
-                   c13store(i,j,k,ispec) =  rho * ( sqrt((vp**2-vs**2)*((1+2*de)*vp**2-vs**2)) - vs**2)
+                   c13store(i,j,k,ispec) =  rho * (sqrt( (vp**2-vs**2)*((1+2*de)*vp**2-vs**2)) - vs**2)
                    c14store(i,j,k,ispec) =  0._CUSTOM_REAL
                    c15store(i,j,k,ispec) =  0._CUSTOM_REAL
                    c16store(i,j,k,ispec) =  0._CUSTOM_REAL
@@ -1227,5 +1242,94 @@ contains
     CIJ(:,:)=C2(:,:)
 
   end subroutine RotateTransIso
+
+
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!--------------------------------------------------------------------------------------------------------------------
+! write sem model decomposed in NROC files for VTI  (Thomsen's parameters)
+!--------------------------------------------------------------------------------------------------------------------
+
+  subroutine write_vti_sem_model(ifrq)
+    integer                                                                   :: ifrq
+    character(len=256)                                                        :: path_file,name_file
+    real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable                   :: wks_model_rh, wks_model_vp, wks_model_vs
+    real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable                   :: wks_model_ep, wks_model_de, wks_model_ga
+
+    
+    allocate(wks_model_rh(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ierror)
+    if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_model_rh in ReadInputSEMmodel subroutine, IO_model_mod")
+
+    allocate(wks_model_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ierror)
+    if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_model_vp in ReadInputSEMmodel subroutine, IO_model_mod")
+
+    allocate(wks_model_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ierror)
+    if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_model_vs in ReadInputSEMmodel subroutine, IO_model_mod")
+
+    allocate(wks_model_ep(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ierror)
+    if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_model_ep in ReadInputSEMmodel subroutine, IO_model_mod")
+
+    allocate(wks_model_de(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ierror)
+    if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_model_ge in ReadInputSEMmodel subroutine, IO_model_mod")
+
+    allocate(wks_model_ga(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ierror)
+    if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_model_da in ReadInputSEMmodel subroutine, IO_model_mod")
+
+    wks_model_rh(:,:,:,:) = rhostore(:,:,:,:)
+    wks_model_vp(:,:,:,:) = sqrt( c33store(:,:,:,:) / rhostore(:,:,:,:))
+    wks_model_vs(:,:,:,:) = sqrt( c44store(:,:,:,:) / rhostore(:,:,:,:))
+    wks_model_ep(:,:,:,:) = (c11store(:,:,:,:) - c33store(:,:,:,:)) / 2*c33store(:,:,:,:)
+    wks_model_ga(:,:,:,:) = (c66store(:,:,:,:) - c44store(:,:,:,:)) / 2*c66store(:,:,:,:)
+    wks_model_de(:,:,:,:) = 0.5 * ( (c13store(:,:,:,:) + c44store(:,:,:,:) )**2 - (c33store(:,:,:,:) - c44store(:,:,:,:))**2 )&
+         / (c33store(:,:,:,:)*(c33store(:,:,:,:) - c44store(:,:,:,:))) 
+
+    !! write output  model
+    path_file='OUTPUT_FILES/DATABASES_MPI/proc'
+    write(name_file,'(i6.6,a1,i6.6,a20)') myrank,'_', ifrq , '_model_vp_output.bin'
+    path_file=(trim(path_file))//trim(name_file)
+    open(888,file=trim(path_file),form='unformatted')
+    write(888) wks_model_vp
+    close(888)
+    
+    path_file='OUTPUT_FILES/DATABASES_MPI/proc'
+    write(name_file,'(i6.6,a1,i6.6,a20)') myrank,'_', ifrq , '_model_vs_output.bin'
+    path_file=(trim(path_file))//trim(name_file)
+    open(888,file=trim(path_file),form='unformatted')
+    write(888) wks_model_vs
+    close(888)
+    
+    path_file='OUTPUT_FILES/DATABASES_MPI/proc'
+    write(name_file,'(i6.6,a1,i6.6,a20)') myrank,'_', ifrq , '_model_rh_output.bin'
+    path_file=(trim(path_file))//trim(name_file)
+    open(888,file=trim(path_file),form='unformatted')
+    write(888) wks_model_rh
+    close(888)
+    
+
+    !! write output  model
+    path_file='OUTPUT_FILES/DATABASES_MPI/proc'
+    write(name_file,'(i6.6,a1,i6.6,a20)') myrank,'_', ifrq , '_model_ep_output.bin'
+    path_file=(trim(path_file))//trim(name_file)
+    open(888,file=trim(path_file),form='unformatted')
+    write(888) wks_model_ep
+    close(888)
+    
+    path_file='OUTPUT_FILES/DATABASES_MPI/proc'
+    write(name_file,'(i6.6,a1,i6.6,a20)') myrank,'_', ifrq , '_model_ga_output.bin'
+    path_file=(trim(path_file))//trim(name_file)
+    open(888,file=trim(path_file),form='unformatted')
+    write(888) wks_model_ga
+    close(888)
+    
+    path_file='OUTPUT_FILES/DATABASES_MPI/proc'
+    write(name_file,'(i6.6,a1,i6.6,a20)') myrank,'_', ifrq , '_model_de_output.bin'
+    path_file=(trim(path_file))//trim(name_file)
+    open(888,file=trim(path_file),form='unformatted')
+    write(888) wks_model_de
+    close(888)
+
+    deallocate(wks_model_rh, wks_model_vp, wks_model_vs,wks_model_ep, wks_model_de, wks_model_ga)
+
+
+  end subroutine write_vti_sem_model
 
 end module IO_model

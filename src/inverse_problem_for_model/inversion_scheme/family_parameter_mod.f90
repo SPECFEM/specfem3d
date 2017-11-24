@@ -68,8 +68,10 @@ contains
     case('rho_vp', 'vp_vs','rho_kappa')
 
        inversion_param%NinvPar=2
+     
     case('rho_vp_vs','rho_kappa_mu')
         inversion_param%NinvPar=3
+       
         if (ACOUSTIC_SIMULATION .and. .not. ELASTIC_SIMULATION)  inversion_param%NinvPar=2
 
     case default
@@ -83,6 +85,9 @@ contains
 
     end select
 
+    allocate(Index_Invert(inversion_param%NinvPar))
+    call set_index_invert(inversion_param)
+    
 
 !!$    if (ANISOTROPIC_KL) then
 !!$       !! TODO
@@ -141,6 +146,7 @@ contains
 
   subroutine InvertParam2Specfem(inversion_param, model)
     use input_output
+    use vit_parameters_mod
 
     type(inver),                                                  intent(in)      :: inversion_param
     real(kind=CUSTOM_REAL),   dimension(:,:,:,:,:), allocatable,  intent(in)      :: model
@@ -153,12 +159,19 @@ contains
 
           if (ANISOTROPIC_KL) then
 
-             write(*,*) ' IF YOU NEED family FROM 21 ELASTIC COEFFICIENTS &
-                  &FEEL FREE TO DO IT ..... cijkl_kl are already computed by specfem &
-                  &you just need to get parameters from array model.... in &
-                  &code  : family_parameter_module.f90 subroutine InvertParam2Specfem'
-             stop
 
+             if (trim(inversion_param%type_aniso) == "VTI") then 
+
+                
+                call translate_from_vti_2_cijkl(inversion_param, ispec, model)
+
+             else
+                write(*,*) ' IF YOU NEED family FROM 21 ELASTIC COEFFICIENTS &
+                     &FEEL FREE TO DO IT ..... cijkl_kl are already computed by specfem &
+                     &you just need to get parameters from array model.... in &
+                     &code  : family_parameter_module.f90 subroutine InvertParam2Specfem'
+                stop
+             end if
              !! IF YOU NEED family FROM 21 ELASTIC COEFFICIENTS
              !! FEEL FREE TO DO IT ..... cijkl_kl are already computed by specfem
              !! you just need to store it in array gradient ....
@@ -264,11 +277,17 @@ contains
 
           if (ANISOTROPIC_KL) then
 
-             write(*,*) ' IF YOU NEED family FROM 21 ELASTIC COEFFICIENTS &
-                  &FEEL FREE TO DO IT ..... cijkl_kl are already computed by specfem &
-                  &you just need to store it in array model .... in &
-                  &code  : family_parameter_module.f90 subroutine SpecfemParam2Invert'
-             stop
+             if (trim(inversion_param%type_aniso) == "VTI") then 
+
+                call translate_from_cijkl_2_vit(inversion_param, ispec, model)
+
+             else
+                write(*,*) ' IF YOU NEED family FROM 21 ELASTIC COEFFICIENTS &
+                     &FEEL FREE TO DO IT ..... cijkl_kl are already computed by specfem &
+                     &you just need to store it in array model .... in &
+                     &code  : family_parameter_module.f90 subroutine SpecfemParam2Invert'
+                stop
+             end if
 
              !! IF YOU NEED family FROM 21 ELASTIC COEFFICIENTS
              !! FEEL FREE TO DO IT ..... cijkl_kl are already computed by specfem
@@ -358,6 +377,7 @@ contains
   subroutine SpecfemPrior2Invert(inversion_param, model)
     type(inver),                                                  intent(inout)   :: inversion_param
     real(kind=CUSTOM_REAL),   dimension(:,:,:,:,:), allocatable,  intent(inout)   :: model
+    integer                                                                       :: ipar
 
     do ispec = 1, NSPEC_AB  !!
        ! elastic simulations
@@ -366,11 +386,19 @@ contains
 
           if (ANISOTROPIC_KL) then
 
-             write(*,*) ' IF YOU NEED family FROM 21 ELASTIC COEFFICIENTS &
-                  &FEEL FREE TO DO IT ..... cijkl_kl are already computed by specfem &
-                  &you just need to store it in array model .... in &
-                  &code  : family_parameter_module.f90 subroutine SpecfemParam2Invert'
-             stop
+            
+             if (trim(inversion_param%type_aniso) == "VTI") then
+                do ipar =1 ,  inversion_param%NinvPar
+                   model(:,:,:,ispec, ipar) =  inversion_param%prior_model(:,:,:,ispec, inversion_param%Index_Invert(ipar))
+                end do
+                
+             else
+                write(*,*) ' IF YOU NEED family FROM 21 ELASTIC COEFFICIENTS &
+                     &FEEL FREE TO DO IT ..... cijkl_kl are already computed by specfem &
+                     &you just need to store it in array model .... in &
+                     &code  : family_parameter_module.f90 subroutine SpecfemParam2Invert'
+                stop
+             end if
 
              !! IF YOU NEED family FROM 21 ELASTIC COEFFICIENTS
              !! FEEL FREE TO DO IT ..... cijkl_kl are already computed by specfem
@@ -468,22 +496,14 @@ contains
     do ispec = 1, NSPEC_AB  !!
        ! elastic simulations
        if (ispec_is_elastic(ispec)) then  !! we need to process element by element because we need to do this test
-          !! because we can use both elastic or acoustic elements (also poroelastic)
-          !! get kernel in element ispec
-          rho_kl(:,:,:,ispec) = - rho_kl(:,:,:,ispec) * &
-               rho_vs(:,:,:,ispec) * rho_vs(:,:,:,ispec) /  mustore(:,:,:,ispec)
-
-          !! store preconditionner kernels
-          if (inversion_param%shin_precond) then
-             hess_rho_kl(:,:,:,ispec) = - hess_rho_kl(:,:,:,ispec) * &
-                  rho_vs(:,:,:,ispec) * rho_vs(:,:,:,ispec) /  mustore(:,:,:,ispec)
-          else if (inversion_param%energy_precond) then
-             !! energy precond : same for all family
-             hess_approxim(:,:,:,ispec,1)= hess_rho_kl(:,:,:,ispec)
-          endif
+          
 
           if (ANISOTROPIC_KL) then
 
+             if (trim(inversion_param%type_aniso) == "VTI") then
+                 call translate_cijkl_gradient_2_vti(inversion_param ,ispec, gradient)
+             end if
+             
              write(*,*) ' IF YOU NEED family FROM 21 ELASTIC COEFFICIENTS &
                   &FEEL FREE TO DO IT ..... cijkl_kl are already computed by specfem &
                   &you just need to store it in array gradient .... in &
@@ -495,7 +515,25 @@ contains
              !! you just need to store it in array gradient ....
 
           else
+             
+             
+
+             !! store preconditionner kernels
+             if (inversion_param%shin_precond) then
+                hess_rho_kl(:,:,:,ispec) = - hess_rho_kl(:,:,:,ispec) * &
+                     rho_vs(:,:,:,ispec) * rho_vs(:,:,:,ispec) /  mustore(:,:,:,ispec)
+             else if (inversion_param%energy_precond) then
+                !! energy precond : same for all family
+                hess_approxim(:,:,:,ispec,1)= hess_rho_kl(:,:,:,ispec)
+             endif
+
+             !! because we can use both elastic or acoustic elements (also poroelastic)
+             !! get kernel in element ispec
+             rho_kl(:,:,:,ispec) = - rho_kl(:,:,:,ispec) * &
+                  rho_vs(:,:,:,ispec) * rho_vs(:,:,:,ispec) /  mustore(:,:,:,ispec)
+
              mu_kl(:,:,:,ispec)  =  - 2._CUSTOM_REAL *  mustore(:,:,:,ispec) * mu_kl(:,:,:,ispec)
+
              kappa_kl(:,:,:,ispec) = - kappastore(:,:,:,ispec) * kappa_kl(:,:,:,ispec)
 
              if (inversion_param%shin_precond) then
@@ -742,5 +780,45 @@ contains
 
   end subroutine mpi_sum_grad_all_to_all_simultaneous_runs
 
+!!=========================================================================================================================
+
+  subroutine set_index_invert(inversion_param)
+    type(inver),                                                  intent(inout)      :: inversion_param
+    
+    select case (inversion_param%type_aniso)
+
+    case('VTI')
+       call selector_vti_family(inversion_param)
+    case('none')
+       !call selector_iso_family(inversion_param)
+    case default
+      
+    end select
+
+  end subroutine set_index_invert
+
+!!==========================================================================================================================
+
+  subroutine selector_vti_family(inversion_param)
+    type(inver),                                                  intent(inout)      :: inversion_param
+    
+    select case (trim(inversion_param%param_family))
+    case('vp')
+        inversion_param%Index_Invert(1)=2
+    case('rho_vp')
+       inversion_param%Index_Invert(1)=1
+       inversion_param%Index_Invert(2)=2
+    case('vp_vs')
+       inversion_param%Index_Invert(1)=2
+       inversion_param%Index_Invert(2)=3
+    case('rho_vp_vs')
+        inversion_param%Index_Invert(1)=1
+        inversion_param%Index_Invert(2)=2
+        inversion_param%Index_Invert(3)=3
+    case default
+    end select
+  end subroutine selector_vti_family
+  
+!!==========================================================================================================================
 
 end module family_parameter

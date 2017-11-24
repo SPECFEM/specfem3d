@@ -200,6 +200,8 @@ module inverse_problem_par
      logical                                                                  :: get_synthetic_velocity=.true.
      logical                                                                  :: get_synthetic_acceleration=.true.
 
+     character(len=MAX_LEN_STRING)                                            :: type_aniso="none"
+
   end type inver !------------------------------------------------------------------------------------------------------------------
 
   ! ACQUISITION STRUCTURE  ---------------------------------------------------------------------------------------------------------
