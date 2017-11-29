@@ -44,6 +44,7 @@ contains
     SIMULATION_TYPE=1
     SAVE_FORWARD=.true.
     COMPUTE_AND_STORE_STRAIN = .false.
+    SAVE_MESH_FILES=.false.
 
     !! forward solver ------------------------------------------------------------------------------------------------
     call InitSpecfemForOneRun(acqui_simu, ievent, inversion_param, iter_inverse)

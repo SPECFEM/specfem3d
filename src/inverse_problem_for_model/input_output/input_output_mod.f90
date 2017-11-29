@@ -81,6 +81,7 @@ contains
     real(kind=CUSTOM_REAL)                                         :: elemsize_min_glob,elemsize_max_glob
     real(kind=CUSTOM_REAL)                                         :: distance_min_glob,distance_max_glob
 
+    
     if (myrank == 0) then
        write(INVERSE_LOG_FILE,*)
        write(INVERSE_LOG_FILE,*) '          *********************************************'
@@ -123,7 +124,7 @@ contains
 
     end select
     !! -------------------------------------------------------------------------------
-
+    
     if (myrank == 0) call flush_iunit(INVERSE_LOG_FILE)
 
 !    call bcast_all_acqui(acqui_simu,  inversion_param, myrank)
@@ -143,7 +144,7 @@ contains
        end select
 
     endif
-
+   
     !! create name for outputs
     do ievent=1,acqui_simu(1)%nevent_tot
        call create_name_database_inversion(acqui_simu(ievent)%prname_inversion, myrank, ievent, LOCAL_PATH)
@@ -681,7 +682,10 @@ contains
 
     nb_traces_tot=0.
 
-    if (myrank == 0) write(INVERSE_LOG_FILE,'(/a17)') '... reading data '
+    if (myrank == 0) then 
+       write(INVERSE_LOG_FILE,*)
+       write(INVERSE_LOG_FILE,*) '     READING data'
+    end if
 
     do ievent = 1, acqui_simu(1)%nevent_tot
 
@@ -748,7 +752,7 @@ contains
                       Gather_loc(irec_local, :, :) = Gather(irec, :, :) !! store data to send
                    endif
                 enddo
-                  if (DEBUG_MODE) write(IIDD,*) 'myrank ', myrank , 'send to ', irank, ' :' , nsta_irank, Nt
+                if (DEBUG_MODE) write(IIDD,*) 'myrank ', myrank , 'send to ', irank, ' :' , nsta_irank, Nt
                 tag    = 2001
                 call MPI_SEND(Gather_loc, Nt*nsta_irank*NDIM, CUSTOM_MPI_TYPE, irank, tag, my_local_mpi_comm_world, ier)
 
@@ -809,7 +813,7 @@ contains
     dummy_real=nb_traces_tot
     call sum_all_all_cr_for_simulatenous_runs(dummy_real,nb_traces_tot,1)
 
-    if (myrank == 0) write(INVERSE_LOG_FILE,'(a25//)') '... reading data : passed'
+    if (myrank == 0) write(INVERSE_LOG_FILE,*) '     READING data passed '
 
   end subroutine read_data_gather
 
@@ -1307,8 +1311,7 @@ contains
       enddo
 99    close(666)
 
-      write(INVERSE_LOG_FILE,*) '       ALLOCATE  acquisition structure for ', NEVENT, ' events '
-      write(INVERSE_LOG_FILE,*)
+      write(INVERSE_LOG_FILE,*) '     ALLOCATE  acquisition structure for ', NEVENT, ' events '
 
       !! 2/ allocate and store type(acqui) acqui_simu
       if (NEVENT > 0) then
@@ -1412,9 +1415,7 @@ contains
 
     if (myrank == 0) then
       write(INVERSE_LOG_FILE,*)
-      write(INVERSE_LOG_FILE,*)
       write(INVERSE_LOG_FILE,*) '     READING acquisition passed '
-      write(INVERSE_LOG_FILE,*)
     endif
 
     ! master broadcasts read values
@@ -1460,157 +1461,161 @@ contains
     ! only master reads inver_file
     if (myrank == 0) then
 
-      open(666, file=trim(inver_file))
-      do
-        read(666,'(a)',end=99) line
-        if (is_blank_line(line)) cycle
+       open(666, file=trim(inver_file))
+       do
+          read(666,'(a)',end=99) line
+          if (is_blank_line(line)) cycle
+          
+          !! INDICES TO READ line -----------------------------------------------
+          ipos0=index(line,':')+1
+          ipos1=index(line,'#')-1
+          if (ipos1 < 0 ) ipos1=len_trim(line)
+          
+          !! STORE KEYWORD ITEM -------------------------------------------------
+          keyw=trim(adjustl(line(1:ipos0-2)))
 
-        !! INDICES TO READ line -----------------------------------------------
-        ipos0=index(line,':')+1
-        ipos1=index(line,'#')-1
-        if (ipos1 < 0 ) ipos1=len_trim(line)
+          !! DIFFERENT ITEM TO READ ---------------------------------------------
+          select case (trim(keyw))
 
-        !! STORE KEYWORD ITEM -------------------------------------------------
-        keyw=trim(adjustl(line(1:ipos0-2)))
+          case ('Niter')
+             read(line(ipos0:ipos1),*)  inversion_param%Niter
+             
+          case('Niter_wolfe')
+             read(line(ipos0:ipos1),*)  inversion_param%Niter_wolfe
+             
+          case('max_history_bfgs')
+             read(line(ipos0:ipos1),*)  inversion_param%max_history_bfgs
 
-        !! DIFFERENT ITEM TO READ ---------------------------------------------
-        select case (trim(keyw))
+          case('max_relative_pert')
+             read(line(ipos0:ipos1),*)  inversion_param%max_relative_pert
 
-        case ('Niter')
-           read(line(ipos0:ipos1),*)  inversion_param%Niter
+          case('param_family')
+             read(line(ipos0:ipos1),*) inversion_param%parameter_family_name
 
-        case('Niter_wolfe')
-           read(line(ipos0:ipos1),*)  inversion_param%Niter_wolfe
+          case('nb_inver')
+             read(line(ipos0:ipos1),*) inversion_param%NinvPar
+           
+          case('param_to_inv')
+             read(line(ipos0:ipos1),*) inversion_param%param_inv_name(1: inversion_param%NinvPar)
+          
+          case('use_frequency_band_pass_filter')
+             inversion_param%use_band_pass_filter=.true.
+             read(line(ipos0:ipos1),*) inversion_param%Nifrq
+             allocate(fl(inversion_param%Nifrq))
+             allocate(fh(inversion_param%Nifrq))
 
-        case('max_history_bfgs')
-           read(line(ipos0:ipos1),*)  inversion_param%max_history_bfgs
+          case('fl')
+             read(line(ipos0:ipos1),*) fl(:)
 
-        case('max_relative_pert')
-           read(line(ipos0:ipos1),*)  inversion_param%max_relative_pert
+          case('fh')
+             read(line(ipos0:ipos1),*) fh(:)
 
-        case('param_family')
-           read(line(ipos0:ipos1),*) inversion_param%param_family
+          case('input_sem_model')
+             read(line(ipos0:ipos1),*)  inversion_param%input_sem_model
 
-        case('use_frequency_band_pass_filter')
-           inversion_param%use_band_pass_filter=.true.
-           read(line(ipos0:ipos1),*) inversion_param%Nifrq
-           allocate(fl(inversion_param%Nifrq))
-           allocate(fh(inversion_param%Nifrq))
+          case('input_sem_prior')
+             read(line(ipos0:ipos1),*)  inversion_param%input_sem_prior
 
-        case('fl')
-           read(line(ipos0:ipos1),*) fl(:)
+          case('output_model')
+             read(line(ipos0:ipos1),*)  inversion_param%output_model
 
-        case('fh')
-           read(line(ipos0:ipos1),*) fh(:)
+          case('input_fd_model')
+             read(line(ipos0:ipos1),*)  inversion_param%input_fd_model
 
-        case('input_sem_model')
-           read(line(ipos0:ipos1),*)  inversion_param%input_sem_model
+          case ('taper')
+             inversion_param%use_taper=.true.
+             read(line(ipos0:ipos1),*) inversion_param%xmin_taper, inversion_param%xmax_taper, &
+                  inversion_param%ymin_taper, inversion_param%ymax_taper, &
+                  inversion_param%zmin_taper, inversion_param%zmax_taper
 
-       case('input_sem_prior')
-          read(line(ipos0:ipos1),*)  inversion_param%input_sem_prior
+          case('shin_precond')
+             read(line(ipos0:ipos1),*) inversion_param%shin_precond
 
-        case('output_model')
-           read(line(ipos0:ipos1),*)  inversion_param%output_model
+          case('energy_precond')
+             read(line(ipos0:ipos1),*) inversion_param%energy_precond
 
-        case('input_fd_model')
-           read(line(ipos0:ipos1),*)  inversion_param%input_fd_model
+          case('z2_precond')
+             read(line(ipos0:ipos1),*) inversion_param%z2_precond
 
-        case ('taper')
-           inversion_param%use_taper=.true.
-           read(line(ipos0:ipos1),*) inversion_param%xmin_taper, inversion_param%xmax_taper, &
-                inversion_param%ymin_taper, inversion_param%ymax_taper, &
-                inversion_param%zmin_taper, inversion_param%zmax_taper
+          case('z_precond')
+             read(line(ipos0:ipos1),*) inversion_param%aPrc, &
+                  inversion_param%zPrc1, &
+                  inversion_param%zPrc2
+             
+             inversion_param%z_precond=.true.
 
-        case('shin_precond')
-           read(line(ipos0:ipos1),*) inversion_param%shin_precond
+             
+          case('relat_grad')
+             read(line(ipos0:ipos1),*) inversion_param%relat_grad
 
-        case('energy_precond')
-           read(line(ipos0:ipos1),*) inversion_param%energy_precond
+          case('relat_cost')
+             read(line(ipos0:ipos1),*) inversion_param%relat_cost
 
-        case('z2_precond')
-           read(line(ipos0:ipos1),*) inversion_param%z2_precond
+          case('dump_model_at_each_iteration')
+             read(line(ipos0:ipos1),*) inversion_param%dump_model_at_each_iteration
 
-       case('z_precond')
-          read(line(ipos0:ipos1),*) inversion_param%aPrc, &
-                                    inversion_param%zPrc1, &
-                                    inversion_param%zPrc2
+          case('dump_gradient_at_each_iteration')
+             read(line(ipos0:ipos1),*) inversion_param%dump_gradient_at_each_iteration
 
-          inversion_param%z_precond=.true.
+          case('dump_descent_direction_at_each_iteration')
+             read(line(ipos0:ipos1),*) inversion_param%dump_descent_direction_at_each_iteration
 
+          case('use_tk_fd_regularization')
+             read(line(ipos0:ipos1),*) inversion_param%weight_Tikonov
+             inversion_param%use_regularization_FD_Tikonov=.true.
 
-       case('relat_grad')
-          read(line(ipos0:ipos1),*) inversion_param%relat_grad
+          case('use_tk_sem_regularization')
+             allocate(inversion_param%smooth_weight(inversion_param%NinvPar))
+             read(line(ipos0:ipos1),*) inversion_param%smooth_weight(1), &
+                  inversion_param%smooth_weight(2), &
+                  inversion_param%smooth_weight(3)
+             inversion_param%use_regularization_SEM_Tikonov=.true.
 
-       case('relat_cost')
-          read(line(ipos0:ipos1),*) inversion_param%relat_cost
+          case('use_tk_sem_damping')
+             allocate(inversion_param%damp_weight(inversion_param%NinvPar))
+             read(line(ipos0:ipos1),*) inversion_param%damp_weight(1:inversion_param%NinvPar)
+             inversion_param%use_damping_SEM_Tikonov=.true.
+             !! we have read standard deviation for model
+             !! then need to change
+             inversion_param%damp_weight(:) = 1. / inversion_param%damp_weight(:)**2
 
-       case('dump_model_at_each_iteration')
-          read(line(ipos0:ipos1),*) inversion_param%dump_model_at_each_iteration
+          case('use_tk_sem_vairiable_damping')
+             read(line(ipos0:ipos1),*) inversion_param%min_damp,inversion_param%max_damp, inversion_param%distance_from_source
+             inversion_param%use_variable_SEM_damping=.true.
 
-       case('dump_gradient_at_each_iteration')
-          read(line(ipos0:ipos1),*) inversion_param%dump_gradient_at_each_iteration
+          case('prior_data_std')
+             read(line(ipos0:ipos1),*) inversion_param%prior_data_std
 
-       case('dump_descent_direction_at_each_iteration')
-          read(line(ipos0:ipos1),*) inversion_param%dump_descent_direction_at_each_iteration
+          case('data_to_invert_type')
+             read(line(ipos0:ipos1),*) inversion_param%inverted_data_type
 
-       case('use_tk_fd_regularization')
-          read(line(ipos0:ipos1),*) inversion_param%weight_Tikonov
-          inversion_param%use_regularization_FD_Tikonov=.true.
+          case('data_to_invert_system')
+             read(line(ipos0:ipos1),*) inversion_param%inverted_data_sys
 
-       case('use_tk_sem_regularization')
-          allocate(inversion_param%smooth_weight(inversion_param%NinvPar))
-          read(line(ipos0:ipos1),*) inversion_param%smooth_weight(1), &
-                                    inversion_param%smooth_weight(2), &
-                                    inversion_param%smooth_weight(3)
-          inversion_param%use_regularization_SEM_Tikonov=.true.
+          case('data_to_invert_is_component')
+             read(line(ipos0:ipos1),*) inversion_param%inverted_data_comp
 
-       case('use_tk_sem_damping')
-          allocate(inversion_param%damp_weight(inversion_param%NinvPar))
-          read(line(ipos0:ipos1),*) inversion_param%damp_weight(1), &
-                                    inversion_param%damp_weight(2), &
-                                    inversion_param%damp_weight(3)
-          inversion_param%use_damping_SEM_Tikonov=.true.
-          !! we have read standard deviation for model
-          !! then need to change
-          inversion_param%damp_weight(:) = 1. / inversion_param%damp_weight(:)**2
+          case('apply_src_weighting_to_gradient')
+             read(line(ipos0:ipos1),*) inversion_param%is_src_weigh_gradient
 
-       case('use_tk_sem_vairiable_damping')
-          read(line(ipos0:ipos1),*) inversion_param%min_damp,inversion_param%max_damp, inversion_param%distance_from_source
-          inversion_param%use_variable_SEM_damping=.true.
+          case('convolve_synth_with_wavelet')
+             read(line(ipos0:ipos1),*) inversion_param%convolution_by_wavelet
 
-       case('prior_data_std')
-          read(line(ipos0:ipos1),*) inversion_param%prior_data_std
+          case default
+             write(*,*) 'ERROR KEY WORD NOT MATCH : ', trim(keyw), ' in file ', trim(inver_file)
+             exit
+             
+          end select
+          
+       enddo
 
-       case('data_to_invert_type')
-          read(line(ipos0:ipos1),*) inversion_param%inverted_data_type
+99     close(666)
 
-       case('data_to_invert_system')
-          read(line(ipos0:ipos1),*) inversion_param%inverted_data_sys
-
-       case('data_to_invert_is_component')
-          read(line(ipos0:ipos1),*) inversion_param%inverted_data_comp
-
-       case('apply_src_weighting_to_gradient')
-          read(line(ipos0:ipos1),*) inversion_param%is_src_weigh_gradient
-
-       case('convolve_synth_with_wavelet')
-          read(line(ipos0:ipos1),*) inversion_param%convolution_by_wavelet
-
-       case default
-          write(*,*) 'ERROR KEY WORD NOT MATCH : ', trim(keyw), ' in file ', trim(inver_file)
-          exit
-
-       end select
-
-    enddo
-
-99  close(666)
-
-   write(INVERSE_LOG_FILE,*)
-   write(INVERSE_LOG_FILE,*) '     READ  ', trim(inver_file)
-   write(INVERSE_LOG_FILE,*) '     Nb tot events ', acqui_simu(1)%nevent_tot
-   write(INVERSE_LOG_FILE,*)
-endif
+       write(INVERSE_LOG_FILE,*)
+       write(INVERSE_LOG_FILE,*) '     READ  ', trim(inver_file)
+       write(INVERSE_LOG_FILE,*) '     Nb tot events ', acqui_simu(1)%nevent_tot
+       write(INVERSE_LOG_FILE,*)
+    endif
 
    if (VERBOSE_MODE .or. DEBUG_MODE) then
      inversion_param%dump_model_at_each_iteration=.true.
@@ -1658,17 +1663,19 @@ endif
    call MPI_BCAST(inversion_param%min_damp,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%max_damp,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%distance_from_source,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+   call MPI_BCAST(inversion_param%NinvPar,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
    if (myrank > 0 .and. inversion_param%use_regularization_SEM_Tikonov ) then
-      allocate(inversion_param%smooth_weight(inversion_param%NinvPar))
-    endif
-    if (inversion_param%use_regularization_SEM_Tikonov) &
-     call MPI_BCAST(inversion_param%smooth_weight(1),inversion_param%NinvPar,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
-    if (myrank > 0 .and. inversion_param%use_damping_SEM_Tikonov ) then
-       allocate(inversion_param%damp_weight(inversion_param%NinvPar))
-    endif
-    if (inversion_param%use_damping_SEM_Tikonov) &
+    allocate(inversion_param%smooth_weight(inversion_param%NinvPar))
+   endif
+   if (inversion_param%use_regularization_SEM_Tikonov) &
+    call MPI_BCAST(inversion_param%smooth_weight(1),inversion_param%NinvPar,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+   if (myrank > 0 .and. inversion_param%use_damping_SEM_Tikonov ) then
+    allocate(inversion_param%damp_weight(inversion_param%NinvPar))
+   endif
+   if (inversion_param%use_damping_SEM_Tikonov) &
    call MPI_BCAST(inversion_param%damp_weight(1),inversion_param%NinvPar,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
-   call MPI_BCAST(inversion_param%param_family,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+   call MPI_BCAST(inversion_param%parameter_family_name,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
+   call MPI_BCAST(inversion_param%param_inv_name, 50*MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%xmin_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%xmax_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%ymin_taper,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)

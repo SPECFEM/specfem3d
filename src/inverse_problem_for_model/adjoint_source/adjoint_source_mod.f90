@@ -126,12 +126,12 @@ contains
     !! save cost function for the current source
     inversion_param%current_cost(ievent) = cost_function_reduced
 
-    if (myrank == 0) then
+    if (myrank == 0 .and. (VERBOSE_MODE .or. DEBUG_MODE) ) then
        write(INVERSE_LOG_FILE,*) '      Cost function for this event : ', cost_function_reduced
        write(INVERSE_LOG_FILE,*) '     weight on data : ', 1._CUSTOM_REAL/prior_data_std
        write(INVERSE_LOG_FILE,*) '     number of traces  : ',  nb_traces_tot
        write(INVERSE_LOG_FILE,*) '     total weight      : ',   1._CUSTOM_REAL/&
-            nb_traces_tot/sqrt(prior_data_std)/sqrt(nstep_data*dt_data)
+            sqrt(nb_traces_tot)/prior_data_std/sqrt(nstep_data*dt_data)
     endif
 
     !! standard deviation on data
@@ -349,8 +349,10 @@ contains
                 wkstmp(:)= acqui_simu(ievent)%data_traces(irec_local,:,icomp)
                 call bwfilt(wkstmp, data_trace_to_use, dt_data, nstep_data, irek_filter, norder_filter, fl, fh)
 
-                !! save filtered data
-                acqui_simu(ievent)%synt_traces(icomp, irec_local,:)=  data_trace_to_use(:)
+                if (VERBOSE_MODE .or. DEBUG_MODE) then 
+                   !! save filtered data
+                   acqui_simu(ievent)%synt_traces(icomp, irec_local,:)=  data_trace_to_use(:)
+                end if
 
              else
                 data_trace_to_use(:)=acqui_simu(ievent)%data_traces(irec_local,:,icomp)

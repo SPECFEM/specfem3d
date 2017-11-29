@@ -71,13 +71,14 @@ subroutine inverse_problem_main()
   logical                                :: finished
   character(len=MAX_LEN_STRING)          :: mode_running
 
+  
   !!!##############################################################################################################################
   !!! ---------------------------------------------- INITIALIZE RUNTIME ----------------------------------------------------------
   !!!##############################################################################################################################
 
   !! get rank of my MPI process
   call world_rank(myrank)
-
+ 
   !! select which mode to run : only direct or FWI
   call get_mode_running(mode_running, inversion_param)
 
@@ -107,7 +108,7 @@ subroutine inverse_problem_main()
         write(INVERSE_LOG_FILE,*)
         write(INVERSE_LOG_FILE,*)
         write(INVERSE_LOG_FILE,*)  '        Specfem inverse problem : Forward only problem ...  '
-        write(INVERSE_LOG_FILE,*)  '        with generic family parameters  : ', trim(inversion_param%param_family)
+        write(INVERSE_LOG_FILE,*)  '        with generic family parameters  : ', trim(inversion_param%parameter_family_name)
         write(INVERSE_LOG_FILE,*)
         write(INVERSE_LOG_FILE,*)
         write(INVERSE_LOG_FILE,*)
@@ -133,7 +134,7 @@ subroutine inverse_problem_main()
         write(INVERSE_LOG_FILE,*)
         write(INVERSE_LOG_FILE,*)
         write(INVERSE_LOG_FILE,*)  '        Specfem inverse problem : L-BFGS FWI ...  '
-        write(INVERSE_LOG_FILE,*)  '        with family parameters  : ', trim(inversion_param%param_family)
+        write(INVERSE_LOG_FILE,*)  '        with family parameters  : ', trim(inversion_param%parameter_family_name)
         write(INVERSE_LOG_FILE,*)  '        memory needed  ', inversion_param%max_history_bfgs
         write(INVERSE_LOG_FILE,*)
         write(INVERSE_LOG_FILE,*)

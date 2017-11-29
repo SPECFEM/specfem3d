@@ -13,11 +13,11 @@ module fwi_iteration
   use precond_mod
   use input_output
 
-  real(kind=CUSTOM_REAL), private, dimension(:,:,:,:,:), allocatable :: initial_model, current_model, prior_model
+  real(kind=CUSTOM_REAL), private, dimension(:,:,:,:,:), allocatable :: initial_model, current_model, prior_model, ref_model
   real(kind=CUSTOM_REAL), private, dimension(:,:,:,:,:), allocatable :: initial_gradient, current_gradient
   real(kind=CUSTOM_REAL), private, dimension(:,:,:,:,:), allocatable :: regularization_penalty, gradient_regularization_penalty
   real(kind=CUSTOM_REAL), private, dimension(:,:,:,:,:), allocatable :: descent_direction
-  real(kind=CUSTOM_REAL), private,  dimension(:,:,:,:,:),allocatable :: fwi_precond, hess_approxim
+  real(kind=CUSTOM_REAL), private, dimension(:,:,:,:,:), allocatable :: fwi_precond, hess_approxim
 
   !! for line search
   real(kind=CUSTOM_REAL), private                                    :: Q0, Qt, Qp0, Qpt
@@ -82,7 +82,7 @@ contains
 
     ! compute q'(0) = grad . descent_direction for line search
     call Parallel_ComputeInnerProduct(initial_gradient, descent_direction, Niv, Qp0)
-
+  
     ! save model or gradient or descent direction if asked by user
     call DumpArraysMeshSpecfem(initial_model, initial_gradient, descent_direction, iter_inverse, inversion_param)
 
@@ -148,10 +148,10 @@ contains
        inversion_param%data_std = sqrt(inversion_param%data_std / inversion_param%nb_data_std)
 
        ! store current gradient in choosen family parameter
-       call StoreGradientInfamilyParam(inversion_param, current_gradient, hess_approxim)
+       call StoreGradientInfamilyParam(inversion_param, current_gradient, current_model, ref_model, hess_approxim)
 
        ! compute regularization term and gradient for choosen family
-       call AddRegularization(inversion_param, current_model, prior_model, regularization_penalty, &
+       call AddRegularization(inversion_param, current_model, ref_model, prior_model, regularization_penalty, &
             gradient_regularization_penalty, &
             myrank)
        ! add penalty tern on cost function
@@ -336,17 +336,24 @@ contains
     call sum_all_all_cr_for_simulatenous_runs(tmp_val, inversion_param%data_std,1)
     inversion_param%data_std = sqrt(inversion_param%data_std / inversion_param%nb_data_std)
 
+    ! set model from modeling as reference model and 
+    if (iter_frq == 1) call Modeling2RefInvert(inversion_param, ref_model)
+
     ! store initial model in choosen family parameter
-    call SpecfemParam2Invert(inversion_param, initial_model)
+    call SpecfemParam2Invert(inversion_param, initial_model, ref_model)
     ! store initial gradient in choosen family parameter
-    call StoreGradientInFamilyParam(inversion_param, initial_gradient, hess_approxim)
+    call StoreGradientInFamilyParam(inversion_param, initial_gradient, initial_model, ref_model, hess_approxim)
 
     if (inversion_param%input_SEM_prior) then
-       ! save specif read prior model in family
+       ! save specific read prior model in family
+       write(*,*) ' STOPPING : not use this option for now : input sem prior'
+       stop
        call  SpecfemPrior2Invert(inversion_param, prior_model)
     else
        ! save starting model read as prior model for the first frequency group
-       if (iter_frq == 1) prior_model(:,:,:,:,:) = initial_model(:,:,:,:,:)
+       if (iter_frq == 1) then
+          prior_model(:,:,:,:,:) = initial_model(:,:,:,:,:)
+       end if
     endif
 
     !! compute reference mean model
@@ -358,7 +365,7 @@ contains
     endif
 
     ! compute regularization term and gradient for choosen family
-    call AddRegularization(inversion_param, initial_model, prior_model, regularization_penalty, &
+    call AddRegularization(inversion_param, initial_model, ref_model, prior_model, regularization_penalty, &
          gradient_regularization_penalty, &
          myrank)
     ! add penalty tern on cost function
@@ -410,7 +417,7 @@ contains
        write(INVERSE_LOG_FILE,*)
        write(INVERSE_LOG_FILE,*) ' Initial Cost function : ', inversion_param%Cost_init
        write(INVERSE_LOG_FILE,*) ' Initial Gradient Norm :', inversion_param%Norm_grad_init
-       write(INVERSE_LOG_FILE,*) 'Initial Data std :', inversion_param%data_std
+       write(INVERSE_LOG_FILE,*) ' Initial Data std :', inversion_param%data_std
        call flush_iunit(INVERSE_LOG_FILE)
        call flush_iunit(OUTPUT_ITERATION_FILE)
     endif
@@ -438,12 +445,10 @@ contains
     real(kind=CUSTOM_REAL)                                        :: vmin_glob0
     real(kind=CUSTOM_REAL)                                        :: vmax_glob0
 
-    !! Here descent_diretion is in log of parameter as by default in specfem
-    !! and we compute current_model not in log
-    current_model(:,:,:,:,:) = initial_model(:,:,:,:,:) * exp(step_length * descent_direction(:,:,:,:,:))
-
+    current_model(:,:,:,:,:) = initial_model(:,:,:,:,:) + step_length * descent_direction(:,:,:,:,:)
+   
     !! store the model on specfem arrays to perform next simulation
-    call InvertParam2Specfem(inversion_param, current_model)
+    call InvertParam2Specfem(inversion_param, current_model, ref_model)
 
     call CheckModelSuitabilityForModeling(ModelIsSuitable)
 
@@ -460,20 +465,54 @@ contains
 
     do ipar=1, inversion_param%NinvPar
 
-       vmin =   minval(current_model(:,:,:,:,ipar))
-       vmax  =  maxval(current_model(:,:,:,:,ipar))
-       call min_all_cr(vmin,vmin_glob)
-       call max_all_cr(vmax,vmax_glob)
+       select case(inversion_param%parameter_metric)
 
-       vmin =   maxval( abs(current_model(:,:,:,:,ipar) - initial_model(:,:,:,:,ipar)) /   initial_model(:,:,:,:,ipar) )
-       vmax  =  maxval( abs(current_model(:,:,:,:,ipar) - prior_model(:,:,:,:,ipar)) /   prior_model(:,:,:,:,ipar) )
-       call max_all_cr(vmin,vmin_glob0)
-       call max_all_cr(vmax,vmax_glob0)
+       case(0)  !! directly the parameter P
+          vmin =   minval(current_model(:,:,:,:,ipar))
+          vmax  =  maxval(current_model(:,:,:,:,ipar))
+          call min_all_cr(vmin,vmin_glob)
+          call max_all_cr(vmax,vmax_glob)
+
+          vmin =   maxval( abs(current_model(:,:,:,:,ipar) - initial_model(:,:,:,:,ipar)) /   initial_model(:,:,:,:,ipar) )
+          vmax  =  maxval( abs(current_model(:,:,:,:,ipar) - prior_model(:,:,:,:,ipar)) /   prior_model(:,:,:,:,ipar) )
+          call max_all_cr(vmin,vmin_glob0)
+          call max_all_cr(vmax,vmax_glob0)
+
+       case(1) 
+          vmin =   minval(current_model(:,:,:,:,ipar)*ref_model(:,:,:,:,ipar))
+          vmax  =  maxval(current_model(:,:,:,:,ipar)*ref_model(:,:,:,:,ipar))
+          call min_all_cr(vmin,vmin_glob)
+          call max_all_cr(vmax,vmax_glob)
+
+          vmin =   maxval( abs(current_model(:,:,:,:,ipar) - initial_model(:,:,:,:,ipar)) /   initial_model(:,:,:,:,ipar) )
+          vmax  =  maxval( abs(current_model(:,:,:,:,ipar) - prior_model(:,:,:,:,ipar)) /   prior_model(:,:,:,:,ipar) )
+          call max_all_cr(vmin,vmin_glob0)
+          call max_all_cr(vmax,vmax_glob0)
+
+       case(2)
+          vmin =   minval(exp(current_model(:,:,:,:,ipar)))
+          vmax  =  maxval(exp(current_model(:,:,:,:,ipar)))
+          call min_all_cr(vmin,vmin_glob)
+          call max_all_cr(vmax,vmax_glob)
+
+          vmin =   maxval( abs(exp(current_model(:,:,:,:,ipar)) - exp(initial_model(:,:,:,:,ipar))) /  &
+               exp(initial_model(:,:,:,:,ipar)) )
+          vmax  =  maxval( abs(exp(current_model(:,:,:,:,ipar)) - exp(prior_model(:,:,:,:,ipar))) /  &
+               exp(prior_model(:,:,:,:,ipar)) )
+          call max_all_cr(vmin,vmin_glob0)
+          call max_all_cr(vmax,vmax_glob0)
+
+       case(3)
+          !! ??
+          
+       end select
+
 
        if (myrank == 0) then
 
-          write(INVERSE_LOG_FILE,'( a13, i2, 2(a8, f12.5), a19, f10.6,  a14, f10.6)') &
-               '  Parameter :', ipar,'   MIN :',vmin_glob ,'   MAX :',vmax_glob, &
+          write(INVERSE_LOG_FILE,'( a13, i2, a10, 2(a8, f12.5), a19, f10.6,  a14, f10.6, a3)') &
+               '  Parameter :', ipar, inversion_param%param_inv_name(ipar),'   MIN :',vmin_glob ,&
+               '   MAX :',vmax_glob, &
                ' max pert,  prior :', 100*vmax_glob0, ' % previous  :', 100*vmin_glob0,' %'
 
           !write(INVERSE_LOG_FILE,*) '            max pert / starting model : ', 100*vmax_glob0,' %'
@@ -481,6 +520,8 @@ contains
 
           call flush_iunit(INVERSE_LOG_FILE)
        endif
+
+       
     enddo
     if (myrank == 0) write(INVERSE_LOG_FILE,*)
 
@@ -498,8 +539,18 @@ contains
 
     max_val_tmp = maxval(abs(descent_direction(:,:,:,:,:)))
     call  max_all_all_cr(max_val_tmp, max_val)
-    step_length= log(1. + inversion_param%max_relative_pert) / max_val
 
+    select case(inversion_param%parameter_metric)
+    case(0)  !! directly the parameter P
+       step_length=inversion_param%max_relative_pert/max_val
+    case(1)  !! P / Pref
+       step_length=inversion_param%max_relative_pert/max_val
+    case(2)  !! log(P)
+       step_length= log(1. + inversion_param%max_relative_pert) / max_val
+    case(3) !! log(P/Pref)
+       step_length= log(1. + inversion_param%max_relative_pert) / max_val
+    end select
+     
     if (DEBUG_MODE) then
        write(IIDD,* ) 'STEP  :',  step_length
     endif
@@ -516,17 +567,21 @@ contains
     integer,                                        intent(in)    :: nevent
     integer                                                       :: ierror, Ninvpar
 
+    !! 1/ set the family parameter
     call PrepareArraysfamilyParam(inversion_param)
 
     Ninvpar =inversion_param%NinvPar
 
 
     if (myrank == 0) then
-          write(INVERSE_LOG_FILE,*) '  '
-          write(INVERSE_LOG_FILE,*) '  allocate arrays for fwi iterations ', Ninvpar
-          write(INVERSE_LOG_FILE,*) '  '
-          call flush_iunit(INVERSE_LOG_FILE)
-       endif
+       write(INVERSE_LOG_FILE,*) '  '
+       write(INVERSE_LOG_FILE,*) '  allocate arrays for fwi iterations,  Ninvpar:', Ninvpar
+       write(INVERSE_LOG_FILE,*) '  '
+       write(INVERSE_LOG_FILE,*) '*************************************************************************'
+       write(INVERSE_LOG_FILE,*) '  '
+       call flush_iunit(INVERSE_LOG_FILE)
+    endif
+    
     !! allocate arrays for inversion scheme
     call AllocateArraysForInversion(inversion_param)
 
@@ -536,6 +591,9 @@ contains
 
     allocate(prior_model(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ierror)
     if (ierror /= 0) call exit_MPI(myrank,"error allocation prior_model in AllocatememoryForFWI  subroutine")
+
+    allocate(ref_model(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ierror)
+    if (ierror /= 0) call exit_MPI(myrank,"error allocation ref_model in AllocatememoryForFWI  subroutine")
 
     allocate(current_model(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ierror)
     if (ierror /= 0) call exit_MPI(myrank,"error allocation current_model in AllocatememoryForFWI  subroutine")

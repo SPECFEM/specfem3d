@@ -128,6 +128,8 @@ inverse_problem_for_model_OBJECTS = \
 	$O/Teleseismic_IO.o \
 	$O/IO_model_mod.o \
 	$O/input_output_mod.o \
+	$O/iso_parameters.o \
+	$O/vti_parameters.o \
 	$O/regularization_SEM_mod.o \
 	$O/inversion_scheme_mod.o \
 	$O/family_parameter_mod.o \
@@ -467,6 +469,12 @@ $O/inversion_scheme_mod.o: $S/inversion_scheme/inversion_scheme_mod.f90 ${SETUP}
 	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/inversion_scheme/inversion_scheme_mod.f90 -c -o $O/inversion_scheme_mod.o
 
 # generic inversion modules
+$O/iso_parameters.o : $S/inversion_scheme/iso_parameters.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
+	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/inversion_scheme/iso_parameters.f90 -c -o  $O/iso_parameters.o
+
+$O/vti_parameters.o : $S/inversion_scheme/vti_parameters.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
+	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/inversion_scheme/vti_parameters.f90 -c -o  $O/vti_parameters.o
+
 $O/family_parameter_mod.o : $S/inversion_scheme/family_parameter_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
 	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/inversion_scheme/family_parameter_mod.f90 -c -o  $O/family_parameter_mod.o
 

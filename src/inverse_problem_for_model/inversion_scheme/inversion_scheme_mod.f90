@@ -241,8 +241,7 @@ contains
           write(INVERSE_LOG_FILE,*)
        endif
 
-       ! we use log of model because in specfem we compute kernels in log
-       bfgs_stored_model(:,:,:,:,:,iteration_to_store) = log(models_to_store(:,:,:,:,:))
+       bfgs_stored_model(:,:,:,:,:,iteration_to_store) =  models_to_store(:,:,:,:,:)
        bfgs_stored_gradient(:,:,:,:,:,iteration_to_store) = gradients_to_store(:,:,:,:,:)
 
     else
@@ -261,8 +260,8 @@ contains
           bfgs_stored_model(:,:,:,:,:,k) = bfgs_stored_model(:,:,:,:,:,k+1)
           bfgs_stored_gradient(:,:,:,:,:,k) = bfgs_stored_gradient(:,:,:,:,:,k+1)
        enddo
-       ! we use log of model because in specfem we compute kernels in log
-       bfgs_stored_model(:,:,:,:,:,Mbfgs) = log(models_to_store(:,:,:,:,:))
+       
+       bfgs_stored_model(:,:,:,:,:,Mbfgs) =    models_to_store(:,:,:,:,:)
        bfgs_stored_gradient(:,:,:,:,:,Mbfgs) = gradients_to_store(:,:,:,:,:)
 
     endif

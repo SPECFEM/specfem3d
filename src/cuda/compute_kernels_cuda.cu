@@ -53,7 +53,7 @@ __global__ void compute_kernels_ani_cudakernel(int* ispec_is_elastic,
   int ispec = blockIdx.x + blockIdx.y*gridDim.x;
   int ijk = threadIdx.x;
   int ijk_ispec = ijk + NGLL3*ispec;
-  int ijk21_ispec = ijk + 21*NGLL3*ispec;
+  int ijk21_ispec = 21*ijk + 21*NGLL3*ispec;
 
   realw prod[21];
   realw eps[6];

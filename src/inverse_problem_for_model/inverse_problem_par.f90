@@ -58,7 +58,7 @@ module inverse_problem_par
   !!logical,                       public             :: USE_PRECOND_OIL_INDUSTRY=.false.
   !!! if needed use steepest descent instead of l-bfgs (if useful need to move elsewhere)
   logical,                       public             :: USE_GRADIENT_OPTIM=.false.
-  !! use simplified station location instead of specfem subroutin which can be problematic with a
+  !! use simplified station location instead of specfem subroutine which can be problematic with a
   !! big number of stations
   logical,                       public             :: USE_LIGHT_STATIONS=.true.
   ! ------------------------------  global parameters for fwi ---------------------------------------------------------------------
@@ -83,17 +83,36 @@ module inverse_problem_par
 
   end type profd !-----------------------------------------------------------------------------------------------------------------
 
-  ! INVERSION PARAMETERS STRUCTURE -------------------------------------------------------------------------------------------------
+  ! INVERSION PARAMETERS STRUCTURE ------------------------------------------------------------------------------------------------
   type, public :: inver
 
+
+     !! inputs files to read -------------------------------------------------------------------------------
      character(len= MAX_LEN_STRING)                                           :: input_acqui_file
      character(len= MAX_LEN_STRING)                                           :: input_inver_file
-     character(len= MAX_LEN_STRING)                                           :: param_family = "rho_vp_vs"
+
+     !! managing parameters family -------------------------------------------------------------------------
+     !! choice of family parameters  : 
+     !! ISO : rho vp vs
+     !! VTI : rho vp vs ep gm de
+     !! ... todo add more ... 
+     character(len=MAX_LEN_STRING)                                            :: parameter_family_name="ISO"
+     character(len=MAX_LEN_STRING), dimension(50)                             :: param_inv_name
+     character(len=MAX_LEN_STRING), dimension(50)                             :: param_ref_name
      integer                                                                  :: NfamilyPar = 3
      integer                                                                  :: NinvPar = 3
      integer, dimension(:), allocatable                                       :: Index_Invert
-
-     !! stopping criteria
+     !! this is not usefull todo remove it. -------------------------------------------------------
+     logical                                                                  :: use_log=.true.  
+     !! ---------------------------------------------------------------------------------------------
+     integer                                                                  :: parameter_metric=2 ! see below : 
+     !! choice of metric in parameter :
+     !! 0 : directly use the parameter P 
+     !! 1 : use P / Pref 
+     !! 2 : use log(P)
+     !! 3 : use log(P/Pref) 
+    
+     !! stopping criteria ----------------------------------------------------------------------------------
      integer                                                                  :: Niter = 100
      integer                                                                  :: Niter_wolfe = 10
      real(kind=CUSTOM_REAL)                                                   :: relat_grad = 1.e-3
@@ -172,7 +191,7 @@ module inverse_problem_par
      !! projection in fd grid
      type(profd)                                                              :: projection_fd
 
-     !! regularization
+     !! regularization ----------------------------------------------------------------------------------------------------
      logical                                                                  :: use_regularization_FD_Tikonov=.false.
      logical                                                                  :: use_regularization_SEM_Tikonov=.false.
      logical                                                                  :: use_damping_SEM_Tikonov=.false.
@@ -183,8 +202,9 @@ module inverse_problem_par
      real(kind=CUSTOM_REAL)                                                   :: min_damp=1., max_damp=10.
      real(kind=CUSTOM_REAL)                                                   :: distance_from_source=100.
      real(kind=CUSTOM_REAL),  dimension(:), allocatable                       :: smooth_weight, damp_weight
-     !! prior model
+     !! prior model 
      real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable                :: prior_model
+     !!-------------------------------------------------------------------------------------------------------------------
 
      !! inverted components
      character(len=2),                       dimension(3)                     :: component
@@ -199,8 +219,6 @@ module inverse_problem_par
      logical                                                                  :: get_synthetic_displacement=.true.
      logical                                                                  :: get_synthetic_velocity=.true.
      logical                                                                  :: get_synthetic_acceleration=.true.
-
-     character(len=MAX_LEN_STRING)                                            :: type_aniso="none"
 
   end type inver !------------------------------------------------------------------------------------------------------------------
 
@@ -219,7 +237,7 @@ module inverse_problem_par
      !! file contains source parameter for 'moment' or 'fk' or axisem traction
      character(len= MAX_LEN_STRING)                                            :: source_file
      !! kind of source to be used ('moment', 'force', 'axisem', 'dsm', 'fk')
-     character(len=10)                                                         :: source_type
+     character(len=MAX_LEN_STRING)                                             :: source_type
      !!
      !! SB SB add source_type_physical and source_type_modeling to distinguish
      !!       between the method used for modeling (local point source(s), injection)
@@ -228,9 +246,9 @@ module inverse_problem_par
      !!       these informations.
      !!
      !! kind of source to be used ('moment', 'force')
-     character(len=256)                                                         :: source_type_physical
+     character(len=MAX_LEN_STRING)                                             :: source_type_physical
      !! kind of source to be used ('pointsource', 'finitefault','axisem', 'dsm', 'fk')
-     character(len=256)                                                         :: source_type_modeling
+     character(len=MAX_LEN_STRING)                                             :: source_type_modeling
      !! position of source in case of internal point source
      double precision, dimension(:), allocatable                               :: Xs,Ys,Zs
      !! source time function
