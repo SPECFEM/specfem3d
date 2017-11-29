@@ -679,7 +679,7 @@
             comp_z = comp_dir_vect_source_Z_UP(isource)/norm
           endif
 
-         
+
           if (ispec_is_acoustic(ispec) .and. DIPOLE_SOURCE_IN_FLUID) then
              ! length of component vector
              norm = dsqrt( comp_dir_vect_source_E(isource)**2 &
@@ -702,7 +702,7 @@
            comp_z = 1.0d0
            call compute_arrays_source_forcesolution(sourcearray,hxis,hetas,hgammas,factor_source, &
                                                    comp_x,comp_y,comp_z,nu_source(:,:,isource))
-          end if
+          endif
         else ! use of CMTSOLUTION files
 
           ! elastic or poroelastic moment tensor source

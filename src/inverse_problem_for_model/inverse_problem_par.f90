@@ -92,26 +92,26 @@ module inverse_problem_par
      character(len= MAX_LEN_STRING)                                           :: input_inver_file
 
      !! managing parameters family -------------------------------------------------------------------------
-     !! choice of family parameters  : 
+     !! choice of family parameters  :
      !! ISO : rho vp vs
      !! VTI : rho vp vs ep gm de
-     !! ... todo add more ... 
+     !! ... todo add more ...
      character(len=MAX_LEN_STRING)                                            :: parameter_family_name="ISO"
      character(len=MAX_LEN_STRING), dimension(50)                             :: param_inv_name
      character(len=MAX_LEN_STRING), dimension(50)                             :: param_ref_name
      integer                                                                  :: NfamilyPar = 3
      integer                                                                  :: NinvPar = 3
      integer, dimension(:), allocatable                                       :: Index_Invert
-     !! this is not usefull todo remove it. -------------------------------------------------------
-     logical                                                                  :: use_log=.true.  
+     !! this is not useful todo remove it. -------------------------------------------------------
+     logical                                                                  :: use_log=.true.
      !! ---------------------------------------------------------------------------------------------
-     integer                                                                  :: parameter_metric=2 ! see below : 
+     integer                                                                  :: parameter_metric=2 ! see below :
      !! choice of metric in parameter :
-     !! 0 : directly use the parameter P 
-     !! 1 : use P / Pref 
+     !! 0 : directly use the parameter P
+     !! 1 : use P / Pref
      !! 2 : use log(P)
-     !! 3 : use log(P/Pref) 
-    
+     !! 3 : use log(P/Pref)
+
      !! stopping criteria ----------------------------------------------------------------------------------
      integer                                                                  :: Niter = 100
      integer                                                                  :: Niter_wolfe = 10
@@ -202,7 +202,7 @@ module inverse_problem_par
      real(kind=CUSTOM_REAL)                                                   :: min_damp=1., max_damp=10.
      real(kind=CUSTOM_REAL)                                                   :: distance_from_source=100.
      real(kind=CUSTOM_REAL),  dimension(:), allocatable                       :: smooth_weight, damp_weight
-     !! prior model 
+     !! prior model
      real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable                :: prior_model
      !!-------------------------------------------------------------------------------------------------------------------
 

@@ -82,7 +82,7 @@ contains
 
     ! compute q'(0) = grad . descent_direction for line search
     call Parallel_ComputeInnerProduct(initial_gradient, descent_direction, Niv, Qp0)
-  
+
     ! save model or gradient or descent direction if asked by user
     call DumpArraysMeshSpecfem(initial_model, initial_gradient, descent_direction, iter_inverse, inversion_param)
 
@@ -336,7 +336,7 @@ contains
     call sum_all_all_cr_for_simulatenous_runs(tmp_val, inversion_param%data_std,1)
     inversion_param%data_std = sqrt(inversion_param%data_std / inversion_param%nb_data_std)
 
-    ! set model from modeling as reference model and 
+    ! set model from modeling as reference model and
     if (iter_frq == 1) call Modeling2RefInvert(inversion_param, ref_model)
 
     ! store initial model in choosen family parameter
@@ -353,7 +353,7 @@ contains
        ! save starting model read as prior model for the first frequency group
        if (iter_frq == 1) then
           prior_model(:,:,:,:,:) = initial_model(:,:,:,:,:)
-       end if
+       endif
     endif
 
     !! compute reference mean model
@@ -446,7 +446,7 @@ contains
     real(kind=CUSTOM_REAL)                                        :: vmax_glob0
 
     current_model(:,:,:,:,:) = initial_model(:,:,:,:,:) + step_length * descent_direction(:,:,:,:,:)
-   
+
     !! store the model on specfem arrays to perform next simulation
     call InvertParam2Specfem(inversion_param, current_model, ref_model)
 
@@ -478,7 +478,7 @@ contains
           call max_all_cr(vmin,vmin_glob0)
           call max_all_cr(vmax,vmax_glob0)
 
-       case(1) 
+       case(1)
           vmin =   minval(current_model(:,:,:,:,ipar)*ref_model(:,:,:,:,ipar))
           vmax  =  maxval(current_model(:,:,:,:,ipar)*ref_model(:,:,:,:,ipar))
           call min_all_cr(vmin,vmin_glob)
@@ -504,14 +504,14 @@ contains
 
        case(3)
           !! ??
-          
+
        end select
 
 
        if (myrank == 0) then
 
           write(INVERSE_LOG_FILE,'( a13, i2, a10, 2(a8, f12.5), a19, f10.6,  a14, f10.6, a3)') &
-               '  Parameter :', ipar, inversion_param%param_inv_name(ipar),'   MIN :',vmin_glob ,&
+               '  Parameter :', ipar, inversion_param%param_inv_name(ipar),'   MIN :',vmin_glob, &
                '   MAX :',vmax_glob, &
                ' max pert,  prior :', 100*vmax_glob0, ' % previous  :', 100*vmin_glob0,' %'
 
@@ -521,7 +521,7 @@ contains
           call flush_iunit(INVERSE_LOG_FILE)
        endif
 
-       
+
     enddo
     if (myrank == 0) write(INVERSE_LOG_FILE,*)
 
@@ -550,7 +550,7 @@ contains
     case(3) !! log(P/Pref)
        step_length= log(1. + inversion_param%max_relative_pert) / max_val
     end select
-     
+
     if (DEBUG_MODE) then
        write(IIDD,* ) 'STEP  :',  step_length
     endif
@@ -581,7 +581,7 @@ contains
        write(INVERSE_LOG_FILE,*) '  '
        call flush_iunit(INVERSE_LOG_FILE)
     endif
-    
+
     !! allocate arrays for inversion scheme
     call AllocateArraysForInversion(inversion_param)
 

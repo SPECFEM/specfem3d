@@ -497,11 +497,11 @@
 
 !!----------------------
 !!
-!!  VM VM test dipole source in fluid regionn 
+!!  VM VM test dipole source in fluid regionn
 !!
-!!  if .true. this will change the way taht force solution is set in fluid region 
-!!  triying to put a dipole in fluids.  
-!!  if .false. the behaviour of code remain inchanged 
+!!  if .true. this will change the way taht force solution is set in fluid region
+!!  triying to put a dipole in fluids.
+!!  if .false. the behaviour of code remain inchanged
 !!
 !!-----------
 

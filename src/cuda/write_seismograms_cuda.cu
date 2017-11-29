@@ -138,20 +138,20 @@ __global__ void compute_acoustic_seismogram_kernel(int nrec_local,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-__global__ void compute_acoustic_vectorial_seismogram_kernel(int nrec_local, 
-							     int*  d_ispec_is_acoustic,
-							     realw* scalar_potential,
-							     realw* seismograms, 
-							     realw* d_rhostore, 
-							     int* d_ibool,
-							     realw* hxir, realw* hetar, realw* hgammar,
-							     realw* d_xix, realw* d_xiy, realw* d_xiz,
-							     realw* d_etax, realw* d_etay, realw* d_etaz,
-							     realw* d_gammax, realw* d_gammay, realw* d_gammaz,
-							     realw* d_hprime_xx,
-							     realw* nu,
-							     int* ispec_selected_rec_loc,
-							     int it)
+__global__ void compute_acoustic_vectorial_seismogram_kernel(int nrec_local,
+                   int*  d_ispec_is_acoustic,
+                   realw* scalar_potential,
+                   realw* seismograms,
+                   realw* d_rhostore,
+                   int* d_ibool,
+                   realw* hxir, realw* hetar, realw* hgammar,
+                   realw* d_xix, realw* d_xiy, realw* d_xiz,
+                   realw* d_etax, realw* d_etay, realw* d_etaz,
+                   realw* d_gammax, realw* d_gammay, realw* d_gammaz,
+                   realw* d_hprime_xx,
+                   realw* nu,
+                   int* ispec_selected_rec_loc,
+                   int it)
 {
   int irec_local = blockIdx.x + blockIdx.y*gridDim.x;
   int tx = threadIdx.x;
@@ -164,24 +164,24 @@ __global__ void compute_acoustic_vectorial_seismogram_kernel(int nrec_local,
   int J = ((tx-K*NGLL2)/NGLLX);
   int I = (tx-K*NGLL2-J*NGLLX);
 
-  // shared memory 
+  // shared memory
   __shared__ realw s_dummy_loc[NGLL3_PADDED];
   __shared__ realw s_temp1[NGLL3_PADDED];
   __shared__ realw s_temp2[NGLL3_PADDED];
   __shared__ realw s_temp3[NGLL3_PADDED];
   __shared__ realw sh_hprime_xx[NGLL2];
 
-  // locals 
+  // locals
   realw temp1l, temp2l, temp3l;
   realw rho_invl, hlagrange;
   realw xixl, xiyl, xizl;
   realw etaxl, etayl, etazl;
-  realw gammaxl, gammayl, gammazl; 
-  int ispec, offset, iglob; 
+  realw gammaxl, gammayl, gammazl;
+  int ispec, offset, iglob;
 
-  
+
   /*
-  // debug 
+  // debug
   if (irec_local < nrec_local) {
     ispec = ispec_selected_rec_loc[irec_local] - 1;
     offset = INDEX4_PADDED(NGLLX,NGLLX,NGLLX,I,J,K,ispec);
@@ -210,10 +210,10 @@ __global__ void compute_acoustic_vectorial_seismogram_kernel(int nrec_local,
   }
   */
 
-  
-  
+
+
   if (irec_local < nrec_local) {
-    
+
     ispec = ispec_selected_rec_loc[irec_local] - 1;
 
     // nothing to do if we are in elastic element
@@ -231,11 +231,11 @@ __global__ void compute_acoustic_vectorial_seismogram_kernel(int nrec_local,
     gammaxl = d_gammax[offset];
     gammayl = d_gammay[offset];
     gammazl = d_gammaz[offset];
-    
-   
+
+
     hlagrange = hxir[irec_local + nrec_local*I]*hetar[irec_local + nrec_local*J]*hgammar[irec_local + nrec_local*K];
 
-    //debug 
+    //debug
     //if (tx == 0) printf("thread %d %d %d - %f %f %f\n",ispec,iglob,irec_local,hlagrange,rho_invl, xixl);
 
 
@@ -244,19 +244,19 @@ __global__ void compute_acoustic_vectorial_seismogram_kernel(int nrec_local,
       sh_hprime_xx[tx] = d_hprime_xx[tx];}
     s_dummy_loc[tx] = scalar_potential[iglob];
   }
-  
 
-  
+
+
   // synchronize all the threads (one thread for each of the NGLL grid points of the
   // current spectral element) because we need the whole element to be ready
   __syncthreads();
-  
+
   if (irec_local < nrec_local) {
     // computes first matrix product
     temp1l = 0.f;
     temp2l = 0.f;
     temp3l = 0.f;
-    
+
     for (int l=0;l<NGLLX;l++) {
       //assumes that hprime_xx = hprime_yy = hprime_zz
       // 1. cut-plane along xi-direction
@@ -266,7 +266,7 @@ __global__ void compute_acoustic_vectorial_seismogram_kernel(int nrec_local,
       // 3. cut-plane along gamma-direction
       temp3l += s_dummy_loc[l*NGLL2+J*NGLLX+I] * sh_hprime_xx[l*NGLLX+K];
     }
-    
+
     // compute derivatives of ux, uy and uz with respect to x, y and z
     // derivatives of potential
     realw dpotentialdxl = xixl*temp1l + etaxl*temp2l + gammaxl*temp3l;
@@ -278,7 +278,7 @@ __global__ void compute_acoustic_vectorial_seismogram_kernel(int nrec_local,
     s_temp2[tx] = hlagrange *dpotentialdyl * rho_invl;
     s_temp3[tx] = hlagrange *dpotentialdzl * rho_invl;
   }
- 
+
 
   __syncthreads();
 
@@ -290,13 +290,13 @@ __global__ void compute_acoustic_vectorial_seismogram_kernel(int nrec_local,
                             s_temp3[tx] += s_temp3[tx + s];}
       __syncthreads();
     }
-  
 
-    
+
+
     if (tx == 0) {seismograms[0+3*irec_local+3*nrec_local*it] = nu[0+3*(0+3*irec_local)]*s_temp1[0] + nu[0+3*(1+3*irec_local)]*s_temp2[0] + nu[0+3*(2+3*irec_local)]*s_temp3[0];}
     if (tx == 1) {seismograms[1+3*irec_local+3*nrec_local*it] = nu[1+3*(0+3*irec_local)]*s_temp1[0] + nu[1+3*(1+3*irec_local)]*s_temp2[0] + nu[1+3*(2+3*irec_local)]*s_temp3[0];}
     if (tx == 2) {seismograms[2+3*irec_local+3*nrec_local*it] = nu[2+3*(0+3*irec_local)]*s_temp1[0] + nu[2+3*(1+3*irec_local)]*s_temp2[0] + nu[2+3*(2+3*irec_local)]*s_temp3[0];}
-    
+
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -360,7 +360,7 @@ void FC_FUNC_(compute_seismograms_cuda,
 
   // computes current seismograms value
 
-  if (*SAVE_SEISMOGRAMS_DISPLACEMENT) 
+  if (*SAVE_SEISMOGRAMS_DISPLACEMENT)
       compute_elastic_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
                                                                                mp->d_displ,
                                                                                mp->d_ibool,
@@ -369,7 +369,7 @@ void FC_FUNC_(compute_seismograms_cuda,
                                                                                mp->d_nu,
                                                                                mp->d_ispec_selected_rec_loc,
                                                                                it);
-      
+
 
   if (*SAVE_SEISMOGRAMS_VELOCITY)
       compute_elastic_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
@@ -413,59 +413,59 @@ void FC_FUNC_(compute_seismograms_cuda,
 
   }
 
-  
+
   // VM VM add computation of vectorial field in fluids ----------------------------------------------------------------
   if (*SAVE_SEISMOGRAMS_DISPLACEMENT && *ACOUSTIC_SIMULATION)
     compute_acoustic_vectorial_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
-											mp->d_ispec_is_acoustic, 
-											mp->d_potential_acoustic,
-											mp->d_seismograms_d,
-											mp->d_rhostore, 
-											mp->d_ibool,
-											mp->d_hxir,mp->d_hetar,mp->d_hgammar,
-											mp->d_xix,mp->d_xiy,mp->d_xiz,
-											mp->d_etax,mp->d_etay,mp->d_etaz,
-											mp->d_gammax,mp->d_gammay,mp->d_gammaz,
-											mp->d_hprime_xx,
-											mp->d_nu,
-											mp->d_ispec_selected_rec_loc,
-											it);
+                      mp->d_ispec_is_acoustic,
+                      mp->d_potential_acoustic,
+                      mp->d_seismograms_d,
+                      mp->d_rhostore,
+                      mp->d_ibool,
+                      mp->d_hxir,mp->d_hetar,mp->d_hgammar,
+                      mp->d_xix,mp->d_xiy,mp->d_xiz,
+                      mp->d_etax,mp->d_etay,mp->d_etaz,
+                      mp->d_gammax,mp->d_gammay,mp->d_gammaz,
+                      mp->d_hprime_xx,
+                      mp->d_nu,
+                      mp->d_ispec_selected_rec_loc,
+                      it);
 
 
 
   if (*SAVE_SEISMOGRAMS_VELOCITY && *ACOUSTIC_SIMULATION)
     compute_acoustic_vectorial_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
-											mp->d_ispec_is_acoustic, 
-											mp->d_potential_dot_acoustic,
-											mp->d_seismograms_v,
-											mp->d_rhostore, 
-											mp->d_ibool,
-											mp->d_hxir,mp->d_hetar,mp->d_hgammar,
-											mp->d_xix,mp->d_xiy,mp->d_xiz,
-											mp->d_etax,mp->d_etay,mp->d_etaz,
-											mp->d_gammax,mp->d_gammay,mp->d_gammaz,
-											mp->d_hprime_xx,
-											mp->d_nu,
-											mp->d_ispec_selected_rec_loc,
-											it);
+                      mp->d_ispec_is_acoustic,
+                      mp->d_potential_dot_acoustic,
+                      mp->d_seismograms_v,
+                      mp->d_rhostore,
+                      mp->d_ibool,
+                      mp->d_hxir,mp->d_hetar,mp->d_hgammar,
+                      mp->d_xix,mp->d_xiy,mp->d_xiz,
+                      mp->d_etax,mp->d_etay,mp->d_etaz,
+                      mp->d_gammax,mp->d_gammay,mp->d_gammaz,
+                      mp->d_hprime_xx,
+                      mp->d_nu,
+                      mp->d_ispec_selected_rec_loc,
+                      it);
 
 
   if (*SAVE_SEISMOGRAMS_ACCELERATION && *ACOUSTIC_SIMULATION)
     compute_acoustic_vectorial_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
-											mp->d_ispec_is_acoustic, 
-											mp->d_potential_dot_dot_acoustic,
-											mp->d_seismograms_a,
-											mp->d_rhostore, 
-											mp->d_ibool,
-											mp->d_hxir,mp->d_hetar,mp->d_hgammar,
-											mp->d_xix,mp->d_xiy,mp->d_xiz,
-											mp->d_etax,mp->d_etay,mp->d_etaz,
-											mp->d_gammax,mp->d_gammay,mp->d_gammaz,
-											mp->d_hprime_xx,
-											mp->d_nu,
-											mp->d_ispec_selected_rec_loc,
-											it);
- 
+                      mp->d_ispec_is_acoustic,
+                      mp->d_potential_dot_dot_acoustic,
+                      mp->d_seismograms_a,
+                      mp->d_rhostore,
+                      mp->d_ibool,
+                      mp->d_hxir,mp->d_hetar,mp->d_hgammar,
+                      mp->d_xix,mp->d_xiy,mp->d_xiz,
+                      mp->d_etax,mp->d_etay,mp->d_etaz,
+                      mp->d_gammax,mp->d_gammay,mp->d_gammaz,
+                      mp->d_hprime_xx,
+                      mp->d_nu,
+                      mp->d_ispec_selected_rec_loc,
+                      it);
+
   if (it == NSTEP - 1 ){
     int size = mp->nrec_local*NSTEP;
     // (cudaMemcpy implicitly synchronizes all other cuda operations)

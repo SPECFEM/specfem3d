@@ -493,7 +493,7 @@
 ! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
 ! for smoothing the boundary portions of the model
 
-!! VM VM this seems to be an hardcoded model we should remove it 
+!! VM VM this seems to be an hardcoded model we should remove it
   if (COUPLE_WITH_INJECTION_TECHNIQUE .and. INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_FK .and. &
                SMOOTH_THE_MODEL_EDGES_FOR_FK) then
 
@@ -558,7 +558,7 @@
 
     endif ! of if (.not. SMOOTH_THE_MOHO_ONLY_FOR_FK) then
 
-! Moho section 
+! Moho section
          if (imaterial_id == 1) then
          tem1 = 160000.0
          tem2 = 170000.0

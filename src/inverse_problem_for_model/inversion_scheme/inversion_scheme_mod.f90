@@ -260,7 +260,7 @@ contains
           bfgs_stored_model(:,:,:,:,:,k) = bfgs_stored_model(:,:,:,:,:,k+1)
           bfgs_stored_gradient(:,:,:,:,:,k) = bfgs_stored_gradient(:,:,:,:,:,k+1)
        enddo
-       
+
        bfgs_stored_model(:,:,:,:,:,Mbfgs) =    models_to_store(:,:,:,:,:)
        bfgs_stored_gradient(:,:,:,:,:,Mbfgs) = gradients_to_store(:,:,:,:,:)
 

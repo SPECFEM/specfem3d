@@ -131,7 +131,7 @@
     ! read direction vector's vertical component
     read(IIN,"(a)") string
     read(string(32:len_trim(string)),*) comp_dir_vect_source_Z_UP(isource)
-    
+
     ! reads USER EXTERNAL SOURCE if needed
     if (USE_EXTERNAL_SOURCE_FILE) then
       ! gets external STF file name

@@ -81,7 +81,7 @@ contains
     real(kind=CUSTOM_REAL)                                         :: elemsize_min_glob,elemsize_max_glob
     real(kind=CUSTOM_REAL)                                         :: distance_min_glob,distance_max_glob
 
-    
+
     if (myrank == 0) then
        write(INVERSE_LOG_FILE,*)
        write(INVERSE_LOG_FILE,*) '          *********************************************'
@@ -124,7 +124,7 @@ contains
 
     end select
     !! -------------------------------------------------------------------------------
-    
+
     if (myrank == 0) call flush_iunit(INVERSE_LOG_FILE)
 
 !    call bcast_all_acqui(acqui_simu,  inversion_param, myrank)
@@ -144,7 +144,7 @@ contains
        end select
 
     endif
-   
+
     !! create name for outputs
     do ievent=1,acqui_simu(1)%nevent_tot
        call create_name_database_inversion(acqui_simu(ievent)%prname_inversion, myrank, ievent, LOCAL_PATH)
@@ -682,10 +682,10 @@ contains
 
     nb_traces_tot=0.
 
-    if (myrank == 0) then 
+    if (myrank == 0) then
        write(INVERSE_LOG_FILE,*)
        write(INVERSE_LOG_FILE,*) '     READING data'
-    end if
+    endif
 
     do ievent = 1, acqui_simu(1)%nevent_tot
 
@@ -1465,12 +1465,12 @@ contains
        do
           read(666,'(a)',end=99) line
           if (is_blank_line(line)) cycle
-          
+
           !! INDICES TO READ line -----------------------------------------------
           ipos0=index(line,':')+1
           ipos1=index(line,'#')-1
           if (ipos1 < 0 ) ipos1=len_trim(line)
-          
+
           !! STORE KEYWORD ITEM -------------------------------------------------
           keyw=trim(adjustl(line(1:ipos0-2)))
 
@@ -1479,10 +1479,10 @@ contains
 
           case ('Niter')
              read(line(ipos0:ipos1),*)  inversion_param%Niter
-             
+
           case('Niter_wolfe')
              read(line(ipos0:ipos1),*)  inversion_param%Niter_wolfe
-             
+
           case('max_history_bfgs')
              read(line(ipos0:ipos1),*)  inversion_param%max_history_bfgs
 
@@ -1494,10 +1494,10 @@ contains
 
           case('nb_inver')
              read(line(ipos0:ipos1),*) inversion_param%NinvPar
-           
+
           case('param_to_inv')
              read(line(ipos0:ipos1),*) inversion_param%param_inv_name(1: inversion_param%NinvPar)
-          
+
           case('use_frequency_band_pass_filter')
              inversion_param%use_band_pass_filter=.true.
              read(line(ipos0:ipos1),*) inversion_param%Nifrq
@@ -1541,10 +1541,10 @@ contains
              read(line(ipos0:ipos1),*) inversion_param%aPrc, &
                   inversion_param%zPrc1, &
                   inversion_param%zPrc2
-             
+
              inversion_param%z_precond=.true.
 
-             
+
           case('relat_grad')
              read(line(ipos0:ipos1),*) inversion_param%relat_grad
 
@@ -1604,9 +1604,9 @@ contains
           case default
              write(*,*) 'ERROR KEY WORD NOT MATCH : ', trim(keyw), ' in file ', trim(inver_file)
              exit
-             
+
           end select
-          
+
        enddo
 
 99     close(666)

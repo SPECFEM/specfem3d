@@ -349,10 +349,10 @@ contains
                 wkstmp(:)= acqui_simu(ievent)%data_traces(irec_local,:,icomp)
                 call bwfilt(wkstmp, data_trace_to_use, dt_data, nstep_data, irek_filter, norder_filter, fl, fh)
 
-                if (VERBOSE_MODE .or. DEBUG_MODE) then 
+                if (VERBOSE_MODE .or. DEBUG_MODE) then
                    !! save filtered data
                    acqui_simu(ievent)%synt_traces(icomp, irec_local,:)=  data_trace_to_use(:)
-                end if
+                endif
 
              else
                 data_trace_to_use(:)=acqui_simu(ievent)%data_traces(irec_local,:,icomp)

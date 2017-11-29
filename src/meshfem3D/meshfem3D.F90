@@ -293,19 +293,19 @@
     endif
 
     !! VM VM : new way to mesh and store mesh in geocubit format
-    if (myrank==0) then  !! serial mesh and use decompose_mesh after
+    if (myrank == 0) then  !! serial mesh and use decompose_mesh after
        call mesh_chunk_earth()
        write(*,*) 'Done creating a chunk of the earth Mesh (HEX8 elements), see directory MESH/'
-    end if
+    endif
     ! make sure everybody is synchronized
     call synchronize_all()
     return
     !call bcast_input_param_to_all()
     !call read_mesh_parameter_file()
-    
-   
-    !! VM VM old way to create  MESH_A_CHUNK_OF_THE_EARTH, but still some routines that will 
-    !! move in the new way thus not remove for now 
+
+
+    !! VM VM old way to create  MESH_A_CHUNK_OF_THE_EARTH, but still some routines that will
+    !! move in the new way thus not remove for now
     if (NGNOD == 8) then
       ! creates mesh in MESH/
       call earth_chunk_HEX8_Mesher(NGNOD)

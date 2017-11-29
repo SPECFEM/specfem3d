@@ -44,10 +44,10 @@ contains
 
       if (inversion_param%use_damping_SEM_Tikonov) then
          if (myrank == 0) then
-           
+
             write(INVERSE_LOG_FILE,*)
             write(INVERSE_LOG_FILE,*) '   INITIALIZE TIKONOV SEM BASED DAMPING  :', inversion_param%weight_Tikonov
-           
+
          endif
       endif
 
@@ -93,8 +93,8 @@ contains
     inversion_param%cost_penalty= 0._CUSTOM_REAL
     regul_penalty(:,:,:,:,:)= 0._CUSTOM_REAL
     gradient_regul_penalty(:,:,:,:,:)= 0._CUSTOM_REAL
-    
-  
+
+
 
     !! ----------------- SEM BASED REGULARIZATION --------
     if (inversion_param%use_regularization_SEM_Tikonov) then
@@ -117,7 +117,7 @@ contains
 !!$             model_on_sem(:,:,:,:) = exp(model(:,:,:,:,ipar))
 !!$          else
           model_on_sem(:,:,:,:) = model(:,:,:,:,ipar)
-!!$          end if
+!!$          endif
           call compute_bi_laplacian_of_field(model_on_sem, regul_on_sem, gradient_regul_on_sem)
 
           !! we add penalty on parameter not on log(parameter)
@@ -134,8 +134,8 @@ contains
           gradient_regul_penalty(:,:,:,:,ipar) = gradient_regul_penalty(:,:,:,:,ipar) + &
                inversion_param%smooth_weight(ipar)* &
                gradient_regul_on_sem(:,:,:,:)
-!!$          end if
-          
+!!$          endif
+
        enddo
 
        deallocate(model_on_sem, regul_on_sem, gradient_regul_on_sem)
@@ -158,8 +158,8 @@ contains
           !regul_penalty(:,:,:,:,ipar) =  log(model(:,:,:,:,ipar)) - log(prior_model(:,:,:,:,ipar))
           !gradient_regul_penalty(:,:,:,:,ipar) =  log(model(:,:,:,:,ipar)) -  log(prior_model(:,:,:,:,ipar))
 
-!!$          if (inversion_param%use_log) then 
-!!$          
+!!$          if (inversion_param%use_log) then
+!!$
 !!$             !! damp the parameter itself (not log)
 !!$             regul_penalty(:,:,:,:,ipar) =  regul_penalty(:,:,:,:,ipar) + &
 !!$                  sqrt(inversion_param%damp_weight(ipar) * spatial_damping(:,:,:,:) ) * &
@@ -170,11 +170,11 @@ contains
 !!$                  inversion_param%damp_weight(ipar) * spatial_damping(:,:,:,:) * &
 !!$                  ( exp(model(:,:,:,:,ipar)) -  exp(prior_model(:,:,:,:,ipar)) ) * exp(model(:,:,:,:,ipar))
 !!$          else
-             !! damp the parameter 
+             !! damp the parameter
 
           select case(inversion_param%parameter_metric)
 
-          case(2) !! for log 
+          case(2) !! for log
 
              regul_penalty(:,:,:,:,ipar) =  regul_penalty(:,:,:,:,ipar) + &
                   sqrt(inversion_param%damp_weight(ipar) * spatial_damping(:,:,:,:) ) * &
@@ -196,8 +196,8 @@ contains
                   inversion_param%damp_weight(ipar) * spatial_damping(:,:,:,:) * &
                   ( model(:,:,:,:,ipar) -  prior_model(:,:,:,:,ipar) )
           end select
-!!$          end if
-!!$             
+!!$          endif
+!!$
        enddo
 
        !!TO DO : we can add damping on vp and vp/vs to avoid non physical (non numerical) models

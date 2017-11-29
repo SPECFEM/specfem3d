@@ -319,7 +319,7 @@ subroutine compute_arrays_source_forcesolution_fluid(ispec_selected_source,sourc
   double precision, dimension(NDIM,NDIM) :: nu_source
   double precision :: comp_x,comp_y,comp_z
   real(kind=CUSTOM_REAL) :: factor_source
-  
+
   double precision :: FX, FY, FZ
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz
@@ -380,9 +380,9 @@ subroutine compute_arrays_source_forcesolution_fluid(ispec_selected_source,sourc
      enddo
   enddo
 
-  FX = factor_source *(nu_source(1,1)*comp_x + nu_source(1,2)*comp_y +  nu_source(1,3)*comp_z) 
-  FY = factor_source *(nu_source(2,1)*comp_x + nu_source(2,2)*comp_y +  nu_source(2,3)*comp_z) 
-  FZ = factor_source *(nu_source(3,1)*comp_x + nu_source(3,2)*comp_y +  nu_source(3,3)*comp_z) 
+  FX = factor_source *(nu_source(1,1)*comp_x + nu_source(1,2)*comp_y +  nu_source(1,3)*comp_z)
+  FY = factor_source *(nu_source(2,1)*comp_x + nu_source(2,2)*comp_y +  nu_source(2,3)*comp_z)
+  FZ = factor_source *(nu_source(3,1)*comp_x + nu_source(3,2)*comp_y +  nu_source(3,3)*comp_z)
 
 ! calculate source array
   sourcearrayd(:,:,:,:) = ZERO
@@ -398,17 +398,17 @@ subroutine compute_arrays_source_forcesolution_fluid(ispec_selected_source,sourc
                                                                 hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dz)
            !! for now fixed force direction and stf is defined after
            sourcearrayd(:,k,l,m) = sourcearrayd(:,k,l,m) + (FX*dsrc_dx + FY*dsrc_dy + FZ*dsrc_dz)
-          
+
            !! to do :
-           !!  this is for time changing force direction 
-           !! sourcearrayd(1,k,l,m) = sourcearrayd(1,k,l,m) +  dsrc_dx  * (stf_comp_x(t))  
-           !! sourcearrayd(2,k,l,m) = sourcearrayd(2,k,l,m) +  dsrc_dy  * (stf_comp_y(t)) 
-           !! sourcearrayd(3,k,l,m) = sourcearrayd(3,k,l,m) +  dsrc_dz  * (stf_comp_z(t))  
+           !!  this is for time changing force direction
+           !! sourcearrayd(1,k,l,m) = sourcearrayd(1,k,l,m) +  dsrc_dx  * (stf_comp_x(t))
+           !! sourcearrayd(2,k,l,m) = sourcearrayd(2,k,l,m) +  dsrc_dy  * (stf_comp_y(t))
+           !! sourcearrayd(3,k,l,m) = sourcearrayd(3,k,l,m) +  dsrc_dz  * (stf_comp_z(t))
            !!
-           !! after we need to add : sum(sourcearrayd(:,k,l,m)) to acoustic potential 
-           !! or sourcearrayd(1,k,l,m) * stf_comp_x(t) + 
-           !!    sourcearrayd(2,k,l,m) * stf_comp_y(t) + 
-           !!    sourcearrayd(3,k,l,m) * stf_comp_z(t) 
+           !! after we need to add : sum(sourcearrayd(:,k,l,m)) to acoustic potential
+           !! or sourcearrayd(1,k,l,m) * stf_comp_x(t) +
+           !!    sourcearrayd(2,k,l,m) * stf_comp_y(t) +
+           !!    sourcearrayd(3,k,l,m) * stf_comp_z(t)
            !!
 
        enddo

@@ -71,14 +71,14 @@ subroutine inverse_problem_main()
   logical                                :: finished
   character(len=MAX_LEN_STRING)          :: mode_running
 
-  
+
   !!!##############################################################################################################################
   !!! ---------------------------------------------- INITIALIZE RUNTIME ----------------------------------------------------------
   !!!##############################################################################################################################
 
   !! get rank of my MPI process
   call world_rank(myrank)
- 
+
   !! select which mode to run : only direct or FWI
   call get_mode_running(mode_running, inversion_param)
 

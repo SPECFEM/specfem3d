@@ -378,11 +378,11 @@ contains
        endif
 
        if (trim(inversion_param%parameter_family_name) == "VTI") then
-     
+
           call write_vti_sem_model(ifrq)
-          
+
        else
-          
+
           if (mygroup <= 0) then !! only the fisrt group write the  model and need to bcast at all other
              path_file='OUTPUT_FILES/DATABASES_MPI/proc'
              write(name_file,'(i6.6,a1,i6.6,a21)') myrank,'_', ifrq , '_model_cij_output.bin'
@@ -417,7 +417,7 @@ contains
              write(888)  rho_vs
              close(888)
 
-          end if
+          endif
        endif
 
     else
@@ -442,8 +442,8 @@ contains
                 wks_model_rh(:,:,:,ispec) =  rho_vs(:,:,:,ispec) * rho_vs(:,:,:,ispec) / mustore(:,:,:,ispec)
                 wks_model_vp(:,:,:,ispec) = (kappastore(:,:,:,ispec) + (4./3.) * mustore(:,:,:,ispec) ) / rho_vp(:,:,:,ispec)
                 wks_model_vs(:,:,:,ispec) = mustore(:,:,:,ispec) /  rho_vs(:,:,:,ispec)
-             end if
-          end do
+             endif
+          enddo
        endif
 
        if (ACOUSTIC_SIMULATION) then
@@ -583,17 +583,17 @@ contains
        endif
 
        open(888,file=trim(file_name),form='unformatted')
-       if (inversion_param%use_log) then 
+       if (inversion_param%use_log) then
           write(888) exp(field(:,:,:,:,i))
        else
           write(888) field(:,:,:,:,i)
-       end if
+       endif
        close(888)
 
     enddo
 
   end subroutine DumpModelArray
-  
+
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !--------------------------------------------------------------------------------------------------------------------
@@ -956,8 +956,8 @@ contains
     select case(trim(adjustl(type_model)))
 
     case('VTI') ! rho, vp, vs, epsillon, delta, gamma (oil-industry like)
-       
-       if (myrank==0) then 
+
+       if (myrank == 0) then
           write(INVERSE_LOG_FILE,*)
           write(INVERSE_LOG_FILE,*) '          *********************************************'
           write(INVERSE_LOG_FILE,*) '          ***         READING FD VTI MODEL          ***'
@@ -1301,7 +1301,7 @@ contains
     real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable                   :: wks_model_rh, wks_model_vp, wks_model_vs
     real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable                   :: wks_model_ep, wks_model_de, wks_model_ga
 
-    
+
     allocate(wks_model_rh(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ierror)
     if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_model_rh in ReadInputSEMmodel subroutine, IO_model_mod")
 
@@ -1326,7 +1326,7 @@ contains
     wks_model_ep(:,:,:,:) = (c11store(:,:,:,:) - c33store(:,:,:,:)) / (2.*c33store(:,:,:,:))
     wks_model_ga(:,:,:,:) = (c66store(:,:,:,:) - c44store(:,:,:,:)) / (2.*c44store(:,:,:,:))
     wks_model_de(:,:,:,:) = 0.5 * ( (c13store(:,:,:,:) + c44store(:,:,:,:) )**2 - (c33store(:,:,:,:) - c44store(:,:,:,:))**2 )&
-         / (c33store(:,:,:,:)*(c33store(:,:,:,:) - c44store(:,:,:,:))) 
+         / (c33store(:,:,:,:)*(c33store(:,:,:,:) - c44store(:,:,:,:)))
 
     !! write output  model
     path_file='OUTPUT_FILES/DATABASES_MPI/proc'
@@ -1335,21 +1335,21 @@ contains
     open(888,file=trim(path_file),form='unformatted')
     write(888) wks_model_vp
     close(888)
-    
+
     path_file='OUTPUT_FILES/DATABASES_MPI/proc'
     write(name_file,'(i6.6,a1,i6.6,a20)') myrank,'_', ifrq , '_model_vs_output.bin'
     path_file=(trim(path_file))//trim(name_file)
     open(888,file=trim(path_file),form='unformatted')
     write(888) wks_model_vs
     close(888)
-    
+
     path_file='OUTPUT_FILES/DATABASES_MPI/proc'
     write(name_file,'(i6.6,a1,i6.6,a20)') myrank,'_', ifrq , '_model_rh_output.bin'
     path_file=(trim(path_file))//trim(name_file)
     open(888,file=trim(path_file),form='unformatted')
     write(888) wks_model_rh
     close(888)
-    
+
 
     !! write output  model
     path_file='OUTPUT_FILES/DATABASES_MPI/proc'
@@ -1358,14 +1358,14 @@ contains
     open(888,file=trim(path_file),form='unformatted')
     write(888) wks_model_ep
     close(888)
-    
+
     path_file='OUTPUT_FILES/DATABASES_MPI/proc'
     write(name_file,'(i6.6,a1,i6.6,a20)') myrank,'_', ifrq , '_model_ga_output.bin'
     path_file=(trim(path_file))//trim(name_file)
     open(888,file=trim(path_file),form='unformatted')
     write(888) wks_model_ga
     close(888)
-    
+
     path_file='OUTPUT_FILES/DATABASES_MPI/proc'
     write(name_file,'(i6.6,a1,i6.6,a20)') myrank,'_', ifrq , '_model_de_output.bin'
     path_file=(trim(path_file))//trim(name_file)
