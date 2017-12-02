@@ -1,10 +1,10 @@
 module elastic_tensor_tools_mod
 
-  use interpolation_mod, only: si=kindsi, sp=>kindsp, di, dp, cp, hp, deg2rad, rad2deg, pi
+  use interpolation_mod, only: kindsi=>si, kindsp=>sp, di, dp, cp, hp, deg2rad, rad2deg, pi
 
   implicit none
 
-  integer(kind=si), dimension(:,:), allocatable :: ind_vec2tens, ind_vec2tens_voigt
+  integer(kind=kindsi), dimension(:,:), allocatable :: ind_vec2tens, ind_vec2tens_voigt
 
 contains
 
