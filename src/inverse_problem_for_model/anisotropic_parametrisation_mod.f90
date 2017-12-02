@@ -1,6 +1,6 @@
 module anisotropic_parametrisation_mod
 
-  use interpolation_mod, only: si, sp, di, dp, cp, hp
+  use interpolation_mod, only: kindsi=>si, kindsp=>sp, kindi=>di, dp, cp, hp
   use elastic_tensor_tools_mod, only: delta, ind_vec2tens, ind_vec2tens_voigt, &
                                       define_indexing_vec_to_tens
   implicit none
@@ -48,8 +48,8 @@ contains
     real(kind=cp), dimension (9),     intent(in) :: physical_param
     real(kind=cp), dimension (9,22), intent(out) :: partial_derivative
 
-    integer(kind=si)            :: i, j, k, l, m, ipar
-    integer(kind=si)            :: dij, dik, dil, djk, djl, dkl, dim, djm, dkm, dlm
+    integer(kind=kindsi)            :: i, j, k, l, m, ipar
+    integer(kind=kindsi)            :: dij, dik, dil, djk, djl, dkl, dim, djm, dkm, dlm
     real(kind=cp)               :: rho, c11, c33, c44, c66, c13
     real(kind=cp)               :: si, sj, sk, sl
     real(kind=cp)               :: sisj, sksl, sjsk, sisl, sisk, sjsl
@@ -183,8 +183,8 @@ contains
     real(kind=cp), dimension (9),     intent(in) :: physical_param
     real(kind=cp), dimension (9,22), intent(out) :: partial_derivative
 
-    integer(kind=si)            :: i, j, k, l, m, ipar
-    integer(kind=si)            :: dij, dik, dil, djk, djl, dkl, dim, djm, dkm, dlm
+    integer(kind=kindsi)            :: i, j, k, l, m, ipar
+    integer(kind=kindsi)            :: dij, dik, dil, djk, djl, dkl, dim, djm, dkm, dlm
     real(kind=cp)               :: rho, c33, c44, eps, del, gam
     real(kind=cp)               :: si, sj, sk, sl
     real(kind=cp)               :: sisj, sksl, sjsk, sisl, sisk, sjsl
@@ -328,8 +328,8 @@ contains
     real(kind=cp), dimension (19),     intent(in) :: physical_param
     real(kind=cp), dimension (19,22), intent(out) :: partial_derivative
 
-    integer(kind=si)            :: i, j, k, l, m, ipar
-    integer(kind=si)            :: dij, dik, dil, djk, djl, dkl, dim, djm, dkm, dlm
+    integer(kind=kindsi)            :: i, j, k, l, m, ipar
+    integer(kind=kindsi)            :: dij, dik, dil, djk, djl, dkl, dim, djm, dkm, dlm
     real(kind=cp)               :: rho, c11, c22, c33, c44, c55, c66, c23, c13, c12
     real(kind=cp)               :: ai, aj, ak, al
     real(kind=cp)               :: bi, bj, bk, bl
