@@ -1,6 +1,6 @@
 module elastic_tensor_tools_mod
 
-  use interpolation_mod, only: kindsi=>si, kindsp=>sp, di, dp, cp, hp, deg2rad, rad2deg, pi
+  use interpolation_mod, only: kindsi => si, kindsp => sp, di, dp, cp, hp, deg2rad, rad2deg, pi
 
   implicit none
 
