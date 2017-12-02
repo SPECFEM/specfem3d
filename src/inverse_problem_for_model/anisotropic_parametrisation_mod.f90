@@ -1,6 +1,6 @@
 module anisotropic_parametrisation_mod
 
-  use interpolation_mod, only: kindsi=>si, kindsp=>sp, kindi=>di, dp, cp, hp
+  use interpolation_mod, only: kindsi => si, kindsp => sp, kindi => di, dp, cp, hp
   use elastic_tensor_tools_mod, only: delta, ind_vec2tens, ind_vec2tens_voigt, &
                                       define_indexing_vec_to_tens
   implicit none
