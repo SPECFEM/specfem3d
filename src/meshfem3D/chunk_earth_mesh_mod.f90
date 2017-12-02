@@ -55,7 +55,10 @@ contains
 !!##################################################################################################################################
     subroutine mesh_chunk_earth()
 
-      integer :: ierr
+      !! SB SB COMMENT THIS IERR (variable alreafy exist in module)
+      !! this makes gfortran complins because the one in the ;odule header is unsed
+      !! integer :: ierr
+      !! SB SB
       character(len=MAX_STRING_LEN) :: keyw
 
       open(27, file='DATA/meshfem3D_files/Mesh_Chunk_Par_file', action='read', iostat=ierr)
