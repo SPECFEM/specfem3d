@@ -474,10 +474,6 @@ module specfem_par_acoustic
   ! LDDRK time scheme
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: potential_acoustic_lddrk,potential_dot_acoustic_lddrk
 
-  ! FLAG for Dipole source in fluid
-  logical :: DIPOLE_SOURCE_IN_FLUID
-
-
 end module specfem_par_acoustic
 
 !=====================================================================
