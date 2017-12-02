@@ -1,6 +1,6 @@
 module elastic_tensor_tools_mod
 
-  use interpolation_mod, only: si, sp, di, dp, cp, hp, deg2rad, rad2deg, pi
+  use interpolation_mod, only: si=kindsi, sp=>kindsp, di, dp, cp, hp, deg2rad, rad2deg, pi
 
   implicit none
 
@@ -174,7 +174,7 @@ contains
     real(kind=dp), dimension(3,3), intent(in)  :: rotmat
     real(kind=dp), dimension(3),   intent(out) :: vi_r
 
-    integer(kind=si) :: i, ip
+    integer(kind=kindsi) :: i, ip
 
     vi_r = 0._dp
 
@@ -195,7 +195,7 @@ contains
     real(kind=dp), dimension(3,3), intent(in)  :: rotmat
     real(kind=dp), dimension(3,3)              :: cij_r
 
-    integer(kind=si) :: i, j, ip, jp
+    integer(kind=kindsi) :: i, j, ip, jp
 
     cij_r = 0._dp
 
@@ -220,7 +220,7 @@ contains
     real(kind=dp),     dimension(3,3), intent(in)  :: rotmat
     real(kind=dp), dimension(3,3,3,3), intent(out) :: cijkl_r
 
-    integer(kind=si) :: i, j, k, l, ip, jp, kp, lp
+    integer(kind=kindsi) :: i, j, k, l, ip, jp, kp, lp
 
     cijkl_r = 0._dp
 
@@ -258,7 +258,7 @@ contains
     real(kind=dp), dimension(6,6)              :: tensor_r
 
     real(kind=dp), dimension(6,6)  :: tensor_tmp, bond_t
-    integer(kind=si)               :: i, j, k
+    integer(kind=kindsi)               :: i, j, k
 
     ! Get transpose of bond
     bond_t = transpose(bond)
@@ -371,8 +371,8 @@ contains
     real(kind=dp), intent(in)                 :: lambda, mu
     real(kind=dp), dimension(21), intent(out) :: tensor
 
-    integer(kind=si) :: ipar, i, j, k, l
-    integer(kind=si) :: dij, dik, dil, djk, djl, dkl
+    integer(kind=kindsi) :: ipar, i, j, k, l
+    integer(kind=kindsi) :: dij, dik, dil, djk, djl, dkl
 
     tensor(:) = 0._dp
 
@@ -410,8 +410,8 @@ contains
 
     real(kind=dp), dimension(21), intent(out) :: tensor
 
-    integer(kind=si) :: ipar, i, j, k, l
-    integer(kind=si) :: dij, dik, dil, djk, djl, dkl
+    integer(kind=kindsi) :: ipar, i, j, k, l
+    integer(kind=kindsi) :: dij, dik, dil, djk, djl, dkl
     real(kind=dp)    :: si, sj, sk, sl
     real(kind=dp)    :: sisj, sksl, sjsk, sisl, sisk, sjsl
     real(kind=dp)    :: sisjsk, sisjsl, sisksl, sjsksl, sisjsksl
@@ -474,8 +474,8 @@ contains
 
     real(kind=dp), dimension(21), intent(out) :: tensor
 
-    integer(kind=si) :: ipar, i, j, k, l
-    integer(kind=si) :: dij, dik, dil, djk, djl, dkl
+    integer(kind=kindsi) :: ipar, i, j, k, l
+    integer(kind=kindsi) :: dij, dik, dil, djk, djl, dkl
     real(kind=dp)    :: si, sj, sk, sl
     real(kind=dp)    :: sisj, sksl, sjsk, sisl, sisk, sjsl
     real(kind=dp)    :: sisjsk, sisjsl, sisksl, sjsksl, sisjsksl
@@ -540,8 +540,8 @@ contains
 
     real(kind=dp), dimension(21), intent(out) :: tensor
 
-    integer(kind=si) :: ipar, i, j, k, l
-    integer(kind=si) :: dij, dik, dil, djk, djl, dkl
+    integer(kind=kindsi) :: ipar, i, j, k, l
+    integer(kind=kindsi) :: dij, dik, dil, djk, djl, dkl
     real(kind=dp)    :: aiajakal, bibjbkbl, cicjckcl
     real(kind=dp)    :: aiaj, akal, bibj, bkbl
     real(kind=dp)    :: aiak, aial, ajal, ajak
@@ -727,8 +727,8 @@ contains
   ! Small function for kronecker delta function
   function delta(i,j) result(d)
 
-    integer(kind=si), intent(in) :: i, j
-    integer(kind=si)             :: d
+    integer(kind=kindsi), intent(in) :: i, j
+    integer(kind=kindsi)             :: d
 
     if (i == j) then
        d = 1
@@ -746,7 +746,7 @@ contains
     real(kind=dp), dimension(3), intent(in) :: vector
     real(kind=dp)                           :: norm
 
-    integer(kind=si) :: i
+    integer(kind=kindsi) :: i
 
     norm = 0._dp
 
@@ -764,7 +764,7 @@ contains
     real(kind=dp), dimension(3,3), intent(in) :: tensor
     real(kind=dp)                             :: norm
 
-    integer(kind=si) :: i, j
+    integer(kind=kindsi) :: i, j
 
     norm = 0._dp
 
@@ -784,7 +784,7 @@ contains
     real(kind=dp), dimension(3,3,3,3), intent(in) :: tensor
     real(kind=dp)                                 :: norm
 
-    integer(kind=si) :: i, j, k, l
+    integer(kind=kindsi) :: i, j, k, l
 
     norm = 0._dp
 
@@ -968,8 +968,8 @@ contains
   ! Get Voigt m index from ij
   function voigt_index(i,j) result(m)
 
-    integer(kind=si), intent(in) :: i, j
-    integer(kind=si)             :: m, dij
+    integer(kind=kindsi), intent(in) :: i, j
+    integer(kind=kindsi)             :: m, dij
 
     dij = delta(i,j)
 
@@ -1064,7 +1064,7 @@ contains
     real(kind=dp), dimension(3,3),    intent(in) :: cmn
     real(kind=dp), dimension(3,3,3,3)            :: cijkl
 
-    integer(kind=si) :: i, j, k, l, m, n
+    integer(kind=kindsi) :: i, j, k, l, m, n
 
     ! Make tensor
     cijkl = 0._dp
@@ -1227,7 +1227,7 @@ contains
     real(kind=dp), dimension(21),  intent(in)  :: vi      ! input vector
     real(kind=dp), dimension(21),  intent(out) :: vp, vd  ! projected and deviation vectors
 
-    integer(kind=si) :: i
+    integer(kind=kindsi) :: i
 
     real(kind=dp), intent(out) :: dev, k, g
     real(kind=dp) :: disum, vosum
@@ -1283,10 +1283,10 @@ contains
     real(kind=dp), parameter :: tol=1e-9
 
     real(kind=dp)    :: val, norm
-    integer(kind=si) :: i, j, pos, p
+    integer(kind=kindsi) :: i, j, pos, p
 
-    integer(kind=si), dimension(3,3) :: perm
-    integer(kind=si), dimension(3)   :: npos
+    integer(kind=kindsi), dimension(3,3) :: perm
+    integer(kind=kindsi), dimension(3)   :: npos
 
     ! Define permutation matrix
     perm(:,1) = (/ 1, 2, 3/)
@@ -1391,7 +1391,7 @@ contains
   ! Jacobi eigenvalue decomposition Ax = lx
   subroutine jacobi_eigenvalue_decomposition(a,n,tol,lambda,vector)
 
-    integer(kind=si), intent(in) :: n
+    integer(kind=kindsi), intent(in) :: n
 
     real(kind=dp), dimension(n,n), intent(in)    :: a      ! input matrix
 
@@ -1400,9 +1400,9 @@ contains
 
     real(kind=dp), dimension(n,n)                :: as     ! as = PtAP
 
-    integer(kind=si), parameter :: max_iter=50
+    integer(kind=kindsi), parameter :: max_iter=50
 
-    integer(kind=si) :: i, j, iter
+    integer(kind=kindsi) :: i, j, iter
     real(kind=dp)    :: mu, tol
 
     ! Copy a in a*
@@ -1446,11 +1446,11 @@ contains
 
     subroutine jacobi_rotate(a,p,n,k,l)
 
-      integer(kind=si), intent(in) :: n, k, l
+      integer(kind=kindsi), intent(in) :: n, k, l
       real(kind=dp), dimension(n,n), intent(inout) :: p ! eigenvectors (P)
       real(kind=dp), dimension(n,n), intent(inout) :: a     ! as = PtAP
 
-      integer(kind=si) :: i
+      integer(kind=kindsi) :: i
       real(kind=dp)    :: adiff, t, c, s, tau, temp, phi
 
       real(kind=dp), parameter :: smallval=1e-36_dp
@@ -1498,11 +1498,11 @@ contains
 
     subroutine sort_eigenvalues_eigenvectors(lambda,vector,n)
 
-      integer(kind=si), intent(in) :: n
+      integer(kind=kindsi), intent(in) :: n
       real(kind=dp), dimension(n),   intent(inout) :: lambda ! eigenvalues
       real(kind=dp), dimension(n,n), intent(inout) :: vector ! eigenvectors
 
-      integer(kind=si), dimension(:), allocatable :: j
+      integer(kind=kindsi), dimension(:), allocatable :: j
 
       do i = 1, n-1
          j = maxloc(lambda(i:n)) + i - 1
@@ -1516,7 +1516,7 @@ contains
 
     subroutine myswap(a,b,n)
 
-      integer(kind=si), intent(in) :: n
+      integer(kind=kindsi), intent(in) :: n
 
       real(kind=dp), dimension(n), intent(inout) :: a, b
       real(kind=dp), dimension(n)                :: c
@@ -1529,12 +1529,12 @@ contains
 
     function threshold(a,n) result(norm)
 
-      integer(kind=si) :: n
+      integer(kind=kindsi) :: n
       real(kind=dp), dimension(n,n), intent(inout) :: a     ! as = PtAP
 
       real(kind=dp) :: norm
 
-      integer(kind=si) :: i, j
+      integer(kind=kindsi) :: i, j
 
       norm = 0._dp
 
