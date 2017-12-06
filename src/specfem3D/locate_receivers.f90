@@ -698,16 +698,18 @@
 !--------------------------------------------------------------------------------------------------------------------
 !  locate point in mesh.
 !--------------------------------------------------------------------------------------------------------------------
+
   subroutine locate_point_in_mesh(x_target, y_target, z_target, POINT_CAN_BE_BURIED, elemsize_max_glob, &
                                   ispec_selected, xi_found, eta_found, gamma_found, x_found, y_found, z_found, domain, nu)
 
   use constants
-  use specfem_par, only: ibool,myrank,NSPEC_AB,NGNOD, &
+  use specfem_par, only: ibool,myrank,NSPEC_AB,NGLOB_AB,NGNOD, &
                          xstore,ystore,zstore,xigll,yigll,zigll,ispec_is_surface_external_mesh,iglob_is_surface_external_mesh
   use specfem_par_acoustic, only: ispec_is_acoustic
   use specfem_par_elastic, only: ispec_is_elastic
   use specfem_par_poroelastic, only: ispec_is_poroelastic
 
+  implicit none
 
   double precision,                      intent(in)     :: x_target, y_target, z_target
   logical,                               intent(in)     :: POINT_CAN_BE_BURIED
@@ -734,6 +736,12 @@
   integer, dimension(NGNOD)                             :: iaddx,iaddy,iaddz
   integer                                               :: imin,imax,jmin,jmax,kmin,kmax
 
+!! DK DK dec 2017: also loop on all the elements in contact with the initial guess element to improve accuracy of estimate
+  logical, dimension(NGLOB_AB) :: flag_topological
+  integer :: number_of_mesh_elements_for_the_initial_guess
+  integer, dimension(:), allocatable :: array_of_all_elements_of_ispec_selected
+  double precision :: final_distance_squared,final_distance_squared_this_element
+
   ! sets maximal element size for search
   ! use 10 times the distance as a criterion for source detection
   maximal_elem_size_squared = (10. * elemsize_max_glob)**2
@@ -743,25 +751,27 @@
   ix_initial_guess = 1
   iy_initial_guess = 1
   iz_initial_guess = 1
+
   ! set distance to huge initial value
   distmin_squared = HUGEVAL
 
-  ! set which GLL points will be considered during research, depending on the possibility to bury the point or not
-  if (.not. POINT_CAN_BE_BURIED) then
+!! DK DK dec 2017 changed this
+! ! set which GLL points will be considered during research, depending on the possibility to bury the point or not
+! if (.not. POINT_CAN_BE_BURIED) then
     imin  = 1
     imax  = NGLLX
     jmin  = 1
     jmax  = NGLLY
     kmin  = 1
     kmax  = NGLLZ
-  else
-    imin  = 2
-    imax  = NGLLX-1
-    jmin  = 2
-    jmax  = NGLLY-1
-    kmin  = 2
-    kmax  = NGLLZ-1
-  endif
+! else
+!   imin  = 2
+!   imax  = NGLLX-1
+!   jmin  = 2
+!   jmax  = NGLLY-1
+!   kmin  = 2
+!   kmax  = NGLLZ-1
+! endif
 
   ! find the element candidate that may contain the target point
   do ispec = 1, NSPEC_AB
@@ -772,6 +782,8 @@
     dist_squared = (x_target - dble(xstore(iglob)))**2 &
                  + (y_target - dble(ystore(iglob)))**2 &
                  + (z_target - dble(zstore(iglob)))**2
+
+    ! we compare squared distances instead of distances to speed up the comparison by avoiding computing a square root
     if (dist_squared > maximal_elem_size_squared) cycle ! exclude elements that are too far from target
 
     ! find closest GLL point form target
@@ -819,16 +831,92 @@
     domain = 0
   endif
 
+!! DK DK dec 2017: also loop on all the elements in contact with the initial guess element to improve accuracy of estimate
+  flag_topological(:) = .false.
+
+! mark the eight corners of the initial guess element
+  flag_topological(ibool(1,1,1,ispec_selected)) = .true.
+  flag_topological(ibool(NGLLX,1,1,ispec_selected)) = .true.
+  flag_topological(ibool(NGLLX,NGLLY,1,ispec_selected)) = .true.
+  flag_topological(ibool(1,NGLLY,1,ispec_selected)) = .true.
+
+  flag_topological(ibool(1,1,NGLLZ,ispec_selected)) = .true.
+  flag_topological(ibool(NGLLX,1,NGLLZ,ispec_selected)) = .true.
+  flag_topological(ibool(NGLLX,NGLLY,NGLLZ,ispec_selected)) = .true.
+  flag_topological(ibool(1,NGLLY,NGLLZ,ispec_selected)) = .true.
+
+! loop on all the elements to count how many are shared with the initial guess
+  number_of_mesh_elements_for_the_initial_guess = 1
+  do ispec = 1,NSPEC_AB
+    if (ispec == ispec_selected) cycle
+    ! loop on the eight corners only, no need to loop on the rest since we just want to detect adjacency
+    do k = 1,NGLLZ,NGLLZ-1
+      do j = 1,NGLLY,NGLLY-1
+        do i = 1,NGLLX,NGLLX-1
+          if (flag_topological(ibool(i,j,k,ispec))) then
+            ! this element is in contact with the initial guess
+            number_of_mesh_elements_for_the_initial_guess = number_of_mesh_elements_for_the_initial_guess + 1
+            ! let us not count it more than once, it may have a full edge in contact with it and would then be counted twice
+            goto 700
+          endif
+        enddo
+      enddo
+    enddo
+    700 continue
+  enddo
+
+! now that we know the number of elements, we can allocate the list of elements and create it
+  allocate(array_of_all_elements_of_ispec_selected(number_of_mesh_elements_for_the_initial_guess))
+
+! first store the initial guess itself
+  number_of_mesh_elements_for_the_initial_guess = 1
+  array_of_all_elements_of_ispec_selected(number_of_mesh_elements_for_the_initial_guess) = ispec_selected
+
+! then store all the others
+  do ispec = 1,NSPEC_AB
+    if (ispec == ispec_selected) cycle
+    ! loop on the eight corners only, no need to loop on the rest since we just want to detect adjacency
+    do k = 1,NGLLZ,NGLLZ-1
+      do j = 1,NGLLY,NGLLY-1
+        do i = 1,NGLLX,NGLLX-1
+          if (flag_topological(ibool(i,j,k,ispec))) then
+            ! this element is in contact with the initial guess
+            number_of_mesh_elements_for_the_initial_guess = number_of_mesh_elements_for_the_initial_guess + 1
+            array_of_all_elements_of_ispec_selected(number_of_mesh_elements_for_the_initial_guess) = ispec
+            ! let us not count it more than once, it may have a full edge in contact with it and would then be counted twice
+            goto 800
+          endif
+        enddo
+      enddo
+    enddo
+    800 continue
+  enddo
+
+  ! define topology of the control element
+  call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
+
+!! DK DK dec 2017
+  final_distance_squared = HUGEVAL
+
+  do i = 1,number_of_mesh_elements_for_the_initial_guess
+
+!! DK DK dec 2017 set initial guess in the middle of the element, since we computed the true one only for the true initial guess
+!! DK DK dec 2017 the nonlinear process below will converge anyway
+    if (i > 1) then
+      ix_initial_guess = NGLLX / 2
+      iy_initial_guess = NGLLY / 2
+      iz_initial_guess = NGLLZ / 2
+    endif
+
+    ispec = array_of_all_elements_of_ispec_selected(i)
+
   ! general coordinate of initial guess
   xi    = xigll(ix_initial_guess)
   eta   = yigll(iy_initial_guess)
   gamma = zigll(iz_initial_guess)
 
-  ! define topology of the control element
-  call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
-
   ! define coordinates of the control points of the element
-  do ia=1,NGNOD
+  do ia = 1,NGNOD
      iax = 0
      iay = 0
      iaz = 0
@@ -862,11 +950,10 @@
         call exit_MPI(myrank,'incorrect value of iaddz')
      endif
 
-     iglob = ibool(iax,iay,iaz,ispec_selected)
+     iglob = ibool(iax,iay,iaz,ispec)
      xelm(ia) = dble(xstore(iglob))
      yelm(ia) = dble(ystore(iglob))
      zelm(ia) = dble(zstore(iglob))
-
   enddo
 
   ! iterate to solve the non linear system
@@ -893,12 +980,12 @@
 
      ! impose that we stay in that element
      ! (useful if user gives a point outside the mesh for instance)
-     if (xi > 1.d0) xi     =  1.d0
-     if (xi < -1.d0) xi     = -1.d0
-     if (eta > 1.d0) eta    =  1.d0
-     if (eta < -1.d0) eta    = -1.d0
-     if (gamma > 1.d0) gamma  =  1.d0
-     if (gamma < -1.d0) gamma  = -1.d0
+     if (xi > 1.01d0) xi     =  1.01d0
+     if (xi < -1.01d0) xi     = -1.01d0
+     if (eta > 1.01d0) eta    =  1.01d0
+     if (eta < -1.01d0) eta    = -1.01d0
+     if (gamma > 1.01d0) gamma  =  1.01d0
+     if (gamma < -1.01d0) gamma  = -1.01d0
 
   enddo
 
@@ -906,15 +993,31 @@
   call recompute_jacobian(xelm,yelm,zelm,xi,eta,gamma,x,y,z, &
        xixs,xiys,xizs,etaxs,etays,etazs,gammaxs,gammays,gammazs,NGNOD)
 
-  ! store xi,eta,gamma and x,y,z of point found
-  ! note: xi/eta/gamma will be in range [-1,1]
-  xi_found = xi
-  eta_found = eta
-  gamma_found = gamma
+! compute final distance squared between asked and found
+  final_distance_squared_this_element = (x_target-x)**2 + (y_target-y)**2 + (z_target-z)**2
 
-  x_found = x
-  y_found = y
-  z_found = z
+! if we have found an element that gives a shorter distance
+  if (final_distance_squared_this_element < final_distance_squared) then
+    ! store information about the point found
+    ! note: xi/eta/gamma will be in range [-1,1]
+    ispec_selected = ispec
+
+    xi_found = xi
+    eta_found = eta
+    gamma_found = gamma
+
+    x_found = x
+    y_found = y
+    z_found = z
+
+!   store final distance squared between asked and found
+    final_distance_squared = final_distance_squared_this_element
+  endif
+
+!! DK DK dec 2017
+  enddo
+
+  deallocate(array_of_all_elements_of_ispec_selected)
 
   end subroutine locate_point_in_mesh
 
