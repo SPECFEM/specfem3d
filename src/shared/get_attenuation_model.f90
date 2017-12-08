@@ -834,8 +834,10 @@
 !! DK DK dec 2017: added call to SolvOpt(), which is better (see https://github.com/geodynamics/specfem3d/issues/742 )
   f_min_attenuation = 1.d0 / max_period
   f_max_attenuation = 1.d0 / min_period
-  call get_attenuation_source_freq(f0_attenuation,min_period,max_period)
-  call compute_attenuation_coeffs(N_SLS,Q_in,f0_attenuation,f_min_attenuation,f_max_attenuation,tau_eps,tau_s)
+  if (N_SLS >= 6) then
+    call get_attenuation_source_freq(f0_attenuation,min_period,max_period)
+    call compute_attenuation_coeffs(N_SLS,Q_in,f0_attenuation,f_min_attenuation,f_max_attenuation,tau_eps,tau_s)
+  endif
 
   ! WRITE
   rw = -1
