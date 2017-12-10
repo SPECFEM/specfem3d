@@ -176,6 +176,7 @@
   ! user parameter
 
   ! enforces ratio Qs/Qp >= L factor from Anderson & Hart (1978)
+  ! IMPORTANT: this flag applies only if USE_OLSEN_ATTENUATION is true
   logical, parameter :: USE_ANDERSON_CRITERIA = .true.
 
   !-----------------------------------------------------
@@ -214,16 +215,20 @@
     write(IMAIN,*) "The approximation is performed in the following frequency band:"
     write(IMAIN,*) "  Reference frequency requested by the user (Hz):",sngl(ATTENUATION_f0_REFERENCE), &
                                             " period (s):",sngl(1.0/ATTENUATION_f0_REFERENCE)
+
     if (COMPUTE_FREQ_BAND_AUTOMATIC) write(IMAIN,*) "  The following values are computed automatically by the code based on &
          &the estimated maximum frequency resolution of your mesh and can thus vary from what you have requested:"
+
     write(IMAIN,*) "  Frequency band min/max (Hz):",sngl(1.0/MAX_ATTENUATION_PERIOD),sngl(1.0/MIN_ATTENUATION_PERIOD)
     write(IMAIN,*) "  Period band min/max (s):",sngl(MIN_ATTENUATION_PERIOD),sngl(MAX_ATTENUATION_PERIOD)
     write(IMAIN,*) "  Logarithmic central frequency (Hz):",sngl(f_c_source)," period (s):",sngl(1.0/f_c_source)
     write(IMAIN,*) "  Using full attenuation with both Q_kappa and Q_mu."
+
     if (USE_OLSEN_ATTENUATION) then
       write(IMAIN,*) "  using Olsen scaling with attenuation ratio Qmu/vs = ",sngl(OLSEN_ATTENUATION_RATIO)
       if (USE_ANDERSON_CRITERIA) write(IMAIN,*) "  using Anderson and Hart criteria for ratio Qs/Qp"
     endif
+
     call flush_IMAIN()
   endif
 
