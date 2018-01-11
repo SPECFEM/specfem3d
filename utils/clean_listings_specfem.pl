@@ -309,6 +309,7 @@ use File::Basename;
       $line =~ s#restauration#restoration#ogi;
       $line =~ s#restaure#restore#ogi;
       $line =~ s#memmory#memory#ogi;
+      $line =~ s#convolution formation#convolution formulation#ogi;
       $line =~ s# usefull # useful #ogi;
       $line =~ s# usefull$# useful#ogi;
 
