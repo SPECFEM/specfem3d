@@ -310,6 +310,9 @@ use File::Basename;
       $line =~ s#restaure#restore#ogi;
       $line =~ s#memmory#memory#ogi;
       $line =~ s#convolution formation#convolution formulation#ogi;
+      $line =~ s#fortran#Fortran#ogi;
+      $line =~ s#adress#address#ogi;
+
       $line =~ s# usefull # useful #ogi;
       $line =~ s# usefull$# useful#ogi;
 
