@@ -354,6 +354,31 @@ typedef struct mesh_ {
   cudaStream_t copy_stream;
   //cudaStream_t b_copy_stream;
 
+  // sources
+  int nsources_local;
+  realw* d_sourcearrays;
+  double* d_stf_pre_compute;
+  int* d_islice_selected_source;
+  int* d_ispec_selected_source;
+
+  // receivers
+  int* d_ispec_selected_rec_loc;
+  int* d_ispec_selected_rec;
+  int nrec_local;
+  realw* d_station_seismo_field;
+  realw* h_station_seismo_field;
+
+  realw* d_hxir, *d_hetar, *d_hgammar;
+  realw* d_seismograms_d, *d_seismograms_v, *d_seismograms_a, *d_seismograms_p, * d_nu;
+
+  //realw* h_seismograms_d_it;
+  //realw* h_seismograms_v_it;
+  //realw* h_seismograms_a_it;
+
+  // adjoint receivers/sources
+  int nadj_rec_local;
+  realw* d_source_adjoint;
+
   // ------------------------------------------------------------------ //
   // elastic wavefield parameters
   // ------------------------------------------------------------------ //
@@ -395,27 +420,6 @@ typedef struct mesh_ {
 
   realw* d_rho_vp;
   realw* d_rho_vs;
-
-  // sources
-  int nsources_local;
-  realw* d_sourcearrays;
-  double* d_stf_pre_compute;
-  int* d_islice_selected_source;
-  int* d_ispec_selected_source;
-
-  // receivers
-  int* d_ispec_selected_rec_loc;
-  int* d_ispec_selected_rec;
-  int nrec_local;
-  realw* d_station_seismo_field;
-  realw* h_station_seismo_field;
-
-  realw* d_hxir, *d_hetar, *d_hgammar;
-  realw* d_seismograms_d, *d_seismograms_v, *d_seismograms_a, *d_seismograms_p, *d_nu;
-
-  // adjoint receivers/sources
-  int nadj_rec_local;
-  realw* d_source_adjoint;
 
   // surface elements (to save for noise tomography and acoustic simulations)
   int* d_free_surface_ispec;
