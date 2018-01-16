@@ -4,7 +4,7 @@
 #       this is using C as a base and installs gfortran in the test environment
 
 language: c
-
+dist: trusty
 sudo: required
 
 os: linux
@@ -22,48 +22,56 @@ env:
     # for test cases, we use
     #   TEST    - flags used for configuration
     #   TESTCOV - determines whether or not (0/1) code coverage flags are used
+    #   CUDA    - flag for compilation with CUDA
+    #   CUDA_VERSION - specifies CUDA toolkit version
 
-    # run coverage (using code coverage flags)
-    - TEST="--enable-vectorization --with-mpi" TESTCOV=1 TESTMAKE=1
+    # code coverage: vectorization & mpi, using code coverage flags
+    - TEST="--enable-vectorization --with-mpi" TESTCOV=1 TESTMAKE=1 CUDA=false
 
-    # run default test with make tests
-    - TEST="" TESTCOV=0 TESTMAKE=0
+    # default test with make tests
+    - TEST="" TESTCOV=0 TESTMAKE=0 CUDA=false
 
-    # run default example (elastic)
-    - TEST="" TESTCOV=0 TESTMAKE=1
+    # default example (elastic)
+    - TEST="" TESTCOV=0 TESTMAKE=1 CUDA=false
 
-    # run example 2 (acoustic)
-    - TEST="--enable-vectorization" TESTCOV=0 TESTMAKE=2
+    # default example, compilation w/ CUDA
+    - TEST="--with-cuda=cuda5 --without-mpi" TESTCOV=0 TESTMAKE=1 CUDA=true CUDA_VERSION=6.5-14
 
-    # run example 3 (poroelastic)
-    - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=3
+    # default example, compilation w/ CUDA and MPI
+    - TEST="--with-cuda=cuda5 --with-mpi" TESTCOV=0 TESTMAKE=1 CUDA=true CUDA_VERSION=6.5-14
 
-    # run example 4 (internal mesher)
-    - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=4
+    # example 2 (acoustic)
+    - TEST="--enable-vectorization" TESTCOV=0 TESTMAKE=2 CUDA=false
 
-    # run serial example (acoustic)
-    - TEST="--enable-vectorization --without-mpi" TESTCOV=0 TESTMAKE=5
+    # example 3 (poroelastic)
+    - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=3 CUDA=false
 
-    # run debug & double precision (acoustic)
-    - TEST="--enable-double-precision --enable-debug" TESTCOV=0 TESTMAKE=6
+    # example 4 (internal mesher)
+    - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=4 CUDA=false
 
-    # run debug with bounds-check (elastic)
-    - TEST="--enable-debug" TESTCOV=0 TESTMAKE=7
+    # serial example (acoustic)
+    - TEST="--enable-vectorization --without-mpi" TESTCOV=0 TESTMAKE=5 CUDA=false
 
-    # run PML example (acoustic)
-    - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=8
+    # debug & double precision (acoustic)
+    - TEST="--enable-double-precision --enable-debug" TESTCOV=0 TESTMAKE=6 CUDA=false
 
-    # run PML example (elastic)
-    - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=9
+    # debug with bounds-check (elastic)
+    - TEST="--enable-debug" TESTCOV=0 TESTMAKE=7 CUDA=false
 
-    # run noise example
-    - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=10
+    # PML example (acoustic)
+    - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=8 CUDA=false
 
-    # run tomographic model example
-    - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=11
+    # PML example (elastic)
+    - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=9 CUDA=false
 
-    # run acoustic kernel example
-    - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=12
+    # noise example
+    - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=10 CUDA=false
+
+    # tomographic model example
+    - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=11 CUDA=false
+
+    # acoustic kernel example
+    - TEST="--enable-vectorization --with-mpi" TESTCOV=0 TESTMAKE=12 CUDA=false
 
 before_install:
   # informations on git
@@ -84,17 +92,63 @@ before_install:
   - sudo apt-get update
 
 install:
+  # installs the CUDA toolkit
+  - |
+    if [ "$CUDA" == "true" ]; then
+      echo "Installing CUDA library"
+      # remove old nvidia-cuda packages
+      #sudo apt-get remove nvidia-cuda-* ;
+      # gets packages
+      ## distribution trusty: from ubuntu 14.04
+      wget http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1404/x86_64/cuda-repo-ubuntu1404_${CUDA_VERSION}_amd64.deb;
+      sudo dpkg -i cuda-repo-ubuntu1404_${CUDA_VERSION}_amd64.deb;
+      ## distribution precise: from ubuntu 12.04
+      #wget http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1204/x86_64/cuda-repo-ubuntu1204_${CUDA_VERSION}_amd64.deb;
+      #sudo dpkg -i cuda-repo-ubuntu1204_${CUDA_VERSION}_amd64.deb;
+      # update
+      sudo apt-get update -qq;
+      dpkg -l | grep cuda ;
+      export CUDA_APT=${CUDA_VERSION:0:3};
+      export CUDA_APT=${CUDA_APT/./-};
+      # installs packages
+      # CUDA_PACKAGES="cuda-drivers cuda-core-${CUDA_APT} cuda-cudart-dev-${CUDA_APT} cuda-cufft-dev-${CUDA_APT}";
+      CUDA_PACKAGES="cuda-drivers cuda-core-${CUDA_APT} cuda-cudart-dev-${CUDA_APT}";
+      echo "Installing ${CUDA_PACKAGES}"
+      sudo apt-get install -y ${CUDA_PACKAGES};
+      sudo apt-get clean;
+      export CUDA_HOME=/usr/local/cuda-${CUDA_VERSION:0:3};
+      export LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH};
+      export PATH=${CUDA_HOME}/bin:${PATH};
+      echo "";
+      echo "exports:"
+      export ;
+      echo "";
+      nvcc --version
+    fi
+
   # fortran/openMPI compiler
   - sudo apt-get install gfortran libgomp1 openmpi-bin libopenmpi-dev
 
   # python script needs numpy
-  - sudo apt-get install -qq python-numpy #python-scipy
+  - |
+    echo "Python on path: `which python`"
+    echo "pip on path: $(which pip)"
+    # for distribution precise
+    #sudo apt-get install -qq python-numpy #python-scipy
+    # trusty:
+    # (Sep2017 update: adding flag --user : see https://github.com/travis-ci/travis-ci/issues/8382)
+    pip install --user --upgrade pip setuptools wheel
+    pip install --user --only-binary=numpy numpy
+    # version info
+    python --version
 
   # version infos
-  - echo "compiler versions:" ${FC} ${MPIFC} ${CC}
-  - ${FC} --version
-  - ${MPIFC} --version
-  - ${CC} --version
+  - |
+    echo "compiler versions:" ${FC} ${MPIFC} ${CC}
+    ${FC} --version
+    ${MPIFC} --version
+    ${CC} --version
+
 
 script:
   ###########################################################
@@ -124,9 +178,16 @@ script:
   # configuration
   - |
     if [ "$TESTCOV" == "1" ]; then
+      echo "configuration: for coverage"
       ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TEST} FLAGS_CHECK="-fprofile-arcs -ftest-coverage -O0"
     else
-      ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TEST}
+      if [ "$CUDA" == "true" ]; then
+        echo "configuration: for cuda"
+        ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TEST} CUDA_LIB="${CUDA_HOME}/lib64" CUDA_INC="${CUDA_HOME}/include" CUDA_FLAGS="-Xcompiler -Wall,-Wno-unused-function,-Wno-unused-const-variable,-Wfatal-errors -g -G"
+      else
+        echo "configuration: default"
+        ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TEST}
+      fi
     fi
 
   # we output to console
@@ -238,74 +299,64 @@ script:
       cd $WORKDIR
     fi
 
-  # additional run for coverage
+  # code coverage: https://codecov.io/gh/geodynamics/specfem3d/
+  # additional runs for coverage
   - |
     if [ "$TESTCOV" == "1" ]; then
+      ##
+      ## testing acoustic
+      ##
       cd EXAMPLES/homogeneous_acoustic/
       sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
       ./run_this_example.sh
       cd $WORKDIR
-    fi
-
-  # additional run for coverage
-  - |
-    if [ "$TESTCOV" == "1" ]; then
+      ##
+      ## testing poroelastic
+      ##
       cd EXAMPLES/homogeneous_poroelastic/
       sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
       ./run_this_example.sh
       cd $WORKDIR
-    fi
-
-  # additional run for coverage
-  - |
-    if [ "$TESTCOV" == "1" ]; then
+      ##
+      ## testing simple model
+      ##
       cd EXAMPLES/meshfem3D_examples/simple_model/
       sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
       ./run_this_example.sh
       cd $WORKDIR
-    fi
-
-  # additional run for coverage
-  - |
-    if [ "$TESTCOV" == "1" ]; then
+      ##
+      ## testing PML acoustic
+      ##
       cd EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_acoustic_absorbing_CPML_5sides/
       sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
       ./run_this_example.sh
       cd $WORKDIR
-    fi
-
-  # additional run for coverage
-  - |
-    if [ "$TESTCOV" == "1" ]; then
+      ##
+      ## testing PML elastic
+      ##
       cd EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_elastic_absorbing_CPML_5sides/
       sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
       ./run_this_example.sh
       cd $WORKDIR
-    fi
-
-  # additional run for coverage
-  - |
-    if [ "$TESTCOV" == "1" ]; then
+      ##
+      ## testing noise
+      ##
       cd EXAMPLES/noise_tomography/
       sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step1
       sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step2
       sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step3
       ./run_this_example.sh
       cd $WORKDIR
-    fi
-
-  # additional run for coverage
-  - |
-    if [ "$TESTCOV" == "1" ]; then
+      ##
+      ## testing tomographic model
+      ##
       cd EXAMPLES/tomographic_model/
       sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
       ./run_this_example.sh
       cd $WORKDIR
-    fi
-
-  # additional run for coverage
-  - |
-    if [ "$TESTCOV" == "1" ]; then
+      ##
+      ## testing acoustic kernel simulation
+      ##
       cd EXAMPLES/homogeneous_acoustic/
       sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
       sed -i "s:^t_start.*:t_start=-6.0:" create_adjoint_sources.sh
