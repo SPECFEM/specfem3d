@@ -90,7 +90,7 @@
   ! prepares GPU arrays
   if (GPU_MODE) call prepare_timerun_GPU()
 
-#ifdef OPENMP_MODE
+#ifdef USE_OPENMP
   ! prepares arrays for OpenMP
   call prepare_timerun_OpenMP()
 #endif
@@ -1663,7 +1663,7 @@
 ! OpenMP version uses "special" compute_forces_viscoelastic routine
 ! we need to set num_elem_colors_elastic arrays
 
-#ifdef OPENMP_MODE
+#ifdef USE_OPENMP
   subroutine prepare_timerun_OpenMP()
 
   use specfem_par
@@ -1676,22 +1676,37 @@
   integer :: NUM_THREADS
   integer :: OMP_GET_MAX_THREADS
 
+  ! safety stop
+  print *,''
+  print *,'Note: there is currently no OpenMP version of the code!'
+  print *,'      a former implementation has been broken and moved to utils/unused_routines/ directory'
+  print *,'      Please re-compile the code, disenabling OpenMP support and/or consider contributing a new version if needed.'
+  print *,''
+
+  stop 'OpenMP version is currently not implemented.'
+
+  ! unused below but might be helpful in future...
+
+  NUM_THREADS = OMP_GET_MAX_THREADS()
+  if (myrank == 0) then
+    write(IMAIN,*)
+    write(IMAIN,*) 'Using:',NUM_THREADS, ' OpenMP threads'
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
+
   ! OpenMP for elastic simulation only supported yet
   if (ELASTIC_SIMULATION) then
 
-    NUM_THREADS = OMP_GET_MAX_THREADS()
-    if (myrank == 0) then
-      write(IMAIN,*)
-      write(IMAIN,*) 'Using:',NUM_THREADS, ' OpenMP threads'
-      write(IMAIN,*)
-      call flush_IMAIN()
-    endif
+! the old OpenMP implementation for compute_forces_viscoelastic is here:
+!  utils/unused_routines/older_please_do_not_use_anymore_partial_OpenMP_port/older_not_maintained_compute_forces_viscoelastic_Dev_openmp.f90
 
-    ! allocate cfe_openmp local arrays for OpenMP version
 !! DK DK July 2014: I do not know who wrote the OpenMP version, but it is currently broken
 !! DK DK July 2014: because the arrays below are undeclared; I therefore need to comment them out
 !! DK DK July 2014: for now and put a stop statement instead
     stop 'from DK DK, July 2014: the OpenMP version is currently broken here, not sure who wrote it, please fix it if possible'
+
+!   ! allocate cfe_openmp local arrays for OpenMP version
 !   allocate(dummyx_loc(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
 !   allocate(dummyy_loc(NGLLX,NGLLY,NGLLZ,NUM_THREADS))
 !   allocate(dummyz_loc(NGLLX,NGLLY,NGLLZ,NUM_THREADS))

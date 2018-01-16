@@ -95,7 +95,7 @@ ${SCOTCH_DIR}/include/scotchf.h: xscotch
 ## scotch
 ##
 $E/xscotch:
-ifeq (${SCOTCH_BUNDLED},1)
+ifeq (${USE_BUNDLED_SCOTCH},1)
 	@echo "Using bundled Scotch in directory: ${SCOTCH_DIR}/src"
 	$(MAKE) -C ${SCOTCH_DIR}/src
 else
@@ -175,10 +175,10 @@ $O/module_mesh.dec.o : $O/shared_par.shared_module.o $O/fault_scotch.dec.o
 ####
 
 $O/%.dec.o: $S/%.f90 $O/shared_par.shared_module.o
-	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(SCOTCH_INC) -c -o $@ $<
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(SCOTCH_FLAGS) -c -o $@ $<
 
 $O/%.dec.o: $S/%.F90 $O/shared_par.shared_module.o
-	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(SCOTCH_INC) -c -o $@ $<
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(SCOTCH_FLAGS) -c -o $@ $<
 
 $O/%.mpidec.o: $S/%.f90 $O/shared_par.shared_module.o
 	${MPIFCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<

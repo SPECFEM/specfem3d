@@ -25,17 +25,6 @@ AC_CANONICAL_HOST
 # 'configure' options
 
 ###
-### MPI
-###
-
-AC_ARG_WITH([mpi],
-    [AS_HELP_STRING([--with-mpi],
-        [build parallel version @<:@default=yes@:>@])],
-    [want_mpi="$withval"],
-    [want_mpi=yes])
-AM_CONDITIONAL([COND_MPI], [test "$want_mpi" = yes])
-
-###
 ### precision
 ###
 
@@ -44,7 +33,7 @@ AC_ARG_ENABLE([double-precision],
         [solver in double precision @<:@default=no@:>@])],
     [want_double_precision="$enableval"],
     [want_double_precision=no])
-if test "$want_double_precision" = no; then
+if test x"$want_double_precision" = xno; then
     CUSTOM_REAL=SIZE_REAL
     CUSTOM_MPI_TYPE=MPI_REAL
 else
@@ -59,7 +48,7 @@ AC_SUBST([CUSTOM_MPI_TYPE])
 ###
 
 AC_ARG_ENABLE([debug],
-    [AC_HELP_STRING([--enable-debug],
+    [AS_HELP_STRING([--enable-debug],
         [build with debugging options enabled @<:@default=no@:>@])],
     [want_debug="$enableval"],
     [want_debug=no])
@@ -68,11 +57,22 @@ export COND_DEBUG_FALSE
 export COND_DEBUG_TRUE
 
 ###
+### MPI
+###
+
+AC_ARG_WITH([mpi],
+    [AS_HELP_STRING([--with-mpi],
+        [build parallel version @<:@default=yes@:>@])],
+    [want_mpi="$withval"],
+    [want_mpi=yes])
+AM_CONDITIONAL([COND_MPI], [test x"$want_mpi" = xyes])
+
+###
 ### FORCE_VECTORIZATION
 ###
 
 AC_ARG_ENABLE([vectorization],
-    [AC_HELP_STRING([--enable-vectorization],
+    [AS_HELP_STRING([--enable-vectorization],
         [build FORCE_VECTORIZATION enabled version @<:@default=auto@:>@])],
     [want_vec="$enableval"],
     [want_vec=no])
@@ -98,48 +98,53 @@ AC_ARG_WITH([cuda],
         [build CUDA GPU enabled version @<:@default=no@:>@])],
     [want_cuda="$withval"],
     [want_cuda=no])
-AM_CONDITIONAL([COND_CUDA], [test "$want_cuda" != no])
-AM_CONDITIONAL([COND_CUDA5], [test "$want_cuda" = cuda5])
-AM_CONDITIONAL([COND_CUDA6], [test "$want_cuda" = cuda6])
-AM_CONDITIONAL([COND_CUDA7], [test "$want_cuda" = cuda7])
-AM_CONDITIONAL([COND_CUDA8], [test "$want_cuda" = cuda8])
-# cuda linking for cuda 5x and 6x and 7x and 8x
-AM_CONDITIONAL([COND_CUDA_PLUS], [test "$want_cuda" = cuda5 -o "$want_cuda" = cuda6 -o "$want_cuda" = cuda7 -o "$want_cuda" = cuda8])
+AM_CONDITIONAL([COND_CUDA], [test x"$want_cuda" != xno])
+AM_CONDITIONAL([COND_CUDA5], [test x"$want_cuda" = xcuda5])
+AM_CONDITIONAL([COND_CUDA6], [test x"$want_cuda" = xcuda6])
+AM_CONDITIONAL([COND_CUDA7], [test x"$want_cuda" = xcuda7])
+AM_CONDITIONAL([COND_CUDA8], [test x"$want_cuda" = xcuda8])
+AM_CONDITIONAL([COND_CUDA9], [test x"$want_cuda" = xcuda9])
+# cuda linking for cuda 5x and 6x and 7x and 8x and ..
+AM_CONDITIONAL([COND_CUDA_PLUS],
+  [test "$want_cuda" = cuda5 \
+     -o "$want_cuda" = cuda6 \
+     -o "$want_cuda" = cuda7 \
+     -o "$want_cuda" = cuda8 \
+     -o "$want_cuda" = cuda9 \]
+)
+
+###
+### OPENMP
+###
+
+AC_ARG_ENABLE([openmp],
+    [AS_HELP_STRING([--enable-openmp],
+        [build OpenMP enabled version @<:@default=no@:>@])],
+    [want_omp="$enableval"],
+    [want_omp=no])
+AM_CONDITIONAL([COND_OMP], [test x"$want_omp" != xno])
 
 ###
 ### VTK
 ###
 
 AC_ARG_ENABLE([vtk],
-    [AC_HELP_STRING([--enable-vtk],
+    [AS_HELP_STRING([--enable-vtk],
         [build VTK enabled version @<:@default=no@:>@])],
     [want_vtk="$enableval"],
     [want_vtk=no])
 AM_CONDITIONAL([COND_VTK], [test x"$want_vtk" != xno])
-
 
 ###
 ### ADIOS
 ###
 
 AC_ARG_WITH([adios],
-    [AC_HELP_STRING([--with-adios],
+    [AS_HELP_STRING([--with-adios],
         [build ADIOS enabled version @<:@default=no@:>@])],
     [want_adios="$withval"],
     [want_adios=no])
-AM_CONDITIONAL([COND_ADIOS], [test "$want_adios" != no])
-
-###
-### OPENMP
-###
-
-AC_ARG_WITH([openmp],
-    [AS_HELP_STRING([--with-openmp],
-        [build OpenMP enabled version @<:@default=no@:>@])],
-    [want_openmp="$withval"],
-    [want_openmp=no])
-AM_CONDITIONAL([COND_OPENMP], [test "$want_openmp" = yes])
-
+AM_CONDITIONAL([COND_ADIOS], [test x"$want_adios" != xno])
 
 ############################################################
 
@@ -183,14 +188,6 @@ AC_SUBST([FC_DEFINE])
 AC_FC_PP_SRCEXT(F90)dnl Because AC_FC_PP_DEFINE messes with things.
 
 AC_PROG_CC
-
-AC_LANG_PUSH(C)
-AC_CHECK_HEADER(emmintrin.h,AC_DEFINE([HAVE_EMMINTRIN],[1],[Define if emmintrin.h]))
-AC_CHECK_HEADER(xmmintrin.h,AC_DEFINE([HAVE_XMMINTRIN],[1],[Define if xmmintrin.h]))
-# AIX doesn't have err.h so we need to check
-AC_CHECK_HEADER(err.h,      AC_DEFINE([HAVE_ERR],      [1],[Define if err.h]))
-AC_LANG_POP(C)
-
 
 ############################################################
 
@@ -247,9 +244,10 @@ if test "${USE_BUNDLED_SCOTCH}" != "1"; then
 
   scotch_include=""
   ac_save_cppflags=${CPPFLAGS}
-  if test -n "${ac_scotch_include_dir}"; then
-    CPPFLAGS="${CPPFLAGS} -I${ac_scotch_include_dir}";
-  fi
+  # scotch only needed for fortran code
+  #if test -n "${ac_scotch_include_dir}"; then
+  #  CPPFLAGS="${CPPFLAGS} -I${ac_scotch_include_dir}";
+  #fi
 
 dnl This does not work because we are in Fortran mode, which does not
 dnl handle headers.
@@ -263,6 +261,7 @@ fi
 AC_MSG_CHECKING([whether Scotch is usable])
 if test "x${scotch_usable}" = "xyes"; then
  AC_DEFINE([HAVE_SCOTCH],[1],[defined if Scotch is installed])
+ want_scotch=yes
  USE_BUNDLED_SCOTCH=0
  SCOTCH_DIR="${ac_scotch_dir}"
  SCOTCH_LIBDIR="${ac_scotch_lib_dir}"
@@ -280,17 +279,33 @@ else
    AC_MSG_ERROR([No suitable yacc or bison found])
  fi
  ACX_PTHREAD(AC_MSG_RESULT([pthread found]), AC_MSG_ERROR([pthread not found]))
- 
- #daniel: scotch bundle
- # uses bundled scotch: current version pointed to by symbolic link scotch/
- USE_BUNDLED_SCOTCH=1
 
- SCOTCH_DIR="$srcdir/src/decompose_mesh/scotch"
- SCOTCH_LIBDIR="${SCOTCH_DIR}/lib"
- SCOTCH_INCLUDEDIR="${SCOTCH_DIR}/include"
+ # scotch only needed with mpi support
+ if test "$want_mpi" = yes; then
+  want_scotch=yes
+  #daniel: scotch bundle
+  # uses bundled scotch: current version pointed to by symbolic link scotch/
+  USE_BUNDLED_SCOTCH=1
+
+  SCOTCH_DIR="$srcdir/src/decompose_mesh/scotch"
+  SCOTCH_LIBDIR="${SCOTCH_DIR}/lib"
+  SCOTCH_INCLUDEDIR="${SCOTCH_DIR}/include"
+ else
+  # no mpi support, scotch not needed
+  want_scotch=no
+  USE_BUNDLED_SCOTCH=0
+ fi # want_mpi
 
 fi
 LDFLAGS=${ac_save_ldflags}
+
+AM_CONDITIONAL([COND_SCOTCH], [test "$want_scotch" = yes])
+AS_IF([test "$want_scotch" = yes],[
+  AC_MSG_RESULT([SCOTCH is enabled])
+],[
+  AC_MSG_RESULT([SCOTCH is not enabled])
+])
+
 
 ############################################################
 # influential environment variables
@@ -306,8 +321,6 @@ AC_ARG_VAR(MPICC, [MPI C compiler command])
 
 AC_ARG_VAR(FLAGS_CHECK, [Fortran compiler flags])
 
-AC_ARG_VAR(OPENMP_LIB,[Location of extra OpenMP libraries])
-
 # scratch disks
 AC_ARG_VAR(LOCAL_PATH_IS_ALSO_GLOBAL, [files on a local path on each node are also seen as global with same path @<:@default=true@:>@])
 
@@ -317,17 +330,17 @@ AC_ARG_VAR(LOCAL_PATH_IS_ALSO_GLOBAL, [files on a local path on each node are al
 AS_IF([test x"$MPIFC" = x],[
     MPIFC=mpif90
 ])
+
 AS_IF([test x"$MPICC" = x],[
     MPICC=mpicc
 ])
+
 AS_IF([test x"$LOCAL_PATH_IS_ALSO_GLOBAL" = x],[
     LOCAL_PATH_IS_ALSO_GLOBAL=true
 ])
 
 # Checks for typedefs, structures, and compiler characteristics.
-
 # check fortran modules flag
-
 AS_BOX([module extensions])
 
 AC_FC_MODULE_EXTENSION
@@ -341,28 +354,25 @@ AC_FC_MODULE_OUTPUT_FLAG([
 ])
 AC_SUBST([FC_MODDIR])
 
+# Checks for header files.
+
+AC_LANG_PUSH(C)
+AC_CHECK_HEADER(emmintrin.h,AC_DEFINE([HAVE_EMMINTRIN],[1],[Define if emmintrin.h]))
+AC_CHECK_HEADER(xmmintrin.h,AC_DEFINE([HAVE_XMMINTRIN],[1],[Define if xmmintrin.h]))
+# AIX doesn't have err.h so we need to check
+AC_CHECK_HEADER(err.h,      AC_DEFINE([HAVE_ERR],      [1],[Define if err.h]))
+AC_LANG_POP(C)
 
 # Checks for libraries.
 
-### 
+###
 ### MPI
 ###
 
 AS_IF([test "$want_mpi" = yes], [
     AS_BOX([MPI])
+    # checks MPI include directory
     CIT_MPI_INCDIR([$MPIFC])
-])
-
-###
-### VTK
-###
-
-AS_IF([test x"$want_vtk" != xno], [
-    AS_BOX([VTK])
-    CIT_OPTIONS_VTK
-    CIT_PATH_VTK
-    # Add optional libraries we need:
-    VTK_LIBS="-lvtkRendering -lvtkGraphics $VTK_LIBS"
 ])
 
 ###
@@ -375,6 +385,7 @@ AS_IF([test x"$want_adios" != xno], [
     fi
     CIT_ADIOS_CONFIG
 ])
+
 
 #mpbl: adding flags to config.h.in through autoheader in order to save them into the adios file.
 #configure_flags_str="FC=$FC FCFLAGS=$FCFLAGS $FLAGS_CHECK"
@@ -392,14 +403,20 @@ AS_IF([test x"$want_cuda" != xno], [
     CIT_CUDA_CONFIG
 ])
 
-
 ###
 ### OPENMP
 ###
 
-AS_IF([test "$want_openmp" = yes], [
-    AS_BOX([OPENMP])
-    CIT_FC_OPENMP_MODULE([$FC],[$FLAGS_CHECK])        
+AS_IF([test x"$want_omp" != xno], [
+  AS_BOX([OpenMP])
+  AC_MSG_NOTICE([OpenMP compilation is enabled])
+
+  AC_ARG_VAR(OMP_FCFLAGS, [OpenMP Fortran compiler flags])
+  AC_ARG_VAR(OMP_LIB, [Location of extra OpenMP libraries])
+
+  # openmp checking
+  AC_MSG_NOTICE([OpenMP flag $OMP_FCFLAGS])
+  CIT_FC_OPENMP_MODULE([$FC], [$OMP_FCFLAGS])
 ])
 
 ###
@@ -414,6 +431,16 @@ AS_IF([test x"$want_vec" != xno],[
   CPPFLAGS="${CPPFLAGS} -DFORCE_VECTORIZATION"
 ])
 
+###
+### VTK
+###
+
+AS_IF([test x"$want_vtk" != xno], [
+    AS_BOX([VTK])
+    CIT_OPTIONS_VTK
+    CIT_PATH_VTK
+])
+
 ############################################################
 
 AS_BOX([setting up default simulation setup])
@@ -426,6 +453,7 @@ AC_CONFIG_FILES([
     setup/precision.h
     setup/config.fh
 ])
+
 AS_IF([test -d $srcdir/.git], [
     GIT_VERSION_DEPS="$srcdir/.git/logs/HEAD"
     AC_MSG_NOTICE([building from git repository])
@@ -442,6 +470,12 @@ if test "$USE_BUNDLED_SCOTCH" = 1; then
   ])
 fi
 
+AC_CONFIG_FILES([
+    DATA/Par_file:DATA/Par_file
+    DATA/CMTSOLUTION:DATA/CMTSOLUTION
+    DATA/STATIONS:DATA/STATIONS
+])
+
 AC_CONFIG_COMMANDS([bin], [AS_MKDIR_P(bin)])
 AC_CONFIG_COMMANDS([obj], [AS_MKDIR_P(obj)])
 AC_CONFIG_COMMANDS([DATA], [AS_MKDIR_P(DATA)])
@@ -452,9 +486,9 @@ AC_OUTPUT
 
 #daniel: adding custom lines to config.h.in through autoheader
 AH_BOTTOM([
-/* Uncomment and define to select optimized file i/o for regional simulations */
+/* Define to select optimized file i/o for regional simulations */
 /* map fails when output files are > 4GB, which is often the case for GPU simulations */
-// #define USE_MAP_FUNCTION
+#undef USE_MAP_FUNCTION
 ])
 
 dnl FYI, this is not a "result", but AS_ECHO is not available in 2.61, and it

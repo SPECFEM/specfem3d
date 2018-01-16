@@ -383,7 +383,7 @@
         k = abs_boundary_ijk(3,igll,iface)
 
         ! gets global index
-        iglob=ibool(i,j,k,ispec)
+        iglob = ibool(i,j,k,ispec)
 
         ! gets associated, weighted jacobian
         jacobianw = abs_boundary_jacobian2Dw(igll,iface)

@@ -23,14 +23,39 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
-/* Define to 1 if you have the `vtkIO' library (-lvtkIO). */
-#undef HAVE_LIBVTKIO
+/* Define to 1 if you have the `vtkCommon' library (-lvtkCommon). */
+#undef HAVE_LIBVTKCOMMON
+
+/* Define to 1 if you have the `vtkDICOMParser' library (-lvtkDICOMParser). */
+#undef HAVE_LIBVTKDICOMPARSER
+
+/* Define to 1 if you have the `vtkexpat' library (-lvtkexpat). */
+#undef HAVE_LIBVTKEXPAT
+
+/* Define to 1 if you have the `vtkFiltering' library (-lvtkFiltering). */
+#undef HAVE_LIBVTKFILTERING
+
+/* Define to 1 if you have the `vtkGenericFiltering' library
+   (-lvtkGenericFiltering). */
+#undef HAVE_LIBVTKGENERICFILTERING
+
+/* Define to 1 if you have the `vtkGraphics' library (-lvtkGraphics). */
+#undef HAVE_LIBVTKGRAPHICS
+
+/* Define to 1 if you have the `vtkRendering' library (-lvtkRendering). */
+#undef HAVE_LIBVTKRENDERING
+
+/* Define to 1 if you have the `vtksys' library (-lvtksys). */
+#undef HAVE_LIBVTKSYS
+
+/* Define to 1 if you have the `vtkzlib' library (-lvtkzlib). */
+#undef HAVE_LIBVTKZLIB
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
-/* Have PTHREAD_PRIO_INHERIT. */
-#undef HAVE_PTHREAD_PRIO_INHERIT
+/* Define if you have POSIX threads libraries and header files. */
+#undef HAVE_PTHREAD
 
 /* defined if Scotch is installed */
 #undef HAVE_SCOTCH
@@ -92,7 +117,7 @@
 #undef YYTEXT_POINTER
 
 
-/* Uncomment and define to select optimized file i/o for regional simulations */
+/* Define to select optimized file i/o for regional simulations */
 /* map fails when output files are > 4GB, which is often the case for GPU simulations */
-// #define USE_MAP_FUNCTION
+#undef USE_MAP_FUNCTION
 
