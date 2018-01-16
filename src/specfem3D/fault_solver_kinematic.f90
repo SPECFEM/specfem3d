@@ -233,7 +233,7 @@ subroutine BC_KINFLT_set_single(bc,MxA,V,D,iflt)
     timeval = it*bc%dt
     ! Slip_rate step "it_kin"
     it_kin = bc%kin_it*nint(bc%kin_dt/bc%dt)
-    ! (nint : fortran round (nearest whole number) ,
+    ! (nint : Fortran round (nearest whole number) ,
     !  if nint(a)=0.5 then "a" get upper bound )
 
     ! Loading the next slip_rate one ahead it.

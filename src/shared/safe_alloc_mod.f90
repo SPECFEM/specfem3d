@@ -134,7 +134,7 @@ contains
 !==============================================================================
 !>
 subroutine check_alloc_err(ier, usr_msg)
-  use iso_fortran_env, only: error_unit
+  use iso_Fortran_env, only: error_unit
 
   integer, intent(in) :: ier
   character(len=*), intent(in), optional :: usr_msg
@@ -157,7 +157,7 @@ end subroutine check_alloc_err
 !==============================================================================
 !>
 subroutine check_dealloc_err(ier, usr_msg)
-  use iso_fortran_env, only: error_unit
+  use iso_Fortran_env, only: error_unit
 
   integer, intent(in) :: ier
   character(len=*), intent(in), optional :: usr_msg

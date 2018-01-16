@@ -690,11 +690,11 @@ subroutine get_runinfo
   !!       some more compiler variables:
   !!       https://github.com/adobe-flash/crossbridge/blob/master/cmake-2.8.10.1/Modules/CMakeFortranCompilerId.F.in
 
-#if defined(__GFORTRAN__)
-   compiler = 'gfortran'
-#define gfortranversion __VERSION__
-   compilerversion = gfortranversion
-#undef gfortranversion
+#if defined(__GFortran__)
+   compiler = 'gFortran'
+#define gFortranversion __VERSION__
+   compilerversion = gFortranversion
+#undef gFortranversion
 #endif
 
 #if defined(__INTEL_COMPILER)
@@ -705,14 +705,14 @@ subroutine get_runinfo
 #endif
 
 #if defined(_CRAYFTN)
-   compiler = 'crayfortran'
+   compiler = 'crayFortran'
 #define crayfortversion _CRAYFTN
    write(compilerversion, *) crayfortversion
 #undef crayfortversion
 #endif
 
 #if defined(__PGI)
-   compiler = 'pg fortran'
+   compiler = 'pg Fortran'
 #define pgfortversion __PGI
    write(compilerversion, *) pgfortversion
 #undef pgfortversion

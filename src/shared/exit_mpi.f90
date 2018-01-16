@@ -95,7 +95,7 @@
   implicit none
 
   ! only master process writes out to main output file
-  ! file I/O in fortran is buffered by default
+  ! file I/O in Fortran is buffered by default
   !
   ! note: Fortran2003 includes a FLUSH statement
   !          which is implemented by most compilers by now

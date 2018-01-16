@@ -2175,7 +2175,7 @@ subroutine write_VTK_bin_scal(x,y,z,u1,rows,nelem_disk,filename1)
 
    write(6,*)'computing VTK bin file ',trim(filename1)//'.vtk  ...'
 
-#if defined(__GFORTRAN__)
+#if defined(__GFortran__)
   open(100,file=trim(filename1)//'.vtk',access='stream', &
                           status='replace',convert='big_endian')
 #elif defined(__INTEL_COMPILER)
@@ -2252,7 +2252,7 @@ subroutine write_VTK_bin_scal_topology(x,y,z,u1,elems,filename)
   !enddo
   cell_type=9
   ! write(6,*)'computing vtk file ',trim(filename),' ...'
-#if defined(__GFORTRAN__)
+#if defined(__GFortran__)
   open(100,file=trim(filename)//'.vtk',access='stream',status='replace',convert='big_endian')
 #elif defined(__INTEL_COMPILER)
   open(100,file=trim(filename)//'.vtk',access='stream',status='replace',convert='big_endian')

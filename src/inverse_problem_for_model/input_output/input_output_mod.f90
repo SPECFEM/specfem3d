@@ -1381,7 +1381,7 @@ contains
                  acqui_simu(ievent)%component(1)='  '
                  acqui_simu(ievent)%component(2)='  '
                  acqui_simu(ievent)%component(3)='  '
-                 !need to add '00' in case of mising components (because fortran cannot let the missing component to '  ')
+                 !need to add '00' in case of mising components (because Fortran cannot let the missing component to '  ')
                  line_to_read=line(ipos0:ipos1)//' 00 00 00'
 
                  read(line_to_read,*)  acqui_simu(ievent)%component(1), &

@@ -215,7 +215,7 @@ subroutine read_sep_binary_mpiio(filename, NX, NY, NZ, ni, nj, nk, &
 
   ! Create the 3D stencil for values consecutive in X but disjoint in Y and Z.
   call MPI_Type_create_subarray(3, global_sizes, local_sizes, starting_idx, &
-                                MPI_ORDER_FORTRAN, MPI_REAL, subarray_type, ier)
+                                MPI_ORDER_Fortran, MPI_REAL, subarray_type, ier)
   call MPI_Type_commit(subarray_type, ier)
 
   call MPI_File_open(my_local_mpi_comm_world, trim(adjustl(filename)), &

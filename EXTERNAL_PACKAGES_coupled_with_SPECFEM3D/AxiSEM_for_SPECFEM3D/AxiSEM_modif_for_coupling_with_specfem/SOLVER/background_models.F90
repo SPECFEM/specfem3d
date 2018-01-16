@@ -1851,7 +1851,7 @@ end function
 
 !-----------------------------------------------------------------------------------------
 function to_lower(strIn) result(strOut)
-! < Converts string to lowercase, adapted from http://www.star <= ac.uk/~cgp/fortran.html
+! < Converts string to lowercase, adapted from http://www.star <= ac.uk/~cgp/Fortran.html
     implicit none
 
     character(len=*), intent(in) :: strIn

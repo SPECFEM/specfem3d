@@ -27,7 +27,7 @@
 ! utility to locate partition which is closest to given point location
 !
 ! compile with one of these (use your default):
-! > gfortran -I src/shared -o bin/xlocate_partition utils/locate_partition.f90
+! > gFortran -I src/shared -o bin/xlocate_partition utils/locate_partition.f90
 ! > ifort -assume byterecl -I src/shared -o bin/xlocate_partition utils/locate_partition.f90
 ! > pgf90 -I src/shared -o bin/xlocate_partition utils/locate_partition.f90
 !

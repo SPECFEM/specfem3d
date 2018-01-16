@@ -1071,7 +1071,7 @@
         if (num_abs_boundary_faces > 2147483646 / (CUSTOM_REAL * NDIM * NGLLSQUARE)) then
           print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_field
           print *,'  ',CUSTOM_REAL, NDIM, NGLLSQUARE, num_abs_boundary_faces
-          print *,'bit size fortran: ',bit_size(b_reclen_field)
+          print *,'bit size Fortran: ',bit_size(b_reclen_field)
           call exit_MPI(myrank,"error b_reclen_field integer limit")
         endif
 
@@ -1105,7 +1105,7 @@
         if (num_abs_boundary_faces > 2147483646 / (CUSTOM_REAL * NGLLSQUARE)) then
           print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_potential
           print *,'  ',CUSTOM_REAL, NGLLSQUARE, num_abs_boundary_faces
-          print *,'bit size fortran: ',bit_size(b_reclen_potential)
+          print *,'bit size Fortran: ',bit_size(b_reclen_potential)
           call exit_MPI(myrank,"error b_reclen_potential integer limit")
         endif
 
@@ -1117,8 +1117,8 @@
         !if (NSTEP > 2147483646 / b_reclen_potential) then
         !  print *,'file size needed exceeds integer 4-byte limit: ',b_reclen_potential,NSTEP
         !  print *,'  ',CUSTOM_REAL, NGLLSQUARE, num_abs_boundary_faces,NSTEP
-        !  print *,'file size fortran: ',filesize
-        !  print *,'file bit size fortran: ',bit_size(filesize)
+        !  print *,'file size Fortran: ',filesize
+        !  print *,'file bit size Fortran: ',bit_size(filesize)
         !endif
 
         if (SIMULATION_TYPE == 3) then
@@ -1149,7 +1149,7 @@
         if (num_abs_boundary_faces > 2147483646 / (CUSTOM_REAL * NDIM * NGLLSQUARE)) then
           print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_field_poro
           print *,'  ',CUSTOM_REAL, NDIM, NGLLSQUARE, num_abs_boundary_faces
-          print *,'bit size fortran: ',bit_size(b_reclen_field_poro)
+          print *,'bit size Fortran: ',bit_size(b_reclen_field_poro)
           call exit_MPI(myrank,"error b_reclen_field_poro integer limit")
         endif
 

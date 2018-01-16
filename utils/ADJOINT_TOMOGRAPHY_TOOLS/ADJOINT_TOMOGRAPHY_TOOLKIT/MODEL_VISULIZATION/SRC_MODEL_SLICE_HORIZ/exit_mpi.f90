@@ -67,7 +67,7 @@
 !          program with an error code of 30
   call MPI_ABORT(MPI_COMM_WORLD,30,ier)
 
-! otherwise: there is no standard behaviour to exit with an error code in fortran,
+! otherwise: there is no standard behaviour to exit with an error code in Fortran,
 ! however most compilers do recognize this as an error code stop statement;
 ! to check stop code in terminal: > echo $?
   stop 30

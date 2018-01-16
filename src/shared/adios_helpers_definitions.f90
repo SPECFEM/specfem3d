@@ -295,7 +295,7 @@ subroutine define_adios_byte_scalar (adios_group, group_size_inc, name, path, va
   integer(kind=8),  intent(in)     :: adios_group
   character(len=*), intent(in)     :: name, path
   integer(kind=8),  intent(inout)  :: group_size_inc
-  ! note: byte is non-standard gnu fortran
+  ! note: byte is non-standard gnu Fortran
   !byte,     intent(in)             :: var
   integer(kind=1),  intent(in)     :: var
   ! Local Variables

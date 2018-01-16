@@ -603,7 +603,7 @@ contains
              if (num_abs_boundary_faces > 2147483646 / (CUSTOM_REAL * NDIM * NGLLSQUARE)) then
                 print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_field
                 print *,'  ',CUSTOM_REAL, NDIM, NGLLSQUARE, num_abs_boundary_faces
-                print *,'bit size fortran: ',bit_size(b_reclen_field)
+                print *,'bit size Fortran: ',bit_size(b_reclen_field)
                 call exit_MPI(myrank,"error b_reclen_field integer limit")
              endif
              ! total file size
@@ -621,7 +621,7 @@ contains
              if (num_abs_boundary_faces > 2147483646 / (CUSTOM_REAL * NGLLSQUARE)) then
                 print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_potential
                 print *,'  ',CUSTOM_REAL, NGLLSQUARE, num_abs_boundary_faces
-                print *,'bit size fortran: ',bit_size(b_reclen_potential)
+                print *,'bit size Fortran: ',bit_size(b_reclen_potential)
                 call exit_MPI(myrank,"error b_reclen_potential integer limit")
              endif
              ! total file size (two lines to implicitly convert to 8-byte integers)
@@ -643,7 +643,7 @@ contains
                 if (num_abs_boundary_faces > 2147483646 / (CUSTOM_REAL * NDIM * NGLLSQUARE)) then
                    print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_field
                    print *,'  ',CUSTOM_REAL, NDIM, NGLLSQUARE, num_abs_boundary_faces
-                   print *,'bit size fortran: ',bit_size(b_reclen_field)
+                   print *,'bit size Fortran: ',bit_size(b_reclen_field)
                    call exit_MPI(myrank,"error b_reclen_field integer limit")
                 endif
                 ! total file size
@@ -660,7 +660,7 @@ contains
                 if (num_abs_boundary_faces > 2147483646 / (CUSTOM_REAL * NGLLSQUARE)) then
                    print *,'reclen needed exceeds integer 4-byte limit: ',b_reclen_potential
                    print *,'  ',CUSTOM_REAL, NGLLSQUARE, num_abs_boundary_faces
-                   print *,'bit size fortran: ',bit_size(b_reclen_potential)
+                   print *,'bit size Fortran: ',bit_size(b_reclen_potential)
                    call exit_MPI(myrank,"error b_reclen_potential integer limit")
                 endif
                 ! total file size (two lines to implicitly convert to 8-byte integers)
@@ -674,7 +674,7 @@ contains
        endif
     endif
 
-    !! reallocate all GPU memory according the fortran arrays
+    !! reallocate all GPU memory according the Fortran arrays
     if (GPU_MODE) call prepare_timerun_GPU()
 
     !! open new log file for specfem -----------------------------------------------------------------------------------------------

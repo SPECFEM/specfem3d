@@ -5,9 +5,9 @@ subroutine write_vtu
 ! VTK/ParaView. See http://www.vtk.org and http://www.paraview.org for details.
 !------------------------------------------
 ! DEPENDENCY:
-!   cfunc4fortran.c, visualize_par.f90, visualize_collect.f90
+!   cfunc4Fortran.c, visualize_par.f90, visualize_collect.f90
 ! COMPILE
-!   >> gfortran -c write_vtu
+!   >> gFortran -c write_vtu
 ! USAGE
 !   write_vtu
 ! HISTORY:

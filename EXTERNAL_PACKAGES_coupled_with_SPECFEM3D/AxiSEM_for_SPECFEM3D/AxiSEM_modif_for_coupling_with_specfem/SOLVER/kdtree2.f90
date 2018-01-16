@@ -1778,7 +1778,7 @@ contains
     !
     !
 
-    !THIS IS BUGGY WITH INTEL FORTRAN
+    !THIS IS BUGGY WITH INTEL Fortran
     !    if (nfound > 1) Call heapsort(results(1:nfound)%dis,results(1:nfound)%ind,nfound)
     !
     if (nfound > 1) call heapsort_struct(results,nfound)

@@ -56,7 +56,7 @@ contains
     subroutine mesh_chunk_earth()
 
       !! SB SB COMMENT THIS IERR (variable alreafy exist in module)
-      !! this makes gfortran complins because the one in the ;odule header is unsed
+      !! this makes gFortran complins because the one in the ;odule header is unsed
       !! integer :: ierr
       !! SB SB
       character(len=MAX_STRING_LEN) :: keyw

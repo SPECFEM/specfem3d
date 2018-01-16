@@ -89,7 +89,7 @@ module cmt3d_sub3
     ! to write my own version of Gaussian elimination
     ! with partial pivoting.
     ! solving A * x = b where A : n*n  b : n*1
-    ! notice for efficiency in fortran, A (nrow,ncol)
+    ! notice for efficiency in Fortran, A (nrow,ncol)
 
     implicit none
 

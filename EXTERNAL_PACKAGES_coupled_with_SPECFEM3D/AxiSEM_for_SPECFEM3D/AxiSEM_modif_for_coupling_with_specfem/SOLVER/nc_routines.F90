@@ -295,7 +295,7 @@ subroutine nc_dump_strain(isnap_loc)
     use data_mesh, only: maxind
 
     ! explicit interfaces to the c functions to avoide the underscore issues
-    ! (fortran 2003 standard)
+    ! (Fortran 2003 standard)
     interface
         subroutine c_spawn_dumpthread(stepstodump) bind(c, name='c_spawn_dumpthread')
             use, intrinsic      :: iso_c_binding, only: c_int

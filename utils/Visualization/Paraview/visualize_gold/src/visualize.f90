@@ -29,7 +29,7 @@ program visualize
 ! VTK/ParaView. See http://www.vtk.org and http://www.paraview.org for details.
 !------------------------------------------
 ! DEPENDENCY:
-!   cfunc4fortran.c, visualize_par.f90, visualize_collect.f90, write_ensight.f90,
+!   cfunc4Fortran.c, visualize_par.f90, visualize_collect.f90, write_ensight.f90,
 !   write_vtu.f90
 ! COMPILE
 !   >> make

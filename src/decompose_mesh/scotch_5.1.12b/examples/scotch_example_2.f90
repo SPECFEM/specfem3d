@@ -5,7 +5,7 @@
 !*   AUTHOR     : Francois PELLEGRINI                     **
 !*                Frederic COUDERC                        **
 !*                                                        **
-!*   function   : FORTRAN testbed for the LibSCOTCH       **
+!*   function   : Fortran testbed for the LibSCOTCH       **
 !*                library routines.                       **
 !*                                                        **
 !*   DATES      : # Version 5.1  : from : 24 jul 2010     **
@@ -17,7 +17,7 @@
 !*                  SCOTCH_Num values are declared as     **
 !*                  "integer*8" quantities.               **
 !*                                                        **
-!*                # To be compiled with : gfortran        **
+!*                # To be compiled with : gFortran        **
 !*                  scotch_example_2.f90                  **
 !*                  -L/scotch/lib/path/ -lscotch          **
 !*                  -lscotcherr -lz -lpthread             **

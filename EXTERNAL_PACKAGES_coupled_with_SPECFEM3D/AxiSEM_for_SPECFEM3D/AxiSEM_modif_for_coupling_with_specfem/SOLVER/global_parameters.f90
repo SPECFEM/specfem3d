@@ -29,7 +29,7 @@
 !! arrays used in the time evolution.
 module global_parameters
 
-  use, intrinsic :: iso_fortran_env
+  use, intrinsic :: iso_Fortran_env
 
   implicit  none
   public

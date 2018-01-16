@@ -190,7 +190,7 @@ module decompose_mesh
     ! debug check size limit
     if (nspec_long > 2147483646) then
       print *,'size exceeds integer 4-byte limit: ',nspec_long
-      print *,'bit size fortran: ',bit_size(nspec)
+      print *,'bit size Fortran: ',bit_size(nspec)
       stop 'Error number of elements too large'
     endif
 

@@ -351,7 +351,7 @@
 !
 ! PORTABILITY
 !
-! This subroutine is written in standard FORTRAN 90.
+! This subroutine is written in standard Fortran 90.
 ! It calls no external functions or subroutines and should run
 ! without problem on any computer having a 32-bit word or longer.
 !

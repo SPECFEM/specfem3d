@@ -154,7 +154,7 @@
   ! put data from SEM mesh to a regular grid
   call Project_model_SEM2FD_grid(data_sp, model_on_FD_grid, projection_fd, myrank)
 
-  ! Write output on a fortran binary file
+  ! Write output on a Fortran binary file
   if (myrank == 0) then
     open(unit = 28,file = trim(outdir)//trim(data_filename) // '_projected.bin',status='unknown', &
           action='write',form ='unformatted',iostat=ier)

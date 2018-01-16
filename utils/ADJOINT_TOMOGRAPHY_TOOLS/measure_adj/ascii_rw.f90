@@ -75,7 +75,7 @@ contains
 
   !-----------------------------------------------------------------------------
 
-!!$! these functions can be used directly in fortran
+!!$! these functions can be used directly in Fortran
 !!$
 !!$subroutine dread_ascfile_f(name,t0,dt,n,data)
 !!$

@@ -366,7 +366,7 @@
       enddo
 
       ! only implements SIMTYPE=1 and NOISE_TOM=0
-      ! write(*,*) "fortran dt = ", dt
+      ! write(*,*) "Fortran dt = ", dt
       ! change dt -> DT
       call compute_add_sources_ac_cuda(Mesh_pointer,NSOURCES,stf_pre_compute)
     endif

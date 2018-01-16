@@ -202,7 +202,7 @@ contains
 !---------------------------------------------------------------------------------
 !##################################################################################################################################
 
-!! DK DK commented out because this subroutine is currently unused, and gfortran -Wall gives an error in case of unused functions
+!! DK DK commented out because this subroutine is currently unused, and gFortran -Wall gives an error in case of unused functions
 
 !  subroutine prepare_MPI_regularization(regularization_fd)
 
@@ -1110,7 +1110,7 @@ contains
 !---------------------------------------------------------------------------------
 !##################################################################################################################################
 
-!! DK DK commented out because this subroutine is currently unused, and gfortran -Wall gives an error in case of unused functions
+!! DK DK commented out because this subroutine is currently unused, and gFortran -Wall gives an error in case of unused functions
 
 ! subroutine find_list_of_element_adj(xp,yp,zp, list_of_all_elements, list_of_elements, ne_stored)
 
@@ -1768,7 +1768,7 @@ contains
 !---------------------------------------------------------------------------------
 !##################################################################################################################################
 
-!! DK DK commented out because this subroutine is currently unused, and gfortran -Wall gives an error in case of unused functions
+!! DK DK commented out because this subroutine is currently unused, and gFortran -Wall gives an error in case of unused functions
 
 ! subroutine check_field_accuracy(itest, numerical_laplacian_of_field, laplacian_of_field)
 
@@ -2829,7 +2829,7 @@ contains
 
 ! subroutine testing_regularization(regularization_fd)
 
-!! DK DK commented out because this subroutine is currently unused, and gfortran -Wall gives an error in case of unused functions
+!! DK DK commented out because this subroutine is currently unused, and gFortran -Wall gives an error in case of unused functions
 
 !   implicit none
 
@@ -3779,7 +3779,7 @@ contains
 !---------------------------------------------------------------------------------
 !##################################################################################################################################
 
-!! DK DK commented out because this subroutine is currently unused, and gfortran -Wall gives an error in case of unused functions
+!! DK DK commented out because this subroutine is currently unused, and gFortran -Wall gives an error in case of unused functions
 
 ! subroutine compute_and_store_FD_derivatives_matrix(regularization_fd)
 
@@ -4038,7 +4038,7 @@ contains
 !---------------------------------------------------------------------------------
 !##################################################################################################################################
 
-!! DK DK commented out because this subroutine is currently unused, and gfortran -Wall gives an error in case of unused functions
+!! DK DK commented out because this subroutine is currently unused, and gFortran -Wall gives an error in case of unused functions
 
 ! subroutine line_vandermonde(l, x,y,z, u,v,w, n)
 
@@ -4075,7 +4075,7 @@ contains
 !---------------------------------------------------------------------------------
 !##################################################################################################################################
 
-!! DK DK commented out because this subroutine is currently unused, and gfortran -Wall gives an error in case of unused functions
+!! DK DK commented out because this subroutine is currently unused, and gFortran -Wall gives an error in case of unused functions
 
 ! subroutine  compute_M_transpose_times_M(Mt,V,n,m)
 
@@ -4104,7 +4104,7 @@ contains
 !---------------------------------------------------------------------------------
 !##################################################################################################################################
 
-!! DK DK commented out because this subroutine is currently unused, and gfortran -Wall gives an error in case of unused functions
+!! DK DK commented out because this subroutine is currently unused, and gFortran -Wall gives an error in case of unused functions
 
 ! subroutine compute_inv_MtM_times_Mt(FDm, iMtM, V, n, m)
 
@@ -4167,7 +4167,7 @@ contains
 !!
 !!
 
-!! DK DK commented out because this subroutine is currently unused, and gfortran -Wall gives an error in case of unused functions
+!! DK DK commented out because this subroutine is currently unused, and gFortran -Wall gives an error in case of unused functions
 
 ! subroutine inverse(a,c,n)
 !   !============================================================
