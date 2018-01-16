@@ -61,9 +61,9 @@ yc = 0.5*(Latmin+Latmax)
 # by making the fault dip angle steeper above depth "z"
 # to avoid elements with small angles at the trench.
 # See demo_subduction_smoothing.m
-def surf(z):
-    c = 2.0/zcutTop
-    f = -math.log(math.exp(-c*z)-1)/c
+def surf(z, zmin):
+    c = 1.0/zcutTop
+    f = -math.log(math.exp(-c*min(z-minz, -0.1))-1)/c
     f = max(f,-zcutBottom)
     return f
 
@@ -135,11 +135,13 @@ print(N)
 start = 1
 n_curve = 0
 n = 0
+mindepth = max(data[:,2])
 for ii in range(0,N):
-    vert = "create vertex x "+str(data[ii,0]*Lon2dis)+" y "+str(data[ii,1]*Lat2dis)+" z "+str(surf(data[ii,2]))
+    vert = "create vertex x "+str(data[ii,0]*Lon2dis)+" y "+str(data[ii,1]*Lat2dis)+" z "+str(surf(data[ii,2], mindepth))
     cubit.cmd(vert)
     if(ii<N-1):
         if(data[ii,1]!=data[ii+1,1]):
+            mindepth = data[ii,2]
             end = ii+1
             if(n%10 == 0):
                 cc = "create curve spline vertex "+str(start)+" to "+str(end)+" delete"
