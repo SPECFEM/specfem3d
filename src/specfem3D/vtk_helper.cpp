@@ -11,7 +11,7 @@
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
-! the Free Software Foundation; either version 2 of the License, or
+! the Free Software Foundation; either version 3 of the License, or
 ! (at your option) any later version.
 !
 ! This program is distributed in the hope that it will be useful,
@@ -245,7 +245,7 @@ class Visualization {
 
     vtkDataSetMapper* mapMesh2D;
     vtkActor* actor2D;
-  
+
     // 3D volume data
     vtkPoints* points3D;
     vtkFloatArray* data_array3D;
@@ -313,7 +313,7 @@ class Visualization {
     // source sphere
     vtkSphereSource* sphere;
     vtkPolyDataMapper* mapperSphere;
-    vtkActor* actorSphere;  
+    vtkActor* actorSphere;
     double pos_source[3]; // source location
 
     // receiver glyphs
@@ -329,7 +329,7 @@ class Visualization {
     // countours
     vtkContourFilter* contour;
     vtkPolyDataMapper* contourMapper;
-    vtkActor* contourActor;  
+    vtkActor* contourActor;
 
     vtkContourFilter* contour3D;
     vtkPolyDataMapper* contour3DMapper;
@@ -347,13 +347,13 @@ class VTKState {
   public:
     // vtk rendering
     Visualization vtk;
-    
+
     // meshes
     VTKmesh freesurface;
     VTKmesh volume;
 
     // timing
-    vtkTimerLog* timer;  
+    vtkTimerLog* timer;
 };
 
 // global vtk state variable
@@ -628,7 +628,7 @@ class MyInteractor{
         set_color_scale(fs.vtk.icolor);
         // update
         fs.vtk.renWin->Render();
-      }      
+      }
       // saves vtu snapshot
       if (key == "v"){
         save_snapshot_vtu();
@@ -779,7 +779,7 @@ class MyInteractor{
           // update
           fs.vtk.renWin->Render();
         }
-      }      
+      }
       // toggles freesurface contour visibility
       if (key == "8"){
         if( SHOW_FREESURFACE == 1 && CONTOUR_FREESURFACE == 1 ){
@@ -972,7 +972,7 @@ void save_snapshot_vtu(){
 #endif
   writer->SetDataModeToAscii();
   writer->Write();
-  
+
   //clean up
   writer->Delete();
 
@@ -983,32 +983,32 @@ void save_snapshot_vtu(){
 // Write jpg file
 void save_snapshot_jpg(){
   TRACE("save_snapshot_jpg");
-  
+
   //std::string filename = "test_snapshot.jpg";
-  
+
   char filename[180];
   if( global_it_step > 0 ){
     sprintf(filename,"test_snapshot.%6.6d.jpg",global_it_step);
   }else{
     sprintf(filename,"test_snapshot.jpg");
   }
-  
+
   // window filter
   vtkWindowToImageFilter* w2i = vtkWindowToImageFilter::New();
   w2i->SetInput(fs.vtk.renWin);
   w2i->Update();
-  
+
   // creates writer
   vtkJPEGWriter* writer = vtkJPEGWriter::New();
   //writer->SetFileName(filename.c_str());
   writer->SetFileName(filename);
   writer->SetInputConnection(w2i->GetOutputPort());
   writer->Write();
-  
+
   //clean up
   writer->Delete();
   w2i->Delete();
-  
+
   printf("snapshot written to file: %s\n\n",filename);
 }
 
@@ -1024,7 +1024,7 @@ void set_color_scale(int icolor){
     gcolor_min = 0.0;
     fs.vtk.lut->SetTableRange( gcolor_min, gcolor_max );
     fs.vtk.lut->SetScaleToLinear();
-    
+
     fs.vtk.lut->SetValueRange( 0.6, 1.0 );
     fs.vtk.lut->SetHueRange( 0.66667, 0.0 );
     fs.vtk.lut->SetSaturationRange( 1.0, 1.0 );
@@ -1045,7 +1045,7 @@ void set_color_scale(int icolor){
     gcolor_min = 1.e-3*gcolor_max;
     fs.vtk.lut->SetTableRange( gcolor_min, gcolor_max );
     fs.vtk.lut->SetScaleToLog10();
-    
+
     fs.vtk.lut->SetValueRange( 0.4, 1.0 );
     fs.vtk.lut->SetHueRange( 0.0, 0.4 );
     fs.vtk.lut->SetSaturationRange( 0.5, 0.0 );
@@ -1054,7 +1054,7 @@ void set_color_scale(int icolor){
     gcolor_min = 1.e-3*gcolor_max;
     fs.vtk.lut->SetTableRange( gcolor_min, gcolor_max );
     fs.vtk.lut->SetScaleToLog10();
-    
+
     fs.vtk.lut->SetValueRange( 0.4, 1.0 );
     fs.vtk.lut->SetHueRange( 0.6, 0.6 );
     fs.vtk.lut->SetSaturationRange( 0.5, 0.0 );
@@ -1063,7 +1063,7 @@ void set_color_scale(int icolor){
     gcolor_min = 1.e-3*gcolor_max;
     fs.vtk.lut->SetTableRange( gcolor_min, gcolor_max );
     fs.vtk.lut->SetScaleToLog10();
-    
+
     fs.vtk.lut->SetValueRange( 0.4, 1.0 ); // from black to white
     fs.vtk.lut->SetHueRange( 0.0, 1.0 );
     fs.vtk.lut->SetSaturationRange( 0.0, 0.0 ); // no color saturation
@@ -1077,7 +1077,7 @@ void set_color_scale(int icolor){
     gcolor_min = 0.0;
     fs.vtk.lut->SetTableRange( gcolor_min, gcolor_max );
     fs.vtk.lut->SetScaleToLinear();
-    
+
     fs.vtk.lut->SetValueRange( 0.6, 1.0 );
     fs.vtk.lut->SetHueRange( 0.66667, 0.0 );
     fs.vtk.lut->SetSaturationRange( 1.0, 1.0 );
@@ -1208,7 +1208,7 @@ void init_vtk(){
   int tableSize = 256;
   fs.vtk.icolor = 0; // from blue to red
   fs.vtk.colorAdjustOn = 1; // automatic adjust
-  
+
   fs.vtk.lut = vtkLookupTable::New();
   if (fs.vtk.lut == NULL){ exit_error("Error: invalid LookupTable, could not create object\n"); }
 
@@ -1317,9 +1317,9 @@ void clean_vtk_arrays(){
     fs.vtk.contourActor->Delete();
     fs.vtk.contourMapper->Delete();
     fs.vtk.contour->Delete();
-    
+
     fs.vtk.actor2D->Delete();
-    fs.vtk.mapMesh2D->Delete();    
+    fs.vtk.mapMesh2D->Delete();
   }
 
   if(SHOW_VOLUMEDATA == 1 ){
@@ -1498,7 +1498,7 @@ void FC_FUNC_(prepare_vtksource,PREPARE_VTKSOURCE)(float* xs_x,float* xs_y, floa
   // terminal output
   printf("vtk: source sphere\n");
   printf("     sphere location: x/y/z = %f / %f / %f \n",fs.vtk.pos_source[0],fs.vtk.pos_source[1],fs.vtk.pos_source[2]);
-  
+
   // creates sphere around source location
   fs.vtk.sphere = vtkSphereSource::New();
   if (fs.vtk.sphere == NULL){ exit_error("Error: invalid sphere, could not create object\n"); }
@@ -1510,7 +1510,7 @@ void FC_FUNC_(prepare_vtksource,PREPARE_VTKSOURCE)(float* xs_x,float* xs_y, floa
   if (fs.vtk.mapperSphere == NULL){ exit_error("Error: invalid sphere mapper, could not create object\n"); }
 
   fs.vtk.mapperSphere->SetInputConnection(fs.vtk.sphere->GetOutputPort());
- 
+
   fs.vtk.actorSphere = vtkActor::New();
   if (fs.vtk.actorSphere == NULL){ exit_error("Error: invalid sphere actor, could not create object\n"); }
 
@@ -1604,7 +1604,7 @@ void FC_FUNC_(prepare_vtkfreesurface,PREPARE_VTKFREESURFACE)(int* free_np,
          fs.freesurface.bounds[5] - fs.freesurface.bounds[4]);
 
   // black color scale
-  int tableSize = 256;  
+  int tableSize = 256;
   fs.vtk.lut2D = vtkLookupTable::New();
   fs.vtk.lut2D->SetNumberOfColors(tableSize);
   fs.vtk.lut2D->SetValueRange( 0.1, 1.0 ); // from black to white
@@ -1675,7 +1675,7 @@ void FC_FUNC_(prepare_vtkfreesurface,PREPARE_VTKFREESURFACE)(int* free_np,
     fs.vtk.contourMapper = vtkPolyDataMapper::New();
     fs.vtk.contourMapper->SetInputConnection(0, fs.vtk.contour->GetOutputPort() );
     fs.vtk.contourMapper->ScalarVisibilityOff();
-    
+
     fs.vtk.contourActor = vtkActor::New();
     fs.vtk.contourActor->SetMapper( fs.vtk.contourMapper );
 
@@ -1683,7 +1683,7 @@ void FC_FUNC_(prepare_vtkfreesurface,PREPARE_VTKFREESURFACE)(int* free_np,
     fs.vtk.contourActor->GetProperty()->SetOpacity( 1.0 );
     fs.vtk.contourActor->SetScale( 1.0, 1.0, vertical_exageration );
     fs.vtk.contourActor->GetProperty()->SetColor( 0.5, 0.5, 0.5 );
-    
+
     fs.vtk.ren->AddActor(fs.vtk.contourActor);
   }
 
@@ -1954,14 +1954,14 @@ void FC_FUNC_(prepare_vtkfield,PREPARE_VTKFIELD)(int* vol_np,
 
   // debug vtk file output
   static int debug_file = 0;
-  
+
   // initializes
   SHOW_VOLUMEDATA = 1;
-  
+
   // volumetric wavefield
   // window text
   fs.vtk.text->SetInput( "...adding wavefield " );
-  
+
   // update view
   fs.vtk.mutex->Lock();
   fs.vtk.do_render = 1;
@@ -2001,7 +2001,7 @@ void FC_FUNC_(prepare_vtkfield,PREPARE_VTKFIELD)(int* vol_np,
   fs.vtk.data_array3D = vtkFloatArray::New();
   fs.vtk.data_array3D->SetNumberOfComponents(1);
   fs.vtk.data_array3D->SetName("vnorm");
-  fs.vtk.data_array3D->SetNumberOfValues(fs.volume.np);    
+  fs.vtk.data_array3D->SetNumberOfValues(fs.volume.np);
 
   for(int i=0;i<fs.volume.np;i++) {
     xyz[0] = vol_x[i];
@@ -2054,7 +2054,7 @@ void FC_FUNC_(prepare_vtkfield,PREPARE_VTKFIELD)(int* vol_np,
   fs.vtk.pcam[0] = fs.vtk.pos_source[0] + 0.5*(zmax-zmin); // (xmax-xmin)/2.0 - 0.1*(xmax-xmin);
   fs.vtk.pcam[1] = fs.vtk.pos_source[1] + 0.5*(zmax-zmin); // (ymax-ymin)/2.0 + 0.1*(ymax-ymin);
   fs.vtk.pcam[2] = fs.vtk.pos_source[2] + 0.5*(zmax-zmin); // (zmax-zmin)/2.0 + 0.5*(zmax-zmin);
-  
+
   // range
   fs.vtk.camera->SetClippingRange( fs.vtk.rclip );
   // camer focal point
@@ -2069,7 +2069,7 @@ void FC_FUNC_(prepare_vtkfield,PREPARE_VTKFIELD)(int* vol_np,
   // adjust sphere size
   fs.vtk.sphere->SetRadius(0.02*fabs(zmax-zmin));
   fs.vtk.sphere->Modified();
-  
+
   //
   // unstructured grid
   //
@@ -2238,7 +2238,7 @@ void FC_FUNC_(prepare_vtkfield,PREPARE_VTKFIELD)(int* vol_np,
     // for table based clipping ..
     // note: we will use the extract filter for now, since the table clipping has problems
     //       when clip functions align with cell boundaries
-    
+
     // to define cut planes, we need a position and a normal vector
     // source location vector / perpendicular vectors
     //
@@ -2274,7 +2274,7 @@ void FC_FUNC_(prepare_vtkfield,PREPARE_VTKFIELD)(int* vol_np,
     pn2[0] = 0.0;
     pn2[1] = -1.0;
     pn2[2] = 0.0;
-    
+
     // flips normal depending on location of source
     // (to cut out only smaller portion)
     double sign;
@@ -2373,7 +2373,7 @@ void FC_FUNC_(prepare_vtkfield,PREPARE_VTKFIELD)(int* vol_np,
     double dist_x = bb_all[1] - bb_all[0];
     double dist_y = bb_all[3] - bb_all[2];
     double dist_z = bb_all[5] - bb_all[4];
-    
+
     // 1. mesh part
     // unstructured grid clipper
     double bb1[6] = { bb_all[0], bb_all[1], bb_all[2], bb_all[3], bb_all[4], bb_all[4]+ 0.5*dist_z};
@@ -2501,16 +2501,16 @@ void FC_FUNC_(prepare_vtkfield,PREPARE_VTKFIELD)(int* vol_np,
   fs.vtk.mapMesh3D->SetScalarModeToUsePointData();
   fs.vtk.mapMesh3D->ScalarVisibilityOn();
   fs.vtk.mapMesh3D->UseLookupTableScalarRangeOn();
-  
+
   //actor
   fs.vtk.actor3D = vtkActor::New();
   fs.vtk.actor3D->SetMapper(fs.vtk.mapMesh3D);
   fs.vtk.actor3D->GetProperty()->SetRepresentationToSurface();
   //fs.vtk.actor3D->GetProperty()->SetEdgeVisibility(1);
-  
+
   // 3D actor
   fs.vtk.ren->AddActor(fs.vtk.actor3D);
-  
+
   // legend for colors
   fs.vtk.legendcolor = vtkScalarBarActor::New();
   fs.vtk.legendcolor->SetLookupTable(fs.vtk.lut);
@@ -2596,7 +2596,7 @@ void FC_FUNC_(visualize_vtkdata,VISUALIZE_VTKDATA)(int* it_h,float* time_h, floa
     fs.vtk.data_array3D->GetValueRange(bounds);
     dmin = bounds[0];
     dmax = bounds[1];
-    
+
     // adjusts color maximum
     if( fs.vtk.colorAdjustOn ){
       if( gcolor_max < 0.0 ) gcolor_max = 1.e-10;
@@ -2695,7 +2695,7 @@ void FC_FUNC_(finish_vtkwindow,FINISH_VTKWINDOW)(int *do_restart_h) {
       fs.vtk.data_array3D->GetValueRange(bounds);
       min = bounds[0];
       max = bounds[1];
-    
+
       // adjusts color maximum
       if( fs.vtk.colorAdjustOn ){
         if( gcolor_max < 0.0 ) gcolor_max = 1.e-10;

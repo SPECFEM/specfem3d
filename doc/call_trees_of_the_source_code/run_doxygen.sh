@@ -6,7 +6,7 @@ currentdir=`pwd`
 rm -rf html/
 
 # generates html files
-doxygen Doxyfile 
+doxygen Doxyfile
 
 
 echo

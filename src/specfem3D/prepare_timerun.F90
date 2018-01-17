@@ -943,11 +943,11 @@
   integer :: OMP_GET_MAX_THREADS
 
   ! safety stop
-  print *,''
+  print *
   print *,'Note: there is currently no OpenMP version of the code!'
   print *,'      a former implementation has been broken and moved to utils/unused_routines/ directory'
   print *,'      Please re-compile the code, disenabling OpenMP support and/or consider contributing a new version if needed.'
-  print *,''
+  print *
 
 ! the old OpenMP implementation for compute_forces_viscoelastic is here:
 !  utils/unused_routines/older_please_do_not_use_anymore_partial_OpenMP_port/older_not_maintained_compute_forces_viscoelastic_Dev_openmp.f90

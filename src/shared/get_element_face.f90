@@ -133,7 +133,7 @@
 
   ! checks that found midpoint is close enough
   !
-  ! note: distance is relative. depending on the mesh, coordinate points might vary on very small (<1mm) or large (>1km) scales.
+  ! note: distance is relative. depending on the mesh, coordinate points might vary on very small ( < 1mm) or large (>1km) scales.
   !       the check here takes the first edge of the surface element as a proxy for the scale
   edge_length = (xcoord(1)-xcoord(2))**2 + (ycoord(1)-ycoord(2))**2 + (zcoord(1)-zcoord(2))**2
 

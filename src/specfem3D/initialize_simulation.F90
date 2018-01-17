@@ -141,7 +141,7 @@
        write(IMAIN,*) '**********************************************'
     endif
   endif
-  
+
 ! read the value of NSPEC_AB and NGLOB_AB because we need it to define some array sizes below
   if (ADIOS_FOR_MESH) then
     call read_mesh_for_init_ADIOS(NSPEC_AB, NGLOB_AB)

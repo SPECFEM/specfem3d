@@ -11,7 +11,7 @@
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
-! the Free Software Foundation; either version 2 of the License, or
+! the Free Software Foundation; either version 3 of the License, or
 ! (at your option) any later version.
 !
 ! This program is distributed in the hope that it will be useful,
@@ -88,7 +88,7 @@ end module vtk_window_par
   if (myrank == 0 ) call initialize_vtkwindow(GPU_MODE)
   call synchronize_all()
 
-  ! note: the following ordering is intended: 
+  ! note: the following ordering is intended:
   !       - source position is needed for clipping the volume.
   !       - free surface extends is needed for setting receiver glyph radius
 
@@ -112,7 +112,7 @@ end module vtk_window_par
   ! user output
   if (myrank == 0) then
     write(IMAIN,*) "  window will update every NTSTEP_BETWEEN_FRAMES = ",NTSTEP_BETWEEN_FRAMES
-    write(IMAIN,*) ""
+    write(IMAIN,*)
     write(IMAIN,*) "  VTK visualization preparation done"
     call flush_IMAIN()
   endif
@@ -514,12 +514,12 @@ end module vtk_window_par
   if (minval(free_conn(:,:)) < 0) stop 'Error vtk free surface point connectivity'
 
 
-  ! gathers data from all mpi processes
+  ! gathers data from all MPI processes
   if (NPROC > 1) then
-    ! multiple mpi processes
-    
+    ! multiple MPI processes
+
     ! user output
-    !if (myrank == 0) print*,"    gathering all mpi infos... "
+    !if (myrank == 0) print *,"    gathering all MPI infos... "
 
     ! number of volume points for all partitions together
     call sum_all_i(free_np,free_np_all)
@@ -581,7 +581,7 @@ end module vtk_window_par
 
     if (myrank == 0) then
       ! locations
-      !if (myrank == 0) print*,"    locations..."
+      !if (myrank == 0) print *,"    locations..."
       call gatherv_all_cr(free_x,free_np, &
                           free_x_all,free_points_all,free_offset_all, &
                           free_np_all,NPROC)
@@ -593,7 +593,7 @@ end module vtk_window_par
                           free_np_all,NPROC)
 
       ! connectivity
-      !if (myrank == 0) print*,"    connectivity..."
+      !if (myrank == 0) print *,"    connectivity..."
       call gatherv_all_i(free_conn,4*free_nspec, &
                          free_conn_all,free_conn_nspec_all,free_conn_offset_all, &
                          free_nspec_all,NPROC)
@@ -608,7 +608,7 @@ end module vtk_window_par
         enddo
       enddo
 
-      !if (myrank == 0) print*,"    preparing vtk field..."
+      !if (myrank == 0) print *,"    preparing vtk field..."
 
       ! adds free surface to vtk window
       call prepare_vtkfreesurface(free_np_all,free_x_all,free_y_all,free_z_all, &
@@ -816,10 +816,10 @@ end module vtk_window_par
 
   vtkdata(:) = 0.0
 
-  ! gathers data from all mpi processes
+  ! gathers data from all MPI processes
   if (NPROC > 1) then
     ! user output
-    !if (myrank == 0) print*,"    gathering all mpi infos... "
+    !if (myrank == 0) print *,"    gathering all MPI infos... "
 
     ! number of volume points for all partitions together
     call sum_all_i(vol_np,vtkdata_numpoints_all)
@@ -889,7 +889,7 @@ end module vtk_window_par
 
     if (myrank == 0) then
       ! locations
-      !if (myrank == 0) print*,"    locations..."
+      !if (myrank == 0) print *,"    locations..."
       call gatherv_all_cr(vol_x,vol_np, &
                           vol_x_all,vtkdata_points_all,vtkdata_offset_all, &
                           vtkdata_numpoints_all,NPROC)
@@ -901,7 +901,7 @@ end module vtk_window_par
                           vtkdata_numpoints_all,NPROC)
 
       ! connectivity
-      !if (myrank == 0) print*,"    connectivity..."
+      !if (myrank == 0) print *,"    connectivity..."
       call gatherv_all_i(vol_conn,8*vol_nspec, &
                          vol_conn_all,vol_conn_nspec_all,vol_conn_offset_all, &
                          vol_nspec_all,NPROC)
@@ -916,7 +916,7 @@ end module vtk_window_par
         enddo
       enddo
 
-      !if (myrank == 0) print*,"    preparing vtk field..."
+      !if (myrank == 0) print *,"    preparing vtk field..."
 
       ! adds total volume wavefield to vtk window
       call prepare_vtkfield(vtkdata_numpoints_all,vol_x_all,vol_y_all,vol_z_all, &
@@ -943,7 +943,7 @@ end module vtk_window_par
 
   else
     ! serial run
-    !if (myrank == 0) print*,"    preparing vtk field..."
+    !if (myrank == 0) print *,"    preparing vtk field..."
 
     ! adds volume wavefield to vtk window
     call prepare_vtkfield(vol_np,vol_x,vol_y,vol_z,vol_nspec,vol_conn)
@@ -982,19 +982,19 @@ end module vtk_window_par
   if (mod(it,NTSTEP_BETWEEN_FRAMES) == 0) then
 
     ! user output
-    !if (myrank == 0) print*,"  VTK rendering..."
+    !if (myrank == 0) print *,"  VTK rendering..."
 
     ! updates time
     currenttime = sngl((it-1)*DT-t0)
 
     ! transfers fields from GPU to host
     if (GPU_MODE) then
-      !if (myrank == 0) print*,"  vtk: transfering velocity from gpu"
+      !if (myrank == 0) print *,"  vtk: transfering velocity from gpu"
       call transfer_veloc_from_device(NDIM*NGLOB_AB,veloc,Mesh_pointer)
     endif
 
     ! updates wavefield
-    !if (myrank == 0) print*,"  vtk: it = ",it," - updating velocity field"
+    !if (myrank == 0) print *,"  vtk: it = ",it," - updating velocity field"
     inum = 0
     vtkdata(:) = 0.0
     do iglob = 1,NGLOB_AB
@@ -1005,16 +1005,16 @@ end module vtk_window_par
       endif
     enddo
 
-    ! updates for multiple mpi process
+    ! updates for multiple MPI process
     if (NPROC > 1) then
       if (myrank == 0) then
         ! gather data
-        call gatherv_all_cr(vtkdata,size(vtkdata),&
+        call gatherv_all_cr(vtkdata,size(vtkdata), &
                             vtkdata_all,vtkdata_points_all,vtkdata_offset_all, &
                             vtkdata_numpoints_all,NPROC)
       else
         ! all other process just send data
-        call gatherv_all_cr(vtkdata,size(vtkdata),&
+        call gatherv_all_cr(vtkdata,size(vtkdata), &
                             dummy,vtkdata_points_all,vtkdata_offset_all, &
                             1,NPROC)
       endif
