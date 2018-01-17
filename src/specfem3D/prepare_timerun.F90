@@ -1546,7 +1546,7 @@
     memory_size = memory_size + 2.0 * NSOURCES * dble(SIZE_INTEGER)
 
     ! receivers
-    !d_number_receiver_global
+    ! d_ispec_selected_rec_loc
     memory_size = memory_size + nrec_local * dble(SIZE_INTEGER)
     ! d_ispec_selected_rec
     memory_size = memory_size + nrec * dble(SIZE_INTEGER)
