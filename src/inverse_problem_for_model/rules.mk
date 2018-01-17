@@ -187,6 +187,29 @@ inverse_problem_for_model_MODULES = \
 	$(FC_MODDIR)/specfem_par_poroelastic.$(FC_MODEXT) \
 	$(FC_MODDIR)/specfem_par_movie.$(FC_MODEXT) \
 	$(FC_MODDIR)/user_noise_distribution.$(FC_MODEXT) \
+	$(FC_MODDIR)/adjoint_source.$(FC_MODEXT) \
+	$(FC_MODDIR)/input_output.$(FC_MODEXT) \
+	$(FC_MODDIR)/mesh_tools.$(FC_MODEXT) \
+	$(FC_MODDIR)/regularization_interface.$(FC_MODEXT) \
+	$(FC_MODDIR)/anisotropic_parametrisation_mod.$(FC_MODEXT) \
+	$(FC_MODDIR)/interpolation_mod.$(FC_MODEXT) \
+	$(FC_MODDIR)/passive_imaging_format_mod.$(FC_MODEXT) \
+	$(FC_MODDIR)/rotations_mod.$(FC_MODEXT) \
+	$(FC_MODDIR)/inverse_problem_par.$(FC_MODEXT) \
+	$(FC_MODDIR)/precond_mod.$(FC_MODEXT) \
+	$(FC_MODDIR)/signal_processing.$(FC_MODEXT) \
+	$(FC_MODDIR)/elastic_tensor_tools_mod.$(FC_MODEXT) \
+	$(FC_MODDIR)/inversion_scheme.$(FC_MODEXT) \
+	$(FC_MODDIR)/projection_on_fd_grid.$(FC_MODEXT) \
+	$(FC_MODDIR)/specfem_interface.$(FC_MODEXT) \
+	$(FC_MODDIR)/family_parameter.$(FC_MODEXT) \
+	$(FC_MODDIR)/io_model.$(FC_MODEXT) \
+	$(FC_MODDIR)/regularization.$(FC_MODEXT) \
+	$(FC_MODDIR)/teleseismic_io_mod.$(FC_MODEXT) \
+	$(FC_MODDIR)/fwi_iteration.$(FC_MODEXT) \
+	$(FC_MODDIR)/iso_parameter_mod.$(FC_MODEXT) \
+	$(FC_MODDIR)/regularization_fd_mod.$(FC_MODEXT) \
+	$(FC_MODDIR)/vti_parameters_mod.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 
 

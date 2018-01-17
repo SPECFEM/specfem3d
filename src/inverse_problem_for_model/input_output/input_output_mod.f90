@@ -843,15 +843,15 @@ contains
     integer                                                    :: it1, it2, it3, it4
     double precision                                           :: lat0, lon0, azi0
 
-    lat0 = acqui_simu(ievent)%Origin_chunk_lat
-    lon0 = acqui_simu(ievent)%Origin_chunk_lon
-    azi0 = acqui_simu(ievent)%Origin_chunk_azi
-
     nb_traces_tot=0
 
     if (myrank == 0) write(INVERSE_LOG_FILE,'(/a17)') '... reading data '
 
     do ievent = 1, acqui_simu(1)%nevent_tot
+
+       lat0 = acqui_simu(ievent)%Origin_chunk_lat
+       lon0 = acqui_simu(ievent)%Origin_chunk_lon
+       azi0 = acqui_simu(ievent)%Origin_chunk_azi
 
        if (myrank == 0) then
 

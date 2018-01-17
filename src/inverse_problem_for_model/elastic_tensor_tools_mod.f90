@@ -714,8 +714,8 @@ contains
     real(kind=dp) :: thrad, phrad, r
 
     r  = sqrt(s(1)*s(1) + s(2)*s(2) + s(3)*s(3))
-    ph = atan2(s(1),s(2))
-    th = acos(s(3)/r)
+    phrad = atan2(s(1),s(2))
+    thrad = acos(s(3)/r)
 
     th = thrad*rad2deg
     ph = phrad*rad2deg
