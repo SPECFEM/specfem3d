@@ -54,8 +54,6 @@
 ! ID of the huge file in which we dump all the time steps of the simulation
   integer, parameter :: IFILE_FOR_EXACT_UNDOING = 244
 
-  logical, parameter :: VTK_MODE = .false.
-
 ! set to .false.  if running on a Beowulf-type machine with local disks
 ! set to .true. if running on a shared-memory machine with common file system
 ! if running on a Beowulf, also modify name of nodes in filter_machine_file.f90
@@ -291,6 +289,22 @@
 !
 ! postprocess the colors to balance them if Droux (1993) algorithm is not used
   logical, parameter :: BALANCE_COLORS_SIMPLE_ALGO = .false.
+
+!!-----------------------------------------------------------
+!!
+!! in-situ visualization (using VTK)
+!!
+!!-----------------------------------------------------------
+
+! use low-res/hi-res mesh point locations (corners only or all GLL points)
+  logical, parameter :: VTK_USE_HIRES         = .false.
+
+! show free surface points
+  logical, parameter :: VTK_SHOW_FREESURFACE  = .true.
+
+! show volumetric field
+  logical, parameter :: VTK_SHOW_VOLUME       = .true.
+
 
 !------------------------------------------------------
 !----------- do not modify anything below -------------

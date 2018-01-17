@@ -27,10 +27,11 @@
 !
 ! United States and French Government Sponsorship Acknowledged.
 
-  subroutine specfem3D()
+  program xspecfem3D
 
   use specfem_par
 
+  implicit none
 
 !=============================================================================!
 !                                                                             !
@@ -336,6 +337,9 @@
 
 ! ************** PROGRAM STARTS HERE **************
 
+  ! MPI initialization
+  call init_mpi()
+
   ! force Flush-To-Zero if available to avoid very slow Gradual Underflow trapping
   call force_ftz()
 
@@ -371,11 +375,19 @@
   ! sets up and precomputes simulation arrays
   call prepare_timerun()
 
+#ifdef VTK_VIS
+  ! vtk window in-situ visualization
+  call vtk_window_prepare()
+#endif
+
   ! steps through time iterations
   call iterate_time()
 
   ! saves last time frame and finishes kernel calculations
   call finalize_simulation()
 
-  end subroutine specfem3D
+  ! MPI finish
+  call finalize_mpi()
+
+  end program xspecfem3D
 

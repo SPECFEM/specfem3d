@@ -35,20 +35,6 @@ module vtk_window_par
   ! VTK module
   implicit none
 
-  !-----------------------------------------------------------------------
-  ! user parameters
-
-  ! lowres/hires mesh & point locations (corners only or all GLL points)
-  logical, parameter :: VTK_USE_HIRES         = .false.
-
-  ! free surface points
-  logical, parameter :: VTK_SHOW_FREESURFACE  = .true.
-
-  ! volumetric field
-  logical, parameter :: VTK_SHOW_VOLUME       = .true.
-
-  !-----------------------------------------------------------------------
-
   ! vtk buffer array
   real,dimension(:),allocatable :: vtkdata
   logical,dimension(:),allocatable :: vtkmask
@@ -90,6 +76,9 @@ end module vtk_window_par
   endif
   call synchronize_all()
 
+  ! turns on VTK visualization mode
+  VTK_MODE = .true.
+
   ! checks: only works with elastic wavefield (uses veloc for display)
   if (.not. ELASTIC_SIMULATION) then
     call exit_MPI(myrank,'Error: VTK_VIS only implemented for elastic simulations')
@@ -127,6 +116,7 @@ end module vtk_window_par
     write(IMAIN,*) "  VTK visualization preparation done"
     call flush_IMAIN()
   endif
+  call synchronize_all()
 
   end subroutine vtk_window_prepare
 
@@ -1069,12 +1059,14 @@ end module vtk_window_par
   if (do_restart) then
     ! re-run simulation
     ! reset wavefields
-    call prepare_timerun_init_wavefield()
+    call prepare_wavefields()
+
     ! reset seismograms
     seismograms_d(:,:,:) = 0._CUSTOM_REAL
     seismograms_v(:,:,:) = 0._CUSTOM_REAL
     seismograms_a(:,:,:) = 0._CUSTOM_REAL
     seismograms_p(:,:,:) = 0._CUSTOM_REAL
+
     ! clear memory variables if attenuation
     if (ATTENUATION) then
       epsilondev_trace(:,:,:,:) = 0._CUSTOM_REAL
@@ -1098,7 +1090,9 @@ end module vtk_window_par
         R_yz(:,:,:,:,:) = VERYSMALLVAL
       endif
     endif
+
     if (USE_LDDRK) stop 'VTK restarting is not supported yet for LDDRK'
+
     ! puts elastic initial fields onto GPU
     if (GPU_MODE) then
       if (ELASTIC_SIMULATION) then
@@ -1107,6 +1101,7 @@ end module vtk_window_par
       endif
       if (ATTENUATION) stop 'VTK restarting is not supported yet for attenuation on GPUs'
     endif
+
     ! return to restart simulation
     return
   endif

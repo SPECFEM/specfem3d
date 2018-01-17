@@ -584,7 +584,7 @@ PACKAGE_STRING='Specfem3D 3.0.0'
 PACKAGE_BUGREPORT='see the wiki'
 PACKAGE_URL=''
 
-ac_unique_file="src/specfem3D/specfem3D.f90"
+ac_unique_file="src/specfem3D/specfem3D.F90"
 # Factoring default headers for most tests.
 ac_includes_default="\
 #include <stdio.h>
@@ -639,6 +639,7 @@ CUDA_INC
 CUDA_FLAGS
 NVCC
 CONFIGURE_FLAGS
+ASDF_LIBS
 ADIOS_LIBS
 ADIOS_FCFLAGS
 ADIOS_CONFIG
@@ -693,6 +694,8 @@ ac_ct_FC
 LDFLAGS
 FCFLAGS
 FC
+COND_ASDF_FALSE
+COND_ASDF_TRUE
 COND_ADIOS_FALSE
 COND_ADIOS_TRUE
 COND_VTK_FALSE
@@ -778,6 +781,7 @@ with_cuda
 enable_openmp
 enable_vtk
 with_adios
+with_asdf
 with_scotch_dir
 with_scotch_includedir
 with_scotch_libdir
@@ -813,6 +817,7 @@ CXXFLAGS
 CCC
 CXXCPP
 ADIOS_CONFIG
+ASDF_LIBS
 NVCC
 CUDA_FLAGS
 CUDA_INC
@@ -1446,6 +1451,7 @@ Optional Packages:
   --with-mpi              build parallel version [default=yes]
   --with-cuda             build CUDA GPU enabled version [default=no]
   --with-adios            build ADIOS enabled version [default=no]
+  --with-asdf             build ASDF enabled version [default=no]
   --with-scotch-dir=DIR   define the root path to Scotch (e.g. /opt/scotch/)
   --with-scotch-includedir=DIR
                           define the path to the Scotch headers (e.g.
@@ -1497,6 +1503,7 @@ Some influential environment variables:
   ADIOS_CONFIG
               Path to adios_config program that indicates how to compile with
               it.
+  ASDF_LIBS   ASDF libraries for linking programs
   NVCC        NVIDIA CUDA compiler command
   CUDA_FLAGS  CUDA compiler flags
   CUDA_INC    Location of CUDA include files
@@ -2814,6 +2821,27 @@ fi
 else
   COND_ADIOS_TRUE='#'
   COND_ADIOS_FALSE=
+fi
+
+
+###
+### ASDF
+###
+
+
+# Check whether --with-asdf was given.
+if test "${with_asdf+set}" = set; then :
+  withval=$with_asdf; want_asdf="$withval"
+else
+  want_asdf=no
+fi
+
+ if test x$"$want_asdf" != xno; then
+  COND_ASDF_TRUE=
+  COND_ASDF_FALSE='#'
+else
+  COND_ASDF_TRUE='#'
+  COND_ASDF_FALSE=
 fi
 
 
@@ -7347,6 +7375,7 @@ fi
 ###
 ### ADIOS
 ###
+
 if test x"$want_adios" != xno; then :
 
     $as_echo "## ----- ##
@@ -7481,6 +7510,18 @@ ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
 fi
 
+###
+### ASDF
+###
+
+if test x"$want_asdf" != xno; then :
+
+    $as_echo "## ---- ##
+## ASDF ##
+## ---- ##"
+
+
+fi
 
 #mpbl: adding flags to config.h.in through autoheader in order to save them into the adios file.
 #configure_flags_str="FC=$FC FCFLAGS=$FCFLAGS $FLAGS_CHECK"
@@ -9809,6 +9850,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${COND_ADIOS_TRUE}" && test -z "${COND_ADIOS_FALSE}"; then
   as_fn_error $? "conditional \"COND_ADIOS\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${COND_ASDF_TRUE}" && test -z "${COND_ASDF_FALSE}"; then
+  as_fn_error $? "conditional \"COND_ASDF\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${COND_SCOTCH_TRUE}" && test -z "${COND_SCOTCH_FALSE}"; then

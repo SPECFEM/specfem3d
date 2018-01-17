@@ -97,8 +97,12 @@ specfem3D_OBJECTS = \
 	$O/pml_compute_accel_contribution.spec.o \
 	$O/pml_compute_memory_variables.spec.o \
 	$O/pml_par.spec.o \
+	$O/prepare_attenuation.spec.o \
+	$O/prepare_gpu.spec.o \
+	$O/prepare_gravity.spec.o \
+	$O/prepare_noise.spec.o \
 	$O/prepare_timerun.spec.o \
-	$O/program_specfem3D.spec.o \
+	$O/prepare_wavefields.spec.o \
 	$O/read_external_stf.spec.o \
 	$O/read_mesh_databases.spec.o \
 	$O/save_adjoint_kernels.spec.o \
@@ -326,9 +330,12 @@ $O/fault_solver_kinematic.spec.o: $O/fault_solver_common.spec.o
 $O/compute_forces_viscoelastic.spec.o: $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o
 $O/compute_forces_viscoelastic_calling_routine.spec.o: $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o
 
+$O/prepare_timerun.spec.o: $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o
+$O/prepare_gpu.spec.o: $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o
+
 ## gravity
 $O/iterate_time.spec.o: $O/gravity_perturbation.spec.o
-$O/prepare_timerun.spec.o: $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o $O/gravity_perturbation.spec.o
+$O/prepare_gravity.spec.o: $O/gravity_perturbation.spec.o
 
 ## adios
 $O/read_forward_arrays_adios.spec_adios.o: $O/pml_par.spec.o
@@ -400,4 +407,6 @@ $O/%.openmp.o: $S/%.f90 ${SETUP}/constants.h
 $O/%.visualcc.o: $S/%.cpp ${SETUP}/config.h
 	${CC} -c $(CPPFLAGS) $(CFLAGS) $(MPI_INCLUDES) -o $@ $<
 
+$O/%.visualcc.o: $S/%.c ${SETUP}/config.h
+	${CC} -c $(CPPFLAGS) $(CFLAGS) $(MPI_INCLUDES) -o $@ $<
 

@@ -253,6 +253,18 @@ ADIOS_LINK = @ADIOS_LIBS@
 FCFLAGS_f90 += $(ADIOS_INC)
 MPILIBS += $(ADIOS_LINK)
 
+#######################################
+####
+#### ASDF
+#### with configure: ./configure --with-asdf ASDF_LIBS=..
+####
+#######################################
+
+@COND_ASDF_TRUE@ASDF = yes
+@COND_ASDF_FALSE@ASDF = no
+
+#FCFLAGS += @ASDF_FCFLAGS@
+MPILIBS += @ASDF_LIBS@
 
 #######################################
 ####
@@ -290,6 +302,7 @@ SUBDIRS = \
 	cuda \
 	decompose_mesh \
 	generate_databases \
+	inverse_problem_for_model \
 	meshfem3D \
 	shared \
 	specfem3D \

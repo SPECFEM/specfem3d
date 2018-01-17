@@ -118,18 +118,18 @@ for (int j=0;j<nker;j++) data_smooth[NGLL3*nspec_me*j + NGLL3*ispec + threadIdx.
 }
 
 extern "C"
-void FC_FUNC_(prepare_gpu,
-              PREPARE_GPU)(long * Container,
-                          realw * xstore_me,
-                          realw * ystore_me,
-                          realw * zstore_me,
-                          realw * sigma_h2_inv,
-                          realw * sigma_v2_inv,
-                          realw * h_criterion,
-                          realw * v_criterion,
-                          int * nspec_me,
-                          int * nker,
-                          realw * wgll_cube){
+void FC_FUNC_(prepare_gpu_smooth,
+              PREPARE_GPU_SMOOTH)(long * Container,
+                                  realw * xstore_me,
+                                  realw * ystore_me,
+                                  realw * zstore_me,
+                                  realw * sigma_h2_inv,
+                                  realw * sigma_v2_inv,
+                                  realw * h_criterion,
+                                  realw * v_criterion,
+                                  int * nspec_me,
+                                  int * nker,
+                                  realw * wgll_cube){
 
   Smooth_data* sp = (Smooth_data*)malloc( sizeof(Smooth_data) );
   *Container = (long)sp;

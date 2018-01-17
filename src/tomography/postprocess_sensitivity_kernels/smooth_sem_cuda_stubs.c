@@ -38,18 +38,18 @@ void FC_FUNC_(initialize_cuda_device,
               INITIALIZE_CUDA_DEVICE)(int* myrank_f,int* ncuda_devices){}
 
 
-void FC_FUNC_(prepare_gpu,
-              PREPARE_GPU)(long * Container,
-                          realw * xstore_me,
-                          realw * ystore_me,
-                          realw * zstore_me,
-                          realw sigma_h2_inv,
-                          realw sigma_v2_inv,
-                          realw h_criterion,
-                          realw v_criterion,
-                          int nspec_me,
-                          int nker,
-                          realw gll){}
+void FC_FUNC_(prepare_gpu_smooth,
+              PREPARE_GPU_SMOOTH)(long * Container,
+                                         realw * xstore_me,
+                                         realw * ystore_me,
+                                         realw * zstore_me,
+                                         realw sigma_h2_inv,
+                                         realw sigma_v2_inv,
+                                         realw h_criterion,
+                                         realw v_criterion,
+                                         int nspec_me,
+                                         int nker,
+                                         realw gll){}
 
 void FC_FUNC_(compute_smooth,
               COMPUTE_SMOOTH)(long * smooth_pointer,

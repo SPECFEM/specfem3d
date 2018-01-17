@@ -10,7 +10,7 @@ dnl You must have recent versions of Autoconf and Automake installed.
 
 AC_PREREQ(2.61)
 AC_INIT([Specfem3D], [3.0.0], [see the wiki], [Specfem3D])
-AC_CONFIG_SRCDIR([src/specfem3D/specfem3D.f90])
+AC_CONFIG_SRCDIR([src/specfem3D/specfem3D.F90])
 
 AC_CONFIG_HEADER([setup/config.h])
 
@@ -145,6 +145,17 @@ AC_ARG_WITH([adios],
     [want_adios="$withval"],
     [want_adios=no])
 AM_CONDITIONAL([COND_ADIOS], [test x"$want_adios" != xno])
+
+###
+### ASDF
+###
+
+AC_ARG_WITH([asdf],
+    [AC_HELP_STRING([--with-asdf],
+        [build ASDF enabled version @<:@default=no@:>@])],
+    [want_asdf="$withval"],
+    [want_asdf=no])
+AM_CONDITIONAL([COND_ASDF], [test x$"$want_asdf" != xno])
 
 ############################################################
 
@@ -378,6 +389,7 @@ AS_IF([test "$want_mpi" = yes], [
 ###
 ### ADIOS
 ###
+
 AS_IF([test x"$want_adios" != xno], [
     AS_BOX([ADIOS])
     if test "$want_mpi" != yes; then
@@ -386,6 +398,14 @@ AS_IF([test x"$want_adios" != xno], [
     CIT_ADIOS_CONFIG
 ])
 
+###
+### ASDF
+###
+
+AS_IF([test x"$want_asdf" != xno], [
+    AS_BOX([ASDF])
+    AC_ARG_VAR(ASDF_LIBS, [ASDF libraries for linking programs])
+])
 
 #mpbl: adding flags to config.h.in through autoheader in order to save them into the adios file.
 #configure_flags_str="FC=$FC FCFLAGS=$FCFLAGS $FLAGS_CHECK"

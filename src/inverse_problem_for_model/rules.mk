@@ -46,7 +46,73 @@ inverse_problem_for_model_TARGETS = \
 	$(EMPTY_MACRO)
 
 
+## source folder objects
+inv_top_OBJECTS = \
+	$O/anisotropic_parametrisation_mod.inv.o \
+	$O/elastic_tensor_tools_mod.inv.o \
+	$O/inverse_problem_main.inv.o \
+	$O/inverse_problem_par.inv_par.o \
+	$O/parallel_for_inverse_problem.invmpi.o \
+	$O/program_inverse_problem.inv.o \
+	$(EMPTY_MACRO)
+
+inv_adjoint_source_OBJECTS = \
+	$O/adjoint_source_mod.inv_adjoint_source.o \
+	$O/rotations_mod.inv_adjoint_source.o \
+	$O/signal_processing_mod.inv_adjoint_source.o \
+	$(EMPTY_MACRO)
+
+inv_input_output_OBJECTS = \
+	$O/input_output_mod.inv_input.o \
+	$O/interpolation_mod.inv_input.o \
+	$O/IO_model_mod.inv_input.o \
+	$O/mesh_tools_mod.inv_input.o \
+	$O/passive_imaging_format_mod.inv_input.o \
+	$O/Teleseismic_IO.inv_inputmpi.o \
+	$(EMPTY_MACRO)
+
+inv_inversion_scheme_OBJECTS = \
+	$O/family_parameter_mod.inv_inversion.o \
+	$O/fwi_iteration_mod.inv_inversion.o \
+	$O/inversion_scheme_mod.inv_inversion.o \
+	$O/iso_parameters.inv_inversion.o \
+	$O/PrecondFWI_mod.inv_inversion.o \
+	$O/vti_parameters.inv_inversion.o \
+	$(EMPTY_MACRO)
+
+inv_parameterisation_OBJECTS = \
+	$O/elastic_isotropic_mod.inv_parameterisation.o \
+	$O/parameters_subfamily_mod.inv_parameterisation.o \
+	$(EMPTY_MACRO)
+
+inv_projection_on_FD_grid_OBJECTS = \
+	$O/projection_on_FD_grid_mod.inv_projection.o \
+	$(EMPTY_MACRO)
+
+inv_regularization_OBJECTS = \
+	$O/regularization_FD_mod.inv_regularization.o \
+	$O/regularization_interface.inv_regularization.o \
+	$O/regularization_SEM_mod.inv_regularization.o \
+	$(EMPTY_MACRO)
+
+inv_specfem_interface_OBJECTS = \
+	$O/specfem_interface_mod.inv_specfem_interface.o \
+	$(EMPTY_MACRO)
+
 inverse_problem_for_model_OBJECTS = \
+	$(inv_top_OBJECTS) \
+	$(inv_adjoint_source_OBJECTS) \
+	$(inv_input_output_OBJECTS) \
+	$(inv_inversion_scheme_OBJECTS) \
+	$(inv_parameterization_OBJECTS) \
+	$(inv_projection_on_FD_grid_OBJECTS) \
+	$(inv_regularization_OBJECTS) \
+	$(inv_specfem_interface_OBJECTS) \
+	$(EMPTY_MACRO)
+
+
+## objects from other source directories
+inverse_problem_for_model_OBJECTS += \
 	$O/specfem3D_par.spec_module.o \
 	$O/assemble_MPI_vector.spec.o \
 	$O/check_stability.spec.o \
@@ -101,47 +167,26 @@ inverse_problem_for_model_OBJECTS = \
 	$O/pml_compute_accel_contribution.spec.o \
 	$O/pml_compute_memory_variables.spec.o \
 	$O/pml_par.spec.o \
+	$O/prepare_attenuation.spec.o \
+	$O/prepare_gpu.spec.o \
+	$O/prepare_gravity.spec.o \
+	$O/prepare_noise.spec.o \
 	$O/prepare_timerun.spec.o \
+	$O/prepare_wavefields.spec.o \
 	$O/read_external_stf.spec.o \
 	$O/read_mesh_databases.spec.o \
 	$O/save_adjoint_kernels.spec.o \
 	$O/setup_GLL_points.spec.o \
 	$O/setup_movie_meshes.spec.o \
 	$O/setup_sources_receivers.spec.o \
-	$O/specfem3D.spec.o \
 	$O/update_displacement_scheme.spec.o \
 	$O/update_displacement_LDDRK.spec.o \
 	$O/write_movie_output.spec.o \
 	$O/write_output_ASCII_or_binary.spec.o \
 	$O/write_output_SU.spec.o \
 	$O/write_seismograms.spec.o \
-	$O/inverse_problem_par.o \
-	$O/interpolation_mod.o \
-	$O/rotations_mod.o \
-	$O/signal_processing_mod.o \
-	$O/parallel_for_inverse_problem.o \
-	$O/adjoint_source_mod.o \
-	$O/mesh_tools_mod.o \
-	$O/elastic_tensor_tools_mod.o \
-	$O/anisotropic_parametrisation_mod.o \
-	$O/passive_imaging_format_mod.o \
-	$O/Teleseismic_IO.o \
-	$O/IO_model_mod.o \
-	$O/input_output_mod.o \
-	$O/iso_parameters.o \
-	$O/vti_parameters.o \
-	$O/regularization_SEM_mod.o \
-	$O/inversion_scheme_mod.o \
-	$O/family_parameter_mod.o \
-	$O/projection_on_FD_grid_mod.o \
-	$O/regularization_FD_mod.o \
-	$O/regularization_interface.o \
-	$O/PrecondFWI_mod.o \
-	$O/specfem_interface_mod.o \
-	$O/fwi_iteration_mod.o \
-	$O/inverse_problem_main.o \
-	$O/program_inverse_problem.o \
 	$(EMPTY_MACRO)
+
 
 inverse_problem_for_model_SHARED_OBJECTS = \
 	$O/shared_par.shared_module.o \
@@ -175,17 +220,6 @@ inverse_problem_for_model_SHARED_OBJECTS = \
 
 
 inverse_problem_for_model_MODULES = \
-	$(FC_MODDIR)/fault_solver_common.$(FC_MODEXT) \
-	$(FC_MODDIR)/fault_solver_dynamic.$(FC_MODEXT) \
-	$(FC_MODDIR)/fault_solver_kinematic.$(FC_MODEXT) \
-	$(FC_MODDIR)/gravity_perturbation.$(FC_MODEXT) \
-	$(FC_MODDIR)/image_pnm_par.$(FC_MODEXT) \
-	$(FC_MODDIR)/pml_par.$(FC_MODEXT) \
-	$(FC_MODDIR)/specfem_par.$(FC_MODEXT) \
-	$(FC_MODDIR)/specfem_par_acoustic.$(FC_MODEXT) \
-	$(FC_MODDIR)/specfem_par_elastic.$(FC_MODEXT) \
-	$(FC_MODDIR)/specfem_par_poroelastic.$(FC_MODEXT) \
-	$(FC_MODDIR)/specfem_par_movie.$(FC_MODEXT) \
 	$(FC_MODDIR)/user_noise_distribution.$(FC_MODEXT) \
 	$(FC_MODDIR)/adjoint_source.$(FC_MODEXT) \
 	$(FC_MODDIR)/input_output.$(FC_MODEXT) \
@@ -297,7 +331,12 @@ endif
 inverse_problem_for_model_OBJECTS += $(adios_inverse_problem_for_model_OBJECTS)
 inverse_problem_for_model_SHARED_OBJECTS += $(adios_inverse_problem_for_model_PREOBJECTS)
 
-
+## VTK
+ifeq ($(VTK),yes)
+inverse_problem_for_model_OBJECTS += \
+	$O/vtk_window_stubs.visualcc.o \
+	$(EMPTY_MACRO)
+endif
 
 #######################################
 
@@ -342,182 +381,89 @@ endif
 ### Module dependencies
 ###
 
-# Version file
-$O/initialize_simulation.spec.o: ${SETUP}/version.fh
+$O/interpolation_mod.inv_input.o: $O/shared_par.shared_module.o
+$O/signal_processing_mod.inv_adjoint_source.o: $O/specfem3D_par.spec_module.o
 
-## pml
-$O/compute_coupling_acoustic_el.spec.o: $O/pml_par.spec.o
-$O/compute_coupling_viscoelastic_ac.spec.o: $O/pml_par.spec.o
-$O/compute_forces_acoustic_calling_routine.spec.o: $O/pml_par.spec.o
-$O/compute_forces_acoustic_NGLL5_fast.spec.o: $O/pml_par.spec.o
-$O/compute_forces_acoustic_NGLLnot5_generic_slow.spec.o: $O/pml_par.spec.o
-$O/compute_energy.spec.o: $O/pml_par.spec.o
-$O/pml_allocate_arrays.spec.o: $O/pml_par.spec.o
-$O/pml_compute_accel_contribution.spec.o: $O/pml_par.spec.o
-$O/pml_compute_memory_variables.spec.o: $O/pml_par.spec.o
-$O/pml_output_VTKs.spec.o: $O/pml_par.spec.o
-$O/read_mesh_databases.spec.o: $O/pml_par.spec.o
-$O/update_displacement_scheme.spec.o: $O/pml_par.spec.o
+$O/mesh_tools_mod.inv_input.o: $O/inverse_problem_par.inv_par.o
+$O/IO_model_mod.inv_input.o: $O/mesh_tools_mod.inv_input.o
 
-## fault
-$O/fault_solver_dynamic.spec.o: $O/fault_solver_common.spec.o
-$O/fault_solver_kinematic.spec.o: $O/fault_solver_common.spec.o
-$O/compute_forces_viscoelastic.spec.o: $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o
-$O/compute_forces_viscoelastic_calling_routine.spec.o: $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o
+$O/rotations_mod.inv_adjoint_source.o: $O/interpolation_mod.inv_input.o
+$O/adjoint_source_mod.inv_adjoint_source.o: $O/signal_processing_mod.inv_adjoint_source.o $O/rotations_mod.inv_adjoint_source.o
 
-## gravity
-$O/iterate_time.spec.o: $O/gravity_perturbation.spec.o
-$O/prepare_timerun.spec.o: $O/pml_par.spec.o $O/fault_solver_dynamic.spec.o $O/fault_solver_kinematic.spec.o $O/gravity_perturbation.spec.o
+$O/elastic_tensor_tools_mod.inv.o: $O/interpolation_mod.inv_input.o
+$O/anisotropic_parametrisation_mod.inv.o: $O/elastic_tensor_tools_mod.inv.o
 
-## adios
-$O/read_forward_arrays_adios.spec_adios.o: $O/pml_par.spec.o
-$O/read_mesh_databases_adios.spec_adios.o: $O/pml_par.spec.o
-$O/initialize_simulation.spec.o: $(adios_inverse_problem_for_model_PREOBJECTS)
-$O/save_kernels_adios.spec_adios.o: $(adios_inverse_problem_for_model_PREOBJECTS)
-$O/save_forward_arrays_adios.spec_adios.o: $O/pml_par.spec.o $(adios_inverse_problem_for_model_PREOBJECTS)
-$O/finalize_simulation.spec.o: $O/pml_par.spec.o $O/gravity_perturbation.spec.o $(adios_inverse_problem_for_model_PREOBJECTS)
-$O/specfem3D_adios_stubs.spec_noadios.o: $O/adios_manager_stubs.shared_noadios.o
-$O/adios_helpers.shared_adios.o: \
-	$O/adios_helpers_definitions.shared_adios_module.o \
-	$O/adios_helpers_writers.shared_adios_module.o
+$O/passive_imaging_format_mod.inv_input.o: $O/rotations_mod.inv_adjoint_source.o
+$O/Teleseismic_IO.inv_inputmpi.o: $O/mesh_tools_mod.inv_input.o $O/passive_imaging_format_mod.inv_input.o
+
+$O/input_output_mod.inv_input.o: \
+	$O/mesh_tools_mod.inv_input.o \
+	$O/IO_model_mod.inv_input.o \
+	$O/Teleseismic_IO.inv_inputmpi.o
+
+$O/specfem_interface_mod.inv_specfem_interface.o: \
+	$O/adjoint_source_mod.inv_adjoint_source.o \
+	$O/input_output_mod.inv_input.o \
+	$O/signal_processing_mod.inv_adjoint_source.o
+
+$O/regularization_interface.inv_regularization.o: $O/regularization_SEM_mod.inv_regularization.o $O/regularization_FD_mod.inv_regularization.o
+
+$O/family_parameter_mod.inv_inversion.o: $O/iso_parameters.inv_inversion.o $O/vti_parameters.inv_inversion.o
+
+$O/fwi_iteration_mod.inv_inversion.o: \
+	$O/family_parameter_mod.inv_inversion.o \
+	$O/PrecondFWI_mod.inv_inversion.o \
+	$O/regularization_interface.inv_regularization.o
+
+$O/inverse_problem_main.inv.o: \
+	$O/elastic_tensor_tools_mod.inv.o \
+	$O/adjoint_source_mod.inv_adjoint_source.o \
+	$O/input_output_mod.inv_input.o \
+	$O/regularization_SEM_mod.inv_regularization.o \
+	$O/inversion_scheme_mod.inv_inversion.o \
+	$O/projection_on_FD_grid_mod.inv_projection.o \
+	$O/specfem_interface_mod.inv_specfem_interface.o \
+	$O/fwi_iteration_mod.inv_inversion.o
+
 
 
 ####
-#### rule to build each .o file below
+#### rule to build each .o file
 ####
 
-## modules
-$O/%.spec_module.o: $S/%.f90 $O/shared_par.shared_module.o
-	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
-
-$O/%.spec_module.o: $S/%.F90 $O/shared_par.shared_module.o
+## main module
+$O/%.inv_par.o: $S/%.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $O/specfem3D_par.spec_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 
-$O/%.spec.o: $S/%.f90 $O/specfem3D_par.spec_module.o
+## file object rules
+$O/%.inv.o: $S/%.f90 ${SETUP}/constants.h $O/inverse_problem_par.inv_par.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.spec.o: $S/%.F90 $O/specfem3D_par.spec_module.o
+$O/%.invmpi.o: $S/%.f90 ${SETUP}/constants.h $O/inverse_problem_par.inv_par.o
+	${MPIFCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+$O/%.inv_adjoint_source.o: $S/adjoint_source/%.f90 ${SETUP}/constants.h $O/inverse_problem_par.inv_par.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-###
-### ADIOS compilation
-###
+$O/%.inv_input.o: $S/input_output/%.f90 ${SETUP}/constants.h $O/inverse_problem_par.inv_par.o
+	${MPIFCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.spec_adios.o: $S/%.F90 $O/specfem3D_par.spec_module.o
+$O/%.inv_inputmpi.o: $S/input_output/%.f90 ${SETUP}/constants.h $O/inverse_problem_par.inv_par.o
+	${MPIFCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+$O/%.inv_inversion.o: $S/inversion_scheme/%.f90 ${SETUP}/constants.h $O/inverse_problem_par.inv_par.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.spec_adios.o: $S/%.f90 $O/specfem3D_par.spec_module.o
+$O/%.inv_parameterisation.o: $S/parameterisation/%.f90 ${SETUP}/constants.h $O/inverse_problem_par.inv_par.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.spec_noadios.o: $S/%.F90 $O/specfem3D_par.spec_module.o
+$O/%.inv_projection.o: $S/projection_on_FD_grid/%.f90 ${SETUP}/constants.h $O/inverse_problem_par.inv_par.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.spec_noadios.o: $S/%.f90 $O/specfem3D_par.spec_module.o
+$O/%.inv_regularization.o: $S/regularization/%.f90 ${SETUP}/constants.h $O/inverse_problem_par.inv_par.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-
-###
-### OpenMP compilation
-###
-
-$O/%.openmp.o: $S/%.f90 ${SETUP}/constants.h
+$O/%.inv_specfem_interface.o: $S/specfem_interface/%.F90 ${SETUP}/constants.h $O/inverse_problem_par.inv_par.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
-
-############################################
-
-###
-### Main program compilation (part added by DK and VM)
-###
-
-$O/program_inverse_problem.o: $S/program_inverse_problem.f90 $(program_inverse_problem_SHARED_OBJECTS) ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
-	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $(program_inverse_problem_SHARED_OBJECTS) $S/program_inverse_problem.f90 -c -o $O/program_inverse_problem.o
-
-$O/inverse_problem_main.o: $S/inverse_problem_main.f90 $(program_inverse_problem_SHARED_OBJECTS) ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
-	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $(program_inverse_problem_SHARED_OBJECTS) $S/inverse_problem_main.f90 -c -o $O/inverse_problem_main.o
-
-# add here all complilation for local modules
-$O/inverse_problem_par.o: $S/inverse_problem_par.f90 $(program_inverse_problem_SHARED_OBJECTS) ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
-	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $(program_inverse_problem_SHARED_OBJECTS) $S/inverse_problem_par.f90 -c -o $O/inverse_problem_par.o
-
-$O/parallel_for_inverse_problem.o: $S/parallel_for_inverse_problem.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
-	${MPIFCCOMPILE_CHECK} $(FCFLAGS_f90) $(program_inverse_problem_SHARED_OBJECTS) $S/parallel_for_inverse_problem.f90 -c -o $O/parallel_for_inverse_problem.o
-
-# additionals tools for mesh
-$O/mesh_tools_mod.o : $S/input_output/mesh_tools_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
-	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/input_output/mesh_tools_mod.f90 -c -o $O/mesh_tools_mod.o
-
-$O/interpolation_mod.o : $S/input_output/interpolation_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
-	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/input_output/interpolation_mod.f90 -c -o $O/interpolation_mod.o
-
-# IO for teleseismic case
-$O/rotations_mod.o : $S/adjoint_source/rotations_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
-	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/adjoint_source/rotations_mod.f90 -c -o $O/rotations_mod.o
-
-$O/passive_imaging_format_mod.o : $S/input_output/passive_imaging_format_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
-	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/input_output/passive_imaging_format_mod.f90 -c -o $O/passive_imaging_format_mod.o
-
-$O/Teleseismic_IO.o : $S/input_output/Teleseismic_IO.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
-	${MPIFCCOMPILE_CHECK} $(FCFLAGS_f90) $S/input_output/Teleseismic_IO.f90 -c -o $O/Teleseismic_IO.o
-
-# modules for full anisotropy and tensor related operations
-$O/elastic_tensor_tools_mod.o : $S/elastic_tensor_tools_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
-	${MPIFCCOMPILE_CHECK} $(FCFLAGS_f90) $S/elastic_tensor_tools_mod.f90 -c -o $O/elastic_tensor_tools_mod.o
-
-$O/anisotropic_parametrisation_mod.o : $S/anisotropic_parametrisation_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
-	${MPIFCCOMPILE_CHECK} $(FCFLAGS_f90) $S/anisotropic_parametrisation_mod.f90 -c -o $O/anisotropic_parametrisation_mod.o
-
-# import or export model
-$O/IO_model_mod.o : $S/input_output/IO_model_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
-	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/input_output/IO_model_mod.f90 -c -o $O/IO_model_mod.o
-
-# input_output module
-$O/input_output_mod.o: $S/input_output/input_output_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
-	${MPIFCCOMPILE_CHECK} $(FCFLAGS_f90) $S/input_output/input_output_mod.f90 -c -o $O/input_output_mod.o
-
-# some signal processing tools need for define adjoint sources
-$O/signal_processing_mod.o: $S/adjoint_source/signal_processing_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
-	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/adjoint_source/signal_processing_mod.f90 -c -o $O/signal_processing_mod.o
-
-# adjoint source module
-$O/adjoint_source_mod.o: $S/adjoint_source/adjoint_source_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
-	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/adjoint_source/adjoint_source_mod.f90 -c -o $O/adjoint_source_mod.o
-
-# regularization module
-$O/regularization_SEM_mod.o: $S/regularization/regularization_SEM_mod.f90 $O/read_partition_files.gen.o  ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
-	${MPIFCCOMPILE_CHECK} $(FCFLAGS_f90) $S/regularization/regularization_SEM_mod.f90 -c -o $O/regularization_SEM_mod.o
-
-# inversion schemes modules
-$O/inversion_scheme_mod.o: $S/inversion_scheme/inversion_scheme_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
-	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/inversion_scheme/inversion_scheme_mod.f90 -c -o $O/inversion_scheme_mod.o
-
-# generic inversion modules
-$O/iso_parameters.o : $S/inversion_scheme/iso_parameters.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
-	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/inversion_scheme/iso_parameters.f90 -c -o  $O/iso_parameters.o
-
-$O/vti_parameters.o : $S/inversion_scheme/vti_parameters.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
-	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/inversion_scheme/vti_parameters.f90 -c -o  $O/vti_parameters.o
-
-$O/family_parameter_mod.o : $S/inversion_scheme/family_parameter_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
-	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/inversion_scheme/family_parameter_mod.f90 -c -o  $O/family_parameter_mod.o
-
-$O/fwi_iteration_mod.o : $S/inversion_scheme/fwi_iteration_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
-	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/inversion_scheme/fwi_iteration_mod.f90 -c -o $O/fwi_iteration_mod.o
-
-$O/PrecondFWI_mod.o : $S/inversion_scheme/PrecondFWI_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
-	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/inversion_scheme/PrecondFWI_mod.f90 -c -o $O/PrecondFWI_mod.o
-
-# projection on finite-difference (FD) grid
-$O/projection_on_FD_grid_mod.o: $S/projection_on_FD_grid/projection_on_FD_grid_mod.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
-	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/projection_on_FD_grid/projection_on_FD_grid_mod.f90 -c -o $O/projection_on_FD_grid_mod.o
-
-$O/regularization_FD_mod.o:  $S/regularization/regularization_FD_mod.f90  ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
-	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/regularization/regularization_FD_mod.f90 -c -o $O/regularization_FD_mod.o
-
-$O/regularization_interface.o:  $S/regularization/regularization_interface.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
-	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/regularization/regularization_interface.f90 -c -o $O/regularization_interface.o
-
-# specfem interface to compile at the end
-$O/specfem_interface_mod.o: $S/specfem_interface/specfem_interface_mod.F90 ${SETUP}/constants.h $O/shared_par.shared_module.o $(inverse_problem_for_model_SHARED_OBJECTS)
-	${FCCOMPILE_CHECK} $(FCFLAGS_f90) $S/specfem_interface/specfem_interface_mod.F90 -c -o $O/specfem_interface_mod.o
 

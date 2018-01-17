@@ -272,6 +272,11 @@ module specfem_par
   double precision, dimension(NTOTAL_OBSERVATION) :: x_observation,y_observation,z_observation, &
                                                 g_x,g_y,g_z,G_xx,G_yy,G_zz,G_xy,G_xz,G_yz,temporary_array_for_sum
 
+#ifdef VTK_VIS
+  ! VTK window mode, default is off
+  logical :: VTK_MODE = .false.
+#endif
+
 end module specfem_par
 
 !=====================================================================

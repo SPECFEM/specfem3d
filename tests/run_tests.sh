@@ -101,7 +101,7 @@ fi
 cd $testdir/
 
 #checks if ROOT valid
-if [ ! -e "${ROOT}/src/specfem3D/specfem3D.f90" ]; then echo "please check if ROOT set correctly ..."; exit 1; fi
+if [ ! -e "${ROOT}/src/specfem3D/specfem3D.F90" ]; then echo "please check if ROOT set correctly ..."; exit 1; fi
 
 # user output
 echo "-------------------------------------"

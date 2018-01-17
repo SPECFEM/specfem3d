@@ -242,9 +242,11 @@
 !
 #ifdef VTK_VIS
   ! restart: goto starting point
-  123 continue
-  if (do_restart) then
-    if (myrank == 0) print *,'VTK_VIS: restarting simulation'
+123 continue
+  if (VTK_MODE) then
+    if (do_restart) then
+      if (myrank == 0) print *,'VTK_VIS: restarting simulation'
+    endif
   endif
 #endif
 
@@ -436,8 +438,10 @@
     endif
 
 #ifdef VTK_VIS
-    ! updates VTK window
-    call vtk_window_update()
+    if (VTK_MODE) then
+      ! updates VTK window
+      call vtk_window_update()
+    endif
 #endif
 
     !! CD CD add this : under validation option
@@ -473,12 +477,14 @@
   if (OUTPUT_ENERGY .and. myrank == 0) close(IOUT_ENERGY)
 
 #ifdef VTK_VIS
-  ! frees memory
-  call vtk_window_cleanup(do_restart)
+  if (VTK_MODE) then
+    ! frees memory
+    call vtk_window_cleanup(do_restart)
 
-  ! check if restart time iterations
-  if (do_restart) then
-    goto 123
+    ! check if restart time iterations
+    if (do_restart) then
+      goto 123
+    endif
   endif
 #endif
 

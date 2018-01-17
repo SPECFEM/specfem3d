@@ -483,7 +483,7 @@ contains
 
     !! clean arrays ----------------------------------------------------------------------------------------------------------------
     ! reset all forward wavefields----------------------------------------------------------------------------------------------------
-    call prepare_timerun_init_wavefield()  !! routine from specfem
+    call prepare_wavefields()  !! routine from specfem
 
     ! memory variables if attenuation
     if (ATTENUATION) then
@@ -675,7 +675,7 @@ contains
     endif
 
     !! reallocate all GPU memory according the Fortran arrays
-    if (GPU_MODE) call prepare_timerun_GPU()
+    if (GPU_MODE) call prepare_GPU()
 
     !! open new log file for specfem -----------------------------------------------------------------------------------------------
     if (myrank == 0 .and. SIMULATION_TYPE == 1) then
@@ -941,6 +941,7 @@ contains
     call setup_GLL_points()
     call detect_mesh_surfaces()
     call setup_sources_receivers()  !! we have one dummy source and STATION_ADJOINT to set up without crashes
+
     SIMULATION_TYPE=1               !! here we need to prepare the fisrt run
     SAVE_FORWARD=.true.             !! which is mandatory direct and need to save forward wavefield
 
