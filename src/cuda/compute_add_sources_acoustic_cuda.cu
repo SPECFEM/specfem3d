@@ -199,11 +199,12 @@ __global__ void add_sources_ac_SIM_TYPE_2_OR_3_kernel(realw* potential_dot_dot_a
 
       int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
 
-      realw kappal = kappastore[INDEX4(NGLLX,NGLLY,NGLLZ,i,j,k,ispec)];
       realw xir    = xir_store[INDEX2(nadj_rec_local,irec_local,i)];
       realw etar   = etar_store[INDEX2(nadj_rec_local,irec_local,j)];
       realw gammar = gammar_store[INDEX2(nadj_rec_local,irec_local,k)];
       realw source_adj = source_adjoint[INDEX3(nadj_rec_local,NSTEP_BETWEEN_ADJSRC,irec_local,it,0)];
+      //realw kappal = kappastore[INDEX4(NGLLX,NGLLY,NGLLZ,i,j,k,ispec)];
+
       //potential_dot_dot_acoustic[iglob] += adj_sourcearrays[INDEX6(nadj_rec_local,NTSTEP_BETWEEN_ADJSRC,3,5,5,
       //                                            pre_computed_irec_local_index[irec],
       //                                            pre_computed_index,
@@ -216,6 +217,7 @@ __global__ void add_sources_ac_SIM_TYPE_2_OR_3_kernel(realw* potential_dot_dot_a
       // note: we take the first component of the adj_sourcearrays
 
       //realw stf = - source_adj * xir * etar * gammar / kappal;
+
       // VM VM : change the adjoint source to be consistent with CPU code
       realw stf = source_adj * xir * etar * gammar;
       atomicAdd(&potential_dot_dot_acoustic[iglob],stf);
