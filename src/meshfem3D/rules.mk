@@ -42,6 +42,7 @@ meshfem3D_TARGETS = \
 
 meshfem3D_OBJECTS = \
 	$O/check_mesh_quality.mesh.o \
+	$O/chunk_earth_mesh_mod.mesh.o \
 	$O/compute_parameters.mesh.o \
 	$O/create_meshfem_mesh.mesh.o \
 	$O/create_CPML_regions.mesh.o \
@@ -53,7 +54,6 @@ meshfem3D_OBJECTS = \
 	$O/get_flags_boundaries.mesh.o \
 	$O/get_MPI_cutplanes_eta.mesh.o \
 	$O/get_MPI_cutplanes_xi.mesh.o \
-	$O/chunk_earth_mesh_mod.mesh.o \
 	$O/meshfem3D.mesh.o \
 	$O/meshfem3D_par.mesh.o \
 	$O/program_meshfem3D.mesh.o \
@@ -67,6 +67,7 @@ meshfem3D_OBJECTS = \
 meshfem3D_MODULES = \
 	$(FC_MODDIR)/constants_meshfem3d.$(FC_MODEXT) \
 	$(FC_MODDIR)/meshfem3d_par.$(FC_MODEXT) \
+	$(FC_MODDIR)/chunk_earth_mod.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 
 meshfem3D_SHARED_OBJECTS = \
