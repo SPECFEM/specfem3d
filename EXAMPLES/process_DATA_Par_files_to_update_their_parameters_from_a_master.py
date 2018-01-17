@@ -3,6 +3,8 @@
 # reads in a Par_file as master (template) and updates parameters and comments in all other Par_files
 # in current directory to have a consistent set of Par_files
 #
+from __future__ import print_function
+
 import sys
 import os
 import collections
@@ -20,12 +22,14 @@ DEPRECATED_RENAMED_PARAMETERS = [ \
   ("OCEANS", "APPROXIMATE_OCEAN_LOAD"), \
   ("NZ_DOUGLING_1", "NZ_DOUBLING_1"), \
   ("NZ_DOUGLING_2", "NZ_DOUBLING_2"), \
+  ("EXTERNAL_SOURCE_FILE","USE_EXTERNAL_SOURCE_FILE") \
 ]
 
 # exclude other possible files with similar name, but with different format
 # (more file names can be appended in this list)
 EXCLUDE_NAME_LIST = [ \
-  "Par_file_faults" \
+  "Par_file_faults", \
+  "Par_file.yml" \
 ]
 
 # exclude old unused directories from search directories
@@ -67,18 +71,18 @@ def read_Par_file_sections(parameters,file,verbose=False):
 
     # user info
     if verbose:
-        print "reading in file: ",file
-        print ""
+        print("reading in file: ",file)
+        print("")
 
     # checks file string
     if len(file) <= 1:
-        print "invalid file name: %s, please check..." % file
+        print("invalid file name: %s, please check..." % file)
         sys.tracebacklimit=0
         raise Exception('invalid file name: %s' % file)
 
     # checks if file exists
     if not os.path.isfile(file):
-        print "file %s does not exist, please check..." % file
+        print("file %s does not exist, please check..." % file)
         sys.tracebacklimit=0
         raise Exception('file does not exist: %s' % file)
 
@@ -86,7 +90,7 @@ def read_Par_file_sections(parameters,file,verbose=False):
     try:
         f = open(file,'r')
     except:
-        print "Error opening file ",file
+        print("Error opening file ",file)
         sys.tracebacklimit=0
         raise Exception('file does not open: %s' % file)
 
@@ -97,7 +101,7 @@ def read_Par_file_sections(parameters,file,verbose=False):
 
     for line in f:
         dataline = line.strip()
-        #print "line: ",dataline
+        #print("line: ",dataline)
 
         if dataline:
             # line with some data
@@ -114,8 +118,8 @@ def read_Par_file_sections(parameters,file,verbose=False):
 
                 if index_app == 0:
                     # should have been a comment, notify user
-                    print "Error parameter line: ",dataline
-                    print "A line starting with a # sign should be a comment line"
+                    print("Error parameter line: ",dataline)
+                    print("A line starting with a # sign should be a comment line")
                     sys.tracebacklimit=0
                     raise Exception('Invalid parameter line: %s' % dataline)
                 elif index_app > 0:
@@ -150,8 +154,8 @@ def read_Par_file_sections(parameters,file,verbose=False):
                             # this is a data format line
                             wrong_format = False
                 if wrong_format:
-                    print "Error invalid format on parameter line: \n",dataline
-                    print "\nPlease use a line format: PARAMETER_NAME = value"
+                    print("Error invalid format on parameter line: \n",dataline)
+                    print("\nPlease use a line format: PARAMETER_NAME = value")
                     sys.tracebacklimit=0
                     raise Exception('Invalid parameter line: %s' % dataline)
 
@@ -180,12 +184,12 @@ def read_Par_file_sections(parameters,file,verbose=False):
 
                 # checks that parameter name is unique
                 if name in parameters.keys():
-                    print "Error parameter name already used: ",name
-                    print "See section: \n"
+                    print("Error parameter name already used: ",name)
+                    print("See section: \n")
                     (value,comment,appendix) = parameters[name]
-                    print "%s" % comment
-                    print "%s = %s" % (name,value)
-                    print "\nPlease verify that parameter names are unique."
+                    print("%s" % comment)
+                    print("%s = %s" % (name,value))
+                    print("\nPlease verify that parameter names are unique.")
                     sys.tracebacklimit=0
                     raise Exception('Invalid parameter name: %s' % name)
 
@@ -201,9 +205,9 @@ def read_Par_file_sections(parameters,file,verbose=False):
 
                 # user info
                 if verbose:
-                    print "  done section for parameter: ",name
-                    #print "starting new section      : ",nsections
-                    #print ""
+                    print("  done section for parameter: ",name)
+                    #print("starting new section      : ",nsections)
+                    #print("")
 
         else:
             # empty line
@@ -213,18 +217,18 @@ def read_Par_file_sections(parameters,file,verbose=False):
 
     # checks number of entries
     if len(parameters.keys()) != nsections:
-        print "Error number of sections ",nsections," but number of keys is ",len(parameters.keys())
+        print("Error number of sections ",nsections," but number of keys is ",len(parameters.keys()))
         sys.tracebacklimit=0
         raise Exception('number of sections read in invalid: %s' % file)
 
     # user info
     if verbose:
-        print ""
-        print "  got %d parameters" % nsections
-        print ""
-        #print "master file sections"
-        #print ""
-        #print parameters
+        print("")
+        print("  got %d parameters" % nsections)
+        print("")
+        #print("master file sections")
+        #print("")
+        #print(parameters)
 
 
 #
@@ -241,16 +245,16 @@ def get_maximum_parameter_name_length(parameters,verbose=False):
     # determines maximum parameter name length
     max_name_length = 0
     for name in parameters.keys():
-        #print "parameter name: ",name
+        #print("parameter name: ",name)
         if len(name) > max_name_length: max_name_length = len(name)
 
     # user info
     if verbose:
-        print "parameter names:"
-        print "  maximum name length: ",max_name_length
+        print("parameter names:")
+        print("  maximum name length: ",max_name_length)
 
     # restrict to a minimum of 32 character until = sign, we will add 1 space when writing out line below
-    if max_name_length < 32-1:
+    if max_name_length <= 32-1:
       max_name_length = 32-1
     else:
       # add additional white space
@@ -258,8 +262,8 @@ def get_maximum_parameter_name_length(parameters,verbose=False):
 
     # user info
     if verbose:
-        print"  using parameter format length: ",max_name_length," + 1"
-        print ""
+        print("  using parameter format length: ",max_name_length," + 1")
+        print("")
 
     return max_name_length
 
@@ -273,7 +277,7 @@ def write_template_file(parameters,tmp_file,verbose=False):
     """
     # checks if anything to do
     if len(parameters.keys()) == 0:
-        print "Error no parameters to write out into template file:",parameters
+        print("Error no parameters to write out into template file:",parameters)
         sys.tracebacklimit=0
         raise Exception('invalid parameters dictionary: %s' % tmp_file)
 
@@ -284,7 +288,7 @@ def write_template_file(parameters,tmp_file,verbose=False):
     try:
         f = open(tmp_file,'w')
     except:
-        print "Error opening file ",tmp_file
+        print("Error opening file ",tmp_file)
         sys.tracebacklimit=0
         raise Exception('file does not open: %s' % tmp_file)
 
@@ -314,8 +318,8 @@ def write_template_file(parameters,tmp_file,verbose=False):
 
     # user info
     if verbose:
-        print "written temporary file, see: ",tmp_file
-        print ""
+        print("written temporary file, see: ",tmp_file)
+        print("")
 
 #
 #----------------------------------------------------------------------------
@@ -338,6 +342,7 @@ def get_files_in_subdirectories(dir,files,basename):
                 # checks with exclude list of name
                 do_add_me = True
                 for name in EXCLUDE_NAME_LIST:
+                    #print("name: ",name," filename: ",filename)
                     if filename.startswith(name): do_add_me = False
                 # adds to list
                 if do_add_me:
@@ -367,9 +372,9 @@ def compare_and_replace_file(master_file,temp_file,verbose=False,replace=False):
     if ret > 0:
         # got some differences
         # replaces master with new file format
-        print ""
-        print "replacing master with new parameter file format:"
-        print ""
+        print("")
+        print("replacing master with new parameter file format:")
+        print("")
 
         # copy over
         if replace:
@@ -378,14 +383,14 @@ def compare_and_replace_file(master_file,temp_file,verbose=False,replace=False):
             #print command
             ret = os.system(command)
             if ret != 0:
-                print "Error replacing file with new format",master_file
+                print("Error replacing file with new format",master_file)
                 sys.tracebacklimit=0
                 raise Exception('file can not be updated: %s' % master_file)
     else:
         if verbose:
-            print "  no differences"
-            print "  master file format is okay"
-            print ""
+            print("  no differences")
+            print("  master file format is okay")
+            print("")
 
 
 def check_and_update_Par_file(my_parameters,file):
@@ -398,11 +403,11 @@ def check_and_update_Par_file(my_parameters,file):
 
     # checks for old, deprecated parameters
     nold_parameters = 0
-    #print "  searching deprecated parameters..."
+    #print("  searching deprecated parameters...")
     for name in my_parameters.keys():
         if not name in master_parameters.keys():
             if (not "MESH_PAR_FILE_DATA" in name) and (not "NZ_DOUBLING" in name):
-                print "  deprecated parameter: ",name
+                print("  deprecated parameter: ",name)
                 nold_parameters += 1
 
                 is_found = False
@@ -413,7 +418,7 @@ def check_and_update_Par_file(my_parameters,file):
             # converts old to new parameter name
             for old_name,new_name in DEPRECATED_RENAMED_PARAMETERS:
                 if name == old_name :
-                    print "    will be converted to ",new_name
+                    print("    will be converted to ",new_name)
                     (val_orig,comment_orig,appendix_orig) = my_parameters[old_name]
                     # stores as new section
                     my_parameters[new_name] = (val_orig,comment_orig,appendix_orig)
@@ -429,12 +434,12 @@ def check_and_update_Par_file(my_parameters,file):
 
     # add missing master parameters and replaces comment lines to compare sections
     nmissing_parameters = 0
-    #print "  searching missing parameters..."
+    #print("  searching missing parameters...")
     for name in master_parameters.keys():
         if (not "MESH_PAR_FILE_DATA" in name):
             # checks if missing
             if not name in my_parameters.keys():
-                print "  misses parameter: ",name
+                print("  misses parameter: ",name)
                 nmissing_parameters += 1
                 # adds from master template record
                 (val,comment,appendix) = master_parameters[name]
@@ -446,7 +451,7 @@ def check_and_update_Par_file(my_parameters,file):
         if (not "MESH_PAR_FILE_DATA" in name):
             # checks we have this parameter
             if not name in my_parameters.keys():
-                print "Error comparing master with current file format parameter",name
+                print("Error comparing master with current file format parameter",name)
                 sys.tracebacklimit=0
                 raise Exception('parameter list invalid: %s' % file)
 
@@ -468,7 +473,7 @@ def check_and_update_Par_file(my_parameters,file):
             # regular Par_file must have a one-to-one match
             # checks that name is available
             if not name in my_parameters.keys():
-                print "Error ordering with current file format parameter",name
+                print("Error ordering with current file format parameter",name)
                 sys.tracebacklimit=0
                 raise Exception('parameter list invalid: %s' % file)
             # get values
@@ -482,7 +487,7 @@ def check_and_update_Par_file(my_parameters,file):
             if (not "MESH_PAR_FILE_DATA" in name) and (not "NZ_DOUBLING" in name):
                 # checks that name is available
                 if not name in my_parameters.keys():
-                    print "Error ordering with current file format parameter",name
+                    print("Error ordering with current file format parameter",name)
                     sys.tracebacklimit=0
                     raise Exception('parameter list invalid: %s' % file)
 
@@ -516,7 +521,7 @@ def check_and_update_Par_file(my_parameters,file):
                             my_key = "MESH_PAR_FILE_DATA" + str(i+1)
                             # check availability
                             if not my_key in my_parameters.keys():
-                                print "Error ordering key",my_key," with previous",previous
+                                print("Error ordering key",my_key," with previous",previous)
                                 sys.tracebacklimit=0
                                 raise Exception('ordering list failed: %s' % file)
                             # add entries
@@ -529,8 +534,8 @@ def check_and_update_Par_file(my_parameters,file):
                     if "NREGIONS" in previous:
                         # check if materials are done
                         if num_material_entries == 0:
-                            print "Error ordering with current file format parameter",name," with previous",previous
-                            print "NREGIONS section must come after NMATERIALS section\n"
+                            print("Error ordering with current file format parameter",name," with previous",previous)
+                            print("NREGIONS section must come after NMATERIALS section\n")
                             sys.tracebacklimit=0
                             raise Exception('ordering list failed: %s' % file)
                         # adds regions
@@ -539,7 +544,7 @@ def check_and_update_Par_file(my_parameters,file):
                             my_key = "MESH_PAR_FILE_DATA" + str(i + 1 + num_material_entries)
                             # check availability
                             if not my_key in my_parameters.keys():
-                                print "Error ordering key",my_key," with previous",previous
+                                print("Error ordering key",my_key," with previous",previous)
                                 sys.tracebacklimit=0
                                 raise Exception('ordering list failed: %s' % file)
                             # add entries
@@ -553,15 +558,15 @@ def check_and_update_Par_file(my_parameters,file):
     # check
     if is_Mesh_Par_file:
         if num_material_entries == 0 or num_region_entries == 0:
-            print "Error ordering Mesh_Par_file ",file
+            print("Error ordering Mesh_Par_file ",file)
             sys.tracebacklimit=0
             raise Exception('ordering list failed: %s' % file)
 
 
     # check length
     if len(ordered_parameters.keys()) != len(my_parameters.keys()):
-        print "Error ordering with parameters got different lengths:"
-        print "new length is ",len(ordered_parameters.keys())," instead of ",len(my_parameters.keys())
+        print("Error ordering with parameters got different lengths:")
+        print("new length is ",len(ordered_parameters.keys())," instead of ",len(my_parameters.keys()))
         sys.tracebacklimit=0
         raise Exception('parameter list invalid: %s' % file)
 
@@ -571,15 +576,15 @@ def check_and_update_Par_file(my_parameters,file):
         if my_parameters.keys()[i] != ordered_parameters.keys()[i]: nold_order += 1
 
     if nold_order > 0:
-        print "  needs re-ordering...",nold_order
+        print("  needs re-ordering...",nold_order)
 
     # replace old file if necessary
     if nold_parameters == 0 and nmissing_parameters == 0 and nold_comments == 0 and nold_order == 0:
         # user info
-        print "  file is okay and up-to-date"
+        print("  file is okay and up-to-date")
     else:
         # user info
-        print "  updating parameter file..."
+        print("  updating parameter file...")
 
         # opens temporary file with master info
         tmp_file = "_____temp09_____"
@@ -624,9 +629,9 @@ def update_Par_files(master_file,replace=False):
     global is_Mesh_Par_file
 
     # user info
-    print ""
-    print "master file: ",master_file
-    print ""
+    print("")
+    print("master file: ",master_file)
+    print("")
 
     # determines file type
     check_parameter_file_type(master_file)
@@ -640,9 +645,9 @@ def update_Par_files(master_file,replace=False):
 
     # notifies user if template is different than master
     # (e.g. by different indentation or white space)
-    print "checking differences between new format and master:"
-    print "  (different formatting or whitespace can lead to differences)"
-    print ""
+    print("checking differences between new format and master:")
+    print("  (different formatting or whitespace can lead to differences)")
+    print("")
     compare_and_replace_file(master_file,tmp_file,verbose=True,replace=replace)
 
     # clean up temporary file
@@ -654,18 +659,18 @@ def update_Par_files(master_file,replace=False):
     current_dir = os.getcwd()
 
     # user info
-    print ""
-    print "finding all files with name: ",basename
-    print "in current directory: ",current_dir
+    print("")
+    print("finding all files with name: ",basename)
+    print("in current directory: ",current_dir)
 
     # gets all files in subdirectories
     files = []
     get_files_in_subdirectories("./",files,basename)
 
     nfiles = len(files)
-    print ""
-    print "found ",nfiles," parameter files"
-    print ""
+    print("")
+    print("found ",nfiles," parameter files")
+    print("")
 
     ifile = 0
     for file in files:
@@ -676,13 +681,13 @@ def update_Par_files(master_file,replace=False):
         check_parameter_file_type(file)
 
         # user info
-        print ""
-        print "file ",ifile," out of ",nfiles
-        print "processing file: ",file
+        print("")
+        print("file ",ifile," out of ",nfiles)
+        print("processing file: ",file)
         if is_Mesh_Par_file:
-            print "  file type is ","Mesh_Par_file"
+            print("  file type is ","Mesh_Par_file")
         else:
-            print "  file type is ","Par_file"
+            print("  file type is ","Par_file")
 
         # read in parameters
         my_parameters = collections.OrderedDict()
@@ -694,21 +699,21 @@ def update_Par_files(master_file,replace=False):
         del my_parameters
 
     # user info
-    print ""
-    print "done"
+    print("")
+    print("done")
     os.system("date")
-    print ""
+    print("")
 
 #
 #----------------------------------------------------------------------------
 #
 
 def usage():
-    print "usage:"
-    print "    ./process_DATA_Par_files_to_update_their_parameters_from_a_master.py Master-Par-file replace"
-    print "  with"
-    print "    Master-Par_file - Par_file which serves as master template (e.g. DATA/Par_file)"
-    print "    replace         = flag to force replacing of file [0==check-only/1==replace]"
+    print("usage:")
+    print("    ./process_DATA_Par_files_to_update_their_parameters_from_a_master.py Master-Par-file replace")
+    print("  with")
+    print("    Master-Par_file - Par_file which serves as master template (e.g. DATA/Par_file)")
+    print("    replace         = flag to force replacing of file [0==check-only/1==replace]")
 
 #
 #----------------------------------------------------------------------------

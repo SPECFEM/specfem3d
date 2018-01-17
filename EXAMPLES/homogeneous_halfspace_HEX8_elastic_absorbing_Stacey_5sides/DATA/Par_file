@@ -286,10 +286,6 @@ SAVE_TRANSVERSE_KL              = .false.
 # cost function using velocity observable rather than displacement
 ANISOTROPIC_VELOCITY_KL         = .false.
 
-# this parameter must be set to .true. to compute anisotropic kernels for
-# cost function using velocity observable rather than displacement
-ANISOTROPIC_VELOCITY_KL         = .false.
-
 # outputs approximate Hessian for preconditioning
 APPROXIMATE_HESS_KL             = .false.
 
@@ -301,13 +297,12 @@ SAVE_MOHO_MESH                  = .false.
 # Coupling with an injection technique (DSM, AxiSEM, or FK)
 #
 #-----------------------------------------------------------
-
 COUPLE_WITH_INJECTION_TECHNIQUE = .false.
 INJECTION_TECHNIQUE_TYPE        = 3   # 1 = DSM, 2 = AxiSEM, 3 = FK
 MESH_A_CHUNK_OF_THE_EARTH       = .false.
 TRACTION_PATH                   = ./DATA/AxiSEM_tractions/3/
 FKMODEL_FILE                    = FKmodel
-RECIPROCITY_AND_KH_INTEGRAL     = .false.  # does not work yet
+RECIPROCITY_AND_KH_INTEGRAL     = .false.   # does not work yet
 
 #-----------------------------------------------------------
 

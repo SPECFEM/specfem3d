@@ -44,11 +44,9 @@ RATIO_BY_WHICH_TO_INCREASE_IT   = 1.4
 #
 #-----------------------------------------------------------
 
-# number of nodes for 2D and 3D shape functions for hexahedra
-# we use either 8-node mesh elements (bricks) or 27-node elements.
-# If you use our internal mesher, the only option is 8-node bricks (27-node elements are not supported)
-# CUBIT does not support HEX27 elements either (it can generate them, but they are flat, i.e. identical to HEX8).
-# To generate HEX27 elements with curvature properly taken into account, you can use Gmsh http://geuz.org/gmsh/
+# Number of nodes for 2D and 3D shape functions for hexahedra.
+# We use either 8-node mesh elements (bricks) or 27-node elements.
+# If you use our internal mesher, the only option is 8-node bricks (27-node elements are not supported).
 NGNOD                           = 8
 
 # models:
@@ -201,10 +199,6 @@ USE_EXTERNAL_SOURCE_FILE        = .false.
 # print source time function
 PRINT_SOURCE_TIME_FUNCTION      = .true.
 
-# (for acoustic simulations only) determines source encoding factor +/-1 depending on sign of moment tensor
-# (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources, Geophysics, 74 (6), WCC177-WCC188.)
-USE_SOURCE_ENCODING             = .false.
-
 #-----------------------------------------------------------
 #
 # Seismograms
@@ -249,10 +243,21 @@ USE_TRICK_FOR_BETTER_PRESSURE   = .true.
 
 #-----------------------------------------------------------
 #
+# Source encoding
+#
+#-----------------------------------------------------------
+
+# (for acoustic simulations only for now) determines source encoding factor +/-1 depending on sign of moment tensor
+# (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources, Geophysics, 74 (6), WCC177-WCC188.)
+USE_SOURCE_ENCODING             = .false.
+
+#-----------------------------------------------------------
+#
 # Energy calculation
 #
 #-----------------------------------------------------------
-# to plot total energy curves, for instance to monitor how CPML absorbing layers behave;
+
+# to plot energy curves, for instance to monitor how CPML absorbing layers behave;
 # should be turned OFF in most cases because a bit expensive
 OUTPUT_ENERGY                   = .false.
 # every how many time steps we compute energy (which is a bit expensive to compute)
@@ -292,13 +297,12 @@ SAVE_MOHO_MESH                  = .false.
 # Coupling with an injection technique (DSM, AxiSEM, or FK)
 #
 #-----------------------------------------------------------
-
 COUPLE_WITH_INJECTION_TECHNIQUE = .false.
 INJECTION_TECHNIQUE_TYPE        = 3   # 1 = DSM, 2 = AxiSEM, 3 = FK
 MESH_A_CHUNK_OF_THE_EARTH       = .false.
 TRACTION_PATH                   = ./DATA/AxiSEM_tractions/3/
 FKMODEL_FILE                    = FKmodel
-RECIPROCITY_AND_KH_INTEGRAL     = .false.  # does not work yet
+RECIPROCITY_AND_KH_INTEGRAL     = .false.   # does not work yet
 
 #-----------------------------------------------------------
 
