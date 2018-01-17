@@ -62,7 +62,7 @@ yc = 0.5*(Latmin+Latmax)
 # to avoid elements with small angles at the trench.
 # See demo_subduction_smoothing.m
 def surf(z, minz):
-    c = 1.0/zcutTop
+    c = 0.5/zcutTop
     f = -math.log(math.exp(-c*min(z - minz, -0.1))-1)/c + minz
     f = max(f,-zcutBottom)
     return f
@@ -87,7 +87,7 @@ def import_elev_data():
 def import_slab_data(filename):
     data = np.loadtxt(filename)
     data = data[np.bitwise_not(np.isnan(data[:,2])),:]
-    data = data[np.bitwise_and(np.bitwise_and(data[:,1]>=Latmin, data[:,1]<=Latmax),data[:,2]>-zcutBottom*1.2)]
+    data = data[np.bitwise_and(np.bitwise_and(data[:,1]>=Latmin, data[:,1]<=Latmax),data[:,2]>-zcutBottom*2.5)]
     return data
 
 
