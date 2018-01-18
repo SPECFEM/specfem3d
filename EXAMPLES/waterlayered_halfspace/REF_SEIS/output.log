@@ -1,4 +1,7 @@
-running example: Fri Jan 19 01:05:46 AST 2018
+running example: Thu Jan 18 22:58:16 AST 2018
+
+(will take about 10 minutes)
+
 
    setting up example...
 
@@ -11,21 +14,23 @@ running example: Fri Jan 19 01:05:46 AST 2018
  **********************
 
  total number of nodes: 
-   nnodes =        23273
+   nnodes =        44436
  total number of spectral elements:
-   nspec =        20736
+   nspec =        40500
  materials:
    num_mat =            1
-   defined =            1 undefined =            0
+   num_mat =            2
+   num_mat =            3
+   defined =            3 undefined =            0
    no poroelastic material file found
  absorbing boundaries:
-   nspec2D_xmin =          576
-   nspec2D_xmax =          576
-   nspec2D_ymin =          576
-   nspec2D_ymax =          576
-   nspec2D_bottom =         1296
-   nspec2D_top =         1296
-   nspec_cpml =         9036
+   nspec2D_xmin =          900
+   nspec2D_xmax =          900
+   nspec2D_ymin =          900
+   nspec2D_ymax =          900
+   nspec2D_bottom =         2025
+   nspec2D_top =         2025
+   no absorbing_cpml_file file found
    no moho_surface_file file found
  Par_file_faults not found: assuming that there are no faults
  node valence:  min =            1  max =            8
@@ -48,5 +53,5 @@ running example: Fri Jan 19 01:05:46 AST 2018
 see results in directory: OUTPUT_FILES/
 
 done
-Fri Jan 19 01:11:18 AST 2018
+Thu Jan 18 23:09:00 AST 2018
 
