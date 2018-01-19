@@ -102,7 +102,7 @@ SCOTCH_LIBDIR = @SCOTCH_LIBDIR@
 
 ### added support for METIS as well, thus uncomment the line below and compile METIS if you want to use it instead of SCOTCH
 # add $(FC_DEFINE)USE_METIS_INSTEAD_OF_SCOTCH
-#@COND_SCOTCH_TRUE@SCOTCH_LIBS = -L./src/decompose_mesh/metis-4.0.3 -L./metis-4.0.3 -lmetis
+#@COND_SCOTCH_TRUE@SCOTCH_LIBS = -L./external_libs/metis-4.0.3 -L./metis-4.0.3 -lmetis
 #@COND_SCOTCH_TRUE@SCOTCH_FLAGS = $(FC_DEFINE)USE_METIS_INSTEAD_OF_SCOTCH
 
 #######################################

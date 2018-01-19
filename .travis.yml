@@ -199,10 +199,9 @@ script:
         ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TEST}
       fi
     fi
-  - echo -en 'travis_fold:end:configure\\r'
-
   # we output to console
   - sed -i "s:IMAIN .*:IMAIN = ISTANDARD_OUTPUT:" setup/constants.h
+  - echo -en 'travis_fold:end:configure\\r'
 
   # compilation
   - echo 'Build...' && echo -en 'travis_fold:start:build\\r'

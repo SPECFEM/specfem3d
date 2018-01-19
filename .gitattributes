@@ -1,6 +1,8 @@
 *.ai binary
 *.pdf binary
 *.semd binary
+*.semv binary
 *.sema binary
+*.semp binary
 *.adj binary
 *.ascii binary

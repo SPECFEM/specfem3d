@@ -2661,6 +2661,9 @@ fi
 ### FORCE_VECTORIZATION
 ###
 
+## note: vectorization support has been removed by DK due to problems with Intel compilers (2016).
+##       enabling will have no effect.
+
 # Check whether --enable-vectorization was given.
 if test "${enable_vectorization+set}" = set; then :
   enableval=$enable_vectorization; want_vec="$enableval"
@@ -6174,7 +6177,7 @@ ac_compiler_gnu=$ac_cv_fc_compiler_gnu
   # uses bundled scotch: current version pointed to by symbolic link scotch/
   USE_BUNDLED_SCOTCH=1
 
-  SCOTCH_DIR="$srcdir/src/decompose_mesh/scotch"
+  SCOTCH_DIR="$srcdir/external_libs/scotch"
   SCOTCH_LIBDIR="${SCOTCH_DIR}/lib"
   SCOTCH_INCLUDEDIR="${SCOTCH_DIR}/include"
  else

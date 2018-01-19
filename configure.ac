@@ -301,7 +301,7 @@ else
   # uses bundled scotch: current version pointed to by symbolic link scotch/
   USE_BUNDLED_SCOTCH=1
 
-  SCOTCH_DIR="$srcdir/src/decompose_mesh/scotch"
+  SCOTCH_DIR="$srcdir/external_libs/scotch"
   SCOTCH_LIBDIR="${SCOTCH_DIR}/lib"
   SCOTCH_INCLUDEDIR="${SCOTCH_DIR}/include"
  else
