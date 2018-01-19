@@ -553,7 +553,7 @@ subroutine SCEC_write_dataT(dataT)
     enddo
     write(IOUT,*) "#"
     write(IOUT,*) "# The line below lists the names of the data fields:"
-    write(IOUT,*) "# t " // trim(dataT%shortFieldNames)
+    write(IOUT,'(a256)') "# t " // trim(dataT%shortFieldNames)
     write(IOUT,*) "#"
     do k=1,dataT%nt
       write(IOUT,my_fmt) k*dataT%dt, dataT%dat(:,i,k)

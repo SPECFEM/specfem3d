@@ -1,0 +1,22 @@
+SCEC benchmark
+
+This example is taken from the SCEC/USGS Spontaneous Rupture Code Verification Project:
+- TPV5, a planar vertical strike-slip fault
+
+
+1. A default mesh is provided in MESH-default/ directory. 
+  The script to generate this mesh using Cubit can be run by:
+  > ./tpv5.py
+
+2. To run the simulation, type:
+  > ./run_this_example.sh
+
+
+Reference solutions are provided in REF_SEIS/ folder. 
+
+For more details about the benchmark, see: 
+  https://www.scec.org
+  https://scec.usc.edu/scecpedia/Spontaneous_Rupture_Code_Validation
+  http://scecdata.usc.edu/cvws/tpv5docs.html
+
+

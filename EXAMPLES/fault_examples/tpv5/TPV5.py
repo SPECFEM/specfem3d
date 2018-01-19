@@ -1,17 +1,22 @@
 #!/usr/bin/env python
-
-import cubit
-import boundary_definition
-import cubit2specfem3d
 import math
 import os
 import sys
-from save_fault_nodes_elements import *
-from absorbing_boundary import *
-cubit.cmd('reset')
+
+import cubit
+try:
+    #cubit.init([""])
+    cubit.init(["-noecho","-nojournal"])
+except:
+    pass
+
+from geocubitlib import absorbing_boundary
+from geocubitlib import save_fault_nodes_elements
+from geocubitlib import cubit2specfem3d
 
 km = 1000
 z_surf=0*km
+
 ####  initializing coordinates x,y,z
 x=[]     # fault
 y=[]
@@ -46,6 +51,7 @@ y.append(-0.1)   #y8
 
 z=[z_surf]*4
 
+cubit.cmd('reset')
 ####################  bulk ###########################################
 for i in range(len(xbulk)):
    vert="create vertex x "+str(xbulk[i])+" y "+str(ybulk[i])+" z "+str(zbulk[i])
@@ -55,7 +61,6 @@ for i in range(len(xbulk)):
 for i in range(len(x)):
   vert="create vertex x "+str(x[i])+" y "+str(y[i])+" z "+str(z[i])
   cubit.cmd(vert)
-
 
 ################ creating fault domains #################################
 bulk1="create curve vertex 1 2"
@@ -82,7 +87,9 @@ cubit.cmd("sweep curve 5 vector 0 0 -1 distance "+str(21*km))
 cubit.cmd("sweep curve 6 vector 0 0 -1 distance "+str(21*km))
 
 #####################################################
+
 elementsize = 1000
+
 cubit.cmd("imprint all")
 cubit.cmd("merge all")
 cubit.cmd("surface 1 size "+str(elementsize))
@@ -97,19 +104,21 @@ cubit.cmd("unmerge surface 2 3")
 
 os.system('mkdir -p MESH')
 
+# fault surfaces (up/down)
 Au = [2]
 Ad = [3]
 
-faultA = fault_input(1,Au,Ad)
+faultA = save_fault_nodes_elements.fault_input(1,Au,Ad)
 
 #  FOR THE BULK (Seismic wave propagation part for SPECFEM3D)
 
 ###### This is boundary_definition.py of GEOCUBIT
 #..... which extracts the bounding faces and defines them into blocks
-#boundary_definition.entities=['face'] # this is a deprecated boundary definition function
-#boundary_definition.define_bc(boundary_definition.entities,parallel=True)
+#entities=['face'] # this is a deprecated boundary definition function
+#boundary_definition.define_bc(entities,parallel=True)
+
 entities=['face']
-define_parallel_bc(entities) # in absorbing_boundary.py
+absorbing_boundary.define_parallel_bc(entities) # in absorbing_boundary.py
 
 #### Define material properties for the 2 volumes ################
 cubit.cmd('#### DEFINE MATERIAL PROPERTIES #######################')
@@ -124,7 +133,6 @@ cubit.cmd('block 1 attribute index 3 3464')    # vs
 cubit.cmd('block 1 attribute index 4 2670')   # rho
 cubit.cmd('block 1 attribute index 5 13')     # q flag (see constants.h: iattenuation_ ... )
 cubit.cmd('block 1 attribute index 6 0')     # q flag (see constants.h: iattenuation_ ... )
-
 
 #### Export to SPECFEM3D format using cubit2specfem3d.py of GEOCUBIT
 

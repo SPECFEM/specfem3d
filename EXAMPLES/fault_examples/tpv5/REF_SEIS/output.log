@@ -1,0 +1,51 @@
+running example: Sat Jan 20 02:31:07 AST 2018
+
+   setting up example...
+
+
+  decomposing mesh...
+
+
+ **********************
+ Serial mesh decomposer
+ **********************
+
+ total number of nodes: 
+   nnodes =        41228
+ total number of spectral elements:
+   nspec =        37212
+ materials:
+   num_mat =            1
+   defined =            1 undefined =            0
+   no poroelastic material file found
+ absorbing boundaries:
+   nspec2D_xmin =          882
+   nspec2D_xmax =          882
+   nspec2D_ymin =          882
+   nspec2D_ymax =          882
+   nspec2D_bottom =         1772
+   nspec2D_top =         1772
+   no absorbing_cpml_file file found
+   no moho_surface_file file found
+ node valence:  min =            1  max =           10
+   nsize =           10 sup_neighbor =           54
+ mesh2dual:
+   max_neighbor =           29
+ partitions: 
+   num =            4
+
+ Databases files in directory: ./OUTPUT_FILES/DATABASES_MPI
+ finished successfully
+
+
+  running database generation on  4  processors...
+
+
+  running solver on  4  processors...
+
+
+see results in directory: OUTPUT_FILES/
+
+done
+Sat Jan 20 02:40:42 AST 2018
+

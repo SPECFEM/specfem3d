@@ -1,11 +1,11 @@
  # problem=TPV104
  # author=Surendra Nadh Somala
- # Date = 08/03/2016; time = 16:51:48
+ # Date = 01/20/2018; time = 02:40:42
  # code=SPECFEM3D_Cartesian (split nodes)
  # code_version=1.1
  # element_size=100 m  (*5 GLL nodes)
- # time_step=  2.0000001E-03
- # location=faultst-120dp000
+ # time_step=   2.00000009E-03
+ # location=faultst120dp000
  # Column #1 = Time (s)
  # Column #2 = horizontal right-lateral slip (m)
  # Column #3 = horizontal right-lateral slip rate (m/s)
@@ -16,8 +16,7 @@
  # Column #8 = normal stress (MPa)
  #
  # The line below lists the names of the data fields:
- # t h-slip h-slip-rate h-shear-stress v-slip v-slip-rate v-shear-stress n-stres
- s
+                                                                                                                                                                                # t h-slip h-slip-rate h-shear-stress v-slip v-slip-rate v-shear-stress n-stress
  #
   0.2000000E-02  0.0000000E+00  0.0000000E+00  0.7000000E+02  0.0000000E+00  0.0000000E+00  0.0000000E+00 -0.1200000E+03
   0.4000000E-02  0.0000000E+00  0.0000000E+00  0.7000000E+02  0.0000000E+00  0.0000000E+00  0.0000000E+00 -0.1200000E+03
