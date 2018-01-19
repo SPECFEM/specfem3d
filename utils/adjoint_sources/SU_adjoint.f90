@@ -6,7 +6,7 @@
 ! please modify routine create_adjoint_trace() according to your needs.
 !
 ! for example, compile with:
-!  > gFortran -o ../../example/homogeneous/halfspace/bin/xSU_adjoint SU_adjoint.f90
+!  > gfortran -o ../../example/homogeneous/halfspace/bin/xSU_adjoint SU_adjoint.f90
 !
 ! call in example directory example/homogeneous_halfspace/ by:
 !  > ./bin/xSU_adjoint 4

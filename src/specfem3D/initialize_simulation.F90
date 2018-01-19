@@ -334,7 +334,7 @@
   ! checks directories
   if (myrank == 0) then
     ! tests if OUTPUT_FILES directory exists
-    ! note: inquire behaves differently when using intel ifort or gFortran compilers
+    ! note: inquire behaves differently when using intel ifort or gfortran compilers
     !INQUIRE( FILE = OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//'/.', EXIST = exists)
     open(IOUT,file=trim(OUTPUT_FILES)//'/dummy.txt',status='unknown',iostat=ier)
     if (ier /= 0) then

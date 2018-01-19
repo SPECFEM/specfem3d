@@ -312,6 +312,7 @@ use File::Basename;
       $line =~ s#convolution formation#convolution formulation#ogi;
       $line =~ s#fortran#Fortran#ogi;
       $line =~ s#adress#address#ogi;
+      $line =~ s#gFortran#gfortran#ogi;
 
       $line =~ s# usefull # useful #ogi;
       $line =~ s# usefull$# useful#ogi;
