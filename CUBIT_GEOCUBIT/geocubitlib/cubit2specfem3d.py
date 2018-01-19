@@ -493,10 +493,12 @@ class mesh(object, mesh_tools):
             # print block,blocks,ty,self.hex,self.face
             if self.hex in ty:
                 flag = None
-                vel = None
+                vp = None
                 vs = None
                 rho = None
                 q = 0
+                qk = 9999.0
+                qmu = 9999.0
                 ani = 0
                 # material domain id
                 if "acoustic" in name:
@@ -517,7 +519,7 @@ class mesh(object, mesh_tools):
                     if flag > 0 and nattrib >= 2:
                         # material properties
                         # vp
-                        vel = cubit.get_block_attribute_value(block, 1)
+                        vp = cubit.get_block_attribute_value(block, 1)
                         if nattrib >= 3:
                             # vs
                             vs = cubit.get_block_attribute_value(block, 2)
@@ -545,20 +547,19 @@ class mesh(object, mesh_tools):
                                         # Q_mu
                                         qmu = cubit.get_block_attribute_value(
                                             block, 5)
+                                        # for q to be valid: it must be positive
+                                        if qk < 0 or qmu < 0:
+                                            print 'error, Q value invalid:',qk, qmu
+                                            break
                                         if nattrib == 7:
                                             # anisotropy_flag
                                             ani = \
                                              cubit.get_block_attribute_value(
                                                     block, 6)
-                                    # for q to be valid: it must be positive
-                                        if qk < 0 or qmu < 0:
-                                            print 'error, Q value invalid:', \
-                                               qk, qmu
-                                            break
                     elif flag < 0:
                         # interface/tomography domain
                         # velocity model
-                        vel = name
+                        vp = name
                         attrib = cubit.get_block_attribute_value(block, 1)
                         if attrib == 1:
                             kind = 'interface'
@@ -570,14 +571,14 @@ class mesh(object, mesh_tools):
                 elif nattrib == 1:
                     flag = cubit.get_block_attribute_value(block, 0)
                     # print 'only 1 attribute ', name,block,flag
-                    vel, vs, rho, qk, qmu, ani = (0, 0, 0, 9999., 9999., 0)
+                    vp, vs, rho, qk, qmu, ani = (0, 0, 0, 9999., 9999., 0)
                 else:
                     flag = block
-                    vel, vs, rho, qk, qmu, ani = (name, 0, 0, 9999., 9999., 0)
+                    vp, vs, rho, qk, qmu, ani = (name, 0, 0, 9999., 9999., 0)
                 block_flag.append(int(flag))
                 block_mat.append(block)
                 if (flag > 0) and nattrib != 1:
-                    par = tuple([imaterial, flag, vel, vs, rho, qk, qmu, ani])
+                    par = tuple([imaterial, flag, vp, vs, rho, qk, qmu, ani])
                 elif flag < 0 and nattrib != 1:
                     if kind == 'interface':
                         par = tuple(

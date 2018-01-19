@@ -25,6 +25,7 @@ cd ../
 cp DATA/Par_file OUTPUT_FILES/
 cp DATA/CMTSOLUTION OUTPUT_FILES/
 cp DATA/STATIONS OUTPUT_FILES/
+cp DATA/FORCESOLUTION OUTPUT_FILES/
 
 # get the number of processors, ignoring comments in the Par_file
 NPROC=`grep ^NPROC DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`

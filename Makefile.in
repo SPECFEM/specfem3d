@@ -302,7 +302,6 @@ SUBDIRS = \
 	cuda \
 	decompose_mesh \
 	generate_databases \
-	inverse_problem_for_model \
 	meshfem3D \
 	shared \
 	specfem3D \

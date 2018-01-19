@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+import os
+import sys
 
 ###########################################################################
 #### TNM: This is the mesh generation, adapted from a journal file
@@ -6,12 +8,17 @@
 ####      Aug 2009
 ###########################################################################
 
-import cubit
-import boundary_definition
-import cubit2specfem3d
+SEMoutput='MESH'
+CUBIToutput='MESH_GEOCUBIT'
 
-import os
-import sys
+os.system('mkdir -p '+ SEMoutput)
+os.system('mkdir -p '+ CUBIToutput)
+
+import cubit
+try:
+    cubit.init([""])
+except:
+    pass
 
 cubit.cmd('reset')
 cubit.cmd('brick x 134000 y 134000 z 60000')
@@ -65,12 +72,25 @@ cubit.cmd('mesh volume 5')
 # this will draw also the tripling layer mesh lines
 cubit.cmd('draw volume all')
 
+cubit.cmd('save as "' + CUBIToutput + '/meshing.cub" overwrite')
+
 #### End of meshing
+
+
+## obsolete:
+#import boundary_definition
+#import cubit2specfem3d
+## new:
+from geocubitlib import boundary_definition
+from geocubitlib import cubit2specfem3d
 
 ###### This is boundary_definition.py of GEOCUBIT
 #..... which extracts the bounding faces and defines them into blocks
 boundary_definition.entities=['face']
 boundary_definition.define_bc(boundary_definition.entities,parallel=True)
+
+# boundary
+#boundary_definition.define_bc(parallel=True)
 
 #### Define material properties for the 3 volumes ################
 cubit.cmd('#### DEFINE MATERIAL PROPERTIES #######################')
@@ -89,7 +109,7 @@ cubit.cmd('block 2 attribute index 1 2  ')      # volume 2
 cubit.cmd('block 2 attribute index 2 7500 ')
 cubit.cmd('block 2 attribute index 3 4300 ')
 cubit.cmd('block 2 attribute index 4 3200 ')
-cubit.cmd('block 2 attribute index 5 9000.0 ')
+cubit.cmd('block 2 attribute index 5 9999.0 ')
 cubit.cmd('block 2 attribute index 6 0 ')     # anisotropy_flag
 
 cubit.cmd('block 3 name "elastic 2" ')        # material region
@@ -98,16 +118,20 @@ cubit.cmd('block 3 attribute index 1 3  ')      # same properties as for volume 
 cubit.cmd('block 3 attribute index 2 7500 ')
 cubit.cmd('block 3 attribute index 3 4300 ')
 cubit.cmd('block 3 attribute index 4 3200 ')
-cubit.cmd('block 3 attribute index 5 9000.0 ')
+cubit.cmd('block 3 attribute index 5 9999.0 ')
 cubit.cmd('block 3 attribute index 6 0 ')     # anisotropy_flag
 
-cubit.cmd('export mesh "top.e" dimension 3 overwrite')
-cubit.cmd('save as "meshing.cub" overwrite')
+cubit.cmd('export mesh "' + CUBIToutput + '/top.e" dimension 3 overwrite')
+cubit.cmd('save as "' + CUBIToutput + '/top.cub" overwrite')
 
 #### Export to SPECFEM3D format using cubit2specfem3d.py of GEOCUBIT
 
-os.system('mkdir -p MESH')
-cubit2specfem3d.export2SPECFEM3D('MESH')
+# file export
+
+cubit2specfem3d.export2SPECFEM3D(SEMoutput)
+
+# screen shot
+cubit.cmd('hardcopy "' + CUBIToutput + '/waterlayer_fig8.png" png')
 
 # all files needed by SCOTCH are now in directory MESH
 
