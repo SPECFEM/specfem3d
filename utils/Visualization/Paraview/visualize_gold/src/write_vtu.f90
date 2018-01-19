@@ -7,7 +7,7 @@ subroutine write_vtu
 ! DEPENDENCY:
 !   cfunc4Fortran.c, visualize_par.f90, visualize_collect.f90
 ! COMPILE
-!   >> gFortran -c write_vtu
+!   >> gfortran -c write_vtu
 ! USAGE
 !   write_vtu
 ! HISTORY:

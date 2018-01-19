@@ -117,7 +117,7 @@
 
     ! debug
     !if (myrank == 0) print *,'norm p = ',Usolidnormp,maxval(potential_dot_dot_acoustic(:)),potential_dot_dot_acoustic(1)
-    ! note for gFortran compiler: only potential_dot_dot(.) entry returns NaN, maxval(..) and maxval(abs(..)) return 0.0
+    ! note for gfortran compiler: only potential_dot_dot(.) entry returns NaN, maxval(..) and maxval(abs(..)) return 0.0
 
     ! checks first entry for Not-a-Number (NaN) value
     if (potential_dot_dot_acoustic(1) /= potential_dot_dot_acoustic(1)) then

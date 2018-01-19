@@ -22,7 +22,7 @@
 
  smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
- velocity model:   default 
+ velocity model:   default
 
  total acoustic elements    :       20736
  total elastic elements     :           0
@@ -50,33 +50,33 @@
 
 
  ********
- Model: P velocity min,max =    2800.00024       2800.00024    
- Model: S velocity min,max =    0.00000000       0.00000000    
+ Model: P velocity min,max =    2800.00024       2800.00024
+ Model: S velocity min,max =    0.00000000       0.00000000
 
- Model: Poisson's ratio min,max =   0.500000000      0.500000000    
+ Model: Poisson's ratio min,max =   0.500000000      0.500000000
  ********
 
  *********************************************
  *** Verification of simulation parameters ***
  *********************************************
 
- *** Xmin and Xmax of the model =    0.00000000       134000.000    
- *** Ymin and Ymax of the model =    0.00000000       134000.000    
- *** Zmin and Zmax of the model =   -60000.0000       0.00000000    
+ *** Xmin and Xmax of the model =    0.00000000       134000.000
+ *** Ymin and Ymax of the model =    0.00000000       134000.000
+ *** Zmin and Zmax of the model =   -60000.0000       0.00000000
 
- *** Max GLL point distance =    1227.47656    
- *** Min GLL point distance =    642.726562    
- *** Max/min ratio =    1.90979588    
+ *** Max GLL point distance =    1227.47656
+ *** Min GLL point distance =    642.726562
+ *** Max/min ratio =    1.90979588
 
- *** Max element size =    3750.00000    
- *** Min element size =    3722.21875    
- *** Max/min ratio =    1.00746357    
+ *** Max element size =    3750.00000
+ *** Min element size =    3722.21875
+ *** Max/min ratio =    1.00746357
 
- *** Minimum period resolved =    1.67410707    
- *** Maximum suggested time step =   0.114772588    
+ *** Minimum period resolved =    1.67410707
+ *** Maximum suggested time step =   0.114772588
 
- *** for DT :   0.11000000000000000     
- *** Max stability for wave velocities =   0.479208499    
+ *** for DT :   0.11000000000000000
+ *** Max stability for wave velocities =   0.479208499
 
  Elapsed time for checking mesh resolution in seconds =    7.5349807739257812E-003
  ******************************************
@@ -95,48 +95,48 @@
                 in element         4904
                 in acoustic domain
 
- using force point source: 
-   xi coordinate of source in that element:    1.0000000000000000     
-   eta coordinate of source in that element:   -1.0000000000000000     
-   gamma coordinate of source in that element:    1.0000000000000000     
+ using force point source:
+   xi coordinate of source in that element:    1.0000000000000000
+   eta coordinate of source in that element:   -1.0000000000000000
+   gamma coordinate of source in that element:    1.0000000000000000
 
-   component of direction vector in East direction:    1.0000000000000000     
-   component of direction vector in North direction:   -2.0000000000000000     
-   component of direction vector in Vertical direction:   -1.0000000000000000     
+   component of direction vector in East direction:    1.0000000000000000
+   component of direction vector in North direction:   -2.0000000000000000
+   component of direction vector in Vertical direction:   -1.0000000000000000
 
-   nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000     
-   nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000     
-   nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000     
+   nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+   nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+   nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
 
-   at (x,y,z) coordinates =    67000.000000000000        67000.000000000000       -30000.000000000000     
+   at (x,y,z) coordinates =    67000.000000000000        67000.000000000000       -30000.000000000000
 
  source time function:
    using Ricker source time function
-   using a source of dominant frequency   0.12800000000000000     
-   t0_ricker =    9.3750000000000000     
+   using a source of dominant frequency   0.12800000000000000
+   t0_ricker =    9.3750000000000000
    Ricker frequency:   0.12800000000000000       Hz
 
    time shift:    0.0000000000000000       seconds
 
  magnitude of the source:
-   factor =    10000000000.000000     
+   factor =    10000000000.000000
 
  original (requested) position of the source:
 
-           latitude:    67000.000000000000     
-          longitude:    67000.000000000000     
+           latitude:    67000.000000000000
+          longitude:    67000.000000000000
 
-              x:    67000.000000000000     
-              y:    67000.000000000000     
+              x:    67000.000000000000
+              y:    67000.000000000000
           depth:    30.000000000000000       km
- topo elevation:    0.0000000000000000     
+ topo elevation:    0.0000000000000000
 
  position of the source that will be used:
 
-              x:    67000.000000000000     
-              y:    67000.000000000000     
+              x:    67000.000000000000
+              y:    67000.000000000000
           depth:    30.000000000000000       km
-              z:   -30000.000000000000     
+              z:   -30000.000000000000
 
  error in location of the source:    0.00000000      m
 
@@ -166,114 +166,114 @@
 
 
  station #            1     DB    X20
-      original latitude:    67000.0000    
-      original longitude:    22732.0996    
-      original x:    22732.0996    
-      original y:    67000.0000    
+      original latitude:    67000.0000
+      original longitude:    22732.0996
+      original x:    22732.0996
+      original y:    67000.0000
       original depth:    50.0000000      m
-      horizontal distance:    44.267900000000004     
-      target x, y, z:    22732.0996       67000.0000      -50.0000000    
+      horizontal distance:    44.267900000000004
+      target x, y, z:    22732.0996       67000.0000      -50.0000000
       closest estimate found:    9.23705556E-14  m away
 
       receiver located in slice            0
                        in element         1729
                        in acoustic domain
-      at coordinates: 
-      xi    =  -0.97333333333333338     
-      eta   =   -1.0000000000000000     
-      gamma =  -0.78573757580241610     
-      rotation matrix: 
-      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000     
-      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000     
-      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000     
-      x:    22732.099999999999     
-      y:    67000.000000000000     
+      at coordinates:
+      xi    =  -0.97333333333333338
+      eta   =   -1.0000000000000000
+      gamma =  -0.78573757580241610
+      rotation matrix:
+      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      x:    22732.099999999999
+      y:    67000.000000000000
       depth:    49.999999999999908       m
-      z:   -49.999999999999908     
+      z:   -49.999999999999908
 
 
 
  station #            2     DB    X30
-      original latitude:    67000.0000    
-      original longitude:    34696.3984    
-      original x:    34696.3984    
-      original y:    67000.0000    
+      original latitude:    67000.0000
+      original longitude:    34696.3984
+      original x:    34696.3984
+      original y:    67000.0000
       original depth:    50.0000000      m
-      horizontal distance:    32.303599999999996     
-      target x, y, z:    34696.3984       67000.0000      -50.0000000    
+      horizontal distance:    32.303599999999996
+      target x, y, z:    34696.3984       67000.0000      -50.0000000
       closest estimate found:    9.23705556E-14  m away
 
       receiver located in slice            0
                        in element         2593
                        in acoustic domain
-      at coordinates: 
-      xi    =  -0.97333333333333338     
-      eta   =   -1.0000000000000000     
-      gamma =  -0.35715828391344662     
-      rotation matrix: 
-      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000     
-      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000     
-      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000     
-      x:    34696.400000000001     
-      y:    67000.000000000000     
+      at coordinates:
+      xi    =  -0.97333333333333338
+      eta   =   -1.0000000000000000
+      gamma =  -0.35715828391344662
+      rotation matrix:
+      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      x:    34696.400000000001
+      y:    67000.000000000000
       depth:    49.999999999999908       m
-      z:   -49.999999999999908     
+      z:   -49.999999999999908
 
 
 
  station #            3     DB    X40
-      original latitude:    67000.0000    
-      original longitude:    46660.6992    
-      original x:    46660.6992    
-      original y:    67000.0000    
+      original latitude:    67000.0000
+      original longitude:    46660.6992
+      original x:    46660.6992
+      original y:    67000.0000
       original depth:    50.0000000      m
-      horizontal distance:    20.339300000000001     
-      target x, y, z:    46660.6992       67000.0000      -50.0000000    
+      horizontal distance:    20.339300000000001
+      target x, y, z:    46660.6992       67000.0000      -50.0000000
       closest estimate found:    9.23705556E-14  m away
 
       receiver located in slice            2
                        in element         3729
                        in acoustic domain
-      at coordinates: 
-      xi    =  -0.97333333333333338     
-      eta   =    1.0000000000000000     
+      at coordinates:
+      xi    =  -0.97333333333333338
+      eta   =    1.0000000000000000
       gamma =    7.1420070963143151E-002
-      rotation matrix: 
-      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000     
-      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000     
-      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000     
-      x:    46660.699999999997     
-      y:    67000.000000000000     
+      rotation matrix:
+      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      x:    46660.699999999997
+      y:    67000.000000000000
       depth:    49.999999999999908       m
-      z:   -49.999999999999908     
+      z:   -49.999999999999908
 
 
 
  station #            4     DB    X50
-      original latitude:    67000.0000    
-      original longitude:    58625.0000    
-      original x:    58625.0000    
-      original y:    67000.0000    
+      original latitude:    67000.0000
+      original longitude:    58625.0000
+      original x:    58625.0000
+      original y:    67000.0000
       original depth:    50.0000000      m
-      horizontal distance:    8.3750000000000000     
-      target x, y, z:    58625.0000       67000.0000      -50.0000000    
+      horizontal distance:    8.3750000000000000
+      target x, y, z:    58625.0000       67000.0000      -50.0000000
       closest estimate found:    9.94759830E-14  m away
 
       receiver located in slice            2
                        in element         4593
                        in acoustic domain
-      at coordinates: 
-      xi    =  -0.97333333333333338     
-      eta   =    1.0000000000000000     
-      gamma =   0.50000052472008893     
-      rotation matrix: 
-      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000     
-      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000     
-      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000     
-      x:    58625.000000000000     
-      y:    67000.000000000000     
+      at coordinates:
+      xi    =  -0.97333333333333338
+      eta   =    1.0000000000000000
+      gamma =   0.50000052472008893
+      rotation matrix:
+      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      x:    58625.000000000000
+      y:    67000.000000000000
       depth:    49.999999999999901       m
-      z:   -49.999999999999901     
+      z:   -49.999999999999901
 
 
  maximum error in location of all the receivers:    9.94759830E-14  m
@@ -311,13 +311,13 @@
  no gravity simulation
 
 
- incorporating C-PML  
+ incorporating C-PML
 
  number of C-PML spectral elements in the global mesh:         9036
 
- thickness of C-PML layer in X direction:    11166.6670    
- thickness of C-PML layer in Y direction:    11166.6670    
- thickness of C-PML layer in Z direction:    11250.0000    
+ thickness of C-PML layer in X direction:    11166.6670
+ thickness of C-PML layer in Y direction:    11166.6670
+ thickness of C-PML layer in Z direction:    11250.0000
 
 
  Elapsed time for preparing timerun in seconds =    1.5269994735717773E-002
@@ -336,15 +336,15 @@
 
  Time step #            5
  Time:   -8.93500042      seconds
- Elapsed time in seconds =   0.41581702232360840     
+ Elapsed time in seconds =   0.41581702232360840
  Elapsed time in hh:mm:ss =      0 h 00 m 00 s
  Mean elapsed time per time step in seconds =    8.31634030E-02
  Max norm pressure P in all slices (Pa) =    1.30349095E-03
  Time steps done =            5  out of         2400
  Time steps remaining =         2395
- Estimated remaining time in seconds =    199.176361    
+ Estimated remaining time in seconds =    199.176361
  Estimated remaining time in hh:mm:ss =      0 h 03 m 19 s
- Estimated total run time in seconds =    199.592163    
+ Estimated total run time in seconds =    199.592163
  Estimated total run time in hh:mm:ss =      0 h 03 m 19 s
  We have done   0.208333328     % of that
  The run will finish approximately on (in local time): Fri Jan 19, 2018 01:08
@@ -355,365 +355,365 @@
 
  Time step #          100
  Time:    1.51499999      seconds
- Elapsed time in seconds =    10.316606044769287     
+ Elapsed time in seconds =    10.316606044769287
  Elapsed time in hh:mm:ss =      0 h 00 m 10 s
- Mean elapsed time per time step in seconds =   0.103166059    
+ Mean elapsed time per time step in seconds =   0.103166059
  Max norm pressure P in all slices (Pa) =    6.69184178E-02
  Time steps done =          100  out of         2400
  Time steps remaining =         2300
- Estimated remaining time in seconds =    237.281937    
+ Estimated remaining time in seconds =    237.281937
  Estimated remaining time in hh:mm:ss =      0 h 03 m 57 s
- Estimated total run time in seconds =    247.598541    
+ Estimated total run time in seconds =    247.598541
  Estimated total run time in hh:mm:ss =      0 h 04 m 07 s
  We have done    4.16666651     % of that
  The run will finish approximately on (in local time): Fri Jan 19, 2018 01:09
 
  Time step #          200
  Time:    12.5150003      seconds
- Elapsed time in seconds =    21.585246086120605     
+ Elapsed time in seconds =    21.585246086120605
  Elapsed time in hh:mm:ss =      0 h 00 m 21 s
- Mean elapsed time per time step in seconds =   0.107926227    
+ Mean elapsed time per time step in seconds =   0.107926227
  Max norm pressure P in all slices (Pa) =    5.02307247E-03
  Time steps done =          200  out of         2400
  Time steps remaining =         2200
- Estimated remaining time in seconds =    237.437714    
+ Estimated remaining time in seconds =    237.437714
  Estimated remaining time in hh:mm:ss =      0 h 03 m 57 s
- Estimated total run time in seconds =    259.022949    
+ Estimated total run time in seconds =    259.022949
  Estimated total run time in hh:mm:ss =      0 h 04 m 19 s
  We have done    8.33333302     % of that
  The run will finish approximately on (in local time): Fri Jan 19, 2018 01:10
 
  Time step #          300
  Time:    23.5149994      seconds
- Elapsed time in seconds =    33.310982942581177     
+ Elapsed time in seconds =    33.310982942581177
  Elapsed time in hh:mm:ss =      0 h 00 m 33 s
- Mean elapsed time per time step in seconds =   0.111036606    
+ Mean elapsed time per time step in seconds =   0.111036606
  Max norm pressure P in all slices (Pa) =    2.53922073E-03
  Time steps done =          300  out of         2400
  Time steps remaining =         2100
- Estimated remaining time in seconds =    233.176880    
+ Estimated remaining time in seconds =    233.176880
  Estimated remaining time in hh:mm:ss =      0 h 03 m 53 s
- Estimated total run time in seconds =    266.487854    
+ Estimated total run time in seconds =    266.487854
  Estimated total run time in hh:mm:ss =      0 h 04 m 26 s
  We have done    12.5000000     % of that
  The run will finish approximately on (in local time): Fri Jan 19, 2018 01:10
 
  Time step #          400
  Time:    34.5149994      seconds
- Elapsed time in seconds =    45.033818006515503     
+ Elapsed time in seconds =    45.033818006515503
  Elapsed time in hh:mm:ss =      0 h 00 m 45 s
- Mean elapsed time per time step in seconds =   0.112584546    
+ Mean elapsed time per time step in seconds =   0.112584546
  Max norm pressure P in all slices (Pa) =    1.04137661E-03
  Time steps done =          400  out of         2400
  Time steps remaining =         2000
- Estimated remaining time in seconds =    225.169083    
+ Estimated remaining time in seconds =    225.169083
  Estimated remaining time in hh:mm:ss =      0 h 03 m 45 s
- Estimated total run time in seconds =    270.202911    
+ Estimated total run time in seconds =    270.202911
  Estimated total run time in hh:mm:ss =      0 h 04 m 30 s
  We have done    16.6666660     % of that
  The run will finish approximately on (in local time): Fri Jan 19, 2018 01:10
 
  Time step #          500
  Time:    45.5149994      seconds
- Elapsed time in seconds =    56.916353940963745     
+ Elapsed time in seconds =    56.916353940963745
  Elapsed time in hh:mm:ss =      0 h 00 m 56 s
- Mean elapsed time per time step in seconds =   0.113832705    
+ Mean elapsed time per time step in seconds =   0.113832705
  Max norm pressure P in all slices (Pa) =    2.32990758E-04
  Time steps done =          500  out of         2400
  Time steps remaining =         1900
- Estimated remaining time in seconds =    216.282150    
+ Estimated remaining time in seconds =    216.282150
  Estimated remaining time in hh:mm:ss =      0 h 03 m 36 s
- Estimated total run time in seconds =    273.198486    
+ Estimated total run time in seconds =    273.198486
  Estimated total run time in hh:mm:ss =      0 h 04 m 33 s
  We have done    20.8333340     % of that
  The run will finish approximately on (in local time): Fri Jan 19, 2018 01:10
 
  Time step #          600
  Time:    56.5149994      seconds
- Elapsed time in seconds =    69.129343032836914     
+ Elapsed time in seconds =    69.129343032836914
  Elapsed time in hh:mm:ss =      0 h 01 m 09 s
- Mean elapsed time per time step in seconds =   0.115215570    
+ Mean elapsed time per time step in seconds =   0.115215570
  Max norm pressure P in all slices (Pa) =    8.02431605E-05
  Time steps done =          600  out of         2400
  Time steps remaining =         1800
- Estimated remaining time in seconds =    207.388031    
+ Estimated remaining time in seconds =    207.388031
  Estimated remaining time in hh:mm:ss =      0 h 03 m 27 s
- Estimated total run time in seconds =    276.517365    
+ Estimated total run time in seconds =    276.517365
  Estimated total run time in hh:mm:ss =      0 h 04 m 36 s
  We have done    25.0000000     % of that
  The run will finish approximately on (in local time): Fri Jan 19, 2018 01:09
 
  Time step #          700
  Time:    67.5149994      seconds
- Elapsed time in seconds =    80.986314058303833     
+ Elapsed time in seconds =    80.986314058303833
  Elapsed time in hh:mm:ss =      0 h 01 m 20 s
- Mean elapsed time per time step in seconds =   0.115694731    
+ Mean elapsed time per time step in seconds =   0.115694731
  Max norm pressure P in all slices (Pa) =    8.52203084E-05
  Time steps done =          700  out of         2400
  Time steps remaining =         1700
- Estimated remaining time in seconds =    196.681046    
+ Estimated remaining time in seconds =    196.681046
  Estimated remaining time in hh:mm:ss =      0 h 03 m 16 s
- Estimated total run time in seconds =    277.667358    
+ Estimated total run time in seconds =    277.667358
  Estimated total run time in hh:mm:ss =      0 h 04 m 37 s
  We have done    29.1666660     % of that
  The run will finish approximately on (in local time): Fri Jan 19, 2018 01:10
 
  Time step #          800
  Time:    78.5149994      seconds
- Elapsed time in seconds =    92.649787902832031     
+ Elapsed time in seconds =    92.649787902832031
  Elapsed time in hh:mm:ss =      0 h 01 m 32 s
- Mean elapsed time per time step in seconds =   0.115812235    
+ Mean elapsed time per time step in seconds =   0.115812235
  Max norm pressure P in all slices (Pa) =    7.72685889E-05
  Time steps done =          800  out of         2400
  Time steps remaining =         1600
- Estimated remaining time in seconds =    185.299576    
+ Estimated remaining time in seconds =    185.299576
  Estimated remaining time in hh:mm:ss =      0 h 03 m 05 s
- Estimated total run time in seconds =    277.949371    
+ Estimated total run time in seconds =    277.949371
  Estimated total run time in hh:mm:ss =      0 h 04 m 37 s
  We have done    33.3333321     % of that
  The run will finish approximately on (in local time): Fri Jan 19, 2018 01:10
 
  Time step #          900
  Time:    89.5149994      seconds
- Elapsed time in seconds =    104.73778009414673     
+ Elapsed time in seconds =    104.73778009414673
  Elapsed time in hh:mm:ss =      0 h 01 m 44 s
- Mean elapsed time per time step in seconds =   0.116375312    
+ Mean elapsed time per time step in seconds =   0.116375312
  Max norm pressure P in all slices (Pa) =    7.43679120E-05
  Time steps done =          900  out of         2400
  Time steps remaining =         1500
- Estimated remaining time in seconds =    174.562973    
+ Estimated remaining time in seconds =    174.562973
  Estimated remaining time in hh:mm:ss =      0 h 02 m 54 s
- Estimated total run time in seconds =    279.300751    
+ Estimated total run time in seconds =    279.300751
  Estimated total run time in hh:mm:ss =      0 h 04 m 39 s
  We have done    37.5000000     % of that
  The run will finish approximately on (in local time): Fri Jan 19, 2018 01:10
 
  Time step #         1000
  Time:    100.514999      seconds
- Elapsed time in seconds =    116.99428009986877     
+ Elapsed time in seconds =    116.99428009986877
  Elapsed time in hh:mm:ss =      0 h 01 m 56 s
- Mean elapsed time per time step in seconds =   0.116994277    
+ Mean elapsed time per time step in seconds =   0.116994277
  Max norm pressure P in all slices (Pa) =    6.88359869E-05
  Time steps done =         1000  out of         2400
  Time steps remaining =         1400
- Estimated remaining time in seconds =    163.791992    
+ Estimated remaining time in seconds =    163.791992
  Estimated remaining time in hh:mm:ss =      0 h 02 m 43 s
- Estimated total run time in seconds =    280.786285    
+ Estimated total run time in seconds =    280.786285
  Estimated total run time in hh:mm:ss =      0 h 04 m 40 s
  We have done    41.6666679     % of that
  The run will finish approximately on (in local time): Fri Jan 19, 2018 01:10
 
  Time step #         1100
  Time:    111.514999      seconds
- Elapsed time in seconds =    129.39456009864807     
+ Elapsed time in seconds =    129.39456009864807
  Elapsed time in hh:mm:ss =      0 h 02 m 09 s
- Mean elapsed time per time step in seconds =   0.117631420    
+ Mean elapsed time per time step in seconds =   0.117631420
  Max norm pressure P in all slices (Pa) =    6.49579670E-05
  Time steps done =         1100  out of         2400
  Time steps remaining =         1300
- Estimated remaining time in seconds =    152.920837    
+ Estimated remaining time in seconds =    152.920837
  Estimated remaining time in hh:mm:ss =      0 h 02 m 32 s
- Estimated total run time in seconds =    282.315399    
+ Estimated total run time in seconds =    282.315399
  Estimated total run time in hh:mm:ss =      0 h 04 m 42 s
  We have done    45.8333321     % of that
  The run will finish approximately on (in local time): Fri Jan 19, 2018 01:10
 
  Time step #         1200
  Time:    122.514999      seconds
- Elapsed time in seconds =    141.98298311233521     
+ Elapsed time in seconds =    141.98298311233521
  Elapsed time in hh:mm:ss =      0 h 02 m 21 s
- Mean elapsed time per time step in seconds =   0.118319154    
+ Mean elapsed time per time step in seconds =   0.118319154
  Max norm pressure P in all slices (Pa) =    5.24873394E-05
  Time steps done =         1200  out of         2400
  Time steps remaining =         1200
- Estimated remaining time in seconds =    141.982986    
+ Estimated remaining time in seconds =    141.982986
  Estimated remaining time in hh:mm:ss =      0 h 02 m 21 s
- Estimated total run time in seconds =    283.965973    
+ Estimated total run time in seconds =    283.965973
  Estimated total run time in hh:mm:ss =      0 h 04 m 43 s
  We have done    50.0000000     % of that
  The run will finish approximately on (in local time): Fri Jan 19, 2018 01:10
 
  Time step #         1300
  Time:    133.514999      seconds
- Elapsed time in seconds =    154.45974206924438     
+ Elapsed time in seconds =    154.45974206924438
  Elapsed time in hh:mm:ss =      0 h 02 m 34 s
- Mean elapsed time per time step in seconds =   0.118815184    
+ Mean elapsed time per time step in seconds =   0.118815184
  Max norm pressure P in all slices (Pa) =    3.92586990E-05
  Time steps done =         1300  out of         2400
  Time steps remaining =         1100
- Estimated remaining time in seconds =    130.696701    
+ Estimated remaining time in seconds =    130.696701
  Estimated remaining time in hh:mm:ss =      0 h 02 m 10 s
- Estimated total run time in seconds =    285.156433    
+ Estimated total run time in seconds =    285.156433
  Estimated total run time in hh:mm:ss =      0 h 04 m 45 s
  We have done    54.1666679     % of that
  The run will finish approximately on (in local time): Fri Jan 19, 2018 01:10
 
  Time step #         1400
  Time:    144.514999      seconds
- Elapsed time in seconds =    166.98849511146545     
+ Elapsed time in seconds =    166.98849511146545
  Elapsed time in hh:mm:ss =      0 h 02 m 46 s
- Mean elapsed time per time step in seconds =   0.119277500    
+ Mean elapsed time per time step in seconds =   0.119277500
  Max norm pressure P in all slices (Pa) =    4.53219473E-05
  Time steps done =         1400  out of         2400
  Time steps remaining =         1000
- Estimated remaining time in seconds =    119.277496    
+ Estimated remaining time in seconds =    119.277496
  Estimated remaining time in hh:mm:ss =      0 h 01 m 59 s
- Estimated total run time in seconds =    286.265991    
+ Estimated total run time in seconds =    286.265991
  Estimated total run time in hh:mm:ss =      0 h 04 m 46 s
  We have done    58.3333321     % of that
  The run will finish approximately on (in local time): Fri Jan 19, 2018 01:10
 
  Time step #         1500
  Time:    155.514999      seconds
- Elapsed time in seconds =    179.40364289283752     
+ Elapsed time in seconds =    179.40364289283752
  Elapsed time in hh:mm:ss =      0 h 02 m 59 s
- Mean elapsed time per time step in seconds =   0.119602427    
+ Mean elapsed time per time step in seconds =   0.119602427
  Max norm pressure P in all slices (Pa) =    5.61714623E-05
  Time steps done =         1500  out of         2400
  Time steps remaining =          900
- Estimated remaining time in seconds =    107.642189    
+ Estimated remaining time in seconds =    107.642189
  Estimated remaining time in hh:mm:ss =      0 h 01 m 47 s
- Estimated total run time in seconds =    287.045837    
+ Estimated total run time in seconds =    287.045837
  Estimated total run time in hh:mm:ss =      0 h 04 m 47 s
  We have done    62.5000000     % of that
  The run will finish approximately on (in local time): Fri Jan 19, 2018 01:10
 
  Time step #         1600
  Time:    166.514999      seconds
- Elapsed time in seconds =    192.11933803558350     
+ Elapsed time in seconds =    192.11933803558350
  Elapsed time in hh:mm:ss =      0 h 03 m 12 s
- Mean elapsed time per time step in seconds =   0.120074585    
+ Mean elapsed time per time step in seconds =   0.120074585
  Max norm pressure P in all slices (Pa) =    4.46116501E-05
  Time steps done =         1600  out of         2400
  Time steps remaining =          800
- Estimated remaining time in seconds =    96.0596695    
+ Estimated remaining time in seconds =    96.0596695
  Estimated remaining time in hh:mm:ss =      0 h 01 m 36 s
- Estimated total run time in seconds =    288.179016    
+ Estimated total run time in seconds =    288.179016
  Estimated total run time in hh:mm:ss =      0 h 04 m 48 s
  We have done    66.6666641     % of that
  The run will finish approximately on (in local time): Fri Jan 19, 2018 01:11
 
  Time step #         1700
  Time:    177.514999      seconds
- Elapsed time in seconds =    204.57235193252563     
+ Elapsed time in seconds =    204.57235193252563
  Elapsed time in hh:mm:ss =      0 h 03 m 24 s
- Mean elapsed time per time step in seconds =   0.120336674    
+ Mean elapsed time per time step in seconds =   0.120336674
  Max norm pressure P in all slices (Pa) =    3.79784760E-05
  Time steps done =         1700  out of         2400
  Time steps remaining =          700
- Estimated remaining time in seconds =    84.2356720    
+ Estimated remaining time in seconds =    84.2356720
  Estimated remaining time in hh:mm:ss =      0 h 01 m 24 s
- Estimated total run time in seconds =    288.808014    
+ Estimated total run time in seconds =    288.808014
  Estimated total run time in hh:mm:ss =      0 h 04 m 48 s
  We have done    70.8333359     % of that
  The run will finish approximately on (in local time): Fri Jan 19, 2018 01:10
 
  Time step #         1800
  Time:    188.514999      seconds
- Elapsed time in seconds =    219.70504689216614     
+ Elapsed time in seconds =    219.70504689216614
  Elapsed time in hh:mm:ss =      0 h 03 m 39 s
- Mean elapsed time per time step in seconds =   0.122058362    
+ Mean elapsed time per time step in seconds =   0.122058362
  Max norm pressure P in all slices (Pa) =    2.98815776E-05
  Time steps done =         1800  out of         2400
  Time steps remaining =          600
- Estimated remaining time in seconds =    73.2350159    
+ Estimated remaining time in seconds =    73.2350159
  Estimated remaining time in hh:mm:ss =      0 h 01 m 13 s
- Estimated total run time in seconds =    292.940063    
+ Estimated total run time in seconds =    292.940063
  Estimated total run time in hh:mm:ss =      0 h 04 m 52 s
  We have done    75.0000000     % of that
  The run will finish approximately on (in local time): Fri Jan 19, 2018 01:10
 
  Time step #         1900
  Time:    199.514999      seconds
- Elapsed time in seconds =    244.41175293922424     
+ Elapsed time in seconds =    244.41175293922424
  Elapsed time in hh:mm:ss =      0 h 04 m 04 s
- Mean elapsed time per time step in seconds =   0.128637761    
+ Mean elapsed time per time step in seconds =   0.128637761
  Max norm pressure P in all slices (Pa) =    3.61031380E-05
  Time steps done =         1900  out of         2400
  Time steps remaining =          500
- Estimated remaining time in seconds =    64.3188858    
+ Estimated remaining time in seconds =    64.3188858
  Estimated remaining time in hh:mm:ss =      0 h 01 m 04 s
- Estimated total run time in seconds =    308.730621    
+ Estimated total run time in seconds =    308.730621
  Estimated total run time in hh:mm:ss =      0 h 05 m 08 s
  We have done    79.1666641     % of that
  The run will finish approximately on (in local time): Fri Jan 19, 2018 01:10
 
  Time step #         2000
  Time:    210.514999      seconds
- Elapsed time in seconds =    268.49473309516907     
+ Elapsed time in seconds =    268.49473309516907
  Elapsed time in hh:mm:ss =      0 h 04 m 28 s
- Mean elapsed time per time step in seconds =   0.134247363    
+ Mean elapsed time per time step in seconds =   0.134247363
  Max norm pressure P in all slices (Pa) =    4.86443350E-05
  Time steps done =         2000  out of         2400
  Time steps remaining =          400
- Estimated remaining time in seconds =    53.6989479    
+ Estimated remaining time in seconds =    53.6989479
  Estimated remaining time in hh:mm:ss =      0 h 00 m 53 s
- Estimated total run time in seconds =    322.193665    
+ Estimated total run time in seconds =    322.193665
  Estimated total run time in hh:mm:ss =      0 h 05 m 22 s
  We have done    83.3333359     % of that
  The run will finish approximately on (in local time): Fri Jan 19, 2018 01:11
 
  Time step #         2100
  Time:    221.514999      seconds
- Elapsed time in seconds =    282.88620400428772     
+ Elapsed time in seconds =    282.88620400428772
  Elapsed time in hh:mm:ss =      0 h 04 m 42 s
- Mean elapsed time per time step in seconds =   0.134707719    
+ Mean elapsed time per time step in seconds =   0.134707719
  Max norm pressure P in all slices (Pa) =    5.45738003E-05
  Time steps done =         2100  out of         2400
  Time steps remaining =          300
- Estimated remaining time in seconds =    40.4123154    
+ Estimated remaining time in seconds =    40.4123154
  Estimated remaining time in hh:mm:ss =      0 h 00 m 40 s
- Estimated total run time in seconds =    323.298523    
+ Estimated total run time in seconds =    323.298523
  Estimated total run time in hh:mm:ss =      0 h 05 m 23 s
  We have done    87.5000000     % of that
  The run will finish approximately on (in local time): Fri Jan 19, 2018 01:11
 
  Time step #         2200
  Time:    232.514999      seconds
- Elapsed time in seconds =    296.76378703117371     
+ Elapsed time in seconds =    296.76378703117371
  Elapsed time in hh:mm:ss =      0 h 04 m 56 s
- Mean elapsed time per time step in seconds =   0.134892628    
+ Mean elapsed time per time step in seconds =   0.134892628
  Max norm pressure P in all slices (Pa) =    3.78490040E-05
  Time steps done =         2200  out of         2400
  Time steps remaining =          200
- Estimated remaining time in seconds =    26.9785252    
+ Estimated remaining time in seconds =    26.9785252
  Estimated remaining time in hh:mm:ss =      0 h 00 m 26 s
- Estimated total run time in seconds =    323.742310    
+ Estimated total run time in seconds =    323.742310
  Estimated total run time in hh:mm:ss =      0 h 05 m 23 s
  We have done    91.6666641     % of that
  The run will finish approximately on (in local time): Fri Jan 19, 2018 01:10
 
  Time step #         2300
  Time:    243.514999      seconds
- Elapsed time in seconds =    310.54417610168457     
+ Elapsed time in seconds =    310.54417610168457
  Elapsed time in hh:mm:ss =      0 h 05 m 10 s
- Mean elapsed time per time step in seconds =   0.135019213    
+ Mean elapsed time per time step in seconds =   0.135019213
  Max norm pressure P in all slices (Pa) =    2.46639211E-05
  Time steps done =         2300  out of         2400
  Time steps remaining =          100
- Estimated remaining time in seconds =    13.5019207    
+ Estimated remaining time in seconds =    13.5019207
  Estimated remaining time in hh:mm:ss =      0 h 00 m 13 s
- Estimated total run time in seconds =    324.046082    
+ Estimated total run time in seconds =    324.046082
  Estimated total run time in hh:mm:ss =      0 h 05 m 24 s
  We have done    95.8333359     % of that
  The run will finish approximately on (in local time): Fri Jan 19, 2018 01:10
 
  Time step #         2400
  Time:    254.514999      seconds
- Elapsed time in seconds =    325.23151898384094     
+ Elapsed time in seconds =    325.23151898384094
  Elapsed time in hh:mm:ss =      0 h 05 m 25 s
- Mean elapsed time per time step in seconds =   0.135513127    
+ Mean elapsed time per time step in seconds =   0.135513127
  Max norm pressure P in all slices (Pa) =    3.80401034E-05
  Time steps done =         2400  out of         2400
  Time steps remaining =            0
- Estimated remaining time in seconds =    0.00000000    
+ Estimated remaining time in seconds =    0.00000000
  Estimated remaining time in hh:mm:ss =      0 h 00 m 00 s
- Estimated total run time in seconds =    325.231506    
+ Estimated total run time in seconds =    325.231506
  Estimated total run time in hh:mm:ss =      0 h 05 m 25 s
  We have done    100.000000     % of that
 
  Time-Loop Complete. Timing info:
- Total elapsed time in seconds =    325.45219802856445     
+ Total elapsed time in seconds =    325.45219802856445
  Total elapsed time in hh:mm:ss =      0 h 05 m 25 s
 
  Writing informations about C-PML elements in VTK-file format

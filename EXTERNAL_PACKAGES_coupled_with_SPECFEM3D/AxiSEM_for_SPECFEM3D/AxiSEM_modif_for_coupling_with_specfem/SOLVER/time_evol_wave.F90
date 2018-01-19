@@ -325,7 +325,7 @@ subroutine sf_time_loop_newmark
   ! initializiation with a small number prevents performance loss (~factor 3) due to
   ! denormal floats in the onset of the p-wave (going from zero to some finite value)
   !
-  ! alternatively, compilerflags -ffast-math (gFortran) or -ftz (ifort) might
+  ! alternatively, compilerflags -ffast-math (gfortran) or -ftz (ifort) might
   ! give the same speedup, but seem to be unstable on some systems
   !
   ! another alternative (IMPLEMENTED NOW, see ftz.c, called in main.f90):
