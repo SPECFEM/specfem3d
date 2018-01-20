@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# compares results in a multi-column file, e.g. faultst-120dp000.dat 
+# compares results in a multi-column file, e.g. faultst-120dp000.dat
 #
 #########################################################################
 import numpy as np
