@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-import os
-import sys
-
 ###########################################################################
 #### TNM: This is the mesh generation, adapted from a journal file
 ####      specific to the settings of Komatitsch and Tromp 1999, Fig.8
@@ -11,8 +8,11 @@ import sys
 # modified version: top layer is water
 #
 ###########################################################################
+import os
+import sys
 
-#hi-resolution
+## choose your size
+# hi-resolution
 #elementsize = 1196.4
 
 # mid-resolution
@@ -21,6 +21,7 @@ import sys
 # low-resolution
 elementsize = 3000.0
 
+# default directories
 SEMoutput='MESH'
 CUBIToutput='MESH_GEOCUBIT'
 

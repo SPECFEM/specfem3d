@@ -111,7 +111,10 @@ contains
 
   dummy_idfault = 0
 
+  ! note: all processes will open this file
   open(unit=IIN_PAR,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file_faults',status='old',iostat=ier)
+
+  ! checks if file exists
   if (ier /= 0) then
     if (myrank == 0) write(IMAIN,*) 'no dynamic faults'
     close(IIN_PAR)
@@ -120,11 +123,10 @@ contains
 
   read(IIN_PAR,*) nbfaults
   if (nbfaults == 0) then
-
     if (myrank == 0) write(IMAIN,*) 'No faults found in file DATA/Par_file_faults'
     return
   else if (nbfaults == 1) then
-      write(*,*) 'MYRANL' , myrank , 'there are ',nbfaults
+    !write(*,*) 'MYRANK' , myrank , 'there are ',nbfaults
     if (myrank == 0) write(IMAIN,*) 'There is 1 fault in file DATA/Par_file_faults'
   else
     if (myrank == 0) write(IMAIN,*) 'There are ', nbfaults, ' faults in file DATA/Par_file_faults'

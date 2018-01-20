@@ -17,8 +17,7 @@
  # Column #9 = log10 of state variable (log-seconds)
  #
  # The line below lists the names of the data fields:
- # t h-slip h-slip-rate h-shear-stress v-slip v-slip-rate v-shear-stress n-stres
- s log-theta
+ # t h-slip h-slip-rate h-shear-stress v-slip v-slip-rate v-shear-stress n-stress log-theta
  #
   0.2500000E-02  0.0000000E+00  0.9550561E-05  0.3999980E+02  0.0000000E+00 -0.3671304E-35 -0.1533522E-28 -0.1200000E+03 -0.2471131E+00
   0.5000000E-02  0.4775282E-07  0.9524257E-05  0.4000018E+02  0.0000000E+00 -0.3701396E-35 -0.1533539E-28 -0.1200000E+03 -0.2451994E+00
