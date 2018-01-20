@@ -41,6 +41,7 @@ Option 2: follow instructions below for submitting separate jobs with qsub (or b
     proc000000_Database
     proc000000_.dx
     proc000000_.INP
+    ..
 
 3. generate databases:
 
@@ -68,7 +69,7 @@ Option 2: follow instructions below for submitting separate jobs with qsub (or b
      > xmgrace WTT*.semd &
 
    - compare with reference seismograms, e.g.:
-     > xmgrace WTT.CI.HXZ.semd ../../examples/meshfem3D_examples/socal1D/REF_SEIS/WTT.CI.HXZ.semd &
+     > xmgrace CI.WTT.HXZ.semd ../../examples/meshfem3D_examples/socal1D/REF_SEIS/CI.WTT.HXZ.semd &
 
 ----------------------------------------------------------------------
 To use the same 1D model but covering a larger region using 168 cores, follow these steps.

@@ -196,10 +196,9 @@
     ! four-zeta dependant terms
     Ec = 0._CUSTOM_REAL
     Es = 0._CUSTOM_REAL
-  endif
 
 ! perturbation model 1
-  if (iflag_aniso == IANISOTROPY_MODEL1) then
+  else if (iflag_aniso == IANISOTROPY_MODEL1) then
     ! zeta-independant
     A = aa*(1.0_CUSTOM_REAL + FACTOR_A)
     C = cc*(1.0_CUSTOM_REAL + FACTOR_C)
@@ -230,10 +229,9 @@
     ! four-zeta dependant terms
     Ec = FACTOR_E_N*nn
     Es = 0._CUSTOM_REAL
-  endif
 
 ! perturbation model 2
-  if (iflag_aniso == IANISOTROPY_MODEL2) then
+  else if (iflag_aniso == IANISOTROPY_MODEL2) then
     ! zeta-independant
     A = aa*(1.0_CUSTOM_REAL + FACTOR_A + 0.1)
     C = cc*(1.0_CUSTOM_REAL + FACTOR_C + 0.1)
@@ -264,6 +262,9 @@
     ! four-zeta dependant terms
     Ec = FACTOR_E_N*nn
     Es = 0._CUSTOM_REAL
+  else
+    print *,'Error: aniso flag',iflag_aniso,' not supported in model_aniso.f90 file'
+    call exit_mpi(0,'error anisotropy model flag')
   endif
 
 

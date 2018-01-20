@@ -66,10 +66,10 @@ SEP_MODEL_DIRECTORY             = ./DATA/my_SEP_model/
 #-----------------------------------------------------------
 
 # parameters describing the model
-APPROXIMATE_OCEAN_LOAD          = .false.
-TOPOGRAPHY                      = .false.
-ATTENUATION                     = .false.
-ANISOTROPY                      = .false.
+APPROXIMATE_OCEAN_LOAD          = .true.
+TOPOGRAPHY                      = .true.
+ATTENUATION                     = .true.
+ANISOTROPY                      = .true.
 GRAVITY                         = .false.
 
 # reference frequency for target velocity values in the velocity model
@@ -211,8 +211,8 @@ NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
 # decide if we save displacement, velocity, acceleration and/or pressure in forward runs (they can be set to true simultaneously)
 # currently pressure seismograms are implemented in acoustic (i.e. fluid) elements only
 SAVE_SEISMOGRAMS_DISPLACEMENT   = .true.
-SAVE_SEISMOGRAMS_VELOCITY       = .true.
-SAVE_SEISMOGRAMS_ACCELERATION   = .true.
+SAVE_SEISMOGRAMS_VELOCITY       = .false.
+SAVE_SEISMOGRAMS_ACCELERATION   = .false.
 SAVE_SEISMOGRAMS_PRESSURE       = .false.   # currently implemented in acoustic (i.e. fluid) elements only
 
 # save seismograms also when running the adjoint runs for an inverse problem

@@ -53,7 +53,7 @@ NZ_DOUBLING_2                   = 9
 # create mesh files for visualisation or further checking
 CREATE_ABAQUS_FILES             = .true.
 CREATE_DX_FILES                 = .true.
-CREATE_VTK_FILES                = .false.
+CREATE_VTK_FILES                = .true.
 
 # path to store the databases files
 LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI
@@ -82,10 +82,10 @@ NMATERIALS                      = 4
 #     Q                : quality factor
 #     anisotropy_flag  : 0=no anisotropy/ 1,2,.. check with implementation in aniso_model.f90
 #     domain_id        : 1=acoustic / 2=elastic
-1  3000  7800  4500 0.0  0  2
-2  2800  6700  3870 0.0  0  2
-3  2670  6300  3640 0.0  0  2
-4  2400  5500  3180 0.0  0  2
+1  3000  7800  4500 1000.0  0  2
+2  2800  6700  3870 500.0  0  2
+3  2670  6300  3640 300.0  0  2
+4  2400  5500  3180 100.0  0  2
 
 #-----------------------------------------------------------
 #

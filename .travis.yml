@@ -79,6 +79,9 @@ env:
     # fault example tpv5
     - TEST="--with-mpi" TESTCOV=0 TESTMAKE=16 CUDA=false
 
+    # socal example
+    - TEST="--with-mpi" TESTCOV=0 TESTMAKE=17 CUDA=false
+
 before_install:
   # informations on git
   - |
@@ -236,6 +239,7 @@ script:
     14) dir=EXAMPLES/homogeneous_halfspace_HEX27_elastic_no_absorbing/ ;;
     15) dir=EXAMPLES/homogeneous_acoustic/ ;;
     16) dir=EXAMPLES/fault_examples/tpv5/ ;;
+    17) dir=EXAMPLES/meshfem3D_examples/socal1D/ ;;
     *) dir=EXAMPLES/homogeneous_halfspace/ ;;
     esac
     # runs test
@@ -302,6 +306,12 @@ script:
       if [ "$TESTMAKE" == "15" ]; then
         sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
         sed -i "s:^NSTEP .*:NSTEP    = 500:" DATA/Par_file
+        sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 100:" DATA/Par_file
+      fi
+      # socal example
+      if [ "$TESTMAKE" == "17" ]; then
+        sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
+        sed -i "s:^NSTEP .*:NSTEP    = 840:" DATA/Par_file
         sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 100:" DATA/Par_file
       fi
 
@@ -418,6 +428,13 @@ script:
       ## testing fault example
       ##
       cd EXAMPLES/fault_examples/tpv5/
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+      ./run_this_example.sh
+      cd $WORKDIR
+      ##
+      ## testing socal example
+      ##
+      cd EXAMPLES/meshfem3D_examples/socal1D/
       sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
       ./run_this_example.sh
       cd $WORKDIR
