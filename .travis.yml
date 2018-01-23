@@ -345,6 +345,7 @@ script:
   - echo 'Coverage...' && echo -en 'travis_fold:start:coverage\\r'
   - |
     if [ "$TESTCOV" == "1" ]; then
+      echo 'Coverage...' && echo -en 'travis_fold:start:coverage.acoustic\\r'
       ##
       ## testing acoustic
       ##
@@ -352,6 +353,8 @@ script:
       sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
       ./run_this_example.sh
       cd $WORKDIR
+      echo -en 'travis_fold:end:coverage.acoustic\\r'
+      echo 'Coverage...' && echo -en 'travis_fold:start:coverage.poro\\r'
       ##
       ## testing poroelastic
       ##
@@ -359,6 +362,8 @@ script:
       sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
       ./run_this_example.sh
       cd $WORKDIR
+      echo -en 'travis_fold:end:coverage.poro\\r'
+      echo 'Coverage...' && echo -en 'travis_fold:start:coverage.simple\\r'
       ##
       ## testing simple model
       ##
@@ -366,6 +371,8 @@ script:
       sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
       ./run_this_example.sh
       cd $WORKDIR
+      echo -en 'travis_fold:end:coverage.simple\\r'
+      echo 'Coverage...' && echo -en 'travis_fold:start:coverage.pmlacoustic\\r'
       ##
       ## testing PML acoustic
       ##
@@ -373,6 +380,8 @@ script:
       sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
       ./run_this_example.sh
       cd $WORKDIR
+      echo -en 'travis_fold:end:coverage.pmlacoustic\\r'
+      echo 'Coverage...' && echo -en 'travis_fold:start:coverage.pmlelastic\\r'
       ##
       ## testing PML elastic
       ##
@@ -380,6 +389,8 @@ script:
       sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
       ./run_this_example.sh
       cd $WORKDIR
+      echo -en 'travis_fold:end:coverage.pmlelastic\\r'
+      echo 'Coverage...' && echo -en 'travis_fold:start:coverage.noise\\r'
       ##
       ## testing noise
       ##
@@ -389,6 +400,8 @@ script:
       sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step3
       ./run_this_example.sh
       cd $WORKDIR
+      echo -en 'travis_fold:end:coverage.noise\\r'
+      echo 'Coverage...' && echo -en 'travis_fold:start:coverage.tomo\\r'
       ##
       ## testing tomographic model
       ##
@@ -396,6 +409,8 @@ script:
       sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
       ./run_this_example.sh
       cd $WORKDIR
+      echo -en 'travis_fold:end:coverage.tomo\\r'
+      echo 'Coverage...' && echo -en 'travis_fold:start:coverage.kernel\\r'
       ##
       ## testing acoustic kernel simulation
       ##
@@ -407,6 +422,8 @@ script:
       ./run_this_example_kernel.sh
       cp -v DATA/Par_file.org DATA/Par_file
       cd $WORKDIR
+      echo -en 'travis_fold:end:coverage.kernel\\r'
+      echo 'Coverage...' && echo -en 'travis_fold:start:coverage.serial\\r'
       ##
       ## testing acoustic serial
       ##
@@ -417,6 +434,8 @@ script:
       ./run_this_example.sh
       cp -v DATA/Par_file.org DATA/Par_file
       cd $WORKDIR
+      echo -en 'travis_fold:end:coverage.serial\\r'
+      echo 'Coverage...' && echo -en 'travis_fold:start:coverage.waterlayer\\r'
       ##
       ## testing waterlayered serial
       ##
@@ -424,6 +443,8 @@ script:
       sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
       ./run_this_example.sh
       cd $WORKDIR
+      echo -en 'travis_fold:end:coverage.waterlayer\\r'
+      echo 'Coverage...' && echo -en 'travis_fold:start:coverage.fault\\r'
       ##
       ## testing fault example
       ##
@@ -431,6 +452,8 @@ script:
       sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
       ./run_this_example.sh
       cd $WORKDIR
+      echo -en 'travis_fold:end:coverage.fault\\r'
+      echo 'Coverage...' && echo -en 'travis_fold:start:coverage.socal\\r'
       ##
       ## testing socal example
       ##
@@ -438,6 +461,7 @@ script:
       sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
       ./run_this_example.sh
       cd $WORKDIR
+      echo -en 'travis_fold:end:coverage.socal\\r'
     fi
   - echo -en 'travis_fold:end:coverage\\r'
 
