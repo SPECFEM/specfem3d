@@ -238,6 +238,14 @@
                                            ispec_selected_rec(irec), islice_selected_rec(irec), &
                                            final_distance(irec), idomain(irec),nu(:,:,irec))
 
+    ! user output progress
+    if (myrank == 0 .and. nrec > 1000) then
+      if (mod(irec,1000) == 0) then
+        write(IMAIN,*) '  located receivers ',irec,'out of',nrec
+        call flush_IMAIN()
+      endif
+    endif
+
   enddo ! loop over stations
 
   ! close receiver file

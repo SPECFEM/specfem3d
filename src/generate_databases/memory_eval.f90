@@ -240,39 +240,53 @@
   double precision,intent(inout) :: memory_size_request
 
   ! local parameters
-  integer :: memory_size
+  double precision, parameter :: BYTES_TO_MB = 1. / 1024. / 1024.
+  double precision :: memory_size
 
   ! memory usage, in generate_database() routine so far
-  memory_size = NGLLX*NGLLY*NGLLZ*nspec*4 + 3*NGLLX*NGLLY*NGLLZ*nspec*8 &
-        + NDIM*nnodes_ext_mesh*8 + NGNOD*nelmnts_ext_mesh*4 + 2*nelmnts_ext_mesh*4 &
-        + 5*nmat_ext_mesh*8 + 3*num_interfaces_ext_mesh &
-        + 6*max_interface_size_ext_mesh*num_interfaces_ext_mesh*4 &
-        + NGLLX*NGLLX*max_interface_size_ext_mesh*num_interfaces_ext_mesh*4 &
-        + nspec2D_xmin*20 + nspec2D_xmax*20 + nspec2D_ymin*20 &
-        + nspec2D_ymax*20 + nspec2D_bottom*20 + nspec2D_top*20
+  ! due to overflow issues for larger meshes, we divide bytes to get MB
+  memory_size = NGLLX*NGLLY*NGLLZ*nspec*dble(4) * BYTES_TO_MB
+  memory_size = memory_size + 3*NGLLX*NGLLY*NGLLZ*nspec*dble(8) * BYTES_TO_MB
+  memory_size = memory_size + NDIM*nnodes_ext_mesh*dble(8) * BYTES_TO_MB
+  memory_size = memory_size + NGNOD*nelmnts_ext_mesh*dble(4) * BYTES_TO_MB
+  memory_size = memory_size + 2*nelmnts_ext_mesh*dble(4) * BYTES_TO_MB
+  memory_size = memory_size + 5*nmat_ext_mesh*dble(8) * BYTES_TO_MB
+  memory_size = memory_size + 3*num_interfaces_ext_mesh*dble(1) * BYTES_TO_MB
+  memory_size = memory_size + 6*max_interface_size_ext_mesh*num_interfaces_ext_mesh*dble(4) * BYTES_TO_MB
+  memory_size = memory_size + NGLLX*NGLLX*max_interface_size_ext_mesh*num_interfaces_ext_mesh*dble(4) * BYTES_TO_MB
+  memory_size = memory_size + nspec2D_xmin*20*dble(1) * BYTES_TO_MB
+  memory_size = memory_size + nspec2D_xmax*20*dble(1) * BYTES_TO_MB
+  memory_size = memory_size + nspec2D_ymin*20*dble(1) * BYTES_TO_MB
+  memory_size = memory_size + nspec2D_ymax*20*dble(1) * BYTES_TO_MB
+  memory_size = memory_size + nspec2D_bottom*20*dble(1) * BYTES_TO_MB
+  memory_size = memory_size + nspec2D_top*20*dble(1) * BYTES_TO_MB
 
   ! memory usage, in create_regions_mesh_ext() routine requested approximately
-  memory_size_request =   &
-        + 3*NGNOD*8 + NGLLX*NGLLY*NGLLZ*nspec*4 + 6*nspec*1 + 6*NGLLX*8 &
-        + NGNOD*NGLLX*NGLLY*NGLLZ*8 + NDIM*NGNOD*NGLLX*NGLLY*NGLLZ*8 &
-        + 4*NGNOD2D*NGLLY*NGLLZ*8 + 4*NDIM2D*NGNOD2D*NGLLX*NGLLY*8 &
-        + 17*NGLLX*NGLLY*NGLLY*nspec*CUSTOM_REAL &
-        + (1+NDIM)*NGLLY*NGLLZ*nspec2D_xmin*CUSTOM_REAL + (1+NDIM)*NGLLY*NGLLZ*nspec2D_xmax*CUSTOM_REAL &
-        + (1+NDIM)*NGLLX*NGLLZ*nspec2D_ymin*CUSTOM_REAL + (1+NDIM)*NGLLX*NGLLZ*nspec2D_ymax*CUSTOM_REAL &
-        + (1+NDIM)*NGLLX*NGLLY*NSPEC2D_BOTTOM*CUSTOM_REAL + (1+NDIM)*NGLLX*NGLLY*NSPEC2D_TOP*CUSTOM_REAL &
-        + 2*npointot*4 + npointot + 3*npointot*8
+  memory_size_request = 3*NGNOD*dble(8) * BYTES_TO_MB
+  memory_size_request = memory_size_request + NGLLX*NGLLY*NGLLZ*nspec*dble(4) * BYTES_TO_MB
+  memory_size_request = memory_size_request + 6*nspec*dble(1) * BYTES_TO_MB
+  memory_size_request = memory_size_request + 6*NGLLX*dble(8) * BYTES_TO_MB
+  memory_size_request = memory_size_request + NGNOD*NGLLX*NGLLY*NGLLZ*dble(8) * BYTES_TO_MB
+  memory_size_request = memory_size_request + NDIM*NGNOD*NGLLX*NGLLY*NGLLZ*dble(8) * BYTES_TO_MB
+  memory_size_request = memory_size_request + 4*NGNOD2D*NGLLY*NGLLZ*dble(8) * BYTES_TO_MB
+  memory_size_request = memory_size_request + 4*NDIM2D*NGNOD2D*NGLLX*NGLLY*dble(8) * BYTES_TO_MB
+  memory_size_request = memory_size_request + 17*NGLLX*NGLLY*NGLLY*nspec*dble(CUSTOM_REAL) * BYTES_TO_MB
+  memory_size_request = memory_size_request + (1+NDIM)*NGLLY*NGLLZ*nspec2D_xmin*dble(CUSTOM_REAL) * BYTES_TO_MB
+  memory_size_request = memory_size_request + (1+NDIM)*NGLLY*NGLLZ*nspec2D_xmax*dble(CUSTOM_REAL) * BYTES_TO_MB
+  memory_size_request = memory_size_request + (1+NDIM)*NGLLX*NGLLZ*nspec2D_ymin*dble(CUSTOM_REAL) * BYTES_TO_MB
+  memory_size_request = memory_size_request + (1+NDIM)*NGLLX*NGLLZ*nspec2D_ymax*dble(CUSTOM_REAL) * BYTES_TO_MB
+  memory_size_request = memory_size_request + (1+NDIM)*NGLLX*NGLLY*NSPEC2D_BOTTOM*dble(CUSTOM_REAL) * BYTES_TO_MB
+  memory_size_request = memory_size_request + (1+NDIM)*NGLLX*NGLLY*NSPEC2D_TOP*dble(CUSTOM_REAL) * BYTES_TO_MB
+  memory_size_request = memory_size_request + 2*npointot*dble(4) * BYTES_TO_MB
+  memory_size_request = memory_size_request + npointot*dble(1) * BYTES_TO_MB
+  memory_size_request = memory_size_request + 3*npointot*dble(8) * BYTES_TO_MB
 
   if (myrank == 0) then
     write(IMAIN,*)
-    write(IMAIN,*) '  minimum memory used so far     : ', &
-                  memory_size / 1024. / 1024., &
-                   'MB per process'
-    write(IMAIN,*) '  minimum total memory requested : ', &
-                  (memory_size+memory_size_request)/1024./1024., &
-                   'MB per process'
+    write(IMAIN,*) '  minimum memory used so far     : ', sngl(memory_size),'MB per process'
+    write(IMAIN,*) '  minimum total memory requested : ', sngl(memory_size + memory_size_request),'MB per process'
     write(IMAIN,*)
   endif
-
 
   end subroutine memory_eval_mesher
 
