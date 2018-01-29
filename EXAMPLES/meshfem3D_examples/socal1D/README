@@ -14,10 +14,26 @@ Figures for comparison:
 The resolution is similar to the the "2 s" accuracy mesh of Komatitsch et al. 2004 (DT = 0.011 s).
 It is the same size region as one slice (out of 168) of model m16 of Tape et al. (2009).
 
-Option 1: run process.sh from local directory (must have access to mpi)
+Option 1: type
+  > run_this_example.sh 
+  from this local directory (must have access to mpi)
+
 Option 2: follow instructions below for submitting separate jobs with qsub (or bsub)
 
+
+Reference seismograms for comparison are in directories: REF_SEIS.default, REF_SEIS.1d_socal, REF_SEIS.1d_prem, ..
+
+The only difference of those references occurs in specifying the model in Par_file:
+..
+MODEL    = default  # or instead 1d_socal, 1d_prem, 1d_cascadia
+..
+
+Note that Q values for these models are all unknown, and thus mostly rely on PREM crust values as a first guess.
+
+
 ----------------------------------------------------------------------
+
+More detailed instructions:
 
 0. Run the default homogeneous halfspace example (external mesh).
 
@@ -72,6 +88,7 @@ Option 2: follow instructions below for submitting separate jobs with qsub (or b
      > xmgrace CI.WTT.HXZ.semd ../../examples/meshfem3D_examples/socal1D/REF_SEIS/CI.WTT.HXZ.semd &
 
 ----------------------------------------------------------------------
+
 To use the same 1D model but covering a larger region using 168 cores, follow these steps.
 
 1. modify Mesh_Par_file:
@@ -96,6 +113,7 @@ To use the same 1D model but covering a larger region using 168 cores, follow th
    - seismograms will not exactly match those in REF_SEIS, since the simulation volume is different.
 
 ----------------------------------------------------------------------
+
 To run the same simulation but using 42 cores, follow these steps.
 
 1. modify Mesh_Par_file:
