@@ -119,9 +119,14 @@
 
   enddo ! nspec
 
+  ! safety check
+  if ((NGLLX <= 2) .or. (NGLLY <= 2) .or. (NGLLZ <= 2)) &
+    stop 'Error: invalid NGLL number for surface detection, must be > 2'
+
 ! counts faces for external-mesh movies and shakemaps
   nfaces_surface = 0
   do ispec = 1, nspec
+    ! takes an inner point of the surface, assuming assuming (2,2,*) is not a corner, i.e., NGLLX > 2, NGLLY > 2
     iglob = ibool(2,2,1,ispec)
     if (iglob_is_surface_external_mesh(iglob)) then
       nfaces_surface = nfaces_surface + 1

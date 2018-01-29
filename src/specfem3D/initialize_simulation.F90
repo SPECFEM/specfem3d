@@ -92,6 +92,7 @@
                    tiny(1._CUSTOM_REAL),huge(1._CUSTOM_REAL)
     write(IMAIN,*)
     write(IMAIN,'(a)',advance='no') ' velocity model: '
+
     select case (IMODEL)
     case (IMODEL_DEFAULT)
     write(IMAIN,'(a)',advance='yes') '  default '
@@ -113,6 +114,10 @@
     write(IMAIN,'(a)',advance='yes') '  ipati'
     case (IMODEL_IPATI_WATER)
     write(IMAIN,'(a)',advance='yes') '  ipati_water'
+    case (IMODEL_SEP)
+    write(IMAIN,'(a)',advance='yes') '  SEP'
+    case (IMODEL_COUPLED)
+    write(IMAIN,'(a)',advance='yes') '  model coupled with injection method'
     end select
 
     write(IMAIN,*)

@@ -38,7 +38,7 @@
 !
 !--------------------------------------------------------------------------------------------------
 
-  subroutine model_1D_prem_iso(xmesh,ymesh,zmesh,rho_prem,vp_prem,vs_prem,qmu_atten)
+  subroutine model_1D_prem_iso(xmesh,ymesh,zmesh,rho_prem,vp_prem,vs_prem,qmu_atten,qkappa_atten)
 
 !
 ! isotropic prem model
@@ -54,7 +54,7 @@
   double precision, intent(in) :: xmesh,ymesh,zmesh
 
   ! material properties
-  real(kind=CUSTOM_REAL), intent(inout) :: rho_prem,vp_prem,vs_prem,qmu_atten
+  real(kind=CUSTOM_REAL), intent(inout) :: rho_prem,vp_prem,vs_prem,qmu_atten,qkappa_atten
 
   ! local parameters
   real(kind=CUSTOM_REAL) :: xloc,yloc,zloc
@@ -274,11 +274,12 @@
   endif
 
   ! scales values to SI units ( m/s, kg/m**3)
-  rho_prem=rho*1000.0d0
-  vp_prem=vp*1000.0d0
-  vs_prem=vs*1000.0d0
+  rho_prem = rho*1000.0d0
+  vp_prem = vp*1000.0d0
+  vs_prem = vs*1000.0d0
 
   qmu_atten = Qmu
+  qkappa_atten = Qkappa
 
   end subroutine model_1D_prem_iso
 

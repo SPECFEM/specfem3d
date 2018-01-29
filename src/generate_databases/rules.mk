@@ -58,6 +58,7 @@ generate_databases_OBJECTS = \
 	$O/model_1d_prem.gen.o \
 	$O/model_1d_socal.gen.o \
 	$O/model_aniso.gen.o \
+	$O/model_coupled.gen.o \
 	$O/model_default.gen.o \
 	$O/model_external_values.gen.o \
 	$O/model_ipati.gen.o \
@@ -80,6 +81,7 @@ generate_databases_MODULES = \
 	$(FC_MODDIR)/external_model.$(FC_MODEXT) \
 	$(FC_MODDIR)/fault_generate_databases.$(FC_MODEXT) \
 	$(FC_MODDIR)/generate_databases_par.$(FC_MODEXT) \
+	$(FC_MODDIR)/model_coupled_par.$(FC_MODEXT) \
 	$(FC_MODDIR)/model_ipati_adios_mod.$(FC_MODEXT) \
 	$(FC_MODDIR)/model_sep_mod.$(FC_MODEXT) \
 	$(FC_MODDIR)/model_tomography_par.$(FC_MODEXT) \

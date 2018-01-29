@@ -114,7 +114,7 @@
 !
 
 
-  subroutine model_salton_trough(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
+  subroutine model_salton_trough(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten,qkappa_atten)
 
 ! given a GLL point, returns super-imposed velocity model values
 
@@ -126,10 +126,10 @@
   double precision, intent(in) :: xmesh,ymesh,zmesh
 
   ! density, Vp and Vs
-  real(kind=CUSTOM_REAL) :: vp,vs,rho
+  real(kind=CUSTOM_REAL),intent(inout) :: vp,vs,rho
 
   ! attenuation flag
-  real(kind=CUSTOM_REAL) :: qmu_atten
+  real(kind=CUSTOM_REAL),intent(inout) :: qmu_atten,qkappa_atten
 
   ! local parameters
   double precision :: uc,vc,wc
@@ -146,8 +146,10 @@
   vs = vs_st
   rho = rho_st
 
-  ! no attenuation info
-  qmu_atten = 0.0
+  ! no attenuation information
+  ! using PREM crustal values instead
+  qmu_atten = 600.0
+  qkappa_atten = 57827.0
 
   end subroutine model_salton_trough
 
@@ -188,7 +190,6 @@
   real :: v1, v2, v3, v4, v5, v6, v7, v8, xi, eta, ga, vi
   double precision :: zmesh
   real,parameter :: eps = 1.0e-3
-
 
   i = int(uc) + 1
   j = int(vc) + 1
