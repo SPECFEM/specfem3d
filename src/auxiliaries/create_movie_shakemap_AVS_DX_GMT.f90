@@ -113,9 +113,11 @@
   print *,'reading parameter file'
   print *
 
-  ! read the parameter file
+  ! initializes
   myrank = 0
   BROADCAST_AFTER_READ = .false.
+
+  ! read the parameter file
   call read_parameter_file(myrank,BROADCAST_AFTER_READ)
 
   ! only one global array for movie data, but stored for all surfaces defined
@@ -187,15 +189,23 @@
 
   if (.not. plot_shaking_map) then
     print *,'enter last time step of movie (e.g. ',NSTEP,')'
+
     read(5,*) it2
+    ! limits to maximum of NSTEP
+    if (it2 > NSTEP) then
+      it2 = NSTEP
+    endif
+
     print *
     print *,'1 = define file names using frame number'
     print *,'2 = define file names using time step number'
     print *,'any other value = exit'
     print *
     print *,'enter value:'
+
     read(5,*) inumber
     if (inumber < 1 .or. inumber > 2) stop 'exiting...'
+
     print *
     print *,'looping from ',it1,' to ',it2,' every ',NTSTEP_BETWEEN_FRAMES,' time steps'
     ! count number of movie frames

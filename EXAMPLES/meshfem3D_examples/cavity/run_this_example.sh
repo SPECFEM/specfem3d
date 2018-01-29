@@ -86,8 +86,12 @@ fi
 if [[ $? -ne 0 ]]; then exit 1; fi
 
 # creates AVS movie files
+#
+# requires executable xcreate_movie_shakemap_AVS_DX_GMT
+# compile with: > make all
+#
 start_timestep=1
-end_timestep=6001
+end_timestep=3000
 display_type=1     #norm velocity
 
 rm -f OUTPUT_FILES/AVS_movie_*.inp
