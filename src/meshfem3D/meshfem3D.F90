@@ -628,10 +628,10 @@
 
   subroutine earth_chunk_HEX8_Mesher(NGNOD)
 
-  use constants, only: NGLLX, NGLLY, NGLLZ, NDIM, R_EARTH, PI, ZERO, TINYVAL
+  use constants, only: NGLLX, NGLLY, NGLLZ, NDIM, R_EARTH, PI, ZERO, TINYVAL, &
+    old_DSM_coupling_from_Vadim, INJECTION_TECHNIQUE_IS_AXISEM, INJECTION_TECHNIQUE_IS_DSM
 
-  use shared_parameters, only: old_DSM_coupling_from_Vadim, INJECTION_TECHNIQUE_IS_AXISEM, &
-                                   INJECTION_TECHNIQUE_IS_DSM,INJECTION_TECHNIQUE_TYPE
+  use shared_parameters, only: INJECTION_TECHNIQUE_TYPE
 
   implicit none
 
@@ -1343,10 +1343,10 @@
 
   subroutine earth_chunk_HEX27_Mesher(NGNOD)
 
-  use constants, only: NGLLX, NGLLY, NGLLZ, NDIM, R_EARTH, PI, ZERO, TINYVAL
+  use constants, only: NGLLX, NGLLY, NGLLZ, NDIM, R_EARTH, PI, ZERO, TINYVAL, &
+    old_DSM_coupling_from_Vadim, INJECTION_TECHNIQUE_IS_AXISEM, INJECTION_TECHNIQUE_IS_DSM
 
-  use shared_parameters, only: old_DSM_coupling_from_Vadim, INJECTION_TECHNIQUE_IS_AXISEM, &
-                                  INJECTION_TECHNIQUE_IS_DSM,INJECTION_TECHNIQUE_TYPE
+  use shared_parameters, only: INJECTION_TECHNIQUE_TYPE
 
   implicit none
 
@@ -2516,9 +2516,10 @@
                                                       deg2rad,ilayer,iboun,ispec,nspec,longitud, &
                                                       latitud,radius,rotation_matrix,updown)
 
-  use constants, only: NGLLX, NGLLY, NGLLZ
+  use constants, only: NGLLX, NGLLY, NGLLZ, &
+    INJECTION_TECHNIQUE_IS_DSM, INJECTION_TECHNIQUE_IS_AXISEM
 
-  use shared_parameters, only: INJECTION_TECHNIQUE_TYPE,INJECTION_TECHNIQUE_IS_DSM, INJECTION_TECHNIQUE_IS_AXISEM
+  use shared_parameters, only: INJECTION_TECHNIQUE_TYPE
 
   implicit none
 

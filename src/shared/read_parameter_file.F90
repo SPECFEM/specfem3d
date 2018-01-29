@@ -653,7 +653,6 @@
       if ( (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM ) .and. &
            (.not. MESH_A_CHUNK_OF_THE_EARTH) ) stop 'Error, coupling with DSM only works with a Earth chunk mesh'
 
-
       if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_FK .and. MESH_A_CHUNK_OF_THE_EARTH) &
            stop 'Error: coupling with F-K is for models with a flat surface (Earth flattening), &
                        &thus turn MESH_A_CHUNK_OF_THE_EARTH off'
@@ -881,6 +880,8 @@
       !if (.not. sep_dir_exists) then
       !  stop 'Error: SEP_MODEL_DIRECTORY should exist.'
       !endif
+    case ('coupled')
+      IMODEL = IMODEL_COUPLED
     case default
       print *
       print *,'********** model not recognized: ',trim(MODEL),' **************'

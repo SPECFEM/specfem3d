@@ -372,9 +372,12 @@
 
   use generate_databases_par, only: myrank,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT,FOUR_THIRDS
 
+  ! MPI interfaces
+  use generate_databases_par, only: nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh,num_interfaces_ext_mesh
+
   use create_regions_mesh_ext_par
 
-  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH
+  use shared_parameters, only: NPROC,COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH
 
   implicit none
 
@@ -385,13 +388,17 @@
   ! local parameters
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: v_tmp
   integer,dimension(:),allocatable :: v_tmp_i
-  integer :: ier,i
+  integer :: ier,i,j,k
   integer, dimension(:), allocatable :: iglob_tmp
-  integer :: iface, igll,  ispec, iglob, j, k, inum
+  integer :: iface, igll, ispec, iglob, inum, num_points
   real(kind=CUSTOM_REAL) :: nx,ny,nz
   character(len=MAX_STRING_LEN) :: filename
 
+  !----------------------------------------------------------------------
+  ! mostly for free-surface and coupling surfaces
   logical,parameter :: SAVE_MESH_FILES_ADDITIONAL = .true.
+
+  !----------------------------------------------------------------------
 
   if (myrank == 0) then
     write(IMAIN,*) '     saving mesh files for AVS, OpenDX, Paraview'
@@ -539,12 +546,13 @@
     ! acoustic-elastic domains
     if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION) then
       ! saves points on acoustic-elastic coupling interface
-      allocate( iglob_tmp(NGLLSQUARE*num_coupling_ac_el_faces),stat=ier)
+      num_points = NGLLSQUARE*num_coupling_ac_el_faces
+      allocate( iglob_tmp(num_points),stat=ier)
       if (ier /= 0) stop 'error allocating array iglob_tmp'
       inum = 0
       iglob_tmp(:) = 0
-      do i=1,num_coupling_ac_el_faces
-        do j=1,NGLLSQUARE
+      do i = 1,num_coupling_ac_el_faces
+        do j = 1,NGLLSQUARE
           inum = inum+1
           iglob_tmp(inum) = ibool(coupling_ac_el_ijk(1,j,i), &
                                   coupling_ac_el_ijk(2,j,i), &
@@ -553,15 +561,13 @@
         enddo
       enddo
       filename = prname(1:len_trim(prname))//'coupling_acoustic_elastic'
-      call write_VTK_data_points(nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy, &
-                        iglob_tmp,NGLLSQUARE*num_coupling_ac_el_faces, &
-                        filename)
+      call write_VTK_data_points(nglob,xstore_dummy,ystore_dummy,zstore_dummy, &
+                                 iglob_tmp,num_points,filename)
 
       ! saves acoustic/elastic flag
       allocate(v_tmp_i(nspec),stat=ier)
       if (ier /= 0) stop 'error allocating array v_tmp_i'
-      do i=1,nspec
+      do i = 1,nspec
         if (ispec_is_acoustic(i)) then
           v_tmp_i(i) = 1
         else if (ispec_is_elastic(i)) then
@@ -571,9 +577,8 @@
         endif
       enddo
       filename = prname(1:len_trim(prname))//'acoustic_elastic_flag'
-      call write_VTK_data_elem_i(nspec,nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-                        v_tmp_i,filename)
+      call write_VTK_data_elem_i(nspec,nglob,xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                                 v_tmp_i,filename)
 
       deallocate(iglob_tmp,v_tmp_i)
     endif !if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION )
@@ -581,12 +586,13 @@
     ! acoustic-poroelastic domains
     if (ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION) then
       ! saves points on acoustic-poroelastic coupling interface
-      allocate( iglob_tmp(NGLLSQUARE*num_coupling_ac_po_faces),stat=ier)
+      num_points = NGLLSQUARE*num_coupling_ac_po_faces
+      allocate( iglob_tmp(num_points),stat=ier)
       if (ier /= 0) stop 'error allocating array iglob_tmp'
       inum = 0
       iglob_tmp(:) = 0
-      do i=1,num_coupling_ac_po_faces
-        do j=1,NGLLSQUARE
+      do i = 1,num_coupling_ac_po_faces
+        do j = 1,NGLLSQUARE
           inum = inum+1
           iglob_tmp(inum) = ibool(coupling_ac_po_ijk(1,j,i), &
                                   coupling_ac_po_ijk(2,j,i), &
@@ -595,15 +601,13 @@
         enddo
       enddo
       filename = prname(1:len_trim(prname))//'coupling_acoustic_poroelastic'
-      call write_VTK_data_points(nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy, &
-                        iglob_tmp,NGLLSQUARE*num_coupling_ac_po_faces, &
-                        filename)
+      call write_VTK_data_points(nglob,xstore_dummy,ystore_dummy,zstore_dummy, &
+                                 iglob_tmp,num_points,filename)
 
       ! saves acoustic/poroelastic flag
       allocate(v_tmp_i(nspec),stat=ier)
       if (ier /= 0) stop 'error allocating array v_tmp_i'
-      do i=1,nspec
+      do i = 1,nspec
         if (ispec_is_acoustic(i)) then
           v_tmp_i(i) = 1
         else if (ispec_is_poroelastic(i)) then
@@ -613,9 +617,8 @@
         endif
       enddo
       filename = prname(1:len_trim(prname))//'acoustic_poroelastic_flag'
-      call write_VTK_data_elem_i(nspec,nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-                        v_tmp_i,filename)
+      call write_VTK_data_elem_i(nspec,nglob,xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                                 v_tmp_i,filename)
 
       deallocate(v_tmp_i,iglob_tmp)
     endif !if (ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION )
@@ -623,12 +626,13 @@
     ! elastic-poroelastic domains
     if (ELASTIC_SIMULATION .and. POROELASTIC_SIMULATION) then
       ! saves points on elastic-poroelastic coupling interface
-      allocate( iglob_tmp(NGLLSQUARE*num_coupling_el_po_faces),stat=ier)
+      num_points = NGLLSQUARE*num_coupling_el_po_faces
+      allocate( iglob_tmp(num_points),stat=ier)
       if (ier /= 0) stop 'error allocating array iglob_tmp'
       inum = 0
       iglob_tmp(:) = 0
-      do i=1,num_coupling_el_po_faces
-        do j=1,NGLLSQUARE
+      do i = 1,num_coupling_el_po_faces
+        do j = 1,NGLLSQUARE
           inum = inum+1
           iglob_tmp(inum) = ibool(coupling_el_po_ijk(1,j,i), &
                                   coupling_el_po_ijk(2,j,i), &
@@ -637,10 +641,8 @@
         enddo
       enddo
       filename = prname(1:len_trim(prname))//'coupling_elastic_poroelastic'
-      call write_VTK_data_points(nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy, &
-                        iglob_tmp,NGLLSQUARE*num_coupling_el_po_faces, &
-                        filename)
+      call write_VTK_data_points(nglob,xstore_dummy,ystore_dummy,zstore_dummy, &
+                                 iglob_tmp,num_points,filename)
 
       ! saves elastic/poroelastic flag
       allocate(v_tmp_i(nspec),stat=ier)
@@ -655,13 +657,32 @@
         endif
       enddo
       filename = prname(1:len_trim(prname))//'elastic_poroelastic_flag'
-      call write_VTK_data_elem_i(nspec,nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-                        v_tmp_i,filename)
+      call write_VTK_data_elem_i(nspec,nglob,xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                                 v_tmp_i,filename)
 
       deallocate(v_tmp_i,iglob_tmp)
     endif !if (ACOUSTIC_SIMULATION .and. POROELASTIC_SIMULATION
 
+    ! MPI
+    if (NPROC > 1) then
+      ! saves MPI interface points
+      num_points = sum(nibool_interfaces_ext_mesh(1:num_interfaces_ext_mesh))
+      allocate( iglob_tmp(num_points),stat=ier)
+      if (ier /= 0) stop 'error allocating array iglob_tmp'
+      inum = 0
+      iglob_tmp(:) = 0
+      do i = 1,num_interfaces_ext_mesh
+        do j = 1, nibool_interfaces_ext_mesh(i)
+          inum = inum + 1
+          iglob_tmp(inum) = ibool_interfaces_ext_mesh(j,i)
+        enddo
+      enddo
+
+      filename = prname(1:len_trim(prname))//'MPI_points'
+      call write_VTK_data_points(nglob,xstore_dummy,ystore_dummy,zstore_dummy, &
+                                 iglob_tmp,num_points,filename)
+      deallocate(iglob_tmp)
+    endif ! NPROC > 1
   endif  !if (SAVE_MESH_FILES_ADDITIONAL)
 
   if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then

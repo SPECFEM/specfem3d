@@ -363,6 +363,24 @@
 !----
 !
 
+  subroutine gather_all_all_i(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
+
+
+
+    implicit none
+
+    integer :: sendcnt, recvcount, NPROC
+    integer, dimension(sendcnt) :: sendbuf
+    integer, dimension(recvcount,0:NPROC-1) :: recvbuf
+
+    recvbuf(:,0) = sendbuf(:)
+
+  end subroutine gather_all_all_i
+
+!
+!----
+!
+
   subroutine gather_all_dp(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
 
   implicit none
@@ -1143,7 +1161,7 @@
   end subroutine world_unsplit
 
 !
-!
+!----
 !
 
   subroutine bcast_all_l_array(buffer, countval)
@@ -1159,18 +1177,3 @@
 
   end subroutine bcast_all_l_array
 
-  subroutine all_gather_all_i(sendbuf, sendcnt, recvbuf, recvcount, NPROC)
-
-
-
-    implicit none
-
-    integer :: sendcnt, recvcount, NPROC
-    integer, dimension(sendcnt) :: sendbuf
-    integer, dimension(recvcount,0:NPROC-1) :: recvbuf
-
-    recvbuf(:,0) = sendbuf(:)
-
-
-
-  end subroutine all_gather_all_i

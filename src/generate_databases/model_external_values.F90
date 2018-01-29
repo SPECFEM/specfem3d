@@ -44,22 +44,14 @@
 ! ADD YOUR MODEL HERE
 !
 !---
+  integer, parameter :: dummy_size = 1
 
   ! only here to illustrate an example
-  !  type model_external_variables
-  !    sequence
-  !    double precision dvs(0:dummy_size)
-  !  end type model_external_variables
-  !  type (model_external_variables) MEXT_V
-
-  ! VM VM my model for DSM coupling
-  use constants
-   ! VM VM
-  double precision, dimension (:,:), allocatable :: vpv_1D,vsv_1D,density_1D
-  double precision, dimension (:), allocatable :: zlayer
-  double precision, dimension (:), allocatable :: smooth_vp,smooth_vs
-  integer :: ilayer,nlayer,ncoeff,ndeg_poly
-  double precision :: ZREF,OLON,OLAT
+  type model_external_variables
+      sequence
+      double precision :: dvs(dummy_size)
+    end type model_external_variables
+  type (model_external_variables) MEXT_V
 
   end module external_model
 
@@ -87,109 +79,48 @@
   ! dummy to ignore compiler warnings
   idummy = myrank
 
+  ! safety check
+  if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
+    print *,'Invalid flags, Coupling with injection technique or mesh a chunk of the earth requires: model coupled'
+    stop 'Error model external'
+  endif
+
+
 !---
 !
 ! ADD YOUR MODEL HERE
 !
-  if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) call read_external_model_for_coupling_or_chunk()
-
 !---
 
   ! the variables read are declared and stored in structure MEXT_V
-  !if (myrank == 0) call read_external_model()
+  if (myrank == 0) call read_external_model()
 
   ! broadcast the information read on the master to the nodes
-  !call bcast_all_dp(MEXT_V%dvs, size(MEXT_V%dvs))
+  call bcast_all_dp(MEXT_V%dvs, size(MEXT_V%dvs))
 
   end subroutine model_external_broadcast
 
 !
 !-------------------------------------------------------------------------------------------------
 !
-!
-!  subroutine read_external_model()
-!
-!  use external_model
-!
-!  use constants
-!
-!  implicit none
-!
+
+  subroutine read_external_model()
+
+  use external_model
+
+  use constants
+
+  implicit none
+
 !---
 !
 ! ADD YOUR MODEL HERE
 !
 !---
-!
-!  end subroutine read_external_model
-!
-!-------------------------------------------------------------------------------------------------
-!
-!
+  MEXT_V%dvs(:) = 0.d0
 
-  subroutine read_external_model_for_coupling_or_chunk()
+  end subroutine read_external_model
 
-  use external_model !! VM VM custom subroutine for coupling with DSM
-
-  implicit none
-
-    character(len=256):: filename
-    integer i,cc
-    double precision aa,bb
-
-    filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'/coeff_poly_deg12'
-    open(27,file=trim(filename))
-    read(27,*) ndeg_poly
-    allocate(smooth_vp(0:ndeg_poly),smooth_vs(0:ndeg_poly))
-    do i=ndeg_poly,0,-1
-       read(27,*) aa,bb,cc
-       smooth_vp(i) = aa
-       smooth_vs(i) = bb
-       ! write(*,*) a,b
-    enddo
-    close(27)
-
-    !write(*,*) " Reading 1D model "
-
-    filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'/model_1D.in'
-    open(27,file=trim(filename))
-    read(27,*) nlayer,ncoeff
-    allocate(vpv_1D(nlayer,ncoeff))
-    allocate(vsv_1D(nlayer,ncoeff))
-    allocate(density_1D(nlayer,ncoeff))
-    allocate(zlayer(nlayer))
-    do i=1,nlayer
-       read(27,*) zlayer(i)
-       read(27,*) vpv_1D(i,:)
-       read(27,*) vsv_1D(i,:)
-       read(27,*) density_1D(i,:)
-    enddo
-    read(27,*) ZREF
-    read(27,*) OLON,OLAT
-    close(27)
-
-  end subroutine read_external_model_for_coupling_or_chunk
-
-!----------------------------------------------------------------
-!! !! ================= VM VM custom subroutine for DSM coupling
-!----------------------------------------------------------------
-
-  subroutine FindLayer(x,y,z)
-
-    use external_model
-    implicit none
-    integer il
-    double precision radius
-    double precision :: x,y,z
-    radius =  dsqrt(x**2 + y**2 + (z+zref)**2) / 1000.d0
-    il = 1
-    do while (radius > zlayer(il) .and. il < nlayer)
-       il = il + 1
-    enddo
-    il = il - 1
-    ilayer = il
-
-  end subroutine FindLayer
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -202,8 +133,6 @@
   use generate_databases_par, only: nspec => NSPEC_AB,ibool,HUGEVAL,TINYVAL,IDOMAIN_ELASTIC
 
   use create_regions_mesh_ext_par
-
-  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH
 
   implicit none
 
@@ -234,117 +163,64 @@
 !
 !---
 
-  ! local parameters
-  double precision :: radius
-
   ! GLL point location converted to real
   x = xmesh
   y = ymesh
   z = zmesh
 
-  if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
-    call  model_1D(x,y,z,rho,vp,vs,radius)
-    return
+  ! note: z coordinate will be negative below surface
+  !          convention is z-axis points up
+
+  ! model dimensions
+  xmin = 0._CUSTOM_REAL ! minval(xstore_dummy)
+  xmax = 134000._CUSTOM_REAL ! maxval(xstore_dummy)
+  ymin = 0._CUSTOM_REAL  !minval(ystore_dummy)
+  ymax = 134000._CUSTOM_REAL ! maxval(ystore_dummy)
+  zmin = 0._CUSTOM_REAL ! minval(zstore_dummy)
+  zmax = 60000._CUSTOM_REAL ! maxval(zstore_dummy)
+  x_target = x
+  y_target = y
+
+  ! get approximate topography elevation at target coordinates from free surface
+  call get_topo_elevation_free_closest(x_target,y_target,elevation,distmin, &
+                                       nspec,nglob_dummy,ibool,xstore_dummy,ystore_dummy,zstore_dummy, &
+                                       num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+
+  ! depth in Z-direction
+  if (distmin < HUGEVAL) then
+    depth = elevation - z
+  else
+    depth = zmin - z
   endif
 
-  ! GLL point location converted to real
-  x = xmesh
-  y = ymesh
-  z = zmesh
+  ! normalizes depth between 0 and 1
+  if (abs( zmax - zmin ) > TINYVAL) depth = depth / (zmax - zmin)
 
-    ! note: z coordinate will be negative below surface
-    !          convention is z-axis points up
+  ! initial values (in m/s and kg/m^3)
+  rho = 2691.0_CUSTOM_REAL
+  vp = 4187.5_CUSTOM_REAL
+  vs = 2151.9_CUSTOM_REAL
 
-    ! model dimensions
-    xmin = 0._CUSTOM_REAL ! minval(xstore_dummy)
-    xmax = 134000._CUSTOM_REAL ! maxval(xstore_dummy)
-    ymin = 0._CUSTOM_REAL  !minval(ystore_dummy)
-    ymax = 134000._CUSTOM_REAL ! maxval(ystore_dummy)
-    zmin = 0._CUSTOM_REAL ! minval(zstore_dummy)
-    zmax = 60000._CUSTOM_REAL ! maxval(zstore_dummy)
-    x_target = x
-    y_target = y
+  ! adds a velocity depth gradient
+  ! (e.g. from PREM mantle gradients:
+  !     vp : 3.9382*6371/5.5
+  !     vs : 2.3481*6371/5.5
+  !     rho : 0.6924*6371/5.5 )
+  rho = rho + 802._CUSTOM_REAL * depth
+  vp = vp + 4562._CUSTOM_REAL * depth
+  vs = vs + 2720._CUSTOM_REAL * depth
 
-    ! get approximate topography elevation at target coordinates from free surface
-    call get_topo_elevation_free_closest(x_target,y_target,elevation,distmin, &
-         nspec,nglob_dummy,ibool,xstore_dummy,ystore_dummy,zstore_dummy, &
-         num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+  ! attenuation: PREM crust value
+  qmu_atten=600._CUSTOM_REAL
 
+  ! no Q_kappa in this model
+  qkappa_atten = 9999._CUSTOM_REAL
 
-    ! depth in Z-direction
-    if (distmin < HUGEVAL) then
-       depth = elevation - z
-    else
-       depth = zmin - z
-    endif
+  ! no anisotropy
+  iflag_aniso = 0
 
-    ! normalizes depth between 0 and 1
-    if (abs( zmax - zmin ) > TINYVAL) depth = depth / (zmax - zmin)
-
-    ! initial values (in m/s and kg/m^3)
-    rho = 2691.0_CUSTOM_REAL
-    vp = 4187.5_CUSTOM_REAL
-    vs = 2151.9_CUSTOM_REAL
-
-    ! adds a velocity depth gradient
-    ! (e.g. from PREM mantle gradients:
-    !     vp : 3.9382*6371/5.5
-    !     vs : 2.3481*6371/5.5
-    !     rho : 0.6924*6371/5.5 )
-    rho = rho + 802._CUSTOM_REAL * depth
-    vp = vp + 4562._CUSTOM_REAL * depth
-    vs = vs + 2720._CUSTOM_REAL * depth
-
-    ! attenuation: PREM crust value
-    qmu_atten=600._CUSTOM_REAL
-
-    ! no Q_kappa in this model
-    qkappa_atten = 9999._CUSTOM_REAL
-
-    ! no anisotropy
-    iflag_aniso = 0
-
-    ! elastic material
-    idomain_id = IDOMAIN_ELASTIC
+  ! elastic material
+  idomain_id = IDOMAIN_ELASTIC
 
   end subroutine model_external_values
 
-!----------------------------------------------------------------
-
- subroutine model_1D(x_eval,y_eval,z_eval, &
-                             rho_final,vp_final,vs_final,r1)
-    use external_model
-    implicit none
-    double precision r1,radius
-    double precision rho,vp,vs
-    double precision x_eval,y_eval,z_eval
-    real(kind=CUSTOM_REAL) rho_final,vp_final,vs_final
-    double precision Interpol,Xtol
-
-
-    Xtol=1d-2
-
-    radius = dsqrt(x_eval**2 + y_eval**2 + (z_eval+zref)**2)
-    radius = radius / 1000.d0
-    r1=radius
-
-    ! get vp,vs and rho
-    radius = radius / zlayer(nlayer)
-    vp = Interpol(vpv_1D,ilayer,radius,nlayer)
-    vs = Interpol(vsv_1D,ilayer,radius,nlayer)
-    rho = Interpol(density_1D,ilayer,radius,nlayer)
-
-    vp_final = vp * 1000.d0
-    vs_final = vs * 1000.d0
-    rho_final = rho * 1000.d0
-
-  end subroutine model_1D
-
-!----------------------------------------------------------------
-
-  function Interpol(v,i,x,nl)
-    implicit none
-    integer i,nl
-    double precision Interpol,x,v(nl,4)
-    Interpol = v(i,1)+x*(v(i,2)+x*(v(i,3)+x*v(i,4)))
-  end function Interpol
