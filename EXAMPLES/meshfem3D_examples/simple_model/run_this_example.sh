@@ -22,6 +22,7 @@ ln -s ../../../../bin/xspecfem3D
 cd ../
 
 # stores setup
+cp DATA/meshfem3D_files/Mesh_Par_file OUTPUT_FILES/
 cp DATA/Par_file OUTPUT_FILES/
 cp DATA/CMTSOLUTION OUTPUT_FILES/
 cp DATA/STATIONS OUTPUT_FILES/

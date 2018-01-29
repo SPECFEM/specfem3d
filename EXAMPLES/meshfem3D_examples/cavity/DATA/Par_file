@@ -23,11 +23,11 @@ UTM_PROJECTION_ZONE             = 11
 SUPPRESS_UTM_PROJECTION         = .true.
 
 # number of MPI processors
-NPROC                           = 96
+NPROC                           = 2
 
 # time step parameters
 NSTEP                           = 6001
-DT                              = 0.0001
+DT                              = 5.e-5
 
 #-----------------------------------------------------------
 #
@@ -148,7 +148,7 @@ MOVIE_SURFACE                   = .true.
 MOVIE_TYPE                      = 1
 MOVIE_VOLUME                    = .false.
 SAVE_DISPLACEMENT               = .false.
-USE_HIGHRES_FOR_MOVIES          = .false.
+USE_HIGHRES_FOR_MOVIES          = .true.
 NTSTEP_BETWEEN_FRAMES           = 100
 HDUR_MOVIE                      = 0.0
 
@@ -220,7 +220,7 @@ SAVE_SEISMOGRAMS_PRESSURE       = .false.   # currently implemented in acoustic 
 SAVE_SEISMOGRAMS_IN_ADJOINT_RUN = .false.
 
 # save seismograms in binary or ASCII format (binary is smaller but may not be portable between machines)
-USE_BINARY_FOR_SEISMOGRAMS      = .true.
+USE_BINARY_FOR_SEISMOGRAMS      = .false.
 
 # output seismograms in Seismic Unix format (binary with 240-byte-headers)
 SU_FORMAT                       = .false.
