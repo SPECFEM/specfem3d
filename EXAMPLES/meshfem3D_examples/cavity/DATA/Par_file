@@ -26,7 +26,7 @@ SUPPRESS_UTM_PROJECTION         = .true.
 NPROC                           = 2
 
 # time step parameters
-NSTEP                           = 6001
+NSTEP                           = 3000
 DT                              = 5.e-5
 
 #-----------------------------------------------------------
@@ -149,7 +149,7 @@ MOVIE_TYPE                      = 1
 MOVIE_VOLUME                    = .false.
 SAVE_DISPLACEMENT               = .false.
 USE_HIGHRES_FOR_MOVIES          = .true.
-NTSTEP_BETWEEN_FRAMES           = 100
+NTSTEP_BETWEEN_FRAMES           = 200
 HDUR_MOVIE                      = 0.0
 
 # save AVS or OpenDX mesh files to check the mesh

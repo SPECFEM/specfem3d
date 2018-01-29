@@ -82,6 +82,19 @@ env:
     # socal example
     - TEST="--with-mpi" TESTCOV=0 TESTMAKE=17 CUDA=false
 
+    # socal example w/ 1d_socal
+    - TEST="--with-mpi" TESTCOV=0 TESTMAKE=18 CUDA=false
+
+    # socal example w/ 1d_prem
+    - TEST="--with-mpi" TESTCOV=0 TESTMAKE=19 CUDA=false
+
+    # socal example w/ 1d_cascadia
+    - TEST="--with-mpi" TESTCOV=0 TESTMAKE=20 CUDA=false
+
+    # cavity example
+    - TEST="--with-mpi" TESTCOV=0 TESTMAKE=21 CUDA=false
+
+
 before_install:
   # informations on git
   - |
@@ -180,9 +193,9 @@ script:
     my_test(){
       echo "testing seismograms:"
       ln -s $WORKDIR/utils/compare_seismogram_correlations.py
-      ./compare_seismogram_correlations.py OUTPUT_FILES/ REF_SEIS/
+      ./compare_seismogram_correlations.py REF_SEIS/ OUTPUT_FILES/
       if [[ $? -ne 0 ]]; then exit 1; fi
-      ./compare_seismogram_correlations.py OUTPUT_FILES/ REF_SEIS/ | grep min/max | cut -d \| -f 3 | awk '{print "correlation:",$1; if ($1 < 0.9 ){print $1,"failed"; exit 1;}else{ print $1,"good"; exit 0;}}'
+      ./compare_seismogram_correlations.py REF_SEIS/ OUTPUT_FILES/ | grep min/max | cut -d \| -f 3 | awk '{print "correlation:",$1; if ($1 < 0.9 ){print $1,"failed"; exit 1;}else{ print $1,"good"; exit 0;}}'
       if [[ $? -ne 0 ]]; then exit 1; fi
       rm -rf OUTPUT_FILES/
     }
@@ -240,6 +253,10 @@ script:
     15) dir=EXAMPLES/homogeneous_acoustic/ ;;
     16) dir=EXAMPLES/fault_examples/tpv5/ ;;
     17) dir=EXAMPLES/meshfem3D_examples/socal1D/ ;;
+    18) dir=EXAMPLES/meshfem3D_examples/socal1D/ ;;
+    19) dir=EXAMPLES/meshfem3D_examples/socal1D/ ;;
+    20) dir=EXAMPLES/meshfem3D_examples/socal1D/ ;;
+    21) dir=EXAMPLES/meshfem3D_examples/cavity/ ;;
     *) dir=EXAMPLES/homogeneous_halfspace/ ;;
     esac
     # runs test
@@ -312,6 +329,35 @@ script:
       if [ "$TESTMAKE" == "17" ]; then
         sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
         sed -i "s:^NSTEP .*:NSTEP    = 840:" DATA/Par_file
+        sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 100:" DATA/Par_file
+      fi
+      # socal example w/ 1d_socal
+      if [ "$TESTMAKE" == "18" ]; then
+        sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
+        sed -i "s:^NSTEP .*:NSTEP    = 840:" DATA/Par_file
+        sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 100:" DATA/Par_file
+        sed -i "s:^MODEL .*:MODEL    = 1d_socal:" DATA/Par_file
+        rm -f REF_SEIS; ln -s REF_SEIS.1d_socal REF_SEIS
+      fi
+      # socal example w/ 1d_prem
+      if [ "$TESTMAKE" == "19" ]; then
+        sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
+        sed -i "s:^NSTEP .*:NSTEP    = 840:" DATA/Par_file
+        sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 100:" DATA/Par_file
+        sed -i "s:^MODEL .*:MODEL    = 1d_prem:" DATA/Par_file
+        rm -f REF_SEIS; ln -s REF_SEIS.1d_prem REF_SEIS
+      fi
+      # socal example w/ 1d_cascadia
+      if [ "$TESTMAKE" == "20" ]; then
+        sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
+        sed -i "s:^NSTEP .*:NSTEP    = 840:" DATA/Par_file
+        sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 100:" DATA/Par_file
+        sed -i "s:^MODEL .*:MODEL    = 1d_cascadia:" DATA/Par_file
+        rm -f REF_SEIS; ln -s REF_SEIS.1d_cascadia REF_SEIS
+      fi
+      # cavity example
+      if [ "$TESTMAKE" == "21" ]; then
+        sed -i "s:^NSTEP .*:NSTEP    = 2000:" DATA/Par_file
         sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 100:" DATA/Par_file
       fi
 
