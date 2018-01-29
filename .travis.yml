@@ -555,6 +555,51 @@ script:
     fi
   - echo -en 'travis_fold:end:coverage.socal\\r'
 
+  - echo 'Coverage...' && echo -en 'travis_fold:start:coverage.socal.1d_socal\\r'
+  - |
+    if [ "$TESTCOV" == "1" ]; then
+      ##
+      ## testing socal example
+      ##
+      cd EXAMPLES/meshfem3D_examples/socal1D/
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+      sed -i "s:^MODEL .*:MODEL    = 1d_socal:" DATA/Par_file
+      rm -f REF_SEIS; ln -s REF_SEIS.1d_socal REF_SEIS
+      ./run_this_example.sh
+      cd $WORKDIR
+    fi
+  - echo -en 'travis_fold:end:coverage.socal.1d_socal\\r'
+
+  - echo 'Coverage...' && echo -en 'travis_fold:start:coverage.socal.1d_prem\\r'
+  - |
+    if [ "$TESTCOV" == "1" ]; then
+      ##
+      ## testing socal example
+      ##
+      cd EXAMPLES/meshfem3D_examples/socal1D/
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+      sed -i "s:^MODEL .*:MODEL    = 1d_prem:" DATA/Par_file
+      rm -f REF_SEIS; ln -s REF_SEIS.1d_prem REF_SEIS
+      ./run_this_example.sh
+      cd $WORKDIR
+    fi
+  - echo -en 'travis_fold:end:coverage.socal.1d_prem\\r'
+
+  - echo 'Coverage...' && echo -en 'travis_fold:start:coverage.socal.1d_cascadia\\r'
+  - |
+    if [ "$TESTCOV" == "1" ]; then
+      ##
+      ## testing socal example
+      ##
+      cd EXAMPLES/meshfem3D_examples/socal1D/
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+      sed -i "s:^MODEL .*:MODEL    = 1d_cascadia:" DATA/Par_file
+      rm -f REF_SEIS; ln -s REF_SEIS.1d_cascadia REF_SEIS
+      ./run_this_example.sh
+      cd $WORKDIR
+    fi
+  - echo -en 'travis_fold:end:coverage.socal.1d_cascadia\\r'
+
   # done
   - echo `pwd`
 
