@@ -412,7 +412,7 @@ contains
 
     integer(kind=si) :: ipar, i, j, k, l
     integer(kind=si) :: dij, dik, dil, djk, djl, dkl
-    real(kind=dp)    :: si, sj, sk, sl
+    real(kind=dp)    :: si_, sj, sk, sl
     real(kind=dp)    :: sisj, sksl, sjsk, sisl, sisk, sjsl
     real(kind=dp)    :: sisjsk, sisjsl, sisksl, sjsksl, sisjsksl
 
@@ -420,15 +420,15 @@ contains
     tensor(:) = 0._dp
 
     !*** Precompute direction cosines
-    si = s(i)
+    si_ = s(i)
     sj = s(j)
     sk = s(k)
     sl = s(l)
-    sisj = si * sj
+    sisj = si_ * sj
     sksl = sk * sl
     sjsk = sj * sk
-    sisl = si * sl
-    sisk = si * sk
+    sisl = si_ * sl
+    sisk = si_ * sk
     sjsl = sj * sl
     sisjsk = sisj * sk
     sisjsl = sisj * sl
@@ -476,7 +476,7 @@ contains
 
     integer(kind=si) :: ipar, i, j, k, l
     integer(kind=si) :: dij, dik, dil, djk, djl, dkl
-    real(kind=dp)    :: si, sj, sk, sl
+    real(kind=dp)    :: si_, sj, sk, sl
     real(kind=dp)    :: sisj, sksl, sjsk, sisl, sisk, sjsl
     real(kind=dp)    :: sisjsk, sisjsl, sisksl, sjsksl, sisjsksl
 
@@ -484,15 +484,15 @@ contains
     tensor(:) = 0._dp
 
     !*** Precompute direction cosines
-    si = s(i)
+    si_ = s(i)
     sj = s(j)
     sk = s(k)
     sl = s(l)
-    sisj = si * sj
+    sisj = si_ * sj
     sksl = sk * sl
     sjsk = sj * sk
-    sisl = si * sl
-    sisk = si * sk
+    sisl = si_ * sl
+    sisk = si_ * sk
     sjsl = sj * sl
     sisjsk = sisj * sk
     sisjsl = sisj * sl

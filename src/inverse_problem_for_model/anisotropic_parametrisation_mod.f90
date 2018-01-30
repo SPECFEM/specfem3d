@@ -51,7 +51,7 @@ contains
     integer(kind=si)            :: i, j, k, l, m, ipar
     integer(kind=si)            :: dij, dik, dil, djk, djl, dkl, dim, djm, dkm, dlm
     real(kind=cp)               :: rho, c11, c33, c44, c66, c13
-    real(kind=cp)               :: si, sj, sk, sl
+    real(kind=cp)               :: si_, sj, sk, sl
     real(kind=cp)               :: sisj, sksl, sjsk, sisl, sisk, sjsl
     real(kind=cp)               :: sisjsk, sisjsl, sisksl, sjsksl, sisjsksl
     real(kind=cp), dimension(3) :: s
@@ -75,16 +75,16 @@ contains
        l = ind_vec2tens(4,ipar)
 
        !*** Precompute direction cosines
-       si = s(i)
+       si_ = s(i)
        sj = s(j)
        sk = s(k)
        sl = s(l)
 
-       sisj = si * sj
+       sisj = si_ * sj
        sksl = sk * sl
        sjsk = sj * sk
-       sisl = si * sl
-       sisk = si * sk
+       sisl = si_ * sl
+       sisk = si_ * sk
        sjsl = sj * sl
 
        sisjsk = sisj * sk
@@ -128,9 +128,9 @@ contains
        dkm = delta(k,m)
        dlm = delta(l,m)
        partial_derivative(6,ipar) = &
-            (c13 - c11 + 2._cp*c66) *  (dij*sk*dlm + dij*dkm*sl + dkl*dim*sj + dkl*si*djm) + &
+            (c13 - c11 + 2._cp*c66) *  (dij*sk*dlm + dij*dkm*sl + dkl*dim*sj + dkl*si_*djm) + &
             (c44 - c66) * (dik*sj*dlm + dik*djm*sl + dil*sj*dkm + dil*djm*sk +               &
-                           djk*si*dlm + djk*dim*sl + djl*si*dkm + djl*dim*sk) +              &
+                           djk*si_*dlm + djk*dim*sl + djl*si_*dkm + djl*dim*sk) +              &
                           (c11 + c33 - 2._cp*c13 - 4._cp*c44) * (sisjsk*dlm + sisjsl*dkm   + &
                                                                  sisksl*djm + sjsksl*dim)
 
@@ -141,9 +141,9 @@ contains
        dkm = delta(k,m)
        dlm = delta(l,m)
        partial_derivative(7,ipar) = &
-            (c13 - c11 + 2._cp*c66) *  (dij*sk*dlm + dij*dkm*sl + dkl*dim*sj + dkl*si*djm) + &
+            (c13 - c11 + 2._cp*c66) *  (dij*sk*dlm + dij*dkm*sl + dkl*dim*sj + dkl*si_*djm) + &
             (c44 - c66) * (dik*sj*dlm + dik*djm*sl + dil*sj*dkm + dil*djm*sk +               &
-                           djk*si*dlm + djk*dim*sl + djl*si*dkm + djl*dim*sk) +              &
+                           djk*si_*dlm + djk*dim*sl + djl*si_*dkm + djl*dim*sk) +              &
                           (c11 + c33 - 2._cp*c13 - 4._cp*c44) * (sisjsk*dlm + sisjsl*dkm   + &
                                                                  sisksl*djm + sjsksl*dim)
 
@@ -154,9 +154,9 @@ contains
        dkm = delta(k,m)
        dlm = delta(l,m)
        partial_derivative(8,ipar) =  &
-            (c13 - c11 + 2._cp*c66) *  (dij*sk*dlm + dij*dkm*sl + dkl*dim*sj + dkl*si*djm) + &
+            (c13 - c11 + 2._cp*c66) *  (dij*sk*dlm + dij*dkm*sl + dkl*dim*sj + dkl*si_*djm) + &
             (c44 - c66) * (dik*sj*dlm + dik*djm*sl + dil*sj*dkm + dil*djm*sk +               &
-                           djk*si*dlm + djk*dim*sl + djl*si*dkm + djl*dim*sk) +              &
+                           djk*si_*dlm + djk*dim*sl + djl*si_*dkm + djl*dim*sk) +              &
                           (c11 + c33 - 2._cp*c13 - 4._cp*c44) * (sisjsk*dlm + sisjsl*dkm   + &
                                                                  sisksl*djm + sjsksl*dim)
 
@@ -186,7 +186,7 @@ contains
     integer(kind=si)            :: i, j, k, l, m, ipar
     integer(kind=si)            :: dij, dik, dil, djk, djl, dkl, dim, djm, dkm, dlm
     real(kind=cp)               :: rho, c33, c44, eps, del, gam
-    real(kind=cp)               :: si, sj, sk, sl
+    real(kind=cp)               :: si_, sj, sk, sl
     real(kind=cp)               :: sisj, sksl, sjsk, sisl, sisk, sjsl
     real(kind=cp)               :: sisjsk, sisjsl, sisksl, sjsksl, sisjsksl
     real(kind=cp), dimension(3) :: s
@@ -210,16 +210,16 @@ contains
        l = ind_vec2tens(4,ipar)
 
        !*** Precompute direction cosines
-       si = s(i)
+       si_ = s(i)
        sj = s(j)
        sk = s(k)
        sl = s(l)
 
-       sisj = si * sj
+       sisj = si_ * sj
        sksl = sk * sl
        sjsk = sj * sk
-       sisl = si * sl
-       sisk = si * sk
+       sisl = si_ * sl
+       sisk = si_ * sk
        sjsl = sj * sl
 
        sisjsk = sisj * sk
@@ -268,13 +268,13 @@ contains
        dkm = delta(k,m)
        dlm = delta(l,m)
        partial_derivative(6,ipar) = &
-            + 2._cp * eps * c33 * (- dij*(sk*dlm + sl*dkm) - dkl*(si*djm + sj*dim)              &
+            + 2._cp * eps * c33 * (- dij*(sk*dlm + sl*dkm) - dkl*(si_*djm + sj*dim)              &
                                    + (sisjsk*dlm + sisjsl*dkm + sisksl*djm + sjsksl*dim))       &
-            +         del * c33 * (dij*(sk*dlm + sl*dkm) + dkl*(si*djm + sj*dim)                &
+            +         del * c33 * (dij*(sk*dlm + sl*dkm) + dkl*(si_*djm + sj*dim)                &
                                    - 2._cp*(sisjsk*dlm + sisjsl*dkm + sisksl*djm + sjsksl*dim)) &
-            + 2._cp * gam * c44 * (+2._cp*dij*(sk*dlm + sl*dkm) + 2._cp*dkl*(si*djm + sj*dim)   &
+            + 2._cp * gam * c44 * (+2._cp*dij*(sk*dlm + sl*dkm) + 2._cp*dkl*(si_*djm + sj*dim)   &
                                    - dik*(sj*dlm + sl*djm) - dil*(sj*dkm + sk*djm)              &
-                                   - djk*(si*dlm + sl*dim) - djl*(si*dkm + sk*dim))
+                                   - djk*(si_*dlm + sl*dim) - djl*(si_*dkm + sk*dim))
 
        ! dcij_ds2
        m   = 2
@@ -283,13 +283,13 @@ contains
        dkm = delta(k,m)
        dlm = delta(l,m)
        partial_derivative(7,ipar) = &
-            + 2._cp * eps * c33 * (- dij*(sk*dlm + sl*dkm) - dkl*(si*djm + sj*dim)              &
+            + 2._cp * eps * c33 * (- dij*(sk*dlm + sl*dkm) - dkl*(si_*djm + sj*dim)              &
                                    + (sisjsk*dlm + sisjsl*dkm + sisksl*djm + sjsksl*dim))       &
-            +         del * c33 * (dij*(sk*dlm + sl*dkm) + dkl*(si*djm + sj*dim)                &
+            +         del * c33 * (dij*(sk*dlm + sl*dkm) + dkl*(si_*djm + sj*dim)                &
                                    - 2._cp*(sisjsk*dlm + sisjsl*dkm + sisksl*djm + sjsksl*dim)) &
-            + 2._cp * gam * c44 * (+2._cp*dij*(sk*dlm + sl*dkm) + 2._cp*dkl*(si*djm + sj*dim)   &
+            + 2._cp * gam * c44 * (+2._cp*dij*(sk*dlm + sl*dkm) + 2._cp*dkl*(si_*djm + sj*dim)   &
                                    - dik*(sj*dlm + sl*djm) - dil*(sj*dkm + sk*djm)              &
-                                   - djk*(si*dlm + sl*dim) - djl*(si*dkm + sk*dim))
+                                   - djk*(si_*dlm + sl*dim) - djl*(si_*dkm + sk*dim))
 
        ! dcij_ds3
        m   = 3
@@ -298,13 +298,13 @@ contains
        dkm = delta(k,m)
        dlm = delta(l,m)
        partial_derivative(8,ipar) = &
-            + 2._cp * eps * c33 * (- dij*(sk*dlm + sl*dkm) - dkl*(si*djm + sj*dim)              &
+            + 2._cp * eps * c33 * (- dij*(sk*dlm + sl*dkm) - dkl*(si_*djm + sj*dim)              &
                                    + (sisjsk*dlm + sisjsl*dkm + sisksl*djm + sjsksl*dim))       &
-            +         del * c33 * (dij*(sk*dlm + sl*dkm) + dkl*(si*djm + sj*dim)                &
+            +         del * c33 * (dij*(sk*dlm + sl*dkm) + dkl*(si_*djm + sj*dim)                &
                                    - 2._cp*(sisjsk*dlm + sisjsl*dkm + sisksl*djm + sjsksl*dim)) &
-            + 2._cp * gam * c44 * (+2._cp*dij*(sk*dlm + sl*dkm) + 2._cp*dkl*(si*djm + sj*dim)   &
+            + 2._cp * gam * c44 * (+2._cp*dij*(sk*dlm + sl*dkm) + 2._cp*dkl*(si_*djm + sj*dim)   &
                                    - dik*(sj*dlm + sl*djm) - dil*(sj*dkm + sk*djm)              &
-                                   - djk*(si*dlm + sl*dim) - djl*(si*dkm + sk*dim))
+                                   - djk*(si_*dlm + sl*dim) - djl*(si_*dkm + sk*dim))
 
        ! dcij_drho
        partial_derivative(9,ipar) = 0._cp
