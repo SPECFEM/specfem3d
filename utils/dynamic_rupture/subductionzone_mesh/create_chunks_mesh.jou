@@ -6,7 +6,8 @@ create volume loft surface 5 20
 create volume loft surface 9 25 match vertex 6 85 match vertex 8 83
 create volume loft surface 10 27
 create volume loft surface 12 29
-create volume loft surface 7 23
+save as "./slab_rotate_before.cub"
+create volume loft surface 7 23 match vertex 5 68 match vertex 10 69
 delete vol 3 to 11
 compress all
 merge all
@@ -38,7 +39,7 @@ vol 9 scheme sweep source 11 target 37
 mesh vol 9
 vol 10 scheme sweep source 7 target 39
 mesh vol 10
-refine surf 3 depth 10 
+#refine surf 3 depth 10 
 #save as "/export/nobackup/kbai/RUPTURE_Simulation/subductzone/jpn_subduct_zone_35_42/slab_rotate.cub" overwrite
 save as "./slab_rotate.cub" overwrite
 exit

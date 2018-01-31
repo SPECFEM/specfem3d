@@ -57,7 +57,7 @@ cubit.cmd('compress all')
 
 
 
-Au = [39]
+Au = [40]
 Ad = [3]
 
 #  FOR THE BULK (Seismic wave propagation part for SESAME)

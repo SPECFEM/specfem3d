@@ -29,7 +29,7 @@ Lat2dis = 100.0      # latitude to km conversion factor
                      # change the whole mesh generation script.
 Lon2dis = 76.0       # longitude to km conversion factor
 zcutBottom = 100.0   # bottom depth of the fault in km, preliminary value (the final depth is set in exportmesh.py)
-zcutTop = 2.0        # steepen the fault surface above this depth in km
+zcutTop = 15.0        # steepen the fault surface above this depth in km
                      # to avoid elements with small angles at the trench
                      # Use the matlab script demo_subduction_smoothing.m to explore this feature
 rotate = -15         # set this to minus average strike. Approximately aligns the trench with the Y axis to facilitate meshing
@@ -62,10 +62,13 @@ yc = 0.5*(Latmin+Latmax)
 # to avoid elements with small angles at the trench.
 # See demo_subduction_smoothing.m
 def surf(z, minz):
-    c = 0.5/zcutTop
-    f = -math.log(math.exp(-c*min(z - minz, -0.1))-1)/c + minz
-    f = max(f,-zcutBottom)
-    return f
+#    c = 0.5/zcutTop
+#    f = -math.log(math.exp(-c*min(z - minz, -0.1))-1)/c + minz
+    if(z > -zcutTop):
+        f = z + 2.0 * (z + zcutTop);
+    else:
+        f = z
+    return max(f, -zcutBottom)
 
 
 def import_elev_data():
