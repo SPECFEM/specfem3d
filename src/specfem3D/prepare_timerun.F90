@@ -949,8 +949,8 @@
   print *,'      Please re-compile the code, disenabling OpenMP support and/or consider contributing a new version if needed.'
   print *
 
-! the old OpenMP implementation for compute_forces_viscoelastic is here:
-!  utils/unused_routines/older_please_do_not_use_anymore_partial_OpenMP_port/older_not_maintained_compute_forces_viscoelastic_Dev_openmp.f90
+! the old OpenMP implementation for compute_forces_viscoelastic is in utils/unused_routines/:
+! older_please_do_not_use_anymore_partial_OpenMP_port/older_not_maintained_compute_forces_viscoelastic_Dev_openmp.f90
 
   stop 'OpenMP version is currently not implemented.'
 

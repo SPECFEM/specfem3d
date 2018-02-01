@@ -93,6 +93,9 @@
 
 ! clean-up
   deallocate(xstore,ystore,zstore)
+  deallocate(ibool)
+  deallocate(ispec_is_surface_external_mesh)
+  deallocate(iglob_is_surface_external_mesh)
 
 ! make sure everybody is synchronized
   call synchronize_all()

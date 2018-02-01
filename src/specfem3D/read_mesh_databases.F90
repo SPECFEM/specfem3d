@@ -35,6 +35,7 @@
   use specfem_par_elastic
   use specfem_par_acoustic
   use specfem_par_poroelastic
+  use specfem_par_movie
 
   implicit none
   integer :: ier
@@ -904,6 +905,25 @@
       if (ier /= 0) stop 'Error allocating num_elem_colors_elastic array'
     endif
   endif
+
+  ! for mesh surface
+  allocate(ispec_is_surface_external_mesh(NSPEC_AB), &
+           iglob_is_surface_external_mesh(NGLOB_AB),stat=ier)
+  if (ier /= 0) stop 'error allocating array for mesh surface'
+  ! determines model surface
+  ! returns surface points/elements in ispec_is_surface_external_mesh / iglob_is_surface_external_mesh
+  ! and number of faces in nfaces_surface
+  ! used for receiver detection, movie files and shakemaps
+  if (I_should_read_the_database) then
+    read(27) nfaces_surface
+    read(27) ispec_is_surface_external_mesh
+    read(27) iglob_is_surface_external_mesh
+  endif
+  call bcast_all_i_for_database(nfaces_surface, 1)
+  call bcast_all_l_for_database(ispec_is_surface_external_mesh(1), size(ispec_is_surface_external_mesh))
+  call bcast_all_l_for_database(iglob_is_surface_external_mesh(1), size(iglob_is_surface_external_mesh))
+
+  ! done reading database
   if (I_should_read_the_database) close(27)
 
   ! MPI communications

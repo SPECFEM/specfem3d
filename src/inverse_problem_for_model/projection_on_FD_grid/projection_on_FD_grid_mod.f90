@@ -161,7 +161,7 @@ end subroutine read_fd_grid_parameters_for_projection
     ! read fd grid parameters !!
     call read_fd_grid_parameters_for_projection()
 
-    ! get mesh properties (mandatory before calling locate_point_in_mesh)
+    ! get mesh properties (mandatory before calling locate_point_in_mesh_simple)
     call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
     call check_mesh_distances(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
          x_min_glob,x_max_glob,y_min_glob,y_max_glob,z_min_glob,z_max_glob, &
@@ -656,8 +656,11 @@ end subroutine read_fd_grid_parameters_for_projection
 !--------------------------------------------------------------------------------------------------------------------
 !  locate point in mesh.
 !--------------------------------------------------------------------------------------------------------------------
-  subroutine locate_point_in_mesh(x_to_locate, y_to_locate, z_to_locate, iaddx, iaddy, iaddz, elemsize_max_glob, &
+  subroutine locate_point_in_mesh_simple(x_to_locate, y_to_locate, z_to_locate, iaddx, iaddy, iaddz, elemsize_max_glob, &
        ispec_selected, xi_found, eta_found, gamma_found, x_found, y_found, z_found, myrank)
+
+! note: this routine differs slightly from the one in locate_point.f90
+!       by "simply" finding the best element using its inner GLL points
 
     double precision,                   intent(in)     :: x_to_locate, y_to_locate, z_to_locate
     real(kind=CUSTOM_REAL),             intent(in)     ::elemsize_max_glob
@@ -846,7 +849,8 @@ end subroutine read_fd_grid_parameters_for_projection
     y_found = y
     z_found = z
 
-  end subroutine locate_point_in_mesh
+  end subroutine locate_point_in_mesh_simple
+
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !--------------------------------------------------------------------------------------------------------------------
 !  locate point in element.

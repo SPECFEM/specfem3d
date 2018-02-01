@@ -146,7 +146,7 @@
                num_interfaces_ext_mesh,max_interface_size_ext_mesh, &
                my_neighbors_ext_mesh)
 
-  !SURENDRA (setting up parallel fault)
+! setting up parallel fault
   if (PARALLEL_FAULT .and. ANY_FAULT) then
     call synchronize_all()
     !at this point (xyz)store_dummy are still open
@@ -158,7 +158,7 @@
 ! sets up absorbing/free surface boundaries
   call synchronize_all()
   if (myrank == 0) then
-    write(IMAIN,*) '  ...setting up absorbing boundaries '
+    write(IMAIN,*) '  ...setting up absorbing boundaries'
     call flush_IMAIN()
   endif
   call get_absorbing_boundary(myrank,nspec,ibool, &
@@ -168,6 +168,14 @@
                               nodes_ibelm_bottom,nodes_ibelm_top, &
                               nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
                               nspec2D_bottom,nspec2D_top)
+
+! sets up mesh surface
+  call synchronize_all()
+  if (myrank == 0) then
+    write(IMAIN,*) '  ...setting up mesh surface'
+    call flush_IMAIN()
+  endif
+  call crm_setup_mesh_surface()
 
 ! sets up up Moho surface
   if (SAVE_MOHO_MESH) then
@@ -1288,4 +1296,65 @@ subroutine crm_ext_setup_indexing(ibool, &
   endif
 
   end subroutine crm_setup_inner_outer_elemnts
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine crm_setup_mesh_surface()
+
+! gets number of surface elements
+! (for receiver detection, movie outputs)
+
+  use generate_databases_par, only: NPROC,NSPEC_AB,NGLOB_AB,ibool, &
+    ispec_is_surface_external_mesh,iglob_is_surface_external_mesh,nfaces_surface,nfaces_surface_glob_ext_mesh, &
+    max_nibool_interfaces_ext_mesh,nibool_interfaces_ext_mesh,ibool_interfaces_ext_mesh, &
+    num_interfaces_ext_mesh,my_neighbors_ext_mesh, &
+    MOVIE_TYPE,NSPEC2D_TOP
+
+  use create_regions_mesh_ext_par
+
+  implicit none
+
+  ! local parameters
+  integer :: i,ier
+  integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
+
+  ! allocates mesh surface arrays
+  allocate(ispec_is_surface_external_mesh(NSPEC_AB), &
+           iglob_is_surface_external_mesh(NGLOB_AB),stat=ier)
+  if (ier /= 0) stop 'error allocating array'
+  nfaces_surface = 0
+
+  ! collects MPI interfaces for detection
+  max_nibool_interfaces_ext_mesh = maxval(nibool_interfaces_ext_mesh)
+  allocate(ibool_interfaces_ext_mesh_dummy(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) stop 'error allocating array'
+
+  do i = 1, num_interfaces_ext_mesh
+     ibool_interfaces_ext_mesh_dummy(:,:) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,:)
+  enddo
+  call synchronize_all()
+
+  call detect_surface(NPROC,NGLOB_AB,NSPEC_AB,ibool, &
+                      ispec_is_surface_external_mesh, &
+                      iglob_is_surface_external_mesh, &
+                      nfaces_surface, &
+                      num_interfaces_ext_mesh, &
+                      max_nibool_interfaces_ext_mesh, &
+                      nibool_interfaces_ext_mesh, &
+                      my_neighbors_ext_mesh, &
+                      ibool_interfaces_ext_mesh_dummy )
+
+  ! takes number of faces for top, free surface only
+  if (MOVIE_TYPE == 1) then
+    nfaces_surface = NSPEC2D_TOP
+  endif
+
+! number of surface faces for all partitions together
+  call sum_all_i(nfaces_surface,nfaces_surface_glob_ext_mesh)
+
+  deallocate(ibool_interfaces_ext_mesh_dummy)
+
+  end subroutine crm_setup_mesh_surface
 

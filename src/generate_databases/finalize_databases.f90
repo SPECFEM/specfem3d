@@ -34,7 +34,6 @@
 
   implicit none
 
-  integer :: i
   ! timing
   double precision, external :: wtime
 
@@ -75,45 +74,11 @@
     write(IMAIN,*)
   endif
 
-! gets number of surface elements (for movie outputs)
-  allocate( ispec_is_surface_external_mesh(NSPEC_AB), &
-           iglob_is_surface_external_mesh(NGLOB_AB),stat=ier)
-  if (ier /= 0) stop 'error allocating array'
-  max_nibool_interfaces_ext_mesh = maxval(nibool_interfaces_ext_mesh)
-  allocate(ibool_interfaces_ext_mesh_dummy(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
-  if (ier /= 0) stop 'error allocating array'
-  do i = 1, num_interfaces_ext_mesh
-     ibool_interfaces_ext_mesh_dummy(:,:) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,:)
-  enddo
-  call synchronize_all()
-  call detect_surface(NPROC,NGLOB_AB,NSPEC_AB,ibool, &
-                        ispec_is_surface_external_mesh, &
-                        iglob_is_surface_external_mesh, &
-                        nfaces_surface, &
-                        num_interfaces_ext_mesh, &
-                        max_nibool_interfaces_ext_mesh, &
-                        nibool_interfaces_ext_mesh, &
-                        my_neighbors_ext_mesh, &
-                        ibool_interfaces_ext_mesh_dummy )
-
-  deallocate(ibool)
-  deallocate(ispec_is_surface_external_mesh)
-  deallocate(iglob_is_surface_external_mesh)
-  deallocate(ibool_interfaces_ext_mesh_dummy)
-
-  ! takes number of faces for top, free surface only
-  if (MOVIE_TYPE == 1) then
-    nfaces_surface = NSPEC2D_TOP
-  endif
-
-! number of surface faces for all partitions together
-  call sum_all_i(nfaces_surface,nfaces_surface_glob_ext_mesh)
-
 ! copy number of elements and points in an include file for the solver
   if (myrank == 0) then
     call save_header_file(NSPEC_AB,NGLOB_AB,NPROC, &
-               ATTENUATION,ANISOTROPY,NSTEP,DT,STACEY_INSTEAD_OF_FREE_SURFACE, &
-               SIMULATION_TYPE,max_memory_size,nfaces_surface_glob_ext_mesh)
+                          ATTENUATION,ANISOTROPY,NSTEP,DT,STACEY_INSTEAD_OF_FREE_SURFACE, &
+                          SIMULATION_TYPE,max_memory_size,nfaces_surface_glob_ext_mesh)
   endif
 
 ! elapsed time since beginning of mesh generation

@@ -535,10 +535,11 @@ contains
     call min_all_dp(z_min,z_min_glob)
     call max_all_dp(z_max,z_max_glob)
     if (myrank == 0) then
+      write(IMAIN,*)
       write(IMAIN,*) 'mesh dimensions:'
-      write(IMAIN,*) '    Xmin and Xmax of the model = ',x_min_glob,x_max_glob
-      write(IMAIN,*) '    Ymin and Ymax of the model = ',y_min_glob,y_max_glob
-      write(IMAIN,*) '    Zmin and Zmax of the model = ',z_min_glob,z_max_glob
+      write(IMAIN,*) '  Xmin and Xmax of the model = ',sngl(x_min_glob),sngl(x_max_glob)
+      write(IMAIN,*) '  Ymin and Ymax of the model = ',sngl(y_min_glob),sngl(y_max_glob)
+      write(IMAIN,*) '  Zmin and Zmax of the model = ',sngl(z_min_glob),sngl(z_max_glob)
     endif
 
     ! compare to exact theoretical value (bottom is always flat)

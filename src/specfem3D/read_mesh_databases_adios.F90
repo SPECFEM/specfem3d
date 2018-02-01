@@ -82,6 +82,7 @@ subroutine read_mesh_databases_adios()
   use specfem_par_elastic
   use specfem_par_acoustic
   use specfem_par_poroelastic
+  use specfem_par_movie
 
   implicit none
   integer :: ier !,inum
@@ -142,7 +143,9 @@ subroutine read_mesh_databases_adios()
              local_dim_num_elem_colors_elastic, local_dim_coupling_ac_po_ispec, &
              local_dim_coupling_ac_po_ijk, &
              local_dim_coupling_ac_po_jacobian2Dw, &
-             local_dim_coupling_ac_po_normal
+             local_dim_coupling_ac_po_normal, &
+             local_dim_ispec_is_surface_external_mesh, &
+             local_dim_iglob_is_surface_external_mesh
 
   integer :: comm
 
@@ -195,9 +198,11 @@ subroutine read_mesh_databases_adios()
                            ispec_is_elastic, ier)
   call adios_schedule_read(handle, sel, "ispec_is_poroelastic/array", 0, 1, &
                            ispec_is_poroelastic, ier)
+
   ! Perform the read, so we can use the values.
   call adios_perform_reads(handle, ier)
   if (ier /= 0) call abort_mpi()
+
   ! number of acoustic elements in this partition
   nspec_acoustic = count(ispec_is_acoustic(:))
   ! all processes will have acoustic_simulation set if any flag is .true.
@@ -318,10 +323,13 @@ subroutine read_mesh_databases_adios()
                                0, 1, num_colors_inner_elastic, ier)
     endif
   endif
+
+  call adios_schedule_read(handle, sel, "nfaces_surface", 0, 1, &
+                           nfaces_surface, ier)
+
   ! Perform the read, so we can use the values.
   call adios_perform_reads(handle, ier)
   if (ier /= 0) call abort_mpi()
-
 
   !------------------------.
   ! Get the 'chunks' sizes |
@@ -579,6 +587,11 @@ subroutine read_mesh_databases_adios()
                             local_dim_num_elem_colors_elastic, ier)
     endif
   endif
+  ! for mesh surface
+  call adios_get_scalar(handle, "ispec_is_surface_external_mesh/local_dim", &
+                        local_dim_ispec_is_surface_external_mesh, ier)
+  call adios_get_scalar(handle, "iglob_is_surface_external_mesh/local_dim", &
+                        local_dim_iglob_is_surface_external_mesh, ier)
 
 !TODO
 #if 1
@@ -942,8 +955,6 @@ subroutine read_mesh_databases_adios()
     endif
     ! elastic domain colors
     if (ELASTIC_SIMULATION) then
-      read(27) num_colors_outer_elastic,num_colors_inner_elastic
-
       allocate(num_elem_colors_elastic(num_colors_outer_elastic &
                                      + num_colors_inner_elastic),stat=ier)
       if (ier /= 0) stop 'error allocating num_elem_colors_elastic array'
@@ -961,6 +972,11 @@ subroutine read_mesh_databases_adios()
       if (ier /= 0) stop 'error allocating num_elem_colors_elastic array'
     endif
   endif
+
+  ! for mesh surface
+  allocate(ispec_is_surface_external_mesh(NSPEC_AB), &
+           iglob_is_surface_external_mesh(NGLOB_AB),stat=ier)
+  if (ier /= 0) stop 'error allocating array for mesh surface'
 
   !-----------------------------------.
   ! Read arrays from external_mesh.bp |
@@ -1588,11 +1604,29 @@ subroutine read_mesh_databases_adios()
     endif
   endif
 
+  ! mesh surface arrays
+  start(1) = local_dim_ispec_is_surface_external_mesh * myrank
+  count_ad(1) = NSPEC_AB
+  sel_num = sel_num+1
+  sel => selections(sel_num)
+  call adios_selection_boundingbox (sel , 1, start, count_ad)
+  call adios_schedule_read(handle, sel, "ispec_is_surface_external_mesh/array", 0, 1, &
+                           ispec_is_surface_external_mesh, ier)
+
+  start(1) = local_dim_iglob_is_surface_external_mesh * myrank
+  count_ad(1) = NGLOB_AB
+  sel_num = sel_num+1
+  sel => selections(sel_num)
+  call adios_selection_boundingbox (sel , 1, start, count_ad)
+  call adios_schedule_read(handle, sel, "iglob_is_surface_external_mesh/array", 0, 1, &
+                           iglob_is_surface_external_mesh, ier)
+
   !---------------------------------------------------------------.
   ! Perform the reads and close the ADIOS 'external_mesh.bp' file |
   !---------------------------------------------------------------'
   call adios_perform_reads(handle, ier)
   if (ier /= 0) call abort_mpi()
+
   call adios_read_close(handle,ier)
   call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
 

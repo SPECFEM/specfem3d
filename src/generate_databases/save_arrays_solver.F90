@@ -32,16 +32,24 @@
                     max_interface_size_ext_mesh,ibool_interfaces_ext_mesh, &
                     SAVE_MESH_FILES,ANISOTROPY)
 
-  use generate_databases_par, only: nspec_cpml,CPML_width_x,CPML_width_y,CPML_width_z,CPML_to_spec, &
+  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT, &
+    nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
+    ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top, &
+    SIMULATION_TYPE,SAVE_FORWARD,mask_ibool_interior_domain, &
+    STACEY_ABSORBING_CONDITIONS,USE_MESH_COLORING_GPU
+
+  ! PML
+  use generate_databases_par, only: PML_CONDITIONS, &
+    nspec_cpml,CPML_width_x,CPML_width_y,CPML_width_z,CPML_to_spec, &
     CPML_regions,is_CPML,min_distance_between_CPML_parameter,nspec_cpml_tot, &
     d_store_x,d_store_y,d_store_z,k_store_x,k_store_y,k_store_z, &
     alpha_store_x,alpha_store_y,alpha_store_z, &
-    nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
-    ibelm_xmin,ibelm_xmax,ibelm_ymin,ibelm_ymax,ibelm_bottom,ibelm_top,PML_CONDITIONS, &
-    SIMULATION_TYPE,SAVE_FORWARD,mask_ibool_interior_domain, &
     nglob_interface_PML_acoustic,points_interface_PML_acoustic, &
-    nglob_interface_PML_elastic,points_interface_PML_elastic, &
-    STACEY_ABSORBING_CONDITIONS,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT,USE_MESH_COLORING_GPU
+    nglob_interface_PML_elastic,points_interface_PML_elastic
+
+  ! mesh surface
+  use generate_databases_par, only: ispec_is_surface_external_mesh,iglob_is_surface_external_mesh, &
+    nfaces_surface
 
   use create_regions_mesh_ext_par
 
@@ -316,6 +324,11 @@
       write(IOUT) num_elem_colors_elastic
     endif
   endif
+
+  ! surface points
+  write(IOUT) nfaces_surface
+  write(IOUT) ispec_is_surface_external_mesh
+  write(IOUT) iglob_is_surface_external_mesh
 
   close(IOUT)
 

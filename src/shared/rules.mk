@@ -53,7 +53,9 @@ shared_OBJECTS = \
 	$O/get_shape3D.shared.o \
 	$O/gll_library.shared.o \
 	$O/hex_nodes.shared.o \
+	$O/heap_sort.shared.o \
 	$O/lagrange_poly.shared.o \
+	$O/merge_sort.shared.o \
 	$O/netlib_specfun_erf.shared.o \
 	$O/param_reader.cc.o \
 	$O/prepare_assemble_MPI.shared.o \
@@ -63,6 +65,7 @@ shared_OBJECTS = \
 	$O/recompute_jacobian.shared.o \
 	$O/safe_alloc_mod.shared.o \
 	$O/save_header_file.shared.o \
+	$O/search_kdtree.shared.o \
 	$O/sort_array_coordinates.shared.o \
 	$O/utm_geo.shared.o \
 	$O/write_c_binary.cc.o \
@@ -72,6 +75,7 @@ shared_OBJECTS = \
 
 shared_MODULES = \
 	$(FC_MODDIR)/constants.$(FC_MODEXT) \
+	$(FC_MODDIR)/kdtree_search.$(FC_MODEXT) \
 	$(FC_MODDIR)/safe_alloc_mod.$(FC_MODEXT) \
 	$(FC_MODDIR)/shared_input_parameters.$(FC_MODEXT) \
 	$(FC_MODDIR)/shared_compute_parameters.$(FC_MODEXT) \

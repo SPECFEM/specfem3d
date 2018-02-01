@@ -100,7 +100,6 @@
   integer, dimension(:,:), allocatable :: elmnts_ext_mesh
   integer, dimension(:,:), allocatable :: mat_ext_mesh
   integer :: max_nibool_interfaces_ext_mesh
-  integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
 
   character(len=MAX_STRING_LEN) :: prname
 
@@ -162,6 +161,7 @@
 ! integer :: nglob_total
   double precision :: nglob_total
 
+! mesh surface
   logical,dimension(:),allocatable :: ispec_is_surface_external_mesh,iglob_is_surface_external_mesh
   integer :: nfaces_surface,nfaces_surface_glob_ext_mesh
 

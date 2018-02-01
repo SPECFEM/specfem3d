@@ -88,6 +88,8 @@ specfem3D_OBJECTS = \
 	$O/gravity_perturbation.spec.o \
 	$O/initialize_simulation.spec.o \
 	$O/iterate_time.spec.o \
+	$O/locate_MPI_slice.spec.o \
+	$O/locate_point.spec.o \
 	$O/locate_receivers.spec.o \
 	$O/locate_source.spec.o \
 	$O/make_gravity.spec.o \
@@ -103,6 +105,7 @@ specfem3D_OBJECTS = \
 	$O/prepare_noise.spec.o \
 	$O/prepare_timerun.spec.o \
 	$O/prepare_wavefields.spec.o \
+	$O/print_stf_file.spec.o \
 	$O/read_external_stf.spec.o \
 	$O/read_mesh_databases.spec.o \
 	$O/save_adjoint_kernels.spec.o \
@@ -132,6 +135,7 @@ specfem3D_SHARED_OBJECTS = \
 	$O/get_jacobian_boundaries.shared.o \
 	$O/get_shape3D.shared.o \
 	$O/gll_library.shared.o \
+	$O/heap_sort.shared.o \
 	$O/hex_nodes.shared.o \
 	$O/lagrange_poly.shared.o \
 	$O/netlib_specfun_erf.shared.o \
@@ -142,6 +146,7 @@ specfem3D_SHARED_OBJECTS = \
 	$O/read_value_parameters.shared.o \
 	$O/recompute_jacobian.shared.o \
 	$O/save_header_file.shared.o \
+	$O/search_kdtree.shared.o \
 	$O/sort_array_coordinates.shared.o \
 	$O/utm_geo.shared.o \
 	$O/write_VTK_data.shared.o \
@@ -349,6 +354,9 @@ $O/adios_helpers.shared_adios.o: \
 	$O/adios_helpers_definitions.shared_adios_module.o \
 	$O/adios_helpers_writers.shared_adios_module.o
 
+## kdtree
+$O/locate_point.spec.o: $O/search_kdtree.shared.o
+$O/setup_sources_receivers.spec.o: $O/search_kdtree.shared.o
 
 ####
 #### rule to build each .o file below

@@ -15,7 +15,7 @@ AC_CONFIG_SRCDIR([src/specfem3D/specfem3D.F90])
 AC_CONFIG_HEADER([setup/config.h])
 
 AC_CONFIG_MACRO_DIR([m4])
-#m4_include(m4/cit_backports.m4)
+m4_include(m4/cit_backports.m4)
 
 ############################################################
 
@@ -199,7 +199,7 @@ AC_FC_FREEFORM()
 
 AC_FC_PP_DEFINE()
 AC_SUBST([FC_DEFINE])
-AC_FC_PP_SRCEXT(F90)dnl Because AC_FC_PP_DEFINE messes with things.
+AC_FC_PP_SRCEXT(F90) dnl Because AC_FC_PP_DEFINE messes with things.
 
 AC_PROG_CC
 

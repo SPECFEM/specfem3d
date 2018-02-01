@@ -33,31 +33,16 @@
   use specfem_par_movie
   use specfem_par_acoustic
   use specfem_par_elastic
+
   implicit none
+
   integer :: ier
 
-  ! for mesh surface
-  allocate(ispec_is_surface_external_mesh(NSPEC_AB), &
-          iglob_is_surface_external_mesh(NGLOB_AB),stat=ier)
-  if (ier /= 0) stop 'error allocating array for mesh surface'
-
-  ! determines model surface
-  if (.not. RECEIVERS_CAN_BE_BURIED .or. MOVIE_SURFACE .or. CREATE_SHAKEMAP) then
-    ! returns surface points/elements
-    ! in ispec_is_surface_external_mesh / iglob_is_surface_external_mesh and
-    ! number of faces in nfaces_surface
-    call detect_surface(NPROC,NGLOB_AB,NSPEC_AB,ibool, &
-                      ispec_is_surface_external_mesh, &
-                      iglob_is_surface_external_mesh, &
-                      nfaces_surface, &
-                      num_interfaces_ext_mesh, &
-                      max_nibool_interfaces_ext_mesh, &
-                      nibool_interfaces_ext_mesh, &
-                      my_neighbors_ext_mesh, &
-                      ibool_interfaces_ext_mesh)
-  endif
-
-  ! takes cross-section surfaces instead
+  ! note: surface points/elements in ispec_is_surface_external_mesh, iglob_is_surface_external_mesh and number
+  !       of faces in nfaces_surface have been detected in xgenerate_databases and stored in database.
+  !       it will be used for receiver detection, movie files and shakemaps
+  !
+  ! for cross-section: it replaces arrays and takes cross-section surfaces
   if (MOVIE_SURFACE .or. CREATE_SHAKEMAP) then
     if (MOVIE_TYPE == 2 .and. PLOT_CROSS_SECTIONS) then
       call detect_surface_cross_section(NPROC,NGLOB_AB,NSPEC_AB,ibool, &

@@ -42,7 +42,7 @@ generate_databases_TARGETS = \
 
 
 generate_databases_OBJECTS = \
-	$O/generate_databases_par.gen.o \
+	$O/generate_databases_par.gen_mod.o \
 	$O/calc_jacobian.gen.o \
 	$O/fault_generate_databases.gen.o \
 	$O/create_mass_matrices.gen.o \
@@ -67,7 +67,7 @@ generate_databases_OBJECTS = \
 	$O/model_salton_trough.gen.o \
 	$O/model_tomography.gen.o \
 	$O/pml_set_local_dampingcoeff.gen.o \
-	$O/program_generate_databases.gen.o \
+	$O/read_parameters.gen.o \
 	$O/read_partition_files.gen.o \
 	$O/save_arrays_solver.gen.o \
 	$O/setup_color_perm.gen.o \
@@ -198,56 +198,30 @@ $E/xgenerate_databases: $(XGENERATE_DATABASES_OBJECTS)
 # Version file
 $O/generate_databases.gen.o: ${SETUP}/version.fh
 
-$O/calc_jacobian.gen.o: $O/generate_databases_par.gen.o
-$O/create_mass_matrices.gen.o: $O/generate_databases_par.gen.o
-$O/fault_generate_databases.gen.o: $O/generate_databases_par.gen.o
-$O/finalize_databases.gen.o: $O/generate_databases_par.gen.o
-$O/get_absorbing_boundary.gen.o: $O/generate_databases_par.gen.o
-$O/get_coupling_surfaces.gen.o: $O/generate_databases_par.gen.o
-$O/get_MPI.gen.o: $O/generate_databases_par.gen.o
 ifeq ($(MPI),no)
 $O/get_model.gen.o: $O/model_sep_nompi.gen.o
 else
 $O/get_model.gen.o: $O/model_sep.mpi_gen.o
 endif
-$O/memory_eval.gen.o: $O/generate_databases_par.gen.o
-$O/model_1d_cascadia.gen.o: $O/generate_databases_par.gen.o
-$O/model_1d_prem.gen.o: $O/generate_databases_par.gen.o
-$O/model_1d_socal.gen.o: $O/generate_databases_par.gen.o
-$O/model_default.gen.o: $O/generate_databases_par.gen.o
-$O/model_external_values.gen.o: $O/generate_databases_par.gen.o
-$O/model_gll.gen.o: $O/generate_databases_par.gen.o
-$O/model_ipati.gen.o: $O/generate_databases_par.gen.o
-ifeq ($(MPI),yes)
-$O/model_sep.mpi_gen.o: $O/generate_databases_par.gen.o $O/parallel.sharedmpi.o
-else
-$O/model_sep.nompi_gen.o: $O/generate_databases_par.gen.o
-endif
-$O/model_salton_trough.gen.o: $O/generate_databases_par.gen.o
-$O/pml_set_local_dampingcoeff.gen.o: $O/generate_databases_par.gen.o
-$O/read_partition_files.gen.o: $O/generate_databases_par.gen.o
-$O/save_arrays_solver.gen.o: $O/generate_databases_par.gen.o
-$O/setup_color_perm.gen.o: $O/generate_databases_par.gen.o
-$O/setup_mesh.gen.o: $O/generate_databases_par.gen.o
 
-$O/create_regions_mesh.gen.o: $O/generate_databases_par.gen.o $O/fault_generate_databases.gen.o
-$O/model_tomography.gen.o: $O/generate_databases_par.gen.o
+ifeq ($(MPI),yes)
+$O/model_sep.mpi_gen.o: $O/parallel.sharedmpi.o
+endif
+
+$O/create_regions_mesh.gen.o: $O/fault_generate_databases.gen.o
 
 ## adios
-$O/generate_databases.gen.o: $O/generate_databases_par.gen.o $(adios_generate_databases_PREOBJECTS)
-$O/model_gll_adios.gen_adios.o: $O/generate_databases_par.gen.o
-$O/model_ipati_adios.gen_adios.o: $O/generate_databases_par.gen.o
-$O/read_partition_files_adios.gen_adios.o: $O/generate_databases_par.gen.o
-$O/save_arrays_solver_adios.gen_adios.o: $O/generate_databases_par.gen.o $(adios_generate_databases_PREOBJECTS)
-$O/save_moho_adios.gen_adios.o: $O/generate_databases_par.gen.o $(adios_generate_databases_PREOBJECTS)
+$O/generate_databases.gen.o: $(adios_generate_databases_PREOBJECTS)
+$O/save_arrays_solver_adios.gen_adios.o: $(adios_generate_databases_PREOBJECTS)
+$O/save_moho_adios.gen_adios.o: $(adios_generate_databases_PREOBJECTS)
 
 ifeq ($(ADIOS),no)
-$O/get_model.gen.o: $O/generate_databases_par.gen.o $O/generate_databases_adios_stubs.gen_noadios.o
+$O/get_model.gen.o: $O/generate_databases_adios_stubs.gen_noadios.o
 else
-$O/get_model.gen.o: $O/generate_databases_par.gen.o $O/model_ipati_adios.gen_adios.o
+$O/get_model.gen.o: $O/model_ipati_adios.gen_adios.o
 endif
 
-$O/generate_databases_adios_stubs.gen_noadios.o: $O/generate_databases_par.gen.o $(adios_generate_databases_PRESTUBS)
+$O/generate_databases_adios_stubs.gen_noadios.o: $(adios_generate_databases_PRESTUBS)
 
 $O/adios_helpers.shared_adios.o: \
 	$O/adios_helpers_definitions.shared_adios_module.o \
@@ -261,17 +235,19 @@ $O/adios_helpers.shared_adios.o: \
 #### rule to build each .o file below
 ####
 
-
-$O/%.gen.o: $S/%.f90 $O/shared_par.shared_module.o
+$O/%.gen_mod.o: $S/%.F90 $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.gen.o: $S/%.F90 $O/shared_par.shared_module.o
+$O/%.gen.o: $S/%.f90 $O/shared_par.shared_module.o $O/generate_databases_par.gen_mod.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.mpi_gen.o: $S/%.f90 $O/shared_par.shared_module.o
+$O/%.gen.o: $S/%.F90 $O/shared_par.shared_module.o $O/generate_databases_par.gen_mod.o
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
+
+$O/%.mpi_gen.o: $S/%.f90 $O/shared_par.shared_module.o $O/generate_databases_par.gen_mod.o
 	${MPIFCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.mpi_gen.o: $S/%.F90 $O/shared_par.shared_module.o
+$O/%.mpi_gen.o: $S/%.F90 $O/shared_par.shared_module.o $O/generate_databases_par.gen_mod.o
 	${MPIFCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 $O/%.genc.o: $S/%.c
@@ -281,10 +257,10 @@ $O/%.genc.o: $S/%.c
 ### ADIOS compilation
 ###
 
-$O/%.gen_adios.o: $S/%.F90 $O/shared_par.shared_module.o
+$O/%.gen_adios.o: $S/%.F90 $O/shared_par.shared_module.o $O/generate_databases_par.gen_mod.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
-$O/%.gen_adios.o: $S/%.f90 $O/shared_par.shared_module.o
+$O/%.gen_adios.o: $S/%.f90 $O/shared_par.shared_module.o $O/generate_databases_par.gen_mod.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 $O/%.gen_noadios.o: $S/%.F90

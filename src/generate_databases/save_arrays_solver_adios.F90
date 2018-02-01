@@ -36,37 +36,39 @@
 ! for external mesh
 
 subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
-                                        APPROXIMATE_OCEAN_LOAD, &
-                                       ibool, num_interfaces_ext_mesh, &
-                                       my_neighbors_ext_mesh, &
-                                       nibool_interfaces_ext_mesh, &
-                                       max_interface_size_ext_mesh, &
-                                       ibool_interfaces_ext_mesh, &
-                                       SAVE_MESH_FILES,ANISOTROPY)
+                                             APPROXIMATE_OCEAN_LOAD, &
+                                             ibool, num_interfaces_ext_mesh, &
+                                             my_neighbors_ext_mesh, &
+                                             nibool_interfaces_ext_mesh, &
+                                             max_interface_size_ext_mesh, &
+                                             ibool_interfaces_ext_mesh, &
+                                             SAVE_MESH_FILES,ANISOTROPY)
 
-  use generate_databases_par, only: nspec_cpml, CPML_width_x, CPML_width_y, &
-    CPML_width_z, CPML_to_spec, &
-    CPML_regions, is_CPML, nspec_cpml_tot, &
-    d_store_x, d_store_y, d_store_z, &
-    k_store_x, k_store_y, k_store_z, &
-    alpha_store_x, alpha_store_y, alpha_store_z, &
+  use generate_databases_par, only: &
     nspec2D_xmin, nspec2D_xmax, &
     nspec2D_ymin, nspec2D_ymax, &
     NSPEC2D_BOTTOM, NSPEC2D_TOP, &
     ibelm_xmin, ibelm_xmax,ibelm_ymin, &
     ibelm_ymax, ibelm_bottom, ibelm_top, &
-    PML_CONDITIONS, &
     SIMULATION_TYPE, SAVE_FORWARD, &
     mask_ibool_interior_domain, &
-    nglob_interface_PML_acoustic, &
-    points_interface_PML_acoustic, &
-    nglob_interface_PML_elastic, &
-    points_interface_PML_elastic, &
     STACEY_ABSORBING_CONDITIONS, &
     LOCAL_PATH, myrank, sizeprocs, &
     nspec_ab,NGLLX,NGLLY,NGLLZ,NDIM,NGLLSQUARE,USE_MESH_COLORING_GPU, &
     ADIOS_TRANSPORT_METHOD
 
+  ! PML
+  use generate_databases_par, only: PML_CONDITIONS, &
+    nspec_cpml,CPML_width_x,CPML_width_y,CPML_width_z,CPML_to_spec, &
+    CPML_regions,is_CPML,nspec_cpml_tot, &
+    d_store_x,d_store_y,d_store_z,k_store_x,k_store_y,k_store_z, &
+    alpha_store_x,alpha_store_y,alpha_store_z, &
+    nglob_interface_PML_acoustic,points_interface_PML_acoustic, &
+    nglob_interface_PML_elastic,points_interface_PML_elastic
+
+  ! mesh surface
+  use generate_databases_par, only: ispec_is_surface_external_mesh,iglob_is_surface_external_mesh, &
+    nfaces_surface
 
   use adios_helpers_mod
   use create_regions_mesh_ext_par
@@ -728,6 +730,16 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
     endif
   endif
 
+  ! for mesh surface
+  call define_adios_scalar(group, groupsize, '',STRINGIFY_VAR(nfaces_surface))
+  local_dim = nspec_wmax
+  call define_adios_global_array1D(group, groupsize,local_dim, '', &
+                                   STRINGIFY_VAR(ispec_is_surface_external_mesh))
+  local_dim = nglob_wmax
+  call define_adios_global_array1D(group, groupsize,local_dim, '', &
+                                   STRINGIFY_VAR(iglob_is_surface_external_mesh))
+
+
   !------------------------------------------------------------.
   ! Open an handler to the ADIOS file and setup the group size |
   !------------------------------------------------------------'
@@ -1209,6 +1221,15 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
                               STRINGIFY_VAR(num_elem_colors_elastic))
     endif
   endif
+
+  ! mesh surface
+  call adios_write(handle, STRINGIFY_VAR(nfaces_surface), ier)
+  local_dim = nspec_wmax
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
+                                 STRINGIFY_VAR(ispec_is_surface_external_mesh))
+  local_dim = nglob_wmax
+  call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
+                                 STRINGIFY_VAR(iglob_is_surface_external_mesh))
 
   !----------------------------------.
   ! Perform the actual write to disk |

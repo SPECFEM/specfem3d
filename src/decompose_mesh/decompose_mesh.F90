@@ -896,7 +896,7 @@ module decompose_mesh
     print *, 'mesh2dual:'
     ncommonnodes = 1
     call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbor, elmnts, xadj, adjncy, nnodes_elmnts, &
-         nodes_elmnts, max_neighbor, ncommonnodes, NGNOD)
+                                nodes_elmnts, max_neighbor, ncommonnodes, NGNOD)
 
     ! user output
     print *, '  max_neighbor = ',max_neighbor
@@ -928,7 +928,7 @@ module decompose_mesh
     elmnts_load(:) = ACOUSTIC_LOAD
     ! then in case of acoustic/elastic/poro simulation, assign different weights to elements accordingly
     call acoustic_elastic_poro_load(elmnts_load,nspec,count_def_mat,count_undef_mat, &
-                                  num_material,mat_prop,undef_mat_prop,ATTENUATION)
+                                    num_material,mat_prop,undef_mat_prop,ATTENUATION)
 
 #if defined(USE_METIS_INSTEAD_OF_SCOTCH)
 
