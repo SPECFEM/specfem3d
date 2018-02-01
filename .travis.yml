@@ -217,9 +217,9 @@ script:
         echo "configuration: default"
         ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TEST}
       fi
+      # we output to console
+      sed -i "s:IMAIN .*:IMAIN = ISTANDARD_OUTPUT:" setup/constants.h
     fi
-  # we output to console
-  - sed -i "s:IMAIN .*:IMAIN = ISTANDARD_OUTPUT:" setup/constants.h
   - echo -en 'travis_fold:end:configure\\r'
 
   # compilation
@@ -599,6 +599,19 @@ script:
       cd $WORKDIR
     fi
   - echo -en 'travis_fold:end:coverage.socal.1d_cascadia\\r'
+
+  - echo 'Coverage...' && echo -en 'travis_fold:start:coverage.cavity\\r'
+  - |
+    if [ "$TESTCOV" == "1" ]; then
+      ##
+      ## testing socal example
+      ##
+      cd EXAMPLES/meshfem3D_examples/cavity/
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+      ./run_this_example.sh
+      cd $WORKDIR
+    fi
+  - echo -en 'travis_fold:end:coverage.cavity\\r'
 
   # done
   - echo `pwd`
