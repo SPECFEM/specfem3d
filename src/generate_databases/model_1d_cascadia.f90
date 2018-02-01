@@ -32,7 +32,7 @@
 ! by Gian Matharu
 !--------------------------------------------------------------------------------------------------
 
-  subroutine model_1D_cascadia(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
+  subroutine model_1D_cascadia(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten,qkappa_atten)
 
 ! given a GLL point, returns super-imposed velocity model values
 
@@ -44,7 +44,7 @@
   double precision, intent(in) :: xmesh,ymesh,zmesh
 
   ! density, Vp and Vs
-  real(kind=CUSTOM_REAL),intent(inout) :: vp,vs,rho,qmu_atten
+  real(kind=CUSTOM_REAL),intent(inout) :: vp,vs,rho,qmu_atten,qkappa_atten
 
   ! local parameters
   real(kind=CUSTOM_REAL) :: x,y,z
@@ -106,6 +106,7 @@
   endif
 
   ! attenuation: PREM crust value
-  qmu_atten=600.0d0
+  qmu_atten = 600.0
+  qkappa_atten = 57827.0
 
   end subroutine model_1D_cascadia

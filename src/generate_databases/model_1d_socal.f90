@@ -34,7 +34,7 @@
 !
 !--------------------------------------------------------------------------------------------------
 
-  subroutine model_1D_socal(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
+  subroutine model_1D_socal(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten,qkappa_atten)
 
 ! given a GLL point, returns super-imposed velocity model values
 
@@ -45,7 +45,7 @@
   double precision, intent(in) :: xmesh,ymesh,zmesh
 
   ! density, Vp and Vs
-  real(kind=CUSTOM_REAL),intent(inout) :: vp,vs,rho,qmu_atten
+  real(kind=CUSTOM_REAL),intent(inout) :: vp,vs,rho,qmu_atten,qkappa_atten
 
   ! local parameters
   real(kind=CUSTOM_REAL) :: depth,x,y,z
@@ -87,6 +87,8 @@
   rho = rho * 1000._CUSTOM_REAL
 
   ! no attenuation information
-  qmu_atten = 0._CUSTOM_REAL
+  ! using PREM crustal values instead
+  qmu_atten = 600.0
+  qkappa_atten = 57827.0
 
   end subroutine model_1D_socal

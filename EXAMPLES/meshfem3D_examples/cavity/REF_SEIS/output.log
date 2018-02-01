@@ -1,0 +1,228 @@
+running example: Mon Jan 29 21:36:37 AST 2018
+
+   setting up example...
+
+
+  running mesher on  2 processors...
+
+
+  running database generation on  2 processors...
+
+
+  running solver on  2 processors...
+
+
+ Recombining all movie frames to create a movie
+
+
+ reading parameter file
+
+   high-resolution:  T
+   moviedata element surfaces:           72
+   moviedata total elements all:         1800
+
+ Velocity will be shown in movie
+
+ 1 = create files in OpenDX format
+ 2 = create files in AVS UCD format
+ 3 = create files in GMT xyz Ascii long/lat/Uz format
+ any other value = exit
+
+ enter value:
+ movie frames have been saved every          200  time steps
+
+ enter first time step of movie (e.g. 1, enter -1 for shaking map)
+ enter last time step of movie (e.g.         3000 )
+
+ 1 = define file names using frame number
+ 2 = define file names using time step number
+ any other value = exit
+
+ enter value:
+
+ looping from            1  to         3000  every          200  time steps
+
+ total number of frames will be           15
+
+ movie data:
+ 1= norm of velocity  2=velocity x-comp 3=velocity y-comp 4=velocity z-comp
+
+
+ there are a total of         1152  elements at the surface
+
+
+
+ reading snapshot time step          200  out of         3000
+
+ sorting list of points
+
+ found a total of         1225  points
+ initial number of points (with multiples) was         4608
+
+ minimum amplitude in current snapshot =    1.3878228488285794E-018
+ maximum amplitude in current snapshot =   0.60072773694992065     
+
+
+ reading snapshot time step          400  out of         3000
+
+ sorting list of points
+
+ found a total of         1225  points
+ initial number of points (with multiples) was         4608
+
+ minimum amplitude in current snapshot =    4.8964128650068328E-015
+ maximum amplitude in current snapshot =    14.011587142944336     
+
+
+ reading snapshot time step          600  out of         3000
+
+ sorting list of points
+
+ found a total of         1225  points
+ initial number of points (with multiples) was         4608
+
+ minimum amplitude in current snapshot =    7.8046515647814396E-013
+ maximum amplitude in current snapshot =    20.613334655761719     
+
+
+ reading snapshot time step          800  out of         3000
+
+ sorting list of points
+
+ found a total of         1225  points
+ initial number of points (with multiples) was         4608
+
+ minimum amplitude in current snapshot =    6.8404071469629901E-012
+ maximum amplitude in current snapshot =    26.067680358886719     
+
+
+ reading snapshot time step         1000  out of         3000
+
+ sorting list of points
+
+ found a total of         1225  points
+ initial number of points (with multiples) was         4608
+
+ minimum amplitude in current snapshot =    1.5905453343290077E-010
+ maximum amplitude in current snapshot =    52.523937225341797     
+
+
+ reading snapshot time step         1200  out of         3000
+
+ sorting list of points
+
+ found a total of         1225  points
+ initial number of points (with multiples) was         4608
+
+ minimum amplitude in current snapshot =    6.5255795211882628E-010
+ maximum amplitude in current snapshot =    19.519567489624023     
+
+
+ reading snapshot time step         1400  out of         3000
+
+ sorting list of points
+
+ found a total of         1225  points
+ initial number of points (with multiples) was         4608
+
+ minimum amplitude in current snapshot =    3.5906269069130303E-009
+ maximum amplitude in current snapshot =    5.2934756278991699     
+
+
+ reading snapshot time step         1600  out of         3000
+
+ sorting list of points
+
+ found a total of         1225  points
+ initial number of points (with multiples) was         4608
+
+ minimum amplitude in current snapshot =    2.1478124168083923E-008
+ maximum amplitude in current snapshot =    4.1159844398498535     
+
+
+ reading snapshot time step         1800  out of         3000
+
+ sorting list of points
+
+ found a total of         1225  points
+ initial number of points (with multiples) was         4608
+
+ minimum amplitude in current snapshot =    4.0877534956962336E-006
+ maximum amplitude in current snapshot =    3.3639557361602783     
+
+
+ reading snapshot time step         2000  out of         3000
+
+ sorting list of points
+
+ found a total of         1225  points
+ initial number of points (with multiples) was         4608
+
+ minimum amplitude in current snapshot =    7.4881251202896237E-004
+ maximum amplitude in current snapshot =    3.1415603160858154     
+
+
+ reading snapshot time step         2200  out of         3000
+
+ sorting list of points
+
+ found a total of         1225  points
+ initial number of points (with multiples) was         4608
+
+ minimum amplitude in current snapshot =    2.7373917400836945E-003
+ maximum amplitude in current snapshot =    2.9986116886138916     
+
+
+ reading snapshot time step         2400  out of         3000
+
+ sorting list of points
+
+ found a total of         1225  points
+ initial number of points (with multiples) was         4608
+
+ minimum amplitude in current snapshot =    9.0705165639519691E-003
+ maximum amplitude in current snapshot =    2.9626150131225586     
+
+
+ reading snapshot time step         2600  out of         3000
+
+ sorting list of points
+
+ found a total of         1225  points
+ initial number of points (with multiples) was         4608
+
+ minimum amplitude in current snapshot =    4.4629168696701527E-003
+ maximum amplitude in current snapshot =    2.0443470478057861     
+
+
+ reading snapshot time step         2800  out of         3000
+
+ sorting list of points
+
+ found a total of         1225  points
+ initial number of points (with multiples) was         4608
+
+ minimum amplitude in current snapshot =    7.2015416808426380E-003
+ maximum amplitude in current snapshot =    1.4999116659164429     
+
+
+ reading snapshot time step         3000  out of         3000
+
+ sorting list of points
+
+ found a total of         1225  points
+ initial number of points (with multiples) was         4608
+
+ minimum amplitude in current snapshot =    2.0878046751022339E-002
+ maximum amplitude in current snapshot =    1.2984048128128052     
+
+
+ done creating movie or shaking map
+
+ AVS files are stored in ./OUTPUT_FILES//AVS_*.inp
+
+
+see results in directory: OUTPUT_FILES/
+
+done
+Mon Jan 29 21:37:37 AST 2018

@@ -43,9 +43,7 @@
 
   use specfem_par_elastic, only: displ
 
-  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE, &
-                  INJECTION_TECHNIQUE_TYPE,INJECTION_TECHNIQUE_IS_DSM,INJECTION_TECHNIQUE_IS_AXISEM,INJECTION_TECHNIQUE_IS_FK, &
-                  old_DSM_coupling_from_Vadim,RECIPROCITY_AND_KH_INTEGRAL,SAVE_RUN_BOUN_FOR_KH_INTEGRAL,Ntime_step_dsm
+  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,INJECTION_TECHNIQUE_TYPE,RECIPROCITY_AND_KH_INTEGRAL
 
 ! *********************************************************************************
 ! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
@@ -428,8 +426,6 @@ endif
 
   use constants
 
-  use shared_parameters, only: Ntime_step_dsm,IIN_veloc_dsm,IIN_tract_dsm
-
   implicit none
 
   integer igll,it_dsm
@@ -462,8 +458,6 @@ endif
 
   use constants
 
-  use shared_parameters, only: IIN_veloc_dsm
-
   implicit none
 
   integer nb
@@ -488,7 +482,7 @@ endif
 
   use constants
 
-  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,old_DSM_coupling_from_Vadim,Ntime_step_dsm
+  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE
 
   implicit none
 

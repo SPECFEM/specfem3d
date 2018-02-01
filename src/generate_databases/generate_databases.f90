@@ -327,6 +327,7 @@
     endif
 
     write(IMAIN,'(a)',advance='no') ' velocity model: '
+
     select case (IMODEL)
     case (IMODEL_DEFAULT )
     write(IMAIN,'(a)',advance='yes') '  default '
@@ -350,6 +351,8 @@
     write(IMAIN,'(a)',advance='yes') '  ipati_water'
     case (IMODEL_SEP)
     write(IMAIN,'(a)',advance='yes') '  SEP'
+    case (IMODEL_COUPLED)
+    write(IMAIN,'(a)',advance='yes') '  model coupled with injection method'
     end select
 
     write(IMAIN,*)

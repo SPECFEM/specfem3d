@@ -41,8 +41,9 @@
 
   use create_regions_mesh_ext_par
 
-  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH, &
-                                  INJECTION_TECHNIQUE_TYPE,INJECTION_TECHNIQUE_IS_DSM
+  use constants, only: INJECTION_TECHNIQUE_IS_DSM
+
+  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH,INJECTION_TECHNIQUE_TYPE
 
   implicit none
 

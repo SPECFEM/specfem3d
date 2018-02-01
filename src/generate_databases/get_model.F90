@@ -30,6 +30,7 @@
   use generate_databases_par, only: IMODEL, &
     IMODEL_DEFAULT,IMODEL_GLL,IMODEL_1D_PREM,IMODEL_1D_CASCADIA,IMODEL_1D_SOCAL, &
     IMODEL_SALTON_TROUGH,IMODEL_TOMO,IMODEL_USER_EXTERNAL,IMODEL_IPATI,IMODEL_IPATI_WATER, &
+    IMODEL_COUPLED, &
     IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC, &
     nspec => NSPEC_AB,ibool,mat_ext_mesh, &
     materials_ext_mesh,nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh, &
@@ -37,8 +38,8 @@
 
   use create_regions_mesh_ext_par
 
-  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH, &
-                                      INJECTION_TECHNIQUE_TYPE,INJECTION_TECHNIQUE_IS_FK
+  use constants, only: INJECTION_TECHNIQUE_IS_FK
+  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH,INJECTION_TECHNIQUE_TYPE
 
   implicit none
 
@@ -84,42 +85,42 @@
     call model_external_broadcast(myrank)
   case (IMODEL_SALTON_TROUGH)
     call model_salton_trough_broadcast(myrank)
+  case (IMODEL_COUPLED)
+    call model_coupled_broadcast(myrank)
   end select
 
+! DP: not sure if this here should check if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) ..
   if (COUPLE_WITH_INJECTION_TECHNIQUE) then
 
-  if (COUPLE_WITH_INJECTION_TECHNIQUE .and. INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_FK .and. &
-         MESH_A_CHUNK_OF_THE_EARTH) &
-    stop 'coupling with INJECTION_TECHNIQUE_IS_FK is incompatible with MESH_A_CHUNK_OF_THE_EARTH &
+    if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_FK .and. MESH_A_CHUNK_OF_THE_EARTH) &
+      stop 'coupling with INJECTION_TECHNIQUE_IS_FK is incompatible with MESH_A_CHUNK_OF_THE_EARTH &
                       &because of Earth curvature not honored'
 
-!! VM VM for coupling with DSM
-!! find the layer in which the middle of the element is located
-  if (myrank == 0) then
-     write(IMAIN,*)
-     write(IMAIN,*)
-     write(IMAIN,*) '         USING A HYBRID METHOD (THE CODE IS COUPLED WITH AN INJECTION TECHNIQUE)'
-     write(IMAIN,*)
-     write(IMAIN,*) '         INJECTION TECHNIQUE TYPE = ', INJECTION_TECHNIQUE_TYPE
-     write(IMAIN,*)
-     write(IMAIN,*)
-  endif
-  if (INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_FK) then
-     if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
+    !! VM VM for coupling with DSM
+    !! find the layer in which the middle of the element is located
+    if (myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*)
+      write(IMAIN,*) '         USING A HYBRID METHOD (THE CODE IS COUPLED WITH AN INJECTION TECHNIQUE)'
+      write(IMAIN,*)
+      write(IMAIN,*) '         INJECTION TECHNIQUE TYPE = ', INJECTION_TECHNIQUE_TYPE
+      write(IMAIN,*)
+      write(IMAIN,*)
+    endif
 
-        if ((NGLLX == 5) .and. (NGLLY == 5) .and. (NGLLZ == 5)) then
-           ! gets xyz coordinates of GLL point
-           iglob = ibool(3,3,3,1)
-           xmesh = xstore_dummy(iglob)
-           ymesh = ystore_dummy(iglob)
-           zmesh = zstore_dummy(iglob)
-           call FindLayer(xmesh,ymesh,zmesh)
-        else
-           stop 'bad number of GLL points for coupling with an external code'
-        endif
-     endif
-  endif
-
+    if (INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_FK) then
+      ! MESH_A_CHUNK_OF_THE_EARTH, DSM or AxiSEM
+      if ((NGLLX == 5) .and. (NGLLY == 5) .and. (NGLLZ == 5)) then
+        ! gets xyz coordinates of GLL point
+        iglob = ibool(3,3,3,1)
+        xmesh = xstore_dummy(iglob)
+        ymesh = ystore_dummy(iglob)
+        zmesh = zstore_dummy(iglob)
+        call model_coupled_FindLayer(xmesh,ymesh,zmesh)
+      else
+        stop 'bad number of GLL points for coupling with an external code'
+      endif
+    endif
   endif
 
   ! get MPI starting time
@@ -129,15 +130,15 @@
   ! each spectral element in input mesh
   do ispec = 1, nspec
 
-  if (INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_FK) then
-     if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
+    if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
+      if (INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_FK) then
         iglob = ibool(3,3,3,ispec)
         xmesh = xstore_dummy(iglob)
         ymesh = ystore_dummy(iglob)
         zmesh = zstore_dummy(iglob)
-        call FindLayer(xmesh,ymesh,zmesh)
-     endif
-  endif
+        call model_coupled_FindLayer(xmesh,ymesh,zmesh)
+      endif
+    endif
 
     ! loops over all GLL points in element
     do k = 1, NGLLZ
@@ -198,9 +199,10 @@
 
           !! VM VM for coupling with DSM
           !! find the layer in which the middle of the element is located
-          if (INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_FK) then
-            if ((COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) .and. &
-              (i == 3 .and. j == 3 .and. k == 3)) call FindLayer(xmesh,ymesh,zmesh)
+          if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
+            if (INJECTION_TECHNIQUE_TYPE /= INJECTION_TECHNIQUE_IS_FK) then
+              if (i == 3 .and. j == 3 .and. k == 3) call model_coupled_FindLayer(xmesh,ymesh,zmesh)
+            endif
           endif
 
           ! material index 1: associated material number
@@ -413,12 +415,13 @@
 
   use generate_databases_par, only: IMODEL,IMODEL_DEFAULT,IMODEL_GLL,IMODEL_1D_PREM,IMODEL_1D_CASCADIA,IMODEL_1D_SOCAL, &
     IMODEL_SALTON_TROUGH,IMODEL_TOMO,IMODEL_USER_EXTERNAL,IMODEL_IPATI,IMODEL_IPATI_WATER, &
-    IMODEL_1D_PREM_PB,IMODEL_GLL, IMODEL_SEP, &
+    IMODEL_1D_PREM_PB,IMODEL_GLL, IMODEL_SEP,IMODEL_COUPLED, &
     IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,ATTENUATION_COMP_MAXIMUM
 
   use create_regions_mesh_ext_par
 
-  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,INJECTION_TECHNIQUE_TYPE,INJECTION_TECHNIQUE_IS_FK
+  use constants, only: INJECTION_TECHNIQUE_IS_FK
+  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,INJECTION_TECHNIQUE_TYPE
 
   implicit none
 
@@ -493,95 +496,95 @@
 ! added by Ping Tong (TP / Tong Ping) for the FK3D calculation
 ! for smoothing the boundary portions of the model
 
-!! VM VM this seems to be an hardcoded model we should remove it
-  if (COUPLE_WITH_INJECTION_TECHNIQUE .and. INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_FK .and. &
-               SMOOTH_THE_MODEL_EDGES_FOR_FK) then
+    !! VM VM this seems to be an hardcoded model we should remove it
+    if (COUPLE_WITH_INJECTION_TECHNIQUE) then
+      if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_FK .and. SMOOTH_THE_MODEL_EDGES_FOR_FK) then
 
-    if (.not. SMOOTH_THE_MOHO_ONLY_FOR_FK) then
+        if (.not. SMOOTH_THE_MOHO_ONLY_FOR_FK) then
+          ratio = 1.0
+          ! fast anomaly
+          if (imaterial_id == 4) then
+            tem1 = (-8.0/20.0)*xmesh + 100000.0
+            tem2 = (-8.0/20.0)*xmesh + 140000.0
+            if (zmesh > tem1 .and. zmesh < tem2) then
+              if (xmesh < 30000.0) then
+                ratio_x = 1.0 + 0.04*xmesh/30000.0
+              else if (xmesh > 170000.0) then
+                ratio_x = 1.0 + 0.04*(200000.0-xmesh)/30000.0
+              else
+                ratio_x = 1.04
+              endif
+              if (ymesh < 30000.0) then
+                ratio = 1.0 + 0.04*ymesh/30000.0
+              else if (ymesh > 170000.0) then
+                ratio = 1.0 + 0.04*(200000.0-ymesh)/30000.0
+              else
+                ratio = 1.04
+              endif
+              if (ratio_x < ratio) then
+                ratio = ratio_x
+              endif
+              rho = rho*ratio
+              vp  = vp *ratio
+              vs  = vs *ratio
+            endif
+          endif
 
-        ratio = 1.0
+          ! slow anomaly
+          if (imaterial_id == 3) then
+            tem1 = (-8.0/20.0)*xmesh + 140000.0
+            tem2 = (-8.0/20.0)*xmesh + 155000.0
+            if (zmesh > tem1 .and. zmesh < tem2) then
+              if (xmesh < 30000.0) then
+                ratio_x = 1.0 - 0.06*xmesh/30000.0
+              else if (xmesh > 170000.0) then
+                ratio_x = 1.0 - 0.06*(200000.0-xmesh)/30000.0
+              else
+                ratio_x = 0.94
+              endif
+              if (ymesh < 30000.0) then
+                ratio = 1.0 - 0.06*ymesh/30000.0
+              else if (ymesh > 170000.0) then
+                ratio = 1.0 - 0.06*(200000.0-ymesh)/30000.0
+              else
+                ratio = 0.94
+              endif
+              if (ratio_x > ratio) then
+                ratio = ratio_x
+              endif
+              rho = rho*ratio
+              vp  = vp *ratio
+              vs  = vs *ratio
+            endif
+          endif
 
-! fast anomaly
-        if (imaterial_id == 4) then
-        tem1 = (-8.0/20.0)*xmesh + 100000.0
-        tem2 = (-8.0/20.0)*xmesh + 140000.0
-        if (zmesh > tem1 .and. zmesh < tem2) then
-        if (xmesh < 30000.0) then
-        ratio_x = 1.0 + 0.04*xmesh/30000.0
-        else if (xmesh > 170000.0) then
-        ratio_x = 1.0 + 0.04*(200000.0-xmesh)/30000.0
-        else
-        ratio_x = 1.04
-        endif
-        if (ymesh < 30000.0) then
-           ratio = 1.0 + 0.04*ymesh/30000.0
-        else if (ymesh > 170000.0) then
-           ratio = 1.0 + 0.04*(200000.0-ymesh)/30000.0
-        else
-           ratio = 1.04
-        endif
-        if (ratio_x < ratio) then
-            ratio = ratio_x
-        endif
-        rho = rho*ratio
-        vp  = vp *ratio
-        vs  = vs *ratio
-        endif
-        endif
-! slow anomaly
-        if (imaterial_id == 3) then
-        tem1 = (-8.0/20.0)*xmesh + 140000.0
-        tem2 = (-8.0/20.0)*xmesh + 155000.0
-        if (zmesh > tem1 .and. zmesh < tem2) then
-        if (xmesh < 30000.0) then
-        ratio_x = 1.0 - 0.06*xmesh/30000.0
-        else if (xmesh > 170000.0) then
-        ratio_x = 1.0 - 0.06*(200000.0-xmesh)/30000.0
-        else
-        ratio_x = 0.94
-        endif
-        if (ymesh < 30000.0) then
-           ratio = 1.0 - 0.06*ymesh/30000.0
-        else if (ymesh > 170000.0) then
-           ratio = 1.0 - 0.06*(200000.0-ymesh)/30000.0
-        else
-           ratio = 0.94
-        endif
-        if (ratio_x > ratio) then
-            ratio = ratio_x
-        endif
-        rho = rho*ratio
-        vp  = vp *ratio
-        vs  = vs *ratio
-        endif
+        endif ! of if (.not. SMOOTH_THE_MOHO_ONLY_FOR_FK) then
+
+        ! Moho section
+        if (imaterial_id == 1) then
+          tem1 = 160000.0
+          tem2 = 170000.0
+          if (zmesh > tem1 .and. zmesh < tem2) then
+            if (ymesh < 30000.0) then
+              vp  = ((30000.0-ymesh)/30000.0)*5800.0 + (ymesh/30000.0)*8080.0
+              vs  = ((30000.0-ymesh)/30000.0)*3198.0 + (ymesh/30000.0)*4485.0
+              rho = ((30000.0-ymesh)/30000.0)*2600.0 + (ymesh/30000.0)*3380.0
+            else if (ymesh > 170000.0) then
+              vp  = ((200000.0-ymesh)/30000.0)*5800.0+((ymesh-170000.0)/30000.0)*8080.0
+              vs  = ((200000.0-ymesh)/30000.0)*3198.0+((ymesh-170000.0)/30000.0)*4485.0
+              rho = ((200000.0-ymesh)/30000.0)*2600.0+((ymesh-170000.0)/30000.0)*3380.0
+            endif
+          endif
         endif
 
-    endif ! of if (.not. SMOOTH_THE_MOHO_ONLY_FOR_FK) then
-
-! Moho section
-         if (imaterial_id == 1) then
-         tem1 = 160000.0
-         tem2 = 170000.0
-         if (zmesh > tem1 .and. zmesh < tem2) then
-           if (ymesh < 30000.0) then
-               vp  = ((30000.0-ymesh)/30000.0)*5800.0 + (ymesh/30000.0)*8080.0
-               vs  = ((30000.0-ymesh)/30000.0)*3198.0 + (ymesh/30000.0)*4485.0
-               rho = ((30000.0-ymesh)/30000.0)*2600.0 + (ymesh/30000.0)*3380.0
-           else if (ymesh > 170000.0) then
-               vp  = ((200000.0-ymesh)/30000.0)*5800.0+((ymesh-170000.0)/30000.0)*8080.0
-               vs  = ((200000.0-ymesh)/30000.0)*3198.0+((ymesh-170000.0)/30000.0)*4485.0
-               rho = ((200000.0-ymesh)/30000.0)*2600.0+((ymesh-170000.0)/30000.0)*3380.0
-           endif
-         endif
-         endif
-
-  endif ! of if (SMOOTH_THE_MODEL_EDGES_FOR_FK) then
+      endif ! of if (SMOOTH_THE_MODEL_EDGES_FOR_FK) then
+    endif
 
 ! *********************************************************************************
 
   case (IMODEL_1D_PREM)
     ! 1D model profile from PREM
-    call model_1D_prem_iso(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
+    call model_1D_prem_iso(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten,qkappa_atten)
 
   case (IMODEL_1D_PREM_PB)
     ! 1D model profile from PREM modified by Piero
@@ -594,15 +597,15 @@
 
   case (IMODEL_1D_CASCADIA)
     ! 1D model profile for Cascadia region
-    call model_1D_cascadia(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
+    call model_1D_cascadia(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten,qkappa_atten)
 
   case (IMODEL_1D_SOCAL)
     ! 1D model profile for Southern California
-    call model_1D_socal(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
+    call model_1D_socal(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten,qkappa_atten)
 
   case (IMODEL_SALTON_TROUGH)
     ! gets model values from tomography file
-    call model_salton_trough(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten)
+    call model_salton_trough(xmesh,ymesh,zmesh,rho,vp,vs,qmu_atten,qkappa_atten)
 
   case (IMODEL_TOMO)
     ! gets model values from tomography file
@@ -616,7 +619,6 @@
     endif
 
   case (IMODEL_USER_EXTERNAL)
-
     ! Florian Schumacher, Germany, June 2015
     ! FS FS: added call to model_default here, before calling model_external_values in order to
     !        be able to superimpose a model onto the default one:
@@ -635,6 +637,11 @@
     ! user model from external routine
     ! adds/gets velocity model as specified in model_external_values.f90
     call model_external_values(xmesh,ymesh,zmesh,rho,vp,vs,qkappa_atten,qmu_atten,iflag_aniso,idomain_id)
+
+  case (IMODEL_COUPLED)
+    ! user model for coupling with injection method
+    ! adds/gets velocity model as specified in model_coupled.f90
+    call model_coupled_values(xmesh,ymesh,zmesh,rho,vp,vs)
 
   case default
     stop 'Error model not implemented yet'
