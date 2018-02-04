@@ -31,7 +31,8 @@
 
   subroutine locate_point_in_mesh(x_target, y_target, z_target, &
                                   POINT_CAN_BE_BURIED, elemsize_max_glob, &
-                                  ispec_selected, xi_found, eta_found, gamma_found, x_found, y_found, z_found, domain, nu)
+                                  ispec_selected, xi_found, eta_found, gamma_found, &
+                                  x_found, y_found, z_found, domain, nu, final_distance_squared)
 
   use constants
   use specfem_par, only: ibool,myrank,NSPEC_AB,NGLOB_AB,NGNOD, &
@@ -52,6 +53,7 @@
   double precision,                      intent(out)    :: xi_found, eta_found, gamma_found
   integer,                               intent(out)    :: ispec_selected, domain
   double precision, dimension(NDIM,NDIM),intent(out)    :: nu
+  double precision,                      intent(out)    :: final_distance_squared
 
   ! locals
   integer                                               :: iter_loop , ispec, iglob, i, j, k
@@ -70,7 +72,7 @@
   integer, dimension(NGNOD)                             :: iaddx,iaddy,iaddz
   integer                                               :: imin,imax,jmin,jmax,kmin,kmax
 
-  double precision :: final_distance_squared,final_distance_squared_this_element
+  double precision :: final_distance_squared_this_element
 
 !! DK DK dec 2017: also loop on all the elements in contact with the initial guess element to improve accuracy of estimate
   logical, dimension(NGLOB_AB) :: flag_topological
@@ -274,7 +276,9 @@
         ! (within search sphere)
         call kdtree_get_nearest_n_neighbors(xyz_target,r_search,num_elem_local)
       else
-        ! checks if points near target locations have been found, if not then it is outside of this slice
+        ! no near target locations have been found
+        ! it is outside of this slice
+
         !print *,'kdtree search: could not find close enough elements for adjacency'
         !print *,'  num_elem_local: ',num_elem_local,'r_search = ',r_search,'elemsize = ',elemsize_max_glob
 
@@ -443,9 +447,9 @@
 !! DK DK dec 2017 set initial guess in the middle of the element, since we computed the true one only for the true initial guess
 !! DK DK dec 2017 the nonlinear process below will converge anyway
     if (i > 1) then
-      ix_initial_guess = NGLLX / 2
-      iy_initial_guess = NGLLY / 2
-      iz_initial_guess = NGLLZ / 2
+      ix_initial_guess = (NGLLX+1) / 2
+      iy_initial_guess = (NGLLY+1) / 2
+      iz_initial_guess = (NGLLZ+1) / 2
     endif
 
     ispec = array_of_all_elements_of_ispec_selected(i)

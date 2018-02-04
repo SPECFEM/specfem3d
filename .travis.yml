@@ -279,14 +279,13 @@ script:
       ./run_this_example.sh
     else
       # limit time steps for testing
-      sed -i "s:^NSTEP .*:NSTEP    = 100:" DATA/Par_file
+      sed -i "s:^NSTEP .*:NSTEP    = 200:" DATA/Par_file
       # shortens output interval to avoid timeouts
-      sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 10:" DATA/Par_file
+      sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 100:" DATA/Par_file
 
       # acoustic example
       if [ "$TESTMAKE" == "2" ]; then
         sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
-        sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 100:" DATA/Par_file
       fi
       # serial example
       if [ "$TESTMAKE" == "5" ]; then
@@ -317,25 +316,21 @@ script:
       # kernel example
       if [ "$TESTMAKE" == "12" ]; then
         sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
-        sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 100:" DATA/Par_file
       fi
       # acoustic example w/ CUDA compilation
       if [ "$TESTMAKE" == "15" ]; then
         sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
         sed -i "s:^NSTEP .*:NSTEP    = 500:" DATA/Par_file
-        sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 100:" DATA/Par_file
       fi
       # socal example
       if [ "$TESTMAKE" == "17" ]; then
         sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
         sed -i "s:^NSTEP .*:NSTEP    = 840:" DATA/Par_file
-        sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 100:" DATA/Par_file
       fi
       # socal example w/ 1d_socal
       if [ "$TESTMAKE" == "18" ]; then
         sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
         sed -i "s:^NSTEP .*:NSTEP    = 840:" DATA/Par_file
-        sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 100:" DATA/Par_file
         sed -i "s:^MODEL .*:MODEL    = 1d_socal:" DATA/Par_file
         rm -f REF_SEIS; ln -s REF_SEIS.1d_socal REF_SEIS
       fi
@@ -343,7 +338,6 @@ script:
       if [ "$TESTMAKE" == "19" ]; then
         sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
         sed -i "s:^NSTEP .*:NSTEP    = 840:" DATA/Par_file
-        sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 100:" DATA/Par_file
         sed -i "s:^MODEL .*:MODEL    = 1d_prem:" DATA/Par_file
         rm -f REF_SEIS; ln -s REF_SEIS.1d_prem REF_SEIS
       fi
@@ -351,14 +345,12 @@ script:
       if [ "$TESTMAKE" == "20" ]; then
         sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
         sed -i "s:^NSTEP .*:NSTEP    = 840:" DATA/Par_file
-        sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 100:" DATA/Par_file
         sed -i "s:^MODEL .*:MODEL    = 1d_cascadia:" DATA/Par_file
         rm -f REF_SEIS; ln -s REF_SEIS.1d_cascadia REF_SEIS
       fi
       # cavity example
       if [ "$TESTMAKE" == "21" ]; then
         sed -i "s:^NSTEP .*:NSTEP    = 2000:" DATA/Par_file
-        sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 100:" DATA/Par_file
       fi
 
       # coverage run

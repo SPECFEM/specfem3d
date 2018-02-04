@@ -1864,7 +1864,7 @@ contains
     double precision, dimension(:,:,:), allocatable           :: nu_source
 
     real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: interparray
-    double precision                                          :: final_distance_source
+    double precision                                          :: final_distance_source,final_distance_squared
     integer                                                   :: idomain
     ! location search
     real(kind=CUSTOM_REAL) :: distance_min_glob,distance_max_glob
@@ -2011,7 +2011,7 @@ contains
             ! get z target coordinate, depending on the topography
             if (.not. USE_SOURCES_RECEIVERS_Z) depth(isrc) = depth(isrc)*1000.0d0
             call get_elevation_and_z_coordinate(long(isrc),lat(isrc),x_target_source(isrc),y_target_source(isrc), &
-                                                z_target_source(isrc),elevation,depth(isrc))
+                                                       z_target_source(isrc),elevation,depth(isrc))
 
           enddo
 
@@ -2068,12 +2068,12 @@ contains
                 SOURCES_CAN_BE_BURIED, elemsize_max_glob, &
                 acqui_simu(ievent)%ispec_selected_source(isrc), xi_source(isrc), eta_source(isrc), gamma_source(isrc), &
                 acqui_simu(ievent)%Xs(isrc), acqui_simu(ievent)%Ys(isrc), acqui_simu(ievent)%Zs(isrc), &
-                idomain,nu_source(:,:,isrc))
+                idomain,nu_source(:,:,isrc),final_distance_squared)
 
         ! synchronize all the processes to make sure all the estimates are available
         call synchronize_all()
 
-        call locate_MPI_slice_and_bcast_to_all(x_target_source(isrc), y_target_source(isrc), z_target_source(isrc), &
+        call locate_MPI_slice_and_bcast_to_all_single(x_target_source(isrc), y_target_source(isrc), z_target_source(isrc), &
                    acqui_simu(ievent)%Xs(isrc), acqui_simu(ievent)%Ys(isrc),acqui_simu(ievent)%Zs(isrc), &
                    xi_source(isrc), eta_source(isrc), gamma_source(isrc), &
                    acqui_simu(ievent)%ispec_selected_source(isrc),acqui_simu(ievent)%islice_selected_source(isrc), &

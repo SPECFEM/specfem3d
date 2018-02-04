@@ -92,7 +92,7 @@
   implicit none
 
 ! input/output parameters
-  double precision :: rx4,ry4,rlon4,rlat4
+  double precision, intent(inout) :: rx4,ry4,rlon4,rlat4
   integer, intent(in) :: iway
 
 ! local parameters

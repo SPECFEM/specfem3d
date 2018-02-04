@@ -49,12 +49,13 @@
   double precision, dimension(nrec),intent(out) :: xi_receiver,eta_receiver,gamma_receiver
   character(len=MAX_LENGTH_STATION_NAME), dimension(nrec),intent(out) :: station_name
   character(len=MAX_LENGTH_NETWORK_NAME), dimension(nrec),intent(out) :: network_name
-  double precision :: utm_x_source,utm_y_source
   double precision, dimension(NDIM,NDIM,nrec),intent(out) :: nu
+  double precision,intent(in) :: utm_x_source,utm_y_source
 
   ! local parameters
   double precision, allocatable, dimension(:) :: x_target,y_target,z_target
   double precision, allocatable, dimension(:) :: x_found,y_found,z_found
+
   integer :: irec
 
   ! timer MPI
@@ -84,6 +85,19 @@
   real(kind=CUSTOM_REAL) :: x_min_glob,x_max_glob
   real(kind=CUSTOM_REAL) :: y_min_glob,y_max_glob
   real(kind=CUSTOM_REAL) :: z_min_glob,z_max_glob
+
+  double precision :: x,y,z,x_new,y_new,z_new
+  double precision :: xi,eta,gamma,final_distance_squared
+  double precision, dimension(NDIM,NDIM) :: nu_found
+  integer :: ispec_found,idomain_found
+
+  ! subset arrays
+  double precision, dimension(NREC_SUBSET_MAX) :: xi_receiver_subset,eta_receiver_subset,gamma_receiver_subset
+  double precision, dimension(NREC_SUBSET_MAX) :: x_found_subset,y_found_subset,z_found_subset
+  double precision, dimension(NREC_SUBSET_MAX) :: final_distance_subset
+  double precision, dimension(NDIM,NDIM,NREC_SUBSET_MAX) :: nu_subset
+  integer, dimension(NREC_SUBSET_MAX) :: ispec_selected_rec_subset,idomain_subset
+  integer :: nrec_subset_current_size,irec_in_this_subset,irec_already_done
 
   ! get MPI starting time
   time_start = wtime()
@@ -206,6 +220,8 @@
       read(IIN,*,iostat=ier) station_name(irec),network_name(irec),stlat(irec),stlon(irec),stele(irec),stbur(irec)
       if (ier /= 0) call exit_mpi(myrank, 'Error reading station file '//trim(rec_filename))
     enddo
+    ! close receiver file
+    close(IIN)
   endif
 
   ! broadcast values to other slices
@@ -216,40 +232,93 @@
   call bcast_all_dp(stele,nrec)
   call bcast_all_dp(stbur,nrec)
 
+  ! determines target point locations (need to locate z coordinate of all receivers)
+  ! note: we first locate all the target positions in the mesh to reduces the need of MPI communication
+  call get_elevation_and_z_coordinate_all(nrec,stlon,stlat,stbur,stutm_x,stutm_y,elevation,x_target,y_target,z_target)
+
+  ! note: we loop over subsets of receivers to fill first MPI buffers, thus reducing the MPI communication for each receiver
+  !
   ! loop on all the stations to locate the stations
-  do irec = 1,nrec
+  do irec_already_done = 0, nrec, NREC_SUBSET_MAX
 
-    ! get z target coordinate, depending on the topography
-    call get_elevation_and_z_coordinate(stlon(irec),stlat(irec),stutm_x(irec),stutm_y(irec),z_target(irec), &
-                                        elevation(irec),stbur(irec))
-    x_target(irec) = stutm_x(irec)
-    y_target(irec) = stutm_y(irec)
+    ! the size of the subset can be the maximum size, or less (if we are in the last subset,
+    ! or if there are fewer sources than the maximum size of a subset)
+    nrec_subset_current_size = min(NREC_SUBSET_MAX, nrec - irec_already_done)
 
-    call locate_point_in_mesh(x_target(irec), y_target(irec), z_target(irec), RECEIVERS_CAN_BE_BURIED, elemsize_max_glob, &
-            ispec_selected_rec(irec), xi_receiver(irec), eta_receiver(irec), gamma_receiver(irec), &
-            x_found(irec), y_found(irec), z_found(irec), idomain(irec),nu(:,:,irec))
+    ! initializes search results
+    final_distance_subset(:) = HUGEVAL
 
-    ! synchronize all the processes to make sure all the estimates are available
-    call synchronize_all()
+    ! loop over the stations within this subset
+    do irec_in_this_subset = 1,nrec_subset_current_size
 
-    call locate_MPI_slice_and_bcast_to_all(x_target(irec), y_target(irec), z_target(irec), &
-                                           x_found(irec), y_found(irec), z_found(irec), &
-                                           xi_receiver(irec), eta_receiver(irec), gamma_receiver(irec), &
-                                           ispec_selected_rec(irec), islice_selected_rec(irec), &
-                                           final_distance(irec), idomain(irec),nu(:,:,irec))
+      ! mapping from station number in current subset to real station number in all the subsets
+      irec = irec_in_this_subset + irec_already_done
 
-    ! user output progress
-    if (myrank == 0 .and. nrec > 1000) then
-      if (mod(irec,500) == 0) then
-        write(IMAIN,*) '  located receivers ',irec,'out of',nrec
-        call flush_IMAIN()
+      x = x_target(irec)
+      y = y_target(irec)
+      z = z_target(irec)
+
+      ! locates point in mesh
+      call locate_point_in_mesh(x, y, z, &
+                                RECEIVERS_CAN_BE_BURIED, elemsize_max_glob, &
+                                ispec_found, xi, eta, gamma, &
+                                x_new, y_new, z_new, &
+                                idomain_found, nu_found, final_distance_squared)
+
+      ispec_selected_rec_subset(irec_in_this_subset) = ispec_found
+
+      x_found_subset(irec_in_this_subset) = x_new
+      y_found_subset(irec_in_this_subset) = y_new
+      z_found_subset(irec_in_this_subset) = z_new
+
+      xi_receiver_subset(irec_in_this_subset) = xi
+      eta_receiver_subset(irec_in_this_subset) = eta
+      gamma_receiver_subset(irec_in_this_subset) = gamma
+
+      idomain_subset(irec_in_this_subset) = idomain_found
+      nu_subset(:,:,irec_in_this_subset) = nu_found(:,:)
+      final_distance_subset(irec_in_this_subset) = sqrt(final_distance_squared)
+
+      ! user output progress
+      if (myrank == 0 .and. nrec > 1000) then
+        if (mod(irec,500) == 0) then
+          write(IMAIN,*) '  located receivers ',irec,'out of',nrec
+          call flush_IMAIN()
+        endif
       endif
-    endif
+    enddo ! loop over subset
+
+    ! master process locates best location in all slices
+    call locate_MPI_slice(nrec_subset_current_size,irec_already_done, &
+                          ispec_selected_rec_subset, &
+                          x_found_subset, y_found_subset, z_found_subset, &
+                          xi_receiver_subset,eta_receiver_subset,gamma_receiver_subset, &
+                          idomain_subset,nu_subset,final_distance_subset, &
+                          nrec,ispec_selected_rec, islice_selected_rec, &
+                          x_found,y_found,z_found, &
+                          xi_receiver, eta_receiver, gamma_receiver, &
+                          idomain,nu,final_distance)
 
   enddo ! loop over stations
 
-  ! close receiver file
-  close(IIN)
+  ! bcast from master process
+  call bcast_all_i(islice_selected_rec,nrec)
+  ! note: in principle, only islice must be updated on all slave processes, the ones containing the best location
+  !       could have valid entries in all other arrays set before already.
+  !       nevertheless, for convenience we broadcast all receiver arrays back to the slaves
+  call bcast_all_i(idomain,nrec)
+  call bcast_all_i(ispec_selected_rec,nrec)
+
+  call bcast_all_dp(xi_receiver,nrec)
+  call bcast_all_dp(eta_receiver,nrec)
+  call bcast_all_dp(gamma_receiver,nrec)
+
+  call bcast_all_dp(x_found,nrec)
+  call bcast_all_dp(y_found,nrec)
+  call bcast_all_dp(z_found,nrec)
+
+  call bcast_all_dp(nu,NDIM*NDIM*nrec)
+  call bcast_all_dp(final_distance,nrec)
 
   ! this is executed by main process only
   if (myrank == 0) then
@@ -400,6 +469,7 @@
   deallocate(stbur)
   deallocate(stutm_x)
   deallocate(stutm_y)
+  deallocate(elevation)
   deallocate(x_target)
   deallocate(y_target)
   deallocate(z_target)
@@ -413,6 +483,7 @@
   call synchronize_all()
 
   end subroutine locate_receivers
+
 
 !-------------------------------------------------------------------------------------------------
 ! Remove stations located outside of the mesh
@@ -529,58 +600,4 @@
   nfilter = nrec_filtered(1)
 
   end subroutine station_filter
-
-!--------------------------------------------------------------------------------------------------------------------
-! get z target coordinate, depending on the topography
-!--------------------------------------------------------------------------------------------------------------------
-  subroutine get_elevation_and_z_coordinate(lon,lat,utm_x,utm_y,z_target,elevation,bury)
-
-  use constants
-  use specfem_par, only: USE_SOURCES_RECEIVERS_Z,ibool,myrank,NSPEC_AB,NGLOB_AB, &
-                         xstore,ystore,zstore,NPROC,num_free_surface_faces,free_surface_ispec,free_surface_ijk
-
-  double precision,     intent(in)  :: lon,lat,utm_x,utm_y,bury
-  double precision,     intent(out) :: z_target,elevation
-
-  !local
-  integer,dimension(1)              :: iproc
-  double precision,dimension(1)     :: altitude_rec,distmin_ele
-  double precision,dimension(NPROC) :: distmin_ele_all,elevation_all
-  real(kind=CUSTOM_REAL)            :: xloc,yloc,loc_ele,loc_distmin
-
-  ! convert station location to UTM
-  call utm_geo(lon,lat,utm_x,utm_y,ILONGLAT2UTM)
-
-  xloc = utm_x
-  yloc = utm_y
-  ! get approximate topography elevation at point long/lat coordinates
-  call get_topo_elevation_free(xloc,yloc,loc_ele,loc_distmin, &
-                               NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-                               num_free_surface_faces,free_surface_ispec,free_surface_ijk)
-
-  altitude_rec(1) = loc_ele
-  distmin_ele(1)  = loc_distmin
-
-  !  MPI communications to determine the best slice
-  call gather_all_dp(distmin_ele,1,distmin_ele_all,1,NPROC)
-  call gather_all_dp(altitude_rec,1,elevation_all,1,NPROC)
-
-  if (myrank == 0) then
-    iproc = minloc(distmin_ele_all)
-    altitude_rec(1) = elevation_all(iproc(1))
-  endif
-  call bcast_all_dp(altitude_rec,1)
-  elevation = altitude_rec(1)
-
-  ! point's Z coordinate
-  if (USE_SOURCES_RECEIVERS_Z) then
-    ! alternative: burial depth is given as z value directly
-    z_target = bury
-  else
-    ! burial depth read in file given in m
-    z_target = elevation - bury
-  endif
-
-  end subroutine get_elevation_and_z_coordinate
-
 

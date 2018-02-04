@@ -84,6 +84,7 @@ specfem3D_OBJECTS = \
 	$O/fault_solver_kinematic.spec.o \
 	$O/finalize_simulation.spec.o \
 	$O/get_cmt.spec.o \
+	$O/get_elevation.spec.o \
 	$O/get_force.spec.o \
 	$O/gravity_perturbation.spec.o \
 	$O/initialize_simulation.spec.o \

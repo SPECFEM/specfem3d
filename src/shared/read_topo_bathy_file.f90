@@ -130,8 +130,8 @@
 !
 
   subroutine get_topo_elevation_free(x_target,y_target,target_elevation,target_distmin, &
-                                    NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
-                                    num_free_surface_faces,free_surface_ispec,free_surface_ijk)
+                                     NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
+                                     num_free_surface_faces,free_surface_ispec,free_surface_ijk)
 
 ! get approximate topography elevation at source long/lat coordinates
 
@@ -242,13 +242,13 @@
     !  weighted mean at current point of topography elevation of the four closest nodes
     !  set distance to huge initial value
     distmin = HUGEVAL
-    do j=jselected,jselected+1
-      do i=iselected,iselected+1
+    do j = jselected,jselected+1
+      do i = iselected,iselected+1
         ! distances to target
         dist_node(:) = HUGEVAL
         inode = 0
-        do jadjust=0,1
-          do iadjust= 0,1
+        do jadjust = 0,1
+          do iadjust = 0,1
             ispec = free_surface_ispec(iface_selected)
             igll = free_surface_ijk(1,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)
             jgll = free_surface_ijk(2,(j-jadjust-1)*NGLLY+i-iadjust,iface_selected)

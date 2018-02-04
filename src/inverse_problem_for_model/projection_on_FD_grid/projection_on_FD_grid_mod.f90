@@ -243,7 +243,7 @@ end subroutine read_fd_grid_parameters_for_projection
                      ispec_selected, xi_loc, eta_loc, gamma_loc, x_found, y_found, z_found, myrank, ispec)
 
 !!$                !! compute islice MPI partition where is the point  (xfd, yfd, zfd)
-!!$                call locate_MPI_slice_and_bcast_to_all1(x_to_locate, y_to_locate, z_to_locate, x_found, y_found, z_found, &
+!!$                call locate_MPI_slice_and_bcast_to_all_1(x_to_locate, y_to_locate, z_to_locate, x_found, y_found, z_found, &
 !!$                     xi_loc, eta_loc, gamma_loc, ispec_selected, islice_selected,  distance_from_target, myrank)
 
 !!$                if (DEBUG_MODE) then
@@ -379,7 +379,7 @@ end subroutine read_fd_grid_parameters_for_projection
 !!$                     ispec_selected, xi_loc, eta_loc, gamma_loc, x_found, y_found, z_found, myrank, ispec)
 !!$
 !!$                !! compute islice MPI partition where is the point  (xfd, yfd, zfd)
-!!$                call locate_MPI_slice_and_bcast_to_all1(x_to_locate, y_to_locate, z_to_locate, x_found, y_found, z_found, &
+!!$                call locate_MPI_slice_and_bcast_to_all_1(x_to_locate, y_to_locate, z_to_locate, x_found, y_found, z_found, &
 !!$                     xi_loc, eta_loc, gamma_loc, ispec_selected, islice_selected,  distance_from_target, myrank)
 !!$
 !!$                if (abs(xi_loc) < 1.05d0 .and. abs(eta_loc) < 1.05d0 .and. abs(gamma_loc) < 1.05d0) then
@@ -528,7 +528,7 @@ end subroutine read_fd_grid_parameters_for_projection
 !--------------------------------------------------------------------------------------------------------------------
 !  locate MPI slice which contains the point and bcast to all
 !--------------------------------------------------------------------------------------------------------------------
-  subroutine locate_MPI_slice_and_bcast_to_all1(x_to_locate, y_to_locate, z_to_locate, x_found, y_found, z_found, &
+  subroutine locate_MPI_slice_and_bcast_to_all_1(x_to_locate, y_to_locate, z_to_locate, x_found, y_found, z_found, &
        xi, eta, gamma, ispec_selected, islice_selected, distance_from_target, myrank)
 
     integer,                                        intent(in)        :: myrank
@@ -650,7 +650,7 @@ end subroutine read_fd_grid_parameters_for_projection
 
     !if (myrank==0)  write(INVERSE_LOG_FILE,*) ' bcast parameters to all slices  : passed'
 
-  end subroutine locate_MPI_slice_and_bcast_to_all1
+  end subroutine locate_MPI_slice_and_bcast_to_all_1
 
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !--------------------------------------------------------------------------------------------------------------------
