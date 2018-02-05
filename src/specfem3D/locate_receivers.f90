@@ -99,6 +99,8 @@
   integer, dimension(NREC_SUBSET_MAX) :: ispec_selected_rec_subset,idomain_subset
   integer :: nrec_subset_current_size,irec_in_this_subset,irec_already_done
 
+  logical :: is_done_stations
+
   ! get MPI starting time
   time_start = wtime()
 
@@ -121,79 +123,11 @@
                             elemsize_min_glob,elemsize_max_glob, &
                             distance_min_glob,distance_max_glob)
 
-
-  ! opens STATIONS or STATIONS_ADJOINT file
-  if (myrank == 0) then
-    open(unit=IIN,file=trim(rec_filename),status='old',action='read',iostat=ier)
-    if (ier /= 0) call exit_mpi(myrank,'error opening file '//trim(rec_filename))
-  endif
-
   ! checks if station locations already available
   if (SU_FORMAT .and. (.not. INVERSE_FWI_FULL_PROBLEM) ) then
-    ! checks if file with station infos located from previous run exists
-    inquire(file=trim(OUTPUT_FILES)//'/SU_stations_info.bin',exist=SU_station_file_exists)
-    if (SU_station_file_exists) then
-      if (myrank == 0) then
-        do irec=1,nrec
-          read(IIN,*,iostat=ier) station_name(irec),network_name(irec),llat,llon,lele,lbur
-          if (ier /= 0) call exit_mpi(myrank, 'Error reading station file '//trim(rec_filename))
-        enddo
-        close(IIN)
-      endif
-      call bcast_all_ch_array(station_name,nrec,MAX_LENGTH_STATION_NAME)
-      call bcast_all_ch_array(network_name,nrec,MAX_LENGTH_NETWORK_NAME)
-
-      ! master reads in available station information
-      if (myrank == 0) then
-        open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/SU_stations_info.bin', &
-              status='old',action='read',form='unformatted',iostat=ier)
-        if (ier /= 0) call exit_mpi(myrank,'error opening file '//trim(rec_filename))
-
-        write(IMAIN,*) 'station details from SU_stations_info.bin'
-        call flush_IMAIN()
-
-        allocate(x_found(nrec),y_found(nrec),z_found(nrec))
-        ! reads in station infos
-        read(IOUT_SU) islice_selected_rec,ispec_selected_rec
-        read(IOUT_SU) xi_receiver,eta_receiver,gamma_receiver
-        read(IOUT_SU) x_found,y_found,z_found
-        read(IOUT_SU) nu
-        close(IOUT_SU)
-        ! write the locations of stations, so that we can load them and write them to SU headers later
-        open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/output_list_stations.txt', &
-              status='unknown',action='write',iostat=ier)
-        if (ier /= 0) &
-          call exit_mpi(myrank,'error opening file '//trim(OUTPUT_FILES)//'/output_list_stations.txt')
-
-        do irec=1,nrec
-          write(IOUT_SU,*) station_name(irec),network_name(irec),x_found(irec),y_found(irec),z_found(irec)
-        enddo
-
-        close(IOUT_SU)
-        deallocate(x_found,y_found,z_found)
-      endif
-      ! main process broadcasts the results to all the slices
-      call bcast_all_i(islice_selected_rec,nrec)
-      call bcast_all_i(ispec_selected_rec,nrec)
-      call bcast_all_dp(xi_receiver,nrec)
-      call bcast_all_dp(eta_receiver,nrec)
-      call bcast_all_dp(gamma_receiver,nrec)
-      call bcast_all_dp(nu,NDIM*NDIM*nrec)
-      call synchronize_all()
-      ! user output
-      if (myrank == 0) then
-        ! elapsed time since beginning of mesh generation
-        tCPU = wtime() - time_start
-        write(IMAIN,*)
-        write(IMAIN,*) 'Elapsed time for receiver detection in seconds = ',tCPU
-        write(IMAIN,*)
-        write(IMAIN,*) 'End of receiver detection - done'
-        write(IMAIN,*)
-        call flush_IMAIN()
-      endif
-      ! everything done
-      return
-    endif
+    call read_stations_from_previous_run(is_done_stations)
+    ! check if done
+    if (is_done_stations) return
   endif
 
   ! allocate memory for arrays using number of stations
@@ -216,6 +150,10 @@
 
   ! loop on all the stations to read the file
   if (myrank == 0) then
+    ! opens STATIONS or STATIONS_ADJOINT file
+    open(unit=IIN,file=trim(rec_filename),status='old',action='read',iostat=ier)
+    if (ier /= 0) call exit_mpi(myrank,'error opening file '//trim(rec_filename))
+    ! reads all stations
     do irec = 1,nrec
       read(IIN,*,iostat=ier) station_name(irec),network_name(irec),stlat(irec),stlon(irec),stele(irec),stbur(irec)
       if (ier /= 0) call exit_mpi(myrank, 'Error reading station file '//trim(rec_filename))
@@ -305,7 +243,7 @@
   call bcast_all_i(islice_selected_rec,nrec)
   ! note: in principle, only islice must be updated on all slave processes, the ones containing the best location
   !       could have valid entries in all other arrays set before already.
-  !       nevertheless, for convenience we broadcast all receiver arrays back to the slaves
+  !       nevertheless, for convenience we broadcast all needed receiver arrays back to the slaves
   call bcast_all_i(idomain,nrec)
   call bcast_all_i(ispec_selected_rec,nrec)
 
@@ -353,8 +291,8 @@
         else
           write(IMAIN,*) '     original depth: ',sngl(stbur(irec)),' m'
         endif
-        write(IMAIN,*) '     horizontal distance: ',dsqrt((stutm_y(irec)-utm_y_source)**2 &
-                                                    + (stutm_x(irec)-utm_x_source)**2) / 1000.d0
+        write(IMAIN,*) '     horizontal distance: ',sngl(dsqrt((stutm_y(irec)-utm_y_source)**2 &
+                                                    + (stutm_x(irec)-utm_x_source)**2) / 1000.d0)
         write(IMAIN,*) '     target x, y, z: ',sngl(x_target(irec)),sngl(y_target(irec)),sngl(z_target(irec))
 
         write(IMAIN,*) '     closest estimate found: ',sngl(final_distance(irec)),' m away'
@@ -432,25 +370,15 @@
          status='unknown',action='write',iostat=ier)
     if (ier /= 0) &
       call exit_mpi(myrank,'error opening file '//trim(OUTPUT_FILES)//'/output_list_stations.txt')
-
+    ! writes station infos
     do irec=1,nrec
       write(IOUT_SU,'(a32,a8,3f24.12)') station_name(irec),network_name(irec),x_found(irec),y_found(irec),z_found(irec)
     enddo
-
+    ! closes output file
     close(IOUT_SU)
 
     ! stores station infos for later runs
-    if (SU_FORMAT) then
-      open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/SU_stations_info.bin', &
-           status='unknown',action='write',form='unformatted',iostat=ier)
-      if (ier == 0) then
-        write(IOUT_SU) islice_selected_rec,ispec_selected_rec
-        write(IOUT_SU) xi_receiver,eta_receiver,gamma_receiver
-        write(IOUT_SU) x_found,y_found,z_found
-        write(IOUT_SU) nu
-        close(IOUT_SU)
-      endif
-    endif
+    if (SU_FORMAT) call write_stations_for_next_run()
 
     ! elapsed time since beginning of mesh generation
     tCPU = wtime() - time_start
@@ -482,122 +410,112 @@
   ! synchronize all the processes to make sure everybody has finished
   call synchronize_all()
 
-  end subroutine locate_receivers
+contains
 
+!
+!--------------------------------------------------------
+!
 
-!-------------------------------------------------------------------------------------------------
-! Remove stations located outside of the mesh
-!-------------------------------------------------------------------------------------------------
-  subroutine station_filter(filename,filtered_filename,nfilter)
+    subroutine read_stations_from_previous_run(is_done_stations)
 
-  use constants
-  use specfem_par, only: SUPPRESS_UTM_PROJECTION,myrank,xstore,ystore
+    implicit none
+    logical, intent(out) :: is_done_stations
 
-  implicit none
+    ! initializes
+    is_done_stations = .false.
 
-  ! input
-  character(len=*) :: filename,filtered_filename
-
-  ! output
-  integer :: nfilter
-
-  ! local
-  integer,dimension(1) :: nrec, nrec_filtered
-  integer :: ier
-  double precision :: stlat,stlon,stele,stbur,stutm_x,stutm_y
-  double precision :: minlat,minlon,maxlat,maxlon
-  character(len=MAX_LENGTH_STATION_NAME) :: station_name
-  character(len=MAX_LENGTH_NETWORK_NAME) :: network_name
-  character(len=MAX_STRING_LEN) :: dummystring
-  real(kind=CUSTOM_REAL):: minl,maxl,min_all,max_all
-  double precision :: LATITUDE_MIN,LATITUDE_MAX,LONGITUDE_MIN,LONGITUDE_MAX
-
-  ! gets model dimensions
-  minl = minval( xstore )
-  maxl = maxval( xstore )
-  call min_all_all_cr(minl,min_all)
-  call max_all_all_cr(maxl,max_all)
-  LONGITUDE_MIN = min_all
-  LONGITUDE_MAX = max_all
-
-  minl = minval( ystore )
-  maxl = maxval( ystore )
-  call min_all_all_cr(minl,min_all)
-  call max_all_all_cr(maxl,max_all)
-  LATITUDE_MIN = min_all
-  LATITUDE_MAX = max_all
-
-  ! initialization
-  nrec = 0
-  nrec_filtered = 0
-
-  if (myrank == 0) then
-
-    ! counts number of stations in stations file, filter them and output the list of active stations in STATIONS_FILTERED file
-    open(unit=IIN, file=trim(filename), status = 'old', iostat = ier)
-    if (ier /= 0) call exit_mpi(myrank, 'No file '//trim(filename)//', exit')
-    open(unit=IOUT,file=trim(filtered_filename),status='unknown')
-    do while (ier == 0)
-      read(IIN,"(a)",iostat=ier) dummystring
-      if (ier /= 0) exit
-
-      if (len_trim(dummystring) > 0) then
-        nrec(1) = nrec(1) + 1
-        dummystring = trim(dummystring)
-        read(dummystring, *) station_name, network_name, stlat, stlon, stele, stbur
-
-        ! convert station location to UTM
-        call utm_geo(stlon,stlat,stutm_x,stutm_y,ILONGLAT2UTM)
-
-        ! counts stations within lon/lat region
-        if (stutm_y >= LATITUDE_MIN .and. stutm_y <= LATITUDE_MAX .and. &
-            stutm_x >= LONGITUDE_MIN .and. stutm_x <= LONGITUDE_MAX) then
-          nrec_filtered(1) = nrec_filtered(1) + 1
-          ! with specific format
-          write(IOUT,'(a10,1x,a10,4e18.6)') &
-                            trim(station_name),trim(network_name), &
-                            sngl(stlat),sngl(stlon),sngl(stele),sngl(stbur)
-        endif
+    ! checks if file with station infos located from previous run exists
+    inquire(file=trim(OUTPUT_FILES)//'/SU_stations_info.bin',exist=SU_station_file_exists)
+    if (SU_station_file_exists) then
+      if (myrank == 0) then
+        ! opens STATIONS or STATIONS_ADJOINT file
+        open(unit=IIN,file=trim(rec_filename),status='old',action='read',iostat=ier)
+        if (ier /= 0) call exit_mpi(myrank,'error opening file '//trim(rec_filename))
+        ! reads stations/network names
+        do irec = 1,nrec
+          read(IIN,*,iostat=ier) station_name(irec),network_name(irec),llat,llon,lele,lbur
+          if (ier /= 0) call exit_mpi(myrank, 'Error reading station file '//trim(rec_filename))
+        enddo
+        close(IIN)
       endif
-    enddo
+      call bcast_all_ch_array(station_name,nrec,MAX_LENGTH_STATION_NAME)
+      call bcast_all_ch_array(network_name,nrec,MAX_LENGTH_NETWORK_NAME)
 
-    close(IIN)
-    close(IOUT)
+      ! master reads in available station information
+      if (myrank == 0) then
+        open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/SU_stations_info.bin', &
+              status='old',action='read',form='unformatted',iostat=ier)
+        if (ier /= 0) call exit_mpi(myrank,'error opening file '//trim(rec_filename))
 
-    write(IMAIN,*)
-    write(IMAIN,*) 'there are ',nrec(1),' stations in file ', trim(filename)
-    write(IMAIN,*) 'saving ',nrec_filtered(1),' stations inside the model in file ', trim(filtered_filename)
-    write(IMAIN,*) 'excluding ',nrec(1) - nrec_filtered(1),' stations located outside the model'
-    write(IMAIN,*)
+        write(IMAIN,*) 'station details from SU_stations_info.bin'
+        call flush_IMAIN()
 
-    if (nrec_filtered(1) < 1) then
-      write(IMAIN,*) 'error filtered stations:'
-      write(IMAIN,*) '  simulation needs at least 1 station but got ',nrec_filtered(1)
-      write(IMAIN,*)
-      write(IMAIN,*) '  check that stations in file '//trim(filename)//' are within'
+        allocate(x_found(nrec),y_found(nrec),z_found(nrec))
+        ! reads in station infos
+        read(IOUT_SU) islice_selected_rec,ispec_selected_rec
+        read(IOUT_SU) xi_receiver,eta_receiver,gamma_receiver
+        read(IOUT_SU) x_found,y_found,z_found
+        read(IOUT_SU) nu
+        close(IOUT_SU)
+        ! write the locations of stations, so that we can load them and write them to SU headers later
+        open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/output_list_stations.txt', &
+              status='unknown',action='write',iostat=ier)
+        if (ier /= 0) &
+          call exit_mpi(myrank,'error opening file '//trim(OUTPUT_FILES)//'/output_list_stations.txt')
 
-      if (SUPPRESS_UTM_PROJECTION) then
-        write(IMAIN,*) '    latitude min/max : ',LATITUDE_MIN,LATITUDE_MAX
-        write(IMAIN,*) '    longitude min/max: ',LONGITUDE_MIN,LONGITUDE_MAX
-      else
-        ! convert edge locations from UTM back to lat/lon
-        call utm_geo(minlon,minlat,LONGITUDE_MIN,LATITUDE_MIN,IUTM2LONGLAT)
-        call utm_geo(maxlon,maxlat,LONGITUDE_MAX,LATITUDE_MAX,IUTM2LONGLAT)
-        write(IMAIN,*) '    longitude min/max: ',minlon,maxlon
-        write(IMAIN,*) '    latitude min/max : ',minlat,maxlat
-        write(IMAIN,*) '    UTM x min/max: ',LONGITUDE_MIN,LONGITUDE_MAX
-        write(IMAIN,*) '    UTM y min/max : ',LATITUDE_MIN,LATITUDE_MAX
+        do irec = 1,nrec
+          write(IOUT_SU,*) station_name(irec),network_name(irec),x_found(irec),y_found(irec),z_found(irec)
+        enddo
+
+        close(IOUT_SU)
+        deallocate(x_found,y_found,z_found)
+      endif
+      ! main process broadcasts the results to all the slices
+      call bcast_all_i(islice_selected_rec,nrec)
+      call bcast_all_i(ispec_selected_rec,nrec)
+      call bcast_all_dp(xi_receiver,nrec)
+      call bcast_all_dp(eta_receiver,nrec)
+      call bcast_all_dp(gamma_receiver,nrec)
+      call bcast_all_dp(nu,NDIM*NDIM*nrec)
+      call synchronize_all()
+      ! user output
+      if (myrank == 0) then
+        ! elapsed time since beginning of mesh generation
+        tCPU = wtime() - time_start
+        write(IMAIN,*)
+        write(IMAIN,*) 'Elapsed time for receiver detection in seconds = ',tCPU
+        write(IMAIN,*)
+        write(IMAIN,*) 'End of receiver detection - done'
+        write(IMAIN,*)
+        call flush_IMAIN()
       endif
 
-      write(IMAIN,*)
+      ! everything done
+      is_done_stations = .true.
     endif
 
-  endif ! myrank == 0
+    end subroutine read_stations_from_previous_run
 
-  call bcast_all_i(nrec,1)
-  call bcast_all_i(nrec_filtered,1)
+!
+!--------------------------------------------------------
+!
 
-  nfilter = nrec_filtered(1)
+    subroutine write_stations_for_next_run()
 
-  end subroutine station_filter
+    implicit none
+
+    open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/SU_stations_info.bin', &
+         status='unknown',action='write',form='unformatted',iostat=ier)
+    if (ier == 0) then
+      write(IOUT_SU) islice_selected_rec,ispec_selected_rec
+      write(IOUT_SU) xi_receiver,eta_receiver,gamma_receiver
+      write(IOUT_SU) x_found,y_found,z_found
+      write(IOUT_SU) nu
+      close(IOUT_SU)
+    endif
+
+    end subroutine write_stations_for_next_run
+
+
+  end subroutine locate_receivers
 

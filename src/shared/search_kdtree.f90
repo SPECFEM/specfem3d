@@ -924,7 +924,13 @@ contains
 
     ! squared distance to associated data point
     dist = get_distance_squared(xyz_target(:),points_data(:,node%ipoint))
-    if (dist < dist_min) then
+
+    ! note: using <= instead of < for comparison. both would be fine, but the first leads to identical location result
+    !       as with a brute force search, if the target location is exactly on a shared gll point.
+    !       the latter would choose a different element and lead to slightly different seismograms - not sure though why...
+    !       it obviously matters if the source point is shared between different elements and the source contribution added by
+    !       only a single element. for such cases, we might need to spread the source contribution to all shared elements.
+    if (dist <= dist_min) then
       ! debug
       !if (ipoint_min < 1) then
       !  print *,'new node distance',node%id,node%ipoint,dist
