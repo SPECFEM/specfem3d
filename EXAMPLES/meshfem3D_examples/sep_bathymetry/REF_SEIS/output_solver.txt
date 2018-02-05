@@ -1,0 +1,939 @@
+
+ **********************************************
+ **** Specfem 3-D Solver - MPI version f90 ****
+ **********************************************
+
+ Version: 3.0.0
+
+ Fixing slow underflow trapping problem using small initial field
+
+ There are            3  MPI processes
+ Processes are numbered from 0 to            2
+
+ There is a total of            3  slices
+
+  NDIM =            3
+
+  NGLLX =            5
+  NGLLY =            5
+  NGLLZ =            5
+
+ using single precision for the calculations
+
+ smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
+
+ velocity model:   SEP
+
+ total acoustic elements    :         768
+ total elastic elements     :        9600
+ total poroelastic elements :           0
+
+ ********
+ minimum and maximum number of elements
+ and points in the CUBIT + SCOTCH mesh:
+
+ NSPEC_global_min =         3200
+ NSPEC_global_max =         3200
+ NSPEC_global_max / NSPEC_global_min imbalance =    1.00000000      =    0.00000000      %
+ NSPEC_global_sum =         9600
+
+ NGLOB_global_min =       222105
+ NGLOB_global_max =       222105
+ NGLOB_global_max / NGLOB_global_min imbalance =    1.00000000      =    0.00000000      %
+ NGLOB_global_sum =       666315
+
+ If you have elements of a single type (all acoustic, all elastic, all poroelastic, and without CPML)
+ in the whole mesh, then there should be no significant imbalance in the above numbers.
+ Otherwise, it is normal to have imbalance in elements and points because the domain decomposer
+ compensates for the different cost of different elements by partitioning them unevenly among processes.
+ ********
+
+
+ ********
+ Model: P velocity min,max =    1499.99988       4500.00000
+ Model: S velocity min,max =    0.00000000       2590.00000
+
+ Model: Poisson's ratio min,max =   0.250554323      0.500000000
+ ********
+
+ *********************************************
+ *** Verification of simulation parameters ***
+ *********************************************
+
+ *** Xmin and Xmax of the model =    0.00000000       10000.0000
+ *** Ymin and Ymax of the model =    1600.00000       2400.00000
+ *** Zmin and Zmax of the model =   -5000.00000       0.00000000
+
+ *** Max GLL point distance =    81.8317108
+ *** Min GLL point distance =    16.1879883
+ *** Max/min ratio =    5.05508852
+
+ *** Max element size =    250.000000
+ *** Min element size =    93.7500000
+ *** Max/min ratio =    2.66666675
+
+ *** Minimum period resolved =   0.226449981
+ *** Maximum suggested time step =    1.79866538E-03
+
+ *** for DT :    1.8000000000000000E-003
+ *** Max stability for wave velocities =   0.500370979
+
+ Elapsed time for checking mesh resolution in seconds =    4.1608810424804688E-003
+ saving VTK files for Courant number and minimum period
+
+ ******************************************
+ There is a total of            3  slices
+ ******************************************
+
+
+ kd-tree:
+   total data points:         3200
+   theoretical   number of nodes:         6397
+                tree memory size:   0.195220947     MB
+   actual        number of nodes:         6399
+                tree memory size:   0.195281982     MB
+   maximum depth   :           12
+   creation timing :    9.91106033E-04 (s)
+
+
+ sources:           6
+
+ ********************
+  locating sources
+ ********************
+
+ reading source information from ./DATA/FORCESOLUTION file
+
+ no UTM projection
+
+ source #            1
+   source located in slice            0
+                  in element         3165
+                  in acoustic domain
+
+   using force point source:
+     xi coordinate of source in that element:   -1.0000000000000000
+     eta coordinate of source in that element:    1.0000000000000000
+     gamma coordinate of source in that element:   0.92000000000000004
+
+     component of direction vector in East direction:    0.0000000000000000
+     component of direction vector in North direction:    0.0000000000000000
+     component of direction vector in Vertical direction:   -1.0000000000000000
+
+     nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+     nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+     nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+
+     at (x,y,z) coordinates =    2500.0000000000000        2000.0000000000000       -9.9999999999999947
+
+   source time function:
+     using Ricker source time function
+     using a source of dominant frequency    4.0000000000000000
+     t0_ricker =   0.29999999999999999
+     Ricker frequency:    4.0000000000000000       Hz
+
+     time shift:    0.0000000000000000       seconds
+
+   magnitude of the source:
+     factor =    10000000000.000000
+
+   original (requested) position of the source:
+
+             latitude:    2000.0000000000000
+            longitude:    2500.0000000000000
+
+                x:    2500.0000000000000
+                y:    2000.0000000000000
+            depth:    1.0000000000000000E-002  km
+   topo elevation:    0.0000000000000000
+
+   position of the source that will be used:
+
+                x:    2500.0000000000000
+                y:    2000.0000000000000
+            depth:    9.9999999999999950E-003  km
+                z:   -9.9999999999999947
+
+   error in location of the source:    5.32907052E-15  m
+
+
+
+ source #            2
+   source located in slice            0
+                  in element         3167
+                  in acoustic domain
+
+   using force point source:
+     xi coordinate of source in that element:  -0.20000046875018310
+     eta coordinate of source in that element:    1.0000000000000000
+     gamma coordinate of source in that element:   0.92000000000000004
+
+     component of direction vector in East direction:    0.0000000000000000
+     component of direction vector in North direction:    0.0000000000000000
+     component of direction vector in Vertical direction:   -1.0000000000000000
+
+     nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+     nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+     nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+
+     at (x,y,z) coordinates =    3000.0000000000000        2000.0000000000000       -9.9999999999999947
+
+   source time function:
+     using Ricker source time function
+     using a source of dominant frequency    4.0000000000000000
+     t0_ricker =   0.29999999999999999
+     Ricker frequency:    4.0000000000000000       Hz
+
+     time shift:   0.20000000000000001       seconds
+
+   magnitude of the source:
+     factor =    10000000000.000000
+
+   original (requested) position of the source:
+
+             latitude:    2000.0000000000000
+            longitude:    3000.0000000000000
+
+                x:    3000.0000000000000
+                y:    2000.0000000000000
+            depth:    1.0000000000000000E-002  km
+   topo elevation:    0.0000000000000000
+
+   position of the source that will be used:
+
+                x:    3000.0000000000000
+                y:    2000.0000000000000
+            depth:    9.9999999999999950E-003  km
+                z:   -9.9999999999999947
+
+   error in location of the source:    5.32907052E-15  m
+
+
+
+ source #            3
+   source located in slice            1
+                  in element         3153
+                  in acoustic domain
+
+   using force point source:
+     xi coordinate of source in that element:   0.59999953125036853
+     eta coordinate of source in that element:    1.0000000000000000
+     gamma coordinate of source in that element:   0.92000000000000004
+
+     component of direction vector in East direction:    0.0000000000000000
+     component of direction vector in North direction:    0.0000000000000000
+     component of direction vector in Vertical direction:   -1.0000000000000000
+
+     nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+     nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+     nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+
+     at (x,y,z) coordinates =    3500.0000000000000        2000.0000000000000       -9.9999999999999964
+
+   source time function:
+     using Ricker source time function
+     using a source of dominant frequency    4.0000000000000000
+     t0_ricker =   0.29999999999999999
+     Ricker frequency:    4.0000000000000000       Hz
+
+     time shift:   0.40000000000000002       seconds
+
+   magnitude of the source:
+     factor =    10000000000.000000
+
+   original (requested) position of the source:
+
+             latitude:    2000.0000000000000
+            longitude:    3500.0000000000000
+
+                x:    3500.0000000000000
+                y:    2000.0000000000000
+            depth:    1.0000000000000000E-002  km
+   topo elevation:    0.0000000000000000
+
+   position of the source that will be used:
+
+                x:    3500.0000000000000
+                y:    2000.0000000000000
+            depth:    9.9999999999999967E-003  km
+                z:   -9.9999999999999964
+
+   error in location of the source:    3.55271368E-15  m
+
+
+
+ source #            4
+   source located in slice            1
+                  in element         3156
+                  in acoustic domain
+
+   using force point source:
+     xi coordinate of source in that element:  -0.59999906249963331
+     eta coordinate of source in that element:    1.0000000000000000
+     gamma coordinate of source in that element:   0.92000000000000004
+
+     component of direction vector in East direction:    0.0000000000000000
+     component of direction vector in North direction:    0.0000000000000000
+     component of direction vector in Vertical direction:   -1.0000000000000000
+
+     nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+     nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+     nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+
+     at (x,y,z) coordinates =    4000.0000000000000        2000.0000000000000       -9.9999999999999964
+
+   source time function:
+     using Ricker source time function
+     using a source of dominant frequency    4.0000000000000000
+     t0_ricker =   0.29999999999999999
+     Ricker frequency:    4.0000000000000000       Hz
+
+     time shift:   0.59999999999999998       seconds
+
+   magnitude of the source:
+     factor =    10000000000.000000
+
+   original (requested) position of the source:
+
+             latitude:    2000.0000000000000
+            longitude:    4000.0000000000000
+
+                x:    4000.0000000000000
+                y:    2000.0000000000000
+            depth:    1.0000000000000000E-002  km
+   topo elevation:    0.0000000000000000
+
+   position of the source that will be used:
+
+                x:    4000.0000000000000
+                y:    2000.0000000000000
+            depth:    9.9999999999999967E-003  km
+                z:   -9.9999999999999964
+
+   error in location of the source:    3.55271368E-15  m
+
+
+
+ source #            5
+   source located in slice            1
+                  in element         3158
+                  in acoustic domain
+
+   using force point source:
+     xi coordinate of source in that element:   0.19999906250073243
+     eta coordinate of source in that element:    1.0000000000000000
+     gamma coordinate of source in that element:   0.92000000000000004
+
+     component of direction vector in East direction:    0.0000000000000000
+     component of direction vector in North direction:    0.0000000000000000
+     component of direction vector in Vertical direction:   -1.0000000000000000
+
+     nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+     nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+     nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+
+     at (x,y,z) coordinates =    4500.0000000000000        2000.0000000000000       -9.9999999999999964
+
+   source time function:
+     using Ricker source time function
+     using a source of dominant frequency    4.0000000000000000
+     t0_ricker =   0.29999999999999999
+     Ricker frequency:    4.0000000000000000       Hz
+
+     time shift:   0.80000000000000004       seconds
+
+   magnitude of the source:
+     factor =    10000000000.000000
+
+   original (requested) position of the source:
+
+             latitude:    2000.0000000000000
+            longitude:    4500.0000000000000
+
+                x:    4500.0000000000000
+                y:    2000.0000000000000
+            depth:    1.0000000000000000E-002  km
+   topo elevation:    0.0000000000000000
+
+   position of the source that will be used:
+
+                x:    4500.0000000000000
+                y:    2000.0000000000000
+            depth:    9.9999999999999967E-003  km
+                z:   -9.9999999999999964
+
+   error in location of the source:    3.55271368E-15  m
+
+
+
+ source #            6
+   source located in slice            1
+                  in element         3160
+                  in acoustic domain
+
+   using force point source:
+     xi coordinate of source in that element:    1.0000000000000000
+     eta coordinate of source in that element:    1.0000000000000000
+     gamma coordinate of source in that element:   0.92000000000000004
+
+     component of direction vector in East direction:    0.0000000000000000
+     component of direction vector in North direction:    0.0000000000000000
+     component of direction vector in Vertical direction:   -1.0000000000000000
+
+     nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+     nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+     nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+
+     at (x,y,z) coordinates =    5000.0000000000000        2000.0000000000000       -9.9999999999999947
+
+   source time function:
+     using Ricker source time function
+     using a source of dominant frequency    4.0000000000000000
+     t0_ricker =   0.29999999999999999
+     Ricker frequency:    4.0000000000000000       Hz
+
+     time shift:    1.0000000000000000       seconds
+
+   magnitude of the source:
+     factor =    10000000000.000000
+
+   original (requested) position of the source:
+
+             latitude:    2000.0000000000000
+            longitude:    5000.0000000000000
+
+                x:    5000.0000000000000
+                y:    2000.0000000000000
+            depth:    1.0000000000000000E-002  km
+   topo elevation:    0.0000000000000000
+
+   position of the source that will be used:
+
+                x:    5000.0000000000000
+                y:    2000.0000000000000
+            depth:    9.9999999999999950E-003  km
+                z:   -9.9999999999999947
+
+   error in location of the source:    5.32907052E-15  m
+
+
+
+ *************************************
+  using sources            6
+ *************************************
+
+
+ maximum error in location of the sources:    5.32907052E-15  m
+
+
+ Elapsed time for detection of sources in seconds =    1.1940002441406250E-003
+
+ End of source detection - done
+
+
+ receivers:
+
+ there are            9  stations in file ./DATA/STATIONS
+ saving            9  stations inside the model in file ./DATA/STATIONS_FILTERED
+ excluding            0  stations located outside the model
+
+
+ Total number of receivers =            9
+
+
+ ********************
+  locating receivers
+ ********************
+
+ reading receiver information from ./DATA/STATIONS_FILTERED file
+
+
+ station #            1     NETWORK    STATION_3
+      original latitude:    2000.00000
+      original longitude:    1000.00000
+      original x:    1000.00000
+      original y:    2000.00000
+      original depth:    500.000000      m
+      horizontal distance:    1.50000000
+      target x, y, z:    1000.00000       2000.00000      -500.000000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element         3045
+                       in elastic domain
+      at coordinates:
+      xi    =   0.60000035156253440
+      eta   =  -0.99999999999999778
+      gamma =   0.99999999999999878
+      rotation matrix:
+      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      x:    1000.0000000000000
+      y:    2000.0000000000000
+      depth:    500.00000000000000       m
+      z:   -500.00000000000000
+
+
+
+ station #            2     NETWORK    STATION_58
+      original latitude:    2000.00000
+      original longitude:    2000.00000
+      original x:    2000.00000
+      original y:    2000.00000
+      original depth:    500.000000      m
+      horizontal distance:   0.500000000
+      target x, y, z:    2000.00000       2000.00000      -500.000000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element         3034
+                       in elastic domain
+      at coordinates:
+      xi    =   0.20000046875018310
+      eta   =    1.0000000000000000
+      gamma =    1.0000000000000000
+      rotation matrix:
+      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      x:    2000.0000000000000
+      y:    2000.0000000000000
+      depth:    500.00000000000000       m
+      z:   -500.00000000000000
+
+
+
+ station #            3     NETWORK    STATION_11
+      original latitude:    2000.00000
+      original longitude:    3000.00000
+      original x:    3000.00000
+      original y:    2000.00000
+      original depth:    500.000000      m
+      horizontal distance:   0.500000000
+      target x, y, z:    3000.00000       2000.00000      -500.000000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element         3039
+                       in elastic domain
+      at coordinates:
+      xi    =  -0.20000046875018310
+      eta   =    1.0000000000000000
+      gamma =    1.0000000000000000
+      rotation matrix:
+      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      x:    3000.0000000000000
+      y:    2000.0000000000000
+      depth:    500.00000000000000       m
+      z:   -500.00000000000000
+
+
+
+ station #            4     NETWORK    STATION_16
+      original latitude:    2000.00000
+      original longitude:    4000.00000
+      original x:    4000.00000
+      original y:    2000.00000
+      original depth:    500.000000      m
+      horizontal distance:    1.50000000
+      target x, y, z:    4000.00000       2000.00000      -500.000000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            1
+                       in element         3028
+                       in elastic domain
+      at coordinates:
+      xi    =  -0.59999906249963353
+      eta   =    1.0000000000000000
+      gamma =    1.0000000000000000
+      rotation matrix:
+      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      x:    4000.0000000000000
+      y:    2000.0000000000000
+      depth:    500.00000000000000       m
+      z:   -500.00000000000000
+
+
+
+ station #            5     NETWORK    STATION_22
+      original latitude:    2000.00000
+      original longitude:    5000.00000
+      original x:    5000.00000
+      original y:    2000.00000
+      original depth:    500.000000      m
+      horizontal distance:    2.50000000
+      target x, y, z:    5000.00000       2000.00000      -500.000000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            1
+                       in element         3032
+                       in elastic domain
+      at coordinates:
+      xi    =    1.0000000000000000
+      eta   =    1.0000000000000000
+      gamma =    1.0000000000000000
+      rotation matrix:
+      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      x:    5000.0000000000000
+      y:    2000.0000000000000
+      depth:    500.00000000000000       m
+      z:   -500.00000000000000
+
+
+
+ station #            6     NETWORK    STATION_28
+      original latitude:    2000.00000
+      original longitude:    6000.00000
+      original x:    6000.00000
+      original y:    2000.00000
+      original depth:    500.000000      m
+      horizontal distance:    3.50000000
+      target x, y, z:    6000.00000       2000.00000      -500.000000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            1
+                       in element         3053
+                       in elastic domain
+      at coordinates:
+      xi    =   0.60000093750146488
+      eta   =   -1.0000000000000000
+      gamma =    1.0000000000000000
+      rotation matrix:
+      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      x:    6000.0000000000000
+      y:    2000.0000000000000
+      depth:    500.00000000000000       m
+      z:   -500.00000000000000
+
+
+
+ station #            7     NETWORK    STATION_33
+      original latitude:    2000.00000
+      original longitude:    7000.00000
+      original x:    7000.00000
+      original y:    2000.00000
+      original depth:    500.000000      m
+      horizontal distance:    4.50000000
+      target x, y, z:    7000.00000       2000.00000      -500.000000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            2
+                       in element         3026
+                       in elastic domain
+      at coordinates:
+      xi    =   0.19999906250073243
+      eta   =    1.0000000000000000
+      gamma =    1.0000000000000000
+      rotation matrix:
+      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      x:    7000.0000000000000
+      y:    2000.0000000000000
+      depth:    500.00000000000000       m
+      z:   -500.00000000000000
+
+
+
+ station #            8     NETWORK    STATION_39
+      original latitude:    2000.00000
+      original longitude:    8000.00000
+      original x:    8000.00000
+      original y:    2000.00000
+      original depth:    500.000000      m
+      horizontal distance:    5.50000000
+      target x, y, z:    8000.00000       2000.00000      -500.000000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            2
+                       in element         3031
+                       in elastic domain
+      at coordinates:
+      xi    =  -0.19999906250073243
+      eta   =    1.0000000000000000
+      gamma =    1.0000000000000000
+      rotation matrix:
+      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      x:    8000.0000000000000
+      y:    2000.0000000000000
+      depth:    500.00000000000000       m
+      z:   -500.00000000000000
+
+
+
+ station #            9     NETWORK    STATION_44
+      original latitude:    2000.00000
+      original longitude:    9000.00000
+      original x:    9000.00000
+      original y:    2000.00000
+      original depth:    500.000000      m
+      horizontal distance:    6.50000000
+      target x, y, z:    9000.00000       2000.00000      -500.000000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            2
+                       in element         3036
+                       in elastic domain
+      at coordinates:
+      xi    =  -0.59999812500585847
+      eta   =    1.0000000000000000
+      gamma =    1.0000000000000000
+      rotation matrix:
+      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      x:    9000.0000000000000
+      y:    2000.0000000000000
+      depth:    500.00000000000000       m
+      z:   -500.00000000000000
+
+
+ maximum error in location of all the receivers:    0.00000000      m
+
+ Elapsed time for receiver detection in seconds =    5.4380893707275391E-003
+
+ End of receiver detection - done
+
+
+ Total number of samples for seismograms =         2000
+
+ found a total of            9  receivers in all the slices
+ Using            6  point sources
+
+
+ no attenuation
+
+ no anisotropy
+
+ no oceans
+
+ no gravity
+
+ incorporating acoustic simulation
+
+ incorporating elastic simulation
+
+ no poroelastic simulation
+
+ no movie simulation
+
+
+ no dynamic faults
+ no kinematic faults
+
+ no gravity simulation
+
+
+ Elapsed time for preparing timerun in seconds =    1.0681867599487305E-002
+
+ time loop:
+               scheme:         Newmark
+
+            time step:    1.79999997E-03  s
+ number of time steps:         2000
+ total simulated time:    3.59999990      seconds
+ start time: -0.300000012      seconds
+
+ All processes are synchronized before time loop
+
+ Starting time iteration loop...
+
+ Time step #            5
+ Time:  -0.292800009      seconds
+ Elapsed time in seconds =   0.16210103034973145
+ Elapsed time in hh:mm:ss =      0 h 00 m 00 s
+ Mean elapsed time per time step in seconds =    3.24202068E-02
+ Max norm displacement vector U in all slices (m) =    7.94038840E-07
+ Max norm pressure P in all slices (Pa) =    21.0943966
+ Time steps done =            5  out of         2000
+ Time steps remaining =         1995
+ Estimated remaining time in seconds =    64.6783142
+ Estimated remaining time in hh:mm:ss =      0 h 01 m 04 s
+ Estimated total run time in seconds =    64.8404083
+ Estimated total run time in hh:mm:ss =      0 h 01 m 04 s
+ We have done   0.250000000     % of that
+ The run will finish approximately on (in local time): Tue Feb 06, 2018 01:20
+ ************************************************************
+ **** BEWARE: the above time estimates are not very reliable
+ **** because fewer than 100 iterations have been performed
+ ************************************************************
+
+ Time step #          200
+ Time:    5.82000017E-02  seconds
+ Elapsed time in seconds =    7.7830219268798828
+ Elapsed time in hh:mm:ss =      0 h 00 m 07 s
+ Mean elapsed time per time step in seconds =    3.89151089E-02
+ Max norm displacement vector U in all slices (m) =   0.655175209
+ Max norm pressure P in all slices (Pa) =    237044.547
+ Time steps done =          200  out of         2000
+ Time steps remaining =         1800
+ Estimated remaining time in seconds =    70.0471954
+ Estimated remaining time in hh:mm:ss =      0 h 01 m 10 s
+ Estimated total run time in seconds =    77.8302155
+ Estimated total run time in hh:mm:ss =      0 h 01 m 17 s
+ We have done    10.0000000     % of that
+ The run will finish approximately on (in local time): Tue Feb 06, 2018 01:20
+
+ Time step #          400
+ Time:   0.418199986      seconds
+ Elapsed time in seconds =    15.540091991424561
+ Elapsed time in hh:mm:ss =      0 h 00 m 15 s
+ Mean elapsed time per time step in seconds =    3.88502292E-02
+ Max norm displacement vector U in all slices (m) =   0.803838313
+ Max norm pressure P in all slices (Pa) =    50770.8516
+ Time steps done =          400  out of         2000
+ Time steps remaining =         1600
+ Estimated remaining time in seconds =    62.1603661
+ Estimated remaining time in hh:mm:ss =      0 h 01 m 02 s
+ Estimated total run time in seconds =    77.7004623
+ Estimated total run time in hh:mm:ss =      0 h 01 m 17 s
+ We have done    20.0000000     % of that
+ The run will finish approximately on (in local time): Tue Feb 06, 2018 01:20
+
+ Time step #          600
+ Time:   0.778199971      seconds
+ Elapsed time in seconds =    23.721614122390747
+ Elapsed time in hh:mm:ss =      0 h 00 m 23 s
+ Mean elapsed time per time step in seconds =    3.95360254E-02
+ Max norm displacement vector U in all slices (m) =   0.671937823
+ Max norm pressure P in all slices (Pa) =    55502.1211
+ Time steps done =          600  out of         2000
+ Time steps remaining =         1400
+ Estimated remaining time in seconds =    55.3504333
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 55 s
+ Estimated total run time in seconds =    79.0720444
+ Estimated total run time in hh:mm:ss =      0 h 01 m 19 s
+ We have done    30.0000000     % of that
+ The run will finish approximately on (in local time): Tue Feb 06, 2018 01:20
+
+ Time step #          800
+ Time:    1.13820004      seconds
+ Elapsed time in seconds =    32.055937051773071
+ Elapsed time in hh:mm:ss =      0 h 00 m 32 s
+ Mean elapsed time per time step in seconds =    4.00699228E-02
+ Max norm displacement vector U in all slices (m) =   0.174651608
+ Max norm pressure P in all slices (Pa) =    64505.8008
+ Time steps done =          800  out of         2000
+ Time steps remaining =         1200
+ Estimated remaining time in seconds =    48.0839043
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 48 s
+ Estimated total run time in seconds =    80.1398392
+ Estimated total run time in hh:mm:ss =      0 h 01 m 20 s
+ We have done    40.0000000     % of that
+ The run will finish approximately on (in local time): Tue Feb 06, 2018 01:20
+
+ Time step #         1000
+ Time:    1.49820006      seconds
+ Elapsed time in seconds =    40.286756992340088
+ Elapsed time in hh:mm:ss =      0 h 00 m 40 s
+ Mean elapsed time per time step in seconds =    4.02867571E-02
+ Max norm displacement vector U in all slices (m) =    2.76113655E-02
+ Max norm pressure P in all slices (Pa) =    1.15370806E-02
+ Time steps done =         1000  out of         2000
+ Time steps remaining =         1000
+ Estimated remaining time in seconds =    40.2867584
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 40 s
+ Estimated total run time in seconds =    80.5735168
+ Estimated total run time in hh:mm:ss =      0 h 01 m 20 s
+ We have done    50.0000000     % of that
+ The run will finish approximately on (in local time): Tue Feb 06, 2018 01:20
+
+ Time step #         1200
+ Time:    1.85819995      seconds
+ Elapsed time in seconds =    48.608473062515259
+ Elapsed time in hh:mm:ss =      0 h 00 m 48 s
+ Mean elapsed time per time step in seconds =    4.05070595E-02
+ Max norm displacement vector U in all slices (m) =    1.57052875E-02
+ Max norm pressure P in all slices (Pa) =    757.365295
+ Time steps done =         1200  out of         2000
+ Time steps remaining =          800
+ Estimated remaining time in seconds =    32.4056473
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 32 s
+ Estimated total run time in seconds =    81.0141220
+ Estimated total run time in hh:mm:ss =      0 h 01 m 21 s
+ We have done    60.0000000     % of that
+ The run will finish approximately on (in local time): Tue Feb 06, 2018 01:21
+
+ Time step #         1400
+ Time:    2.21819997      seconds
+ Elapsed time in seconds =    56.886717081069946
+ Elapsed time in hh:mm:ss =      0 h 00 m 56 s
+ Mean elapsed time per time step in seconds =    4.06333692E-02
+ Max norm displacement vector U in all slices (m) =    7.63017870E-03
+ Max norm pressure P in all slices (Pa) =    1949.27734
+ Time steps done =         1400  out of         2000
+ Time steps remaining =          600
+ Estimated remaining time in seconds =    24.3800220
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 24 s
+ Estimated total run time in seconds =    81.2667389
+ Estimated total run time in hh:mm:ss =      0 h 01 m 21 s
+ We have done    70.0000000     % of that
+ The run will finish approximately on (in local time): Tue Feb 06, 2018 01:20
+
+ Time step #         1600
+ Time:    2.57820010      seconds
+ Elapsed time in seconds =    65.135777950286865
+ Elapsed time in hh:mm:ss =      0 h 01 m 05 s
+ Mean elapsed time per time step in seconds =    4.07098606E-02
+ Max norm displacement vector U in all slices (m) =    8.30376893E-03
+ Max norm pressure P in all slices (Pa) =    2079.53564
+ Time steps done =         1600  out of         2000
+ Time steps remaining =          400
+ Estimated remaining time in seconds =    16.2839451
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 16 s
+ Estimated total run time in seconds =    81.4197235
+ Estimated total run time in hh:mm:ss =      0 h 01 m 21 s
+ We have done    80.0000000     % of that
+ The run will finish approximately on (in local time): Tue Feb 06, 2018 01:20
+
+ Time step #         1800
+ Time:    2.93820000      seconds
+ Elapsed time in seconds =    73.348407983779907
+ Elapsed time in hh:mm:ss =      0 h 01 m 13 s
+ Mean elapsed time per time step in seconds =    4.07491140E-02
+ Max norm displacement vector U in all slices (m) =    1.06842201E-02
+ Max norm pressure P in all slices (Pa) =    1958.92859
+ Time steps done =         1800  out of         2000
+ Time steps remaining =          200
+ Estimated remaining time in seconds =    8.14982319
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 08 s
+ Estimated total run time in seconds =    81.4982300
+ Estimated total run time in hh:mm:ss =      0 h 01 m 21 s
+ We have done    90.0000000     % of that
+ The run will finish approximately on (in local time): Tue Feb 06, 2018 01:20
+
+ Time step #         2000
+ Time:    3.29819989      seconds
+ Elapsed time in seconds =    81.745870113372803
+ Elapsed time in hh:mm:ss =      0 h 01 m 21 s
+ Mean elapsed time per time step in seconds =    4.08729352E-02
+ Max norm displacement vector U in all slices (m) =    7.10769696E-03
+ Max norm pressure P in all slices (Pa) =    1644.61475
+ Time steps done =         2000  out of         2000
+ Time steps remaining =            0
+ Estimated remaining time in seconds =    0.00000000
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 00 s
+ Estimated total run time in seconds =    81.7458725
+ Estimated total run time in hh:mm:ss =      0 h 01 m 21 s
+ We have done    100.000000     % of that
+
+ Component: .semd
+   total number of receivers saved is            9  out of            9
+
+ Time-Loop Complete. Timing info:
+ Total elapsed time in seconds =    81.871711969375610
+ Total elapsed time in hh:mm:ss =      0 h 01 m 21 s
+
+ End of the simulation
+

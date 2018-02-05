@@ -926,7 +926,7 @@ contains
     dist = get_distance_squared(xyz_target(:),points_data(:,node%ipoint))
 
     ! note: using <= instead of < for comparison. both would be fine, but the first leads to identical location result
-    !       as with a brute force search, if the target location is exactly on a shared gll point.
+    !       as with a brute force search, if the target location is exactly on a shared GLL point.
     !       the latter would choose a different element and lead to slightly different seismograms - not sure though why...
     !       it obviously matters if the source point is shared between different elements and the source contribution added by
     !       only a single element. for such cases, we might need to spread the source contribution to all shared elements.

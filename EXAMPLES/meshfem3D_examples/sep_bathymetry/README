@@ -1,8 +1,15 @@
 ----------------------------------------------------------------------
 README
-(/SPECFEM3D/examples/meshfem3D_examples/sep_bathymetry/README)
 ----------------------------------------------------------------------
 
-Option 1: run process.sh from local directory (must have access to mpi)
+Marine setup example:
+  uses a velocity model in SEP-format 
+  (water layer on top, 3D velocity model with fast-velocity layer in middle)
 
-----------------------------------------------------------------------
+
+To run example, type: 
+
+ > run_this_example.sh 
+
+from local directory (must have access to mpi)
+

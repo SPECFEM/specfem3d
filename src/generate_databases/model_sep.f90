@@ -36,7 +36,9 @@ contains
 
 !==============================================================================
 !> Reads a SEP elastic model, with vp, vs and rho files.
-subroutine model_sep()
+
+  subroutine model_sep()
+
   use generate_databases_par, only: NGLLX, NGLLY, NGLLZ, &
                                     SEP_MODEL_DIRECTORY, FOUR_THIRDS, myrank, IMAIN
   use create_regions_mesh_ext_par, only: rhostore, rho_vp, rho_vs, &
@@ -174,7 +176,8 @@ subroutine model_sep()
   if (allocated(vp_sep)) deallocate(vp_sep)
   if (allocated(vs_sep)) deallocate(vs_sep)
   if (allocated(rho_sep)) deallocate(rho_sep)
-end subroutine model_sep
+
+  end subroutine model_sep
 
 
 !==============================================================================
@@ -189,7 +192,8 @@ end subroutine model_sep
 !! \param nk Dimension in z for a process -- usually equal to NZ.
 !!
 !! \note xyz SEP organized files are expected.
-subroutine read_sep_binary_mpiio(filename, NX, NY, NZ, ni, nj, nk, &
+
+  subroutine read_sep_binary_mpiio(filename, NX, NY, NZ, ni, nj, nk, &
                                  imin, jmin, kmin, var)
   use my_mpi
 
@@ -229,14 +233,16 @@ subroutine read_sep_binary_mpiio(filename, NX, NY, NZ, ni, nj, nk, &
   call MPI_File_read_all(fh, var, ni * nj * nk, MPI_REAL, status, ier)
   call MPI_File_close(fh, ier)
 
-end subroutine read_sep_binary_mpiio
+  end subroutine read_sep_binary_mpiio
 
 !==============================================================================
 !> \brief Assign values read from SEP files to GLL points
 !!
 !! \note from Yang Luo's external routines. Actually finds a nearby point.
-subroutine interpolate_sep_on_mesh(sep_var, xmin, ymin, ni, nj, NZ, &
+
+  subroutine interpolate_sep_on_mesh(sep_var, xmin, ymin, ni, nj, NZ, &
                                    DX, DY, DZ, var)
+
   use generate_databases_par, only: NGLLX, NGLLY, NGLLZ, NSPEC => NSPEC_AB, &
                                     ibool, xstore, ystore, zstore, &
                                     CUSTOM_REAL
@@ -271,12 +277,14 @@ subroutine interpolate_sep_on_mesh(sep_var, xmin, ymin, ni, nj, NZ, &
         enddo
      enddo
   enddo
-end subroutine interpolate_sep_on_mesh
+
+  end subroutine interpolate_sep_on_mesh
 
 !==============================================================================
 !> Find offsets and number of elements to read from the SEP file according
 !! to the slice topology.
-subroutine find_slice_bounds_sep(NX, NY, NZ, OX, OY, OZ, DX, DY, DZ, &
+
+  subroutine find_slice_bounds_sep(NX, NY, NZ, OX, OY, OZ, DX, DY, DZ, &
                                  xmin, ymin, imin, jmin, kmin, ni, nj, nk)
   use generate_databases_par, only: xstore, ystore, zstore
   ! Parameters
@@ -310,12 +318,14 @@ subroutine find_slice_bounds_sep(NX, NY, NZ, OX, OY, OZ, DX, DY, DZ, &
   ymin=DY*(jmin-1)+OY; ymax=DY*(jmax-1)+OY;
   zmin=DZ*(kmin-1)+OZ; zmax=DZ*(kmax-1)+OZ;
 
-end subroutine find_slice_bounds_sep
+  end subroutine find_slice_bounds_sep
 
 
 !==============================================================================
 !> Make sure that each element is fully acoustic or fully elastic.
-subroutine correct_sep_interface()
+
+  subroutine correct_sep_interface()
+
   use generate_databases_par, only: NGLLX, NGLLY, NGLLZ, NSPEC => NSPEC_AB
   use create_regions_mesh_ext_par, only: rhostore, rho_vp, rho_vs, &
                                          ispec_is_acoustic, ispec_is_elastic
@@ -354,7 +364,8 @@ subroutine correct_sep_interface()
       endif
     endif
   enddo ! ispec
-end subroutine correct_sep_interface
+
+  end subroutine correct_sep_interface
 
 end module model_sep_mod
 

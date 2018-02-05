@@ -23,10 +23,10 @@ UTM_PROJECTION_ZONE             = 11
 SUPPRESS_UTM_PROJECTION         = .true.
 
 # number of MPI processors
-NPROC                           = 5
+NPROC                           = 3
 
 # time step parameters
-NSTEP                           = 10000
+NSTEP                           = 2000
 DT                              = 0.0018
 
 #-----------------------------------------------------------
@@ -145,7 +145,7 @@ NT_DUMP_ATTENUATION             = 500
 # MOVIE_TYPE = 2 to show all the external faces of the mesh
 CREATE_SHAKEMAP                 = .false.
 MOVIE_SURFACE                   = .false.
-MOVIE_TYPE                      = 1
+MOVIE_TYPE                      = 2
 MOVIE_VOLUME                    = .false.
 SAVE_DISPLACEMENT               = .false.
 USE_HIGHRES_FOR_MOVIES          = .false.
@@ -153,13 +153,13 @@ NTSTEP_BETWEEN_FRAMES           = 200
 HDUR_MOVIE                      = 0.0
 
 # save AVS or OpenDX mesh files to check the mesh
-SAVE_MESH_FILES                 = .false.
+SAVE_MESH_FILES                 = .true.
 
 # path to store the local database file on each node
 LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI
 
 # interval at which we output time step info and max of norm of displacement
-NTSTEP_BETWEEN_OUTPUT_INFO      = 100
+NTSTEP_BETWEEN_OUTPUT_INFO      = 200
 
 #-----------------------------------------------------------
 #
@@ -211,8 +211,8 @@ NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
 # decide if we save displacement, velocity, acceleration and/or pressure in forward runs (they can be set to true simultaneously)
 # currently pressure seismograms are implemented in acoustic (i.e. fluid) elements only
 SAVE_SEISMOGRAMS_DISPLACEMENT   = .true.
-SAVE_SEISMOGRAMS_VELOCITY       = .true.
-SAVE_SEISMOGRAMS_ACCELERATION   = .true.
+SAVE_SEISMOGRAMS_VELOCITY       = .false.
+SAVE_SEISMOGRAMS_ACCELERATION   = .false.
 SAVE_SEISMOGRAMS_PRESSURE       = .false.   # currently implemented in acoustic (i.e. fluid) elements only
 
 # save seismograms also when running the adjoint runs for an inverse problem
@@ -226,7 +226,7 @@ USE_BINARY_FOR_SEISMOGRAMS      = .false.
 SU_FORMAT                       = .false.
 
 # decide if master process writes all the seismograms or if all processes do it in parallel
-WRITE_SEISMOGRAMS_BY_MASTER     = .false.
+WRITE_SEISMOGRAMS_BY_MASTER     = .true.
 
 # save all seismograms in one large combined file instead of one file per seismogram
 # to avoid overloading shared non-local file systems such as LUSTRE or GPFS for instance

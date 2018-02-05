@@ -107,6 +107,18 @@
 
   !-----------------------------------------------------------------------------------
 
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*)
+    write(IMAIN,*) '********************'
+    write(IMAIN,*) ' locating sources'
+    write(IMAIN,*) '********************'
+    write(IMAIN,*)
+    write(IMAIN,'(1x,a,a,a)') 'reading source information from ', trim(filename), ' file'
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
+
   ! clear the arrays
   Mxx(:) = 0.d0
   Myy(:) = 0.d0
@@ -282,71 +294,68 @@
 
     do isource = 1,NSOURCES
 
-      if (SHOW_DETAILS_LOCATE_SOURCE .or. NSOURCES == 1) then
+      if (SHOW_DETAILS_LOCATE_SOURCE .or. NSOURCES < 10) then
         ! source info
         write(IMAIN,*)
-        write(IMAIN,*) '*************************************'
-        write(IMAIN,*) ' locating source ',isource
-        write(IMAIN,*) '*************************************'
-        write(IMAIN,*)
+        write(IMAIN,*) 'source # ',isource
 
         ! source type
-        write(IMAIN,*) 'source located in slice ',islice_selected_source(isource)
-        write(IMAIN,*) '               in element ',ispec_selected_source(isource)
+        write(IMAIN,*) '  source located in slice ',islice_selected_source(isource)
+        write(IMAIN,*) '                 in element ',ispec_selected_source(isource)
         if (idomain(isource) == IDOMAIN_ACOUSTIC) then
-          write(IMAIN,*) '               in acoustic domain'
+          write(IMAIN,*) '                 in acoustic domain'
         else if (idomain(isource) == IDOMAIN_ELASTIC) then
-          write(IMAIN,*) '               in elastic domain'
+          write(IMAIN,*) '                 in elastic domain'
         else if (idomain(isource) == IDOMAIN_POROELASTIC) then
-          write(IMAIN,*) '               in poroelastic domain'
+          write(IMAIN,*) '                 in poroelastic domain'
         else
-          write(IMAIN,*) '               in unknown domain'
+          write(IMAIN,*) '                 in unknown domain'
         endif
         write(IMAIN,*)
 
         ! source location (reference element)
         if (USE_FORCE_POINT_SOURCE) then
           ! single point force
-          write(IMAIN,*) 'using force point source: '
-          write(IMAIN,*) '  xi coordinate of source in that element: ',xi_source(isource)
-          write(IMAIN,*) '  eta coordinate of source in that element: ',eta_source(isource)
-          write(IMAIN,*) '  gamma coordinate of source in that element: ',gamma_source(isource)
+          write(IMAIN,*) '  using force point source: '
+          write(IMAIN,*) '    xi coordinate of source in that element: ',xi_source(isource)
+          write(IMAIN,*) '    eta coordinate of source in that element: ',eta_source(isource)
+          write(IMAIN,*) '    gamma coordinate of source in that element: ',gamma_source(isource)
 
           write(IMAIN,*)
-          write(IMAIN,*) '  component of direction vector in East direction: ',comp_dir_vect_source_E(isource)
-          write(IMAIN,*) '  component of direction vector in North direction: ',comp_dir_vect_source_N(isource)
-          write(IMAIN,*) '  component of direction vector in Vertical direction: ',comp_dir_vect_source_Z_UP(isource)
+          write(IMAIN,*) '    component of direction vector in East direction: ',comp_dir_vect_source_E(isource)
+          write(IMAIN,*) '    component of direction vector in North direction: ',comp_dir_vect_source_N(isource)
+          write(IMAIN,*) '    component of direction vector in Vertical direction: ',comp_dir_vect_source_Z_UP(isource)
           write(IMAIN,*)
-          write(IMAIN,*) '  nu1 = ',nu_source(1,:,isource)
-          write(IMAIN,*) '  nu2 = ',nu_source(2,:,isource)
-          write(IMAIN,*) '  nu3 = ',nu_source(3,:,isource)
+          write(IMAIN,*) '    nu1 = ',nu_source(1,:,isource)
+          write(IMAIN,*) '    nu2 = ',nu_source(2,:,isource)
+          write(IMAIN,*) '    nu3 = ',nu_source(3,:,isource)
           write(IMAIN,*)
-          write(IMAIN,*) '  at (x,y,z) coordinates = ',x_found(isource),y_found(isource),z_found(isource)
+          write(IMAIN,*) '    at (x,y,z) coordinates = ',x_found(isource),y_found(isource),z_found(isource)
         else
           ! moment tensor
-          write(IMAIN,*) 'using moment tensor source: '
-          write(IMAIN,*) '  xi coordinate of source in that element: ',xi_source(isource)
-          write(IMAIN,*) '  eta coordinate of source in that element: ',eta_source(isource)
-          write(IMAIN,*) '  gamma coordinate of source in that element: ',gamma_source(isource)
+          write(IMAIN,*) '  using moment tensor source: '
+          write(IMAIN,*) '    xi coordinate of source in that element: ',xi_source(isource)
+          write(IMAIN,*) '    eta coordinate of source in that element: ',eta_source(isource)
+          write(IMAIN,*) '    gamma coordinate of source in that element: ',gamma_source(isource)
         endif
         write(IMAIN,*)
 
         ! source time function info
-        write(IMAIN,*) 'source time function:'
+        write(IMAIN,*) '  source time function:'
         if (USE_EXTERNAL_SOURCE_FILE) then
           ! external STF
-          write(IMAIN,*) '  using external source time function'
+          write(IMAIN,*) '    using external source time function'
           write(IMAIN,*)
         else
           ! STF details
           if (USE_RICKER_TIME_FUNCTION) then
-            write(IMAIN,*) '  using Ricker source time function'
+            write(IMAIN,*) '    using Ricker source time function'
           else
-            write(IMAIN,*) '  using Gaussian source time function'
+            write(IMAIN,*) '    using Gaussian source time function'
           endif
           if (idomain(isource) == IDOMAIN_ACOUSTIC) then
             if (USE_TRICK_FOR_BETTER_PRESSURE) then
-              write(IMAIN,*) '  using trick for better pressure (second derivatives)'
+              write(IMAIN,*) '    using trick for better pressure (second derivatives)'
             endif
           endif
 
@@ -356,37 +365,37 @@
             ! prints frequency content for point forces
             f0 = hdur(isource)
             if (USE_RICKER_TIME_FUNCTION) then
-              write(IMAIN,*) '  using a source of dominant frequency ',f0
+              write(IMAIN,*) '    using a source of dominant frequency ',f0
 
               t0_ricker = 1.2d0/f0
-              write(IMAIN,*) '  t0_ricker = ',t0_ricker
-              write(IMAIN,*) '  Ricker frequency: ',hdur(isource),' Hz'
+              write(IMAIN,*) '    t0_ricker = ',t0_ricker
+              write(IMAIN,*) '    Ricker frequency: ',hdur(isource),' Hz'
             else
               if (idomain(isource) == IDOMAIN_ACOUSTIC) then
-                write(IMAIN,*) '  Gaussian half duration: ',5.d0*DT,' seconds'
+                write(IMAIN,*) '    Gaussian half duration: ',5.d0*DT,' seconds'
               else if (idomain(isource) == IDOMAIN_ELASTIC) then
-                write(IMAIN,*) '  Gaussian half duration: ',hdur(isource)/SOURCE_DECAY_MIMIC_TRIANGLE,' seconds'
+                write(IMAIN,*) '    Gaussian half duration: ',hdur(isource)/SOURCE_DECAY_MIMIC_TRIANGLE,' seconds'
               else if (idomain(isource) == IDOMAIN_POROELASTIC) then
-                write(IMAIN,*) '  Gaussian half duration: ',5.d0*DT,' seconds'
+                write(IMAIN,*) '    Gaussian half duration: ',5.d0*DT,' seconds'
               endif
             endif
             write(IMAIN,*)
           else
             ! moment-tensor
             if (USE_RICKER_TIME_FUNCTION) then
-              write(IMAIN,*) '  Ricker frequency: ',hdur(isource),' Hz'
+              write(IMAIN,*) '    Ricker frequency: ',hdur(isource),' Hz'
             else
               ! add message if source is a Heaviside
               if (hdur(isource) <= 5.*DT) then
                 write(IMAIN,*)
-                write(IMAIN,*) '  Source time function is a Heaviside, convolve later'
+                write(IMAIN,*) '    Source time function is a Heaviside, convolve later'
                 write(IMAIN,*)
               endif
-              write(IMAIN,*) '  half duration: ',hdur(isource),' seconds'
+              write(IMAIN,*) '    half duration: ',hdur(isource),' seconds'
             endif
           endif
         endif
-        write(IMAIN,*) '  time shift: ',tshift_src(isource),' seconds'
+        write(IMAIN,*) '    time shift: ',tshift_src(isource),' seconds'
         write(IMAIN,*)
 
         ! magnitude
@@ -395,65 +404,65 @@
         write(IMAIN,*) 'Coupled activated, thus not including any internal source'
         write(IMAIN,*)
 #else
-        write(IMAIN,*) 'magnitude of the source:'
+        write(IMAIN,*) '  magnitude of the source:'
         if (USE_FORCE_POINT_SOURCE) then
           ! single point force
-          write(IMAIN,*) '  factor = ', factor_force_source(isource)
+          write(IMAIN,*) '    factor = ', factor_force_source(isource)
         else
           ! moment-tensor
-          write(IMAIN,*) '     scalar moment M0 = ', &
+          write(IMAIN,*) '       scalar moment M0 = ', &
             get_cmt_scalar_moment(Mxx(isource),Myy(isource),Mzz(isource),Mxy(isource),Mxz(isource),Myz(isource)),' dyne-cm'
-          write(IMAIN,*) '  moment magnitude Mw = ', &
+          write(IMAIN,*) '    moment magnitude Mw = ', &
             get_cmt_moment_magnitude(Mxx(isource),Myy(isource),Mzz(isource),Mxy(isource),Mxz(isource),Myz(isource))
         endif
 #endif
         write(IMAIN,*)
 
         ! location accuracy
-        write(IMAIN,*) 'original (requested) position of the source:'
+        write(IMAIN,*) '  original (requested) position of the source:'
         write(IMAIN,*)
-        write(IMAIN,*) '          latitude: ',lat(isource)
-        write(IMAIN,*) '         longitude: ',long(isource)
+        write(IMAIN,*) '            latitude: ',lat(isource)
+        write(IMAIN,*) '           longitude: ',long(isource)
         write(IMAIN,*)
         if (SUPPRESS_UTM_PROJECTION) then
-          write(IMAIN,*) '             x: ',utm_x_source(isource)
-          write(IMAIN,*) '             y: ',utm_y_source(isource)
+          write(IMAIN,*) '               x: ',utm_x_source(isource)
+          write(IMAIN,*) '               y: ',utm_y_source(isource)
         else
-          write(IMAIN,*) '         UTM x: ',utm_x_source(isource)
-          write(IMAIN,*) '         UTM y: ',utm_y_source(isource)
+          write(IMAIN,*) '           UTM x: ',utm_x_source(isource)
+          write(IMAIN,*) '           UTM y: ',utm_y_source(isource)
         endif
         if (USE_SOURCES_RECEIVERS_Z) then
-          write(IMAIN,*) '         z: ',depth(isource),' m'
+          write(IMAIN,*) '           z: ',depth(isource),' m'
         else
-          write(IMAIN,*) '         depth: ',depth(isource)/1000.0,' km'
-          write(IMAIN,*) 'topo elevation: ',elevation(isource)
+          write(IMAIN,*) '           depth: ',depth(isource)/1000.0,' km'
+          write(IMAIN,*) '  topo elevation: ',elevation(isource)
         endif
 
         write(IMAIN,*)
-        write(IMAIN,*) 'position of the source that will be used:'
+        write(IMAIN,*) '  position of the source that will be used:'
         write(IMAIN,*)
         if (SUPPRESS_UTM_PROJECTION) then
-          write(IMAIN,*) '             x: ',x_found(isource)
-          write(IMAIN,*) '             y: ',y_found(isource)
+          write(IMAIN,*) '               x: ',x_found(isource)
+          write(IMAIN,*) '               y: ',y_found(isource)
         else
-          write(IMAIN,*) '         UTM x: ',x_found(isource)
-          write(IMAIN,*) '         UTM y: ',y_found(isource)
+          write(IMAIN,*) '           UTM x: ',x_found(isource)
+          write(IMAIN,*) '           UTM y: ',y_found(isource)
         endif
         if (USE_SOURCES_RECEIVERS_Z) then
-          write(IMAIN,*) '             z: ',z_found(isource)
+          write(IMAIN,*) '               z: ',z_found(isource)
         else
-          write(IMAIN,*) '         depth: ',dabs(z_found(isource) - elevation(isource))/1000.,' km'
-          write(IMAIN,*) '             z: ',z_found(isource)
+          write(IMAIN,*) '           depth: ',dabs(z_found(isource) - elevation(isource))/1000.,' km'
+          write(IMAIN,*) '               z: ',z_found(isource)
         endif
         write(IMAIN,*)
 
         ! display error in location estimate
-        write(IMAIN,*) 'error in location of the source: ',sngl(final_distance(isource)),' m'
+        write(IMAIN,*) '  error in location of the source: ',sngl(final_distance(isource)),' m'
+        write(IMAIN,*)
 
         ! add warning if estimate is poor
         ! (usually means source outside the mesh given by the user)
         if (final_distance(isource) > elemsize_max_glob) then
-          write(IMAIN,*)
           write(IMAIN,*) '*****************************************************'
           write(IMAIN,*) '*****************************************************'
           write(IMAIN,*) '***** WARNING: source location estimate is poor *****'
@@ -461,6 +470,7 @@
           write(IMAIN,*) '*****************************************************'
         endif
 
+        write(IMAIN,*)
       endif  ! end of detailed output to locate source
 
       ! checks CMTSOLUTION format for acoustic case
@@ -468,7 +478,7 @@
         if (Mxx(isource) /= Myy(isource) .or. Myy(isource) /= Mzz(isource) .or. &
            Mxy(isource) > TINYVAL .or. Mxz(isource) > TINYVAL .or. Myz(isource) > TINYVAL) then
           write(IMAIN,*)
-          write(IMAIN,*) ' error CMTSOLUTION format for acoustic source:'
+          write(IMAIN,*) 'Error CMTSOLUTION format for acoustic source:'
           write(IMAIN,*) '   acoustic source needs explosive moment tensor with'
           write(IMAIN,*) '      Mrr = Mtt = Mpp '
           write(IMAIN,*) '   and '

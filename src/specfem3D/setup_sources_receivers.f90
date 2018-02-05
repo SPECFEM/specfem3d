@@ -98,7 +98,7 @@
   ! user output
   if (myrank == 0) then
     write(IMAIN,*)
-    write(IMAIN,*) 'sources:'
+    write(IMAIN,*) 'sources:',NSOURCES
     call flush_IMAIN()
   endif
 

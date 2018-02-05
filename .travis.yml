@@ -94,6 +94,9 @@ env:
     # cavity example
     - TEST="--with-mpi" TESTCOV=0 TESTMAKE=21 CUDA=false
 
+    # SEP example
+    - TEST="--with-mpi" TESTCOV=0 TESTMAKE=22 CUDA=false
+
 
 before_install:
   # informations on git
@@ -257,6 +260,7 @@ script:
     19) dir=EXAMPLES/meshfem3D_examples/socal1D/ ;;
     20) dir=EXAMPLES/meshfem3D_examples/socal1D/ ;;
     21) dir=EXAMPLES/meshfem3D_examples/cavity/ ;;
+    22) dir=EXAMPLES/meshfem3D_examples/sep_bathymetry/ ;;
     *) dir=EXAMPLES/homogeneous_halfspace/ ;;
     esac
     # runs test
@@ -282,10 +286,14 @@ script:
       sed -i "s:^NSTEP .*:NSTEP    = 200:" DATA/Par_file
       # shortens output interval to avoid timeouts
       sed -i "s:^NTSTEP_BETWEEN_OUTPUT_INFO .*:NTSTEP_BETWEEN_OUTPUT_INFO    = 100:" DATA/Par_file
-
+      #
       # acoustic example
       if [ "$TESTMAKE" == "2" ]; then
         sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
+      fi
+      # simple mesh example
+      if [ "$TESTMAKE" == "4" ]; then
+        sed -i "s:^NSTEP .*:NSTEP    = 400:" DATA/Par_file
       fi
       # serial example
       if [ "$TESTMAKE" == "5" ]; then
@@ -316,6 +324,10 @@ script:
       # kernel example
       if [ "$TESTMAKE" == "12" ]; then
         sed -i "s:^NSTEP .*:NSTEP    = 1000:" DATA/Par_file
+      fi
+      # elastic example w/ CUDA compilation
+      if [ "$TESTMAKE" == "14" ]; then
+        sed -i "s:^NSTEP .*:NSTEP    = 500:" DATA/Par_file
       fi
       # acoustic example w/ CUDA compilation
       if [ "$TESTMAKE" == "15" ]; then
@@ -351,6 +363,10 @@ script:
       # cavity example
       if [ "$TESTMAKE" == "21" ]; then
         sed -i "s:^NSTEP .*:NSTEP    = 2000:" DATA/Par_file
+      fi
+      # SEP example
+      if [ "$TESTMAKE" == "22" ]; then
+        sed -i "s:^NSTEP .*:NSTEP    = 500:" DATA/Par_file
       fi
 
       # coverage run
@@ -604,6 +620,19 @@ script:
       cd $WORKDIR
     fi
   - echo -en 'travis_fold:end:coverage.cavity\\r'
+
+  - echo 'Coverage...' && echo -en 'travis_fold:start:coverage.sep\\r'
+  - |
+    if [ "$TESTCOV" == "1" ]; then
+      ##
+      ## testing socal example
+      ##
+      cd EXAMPLES/meshfem3D_examples/sep_bathymetry/
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+      ./run_this_example.sh
+      cd $WORKDIR
+    fi
+  - echo -en 'travis_fold:end:coverage.sep\\r'
 
   # done
   - echo `pwd`
