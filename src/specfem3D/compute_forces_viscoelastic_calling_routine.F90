@@ -63,7 +63,7 @@ subroutine compute_forces_viscoelastic_calling()
     call compute_forces_viscoelastic(iphase,NSPEC_AB,NGLOB_AB, &
                         displ,veloc,accel, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        hprime_xx,hprime_yy,hprime_zz, &
+                        hprime_xxT,hprime_yyT,hprime_zzT, &
                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         kappastore,mustore,jacobian,ibool, &
@@ -305,7 +305,7 @@ subroutine compute_forces_viscoelastic_backward_calling()
     call compute_forces_viscoelastic(iphase,NSPEC_AB,NGLOB_AB, &
                         b_displ,b_veloc,b_accel, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        hprime_xx,hprime_yy,hprime_zz, &
+                        hprime_xxT,hprime_yyT,hprime_zzT, &
                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         kappastore,mustore,jacobian,ibool, &

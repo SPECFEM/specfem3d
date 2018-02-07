@@ -1,0 +1,639 @@
+
+ **********************************************
+ **** Specfem 3-D Solver - MPI version f90 ****
+ **********************************************
+
+ Version: 3.0.0
+
+ Fixing slow underflow trapping problem using small initial field
+
+ There are            4  MPI processes
+ Processes are numbered from 0 to            3
+
+ There is a total of            4  slices
+
+  NDIM =            3
+
+  NGLLX =            5
+  NGLLY =            5
+  NGLLZ =            5
+
+ using single precision for the calculations
+
+ smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
+
+ velocity model:   default
+
+
+ **********************************************
+       **** USING HYBRID METHOD  ****
+ **********************************************
+
+  using coupling with injection technique:
+  type of injection technique is FK
+
+ **********************************************
+
+ total acoustic elements    :           0
+ total elastic elements     :       13056
+ total poroelastic elements :           0
+
+ ********
+ minimum and maximum number of elements
+ and points in the CUBIT + SCOTCH mesh:
+
+ NSPEC_global_min =         3264
+ NSPEC_global_max =         3264
+ NSPEC_global_max / NSPEC_global_min imbalance =    1.00000000      =    0.00000000      %
+ NSPEC_global_sum =        13056
+
+ NGLOB_global_min =       223245
+ NGLOB_global_max =       223245
+ NGLOB_global_max / NGLOB_global_min imbalance =    1.00000000      =    0.00000000      %
+ NGLOB_global_sum =       892980
+
+ If you have elements of a single type (all acoustic, all elastic, all poroelastic, and without CPML)
+ in the whole mesh, then there should be no significant imbalance in the above numbers.
+ Otherwise, it is normal to have imbalance in elements and points because the domain decomposer
+ compensates for the different cost of different elements by partitioning them unevenly among processes.
+ ********
+
+
+ ********
+ Model: P velocity min,max =    5800.00000       8289.00000
+ Model: S velocity min,max =    3460.00000       4530.00000
+
+ Model: Poisson's ratio min,max =   0.223754406      0.288804352
+ ********
+
+ *********************************************
+ *** Verification of simulation parameters ***
+ *********************************************
+
+ *** Xmin and Xmax of the model =   -150000.000       200000.000
+ *** Ymin and Ymax of the model =   -150000.000       150000.000
+ *** Zmin and Zmax of the model =   -250000.000       0.00000000
+
+ *** Max GLL point distance =    7160.28125
+ *** Min GLL point distance =    846.421875
+ *** Max/min ratio =    8.45947075
+
+ *** Max element size =    21875.0000
+ *** Min element size =    4901.95312
+ *** Max/min ratio =    4.46250677
+
+ *** Minimum period resolved =    7.90281773
+ *** Maximum suggested time step =    5.10569364E-02
+
+ *** for DT :    5.0000000000000003E-002
+ *** Max stability for wave velocities =   0.489649445
+
+ Elapsed time for checking mesh resolution in seconds =    6.3588619232177734E-003
+ saving VTK files for Courant number and minimum period
+
+ ******************************************
+ There is a total of            4  slices
+ ******************************************
+
+
+ kd-tree:
+   total data points:         3264
+   theoretical   number of nodes:         6524
+                tree memory size:   0.199096680     MB
+   actual        number of nodes:         6527
+                tree memory size:   0.199188232     MB
+   maximum depth   :           12
+   creation timing :    1.03700161E-03 (s)
+
+
+ sources:           1
+
+ ********************
+  locating sources
+ ********************
+
+ reading source information from ./DATA/CMTSOLUTION file
+
+ no UTM projection
+ using sources/receivers Z:
+   (depth) becomes directly (z) coordinate
+
+ note on using injection technique:
+   source (inside the mesh) will be ignored if we are coupling with DSM/AxiSEM/FK,
+   because the source is precisely the wavefield coming from the injection boundary
+
+
+ Each source is being convolved with HDUR_MOVIE =    0.0000000000000000
+
+
+ printing the source-time function
+
+ receivers:
+
+ there are           11  stations in file ./DATA/STATIONS
+ saving           11  stations inside the model in file ./DATA/STATIONS_FILTERED
+ excluding            0  stations located outside the model
+
+
+ Total number of receivers =           11
+
+
+ ********************
+  locating receivers
+ ********************
+
+ reading receiver information from ./DATA/STATIONS_FILTERED file
+
+ using sources/receivers Z:
+   (depth) becomes directly (z) coordinate
+
+ station #            1     XX    STA0001
+      original latitude:    0.00000000
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    0.00000000
+      original z:    0.00000000
+      horizontal distance:    2.00997519
+      target x, y, z:    0.00000000       0.00000000       0.00000000
+      closest estimate found:    4.54747351E-13  m away
+
+      receiver located in slice            0
+                       in element         3263
+                       in elastic domain
+      at coordinates:
+      xi    =   0.71428571428571430
+      eta   =    1.0000000000000000
+      gamma =    1.0000000000000000
+      rotation matrix:
+      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      x:    4.5474735088646412E-013
+      y:    0.0000000000000000
+      z:    0.0000000000000000
+
+
+
+ station #            2     XX    STA0002
+      original latitude:    0.00000000
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    0.00000000
+      original z:   -25000.0000
+      horizontal distance:    2.00997519
+      target x, y, z:    0.00000000       0.00000000      -25000.0000
+      closest estimate found:    4.54747351E-13  m away
+
+      receiver located in slice            2
+                       in element         2887
+                       in elastic domain
+      at coordinates:
+      xi    =   0.71428571428571430
+      eta   =   -1.0000000000000000
+      gamma =   0.80000031874998956
+      rotation matrix:
+      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      x:    4.5474735088646412E-013
+      y:    0.0000000000000000
+      z:   -25000.000000000000
+
+
+
+ station #            3     XX    STA0003
+      original latitude:    0.00000000
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    0.00000000
+      original z:   -50000.0000
+      horizontal distance:    2.00997519
+      target x, y, z:    0.00000000       0.00000000      -50000.0000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element         2623
+                       in elastic domain
+      at coordinates:
+      xi    =   0.71428571428571430
+      eta   =    1.0000000000000000
+      gamma =   0.60000063749998112
+      rotation matrix:
+      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      x:    0.0000000000000000
+      y:    0.0000000000000000
+      z:   -50000.000000000000
+
+
+
+ station #            4     XX    STA0004
+      original latitude:    0.00000000
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    0.00000000
+      original z:   -75000.0000
+      horizontal distance:    2.00997519
+      target x, y, z:    0.00000000       0.00000000      -75000.0000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element         2303
+                       in elastic domain
+      at coordinates:
+      xi    =   0.71428571428571430
+      eta   =    1.0000000000000000
+      gamma =   0.40000095624997095
+      rotation matrix:
+      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      x:    0.0000000000000000
+      y:    0.0000000000000000
+      z:   -75000.000000000000
+
+
+
+ station #            5     XX    STA0005
+      original latitude:    0.00000000
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    0.00000000
+      original z:   -100000.000
+      horizontal distance:    2.00997519
+      target x, y, z:    0.00000000       0.00000000      -100000.000
+      closest estimate found:    2.27373675E-13  m away
+
+      receiver located in slice            0
+                       in element         1983
+                       in elastic domain
+      at coordinates:
+      xi    =   0.71428571428571430
+      eta   =    1.0000000000000000
+      gamma =   0.20000127499996592
+      rotation matrix:
+      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      x:    2.2737367544323206E-013
+      y:    0.0000000000000000
+      z:   -100000.00000000000
+
+
+
+ station #            6     XX    STA0006
+      original latitude:    0.00000000
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    0.00000000
+      original z:   -125000.000
+      horizontal distance:    2.00997519
+      target x, y, z:    0.00000000       0.00000000      -125000.000
+      closest estimate found:    2.27373675E-13  m away
+
+      receiver located in slice            0
+                       in element         1663
+                       in elastic domain
+      at coordinates:
+      xi    =   0.71428571428571430
+      eta   =    1.0000000000000000
+      gamma =    5.9371906900341423E-015
+      rotation matrix:
+      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      x:    2.2737367544323206E-013
+      y:    0.0000000000000000
+      z:   -125000.00000000000
+
+
+
+ station #            7     XX    STA0007
+      original latitude:    0.00000000
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    0.00000000
+      original z:   -150000.000
+      horizontal distance:    2.00997519
+      target x, y, z:    0.00000000       0.00000000      -150000.000
+      closest estimate found:    2.27373675E-13  m away
+
+      receiver located in slice            0
+                       in element         1343
+                       in elastic domain
+      at coordinates:
+      xi    =   0.71428571428571430
+      eta   =    1.0000000000000000
+      gamma =  -0.20000000000000018
+      rotation matrix:
+      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      x:    2.2737367544323206E-013
+      y:    0.0000000000000000
+      z:   -150000.00000000000
+
+
+
+ station #            8     XX    STA0008
+      original latitude:    0.00000000
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    0.00000000
+      original z:   -175000.000
+      horizontal distance:    2.00997519
+      target x, y, z:    0.00000000       0.00000000      -175000.000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            2
+                       in element          967
+                       in elastic domain
+      at coordinates:
+      xi    =   0.71428571428571430
+      eta   =   -1.0000000000000000
+      gamma =  -0.39999872500206624
+      rotation matrix:
+      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      x:    0.0000000000000000
+      y:    0.0000000000000000
+      z:   -175000.00000000000
+
+
+
+ station #            9     XX    STA0009
+      original latitude:    0.00000000
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    0.00000000
+      original z:   -200000.000
+      horizontal distance:    2.00997519
+      target x, y, z:    0.00000000       0.00000000      -200000.000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element          703
+                       in elastic domain
+      at coordinates:
+      xi    =   0.71428571428571430
+      eta   =    1.0000000000000000
+      gamma =  -0.59999999999999742
+      rotation matrix:
+      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      x:    0.0000000000000000
+      y:    0.0000000000000000
+      z:   -200000.00000000000
+
+
+
+ station #           10     XX    STA0010
+      original latitude:    0.00000000
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    0.00000000
+      original z:   -225000.000
+      horizontal distance:    2.00997519
+      target x, y, z:    0.00000000       0.00000000      -225000.000
+      closest estimate found:    5.68434189E-14  m away
+
+      receiver located in slice            2
+                       in element          327
+                       in elastic domain
+      at coordinates:
+      xi    =   0.71428571428571430
+      eta   =   -1.0000000000000000
+      gamma =  -0.79999745000413658
+      rotation matrix:
+      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      x:    5.6843418860808015E-014
+      y:    0.0000000000000000
+      z:   -225000.00000000000
+
+
+
+ station #           11     XX    STA0011
+      original latitude:    0.00000000
+      original longitude:    0.00000000
+      original x:    0.00000000
+      original y:    0.00000000
+      original z:   -250000.000
+      horizontal distance:    2.00997519
+      target x, y, z:    0.00000000       0.00000000      -250000.000
+      closest estimate found:    4.54747351E-13  m away
+
+      receiver located in slice            0
+                       in element           63
+                       in elastic domain
+      at coordinates:
+      xi    =   0.71428571428571430
+      eta   =    1.0000000000000000
+      gamma =   -1.0000000000000000
+      rotation matrix:
+      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
+      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
+      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      x:    4.5474735088646412E-013
+      y:    0.0000000000000000
+      z:   -250000.00000000000
+
+
+ maximum error in location of all the receivers:    4.54747351E-13  m
+
+ Elapsed time for receiver detection in seconds =    6.6978931427001953E-003
+
+ End of receiver detection - done
+
+
+ Total number of samples for seismograms =         2000
+
+ found a total of           11  receivers in all the slices
+
+
+ no attenuation
+
+ no anisotropy
+
+ no oceans
+
+ no gravity
+
+ no acoustic simulation
+
+ incorporating elastic simulation
+
+ no poroelastic simulation
+
+ incorporating movie simulation
+
+
+ no dynamic faults
+ no kinematic faults
+
+ no gravity simulation
+
+  **********************************************
+          USING FK INJECTION TECHNIQUE
+  **********************************************
+
+          Model :            4  layers
+
+ layer   1 rho    2720.000 vp     5800.000 vs     3460.000    Height =       20000.00000
+ layer   2 rho    2920.000 vp     6500.000 vs     3850.000    Height =       15000.00000
+ layer   3 rho    3423.000 vp     8060.000 vs     4530.000    Height =       85000.00000
+ layer   4 rho    3423.000 vp     8289.000 vs     4517.000    Height =           0.00000
+
+
+  FK phi   =   -158.000000     (deg)
+  FK theta =    20.0000000     (deg)
+
+  Origin wavefront point FK  :    25000.0000       0.00000000      -302301.094
+  time shift  FK             :    0.00000000
+  Z reference for FK routine :   -120000.000
+  Window for FK computing    :    100.000000
+  frequency max              :   0.250000000
+  type of incoming wave (1=p), (2=sv) :           1
+
+
+ ALLOCATE SAVED ARRAYS        1024
+
+   number of frequencies to store =         1024
+   number of frequencies for FFT  =         2048
+   power of 2 for FFT             =           11
+   resampling rate                =            2
+
+   new time step for F-K          =   0.100000001
+   new time window length         =    204.699997
+   frequency step for F-K         =    4.88519808E-03
+
+   total number of points on boundary =        22000
+
+ Entering the FK synthetics program:
+   Number of points used for FFT            =         2048
+   Number of samples stored for FK solution =         1024
+   Total time length used for FK            =    204.699997
+   FK time step       =   0.100000001
+   FK frequency step  =    4.88519808E-03
+   power of 2 for FFT =           11
+
+ starting from            0  points before time 0
+ Incoming P : C_3,  p, eta =  (  0.0000000000000000     , 0.34202015399932861     )   4.12619302E-05   1.13366223E-04
+   done           10 % points out of        22000
+   done           20 % points out of        22000
+   done           30 % points out of        22000
+   done           40 % points out of        22000
+   done           50 % points out of        22000
+   done           60 % points out of        22000
+   done           70 % points out of        22000
+   done           80 % points out of        22000
+   done           90 % points out of        22000
+   done          100 % points out of        22000
+
+  FK computing passed
+
+ Elapsed time for FK computation :                 55.16  sec.
+
+
+ Elapsed time for preparing timerun in seconds =    55.175097942352295
+
+ time loop:
+               scheme:         Newmark
+
+            time step:    5.00000007E-02  s
+ number of time steps:         2000
+ total simulated time:    100.000000      seconds
+ start time:  -4.80000019      seconds
+
+ All processes are synchronized before time loop
+
+ Starting time iteration loop...
+
+ Time step #            5
+ Time:   -4.59999990      seconds
+ Elapsed time in seconds =   0.17882513999938965
+ Elapsed time in hh:mm:ss =      0 h 00 m 00 s
+ Mean elapsed time per time step in seconds =    3.57650295E-02
+ Max norm displacement vector U in all slices (m) =    7.60177500E-05
+ Time steps done =            5  out of         2000
+ Time steps remaining =         1995
+ Estimated remaining time in seconds =    71.3512344
+ Estimated remaining time in hh:mm:ss =      0 h 01 m 11 s
+ Estimated total run time in seconds =    71.5300598
+ Estimated total run time in hh:mm:ss =      0 h 01 m 11 s
+ We have done   0.250000000     % of that
+ The run will finish approximately on (in local time): Thu Feb 08, 2018 01:02
+ ************************************************************
+ **** BEWARE: the above time estimates are not very reliable
+ **** because fewer than 100 iterations have been performed
+ ************************************************************
+
+ Time step #          500
+ Time:    20.1499996      seconds
+ Elapsed time in seconds =    22.176575183868408
+ Elapsed time in hh:mm:ss =      0 h 00 m 22 s
+ Mean elapsed time per time step in seconds =    4.43531498E-02
+ Max norm displacement vector U in all slices (m) =   0.285129040
+ Time steps done =          500  out of         2000
+ Time steps remaining =         1500
+ Estimated remaining time in seconds =    66.5297241
+ Estimated remaining time in hh:mm:ss =      0 h 01 m 06 s
+ Estimated total run time in seconds =    88.7062988
+ Estimated total run time in hh:mm:ss =      0 h 01 m 28 s
+ We have done    25.0000000     % of that
+ The run will finish approximately on (in local time): Thu Feb 08, 2018 01:03
+
+ Time step #         1000
+ Time:    45.1500015      seconds
+ Elapsed time in seconds =    45.387091159820557
+ Elapsed time in hh:mm:ss =      0 h 00 m 45 s
+ Mean elapsed time per time step in seconds =    4.53870930E-02
+ Max norm displacement vector U in all slices (m) =   0.729283690
+ Time steps done =         1000  out of         2000
+ Time steps remaining =         1000
+ Estimated remaining time in seconds =    45.3870926
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 45 s
+ Estimated total run time in seconds =    90.7741852
+ Estimated total run time in hh:mm:ss =      0 h 01 m 30 s
+ We have done    50.0000000     % of that
+ The run will finish approximately on (in local time): Thu Feb 08, 2018 01:03
+
+ Time step #         1500
+ Time:    70.1500015      seconds
+ Elapsed time in seconds =    68.565207004547119
+ Elapsed time in hh:mm:ss =      0 h 01 m 08 s
+ Mean elapsed time per time step in seconds =    4.57101390E-02
+ Max norm displacement vector U in all slices (m) =   0.233924344
+ Time steps done =         1500  out of         2000
+ Time steps remaining =          500
+ Estimated remaining time in seconds =    22.8550682
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 22 s
+ Estimated total run time in seconds =    91.4202728
+ Estimated total run time in hh:mm:ss =      0 h 01 m 31 s
+ We have done    75.0000000     % of that
+ The run will finish approximately on (in local time): Thu Feb 08, 2018 01:02
+
+ Time step #         2000
+ Time:    95.1500015      seconds
+ Elapsed time in seconds =    91.074725151062012
+ Elapsed time in hh:mm:ss =      0 h 01 m 31 s
+ Mean elapsed time per time step in seconds =    4.55373637E-02
+ Max norm displacement vector U in all slices (m) =   0.171929732
+ Time steps done =         2000  out of         2000
+ Time steps remaining =            0
+ Estimated remaining time in seconds =    0.00000000
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 00 s
+ Estimated total run time in seconds =    91.0747223
+ Estimated total run time in hh:mm:ss =      0 h 01 m 31 s
+ We have done    100.000000     % of that
+
+ Time-Loop Complete. Timing info:
+ Total elapsed time in seconds =    91.263530015945435
+ Total elapsed time in hh:mm:ss =      0 h 01 m 31 s
+
+ End of the simulation
+

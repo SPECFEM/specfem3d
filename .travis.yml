@@ -97,6 +97,9 @@ env:
     # SEP example
     - TEST="--with-mpi" TESTCOV=0 TESTMAKE=22 CUDA=false
 
+    # couple with FK
+    - TEST="--with-mpi" TESTCOV=0 TESTMAKE=23 CUDA=false
+
 
 before_install:
   # informations on git
@@ -261,6 +264,7 @@ script:
     20) dir=EXAMPLES/meshfem3D_examples/socal1D/ ;;
     21) dir=EXAMPLES/meshfem3D_examples/cavity/ ;;
     22) dir=EXAMPLES/meshfem3D_examples/sep_bathymetry/ ;;
+    23) dir=EXAMPLES/small_example_coupling_FK_specfem/ ;;
     *) dir=EXAMPLES/homogeneous_halfspace/ ;;
     esac
     # runs test
@@ -633,6 +637,19 @@ script:
       cd $WORKDIR
     fi
   - echo -en 'travis_fold:end:coverage.sep\\r'
+
+  - echo 'Coverage...' && echo -en 'travis_fold:start:coverage.coupleFK\\r'
+  - |
+    if [ "$TESTCOV" == "1" ]; then
+      ##
+      ## testing socal example
+      ##
+      cd EXAMPLES/small_example_coupling_FK_specfem/
+      sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+      ./run_this_example.sh
+      cd $WORKDIR
+    fi
+  - echo -en 'travis_fold:end:coverage.coupleFK\\r'
 
   # done
   - echo `pwd`

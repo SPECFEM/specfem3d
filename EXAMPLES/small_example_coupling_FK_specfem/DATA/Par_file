@@ -23,11 +23,11 @@ UTM_PROJECTION_ZONE             = 11
 SUPPRESS_UTM_PROJECTION         = .true.
 
 # number of MPI processors
-NPROC                           = 16
+NPROC                           = 4
 
 # time step parameters
-NSTEP                           = 8000
-DT                              = 0.025
+NSTEP                           = 2000
+DT                              = 0.05
 
 #-----------------------------------------------------------
 #
@@ -55,7 +55,7 @@ NGNOD                           = 8
 # 1D models available are:
 #   1d_prem,1d_socal,1d_cascadia
 # 3D models available are:
-#   aniso,external,gll,salton_trough,tomo,SEP...
+#   aniso,external,gll,salton_trough,tomo,SEP,coupled,...
 MODEL                           = default
 
 # path for external tomographic models files

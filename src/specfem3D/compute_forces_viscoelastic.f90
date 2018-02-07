@@ -25,10 +25,11 @@
 !
 !=====================================================================
 
-subroutine compute_forces_viscoelastic(iphase, &
+
+  subroutine compute_forces_viscoelastic(iphase, &
                         NSPEC_AB,NGLOB_AB,displ,veloc,accel, &
                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        hprime_xx,hprime_yy,hprime_zz, &
+                        hprime_xxT,hprime_yyT,hprime_zzT, &
                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                         kappastore,mustore,jacobian,ibool, &
@@ -96,9 +97,9 @@ subroutine compute_forces_viscoelastic(iphase, &
             kappastore,mustore,jacobian
 
 ! array with derivatives of Lagrange polynomials and precalculated products
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx,hprimewgll_xx
-  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLY) :: hprime_yy,hprimewgll_yy
-  real(kind=CUSTOM_REAL), dimension(NGLLZ,NGLLZ) :: hprime_zz,hprimewgll_zz
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xxT,hprimewgll_xx
+  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLY) :: hprime_yyT,hprimewgll_yy
+  real(kind=CUSTOM_REAL), dimension(NGLLZ,NGLLZ) :: hprime_zzT,hprimewgll_zz
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY) :: wgllwgll_xy
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ) :: wgllwgll_xz
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
@@ -324,7 +325,7 @@ subroutine compute_forces_viscoelastic(iphase, &
                  tempy1,tempy2,tempy3,zero_array,zero_array,zero_array, &
                  tempz1,tempz2,tempz3,zero_array,zero_array,zero_array, &
                  dummyx_loc,dummyy_loc,dummyz_loc, &
-                 hprime_xx,hprime_yy,hprime_zz)
+                 hprime_xxT,hprime_yyT,hprime_zzT)
 
     if (is_CPML(ispec)) then
         if (.not. backward_simulation) then
@@ -333,14 +334,14 @@ subroutine compute_forces_viscoelastic(iphase, &
                        tempy1_att,tempy2_att,tempy3_att,zero_array,zero_array,zero_array, &
                        tempz1_att,tempz2_att,tempz3_att,zero_array,zero_array,zero_array, &
                        dummyx_loc_att,dummyy_loc_att,dummyz_loc_att, &
-                       hprime_xx,hprime_yy,hprime_zz)
+                       hprime_xxT,hprime_yyT,hprime_zzT)
 
           call compute_strain_in_element( &
                        tempx1_att_new,tempx2_att_new,tempx3_att_new,zero_array,zero_array,zero_array, &
                        tempy1_att_new,tempy2_att_new,tempy3_att_new,zero_array,zero_array,zero_array, &
                        tempz1_att_new,tempz2_att_new,tempz3_att_new,zero_array,zero_array,zero_array, &
                        dummyx_loc_att_new,dummyy_loc_att_new,dummyz_loc_att_new, &
-                       hprime_xx,hprime_yy,hprime_zz)
+                       hprime_xxT,hprime_yyT,hprime_zzT)
         endif
     endif
 
@@ -350,7 +351,7 @@ subroutine compute_forces_viscoelastic(iphase, &
                      tempy1_att,tempy2_att,tempy3_att,tempy1,tempy2,tempy3, &
                      tempz1_att,tempz2_att,tempz3_att,tempz1,tempz2,tempz3, &
                      dummyx_loc_att,dummyy_loc_att,dummyz_loc_att, &
-                     hprime_xx,hprime_yy,hprime_zz)
+                     hprime_xxT,hprime_yyT,hprime_zzT)
     endif
 
     do k=1,NGLLZ
@@ -807,7 +808,7 @@ subroutine compute_forces_viscoelastic(iphase, &
 
   enddo  ! spectral element loop
 
-end subroutine compute_forces_viscoelastic
+contains
 
 !
 !---------------
@@ -815,10 +816,10 @@ end subroutine compute_forces_viscoelastic
 
 ! put the code used for computation of strain in element in a subroutine
 
-subroutine compute_strain_in_element(tempx1_att,tempx2_att,tempx3_att,tempx1,tempx2,tempx3, &
+  subroutine compute_strain_in_element(tempx1_att,tempx2_att,tempx3_att,tempx1,tempx2,tempx3, &
                                             tempy1_att,tempy2_att,tempy3_att,tempy1,tempy2,tempy3, &
                                             tempz1_att,tempz2_att,tempz3_att,tempz1,tempz2,tempz3, &
-                                            dummyx_loc,dummyy_loc,dummyz_loc,hprime_xx,hprime_yy,hprime_zz)
+                                            dummyx_loc,dummyy_loc,dummyz_loc,hprime_xxT,hprime_yyT,hprime_zzT)
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ
 
@@ -831,9 +832,9 @@ subroutine compute_strain_in_element(tempx1_att,tempx2_att,tempx3_att,tempx1,tem
                                                           tempz1,tempz2,tempz3
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dummyx_loc,dummyy_loc,dummyz_loc
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx
-  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLY) :: hprime_yy
-  real(kind=CUSTOM_REAL), dimension(NGLLZ,NGLLZ) :: hprime_zz
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xxT
+  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLY) :: hprime_yyT
+  real(kind=CUSTOM_REAL), dimension(NGLLZ,NGLLZ) :: hprime_zzT
 
   ! local variables
   integer :: i,j,k,l
@@ -859,17 +860,17 @@ subroutine compute_strain_in_element(tempx1_att,tempx2_att,tempx3_att,tempx1,tem
 
         ! we can merge these loops because NGLLX = NGLLY = NGLLZ
         do l=1,NGLLX
-          hp1 = hprime_xx(i,l)
+          hp1 = hprime_xxT(l,i)
           tempx1_att(i,j,k) = tempx1_att(i,j,k) + dummyx_loc(l,j,k) * hp1
           tempy1_att(i,j,k) = tempy1_att(i,j,k) + dummyy_loc(l,j,k) * hp1
           tempz1_att(i,j,k) = tempz1_att(i,j,k) + dummyz_loc(l,j,k) * hp1
 
-          hp2 = hprime_yy(j,l)
+          hp2 = hprime_yyT(l,j)
           tempx2_att(i,j,k) = tempx2_att(i,j,k) + dummyx_loc(i,l,k) * hp2
           tempy2_att(i,j,k) = tempy2_att(i,j,k) + dummyy_loc(i,l,k) * hp2
           tempz2_att(i,j,k) = tempz2_att(i,j,k) + dummyz_loc(i,l,k) * hp2
 
-          hp3 = hprime_zz(k,l)
+          hp3 = hprime_zzT(l,k)
           tempx3_att(i,j,k) = tempx3_att(i,j,k) + dummyx_loc(i,j,l) * hp3
           tempy3_att(i,j,k) = tempy3_att(i,j,k) + dummyy_loc(i,j,l) * hp3
           tempz3_att(i,j,k) = tempz3_att(i,j,k) + dummyz_loc(i,j,l) * hp3
@@ -879,5 +880,9 @@ subroutine compute_strain_in_element(tempx1_att,tempx2_att,tempx3_att,tempx1,tem
     enddo
   enddo
 
-end subroutine compute_strain_in_element
+  end subroutine compute_strain_in_element
+
+
+  end subroutine compute_forces_viscoelastic
+
 

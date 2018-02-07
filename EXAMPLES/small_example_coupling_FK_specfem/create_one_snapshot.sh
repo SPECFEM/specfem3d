@@ -1,14 +1,14 @@
 #
 #  USAGE
 #
-#   ./create_one_snaphot iteration
+#   ./create_one_snaphot <iteration>
 #
 #   iteration is time step that you want to volume display
 #
 #
 
 # specfem bin directory
-bin=/mnt/Data1/vmont/GIT/specfem3d/bin/
+bin=./bin/
 
 # choose what to display
 DISPLAY="velocity_Z"
@@ -22,17 +22,18 @@ DISPLAY="velocity_Z"
 #
 
 # choose DATABASES_MPI DIRECTORY
-DIRIN=DATABASES_MPI
+DIRIN="DATABASES_MPI/"
 
 # choose output directory
-DIROUT=.
+DIROUT="OUTPUT_FILES/"
 
 # choose resolution (low=0, high=1)
-res=1
+res=0
 
 # --- DO NOT CHANGE------------------------------
 declare -i NPROC
 NPROC=`grep ^NPROC DATA/Par_file | grep -v -E '^[[:space:]]*#' | cut -d = -f 2`
 NPROC="$NPROC-1"
 it=$(printf "%06d" $1)
-$bin/xcombine_vol_data_vtk 0 $NPROC $DISPLAY"_it"$it $DIRIN"/" $DIROUT $res
+$bin/xcombine_vol_data_vtk 0 $NPROC $DISPLAY"_it"$it $DIRIN $DIROUT $res
+

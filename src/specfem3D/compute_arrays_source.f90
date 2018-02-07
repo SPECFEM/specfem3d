@@ -26,9 +26,9 @@
 !=====================================================================
 
   subroutine compute_arrays_source_cmt(ispec_selected_source,sourcearray, &
-                                   hxis,hetas,hgammas,hpxis,hpetas,hpgammas, &
-                                   Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
-                                   xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,nspec)
+                                       hxis,hetas,hgammas,hpxis,hpetas,hpgammas, &
+                                       Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
+                                       xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,nspec)
 
   use constants
 
@@ -106,12 +106,17 @@
      do l = 1,NGLLY
         do k = 1,NGLLX
 
-           dsrc_dx = (hpxis(k)*dxis_dx)*hetas(l)*hgammas(m) + hxis(k)*(hpetas(l)*detas_dx)*hgammas(m) + &
-                                                                hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dx)
-           dsrc_dy = (hpxis(k)*dxis_dy)*hetas(l)*hgammas(m) + hxis(k)*(hpetas(l)*detas_dy)*hgammas(m) + &
-                                                                hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dy)
-           dsrc_dz = (hpxis(k)*dxis_dz)*hetas(l)*hgammas(m) + hxis(k)*(hpetas(l)*detas_dz)*hgammas(m) + &
-                                                                hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dz)
+           dsrc_dx = (hpxis(k)*dxis_dx)*hetas(l)*hgammas(m) &
+                    + hxis(k)*(hpetas(l)*detas_dx)*hgammas(m) &
+                    + hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dx)
+
+           dsrc_dy = (hpxis(k)*dxis_dy)*hetas(l)*hgammas(m) &
+                    + hxis(k)*(hpetas(l)*detas_dy)*hgammas(m) &
+                    + hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dy)
+
+           dsrc_dz = (hpxis(k)*dxis_dz)*hetas(l)*hgammas(m) &
+                    + hxis(k)*(hpetas(l)*detas_dz)*hgammas(m) &
+                    + hxis(k)*hetas(l)*(hpgammas(m)*dgammas_dz)
 
            sourcearrayd(1,k,l,m) = sourcearrayd(1,k,l,m) + (Mxx*dsrc_dx + Mxy*dsrc_dy + Mxz*dsrc_dz)
            sourcearrayd(2,k,l,m) = sourcearrayd(2,k,l,m) + (Mxy*dsrc_dx + Myy*dsrc_dy + Myz*dsrc_dz)

@@ -672,8 +672,9 @@
         call lagrange_any(eta_source(isource),NGLLY,yigll,hetas,hpetas)
         call lagrange_any(gamma_source(isource),NGLLZ,zigll,hgammas,hpgammas)
 
-        if (USE_FORCE_POINT_SOURCE) then ! use of FORCESOLUTION files
-
+        if (USE_FORCE_POINT_SOURCE) then
+          ! use of FORCESOLUTION files
+          !
           ! note: for use_force_point_source xi/eta/gamma are also in the range [-1,1], for exact positioning
 
           factor_source = factor_force_source(isource)
@@ -717,7 +718,8 @@
            call compute_arrays_source_forcesolution(sourcearray,hxis,hetas,hgammas,factor_source, &
                                                    comp_x,comp_y,comp_z,nu_source(:,:,isource))
           endif
-        else ! use of CMTSOLUTION files
+        else
+          ! use of CMTSOLUTION files
 
           ! elastic or poroelastic moment tensor source
           if (ispec_is_elastic(ispec) .or. ispec_is_poroelastic(ispec)) then
@@ -741,11 +743,8 @@
             factor_source = factor_source * sqrt(2.0) / sqrt(3.0)
 
             ! source encoding
-            comp_x = 1.0d0
             ! determines factor +/-1 depending on sign of moment tensor
-            comp_y = 1.0d0
             ! (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources,
-            comp_z = 1.0d0
             !   Geophysics, 74 (6), WCC177-WCC188.)
             if (USE_SOURCE_ENCODING) then
               pm1_source_encoding(isource) = sign(1.0d0,Mxx(isource))

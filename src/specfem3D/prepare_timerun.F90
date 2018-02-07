@@ -40,11 +40,11 @@
   implicit none
 
   ! local parameters
-  double precision :: tCPU
+  double precision :: tCPU,tstart
   double precision, external :: wtime
 
   ! get MPI starting time
-  time_start = wtime()
+  tstart = wtime()
 
   ! user output infos
   call prepare_timerun_user_output()
@@ -91,9 +91,12 @@
   call prepare_timerun_OpenMP()
 #endif
 
+  ! prepars coupling with injection boundary
+  call couple_with_injection_prepare_boundary()
+
   ! elapsed time since beginning of preparation
   if (myrank == 0) then
-    tCPU = wtime() - time_start
+    tCPU = wtime() - tstart
     write(IMAIN,*)
     write(IMAIN,*) 'Elapsed time for preparing timerun in seconds = ',tCPU
     write(IMAIN,*)

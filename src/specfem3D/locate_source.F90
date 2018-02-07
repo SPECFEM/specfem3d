@@ -38,8 +38,8 @@
 
   use specfem_par, only: USE_FORCE_POINT_SOURCE,USE_RICKER_TIME_FUNCTION, &
       UTM_PROJECTION_ZONE,SUPPRESS_UTM_PROJECTION,USE_SOURCES_RECEIVERS_Z, &
-      NSTEP_STF,NSOURCES_STF,USE_EXTERNAL_SOURCE_FILE,USE_TRICK_FOR_BETTER_PRESSURE, &
-      ibool,myrank,NSPEC_AB,NGLOB_AB,xstore,ystore,zstore,DT, &
+      NSTEP_STF,NSOURCES_STF,USE_EXTERNAL_SOURCE_FILE,USE_TRICK_FOR_BETTER_PRESSURE,COUPLE_WITH_INJECTION_TECHNIQUE, &
+      myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore,DT, &
       NSOURCES
 
 
@@ -69,8 +69,8 @@
   double precision :: final_distance(NSOURCES)
   double precision, dimension(NSOURCES) :: x_target,y_target,z_target
   ! timer MPI
+  double precision :: tstart,tCPU
   double precision, external :: wtime
-  double precision :: time_start,tCPU
   ! sources
   double precision :: f0,t0_ricker
   ! CMTs
@@ -169,7 +169,7 @@
                             distance_min_glob,distance_max_glob)
 
   ! get MPI starting time
-  time_start = wtime()
+  tstart = wtime()
 
   ! user output
   if (myrank == 0) then
@@ -180,6 +180,7 @@
       write(IMAIN,*) '  UTM zone: ',UTM_PROJECTION_ZONE
     endif
     if (USE_SOURCES_RECEIVERS_Z) then
+      write(IMAIN,*) 'using sources/receivers Z:'
       write(IMAIN,*) '  (depth) becomes directly (z) coordinate'
     endif
   endif
@@ -289,8 +290,32 @@
   call bcast_all_dp(nu_source,NDIM*NDIM*NSOURCES)
   call bcast_all_dp(final_distance,NSOURCES)
 
+  ! sets new utm coordinates for best locations
+  utm_x_source(:) = x_found(:)
+  utm_y_source(:) = y_found(:)
+
+  ! output source information to a file so that we can load it and write to SU headers later
+  if (myrank == 0) then
+    open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/output_list_sources.txt',status='unknown')
+    do isource=1,NSOURCES
+      write(IOUT_SU,*) x_found(isource),y_found(isource),z_found(isource)
+    enddo
+    close(IOUT_SU)
+  endif
+
   ! user output
   if (myrank == 0) then
+
+    ! skip source info for wavefield injection simulations
+    if (COUPLE_WITH_INJECTION_TECHNIQUE) then
+      write(IMAIN,*)
+      write(IMAIN,*) 'note on using injection technique:'
+      write(IMAIN,*) '  source (inside the mesh) will be ignored if we are coupling with DSM/AxiSEM/FK,'
+      write(IMAIN,*) '  because the source is precisely the wavefield coming from the injection boundary'
+      write(IMAIN,*)
+      ! nothing to display anymore
+      return
+    endif
 
     do isource = 1,NSOURCES
 
@@ -514,26 +539,15 @@
 
   endif     ! end of section executed by main process only
 
-  ! sets new utm coordinates for best locations
-  utm_x_source(:) = x_found(:)
-  utm_y_source(:) = y_found(:)
-
   ! elapsed time since beginning of source detection
   if (myrank == 0) then
-    tCPU = wtime() - time_start
+    tCPU = wtime() - tstart
     write(IMAIN,*)
     write(IMAIN,*) 'Elapsed time for detection of sources in seconds = ',tCPU
     write(IMAIN,*)
     write(IMAIN,*) 'End of source detection - done'
     write(IMAIN,*)
     call flush_IMAIN()
-
-    ! output source information to a file so that we can load it and write to SU headers later
-    open(unit=IOUT_SU,file=trim(OUTPUT_FILES)//'/output_list_sources.txt',status='unknown')
-    do isource=1,NSOURCES
-      write(IOUT_SU,*) x_found(isource),y_found(isource),z_found(isource)
-    enddo
-    close(IOUT_SU)
   endif
 
   end subroutine locate_source

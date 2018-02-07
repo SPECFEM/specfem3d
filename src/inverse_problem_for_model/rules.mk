@@ -115,6 +115,7 @@ inverse_problem_for_model_OBJECTS = \
 inverse_problem_for_model_OBJECTS += \
 	$O/specfem3D_par.spec_module.o \
 	$O/assemble_MPI_vector.spec.o \
+	$O/calendar.spec.o \
 	$O/check_stability.spec.o \
 	$O/comp_source_time_function.spec.o \
 	$O/compute_add_sources_acoustic.spec.o \
@@ -146,7 +147,7 @@ inverse_problem_for_model_OBJECTS += \
 	$O/compute_stacey_poroelastic.spec.o \
 	$O/compute_energy.spec.o \
 	$O/convert_time.spec.o \
-	$O/calendar.spec.o \
+	$O/couple_with_injection.spec.o \
 	$O/create_color_image.spec.o \
 	$O/detect_mesh_surfaces.spec.o \
 	$O/fault_solver_common.spec.o \
@@ -184,6 +185,7 @@ inverse_problem_for_model_OBJECTS += \
 	$O/setup_movie_meshes.spec.o \
 	$O/setup_sources_receivers.spec.o \
 	$O/station_filter.spec.o \
+	$O/surface_or_volume_integral.spec.o \
 	$O/update_displacement_scheme.spec.o \
 	$O/update_displacement_LDDRK.spec.o \
 	$O/write_movie_output.spec.o \

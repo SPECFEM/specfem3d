@@ -103,6 +103,9 @@
   do j = 1,NGLLY
     do i = 1,NGLLX
       hprime_xxT(j,i) = hprime_xx(i,j)
+      hprime_yyT(j,i) = hprime_yy(i,j)
+      hprime_zzT(j,i) = hprime_zz(i,j)
+
       hprimewgll_xxT(j,i) = hprimewgll_xx(i,j)
     enddo
   enddo

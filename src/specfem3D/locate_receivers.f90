@@ -60,7 +60,7 @@
 
   ! timer MPI
   double precision, external :: wtime
-  double precision :: time_start,tCPU
+  double precision :: tstart,tCPU
 
   ! use dynamic allocation
   double precision, dimension(:), allocatable :: final_distance
@@ -102,7 +102,7 @@
   logical :: is_done_stations
 
   ! get MPI starting time
-  time_start = wtime()
+  tstart = wtime()
 
   ! user output
   if (myrank == 0) then
@@ -113,6 +113,10 @@
     write(IMAIN,*)
     write(IMAIN,'(1x,a,a,a)') 'reading receiver information from ', trim(rec_filename), ' file'
     write(IMAIN,*)
+    if (USE_SOURCES_RECEIVERS_Z) then
+      write(IMAIN,*) 'using sources/receivers Z:'
+      write(IMAIN,*) '  (depth) becomes directly (z) coordinate'
+    endif
     call flush_IMAIN()
   endif
 
@@ -381,7 +385,7 @@
     if (SU_FORMAT) call write_stations_for_next_run()
 
     ! elapsed time since beginning of mesh generation
-    tCPU = wtime() - time_start
+    tCPU = wtime() - tstart
     write(IMAIN,*)
     write(IMAIN,*) 'Elapsed time for receiver detection in seconds = ',tCPU
     write(IMAIN,*)
@@ -481,7 +485,7 @@ contains
       ! user output
       if (myrank == 0) then
         ! elapsed time since beginning of mesh generation
-        tCPU = wtime() - time_start
+        tCPU = wtime() - tstart
         write(IMAIN,*)
         write(IMAIN,*) 'Elapsed time for receiver detection in seconds = ',tCPU
         write(IMAIN,*)
