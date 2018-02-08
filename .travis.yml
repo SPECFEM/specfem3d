@@ -372,6 +372,10 @@ script:
       if [ "$TESTMAKE" == "22" ]; then
         sed -i "s:^NSTEP .*:NSTEP    = 500:" DATA/Par_file
       fi
+      # coupled with FK
+      if [ "$TESTMAKE" == "23" ]; then
+        sed -i "s:^NSTEP .*:NSTEP    = 500:" DATA/Par_file
+      fi
 
       # coverage run
       if [ "$TESTCOV" == "1" ]; then

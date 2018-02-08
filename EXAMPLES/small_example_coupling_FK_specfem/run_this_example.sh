@@ -86,10 +86,12 @@ if [[ $? -ne 0 ]]; then exit 1; fi
 
 
 # vtk-files of movie snapshots
-#./create_one_snapshot.sh 500
-./create_one_snapshot.sh 1000
+./create_one_snapshot.sh 500
+
+#./create_one_snapshot.sh 1000
 #./create_one_snapshot.sh 1500
 #./create_one_snapshot.sh 2000
+
 if [[ $? -ne 0 ]]; then exit 1; fi
 
 echo

@@ -37,3 +37,5 @@ NPROC="$NPROC-1"
 it=$(printf "%06d" $1)
 $bin/xcombine_vol_data_vtk 0 $NPROC $DISPLAY"_it"$it $DIRIN $DIROUT $res
 
+if [[ $? -ne 0 ]]; then exit 1; fi
+
