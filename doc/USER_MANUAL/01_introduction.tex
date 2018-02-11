@@ -77,6 +77,15 @@ In the Legendre version that we use in SPECFEM the mass matrix is purposely slig
 while in the Chebyshev version it is exact but non diagonal.\\
 
 
+\red{Beware that, in a spectral-element method, some spurious modes (that have some similarities with classical so-called "Hourglass modes" in finite-element techniques,
+although in the SEM they are not zero-energy modes) can appear in some (but not all) cases in the spectral element in which the source is located.
+Fortunately, they do not propagate away from the source element.
+However, this means that if you put a receiver in the same spectral element as a source, the recorded signals may in some cases be wrong, typically exhibiting some spurious
+oscillations, which are often even non causal.
+If that is the case, an easy option is to slightly change the mesh in the source region in order to get rid of these Hourglass-like spurious modes,
+as explained in \cite{DuLiScGa14}, in which this phenomenon is described in details, and in which practical solutions to avoid it are suggested.}\\
+
+
 All SPECFEM3D software is written in Fortran2003 with full portability
 in mind, and conforms strictly to the Fortran2003 standard. It uses
 no obsolete or obsolescent features of Fortran. The package uses parallel
