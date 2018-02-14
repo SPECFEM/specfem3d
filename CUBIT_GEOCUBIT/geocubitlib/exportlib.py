@@ -107,6 +107,12 @@ def collect_new(cpuxmin=0, cpuxmax=1, cpuymin=0, cpuymax=1, cpux=1, cpuy=1,
     # cubit.cmd('set error off')
     version_cubit = get_cubit_version()
 
+    print '##########################################################'
+    print '#'
+    print '# collecting mesh'
+    print '#'
+    print '##########################################################'
+
     if decimate:
         if version_cubit >= 14.0:
             raise VersionException('check cubit version, decimate capability \
@@ -126,11 +132,15 @@ def collect_new(cpuxmin=0, cpuxmax=1, cpuymin=0, cpuymax=1, cpux=1, cpuy=1,
         raise VersionException('check cubit version, parallel capability \
                                of geocubit is working with \
                                cubit/trelis 14 or later (or cubit 12.2)')
+
     cubit.cmd('set info on')
     cubit.cmd('set echo on')
     cubit.cmd('set journal on')
     # cubit.cmd('set error on')
-    #
+
+    ##
+    ## refinements
+    ##
     if curverefining:
         if version_cubit <= 12.2:
             block = 1001  # topography
@@ -140,8 +150,9 @@ def collect_new(cpuxmin=0, cpuxmax=1, cpuymin=0, cpuymax=1, cpux=1, cpuy=1,
                 'check cubit version, refine curve capability has been tested \
                 only with cubit <= 12.2')
 
-    #
-    #
+    ##
+    ## sea
+    ##
     if add_sea:
         if version_cubit <= 12.2:
             block = 1001
@@ -151,6 +162,7 @@ def collect_new(cpuxmin=0, cpuxmax=1, cpuymin=0, cpuymax=1, cpux=1, cpuy=1,
                 'check cubit version, sea capability has been tested \
                 only with cubit <= 12.2')
 
+    # output directory
     outdir2 = '/'.join(x for x in outfilename.split('/')[:-1])
     if outdir2 == '':
         outdir2 = outdir + '/'
@@ -163,10 +175,13 @@ def collect_new(cpuxmin=0, cpuxmax=1, cpuymin=0, cpuymax=1, cpux=1, cpuy=1,
     except OSError:
         pass
 
+    # mesh file output
     cubit.cmd('compress all')
     command = "export mesh '" + outdir2 + outfilename + \
         ".e' block all overwrite xml '" + outdir2 + outfilename + ".xml'"
     cubit.cmd(command)
+
+    # outputs block infos
     f = open(outdir2 + 'blocks.dat', 'w')
     blocks = cubit.get_block_id_list()
     #
@@ -181,6 +196,7 @@ def collect_new(cpuxmin=0, cpuxmax=1, cpuymin=0, cpuymax=1, cpux=1, cpuy=1,
                 ' '.join(str(x) for x in attr) + ' ; ' + ty + ' ' +
                 str(element_count) + '\n')
     f.close()
+
     #
     #
     cubit.cmd('set info echo journ off')
@@ -214,10 +230,6 @@ def collect_new(cpuxmin=0, cpuxmax=1, cpuymin=0, cpuymax=1, cpux=1, cpuy=1,
         command = "save as '" + outdir2 + outfilename + ".cub' overwrite"
         print command
         cubit.cmd(command)
-
-collect = collect_new
-
-define_blocks = collect_new
 
 
 def e2SEM(files=False, listblock=None, listflag=None, outdir='.',
@@ -256,13 +268,20 @@ def e2SEM(files=False, listblock=None, listflag=None, outdir='.',
                                      top_absorbing=top_absorbing, hex27=hex27)
 
 
-def collecting_block(store_group_name, ip=0, xmin=[0], xmax=[0], ymin=[0],
+def collecting_block(store_group_name, iproc=0, xmin=[0], xmax=[0], ymin=[0],
                      ymax=[0], index_block=0):
     block_list = list(cubit.get_block_id_list())
     block_list.sort()
     block_hex = [x for x in block_list if x <= 1000]
     block_side = [x for x in block_list if x > 1000]
+    #print 'collecting block list = ',block_list
+    #print '  hex list  = ',block_hex
+    #print '  side list = ',block_side
+    print 'collecting block: iproc = ',iproc,xmin,xmax,ymin,ymax
+    print '  block_hex = ',block_hex,'block_side = ',block_side
+    ## hexahedrals
     for ib, block in enumerate(block_hex):
+        #print '  hex ib = ',ib,'block = ',block
         if index_block == 0:
             cubit.cmd("group 'vol" + str(block) +
                       "' add Hex in block " + str(block))
@@ -272,24 +291,26 @@ def collecting_block(store_group_name, ip=0, xmin=[0], xmax=[0], ymin=[0],
             cubit.cmd("group '" + store_group_name[ib] +
                       "' add Hex in block " + str(block))
             cubit.cmd("del block " + str(block))
+    ## faces
     for ib, side in enumerate(block_side):
+        #print '  faces ib = ',ib,'side = ',side
         if side == 1004:
-            if ip in ymin:
+            if iproc in ymin:
                 cubit.cmd("group 'ymin' add face in block " + str(side))
             else:
                 cubit.cmd("group 'lateral' add face in block " + str(side))
         elif side == 1003:
-            if ip in xmin:
+            if iproc in xmin:
                 cubit.cmd("group 'xmin' add face in block " + str(side))
             else:
                 cubit.cmd("group 'lateral' add face in block " + str(side))
         elif side == 1006:
-            if ip in ymax:
+            if iproc in ymax:
                 cubit.cmd("group 'ymax' add face in block " + str(side))
             else:
                 cubit.cmd("group 'lateral' add face in block " + str(side))
         elif side == 1005:
-            if ip in xmax:
+            if iproc in xmax:
                 cubit.cmd("group 'xmax' add face in block " + str(side))
             else:
                 cubit.cmd("group 'lateral' add face in block " + str(side))
@@ -298,6 +319,12 @@ def collecting_block(store_group_name, ip=0, xmin=[0], xmax=[0], ymin=[0],
         elif side == 1002:
             cubit.cmd("group 'bot' add face in block " + str(side))
         cubit.cmd("del block " + str(side))
+
+    ## check if faces in group lateral
+    ilateral = cubit.get_id_from_name('lateral')
+    lateral_nodes = cubit.get_group_nodes(ilateral)
+    print '  lateral nodes: ', len(lateral_nodes)
+
     return store_group_name
 
 
@@ -311,6 +338,7 @@ def check_lateral_nodes(name_group='lateral'):
 
 
 def prepare_equivalence_new(name_group='lateral'):
+    print 'equivalence group ',name_group
     length = {}
     cmd = "group 'tmpn' add edge in face in group " + name_group
     cubit.cmd(cmd)
@@ -319,26 +347,39 @@ def prepare_equivalence_new(name_group='lateral'):
     lengthmin = 1e9
     for e in e1:
         lengthmin = min(lengthmin, cubit.get_mesh_edge_length(e))
-        length[e] = lengthmin * .5
+        length[e] = lengthmin * 0.5
     cubit.cmd('delete group ' + str(ge))
-    minvalue = min(length.values())
-    maxvalue = max(length.values())
+
+    #print '  equivalence edge lengths ',length
+    if len(length) > 0:
+        minvalue = min(length.values())
+        maxvalue = max(length.values())
+    else:
+        minvalue = 100.
+        maxvalue = 100.
     #
-    print 'min lentgh: ', minvalue, 'max lentgh: ', maxvalue
-    nbin = int((maxvalue / minvalue)) + 1
-    factor = (maxvalue - minvalue) / nbin
+    print '  min length: ', minvalue, 'max length: ', maxvalue
+    if minvalue != 0:
+        nbin = int((maxvalue / minvalue)) + 1
+        factor = (maxvalue - minvalue) / nbin
+    else:
+        nbin = 0
+        factor = 0.0
     dic_new = {}
     for k in length.keys():
-        if factor != 0.:
+        if factor != 0.0:
             dic_new[k] = int((length[k] - minvalue) / factor)
         else:
-            dic_new[k] = 0.
+            dic_new[k] = 0.0
     inv_length = invert_dict(dic_new)
-    print inv_length.keys(), factor, minvalue
+
     ks = inv_length.keys()
     ks.sort()
     for k in range(0, len(inv_length.keys()) - 1):
         inv_length[ks[k]] = inv_length[ks[k]] + inv_length[ks[k + 1]]
+
+    print '  edge lengths ',inv_length.keys(), factor, minvalue
+
     return factor, minvalue, maxvalue, inv_length
 
 
@@ -346,8 +387,7 @@ def merging_node_new(tol, clean=True, graphic_debug=False):
     empty = False
     print 'tolerance ', tol
     cubit.cmd("topology check coincident node node in \
-              group coincident_lateral_nodes tolerance " +
-              str(tol) + " highlight brief result \
+              group coincident_lateral_nodes tolerance " + str(tol) + " highlight brief result \
               group 'merging_lateral_nodes'")
     group_exist = cubit.get_id_from_name("merging_lateral_nodes")
     if not group_exist:
@@ -412,25 +452,28 @@ def collecting_merging_new(cpuxmin=0, cpuxmax=0, cpuymin=0, cpuymax=0, cpux=1,
     except:
         pass
     #
-    print 'number of chunks: ', cpux * cpuy
     number_of_chunks = cpux * cpuy
-    xmin, xmax, ymin, ymax, listfull = map_boundary(
-        cpuxmin, cpuxmax, cpuymin, cpuymax, cpux, cpuy)
-    print 'xmin: ', xmin
-    print 'xmax: ', xmax
-    print 'ymin: ', ymin
-    print 'ymax: ', ymax
-    print 'full list: ', listfull
+    print 'number of chunks: ', number_of_chunks
+
+    xmin, xmax, ymin, ymax, listfull = map_boundary(cpuxmin, cpuxmax, cpuymin, cpuymax, cpux, cpuy)
+    print 'list of processes with boundary:'
+    print '  xmin: ', xmin
+    print '  xmax: ', xmax
+    print '  ymin: ', ymin
+    print '  ymax: ', ymax
+    print '  full list: ', listfull
     if 1 < number_of_chunks < max(listfull):
         raise MergingError('error mapping the chunks')
     #
     if cubfiles:
-        nf, listip, filenames, cubflag = importing_cubfiles(cubfiles)
-        print nf, listip, filenames, cubflag, listfull
+        nf, listiproc, filenames, cubflag = importing_cubfiles(cubfiles)
+        print nf, listiproc, filenames, cubflag, listfull
     else:
         nf = 0
         filenames = []
-        ip = 0
+        iproc = 0
+    print 'cubfiles       : ',cubfiles
+    print 'number of files: ',nf
     #
 
     index_block = -1
@@ -444,26 +487,27 @@ def collecting_merging_new(cpuxmin=0, cpuxmax=0, cpuymin=0, cpuymax=0, cpux=1,
     cubit.cmd('set duplicate block elements on')
 
     if nf > 0:
-        for ip, filename in zip(listip, filenames):
-            print ip, filename, ip in listfull
+        for iproc, filename in zip(listiproc, filenames):
+            print iproc, filename, iproc in listfull
             try:
-                if ip in listfull:
+                if iproc in listfull:
                     print filename
                     index_block = index_block + 1
                     if cubflag:
                         cubit.cmd('import cubit "' + filename + '"')
                     else:
-                        cubit.cmd('import mesh "' + filename +
-                                  '" block all  no_geom')
+                        cubit.cmd('import mesh "' + filename + '" block all  no_geom')
             except:
                 cubit.cmd('import mesh "' + filename + '" block all  no_geom')
-            # print ip,xmin,xmax,ymin,ymax,ip in xmin,ip in xmax,ip in ymin,ip
-            # in ymax
-            store_tmp = collecting_block(
-                store_group_name, ip, xmin, xmax, ymin, ymax, index_block)
+            # print iproc,xmin,xmax,ymin,ymax,iproc in xmin,iproc in xmax,iproc in ymin,iproc in ymax
+            print "iproc ",iproc," mesh imported"
+
+            store_tmp = collecting_block(store_group_name, iproc, xmin, xmax, ymin, ymax, index_block)
+            print 'store tmp ',store_tmp
             if len(store_tmp) != 0:
                 store_group_name = store_tmp
             # lateral_nodes = check_lateral_nodes()
+            print 'store group name ',store_group_name
 
         cubit.cmd('save as "tmp_nomerging.cub" overwrite ')
 
@@ -472,7 +516,7 @@ def collecting_merging_new(cpuxmin=0, cpuxmax=0, cpuymin=0, cpuymax=0, cpux=1,
             from geocubitlib import boundary_definition
             boundary_definition.define_bc()
         else:
-            check_bc(ip, xmin, xmax, ymin, ymax, cpux, cpuy,
+            check_bc(iproc, xmin, xmax, ymin, ymax, cpux, cpuy,
                      cpuxmin, cpuxmax + 1, cpuymin, cpuymax + 1)
         cubit.cmd('disassociate mesh from volume all')
         cubit.cmd('del vol all')
@@ -481,29 +525,31 @@ def collecting_merging_new(cpuxmin=0, cpuxmax=0, cpuymin=0, cpuymax=0, cpux=1,
         cubit.cmd('set journal on')
         return
 
-    factor, minvalue, maxvalue, inv_length = prepare_equivalence_new()
-    cubit.cmd('set info off')
-    cubit.cmd('set echo off')
-    cubit.cmd('set journal off')
-    if starting_tolerance:
-        tol = starting_tolerance
-    else:
-        tol = minvalue / 20.
-    if step_tolerance:
-        step_tol = step_tolerance
-    else:
-        step_tol = minvalue / 20.
+    if number_of_chunks > 1:
+        factor, minvalue, maxvalue, inv_length = prepare_equivalence_new()
+        cubit.cmd('set info off')
+        cubit.cmd('set echo off')
+        cubit.cmd('set journal off')
+        if starting_tolerance:
+            tol = starting_tolerance
+        else:
+            tol = minvalue / 20.
+        if step_tolerance:
+            step_tol = step_tolerance
+        else:
+            step_tol = minvalue / 20.
 
-    cubit.cmd('group \'coincident_lateral_nodes\' add \
-              Node in face in group lateral')
-    isempty = False
-    while not isempty:
-        isempty = merging_node_new(tol, clean=True, graphic_debug=False)
-        tol = tol + step_tol
-        if tol > maxvalue * 1.5:
-            raise MergingError(
-                'tolerance greater than the max length of the edges, \
-                please check the mesh')
+        cubit.cmd('group \'coincident_lateral_nodes\' add \
+                   Node in face in group lateral')
+
+        isempty = False
+        while not isempty:
+            isempty = merging_node_new(tol, clean=True, graphic_debug=False)
+            tol = tol + step_tol
+            if tol > maxvalue * 1.5:
+                raise MergingError(
+                    'tolerance greater than the max length of the edges, \
+                    please check the mesh')
 
     # if checknodes and checklines:
     for ig, g in enumerate(store_group_name):
@@ -522,9 +568,11 @@ def collecting_merging_new(cpuxmin=0, cpuxmax=0, cpuymin=0, cpuymax=0, cpux=1,
     cubit.cmd('set journal on')
     # cubit.cmd('set error on')
 
-
+##########################################################################################
+#
 # deprecated methods
-
+#
+##########################################################################################
 
 def add_sea_layer(block=1001, optionsea=False):
     if optionsea:
@@ -737,16 +785,16 @@ def collecting_merging(cpuxmin=0, cpuxmax=1, cpuymin=0, cpuymax=1, cpux=1,
         cpuxmin, cpuxmax, cpuymin, cpuymax, cpux, cpuy)
     #
     if cubfiles:
-        nf, listip, filenames, cubflag = importing_cubfiles(cubfiles)
+        nf, listiproc, filenames, cubflag = importing_cubfiles(cubfiles)
     else:
         nf = 0
         filenames = []
-        ip = 0
+        iproc = 0
     #
     if nf > 0:
-        for ip, filename in zip(listip, filenames):
+        for iproc, filename in zip(listiproc, filenames):
             try:
-                if ip in listfull:
+                if iproc in listfull:
                     if cubflag:
                         cubit.cmd('import cubit "' + filename + '"')
                     else:
@@ -756,10 +804,10 @@ def collecting_merging(cpuxmin=0, cpuxmax=1, cpuymin=0, cpuymax=1, cpux=1,
                     if decimate:
                         cubit.cmd(
                             'refine volume all numsplit 1 bias 1.0 depth 1 ')
-                    boundary = check_bc(ip, xmin, xmax, ymin, ymax,
+                    boundary = check_bc(iproc, xmin, xmax, ymin, ymax,
                                         cpux, cpuy, cpuxmin, cpuxmax,
                                         cpuymin, cpuymax)
-                    boundary_dict[ip] = boundary
+                    boundary_dict[iproc] = boundary
                     list_vol = list(cubit.parse_cubit_list('volume', 'all'))
                     for v in list_vol:
                         cubit.cmd("disassociate mesh from volume " + str(v))
@@ -771,11 +819,11 @@ def collecting_merging(cpuxmin=0, cpuxmax=1, cpuymin=0, cpuymax=1, cpux=1,
                           feature_angle 135.00 linear merge')
                 if decimate:
                     cubit.cmd('refine volume all numsplit 1 bias 1.0 depth 1 ')
-                ip = 0
-                boundary = check_bc(ip, xmin, xmax, ymin, ymax,
+                iproc = 0
+                boundary = check_bc(iproc, xmin, xmax, ymin, ymax,
                                     cpux, cpuy, cpuxmin, cpuxmax,
                                     cpuymin, cpuymax)
-                boundary_dict[ip] = boundary
+                boundary_dict[iproc] = boundary
                 list_vol = list(cubit.parse_cubit_list('volume', 'all'))
                 for v in list_vol:
                     cubit.cmd("disassociate mesh from volume " + str(v))
@@ -786,7 +834,7 @@ def collecting_merging(cpuxmin=0, cpuxmax=1, cpuymin=0, cpuymax=1, cpux=1,
     else:
         if decimate:
             cubit.cmd('refine volume all numsplit 1 bias 1.0 depth 1 ')
-        boundary = check_bc(ip, xmin, xmax, ymin, ymax, cpux,
+        boundary = check_bc(iproc, xmin, xmax, ymin, ymax, cpux,
                             cpuy, cpuxmin, cpuxmax, cpuymin, cpuymax)
     #
     #
@@ -817,79 +865,79 @@ def collecting_merging(cpuxmin=0, cpuxmax=1, cpuymin=0, cpuymax=1, cpux=1,
         for ix in range(cpuxmin, cpuxmax):
             for iy in range(cpuymin, cpuymax):
                 ind = ind + 1
-                ip = iy * cpux + ix
-                print '******************* ', ip, ind, '/', len(listfull)
+                iproc = iy * cpux + ix
+                print '******************* ', iproc, ind, '/', len(listfull)
                 #
-                #   ileft    |   ip
+                #   ileft    |   iproc
                 #  --------------------
                 #   idiag    |   idown
                 #
                 #
-                if ip not in xmin and ip not in ymin:
+                if iproc not in xmin and iproc not in ymin:
                     ileft = iy * cpux + ix - 1
                     idown = (iy - 1) * cpux + ix
                     idiag = idown - 1
-                elif ip in xmin and ip in ymin:
-                    ileft = ip
-                    idown = ip
+                elif iproc in xmin and iproc in ymin:
+                    ileft = iproc
+                    idown = iproc
                     idiag = None
-                elif ip in xmin:
-                    ileft = ip
+                elif iproc in xmin:
+                    ileft = iproc
                     idown = (iy - 1) * cpux + ix
                     idiag = idown
-                elif ip in ymin:
+                elif iproc in ymin:
                     ileft = iy * cpux + ix - 1
-                    idown = ip
+                    idown = iproc
                     idiag = ileft
                 #
-                print ip, ileft, idiag, idown
-                if ip != idown:
-                    nup = boundary_dict[ip]['nodes_surf_ymin']
+                print iproc, ileft, idiag, idown
+                if iproc != idown:
+                    nup = boundary_dict[iproc]['nodes_surf_ymin']
                     ndow = boundary_dict[idown]['nodes_surf_ymax']
                     merge_node_ck(nup, ndow)
 
                     if idiag != idown:
-                        if ip in ymax and ip not in xmin:
+                        if iproc in ymax and iproc not in xmin:
                             # node in curve chunck left up... r u
-                            nlu = boundary_dict[ip]['node_curve_xminymax']
+                            nlu = boundary_dict[iproc]['node_curve_xminymax']
                             nru = boundary_dict[ileft]['node_curve_xmaxymax']
                             merge_node(nlu, nru)
-                        if ip in xmax:
+                        if iproc in xmax:
                             # node in curve chunck left up... r u
-                            nrd = boundary_dict[ip]['node_curve_xmaxymin']
+                            nrd = boundary_dict[iproc]['node_curve_xmaxymin']
                             nru = boundary_dict[idown]['node_curve_xmaxymax']
                             merge_node(nrd, nru)
                         # node in curve chunck right up... r u
-                        nru = boundary_dict[ip]['node_curve_xminymin']
+                        nru = boundary_dict[iproc]['node_curve_xminymin']
                         nrd = boundary_dict[idown]['node_curve_xminymax']
                         nld = boundary_dict[idiag]['node_curve_xmaxymax']
                         nlu = boundary_dict[ileft]['node_curve_xmaxymin']
                         merge_node_4(nru, nrd, nld, nlu)
-                    elif ip in xmin:
+                    elif iproc in xmin:
                         # node in curve chunck right up... r u
-                        nlu = boundary_dict[ip]['node_curve_xminymin']
+                        nlu = boundary_dict[iproc]['node_curve_xminymin']
                         nld = boundary_dict[idown]['node_curve_xminymax']
                         merge_node(nld, nlu)
                         # node in curve chunck right up... r u
-                        nru = boundary_dict[ip]['node_curve_xmaxymin']
+                        nru = boundary_dict[iproc]['node_curve_xmaxymin']
                         nrd = boundary_dict[idown]['node_curve_xmaxymax']
                         merge_node(nrd, nru)
 
                 #
-                if ip != ileft:
-                    nright = boundary_dict[ip]['nodes_surf_xmin']
+                if iproc != ileft:
+                    nright = boundary_dict[iproc]['nodes_surf_xmin']
                     nleft = boundary_dict[ileft]['nodes_surf_xmax']
                     merge_node_ck(nright, nleft)
                     #
                     #
-                    if ip in ymin:
+                    if iproc in ymin:
                         # node in curve chunck right down... r u
-                        nrd = boundary_dict[ip]['node_curve_xminymin']
+                        nrd = boundary_dict[iproc]['node_curve_xminymin']
                         nld = boundary_dict[ileft]['node_curve_xmaxymin']
                         merge_node(nrd, nld)
-                    if ip in ymax:
+                    if iproc in ymax:
                         # node in curve chunck right up... r u
-                        nru = boundary_dict[ip]['node_curve_xminymax']
+                        nru = boundary_dict[iproc]['node_curve_xminymax']
                         nlu = boundary_dict[ileft]['node_curve_xmaxymax']
                         merge_node(nlu, nru)
 
@@ -917,41 +965,41 @@ def collecting_merging(cpuxmin=0, cpuxmax=1, cpuymin=0, cpuymax=1, cpux=1,
         idiag = None
         for ix in range(cpuxmin, cpuxmax):
             for iy in range(cpuymin, cpuymax):
-                ip = iy * cpux + ix
-                print '******************* ', ip
+                iproc = iy * cpux + ix
+                print '******************* ', iproc
                 #
-                #   ileft    |   ip
+                #   ileft    |   iproc
                 #  --------------------
                 #   idiag    |   idown
                 #
                 #
-                if ip not in xmin and ip not in ymin:
+                if iproc not in xmin and iproc not in ymin:
                     ileft = iy * cpux + ix - 1
                     idown = (iy - 1) * cpux + ix
                     idiag = idown - 1
-                elif ip in xmin and ip in ymin:
-                    ileft = ip
-                    idown = ip
-                elif ip in xmin:
-                    ileft = ip
+                elif iproc in xmin and iproc in ymin:
+                    ileft = iproc
+                    idown = iproc
+                elif iproc in xmin:
+                    ileft = iproc
                     idown = (iy - 1) * cpux + ix
                     idiag = idown
-                elif ip in ymin:
+                elif iproc in ymin:
                     ileft = iy * cpux + ix - 1
-                    idown = ip
+                    idown = iproc
                     idiag = ileft
                 #
                 #
-                if ip != idown:
-                    nup = boundary_dict[ip]['nodes_surf_ymin']
+                if iproc != idown:
+                    nup = boundary_dict[iproc]['nodes_surf_ymin']
                     ndow = boundary_dict[idown]['nodes_surf_ymax']
                     for n1, n2 in zip(nup, ndow):
                         cubit.cmd('equivalence node ' + str(n1) +
                                   ' ' + str(n2) + ' tolerance ' + str(tol))
                     if idiag != idown:
-                        if ip in ymax and ip not in xmin:
+                        if iproc in ymax and iproc not in xmin:
                             # node in curve chunck left up... r u
-                            nlu = boundary_dict[ip]['node_curve_xminymax']
+                            nlu = boundary_dict[iproc]['node_curve_xminymax']
                             nru = boundary_dict[ileft]['node_curve_xmaxymax']
                             for n in zip(nlu, nru):
                                 cubit.cmd('equivalence node ' +
@@ -959,7 +1007,7 @@ def collecting_merging(cpuxmin=0, cpuxmax=1, cpuymin=0, cpuymax=1, cpux=1,
                                           ' tolerance ' + str(tol))
 
                         # node in curve chunck right up... r u
-                        nru = boundary_dict[ip]['node_curve_xminymin']
+                        nru = boundary_dict[iproc]['node_curve_xminymin']
                         nrd = boundary_dict[idown]['node_curve_xminymax']
                         nld = boundary_dict[idiag]['node_curve_xmaxymax']
                         nlu = boundary_dict[ileft]['node_curve_xmaxymin']
@@ -968,9 +1016,9 @@ def collecting_merging(cpuxmin=0, cpuxmax=1, cpuymin=0, cpuymax=1, cpux=1,
                                       ' '.join(str(x) for x in n) +
                                       ' tolerance ' + str(tol))
 
-                    elif ip in xmin:
+                    elif iproc in xmin:
                         # node in curve chunck right up... r u
-                        nru = boundary_dict[ip]['node_curve_xminymin']
+                        nru = boundary_dict[iproc]['node_curve_xminymin']
                         nrd = boundary_dict[idown]['node_curve_xminymax']
                         for n in zip(nru, nrd):
                             cubit.cmd('equivalence node ' +
@@ -978,25 +1026,25 @@ def collecting_merging(cpuxmin=0, cpuxmax=1, cpuymin=0, cpuymax=1, cpux=1,
                                       ' tolerance ' + str(tol))
                 #
                 #
-                if ip != ileft:
-                    nright = boundary_dict[ip]['nodes_surf_xmin']
+                if iproc != ileft:
+                    nright = boundary_dict[iproc]['nodes_surf_xmin']
                     nleft = boundary_dict[ileft]['nodes_surf_xmax']
                     for n1, n2 in zip(nleft, nright):
                         cubit.cmd('equivalence node ' + str(n1) +
                                   ' ' + str(n2) + ' tolerance ' + str(tol))
                     #
                     #
-                    if ip in ymin:
+                    if iproc in ymin:
                         # node in curve chunck right down... r u
-                        nrd = boundary_dict[ip]['node_curve_xminymin']
+                        nrd = boundary_dict[iproc]['node_curve_xminymin']
                         nld = boundary_dict[ileft]['node_curve_xmaxymin']
                         for n in zip(nrd, nld):
                             cubit.cmd('equivalence node ' +
                                       ' '.join(str(x) for x in n) +
                                       ' tolerance ' + str(tol))
-                    if ip in ymax:
+                    if iproc in ymax:
                         # node in curve chunck right up... r u
-                        nru = boundary_dict[ip]['node_curve_xminymax']
+                        nru = boundary_dict[iproc]['node_curve_xminymax']
                         nlu = boundary_dict[ileft]['node_curve_xmaxymax']
                         for n in zip(nru, nlu):
                             cubit.cmd('equivalence node ' +
@@ -1422,3 +1470,13 @@ def merge_node_4(n1, n2, n3, n4, newmethod=True):
                 print 'equivalence ' + str(len(inv_length[k])) + \
                       ' couples of nodes -  tolerance ' + \
                       str(k * factor + minvalue / 3.)
+
+##########################################################################################
+#
+# end deprecated methods
+#
+##########################################################################################
+
+collect = collect_new
+define_blocks = collect_new
+
