@@ -179,12 +179,6 @@ end module constants
   ! model
   integer :: IMODEL
 
-!! DK DK added this temporarily here to make SPECFEM3D and SPECFEM3D_GLOBE much more similar
-!! DK DK in terms of the structure of their main time iteration loop; these are future features
-!! DK DK that are missing in this code but implemented in the other and that could thus be cut and pasted one day
-  integer :: it_begin,it_end
-  integer :: seismo_offset,seismo_current
-
   !! VM VM number of source for external source time function
   integer :: NSOURCES_STF
 
