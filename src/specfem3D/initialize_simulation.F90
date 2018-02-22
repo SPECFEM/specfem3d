@@ -131,22 +131,6 @@
   ! reads in numbers of spectral elements and points for the part of the mesh handled by this process
   call create_name_database(prname,myrank,LOCAL_PATH)
 
-! for coupling with EXTERNAL CODE !! CD CD modify here
-  if (COUPLE_WITH_INJECTION_TECHNIQUE .or. SAVE_RUN_BOUN_FOR_KH_INTEGRAL) then
-     call create_name_database(dsmname,myrank,TRACTION_PATH)
-
-    if (myrank == 0) then
-       write(IMAIN,*)
-       write(IMAIN,*) '**********************************************'
-       write(IMAIN,*) '      **** USING HYBRID METHOD  ****'
-       write(IMAIN,*) '**********************************************'
-       write(IMAIN,*)
-       write(IMAIN,*) ' create name database ',COUPLE_WITH_INJECTION_TECHNIQUE
-       write(IMAIN,*)
-       write(IMAIN,*) '**********************************************'
-    endif
-  endif
-
 ! read the value of NSPEC_AB and NGLOB_AB because we need it to define some array sizes below
   if (ADIOS_FOR_MESH) then
     call read_mesh_for_init_ADIOS(NSPEC_AB, NGLOB_AB)

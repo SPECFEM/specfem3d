@@ -1,0 +1,432 @@
+
+ **********************************************
+ **** Specfem 3-D Solver - MPI version f90 ****
+ **********************************************
+
+ Version: 3.0.0
+
+ Fixing slow underflow trapping problem using small initial field
+
+ There are           16  MPI processes
+ Processes are numbered from 0 to           15
+
+ There is a total of           16  slices
+
+  NDIM =            3
+
+  NGLLX =            6
+  NGLLY =            6
+  NGLLZ =            6
+
+ using single precision for the calculations
+
+ smallest and largest possible floating-point numbers are:   1.1754944E-38
+  3.4028235E+38
+
+ velocity model:   default
+
+ total acoustic elements    :           0
+ total elastic elements     :       70200
+ total poroelastic elements :           0
+
+ ********
+ minimum and maximum number of elements
+ and points in the CUBIT + SCOTCH mesh:
+
+ NSPEC_global_min =         4169
+ NSPEC_global_max =         4606
+ NSPEC_global_max / NSPEC_global_min imbalance =    1.104821      =
+   10.48213      %
+ NSPEC_global_sum =        70200
+
+ NGLOB_global_min =       539801
+ NGLOB_global_max =       600791
+ NGLOB_global_max / NGLOB_global_min imbalance =    1.112986      =
+   11.29861      %
+ NGLOB_global_sum =      9107189
+
+ If you have elements of a single type (all acoustic, all elastic, all poroelast
+ ic, and without CPML)
+ in the whole mesh, then there should be no significant imbalance in the above n
+ umbers.
+ Otherwise, it is normal to have imbalance in elements and points because the do
+ main decomposer
+ compensates for the different cost of different elements by partitioning them u
+ nevenly among processes.
+ ********
+
+
+ ********
+ Model: P velocity min,max =    2800.000       7500.000
+ Model: S velocity min,max =    1500.000       4300.000
+
+ Model: Poisson's ratio min,max =   0.2551642      0.2987478
+ ********
+
+ *********************************************
+ *** Verification of simulation parameters ***
+ *********************************************
+
+ *** Xmin and Xmax of the model =   0.0000000E+00   134000.0
+ *** Ymin and Ymax of the model =   0.0000000E+00   134000.0
+ *** Zmin and Zmax of the model =   -60000.00      0.0000000E+00
+
+ *** Max GLL point distance =    1274.039
+ *** Min GLL point distance =    117.4723
+ *** Max/min ratio =    10.84544
+
+ *** Max element size =    4466.672
+ *** Min element size =    1000.000
+ *** Max/min ratio =    4.466672
+
+ *** Minimum period resolved =    1.038761
+ *** Maximum suggested time step =   8.6342124E-03
+
+ *** for DT :   7.500000000000000E-003
+ *** Max stability for wave velocities =   0.4343187
+
+ Elapsed time for checking mesh resolution in seconds =   8.234977722167969E-003
+ ******************************************
+ There is a total of           16  slices
+ ******************************************
+
+
+ kd-tree:
+   total data points:         4169
+   theoretical   number of nodes:         8334
+                tree memory size:   0.2543335     MB
+   actual        number of nodes:         8337
+                tree memory size:   0.2544250     MB
+   maximum depth   :           15
+   creation timing :   3.0299947E-03 (s)
+
+
+ sources:           1
+
+ ********************
+  locating sources
+ ********************
+
+ reading source information from ./DATA/FORCESOLUTION file
+
+ no UTM projection
+
+ source #            1
+   source located in slice            2
+                  in element         4592
+                  in elastic domain
+
+   using force point source:
+     xi coordinate of source in that element:   -1.00000000000000
+     eta coordinate of source in that element:    1.00000000000000
+     gamma coordinate of source in that element:    1.00000000000000
+
+     component of direction vector in East direction:   0.0000000E+00
+     component of direction vector in North direction:   0.0000000E+00
+     component of direction vector in Vertical direction:   -1.000000
+
+     nu1 =    1.00000000000000       0.000000000000000E+000
+  0.000000000000000E+000
+     nu2 =   0.000000000000000E+000   1.00000000000000
+  0.000000000000000E+000
+     nu3 =   0.000000000000000E+000  0.000000000000000E+000
+   1.00000000000000
+
+     at (x,y,z) coordinates =    67000.0000000000        67000.0000000000
+  -25050.0000000000
+
+   source time function:
+     using Ricker source time function
+     using a source of dominant frequency   0.400000000000000
+     t0_ricker =    3.00000000000000
+     Ricker frequency:   0.400000000000000       Hz
+
+     time shift:   0.000000000000000E+000  seconds
+
+   magnitude of the source:
+     factor =   1.000000000000000E+015
+
+   original (requested) position of the source:
+
+             latitude:    67000.0000000000
+            longitude:    67000.0000000000
+
+                x:    67000.0000000000
+                y:    67000.0000000000
+            depth:    25.0500000000000       km
+   topo elevation:   0.000000000000000E+000
+
+   position of the source that will be used:
+
+                x:    67000.0000000000
+                y:    67000.0000000000
+            depth:    25.0500000000000       km
+                z:   -25050.0000000000
+
+   error in location of the source:   0.0000000E+00  m
+
+
+
+ maximum error in location of the sources:   0.0000000E+00  m
+
+
+ Elapsed time for detection of sources in seconds =   1.377105712890625E-003
+
+ End of source detection - done
+
+
+ receivers:
+
+ there are            2  stations in file ./DATA/STATIONS
+ saving            2  stations inside the model in file ./DATA/STATIONS_FILTERED
+ excluding            0  stations located outside the model
+
+
+ Total number of receivers =            2
+
+
+ ********************
+  locating receivers
+ ********************
+
+ reading receiver information from ./DATA/STATIONS_FILTERED file
+
+
+ station #            1     DB    X31
+      original latitude:    67000.00
+      original longitude:    35892.90
+      original x:    35892.90
+      original y:    67000.00
+      original depth:   0.0000000E+00  m
+      horizontal distance:    31.10710
+      target x, y, z:    35892.90       67000.00      0.0000000E+00
+      closest estimate found:   0.0000000E+00  m away
+
+      receiver located in slice            3
+                       in element         2888
+                       in elastic domain
+      at coordinates:
+      xi    =    1.00000000000000
+      eta   =   0.785655217286364
+      gamma =    1.00000000000001
+      rotation matrix:
+      nu1 =    1.00000000000000       0.000000000000000E+000
+  0.000000000000000E+000
+      nu2 =   0.000000000000000E+000   1.00000000000000
+  0.000000000000000E+000
+      nu3 =   0.000000000000000E+000  0.000000000000000E+000
+   1.00000000000000
+      x:    35892.9000000000
+      y:    67000.0000000000
+      depth:   0.000000000000000E+000  m
+      z:   0.000000000000000E+000
+
+
+
+ station #            2     DB    X55
+      original latitude:    67000.00
+      original longitude:    64607.10
+      original x:    64607.10
+      original y:    67000.00
+      original depth:   0.0000000E+00  m
+      horizontal distance:    2.392900
+      target x, y, z:    64607.10       67000.00      0.0000000E+00
+      closest estimate found:   0.0000000E+00  m away
+
+      receiver located in slice            6
+                       in element         2541
+                       in elastic domain
+      at coordinates:
+      xi    =    1.00000000000000
+      eta   =   0.214342721465024
+      gamma =   -1.00000000000000
+      rotation matrix:
+      nu1 =    1.00000000000000       0.000000000000000E+000
+  0.000000000000000E+000
+      nu2 =   0.000000000000000E+000   1.00000000000000
+  0.000000000000000E+000
+      nu3 =   0.000000000000000E+000  0.000000000000000E+000
+   1.00000000000000
+      x:    64607.1000000000
+      y:    67000.0000000000
+      depth:   0.000000000000000E+000  m
+      z:   0.000000000000000E+000
+
+
+ maximum error in location of all the receivers:   0.0000000E+00  m
+
+ Elapsed time for receiver detection in seconds =   7.308959960937500E-003
+
+ End of receiver detection - done
+
+ source arrays:
+   number of sources is            1
+   size of source array                 =   2.4719238E-03 MB
+                                        =   2.4139881E-06 GB
+
+ seismograms:
+   seismograms written by all processes
+   writing out seismograms at every NTSTEP_BETWEEN_OUTPUT_SEISMOS =         3000
+   maximum number of local receivers is            1  in slice            3
+   size of maximum seismogram array       =   3.4332275E-02 MB
+                                          =   3.3527613E-05 GB
+
+
+ Total number of samples for seismograms =         3000
+
+ found a total of            2  receivers in all the slices
+
+
+ Simulation setup:
+
+   no acoustic simulation
+ incorporating elastic simulation
+   no poroelastic simulation
+
+   no attenuation
+   no anisotropy
+   no oceans
+   no gravity
+   no movie simulation
+
+
+   no dynamic faults
+   no kinematic faults
+
+   no gravity simulation
+
+
+ Elapsed time for preparing timerun in seconds =   1.674604415893555E-002
+
+ ************
+  time loop
+ ************
+               scheme:         Newmark
+
+            time step:   7.4999998E-03  s
+ number of time steps:         3000
+ total simulated time:    22.50000      seconds
+ start time:  -3.000000      seconds
+
+ All processes are synchronized before time loop
+
+ Starting time iteration loop...
+
+ Time step #            5
+ Time:   -2.970000      seconds
+ Elapsed time in seconds =   0.435024976730347
+ Elapsed time in hh:mm:ss =      0 h 00 m 00 s
+ Mean elapsed time per time step in seconds =   8.7004997E-02
+ Max norm displacement vector U in all slices (m) =   7.3247575E-05
+ Time steps done =            5  out of         3000
+ Time steps remaining =         2995
+ Estimated remaining time in seconds =    260.5800
+ Estimated remaining time in hh:mm:ss =      0 h 04 m 20 s
+ Estimated total run time in seconds =    261.0150
+ Estimated total run time in hh:mm:ss =      0 h 04 m 21 s
+ We have done   0.1666667     % of that
+ The run will finish approximately on (in local time): Wed Feb 21, 2018 00:54
+ ************************************************************
+ **** BEWARE: the above time estimates are not very reliable
+ **** because fewer than 100 iterations have been performed
+ ************************************************************
+
+ Time step #          500
+ Time:   0.7425000      seconds
+ Elapsed time in seconds =    53.2686588764191
+ Elapsed time in hh:mm:ss =      0 h 00 m 53 s
+ Mean elapsed time per time step in seconds =   0.1065373
+ Max norm displacement vector U in all slices (m) =    3.300110
+ Time steps done =          500  out of         3000
+ Time steps remaining =         2500
+ Estimated remaining time in seconds =    266.3433
+ Estimated remaining time in hh:mm:ss =      0 h 04 m 26 s
+ Estimated total run time in seconds =    319.6119
+ Estimated total run time in hh:mm:ss =      0 h 05 m 19 s
+ We have done    16.66667     % of that
+ The run will finish approximately on (in local time): Wed Feb 21, 2018 00:55
+
+ Time step #         1000
+ Time:    4.492500      seconds
+ Elapsed time in seconds =    106.633472919464
+ Elapsed time in hh:mm:ss =      0 h 01 m 46 s
+ Mean elapsed time per time step in seconds =   0.1066335
+ Max norm displacement vector U in all slices (m) =   6.9206849E-02
+ Time steps done =         1000  out of         3000
+ Time steps remaining =         2000
+ Estimated remaining time in seconds =    213.2670
+ Estimated remaining time in hh:mm:ss =      0 h 03 m 33 s
+ Estimated total run time in seconds =    319.9004
+ Estimated total run time in hh:mm:ss =      0 h 05 m 19 s
+ We have done    33.33333     % of that
+ The run will finish approximately on (in local time): Wed Feb 21, 2018 00:56
+
+ Time step #         1500
+ Time:    8.242500      seconds
+ Elapsed time in seconds =    159.977639913559
+ Elapsed time in hh:mm:ss =      0 h 02 m 39 s
+ Mean elapsed time per time step in seconds =   0.1066518
+ Max norm displacement vector U in all slices (m) =   8.2561590E-02
+ Time steps done =         1500  out of         3000
+ Time steps remaining =         1500
+ Estimated remaining time in seconds =    159.9776
+ Estimated remaining time in hh:mm:ss =      0 h 02 m 39 s
+ Estimated total run time in seconds =    319.9553
+ Estimated total run time in hh:mm:ss =      0 h 05 m 19 s
+ We have done    50.00000     % of that
+ The run will finish approximately on (in local time): Wed Feb 21, 2018 00:56
+
+ Time step #         2000
+ Time:    11.99250      seconds
+ Elapsed time in seconds =    213.370447874069
+ Elapsed time in hh:mm:ss =      0 h 03 m 33 s
+ Mean elapsed time per time step in seconds =   0.1066852
+ Max norm displacement vector U in all slices (m) =   5.0167669E-02
+ Time steps done =         2000  out of         3000
+ Time steps remaining =         1000
+ Estimated remaining time in seconds =    106.6852
+ Estimated remaining time in hh:mm:ss =      0 h 01 m 46 s
+ Estimated total run time in seconds =    320.0557
+ Estimated total run time in hh:mm:ss =      0 h 05 m 20 s
+ We have done    66.66666     % of that
+ The run will finish approximately on (in local time): Wed Feb 21, 2018 00:56
+
+ Time step #         2500
+ Time:    15.74250      seconds
+ Elapsed time in seconds =    266.705928087234
+ Elapsed time in hh:mm:ss =      0 h 04 m 26 s
+ Mean elapsed time per time step in seconds =   0.1066824
+ Max norm displacement vector U in all slices (m) =   3.6726397E-02
+ Time steps done =         2500  out of         3000
+ Time steps remaining =          500
+ Estimated remaining time in seconds =    53.34119
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 53 s
+ Estimated total run time in seconds =    320.0471
+ Estimated total run time in hh:mm:ss =      0 h 05 m 20 s
+ We have done    83.33334     % of that
+ The run will finish approximately on (in local time): Wed Feb 21, 2018 00:56
+
+ Time step #         3000
+ Time:    19.49250      seconds
+ Elapsed time in seconds =    320.045104980469
+ Elapsed time in hh:mm:ss =      0 h 05 m 20 s
+ Mean elapsed time per time step in seconds =   0.1066817
+ Max norm displacement vector U in all slices (m) =   2.7455645E-02
+ Time steps done =         3000  out of         3000
+ Time steps remaining =            0
+ Estimated remaining time in seconds =   0.0000000E+00
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 00 s
+ Estimated total run time in seconds =    320.0451
+ Estimated total run time in hh:mm:ss =      0 h 05 m 20 s
+ We have done    100.0000     % of that
+
+
+ Total number of time steps written:         3000
+ Writing the seismograms in parallel took   6.0356855E-02  seconds
+
+ Time-Loop Complete. Timing info:
+ Total elapsed time in seconds =    320.210174083710
+ Total elapsed time in hh:mm:ss =      0 h 05 m 20 s
+
+ End of the simulation
+

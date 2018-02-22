@@ -1,25 +1,50 @@
-#!python
 #!/usr/bin/env python
-
+##!python
+##!/usr/bin/python
 ###########################################################################
 #### TNM: This is the mesh generation, adapted from a journal file
 ####      specific to the settings of Komatitsch and Tromp 1999, Fig.8
 ####      Aug 2009
 ###########################################################################
-
-import cubit
-cubit.init([""])
-try:
-
-from geocubitlib import boundary_definition
-from geocubitlib import cubit2specfem3d
-except:
-
- import boundary_definition
-import cubit2specfem3d
-
 import os
 import sys
+
+## choose your size
+# hi-resolution
+#elementsize = 1196.4
+
+# mid-resolution
+#elementsize = 1500.0
+
+# low-resolution
+elementsize = 3000.0
+
+# default directories
+SEMoutput='MESH'
+CUBIToutput='MESH_GEOCUBIT'
+
+os.system('mkdir -p '+ SEMoutput)
+os.system('mkdir -p '+ CUBIToutput)
+
+## obsolete:
+#import boundary_definition
+#import cubit2specfem3d
+## new:
+from geocubitlib import boundary_definition
+from geocubitlib import cubit2specfem3d
+
+## CUBIT/Trelis
+import cubit
+try:
+    #cubit.init([""])
+    cubit.init(["-noecho","-nojournal"])
+except:
+    pass
+
+version = cubit.get_version()
+version_major = int(version.split(".")[0])
+version_minor = int(version.split(".")[1])
+print "cubit version: ",version
 
 cubit.cmd('reset')
 cubit.cmd('brick x 134000 y 134000 z 60000')
@@ -56,11 +81,6 @@ cubit.cmd('delete volume 2 4')
 
 cubit.cmd('merge all')
 cubit.cmd('imprint all')
-
-# Meshing the volumes
-#elementsize = 1196.4 #hi-resolution
-#elementsize = 1500.0 # mid-resolution
-elementsize = 3000.0 # low-resolution
 
 cubit.cmd('volume 3 size '+str(elementsize))
 cubit.cmd('mesh volume 3')
@@ -108,13 +128,18 @@ cubit.cmd('block 3 attribute index 4 3200 ')
 cubit.cmd('block 3 attribute index 5 9000.0')
 cubit.cmd('block 3 attribute index 6 0')
 
-cubit.cmd('export mesh "top.e" dimension 3 overwrite')
-cubit.cmd('save as "meshing.cub" overwrite')
+cubit.cmd('export mesh "' + CUBIToutput + '/top.e" dimension 3 overwrite')
+cubit.cmd('save as "' + CUBIToutput + '/top.cub" overwrite')
 
 #### Export to SPECFEM3D format using cubit2specfem3d.py of GEOCUBIT
 
-os.system('mkdir -p MESH')
-cubit2specfem3d.export2SPECFEM3D('MESH')
+cubit2specfem3d.export2SPECFEM3D(SEMoutput)
+
+# screen shot
+# (could crash version < 16.4)
+if version_major >= 16 and version_minor >= 4:
+    cubit.cmd('view top')
+    cubit.cmd('hardcopy "' + CUBIToutput + '/layered-fig8-nodoubling.png" png')
 
 # all files needed by SCOTCH are now in directory MESH
 

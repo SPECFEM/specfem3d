@@ -40,11 +40,11 @@
   implicit none
 
   ! local parameters
-  double precision :: tCPU
+  double precision :: tCPU,tstart
   double precision, external :: wtime
 
   ! get MPI starting time
-  time_start = wtime()
+  tstart = wtime()
 
   ! user output infos
   call prepare_timerun_user_output()
@@ -91,13 +91,18 @@
   call prepare_timerun_OpenMP()
 #endif
 
+  ! prepars coupling with injection boundary
+  call couple_with_injection_prepare_boundary()
+
   ! elapsed time since beginning of preparation
   if (myrank == 0) then
-    tCPU = wtime() - time_start
+    tCPU = wtime() - tstart
     write(IMAIN,*)
     write(IMAIN,*) 'Elapsed time for preparing timerun in seconds = ',tCPU
     write(IMAIN,*)
-    write(IMAIN,*) 'time loop:'
+    write(IMAIN,*) '************'
+    write(IMAIN,*) ' time loop'
+    write(IMAIN,*) '************'
     if (USE_LDDRK) then
       write(IMAIN,*) '              scheme:         LDDRK with',NSTAGE_TIME_SCHEME,'stages'
     else
@@ -154,66 +159,62 @@
 
   ! user info
   if (myrank == 0) then
-
     write(IMAIN,*)
+    write(IMAIN,*) 'Simulation setup:'
+    write(IMAIN,*)
+
+    if (ACOUSTIC_SIMULATION) then
+      write(IMAIN,*) 'incorporating acoustic simulation'
+    else
+      write(IMAIN,*) '  no acoustic simulation'
+    endif
+
+    if (ELASTIC_SIMULATION) then
+      write(IMAIN,*) 'incorporating elastic simulation'
+    else
+      write(IMAIN,*) '  no elastic simulation'
+    endif
+
+    if (POROELASTIC_SIMULATION) then
+      write(IMAIN,*) 'incorporating poroelastic simulation'
+    else
+      write(IMAIN,*) '  no poroelastic simulation'
+    endif
+    write(IMAIN,*)
+
     if (ATTENUATION) then
       write(IMAIN,*) 'incorporating attenuation using ',N_SLS,' standard linear solids'
       if (USE_OLSEN_ATTENUATION) then
         write(IMAIN,*) 'using attenuation from Olsen et al.'
       else
-        write(IMAIN,*) 'not using attenuation from Olsen et al.'
+        write(IMAIN,*) '  not using attenuation from Olsen et al.'
       endif
     else
-      write(IMAIN,*) 'no attenuation'
+      write(IMAIN,*) '  no attenuation'
     endif
 
-    write(IMAIN,*)
     if (ANISOTROPY) then
       write(IMAIN,*) 'incorporating anisotropy'
     else
-      write(IMAIN,*) 'no anisotropy'
+      write(IMAIN,*) '  no anisotropy'
     endif
 
-    write(IMAIN,*)
     if (APPROXIMATE_OCEAN_LOAD) then
       write(IMAIN,*) 'incorporating the oceans using equivalent load'
     else
-      write(IMAIN,*) 'no oceans'
+      write(IMAIN,*) '  no oceans'
     endif
 
-    write(IMAIN,*)
     if (GRAVITY) then
       write(IMAIN,*) 'incorporating gravity'
     else
-      write(IMAIN,*) 'no gravity'
+      write(IMAIN,*) '  no gravity'
     endif
 
-    write(IMAIN,*)
-    if (ACOUSTIC_SIMULATION) then
-      write(IMAIN,*) 'incorporating acoustic simulation'
-    else
-      write(IMAIN,*) 'no acoustic simulation'
-    endif
-
-    write(IMAIN,*)
-    if (ELASTIC_SIMULATION) then
-      write(IMAIN,*) 'incorporating elastic simulation'
-    else
-      write(IMAIN,*) 'no elastic simulation'
-    endif
-
-    write(IMAIN,*)
-    if (POROELASTIC_SIMULATION) then
-      write(IMAIN,*) 'incorporating poroelastic simulation'
-    else
-      write(IMAIN,*) 'no poroelastic simulation'
-    endif
-
-    write(IMAIN,*)
     if (MOVIE_SIMULATION) then
       write(IMAIN,*) 'incorporating movie simulation'
     else
-      write(IMAIN,*) 'no movie simulation'
+      write(IMAIN,*) '  no movie simulation'
     endif
 
     write(IMAIN,*)
@@ -355,9 +356,6 @@
 
   implicit none
 
-  ! local parameters
-  integer :: ier
-
   ! time scheme
   if (.not. USE_LDDRK) then
     ! Newmark time scheme, only single update needed
@@ -379,25 +377,6 @@
     b_deltat = - real(DT,kind=CUSTOM_REAL)
     b_deltatover2 = b_deltat/2._CUSTOM_REAL
     b_deltatsqover2 = b_deltat*b_deltat/2._CUSTOM_REAL
-  endif
-
-  ! seismograms
-  if (nrec_local > 0) then
-    ! allocate seismogram array
-    allocate(seismograms_d(NDIM,nrec_local,NSTEP),stat=ier)
-    if (ier /= 0) stop 'error allocating array seismograms_d'
-    allocate(seismograms_v(NDIM,nrec_local,NSTEP),stat=ier)
-    if (ier /= 0) stop 'error allocating array seismograms_v'
-    allocate(seismograms_a(NDIM,nrec_local,NSTEP),stat=ier)
-    if (ier /= 0) stop 'error allocating array seismograms_a'
-    allocate(seismograms_p(NDIM,nrec_local,NSTEP),stat=ier)
-    if (ier /= 0) stop 'error allocating array seismograms_p'
-
-    ! initialize seismograms
-    seismograms_d(:,:,:) = 0._CUSTOM_REAL
-    seismograms_v(:,:,:) = 0._CUSTOM_REAL
-    seismograms_a(:,:,:) = 0._CUSTOM_REAL
-    seismograms_p(:,:,:) = 0._CUSTOM_REAL
   endif
 
   end subroutine prepare_timerun_constants
@@ -627,7 +606,7 @@
   integer :: ier
   integer(kind=8) :: filesize
 
-  ! seismograms
+  ! moment tensor derivatives
   if (nrec_local > 0 .and. SIMULATION_TYPE == 2) then
     ! allocate Frechet derivatives array
     allocate(Mxx_der(nrec_local),Myy_der(nrec_local), &
@@ -642,10 +621,6 @@
     Mxz_der = 0._CUSTOM_REAL
     Myz_der = 0._CUSTOM_REAL
     sloc_der = 0._CUSTOM_REAL
-
-    allocate(seismograms_eps(NDIM,NDIM,nrec_local,NSTEP),stat=ier)
-    if (ier /= 0) stop 'error allocating array seismograms_eps'
-    seismograms_eps(:,:,:,:) = 0._CUSTOM_REAL
   endif
 
   ! attenuation backward memories

@@ -38,7 +38,7 @@
 
   use create_regions_mesh_ext_par
 
-  use constants, only: INJECTION_TECHNIQUE_IS_FK
+  use constants, only: INJECTION_TECHNIQUE_IS_FK,INJECTION_TECHNIQUE_IS_DSM,INJECTION_TECHNIQUE_IS_AXISEM
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH,INJECTION_TECHNIQUE_TYPE
 
   implicit none
@@ -75,9 +75,7 @@
   ispec_is_poroelastic(:) = .false.
 
   ! prepares tomographic models if needed for elements with undefined material definitions
-#ifndef DEBUG_COUPLED
   if (nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO) call model_tomography_broadcast(myrank)
-#endif
 
   ! prepares external model values if needed
   select case (IMODEL)
@@ -101,9 +99,18 @@
     if (myrank == 0) then
       write(IMAIN,*)
       write(IMAIN,*)
-      write(IMAIN,*) '         USING A HYBRID METHOD (THE CODE IS COUPLED WITH AN INJECTION TECHNIQUE)'
+      write(IMAIN,*) '     USING A HYBRID METHOD (THE CODE IS COUPLED WITH AN INJECTION TECHNIQUE)'
       write(IMAIN,*)
-      write(IMAIN,*) '         INJECTION TECHNIQUE TYPE = ', INJECTION_TECHNIQUE_TYPE
+      select case(INJECTION_TECHNIQUE_TYPE)
+      case (INJECTION_TECHNIQUE_IS_DSM)
+        write(IMAIN,*) '     INJECTION TECHNIQUE TYPE = ', INJECTION_TECHNIQUE_TYPE,' (DSM) '
+      case (INJECTION_TECHNIQUE_IS_AXISEM)
+        write(IMAIN,*) '     INJECTION TECHNIQUE TYPE = ', INJECTION_TECHNIQUE_TYPE,' (AXISEM) '
+      case (INJECTION_TECHNIQUE_IS_FK)
+        write(IMAIN,*) '     INJECTION TECHNIQUE TYPE = ', INJECTION_TECHNIQUE_TYPE,' (FK) '
+      case default
+        stop 'Invalid INJECTION_TECHNIQUE_TYPE chosen, must be 1 == DSM, 2 == AXISEM or 3 == FK'
+      end select
       write(IMAIN,*)
       write(IMAIN,*)
     endif
@@ -391,9 +398,7 @@
   call any_all_l( ANY(ispec_is_poroelastic), POROELASTIC_SIMULATION )
 
   ! deallocates tomographic arrays
-#ifndef DEBUG_COUPLED
   if ( (nundefMat_ext_mesh > 0 .or. IMODEL == IMODEL_TOMO) ) call deallocate_tomography_files()
-#endif
 
   end subroutine get_model
 
@@ -624,7 +629,6 @@
     !        be able to superimpose a model onto the default one:
 
     ! material values determined by mesh properties
-#ifndef DEBUG_COUPLED
     call model_default(materials_ext_mesh,nmat_ext_mesh, &
                        undef_mat_prop,nundefMat_ext_mesh, &
                        imaterial_id,imaterial_def, &
@@ -632,7 +636,6 @@
                        iflag_aniso,qkappa_atten,qmu_atten,idomain_id, &
                        rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
                        phi,tort,kxx,kxy,kxz,kyy,kyz,kzz)
-#endif
 
     ! user model from external routine
     ! adds/gets velocity model as specified in model_external_values.f90

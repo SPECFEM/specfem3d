@@ -71,11 +71,13 @@ specfem3D_OBJECTS = \
 	$O/compute_gradient_in_acoustic.spec.o \
 	$O/compute_interpolated_dva.spec.o \
 	$O/compute_kernels.spec.o \
+	$O/compute_seismograms.spec.o \
 	$O/compute_stacey_acoustic.spec.o \
 	$O/compute_stacey_viscoelastic.spec.o \
 	$O/compute_stacey_poroelastic.spec.o \
 	$O/compute_energy.spec.o \
 	$O/convert_time.spec.o \
+	$O/couple_with_injection.spec.o \
 	$O/calendar.spec.o \
 	$O/create_color_image.spec.o \
 	$O/detect_mesh_surfaces.spec.o \
@@ -115,6 +117,7 @@ specfem3D_OBJECTS = \
 	$O/setup_sources_receivers.spec.o \
 	$O/specfem3D.spec.o \
 	$O/station_filter.spec.o \
+	$O/surface_or_volume_integral.spec.o \
 	$O/update_displacement_scheme.spec.o \
 	$O/update_displacement_LDDRK.spec.o \
 	$O/write_movie_output.spec.o \
@@ -168,6 +171,7 @@ specfem3D_MODULES = \
 	$(FC_MODDIR)/specfem_par_elastic.$(FC_MODEXT) \
 	$(FC_MODDIR)/specfem_par_poroelastic.$(FC_MODEXT) \
 	$(FC_MODDIR)/specfem_par_movie.$(FC_MODEXT) \
+	$(FC_MODDIR)/specfem_par_coupling.$(FC_MODEXT) \
 	$(FC_MODDIR)/user_noise_distribution.$(FC_MODEXT) \
 	$(EMPTY_MACRO)
 

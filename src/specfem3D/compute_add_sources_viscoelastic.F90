@@ -186,7 +186,7 @@
                     iglob = ibool(i,j,k,ispec_selected_rec(irec))
 
                     accel(:,iglob) = accel(:,iglob)  &
-                              + source_adjoint(irec_local,NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC),:) * &
+                              + source_adjoint(:,irec_local,NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC)) * &
                                 hxir_store(irec_local,i)*hetar_store(irec_local,j)*hgammar_store(irec_local,k)
                   enddo
                 enddo
@@ -263,7 +263,7 @@
 
 ! no source inside the mesh if we are coupling with DSM
 ! because the source is precisely the wavefield coming from the DSM traction file
-  if (COUPLE_WITH_INJECTION_TECHNIQUE .and. SIMULATION_TYPE == 1) return
+  if (COUPLE_WITH_INJECTION_TECHNIQUE .and. SIMULATION_TYPE == 3) return
 
 ! NOTE: adjoint sources and backward wavefield timing:
 !             idea is to start with the backward field b_displ,.. at time (T)

@@ -161,10 +161,11 @@
 
  number of mesh regions =            1
    creating mesh region            1
+
  mesh dimensions:
-     Xmin and Xmax of the model =    0.0000000000000000        288.00000000000000
-     Ymin and Ymax of the model =    0.0000000000000000        144.00000000000000
-     Zmin and Zmax of the model =   -70.500000000000014       -0.0000000000000000
+   Xmin and Xmax of the model =    0.00000000       288.000000
+   Ymin and Ymax of the model =    0.00000000       144.000000
+   Zmin and Zmax of the model =   -70.5000000      -0.00000000
 
  exact area =    41472.0000     (m^2)
             =    4.14719991E-02 (km^2)
@@ -256,6 +257,7 @@
   0.850000024      -   0.899999976               0     0.00000000      %
   0.899999976      -   0.949999988               0     0.00000000      %
   0.949999988      -    1.00000000               0     0.00000000      %
+
  plotting skewness to VTK-file: ./OUTPUT_FILES/DATABASES_MPI/proc000000_skewness.vtk
 
 
@@ -274,7 +276,7 @@
  smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
 
- Elapsed time for mesh generation and buffer creation in seconds =    4.8294067382812500E-002
+ Elapsed time for mesh generation and buffer creation in seconds =    7.9944849014282227E-002
  End of mesh generation
 
  done

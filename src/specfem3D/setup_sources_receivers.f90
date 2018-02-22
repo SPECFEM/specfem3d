@@ -38,6 +38,9 @@
   ! builds search tree
   if (.not. DO_BRUTE_FORCE_POINT_SEARCH) call setup_search_kdtree()
 
+  ! sets number of timestep parameters
+  call setup_timesteps()
+
   ! locates sources and determines simulation start time t0
   call setup_sources()
 
@@ -59,8 +62,11 @@
     write(IMAIN,*) 'Total number of samples for seismograms = ',NSTEP
     write(IMAIN,*)
     write(IMAIN,*) 'found a total of ',nrec_tot_found,' receivers in all the slices'
-    if (NSOURCES > 1) write(IMAIN,*) 'Using ',NSOURCES,' point sources'
     write(IMAIN,*)
+    if (NSOURCES > 1) then
+      write(IMAIN,*) 'Using ',NSOURCES,' point sources'
+      write(IMAIN,*)
+    endif
     call flush_IMAIN()
   endif
 
@@ -77,6 +83,51 @@
   call synchronize_all()
 
   end subroutine setup_sources_receivers
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine setup_timesteps()
+
+  use specfem_par, only: myrank,NSTEP,NSOURCES,SIMULATION_TYPE, &
+    NTSTEP_BETWEEN_OUTPUT_SEISMOS,NTSTEP_BETWEEN_READ_ADJSRC, &
+    USE_EXTERNAL_SOURCE_FILE,NSTEP_STF,NSOURCES_STF, &
+    SAVE_ALL_SEISMOS_IN_ONE_FILE
+
+  implicit none
+
+  ! subsets used to save seismograms must not be larger than the whole time series
+  if (NTSTEP_BETWEEN_OUTPUT_SEISMOS > NSTEP) NTSTEP_BETWEEN_OUTPUT_SEISMOS = NSTEP
+
+  ! subsets used to save adjoint sources must not be larger than the whole time series,
+  ! otherwise we waste memory
+  if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
+    if (NTSTEP_BETWEEN_READ_ADJSRC > NSTEP) NTSTEP_BETWEEN_READ_ADJSRC = NSTEP
+  endif
+
+  !! VM VM set the size of user_source_time_function
+  if (USE_EXTERNAL_SOURCE_FILE) then
+     NSTEP_STF = NSTEP
+     NSOURCES_STF = NSOURCES
+  else !! We don't need the array user_source_time_function : use a small dummy array
+     NSTEP_STF = 1
+     NSOURCES_STF = 1
+  endif
+
+  ! check
+  if (SAVE_ALL_SEISMOS_IN_ONE_FILE) then
+    ! requires to have full length of seismograms
+    if (NTSTEP_BETWEEN_OUTPUT_SEISMOS < NSTEP) then
+      if (myrank == 0) then
+        print *, 'Error: Setting SAVE_ALL_SEISMOS_IN_ONE_FILE to .true. requires NTSTEP_BETWEEN_OUTPUT_SEISMOS >= NSTEP'
+      endif
+      call exit_MPI(myrank, &
+                    'Setting SAVE_ALL_SEISMOS_IN_ONE_FILE not supported for current NTSTEP_BETWEEN_OUTPUT_SEISMOS in Par_file')
+    endif
+  endif
+
+  end subroutine setup_timesteps
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -136,14 +187,6 @@
   endif
   if (ier /= 0) stop 'error allocating arrays for force point sources'
 
-  !! VM VM set the size of user_source_time_function
-  if (USE_EXTERNAL_SOURCE_FILE) then
-     NSTEP_STF = NSTEP
-     NSOURCES_STF = NSOURCES
-  else !! We don't need the array user_source_time_function : use a small dummy array
-     NSTEP_STF = 1
-     NSOURCES_STF = 1
-  endif
   !! allocate the array contains the user defined source time function
   allocate(user_source_time_function(NSTEP_STF, NSOURCES_STF),stat=ier)
   if (ier /= 0) stop 'error allocating arrays for user sources time function'
@@ -170,7 +213,9 @@
                      factor_force_source,comp_dir_vect_source_E,comp_dir_vect_source_N,comp_dir_vect_source_Z_UP, &
                      xi_source,eta_source,gamma_source,nu_source,user_source_time_function)
 
-  call define_stf_constants(hdur,hdur_Gaussian,tshift_src,min_tshift_src_original,islice_selected_source,ispec_selected_source,t0)
+  ! determines onset time
+  call setup_stf_constants(hdur,hdur_Gaussian,tshift_src,min_tshift_src_original, &
+                           islice_selected_source,ispec_selected_source,t0)
 
   ! count number of sources located in this slice
   nsources_local = 0
@@ -189,7 +234,7 @@
 !
 !-------------------------------------------------------------------------------------------------
 !
-  subroutine define_stf_constants(hdur,hdur_Gaussian,tshift_src,min_tshift_src_original, &
+  subroutine setup_stf_constants(hdur,hdur_Gaussian,tshift_src,min_tshift_src_original, &
                                   islice_selected_source,ispec_selected_source,t0)
 
   use constants
@@ -326,7 +371,7 @@
     call exit_mpi(myrank,'error negative USER_T0 parameter in constants.h')
   endif
 
-  end subroutine define_stf_constants
+  end subroutine setup_stf_constants
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -636,8 +681,26 @@
   double precision, dimension(NGLLY) :: hetas,hpetas
   double precision, dimension(NGLLZ) :: hgammas,hpgammas
   double precision :: norm,comp_x,comp_y,comp_z
-
+  double precision :: sizeval
   logical :: does_source_encoding
+
+  ! user output info
+  ! sources
+  if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
+    ! user output
+    if (myrank == 0) then
+      ! note: all process allocate the full sourcearrays array
+      ! sourcearrays(NDIM,NGLLX,NGLLY,NGLLZ,NSOURCES)
+      sizeval = dble(NSOURCES) * dble(NDIM * NGLLX * NGLLY * NGLLZ * CUSTOM_REAL / 1024. / 1024. )
+      ! outputs info
+      write(IMAIN,*) 'source arrays:'
+      write(IMAIN,*) '  number of sources is ',NSOURCES
+      write(IMAIN,*) '  size of source array                 = ', sngl(sizeval),'MB'
+      write(IMAIN,*) '                                       = ', sngl(sizeval/1024.d0),'GB'
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+  endif
 
   ! for source encoding (acoustic sources only so far)
   if (USE_SOURCE_ENCODING) then
@@ -658,6 +721,9 @@
     ! compute source arrays
     do isource = 1,NSOURCES
 
+      ! initializes
+      sourcearray(:,:,:,:) = ZERO
+
       !   check that the source slice number is okay
       if (islice_selected_source(isource) < 0 .or. islice_selected_source(isource) > NPROC-1) &
         call exit_MPI(myrank,'something is wrong with the source slice number')
@@ -672,13 +738,16 @@
         call lagrange_any(eta_source(isource),NGLLY,yigll,hetas,hpetas)
         call lagrange_any(gamma_source(isource),NGLLZ,zigll,hgammas,hpgammas)
 
-        if (USE_FORCE_POINT_SOURCE) then ! use of FORCESOLUTION files
-
+        if (USE_FORCE_POINT_SOURCE) then
+          ! use of FORCESOLUTION files
+          !
           ! note: for use_force_point_source xi/eta/gamma are also in the range [-1,1], for exact positioning
-
           factor_source = factor_force_source(isource)
-          ! elastic source
-          if (ispec_is_elastic(ispec)) then
+
+          ! elastic sources
+          ! note: point forces in poroelastic element act on both, solid and fluid parts (see compute_add_sources_poroelastic)
+          !       we allow thus the force to have a given direction.
+          if (ispec_is_elastic(ispec) .or. ispec_is_poroelastic(ispec)) then
             ! length of component vector
             norm = dsqrt( comp_dir_vect_source_E(isource)**2 &
                         + comp_dir_vect_source_N(isource)**2 &
@@ -691,33 +760,41 @@
             comp_x = comp_dir_vect_source_E(isource)/norm
             comp_y = comp_dir_vect_source_N(isource)/norm
             comp_z = comp_dir_vect_source_Z_UP(isource)/norm
+            call compute_arrays_source_forcesolution(sourcearray,hxis,hetas,hgammas,factor_source, &
+                                                     comp_x,comp_y,comp_z,nu_source(:,:,isource))
           endif
 
+          ! acoustic sources
+          if (ispec_is_acoustic(ispec)) then
+            ! dipole
+            if (DIPOLE_SOURCE_IN_FLUID) then
+              ! length of component vector
+              norm = dsqrt( comp_dir_vect_source_E(isource)**2 &
+                          + comp_dir_vect_source_N(isource)**2 &
+                          + comp_dir_vect_source_Z_UP(isource)**2 )
+              comp_x = comp_dir_vect_source_E(isource)/norm
+              comp_y = comp_dir_vect_source_N(isource)/norm
+              comp_z = comp_dir_vect_source_Z_UP(isource)/norm
+              write(*,*) " DIPOLE FLUID ", comp_x, comp_y, comp_z
+              call compute_arrays_source_forcesolution_fluid(ispec, sourcearray, hxis,hetas,hgammas,hpxis,hpetas,hpgammas, &
+                                                             factor_source,comp_x,comp_y,comp_z,nu_source(:,:,isource), &
+                                                             xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,NSPEC_AB)
+            else
+              ! point force
+              ! identical source array components in x,y,z-direction
+              ! source array interpolated on all element GLL points
+              ! we use an tilted force defined by its magnitude and the projections
+              ! of an arbitrary (non-unitary) direction vector on the E/N/Z_UP basis
+              comp_x = 1.0d0
+              comp_y = 1.0d0
+              comp_z = 1.0d0
+              call compute_arrays_source_forcesolution(sourcearray,hxis,hetas,hgammas,factor_source, &
+                                                       comp_x,comp_y,comp_z,nu_source(:,:,isource))
+            endif
+          endif ! acoustic
 
-          if (ispec_is_acoustic(ispec) .and. DIPOLE_SOURCE_IN_FLUID) then
-             ! length of component vector
-             norm = dsqrt( comp_dir_vect_source_E(isource)**2 &
-                  + comp_dir_vect_source_N(isource)**2 &
-                  + comp_dir_vect_source_Z_UP(isource)**2 )
-             comp_x = comp_dir_vect_source_E(isource)/norm
-             comp_y = comp_dir_vect_source_N(isource)/norm
-             comp_z = comp_dir_vect_source_Z_UP(isource)/norm
-             write(*,*) " DIPOLE FLUID ", comp_x, comp_y, comp_z
-            call compute_arrays_source_forcesolution_fluid(ispec, sourcearray, hxis,hetas,hgammas,hpxis,hpetas,hpgammas, &
-                 factor_source,comp_x,comp_y,comp_z,nu_source(:,:,isource),xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,NSPEC_AB)
-          else
-           ! acoustic source
-           ! identical source array components in x,y,z-direction
-           ! source array interpolated on all element GLL points
-           ! we use an tilted force defined by its magnitude and the projections
-           ! of an arbitrary (non-unitary) direction vector on the E/N/Z_UP basis
-           comp_x = 1.0d0
-           comp_y = 1.0d0
-           comp_z = 1.0d0
-           call compute_arrays_source_forcesolution(sourcearray,hxis,hetas,hgammas,factor_source, &
-                                                   comp_x,comp_y,comp_z,nu_source(:,:,isource))
-          endif
-        else ! use of CMTSOLUTION files
+        else
+          ! use of CMTSOLUTION files
 
           ! elastic or poroelastic moment tensor source
           if (ispec_is_elastic(ispec) .or. ispec_is_poroelastic(ispec)) then
@@ -741,11 +818,8 @@
             factor_source = factor_source * sqrt(2.0) / sqrt(3.0)
 
             ! source encoding
-            comp_x = 1.0d0
             ! determines factor +/-1 depending on sign of moment tensor
-            comp_y = 1.0d0
             ! (see e.g. Krebs et al., 2009. Fast full-wavefield seismic inversion using encoded sources,
-            comp_z = 1.0d0
             !   Geophysics, 74 (6), WCC177-WCC188.)
             if (USE_SOURCE_ENCODING) then
               pm1_source_encoding(isource) = sign(1.0d0,Mxx(isource))
@@ -860,7 +934,7 @@
 
     ! initializes adjoint sources
 
-    allocate(source_adjoint(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM),stat=ier)
+    allocate(source_adjoint(NDIM,nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC),stat=ier)
     if (ier /= 0) stop 'error allocating array source_adjoint'
 
     ! note:
@@ -885,6 +959,12 @@
     endif
   endif
 
+  ! frees dynamically allocated memory
+  deallocate(factor_force_source)
+  deallocate(comp_dir_vect_source_E)
+  deallocate(comp_dir_vect_source_N)
+  deallocate(comp_dir_vect_source_Z_UP)
+
   end subroutine setup_sources_precompute_arrays
 
 !
@@ -896,7 +976,69 @@
   use specfem_par
   implicit none
 
+  ! local parameters
   integer :: irec,irec_local,isource,ier
+  integer,dimension(0:NPROC-1) :: tmp_rec_local_all
+  integer :: maxrec,maxproc(1)
+  double precision :: sizeval
+
+  ! statistics about allocation memory for seismograms & source_adjoint
+  ! seismograms
+  ! gather from slaves on master
+  call gather_all_singlei(nrec_local,tmp_rec_local_all,NPROC)
+  ! user output
+  if (myrank == 0) then
+    ! determines maximum number of local receivers and corresponding rank
+    maxrec = maxval(tmp_rec_local_all(:))
+    ! note: MAXLOC will determine the lower bound index as '1'.
+    maxproc = maxloc(tmp_rec_local_all(:)) - 1
+    ! seismograms array size in MB
+    if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
+      ! seismograms need seismograms(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS)
+      sizeval = dble(maxrec) * dble(NDIM * NTSTEP_BETWEEN_OUTPUT_SEISMOS * CUSTOM_REAL / 1024. / 1024. )
+    else
+      ! adjoint seismograms need seismograms(NDIM*NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS)
+      sizeval = dble(maxrec) * dble(NDIM * NDIM * NTSTEP_BETWEEN_OUTPUT_SEISMOS * CUSTOM_REAL / 1024. / 1024. )
+    endif
+    ! outputs info
+    write(IMAIN,*) 'seismograms:'
+    if (WRITE_SEISMOGRAMS_BY_MASTER) then
+      write(IMAIN,*) '  seismograms written by master process only'
+    else
+      write(IMAIN,*) '  seismograms written by all processes'
+    endif
+    write(IMAIN,*) '  writing out seismograms at every NTSTEP_BETWEEN_OUTPUT_SEISMOS = ',NTSTEP_BETWEEN_OUTPUT_SEISMOS
+    write(IMAIN,*) '  maximum number of local receivers is ',maxrec,' in slice ',maxproc(1)
+    write(IMAIN,*) '  size of maximum seismogram array       = ', sngl(sizeval),'MB'
+    write(IMAIN,*) '                                         = ', sngl(sizeval/1024.d0),'GB'
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
+
+  ! adjoint sources
+  if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
+    ! gather from slaves on master
+    call gather_all_singlei(nadj_rec_local,tmp_rec_local_all,NPROC)
+    ! user output
+    if (myrank == 0) then
+      ! determines maximum number of local receivers and corresponding rank
+      maxrec = maxval(tmp_rec_local_all(:))
+      ! note: MAXLOC will determine the lower bound index as '1'.
+      maxproc = maxloc(tmp_rec_local_all(:)) - 1
+      ! source_adjoint size in MB
+      !source_adjoint(NDIM,nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC)
+      sizeval = dble(maxrec) * dble(NDIM * NTSTEP_BETWEEN_READ_ADJSRC * CUSTOM_REAL / 1024. / 1024. )
+      ! outputs info
+      write(IMAIN,*) 'adjoint source arrays:'
+      write(IMAIN,*) '  reading adjoint sources at every NTSTEP_BETWEEN_READ_ADJSRC = ',NTSTEP_BETWEEN_READ_ADJSRC
+      write(IMAIN,*) '  maximum number of local adjoint sources is ',maxrec,' in slice ',maxproc(1)
+      write(IMAIN,*) '  size of maximum adjoint source array = ', sngl(sizeval),'MB'
+      write(IMAIN,*) '                                       = ', sngl(sizeval/1024.d0),'GB'
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+  endif
+
 
   ! needs to be allocate for subroutine calls (even if nrec_local == 0)
   allocate(number_receiver_global(nrec_local),stat=ier)
@@ -983,6 +1125,56 @@
       if (ier /= 0) stop 'error allocating array hpxir_store'
     endif
   endif ! nrec_local > 0
+
+  ! seismograms
+  if (nrec_local > 0) then
+    ! allocate seismogram array
+    if (SAVE_SEISMOGRAMS_DISPLACEMENT) then
+      allocate(seismograms_d(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+    else
+      allocate(seismograms_d(1,1,1),stat=ier)
+    endif
+    if (ier /= 0) stop 'error allocating array seismograms_d'
+
+    if (SAVE_SEISMOGRAMS_VELOCITY) then
+      allocate(seismograms_v(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+    else
+      allocate(seismograms_v(1,1,1),stat=ier)
+    endif
+    if (ier /= 0) stop 'error allocating array seismograms_v'
+
+    if (SAVE_SEISMOGRAMS_ACCELERATION) then
+      allocate(seismograms_a(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+    else
+      allocate(seismograms_a(1,1,1),stat=ier)
+    endif
+    if (ier /= 0) stop 'error allocating array seismograms_a'
+
+    if (SAVE_SEISMOGRAMS_PRESSURE) then
+      allocate(seismograms_p(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+    else
+      allocate(seismograms_p(1,1,1),stat=ier)
+    endif
+    if (ier /= 0) stop 'error allocating array seismograms_p'
+
+    ! initialize seismograms
+    seismograms_d(:,:,:) = 0._CUSTOM_REAL
+    seismograms_v(:,:,:) = 0._CUSTOM_REAL
+    seismograms_a(:,:,:) = 0._CUSTOM_REAL
+    seismograms_p(:,:,:) = 0._CUSTOM_REAL
+  endif
+
+  ! seismograms
+  if (SIMULATION_TYPE == 2) then
+    if (nrec_local > 0) then
+      allocate(seismograms_eps(NDIM,NDIM,nrec_local,NSTEP),stat=ier)
+      if (ier /= 0) stop 'error allocating array seismograms_eps'
+      seismograms_eps(:,:,:,:) = 0._CUSTOM_REAL
+    endif
+  endif
+  ! adjoint seismograms writing
+  it_adj_written = 0
+
 
   end subroutine setup_receivers_precompute_intp
 

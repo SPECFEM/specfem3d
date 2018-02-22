@@ -363,6 +363,9 @@
   ! reads adjoint parameters
   call read_mesh_databases_adjoint()
 
+  ! for coupling with external codes
+  call couple_with_injection_setup()
+
   ! sets up reference element GLL points/weights/derivatives
   call setup_GLL_points()
 

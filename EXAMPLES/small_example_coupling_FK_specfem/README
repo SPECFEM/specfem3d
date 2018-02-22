@@ -1,20 +1,20 @@
-  example of hybrid method run FK/Specfem
+--------------------------------------------------------------------------
+Couple with injection 
+--------------------------------------------------------------------------
+
+Example of hybrid method run FK/Specfem
 
      model       : 350x300x250 km 
-     peroid min  : 2 s
+     period min  : 2 s
 
 require additionnaly input file for FK :
   
-            DATA/FKMODEL
+     DATA/FKMODEL
 
-to run : 
+to run in this directory, type : 
 
-  fill,  specfem_bin=path to specfem binaries  in run_this_example.sh file
-
-and type : 
     ./run_this_exemple.sh 
 
-
-require 16 mpi process and take around 40 min to run
+requires 4 mpi processes and takes around 4 min to run
 
  

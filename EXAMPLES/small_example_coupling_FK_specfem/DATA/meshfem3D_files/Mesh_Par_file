@@ -25,12 +25,12 @@ CAVITY_FILE                     = no_cavity.dat
 # number of elements at the surface along edges of the mesh at the surface
 # (must be 8 * multiple of NPROC below if mesh is not regular and contains mesh doublings)
 # (must be multiple of NPROC below if mesh is regular)
-NEX_XI                          = 64
-NEX_ETA                         = 64
+NEX_XI                          = 16
+NEX_ETA                         = 16
 
 # number of MPI processors along xi and eta (can be different)
-NPROC_XI                        = 4
-NPROC_ETA                       = 4
+NPROC_XI                        = 2
+NPROC_ETA                       = 2
 
 #-----------------------------------------------------------
 #
@@ -100,7 +100,7 @@ NMATERIALS                      = 4
 NREGIONS                        = 4
 # define the different regions of the model as :
 #NEX_XI_BEGIN  #NEX_XI_END  #NEX_ETA_BEGIN  #NEX_ETA_END  #NZ_BEGIN #NZ_END  #material_id
-1            64              1             64            47            51          1
-1            64              1             64            44            47          2
-1            64              1             64            27            44          3
-1            64              1             64            1            27          4
+1            16              1             16            47            51          1
+1            16              1             16            44            47          2
+1            16              1             16            27            44          3
+1            16              1             16            1            27          4

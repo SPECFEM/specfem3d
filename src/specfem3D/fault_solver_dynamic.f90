@@ -116,7 +116,7 @@ contains
 
   ! checks if file exists
   if (ier /= 0) then
-    if (myrank == 0) write(IMAIN,*) 'no dynamic faults'
+    if (myrank == 0) write(IMAIN,*) '  no dynamic faults'
     close(IIN_PAR)
     return
   endif

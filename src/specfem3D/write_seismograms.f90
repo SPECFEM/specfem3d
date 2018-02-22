@@ -37,22 +37,13 @@
   implicit none
 
   ! local parameters
-  real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ):: displ_element,veloc_element,accel_element
-  ! interpolated wavefield values
-  double precision :: dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd
+  ! timing
+  double precision, external :: wtime
+  double precision :: write_time_begin,write_time
+  logical :: do_save_seismograms
 
-  integer :: irec_local,irec
-  integer :: iglob,ispec,i,j,k
-
-  ! adjoint locals
-  real(kind=CUSTOM_REAL),dimension(NDIM,NDIM):: eps_s
-  real(kind=CUSTOM_REAL),dimension(NDIM):: eps_m_s
-  real(kind=CUSTOM_REAL):: stf_deltat
-  double precision :: stf
-  double precision,dimension(NDIM,NDIM) :: rotation_seismo
-
-  ! checks if anything to do
-  if (.not. (nrec_local > 0 .or. (WRITE_SEISMOGRAMS_BY_MASTER .and. myrank == 0))) return
+  ! update position in seismograms
+  seismo_current = seismo_current + 1
 
   ! note: there might be some confusion about adjoint simulations, i.e. adjoint receivers and adjoint sources:
   !       for pure adjoint simulations (SIMULATION_TYPE == 2), CMT source locations become adjoint receivers
@@ -69,265 +60,120 @@
   ! - number_receiver_global  -> local to global mapping for "adjoint" receivers, i.e. at source positions
   ! - ispec_selected_source   -> element containing source position, which becomes an adjoint "receiver"
 
-  ! gets resulting array values onto CPU
-  if (GPU_MODE .and. nrec_local > 0 .and. (.not. (SIMULATION_TYPE == 3 .and. (.not. SAVE_SEISMOGRAMS_IN_ADJOINT_RUN)) )) then
-    call compute_seismograms_cuda(Mesh_pointer,seismograms_d,seismograms_v,seismograms_a, &
-                                  seismograms_p,it,NSTEP,ELASTIC_SIMULATION,ACOUSTIC_SIMULATION, &
-                                  USE_TRICK_FOR_BETTER_PRESSURE,SAVE_SEISMOGRAMS_DISPLACEMENT, &
-                                  SAVE_SEISMOGRAMS_VELOCITY,SAVE_SEISMOGRAMS_ACCELERATION,SAVE_SEISMOGRAMS_PRESSURE)
+  ! check if we need to save seismos
+  if (SIMULATION_TYPE == 3 .and. (.not. SAVE_SEISMOGRAMS_IN_ADJOINT_RUN)) then
+    do_save_seismograms = .false.
+  else
+    do_save_seismograms = .true.
   endif
 
-  if (.not. GPU_MODE .and. (.not. (SIMULATION_TYPE == 3 .and. (.not. SAVE_SEISMOGRAMS_IN_ADJOINT_RUN)) ) ) then
-
-    do irec_local = 1,nrec_local
-
-      ! initializes wavefield values
-      dxd = ZERO
-      dyd = ZERO
-      dzd = ZERO
-
-      vxd = ZERO
-      vyd = ZERO
-      vzd = ZERO
-
-      axd = ZERO
-      ayd = ZERO
-      azd = ZERO
-
-      pd  = ZERO
-
-      ! gets local receiver interpolators
-      ! (1-D Lagrange interpolators)
-      hxir(:) = hxir_store(irec_local,:)
-      hetar(:) = hetar_store(irec_local,:)
-      hgammar(:) = hgammar_store(irec_local,:)
-
-      ! gets global number of that receiver
-      irec = number_receiver_global(irec_local)
-
-      ! spectral element in which the receiver is located
-      if (SIMULATION_TYPE == 2) then
-        ! adjoint "receivers" are located at CMT source positions
-        ! note: we take here xi_source,.. when FASTER_RECEIVERS_POINTS_ONLY is set
-        ispec = ispec_selected_source(irec)
-      else
-        ! receiver located at station positions
-        ispec = ispec_selected_rec(irec)
-      endif
-
-      ! calculates interpolated wavefield values at receiver positions
-      select case (SIMULATION_TYPE)
-      case (1,2)
-        ! forward simulations & pure adjoint simulations
-        ! wavefields stored in displ,veloc,accel
-
-        ! elastic wave field
-        if (ispec_is_elastic(ispec)) then
-          ! interpolates displ/veloc/accel at receiver locations
-          call compute_interpolated_dva_viscoelast(displ,veloc,accel,NGLOB_AB, &
-                                        ispec,NSPEC_AB,ibool, &
-                                        hxir,hetar,hgammar, &
-                                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
-        endif ! elastic
-
-        ! acoustic wave field
-        if (ispec_is_acoustic(ispec)) then
-          ! displacement vector
-          call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                          potential_acoustic,displ_element, &
-                          hprime_xx,hprime_yy,hprime_zz, &
-                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore,GRAVITY)
-
-          ! velocity vector
-          call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                          potential_dot_acoustic,veloc_element, &
-                          hprime_xx,hprime_yy,hprime_zz, &
-                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore,GRAVITY)
-
-          ! acceleration vector
-          call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                          potential_dot_dot_acoustic,accel_element, &
-                          hprime_xx,hprime_yy,hprime_zz, &
-                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore,GRAVITY)
-
-          ! interpolates displ/veloc/accel/pressure at receiver locations
-          call compute_interpolated_dva_acoust(displ_element,veloc_element,accel_element, &
-                                               potential_dot_dot_acoustic,potential_acoustic,NGLOB_AB, &
-                                               ispec,NSPEC_AB,ibool, &
-                                               hxir,hetar,hgammar, &
-                                               dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd,USE_TRICK_FOR_BETTER_PRESSURE)
-        endif ! acoustic
-
-        ! poroelastic wave field
-        if (ispec_is_poroelastic(ispec)) then
-          ! interpolates displ/veloc/accel at receiver locations
-          call compute_interpolated_dva_viscoelast(displs_poroelastic,velocs_poroelastic,accels_poroelastic,NGLOB_AB, &
-                                        ispec,NSPEC_AB,ibool, &
-                                        hxir,hetar,hgammar, &
-                                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
-        endif ! poroelastic
-
-      case (3)
-        ! adjoint/kernel simulations
-        ! reconstructed forward wavefield stored in b_displ, b_veloc, b_accel
-
-        ! elastic wave field
-        if (ispec_is_elastic(ispec)) then
-          ! backward field: interpolates displ/veloc/accel at receiver locations
-          call compute_interpolated_dva_viscoelast(b_displ,b_veloc,b_accel,NGLOB_ADJOINT, &
-                                        ispec,NSPEC_AB,ibool, &
-                                        hxir,hetar,hgammar, &
-                                        dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd)
-        endif ! elastic
-
-        ! acoustic wave field
-        if (ispec_is_acoustic(ispec)) then
-          ! backward field: displacement vector
-          call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_ADJOINT, &
-                          b_potential_acoustic,displ_element, &
-                          hprime_xx,hprime_yy,hprime_zz, &
-                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore,GRAVITY)
-
-          ! backward field: velocity vector
-          call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_ADJOINT, &
-                          b_potential_dot_acoustic,veloc_element, &
-                          hprime_xx,hprime_yy,hprime_zz, &
-                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore,GRAVITY)
-
-          ! backward field: acceleration vector
-          call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                          b_potential_dot_dot_acoustic,accel_element, &
-                          hprime_xx,hprime_yy,hprime_zz, &
-                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore,GRAVITY)
-
-          ! backward field: interpolates displ/veloc/accel/pressure at receiver locations
-          call compute_interpolated_dva_acoust(displ_element,veloc_element,accel_element, &
-                                               b_potential_dot_dot_acoustic,b_potential_acoustic,NGLOB_ADJOINT, &
-                                               ispec,NSPEC_AB,ibool, &
-                                               hxir,hetar,hgammar, &
-                                               dxd,dyd,dzd,vxd,vyd,vzd,axd,ayd,azd,pd,USE_TRICK_FOR_BETTER_PRESSURE)
-        endif ! acoustic
-
-      end select ! SIMULATION_TYPE
-
-      ! additional calculations for pure adjoint simulations
-      ! computes derivatives of source parameters
-      if (SIMULATION_TYPE == 2) then
-
-        ! elastic wave field
-        if (ispec_is_elastic(ispec)) then
-          ! stores elements displacement field
-          do k = 1,NGLLZ
-            do j = 1,NGLLY
-              do i = 1,NGLLX
-                iglob = ibool(i,j,k,ispec)
-                displ_element(:,i,j,k) = displ(:,iglob)
-              enddo
-            enddo
-          enddo
-
-          ! gets derivatives of local receiver interpolators
-          hpxir(:) = hpxir_store(irec_local,:)
-          hpetar(:) = hpetar_store(irec_local,:)
-          hpgammar(:) = hpgammar_store(irec_local,:)
-
-          ! computes the integrated derivatives of source parameters (M_jk and X_s)
-          call compute_adj_source_frechet(displ_element,Mxx(irec),Myy(irec),Mzz(irec), &
-                                          Mxy(irec),Mxz(irec),Myz(irec),eps_s,eps_m_s, &
-                                          hxir,hetar,hgammar,hpxir,hpetar,hpgammar, &
-                                          hprime_xx,hprime_yy,hprime_zz, &
-                                          xix(:,:,:,ispec),xiy(:,:,:,ispec),xiz(:,:,:,ispec), &
-                                          etax(:,:,:,ispec),etay(:,:,:,ispec),etaz(:,:,:,ispec), &
-                                          gammax(:,:,:,ispec),gammay(:,:,:,ispec),gammaz(:,:,:,ispec))
-
-          stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(irec),hdur_Gaussian(irec))
-          stf_deltat = stf * deltat
-
-          Mxx_der(irec_local) = Mxx_der(irec_local) + eps_s(1,1) * stf_deltat
-          Myy_der(irec_local) = Myy_der(irec_local) + eps_s(2,2) * stf_deltat
-          Mzz_der(irec_local) = Mzz_der(irec_local) + eps_s(3,3) * stf_deltat
-          Mxy_der(irec_local) = Mxy_der(irec_local) + 2 * eps_s(1,2) * stf_deltat
-          Mxz_der(irec_local) = Mxz_der(irec_local) + 2 * eps_s(1,3) * stf_deltat
-          Myz_der(irec_local) = Myz_der(irec_local) + 2 * eps_s(2,3) * stf_deltat
-
-          sloc_der(:,irec_local) = sloc_der(:,irec_local) + eps_m_s(:) * stf_deltat
-        endif ! elastic
-      endif
-
-      if (SIMULATION_TYPE == 2) then
-        ! adjoint simulations
-        ! adjoint "receiver" N/E/Z orientations given by nu_source array
-        rotation_seismo(:,:)=nu_source(:,:,irec)
-      else
-        rotation_seismo(:,:)=nu(:,:,irec)
-      endif
-
-      if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
-        seismograms_d(:,irec_local,it) = real(rotation_seismo(:,1)*dxd + rotation_seismo(:,2)*dyd &
-                                         + rotation_seismo(:,3)*dzd,kind=CUSTOM_REAL)
-
-      if (SAVE_SEISMOGRAMS_VELOCITY) &
-        seismograms_v(:,irec_local,it) = real(rotation_seismo(:,1)*vxd + rotation_seismo(:,2)*vyd &
-                                         + rotation_seismo(:,3)*vzd,kind=CUSTOM_REAL)
-
-      if (SAVE_SEISMOGRAMS_ACCELERATION) &
-        seismograms_a(:,irec_local,it) = real(rotation_seismo(:,1)*axd + rotation_seismo(:,2)*ayd &
-                                         + rotation_seismo(:,3)*azd,kind=CUSTOM_REAL)
-
-      ! only one scalar in the case of pressure
-      if (SAVE_SEISMOGRAMS_PRESSURE) seismograms_p(1,irec_local,it) = real(pd,kind=CUSTOM_REAL)
-
-      ! adjoint simulations
-      if (SIMULATION_TYPE == 2) seismograms_eps(:,:,irec_local,it) = eps_s(:,:)
-
-    enddo ! nrec_local
-
+  ! gets seismogram values
+  if (GPU_MODE) then
+    ! on GPU
+    if (nrec_local > 0 .and. do_save_seismograms) then
+      ! gets resulting array values onto CPU
+      call compute_seismograms_cuda(Mesh_pointer,seismograms_d,seismograms_v,seismograms_a,seismograms_p, &
+                                    seismo_current,NTSTEP_BETWEEN_OUTPUT_SEISMOS,it,it_end, &
+                                    ACOUSTIC_SIMULATION,USE_TRICK_FOR_BETTER_PRESSURE)
+    endif
+  else
+    ! on CPU
+    if (nrec_local > 0 .and. do_save_seismograms) then
+      call compute_seismograms()
+    endif
   endif
 
   ! write the current or final seismograms
-  if ((mod(it,NTSTEP_BETWEEN_OUTPUT_SEISMOS) == 0 .or. it == NSTEP) &
-       .and. .not. INVERSE_FWI_FULL_PROBLEM &
-       .and. (.not.(SIMULATION_TYPE == 3 .and. (.not. SAVE_SEISMOGRAMS_IN_ADJOINT_RUN)) )) then
-    if (.not. SU_FORMAT) then
-      if (SIMULATION_TYPE == 2) then
-        ! adjoint simulations
-        if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
-          call write_adj_seismograms_to_file(seismograms_d,1)
-        if (SAVE_SEISMOGRAMS_VELOCITY) &
-          call write_adj_seismograms_to_file(seismograms_v,2)
-        if (SAVE_SEISMOGRAMS_ACCELERATION) &
-          call write_adj_seismograms_to_file(seismograms_a,3)
-        if (SAVE_SEISMOGRAMS_PRESSURE) &
-          call write_adj_seismograms_to_file(seismograms_p,4)
-      else
-        ! forward & kernel simulations
-        if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
-          call write_seismograms_to_file(seismograms_d,1)
-        if (SAVE_SEISMOGRAMS_VELOCITY) &
-          call write_seismograms_to_file(seismograms_v,2)
-        if (SAVE_SEISMOGRAMS_ACCELERATION) &
-          call write_seismograms_to_file(seismograms_a,3)
-        if (SAVE_SEISMOGRAMS_PRESSURE) &
-          call write_seismograms_to_file(seismograms_p,4)
+  if (seismo_current == NTSTEP_BETWEEN_OUTPUT_SEISMOS .or. it == it_end) then
+
+    if (do_save_seismograms .and. .not. INVERSE_FWI_FULL_PROBLEM) then
+
+      ! timing
+      write_time_begin = wtime()
+
+      ! checks if anything to do
+      if (nrec_local > 0 .or. (WRITE_SEISMOGRAMS_BY_MASTER .and. myrank == 0)) then
+
+        ! writes out seismogram files
+        select case(SIMULATION_TYPE)
+        case (1,3)
+          if (.not. SU_FORMAT) then
+            ! forward & kernel simulations
+            if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
+              call write_seismograms_to_file(seismograms_d,1)
+            if (SAVE_SEISMOGRAMS_VELOCITY) &
+              call write_seismograms_to_file(seismograms_v,2)
+            if (SAVE_SEISMOGRAMS_ACCELERATION) &
+              call write_seismograms_to_file(seismograms_a,3)
+            if (SAVE_SEISMOGRAMS_PRESSURE) &
+              call write_seismograms_to_file(seismograms_p,4)
+          else
+            ! SU_format
+            ! write ONE binary file for all receivers (nrec_local) within one proc
+            ! SU format, with 240-byte-header for each trace
+            if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
+              call write_output_SU(seismograms_d,1)
+            if (SAVE_SEISMOGRAMS_VELOCITY) &
+              call write_output_SU(seismograms_v,2)
+            if (SAVE_SEISMOGRAMS_ACCELERATION) &
+              call write_output_SU(seismograms_a,3)
+            if (SAVE_SEISMOGRAMS_PRESSURE) &
+              call write_output_SU(seismograms_p,4)
+          endif
+        case (2)
+          ! adjoint wavefield
+          if (.not. SU_FORMAT) then
+            ! adjoint simulations
+            if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
+              call write_adj_seismograms_to_file(seismograms_d,1)
+            if (SAVE_SEISMOGRAMS_VELOCITY) &
+              call write_adj_seismograms_to_file(seismograms_v,2)
+            if (SAVE_SEISMOGRAMS_ACCELERATION) &
+              call write_adj_seismograms_to_file(seismograms_a,3)
+            if (SAVE_SEISMOGRAMS_PRESSURE) &
+              call write_adj_seismograms_to_file(seismograms_p,4)
+          else
+            ! SU_format
+            ! write ONE binary file for all receivers (nrec_local) within one proc
+            ! SU format, with 240-byte-header for each trace
+            if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
+              call write_output_SU(seismograms_d,1)
+            if (SAVE_SEISMOGRAMS_VELOCITY) &
+              call write_output_SU(seismograms_v,2)
+            if (SAVE_SEISMOGRAMS_ACCELERATION) &
+              call write_output_SU(seismograms_a,3)
+            if (SAVE_SEISMOGRAMS_PRESSURE) &
+              call write_output_SU(seismograms_p,4)
+          endif
+          ! updates adjoint time counter
+          it_adj_written = it
+        end select
       endif
-    else ! SU_format
-    ! write ONE binary file for all receivers (nrec_local) within one proc
-    ! SU format, with 240-byte-header for each trace
-      if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
-        call write_output_SU(seismograms_d,1)
-      if (SAVE_SEISMOGRAMS_VELOCITY) &
-        call write_output_SU(seismograms_v,2)
-      if (SAVE_SEISMOGRAMS_ACCELERATION) &
-        call write_output_SU(seismograms_a,3)
-      if (SAVE_SEISMOGRAMS_PRESSURE) &
-        call write_output_SU(seismograms_p,4)
-    endif
+      ! synchronizes processes (waits for all processes to finish writing)
+      call synchronize_all()
+
+      ! user output
+      if (myrank == 0) then
+        ! timing
+        write_time = wtime() - write_time_begin
+        ! output
+        write(IMAIN,*)
+        write(IMAIN,*) 'Total number of time steps written: ', it-it_begin+1
+        if (WRITE_SEISMOGRAMS_BY_MASTER) then
+          write(IMAIN,*) 'Writing the seismograms by master proc alone took ',sngl(write_time),' seconds'
+        else
+          write(IMAIN,*) 'Writing the seismograms in parallel took ',sngl(write_time),' seconds'
+        endif
+        write(IMAIN,*)
+        call flush_IMAIN()
+      endif
+
+    endif ! do_save_seismograms
+
+    ! resets current seismogram position
+    seismo_offset = seismo_offset + seismo_current
+    seismo_current = 0
+
   endif
 
   end subroutine write_seismograms
@@ -341,9 +187,11 @@
 
   use constants
 
-  use specfem_par, only: myrank,number_receiver_global, &
+  use specfem_par, only: myrank,number_receiver_global,NPROC, &
           nrec,nrec_local,islice_selected_rec, &
-          NSTEP,WRITE_SEISMOGRAMS_BY_MASTER,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_SEISMOGRAMS
+          seismo_offset,seismo_current, &
+          NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS, &
+          WRITE_SEISMOGRAMS_BY_MASTER,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_SEISMOGRAMS
 
   implicit none
 
@@ -351,16 +199,16 @@
   real(kind=CUSTOM_REAL), dimension(NDIM,nrec_local,NSTEP) :: seismograms
 
   ! local parameters
-  integer irec,irec_local
+  integer :: irec,irec_local
 
   character(len=1) component
 
   ! parameters for master collects seismograms
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: one_seismogram
-  integer :: nrec_local_received,NPROCTOT,total_seismos,receiver,sender
-  integer :: iproc,ier
+  integer :: nrec_local_received,total_seismos,receiver,sender
+  integer :: iproc,ier,i
   integer,dimension(1) :: tmp_nrec_local_received,tmp_irec,tmp_nrec_local
-  integer,dimension(:),allocatable:: islice_num_rec_local
+  integer,dimension(0:NPROC-1) :: islice_num_rec_local
 
   character(len=MAX_STRING_LEN) :: sisname
 
@@ -377,18 +225,33 @@
     call exit_MPI(myrank,'wrong component to save for seismograms')
   endif
 
-  allocate(one_seismogram(NDIM,NSTEP),stat=ier)
+  allocate(one_seismogram(NDIM,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
   if (ier /= 0) stop 'error while allocating one temporary seismogram'
 
   ! write out seismograms: all processes write their local seismograms themselves
   if (.not. WRITE_SEISMOGRAMS_BY_MASTER) then
 
     if (SAVE_ALL_SEISMOS_IN_ONE_FILE) then
-      write(sisname,'(A,I5.5)') '/all_seismograms_node_',myrank
+      ! note: saving in a single file while using multiple outputs when NTSTEP_BETWEEN_OUTPUT_SEISMOS is less than NSTEP
+      !       will shuffle the entries and give unordered results. thus for now, we will only allow this when writing out
+      !       the full arrays.
+      write(sisname,'(A,I5.5)') '/all_seismograms_'//component//'_node_',myrank
       if (USE_BINARY_FOR_SEISMOGRAMS) then
-        open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.bin',status='unknown',form='unformatted',action='write')
+        if (seismo_offset == 0) then
+          open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.bin',status='unknown', &
+               form='unformatted',action='write')
+        else
+          open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.bin',status='old',position='append', &
+               form='unformatted',action='write')
+        endif
       else
-        open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.ascii',status='unknown',form='formatted',action='write')
+        if (seismo_offset == 0) then
+          open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.ascii',status='unknown', &
+               form='formatted',action='write')
+        else
+          open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.ascii',status='old',position='append', &
+               form='formatted',action='write')
+        endif
       endif
     endif
 
@@ -399,7 +262,9 @@
       irec = number_receiver_global(irec_local)
 
       ! writes out this seismogram
-      one_seismogram = seismograms(:,irec_local,:)
+      do i = 1,seismo_current
+        one_seismogram(:,i) = seismograms(:,irec_local,i)
+      enddo
 
       call write_one_seismogram(one_seismogram,irec,component,istore)
 
@@ -410,7 +275,8 @@
 
 ! only the master process does the writing of seismograms and
 ! collects the data from all other processes
-  else ! if WRITE_SEISMOGRAMS_BY_MASTER
+  else
+    ! only written out by master process - WRITE_SEISMOGRAMS_BY_MASTER
 
     if (myrank == 0) then
       ! on the master, gather all the seismograms
@@ -419,28 +285,35 @@
       if (SAVE_ALL_SEISMOS_IN_ONE_FILE) then
         write(sisname,'(A)') '/all_seismograms'
         if (USE_BINARY_FOR_SEISMOGRAMS) then
-          open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.bin',status='unknown',form='unformatted',action='write')
+          if (seismo_offset == 0) then
+            open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.bin',status='unknown', &
+                 form='unformatted',action='write')
+          else
+            open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.bin',status='old',position='append', &
+                 form='unformatted',action='write')
+          endif
         else
-          open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.ascii',status='unknown',form='formatted',action='write')
+          if (seismo_offset == 0) then
+            open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.ascii',status='unknown', &
+                 form='formatted',action='write')
+          else
+            open(unit=IOUT,file=trim(OUTPUT_FILES)//trim(sisname)//'.ascii',status='old',position='append', &
+                 form='formatted',action='write')
+          endif
         endif
       endif
 
-      total_seismos = 0
-
-      ! loop on all the slices
-      call world_size(NPROCTOT)
-
       ! counts number of local receivers for each slice
-      allocate(islice_num_rec_local(0:NPROCTOT-1),stat=ier)
-      if (ier /= 0) call exit_mpi(myrank,'error allocating islice_num_rec_local')
       islice_num_rec_local(:) = 0
       do irec = 1,nrec
         iproc = islice_selected_rec(irec)
         islice_num_rec_local(iproc) = islice_num_rec_local(iproc) + 1
       enddo
 
+      total_seismos = 0
+
       ! loop on all the slices
-      do iproc = 0,NPROCTOT-1
+      do iproc = 0,NPROC-1
 
         ! communicate only with processes which contain local receivers
         if (islice_num_rec_local(iproc) == 0) cycle
@@ -461,13 +334,15 @@
             if (iproc == 0) then
               ! get global number of that receiver
               irec = number_receiver_global(irec_local)
-              one_seismogram(:,:) = seismograms(:,irec_local,:)
+              do i = 1,seismo_current
+                one_seismogram(:,i) = seismograms(:,irec_local,i)
+              enddo
             else
               call recv_i(tmp_irec,1,sender,itag)
               irec = tmp_irec(1)
               if (irec < 1 .or. irec > nrec) call exit_MPI(myrank,'error while receiving global receiver number')
 
-              call recvv_cr(one_seismogram,NDIM*NSTEP,sender,itag)
+              call recvv_cr(one_seismogram,NDIM*seismo_current,sender,itag)
             endif
 
             total_seismos = total_seismos + 1
@@ -477,8 +352,7 @@
 
           enddo ! nrec_local_received
         endif ! if (nrec_local_received > 0)
-      enddo ! NPROCTOT-1
-      deallocate(islice_num_rec_local)
+      enddo ! NPROC-1
 
       write(IMAIN,*) 'Component: .sem'//component
       write(IMAIN,*) '  total number of receivers saved is ',total_seismos,' out of ',nrec
@@ -502,8 +376,10 @@
           call send_i(tmp_irec,1,receiver,itag)
 
           ! sends seismogram of that receiver
-          one_seismogram(:,:) = seismograms(:,irec_local,:)
-          call sendv_cr(one_seismogram,NDIM*NSTEP,receiver,itag)
+          do i = 1,seismo_current
+            one_seismogram(:,i) = seismograms(:,irec_local,i)
+          enddo
+          call sendv_cr(one_seismogram,NDIM*seismo_current,receiver,itag)
         enddo
       endif
     endif ! myrank
@@ -520,14 +396,16 @@
 
   use constants
 
-  use specfem_par, only: DT,t0,it,NSTEP,SIMULATION_TYPE,myrank,station_name,network_name
+  use specfem_par, only: DT,t0,it, &
+    NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS, &
+    SIMULATION_TYPE,station_name,network_name
 
   implicit none
 
   integer, intent(in) :: istore
-  real(kind=CUSTOM_REAL), dimension(NDIM,NSTEP) :: one_seismogram
-  integer :: irec
-  character(len=1) component
+  real(kind=CUSTOM_REAL), dimension(NDIM,NTSTEP_BETWEEN_OUTPUT_SEISMOS),intent(in) :: one_seismogram
+  integer,intent(in) :: irec
+  character(len=1),intent(in) :: component
 
   ! local parameters
   integer :: iorientation,number_of_components
@@ -557,16 +435,9 @@
     length_station_name = len_trim(station_name(irec))
     length_network_name = len_trim(network_name(irec))
 
-    ! check that length conforms to standard
-    if (length_station_name < 1 .or. length_station_name > MAX_LENGTH_STATION_NAME) &
-      call exit_MPI(myrank,'wrong length of station name')
-
-    if (length_network_name < 1 .or. length_network_name > MAX_LENGTH_NETWORK_NAME) &
-      call exit_MPI(myrank,'wrong length of network name')
-
     ! writes out **net**.**sta**.**BH**.sem* files
     write(sisname,"(a,'.',a,'.',a3,'.sem',a1)") network_name(irec)(1:length_network_name), &
-       station_name(irec)(1:length_station_name),channel,component
+                                                station_name(irec)(1:length_station_name),channel,component
 
     ! directory to store seismograms
     final_LOCAL_PATH = OUTPUT_FILES(1:len_trim(OUTPUT_FILES)) // '/'
@@ -588,12 +459,14 @@
 
   use constants, only: CUSTOM_REAL,NDIM,MAX_STRING_LEN,IOUT,OUTPUT_FILES
 
-  use specfem_par, only: myrank,number_receiver_global,nrec_local,it,DT,NSTEP,t0
+  use specfem_par, only: myrank,number_receiver_global,nrec_local,it,DT, &
+    NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS, &
+    t0,seismo_offset,it_adj_written
 
   implicit none
 
   integer :: istore
-  real(kind=CUSTOM_REAL), dimension(NDIM,nrec_local,NSTEP) :: seismograms
+  real(kind=CUSTOM_REAL), dimension(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS) :: seismograms
 
   ! local parameters
   integer :: irec,irec_local
@@ -647,13 +520,22 @@
       ! if the simulation uses many time steps. However, subsampling the output
       ! here would result in a loss of accuracy when one later convolves
       ! the results with the source time function
-      open(unit=IOUT,file=OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//sisname(1:len_trim(sisname)),status='unknown')
+      if (seismo_offset == 0) then
+        !open new file
+        open(unit=IOUT,file=OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//sisname(1:len_trim(sisname)), &
+             status='unknown',action='write')
+      else
+        !append to existing file
+        open(unit=IOUT,file=OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//sisname(1:len_trim(sisname)), &
+             status='old',position='append',action='write')
+      endif
 
       ! make sure we never write more than the maximum number of time steps
       ! subtract half duration of the source to make sure travel time is correct
-      do isample = 1,min(it,NSTEP)
+      do isample = it_adj_written+1,min(it,NSTEP)
         ! distinguish between single and double precision for reals
-        write(IOUT,*) real(dble(isample-1)*DT - t0,kind=CUSTOM_REAL),' ',seismograms(iorientation,irec_local,isample)
+        write(IOUT,*) real(dble(isample-1)*DT - t0,kind=CUSTOM_REAL),' ', &
+                      seismograms(iorientation,irec_local,isample-it_adj_written)
       enddo
 
       close(IOUT)
@@ -676,6 +558,7 @@
   integer :: myrank
   integer :: nrec_local,NSTEP,it
   integer, dimension(nrec_local) :: number_receiver_global
+  ! note: seismograms here is still an array of size *,*,*,NSTEP
   real(kind=CUSTOM_REAL), dimension(NDIM,NDIM,nrec_local,NSTEP) :: seismograms
   double precision :: t0,DT
 

@@ -57,20 +57,20 @@
 
   implicit none
 
-  integer :: nspec,nglob
+  integer,intent(in) :: nspec,nglob
   ! ocean load
-  logical :: APPROXIMATE_OCEAN_LOAD
+  logical,intent(in) :: APPROXIMATE_OCEAN_LOAD
   ! mesh coordinates
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
   ! MPI interfaces
-  integer :: num_interfaces_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh) :: my_neighbors_ext_mesh
-  integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
-  integer :: max_interface_size_ext_mesh
-  integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
+  integer,intent(in) :: num_interfaces_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh),intent(in) :: my_neighbors_ext_mesh
+  integer, dimension(num_interfaces_ext_mesh),intent(in) :: nibool_interfaces_ext_mesh
+  integer,intent(in) :: max_interface_size_ext_mesh
+  integer, dimension(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh),intent(in) :: ibool_interfaces_ext_mesh
 
-  logical :: SAVE_MESH_FILES
-  logical :: ANISOTROPY
+  logical,intent(in) :: SAVE_MESH_FILES
+  logical,intent(in) :: ANISOTROPY
 
   ! local parameters
   integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
@@ -336,8 +336,8 @@
   if (SAVE_MESH_FILES) call save_arrays_solver_files(nspec,nglob,ibool)
 
   ! if SAVE_MESH_FILES is true then the files have already been saved, no need to save them again
-  if ((COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) .and. .not. SAVE_MESH_FILES) then
-    call save_arrays_solver_files(nspec,nglob,ibool)
+  if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
+    call save_arrays_solver_injection_boundary(nspec,ibool)
   endif
 
   ! cleanup
@@ -381,7 +381,10 @@
 !
 !-------------------------------------------------------------------------------------------------
 !
+
   subroutine save_arrays_solver_files(nspec,nglob,ibool)
+
+! outputs binary files for single mesh parameters (for example vp, vs, rho, ..)
 
   use generate_databases_par, only: myrank,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT,FOUR_THIRDS
 
@@ -390,25 +393,25 @@
 
   use create_regions_mesh_ext_par
 
-  use shared_parameters, only: NPROC,COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH
+  use shared_parameters, only: NPROC
 
   implicit none
 
-  integer :: nspec,nglob
+  integer,intent(in) :: nspec,nglob
   ! mesh coordinates
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
 
   ! local parameters
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: v_tmp
   integer,dimension(:),allocatable :: v_tmp_i
-  integer :: ier,i,j,k
+  integer :: ier,i,j
   integer, dimension(:), allocatable :: iglob_tmp
-  integer :: iface, igll, ispec, iglob, inum, num_points
-  real(kind=CUSTOM_REAL) :: nx,ny,nz
+  integer :: inum, num_points
   character(len=MAX_STRING_LEN) :: filename
 
   !----------------------------------------------------------------------
-  ! mostly for free-surface and coupling surfaces
+  ! outputs mesh files in vtk-format for visualization
+  ! (mostly for free-surface and acoustic/elastic coupling surfaces)
   logical,parameter :: SAVE_MESH_FILES_ADDITIONAL = .true.
 
   !----------------------------------------------------------------------
@@ -698,52 +701,82 @@
     endif ! NPROC > 1
   endif  !if (SAVE_MESH_FILES_ADDITIONAL)
 
-  if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
-    !if (num_abs_boundary_faces > 0) then
-    filename = prname(1:len_trim(prname))//'absorb_dsm'
-    open(IOUT,file=filename(1:len_trim(filename)),status='unknown',form='unformatted',iostat=ier)
-    if (ier /= 0) stop 'error opening file absorb_dsm'
-    write(IOUT) num_abs_boundary_faces
-    write(IOUT) abs_boundary_ispec
-    write(IOUT) abs_boundary_ijk
-    write(IOUT) abs_boundary_jacobian2Dw
-    write(IOUT) abs_boundary_normal
-    close(IOUT)
-
-    filename = prname(1:len_trim(prname))//'inner'
-    open(IOUT,file=filename(1:len_trim(filename)),status='unknown',form='unformatted',iostat=ier)
-    write(IOUT) ispec_is_inner
-    write(IOUT) ispec_is_elastic
-    close(IOUT)
-
-    !! VM VM write an ascii file for instaseis input
-    filename = prname(1:len_trim(prname))//'normal.txt'
-    open(IOUT,file=filename(1:len_trim(filename)),status='unknown',iostat=ier)
-    write(IOUT, *) ' number of points :', num_abs_boundary_faces*NGLLSQUARE
-
-    do iface = 1,num_abs_boundary_faces
-       ispec = abs_boundary_ispec(iface)
-       if (ispec_is_elastic(ispec)) then
-          do igll = 1,NGLLSQUARE
-
-             ! gets local indices for GLL point
-             i = abs_boundary_ijk(1,igll,iface)
-             j = abs_boundary_ijk(2,igll,iface)
-             k = abs_boundary_ijk(3,igll,iface)
-
-             iglob = ibool(i,j,k,ispec)
-
-             nx = abs_boundary_normal(1,igll,iface)
-             ny = abs_boundary_normal(2,igll,iface)
-             nz = abs_boundary_normal(3,igll,iface)
-
-             write(IOUT,'(6f25.10)') xstore_dummy(iglob), ystore_dummy(iglob), zstore_dummy(iglob), nx, ny, nz
-
-          enddo
-       endif
-    enddo
-    close(IOUT)
-  endif ! of if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH)
-
   end subroutine save_arrays_solver_files
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine save_arrays_solver_injection_boundary(nspec,ibool)
+
+  use generate_databases_par, only: myrank,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN,IOUT,FOUR_THIRDS
+
+  use create_regions_mesh_ext_par
+
+  use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE,MESH_A_CHUNK_OF_THE_EARTH
+
+  implicit none
+
+  integer,intent(in) :: nspec
+  ! mesh coordinates
+  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec),intent(in) :: ibool
+
+  ! local parameters
+  integer :: ier,i,j,k
+  integer :: iface, ispec, iglob, igll
+  real(kind=CUSTOM_REAL) :: nx,ny,nz
+  character(len=MAX_STRING_LEN) :: filename
+
+  if (myrank == 0) then
+    write(IMAIN,*) '     saving mesh files for coupled injection boundary'
+    call flush_IMAIN()
+  endif
+
+  ! checks if anything to do
+  if (.not. (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH)) return
+
+  filename = prname(1:len_trim(prname))//'absorb_dsm'
+  open(IOUT,file=filename(1:len_trim(filename)),status='unknown',form='unformatted',iostat=ier)
+  if (ier /= 0) stop 'error opening file absorb_dsm'
+  write(IOUT) num_abs_boundary_faces
+  write(IOUT) abs_boundary_ispec
+  write(IOUT) abs_boundary_ijk
+  write(IOUT) abs_boundary_jacobian2Dw
+  write(IOUT) abs_boundary_normal
+  close(IOUT)
+
+  filename = prname(1:len_trim(prname))//'inner'
+  open(IOUT,file=filename(1:len_trim(filename)),status='unknown',form='unformatted',iostat=ier)
+  write(IOUT) ispec_is_inner
+  write(IOUT) ispec_is_elastic
+  close(IOUT)
+
+  !! VM VM write an ascii file for instaseis input
+  filename = prname(1:len_trim(prname))//'normal.txt'
+  open(IOUT,file=filename(1:len_trim(filename)),status='unknown',iostat=ier)
+  write(IOUT, *) ' number of points :', num_abs_boundary_faces*NGLLSQUARE
+
+  do iface = 1,num_abs_boundary_faces
+     ispec = abs_boundary_ispec(iface)
+     if (ispec_is_elastic(ispec)) then
+        do igll = 1,NGLLSQUARE
+
+           ! gets local indices for GLL point
+           i = abs_boundary_ijk(1,igll,iface)
+           j = abs_boundary_ijk(2,igll,iface)
+           k = abs_boundary_ijk(3,igll,iface)
+
+           iglob = ibool(i,j,k,ispec)
+
+           nx = abs_boundary_normal(1,igll,iface)
+           ny = abs_boundary_normal(2,igll,iface)
+           nz = abs_boundary_normal(3,igll,iface)
+
+           write(IOUT,'(6f25.10)') xstore_dummy(iglob), ystore_dummy(iglob), zstore_dummy(iglob), nx, ny, nz
+
+        enddo
+     endif
+  enddo
+  close(IOUT)
+
+  end subroutine save_arrays_solver_injection_boundary

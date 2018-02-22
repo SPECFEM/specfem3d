@@ -67,6 +67,7 @@
       absorbing boundary:
       total number of free faces =           72
       total number of faces =         1330
+   ...setting up mesh surface
    ...determining velocity model
 
       number of tomographic models       =            1
@@ -78,15 +79,15 @@
       data format: #x #y #z #vp #vs #density
       number of grid points = NX*NY*NZ:       93312
 
-               10  % time remaining:   1.5408003622985333E-006 s
-               20  % time remaining:   1.3655756719230250E-006 s
-               30  % time remaining:   1.1888690927275292E-006 s
-               40  % time remaining:   1.0156892914572890E-006 s
-               50  % time remaining:   8.4454184513631236E-007 s
-               60  % time remaining:   6.7556936221915831E-007 s
-               70  % time remaining:   5.0615355775196144E-007 s
-               80  % time remaining:   3.3698626765183565E-007 s
-               90  % time remaining:   1.6838174030640082E-007 s
+               10  % time remaining:   1.5703999482058473E-006 s
+               20  % time remaining:   1.3950701361342688E-006 s
+               30  % time remaining:   1.2169368875658559E-006 s
+               40  % time remaining:   1.0394095075610954E-006 s
+               50  % time remaining:   8.6199223587636598E-007 s
+               60  % time remaining:   6.9514223194171165E-007 s
+               70  % time remaining:   5.2057040310837452E-007 s
+               80  % time remaining:   3.4772756883670944E-007 s
+               90  % time remaining:   1.7305720320279997E-007 s
               100  % time remaining:   0.0000000000000000      s
    ...detecting acoustic-elastic-poroelastic surfaces
       total acoustic elements   :           0
@@ -153,7 +154,7 @@
  *** Minimum period resolved =    2.00000014E-02
  *** Maximum suggested time step =    5.17306762E-05
 
- Elapsed time for checking mesh resolution in seconds =    1.5320777893066406E-003
+ Elapsed time for checking mesh resolution in seconds =    1.5780925750732422E-003
  saving VTK files for Courant number and minimum period
 
 
@@ -177,7 +178,7 @@
  smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
 
- Elapsed time for mesh generation and buffer creation in seconds =    1.5611608028411865
+ Elapsed time for mesh generation and buffer creation in seconds =    1.6425421237945557
  End of mesh generation
 
  done

@@ -81,7 +81,9 @@
                                 nspec_acoustic,nspec_elastic, &
                                 myrank,SAVE_FORWARD, &
                                 hxir_store,hetar_store,hgammar_store,nu, &
-                                islice_selected_rec,NSTEP)
+                                islice_selected_rec,NSTEP, &
+                                SAVE_SEISMOGRAMS_DISPLACEMENT,SAVE_SEISMOGRAMS_VELOCITY, &
+                                SAVE_SEISMOGRAMS_ACCELERATION,SAVE_SEISMOGRAMS_PRESSURE)
 
 
   ! prepares fields on GPU for acoustic simulations
@@ -166,7 +168,6 @@
   ! prepares fields on GPU for noise simulations
   if (NOISE_TOMOGRAPHY > 0) then
     ! note: noise tomography is only supported for elastic domains so far.
-
     ! copies noise  arrays to GPU
     call prepare_fields_noise_device(Mesh_pointer, &
                                 NSPEC_AB, NGLOB_AB, &
@@ -216,6 +217,25 @@
       call transfer_b_fields_to_device(NDIM*NGLOB_AB,b_displ,b_veloc,b_accel,Mesh_pointer)
   endif
 
+  ! warning
+  if (myrank == 0) then
+    if (SAVE_SEISMOGRAMS_DISPLACEMENT .or. SAVE_SEISMOGRAMS_VELOCITY .or. SAVE_SEISMOGRAMS_ACCELERATION) then
+      ! warnings
+      if (.not. ELASTIC_SIMULATION) &
+        print *, "Warning: Wrong type of seismogram for a pure fluid simulation, use pressure in seismotype"
+      if (ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION) &
+        print *, "Warning: Coupled elastic/fluid simulation has only valid displacement seismograms &
+                &in elastic domain for GPU simulation"
+    endif
+    if (SAVE_SEISMOGRAMS_PRESSURE) then
+      if (.not. ACOUSTIC_SIMULATION) &
+        print *, "Warning: Wrong type of seismogram for a pure elastic simulation, use displ veloc or accel in seismotype"
+      if (ELASTIC_SIMULATION .and. ACOUSTIC_SIMULATION) &
+        print *, "Warning: Coupled elastic/fluid simulation has only valid pressure seismograms &
+                 &in fluid domain for GPU simulation"
+    endif
+  endif
+
   ! synchronizes processes
   call synchronize_all()
 
@@ -240,7 +260,7 @@
     implicit none
 
     ! local parameters
-    double precision :: memory_size
+    double precision :: memory_size,memory_size_glob
     integer,parameter :: NGLL2 = 25
     integer,parameter :: NGLL3 = 125
     integer,parameter :: NGLL3_PADDED = 128
@@ -284,6 +304,22 @@
     ! d_ispec_selected_rec
     memory_size = memory_size + nrec * dble(SIZE_INTEGER)
 
+    ! d_hxir, d_hetar, d_hgammar
+    memory_size = memory_size + 3.d0 * NGLLX * nrec_local * dble(CUSTOM_REAL)
+    ! d_nu
+    memory_size = memory_size + NDIM * NDIM * nrec_local * dble(CUSTOM_REAL)
+    ! d_ispec_selected_rec_loc
+    memory_size = memory_size + nrec_local * dble(SIZE_INTEGER)
+    ! d_seismograms_d,d_seismograms_v,d_seismograms_a,d_seismograms_p
+    if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
+      memory_size = memory_size + NDIM * NTSTEP_BETWEEN_OUTPUT_SEISMOS * nrec_local * dble(CUSTOM_REAL)
+    if (SAVE_SEISMOGRAMS_VELOCITY) &
+      memory_size = memory_size + NDIM * NTSTEP_BETWEEN_OUTPUT_SEISMOS * nrec_local * dble(CUSTOM_REAL)
+    if (SAVE_SEISMOGRAMS_ACCELERATION) &
+      memory_size = memory_size + NDIM * NTSTEP_BETWEEN_OUTPUT_SEISMOS * nrec_local * dble(CUSTOM_REAL)
+    if (SAVE_SEISMOGRAMS_PRESSURE) &
+      memory_size = memory_size + NDIM * NTSTEP_BETWEEN_OUTPUT_SEISMOS * nrec_local * dble(CUSTOM_REAL)
+
     ! acoustic simulations
     if (ACOUSTIC_SIMULATION) then
       ! d_potential_acoustic,d_potential_dot_acoustic,d_potential_dot_dot_acoustic
@@ -298,6 +334,9 @@
       memory_size = memory_size + 2.d0 * num_phase_ispec_acoustic * dble(SIZE_INTEGER)
       ! d_ispec_is_acoustic
       memory_size = memory_size + NSPEC_AB * dble(SIZE_INTEGER)
+      ! d_station_seismo_potential
+      memory_size = memory_size + nrec_local* NGLL3 * dble(CUSTOM_REAL)
+
     endif
 
     ! elastic simulations
@@ -375,12 +414,13 @@
     ! poor estimate for kernel simulations...
     if (SIMULATION_TYPE == 3) memory_size = 2.d0 * memory_size
 
+    ! maximum of all processes (may vary e.g. due to different nrec_local, num_abs_boundary_faces, ..)
+    call max_all_dp(memory_size,memory_size_glob)
+
     ! user output
     if (myrank == 0) then
       write(IMAIN,*)
-      write(IMAIN,*) '  minimum memory requested     : ', &
-                    memory_size / 1024. / 1024., &
-                     'MB per process'
+      write(IMAIN,*) '  minimum memory requested     : ',memory_size_glob / 1024. / 1024.,'MB per process'
       write(IMAIN,*)
       call flush_IMAIN()
     endif

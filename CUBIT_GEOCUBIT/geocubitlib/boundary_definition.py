@@ -37,6 +37,9 @@ from utilities import get_cubit_version
 
 
 def map_boundary(cpuxmin=0, cpuxmax=1, cpuymin=0, cpuymax=1, cpux=1, cpuy=1):
+    """
+    determines list of processes with boundary on xmin/xmax and ymin/ymax sides
+    """
     ymin = []
     xmax = []
     xmin = []
@@ -45,17 +48,17 @@ def map_boundary(cpuxmin=0, cpuxmax=1, cpuymin=0, cpuymax=1, cpux=1, cpuy=1):
     #
     for ix in range(cpuxmin, cpuxmax):
         for iy in range(cpuymin, cpuymax):
-            ip = iy * cpux + ix
+            iproc = iy * cpux + ix
             if ix == cpuxmin:
-                xmin.append(ip)
+                xmin.append(iproc)
             if ix == cpuxmax - 1:
-                xmax.append(ip)
+                xmax.append(iproc)
             if iy == cpuymin:
-                ymin.append(ip)
+                ymin.append(iproc)
             if iy == cpuymax - 1:
-                ymax.append(ip)
+                ymax.append(iproc)
                 #
-            listfull.append(ip)
+            listfull.append(iproc)
     if cpux * cpuy == 1:
         xmin, xmax, ymin, ymax = [0], [0], [0], [0]
     return xmin, xmax, ymin, ymax, listfull
@@ -87,42 +90,42 @@ def define_4side_lateral_surfaces():
     return surf_xmin, surf_ymin, surf_xmax, surf_ymax
 
 
-def lateral_boundary_are_absorbing(ip=0, cpuxmin=0, cpuxmax=1,
+def lateral_boundary_are_absorbing(iproc=0, cpuxmin=0, cpuxmax=1,
                                    cpuymin=0, cpuymax=1, cpux=1, cpuy=1):
     #
     xmin, ymin, xmax, ymax = define_4side_lateral_surfaces()
-    ip_xmin, ip_xmax, ip_ymin, ip_ymax, listfull = map_boundary(
+    iproc_xmin, iproc_xmax, iproc_ymin, iproc_ymax, listfull = map_boundary(
         cpuxmin, cpuxmax, cpuymin, cpuymax, cpux, cpuy)
-    if not isinstance(ip_xmin, list):
-        ip_xmin = [ip_xmin]
-    if not isinstance(ip_ymin, list):
-        ip_ymin = [ip_ymin]
-    if not isinstance(ip_xmax, list):
-        ip_xmax = [ip_xmax]
-    if not isinstance(ip_ymax, list):
-        ip_ymax = [ip_ymax]
+    if not isinstance(iproc_xmin, list):
+        iproc_xmin = [iproc_xmin]
+    if not isinstance(iproc_ymin, list):
+        iproc_ymin = [iproc_ymin]
+    if not isinstance(iproc_xmax, list):
+        iproc_xmax = [iproc_xmax]
+    if not isinstance(iproc_ymax, list):
+        iproc_ymax = [iproc_ymax]
     #
     abs_xmin = []
     abs_ymin = []
     abs_xmax = []
     abs_ymax = []
     #
-    if ip in ip_xmin:
+    if iproc in iproc_xmin:
         abs_xmin = xmin
-        print 'proc ', ip, ' has absorbing boundary xmin'
-    if ip in ip_ymin:
-        print 'proc ', ip, ' has absorbing boundary ymin'
+        print 'proc ', iproc, ' has absorbing boundary xmin'
+    if iproc in iproc_ymin:
+        print 'proc ', iproc, ' has absorbing boundary ymin'
         abs_ymin = ymin
-    if ip in ip_xmax:
-        print 'proc ', ip, ' has absorbing boundary xmax'
+    if iproc in iproc_xmax:
+        print 'proc ', iproc, ' has absorbing boundary xmax'
         abs_xmax = xmax
-    if ip in ip_ymax:
-        print 'proc ', ip, ' has absorbing boundary ymax'
+    if iproc in iproc_ymax:
+        print 'proc ', iproc, ' has absorbing boundary ymax'
         abs_ymax = ymax
     return abs_xmin, abs_xmax, abs_ymin, abs_ymax
 
 
-def define_surf(ip=0, cpuxmin=0, cpuxmax=1,
+def define_surf(iproc=0, cpuxmin=0, cpuxmax=1,
                 cpuymin=0, cpuymax=1, cpux=1, cpuy=1):
     """
     define the absorbing surfaces for a layered topological
@@ -245,7 +248,7 @@ def define_surf(ip=0, cpuxmin=0, cpuxmax=1,
         ymin = list(Set(ymintmp) - Set(ymaxtmp))
         ymax = list(Set(ymaxtmp) - Set(ymintmp))
         abs_xmintmp, abs_xmaxtmp, abs_ymintmp, abs_ymaxtmp = \
-            lateral_boundary_are_absorbing(ip, cpuxmin, cpuxmax, cpuymin,
+            lateral_boundary_are_absorbing(iproc, cpuxmin, cpuxmax, cpuymin,
                                            cpuymax, cpux, cpuy)
         abs_xmin = list(Set(abs_xmintmp) - Set(abs_xmaxtmp))
         abs_xmax = list(Set(abs_xmaxtmp) - Set(abs_xmintmp))
@@ -370,7 +373,7 @@ def define_bc(*args, **keys):
     #
     parallel = keys.get('parallel', True)
     closed = keys.get('closed', False)
-    ip = keys.get("iproc", 0)
+    iproc = keys.get("iproc", 0)
     cpuxmin = keys.get("cpuxmin", 0)
     cpuymin = keys.get("cpuymin", 0)
     cpux = keys.get("cpux", 1)
@@ -382,7 +385,7 @@ def define_bc(*args, **keys):
     if parallel:
         absorbing_surf, abs_xmin, abs_xmax, abs_ymin, abs_ymax, top_surf, \
             bottom_surf, xmin, ymin, xmax, ymax = \
-            define_surf(ip=ip, cpuxmin=cpuxmin, cpuxmax=cpuxmax,
+            define_surf(iproc=iproc, cpuxmin=cpuxmin, cpuxmax=cpuxmax,
                         cpuymin=cpuymin, cpuymax=cpuymax,
                         cpux=cpux, cpuy=cpuy)
         id_0 = cubit.get_next_block_id()
@@ -624,7 +627,7 @@ def check_bc(iproc, xmin, xmax, ymin, ymax,
     #
     absorbing_surf, abs_xmin, abs_xmax, abs_ymin, abs_ymax, top_surf, \
         bottom_surf, surf_xmin, surf_ymin, surf_xmax, surf_ymax = \
-        define_surf(ip=iproc, cpuxmin=cpuxmin, cpuxmax=cpuxmax,
+        define_surf(iproc=iproc, cpuxmin=cpuxmin, cpuxmax=cpuxmax,
                     cpuymin=cpuymin, cpuymax=cpuymax, cpux=cpux, cpuy=cpuy)
     curve_bottom_xmin, curve_bottom_ymin, curve_bottom_xmax, \
         curve_bottom_ymax = \

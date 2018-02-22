@@ -302,6 +302,7 @@
                      ' ',sngl(current_percent),' %'
       write(14,*) 0.5*(real(iclass/dble(NCLASS)) + real((iclass+1)/dble(NCLASS))),' ',sngl(current_percent)
     enddo
+    write(IMAIN,*)
     close(14)
 
     ! create script for Gnuplot histogram file

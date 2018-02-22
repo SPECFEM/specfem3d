@@ -37,93 +37,110 @@
 
   use constants
 
-  use specfem_par, only: USE_BINARY_FOR_SEISMOGRAMS,SAVE_ALL_SEISMOS_IN_ONE_FILE
+  use specfem_par, only: myrank,USE_BINARY_FOR_SEISMOGRAMS,SAVE_ALL_SEISMOS_IN_ONE_FILE,NTSTEP_BETWEEN_OUTPUT_SEISMOS, &
+    seismo_offset,seismo_current
 
   implicit none
 
-  integer :: NSTEP,it,SIMULATION_TYPE
+  integer,intent(in) :: NSTEP,it,SIMULATION_TYPE
 
-  real(kind=CUSTOM_REAL), dimension(NDIM,NSTEP) :: one_seismogram
+  real(kind=CUSTOM_REAL), dimension(NDIM,NTSTEP_BETWEEN_OUTPUT_SEISMOS),intent(in) :: one_seismogram
 
-  double precision t0,DT
+  double precision,intent(in) :: t0,DT
 
-  integer iorientation
+  integer,intent(in) :: iorientation
 
-  character(len=MAX_STRING_LEN) :: sisname,final_LOCAL_PATH
+  character(len=MAX_STRING_LEN),intent(in) :: sisname,final_LOCAL_PATH
 
   ! local parameter
-  integer isample,nt_s,ier
-  real, dimension(:), allocatable :: tr
-  real(kind=CUSTOM_REAL) :: time_t
+  integer :: isample,ier,it_current
+  real(kind=CUSTOM_REAL) :: value,time_t
+
+  real, dimension(1:seismo_current) :: tr
 
   ! opens seismogram file
   if (USE_BINARY_FOR_SEISMOGRAMS) then
 
-    ! allocate trace
-    nt_s = min(it,NSTEP)
-    allocate(tr(nt_s),stat=ier)
-    if (ier /= 0) stop 'error allocating array tr()'
-
     ! binary format case
-    if (.not. SAVE_ALL_SEISMOS_IN_ONE_FILE) then
-      open(unit=IOUT, file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//&
-         sisname(1:len_trim(sisname)), form='unformatted', access='direct', recl=4*(nt_s))
-    else
+    if (SAVE_ALL_SEISMOS_IN_ONE_FILE) then
+      ! trace name
       write(IOUT) sisname
+    else
+      if (seismo_offset == 0) then
+        open(unit=IOUT, file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//sisname(1:len_trim(sisname)), &
+             form='unformatted', action='write', access='stream', status='replace', iostat=ier)
+      else
+        open(unit=IOUT, file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//sisname(1:len_trim(sisname)), &
+             form='unformatted', action='write', access='stream', status='old', position='append', iostat=ier)
+      endif
+      if (ier /= 0) call exit_mpi(myrank,'Error opening file: '// &
+                                  final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//sisname(1:len_trim(sisname)))
     endif
-    tr(:)=0
 
   else
 
     ! ASCII format case
-    if (.not. SAVE_ALL_SEISMOS_IN_ONE_FILE) then
-      open(unit=IOUT,file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//&
-         sisname(1:len_trim(sisname)),status='unknown')
-    else
+    if (SAVE_ALL_SEISMOS_IN_ONE_FILE) then
+      ! trace name
       write(IOUT,*) sisname(1:len_trim(sisname))
+    else
+      if (seismo_offset == 0) then
+        open(unit=IOUT,file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//sisname(1:len_trim(sisname)), &
+             action='write', status='unknown',iostat=ier)
+      else
+        open(unit=IOUT,file=final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//sisname(1:len_trim(sisname)), &
+             action='write', status='old',position='append',iostat=ier)
+      endif
+      if (ier /= 0) call exit_mpi(myrank,'Error opening file: '// &
+                                  final_LOCAL_PATH(1:len_trim(final_LOCAL_PATH))//sisname(1:len_trim(sisname)))
     endif
 
   endif
 
   ! make sure we never write more than the maximum number of time steps
   ! subtract half duration of the source to make sure travel time is correct
-  do isample = 1,min(it,NSTEP)
+  do isample = 1,seismo_current
 
+    ! seismogram value
+    value = one_seismogram(iorientation,isample)
+
+    ! current time increment
+    it_current = seismo_offset + isample
+    if (it_current > it) stop 'Invalid current time step in writing output ASCII/binary'
+
+    ! time
+    if (SIMULATION_TYPE == 1) then
       ! forward simulation
-      if (SIMULATION_TYPE == 1) then
-        ! distinguish between single and double precision for reals
-        time_t = real( dble(isample-1)*DT - t0 ,kind=CUSTOM_REAL)
-      endif
-
+      ! distinguish between single and double precision for reals
+      time_t = real( dble(it_current-1)*DT - t0 ,kind=CUSTOM_REAL)
+    else if (SIMULATION_TYPE == 3) then
       ! adjoint simulation: backward/reconstructed wavefields
-      if (SIMULATION_TYPE == 3) then
-        ! distinguish between single and double precision for reals
-        ! note: compare time_t with time used for source term
-        time_t = real( dble(NSTEP-isample)*DT - t0 ,kind=CUSTOM_REAL)
-      endif
+      ! distinguish between single and double precision for reals
+      ! note: compare time_t with time used for source term
+      time_t = real( dble(NSTEP-it_current)*DT - t0 ,kind=CUSTOM_REAL)
+    endif
 
-      if (USE_BINARY_FOR_SEISMOGRAMS) then
-        ! binary format case
-        if (.not. SAVE_ALL_SEISMOS_IN_ONE_FILE) then
-          tr(isample) = one_seismogram(iorientation,isample)
-        else
-          write(IOUT) time_t,one_seismogram(iorientation,isample)
-        endif
+    if (USE_BINARY_FOR_SEISMOGRAMS) then
+      ! binary format case
+      if (SAVE_ALL_SEISMOS_IN_ONE_FILE) then
+        write(IOUT) time_t,value
       else
-        ! ASCII format case
-        write(IOUT,*) time_t,' ',one_seismogram(iorientation,isample)
+        tr(isample) = value
       endif
+    else
+      ! ASCII format case
+      write(IOUT,*) time_t,value
+    endif
 
   enddo
 
-  ! binary format case
-  if (USE_BINARY_FOR_SEISMOGRAMS) then
+  if (.not. SAVE_ALL_SEISMOS_IN_ONE_FILE) then
+    ! binary format case
     ! writes out whole trace into binary file
-    if (.not. SAVE_ALL_SEISMOS_IN_ONE_FILE) write(IOUT,rec=1) tr
-    deallocate(tr)
+    if (USE_BINARY_FOR_SEISMOGRAMS) write(IOUT) tr(:)
+    ! closes files
+    close(IOUT)
   endif
-
-  if (.not. SAVE_ALL_SEISMOS_IN_ONE_FILE) close(IOUT)
 
   end subroutine write_output_ASCII_or_binary
 

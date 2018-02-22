@@ -43,13 +43,11 @@
   module model_coupled_par
 
   ! VM VM my model for DSM coupling
-  use constants
-
-  ! VM VM
   double precision, dimension (:,:), allocatable :: vpv_1D,vsv_1D,density_1D
   double precision, dimension (:), allocatable :: zlayer
   double precision, dimension (:), allocatable :: smooth_vp,smooth_vs
   integer :: ilayer,nlayer,ncoeff,ndeg_poly
+
   double precision :: ZREF,OLON,OLAT
 
   end module model_coupled_par
@@ -70,13 +68,7 @@
 
   implicit none
 
-  integer :: myrank
-
-  ! local parameters
-  integer :: idummy
-
-  ! dummy to ignore compiler warnings
-  idummy = myrank
+  integer,intent(in) :: myrank
 
   ! safety check
   if (.not. (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH)) then
@@ -84,7 +76,7 @@
     stop 'Error model coupling'
   endif
 
-  call read_model_for_coupling_or_chunk()
+  call read_model_for_coupling_or_chunk(myrank)
 
   end subroutine model_coupled_broadcast
 
@@ -92,42 +84,63 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine read_model_for_coupling_or_chunk()
+  subroutine read_model_for_coupling_or_chunk(myrank)
+
+  use constants, only: IMAIN,IN_DATA_FILES
 
   use model_coupled_par !! VM VM custom subroutine for coupling with DSM
 
   implicit none
+  integer, intent(in) :: myrank
 
-  character(len=256):: filename
-  integer i,cc
-  double precision aa,bb
+  ! local parameters
+  character(len=256) :: filename
+  integer :: i,cc,ier
+  double precision :: aa,bb
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) 'reading model for coupling or mesh a chunk of the earth...'
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
 
   filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'/coeff_poly_deg12'
-  open(27,file=trim(filename))
+  open(27,file=trim(filename),iostat=ier)
+  if (ier /= 0) then
+    print *,'Error opening file: ',filename
+    stop 'Error opening coupled coeff_poly_deg12 file'
+  endif
+
   read(27,*) ndeg_poly
   allocate(smooth_vp(0:ndeg_poly),smooth_vs(0:ndeg_poly))
-  do i=ndeg_poly,0,-1
-     read(27,*) aa,bb,cc
-     smooth_vp(i) = aa
-     smooth_vs(i) = bb
-     ! write(*,*) a,b
+  do i = ndeg_poly,0,-1
+    read(27,*) aa,bb,cc
+    smooth_vp(i) = aa
+    smooth_vs(i) = bb
+    ! write(*,*) a,b
   enddo
   close(27)
 
   !write(*,*) " Reading 1D model "
 
   filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'/model_1D.in'
-  open(27,file=trim(filename))
+  open(27,file=trim(filename),iostat=ier)
+  if (ier /= 0) then
+    print *,'Error opening file: ',filename
+    stop 'Error opening coupled model_1D.in file'
+  endif
+
   read(27,*) nlayer,ncoeff
   allocate(vpv_1D(nlayer,ncoeff))
   allocate(vsv_1D(nlayer,ncoeff))
   allocate(density_1D(nlayer,ncoeff))
   allocate(zlayer(nlayer))
-  do i=1,nlayer
-     read(27,*) zlayer(i)
-     read(27,*) vpv_1D(i,:)
-     read(27,*) vsv_1D(i,:)
-     read(27,*) density_1D(i,:)
+  do i = 1,nlayer
+    read(27,*) zlayer(i)
+    read(27,*) vpv_1D(i,:)
+    read(27,*) vsv_1D(i,:)
+    read(27,*) density_1D(i,:)
   enddo
   read(27,*) ZREF
   read(27,*) OLON,OLAT
@@ -148,7 +161,7 @@
   double precision radius
   double precision :: x,y,z
 
-  radius =  dsqrt(x**2 + y**2 + (z+zref)**2) / 1000.d0
+  radius =  dsqrt(x**2 + y**2 + (z+ZREF)**2) / 1000.d0
   il = 1
   do while (radius > zlayer(il) .and. il < nlayer)
      il = il + 1
@@ -176,7 +189,7 @@
   double precision, intent(in) :: xmesh,ymesh,zmesh
 
   ! density, Vp and Vs
-  real(kind=CUSTOM_REAL) :: vp,vs,rho
+  real(kind=CUSTOM_REAL),intent(out) :: vp,vs,rho
 
   ! local parameters
   double precision :: x,y,z
@@ -201,26 +214,33 @@
 
   subroutine model_1D_coupling(x_eval,y_eval,z_eval,rho_final,vp_final,vs_final,r1)
 
+  use constants, only: CUSTOM_REAL
+
   use model_coupled_par
+
   implicit none
 
-  double precision r1,radius
-  double precision rho,vp,vs
-  double precision x_eval,y_eval,z_eval
-  real(kind=CUSTOM_REAL) rho_final,vp_final,vs_final
+  double precision,intent(in) :: x_eval,y_eval,z_eval
+  real(kind=CUSTOM_REAL),intent(out) :: rho_final,vp_final,vs_final
+
+  ! local parameters
+  double precision :: r1,radius
+  double precision :: rho,vp,vs
 
   double precision, parameter :: Xtol = 1d-2
 
-  radius = dsqrt(x_eval**2 + y_eval**2 + (z_eval+zref)**2)
+  radius = dsqrt(x_eval**2 + y_eval**2 + (z_eval+ZREF)**2)
   radius = radius / 1000.d0
-  r1=radius
+  r1 = radius
 
   ! get vp,vs and rho
   radius = radius / zlayer(nlayer)
+
   vp = Interpol(vpv_1D,ilayer,radius,nlayer)
   vs = Interpol(vsv_1D,ilayer,radius,nlayer)
   rho = Interpol(density_1D,ilayer,radius,nlayer)
 
+  ! converts units to m/s
   vp_final = vp * 1000.d0
   vs_final = vs * 1000.d0
   rho_final = rho * 1000.d0

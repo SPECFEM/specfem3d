@@ -2,10 +2,28 @@
 #
 # plot the cross-correlation and L2-norm between reference and output seismograms
 #
+from __future__ import print_function
+
 import sys
 import glob
 import os
-import numpy as np
+
+try:
+    import numpy as np
+except:
+    print("Error importing numpy, check if numpy module is installed")
+    print("")
+    # python version
+    print("python version:")
+    print(sys.version)
+    print("")
+    # import module paths
+    print("module paths:")
+    for path in sys.path:
+        print(path)
+    print("")
+    sys.exit(1)
+
 
 # tolerance values
 TOL_CORR = 0.8
@@ -31,7 +49,7 @@ def get_cross_correlation_timeshift(x,y,dt):
     """
     # checks signals
     if len(x) != len(y):
-        print "Error: lengths in cross-correlation don't match"
+        print("Error: lengths in cross-correlation don't match")
         return 1.e30
 
     # cross-correlation length
@@ -40,19 +58,19 @@ def get_cross_correlation_timeshift(x,y,dt):
 
     # cross-correlation array
     crosscorrelation = np.correlate(x, y, mode='full')
-
+    
     # index of maximum (between [0,2 * signal_length - 1]
     indexmax = np.argmax(crosscorrelation)
 
     # position (negative -> signal shifted to right, positive -> signal shifted to left)
     # time lag (will have steps of dt)
     lag = (indexmax + 1) - signal_length
-
+    
     # subsample precision
     maxval = crosscorrelation[indexmax]
 
     #debug
-    #print "xcorr: ",indexmax,maxval,len(crosscorrelation),length
+    #print("xcorr: ",indexmax,maxval,len(crosscorrelation),length)
 
     # gets values left/right from maximum value
     if indexmax >= 1 and indexmax < length-1:
@@ -73,7 +91,7 @@ def get_cross_correlation_timeshift(x,y,dt):
         peak_shift = 0.5 * (val_left - val_right) / (val_left - 2.0*maxval + val_right)
     else:
         peak_shift = 0.0
-
+    
     # adds subsample shift
     lag += peak_shift
 
@@ -81,7 +99,7 @@ def get_cross_correlation_timeshift(x,y,dt):
     time_shift = lag * dt
 
     # debug
-    #print "cross-correlation:",length,signal_length,"shift = ",indexmax,lag,time_shift
+    #print("cross-correlation:",length,signal_length,"shift = ",indexmax,lag,time_shift)
 
     return time_shift
 
@@ -94,14 +112,24 @@ def plot_correlations(out_dir,ref_dir):
     print('  reference directory: %s' % ref_dir)
     print('  output directory   : %s\n' % out_dir)
 
+    # checks if directory exists
+    if not os.path.isdir(ref_dir):
+        print("Please check if directory exists: ",ref_dir)
+        sys.exit(1)
+    if not os.path.isdir(out_dir):
+        print("Please check if directory exists: ",out_dir)
+        sys.exit(1)
+
     # seismogram file ending
+    ## global version: ending = '.sem.ascii' # MX*.sem.ascii, ..
+    ## cartesian version:
     ending = '.sem*' # .semd, .semv, .sema, .semp, ..
 
     # gets seismograms
     files = glob.glob(out_dir + '/*' + ending)
     if len(files) == 0:
-        print "no seismogram files with ending ",ending," found"
-        print "Please check directory: ",out_dir
+        print("no seismogram files with ending ",ending," found")
+        print("Please check directory: ",out_dir)
         sys.exit(1)
 
     files.sort()
@@ -112,22 +140,19 @@ def plot_correlations(out_dir,ref_dir):
 
     # gets time step size from first file
     syn_file = files[0]
-    print "  time step: reading from first file ",syn_file
+    print("  time step: reading from first file ",syn_file)
     syn_time = np.loadtxt(syn_file)[:, 0]
     dt = syn_time[1] - syn_time[0]
-    print "  time step: size = ",dt
-    # start time
-    dt_start = syn_time[0]
-
+    print("  time step: size = ",dt)
     # warning
     if dt <= 0.0:
-        print "warning: invalid time step size for file ",files[0]
+        print("warning: invalid time step size for file ",files[0])
 
     # determines window length
     if USE_SUB_WINDOW_CORR:
         # moving window
-        print "  using correlations in moving sub-windows"
-        print "  minimum period: ",TMIN
+        print("  using correlations in moving sub-windows")
+        print("  minimum period: ",TMIN)
         # checks
         if dt <= 0.0:
             # use no moving window
@@ -136,26 +161,26 @@ def plot_correlations(out_dir,ref_dir):
             # window length for minimum period
             window_length = int(TMIN/dt)
 
-        print "  moving window length: ",window_length
+        print("  moving window length: ",window_length)
 
 
-    print ""
-    print "comparing ",len(files),"seismograms"
-    print ""
+    print("")
+    print("comparing ",len(files),"seismograms")
+    print("")
 
     # outputs table header
     print("|%-30s| %13s| %13s| %13s|" % ('file name', 'corr', 'err', 'time shift'))
 
     # counter
     n = 0
-
+    
     for f in files:
         # build reference and synthetics file names
         # specfem file: **network**.**station**.**comp**.sem.ascii
-        fname = os.path.basename(f)
+        fname = os.path.basename(f)        
         names = str.split(fname,".")
-
-        # trace
+        
+        # trace 
         net = names[0]
         sta = names[1]
         cha = names[2]
@@ -171,10 +196,10 @@ def plot_correlations(out_dir,ref_dir):
 
         # makes sure files are both available
         if not os.path.isfile(ref_file):
-            print "  file " + ref_file + " not found"
+            print("  file " + ref_file + " not found")
             continue
         if not os.path.isfile(syn_file):
-            print "  file " + syn_file + " not found"
+            print("  file " + syn_file + " not found")
             continue
 
         # numpy: reads in file data
@@ -182,7 +207,7 @@ def plot_correlations(out_dir,ref_dir):
         syn0 = np.loadtxt(syn_file)[:, 1]
 
         #debug
-        #print "  seismogram: ", fname, "vs", fname_old,"  lengths: ",len(ref0),len(syn0)
+        #print("  seismogram: ", fname, "vs", fname_old,"  lengths: ",len(ref0),len(syn0))
 
         # cuts common length
         length = min(len(ref0),len(syn0))
@@ -196,16 +221,13 @@ def plot_correlations(out_dir,ref_dir):
         # time step size in reference file
         ref_time = np.loadtxt(ref_file)[:, 0]
         dt_ref = ref_time[1] - ref_time[0]
-        # start time
-        dt_ref_start = ref_time[0]
-
         # mismatch warning
         if abs(dt - dt_ref)/dt > 1.e-5:
           print("** warning: mismatch of time step size in both files syn/ref = %e / %e" %(dt,dt_ref))
           #print("** warning: using time step size %e from file %s" %(dt,syn_file))
 
         #debug
-        #print "common length: ",length
+        #print("common length: ",length)
 
         ref = ref0[0:length]
         syn = syn0[0:length]
@@ -239,7 +261,7 @@ def plot_correlations(out_dir,ref_dir):
                 print("** warning: comparing zero traces")
                 corr_mat = 1.0
         corr = np.min(corr_mat)
-
+        
         # time shift
         if fac_norm > 0.0:
           # shift (in s) by cross correlation
@@ -255,7 +277,7 @@ def plot_correlations(out_dir,ref_dir):
                 # windowed signals
                 x = ref[i:i+window_length]
                 y = syn[i:i+window_length]
-
+                
                 # correlations
                 corr_win = np.corrcoef(x, y)
                 corr_w = np.min(corr_win)
@@ -264,9 +286,6 @@ def plot_correlations(out_dir,ref_dir):
                 # cross-correlation array
                 shift_w = get_cross_correlation_timeshift(x,y,dt)
                 if abs(shift) < abs(shift_w): shift = shift_w
-
-        # adding shift in start times
-        shift += (dt_ref_start - dt_start)
 
         # statistics
         corr_min = min(corr, corr_min)
@@ -308,30 +327,30 @@ def plot_correlations(out_dir,ref_dir):
         print("              poor correlation seismograms found")
     else:
         print("              no poor correlations found")
-    print ""
-
+    print("")
+    
     print("L2-error    : values 0.0 perfect, > %.2f poor match" % TOL_ERR)
     if err_max > TOL_ERR:
         print("              poor matching seismograms found")
     else:
         print("              no poor matches found")
-    print ""
+    print("")
 
     print("Time shift  : values 0.0 perfect, > %.2f significant shift" % TOL_SHIFT)
     if abs(shift_max) > TOL_SHIFT:
         print("              significant time shift in seismograms found")
     else:
         print("              no significant time shifts found")
-    print ""
+    print("")
 
 
 def usage():
-    print "usage: ./compare_seismogram_correlations.py directory1/ directory2/"
-    print "  with"
-    print "     directory1 - directory holding seismogram files (***.sem.ascii),"
-    print "                    e.g. OUTPUT_FILES/"
-    print "     directory2 - directory holding corresponding reference seismogram files,"
-    print "                    e.g. OUTPUT_FILES_reference_OK/"
+    print("usage: ./compare_seismogram_correlations.py directory1/ directory2/")
+    print("  with")
+    print("     directory1 - directory holding seismogram files (***.sem.ascii),")
+    print("                    e.g. OUTPUT_FILES/")
+    print("     directory2 - directory holding corresponding reference seismogram files,")
+    print("                    e.g. OUTPUT_FILES_reference_OK/")
 
 if __name__ == '__main__':
     # gets arguments

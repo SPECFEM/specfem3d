@@ -55,8 +55,8 @@ NGNOD                           = 8
 # 1D models available are:
 #   1d_prem,1d_socal,1d_cascadia
 # 3D models available are:
-#   aniso,external,gll,salton_trough,tomo,SEP...
-MODEL                           = external
+#   aniso,external,gll,salton_trough,tomo,SEP,coupled,...
+MODEL                           = coupled
 
 # path for external tomographic models files
 TOMOGRAPHY_PATH                 = ./DATA/tomo_files/

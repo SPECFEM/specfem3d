@@ -844,33 +844,6 @@ subroutine read_mesh_databases_adios()
            abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
   if (ier /= 0) stop 'error allocating array abs_boundary_ispec etc.'
 
-#ifdef DEBUG_COUPLED
-  ! safety stop, as the code below will probably not work anymore...
-  ! see commits like: 858afb31e8bbdab6ac1e8354a9dbab913a7111f3
-  ! by PR #759: "now fully done removing the old DSM coupling"
-  stop 'COUPLE w/ external code: ADIOS support not fully implemented yet'
-
-  !! CD CD !! For coupling with DSM
-  if (COUPLE_WITH_INJECTION_TECHNIQUE) then
-    allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
-    allocate(Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
-
-    if (old_DSM_coupling_from_Vadim) then
-      open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'vel.bin',status='old', &
-           action='read',form='unformatted',iostat=ier)
-      open(unit=IIN_tract_dsm,file=dsmname(1:len_trim(dsmname))//'tract.bin',status='old', &
-           action='read',form='unformatted',iostat=ier)
-    else
-      !! To verify for NOBU version (normally, remains empty)
-    endif
-
-  else
-    allocate(Veloc_dsm_boundary(1,1,1,1))
-    allocate(Tract_dsm_boundary(1,1,1,1))
-  endif
-  !! CD CD
-#endif
-
   allocate(ibelm_xmin(nspec2D_xmin),ibelm_xmax(nspec2D_xmax), &
            ibelm_ymin(nspec2D_ymin),ibelm_ymax(nspec2D_ymax), &
            ibelm_bottom(NSPEC2D_BOTTOM),ibelm_top(NSPEC2D_TOP),stat=ier)
