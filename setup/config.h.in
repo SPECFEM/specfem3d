@@ -119,5 +119,5 @@
 
 /* Define to select optimized file i/o for regional simulations */
 /* map fails when output files are > 4GB, which is often the case for GPU simulations */
-#undef USE_MAP_FUNCTION
+#undef USE_MAP_function
 

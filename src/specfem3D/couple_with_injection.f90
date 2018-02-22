@@ -34,9 +34,9 @@
 !
 ! when using this technique, please also reference the original work:
 !
-! "Three-dimensional full waveform inversion of short-period teleseismic wavefields based upon the SEM–DSM hybrid method"
-! Vadim Monteiller, Sébastien Chevrot, Dimitri Komatitsch, Yi Wang
-! Geophysical Journal International, Volume 202, Issue 2, 1 August 2015, Pages 811–827,
+! "Three-dimensional full waveform inversion of short-period teleseismic wavefields based upon the SEM-DSM hybrid method"
+! Vadim Monteiller, Sebastien Chevrot, Dimitri Komatitsch, Yi Wang
+! Geophysical Journal International, Volume 202, Issue 2, 1 August 2015, Pages 811-827,
 ! https://doi.org/10.1093/gji/ggv189
 !
 !
@@ -48,7 +48,7 @@
 !
 ! "High-resolution seismic array imaging based on an SEM-FK hybrid method"
 ! Ping Tong, Chin-wu Chen, Dimitri Komatitsch, Piero Basini and Qinya Liu
-! Geophysical Journal International, Volume 197, Issue 1, 1 April 2014, Pages 369–395,
+! Geophysical Journal International, Volume 197, Issue 1, 1 April 2014, Pages 369-395,
 ! https://doi.org/10.1093/gji/ggt508
 !
 ! *********************************************************************************
