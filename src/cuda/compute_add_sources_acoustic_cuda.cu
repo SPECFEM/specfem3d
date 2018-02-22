@@ -202,7 +202,7 @@ __global__ void add_sources_ac_SIM_TYPE_2_OR_3_kernel(realw* potential_dot_dot_a
       realw xir    = xir_store[INDEX2(nadj_rec_local,irec_local,i)];
       realw etar   = etar_store[INDEX2(nadj_rec_local,irec_local,j)];
       realw gammar = gammar_store[INDEX2(nadj_rec_local,irec_local,k)];
-      realw source_adj = source_adjoint[INDEX3(nadj_rec_local,NSTEP_BETWEEN_ADJSRC,irec_local,it,0)];
+      realw source_adj = source_adjoint[INDEX3(NDIM,nadj_rec_local,0,irec_local,it)];
       //realw kappal = kappastore[INDEX4(NGLLX,NGLLY,NGLLZ,i,j,k,ispec)];
 
       //potential_dot_dot_acoustic[iglob] += adj_sourcearrays[INDEX6(nadj_rec_local,NTSTEP_BETWEEN_ADJSRC,3,5,5,

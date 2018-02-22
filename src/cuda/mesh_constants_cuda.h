@@ -371,6 +371,11 @@ typedef struct mesh_ {
   realw* d_hxir, *d_hetar, *d_hgammar;
   realw* d_seismograms_d, *d_seismograms_v, *d_seismograms_a, *d_seismograms_p, * d_nu;
 
+  int save_seismograms_d;
+  int save_seismograms_v;
+  int save_seismograms_a;
+  int save_seismograms_p;
+
   //realw* h_seismograms_d_it;
   //realw* h_seismograms_v_it;
   //realw* h_seismograms_a_it;

@@ -254,9 +254,9 @@ __global__ void add_sources_el_SIM_TYPE_2_OR_3_kernel(realw* accel,
       realw lagrange =   xir * etar * gammar ;
 
       // atomic operations are absolutely necessary for correctness!
-      atomicAdd(&accel[3*iglob],source_adjoint[INDEX3(nadj_rec_local,NSTEP_BETWEEN_ADJSRC,irec_local,it,0)]*lagrange);
-      atomicAdd(&accel[1+3*iglob],source_adjoint[INDEX3(nadj_rec_local,NSTEP_BETWEEN_ADJSRC,irec_local,it,1)]*lagrange);
-      atomicAdd(&accel[2+3*iglob],source_adjoint[INDEX3(nadj_rec_local,NSTEP_BETWEEN_ADJSRC,irec_local,it,2)]*lagrange);
+      atomicAdd(&accel[3*iglob],source_adjoint[INDEX3(NDIM,nadj_rec_local,0,irec_local,it)]*lagrange);
+      atomicAdd(&accel[1+3*iglob],source_adjoint[INDEX3(NDIM,nadj_rec_local,1,irec_local,it)]*lagrange);
+      atomicAdd(&accel[2+3*iglob],source_adjoint[INDEX3(NDIM,nadj_rec_local,2,irec_local,it)]*lagrange);
     } // ispec_is_elastic
   }
 

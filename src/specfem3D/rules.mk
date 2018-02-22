@@ -71,6 +71,7 @@ specfem3D_OBJECTS = \
 	$O/compute_gradient_in_acoustic.spec.o \
 	$O/compute_interpolated_dva.spec.o \
 	$O/compute_kernels.spec.o \
+	$O/compute_seismograms.spec.o \
 	$O/compute_stacey_acoustic.spec.o \
 	$O/compute_stacey_viscoelastic.spec.o \
 	$O/compute_stacey_poroelastic.spec.o \

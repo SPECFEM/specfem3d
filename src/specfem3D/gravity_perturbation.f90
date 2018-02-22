@@ -80,7 +80,7 @@ subroutine gravity_init()
     ! user output
     if (myrank == 0) then
       write(IMAIN,*)
-      write(IMAIN,*) 'no gravity simulation'
+      write(IMAIN,*) '  no gravity simulation'
       write(IMAIN,*)
     endif
 

@@ -25,6 +25,7 @@
 !
 !=====================================================================
 
+
   subroutine compute_arrays_source_cmt(ispec_selected_source,sourcearray, &
                                        hxis,hetas,hgammas,hpxis,hpetas,hpgammas, &
                                        Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
@@ -131,9 +132,12 @@
 
   end subroutine compute_arrays_source_cmt
 
-! =======================================================================
+!
+!-------------------------------------------------------------------------------------------------
+!
 
 ! compute array for acoustic source
+
   subroutine compute_arrays_source_forcesolution(sourcearray,hxis,hetas,hgammas,factor_source,comp_x,comp_y,comp_z,nu_source)
 
   use constants
@@ -156,9 +160,9 @@
   sourcearray(:,:,:,:) = 0._CUSTOM_REAL
 
 ! calculates source array for interpolated location
-  do k=1,NGLLZ
-    do j=1,NGLLY
-      do i=1,NGLLX
+  do k = 1,NGLLZ
+    do j = 1,NGLLY
+      do i = 1,NGLLX
         hlagrange = hxis(i) * hetas(j) * hgammas(k) * dble(factor_source)
         ! identical source array components in x,y,z-direction
         sourcearray(:,i,j,k) =  hlagrange * ( nu_source(1,:) * comp_x + &
@@ -170,7 +174,9 @@
 
   end subroutine compute_arrays_source_forcesolution
 
-!================================================================
+!
+!-------------------------------------------------------------------------------------------------
+!
 
   subroutine compute_arrays_adjoint_source(adj_source_file,irec_local)
 
@@ -221,7 +227,7 @@
     enddo
     !! read the block we need
     do itime = it_start, it_end
-      read(IIN,*,iostat=ier) junk, source_adjoint(irec_local,itime-it_start+1,icomp)
+      read(IIN,*,iostat=ier) junk, source_adjoint(icomp,irec_local,itime-it_start+1)
       !!! used to check whether we read the correct block
       ! if (icomp==1)      print *, junk, adj_src(itime-it_start+1,icomp)
       if (ier /= 0) &
@@ -232,11 +238,13 @@
 
   enddo
 
-end subroutine compute_arrays_adjoint_source
+  end subroutine compute_arrays_adjoint_source
 
-!================================================================
+!
+!-------------------------------------------------------------------------------------------------
+!
 
-subroutine compute_arrays_adjoint_source_SU()
+  subroutine compute_arrays_adjoint_source_SU()
 
   use specfem_par, only: myrank,source_adjoint,it,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC,nrec_local
   use specfem_par_acoustic, only: ACOUSTIC_SIMULATION
@@ -263,9 +271,9 @@ subroutine compute_arrays_adjoint_source_SU()
     if (ier /= 0) call exit_MPI(myrank,'file '//trim(filename)//' does not exist')
     do irec_local = 1,nrec_local
        read(IIN_SU1,pos=4*((irec_local-1)*(60+NSTEP) + 60 + it_start)+1 ) adj_temp
-       source_adjoint(irec_local,:,1) = adj_temp(:)
-       source_adjoint(irec_local,:,2) = 0.0  !TRIVIAL
-       source_adjoint(irec_local,:,3) = 0.0  !TRIVIAL
+       source_adjoint(1,irec_local,:) = adj_temp(:)
+       source_adjoint(2,irec_local,:) = 0.0  !TRIVIAL
+       source_adjoint(3,irec_local,:) = 0.0  !TRIVIAL
     enddo
     close(IIN_SU1)
 
@@ -286,11 +294,11 @@ subroutine compute_arrays_adjoint_source_SU()
     do irec_local = 1,nrec_local
 
        read(IIN_SU1,pos=4*((irec_local-1)*(60+NSTEP) + 60 + it_start)+1 ) adj_temp
-       source_adjoint(irec_local,:,1)=adj_temp(:)
+       source_adjoint(1,irec_local,:) = adj_temp(:)
        read(IIN_SU2,pos=4*((irec_local-1)*(60+NSTEP) + 60 + it_start)+1 ) adj_temp
-       source_adjoint(irec_local,:,2)=adj_temp(:)
+       source_adjoint(2,irec_local,:) = adj_temp(:)
        read(IIN_SU3,pos=4*((irec_local-1)*(60+NSTEP) + 60 + it_start)+1 ) adj_temp
-       source_adjoint(irec_local,:,3)=adj_temp(:)
+       source_adjoint(3,irec_local,:) = adj_temp(:)
 
     enddo
 
@@ -304,13 +312,17 @@ subroutine compute_arrays_adjoint_source_SU()
 
   endif
 
-end subroutine compute_arrays_adjoint_source_SU
+  end subroutine compute_arrays_adjoint_source_SU
+
+!
+!-------------------------------------------------------------------------------------------------
+!
 
 
-subroutine compute_arrays_source_forcesolution_fluid(ispec_selected_source,sourcearray, &
-                                   hxis,hetas,hgammas,hpxis,hpetas,hpgammas, &
-                                   factor_source, comp_x,comp_y,comp_z, nu_source, &
-                                   xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,nspec)
+  subroutine compute_arrays_source_forcesolution_fluid(ispec_selected_source,sourcearray, &
+                                                       hxis,hetas,hgammas,hpxis,hpetas,hpgammas, &
+                                                       factor_source, comp_x,comp_y,comp_z, nu_source, &
+                                                       xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,nspec)
   use constants
 
   implicit none
@@ -422,4 +434,5 @@ subroutine compute_arrays_source_forcesolution_fluid(ispec_selected_source,sourc
 
   ! distinguish between single and double precision for reals
   sourcearray(:,:,:,:) = real(sourcearrayd(:,:,:,:), kind=CUSTOM_REAL)
-end subroutine compute_arrays_source_forcesolution_fluid
+
+  end subroutine compute_arrays_source_forcesolution_fluid

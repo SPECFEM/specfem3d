@@ -212,15 +212,15 @@
 
                   ! solid phase
                   accels_poroelastic(:,iglob) = accels_poroelastic(:,iglob)   + &
-                                    source_adjoint(irec_local,NTSTEP_BETWEEN_READ_ADJSRC -&
-                                                   mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC),:) * &
+                                    source_adjoint(:,irec_local, &
+                                                   NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC)) * &
                                     hxir_store(irec_local,i)*hetar_store(irec_local,j)*hgammar_store(irec_local,k)
                   !
                   ! fluid phase
                   accelw_poroelastic(:,iglob) = accelw_poroelastic(:,iglob)  &
                                     - rhol_f/rhol_bar *&
-                                    source_adjoint(irec_local,NTSTEP_BETWEEN_READ_ADJSRC -&
-                                    mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC),:) * &
+                                    source_adjoint(:,irec_local, &
+                                                  NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC)) * &
                                     hxir_store(irec_local,i)*hetar_store(irec_local,j)*hgammar_store(irec_local,k)
                 enddo
               enddo

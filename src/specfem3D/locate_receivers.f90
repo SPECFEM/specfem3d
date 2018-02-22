@@ -56,7 +56,7 @@
   double precision, allocatable, dimension(:) :: x_target,y_target,z_target
   double precision, allocatable, dimension(:) :: x_found,y_found,z_found
 
-  integer :: irec
+  integer :: irec,ier,i
 
   ! timer MPI
   double precision, external :: wtime
@@ -69,8 +69,6 @@
   ! receiver information
   ! station information for writing the seismograms
   double precision, allocatable, dimension(:) :: stlat,stlon,stele,stbur,stutm_x,stutm_y,elevation
-
-  integer :: ier
 
   ! SU_FORMAT parameters
   double precision :: llat,llon,lele,lbur
@@ -98,6 +96,8 @@
   double precision, dimension(NDIM,NDIM,NREC_SUBSET_MAX) :: nu_subset
   integer, dimension(NREC_SUBSET_MAX) :: ispec_selected_rec_subset,idomain_subset
   integer :: nrec_subset_current_size,irec_in_this_subset,irec_already_done
+  integer :: length_station_name,length_network_name
+  integer, allocatable, dimension(:) :: station_duplet
 
   logical :: is_done_stations
 
@@ -164,6 +164,42 @@
     enddo
     ! close receiver file
     close(IIN)
+
+    ! In case that the same station and network name appear twice (or more times) in the STATIONS
+    ! file, problems occur, as two (or more) seismograms are written (with mode
+    ! "append") to a file with same name. The philosophy here is to accept multiple
+    ! appearances and to just add a count to the station name in this case.
+    allocate(station_duplet(nrec),stat=ier)
+    if (ier /= 0 ) call exit_MPI(myrank,'Error allocating station_duplet array')
+    station_duplet(:) = 0
+    do irec = 1,nrec
+      do i = 1,irec-1
+        if ((station_name(irec) == station_name(i)) .and. (network_name(irec) == network_name(i))) then
+            station_duplet(i) = station_duplet(i) + 1
+            if (len_trim(station_name(irec)) <= MAX_LENGTH_STATION_NAME-3) then
+              write(station_name(irec),"(a,'_',i2.2)") trim(station_name(irec)),station_duplet(i)+1
+            else
+              call exit_MPI(myrank,'Please increase MAX_LENGTH_STATION_NAME by at least 3 to name station duplets')
+            endif
+        endif
+      enddo
+
+      ! checks name lengths
+      length_station_name = len_trim(station_name(irec))
+      length_network_name = len_trim(network_name(irec))
+      ! check that length conforms to standard
+      if (length_station_name < 1 .or. length_station_name > MAX_LENGTH_STATION_NAME) then
+        print *, 'Error: invalid station name ',trim(station_name(irec))
+        call exit_MPI(myrank,'wrong length of station name')
+      endif
+      if (length_network_name < 1 .or. length_network_name > MAX_LENGTH_NETWORK_NAME) then
+        print *, 'Error: invalid network name ',trim(network_name(irec))
+        call exit_MPI(myrank,'wrong length of network name')
+      endif
+
+    enddo
+    deallocate(station_duplet)
+
   endif
 
   ! broadcast values to other slices

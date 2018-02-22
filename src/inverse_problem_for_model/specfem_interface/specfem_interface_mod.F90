@@ -379,13 +379,13 @@ contains
        if (allocated(seismograms_p)) deallocate(seismograms_p)
 
        ! allocate seismogram array
-       allocate(seismograms_d(NDIM,nrec_local,NSTEP),stat=ier)
+       allocate(seismograms_d(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
        if (ier /= 0) stop 'error allocating array seismograms_d'
-       allocate(seismograms_v(NDIM,nrec_local,NSTEP),stat=ier)
+       allocate(seismograms_v(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
        if (ier /= 0) stop 'error allocating array seismograms_v'
-       allocate(seismograms_a(NDIM,nrec_local,NSTEP),stat=ier)
+       allocate(seismograms_a(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
        if (ier /= 0) stop 'error allocating array seismograms_a'
-       allocate(seismograms_p(NDIM,nrec_local,NSTEP),stat=ier)
+       allocate(seismograms_p(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
        if (ier /= 0) stop 'error allocating array seismograms_p'
 
        ! initialize seismograms
@@ -439,14 +439,14 @@ contains
 
     ! initializes adjoint sources --------------------------------------------------------------------------------------------------
     if (allocated(source_adjoint)) deallocate(source_adjoint)
-    allocate(source_adjoint(nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NDIM),stat=ier)
+    allocate(source_adjoint(NDIM,nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC),stat=ier)
     if (ier /= 0) stop 'error allocating array adj_sourcearrays'
     source_adjoint(:,:,:) = 0._CUSTOM_REAL
     if (SIMULATION_TYPE == 3) then
        do icomp=1,NDIM
           do it=1,NTSTEP_BETWEEN_OUTPUT_SEISMOS
              do irec_local=1, nadj_rec_local
-                source_adjoint(irec_local, it, icomp) = acqui_simu(ievent)%adjoint_sources(icomp,irec_local,it)
+                source_adjoint(icomp, irec_local, it) = acqui_simu(ievent)%adjoint_sources(icomp,irec_local,it)
              enddo
           enddo
        enddo

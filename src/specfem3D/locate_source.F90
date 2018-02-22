@@ -347,9 +347,9 @@
           write(IMAIN,*) '    gamma coordinate of source in that element: ',gamma_source(isource)
 
           write(IMAIN,*)
-          write(IMAIN,*) '    component of direction vector in East direction: ',comp_dir_vect_source_E(isource)
-          write(IMAIN,*) '    component of direction vector in North direction: ',comp_dir_vect_source_N(isource)
-          write(IMAIN,*) '    component of direction vector in Vertical direction: ',comp_dir_vect_source_Z_UP(isource)
+          write(IMAIN,*) '    component of direction vector in East direction: ',sngl(comp_dir_vect_source_E(isource))
+          write(IMAIN,*) '    component of direction vector in North direction: ',sngl(comp_dir_vect_source_N(isource))
+          write(IMAIN,*) '    component of direction vector in Vertical direction: ',sngl(comp_dir_vect_source_Z_UP(isource))
           write(IMAIN,*)
           write(IMAIN,*) '    nu1 = ',nu_source(1,:,isource)
           write(IMAIN,*) '    nu2 = ',nu_source(2,:,isource)

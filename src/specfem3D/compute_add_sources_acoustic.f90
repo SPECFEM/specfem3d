@@ -190,7 +190,7 @@
                     ! note: we take the first component of the adj_sourcearrays
                     !          the idea is to have e.g. a pressure source, where all 3 components would be the same
                     potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
-                                + source_adjoint(irec_local,NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC),1) * &
+                                + source_adjoint(1,irec_local,NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC)) * &
                                 hxir_store(irec_local,i)*hetar_store(irec_local,j)*hgammar_store(irec_local,k)
                   enddo
                 enddo

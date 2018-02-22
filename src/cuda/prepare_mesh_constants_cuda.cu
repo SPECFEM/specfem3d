@@ -134,7 +134,10 @@ void FC_FUNC_(prepare_constants_device,
                                         int* h_myrank,
                                         int* SAVE_FORWARD,
                                         realw* h_xir,realw* h_etar, realw* h_gammar,double * nu,
-                                        int* islice_selected_rec,int* NSTEP) {
+                                        int* islice_selected_rec,
+                                        int* NTSTEP_BETWEEN_OUTPUT_SEISMOS,
+                                        int* SAVE_SEISMOGRAMS_DISPLACEMENT,int* SAVE_SEISMOGRAMS_VELOCITY,
+                                        int* SAVE_SEISMOGRAMS_ACCELERATION,int* SAVE_SEISMOGRAMS_PRESSURE) {
 
   TRACE("prepare_constants_device");
 
@@ -312,14 +315,18 @@ void FC_FUNC_(prepare_constants_device,
     copy_todevice_realw((void**)&mp->d_sourcearrays,h_sourcearrays,(*NSOURCES)*NDIM*NGLL3);
 
     // buffer for source time function values
-    print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_stf_pre_compute,
-                                       *NSOURCES*sizeof(double)),1303);
+    print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_stf_pre_compute,(*NSOURCES)*sizeof(double)),1303);
   }
   copy_todevice_int((void**)&mp->d_islice_selected_source,h_islice_selected_source,(*NSOURCES));
   copy_todevice_int((void**)&mp->d_ispec_selected_source,h_ispec_selected_source,(*NSOURCES));
 
 
   // receiver stations
+  mp->save_seismograms_d = *SAVE_SEISMOGRAMS_DISPLACEMENT;
+  mp->save_seismograms_v = *SAVE_SEISMOGRAMS_VELOCITY;
+  mp->save_seismograms_a = *SAVE_SEISMOGRAMS_ACCELERATION;
+  mp->save_seismograms_p = *SAVE_SEISMOGRAMS_PRESSURE;
+
   mp->nrec_local = *nrec_local; // number of receiver located in this partition
   // note that:
   // size(ispec_selected_rec) = nrec
@@ -329,31 +336,42 @@ void FC_FUNC_(prepare_constants_device,
     copy_todevice_realw((void**)&mp->d_hgammar,h_gammar,NGLLZ*mp->nrec_local);
 
     float* h_nu;
-    h_nu=(float*)malloc(9 * sizeof(float) * mp->nrec_local);
-    int irec_loc=0;
-    for (int i=0;i < (*nrec);i++)
-      {
-      if ( mp->myrank == islice_selected_rec[i])
-        {
-         for (int j=0;j < 9;j++) h_nu[j + 9*irec_loc] = (float)nu[j + 9*i];
+    h_nu = (float*)malloc(NDIM * NDIM * mp->nrec_local * sizeof(float));
+    int irec_loc = 0;
+    for (int i=0;i < (*nrec);i++){
+      if (mp->myrank == islice_selected_rec[i]){
+         for (int j = 0; j < 9; j++) h_nu[j + NDIM * NDIM * irec_loc] = (float)nu[j + NDIM * NDIM * i];
          irec_loc = irec_loc + 1;
-        }
       }
-    copy_todevice_realw((void**)&mp->d_nu,h_nu,3*3*(*nrec_local));
+    }
+    copy_todevice_realw((void**)&mp->d_nu,h_nu,NDIM * NDIM * (*nrec_local));
     free(h_nu);
 
-    print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_d,3*(*NSTEP)*(*nrec_local)*sizeof(realw)),8101);
-    print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_v,3*(*NSTEP)*(*nrec_local)*sizeof(realw)),8101);
-    print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_a,3*(*NSTEP)*(*nrec_local)*sizeof(realw)),8101);
-    print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_p,3*(*NSTEP)*(*nrec_local)*sizeof(realw)),8101);
-    int * ispec_selected_rec_loc;
-    ispec_selected_rec_loc = (int*)malloc(sizeof(int)*mp->nrec_local);
-    irec_loc=0;
-    for(int i=0;i<*nrec;i++) { if ( mp->myrank == islice_selected_rec[i]){ ispec_selected_rec_loc[irec_loc] = h_ispec_selected_rec[i];irec_loc = irec_loc+1;}}
+    // seismograms
+    int size = NDIM * (*NTSTEP_BETWEEN_OUTPUT_SEISMOS) * (*nrec_local);
+
+    if (mp->save_seismograms_d)
+      print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_d,size * sizeof(realw)),1801);
+    if (mp->save_seismograms_v)
+      print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_v,size * sizeof(realw)),1802);
+    if (mp->save_seismograms_a)
+      print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_a,size * sizeof(realw)),1803);
+    if (mp->save_seismograms_p)
+      print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_p,size * sizeof(realw)),1804);
+
+    int *ispec_selected_rec_loc;
+    ispec_selected_rec_loc = (int*)malloc(mp->nrec_local * sizeof(int));
+    irec_loc = 0;
+    for(int i=0;i<*nrec;i++) {
+      if ( mp->myrank == islice_selected_rec[i]){
+        ispec_selected_rec_loc[irec_loc] = h_ispec_selected_rec[i];
+        irec_loc = irec_loc+1;
+      }
+    }
     copy_todevice_int((void**)&mp->d_ispec_selected_rec_loc,ispec_selected_rec_loc,mp->nrec_local);
     free(ispec_selected_rec_loc);
   }
-    copy_todevice_int((void**)&mp->d_ispec_selected_rec,h_ispec_selected_rec,(*nrec));
+  copy_todevice_int((void**)&mp->d_ispec_selected_rec,h_ispec_selected_rec,(*nrec));
 
 #ifdef USE_MESH_COLORING_GPUX
   mp->use_mesh_coloring_gpu = 1;
@@ -963,9 +981,6 @@ void FC_FUNC_(prepare_fields_elastic_device,
     print_CUDA_error_if_any(cudaMemcpy2D(mp->d_c66store, NGLL3_PADDED*sizeof(realw),
                                          c66store, NGLL3*sizeof(realw), NGLL3*sizeof(realw),
                                          mp->NSPEC_AB, cudaMemcpyHostToDevice),4800);
-
-
-
   }
 
   // ocean load approximation
@@ -1197,7 +1212,7 @@ void FC_FUNC_(prepare_sim2_or_3_const_device,
   mp->nadj_rec_local = *nadj_rec_local;
   if (mp->nadj_rec_local > 0){
     print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_source_adjoint,
-                                       (mp->nadj_rec_local)*3*sizeof(realw)*(*NTSTEP_BETWEEN_READ_ADJSRC)),6005);
+                                       (mp->nadj_rec_local)* NDIM * sizeof(realw) * (*NTSTEP_BETWEEN_READ_ADJSRC)),6005);
   }
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
@@ -1317,7 +1332,6 @@ void FC_FUNC_(prepare_fields_gravity_device,
       print_CUDA_error_if_any(cudaMemcpy2D(mp->d_rhostore, NGLL3_PADDED*sizeof(realw),
                                            rhostore, NGLL3*sizeof(realw), NGLL3*sizeof(realw),
                                            mp->NSPEC_AB, cudaMemcpyHostToDevice),4800);
-
     }
   }
 
@@ -1371,10 +1385,9 @@ void FC_FUNC_(prepare_seismogram_fields,
 extern "C"
 void FC_FUNC_(prepare_fault_device,
               PREPARE_FAULT_DEVICE)(long* Mesh_pointer,
-                            int* KELVIN_VOIGT_DAMPING,
+                                    int* KELVIN_VOIGT_DAMPING,
 //                            int* testtrue,
-                                realw* Kelvin_Voigt_eta)
-{
+                                    realw* Kelvin_Voigt_eta) {
 
   TRACE("prepare_fault_device");
 
@@ -1385,7 +1398,7 @@ void FC_FUNC_(prepare_fault_device,
 //    if(! (*KELVIN_VOIGT_DAMPING)) printf("\nKV test pass!\n");
 //    printf("myrank = %d , size of damping = %6d, isAllocated? = %d\n",mp->myrank,sizeof(Kelvin_Voigt_eta),mp -> Kelvin_Voigt_damping);
     copy_todevice_realw((void**)&mp->d_Kelvin_Voigt_eta,Kelvin_Voigt_eta,mp-> NSPEC_AB);
-}
+  }
 }
 
 
@@ -1459,10 +1472,10 @@ TRACE("prepare_cleanup_device");
     cudaFree(mp->d_hxir);
     cudaFree(mp->d_hetar);
     cudaFree(mp->d_hgammar);
-    cudaFree(mp->d_seismograms_d);
-    cudaFree(mp->d_seismograms_v);
-    cudaFree(mp->d_seismograms_a);
-    cudaFree(mp->d_seismograms_p);
+    if (mp->save_seismograms_d) cudaFree(mp->d_seismograms_d);
+    if (mp->save_seismograms_v) cudaFree(mp->d_seismograms_v);
+    if (mp->save_seismograms_a) cudaFree(mp->d_seismograms_a);
+    if (mp->save_seismograms_p) cudaFree(mp->d_seismograms_p);
     cudaFree(mp->d_nu);
     cudaFree(mp->d_ispec_selected_rec_loc);
     }
@@ -1494,9 +1507,9 @@ TRACE("prepare_cleanup_device");
       cudaFree(mp->d_rho_ac_kl);
       cudaFree(mp->d_kappa_ac_kl);
       if (*APPROXIMATE_HESS_KL) {
-  cudaFree(mp->d_hess_ac_kl);
-  cudaFree(mp->d_hess_rho_ac_kl);
-  cudaFree(mp->d_hess_kappa_ac_kl);
+        cudaFree(mp->d_hess_ac_kl);
+        cudaFree(mp->d_hess_rho_ac_kl);
+        cudaFree(mp->d_hess_kappa_ac_kl);
       }
     }
 
@@ -1549,10 +1562,10 @@ TRACE("prepare_cleanup_device");
         cudaFree(mp->d_kappa_kl);
       }
       if (*APPROXIMATE_HESS_KL) {
-  cudaFree(mp->d_hess_el_kl);
-  cudaFree(mp->d_hess_rho_el_kl);
-  cudaFree(mp->d_hess_kappa_el_kl);
-  cudaFree(mp->d_hess_mu_el_kl);
+        cudaFree(mp->d_hess_el_kl);
+        cudaFree(mp->d_hess_rho_el_kl);
+        cudaFree(mp->d_hess_kappa_el_kl);
+        cudaFree(mp->d_hess_mu_el_kl);
       }
     }
 

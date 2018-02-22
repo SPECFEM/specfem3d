@@ -110,10 +110,6 @@
     close(IOUT)
   endif
 
-  ! initialize variables for writing seismograms
-  seismo_offset = it_begin-1
-  seismo_current = 0
-
   ! *********************************************************
   ! ************* MAIN LOOP OVER THE TIME STEPS *************
   ! *********************************************************
@@ -177,11 +173,17 @@
 
   endif ! of if (EXACT_UNDOING_TO_DISK)
 
+  ! time loop increments begin/end
+  it_begin = 1
+  it_end = NSTEP
+
+  ! initialize variables for writing seismograms
+  seismo_offset = it_begin-1
+  seismo_current = 0
+
   ! get MPI starting
   time_start = wtime()
 
-  it_begin = 1
-  it_end = NSTEP
   do it = it_begin,it_end
 
     ! simulation status output and stability check

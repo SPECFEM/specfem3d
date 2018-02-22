@@ -186,7 +186,7 @@
                     iglob = ibool(i,j,k,ispec_selected_rec(irec))
 
                     accel(:,iglob) = accel(:,iglob)  &
-                              + source_adjoint(irec_local,NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC),:) * &
+                              + source_adjoint(:,irec_local,NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC)) * &
                                 hxir_store(irec_local,i)*hetar_store(irec_local,j)*hgammar_store(irec_local,k)
                   enddo
                 enddo

@@ -2083,7 +2083,7 @@ contains
 
       deallocate(x_target_source,y_target_source,z_target_source)
 
-      call define_stf_constants(acqui_simu(ievent)%hdur,acqui_simu(ievent)%hdur_Gaussian,acqui_simu(ievent)%tshift, &
+      call setup_stf_constants(acqui_simu(ievent)%hdur,acqui_simu(ievent)%hdur_Gaussian,acqui_simu(ievent)%tshift, &
                                 min_tshift,acqui_simu(ievent)%islice_selected_source,acqui_simu(ievent)%ispec_selected_source, &
                                 acqui_simu(ievent)%t0)
 
