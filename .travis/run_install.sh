@@ -51,9 +51,10 @@ if [ "$CUDA" == "true" ]; then
   nvcc --version
 fi
 
-# storing new environment path for following bash-script
+# storing updated environment parameters for following bash-script
 echo "export PATH=${PATH}" > $HOME/.tmprc
 echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $HOME/.tmprc
+echo "export CUDA_HOME=${CUDA_HOME}" >> $HOME/.tmprc
 
 echo "exports:"
 export

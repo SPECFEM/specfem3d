@@ -1,10 +1,7 @@
 #!/bin/bash
 
-# getting updated environment
-if [ -f $HOME/.tmprc]; then source $HOME/.tmprc; fi
-echo "exports:"
-export
-echo ""
+# getting updated environment (CUDA_HOME, PATH, ..)
+if [ -f $HOME/.tmprc ]; then source $HOME/.tmprc; fi
 
 ###########################################################
 # setup
@@ -52,7 +49,7 @@ else
 fi
 # layered example
 if [ "$TESTMAKE" == "24" ]; then
-  sed -i "s:NGLLX .*:NGLLX = 6:" setup/constants.h
+  sed -i "s:NGLLX =.*:NGLLX = 6:" setup/constants.h
 fi
 echo -en 'travis_fold:end:configure\\r'
 
