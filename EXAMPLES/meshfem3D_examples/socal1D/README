@@ -18,29 +18,44 @@ Option 1: type
   > run_this_example.sh 
   from this local directory (must have access to mpi)
 
-Option 2: follow instructions below for submitting separate jobs with qsub (or bsub)
+Option 2: follow detailed instructions below for submitting separate jobs with qsub (or bsub)
 
 
-Reference seismograms for comparison are in directories: REF_SEIS.default, REF_SEIS.1d_socal, REF_SEIS.1d_prem, ..
+Note on 1D models:
+------------------
+Different 1D models can be chosen by setting the parameter MODEL in the Par_file. Currently, the 
+following 1D models are available:
+* 1D isotropic PREM (1d_prem)
+* 1D Southern California (1d_socal)
+* 1D Cascadia (1d_cascadia)
 
-The only difference of those references occurs in specifying the model in Par_file:
+The only difference in the settings occur in specifying the model in Par_file:
 ..
 MODEL    = default  # or instead 1d_socal, 1d_prem, 1d_cascadia
 ..
 
-Note that Q values for these models are all unknown, and thus mostly rely on PREM crust values as a first guess.
+Q values for these models are all unknown, and thus mostly rely on PREM crust values as a first guess.
 
+Using the setting `MODEL = default` in Par_file, will take the material definitions provided in Mesh_Par_file and are
+thus fixed to the mesh geometry. Choosing instead one of the 1D model options, e.g., `MODEL = 1d_socal`, will overimpose
+the corresponding 1D material properties and thus can be used with different meshes and mesh resolutions.
+
+Reference seismograms for comparison are in directories: REF_SEIS.default, REF_SEIS.1d_socal, REF_SEIS.1d_prem, ..
 
 ----------------------------------------------------------------------
 
 More detailed instructions:
+
+The setup here explains how to run simulations on a cluster through a job scheduler. Instead of running the example in its EXAMPLES/ folder,
+it copies the files to the corresponding main root folder SPECFEM3D/ to avoid changing the working directory for different example runs.
+
 
 0. Run the default homogeneous halfspace example (external mesh).
 
 1. set up input files:
 
    > cd SPECFEM3D
-   > rsync -av examples/meshfem3D_examples/socal1D/DATA/ DATA
+   > rsync -av EXAMPLES/meshfem3D_examples/socal1D/DATA/ DATA
 
    - adapt the submission scripts for the appropriate queues (-q) and number of cores (-l):
      go_mesher_pbs.bash, go_generate_databases_pbs.bash, go_solver_pbs.bash

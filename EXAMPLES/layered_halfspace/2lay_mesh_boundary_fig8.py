@@ -1,34 +1,40 @@
-#!python
-#!python
-#!/usr/bin/python
 #!/usr/bin/env python
-
-
+##!python
+##!/usr/bin/python
 ###########################################################################
 #### TNM: This is the mesh generation, adapted from a journal file
 ####      specific to the settings of Komatitsch and Tromp 1999, Fig.8
 ####      Aug 2009
 ###########################################################################
-
-import cubit
-cubit.init([""])
-
-try:
-
-from geocubitlib import boundary_definition, exportlib
-from geocubitlib import cubit2specfem3d
-
-
-except:
-
-import boundary_definition
-import cubit2specfem3d
-
 import os
 import sys
-import os.path
-import time
 
+# default directories
+SEMoutput='MESH'
+CUBIToutput='MESH_GEOCUBIT'
+
+os.system('mkdir -p '+ SEMoutput)
+os.system('mkdir -p '+ CUBIToutput)
+
+## obsolete:
+#import boundary_definition
+#import cubit2specfem3d
+## new:
+from geocubitlib import boundary_definition
+from geocubitlib import cubit2specfem3d
+
+## CUBIT/Trelis
+import cubit
+try:
+    #cubit.init([""])
+    cubit.init(["-noecho","-nojournal"])
+except:
+    pass
+
+version = cubit.get_version()
+version_major = int(version.split(".")[0])
+version_minor = int(version.split(".")[1])
+print "cubit version: ",version
 
 cubit.cmd('reset')
 cubit.cmd('brick x 134000 y 134000 z 60000')
@@ -51,10 +57,9 @@ cubit.cmd('create surface vertex 9 10 12 11')
 cubit.cmd('section volume 1 with surface 7 keep normal')
 cubit.cmd('section volume 1 with surface 7 reverse')
 
-# create vertices for auxiliary interface to allow for refinement
-#distance = 9000
-# to have a surface at 25050 m depth, such that point force source can be located exactly
-# on a GLL point at that depth as in Komatitsch et al. (1999)
+# create vertices for auxiliary interface
+# source will be at 25050 m depth as in Komatitsch et al. (1999); placing this auxiliary surface at 22050 will create a mesh
+# such that point force source can be located exactly on a GLL point at that depth.
 distance = 22050
 cubit.cmd('split curve 29  distance '+str(distance))
 cubit.cmd('split curve 31  distance '+str(distance))
@@ -138,13 +143,18 @@ cubit.cmd('block 3 attribute index 4 3200 ')
 cubit.cmd('block 3 attribute index 5 9000.0 ')
 cubit.cmd('block 3 attribute index 6 0 ')     # anisotropy_flag
 
-cubit.cmd('export mesh "top.e" dimension 3 overwrite')
-cubit.cmd('save as "meshing.cub" overwrite')
+cubit.cmd('export mesh "' + CUBIToutput + '/top.e" dimension 3 overwrite')
+cubit.cmd('save as "' + CUBIToutput + '/top.cub" overwrite')
 
 #### Export to SPECFEM3D format using cubit2specfem3d.py of GEOCUBIT
 
-os.system('mkdir -p MESH')
-cubit2specfem3d.export2SPECFEM3D('MESH')
+cubit2specfem3d.export2SPECFEM3D(SEMoutput)
+
+# screen shot
+# (could crash version < 16.4)
+if version_major >= 16 and version_minor >= 4:
+    cubit.cmd('view top')
+    cubit.cmd('hardcopy "' + CUBIToutput + '/layered-fig8.png" png')
 
 # all files needed by SCOTCH are now in directory MESH
 

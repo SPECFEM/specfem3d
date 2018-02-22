@@ -35,6 +35,11 @@ try:
 except:
     pass
 
+version = cubit.get_version()
+version_major = int(version.split(".")[0])
+version_minor = int(version.split(".")[1])
+print "cubit version: ",version
+
 cubit.cmd('reset')
 cubit.cmd('brick x 134000 y 134000 z 60000')
 
@@ -134,7 +139,10 @@ cubit.cmd('save as "' + CUBIToutput + '/top.cub" overwrite')
 cubit2specfem3d.export2SPECFEM3D(SEMoutput)
 
 # screen shot
-cubit.cmd('hardcopy "' + CUBIToutput + '/waterlayered.png" png')
+# (could crash version < 16.4)
+if version_major >= 16 and version_minor >= 4:
+    cubit.cmd('view top')
+    cubit.cmd('hardcopy "' + CUBIToutput + '/waterlayered.png" png')
 
 # all files needed by SCOTCH are now in directory MESH
 

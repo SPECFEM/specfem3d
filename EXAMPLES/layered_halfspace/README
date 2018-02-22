@@ -5,13 +5,13 @@ README
 This example creates a layered model, with three volumes and two different material
 descriptions, using CUBIT.
 It is used for validation with a layer-cake solution from Komatitsch and Tromp (1999),
-using a 2-layer model as shown in their Figure 8, left.
+using a 2-layer model as shown in their Figure 8, left. The source is a vertical point force (pointing down).
 
 step-by-step tutorial:
 
 0. bash run this example in the directory examples/layered_halfspace/
    
-     > ./process.sh
+     > ./run_this_example.sh
 
 which basically goes through the following steps:
 
@@ -140,8 +140,8 @@ Note three input files (CMTSOLUTION, Par_file, STATIONS) are already in the DATA
 Optional:
   Compare the solution traces in the directory
     OUTPUT_FILES/:
-    X55.DB.HXZ.semd
-    X31.DB.HXZ.semd
+    DB.X55.HXZ.semd
+    DB.X31.HXZ.semd
 
   with the reference solutions provided in the directory
     examples/layered_halfspace/VALIDATION_3D_SEM_SIMPLER_LAYER_SOURCE_DEPTH/REF_SEIS/:

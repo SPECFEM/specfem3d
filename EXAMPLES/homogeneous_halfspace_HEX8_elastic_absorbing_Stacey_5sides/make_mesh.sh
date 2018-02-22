@@ -1,10 +1,27 @@
 #!/bin/bash
 
-../../CUBIT_GEOCUBIT/GEOCUBIT.py --build_volume --mesh --cfg=homogeneous_halfspace.cfg
-../../CUBIT_GEOCUBIT/GEOCUBIT.py --meshfiles=MESH_GEOCUBIT/mesh_vol_0.e --export2SPECFEM3D --SEMoutput=MESH
+# checks if your GEOCUBIT.py is already in your path (which GEOCUBIT.py)
+if ! [ -x "$(command -v GEOCUBIT.py)" ]; then
+geocubit=../../CUBIT_GEOCUBIT/GEOCUBIT.py
+else
+geocubit=GEOCUBIT.py
+fi
 
-# if your GEOCUBIT.py is already in your path (which GEOCUBIT.py)
-#GEOCUBIT.py --build_volume --mesh --cfg=homogeneous_halfspace.cfg
-#GEOCUBIT.py --meshfiles=MESH_GEOCUBIT/mesh_vol_0.e --export2SPECFEM3D --SEMoutput=MESH
+# meshing
+echo
+echo "$geocubit --build_volume --mesh --cfg=homogeneous_halfspace.cfg"
+echo
+$geocubit --build_volume --mesh --cfg=homogeneous_halfspace.cfg
 
-cp MESH-default/nummaterial_velocity_file MESH/
+
+echo
+echo "$geocubit --meshfiles=MESH_GEOCUBIT/mesh_vol_0.e --export2SPECFEM3D --SEMoutput=MESH"
+echo
+
+$geocubit --meshfiles=MESH_GEOCUBIT/mesh_vol_0.e --export2SPECFEM3D --SEMoutput=MESH
+
+echo
+echo
+
+cp -v MESH-default/nummaterial_velocity_file MESH/
+
