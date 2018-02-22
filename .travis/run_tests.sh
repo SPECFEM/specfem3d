@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# getting updated environment
+if [ -f $HOME/.tmprc]; then source $HOME/.tmprc; fi
+echo "exports:"
+export
+echo ""
+
 ###########################################################
 # setup
 ###########################################################
@@ -470,3 +476,7 @@ if [ "$TESTCOV" == "1" ]; then
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.layered\\r'
+
+# done
+echo "done `pwd`"
+
