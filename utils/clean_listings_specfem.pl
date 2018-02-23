@@ -183,8 +183,10 @@ use File::Basename;
       $line =~ s#external_stf#EXTERNAL_SOURCE_TIME_FUNCTION#ogi;
       $line =~ s#EXTERNAL_SOURCE_TIME_FUNCTION_filename#external_source_time_function_filename#ogi;
       $line =~ s#read_EXTERNAL_SOURCE_TIME_FUNCTION#read_external_source_time_function#ogi;
+      $line =~ s#USE_MAP_function#USE_MAP_FUNCTION#ogi;
 
       $line =~ s#enddo_LOOP_IJK#ENDDO_LOOP_IJK#ogi;
+      $line =~ s#print\*#print \*#ogi;
 
       $line =~ s#spectral-elements#spectral elements#ogi;
 
@@ -213,7 +215,7 @@ use File::Basename;
       if($first_letter ne '!') {
         $line =~ s#\s*>\s*# > #ogi;
         $line =~ s#\s*==\s*# == #ogi;
-        }
+      }
 
 # restore operators that may have been split by the above introduction of white spaces
       $line =~ s#<\s*=#<=#ogi;
@@ -247,7 +249,7 @@ use File::Basename;
         $line =~ s#\s*\.not\.\s*# \.not\. #ogi;
         $line =~ s#\s*\.eqv\.\s*# \.eqv\. #ogi;
         $line =~ s#\s*\.neqv\.\s*# \.neqv\. #ogi;
-        }
+      }
 
 # suppress space between parenthesis and .not. (this can happen when testing logical operators)
       $line =~ s#\( \.not\. #\(\.not\. #ogi;
@@ -321,12 +323,12 @@ use File::Basename;
 
       }
 
-            close(FILE_INPUT);
-            close(FILEF90);
+      close(FILE_INPUT);
+      close(FILEF90);
 
       }
 
-            system("rm -f _____temp08_____");
+      system("rm -f _____temp08_____");
 
 ################################################################################################
 ################################################################################################
