@@ -5,7 +5,20 @@ README
 This examples creates a homogeneous halfspace, i.e. a single volume block with a
 constant elastic material property, using CUBIT and runs a forward simulation.
 
-step-by-step tutorial:
+
+For a quick run test, just type:
+  > ./run_this_example.sh
+
+and compare the seismograms in OUTPUT_FILES/ with the reference ones in REF_SEIS/
+
+Remark about seismograms:
+  The default simulation will output seismograms for displacement (*.semd), velocity (*.semv) and acceleration (*.sema).
+  However, only displacement is second-order accurate due to the Newmark time scheme used.
+
+===========================================================
+
+
+A step-by-step tutorial:
 
 0. check that all software is available (or that modules are loaded):
 	openmpi: > which mpirun
@@ -54,7 +67,7 @@ step-by-step tutorial:
      > claro (or cubit)
 
      then run meshing script:
-     claro -> Menu "Tools" -> "Play Journal File" ... and select file: "block_mesh.py"
+     claro -> Menu "Tools" -> "Play Journal File" ... and select file: "create_mesh.py"
 
      if everything goes fine, this creates the ten mesh files in subdirectory MESH/:
         MESH/absorbing_surface_file_bottom

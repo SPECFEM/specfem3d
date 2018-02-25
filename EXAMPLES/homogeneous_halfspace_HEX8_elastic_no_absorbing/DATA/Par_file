@@ -159,7 +159,7 @@ SAVE_MESH_FILES                 = .false.
 LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI
 
 # interval at which we output time step info and max of norm of displacement
-NTSTEP_BETWEEN_OUTPUT_INFO      = 100
+NTSTEP_BETWEEN_OUTPUT_INFO      = 200
 
 #-----------------------------------------------------------
 #
@@ -206,7 +206,7 @@ PRINT_SOURCE_TIME_FUNCTION      = .false.
 #-----------------------------------------------------------
 
 # interval in time steps for writing of seismograms
-NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
+NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 500
 
 # decide if we save displacement, velocity, acceleration and/or pressure in forward runs (they can be set to true simultaneously)
 # currently pressure seismograms are implemented in acoustic (i.e. fluid) elements only
@@ -226,7 +226,7 @@ USE_BINARY_FOR_SEISMOGRAMS      = .false.
 SU_FORMAT                       = .false.
 
 # decide if master process writes all the seismograms or if all processes do it in parallel
-WRITE_SEISMOGRAMS_BY_MASTER     = .false.
+WRITE_SEISMOGRAMS_BY_MASTER     = .true.
 
 # save all seismograms in one large combined file instead of one file per seismogram
 # to avoid overloading shared non-local file systems such as LUSTRE or GPFS for instance

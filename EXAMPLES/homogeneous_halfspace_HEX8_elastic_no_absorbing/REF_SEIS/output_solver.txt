@@ -1,0 +1,870 @@
+
+ **********************************************
+ **** Specfem 3-D Solver - MPI version f90 ****
+ **********************************************
+
+ Version: 3.0.0
+
+ Fixing slow underflow trapping problem using small initial field
+
+ There are            4  MPI processes
+ Processes are numbered from 0 to            3
+
+ There is a total of            4  slices
+
+  NDIM =            3
+
+  NGLLX =            5
+  NGLLY =            5
+  NGLLZ =            5
+
+ using single precision for the calculations
+
+ smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
+
+ velocity model:   default 
+
+ total acoustic elements    :           0
+ total elastic elements     :       20736
+ total poroelastic elements :           0
+
+ ********
+ minimum and maximum number of elements
+ and points in the CUBIT + SCOTCH mesh:
+
+ NSPEC_global_min =         5184
+ NSPEC_global_max =         5184
+ NSPEC_global_max / NSPEC_global_min imbalance =    1.00000000      =    0.00000000      %
+ NSPEC_global_sum =        20736
+
+ NGLOB_global_min =       346385
+ NGLOB_global_max =       346385
+ NGLOB_global_max / NGLOB_global_min imbalance =    1.00000000      =    0.00000000      %
+ NGLOB_global_sum =      1385540
+
+ If you have elements of a single type (all acoustic, all elastic, all poroelastic, and without CPML)
+ in the whole mesh, then there should be no significant imbalance in the above numbers.
+ Otherwise, it is normal to have imbalance in elements and points because the domain decomposer
+ compensates for the different cost of different elements by partitioning them unevenly among processes.
+ ********
+
+
+ ********
+ Model: P velocity min,max =    2800.00024       2800.00024    
+ Model: S velocity min,max =    1500.00000       1500.00000    
+
+ Model: Poisson's ratio min,max =   0.298747808      0.298747808    
+ ********
+
+ *********************************************
+ *** Verification of simulation parameters ***
+ *********************************************
+
+ *** Xmin and Xmax of the model =    0.00000000       134000.000    
+ *** Ymin and Ymax of the model =    0.00000000       134000.000    
+ *** Zmin and Zmax of the model =   -60000.0000       0.00000000    
+
+ *** Max GLL point distance =    1227.47656    
+ *** Min GLL point distance =    642.726562    
+ *** Max/min ratio =    1.90979588    
+
+ *** Max element size =    3750.00000    
+ *** Min element size =    3722.21875    
+ *** Max/min ratio =    1.00746357    
+
+ *** Minimum period resolved =    3.12500000    
+ *** Maximum suggested time step =   0.114772588    
+
+ *** for DT :    5.0000000000000003E-002
+ *** Max stability for wave velocities =   0.217822045    
+
+ Elapsed time for checking mesh resolution in seconds =    6.5100193023681641E-003
+ ******************************************
+ There is a total of            4  slices
+ ******************************************
+
+
+ kd-tree:
+   total data points:         5184
+   theoretical   number of nodes:        10365
+                tree memory size:   0.316314697     MB
+   actual        number of nodes:        10367
+                tree memory size:   0.316375732     MB
+   maximum depth   :           14
+   creation timing :    1.64300203E-03 (s)
+
+
+ sources:           1
+
+ ********************
+  locating sources
+ ********************
+
+ reading source information from ./DATA/CMTSOLUTION file
+
+ no UTM projection
+
+ source #            1
+   source located in slice            0
+                  in element         4905
+                  in elastic domain
+
+   using moment tensor source: 
+     xi coordinate of source in that element:   -1.0000000000000000     
+     eta coordinate of source in that element:   -1.0000000000000000     
+     gamma coordinate of source in that element:    1.0000000000000000     
+
+   source time function:
+     using Gaussian source time function
+     half duration:    5.0000000000000000       seconds
+     time shift:    0.0000000000000000       seconds
+
+   magnitude of the source:
+        scalar moment M0 =    2.6266994498800193E+028  dyne-cm
+     moment magnitude Mw =    8.2462737794883481     
+
+   original (requested) position of the source:
+
+             latitude:    67000.000000000000     
+            longitude:    67000.000000000000     
+
+                x:    67000.000000000000     
+                y:    67000.000000000000     
+            depth:    30.000000000000000       km
+   topo elevation:    0.0000000000000000     
+
+   position of the source that will be used:
+
+                x:    67000.000000000000     
+                y:    67000.000000000000     
+            depth:    30.000000000000000       km
+                z:   -30000.000000000000     
+
+   error in location of the source:    0.00000000      m
+
+
+
+ maximum error in location of the sources:    0.00000000      m
+
+
+ Elapsed time for detection of sources in seconds =    8.9812278747558594E-004
+
+ End of source detection - done
+
+
+ receivers:
+
+ there are            4  stations in file ./DATA/STATIONS
+ saving            4  stations inside the model in file ./DATA/STATIONS_FILTERED
+ excluding            0  stations located outside the model
+
+
+ Total number of receivers =            4
+
+
+ ********************
+  locating receivers
+ ********************
+
+ reading receiver information from ./DATA/STATIONS_FILTERED file
+
+
+ station #            1     DB    X20
+      original latitude:    67000.0000    
+      original longitude:    22732.0996    
+      original x:    22732.0996    
+      original y:    67000.0000    
+      original depth:    0.00000000      m
+      horizontal distance:    44.2678986    
+      target x, y, z:    22732.0996       67000.0000       0.00000000    
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element         1729
+                       in elastic domain
+      at coordinates: 
+      xi    =   -1.0000000000000000     
+      eta   =   -1.0000000000000000     
+      gamma =  -0.78573757580241610     
+      rotation matrix: 
+      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000     
+      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000     
+      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000     
+      x:    22732.099999999999     
+      y:    67000.000000000000     
+      depth:    0.0000000000000000       m
+      z:    0.0000000000000000     
+
+
+
+ station #            2     DB    X30
+      original latitude:    67000.0000    
+      original longitude:    34696.3984    
+      original x:    34696.3984    
+      original y:    67000.0000    
+      original depth:    0.00000000      m
+      horizontal distance:    32.3036003    
+      target x, y, z:    34696.3984       67000.0000       0.00000000    
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element         2593
+                       in elastic domain
+      at coordinates: 
+      xi    =   -1.0000000000000000     
+      eta   =   -1.0000000000000000     
+      gamma =  -0.35715828391344662     
+      rotation matrix: 
+      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000     
+      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000     
+      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000     
+      x:    34696.400000000001     
+      y:    67000.000000000000     
+      depth:    0.0000000000000000       m
+      z:    0.0000000000000000     
+
+
+
+ station #            3     DB    X40
+      original latitude:    67000.0000    
+      original longitude:    46660.6992    
+      original x:    46660.6992    
+      original y:    67000.0000    
+      original depth:    0.00000000      m
+      horizontal distance:    20.3393002    
+      target x, y, z:    46660.6992       67000.0000       0.00000000    
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element         3457
+                       in elastic domain
+      at coordinates: 
+      xi    =   -1.0000000000000000     
+      eta   =   -1.0000000000000000     
+      gamma =    7.1420070963143151E-002
+      rotation matrix: 
+      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000     
+      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000     
+      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000     
+      x:    46660.699999999997     
+      y:    67000.000000000000     
+      depth:    0.0000000000000000       m
+      z:    0.0000000000000000     
+
+
+
+ station #            4     DB    X50
+      original latitude:    67000.0000    
+      original longitude:    58625.0000    
+      original x:    58625.0000    
+      original y:    67000.0000    
+      original depth:    0.00000000      m
+      horizontal distance:    8.37500000    
+      target x, y, z:    58625.0000       67000.0000       0.00000000    
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            0
+                       in element         4321
+                       in elastic domain
+      at coordinates: 
+      xi    =   -1.0000000000000000     
+      eta   =   -1.0000000000000000     
+      gamma =   0.50000052472008893     
+      rotation matrix: 
+      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000     
+      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000     
+      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000     
+      x:    58625.000000000000     
+      y:    67000.000000000000     
+      depth:    0.0000000000000000       m
+      z:    0.0000000000000000     
+
+
+ maximum error in location of all the receivers:    0.00000000      m
+
+ Elapsed time for receiver detection in seconds =    6.2489509582519531E-003
+
+ End of receiver detection - done
+
+ source arrays:
+   number of sources is            1
+   size of source array                 =    1.43051147E-03 MB
+                                        =    1.39698386E-06 GB
+
+ seismograms:
+   seismograms written by master process only
+   writing out seismograms at every NTSTEP_BETWEEN_OUTPUT_SEISMOS =          500
+   maximum number of local receivers is            4  in slice            0
+   size of maximum seismogram array       =    2.28881836E-02 MB
+                                          =    2.23517418E-05 GB
+
+
+ Total number of samples for seismograms =         5000
+
+ found a total of            4  receivers in all the slices
+
+
+ Simulation setup:
+
+   no acoustic simulation
+ incorporating elastic simulation
+   no poroelastic simulation
+
+   no attenuation
+   no anisotropy
+   no oceans
+   no gravity
+   no movie simulation
+
+
+   no dynamic faults
+   no kinematic faults
+
+   no gravity simulation
+
+
+ Elapsed time for preparing timerun in seconds =    1.2835979461669922E-002
+
+ ************
+  time loop
+ ************
+               scheme:         Newmark
+
+            time step:    5.00000007E-02  s
+ number of time steps:         5000
+ total simulated time:    250.000000      seconds
+ start time:  -10.0000000      seconds
+
+ All processes are synchronized before time loop
+
+ Starting time iteration loop...
+
+ Time step #            5
+ Time:   -9.80000019      seconds
+ Elapsed time in seconds =   0.27342700958251953     
+ Elapsed time in hh:mm:ss =      0 h 00 m 00 s
+ Mean elapsed time per time step in seconds =    5.46854027E-02
+ Max norm displacement vector U in all slices (m) =    2.15469551    
+ Time steps done =            5  out of         5000
+ Time steps remaining =         4995
+ Estimated remaining time in seconds =    273.153595    
+ Estimated remaining time in hh:mm:ss =      0 h 04 m 33 s
+ Estimated total run time in seconds =    273.427002    
+ Estimated total run time in hh:mm:ss =      0 h 04 m 33 s
+ We have done   0.100000001     % of that
+ The run will finish approximately on (in local time): Sun Feb 25, 2018 09:55
+ ************************************************************
+ **** BEWARE: the above time estimates are not very reliable
+ **** because fewer than 100 iterations have been performed
+ ************************************************************
+
+ Time step #          200
+ Time:   -5.00000007E-02  seconds
+ Elapsed time in seconds =    12.914845943450928     
+ Elapsed time in hh:mm:ss =      0 h 00 m 12 s
+ Mean elapsed time per time step in seconds =    6.45742267E-02
+ Max norm displacement vector U in all slices (m) =    385159.906    
+ Time steps done =          200  out of         5000
+ Time steps remaining =         4800
+ Estimated remaining time in seconds =    309.956299    
+ Estimated remaining time in hh:mm:ss =      0 h 05 m 09 s
+ Estimated total run time in seconds =    322.871155    
+ Estimated total run time in hh:mm:ss =      0 h 05 m 22 s
+ We have done    4.00000000     % of that
+ The run will finish approximately on (in local time): Sun Feb 25, 2018 09:55
+
+ Time step #          400
+ Time:    9.94999981      seconds
+ Elapsed time in seconds =    27.096524953842163     
+ Elapsed time in hh:mm:ss =      0 h 00 m 27 s
+ Mean elapsed time per time step in seconds =    6.77413121E-02
+ Max norm displacement vector U in all slices (m) =    799764.688    
+ Time steps done =          400  out of         5000
+ Time steps remaining =         4600
+ Estimated remaining time in seconds =    311.610046    
+ Estimated remaining time in hh:mm:ss =      0 h 05 m 11 s
+ Estimated total run time in seconds =    338.706573    
+ Estimated total run time in hh:mm:ss =      0 h 05 m 38 s
+ We have done    8.00000000     % of that
+ The run will finish approximately on (in local time): Sun Feb 25, 2018 09:55
+
+ Component: .semd
+   total number of receivers saved is            4  out of            4
+
+ Component: .semv
+   total number of receivers saved is            4  out of            4
+
+ Component: .sema
+   total number of receivers saved is            4  out of            4
+
+
+ Total number of time steps written:          500
+ Writing the seismograms by master proc alone took    3.39119434E-02  seconds
+
+ Time step #          600
+ Time:    19.9500008      seconds
+ Elapsed time in seconds =    41.541279792785645     
+ Elapsed time in hh:mm:ss =      0 h 00 m 41 s
+ Mean elapsed time per time step in seconds =    6.92354664E-02
+ Max norm displacement vector U in all slices (m) =    799766.750    
+ Time steps done =          600  out of         5000
+ Time steps remaining =         4400
+ Estimated remaining time in seconds =    304.636047    
+ Estimated remaining time in hh:mm:ss =      0 h 05 m 04 s
+ Estimated total run time in seconds =    346.177338    
+ Estimated total run time in hh:mm:ss =      0 h 05 m 46 s
+ We have done    12.0000000     % of that
+ The run will finish approximately on (in local time): Sun Feb 25, 2018 09:56
+
+ Time step #          800
+ Time:    29.9500008      seconds
+ Elapsed time in seconds =    56.241522789001465     
+ Elapsed time in hh:mm:ss =      0 h 00 m 56 s
+ Mean elapsed time per time step in seconds =    7.03019053E-02
+ Max norm displacement vector U in all slices (m) =    799766.750    
+ Time steps done =          800  out of         5000
+ Time steps remaining =         4200
+ Estimated remaining time in seconds =    295.268005    
+ Estimated remaining time in hh:mm:ss =      0 h 04 m 55 s
+ Estimated total run time in seconds =    351.509521    
+ Estimated total run time in hh:mm:ss =      0 h 05 m 51 s
+ We have done    16.0000000     % of that
+ The run will finish approximately on (in local time): Sun Feb 25, 2018 09:56
+
+ Time step #         1000
+ Time:    39.9500008      seconds
+ Elapsed time in seconds =    70.819400787353516     
+ Elapsed time in hh:mm:ss =      0 h 01 m 10 s
+ Mean elapsed time per time step in seconds =    7.08194003E-02
+ Max norm displacement vector U in all slices (m) =    799766.875    
+ Time steps done =         1000  out of         5000
+ Time steps remaining =         4000
+ Estimated remaining time in seconds =    283.277588    
+ Estimated remaining time in hh:mm:ss =      0 h 04 m 43 s
+ Estimated total run time in seconds =    354.097015    
+ Estimated total run time in hh:mm:ss =      0 h 05 m 54 s
+ We have done    20.0000000     % of that
+ The run will finish approximately on (in local time): Sun Feb 25, 2018 09:56
+
+ Component: .semd
+   total number of receivers saved is            4  out of            4
+
+ Component: .semv
+   total number of receivers saved is            4  out of            4
+
+ Component: .sema
+   total number of receivers saved is            4  out of            4
+
+
+ Total number of time steps written:         1000
+ Writing the seismograms by master proc alone took    2.61640549E-02  seconds
+
+ Time step #         1200
+ Time:    49.9500008      seconds
+ Elapsed time in seconds =    85.268806934356689     
+ Elapsed time in hh:mm:ss =      0 h 01 m 25 s
+ Mean elapsed time per time step in seconds =    7.10573420E-02
+ Max norm displacement vector U in all slices (m) =    799766.812    
+ Time steps done =         1200  out of         5000
+ Time steps remaining =         3800
+ Estimated remaining time in seconds =    270.017883    
+ Estimated remaining time in hh:mm:ss =      0 h 04 m 30 s
+ Estimated total run time in seconds =    355.286682    
+ Estimated total run time in hh:mm:ss =      0 h 05 m 55 s
+ We have done    24.0000000     % of that
+ The run will finish approximately on (in local time): Sun Feb 25, 2018 09:56
+
+ Time step #         1400
+ Time:    59.9500008      seconds
+ Elapsed time in seconds =    99.462188005447388     
+ Elapsed time in hh:mm:ss =      0 h 01 m 39 s
+ Mean elapsed time per time step in seconds =    7.10444227E-02
+ Max norm displacement vector U in all slices (m) =    799766.938    
+ Time steps done =         1400  out of         5000
+ Time steps remaining =         3600
+ Estimated remaining time in seconds =    255.759918    
+ Estimated remaining time in hh:mm:ss =      0 h 04 m 15 s
+ Estimated total run time in seconds =    355.222107    
+ Estimated total run time in hh:mm:ss =      0 h 05 m 55 s
+ We have done    28.0000000     % of that
+ The run will finish approximately on (in local time): Sun Feb 25, 2018 09:56
+
+ Component: .semd
+   total number of receivers saved is            4  out of            4
+
+ Component: .semv
+   total number of receivers saved is            4  out of            4
+
+ Component: .sema
+   total number of receivers saved is            4  out of            4
+
+
+ Total number of time steps written:         1500
+ Writing the seismograms by master proc alone took    2.62169838E-02  seconds
+
+ Time step #         1600
+ Time:    69.9499969      seconds
+ Elapsed time in seconds =    113.82799887657166     
+ Elapsed time in hh:mm:ss =      0 h 01 m 53 s
+ Mean elapsed time per time step in seconds =    7.11425021E-02
+ Max norm displacement vector U in all slices (m) =    799766.625    
+ Time steps done =         1600  out of         5000
+ Time steps remaining =         3400
+ Estimated remaining time in seconds =    241.884491    
+ Estimated remaining time in hh:mm:ss =      0 h 04 m 01 s
+ Estimated total run time in seconds =    355.712494    
+ Estimated total run time in hh:mm:ss =      0 h 05 m 55 s
+ We have done    32.0000000     % of that
+ The run will finish approximately on (in local time): Sun Feb 25, 2018 09:56
+
+ Time step #         1800
+ Time:    79.9499969      seconds
+ Elapsed time in seconds =    128.13370680809021     
+ Elapsed time in hh:mm:ss =      0 h 02 m 08 s
+ Mean elapsed time per time step in seconds =    7.11853951E-02
+ Max norm displacement vector U in all slices (m) =    799767.000    
+ Time steps done =         1800  out of         5000
+ Time steps remaining =         3200
+ Estimated remaining time in seconds =    227.793259    
+ Estimated remaining time in hh:mm:ss =      0 h 03 m 47 s
+ Estimated total run time in seconds =    355.926971    
+ Estimated total run time in hh:mm:ss =      0 h 05 m 55 s
+ We have done    36.0000000     % of that
+ The run will finish approximately on (in local time): Sun Feb 25, 2018 09:56
+
+ Time step #         2000
+ Time:    89.9499969      seconds
+ Elapsed time in seconds =    142.32747483253479     
+ Elapsed time in hh:mm:ss =      0 h 02 m 22 s
+ Mean elapsed time per time step in seconds =    7.11637363E-02
+ Max norm displacement vector U in all slices (m) =    799766.688    
+ Time steps done =         2000  out of         5000
+ Time steps remaining =         3000
+ Estimated remaining time in seconds =    213.491211    
+ Estimated remaining time in hh:mm:ss =      0 h 03 m 33 s
+ Estimated total run time in seconds =    355.818695    
+ Estimated total run time in hh:mm:ss =      0 h 05 m 55 s
+ We have done    40.0000000     % of that
+ The run will finish approximately on (in local time): Sun Feb 25, 2018 09:56
+
+ Component: .semd
+   total number of receivers saved is            4  out of            4
+
+ Component: .semv
+   total number of receivers saved is            4  out of            4
+
+ Component: .sema
+   total number of receivers saved is            4  out of            4
+
+
+ Total number of time steps written:         2000
+ Writing the seismograms by master proc alone took    2.79350281E-02  seconds
+
+ Time step #         2200
+ Time:    99.9499969      seconds
+ Elapsed time in seconds =    156.64935994148254     
+ Elapsed time in hh:mm:ss =      0 h 02 m 36 s
+ Mean elapsed time per time step in seconds =    7.12042525E-02
+ Max norm displacement vector U in all slices (m) =    799766.938    
+ Time steps done =         2200  out of         5000
+ Time steps remaining =         2800
+ Estimated remaining time in seconds =    199.371918    
+ Estimated remaining time in hh:mm:ss =      0 h 03 m 19 s
+ Estimated total run time in seconds =    356.021271    
+ Estimated total run time in hh:mm:ss =      0 h 05 m 56 s
+ We have done    44.0000000     % of that
+ The run will finish approximately on (in local time): Sun Feb 25, 2018 09:56
+
+ Time step #         2400
+ Time:    109.949997      seconds
+ Elapsed time in seconds =    170.86934590339661     
+ Elapsed time in hh:mm:ss =      0 h 02 m 50 s
+ Mean elapsed time per time step in seconds =    7.11955577E-02
+ Max norm displacement vector U in all slices (m) =    799766.750    
+ Time steps done =         2400  out of         5000
+ Time steps remaining =         2600
+ Estimated remaining time in seconds =    185.108459    
+ Estimated remaining time in hh:mm:ss =      0 h 03 m 05 s
+ Estimated total run time in seconds =    355.977814    
+ Estimated total run time in hh:mm:ss =      0 h 05 m 55 s
+ We have done    48.0000000     % of that
+ The run will finish approximately on (in local time): Sun Feb 25, 2018 09:56
+
+ Component: .semd
+   total number of receivers saved is            4  out of            4
+
+ Component: .semv
+   total number of receivers saved is            4  out of            4
+
+ Component: .sema
+   total number of receivers saved is            4  out of            4
+
+
+ Total number of time steps written:         2500
+ Writing the seismograms by master proc alone took    2.88839340E-02  seconds
+
+ Time step #         2600
+ Time:    119.949997      seconds
+ Elapsed time in seconds =    185.24635291099548     
+ Elapsed time in hh:mm:ss =      0 h 03 m 05 s
+ Mean elapsed time per time step in seconds =    7.12485984E-02
+ Max norm displacement vector U in all slices (m) =    799766.875    
+ Time steps done =         2600  out of         5000
+ Time steps remaining =         2400
+ Estimated remaining time in seconds =    170.996628    
+ Estimated remaining time in hh:mm:ss =      0 h 02 m 50 s
+ Estimated total run time in seconds =    356.242981    
+ Estimated total run time in hh:mm:ss =      0 h 05 m 56 s
+ We have done    52.0000000     % of that
+ The run will finish approximately on (in local time): Sun Feb 25, 2018 09:56
+
+ Time step #         2800
+ Time:    129.949997      seconds
+ Elapsed time in seconds =    199.51617193222046     
+ Elapsed time in hh:mm:ss =      0 h 03 m 19 s
+ Mean elapsed time per time step in seconds =    7.12557733E-02
+ Max norm displacement vector U in all slices (m) =    799766.688    
+ Time steps done =         2800  out of         5000
+ Time steps remaining =         2200
+ Estimated remaining time in seconds =    156.762711    
+ Estimated remaining time in hh:mm:ss =      0 h 02 m 36 s
+ Estimated total run time in seconds =    356.278870    
+ Estimated total run time in hh:mm:ss =      0 h 05 m 56 s
+ We have done    56.0000000     % of that
+ The run will finish approximately on (in local time): Sun Feb 25, 2018 09:56
+
+ Time step #         3000
+ Time:    139.949997      seconds
+ Elapsed time in seconds =    213.87856578826904     
+ Elapsed time in hh:mm:ss =      0 h 03 m 33 s
+ Mean elapsed time per time step in seconds =    7.12928548E-02
+ Max norm displacement vector U in all slices (m) =    799766.688    
+ Time steps done =         3000  out of         5000
+ Time steps remaining =         2000
+ Estimated remaining time in seconds =    142.585709    
+ Estimated remaining time in hh:mm:ss =      0 h 02 m 22 s
+ Estimated total run time in seconds =    356.464264    
+ Estimated total run time in hh:mm:ss =      0 h 05 m 56 s
+ We have done    60.0000000     % of that
+ The run will finish approximately on (in local time): Sun Feb 25, 2018 09:56
+
+ Component: .semd
+   total number of receivers saved is            4  out of            4
+
+ Component: .semv
+   total number of receivers saved is            4  out of            4
+
+ Component: .sema
+   total number of receivers saved is            4  out of            4
+
+
+ Total number of time steps written:         3000
+ Writing the seismograms by master proc alone took    2.87668705E-02  seconds
+
+ Time step #         3200
+ Time:    149.949997      seconds
+ Elapsed time in seconds =    228.61386084556580     
+ Elapsed time in hh:mm:ss =      0 h 03 m 48 s
+ Mean elapsed time per time step in seconds =    7.14418292E-02
+ Max norm displacement vector U in all slices (m) =    799766.875    
+ Time steps done =         3200  out of         5000
+ Time steps remaining =         1800
+ Estimated remaining time in seconds =    128.595291    
+ Estimated remaining time in hh:mm:ss =      0 h 02 m 08 s
+ Estimated total run time in seconds =    357.209167    
+ Estimated total run time in hh:mm:ss =      0 h 05 m 57 s
+ We have done    64.0000000     % of that
+ The run will finish approximately on (in local time): Sun Feb 25, 2018 09:56
+
+ Time step #         3400
+ Time:    159.949997      seconds
+ Elapsed time in seconds =    243.31366586685181     
+ Elapsed time in hh:mm:ss =      0 h 04 m 03 s
+ Mean elapsed time per time step in seconds =    7.15628415E-02
+ Max norm displacement vector U in all slices (m) =    799766.812    
+ Time steps done =         3400  out of         5000
+ Time steps remaining =         1600
+ Estimated remaining time in seconds =    114.500549    
+ Estimated remaining time in hh:mm:ss =      0 h 01 m 54 s
+ Estimated total run time in seconds =    357.814209    
+ Estimated total run time in hh:mm:ss =      0 h 05 m 57 s
+ We have done    68.0000000     % of that
+ The run will finish approximately on (in local time): Sun Feb 25, 2018 09:56
+
+ Component: .semd
+   total number of receivers saved is            4  out of            4
+
+ Component: .semv
+   total number of receivers saved is            4  out of            4
+
+ Component: .sema
+   total number of receivers saved is            4  out of            4
+
+
+ Total number of time steps written:         3500
+ Writing the seismograms by master proc alone took    2.70349979E-02  seconds
+
+ Time step #         3600
+ Time:    169.949997      seconds
+ Elapsed time in seconds =    258.52815890312195     
+ Elapsed time in hh:mm:ss =      0 h 04 m 18 s
+ Mean elapsed time per time step in seconds =    7.18133748E-02
+ Max norm displacement vector U in all slices (m) =    799767.062    
+ Time steps done =         3600  out of         5000
+ Time steps remaining =         1400
+ Estimated remaining time in seconds =    100.538727    
+ Estimated remaining time in hh:mm:ss =      0 h 01 m 40 s
+ Estimated total run time in seconds =    359.066895    
+ Estimated total run time in hh:mm:ss =      0 h 05 m 59 s
+ We have done    72.0000000     % of that
+ The run will finish approximately on (in local time): Sun Feb 25, 2018 09:56
+
+ Time step #         3800
+ Time:    179.949997      seconds
+ Elapsed time in seconds =    273.41228699684143     
+ Elapsed time in hh:mm:ss =      0 h 04 m 33 s
+ Mean elapsed time per time step in seconds =    7.19505996E-02
+ Max norm displacement vector U in all slices (m) =    799766.625    
+ Time steps done =         3800  out of         5000
+ Time steps remaining =         1200
+ Estimated remaining time in seconds =    86.3407211    
+ Estimated remaining time in hh:mm:ss =      0 h 01 m 26 s
+ Estimated total run time in seconds =    359.753021    
+ Estimated total run time in hh:mm:ss =      0 h 05 m 59 s
+ We have done    76.0000000     % of that
+ The run will finish approximately on (in local time): Sun Feb 25, 2018 09:55
+
+ Time step #         4000
+ Time:    189.949997      seconds
+ Elapsed time in seconds =    288.22569799423218     
+ Elapsed time in hh:mm:ss =      0 h 04 m 48 s
+ Mean elapsed time per time step in seconds =    7.20564276E-02
+ Max norm displacement vector U in all slices (m) =    799766.938    
+ Time steps done =         4000  out of         5000
+ Time steps remaining =         1000
+ Estimated remaining time in seconds =    72.0564270    
+ Estimated remaining time in hh:mm:ss =      0 h 01 m 12 s
+ Estimated total run time in seconds =    360.282135    
+ Estimated total run time in hh:mm:ss =      0 h 06 m 00 s
+ We have done    80.0000000     % of that
+ The run will finish approximately on (in local time): Sun Feb 25, 2018 09:56
+
+ Component: .semd
+   total number of receivers saved is            4  out of            4
+
+ Component: .semv
+   total number of receivers saved is            4  out of            4
+
+ Component: .sema
+   total number of receivers saved is            4  out of            4
+
+
+ Total number of time steps written:         4000
+ Writing the seismograms by master proc alone took    3.02748680E-02  seconds
+
+ Time step #         4200
+ Time:    199.949997      seconds
+ Elapsed time in seconds =    303.70143294334412     
+ Elapsed time in hh:mm:ss =      0 h 05 m 03 s
+ Mean elapsed time per time step in seconds =    7.23098665E-02
+ Max norm displacement vector U in all slices (m) =    799766.750    
+ Time steps done =         4200  out of         5000
+ Time steps remaining =          800
+ Estimated remaining time in seconds =    57.8478928    
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 57 s
+ Estimated total run time in seconds =    361.549316    
+ Estimated total run time in hh:mm:ss =      0 h 06 m 01 s
+ We have done    84.0000000     % of that
+ The run will finish approximately on (in local time): Sun Feb 25, 2018 09:56
+
+ Time step #         4400
+ Time:    209.949997      seconds
+ Elapsed time in seconds =    318.56136798858643     
+ Elapsed time in hh:mm:ss =      0 h 05 m 18 s
+ Mean elapsed time per time step in seconds =    7.24003091E-02
+ Max norm displacement vector U in all slices (m) =    799766.812    
+ Time steps done =         4400  out of         5000
+ Time steps remaining =          600
+ Estimated remaining time in seconds =    43.4401855    
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 43 s
+ Estimated total run time in seconds =    362.001556    
+ Estimated total run time in hh:mm:ss =      0 h 06 m 02 s
+ We have done    88.0000000     % of that
+ The run will finish approximately on (in local time): Sun Feb 25, 2018 09:56
+
+ Component: .semd
+   total number of receivers saved is            4  out of            4
+
+ Component: .semv
+   total number of receivers saved is            4  out of            4
+
+ Component: .sema
+   total number of receivers saved is            4  out of            4
+
+
+ Total number of time steps written:         4500
+ Writing the seismograms by master proc alone took    2.67639160E-02  seconds
+
+ Time step #         4600
+ Time:    219.949997      seconds
+ Elapsed time in seconds =    333.73877191543579     
+ Elapsed time in hh:mm:ss =      0 h 05 m 33 s
+ Mean elapsed time per time step in seconds =    7.25519061E-02
+ Max norm displacement vector U in all slices (m) =    799766.750    
+ Time steps done =         4600  out of         5000
+ Time steps remaining =          400
+ Estimated remaining time in seconds =    29.0207634    
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 29 s
+ Estimated total run time in seconds =    362.759521    
+ Estimated total run time in hh:mm:ss =      0 h 06 m 02 s
+ We have done    92.0000000     % of that
+ The run will finish approximately on (in local time): Sun Feb 25, 2018 09:56
+
+ Time step #         4800
+ Time:    229.949997      seconds
+ Elapsed time in seconds =    348.65411782264709     
+ Elapsed time in hh:mm:ss =      0 h 05 m 48 s
+ Mean elapsed time per time step in seconds =    7.26362765E-02
+ Max norm displacement vector U in all slices (m) =    799766.875    
+ Time steps done =         4800  out of         5000
+ Time steps remaining =          200
+ Estimated remaining time in seconds =    14.5272551    
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 14 s
+ Estimated total run time in seconds =    363.181366    
+ Estimated total run time in hh:mm:ss =      0 h 06 m 03 s
+ We have done    96.0000000     % of that
+ The run will finish approximately on (in local time): Sun Feb 25, 2018 09:56
+
+ Time step #         5000
+ Time:    239.949997      seconds
+ Elapsed time in seconds =    363.61984300613403     
+ Elapsed time in hh:mm:ss =      0 h 06 m 03 s
+ Mean elapsed time per time step in seconds =    7.27239698E-02
+ Max norm displacement vector U in all slices (m) =    799766.750    
+ Time steps done =         5000  out of         5000
+ Time steps remaining =            0
+ Estimated remaining time in seconds =    0.00000000    
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 00 s
+ Estimated total run time in seconds =    363.619843    
+ Estimated total run time in hh:mm:ss =      0 h 06 m 03 s
+ We have done    100.000000     % of that
+
+ Component: .semd
+   total number of receivers saved is            4  out of            4
+
+ Component: .semv
+   total number of receivers saved is            4  out of            4
+
+ Component: .sema
+   total number of receivers saved is            4  out of            4
+
+
+ Total number of time steps written:         5000
+ Writing the seismograms by master proc alone took    2.84459591E-02  seconds
+
+ Time-Loop Complete. Timing info:
+ Total elapsed time in seconds =    363.72404789924622     
+ Total elapsed time in hh:mm:ss =      0 h 06 m 03 s
+
+ End of the simulation
+
