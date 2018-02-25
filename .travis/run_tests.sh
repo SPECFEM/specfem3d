@@ -35,7 +35,7 @@ my_test(){
 echo 'Configure...' && echo -en 'travis_fold:start:configure\\r'
 if [ "$TESTCOV" == "1" ]; then
   echo "configuration: for coverage"
-  ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TEST} FLAGS_CHECK="-fprofile-arcs -ftest-coverage -O0"
+  ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TEST} FLAGS_CHECK="-fprofile-arcs -ftest-coverage -O0" CFLAGS="-coverage -O0"
 else
   if [ "$CUDA" == "true" ]; then
     echo "configuration: for cuda"
@@ -90,6 +90,7 @@ case "$TESTMAKE" in
   22) dir=EXAMPLES/meshfem3D_examples/sep_bathymetry/ ;;
   23) dir=EXAMPLES/small_example_coupling_FK_specfem/ ;;
   24) dir=EXAMPLES/layered_halfspace/ ;;
+  25) dir=EXAMPLES/homogeneous_halfspace_HEX8_elastic_no_absorbing/ ;;
   *) dir=EXAMPLES/homogeneous_halfspace/ ;;
 esac
 # runs test
@@ -201,6 +202,10 @@ else
   if [ "$TESTMAKE" == "23" ]; then
     sed -i "s:^NSTEP .*:NSTEP    = 500:" DATA/Par_file
   fi
+  # elastic, no absorbing
+  if [ "$TESTMAKE" == "25" ]; then
+    sed -i "s:^NSTEP .*:NSTEP    = 600:" DATA/Par_file
+  fi
 
   # coverage run
   if [ "$TESTCOV" == "1" ]; then
@@ -227,24 +232,28 @@ else
 fi
 echo -en 'travis_fold:end:tests\\r'
 
+
 # code coverage: https://codecov.io/gh/geodynamics/specfem3d/
 # additional runs for coverage
 # note: log becomes too long, trying to fold each test output
 
-echo 'Coverage...' && echo -en 'travis_fold:start:coverage.acoustic\\r'
-if [ "$TESTCOV" == "1" ]; then
+##
+## homogeneous halfspace examples
+##
+echo 'Coverage...' && echo -en 'travis_fold:start:coverage.elastic-noabs\\r'
+if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "1" ]; then
   ##
-  ## testing acoustic
+  ## testing socal example
   ##
-  cd EXAMPLES/homogeneous_acoustic/
+  cd EXAMPLES/homogeneous_halfspace_HEX8_elastic_no_absorbing/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
   cd $WORKDIR
 fi
-echo -en 'travis_fold:end:coverage.acoustic\\r'
+echo -en 'travis_fold:end:coverage.elastic-noabs\\r'
 
 echo 'Coverage...' && echo -en 'travis_fold:start:coverage.poro\\r'
-if [ "$TESTCOV" == "1" ]; then
+if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "1" ]; then
   ##
   ## testing poroelastic
   ##
@@ -255,70 +264,9 @@ if [ "$TESTCOV" == "1" ]; then
 fi
 echo -en 'travis_fold:end:coverage.poro\\r'
 
-echo 'Coverage...' && echo -en 'travis_fold:start:coverage.simple\\r'
-if [ "$TESTCOV" == "1" ]; then
-  ##
-  ## testing simple model
-  ##
-  cd EXAMPLES/meshfem3D_examples/simple_model/
-  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
-  ./run_this_example.sh
-  cd $WORKDIR
-fi
-echo -en 'travis_fold:end:coverage.simple\\r'
-
-echo 'Coverage...' && echo -en 'travis_fold:start:coverage.pmlacoustic\\r'
-if [ "$TESTCOV" == "1" ]; then
-  ##
-  ## testing PML acoustic
-  ##
-  cd EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_acoustic_absorbing_CPML_5sides/
-  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
-  ./run_this_example.sh
-  cd $WORKDIR
-fi
-echo -en 'travis_fold:end:coverage.pmlacoustic\\r'
-
-echo 'Coverage...' && echo -en 'travis_fold:start:coverage.pmlelastic\\r'
-if [ "$TESTCOV" == "1" ]; then
-  ##
-  ## testing PML elastic
-  ##
-  cd EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_elastic_absorbing_CPML_5sides/
-  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
-  ./run_this_example.sh
-  cd $WORKDIR
-fi
-echo -en 'travis_fold:end:coverage.pmlelastic\\r'
-
-echo 'Coverage...' && echo -en 'travis_fold:start:coverage.noise\\r'
-if [ "$TESTCOV" == "1" ]; then
-  ##
-  ## testing noise
-  ##
-  cd EXAMPLES/noise_tomography/
-  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step1
-  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step2
-  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step3
-  ./run_this_example.sh
-  cd $WORKDIR
-fi
-echo -en 'travis_fold:end:coverage.noise\\r'
-
-echo 'Coverage...' && echo -en 'travis_fold:start:coverage.tomo\\r'
-if [ "$TESTCOV" == "1" ]; then
-  ##
-  ## testing tomographic model
-  ##
-  cd EXAMPLES/tomographic_model/
-  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
-  ./run_this_example.sh
-  cd $WORKDIR
-fi
-echo -en 'travis_fold:end:coverage.tomo\\r'
-
+## kernel example
 echo 'Coverage...' && echo -en 'travis_fold:start:coverage.kernel\\r'
-if [ "$TESTCOV" == "1" ]; then
+if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "1" ]; then
   ##
   ## testing acoustic kernel simulation
   ##
@@ -333,23 +281,92 @@ if [ "$TESTCOV" == "1" ]; then
 fi
 echo -en 'travis_fold:end:coverage.kernel\\r'
 
-echo 'Coverage...' && echo -en 'travis_fold:start:coverage.serial\\r'
-if [ "$TESTCOV" == "1" ]; then
+#echo 'Coverage...' && echo -en 'travis_fold:start:coverage.acoustic\\r'
+#if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "1" ]; then
+#  ##
+#  ## testing acoustic
+#  ##
+#  cd EXAMPLES/homogeneous_acoustic/
+#  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+#  ./run_this_example.sh
+#  cd $WORKDIR
+#fi
+#echo -en 'travis_fold:end:coverage.acoustic\\r'
+
+##
+## CPMLs
+##
+echo 'Coverage...' && echo -en 'travis_fold:start:coverage.pmlacoustic\\r'
+if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "1" ]; then
   ##
-  ## testing acoustic serial
+  ## testing PML acoustic
   ##
-  cd EXAMPLES/homogeneous_acoustic/
-  cp -v DATA/Par_file DATA/Par_file.org
-  sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
+  cd EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_acoustic_absorbing_CPML_5sides/
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
-  cp -v DATA/Par_file.org DATA/Par_file
   cd $WORKDIR
 fi
-echo -en 'travis_fold:end:coverage.serial\\r'
+echo -en 'travis_fold:end:coverage.pmlacoustic\\r'
+
+echo 'Coverage...' && echo -en 'travis_fold:start:coverage.pmlelastic\\r'
+if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "1" ]; then
+  ##
+  ## testing PML elastic
+  ##
+  cd EXAMPLES/CPML_examples/homogeneous_halfspace_HEX8_elastic_absorbing_CPML_5sides/
+  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+  ./run_this_example.sh
+  cd $WORKDIR
+fi
+echo -en 'travis_fold:end:coverage.pmlelastic\\r'
+
+##
+## noise
+##
+echo 'Coverage...' && echo -en 'travis_fold:start:coverage.noise\\r'
+if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "1" ]; then
+  ##
+  ## testing noise
+  ##
+  cd EXAMPLES/noise_tomography/
+  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step1
+  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step2
+  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file_step3
+  ./run_this_example.sh
+  cd $WORKDIR
+fi
+echo -en 'travis_fold:end:coverage.noise\\r'
+
+##
+## 3d model examples
+##
+echo 'Coverage...' && echo -en 'travis_fold:start:coverage.tomo\\r'
+if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "1" ]; then
+  ##
+  ## testing tomographic model
+  ##
+  cd EXAMPLES/tomographic_model/
+  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+  ./run_this_example.sh
+  cd $WORKDIR
+fi
+echo -en 'travis_fold:end:coverage.tomo\\r'
+
+
+echo 'Coverage...' && echo -en 'travis_fold:start:coverage.layered\\r'
+if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "1" ]; then
+  ##
+  ## testing socal example
+  ##
+  cd EXAMPLES/layered_halfspace/
+  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+  ./run_this_example.sh
+  cd $WORKDIR
+fi
+echo -en 'travis_fold:end:coverage.layered\\r'
 
 echo 'Coverage...' && echo -en 'travis_fold:start:coverage.waterlayer\\r'
-if [ "$TESTCOV" == "1" ]; then
+if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "1" ]; then
   ##
   ## testing waterlayered serial
   ##
@@ -361,7 +378,7 @@ fi
 echo -en 'travis_fold:end:coverage.waterlayer\\r'
 
 echo 'Coverage...' && echo -en 'travis_fold:start:coverage.fault\\r'
-if [ "$TESTCOV" == "1" ]; then
+if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "1" ]; then
   ##
   ## testing fault example
   ##
@@ -372,8 +389,37 @@ if [ "$TESTCOV" == "1" ]; then
 fi
 echo -en 'travis_fold:end:coverage.fault\\r'
 
+echo 'Coverage...' && echo -en 'travis_fold:start:coverage.coupleFK\\r'
+if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "1" ]; then
+  ##
+  ## testing socal example
+  ##
+  cd EXAMPLES/small_example_coupling_FK_specfem/
+  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+  ./run_this_example.sh
+  cd $WORKDIR
+fi
+echo -en 'travis_fold:end:coverage.coupleFK\\r'
+
+
+##
+## meshfem3D examples checks
+##
+echo 'Coverage...' && echo -en 'travis_fold:start:coverage.simple\\r'
+if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "2" ]; then
+  ##
+  ## testing simple model
+  ##
+  cd EXAMPLES/meshfem3D_examples/simple_model/
+  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+  ./run_this_example.sh
+  cd $WORKDIR
+fi
+echo -en 'travis_fold:end:coverage.simple\\r'
+
+
 echo 'Coverage...' && echo -en 'travis_fold:start:coverage.socal\\r'
-if [ "$TESTCOV" == "1" ]; then
+if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "2" ]; then
   ##
   ## testing socal example
   ##
@@ -385,7 +431,7 @@ fi
 echo -en 'travis_fold:end:coverage.socal\\r'
 
 echo 'Coverage...' && echo -en 'travis_fold:start:coverage.socal.1d_socal\\r'
-if [ "$TESTCOV" == "1" ]; then
+if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "2" ]; then
   ##
   ## testing socal example
   ##
@@ -399,7 +445,7 @@ fi
 echo -en 'travis_fold:end:coverage.socal.1d_socal\\r'
 
 echo 'Coverage...' && echo -en 'travis_fold:start:coverage.socal.1d_prem\\r'
-if [ "$TESTCOV" == "1" ]; then
+if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "2" ]; then
   ##
   ## testing socal example
   ##
@@ -413,7 +459,7 @@ fi
 echo -en 'travis_fold:end:coverage.socal.1d_prem\\r'
 
 echo 'Coverage...' && echo -en 'travis_fold:start:coverage.socal.1d_cascadia\\r'
-if [ "$TESTCOV" == "1" ]; then
+if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "2" ]; then
   ##
   ## testing socal example
   ##
@@ -427,7 +473,7 @@ fi
 echo -en 'travis_fold:end:coverage.socal.1d_cascadia\\r'
 
 echo 'Coverage...' && echo -en 'travis_fold:start:coverage.cavity\\r'
-if [ "$TESTCOV" == "1" ]; then
+if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "2" ]; then
   ##
   ## testing socal example
   ##
@@ -439,7 +485,7 @@ fi
 echo -en 'travis_fold:end:coverage.cavity\\r'
 
 echo 'Coverage...' && echo -en 'travis_fold:start:coverage.sep\\r'
-if [ "$TESTCOV" == "1" ]; then
+if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "2" ]; then
   ##
   ## testing socal example
   ##
@@ -450,29 +496,59 @@ if [ "$TESTCOV" == "1" ]; then
 fi
 echo -en 'travis_fold:end:coverage.sep\\r'
 
-echo 'Coverage...' && echo -en 'travis_fold:start:coverage.coupleFK\\r'
-if [ "$TESTCOV" == "1" ]; then
-  ##
-  ## testing socal example
-  ##
-  cd EXAMPLES/small_example_coupling_FK_specfem/
-  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
-  ./run_this_example.sh
-  cd $WORKDIR
-fi
-echo -en 'travis_fold:end:coverage.coupleFK\\r'
 
-echo 'Coverage...' && echo -en 'travis_fold:start:coverage.layered\\r'
-if [ "$TESTCOV" == "1" ]; then
+##
+## serial
+##
+echo 'Coverage...' && echo -en 'travis_fold:start:coverage.serial-elastic\\r'
+if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "5" ]; then
   ##
-  ## testing socal example
+  ## testing elastic serial
   ##
-  cd EXAMPLES/layered_halfspace/
+  cd EXAMPLES/homogeneous_halfspace/
+  cp -v DATA/Par_file DATA/Par_file.org
+  sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
   sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
   ./run_this_example.sh
+  cp -v DATA/Par_file.org DATA/Par_file
   cd $WORKDIR
 fi
-echo -en 'travis_fold:end:coverage.layered\\r'
+echo -en 'travis_fold:end:coverage.serial-elastic\\r'
+
+#echo 'Coverage...' && echo -en 'travis_fold:start:coverage.serial\\r'
+#if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "1" ]; then
+#  ##
+#  ## testing acoustic serial
+#  ##
+#  cd EXAMPLES/homogeneous_acoustic/
+#  cp -v DATA/Par_file DATA/Par_file.org
+#  sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
+#  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+#  ./run_this_example.sh
+#  cp -v DATA/Par_file.org DATA/Par_file
+#  cd $WORKDIR
+#fi
+#echo -en 'travis_fold:end:coverage.serial\\r'
+
+echo 'Coverage...' && echo -en 'travis_fold:start:coverage.serial-meshfem\\r'
+if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "5" ]; then
+  ##
+  ## testing simple model serial
+  ##
+  cd EXAMPLES/meshfem3D_examples/simple_model
+  cp -v DATA/Par_file DATA/Par_file.org
+  sed -i "s:^NPROC .*:NPROC    = 1:" DATA/Par_file
+  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+  cp -v DATA/meshfem3D_files/Mesh_Par_file DATA/meshfem3D_files/Mesh_Par_file.org
+  sed -i "s:^NPROC_XI .*:NPROC_XI    = 1:" DATA/meshfem3D_files/Mesh_Par_file
+  sed -i "s:^NPROC_ETA .*:NPROC_ETA    = 1:" DATA/meshfem3D_files/Mesh_Par_file
+  ./run_this_example.sh
+  cp -v DATA/Par_file.org DATA/Par_file
+  cp -v DATA/meshfem3D_files/Mesh_Par_file.org DATA/meshfem3D_files/Mesh_Par_file
+  cd $WORKDIR
+fi
+echo -en 'travis_fold:end:coverage.serial-meshfem\\r'
+
 
 # done
 echo "done `pwd`"

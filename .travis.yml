@@ -28,6 +28,12 @@ env:
     # code coverage: mpi, using code coverage flags
     - TEST="--with-mpi" TESTCOV=1 TESTMAKE=1 CUDA=false
 
+    # code coverage: mpi, using code coverage flags, additional tests
+    - TEST="--with-mpi" TESTCOV=1 TESTMAKE=2 CUDA=false
+
+    # code coverage: no mpi, using code coverage flags
+    - TEST="--without-mpi" TESTCOV=1 TESTMAKE=5 CUDA=false
+
     # default test with make tests
     - TEST="" TESTCOV=0 TESTMAKE=0 CUDA=false
 
@@ -103,6 +109,9 @@ env:
     # layered model w/ point force
     - TEST="--with-mpi" TESTCOV=0 TESTMAKE=24 CUDA=false
 
+    # elastic halfspace, no absorbing
+    - TEST="--with-mpi" TESTCOV=0 TESTMAKE=25 CUDA=false
+
 
 before_install:
   # informations on git
@@ -150,5 +159,7 @@ after_success:
       find obj/ -iname '*.o' | sort | awk '{print "gcov -o obj/ "$1;}' | sh
     fi
 
-  # code coverage: see example https://github.com/codecov/example-fortran/blob/master/.travis.yml
+  # code coverage:
+  # see script : https://github.com/codecov/codecov-bash/blob/master/codecov
+  # see example: https://github.com/codecov/example-fortran/blob/master/.travis.yml
   - if [ "$TESTCOV" == "1" ]; then bash <(curl -s https://codecov.io/bash) -X gcov; fi
