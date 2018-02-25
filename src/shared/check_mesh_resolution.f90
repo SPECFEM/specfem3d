@@ -924,14 +924,46 @@
         endif
         if (vs > vsmax) vsmax = vs
 
-        ! Poisson solid: for poisson solid, the Lame parameters lambda == mu,
+        ! Poisson solid: for Poisson solid, the Lame parameters lambda == mu,
         !                and vp/vs = sqrt(3) => vp = sqrt(3) * vs ~ 1.73 * vs and Poisson's ratio == 0.25 (1/4)
+        !
+        !                note if vs = 0, then Poisson's ratio = 0.5. this value indicates a fluid or a material
+        !                that maintains constant volume regardless of stress, also known as ideal incompressible solid.
+        !
+        !                typical values:  0.0 cork
+        !                                 0.06 - 0.27 concrete
+        !                                 0.27 – 0.30 steel
+        !                                 0.2 sandstone
+        !                                 0.3 carbonate rocks
+        !                                 0.3+ shale
+        !                                 0.4 coal
+        !                                 0.42 – 0.44 gold
+        !                                 0.5 rubber
+        !
+        !                for more crustal rocks, see e.g.:
+        !                N. Christensen, 1996, Poisson's ratio and crustal seismology, JGR Solid Earth, vol. 101, B2.
+        !                http://onlinelibrary.wiley.com/doi/10.1029/95JB03446/abstract
+        !
+        !                                 0.265 average continental crust
+        !                                 0.253 average upper crust
+        !                                 0.279 average lower crust
+        !                                 0.30  average oceanic crust
+        !                                 0.24 - 0.29 average crustal rocks
+        !
+        !                                 0.1  quartzite
+        !                                 0.24 - 0.33 olivine (forsterite to fayalite)
+        !                                 0.24 granite
+        !                                 0.29 basalt
+        !                                 0.29 gabbro
+        !                                 0.34 serpentinite
+        !
+        !                theoretical limiting values of Poisson's ratio are -1 < sigma < 1/2
         if (has_vs_zero) then
           poisson = 0.5_CUSTOM_REAL
         else
           ! Poisson's ratio for vp and vs: \nu = 1/2 \frac{(vp/vs)^2 - 2}{(vp/vs)^2 - 1} = \frac{vp^2 - 2 vs^2}{2 vp^2 - 2 vs^2}
           if (vp > TINYVAL) then
-            poisson = (vp*vp - 2.0_CUSTOM_REAL * vs*vs) / (2.0_CUSTOM_REAL * (vp*vp - vs*vs))
+            poisson = 0.5_CUSTOM_REAL * (vp*vp - 2.0_CUSTOM_REAL * vs*vs) / (vp*vp - vs*vs)
             ! Poisson's ratio for kappa and mu: \nu = 1/2 (3 kappa - 2 mu)/(3 kappa + mu)
             ! poisson = 0.5d0 * (3.d0*kappa - 2.d0*mu)/(3.d0*kappa + mu)
           else

@@ -500,7 +500,7 @@ program model_update
 
   ! Poisson's ratio of current model
   total_model = 0.
-  total_model = ( model_vp**2 - 2.0*model_vs**2) / ( 2.0*model_vp**2 - 2.0*model_vs**2)
+  total_model = 0.5 * ( model_vp**2 - 2.0*model_vs**2) / ( model_vp**2 - model_vs**2)
   fname = 'poisson'
   write(m_file,'(a,i6.6,a)') trim(LOCAL_PATH)//'/proc',myrank,trim(REG)//trim(fname)//'.bin'
   open(12,file=trim(m_file),form='unformatted')
@@ -509,8 +509,7 @@ program model_update
 
   ! Poisson's ratio of new model
   total_model = 0.
-  total_model = ( model_vp_new**2 - 2.0*model_vs_new**2) / &
-                ( 2.0*model_vp_new**2 - 2.0*model_vs_new**2)
+  total_model = 0.5 * ( model_vp_new**2 - 2.0*model_vs_new**2) / ( model_vp_new**2 - model_vs_new**2)
   fname = 'poisson_new'
   write(m_file,'(a,i6.6,a)') trim(OUTPUT_MODEL_DIR)//'/proc',myrank,trim(REG)//trim(fname)//'.bin'
   open(12,file=trim(m_file),form='unformatted')
