@@ -6,63 +6,6 @@ if [ -f $HOME/.tmprc ]; then source $HOME/.tmprc; fi
 ###########################################################
 # setup
 ###########################################################
-# info
-echo $TRAVIS_BUILD_DIR
-echo $WORKDIR
-echo
-echo "**********************************************************"
-echo
-echo "configuration test: TESTMAKE=${TESTMAKE} TEST=${TEST} FLAGS=${TESTFLAGS}"
-echo
-echo "**********************************************************"
-echo
-
-# bash function for checking seismogram output with reference solutions
-my_test(){
-  echo "testing seismograms:"
-  ln -s $WORKDIR/utils/compare_seismogram_correlations.py
-  ./compare_seismogram_correlations.py REF_SEIS/ OUTPUT_FILES/
-  if [[ $? -ne 0 ]]; then exit 1; fi
-  ./compare_seismogram_correlations.py REF_SEIS/ OUTPUT_FILES/ | grep min/max | cut -d \| -f 3 | awk '{print "correlation:",$1; if ($1 < 0.9 ){print $1,"failed"; exit 1;}else{ print $1,"good"; exit 0;}}'
-  if [[ $? -ne 0 ]]; then exit 1; fi
-  rm -rf OUTPUT_FILES/
-}
-
-###########################################################
-# configuration & compilation
-###########################################################
-# configuration
-echo 'Configure...' && echo -en 'travis_fold:start:configure\\r'
-if [ "$TESTCOV" == "1" ]; then
-  echo "configuration: for coverage"
-  ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TEST} FLAGS_CHECK="-fprofile-arcs -ftest-coverage -O0" CFLAGS="-coverage -O0"
-else
-  if [ "$CUDA" == "true" ]; then
-    echo "configuration: for cuda"
-    ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TEST} CUDA_LIB="${CUDA_HOME}/lib64" CUDA_INC="${CUDA_HOME}/include" CUDA_FLAGS="-Xcompiler -Wall,-Wno-unused-function,-Wno-unused-const-variable,-Wfatal-errors -g -G"
-  else
-    echo "configuration: default"
-    ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TEST}
-  fi
-  # we output to console
-  sed -i "s:IMAIN .*:IMAIN = ISTANDARD_OUTPUT:" setup/constants.h
-fi
-# layered example
-if [ "$TESTMAKE" == "24" ]; then
-  sed -i "s:NGLLX =.*:NGLLX = 6:" setup/constants.h
-fi
-echo -en 'travis_fold:end:configure\\r'
-
-# compilation
-echo 'Build...' && echo -en 'travis_fold:start:build\\r'
-make clean; make -j2 all
-echo -en 'travis_fold:end:build\\r'
-
-###########################################################
-# test examples
-###########################################################
-# testing internal mesher example (short & quick for all configuration)
-echo 'Tests...' && echo -en 'travis_fold:start:tests\\r'
 # chooses example directory
 case "$TESTMAKE" in
   0) dir=./ ;;
@@ -93,13 +36,70 @@ case "$TESTMAKE" in
   25) dir=EXAMPLES/homogeneous_halfspace_HEX8_elastic_no_absorbing/ ;;
   *) dir=EXAMPLES/homogeneous_halfspace/ ;;
 esac
+
+# info
+echo $TRAVIS_BUILD_DIR
+echo $WORKDIR
+echo
+echo "**********************************************************"
+echo
+echo "configuration test: TESTMAKE=${TESTMAKE} TEST=${TEST} FLAGS=${TESTFLAGS}"
+echo
+echo "    test directory: $dir"
+echo
+echo "**********************************************************"
+echo
+
+# bash function for checking seismogram output with reference solutions
+my_test(){
+  echo "testing seismograms:"
+  ln -s $WORKDIR/utils/compare_seismogram_correlations.py
+  ./compare_seismogram_correlations.py REF_SEIS/ OUTPUT_FILES/
+  if [[ $? -ne 0 ]]; then exit 1; fi
+  ./compare_seismogram_correlations.py REF_SEIS/ OUTPUT_FILES/ | grep min/max | cut -d \| -f 3 | awk '{print "correlation:",$1; if ($1 < 0.9 ){print $1,"failed"; exit 1;}else{ print $1,"good"; exit 0;}}'
+  if [[ $? -ne 0 ]]; then exit 1; fi
+  rm -rf OUTPUT_FILES/
+}
+
+###########################################################
+# configuration & compilation
+###########################################################
+# configuration
+echo 'Configure...' && echo -en 'travis_fold:start:configure\\r'
+echo "configuration:"
+if [ "$TESTCOV" == "1" ]; then
+  echo "configuration: for coverage"
+  ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TEST} FLAGS_CHECK="-fprofile-arcs -ftest-coverage -O0" CFLAGS="-coverage -O0"
+else
+  if [ "$CUDA" == "true" ]; then
+    echo "configuration: for cuda"
+    ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TEST} CUDA_LIB="${CUDA_HOME}/lib64" CUDA_INC="${CUDA_HOME}/include" CUDA_FLAGS="-Xcompiler -Wall,-Wno-unused-function,-Wno-unused-const-variable,-Wfatal-errors -g -G"
+  else
+    echo "configuration: default"
+    ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TEST}
+  fi
+  # we output to console
+  sed -i "s:IMAIN .*:IMAIN = ISTANDARD_OUTPUT:" setup/constants.h
+fi
+# layered example
+if [ "$TESTMAKE" == "24" ]; then
+  sed -i "s:NGLLX =.*:NGLLX = 6:" setup/constants.h
+fi
+echo -en 'travis_fold:end:configure\\r'
+
+# compilation
+echo 'Build...' && echo -en 'travis_fold:start:build\\r'
+echo "compilation:"
+make clean; make -j2 all
+echo -en 'travis_fold:end:build\\r'
+
+###########################################################
+# test examples
+###########################################################
+# testing internal mesher example (short & quick for all configuration)
+echo 'Tests...' && echo -en 'travis_fold:start:tests\\r'
 # runs test
-echo
-echo "**********************************************************"
-echo
 echo "test directory: $dir"
-echo
-echo "**********************************************************"
 echo
 cd $dir
 if [ "$TESTMAKE" == "0" ]; then
@@ -377,35 +377,11 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "1" ]; then
 fi
 echo -en 'travis_fold:end:coverage.waterlayer\\r'
 
-echo 'Coverage...' && echo -en 'travis_fold:start:coverage.fault\\r'
-if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "1" ]; then
-  ##
-  ## testing fault example
-  ##
-  cd EXAMPLES/fault_examples/tpv5/
-  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
-  ./run_this_example.sh
-  cd $WORKDIR
-fi
-echo -en 'travis_fold:end:coverage.fault\\r'
-
-echo 'Coverage...' && echo -en 'travis_fold:start:coverage.coupleFK\\r'
-if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "1" ]; then
-  ##
-  ## testing socal example
-  ##
-  cd EXAMPLES/small_example_coupling_FK_specfem/
-  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
-  ./run_this_example.sh
-  cd $WORKDIR
-fi
-echo -en 'travis_fold:end:coverage.coupleFK\\r'
-
 
 ##
 ## meshfem3D examples checks
 ##
-echo 'Coverage...' && echo -en 'travis_fold:start:coverage.simple\\r'
+echo 'Coverage...' && echo -en 'travis_fold:start:coverage.meshfem3D-simple\\r'
 if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "2" ]; then
   ##
   ## testing simple model
@@ -415,10 +391,10 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "2" ]; then
   ./run_this_example.sh
   cd $WORKDIR
 fi
-echo -en 'travis_fold:end:coverage.simple\\r'
+echo -en 'travis_fold:end:coverage.meshfem3D-simple\\r'
 
 
-echo 'Coverage...' && echo -en 'travis_fold:start:coverage.socal\\r'
+echo 'Coverage...' && echo -en 'travis_fold:start:coverage.meshfem3D-socal\\r'
 if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "2" ]; then
   ##
   ## testing socal example
@@ -428,9 +404,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "2" ]; then
   ./run_this_example.sh
   cd $WORKDIR
 fi
-echo -en 'travis_fold:end:coverage.socal\\r'
+echo -en 'travis_fold:end:coverage.meshfem3D-socal\\r'
 
-echo 'Coverage...' && echo -en 'travis_fold:start:coverage.socal.1d_socal\\r'
+echo 'Coverage...' && echo -en 'travis_fold:start:coverage.meshfem3D-socal.1d_socal\\r'
 if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "2" ]; then
   ##
   ## testing socal example
@@ -442,9 +418,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "2" ]; then
   ./run_this_example.sh
   cd $WORKDIR
 fi
-echo -en 'travis_fold:end:coverage.socal.1d_socal\\r'
+echo -en 'travis_fold:end:coverage.meshfem3D-socal.1d_socal\\r'
 
-echo 'Coverage...' && echo -en 'travis_fold:start:coverage.socal.1d_prem\\r'
+echo 'Coverage...' && echo -en 'travis_fold:start:coverage.meshfem3D-socal.1d_prem\\r'
 if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "2" ]; then
   ##
   ## testing socal example
@@ -456,9 +432,9 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "2" ]; then
   ./run_this_example.sh
   cd $WORKDIR
 fi
-echo -en 'travis_fold:end:coverage.socal.1d_prem\\r'
+echo -en 'travis_fold:end:coverage.meshfem3D-socal.1d_prem\\r'
 
-echo 'Coverage...' && echo -en 'travis_fold:start:coverage.socal.1d_cascadia\\r'
+echo 'Coverage...' && echo -en 'travis_fold:start:coverage.meshfem3D-socal.1d_cascadia\\r'
 if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "2" ]; then
   ##
   ## testing socal example
@@ -470,21 +446,21 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "2" ]; then
   ./run_this_example.sh
   cd $WORKDIR
 fi
-echo -en 'travis_fold:end:coverage.socal.1d_cascadia\\r'
+echo -en 'travis_fold:end:coverage.meshfem3D-socal.1d_cascadia\\r'
 
-echo 'Coverage...' && echo -en 'travis_fold:start:coverage.cavity\\r'
+echo 'Coverage...' && echo -en 'travis_fold:start:coverage.meshfem3D-cavity\\r'
 if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "2" ]; then
   ##
   ## testing socal example
   ##
   cd EXAMPLES/meshfem3D_examples/cavity/
-  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+  sed -i "s:^NSTEP .*:NSTEP    = 200:" DATA/Par_file
   ./run_this_example.sh
   cd $WORKDIR
 fi
-echo -en 'travis_fold:end:coverage.cavity\\r'
+echo -en 'travis_fold:end:coverage.meshfem3D-cavity\\r'
 
-echo 'Coverage...' && echo -en 'travis_fold:start:coverage.sep\\r'
+echo 'Coverage...' && echo -en 'travis_fold:start:coverage.meshfem3D-sep\\r'
 if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "2" ]; then
   ##
   ## testing socal example
@@ -494,7 +470,33 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "2" ]; then
   ./run_this_example.sh
   cd $WORKDIR
 fi
-echo -en 'travis_fold:end:coverage.sep\\r'
+echo -en 'travis_fold:end:coverage.meshfem3D-sep\\r'
+
+## special examples
+echo 'Coverage...' && echo -en 'travis_fold:start:coverage.fault\\r'
+if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "2" ]; then
+  ##
+  ## testing fault example
+  ##
+  cd EXAMPLES/fault_examples/tpv5/
+  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+  ./run_this_example.sh
+  cd $WORKDIR
+fi
+echo -en 'travis_fold:end:coverage.fault\\r'
+
+echo 'Coverage...' && echo -en 'travis_fold:start:coverage.coupleFK\\r'
+if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "2" ]; then
+  ##
+  ## testing socal example
+  ##
+  cd EXAMPLES/small_example_coupling_FK_specfem/
+  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+  ./run_this_example.sh
+  cd $WORKDIR
+fi
+echo -en 'travis_fold:end:coverage.coupleFK\\r'
+
 
 
 ##
