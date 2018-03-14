@@ -110,31 +110,34 @@
   endif
   print *
 
-  ADD_ON_THE_XMIN_SURFACE = .true.
-  ADD_ON_THE_XMAX_SURFACE = .true.
-  ADD_ON_THE_YMIN_SURFACE = .true.
-  ADD_ON_THE_YMAX_SURFACE = .true.
-  ADD_ON_THE_ZMIN_SURFACE = .true.
-  ADD_ON_THE_ZMAX_SURFACE = .true.
-
-  print *
-  print *,'1 = use a free surface at the top of the mesh (most classical option)'
-  print *,'2 = use a CPML absorbing layer at the top of the mesh (less classical option)'
-  print *,'3 = exit'
-  read(*,*) iflag
-  if (iflag /= 1 .and. iflag /= 2) stop 'exiting...'
-  if (iflag == 1) then
-    ADD_ON_THE_ZMAX_SURFACE = .false.
-  else
-    ADD_ON_THE_ZMAX_SURFACE = .true.
-  endif
-  print *
-
   print *,'1 = enter the CPML thickness values to create manually'
   print *,'2 = read them from a file created by the previous code, xadd_CPML_layers_to_an_existing_mesh'
   print *,'3 = exit'
   read(*,*) iread
   if (iread /= 1 .and. iread /= 2) stop 'exiting...'
+
+  if (iread /= 2) then
+    ADD_ON_THE_XMIN_SURFACE = .true.
+    ADD_ON_THE_XMAX_SURFACE = .true.
+    ADD_ON_THE_YMIN_SURFACE = .true.
+    ADD_ON_THE_YMAX_SURFACE = .true.
+    ADD_ON_THE_ZMIN_SURFACE = .true.
+    ADD_ON_THE_ZMAX_SURFACE = .true.
+
+    print *
+    print *,'1 = use a free surface at the top of the mesh (most classical option)'
+    print *,'2 = use a CPML absorbing layer at the top of the mesh (less classical option)'
+    print *,'3 = exit'
+    read(*,*) iflag
+    if (iflag /= 1 .and. iflag /= 2) stop 'exiting...'
+    if (iflag == 1) then
+      ADD_ON_THE_ZMAX_SURFACE = .false.
+    else
+      ADD_ON_THE_ZMAX_SURFACE = .true.
+    endif
+  endif
+
+  print *
 
 ! open SPECFEM3D_Cartesian mesh file to read the points
   if (iformat == 1) then
@@ -187,6 +190,20 @@
   read(23,*) THICKNESS_OF_ZMIN_PML
   read(23,*) THICKNESS_OF_ZMAX_PML
   close(23)
+
+! use the convention that a negative means that that PML is turned off
+  ADD_ON_THE_XMIN_SURFACE = .true.
+  ADD_ON_THE_XMAX_SURFACE = .true.
+  ADD_ON_THE_YMIN_SURFACE = .true.
+  ADD_ON_THE_YMAX_SURFACE = .true.
+  ADD_ON_THE_ZMIN_SURFACE = .true.
+  ADD_ON_THE_ZMAX_SURFACE = .true.
+  if (THICKNESS_OF_XMIN_PML <= 0) ADD_ON_THE_XMIN_SURFACE = .false.
+  if (THICKNESS_OF_XMAX_PML <= 0) ADD_ON_THE_XMAX_SURFACE = .false.
+  if (THICKNESS_OF_YMIN_PML <= 0) ADD_ON_THE_YMIN_SURFACE = .false.
+  if (THICKNESS_OF_YMAX_PML <= 0) ADD_ON_THE_YMAX_SURFACE = .false.
+  if (THICKNESS_OF_ZMIN_PML <= 0) ADD_ON_THE_ZMIN_SURFACE = .false.
+  if (THICKNESS_OF_ZMAX_PML <= 0) ADD_ON_THE_ZMAX_SURFACE = .false.
 
 ! check convention (negative value) that says that this absorbing edge is turned off
   if (ADD_ON_THE_XMIN_SURFACE .and. THICKNESS_OF_XMIN_PML <= 0) &
