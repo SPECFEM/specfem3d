@@ -191,7 +191,7 @@
   read(23,*) THICKNESS_OF_ZMAX_PML
   close(23)
 
-! use the convention that a negative means that that PML is turned off
+! use the convention that a negative value means that that PML is turned off
   ADD_ON_THE_XMIN_SURFACE = .true.
   ADD_ON_THE_XMAX_SURFACE = .true.
   ADD_ON_THE_YMIN_SURFACE = .true.
