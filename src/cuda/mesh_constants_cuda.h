@@ -168,7 +168,7 @@
 // (optional) use launch_bounds specification to increase compiler optimization
 // (depending on GPU type, register spilling might slow down the performance)
 // (uncomment if desired)
-#define USE_LAUNCH_BOUNDS
+//#define USE_LAUNCH_BOUNDS
 
 // elastic kernel
 // note: main kernel is Kernel_2_***_impl() which is limited by shared memory usage to 8 active blocks
