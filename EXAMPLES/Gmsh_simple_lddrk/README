@@ -1,0 +1,40 @@
+----------------------------------------------------------------------
+README
+----------------------------------------------------------------------
+
+Gmsh example for an elastic model with simple topography.
+Uses the LDDRK time scheme.
+
+requires:
+ * Gmsh       - for downloading, see http://gmsh.info
+ * pygmsh     - python wrapper, see https://pypi.python.org/pypi/pygmsh
+ * numpy      - scientific computing with python, see http://www.numpy.org
+
+tested for Gmsh version 3.0, pygmsh version 4.1.0, numpy version 1.14.0
+
+
+0. installation:
+  
+   - Gmsh:
+       download Gmsh and install package (make sure that command gmsh is in your PATH)
+       http://gmsh.info
+
+   - pygmsh:
+       for installation using pip, type:
+       > pip install -U pygmsh
+   
+   (finally check your installation, see if you can run a simple pygmsh example: https://github.com/nschloe/pygmsh)
+
+1. to generate mesh, type:
+
+    > ./mesh_example_with_gmsh.py
+
+
+2. run simulation:
+    
+   - run script:
+     > ./run_this_example.sh
+
+
+Compare your seismograms in OUTPUT_FILES/ with the reference ones in directory REF_SEIS/
+
