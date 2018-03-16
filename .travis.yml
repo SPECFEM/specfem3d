@@ -112,6 +112,9 @@ env:
     # elastic halfspace, no absorbing
     - TEST="--with-mpi" TESTCOV=0 TESTMAKE=25 CUDA=false
 
+    # gmsh example w/ LDDRK
+    - TEST="--with-mpi" TESTCOV=0 TESTMAKE=26 CUDA=false
+
 
 before_install:
   # informations on git

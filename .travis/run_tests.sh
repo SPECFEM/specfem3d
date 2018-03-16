@@ -34,6 +34,7 @@ case "$TESTMAKE" in
   23) dir=EXAMPLES/small_example_coupling_FK_specfem/ ;;
   24) dir=EXAMPLES/layered_halfspace/ ;;
   25) dir=EXAMPLES/homogeneous_halfspace_HEX8_elastic_no_absorbing/ ;;
+  26) dir=EXAMPLES/Gmsh_simple_lddrk/ ;;
   *) dir=EXAMPLES/homogeneous_halfspace/ ;;
 esac
 
@@ -205,6 +206,10 @@ else
   # elastic, no absorbing
   if [ "$TESTMAKE" == "25" ]; then
     sed -i "s:^NSTEP .*:NSTEP    = 600:" DATA/Par_file
+  fi
+  # Gmsh example w/ LDDRK
+  if [ "$TESTMAKE" == "26" ]; then
+    sed -i "s:^NSTEP .*:NSTEP    = 2000:" DATA/Par_file
   fi
 
   # coverage run
@@ -496,6 +501,18 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "2" ]; then
   cd $WORKDIR
 fi
 echo -en 'travis_fold:end:coverage.coupleFK\\r'
+
+echo 'Coverage...' && echo -en 'travis_fold:start:coverage.Gmsh\\r'
+if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "2" ]; then
+  ##
+  ## testing Gmsh example
+  ##
+  cd EXAMPLES/Gmsh_simple_lddrk/
+  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+  ./run_this_example.sh
+  cd $WORKDIR
+fi
+echo -en 'travis_fold:end:coverage.Gmsh\\r'
 
 
 
