@@ -57,9 +57,9 @@ subroutine compute_element_att_memory_second_order_rk(ispec,alphaval,betaval,gam
   real(kind=CUSTOM_REAL) :: factor_loc,alphaval_loc,betaval_loc,gammaval_loc,Sn,Snp1
 
   do i_sls = 1,N_SLS
-    do k=1,NGLLZ
-      do j=1,NGLLY
-        do i=1,NGLLX
+    do k = 1,NGLLZ
+      do j = 1,NGLLY
+        do i = 1,NGLLX
 
           alphaval_loc = alphaval(i_sls)
           betaval_loc = betaval(i_sls)
@@ -149,17 +149,17 @@ subroutine compute_element_att_memory_lddrk(ispec,deltat,NSPEC_AB,kappastore,mus
   real(kind=CUSTOM_REAL) :: factor_loc,Snp1
 
   do i_sls = 1,N_SLS
-    do k=1,NGLLZ
-      do j=1,NGLLY
-        do i=1,NGLLX
+    do k = 1,NGLLZ
+      do j = 1,NGLLY
+        do i = 1,NGLLX
 
           ! term in trace
           factor_loc = kappastore(i,j,k,ispec) * factor_common_kappa(i_sls,i,j,k,ispec)
           Snp1   = factor_loc * epsilondev_trace_loc(i,j,k)
 
           R_trace_lddrk(i,j,k,ispec,i_sls) = ALPHA_LDDRK(istage) * R_trace_lddrk(i,j,k,ispec,i_sls) + &
-            deltat * (Snp1 - R_trace(i,j,k,ispec,i_sls)*(1.0_CUSTOM_REAL/tau_sigma(i_SLS)))
-          R_trace(i,j,k,i_SLS,ispec) = R_trace(i,j,k,i_SLS,ispec) + BETA_LDDRK(istage) * R_trace_lddrk(i,j,k,i_SLS,ispec)
+            deltat * (Snp1 - R_trace(i,j,k,ispec,i_sls)*(1.0_CUSTOM_REAL/tau_sigma(i_sls)))
+          R_trace(i,j,k,ispec,i_sls) = R_trace(i,j,k,ispec,i_sls) + BETA_LDDRK(istage) * R_trace_lddrk(i,j,k,ispec,i_sls)
 
           ! term in xx yy zz xy xz yz
           factor_loc = mustore(i,j,k,ispec) * factor_common(i_sls,i,j,k,ispec)
@@ -167,35 +167,35 @@ subroutine compute_element_att_memory_lddrk(ispec,deltat,NSPEC_AB,kappastore,mus
           ! term in xx
           Snp1   = factor_loc * epsilondev_xx_loc(i,j,k)
           R_xx_lddrk(i,j,k,ispec,i_sls) = ALPHA_LDDRK(istage) * R_xx_lddrk(i,j,k,ispec,i_sls) + &
-              deltat * (Snp1 - R_xx(i,j,k,ispec,i_sls)*(1.0_CUSTOM_REAL/tau_sigma(i_SLS)))
+              deltat * (Snp1 - R_xx(i,j,k,ispec,i_sls)*(1.0_CUSTOM_REAL/tau_sigma(i_sls)))
 
           ! term in yy
           Snp1   = factor_loc * epsilondev_yy_loc(i,j,k)
           R_yy_lddrk(i,j,k,ispec,i_sls) = ALPHA_LDDRK(istage) * R_yy_lddrk(i,j,k,ispec,i_sls) + &
-              deltat * (Snp1 - R_yy(i,j,k,ispec,i_sls)*(1.0_CUSTOM_REAL/tau_sigma(i_SLS)))
+              deltat * (Snp1 - R_yy(i,j,k,ispec,i_sls)*(1.0_CUSTOM_REAL/tau_sigma(i_sls)))
 
           ! term in zz not computed since zero trace
 
           ! term in xy
           Snp1   = factor_loc * epsilondev_xy_loc(i,j,k)
           R_xy_lddrk(i,j,k,ispec,i_sls) = ALPHA_LDDRK(istage) * R_xy_lddrk(i,j,k,ispec,i_sls) + &
-              deltat * (Snp1 - R_xy(i,j,k,ispec,i_sls)*(1.0_CUSTOM_REAL/tau_sigma(i_SLS)))
+              deltat * (Snp1 - R_xy(i,j,k,ispec,i_sls)*(1.0_CUSTOM_REAL/tau_sigma(i_sls)))
 
           ! term in xz
           Snp1   = factor_loc * epsilondev_xz_loc(i,j,k)
           R_xz_lddrk(i,j,k,ispec,i_sls) = ALPHA_LDDRK(istage) * R_xz_lddrk(i,j,k,ispec,i_sls) + &
-              deltat * (Snp1 - R_xz(i,j,k,ispec,i_sls)*(1.0_CUSTOM_REAL/tau_sigma(i_SLS)))
+              deltat * (Snp1 - R_xz(i,j,k,ispec,i_sls)*(1.0_CUSTOM_REAL/tau_sigma(i_sls)))
 
           ! term in yz
           Snp1   = factor_loc * epsilondev_yz_loc(i,j,k)
           R_yz_lddrk(i,j,k,ispec,i_sls) = ALPHA_LDDRK(istage) * R_yz_lddrk(i,j,k,ispec,i_sls) + &
-              deltat * (Snp1 - R_yz(i,j,k,ispec,i_sls)*(1.0_CUSTOM_REAL/tau_sigma(i_SLS)))
+              deltat * (Snp1 - R_yz(i,j,k,ispec,i_sls)*(1.0_CUSTOM_REAL/tau_sigma(i_sls)))
 
-          R_xx(i,j,k,i_SLS,ispec) = R_xx(i,j,k,i_SLS,ispec) + BETA_LDDRK(istage) * R_xx_lddrk(i,j,k,i_SLS,ispec)
-          R_yy(i,j,k,i_SLS,ispec) = R_yy(i,j,k,i_SLS,ispec) + BETA_LDDRK(istage) * R_yy_lddrk(i,j,k,i_SLS,ispec)
-          R_xy(i,j,k,i_SLS,ispec) = R_xy(i,j,k,i_SLS,ispec) + BETA_LDDRK(istage) * R_xy_lddrk(i,j,k,i_SLS,ispec)
-          R_xz(i,j,k,i_SLS,ispec) = R_xz(i,j,k,i_SLS,ispec) + BETA_LDDRK(istage) * R_xz_lddrk(i,j,k,i_SLS,ispec)
-          R_yz(i,j,k,i_SLS,ispec) = R_yz(i,j,k,i_SLS,ispec) + BETA_LDDRK(istage) * R_yz_lddrk(i,j,k,i_SLS,ispec)
+          R_xx(i,j,k,ispec,i_sls) = R_xx(i,j,k,ispec,i_sls) + BETA_LDDRK(istage) * R_xx_lddrk(i,j,k,ispec,i_sls)
+          R_yy(i,j,k,ispec,i_sls) = R_yy(i,j,k,ispec,i_sls) + BETA_LDDRK(istage) * R_yy_lddrk(i,j,k,ispec,i_sls)
+          R_xy(i,j,k,ispec,i_sls) = R_xy(i,j,k,ispec,i_sls) + BETA_LDDRK(istage) * R_xy_lddrk(i,j,k,ispec,i_sls)
+          R_xz(i,j,k,ispec,i_sls) = R_xz(i,j,k,ispec,i_sls) + BETA_LDDRK(istage) * R_xz_lddrk(i,j,k,ispec,i_sls)
+          R_yz(i,j,k,ispec,i_sls) = R_yz(i,j,k,ispec,i_sls) + BETA_LDDRK(istage) * R_yz_lddrk(i,j,k,ispec,i_sls)
         enddo
       enddo
     enddo
