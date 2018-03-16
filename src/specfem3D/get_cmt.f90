@@ -332,10 +332,11 @@
       min_tshift_cmt_original = minval(t_shift)
   endif
 
-
   ! scales the moment tensor to Newton.m
   !
   ! CMTSOLUTION file values are in dyne.cm
+  ! (from Global CMT project, Dziewonski 1981, Ekstrom et al. 2012, moment-tensor elements are given in dyne-cm)
+  !
   ! 1 dyne is 1 gram * 1 cm / (1 second)^2
   ! 1 Newton is 1 kg * 1 m / (1 second)^2
   ! thus 1 Newton = 100,000 dynes
@@ -416,14 +417,16 @@
   ! adds 1/2 to be coherent with double couple or point sources
   scalar_moment = dsqrt(0.5d0*scalar_moment)
 
-  ! scale factor for the moment tensor
+  ! scale factor for the scalar moment in dyne-cm
   !
-  ! CMTSOLUTION file values are in Newton.m
+  ! Mxx,.. are given in in Newton.m
+  !
   ! 1 dyne is 1 gram * 1 cm / (1 second)^2
   ! 1 Newton is 1 kg * 1 m / (1 second)^2
   ! thus 1 Newton = 100,000 dynes
   ! therefore 1 dyne.cm = 1e-7 Newton.m
   !       and 1 Newton.m = 1e7 dyne.cm
+  !
   scaleM = 1.d7
 
   ! return value (in dyne-cm)
@@ -466,7 +469,7 @@
   ! see: http://earthquake.usgs.gov/aboutus/docs/020204mag_policy.php
 
   Mw = 2.d0/3.d0 * log10( max(M0,tiny(M0)) ) - 10.7
-  ! this is to ensure M0>0.0 inorder to avoid arithmatic error.
+  ! this is to ensure M0>0.0 inorder to avoid arithmetic error.
 
   ! return value
   get_cmt_moment_magnitude = Mw

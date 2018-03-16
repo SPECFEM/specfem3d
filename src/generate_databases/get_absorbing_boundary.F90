@@ -124,6 +124,11 @@
   ifree = 0
 
   ! xmin
+  if (myrank == 0) then
+    write(IMAIN,*) '     boundary xmin',nspec2D_xmin
+    call flush_IMAIN()
+  endif
+
   ijk_face(:,:,:) = 0
   normal_face(:,:,:) = 0.0_CUSTOM_REAL
   jacobian2Dw_face(:,:) = 0.0_CUSTOM_REAL
@@ -133,7 +138,7 @@
 
     ! looks for i,j,k indices of GLL points on boundary face
     ! determines element face by given CUBIT corners
-    do icorner=1,NGNOD2D_FOUR_CORNERS
+    do icorner = 1,NGNOD2D_FOUR_CORNERS
       xcoord(icorner) = nodes_coords_ext_mesh(1,nodes_ibelm_xmin(icorner,ispec2D))
       ycoord(icorner) = nodes_coords_ext_mesh(2,nodes_ibelm_xmin(icorner,ispec2D))
       zcoord(icorner) = nodes_coords_ext_mesh(3,nodes_ibelm_xmin(icorner,ispec2D))
@@ -194,6 +199,10 @@
   if ( COUPLE_WITH_INJECTION_TECHNIQUE .and. (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM) ) close(123)
 
   ! xmax
+  if (myrank == 0) then
+    write(IMAIN,*) '     boundary xmax',nspec2D_xmax
+    call flush_IMAIN()
+  endif
   ijk_face(:,:,:) = 0
   normal_face(:,:,:) = 0.0_CUSTOM_REAL
   jacobian2Dw_face(:,:) = 0.0_CUSTOM_REAL
@@ -203,7 +212,7 @@
 
     ! looks for i,j,k indices of GLL points on boundary face
     ! determines element face by given CUBIT corners
-    do icorner=1,NGNOD2D_FOUR_CORNERS
+    do icorner = 1,NGNOD2D_FOUR_CORNERS
       xcoord(icorner) = nodes_coords_ext_mesh(1,nodes_ibelm_xmax(icorner,ispec2D))
       ycoord(icorner) = nodes_coords_ext_mesh(2,nodes_ibelm_xmax(icorner,ispec2D))
       zcoord(icorner) = nodes_coords_ext_mesh(3,nodes_ibelm_xmax(icorner,ispec2D))
@@ -257,6 +266,11 @@
   enddo
 
   ! ymin
+  if (myrank == 0) then
+    write(IMAIN,*) '     boundary ymin',nspec2D_ymin
+    call flush_IMAIN()
+  endif
+
   ijk_face(:,:,:) = 0
   normal_face(:,:,:) = 0.0_CUSTOM_REAL
   jacobian2Dw_face(:,:) = 0.0_CUSTOM_REAL
@@ -266,7 +280,7 @@
 
     ! looks for i,j,k indices of GLL points on boundary face
     ! determines element face by given CUBIT corners
-    do icorner=1,NGNOD2D_FOUR_CORNERS
+    do icorner = 1,NGNOD2D_FOUR_CORNERS
       xcoord(icorner) = nodes_coords_ext_mesh(1,nodes_ibelm_ymin(icorner,ispec2D))
       ycoord(icorner) = nodes_coords_ext_mesh(2,nodes_ibelm_ymin(icorner,ispec2D))
       zcoord(icorner) = nodes_coords_ext_mesh(3,nodes_ibelm_ymin(icorner,ispec2D))
@@ -320,6 +334,11 @@
   enddo
 
   ! ymax
+  if (myrank == 0) then
+    write(IMAIN,*) '     boundary ymax',nspec2D_ymax
+    call flush_IMAIN()
+  endif
+
   ijk_face(:,:,:) = 0
   normal_face(:,:,:) = 0.0_CUSTOM_REAL
   jacobian2Dw_face(:,:) = 0.0_CUSTOM_REAL
@@ -329,7 +348,7 @@
 
     ! looks for i,j,k indices of GLL points on boundary face
     ! determines element face by given CUBIT corners
-    do icorner=1,NGNOD2D_FOUR_CORNERS
+    do icorner = 1,NGNOD2D_FOUR_CORNERS
       xcoord(icorner) = nodes_coords_ext_mesh(1,nodes_ibelm_ymax(icorner,ispec2D))
       ycoord(icorner) = nodes_coords_ext_mesh(2,nodes_ibelm_ymax(icorner,ispec2D))
       zcoord(icorner) = nodes_coords_ext_mesh(3,nodes_ibelm_ymax(icorner,ispec2D))
@@ -383,6 +402,11 @@
   enddo
 
   ! bottom
+  if (myrank == 0) then
+    write(IMAIN,*) '     boundary bottom',NSPEC2D_BOTTOM
+    call flush_IMAIN()
+  endif
+
   ijk_face(:,:,:) = 0
   normal_face(:,:,:) = 0.0_CUSTOM_REAL
   jacobian2Dw_face(:,:) = 0.0_CUSTOM_REAL
@@ -392,7 +416,7 @@
 
     ! looks for i,j,k indices of GLL points on boundary face
     ! determines element face by given CUBIT corners
-    do icorner=1,NGNOD2D_FOUR_CORNERS
+    do icorner = 1,NGNOD2D_FOUR_CORNERS
       xcoord(icorner) = nodes_coords_ext_mesh(1,nodes_ibelm_bottom(icorner,ispec2D))
       ycoord(icorner) = nodes_coords_ext_mesh(2,nodes_ibelm_bottom(icorner,ispec2D))
       zcoord(icorner) = nodes_coords_ext_mesh(3,nodes_ibelm_bottom(icorner,ispec2D))
@@ -464,10 +488,14 @@
   enddo
 
   ! top
+  if (myrank == 0) then
+    write(IMAIN,*) '     boundary top',NSPEC2D_TOP
+    call flush_IMAIN()
+  endif
+
   ijk_face(:,:,:) = 0
   normal_face(:,:,:) = 0.0_CUSTOM_REAL
   jacobian2Dw_face(:,:) = 0.0_CUSTOM_REAL
-
 
   do ispec2D = 1, NSPEC2D_TOP
     ! sets element
@@ -475,7 +503,7 @@
 
     ! looks for i,j,k indices of GLL points on boundary face
     ! determines element face by given CUBIT corners
-    do icorner=1,NGNOD2D_FOUR_CORNERS
+    do icorner = 1,NGNOD2D_FOUR_CORNERS
       xcoord(icorner) = nodes_coords_ext_mesh(1,nodes_ibelm_top(icorner,ispec2D))
       ycoord(icorner) = nodes_coords_ext_mesh(2,nodes_ibelm_top(icorner,ispec2D))
       zcoord(icorner) = nodes_coords_ext_mesh(3,nodes_ibelm_top(icorner,ispec2D))
@@ -668,6 +696,7 @@
        print *,'the free_or_absorbing_surface_file_zmax contains no absorbing element, but Zmax absorption is turned on'
        stop 'error: number of Zmax absorbing elements cannot be zero in free_or_absorbing_surface_file_zmax in such a case'
     endif
+    call flush_IMAIN()
   endif
 
   end subroutine get_absorbing_boundary

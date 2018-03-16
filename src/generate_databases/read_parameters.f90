@@ -141,35 +141,35 @@
     else
       write(IMAIN,*) 'using UTM projection in region ',UTM_PROJECTION_ZONE
     endif
-
     write(IMAIN,*)
+
     if (ATTENUATION) then
       write(IMAIN,*) 'incorporating attenuation using ',N_SLS,' standard linear solids'
       if (USE_OLSEN_ATTENUATION) then
-        write(IMAIN,*) 'using attenuation from Olsen et al.'
+        write(IMAIN,*) '  using attenuation from Olsen et al.'
       else
-        write(IMAIN,*) 'not using attenuation from Olsen et al.'
+        write(IMAIN,*) '  not using attenuation from Olsen et al.'
       endif
     else
       write(IMAIN,*) 'no attenuation'
     endif
-
     write(IMAIN,*)
+
     if (ANISOTROPY) then
       write(IMAIN,*) 'incorporating anisotropy'
     else
       write(IMAIN,*) 'no anisotropy'
     endif
-
     write(IMAIN,*)
+
     if (APPROXIMATE_OCEAN_LOAD) then
       write(IMAIN,*) 'incorporating the oceans using equivalent load'
       if (TOPOGRAPHY) write(IMAIN,*) ' with elevation from topography file'
     else
       write(IMAIN,*) 'no oceans'
     endif
-
     write(IMAIN,*)
+
     if (STACEY_ABSORBING_CONDITIONS) then
       write(IMAIN,*) 'incorporating Stacey absorbing conditions'
     else
@@ -179,27 +179,24 @@
         write(IMAIN,*) 'no absorbing condition'
       endif
     endif
-
     write(IMAIN,*)
+
     if (USE_FORCE_POINT_SOURCE) then
        write(IMAIN,*) 'using a FORCESOLUTION source instead of a CMTSOLUTION source'
     else
        write(IMAIN,*) 'using a CMTSOLUTION source'
-       write(IMAIN,*)
     endif
-
-    write(IMAIN,*)
     if (USE_RICKER_TIME_FUNCTION) then
-       write(IMAIN,*) 'using a Ricker source time function'
+       write(IMAIN,*) '  with a Ricker source time function'
     else
        if (USE_FORCE_POINT_SOURCE) then
-          write(IMAIN,*) 'using a quasi-Heaviside source time function'
-          write(IMAIN,*)
+          write(IMAIN,*) '  with a quasi-Heaviside source time function'
        else
-          write(IMAIN,*) 'using a Gaussian source time function'
-          write(IMAIN,*)
+          write(IMAIN,*) '  with a Gaussian source time function'
        endif
     endif
+    write(IMAIN,*)
+
     call flush_IMAIN()
   endif
 

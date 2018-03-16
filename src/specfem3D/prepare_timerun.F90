@@ -411,6 +411,7 @@
     if (ier /= 0) stop 'Error allocating array potential_acoustic_lddrk'
     allocate(potential_dot_acoustic_lddrk(NGLOB_AB_LDDRK),stat=ier)
     if (ier /= 0) stop 'Error allocating array potential_dot_acoustic_lddrk'
+
     potential_acoustic_lddrk(:) = 0._CUSTOM_REAL
     potential_dot_acoustic_lddrk(:) = 0._CUSTOM_REAL
     if (FIX_UNDERFLOW_PROBLEM) then
@@ -424,6 +425,7 @@
     if (ier /= 0) stop 'Error allocating array displ_lddrk'
     allocate(veloc_lddrk(NDIM,NGLOB_AB_LDDRK),stat=ier)
     if (ier /= 0) stop 'Error allocating array veloc_lddrk'
+
     displ_lddrk(:,:) = 0._CUSTOM_REAL
     veloc_lddrk(:,:) = 0._CUSTOM_REAL
     if (FIX_UNDERFLOW_PROBLEM) then
