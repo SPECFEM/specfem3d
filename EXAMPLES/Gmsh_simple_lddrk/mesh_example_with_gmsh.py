@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 #
-# uses pygmsh: 
-#   https://github.com/nschloe/pygmsh 
+# uses pygmsh:
+#   https://github.com/nschloe/pygmsh
 #   https://pygmsh.readthedocs.io/en/latest/
-# 
+#
 # install with:
 #   pip install -U pygmsh
 #
@@ -237,7 +237,7 @@ def create_material_file():
     print("  aniso_flag   = ",aniso_flag)
     print("  domain id    = ",domain_id)
     print("")
-    
+
     # default volume id gets material
     mat_id = 1
 

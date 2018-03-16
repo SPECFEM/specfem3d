@@ -932,12 +932,12 @@
         !
         !                typical values:  0.0 cork
         !                                 0.06 - 0.27 concrete
-        !                                 0.27 – 0.30 steel
+        !                                 0.27 - 0.30 steel
         !                                 0.2 sandstone
         !                                 0.3 carbonate rocks
         !                                 0.3+ shale
         !                                 0.4 coal
-        !                                 0.42 – 0.44 gold
+        !                                 0.42 - 0.44 gold
         !                                 0.5 rubber
         !
         !                for more crustal rocks, see e.g.:
