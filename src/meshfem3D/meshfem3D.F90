@@ -548,9 +548,6 @@
   npy_element_steps = 2*NEX_PER_PROC_ETA
   ner_layer(:) = 2 * ner_layer(:)
 
-  !min_elevation = +HUGEVAL
-  !max_elevation = -HUGEVAL
-
   ! user output
   if (myrank == 0) then
     write(IMAIN,*)
