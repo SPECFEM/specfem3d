@@ -229,7 +229,54 @@
   ! prints source time functions to output files
   if (PRINT_SOURCE_TIME_FUNCTION) call print_stf_file()
 
+  call get_run_number_of_the_source()
+
   end subroutine setup_sources
+!
+!-------------------------------------------------------------------------------------------------
+!
+!EB EB When NB_RUNS_ACOUSTIC_GPU > 1, the file SOURCE_FILE actually contains the sources for all the runs.
+!This routine is intended to get the array that contains the run number of each source described in SOURCE_FILE.
+!The line i of the file run_number_of_the_source contains the run number \in [ 0;NB_RUNS_ACOUSTIC_GPU-1] of the source i  
+  subroutine get_run_number_of_the_source()
+
+  use constants
+  use specfem_par, only: run_number_of_the_source,NSOURCES
+  character(len=MAX_STRING_LEN) :: filename,string
+  integer :: ier,isource,icounter
+
+  allocate(run_number_of_the_source(NSOURCES))
+
+  if (NB_RUNS_ACOUSTIC_GPU == 1) then
+    run_number_of_the_source(:) = 0
+  else
+
+    filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'run_number_of_the_source'
+    open(unit=IIN,file=filename,status='old',action='read',iostat=ier)
+    if (ier /= 0) then
+      print *,'Error opening file: ',filename
+      stop 'Error opening run_number_of_the_source file'
+    endif
+
+    ! Checks if the number of lines is correct
+    icounter = 0
+    do while (ier == 0)
+      read(IIN,"(a)",iostat=ier) string
+      if (ier == 0) icounter = icounter + 1
+    enddo
+    close(IIN)
+    if (icounter /= NSOURCES) stop 'Error total number of lines in run_number_of_the_source file is not equal to NSOURCES'
+
+    ! Fills the array run_number_of_the_source
+    open(unit=IIN,file=filename,status='old',action='read')
+    ! reads run number for each source
+    do isource = 1,NSOURCES
+      read(IIN,"(a)") string
+      read(string,*) run_number_of_the_source(isource) 
+    enddo
+  endif
+
+  end subroutine get_run_number_of_the_source
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -1151,7 +1198,8 @@
     if (ier /= 0) stop 'error allocating array seismograms_a'
 
     if (SAVE_SEISMOGRAMS_PRESSURE) then
-      allocate(seismograms_p(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+      !NB_RUNS_ACOUSTIC_GPU is set to 1 by default in constants.h
+      allocate(seismograms_p(NDIM,nrec_local*NB_RUNS_ACOUSTIC_GPU,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
     else
       allocate(seismograms_p(1,1,1),stat=ier)
     endif

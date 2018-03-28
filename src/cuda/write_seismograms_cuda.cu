@@ -98,10 +98,10 @@ __global__ void compute_elastic_seismogram_kernel(int nrec_local,
 /* ----------------------------------------------------------------------------------------------- */
 
 __global__ void compute_acoustic_seismogram_kernel(int nrec_local,
-                                                   realw* pressure,
+                                                   field* pressure,
                                                    int* d_ibool,
                                                    realw* hxir, realw* hetar, realw* hgammar,
-                                                   realw* seismograms,
+                                                   field* seismograms,
                                                    int* ispec_selected_rec_loc,
                                                    int it){
 
@@ -113,13 +113,13 @@ __global__ void compute_acoustic_seismogram_kernel(int nrec_local,
   int J = ((tx-K*NGLL2)/NGLLX);
   int I = (tx-K*NGLL2-J*NGLLX);
 
-  __shared__ realw sh_dxd[NGLL3_PADDED];
+  __shared__ field sh_dxd[NGLL3_PADDED];
 
   if (irec_local < nrec_local) {
 
     int ispec = ispec_selected_rec_loc[irec_local]-1;
 
-    sh_dxd[tx] = 0;
+    sh_dxd[tx] = Make_field(0.f); 
 
     if (tx < NGLL3) {
 
@@ -131,16 +131,14 @@ __global__ void compute_acoustic_seismogram_kernel(int nrec_local,
     __syncthreads();
 
     for (unsigned int s=1; s<NGLL3_PADDED ; s *= 2) {
-      if (tx % (2*s) == 0) sh_dxd[tx] += sh_dxd[tx + s];
+      if (tx % (2*s) == 0) {sh_dxd[tx] += sh_dxd[tx + s];}
       __syncthreads();
     }
 
-    int idx = INDEX3(NDIM,nrec_local,0,irec_local,it);
+    int idx = INDEX2(nrec_local,irec_local,it);
 
     // Signe moins car pression = -potential_dot_dot
-   if (tx == 0) {seismograms[0+idx] = -sh_dxd[0];}
-   if (tx == 1) {seismograms[1+idx] = 0;}
-   if (tx == 2) {seismograms[2+idx] = 0;}
+   if (tx == 0) seismograms[idx] = -sh_dxd[0];
   }
 }
 
@@ -148,7 +146,7 @@ __global__ void compute_acoustic_seismogram_kernel(int nrec_local,
 
 __global__ void compute_acoustic_vectorial_seismogram_kernel(int nrec_local,
                    int*  d_ispec_is_acoustic,
-                   realw* scalar_potential,
+                   field* scalar_potential,
                    realw* seismograms,
                    realw* d_rhostore,
                    int* d_ibool,
@@ -173,7 +171,7 @@ __global__ void compute_acoustic_vectorial_seismogram_kernel(int nrec_local,
   int I = (tx-K*NGLL2-J*NGLLX);
 
   // shared memory
-  __shared__ realw s_dummy_loc[NGLL3_PADDED];
+  __shared__ field s_dummy_loc[NGLL3_PADDED];
   __shared__ realw s_temp1[NGLL3_PADDED];
   __shared__ realw s_temp2[NGLL3_PADDED];
   __shared__ realw s_temp3[NGLL3_PADDED];
@@ -467,17 +465,31 @@ void FC_FUNC_(compute_seismograms_cuda,
   } // ACOUSTIC_SIMULATION
 
   if (seismo_current == NTSTEP_BETWEEN_OUTPUT_SEISMOS || *it == *it_end ){
-    int size = NDIM * mp->nrec_local * NTSTEP_BETWEEN_OUTPUT_SEISMOS;
+    int size = mp->nrec_local * NTSTEP_BETWEEN_OUTPUT_SEISMOS * sizeof(realw);
 
     // (cudaMemcpy implicitly synchronizes all other cuda operations)
     if (mp->save_seismograms_d)
-      print_CUDA_error_if_any(cudaMemcpy(seismograms_d,mp->d_seismograms_d,size * sizeof(realw),cudaMemcpyDeviceToHost),72001);
+      print_CUDA_error_if_any(cudaMemcpy(seismograms_d,mp->d_seismograms_d,NDIM * size,cudaMemcpyDeviceToHost),72001);
     if (mp->save_seismograms_v)
-      print_CUDA_error_if_any(cudaMemcpy(seismograms_v,mp->d_seismograms_v,size * sizeof(realw),cudaMemcpyDeviceToHost),72002);
+      print_CUDA_error_if_any(cudaMemcpy(seismograms_v,mp->d_seismograms_v,NDIM * size,cudaMemcpyDeviceToHost),72002);
     if (mp->save_seismograms_a)
-      print_CUDA_error_if_any(cudaMemcpy(seismograms_a,mp->d_seismograms_a,size * sizeof(realw),cudaMemcpyDeviceToHost),72003);
+      print_CUDA_error_if_any(cudaMemcpy(seismograms_a,mp->d_seismograms_a,NDIM * size,cudaMemcpyDeviceToHost),72003);
+    // EB EB Temporary solution : in the future we will also declare host pressure seismograms as (1,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS)
+    realw * seismo_temp;
     if (mp->save_seismograms_p)
-      print_CUDA_error_if_any(cudaMemcpy(seismograms_p,mp->d_seismograms_p,size * sizeof(realw),cudaMemcpyDeviceToHost),72004);
+      // EB EB We need to reorganize data to match host array shape :
+      // if NB_RUNS_ACOUSTIC_GPU = 1 from fortran shape (1,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS) to (NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS)
+      // if NB_RUNS_ACOUSTIC_GPU > 1 from fortran shape (NB_RUNS_ACOUSTIC_GPU,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS) to (NDIM,nrec_local*NB_RUNS_ACOUSTIC_GPU,NTSTEP_BETWEEN_OUTPUT_SEISMOS)
+      seismo_temp = (realw*)malloc(size*NB_RUNS_ACOUSTIC_GPU);
+      print_CUDA_error_if_any(cudaMemcpy(seismo_temp,mp->d_seismograms_p,size*NB_RUNS_ACOUSTIC_GPU,cudaMemcpyDeviceToHost),72004);
+      for (int it = 0; it<NTSTEP_BETWEEN_OUTPUT_SEISMOS; it++)
+        for (int i_recloc=0; i_recloc<mp->nrec_local; i_recloc++)
+          for (int i_run=0; i_run<NB_RUNS_ACOUSTIC_GPU; i_run++){
+          seismograms_p[INDEX4(NDIM,mp->nrec_local,NB_RUNS_ACOUSTIC_GPU,0,i_recloc,i_run,it)] = seismo_temp[INDEX3(NB_RUNS_ACOUSTIC_GPU,mp->nrec_local,i_run,i_recloc,it)];
+          seismograms_p[INDEX4(NDIM,mp->nrec_local,NB_RUNS_ACOUSTIC_GPU,1,i_recloc,i_run,it)] = 0.f;
+          seismograms_p[INDEX4(NDIM,mp->nrec_local,NB_RUNS_ACOUSTIC_GPU,2,i_recloc,i_run,it)] = 0.f;
+          }
+      free(seismo_temp);
   }
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING

@@ -104,10 +104,10 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
                        const int* d_phase_ispec_inner_acoustic,
                        const int num_phase_ispec_acoustic,
                        const int d_iphase,
-                       realw_const_p d_potential_acoustic,
-                       realw_p d_potential_dot_dot_acoustic,
-                       realw_const_p d_b_potential_acoustic,
-                       realw_p d_b_potential_dot_dot_acoustic,
+                       field_const_p d_potential_acoustic,
+                       field_p d_potential_dot_dot_acoustic,
+                       field_const_p d_b_potential_acoustic,
+                       field_p d_b_potential_dot_dot_acoustic,
                        const int nb_field,
                        realw* d_xix,realw* d_xiy,realw* d_xiz,
                        realw* d_etax,realw* d_etay,realw* d_etaz,
@@ -136,22 +136,22 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
   int iglob,offset;
   int working_element;
 
-  realw temp1l,temp2l,temp3l;
+  field temp1l,temp2l,temp3l;
   realw xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl;
   realw jacobianl;
 
-  realw dpotentialdxl,dpotentialdyl,dpotentialdzl;
+  field dpotentialdxl,dpotentialdyl,dpotentialdzl;
   realw fac1,fac2,fac3;
   realw rho_invl,kappa_invl;
 
-  realw sum_terms;
-  realw gravity_term;
+  field sum_terms;
+  field gravity_term;
 
-  __shared__ realw s_dummy_loc[2*NGLL3];
+  __shared__ field s_dummy_loc[2*NGLL3];
 
-  __shared__ realw s_temp1[NGLL3];
-  __shared__ realw s_temp2[NGLL3];
-  __shared__ realw s_temp3[NGLL3];
+  __shared__ field s_temp1[NGLL3];
+  __shared__ field s_temp2[NGLL3];
+  __shared__ field s_temp3[NGLL3];
 
   __shared__ realw sh_hprime_xx[NGLL2];
   __shared__ realw sh_hprimewgll_xx[NGLL2];
@@ -296,9 +296,9 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
   for (int k = 0 ; k < nb_field ; k++){
 
   // computes first matrix product
-  temp1l = 0.f;
-  temp2l = 0.f;
-  temp3l = 0.f;
+  temp1l = Make_field(0.f);
+  temp2l = Make_field(0.f);
+  temp3l = Make_field(0.f);
 
   for (int l=0;l<NGLLX;l++) {
     //assumes that hprime_xx = hprime_yy = hprime_zz
@@ -353,9 +353,9 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
   __syncthreads();
 
   // computes second matrix product
-  temp1l = 0.f;
-  temp2l = 0.f;
-  temp3l = 0.f;
+  temp1l = Make_field(0.f);
+  temp2l = Make_field(0.f);
+  temp3l = Make_field(0.f);
 
   for (int l=0;l<NGLLX;l++) {
     //assumes hprimewgll_xx = hprimewgll_yy = hprimewgll_zz
@@ -382,7 +382,8 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
 //
 // + 3 float * 128 threads = 1536 BYTE
 
-  // assembles potential array
+  __syncthreads();
+// assembles potential array
   if (threadIdx.x < NGLL3) {
 #ifdef USE_MESH_COLORING_GPU
   // no atomic operation needed, colors don't share global points between elements
@@ -1009,7 +1010,6 @@ void Kernel_2_acoustic(int nb_blocks_to_compute, Mesh* mp, int d_iphase,
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   exit_on_cuda_error("before acoustic kernel Kernel 2");
 #endif
-
   // if the grid can handle the number of blocks, we let it be 1D
   // grid_2_x = nb_elem_color;
   // nb_elem_color is just how many blocks we are computing now
@@ -1201,9 +1201,9 @@ void FC_FUNC_(compute_forces_acoustic_cuda,
 
 
 __global__ void enforce_free_surface_cuda_kernel(
-                                       realw_p potential_acoustic,
-                                       realw_p potential_dot_acoustic,
-                                       realw_p potential_dot_dot_acoustic,
+                                       field_p potential_acoustic,
+                                       field_p potential_dot_acoustic,
+                                       field_p potential_dot_dot_acoustic,
                                        const int num_free_surface_faces,
                                        const int* free_surface_ispec,
                                        const int* free_surface_ijk,
@@ -1230,9 +1230,9 @@ __global__ void enforce_free_surface_cuda_kernel(
       int iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)] - 1;
 
       // sets potentials to zero at free surface
-      potential_acoustic[iglob] = 0;
-      potential_dot_acoustic[iglob] = 0;
-      potential_dot_dot_acoustic[iglob] = 0;
+      potential_acoustic[iglob] = Make_field(0.f);
+      potential_dot_acoustic[iglob] = Make_field(0.f);
+      potential_dot_dot_acoustic[iglob] = Make_field(0.f);
     }
   }
 }

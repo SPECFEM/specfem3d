@@ -88,6 +88,7 @@
 
   ! prepares fields on GPU for acoustic simulations
   if (ACOUSTIC_SIMULATION) then
+
     call prepare_fields_acoustic_device(Mesh_pointer, &
                                 rmass_acoustic,rhostore,kappastore, &
                                 num_phase_ispec_acoustic,phase_ispec_inner_acoustic, &
@@ -318,7 +319,7 @@
     if (SAVE_SEISMOGRAMS_ACCELERATION) &
       memory_size = memory_size + NDIM * NTSTEP_BETWEEN_OUTPUT_SEISMOS * nrec_local * dble(CUSTOM_REAL)
     if (SAVE_SEISMOGRAMS_PRESSURE) &
-      memory_size = memory_size + NDIM * NTSTEP_BETWEEN_OUTPUT_SEISMOS * nrec_local * dble(CUSTOM_REAL)
+      memory_size = memory_size + NTSTEP_BETWEEN_OUTPUT_SEISMOS * nrec_local * dble(CUSTOM_REAL)
 
     ! acoustic simulations
     if (ACOUSTIC_SIMULATION) then
@@ -334,8 +335,6 @@
       memory_size = memory_size + 2.d0 * num_phase_ispec_acoustic * dble(SIZE_INTEGER)
       ! d_ispec_is_acoustic
       memory_size = memory_size + NSPEC_AB * dble(SIZE_INTEGER)
-      ! d_station_seismo_potential
-      memory_size = memory_size + nrec_local* NGLL3 * dble(CUSTOM_REAL)
 
     endif
 
@@ -351,8 +350,6 @@
       memory_size = memory_size + NSPEC_AB * dble(SIZE_INTEGER)
       ! d_phase_ispec_inner_elastic
       memory_size = memory_size + 2.d0 * num_phase_ispec_elastic * dble(SIZE_INTEGER)
-      ! d_station_seismo_field
-      memory_size = memory_size + 3.d0 * NGLL3 * nrec_local * dble(CUSTOM_REAL)
 
       if (STACEY_ABSORBING_CONDITIONS .or. PML_CONDITIONS) then
         ! d_rho_vp,..

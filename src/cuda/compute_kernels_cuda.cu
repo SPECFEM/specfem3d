@@ -355,8 +355,8 @@ TRACE("compute_kernels_strgth_noise_cu");
 
 __device__ void compute_gradient_kernel(int ijk,
                                         int ispec,
-                                        realw* scalar_field,
-                                        realw* vector_field_element,
+                                        field* scalar_field,
+                                        field* vector_field_loc,
                                         realw* d_hprime_xx,
                                         realw* d_xix,realw* d_xiy,realw* d_xiz,
                                         realw* d_etax,realw* d_etay,realw* d_etaz,
@@ -364,7 +364,7 @@ __device__ void compute_gradient_kernel(int ijk,
                                         realw rhol,
                                         int gravity) {
 
-  realw temp1l,temp2l,temp3l;
+  field temp1l,temp2l,temp3l;
   realw hp1,hp2,hp3;
   realw xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl;
   realw rho_invl;
@@ -377,7 +377,7 @@ __device__ void compute_gradient_kernel(int ijk,
   int I = (ijk-K*NGLL2-J*NGLLX);
 
   // derivative along x
-  temp1l = 0.f;
+  temp1l = Make_field(0.f);
   for( l=0; l<NGLLX;l++){
     hp1 = d_hprime_xx[l*NGLLX+I];
     offset1 = K*NGLL2+J*NGLLX+l;
@@ -385,7 +385,7 @@ __device__ void compute_gradient_kernel(int ijk,
   }
 
   // derivative along y
-  temp2l = 0.f;
+  temp2l = Make_field(0.f);
   for( l=0; l<NGLLX;l++){
     // assumes hprime_xx == hprime_yy
     hp2 = d_hprime_xx[l*NGLLX+J];
@@ -394,7 +394,7 @@ __device__ void compute_gradient_kernel(int ijk,
   }
 
   // derivative along z
-  temp3l = 0.f;
+  temp3l = Make_field(0.f);
   for( l=0; l<NGLLX;l++){
     // assumes hprime_xx == hprime_zz
     hp3 = d_hprime_xx[l*NGLLX+K];
@@ -421,9 +421,9 @@ __device__ void compute_gradient_kernel(int ijk,
     rho_invl = 1.0f / rhol;
   }
   // derivatives of acoustic scalar potential field on GLL points
-  vector_field_element[0] = (temp1l*xixl + temp2l*etaxl + temp3l*gammaxl) * rho_invl;
-  vector_field_element[1] = (temp1l*xiyl + temp2l*etayl + temp3l*gammayl) * rho_invl;
-  vector_field_element[2] = (temp1l*xizl + temp2l*etazl + temp3l*gammazl) * rho_invl;
+  vector_field_loc[0] = (temp1l*xixl + temp2l*etaxl + temp3l*gammaxl) * rho_invl;
+  vector_field_loc[1] = (temp1l*xiyl + temp2l*etayl + temp3l*gammayl) * rho_invl;
+  vector_field_loc[2] = (temp1l*xizl + temp2l*etazl + temp3l*gammazl) * rho_invl;
 
 }
 
@@ -438,10 +438,10 @@ __global__ void compute_kernels_acoustic_kernel(int* ispec_is_acoustic,
                                                 realw* d_xix,realw* d_xiy,realw* d_xiz,
                                                 realw* d_etax,realw* d_etay,realw* d_etaz,
                                                 realw* d_gammax,realw* d_gammay,realw* d_gammaz,
-                                                realw* potential_acoustic,
-                                                realw* potential_dot_dot_acoustic,
-                                                realw* b_potential_acoustic,
-                                                realw* b_potential_dot_dot_acoustic,
+                                                field* potential_acoustic,
+                                                field* potential_dot_dot_acoustic,
+                                                field* b_potential_acoustic,
+                                                field* b_potential_dot_dot_acoustic,
                                                 realw* rho_ac_kl,
                                                 realw* kappa_ac_kl,
                                                 realw deltat,
@@ -457,8 +457,8 @@ __global__ void compute_kernels_acoustic_kernel(int* ispec_is_acoustic,
   int iglob;
 
   // shared memory between all threads within this block
-  __shared__ realw scalar_field_displ[NGLL3];
-  __shared__ realw scalar_field_accel[NGLL3];
+  __shared__ field scalar_field_displ[NGLL3];
+  __shared__ field scalar_field_accel[NGLL3];
 
   int active = 0;
 
@@ -479,34 +479,36 @@ __global__ void compute_kernels_acoustic_kernel(int* ispec_is_acoustic,
   __syncthreads();
 
   if (active ){
-    realw accel_elm[3];
-    realw b_displ_elm[3];
+    field accel_loc[3];
+    field b_displ_loc[3];
     realw rhol,kappal;
 
     // gets material parameter
     rhol = rhostore[ijk_ispec_padded];
 
     // displacement vector from backward field
-    compute_gradient_kernel(ijk,ispec,scalar_field_displ,b_displ_elm,
+    compute_gradient_kernel(ijk,ispec,scalar_field_displ,b_displ_loc,
                             d_hprime_xx,
                             d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,
                             rhol,gravity);
 
     // acceleration vector
-    compute_gradient_kernel(ijk,ispec,scalar_field_accel,accel_elm,
+    compute_gradient_kernel(ijk,ispec,scalar_field_accel,accel_loc,
                             d_hprime_xx,
                             d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,
                             rhol,gravity);
 
+    // the sum function is here to enable summing over wavefields when NB_RUNS_ACOUSTIC_GPU > 1
+
     // density kernel
-    rho_ac_kl[ijk_ispec] += deltat * rhol * (accel_elm[0]*b_displ_elm[0] +
-                                             accel_elm[1]*b_displ_elm[1] +
-                                             accel_elm[2]*b_displ_elm[2]);
+    rho_ac_kl[ijk_ispec] += deltat * rhol * sum(accel_loc[0]*b_displ_loc[0] +
+                                                accel_loc[1]*b_displ_loc[1] +
+                                                accel_loc[2]*b_displ_loc[2]);
 
     // bulk modulus kernel
     kappal = kappastore[ijk_ispec];
-    kappa_ac_kl[ijk_ispec] += deltat / kappal * potential_acoustic[iglob]
-                                              * b_potential_dot_dot_acoustic[iglob];
+    kappa_ac_kl[ijk_ispec] += deltat / kappal * sum(potential_acoustic[iglob]
+                                              * b_potential_dot_dot_acoustic[iglob]);
   } // active
 }
 
@@ -618,18 +620,18 @@ __global__ void compute_kernels_hess_el_cudakernel(int* ispec_is_elastic,
 
 __global__ void compute_kernels_hess_ac_cudakernel(int* ispec_is_acoustic,
                                                    int* d_ibool,
-                                                   realw* potential_dot_dot_acoustic,
-                                                   realw* b_potential_dot_dot_acoustic,
-               realw* b_potential_dot_acoustic,
+                                                   field* potential_dot_dot_acoustic,
+                                                   field* b_potential_dot_dot_acoustic,
+                                                   field* b_potential_dot_acoustic,
                                                    realw* rhostore,
-               realw* kappastore,
+                                                   realw* kappastore,
                                                    realw* d_hprime_xx,
                                                    realw* d_xix,realw* d_xiy,realw* d_xiz,
                                                    realw* d_etax,realw* d_etay,realw* d_etaz,
                                                    realw* d_gammax,realw* d_gammay,realw* d_gammaz,
                                                    realw* hess_kl,
-               realw* hess_rho_ac_kl,
-               realw* hess_kappa_ac_kl,
+                                                   realw* hess_rho_ac_kl,
+                                                   realw* hess_kappa_ac_kl,
                                                    realw deltat,
                                                    int NSPEC_AB,
                                                    int gravity) {
@@ -641,9 +643,9 @@ __global__ void compute_kernels_hess_ac_cudakernel(int* ispec_is_acoustic,
   int iglob;
 
   // shared memory between all threads within this block
-  __shared__ realw scalar_field_accel[NGLL3];
-  __shared__ realw scalar_field_b_accel[NGLL3];
-  __shared__ realw scalar_field_b_veloc[NGLL3];
+  __shared__ field scalar_field_accel[NGLL3];
+  __shared__ field scalar_field_b_accel[NGLL3];
+  __shared__ field scalar_field_b_veloc[NGLL3];
 
   int active = 0;
 
@@ -668,9 +670,9 @@ __global__ void compute_kernels_hess_ac_cudakernel(int* ispec_is_acoustic,
   __syncthreads();
 
   if (active ){
-    realw accel_elm[3];
-    realw b_accel_elm[3];
-    realw b_veloc_elm[3];
+    field accel_loc[3];
+    field b_accel_loc[3];
+    field b_veloc_loc[3];
     realw rhol,  kappal;
 
     // gets material parameter
@@ -678,38 +680,39 @@ __global__ void compute_kernels_hess_ac_cudakernel(int* ispec_is_acoustic,
 
     // acceleration vector
     compute_gradient_kernel(ijk,ispec,
-                            scalar_field_accel,accel_elm,
+                            scalar_field_accel,accel_loc,
                             d_hprime_xx,
                             d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,
                             rhol,gravity);
 
     // acceleration vector from backward field
     compute_gradient_kernel(ijk,ispec,
-                            scalar_field_b_accel,b_accel_elm,
+                            scalar_field_b_accel,b_accel_loc,
                             d_hprime_xx,
                             d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,
                             rhol,gravity);
 
     // velocity vector from backward field
     compute_gradient_kernel(ijk,ispec,
-                            scalar_field_b_veloc,b_veloc_elm,
+                            scalar_field_b_veloc,b_veloc_loc,
                             d_hprime_xx,
                             d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,
                             rhol,gravity);
 
+    //sun function is here to sum over wavefields, in case of NB_RUNS_ACOUSTIC_GPU>1
+
     // approximates hessian
-    hess_kl[ijk + NGLL3*ispec] += deltat * (accel_elm[0]*b_accel_elm[0] +
-                                            accel_elm[1]*b_accel_elm[1] +
-                                            accel_elm[2]*b_accel_elm[2]);
-    //
+    hess_kl[ijk + NGLL3*ispec] += deltat * sum(accel_loc[0]*b_accel_loc[0] +
+                                               accel_loc[1]*b_accel_loc[1] +
+                                               accel_loc[2]*b_accel_loc[2]);
 
 
-    hess_rho_ac_kl[ijk_ispec] += deltat * rhol * (b_veloc_elm[0]*b_veloc_elm[0] +
-              b_veloc_elm[1]*b_veloc_elm[1] +
-              b_veloc_elm[2]*b_veloc_elm[2]);
+    hess_rho_ac_kl[ijk_ispec] += deltat * rhol * sum(b_veloc_loc[0]*b_veloc_loc[0] +
+              b_veloc_loc[1]*b_veloc_loc[1] +
+              b_veloc_loc[2]*b_veloc_loc[2]);
     kappal = kappastore[ijk_ispec];
-    hess_kappa_ac_kl[ijk_ispec] += deltat / kappal * b_potential_dot_acoustic[iglob]
-                                                   * b_potential_dot_acoustic[iglob];
+    hess_kappa_ac_kl[ijk_ispec] += deltat / kappal * sum(  b_potential_dot_acoustic[iglob]
+                                                         * b_potential_dot_acoustic[iglob]);
      //
 
   } // active

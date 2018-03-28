@@ -147,9 +147,9 @@ void FC_FUNC_(update_displacement_cuda,
 // KERNEL 1
 /* ----------------------------------------------------------------------------------------------- */
 
-__global__ void UpdatePotential_kernel(realw* potential_acoustic,
-                                       realw* potential_dot_acoustic,
-                                       realw* potential_dot_dot_acoustic,
+__global__ void UpdatePotential_kernel(field* potential_acoustic,
+                                       field* potential_dot_acoustic,
+                                       field* potential_dot_dot_acoustic,
                                        int size,
                                        realw deltat,
                                        realw deltatsqover2,
@@ -167,7 +167,7 @@ __global__ void UpdatePotential_kernel(realw* potential_acoustic,
     potential_dot_acoustic[id] = potential_dot_acoustic[id]
                                 + deltatover2*potential_dot_dot_acoustic[id];
 
-    potential_dot_dot_acoustic[id] = 0.0f;
+    potential_dot_dot_acoustic[id] = Make_field(0.f);
   }
 
 // -----------------
@@ -483,10 +483,10 @@ void FC_FUNC_(kernel_3_b_cuda,
 /* ----------------------------------------------------------------------------------------------- */
 
 
-__global__ void kernel_3_acoustic_cuda_device(realw* potential_dot_acoustic,
-                                                realw* potential_dot_dot_acoustic,
-                                                realw* b_potential_dot_acoustic,
-                                                realw* b_potential_dot_dot_acoustic,
+__global__ void kernel_3_acoustic_cuda_device(field* potential_dot_acoustic,
+                                                field* potential_dot_dot_acoustic,
+                                                field* b_potential_dot_acoustic,
+                                                field* b_potential_dot_dot_acoustic,
                                                 int simulation_type,
                                                 int size,
                                                 realw deltatover2,
@@ -495,7 +495,7 @@ __global__ void kernel_3_acoustic_cuda_device(realw* potential_dot_acoustic,
 
   int id = threadIdx.x + blockIdx.x*blockDim.x + blockIdx.y*gridDim.x*blockDim.x;
   realw rmass;
-  realw p_dot_dot;
+  field p_dot_dot;
   // because of block and grid sizing problems, there is a small
   // amount of buffer at the end of the calculation
   if (id < size) {
@@ -503,7 +503,7 @@ __global__ void kernel_3_acoustic_cuda_device(realw* potential_dot_acoustic,
     // multiplies pressure with the inverse of the mass matrix
     p_dot_dot = rmass*potential_dot_dot_acoustic[id];
     potential_dot_dot_acoustic[id] = p_dot_dot;
-    potential_dot_acoustic[id] += deltatover2*p_dot_dot;
+    potential_dot_acoustic[id] = potential_dot_acoustic[id]+ deltatover2*p_dot_dot;
     if (simulation_type==3) {
       p_dot_dot = rmass*b_potential_dot_dot_acoustic[id];
       b_potential_dot_dot_acoustic[id] = p_dot_dot;

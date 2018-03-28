@@ -315,7 +315,7 @@ void FC_FUNC_(prepare_constants_device,
     copy_todevice_realw((void**)&mp->d_sourcearrays,h_sourcearrays,(*NSOURCES)*NDIM*NGLL3);
 
     // buffer for source time function values
-    print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_stf_pre_compute,(*NSOURCES)*sizeof(double)),1303);
+    print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_stf_pre_compute,(*NSOURCES)*sizeof(field)),1303);
   }
   copy_todevice_int((void**)&mp->d_islice_selected_source,h_islice_selected_source,(*NSOURCES));
   copy_todevice_int((void**)&mp->d_ispec_selected_source,h_ispec_selected_source,(*NSOURCES));
@@ -335,12 +335,12 @@ void FC_FUNC_(prepare_constants_device,
     copy_todevice_realw((void**)&mp->d_hetar,h_etar,NGLLY*mp->nrec_local);
     copy_todevice_realw((void**)&mp->d_hgammar,h_gammar,NGLLZ*mp->nrec_local);
 
-    float* h_nu;
-    h_nu = (float*)malloc(NDIM * NDIM * mp->nrec_local * sizeof(float));
+    realw* h_nu;
+    h_nu = (realw*)malloc(NDIM * NDIM * mp->nrec_local * sizeof(realw));
     int irec_loc = 0;
     for (int i=0;i < (*nrec);i++){
       if (mp->myrank == islice_selected_rec[i]){
-         for (int j = 0; j < 9; j++) h_nu[j + NDIM * NDIM * irec_loc] = (float)nu[j + NDIM * NDIM * i];
+         for (int j = 0; j < 9; j++) h_nu[j + NDIM * NDIM * irec_loc] = (realw)nu[j + NDIM * NDIM * i];
          irec_loc = irec_loc + 1;
       }
     }
@@ -348,16 +348,16 @@ void FC_FUNC_(prepare_constants_device,
     free(h_nu);
 
     // seismograms
-    int size = NDIM * (*NTSTEP_BETWEEN_OUTPUT_SEISMOS) * (*nrec_local);
+    int size =  (*NTSTEP_BETWEEN_OUTPUT_SEISMOS) * (*nrec_local);
 
     if (mp->save_seismograms_d)
-      print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_d,size * sizeof(realw)),1801);
+      print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_d,NDIM*size * sizeof(realw)),1801);
     if (mp->save_seismograms_v)
-      print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_v,size * sizeof(realw)),1802);
+      print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_v,NDIM*size * sizeof(realw)),1802);
     if (mp->save_seismograms_a)
-      print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_a,size * sizeof(realw)),1803);
+      print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_a,NDIM*size * sizeof(realw)),1803);
     if (mp->save_seismograms_p)
-      print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_p,size * sizeof(realw)),1804);
+      print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_seismograms_p,size * sizeof(field)),1804);
 
     int *ispec_selected_rec_loc;
     ispec_selected_rec_loc = (int*)malloc(mp->nrec_local * sizeof(int));
@@ -432,13 +432,13 @@ void FC_FUNC_(prepare_fields_acoustic_device,
 
   // allocates arrays on device (GPU)
   int size = mp->NGLOB_AB;
-  print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_potential_acoustic),sizeof(realw)*size),2001);
-  print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_potential_dot_acoustic),sizeof(realw)*size),2002);
-  print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_potential_dot_dot_acoustic),sizeof(realw)*size),2003);
+  print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_potential_acoustic),sizeof(field)*size),2001);
+  print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_potential_dot_acoustic),sizeof(field)*size),2002);
+  print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_potential_dot_dot_acoustic),sizeof(field)*size),2003);
   // initializes values to zero
-  //print_CUDA_error_if_any(cudaMemset(mp->d_potential_acoustic,0,sizeof(realw)*size),2007);
-  //print_CUDA_error_if_any(cudaMemset(mp->d_potential_dot_acoustic,0,sizeof(realw)*size),2007);
-  //print_CUDA_error_if_any(cudaMemset(mp->d_potential_dot_dot_acoustic,0,sizeof(realw)*size),2007);
+  //print_CUDA_error_if_any(cudaMemset(mp->d_potential_acoustic,0,sizeof(field)*size),2007);
+  //print_CUDA_error_if_any(cudaMemset(mp->d_potential_dot_acoustic,0,sizeof(field)*size),2007);
+  //print_CUDA_error_if_any(cudaMemset(mp->d_potential_dot_dot_acoustic,0,sizeof(field)*size),2007);
 
   #ifdef USE_TEXTURES_FIELDS
   {
@@ -462,7 +462,7 @@ void FC_FUNC_(prepare_fields_acoustic_device,
   // mpi buffer
   mp->size_mpi_buffer_potential = (mp->num_interfaces_ext_mesh) * (mp->max_nibool_interfaces_ext_mesh);
   if (mp->size_mpi_buffer_potential > 0){
-    print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_send_potential_dot_dot_buffer),mp->size_mpi_buffer_potential *sizeof(realw)),2004);
+    print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_send_potential_dot_dot_buffer),mp->size_mpi_buffer_potential *sizeof(field)),2004);
   }
 
   // mass matrix
@@ -518,15 +518,6 @@ void FC_FUNC_(prepare_fields_acoustic_device,
     }
   }
 
-  // for seismograms
-  if (mp->nrec_local > 0){
-    print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_station_seismo_potential),
-                                       mp->nrec_local*NGLL3*sizeof(realw)),2107);
-
-    mp->h_station_seismo_potential = (realw*) malloc( mp->nrec_local*NGLL3*sizeof(realw) );
-    if (mp->h_station_seismo_potential == NULL) exit_on_error("error allocating h_station_seismo_potential");
-  }
-
   // coupling with elastic parts
   if (*ELASTIC_SIMULATION && *num_coupling_ac_el_faces > 0){
     copy_todevice_int((void**)&mp->d_coupling_ac_el_ispec,coupling_ac_el_ispec,(*num_coupling_ac_el_faces));
@@ -566,9 +557,9 @@ void FC_FUNC_(prepare_fields_acoustic_adj_dev,
 
   // allocates backward/reconstructed arrays on device (GPU)
   int size = mp->NGLOB_AB;
-  print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_b_potential_acoustic),sizeof(realw)*size),3014);
-  print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_b_potential_dot_acoustic),sizeof(realw)*size),3015);
-  print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_b_potential_dot_dot_acoustic),sizeof(realw)*size),3016);
+  print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_b_potential_acoustic),sizeof(field)*size),3014);
+  print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_b_potential_dot_acoustic),sizeof(field)*size),3015);
+  print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_b_potential_dot_dot_acoustic),sizeof(field)*size),3016);
   // initializes values to zero
   //print_CUDA_error_if_any(cudaMemset(mp->d_b_potential_acoustic,0,sizeof(realw)*size),3007);
   //print_CUDA_error_if_any(cudaMemset(mp->d_b_potential_dot_acoustic,0,sizeof(realw)*size),3007);
@@ -616,7 +607,7 @@ void FC_FUNC_(prepare_fields_acoustic_adj_dev,
 
   // mpi buffer
   if (mp->size_mpi_buffer_potential > 0){
-    print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_b_send_potential_dot_dot_buffer),mp->size_mpi_buffer_potential*sizeof(realw)),3014);
+    print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_b_send_potential_dot_dot_buffer),mp->size_mpi_buffer_potential*sizeof(field)),3014);
   }
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
@@ -754,20 +745,6 @@ void FC_FUNC_(prepare_fields_elastic_device,
   mp->num_phase_ispec_elastic = *num_phase_ispec_elastic;
 
   copy_todevice_int((void**)&mp->d_phase_ispec_inner_elastic,phase_ispec_inner_elastic,2*mp->num_phase_ispec_elastic);
-
-  // debug
-  //synchronize_mpi();
-
-  // for seismograms
-  if (mp->nrec_local > 0){
-    // debug
-    //printf("prepare_fields_elastic_device: rank %d - seismogram setup\n",mp->myrank);
-
-    print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_station_seismo_field),3*NGLL3*(mp->nrec_local)*sizeof(realw)),4015);
-
-    mp->h_station_seismo_field = (realw*) malloc( 3*NGLL3*(mp->nrec_local)*sizeof(realw) );
-    if (mp->h_station_seismo_field == NULL) exit_on_error("h_station_seismo_field not allocated \n");
-  }
 
   // debug
   //synchronize_mpi();
@@ -1212,7 +1189,7 @@ void FC_FUNC_(prepare_sim2_or_3_const_device,
   mp->nadj_rec_local = *nadj_rec_local;
   if (mp->nadj_rec_local > 0){
     print_CUDA_error_if_any(cudaMalloc((void**)&mp->d_source_adjoint,
-                                       (mp->nadj_rec_local)* NDIM * sizeof(realw) * (*NTSTEP_BETWEEN_READ_ADJSRC)),6005);
+                                       (mp->nadj_rec_local)* NDIM * sizeof(field) * (*NTSTEP_BETWEEN_READ_ADJSRC)),6005);
   }
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
@@ -1513,12 +1490,6 @@ TRACE("prepare_cleanup_device");
       }
     }
 
-
-    if (mp->nrec_local > 0){
-      cudaFree(mp->d_station_seismo_potential);
-      free(mp->h_station_seismo_potential);
-    }
-
   } // ACOUSTIC_SIMULATION
 
   // ELASTIC arrays
@@ -1536,11 +1507,6 @@ TRACE("prepare_cleanup_device");
 
     cudaFree(mp->d_phase_ispec_inner_elastic);
     cudaFree(mp->d_ispec_is_elastic);
-
-    if (mp->nrec_local > 0){
-      cudaFree(mp->d_station_seismo_field);
-      free(mp->h_station_seismo_field);
-    }
 
     if (*ABSORBING_CONDITIONS && mp->d_num_abs_boundary_faces > 0){
       cudaFree(mp->d_rho_vp);

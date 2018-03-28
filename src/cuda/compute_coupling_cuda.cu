@@ -36,7 +36,7 @@
 /* ----------------------------------------------------------------------------------------------- */
 
 __global__ void compute_coupling_acoustic_el_kernel(realw* displ,
-                                                    realw* potential_dot_dot_acoustic,
+                                                    field* potential_dot_dot_acoustic,
                                                     int num_coupling_ac_el_faces,
                                                     int* coupling_ac_el_ispec,
                                                     int* coupling_ac_el_ijk,
@@ -162,7 +162,7 @@ void FC_FUNC_(compute_coupling_ac_el_cuda,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-__global__ void compute_coupling_elastic_ac_kernel(realw* potential_dot_dot_acoustic,
+__global__ void compute_coupling_elastic_ac_kernel(field* potential_dot_dot_acoustic,
                                                     realw* accel,
                                                     int num_coupling_ac_el_faces,
                                                     int* coupling_ac_el_ispec,
@@ -179,7 +179,7 @@ __global__ void compute_coupling_elastic_ac_kernel(realw* potential_dot_dot_acou
   int iface = blockIdx.x + gridDim.x*blockIdx.y;
 
   int i,j,k,iglob,ispec;
-  realw pressure;
+  field pressure;
   realw nx,ny,nz;
   realw jacobianw;
   realw rhol;

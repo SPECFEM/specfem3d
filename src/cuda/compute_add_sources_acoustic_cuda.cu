@@ -35,10 +35,10 @@
 
 /* ----------------------------------------------------------------------------------------------- */
 
-__global__ void compute_add_sources_acoustic_kernel(realw* potential_dot_dot_acoustic,
+__global__ void compute_add_sources_acoustic_kernel(field* potential_dot_dot_acoustic,
                                                     int* d_ibool,
                                                     realw* sourcearrays,
-                                                    double* stf_pre_compute,
+                                                    field* stf_pre_compute,
                                                     int myrank,
                                                     int* islice_selected_source,
                                                     int* ispec_selected_source,
@@ -52,7 +52,8 @@ __global__ void compute_add_sources_acoustic_kernel(realw* potential_dot_dot_aco
   int isource  = blockIdx.x + gridDim.x*blockIdx.y; // bx
 
   int ispec,iglob;
-  realw stf,kappal;
+  field stf;
+  realw kappal;
 
   if (isource < NSOURCES){
 
@@ -64,7 +65,7 @@ __global__ void compute_add_sources_acoustic_kernel(realw* potential_dot_dot_aco
 
         iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)] - 1;
 
-        stf = (realw) stf_pre_compute[isource];
+        stf = stf_pre_compute[isource];
         kappal = kappastore[INDEX4(NGLLX,NGLLX,NGLLX,i,j,k,ispec)];
 
         atomicAdd(&potential_dot_dot_acoustic[iglob],
@@ -72,20 +73,40 @@ __global__ void compute_add_sources_acoustic_kernel(realw* potential_dot_dot_aco
 
         // debug: without atomic operation
         //      potential_dot_dot_acoustic[iglob] +=
-        //                -sourcearrays[INDEX5(NSOURCES, 3, NGLLX,NGLLX,isource, 0, i,j,k)]*stf/kappal;
+        //              -sourcearrays[INDEX5(NSOURCES, 3, NGLLX,NGLLX,isource, 0, i,j,k)]*stf/kappal;
       }
     }
   }
 }
 
+// Converts source time function to the correct GPU precision, and adapts format for NB_RUNS_ON_ACOUSTIC_GPU option 
+void get_stf_for_gpu(field* stf_pre_compute, double* h_stf_pre_compute, int * run_number_of_the_source, int NSOURCES) {
 
+  TRACE("get_stf_for_gpu");
+  realw realw_to_field[NB_RUNS_ACOUSTIC_GPU];
+  //Conversion to GPU precision
+  //Converts source time function to the field format. The stf value is saved only into its corresponding run. For other runs, a zero will be added 
+
+
+  for (int i_source=0;i_source < NSOURCES;i_source++){
+    for (int i_run=0;i_run < NB_RUNS_ACOUSTIC_GPU;i_run++)
+      if (run_number_of_the_source[i_source] == i_run){
+        realw_to_field[i_run]= (realw)h_stf_pre_compute[i_source];
+      }
+      else{
+        realw_to_field[i_run] = 0.0f;
+      }
+      //function Make_field is overloaded to convert array of realw into field structure
+      stf_pre_compute[i_source] = Make_field(realw_to_field);
+  }
+}
 /* ----------------------------------------------------------------------------------------------- */
 
 extern "C"
 void FC_FUNC_(compute_add_sources_ac_cuda,
               COMPUTE_ADD_SOURCES_AC_CUDA)(long* Mesh_pointer,
                                            int* NSOURCESf,
-                                           double* h_stf_pre_compute) {
+                                           double* h_stf_pre_compute,int* run_number_of_the_source) {
 
   TRACE("compute_add_sources_ac_cuda");
 
@@ -96,9 +117,14 @@ void FC_FUNC_(compute_add_sources_ac_cuda,
 
   int NSOURCES = *NSOURCESf;
 
+
+  field* stf_pre_compute = (field*)malloc(NSOURCES * sizeof(field));
+  get_stf_for_gpu(stf_pre_compute,h_stf_pre_compute,run_number_of_the_source,NSOURCES);
+
   // copies pre-computed source time factors onto GPU
-  print_CUDA_error_if_any(cudaMemcpy(mp->d_stf_pre_compute,h_stf_pre_compute,
-                                     NSOURCES*sizeof(double),cudaMemcpyHostToDevice),1877);
+  print_CUDA_error_if_any(cudaMemcpy(mp->d_stf_pre_compute,stf_pre_compute,
+                                     NSOURCES*sizeof(field),cudaMemcpyHostToDevice),1877);
+  free(stf_pre_compute);
 
   int num_blocks_x, num_blocks_y;
   get_blocks_xy(NSOURCES,&num_blocks_x,&num_blocks_y);
@@ -129,7 +155,7 @@ extern "C"
 void FC_FUNC_(compute_add_sources_ac_s3_cuda,
               COMPUTE_ADD_SOURCES_AC_s3_CUDA)(long* Mesh_pointer,
                                               int* NSOURCESf,
-                                              double* h_stf_pre_compute) {
+                                              double* h_stf_pre_compute,int* run_number_of_the_source) {
 
   TRACE("compute_add_sources_ac_s3_cuda");
 
@@ -139,9 +165,15 @@ void FC_FUNC_(compute_add_sources_ac_s3_cuda,
   if (mp->nsources_local == 0) return;
 
   int NSOURCES = *NSOURCESf;
+
+  field* stf_pre_compute = (field*)malloc(NSOURCES * sizeof(field));
+  get_stf_for_gpu(stf_pre_compute,h_stf_pre_compute,run_number_of_the_source,NSOURCES);
+
   // copies source time factors onto GPU
-  print_CUDA_error_if_any(cudaMemcpy(mp->d_stf_pre_compute,h_stf_pre_compute,
-                                     NSOURCES*sizeof(double),cudaMemcpyHostToDevice),55);
+  print_CUDA_error_if_any(cudaMemcpy(mp->d_stf_pre_compute,stf_pre_compute,
+                                     NSOURCES*sizeof(field),cudaMemcpyHostToDevice),55);
+
+  free(stf_pre_compute);
 
   int num_blocks_x, num_blocks_y;
   get_blocks_xy(NSOURCES,&num_blocks_x,&num_blocks_y);
@@ -172,11 +204,11 @@ void FC_FUNC_(compute_add_sources_ac_s3_cuda,
 
 /* ----------------------------------------------------------------------------------------------- */
 
-__global__ void add_sources_ac_SIM_TYPE_2_OR_3_kernel(realw* potential_dot_dot_acoustic,
+__global__ void add_sources_ac_SIM_TYPE_2_OR_3_kernel(field* potential_dot_dot_acoustic,
                                                       int nrec,
                                                       int it,
                                                       int NSTEP_BETWEEN_ADJSRC,
-                                                      realw* source_adjoint,
+                                                      field* source_adjoint,
                                                       realw* xir_store,
                                                       realw* etar_store,
                                                       realw* gammar_store,
@@ -202,7 +234,7 @@ __global__ void add_sources_ac_SIM_TYPE_2_OR_3_kernel(realw* potential_dot_dot_a
       realw xir    = xir_store[INDEX2(nadj_rec_local,irec_local,i)];
       realw etar   = etar_store[INDEX2(nadj_rec_local,irec_local,j)];
       realw gammar = gammar_store[INDEX2(nadj_rec_local,irec_local,k)];
-      realw source_adj = source_adjoint[INDEX3(NDIM,nadj_rec_local,0,irec_local,it)];
+      field source_adj = source_adjoint[INDEX3(NDIM,nadj_rec_local,0,irec_local,it)];
       //realw kappal = kappastore[INDEX4(NGLLX,NGLLY,NGLLZ,i,j,k,ispec)];
 
       //potential_dot_dot_acoustic[iglob] += adj_sourcearrays[INDEX6(nadj_rec_local,NTSTEP_BETWEEN_ADJSRC,3,5,5,
@@ -219,7 +251,7 @@ __global__ void add_sources_ac_SIM_TYPE_2_OR_3_kernel(realw* potential_dot_dot_a
       //realw stf = - source_adj * xir * etar * gammar / kappal;
 
       // VM VM : change the adjoint source to be consistent with CPU code
-      realw stf = source_adj * xir * etar * gammar;
+      field stf = source_adj * xir * etar * gammar;
       atomicAdd(&potential_dot_dot_acoustic[iglob],stf);
 
                 //+adj_sourcearrays[INDEX6(nadj_rec_local,NTSTEP_BETWEEN_ADJSRC,3,5,5,
@@ -247,7 +279,7 @@ void FC_FUNC_(add_sources_ac_sim_2_or_3_cuda,
   Mesh* mp = (Mesh*)(*Mesh_pointer); //get mesh pointer out of fortran integer container
 
   // checks
-  if (*nadj_rec_local != mp->nadj_rec_local) exit_on_cuda_error("add_sources_ac_sim_type_2_or_3: nadj_rec_local not equal\n");
+  if (*nadj_rec_local/NB_RUNS_ACOUSTIC_GPU != mp->nadj_rec_local) exit_on_cuda_error("add_sources_ac_sim_type_2_or_3: nadj_rec_local not equal\n");
 
   int num_blocks_x, num_blocks_y;
   get_blocks_xy(mp->nadj_rec_local,&num_blocks_x,&num_blocks_y);
@@ -257,7 +289,7 @@ void FC_FUNC_(add_sources_ac_sim_2_or_3_cuda,
   int it_index = *NTSTEP_BETWEEN_READ_ADJSRC - (*it-1) % *NTSTEP_BETWEEN_READ_ADJSRC - 1 ;
   // copies extracted array values onto GPU
   if ( (*it-1) % *NTSTEP_BETWEEN_READ_ADJSRC==0) print_CUDA_error_if_any(cudaMemcpy(mp->d_source_adjoint,h_source_adjoint,
-                                                                mp->nadj_rec_local*3*sizeof(realw)*(*NTSTEP_BETWEEN_READ_ADJSRC),cudaMemcpyHostToDevice),99099);
+                                                                mp->nadj_rec_local*3*sizeof(field)*(*NTSTEP_BETWEEN_READ_ADJSRC),cudaMemcpyHostToDevice),99099);
 
   // launches cuda kernel for acoustic adjoint sources
   add_sources_ac_SIM_TYPE_2_OR_3_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_dot_dot_acoustic,

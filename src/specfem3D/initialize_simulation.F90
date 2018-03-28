@@ -342,6 +342,19 @@
     close(IOUT,status='delete')
   endif
 
+  ! safety check
+  if (NB_RUNS_ACOUSTIC_GPU > 1) then
+
+   if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with NUMBER_OF_SIMULTANEOUS_RUNS > 1 yet'
+   if (SIMULATION_TYPE /= 1) stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with SIMULATION_TYPE/=1 yet'
+   if (STACEY_ABSORBING_CONDITIONS) stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with STACEY_ABSORBING_CONDITIONS yet'
+   if (.not. SAVE_SEISMOGRAMS_PRESSURE ) stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with elastic wavefield seismograms yet'
+   if (.not. GPU_MODE ) stop 'NB_RUNS_ACOUSTIC_GPU > 1 only applies with GPU_MODE'
+   if (INVERSE_FWI_FULL_PROBLEM) stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with INVERSE_FWI_FULL_PROBLEM yet'
+   if (myrank == 1) stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with MPI mode yet'
+
+  endif
+
   end subroutine initialize_simulation_check
 
 !

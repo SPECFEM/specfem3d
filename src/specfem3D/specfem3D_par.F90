@@ -181,6 +181,9 @@ module specfem_par
   double precision, dimension(:), allocatable :: comp_dir_vect_source_N
   double precision, dimension(:), allocatable :: comp_dir_vect_source_Z_UP
 
+! array for NB_RUN_ACOUSTIC_GPU > 1
+  integer, dimension(:), allocatable :: run_number_of_the_source
+
 ! arrays for elemental computations in compute_forces()
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: chi_elem
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: temp1,temp2,temp3,temp4

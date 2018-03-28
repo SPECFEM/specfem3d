@@ -540,6 +540,7 @@ subroutine compute_forces_acoustic_GPU_calling()
       !       to avoid calling the same routine twice and to check if the source element is an inner/outer element
       !
       call compute_add_sources_acoustic_GPU()
+
     endif ! iphase
 
     ! assemble all the contributions between slices using MPI

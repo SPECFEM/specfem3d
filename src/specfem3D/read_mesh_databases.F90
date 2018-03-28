@@ -118,11 +118,12 @@
   call any_all_l( ANY(ispec_is_acoustic), ACOUSTIC_SIMULATION )
   if (ACOUSTIC_SIMULATION) then
     ! potentials
-    allocate(potential_acoustic(NGLOB_AB),stat=ier)
+    ! NB_RUNS_ACOUSTIC_GPU is set to 1 by default in constants.h
+    allocate(potential_acoustic(NGLOB_AB*NB_RUNS_ACOUSTIC_GPU),stat=ier)
     if (ier /= 0) stop 'Error allocating array potential_acoustic'
-    allocate(potential_dot_acoustic(NGLOB_AB),stat=ier)
+    allocate(potential_dot_acoustic(NGLOB_AB*NB_RUNS_ACOUSTIC_GPU),stat=ier)
     if (ier /= 0) stop 'Error allocating array potential_dot_acoustic'
-    allocate(potential_dot_dot_acoustic(NGLOB_AB),stat=ier)
+    allocate(potential_dot_dot_acoustic(NGLOB_AB*NB_RUNS_ACOUSTIC_GPU),stat=ier)
     if (ier /= 0) stop 'Error allocating array potential_dot_dot_acoustic'
     if (SIMULATION_TYPE /= 1) then
       allocate(potential_acoustic_adj_coupling(NGLOB_AB),stat=ier)
@@ -154,6 +155,9 @@
   ! elastic simulation
   call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
   if (ELASTIC_SIMULATION) then
+
+    if (NB_RUNS_ACOUSTIC_GPU > 1) stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with elastic or coupled simulations' 
+
     ! displacement,velocity,acceleration
     allocate(displ(NDIM,NGLOB_AB),stat=ier)
     if (ier /= 0) stop 'Error allocating array displ'
@@ -1126,9 +1130,10 @@
   if (ACOUSTIC_SIMULATION .and. SIMULATION_TYPE == 3) then
 
     ! backward potentials
-    allocate(b_potential_acoustic(NGLOB_ADJOINT), &
-             b_potential_dot_acoustic(NGLOB_ADJOINT), &
-             b_potential_dot_dot_acoustic(NGLOB_ADJOINT),stat=ier)
+    ! NB_RUNS_ACOUSTIC_GPU is set to 1 by default in constants.h 
+    allocate(b_potential_acoustic(NGLOB_ADJOINT*NB_RUNS_ACOUSTIC_GPU), &
+             b_potential_dot_acoustic(NGLOB_ADJOINT*NB_RUNS_ACOUSTIC_GPU), &
+             b_potential_dot_dot_acoustic(NGLOB_ADJOINT*NB_RUNS_ACOUSTIC_GPU),stat=ier)
     if (ier /= 0) stop 'Error allocating array b_potential_acoustic etc.'
 
     ! kernels

@@ -343,6 +343,11 @@
 ! show volumetric field
   logical, parameter :: VTK_SHOW_VOLUME       = .true.
 
+!!-----------------------------------------------------------
+!! Option to run several events within the same MPI slice when using GPU acoustic simulations
+!!-----------------------------------------------------------
+
+  integer, parameter :: NB_RUNS_ACOUSTIC_GPU = 1
 
 !------------------------------------------------------
 !----------- do not modify anything below -------------

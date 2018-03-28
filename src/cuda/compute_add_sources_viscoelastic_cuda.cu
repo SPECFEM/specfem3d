@@ -38,7 +38,7 @@
 __global__ void compute_add_sources_kernel(realw* accel,
                                            int* d_ibool,
                                            realw* sourcearrays,
-                                           double* stf_pre_compute,
+                                           field* stf_pre_compute,
                                            int myrank,
                                            int* islice_selected_source,
                                            int* ispec_selected_source,
@@ -51,7 +51,7 @@ __global__ void compute_add_sources_kernel(realw* accel,
   int isource  = blockIdx.x + gridDim.x*blockIdx.y; // bx
 
   int ispec,iglob;
-  realw stf;
+  field stf;
 
   if (isource < NSOURCES) { // when NSOURCES > 65535, but mod(nspec_top,2) > 0, we end up with an extra block.
 
@@ -61,7 +61,7 @@ __global__ void compute_add_sources_kernel(realw* accel,
 
       if (ispec_is_elastic[ispec]) {
 
-        stf = (realw) stf_pre_compute[isource];
+        stf = stf_pre_compute[isource];
         iglob = d_ibool[INDEX4_PADDED(NGLLX,NGLLX,NGLLX,i,j,k,ispec)]-1;
 
         atomicAdd(&accel[iglob*3],sourcearrays[INDEX5(NSOURCES,NDIM,NGLLX,NGLLX,isource, 0,i,j,k)]*stf);
@@ -91,8 +91,14 @@ void FC_FUNC_(compute_add_sources_el_cuda,
 
   int NSOURCES = *h_NSOURCES;
 
-  print_CUDA_error_if_any(cudaMemcpy(mp->d_stf_pre_compute,h_stf_pre_compute,
-                                     NSOURCES*sizeof(double),cudaMemcpyHostToDevice),18);
+  // convert to GPU precision
+  realw* stf_pre_compute;
+  stf_pre_compute = (realw*)malloc(NSOURCES * sizeof(realw));
+  for (int i_source=0;i_source < NSOURCES;i_source++) stf_pre_compute[i_source] = (realw)h_stf_pre_compute[i_source];
+
+  print_CUDA_error_if_any(cudaMemcpy(mp->d_stf_pre_compute,stf_pre_compute,
+                                     NSOURCES*sizeof(realw),cudaMemcpyHostToDevice),18);
+  free(stf_pre_compute);
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   exit_on_cuda_error("compute_add_sources_el_cuda copy");
@@ -132,8 +138,14 @@ void FC_FUNC_(compute_add_sources_el_s3_cuda,
 
   int NSOURCES = *h_NSOURCES;
 
-  print_CUDA_error_if_any(cudaMemcpy(mp->d_stf_pre_compute,h_stf_pre_compute,
-                                     NSOURCES*sizeof(double),cudaMemcpyHostToDevice),18);
+  // convert to GPU precision
+  realw* stf_pre_compute;
+  stf_pre_compute = (realw*)malloc(NSOURCES * sizeof(realw));
+  for (int i_source=0;i_source < NSOURCES;i_source++) stf_pre_compute[i_source] = (realw)h_stf_pre_compute[i_source];
+
+  print_CUDA_error_if_any(cudaMemcpy(mp->d_stf_pre_compute,stf_pre_compute,
+                                     NSOURCES*sizeof(realw),cudaMemcpyHostToDevice),18);
+  free(stf_pre_compute);
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   exit_on_cuda_error("compute_add_sources_el_s3_cuda copy");
@@ -227,7 +239,7 @@ __global__ void add_sources_el_SIM_TYPE_2_OR_3_kernel(realw* accel,
                                                       int nrec,
                                                       int it,
                                                       int NSTEP_BETWEEN_ADJSRC,
-                                                      realw* source_adjoint,
+                                                      field* source_adjoint,
                                                       realw* xir_store,
                                                       realw* etar_store,
                                                       realw* gammar_store,

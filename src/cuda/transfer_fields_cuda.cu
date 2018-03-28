@@ -336,9 +336,9 @@ void FC_FUNC_(transfer_kernels_noise_to_host,
 extern "C"
 void FC_FUNC_(transfer_fields_ac_to_device,
               TRANSFER_FIELDS_AC_TO_DEVICE)(int* size,
-                                            realw* potential_acoustic,
-                                            realw* potential_dot_acoustic,
-                                            realw* potential_dot_dot_acoustic,
+                                            field* potential_acoustic,
+                                            field* potential_dot_acoustic,
+                                            field* potential_dot_dot_acoustic,
                                             long* Mesh_pointer) {
 
   TRACE("transfer_fields_ac_to_device");
@@ -347,11 +347,11 @@ void FC_FUNC_(transfer_fields_ac_to_device,
   Mesh* mp = (Mesh*)(*Mesh_pointer);
 
   print_CUDA_error_if_any(cudaMemcpy(mp->d_potential_acoustic,potential_acoustic,
-                                     sizeof(realw)*(*size),cudaMemcpyHostToDevice),50110);
+                                     sizeof(field)*(*size),cudaMemcpyHostToDevice),50110);
   print_CUDA_error_if_any(cudaMemcpy(mp->d_potential_dot_acoustic,potential_dot_acoustic,
-                                     sizeof(realw)*(*size),cudaMemcpyHostToDevice),50120);
+                                     sizeof(field)*(*size),cudaMemcpyHostToDevice),50120);
   print_CUDA_error_if_any(cudaMemcpy(mp->d_potential_dot_dot_acoustic,potential_dot_dot_acoustic,
-                                     sizeof(realw)*(*size),cudaMemcpyHostToDevice),50130);
+                                     sizeof(field)*(*size),cudaMemcpyHostToDevice),50130);
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   exit_on_cuda_error("after transfer_fields_ac_to_device");
@@ -363,9 +363,9 @@ void FC_FUNC_(transfer_fields_ac_to_device,
 extern "C"
 void FC_FUNC_(transfer_b_fields_ac_to_device,
               TRANSFER_B_FIELDS_AC_TO_DEVICE)(int* size,
-                                              realw* b_potential_acoustic,
-                                              realw* b_potential_dot_acoustic,
-                                              realw* b_potential_dot_dot_acoustic,
+                                              field* b_potential_acoustic,
+                                              field* b_potential_dot_acoustic,
+                                              field* b_potential_dot_dot_acoustic,
                                               long* Mesh_pointer) {
 
   TRACE("transfer_b_fields_ac_to_device");
@@ -374,11 +374,11 @@ void FC_FUNC_(transfer_b_fields_ac_to_device,
   Mesh* mp = (Mesh*)(*Mesh_pointer);
 
   print_CUDA_error_if_any(cudaMemcpy(mp->d_b_potential_acoustic,b_potential_acoustic,
-                                     sizeof(realw)*(*size),cudaMemcpyHostToDevice),51110);
+                                     sizeof(field)*(*size),cudaMemcpyHostToDevice),51110);
   print_CUDA_error_if_any(cudaMemcpy(mp->d_b_potential_dot_acoustic,b_potential_dot_acoustic,
-                                     sizeof(realw)*(*size),cudaMemcpyHostToDevice),51120);
+                                     sizeof(field)*(*size),cudaMemcpyHostToDevice),51120);
   print_CUDA_error_if_any(cudaMemcpy(mp->d_b_potential_dot_dot_acoustic,b_potential_dot_dot_acoustic,
-                                     sizeof(realw)*(*size),cudaMemcpyHostToDevice),51130);
+                                     sizeof(field)*(*size),cudaMemcpyHostToDevice),51130);
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   exit_on_cuda_error("after transfer_b_fields_ac_to_device");
@@ -391,9 +391,9 @@ void FC_FUNC_(transfer_b_fields_ac_to_device,
 extern "C"
 void FC_FUNC_(transfer_fields_ac_from_device,
               TRANSFER_FIELDS_AC_FROM_DEVICE)(int* size,
-                                              realw* potential_acoustic,
-                                              realw* potential_dot_acoustic,
-                                              realw* potential_dot_dot_acoustic,
+                                              field* potential_acoustic,
+                                              field* potential_dot_acoustic,
+                                              field* potential_dot_dot_acoustic,
                                               long* Mesh_pointer) {
   TRACE("transfer_fields_ac_from_device");
 
@@ -401,11 +401,11 @@ void FC_FUNC_(transfer_fields_ac_from_device,
   Mesh* mp = (Mesh*)(*Mesh_pointer);
 
   print_CUDA_error_if_any(cudaMemcpy(potential_acoustic,mp->d_potential_acoustic,
-                                     sizeof(realw)*(*size),cudaMemcpyDeviceToHost),52111);
+                                     sizeof(field)*(*size),cudaMemcpyDeviceToHost),52111);
   print_CUDA_error_if_any(cudaMemcpy(potential_dot_acoustic,mp->d_potential_dot_acoustic,
-                                     sizeof(realw)*(*size),cudaMemcpyDeviceToHost),52121);
+                                     sizeof(field)*(*size),cudaMemcpyDeviceToHost),52121);
   print_CUDA_error_if_any(cudaMemcpy(potential_dot_dot_acoustic,mp->d_potential_dot_dot_acoustic,
-                                     sizeof(realw)*(*size),cudaMemcpyDeviceToHost),52131);
+                                     sizeof(field)*(*size),cudaMemcpyDeviceToHost),52131);
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   exit_on_cuda_error("after transfer_fields_ac_from_device");
@@ -417,9 +417,9 @@ void FC_FUNC_(transfer_fields_ac_from_device,
 extern "C"
 void FC_FUNC_(transfer_b_fields_ac_from_device,
               TRANSFER_B_FIELDS_AC_FROM_DEVICE)(int* size,
-                                                realw* b_potential_acoustic,
-                                                realw* b_potential_dot_acoustic,
-                                                realw* b_potential_dot_dot_acoustic,
+                                                field* b_potential_acoustic,
+                                                field* b_potential_dot_acoustic,
+                                                field* b_potential_dot_dot_acoustic,
                                                 long* Mesh_pointer) {
   TRACE("transfer_b_fields_ac_from_device");
 
@@ -427,11 +427,11 @@ void FC_FUNC_(transfer_b_fields_ac_from_device,
   Mesh* mp = (Mesh*)(*Mesh_pointer);
 
   print_CUDA_error_if_any(cudaMemcpy(b_potential_acoustic,mp->d_b_potential_acoustic,
-                                     sizeof(realw)*(*size),cudaMemcpyDeviceToHost),53111);
+                                     sizeof(field)*(*size),cudaMemcpyDeviceToHost),53111);
   print_CUDA_error_if_any(cudaMemcpy(b_potential_dot_acoustic,mp->d_b_potential_dot_acoustic,
-                                     sizeof(realw)*(*size),cudaMemcpyDeviceToHost),53121);
+                                     sizeof(field)*(*size),cudaMemcpyDeviceToHost),53121);
   print_CUDA_error_if_any(cudaMemcpy(b_potential_dot_dot_acoustic,mp->d_b_potential_dot_dot_acoustic,
-                                     sizeof(realw)*(*size),cudaMemcpyDeviceToHost),53131);
+                                     sizeof(field)*(*size),cudaMemcpyDeviceToHost),53131);
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
   exit_on_cuda_error("after transfer_b_fields_ac_from_device");
@@ -442,7 +442,7 @@ void FC_FUNC_(transfer_b_fields_ac_from_device,
 
 extern "C"
 void FC_FUNC_(transfer_dot_dot_from_device,
-              TRNASFER_DOT_DOT_FROM_DEVICE)(int* size, realw* potential_dot_dot_acoustic,long* Mesh_pointer) {
+              TRNASFER_DOT_DOT_FROM_DEVICE)(int* size, field* potential_dot_dot_acoustic,long* Mesh_pointer) {
 
   TRACE("transfer_dot_dot_from_device");
 
@@ -450,7 +450,7 @@ void FC_FUNC_(transfer_dot_dot_from_device,
   Mesh* mp = (Mesh*)(*Mesh_pointer);
 
   print_CUDA_error_if_any(cudaMemcpy(potential_dot_dot_acoustic,mp->d_potential_dot_dot_acoustic,
-                                     sizeof(realw)*(*size),cudaMemcpyDeviceToHost),50041);
+                                     sizeof(field)*(*size),cudaMemcpyDeviceToHost),50041);
 
 }
 
@@ -458,7 +458,7 @@ void FC_FUNC_(transfer_dot_dot_from_device,
 
 extern "C"
 void FC_FUNC_(transfer_b_dot_dot_from_device,
-              TRNASFER_B_DOT_DOT_FROM_DEVICE)(int* size, realw* b_potential_dot_dot_acoustic,long* Mesh_pointer) {
+              TRNASFER_B_DOT_DOT_FROM_DEVICE)(int* size, field* b_potential_dot_dot_acoustic,long* Mesh_pointer) {
 
   TRACE("transfer_b_dot_dot_from_device");
 
@@ -466,7 +466,7 @@ void FC_FUNC_(transfer_b_dot_dot_from_device,
   Mesh* mp = (Mesh*)(*Mesh_pointer);
 
   print_CUDA_error_if_any(cudaMemcpy(b_potential_dot_dot_acoustic,mp->d_b_potential_dot_dot_acoustic,
-                                     sizeof(realw)*(*size),cudaMemcpyDeviceToHost),50042);
+                                     sizeof(field)*(*size),cudaMemcpyDeviceToHost),50042);
 
 }
 

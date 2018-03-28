@@ -430,7 +430,7 @@ realw get_device_array_maximum_value(realw* array, int size){
 /* ----------------------------------------------------------------------------------------------- */
 
 
-__global__ void get_maximum_kernel(realw* array, int size, realw* d_max){
+__global__ void get_maximum_kernel(field* array, int size, realw* d_max){
 
   /* simplest version: uses only 1 thread
    realw max;
@@ -547,7 +547,7 @@ void FC_FUNC_(get_norm_acoustic_from_device,
 
 
   if (*sim_type == 1){
-    get_maximum_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_dot_dot_acoustic,size,d_max);
+    get_maximum_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_acoustic,size,d_max);
   }else if (*sim_type == 3){
     get_maximum_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_dot_dot_acoustic,size,d_max);
   }

@@ -31,8 +31,8 @@
 
 /* ----------------------------------------------------------------------------------------------- */
 
-__global__ void compute_stacey_acoustic_kernel(realw* potential_dot_acoustic,
-                                               realw* potential_dot_dot_acoustic,
+__global__ void compute_stacey_acoustic_kernel(field* potential_dot_acoustic,
+                                               field* potential_dot_dot_acoustic,
                                                int* abs_boundary_ispec,
                                                int* abs_boundary_ijk,
                                                realw* abs_boundary_jacobian2Dw,
@@ -43,9 +43,9 @@ __global__ void compute_stacey_acoustic_kernel(realw* potential_dot_acoustic,
                                                int SIMULATION_TYPE,
                                                int SAVE_FORWARD,
                                                int num_abs_boundary_faces,
-                                               realw* b_potential_dot_acoustic,
-                                               realw* b_potential_dot_dot_acoustic,
-                                               realw* b_absorb_potential,
+                                               field* b_potential_dot_acoustic,
+                                               field* b_potential_dot_dot_acoustic,
+                                               field* b_absorb_potential,
                                                int gravity) {
 
   int igll = threadIdx.x;
@@ -54,7 +54,7 @@ __global__ void compute_stacey_acoustic_kernel(realw* potential_dot_acoustic,
   int i,j,k,iglob,ispec;
   realw rhol,kappal,cpl;
   realw jacobianw;
-  realw vel;
+  field vel;
 
   // don't compute points outside NGLLSQUARE==NGLL2==25
   // way 2: no further check needed since blocksize = 25

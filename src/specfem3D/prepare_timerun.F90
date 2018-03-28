@@ -780,7 +780,8 @@
         if (ier /= 0) stop 'error allocating array b_absorb_potential'
 
         ! size of single record
-        b_reclen_potential = CUSTOM_REAL * NGLLSQUARE * num_abs_boundary_faces
+        b_reclen_potential = CUSTOM_REAL * NGLLSQUARE * num_abs_boundary_faces * NB_RUNS_ACOUSTIC_GPU
+
 
         ! check integer size limit: size of b_reclen_potential must fit onto an 4-byte integer
         if (num_abs_boundary_faces > 2147483646 / (CUSTOM_REAL * NGLLSQUARE)) then

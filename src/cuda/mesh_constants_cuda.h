@@ -110,10 +110,10 @@
 
 // Gauss-Lobatto-Legendre
 #define NGLLX 5
-#define NGLLY 5
-#define NGLLZ 5
-#define NGLL2 25
-#define NGLL3 125 // no padding: requires same size as in fortran for NGLLX * NGLLY * NGLLZ
+#define NGLLY NGLLX
+#define NGLLZ NGLLX
+#define NGLL2 25 
+#define NGLL3 125  // no padding: requires same size as in fortran for NGLLX * NGLLY * NGLLZ
 
 // padding: 128 == 2**7 might improve on older graphics cards w/ coalescent memory accesses:
 #define NGLL3_PADDED 128
@@ -226,7 +226,6 @@
 // double precision temporary variables leads to 10% performance decrease
 // in Kernel_2_impl (not very much..)
 typedef float realw;
-
 // textures
 typedef texture<float, cudaTextureType1D, cudaReadModeElementType> realw_texture;
 
@@ -254,6 +253,82 @@ __device__ __forceinline__ realw get_global_cr(realw_const_p ptr) { return __ldg
 //Device does not, fall back.
 __device__ __forceinline__ realw get_global_cr(realw_const_p ptr) { return (*ptr); }
 #endif
+
+
+/* ----------------------------------------------------------------------------------------------- */
+
+// Specific definitions and overloads for option NB_RUNS_ON_ACOUSTIC_GPU
+
+/* ----------------------------------------------------------------------------------------------- */
+
+// option to run several events within the same MPI slice
+#define NB_RUNS_ACOUSTIC_GPU 1
+
+// Functions and operators are overloaded according to the number of runs to perform
+#if NB_RUNS_ACOUSTIC_GPU == 1 
+typedef realw field;
+inline __host__ __device__ field Make_field(realw* b){ return b[0];}
+inline __host__ __device__ field Make_field(realw b){ return b;}
+inline __host__ __device__ field max(field b){ return b;}
+inline __host__ __device__ realw sum(field b){ return b;}
+#endif
+
+#if NB_RUNS_ACOUSTIC_GPU == 2
+typedef float2 field;
+inline __host__ __device__ field Make_field(realw* b){ return make_float2(b[0],b[1]);}
+inline __host__ __device__ field Make_field(realw b){ return make_float2(b,b);} 
+inline __host__ __device__ realw fabs(field b){ return max(fabs(b.x),fabs(b.y));}
+inline __host__ __device__ void operator+=(field &a, field b){a.x += b.x;a.y += b.y;}
+inline __host__ __device__ void operator-=(field &a, field b){a.x -= b.x;a.y -= b.y;}
+inline __host__ __device__ field operator*(field a, realw b){ return make_float2(a.x * b, a.y * b);}
+inline __host__ __device__ field operator*(realw b, field a){ return make_float2(a.x * b, a.y * b);}
+inline __host__ __device__ field operator*(field a, field b){ return make_float2(a.x * b.x, a.y * b.y);}
+inline __host__ __device__ field operator+(field a, field b){ return make_float2(a.x + b.x, a.y + b.y);}
+inline __host__ __device__ field operator/(field a, realw b){ return make_float2(a.x / b, a.y / b);}
+inline __host__ __device__ field operator-(field a, field b){ return make_float2(a.x - b.x, a.y - b.y);}
+inline __host__ __device__ field operator-(field a){ return make_float2(-a.x,-a.y);}
+inline __host__ __device__ realw sum(field b){ return b.x+b.y;}
+inline __device__ void atomicAdd(field* address, field val){atomicAdd(&(address->x),val.x); atomicAdd(&(address->y),val.y);}
+
+//dummy overloads, just to enable compilation
+inline __host__ __device__ field operator+(field a, realw b){ return a;}
+inline __device__ void atomicAdd(field* address, float val){}
+inline __device__ void atomicAdd(realw* address, field val){}
+inline __host__ __device__ void operator+=(realw &a, field b){}
+
+//texture are not compatible for the moment with floatN data
+#undef USE_TEXTURES_FIELDS
+#endif
+
+#if NB_RUNS_ACOUSTIC_GPU == 4
+typedef float4 field;
+inline __host__ __device__ field Make_field(realw* b){ return make_float4(b[0],b[1],b[2],b[3]);}
+inline __host__ __device__ field Make_field(realw b){ return make_float4(b,b,b,b);}
+inline __host__ __device__ realw fabs(field b){ return max(max(fabs(b.x),fabs(b.y)),max(fabs(b.z),fabs(b.w)));}
+inline __host__ __device__ void operator+=(field &a, field b){a.x += b.x;a.y += b.y;a.z += b.z;a.w += b.w;}
+inline __host__ __device__ void operator-=(field &a, field b){a.x -= b.x;a.y -= b.y;a.z -= b.z;a.w -= b.w;}
+inline __host__ __device__ field operator*(field a, realw b){ return make_float4(a.x * b, a.y * b,a.z * b, a.w * b);}
+inline __host__ __device__ field operator*(realw b, field a){ return make_float4(a.x * b, a.y * b,a.z * b, a.w * b);}
+inline __host__ __device__ field operator*(field a, field b){ return make_float4(a.x * b.x, a.y * b.y,a.z * b.z, a.w * b.w);}
+inline __host__ __device__ field operator+(field a, field b){ return make_float4(a.x + b.x, a.y + b.y,a.z + b.z, a.w + b.w);}
+inline __host__ __device__ field operator/(field a, realw b){ return make_float4(a.x / b, a.y / b,a.z / b, a.w / b);}
+inline __host__ __device__ field operator-(field a, field b){ return make_float4(a.x - b.x, a.y - b.y,a.z - b.z, a.w - b.w);}
+inline __host__ __device__ field operator-(field a){ return make_float4(-a.x,-a.y,-a.z,-a.w);}
+inline __host__ __device__ realw sum(field b){ return b.x+b.y+b.z+b.w;}
+inline __device__ void atomicAdd(field* address, field val){atomicAdd(&(address->x),val.x); atomicAdd(&(address->y),val.y);atomicAdd(&(address->z),val.z); atomicAdd(&(address->w),val.w);}
+
+//dummy overloads, just to enable compilation
+inline __host__ __device__ field operator+(field a, realw b){ return a;}
+inline __device__ void atomicAdd(field* address, float val){}
+inline __device__ void atomicAdd(realw* address, field val){}
+inline __host__ __device__ void operator+=(realw &a, field b){}
+
+//texture are not compatible for the moment with floatN data
+#undef USE_TEXTURES_FIELDS
+#endif
+typedef const field* __restrict__ field_const_p;
+typedef field* __restrict__ field_p;
+
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -357,7 +432,7 @@ typedef struct mesh_ {
   // sources
   int nsources_local;
   realw* d_sourcearrays;
-  double* d_stf_pre_compute;
+  field* d_stf_pre_compute;
   int* d_islice_selected_source;
   int* d_ispec_selected_source;
 
@@ -365,11 +440,10 @@ typedef struct mesh_ {
   int* d_ispec_selected_rec_loc;
   int* d_ispec_selected_rec;
   int nrec_local;
-  realw* d_station_seismo_field;
-  realw* h_station_seismo_field;
 
   realw* d_hxir, *d_hetar, *d_hgammar;
-  realw* d_seismograms_d, *d_seismograms_v, *d_seismograms_a, *d_seismograms_p, * d_nu;
+  realw* d_seismograms_d, *d_seismograms_v, *d_seismograms_a, * d_nu;
+  field* d_seismograms_p;
 
   int save_seismograms_d;
   int save_seismograms_v;
@@ -382,7 +456,7 @@ typedef struct mesh_ {
 
   // adjoint receivers/sources
   int nadj_rec_local;
-  realw* d_source_adjoint;
+  field* d_source_adjoint;
 
   // ------------------------------------------------------------------ //
   // elastic wavefield parameters
@@ -530,9 +604,9 @@ typedef struct mesh_ {
   // acoustic wavefield
   // ------------------------------------------------------------------ //
   // potential and first and second time derivative
-  realw* d_potential_acoustic; realw* d_potential_dot_acoustic; realw* d_potential_dot_dot_acoustic;
+  field* d_potential_acoustic, *d_potential_dot_acoustic, *d_potential_dot_dot_acoustic;
   // backward/reconstructed wavefield
-  realw* d_b_potential_acoustic; realw* d_b_potential_dot_acoustic; realw* d_b_potential_dot_dot_acoustic;
+  field* d_b_potential_acoustic, *d_b_potential_dot_acoustic, *d_b_potential_dot_dot_acoustic;
 
   // acoustic domain parameters
   int* d_ispec_is_acoustic;
@@ -550,15 +624,11 @@ typedef struct mesh_ {
   realw* d_rmass_acoustic;
 
   // mpi buffer
-  realw* d_send_potential_dot_dot_buffer;
-  realw* d_b_send_potential_dot_dot_buffer;
+  field* d_send_potential_dot_dot_buffer;
+  field* d_b_send_potential_dot_dot_buffer;
 
-  realw* d_b_absorb_potential;
+  field* d_b_absorb_potential;
   int d_b_reclen_potential;
-
-  // for writing seismograms
-  realw* d_station_seismo_potential;
-  realw* h_station_seismo_potential;
 
   // sensitivity kernels
   realw* d_rho_ac_kl;
@@ -579,6 +649,9 @@ typedef struct mesh_ {
   // FAULT
   int Kelvin_Voigt_damping;
   realw* d_Kelvin_Voigt_eta;
+
+  // for option NB_RUNS_FOR_ACOUSTIC_GPU
+  int* run_number_of_the_source; 
 
 } Mesh;
 

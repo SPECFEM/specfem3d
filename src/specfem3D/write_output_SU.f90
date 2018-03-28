@@ -38,7 +38,7 @@
 
   ! arguments
   integer,intent(in) :: istore
-  real(kind=CUSTOM_REAL), dimension(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS),intent(in) :: seismograms
+  real(kind=CUSTOM_REAL), dimension(NDIM,nrec_local*NB_RUNS_ACOUSTIC_GPU,NTSTEP_BETWEEN_OUTPUT_SEISMOS),intent(in) :: seismograms
 
   ! local parameters
   character(len=MAX_STRING_LEN) :: procname,final_LOCAL_PATH
@@ -125,8 +125,8 @@
     dx = 0.0
   endif
 
-  do irec_local = 1,nrec_local
-    irec = number_receiver_global(irec_local)
+  do irec_local = 1,nrec_local*NB_RUNS_ACOUSTIC_GPU
+    irec = number_receiver_global(mod(irec_local,nrec_local))
 
     if (seismo_offset == 0) then
       ! determines header
