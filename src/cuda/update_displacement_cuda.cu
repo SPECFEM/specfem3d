@@ -160,12 +160,12 @@ __global__ void UpdatePotential_kernel(field* potential_acoustic,
   // because of block and grid sizing problems, there is a small
   // amount of buffer at the end of the calculation
   if (id < size) {
-    potential_acoustic[id] = potential_acoustic[id]
-                            + deltat*potential_dot_acoustic[id]
-                            + deltatsqover2*potential_dot_dot_acoustic[id];
+    field p_dot_dot = potential_dot_dot_acoustic[id];
+    field p_dot = potential_dot_acoustic[id];
+    potential_acoustic[id] +=   deltat*p_dot
+                              + deltatsqover2*p_dot_dot;
 
-    potential_dot_acoustic[id] = potential_dot_acoustic[id]
-                                + deltatover2*potential_dot_dot_acoustic[id];
+    potential_dot_acoustic[id] = p_dot + deltatover2*p_dot_dot;
 
     potential_dot_dot_acoustic[id] = Make_field(0.f);
   }
@@ -503,12 +503,11 @@ __global__ void kernel_3_acoustic_cuda_device(field* potential_dot_acoustic,
     // multiplies pressure with the inverse of the mass matrix
     p_dot_dot = rmass*potential_dot_dot_acoustic[id];
     potential_dot_dot_acoustic[id] = p_dot_dot;
-    potential_dot_acoustic[id] = potential_dot_acoustic[id]+ deltatover2*p_dot_dot;
+    potential_dot_acoustic[id] += deltatover2*p_dot_dot;
     if (simulation_type==3) {
       p_dot_dot = rmass*b_potential_dot_dot_acoustic[id];
       b_potential_dot_dot_acoustic[id] = p_dot_dot;
       b_potential_dot_acoustic[id] += b_deltatover2*p_dot_dot;
-
     }
   }
 }
