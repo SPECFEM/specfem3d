@@ -111,7 +111,6 @@ void FC_FUNC_(prepare_constants_device,
                                         realw* h_xix, realw* h_xiy, realw* h_xiz,
                                         realw* h_etax, realw* h_etay, realw* h_etaz,
                                         realw* h_gammax, realw* h_gammay, realw* h_gammaz,
-                                        realw* h_kappav, realw* h_muv,
                                         int* h_ibool,
                                         int* num_interfaces_ext_mesh, int* max_nibool_interfaces_ext_mesh,
                                         int* h_nibool_interfaces_ext_mesh, int* h_ibool_interfaces_ext_mesh,
@@ -202,8 +201,6 @@ void FC_FUNC_(prepare_constants_device,
   print_CUDA_error_if_any(cudaMalloc((void**) &mp->d_gammax, size_padded*sizeof(realw)),1007);
   print_CUDA_error_if_any(cudaMalloc((void**) &mp->d_gammay, size_padded*sizeof(realw)),1008);
   print_CUDA_error_if_any(cudaMalloc((void**) &mp->d_gammaz, size_padded*sizeof(realw)),1009);
-  print_CUDA_error_if_any(cudaMalloc((void**) &mp->d_kappav, size_padded*sizeof(realw)),1010);
-  print_CUDA_error_if_any(cudaMalloc((void**) &mp->d_muv, size_padded*sizeof(realw)),1011);
 
   // transfer constant element data with padding
   /*
@@ -261,12 +258,6 @@ void FC_FUNC_(prepare_constants_device,
   print_CUDA_error_if_any(cudaMemcpy2D(mp->d_gammaz, NGLL3_PADDED*sizeof(realw),
                                        h_gammaz, NGLL3*sizeof(realw), NGLL3*sizeof(realw),
                                        mp->NSPEC_AB, cudaMemcpyHostToDevice),1509);
-  print_CUDA_error_if_any(cudaMemcpy2D(mp->d_kappav, NGLL3_PADDED*sizeof(realw),
-                                       h_kappav, NGLL3*sizeof(realw), NGLL3*sizeof(realw),
-                                       mp->NSPEC_AB, cudaMemcpyHostToDevice),1510);
-  print_CUDA_error_if_any(cudaMemcpy2D(mp->d_muv, NGLL3_PADDED*sizeof(realw),
-                                       h_muv, NGLL3*sizeof(realw), NGLL3*sizeof(realw),
-                                       mp->NSPEC_AB, cudaMemcpyHostToDevice),1511);
 
   // global indexing (padded)
   print_CUDA_error_if_any(cudaMalloc((void**) &mp->d_ibool, size_padded*sizeof(int)),1600);
@@ -481,11 +472,10 @@ void FC_FUNC_(prepare_fields_acoustic_device,
                                        NGLL3*sizeof(realw),cudaMemcpyHostToDevice),2106);
   }
   */
-  // way 2: faster ...
+  // way 2: faster ... 
   print_CUDA_error_if_any(cudaMemcpy2D(mp->d_rhostore, NGLL3_PADDED*sizeof(realw),
                                        rhostore, NGLL3*sizeof(realw), NGLL3*sizeof(realw),
                                        mp->NSPEC_AB, cudaMemcpyHostToDevice),2106);
-
 
   // non-padded array
   copy_todevice_realw((void**)&mp->d_kappastore,kappastore,NGLL3*mp->NSPEC_AB);
@@ -627,6 +617,7 @@ void FC_FUNC_(prepare_fields_elastic_device,
               PREPARE_FIELDS_ELASTIC_DEVICE)(long* Mesh_pointer,
                                              realw* rmassx, realw* rmassy, realw* rmassz,
                                              realw* rho_vp, realw* rho_vs,
+                                             realw* h_kappav, realw* h_muv,
                                              int* num_phase_ispec_elastic,
                                              int* phase_ispec_inner_elastic,
                                              int* ispec_is_elastic,
@@ -773,6 +764,15 @@ void FC_FUNC_(prepare_fields_elastic_device,
 
     }
   }
+  int size_padded = NGLL3_PADDED*mp->NSPEC_AB;
+  print_CUDA_error_if_any(cudaMalloc((void**) &mp->d_kappav, size_padded*sizeof(realw)),1010);
+  print_CUDA_error_if_any(cudaMalloc((void**) &mp->d_muv, size_padded*sizeof(realw)),1011);
+  print_CUDA_error_if_any(cudaMemcpy2D(mp->d_kappav, NGLL3_PADDED*sizeof(realw),
+                                       h_kappav, NGLL3*sizeof(realw), NGLL3*sizeof(realw),
+                                       mp->NSPEC_AB, cudaMemcpyHostToDevice),1510);
+  print_CUDA_error_if_any(cudaMemcpy2D(mp->d_muv, NGLL3_PADDED*sizeof(realw),
+                                       h_muv, NGLL3*sizeof(realw), NGLL3*sizeof(realw),
+                                       mp->NSPEC_AB, cudaMemcpyHostToDevice),1511);
 
   // debug
   //synchronize_mpi();
@@ -821,7 +821,7 @@ void FC_FUNC_(prepare_fields_elastic_device,
     //synchronize_mpi();
 
     // Assuming NGLLX==5. Padded is then 128 (5^3+3)
-    int size_padded = NGLL3_PADDED * (mp->NSPEC_AB);
+    size_padded = NGLL3_PADDED * (mp->NSPEC_AB);
 
     // allocates memory on GPU
     print_CUDA_error_if_any(cudaMalloc((void**)&(mp->d_c11store),size_padded*sizeof(realw)),4700);
@@ -1414,8 +1414,6 @@ TRACE("prepare_cleanup_device");
   cudaFree(mp->d_gammax);
   cudaFree(mp->d_gammay);
   cudaFree(mp->d_gammaz);
-  cudaFree(mp->d_kappav);
-  cudaFree(mp->d_muv);
 
   // absorbing boundaries
   if (*ABSORBING_CONDITIONS && mp->d_num_abs_boundary_faces > 0){
@@ -1515,6 +1513,9 @@ TRACE("prepare_cleanup_device");
       if (mp->simulation_type == 3 || ( mp->simulation_type == 1 && mp->save_forward ))
           cudaFree(mp->d_b_absorb_field);
     }
+
+    cudaFree(mp->d_kappav);
+    cudaFree(mp->d_muv);
 
     if (mp->simulation_type == 3) {
       cudaFree(mp->d_b_displ);

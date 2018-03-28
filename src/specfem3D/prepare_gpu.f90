@@ -60,7 +60,6 @@
   call prepare_constants_device(Mesh_pointer, &
                                 NGLLX, NSPEC_AB, NGLOB_AB, &
                                 xix, xiy, xiz, etax,etay,etaz, gammax, gammay, gammaz, &
-                                kappastore, mustore, &
                                 ibool, &
                                 num_interfaces_ext_mesh, max_nibool_interfaces_ext_mesh, &
                                 nibool_interfaces_ext_mesh, ibool_interfaces_ext_mesh, &
@@ -114,6 +113,7 @@
     call prepare_fields_elastic_device(Mesh_pointer, &
                                 rmassx,rmassy,rmassz, &
                                 rho_vp,rho_vs, &
+                                kappastore, mustore, &
                                 num_phase_ispec_elastic,phase_ispec_inner_elastic, &
                                 ispec_is_elastic, &
                                 b_absorb_field,b_reclen_field, &
@@ -273,8 +273,6 @@
     memory_size = memory_size + 2.d0 * NGLL2 * dble(CUSTOM_REAL)
     ! padded xix,..gammaz
     memory_size = memory_size + 9.d0 * NGLL3_PADDED * NSPEC_AB * dble(CUSTOM_REAL)
-    ! padded kappav,muv
-    memory_size = memory_size + 2.d0 * NGLL3_PADDED * NSPEC_AB * dble(CUSTOM_REAL)
     ! ibool
     memory_size = memory_size + NGLL3 * NSPEC_AB * dble(SIZE_INTEGER)
     ! d_ibool_interfaces_ext_mesh
@@ -319,12 +317,12 @@
     if (SAVE_SEISMOGRAMS_ACCELERATION) &
       memory_size = memory_size + NDIM * NTSTEP_BETWEEN_OUTPUT_SEISMOS * nrec_local * dble(CUSTOM_REAL)
     if (SAVE_SEISMOGRAMS_PRESSURE) &
-      memory_size = memory_size + NTSTEP_BETWEEN_OUTPUT_SEISMOS * nrec_local * dble(CUSTOM_REAL)
+      memory_size = memory_size + NTSTEP_BETWEEN_OUTPUT_SEISMOS * nrec_local * dble(CUSTOM_REAL) * NB_RUNS_ACOUSTIC_GPU
 
     ! acoustic simulations
     if (ACOUSTIC_SIMULATION) then
       ! d_potential_acoustic,d_potential_dot_acoustic,d_potential_dot_dot_acoustic
-      memory_size = memory_size + 3.d0 * NGLOB_AB * dble(CUSTOM_REAL)
+      memory_size = memory_size + 3.d0 * NGLOB_AB * dble(CUSTOM_REAL) * NB_RUNS_ACOUSTIC_GPU
       ! d_rmass_acoustic
       memory_size = memory_size + NGLOB_AB * dble(CUSTOM_REAL)
       ! padded d_rhostore
@@ -355,6 +353,10 @@
         ! d_rho_vp,..
         memory_size = memory_size + 2.d0 * NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
       endif
+
+      ! padded kappav,muv
+      memory_size = memory_size + 2.d0 * NGLL3_PADDED * NSPEC_AB * dble(CUSTOM_REAL)
+
       if (COMPUTE_AND_STORE_STRAIN) then
         ! d_epsilondev_xx,..
         memory_size = memory_size + 5.d0 * NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
