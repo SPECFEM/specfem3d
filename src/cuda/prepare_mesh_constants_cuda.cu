@@ -472,7 +472,7 @@ void FC_FUNC_(prepare_fields_acoustic_device,
                                        NGLL3*sizeof(realw),cudaMemcpyHostToDevice),2106);
   }
   */
-  // way 2: faster ... 
+  // way 2: faster ...
   print_CUDA_error_if_any(cudaMemcpy2D(mp->d_rhostore, NGLL3_PADDED*sizeof(realw),
                                        rhostore, NGLL3*sizeof(realw), NGLL3*sizeof(realw),
                                        mp->NSPEC_AB, cudaMemcpyHostToDevice),2106);
