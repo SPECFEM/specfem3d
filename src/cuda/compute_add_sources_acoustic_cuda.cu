@@ -79,13 +79,13 @@ __global__ void compute_add_sources_acoustic_kernel(field* potential_dot_dot_aco
   }
 }
 
-// Converts source time function to the correct GPU precision, and adapts format for NB_RUNS_ON_ACOUSTIC_GPU option 
+// Converts source time function to the correct GPU precision, and adapts format for NB_RUNS_ON_ACOUSTIC_GPU option
 void get_stf_for_gpu(field* stf_pre_compute, double* h_stf_pre_compute, int * run_number_of_the_source, int NSOURCES) {
 
   TRACE("get_stf_for_gpu");
   realw realw_to_field[NB_RUNS_ACOUSTIC_GPU];
   //Conversion to GPU precision
-  //Converts source time function to the field format. The stf value is saved only into its corresponding run. For other runs, a zero will be added 
+  //Converts source time function to the field format. The stf value is saved only into its corresponding run. For other runs, a zero will be added
 
 
   for (int i_source=0;i_source < NSOURCES;i_source++){

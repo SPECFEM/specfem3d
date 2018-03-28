@@ -112,7 +112,7 @@
 #define NGLLX 5
 #define NGLLY NGLLX
 #define NGLLZ NGLLX
-#define NGLL2 25 
+#define NGLL2 25
 #define NGLL3 125  // no padding: requires same size as in fortran for NGLLX * NGLLY * NGLLZ
 
 // padding: 128 == 2**7 might improve on older graphics cards w/ coalescent memory accesses:
@@ -265,7 +265,7 @@ __device__ __forceinline__ realw get_global_cr(realw_const_p ptr) { return (*ptr
 #define NB_RUNS_ACOUSTIC_GPU 1
 
 // Functions and operators are overloaded according to the number of runs to perform
-#if NB_RUNS_ACOUSTIC_GPU == 1 
+#if NB_RUNS_ACOUSTIC_GPU == 1
 typedef realw field;
 inline __host__ __device__ field Make_field(realw* b){ return b[0];}
 inline __host__ __device__ field Make_field(realw b){ return b;}
@@ -276,7 +276,7 @@ inline __host__ __device__ realw sum(field b){ return b;}
 #if NB_RUNS_ACOUSTIC_GPU == 2
 typedef float2 field;
 inline __host__ __device__ field Make_field(realw* b){ return make_float2(b[0],b[1]);}
-inline __host__ __device__ field Make_field(realw b){ return make_float2(b,b);} 
+inline __host__ __device__ field Make_field(realw b){ return make_float2(b,b);}
 inline __host__ __device__ realw fabs(field b){ return max(fabs(b.x),fabs(b.y));}
 inline __host__ __device__ void operator+=(field &a, field b){a.x += b.x;a.y += b.y;}
 inline __host__ __device__ void operator-=(field &a, field b){a.x -= b.x;a.y -= b.y;}
@@ -651,7 +651,7 @@ typedef struct mesh_ {
   realw* d_Kelvin_Voigt_eta;
 
   // for option NB_RUNS_FOR_ACOUSTIC_GPU
-  int* run_number_of_the_source; 
+  int* run_number_of_the_source;
 
 } Mesh;
 

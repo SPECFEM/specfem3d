@@ -156,7 +156,7 @@
   call any_all_l( ANY(ispec_is_elastic), ELASTIC_SIMULATION )
   if (ELASTIC_SIMULATION) then
 
-    if (NB_RUNS_ACOUSTIC_GPU > 1) stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with elastic or coupled simulations' 
+    if (NB_RUNS_ACOUSTIC_GPU > 1) stop 'NB_RUNS_ACOUSTIC_GPU > 1 not compatible with elastic or coupled simulations'
 
     ! displacement,velocity,acceleration
     allocate(displ(NDIM,NGLOB_AB),stat=ier)
@@ -1130,7 +1130,7 @@
   if (ACOUSTIC_SIMULATION .and. SIMULATION_TYPE == 3) then
 
     ! backward potentials
-    ! NB_RUNS_ACOUSTIC_GPU is set to 1 by default in constants.h 
+    ! NB_RUNS_ACOUSTIC_GPU is set to 1 by default in constants.h
     allocate(b_potential_acoustic(NGLOB_ADJOINT*NB_RUNS_ACOUSTIC_GPU), &
              b_potential_dot_acoustic(NGLOB_ADJOINT*NB_RUNS_ACOUSTIC_GPU), &
              b_potential_dot_dot_acoustic(NGLOB_ADJOINT*NB_RUNS_ACOUSTIC_GPU),stat=ier)

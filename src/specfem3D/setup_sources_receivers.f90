@@ -237,7 +237,7 @@
 !
 !EB EB When NB_RUNS_ACOUSTIC_GPU > 1, the file SOURCE_FILE actually contains the sources for all the runs.
 !This routine is intended to get the array that contains the run number of each source described in SOURCE_FILE.
-!The line i of the file run_number_of_the_source contains the run number \in [ 0;NB_RUNS_ACOUSTIC_GPU-1] of the source i  
+!The line i of the file run_number_of_the_source contains the run number \in [ 0;NB_RUNS_ACOUSTIC_GPU-1] of the source i
   subroutine get_run_number_of_the_source()
 
   use constants
@@ -272,7 +272,7 @@
     ! reads run number for each source
     do isource = 1,NSOURCES
       read(IIN,"(a)") string
-      read(string,*) run_number_of_the_source(isource) 
+      read(string,*) run_number_of_the_source(isource)
     enddo
   endif
 
