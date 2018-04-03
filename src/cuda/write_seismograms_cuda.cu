@@ -476,7 +476,7 @@ void FC_FUNC_(compute_seismograms_cuda,
       print_CUDA_error_if_any(cudaMemcpy(seismograms_a,mp->d_seismograms_a,NDIM * size,cudaMemcpyDeviceToHost),72003);
     // EB EB Temporary solution : in the future we will also declare host pressure seismograms as (1,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS)
     realw * seismo_temp;
-    if (mp->save_seismograms_p)
+    if (mp->save_seismograms_p){
       // EB EB We need to reorganize data to match host array shape :
       // if NB_RUNS_ACOUSTIC_GPU = 1 from fortran shape (1,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS) to (NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS)
       // if NB_RUNS_ACOUSTIC_GPU > 1 from fortran shape (NB_RUNS_ACOUSTIC_GPU,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS) to (NDIM,nrec_local*NB_RUNS_ACOUSTIC_GPU,NTSTEP_BETWEEN_OUTPUT_SEISMOS)
@@ -490,6 +490,7 @@ void FC_FUNC_(compute_seismograms_cuda,
           seismograms_p[INDEX4(NDIM,mp->nrec_local,NB_RUNS_ACOUSTIC_GPU,2,i_recloc,i_run,it)] = 0.f;
           }
       free(seismo_temp);
+    }
   }
 
 #ifdef ENABLE_VERY_SLOW_ERROR_CHECKING
