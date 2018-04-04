@@ -671,6 +671,8 @@ subroutine crm_ext_setup_jacobian(myrank, &
   ystore(:,:,:,:) = 0.d0
   zstore(:,:,:,:) = 0.d0
 
+  any_regular_element = .false.
+
   do ispec = 1, nspec
     do ia = 1,NGNOD
       xelm(ia) = nodes_coords_ext_mesh(1,elmnts_ext_mesh(ia,ispec))
