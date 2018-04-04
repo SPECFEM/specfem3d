@@ -562,7 +562,7 @@ subroutine initialize()
 
   use tomography_par, only: myrank_tomo => myrank, sizeprocs, NSPEC, NGLOB, USE_ALPHA_BETA_RHO
 
-  use specfem_par, only: NSPEC_AB,NGLOB_AB,NPROC,myrank,ADIOS_ENABLED,ATTENUATION
+  use specfem_par, only: NSPEC_AB,NGLOB_AB,NSPEC_IRREGULAR,NPROC,myrank,ADIOS_ENABLED,ATTENUATION
 
   implicit none
 
@@ -617,7 +617,7 @@ end subroutine initialize
 
 subroutine get_external_mesh()
 
-  use specfem_par, only: CUSTOM_REAL,NSPEC_AB,NGLOB_AB,NGLLX,NGLLY,NGLLZ, &
+  use specfem_par, only: CUSTOM_REAL,NSPEC_AB,NGLOB_AB,NSPEC_IRREGULAR,NGLLX,NGLLY,NGLLZ, &
     LOCAL_PATH,SAVE_MESH_FILES,model_speed_max,DT,myrank,IMAIN,ISTANDARD_OUTPUT
 
   use specfem_par, only: ibool,xstore,ystore,zstore,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
@@ -639,17 +639,31 @@ subroutine get_external_mesh()
   real(kind=CUSTOM_REAL) :: z_min_glob,z_max_glob
 
   ! allocate arrays for storing the databases
-  allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           xix(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           xiy(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           xiz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           etax(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           etay(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           etaz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           gammax(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           gammay(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+
+  if (NSPEC_IRREGULAR > 0) then 
+    allocate(xix(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
+             xiy(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
+             xiz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
+             etax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
+             etay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
+             etaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
+             gammax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
+             gammay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
+             gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
+             jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+  else
+    allocate(xix(1,1,1,1), &
+             xiy(1,1,1,1), &
+             xiz(1,1,1,1), &
+             etax(1,1,1,1), &
+             etay(1,1,1,1), &
+             etaz(1,1,1,1), &
+             gammax(1,1,1,1), &
+             gammay(1,1,1,1), &
+             gammaz(1,1,1,1), &
+             jacobian(1,1,1,1),stat=ier)
+  endif
   if (ier /= 0) stop 'Error allocating arrays for databases'
 
   ! mesh node locations
@@ -1001,9 +1015,7 @@ subroutine save_new_databases()
   call synchronize_all()
 
   call save_external_bin_m_up(NSPEC_AB,NGLOB_AB, &
-                        xix,xiy,xiz,etax,etay,etaz, &
-                        gammax,gammay,gammaz, &
-                        jacobianstore,rho_vp_new,rho_vs_new,qmu_attenuation_store, &
+                        rho_vp_new,rho_vs_new,qmu_attenuation_store, &
                         rhostore_new,kappastore_new,mustore_new, &
                         rmass_new,rmass_acoustic_new,rmass_solid_poroelastic_new,rmass_fluid_poroelastic_new, &
                         APPROXIMATE_OCEAN_LOAD,rmass_ocean_load,NGLOB_OCEAN,ibool,xstore,ystore,zstore, &

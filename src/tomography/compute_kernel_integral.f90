@@ -35,6 +35,8 @@
 
   ! jacobian
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: jacobian
+  real :: jacobian_regular
+  integer, dimension(:), allocatable :: irregular_element_number
   real(kind=CUSTOM_REAL) :: volumel
   ! integration values
   real(kind=CUSTOM_REAL) :: kernel_integral_alpha,kernel_integral_beta,kernel_integral_rho
@@ -58,8 +60,10 @@
   ! array with all the weights in the cube
   double precision, dimension(NGLLX,NGLLY,NGLLZ) :: wgll_cube
 
+  real(kind=CUSTOM_REAL) :: jacobianl
   integer :: iglob
-  integer :: i,j,k,ispec,ier
+  integer :: i,j,k,ier,ival,ispec,ispec_irreg,NSPEC_IRREGULAR,s1_jac,s2_jac,s3_jac,s4_jac
+  character(len=MAX_STRING_LEN) :: m_file
 
   ! user output
   if (myrank == 0) then
@@ -70,9 +74,43 @@
     print *
   endif
 
-  ! allocates array
-  allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
-  if (ier /= 0) stop 'Error allocating jacobian array'
+! reads NSPEC_IRREGULAR
+  write(m_file,'(a,i6.6,a)') 'topo/proc',myrank,trim(REG)//'external_mesh.bin'
+  open(IIN,file=trim(m_file),status='old',form='unformatted',iostat=ier)
+  if (ier /= 0) then
+    print *,'Error opening: ',trim(m_file)
+    call exit_mpi(myrank,'file not found')
+  endif
+
+  read(IIN) ival !nspec
+  if (ival /= nspec) call exit_mpi(myrank,'Error invalid nspec value in external_mesh.bin')
+  read(IIN) ival !nglob
+  if (ival /= nglob) call exit_mpi(myrank,'Error invalid nspec value in external_mesh.bin')
+
+  read(IIN) NSPEC_IRREGULAR
+  close(IIN)
+
+  !allocations
+  if (NSPEC_IRREGULAR > 0) then
+    allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    s1_jac = NGLLX
+    s2_jac = NGLLY
+    s3_jac = NGLLZ
+    s4_jac = NSPEC_IRREGULAR
+  else
+    allocate(jacobian(1,1,1,1),stat=ier)
+    s1_jac = 1
+    s2_jac = 1
+    s3_jac = 1
+    s4_jac = 1
+  endif
+  if (ier /= 0) then
+    print *,'Error allocating array jacobian'
+    call exit_mpi(myrank,'error allocation jacobian')
+  endif
+
+  allocate(irregular_element_number(NSPEC))
+
 
   ! GLL points
   wgll_cube = 0.0
@@ -88,7 +126,7 @@
   enddo
 
   ! builds jacobian
-  call compute_jacobian(jacobian)
+  call compute_jacobian(jacobian,irregular_element_number,jacobian_regular,s1_jac,s2_jac,s3_jac,s4_jac)
 
   ! volume associated with global point
   volume_glob = 0._CUSTOM_REAL
@@ -103,6 +141,8 @@
   rms_rho = 0._CUSTOM_REAL
 
   do ispec = 1, NSPEC
+    ispec_irreg = irregular_element_number(ispec)
+    if (ispec_irreg == 0 ) jacobianl = jacobian_regular
     do k = 1, NGLLZ
       do j = 1, NGLLY
         do i = 1, NGLLX
@@ -115,9 +155,9 @@
             print *
             call exit_MPI(myrank,'Error ibool')
           endif
-
+          if (ispec_irreg /= 0) jacobianl = jacobian(i,j,k,ispec_irreg)
           ! volume associated with GLL point
-          volumel = jacobian(i,j,k,ispec) * wgll_cube(i,j,k)
+          volumel = jacobianl * wgll_cube(i,j,k)
           volume_glob = volume_glob + volumel
 
           ! kernel integration: for each element
@@ -216,6 +256,7 @@
 
   ! frees memory
   deallocate(jacobian)
+  deallocate(irregular_element_number)
 
   end subroutine compute_kernel_integral_iso
 
@@ -233,6 +274,9 @@
 
   ! jacobian
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: jacobian
+  real(kind=CUSTOM_REAL) :: jacobian_regular
+  integer, dimension(:), allocatable :: irregular_element_number
+
   real(kind=CUSTOM_REAL) :: volumel
 
   ! integration values
@@ -260,8 +304,10 @@
   ! array with all the weights in the cube
   double precision, dimension(NGLLX,NGLLY,NGLLZ) :: wgll_cube
 
+  real(kind=CUSTOM_REAL) :: jacobianl
   integer :: iglob
-  integer :: i,j,k,ispec,ier
+  integer :: i,j,k,ier,ival,ispec,ispec_irreg,NSPEC_IRREGULAR,s1_jac,s2_jac,s3_jac,s4_jac
+  character(len=MAX_STRING_LEN) :: m_file
 
   ! user output
   if (myrank == 0) then
@@ -272,9 +318,44 @@
     print *
   endif
 
-  ! allocates array
-  allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
-  if (ier /= 0) stop 'Error allocating jacobian array'
+! reads NSPEC_IRREGULAR
+  write(m_file,'(a,i6.6,a)') 'topo/proc',myrank,trim(REG)//'external_mesh.bin'
+  open(IIN,file=trim(m_file),status='old',form='unformatted',iostat=ier)
+  if (ier /= 0) then
+    print *,'Error opening: ',trim(m_file)
+    call exit_mpi(myrank,'file not found')
+  endif
+
+  read(IIN) ival !nspec
+  if (ival /= nspec) call exit_mpi(myrank,'Error invalid nspec value in external_mesh.bin')
+  read(IIN) ival !nglob
+  if (ival /= nglob) call exit_mpi(myrank,'Error invalid nspec value in external_mesh.bin')
+
+  read(IIN) NSPEC_IRREGULAR
+  close(IIN)
+
+  !allocations
+  if (NSPEC_IRREGULAR > 0) then
+    allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    s1_jac = NGLLX
+    s2_jac = NGLLY
+    s3_jac = NGLLZ
+    s4_jac = NSPEC_IRREGULAR
+  else
+    allocate(jacobian(1,1,1,1),stat=ier)
+    s1_jac = 1
+    s2_jac = 1
+    s3_jac = 1
+    s4_jac = 1
+  endif
+  if (ier /= 0) then
+    print *,'Error allocating array jacobian'
+    call exit_mpi(myrank,'error allocation jacobian')
+  endif
+
+  allocate(irregular_element_number(NSPEC))
+
+
 
   ! GLL points
   wgll_cube = 0.0d0
@@ -290,7 +371,7 @@
   enddo
 
   ! builds jacobian
-  call compute_jacobian(jacobian)
+  call compute_jacobian(jacobian,irregular_element_number,jacobian_regular,s1_jac,s2_jac,s3_jac,s4_jac)
 
   ! volume associated with global point
   volume_glob = 0._CUSTOM_REAL
@@ -309,6 +390,8 @@
   rms_eta = 0._CUSTOM_REAL
   rms_rho = 0._CUSTOM_REAL
   do ispec = 1, NSPEC
+    ispec_irreg = irregular_element_number(ispec)
+    if (ispec_irreg == 0 ) jacobianl = jacobian_regular
     do k = 1, NGLLZ
       do j = 1, NGLLY
         do i = 1, NGLLX
@@ -321,9 +404,9 @@
             print *
             call exit_MPI(myrank,'Error ibool')
           endif
-
+          if (ispec_irreg /= 0) jacobianl = jacobian(i,j,k,ispec_irreg)
           ! volume associated with GLL point
-          volumel = jacobian(i,j,k,ispec)*wgll_cube(i,j,k)
+          volumel = jacobianl*wgll_cube(i,j,k)
           volume_glob = volume_glob + volumel
 
           ! kernel integration: for each element
@@ -449,6 +532,7 @@
 
   ! frees memory
   deallocate(jacobian)
+  deallocate(irregular_element_number)
 
   end subroutine compute_kernel_integral_tiso
 
@@ -466,6 +550,8 @@
   implicit none
   ! jacobian
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: jacobian
+  real(kind=CUSTOM_REAL) :: jacobian_regular
+  integer, dimension(:), allocatable :: irregular_element_number
   real(kind=CUSTOM_REAL) :: volumel
 
   ! integration values
@@ -490,8 +576,10 @@
   ! array with all the weights in the cube
   double precision, dimension(NGLLX,NGLLY,NGLLZ) :: wgll_cube
 
+  real(kind=CUSTOM_REAL) :: jacobianl
   integer :: iglob
-  integer :: i,j,k,ispec,ier
+  integer :: i,j,k,ier,ival,ispec,ispec_irreg,NSPEC_IRREGULAR,s1_jac,s2_jac,s3_jac,s4_jac
+  character(len=MAX_STRING_LEN) :: m_file
 
   ! user output
   if (myrank == 0) then
@@ -502,9 +590,43 @@
     print *
   endif
 
-  ! allocates array
-  allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
-  if (ier /= 0) stop 'Error allocating jacobian array'
+! reads NSPEC_IRREGULAR
+  write(m_file,'(a,i6.6,a)') 'topo/proc',myrank,trim(REG)//'external_mesh.bin'
+  open(IIN,file=trim(m_file),status='old',form='unformatted',iostat=ier)
+  if (ier /= 0) then
+    print *,'Error opening: ',trim(m_file)
+    call exit_mpi(myrank,'file not found')
+  endif
+
+  read(IIN) ival !nspec
+  if (ival /= nspec) call exit_mpi(myrank,'Error invalid nspec value in external_mesh.bin')
+  read(IIN) ival !nglob
+  if (ival /= nglob) call exit_mpi(myrank,'Error invalid nspec value in external_mesh.bin')
+
+  read(IIN) NSPEC_IRREGULAR
+  close(IIN)
+
+  !allocations
+  if (NSPEC_IRREGULAR > 0) then
+    allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    s1_jac = NGLLX
+    s2_jac = NGLLY
+    s3_jac = NGLLZ
+    s4_jac = NSPEC_IRREGULAR
+  else
+    allocate(jacobian(1,1,1,1),stat=ier)
+    s1_jac = 1
+    s2_jac = 1
+    s3_jac = 1
+    s4_jac = 1
+  endif
+  if (ier /= 0) then
+    print *,'Error allocating array jacobian'
+    call exit_mpi(myrank,'error allocation jacobian')
+  endif
+
+  allocate(irregular_element_number(NSPEC))
+
 
   ! GLL points
   wgll_cube = 0.0d0
@@ -520,7 +642,7 @@
   enddo
 
   ! builds jacobian
-  call compute_jacobian(jacobian)
+  call compute_jacobian(jacobian,irregular_element_number,jacobian_regular,s1_jac,s2_jac,s3_jac,s4_jac)
 
   ! volume associated with global point
   volume_glob = 0._CUSTOM_REAL
@@ -538,6 +660,8 @@
   rms_rho = 0._CUSTOM_REAL
 
   do ispec = 1, NSPEC
+    ispec_irreg = irregular_element_number(ispec)
+    if (ispec_irreg == 0 ) jacobianl = jacobian_regular
     do k = 1, NGLLZ
       do j = 1, NGLLY
         do i = 1, NGLLX
@@ -550,9 +674,9 @@
             print *
             call exit_MPI(myrank,'Error ibool')
           endif
-
+          if (ispec_irreg /= 0) jacobianl = jacobian(i,j,k,ispec_irreg)
           ! volume associated with GLL point
-          volumel = jacobian(i,j,k,ispec)*wgll_cube(i,j,k)
+          volumel = jacobianl*wgll_cube(i,j,k)
           volume_glob = volume_glob + volumel
 
           ! kernel integration: for each element
@@ -669,33 +793,32 @@
 
   ! frees memory
   deallocate(jacobian)
-
+  deallocate(irregular_element_number)
   end subroutine compute_kernel_integral_tiso_iso
 
 !
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine compute_jacobian(jacobian)
+  subroutine compute_jacobian(jacobian,irregular_element_number,jacobian_regular,s1_jac,s2_jac,s3_jac,s4_jac)
 
 ! computes volume element associated with points
 
   use tomography_par, only: CUSTOM_REAL,NSPEC,NGLOB,NGLLX,NGLLY,NGLLZ,IIN,myrank,MAX_STRING_LEN,REG
 
   implicit none
-
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC) :: jacobian
+  integer ::s1_jac,s2_jac,s3_jac,s4_jac
+  real(kind=CUSTOM_REAL), dimension(s1_jac,s2_jac,s3_jac,s4_jac) :: jacobian
+  real(kind=CUSTOM_REAL) :: jacobian_regular
+  integer, dimension(NSPEC) :: irregular_element_number
 
   ! local parameters
   ! dummy
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC) :: dummy_sem
+  real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: dummy_sem
   real(kind=CUSTOM_REAL), dimension(NGLOB) :: dummy
   integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC) :: dummy_ibool
-  integer :: ival,ier
+  integer :: ival,ier,NSPEC_IRREGULAR
   character(len=MAX_STRING_LEN) :: m_file
-
-  ! initializes
-  jacobian(:,:,:,:) = 0.0_CUSTOM_REAL
 
   ! reads jacobian
   write(m_file,'(a,i6.6,a)') 'topo/proc',myrank,trim(REG)//'external_mesh.bin'
@@ -710,11 +833,28 @@
   read(IIN) ival !nglob
   if (ival /= nglob) call exit_mpi(myrank,'Error invalid nspec value in external_mesh.bin')
 
+  read(IIN) NSPEC_IRREGULAR
+
+  !allocations
+  if (NSPEC_IRREGULAR > 0) then
+    allocate(dummy_sem(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+  else 
+    allocate(dummy_sem(1,1,1,1),stat=ier)
+  endif
+  if (ier /= 0) then
+    print *,'Error allocating array dummy_sem'
+    call exit_mpi(myrank,'error allocation dummy_sem')
+  endif
+
   read(IIN) dummy_ibool ! ibool
 
   read(IIN) dummy ! x
   read(IIN) dummy ! y
   read(IIN) dummy ! z
+
+  read(IIN) irregular_element_number ! irregular_element_number
+  read(IIN) jacobian_regular         !xix_regular
+  read(IIN) jacobian_regular         !jacobian_regular
 
   read(IIN) dummy_sem ! xix
   read(IIN) dummy_sem ! xiy
@@ -728,6 +868,8 @@
   read(IIN) jacobian
 
   close(IIN)
+
+  deallocate(dummy_sem)
 
   end subroutine compute_jacobian
 

@@ -76,9 +76,9 @@ program smooth_sem
   ! data must be of dimension: (NGLLX,NGLLY,NGLLZ,NSPEC_AB)
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: dat,dat_smooth
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: dummy ! for jacobian read
-  integer :: NSPEC_N, NGLOB_N
+  integer :: NSPEC_N, NGLOB_N, NSPEC_IRREGULAR_N
 
-  integer :: i,j,k,iglob,ier,ispec2,ispec,inum
+  integer :: i,j,k,iglob,ier,ispec2,ispec,ispec_irreg,inum
   integer :: icounter,num_slices
   integer :: iproc,ncuda_devices
   integer(kind=8) :: Container
@@ -113,6 +113,7 @@ program smooth_sem
   real(kind=CUSTOM_REAL) :: min_old,min_new,min_old_all,min_new_all
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: exp_val,factor
+  real(kind=CUSTOM_REAL) :: jacobianl
 
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: tk, bk
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: xl, yl, zl
@@ -460,22 +461,13 @@ program smooth_sem
       endif
       read(IIN) NSPEC_N
       read(IIN) NGLOB_N
-      close(IIN)
+      read(IIN) NSPEC_IRREGULAR_N
 
       ! allocates mesh arrays
       allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
       if (ier /= 0) stop 'Error allocating array ibool'
       allocate(xstore(NGLOB_N),ystore(NGLOB_N),zstore(NGLOB_N),stat=ier)
       if (ier /= 0) stop 'Error allocating array xstore etc.'
-
-      ! gets number of point locations and mesh
-      open(unit=IIN,file=trim(prname_lp),status='old',action='read',form='unformatted',iostat=ier)
-      if (ier /= 0) then
-        print *,'Error: could not open database file: ',trim(prname_lp)
-        call exit_mpi(myrank, 'Error reading neighbors external mesh file')
-      endif
-      read(IIN) NSPEC_N
-      read(IIN) NGLOB_N
 
       ! ibool file
       read(IIN) ibool
@@ -599,7 +591,7 @@ program smooth_sem
     endif
     read(IIN) NSPEC_N
     read(IIN) NGLOB_N
-
+    read(IIN) NSPEC_IRREGULAR_N
 
     ! allocates arrays
     allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
@@ -608,10 +600,19 @@ program smooth_sem
     if (ier /= 0) stop 'Error allocating array xstore etc.'
 
     if (USE_QUADRATURE_RULE_FOR_SMOOTHING) then
-      allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
-      if (ier /= 0) stop 'Error allocating array jacobian'
-      allocate(dummy(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
-      if (ier /= 0) stop 'Error allocating array dummy'
+      if (NSPEC_IRREGULAR_N >0) then
+        allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR_N),stat=ier)
+        if (ier /= 0) stop 'Error allocating array jacobian'
+        allocate(dummy(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
+        if (ier /= 0) stop 'Error allocating array dummy'
+      else
+        allocate(jacobian(1,1,1,1),stat=ier)
+        if (ier /= 0) stop 'Error allocating array jacobian'
+        allocate(dummy(1,1,1,1),stat=ier)
+        if (ier /= 0) stop 'Error allocating array dummy'
+      endif
+      allocate(irregular_element_number(NSPEC_N),stat=ier)
+      if (ier /= 0) stop 'Error allocating array irregular_element_number'
     endif
 
     ! ibool file
@@ -624,6 +625,9 @@ program smooth_sem
 
     if (USE_QUADRATURE_RULE_FOR_SMOOTHING) then
     ! reads in jacobian
+      read(IIN) irregular_element_number
+      read(IIN) xix_regular
+      read(IIN) jacobian_regular
       read(IIN) dummy ! xix
       read(IIN) dummy ! xiy
       read(IIN) dummy ! xiz
@@ -693,7 +697,7 @@ program smooth_sem
     ! finds closest elements for smoothing
     !if (myrank==0) print *, '  start looping over elements and points for smoothing ...'
     if (USE_GPU) then
-      call compute_smooth(Container,jacobian,xx,yy,zz,dat,NSPEC_N)
+      call compute_smooth(Container,jacobian,jacobian_regular,irregular_element_number,xx,yy,zz,dat,NSPEC_N,NSPEC_IRREGULAR_N)
     else
       ! loop over elements to be smoothed in the current slice
       do ispec = 1, NSPEC_AB
@@ -720,7 +724,16 @@ program smooth_sem
 
           ! integration factors
           if (USE_QUADRATURE_RULE_FOR_SMOOTHING) then
-            factor(:,:,:) = jacobian(:,:,:,ispec2) * wgll_cube(:,:,:)
+            ispec_irreg = irregular_element_number(ispec2)
+            if (ispec_irreg == 0) jacobianl = jacobian_regular
+            do k=1,NGLLZ
+              do j=1,NGLLY
+                do i=1,NGLLX
+                  if (ispec_irreg /= 0) jacobianl = jacobian(i,j,k,ispec)
+                  factor(i,j,k) = jacobianl * wgll_cube(i,j,k)
+                enddo
+              enddo
+            enddo
           endif
 
           ! loop over GLL points of the elements in current slice (ispec)
@@ -760,6 +773,7 @@ program smooth_sem
     deallocate(cx,cy,cz)
 
     if (USE_QUADRATURE_RULE_FOR_SMOOTHING) then
+      deallocate(irregular_element_number)
       deallocate(jacobian)
       deallocate(dummy)
     endif

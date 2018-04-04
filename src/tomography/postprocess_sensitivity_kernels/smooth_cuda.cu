@@ -41,9 +41,10 @@ void copy_todevice_realw(void** d_array_addr_ptr,realw* h_array,int size){
    cudaMemcpy((realw*) *d_array_addr_ptr,h_array,size*sizeof(realw),cudaMemcpyHostToDevice);
 }
 
-__global__ void process_smooth(realw_const_p xstore_me,realw_const_p ystore_me,realw_const_p zstore_me,realw_const_p xstore_other,realw_const_p ystore_other,realw_const_p zstore_other, realw_const_p data_other, const realw sigma_h2_inv, const realw sigma_v2_inv, const int iker, const int nspec_me, const int nspec_other, const realw v_criterion, const realw h_criterion, realw_const_p jacobian, realw_p sum_data_smooth, realw_p normalisation,realw_const_p wgll_cube){
+__global__ void process_smooth(realw_const_p xstore_me,realw_const_p ystore_me,realw_const_p zstore_me,realw_const_p xstore_other,realw_const_p ystore_other,realw_const_p zstore_other, realw_const_p data_other, const realw sigma_h2_inv, const realw sigma_v2_inv, const int iker, const int nspec_me, const int nspec_other, const realw v_criterion, const realw h_criterion, realw_const_p jacobian, const int * irregular_element_number,realw jacobian_regular,realw_p sum_data_smooth, realw_p normalisation,realw_const_p wgll_cube){
 
 int ispec = blockIdx.x + gridDim.x*blockIdx.y;
+int ispec_irreg;
 int igll = threadIdx.x;
 int gll_other;
 realw x_me,y_me, z_me, x_other,y_other, z_other, coef, normalisation_slice;
@@ -89,8 +90,9 @@ sh_y_other[igll] = ystore_other[i*NGLL3*NGLL3 + k*NGLL3 + igll ];
 sh_z_other[igll] = zstore_other[i*NGLL3*NGLL3 + k*NGLL3 + igll ];
 
 sh_data[igll] = data_other[i*NGLL3*NGLL3 + k*NGLL3 + igll ];
-sh_jacobian[igll] = jacobian[i*NGLL3*NGLL3 + k*NGLL3 + igll ];
-
+ispec_irreg = irregular_element_number[i*NGLL3 + k]-1;
+if (ispec_irreg >= 0){sh_jacobian[igll] = jacobian[ispec_irreg*NGLL3 + igll ];}
+else{sh_jacobian[igll] = jacobian_regular;}
 __syncthreads();
 
 for (int j=0;j<NGLL3;j++){
@@ -157,23 +159,29 @@ extern "C"
 void FC_FUNC_(compute_smooth,
               COMPUTE_SMOOTH)(long * smooth_pointer,
                               realw * jacobian,
+                              realw * jacobian_regular,
+                              int * irregular_element_number,
                               realw * xstore_other,
                               realw * ystore_other,
                               realw * zstore_other,
                               realw * data_other,
-                              const int * nspec_other){
+                              const int * nspec_other,
+                              const int * nspec_irregular_other){
 realw * x_other;
 realw * y_other;
 realw * z_other;
 realw * d_data_other;
 realw * d_jacobian;
+int * d_irregular_element_number;
 
 Smooth_data * sp = (Smooth_data*)*smooth_pointer;
 
 copy_todevice_realw((void**)&x_other,xstore_other,NGLL3*(*nspec_other));
 copy_todevice_realw((void**)&y_other,ystore_other,NGLL3*(*nspec_other));
 copy_todevice_realw((void**)&z_other,zstore_other,NGLL3*(*nspec_other));
-copy_todevice_realw((void**)&d_jacobian,jacobian,NGLL3*(*nspec_other));
+if (*nspec_irregular_other > 0){copy_todevice_realw((void**)&d_jacobian,jacobian,NGLL3*(*nspec_irregular_other));}
+else {copy_todevice_realw((void**)&d_jacobian,jacobian,1);}
+copy_todevice_int((void**)&d_irregular_element_number,irregular_element_number,(*nspec_other));
 
 dim3 grid(sp->nspec_me,1);
 dim3 threads(NGLL3,1,1);
@@ -197,6 +205,8 @@ process_smooth<<<grid,threads>>>(sp->x_me,
                                  sp->v_criterion,
                                  sp->h_criterion,
                                  d_jacobian,
+                                 d_irregular_element_number,
+                                 *jacobian_regular,
                                  sp->data_smooth,
                                  sp->normalisation,
                                  sp->wgll_cube);
@@ -207,6 +217,7 @@ cudaFree(x_other);
 cudaFree(y_other);
 cudaFree(z_other);
 cudaFree(d_jacobian);
+cudaFree(d_irregular_element_number);
 }
 
 extern "C"
