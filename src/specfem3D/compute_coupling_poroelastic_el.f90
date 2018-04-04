@@ -32,13 +32,13 @@
 ! returns the updated accelerations array: accels_poroelatsic (& accelw_poroelastic )
 
   use constants
-  use specfem_par, only : ibool,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+  use specfem_par, only: ibool,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           hprime_xx,hprime_yy,hprime_zz, &
                           mustore,kappastore, &
                           SIMULATION_TYPE,NGLOB_ADJOINT,NSPEC_ADJOINT,ANISOTROPY, &
                           irregular_element_number,xix_regular
 
-  use specfem_par_poroelastic, only :  displs_poroelastic,accels_poroelastic,displw_poroelastic, &
+  use specfem_par_poroelastic, only: displs_poroelastic,accels_poroelastic,displw_poroelastic, &
                                        kappaarraystore,rhoarraystore, &
                                        phistore,tortstore,num_coupling_el_po_faces, &
                                        coupling_el_po_ispec,coupling_po_el_ispec, &
@@ -46,11 +46,11 @@
                                        coupling_el_po_normal, &
                                        coupling_el_po_jacobian2Dw
 
-  use specfem_par_elastic, only : displ, &
+  use specfem_par_elastic, only: displ, &
                                   c11store,c12store,c13store,c14store,c15store,c16store, &
                                   c22store,c23store,c24store,c25store,c26store,c33store, &
                                   c34store,c35store,c36store,c44store,c45store,c46store, &
-                                  c55store,c56store,c66store 
+                                  c55store,c56store,c66store
   implicit none
 
 ! communication overlap
@@ -404,7 +404,7 @@
         dwzdxl = xixl*tempz1lw + etaxl*tempz2lw + gammaxl*tempz3lw
         dwzdyl = xiyl*tempz1lw + etayl*tempz2lw + gammayl*tempz3lw
         dwzdzl = xizl*tempz1lw + etazl*tempz2lw + gammazl*tempz3lw
-      
+
       else !regular element
 
         ! derivatives of displacement

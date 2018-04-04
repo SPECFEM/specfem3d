@@ -232,7 +232,7 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
   nglob_xy_wmax                       = max_global_values(38)
   nspec_ab_wmax                       = max_global_values(39)
   nspec_aniso_wmax                    = max_global_values(40)
-  nspec_irreg_wmax                    = max_global_values(41) 
+  nspec_irreg_wmax                    = max_global_values(41)
 
   ! save arrays for the solver to run.
   !-----------------------------------.

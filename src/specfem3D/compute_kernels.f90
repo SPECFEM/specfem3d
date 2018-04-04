@@ -760,7 +760,7 @@
                    duy_dgaml = duy_dgaml + dsem_adj_gll(2,i,j,5) * fac
                    duz_dgaml = duz_dgaml + dsem_adj_gll(3,i,j,5) * fac
 
-                   if (ielem_irreg/=0) then !irregular element
+                   if (ielem_irreg /= 0) then !irregular element
                      !*** Get local derivatives of ref square coord wrt Cartesian ones (jacobian)
                      dxil_dxl  = xix(i,j,k,ielem_irreg)
                      dxil_dyl  = xiy(i,j,k,ielem_irreg)
@@ -797,7 +797,7 @@
                    else !regular element
                                           !*** Strain
                      !* Normal state normal strain
-                     dvx_dxl = dvx_dxil * xix_regular 
+                     dvx_dxl = dvx_dxil * xix_regular
                      dvx_dyl = dvx_detal * xix_regular
                      dvx_dzl = dvx_dgaml * xix_regular
                      dvy_dxl = dvy_dxil *  xix_regular

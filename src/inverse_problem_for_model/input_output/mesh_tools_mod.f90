@@ -5,7 +5,7 @@ module mesh_tools
   use specfem_par, only: CUSTOM_REAL, HUGEVAL, TINYVAL, NGNOD, NUM_ITER, NPROC, MAX_STRING_LEN, &
                          NGLLX, NGLLY, NGLLZ, NDIM, NSPEC_AB, NGLOB_AB, MIDX, MIDY, MIDZ, &
                          LOCAL_PATH, xigll, yigll, zigll, &
-                         ibool, xstore, ystore, zstore 
+                         ibool, xstore, ystore, zstore
 
   use specfem_par_elastic, only: ispec_is_elastic
   use specfem_par_acoustic, only: ispec_is_acoustic

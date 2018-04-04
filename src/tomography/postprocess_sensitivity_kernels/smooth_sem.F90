@@ -247,7 +247,7 @@ program smooth_sem
   ! read the value of NSPEC_AB and NGLOB_AB because we need it to define some array sizes below
   call read_mesh_for_init()
 
-  allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),irregular_element_number(NSPEC_AB),stat=ier) 
+  allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),irregular_element_number(NSPEC_AB),stat=ier)
 
   if (NSPEC_IRREGULAR > 0) then
     ! allocate arrays for storing the databases

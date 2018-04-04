@@ -242,7 +242,7 @@ __global__ void compute_acoustic_vectorial_seismogram_kernel(int nrec_local,
   // loads into shared memory
   if (tx < NGLL2) sh_hprime_xx[tx] = d_hprime_xx[tx];
   if (tx < NGLL3) s_dummy_loc[tx] = (realw)scalar_potential[iglob];
-  
+
 
   // synchronize all the threads (one thread for each of the NGLL grid points of the
   // current spectral element) because we need the whole element to be ready

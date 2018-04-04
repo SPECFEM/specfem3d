@@ -184,7 +184,7 @@
               duzdyl = xix_regular*tempz2(i,j,k)
               duzdzl = xix_regular*tempz3(i,j,k)
 
-              jacobianl = jacobian_regular 
+              jacobianl = jacobian_regular
 
             endif
 

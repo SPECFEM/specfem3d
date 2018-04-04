@@ -421,7 +421,7 @@ __device__ void compute_gradient_kernel(int ijk,
     gammaxl = d_gammax[offset];
     gammayl = d_gammay[offset];
     gammazl = d_gammaz[offset];
-  
+
   // derivatives of acoustic scalar potential field on GLL points
   vector_field_loc[0] = (temp1l*xixl + temp2l*etaxl + temp3l*gammaxl) * rho_invl;
   vector_field_loc[1] = (temp1l*xiyl + temp2l*etayl + temp3l*gammayl) * rho_invl;

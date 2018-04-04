@@ -104,7 +104,7 @@
       ! acoustic wave field
       if (ispec_is_acoustic(ispec)) then
         ! displacement vector
-        call compute_gradient_in_acoustic(ispec,potential_acoustic,displ_element) 
+        call compute_gradient_in_acoustic(ispec,potential_acoustic,displ_element)
 
         ! velocity vector
         call compute_gradient_in_acoustic(ispec,potential_dot_acoustic,veloc_element)
@@ -145,7 +145,7 @@
       ! acoustic wave field
       if (ispec_is_acoustic(ispec)) then
         ! backward field: displacement vector
-        call compute_gradient_in_acoustic(ispec,b_potential_acoustic,displ_element) 
+        call compute_gradient_in_acoustic(ispec,b_potential_acoustic,displ_element)
 
         ! backward field: velocity vector
         call compute_gradient_in_acoustic(ispec,b_potential_dot_acoustic,veloc_element)

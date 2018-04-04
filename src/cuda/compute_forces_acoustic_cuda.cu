@@ -228,7 +228,7 @@ Kernel_2_acoustic_impl(const int nb_blocks_to_compute,
 
   // gravity
   if (gravity ) kappa_invl = 1.f / d_kappastore[working_element*NGLL3 + tx];
-  
+
 
   // local index
   K = (tx/NGLL2);

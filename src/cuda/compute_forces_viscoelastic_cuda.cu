@@ -524,7 +524,7 @@ __device__  __forceinline__ void sum_hprimewgll_gamma(int I, int J, int K,
 // computes the spatial derivatives
 
 
-__device__  __forceinline__ void 
+__device__  __forceinline__ void
   get_spatial_derivatives(realw* xixl,realw* xiyl,realw* xizl,realw* etaxl,realw* etayl,realw* etazl,
                           realw* gammaxl,realw* gammayl,realw* gammazl,realw* jacobianl,int I,int J,int K,int tx,
                           realw* tempx1l,realw* tempy1l,realw* tempz1l,realw* tempx2l,realw* tempy2l,realw* tempz2l,
@@ -539,7 +539,7 @@ __device__  __forceinline__ void
     int offset = ispec_irreg*NGLL3_PADDED + tx;
 
     *xixl = get_global_cr( &d_xix[offset]);
-    *xiyl = get_global_cr(&d_xiy[offset]); 
+    *xiyl = get_global_cr(&d_xiy[offset]);
     *xizl = get_global_cr(&d_xiz[offset]);
     *etaxl = get_global_cr(&d_etax[offset]);
     *etayl = get_global_cr(&d_etay[offset]);
@@ -2321,7 +2321,7 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
 
       // attenuation
       // use unrelaxed parameters if attenuation
-      mul2  = mul * get_global_cr( &one_minus_sum_beta[tx+working_element*NGLL3] ); // (i,j,k,ispec) 
+      mul2  = mul * get_global_cr( &one_minus_sum_beta[tx+working_element*NGLL3] ); // (i,j,k,ispec)
 
       lambdalplus2mul = kappal + 1.33333333333333333333f * mul2;  // 4./3. = 1.3333333
       lambdal = lambdalplus2mul - 2.0f * mul2;

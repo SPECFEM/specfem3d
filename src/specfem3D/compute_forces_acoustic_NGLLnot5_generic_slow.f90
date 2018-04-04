@@ -48,7 +48,7 @@
                          rhostore,jacobian,ibool, &
                          irregular_element_number,xix_regular,jacobian_regular
 
-  use specfem_par_acoustic, only : nspec_inner_acoustic,nspec_outer_acoustic, &
+  use specfem_par_acoustic, only: nspec_inner_acoustic,nspec_outer_acoustic, &
                                    phase_ispec_inner_acoustic
 
 
@@ -163,7 +163,7 @@
                 temp3l_old = temp3l_old + PML_potential_acoustic_old(i,j,l,ispec_CPML)*hp3
                 temp3l_new = temp3l_new + PML_potential_acoustic_new(i,j,l,ispec_CPML)*hp3
               enddo
- 
+
               rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
 
               if (ispec_irreg /= 0 ) then !irregular element

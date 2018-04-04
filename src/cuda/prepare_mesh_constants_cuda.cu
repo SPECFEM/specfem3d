@@ -237,7 +237,7 @@ void FC_FUNC_(prepare_constants_device,
   }
   */
   // way 2: faster ....
-  if (*NSPEC_IRREGULAR > 0 ){ 
+  if (*NSPEC_IRREGULAR > 0 ){
     print_CUDA_error_if_any(cudaMemcpy2D(mp->d_xix, NGLL3_PADDED*sizeof(realw),
                                          h_xix, NGLL3*sizeof(realw), NGLL3*sizeof(realw),
                                          mp->NSPEC_AB, cudaMemcpyHostToDevice),1501);
@@ -482,7 +482,7 @@ void FC_FUNC_(prepare_fields_acoustic_device,
                                        NGLL3*sizeof(realw),cudaMemcpyHostToDevice),2106);
   }
   */
-  // way 2: faster ... 
+  // way 2: faster ...
   print_CUDA_error_if_any(cudaMemcpy2D(mp->d_rhostore, NGLL3_PADDED*sizeof(realw),
                                        rhostore, NGLL3*sizeof(realw), NGLL3*sizeof(realw),
                                        mp->NSPEC_AB, cudaMemcpyHostToDevice),2106);

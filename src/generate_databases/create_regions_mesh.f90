@@ -72,7 +72,7 @@
   endif
   call crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
                                nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
-                               nspec2D_bottom,nspec2D_top,ANISOTROPY,&
+                               nspec2D_bottom,nspec2D_top,ANISOTROPY, &
                                nodes_coords_ext_mesh,nnodes_ext_mesh,elmnts_ext_mesh,nelmnts_ext_mesh,ANY_FAULT_IN_THIS_PROC)
 
  ! if faults exist this reads nodes_coords_open
@@ -380,8 +380,8 @@ end subroutine create_regions_mesh
 
 subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
                         nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
-                        nspec2D_bottom,nspec2D_top,ANISOTROPY,&
-                        nodes_coords_ext_mesh,nnodes_ext_mesh,&
+                        nspec2D_bottom,nspec2D_top,ANISOTROPY, &
+                        nodes_coords_ext_mesh,nnodes_ext_mesh, &
                         elmnts_ext_mesh,nelmnts_ext_mesh,ANY_FAULT_IN_THIS_PROC)
 
   use generate_databases_par, only: STACEY_INSTEAD_OF_FREE_SURFACE,PML_INSTEAD_OF_FREE_SURFACE, &
@@ -498,7 +498,7 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
     enddo
 
     ! checks if element is regular (is a cube)
-    call check_element_regularity(xelm_real,yelm_real,zelm_real,any_regular_elem,cube_edge_size_squared,&
+    call check_element_regularity(xelm_real,yelm_real,zelm_real,any_regular_elem,cube_edge_size_squared, &
                                   nspec_irregular,ispec,nspec,irregular_element_number,ANY_FAULT_IN_THIS_PROC)
   enddo
 
@@ -632,7 +632,7 @@ subroutine crm_ext_setup_jacobian(myrank, &
 ! local parameters
   integer :: ispec,ia,i,j,k,ispec_irreg
   logical :: any_regular_elem
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: xix_reg,xiy_reg,xiz_reg,etax_reg,etay_reg,etaz_reg,&
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: xix_reg,xiy_reg,xiz_reg,etax_reg,etay_reg,etaz_reg, &
                                                           gammax_reg,gammay_reg,gammaz_reg,jacobian_reg
 
 ! set up coordinates of the Gauss-Lobatto-Legendre points
@@ -685,21 +685,21 @@ subroutine crm_ext_setup_jacobian(myrank, &
     if (ispec_irreg /= 0 ) then
       call calc_jacobian(myrank,xixstore(:,:,:,ispec_irreg),xiystore(:,:,:,ispec_irreg),xizstore(:,:,:,ispec_irreg), &
                          etaxstore(:,:,:,ispec_irreg),etaystore(:,:,:,ispec_irreg),etazstore(:,:,:,ispec_irreg), &
-                         gammaxstore(:,:,:,ispec_irreg),gammaystore(:,:,:,ispec_irreg),gammazstore(:,:,:,ispec_irreg),&
+                         gammaxstore(:,:,:,ispec_irreg),gammaystore(:,:,:,ispec_irreg),gammazstore(:,:,:,ispec_irreg), &
                          jacobianstore(:,:,:,ispec_irreg),xelm,yelm,zelm,dershape3D)
     else
       any_regular_elem = .true.
     endif
-    call calc_coords(xstore(:,:,:,ispec),ystore(:,:,:,ispec),zstore(:,:,:,ispec),&
+    call calc_coords(xstore(:,:,:,ispec),ystore(:,:,:,ispec),zstore(:,:,:,ispec), &
                      xelm,yelm,zelm,shape3D)
-    
+
   enddo
   ! get xix derivative and jacobian on a regular element
   if (any_regular_elem) then
 
     !find a regular element
     ispec = 1
-    do while (irregular_element_number(ispec)/=0)
+    do while (irregular_element_number(ispec) /= 0)
       ispec = ispec + 1
     enddo
     do ia = 1,NGNOD
@@ -709,11 +709,11 @@ subroutine crm_ext_setup_jacobian(myrank, &
     enddo
     call calc_jacobian(myrank,xix_reg,xiy_reg,xiz_reg, &
                        etax_reg,etay_reg,etaz_reg, &
-                       gammax_reg,gammay_reg,gammaz_reg,&
+                       gammax_reg,gammay_reg,gammaz_reg, &
                        jacobian_reg,xelm,yelm,zelm,dershape3D)
     xix_regular = xix_reg(1,1,1)
     jacobian_regular  = jacobian_reg(1,1,1)
-    
+
   endif
 
 end subroutine crm_ext_setup_jacobian

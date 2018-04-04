@@ -36,7 +36,7 @@
 
   use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,ONE_THIRD
 
-  use specfem_par, only : NGLOB_AB, &
+  use specfem_par, only: NGLOB_AB, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           hprime_xx,hprime_yy,hprime_zz, &
                           hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
@@ -44,8 +44,8 @@
                           SIMULATION_TYPE,NSPEC_ADJOINT,jacobian,ibool,mustore, &
                           irregular_element_number,xix_regular,jacobian_regular
 
-  use specfem_par_poroelastic, only : kappaarraystore,rhoarraystore,etastore,permstore, &
-                                      phistore,tortstore,nspec_inner_poroelastic,&
+  use specfem_par_poroelastic, only: kappaarraystore,rhoarraystore,etastore,permstore, &
+                                      phistore,tortstore,nspec_inner_poroelastic, &
                                       nspec_outer_poroelastic,phase_ispec_inner_poroelastic
   implicit none
 
@@ -324,7 +324,7 @@
           sigma_yx = sigma_xy
           sigma_zx = sigma_xz
           sigma_zy = sigma_yz
-          
+
           if (ispec_irreg /= 0) then
             ! form dot product with test vector, non-symmetric form (which is useful in the case of PML)
             tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl) ! this goes to accel_x
@@ -354,15 +354,15 @@
 
             ! form dot product with test vector, non-symmetric form (which is
             ! useful in the case of PML)
-            tempx1(i,j,k) = jacobianl * sigma_xx * xix_regular 
-            tempy1(i,j,k) = jacobianl * sigma_xy * xix_regular  
-            tempz1(i,j,k) = jacobianl * sigma_xz * xix_regular 
+            tempx1(i,j,k) = jacobianl * sigma_xx * xix_regular
+            tempy1(i,j,k) = jacobianl * sigma_xy * xix_regular
+            tempz1(i,j,k) = jacobianl * sigma_xz * xix_regular
 
             tempx2(i,j,k) = jacobianl * sigma_yx * xix_regular
             tempy2(i,j,k) = jacobianl * sigma_yy * xix_regular
             tempz2(i,j,k) = jacobianl * sigma_zz * xix_regular
 
-            tempx3(i,j,k) = jacobianl * sigma_zx* xix_regular 
+            tempx3(i,j,k) = jacobianl * sigma_zx* xix_regular
             tempy3(i,j,k) = jacobianl * sigma_zy* xix_regular
             tempz3(i,j,k) = jacobianl * sigma_zz* xix_regular
 
@@ -374,7 +374,7 @@
             tempy2p(i,j,k) = jacobianl * sigmap * xix_regular
             tempz2p(i,j,k) = 0.0
 
-            tempx3p(i,j,k) = 0.0 
+            tempx3p(i,j,k) = 0.0
             tempy3p(i,j,k) = 0.0
             tempz3p(i,j,k) = jacobianl * sigmap * xix_regular
           endif

@@ -57,7 +57,7 @@ subroutine compute_forces_poroelastic_calling()
                           displw_poroelastic,accelw_poroelastic, &
                           velocw_poroelastic,displs_poroelastic, &
                           epsilonwdev_xx,epsilonwdev_yy,epsilonwdev_xy, &
-                          epsilonwdev_xz,epsilonwdev_yz,epsilonw_trace_over_3) 
+                          epsilonwdev_xz,epsilonwdev_yz,epsilonw_trace_over_3)
 
       ! adjoint simulations: backward/reconstructed wavefield
       if (SIMULATION_TYPE == 3) then
@@ -74,7 +74,7 @@ subroutine compute_forces_poroelastic_calling()
                             b_displw_poroelastic,b_accelw_poroelastic, &
                             b_velocw_poroelastic,b_displs_poroelastic, &
                             b_epsilonwdev_xx,b_epsilonwdev_yy,b_epsilonwdev_xy, &
-                            b_epsilonwdev_xz,b_epsilonwdev_yz,b_epsilonw_trace_over_3) 
+                            b_epsilonwdev_xz,b_epsilonwdev_yz,b_epsilonw_trace_over_3)
       endif
 
     else

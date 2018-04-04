@@ -31,7 +31,7 @@
                                        Mxx,Myy,Mzz,Mxy,Mxz,Myz)
 
   use constants
-  use specfem_par, only : xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,xix_regular,irregular_element_number
+  use specfem_par, only: xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,xix_regular,irregular_element_number
 
   implicit none
 
@@ -76,7 +76,7 @@
 
            hlagrange = hxis(k) * hetas(l) * hgammas(m)
 
-           if (ispec_irreg /= 0) then !irregular element 
+           if (ispec_irreg /= 0) then !irregular element
 
              xixd    = dble(xix(k,l,m,ispec_irreg))
              xiyd    = dble(xiy(k,l,m,ispec_irreg))
@@ -87,7 +87,7 @@
              gammaxd = dble(gammax(k,l,m,ispec_irreg))
              gammayd = dble(gammay(k,l,m,ispec_irreg))
              gammazd = dble(gammaz(k,l,m,ispec_irreg))
-          
+
              dxis_dx = dxis_dx + hlagrange * xixd
              dxis_dy = dxis_dy + hlagrange * xiyd
              dxis_dz = dxis_dz + hlagrange * xizd
@@ -334,7 +334,7 @@
                                                        factor_source, comp_x,comp_y,comp_z, nu_source)
   use constants
 
-  use specfem_par, only : xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+  use specfem_par, only: xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           irregular_element_number,xix_regular
 
   implicit none
@@ -377,7 +377,7 @@
 
   ispec_irreg = irregular_element_number(ispec_selected_source)
   if (ispec_irreg == 0) xixd = dble(xix_regular)
- 
+
   do m = 1,NGLLZ
      do l = 1,NGLLY
         do k = 1,NGLLX

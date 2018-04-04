@@ -847,7 +847,7 @@
   use specfem_par_acoustic, only: ACOUSTIC_SIMULATION,potential_acoustic,potential_dot_acoustic, &
                                 ispec_is_acoustic,b_potential_acoustic,b_potential_dot_acoustic
   use specfem_par_elastic, only: ELASTIC_SIMULATION,displ,veloc,ispec_is_elastic
-  use specfem_par, only :  SIMULATION_TYPE,SAVE_DISPLACEMENT,ibool
+  use specfem_par, only: SIMULATION_TYPE,SAVE_DISPLACEMENT,ibool
   implicit none
 
   integer,intent(in) :: iglob,ispec
@@ -890,10 +890,10 @@
       if (SAVE_DISPLACEMENT) then
         if (SIMULATION_TYPE == 3) then
           ! displacement vector from backward potential
-          call compute_gradient_in_acoustic(ispec,b_potential_acoustic,val_element) 
+          call compute_gradient_in_acoustic(ispec,b_potential_acoustic,val_element)
         else
           ! displacement vector
-          call compute_gradient_in_acoustic(ispec,potential_acoustic,val_element) 
+          call compute_gradient_in_acoustic(ispec,potential_acoustic,val_element)
         endif
       else
         if (SIMULATION_TYPE == 3) then

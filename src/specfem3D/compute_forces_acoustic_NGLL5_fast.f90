@@ -45,7 +45,7 @@
                          rhostore,jacobian,ibool, &
                          irregular_element_number,xix_regular,jacobian_regular
 
-  use specfem_par_acoustic, only : nspec_inner_acoustic,nspec_outer_acoustic, &
+  use specfem_par_acoustic, only: nspec_inner_acoustic,nspec_outer_acoustic, &
                                    phase_ispec_inner_acoustic
 
   use pml_par, only: is_CPML, spec_to_CPML, potential_dot_dot_acoustic_CPML,rmemory_dpotential_dxl,rmemory_dpotential_dyl, &

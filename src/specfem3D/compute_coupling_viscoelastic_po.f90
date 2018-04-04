@@ -32,13 +32,13 @@
 ! returns the updated accelerations array: accel
 
   use constants
-  use specfem_par, only : ibool,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+  use specfem_par, only: ibool,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                           hprime_xx,hprime_yy,hprime_zz, &
                           mustore,kappastore, &
                           SIMULATION_TYPE,NGLOB_ADJOINT,NSPEC_ADJOINT,ANISOTROPY, &
                           irregular_element_number,xix_regular
 
-  use specfem_par_poroelastic, only : displs_poroelastic,displw_poroelastic, &
+  use specfem_par_poroelastic, only: displs_poroelastic,displw_poroelastic, &
                                       kappaarraystore,rhoarraystore, &
                                       phistore,tortstore,num_coupling_el_po_faces, &
                                       coupling_el_po_ispec,coupling_po_el_ispec, &
@@ -46,7 +46,7 @@
                                       coupling_el_po_normal, &
                                       coupling_el_po_jacobian2Dw
 
-  use specfem_par_elastic, only : displ,accel, &
+  use specfem_par_elastic, only: displ,accel, &
                                   c11store,c12store,c13store,c14store,c15store,c16store, &
                                   c22store,c23store,c24store,c25store,c26store,c33store, &
                                   c34store,c35store,c36store,c44store,c45store,c46store, &

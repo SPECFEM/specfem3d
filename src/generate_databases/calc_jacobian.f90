@@ -161,7 +161,7 @@
   end subroutine calc_coords
 
 
-  subroutine check_element_regularity(xelm,yelm,zelm,any_regular_elem,cube_edge_size_squared,&
+  subroutine check_element_regularity(xelm,yelm,zelm,any_regular_elem,cube_edge_size_squared, &
                                       nspec_irregular,ispec,nspec,irregular_element_number,ANY_FAULT_IN_THIS_PROC)
 
   use generate_databases_par, only: NGNOD,CUSTOM_REAL,USE_MESH_COLORING_GPU
@@ -177,19 +177,19 @@
 
   !checks if the potential cube has the same size as the previous ones
   dist1_sq = (xelm(2)-xelm(1))**2 + (yelm(2)-yelm(1))**2 +(zelm(2)-zelm(1))**2
-  if (NGNOD==27 .or. ANY_FAULT_IN_THIS_PROC .or. USE_MESH_COLORING_GPU .or. &
+  if (NGNOD == 27 .or. ANY_FAULT_IN_THIS_PROC .or. USE_MESH_COLORING_GPU .or. &
      (any_regular_elem .and. ( abs(dist1_sq - cube_edge_size_squared) > (1e-5)*cube_edge_size_squared ))) then
     irregular_element_number(ispec) = ispec - (nspec - nspec_irregular)
-    return 
+    return
   endif
 
   ! checks if the element is a cube (following numbering convention in a 8 nodes element)
-  if (xelm(1)==xelm(4) .and. xelm(1)==xelm(5) .and. xelm(1)==xelm(8) .and. &
-      xelm(2)==xelm(3) .and. xelm(2)==xelm(6) .and. xelm(2)==xelm(7) .and. &
-      yelm(1)==yelm(2) .and. yelm(1)==yelm(5) .and. yelm(1)==yelm(6) .and. & 
-      yelm(3)==yelm(4) .and. yelm(3)==yelm(7) .and. yelm(3)==yelm(8) .and. &
-      zelm(1)==zelm(2) .and. zelm(1)==zelm(3) .and. zelm(1)==zelm(4) .and. &
-      zelm(5)==zelm(6) .and. zelm(5)==zelm(7) .and. zelm(5)==zelm(8) ) then
+  if (xelm(1) == xelm(4) .and. xelm(1) == xelm(5) .and. xelm(1) == xelm(8) .and. &
+      xelm(2) == xelm(3) .and. xelm(2) == xelm(6) .and. xelm(2) == xelm(7) .and. &
+      yelm(1) == yelm(2) .and. yelm(1) == yelm(5) .and. yelm(1) == yelm(6) .and. &
+      yelm(3) == yelm(4) .and. yelm(3) == yelm(7) .and. yelm(3) == yelm(8) .and. &
+      zelm(1) == zelm(2) .and. zelm(1) == zelm(3) .and. zelm(1) == zelm(4) .and. &
+      zelm(5) == zelm(6) .and. zelm(5) == zelm(7) .and. zelm(5) == zelm(8) ) then
 
     dist2_sq = (xelm(5)-xelm(1))**2 + (yelm(5)-yelm(1))**2 +(zelm(5)-zelm(1))**2
     dist3_sq = (xelm(4)-xelm(1))**2 + (yelm(4)-yelm(1))**2 +(zelm(4)-zelm(1))**2
@@ -197,7 +197,7 @@
     if (abs(dist2_sq - dist1_sq) < 1e-5*dist1_sq .and. abs(dist3_sq - dist1_sq) < 1e-5*dist1_sq) then
 
       ! test if first cube found in mesh
-      if ( .not. any_regular_elem ) then
+      if (.not. any_regular_elem ) then
         cube_edge_size_squared = dist1_sq
         any_regular_elem = .true.
       endif

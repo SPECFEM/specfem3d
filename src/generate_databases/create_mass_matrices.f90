@@ -67,14 +67,14 @@
         do ispec=1,nspec
            if (ispec_is_elastic(ispec)) then
               ispec_irreg = irregular_element_number(ispec)
-              if (ispec_irreg==0) jacobianl = jacobian_regular
+              if (ispec_irreg == 0) jacobianl = jacobian_regular
               do k=1,NGLLZ
                  do j=1,NGLLY
                     do i=1,NGLLX
                        iglob = ibool(i,j,k,ispec)
 
                        weight = wxgll(i)*wygll(j)*wzgll(k)
-                       if (ispec_irreg/=0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
+                       if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
                        rmass(iglob) = rmass(iglob) + &
                                real( dble(jacobianl) * weight * dble(rhostore(i,j,k,ispec)),kind=CUSTOM_REAL)
                     enddo
@@ -98,14 +98,14 @@
         do ispec=1,nspec
            if (ispec_is_acoustic(ispec)) then
               ispec_irreg = irregular_element_number(ispec)
-              if (ispec_irreg==0) jacobianl = jacobian_regular
+              if (ispec_irreg == 0) jacobianl = jacobian_regular
               do k=1,NGLLZ
                  do j=1,NGLLY
                     do i=1,NGLLX
                       iglob = ibool(i,j,k,ispec)
 
                       weight = wxgll(i)*wygll(j)*wzgll(k)
-                      if (ispec_irreg/=0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
+                      if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
                       ! distinguish between single and double precision for reals
                       rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
                                real( dble(jacobianl) * weight / dble(kappastore(i,j,k,ispec)) ,kind=CUSTOM_REAL)
@@ -129,14 +129,14 @@
     do ispec=1,nspec
       if (ispec_is_poroelastic(ispec)) then
         ispec_irreg = irregular_element_number(ispec)
-        if (ispec_irreg==0) jacobianl = jacobian_regular
+        if (ispec_irreg == 0) jacobianl = jacobian_regular
         do k=1,NGLLZ
           do j=1,NGLLY
             do i=1,NGLLX
               iglob = ibool(i,j,k,ispec)
 
               weight = wxgll(i)*wygll(j)*wzgll(k)
-              if (ispec_irreg/=0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
+              if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
               rho_s = rhoarraystore(1,i,j,k,ispec)
               rho_f = rhoarraystore(2,i,j,k,ispec)
               phi = phistore(i,j,k,ispec)
@@ -413,8 +413,8 @@
     CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
     CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
-  use create_regions_mesh_ext_par, only: rmass,rhostore,jacobianstore,wxgll,wygll,wzgll,ispec_is_elastic,&
-                                         irregular_element_number,jacobian_regular 
+  use create_regions_mesh_ext_par, only: rmass,rhostore,jacobianstore,wxgll,wygll,wzgll,ispec_is_elastic, &
+                                         irregular_element_number,jacobian_regular
 
   implicit none
 
@@ -433,7 +433,7 @@
   do ispec=1,nspec
      if (.not. is_CPML(ispec) .and. ispec_is_elastic(ispec)) then
         ispec_irreg = irregular_element_number(ispec)
-        if (ispec_irreg==0) jacobianl = jacobian_regular
+        if (ispec_irreg == 0) jacobianl = jacobian_regular
         do k=1,NGLLZ
            do j=1,NGLLY
               do i=1,NGLLX
@@ -441,7 +441,7 @@
                  mat_coef = rhostore(i,j,k,ispec)
                  iglob = ibool(i,j,k,ispec)
                  weight = wxgll(i)*wygll(j)*wzgll(k)
-                 if (ispec_irreg/=0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
+                 if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
                  rmass(iglob) = rmass(iglob) + &
                          real( dble(jacobianl) * weight * dble(mat_coef) ,kind=CUSTOM_REAL)
               enddo
@@ -458,7 +458,7 @@
         ! X_surface C-PML
         if (CPML_regions(ispec_CPML) == CPML_X_ONLY) then
            ispec_irreg = irregular_element_number(ispec)
-           if (ispec_irreg==0) jacobianl = jacobian_regular
+           if (ispec_irreg == 0) jacobianl = jacobian_regular
            do k=1,NGLLZ
               do j=1,NGLLY
                  do i=1,NGLLX
@@ -467,7 +467,7 @@
                     iglob = ibool(i,j,k,ispec)
                     weight = wxgll(i)*wygll(j)*wzgll(k)
 
-                    if (ispec_irreg/=0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
+                    if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
                     rmass(iglob) = rmass(iglob) + &
                       real( dble(jacobianl) * weight * dble(mat_coef) * &
                            (dble(K_store_x(i,j,k,ispec_CPML)) &
@@ -479,7 +479,7 @@
            ! Y_surface C-PML
         else if (CPML_regions(ispec_CPML) == CPML_Y_ONLY) then
            ispec_irreg = irregular_element_number(ispec)
-           if (ispec_irreg==0) jacobianl = jacobian_regular
+           if (ispec_irreg == 0) jacobianl = jacobian_regular
            do k=1,NGLLZ
               do j=1,NGLLY
                  do i=1,NGLLX
@@ -488,7 +488,7 @@
                     iglob = ibool(i,j,k,ispec)
                     weight = wxgll(i)*wygll(j)*wzgll(k)
 
-                    if (ispec_irreg/=0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
+                    if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
                     rmass(iglob) = rmass(iglob) + &
                         real( dble(jacobianl) * weight * dble(mat_coef) * &
                              (dble(K_store_y(i,j,k,ispec_CPML)) &
@@ -500,7 +500,7 @@
            ! Z_surface C-PML
         else if (CPML_regions(ispec_CPML) == CPML_Z_ONLY) then
            ispec_irreg = irregular_element_number(ispec)
-           if (ispec_irreg==0) jacobianl = jacobian_regular
+           if (ispec_irreg == 0) jacobianl = jacobian_regular
            do k=1,NGLLZ
               do j=1,NGLLY
                  do i=1,NGLLX
@@ -509,7 +509,7 @@
                     iglob = ibool(i,j,k,ispec)
                     weight = wxgll(i)*wygll(j)*wzgll(k)
 
-                    if (ispec_irreg/=0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
+                    if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
                     rmass(iglob) = rmass(iglob) + &
                         real( dble(jacobianl) * weight * dble(mat_coef) * &
                         (dble(K_store_z(i,j,k,ispec_CPML)) + dble(d_store_z(i,j,k,ispec_CPML)) &
@@ -521,7 +521,7 @@
            ! XY_edge C-PML
         else if (CPML_regions(ispec_CPML) == CPML_XY_ONLY) then
            ispec_irreg = irregular_element_number(ispec)
-           if (ispec_irreg==0) jacobianl = jacobian_regular
+           if (ispec_irreg == 0) jacobianl = jacobian_regular
            do k=1,NGLLZ
               do j=1,NGLLY
                  do i=1,NGLLX
@@ -530,7 +530,7 @@
                     iglob = ibool(i,j,k,ispec)
                     weight = wxgll(i)*wygll(j)*wzgll(k)
 
-                    if (ispec_irreg/=0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
+                    if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
                     rmass(iglob) = rmass(iglob) + &
                       real( dble(jacobianl) * weight * dble(mat_coef) * &
                           (dble(K_store_x(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML)) + &
@@ -544,7 +544,7 @@
            ! XZ_edge C-PML
         else if (CPML_regions(ispec_CPML) == CPML_XZ_ONLY) then
            ispec_irreg = irregular_element_number(ispec)
-           if (ispec_irreg==0) jacobianl = jacobian_regular
+           if (ispec_irreg == 0) jacobianl = jacobian_regular
            do k=1,NGLLZ
               do j=1,NGLLY
                  do i=1,NGLLX
@@ -553,7 +553,7 @@
                     iglob = ibool(i,j,k,ispec)
                     weight = wxgll(i)*wygll(j)*wzgll(k)
 
-                    if (ispec_irreg/=0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
+                    if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
                     rmass(iglob) = rmass(iglob) + &
                             real( dble(jacobianl) * weight * dble(mat_coef) * &
                             (dble(K_store_x(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
@@ -567,7 +567,7 @@
            ! YZ_edge C-PML
         else if (CPML_regions(ispec_CPML) == CPML_YZ_ONLY) then
            ispec_irreg = irregular_element_number(ispec)
-           if (ispec_irreg==0) jacobianl = jacobian_regular
+           if (ispec_irreg == 0) jacobianl = jacobian_regular
            do k=1,NGLLZ
               do j=1,NGLLY
                  do i=1,NGLLX
@@ -576,7 +576,7 @@
                     iglob = ibool(i,j,k,ispec)
                     weight = wxgll(i)*wygll(j)*wzgll(k)
 
-                    if (ispec_irreg/=0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
+                    if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
                     rmass(iglob) = rmass(iglob) + &
                         real( dble(jacobianl) * weight * dble(mat_coef) * &
                              (dble(K_store_y(i,j,k,ispec_CPML)) * dble(K_store_z(i,j,k,ispec_CPML)) + &
@@ -590,7 +590,7 @@
            ! XYZ_corner C-PML
         else if (CPML_regions(ispec_CPML) == CPML_XYZ) then
            ispec_irreg = irregular_element_number(ispec)
-           if (ispec_irreg==0) jacobianl = jacobian_regular
+           if (ispec_irreg == 0) jacobianl = jacobian_regular
            do k=1,NGLLZ
               do j=1,NGLLY
                  do i=1,NGLLX
@@ -599,7 +599,7 @@
                     iglob = ibool(i,j,k,ispec)
                     weight = wxgll(i)*wygll(j)*wzgll(k)
 
-                    if (ispec_irreg/=0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
+                    if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
                     rmass(iglob) = rmass(iglob) + &
                         real( dble(jacobianl) * weight * dble(mat_coef) * &
                             (dble(K_store_x(i,j,k,ispec_CPML)) * dble(K_store_y(i,j,k,ispec_CPML)) * &
@@ -632,7 +632,7 @@
     CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY, &
     CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ
 
-  use create_regions_mesh_ext_par, only: rmass_acoustic,kappastore,jacobianstore,wxgll,wygll,wzgll,ispec_is_acoustic,&
+  use create_regions_mesh_ext_par, only: rmass_acoustic,kappastore,jacobianstore,wxgll,wygll,wzgll,ispec_is_acoustic, &
                                          irregular_element_number,jacobian_regular
 
   implicit none
@@ -652,7 +652,7 @@
   do ispec=1,nspec
      if (.not. is_CPML(ispec) .and. ispec_is_acoustic(ispec)) then
         ispec_irreg = irregular_element_number(ispec)
-        if (ispec_irreg==0) jacobianl = jacobian_regular
+        if (ispec_irreg == 0) jacobianl = jacobian_regular
         do k=1,NGLLZ
            do j=1,NGLLY
               do i=1,NGLLX
@@ -660,7 +660,7 @@
                  mat_coef = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
                  iglob = ibool(i,j,k,ispec)
                  weight = wxgll(i)*wygll(j)*wzgll(k)
-                 if (ispec_irreg/=0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
+                 if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
 
                  rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
                          real( dble(jacobianl) * weight * dble(mat_coef) ,kind=CUSTOM_REAL)
@@ -678,7 +678,7 @@
         ! X_surface C-PML
         if (CPML_regions(ispec_CPML) == CPML_X_ONLY) then
            ispec_irreg = irregular_element_number(ispec)
-           if (ispec_irreg==0) jacobianl = jacobian_regular
+           if (ispec_irreg == 0) jacobianl = jacobian_regular
            do k=1,NGLLZ
               do j=1,NGLLY
                  do i=1,NGLLX
@@ -686,7 +686,7 @@
                     mat_coef = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
                     iglob = ibool(i,j,k,ispec)
                     weight = wxgll(i)*wygll(j)*wzgll(k)
-                    if (ispec_irreg/=0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
+                    if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
 
                     rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
                         real( dble(jacobianl) * weight * dble(mat_coef) * &
@@ -699,7 +699,7 @@
            ! Y_surface C-PML
         else if (CPML_regions(ispec_CPML) == CPML_Y_ONLY) then
            ispec_irreg = irregular_element_number(ispec)
-           if (ispec_irreg==0) jacobianl = jacobian_regular
+           if (ispec_irreg == 0) jacobianl = jacobian_regular
            do k=1,NGLLZ
               do j=1,NGLLY
                  do i=1,NGLLX
@@ -707,7 +707,7 @@
                     mat_coef = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
                     iglob = ibool(i,j,k,ispec)
                     weight = wxgll(i)*wygll(j)*wzgll(k)
-                    if (ispec_irreg/=0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
+                    if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
 
                     rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
                         real( dble(jacobianl) * weight * dble(mat_coef) * &
@@ -720,7 +720,7 @@
            ! Z_surface C-PML
         else if (CPML_regions(ispec_CPML) == CPML_Z_ONLY) then
            ispec_irreg = irregular_element_number(ispec)
-           if (ispec_irreg==0) jacobianl = jacobian_regular
+           if (ispec_irreg == 0) jacobianl = jacobian_regular
            do k=1,NGLLZ
               do j=1,NGLLY
                  do i=1,NGLLX
@@ -728,7 +728,7 @@
                     mat_coef = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
                     iglob = ibool(i,j,k,ispec)
                     weight = wxgll(i)*wygll(j)*wzgll(k)
-                    if (ispec_irreg/=0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
+                    if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
 
                     rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
                         real( dble(jacobianl) * weight * dble(mat_coef) * &
@@ -741,7 +741,7 @@
            ! XY_edge C-PML
         else if (CPML_regions(ispec_CPML) == CPML_XY_ONLY) then
            ispec_irreg = irregular_element_number(ispec)
-           if (ispec_irreg==0) jacobianl = jacobian_regular
+           if (ispec_irreg == 0) jacobianl = jacobian_regular
            do k=1,NGLLZ
               do j=1,NGLLY
                  do i=1,NGLLX
@@ -749,7 +749,7 @@
                     mat_coef = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
                     iglob = ibool(i,j,k,ispec)
                     weight = wxgll(i)*wygll(j)*wzgll(k)
-                    if (ispec_irreg/=0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
+                    if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
 
                     rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
                         real( dble(jacobianl) * weight * dble(mat_coef) * &
@@ -764,7 +764,7 @@
            ! XZ_edge C-PML
         else if (CPML_regions(ispec_CPML) == CPML_XZ_ONLY) then
            ispec_irreg = irregular_element_number(ispec)
-           if (ispec_irreg==0) jacobianl = jacobian_regular
+           if (ispec_irreg == 0) jacobianl = jacobian_regular
            do k=1,NGLLZ
               do j=1,NGLLY
                  do i=1,NGLLX
@@ -772,7 +772,7 @@
                     mat_coef = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
                     iglob = ibool(i,j,k,ispec)
                     weight = wxgll(i)*wygll(j)*wzgll(k)
-                    if (ispec_irreg/=0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
+                    if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
 
                     rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
                         real( dble(jacobianl) * weight * dble(mat_coef) * &
@@ -787,7 +787,7 @@
            ! YZ_edge C-PML
         else if (CPML_regions(ispec_CPML) == CPML_YZ_ONLY) then
            ispec_irreg = irregular_element_number(ispec)
-           if (ispec_irreg==0) jacobianl = jacobian_regular
+           if (ispec_irreg == 0) jacobianl = jacobian_regular
            do k=1,NGLLZ
               do j=1,NGLLY
                  do i=1,NGLLX
@@ -795,7 +795,7 @@
                     mat_coef = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
                     iglob = ibool(i,j,k,ispec)
                     weight = wxgll(i)*wygll(j)*wzgll(k)
-                    if (ispec_irreg/=0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
+                    if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
 
                     rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
                         real( dble(jacobianl) * weight * dble(mat_coef) * &
@@ -810,7 +810,7 @@
            ! XYZ_corner C-PML
         else if (CPML_regions(ispec_CPML) == CPML_XYZ) then
            ispec_irreg = irregular_element_number(ispec)
-           if (ispec_irreg==0) jacobianl = jacobian_regular
+           if (ispec_irreg == 0) jacobianl = jacobian_regular
            do k=1,NGLLZ
               do j=1,NGLLY
                  do i=1,NGLLX
@@ -818,7 +818,7 @@
                     mat_coef = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
                     iglob = ibool(i,j,k,ispec)
                     weight = wxgll(i)*wygll(j)*wzgll(k)
-                    if (ispec_irreg/=0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
+                    if (ispec_irreg /= 0) jacobianl = jacobianstore(i,j,k,ispec_irreg)
 
                     rmass_acoustic(iglob) = rmass_acoustic(iglob) + &
                         real( dble(jacobianl) * weight * dble(mat_coef) * &

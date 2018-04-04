@@ -3236,7 +3236,7 @@ contains
              enddo
           enddo
        enddo
- 
+
        if (DEBUG_MODE .and. ispec == ispec_to_debug) write(IIDD,*)
        !! deivate again df/dy / dy
        F(:,:,:)=dF(2,:,:,:)
@@ -4402,7 +4402,7 @@ end subroutine compute_bi_laplacian_of_field
 !!===============
 subroutine compute_derivative_with_lagrange_polynomials(derivative_of_field, field_to_derivate)
 
-   use specfem_par, only: xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, hprime_xx, irregular_element_number,&
+   use specfem_par, only: xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, hprime_xx, irregular_element_number, &
                           xix_regular
 
    implicit none
@@ -4502,7 +4502,7 @@ end subroutine compute_derivative_with_lagrange_polynomials
 !!============
 subroutine compute_2nd_derivative_with_lagrange_polynomials(derivative_of_field, field_to_derivate)
 
-   use specfem_par, only: xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, hprime_xx,irregular_element_number,&
+   use specfem_par, only: xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, hprime_xx,irregular_element_number, &
                           xix_regular
 
    implicit none

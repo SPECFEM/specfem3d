@@ -232,7 +232,7 @@
           else !regular element
            jacobianl = 1.d0 / dble(xix_regular*xix_regular*xix_regular)
           endif
- 
+
           if (CHECK_FOR_NEGATIVE_JACOBIANS .and. jacobianl <= ZERO) stop 'error: negative Jacobian found in integral calculation'
 
           iglob = ibool(i,j,k,ispec)

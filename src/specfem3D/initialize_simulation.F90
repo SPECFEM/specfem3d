@@ -163,11 +163,11 @@
     NSPEC_ANISO = 1
   endif
 
-  allocate(irregular_element_number(NSPEC_AB),stat=ier) 
+  allocate(irregular_element_number(NSPEC_AB),stat=ier)
     if (ier /= 0) stop 'error allocating arrays for irregular element numbering'
 
   ! allocate arrays for storing the databases
-  allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier) 
+  allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
     if (ier /= 0) stop 'error allocating ibool'
 
   if (NSPEC_IRREGULAR > 0) then

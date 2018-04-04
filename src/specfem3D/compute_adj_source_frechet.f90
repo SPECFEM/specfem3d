@@ -32,8 +32,8 @@
            hxir,hetar,hgammar,hpxir,hpetar,hpgammar, hprime_xx,hprime_yy,hprime_zz)
 
   use constants
-  
-  use specfem_par, only : xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,xix_regular, &
+
+  use specfem_par, only: xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,xix_regular, &
                           irregular_element_number
 
   implicit none
@@ -128,12 +128,12 @@
 
         else !regular element
 
-          duxdxl = xix_regular*tempx1l 
-          duxdyl = xix_regular*tempx2l 
+          duxdxl = xix_regular*tempx1l
+          duxdyl = xix_regular*tempx2l
           duxdzl = xix_regular*tempx3l
 
           duydxl = xix_regular*tempy1l
-          duydyl = xix_regular*tempy2l 
+          duydyl = xix_regular*tempy2l
           duydzl = xix_regular*tempy3l
 
           duzdxl = xix_regular*tempz1l

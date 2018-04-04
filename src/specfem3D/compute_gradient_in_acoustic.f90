@@ -40,7 +40,7 @@
 !             or in gravity case, just gradient vector field
 
   use constants
-  use specfem_par, only : NGLOB_AB,xix,xiy,xiz,etax,etay,etaz, &
+  use specfem_par, only: NGLOB_AB,xix,xiy,xiz,etax,etay,etaz, &
                           gammax,gammay,gammaz,xix_regular,irregular_element_number, &
                           ibool,rhostore,GRAVITY,hprime_xx,hprime_yy,hprime_zz
 

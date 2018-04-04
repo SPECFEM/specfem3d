@@ -652,13 +652,13 @@
                                 div_glob,valence, &
                                 div,curl_x,curl_y,curl_z, &
                                 velocity_x,velocity_y,velocity_z, &
-                                ispec_is) 
+                                ispec_is)
 
 ! calculates div, curl and velocity
 
   use constants
 
-  use specfem_par, only : NSPEC_AB,NGLOB_AB,ibool,ispec_is,hprime_xx,hprime_yy,hprime_zz, &
+  use specfem_par, only: NSPEC_AB,NGLOB_AB,ibool,ispec_is,hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,irregular_element_number, &
                           xix_regular
 
@@ -762,7 +762,7 @@
             dvzdxl(i,j,k) = xix_regular*tempz1l
             dvzdyl(i,j,k) = xix_regular*tempz2l
             dvzdzl(i,j,k) = xix_regular*tempz3l
- 
+
           endif
 
         enddo

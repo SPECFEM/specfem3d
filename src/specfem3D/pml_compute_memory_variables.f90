@@ -95,7 +95,7 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
 
   CPML_region_local = CPML_regions(ispec_CPML)
   ispec_irreg = irregular_element_number(ispec)
-  if (ispec_irreg==0) jacobianl = jacobian_regular
+  if (ispec_irreg == 0) jacobianl = jacobian_regular
 
   do k=1,NGLLZ
     do j=1,NGLLY

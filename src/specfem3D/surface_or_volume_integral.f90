@@ -81,7 +81,7 @@
 
             weightpt = wxgll(i)*wygll(j)*wzgll(k)
 
-            if (ispec_irreg /= 0) then !irregular element 
+            if (ispec_irreg /= 0) then !irregular element
               ! compute the Jacobian
               xixpt    = xix(i,j,k,ispec_irreg)
               xiypt    = xiy(i,j,k,ispec_irreg)

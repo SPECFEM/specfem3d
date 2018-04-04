@@ -40,7 +40,7 @@
 
   use fault_solver_dynamic, only: Kelvin_Voigt_eta
 
-  use specfem_par, only:SAVE_MOHO_MESH,USE_LDDRK,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+  use specfem_par, only: SAVE_MOHO_MESH,USE_LDDRK,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
                         NSPEC_AB,NGLOB_AB,hprime_xxT,hprime_yyT,hprime_zzT, &
                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
@@ -49,13 +49,13 @@
                         NSPEC_ATTENUATION_AB,NSPEC_ATTENUATION_AB_LDDRK, &
                         ANISOTROPY,SIMULATION_TYPE, &
                         NSPEC_ADJOINT,is_moho_top,is_moho_bot, &
-                        irregular_element_number,xix_regular,jacobian_regular 
+                        irregular_element_number,xix_regular,jacobian_regular
 
-  use specfem_par_elastic, only : c11store,c12store,c13store,c14store,c15store,c16store, &
+  use specfem_par_elastic, only: c11store,c12store,c13store,c14store,c15store,c16store, &
                         c22store,c23store,c24store,c25store,c26store,c33store, &
                         c34store,c35store,c36store,c44store,c45store,c46store, &
                         c55store,c56store,c66store,one_minus_sum_beta,factor_common, &
-                        one_minus_sum_beta_kappa,factor_common_kappa,COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, & 
+                        one_minus_sum_beta_kappa,factor_common_kappa,COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
                         dsdx_top,dsdx_bot, &
                         ispec2D_moho_top,ispec2D_moho_bot, &
                         nspec_inner_elastic,nspec_outer_elastic,phase_ispec_inner_elastic
@@ -302,7 +302,7 @@
     endif
 
     ispec_irreg = irregular_element_number(ispec)
-    if (ispec_irreg==0) jacobianl = jacobian_regular
+    if (ispec_irreg == 0) jacobianl = jacobian_regular
 
     do k=1,NGLLZ
       do j=1,NGLLY
@@ -503,7 +503,7 @@
                   duzdyl_att = xiyl * tempz1_att(i,j,k) + etayl * tempz2_att(i,j,k) + gammayl * tempz3_att(i,j,k)
                   duzdzl_att = xizl * tempz1_att(i,j,k) + etazl * tempz2_att(i,j,k) + gammazl * tempz3_att(i,j,k)
                 else
-                  duxdxl_att = xix_regular * tempx1_att(i,j,k) 
+                  duxdxl_att = xix_regular * tempx1_att(i,j,k)
                   duxdyl_att = xix_regular * tempx2_att(i,j,k)
                   duxdzl_att = xix_regular * tempx3_att(i,j,k)
 
