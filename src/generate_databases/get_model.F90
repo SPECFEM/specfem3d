@@ -253,13 +253,6 @@
             rho_vp(i,j,k,ispec) = rho*vp
             rho_vs(i,j,k,ispec) = rho*vs
             !
-            rho_vpI(i,j,k,ispec) = rho*vp
-            rho_vpII(i,j,k,ispec) = 0.d0
-            rho_vsI(i,j,k,ispec) = rho*vs
-            rhoarraystore(1,i,j,k,ispec) = rho
-            rhoarraystore(2,i,j,k,ispec) = rho
-            phistore(i,j,k,ispec) = 0.d0
-            tortstore(i,j,k,ispec) = 1.d0
             !end pll
 
           else

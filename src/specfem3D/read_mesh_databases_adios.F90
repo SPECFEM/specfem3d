@@ -95,7 +95,7 @@ subroutine read_mesh_databases_adios()
   integer(kind=8), pointer :: sel => null()
   integer(kind=8), dimension(1) :: start, count_ad
 
-  integer :: local_dim_ibool, local_dim_x_global, local_dim_y_global, &
+  integer :: local_dim_ibool, local_dim_irregular_element_number, local_dim_x_global, local_dim_y_global, &
              local_dim_z_global, local_dim_xixstore, local_dim_xiystore, &
              local_dim_xizstore, local_dim_etaxstore, local_dim_etaystore, &
              local_dim_etazstore, local_dim_gammaxstore, &
@@ -173,6 +173,7 @@ subroutine read_mesh_databases_adios()
   call adios_selection_writeblock(sel, myrank)
   call adios_schedule_read(handle, sel, "nspec", 0, 1, NSPEC_AB, ier)
   call adios_schedule_read(handle, sel, "nglob", 0, 1, NGLOB_AB, ier)
+  call adios_schedule_read(handle, sel, "nspec_irregular", 0, 1, NSPEC_IRREGULAR, ier)
   call adios_perform_reads(handle, ier)
   if (ier /= 0) call abort_mpi()
 
@@ -368,6 +369,16 @@ subroutine read_mesh_databases_adios()
                         local_dim_mustore,ier)
   call adios_get_scalar(handle, "rhostore/local_dim", &
                         local_dim_rhostore,ier)
+
+  call adios_get_scalar(handle, "irregular_element_number/local_dim", &
+                        local_dim_irregular_element_number,ier)
+
+  call adios_schedule_read(handle, sel, "jacobian_regular", 0, 1, &
+                           jacobian_regular, ier)
+  call adios_schedule_read(handle, sel, "xix_regular", 0, 1, &
+                           xix_regular, ier)
+
+
   if (ACOUSTIC_SIMULATION) then
     call adios_get_scalar(handle, "rmass_acoustic/local_dim", &
                           local_dim_rmass_acoustic,ier)

@@ -824,8 +824,7 @@
               comp_z = comp_dir_vect_source_Z_UP(isource)/norm
               write(*,*) " DIPOLE FLUID ", comp_x, comp_y, comp_z
               call compute_arrays_source_forcesolution_fluid(ispec, sourcearray, hxis,hetas,hgammas,hpxis,hpetas,hpgammas, &
-                                                             factor_source,comp_x,comp_y,comp_z,nu_source(:,:,isource), &
-                                                             xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,NSPEC_AB)
+                                                             factor_source,comp_x,comp_y,comp_z,nu_source(:,:,isource))
             else
               ! point force
               ! identical source array components in x,y,z-direction
@@ -848,8 +847,7 @@
             call compute_arrays_source_cmt(ispec,sourcearray, &
                                            hxis,hetas,hgammas,hpxis,hpetas,hpgammas, &
                                            Mxx(isource),Myy(isource),Mzz(isource), &
-                                           Mxy(isource),Mxz(isource),Myz(isource), &
-                                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,NSPEC_AB)
+                                           Mxy(isource),Mxz(isource),Myz(isource))
           endif
 
           ! acoustic case

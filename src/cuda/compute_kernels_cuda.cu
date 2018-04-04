@@ -354,14 +354,14 @@ TRACE("compute_kernels_strgth_noise_cu");
 
 
 __device__ void compute_gradient_kernel(int ijk,
-                                        int ispec,
+                                        int ispec,int ispec_irreg,
                                         field* scalar_field,
                                         field* vector_field_loc,
                                         realw* d_hprime_xx,
                                         realw* d_xix,realw* d_xiy,realw* d_xiz,
                                         realw* d_etax,realw* d_etay,realw* d_etaz,
                                         realw* d_gammax,realw* d_gammay,realw* d_gammaz,
-                                        realw rhol,
+                                        realw rhol,realw xix_regular,
                                         int gravity) {
 
   field temp1l,temp2l,temp3l;
@@ -402,17 +402,7 @@ __device__ void compute_gradient_kernel(int ijk,
     temp3l += scalar_field[offset3]*hp3;
   }
 
-  offset = ispec*NGLL3_ALIGN + ijk;
-
-  xixl = d_xix[offset];
-  xiyl = d_xiy[offset];
-  xizl = d_xiz[offset];
-  etaxl = d_etax[offset];
-  etayl = d_etay[offset];
-  etazl = d_etaz[offset];
-  gammaxl = d_gammax[offset];
-  gammayl = d_gammay[offset];
-  gammazl = d_gammaz[offset];
+  offset = ispec_irreg*NGLL3_ALIGN + ijk;
 
   if (gravity ){
     // daniel: TODO - check gravity case here
@@ -420,10 +410,29 @@ __device__ void compute_gradient_kernel(int ijk,
   }else{
     rho_invl = 1.0f / rhol;
   }
+
+  if (ispec_irreg >= 0){
+    xixl = d_xix[offset];
+    xiyl = d_xiy[offset];
+    xizl = d_xiz[offset];
+    etaxl = d_etax[offset];
+    etayl = d_etay[offset];
+    etazl = d_etaz[offset];
+    gammaxl = d_gammax[offset];
+    gammayl = d_gammay[offset];
+    gammazl = d_gammaz[offset];
+  
   // derivatives of acoustic scalar potential field on GLL points
   vector_field_loc[0] = (temp1l*xixl + temp2l*etaxl + temp3l*gammaxl) * rho_invl;
   vector_field_loc[1] = (temp1l*xiyl + temp2l*etayl + temp3l*gammayl) * rho_invl;
   vector_field_loc[2] = (temp1l*xizl + temp2l*etazl + temp3l*gammazl) * rho_invl;
+  }
+  else{
+  // derivatives of acoustic scalar potential field on GLL points
+  vector_field_loc[0] = temp1l * xix_regular * rho_invl;
+  vector_field_loc[1] = temp2l * xix_regular * rho_invl;
+  vector_field_loc[2] = temp3l * xix_regular * rho_invl;
+  }
 
 }
 
@@ -435,9 +444,11 @@ __global__ void compute_kernels_acoustic_kernel(int* ispec_is_acoustic,
                                                 realw* rhostore,
                                                 realw* kappastore,
                                                 realw* d_hprime_xx,
+                                                int* d_irregular_element_number,
                                                 realw* d_xix,realw* d_xiy,realw* d_xiz,
                                                 realw* d_etax,realw* d_etay,realw* d_etaz,
                                                 realw* d_gammax,realw* d_gammay,realw* d_gammaz,
+                                                realw xix_regular,
                                                 field* potential_acoustic,
                                                 field* potential_dot_dot_acoustic,
                                                 field* b_potential_acoustic,
@@ -455,6 +466,7 @@ __global__ void compute_kernels_acoustic_kernel(int* ispec_is_acoustic,
   int ijk_ispec = ijk + NGLL3*ispec;
   int ijk_ispec_padded = ijk + NGLL3_PADDED*ispec;
   int iglob;
+  int ispec_irreg = d_irregular_element_number[ispec]-1;
 
   // shared memory between all threads within this block
   __shared__ field scalar_field_displ[NGLL3];
@@ -487,16 +499,16 @@ __global__ void compute_kernels_acoustic_kernel(int* ispec_is_acoustic,
     rhol = rhostore[ijk_ispec_padded];
 
     // displacement vector from backward field
-    compute_gradient_kernel(ijk,ispec,scalar_field_displ,b_displ_loc,
+    compute_gradient_kernel(ijk,ispec,ispec_irreg,scalar_field_displ,b_displ_loc,
                             d_hprime_xx,
                             d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,
-                            rhol,gravity);
+                            rhol,xix_regular,gravity);
 
     // acceleration vector
-    compute_gradient_kernel(ijk,ispec,scalar_field_accel,accel_loc,
+    compute_gradient_kernel(ijk,ispec,ispec_irreg,scalar_field_accel,accel_loc,
                             d_hprime_xx,
                             d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,
-                            rhol,gravity);
+                            rhol,xix_regular,gravity);
 
     // the sum function is here to enable summing over wavefields when NB_RUNS_ACOUSTIC_GPU > 1
 
@@ -538,9 +550,11 @@ TRACE("compute_kernels_acoustic_cuda");
                                                     mp->d_rhostore,
                                                     mp->d_kappastore,
                                                     mp->d_hprime_xx,
+                                                    mp->d_irregular_element_number,
                                                     mp->d_xix,mp->d_xiy,mp->d_xiz,
                                                     mp->d_etax,mp->d_etay,mp->d_etaz,
                                                     mp->d_gammax,mp->d_gammay,mp->d_gammaz,
+                                                    mp->xix_regular,
                                                     mp->d_potential_acoustic,
                                                     mp->d_potential_dot_dot_acoustic,
                                                     mp->d_b_potential_acoustic,
@@ -626,9 +640,11 @@ __global__ void compute_kernels_hess_ac_cudakernel(int* ispec_is_acoustic,
                                                    realw* rhostore,
                                                    realw* kappastore,
                                                    realw* d_hprime_xx,
+                                                   int* d_irregular_element_number,
                                                    realw* d_xix,realw* d_xiy,realw* d_xiz,
                                                    realw* d_etax,realw* d_etay,realw* d_etaz,
                                                    realw* d_gammax,realw* d_gammay,realw* d_gammaz,
+                                                   realw xix_regular,
                                                    realw* hess_kl,
                                                    realw* hess_rho_ac_kl,
                                                    realw* hess_kappa_ac_kl,
@@ -641,6 +657,7 @@ __global__ void compute_kernels_hess_ac_cudakernel(int* ispec_is_acoustic,
   int ijk_ispec_padded = ijk + NGLL3_PADDED*ispec;
   int ijk_ispec = ijk + NGLL3*ispec;
   int iglob;
+  int ispec_irreg = d_irregular_element_number[ispec]-1;
 
   // shared memory between all threads within this block
   __shared__ field scalar_field_accel[NGLL3];
@@ -679,25 +696,25 @@ __global__ void compute_kernels_hess_ac_cudakernel(int* ispec_is_acoustic,
     rhol = rhostore[ijk_ispec_padded];
 
     // acceleration vector
-    compute_gradient_kernel(ijk,ispec,
+    compute_gradient_kernel(ijk,ispec,ispec_irreg,
                             scalar_field_accel,accel_loc,
                             d_hprime_xx,
                             d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,
-                            rhol,gravity);
+                            rhol,xix_regular,gravity);
 
     // acceleration vector from backward field
-    compute_gradient_kernel(ijk,ispec,
+    compute_gradient_kernel(ijk,ispec,ispec_irreg,
                             scalar_field_b_accel,b_accel_loc,
                             d_hprime_xx,
                             d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,
-                            rhol,gravity);
+                            rhol,xix_regular,gravity);
 
     // velocity vector from backward field
-    compute_gradient_kernel(ijk,ispec,
+    compute_gradient_kernel(ijk,ispec,ispec_irreg,
                             scalar_field_b_veloc,b_veloc_loc,
                             d_hprime_xx,
                             d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,
-                            rhol,gravity);
+                            rhol,xix_regular,gravity);
 
     //sun function is here to sum over wavefields, in case of NB_RUNS_ACOUSTIC_GPU>1
 
@@ -768,9 +785,11 @@ void FC_FUNC_(compute_kernels_hess_cuda,
                                                          mp->d_rhostore,
                mp->d_kappastore,
                                                          mp->d_hprime_xx,
+                                                         mp->d_irregular_element_number,
                                                          mp->d_xix,mp->d_xiy,mp->d_xiz,
                                                          mp->d_etax,mp->d_etay,mp->d_etaz,
                                                          mp->d_gammax,mp->d_gammay,mp->d_gammaz,
+                                                         mp->xix_regular,
                                                          mp->d_hess_ac_kl,
                mp->d_hess_rho_ac_kl,
                mp->d_hess_kappa_ac_kl,

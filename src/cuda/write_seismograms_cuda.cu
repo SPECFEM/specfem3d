@@ -150,10 +150,12 @@ __global__ void compute_acoustic_vectorial_seismogram_kernel(int nrec_local,
                    realw* seismograms,
                    realw* d_rhostore,
                    int* d_ibool,
+                   int * d_irregular_element_number,
                    realw* hxir, realw* hetar, realw* hgammar,
                    realw* d_xix, realw* d_xiy, realw* d_xiz,
                    realw* d_etax, realw* d_etay, realw* d_etaz,
                    realw* d_gammax, realw* d_gammay, realw* d_gammaz,
+                   realw xix_regular,
                    realw* d_hprime_xx,
                    realw* nu,
                    int* ispec_selected_rec_loc,
@@ -162,16 +164,8 @@ __global__ void compute_acoustic_vectorial_seismogram_kernel(int nrec_local,
   int irec_local = blockIdx.x + blockIdx.y*gridDim.x;
   int tx = threadIdx.x;
 
-  // limits thread ids to range [0,125-1]
-  if (tx >= NGLL3) tx = NGLL3-1;
-
-  // local index
-  int K = (tx/NGLL2);
-  int J = ((tx-K*NGLL2)/NGLLX);
-  int I = (tx-K*NGLL2-J*NGLLX);
-
   // shared memory
-  __shared__ field s_dummy_loc[NGLL3_PADDED];
+  __shared__ realw s_dummy_loc[NGLL3_PADDED];
   __shared__ realw s_temp1[NGLL3_PADDED];
   __shared__ realw s_temp2[NGLL3_PADDED];
   __shared__ realw s_temp3[NGLL3_PADDED];
@@ -183,7 +177,8 @@ __global__ void compute_acoustic_vectorial_seismogram_kernel(int nrec_local,
   realw xixl, xiyl, xizl;
   realw etaxl, etayl, etazl;
   realw gammaxl, gammayl, gammazl;
-  int ispec, offset, iglob;
+  realw dpotentialdxl, dpotentialdyl, dpotentialdzl;
+  int ispec, offset, offset_irreg, iglob, ispec_irreg;
 
   /*
   // debug
@@ -215,42 +210,45 @@ __global__ void compute_acoustic_vectorial_seismogram_kernel(int nrec_local,
   }
   */
 
-  if (irec_local < nrec_local) {
+  s_temp1[tx] = 0.0f;
+  s_temp2[tx] = 0.0f;
+  s_temp3[tx] = 0.0f;
 
+  // local index
+  int K = (tx/NGLL2);
+  int J = ((tx-K*NGLL2)/NGLLX);
+  int I = (tx-K*NGLL2-J*NGLLX);
+
+
+  if (irec_local >= nrec_local) return;
+
+  if (tx < NGLL3) {
     ispec = ispec_selected_rec_loc[irec_local] - 1;
-
+    ispec_irreg = d_irregular_element_number[ispec] - 1;
     // nothing to do if we are in elastic element
     if (d_ispec_is_acoustic[ispec] == 0) {return;}
 
     offset = INDEX4_PADDED(NGLLX,NGLLX,NGLLX,I,J,K,ispec);
+    offset_irreg = INDEX4_PADDED(NGLLX,NGLLX,NGLLX,I,J,K,ispec_irreg);
+
     iglob = d_ibool[offset]-1;
     rho_invl = 1.f / d_rhostore[offset];
-    xixl = d_xix[offset];
-    xiyl = d_xiy[offset];
-    xizl = d_xiz[offset];
-    etaxl = d_etax[offset];
-    etayl = d_etay[offset];
-    etazl = d_etaz[offset];
-    gammaxl = d_gammax[offset];
-    gammayl = d_gammay[offset];
-    gammazl = d_gammaz[offset];
-
     hlagrange = hxir[irec_local + nrec_local*I]*hetar[irec_local + nrec_local*J]*hgammar[irec_local + nrec_local*K];
-
-    //debug
-    //if (tx == 0) printf("thread %d %d %d - %f %f %f\n",ispec,iglob,irec_local,hlagrange,rho_invl, xixl);
-
-    // loads into shared memory
-    if (tx < NGLL2) {
-      sh_hprime_xx[tx] = d_hprime_xx[tx];}
-    s_dummy_loc[tx] = scalar_potential[iglob];
   }
+
+  //debug
+  //if (tx == 0) printf("thread %d %d %d - %f %f %f\n",ispec,iglob,irec_local,hlagrange,rho_invl, xixl);
+
+  // loads into shared memory
+  if (tx < NGLL2) sh_hprime_xx[tx] = d_hprime_xx[tx];
+  if (tx < NGLL3) s_dummy_loc[tx] = (realw)scalar_potential[iglob];
+  
 
   // synchronize all the threads (one thread for each of the NGLL grid points of the
   // current spectral element) because we need the whole element to be ready
   __syncthreads();
 
-  if (irec_local < nrec_local) {
+  if (tx < NGLL3) {
     // computes first matrix product
     temp1l = 0.f;
     temp2l = 0.f;
@@ -266,11 +264,29 @@ __global__ void compute_acoustic_vectorial_seismogram_kernel(int nrec_local,
       temp3l += s_dummy_loc[l*NGLL2+J*NGLLX+I] * sh_hprime_xx[l*NGLLX+K];
     }
 
-    // compute derivatives of ux, uy and uz with respect to x, y and z
-    // derivatives of potential
-    realw dpotentialdxl = xixl*temp1l + etaxl*temp2l + gammaxl*temp3l;
-    realw dpotentialdyl = xiyl*temp1l + etayl*temp2l + gammayl*temp3l;
-    realw dpotentialdzl = xizl*temp1l + etazl*temp2l + gammazl*temp3l;
+   if (ispec_irreg >= 0){ //irregular element
+      xixl = d_xix[offset_irreg];
+      xiyl = d_xiy[offset_irreg];
+      xizl = d_xiz[offset_irreg];
+      etaxl = d_etax[offset_irreg];
+      etayl = d_etay[offset_irreg];
+      etazl = d_etaz[offset_irreg];
+      gammaxl = d_gammax[offset_irreg];
+      gammayl = d_gammay[offset_irreg];
+      gammazl = d_gammaz[offset_irreg];
+      // compute derivatives of ux, uy and uz with respect to x, y and z
+      // derivatives of potential
+      dpotentialdxl = xixl*temp1l + etaxl*temp2l + gammaxl*temp3l;
+      dpotentialdyl = xiyl*temp1l + etayl*temp2l + gammayl*temp3l;
+      dpotentialdzl = xizl*temp1l + etazl*temp2l + gammazl*temp3l;
+    }
+    else{
+      // compute derivatives of ux, uy and uz with respect to x, y and z
+      // derivatives of potential
+      dpotentialdxl = xix_regular*temp1l;
+      dpotentialdyl = xix_regular*temp2l;
+      dpotentialdzl = xix_regular*temp3l;
+    }
 
     // store the field in shared memmory
     s_temp1[tx] = hlagrange *dpotentialdxl * rho_invl;
@@ -314,6 +330,7 @@ void FC_FUNC_(compute_seismograms_cuda,
                                         int* NTSTEP_BETWEEN_OUTPUT_SEISMOSf,
                                         int* it, int* it_end,
                                         int* ACOUSTIC_SIMULATION,
+                                        int* ELASTIC_SIMULATION,
                                         int* USE_TRICK_FOR_BETTER_PRESSURE) {
 
 // compute_seismograms
@@ -359,37 +376,40 @@ void FC_FUNC_(compute_seismograms_cuda,
   // computes current seismograms value
 
   // elastic wavefield
-  if (mp->save_seismograms_d)
-      compute_elastic_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
-                                                                               mp->d_displ,
-                                                                               mp->d_ibool,
-                                                                               mp->d_hxir,mp->d_hetar,mp->d_hgammar,
-                                                                               mp->d_seismograms_d,
-                                                                               mp->d_nu,
-                                                                               mp->d_ispec_selected_rec_loc,
-                                                                               seismo_current);
+  // acoustic wavefield
+  if (*ELASTIC_SIMULATION){
+    if (mp->save_seismograms_d)
+        compute_elastic_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
+                                                                                 mp->d_displ,
+                                                                                 mp->d_ibool,
+                                                                                 mp->d_hxir,mp->d_hetar,mp->d_hgammar,
+                                                                                 mp->d_seismograms_d,
+                                                                                 mp->d_nu,
+                                                                                 mp->d_ispec_selected_rec_loc,
+                                                                                 seismo_current);
 
 
-  if (mp->save_seismograms_v)
-      compute_elastic_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
-                                                                               mp->d_veloc,
-                                                                               mp->d_ibool,
-                                                                               mp->d_hxir,mp->d_hetar,mp->d_hgammar,
-                                                                               mp->d_seismograms_v,
-                                                                               mp->d_nu,
-                                                                               mp->d_ispec_selected_rec_loc,
-                                                                               seismo_current);
+    if (mp->save_seismograms_v)
+        compute_elastic_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
+                                                                                 mp->d_veloc,
+                                                                                 mp->d_ibool,
+                                                                                 mp->d_hxir,mp->d_hetar,mp->d_hgammar,
+                                                                                 mp->d_seismograms_v,
+                                                                                 mp->d_nu,
+                                                                                 mp->d_ispec_selected_rec_loc,
+                                                                                 seismo_current);
 
-  if (mp->save_seismograms_a)
-      compute_elastic_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
-                                                                               mp->d_accel,
-                                                                               mp->d_ibool,
-                                                                               mp->d_hxir,mp->d_hetar,mp->d_hgammar,
-                                                                               mp->d_seismograms_a,
-                                                                               mp->d_nu,
-                                                                               mp->d_ispec_selected_rec_loc,
-                                                                               seismo_current);
+    if (mp->save_seismograms_a)
+        compute_elastic_seismogram_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->nrec_local,
+                                                                                 mp->d_accel,
+                                                                                 mp->d_ibool,
+                                                                                 mp->d_hxir,mp->d_hetar,mp->d_hgammar,
+                                                                                 mp->d_seismograms_a,
+                                                                                 mp->d_nu,
+                                                                                 mp->d_ispec_selected_rec_loc,
+                                                                                 seismo_current);
 
+  }
   // acoustic wavefield
   if (*ACOUSTIC_SIMULATION){
     if (mp->save_seismograms_p){
@@ -420,10 +440,12 @@ void FC_FUNC_(compute_seismograms_cuda,
                                                                                           mp->d_seismograms_d,
                                                                                           mp->d_rhostore,
                                                                                           mp->d_ibool,
+                                                                                          mp->d_irregular_element_number,
                                                                                           mp->d_hxir,mp->d_hetar,mp->d_hgammar,
                                                                                           mp->d_xix,mp->d_xiy,mp->d_xiz,
                                                                                           mp->d_etax,mp->d_etay,mp->d_etaz,
                                                                                           mp->d_gammax,mp->d_gammay,mp->d_gammaz,
+                                                                                          mp->xix_regular,
                                                                                           mp->d_hprime_xx,
                                                                                           mp->d_nu,
                                                                                           mp->d_ispec_selected_rec_loc,
@@ -437,10 +459,12 @@ void FC_FUNC_(compute_seismograms_cuda,
                                                                                           mp->d_seismograms_v,
                                                                                           mp->d_rhostore,
                                                                                           mp->d_ibool,
+                                                                                          mp->d_irregular_element_number,
                                                                                           mp->d_hxir,mp->d_hetar,mp->d_hgammar,
                                                                                           mp->d_xix,mp->d_xiy,mp->d_xiz,
                                                                                           mp->d_etax,mp->d_etay,mp->d_etaz,
                                                                                           mp->d_gammax,mp->d_gammay,mp->d_gammaz,
+                                                                                          mp->xix_regular,
                                                                                           mp->d_hprime_xx,
                                                                                           mp->d_nu,
                                                                                           mp->d_ispec_selected_rec_loc,
@@ -454,10 +478,12 @@ void FC_FUNC_(compute_seismograms_cuda,
                                                                                           mp->d_seismograms_a,
                                                                                           mp->d_rhostore,
                                                                                           mp->d_ibool,
+                                                                                          mp->d_irregular_element_number,
                                                                                           mp->d_hxir,mp->d_hetar,mp->d_hgammar,
                                                                                           mp->d_xix,mp->d_xiy,mp->d_xiz,
                                                                                           mp->d_etax,mp->d_etay,mp->d_etaz,
                                                                                           mp->d_gammax,mp->d_gammay,mp->d_gammaz,
+                                                                                          mp->xix_regular,
                                                                                           mp->d_hprime_xx,
                                                                                           mp->d_nu,
                                                                                           mp->d_ispec_selected_rec_loc,

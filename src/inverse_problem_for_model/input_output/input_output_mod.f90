@@ -31,7 +31,6 @@ module input_output
                          NGLLX, NGLLY, NGLLZ, NDIM, NSPEC_AB, NGLOB_AB, MIDX, MIDY, MIDZ, &
                          LOCAL_PATH, xigll, yigll, zigll, DT, &
                          ibool, xstore, ystore, zstore, &
-                         xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, &
                          myrank, USE_SOURCES_RECEIVERS_Z,INVERSE_FWI_FULL_PROBLEM, &
                          USE_FORCE_POINT_SOURCE,USE_EXTERNAL_SOURCE_FILE, USE_RICKER_TIME_FUNCTION
 

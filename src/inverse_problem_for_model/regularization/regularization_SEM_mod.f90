@@ -2991,7 +2991,8 @@ contains
 !##################################################################################################################################
   subroutine compute_first_derivatives_lagrange(Df, field_to_derivate)
 
-    use specfem_par, only: xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, hprime_xx
+    use specfem_par, only: xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, hprime_xx, irregular_element_number, &
+                           xix_regular
 
     implicit none
     real(kind=CUSTOM_REAL), dimension(:),         allocatable, intent(in)     :: field_to_derivate
@@ -3003,7 +3004,7 @@ contains
     real(kind=CUSTOM_REAL)                                              :: xixl,xiyl,xizl
     real(kind=CUSTOM_REAL)                                              :: etaxl,etayl,etazl
     real(kind=CUSTOM_REAL)                                              :: gammaxl,gammayl,gammazl
-    integer                                                             :: ispec, iglob, i, j, k, l
+    integer                                                             :: ispec, ispec_irreg, iglob, i, j, k, l
 
 
     do ispec =1, NSPEC_AB
@@ -3015,6 +3016,8 @@ contains
              enddo
           enddo
        enddo
+
+       ispec_irreg = irregular_element_number(ispec)
 
        do k=1,NGLLZ
           do j=1,NGLLY
@@ -3038,20 +3041,28 @@ contains
                    tempx3l = tempx3l + dummyloc(i,j,l)*hp3
 
                 enddo
+                if (ispec_irreg /= 0 ) then !irregular element
+                  xixl = xix(i,j,k,ispec_irreg)
+                  xiyl = xiy(i,j,k,ispec_irreg)
+                  xizl = xiz(i,j,k,ispec_irreg)
+                  etaxl = etax(i,j,k,ispec_irreg)
+                  etayl = etay(i,j,k,ispec_irreg)
+                  etazl = etaz(i,j,k,ispec_irreg)
+                  gammaxl = gammax(i,j,k,ispec_irreg)
+                  gammayl = gammay(i,j,k,ispec_irreg)
+                  gammazl = gammaz(i,j,k,ispec_irreg)
 
-                xixl = xix(i,j,k,ispec)
-                xiyl = xiy(i,j,k,ispec)
-                xizl = xiz(i,j,k,ispec)
-                etaxl = etax(i,j,k,ispec)
-                etayl = etay(i,j,k,ispec)
-                etazl = etaz(i,j,k,ispec)
-                gammaxl = gammax(i,j,k,ispec)
-                gammayl = gammay(i,j,k,ispec)
-                gammazl = gammaz(i,j,k,ispec)
+                  Df(1,i,j,k,ispec) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
+                  Df(2,i,j,k,ispec) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
+                  Df(3,i,j,k,ispec) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
 
-                Df(1,i,j,k,ispec) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
-                Df(2,i,j,k,ispec) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
-                Df(3,i,j,k,ispec) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
+                else !regular element
+
+                  Df(1,i,j,k,ispec) = xix_regular * tempx1l
+                  Df(2,i,j,k,ispec) = xix_regular * tempx2l
+                  Df(3,i,j,k,ispec) = xix_regular * tempx3l
+
+                endif
 
              enddo
           enddo
@@ -3068,7 +3079,9 @@ contains
 !##################################################################################################################################
   subroutine compute_laplac_lagrange(Lapf, field_to_derivate)
 
-    use specfem_par, only: xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, hprime_xx
+    use specfem_par, only: xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, hprime_xx, irregular_element_number, &
+                           xix_regular
+
 
     implicit none
     real(kind=CUSTOM_REAL), dimension(:),     allocatable, intent(in)     :: field_to_derivate
@@ -3082,7 +3095,7 @@ contains
     double precision                                              :: etaxl,etayl,etazl
     double precision                                              :: gammaxl,gammayl,gammazl
     double precision                                              :: coef_norm
-    integer                                                             :: ispec, iglob, i, j, k, l
+    integer                                                       :: ispec, ispec_irreg, iglob, i, j, k, l
     integer :: ispec_to_debug = 100
 
     if (DEBUG_MODE) write(IIDD,*)
@@ -3102,6 +3115,7 @@ contains
        coef_norm = maxval(abs(F(:,:,:)))
        !coef_norm=1.
        F(:,:,:)=F(:,:,:)/coef_norm
+       ispec_irreg = irregular_element_number(ispec)
 
        do k=1,NGLLZ
           do j=1,NGLLY
@@ -3126,19 +3140,29 @@ contains
 
                 enddo
 
-                xixl = xix(i,j,k,ispec)
-                xiyl = xiy(i,j,k,ispec)
-                xizl = xiz(i,j,k,ispec)
-                etaxl = etax(i,j,k,ispec)
-                etayl = etay(i,j,k,ispec)
-                etazl = etaz(i,j,k,ispec)
-                gammaxl = gammax(i,j,k,ispec)
-                gammayl = gammay(i,j,k,ispec)
-                gammazl = gammaz(i,j,k,ispec)
+                if (ispec_irreg /= 0 ) then !irregular element
+                  xixl = xix(i,j,k,ispec_irreg)
+                  xiyl = xiy(i,j,k,ispec_irreg)
+                  xizl = xiz(i,j,k,ispec_irreg)
+                  etaxl = etax(i,j,k,ispec_irreg)
+                  etayl = etay(i,j,k,ispec_irreg)
+                  etazl = etaz(i,j,k,ispec_irreg)
+                  gammaxl = gammax(i,j,k,ispec_irreg)
+                  gammayl = gammay(i,j,k,ispec_irreg)
+                  gammazl = gammaz(i,j,k,ispec_irreg)
 
-                dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l  ! df/dx
-                dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l  ! df/dy
-                dF(3,i,j,k) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l  ! df/dz
+                  dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
+                  dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
+                  dF(3,i,j,k) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
+
+                else !regular element
+
+                  dF(1,i,j,k) = xix_regular * tempx1l
+                  dF(2,i,j,k) = xix_regular * tempx2l
+                  dF(3,i,j,k) = xix_regular * tempx3l
+
+                endif
+
                 if (DEBUG_MODE .and. ispec == ispec_to_debug .and. i == 1 .and. j == 1) write(IIDD,*)   &
                      k,zstore(iglob), dF(3,i,j,k)*coef_norm,  F(i,j,k)*coef_norm
                 !if (DEBUG_MODE) write(IIDD,*)   dF(1,i,j,k),  dF(2,i,j,k), dF(3,i,j,k),  F(i,j,k)
@@ -3178,16 +3202,29 @@ contains
                    tempx3l = tempx3l + F(i,j,l)*hp3
 
                 enddo
+                if (ispec_irreg /= 0 ) then !irregular element
 
-                xixl = xix(i,j,k,ispec)
-                xiyl = xiy(i,j,k,ispec)
-                xizl = xiz(i,j,k,ispec)
-                etaxl = etax(i,j,k,ispec)
-                etayl = etay(i,j,k,ispec)
-                etazl = etaz(i,j,k,ispec)
-                gammaxl = gammax(i,j,k,ispec)
-                gammayl = gammay(i,j,k,ispec)
-                gammazl = gammaz(i,j,k,ispec)
+                  xixl = xix(i,j,k,ispec_irreg)
+                  xiyl = xiy(i,j,k,ispec_irreg)
+                  xizl = xiz(i,j,k,ispec_irreg)
+                  etaxl = etax(i,j,k,ispec_irreg)
+                  etayl = etay(i,j,k,ispec_irreg)
+                  etazl = etaz(i,j,k,ispec_irreg)
+                  gammaxl = gammax(i,j,k,ispec_irreg)
+                  gammayl = gammay(i,j,k,ispec_irreg)
+                  gammazl = gammaz(i,j,k,ispec_irreg)
+
+                  dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
+           !       dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
+            !      dF(3,i,j,k) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
+
+                else !regular element
+
+                  dF(1,i,j,k) = xix_regular * tempx1l
+             !     dF(2,i,j,k) = xix_regular * tempx2l
+              !    dF(3,i,j,k) = xix_regular * tempx3l
+
+                endif
 
                 dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
                 !dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
@@ -3199,6 +3236,7 @@ contains
              enddo
           enddo
        enddo
+ 
        if (DEBUG_MODE .and. ispec == ispec_to_debug) write(IIDD,*)
        !! deivate again df/dy / dy
        F(:,:,:)=dF(2,:,:,:)
@@ -3230,19 +3268,30 @@ contains
 
                 enddo
 
-                xixl = xix(i,j,k,ispec)
-                xiyl = xiy(i,j,k,ispec)
-                xizl = xiz(i,j,k,ispec)
-                etaxl = etax(i,j,k,ispec)
-                etayl = etay(i,j,k,ispec)
-                etazl = etaz(i,j,k,ispec)
-                gammaxl = gammax(i,j,k,ispec)
-                gammayl = gammay(i,j,k,ispec)
-                gammazl = gammaz(i,j,k,ispec)
+                if (ispec_irreg /= 0 ) then !irregular element
 
-               ! dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
-                dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
-               ! dF(3,i,j,k) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
+                  xixl = xix(i,j,k,ispec_irreg)
+                  xiyl = xiy(i,j,k,ispec_irreg)
+                  xizl = xiz(i,j,k,ispec_irreg)
+                  etaxl = etax(i,j,k,ispec_irreg)
+                  etayl = etay(i,j,k,ispec_irreg)
+                  etazl = etaz(i,j,k,ispec_irreg)
+                  gammaxl = gammax(i,j,k,ispec_irreg)
+                  gammayl = gammay(i,j,k,ispec_irreg)
+                  gammazl = gammaz(i,j,k,ispec_irreg)
+
+           !       dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
+                  dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
+            !      dF(3,i,j,k) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
+
+                else !regular element
+
+             !     dF(1,i,j,k) = xix_regular * tempx1l
+                  dF(2,i,j,k) = xix_regular * tempx2l
+              !    dF(3,i,j,k) = xix_regular * tempx3l
+
+                endif
+
                 !if (DEBUG_MODE) write(IIDD,*) 'y', dF(2,i,j,k)
                 LapF(1,iglob) = LapF(1,iglob) + dF(2,i,j,k) * coef_norm
              enddo
@@ -3278,20 +3327,30 @@ contains
                    tempx3l = tempx3l + F(i,j,l)*hp3
 
                 enddo
+                if (ispec_irreg /= 0 ) then !irregular element
 
-                xixl = xix(i,j,k,ispec)
-                xiyl = xiy(i,j,k,ispec)
-                xizl = xiz(i,j,k,ispec)
-                etaxl = etax(i,j,k,ispec)
-                etayl = etay(i,j,k,ispec)
-                etazl = etaz(i,j,k,ispec)
-                gammaxl = gammax(i,j,k,ispec)
-                gammayl = gammay(i,j,k,ispec)
-                gammazl = gammaz(i,j,k,ispec)
+                  xixl = xix(i,j,k,ispec_irreg)
+                  xiyl = xiy(i,j,k,ispec_irreg)
+                  xizl = xiz(i,j,k,ispec_irreg)
+                  etaxl = etax(i,j,k,ispec_irreg)
+                  etayl = etay(i,j,k,ispec_irreg)
+                  etazl = etaz(i,j,k,ispec_irreg)
+                  gammaxl = gammax(i,j,k,ispec_irreg)
+                  gammayl = gammay(i,j,k,ispec_irreg)
+                  gammazl = gammaz(i,j,k,ispec_irreg)
 
-               ! dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
-               ! dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
-                dF(3,i,j,k) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
+            !      dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
+           !       dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
+                  dF(3,i,j,k) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
+
+                else !regular element
+
+            !      dF(1,i,j,k) = xix_regular * tempx1l
+             !     dF(2,i,j,k) = xix_regular * tempx2l
+                  dF(3,i,j,k) = xix_regular * tempx3l
+
+                endif
+
                 !if (DEBUG_MODE) write(IIDD,*) 'z', dF(3,i,j,k)
                 LapF(1,iglob) = LapF(1,iglob) + dF(3,i,j,k) * coef_norm
                 if (DEBUG_MODE .and. ispec == ispec_to_debug .and. i == 1 .and. j == 1) write(IIDD,*)   &
@@ -4343,7 +4402,8 @@ end subroutine compute_bi_laplacian_of_field
 !!===============
 subroutine compute_derivative_with_lagrange_polynomials(derivative_of_field, field_to_derivate)
 
-   use specfem_par, only: xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, hprime_xx
+   use specfem_par, only: xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, hprime_xx, irregular_element_number,&
+                          xix_regular
 
    implicit none
    !! size (NDIM,NGLLX, NGLLY, NGLLZ, NSPEC_AB)
@@ -4358,7 +4418,7 @@ subroutine compute_derivative_with_lagrange_polynomials(derivative_of_field, fie
    double precision                                              :: xixl,xiyl,xizl
    double precision                                              :: etaxl,etayl,etazl
    double precision                                              :: gammaxl,gammayl,gammazl
-   integer                                                       :: ispec, i, j, k, l
+   integer                                                       :: ispec, ispec_irreg, i, j, k, l
 
 
    do ispec =1, NSPEC_AB
@@ -4372,7 +4432,7 @@ subroutine compute_derivative_with_lagrange_polynomials(derivative_of_field, fie
             enddo
          enddo
       enddo
-
+      ispec_irreg = irregular_element_number(ispec)
       !! derivative of field based on lagrange polynomials
       do k=1,NGLLZ
          do j=1,NGLLY
@@ -4396,20 +4456,29 @@ subroutine compute_derivative_with_lagrange_polynomials(derivative_of_field, fie
                   tempx3l = tempx3l + F(i,j,l)*hp3
 
                enddo
+               if (ispec_irreg /= 0 ) then !irregular element
 
-               xixl = xix(i,j,k,ispec)
-               xiyl = xiy(i,j,k,ispec)
-               xizl = xiz(i,j,k,ispec)
-               etaxl = etax(i,j,k,ispec)
-               etayl = etay(i,j,k,ispec)
-               etazl = etaz(i,j,k,ispec)
-               gammaxl = gammax(i,j,k,ispec)
-               gammayl = gammay(i,j,k,ispec)
-               gammazl = gammaz(i,j,k,ispec)
+                 xixl = xix(i,j,k,ispec_irreg)
+                 xiyl = xiy(i,j,k,ispec_irreg)
+                 xizl = xiz(i,j,k,ispec_irreg)
+                 etaxl = etax(i,j,k,ispec_irreg)
+                 etayl = etay(i,j,k,ispec_irreg)
+                 etazl = etaz(i,j,k,ispec_irreg)
+                 gammaxl = gammax(i,j,k,ispec_irreg)
+                 gammayl = gammay(i,j,k,ispec_irreg)
+                 gammazl = gammaz(i,j,k,ispec_irreg)
 
-               dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l  ! df/dx
-               dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l  ! df/dy
-               dF(3,i,j,k) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l  ! df/dz
+                 dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
+                 dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
+                 dF(3,i,j,k) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
+
+               else !regular element
+
+                 dF(1,i,j,k) = xix_regular * tempx1l
+                 dF(2,i,j,k) = xix_regular * tempx2l
+                 dF(3,i,j,k) = xix_regular * tempx3l
+
+               endif
 
           enddo
        enddo
@@ -4433,7 +4502,8 @@ end subroutine compute_derivative_with_lagrange_polynomials
 !!============
 subroutine compute_2nd_derivative_with_lagrange_polynomials(derivative_of_field, field_to_derivate)
 
-   use specfem_par, only: xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, hprime_xx
+   use specfem_par, only: xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, hprime_xx,irregular_element_number,&
+                          xix_regular
 
    implicit none
    !! size (NDIM, NGLLX, NGLLY, NGLLZ, NSPEC_AB)
@@ -4450,7 +4520,7 @@ subroutine compute_2nd_derivative_with_lagrange_polynomials(derivative_of_field,
    double precision                                              :: xixl,xiyl,xizl
    double precision                                              :: etaxl,etayl,etazl
    double precision                                              :: gammaxl,gammayl,gammazl
-   integer                                                       :: ispec, i, j, k, l
+   integer                                                       :: ispec, ispec_irreg,i, j, k, l
 
    do ispec =1, NSPEC_AB
 
@@ -4464,6 +4534,7 @@ subroutine compute_2nd_derivative_with_lagrange_polynomials(derivative_of_field,
             enddo
          enddo
       enddo
+      ispec_irreg = irregular_element_number(ispec)
 
       !! derivative of field based on lagrange polynomials
       do k=1,NGLLZ
@@ -4503,20 +4574,29 @@ subroutine compute_2nd_derivative_with_lagrange_polynomials(derivative_of_field,
 
 
                enddo
+               if (ispec_irreg /= 0 ) then !irregular element
 
-               xixl = xix(i,j,k,ispec)
-               xiyl = xiy(i,j,k,ispec)
-               xizl = xiz(i,j,k,ispec)
-               etaxl = etax(i,j,k,ispec)
-               etayl = etay(i,j,k,ispec)
-               etazl = etaz(i,j,k,ispec)
-               gammaxl = gammax(i,j,k,ispec)
-               gammayl = gammay(i,j,k,ispec)
-               gammazl = gammaz(i,j,k,ispec)
+                 xixl = xix(i,j,k,ispec_irreg)
+                 xiyl = xiy(i,j,k,ispec_irreg)
+                 xizl = xiz(i,j,k,ispec_irreg)
+                 etaxl = etax(i,j,k,ispec_irreg)
+                 etayl = etay(i,j,k,ispec_irreg)
+                 etazl = etaz(i,j,k,ispec_irreg)
+                 gammaxl = gammax(i,j,k,ispec_irreg)
+                 gammayl = gammay(i,j,k,ispec_irreg)
+                 gammazl = gammaz(i,j,k,ispec_irreg)
 
-               dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l  ! (df/dx) / dx
-               dF(2,i,j,k) = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l  ! (df/dy) / dy
-               dF(3,i,j,k) = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l  ! (df/dz) / dz
+                 dF(1,i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
+                 dF(2,i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
+                 dF(3,i,j,k) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
+
+               else !regular element
+
+                 dF(1,i,j,k) = xix_regular * tempx1l
+                 dF(2,i,j,k) = xix_regular * tempx2l
+                 dF(3,i,j,k) = xix_regular * tempx3l
+
+               endif
 
           enddo
        enddo

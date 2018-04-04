@@ -58,9 +58,9 @@
   ! prepares general fields on GPU
   ! add GPU support for the C-PML routines
   call prepare_constants_device(Mesh_pointer, &
-                                NGLLX, NSPEC_AB, NGLOB_AB, &
+                                NGLLX, NSPEC_AB, NGLOB_AB, NSPEC_IRREGULAR,irregular_element_number, &
                                 xix, xiy, xiz, etax,etay,etaz, gammax, gammay, gammaz, &
-                                ibool, &
+                                xix_regular,jacobian_regular,ibool, &
                                 num_interfaces_ext_mesh, max_nibool_interfaces_ext_mesh, &
                                 nibool_interfaces_ext_mesh, ibool_interfaces_ext_mesh, &
                                 hprime_xx,hprimewgll_xx, &
@@ -272,9 +272,9 @@
     ! d_hprime_xx,d_hprimewgll_xx
     memory_size = memory_size + 2.d0 * NGLL2 * dble(CUSTOM_REAL)
     ! padded xix,..gammaz
-    memory_size = memory_size + 9.d0 * NGLL3_PADDED * NSPEC_AB * dble(CUSTOM_REAL)
-    ! ibool
-    memory_size = memory_size + NGLL3 * NSPEC_AB * dble(SIZE_INTEGER)
+    memory_size = memory_size + 9.d0 * NGLL3_PADDED * NSPEC_IRREGULAR * dble(CUSTOM_REAL)
+    ! ibool + irregular_element_number
+    memory_size = memory_size + (NGLL3+1) * NSPEC_AB * dble(SIZE_INTEGER)
     ! d_ibool_interfaces_ext_mesh
     memory_size = memory_size + num_interfaces_ext_mesh * max_nibool_interfaces_ext_mesh * dble(SIZE_INTEGER)
     ! ispec_is_inner

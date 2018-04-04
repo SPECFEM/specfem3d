@@ -60,12 +60,17 @@
   if (I_should_read_the_database) then
     read(27) NSPEC_AB
     read(27) NGLOB_AB
+    read(27) NSPEC_IRREGULAR
 
     read(27) ibool
 
     read(27) xstore
     read(27) ystore
     read(27) zstore
+
+    read(27) irregular_element_number
+    read(27) xix_regular
+    read(27) jacobian_regular
 
     read(27) xix
     read(27) xiy
@@ -88,7 +93,12 @@
 
   call bcast_all_i_for_database(NSPEC_AB, 1)
   call bcast_all_i_for_database(NGLOB_AB, 1)
+  call bcast_all_i_for_database(NSPEC_IRREGULAR, 1)
   call bcast_all_i_for_database(ibool(1,1,1,1), size(ibool))
+  call bcast_all_i_for_database(ibool(1,1,1,1), size(irregular_element_number))
+  call bcast_all_cr_for_database(xix_regular, 1)
+  call bcast_all_cr_for_database(jacobian_regular, 1)
+
   if (size(xstore) > 0) call bcast_all_cr_for_database(xstore(1), size(xstore))
   if (size(ystore) > 0) call bcast_all_cr_for_database(ystore(1), size(ystore))
   if (size(zstore) > 0) call bcast_all_cr_for_database(zstore(1), size(zstore))
@@ -1364,9 +1374,11 @@
   if (I_should_read_the_database) then
     read(IIN) NSPEC_AB
     read(IIN) NGLOB_AB
+    read(IIN) NSPEC_IRREGULAR
   endif
   call bcast_all_i_for_database(NSPEC_AB, 1)
   call bcast_all_i_for_database(NGLOB_AB, 1)
+  call bcast_all_i_for_database(NSPEC_IRREGULAR, 1)
 
   if (I_should_read_the_database) close(IIN)
 

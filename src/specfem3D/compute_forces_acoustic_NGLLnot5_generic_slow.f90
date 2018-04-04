@@ -27,15 +27,9 @@
 
 ! for acoustic solver
 
-  subroutine compute_forces_acoustic_NGLLnot5_generic_slow(iphase,NSPEC_AB,NGLOB_AB, &
+  subroutine compute_forces_acoustic_NGLLnot5_generic_slow(iphase, &
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        hprime_xx,hprime_yy,hprime_zz, &
-                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
-                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                        rhostore,jacobian,ibool, &
-                        num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic, &
-                        phase_ispec_inner_acoustic,backward_simulation)
+                        backward_simulation)
 
 ! computes forces for acoustic elements
 !
@@ -45,7 +39,18 @@
   use specfem_par, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,chi_elem,temp1,temp2,temp3,temp4, &
                          PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl, &
                          PML_dpotential_dxl_old,PML_dpotential_dyl_old,PML_dpotential_dzl_old, &
-                         PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new
+                         PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new, &
+                         NGLOB_AB, &
+                         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                         hprime_xx,hprime_yy,hprime_zz, &
+                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
+                         wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
+                         rhostore,jacobian,ibool, &
+                         irregular_element_number,xix_regular,jacobian_regular
+
+  use specfem_par_acoustic, only : nspec_inner_acoustic,nspec_outer_acoustic, &
+                                   phase_ispec_inner_acoustic
+
 
   use pml_par, only: is_CPML, spec_to_CPML, potential_dot_dot_acoustic_CPML,rmemory_dpotential_dxl,rmemory_dpotential_dyl, &
                      rmemory_dpotential_dzl,rmemory_potential_acoustic, &
@@ -53,40 +58,17 @@
 
   implicit none
 
-  integer, intent(in) :: NSPEC_AB,NGLOB_AB
-
-  ! acoustic potentials
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(inout) :: &
         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic
 
-  ! arrays with mesh parameters per slice
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: &
-        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: &
-        rhostore,jacobian
-
-  ! array with derivatives of Lagrange polynomials and precalculated products
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX),intent(in) :: hprime_xx,hprimewgll_xx
-  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLY),intent(in) :: hprime_yy,hprimewgll_yy
-  real(kind=CUSTOM_REAL), dimension(NGLLZ,NGLLZ),intent(in) :: hprime_zz,hprimewgll_zz
-
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY),intent(in) :: wgllwgll_xy
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLZ),intent(in) :: wgllwgll_xz
-  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ),intent(in) :: wgllwgll_yz
-
   integer,intent(in) :: iphase
-  integer,intent(in) :: num_phase_ispec_acoustic,nspec_inner_acoustic,nspec_outer_acoustic
-  integer, dimension(num_phase_ispec_acoustic,2),intent(in) :: phase_ispec_inner_acoustic
-
-  ! CPML adjoint
   logical,intent(in) :: backward_simulation
 
   ! local variables
   real(kind=CUSTOM_REAL) :: temp1l,temp2l,temp3l
   real(kind=CUSTOM_REAL) :: hp1,hp2,hp3
 
-  integer :: ispec,iglob,i,j,k,l,ispec_p,num_elements
+  integer :: ispec,ispec_irreg,iglob,i,j,k,l,ispec_p,num_elements
 
   ! CPML
   integer :: ispec_CPML
@@ -135,7 +117,8 @@
   if (is_CPML(ispec) .and. .not. backward_simulation) then
 
     ispec_CPML = spec_to_CPML(ispec)
-
+    ispec_irreg = irregular_element_number(ispec)
+    if (ispec_irreg == 0) jacobianl = jacobian_regular
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     do k=1,NGLLZ
@@ -180,44 +163,66 @@
                 temp3l_old = temp3l_old + PML_potential_acoustic_old(i,j,l,ispec_CPML)*hp3
                 temp3l_new = temp3l_new + PML_potential_acoustic_new(i,j,l,ispec_CPML)*hp3
               enddo
+ 
+              rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
 
-          ! get derivatives of potential with respect to x, y and z
-          xixl = xix(i,j,k,ispec)
-          xiyl = xiy(i,j,k,ispec)
-          xizl = xiz(i,j,k,ispec)
-          etaxl = etax(i,j,k,ispec)
-          etayl = etay(i,j,k,ispec)
-          etazl = etaz(i,j,k,ispec)
-          gammaxl = gammax(i,j,k,ispec)
-          gammayl = gammay(i,j,k,ispec)
-          gammazl = gammaz(i,j,k,ispec)
-          jacobianl = jacobian(i,j,k,ispec)
+              if (ispec_irreg /= 0 ) then !irregular element
 
-          ! derivatives of potential
-          dpotentialdxl = xixl*temp1l + etaxl*temp2l + gammaxl*temp3l
-          dpotentialdyl = xiyl*temp1l + etayl*temp2l + gammayl*temp3l
-          dpotentialdzl = xizl*temp1l + etazl*temp2l + gammazl*temp3l
+                ! get derivatives of ux, uy and uz with respect to x, y and z
+                xixl = xix(i,j,k,ispec_irreg)
+                xiyl = xiy(i,j,k,ispec_irreg)
+                xizl = xiz(i,j,k,ispec_irreg)
+                etaxl = etax(i,j,k,ispec_irreg)
+                etayl = etay(i,j,k,ispec_irreg)
+                etazl = etaz(i,j,k,ispec_irreg)
+                gammaxl = gammax(i,j,k,ispec_irreg)
+                gammayl = gammay(i,j,k,ispec_irreg)
+                gammazl = gammaz(i,j,k,ispec_irreg)
+                jacobianl = jacobian(i,j,k,ispec_irreg)
 
-          ! stores derivatives of ux, uy and uz with respect to x, y and z
-          PML_dpotential_dxl(i,j,k) = dpotentialdxl
-          PML_dpotential_dyl(i,j,k) = dpotentialdyl
-          PML_dpotential_dzl(i,j,k) = dpotentialdzl
+                ! derivatives of potential
+                dpotentialdxl = xixl*temp1l + etaxl*temp2l + gammaxl*temp3l
+                dpotentialdyl = xiyl*temp1l + etayl*temp2l + gammayl*temp3l
+                dpotentialdzl = xizl*temp1l + etazl*temp2l + gammazl*temp3l
 
-          PML_dpotential_dxl_old(i,j,k) = xixl*temp1l_old + etaxl*temp2l_old + gammaxl*temp3l_old
-          PML_dpotential_dyl_old(i,j,k) = xiyl*temp1l_old + etayl*temp2l_old + gammayl*temp3l_old
-          PML_dpotential_dzl_old(i,j,k) = xizl*temp1l_old + etazl*temp2l_old + gammazl*temp3l_old
+                PML_dpotential_dxl_old(i,j,k) = xixl*temp1l_old + etaxl*temp2l_old + gammaxl*temp3l_old
+                PML_dpotential_dyl_old(i,j,k) = xiyl*temp1l_old + etayl*temp2l_old + gammayl*temp3l_old
+                PML_dpotential_dzl_old(i,j,k) = xizl*temp1l_old + etazl*temp2l_old + gammazl*temp3l_old
 
-          PML_dpotential_dxl_new(i,j,k) = xixl*temp1l_new + etaxl*temp2l_new + gammaxl*temp3l_new
-          PML_dpotential_dyl_new(i,j,k) = xiyl*temp1l_new + etayl*temp2l_new + gammayl*temp3l_new
-          PML_dpotential_dzl_new(i,j,k) = xizl*temp1l_new + etazl*temp2l_new + gammazl*temp3l_new
+                PML_dpotential_dxl_new(i,j,k) = xixl*temp1l_new + etaxl*temp2l_new + gammaxl*temp3l_new
+                PML_dpotential_dyl_new(i,j,k) = xiyl*temp1l_new + etayl*temp2l_new + gammayl*temp3l_new
+                PML_dpotential_dzl_new(i,j,k) = xizl*temp1l_new + etazl*temp2l_new + gammazl*temp3l_new
 
-          ! reciprocal of density
-          rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
+                ! for acoustic medium
+                temp1(i,j,k) = rho_invl * jacobianl * (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
+                temp2(i,j,k) = rho_invl * jacobianl * (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
+                temp3(i,j,k) = rho_invl * jacobianl * (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
 
-          ! for acoustic medium
-          temp1(i,j,k) = rho_invl * jacobianl * (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
-          temp2(i,j,k) = rho_invl * jacobianl * (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
-          temp3(i,j,k) = rho_invl * jacobianl * (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
+             else ! regular element
+
+                dpotentialdxl = xix_regular*temp1l
+                dpotentialdyl = xix_regular*temp2l
+                dpotentialdzl = xix_regular*temp3l
+
+                PML_dpotential_dxl_old(i,j,k) = xix_regular*temp1l_old
+                PML_dpotential_dyl_old(i,j,k) = xix_regular*temp2l_old
+                PML_dpotential_dzl_old(i,j,k) = xix_regular*temp3l_old
+
+                PML_dpotential_dxl_new(i,j,k) = xix_regular*temp1l_new
+                PML_dpotential_dyl_new(i,j,k) = xix_regular*temp2l_new
+                PML_dpotential_dzl_new(i,j,k) = xix_regular*temp3l_new
+
+                ! for acoustic medium
+                temp1(i,j,k) = rho_invl * jacobianl * xix_regular * dpotentialdxl
+                temp2(i,j,k) = rho_invl * jacobianl * xix_regular * dpotentialdyl
+                temp3(i,j,k) = rho_invl * jacobianl * xix_regular * dpotentialdzl
+
+              endif
+
+              ! stores derivatives of ux, uy and uz with respect to x, y and z
+              PML_dpotential_dxl(i,j,k) = dpotentialdxl
+              PML_dpotential_dyl(i,j,k) = dpotentialdyl
+              PML_dpotential_dzl(i,j,k) = dpotentialdzl
         enddo
       enddo
     enddo
@@ -227,6 +232,8 @@
   else ! no PML in this element
 
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    ispec_irreg = irregular_element_number(ispec)
+    if (ispec_irreg == 0) jacobianl = jacobian_regular
 
     do k=1,NGLLZ
       do j=1,NGLLY
@@ -245,30 +252,40 @@
             temp3l = temp3l + chi_elem(i,j,l)*hprime_zz(k,l)
           enddo
 
-          ! get derivatives of potential with respect to x, y and z
-          xixl = xix(i,j,k,ispec)
-          xiyl = xiy(i,j,k,ispec)
-          xizl = xiz(i,j,k,ispec)
-          etaxl = etax(i,j,k,ispec)
-          etayl = etay(i,j,k,ispec)
-          etazl = etaz(i,j,k,ispec)
-          gammaxl = gammax(i,j,k,ispec)
-          gammayl = gammay(i,j,k,ispec)
-          gammazl = gammaz(i,j,k,ispec)
-          jacobianl = jacobian(i,j,k,ispec)
-
-          ! derivatives of potential
-          dpotentialdxl = xixl*temp1l + etaxl*temp2l + gammaxl*temp3l
-          dpotentialdyl = xiyl*temp1l + etayl*temp2l + gammayl*temp3l
-          dpotentialdzl = xizl*temp1l + etazl*temp2l + gammazl*temp3l
-
           ! density (reciproc)
           rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
 
-          ! for acoustic medium
-          temp1(i,j,k) = rho_invl * jacobianl * (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
-          temp2(i,j,k) = rho_invl * jacobianl * (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
-          temp3(i,j,k) = rho_invl * jacobianl * (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
+          if (ispec_irreg /= 0 ) then !irregular element
+
+            ! get derivatives of ux, uy and uz with respect to x, y and z
+            xixl = xix(i,j,k,ispec_irreg)
+            xiyl = xiy(i,j,k,ispec_irreg)
+            xizl = xiz(i,j,k,ispec_irreg)
+            etaxl = etax(i,j,k,ispec_irreg)
+            etayl = etay(i,j,k,ispec_irreg)
+            etazl = etaz(i,j,k,ispec_irreg)
+            gammaxl = gammax(i,j,k,ispec_irreg)
+            gammayl = gammay(i,j,k,ispec_irreg)
+            gammazl = gammaz(i,j,k,ispec_irreg)
+            jacobianl = jacobian(i,j,k,ispec_irreg)
+
+            ! derivatives of potential
+            dpotentialdxl = xixl*temp1l + etaxl*temp2l + gammaxl*temp3l
+            dpotentialdyl = xiyl*temp1l + etayl*temp2l + gammayl*temp3l
+            dpotentialdzl = xizl*temp1l + etazl*temp2l + gammazl*temp3l
+
+            temp1(i,j,k) = rho_invl * jacobianl * (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
+            temp2(i,j,k) = rho_invl * jacobianl * (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
+            temp3(i,j,k) = rho_invl * jacobianl * (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
+
+          else ! regular element
+            ! for acoustic medium
+            temp1(i,j,k) = rho_invl * jacobianl * xix_regular * xix_regular * temp1l
+            temp2(i,j,k) = rho_invl * jacobianl * xix_regular * xix_regular * temp2l
+            temp3(i,j,k) = rho_invl * jacobianl * xix_regular * xix_regular * temp3l
+
+          endif
+
         enddo
       enddo
     enddo

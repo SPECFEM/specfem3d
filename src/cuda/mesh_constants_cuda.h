@@ -317,6 +317,9 @@ inline __host__ __device__ field operator-(field a){ return make_float4(-a.x,-a.
 inline __host__ __device__ realw sum(field b){ return b.x+b.y+b.z+b.w;}
 inline __device__ void atomicAdd(field* address, field val){atomicAdd(&(address->x),val.x); atomicAdd(&(address->y),val.y);atomicAdd(&(address->z),val.z); atomicAdd(&(address->w),val.w);}
 
+inline __host__ __device__ int operator>(field &a, realw b){return (a.x>b || a.y>b || a.z>b || a.w >b ) ? 1:0;}
+
+
 //dummy overloads, just to enable compilation
 inline __host__ __device__ field operator+(field a, realw b){ return a;}
 inline __device__ void atomicAdd(field* address, float val){}
@@ -377,6 +380,9 @@ typedef struct mesh_ {
   // ------------------------------------------------------------------ //
   // GLL points & weights
   // ------------------------------------------------------------------ //
+
+  int* d_irregular_element_number;
+  realw xix_regular,jacobian_regular;
 
   // interpolators
   realw* d_xix; realw* d_xiy; realw* d_xiz;

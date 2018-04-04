@@ -49,7 +49,7 @@
 
   ! mesh surface
   use generate_databases_par, only: ispec_is_surface_external_mesh,iglob_is_surface_external_mesh, &
-    nfaces_surface
+    nfaces_surface,nspec_irregular
 
   use create_regions_mesh_ext_par
 
@@ -86,12 +86,17 @@
 
   write(IOUT) nspec
   write(IOUT) nglob
+  write(IOUT) nspec_irregular
 
   write(IOUT) ibool
 
   write(IOUT) xstore_dummy
   write(IOUT) ystore_dummy
   write(IOUT) zstore_dummy
+
+  write(IOUT) irregular_element_number
+  write(IOUT) xix_regular
+  write(IOUT) jacobian_regular
 
   write(IOUT) xixstore
   write(IOUT) xiystore

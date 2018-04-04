@@ -217,23 +217,14 @@
 
   ! updates kernels
   do ispec = 1, NSPEC_AB
-
     ! acoustic domains
     if (ispec_is_acoustic(ispec)) then
 
       ! backward fields: displacement vector
-      call compute_gradient_in_acoustic(ispec,NSPEC_ADJOINT,NGLOB_ADJOINT, &
-                      b_potential_acoustic, b_displ_elm, &
-                      hprime_xx,hprime_yy,hprime_zz, &
-                      xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                      ibool,rhostore,GRAVITY)
+      call compute_gradient_in_acoustic(ispec,b_potential_acoustic,b_displ_elm)
       ! adjoint fields: acceleration vector
       ! new expression (\partial_t^2\bfs^\dagger=-\frac{1}{\rho}\bfnabla\phi^\dagger)
-      call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                      potential_acoustic, accel_elm, &
-                      hprime_xx,hprime_yy,hprime_zz, &
-                      xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                      ibool,rhostore,GRAVITY)
+      call compute_gradient_in_acoustic(ispec,potential_acoustic,accel_elm)
 
       do k = 1, NGLLZ
         do j = 1, NGLLY
@@ -404,26 +395,14 @@
     ! acoustic domains
     if (ispec_is_acoustic(ispec)) then
 
-      ! adjoint fields: acceleration vector
-      call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                      potential_dot_dot_acoustic, accel_elm, &
-                      hprime_xx,hprime_yy,hprime_zz, &
-                      xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                      ibool,rhostore,GRAVITY)
+   ! adjoint fields: acceleration vector
+      call compute_gradient_in_acoustic(ispec,potential_dot_dot_acoustic,accel_elm)
 
       ! adjoint fields: acceleration vector
-      call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                      b_potential_dot_dot_acoustic, b_accel_elm, &
-                      hprime_xx,hprime_yy,hprime_zz, &
-                      xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                      ibool,rhostore,GRAVITY)
+      call compute_gradient_in_acoustic(ispec,b_potential_dot_dot_acoustic,b_accel_elm)
 
       ! backward fields: displacement vector
-      call compute_gradient_in_acoustic(ispec,NSPEC_ADJOINT,NGLOB_ADJOINT, &
-                      b_potential_dot_acoustic, b_veloc_elm, &
-                      hprime_xx,hprime_yy,hprime_zz, &
-                      xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                      ibool,rhostore,GRAVITY)
+      call compute_gradient_in_acoustic(ispec,b_potential_dot_acoustic,b_veloc_elm)
 
       do k = 1, NGLLZ
         do j = 1, NGLLY
@@ -557,14 +536,14 @@
 
     use specfem_par, only: ngllx, nglly, ngllz, ibool, hprime_xx, hprime_yy, hprime_zz, nspec_ab, &
          xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz, CUSTOM_REAL, &
-         nglob_ab, ndim, deltat
+         nglob_ab, ndim, deltat, irregular_element_number, xix_regular
     use specfem_par_elastic, only: ispec_is_elastic, rho_kl, cijkl_kl
 
 
     real(kind=CUSTOM_REAL), dimension(ndim,nglob_ab), intent(in) :: vsem_fwd, asem_fwd
     real(kind=CUSTOM_REAL), dimension(ndim,nglob_ab), intent(in) :: dsem_adj, vsem_adj
 
-    integer                :: i, j, k, ielem, iglob   ! ,l
+    integer                :: i, j, k, ielem, iglob, ielem_irreg   ! ,l
 
     real(kind=CUSTOM_REAL) :: dxil_dxl, dxil_dyl, dxil_dzl
     real(kind=CUSTOM_REAL) :: detal_dxl, detal_dyl, detal_dzl
@@ -626,6 +605,8 @@
                 enddo
              enddo
           enddo
+
+          ielem_irreg = irregular_element_number(ielem)
 
           do k=1,ngllz
              do j=1,nglly
@@ -779,39 +760,65 @@
                    duy_dgaml = duy_dgaml + dsem_adj_gll(2,i,j,5) * fac
                    duz_dgaml = duz_dgaml + dsem_adj_gll(3,i,j,5) * fac
 
-                   !*** Get local derivatives of ref square coord wrt Cartesian ones (jacobian)
-                   dxil_dxl  = xix(i,j,k,ielem)
-                   dxil_dyl  = xiy(i,j,k,ielem)
-                   dxil_dzl  = xiz(i,j,k,ielem)
-                   detal_dxl = etax(i,j,k,ielem)
-                   detal_dyl = etay(i,j,k,ielem)
-                   detal_dzl = etaz(i,j,k,ielem)
-                   dgaml_dxl = gammax(i,j,k,ielem)
-                   dgaml_dyl = gammay(i,j,k,ielem)
-                   dgaml_dzl = gammaz(i,j,k,ielem)
+                   if (ielem_irreg/=0) then !irregular element
+                     !*** Get local derivatives of ref square coord wrt Cartesian ones (jacobian)
+                     dxil_dxl  = xix(i,j,k,ielem_irreg)
+                     dxil_dyl  = xiy(i,j,k,ielem_irreg)
+                     dxil_dzl  = xiz(i,j,k,ielem_irreg)
+                     detal_dxl = etax(i,j,k,ielem_irreg)
+                     detal_dyl = etay(i,j,k,ielem_irreg)
+                     detal_dzl = etaz(i,j,k,ielem_irreg)
+                     dgaml_dxl = gammax(i,j,k,ielem_irreg)
+                     dgaml_dyl = gammay(i,j,k,ielem_irreg)
+                     dgaml_dzl = gammaz(i,j,k,ielem_irreg)
 
-                   !*** Strain
-                   !* Normal state normal strain
-                   dvx_dxl = dvx_dxil * dxil_dxl + dvx_detal * detal_dxl + dvx_dgaml * dgaml_dxl
-                   dvx_dyl = dvx_dxil * dxil_dyl + dvx_detal * detal_dyl + dvx_dgaml * dgaml_dyl
-                   dvx_dzl = dvx_dxil * dxil_dzl + dvx_detal * detal_dzl + dvx_dgaml * dgaml_dzl
-                   dvy_dxl = dvy_dxil * dxil_dxl + dvy_detal * detal_dxl + dvy_dgaml * dgaml_dxl
-                   dvy_dyl = dvy_dxil * dxil_dyl + dvy_detal * detal_dyl + dvy_dgaml * dgaml_dyl
-                   dvy_dzl = dvy_dxil * dxil_dzl + dvy_detal * detal_dzl + dvy_dgaml * dgaml_dzl
-                   dvz_dxl = dvz_dxil * dxil_dxl + dvz_detal * detal_dxl + dvz_dgaml * dgaml_dxl
-                   dvz_dyl = dvz_dxil * dxil_dyl + dvz_detal * detal_dyl + dvz_dgaml * dgaml_dyl
-                   dvz_dzl = dvz_dxil * dxil_dzl + dvz_detal * detal_dzl + dvz_dgaml * dgaml_dzl
+                     !*** Strain
+                     !* Normal state normal strain
+                     dvx_dxl = dvx_dxil * dxil_dxl + dvx_detal * detal_dxl + dvx_dgaml * dgaml_dxl
+                     dvx_dyl = dvx_dxil * dxil_dyl + dvx_detal * detal_dyl + dvx_dgaml * dgaml_dyl
+                     dvx_dzl = dvx_dxil * dxil_dzl + dvx_detal * detal_dzl + dvx_dgaml * dgaml_dzl
+                     dvy_dxl = dvy_dxil * dxil_dxl + dvy_detal * detal_dxl + dvy_dgaml * dgaml_dxl
+                     dvy_dyl = dvy_dxil * dxil_dyl + dvy_detal * detal_dyl + dvy_dgaml * dgaml_dyl
+                     dvy_dzl = dvy_dxil * dxil_dzl + dvy_detal * detal_dzl + dvy_dgaml * dgaml_dzl
+                     dvz_dxl = dvz_dxil * dxil_dxl + dvz_detal * detal_dxl + dvz_dgaml * dgaml_dxl
+                     dvz_dyl = dvz_dxil * dxil_dyl + dvz_detal * detal_dyl + dvz_dgaml * dgaml_dyl
+                     dvz_dzl = dvz_dxil * dxil_dzl + dvz_detal * detal_dzl + dvz_dgaml * dgaml_dzl
 
-                   !* Adjoint state normal strain
-                   dux_dxl = dux_dxil * dxil_dxl + dux_detal * detal_dxl + dux_dgaml * dgaml_dxl
-                   dux_dyl = dux_dxil * dxil_dyl + dux_detal * detal_dyl + dux_dgaml * dgaml_dyl
-                   dux_dzl = dux_dxil * dxil_dzl + dux_detal * detal_dzl + dux_dgaml * dgaml_dzl
-                   duy_dxl = duy_dxil * dxil_dxl + duy_detal * detal_dxl + duy_dgaml * dgaml_dxl
-                   duy_dyl = duy_dxil * dxil_dyl + duy_detal * detal_dyl + duy_dgaml * dgaml_dyl
-                   duy_dzl = duy_dxil * dxil_dzl + duy_detal * detal_dzl + duy_dgaml * dgaml_dzl
-                   duz_dxl = duz_dxil * dxil_dxl + duz_detal * detal_dxl + duz_dgaml * dgaml_dxl
-                   duz_dyl = duz_dxil * dxil_dyl + duz_detal * detal_dyl + duz_dgaml * dgaml_dyl
-                   duz_dzl = duz_dxil * dxil_dzl + duz_detal * detal_dzl + duz_dgaml * dgaml_dzl
+                     !* Adjoint state normal strain
+                     dux_dxl = dux_dxil * dxil_dxl + dux_detal * detal_dxl + dux_dgaml * dgaml_dxl
+                     dux_dyl = dux_dxil * dxil_dyl + dux_detal * detal_dyl + dux_dgaml * dgaml_dyl
+                     dux_dzl = dux_dxil * dxil_dzl + dux_detal * detal_dzl + dux_dgaml * dgaml_dzl
+                     duy_dxl = duy_dxil * dxil_dxl + duy_detal * detal_dxl + duy_dgaml * dgaml_dxl
+                     duy_dyl = duy_dxil * dxil_dyl + duy_detal * detal_dyl + duy_dgaml * dgaml_dyl
+                     duy_dzl = duy_dxil * dxil_dzl + duy_detal * detal_dzl + duy_dgaml * dgaml_dzl
+                     duz_dxl = duz_dxil * dxil_dxl + duz_detal * detal_dxl + duz_dgaml * dgaml_dxl
+                     duz_dyl = duz_dxil * dxil_dyl + duz_detal * detal_dyl + duz_dgaml * dgaml_dyl
+                     duz_dzl = duz_dxil * dxil_dzl + duz_detal * detal_dzl + duz_dgaml * dgaml_dzl
+                   else !regular element
+                                          !*** Strain
+                     !* Normal state normal strain
+                     dvx_dxl = dvx_dxil * xix_regular 
+                     dvx_dyl = dvx_detal * xix_regular
+                     dvx_dzl = dvx_dgaml * xix_regular
+                     dvy_dxl = dvy_dxil *  xix_regular
+                     dvy_dyl = dvy_detal *  xix_regular
+                     dvy_dzl = dvy_dgaml * xix_regular
+                     dvz_dxl = dvz_dxil *  xix_regular
+                     dvz_dyl = dvz_detal * xix_regular
+                     dvz_dzl = dvz_dgaml * xix_regular
+
+                     !* Adjoint state normal strain
+                     dux_dxl = dux_dxil * xix_regular
+                     dux_dyl = dux_detal * xix_regular
+                     dux_dzl = dux_dgaml * xix_regular
+                     duy_dxl = duy_dxil * xix_regular
+                     duy_dyl = duy_detal * xix_regular
+                     duy_dzl = duy_dgaml * xix_regular
+                     duz_dxl = duz_dxil * xix_regular
+                     duz_dyl = duz_detal * xix_regular
+                     duz_dzl = duz_dgaml * xix_regular
+
+                   endif !element regularity
 
                    !* Normal state non normal strain
                    dvx_dyl_plus_dvy_dxl = dvx_dyl + dvy_dxl

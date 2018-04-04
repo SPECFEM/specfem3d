@@ -72,7 +72,8 @@
   endif
   call crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
                                nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
-                               nspec2D_bottom,nspec2D_top,ANISOTROPY)
+                               nspec2D_bottom,nspec2D_top,ANISOTROPY,&
+                               nodes_coords_ext_mesh,nnodes_ext_mesh,elmnts_ext_mesh,nelmnts_ext_mesh,ANY_FAULT_IN_THIS_PROC)
 
  ! if faults exist this reads nodes_coords_open
   call fault_read_input(prname,myrank)
@@ -379,10 +380,13 @@ end subroutine create_regions_mesh
 
 subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
                         nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax, &
-                        nspec2D_bottom,nspec2D_top,ANISOTROPY)
+                        nspec2D_bottom,nspec2D_top,ANISOTROPY,&
+                        nodes_coords_ext_mesh,nnodes_ext_mesh,&
+                        elmnts_ext_mesh,nelmnts_ext_mesh,ANY_FAULT_IN_THIS_PROC)
 
   use generate_databases_par, only: STACEY_INSTEAD_OF_FREE_SURFACE,PML_INSTEAD_OF_FREE_SURFACE, &
-    NGNOD,NGNOD2D,NDIM,NDIM2D,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,BOTTOM_FREE_SURFACE
+    NGNOD,NGNOD2D,NDIM,NDIM2D,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,BOTTOM_FREE_SURFACE,nspec_irregular
+
   use create_regions_mesh_ext_par
 
   implicit none
@@ -393,10 +397,19 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
 
   character(len=MAX_STRING_LEN) :: LOCAL_PATH
 
-  logical :: ANISOTROPY
+  logical :: ANISOTROPY,ANY_FAULT_IN_THIS_PROC
+
+! data from the external mesh
+  integer :: nnodes_ext_mesh,nelmnts_ext_mesh
+  double precision, dimension(NDIM,nnodes_ext_mesh) :: nodes_coords_ext_mesh
+  integer, dimension(NGNOD,nelmnts_ext_mesh) :: elmnts_ext_mesh
+
 
 ! local parameters
-  integer :: ier
+  integer :: ier,ispec,ia
+  logical :: any_regular_elem
+  real    :: cube_edge_size_squared
+  real, dimension(NGNOD) :: xelm_real,yelm_real,zelm_real
 
   allocate(xelm(NGNOD),yelm(NGNOD),zelm(NGNOD),stat=ier)
   if (ier /= 0) stop 'error allocating array xelm etc.'
@@ -453,30 +466,67 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
            mustore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
+  if (POROELASTIC_SIMULATION) then
+    NSPEC_PORO = nspec
+  else
+    NSPEC_PORO = 1
+  endif
+
 ! array with poroelastic model
-  allocate(rhoarraystore(2,NGLLX,NGLLY,NGLLZ,nspec), &
-           kappaarraystore(3,NGLLX,NGLLY,NGLLZ,nspec), &
-           etastore(NGLLX,NGLLY,NGLLZ,nspec), &
-           tortstore(NGLLX,NGLLY,NGLLZ,nspec), &
-           phistore(NGLLX,NGLLY,NGLLZ,nspec), &
-           rho_vpI(NGLLX,NGLLY,NGLLZ,nspec), &
-           rho_vpII(NGLLX,NGLLY,NGLLZ,nspec), &
-           rho_vsI(NGLLX,NGLLY,NGLLZ,nspec), &
-           permstore(6,NGLLX,NGLLY,NGLLZ,nspec), stat=ier)
+  allocate(rhoarraystore(2,NGLLX,NGLLY,NGLLZ,NSPEC_PORO), &
+           kappaarraystore(3,NGLLX,NGLLY,NGLLZ,NSPEC_PORO), &
+           etastore(NGLLX,NGLLY,NGLLZ,NSPEC_PORO), &
+           tortstore(NGLLX,NGLLY,NGLLZ,NSPEC_PORO), &
+           phistore(NGLLX,NGLLY,NGLLZ,NSPEC_PORO), &
+           rho_vpI(NGLLX,NGLLY,NGLLZ,NSPEC_PORO), &
+           rho_vpII(NGLLX,NGLLY,NGLLZ,NSPEC_PORO), &
+           rho_vsI(NGLLX,NGLLY,NGLLZ,NSPEC_PORO), &
+           permstore(6,NGLLX,NGLLY,NGLLZ,NSPEC_PORO), stat=ier)
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
-! arrays with mesh parameters
-  allocate(xixstore(NGLLX,NGLLY,NGLLZ,nspec), &
-           xiystore(NGLLX,NGLLY,NGLLZ,nspec), &
-           xizstore(NGLLX,NGLLY,NGLLZ,nspec), &
-           etaxstore(NGLLX,NGLLY,NGLLZ,nspec), &
-           etaystore(NGLLX,NGLLY,NGLLZ,nspec), &
-           etazstore(NGLLX,NGLLY,NGLLZ,nspec), &
-           gammaxstore(NGLLX,NGLLY,NGLLZ,nspec), &
-           gammaystore(NGLLX,NGLLY,NGLLZ,nspec), &
-           gammazstore(NGLLX,NGLLY,NGLLZ,nspec), &
-           jacobianstore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
-  if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+! get the number of regular and irregular elements
+  any_regular_elem = .false.
+  allocate(irregular_element_number(nspec))
+  irregular_element_number(:) = 0
+  nspec_irregular = nspec
+
+  do ispec = 1, nspec
+    do ia = 1,NGNOD
+      xelm_real(ia) = real(nodes_coords_ext_mesh(1,elmnts_ext_mesh(ia,ispec)))
+      yelm_real(ia) = real(nodes_coords_ext_mesh(2,elmnts_ext_mesh(ia,ispec)))
+      zelm_real(ia) = real(nodes_coords_ext_mesh(3,elmnts_ext_mesh(ia,ispec)))
+    enddo
+
+    ! checks if element is regular (is a cube)
+    call check_element_regularity(xelm_real,yelm_real,zelm_real,any_regular_elem,cube_edge_size_squared,&
+                                  nspec_irregular,ispec,nspec,irregular_element_number,ANY_FAULT_IN_THIS_PROC)
+  enddo
+
+  if (nspec_irregular == 0) then
+    allocate(xixstore(1,1,1,1), &
+             xiystore(1,1,1,1), &
+             xizstore(1,1,1,1), &
+             etaxstore(1,1,1,1), &
+             etaystore(1,1,1,1), &
+             etazstore(1,1,1,1), &
+             gammaxstore(1,1,1,1), &
+             gammaystore(1,1,1,1), &
+             gammazstore(1,1,1,1), &
+             jacobianstore(1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  else
+    allocate(xixstore(NGLLX,NGLLY,NGLLZ,nspec_irregular), &
+             xiystore(NGLLX,NGLLY,NGLLZ,nspec_irregular), &
+             xizstore(NGLLX,NGLLY,NGLLZ,nspec_irregular), &
+             etaxstore(NGLLX,NGLLY,NGLLZ,nspec_irregular), &
+             etaystore(NGLLX,NGLLY,NGLLZ,nspec_irregular), &
+             etazstore(NGLLX,NGLLY,NGLLZ,nspec_irregular), &
+             gammaxstore(NGLLX,NGLLY,NGLLZ,nspec_irregular), &
+             gammaystore(NGLLX,NGLLY,NGLLZ,nspec_irregular), &
+             gammazstore(NGLLX,NGLLY,NGLLZ,nspec_irregular), &
+             jacobianstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
+   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
+  endif
 
 ! absorbing boundary
   ! absorbing faces
@@ -561,7 +611,7 @@ subroutine crm_ext_setup_jacobian(myrank, &
                         nodes_coords_ext_mesh,nnodes_ext_mesh, &
                         elmnts_ext_mesh,nelmnts_ext_mesh)
 
-  use generate_databases_par, only: NGNOD,NGNOD2D,NDIM,NGLLX,NGLLY,NGLLZ,GAUSSALPHA,GAUSSBETA
+  use generate_databases_par, only: NGNOD,NGNOD2D,NDIM,NGLLX,NGLLY,NGLLZ,GAUSSALPHA,GAUSSBETA,CUSTOM_REAL
   use create_regions_mesh_ext_par
 
   implicit none
@@ -580,7 +630,10 @@ subroutine crm_ext_setup_jacobian(myrank, &
   integer :: myrank
 
 ! local parameters
-  integer :: ispec,ia,i,j,k
+  integer :: ispec,ia,i,j,k,ispec_irreg
+  logical :: any_regular_elem
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: xix_reg,xiy_reg,xiz_reg,etax_reg,etay_reg,etaz_reg,&
+                                                          gammax_reg,gammay_reg,gammaz_reg,jacobian_reg
 
 ! set up coordinates of the Gauss-Lobatto-Legendre points
   call zwgljd(xigll,wxgll,NGLLX,GAUSSALPHA,GAUSSBETA)
@@ -627,13 +680,41 @@ subroutine crm_ext_setup_jacobian(myrank, &
 
     ! CUBIT should provide a mesh ordering such that the 3D jacobian is defined
     ! (otherwise mesh would be degenerated)
-    call calc_jacobian(myrank,xixstore,xiystore,xizstore, &
-                       etaxstore,etaystore,etazstore, &
-                       gammaxstore,gammaystore,gammazstore,jacobianstore, &
-                       xstore,ystore,zstore, &
-                       xelm,yelm,zelm,shape3D,dershape3D,ispec,nspec)
-
+    ispec_irreg = irregular_element_number(ispec)
+    !irregular_element_number is 0 only if the element is regular
+    if (ispec_irreg /= 0 ) then
+      call calc_jacobian(myrank,xixstore(:,:,:,ispec_irreg),xiystore(:,:,:,ispec_irreg),xizstore(:,:,:,ispec_irreg), &
+                         etaxstore(:,:,:,ispec_irreg),etaystore(:,:,:,ispec_irreg),etazstore(:,:,:,ispec_irreg), &
+                         gammaxstore(:,:,:,ispec_irreg),gammaystore(:,:,:,ispec_irreg),gammazstore(:,:,:,ispec_irreg),&
+                         jacobianstore(:,:,:,ispec_irreg),xelm,yelm,zelm,dershape3D)
+    else
+      any_regular_elem = .true.
+    endif
+    call calc_coords(xstore(:,:,:,ispec),ystore(:,:,:,ispec),zstore(:,:,:,ispec),&
+                     xelm,yelm,zelm,shape3D)
+    
   enddo
+  ! get xix derivative and jacobian on a regular element
+  if (any_regular_elem) then
+
+    !find a regular element
+    ispec = 1
+    do while (irregular_element_number(ispec)/=0)
+      ispec = ispec + 1
+    enddo
+    do ia = 1,NGNOD
+      xelm(ia) = nodes_coords_ext_mesh(1,elmnts_ext_mesh(ia,ispec))
+      yelm(ia) = nodes_coords_ext_mesh(2,elmnts_ext_mesh(ia,ispec))
+      zelm(ia) = nodes_coords_ext_mesh(3,elmnts_ext_mesh(ia,ispec))
+    enddo
+    call calc_jacobian(myrank,xix_reg,xiy_reg,xiz_reg, &
+                       etax_reg,etay_reg,etaz_reg, &
+                       gammax_reg,gammay_reg,gammaz_reg,&
+                       jacobian_reg,xelm,yelm,zelm,dershape3D)
+    xix_regular = xix_reg(1,1,1)
+    jacobian_regular  = jacobian_reg(1,1,1)
+    
+  endif
 
 end subroutine crm_ext_setup_jacobian
 

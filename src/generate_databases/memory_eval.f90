@@ -33,8 +33,8 @@
                         APPROXIMATE_OCEAN_LOAD,memory_size)
 
   use constants
-  use generate_databases_par, only: PML_CONDITIONS,nspec_cpml
-  use create_regions_mesh_ext_par, only: NSPEC_ANISO,ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic
+  use generate_databases_par, only: PML_CONDITIONS,nspec_cpml,nspec_irregular
+  use create_regions_mesh_ext_par, only: NSPEC_ANISO,NSPEC_PORO,ispec_is_acoustic,ispec_is_elastic,ispec_is_poroelastic
 
   implicit none
 
@@ -58,7 +58,10 @@
   ! xix,xiy,xiz,
   ! etax,etay,etaz,
   ! gammax,gammay,gammaz,jacobian
-  memory_size = memory_size + 10.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_AB*dble(CUSTOM_REAL)
+  memory_size = memory_size + 10.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_irregular*dble(CUSTOM_REAL)
+
+  ! irregular_element_number
+  memory_size = memory_size + NSPEC_AB*dble(SIZE_INTEGER)
 
   ! xstore,ystore,zstore
   memory_size = memory_size + 3.d0*NGLOB_AB*dble(CUSTOM_REAL)
@@ -162,7 +165,7 @@
     ! rmass_solid_poroelastic,..
     memory_size = memory_size + 2.d0*NGLOB_AB*dble(CUSTOM_REAL)
     ! rhoarraystore,..
-    memory_size = memory_size + 17.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_AB*dble(CUSTOM_REAL)
+    memory_size = memory_size + 17.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*NSPEC_PORO*dble(CUSTOM_REAL)
   endif
 
   ! skipping boundary surfaces

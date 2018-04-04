@@ -5,8 +5,7 @@ module mesh_tools
   use specfem_par, only: CUSTOM_REAL, HUGEVAL, TINYVAL, NGNOD, NUM_ITER, NPROC, MAX_STRING_LEN, &
                          NGLLX, NGLLY, NGLLZ, NDIM, NSPEC_AB, NGLOB_AB, MIDX, MIDY, MIDZ, &
                          LOCAL_PATH, xigll, yigll, zigll, &
-                         ibool, xstore, ystore, zstore, &
-                         xix, xiy, xiz, etax, etay, etaz, gammax, gammay, gammaz
+                         ibool, xstore, ystore, zstore 
 
   use specfem_par_elastic, only: ispec_is_elastic
   use specfem_par_acoustic, only: ispec_is_acoustic
@@ -437,9 +436,7 @@ contains
           factor = 1.0
           call compute_arrays_source_cmt(ispec,interparray, &
                hxis,hetas,hgammas,hpxis,hpetas,hpgammas, &
-               Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
-               xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-               NSPEC_AB)
+               Mxx,Myy,Mzz,Mxy,Mxz,Myz)
 
        else if (ispec_is_acoustic(ispec)) then
           ! scalar moment of moment tensor values read in from CMTSOLUTION

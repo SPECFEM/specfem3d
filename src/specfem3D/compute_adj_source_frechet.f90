@@ -28,15 +28,18 @@
 
 ! compute the integrated derivatives of source parameters (M_jk and X_s)
 
-  subroutine compute_adj_source_frechet(displ_s,Mxx,Myy,Mzz,Mxy,Mxz,Myz,eps_s,eps_m_s, &
-           hxir,hetar,hgammar,hpxir,hpetar,hpgammar, hprime_xx,hprime_yy,hprime_zz, &
-           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
+  subroutine compute_adj_source_frechet(ispec,displ_s,Mxx,Myy,Mzz,Mxy,Mxz,Myz,eps_s,eps_m_s, &
+           hxir,hetar,hgammar,hpxir,hpetar,hpgammar, hprime_xx,hprime_yy,hprime_zz)
 
   use constants
+  
+  use specfem_par, only : xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,xix_regular, &
+                          irregular_element_number
 
   implicit none
 
   ! input
+  integer :: ispec
   real(kind=CUSTOM_REAL) :: displ_s(NDIM,NGLLX,NGLLY,NGLLZ)
   double precision :: Mxx, Myy, Mzz, Mxy, Mxz, Myz
   ! output
@@ -49,9 +52,6 @@
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLY) :: hprime_yy
   real(kind=CUSTOM_REAL), dimension(NGLLZ,NGLLZ) :: hprime_zz
 
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: &
-        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz
-
 ! local variables
   real(kind=CUSTOM_REAL) :: tempx1l,tempx2l,tempx3l, tempy1l,tempy2l,tempy3l, &
              tempz1l,tempz2l,tempz3l, hp1, hp2, hp3, &
@@ -63,8 +63,9 @@
   real(kind=CUSTOM_REAL) :: eps(NDIM,NDIM), eps_array(NDIM,NDIM,NGLLX,NGLLY,NGLLZ), &
              eps_m_array(NGLLX,NGLLY,NGLLZ)
 
-  integer i,j,k,l
+  integer i,j,k,l,ispec_irreg
 
+  ispec_irreg = irregular_element_number(ispec)
 
 ! first compute the strain at all the GLL points of the source element
   do k = 1, NGLLZ
@@ -101,27 +102,45 @@
         enddo
 
 ! dudx
-        xixl = xix(i,j,k)
-        xiyl = xiy(i,j,k)
-        xizl = xiz(i,j,k)
-        etaxl = etax(i,j,k)
-        etayl = etay(i,j,k)
-        etazl = etaz(i,j,k)
-        gammaxl = gammax(i,j,k)
-        gammayl = gammay(i,j,k)
-        gammazl = gammaz(i,j,k)
+        if (ispec_irreg /= 0) then !irregular element
 
-        duxdxl = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
-        duxdyl = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
-        duxdzl = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
+          xixl = xix(i,j,k,ispec_irreg)
+          xiyl = xiy(i,j,k,ispec_irreg)
+          xizl = xiz(i,j,k,ispec_irreg)
+          etaxl = etax(i,j,k,ispec_irreg)
+          etayl = etay(i,j,k,ispec_irreg)
+          etazl = etaz(i,j,k,ispec_irreg)
+          gammaxl = gammax(i,j,k,ispec_irreg)
+          gammayl = gammay(i,j,k,ispec_irreg)
+          gammazl = gammaz(i,j,k,ispec_irreg)
 
-        duydxl = xixl*tempy1l + etaxl*tempy2l + gammaxl*tempy3l
-        duydyl = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l
-        duydzl = xizl*tempy1l + etazl*tempy2l + gammazl*tempy3l
+          duxdxl = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
+          duxdyl = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
+          duxdzl = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
 
-        duzdxl = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l
-        duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l
-        duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l
+          duydxl = xixl*tempy1l + etaxl*tempy2l + gammaxl*tempy3l
+          duydyl = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l
+          duydzl = xizl*tempy1l + etazl*tempy2l + gammazl*tempy3l
+
+          duzdxl = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l
+          duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l
+          duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l
+
+        else !regular element
+
+          duxdxl = xix_regular*tempx1l 
+          duxdyl = xix_regular*tempx2l 
+          duxdzl = xix_regular*tempx3l
+
+          duydxl = xix_regular*tempy1l
+          duydyl = xix_regular*tempy2l 
+          duydzl = xix_regular*tempy3l
+
+          duzdxl = xix_regular*tempz1l
+          duzdyl = xix_regular*tempz2l
+          duzdzl = xix_regular*tempz3l
+
+        endif
 
 ! strain eps_jk
         eps(1,1) = duxdxl
@@ -163,15 +182,21 @@
         eps_s(2,3) = eps_s(2,3) + eps_array(2,3,i,j,k)*hlagrange
         eps_s(3,3) = eps_s(3,3) + eps_array(3,3,i,j,k)*hlagrange
 
-        xix_s = xix_s + xix(i,j,k)*hlagrange
-        xiy_s = xiy_s + xiy(i,j,k)*hlagrange
-        xiz_s = xiz_s + xiz(i,j,k)*hlagrange
-        etax_s = etax_s + etax(i,j,k)*hlagrange
-        etay_s = etay_s + etay(i,j,k)*hlagrange
-        etaz_s = etaz_s + etaz(i,j,k)*hlagrange
-        gammax_s = gammax_s + gammax(i,j,k)*hlagrange
-        gammay_s = gammay_s + gammay(i,j,k)*hlagrange
-        gammaz_s = gammaz_s + gammaz(i,j,k)*hlagrange
+        if (ispec_irreg /= 0 ) then !irregular element
+          xix_s = xix_s + xix(i,j,k,ispec_irreg)*hlagrange
+          xiy_s = xiy_s + xiy(i,j,k,ispec_irreg)*hlagrange
+          xiz_s = xiz_s + xiz(i,j,k,ispec_irreg)*hlagrange
+          etax_s = etax_s + etax(i,j,k,ispec_irreg)*hlagrange
+          etay_s = etay_s + etay(i,j,k,ispec_irreg)*hlagrange
+          etaz_s = etaz_s + etaz(i,j,k,ispec_irreg)*hlagrange
+          gammax_s = gammax_s + gammax(i,j,k,ispec_irreg)*hlagrange
+          gammay_s = gammay_s + gammay(i,j,k,ispec_irreg)*hlagrange
+          gammaz_s = gammaz_s + gammaz(i,j,k,ispec_irreg)*hlagrange
+        else !regular element
+          xix_s = xix_s + xix_regular*hlagrange
+          etay_s = xix_s
+          gammaz_s = xix_s
+        endif
 
       enddo
     enddo

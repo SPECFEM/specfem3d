@@ -28,22 +28,20 @@
 
   subroutine compute_arrays_source_cmt(ispec_selected_source,sourcearray, &
                                        hxis,hetas,hgammas,hpxis,hpetas,hpgammas, &
-                                       Mxx,Myy,Mzz,Mxy,Mxz,Myz, &
-                                       xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,nspec)
+                                       Mxx,Myy,Mzz,Mxy,Mxz,Myz)
 
   use constants
+  use specfem_par, only : xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,xix_regular,irregular_element_number
 
   implicit none
 
-  integer :: ispec_selected_source,nspec
+  integer :: ispec_selected_source
 
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearray
   double precision, dimension(NGLLX) :: hxis,hpxis
   double precision, dimension(NGLLY) :: hetas,hpetas
   double precision, dimension(NGLLZ) :: hgammas,hpgammas
   double precision :: Mxx,Myy,Mzz,Mxy,Mxz,Myz
-
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz
 
   ! local parameters
   double precision :: xixd,xiyd,xizd,etaxd,etayd,etazd,gammaxd,gammayd,gammazd
@@ -56,8 +54,9 @@
   double precision :: dxis_dx, detas_dx, dgammas_dx
   double precision :: dxis_dy, detas_dy, dgammas_dy
   double precision :: dxis_dz, detas_dz, dgammas_dz
+  double precision :: xix_reg_d
 
-  integer :: k,l,m
+  integer :: k,l,m, ispec_irreg
 
   dxis_dx = ZERO
   dxis_dy = ZERO
@@ -69,34 +68,45 @@
   dgammas_dy = ZERO
   dgammas_dz = ZERO
 
+  ispec_irreg = irregular_element_number(ispec_selected_source)
+  if (ispec_irreg == 0) xix_reg_d = dble(xix_regular)
   do m = 1,NGLLZ
      do l = 1,NGLLY
         do k = 1,NGLLX
 
-           xixd    = dble(xix(k,l,m,ispec_selected_source))
-           xiyd    = dble(xiy(k,l,m,ispec_selected_source))
-           xizd    = dble(xiz(k,l,m,ispec_selected_source))
-           etaxd   = dble(etax(k,l,m,ispec_selected_source))
-           etayd   = dble(etay(k,l,m,ispec_selected_source))
-           etazd   = dble(etaz(k,l,m,ispec_selected_source))
-           gammaxd = dble(gammax(k,l,m,ispec_selected_source))
-           gammayd = dble(gammay(k,l,m,ispec_selected_source))
-           gammazd = dble(gammaz(k,l,m,ispec_selected_source))
-
            hlagrange = hxis(k) * hetas(l) * hgammas(m)
 
-           dxis_dx = dxis_dx + hlagrange * xixd
-           dxis_dy = dxis_dy + hlagrange * xiyd
-           dxis_dz = dxis_dz + hlagrange * xizd
+           if (ispec_irreg /= 0) then !irregular element 
 
-           detas_dx = detas_dx + hlagrange * etaxd
-           detas_dy = detas_dy + hlagrange * etayd
-           detas_dz = detas_dz + hlagrange * etazd
+             xixd    = dble(xix(k,l,m,ispec_irreg))
+             xiyd    = dble(xiy(k,l,m,ispec_irreg))
+             xizd    = dble(xiz(k,l,m,ispec_irreg))
+             etaxd   = dble(etax(k,l,m,ispec_irreg))
+             etayd   = dble(etay(k,l,m,ispec_irreg))
+             etazd   = dble(etaz(k,l,m,ispec_irreg))
+             gammaxd = dble(gammax(k,l,m,ispec_irreg))
+             gammayd = dble(gammay(k,l,m,ispec_irreg))
+             gammazd = dble(gammaz(k,l,m,ispec_irreg))
+          
+             dxis_dx = dxis_dx + hlagrange * xixd
+             dxis_dy = dxis_dy + hlagrange * xiyd
+             dxis_dz = dxis_dz + hlagrange * xizd
 
-           dgammas_dx = dgammas_dx + hlagrange * gammaxd
-           dgammas_dy = dgammas_dy + hlagrange * gammayd
-           dgammas_dz = dgammas_dz + hlagrange * gammazd
+             detas_dx = detas_dx + hlagrange * etaxd
+             detas_dy = detas_dy + hlagrange * etayd
+             detas_dz = detas_dz + hlagrange * etazd
 
+             dgammas_dx = dgammas_dx + hlagrange * gammaxd
+             dgammas_dy = dgammas_dy + hlagrange * gammayd
+             dgammas_dz = dgammas_dz + hlagrange * gammazd
+
+           else !regular element
+
+             dxis_dx = dxis_dx + hlagrange * xix_reg_d
+             detas_dy = detas_dy + hlagrange * xix_reg_d
+             dgammas_dz = dgammas_dz + hlagrange * xix_reg_d
+
+           endif
        enddo
      enddo
   enddo
@@ -321,13 +331,15 @@
 
   subroutine compute_arrays_source_forcesolution_fluid(ispec_selected_source,sourcearray, &
                                                        hxis,hetas,hgammas,hpxis,hpetas,hpgammas, &
-                                                       factor_source, comp_x,comp_y,comp_z, nu_source, &
-                                                       xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,nspec)
+                                                       factor_source, comp_x,comp_y,comp_z, nu_source)
   use constants
+
+  use specfem_par, only : xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                          irregular_element_number,xix_regular
 
   implicit none
 
-  integer :: ispec_selected_source,nspec
+  integer :: ispec_selected_source,ispec_irreg
 
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ) :: sourcearray
   double precision, dimension(NGLLX) :: hxis,hpxis
@@ -338,8 +350,6 @@
   real(kind=CUSTOM_REAL) :: factor_source
 
   double precision :: FX, FY, FZ
-
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,nspec) :: xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz
 
   ! local parameters
   double precision :: xixd,xiyd,xizd,etaxd,etayd,etazd,gammaxd,gammayd,gammazd
@@ -365,33 +375,46 @@
   dgammas_dy = ZERO
   dgammas_dz = ZERO
 
+  ispec_irreg = irregular_element_number(ispec_selected_source)
+  if (ispec_irreg == 0) xixd = dble(xix_regular)
+ 
   do m = 1,NGLLZ
      do l = 1,NGLLY
         do k = 1,NGLLX
 
-           xixd    = dble(xix(k,l,m,ispec_selected_source))
-           xiyd    = dble(xiy(k,l,m,ispec_selected_source))
-           xizd    = dble(xiz(k,l,m,ispec_selected_source))
-           etaxd   = dble(etax(k,l,m,ispec_selected_source))
-           etayd   = dble(etay(k,l,m,ispec_selected_source))
-           etazd   = dble(etaz(k,l,m,ispec_selected_source))
-           gammaxd = dble(gammax(k,l,m,ispec_selected_source))
-           gammayd = dble(gammay(k,l,m,ispec_selected_source))
-           gammazd = dble(gammaz(k,l,m,ispec_selected_source))
-
            hlagrange = hxis(k) * hetas(l) * hgammas(m)
 
-           dxis_dx = dxis_dx + hlagrange * xixd
-           dxis_dy = dxis_dy + hlagrange * xiyd
-           dxis_dz = dxis_dz + hlagrange * xizd
+           if (ispec_irreg /= 0) then !irregular element
 
-           detas_dx = detas_dx + hlagrange * etaxd
-           detas_dy = detas_dy + hlagrange * etayd
-           detas_dz = detas_dz + hlagrange * etazd
+             xixd    = dble(xix(k,l,m,ispec_irreg))
+             xiyd    = dble(xiy(k,l,m,ispec_irreg))
+             xizd    = dble(xiz(k,l,m,ispec_irreg))
+             etaxd   = dble(etax(k,l,m,ispec_irreg))
+             etayd   = dble(etay(k,l,m,ispec_irreg))
+             etazd   = dble(etaz(k,l,m,ispec_irreg))
+             gammaxd = dble(gammax(k,l,m,ispec_irreg))
+             gammayd = dble(gammay(k,l,m,ispec_irreg))
+             gammazd = dble(gammaz(k,l,m,ispec_irreg))
 
-           dgammas_dx = dgammas_dx + hlagrange * gammaxd
-           dgammas_dy = dgammas_dy + hlagrange * gammayd
-           dgammas_dz = dgammas_dz + hlagrange * gammazd
+             dxis_dx = dxis_dx + hlagrange * xixd
+             dxis_dy = dxis_dy + hlagrange * xiyd
+             dxis_dz = dxis_dz + hlagrange * xizd
+
+             detas_dx = detas_dx + hlagrange * etaxd
+             detas_dy = detas_dy + hlagrange * etayd
+             detas_dz = detas_dz + hlagrange * etazd
+
+             dgammas_dx = dgammas_dx + hlagrange * gammaxd
+             dgammas_dy = dgammas_dy + hlagrange * gammayd
+             dgammas_dz = dgammas_dz + hlagrange * gammazd
+
+           else ! regular_element
+
+             dxis_dx = dxis_dx + hlagrange * xixd
+             detas_dy = detas_dy + hlagrange * xixd
+             dgammas_dz = dgammas_dz + hlagrange * xixd
+
+           endif
 
        enddo
      enddo

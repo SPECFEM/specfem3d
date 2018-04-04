@@ -151,7 +151,7 @@
   double precision :: weight
   real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl
   double precision :: jacobianl
-  integer :: i,j,k,ispec,iglob,ier
+  integer :: i,j,k,ispec,ispec_irreg,iglob,ier
   double precision :: xval,yval,zval
   double precision :: xval_squared,yval_squared,zval_squared
   double precision :: x_meshpoint,y_meshpoint,z_meshpoint
@@ -207,28 +207,32 @@
        close(unit=IOUT)
     endif
 
+    ispec_irreg = irregular_element_number(ispec)
     do k = 1,NGLLZ
       do j = 1,NGLLY
         do i = 1,NGLLX
 
           weight = wxgll(i)*wygll(j)*wzgll(k)
+          if (ispec_irreg /= 0) then ! irregular element
+            ! compute the Jacobian
+            xixl = xix(i,j,k,ispec_irreg)
+            xiyl = xiy(i,j,k,ispec_irreg)
+            xizl = xiz(i,j,k,ispec_irreg)
+            etaxl = etax(i,j,k,ispec_irreg)
+            etayl = etay(i,j,k,ispec_irreg)
+            etazl = etaz(i,j,k,ispec_irreg)
+            gammaxl = gammax(i,j,k,ispec_irreg)
+            gammayl = gammay(i,j,k,ispec_irreg)
+            gammazl = gammaz(i,j,k,ispec_irreg)
 
-          ! compute the Jacobian
-          xixl = xix(i,j,k,ispec)
-          xiyl = xiy(i,j,k,ispec)
-          xizl = xiz(i,j,k,ispec)
-          etaxl = etax(i,j,k,ispec)
-          etayl = etay(i,j,k,ispec)
-          etazl = etaz(i,j,k,ispec)
-          gammaxl = gammax(i,j,k,ispec)
-          gammayl = gammay(i,j,k,ispec)
-          gammazl = gammaz(i,j,k,ispec)
-
-          ! do this in double precision for accuracy
-          jacobianl = 1.d0 / dble(xixl*(etayl*gammazl-etazl*gammayl) &
-                        - xiyl*(etaxl*gammazl-etazl*gammaxl) &
-                        + xizl*(etaxl*gammayl-etayl*gammaxl))
-
+            ! do this in double precision for accuracy
+            jacobianl = 1.d0 / dble(xixl*(etayl*gammazl-etazl*gammayl) &
+                          - xiyl*(etaxl*gammazl-etazl*gammaxl) &
+                          + xizl*(etaxl*gammayl-etayl*gammaxl))
+          else !regular element
+           jacobianl = 1.d0 / dble(xix_regular*xix_regular*xix_regular)
+          endif
+ 
           if (CHECK_FOR_NEGATIVE_JACOBIANS .and. jacobianl <= ZERO) stop 'error: negative Jacobian found in integral calculation'
 
           iglob = ibool(i,j,k,ispec)

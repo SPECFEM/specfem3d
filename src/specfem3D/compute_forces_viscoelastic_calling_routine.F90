@@ -60,35 +60,15 @@ subroutine compute_forces_viscoelastic_calling()
   do iphase = 1,2
 
 ! elastic term
-    call compute_forces_viscoelastic(iphase,NSPEC_AB,NGLOB_AB, &
+    call compute_forces_viscoelastic(iphase, &
                         displ,veloc,accel, &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        hprime_xxT,hprime_yyT,hprime_zzT, &
-                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
-                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                        kappastore,mustore,jacobian,ibool, &
-                        ATTENUATION,deltat, &
-                        one_minus_sum_beta,factor_common, &
-                        one_minus_sum_beta_kappa,factor_common_kappa, &
                         alphaval,betaval,gammaval, &
-                        NSPEC_ATTENUATION_AB, &
                         R_trace,R_xx,R_yy,R_xy,R_xz,R_yz, &
-                        NSPEC_ATTENUATION_AB_LDDRK,R_trace_lddrk, &
+                        R_trace_lddrk, &
                         R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk, &
                         epsilondev_trace,epsilondev_xx,epsilondev_yy,epsilondev_xy, &
                         epsilondev_xz,epsilondev_yz,epsilon_trace_over_3, &
-                        ANISOTROPY,NSPEC_ANISO, &
-                        c11store,c12store,c13store,c14store,c15store,c16store, &
-                        c22store,c23store,c24store,c25store,c26store,c33store, &
-                        c34store,c35store,c36store,c44store,c45store,c46store, &
-                        c55store,c56store,c66store, &
-                        SIMULATION_TYPE,COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
-                        NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT, &
-                        is_moho_top,is_moho_bot, &
-                        dsdx_top,dsdx_bot, &
-                        ispec2D_moho_top,ispec2D_moho_bot, &
-                        num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
-                        phase_ispec_inner_elastic,.false.)
+                        .false.)
 
     ! computes additional contributions
     if (iphase == 1) then
@@ -142,25 +122,7 @@ subroutine compute_forces_viscoelastic_calling()
 
       ! poroelastic coupling
       if (POROELASTIC_SIMULATION) then
-        call compute_coupling_viscoelastic_po(NSPEC_AB,NGLOB_AB,ibool, &
-                          displs_poroelastic,displw_poroelastic, &
-                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          hprime_xx,hprime_yy,hprime_zz, &
-                          kappaarraystore,rhoarraystore,mustore, &
-                          phistore,tortstore,jacobian, &
-                          displ,accel,kappastore, &
-                          ANISOTROPY,NSPEC_ANISO, &
-                          c11store,c12store,c13store,c14store,c15store,c16store, &
-                          c22store,c23store,c24store,c25store,c26store,c33store, &
-                          c34store,c35store,c36store,c44store,c45store,c46store, &
-                          c55store,c56store,c66store, &
-                          SIMULATION_TYPE,NGLOB_ADJOINT,NSPEC_ADJOINT, &
-                          num_coupling_el_po_faces, &
-                          coupling_el_po_ispec,coupling_po_el_ispec, &
-                          coupling_el_po_ijk,coupling_po_el_ijk, &
-                          coupling_el_po_normal, &
-                          coupling_el_po_jacobian2Dw, &
-                          iphase)
+        call compute_coupling_viscoelastic_po(iphase)
       endif
 
 
@@ -302,35 +264,15 @@ subroutine compute_forces_viscoelastic_backward_calling()
 
 ! elastic term
     ! adjoint simulations: backward/reconstructed wavefield
-    call compute_forces_viscoelastic(iphase,NSPEC_AB,NGLOB_AB, &
+    call compute_forces_viscoelastic(iphase, &
                         b_displ,b_veloc,b_accel, &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        hprime_xxT,hprime_yyT,hprime_zzT, &
-                        hprimewgll_xx,hprimewgll_yy,hprimewgll_zz, &
-                        wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
-                        kappastore,mustore,jacobian,ibool, &
-                        ATTENUATION,deltat, &
-                        one_minus_sum_beta,factor_common, &
-                        one_minus_sum_beta_kappa,factor_common_kappa, &
                         b_alphaval,b_betaval,b_gammaval, &
-                        NSPEC_ATTENUATION_AB, &
                         b_R_trace,b_R_xx,b_R_yy,b_R_xy,b_R_xz,b_R_yz, &
-                        NSPEC_ATTENUATION_AB_LDDRK,b_R_trace_lddrk, &
+                        b_R_trace_lddrk, &
                         b_R_xx_lddrk,b_R_yy_lddrk,b_R_xy_lddrk,b_R_xz_lddrk,b_R_yz_lddrk, &
                         b_epsilondev_trace,b_epsilondev_xx,b_epsilondev_yy,b_epsilondev_xy, &
                         b_epsilondev_xz,b_epsilondev_yz,b_epsilon_trace_over_3, &
-                        ANISOTROPY,NSPEC_ANISO, &
-                        c11store,c12store,c13store,c14store,c15store,c16store, &
-                        c22store,c23store,c24store,c25store,c26store,c33store, &
-                        c34store,c35store,c36store,c44store,c45store,c46store, &
-                        c55store,c56store,c66store, &
-                        SIMULATION_TYPE,COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
-                        NSPEC_BOUN,NSPEC2D_MOHO,NSPEC_ADJOINT, &
-                        is_moho_top,is_moho_bot, &
-                        b_dsdx_top,b_dsdx_bot, &
-                        ispec2D_moho_top,ispec2D_moho_bot, &
-                        num_phase_ispec_elastic,nspec_inner_elastic,nspec_outer_elastic, &
-                        phase_ispec_inner_elastic,.true.)
+                        .true.)
 
     ! computes additional contributions
     if (iphase == 1) then
@@ -518,25 +460,7 @@ subroutine compute_forces_viscoelastic_GPU_calling()
         call transfer_displ_from_device(NDIM*NGLOB_AB,displ, Mesh_pointer)
         call transfer_accel_from_device(NDIM*NGLOB_AB,accel, Mesh_pointer)
 
-        call compute_coupling_viscoelastic_po(NSPEC_AB,NGLOB_AB,ibool, &
-                          displs_poroelastic,displw_poroelastic, &
-                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          hprime_xx,hprime_yy,hprime_zz, &
-                          kappaarraystore,rhoarraystore,mustore, &
-                          phistore,tortstore,jacobian, &
-                          displ,accel,kappastore, &
-                          ANISOTROPY,NSPEC_ANISO, &
-                          c11store,c12store,c13store,c14store,c15store,c16store, &
-                          c22store,c23store,c24store,c25store,c26store,c33store, &
-                          c34store,c35store,c36store,c44store,c45store,c46store, &
-                          c55store,c56store,c66store, &
-                          SIMULATION_TYPE,NGLOB_ADJOINT,NSPEC_ADJOINT, &
-                          num_coupling_el_po_faces, &
-                          coupling_el_po_ispec,coupling_po_el_ispec, &
-                          coupling_el_po_ijk,coupling_po_el_ijk, &
-                          coupling_el_po_normal, &
-                          coupling_el_po_jacobian2Dw, &
-                          iphase)
+        call compute_coupling_viscoelastic_po(iphase)
 
         ! transfers acceleration back to GPU
         call transfer_accel_to_device(NDIM*NGLOB_AB,accel, Mesh_pointer)

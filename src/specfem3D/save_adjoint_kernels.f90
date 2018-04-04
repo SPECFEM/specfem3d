@@ -191,16 +191,20 @@ subroutine save_weights_kernel()
   implicit none
 
   ! local parameters
-  integer:: ispec,i,j,k,ier
+  integer:: ispec,i,j,k,ier,ispec_irreg
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: weights_kernel
+  real(kind=CUSTOM_REAL) :: jacobianl
 
   allocate(weights_kernel(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) stop 'error allocating array weights_kernel'
   do ispec = 1, NSPEC_AB
+    ispec_irreg = irregular_element_number(ispec)
+    if (ispec_irreg == 0) jacobianl = jacobian_regular
     do k = 1, NGLLZ
       do j = 1, NGLLY
         do i = 1, NGLLX
-          weights_kernel(i,j,k,ispec) = wxgll(i) * wygll(j) * wzgll(k) * jacobian(i,j,k,ispec)
+          if (ispec_irreg /= 0) jacobianl = jacobian(i,j,k,ispec_irreg)
+          weights_kernel(i,j,k,ispec) = wxgll(i) * wygll(j) * wzgll(k) * jacobianl
         enddo ! i
       enddo ! j
     enddo ! k

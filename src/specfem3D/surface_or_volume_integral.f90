@@ -43,7 +43,7 @@
 
   real(kind=CUSTOM_REAL) :: xixpt,xiypt,xizpt,etaxpt,etaypt,etazpt,gammaxpt,gammaypt,gammazpt
 
-  integer :: ier,iint,i,j,k,ispec,iglob,igll,iface
+  integer :: ier,iint,i,j,k,ispec,iglob,igll,iface,ispec_irreg
 
   ! NOTE : 'f_integrandloc' have to be defined at all 'iglob'
   ! (all the points of the surface, or all the point of the volume)
@@ -72,6 +72,8 @@
     ! calculates volume of all elements in mesh
     do ispec = 1, NSPEC_AB
 
+      ispec_irreg = irregular_element_number(ispec)
+      if (ispec_irreg == 0) xixpt = dble(xix_regular)
       ! main computation
       do k = 1,NGLLZ
         do j = 1,NGLLY
@@ -79,21 +81,26 @@
 
             weightpt = wxgll(i)*wygll(j)*wzgll(k)
 
-            ! compute the Jacobian
-            xixpt    = xix(i,j,k,ispec)
-            xiypt    = xiy(i,j,k,ispec)
-            xizpt    = xiz(i,j,k,ispec)
-            etaxpt   = etax(i,j,k,ispec)
-            etaypt   = etay(i,j,k,ispec)
-            etazpt   = etaz(i,j,k,ispec)
-            gammaxpt = gammax(i,j,k,ispec)
-            gammaypt = gammay(i,j,k,ispec)
-            gammazpt = gammaz(i,j,k,ispec)
+            if (ispec_irreg /= 0) then !irregular element 
+              ! compute the Jacobian
+              xixpt    = xix(i,j,k,ispec_irreg)
+              xiypt    = xiy(i,j,k,ispec_irreg)
+              xizpt    = xiz(i,j,k,ispec_irreg)
+              etaxpt   = etax(i,j,k,ispec_irreg)
+              etaypt   = etay(i,j,k,ispec_irreg)
+              etazpt   = etaz(i,j,k,ispec_irreg)
+              gammaxpt = gammax(i,j,k,ispec_irreg)
+              gammaypt = gammay(i,j,k,ispec_irreg)
+              gammazpt = gammaz(i,j,k,ispec_irreg)
 
-            ! do this in double precision for accuracy
-            jacobianpt = 1.d0 / dble(xixpt*(etaypt*gammazpt-etazpt*gammaypt) &
-                                    - xiypt*(etaxpt*gammazpt-etazpt*gammaxpt) &
-                                    + xizpt*(etaxpt*gammaypt-etaypt*gammaxpt))
+              ! do this in double precision for accuracy
+              jacobianpt = 1.d0 / dble(xixpt*(etaypt*gammazpt-etazpt*gammaypt) &
+                                      - xiypt*(etaxpt*gammazpt-etazpt*gammaxpt) &
+                                      + xizpt*(etaxpt*gammaypt-etaypt*gammaxpt))
+
+            else !regular element
+              jacobianpt = 1.d0 / dble(xixpt*xixpt*xixpt)
+            endif
 
             if (CHECK_FOR_NEGATIVE_JACOBIANS .and. jacobianpt <= ZERO) stop &
                                              'error: negative Jacobian found in volume integral calculation'

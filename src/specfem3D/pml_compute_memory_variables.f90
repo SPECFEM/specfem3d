@@ -43,7 +43,9 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
   use specfem_par, only: deltat,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
-                         kappastore,mustore
+                         kappastore,mustore,irregular_element_number, &
+                         jacobian_regular,xix_regular
+
   use pml_par, only: NSPEC_CPML,CPML_regions,k_store_x,k_store_y,k_store_z, &
                      d_store_x,d_store_y,d_store_z,alpha_store_x,alpha_store_y,alpha_store_z, &
                      PML_dux_dxl, PML_dux_dyl, PML_dux_dzl, PML_duy_dxl, PML_duy_dyl, PML_duy_dzl, &
@@ -74,7 +76,7 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
                           rmemory_dux_dxl_y, rmemory_duz_dzl_y, rmemory_duz_dyl_y, rmemory_dux_dyl_y, &
                           rmemory_dux_dxl_z, rmemory_duy_dyl_z, rmemory_duy_dzl_z, rmemory_dux_dzl_z
   ! local parameters
-  integer :: i,j,k
+  integer :: i,j,k,ispec_irreg
   real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
   real(kind=CUSTOM_REAL) :: sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz,sigma_yx,sigma_zx,sigma_zy
   real(kind=CUSTOM_REAL) :: lambdal,mul,lambdalplus2mul,kappal
@@ -92,6 +94,8 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
   real(kind=CUSTOM_REAL) :: kappa_x,kappa_y,kappa_z,d_x,d_y,d_z,alpha_x,alpha_y,alpha_z
 
   CPML_region_local = CPML_regions(ispec_CPML)
+  ispec_irreg = irregular_element_number(ispec)
+  if (ispec_irreg==0) jacobianl = jacobian_regular
 
   do k=1,NGLLZ
     do j=1,NGLLY
@@ -100,16 +104,21 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
         mul = mustore(i,j,k,ispec)
         lambdalplus2mul = kappal + FOUR_THIRDS * mul
         lambdal = lambdalplus2mul - 2.0_CUSTOM_REAL*mul
-        xixl = xix(i,j,k,ispec)
-        xiyl = xiy(i,j,k,ispec)
-        xizl = xiz(i,j,k,ispec)
-        etaxl = etax(i,j,k,ispec)
-        etayl = etay(i,j,k,ispec)
-        etazl = etaz(i,j,k,ispec)
-        gammaxl = gammax(i,j,k,ispec)
-        gammayl = gammay(i,j,k,ispec)
-        gammazl = gammaz(i,j,k,ispec)
-        jacobianl = jacobian(i,j,k,ispec)
+
+        if (ispec_irreg /= 0) then !irregular element
+
+          xixl = xix(i,j,k,ispec_irreg)
+          xiyl = xiy(i,j,k,ispec_irreg)
+          xizl = xiz(i,j,k,ispec_irreg)
+          etaxl = etax(i,j,k,ispec_irreg)
+          etayl = etay(i,j,k,ispec_irreg)
+          etazl = etaz(i,j,k,ispec_irreg)
+          gammaxl = gammax(i,j,k,ispec_irreg)
+          gammayl = gammay(i,j,k,ispec_irreg)
+          gammazl = gammaz(i,j,k,ispec_irreg)
+          jacobianl = jacobian(i,j,k,ispec_irreg)
+
+        endif
 
         !---------------------- A6, A7, A8, A9 --------------------------
         kappa_x = k_store_x(i,j,k,ispec_CPML)
@@ -327,18 +336,35 @@ subroutine pml_compute_memory_variables_elastic(ispec,ispec_CPML,tempx1,tempy1,t
         sigma_yz = mul*duzdyl_z + mul*duydzl_z
         sigma_zz = lambdal*duxdxl_z + lambdal*duydyl_z + lambdalplus2mul*duzdzl_z
 
-        ! form dot product with test vector, non-symmetric form
-        tempx1(i,j,k) = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl) ! this goes to accel_x
-        tempy1(i,j,k) = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl) ! this goes to accel_y
-        tempz1(i,j,k) = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl) ! this goes to accel_z
+        if (ispec_irreg /= 0) then ! irregular element
 
-        tempx2(i,j,k) = jacobianl * (sigma_xx*etaxl + sigma_yx*etayl + sigma_zx*etazl) ! this goes to accel_x
-        tempy2(i,j,k) = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_zy*etazl) ! this goes to accel_y
-        tempz2(i,j,k) = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl) ! this goes to accel_z
+          ! form dot product with test vector, non-symmetric form (which
+          ! is useful in the case of PML)
+          tempx1(i,j,k) = jacobianl * (sigma_xx * xixl + sigma_yx * xiyl + sigma_zx * xizl) ! this goes to accel_x
+          tempy1(i,j,k) = jacobianl * (sigma_xy * xixl + sigma_yy * xiyl + sigma_zy * xizl) ! this goes to accel_y
+          tempz1(i,j,k) = jacobianl * (sigma_xz * xixl + sigma_yz * xiyl + sigma_zz * xizl) ! this goes to accel_z
 
-        tempx3(i,j,k) = jacobianl * (sigma_xx*gammaxl + sigma_yx*gammayl + sigma_zx*gammazl) ! this goes to accel_x
-        tempy3(i,j,k) = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl) ! this goes to accel_y
-        tempz3(i,j,k) = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl) ! this goes to accel_z
+          tempx2(i,j,k) = jacobianl * (sigma_xx * etaxl + sigma_yx * etayl + sigma_zx * etazl) ! this goes to accel_x
+          tempy2(i,j,k) = jacobianl * (sigma_xy * etaxl + sigma_yy * etayl + sigma_zy * etazl) ! this goes to accel_y
+          tempz2(i,j,k) = jacobianl * (sigma_xz * etaxl + sigma_yz * etayl + sigma_zz * etazl) ! this goes to accel_z
+
+          tempx3(i,j,k) = jacobianl * (sigma_xx * gammaxl + sigma_yx * gammayl + sigma_zx * gammazl) ! this goes to accel_x
+          tempy3(i,j,k) = jacobianl * (sigma_xy * gammaxl + sigma_yy * gammayl + sigma_zy * gammazl) ! this goes to accel_y
+          tempz3(i,j,k) = jacobianl * (sigma_xz * gammaxl + sigma_yz * gammayl + sigma_zz * gammazl) ! this goes to accel_z
+        else !regular element
+           tempx1(i,j,k) = jacobianl * sigma_xx * xix_regular ! this goes to accel_x
+           tempy1(i,j,k) = jacobianl * sigma_xy * xix_regular ! this goes to accel_y
+           tempz1(i,j,k) = jacobianl * sigma_xz * xix_regular ! this goes to accel_z
+
+           tempx2(i,j,k) = jacobianl * sigma_yx * xix_regular ! this goes to accel_x
+           tempy2(i,j,k) = jacobianl * sigma_yy * xix_regular ! this goes to accel_y
+           tempz2(i,j,k) = jacobianl * sigma_yz * xix_regular ! this goes to accel_z
+
+           tempx3(i,j,k) = jacobianl * sigma_zx * xix_regular ! this goes to accel_x
+           tempy3(i,j,k) = jacobianl * sigma_zy * xix_regular ! this goes to accel_y
+           tempz3(i,j,k) = jacobianl * sigma_zz * xix_regular ! this goes to accel_z
+
+         endif
 
       enddo
     enddo
@@ -362,7 +388,8 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
   use specfem_par, only: xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian, &
-                         deltat,rhostore
+                         deltat,rhostore,irregular_element_number, &
+                         jacobian_regular,xix_regular
 
   use pml_par, only: NSPEC_CPML,CPML_regions,k_store_x,k_store_y,k_store_z, &
                      d_store_x,d_store_y,d_store_z, &
@@ -395,7 +422,7 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
     PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new
 
   ! local parameters
-  integer :: i,j,k
+  integer :: i,j,k,ispec_irreg
   real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
   real(kind=CUSTOM_REAL) :: rho_invl_jacob
   real(kind=CUSTOM_REAL) :: dpotentialdxl,dpotentialdyl,dpotentialdzl
@@ -410,6 +437,7 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
 
 
   CPML_region_local = CPML_regions(ispec_CPML)
+  ispec_irreg = irregular_element_number(ispec)
 
   do k=1,NGLLZ
     do j=1,NGLLY
@@ -486,22 +514,33 @@ subroutine pml_compute_memory_variables_acoustic(ispec,ispec_CPML,temp1,temp2,te
                         A16 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,2) + &
                         A17 * rmemory_dpotential_dzl(i,j,k,ispec_CPML,3)
 
-        xixl = xix(i,j,k,ispec)
-        xiyl = xiy(i,j,k,ispec)
-        xizl = xiz(i,j,k,ispec)
-        etaxl = etax(i,j,k,ispec)
-        etayl = etay(i,j,k,ispec)
-        etazl = etaz(i,j,k,ispec)
-        gammaxl = gammax(i,j,k,ispec)
-        gammayl = gammay(i,j,k,ispec)
-        gammazl = gammaz(i,j,k,ispec)
+        if (ispec_irreg /= 0) then !irregular element
 
-        jacobianl = jacobian(i,j,k,ispec)
-        rho_invl_jacob = jacobianl / rhostore(i,j,k,ispec)
+          xixl = xix(i,j,k,ispec_irreg)
+          xiyl = xiy(i,j,k,ispec_irreg)
+          xizl = xiz(i,j,k,ispec_irreg)
+          etaxl = etax(i,j,k,ispec_irreg)
+          etayl = etay(i,j,k,ispec_irreg)
+          etazl = etaz(i,j,k,ispec_irreg)
+          gammaxl = gammax(i,j,k,ispec_irreg)
+          gammayl = gammay(i,j,k,ispec_irreg)
+          gammazl = gammaz(i,j,k,ispec_irreg)
+          jacobianl = jacobian(i,j,k,ispec_irreg)
+          rho_invl_jacob = jacobianl / rhostore(i,j,k,ispec)
 
-        temp1(i,j,k) = rho_invl_jacob * (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
-        temp2(i,j,k) = rho_invl_jacob * (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
-        temp3(i,j,k) = rho_invl_jacob * (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
+          temp1(i,j,k) = rho_invl_jacob * (xixl*dpotentialdxl + xiyl*dpotentialdyl + xizl*dpotentialdzl)
+          temp2(i,j,k) = rho_invl_jacob * (etaxl*dpotentialdxl + etayl*dpotentialdyl + etazl*dpotentialdzl)
+          temp3(i,j,k) = rho_invl_jacob * (gammaxl*dpotentialdxl + gammayl*dpotentialdyl + gammazl*dpotentialdzl)
+
+        else !regular element
+
+          rho_invl_jacob = jacobian_regular / rhostore(i,j,k,ispec)
+          temp1(i,j,k) = rho_invl_jacob * xix_regular * dpotentialdxl
+          temp2(i,j,k) = rho_invl_jacob * xix_regular * dpotentialdyl
+          temp3(i,j,k) = rho_invl_jacob * xix_regular * dpotentialdzl
+
+        endif
+
       enddo
     enddo
   enddo

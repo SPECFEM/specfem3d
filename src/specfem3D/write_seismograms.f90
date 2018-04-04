@@ -74,7 +74,7 @@
       ! gets resulting array values onto CPU
       call compute_seismograms_cuda(Mesh_pointer,seismograms_d,seismograms_v,seismograms_a,seismograms_p, &
                                     seismo_current,NTSTEP_BETWEEN_OUTPUT_SEISMOS,it,it_end, &
-                                    ACOUSTIC_SIMULATION,USE_TRICK_FOR_BETTER_PRESSURE)
+                                    ACOUSTIC_SIMULATION,ELASTIC_SIMULATION,USE_TRICK_FOR_BETTER_PRESSURE)
     endif
   else
     ! on CPU

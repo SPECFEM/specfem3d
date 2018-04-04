@@ -25,11 +25,8 @@
 !
 !=====================================================================
 
-  subroutine compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                        scalar_field, vector_field_element, &
-                        hprime_xx,hprime_yy,hprime_zz, &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        ibool,rhostore,GRAVITY)
+  subroutine compute_gradient_in_acoustic(ispec, &
+                        scalar_field, vector_field_element)
 
 ! calculates gradient of given acoustic scalar (potential) field on all GLL points in one, single element
 ! note:
@@ -43,37 +40,26 @@
 !             or in gravity case, just gradient vector field
 
   use constants
+  use specfem_par, only : NGLOB_AB,xix,xiy,xiz,etax,etay,etaz, &
+                          gammax,gammay,gammaz,xix_regular,irregular_element_number, &
+                          ibool,rhostore,GRAVITY,hprime_xx,hprime_yy,hprime_zz
 
   implicit none
 
-  integer,intent(in) :: ispec,NSPEC_AB,NGLOB_AB
-
+  integer,intent(in) :: ispec
   real(kind=CUSTOM_REAL),dimension(NGLOB_AB),intent(in) :: scalar_field
-
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLLX,NGLLY,NGLLZ),intent(out) :: vector_field_element
-
-  integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB):: ibool
-
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
-        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz
-
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rhostore
-
-! array with derivatives of Lagrange polynomials
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx
-  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLY) :: hprime_yy
-  real(kind=CUSTOM_REAL), dimension(NGLLZ,NGLLZ) :: hprime_zz
-
-  logical :: GRAVITY
 
 ! local parameters
   real(kind=CUSTOM_REAL) xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl
   real(kind=CUSTOM_REAL) temp1l,temp2l,temp3l
   real(kind=CUSTOM_REAL) rho_invl
-  integer :: i,j,k,l
+  integer :: i,j,k,l,ispec_irreg
 
 ! double loop over GLL points to compute and store gradients
   vector_field_element(:,:,:,:) = 0._CUSTOM_REAL
+
+  ispec_irreg = irregular_element_number(ispec)
 
   do k= 1,NGLLZ
     do j = 1,NGLLY
@@ -97,16 +83,6 @@
           temp3l = temp3l + scalar_field(ibool(i,j,l,ispec))*hprime_zz(k,l)
         enddo
 
-        xixl = xix(i,j,k,ispec)
-        xiyl = xiy(i,j,k,ispec)
-        xizl = xiz(i,j,k,ispec)
-        etaxl = etax(i,j,k,ispec)
-        etayl = etay(i,j,k,ispec)
-        etazl = etaz(i,j,k,ispec)
-        gammaxl = gammax(i,j,k,ispec)
-        gammayl = gammay(i,j,k,ispec)
-        gammazl = gammaz(i,j,k,ispec)
-
         ! daniel: TODO - check gravity case here
         if (GRAVITY) then
           rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
@@ -114,11 +90,31 @@
           rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
         endif
 
-        ! derivatives of acoustic scalar potential field on GLL points
-        vector_field_element(1,i,j,k) = (temp1l*xixl + temp2l*etaxl + temp3l*gammaxl) * rho_invl
-        vector_field_element(2,i,j,k) = (temp1l*xiyl + temp2l*etayl + temp3l*gammayl) * rho_invl
-        vector_field_element(3,i,j,k) = (temp1l*xizl + temp2l*etazl + temp3l*gammazl) * rho_invl
+        if (ispec_irreg /= 0 ) then !irregular element
 
+          xixl = xix(i,j,k,ispec_irreg)
+          xiyl = xiy(i,j,k,ispec_irreg)
+          xizl = xiz(i,j,k,ispec_irreg)
+          etaxl = etax(i,j,k,ispec_irreg)
+          etayl = etay(i,j,k,ispec_irreg)
+          etazl = etaz(i,j,k,ispec_irreg)
+          gammaxl = gammax(i,j,k,ispec_irreg)
+          gammayl = gammay(i,j,k,ispec_irreg)
+          gammazl = gammaz(i,j,k,ispec_irreg)
+
+          ! derivatives of acoustic scalar potential field on GLL points
+          vector_field_element(1,i,j,k) = (temp1l*xixl + temp2l*etaxl + temp3l*gammaxl) * rho_invl
+          vector_field_element(2,i,j,k) = (temp1l*xiyl + temp2l*etayl + temp3l*gammayl) * rho_invl
+          vector_field_element(3,i,j,k) = (temp1l*xizl + temp2l*etazl + temp3l*gammazl) * rho_invl
+
+        else !regular element
+
+          ! derivatives of acoustic scalar potential field on GLL points
+          vector_field_element(1,i,j,k) = temp1l * xix_regular * rho_invl
+          vector_field_element(2,i,j,k) = temp2l * xix_regular * rho_invl
+          vector_field_element(3,i,j,k) = temp3l * xix_regular * rho_invl
+
+        endif
       enddo
     enddo
   enddo

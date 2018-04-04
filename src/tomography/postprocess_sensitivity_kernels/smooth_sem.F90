@@ -247,18 +247,33 @@ program smooth_sem
   ! read the value of NSPEC_AB and NGLOB_AB because we need it to define some array sizes below
   call read_mesh_for_init()
 
-  ! allocate arrays for storing the databases
-  allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           xix(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           xiy(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           xiz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           etax(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           etay(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           etaz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           gammax(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           gammay(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),irregular_element_number(NSPEC_AB),stat=ier) 
+
+  if (NSPEC_IRREGULAR > 0) then
+    ! allocate arrays for storing the databases
+    allocate(xix(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
+             xiy(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
+             xiz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
+             etax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
+             etay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
+             etaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
+             gammax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
+             gammay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
+             gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
+             jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+   else
+       ! allocate arrays for storing the databases
+    allocate(xix(1,1,1,1), &
+             xiy(1,1,1,1), &
+             xiz(1,1,1,1), &
+             etax(1,1,1,1), &
+             etay(1,1,1,1), &
+             etaz(1,1,1,1), &
+             gammax(1,1,1,1), &
+             gammay(1,1,1,1), &
+             gammaz(1,1,1,1), &
+             jacobian(1,1,1,1),stat=ier)
+  endif
   if (ier /= 0) stop 'Error allocating arrays for databases'
 
   ! mesh node locations

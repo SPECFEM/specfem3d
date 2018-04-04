@@ -122,18 +122,10 @@
       ! acoustic elements
       if (SAVE_DISPLACEMENT) then
         ! displacement vector
-        call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                          potential_acoustic, val_element, &
-                          hprime_xx,hprime_yy,hprime_zz, &
-                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore,GRAVITY)
+        call compute_gradient_in_acoustic(ispec,potential_acoustic,val_element)
       else
         ! velocity vector
-        call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                          potential_dot_acoustic, val_element, &
-                          hprime_xx,hprime_yy,hprime_zz, &
-                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore,GRAVITY)
+        call compute_gradient_in_acoustic(ispec,potential_dot_acoustic,val_element)
       endif
 
       ! all surface element points
@@ -280,23 +272,11 @@
 
       ! computes displ/veloc/accel for local element
       ! displacement vector
-      call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                          potential_acoustic, displ_element, &
-                          hprime_xx,hprime_yy,hprime_zz, &
-                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore,GRAVITY)
+      call compute_gradient_in_acoustic(ispec,potential_acoustic,displ_element)
       ! velocity vector
-      call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                          potential_dot_acoustic, veloc_element, &
-                          hprime_xx,hprime_yy,hprime_zz, &
-                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore,GRAVITY)
+      call compute_gradient_in_acoustic(ispec,potential_dot_acoustic,veloc_element)
       ! accel ?
-      call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                          potential_dot_dot_acoustic, accel_element, &
-                          hprime_xx,hprime_yy,hprime_zz, &
-                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                          ibool,rhostore,GRAVITY)
+      call compute_gradient_in_acoustic(ispec,potential_dot_dot_acoustic,accel_element)
 
       ! all surface element points
       do ipoin = 1, npoin_elem
@@ -540,11 +520,7 @@
     do ispec=1,NSPEC_AB
       if (.not. ispec_is_acoustic(ispec)) cycle
       ! calculates velocity
-      call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                        potential_dot_acoustic, veloc_element, &
-                        hprime_xx,hprime_yy,hprime_zz, &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        ibool,rhostore,GRAVITY)
+      call compute_gradient_in_acoustic(ispec,potential_dot_acoustic,veloc_element)
       velocity_x(:,:,:,ispec) = veloc_element(1,:,:,:)
       velocity_y(:,:,:,ispec) = veloc_element(2,:,:,:)
       velocity_z(:,:,:,ispec) = veloc_element(3,:,:,:)
@@ -583,13 +559,11 @@
     if (ier /= 0) stop 'error allocating arrays for movie div and curl'
 
     ! calculates divergence and curl of velocity field
-    call wmo_movie_div_curl(NSPEC_AB,NGLOB_AB,veloc, &
+    call wmo_movie_div_curl(veloc, &
                             div_glob,valence, &
                             div,curl_x,curl_y,curl_z, &
                             velocity_x,velocity_y,velocity_z, &
-                            ibool,ispec_is_elastic, &
-                            hprime_xx,hprime_yy,hprime_zz, &
-                            xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
+                            ispec_is_elastic)
 
     ! writes out div and curl on global points
     write(outputname,"('/proc',i6.6,'_div_glob_it',i6.6,'.bin')") myrank,it
@@ -610,13 +584,12 @@
     if (ier /= 0) stop 'error allocating arrays for movie div and curl'
 
     ! calculates divergence and curl of velocity field
-    call wmo_movie_div_curl(NSPEC_AB,NGLOB_AB,velocs_poroelastic, &
+    call wmo_movie_div_curl(velocs_poroelastic, &
                             div_glob,valence, &
                             div,curl_x,curl_y,curl_z, &
                             velocity_x,velocity_y,velocity_z, &
-                            ibool,ispec_is_poroelastic, &
-                            hprime_xx,hprime_yy,hprime_zz, &
-                            xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
+                            ispec_is_poroelastic)
+
     deallocate(div_glob,valence)
   endif ! poroelastic
 
@@ -675,21 +648,22 @@
 
 !=====================================================================
 
-  subroutine wmo_movie_div_curl(NSPEC_AB,NGLOB_AB,veloc, &
+  subroutine wmo_movie_div_curl(veloc, &
                                 div_glob,valence, &
                                 div,curl_x,curl_y,curl_z, &
                                 velocity_x,velocity_y,velocity_z, &
-                                ibool,ispec_is, &
-                                hprime_xx,hprime_yy,hprime_zz, &
-                                xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
+                                ispec_is) 
 
 ! calculates div, curl and velocity
 
   use constants
 
+  use specfem_par, only : NSPEC_AB,NGLOB_AB,ibool,ispec_is,hprime_xx,hprime_yy,hprime_zz, &
+                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,irregular_element_number, &
+                          xix_regular
+
   implicit none
 
-  integer :: NSPEC_AB,NGLOB_AB
 
   ! velocity field
   real(kind=CUSTOM_REAL),dimension(NDIM,NGLOB_AB),intent(in) :: veloc
@@ -700,16 +674,7 @@
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: div, curl_x, curl_y, curl_z
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: velocity_x,velocity_y,velocity_z
-  integer,dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB):: ibool
   logical,dimension(NSPEC_AB) :: ispec_is
-
-  ! array with derivatives of Lagrange polynomials
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx
-  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLY) :: hprime_yy
-  real(kind=CUSTOM_REAL), dimension(NGLLZ,NGLLZ) :: hprime_zz
-
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
-        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz
 
   ! local parameters
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: dvxdxl,dvxdyl, &
@@ -719,7 +684,7 @@
   real(kind=CUSTOM_REAL) tempx1l,tempx2l,tempx3l
   real(kind=CUSTOM_REAL) tempy1l,tempy2l,tempy3l
   real(kind=CUSTOM_REAL) tempz1l,tempz2l,tempz3l
-  integer :: ispec,i,j,k,l,iglob
+  integer :: ispec,ispec_irreg,i,j,k,l,iglob
 
   ! initializes
   div_glob(:) = 0.0_CUSTOM_REAL
@@ -728,7 +693,7 @@
   ! loops over elements
   do ispec=1,NSPEC_AB
     if (.not. ispec_is(ispec)) cycle
-
+    ispec_irreg = irregular_element_number(ispec)
     ! calculates divergence and curl of velocity field
     do k=1,NGLLZ
       do j=1,NGLLY
@@ -760,29 +725,45 @@
             tempy3l = tempy3l + veloc(2,iglob)*hp3
             tempz3l = tempz3l + veloc(3,iglob)*hp3
           enddo
+          if (ispec_irreg /= 0) then !irregular element
+            ! get derivatives of ux, uy and uz with respect to x, y and z
+            xixl = xix(i,j,k,ispec_irreg)
+            xiyl = xiy(i,j,k,ispec_irreg)
+            xizl = xiz(i,j,k,ispec_irreg)
+            etaxl = etax(i,j,k,ispec_irreg)
+            etayl = etay(i,j,k,ispec_irreg)
+            etazl = etaz(i,j,k,ispec_irreg)
+            gammaxl = gammax(i,j,k,ispec_irreg)
+            gammayl = gammay(i,j,k,ispec_irreg)
+            gammazl = gammaz(i,j,k,ispec_irreg)
 
-          ! get derivatives of ux, uy and uz with respect to x, y and z
-          xixl = xix(i,j,k,ispec)
-          xiyl = xiy(i,j,k,ispec)
-          xizl = xiz(i,j,k,ispec)
-          etaxl = etax(i,j,k,ispec)
-          etayl = etay(i,j,k,ispec)
-          etazl = etaz(i,j,k,ispec)
-          gammaxl = gammax(i,j,k,ispec)
-          gammayl = gammay(i,j,k,ispec)
-          gammazl = gammaz(i,j,k,ispec)
+            dvxdxl(i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
+            dvxdyl(i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
+            dvxdzl(i,j,k) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
 
-          dvxdxl(i,j,k) = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
-          dvxdyl(i,j,k) = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
-          dvxdzl(i,j,k) = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
+            dvydxl(i,j,k) = xixl*tempy1l + etaxl*tempy2l + gammaxl*tempy3l
+            dvydyl(i,j,k) = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l
+            dvydzl(i,j,k) = xizl*tempy1l + etazl*tempy2l + gammazl*tempy3l
 
-          dvydxl(i,j,k) = xixl*tempy1l + etaxl*tempy2l + gammaxl*tempy3l
-          dvydyl(i,j,k) = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l
-          dvydzl(i,j,k) = xizl*tempy1l + etazl*tempy2l + gammazl*tempy3l
+            dvzdxl(i,j,k) = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l
+            dvzdyl(i,j,k) = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l
+            dvzdzl(i,j,k) = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l
 
-          dvzdxl(i,j,k) = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l
-          dvzdyl(i,j,k) = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l
-          dvzdzl(i,j,k) = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l
+          else !regular element
+
+            dvxdxl(i,j,k) = xix_regular*tempx1l
+            dvxdyl(i,j,k) = xix_regular*tempx2l
+            dvxdzl(i,j,k) = xix_regular*tempx3l
+
+            dvydxl(i,j,k) = xix_regular*tempy1l
+            dvydyl(i,j,k) = xix_regular*tempy2l
+            dvydzl(i,j,k) = xix_regular*tempy3l
+
+            dvzdxl(i,j,k) = xix_regular*tempz1l
+            dvzdyl(i,j,k) = xix_regular*tempz2l
+            dvzdzl(i,j,k) = xix_regular*tempz3l
+ 
+          endif
 
         enddo
       enddo

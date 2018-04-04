@@ -107,7 +107,7 @@ __device__ __forceinline__ void compute_element_att_stress(int tx,int working_el
 // updates R_memory
 
 __device__  __forceinline__ void compute_element_att_memory(int tx,int working_element,const int NSPEC,
-                                          realw_const_p d_muv,
+                                          realw mul,
                                           realw_const_p factor_common,
                                           realw_const_p alphaval,realw_const_p betaval,realw_const_p gammaval,
                                           realw_p R_xx,realw_p R_yy,realw_p R_xy,realw_p R_xz,realw_p R_yz,
@@ -118,20 +118,20 @@ __device__  __forceinline__ void compute_element_att_memory(int tx,int working_e
                                           ){
 
   int ijk_ispec;
-  int offset_sls,offset_align,offset_common;
-  realw mul;
+  int offset_sls,offset_common;
   realw alphaval_loc,betaval_loc,gammaval_loc;
   realw factor_loc;
-
-  realw rxxl,ryyl,rxyl,rxzl,ryzl;
   realw Sn_xx,Sn_yy,Sn_xy,Sn_xz,Sn_yz;
-  realw Snp1_xx,Snp1_yy,Snp1_xy,Snp1_xz,Snp1_yz;
 
   // indices
-  offset_align = tx + NGLL3_PADDED * working_element;
   ijk_ispec = tx + NGLL3 * working_element;
 
-  mul = get_global_cr( &d_muv[offset_align] );
+//  mul = get_global_cr( &d_muv[offset_align] );
+   Sn_xx   = get_global_cr( &epsilondev_xx[ijk_ispec] ); //(i,j,k,ispec)
+   Sn_yy   = get_global_cr( &epsilondev_yy[ijk_ispec] );
+   Sn_xy   = get_global_cr( &epsilondev_xy[ijk_ispec] );
+   Sn_xz   = get_global_cr( &epsilondev_xz[ijk_ispec] );
+   Sn_yz   = get_global_cr( &epsilondev_yz[ijk_ispec] );
 
   // use Runge-Kutta scheme to march in time
   for(int i_sls = 0; i_sls < N_SLS; i_sls++){
@@ -140,47 +140,17 @@ __device__  __forceinline__ void compute_element_att_memory(int tx,int working_e
     offset_common = i_sls + N_SLS*(tx + NGLL3*working_element); // (i_sls,i,j,k,ispec)
     offset_sls = tx + NGLL3*(working_element + NSPEC*i_sls);   // (i,j,k,ispec,i_sls)
 
-    factor_loc = mul * get_global_cr( &factor_common[offset_common] ); //mustore(i,j,k,ispec) * factor_common(i_sls,i,j,k,ispec)
+    factor_loc = mul*get_global_cr( &factor_common[offset_common] ); //mustore(i,j,k,ispec) * factor_common(i_sls,i,j,k,ispec)
 
     alphaval_loc = alphaval[i_sls]; // (i_sls)
-    betaval_loc = betaval[i_sls];
-    gammaval_loc = gammaval[i_sls];
+    betaval_loc = factor_loc*betaval[i_sls];
+    gammaval_loc = factor_loc*gammaval[i_sls];
 
-    // term in xx
-    Sn_xx   = factor_loc * get_global_cr( &epsilondev_xx[ijk_ispec] ); //(i,j,k,ispec)
-    Snp1_xx   = factor_loc * epsilondev_xx_loc; //(i,j,k)
-
-    rxxl = get_global_cr( &R_xx[offset_sls] );
-    R_xx[offset_sls] = alphaval_loc * rxxl + betaval_loc * Sn_xx + gammaval_loc * Snp1_xx;
-
-    // term in yy
-    Sn_yy   = factor_loc * get_global_cr( &epsilondev_yy[ijk_ispec] );
-    Snp1_yy   = factor_loc * epsilondev_yy_loc;
-
-    ryyl = get_global_cr( &R_yy[offset_sls] );
-    R_yy[offset_sls] = alphaval_loc * ryyl + betaval_loc * Sn_yy + gammaval_loc * Snp1_yy;
-
-    // term in zz not computed since zero trace
-    // term in xy
-    Sn_xy   = factor_loc * get_global_cr( &epsilondev_xy[ijk_ispec] );
-    Snp1_xy   = factor_loc * epsilondev_xy_loc;
-
-    rxyl = get_global_cr( &R_xy[offset_sls] );
-    R_xy[offset_sls] = alphaval_loc * rxyl + betaval_loc * Sn_xy + gammaval_loc * Snp1_xy;
-
-    // term in xz
-    Sn_xz   = factor_loc * get_global_cr( &epsilondev_xz[ijk_ispec] );
-    Snp1_xz   = factor_loc * epsilondev_xz_loc;
-
-    rxzl = get_global_cr( &R_xz[offset_sls] );
-    R_xz[offset_sls] = alphaval_loc * rxzl + betaval_loc * Sn_xz + gammaval_loc * Snp1_xz;
-
-    // term in yz
-    Sn_yz   = factor_loc * get_global_cr( &epsilondev_yz[ijk_ispec] );
-    Snp1_yz   = factor_loc * epsilondev_yz_loc;
-
-    ryzl = get_global_cr( &R_yz[offset_sls] );
-    R_yz[offset_sls] = alphaval_loc * ryzl + betaval_loc * Sn_yz + gammaval_loc * Snp1_yz;
+    R_xx[offset_sls] = alphaval_loc * get_global_cr(&R_xx[offset_sls]) + betaval_loc * Sn_xx + gammaval_loc *  epsilondev_xx_loc;
+    R_yy[offset_sls] = alphaval_loc * get_global_cr(&R_yy[offset_sls]) + betaval_loc * Sn_yy + gammaval_loc *  epsilondev_yy_loc;
+    R_xy[offset_sls] = alphaval_loc * get_global_cr(&R_xy[offset_sls]) + betaval_loc * Sn_xy + gammaval_loc *  epsilondev_xy_loc;
+    R_xz[offset_sls] = alphaval_loc * get_global_cr(&R_xz[offset_sls]) + betaval_loc * Sn_xz + gammaval_loc *  epsilondev_xz_loc;
+    R_yz[offset_sls] = alphaval_loc * get_global_cr(&R_yz[offset_sls]) + betaval_loc * Sn_yz + gammaval_loc *  epsilondev_yz_loc;
 
   }
   return;
@@ -197,9 +167,9 @@ __device__ __forceinline__ void compute_element_gravity(int tx,int working_eleme
                                         realw_const_p d_rhostore,
                                         realw_const_p wgll_cube,
                                         realw jacobianl,
-                                        realw* sh_tempx,
-                                        realw* sh_tempy,
-                                        realw* sh_tempz,
+                                        realw* sh_displx,
+                                        realw* sh_disply,
+                                        realw* sh_displz,
                                         realw* sigma_xx,
                                         realw* sigma_yy,
                                         realw* sigma_xz,
@@ -240,9 +210,9 @@ __device__ __forceinline__ void compute_element_gravity(int tx,int working_eleme
 
   // get displacement and multiply by density to compute G tensor
   // G = rho [ sg - (s * g) I  ]
-  sx_l = rhol * sh_tempx[tx]; // d_displ[iglob*3];
-  sy_l = rhol * sh_tempy[tx]; // d_displ[iglob*3 + 1];
-  sz_l = rhol * sh_tempz[tx]; // d_displ[iglob*3 + 2];
+  sx_l = rhol * sh_displx[tx]; // d_displ[iglob*3];
+  sy_l = rhol * sh_disply[tx]; // d_displ[iglob*3 + 1];
+  sz_l = rhol * sh_displz[tx]; // d_displ[iglob*3 + 2];
 
   // compute G tensor from s . g and add to sigma (not symmetric)
   //sigma_xx += sy_l*gyl + sz_l*gzl;
@@ -286,21 +256,21 @@ __device__ __forceinline__ void compute_element_gravity(int tx,int working_eleme
 template<int FORWARD_OR_ADJOINT>
 __device__  __forceinline__ void load_shared_memory_displ(const int* tx, const int* iglob,
                                                           realw_const_p d_displ,
-                                                          realw* sh_tempx,
-                                                          realw* sh_tempy,
-                                                          realw* sh_tempz){
+                                                          realw* sh_displx,
+                                                          realw* sh_disply,
+                                                          realw* sh_displz){
 
   // copy from global memory to shared memory
   // each thread writes one of the NGLL^3 = 125 data points
 #ifdef USE_TEXTURES_FIELDS
-  sh_tempx[(*tx)] = texfetch_displ<FORWARD_OR_ADJOINT>((*iglob)*3);
-  sh_tempy[(*tx)] = texfetch_displ<FORWARD_OR_ADJOINT>((*iglob)*3 + 1);
-  sh_tempz[(*tx)] = texfetch_displ<FORWARD_OR_ADJOINT>((*iglob)*3 + 2);
+  sh_displx[(*tx)] = texfetch_displ<FORWARD_OR_ADJOINT>((*iglob)*3);
+  sh_disply[(*tx)] = texfetch_displ<FORWARD_OR_ADJOINT>((*iglob)*3 + 1);
+  sh_displz[(*tx)] = texfetch_displ<FORWARD_OR_ADJOINT>((*iglob)*3 + 2);
 #else
   // changing iglob indexing to match fortran row changes fast style
-  sh_tempx[(*tx)] = d_displ[(*iglob)*3];
-  sh_tempy[(*tx)] = d_displ[(*iglob)*3 + 1];
-  sh_tempz[(*tx)] = d_displ[(*iglob)*3 + 2];
+  sh_displx[(*tx)] = d_displ[(*iglob)*3];
+  sh_disply[(*tx)] = d_displ[(*iglob)*3 + 1];
+  sh_displz[(*tx)] = d_displ[(*iglob)*3 + 2];
 #endif
 }
 
@@ -313,21 +283,21 @@ __device__  __forceinline__ void load_shared_memory_displ_visco(const int* tx, c
                                                           realw_const_p d_displ,
                                                           realw_const_p d_veloc,
                                                           realw visco,
-                                                          realw* sh_tempx,
-                                                          realw* sh_tempy,
-                                                          realw* sh_tempz){
+                                                          realw* sh_displx,
+                                                          realw* sh_disply,
+                                                          realw* sh_displz){
 
   // copy from global memory to shared memory
   // each thread writes one of the NGLL^3 = 125 data points
 #ifdef USE_TEXTURES_FIELDS
-  sh_tempx[(*tx)] = texfetch_displ<FORWARD_OR_ADJOINT>((*iglob)*3) + visco*texfetch_veloc<FORWARD_OR_ADJOINT>((*iglob)*3);
-  sh_tempy[(*tx)] = texfetch_displ<FORWARD_OR_ADJOINT>((*iglob)*3 + 1) + visco*texfetch_veloc<FORWARD_OR_ADJOINT>((*iglob)*3 + 1);
-  sh_tempz[(*tx)] = texfetch_displ<FORWARD_OR_ADJOINT>((*iglob)*3 + 2) + visco*texfetch_veloc<FORWARD_OR_ADJOINT>((*iglob)*3 + 2);
+  sh_displx[(*tx)] = texfetch_displ<FORWARD_OR_ADJOINT>((*iglob)*3) + visco*texfetch_veloc<FORWARD_OR_ADJOINT>((*iglob)*3);
+  sh_disply[(*tx)] = texfetch_displ<FORWARD_OR_ADJOINT>((*iglob)*3 + 1) + visco*texfetch_veloc<FORWARD_OR_ADJOINT>((*iglob)*3 + 1);
+  sh_displz[(*tx)] = texfetch_displ<FORWARD_OR_ADJOINT>((*iglob)*3 + 2) + visco*texfetch_veloc<FORWARD_OR_ADJOINT>((*iglob)*3 + 2);
 #else
   // changing iglob indexing to match fortran row changes fast style
-  sh_tempx[(*tx)] = d_displ[(*iglob)*3] + visco * d_veloc[(*iglob)*3];
-  sh_tempy[(*tx)] = d_displ[(*iglob)*3 + 1] + visco * d_veloc[(*iglob)*3 + 1];
-  sh_tempz[(*tx)] = d_displ[(*iglob)*3 + 2] + visco * d_veloc[(*iglob)*3 + 2];
+  sh_displx[(*tx)] = d_displ[(*iglob)*3] + visco * d_veloc[(*iglob)*3];
+  sh_disply[(*tx)] = d_displ[(*iglob)*3 + 1] + visco * d_veloc[(*iglob)*3 + 1];
+  sh_displz[(*tx)] = d_displ[(*iglob)*3 + 2] + visco * d_veloc[(*iglob)*3 + 2];
 #endif
 }
 
@@ -549,6 +519,125 @@ __device__  __forceinline__ void sum_hprimewgll_gamma(int I, int J, int K,
   *tempzl = sumz;
 }
 
+/* ----------------------------------------------------------------------------------------------- */
+
+// computes the spatial derivatives
+
+
+__device__  __forceinline__ void 
+  get_spatial_derivatives(realw* xixl,realw* xiyl,realw* xizl,realw* etaxl,realw* etayl,realw* etazl,
+                          realw* gammaxl,realw* gammayl,realw* gammazl,realw* jacobianl,int I,int J,int K,int tx,
+                          realw* tempx1l,realw* tempy1l,realw* tempz1l,realw* tempx2l,realw* tempy2l,realw* tempz2l,
+                          realw* tempx3l,realw* tempy3l,realw* tempz3l,realw* sh_tempx,realw* sh_tempy,realw* sh_tempz,realw* sh_hprime_xx,
+                          realw* duxdxl,realw* duxdyl,realw* duxdzl,realw* duydxl,realw* duydyl,realw* duydzl,realw* duzdxl,realw* duzdyl,realw* duzdzl,
+                          realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,realw_const_p d_etax,realw_const_p d_etay,realw_const_p d_etaz,realw_const_p d_gammax,realw_const_p d_gammay,realw_const_p d_gammaz,
+                          int ispec_irreg, realw xix_regular,int ipass){
+
+  // computes first matrix products
+  if (ispec_irreg >= 0 && ipass==0 ){ //irregular_element
+    // local padded index
+    int offset = ispec_irreg*NGLL3_PADDED + tx;
+
+    *xixl = get_global_cr( &d_xix[offset]);
+    *xiyl = get_global_cr(&d_xiy[offset]); 
+    *xizl = get_global_cr(&d_xiz[offset]);
+    *etaxl = get_global_cr(&d_etax[offset]);
+    *etayl = get_global_cr(&d_etay[offset]);
+    *etazl = get_global_cr(&d_etaz[offset]);
+    *gammaxl = get_global_cr(&d_gammax[offset]);
+    *gammayl = get_global_cr(&d_gammay[offset]);
+    *gammazl = get_global_cr(&d_gammaz[offset]);
+
+    *jacobianl = 1.f / ((*xixl)*((*etayl)*(*gammazl)-(*etazl)*(*gammayl))
+                      -(*xiyl)*((*etaxl)*(*gammazl)-(*etazl)*(*gammaxl))
+                      +(*xizl)*((*etaxl)*(*gammayl)-(*etayl)*(*gammaxl)));
+  }
+
+  // 1. cut-plane
+  sum_hprime_xi(I,J,K,tempx1l,tempy1l,tempz1l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx);
+  // 2. cut-plane
+  sum_hprime_eta(I,J,K,tempx2l,tempy2l,tempz2l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx);
+  // 3. cut-plane
+  sum_hprime_gamma(I,J,K,tempx3l,tempy3l,tempz3l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx);
+
+
+    // synchronize all the threads (one thread for each of the NGLL grid points of the
+    // current spectral element) because we need the whole element to be ready in order
+    // to be able to compute the matrix products along cut planes of the 3D element below
+    __syncthreads();
+
+  if (ispec_irreg >= 0 ){ //irregular_element
+
+    // compute derivatives of ux, uy and uz with respect to x, y and z
+    (*duxdxl) = (*xixl)*(*tempx1l) + (*etaxl)*(*tempx2l) + (*gammaxl)*(*tempx3l);
+    (*duxdyl) = (*xiyl)*(*tempx1l) + (*etayl)*(*tempx2l) + (*gammayl)*(*tempx3l);
+    (*duxdzl) = (*xizl)*(*tempx1l) + (*etazl)*(*tempx2l) + (*gammazl)*(*tempx3l);
+
+    (*duydxl) = (*xixl)*(*tempy1l) + (*etaxl)*(*tempy2l) + (*gammaxl)*(*tempy3l);
+    (*duydyl) = (*xiyl)*(*tempy1l) + (*etayl)*(*tempy2l) + (*gammayl)*(*tempy3l);
+    (*duydzl) = (*xizl)*(*tempy1l) + (*etazl)*(*tempy2l) + (*gammazl)*(*tempy3l);
+
+    (*duzdxl) = (*xixl)*(*tempz1l) + (*etaxl)*(*tempz2l) + (*gammaxl)*(*tempz3l);
+    (*duzdyl) = (*xiyl)*(*tempz1l) + (*etayl)*(*tempz2l) + (*gammayl)*(*tempz3l);
+    (*duzdzl) = (*xizl)*(*tempz1l) + (*etazl)*(*tempz2l) + (*gammazl)*(*tempz3l);
+  }
+  else{
+    // compute derivatives of ux, uy and uz with respect to x, y and z
+    (*duxdxl) = xix_regular*(*tempx1l);
+    (*duxdyl) = xix_regular*(*tempx2l);
+    (*duxdzl) = xix_regular*(*tempx3l);
+
+    (*duydxl) = xix_regular*(*tempy1l);
+    (*duydyl) = xix_regular*(*tempy2l);
+    (*duydzl) = xix_regular*(*tempy3l);
+
+    (*duzdxl) = xix_regular*(*tempz1l);
+    (*duzdyl) = xix_regular*(*tempz2l);
+    (*duzdzl) = xix_regular*(*tempz3l);
+  }
+  // counts:
+  // + 9 * 5 FLOP = 45 FLOP
+  //
+  // + 0 BYTE
+
+
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+// computes dot product between tensor and derivatives
+
+__device__  __forceinline__ void
+  get_dot_product(realw jacobianl,realw sigma_xx,realw sigma_xy,realw sigma_yx,realw sigma_xz,realw sigma_zx,realw sigma_yy,realw sigma_yz,realw sigma_zy,realw sigma_zz,
+                  realw Dxl,realw Dyl,realw Dzl,realw* sh_tempx,realw* sh_tempy,realw* sh_tempz,int tx,
+                  int ispec_irreg,realw xix_regular,realw jacobian_regular,int component){
+
+  // fills shared memory arrays
+  if (threadIdx.x < NGLL3) {
+
+    if (ispec_irreg>=0){ //irregular element
+      sh_tempx[tx] = jacobianl * (sigma_xx*Dxl + sigma_yx*Dyl + sigma_zx*Dzl); // sh_tempx1
+      sh_tempy[tx] = jacobianl * (sigma_xy*Dxl + sigma_yy*Dyl + sigma_zy*Dzl); // sh_tempy1
+      sh_tempz[tx] = jacobianl * (sigma_xz*Dxl + sigma_yz*Dyl + sigma_zz*Dzl); // sh_tempz1
+    }
+    else if (component==1){
+      sh_tempx[tx] = jacobian_regular * (sigma_xx*xix_regular); // sh_tempx1
+      sh_tempy[tx] = jacobian_regular * (sigma_xy*xix_regular); // sh_tempy1
+      sh_tempz[tx] = jacobian_regular * (sigma_xz*xix_regular); // sh_tempz1
+    }
+    else if (component==2){
+      sh_tempx[tx] = jacobian_regular * (sigma_yx*xix_regular); // sh_tempx1
+      sh_tempy[tx] = jacobian_regular * (sigma_yy*xix_regular); // sh_tempy1
+      sh_tempz[tx] = jacobian_regular * (sigma_yz*xix_regular); // sh_tempz1
+
+    }else{
+      sh_tempx[tx] = jacobian_regular * (sigma_zx*xix_regular); // sh_tempx1
+      sh_tempy[tx] = jacobian_regular * (sigma_zy*xix_regular); // sh_tempy1
+      sh_tempz[tx] = jacobian_regular * (sigma_zz*xix_regular); // sh_tempz1
+    }
+  }
+  __syncthreads();
+}
+
 
 /* ----------------------------------------------------------------------------------------------- */
 
@@ -584,15 +673,17 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
                         const int* d_ibool,
                         const int* d_phase_ispec_inner_elastic,const int num_phase_ispec_elastic,
                         const int d_iphase,
+                        const int* d_irregular_element_number,
                         realw_const_p d_displ,
                         realw_p d_accel,
-                        realw* d_xix,realw* d_xiy,realw* d_xiz,
-                        realw* d_etax,realw* d_etay,realw* d_etaz,
-                        realw* d_gammax,realw* d_gammay,realw* d_gammaz,
+                        realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
+                        realw_const_p d_etax,realw_const_p d_etay,realw_const_p d_etaz,
+                        realw_const_p d_gammax,realw_const_p d_gammay,realw_const_p d_gammaz,
+                        const realw xix_regular,const realw jacobian_regular,
                         realw_const_p d_hprime_xx,
                         realw_const_p d_hprimewgll_xx,
                         realw_const_p d_wgllwgll_xy,realw_const_p d_wgllwgll_xz,realw_const_p d_wgllwgll_yz,
-                        realw* d_kappav,realw* d_muv){
+                        realw_const_p d_kappav,realw_const_p d_muv){
 
 // elastic compute kernel without attenuation for isotropic elements
 //
@@ -616,7 +707,7 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
 
   int I,J,K;
   int iglob,offset;
-  int working_element;
+  int working_element, ispec_irreg;
 
   realw tempx1l,tempx2l,tempx3l,tempy1l,tempy2l,tempy3l,tempz1l,tempz2l,tempz3l;
   realw xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl;
@@ -661,23 +752,10 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
 //
 // + 0 BYTE
 
-  // loads hprime's into shared memory
-  if (tx < NGLL2) {
-    // copy hprime from global memory to shared memory
-    load_shared_memory_hprime(&tx,d_hprime_xx,sh_hprime_xx);
-
-    // copy hprimewgll from global memory to shared memory
-    load_shared_memory_hprimewgll(&tx,d_hprimewgll_xx,sh_hprimewgll_xx);
-  }
-
-// counts:
-// + 0 FLOP
-//
-// 2 * 1 float * 25 threads = 200 BYTE
-
   // spectral-element id
   // iphase-1 and working_element-1 for Fortran->C array conventions
   working_element = d_phase_ispec_inner_elastic[bx + num_phase_ispec_elastic*(d_iphase-1)] - 1;
+  ispec_irreg = d_irregular_element_number[working_element] - 1;
 
   // local padded index
   offset = working_element*NGLL3_PADDED + tx;
@@ -686,9 +764,9 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
   iglob = d_ibool[offset] - 1 ;
 
 // counts:
-// + 7 FLOP
+// + 8 FLOP
 //
-// + 2 float * 128 threads = 1024 BYTE
+// ( 1 int + 2 float) * 128 threads = 1024 BYTE
 
   // copy from global memory to shared memory
   // each thread writes one of the NGLL^3 = 125 data points
@@ -708,41 +786,7 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
 // counts:
 // + 0 FLOP
 //
-// + 2 * 1 float * 128 threads = 1024 BYTE
-
-  // loads mesh values here to give compiler possibility to overlap memory fetches with some computations
-  // note: arguments defined as realw* instead of const realw* __restrict__ to avoid that the compiler
-  //       loads all memory by texture loads
-  //       we only use the first loads explicitly by texture loads, all subsequent without. this should lead/trick
-  //       the compiler to use global memory loads for all the subsequent accesses.
-  //
-  // calculates laplacian
-  xixl = get_global_cr( &d_xix[offset] ); // first array with texture load
-  xiyl = get_global_cr( &d_xiy[offset] ); // first array with texture load
-  xizl = get_global_cr( &d_xiz[offset] ); // first array with texture load
-
-//  xixl = d_xix[offset]; // first array with texture load
-//  xiyl = d_xiy[offset]; // all subsequent without to avoid over-use of texture for coalescent access
-//  xizl = d_xiz[offset];
-
-  etaxl = d_etax[offset];
-  etayl = d_etay[offset];
-  etazl = d_etaz[offset];
-
-  gammaxl = d_gammax[offset];
-  gammayl = d_gammay[offset];
-  gammazl = d_gammaz[offset];
-
-  jacobianl = 1.f / (xixl*(etayl*gammazl-etazl*gammayl)
-                    -xiyl*(etaxl*gammazl-etazl*gammaxl)
-                    +xizl*(etaxl*gammayl-etayl*gammaxl));
-
-// counts:
-// + 15 FLOP
-//
-// + 9 float * 128 threads = 4608 BYTE
-
-
+// 2 * 1 float * 128 threads = 1024 BYTE
 
   // local index
   K = (tx/NGLL2);
@@ -754,41 +798,30 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
 //
 // + 0 BYTE
 
+  // loads hprime's into shared memory
+  if (tx < NGLL2) {
+    // copy hprime from global memory to shared memory
+    load_shared_memory_hprime(&tx,d_hprime_xx,sh_hprime_xx);
+    // copy hprimewgll from global memory to shared memory
+    load_shared_memory_hprimewgll(&tx,d_hprimewgll_xx,sh_hprimewgll_xx);
+  }
+// counts:
+// + 0 FLOP
+//
+// 2 * 1 float * 25 threads = 200 BYTE
+
   // synchronize all the threads (one thread for each of the NGLL grid points of the
   // current spectral element) because we need the whole element to be ready in order
   // to be able to compute the matrix products along cut planes of the 3D element below
   __syncthreads();
 
-  // computes first matrix products
-  // 1. cut-plane
-  sum_hprime_xi(I,J,K,&tempx1l,&tempy1l,&tempz1l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx);
-  // 2. cut-plane
-  sum_hprime_eta(I,J,K,&tempx2l,&tempy2l,&tempz2l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx);
-  // 3. cut-plane
-  sum_hprime_gamma(I,J,K,&tempx3l,&tempy3l,&tempz3l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx);
-
-// counts:
-// + 3 * 100 FLOP = 300 FLOP
-//
-// + 0 BYTE
-
-  // compute derivatives of ux, uy and uz with respect to x, y and z
-  duxdxl = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l;
-  duxdyl = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l;
-  duxdzl = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l;
-
-  duydxl = xixl*tempy1l + etaxl*tempy2l + gammaxl*tempy3l;
-  duydyl = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l;
-  duydzl = xizl*tempy1l + etazl*tempy2l + gammazl*tempy3l;
-
-  duzdxl = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l;
-  duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l;
-  duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l;
-
-// counts:
-// + 9 * 5 FLOP = 45 FLOP
-//
-// + 0 BYTE
+  // computes the spatial derivatives duxdxl ... depending on the regularity of the element
+  get_spatial_derivatives(&xixl,&xiyl,&xizl,&etaxl,&etayl,&etazl,
+                          &gammaxl,&gammayl,&gammazl,&jacobianl,I,J,K,tx,
+                          &tempx1l,&tempy1l,&tempz1l,&tempx2l,&tempy2l,&tempz2l,
+                          &tempx3l,&tempy3l,&tempz3l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx,
+                          &duxdxl,&duxdyl,&duxdzl,&duydxl,&duydyl,&duydzl,&duzdxl,&duzdyl,&duzdzl,
+                          d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,ispec_irreg,xix_regular,0);
 
   // precompute some sums to save CPU time
   duxdxl_plus_duydyl = duxdxl + duydyl;
@@ -821,40 +854,23 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
 // + 0 BYTE
 
   // form dot product with test vector, symmetric form
+
   // 1. cut-plane xi
   __syncthreads();
-  // fills shared memory arrays
-  if (threadIdx.x < NGLL3) {
-    sh_tempx[tx] = jacobianl * (sigma_xx*xixl + sigma_xy*xiyl + sigma_xz*xizl); // sh_tempx1
-    sh_tempy[tx] = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_yz*xizl); // sh_tempy1
-    sh_tempz[tx] = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl); // sh_tempz1
-  }
-  __syncthreads();
-  // 1. cut-plane xi
+  get_dot_product(jacobianl,sigma_xx,sigma_xy,sigma_xy,sigma_xz,sigma_xz,sigma_yy,sigma_yz,sigma_yz,sigma_zz,
+                  xixl,xiyl,xizl,sh_tempx,sh_tempy,sh_tempz,tx,ispec_irreg,xix_regular,jacobian_regular,1);
   sum_hprimewgll_xi(I,J,K,&tempx1l,&tempy1l,&tempz1l,sh_tempx,sh_tempy,sh_tempz,sh_hprimewgll_xx);
 
   // 2. cut-plane eta
   __syncthreads();
-  // fills shared memory arrays
-  if (threadIdx.x < NGLL3) {
-    sh_tempx[tx] = jacobianl * (sigma_xx*etaxl + sigma_xy*etayl + sigma_xz*etazl); // sh_tempx2
-    sh_tempy[tx] = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_yz*etazl); // sh_tempy2
-    sh_tempz[tx] = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl); // sh_tempz2
-  }
-  __syncthreads();
-  // 2. cut-plane eta
+  get_dot_product(jacobianl,sigma_xx,sigma_xy,sigma_xy,sigma_xz,sigma_xz,sigma_yy,sigma_yz,sigma_yz,sigma_zz,
+                  etaxl,etayl,etazl,sh_tempx,sh_tempy,sh_tempz,tx,ispec_irreg,xix_regular,jacobian_regular,2);
   sum_hprimewgll_eta(I,J,K,&tempx2l,&tempy2l,&tempz2l,sh_tempx,sh_tempy,sh_tempz,sh_hprimewgll_xx);
 
   // 3. cut-plane gamma
   __syncthreads();
-  // fills shared memory arrays
-  if (threadIdx.x < NGLL3) {
-    sh_tempx[tx] = jacobianl * (sigma_xx*gammaxl + sigma_xy*gammayl + sigma_xz*gammazl); // sh_tempx3
-    sh_tempy[tx] = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_yz*gammazl); // sh_tempy3
-    sh_tempz[tx] = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl); // sh_tempz3
-  }
-  __syncthreads();
-  // 3. cut-plane gamma
+  get_dot_product(jacobianl,sigma_xx,sigma_xy,sigma_xy,sigma_xz,sigma_xz,sigma_yy,sigma_yz,sigma_yz,sigma_zz,
+                  gammaxl,gammayl,gammazl,sh_tempx,sh_tempy,sh_tempz,tx,ispec_irreg,xix_regular,jacobian_regular,3);
   sum_hprimewgll_gamma(I,J,K,&tempx3l,&tempy3l,&tempz3l,sh_tempx,sh_tempy,sh_tempz,sh_hprimewgll_xx);
 
 // counts:
@@ -897,8 +913,8 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
 
 // counts:
 // -----------------
-// total of: 790 FLOP per thread
-//           ~ 128 * 790 = 101120 FLOP per block
+// total of: 791 FLOP per thread
+//           ~ 128 * 791 = 101248 FLOP per block
 //
 //           11392 BYTE DRAM accesses per block
 //
@@ -948,11 +964,13 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
                               const int* d_ibool,
                               const int* d_phase_ispec_inner_elastic,const int num_phase_ispec_elastic,
                               const int d_iphase,
+                              const int* d_irregular_element_number,
                               realw_const_p d_displ,
                               realw_p d_accel,
-                              realw* d_xix,realw* d_xiy,realw* d_xiz,
-                              realw* d_etax,realw* d_etay,realw* d_etaz,
-                              realw* d_gammax,realw* d_gammay,realw* d_gammaz,
+                              realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
+                              realw_const_p d_etax,realw_const_p d_etay,realw_const_p d_etaz,
+                              realw_const_p d_gammax,realw_const_p d_gammay,realw_const_p d_gammaz,
+                              const realw xix_regular,const realw jacobian_regular,
                               realw_const_p d_hprime_xx,
                               realw_const_p d_hprimewgll_xx,
                               realw_const_p d_wgllwgll_xy,realw_const_p d_wgllwgll_xz,realw_const_p d_wgllwgll_yz,
@@ -992,7 +1010,7 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
   int I = (tx-K*NGLL2-J*NGLLX);
 
   int iglob,offset;
-  int working_element;
+  int working_element,ispec_irreg;
 
   realw tempx1l,tempx2l,tempx3l,tempy1l,tempy2l,tempy3l,tempz1l,tempz2l,tempz3l;
   realw xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl;
@@ -1026,6 +1044,7 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
   // spectral-element id
   // iphase-1 and working_element-1 for Fortran->C array conventions
   working_element = d_phase_ispec_inner_elastic[bx + num_phase_ispec_elastic*(d_iphase-1)] - 1;
+  ispec_irreg = d_irregular_element_number[working_element] - 1;
 
   // local padded index
   offset = working_element*NGLL3_PADDED + tx;
@@ -1040,52 +1059,20 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
     load_shared_memory_displ<FORWARD_OR_ADJOINT>(&tx,&iglob,d_displ,sh_tempx,sh_tempy,sh_tempz);
   }
 
-  // loads mesh values here to give compiler possibility to overlap memory fetches with some computations
-  // note: arguments defined as realw* instead of const realw* __restrict__ to avoid that the compiler
-  //       loads all memory by texture loads
-  //       we only use the first loads explicitly by texture loads, all subsequent without. this should lead/trick
-  //       the compiler to use global memory loads for all the subsequent accesses.
-  //
-  // calculates laplacian
-  xixl = get_global_cr( &d_xix[offset] ); // first array with texture load
-  xiyl = d_xiy[offset]; // all subsequent without to avoid over-use of texture for coalescent access
-  xizl = d_xiz[offset];
-  etaxl = d_etax[offset];
-  etayl = d_etay[offset];
-  etazl = d_etaz[offset];
-  gammaxl = d_gammax[offset];
-  gammayl = d_gammay[offset];
-  gammazl = d_gammaz[offset];
 
-  jacobianl = 1.f / (xixl*(etayl*gammazl-etazl*gammayl)
-                    -xiyl*(etaxl*gammazl-etazl*gammaxl)
-                    +xizl*(etaxl*gammayl-etayl*gammaxl));
 
   // synchronize all the threads (one thread for each of the NGLL grid points of the
   // current spectral element) because we need the whole element to be ready in order
   // to be able to compute the matrix products along cut planes of the 3D element below
   __syncthreads();
 
-  // computes first matrix products
-  // 1. cut-plane
-  sum_hprime_xi(I,J,K,&tempx1l,&tempy1l,&tempz1l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx);
-  // 2. cut-plane
-  sum_hprime_eta(I,J,K,&tempx2l,&tempy2l,&tempz2l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx);
-  // 3. cut-plane
-  sum_hprime_gamma(I,J,K,&tempx3l,&tempy3l,&tempz3l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx);
-
-  // compute derivatives of ux, uy and uz with respect to x, y and z
-  duxdxl = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l;
-  duxdyl = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l;
-  duxdzl = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l;
-
-  duydxl = xixl*tempy1l + etaxl*tempy2l + gammaxl*tempy3l;
-  duydyl = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l;
-  duydzl = xizl*tempy1l + etazl*tempy2l + gammazl*tempy3l;
-
-  duzdxl = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l;
-  duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l;
-  duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l;
+  // computes the spatial derivatives duxdxl ... depending on the regularity of the element
+  get_spatial_derivatives(&xixl,&xiyl,&xizl,&etaxl,&etayl,&etazl,
+                          &gammaxl,&gammayl,&gammazl,&jacobianl,I,J,K,tx,
+                          &tempx1l,&tempy1l,&tempz1l,&tempx2l,&tempy2l,&tempz2l,
+                          &tempx3l,&tempy3l,&tempz3l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx,
+                          &duxdxl,&duxdyl,&duxdzl,&duydxl,&duydyl,&duydzl,&duzdxl,&duzdyl,&duzdzl,
+                          d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,ispec_irreg,xix_regular,0);
 
   // precompute some sums to save CPU time
   duxdxl_plus_duydyl = duxdxl + duydyl;
@@ -1134,40 +1121,23 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
   sigma_yz = mul*duzdyl_plus_duydzl;
 
   // form dot product with test vector, symmetric form
+
   // 1. cut-plane xi
   __syncthreads();
-  // fills shared memory arrays
-  if (threadIdx.x < NGLL3) {
-    sh_tempx[tx] = jacobianl * (sigma_xx*xixl + sigma_xy*xiyl + sigma_xz*xizl); // sh_tempx1
-    sh_tempy[tx] = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_yz*xizl); // sh_tempy1
-    sh_tempz[tx] = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl); // sh_tempz1
-  }
-  __syncthreads();
-  // 1. cut-plane xi
+  get_dot_product(jacobianl,sigma_xx,sigma_xy,sigma_xy,sigma_xz,sigma_xz,sigma_yy,sigma_yz,sigma_yz,sigma_zz,
+                  xixl,xiyl,xizl,sh_tempx,sh_tempy,sh_tempz,tx,ispec_irreg,xix_regular,jacobian_regular,1);
   sum_hprimewgll_xi(I,J,K,&tempx1l,&tempy1l,&tempz1l,sh_tempx,sh_tempy,sh_tempz,sh_hprimewgll_xx);
 
   // 2. cut-plane eta
   __syncthreads();
-  // fills shared memory arrays
-  if (threadIdx.x < NGLL3) {
-    sh_tempx[tx] = jacobianl * (sigma_xx*etaxl + sigma_xy*etayl + sigma_xz*etazl); // sh_tempx2
-    sh_tempy[tx] = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_yz*etazl); // sh_tempy2
-    sh_tempz[tx] = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl); // sh_tempz2
-  }
-  __syncthreads();
-  // 2. cut-plane eta
+  get_dot_product(jacobianl,sigma_xx,sigma_xy,sigma_xy,sigma_xz,sigma_xz,sigma_yy,sigma_yz,sigma_yz,sigma_zz,
+                  etaxl,etayl,etazl,sh_tempx,sh_tempy,sh_tempz,tx,ispec_irreg,xix_regular,jacobian_regular,2);
   sum_hprimewgll_eta(I,J,K,&tempx2l,&tempy2l,&tempz2l,sh_tempx,sh_tempy,sh_tempz,sh_hprimewgll_xx);
 
   // 3. cut-plane gamma
   __syncthreads();
-  // fills shared memory arrays
-  if (threadIdx.x < NGLL3) {
-    sh_tempx[tx] = jacobianl * (sigma_xx*gammaxl + sigma_xy*gammayl + sigma_xz*gammazl); // sh_tempx3
-    sh_tempy[tx] = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_yz*gammazl); // sh_tempy3
-    sh_tempz[tx] = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl); // sh_tempz3
-  }
-  __syncthreads();
-  // 3. cut-plane gamma
+  get_dot_product(jacobianl,sigma_xx,sigma_xy,sigma_xy,sigma_xz,sigma_xz,sigma_yy,sigma_yz,sigma_yz,sigma_zz,
+                  gammaxl,gammayl,gammazl,sh_tempx,sh_tempy,sh_tempz,tx,ispec_irreg,xix_regular,jacobian_regular,3);
   sum_hprimewgll_gamma(I,J,K,&tempx3l,&tempy3l,&tempz3l,sh_tempx,sh_tempy,sh_tempz,sh_hprimewgll_xx);
 
   // gets double weights
@@ -1203,9 +1173,9 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
                         const int use_mesh_coloring_gpu,
                         realw_const_p d_displ,
                         realw_p d_accel,
-                        realw* d_xix,realw* d_xiy,realw* d_xiz,
-                        realw* d_etax,realw* d_etay,realw* d_etaz,
-                        realw* d_gammax,realw* d_gammay,realw* d_gammaz,
+                        realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
+                        realw_const_p d_etax,realw_const_p d_etay,realw_const_p d_etaz,
+                        realw_const_p d_gammax,realw_const_p d_gammay,realw_const_p d_gammaz,
                         realw_const_p d_hprime_xx,
                         realw_const_p d_hprimewgll_xx,
                         realw_const_p d_wgllwgll_xy,realw_const_p d_wgllwgll_xz,realw_const_p d_wgllwgll_yz,
@@ -1497,12 +1467,14 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
                         const int* d_ibool,
                         const int* d_phase_ispec_inner_elastic,const int num_phase_ispec_elastic,
                         const int d_iphase,
+                        const int* d_irregular_element_number,
                         const int use_mesh_coloring_gpu,
                         realw_const_p d_displ,
                         realw_p d_accel,
-                        realw* d_xix,realw* d_xiy,realw* d_xiz,
-                        realw* d_etax,realw* d_etay,realw* d_etaz,
-                        realw* d_gammax,realw* d_gammay,realw* d_gammaz,
+                        realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
+                        realw_const_p d_etax,realw_const_p d_etay,realw_const_p d_etaz,
+                        realw_const_p d_gammax,realw_const_p d_gammay,realw_const_p d_gammaz,
+                        const realw xix_regular,const realw jacobian_regular,
                         realw_const_p d_hprime_xx,
                         realw_const_p d_hprimewgll_xx,
                         realw_const_p d_wgllwgll_xy,realw_const_p d_wgllwgll_xz,realw_const_p d_wgllwgll_yz,
@@ -1546,7 +1518,7 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
   int I = (tx-K*NGLL2-J*NGLLX);
 
   int iglob,offset;
-  int working_element;
+  int working_element,ispec_irreg;
 
   realw tempx1l,tempx2l,tempx3l,tempy1l,tempy2l,tempy3l,tempz1l,tempz2l,tempz3l;
   realw xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl;
@@ -1596,6 +1568,8 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
     working_element = d_phase_ispec_inner_elastic[bx + num_phase_ispec_elastic*(d_iphase-1)] - 1;
   }
 #endif
+  ispec_irreg = d_irregular_element_number[working_element] - 1;
+
   // local padded index
   offset = working_element*NGLL3_PADDED + tx;
 
@@ -1609,52 +1583,18 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
     load_shared_memory_displ<FORWARD_OR_ADJOINT>(&tx,&iglob,d_displ,sh_tempx,sh_tempy,sh_tempz);
   }
 
-  // loads mesh values here to give compiler possibility to overlap memory fetches with some computations
-  // note: arguments defined as realw* instead of const realw* __restrict__ to avoid that the compiler
-  //       loads all memory by texture loads
-  //       we only use the first loads explicitly by texture loads, all subsequent without. this should lead/trick
-  //       the compiler to use global memory loads for all the subsequent accesses.
-  //
-  // calculates laplacian
-  xixl = get_global_cr( &d_xix[offset] ); // first array with texture load
-  xiyl = d_xiy[offset]; // all subsequent without to avoid over-use of texture for coalescent access
-  xizl = d_xiz[offset];
-  etaxl = d_etax[offset];
-  etayl = d_etay[offset];
-  etazl = d_etaz[offset];
-  gammaxl = d_gammax[offset];
-  gammayl = d_gammay[offset];
-  gammazl = d_gammaz[offset];
-
-  jacobianl = 1.f / (xixl*(etayl*gammazl-etazl*gammayl)
-                    -xiyl*(etaxl*gammazl-etazl*gammaxl)
-                    +xizl*(etaxl*gammayl-etayl*gammaxl));
-
   // synchronize all the threads (one thread for each of the NGLL grid points of the
   // current spectral element) because we need the whole element to be ready in order
   // to be able to compute the matrix products along cut planes of the 3D element below
   __syncthreads();
 
-  // computes first matrix products
-  // 1. cut-plane
-  sum_hprime_xi(I,J,K,&tempx1l,&tempy1l,&tempz1l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx);
-  // 2. cut-plane
-  sum_hprime_eta(I,J,K,&tempx2l,&tempy2l,&tempz2l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx);
-  // 3. cut-plane
-  sum_hprime_gamma(I,J,K,&tempx3l,&tempy3l,&tempz3l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx);
-
-  // compute derivatives of ux, uy and uz with respect to x, y and z
-  duxdxl = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l;
-  duxdyl = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l;
-  duxdzl = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l;
-
-  duydxl = xixl*tempy1l + etaxl*tempy2l + gammaxl*tempy3l;
-  duydyl = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l;
-  duydzl = xizl*tempy1l + etazl*tempy2l + gammazl*tempy3l;
-
-  duzdxl = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l;
-  duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l;
-  duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l;
+  // computes the spatial derivatives duxdxl ... depending on the regularity of the element
+  get_spatial_derivatives(&xixl,&xiyl,&xizl,&etaxl,&etayl,&etazl,
+                          &gammaxl,&gammayl,&gammazl,&jacobianl,I,J,K,tx,
+                          &tempx1l,&tempy1l,&tempz1l,&tempx2l,&tempy2l,&tempz2l,
+                          &tempx3l,&tempy3l,&tempz3l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx,
+                          &duxdxl,&duxdyl,&duxdzl,&duydxl,&duydyl,&duydzl,&duzdxl,&duzdyl,&duzdzl,
+                          d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,ispec_irreg,xix_regular,0);
 
   // precompute some sums to save CPU time
   duxdxl_plus_duydyl = duxdxl + duydyl;
@@ -1716,39 +1656,26 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
                             &rho_s_H1,&rho_s_H2,&rho_s_H3);
   }
 
-  // form dot product with test vector, non-symmetric form
+  // form dot product with test vector, symmetric form
+
   // 1. cut-plane xi
   __syncthreads();
-  if (threadIdx.x < NGLL3) {
-    sh_tempx[tx] = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl); // sh_tempx1
-    sh_tempy[tx] = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl); // sh_tempy1
-    sh_tempz[tx] = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl); // sh_tempz1
-  }
-  __syncthreads();
-  // 1. cut-plane xi
+  get_dot_product(jacobianl,sigma_xx,sigma_xy,sigma_yx,sigma_xz,sigma_zx,sigma_yy,sigma_yz,sigma_zy,sigma_zz,
+                  xixl,xiyl,xizl,sh_tempx,sh_tempy,sh_tempz,tx,ispec_irreg,xix_regular,jacobian_regular,1);
   sum_hprimewgll_xi(I,J,K,&tempx1l,&tempy1l,&tempz1l,sh_tempx,sh_tempy,sh_tempz,sh_hprimewgll_xx);
 
   // 2. cut-plane eta
   __syncthreads();
-  if (threadIdx.x < NGLL3) {
-    sh_tempx[tx] = jacobianl * (sigma_xx*etaxl + sigma_yx*etayl + sigma_zx*etazl); // sh_tempx2
-    sh_tempy[tx] = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_zy*etazl); // sh_tempy2
-    sh_tempz[tx] = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl); // sh_tempz2
-  }
-  __syncthreads();
-  // 2. cut-plane eta
+  get_dot_product(jacobianl,sigma_xx,sigma_xy,sigma_yx,sigma_xz,sigma_zx,sigma_yy,sigma_yz,sigma_zy,sigma_zz,
+                  etaxl,etayl,etazl,sh_tempx,sh_tempy,sh_tempz,tx,ispec_irreg,xix_regular,jacobian_regular,2);
   sum_hprimewgll_eta(I,J,K,&tempx2l,&tempy2l,&tempz2l,sh_tempx,sh_tempy,sh_tempz,sh_hprimewgll_xx);
 
   // 3. cut-plane gamma
   __syncthreads();
-  if (threadIdx.x < NGLL3) {
-    sh_tempx[tx] = jacobianl * (sigma_xx*gammaxl + sigma_yx*gammayl + sigma_zx*gammazl); // sh_tempx3
-    sh_tempy[tx] = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl); // sh_tempy3
-    sh_tempz[tx] = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl); // sh_tempz3
-  }
-  __syncthreads();
-  // 3. cut-plane gamma
+  get_dot_product(jacobianl,sigma_xx,sigma_xy,sigma_yx,sigma_xz,sigma_zx,sigma_yy,sigma_yz,sigma_zy,sigma_zz,
+                  gammaxl,gammayl,gammazl,sh_tempx,sh_tempy,sh_tempz,tx,ispec_irreg,xix_regular,jacobian_regular,3);
   sum_hprimewgll_gamma(I,J,K,&tempx3l,&tempy3l,&tempz3l,sh_tempx,sh_tempy,sh_tempz,sh_hprimewgll_xx);
+
 
   // gets double weights
   fac1 = d_wgllwgll_yz[K*NGLLX+J];
@@ -1821,12 +1748,14 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
                         const int* d_ibool,
                         const int* d_phase_ispec_inner_elastic,const int num_phase_ispec_elastic,
                         const int d_iphase,
+                        const int* d_irregular_element_number,
                         const int use_mesh_coloring_gpu,
                         realw_const_p d_displ,
                         realw_p d_accel,
-                        realw* d_xix,realw* d_xiy,realw* d_xiz,
-                        realw* d_etax,realw* d_etay,realw* d_etaz,
-                        realw* d_gammax,realw* d_gammay,realw* d_gammaz,
+                        realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
+                        realw_const_p d_etax,realw_const_p d_etay,realw_const_p d_etaz,
+                        realw_const_p d_gammax,realw_const_p d_gammay,realw_const_p d_gammaz,
+                        const realw xix_regular,const realw jacobian_regular,
                         realw_const_p d_hprime_xx,
                         realw_const_p d_hprimewgll_xx,
                         realw_const_p d_wgllwgll_xy,realw_const_p d_wgllwgll_xz,realw_const_p d_wgllwgll_yz,
@@ -1877,7 +1806,7 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
   int I = (tx-K*NGLL2-J*NGLLX);
 
   int iglob,offset;
-  int working_element;
+  int working_element,ispec_irreg;
 
   realw tempx1l,tempx2l,tempx3l,tempy1l,tempy2l,tempy3l,tempz1l,tempz2l,tempz3l;
   realw xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl;
@@ -1929,6 +1858,8 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
     working_element = d_phase_ispec_inner_elastic[bx + num_phase_ispec_elastic*(d_iphase-1)] - 1;
   }
 #endif
+  ispec_irreg = d_irregular_element_number[working_element] - 1;
+
   // local padded index
   offset = working_element*NGLL3_PADDED + tx;
 
@@ -1942,52 +1873,18 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
     load_shared_memory_displ<FORWARD_OR_ADJOINT>(&tx,&iglob,d_displ,sh_tempx,sh_tempy,sh_tempz);
   }
 
-  // loads mesh values here to give compiler possibility to overlap memory fetches with some computations
-  // note: arguments defined as realw* instead of const realw* __restrict__ to avoid that the compiler
-  //       loads all memory by texture loads
-  //       we only use the first loads explicitly by texture loads, all subsequent without. this should lead/trick
-  //       the compiler to use global memory loads for all the subsequent accesses.
-  //
-  // calculates laplacian
-  xixl = get_global_cr( &d_xix[offset] ); // first array with texture load
-  xiyl = d_xiy[offset]; // all subsequent without to avoid over-use of texture for coalescent access
-  xizl = d_xiz[offset];
-  etaxl = d_etax[offset];
-  etayl = d_etay[offset];
-  etazl = d_etaz[offset];
-  gammaxl = d_gammax[offset];
-  gammayl = d_gammay[offset];
-  gammazl = d_gammaz[offset];
-
-  jacobianl = 1.f / (xixl*(etayl*gammazl-etazl*gammayl)
-                    -xiyl*(etaxl*gammazl-etazl*gammaxl)
-                    +xizl*(etaxl*gammayl-etayl*gammaxl));
-
   // synchronize all the threads (one thread for each of the NGLL grid points of the
   // current spectral element) because we need the whole element to be ready in order
   // to be able to compute the matrix products along cut planes of the 3D element below
   __syncthreads();
 
-  // computes first matrix products
-  // 1. cut-plane
-  sum_hprime_xi(I,J,K,&tempx1l,&tempy1l,&tempz1l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx);
-  // 2. cut-plane
-  sum_hprime_eta(I,J,K,&tempx2l,&tempy2l,&tempz2l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx);
-  // 3. cut-plane
-  sum_hprime_gamma(I,J,K,&tempx3l,&tempy3l,&tempz3l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx);
-
-  // compute derivatives of ux, uy and uz with respect to x, y and z
-  duxdxl = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l;
-  duxdyl = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l;
-  duxdzl = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l;
-
-  duydxl = xixl*tempy1l + etaxl*tempy2l + gammaxl*tempy3l;
-  duydyl = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l;
-  duydzl = xizl*tempy1l + etazl*tempy2l + gammazl*tempy3l;
-
-  duzdxl = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l;
-  duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l;
-  duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l;
+  // computes the spatial derivatives duxdxl ... depending on the regularity of the element
+  get_spatial_derivatives(&xixl,&xiyl,&xizl,&etaxl,&etayl,&etazl,
+                          &gammaxl,&gammayl,&gammazl,&jacobianl,I,J,K,tx,
+                          &tempx1l,&tempy1l,&tempz1l,&tempx2l,&tempy2l,&tempz2l,
+                          &tempx3l,&tempy3l,&tempz3l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx,
+                          &duxdxl,&duxdyl,&duxdzl,&duydxl,&duydyl,&duydzl,&duzdxl,&duzdyl,&duzdzl,
+                          d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,ispec_irreg,xix_regular,0);
 
   // precompute some sums to save CPU time
   duxdxl_plus_duydyl = duxdxl + duydyl;
@@ -2086,38 +1983,24 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
                             &rho_s_H1,&rho_s_H2,&rho_s_H3);
   }
 
-  // form dot product with test vector, non-symmetric form
+  // form dot product with test vector, symmetric form
+
   // 1. cut-plane xi
   __syncthreads();
-  if (threadIdx.x < NGLL3) {
-    sh_tempx[tx] = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl); // sh_tempx1
-    sh_tempy[tx] = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl); // sh_tempy1
-    sh_tempz[tx] = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl); // sh_tempz1
-  }
-  __syncthreads();
-  // 1. cut-plane xi
+  get_dot_product(jacobianl,sigma_xx,sigma_xy,sigma_yx,sigma_xz,sigma_zx,sigma_yy,sigma_yz,sigma_zy,sigma_zz,
+                  xixl,xiyl,xizl,sh_tempx,sh_tempy,sh_tempz,tx,ispec_irreg,xix_regular,jacobian_regular,1);
   sum_hprimewgll_xi(I,J,K,&tempx1l,&tempy1l,&tempz1l,sh_tempx,sh_tempy,sh_tempz,sh_hprimewgll_xx);
 
   // 2. cut-plane eta
   __syncthreads();
-  if (threadIdx.x < NGLL3) {
-    sh_tempx[tx] = jacobianl * (sigma_xx*etaxl + sigma_yx*etayl + sigma_zx*etazl); // sh_tempx2
-    sh_tempy[tx] = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_zy*etazl); // sh_tempy2
-    sh_tempz[tx] = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl); // sh_tempz2
-  }
-  __syncthreads();
-  // 2. cut-plane eta
+  get_dot_product(jacobianl,sigma_xx,sigma_xy,sigma_yx,sigma_xz,sigma_zx,sigma_yy,sigma_yz,sigma_zy,sigma_zz,
+                  etaxl,etayl,etazl,sh_tempx,sh_tempy,sh_tempz,tx,ispec_irreg,xix_regular,jacobian_regular,2);
   sum_hprimewgll_eta(I,J,K,&tempx2l,&tempy2l,&tempz2l,sh_tempx,sh_tempy,sh_tempz,sh_hprimewgll_xx);
 
   // 3. cut-plane gamma
   __syncthreads();
-  if (threadIdx.x < NGLL3) {
-    sh_tempx[tx] = jacobianl * (sigma_xx*gammaxl + sigma_yx*gammayl + sigma_zx*gammazl); // sh_tempx3
-    sh_tempy[tx] = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl); // sh_tempy3
-    sh_tempz[tx] = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl); // sh_tempz3
-  }
-  __syncthreads();
-  // 3. cut-plane gamma
+  get_dot_product(jacobianl,sigma_xx,sigma_xy,sigma_yx,sigma_xz,sigma_zx,sigma_yy,sigma_yz,sigma_zy,sigma_zz,
+                  gammaxl,gammayl,gammazl,sh_tempx,sh_tempy,sh_tempz,tx,ispec_irreg,xix_regular,jacobian_regular,3);
   sum_hprimewgll_gamma(I,J,K,&tempx3l,&tempy3l,&tempz3l,sh_tempx,sh_tempy,sh_tempz,sh_hprimewgll_xx);
 
   // gets double weights
@@ -2207,14 +2090,16 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
                   const int* d_ibool,
                   const int* d_phase_ispec_inner_elastic,const int num_phase_ispec_elastic,
                   const int d_iphase,
+                  const int* d_irregular_element_number,
                   const int use_mesh_coloring_gpu,
-                  realw d_deltat,
+                  const realw d_deltat,
                   realw_const_p d_displ,
                   realw_const_p d_veloc,
                   realw_p d_accel,
                   realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
                   realw_const_p d_etax,realw_const_p d_etay,realw_const_p d_etaz,
                   realw_const_p d_gammax,realw_const_p d_gammay,realw_const_p d_gammaz,
+                  const realw xix_regular,const realw jacobian_regular,
                   realw_const_p d_hprime_xx,
                   realw_const_p d_hprimewgll_xx,
                   realw_const_p d_wgllwgll_xy,realw_const_p d_wgllwgll_xz,realw_const_p d_wgllwgll_yz,
@@ -2255,7 +2140,7 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
 
   unsigned short int active;
   int iglob,offset;
-  int working_element;
+  int working_element,ispec_irreg;
 
   realw tempx1l,tempx2l,tempx3l,tempy1l,tempy2l,tempy3l,tempz1l,tempz2l,tempz3l;
   realw xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl;
@@ -2264,12 +2149,8 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
   realw duxdyl_plus_duydxl,duzdxl_plus_duxdzl,duzdyl_plus_duydzl;
   realw templ;
 
-  realw tempx1l_att,tempx2l_att,tempx3l_att,tempy1l_att,tempy2l_att,tempy3l_att,tempz1l_att,tempz2l_att,tempz3l_att;
-  realw duxdxl_att,duxdyl_att,duxdzl_att,duydxl_att,duydyl_att,duydzl_att,duzdxl_att,duzdyl_att,duzdzl_att;
-  realw duxdyl_plus_duydxl_att,duzdxl_plus_duxdzl_att,duzdyl_plus_duydzl_att;
-
   realw fac1,fac2,fac3;
-  realw lambdal,mul,lambdalplus2mul,kappal;
+  realw lambdal,mul,lambdalplus2mul,kappal,mul2;
 
   realw sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz;
   realw epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,epsilondev_xz_loc,epsilondev_yz_loc;
@@ -2281,21 +2162,9 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
   realw sigma_yx,sigma_zx,sigma_zy;
   realw rho_s_H1,rho_s_H2,rho_s_H3;
 
-#ifndef MANUALLY_UNROLLED_LOOPS
-  int l;
-#endif
-
-  __shared__ realw sh_tempx1[NGLL3];
-  __shared__ realw sh_tempx2[NGLL3];
-  __shared__ realw sh_tempx3[NGLL3];
-
-  __shared__ realw sh_tempy1[NGLL3];
-  __shared__ realw sh_tempy2[NGLL3];
-  __shared__ realw sh_tempy3[NGLL3];
-
-  __shared__ realw sh_tempz1[NGLL3];
-  __shared__ realw sh_tempz2[NGLL3];
-  __shared__ realw sh_tempz3[NGLL3];
+  __shared__ realw sh_tempx[NGLL3];
+  __shared__ realw sh_tempy[NGLL3];
+  __shared__ realw sh_tempz[NGLL3];
 
   __shared__ realw sh_hprime_xx[NGLL2];
 
@@ -2305,13 +2174,15 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
 
   // re-assigns shared array to decrease shared memory usage
   // note: this will re-use s_temp arrays from above to save shared memory
-  realw* s_dummyx_loc_att = (realw*) sh_tempx1;
-  realw* s_dummyy_loc_att = (realw*) sh_tempx2;
-  realw* s_dummyz_loc_att = (realw*) sh_tempx3;
+  realw* s_dummyx_loc_att = (realw*) sh_tempx;
+  realw* s_dummyy_loc_att = (realw*) sh_tempy;
+  realw* s_dummyz_loc_att = (realw*) sh_tempz;
 
+
+  if (bx >= nb_blocks_to_compute) return;
   // use only NGLL^3 = 125 active threads, plus 3 inactive/ghost threads,
   // because we used memory padding from NGLL^3 = 125 to 128 to get coalescent memory accesses
-  active = (tx < NGLL3 && bx < nb_blocks_to_compute) ? 1:0;
+  active = (tx < NGLL3) ? 1:0;
 
   // copy from global memory to shared memory
   // each thread writes one of the NGLL^3 = 125 data points
@@ -2328,6 +2199,8 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
       working_element = d_phase_ispec_inner_elastic[bx + num_phase_ispec_elastic*(d_iphase-1)]-1;
     }
 #endif
+    ispec_irreg = d_irregular_element_number[working_element] - 1;
+
     // local padded index
     offset = working_element*NGLL3_PADDED + tx;
 
@@ -2365,214 +2238,34 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
   __syncthreads();
 
   if (active ){
-
-#ifndef MANUALLY_UNROLLED_LOOPS
-
-    tempx1l = 0.f;
-    tempx2l = 0.f;
-    tempx3l = 0.f;
-
-    tempy1l = 0.f;
-    tempy2l = 0.f;
-    tempy3l = 0.f;
-
-    tempz1l = 0.f;
-    tempz2l = 0.f;
-    tempz3l = 0.f;
-
-    for (l=0;l<NGLLX;l++) {
-      //assumes that hprime_xx = hprime_yy = hprime_zz
-      fac1 = sh_hprime_xx[l*NGLLX+I];
-      tempx1l += s_dummyx_loc[K*NGLL2+J*NGLLX+l]*fac1;
-      tempy1l += s_dummyy_loc[K*NGLL2+J*NGLLX+l]*fac1;
-      tempz1l += s_dummyz_loc[K*NGLL2+J*NGLLX+l]*fac1;
-
-      fac2 = sh_hprime_xx[l*NGLLX+J];
-      tempx2l += s_dummyx_loc[K*NGLL2+l*NGLLX+I]*fac2;
-      tempy2l += s_dummyy_loc[K*NGLL2+l*NGLLX+I]*fac2;
-      tempz2l += s_dummyz_loc[K*NGLL2+l*NGLLX+I]*fac2;
-
-      fac3 = sh_hprime_xx[l*NGLLX+K];
-      tempx3l += s_dummyx_loc[l*NGLL2+J*NGLLX+I]*fac3;
-      tempy3l += s_dummyy_loc[l*NGLL2+J*NGLLX+I]*fac3;
-      tempz3l += s_dummyz_loc[l*NGLL2+J*NGLLX+I]*fac3;
-    }
-
-// JC JC here we will need to add GPU support for the new C-PML routines
+   // attenuation
+  // computes the spatial derivatives duxdxl ... depending on the regularity of the element
+    get_spatial_derivatives(&xixl,&xiyl,&xizl,&etaxl,&etayl,&etazl,
+                            &gammaxl,&gammayl,&gammazl,&jacobianl,I,J,K,tx,
+                            &tempx1l,&tempy1l,&tempz1l,&tempx2l,&tempy2l,&tempz2l,
+                            &tempx3l,&tempy3l,&tempz3l,s_dummyx_loc_att,s_dummyy_loc_att,s_dummyz_loc_att,sh_hprime_xx,
+                            &duxdxl,&duxdyl,&duxdzl,&duydxl,&duydyl,&duydzl,&duzdxl,&duzdyl,&duzdzl,
+                            d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,ispec_irreg,xix_regular,0);
 
     // attenuation
-    // temporary variables used for fixing attenuation in a consistent way
-    tempx1l_att = 0.f;
-    tempx2l_att = 0.f;
-    tempx3l_att = 0.f;
+    // computes deviatoric strain attenuation and/or for kernel calculations
+    templ = 0.33333333333333333333f * (duxdxl + duydyl + duzdzl); // 1./3. = 0.33333
+    // local storage: stresses at this current time step
+    epsilondev_xx_loc = duxdxl - templ;
+    epsilondev_yy_loc = duydyl - templ;
+    epsilondev_xy_loc = 0.5f * (duxdyl + duydxl);
+    epsilondev_xz_loc = 0.5f * (duzdxl + duxdzl);
+    epsilondev_yz_loc = 0.5f * (duzdyl + duydzl);
 
-    tempy1l_att = 0.f;
-    tempy2l_att = 0.f;
-    tempy3l_att = 0.f;
+    if (SIMULATION_TYPE == 3) epsilon_trace_over_3[tx + working_element*NGLL3] = templ;
 
-    tempz1l_att = 0.f;
-    tempz2l_att = 0.f;
-    tempz3l_att = 0.f;
-
-    for (l=0;l<NGLLX;l++) {
-      fac1 = sh_hprime_xx[l*NGLLX+I];
-      tempx1l_att += s_dummyx_loc_att[K*NGLL2+J*NGLLX+l]*fac1;
-      tempy1l_att += s_dummyy_loc_att[K*NGLL2+J*NGLLX+l]*fac1;
-      tempz1l_att += s_dummyz_loc_att[K*NGLL2+J*NGLLX+l]*fac1;
-
-      fac2 = sh_hprime_xx[l*NGLLX+J];
-      tempx2l_att += s_dummyx_loc_att[K*NGLL2+l*NGLLX+I]*fac2;
-      tempy2l_att += s_dummyy_loc_att[K*NGLL2+l*NGLLX+I]*fac2;
-      tempz2l_att += s_dummyz_loc_att[K*NGLL2+l*NGLLX+I]*fac2;
-
-      fac3 = sh_hprime_xx[l*NGLLX+K];
-      tempx3l_att += s_dummyx_loc_att[l*NGLL2+J*NGLLX+I]*fac3;
-      tempy3l_att += s_dummyy_loc_att[l*NGLL2+J*NGLLX+I]*fac3;
-      tempz3l_att += s_dummyz_loc_att[l*NGLL2+J*NGLLX+I]*fac3;
-    }
-
-#else
-    tempx1l = s_dummyx_loc[K*NGLL2+J*NGLLX]*d_hprime_xx[I]
-            + s_dummyx_loc[K*NGLL2+J*NGLLX+1]*d_hprime_xx[NGLLX+I]
-            + s_dummyx_loc[K*NGLL2+J*NGLLX+2]*d_hprime_xx[2*NGLLX+I]
-            + s_dummyx_loc[K*NGLL2+J*NGLLX+3]*d_hprime_xx[3*NGLLX+I]
-            + s_dummyx_loc[K*NGLL2+J*NGLLX+4]*d_hprime_xx[4*NGLLX+I];
-
-    tempy1l = s_dummyy_loc[K*NGLL2+J*NGLLX]*d_hprime_xx[I]
-            + s_dummyy_loc[K*NGLL2+J*NGLLX+1]*d_hprime_xx[NGLLX+I]
-            + s_dummyy_loc[K*NGLL2+J*NGLLX+2]*d_hprime_xx[2*NGLLX+I]
-            + s_dummyy_loc[K*NGLL2+J*NGLLX+3]*d_hprime_xx[3*NGLLX+I]
-            + s_dummyy_loc[K*NGLL2+J*NGLLX+4]*d_hprime_xx[4*NGLLX+I];
-
-    tempz1l = s_dummyz_loc[K*NGLL2+J*NGLLX]*d_hprime_xx[I]
-            + s_dummyz_loc[K*NGLL2+J*NGLLX+1]*d_hprime_xx[NGLLX+I]
-            + s_dummyz_loc[K*NGLL2+J*NGLLX+2]*d_hprime_xx[2*NGLLX+I]
-            + s_dummyz_loc[K*NGLL2+J*NGLLX+3]*d_hprime_xx[3*NGLLX+I]
-            + s_dummyz_loc[K*NGLL2+J*NGLLX+4]*d_hprime_xx[4*NGLLX+I];
-
-    tempx2l = s_dummyx_loc[K*NGLL2+I]*d_hprime_xx[J]
-            + s_dummyx_loc[K*NGLL2+NGLLX+I]*d_hprime_xx[NGLLX+J]
-            + s_dummyx_loc[K*NGLL2+2*NGLLX+I]*d_hprime_xx[2*NGLLX+J]
-            + s_dummyx_loc[K*NGLL2+3*NGLLX+I]*d_hprime_xx[3*NGLLX+J]
-            + s_dummyx_loc[K*NGLL2+4*NGLLX+I]*d_hprime_xx[4*NGLLX+J];
-
-    tempy2l = s_dummyy_loc[K*NGLL2+I]*d_hprime_xx[J]
-            + s_dummyy_loc[K*NGLL2+NGLLX+I]*d_hprime_xx[NGLLX+J]
-            + s_dummyy_loc[K*NGLL2+2*NGLLX+I]*d_hprime_xx[2*NGLLX+J]
-            + s_dummyy_loc[K*NGLL2+3*NGLLX+I]*d_hprime_xx[3*NGLLX+J]
-            + s_dummyy_loc[K*NGLL2+4*NGLLX+I]*d_hprime_xx[4*NGLLX+J];
-
-    tempz2l = s_dummyz_loc[K*NGLL2+I]*d_hprime_xx[J]
-            + s_dummyz_loc[K*NGLL2+NGLLX+I]*d_hprime_xx[NGLLX+J]
-            + s_dummyz_loc[K*NGLL2+2*NGLLX+I]*d_hprime_xx[2*NGLLX+J]
-            + s_dummyz_loc[K*NGLL2+3*NGLLX+I]*d_hprime_xx[3*NGLLX+J]
-            + s_dummyz_loc[K*NGLL2+4*NGLLX+I]*d_hprime_xx[4*NGLLX+J];
-
-    tempx3l = s_dummyx_loc[J*NGLLX+I]*d_hprime_xx[K]
-            + s_dummyx_loc[NGLL2+J*NGLLX+I]*d_hprime_xx[NGLLX+K]
-            + s_dummyx_loc[2*NGLL2+J*NGLLX+I]*d_hprime_xx[2*NGLLX+K]
-            + s_dummyx_loc[3*NGLL2+J*NGLLX+I]*d_hprime_xx[3*NGLLX+K]
-            + s_dummyx_loc[4*NGLL2+J*NGLLX+I]*d_hprime_xx[4*NGLLX+K];
-
-    tempy3l = s_dummyy_loc[J*NGLLX+I]*d_hprime_xx[K]
-            + s_dummyy_loc[NGLL2+J*NGLLX+I]*d_hprime_xx[NGLLX+K]
-            + s_dummyy_loc[2*NGLL2+J*NGLLX+I]*d_hprime_xx[2*NGLLX+K]
-            + s_dummyy_loc[3*NGLL2+J*NGLLX+I]*d_hprime_xx[3*NGLLX+K]
-            + s_dummyy_loc[4*NGLL2+J*NGLLX+I]*d_hprime_xx[4*NGLLX+K];
-
-    tempz3l = s_dummyz_loc[J*NGLLX+I]*d_hprime_xx[K]
-            + s_dummyz_loc[NGLL2+J*NGLLX+I]*d_hprime_xx[NGLLX+K]
-            + s_dummyz_loc[2*NGLL2+J*NGLLX+I]*d_hprime_xx[2*NGLLX+K]
-            + s_dummyz_loc[3*NGLL2+J*NGLLX+I]*d_hprime_xx[3*NGLLX+K]
-            + s_dummyz_loc[4*NGLL2+J*NGLLX+I]*d_hprime_xx[4*NGLLX+K];
-
-// JC JC here we will need to add GPU support for the new C-PML routines
-
-    // attenuation
-    // temporary variables used for fixing attenuation in a consistent way
-    tempx1l_att = s_dummyx_loc_att[K*NGLL2+J*NGLLX]*d_hprime_xx[I]
-                  + s_dummyx_loc_att[K*NGLL2+J*NGLLX+1]*d_hprime_xx[NGLLX+I]
-                  + s_dummyx_loc_att[K*NGLL2+J*NGLLX+2]*d_hprime_xx[2*NGLLX+I]
-                  + s_dummyx_loc_att[K*NGLL2+J*NGLLX+3]*d_hprime_xx[3*NGLLX+I]
-                  + s_dummyx_loc_att[K*NGLL2+J*NGLLX+4]*d_hprime_xx[4*NGLLX+I];
-
-    tempy1l_att = s_dummyy_loc_att[K*NGLL2+J*NGLLX]*d_hprime_xx[I]
-                  + s_dummyy_loc_att[K*NGLL2+J*NGLLX+1]*d_hprime_xx[NGLLX+I]
-                  + s_dummyy_loc_att[K*NGLL2+J*NGLLX+2]*d_hprime_xx[2*NGLLX+I]
-                  + s_dummyy_loc_att[K*NGLL2+J*NGLLX+3]*d_hprime_xx[3*NGLLX+I]
-                  + s_dummyy_loc_att[K*NGLL2+J*NGLLX+4]*d_hprime_xx[4*NGLLX+I];
-
-    tempz1l_att = s_dummyz_loc_att[K*NGLL2+J*NGLLX]*d_hprime_xx[I]
-                  + s_dummyz_loc_att[K*NGLL2+J*NGLLX+1]*d_hprime_xx[NGLLX+I]
-                  + s_dummyz_loc_att[K*NGLL2+J*NGLLX+2]*d_hprime_xx[2*NGLLX+I]
-                  + s_dummyz_loc_att[K*NGLL2+J*NGLLX+3]*d_hprime_xx[3*NGLLX+I]
-                  + s_dummyz_loc_att[K*NGLL2+J*NGLLX+4]*d_hprime_xx[4*NGLLX+I];
-
-    tempx2l_att = s_dummyx_loc_att[K*NGLL2+I]*d_hprime_xx[J]
-                  + s_dummyx_loc_att[K*NGLL2+NGLLX+I]*d_hprime_xx[NGLLX+J]
-                  + s_dummyx_loc_att[K*NGLL2+2*NGLLX+I]*d_hprime_xx[2*NGLLX+J]
-                  + s_dummyx_loc_att[K*NGLL2+3*NGLLX+I]*d_hprime_xx[3*NGLLX+J]
-                  + s_dummyx_loc_att[K*NGLL2+4*NGLLX+I]*d_hprime_xx[4*NGLLX+J];
-
-    tempy2l_att = s_dummyy_loc_att[K*NGLL2+I]*d_hprime_xx[J]
-                  + s_dummyy_loc_att[K*NGLL2+NGLLX+I]*d_hprime_xx[NGLLX+J]
-                  + s_dummyy_loc_att[K*NGLL2+2*NGLLX+I]*d_hprime_xx[2*NGLLX+J]
-                  + s_dummyy_loc_att[K*NGLL2+3*NGLLX+I]*d_hprime_xx[3*NGLLX+J]
-                  + s_dummyy_loc_att[K*NGLL2+4*NGLLX+I]*d_hprime_xx[4*NGLLX+J];
-
-    tempz2l_att = s_dummyz_loc_att[K*NGLL2+I]*d_hprime_xx[J]
-                  + s_dummyz_loc_att[K*NGLL2+NGLLX+I]*d_hprime_xx[NGLLX+J]
-                  + s_dummyz_loc_att[K*NGLL2+2*NGLLX+I]*d_hprime_xx[2*NGLLX+J]
-                  + s_dummyz_loc_att[K*NGLL2+3*NGLLX+I]*d_hprime_xx[3*NGLLX+J]
-                  + s_dummyz_loc_att[K*NGLL2+4*NGLLX+I]*d_hprime_xx[4*NGLLX+J];
-
-    tempx3l_att = s_dummyx_loc_att[J*NGLLX+I]*d_hprime_xx[K]
-                  + s_dummyx_loc_att[NGLL2+J*NGLLX+I]*d_hprime_xx[NGLLX+K]
-                  + s_dummyx_loc_att[2*NGLL2+J*NGLLX+I]*d_hprime_xx[2*NGLLX+K]
-                  + s_dummyx_loc_att[3*NGLL2+J*NGLLX+I]*d_hprime_xx[3*NGLLX+K]
-                  + s_dummyx_loc_att[4*NGLL2+J*NGLLX+I]*d_hprime_xx[4*NGLLX+K];
-
-    tempy3l_att = s_dummyy_loc_att[J*NGLLX+I]*d_hprime_xx[K]
-                  + s_dummyy_loc_att[NGLL2+J*NGLLX+I]*d_hprime_xx[NGLLX+K]
-                  + s_dummyy_loc_att[2*NGLL2+J*NGLLX+I]*d_hprime_xx[2*NGLLX+K]
-                  + s_dummyy_loc_att[3*NGLL2+J*NGLLX+I]*d_hprime_xx[3*NGLLX+K]
-                  + s_dummyy_loc_att[4*NGLL2+J*NGLLX+I]*d_hprime_xx[4*NGLLX+K];
-
-    tempz3l_att = s_dummyz_loc_att[J*NGLLX+I]*d_hprime_xx[K]
-                  + s_dummyz_loc_att[NGLL2+J*NGLLX+I]*d_hprime_xx[NGLLX+K]
-                  + s_dummyz_loc_att[2*NGLL2+J*NGLLX+I]*d_hprime_xx[2*NGLLX+K]
-                  + s_dummyz_loc_att[3*NGLL2+J*NGLLX+I]*d_hprime_xx[3*NGLLX+K]
-                  + s_dummyz_loc_att[4*NGLL2+J*NGLLX+I]*d_hprime_xx[4*NGLLX+K];
-#endif
-
-    // compute derivatives of ux, uy and uz with respect to x, y and z
-    xixl = get_global_cr( &d_xix[offset] );
-    xiyl = get_global_cr( &d_xiy[offset] );
-    xizl = get_global_cr( &d_xiz[offset] );
-    etaxl = get_global_cr( &d_etax[offset] );
-    etayl = get_global_cr( &d_etay[offset] );
-    etazl = get_global_cr( &d_etaz[offset] );
-    gammaxl = get_global_cr( &d_gammax[offset] );
-    gammayl = get_global_cr( &d_gammay[offset] );
-    gammazl = get_global_cr( &d_gammaz[offset] );
-
-    jacobianl = 1.0f / (xixl*(etayl*gammazl-etazl*gammayl)
-                       -xiyl*(etaxl*gammazl-etazl*gammaxl)
-                       +xizl*(etaxl*gammayl-etayl*gammaxl));
-
-    duxdxl = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l;
-    duxdyl = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l;
-    duxdzl = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l;
-
-    duydxl = xixl*tempy1l + etaxl*tempy2l + gammaxl*tempy3l;
-    duydyl = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l;
-    duydzl = xizl*tempy1l + etazl*tempy2l + gammazl*tempy3l;
-
-    duzdxl = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l;
-    duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l;
-    duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l;
-
-// JC JC here we will need to add GPU support for the new C-PML routines
+    // computes the spatial derivatives duxdxl ... depending on the regularity of the element
+    get_spatial_derivatives(&xixl,&xiyl,&xizl,&etaxl,&etayl,&etazl,
+                            &gammaxl,&gammayl,&gammazl,&jacobianl,I,J,K,tx,
+                            &tempx1l,&tempy1l,&tempz1l,&tempx2l,&tempy2l,&tempz2l,
+                            &tempx3l,&tempy3l,&tempz3l,s_dummyx_loc,s_dummyy_loc,s_dummyz_loc,sh_hprime_xx,
+                            &duxdxl,&duxdyl,&duxdzl,&duydxl,&duydyl,&duydzl,&duzdxl,&duzdyl,&duzdzl,
+                            d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,ispec_irreg,xix_regular,1);
 
     // precompute some sums to save CPU time
     duxdxl_plus_duydyl = duxdxl + duydyl;
@@ -2581,41 +2274,6 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
     duxdyl_plus_duydxl = duxdyl + duydxl;
     duzdxl_plus_duxdzl = duzdxl + duxdzl;
     duzdyl_plus_duydzl = duzdyl + duydzl;
-
-// JC JC here we will need to add GPU support for the new C-PML routines
-
-    // attenuation
-    // temporary variables used for fixing attenuation in a consistent way
-    duxdxl_att = xixl*tempx1l_att + etaxl*tempx2l_att + gammaxl*tempx3l_att;
-    duxdyl_att = xiyl*tempx1l_att + etayl*tempx2l_att + gammayl*tempx3l_att;
-    duxdzl_att = xizl*tempx1l_att + etazl*tempx2l_att + gammazl*tempx3l_att;
-
-    duydxl_att = xixl*tempy1l_att + etaxl*tempy2l_att + gammaxl*tempy3l_att;
-    duydyl_att = xiyl*tempy1l_att + etayl*tempy2l_att + gammayl*tempy3l_att;
-    duydzl_att = xizl*tempy1l_att + etazl*tempy2l_att + gammazl*tempy3l_att;
-
-    duzdxl_att = xixl*tempz1l_att + etaxl*tempz2l_att + gammaxl*tempz3l_att;
-    duzdyl_att = xiyl*tempz1l_att + etayl*tempz2l_att + gammayl*tempz3l_att;
-    duzdzl_att = xizl*tempz1l_att + etazl*tempz2l_att + gammazl*tempz3l_att;
-
-    // precompute some sums to save CPU time
-    duxdyl_plus_duydxl_att = duxdyl_att + duydxl_att;
-    duzdxl_plus_duxdzl_att = duzdxl_att + duxdzl_att;
-    duzdyl_plus_duydzl_att = duzdyl_att + duydzl_att;
-
-    // attenuation
-    // computes deviatoric strain attenuation and/or for kernel calculations
-    templ = 0.33333333333333333333f * (duxdxl_att + duydyl_att + duzdzl_att); // 1./3. = 0.33333
-    // local storage: stresses at this current time step
-    epsilondev_xx_loc = duxdxl_att - templ;
-    epsilondev_yy_loc = duydyl_att - templ;
-    epsilondev_xy_loc = 0.5f * duxdyl_plus_duydxl_att;
-    epsilondev_xz_loc = 0.5f * duzdxl_plus_duxdzl_att;
-    epsilondev_yz_loc = 0.5f * duzdyl_plus_duydzl_att;
-
-    if (SIMULATION_TYPE == 3) {
-      epsilon_trace_over_3[tx + working_element*NGLL3] = templ;
-    }
 
     // full anisotropic case, stress calculations
     if (ANISOTROPY){
@@ -2663,19 +2321,19 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
 
       // attenuation
       // use unrelaxed parameters if attenuation
-      mul  = mul * get_global_cr( &one_minus_sum_beta[tx+working_element*NGLL3] ); // (i,j,k,ispec)
+      mul2  = mul * get_global_cr( &one_minus_sum_beta[tx+working_element*NGLL3] ); // (i,j,k,ispec) 
 
-      lambdalplus2mul = kappal + 1.33333333333333333333f * mul;  // 4./3. = 1.3333333
-      lambdal = lambdalplus2mul - 2.0f * mul;
+      lambdalplus2mul = kappal + 1.33333333333333333333f * mul2;  // 4./3. = 1.3333333
+      lambdal = lambdalplus2mul - 2.0f * mul2;
 
       // compute the six components of the stress tensor sigma
       sigma_xx = lambdalplus2mul*duxdxl + lambdal*duydyl_plus_duzdzl;
       sigma_yy = lambdalplus2mul*duydyl + lambdal*duxdxl_plus_duzdzl;
       sigma_zz = lambdalplus2mul*duzdzl + lambdal*duxdxl_plus_duydyl;
 
-      sigma_xy = mul*duxdyl_plus_duydxl;
-      sigma_xz = mul*duzdxl_plus_duxdzl;
-      sigma_yz = mul*duzdyl_plus_duydzl;
+      sigma_xy = mul2*duxdyl_plus_duydxl;
+      sigma_xz = mul2*duzdxl_plus_duxdzl;
+      sigma_yz = mul2*duzdyl_plus_duydzl;
     }
 
     // attenuation
@@ -2697,25 +2355,8 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
                               &sigma_xx,&sigma_yy,&sigma_xz,&sigma_yz,
                               &rho_s_H1,&rho_s_H2,&rho_s_H3);
     }
+
   } // active
-
-  //note: due to re-assignement of s_dummyx_loc_att,..,we need to sync before updating sh_tempx1...
-  __syncthreads();
-
-  if (active ){
-    // form dot product with test vector, non-symmetric form
-    sh_tempx1[tx] = jacobianl * (sigma_xx*xixl + sigma_yx*xiyl + sigma_zx*xizl);
-    sh_tempy1[tx] = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_zy*xizl);
-    sh_tempz1[tx] = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl);
-
-    sh_tempx2[tx] = jacobianl * (sigma_xx*etaxl + sigma_yx*etayl + sigma_zx*etazl);
-    sh_tempy2[tx] = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_zy*etazl);
-    sh_tempz2[tx] = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl);
-
-    sh_tempx3[tx] = jacobianl * (sigma_xx*gammaxl + sigma_yx*gammayl + sigma_zx*gammazl);
-    sh_tempy3[tx] = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_zy*gammazl);
-    sh_tempz3[tx] = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl);
-  }
 
   // re-assigns sh_hprime_xx to load hprimewgll
   // note: the sync seems to be necessary, otherwise there is more jitter, not sure why...
@@ -2725,101 +2366,28 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
     load_shared_memory_hprimewgll(&tx,d_hprimewgll_xx,sh_hprime_xx);
   }
 
-  // synchronize all the threads (one thread for each of the NGLL grid points of the
-  // current spectral element) because we need the whole element to be ready in order
-  // to be able to compute the matrix products along cut planes of the 3D element below
+// JC JC here we will need to add GPU support for the new C-PML routines
   __syncthreads();
 
-// JC JC here we will need to add GPU support for the new C-PML routines
-
   if (active ){
+    // form dot product with test vector, symmetric form
+    // 1. cut-plane xi
+    __syncthreads();
+    get_dot_product(jacobianl,sigma_xx,sigma_xy,sigma_yx,sigma_xz,sigma_zx,sigma_yy,sigma_yz,sigma_zy,sigma_zz,
+                    xixl,xiyl,xizl,sh_tempx,sh_tempy,sh_tempz,tx,ispec_irreg,xix_regular,jacobian_regular,1);
+    sum_hprimewgll_xi(I,J,K,&tempx1l,&tempy1l,&tempz1l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx);
 
-#ifndef MANUALLY_UNROLLED_LOOPS
+    // 2. cut-plane eta
+    __syncthreads();
+    get_dot_product(jacobianl,sigma_xx,sigma_xy,sigma_yx,sigma_xz,sigma_zx,sigma_yy,sigma_yz,sigma_zy,sigma_zz,
+                    etaxl,etayl,etazl,sh_tempx,sh_tempy,sh_tempz,tx,ispec_irreg,xix_regular,jacobian_regular,2);
+    sum_hprimewgll_eta(I,J,K,&tempx2l,&tempy2l,&tempz2l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx);
 
-    tempx1l = 0.f;
-    tempy1l = 0.f;
-    tempz1l = 0.f;
-
-    tempx2l = 0.f;
-    tempy2l = 0.f;
-    tempz2l = 0.f;
-
-    tempx3l = 0.f;
-    tempy3l = 0.f;
-    tempz3l = 0.f;
-
-    for (l=0;l<NGLLX;l++) {
-      // assumes hprimewgll_xx == hprimewgll_yy == hprimewgll_zz
-      fac1 = sh_hprime_xx[I*NGLLX+l]; //  d_hprimewgll_xx[I*NGLLX+l];
-      tempx1l += sh_tempx1[K*NGLL2+J*NGLLX+l]*fac1;
-      tempy1l += sh_tempy1[K*NGLL2+J*NGLLX+l]*fac1;
-      tempz1l += sh_tempz1[K*NGLL2+J*NGLLX+l]*fac1;
-
-      fac2 = sh_hprime_xx[J*NGLLX+l]; // d_hprimewgll_xx[J*NGLLX+l];
-      tempx2l += sh_tempx2[K*NGLL2+l*NGLLX+I]*fac2;
-      tempy2l += sh_tempy2[K*NGLL2+l*NGLLX+I]*fac2;
-      tempz2l += sh_tempz2[K*NGLL2+l*NGLLX+I]*fac2;
-
-      fac3 = sh_hprime_xx[K*NGLLX+l]; // d_hprimewgll_xx[K*NGLLX+l];
-      tempx3l += sh_tempx3[l*NGLL2+J*NGLLX+I]*fac3;
-      tempy3l += sh_tempy3[l*NGLL2+J*NGLLX+I]*fac3;
-      tempz3l += sh_tempz3[l*NGLL2+J*NGLLX+I]*fac3;
-    }
-#else
-    tempx1l = sh_tempx1[K*NGLL2+J*NGLLX]*d_hprimewgll_xx[I*NGLLX]
-            + sh_tempx1[K*NGLL2+J*NGLLX+1]*d_hprimewgll_xx[I*NGLLX+1]
-            + sh_tempx1[K*NGLL2+J*NGLLX+2]*d_hprimewgll_xx[I*NGLLX+2]
-            + sh_tempx1[K*NGLL2+J*NGLLX+3]*d_hprimewgll_xx[I*NGLLX+3]
-            + sh_tempx1[K*NGLL2+J*NGLLX+4]*d_hprimewgll_xx[I*NGLLX+4];
-
-    tempy1l = sh_tempy1[K*NGLL2+J*NGLLX]*d_hprimewgll_xx[I*NGLLX]
-            + sh_tempy1[K*NGLL2+J*NGLLX+1]*d_hprimewgll_xx[I*NGLLX+1]
-            + sh_tempy1[K*NGLL2+J*NGLLX+2]*d_hprimewgll_xx[I*NGLLX+2]
-            + sh_tempy1[K*NGLL2+J*NGLLX+3]*d_hprimewgll_xx[I*NGLLX+3]
-            + sh_tempy1[K*NGLL2+J*NGLLX+4]*d_hprimewgll_xx[I*NGLLX+4];
-
-    tempz1l = sh_tempz1[K*NGLL2+J*NGLLX]*d_hprimewgll_xx[I*NGLLX]
-            + sh_tempz1[K*NGLL2+J*NGLLX+1]*d_hprimewgll_xx[I*NGLLX+1]
-            + sh_tempz1[K*NGLL2+J*NGLLX+2]*d_hprimewgll_xx[I*NGLLX+2]
-            + sh_tempz1[K*NGLL2+J*NGLLX+3]*d_hprimewgll_xx[I*NGLLX+3]
-            + sh_tempz1[K*NGLL2+J*NGLLX+4]*d_hprimewgll_xx[I*NGLLX+4];
-
-    tempx2l = sh_tempx2[K*NGLL2+I]*d_hprimewgll_xx[J*NGLLX]
-            + sh_tempx2[K*NGLL2+NGLLX+I]*d_hprimewgll_xx[J*NGLLX+1]
-            + sh_tempx2[K*NGLL2+2*NGLLX+I]*d_hprimewgll_xx[J*NGLLX+2]
-            + sh_tempx2[K*NGLL2+3*NGLLX+I]*d_hprimewgll_xx[J*NGLLX+3]
-            + sh_tempx2[K*NGLL2+4*NGLLX+I]*d_hprimewgll_xx[J*NGLLX+4];
-
-    tempy2l = sh_tempy2[K*NGLL2+I]*d_hprimewgll_xx[J*NGLLX]
-            + sh_tempy2[K*NGLL2+NGLLX+I]*d_hprimewgll_xx[J*NGLLX+1]
-            + sh_tempy2[K*NGLL2+2*NGLLX+I]*d_hprimewgll_xx[J*NGLLX+2]
-            + sh_tempy2[K*NGLL2+3*NGLLX+I]*d_hprimewgll_xx[J*NGLLX+3]
-            + sh_tempy2[K*NGLL2+4*NGLLX+I]*d_hprimewgll_xx[J*NGLLX+4];
-
-    tempz2l = sh_tempz2[K*NGLL2+I]*d_hprimewgll_xx[J*NGLLX]
-            + sh_tempz2[K*NGLL2+NGLLX+I]*d_hprimewgll_xx[J*NGLLX+1]
-            + sh_tempz2[K*NGLL2+2*NGLLX+I]*d_hprimewgll_xx[J*NGLLX+2]
-            + sh_tempz2[K*NGLL2+3*NGLLX+I]*d_hprimewgll_xx[J*NGLLX+3]
-            + sh_tempz2[K*NGLL2+4*NGLLX+I]*d_hprimewgll_xx[J*NGLLX+4];
-
-    tempx3l = sh_tempx3[J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX]
-            + sh_tempx3[NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+1]
-            + sh_tempx3[2*NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+2]
-            + sh_tempx3[3*NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+3]
-            + sh_tempx3[4*NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+4];
-
-    tempy3l = sh_tempy3[J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX]
-            + sh_tempy3[NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+1]
-            + sh_tempy3[2*NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+2]
-            + sh_tempy3[3*NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+3]
-            + sh_tempy3[4*NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+4];
-
-    tempz3l = sh_tempz3[J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX]
-            + sh_tempz3[NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+1]
-            + sh_tempz3[2*NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+2]
-            + sh_tempz3[3*NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+3]
-            + sh_tempz3[4*NGLL2+J*NGLLX+I]*d_hprimewgll_xx[K*NGLLX+4];
-#endif
+    // 3. cut-plane gamma
+    __syncthreads();
+    get_dot_product(jacobianl,sigma_xx,sigma_xy,sigma_yx,sigma_xz,sigma_zx,sigma_yy,sigma_yz,sigma_zy,sigma_zz,
+                    gammaxl,gammayl,gammazl,sh_tempx,sh_tempy,sh_tempz,tx,ispec_irreg,xix_regular,jacobian_regular,3);
+    sum_hprimewgll_gamma(I,J,K,&tempx3l,&tempy3l,&tempz3l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx);
 
     fac1 = d_wgllwgll_yz[K*NGLLX+J];
     fac2 = d_wgllwgll_xz[K*NGLLX+I];
@@ -2879,7 +2447,7 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
     // attenuation
     // update memory variables based upon the Runge-Kutta scheme
     compute_element_att_memory(tx,working_element,NSPEC,
-                               d_muv,
+                               mul,
                                factor_common,alphaval,betaval,gammaval,
                                R_xx,R_yy,R_xy,R_xz,R_yz,
                                epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,
@@ -3622,17 +3190,19 @@ Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
                         const int* d_ibool,
                         const int* d_phase_ispec_inner_elastic,const int num_phase_ispec_elastic,
                         const int d_iphase,
+                        const int* d_irregular_element_number,
                         realw* d_kelvin_voigt_eta,
                         realw_const_p d_displ,
                         realw_const_p d_veloc,
                         realw_p d_accel,
-                        realw* d_xix,realw* d_xiy,realw* d_xiz,
-                        realw* d_etax,realw* d_etay,realw* d_etaz,
-                        realw* d_gammax,realw* d_gammay,realw* d_gammaz,
+                        realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
+                        realw_const_p d_etax,realw_const_p d_etay,realw_const_p d_etaz,
+                        realw_const_p d_gammax,realw_const_p d_gammay,realw_const_p d_gammaz,
+                        const realw xix_regular,const realw jacobian_regular,
                         realw_const_p d_hprime_xx,
                         realw_const_p d_hprimewgll_xx,
                         realw_const_p d_wgllwgll_xy,realw_const_p d_wgllwgll_xz,realw_const_p d_wgllwgll_yz,
-                        realw* d_kappav,realw* d_muv){
+                        realw_const_p d_kappav,realw_const_p d_muv){
 
 // elastic compute kernel without attenuation for isotropic elements with kelvin voigt damping aroung the fault
 //
@@ -3657,7 +3227,7 @@ Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
 
   int I,J,K;
   int iglob,offset;
-  int working_element;
+  int working_element,ispec_irreg;
 
   realw tempx1l,tempx2l,tempx3l,tempy1l,tempy2l,tempy3l,tempz1l,tempz2l,tempz3l;
   realw xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl;
@@ -3718,6 +3288,7 @@ Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
   // spectral-element id
   // iphase-1 and working_element-1 for Fortran->C array conventions
   working_element = d_phase_ispec_inner_elastic[bx + num_phase_ispec_elastic*(d_iphase-1)] - 1;
+  ispec_irreg = d_irregular_element_number[working_element] - 1;
 
   // local padded index
   offset = working_element*NGLL3_PADDED + tx;
@@ -3753,39 +3324,6 @@ Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
 //
 // + 2 * 1 float * 128 threads = 1024 BYTE
 
-  // loads mesh values here to give compiler possibility to overlap memory fetches with some computations
-  // note: arguments defined as realw* instead of const realw* __restrict__ to avoid that the compiler
-  //       loads all memory by texture loads
-  //       we only use the first loads explicitly by texture loads, all subsequent without. this should lead/trick
-  //       the compiler to use global memory loads for all the subsequent accesses.
-  //
-  // calculates laplacian
-  xixl = get_global_cr( &d_xix[offset] ); // first array with texture load
-  xiyl = get_global_cr( &d_xiy[offset] ); // first array with texture load
-  xizl = get_global_cr( &d_xiz[offset] ); // first array with texture load
-
-//  xixl = d_xix[offset]; // first array with texture load
-//  xiyl = d_xiy[offset]; // all subsequent without to avoid over-use of texture for coalescent access
-//  xizl = d_xiz[offset];
-
-  etaxl = d_etax[offset];
-  etayl = d_etay[offset];
-  etazl = d_etaz[offset];
-
-  gammaxl = d_gammax[offset];
-  gammayl = d_gammay[offset];
-  gammazl = d_gammaz[offset];
-
-  jacobianl = 1.f / (xixl*(etayl*gammazl-etazl*gammayl)
-                    -xiyl*(etaxl*gammazl-etazl*gammaxl)
-                    +xizl*(etaxl*gammayl-etayl*gammaxl));
-
-// counts:
-// + 15 FLOP
-//
-// + 9 float * 128 threads = 4608 BYTE
-
-
 
   // local index
   K = (tx/NGLL2);
@@ -3802,36 +3340,14 @@ Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
   // to be able to compute the matrix products along cut planes of the 3D element below
   __syncthreads();
 
-  // computes first matrix products
-  // 1. cut-plane
-  sum_hprime_xi(I,J,K,&tempx1l,&tempy1l,&tempz1l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx);
-  // 2. cut-plane
-  sum_hprime_eta(I,J,K,&tempx2l,&tempy2l,&tempz2l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx);
-  // 3. cut-plane
-  sum_hprime_gamma(I,J,K,&tempx3l,&tempy3l,&tempz3l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx);
+  // computes the spatial derivatives duxdxl ... depending on the regularity of the element
+  get_spatial_derivatives(&xixl,&xiyl,&xizl,&etaxl,&etayl,&etazl,
+                          &gammaxl,&gammayl,&gammazl,&jacobianl,I,J,K,tx,
+                          &tempx1l,&tempy1l,&tempz1l,&tempx2l,&tempy2l,&tempz2l,
+                          &tempx3l,&tempy3l,&tempz3l,sh_tempx,sh_tempy,sh_tempz,sh_hprime_xx,
+                          &duxdxl,&duxdyl,&duxdzl,&duydxl,&duydyl,&duydzl,&duzdxl,&duzdyl,&duzdzl,
+                          d_xix,d_xiy,d_xiz,d_etax,d_etay,d_etaz,d_gammax,d_gammay,d_gammaz,ispec_irreg,xix_regular,0);
 
-// counts:
-// + 3 * 100 FLOP = 300 FLOP
-//
-// + 0 BYTE
-
-  // compute derivatives of ux, uy and uz with respect to x, y and z
-  duxdxl = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l;
-  duxdyl = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l;
-  duxdzl = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l;
-
-  duydxl = xixl*tempy1l + etaxl*tempy2l + gammaxl*tempy3l;
-  duydyl = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l;
-  duydzl = xizl*tempy1l + etazl*tempy2l + gammazl*tempy3l;
-
-  duzdxl = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l;
-  duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l;
-  duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l;
-
-// counts:
-// + 9 * 5 FLOP = 45 FLOP
-//
-// + 0 BYTE
 
   // precompute some sums to save CPU time
   duxdxl_plus_duydyl = duxdxl + duydyl;
@@ -3862,42 +3378,24 @@ Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
 // + 22 FLOP
 //
 // + 0 BYTE
-
   // form dot product with test vector, symmetric form
+
   // 1. cut-plane xi
   __syncthreads();
-  // fills shared memory arrays
-  if (threadIdx.x < NGLL3) {
-    sh_tempx[tx] = jacobianl * (sigma_xx*xixl + sigma_xy*xiyl + sigma_xz*xizl); // sh_tempx1
-    sh_tempy[tx] = jacobianl * (sigma_xy*xixl + sigma_yy*xiyl + sigma_yz*xizl); // sh_tempy1
-    sh_tempz[tx] = jacobianl * (sigma_xz*xixl + sigma_yz*xiyl + sigma_zz*xizl); // sh_tempz1
-  }
-  __syncthreads();
-  // 1. cut-plane xi
+  get_dot_product(jacobianl,sigma_xx,sigma_xy,sigma_xy,sigma_xz,sigma_xz,sigma_yy,sigma_yz,sigma_yz,sigma_zz,
+                  xixl,xiyl,xizl,sh_tempx,sh_tempy,sh_tempz,tx,ispec_irreg,xix_regular,jacobian_regular,1);
   sum_hprimewgll_xi(I,J,K,&tempx1l,&tempy1l,&tempz1l,sh_tempx,sh_tempy,sh_tempz,sh_hprimewgll_xx);
 
   // 2. cut-plane eta
   __syncthreads();
-  // fills shared memory arrays
-  if (threadIdx.x < NGLL3) {
-    sh_tempx[tx] = jacobianl * (sigma_xx*etaxl + sigma_xy*etayl + sigma_xz*etazl); // sh_tempx2
-    sh_tempy[tx] = jacobianl * (sigma_xy*etaxl + sigma_yy*etayl + sigma_yz*etazl); // sh_tempy2
-    sh_tempz[tx] = jacobianl * (sigma_xz*etaxl + sigma_yz*etayl + sigma_zz*etazl); // sh_tempz2
-  }
-  __syncthreads();
-  // 2. cut-plane eta
+  get_dot_product(jacobianl,sigma_xx,sigma_xy,sigma_xy,sigma_xz,sigma_xz,sigma_yy,sigma_yz,sigma_yz,sigma_zz,
+                  etaxl,etayl,etazl,sh_tempx,sh_tempy,sh_tempz,tx,ispec_irreg,xix_regular,jacobian_regular,2);
   sum_hprimewgll_eta(I,J,K,&tempx2l,&tempy2l,&tempz2l,sh_tempx,sh_tempy,sh_tempz,sh_hprimewgll_xx);
 
   // 3. cut-plane gamma
   __syncthreads();
-  // fills shared memory arrays
-  if (threadIdx.x < NGLL3) {
-    sh_tempx[tx] = jacobianl * (sigma_xx*gammaxl + sigma_xy*gammayl + sigma_xz*gammazl); // sh_tempx3
-    sh_tempy[tx] = jacobianl * (sigma_xy*gammaxl + sigma_yy*gammayl + sigma_yz*gammazl); // sh_tempy3
-    sh_tempz[tx] = jacobianl * (sigma_xz*gammaxl + sigma_yz*gammayl + sigma_zz*gammazl); // sh_tempz3
-  }
-  __syncthreads();
-  // 3. cut-plane gamma
+  get_dot_product(jacobianl,sigma_xx,sigma_xy,sigma_xy,sigma_xz,sigma_xz,sigma_yy,sigma_yz,sigma_yz,sigma_zz,
+                  gammaxl,gammayl,gammazl,sh_tempx,sh_tempy,sh_tempz,tx,ispec_irreg,xix_regular,jacobian_regular,3);
   sum_hprimewgll_gamma(I,J,K,&tempx3l,&tempy3l,&tempz3l,sh_tempx,sh_tempy,sh_tempz,sh_hprimewgll_xx);
 
 // counts:
@@ -4004,12 +3502,14 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                 mp->d_phase_ispec_inner_elastic,
                                                                 mp->num_phase_ispec_elastic,
                                                                 d_iphase,
+                                                                mp->d_irregular_element_number,
                                                                 mp->use_mesh_coloring_gpu,
                                                                 d_deltat,
                                                                 mp->d_displ,mp->d_veloc,mp->d_accel,
                                                                 d_xix, d_xiy, d_xiz,
                                                                 d_etax, d_etay, d_etaz,
                                                                 d_gammax, d_gammay, d_gammaz,
+                                                                mp->xix_regular,mp->jacobian_regular,
                                                                 mp->d_hprime_xx,
                                                                 mp->d_hprimewgll_xx,
                                                                 mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
@@ -4044,12 +3544,14 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                    mp->d_phase_ispec_inner_elastic,
                                                                    mp->num_phase_ispec_elastic,
                                                                    d_iphase,
+                                                                   mp->d_irregular_element_number,
                                                                    mp->use_mesh_coloring_gpu,
                                                                    d_deltat,
                                                                    mp->d_b_displ,mp->d_b_veloc,mp->d_b_accel,
                                                                    d_xix, d_xiy, d_xiz,
                                                                    d_etax, d_etay, d_etaz,
                                                                    d_gammax, d_gammay, d_gammaz,
+                                                                   mp->xix_regular,mp->jacobian_regular,
                                                                    mp->d_hprime_xx,
                                                                    mp->d_hprimewgll_xx,
                                                                    mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
@@ -4086,12 +3588,14 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                         d_ibool,
                                                                         mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
                                                                         d_iphase,
+                                                                        mp->d_irregular_element_number,
                                                                         mp->use_mesh_coloring_gpu,
                                                                         mp->d_displ,
                                                                         mp->d_accel,
                                                                         d_xix, d_xiy, d_xiz,
                                                                         d_etax, d_etay, d_etaz,
                                                                         d_gammax, d_gammay, d_gammaz,
+                                                                        mp->xix_regular,mp->jacobian_regular,
                                                                         mp->d_hprime_xx,
                                                                         mp->d_hprimewgll_xx,
                                                                         mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
@@ -4114,7 +3618,6 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                         mp->d_minus_deriv_gravity,
                                                                         d_rhostore,
                                                                         mp->d_wgll_cube );
-
       // backward/reconstructed wavefield
       if (mp->simulation_type == 3) {
         // backward/reconstructed wavefields -> FORWARD_OR_ADJOINT == 3
@@ -4122,12 +3625,14 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                            d_ibool,
                                                                            mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
                                                                            d_iphase,
+                                                                           mp->d_irregular_element_number,
                                                                            mp->use_mesh_coloring_gpu,
                                                                            mp->d_b_displ,
                                                                            mp->d_b_accel,
                                                                            d_xix, d_xiy, d_xiz,
                                                                            d_etax, d_etay, d_etaz,
                                                                            d_gammax, d_gammay, d_gammaz,
+                                                                           mp->xix_regular,mp->jacobian_regular,
                                                                            mp->d_hprime_xx,
                                                                            mp->d_hprimewgll_xx,
                                                                            mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
@@ -4160,12 +3665,14 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                           d_ibool,
                                                                           mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
                                                                           d_iphase,
+                                                                          mp->d_irregular_element_number,
                                                                           mp->use_mesh_coloring_gpu,
                                                                           mp->d_displ,
                                                                           mp->d_accel,
                                                                           d_xix, d_xiy, d_xiz,
                                                                           d_etax, d_etay, d_etaz,
                                                                           d_gammax, d_gammay, d_gammaz,
+                                                                          mp->xix_regular,mp->jacobian_regular,
                                                                           mp->d_hprime_xx,
                                                                           mp->d_hprimewgll_xx,
                                                                           mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
@@ -4188,12 +3695,14 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                              d_ibool,
                                                                              mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
                                                                              d_iphase,
+                                                                             mp->d_irregular_element_number,
                                                                              mp->use_mesh_coloring_gpu,
                                                                              mp->d_b_displ,
                                                                              mp->d_b_accel,
                                                                              d_xix, d_xiy, d_xiz,
                                                                              d_etax, d_etay, d_etaz,
                                                                              d_gammax, d_gammay, d_gammaz,
+                                                                             mp->xix_regular,mp->jacobian_regular,
                                                                              mp->d_hprime_xx,
                                                                              mp->d_hprimewgll_xx,
                                                                              mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
@@ -4266,11 +3775,13 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                               d_ibool,
                                                                               mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
                                                                               d_iphase,
+                                                                              mp->d_irregular_element_number,
                                                                               mp->d_displ,
                                                                               mp->d_accel,
                                                                               d_xix, d_xiy, d_xiz,
                                                                               d_etax, d_etay, d_etaz,
                                                                               d_gammax, d_gammay, d_gammaz,
+                                                                              mp->xix_regular,mp->jacobian_regular,
                                                                               mp->d_hprime_xx,
                                                                               mp->d_hprimewgll_xx,
                                                                               mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
@@ -4288,11 +3799,13 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                                  d_ibool,
                                                                                  mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
                                                                                  d_iphase,
+                                                                                 mp->d_irregular_element_number,
                                                                                  mp->d_b_displ,
                                                                                  mp->d_b_accel,
                                                                                  d_xix, d_xiy, d_xiz,
                                                                                  d_etax, d_etay, d_etaz,
                                                                                  d_gammax, d_gammay, d_gammaz,
+                                                                                 mp->xix_regular,mp->jacobian_regular,
                                                                                  mp->d_hprime_xx,
                                                                                  mp->d_hprimewgll_xx,
                                                                                  mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
@@ -4310,6 +3823,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                                            d_ibool,
                                                                                            mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
                                                                                            d_iphase,
+                                                                                           mp->d_irregular_element_number,
                                                                                            mp->d_Kelvin_Voigt_eta,
                                                                                            mp->d_displ,
                                                                                            mp->d_veloc,
@@ -4317,6 +3831,7 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                                            d_xix, d_xiy, d_xiz,
                                                                                            d_etax, d_etay, d_etaz,
                                                                                            d_gammax, d_gammay, d_gammaz,
+                                                                                           mp->xix_regular,mp->jacobian_regular,
                                                                                            mp->d_hprime_xx,
                                                                                            mp->d_hprimewgll_xx,
                                                                                            mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
@@ -4329,11 +3844,13 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                               d_ibool,
                                                                               mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
                                                                               d_iphase,
+                                                                              mp->d_irregular_element_number,
                                                                               mp->d_displ,
                                                                               mp->d_accel,
                                                                               d_xix, d_xiy, d_xiz,
                                                                               d_etax, d_etay, d_etaz,
                                                                               d_gammax, d_gammay, d_gammaz,
+                                                                              mp->xix_regular,mp->jacobian_regular,
                                                                               mp->d_hprime_xx,
                                                                               mp->d_hprimewgll_xx,
                                                                               mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,
@@ -4346,11 +3863,13 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                                  d_ibool,
                                                                                  mp->d_phase_ispec_inner_elastic,mp->num_phase_ispec_elastic,
                                                                                  d_iphase,
+                                                                                 mp->d_irregular_element_number,
                                                                                  mp->d_b_displ,
                                                                                  mp->d_b_accel,
                                                                                  d_xix, d_xiy, d_xiz,
                                                                                  d_etax, d_etay, d_etaz,
                                                                                  d_gammax, d_gammay, d_gammaz,
+                                                                                 mp->xix_regular,mp->jacobian_regular,
                                                                                  mp->d_hprime_xx,
                                                                                  mp->d_hprimewgll_xx,
                                                                                  mp->d_wgllwgll_xy, mp->d_wgllwgll_xz, mp->d_wgllwgll_yz,

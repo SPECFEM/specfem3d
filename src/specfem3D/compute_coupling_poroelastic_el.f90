@@ -27,77 +27,31 @@
 
 ! for poroelastic solver
 
-  subroutine compute_coupling_poroelastic_el(NSPEC_AB,NGLOB_AB,ibool, &
-                        displs_poroelastic,accels_poroelastic,displw_poroelastic, &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        hprime_xx,hprime_yy,hprime_zz, &
-                        kappaarraystore,rhoarraystore,mustore, &
-                        phistore,tortstore,jacobian, &
-                        displ,kappastore, &
-                        ANISOTROPY,NSPEC_ANISO, &
-                        c11store,c12store,c13store,c14store,c15store,c16store, &
-                        c22store,c23store,c24store,c25store,c26store,c33store, &
-                        c34store,c35store,c36store,c44store,c45store,c46store, &
-                        c55store,c56store,c66store, &
-                        SIMULATION_TYPE,NGLOB_ADJOINT,NSPEC_ADJOINT, &
-                        num_coupling_el_po_faces, &
-                        coupling_el_po_ispec,coupling_po_el_ispec, &
-                        coupling_el_po_ijk,coupling_po_el_ijk, &
-                        coupling_el_po_normal, &
-                        coupling_el_po_jacobian2Dw, &
-                        iphase)
+  subroutine compute_coupling_poroelastic_el(iphase)
 
 ! returns the updated accelerations array: accels_poroelatsic (& accelw_poroelastic )
 
   use constants
+  use specfem_par, only : ibool,xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
+                          hprime_xx,hprime_yy,hprime_zz, &
+                          mustore,kappastore, &
+                          SIMULATION_TYPE,NGLOB_ADJOINT,NSPEC_ADJOINT,ANISOTROPY, &
+                          irregular_element_number,xix_regular
 
+  use specfem_par_poroelastic, only :  displs_poroelastic,accels_poroelastic,displw_poroelastic, &
+                                       kappaarraystore,rhoarraystore, &
+                                       phistore,tortstore,num_coupling_el_po_faces, &
+                                       coupling_el_po_ispec,coupling_po_el_ispec, &
+                                       coupling_el_po_ijk,coupling_po_el_ijk, &
+                                       coupling_el_po_normal, &
+                                       coupling_el_po_jacobian2Dw
+
+  use specfem_par_elastic, only : displ, &
+                                  c11store,c12store,c13store,c14store,c15store,c16store, &
+                                  c22store,c23store,c24store,c25store,c26store,c33store, &
+                                  c34store,c35store,c36store,c44store,c45store,c46store, &
+                                  c55store,c56store,c66store 
   implicit none
-
-  integer :: NSPEC_AB,NGLOB_AB
-
-! displacements, etc
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displs_poroelastic,accels_poroelastic, &
-                                                      displw_poroelastic
-  real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displ
-
-! global indexing
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
-        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz
-
-  integer :: SIMULATION_TYPE
-  integer :: NGLOB_ADJOINT,NSPEC_ADJOINT
-
-! elastic-poroelastic coupling surface
-  integer :: num_coupling_el_po_faces
-  real(kind=CUSTOM_REAL) :: coupling_el_po_normal(NDIM,NGLLSQUARE,num_coupling_el_po_faces)
-  real(kind=CUSTOM_REAL) :: coupling_el_po_jacobian2Dw(NGLLSQUARE,num_coupling_el_po_faces)
-  integer :: coupling_el_po_ijk(3,NGLLSQUARE,num_coupling_el_po_faces)
-  integer :: coupling_po_el_ijk(3,NGLLSQUARE,num_coupling_el_po_faces)
-  integer :: coupling_el_po_ispec(num_coupling_el_po_faces)
-  integer :: coupling_po_el_ispec(num_coupling_el_po_faces)
-
-! properties
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
-        phistore,tortstore,jacobian
-  real(kind=CUSTOM_REAL), dimension(2,NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: rhoarraystore
-  real(kind=CUSTOM_REAL), dimension(3,NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: kappaarraystore
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: &
-        kappastore,mustore
-
-! anisotropy
-  logical :: ANISOTROPY
-  integer :: NSPEC_ANISO
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO) :: &
-            c11store,c12store,c13store,c14store,c15store,c16store, &
-            c22store,c23store,c24store,c25store,c26store,c33store, &
-            c34store,c35store,c36store,c44store,c45store,c46store, &
-            c55store,c56store,c66store
-
-! array with derivatives of Lagrange polynomials and precalculated products
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLX) :: hprime_xx
-  real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLY) :: hprime_yy
-  real(kind=CUSTOM_REAL), dimension(NGLLZ,NGLLZ) :: hprime_zz
 
 ! communication overlap
   integer :: iphase
@@ -119,7 +73,7 @@
                         c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
 
   integer :: iface,igll,ispec_po,ispec_el,iglob,iglob_po,iglob_el
-  integer :: i,j,k,l
+  integer :: i,j,k,l,ispec_irreg_po,ispec_irreg_el
 
   real(kind=CUSTOM_REAL) tempx1l,tempx2l,tempx3l
   real(kind=CUSTOM_REAL) tempy1l,tempy2l,tempy3l
@@ -138,7 +92,7 @@
   real(kind=CUSTOM_REAL) hp1,hp2,hp3
 
 ! Jacobian matrix and determinant
-  real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl,jacobianl
+  real(kind=CUSTOM_REAL) :: xixl,xiyl,xizl,etaxl,etayl,etazl,gammaxl,gammayl,gammazl
 
   ! only add these contributions in first pass
   if (iphase /= 1) return
@@ -149,6 +103,9 @@
     ! gets corresponding poro/elastic spectral element
     ispec_po = coupling_el_po_ispec(iface)
     ispec_el = coupling_po_el_ispec(iface)
+
+    ispec_irreg_po = irregular_element_number(ispec_po)
+    ispec_irreg_el = irregular_element_number(ispec_el)
 
     ! loops over common GLL points
     do igll = 1, NGLLSQUARE
@@ -197,29 +154,46 @@
         tempz3l = tempz3l + displ(3,iglob)*hp3
       enddo
 
-      ! get derivatives of ux, uy and uz with respect to x, y and z
-      xixl = xix(i,j,k,ispec_el)
-      xiyl = xiy(i,j,k,ispec_el)
-      xizl = xiz(i,j,k,ispec_el)
-      etaxl = etax(i,j,k,ispec_el)
-      etayl = etay(i,j,k,ispec_el)
-      etazl = etaz(i,j,k,ispec_el)
-      gammaxl = gammax(i,j,k,ispec_el)
-      gammayl = gammay(i,j,k,ispec_el)
-      gammazl = gammaz(i,j,k,ispec_el)
-      jacobianl = jacobian(i,j,k,ispec_el)
+      if (ispec_irreg_el /= 0 ) then !irregular element
 
-      duxdxl = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
-      duxdyl = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
-      duxdzl = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
+        ! get derivatives of ux, uy and uz with respect to x, y and z
+        xixl = xix(i,j,k,ispec_irreg_el)
+        xiyl = xiy(i,j,k,ispec_irreg_el)
+        xizl = xiz(i,j,k,ispec_irreg_el)
+        etaxl = etax(i,j,k,ispec_irreg_el)
+        etayl = etay(i,j,k,ispec_irreg_el)
+        etazl = etaz(i,j,k,ispec_irreg_el)
+        gammaxl = gammax(i,j,k,ispec_irreg_el)
+        gammayl = gammay(i,j,k,ispec_irreg_el)
+        gammazl = gammaz(i,j,k,ispec_irreg_el)
 
-      duydxl = xixl*tempy1l + etaxl*tempy2l + gammaxl*tempy3l
-      duydyl = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l
-      duydzl = xizl*tempy1l + etazl*tempy2l + gammazl*tempy3l
+        duxdxl = xixl*tempx1l + etaxl*tempx2l + gammaxl*tempx3l
+        duxdyl = xiyl*tempx1l + etayl*tempx2l + gammayl*tempx3l
+        duxdzl = xizl*tempx1l + etazl*tempx2l + gammazl*tempx3l
 
-      duzdxl = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l
-      duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l
-      duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l
+        duydxl = xixl*tempy1l + etaxl*tempy2l + gammaxl*tempy3l
+        duydyl = xiyl*tempy1l + etayl*tempy2l + gammayl*tempy3l
+        duydzl = xizl*tempy1l + etazl*tempy2l + gammazl*tempy3l
+
+        duzdxl = xixl*tempz1l + etaxl*tempz2l + gammaxl*tempz3l
+        duzdyl = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l
+        duzdzl = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l
+
+      else ! regular element
+
+        duxdxl = xix_regular*tempx1l
+        duxdyl = xix_regular*tempx2l
+        duxdzl = xix_regular*tempx3l
+
+        duydxl = xix_regular*tempy1l
+        duydyl = xix_regular*tempy2l
+        duydzl = xix_regular*tempy3l
+
+        duzdxl = xix_regular*tempz1l
+        duzdyl = xix_regular*tempz2l
+        duzdzl = xix_regular*tempz3l
+
+      endif
 
       ! precompute some sums to save CPU time
       duxdxl_plus_duydyl = duxdxl + duydyl
@@ -393,41 +367,72 @@
         endif ! adjoint
       enddo
 
-      xixl = xix(i,j,k,ispec_po)
-      xiyl = xiy(i,j,k,ispec_po)
-      xizl = xiz(i,j,k,ispec_po)
-      etaxl = etax(i,j,k,ispec_po)
-      etayl = etay(i,j,k,ispec_po)
-      etazl = etaz(i,j,k,ispec_po)
-      gammaxl = gammax(i,j,k,ispec_po)
-      gammayl = gammay(i,j,k,ispec_po)
-      gammazl = gammaz(i,j,k,ispec_po)
-      jacobianl = jacobian(i,j,k,ispec_po)
+      if (ispec_irreg_po /= 0 ) then !irregular element
 
-      ! derivatives of displacement
-      duxdxl = xixl*tempx1ls + etaxl*tempx2ls + gammaxl*tempx3ls
-      duxdyl = xiyl*tempx1ls + etayl*tempx2ls + gammayl*tempx3ls
-      duxdzl = xizl*tempx1ls + etazl*tempx2ls + gammazl*tempx3ls
+        ! get derivatives of ux, uy and uz with respect to x, y and z
+        xixl = xix(i,j,k,ispec_irreg_po)
+        xiyl = xiy(i,j,k,ispec_irreg_po)
+        xizl = xiz(i,j,k,ispec_irreg_po)
+        etaxl = etax(i,j,k,ispec_irreg_po)
+        etayl = etay(i,j,k,ispec_irreg_po)
+        etazl = etaz(i,j,k,ispec_irreg_po)
+        gammaxl = gammax(i,j,k,ispec_irreg_po)
+        gammayl = gammay(i,j,k,ispec_irreg_po)
+        gammazl = gammaz(i,j,k,ispec_irreg_po)
 
-      duydxl = xixl*tempy1ls + etaxl*tempy2ls + gammaxl*tempy3ls
-      duydyl = xiyl*tempy1ls + etayl*tempy2ls + gammayl*tempy3ls
-      duydzl = xizl*tempy1ls + etazl*tempy2ls + gammazl*tempy3ls
+        ! derivatives of displacement
+        duxdxl = xixl*tempx1ls + etaxl*tempx2ls + gammaxl*tempx3ls
+        duxdyl = xiyl*tempx1ls + etayl*tempx2ls + gammayl*tempx3ls
+        duxdzl = xizl*tempx1ls + etazl*tempx2ls + gammazl*tempx3ls
 
-      duzdxl = xixl*tempz1ls + etaxl*tempz2ls + gammaxl*tempz3ls
-      duzdyl = xiyl*tempz1ls + etayl*tempz2ls + gammayl*tempz3ls
-      duzdzl = xizl*tempz1ls + etazl*tempz2ls + gammazl*tempz3ls
+        duydxl = xixl*tempy1ls + etaxl*tempy2ls + gammaxl*tempy3ls
+        duydyl = xiyl*tempy1ls + etayl*tempy2ls + gammayl*tempy3ls
+        duydzl = xizl*tempy1ls + etazl*tempy2ls + gammazl*tempy3ls
 
-      dwxdxl = xixl*tempx1lw + etaxl*tempx2lw + gammaxl*tempx3lw
-      dwxdyl = xiyl*tempx1lw + etayl*tempx2lw + gammayl*tempx3lw
-      dwxdzl = xizl*tempx1lw + etazl*tempx2lw + gammazl*tempx3lw
+        duzdxl = xixl*tempz1ls + etaxl*tempz2ls + gammaxl*tempz3ls
+        duzdyl = xiyl*tempz1ls + etayl*tempz2ls + gammayl*tempz3ls
+        duzdzl = xizl*tempz1ls + etazl*tempz2ls + gammazl*tempz3ls
 
-      dwydxl = xixl*tempy1lw + etaxl*tempy2lw + gammaxl*tempy3lw
-      dwydyl = xiyl*tempy1lw + etayl*tempy2lw + gammayl*tempy3lw
-      dwydzl = xizl*tempy1lw + etazl*tempy2lw + gammazl*tempy3lw
+        dwxdxl = xixl*tempx1lw + etaxl*tempx2lw + gammaxl*tempx3lw
+        dwxdyl = xiyl*tempx1lw + etayl*tempx2lw + gammayl*tempx3lw
+        dwxdzl = xizl*tempx1lw + etazl*tempx2lw + gammazl*tempx3lw
 
-      dwzdxl = xixl*tempz1lw + etaxl*tempz2lw + gammaxl*tempz3lw
-      dwzdyl = xiyl*tempz1lw + etayl*tempz2lw + gammayl*tempz3lw
-      dwzdzl = xizl*tempz1lw + etazl*tempz2lw + gammazl*tempz3lw
+        dwydxl = xixl*tempy1lw + etaxl*tempy2lw + gammaxl*tempy3lw
+        dwydyl = xiyl*tempy1lw + etayl*tempy2lw + gammayl*tempy3lw
+        dwydzl = xizl*tempy1lw + etazl*tempy2lw + gammazl*tempy3lw
+
+        dwzdxl = xixl*tempz1lw + etaxl*tempz2lw + gammaxl*tempz3lw
+        dwzdyl = xiyl*tempz1lw + etayl*tempz2lw + gammayl*tempz3lw
+        dwzdzl = xizl*tempz1lw + etazl*tempz2lw + gammazl*tempz3lw
+      
+      else !regular element
+
+        ! derivatives of displacement
+        duxdxl = xix_regular*tempx1ls
+        duxdyl = xix_regular*tempx2ls
+        duxdzl = xix_regular*tempx3ls
+
+        duydxl = xix_regular*tempy1ls
+        duydyl = xix_regular*tempy2ls
+        duydzl = xix_regular*tempy3ls
+
+        duzdxl = xix_regular*tempz1ls
+        duzdyl = xix_regular*tempz2ls
+        duzdzl = xix_regular*tempz3ls
+
+        dwxdxl = xix_regular*tempx1lw
+        dwxdyl = xix_regular*tempx2lw
+        dwxdzl = xix_regular*tempx3lw
+
+        dwydxl = xix_regular*tempy1lw
+        dwydyl = xix_regular*tempy2lw
+        dwydzl = xix_regular*tempy3lw
+
+        dwzdxl = xix_regular*tempz1lw
+        dwzdyl = xix_regular*tempz2lw
+        dwzdzl = xix_regular*tempz3lw
+
+      endif
 
       ! precompute some sums to save CPU time
       duxdxl_plus_duydyl_plus_duzdzl = duxdxl + duydyl + duzdzl

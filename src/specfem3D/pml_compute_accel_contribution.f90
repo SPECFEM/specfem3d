@@ -36,7 +36,7 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
   ! Anisotropic-medium PML for vector FETD with modified basis functions,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
-  use specfem_par, only: NGLOB_AB,deltat,wgll_cube,jacobian,ibool,rhostore
+  use specfem_par, only: NGLOB_AB,deltat,wgll_cube,jacobian,ibool,rhostore,irregular_element_number,jacobian_regular
   use pml_par, only: CPML_regions,d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z, &
                      alpha_store_x, alpha_store_y, alpha_store_z, &
                      NSPEC_CPML,accel_elastic_CPML,PML_displ_old,PML_displ_new
@@ -50,12 +50,15 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLLX,NGLLY,NGLLZ,NSPEC_CPML,3) :: rmemory_displ_elastic
 
   ! local parameters
-  integer :: i,j,k,iglob,CPML_region_local
+  integer :: i,j,k,iglob,CPML_region_local,ispec_irreg
 
   real(kind=CUSTOM_REAL) :: wgllcube,rhol,jacobianl
   real(kind=CUSTOM_REAL) :: alpha_x,alpha_y,alpha_z,d_x,d_y,d_z,kappa_x,kappa_y,kappa_z
   real(kind=CUSTOM_REAL) :: coef0_x,coef1_x,coef2_x,coef0_y,coef1_y,coef2_y,coef0_z,coef1_z,coef2_z
   real(kind=CUSTOM_REAL) :: A_0,A_1,A_2,A_3,A_4,A_5
+
+  ispec_irreg = irregular_element_number(ispec)
+  if (ispec_irreg == 0) jacobianl = jacobian_regular
 
   do k=1,NGLLZ
     do j=1,NGLLY
@@ -63,7 +66,7 @@ subroutine pml_compute_accel_contribution_elastic(ispec,ispec_CPML,displ,veloc,r
         iglob = ibool(i,j,k,ispec)
 
         rhol = rhostore(i,j,k,ispec)
-        jacobianl = jacobian(i,j,k,ispec)
+        if (ispec_irreg /= 0) jacobianl = jacobian(i,j,k,ispec_irreg)
         wgllcube = wgll_cube(i,j,k)
 
         ! PML coefficient values
@@ -153,7 +156,7 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
   ! Anisotropic-medium PML for vector FETD with modified basis functions,
   ! IEEE Transactions on Antennas and Propagation, vol. 54, no. 1, (2006)
 
-  use specfem_par, only: NGLOB_AB,deltat,wgll_cube,jacobian,ibool,kappastore
+  use specfem_par, only: NGLOB_AB,deltat,wgll_cube,jacobian,ibool,kappastore,irregular_element_number,jacobian_regular
   use pml_par, only: CPML_regions,NSPEC_CPML,d_store_x,d_store_y,d_store_z,K_store_x,K_store_y,K_store_z, &
                      alpha_store_x, alpha_store_y, alpha_store_z, &
                      NSPEC_CPML,potential_dot_dot_acoustic_CPML, &
@@ -169,12 +172,15 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
 
 
   ! local parameters
-  integer :: i,j,k,iglob,CPML_region_local
+  integer :: i,j,k,iglob,CPML_region_local,ispec_irreg
 
   real(kind=CUSTOM_REAL) :: wgllcube,kappal_inv,jacobianl
   real(kind=CUSTOM_REAL) :: alpha_x,alpha_y,alpha_z,d_x,d_y,d_z,kappa_x,kappa_y,kappa_z
   real(kind=CUSTOM_REAL) :: coef0_x,coef1_x,coef2_x,coef0_y,coef1_y,coef2_y,coef0_z,coef1_z,coef2_z
   real(kind=CUSTOM_REAL) :: A_0,A_1,A_2,A_3,A_4,A_5
+
+  ispec_irreg = irregular_element_number(ispec)
+  if (ispec_irreg == 0) jacobianl = jacobian_regular
 
   do k=1,NGLLZ
     do j=1,NGLLY
@@ -182,7 +188,7 @@ subroutine pml_compute_accel_contribution_acoustic(ispec,ispec_CPML,potential_ac
         iglob = ibool(i,j,k,ispec)
 
         wgllcube = wgll_cube(i,j,k)
-        jacobianl = jacobian(i,j,k,ispec)
+        if (ispec_irreg /= 0) jacobianl = jacobian(i,j,k,ispec_irreg)
         kappal_inv = 1._CUSTOM_REAL / kappastore(i,j,k,ispec)
 
         ! PML coefficient values

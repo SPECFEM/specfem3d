@@ -157,6 +157,8 @@
   integer, dimension(:,:), allocatable  :: nodes_ibelm_moho
 
   integer :: nspec_total
+  integer :: nspec_irregular
+
 ! this can overflow if more than 2 Gigapoints in the whole mesh, thus replaced with double precision version
 ! integer :: nglob_total
   double precision :: nglob_total
@@ -198,6 +200,10 @@
 
   double precision, dimension(:), allocatable :: xelm,yelm,zelm
 
+! regular elements
+  real(kind=CUSTOM_REAL) :: xix_regular,jacobian_regular
+  integer, dimension(:), allocatable :: irregular_element_number
+
 ! arrays with mesh parameters
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: xixstore,xiystore,xizstore, &
     etaxstore,etaystore,etazstore,gammaxstore,gammaystore,gammazstore,jacobianstore
@@ -206,6 +212,7 @@
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rhostore,kappastore,mustore
 
 ! for poroelastic model
+  integer :: NSPEC_PORO
   real(kind=CUSTOM_REAL),dimension(:,:,:,:), allocatable :: etastore,phistore,tortstore
   real(kind=CUSTOM_REAL),dimension(:,:,:,:,:), allocatable :: rhoarraystore,kappaarraystore,permstore
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: rho_vpI,rho_vpII,rho_vsI

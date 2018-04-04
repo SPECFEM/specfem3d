@@ -104,25 +104,13 @@
       ! acoustic wave field
       if (ispec_is_acoustic(ispec)) then
         ! displacement vector
-        call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                        potential_acoustic,displ_element, &
-                        hprime_xx,hprime_yy,hprime_zz, &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        ibool,rhostore,GRAVITY)
+        call compute_gradient_in_acoustic(ispec,potential_acoustic,displ_element) 
 
         ! velocity vector
-        call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                        potential_dot_acoustic,veloc_element, &
-                        hprime_xx,hprime_yy,hprime_zz, &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        ibool,rhostore,GRAVITY)
+        call compute_gradient_in_acoustic(ispec,potential_dot_acoustic,veloc_element)
 
         ! acceleration vector
-        call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                        potential_dot_dot_acoustic,accel_element, &
-                        hprime_xx,hprime_yy,hprime_zz, &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        ibool,rhostore,GRAVITY)
+        call compute_gradient_in_acoustic(ispec,potential_dot_dot_acoustic,accel_element)
 
         ! interpolates displ/veloc/accel/pressure at receiver locations
         call compute_interpolated_dva_acoust(displ_element,veloc_element,accel_element, &
@@ -157,25 +145,13 @@
       ! acoustic wave field
       if (ispec_is_acoustic(ispec)) then
         ! backward field: displacement vector
-        call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_ADJOINT, &
-                        b_potential_acoustic,displ_element, &
-                        hprime_xx,hprime_yy,hprime_zz, &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        ibool,rhostore,GRAVITY)
+        call compute_gradient_in_acoustic(ispec,b_potential_acoustic,displ_element) 
 
         ! backward field: velocity vector
-        call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_ADJOINT, &
-                        b_potential_dot_acoustic,veloc_element, &
-                        hprime_xx,hprime_yy,hprime_zz, &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        ibool,rhostore,GRAVITY)
+        call compute_gradient_in_acoustic(ispec,b_potential_dot_acoustic,veloc_element)
 
         ! backward field: acceleration vector
-        call compute_gradient_in_acoustic(ispec,NSPEC_AB,NGLOB_AB, &
-                        b_potential_dot_dot_acoustic,accel_element, &
-                        hprime_xx,hprime_yy,hprime_zz, &
-                        xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                        ibool,rhostore,GRAVITY)
+        call compute_gradient_in_acoustic(ispec,b_potential_dot_dot_acoustic,accel_element)
 
         ! backward field: interpolates displ/veloc/accel/pressure at receiver locations
         call compute_interpolated_dva_acoust(displ_element,veloc_element,accel_element, &
@@ -209,13 +185,10 @@
         hpgammar(:) = hpgammar_store(irec_local,:)
 
         ! computes the integrated derivatives of source parameters (M_jk and X_s)
-        call compute_adj_source_frechet(displ_element,Mxx(irec),Myy(irec),Mzz(irec), &
+        call compute_adj_source_frechet(ispec,displ_element,Mxx(irec),Myy(irec),Mzz(irec), &
                                         Mxy(irec),Mxz(irec),Myz(irec),eps_s,eps_m_s, &
                                         hxir,hetar,hgammar,hpxir,hpetar,hpgammar, &
-                                        hprime_xx,hprime_yy,hprime_zz, &
-                                        xix(:,:,:,ispec),xiy(:,:,:,ispec),xiz(:,:,:,ispec), &
-                                        etax(:,:,:,ispec),etay(:,:,:,ispec),etaz(:,:,:,ispec), &
-                                        gammax(:,:,:,ispec),gammay(:,:,:,ispec),gammaz(:,:,:,ispec))
+                                        hprime_xx,hprime_yy,hprime_zz)
 
         stf = comp_source_time_function(dble(NSTEP-it)*DT-t0-tshift_src(irec),hdur_Gaussian(irec))
         stf_deltat = stf * deltat
