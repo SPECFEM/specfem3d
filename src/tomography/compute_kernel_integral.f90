@@ -838,7 +838,7 @@
   !allocations
   if (NSPEC_IRREGULAR > 0) then
     allocate(dummy_sem(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
-  else 
+  else
     allocate(dummy_sem(1,1,1,1),stat=ier)
   endif
   if (ier /= 0) then

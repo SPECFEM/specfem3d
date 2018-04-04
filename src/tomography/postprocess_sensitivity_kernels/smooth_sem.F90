@@ -600,7 +600,7 @@ program smooth_sem
     if (ier /= 0) stop 'Error allocating array xstore etc.'
 
     if (USE_QUADRATURE_RULE_FOR_SMOOTHING) then
-      if (NSPEC_IRREGULAR_N >0) then
+      if (NSPEC_IRREGULAR_N > 0) then
         allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR_N),stat=ier)
         if (ier /= 0) stop 'Error allocating array jacobian'
         allocate(dummy(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)

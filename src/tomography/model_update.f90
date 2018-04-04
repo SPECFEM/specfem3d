@@ -641,7 +641,7 @@ subroutine get_external_mesh()
   ! allocate arrays for storing the databases
   allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
 
-  if (NSPEC_IRREGULAR > 0) then 
+  if (NSPEC_IRREGULAR > 0) then
     allocate(xix(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
              xiy(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
              xiz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &

@@ -56,7 +56,7 @@
 
   use constants
 
-  use specfem_par, only: NSPEC_IRREGULAR,ispec_is_inner,ATTENUATION,xix,xiy,xiz,&
+  use specfem_par, only: NSPEC_IRREGULAR,ispec_is_inner,ATTENUATION,xix,xiy,xiz, &
             etax,etay,etaz,gammax,gammay,gammaz,jacobian,irregular_element_number,xix_regular,jacobian_regular
 
   use specfem_par_elastic, only: rmassx,rmassy,rmassz, &
@@ -160,7 +160,7 @@
 
   write(IOUT) irregular_element_number
   write(IOUT) xix_regular
-  write(IOUT) jacobian_regular 
+  write(IOUT) jacobian_regular
 
   write(IOUT) xix
   write(IOUT) xiy
