@@ -658,7 +658,7 @@
 
   use constants
 
-  use specfem_par, only: NSPEC_AB,NGLOB_AB,ibool,ispec_is,hprime_xx,hprime_yy,hprime_zz, &
+  use specfem_par, only: NSPEC_AB,NGLOB_AB,ibool,hprime_xx,hprime_yy,hprime_zz, &
                           xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,irregular_element_number, &
                           xix_regular
 
