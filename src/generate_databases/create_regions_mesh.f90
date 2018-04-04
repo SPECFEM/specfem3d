@@ -671,7 +671,7 @@ subroutine crm_ext_setup_jacobian(myrank, &
   ystore(:,:,:,:) = 0.d0
   zstore(:,:,:,:) = 0.d0
 
-  any_regular_element = .false.
+  any_regular_elem = .false.
 
   do ispec = 1, nspec
     do ia = 1,NGNOD
