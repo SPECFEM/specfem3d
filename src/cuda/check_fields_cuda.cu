@@ -547,7 +547,7 @@ void FC_FUNC_(get_norm_acoustic_from_device,
 
 
   if (*sim_type == 1){
-    get_maximum_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_acoustic,size,d_max);
+    get_maximum_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_potential_dot_dot_acoustic,size,d_max);
   }else if (*sim_type == 3){
     get_maximum_kernel<<<grid,threads,0,mp->compute_stream>>>(mp->d_b_potential_dot_dot_acoustic,size,d_max);
   }
