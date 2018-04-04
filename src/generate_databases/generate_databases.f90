@@ -218,7 +218,9 @@
     write(IMAIN,*) '*** Specfem3D MPI database generation ***'
     write(IMAIN,*) '*****************************************'
     write(IMAIN,*)
-    write(IMAIN,*) 'Version: ', git_version
+    write(IMAIN,*) 'Running Git package version of the code: ', git_package_version
+    write(IMAIN,*) 'which is Git ', git_commit_version
+    write(IMAIN,*) 'dating ', git_date_version
     write(IMAIN,*)
     call flush_IMAIN()
   endif

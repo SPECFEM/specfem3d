@@ -27,7 +27,7 @@
 
 # I make this Makefile serial for now because I do not know how to write a clean rules.mk here with all the right dependencies
 # If someone knows how to do that then please do it (in this rules.mk file only; all the others in other directories are already OK)
-#.NOTPARALLEL:
+.NOTPARALLEL:
 
 ## compilation directories
 S := ${S_TOP}/src/inverse_problem_for_model

@@ -66,7 +66,9 @@
     write(IMAIN,*) '**** Specfem 3-D Solver - MPI version f90 ****'
     write(IMAIN,*) '**********************************************'
     write(IMAIN,*)
-    write(IMAIN,*) 'Version: ', git_version
+    write(IMAIN,*) 'Running Git package version of the code: ', git_package_version
+    write(IMAIN,*) 'which is Git ', git_commit_version
+    write(IMAIN,*) 'dating ', git_date_version
     write(IMAIN,*)
     if (FIX_UNDERFLOW_PROBLEM) write(IMAIN,*) 'Fixing slow underflow trapping problem using small initial field'
     write(IMAIN,*)
