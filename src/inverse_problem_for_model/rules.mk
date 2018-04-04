@@ -27,7 +27,7 @@
 
 # I make this Makefile serial for now because I do not know how to write a clean rules.mk here with all the right dependencies
 # If someone knows how to do that then please do it (in this rules.mk file only; all the others in other directories are already OK)
-.NOTPARALLEL:
+#.NOTPARALLEL:
 
 ## compilation directories
 S := ${S_TOP}/src/inverse_problem_for_model
@@ -418,12 +418,14 @@ $O/specfem_interface_mod.inv_specfem_interface.o: \
 
 $O/regularization_interface.inv_regularization.o: $O/regularization_SEM_mod.inv_regularization.o $O/regularization_FD_mod.inv_regularization.o
 
-$O/family_parameter_mod.inv_inversion.o: $O/iso_parameters.inv_inversion.o $O/vti_parameters.inv_inversion.o
+$O/family_parameter_mod.inv_inversion.o: $O/input_output_mod.inv_input.o $O/iso_parameters.inv_inversion.o $O/vti_parameters.inv_inversion.o
 
 $O/fwi_iteration_mod.inv_inversion.o: \
 	$O/family_parameter_mod.inv_inversion.o \
 	$O/PrecondFWI_mod.inv_inversion.o \
 	$O/regularization_interface.inv_regularization.o
+
+$O/regularization_FD_mod.inv_regularization.o: $O/projection_on_FD_grid_mod.inv_projection.o
 
 $O/inverse_problem_main.inv.o: \
 	$O/elastic_tensor_tools_mod.inv.o \

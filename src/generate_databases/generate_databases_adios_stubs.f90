@@ -149,18 +149,16 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
                                              SAVE_MESH_FILES,ANISOTROPY)
 
   use adios_manager_mod
-  use generate_databases_par, only: NGLLX,NGLLY,NGLLZ
 
   implicit none
   integer :: nspec,nglob
   logical :: APPROXIMATE_OCEAN_LOAD
-  integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
+  integer, dimension(1,1,1,1) :: ibool
   integer :: num_interfaces_ext_mesh
   integer, dimension(num_interfaces_ext_mesh) :: my_neighbors_ext_mesh
   integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
   integer :: max_interface_size_ext_mesh
-  integer, dimension(NGLLX * NGLLX * max_interface_size_ext_mesh, &
-                     num_interfaces_ext_mesh) :: ibool_interfaces_ext_mesh
+  integer, dimension(1,1) :: ibool_interfaces_ext_mesh
   logical :: SAVE_MESH_FILES
   logical :: ANISOTROPY
 
