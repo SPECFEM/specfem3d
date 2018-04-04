@@ -56,7 +56,7 @@
   real(kind=CUSTOM_REAL),dimension(:),allocatable :: xstore, ystore, zstore
   integer, dimension(:,:,:,:),allocatable :: ibool
 
-  integer :: NSPEC_AB, NGLOB_AB
+  integer :: NSPEC_AB, NGLOB_AB, NSPEC_IRREGULAR
   integer :: numpoin
 
   integer :: i, it, ier
@@ -180,6 +180,7 @@
       call read_coordinates_adios_mesh(mesh_handle, x_global_offset, &
                                        NGLOB_AB, xstore, ystore, zstore)
     else
+      read(27) NSPEC_IRREGULAR
       read(27) ibool
       read(27) xstore
       read(27) ystore
@@ -290,6 +291,7 @@
                                  NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
     else
       if (ier /= 0) stop 'error allocating array ibool'
+      read(27) NSPEC_IRREGULAR
       read(27) ibool
       close(27)
     endif
@@ -404,7 +406,7 @@
   ! local parameters
   integer, dimension(:,:,:,:),allocatable :: ibool
   logical, dimension(:),allocatable :: mask_ibool
-  integer :: NSPEC_AB, NGLOB_AB
+  integer :: NSPEC_AB, NGLOB_AB, NSPEC_IRREGULAR
   integer :: it,iproc,npoint,nelement,ispec,ier
   integer :: iglob1, iglob2, iglob3, iglob4, iglob5, iglob6, iglob7, iglob8
   character(len=MAX_STRING_LEN) :: prname_lp
@@ -446,6 +448,7 @@
         call read_ibool_adios_mesh(mesh_handle, ibool_offset, &
                                    NGLLX, NGLLY, NGLLZ, NSPEC_AB, ibool)
       else
+        read(27) NSPEC_IRREGULAR
         read(27) ibool
       endif
     endif

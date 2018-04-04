@@ -52,7 +52,7 @@
   character(len=MAX_STRING_LEN*2) :: local_data_file
   logical :: BROADCAST_AFTER_READ
   integer :: myrank
-  integer :: sizeprocs
+  integer :: sizeprocs, NSPEC_IRREGULAR
 
   type(profd)  :: projection_fd
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable ::      model_on_FD_grid
@@ -101,6 +101,7 @@
   allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB),stat=ier)
   if (ier /= 0) stop 'error allocating array xstore etc.'
 
+  read(27) NSPEC_IRREGULAR
   read(27) ibool
   read(27) xstore
   read(27) ystore

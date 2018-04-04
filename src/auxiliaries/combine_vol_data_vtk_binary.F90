@@ -56,7 +56,7 @@
   real(kind=CUSTOM_REAL),dimension(:),allocatable :: xstore, ystore, zstore, pts
   integer, dimension(:,:,:,:),allocatable :: ibool
 
-  integer :: NSPEC_AB, NGLOB_AB
+  integer :: NSPEC_AB, NGLOB_AB, NSPEC_IRREGULAR
   integer :: numpoin
 
   integer :: i, it, ier
@@ -138,6 +138,7 @@
     allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB),stat=ier)
     if (ier /= 0) stop 'error allocating array xstore etc.'
 
+    read(27) NSPEC_IRREGULAR
     read(27) ibool
     read(27) xstore
     read(27) ystore
@@ -225,6 +226,7 @@
     ! ibool file
     allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
     if (ier /= 0) stop 'error allocating array ibool'
+    read(27) NSPEC_IRREGULAR
     read(27) ibool
     close(27)
 
@@ -292,7 +294,7 @@
   ! local parameters
   integer, dimension(:,:,:,:),allocatable :: ibool
   logical, dimension(:),allocatable :: mask_ibool
-  integer :: NSPEC_AB, NGLOB_AB
+  integer :: NSPEC_AB, NGLOB_AB, NSPEC_IRREGULAR
   integer :: it,iproc,npoint,nelement,ispec,ier
   integer :: iglob1, iglob2, iglob3, iglob4, iglob5, iglob6, iglob7, iglob8
   character(len=MAX_STRING_LEN) :: prname_lp
@@ -321,6 +323,7 @@
     if (.not. HIGH_RESOLUTION_MESH) then
       allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
       if (ier /= 0) stop 'error allocating array ibool'
+      read(27) NSPEC_IRREGULAR
       read(27) ibool
     endif
 
