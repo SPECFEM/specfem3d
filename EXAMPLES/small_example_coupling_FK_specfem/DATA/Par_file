@@ -225,6 +225,9 @@ USE_BINARY_FOR_SEISMOGRAMS      = .false.
 # output seismograms in Seismic Unix format (binary with 240-byte-headers)
 SU_FORMAT                       = .false.
 
+# output seismograms in ASDF (requires asdf-library)
+ASDF_FORMAT                     = .false.
+
 # decide if master process writes all the seismograms or if all processes do it in parallel
 WRITE_SEISMOGRAMS_BY_MASTER     = .false.
 

@@ -108,6 +108,9 @@
   integer, parameter :: ADIOS_BUFFER_SIZE_IN_MB = 200
   character(len=*), parameter :: ADIOS_TRANSPORT_METHOD = 'MPI'
 
+  ! ASDF parameter
+  logical, parameter :: OUTPUT_PROVENANCE = .false.
+
 !!-----------------------------------------------------------
 !!
 !! smoothing of the sensitivity kernels

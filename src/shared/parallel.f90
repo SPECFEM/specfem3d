@@ -1477,6 +1477,29 @@ end module my_mpi
 !-------------------------------------------------------------------------------------------------
 !
 
+  subroutine all_gatherv_all_ch(sendbuf, sendcnt, recvbuf, recvcnt, recvoffset, dim1, dim2, NPROC)
+
+  use constants
+  use my_mpi
+
+  implicit none
+
+  integer :: sendcnt, dim1, dim2, NPROC
+
+  character(len=dim2), dimension(NPROC) :: sendbuf
+  character(len=dim2), dimension(dim1, NPROC) :: recvbuf
+
+  integer, dimension(NPROC) :: recvoffset, recvcnt
+
+  integer :: ier
+
+  call MPI_Allgatherv(sendbuf,sendcnt,MPI_CHARACTER, &
+                  recvbuf,recvcnt,recvoffset,MPI_CHARACTER, &
+                  my_local_mpi_comm_world,ier)
+
+  end subroutine all_gatherv_all_ch
+
+
 ! not used yet...
 !  subroutine gatherv_all_dp(sendbuf, sendcnt, recvbuf, recvcount, recvoffset,recvcounttot, NPROC)
 !

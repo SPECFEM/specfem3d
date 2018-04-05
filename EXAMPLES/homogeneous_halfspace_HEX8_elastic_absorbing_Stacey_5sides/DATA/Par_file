@@ -23,11 +23,11 @@ UTM_PROJECTION_ZONE             = 11
 SUPPRESS_UTM_PROJECTION         = .true.
 
 # number of MPI processors
-NPROC                           = 4
+NPROC                           = 2
 
 # time step parameters
-NSTEP                           = 5000
-DT                              = 0.05
+NSTEP                           = 3000
+DT                              = 5.e-5
 
 #-----------------------------------------------------------
 #
@@ -56,7 +56,7 @@ NGNOD                           = 8
 #   1d_prem,1d_socal,1d_cascadia
 # 3D models available are:
 #   aniso,external,gll,salton_trough,tomo,SEP,coupled,...
-MODEL                           = default
+MODEL                           = tomo
 
 # path for external tomographic models files
 TOMOGRAPHY_PATH                 = ./DATA/tomo_files/
@@ -101,7 +101,7 @@ PML_CONDITIONS                  = .false.
 PML_INSTEAD_OF_FREE_SURFACE     = .false.
 
 # C-PML dominant frequency
-f0_FOR_PML                      = 0.05555
+f0_FOR_PML                      = 12.7
 
 # parameters used to rotate C-PML boundary conditions by a given angle (not completed yet)
 # ROTATE_PML_ACTIVATE           = .false.
@@ -144,11 +144,11 @@ NT_DUMP_ATTENUATION             = 500
 # MOVIE_TYPE = 1 to show the top surface
 # MOVIE_TYPE = 2 to show all the external faces of the mesh
 CREATE_SHAKEMAP                 = .false.
-MOVIE_SURFACE                   = .false.
+MOVIE_SURFACE                   = .true.
 MOVIE_TYPE                      = 1
 MOVIE_VOLUME                    = .false.
 SAVE_DISPLACEMENT               = .false.
-USE_HIGHRES_FOR_MOVIES          = .false.
+USE_HIGHRES_FOR_MOVIES          = .true.
 NTSTEP_BETWEEN_FRAMES           = 200
 HDUR_MOVIE                      = 0.0
 
@@ -181,11 +181,11 @@ USE_SOURCES_RECEIVERS_Z         = .false.
 # - the components of a (non necessarily unitary) direction vector for the force source in the E/N/Z_UP basis.
 # The direction vector is made unitary internally in the code and thus only its direction matters here;
 # its norm is ignored and the norm of the force used is the factor force source times the source time function.
-USE_FORCE_POINT_SOURCE          = .false.
+USE_FORCE_POINT_SOURCE          = .true.
 
 # set to true to use a Ricker source time function instead of the source time functions set by default
 # to represent a (tilted) FORCESOLUTION force point source or a CMTSOLUTION moment-tensor source.
-USE_RICKER_TIME_FUNCTION        = .false.
+USE_RICKER_TIME_FUNCTION        = .true.
 
 # Use an external source time function.
 # if .true. you must add a file with your source time function and the file name
@@ -211,7 +211,7 @@ NTSTEP_BETWEEN_OUTPUT_SEISMOS   = 10000
 # decide if we save displacement, velocity, acceleration and/or pressure in forward runs (they can be set to true simultaneously)
 # currently pressure seismograms are implemented in acoustic (i.e. fluid) elements only
 SAVE_SEISMOGRAMS_DISPLACEMENT   = .true.
-SAVE_SEISMOGRAMS_VELOCITY       = .false.
+SAVE_SEISMOGRAMS_VELOCITY       = .true.
 SAVE_SEISMOGRAMS_ACCELERATION   = .false.
 SAVE_SEISMOGRAMS_PRESSURE       = .false.   # currently implemented in acoustic (i.e. fluid) elements only
 
@@ -224,6 +224,9 @@ USE_BINARY_FOR_SEISMOGRAMS      = .false.
 
 # output seismograms in Seismic Unix format (binary with 240-byte-headers)
 SU_FORMAT                       = .false.
+
+# output seismograms in ASDF (requires asdf-library)
+ASDF_FORMAT                     = .false.
 
 # decide if master process writes all the seismograms or if all processes do it in parallel
 WRITE_SEISMOGRAMS_BY_MASTER     = .false.
@@ -272,6 +275,9 @@ NTSTEP_BETWEEN_OUTPUT_ENERGY    = 10
 # interval in time steps for reading adjoint traces
 # 0 = read the whole adjoint sources at the same time
 NTSTEP_BETWEEN_READ_ADJSRC      = 0
+
+# read adjoint sources using ASDF (requires asdf-library)
+READ_ADJSRC_ASDF                = .false.
 
 # this parameter must be set to .true. to compute anisotropic kernels
 # in crust and mantle (related to the 21 Cij in geographical coordinates)
@@ -351,7 +357,7 @@ NUMBER_OF_SIMULTANEOUS_RUNS     = 1
 # In that case there is no need to duplicate the mesh and model file database (the content of the DATABASES_MPI
 # directories) in each of the run0001, run0002,... directories, it is sufficient to have one in run0001
 # and the code will broadcast it to the others)
-BROADCAST_SAME_MESH_AND_MODEL   = .true.
+BROADCAST_SAME_MESH_AND_MODEL   = .false.
 
 #-----------------------------------------------------------
 

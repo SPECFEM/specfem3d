@@ -126,6 +126,24 @@ shared_OBJECTS += $(adios_shared_STUB_OBJECTS)
 shared_MODULES += $(adios_shared_STUB_MODULES)
 endif
 
+###
+### ASDF
+###
+
+asdf_shared_OBJECTS = \
+        $O/asdf_manager.shared.o \
+        $(EMPTY_MACRO)
+
+asdf_shared_STUBS = \
+        $O/asdf_method_stubs.cc.o \
+        $(EMPTY_MACRO)
+
+ifeq ($(ASDF),yes)
+shared_OBJECTS += $(asdf_shared_OBJECTS)
+else
+shared_OBJECTS += $(asdf_shared_STUBS)
+endif
+
 #######################################
 
 ####

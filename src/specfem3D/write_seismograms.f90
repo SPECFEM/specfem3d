@@ -92,7 +92,7 @@
       write_time_begin = wtime()
 
       ! checks if anything to do
-      if (nrec_local > 0 .or. (WRITE_SEISMOGRAMS_BY_MASTER .and. myrank == 0)) then
+      if (nrec_local > 0 .or. (WRITE_SEISMOGRAMS_BY_MASTER .and. myrank == 0) .or. ASDF_FORMAT) then
 
         ! writes out seismogram files
         select case(SIMULATION_TYPE)
@@ -190,7 +190,7 @@
   use specfem_par, only: myrank,number_receiver_global,NPROC, &
           nrec,nrec_local,islice_selected_rec, &
           seismo_offset,seismo_current, &
-          NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS, &
+          NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS,ASDF_FORMAT, &
           WRITE_SEISMOGRAMS_BY_MASTER,SAVE_ALL_SEISMOS_IN_ONE_FILE,USE_BINARY_FOR_SEISMOGRAMS
 
   implicit none
@@ -255,6 +255,8 @@
       endif
     endif
 
+    if (ASDF_FORMAT) call init_asdf_data(nrec_local)
+
     ! loop on all the local receivers
     do irec_local = 1,nrec_local
 
@@ -266,12 +268,34 @@
         one_seismogram(:,i) = seismograms(:,irec_local,i)
       enddo
 
-      call write_one_seismogram(one_seismogram,irec,component,istore)
+      call write_one_seismogram(one_seismogram,irec_local,irec,component,istore)
 
     enddo ! nrec_local
 
+    ! writes out ASDF container to the file
+    if (ASDF_FORMAT) then
+      call write_asdf()
+      ! deallocate the container
+      call close_asdf_data()
+    endif
+
     ! create one large file instead of one small file per station to avoid file system overload
     if (SAVE_ALL_SEISMOS_IN_ONE_FILE) close(IOUT)
+
+  else if (WRITE_SEISMOGRAMS_BY_MASTER .and. ASDF_FORMAT) then
+    call init_asdf_data(nrec_local)
+    call synchronize_all()
+
+    do irec_local = 1, nrec_local
+
+      ! get global number of that receiver
+      irec = number_receiver_global(irec_local)
+      one_seismogram(:,:) = seismograms(:,irec_local,:)
+      call write_one_seismogram(one_seismogram,irec_local,irec,component,istore)
+    enddo
+    call write_asdf()
+    call synchronize_all()
+    call close_asdf_data()
 
 ! only the master process does the writing of seismograms and
 ! collects the data from all other processes
@@ -348,7 +372,7 @@
             total_seismos = total_seismos + 1
 
             ! writes out this seismogram
-            call write_one_seismogram(one_seismogram,irec,component,istore)
+            call write_one_seismogram(one_seismogram,irec_local,irec,component,istore)
 
           enddo ! nrec_local_received
         endif ! if (nrec_local_received > 0)
@@ -392,19 +416,19 @@
 
 !=====================================================================
 
-  subroutine write_one_seismogram(one_seismogram,irec,component,istore)
+  subroutine write_one_seismogram(one_seismogram,irec_local,irec,component,istore)
 
   use constants
 
   use specfem_par, only: DT,t0,it, &
-    NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS, &
+    NSTEP,NTSTEP_BETWEEN_OUTPUT_SEISMOS,ASDF_FORMAT, &
     SIMULATION_TYPE,station_name,network_name
 
   implicit none
 
   integer, intent(in) :: istore
   real(kind=CUSTOM_REAL), dimension(NDIM,NTSTEP_BETWEEN_OUTPUT_SEISMOS),intent(in) :: one_seismogram
-  integer,intent(in) :: irec
+  integer,intent(in) :: irec_local,irec
   character(len=1),intent(in) :: component
 
   ! local parameters
@@ -442,10 +466,15 @@
     ! directory to store seismograms
     final_LOCAL_PATH = OUTPUT_FILES(1:len_trim(OUTPUT_FILES)) // '/'
 
+
+    if (ASDF_FORMAT) then
+      call store_asdf_data(one_seismogram,irec_local,irec,channel,iorientation)
+    else
     ! ASCII output format
     call write_output_ASCII_or_binary(one_seismogram, &
                                       NSTEP,it,SIMULATION_TYPE,DT,t0, &
                                       iorientation,sisname,final_LOCAL_PATH)
+    endif
 
   enddo ! do iorientation
 
