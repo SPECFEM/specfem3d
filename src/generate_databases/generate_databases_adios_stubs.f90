@@ -153,12 +153,12 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
   implicit none
   integer :: nspec,nglob
   logical :: APPROXIMATE_OCEAN_LOAD
-  integer, dimension(1,1,1,1) :: ibool
+  integer, dimension(1,1,1,nspec) :: ibool
   integer :: num_interfaces_ext_mesh
   integer, dimension(num_interfaces_ext_mesh) :: my_neighbors_ext_mesh
   integer, dimension(num_interfaces_ext_mesh) :: nibool_interfaces_ext_mesh
   integer :: max_interface_size_ext_mesh
-  integer, dimension(1,1) :: ibool_interfaces_ext_mesh
+  integer, dimension(1,max_interface_size_ext_mesh) :: ibool_interfaces_ext_mesh
   logical :: SAVE_MESH_FILES
   logical :: ANISOTROPY
 
