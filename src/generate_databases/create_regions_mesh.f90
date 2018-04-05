@@ -466,11 +466,14 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
            mustore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
-  if (POROELASTIC_SIMULATION) then
-    NSPEC_PORO = nspec
-  else
-    NSPEC_PORO = 1
-  endif
+!EB EB April 2018 : we should find a way to know if there are any poroelastic
+! element before these costly allocations. The commented part does notwork
+! because POROELASTIC_SIMULATION flag is set after (in get_model)
+!  if (POROELASTIC_SIMULATION) then
+  NSPEC_PORO = nspec
+!  else
+!    NSPEC_PORO = 1
+!  endif
 
 ! array with poroelastic model
   allocate(rhoarraystore(2,NGLLX,NGLLY,NGLLZ,NSPEC_PORO), &

@@ -35,7 +35,7 @@
 
   ! jacobian
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: jacobian
-  real :: jacobian_regular
+  real(kind=CUSTOM_REAL) :: jacobian_regular
   integer, dimension(:), allocatable :: irregular_element_number
   real(kind=CUSTOM_REAL) :: volumel
   ! integration values
