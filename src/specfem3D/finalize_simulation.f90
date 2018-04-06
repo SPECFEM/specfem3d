@@ -158,6 +158,11 @@
     call adios_cleanup()
   endif
 
+  ! asdf finalizes
+  if ((SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) .and. READ_ADJSRC_ASDF) then
+    call asdf_cleanup()
+  endif
+
   ! close the main output file
   if (myrank == 0) then
     write(IMAIN,*)

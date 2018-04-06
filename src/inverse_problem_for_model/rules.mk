@@ -114,6 +114,7 @@ inverse_problem_for_model_OBJECTS = \
 ## objects from other source directories
 inverse_problem_for_model_OBJECTS += \
 	$O/specfem3D_par.spec_module.o \
+	$O/asdf_data.spec_module.o \
 	$O/assemble_MPI_vector.spec.o \
 	$O/calendar.spec.o \
 	$O/check_stability.spec.o \
@@ -341,7 +342,24 @@ endif
 inverse_problem_for_model_OBJECTS += $(adios_inverse_problem_for_model_OBJECTS)
 inverse_problem_for_model_SHARED_OBJECTS += $(adios_inverse_problem_for_model_PREOBJECTS)
 
-## VTK
+asdf_inverse_problem_for_model_OBJECTS=\
+	$O/write_output_ASDF.spec.o \
+	$O/read_adjoint_sources_ASDF.spec.o \
+
+asdf_inverse_problem_for_model_PREOBJECTS = \
+        $O/asdf_manager.shared_asdf.o \
+
+asdf_inverse_problem_for_model_STUBS=\
+	$O/asdf_method_stubs.cc.o \
+#
+# conditional asdf linking
+ifeq ($(ASDF),no)
+asdf_inverse_problem_for_model_OBJECTS = $(asdf_inverse_problem_for_model_STUBS)
+endif
+ASDFL += $(ASDF_LIBS) -lhdf5hl_fortran -lhdf5_hl -lhdf5 -lstdc++
+inverse_problem_for_model_OBJECTS += $(asdf_inverse_problem_for_model_OBJECTS)
+inverse_problem_for_model_SHARED_OBJECTS += $(asdf_inverse_problem_for_model_PREOBJECTS)
+
 ifeq ($(VTK),yes)
 inverse_problem_for_model_OBJECTS += \
 	$O/vtk_window_stubs.visualcc.o \
@@ -368,7 +386,7 @@ ${E}/xinverse_problem_for_model: $(inverse_problem_for_model_OBJECTS) $(inverse_
 	@echo ""
 	@echo $(INFO_CUDA_INVERSE_PROBLEM)
 	@echo ""
-	${FCLINK} -o ${E}/xinverse_problem_for_model $(inverse_problem_for_model_OBJECTS) $(inverse_problem_for_model_SHARED_OBJECTS) $(MPILIBS) $(CUDA_LINK)
+	${FCLINK} -o ${E}/xinverse_problem_for_model $(inverse_problem_for_model_OBJECTS) $(inverse_problem_for_model_SHARED_OBJECTS) $(MPILIBS) $(CUDA_LINK) $(ASDFL)
 	@echo ""
 
 else
@@ -378,7 +396,7 @@ ${E}/xinverse_problem_for_model: $(inverse_problem_for_model_OBJECTS) $(inverse_
 	@echo ""
 	@echo "building xinverse_problem_for_model"
 	@echo ""
-	${FCLINK} -o ${E}/xinverse_problem_for_model $(inverse_problem_for_model_OBJECTS) $(inverse_problem_for_model_SHARED_OBJECTS) $(MPILIBS)
+	${FCLINK} -o ${E}/xinverse_problem_for_model $(inverse_problem_for_model_OBJECTS) $(inverse_problem_for_model_SHARED_OBJECTS) $(MPILIBS) $(ASDFL)
 	@echo ""
 
 endif
@@ -437,8 +455,6 @@ $O/inverse_problem_main.inv.o: \
 	$O/specfem_interface_mod.inv_specfem_interface.o \
 	$O/fwi_iteration_mod.inv_inversion.o
 
-
-
 ####
 #### rule to build each .o file
 ####
@@ -446,7 +462,6 @@ $O/inverse_problem_main.inv.o: \
 ## main module
 $O/%.inv_par.o: $S/%.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $O/specfem3D_par.spec_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
-
 
 ## file object rules
 $O/%.inv.o: $S/%.f90 ${SETUP}/constants.h $O/inverse_problem_par.inv_par.o

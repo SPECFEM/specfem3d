@@ -268,6 +268,11 @@ specfem3D_SHARED_OBJECTS += $(adios_specfem3D_PREOBJECTS)
 
 asdf_specfem3D_OBJECTS = \
         $O/write_output_ASDF.spec.o \
+        $O/read_adjoint_sources_ASDF.spec.o \
+        $(EMPTY_MACRO)
+
+asdf_specfem3D_SHARED_OBJECTS = \
+        $O/asdf_manager.shared_asdf.o \
         $(EMPTY_MACRO)
 
 asdf_specfem3D_SHARED_STUBS = \
@@ -278,6 +283,7 @@ asdf_specfem3D_SHARED_STUBS = \
 ifeq ($(ASDF),yes)
 SPECFEM_LINK_FLAGS += $(ASDF_LIBS) -lhdf5hl_fortran -lhdf5_hl -lhdf5 -lstdc++
 specfem3D_OBJECTS += $(asdf_specfem3D_OBJECTS)
+specfem3D_SHARED_OBJECTS += $(asdf_specfem3D_SHARED_OBJECTS)
 else
 specfem3D_OBJECTS += $(asdf_specfem3D_STUBS)
 specfem3D_SHARED_OBJECTS += $(asdf_specfem3D_SHARED_STUBS)

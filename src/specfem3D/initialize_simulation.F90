@@ -130,6 +130,10 @@
     call adios_setup()
   endif
 
+  if ((SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) .and. READ_ADJSRC_ASDF) then
+    call asdf_setup(current_asdf_handle)
+  endif
+
   ! reads in numbers of spectral elements and points for the part of the mesh handled by this process
   call create_name_database(prname,myrank,LOCAL_PATH)
 

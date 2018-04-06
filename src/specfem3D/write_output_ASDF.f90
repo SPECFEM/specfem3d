@@ -636,7 +636,6 @@
 
   deallocate(one_seismogram)
 
-  write(*,*) 'EXITING'
   end subroutine write_asdf
 
 !

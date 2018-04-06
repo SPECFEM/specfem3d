@@ -131,11 +131,11 @@ endif
 ###
 
 asdf_shared_OBJECTS = \
-        $O/asdf_manager.shared.o \
-        $(EMPTY_MACRO)
+	$O/asdf_manager.shared_asdf.o \
+	$(EMPTY_MACRO)
 
 asdf_shared_STUBS = \
-        $O/asdf_method_stubs.cc.o \
+	$O/asdf_method_stubs.cc.o \
         $(EMPTY_MACRO)
 
 ifeq ($(ASDF),yes)
@@ -189,6 +189,10 @@ $O/%.shared_adios.o: $S/%.F90 $O/adios_helpers_writers.shared_adios_module.o $O/
 $O/%.shared_noadios.o: $S/%.f90
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
+## asdf
+
+$O/%.shared_asdf.o: $S/%.f90
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 ##
 ## C compilation

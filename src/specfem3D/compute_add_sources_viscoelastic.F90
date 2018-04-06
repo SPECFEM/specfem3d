@@ -36,7 +36,7 @@
                         nrec_local,number_receiver_global,nsources_local,tshift_src,dt,t0,SU_FORMAT, &
                         USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function, &
                         USE_BINARY_FOR_SEISMOGRAMS,NSPEC_AB,NGLOB_AB,ibool,NSOURCES,myrank,it,islice_selected_source, &
-                        ispec_selected_source,sourcearrays,SIMULATION_TYPE,NSTEP, &
+                        ispec_selected_source,sourcearrays,SIMULATION_TYPE,NSTEP,READ_ADJSRC_ASDF, &
                         nrec,islice_selected_rec,ispec_selected_rec,nadj_rec_local, &
                         NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY,hxir_store,hetar_store,hgammar_store,source_adjoint, &
                         INVERSE_FWI_FULL_PROBLEM
@@ -151,7 +151,7 @@
       ! this must be done carefully, otherwise the adjoint sources may be added twice
       if (ibool_read_adj_arrays .and. .not. INVERSE_FWI_FULL_PROBLEM) then
 
-        if (.not. SU_FORMAT) then
+        if (.not. (SU_FORMAT .or. READ_ADJSRC_ASDF)) then
           if (USE_BINARY_FOR_SEISMOGRAMS) stop 'Adjoint simulations not supported with .bin format, please use SU format instead'
           !!! read ascii adjoint sources
           do irec_local = 1, nrec_local
@@ -160,6 +160,14 @@
             adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
             call compute_arrays_adjoint_source(adj_source_file,irec_local)
           enddo
+        else if (READ_ADJSRC_ASDF) then
+          do irec_local = 1, nrec_local
+            ! reads in **net**.**sta**.**BH**.adj files
+            irec = number_receiver_global(irec_local)
+            adj_source_file = trim(network_name(irec))//'_'//trim(station_name(irec))
+            call compute_arrays_adjoint_source(adj_source_file,irec_local)
+          enddo
+          call compute_arrays_adjoint_source(adj_source_file, irec_local)
         else
            call compute_arrays_adjoint_source_SU()
         endif !if (.not. SU_FORMAT)

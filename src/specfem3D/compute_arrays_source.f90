@@ -190,7 +190,7 @@
 
   subroutine compute_arrays_adjoint_source(adj_source_file,irec_local)
 
-  use specfem_par, only: myrank,source_adjoint,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC,it
+  use specfem_par, only: myrank,source_adjoint,NSTEP,NTSTEP_BETWEEN_READ_ADJSRC,it,READ_ADJSRC_ASDF
 
   use constants
 
@@ -202,6 +202,8 @@
 
 ! local
   integer icomp, itime, ier, it_start, it_end, it_sub_adj
+  real(kind=CUSTOM_REAL), dimension(NDIM,NTSTEP_BETWEEN_READ_ADJSRC) :: adj_src
+  real(kind=CUSTOM_REAL), dimension(NSTEP) :: adj_source_asdf
   double precision :: junk
   ! note: should have same order as orientation in write_seismograms_to_file()
   character(len=3),dimension(NDIM) :: comp
@@ -216,37 +218,60 @@
   it_sub_adj = ceiling( dble(it)/dble(NTSTEP_BETWEEN_READ_ADJSRC) )
   it_start = NSTEP - it_sub_adj*NTSTEP_BETWEEN_READ_ADJSRC + 1
   it_end   = it_start + NTSTEP_BETWEEN_READ_ADJSRC - 1
+  adj_src(:,:) = 0._CUSTOM_REAL
 
-  ! loops over components
-  do icomp = 1, NDIM
+  if (READ_ADJSRC_ASDF) then
 
-    filename = OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//'/../SEM/'//trim(adj_source_file)//'.'//comp(icomp)//'.adj'
-    open(unit=IIN,file=trim(filename),status='old',action='read',iostat = ier)
-    ! cycles to next file (this might be more error prone)
-    !if (ier /= 0) cycle
-    ! requires adjoint files to exist (users will have to be more careful in setting up adjoint runs)
-    if (ier /= 0) call exit_MPI(myrank, ' file '//trim(filename)//' does not exist - required for adjoint runs')
+    do icomp = 1, NDIM ! 3 components
 
-    ! reads in adjoint source trace
-    !! skip unused blocks
-    do itime = 1, it_start-1
-      read(IIN,*,iostat=ier) junk, junk
-      if (ier /= 0) &
-        call exit_MPI(myrank, &
-          'file '//trim(filename)//' has wrong length, please check with your simulation duration (1111)')
+      filename = trim(adj_source_file) // '_' // comp(icomp)
+
+      ! would skip read and set source artificially to zero if out of bounds,
+      ! see comments above
+      if (it_start == 0 .and. itime == 0) then
+        adj_src(icomp,1) = 0._CUSTOM_REAL
+        cycle
+      endif
+
+      call read_adjoint_sources_ASDF(filename, adj_source_asdf, it_start, it_end)
+
+      adj_src(icomp,:) = real(adj_source_asdf(:))
+
     enddo
-    !! read the block we need
-    do itime = it_start, it_end
-      read(IIN,*,iostat=ier) junk, source_adjoint(icomp,irec_local,itime-it_start+1)
-      !!! used to check whether we read the correct block
-      ! if (icomp==1)      print *, junk, adj_src(itime-it_start+1,icomp)
-      if (ier /= 0) &
-        call exit_MPI(myrank, &
-          'file '//trim(filename)//' has wrong length, please check with your simulation duration (2222)')
-    enddo
-    close(IIN)
 
-  enddo
+  else
+
+    ! loops over components
+    do icomp = 1, NDIM
+
+      filename = OUTPUT_FILES(1:len_trim(OUTPUT_FILES))//'/../SEM/'//trim(adj_source_file)//'.'//comp(icomp)//'.adj'
+      open(unit=IIN,file=trim(filename),status='old',action='read',iostat = ier)
+      ! cycles to next file (this might be more error prone)
+      !if (ier /= 0) cycle
+      ! requires adjoint files to exist (users will have to be more careful in setting up adjoint runs)
+      if (ier /= 0) call exit_MPI(myrank, ' file '//trim(filename)//' does not exist - required for adjoint runs')
+
+      ! reads in adjoint source trace
+      !! skip unused blocks
+      do itime = 1, it_start-1
+        read(IIN,*,iostat=ier) junk, junk
+        if (ier /= 0) &
+          call exit_MPI(myrank, &
+            'file '//trim(filename)//' has wrong length, please check with your simulation duration (1111)')
+      enddo
+      !! read the block we need
+      do itime = it_start, it_end
+        read(IIN,*,iostat=ier) junk, source_adjoint(icomp,irec_local,itime-it_start+1)
+        !!! used to check whether we read the correct block
+        ! if (icomp==1)      print *, junk, adj_src(itime-it_start+1,icomp)
+        if (ier /= 0) &
+          call exit_MPI(myrank, &
+            'file '//trim(filename)//' has wrong length, please check with your simulation duration (2222)')
+      enddo
+      close(IIN)
+
+    enddo
+  endif
 
   end subroutine compute_arrays_adjoint_source
 
