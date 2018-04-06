@@ -277,7 +277,7 @@ NTSTEP_BETWEEN_OUTPUT_ENERGY    = 10
 NTSTEP_BETWEEN_READ_ADJSRC      = 0
 
 # read adjoint sources in ASDF (requires asdf-library)
-ASDF_FORMAT                     = .false.
+READ_ADJSRC_ASDF                = .false.
 
 # this parameter must be set to .true. to compute anisotropic kernels
 # in crust and mantle (related to the 21 Cij in geographical coordinates)
