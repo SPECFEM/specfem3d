@@ -562,7 +562,7 @@ subroutine initialize()
 
   use tomography_par, only: myrank_tomo => myrank, sizeprocs, NSPEC, NGLOB, USE_ALPHA_BETA_RHO
 
-  use specfem_par, only: NSPEC_AB,NGLOB_AB,NSPEC_IRREGULAR,NPROC,myrank,ADIOS_ENABLED,ATTENUATION
+  use specfem_par, only: NSPEC_AB,NGLOB_AB,NPROC,myrank,ADIOS_ENABLED,ATTENUATION
 
   implicit none
 
