@@ -85,7 +85,7 @@
   call max_all_dp(max_elevation,max_elevation_all)
 
   if (myrank == 0) then
-    if (min_elevation /= HUGEVAL .and. max_elevation /= -HUGEVAL) then
+    if (min_elevation_all /= HUGEVAL .and. max_elevation_all /= -HUGEVAL) then
       write(IMAIN,*)
       write(IMAIN,*) 'min and max of elevation (i.e. height of the upper surface of the mesh) included in mesh in m is ', &
                            min_elevation_all,' ',max_elevation_all
