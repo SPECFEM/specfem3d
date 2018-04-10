@@ -198,6 +198,7 @@ inverse_problem_for_model_OBJECTS += \
 
 
 inverse_problem_for_model_SHARED_OBJECTS = \
+	$O/asdf_method_stubs.cc.o \
 	$O/shared_par.shared_module.o \
 	$O/assemble_MPI_scalar.shared.o \
 	$O/check_mesh_resolution.shared.o \
@@ -342,24 +343,6 @@ endif
 inverse_problem_for_model_OBJECTS += $(adios_inverse_problem_for_model_OBJECTS)
 inverse_problem_for_model_SHARED_OBJECTS += $(adios_inverse_problem_for_model_PREOBJECTS)
 
-asdf_inverse_problem_for_model_OBJECTS=\
-	$O/write_output_ASDF.spec.o \
-	$O/read_adjoint_sources_ASDF.spec.o \
-
-asdf_inverse_problem_for_model_PREOBJECTS = \
-        $O/asdf_manager.shared_asdf.o \
-
-asdf_inverse_problem_for_model_STUBS=\
-	$O/asdf_method_stubs.cc.o \
-#
-# conditional asdf linking
-ifeq ($(ASDF),no)
-asdf_inverse_problem_for_model_OBJECTS = $(asdf_inverse_problem_for_model_STUBS)
-endif
-ASDFL += $(ASDF_LIBS) -lhdf5hl_fortran -lhdf5_hl -lhdf5 -lstdc++
-inverse_problem_for_model_OBJECTS += $(asdf_inverse_problem_for_model_OBJECTS)
-inverse_problem_for_model_SHARED_OBJECTS += $(asdf_inverse_problem_for_model_PREOBJECTS)
-
 ifeq ($(VTK),yes)
 inverse_problem_for_model_OBJECTS += \
 	$O/vtk_window_stubs.visualcc.o \
@@ -386,7 +369,7 @@ ${E}/xinverse_problem_for_model: $(inverse_problem_for_model_OBJECTS) $(inverse_
 	@echo ""
 	@echo $(INFO_CUDA_INVERSE_PROBLEM)
 	@echo ""
-	${FCLINK} -o ${E}/xinverse_problem_for_model $(inverse_problem_for_model_OBJECTS) $(inverse_problem_for_model_SHARED_OBJECTS) $(MPILIBS) $(CUDA_LINK) $(ASDFL)
+	${FCLINK} -o ${E}/xinverse_problem_for_model $(inverse_problem_for_model_OBJECTS) $(inverse_problem_for_model_SHARED_OBJECTS) $(MPILIBS) $(CUDA_LINK)
 	@echo ""
 
 else
@@ -396,7 +379,7 @@ ${E}/xinverse_problem_for_model: $(inverse_problem_for_model_OBJECTS) $(inverse_
 	@echo ""
 	@echo "building xinverse_problem_for_model"
 	@echo ""
-	${FCLINK} -o ${E}/xinverse_problem_for_model $(inverse_problem_for_model_OBJECTS) $(inverse_problem_for_model_SHARED_OBJECTS) $(MPILIBS) $(ASDFL)
+	${FCLINK} -o ${E}/xinverse_problem_for_model $(inverse_problem_for_model_OBJECTS) $(inverse_problem_for_model_SHARED_OBJECTS) $(MPILIBS)
 	@echo ""
 
 endif
