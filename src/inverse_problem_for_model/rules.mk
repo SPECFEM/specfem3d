@@ -343,6 +343,18 @@ endif
 inverse_problem_for_model_OBJECTS += $(adios_inverse_problem_for_model_OBJECTS)
 inverse_problem_for_model_SHARED_OBJECTS += $(adios_inverse_problem_for_model_PREOBJECTS)
 
+asdf_inverse_problem_for_model_STUBS = \
+	$O/asdf_method_stubs.cc.o
+
+asdf_inverse_problem_for_model_PRESTUBS = \
+	$O/asdf_manager_stubs.shared_asdf.o
+
+ifeq ($(ASDF),no)
+asdf_inverse_problem_for_model_PREOBJECTS = $(asdf_inverse_problem_for_model_PRESTUBS)
+endif
+inverse_problem_for_model_OBJECTS += $(asdf_inverse_problem_for_model_OBJECTS)
+inverse_problem_for_model_SHARED_OBJECTS += $(asdf_inverse_problem_for_model_PREOBJECTS)
+
 ifeq ($(VTK),yes)
 inverse_problem_for_model_OBJECTS += \
 	$O/vtk_window_stubs.visualcc.o \

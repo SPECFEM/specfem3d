@@ -136,6 +136,7 @@ asdf_shared_OBJECTS = \
 
 asdf_shared_STUBS = \
 	$O/asdf_method_stubs.cc.o \
+	$O/asdf_manager_stubs.shared_asdf.o \
         $(EMPTY_MACRO)
 
 ifeq ($(ASDF),yes)

@@ -277,6 +277,7 @@ asdf_specfem3D_SHARED_OBJECTS = \
 
 asdf_specfem3D_SHARED_STUBS = \
         $O/asdf_method_stubs.cc.o \
+        $O/asdf_manager_stubs.shared_asdf.o \
         $(EMPTY_MACRO)
 
 # conditional asdf linking
