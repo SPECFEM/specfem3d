@@ -503,6 +503,13 @@
       write(*,*)
     endif
 
+    call read_value_logical(ASDF_FORMAT, 'ASDF_FORMAT', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'ASDF_FORMAT                       = .false.'
+      write(*,*)
+    endif
+
     call read_value_logical(WRITE_SEISMOGRAMS_BY_MASTER, 'WRITE_SEISMOGRAMS_BY_MASTER', ier)
     if (ier /= 0) then
       some_parameters_missing_from_Par_file = .true.
@@ -558,6 +565,13 @@
     if (ier /= 0) then
       some_parameters_missing_from_Par_file = .true.
       write(*,'(a)') 'NTSTEP_BETWEEN_READ_ADJSRC      = 0'
+      write(*,*)
+    endif
+
+    call read_value_logical(READ_ADJSRC_ASDF, 'READ_ADJSRC_ASDF', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'READ_ADJSRC_ASDF               = .false.'
       write(*,*)
     endif
 
@@ -955,12 +969,14 @@
     call bcast_all_singlel(SAVE_SEISMOGRAMS_IN_ADJOINT_RUN)
     call bcast_all_singlel(USE_BINARY_FOR_SEISMOGRAMS)
     call bcast_all_singlel(SU_FORMAT)
+    call bcast_all_singlel(ASDF_FORMAT)
     call bcast_all_singlel(WRITE_SEISMOGRAMS_BY_MASTER)
     call bcast_all_singlel(SAVE_ALL_SEISMOS_IN_ONE_FILE)
     call bcast_all_singlel(USE_TRICK_FOR_BETTER_PRESSURE)
     call bcast_all_singlel(USE_SOURCE_ENCODING)
     call bcast_all_singlel(OUTPUT_ENERGY)
     call bcast_all_singlei(NTSTEP_BETWEEN_OUTPUT_ENERGY)
+    call bcast_all_singlel(READ_ADJSRC_ASDF)
     call bcast_all_singlel(ANISOTROPIC_KL)
     call bcast_all_singlel(SAVE_TRANSVERSE_KL)
     call bcast_all_singlel(APPROXIMATE_HESS_KL)

@@ -126,6 +126,25 @@ shared_OBJECTS += $(adios_shared_STUB_OBJECTS)
 shared_MODULES += $(adios_shared_STUB_MODULES)
 endif
 
+###
+### ASDF
+###
+
+asdf_shared_OBJECTS = \
+	$O/asdf_manager.shared_asdf.o \
+	$(EMPTY_MACRO)
+
+asdf_shared_STUBS = \
+	$O/asdf_method_stubs.cc.o \
+	$O/asdf_manager_stubs.shared_asdf.o \
+        $(EMPTY_MACRO)
+
+ifeq ($(ASDF),yes)
+shared_OBJECTS += $(asdf_shared_OBJECTS)
+else
+shared_OBJECTS += $(asdf_shared_STUBS)
+endif
+
 #######################################
 
 ####
@@ -171,6 +190,10 @@ $O/%.shared_adios.o: $S/%.F90 $O/adios_helpers_writers.shared_adios_module.o $O/
 $O/%.shared_noadios.o: $S/%.f90
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
+## asdf
+
+$O/%.shared_asdf.o: $S/%.f90
+	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
 
 ##
 ## C compilation

@@ -917,35 +917,44 @@
           ! updates counter
           nadj_rec_local = nadj_rec_local + 1
 
-          ! checks **net**.**sta**.**BH**.adj files for correct number of time steps
-          adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
+          if (.not. READ_ADJSRC_ASDF) then
+            ! checks **net**.**sta**.**BH**.adj files for correct number of time steps
+            adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
 
-          ! loops over file components E/N/Z
-          do icomp = 1,NDIM
-            filename = OUTPUT_FILES(1:len_trim(OUTPUT_FILES))// &
+            ! loops over file components E/N/Z
+            do icomp = 1,NDIM
+              filename = OUTPUT_FILES(1:len_trim(OUTPUT_FILES))// &
                        '/../SEM/'//trim(adj_source_file) // '.'// comp(icomp) // '.adj'
-            open(unit=IIN,file=trim(filename),status='old',action='read',iostat=ier)
-            if (ier == 0) then
-              ! checks length of file
-              itime = 0
-              do while (ier == 0)
-                read(IIN,*,iostat=ier) junk,junk
-                if (ier == 0) itime = itime + 1
-              enddo
+              open(unit=IIN,file=trim(filename),status='old',action='read',iostat=ier)
+              if (ier == 0) then
+                ! checks length of file
+                itime = 0
+                do while (ier == 0)
+                  read(IIN,*,iostat=ier) junk,junk
+                  if (ier == 0) itime = itime + 1
+                enddo
 
-              ! checks length
-              if (itime /= NSTEP) then
-                print *,'adjoint source error: ',trim(filename),' has length',itime,' but should be',NSTEP
-                call exit_MPI(myrank, &
-                  'file '//trim(filename)//' has wrong length, please check your adjoint sources and your simulation duration')
+                ! checks length
+                if (itime /= NSTEP) then
+                  print *,'adjoint source error: ',trim(filename),' has length',itime,' but should be',NSTEP
+                  call exit_MPI(myrank, &
+                    'file '//trim(filename)//' has wrong length, please check your adjoint sources and your simulation duration')
+                endif
+
+                ! updates counter for found files
+                nadj_files_found = nadj_files_found + 1
               endif
-
-              ! updates counter for found files
-              nadj_files_found = nadj_files_found + 1
-            endif
-            ! closes file
-            close(IIN)
-          enddo
+              ! closes file
+              close(IIN)
+            enddo
+          else
+            adj_source_file = trim(network_name(irec))//'_'//trim(station_name(irec))
+            do icomp = 1,NDIM
+              filename = trim(adj_source_file) // '_'// comp(icomp)
+              call check_adjoint_sources_asdf(filename)
+            enddo
+            nadj_files_found = nadj_files_found + 1
+          endif
         endif
       enddo
 

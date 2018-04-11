@@ -114,6 +114,7 @@ inverse_problem_for_model_OBJECTS = \
 ## objects from other source directories
 inverse_problem_for_model_OBJECTS += \
 	$O/specfem3D_par.spec_module.o \
+	$O/asdf_data.spec_module.o \
 	$O/assemble_MPI_vector.spec.o \
 	$O/calendar.spec.o \
 	$O/check_stability.spec.o \
@@ -197,6 +198,7 @@ inverse_problem_for_model_OBJECTS += \
 
 
 inverse_problem_for_model_SHARED_OBJECTS = \
+	$O/asdf_method_stubs.cc.o \
 	$O/shared_par.shared_module.o \
 	$O/assemble_MPI_scalar.shared.o \
 	$O/check_mesh_resolution.shared.o \
@@ -341,7 +343,18 @@ endif
 inverse_problem_for_model_OBJECTS += $(adios_inverse_problem_for_model_OBJECTS)
 inverse_problem_for_model_SHARED_OBJECTS += $(adios_inverse_problem_for_model_PREOBJECTS)
 
-## VTK
+asdf_inverse_problem_for_model_STUBS = \
+	$O/asdf_method_stubs.cc.o
+
+asdf_inverse_problem_for_model_PRESTUBS = \
+	$O/asdf_manager_stubs.shared_asdf.o
+
+ifeq ($(ASDF),no)
+asdf_inverse_problem_for_model_PREOBJECTS = $(asdf_inverse_problem_for_model_PRESTUBS)
+endif
+inverse_problem_for_model_OBJECTS += $(asdf_inverse_problem_for_model_OBJECTS)
+inverse_problem_for_model_SHARED_OBJECTS += $(asdf_inverse_problem_for_model_PREOBJECTS)
+
 ifeq ($(VTK),yes)
 inverse_problem_for_model_OBJECTS += \
 	$O/vtk_window_stubs.visualcc.o \
@@ -437,8 +450,6 @@ $O/inverse_problem_main.inv.o: \
 	$O/specfem_interface_mod.inv_specfem_interface.o \
 	$O/fwi_iteration_mod.inv_inversion.o
 
-
-
 ####
 #### rule to build each .o file
 ####
@@ -446,7 +457,6 @@ $O/inverse_problem_main.inv.o: \
 ## main module
 $O/%.inv_par.o: $S/%.f90 ${SETUP}/constants.h $O/shared_par.shared_module.o $O/specfem3D_par.spec_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
-
 
 ## file object rules
 $O/%.inv.o: $S/%.f90 ${SETUP}/constants.h $O/inverse_problem_par.inv_par.o

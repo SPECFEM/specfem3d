@@ -44,6 +44,7 @@ specfem3D_TARGETS = \
 
 specfem3D_OBJECTS = \
 	$O/specfem3D_par.spec_module.o \
+        $O/asdf_data.spec_module.o \
 	$O/assemble_MPI_vector.spec.o \
 	$O/check_stability.spec.o \
 	$O/comp_source_time_function.spec.o \
@@ -160,6 +161,7 @@ specfem3D_SHARED_OBJECTS = \
 
 
 specfem3D_MODULES = \
+        $(FC_MODDIR)/asdf_data.$(FC_MODEXT) \
 	$(FC_MODDIR)/fault_solver_common.$(FC_MODEXT) \
 	$(FC_MODDIR)/fault_solver_dynamic.$(FC_MODEXT) \
 	$(FC_MODDIR)/fault_solver_kinematic.$(FC_MODEXT) \
@@ -260,6 +262,34 @@ endif
 specfem3D_OBJECTS += $(adios_specfem3D_OBJECTS)
 specfem3D_SHARED_OBJECTS += $(adios_specfem3D_PREOBJECTS)
 
+###
+### ASDF
+###
+
+asdf_specfem3D_OBJECTS = \
+        $O/write_output_ASDF.spec.o \
+        $O/read_adjoint_sources_ASDF.spec.o \
+        $(EMPTY_MACRO)
+
+asdf_specfem3D_SHARED_OBJECTS = \
+        $O/asdf_manager.shared_asdf.o \
+        $(EMPTY_MACRO)
+
+asdf_specfem3D_SHARED_STUBS = \
+        $O/asdf_method_stubs.cc.o \
+        $O/asdf_manager_stubs.shared_asdf.o \
+        $(EMPTY_MACRO)
+
+# conditional asdf linking
+ifeq ($(ASDF),yes)
+SPECFEM_LINK_FLAGS += $(ASDF_LIBS) -lhdf5hl_fortran -lhdf5_hl -lhdf5 -lstdc++
+specfem3D_OBJECTS += $(asdf_specfem3D_OBJECTS)
+specfem3D_SHARED_OBJECTS += $(asdf_specfem3D_SHARED_OBJECTS)
+else
+specfem3D_OBJECTS += $(asdf_specfem3D_STUBS)
+specfem3D_SHARED_OBJECTS += $(asdf_specfem3D_SHARED_STUBS)
+endif
+#
 
 ###
 ### VTK
@@ -295,7 +325,7 @@ ${E}/xspecfem3D: $(specfem3D_OBJECTS) $(specfem3D_SHARED_OBJECTS)
 	@echo ""
 	@echo $(INFO_CUDA_SPECFEM)
 	@echo ""
-	${FCLINK} -o ${E}/xspecfem3D $(specfem3D_OBJECTS) $(specfem3D_SHARED_OBJECTS) $(MPILIBS) $(CUDA_LINK) $(VTKLIBS)
+	${FCLINK} -o ${E}/xspecfem3D $(specfem3D_OBJECTS) $(specfem3D_SHARED_OBJECTS) $(MPILIBS) $(CUDA_LINK) $(VTKLIBS) $(SPECFEM_LINK_FLAGS)
 	@echo ""
 
 else
@@ -305,7 +335,7 @@ ${E}/xspecfem3D: $(specfem3D_OBJECTS) $(specfem3D_SHARED_OBJECTS)
 	@echo ""
 	@echo "building xspecfem3D"
 	@echo ""
-	${FCLINK} -o ${E}/xspecfem3D $(specfem3D_OBJECTS) $(specfem3D_SHARED_OBJECTS) $(MPILIBS) $(VTKLIBS)
+	${FCLINK} -o ${E}/xspecfem3D $(specfem3D_OBJECTS) $(specfem3D_SHARED_OBJECTS) $(MPILIBS) $(VTKLIBS) $(SPECFEM_LINK_FLAGS)
 	@echo ""
 
 endif
@@ -359,6 +389,9 @@ $O/specfem3D_adios_stubs.spec_noadios.o: $O/adios_manager_stubs.shared_noadios.o
 $O/adios_helpers.shared_adios.o: \
 	$O/adios_helpers_definitions.shared_adios_module.o \
 	$O/adios_helpers_writers.shared_adios_module.o
+
+## ASDF compilation
+$O/write_output_ASDF.spec.o: $O/asdf_data.spec_module.o
 
 ## kdtree
 $O/locate_point.spec.o: $O/search_kdtree.shared.o

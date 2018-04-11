@@ -63,6 +63,10 @@ module specfem_par
 
   integer(kind=8) :: Fault_pointer
 
+! ASDF
+! asdf file handle
+  integer :: current_asdf_handle
+
 ! use integer array to store topography values
   integer :: NX_TOPO,NY_TOPO
   integer, dimension(:,:), allocatable :: itopo_bathy
@@ -120,6 +124,8 @@ module specfem_par
   double precision, dimension(:), allocatable :: utm_x_source,utm_y_source
   double precision, external :: comp_source_time_function
   double precision :: t0
+  integer :: yr,mo,da,jda,ho,mi
+  double precision :: sec
   real(kind=CUSTOM_REAL) :: stf_used_total
   integer :: nsources_local
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: user_source_time_function
@@ -127,7 +133,6 @@ module specfem_par
   ! for acoustic sources: takes +/- 1 sign, depending on sign(Mxx)
   ! [ = sign(Myy) = sign(Mzz) since they have to be equal in the acoustic setting]
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: pm1_source_encoding
-
 
 ! receiver information
   character(len=MAX_STRING_LEN) :: rec_filename,filtered_rec_filename,dummystring

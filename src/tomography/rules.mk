@@ -209,6 +209,18 @@ xmodel_update_OBJECTS += $(adios_model_update_STUBS)
 xmodel_update_SHARED_OBJECTS += $(adios_model_update_SHARED_STUBS)
 endif
 
+###
+### ASDF
+###
+
+asdf_specfem3D_SHARED_STUBS = \
+        $O/asdf_method_stubs.cc.o \
+        $O/asdf_manager_stubs.shared_asdf.o \
+        $(EMPTY_MACRO)
+
+# conditional asdf linking
+xmodel_update_SHARED_OBJECTS += $(asdf_specfem3D_SHARED_STUBS)
+
 # extra dependencies
 $O/model_update.tomo.o: $O/specfem3D_par.spec_module.o $O/tomography_par.tomo_module.o
 $O/save_external_bin_m_up.tomo.o: $O/specfem3D_par.spec_module.o
