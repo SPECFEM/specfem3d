@@ -163,7 +163,7 @@
   use asdf_data, only: asdf_container
 
   use iso_c_binding
-  use iso_fortran_env
+  use iso_Fortran_env
 
   use specfem_par
 
@@ -412,7 +412,7 @@
     if (myrank == 0) then
       call ASDF_initialize_hdf5_f(ier);
 
-      call ASDF_create_new_file_serial_f(trim(OUTPUT_FILES) // "synthetic.h5" // C_NULL_CHAR,&
+      call ASDF_create_new_file_serial_f(trim(OUTPUT_FILES) // "synthetic.h5" // C_NULL_CHAR, &
                                           current_asdf_handle)
 
       call ASDF_write_string_attribute_f(current_asdf_handle, "file_format" // C_NULL_CHAR, &
@@ -930,7 +930,7 @@
   len_station_depth = len(trim(station_depth))
   len_station_ele = len(trim(station_ele))
 
-  
+
   stationxmlstring = '<FDSNStationXML schemaVersion="1.0" xmlns="http://www.fdsn.org/xml/station/1">'//&
                      '<Source>SPECFEM3D_GLOBE</Source>'//&
                      '<Module>SPECFEM3D_GLOBE/asdf-library</Module>'//&
