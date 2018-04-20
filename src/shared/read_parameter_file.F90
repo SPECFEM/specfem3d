@@ -816,7 +816,7 @@
     endif
 
     ! checks number of nodes for 2D and 3D shape functions for quadrilaterals and hexahedra
-    ! curvature (i.e. HEX27 elements) is not handled by our internal mesher, for that use Gmsh (CUBIT does not handle it either)
+    ! curvature (i.e. HEX27 elements) is not handled by our internal mesher, for that use CUBIT/Trelis or Gmsh for instance
     if (NGNOD == 8) then
       NGNOD2D = 4
     else if (NGNOD == 27) then
