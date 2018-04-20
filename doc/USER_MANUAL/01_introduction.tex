@@ -19,7 +19,7 @@ TRACTION\_PATH                   = ./DATA/AxiSEM\_tractions/3/ \\
 FKMODEL\_FILE                    = FKmodel \\
 RECIPROCITY\_AND\_KH\_INTEGRAL     = .false.   \# does not work yet \\
 That part (coupling with FK) is actively maintained and works fine. See e.g. \url{http://komatitsch.free.fr/preprints/GRL_Ping_Tong_2014.pdf} for some examples.
-There is also an example that is provided with the code: specfem3d/EXAMPLES/small\_example\_coupling\_FK\_specfem. \\
+There is also an example that is provided with the code: specfem3d/EXAMPLES/small\_example\_coupling\_FK\_specfem. \\
 Regarding coupling with DSM, that part is not actively maintained any more, but it is still included in the code, you may have to test it again and make minor adjustments if needed. The necessary tools are in directory specfem3d/EXTERNAL\_PACKAGES\_coupled\_with\_SPECFEM3D/DSM\_for\_SPECFEM3D , and there is a README file in specfem3d/EXTERNAL\_PACKAGES\_coupled\_with\_SPECFEM3D that should be more or less up-to-date (there are about four steps to follow in total, the first one being creating the database of DSM tractions and displacements on the edges of the coupling box). \\
 See e.g. \url{http://komatitsch.free.fr/preprints/GJI1_Vadim_2013.pdf} and \url{http://komatitsch.free.fr/preprints/GJI2_Vadim_2015.pdf} for some examples.\\
 
