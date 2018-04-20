@@ -1,10 +1,29 @@
 \chapter{Introduction}
 
-\red{\Large ANNOUNCEMENT: SPECFEM3D can now perform full waveform inversion (FWI), i.e. invert for models in an iterative fashion, and it can also perform source inversions in a constant model;
+\red{FIRST ANNOUNCEMENT: SPECFEM3D can now perform full waveform inversion (FWI), i.e. invert for models in an iterative fashion, and it can also perform source inversions in a constant model;
 please refer to the two new directories, \texttt{inverse\_problem\_for\_model} and \texttt{inverse\_problem\_for\_source}, and the README files they contain. For FWI inversions for the model, also refer to the new examples provided in
 directory \texttt{EXAMPLES}.}\\
 
-\red{OTHER ANNOUNCEMENT: SPECFEM3D can now perform gravity field calculations in addition (or instead of) seismic wave propagation only.
+\red{SECOND ANNOUNCEMENT: SPECFEM3D can now perform coupling with an external code (DSM, AxiSEM or FK) based on a database of displacement vectors and traction vectors
+on the outer edges of the mesh created once and for all (see \cite{MoChKoFu13,MoChKoWa15,WaChMoKoMo16,ToChKoBaLi14,ToKoTsHuChBaLi14}, and if you use that feature of the code please cite at least one of these papers).} \\
+To use coupling with FK, just use the set of parameters that is in the DATA/Par\_file input file of the code: \\
+\#----------------------------------------------------------- \\
+\# \\
+\# Coupling with an injection technique (DSM, AxiSEM, or FK) \\
+\# \\
+\#----------------------------------------------------------- \\
+COUPLE\_WITH\_INJECTION\_TECHNIQUE = .false. \\
+INJECTION\_TECHNIQUE\_TYPE        = 3   \# 1 = DSM, 2 = AxiSEM, 3 = FK \\
+MESH\_A\_CHUNK\_OF\_THE\_EARTH       = .false. \\
+TRACTION\_PATH                   = ./DATA/AxiSEM\_tractions/3/ \\
+FKMODEL\_FILE                    = FKmodel \\
+RECIPROCITY\_AND\_KH\_INTEGRAL     = .false.   \# does not work yet \\
+That part (coupling with FK) is actively maintained and works fine. See e.g. \url{http://komatitsch.free.fr/preprints/GRL_Ping_Tong_2014.pdf} for some examples.
+There is also an example that is provided with the code: specfem3d/EXAMPLES/small\_example\_coupling\_FK\_specfem. \\
+Regarding coupling with DSM, that part is not actively maintained any more, but it is still included in the code, you may have to test it again and make minor adjustments if needed. The necessary tools are in directory specfem3d/EXTERNAL\_PACKAGES\_coupled\_with\_SPECFEM3D/DSM\_for\_SPECFEM3D , and there is a README file in specfem3d/EXTERNAL\_PACKAGES\_coupled\_with\_SPECFEM3D that should be more or less up-to-date (there are about four steps to follow in total, the first one being creating the database of DSM tractions and displacements on the edges of the coupling box). \\
+See e.g. \url{http://komatitsch.free.fr/preprints/GJI1_Vadim_2013.pdf} and \url{http://komatitsch.free.fr/preprints/GJI2_Vadim_2015.pdf} for some examples.\\
+
+\red{THIRD ANNOUNCEMENT: SPECFEM3D can now perform gravity field calculations in addition (or instead of) seismic wave propagation only.
 See flag \texttt{GRAVITY\_INTEGRALS} in file \texttt{setup/constants.h.in}. Please also refer to \url{http://komatitsch.free.fr/preprints/GJI_Martin_gravimetry_2017.pdf}.
 And yes, that is the reason why I added a falling apple on the cover of the manual :-).
 Note that SPECFEM3D can also model transient gravity perturbations induced by earthquake rupture, as developed and explained in \cite{HaAmBaChMoSoWh2015}.
