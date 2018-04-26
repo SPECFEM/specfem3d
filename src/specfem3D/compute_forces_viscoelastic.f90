@@ -83,9 +83,9 @@
   real(kind=CUSTOM_REAL), dimension(NDIM,NGLOB_AB) :: displ,veloc,accel
 
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: alphaval,betaval,gammaval
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS) :: &
+  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: &
             R_xx,R_yy,R_xy,R_xz,R_yz
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB,N_SLS) :: R_trace
+  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB) :: R_trace
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY) :: &
             epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz
@@ -94,9 +94,9 @@
   real(kind=CUSTOM_REAL),dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT) :: epsilon_trace_over_3
 
 ! lddrk for update the memory variables
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK,N_SLS) :: &
+  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK) :: &
             R_xx_lddrk,R_yy_lddrk,R_xy_lddrk,R_xz_lddrk,R_yz_lddrk
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK,N_SLS) :: R_trace_lddrk
+  real(kind=CUSTOM_REAL), dimension(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK) :: R_trace_lddrk
 
   integer :: iphase
 
@@ -104,7 +104,6 @@
   logical :: backward_simulation
 
 ! local parameters
-  integer :: i_SLS,imodulo_N_SLS
   integer :: ispec,iglob,ispec_p,ispec_irreg,num_elements
   integer :: i,j,k,l
 
@@ -128,9 +127,7 @@
   ! local attenuation parameters
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: epsilondev_trace_loc, epsilondev_xx_loc, &
             epsilondev_yy_loc, epsilondev_xy_loc, epsilondev_xz_loc, epsilondev_yz_loc
-  real(kind=CUSTOM_REAL) :: R_trace_val1,R_xx_val1,R_yy_val1
-  real(kind=CUSTOM_REAL) :: R_trace_val2,R_xx_val2,R_yy_val2
-  real(kind=CUSTOM_REAL) :: R_trace_val3,R_xx_val3,R_yy_val3
+  real(kind=CUSTOM_REAL) :: R_trace_kappa_sum,R_xx_sum,R_yy_sum
   real(kind=CUSTOM_REAL) :: templ
 
 ! local parameters
@@ -160,8 +157,6 @@
             tempy1_att_new,tempy2_att_new,tempy3_att_new, &
             tempz1_att_new,tempz2_att_new,tempz3_att_new
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: zero_array
-
-  imodulo_N_SLS = mod(N_SLS,3)
 
   ! choses inner/outer elements
   if (iphase == 1) then
@@ -611,68 +606,16 @@
 
           ! subtract memory variables if attenuation
           if (ATTENUATION .and. .not. is_CPML(ispec)) then
-! old way 1
-!             do i_sls = 1,N_SLS
-!               R_xx_val = R_xx(i,j,k,ispec,i_sls)
-!               R_yy_val = R_yy(i,j,k,ispec,i_sls)
-!               sigma_xx = sigma_xx - R_xx_val
-!               sigma_yy = sigma_yy - R_yy_val
-!               sigma_zz = sigma_zz + R_xx_val + R_yy_val
-!               sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls)
-!               sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls)
-!               sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls)
-!             enddo
 
-! new way 2
-! note: this helps compilers to pipeline the code and make better use of the cache;
-!       depending on compilers, it can further decrease the computation time by ~ 30%.
-!       by default, N_SLS = 3, therefore we take steps of 3
-                if (imodulo_N_SLS >= 1) then
-                  do i_sls = 1,imodulo_N_SLS
-                    R_trace_val1 = R_trace(i,j,k,ispec,i_sls)
-                    R_xx_val1 = R_xx(i,j,k,ispec,i_sls)
-                    R_yy_val1 = R_yy(i,j,k,ispec,i_sls)
-                    sigma_xx = sigma_xx - R_xx_val1 - R_trace_val1
-                    sigma_yy = sigma_yy - R_yy_val1 - R_trace_val1
-                    sigma_zz = sigma_zz + R_xx_val1 + R_yy_val1 - R_trace_val1
-                    sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls)
-                    sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls)
-                    sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls)
-                  enddo
-                endif
-
-                if (N_SLS >= imodulo_N_SLS+1) then
-                  do i_sls = imodulo_N_SLS+1,N_SLS,3
-                    R_trace_val1 = R_trace(i,j,k,ispec,i_sls)
-                    R_xx_val1 = R_xx(i,j,k,ispec,i_sls)
-                    R_yy_val1 = R_yy(i,j,k,ispec,i_sls)
-                    sigma_xx = sigma_xx - R_xx_val1 - R_trace_val1
-                    sigma_yy = sigma_yy - R_yy_val1 - R_trace_val1
-                    sigma_zz = sigma_zz + R_xx_val1 + R_yy_val1 - R_trace_val1
-                    sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls)
-                    sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls)
-                    sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls)
-                    R_trace_val2 = R_trace(i,j,k,ispec,i_sls+1)
-                    R_xx_val2 = R_xx(i,j,k,ispec,i_sls+1)
-                    R_yy_val2 = R_yy(i,j,k,ispec,i_sls+1)
-                    sigma_xx = sigma_xx - R_xx_val2 - R_trace_val2
-                    sigma_yy = sigma_yy - R_yy_val2 - R_trace_val2
-                    sigma_zz = sigma_zz + R_xx_val2 + R_yy_val2 - R_trace_val2
-                    sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls+1)
-                    sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls+1)
-                    sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls+1)
-
-                    R_trace_val3 = R_trace(i,j,k,ispec,i_sls+2)
-                    R_xx_val3 = R_xx(i,j,k,ispec,i_sls+2)
-                    R_yy_val3 = R_yy(i,j,k,ispec,i_sls+2)
-                    sigma_xx = sigma_xx - R_xx_val3 - R_trace_val3
-                    sigma_yy = sigma_yy - R_yy_val3 - R_trace_val3
-                    sigma_zz = sigma_zz + R_xx_val3 + R_yy_val3 - R_trace_val3
-                    sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls+2)
-                    sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls+2)
-                    sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls+2)
-                  enddo
-                endif
+               R_xx_sum = sum(R_xx(:,i,j,k,ispec))
+               R_yy_sum = sum(R_yy(:,i,j,k,ispec))
+               R_trace_kappa_sum = sum(R_trace(:,i,j,k,ispec))
+               sigma_xx = sigma_xx - R_xx_sum - R_trace_kappa_sum
+               sigma_yy = sigma_yy - R_yy_sum - R_trace_kappa_sum
+               sigma_zz = sigma_zz + R_xx_sum + R_yy_sum - R_trace_kappa_sum
+               sigma_xy = sigma_xy - sum(R_xy(:,i,j,k,ispec))
+               sigma_xz = sigma_xz - sum(R_xz(:,i,j,k,ispec))
+               sigma_yz = sigma_yz - sum(R_yz(:,i,j,k,ispec))
 
           endif
 

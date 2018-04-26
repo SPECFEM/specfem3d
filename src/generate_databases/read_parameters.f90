@@ -122,9 +122,6 @@
   if (CUSTOM_REAL /= SIZE_REAL .and. CUSTOM_REAL /= SIZE_DOUBLE) &
     call exit_MPI(myrank,'wrong size of CUSTOM_REAL for reals')
 
-! for the number of standard linear solids for attenuation
-  if (N_SLS /= 3) call exit_MPI(myrank,'number of SLS must be 3')
-
   ! for noise simulations, we need to save movies at the surface (where the noise is generated)
   ! and thus we force MOVIE_SURFACE to be .true., in order to use variables defined for surface movies later
   if (NOISE_TOMOGRAPHY /= 0) then

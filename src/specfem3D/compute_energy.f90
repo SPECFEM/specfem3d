@@ -271,14 +271,14 @@
           ! subtract memory variables if attenuation
           if (ATTENUATION) then
             do i_sls = 1,N_SLS
-              R_xx_val = R_xx(i,j,k,ispec,i_sls)
-              R_yy_val = R_yy(i,j,k,ispec,i_sls)
+              R_xx_val = R_xx(i_sls,i,j,k,ispec)
+              R_yy_val = R_yy(i_sls,i,j,k,ispec)
               sigma_xx = sigma_xx - R_xx_val
               sigma_yy = sigma_yy - R_yy_val
               sigma_zz = sigma_zz + R_xx_val + R_yy_val
-              sigma_xy = sigma_xy - R_xy(i,j,k,ispec,i_sls)
-              sigma_xz = sigma_xz - R_xz(i,j,k,ispec,i_sls)
-              sigma_yz = sigma_yz - R_yz(i,j,k,ispec,i_sls)
+              sigma_xy = sigma_xy - R_xy(i_sls,i,j,k,ispec)
+              sigma_xz = sigma_xz - R_xz(i_sls,i,j,k,ispec)
+              sigma_yz = sigma_yz - R_yz(i_sls,i,j,k,ispec)
             enddo
           endif
 

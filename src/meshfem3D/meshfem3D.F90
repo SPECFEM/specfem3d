@@ -470,9 +470,6 @@
   ! check that reals are either 4 or 8 bytes
   if (CUSTOM_REAL /= SIZE_REAL .and. CUSTOM_REAL /= SIZE_DOUBLE) call exit_MPI(myrank,'wrong size of CUSTOM_REAL for reals')
 
-  ! for the number of standard linear solids for attenuation
-  if (N_SLS /= 3) call exit_MPI(myrank,'number of SLS must be 3')
-
   ! check that number of slices is at least 1 in each direction
   if (NPROC_XI < 1) call exit_MPI(myrank,'NPROC_XI must be greater than 1')
   if (NPROC_ETA < 1) call exit_MPI(myrank,'NPROC_ETA must be greater than 1')
