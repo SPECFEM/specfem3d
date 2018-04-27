@@ -84,7 +84,7 @@ subroutine compute_element_att_memory_second_order_rk(ispec,alphaval,betaval,gam
         Sn   = epsilondev_xy(i,j,k,ispec)
         Snp1   = epsilondev_xy_loc(i,j,k)
         R_xy(:,i,j,k,ispec) = alphaval(:) * R_xy(:,i,j,k,ispec) + factor_loc(:) * (betaval(:) * Sn + gammaval(:) * Snp1)
-  
+
         ! term in xz
         Sn   = epsilondev_xz(i,j,k,ispec)
         Snp1   = epsilondev_xz_loc(i,j,k)
@@ -97,7 +97,7 @@ subroutine compute_element_att_memory_second_order_rk(ispec,alphaval,betaval,gam
 
       enddo
     enddo
-  enddo   
+  enddo
 
 end subroutine compute_element_att_memory_second_order_rk
 
