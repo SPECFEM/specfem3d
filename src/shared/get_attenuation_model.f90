@@ -1115,7 +1115,7 @@
 !      Geophys, J. R. asts. Soc, Vol 47, pp. 41-58
 
 !! EB EB May 2018: the expressions of A and B from Liu have been corrected here,
-!to incorporate the 1/L 
+!to incorporate the 1/L
   implicit none
 
   ! Input
