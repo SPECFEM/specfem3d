@@ -123,7 +123,7 @@
                                 ATTENUATION, &
                                 size(R_xx), &
                                 R_xx,R_yy,R_xy,R_xz,R_yz, &
-                                one_minus_sum_beta,factor_common, &
+                                factor_common, &
                                 alphaval,betaval,gammaval, &
                                 APPROXIMATE_OCEAN_LOAD,rmass_ocean_load, &
                                 NOISE_TOMOGRAPHY, &
@@ -364,8 +364,6 @@
       if (ATTENUATION) then
         ! d_R_xx,..
         memory_size = memory_size + 5.d0 * size(R_xx) * dble(CUSTOM_REAL)
-        ! d_one_minus_sum_beta
-        memory_size = memory_size + NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
         ! d_factor_common
         memory_size = memory_size + N_SLS * NGLL3 * NSPEC_AB * dble(CUSTOM_REAL)
         ! alphaval,..

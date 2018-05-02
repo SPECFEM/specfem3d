@@ -153,9 +153,7 @@
   character(len=MAX_STRING_LEN),intent(in) :: prname
 
   ! local parameters
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: one_minus_sum_beta
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: factor_common
-  real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: one_minus_sum_beta_kappa
   real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable :: factor_common_kappa
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: scale_factor, scale_factor_kappa
   double precision, dimension(N_SLS) :: tau_sigma_dble,beta_dble,beta_dble_kappa
@@ -166,7 +164,6 @@
   double precision :: f_c_source
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: tau_sigma
   real(kind=CUSTOM_REAL), dimension(N_SLS) :: tauinv
-  real(kind=CUSTOM_REAL), dimension(N_SLS) :: beta,beta_kappa
   real(kind=CUSTOM_REAL):: vs_val,vp_val
   integer :: i,j,k,ispec,ier
   double precision :: qmin,qmax,qmin_all,qmax_all
@@ -182,21 +179,17 @@
   !-----------------------------------------------------
 
   ! initializes arrays
-  allocate(one_minus_sum_beta(NGLLX,NGLLY,NGLLZ,nspec), &
-          factor_common(N_SLS,NGLLX,NGLLY,NGLLZ,nspec), &
-          scale_factor(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  allocate(factor_common(N_SLS,NGLLX,NGLLY,NGLLZ,nspec), &
+           scale_factor(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if (ier /= 0) call exit_mpi(myrank,'error allocation attenuation arrays')
 
-  allocate(one_minus_sum_beta_kappa(NGLLX,NGLLY,NGLLZ,nspec), &
-          factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,nspec), &
+  allocate(factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,nspec), &
           scale_factor_kappa(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if (ier /= 0) call exit_mpi(myrank,'error allocation attenuation arrays')
 
-  one_minus_sum_beta(:,:,:,:) = 1._CUSTOM_REAL
   factor_common(:,:,:,:,:) = 1._CUSTOM_REAL
   scale_factor(:,:,:,:) = 1._CUSTOM_REAL
 
-  one_minus_sum_beta_kappa(:,:,:,:) = 1._CUSTOM_REAL
   factor_common_kappa(:,:,:,:,:) = 1._CUSTOM_REAL
   scale_factor_kappa(:,:,:,:) = 1._CUSTOM_REAL
 
@@ -239,8 +232,8 @@
   ! determines inverse of tau_sigma
   tau_sigma(:) = real(tau_sigma_dble(:),kind=CUSTOM_REAL)
 
-  ! precalculates the negative inverse of tau_sigma
-  tauinv(:) = - 1._CUSTOM_REAL / tau_sigma(:)
+  ! precalculates the inverse of tau_sigma
+  tauinv(:) = 1._CUSTOM_REAL / tau_sigma(:)
 
   ! precalculates factors for shear modulus scaling according to attenuation model
   qmin = HUGEVAL
@@ -354,25 +347,18 @@
                                        ATTENUATION_f0_REFERENCE)
 
           ! shear attenuation
-          ! stores factor for unrelaxed parameter
-          one_minus_sum_beta(i,j,k,ispec) = one_minus_sum_beta_dble
 
           ! stores factor for runge-kutta scheme
           ! using factor for modulus defect Delta M_i = - M_relaxed
           ! see e.g. Savage et al. (BSSA, 2010): eq. 11
           !     precomputes factor: 2 ( 1 - tau_eps_i / tau_sigma_i ) / tau_sigma_i
-          beta(:) = beta_dble(:)
-          factor_common(:,i,j,k,ispec) = 2._CUSTOM_REAL * beta(:) * tauinv(:)
-
-          ! stores scale factor for mu moduli
+          !EB EB May 2018 : this expression has been corrected, replaced by :
+          ! 2 (1 - tau_eps_i / tau_sigma_i ) / tau_sigma_i) / sum(tau_eps / tau_sigma)
+          factor_common(:,i,j,k,ispec) = (2._CUSTOM_REAL * beta_dble(:) * tauinv(:)) / one_minus_sum_beta_dble
           scale_factor(i,j,k,ispec) = factor_scale_dble
 
           ! bulk attenuation
-          one_minus_sum_beta_kappa(i,j,k,ispec) = one_minus_sum_beta_dble_kappa
-          beta_kappa(:) = beta_dble_kappa(:)
-          factor_common_kappa(:,i,j,k,ispec) = beta_kappa(:) * tauinv(:)
-
-          ! stores scale factor for mu moduli
+          factor_common_kappa(:,i,j,k,ispec) = (beta_dble_kappa(:) * tauinv(:)) / one_minus_sum_beta_dble_kappa
           scale_factor_kappa(i,j,k,ispec) = factor_scale_dble_kappa
 
         enddo
@@ -403,20 +389,18 @@
   write(27) nspec
 
   ! shear attenuation
-  write(27) one_minus_sum_beta
   write(27) factor_common
   write(27) scale_factor
 
   ! bulk attenuation
-  write(27) one_minus_sum_beta_kappa
   write(27) factor_common_kappa
   write(27) scale_factor_kappa
 
   close(27)
 
   ! frees memory
-  deallocate(one_minus_sum_beta,factor_common,scale_factor)
-  deallocate(one_minus_sum_beta_kappa,factor_common_kappa,scale_factor_kappa)
+  deallocate(factor_common,scale_factor)
+  deallocate(factor_common_kappa,scale_factor_kappa)
 
   end subroutine get_attenuation_model
 
@@ -433,7 +417,7 @@
 
   implicit none
 
-  real(kind=CUSTOM_REAL), dimension(N_SLS) :: tau_s, alphaval, betaval,gammaval
+  real(kind=CUSTOM_REAL), dimension(N_SLS) :: tau_s, alphaval,betaval,gammaval
   real(kind=CUSTOM_REAL) :: deltat
 
   ! local parameter
@@ -570,22 +554,19 @@
   double precision,dimension(N_SLS),intent(out) :: beta
   double precision,intent(out):: one_minus_sum_beta
 
-  ! local parameters
-  double precision,dimension(N_SLS) :: tauinv
   integer :: i
 
-  ! inverse of stress relaxation times
-  tauinv(:) = -1.0d0 / tau_s(:)
-
   ! see e.g. Komatitsch & Tromp 1999, eq. (7)
-
+  ! EB EB May 2018 this equation was wrong and has been corrected here
   ! coefficients beta
-  beta(:) = 1.0d0 - tau_eps(:) / tau_s(:)
+  beta(:) = tau_eps(:) / tau_s(:)
 
   ! sum of coefficients beta
-  one_minus_sum_beta = 1.0d0
+  one_minus_sum_beta = ZERO
   do i = 1,N_SLS
-    one_minus_sum_beta = one_minus_sum_beta - beta(i)
+    one_minus_sum_beta = one_minus_sum_beta + beta(i)
+    ! this factor will be used later to get the modulus defect
+    beta(i) = beta(i)-ONE
   enddo
 
   end subroutine get_attenuation_property_values
@@ -611,9 +592,8 @@
   ! local parameters
   double precision w_c_source
   double precision factor_scale_mu0, factor_scale_mu
-  double precision a_val, b_val
-  double precision big_omega
   integer i
+  double precision :: xtmp1_nu1,xtmp2_nu1,xtmp_ak_nu1
 
 
   !--- compute central angular frequency of source (non dimensionalized)
@@ -621,6 +601,7 @@
 
 
   !--- quantity by which to scale mu_0 to get mu
+
   ! this formula can be found for instance in
   ! Liu, H. P., Anderson, D. L. and Kanamori, H., Velocity dispersion due to
   ! anelasticity: implications for seismology and mantle composition,
@@ -629,45 +610,35 @@
   ! W. H. Freeman, (1980), second edition, sections 5.5 and 5.5.2, eq. (5.81) p. 170
   factor_scale_mu0 = ONE + TWO * log(f_c_source / ATTENUATION_f0_REFERENCE ) / (PI * Q_val)
 
-  !--- compute a, b and Omega parameters
-  ! see e.g.:
-  !   Liu et al. (1976): eq. 25
-  !   using complex modulus Mc = M_R / ( A - i B )
-  !   or
-  !   Savage et al. (BSSA, 2010): eq. (5) and (6)
-  !   complex modulus: M(t) = M_1(t) + i M_2(t)
-  a_val = ONE
-  b_val = ZERO
+
+  !--- quantity by which to scale mu to get mu_unrelaxed
+  xtmp1_nu1 = ONE
+  xtmp2_nu1 = ONE
+
   do i = 1,N_SLS
-    ! real part M_1 of complex modulus
-    a_val = a_val - w_c_source * w_c_source * tau_eps(i) * &
-      (tau_eps(i) - tau_sigma(i)) / (1.d0 + w_c_source * w_c_source * tau_eps(i) * tau_eps(i))
-    ! imaginary part M_2 of complex modulus
-    b_val = b_val + w_c_source * (tau_eps(i) - tau_sigma(i)) / &
-      (1.d0 + w_c_source * w_c_source * tau_eps(i) * tau_eps(i))
+  !! DK DK changed this to the pre-computed inverse     xtmp_ak_nu1 =
+  !tau_epsilon_nu1(i_sls)/tau_sigma_nu1(i_sls) - ONE
+     xtmp_ak_nu1 = tau_eps(i)/tau_sigma(i) - ONE
+     xtmp1_nu1 = xtmp1_nu1 + xtmp_ak_nu1/N_SLS
+     xtmp2_nu1 = xtmp2_nu1 + xtmp_ak_nu1/(ONE + ONE/(TWO * PI * f_c_source * tau_sigma(i))**2)/N_SLS
   enddo
 
-  ! see e.g. Liu et al. (1976): Omega used in equation (20)
-  big_omega = a_val * ( sqrt(1.d0 + b_val*b_val/(a_val*a_val)) - 1.d0 )
+  factor_scale_mu = xtmp1_nu1/xtmp2_nu1
 
-  !--- quantity by which to scale mu to get mu_relaxed
-  factor_scale_mu = b_val * b_val / (TWO * big_omega)
-
-  !--- total factor by which to scale mu0
+  !--- total factor by which to scale mu0 to get mu_unrelaxed
   scale_factor = factor_scale_mu * factor_scale_mu0
 
+
   !--- check that the correction factor is close to one
-  if (scale_factor < 0.7 .or. scale_factor > 1.3) then
+  if (scale_factor < 0.5 .or. scale_factor > 1.5) then
     write(*,*) "error : in get_attenuation_scale_factor() "
-    write(*,*) "  scale factor: ", scale_factor, " should be between 0.7 and 1.3"
+    write(*,*) "  scale factor: ", scale_factor, " should be between 0.5 and 1.5"
     write(*,*) "  Q value = ", Q_val, " central frequency = ",f_c_source
     write(*,*) "  please check your reference frequency ATTENUATION_f0_REFERENCE in constants.h"
     call exit_MPI(myrank,'unreliable correction factor in attenuation model')
   endif
 
   end subroutine get_attenuation_scale_factor
-
-
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -704,7 +675,6 @@
   THETA(3)           =   1.75d0
   THETA(4)           =   2.25d0
   THETA(5)           =   2.85d0
-
   ! Compute Min Attenuation Period
   !
   ! The Minimum attenuation period = (Grid Spacing in km) / V_min
@@ -838,11 +808,9 @@
   if (rw > 0) return
 
   call attenuation_invert_by_simplex(min_period, max_period, N_SLS, Q_in, tau_s, tau_eps)
-
   ! WRITE
   rw = -1
   call model_attenuation_storage(Q_in, tau_eps, rw)
-
   end subroutine get_attenuation_tau_eps
 
 !
@@ -1146,6 +1114,8 @@
 !      Velocity dispersion due to anelasticity: implications for seismology and mantle composition
 !      Geophys, J. R. asts. Soc, Vol 47, pp. 41-58
 
+!! EB EB May 2018: the expressions of A and B from Liu have been corrected here,
+!to incorporate the 1/L 
   implicit none
 
   ! Input
@@ -1156,19 +1126,19 @@
   double precision, dimension(nf)   :: A,B
 
   integer i,j
-  double precision w, pi, demon
+  double precision w, pi, denom
 
   PI = 3.14159265358979d0
 
-  A(:) = 1.0d0 -  nsls*1.0d0
+  A(:) = 0.0d0
   B(:) = 0.0d0
   do i = 1,nf
     w = 2.0d0 * PI * 10**f(i)
     do j = 1,nsls
       !        write(*,*)j,tau_s(j),tau_eps(j)
-      demon = 1.0d0 + w**2 * tau_s(j)**2
-      A(i) = A(i) + ((1.0d0 + (w**2 * tau_eps(j) * tau_s(j)))/ demon)
-      B(i) = B(i) + ((w * (tau_eps(j) - tau_s(j))) / demon)
+      denom = 1.0d0 + w**2 * tau_s(j)**2
+      A(i) = A(i) + (1.0d0 + (w**2 * tau_eps(j) * tau_s(j)))/ denom
+      B(i) = B(i) + w * ( tau_eps(j) - tau_s(j) ) / denom
     enddo
      !     write(*,*)A(i),B(i),10**f(i)
   enddo

@@ -638,7 +638,7 @@ void FC_FUNC_(prepare_fields_elastic_device,
                                              int* ATTENUATION,
                                              int* R_size,
                                              realw* R_xx,realw* R_yy,realw* R_xy,realw* R_xz,realw* R_yz,
-                                             realw* one_minus_sum_beta,realw* factor_common,
+                                             realw* factor_common,
                                              realw* alphaval,realw* betaval,realw* gammaval,
                                              int* APPROXIMATE_OCEAN_LOAD,
                                              realw* rmass_ocean_load,
@@ -816,7 +816,6 @@ void FC_FUNC_(prepare_fields_elastic_device,
     copy_todevice_realw((void**)&mp->d_R_xz,R_xz,size);
     copy_todevice_realw((void**)&mp->d_R_yz,R_yz,size);
     // attenuation factors
-    copy_todevice_realw((void**)&mp->d_one_minus_sum_beta,one_minus_sum_beta,NGLL3*mp->NSPEC_AB);
     copy_todevice_realw((void**)&mp->d_factor_common,factor_common,N_SLS*NGLL3*mp->NSPEC_AB);
     // alpha,beta,gamma factors
     copy_todevice_realw((void**)&mp->d_alphaval,alphaval,N_SLS);
@@ -1567,7 +1566,6 @@ TRACE("prepare_cleanup_device");
 
     if (*ATTENUATION ){
       cudaFree(mp->d_factor_common);
-      cudaFree(mp->d_one_minus_sum_beta);
       cudaFree(mp->d_alphaval);
       cudaFree(mp->d_betaval);
       cudaFree(mp->d_gammaval);

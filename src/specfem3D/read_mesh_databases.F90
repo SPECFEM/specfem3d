@@ -246,13 +246,11 @@
     if (ier /= 0) stop 'Error allocating array epsilon_trace_over_3'
 
     ! needed for attenuation
-    allocate(one_minus_sum_beta(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB), &
-             factor_common(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
-    if (ier /= 0) stop 'Error allocating array one_minus_sum_beta etc.'
+    allocate(factor_common(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
+    if (ier /= 0) stop 'Error allocating array factor_common etc.'
 
-    allocate(one_minus_sum_beta_kappa(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB), &
-             factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
-    if (ier /= 0) stop 'Error allocating array one_minus_sum_beta_kappa etc.'
+    allocate(factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
+    if (ier /= 0) stop 'Error allocating array factor_common_kappa etc.'
 
     ! reads mass matrices
     if (I_should_read_the_database) read(27,iostat=ier) rmass

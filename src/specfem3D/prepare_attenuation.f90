@@ -53,14 +53,12 @@
   ! rescale mu to average (central) frequency for attenuation
 
   ! initializes arrays
-  one_minus_sum_beta(:,:,:,:) = 1._CUSTOM_REAL
   factor_common(:,:,:,:,:) = 1._CUSTOM_REAL
 
   allocate( scale_factor(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
   if (ier /= 0) call exit_mpi(myrank,'error allocation scale_factor')
   scale_factor(:,:,:,:) = 1._CUSTOM_REAL
 
-  one_minus_sum_beta_kappa(:,:,:,:) = 1._CUSTOM_REAL
   factor_common_kappa(:,:,:,:,:) = 1._CUSTOM_REAL
   allocate( scale_factor_kappa(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
   if (ier /= 0) call exit_mpi(myrank,'error allocation scale_factor_kappa')
@@ -83,11 +81,9 @@
           print *,'error: attenuation file array ',ispec,'should be ',NSPEC_ATTENUATION_AB
           call exit_mpi(myrank,'error attenuation array dimensions, please recompile and rerun generate_databases')
       endif
-      read(27) one_minus_sum_beta
       read(27) factor_common
       read(27) scale_factor
 
-      read(27) one_minus_sum_beta_kappa
       read(27) factor_common_kappa
       read(27) scale_factor_kappa
 
@@ -95,10 +91,8 @@
   endif
 
   call bcast_all_i_for_database(ispec, 1)
-  if (size(one_minus_sum_beta) > 0) call bcast_all_cr_for_database(one_minus_sum_beta(1,1,1,1), size(one_minus_sum_beta))
   if (size(factor_common) > 0) call bcast_all_cr_for_database(factor_common(1,1,1,1,1), size(factor_common))
   if (size(scale_factor) > 0) call bcast_all_cr_for_database(scale_factor(1,1,1,1), size(scale_factor))
-  call bcast_all_cr_for_database(one_minus_sum_beta_kappa(1,1,1,1), size(one_minus_sum_beta_kappa))
   call bcast_all_cr_for_database(factor_common_kappa(1,1,1,1,1), size(factor_common_kappa))
   call bcast_all_cr_for_database(scale_factor_kappa(1,1,1,1), size(scale_factor_kappa))
 

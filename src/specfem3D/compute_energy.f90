@@ -208,12 +208,6 @@
             mul = mustore(i,j,k,ispec)
             rhol = rhostore(i,j,k,ispec)
 
-          ! use unrelaxed parameters if attenuation
-          if (ATTENUATION) then
-            mul  = mul * one_minus_sum_beta(i,j,k,ispec)
-            kappal = kappal * one_minus_sum_beta_kappa(i,j,k,ispec)
-          endif
-
           ! full anisotropic case, stress calculations
           if (ANISOTROPY) then
             c11 = c11store(i,j,k,ispec)

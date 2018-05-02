@@ -2109,7 +2109,7 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
                   realw_p epsilon_trace_over_3,
                   const int SIMULATION_TYPE,
                   const int NSPEC,
-                  realw_const_p one_minus_sum_beta,realw_const_p factor_common,
+                  realw_const_p factor_common,
                   realw_p R_xx,realw_p R_yy,realw_p R_xy,realw_p R_xz,realw_p R_yz,
                   realw_const_p alphaval,realw_const_p betaval,realw_const_p gammaval,
                   const int ANISOTROPY,
@@ -2150,7 +2150,7 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
   realw templ;
 
   realw fac1,fac2,fac3;
-  realw lambdal,mul,lambdalplus2mul,kappal,mul2;
+  realw lambdal,mul,lambdalplus2mul,kappal;
 
   realw sigma_xx,sigma_yy,sigma_zz,sigma_xy,sigma_xz,sigma_yz;
   realw epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,epsilondev_xz_loc,epsilondev_yz_loc;
@@ -2320,20 +2320,18 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
       mul = get_global_cr( &d_muv[offset] );
 
       // attenuation
-      // use unrelaxed parameters if attenuation
-      mul2  = mul * get_global_cr( &one_minus_sum_beta[tx+working_element*NGLL3] ); // (i,j,k,ispec)
 
-      lambdalplus2mul = kappal + 1.33333333333333333333f * mul2;  // 4./3. = 1.3333333
-      lambdal = lambdalplus2mul - 2.0f * mul2;
+      lambdalplus2mul = kappal + 1.33333333333333333333f * mul;  // 4./3. = 1.3333333
+      lambdal = lambdalplus2mul - 2.0f * mul;
 
       // compute the six components of the stress tensor sigma
       sigma_xx = lambdalplus2mul*duxdxl + lambdal*duydyl_plus_duzdzl;
       sigma_yy = lambdalplus2mul*duydyl + lambdal*duxdxl_plus_duzdzl;
       sigma_zz = lambdalplus2mul*duzdzl + lambdal*duxdxl_plus_duydyl;
 
-      sigma_xy = mul2*duxdyl_plus_duydxl;
-      sigma_xz = mul2*duzdxl_plus_duxdzl;
-      sigma_yz = mul2*duzdyl_plus_duydzl;
+      sigma_xy = mul*duxdyl_plus_duydxl;
+      sigma_xz = mul*duzdxl_plus_duxdzl;
+      sigma_yz = mul*duzdyl_plus_duydzl;
     }
 
     // attenuation
@@ -3451,7 +3449,6 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
               realw* d_epsilondev_xx,realw* d_epsilondev_yy,realw* d_epsilondev_xy,
               realw* d_epsilondev_xz,realw* d_epsilondev_yz,
               realw* d_epsilon_trace_over_3,
-              realw* d_one_minus_sum_beta,
               realw* d_factor_common,
               realw* d_R_xx,realw* d_R_yy,realw* d_R_xy,
               realw* d_R_xz,realw* d_R_yz,
@@ -3519,7 +3516,6 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                 d_epsilon_trace_over_3,
                                                                 mp->simulation_type,
                                                                 mp->NSPEC_AB,
-                                                                d_one_minus_sum_beta,
                                                                 d_factor_common,
                                                                 d_R_xx,d_R_yy,d_R_xy,d_R_xz,d_R_yz,
                                                                 mp->d_alphaval,mp->d_betaval,mp->d_gammaval,
@@ -3561,7 +3557,6 @@ void Kernel_2(int nb_blocks_to_compute,Mesh* mp,int d_iphase,realw d_deltat,
                                                                    d_b_epsilon_trace_over_3,
                                                                    mp->simulation_type,
                                                                    mp->NSPEC_AB,
-                                                                   d_one_minus_sum_beta,
                                                                    d_factor_common,
                                                                    d_b_R_xx,d_b_R_yy,d_b_R_xy,d_b_R_xz,d_b_R_yz,
                                                                    mp->d_b_alphaval,mp->d_b_betaval,mp->d_b_gammaval,
@@ -4000,7 +3995,6 @@ void FC_FUNC_(compute_forces_viscoelastic_cuda,
                mp->d_epsilondev_xx + offset_nonpadded,mp->d_epsilondev_yy + offset_nonpadded,mp->d_epsilondev_xy + offset_nonpadded,
                mp->d_epsilondev_xz + offset_nonpadded,mp->d_epsilondev_yz + offset_nonpadded,
                mp->d_epsilon_trace_over_3 + offset_nonpadded,
-               mp->d_one_minus_sum_beta + offset_nonpadded,
                mp->d_factor_common + offset_nonpadded_att2,
                mp->d_R_xx + offset_nonpadded,mp->d_R_yy + offset_nonpadded,mp->d_R_xy + offset_nonpadded,
                mp->d_R_xz + offset_nonpadded,mp->d_R_yz + offset_nonpadded,
@@ -4044,7 +4038,6 @@ void FC_FUNC_(compute_forces_viscoelastic_cuda,
              mp->d_epsilondev_xx,mp->d_epsilondev_yy,mp->d_epsilondev_xy,
              mp->d_epsilondev_xz,mp->d_epsilondev_yz,
              mp->d_epsilon_trace_over_3,
-             mp->d_one_minus_sum_beta,
              mp->d_factor_common,
              mp->d_R_xx,mp->d_R_yy,mp->d_R_xy,
              mp->d_R_xz,mp->d_R_yz,

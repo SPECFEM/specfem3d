@@ -54,8 +54,8 @@
   use specfem_par_elastic, only: c11store,c12store,c13store,c14store,c15store,c16store, &
                         c22store,c23store,c24store,c25store,c26store,c33store, &
                         c34store,c35store,c36store,c44store,c45store,c46store, &
-                        c55store,c56store,c66store,one_minus_sum_beta,factor_common, &
-                        one_minus_sum_beta_kappa,factor_common_kappa,COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
+                        c55store,c56store,c66store,factor_common, &
+                        factor_common_kappa,COMPUTE_AND_STORE_STRAIN,NSPEC_STRAIN_ONLY, &
                         dsdx_top,dsdx_bot, &
                         ispec2D_moho_top,ispec2D_moho_bot, &
                         nspec_inner_elastic,nspec_outer_elastic,phase_ispec_inner_elastic
@@ -543,12 +543,6 @@
 
           kappal = kappastore(i,j,k,ispec)
           mul = mustore(i,j,k,ispec)
-
-          ! use unrelaxed parameters if attenuation
-          if (ATTENUATION .and. .not. is_CPML(ispec)) then
-            mul  = mul * one_minus_sum_beta(i,j,k,ispec)
-            kappal = kappal * one_minus_sum_beta_kappa(i,j,k,ispec)
-          endif
 
           ! full anisotropic case, stress calculations
           if (ANISOTROPY) then

@@ -521,7 +521,6 @@ typedef struct mesh_ {
   realw* d_R_xz;
   realw* d_R_yz;
 
-  realw* d_one_minus_sum_beta;
   realw* d_factor_common;
 
   realw* d_alphaval;
