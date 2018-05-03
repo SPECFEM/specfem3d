@@ -95,8 +95,8 @@ __device__ __forceinline__ void compute_element_att_stress(int tx,int working_el
   for(int i_sls = 0; i_sls < N_SLS; i_sls++){
     // index
     offset_sls = tx + NGLL3*(working_element + NSPEC*i_sls);
-    //loads R_** values in local registers, which will be used later in the code 
-    Rxx_loc[i_sls] = get_global_cr( &R_xx[offset_sls] ); 
+    //loads R_** values in local registers, which will be used later in the code
+    Rxx_loc[i_sls] = get_global_cr( &R_xx[offset_sls] );
     Ryy_loc[i_sls] = get_global_cr( &R_yy[offset_sls] );
     Rxy_loc[i_sls] = get_global_cr( &R_xy[offset_sls] );
     Rxz_loc[i_sls] = get_global_cr( &R_xz[offset_sls] );
@@ -113,7 +113,7 @@ __device__ __forceinline__ void compute_element_att_stress(int tx,int working_el
     *sigma_xy = *sigma_xy - rxy_sum;//Rxy_loc[i_sls];
     *sigma_xz = *sigma_xz - rxz_sum;//Rxz_loc[i_sls];
     *sigma_yz = *sigma_yz - ryz_sum;//Ryz_loc[i_sls];
-  
+
   return;
 }
 
