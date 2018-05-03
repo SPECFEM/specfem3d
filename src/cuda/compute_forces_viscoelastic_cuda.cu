@@ -78,27 +78,42 @@ realw_texture d_hprime_xx_tex;
 
 __device__ __forceinline__ void compute_element_att_stress(int tx,int working_element,const int NSPEC,
                                            realw* R_xx,realw* R_yy,realw* R_xy,
-                                           realw* R_xz,realw* R_yz,
+                                           realw* R_xz,realw* R_yz,realw* Rxx_loc,realw* Ryy_loc,realw* Rxy_loc,
+                                           realw* Rxz_loc,realw* Ryz_loc,
                                            realw* sigma_xx,realw* sigma_yy,realw* sigma_zz,
                                            realw* sigma_xy,realw* sigma_xz,realw* sigma_yz) {
 
   int offset_sls;
-  realw R_xx_val,R_yy_val;
+  realw rxx_sum,ryy_sum,rxy_sum,rxz_sum,ryz_sum;
+
+  rxx_sum = 0.f;
+  ryy_sum = 0.f;
+  rxy_sum = 0.f;
+  rxz_sum = 0.f;
+  ryz_sum = 0.f;
 
   for(int i_sls = 0; i_sls < N_SLS; i_sls++){
     // index
     offset_sls = tx + NGLL3*(working_element + NSPEC*i_sls);
-
-    R_xx_val = get_global_cr( &R_xx[offset_sls] ); //(i,j,k,ispec,i_sls)
-    R_yy_val = get_global_cr( &R_yy[offset_sls] );
-
-    *sigma_xx = *sigma_xx - R_xx_val;
-    *sigma_yy = *sigma_yy - R_yy_val;
-    *sigma_zz = *sigma_zz + R_xx_val + R_yy_val;
-    *sigma_xy = *sigma_xy - get_global_cr( &R_xy[offset_sls] );
-    *sigma_xz = *sigma_xz - get_global_cr( &R_xz[offset_sls] );
-    *sigma_yz = *sigma_yz - get_global_cr( &R_yz[offset_sls] );
-  }
+    //loads R_** values in local registers, which will be used later in the code 
+    Rxx_loc[i_sls] = get_global_cr( &R_xx[offset_sls] ); 
+    Ryy_loc[i_sls] = get_global_cr( &R_yy[offset_sls] );
+    Rxy_loc[i_sls] = get_global_cr( &R_xy[offset_sls] );
+    Rxz_loc[i_sls] = get_global_cr( &R_xz[offset_sls] );
+    Ryz_loc[i_sls] = get_global_cr( &R_yz[offset_sls] );
+    rxx_sum += Rxx_loc[i_sls];
+    ryy_sum += Ryy_loc[i_sls];
+    rxy_sum += Rxy_loc[i_sls];
+    rxz_sum += Rxz_loc[i_sls];
+    ryz_sum += Ryz_loc[i_sls];
+}
+    *sigma_xx = *sigma_xx - rxx_sum;//Rxx_loc[i_sls];
+    *sigma_yy = *sigma_yy - ryy_sum;//Ryy_loc[i_sls];
+    *sigma_zz = *sigma_zz + rxx_sum + ryy_sum;//Rxx_loc[i_sls] + Ryy_loc[i_sls];
+    *sigma_xy = *sigma_xy - rxy_sum;//Rxy_loc[i_sls];
+    *sigma_xz = *sigma_xz - rxz_sum;//Rxz_loc[i_sls];
+    *sigma_yz = *sigma_yz - ryz_sum;//Ryz_loc[i_sls];
+  
   return;
 }
 
@@ -111,6 +126,7 @@ __device__  __forceinline__ void compute_element_att_memory(int tx,int working_e
                                           realw_const_p factor_common,
                                           realw_const_p alphaval,realw_const_p betaval,realw_const_p gammaval,
                                           realw_p R_xx,realw_p R_yy,realw_p R_xy,realw_p R_xz,realw_p R_yz,
+                                          realw* Rxx_loc,realw* Ryy_loc,realw* Rxy_loc,realw* Rxz_loc,realw* Ryz_loc,
                                           realw_p epsilondev_xx,realw_p epsilondev_yy,realw_p epsilondev_xy,
                                           realw_p epsilondev_xz,realw_p epsilondev_yz,
                                           realw epsilondev_xx_loc,realw epsilondev_yy_loc,realw epsilondev_xy_loc,
@@ -146,11 +162,11 @@ __device__  __forceinline__ void compute_element_att_memory(int tx,int working_e
     betaval_loc = factor_loc*betaval[i_sls];
     gammaval_loc = factor_loc*gammaval[i_sls];
 
-    R_xx[offset_sls] = alphaval_loc * get_global_cr(&R_xx[offset_sls]) + betaval_loc * Sn_xx + gammaval_loc *  epsilondev_xx_loc;
-    R_yy[offset_sls] = alphaval_loc * get_global_cr(&R_yy[offset_sls]) + betaval_loc * Sn_yy + gammaval_loc *  epsilondev_yy_loc;
-    R_xy[offset_sls] = alphaval_loc * get_global_cr(&R_xy[offset_sls]) + betaval_loc * Sn_xy + gammaval_loc *  epsilondev_xy_loc;
-    R_xz[offset_sls] = alphaval_loc * get_global_cr(&R_xz[offset_sls]) + betaval_loc * Sn_xz + gammaval_loc *  epsilondev_xz_loc;
-    R_yz[offset_sls] = alphaval_loc * get_global_cr(&R_yz[offset_sls]) + betaval_loc * Sn_yz + gammaval_loc *  epsilondev_yz_loc;
+    R_xx[offset_sls] = alphaval_loc * Rxx_loc[i_sls] + betaval_loc * Sn_xx + gammaval_loc *  epsilondev_xx_loc;
+    R_yy[offset_sls] = alphaval_loc * Ryy_loc[i_sls] + betaval_loc * Sn_yy + gammaval_loc *  epsilondev_yy_loc;
+    R_xy[offset_sls] = alphaval_loc * Rxy_loc[i_sls] + betaval_loc * Sn_xy + gammaval_loc *  epsilondev_xy_loc;
+    R_xz[offset_sls] = alphaval_loc * Rxz_loc[i_sls] + betaval_loc * Sn_xz + gammaval_loc *  epsilondev_xz_loc;
+    R_yz[offset_sls] = alphaval_loc * Ryz_loc[i_sls] + betaval_loc * Sn_yz + gammaval_loc *  epsilondev_yz_loc;
 
   }
   return;
@@ -255,7 +271,7 @@ __device__ __forceinline__ void compute_element_gravity(int tx,int working_eleme
 
 template<int FORWARD_OR_ADJOINT>
 __device__  __forceinline__ void load_shared_memory_displ(const int* tx, const int* iglob,
-                                                          realw_const_p d_displ,
+                                                          realw_p d_displ,
                                                           realw* sh_displx,
                                                           realw* sh_disply,
                                                           realw* sh_displz){
@@ -272,6 +288,7 @@ __device__  __forceinline__ void load_shared_memory_displ(const int* tx, const i
   sh_disply[(*tx)] = d_displ[(*iglob)*3 + 1];
   sh_displz[(*tx)] = d_displ[(*iglob)*3 + 2];
 #endif
+
 }
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -280,7 +297,7 @@ __device__  __forceinline__ void load_shared_memory_displ(const int* tx, const i
 
 template<int FORWARD_OR_ADJOINT>
 __device__  __forceinline__ void load_shared_memory_displ_visco(const int* tx, const int* iglob,
-                                                          realw_const_p d_displ,
+                                                          realw_p d_displ,
                                                           realw_const_p d_veloc,
                                                           realw visco,
                                                           realw* sh_displx,
@@ -674,7 +691,7 @@ Kernel_2_noatt_iso_impl(const int nb_blocks_to_compute,
                         const int* d_phase_ispec_inner_elastic,const int num_phase_ispec_elastic,
                         const int d_iphase,
                         const int* d_irregular_element_number,
-                        realw_const_p d_displ,
+                        realw_p d_displ,
                         realw_p d_accel,
                         realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
                         realw_const_p d_etax,realw_const_p d_etay,realw_const_p d_etaz,
@@ -965,7 +982,7 @@ Kernel_2_noatt_iso_strain_impl(int nb_blocks_to_compute,
                               const int* d_phase_ispec_inner_elastic,const int num_phase_ispec_elastic,
                               const int d_iphase,
                               const int* d_irregular_element_number,
-                              realw_const_p d_displ,
+                              realw_p d_displ,
                               realw_p d_accel,
                               realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
                               realw_const_p d_etax,realw_const_p d_etay,realw_const_p d_etaz,
@@ -1171,7 +1188,7 @@ Kernel_2_noatt_iso_col_impl(int nb_blocks_to_compute,
                         const int* d_phase_ispec_inner_elastic,const int num_phase_ispec_elastic,
                         const int d_iphase,
                         const int use_mesh_coloring_gpu,
-                        realw_const_p d_displ,
+                        realw_p d_displ,
                         realw_p d_accel,
                         realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
                         realw_const_p d_etax,realw_const_p d_etay,realw_const_p d_etaz,
@@ -1469,7 +1486,7 @@ Kernel_2_noatt_iso_grav_impl(int nb_blocks_to_compute,
                         const int d_iphase,
                         const int* d_irregular_element_number,
                         const int use_mesh_coloring_gpu,
-                        realw_const_p d_displ,
+                        realw_p d_displ,
                         realw_p d_accel,
                         realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
                         realw_const_p d_etax,realw_const_p d_etay,realw_const_p d_etaz,
@@ -1750,7 +1767,7 @@ Kernel_2_noatt_ani_impl(int nb_blocks_to_compute,
                         const int d_iphase,
                         const int* d_irregular_element_number,
                         const int use_mesh_coloring_gpu,
-                        realw_const_p d_displ,
+                        realw_p d_displ,
                         realw_p d_accel,
                         realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
                         realw_const_p d_etax,realw_const_p d_etay,realw_const_p d_etaz,
@@ -2093,7 +2110,7 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
                   const int* d_irregular_element_number,
                   const int use_mesh_coloring_gpu,
                   const realw d_deltat,
-                  realw_const_p d_displ,
+                  realw_p d_displ,
                   realw_const_p d_veloc,
                   realw_p d_accel,
                   realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
@@ -2157,6 +2174,8 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
 
   realw c11,c12,c13,c14,c15,c16,c22,c23,c24,c25,c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66;
   realw sum_terms1,sum_terms2,sum_terms3;
+  realw Rxx_loc[N_SLS],Ryy_loc[N_SLS],Rxy_loc[N_SLS],Rxz_loc[N_SLS],Ryz_loc[N_SLS];
+
 
   // gravity variables
   realw sigma_yx,sigma_zx,sigma_zy;
@@ -2337,7 +2356,7 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
     // attenuation
     // subtracts memory variables if attenuation
     compute_element_att_stress(tx,working_element,NSPEC,
-                               R_xx,R_yy,R_xy,R_xz,R_yz,
+                               R_xx,R_yy,R_xy,R_xz,R_yz,Rxx_loc,Ryy_loc,Rxy_loc,Rxz_loc,Ryz_loc,
                                &sigma_xx,&sigma_yy,&sigma_zz,&sigma_xy,&sigma_xz,&sigma_yz);
 
     // define symmetric components (needed for non-symmetric dot product and sigma for gravity)
@@ -2447,7 +2466,7 @@ Kernel_2_att_impl(int nb_blocks_to_compute,
     compute_element_att_memory(tx,working_element,NSPEC,
                                mul,
                                factor_common,alphaval,betaval,gammaval,
-                               R_xx,R_yy,R_xy,R_xz,R_yz,
+                               R_xx,R_yy,R_xy,R_xz,R_yz,Rxx_loc,Ryy_loc,Rxy_loc,Rxz_loc,Ryz_loc,
                                epsilondev_xx,epsilondev_yy,epsilondev_xy,epsilondev_xz,epsilondev_yz,
                                epsilondev_xx_loc,epsilondev_yy_loc,epsilondev_xy_loc,epsilondev_xz_loc,epsilondev_yz_loc);
 
@@ -3190,7 +3209,7 @@ Kernel_2_noatt_iso_kelvinvoigt_impl(const int nb_blocks_to_compute,
                         const int d_iphase,
                         const int* d_irregular_element_number,
                         realw* d_kelvin_voigt_eta,
-                        realw_const_p d_displ,
+                        realw_p d_displ,
                         realw_const_p d_veloc,
                         realw_p d_accel,
                         realw_const_p d_xix,realw_const_p d_xiy,realw_const_p d_xiz,
