@@ -24,7 +24,7 @@
 ! i.e. turn off viscoelasticity and compute the elastic Green function instead
   logical, parameter :: COMPUTE_ELASTIC_CASE_INSTEAD = .false.
 
-! to see how small the contribution of the near-field + middle-field term is,
+! to see how small the contribution of the near-field term is,
 ! here the user can ask not to include it, to then compare with the full result obtained with this flag set to false
   logical, parameter :: DO_NOT_COMPUTE_THE_NEAR_FIELD = .false.
 
@@ -143,7 +143,7 @@
   if (DO_NOT_COMPUTE_THE_NEAR_FIELD) then
     print *,'BEWARE: computing the far-field solution only, rather than the full Green function'
   else
-    print *,'Computing the full solution, including the near-field + middle-field term of the Green function'
+    print *,'Computing the full solution, including the near-field term of the Green function'
   endif
 
 ! step in frequency
