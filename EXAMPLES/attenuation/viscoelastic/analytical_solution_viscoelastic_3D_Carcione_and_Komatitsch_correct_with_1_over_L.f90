@@ -175,10 +175,10 @@
   enddo
 
 ! sauvegarde du spectre d'amplitude de la source en Hz au format Gnuplot
-  open(unit=10,file='spectrum.gnu',status='unknown')
+  open(unit=10,file='spectrum_of_the_source_used.gnu',status='unknown')
   do ifreq = 0,nfreq
-      freq = deltafreq * dble(ifreq)
-      write(10,*) sngl(freq),sngl(ampli(ifreq))
+    freq = deltafreq * dble(ifreq)
+    write(10,*) sngl(freq),sngl(ampli(ifreq))
   enddo
   close(10)
 
