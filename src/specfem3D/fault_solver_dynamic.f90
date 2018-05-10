@@ -123,13 +123,8 @@ contains
 
   read(IIN_PAR,*) nbfaults
   if (nbfaults == 0) then
-    if (myrank == 0) write(IMAIN,*) 'No faults found in file DATA/Par_file_faults'
+    !if (myrank == 0) write(IMAIN,*) 'No faults found in file DATA/Par_file_faults'
     return
-  else if (nbfaults == 1) then
-    !write(*,*) 'MYRANK' , myrank , 'there are ',nbfaults
-    if (myrank == 0) write(IMAIN,*) 'There is 1 fault in file DATA/Par_file_faults'
-  else
-    if (myrank == 0) write(IMAIN,*) 'There are ', nbfaults, ' faults in file DATA/Par_file_faults'
   endif
 
   filename = prname(1:len_trim(prname))//'fault_db.bin'
@@ -152,6 +147,12 @@ contains
     close(IIN_BIN)
     close(IIN_PAR)
     return
+  endif
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) 'incorporating dynamic rupture simulation'
+    write(IMAIN,*) '  found ', nbfaults, ' fault(s) in file DATA/Par_file_faults'
   endif
 
   SIMULATION_TYPE_DYN = .true.
