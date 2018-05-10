@@ -295,11 +295,13 @@
   double precision, dimension(NSOURCES) :: tshift_src,hdur,hdur_Gaussian
   double precision :: min_tshift_src_original,t0
   integer, dimension(NSOURCES) :: islice_selected_source,ispec_selected_source
-  !local
+
+  ! local parameters
   double precision :: t0_acoustic
   integer :: isource,ispec
 
-  if (abs(minval(tshift_src)) > TINYVAL) call exit_MPI(myrank,'one tshift_src must be zero, others must be positive')
+  if (abs(minval(tshift_src)) > TINYVAL) &
+    call exit_MPI(myrank,'one tshift_src must be zero, others must be positive')
 
   ! filter source time function by Gaussian with hdur = HDUR_MOVIE when outputing movies or shakemaps
   if (MOVIE_SURFACE .or. MOVIE_VOLUME .or. CREATE_SHAKEMAP) then

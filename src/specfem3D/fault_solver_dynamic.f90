@@ -145,12 +145,17 @@ contains
     read(IIN_PAR,*) ! etas
   enddo
   read(IIN_PAR,*) SIMULATION_TYPE
+
+  ! fault simulation type == 1 for dynamic rupture simulation
+  ! checks if anything to do
   if (SIMULATION_TYPE /= 1) then
     close(IIN_BIN)
     close(IIN_PAR)
     return
   endif
+
   SIMULATION_TYPE_DYN = .true.
+
   read(IIN_PAR,*) NTOUT
   read(IIN_PAR,*) NSNAP
   read(IIN_PAR,*) V_HEALING

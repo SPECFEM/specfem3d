@@ -106,28 +106,39 @@ subroutine BC_KINFLT_init(prname,DTglobal,myrank)
 
   read(IIN_PAR,*)  ! eta
   read(IIN_PAR,*) SIMULATION_TYPE
-  if (SIMULATION_TYPE == 2) then
-    SIMULATION_TYPE_KIN = .true.
-    read(IIN_PAR,*) NTOUT
-    read(IIN_PAR,*) NSNAP
-    read(IIN_PAR,*) DUMMY
-    read(IIN_PAR,*) DUMMY
-    read(IIN_BIN) nbfaults ! should be the same as in IIN_PAR
-    allocate( faults(nbfaults) )
-    dt = real(DTglobal)
-    do iflt=1,nbfaults
-      read(IIN_PAR,nml=BEGIN_FAULT,end=100)
-      call init_one_fault(faults(iflt),IIN_BIN,IIN_PAR,dt,nt,iflt)
-    enddo
+
+  ! fault simulation type == 2 for kinematic rupture simulation
+  ! checks if anything to do
+  if (SIMULATION_TYPE /= 2) then
+    close(IIN_BIN)
+    close(IIN_PAR)
+    return
   endif
+
+  SIMULATION_TYPE_KIN = .true.
+
+  read(IIN_PAR,*) NTOUT
+  read(IIN_PAR,*) NSNAP
+  read(IIN_PAR,*) DUMMY
+  read(IIN_PAR,*) DUMMY
+
+  read(IIN_BIN) nbfaults ! should be the same as in IIN_PAR
+  allocate( faults(nbfaults) )
+  dt = real(DTglobal)
+  do iflt=1,nbfaults
+    read(IIN_PAR,nml=BEGIN_FAULT,end=100)
+    call init_one_fault(faults(iflt),IIN_BIN,IIN_PAR,dt,nt,iflt)
+  enddo
+
   close(IIN_BIN)
   close(IIN_PAR)
 
-  return
 
-100 if (myrank == 0) write(IMAIN,*) 'Fatal error: did not find BEGIN_FAULT input block in file DATA/Par_file_faults. Abort.'
-    stop
-  ! WARNING TO DO: should be an MPI abort
+100 if (myrank == 0) then
+      write(IMAIN,*) 'Fatal error: did not find BEGIN_FAULT input block in file DATA/Par_file_faults. Abort.'
+      stop
+      ! WARNING TO DO: should be an MPI abort
+    endif
 
 end subroutine BC_KINFLT_init
 
