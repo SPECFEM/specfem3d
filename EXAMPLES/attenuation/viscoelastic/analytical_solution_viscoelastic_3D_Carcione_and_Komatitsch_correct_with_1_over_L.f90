@@ -272,7 +272,11 @@
 ! save time result inverse FFT for Ux
 
   if (COMPUTE_ELASTIC_CASE_INSTEAD) then
-    open(unit=11,file='Ux_time_analytical_solution_elastic.dat',status='unknown')
+    if (DO_NOT_COMPUTE_THE_NEAR_FIELD) then
+      open(unit=11,file='Ux_time_analytical_solution_elastic_without_near_field.dat',status='unknown')
+    else
+      open(unit=11,file='Ux_time_analytical_solution_elastic.dat',status='unknown')
+    endif
   else
     if (DO_NOT_COMPUTE_THE_NEAR_FIELD) then
       open(unit=11,file='Ux_time_analytical_solution_viscoelastic_without_near_field.dat',status='unknown')
@@ -310,7 +314,11 @@
 
 ! save time result inverse FFT for Uy
   if (COMPUTE_ELASTIC_CASE_INSTEAD) then
-    open(unit=11,file='Uy_time_analytical_solution_elastic.dat',status='unknown')
+    if (DO_NOT_COMPUTE_THE_NEAR_FIELD) then
+      open(unit=11,file='Uy_time_analytical_solution_elastic_without_near_field.dat',status='unknown')
+    else
+      open(unit=11,file='Uy_time_analytical_solution_elastic.dat',status='unknown')
+    endif
   else
     if (DO_NOT_COMPUTE_THE_NEAR_FIELD) then
       open(unit=11,file='Uy_time_analytical_solution_viscoelastic_without_near_field.dat',status='unknown')
@@ -348,7 +356,11 @@
 
 ! save time result inverse FFT for Uz
   if (COMPUTE_ELASTIC_CASE_INSTEAD) then
-    open(unit=11,file='Uz_time_analytical_solution_elastic.dat',status='unknown')
+    if (DO_NOT_COMPUTE_THE_NEAR_FIELD) then
+      open(unit=11,file='Uz_time_analytical_solution_elastic_without_near_field.dat',status='unknown')
+    else
+      open(unit=11,file='Uz_time_analytical_solution_elastic.dat',status='unknown')
+    endif
   else
     if (DO_NOT_COMPUTE_THE_NEAR_FIELD) then
       open(unit=11,file='Uz_time_analytical_solution_viscoelastic_without_near_field.dat',status='unknown')
