@@ -20,9 +20,8 @@
 
 !! DK DK Dimitri Komatitsch, CNRS Marseille, France, April 2017: added the elastic reference calculation.
 
-! compute the elastic solution instead of the viscoelastic one,
-! i.e. turn off viscoelasticity and compute the elastic Green function instead
-  logical, parameter :: COMPUTE_ELASTIC_CASE_INSTEAD = .false.
+! compute the non-viscoacoustic case as a reference if needed, i.e. turn attenuation off
+  logical, parameter :: TURN_ATTENUATION_OFF = .false.
 
 ! to see how small the contribution of the near-field term is,
 ! here the user can ask not to include it, to then compare with the full result obtained with this flag set to false
@@ -134,7 +133,7 @@
   print *,'Force source located at the origin (0,0,0)'
   print *,'Receiver located in (x,y,z) = ',x(1),x(2),x(3)
 
-  if (COMPUTE_ELASTIC_CASE_INSTEAD) then
+  if (TURN_ATTENUATION_OFF) then
     print *,'BEWARE: computing the elastic reference solution (i.e., without attenuation) instead of the viscoelastic solution'
   else
     print *,'Computing the viscoelastic solution'
@@ -208,7 +207,7 @@
 
   M2C = (M2_unrelaxed /(sum(tau_epsilon_nu2(:)/tau_sigma_nu2(:)))) * temp
 
-  if (COMPUTE_ELASTIC_CASE_INSTEAD) then
+  if (TURN_ATTENUATION_OFF) then
 ! from Etienne Bachmann, May 2018: pour calculer la solution sans attenuation, il faut donner le Mu_unrelaxed et pas le Mu_relaxed.
 ! En effet, pour comparer avec SPECFEM, il faut simplement partir de la bonne reference.
 ! SPECFEM est defini en unrelaxed et les constantes unrelaxed dans Carcione matchent parfaitement les Vp et Vs definis dans SPECFEM.
@@ -271,7 +270,7 @@
 
 ! save time result inverse FFT for Ux
 
-  if (COMPUTE_ELASTIC_CASE_INSTEAD) then
+  if (TURN_ATTENUATION_OFF) then
     if (DO_NOT_COMPUTE_THE_NEAR_FIELD) then
       open(unit=11,file='Ux_time_analytical_solution_elastic_without_near_field.dat',status='unknown')
     else
@@ -313,7 +312,7 @@
   call cfftb(nt,c,wsave)
 
 ! save time result inverse FFT for Uy
-  if (COMPUTE_ELASTIC_CASE_INSTEAD) then
+  if (TURN_ATTENUATION_OFF) then
     if (DO_NOT_COMPUTE_THE_NEAR_FIELD) then
       open(unit=11,file='Uy_time_analytical_solution_elastic_without_near_field.dat',status='unknown')
     else
@@ -355,7 +354,7 @@
   call cfftb(nt,c,wsave)
 
 ! save time result inverse FFT for Uz
-  if (COMPUTE_ELASTIC_CASE_INSTEAD) then
+  if (TURN_ATTENUATION_OFF) then
     if (DO_NOT_COMPUTE_THE_NEAR_FIELD) then
       open(unit=11,file='Uz_time_analytical_solution_elastic_without_near_field.dat',status='unknown')
     else
