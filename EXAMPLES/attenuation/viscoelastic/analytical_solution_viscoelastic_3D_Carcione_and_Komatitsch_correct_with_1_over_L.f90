@@ -49,16 +49,6 @@
 ! density of the medium
   double precision, parameter :: rho = 2000.d0
 
-! unrelaxed (f = +infinity) values
-! these values for the unrelaxed state are computed from the relaxed state values (Vp = 3000, Vs = 2000, rho = 2000)
-! given in Carcione et al. 1988 GJI vol 95 p 604 Table 1
-  double precision, parameter :: Vp = 3297.849d0
-  double precision, parameter :: Vs = 2222.536d0
-
-! unrelaxed (f = +infinity) values, i.e. using the fastest Vp and Vs velocities
-  double precision, parameter :: M2_unrelaxed = Vs**2 * 2.d0 * rho
-  double precision, parameter :: M1_unrelaxed = 2.d0 * Vp**2 * rho - M2_unrelaxed
-
 ! amplitude of the force source
   double precision, parameter :: F = 1.d0
 
@@ -82,16 +72,12 @@
 ! number of Zener standard linear solids in parallel
   integer, parameter :: Lnu = 3
 
-! attenuation relaxation times
-  double precision tau_epsilon_nu1_mech1, tau_sigma_nu1_mech1, tau_epsilon_nu2_mech1, tau_sigma_nu2_mech1, &
-    tau_epsilon_nu1_mech2, tau_sigma_nu1_mech2, tau_epsilon_nu2_mech2, tau_sigma_nu2_mech2
-
 !! DK DK March 2018: this missing 1/L factor has been added to this code by Quentin Brissaud
 !! DK DK for the viscoacoustic code in directory EXAMPLES/attenuation/viscoacoustic,
 !! DK DK it would be very easy to copy the changes from there to this viscoelastic version;
 !! DK DK but then all the values of the tau_epsilon below would need to change.
 
- double precision, dimension(Lnu) :: tau_sigma_nu1,tau_sigma_nu2,tau_epsilon_nu1,tau_epsilon_nu2
+ double precision, dimension(Lnu) :: tau_sigma_kappa,tau_sigma_mu,tau_epsilon_kappa,tau_epsilon_mu
 
   integer :: ifreq,ifreq2
   double precision :: deltafreq,freq,omega,omega0,deltat,time
@@ -115,15 +101,36 @@
   double complex, external :: ui
 
 ! modules elastiques
-  double complex :: M1C, M2C, E, V1, V2, temp
+  double complex :: Kappa_omega, Mu_omega, E, Vp_omega, Vs_omega, temp, Mu_relaxed, Kappa_relaxed
 
-! ********** end of variable declarations ************
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!
+!  Below are all the variables that need to be obtained from Specfem3D
+!  These default values match the following simulation :
+!
+!  Vp(f0_ref) = 3297.849 m/s
+!  Vs(f0_ref) = 2222.536 m/s
+!  f0_ref = 18 Hz
+!  QKappa = 20
+!  QMu = 10
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-! classical least-squares constants
- tau_epsilon_nu1 =  (/ 0.109527114743452     ,  1.070028707488438E-002,  1.132519034287800E-003/)
- tau_sigma_nu1 = (/  8.841941282883074E-002 , 8.841941282883075E-003,  8.841941282883074E-004/)
- tau_epsilon_nu2 = (/  0.112028084581976    ,   1.093882462934487E-002,  1.167173427475064E-003/)
- tau_sigma_nu2 = (/  8.841941282883074E-002,  8.841941282883075E-003,  8.841941282883074E-004/)
+! unrelaxed (f = +infinity) values, i.e. using the fastest Vp and Vs velocities
+! Mu_unrelaxed = rho * Vs_unrelaxed * Vs_unrelaxed
+! Kappa_unrelaxed = rho * (Vp_unrelaxed * Vp_unrelaxed - 4/3 * Vs_unrelaxed * Vs_unrelaxed)  (Valid in 3D only)
+  double precision, parameter :: Mu_unrelaxed =  1.1493666E+10
+  double precision, parameter :: Kappa_unrelaxed =  9.2604488E+09
+
+! tau constants mimiquing constant QKappa and KMu
+  tau_epsilon_mu    = (/ 0.281966668348107  ,  3.607809663879573E-002 , 5.638875613224542E-003/)
+  tau_sigma_mu      = (/ 0.186873539567019  ,  2.491998701168405E-002 , 3.323133676931235E-003/)
+  tau_epsilon_kappa = (/ 0.233016592750914  ,  2.994444382282767E-002 , 4.283862487455025E-003/)
+  tau_sigma_kappa   = (/ 0.186873539567019  ,  2.491998701168405E-002 , 3.323133676931235E-003/)
+
+! Eq(32) of Jeroen's note, eq (2.199) of Carcione's book 2014, third edition 
+  Kappa_relaxed = (Kappa_unrelaxed /(sum(tau_epsilon_kappa(:)/tau_sigma_kappa(:))/Lnu))
+  Mu_relaxed    = (Mu_unrelaxed    /(sum(tau_epsilon_mu(:)/tau_sigma_mu(:))/Lnu))
 
 ! position of the receiver
   x(1) = +500.
@@ -195,40 +202,40 @@
 ! in which waves slow down when attenuation is turned on.
   temp = dcmplx(0.d0,0.d0)
   do i=1,Lnu
-    temp = temp + dcmplx(1.d0,omega*tau_epsilon_nu1(i)) / dcmplx(1.d0,omega*tau_sigma_nu1(i))
+    temp = temp + (1./Lnu)*dcmplx(1.d0,omega*tau_epsilon_kappa(i)) / dcmplx(1.d0,omega*tau_sigma_kappa(i))
   enddo
 
-  M1C = (M1_unrelaxed /(sum(tau_epsilon_nu1(:)/tau_sigma_nu1(:)))) * temp
+! Eq(31) of Jeroen's note
+  Kappa_omega = Kappa_relaxed * temp
 
   temp = dcmplx(0.d0,0.d0)
   do i=1,Lnu
-    temp = temp + dcmplx(1.d0,omega*tau_epsilon_nu2(i)) / dcmplx(1.d0,omega*tau_sigma_nu2(i))
+    temp = temp + (1./Lnu)*dcmplx(1.d0,omega*tau_epsilon_mu(i)) / dcmplx(1.d0,omega*tau_sigma_mu(i))
   enddo
 
-  M2C = (M2_unrelaxed /(sum(tau_epsilon_nu2(:)/tau_sigma_nu2(:)))) * temp
+! Eq (31) of Jeroen's note
+  Mu_omega = Mu_relaxed * temp
 
   if (TURN_ATTENUATION_OFF) then
-! from Etienne Bachmann, May 2018: pour calculer la solution sans attenuation, il faut donner le Mu_unrelaxed et pas le Mu_relaxed.
-! En effet, pour comparer avec SPECFEM, il faut simplement partir de la bonne reference.
-! SPECFEM est defini en unrelaxed et les constantes unrelaxed dans Carcione matchent parfaitement les Vp et Vs definis dans SPECFEM.
-    M1C = M1_unrelaxed
-    M2C = M2_unrelaxed
+! Wavespeeds and modulus are the same for all omega when there is no attenuation
+    Kappa_omega = Kappa_unrelaxed
+    Mu_omega    = Mu_unrelaxed
   endif
 
-  E = (M1C + M2C) / 2
-  V1 = cdsqrt(E / rho)  !! DK DK this is Vp
+  Vs_omega = cdsqrt( Mu_omega / rho)
+  Vp_omega = cdsqrt( Kappa_omega / rho + (4.d0/3)*Vs_omega*Vs_omega )
+
 !! DK DK print the velocity if we want to display the curve of how velocity varies with frequency
 !! DK DK for instance to compute the unrelaxed velocity in the Zener model
-! print *,freq,dsqrt(real(V1)**2 + imag(V1)**2)
-  V2 = cdsqrt(M2C / (2.d0 * rho))  !! DK DK this is Vs
+! print *,freq,dsqrt(real(Vp_omega)**2 + imag(Vp_omega)**2)
 !! DK DK print the velocity if we want to display the curve of how velocity varies with frequency
 !! DK DK for instance to compute the unrelaxed velocity in the Zener model
-! print *,freq,dsqrt(real(V2)**2 + imag(V2)**2)
+! print *,freq,dsqrt(real(Vs_omega)**2 + imag(Vs_omega)**2)
 
 ! calcul de la solution analytique en frequence
-  phi1(ifreq) = ui(1,omega,V1,V2,x,rho,NDIM,F,DO_NOT_COMPUTE_THE_NEAR_FIELD) * fomega(ifreq)
-  phi2(ifreq) = ui(2,omega,V1,V2,x,rho,NDIM,F,DO_NOT_COMPUTE_THE_NEAR_FIELD) * fomega(ifreq)
-  phi3(ifreq) = ui(3,omega,V1,V2,x,rho,NDIM,F,DO_NOT_COMPUTE_THE_NEAR_FIELD) * fomega(ifreq)
+  phi1(ifreq) = ui(1,omega,Vp_omega,Vs_omega,x,rho,NDIM,F,DO_NOT_COMPUTE_THE_NEAR_FIELD) * fomega(ifreq)
+  phi2(ifreq) = ui(2,omega,Vp_omega,Vs_omega,x,rho,NDIM,F,DO_NOT_COMPUTE_THE_NEAR_FIELD) * fomega(ifreq)
+  phi3(ifreq) = ui(3,omega,Vp_omega,Vs_omega,x,rho,NDIM,F,DO_NOT_COMPUTE_THE_NEAR_FIELD) * fomega(ifreq)
 
   enddo
 
