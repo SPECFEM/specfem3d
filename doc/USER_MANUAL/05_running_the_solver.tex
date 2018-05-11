@@ -175,10 +175,15 @@ will not run otherwise.) The time shift parameter would simply apply
 an overall time shift to the synthetics, something that can be done
 in the post-processing (see Section \ref{sec:Process-data-and-syn}).
 \item Set the \texttt{f0} parameter (the dominant frequency) of the Ricker source time
-function when {\texttt{USE\_RICKER\_TIME\_FUNCTION}} is turned on
+function (i.e., the second derivative of a Gaussian) when {\texttt{USE\_RICKER\_TIME\_FUNCTION}} is turned on
 in the main parameter file {\texttt{Par\_file}}. In case that the
 solver uses a (pseudo) Dirac delta source time function to represent
 a force point source, a very short duration of five time steps is automatically set by default.
+Note that we use the standard definition of a Ricker, for a dominant frequency $f_0$:
+$\mathrm{Ricker}(t) = (1 - 2 a t^2) e^{-a t^2}$, with $a = \pi^2 f_0^2$,
+whose Fourier transform is thus:
+$\frac{1}{2} \frac{\sqrt{\pi}\omega^2}{a^{3/2}}e^{-\frac{\omega^2}{4 a}}$
+This gives the wavelet of Figure~\ref{fig:RickerWavelet}.
 \item Set the latitude or UTM $x$ coordinate, longitude or UTM $y$ coordinate, depth of the source (in km).
 \item Set the magnitude of the force source.
 \item Set the components of a (non-unitary) direction vector for the force

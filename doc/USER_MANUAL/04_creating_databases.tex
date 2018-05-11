@@ -284,10 +284,23 @@ If needed, you can change that default behavior and force the code to use the cl
 GLL mesh point instead by setting flag \texttt{USE\_BEST\_LOCATION} to \texttt{.false.} instead of \texttt{.true.} in file
 \texttt{src/shared/constants.h.in} and running the \texttt{configure} script again and recompiling the code.
 \item [{\texttt{USE\_RICKER\_TIME\_FUNCTION}}] Turn this flag on to use
-a Ricker source time function instead of the source time functions
+a Ricker source time function, i.e., the second derivative of a Gaussian, instead of the source time functions
 set by default to represent a (tilted) \texttt{FORCESOLUTION} force
-point source or a \texttt{CMTSOLUTION} moment-tensor source. Originally,
-if a \texttt{CMTSOLUTION} moment-tensor source is used, a (pseudo)
+point source or a \texttt{CMTSOLUTION} moment-tensor source.
+Note that we use the standard definition of a Ricker, for a dominant frequency $f_0$:
+$\mathrm{Ricker}(t) = (1 - 2 a t^2) e^{-a t^2}$, with $a = \pi^2 f_0^2$,
+whose Fourier transform is thus:
+$\frac{1}{2} \frac{\sqrt{\pi}\omega^2}{a^{3/2}}e^{-\frac{\omega^2}{4 a}}$
+This gives the wavelet of Figure~\ref{fig:RickerWavelet}.
+%%
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=3in]{figures/Ricker_wavelet.png}
+\caption{We use the standard definition of a Ricker (i.e., second derivative of a Gaussian). Image taken from \url{http://subsurfwiki.org}.}
+\label{fig:RickerWavelet}
+\end{figure}
+%%
+Originally, if a \texttt{CMTSOLUTION} moment-tensor source is used, a (pseudo)
 Heaviside step function with a very short half duration is defined
 for elastic cases to represent the permanent slip on the fault while
 in the acoustic case a Gaussian source time function with a similarly
