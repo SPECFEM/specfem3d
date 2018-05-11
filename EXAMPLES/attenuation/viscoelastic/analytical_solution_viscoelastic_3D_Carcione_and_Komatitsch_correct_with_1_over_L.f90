@@ -46,6 +46,10 @@
   real wsave(4*nt+15)
   complex c(nt)
 
+!! DK DK for my slow inverse Discrete Fourier Transform using a double loop
+  complex :: input(nt), i_imaginary_constant
+  integer :: j,m
+
 ! density of the medium
   double precision, parameter :: rho = 2000.d0
 
@@ -72,6 +76,12 @@
 ! number of Zener standard linear solids in parallel
   integer, parameter :: Lnu = 3
 
+! DK DK I implemented a very simple and slow inverse Discrete Fourier Transform
+! DK DK at some point, for verification, using a double loop. I keep it just in case.
+! DK DK For large number of points it is extremely slow because of the double loop.
+! DK DK Thus there is no reason to turn this flag on.
+  logical, parameter :: USE_SLOW_FOURIER_TRANSFORM = .false.
+
 !! DK DK March 2018: this missing 1/L factor has been added to this code by Quentin Brissaud
 !! DK DK for the viscoacoustic code in directory EXAMPLES/attenuation/viscoacoustic,
 !! DK DK it would be very easy to copy the changes from there to this viscoelastic version;
@@ -79,8 +89,8 @@
 
  double precision, dimension(Lnu) :: tau_sigma_kappa,tau_sigma_mu,tau_epsilon_kappa,tau_epsilon_mu
 
-  integer :: ifreq,ifreq2
-  double precision :: deltafreq,freq,omega,omega0,deltat,time
+  integer :: ifreq
+  double precision :: deltafreq,freq,omega,omega0,deltat,time,a
   double complex :: comparg
 
 ! Fourier transform of the Ricker wavelet source
@@ -101,12 +111,14 @@
   double complex, external :: ui
 
 ! modules elastiques
-  double complex :: Kappa_omega, Mu_omega, E, Vp_omega, Vs_omega, temp, Mu_relaxed, Kappa_relaxed
+  double complex :: Kappa_omega, Mu_omega, Vp_omega, Vs_omega, temp, Mu_relaxed, Kappa_relaxed
+
+! ********** end of variable declarations ************
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
 !  Below are all the variables that need to be obtained from Specfem3D
-!  These default values match the following simulation :
+!  These default values match the following simulation:
 !
 !  Vp(f0_ref) = 3297.849 m/s
 !  Vs(f0_ref) = 2222.536 m/s
@@ -128,7 +140,7 @@
   tau_epsilon_kappa = (/ 0.233016592750914  ,  2.994444382282767E-002 , 4.283862487455025E-003/)
   tau_sigma_kappa   = (/ 0.186873539567019  ,  2.491998701168405E-002 , 3.323133676931235E-003/)
 
-! Eq(32) of Jeroen's note, eq (2.199) of Carcione's book 2014, third edition
+! Eq (32) of Jeroen's note, eq (2.199) of Carcione's book from 2014, third edition
   Kappa_relaxed = (Kappa_unrelaxed /(sum(tau_epsilon_kappa(:)/tau_sigma_kappa(:))/Lnu))
   Mu_relaxed    = (Mu_unrelaxed    /(sum(tau_epsilon_mu(:)/tau_sigma_mu(:))/Lnu))
 
@@ -155,11 +167,17 @@
 ! step in frequency
   deltafreq = freqmax / dble(nfreq)
 
+! define parameters for the Ricker source
+  omega0 = 2.d0 * pi * f0
+  a = pi**2 * f0**2
+
+  deltat = 1.d0 / (freqmax*dble(iratio))
+
 ! define the spectrum of the source
   do ifreq=0,nfreq
       freq = deltafreq * dble(ifreq)
       omega = 2.d0 * pi * freq
-      omega0 = 2.d0 * pi * f0
+
 ! typo in equation (B7) of Carcione et al., Wave propagation simulation in a linear viscoelastic medium,
 ! Geophysical Journal, vol. 95, p. 597-611 (1988), the exponential should be of -i omega t0,
 ! fixed here by adding the minus sign
@@ -171,8 +189,8 @@
 !     fomega(ifreq) = pi * dsqrt(pi/eta) * (1.d0/omega0) * cdexp(comparg) * ( dexp(- (pi*pi/eta) * (epsil/2 - omega/omega0)**2) &
 !         + dexp(- (pi*pi/eta) * (epsil/2 + omega/omega0)**2) )
 
-! definir le spectre d'un Ricker classique
-      fomega(ifreq) = - omega**2 * 2.d0 * (dsqrt(pi)/omega0) * cdexp(comparg) * dexp(- (omega/omega0)**2)
+! definir le spectre d'un Ricker classique (centre en t0)
+      fomega(ifreq) = dsqrt(pi) * cdexp(comparg) * omega**2 * dexp(-omega**2/(4.d0*a)) / (2.d0 * dsqrt(a**3))
 
       ra(ifreq) = dreal(fomega(ifreq))
       rb(ifreq) = dimag(fomega(ifreq))
@@ -217,7 +235,7 @@
   Mu_omega = Mu_relaxed * temp
 
   if (TURN_ATTENUATION_OFF) then
-! Wavespeeds and modulus are the same for all omega when there is no attenuation
+! wave speeds and moduli are the same for all omega when there is no attenuation
     Kappa_omega = Kappa_unrelaxed
     Mu_omega    = Mu_unrelaxed
   endif
@@ -258,8 +276,8 @@
   call cffti(nt,wsave)
 
 ! clear array of Fourier coefficients
-  do it=1,nt
-      c(it) = cmplx(0.,0.)
+  do it = 1,nt
+    c(it) = cmplx(0.,0.)
   enddo
 
 ! use the Fourier values for Ux
@@ -270,10 +288,33 @@
   enddo
 
 ! perform the inverse FFT for Ux
-  call cfftb(nt,c,wsave)
+  if (.not. USE_SLOW_FOURIER_TRANSFORM) then
+    call cfftb(nt,c,wsave)
+  else
+! DK DK I implemented a very simple and slow inverse Discrete Fourier Transform here
+! DK DK at some point, for verification, using a double loop. I keep it just in case.
+! DK DK For large number of points it is extremely slow because of the double loop.
+    input(:) = c(:)
+!   imaginary constant "i"
+    i_imaginary_constant = (0.,1.)
+    do it = 1,nt
+      if (mod(it,1000) == 0) print *,'FFT inverse it = ',it,' out of ',nt
+      j = it
+      c(j) = cmplx(0.,0.)
+      do m = 1,nt
+        c(j) = c(j) + input(m) * exp(2.d0 * PI * i_imaginary_constant * dble((m-1) * (j-1)) / nt)
+      enddo
+    enddo
+  endif
+
+! in the inverse Discrete Fourier transform one needs to divide by N, the number of samples (number of time steps here)
+  c(:) = c(:) / nt
 
 ! value of a time step
   deltat = 1.d0 / (freqmax*dble(iratio))
+
+! to get the amplitude right, we need to divide by the time step
+  c(:) = c(:) / deltat
 
 ! save time result inverse FFT for Ux
 
@@ -304,8 +345,8 @@
 ! **********
 
 ! clear array of Fourier coefficients
-  do it=1,nt
-      c(it) = cmplx(0.,0.)
+  do it = 1,nt
+    c(it) = cmplx(0.,0.)
   enddo
 
 ! use the Fourier values for Uy
@@ -316,7 +357,33 @@
   enddo
 
 ! perform the inverse FFT for Uy
-  call cfftb(nt,c,wsave)
+  if (.not. USE_SLOW_FOURIER_TRANSFORM) then
+    call cfftb(nt,c,wsave)
+  else
+! DK DK I implemented a very simple and slow inverse Discrete Fourier Transform here
+! DK DK at some point, for verification, using a double loop. I keep it just in case.
+! DK DK For large number of points it is extremely slow because of the double loop.
+    input(:) = c(:)
+!   imaginary constant "i"
+    i_imaginary_constant = (0.,1.)
+    do it = 1,nt
+      if (mod(it,1000) == 0) print *,'FFT inverse it = ',it,' out of ',nt
+      j = it
+      c(j) = cmplx(0.,0.)
+      do m = 1,nt
+        c(j) = c(j) + input(m) * exp(2.d0 * PI * i_imaginary_constant * dble((m-1) * (j-1)) / nt)
+      enddo
+    enddo
+  endif
+
+! in the inverse Discrete Fourier transform one needs to divide by N, the number of samples (number of time steps here)
+  c(:) = c(:) / nt
+
+! value of a time step
+  deltat = 1.d0 / (freqmax*dble(iratio))
+
+! to get the amplitude right, we need to divide by the time step
+  c(:) = c(:) / deltat
 
 ! save time result inverse FFT for Uy
   if (TURN_ATTENUATION_OFF) then
@@ -346,8 +413,8 @@
 ! **********
 
 ! clear array of Fourier coefficients
-  do it=1,nt
-      c(it) = cmplx(0.,0.)
+  do it = 1,nt
+    c(it) = cmplx(0.,0.)
   enddo
 
 ! use the Fourier values for Uz
@@ -358,7 +425,33 @@
   enddo
 
 ! perform the inverse FFT for Uz
-  call cfftb(nt,c,wsave)
+  if (.not. USE_SLOW_FOURIER_TRANSFORM) then
+    call cfftb(nt,c,wsave)
+  else
+! DK DK I implemented a very simple and slow inverse Discrete Fourier Transform here
+! DK DK at some point, for verification, using a double loop. I keep it just in case.
+! DK DK For large number of points it is extremely slow because of the double loop.
+    input(:) = c(:)
+!   imaginary constant "i"
+    i_imaginary_constant = (0.,1.)
+    do it = 1,nt
+      if (mod(it,1000) == 0) print *,'FFT inverse it = ',it,' out of ',nt
+      j = it
+      c(j) = cmplx(0.,0.)
+      do m = 1,nt
+        c(j) = c(j) + input(m) * exp(2.d0 * PI * i_imaginary_constant * dble((m-1) * (j-1)) / nt)
+      enddo
+    enddo
+  endif
+
+! in the inverse Discrete Fourier transform one needs to divide by N, the number of samples (number of time steps here)
+  c(:) = c(:) / nt
+
+! value of a time step
+  deltat = 1.d0 / (freqmax*dble(iratio))
+
+! to get the amplitude right, we need to divide by the time step
+  c(:) = c(:) / deltat
 
 ! save time result inverse FFT for Uz
   if (TURN_ATTENUATION_OFF) then
