@@ -122,7 +122,7 @@
   double precision, parameter :: Mu_unrelaxed =  1.1493666E+10
   double precision, parameter :: Kappa_unrelaxed =  9.2604488E+09
 
-! tau constants mimiquing constant QKappa and KMu
+! tau constants mimicking constant QKappa and KMu
   tau_epsilon_mu    = (/ 0.281966668348107  ,  3.607809663879573E-002 , 5.638875613224542E-003/)
   tau_sigma_mu      = (/ 0.186873539567019  ,  2.491998701168405E-002 , 3.323133676931235E-003/)
   tau_epsilon_kappa = (/ 0.233016592750914  ,  2.994444382282767E-002 , 4.283862487455025E-003/)
@@ -292,10 +292,10 @@
   endif
   do it=1,nt
 ! DK DK Dec 2011: subtract t0 to be consistent with the SPECFEM2D code
-        time = dble(it)*deltat - t0
+        time = dble(it-1)*deltat - t0
 ! the seismograms are very long due to the very large number of FFT points used,
 ! thus keeping the useful part of the signal only (the first six seconds of the seismogram)
-        if (time <= 6.d0) write(11,*) sngl(time),real(c(it))
+        if (time >= 0.d0 .and. time <= 6.d0) write(11,*) sngl(time),real(c(it))
   enddo
   close(11)
 
@@ -334,10 +334,10 @@
   endif
   do it=1,nt
 ! DK DK Dec 2011: subtract t0 to be consistent with the SPECFEM2D code
-        time = dble(it)*deltat - t0
+        time = dble(it-1)*deltat - t0
 ! the seismograms are very long due to the very large number of FFT points used,
 ! thus keeping the useful part of the signal only (the first six seconds of the seismogram)
-        if (time <= 6.d0) write(11,*) sngl(time),real(c(it))
+        if (time >= 0.d0 .and. time <= 6.d0) write(11,*) sngl(time),real(c(it))
   enddo
   close(11)
 
@@ -376,10 +376,10 @@
   endif
   do it=1,nt
 ! DK DK Dec 2011: subtract t0 to be consistent with the SPECFEM2D code
-        time = dble(it)*deltat - t0
+        time = dble(it-1)*deltat - t0
 ! the seismograms are very long due to the very large number of FFT points used,
 ! thus keeping the useful part of the signal only (the first six seconds of the seismogram)
-        if (time <= 6.d0) write(11,*) sngl(time),real(c(it))
+        if (time >= 0.d0 .and. time <= 6.d0) write(11,*) sngl(time),real(c(it))
   enddo
   close(11)
 
