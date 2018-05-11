@@ -128,7 +128,7 @@
   tau_epsilon_kappa = (/ 0.233016592750914  ,  2.994444382282767E-002 , 4.283862487455025E-003/)
   tau_sigma_kappa   = (/ 0.186873539567019  ,  2.491998701168405E-002 , 3.323133676931235E-003/)
 
-! Eq(32) of Jeroen's note, eq (2.199) of Carcione's book 2014, third edition 
+! Eq(32) of Jeroen's note, eq (2.199) of Carcione's book 2014, third edition
   Kappa_relaxed = (Kappa_unrelaxed /(sum(tau_epsilon_kappa(:)/tau_sigma_kappa(:))/Lnu))
   Mu_relaxed    = (Mu_unrelaxed    /(sum(tau_epsilon_mu(:)/tau_sigma_mu(:))/Lnu))
 
