@@ -133,7 +133,7 @@
 
 ! We use Kappa_ref and Mu_ref to compute the case without attenuation
 ! They are chosen such that Kappa_ref = Kappa(2*pi*f0_ref) when there is
-! attenuation 
+! attenuation
   double precision, parameter :: Vp_ref  = 3297.849
   double precision, parameter :: Vs_ref  = 2222.536
 
