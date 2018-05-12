@@ -1,4 +1,4 @@
-set term qt
+set term x11
 
 set xrange [0:1]
 
