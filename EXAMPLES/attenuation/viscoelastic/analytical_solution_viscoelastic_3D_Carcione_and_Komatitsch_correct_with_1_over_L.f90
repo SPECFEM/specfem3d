@@ -21,7 +21,7 @@
 !! DK DK Dimitri Komatitsch, CNRS Marseille, France, April 2017: added the elastic reference calculation.
 
 ! compute the non-viscoacoustic case as a reference if needed, i.e. turn attenuation off
-  logical, parameter :: TURN_ATTENUATION_OFF = .false.
+  logical, parameter :: TURN_ATTENUATION_OFF = .true.
 
 ! to see how small the contribution of the near-field term is,
 ! here the user can ask not to include it, to then compare with the full result obtained with this flag set to false
@@ -123,21 +123,28 @@
 !  Vp(f0_ref) = 3297.849 m/s
 !  Vs(f0_ref) = 2222.536 m/s
 !  f0_ref = 18 Hz
-!  QKappa = 20
+!  QKappa = 9000
 !  QMu = 10
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-! unrelaxed (f = +infinity) values, i.e. using the fastest Vp and Vs velocities
-! Mu_unrelaxed = rho * Vs_unrelaxed * Vs_unrelaxed
-! Kappa_unrelaxed = rho * (Vp_unrelaxed * Vp_unrelaxed - 4/3 * Vs_unrelaxed * Vs_unrelaxed)  (Valid in 3D only)
-  double precision, parameter :: Mu_unrelaxed =  1.1493666E+10
-  double precision, parameter :: Kappa_unrelaxed =  9.2604488E+09
+  double precision, parameter :: Mu_unrelaxed    =  1.1493666E+10
+  double precision, parameter :: Kappa_unrelaxed =  8.5806454E+09
+
+! We use Kappa_ref and Mu_ref to compute the case without attenuation
+! They are chosen such that Kappa_ref = Kappa(2*pi*f0_ref) when there is
+! attenuation 
+  double precision, parameter :: Vp_ref  = 3297.849
+  double precision, parameter :: Vs_ref  = 2222.536
+
+  double precision, parameter :: Mu_ref    =  rho * Vs_ref * Vs_ref
+  double precision, parameter :: Kappa_ref =  rho * ( Vp_ref * Vp_ref - 4.d0/3 * Vs_ref * Vs_ref)
+
 
 ! tau constants mimicking constant QKappa and KMu
   tau_epsilon_mu    = (/ 0.281966668348107  ,  3.607809663879573E-002 , 5.638875613224542E-003/)
   tau_sigma_mu      = (/ 0.186873539567019  ,  2.491998701168405E-002 , 3.323133676931235E-003/)
-  tau_epsilon_kappa = (/ 0.233016592750914  ,  2.994444382282767E-002 , 4.283862487455025E-003/)
+  tau_epsilon_kappa = (/ 0.186973292921151  ,  2.492998179955646E-002 , 3.324907855424433E-003/)
   tau_sigma_kappa   = (/ 0.186873539567019  ,  2.491998701168405E-002 , 3.323133676931235E-003/)
 
 ! Eq (32) of Jeroen's note, eq (2.199) of Carcione's book from 2014, third edition
@@ -236,8 +243,8 @@
 
   if (TURN_ATTENUATION_OFF) then
 ! wave speeds and moduli are the same for all omega when there is no attenuation
-    Kappa_omega = Kappa_unrelaxed
-    Mu_omega    = Mu_unrelaxed
+    Kappa_omega = Kappa_ref
+    Mu_omega    = Mu_ref
   endif
 
   Vs_omega = cdsqrt( Mu_omega / rho)
