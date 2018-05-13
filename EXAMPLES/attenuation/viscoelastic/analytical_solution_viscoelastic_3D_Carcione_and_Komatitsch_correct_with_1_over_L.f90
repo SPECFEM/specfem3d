@@ -20,8 +20,8 @@
 
 !! DK DK Dimitri Komatitsch, CNRS Marseille, France, April 2017: added the elastic reference calculation.
 
-! compute the non-viscoacoustic case as a reference if needed, i.e. turn attenuation off
-  logical, parameter :: TURN_ATTENUATION_OFF = .true.
+! compute the non-viscoelastic i.e. the purely elastic case as a reference if needed, i.e. turn attenuation off
+  logical, parameter :: TURN_ATTENUATION_OFF = .false.
 
 ! to see how small the contribution of the near-field term is,
 ! here the user can ask not to include it, to then compare with the full result obtained with this flag set to false
