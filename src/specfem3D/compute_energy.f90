@@ -56,7 +56,7 @@
   real(kind=CUSTOM_REAL) :: lambdal,mul,lambdalplus2mul,rhol,rho_invl
   real(kind=CUSTOM_REAL) :: kappal
 
-  real(kind=CUSTOM_REAL) :: integration_weight
+  double precision :: integration_weight
   double precision :: kinetic_energy,potential_energy
   double precision :: kinetic_energy_glob,potential_energy_glob,total_energy_glob
 
@@ -278,10 +278,14 @@
 
             integration_weight = wxgll(i)*wygll(j)*wzgll(k)*jacobianl
 
+            ! velocity
+            vx = veloc(1,iglob)
+            vy = veloc(2,iglob)
+            vz = veloc(3,iglob)
+
             ! compute kinetic energy  1/2 rho ||v||^2
             ! we will divide the total sum by 2 only once, at the end of this routine, to reduce compute time
-            kinetic_energy = kinetic_energy + integration_weight * rhol*(veloc(1,iglob)**2 + &
-                                 veloc(2,iglob)**2 + veloc(3,iglob)**2)
+            kinetic_energy = kinetic_energy + integration_weight * rhol*(vx**2 + vy**2 + vz**2)
 
             ! compute potential energy 1/2 sigma_ij epsilon_ij
             ! we will divide the total sum by 2 only once, at the end of this routine, to reduce compute time
