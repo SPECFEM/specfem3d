@@ -101,7 +101,7 @@ subroutine bkgrdmodel_testing
   !$omp                 Qmu, Qka, mesh2, bkgrdmodel, rho, period) &
   !$omp          private(s1, z1, r, h1, s2, z2, h2, iel, jpol, ipol, velo, velo_max, &
   !$omp                  crit, crit_max, theta, ct)
-  !$omp do
+  !$OMP DO
   do iel = 1, neltot
 
      do jpol = 0, npol-1
@@ -175,7 +175,7 @@ subroutine bkgrdmodel_testing
 
   write(*,*) 'starting big loop....'
   !$omp end single
-  !$omp do
+  !$OMP DO
   do iel = 1, neltot
      do jpol = npol, 0, -1
         do ipol = 0,npol
@@ -312,7 +312,7 @@ subroutine bkgrdmodel_testing
 
 
   enddo ! iel
-  !$omp enddo
+  !$OMP ENDDO
   !$omp end parallel
 
   if (dump_mesh_vtk) then
