@@ -161,7 +161,8 @@ specfem3D_SHARED_OBJECTS = \
 
 
 specfem3D_MODULES = \
-        $(FC_MODDIR)/asdf_data.$(FC_MODEXT) \
+	$(FC_MODDIR)/asdf_data.$(FC_MODEXT) \
+	$(FC_MODDIR)/asdf_manager_mod.$(FC_MODEXT) \
 	$(FC_MODDIR)/fault_solver_common.$(FC_MODEXT) \
 	$(FC_MODDIR)/fault_solver_dynamic.$(FC_MODEXT) \
 	$(FC_MODDIR)/fault_solver_kinematic.$(FC_MODEXT) \
