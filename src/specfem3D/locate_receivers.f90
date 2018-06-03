@@ -375,11 +375,11 @@
 
         write(IMAIN,*) '     rotation matrix: '
         nu_tmp(:) = nu(1,:,irec)
-        write(IMAIN,*) '     nu1 = ',nu_tmp
+        write(IMAIN,*) '     nu1 = ',sngl(nu_tmp)
         nu_tmp(:) = nu(2,:,irec)
-        write(IMAIN,*) '     nu2 = ',nu_tmp
+        write(IMAIN,*) '     nu2 = ',sngl(nu_tmp)
         nu_tmp(:) = nu(3,:,irec)
-        write(IMAIN,*) '     nu3 = ',nu_tmp
+        write(IMAIN,*) '     nu3 = ',sngl(nu_tmp)
 
         if (SUPPRESS_UTM_PROJECTION) then
           write(IMAIN,*) '     x: ',x_found(irec)
