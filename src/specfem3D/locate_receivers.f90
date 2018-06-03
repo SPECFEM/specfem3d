@@ -87,6 +87,8 @@
   double precision :: x,y,z,x_new,y_new,z_new
   double precision :: xi,eta,gamma,final_distance_squared
   double precision, dimension(NDIM,NDIM) :: nu_found
+  double precision, dimension(NDIM) :: nu_tmp ! to avoid intel compiler warning about temporary array in i/o routine
+
   integer :: ispec_found,idomain_found
 
   ! subset arrays
@@ -372,9 +374,12 @@
         write(IMAIN,*) '     gamma = ',gamma_receiver(irec)
 
         write(IMAIN,*) '     rotation matrix: '
-        write(IMAIN,*) '     nu1 = ',nu(1,:,irec)
-        write(IMAIN,*) '     nu2 = ',nu(2,:,irec)
-        write(IMAIN,*) '     nu3 = ',nu(3,:,irec)
+        nu_tmp(:) = nu(1,:,irec)
+        write(IMAIN,*) '     nu1 = ',nu_tmp
+        nu_tmp(:) = nu(2,:,irec)
+        write(IMAIN,*) '     nu2 = ',nu_tmp
+        nu_tmp(:) = nu(3,:,irec)
+        write(IMAIN,*) '     nu3 = ',nu_tmp
 
         if (SUPPRESS_UTM_PROJECTION) then
           write(IMAIN,*) '     x: ',x_found(irec)
