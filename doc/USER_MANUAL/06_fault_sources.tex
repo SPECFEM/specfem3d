@@ -275,22 +275,17 @@ followed by (nV0+nf0+na+nb+nL+nV\_init+ntheta\_init+nC) \&\textbf{DIST2D} blocks
    =.FALSE. turn off such feature
    \end{description}
 
-
 \item [{\&\textbf{STRESS\_TENSOR}}] input block sets the initial fault stresses
   by projecting a uniform regional stress field onto the fault plane.So that the
   tractions $\tau = \sigma : n$ while $n$ is the local norm of the fault plane.
   Sigma =  $\sigma_{xx}$,$\sigma_{yy}$,$\sigma_{zz}$,$\sigma_{xy}$,$\sigma_{xz}$,$\sigma_{yz}$
   (in Pa)
 
-
-
-
 \item [{\&\textbf{INIT\_STRESS}}] input block sets the initial fault stresses
 relative to the foot-wall side of the fault. Initial stresses are
 composed of a constant background value possibly overwritten in prescribed
 regions by heterogeneous distributions (see \&\textbf{DIST2D} blocks
 below):
-
 \begin{description}
 \item [{S1}] = constant background value of along-strike shear stress (positive
 in the usual strike direction)
@@ -305,25 +300,25 @@ compression)
 \item [{n3}] = number of heterogeneous items for normal stress {[}default
 is 0{]}
 \end{description}
+
 \item [{\&\textbf{SWF}}] input block sets the slip-weakening friction parameters
 of the fault:
-
 \begin{description}
 \item [{mus}] = constant background value of static friction coefficient
 \item [{mud}] = constant background value of dynamic friction coefficient
 \item [{dc}] = constant background value of critical slip-weakening distance
+\item [{C}] = constant background value of cohesion (in Pa)
 \item [{nmus}] = number of heterogeneous items for static friction coefficient
 {[}default is 0{]}
 \item [{nmud}] = number of heterogeneous items for dynamic friction coefficient
 {[}default is 0{]}
 \item [{ndc}] = number of heterogeneous items for critical slip-weakening
-distance {[}default is 0{]}\\
-
+distance {[}default is 0{]}
+\item [{nC}] = number of heterogeneous items for cohesion
 \end{description}
 
 \item [{\&\textbf{RSF}}] input block sets the rate and state friction parameters
 of the fault:
-
 \begin{description}
   \item []
     We refer to the well known rate and state friction formula:
@@ -340,11 +335,8 @@ of the fault:
 \item [{n**}] = number of heterogeneous items for quantity **
 \end{description}
 
-
-
 \item [{\&\textbf{DIST2D}}] input blocks modify (overwrite) the value of
 a fault parameter by a heterogeneous spatial distribution:
-
 
 \&\textbf{DIST2D} shapeval='$\mathtt{square}$', val, xc, yc, zc, l /
 
@@ -414,15 +406,10 @@ To activate this feature, in Par\_file\_faults name list \&\textbf{RUPTURE\_SWIT
 \item [{\textbf{DATA/rsf\_hete\_input\_file.txt}}]  Heterogeneous stresses and friction input for
   rate and state friction.
 To activate this feature, in Par\_file\_faults name list \&\textbf{RUPTURE\_SWITCHES}, set RSF\_HETE=.TRUE..
-
   The format of  {\textbf{DATA/rsf\_hete\_input\_file.txt}} is as such, in the first line there are four integers
-
   that are sequentially documenting the number of divisions along strike, number of divisions along
-
-  dip, cell size along strike , cell size along dip. Then the following N(N=NumberOfDivisionsAlongStrike
-
+  dip, cell size along strike , cell size along dip. Then the following N (N=NumberOfDivisionsAlongStrike
   * NumberOfDivisionsAlongDip) lines will document the stress and friction properties on the grid.
-
   There are a total of 13 columns.
   \begin{enumerate}
   \item{Column1} = Along strike distance(m)
