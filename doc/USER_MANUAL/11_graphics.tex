@@ -227,15 +227,10 @@ Then, you can launch \texttt{xcombine\_vol\_data}, specifying the path where it 
 }
 Here, $0$ is the number of the first processor, $3$ the number of the last one, \texttt{velocity\_Z\_it000400} the name of the files we want to combine without the prefix \texttt{proc000000*\_}, \texttt{./OUTPUT\_FILES/DATABASES\_MPI} the directory where the files are located, \texttt{./OUTPUT\_FILES} the directory where the combined file will be stored, and $0$ is the parameter to create a low-resolution mesh file ($1$ for a high-resolution).
 
-\medskip
-
-At the beginning of the source file \texttt{src/auxiliaries/combine\_vol\_data\_impl.f90} there is a logical parameter \texttt{USE\_VTK\_INSTEAD\_OF\_MESH},
-whose default value is \texttt{.false.}, which can be used to generate the combined output file directly in VTK format, which can then be visualized using Paraview.
-
-\medskip
-
-If the value of this parameter is \texttt{.false.}, the output mesh file will have a name of the form \texttt{velocity\_Z\_it000400.mesh}.
-One then has to convert the \texttt{.mesh} file into the VTU (Unstructured grid file) format which can be viewed in ParaView.
+When compiling the code, you will get two executables related to this: xcombine\_vol\_data, and xcombine\_vol\_data\_vtk.
+Use the executable that has the \_vtk extension if you want to directly create VTK files.
+If you use the executable that does not have the \_vtk extension, then the output mesh file will have a name of the form \texttt{velocity\_Z\_it000400.mesh}.
+You will then have to convert the \texttt{.mesh} file into the VTU (Unstructured grid file) format which can be viewed in ParaView.
 
 \noindent
 For this task, you can use and modify the

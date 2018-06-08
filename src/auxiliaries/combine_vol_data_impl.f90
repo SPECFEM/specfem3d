@@ -33,8 +33,6 @@ module combine_vtk_par
     ! maximum number of slices
     integer,parameter :: MAX_NUM_NODES = 600
 
-    logical, parameter :: USE_VTK_INSTEAD_OF_MESH = .false.
-
 end module combine_vtk_par
 
 !=============================================================================

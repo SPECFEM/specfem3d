@@ -125,7 +125,7 @@
   print *, 'Slice list: '
   print *, node_list(1:num_node)
 
-if (USE_VTK_INSTEAD_OF_MESH) then
+#ifdef USE_VTK_INSTEAD_OF_MESH
   ! VTK
   mesh_file = trim(outdir) // '/' // trim(filename)//'.vtk'
   open(IOVTK,file=mesh_file(1:len_trim(mesh_file)),status='unknown',iostat=ier)
@@ -135,11 +135,11 @@ if (USE_VTK_INSTEAD_OF_MESH) then
   write(IOVTK,'(a)') 'material model VTK file'
   write(IOVTK,'(a)') 'ASCII'
   write(IOVTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
-else
+#else
     ! open paraview output mesh file
     mesh_file = trim(outdir) // '/' // trim(filename)//'.mesh'
     call open_file_create(trim(mesh_file)//char(0))
-endif
+#endif
 
   ! counts total number of points (all slices)
   npp = 0
@@ -253,10 +253,10 @@ endif
 
   enddo  ! all slices for points
 
-if (USE_VTK_INSTEAD_OF_MESH) then
+#ifdef USE_VTK_INSTEAD_OF_MESH
   ! VTK
   write(IOVTK,*) ''
-endif
+#endif
 
   if (np /= npp) stop 'Error: Number of total points are not consistent'
   print *, 'Total number of points: ', np
@@ -318,10 +318,10 @@ endif
 
   enddo ! num_node
 
-if (USE_VTK_INSTEAD_OF_MESH) then
+#ifdef USE_VTK_INSTEAD_OF_MESH
   ! VTK
   write(IOVTK,*) ''
-endif
+#endif
 
   ! checks with total number of elements
   if (ne /= nee) then
@@ -330,7 +330,7 @@ endif
   endif
   print *, 'Total number of elements: ', ne
 
-if (USE_VTK_INSTEAD_OF_MESH) then
+#ifdef USE_VTK_INSTEAD_OF_MESH
   ! VTK
   ! type: hexahedrons
   write(IOVTK,'(a,i12)') "CELL_TYPES ",nee
@@ -365,12 +365,12 @@ if (USE_VTK_INSTEAD_OF_MESH) then
   enddo
   write(IOVTK,*) ''
   close(IOVTK)
-else
+#else
   ! close mesh file
   call close_file()
   ! to avoid compiler warning
   data_array_name = ''
-endif
+#endif
 
   if (ADIOS_FOR_MESH) then
     call clean_adios(mesh_handle, value_handle)
@@ -536,18 +536,18 @@ endif
 
   ! writes out total number of points
   if (it == 1) then
-if (USE_VTK_INSTEAD_OF_MESH) then
+#ifdef USE_VTK_INSTEAD_OF_MESH
     ! VTK
     write(IOVTK, '(a,i12,a)') 'POINTS ', npp, ' float'
     ! creates array to hold point data
     allocate(total_dat(npp),stat=ier)
     if (ier /= 0) stop 'error allocating total dat array'
     total_dat(:) = 0.0
-else
+#else
     call write_integer(npp)
     ! to avoid compiler warning
     iglob1 = np
-endif
+#endif
   endif
 
   ! writes our corner point locations
@@ -570,16 +570,16 @@ endif
       x = xstore(iglob1)
       y = ystore(iglob1)
       z = zstore(iglob1)
-if (USE_VTK_INSTEAD_OF_MESH) then
+#ifdef USE_VTK_INSTEAD_OF_MESH
       ! VTK
       write(IOVTK,'(3e18.6)') x,y,z
       total_dat(np+numpoin) = dat(1,1,1,ispec)
-else
+#else
       call write_real(x)
       call write_real(y)
       call write_real(z)
       call write_real(dat(1,1,1,ispec))
-endif
+#endif
       mask_ibool(iglob1) = .true.
     endif
     if (.not. mask_ibool(iglob2)) then
@@ -587,16 +587,16 @@ endif
       x = xstore(iglob2)
       y = ystore(iglob2)
       z = zstore(iglob2)
-if (USE_VTK_INSTEAD_OF_MESH) then
+#ifdef USE_VTK_INSTEAD_OF_MESH
       ! VTK
       write(IOVTK,'(3e18.6)') x,y,z
       total_dat(np+numpoin) = dat(NGLLX,1,1,ispec)
-else
+#else
       call write_real(x)
       call write_real(y)
       call write_real(z)
       call write_real(dat(NGLLX,1,1,ispec))
-endif
+#endif
       mask_ibool(iglob2) = .true.
     endif
     if (.not. mask_ibool(iglob3)) then
@@ -604,16 +604,16 @@ endif
       x = xstore(iglob3)
       y = ystore(iglob3)
       z = zstore(iglob3)
-if (USE_VTK_INSTEAD_OF_MESH) then
+#ifdef USE_VTK_INSTEAD_OF_MESH
       ! VTK
       write(IOVTK,'(3e18.6)') x,y,z
       total_dat(np+numpoin) = dat(NGLLX,NGLLY,1,ispec)
-else
+#else
       call write_real(x)
       call write_real(y)
       call write_real(z)
       call write_real(dat(NGLLX,NGLLY,1,ispec))
-endif
+#endif
       mask_ibool(iglob3) = .true.
     endif
     if (.not. mask_ibool(iglob4)) then
@@ -621,16 +621,16 @@ endif
       x = xstore(iglob4)
       y = ystore(iglob4)
       z = zstore(iglob4)
-if (USE_VTK_INSTEAD_OF_MESH) then
+#ifdef USE_VTK_INSTEAD_OF_MESH
       ! VTK
       write(IOVTK,'(3e18.6)') x,y,z
       total_dat(np+numpoin) = dat(1,NGLLY,1,ispec)
-else
+#else
       call write_real(x)
       call write_real(y)
       call write_real(z)
       call write_real(dat(1,NGLLY,1,ispec))
-endif
+#endif
       mask_ibool(iglob4) = .true.
     endif
     if (.not. mask_ibool(iglob5)) then
@@ -638,16 +638,16 @@ endif
       x = xstore(iglob5)
       y = ystore(iglob5)
       z = zstore(iglob5)
-if (USE_VTK_INSTEAD_OF_MESH) then
+#ifdef USE_VTK_INSTEAD_OF_MESH
       ! VTK
       write(IOVTK,'(3e18.6)') x,y,z
       total_dat(np+numpoin) = dat(1,1,NGLLZ,ispec)
-else
+#else
       call write_real(x)
       call write_real(y)
       call write_real(z)
       call write_real(dat(1,1,NGLLZ,ispec))
-endif
+#endif
       mask_ibool(iglob5) = .true.
     endif
     if (.not. mask_ibool(iglob6)) then
@@ -655,16 +655,16 @@ endif
       x = xstore(iglob6)
       y = ystore(iglob6)
       z = zstore(iglob6)
-if (USE_VTK_INSTEAD_OF_MESH) then
+#ifdef USE_VTK_INSTEAD_OF_MESH
       ! VTK
       write(IOVTK,'(3e18.6)') x,y,z
       total_dat(np+numpoin) = dat(NGLLX,1,NGLLZ,ispec)
-else
+#else
       call write_real(x)
       call write_real(y)
       call write_real(z)
       call write_real(dat(NGLLX,1,NGLLZ,ispec))
-endif
+#endif
       mask_ibool(iglob6) = .true.
     endif
     if (.not. mask_ibool(iglob7)) then
@@ -672,16 +672,16 @@ endif
       x = xstore(iglob7)
       y = ystore(iglob7)
       z = zstore(iglob7)
-if (USE_VTK_INSTEAD_OF_MESH) then
+#ifdef USE_VTK_INSTEAD_OF_MESH
       ! VTK
       write(IOVTK,'(3e18.6)') x,y,z
       total_dat(np+numpoin) = dat(NGLLX,NGLLY,NGLLZ,ispec)
-else
+#else
       call write_real(x)
       call write_real(y)
       call write_real(z)
       call write_real(dat(NGLLX,NGLLY,NGLLZ,ispec))
-endif
+#endif
       mask_ibool(iglob7) = .true.
     endif
     if (.not. mask_ibool(iglob8)) then
@@ -689,16 +689,16 @@ endif
       x = xstore(iglob8)
       y = ystore(iglob8)
       z = zstore(iglob8)
-if (USE_VTK_INSTEAD_OF_MESH) then
+#ifdef USE_VTK_INSTEAD_OF_MESH
       ! VTK
       write(IOVTK,'(3e18.6)') x,y,z
       total_dat(np+numpoin) = dat(1,NGLLY,NGLLZ,ispec)
-else
+#else
       call write_real(x)
       call write_real(y)
       call write_real(z)
       call write_real(dat(1,NGLLY,NGLLZ,ispec))
-endif
+#endif
       mask_ibool(iglob8) = .true.
     endif
   enddo ! ispec
@@ -728,18 +728,18 @@ endif
 
   ! writes out total number of points
   if (it == 1) then
-if (USE_VTK_INSTEAD_OF_MESH) then
+#ifdef USE_VTK_INSTEAD_OF_MESH
     ! VTK
     write(IOVTK, '(a,i12,a)') 'POINTS ', npp, ' float'
     ! creates array to hold point data
     allocate(total_dat(npp),stat=ier)
     if (ier /= 0) stop 'error allocating total dat array'
     total_dat(:) = 0.0
-else
+#else
     call write_integer(npp)
     ! to avoid compiler warning
     iglob = np
-endif
+#endif
   endif
 
   ! writes out point locations and values
@@ -758,16 +758,16 @@ endif
             x = xstore(iglob)
             y = ystore(iglob)
             z = zstore(iglob)
-if (USE_VTK_INSTEAD_OF_MESH) then
+#ifdef USE_VTK_INSTEAD_OF_MESH
             ! VTK
             write(IOVTK,'(3e18.6)') x,y,z
             total_dat(np+numpoin) = dat(i,j,k,ispec)
-else
+#else
             call write_real(x)
             call write_real(y)
             call write_real(z)
             call write_real(dat(i,j,k,ispec))
-endif
+#endif
             mask_ibool(iglob) = .true.
           endif
         enddo ! i
@@ -801,13 +801,13 @@ endif
 
   ! outputs total number of elements for all slices
   if (it == 1) then
-if (USE_VTK_INSTEAD_OF_MESH) then
+#ifdef USE_VTK_INSTEAD_OF_MESH
     ! VTK
     ! note: indices for vtk start at 0
     write(IOVTK,'(a,i12,i12)') "CELLS ",nee,nee*9
-else
+#else
     call write_integer(nee)
-endif
+#endif
   endif
 
   ! writes out element indices
@@ -881,10 +881,10 @@ endif
     n7 = num_ibool(iglob7) -1 + np
     n8 = num_ibool(iglob8) -1 + np
 
-if (USE_VTK_INSTEAD_OF_MESH) then
+#ifdef USE_VTK_INSTEAD_OF_MESH
     ! VTK
     write(IOVTK,'(9i12)') 8,n1,n2,n3,n4,n5,n6,n7,n8
-else
+#else
     call write_integer(n1)
     call write_integer(n2)
     call write_integer(n3)
@@ -893,7 +893,7 @@ else
     call write_integer(n6)
     call write_integer(n7)
     call write_integer(n8)
-endif
+#endif
 
   enddo
 
@@ -930,14 +930,14 @@ endif
 
   ! outputs total number of elements for all slices
   if (it == 1) then
-if (USE_VTK_INSTEAD_OF_MESH) then
+#ifdef USE_VTK_INSTEAD_OF_MESH
     ! VTK
     ! note: indices for vtk start at 0
     write(IOVTK,'(a,i12,i12)') "CELLS ",nee,nee*9
-else
+#else
     !nee = nelement * num_node
     call write_integer(nee)
-endif
+#endif
   endif
 
   ! sets numbering num_ibool respecting mask
@@ -985,10 +985,10 @@ endif
           n7 = num_ibool(iglob7)+np-1
           n8 = num_ibool(iglob8)+np-1
 
-if (USE_VTK_INSTEAD_OF_MESH) then
+#ifdef USE_VTK_INSTEAD_OF_MESH
           ! VTK
           write(IOVTK,'(9i12)') 8,n1,n2,n3,n4,n5,n6,n7,n8
-else
+#else
           call write_integer(n1)
           call write_integer(n2)
           call write_integer(n3)
@@ -997,7 +997,7 @@ else
           call write_integer(n6)
           call write_integer(n7)
           call write_integer(n8)
-endif
+#endif
         enddo
       enddo
     enddo
