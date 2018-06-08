@@ -229,16 +229,17 @@ Here, $0$ is the number of the first processor, $3$ the number of the last one, 
 
 \medskip
 
-At the beginning of the source file \texttt{combine\_vol\_data.f90} (located in \texttt{src/auxiliaries/}), there is a logical constant parameter \texttt{USE\_VTK\_OUTPUT} whose default value is \texttt{.true.}, that which will provide the output combined file directly in the VTK format and you can use Paraview to visualize it.
+At the beginning of the source file \texttt{src/auxiliaries/combine\_vol\_data\_impl.f90} there is a logical parameter \texttt{USE\_VTK\_INSTEAD\_OF\_MESH},
+whose default value is \texttt{.false.}, which can be used to generate the combined output file directly in VTK format, which can then be visualized using Paraview.
 
 \medskip
 
-If the value of this parameter is \texttt{.false.}, the output mesh file will have the name \texttt{velocity\_Z\_it000400.mesh}. Then we next have to convert the
-\texttt{.mesh} file into the VTU (Unstructured grid file) format which can be viewed in ParaView.
+If the value of this parameter is \texttt{.false.}, the output mesh file will have a name of the form \texttt{velocity\_Z\_it000400.mesh}.
+One then has to convert the \texttt{.mesh} file into the VTU (Unstructured grid file) format which can be viewed in ParaView.
 
 \noindent
 For this task, you can use and modify the
-script \texttt{mesh2vtu.pl} located in directory \texttt{\small utils/Visualization/Paraview/}, for example:
+script \texttt{mesh2vtu.pl} located in directory \texttt{\small utils/Visualization/Paraview}, for example:
 
 {\footnotesize
 \begin{verbatim}
@@ -247,7 +248,7 @@ mesh2vtu.pl -i velocity_Z_it000400.mesh -o velocity_Z_it000400.vtu
 }
 
 Notice that this Perl script uses a program \texttt{mesh2vtu} in the \texttt{utils/Visualization/Paraview/mesh2vtu} directory, which further
-uses the VTK \urlwithparentheses{http://www.vtk.org/} run-time library for its execution. Therefore, make sure you have them properly set
+uses the VTK \urlwithparentheses{http://www.vtk.org} run-time library for its execution. Therefore, make sure you have them properly set
 in the script according to your system.
 
 \bigskip
