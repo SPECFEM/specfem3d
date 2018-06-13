@@ -416,7 +416,7 @@ program smooth_sem
   ! frees memory
   deallocate(xstore,ystore,zstore)
   deallocate(xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz)
-  deallocate(ibool)
+  deallocate(ibool,irregular_element_number)
   deallocate(jacobian)
 
   call synchronize_all()
@@ -673,7 +673,7 @@ program smooth_sem
     deallocate(ibool)
 
     ! data file
-    write(prname,'(a,i6.6,a)') trim(input_dir)//'proc',iproc,'_'
+    write(prname,'(a,i6.6,a)') trim(input_dir)//'/proc',iproc,'_'
     local_data_file = trim(prname) // trim(kernel_name) // '.bin'
 
     open(unit = IIN,file = trim(local_data_file),status='old',action='read',form ='unformatted',iostat=ier)

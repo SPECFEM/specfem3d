@@ -64,11 +64,12 @@ z_me = zstore_me[NGLL3*ispec + igll ];
 sh_wgll_cube[igll]=wgll_cube[igll];
 __syncthreads();
 
-dat=0;
-normalisation_slice=0;
+dat=0.f;
+normalisation_slice=0.f;
 //We test 125 spectral elements at a time
 for (int i=0;i<n_loop;i++)
 {
+__syncthreads();
 if (NGLL3*i + threadIdx.x < nspec_other){
 x_other = (xstore_other[i*NGLL3*NGLL3 + threadIdx.x*NGLL3 ] + xstore_other[i*NGLL3*NGLL3 + threadIdx.x*NGLL3 + NGLL3 - 1 ])/2;
 y_other = (ystore_other[i*NGLL3*NGLL3 + threadIdx.x*NGLL3 ] + ystore_other[i*NGLL3*NGLL3 + threadIdx.x*NGLL3 + NGLL3 - 1 ])/2;
