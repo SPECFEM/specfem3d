@@ -1143,14 +1143,14 @@
     enddo
     close(21)
     if (.not. USE_EXTERNAL_SOURCE_FILE) then
-       if (mod(icounter,NLINES_PER_CMTSOLUTION_SOURCE) /= 0) &
+      NSOURCES = icounter / NLINES_PER_CMTSOLUTION_SOURCE
+      if (mod(icounter,NLINES_PER_CMTSOLUTION_SOURCE) /= 0) &
             stop 'Error total number of lines in CMTSOLUTION file should be a multiple of NLINES_PER_CMTSOLUTION_SOURCE'
     else
-       !! VM VM in case of USE_EXTERNAL_SOURCE_FILE we have to read one additional line per source (the name of external source file)
-       NSOURCES = icounter / (NLINES_PER_FORCESOLUTION_SOURCE+1)
+      !! VM VM in case of USE_EXTERNAL_SOURCE_FILE we have to read one additional line per source (the name of external source file)
+      NSOURCES = icounter / (NLINES_PER_CMTSOLUTION_SOURCE+1)
     endif
 
-    NSOURCES = icounter / NLINES_PER_CMTSOLUTION_SOURCE
     if (NSOURCES < 1) stop 'Error need at least one source in CMTSOLUTION file'
 
     ! compute the minimum value of hdur in CMTSOLUTION file
@@ -1169,9 +1169,17 @@
       minval_hdur = min(minval_hdur,hdur)
 
       ! skip other information
-      do idummy = 1,9
-        read(21,"(a)") dummystring
-      enddo
+      if (.not. USE_EXTERNAL_SOURCE_FILE) then
+        do idummy = 1,9
+          read(21,"(a)") dummystring
+        enddo
+      else
+! we need to skip 10 lines instead of 9 when USE_EXTERNAL_SOURCE_FILE is .true.
+! because there is an extra line for source time function file name
+        do idummy = 1,10
+          read(21,"(a)") dummystring
+        enddo
+      endif
 
     enddo
     close(21)
