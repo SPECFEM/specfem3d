@@ -59,6 +59,7 @@ following options:
 
 If you have problems configuring the code on a Cray machine, i.e. for instance if you get an error message from the \texttt{configure} script, try exporting these two variables:
 \texttt{MPI\_INC=\${CRAY\_MPICH2\_DIR}/include and FCLIBS=" "}, and for more details if needed you can refer to the \texttt{utils/Cray\_compiler\_information} directory.
+You can also have a look at the configure script called \texttt{utils/Cray\_compiler\_information/configure\_SPECFEM\_for\_Piz\_Daint.bash}.
 
 On SGI systems, \texttt{flags.guess} automatically informs \texttt{configure}
 to insert `\texttt{`TRAP\_FPE=OFF}'' into the generated \texttt{Makefile}
