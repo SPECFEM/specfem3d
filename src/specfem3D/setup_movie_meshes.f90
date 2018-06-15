@@ -45,6 +45,9 @@
   integer :: nfaces_m,npoin,npoin_elem
   real(kind=CUSTOM_REAL),dimension(1):: dummy
 
+  !! DK DK create a copy of the iface number to avoid an (erroneous) warning when compiling on a Cray with crayftn
+  integer :: iface_copy
+
   ! number of points per element surface
   if (USE_HIGHRES_FOR_MOVIES) then
     npoin_elem = NGLLX*NGLLY
@@ -198,7 +201,10 @@
     do ispec = 1, NSPEC_AB
       if (ispec_is_surface_external_mesh(ispec)) then
         ! determines indexing for all faces on a outer surface
-        call setup_movie_face_indices(ispec,iface)
+        !! DK DK create a copy of the ispec number to avoid an (erroneous) warning when compiling on a Cray with crayftn
+        iface_copy = iface
+        call setup_movie_face_indices(ispec,iface_copy)
+        iface = iface_copy !! DK DK this also only to avoid the (erroneous) warning when compiling on a Cray with crayftn
       endif
     enddo
 
@@ -323,8 +329,8 @@
 
   implicit none
 
-  integer,intent(in) :: ispec
-  integer,intent(inout) :: iface
+  integer, intent(in) :: ispec
+  integer, intent(inout) :: iface
 
   ! local parameters
   integer :: iglob,i,j,k,ipoin
