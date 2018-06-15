@@ -844,7 +844,7 @@ contains
 
     nb_traces_tot=0
     W=1.
-    
+
     if (myrank == 0) write(INVERSE_LOG_FILE,'(/a17)') '... reading data '
 
     do ievent = 1, acqui_simu(1)%nevent_tot

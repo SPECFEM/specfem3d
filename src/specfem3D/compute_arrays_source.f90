@@ -220,7 +220,7 @@
   it_end   = it_start + NTSTEP_BETWEEN_READ_ADJSRC - 1
   adj_src(:,:) = 0._CUSTOM_REAL
   itime=0
-  
+
   if (READ_ADJSRC_ASDF) then
 
     do icomp = 1, NDIM ! 3 components
