@@ -1430,9 +1430,12 @@ subroutine save_arrays_solver_files_adios(nspec,nglob,ibool, nspec_wmax, &
   !----------------------------------.
   ! Set up the model values to write |
   !----------------------------------'
-  allocate( vp_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier); if (ier /= 0) stop 'error allocating array '
-  allocate( vs_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier); if (ier /= 0) stop 'error allocating array '
-  allocate( rho_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier); if (ier /= 0) stop 'error allocating array '
+  allocate( vp_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array')
+  allocate( vs_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array')
+  allocate( rho_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array')
   ! vp (for checking the mesh and model)
   !minimum = minval( abs(rho_vp) )
   !if (minimum(1) /= 0.0) then

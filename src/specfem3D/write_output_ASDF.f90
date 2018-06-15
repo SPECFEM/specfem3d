@@ -44,21 +44,21 @@
 
   asdf_container%nrec_local = nrec_local
 
-  allocate (asdf_container%receiver_name_array(nrec_local), STAT=ier)
+  allocate(asdf_container%receiver_name_array(nrec_local), STAT=ier)
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate (asdf_container%network_array(nrec_local), STAT=ier)
+  allocate(asdf_container%network_array(nrec_local), STAT=ier)
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate (asdf_container%component_array(total_seismos_local), STAT=ier)
+  allocate(asdf_container%component_array(total_seismos_local), STAT=ier)
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate (asdf_container%receiver_lat(nrec_local), STAT=ier)
+  allocate(asdf_container%receiver_lat(nrec_local), STAT=ier)
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate (asdf_container%receiver_lo(nrec_local), STAT=ier)
+  allocate(asdf_container%receiver_lo(nrec_local), STAT=ier)
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate (asdf_container%receiver_el(nrec_local), STAT=ier)
+  allocate(asdf_container%receiver_el(nrec_local), STAT=ier)
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate (asdf_container%receiver_dpt(nrec_local), STAT=ier)
+  allocate(asdf_container%receiver_dpt(nrec_local), STAT=ier)
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate (asdf_container%records(total_seismos_local), STAT=ier)
+  allocate(asdf_container%records(total_seismos_local), STAT=ier)
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
 
   end subroutine init_asdf_data
@@ -121,7 +121,7 @@
   i = (irec_local-1)*(3) + (index_increment)
   asdf_container%component_array(i) = chn(1:3)
 
-  allocate (asdf_container%records(i)%record(NSTEP), STAT=ier)
+  allocate(asdf_container%records(i)%record(NSTEP), STAT=ier)
   if (ier /= 0) call exit_MPI (myrank, 'Allocating ASDF container failed.')
 
   asdf_container%records(i)%record(1:NSTEP) = seismogram_tmp(iorientation,1:NSTEP)
@@ -145,9 +145,9 @@
   do i = 1, asdf_container%nrec_local*3 ! 3 components
     deallocate(asdf_container%records(i)%record)
   enddo
-  deallocate (asdf_container%receiver_name_array)
-  deallocate (asdf_container%network_array)
-  deallocate (asdf_container%component_array)
+  deallocate(asdf_container%receiver_name_array)
+  deallocate(asdf_container%network_array)
+  deallocate(asdf_container%component_array)
 
   end subroutine close_asdf_data
 

@@ -99,8 +99,10 @@
   integer:: i,j,k,ispec,ier
 
 ! copies original array
-  allocate(copy_ibool_ori(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if (ier /= 0) stop 'error in allocate'
-  allocate(mask_ibool(nglob),stat=ier); if (ier /= 0) stop 'error in allocate'
+  allocate(copy_ibool_ori(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error in allocate')
+  allocate(mask_ibool(nglob),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error in allocate')
 
   mask_ibool(:) = -1
   copy_ibool_ori(:,:,:,:) = ibool(:,:,:,:)

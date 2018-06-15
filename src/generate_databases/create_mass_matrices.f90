@@ -57,7 +57,8 @@
   ! elastic domains
   if (ELASTIC_SIMULATION) then
      ! allocates memory
-     allocate(rmass(nglob),stat=ier); if (ier /= 0) stop 'error allocating array rmass'
+     allocate(rmass(nglob),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array rmass')
      rmass(:) = 0._CUSTOM_REAL
 
      ! returns elastic mass matrix
@@ -88,7 +89,8 @@
   ! acoustic domains
   if (ACOUSTIC_SIMULATION) then
      ! allocates memory
-     allocate(rmass_acoustic(nglob),stat=ier); if (ier /= 0) stop 'error allocating array rmass_acoustic'
+     allocate(rmass_acoustic(nglob),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array rmass_acoustic')
      rmass_acoustic(:) = 0._CUSTOM_REAL
 
      ! returns acoustic mass matrix
@@ -120,8 +122,10 @@
   ! poroelastic domains
   if (POROELASTIC_SIMULATION) then
     ! allocates memory
-    allocate(rmass_solid_poroelastic(nglob),stat=ier); if (ier /= 0) stop 'error in allocate rmass_solid_poroelastic'
-    allocate(rmass_fluid_poroelastic(nglob),stat=ier); if (ier /= 0) stop 'error in allocate rmass_fluid_poroelastic'
+    allocate(rmass_solid_poroelastic(nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error in allocate rmass_solid_poroelastic')
+    allocate(rmass_fluid_poroelastic(nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error in allocate rmass_fluid_poroelastic')
     rmass_solid_poroelastic(:) = 0._CUSTOM_REAL
     rmass_fluid_poroelastic(:) = 0._CUSTOM_REAL
 

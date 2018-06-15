@@ -347,7 +347,8 @@
     write(27) ibool
     close(27)
 
-    allocate( v_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier); if (ier /= 0) stop 'error allocating array '
+    allocate(v_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array')
 
     ! vp (for checking the mesh and model)
     !minimum = minval( abs(rho_vp) )
