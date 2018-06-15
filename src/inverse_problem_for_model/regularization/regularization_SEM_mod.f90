@@ -2113,7 +2113,7 @@ contains
        do k=1,NGLLZ
           do j=1,NGLLY
              do i=1,NGLLX
-!!$                iglob=ibool(i,j,k,ispec)
+                iglob=ibool(i,j,k,ispec)
 !!$                field(1,iglob)=field(1,iglob) + current_model_vp(i,j,k,ispec)
 !!$                field(2,iglob)=field(2,iglob) + current_model_vs(i,j,k,ispec)
 !!$                field(3,iglob)=field(3,iglob) + current_model_rh(i,j,k,ispec)
