@@ -304,13 +304,13 @@ contains
     integer,                             intent(in)       :: NUMBER_OF_SIMULTANEOUS_RUNS
     integer                                               :: number_of_events_in_acqui_file_ref
     integer                                               :: nevent_per_group, nevent_remained
-    integer                                               :: igroup, ievent_in_group, ievent, ievent_global
+    integer                                               :: igroup, ievent_in_group, ievent, ievent_global, ier
     integer,  dimension(:),     allocatable               :: nevent_in_group
     character(len=MAX_LEN_STRING)                         :: line, prefix_to_path_tmp
 
 
     write(6,*)
-    write(6,*)  ' NUMBER OF SIMULTANEOUS RUN > 0 '
+    write(6,*)  ' NUMBER OF SIMULTANEOUS RUNS > 0 '
     write(6,*)
     call flush_iunit(6)
     number_of_events_in_acqui_file_ref=0
@@ -328,7 +328,8 @@ contains
     nevent_per_group = number_of_events_in_acqui_file_ref / NUMBER_OF_SIMULTANEOUS_RUNS
     nevent_remained =  mod( number_of_events_in_acqui_file_ref, NUMBER_OF_SIMULTANEOUS_RUNS)
 
-    allocate(nevent_in_group(NUMBER_OF_SIMULTANEOUS_RUNS))
+    allocate(nevent_in_group(NUMBER_OF_SIMULTANEOUS_RUNS),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 392')
     do ievent=1,NUMBER_OF_SIMULTANEOUS_RUNS
        if (ievent <= nevent_remained) then
           nevent_in_group(ievent)= nevent_per_group+1
@@ -559,7 +560,8 @@ contains
      if (myrank == 0) then
         NSTA=acqui_simu(ievent)%nsta_tot
         Nt=acqui_simu(ievent)%Nt_data
-        allocate(Gather(NSTA,Nt,NDIM))
+        allocate(Gather(NSTA,Nt,NDIM),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 393')
      endif
       ! not sure if need this sync
         call synchronize_all()
@@ -573,8 +575,10 @@ contains
            enddo
            if (nsta_irank > 0) then
               !! data to receive
-              allocate(Gather_loc(nsta_irank,Nt,NDIM))
-              allocate(irec_global(nsta_irank))
+              allocate(Gather_loc(nsta_irank,Nt,NDIM),stat=ier)
+              if (ier /= 0) call exit_MPI_without_rank('error allocating array 394')
+              allocate(irec_global(nsta_irank),stat=ier)
+              if (ier /= 0) call exit_MPI_without_rank('error allocating array 395')
               irec_local=0
               tag   = MPI_ANY_TAG
               call MPI_RECV(Gather_loc, Nt*nsta_irank*NDIM, CUSTOM_MPI_TYPE, irank, tag, my_local_mpi_comm_world, status,  ier)
@@ -592,8 +596,10 @@ contains
            if (myrank == irank .and. acqui_simu(ievent)%nsta_slice > 0) then
               NSTA_LOC=acqui_simu(ievent)%nsta_slice
               Nt=acqui_simu(ievent)%Nt_data
-              allocate(Gather_loc(NSTA_LOC,Nt,NDIM))
-              allocate(irec_global(NSTA_LOC))
+              allocate(Gather_loc(NSTA_LOC,Nt,NDIM),stat=ier)
+              if (ier /= 0) call exit_MPI_without_rank('error allocating array 396')
+              allocate(irec_global(NSTA_LOC),stat=ier)
+              if (ier /= 0) call exit_MPI_without_rank('error allocating array 397')
 
               do irec_local = 1, NSTA_LOC
                  irec_global(irec_local) = acqui_simu(ievent)%number_receiver_global(irec_local)
@@ -694,7 +700,8 @@ contains
           NSTA=acqui_simu(ievent)%nsta_tot
           Nt=acqui_simu(ievent)%Nt_data
 
-          allocate(Gather(NSTA,Nt,NDIM))
+          allocate(Gather(NSTA,Nt,NDIM),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 398')
           Gather(:,:,:) = 0._CUSTOM_REAL
           ! read gather file
           open(IINN,file=trim(adjustl(acqui_simu(ievent)%data_file_gather)), access='direct', &
@@ -715,13 +722,17 @@ contains
 
           !! store data gather in my slice if needed
           NSTA_LOC=acqui_simu(ievent)%nsta_slice
-          allocate(acqui_simu(ievent)%data_traces(NSTA_LOC,Nt,NDIM))
-          allocate(acqui_simu(ievent)%adjoint_sources(NDIM, NSTA_LOC, Nt))
+          allocate(acqui_simu(ievent)%data_traces(NSTA_LOC,Nt,NDIM),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 399')
+          allocate(acqui_simu(ievent)%adjoint_sources(NDIM, NSTA_LOC, Nt),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 400')
           !! SB SB here weight_trace is allocated with nt = 1
-          allocate(acqui_simu(ievent)%weight_trace(NDIM, NSTA_LOC, 1))
+          allocate(acqui_simu(ievent)%weight_trace(NDIM, NSTA_LOC, 1),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 401')
           acqui_simu(ievent)%weight_trace(:,:,:)=1._CUSTOM_REAL
           if (VERBOSE_MODE .or. DEBUG_MODE) then
-            allocate(acqui_simu(ievent)%synt_traces(NDIM, NSTA_LOC, Nt))
+            allocate(acqui_simu(ievent)%synt_traces(NDIM, NSTA_LOC, Nt),stat=ier)
+            if (ier /= 0) call exit_MPI_without_rank('error allocating array 402')
           endif
 
           irec_local=0
@@ -747,7 +758,8 @@ contains
              ! if there is receiver in slice irank then MPI send data
              if (nsta_irank > 0) then
                 !! data to send
-                allocate(Gather_loc(nsta_irank,Nt,NDIM))
+                allocate(Gather_loc(nsta_irank,Nt,NDIM),stat=ier)
+                if (ier /= 0) call exit_MPI_without_rank('error allocating array 403')
                 irec_local=0
                 do irec = 1, NSTA
                    if (acqui_simu(ievent)%islice_selected_rec(irec) == irank) then
@@ -768,12 +780,17 @@ contains
              if (myrank == irank .and. acqui_simu(ievent)%nsta_slice > 0) then
                 NSTA_LOC=acqui_simu(ievent)%nsta_slice
                 Nt=acqui_simu(ievent)%Nt_data
-                allocate(Gather_loc(NSTA_LOC,Nt,NDIM))
-                allocate(acqui_simu(ievent)%data_traces(NSTA_LOC,Nt,NDIM))
-                allocate(acqui_simu(ievent)%adjoint_sources(NDIM, NSTA_LOC, Nt))
-                allocate(acqui_simu(ievent)%weight_trace(NDIM, NSTA_LOC,1))
+                allocate(Gather_loc(NSTA_LOC,Nt,NDIM),stat=ier)
+                if (ier /= 0) call exit_MPI_without_rank('error allocating array 404')
+                allocate(acqui_simu(ievent)%data_traces(NSTA_LOC,Nt,NDIM),stat=ier)
+                if (ier /= 0) call exit_MPI_without_rank('error allocating array 405')
+                allocate(acqui_simu(ievent)%adjoint_sources(NDIM, NSTA_LOC, Nt),stat=ier)
+                if (ier /= 0) call exit_MPI_without_rank('error allocating array 406')
+                allocate(acqui_simu(ievent)%weight_trace(NDIM, NSTA_LOC,1),stat=ier)
+                if (ier /= 0) call exit_MPI_without_rank('error allocating array 407')
                 if (VERBOSE_MODE .or. DEBUG_MODE) then
-                  allocate(acqui_simu(ievent)%synt_traces(NDIM, NSTA_LOC, Nt))
+                  allocate(acqui_simu(ievent)%synt_traces(NDIM, NSTA_LOC, Nt),stat=ier)
+                  if (ier /= 0) call exit_MPI_without_rank('error allocating array 408')
                 endif
 
                 if (DEBUG_MODE) write(IIDD,*) 'myrank ',myrank,' wait for 0 :', NSTA_LOC,Nt
@@ -803,8 +820,10 @@ contains
        if ( use_band_pass_filter) then
           acqui_simu(ievent)%Nfrq=NIFRQ
           acqui_simu(ievent)%band_pass_filter=use_band_pass_filter
-          allocate(acqui_simu(ievent)%fl_event(acqui_simu(ievent)%Nfrq))
-          allocate(acqui_simu(ievent)%fh_event(acqui_simu(ievent)%Nfrq))
+          allocate(acqui_simu(ievent)%fl_event(acqui_simu(ievent)%Nfrq),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 409')
+          allocate(acqui_simu(ievent)%fh_event(acqui_simu(ievent)%Nfrq),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 410')
           acqui_simu(ievent)%fl_event(:)=fl(:)
           acqui_simu(ievent)%fh_event(:)=fh(:)
           !! WARNING WARNING
@@ -866,7 +885,8 @@ contains
           NSTA=acqui_simu(ievent)%nsta_tot
           Nt=acqui_simu(ievent)%Nt_data
 
-          allocate(Gather(NSTA,Nt,NDIM))
+          allocate(Gather(NSTA,Nt,NDIM),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 411')
           Gather(:,:,:) = 0._CUSTOM_REAL
 
           !! Read pif gather file component by conponent
@@ -892,15 +912,19 @@ contains
 
           !! store data gather in my slice if needed
           NSTA_LOC=acqui_simu(ievent)%nsta_slice
-          allocate(acqui_simu(ievent)%data_traces(ndim,nsta_loc,nt))
-          allocate(acqui_simu(ievent)%adjoint_sources(ndim,nsta_loc,nt))
-          allocate(acqui_simu(ievent)%weight_trace(ndim,nsta_loc,nt))
+          allocate(acqui_simu(ievent)%data_traces(ndim,nsta_loc,nt),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 412')
+          allocate(acqui_simu(ievent)%adjoint_sources(ndim,nsta_loc,nt),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 413')
+          allocate(acqui_simu(ievent)%weight_trace(ndim,nsta_loc,nt),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 414')
           acqui_simu(ievent)%weight_trace(:,:,:) = 1._CUSTOM_REAL
 
           !! manage data taper here
           ! first windowing
           if (acqui_simu(ievent)%is_time_pick) then
-             allocate(weight_loc(nt))
+             allocate(weight_loc(nt),stat=ier)
+             if (ier /= 0) call exit_MPI_without_rank('error allocating array 415')
              do irec = 1, nsta
                 weight_loc(:) = 1._CUSTOM_REAL
                 it1 = int(floor(acqui_simu(ievent)%time_pick(irec) / acqui_simu(ievent)%dt_data ))
@@ -994,7 +1018,8 @@ contains
           end select
 
           if (VERBOSE_MODE .or. DEBUG_MODE) then
-            allocate(acqui_simu(ievent)%synt_traces(NDIM, NSTA_LOC, Nt))
+            allocate(acqui_simu(ievent)%synt_traces(NDIM, NSTA_LOC, Nt),stat=ier)
+            if (ier /= 0) call exit_MPI_without_rank('error allocating array 416')
           endif
           irec_local=0
           do irec = 1, NSTA
@@ -1019,7 +1044,8 @@ contains
              ! if there is receiver in slice irank then MPI send data
              if (nsta_irank > 0) then
                 !! data to send
-                allocate(Gather_loc(nsta_irank,Nt,NDIM))
+                allocate(Gather_loc(nsta_irank,Nt,NDIM),stat=ier)
+                if (ier /= 0) call exit_MPI_without_rank('error allocating array 417')
                 irec_local=0
                 do irec = 1, NSTA
                    if (acqui_simu(ievent)%islice_selected_rec(irec) == irank) then
@@ -1040,12 +1066,17 @@ contains
              if (myrank == irank .and. acqui_simu(ievent)%nsta_slice > 0) then
                 NSTA_LOC=acqui_simu(ievent)%nsta_slice
                 Nt=acqui_simu(ievent)%Nt_data
-                allocate(Gather_loc(NSTA_LOC,Nt,NDIM))
-                allocate(acqui_simu(ievent)%data_traces(NSTA_LOC,Nt,NDIM))
-                allocate(acqui_simu(ievent)%adjoint_sources(NDIM,NSTA_LOC,Nt))
-                allocate( acqui_simu(ievent)%weight_trace(NDIM,NSTA_LOC,nt))
+                allocate(Gather_loc(NSTA_LOC,Nt,NDIM),stat=ier)
+                if (ier /= 0) call exit_MPI_without_rank('error allocating array 418')
+                allocate(acqui_simu(ievent)%data_traces(NSTA_LOC,Nt,NDIM),stat=ier)
+                if (ier /= 0) call exit_MPI_without_rank('error allocating array 419')
+                allocate(acqui_simu(ievent)%adjoint_sources(NDIM,NSTA_LOC,Nt),stat=ier)
+                if (ier /= 0) call exit_MPI_without_rank('error allocating array 420')
+                allocate( acqui_simu(ievent)%weight_trace(NDIM,NSTA_LOC,nt),stat=ier)
+                if (ier /= 0) call exit_MPI_without_rank('error allocating array 421')
                 if (VERBOSE_MODE .or. DEBUG_MODE) then
-                  allocate(acqui_simu(ievent)%synt_traces(NDIM, NSTA_LOC, Nt))
+                  allocate(acqui_simu(ievent)%synt_traces(NDIM, NSTA_LOC, Nt),stat=ier)
+                  if (ier /= 0) call exit_MPI_without_rank('error allocating array 422')
                 endif
 
                 if (DEBUG_MODE) write(IIDD,*) 'myrank ',myrank,' wait for 0 :', NSTA_LOC,Nt
@@ -1075,8 +1106,10 @@ contains
        if ( use_band_pass_filter) then
           acqui_simu(ievent)%Nfrq=NIFRQ
           acqui_simu(ievent)%band_pass_filter=use_band_pass_filter
-          allocate(acqui_simu(ievent)%fl_event(acqui_simu(ievent)%Nfrq))
-          allocate(acqui_simu(ievent)%fh_event(acqui_simu(ievent)%Nfrq))
+          allocate(acqui_simu(ievent)%fl_event(acqui_simu(ievent)%Nfrq),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 423')
+          allocate(acqui_simu(ievent)%fh_event(acqui_simu(ievent)%Nfrq),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 424')
           acqui_simu(ievent)%fl_event(:)=fl(:)
           acqui_simu(ievent)%fh_event(:)=fh(:)
           !! WARNING WARNING
@@ -1127,7 +1160,8 @@ contains
      if (myrank == 0) then
         NSTA=acqui_simu(ievent)%nsta_tot
         Nt=acqui_simu(ievent)%Nt_data
-        allocate(Gather(NSTA,Nt,NDIM))
+        allocate(Gather(NSTA,Nt,NDIM),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 425')
      endif
       ! not sure if need this sync
         call synchronize_all()
@@ -1141,8 +1175,10 @@ contains
            enddo
            if (nsta_irank > 0) then
               !! data to receive
-              allocate(Gather_loc(nsta_irank,Nt,NDIM))
-              allocate(irec_global(nsta_irank))
+              allocate(Gather_loc(nsta_irank,Nt,NDIM),stat=ier)
+              if (ier /= 0) call exit_MPI_without_rank('error allocating array 426')
+              allocate(irec_global(nsta_irank),stat=ier)
+              if (ier /= 0) call exit_MPI_without_rank('error allocating array 427')
               irec_local=0
               tag   = MPI_ANY_TAG
               call MPI_RECV(Gather_loc, Nt*nsta_irank*NDIM, CUSTOM_MPI_TYPE, irank, tag, my_local_mpi_comm_world, status,  ier)
@@ -1160,8 +1196,10 @@ contains
            if (myrank == irank .and. acqui_simu(ievent)%nsta_slice > 0) then
               NSTA_LOC=acqui_simu(ievent)%nsta_slice
               Nt=acqui_simu(ievent)%Nt_data
-              allocate(Gather_loc(NSTA_LOC,Nt,NDIM))
-              allocate(irec_global(NSTA_LOC))
+              allocate(Gather_loc(NSTA_LOC,Nt,NDIM),stat=ier)
+              if (ier /= 0) call exit_MPI_without_rank('error allocating array 428')
+              allocate(irec_global(NSTA_LOC),stat=ier)
+              if (ier /= 0) call exit_MPI_without_rank('error allocating array 429')
 
               do irec_local = 1, NSTA_LOC
                  irec_global(irec_local) = acqui_simu(ievent)%number_receiver_global(irec_local)
@@ -1331,9 +1369,11 @@ contains
 
       !! 2/ allocate and store type(acqui) acqui_simu
       if (NEVENT > 0) then
-         allocate(acqui_simu(NEVENT))
+         allocate(acqui_simu(NEVENT),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 430')
       else
-         allocate(acqui_simu(1))
+         allocate(acqui_simu(1),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 431')
          write(*,*) 'ERROR NO EVENTS FOUND IN ACQUISITION FILE ',myrank, mygroup, trim(acqui_file)
          stop
       endif
@@ -1437,7 +1477,8 @@ contains
     ! master broadcasts read values
     call MPI_BCAST(NEVENT,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
     if (myrank > 0) then
-      allocate(acqui_simu(NEVENT))
+      allocate(acqui_simu(NEVENT),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 432')
     endif
     do ievent = 1, NEVENT
        acqui_simu(ievent)%nevent_tot = NEVENT
@@ -1519,8 +1560,10 @@ contains
           case('use_frequency_band_pass_filter')
              inversion_param%use_band_pass_filter=.true.
              read(line(ipos0:ipos1),*) inversion_param%Nifrq
-             allocate(fl(inversion_param%Nifrq))
-             allocate(fh(inversion_param%Nifrq))
+             allocate(fl(inversion_param%Nifrq),stat=ier)
+             if (ier /= 0) call exit_MPI_without_rank('error allocating array 433')
+             allocate(fh(inversion_param%Nifrq),stat=ier)
+             if (ier /= 0) call exit_MPI_without_rank('error allocating array 434')
 
           case('fl')
              read(line(ipos0:ipos1),*) fl(:)
@@ -1583,14 +1626,16 @@ contains
              inversion_param%use_regularization_FD_Tikonov=.true.
 
           case('use_tk_sem_regularization')
-             allocate(inversion_param%smooth_weight(inversion_param%NinvPar))
+             allocate(inversion_param%smooth_weight(inversion_param%NinvPar),stat=ier)
+             if (ier /= 0) call exit_MPI_without_rank('error allocating array 435')
              read(line(ipos0:ipos1),*) inversion_param%smooth_weight(1), &
                   inversion_param%smooth_weight(2), &
                   inversion_param%smooth_weight(3)
              inversion_param%use_regularization_SEM_Tikonov=.true.
 
           case('use_tk_sem_damping')
-             allocate(inversion_param%damp_weight(inversion_param%NinvPar))
+             allocate(inversion_param%damp_weight(inversion_param%NinvPar),stat=ier)
+             if (ier /= 0) call exit_MPI_without_rank('error allocating array 436')
              read(line(ipos0:ipos1),*) inversion_param%damp_weight(1:inversion_param%NinvPar)
              inversion_param%use_damping_SEM_Tikonov=.true.
              !! we have read standard deviation for model
@@ -1651,7 +1696,8 @@ contains
    if (inversion_param%use_band_pass_filter) then
       call MPI_BCAST(inversion_param%Nifrq, 1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
       if (myrank > 0) then
-         allocate(fl(inversion_param%Nifrq), fh(inversion_param%Nifrq))
+         allocate(fl(inversion_param%Nifrq), fh(inversion_param%Nifrq),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 437')
       endif
       call MPI_BCAST(fl,inversion_param%Nifrq,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
       call MPI_BCAST(fh,inversion_param%Nifrq,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
@@ -1683,12 +1729,14 @@ contains
    call MPI_BCAST(inversion_param%distance_from_source,1,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
    call MPI_BCAST(inversion_param%NinvPar,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
    if (myrank > 0 .and. inversion_param%use_regularization_SEM_Tikonov ) then
-    allocate(inversion_param%smooth_weight(inversion_param%NinvPar))
+    allocate(inversion_param%smooth_weight(inversion_param%NinvPar),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 438')
    endif
    if (inversion_param%use_regularization_SEM_Tikonov) &
     call MPI_BCAST(inversion_param%smooth_weight(1),inversion_param%NinvPar,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
    if (myrank > 0 .and. inversion_param%use_damping_SEM_Tikonov ) then
-    allocate(inversion_param%damp_weight(inversion_param%NinvPar))
+    allocate(inversion_param%damp_weight(inversion_param%NinvPar),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 439')
    endif
    if (inversion_param%use_damping_SEM_Tikonov) &
    call MPI_BCAST(inversion_param%damp_weight(1),inversion_param%NinvPar,CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
@@ -1770,7 +1818,7 @@ contains
 
     type(acqui), allocatable, dimension(:), intent(inout)  :: acqui_simu
 
-    integer                                                :: ievent, irec, nsta, nrec_loc
+    integer                                                :: ievent, irec, nsta, nrec_loc, ier
     character(len=MAX_LEN_STRING)                          :: rec_filename,filtered_rec_filename
     if (myrank == 0) then
       write(INVERSE_LOG_FILE,*)
@@ -1792,15 +1840,24 @@ contains
 
        call station_filter(rec_filename,filtered_rec_filename,nsta)
        acqui_simu(ievent)%nsta_tot=nsta
-       allocate(acqui_simu(ievent)%station_name(nsta),acqui_simu(ievent)%network_name(nsta))
-       allocate(acqui_simu(ievent)%position_station(3,nsta))
-       allocate(acqui_simu(ievent)%xi_rec(nsta))
-       allocate(acqui_simu(ievent)%eta_rec(nsta))
-       allocate(acqui_simu(ievent)%gamma_rec(nsta))
-       allocate(acqui_simu(ievent)%islice_selected_rec(nsta))
-       allocate(acqui_simu(ievent)%ispec_selected_rec(nsta))
-       allocate(acqui_simu(ievent)%number_receiver_global(nsta))
-       allocate(acqui_simu(ievent)%nu(NDIM,NDIM,nsta))
+       allocate(acqui_simu(ievent)%station_name(nsta),acqui_simu(ievent)%network_name(nsta),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 440')
+       allocate(acqui_simu(ievent)%position_station(3,nsta),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 441')
+       allocate(acqui_simu(ievent)%xi_rec(nsta),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 442')
+       allocate(acqui_simu(ievent)%eta_rec(nsta),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 443')
+       allocate(acqui_simu(ievent)%gamma_rec(nsta),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 444')
+       allocate(acqui_simu(ievent)%islice_selected_rec(nsta),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 445')
+       allocate(acqui_simu(ievent)%ispec_selected_rec(nsta),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 446')
+       allocate(acqui_simu(ievent)%number_receiver_global(nsta),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 447')
+       allocate(acqui_simu(ievent)%nu(NDIM,NDIM,nsta),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 448')
 
        ! reads STATIONS_FILTERED file, locates receivers in the mesh and compute Lagrange interpolators
        call locate_receivers(filtered_rec_filename,nsta,acqui_simu(ievent)%islice_selected_rec, &
@@ -1817,21 +1874,35 @@ contains
 
        acqui_simu(ievent)%nsta_slice=nrec_loc
        if (acqui_simu(ievent)%nsta_slice > 0) then
-          allocate(acqui_simu(ievent)%hxi    (NGLLX,nrec_loc))
-          allocate(acqui_simu(ievent)%heta   (NGLLY,nrec_loc))
-          allocate(acqui_simu(ievent)%hgamma (NGLLZ,nrec_loc))
-          allocate(acqui_simu(ievent)%hpxi   (NGLLX,nrec_loc))
-          allocate(acqui_simu(ievent)%hpeta  (NGLLY,nrec_loc))
-          allocate(acqui_simu(ievent)%hpgamma(NGLLZ,nrec_loc))
-          allocate(acqui_simu(ievent)%freqcy_to_invert(NDIM,2,nrec_loc))
+          allocate(acqui_simu(ievent)%hxi    (NGLLX,nrec_loc),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 449')
+          allocate(acqui_simu(ievent)%heta   (NGLLY,nrec_loc),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 450')
+          allocate(acqui_simu(ievent)%hgamma (NGLLZ,nrec_loc),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 451')
+          allocate(acqui_simu(ievent)%hpxi   (NGLLX,nrec_loc),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 452')
+          allocate(acqui_simu(ievent)%hpeta  (NGLLY,nrec_loc),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 453')
+          allocate(acqui_simu(ievent)%hpgamma(NGLLZ,nrec_loc),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 454')
+          allocate(acqui_simu(ievent)%freqcy_to_invert(NDIM,2,nrec_loc),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 455')
        else
-          allocate(acqui_simu(ievent)%hxi    (1,1))
-          allocate(acqui_simu(ievent)%heta   (1,1))
-          allocate(acqui_simu(ievent)%hgamma (1,1))
-          allocate(acqui_simu(ievent)%hpxi   (1,1))
-          allocate(acqui_simu(ievent)%hpeta  (1,1))
-          allocate(acqui_simu(ievent)%hpgamma(1,1))
-          allocate(acqui_simu(ievent)%freqcy_to_invert(NDIM,2,1))
+          allocate(acqui_simu(ievent)%hxi    (1,1),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 456')
+          allocate(acqui_simu(ievent)%heta   (1,1),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 457')
+          allocate(acqui_simu(ievent)%hgamma (1,1),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 458')
+          allocate(acqui_simu(ievent)%hpxi   (1,1),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 459')
+          allocate(acqui_simu(ievent)%hpeta  (1,1),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 460')
+          allocate(acqui_simu(ievent)%hpgamma(1,1),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 461')
+          allocate(acqui_simu(ievent)%freqcy_to_invert(NDIM,2,1),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 462')
        endif
 
        nrec_loc = 0
@@ -1937,35 +2008,59 @@ contains
       ! 2/ Allocate the acqui_simu structure
       acqui_simu(ievent)%nsources_tot=NSOURCES
 
-      allocate(acqui_simu(ievent)%islice_selected_source(NSOURCES))
-      allocate(acqui_simu(ievent)%ispec_selected_source(NSOURCES))
-      allocate(acqui_simu(ievent)%tshift(NSOURCES))
-      allocate(acqui_simu(ievent)%hdur(NSOURCES))
-      allocate(acqui_simu(ievent)%hdur_Gaussian(NSOURCES))
-      allocate(acqui_simu(ievent)%sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ))
-      allocate(acqui_simu(ievent)%Xs(NSOURCES))
-      allocate(acqui_simu(ievent)%Ys(NSOURCES))
+      allocate(acqui_simu(ievent)%islice_selected_source(NSOURCES),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 463')
+      allocate(acqui_simu(ievent)%ispec_selected_source(NSOURCES),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 464')
+      allocate(acqui_simu(ievent)%tshift(NSOURCES),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 465')
+      allocate(acqui_simu(ievent)%hdur(NSOURCES),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 466')
+      allocate(acqui_simu(ievent)%hdur_Gaussian(NSOURCES),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 467')
+      allocate(acqui_simu(ievent)%sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 468')
+      allocate(acqui_simu(ievent)%Xs(NSOURCES),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 469')
+      allocate(acqui_simu(ievent)%Ys(NSOURCES),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 470')
       allocate(acqui_simu(ievent)%Zs(NSOURCES), stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 471')
       if (ier /= 0) stop 'error allocating arrays for sources'
-      allocate(Mxx(NSOURCES))
-      allocate(Myy(NSOURCES))
-      allocate(Mzz(NSOURCES))
-      allocate(Mxy(NSOURCES))
-      allocate(Mxz(NSOURCES))
-      allocate(Myz(NSOURCES))
-      allocate(x_target_source(NSOURCES))
-      allocate(y_target_source(NSOURCES))
-      allocate(z_target_source(NSOURCES))
-      allocate(xi_source(NSOURCES))
-      allocate(eta_source(NSOURCES))
-      allocate(gamma_source(NSOURCES))
+      allocate(Mxx(NSOURCES),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 472')
+      allocate(Myy(NSOURCES),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 473')
+      allocate(Mzz(NSOURCES),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 474')
+      allocate(Mxy(NSOURCES),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 475')
+      allocate(Mxz(NSOURCES),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 476')
+      allocate(Myz(NSOURCES),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 477')
+      allocate(x_target_source(NSOURCES),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 478')
+      allocate(y_target_source(NSOURCES),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 479')
+      allocate(z_target_source(NSOURCES),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 480')
+      allocate(xi_source(NSOURCES),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 481')
+      allocate(eta_source(NSOURCES),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 482')
+      allocate(gamma_source(NSOURCES),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 483')
       allocate(nu_source(NDIM,NDIM,NSOURCES),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 484')
       if (ier /= 0) stop 'error allocating utm source arrays'
 
       if (USE_FORCE_POINT_SOURCE) then
         allocate(factor_force_source(NSOURCES),Fx(NSOURCES),Fy(NSOURCES),Fz(NSOURCES),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 485')
       else
         allocate(factor_force_source(1),Fx(1),Fy(1),Fz(1),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 486')
       endif
       if (ier /= 0) stop 'error allocating arrays for force point sources'
 
@@ -1980,6 +2075,7 @@ contains
 
       !! allocate the array contains the user defined source time function
       allocate(acqui_simu(ievent)%user_source_time_function(NSTEP_STF, NSOURCES_STF),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 487')
       if (ier /= 0) stop 'error allocating arrays for user sources time function'
 
 
@@ -1989,7 +2085,8 @@ contains
 
         case('moment','force')
 
-          allocate(lat(NSOURCES),long(NSOURCES),depth(NSOURCES),moment_tensor(6,NSOURCES))
+          allocate(lat(NSOURCES),long(NSOURCES),depth(NSOURCES),moment_tensor(6,NSOURCES),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 488')
           ! read all the sources
           if (USE_FORCE_POINT_SOURCE) then
             ! point forces

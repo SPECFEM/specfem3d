@@ -108,6 +108,7 @@
   ! assignes material index
   ! format: (1,ispec) = #material_id , (2,ispec) = #material_definition
   allocate(material_index(2,nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1346')
   if (ier /= 0) stop 'Error allocating array material_index'
   material_index (:,:) = 0
   do ispec = 1, nspec
@@ -636,7 +637,7 @@
   double precision  :: lat_center_chunk, lon_center_chunk, chunk_depth, chunk_azi
   double precision  :: radius_of_box_top
 
-  integer :: ielm, j,k, imin,imax,jmin,jmax,kmin,kmax
+  integer :: ielm, j,k, imin,imax,jmin,jmax,kmin,kmax,ier
   integer :: nel_lat, nel_lon, nel_depth
   logical :: buried_box
 
@@ -653,10 +654,14 @@
 
     z_bottom = 0. ! will shift coordinates in z-direction
 
-    allocate(longitud(NGLLX,NGLLY,NGLLZ), latitud(NGLLX,NGLLY,NGLLZ), radius(NGLLX,NGLLY,NGLLZ))
-    allocate(xstore(NGLLX,NGLLY,NGLLZ), ystore(NGLLX,NGLLY,NGLLZ), zstore(NGLLX,NGLLY,NGLLZ))
-    allocate(xelm(NGNOD), yelm(NGNOD), zelm(NGNOD))
-    allocate(xigll(NGLLX), yigll(NGLLY), zigll(NGLLZ), wxgll(NGLLX),wygll(NGLLY), wzgll(NGLLZ))
+    allocate(longitud(NGLLX,NGLLY,NGLLZ), latitud(NGLLX,NGLLY,NGLLZ), radius(NGLLX,NGLLY,NGLLZ),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1347')
+    allocate(xstore(NGLLX,NGLLY,NGLLZ), ystore(NGLLX,NGLLY,NGLLZ), zstore(NGLLX,NGLLY,NGLLZ),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1348')
+    allocate(xelm(NGNOD), yelm(NGNOD), zelm(NGNOD),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1349')
+    allocate(xigll(NGLLX), yigll(NGLLY), zigll(NGLLZ), wxgll(NGLLX),wygll(NGLLY), wzgll(NGLLZ),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1350')
 
     deg2rad = 3.141592653589793d0/180.d0
 
@@ -678,7 +683,8 @@
     !
     !--- get the 3-D shape functions
     !
-    allocate(shape3D(NGNOD,NGLLX,NGLLY,NGLLZ),dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ))
+    allocate(shape3D(NGNOD,NGLLX,NGLLY,NGLLZ),dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1351')
     call get_shape3D(myrank,shape3D,dershape3D,xigll,yigll,zigll,NGNOD)
     !
 

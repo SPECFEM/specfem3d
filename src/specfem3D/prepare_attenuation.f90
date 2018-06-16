@@ -56,11 +56,13 @@
   factor_common(:,:,:,:,:) = 1._CUSTOM_REAL
 
   allocate( scale_factor(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2232')
   if (ier /= 0) call exit_mpi(myrank,'error allocation scale_factor')
   scale_factor(:,:,:,:) = 1._CUSTOM_REAL
 
   factor_common_kappa(:,:,:,:,:) = 1._CUSTOM_REAL
   allocate( scale_factor_kappa(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2233')
   if (ier /= 0) call exit_mpi(myrank,'error allocation scale_factor_kappa')
   scale_factor_kappa(:,:,:,:) = 1._CUSTOM_REAL
 

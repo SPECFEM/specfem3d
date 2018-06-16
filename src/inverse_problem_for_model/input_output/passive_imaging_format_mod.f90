@@ -122,11 +122,13 @@ contains
     type(gather),     intent(out) :: mygather
     integer(kind=si) :: k
 
-    write(6,*)'Read PIF-file header from ',trim(adjustl(filename)),' ...'
+    integer :: ier
+
+    write(*,*)'Read PIF-file header from ',trim(adjustl(filename)),' ...'
     open(iunit, file=trim(adjustl(filename)), status='old',action='read', iostat=io_err)
 
     if (io_err /= 0) then
-       write(6,*)'PIF file: ',trim(adjustl(filename)),' does not exist!'
+       write(*,*)'PIF file: ',trim(adjustl(filename)),' does not exist!'
        stop 'PIF file does not exist!'
     endif
 
@@ -201,7 +203,8 @@ contains
     !*** Now read stations
     k = 0
     if (.not. allocated(mygather%stations)) then
-      allocate(mygather%stations(mygather%hdr%nsta))
+      allocate(mygather%stations(mygather%hdr%nsta),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 489')
     endif
     do
        read(iunit,fmt='(a256)',iostat=io_err) line
@@ -269,13 +272,13 @@ contains
 
        end select
 
-       if (debug_level > 1) write(6,*)trim(adjustl(line))
+       if (debug_level > 1) write(*,*)trim(adjustl(line))
 
     enddo
 
     if (k < mygather%hdr%nsta) stop 'Not enough stations in PIF binary file..., check number_of_station'
     close(iunit)
-    write(6,*)'Done!'
+    write(*,*)'Done!'
 
     ! Read CMT file if needed
     select case (mygather%hdr%source_type)
@@ -298,7 +301,7 @@ contains
                                   mygather%source%y, &
                                   mygather%source%z)
     case default
-       write(6,*)'WARNING : source_type undefined !'
+       write(*,*) 'WARNING : source_type undefined !'
     end select
 
 !!!! Not here.... since only header

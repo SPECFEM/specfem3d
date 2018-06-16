@@ -270,6 +270,8 @@ use File::Basename;
       $line =~ s#write\s*\(\s*IMAIN\s*,\s*\*\s*\)\s*""#write\(IMAIN,\*\)#ogi;
       $line =~ s#write\s*\(\s*IOUT\s*,\s*\*\s*\)\s*""#write\(IOUT,\*\)#ogi;
 
+      $line =~ s#write\s*\(\s*6\s*,\s*\*\s*\)\s*""#write\(IMAIN,\*\)#ogi;
+
 # force space in , & at end of line
       $line =~ s#\s*,\s*&\s*$#, &#ogi;
 

@@ -27,7 +27,7 @@ contains
   subroutine selector_iso_family(inversion_param)
     type(inver),                                                  intent(inout)      :: inversion_param
     integer :: ipar
-    integer :: ipar_inv
+    integer :: ipar_inv, ier
     logical, dimension(3) :: is_selected
     character(len=MAX_LEN_STRING), dimension(3) :: vti_family_name
 
@@ -72,7 +72,8 @@ contains
 
     !! set wanted parameters in inversion structure
     inversion_param%NinvPar=ipar_inv
-    allocate(inversion_param%Index_Invert(inversion_param%NinvPar))
+    allocate(inversion_param%Index_Invert(inversion_param%NinvPar),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 569')
     ipar_inv=0
     do ipar=1, inversion_param%NfamilyPar !! loop on all parameters : rho, vp, vs
        if (is_selected(ipar)) then

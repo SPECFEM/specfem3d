@@ -95,24 +95,33 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
   ! stores damping profiles
   allocate(d_store_x(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 841')
   if (ier /= 0) stop 'error allocating array d_store_x'
   allocate(d_store_y(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 842')
   if (ier /= 0) stop 'error allocating array d_store_y'
   allocate(d_store_z(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 843')
   if (ier /= 0) stop 'error allocating array d_store_z'
 
   ! stores auxiliary coefficients
   allocate(K_store_x(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 844')
   if (ier /= 0) stop 'error allocating array K_store_x'
   allocate(K_store_y(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 845')
   if (ier /= 0) stop 'error allocating array K_store_y'
   allocate(K_store_z(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 846')
   if (ier /= 0) stop 'error allocating array K_store_z'
   allocate(alpha_store_x(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 847')
   if (ier /= 0) stop 'error allocating array alpha_store_x'
   allocate(alpha_store_y(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 848')
   if (ier /= 0) stop 'error allocating array alpha_store_y'
   allocate(alpha_store_z(NGLLX,NGLLY,NGLLZ,nspec_cpml),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 849')
   if (ier /= 0) stop 'error allocating array alpha_store_z'
 
   K_store_x(:,:,:,:) = ZERO
@@ -1819,6 +1828,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
     !mask all points belong interior computational domain
     allocate(mask_ibool_interior_domain(NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 850')
     if (ier /= 0) stop 'error allocating array mask_ibool_interior_domain'
     mask_ibool_interior_domain = .false.
     do ispec = 1,nspec
@@ -1848,6 +1858,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
       if (nglob_interface_PML_acoustic > 0) then
         allocate(points_interface_PML_acoustic(nglob_interface_PML_acoustic),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 851')
         if (ier /= 0) stop 'error allocating array points_interface_PML_acoustic'
         points_interface_PML_acoustic = 0
         nglob_interface_PML_acoustic = 0
@@ -1887,6 +1898,7 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
 
       if (nglob_interface_PML_elastic > 0) then
         allocate(points_interface_PML_elastic(nglob_interface_PML_elastic),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 852')
         if (ier /= 0) stop 'error allocating array points_interface_PML_elastic'
         points_interface_PML_elastic = 0
         nglob_interface_PML_elastic = 0

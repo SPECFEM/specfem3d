@@ -242,25 +242,32 @@ contains
 
     real(kind=cp), dimension(:), allocatable :: dobs2, autocorr, crosscorr, new_obs, src_one
 
+    integer :: ier
 
     !* 0. Allocate
     if (.not. allocated(autocorr)) then
-      allocate(autocorr(nt))
+      allocate(autocorr(nt),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 377')
     endif
     if (.not. allocated(crosscorr)) then
-      allocate(crosscorr(nt))
+      allocate(crosscorr(nt),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 378')
     endif
     if (.not. allocated(src_sum)) then
-      allocate(src_sum(nt))
+      allocate(src_sum(nt),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 379')
     endif
     if (.not. allocated(src_one)) then
-      allocate(src_one(nt))
+      allocate(src_one(nt),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 380')
     endif
     if (.not. allocated(dobs2)) then
-      allocate(dobs2(nt))
+      allocate(dobs2(nt),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 381')
     endif
     if (.not. allocated(new_obs)) then
-      allocate(new_obs(nt))
+      allocate(new_obs(nt),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 382')
     endif
 
     src_sum = 0._cp
@@ -307,12 +314,13 @@ contains
      real(kind=cp), dimension(n1), intent(in) :: sig1
      real(kind=cp), dimension(n2), intent(in) :: sig2
 
-!     real(kind=cp), dimension(n1), intent(out) ::conv
-      real(kind=cp), dimension(:), allocatable, intent(inout) ::conv
+     real(kind=cp), dimension(:), allocatable, intent(inout) ::conv
 
-     real(kind=cp), dimension(n1+n2-1) :: convtmp !, intent(out) :: conv
+     real(kind=cp), dimension(n1+n2-1) :: convtmp
 
      integer(kind=si) :: i1, i2, ind
+
+     integer :: ier
 
      !*** Put to zero
      convtmp = zero
@@ -332,20 +340,23 @@ contains
            ind = ceiling(real(n2/2,kind=cp))
         endif
         if (.not. allocated(conv)) then
-          allocate(conv(n2))
+          allocate(conv(n2),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 383')
         endif
         conv(1:n2) = convtmp(ind:ind+n2-1)
 
      else if (part == 1) then ! full convolution
 
         if (.not. allocated(conv)) then
-          allocate(conv(n1+n2-1))
+          allocate(conv(n1+n2-1),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 384')
         endif
         conv(:) = convtmp(:)
 
      else if (part == 2) then !(middle irregular)
         if (.not. allocated(conv)) then
-          allocate(conv(n2))
+          allocate(conv(n2),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 385')
         endif
         conv(1:n2) = convtmp(n2:n2+n2-1)
      endif
@@ -362,20 +373,23 @@ contains
      real(kind=cp), dimension(n1), intent(in) :: sig1
      real(kind=cp), dimension(n2), intent(in) :: sig2
 
-!     real(kind=cp), dimension(n1), intent(out) :: corr
      real(kind=cp), dimension(:), allocatable, intent(inout) :: corr
 
      real(kind=cp), dimension(n2) :: flipsig2
      integer(kind=si) :: i
 
+     integer :: ier
+
      !*** Choose size of corr
      if (part == 0) then ! (middle)
         if (.not. allocated(corr)) then
-          allocate(corr(n2))
+          allocate(corr(n2),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 386')
         endif
      else if (part == 1) then ! (full)
         if (.not. allocated(corr)) then
-          allocate(corr(n1+n2-1))
+          allocate(corr(n1+n2-1),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 387')
         endif
      endif
 
@@ -408,9 +422,12 @@ contains
      integer(kind=si) :: it, ind
      real(kind=cp)    :: maxcorr
 
-     !*** Take good parts define middle
+     integer :: ier
+
+     !*** Take good parts, define middle
      if (.not. allocated(corr)) then
-       allocate(corr(n1))
+       allocate(corr(n1),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 388')
      endif
 
      if (modulo(n2,2) == 0) then
@@ -714,14 +731,19 @@ contains
      real(kind=cp) :: alpha
      real(kind=cp),intent(in) :: sizetapx, sizetapy, sizetapz
 
+     integer :: ier
+
      if (.not. allocated(tapx)) then
-       allocate(tapx(ndom(1)))
+       allocate(tapx(ndom(1)),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 389')
      endif
      if (.not. allocated(tapy)) then
-       allocate(tapy(ndom(2)))
+       allocate(tapy(ndom(2)),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 390')
      endif
      if (.not. allocated(tapz)) then
-       allocate(tapz(ndom(3)))
+       allocate(tapz(ndom(3)),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 391')
      endif
 
      alpha = sizetapx*2./ndom(1)

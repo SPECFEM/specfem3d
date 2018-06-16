@@ -33,7 +33,7 @@ module vti_parameters_mod
   subroutine selector_vti_family(inversion_param)
     type(inver),                                                  intent(inout)      :: inversion_param
     integer :: ipar
-    integer :: ipar_inv
+    integer :: ipar_inv, ier
     logical, dimension(6) :: is_selected
     character(len=MAX_LEN_STRING), dimension(6) :: vti_family_name
 
@@ -50,7 +50,6 @@ module vti_parameters_mod
     inversion_param%param_ref_name(4)="epsillon--(ep)"
     inversion_param%param_ref_name(5)="delta--(de)"
     inversion_param%param_ref_name(6)="gamma--(gm)"
-
 
     is_selected(:)=.false.
     ipar_inv=0
@@ -103,7 +102,8 @@ module vti_parameters_mod
 
     !! set wanted parameters in inversion structure
     inversion_param%NinvPar=ipar_inv
-    allocate(inversion_param%Index_Invert(inversion_param%NinvPar))
+    allocate(inversion_param%Index_Invert(inversion_param%NinvPar),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 563')
     ipar_inv=0
     do ipar=1, inversion_param%NfamilyPar !! loop on all parameters : rho, vp, vs, ep, gm, de
        if (is_selected(ipar)) then

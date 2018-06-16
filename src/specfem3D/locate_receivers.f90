@@ -135,21 +135,36 @@
   endif
 
   ! allocate memory for arrays using number of stations
-  allocate(stlat(nrec))
-  allocate(stlon(nrec))
-  allocate(stele(nrec))
-  allocate(stbur(nrec))
-  allocate(stutm_x(nrec))
-  allocate(stutm_y(nrec))
-  allocate(elevation(nrec))
-  allocate(x_target(nrec))
-  allocate(y_target(nrec))
-  allocate(z_target(nrec))
-  allocate(x_found(nrec))
-  allocate(y_found(nrec))
-  allocate(z_found(nrec))
-  allocate(final_distance(nrec))
+  allocate(stlat(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1955')
+  allocate(stlon(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1956')
+  allocate(stele(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1957')
+  allocate(stbur(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1958')
+  allocate(stutm_x(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1959')
+  allocate(stutm_y(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1960')
+  allocate(elevation(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1961')
+  allocate(x_target(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1962')
+  allocate(y_target(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1963')
+  allocate(z_target(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1964')
+  allocate(x_found(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1965')
+  allocate(y_found(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1966')
+  allocate(z_found(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1967')
+  allocate(final_distance(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1968')
   allocate(idomain(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1969')
   if (ier /= 0) stop 'Error allocating arrays for locating receivers'
 
   ! loop on all the stations to read the file
@@ -170,6 +185,7 @@
     ! "append") to a file with same name. The philosophy here is to accept multiple
     ! appearances and to just add a count to the station name in this case.
     allocate(station_duplet(nrec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1970')
     if (ier /= 0 ) call exit_MPI(myrank,'Error allocating station_duplet array')
     station_duplet(:) = 0
     do irec = 1,nrec
@@ -490,7 +506,8 @@ contains
         write(IMAIN,*) 'station details from SU_stations_info.bin'
         call flush_IMAIN()
 
-        allocate(x_found(nrec),y_found(nrec),z_found(nrec))
+        allocate(x_found(nrec),y_found(nrec),z_found(nrec),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1971')
         ! reads in station infos
         read(IOUT_SU) islice_selected_rec,ispec_selected_rec
         read(IOUT_SU) xi_receiver,eta_receiver,gamma_receiver

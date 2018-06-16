@@ -40,12 +40,16 @@
 
 ! use dynamic allocation to allocate memory for arrays
   allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 605')
   if (ier /= 0) stop 'error allocating array ibool'
   allocate(xstore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 606')
   if (ier /= 0) stop 'error allocating array xstore'
   allocate(ystore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 607')
   if (ier /= 0) stop 'error allocating array ystore'
   allocate(zstore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 608')
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
   call memory_eval_mesher(myrank,NSPEC_AB,npointot,nnodes_ext_mesh, &

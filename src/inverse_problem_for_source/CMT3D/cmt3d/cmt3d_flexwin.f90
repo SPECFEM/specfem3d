@@ -50,6 +50,7 @@ program cmt3d_flexwin
 
 ! allocate arrays
   allocate(A(npar,npar),b(npar),dm(npar),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1093')
   if (ier /= 0) stop 'Error allocating '
   print *, 'Set up inversion matrix ...'
   call setup_matrix(A,b,npar)

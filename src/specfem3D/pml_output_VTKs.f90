@@ -50,6 +50,7 @@ subroutine pml_output_VTKs()
 
   ! C-PML regions
   allocate(temp_CPML_regions(NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1981')
   if (ier /= 0) stop 'error allocating array temp_CPML_regions'
 
   temp_CPML_regions(:) = 0
@@ -69,10 +70,13 @@ subroutine pml_output_VTKs()
 
   ! C-PML damping profile arrays
   allocate(temp_d_store_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1982')
   if (ier /= 0) stop 'error allocating array temp_d_store_x'
   allocate(temp_d_store_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1983')
   if (ier /= 0) stop 'error allocating array temp_d_store_y'
   allocate(temp_d_store_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1984')
   if (ier /= 0) stop 'error allocating array temp_d_store_z'
 
   temp_d_store_x(:,:,:,:) = 0._CUSTOM_REAL

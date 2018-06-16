@@ -64,12 +64,16 @@
   if (NPROC > 1) then
 
     allocate(buffer_send_scalar(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1190')
     if (ier /= 0) stop 'error allocating array buffer_send_scalar'
     allocate(buffer_recv_scalar(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1191')
     if (ier /= 0) stop 'error allocating array buffer_recv_scalar'
     allocate(request_send_scalar(num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1192')
     if (ier /= 0) stop 'error allocating array request_send_scalar'
     allocate(request_recv_scalar(num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1193')
     if (ier /= 0) stop 'error allocating array request_recv_scalar'
 
     ! partition border copy into the buffer
@@ -158,12 +162,16 @@
   if (NPROC > 1) then
 
     allocate(buffer_send_scalar(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1194')
     if (ier /= 0) stop 'error allocating array buffer_send_scalar'
     allocate(buffer_recv_scalar(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1195')
     if (ier /= 0) stop 'error allocating array buffer_recv_scalar'
     allocate(request_send_scalar(num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1196')
     if (ier /= 0) stop 'error allocating array request_send_scalar'
     allocate(request_recv_scalar(num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1197')
     if (ier /= 0) stop 'error allocating array request_recv_scalar'
 
     ! partition border copy into the buffer

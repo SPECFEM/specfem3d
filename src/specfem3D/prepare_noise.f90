@@ -52,17 +52,23 @@
 
     ! allocates arrays
     allocate(noise_sourcearray(NDIM,NGLLX,NGLLY,NGLLZ,NSTEP),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1975')
     if (ier /= 0) call exit_mpi(myrank,'error allocating noise source array')
 
     allocate(normal_x_noise(NGLLSQUARE*num_free_surface_faces),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1976')
     if (ier /= 0) stop 'error allocating array normal_x_noise'
     allocate(normal_y_noise(NGLLSQUARE*num_free_surface_faces),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1977')
     if (ier /= 0) stop 'error allocating array normal_y_noise'
     allocate(normal_z_noise(NGLLSQUARE*num_free_surface_faces),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1978')
     if (ier /= 0) stop 'error allocating array normal_z_noise'
     allocate(mask_noise(NGLLSQUARE*num_free_surface_faces),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1979')
     if (ier /= 0) stop 'error allocating array mask_noise'
     allocate(noise_surface_movie(NDIM,NGLLSQUARE,num_free_surface_faces),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1980')
     if (ier /= 0) stop 'error allocating array noise_surface_movie'
 
     ! initializes

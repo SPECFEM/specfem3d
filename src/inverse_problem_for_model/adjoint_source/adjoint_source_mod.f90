@@ -157,17 +157,30 @@ contains
 !----------------------------------------------------------------------------------------------------------------------------------
   subroutine  allocate_adjoint_source_working_arrays()
 
-    allocate(residuals(nstep_data))
-    allocate(raw_residuals(nstep_data))
-    allocate(fil_residuals(nstep_data))
-    allocate(filfil_residuals(nstep_data))
-    allocate(w_tap(nstep_data))
-    allocate(signal(nstep_data))
-    allocate(residuals_for_cost(nstep_data))
-    allocate(elastic_adjoint_source(NDIM,nstep_data))
-    allocate(elastic_misfit(NDIM,nstep_data))
-    allocate(data_trace_to_use(nstep_data))
-    allocate(wkstmp(nstep_data))
+    integer :: ier
+
+    allocate(residuals(nstep_data),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 279')
+    allocate(raw_residuals(nstep_data),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 280')
+    allocate(fil_residuals(nstep_data),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 281')
+    allocate(filfil_residuals(nstep_data),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 282')
+    allocate(w_tap(nstep_data),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 283')
+    allocate(signal(nstep_data),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 284')
+    allocate(residuals_for_cost(nstep_data),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 285')
+    allocate(elastic_adjoint_source(NDIM,nstep_data),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 286')
+    allocate(elastic_misfit(NDIM,nstep_data),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 287')
+    allocate(data_trace_to_use(nstep_data),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 288')
+    allocate(wkstmp(nstep_data),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 289')
 
   end subroutine allocate_adjoint_source_working_arrays
 
@@ -204,6 +217,8 @@ contains
     double precision                                           :: lat0, lon0, azi0
     type(inver),                                 intent(inout) :: inversion_param
 
+    integer :: ier
+
     !!----------------------------------------------------------------------------------------------------
     !! store residuals and filter  ---------------------------
 
@@ -227,16 +242,20 @@ contains
 
        ! Define temporary trace vector
        if (.not. allocated(trace_cal_1)) then
-         allocate(trace_cal_1(3,nstep_data))
+         allocate(trace_cal_1(3,nstep_data),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 290')
        endif
        if (.not. allocated(trace_cal_2)) then
-         allocate(trace_cal_2(3,nstep_data))
+         allocate(trace_cal_2(3,nstep_data),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 291')
        endif
        if (.not. allocated(trace_obs_1)) then
-         allocate(trace_obs_1(3,nstep_data))
+         allocate(trace_obs_1(3,nstep_data),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 292')
        endif
        if (.not. allocated(trace_obs_2)) then
-         allocate(trace_obs_2(3,nstep_data))
+         allocate(trace_obs_2(3,nstep_data),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 293')
        endif
        lat0 = acqui_simu(ievent)%Origin_chunk_lat
        lon0 = acqui_simu(ievent)%Origin_chunk_lon
@@ -255,7 +274,8 @@ contains
           ! Convolve synthetic data with wavelet
           if (inversion_param%convolution_by_wavelet) then
              if (.not. allocated(wavelet)) then
-               allocate(wavelet(nstep_data))
+               allocate(wavelet(nstep_data),stat=ier)
+               if (ier /= 0) call exit_MPI_without_rank('error allocating array 294')
              endif
              wavelet = acqui_simu(ievent)%user_source_time_function(1,:)
              call myconvolution(trace_cal_2(idim,:),wavelet,nstep_data,nstep_data,tmpl,0)
@@ -340,7 +360,8 @@ contains
           ! Finally cross-correlate residuals with wavelet
           if (inversion_param%convolution_by_wavelet) then
              if (.not. allocated(filfil_residuals_tmp)) then
-               allocate(filfil_residuals_tmp(nstep_data))
+               allocate(filfil_residuals_tmp(nstep_data),stat=ier)
+               if (ier /= 0) call exit_MPI_without_rank('error allocating array 295')
              endif
              filfil_residuals_tmp(:) = filfil_residuals(:)
              call mycorrelation(filfil_residuals_tmp,wavelet,nstep_data,nstep_data,tmpl,0)

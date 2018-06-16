@@ -601,11 +601,14 @@ contains
 
   implicit none
 
+  integer :: ier
+
   !*** Define indexing to pass from tensor to vector (see browaeys and chevrot 2004)
   !    IN TENSOR INDEXING
   if (.not. allocated(ind_vec2tens)) then
 
-     allocate(ind_vec2tens(4,21))
+     allocate(ind_vec2tens(4,21),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 570')
 
      ! Group 1
      ind_vec2tens(1:4,1)  = (/ 1, 1, 1, 1 /)
@@ -646,7 +649,8 @@ contains
   !    IN VOIGT INDEXING
   if (.not. allocated(ind_vec2tens_voigt)) then
 
-     allocate(ind_vec2tens_voigt(2,21))
+     allocate(ind_vec2tens_voigt(2,21),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 571')
 
      ! Group 1
      ind_vec2tens_voigt(1:2,1)  = (/ 1, 1 /)

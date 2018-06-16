@@ -93,12 +93,14 @@
   !allocations
   if (NSPEC_IRREGULAR > 0) then
     allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1064')
     s1_jac = NGLLX
     s2_jac = NGLLY
     s3_jac = NGLLZ
     s4_jac = NSPEC_IRREGULAR
   else
     allocate(jacobian(1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1065')
     s1_jac = 1
     s2_jac = 1
     s3_jac = 1
@@ -109,7 +111,8 @@
     call exit_mpi(myrank,'error allocation jacobian')
   endif
 
-  allocate(irregular_element_number(NSPEC))
+  allocate(irregular_element_number(NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1066')
 
 
   ! GLL points
@@ -337,12 +340,14 @@
   !allocations
   if (NSPEC_IRREGULAR > 0) then
     allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1067')
     s1_jac = NGLLX
     s2_jac = NGLLY
     s3_jac = NGLLZ
     s4_jac = NSPEC_IRREGULAR
   else
     allocate(jacobian(1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1068')
     s1_jac = 1
     s2_jac = 1
     s3_jac = 1
@@ -353,7 +358,8 @@
     call exit_mpi(myrank,'error allocation jacobian')
   endif
 
-  allocate(irregular_element_number(NSPEC))
+  allocate(irregular_element_number(NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1069')
 
 
 
@@ -609,12 +615,14 @@
   !allocations
   if (NSPEC_IRREGULAR > 0) then
     allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1070')
     s1_jac = NGLLX
     s2_jac = NGLLY
     s3_jac = NGLLZ
     s4_jac = NSPEC_IRREGULAR
   else
     allocate(jacobian(1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1071')
     s1_jac = 1
     s2_jac = 1
     s3_jac = 1
@@ -625,7 +633,8 @@
     call exit_mpi(myrank,'error allocation jacobian')
   endif
 
-  allocate(irregular_element_number(NSPEC))
+  allocate(irregular_element_number(NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1072')
 
 
   ! GLL points
@@ -838,8 +847,10 @@
   !allocations
   if (NSPEC_IRREGULAR > 0) then
     allocate(dummy_sem(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1073')
   else
     allocate(dummy_sem(1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1074')
   endif
   if (ier /= 0) then
     print *,'Error allocating array dummy_sem'

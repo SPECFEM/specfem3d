@@ -191,6 +191,7 @@ subroutine safe_alloc_float_1d(array, dim1, usr_msg)
   integer :: ier
 
   allocate(array(dim1), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1198')
   call check_alloc_err(ier, usr_msg)
 end subroutine safe_alloc_float_1d
 
@@ -209,6 +210,7 @@ subroutine safe_alloc_float_2d(array, dim1, dim2, usr_msg)
   integer :: ier
 
   allocate(array(dim1, dim2), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1199')
   call check_alloc_err(ier, usr_msg)
 end subroutine safe_alloc_float_2d
 
@@ -228,6 +230,7 @@ subroutine safe_alloc_float_3d(array, dim1, dim2, dim3, usr_msg)
   integer :: ier
 
   allocate(array(dim1, dim2, dim3), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1200')
   call check_alloc_err(ier, usr_msg)
 end subroutine safe_alloc_float_3d
 
@@ -248,6 +251,7 @@ subroutine safe_alloc_float_4d(array, dim1, dim2, dim3, dim4, usr_msg)
   integer :: ier
 
   allocate(array(dim1, dim2, dim3, dim4), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1201')
   call check_alloc_err(ier, usr_msg)
 end subroutine safe_alloc_float_4d
 
@@ -269,6 +273,7 @@ subroutine safe_alloc_float_5d(array, dim1, dim2, dim3, dim4, dim5, usr_msg)
   integer :: ier
 
   allocate(array(dim1, dim2, dim3, dim4, dim5), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1202')
   call check_alloc_err(ier, usr_msg)
 end subroutine safe_alloc_float_5d
 
@@ -286,6 +291,7 @@ subroutine safe_alloc_double_1d(array, dim1, usr_msg)
   integer :: ier
 
   allocate(array(dim1), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1203')
   call check_alloc_err(ier, usr_msg)
 end subroutine safe_alloc_double_1d
 
@@ -304,6 +310,7 @@ subroutine safe_alloc_double_2d(array, dim1, dim2, usr_msg)
   integer :: ier
 
   allocate(array(dim1, dim2), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1204')
   call check_alloc_err(ier, usr_msg)
 end subroutine safe_alloc_double_2d
 
@@ -323,6 +330,7 @@ subroutine safe_alloc_double_3d(array, dim1, dim2, dim3, usr_msg)
   integer :: ier
 
   allocate(array(dim1, dim2, dim3), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1205')
   call check_alloc_err(ier, usr_msg)
 end subroutine safe_alloc_double_3d
 
@@ -343,6 +351,7 @@ subroutine safe_alloc_double_4d(array, dim1, dim2, dim3, dim4, usr_msg)
   integer :: ier
 
   allocate(array(dim1, dim2, dim3, dim4), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1206')
   call check_alloc_err(ier, usr_msg)
 end subroutine safe_alloc_double_4d
 
@@ -364,6 +373,7 @@ subroutine safe_alloc_double_5d(array, dim1, dim2, dim3, dim4, dim5, usr_msg)
   integer :: ier
 
   allocate(array(dim1, dim2, dim3, dim4, dim5), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1207')
   call check_alloc_err(ier, usr_msg)
 end subroutine safe_alloc_double_5d
 
@@ -381,6 +391,7 @@ subroutine safe_alloc_int_1d(array, dim1, usr_msg)
   integer :: ier
 
   allocate(array(dim1), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1208')
   call check_alloc_err(ier, usr_msg)
 end subroutine safe_alloc_int_1d
 
@@ -399,6 +410,7 @@ subroutine safe_alloc_int_2d(array, dim1, dim2, usr_msg)
   integer :: ier
 
   allocate(array(dim1, dim2), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1209')
   call check_alloc_err(ier, usr_msg)
 end subroutine safe_alloc_int_2d
 
@@ -418,6 +430,7 @@ subroutine safe_alloc_int_3d(array, dim1, dim2, dim3, usr_msg)
   integer :: ier
 
   allocate(array(dim1, dim2, dim3), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1210')
   call check_alloc_err(ier, usr_msg)
 end subroutine safe_alloc_int_3d
 
@@ -438,6 +451,7 @@ subroutine safe_alloc_int_4d(array, dim1, dim2, dim3, dim4, usr_msg)
   integer :: ier
 
   allocate(array(dim1, dim2, dim3, dim4), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1211')
   call check_alloc_err(ier, usr_msg)
 end subroutine safe_alloc_int_4d
 
@@ -459,6 +473,7 @@ subroutine safe_alloc_int_5d(array, dim1, dim2, dim3, dim4, dim5, usr_msg)
   integer :: ier
 
   allocate(array(dim1, dim2, dim3, dim4, dim5), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1212')
   call check_alloc_err(ier, usr_msg)
 end subroutine safe_alloc_int_5d
 
@@ -476,6 +491,7 @@ subroutine safe_alloc_long_1d(array, dim1, usr_msg)
   integer :: ier
 
   allocate(array(dim1), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1213')
   call check_alloc_err(ier, usr_msg)
 end subroutine safe_alloc_long_1d
 
@@ -494,6 +510,7 @@ subroutine safe_alloc_long_2d(array, dim1, dim2, usr_msg)
   integer :: ier
 
   allocate(array(dim1, dim2), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1214')
   call check_alloc_err(ier, usr_msg)
 end subroutine safe_alloc_long_2d
 
@@ -513,6 +530,7 @@ subroutine safe_alloc_long_3d(array, dim1, dim2, dim3, usr_msg)
   integer :: ier
 
   allocate(array(dim1, dim2, dim3), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1215')
   call check_alloc_err(ier, usr_msg)
 end subroutine safe_alloc_long_3d
 
@@ -533,6 +551,7 @@ subroutine safe_alloc_long_4d(array, dim1, dim2, dim3, dim4, usr_msg)
   integer :: ier
 
   allocate(array(dim1, dim2, dim3, dim4), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1216')
   call check_alloc_err(ier, usr_msg)
 end subroutine safe_alloc_long_4d
 
@@ -554,6 +573,7 @@ subroutine safe_alloc_long_5d(array, dim1, dim2, dim3, dim4, dim5, usr_msg)
   integer :: ier
 
   allocate(array(dim1, dim2, dim3, dim4, dim5), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1217')
   call check_alloc_err(ier, usr_msg)
 end subroutine safe_alloc_long_5d
 
@@ -666,6 +686,7 @@ subroutine safe_alloc_logical_1d(array, dim1, usr_msg)
   integer :: ier
 
   allocate(array(dim1), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1218')
   call check_alloc_err(ier, usr_msg)
 end subroutine safe_alloc_logical_1d
 
@@ -684,6 +705,7 @@ subroutine safe_alloc_logical_2d(array, dim1, dim2, usr_msg)
   integer :: ier
 
   allocate(array(dim1, dim2), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1219')
   call check_alloc_err(ier, usr_msg)
 end subroutine safe_alloc_logical_2d
 
@@ -703,6 +725,7 @@ subroutine safe_alloc_logical_3d(array, dim1, dim2, dim3, usr_msg)
   integer :: ier
 
   allocate(array(dim1, dim2, dim3), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1220')
   call check_alloc_err(ier, usr_msg)
 end subroutine safe_alloc_logical_3d
 
@@ -723,6 +746,7 @@ subroutine safe_alloc_logical_4d(array, dim1, dim2, dim3, dim4, usr_msg)
   integer :: ier
 
   allocate(array(dim1, dim2, dim3, dim4), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1221')
   call check_alloc_err(ier, usr_msg)
 end subroutine safe_alloc_logical_4d
 
@@ -744,6 +768,7 @@ subroutine safe_alloc_logical_5d(array, dim1, dim2, dim3, dim4, dim5, usr_msg)
   integer :: ier
 
   allocate(array(dim1, dim2, dim3, dim4, dim5), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1222')
   call check_alloc_err(ier, usr_msg)
 end subroutine safe_alloc_logical_5d
 

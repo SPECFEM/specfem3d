@@ -270,6 +270,7 @@
       ! allocates search array
       if (kdtree_search_num_nodes > 0) then
         allocate(kdtree_search_index(kdtree_search_num_nodes),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2418')
         if (ier /= 0) stop 'Error allocating array kdtree_search_index'
 
         ! finds closest n points in mesh
@@ -284,6 +285,7 @@
 
         ! starts with dummy element
         allocate(kdtree_search_index(1),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2419')
         if (ier /= 0) stop 'Error allocating array kdtree_search_index'
         kdtree_search_index(1) = 1 ! first element
 

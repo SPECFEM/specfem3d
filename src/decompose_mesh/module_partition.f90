@@ -71,11 +71,12 @@ contains
     integer,             dimension(:),   allocatable        :: nEipart_1, nEipart_2, nEipart_3
     integer                                                 :: nE_1, nE_2, nE_3
     integer                                                 :: kpart_2, kpart_3, p1, p2, p3
-    integer                                                 :: i, iE, idir, num_original_element
+    integer                                                 :: i, iE, idir, num_original_element, ier
     !
 
     nE=nspec
-    allocate(ipart(nE))
+    allocate(ipart(nE),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 67')
     ipart(:)=-1
 
     xmin = minval(nodes_coords(1,:))
@@ -93,16 +94,20 @@ contains
     write(27,*)
     WRITE(27,*) ' xmin, ymin, zmin ', xmin, ymin, zmin
     write(27,*) ' sizes, nspec, nnodes ',  nspec, nnodes
-    allocate(elmnts_center(3,nE))
+    allocate(elmnts_center(3,nE),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 68')
     write(27,*)
     call compute_elmnts_center(elmnts_center, elmnts, nodes_coords, nspec, nnodes)
 
     ! partition in direction 1 on the whole mesh
     idir=1
     nE_1=nE
-    allocate(sum_load_1(nE_1),cri_load_1(nE_1))
-    allocate(ipart_1(nE_1), nEipart_1(nE_1), iperm_1(nE_1))
-    allocate(load_elmnts_1(nE_1), elmnts_center_1(3,nE_1), old_num_1(nE_1))
+    allocate(sum_load_1(nE_1),cri_load_1(nE_1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 69')
+    allocate(ipart_1(nE_1), nEipart_1(nE_1), iperm_1(nE_1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 70')
+    allocate(load_elmnts_1(nE_1), elmnts_center_1(3,nE_1), old_num_1(nE_1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 71')
     elmnts_center_1(:,:)=elmnts_center(:,:)
     load_elmnts_1(:)=load_elmnts(:)
     do i=1,nE
@@ -120,9 +125,12 @@ contains
 
        idir = 2
        nE_2 = nEipart_1(kpart_2)
-       allocate(sum_load_2(nE_2), cri_load_2(nE_2))
-       allocate(load_elmnts_2(nE_2), elmnts_center_2(3,nE_2))
-       allocate(ipart_2(nE_2), nEipart_2(npart_2), iperm_2(nE_2), old_num_2(nE_2))
+       allocate(sum_load_2(nE_2), cri_load_2(nE_2),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 72')
+       allocate(load_elmnts_2(nE_2), elmnts_center_2(3,nE_2),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 73')
+       allocate(ipart_2(nE_2), nEipart_2(npart_2), iperm_2(nE_2), old_num_2(nE_2),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 74')
 
        call extract_partition(load_elmnts_2, elmnts_center_2, old_num_2, nE_2, &
             ipart_1, load_elmnts_1, elmnts_center_1, old_num_1, kpart_2, nE_1)
@@ -135,9 +143,12 @@ contains
           idir = 3
           nE_3 = nEipart_2(kpart_3)
 
-          allocate(sum_load_3(nE_3), cri_load_3(nE_3))
-          allocate(load_elmnts_3(nE_3), elmnts_center_3(3,nE_3))
-          allocate(ipart_3(nE_3), nEipart_3(npart_3), iperm_3(nE_3), old_num_3(nE_3))
+          allocate(sum_load_3(nE_3), cri_load_3(nE_3),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 75')
+          allocate(load_elmnts_3(nE_3), elmnts_center_3(3,nE_3),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 76')
+          allocate(ipart_3(nE_3), nEipart_3(npart_3), iperm_3(nE_3), old_num_3(nE_3),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 77')
 
           call extract_partition(load_elmnts_3, elmnts_center_3, old_num_3, nE_3, &
                ipart_2, load_elmnts_2, elmnts_center_2, old_num_2, kpart_3, nE_2)

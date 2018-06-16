@@ -69,12 +69,16 @@
   if (NPROC > 1) then
 
     allocate(buffer_send_vector(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1985')
     if (ier /= 0) stop 'error allocating array buffer_send_vector'
     allocate(buffer_recv_vector(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1986')
     if (ier /= 0) stop 'error allocating array buffer_recv_vector'
     allocate(request_send_vector(num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1987')
     if (ier /= 0) stop 'error allocating array request_send_vector'
     allocate(request_recv_vector(num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1988')
     if (ier /= 0) stop 'error allocating array request_recv_vector'
 
     ! partition border copy into the buffer
@@ -170,12 +174,16 @@
   if (NPROC > 1) then
 
     allocate(buffer_send_vector(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1989')
     if (ier /= 0) stop 'error allocating array buffer_send_vector'
     allocate(buffer_recv_vector(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1990')
     if (ier /= 0) stop 'error allocating array buffer_recv_vector'
      allocate(request_send_vector(num_interfaces_ext_mesh),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1991')
     if (ier /= 0) stop 'error allocating array request_send_vector'
     allocate(request_recv_vector(num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1992')
     if (ier /= 0) stop 'error allocating array request_recv_vector'
 
     ! partition border copy into the buffer

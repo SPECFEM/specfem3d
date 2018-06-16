@@ -49,9 +49,11 @@ contains
 
     !! temporary array useful for MPI comm
     allocate(wks(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 564')
     if (ier /= 0) call exit_MPI(myrank,"error allocation wks in  PrepareArraysfamilyParam subroutine, family_parameter_mod")
     if (ANISOTROPIC_KL) then
        allocate(wks1(21, NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 565')
        if (ier /= 0) call exit_MPI(myrank,"error allocation wks1 in  PrepareArraysfamilyParam subroutine, family_parameter_mod")
     endif
 
@@ -59,9 +61,12 @@ contains
     call choose_inversion_parameters(inversion_param)
 
     !! temporay arrays used for translation : inversion parmeters <-> modeling parameters
-    allocate(gradient_wks(NGLLX, NGLLY, NGLLZ, inversion_param%NinvPar))
-    allocate(model_wks(NGLLX, NGLLY, NGLLZ, inversion_param%NinvPar))
-    allocate(model_ref_wks(NGLLX, NGLLY, NGLLZ, inversion_param%NinvPar))
+    allocate(gradient_wks(NGLLX, NGLLY, NGLLZ, inversion_param%NinvPar),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 566')
+    allocate(model_wks(NGLLX, NGLLY, NGLLZ, inversion_param%NinvPar),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 567')
+    allocate(model_ref_wks(NGLLX, NGLLY, NGLLZ, inversion_param%NinvPar),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 568')
 
 
     if (myrank == 0) then

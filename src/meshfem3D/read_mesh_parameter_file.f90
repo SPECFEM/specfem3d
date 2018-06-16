@@ -119,6 +119,7 @@
 
   ! allocate doubling array
   allocate(ner_doublings(NDOUBLINGS),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1318')
   if (ier /= 0) stop 'Error allocating ner_doublings array'
   ner_doublings(:) = 0
 
@@ -167,6 +168,7 @@
 
   ! read materials properties
   allocate(material_properties(NMATERIALS,7),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1319')
   if (ier /= 0) stop 'Error allocation of material_properties'
   material_properties(:,:) = 0.d0
   do imat = 1,NMATERIALS
@@ -188,6 +190,7 @@
 
   ! read subregions properties
   allocate(subregions(NSUBREGIONS,7),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1320')
   if (ier /= 0) stop 'Error allocation of subregions'
   subregions(:,:) = 0
   do ireg = 1,NSUBREGIONS

@@ -105,8 +105,10 @@
 
   ! allocates interface arrays
   allocate(interface_bottom(max_npx_interface,max_npy_interface),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1281')
   if (ier /= 0) stop 'Error allocating array interface_bottom'
   allocate(interface_top(max_npx_interface,max_npy_interface),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1282')
   if (ier /= 0) stop 'Error allocating array interface_top'
 
   ! read number of interfaces
@@ -526,6 +528,7 @@
   number_of_layers = number_of_interfaces
 
   allocate(ner_layer(number_of_layers),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1283')
   if (ier /= 0) stop 'Error allocating array ner_layer'
 
   ! loop on all the layers

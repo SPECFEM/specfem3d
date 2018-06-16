@@ -264,9 +264,10 @@ module signal_processing
     integer,                                           intent(in)     :: nt
     real(kind=CUSTOM_REAL), dimension(:), allocatable, intent(inout)  :: signal
     real(kind=CUSTOM_REAL), dimension(:), allocatable                 :: wks_signal
-    integer                                                           :: i
+    integer                                                           :: i, ier
 
-    allocate(wks_signal(nt))
+    allocate(wks_signal(nt),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 296')
     wks_signal(1:nt)=signal(1:nt)
 
     !! laplacian 1D
@@ -291,9 +292,10 @@ module signal_processing
     real(kind=CUSTOM_REAL), dimension(:), allocatable, intent(inout)  :: signal
     real(kind=CUSTOM_REAL), dimension(:), allocatable                 :: w_tap
     real(kind=CUSTOM_REAL)                                            :: wh
-    integer                                                           :: i0, i1, i2, i3
+    integer                                                           :: i0, i1, i2, i3, ier
 
-    allocate(w_tap(nt))
+    allocate(w_tap(nt),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 297')
     i0 = 2
     i1 = (lwa/100.) * nt + i0
     i3 = nt-1

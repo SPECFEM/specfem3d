@@ -58,6 +58,7 @@
 
     ! creates coloring of elements
     allocate(perm(nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 628')
     if (ier /= 0) stop 'error allocating temporary perm array'
     perm(:) = 0
 
@@ -73,6 +74,7 @@
     else
       ! allocates dummy arrays
       allocate(num_elem_colors_acoustic(num_colors_outer_acoustic + num_colors_inner_acoustic),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 629')
       if (ier /= 0) stop 'error allocating num_elem_colors_acoustic array'
     endif
 
@@ -87,6 +89,7 @@
                           SAVE_MESH_FILES)
     else
       allocate(num_elem_colors_elastic(num_colors_outer_elastic + num_colors_inner_elastic),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 630')
       if (ier /= 0) stop 'error allocating num_elem_colors_elastic array'
     endif
 
@@ -110,8 +113,10 @@
 
     ! allocates dummy arrays
     allocate(num_elem_colors_acoustic(num_colors_outer_acoustic + num_colors_inner_acoustic),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 631')
     if (ier /= 0) stop 'error allocating num_elem_colors_acoustic array'
     allocate(num_elem_colors_elastic(num_colors_outer_elastic + num_colors_inner_elastic),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 632')
     if (ier /= 0) stop 'error allocating num_elem_colors_elastic array'
 
   endif ! USE_MESH_COLORING_GPU
@@ -175,13 +180,16 @@
 
   ! allocates temporary array with colors
   allocate(color(nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 633')
   if (ier /= 0) stop 'error allocating temporary color array'
   allocate(first_elem_number_in_this_color(MAX_NUMBER_OF_COLORS + 1),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 634')
   if (ier /= 0) stop 'error allocating first_elem_number_in_this_color array'
 
   ! flags for elements on outer rims
   ! opposite to what is stored in ispec_is_inner
   allocate(is_on_a_slice_edge(nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 635')
   if (ier /= 0) stop 'error allocating is_on_a_slice_edge array'
   do ispec = 1,nspec
     is_on_a_slice_edge(ispec) = .not. ispec_is_inner(ispec)
@@ -201,6 +209,7 @@
     = nspec_domain + 1
 
   allocate(num_of_elems_in_this_color(nb_colors_outer_elements + nb_colors_inner_elements),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 636')
   if (ier /= 0) stop 'error allocating num_of_elems_in_this_color array'
 
   num_of_elems_in_this_color(:) = 0
@@ -278,6 +287,7 @@
     if (nspec_inner > 0) nb_colors_inner_elements = 1
 
     allocate(num_of_elems_in_this_color(nb_colors_outer_elements + nb_colors_inner_elements),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 637')
     if (ier /= 0) stop 'error allocating num_of_elems_in_this_color array'
 
     if (nspec_outer > 0) num_of_elems_in_this_color(1) = nspec_outer
@@ -310,6 +320,7 @@
     num_colors_inner_acoustic = nb_colors_inner_elements
 
     allocate(num_elem_colors_acoustic(num_colors_outer_acoustic + num_colors_inner_acoustic),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 638')
     if (ier /= 0) stop 'error allocating num_elem_colors_acoustic array'
 
     num_elem_colors_acoustic(:) = num_of_elems_in_this_color(:)
@@ -320,6 +331,7 @@
     num_colors_inner_elastic = nb_colors_inner_elements
 
     allocate(num_elem_colors_elastic(num_colors_outer_elastic + num_colors_inner_elastic),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 639')
     if (ier /= 0) stop 'error allocating num_elem_colors_elastic array'
 
     num_elem_colors_elastic(:) = num_of_elems_in_this_color(:)
@@ -434,6 +446,7 @@
 
   ! sorts array according to permutation
   allocate(temp_perm_global(nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 640')
   if (ier /= 0) stop 'error temp_perm_global array'
 
   ! global ordering
@@ -519,6 +532,7 @@
 
   ! checks if every element was uniquely set
   allocate(mask_global(nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 641')
   if (ier /= 0) stop 'error allocating temporary mask_global'
   mask_global(:) = .false.
   icounter = 0 ! counts permutations
@@ -565,12 +579,14 @@
 
   ! permutation of ibool
   allocate(temp_array_int(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 642')
   if (ier /= 0) stop 'error allocating temporary temp_array_int'
   call permute_elements_integer(ibool,temp_array_int,perm,nspec)
   deallocate(temp_array_int)
 
   ! element domain flags
   allocate(temp_array_logical_1D(nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 643')
   if (ier /= 0) stop 'error allocating temporary temp_array_logical_1D'
   call permute_elements_logical1D(ispec_is_acoustic,temp_array_logical_1D,perm,nspec)
   call permute_elements_logical1D(ispec_is_elastic,temp_array_logical_1D,perm,nspec)
@@ -580,6 +596,7 @@
 
   ! mesh arrays
   allocate(temp_array_real(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 644')
   if (ier /= 0) stop 'error allocating temporary temp_array_real'
   call permute_elements_real(xixstore,temp_array_real,perm,nspec)
   call permute_elements_real(xiystore,temp_array_real,perm,nspec)
@@ -686,6 +703,7 @@
   ! moho surface
   if (NSPEC2D_MOHO > 0) then
     allocate(temp_array_logical_1D(nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 645')
     if (ier /= 0) stop 'error allocating temporary temp_array_logical_1D'
     call permute_elements_logical1D(is_moho_top,temp_array_logical_1D,perm,nspec)
     call permute_elements_logical1D(is_moho_bot,temp_array_logical_1D,perm,nspec)
@@ -706,6 +724,7 @@
   if (PML_CONDITIONS) then
     ! element flag
     allocate(temp_array_logical_1D(nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 646')
     if (ier /= 0) stop 'error allocating temporary temp_array_logical_1D'
     call permute_elements_logical1D(is_CPML,temp_array_logical_1D,perm,nspec)
     deallocate(temp_array_logical_1D)

@@ -40,21 +40,27 @@ contains
     Mbfgs=inversion_param%max_history_bfgs
 
     allocate(bfgs_stored_gradient(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar, 0:Mbfgs),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 557')
     if (ier /= 0) call exit_MPI(myrank,"error allocation bfgs_stored_gradient in AllocateArraysForInversion subroutine")
 
     allocate(bfgs_stored_model(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar, 0:Mbfgs),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 558')
     if (ier /= 0) call exit_MPI(myrank,"error allocation bfgs_stored_model in AllocateArraysForInversion subroutine")
 
     allocate(wks_1(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 559')
     if (ier /= 0) call exit_MPI(myrank,"error allocation wks_1 in AllocateArraysForInversion subroutine")
 
     allocate(wks_2(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 560')
     if (ier /= 0) call exit_MPI(myrank,"error allocation wks_2 in AllocateArraysForInversion subroutine")
 
     allocate(wks_1n(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 561')
     if (ier /= 0) call exit_MPI(myrank,"error allocation wks_1n in AllocateArraysForInversion subroutine")
 
     allocate(wks_2n(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 562')
     if (ier /= 0) call exit_MPI(myrank,"error allocation wks_2n in AllocateArraysForInversion subroutine")
 
     bfgs_stored_gradient(:,:,:,:,:,:) = 0._CUSTOM_REAL

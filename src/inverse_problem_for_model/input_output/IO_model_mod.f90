@@ -125,6 +125,7 @@ contains
 
 
        allocate(wks_model_cij(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 298')
        if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model_cij in ReadInputSEMmodel subroutine, IO_model_mod")
 
        path_file='OUTPUT_FILES/DATABASES_MPI/proc'
@@ -209,12 +210,15 @@ contains
       endif
 
        allocate(wks_model_rh(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 299')
        if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model_rh in ReadInputSEMmodel subroutine, IO_model_mod")
 
        allocate(wks_model_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 300')
        if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model_vp in ReadInputSEMmodel subroutine, IO_model_mod")
 
        allocate(wks_model_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 301')
        if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model_vs in ReadInputSEMmodel subroutine, IO_model_mod")
 
        if (mygroup <= 0) then !! only the fisrt group read model and need to bcast at all other
@@ -299,9 +303,11 @@ contains
     else
 
        allocate(wks_model(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 302')
        if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model in ReadInputSEMpriormodel subroutine, IO_model_mod")
 
        allocate(inversion_param%prior_model(NGLLX,NGLLY,NGLLZ,NSPEC_AB, inversion_param%NinvPar), stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 303')
        if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model_vp in ReadInputSEMmodel subroutine, IO_model_mod")
 
 
@@ -423,12 +429,15 @@ contains
     else
 
        allocate(wks_model_rh(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 304')
        if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model_rh in ReadInputSEMmodel subroutine, IO_model_mod")
 
        allocate(wks_model_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 305')
        if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model_vp in ReadInputSEMmodel subroutine, IO_model_mod")
 
        allocate(wks_model_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 306')
        if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model_vs in ReadInputSEMmodel subroutine, IO_model_mod")
 
        wks_model_rh(:,:,:,:)=0._CUSTOM_REAL
@@ -629,7 +638,8 @@ contains
        read(4444,'(a)') vp_file
        close(4444)
 
-       allocate(vp_fd(nx_fd,ny_fd,nz_fd), rho_fd(nx_fd,ny_fd,nz_fd))
+       allocate(vp_fd(nx_fd,ny_fd,nz_fd), rho_fd(nx_fd,ny_fd,nz_fd),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 307')
 
        open(4444,file=trim(rho_file),access='direct',recl=CUSTOM_REAL*nx_fd*ny_fd*nz_fd)
        read(4444,rec=1) rho_fd
@@ -654,7 +664,8 @@ contains
     call bcast_all_singlecr(hz_fd)
 
     if (myrank > 0) then
-      allocate(vp_fd(nx_fd,ny_fd,nz_fd), rho_fd(nx_fd,ny_fd,nz_fd))
+      allocate(vp_fd(nx_fd,ny_fd,nz_fd), rho_fd(nx_fd,ny_fd,nz_fd),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 308')
     endif
 
     call bcast_all_cr(rho_fd,nx_fd*ny_fd*nz_fd)
@@ -750,7 +761,8 @@ contains
        read(4444,'(a)') vs_file
        close(4444)
 
-       allocate(vp_fd(nx_fd,ny_fd,nz_fd), vs_fd(nx_fd,ny_fd,nz_fd), rho_fd(nx_fd,ny_fd,nz_fd))
+       allocate(vp_fd(nx_fd,ny_fd,nz_fd), vs_fd(nx_fd,ny_fd,nz_fd), rho_fd(nx_fd,ny_fd,nz_fd),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 309')
 
        open(4444,file=trim(rho_file),access='direct',recl=CUSTOM_REAL*nx_fd*ny_fd*nz_fd)
        read(4444,rec=1) rho_fd
@@ -779,7 +791,8 @@ contains
     call bcast_all_singlecr(hz_fd)
 
     if (myrank > 0) then
-      allocate(vp_fd(nx_fd,ny_fd,nz_fd), vs_fd(nx_fd,ny_fd,nz_fd), rho_fd(nx_fd,ny_fd,nz_fd))
+      allocate(vp_fd(nx_fd,ny_fd,nz_fd), vs_fd(nx_fd,ny_fd,nz_fd), rho_fd(nx_fd,ny_fd,nz_fd),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 310')
     endif
 
     call bcast_all_cr(rho_fd,nx_fd*ny_fd*nz_fd)
@@ -901,7 +914,8 @@ contains
        read(4444,'(a)') model_file
        close(4444)
 
-       allocate(model_fd(nx_fd,ny_fd,nz_fd, nb_model_to_read))
+       allocate(model_fd(nx_fd,ny_fd,nz_fd, nb_model_to_read),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 311')
 
        open(4444,file=trim(model_file),access='direct',recl=CUSTOM_REAL*nx_fd*ny_fd*nz_fd)
        do i=1,nb_model_to_read
@@ -926,7 +940,8 @@ contains
     call bcast_all_ch_array(type_model,1,MAX_STRING_LEN)
 
     if (myrank > 0) then
-      allocate(model_fd(nx_fd, ny_fd, nz_fd, nb_model_to_read))
+      allocate(model_fd(nx_fd, ny_fd, nz_fd, nb_model_to_read),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 312')
     endif
     call bcast_all_cr(model_fd,nx_fd*ny_fd*nz_fd*nb_model_to_read)
 
@@ -1104,13 +1119,16 @@ contains
 
        !! DEFINE TOMO GRID LOOKUP TABLES
        if (.not. allocated(xcrd_fd)) then
-         allocate(xcrd_fd(nx_fd))
+         allocate(xcrd_fd(nx_fd),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 313')
        endif
        if (.not. allocated(ycrd_fd)) then
-         allocate(ycrd_fd(ny_fd))
+         allocate(ycrd_fd(ny_fd),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 314')
        endif
        if (.not. allocated(zcrd_fd)) then
-         allocate(zcrd_fd(nz_fd))
+         allocate(zcrd_fd(nz_fd),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 315')
        endif
        do i=1,nx_fd
           xcrd_fd(i) = ox_fd + hx_fd * real(i-1)
@@ -1315,21 +1333,27 @@ contains
 
 
     allocate(wks_model_rh(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 316')
     if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model_rh in ReadInputSEMmodel subroutine, IO_model_mod")
 
     allocate(wks_model_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 317')
     if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model_vp in ReadInputSEMmodel subroutine, IO_model_mod")
 
     allocate(wks_model_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 318')
     if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model_vs in ReadInputSEMmodel subroutine, IO_model_mod")
 
     allocate(wks_model_ep(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 319')
     if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model_ep in ReadInputSEMmodel subroutine, IO_model_mod")
 
     allocate(wks_model_de(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 320')
     if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model_ge in ReadInputSEMmodel subroutine, IO_model_mod")
 
     allocate(wks_model_ga(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 321')
     if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model_da in ReadInputSEMmodel subroutine, IO_model_mod")
 
     wks_model_rh(:,:,:,:) = rhostore(:,:,:,:)

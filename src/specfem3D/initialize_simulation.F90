@@ -170,52 +170,82 @@
   endif
 
   allocate(irregular_element_number(NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2388')
     if (ier /= 0) stop 'error allocating arrays for irregular element numbering'
 
   ! allocate arrays for storing the databases
   allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2389')
     if (ier /= 0) stop 'error allocating ibool'
 
   if (NSPEC_IRREGULAR > 0) then
-     allocate(xix(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
-     allocate(xiy(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
-     allocate(xiz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
-     allocate(etax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
-     allocate(etay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
-     allocate(etaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
-     allocate(gammax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
-     allocate(gammay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
-     allocate(gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
+     allocate(xix(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2390')
+     allocate(xiy(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2391')
+     allocate(xiz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2392')
+     allocate(etax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2393')
+     allocate(etay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2394')
+     allocate(etaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2395')
+     allocate(gammax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2396')
+     allocate(gammay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2397')
+     allocate(gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2398')
      allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2399')
   else
-    allocate(xix(1,1,1,1))
-    allocate(xiy(1,1,1,1))
-    allocate(xiz(1,1,1,1))
-    allocate(etax(1,1,1,1))
-    allocate(etay(1,1,1,1))
-    allocate(etaz(1,1,1,1))
-    allocate(gammax(1,1,1,1))
-    allocate(gammay(1,1,1,1))
-    allocate(gammaz(1,1,1,1))
+    allocate(xix(1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2400')
+    allocate(xiy(1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2401')
+    allocate(xiz(1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2402')
+    allocate(etax(1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2403')
+    allocate(etay(1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2404')
+    allocate(etaz(1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2405')
+    allocate(gammax(1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2406')
+    allocate(gammay(1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2407')
+    allocate(gammaz(1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2408')
     allocate(jacobian(1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2409')
   endif
   if (ier /= 0) stop 'error allocating arrays for databases'
 
   ! mesh node locations
-  allocate(xstore(NGLOB_AB))
-  allocate(ystore(NGLOB_AB))
+  allocate(xstore(NGLOB_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2410')
+  allocate(ystore(NGLOB_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2411')
   allocate(zstore(NGLOB_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2412')
   if (ier /= 0) stop 'error allocating arrays for mesh nodes'
 
   ! material properties
-  allocate(kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2413')
   allocate(mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2414')
   if (ier /= 0) stop 'error allocating arrays for material properties'
 
   ! material flags
-  allocate(ispec_is_acoustic(NSPEC_AB))
-  allocate(ispec_is_elastic(NSPEC_AB))
+  allocate(ispec_is_acoustic(NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2415')
+  allocate(ispec_is_elastic(NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2416')
   allocate(ispec_is_poroelastic(NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2417')
   if (ier /= 0) stop 'error allocating arrays for material flags'
   ispec_is_acoustic(:) = .false.
   ispec_is_elastic(:) = .false.

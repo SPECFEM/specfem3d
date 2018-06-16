@@ -98,18 +98,25 @@
   do iinterface = 1, num_interfaces_ext_mesh
 
     allocate(xp(nibool_interfaces_ext_mesh(iinterface)),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 891')
     if (ier /= 0) stop 'error allocating array xp'
     allocate(yp(nibool_interfaces_ext_mesh(iinterface)),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 892')
     if (ier /= 0) stop 'error allocating array yp'
     allocate(zp(nibool_interfaces_ext_mesh(iinterface)),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 893')
     if (ier /= 0) stop 'error allocating array zp'
     allocate(locval(nibool_interfaces_ext_mesh(iinterface)),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 894')
     if (ier /= 0) stop 'error allocating array locval'
     allocate(ifseg(nibool_interfaces_ext_mesh(iinterface)),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 895')
     if (ier /= 0) stop 'error allocating array ifseg'
     allocate(reorder_interface_ext_mesh(nibool_interfaces_ext_mesh(iinterface)),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 896')
     if (ier /= 0) stop 'error allocating array reorder_interface_ext_mesh'
     allocate(ninseg_ext_mesh(nibool_interfaces_ext_mesh(iinterface)),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 897')
     if (ier /= 0) stop 'error allocating array ninseg_ext_mesh'
 
     ! gets x,y,z coordinates of global points on MPI interface
@@ -155,6 +162,7 @@
 
   ! checks with assembly of test fields
   allocate(test_flag(nglob),test_flag_cr(nglob),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 898')
   if (ier /= 0) stop 'error allocating array test_flag etc.'
   test_flag(:) = 0
   test_flag_cr(:) = 0._CUSTOM_REAL
@@ -183,6 +191,7 @@
   ! sets up MPI communications
   max_nibool_interfaces_ext_mesh = maxval( nibool_interfaces_ext_mesh(:) )
   allocate(ibool_interfaces_dummy(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 899')
   if (ier /= 0) stop 'error allocating array ibool_interfaces_dummy'
 
   countval = 0

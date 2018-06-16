@@ -1,0 +1,50 @@
+
+pour trouver ceux qui ont un espace avant la parenthese :
+
+grep -i "allocate[[:space:]](" src/*/*90 src/*/*/*90 src/*/*/*/*90
+
+-----------
+
+pour trouver ceux qui sont sur plusieurs lignes, et pouvoir les mettre manuellement en plusieurs lignes separees :
+
+/bin/grep -i "allocate\s*(" src/*/*90 src/*/*/*90 src/*/*/*/*90 | /bin/grep -i -v "deallocate\s*(" | /bin/grep "&"
+
+-----------
+
+pour verifier que tous ceux qui ont deja stat= utilisent bien ier comme variable, et sans espace avant la parenthese finale, pour futur remplacement automatique par Perl :
+
+/bin/grep -i "allocate\s*(" src/*/*90 src/*/*/*90 src/*/*/*/*90 | /bin/grep -i -v "deallocate\s*(" | /bin/grep ",\s*stat\s*=" | /bin/grep -v -i "stat=ier)"
+
+-----------
+
+Pour voir si certains de ceux-la appellent call stop_the_code sur la meme ligne (dans ce cas, les passer a la main sur la ligne suivante) :
+
+/bin/grep -i "allocate\s*(" src/*/*90 src/*/*/*90 src/*/*/*/*90 | /bin/grep -i -v "deallocate\s*(" | /bin/grep ",\s*stat\s*=" | /bin/grep -i call
+
+-----------
+
+Pour voir si certains de ceux-la appellent "stop" sur la meme ligne (dans ce cas, les passer a la main sur la ligne suivante) :
+
+/bin/grep -i "allocate\s*(" src/*/*90 src/*/*/*90 src/*/*/*/*90 | /bin/grep -i -v "deallocate\s*(" | /bin/grep ",\s*stat\s*=" | /bin/grep -i stop
+
+-----------
+
+Pour trouver ceux qui sont dans un "if" sur une seule ligne sans "then" et donc pour lesquels on ne pourrait pas ajouter une ligne automatiquement par notre script car elle se retrouverait a l'exterieur du "if" :
+
+/bin/grep -i "allocate\s*(" src/*/*90 src/*/*/*90 src/*/*/*/*90 | /bin/grep -i -v "deallocate\s*(" | /bin/grep -i "if\s*("
+
+-----------
+
+Pour trouver ceux qui ont un commentaire a la fin de la ligne, qu'il faut deplacer manuellement sur la ligne precedente
+
+/bin/grep -i "allocate\s*(" src/*/*90 src/*/*/*90 src/*/*/*/*90 | /bin/grep -i -v "deallocate\s*(" | /bin/grep -i ")\s*!"
+
+-----------
+
+ceci sera le call a mettre au lieu de mettre des stops :
+
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array')
+
+-----------
+
+

@@ -99,24 +99,31 @@ subroutine gravity_init()
     write(IMAIN,*)
   endif
 
-  allocate(xstat(nstat))
-  allocate(ystat(nstat))
-  allocate(zstat(nstat))
+  allocate(xstat(nstat),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2234')
+  allocate(ystat(nstat),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2235')
+  allocate(zstat(nstat),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2236')
   do istat=1,nstat
      read(IIN_G,*) xstat(istat),ystat(istat),zstat(istat)
   enddo
   close(IIN_G)
 
   nstep_grav = floor(dble(NSTEP)/dble(ntimgap))
-  allocate(accE(nstep_grav,nstat))
-  allocate(accN(nstep_grav,nstat))
-  allocate(accZ(nstep_grav,nstat))
+  allocate(accE(nstep_grav,nstat),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2237')
+  allocate(accN(nstep_grav,nstat),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2238')
+  allocate(accZ(nstep_grav,nstat),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2239')
 
   accE = 0._CUSTOM_REAL
   accN = 0._CUSTOM_REAL
   accZ = 0._CUSTOM_REAL
 
-  allocate(rho0_wm(NGLOB_AB))
+  allocate(rho0_wm(NGLOB_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2240')
   rho0_wm = 0._CUSTOM_REAL
 
   call usual_hex_nodes(NGNOD,iaddx,iaddy,iaddz)
@@ -320,12 +327,14 @@ subroutine gravity_timeseries()
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: accEdV,accNdV,accZdV
   real(kind=CUSTOM_REAL) :: E_local,N_local,Z_local,E_all,N_all,Z_all
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: Rg,dotP
-  integer :: istat, it_grav
+  integer :: istat, it_grav, ier
 
   if (mod(it,ntimgap) == 0) then
     it_grav = nint(dble(it)/dble(ntimgap))
-    allocate(Rg(NGLOB_AB))
-    allocate(dotP(NGLOB_AB))
+    allocate(Rg(NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2241')
+    allocate(dotP(NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2242')
 
     do istat=1,nstat
       Rg = sqrt((xstore-xstat(istat))**2+(ystore-ystat(istat))**2+(zstore-zstat(istat))**2)

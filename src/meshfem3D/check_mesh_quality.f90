@@ -126,6 +126,7 @@
   ! debug: for vtk output
   if (CREATE_VTK_FILES) then
     allocate(tmp1(NSPEC),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1345')
     if (ier /= 0) stop 'error allocating array tmp'
     tmp1(:) = 0.0
   endif

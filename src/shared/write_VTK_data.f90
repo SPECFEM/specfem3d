@@ -223,6 +223,7 @@
   ! iflag field on global nodeset
   if (.not. allocated(mask_ibool)) then
      allocate(mask_ibool(nglob),flag_val(nglob),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1234')
      if (ier /= 0) stop 'error allocating mask'
   endif
 
@@ -313,6 +314,7 @@
 
   ! iflag field on global nodeset
   allocate(mask_ibool(nglob),flag_val(nglob),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1235')
   if (ier /= 0) stop 'error allocating mask'
 
   mask_ibool = .false.

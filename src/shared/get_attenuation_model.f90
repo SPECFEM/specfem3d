@@ -179,12 +179,16 @@
   !-----------------------------------------------------
 
   ! initializes arrays
-  allocate(factor_common(N_SLS,NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(factor_common(N_SLS,NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1182')
   allocate(scale_factor(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1183')
   if (ier /= 0) call exit_mpi(myrank,'error allocation attenuation arrays')
 
-  allocate(factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1184')
   allocate(scale_factor_kappa(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1185')
   if (ier /= 0) call exit_mpi(myrank,'error allocation attenuation arrays')
 
   factor_common(:,:,:,:,:) = 1._CUSTOM_REAL
@@ -843,8 +847,10 @@
     AM_S%Q_max = ATTENUATION_COMP_MAXIMUM
     Qtmp = AM_S%Q_resolution * AM_S%Q_max
 
-    allocate(AM_S%tau_eps_storage(N_SLS, Qtmp))
+    allocate(AM_S%tau_eps_storage(N_SLS, Qtmp),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1186')
     allocate(AM_S%Qmu_storage(Qtmp),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1187')
     if (ier /= 0) stop 'error allocating arrays for attenuation storage'
     AM_S%Qmu_storage(:) = -1
   endif
@@ -1011,8 +1017,10 @@
   double precision, dimension(nsls_in) :: tau_s_in
   integer ier
 
-  allocate(AS_V%f(nf_in))
+  allocate(AS_V%f(nf_in),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1188')
   allocate(AS_V%tau_s(nsls_in),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1189')
   if (ier /= 0) stop 'error allocating arrays for attenuation simplex'
 
   AS_V%nf    = nf_in

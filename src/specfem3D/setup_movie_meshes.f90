@@ -67,31 +67,42 @@
   npoin = npoin_elem * nfaces_m
 
   ! surface elements
-  allocate(faces_surface_ispec(nfaces_m))
+  allocate(faces_surface_ispec(nfaces_m),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2098')
   allocate(faces_surface_ibool(npoin_elem,nfaces_m),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2099')
   if (ier /= 0) stop 'error allocating array faces_surface_ispec'
   faces_surface_ispec(:) = 0
   faces_surface_ibool(:,:) = 0
 
   ! point locations
-  allocate(store_val_x(npoin))
-  allocate(store_val_y(npoin))
+  allocate(store_val_x(npoin),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2100')
+  allocate(store_val_y(npoin),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2101')
   allocate(store_val_z(npoin),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2102')
   if (ier /= 0) stop 'error allocating location arrays for highres movie'
 
   ! surface movie data
   if (MOVIE_SURFACE) then
-    allocate(store_val_ux(npoin))
-    allocate(store_val_uy(npoin))
+    allocate(store_val_ux(npoin),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2103')
+    allocate(store_val_uy(npoin),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2104')
     allocate(store_val_uz(npoin),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2105')
     if (ier /= 0) stop 'error allocating arrays for highres movie'
   endif
 
   ! shakemap data
   if (CREATE_SHAKEMAP) then
-    allocate(shakemap_ux(npoin))
-    allocate(shakemap_uy(npoin))
+    allocate(shakemap_ux(npoin),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2106')
+    allocate(shakemap_uy(npoin),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2107')
     allocate(shakemap_uz(npoin),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2108')
     if (ier /= 0) stop 'error allocating arrays for highres shakemap'
     ! initializes shakemap values
     shakemap_ux(:) = 0._CUSTOM_REAL
@@ -105,31 +116,42 @@
   ! arrays used for collected/gathered fields
   if (myrank == 0) then
     ! all point locations
-    allocate(store_val_x_all(npoin_elem*nfaces_surface_glob_ext_mesh))
-    allocate(store_val_y_all(npoin_elem*nfaces_surface_glob_ext_mesh))
+    allocate(store_val_x_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2109')
+    allocate(store_val_y_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2110')
     allocate(store_val_z_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2111')
     if (ier /= 0) stop 'error allocating arrays for highres movie'
 
     ! surface movie
     if (MOVIE_SURFACE) then
-      allocate(store_val_ux_all(npoin_elem*nfaces_surface_glob_ext_mesh))
-      allocate(store_val_uy_all(npoin_elem*nfaces_surface_glob_ext_mesh))
+      allocate(store_val_ux_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2112')
+      allocate(store_val_uy_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2113')
       allocate(store_val_uz_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2114')
       if (ier /= 0) stop 'error allocating arrays for highres movie'
     endif
 
     ! shakemap
     if (CREATE_SHAKEMAP) then
-      allocate(shakemap_ux_all(npoin_elem*nfaces_surface_glob_ext_mesh))
-      allocate(shakemap_uy_all(npoin_elem*nfaces_surface_glob_ext_mesh))
+      allocate(shakemap_ux_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2115')
+      allocate(shakemap_uy_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2116')
       allocate(shakemap_uz_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2117')
       if (ier /= 0) stop 'error allocating arrays for highres movie'
     endif
   endif
 
   ! arrays for collecting movies and shakemaps
-  allocate(nfaces_perproc_surface(NPROC))
+  allocate(nfaces_perproc_surface(NPROC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2118')
   allocate(faces_surface_offset(NPROC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2119')
   if (ier /= 0) stop 'error allocating array for movie faces'
 
   ! number of faces per slice
