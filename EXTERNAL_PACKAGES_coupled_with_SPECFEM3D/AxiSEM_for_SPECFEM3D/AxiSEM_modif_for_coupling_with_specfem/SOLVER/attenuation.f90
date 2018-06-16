@@ -755,7 +755,7 @@ subroutine prepare_attenuation(lambda, mu)
      keyword = ' '
      keyvalue = ' '
 
-     if (verbose > 1) write(6, '(A)', advance='no') &
+     if (verbose > 1) write(*, '(A)', advance='no') &
             '   Reading attenuation parameters from inparam_advanced...'
      open(unit=iinparam_advanced, file='inparam_advanced', status='old', action='read',  iostat=ioerr)
      if (ioerr /= 0) stop 'Check input file ''inparam_advanced''! Is it still there?'
@@ -915,7 +915,7 @@ subroutine prepare_attenuation(lambda, mu)
   if (att_coarse_grained) then
 
      if ( npol /= 4 ) then
-        write(6,*) "ERROR: coarse grained memvar only implemented for npol = 4, but is ", npol
+        write(*,*) "ERROR: coarse grained memvar only implemented for npol = 4, but is ", npol
         stop 2
      endif
 

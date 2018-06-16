@@ -60,14 +60,14 @@ subroutine prepare_waves
   character(len=120) :: fname
 
   if (lpr) then
-     write(6,*)''
-     write(6,*)'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+     print *
+     write(*,*)'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
      if (have_fluid) then
-        write(6,*)'++++++++    SEISMIC WAVE PROPAGATION: SOLID-FLUID CASE  ++++++++'
+        write(*,*)'++++++++    SEISMIC WAVE PROPAGATION: SOLID-FLUID CASE  ++++++++'
      else
-        write(6,*)'+++++++++++  SEISMIC WAVE PROPAGATION: SOLID CASE  +++++++++++++'
+        write(*,*)'+++++++++++  SEISMIC WAVE PROPAGATION: SOLID CASE  +++++++++++++'
      endif
-     write(6,*)'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+     write(*,*)'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
   endif
 
   ! read source parameters from sourceparams.dat
@@ -97,7 +97,7 @@ subroutine prepare_waves
 
   ! Prepare output
   if ( dump_energy .and. lpr) then ! only one proc dumps
-     write(6,*)'  opening files for kinetic/potential energy...'
+     write(*,*)'  opening files for kinetic/potential energy...'
      if (have_fluid) then
         open(unit=4444,file=datapath(1:lfdata)//'/energy_sol.dat')
         open(unit=4445,file=datapath(1:lfdata)//'/energy_flu.dat')
@@ -106,11 +106,11 @@ subroutine prepare_waves
   endif
 
   if (dump_wavefields) then
-     if (lpr) write(6,*)'  dumping strain mesh and associated fields...'
+     if (lpr) write(*,*)'  dumping strain mesh and associated fields...'
      !!!!! SB VM has changed with a case fullfields and coupling
      !!!! OLD VERSION :
      !if (dump_wavefields) then
-     !   if (lpr) write(6,*)'  dumping strain mesh and associated fields...'
+     !   if (lpr) write(*,*)'  dumping strain mesh and associated fields...'
      !   select case (dump_type)
      !   case ('fullfields')
      !      call dump_wavefields_mesh_1d
@@ -124,12 +124,12 @@ subroutine prepare_waves
   endif
 
   if (dump_vtk) then
-     if (lpr) write(6,*)'  dumping global grids for snapshots...'
+     if (lpr) write(*,*)'  dumping global grids for snapshots...'
      call dump_glob_grid_midpoint(ibeg,iend,jbeg,jend)
   endif
 
   if (dump_xdmf) then
-     if (lpr) write(6,*)'  dumping mesh for xdmf snapshots...'
+     if (lpr) write(*,*)'  dumping mesh for xdmf snapshots...'
 
      if (.not. use_netcdf) then
          fname = datapath(1:lfdata)//'/xdmf_snap_s_' //appmynum//'.dat'
@@ -212,15 +212,15 @@ subroutine prepare_waves
 
   ! Need to reload old seismograms and add results
   if (isim > 1 .and. sum_seis ) then
-     if (lpr) write(6,*)' Running multiple simulations and summing seismograms'
-     if (lpr) write(6,*)' ...implementation of multiple simulations not finished'
+     if (lpr) write(*,*)' Running multiple simulations and summing seismograms'
+     if (lpr) write(*,*)' ...implementation of multiple simulations not finished'
      stop
   endif
 
   ! Need to reload old seismograms and add results
   if (isim > 1 .and. sum_fields) then
-     if (lpr) write(6,*)' Running multiple simulations and summing wavefields'
-     if (lpr) write(6,*)' ...implementation of multiple simulations not finished'
+     if (lpr) write(*,*)' Running multiple simulations and summing wavefields'
+     if (lpr) write(*,*)' ...implementation of multiple simulations not finished'
      stop
   endif
 
@@ -229,7 +229,7 @@ subroutine prepare_waves
   call write_parameters
 
   call barrier
-  if (lpr) write(6,*) 'done preparing waves.'
+  if (lpr) write(*,*) 'done preparing waves.'
 
 end subroutine prepare_waves
 !-----------------------------------------------------------------------------------------
@@ -304,11 +304,11 @@ subroutine sf_time_loop_newmark
   integer           :: iter
 
   if (lpr) then
-     write(6,*)
-     write(6,*)'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
-     write(6,*)'TTTT  2nd-order, acceleration-driven Newmark time scheme TTTTT'
-     write(6,*)'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
-     write(6,*)
+     write(*,*)
+     write(*,*)'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
+     write(*,*)'TTTT  2nd-order, acceleration-driven Newmark time scheme TTTTT'
+     write(*,*)'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
+     write(*,*)
   endif
 
   if (anel_true) then
@@ -346,7 +346,7 @@ subroutine sf_time_loop_newmark
 
   t = zero
 
-  if (lpr) write(6,*) '************ S T A R T I N G   T I M E   L O O P *************'
+  if (lpr) write(*,*) '************ S T A R T I N G   T I M E   L O O P *************'
   if (verbose > 1) write(69,*) &
         '************ S T A R T I N G   T I M E   L O O P *************'
 
@@ -565,7 +565,7 @@ subroutine symplectic_time_loop
   ddchi = zero
 
   t = zero
-  if (lpr) write(6,*)'*********** S T A R T I N G   T I M E   L O O P ************'
+  if (lpr) write(*,*)'*********** S T A R T I N G   T I M E   L O O P ************'
   if (verbose > 1) write(69,*) &
         '*********** S T A R T I N G   T I M E   L O O P ************'
 
@@ -739,11 +739,11 @@ subroutine symplectic_coefficients(coefd,coeff,coefv)
      allocate(coefd(nstages+1), coeff(nstages), coefv(nstages))
 
      if (lpr) then
-        write(6,*)
-        write(6,*) 'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
-        write(6,*) 'TTTT  4th-order symplectic PEFRL scheme  TTTTTTTTTTTTTTT'
-        write(6,*) 'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
-        write(6,*)
+        write(*,*)
+        write(*,*) 'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
+        write(*,*) 'TTTT  4th-order symplectic PEFRL scheme  TTTTTTTTTTTTTTT'
+        write(*,*) 'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
+        write(*,*)
      endif
 
      ! symplectic parameters
@@ -774,11 +774,11 @@ subroutine symplectic_coefficients(coefd,coeff,coefv)
      allocate(coefd(nstages+1), coeff(nstages), coefv(nstages))
 
      if (lpr) then
-        write(6,*)
-        write(6,*) 'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
-        write(6,*) 'TTTT  4th-order symplectic McLachlan scheme  TTTTTTTTTTT'
-        write(6,*) 'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
-        write(6,*)
+        write(*,*)
+        write(*,*) 'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
+        write(*,*) 'TTTT  4th-order symplectic McLachlan scheme  TTTTTTTTTTT'
+        write(*,*) 'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
+        write(*,*)
      endif
 
      rho = (14.d0 - dsqrt(19.d0)) / 108.d0;
@@ -811,11 +811,11 @@ subroutine symplectic_coefficients(coefd,coeff,coefv)
      allocate(coefd(nstages+1), coeff(nstages), coefv(nstages))
 
      if (lpr) then
-        write(6,*)
-        write(6,*) 'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
-        write(6,*) 'TTTT  6th-order symplectic McLachlan scheme  TTTTTTTTTTT'
-        write(6,*) 'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
-        write(6,*)
+        write(*,*)
+        write(*,*) 'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
+        write(*,*) 'TTTT  6th-order symplectic McLachlan scheme  TTTTTTTTTTT'
+        write(*,*) 'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
+        write(*,*)
      endif
 
      coefd(1) = -1.01308797891717472981
@@ -846,11 +846,11 @@ subroutine symplectic_coefficients(coefd,coeff,coefv)
      allocate(g(n), coefd(nstages+1), coeff(nstages), coefv(nstages))
 
      if (lpr) then
-        write(6,*)
-        write(6,*) 'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
-        write(6,*) 'TTTT  8th-order symplectic Kahan/Li scheme  TTTTTTTTTTTT'
-        write(6,*) 'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
-        write(6,*)
+        write(*,*)
+        write(*,*) 'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
+        write(*,*) 'TTTT  8th-order symplectic Kahan/Li scheme  TTTTTTTTTTTT'
+        write(*,*) 'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
+        write(*,*)
      endif
 
      g(1) =  0.13020248308889008088
@@ -876,11 +876,11 @@ subroutine symplectic_coefficients(coefd,coeff,coefv)
      allocate(g(n), coefd(nstages+1), coeff(nstages), coefv(nstages))
 
      if (lpr) then
-        write(6,*)
-        write(6,*) 'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
-        write(6,*) 'TTTT  10th-order symplectic Sofroniou/Spaletta scheme TT'
-        write(6,*) 'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
-        write(6,*)
+        write(*,*)
+        write(*,*) 'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
+        write(*,*) 'TTTT  10th-order symplectic Sofroniou/Spaletta scheme TT'
+        write(*,*) 'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
+        write(*,*)
      endif
 
     g(1)  =  0.078795722521686419263907679337684
@@ -908,8 +908,8 @@ subroutine symplectic_coefficients(coefd,coeff,coefv)
     C = 5.973
 
   case default
-     write(6,*) procstrg, 'reporting ERROR ::::::::::'
-     write(6,*) procstrg, time_scheme,'Time scheme unknown'; call pend; stop
+     write(*,*) procstrg, 'reporting ERROR ::::::::::'
+     write(*,*) procstrg, time_scheme,'Time scheme unknown'; call pend; stop
 
   end select
 
@@ -922,16 +922,16 @@ subroutine symplectic_coefficients(coefd,coeff,coefv)
 
   call barrier
   if (mynum == 0) then
-     write(6,*)'  :::::::::::::::: Symplectic coefficients :::::::::::::::::'
-     write(6,*)'   order,stages:', Q, nstages
-     write(6,*)'   dispersion error coeff:', B
-     write(6,*)'   CFL factor (wrt Newmark deltat):', C/2.
+     write(*,*)'  :::::::::::::::: Symplectic coefficients :::::::::::::::::'
+     write(*,*)'   order,stages:', Q, nstages
+     write(*,*)'   dispersion error coeff:', B
+     write(*,*)'   CFL factor (wrt Newmark deltat):', C/2.
      do i=1, nstages
-        write(6,12) i, coefd(i), coefv(i), coeff(i)
+        write(*,12) i, coefd(i), coefv(i), coeff(i)
      enddo
-     write(6,12)nstages+1,coefd(nstages+1)
-     write(6,*)'  :::::::::::::: End Symplectic coefficients :::::::::::::::'
-     write(6,*)
+     write(*,12)nstages+1,coefd(nstages+1)
+     write(*,*)'  :::::::::::::: End Symplectic coefficients :::::::::::::::'
+     write(*,*)
   endif
   call barrier
 
@@ -985,7 +985,7 @@ subroutine runtime_info(iter, disp, chi)
 
   ! Stdout time step/percentage announcements
   if (lpr .and. mod(iter,check_iter) == 0 ) then
-     write(6,13) iter, t, real(iter) / real(niter) * 100.
+     write(*,13) iter, t, real(iter) / real(niter) * 100.
      call flush(6)
 13   format('  time step:',i6,'; t=',f8.2,' s (',f5.1,'%)')
   endif
@@ -1013,16 +1013,16 @@ subroutine runtime_info(iter, disp, chi)
 
   ! Stop simulation if displacement exceeds source magnitude
   if ( maxval(abs(disp(1,1,:,:))) > 10*abs(magnitude) ) then
-     write(6,*) procstrg,'!!!!!!!!!!!!!!! DISPLACEMENTS BLEW UP !!!!!!!!!!!!!!!'
-     write(6,*) procstrg,'  Time step & time:', iter, t
-     write(6,*) procstrg,'  Proc. num, displ value',mynum,maxval(abs(disp))
+     write(*,*) procstrg,'!!!!!!!!!!!!!!! DISPLACEMENTS BLEW UP !!!!!!!!!!!!!!!'
+     write(*,*) procstrg,'  Time step & time:', iter, t
+     write(*,*) procstrg,'  Proc. num, displ value',mynum,maxval(abs(disp))
      iblow(1:4) = maxloc(abs(disp))
-     write(6,*) procstrg,'iel,comp   :',iblow(3),iblow(4)
-     write(6,*) procstrg,'elem r, th :',mean_rad_colat_solid(iblow(3),1), &
+     write(*,*) procstrg,'iel,comp   :',iblow(3),iblow(4)
+     write(*,*) procstrg,'elem r, th :',mean_rad_colat_solid(iblow(3),1), &
                                        mean_rad_colat_solid(iblow(3),2)
-     write(6,*) procstrg,'ipol,jpol  :',iblow(1)-1,iblow(2)-1
-     write(6,*) procstrg,'axis       :',axis_solid(iblow(3))
-     write(6,*) procstrg,''
+     write(*,*) procstrg,'ipol,jpol  :',iblow(1)-1,iblow(2)-1
+     write(*,*) procstrg,'axis       :',axis_solid(iblow(3))
+     write(*,*) procstrg,''
      stop
   endif
 
@@ -1107,9 +1107,9 @@ subroutine dump_stuff(iter, iseismo, istrain, isnap, &
     if (mod(iter, snap_it) == 0) then
        isnap = isnap + 1
        if (lpr) then
-          write(6,*)
-          write(6,*) 'Writing global snap to file: ', isnap
-          write(6,*)
+          write(*,*)
+          write(*,*) 'Writing global snap to file: ', isnap
+          write(*,*)
        endif
        call glob_snapshot_midpoint(disp, chi, ibeg, iend, jbeg, jend, isnap)
      endif
@@ -1119,9 +1119,9 @@ subroutine dump_stuff(iter, iseismo, istrain, isnap, &
     if (mod(iter, snap_it) == 0) then
         if (.not. (dump_vtk)) isnap=isnap+1
         if (lpr) then
-           write(6,*)
-           write(6,*)'Writing global xdmf snap to file:',isnap
-           write(6,*)
+           write(*,*)
+           write(*,*)'Writing global xdmf snap to file:',isnap
+           write(*,*)
         endif
         call glob_snapshot_xdmf(disp, chi, time, isnap)
      endif

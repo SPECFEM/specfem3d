@@ -230,7 +230,7 @@
               simdir(4) = "MXY_MXX_M_MYY/"
 
               !! read CMTSOLUTION
-              write(6,*)'  reading CMTSOLUTION file....'
+              write(*,*)'  reading CMTSOLUTION file....'
               open(unit=20000,file='CMTSOLUTION',POSITION='REWIND',status='old')
               read(20000,*) junk
               read(20000,*) junk

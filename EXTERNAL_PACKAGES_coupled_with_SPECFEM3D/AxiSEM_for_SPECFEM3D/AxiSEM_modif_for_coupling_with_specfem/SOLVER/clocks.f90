@@ -85,8 +85,8 @@ subroutine clocks_init(flag)
     tick_rate = 1./ticks_per_sec
     start_tick = ref_tick
     if ( verbose ) then
-        write(6,*) '    CLOCKS module '//trim(version)
-        write(6,*) '    Realtime clock resolution=', tick_rate, '(', &
+        write(*,*) '    CLOCKS module '//trim(version)
+        write(*,*) '    Realtime clock resolution=', tick_rate, '(', &
                    ticks_per_sec, ' ticks/sec)'
     endif
 
@@ -218,17 +218,17 @@ subroutine clocks_exit(flag)
 
     call system_clock(end_tick)
     cumul_time = (end_tick-start_tick)*tick_rate
-    write(6,"(32x,a)") '           calls        t_call       t_total t_frac'
+    write(*,"(32x,a)") '           calls        t_call       t_total t_frac'
     do i = 1, max_clocks
        if ( clocks(i)%calls /= 0 ) then
            total_time = clocks(i)%ticks*tick_rate
            time_per_call = total_time/clocks(i)%calls
-           write(6,"(a40,i8,2f14.6,f7.3)") &
+           write(*,"(a40,i8,2f14.6,f7.3)") &
                 'CLOCKS: '//clocks(i)%name, &
                 clocks(i)%calls, time_per_call, total_time, total_time/cumul_time
        endif
     enddo
-    write(6,"(a,f14.6)") 'CLOCKS: Total measured time: ', cumul_time
+    write(*,"(a,f14.6)") 'CLOCKS: Total measured time: ', cumul_time
 
     return
 

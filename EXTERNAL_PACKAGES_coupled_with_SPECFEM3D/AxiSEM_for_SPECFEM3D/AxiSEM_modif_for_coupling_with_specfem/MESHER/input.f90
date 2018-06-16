@@ -71,7 +71,7 @@ subroutine read_params
   lfdiag          = index(diagpath,' ') - 1
 
 
-  write(6, '(A)', advance='no') 'Reading inparam_mesh...'
+  write(*, '(A)', advance='no') 'Reading inparam_mesh...'
   open(unit=iinparam_mesh, file='./inparam_mesh', status='old', action='read', &
        iostat=ioerr)
   if (ioerr /= 0) stop 'Check input file ''inparam_mesh''! Is it still there?'
@@ -143,38 +143,38 @@ subroutine read_params
   enddo
 
   if (trim(bkgrdmodel) == 'UNDEFINED') then
-      write(6,20) 'BACKGROUND_MODEL'
+      write(*,20) 'BACKGROUND_MODEL'
       stop
   endif
 
   if (nthetaslices == -1) then
-      write(6,20) 'NTHETA_SLICES'
+      write(*,20) 'NTHETA_SLICES'
       stop
   endif
 
   if (only_suggest_ntheta) nthetaslices = 4
 
   if (period == -1) then
-      write(6,20) 'DOMINANT_PERIOD'
+      write(*,20) 'DOMINANT_PERIOD'
       stop
   endif
 20 format('ERROR: Parameter ', A, ' not set in inparam_mesh')
-  write(6,*) 'done'
+  write(*,*) 'done'
 
 
-  write(6,*) ''
-  write(6,*) 'PREDEFINED MODEL/SIMULATION PARAMETERS'
-  write(6,*) 'Background model                 : ',bkgrdmodel(1:lfbkgrdmodel)
-  write(6,*) 'Dominant period [s]              : ',period
-  write(6,*) 'Elements per dominant wavelength : ',pts_wavelngth
-  write(6,*) 'Courant number                   : ',courant
-  write(6,*) 'coarsening levels                : ',nc_init
-  write(6,*) 'processors used in solver        : ',nthetaslices
-  write(6,*) 'outer radius [m]                 : ',router
-  write(6,*) 'save mesh info files?            : ',dump_mesh_info_files
-  write(6,*) 'print mesh info to screen?       : ',dump_mesh_info_screen
-  write(6,*) 'path to dump output files        : ',trim(diagpath)
-  write(6,*)
+  print *
+  write(*,*) 'PREDEFINED MODEL/SIMULATION PARAMETERS'
+  write(*,*) 'Background model                 : ',bkgrdmodel(1:lfbkgrdmodel)
+  write(*,*) 'Dominant period [s]              : ',period
+  write(*,*) 'Elements per dominant wavelength : ',pts_wavelngth
+  write(*,*) 'Courant number                   : ',courant
+  write(*,*) 'coarsening levels                : ',nc_init
+  write(*,*) 'processors used in solver        : ',nthetaslices
+  write(*,*) 'outer radius [m]                 : ',router
+  write(*,*) 'save mesh info files?            : ',dump_mesh_info_files
+  write(*,*) 'print mesh info to screen?       : ',dump_mesh_info_screen
+  write(*,*) 'path to dump output files        : ',trim(diagpath)
+  write(*,*)
   call flush(6)
 
 end subroutine read_params

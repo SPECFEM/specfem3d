@@ -170,7 +170,7 @@ pure subroutine compute_partial_d_semino(dsdxi, dzdxi, dsdeta, dzdeta, xil, etal
      dzdeta = (dz/ds)*dsdeta
   else
      ! This statement blocks purification and is of dubious use anyway
-     !write(6,*)'DS SMALL IN SEMIN ELEMENT!!!'; call flush(6)
+     !write(*,*)'DS SMALL IN SEMIN ELEMENT!!!'; call flush(6)
      dzdxi = zero
      dzdeta = half*dz
   endif

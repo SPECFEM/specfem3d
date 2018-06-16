@@ -433,7 +433,7 @@ subroutine BNDPAS(F1,F2,DELT,D,G,N)
 !     ig = 2  two passes
 
       if (ISW == 1) goto 31
-      WRITE (6,6)
+      write(*,6)
     6 FORMAT ('1BNDPAS MUST BE CALLED BEFORE FILTER')
       return
 

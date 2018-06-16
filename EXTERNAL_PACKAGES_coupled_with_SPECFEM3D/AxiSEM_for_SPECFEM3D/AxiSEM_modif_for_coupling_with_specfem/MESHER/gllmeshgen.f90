@@ -168,7 +168,7 @@ subroutine test_mapping
   real(kind=dp)     ::  stest
   real(kind=dp)   , dimension(:,:,:), allocatable :: sglltmp,zglltmp
 
-  write(6,*)'Test mapping...'; call flush(6)
+  write(*,*)'Test mapping...'; call flush(6)
 
   ! Generate collocation points in the  two directions of space
   npoin = neltot*(npol+1)**2

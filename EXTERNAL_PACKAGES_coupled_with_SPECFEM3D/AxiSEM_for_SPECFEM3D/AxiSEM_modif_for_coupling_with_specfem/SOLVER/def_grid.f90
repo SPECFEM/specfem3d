@@ -137,13 +137,13 @@ subroutine init_grid
            do iel=0, nproc-1
               call barrier
               if (mynum == iel) then
-                 write(6,'("   ",a8,a33,i6)') procstrg, &
+                 write(*,'("   ",a8,a33,i6)') procstrg, &
                     'counted sent/received GLL points, solid:', num_comm_gll_solid
               endif
            enddo
            call flush(6)
            call barrier
-           if (lpr) write(6,*)
+           if (lpr) write(*,*)
         endif
      endif
 
@@ -185,13 +185,13 @@ subroutine init_grid
               do iel=0, nproc-1
                  call barrier
                  if (mynum == iel) then
-                    write(6,'("   ",a8,a33,i6)') procstrg, &
+                    write(*,'("   ",a8,a33,i6)') procstrg, &
                        'counted sent/received GLL points, fluid:', num_comm_gll_fluid
                  endif
               enddo
               call flush(6)
               call barrier
-              if (lpr) write(6,*)
+              if (lpr) write(*,*)
            endif
         endif
      endif
@@ -212,7 +212,7 @@ subroutine deallocate_preloop_arrays
 
   use data_pointwise
 
-  if (lpr) write(6,*)'  deallocating large mesh arrays...'
+  if (lpr) write(*,*)'  deallocating large mesh arrays...'
   ! TESTING: comment next 4 lines to use with plane wave initial condition
   if (dump_type /= 'coupling' .and. dump_type /= 'coupling_box') then  !! SB coupling
      deallocate(lnods)
@@ -226,7 +226,7 @@ subroutine deallocate_preloop_arrays
 
   ! Deallocate redundant arrays if memory-efficient dumping strategy is applied
   if (.not. need_fluid_displ) then
-     if (lpr) write(6,*)'  deallocating pointwise fluid arrays...'
+     if (lpr) write(*,*)'  deallocating pointwise fluid arrays...'
      deallocate(DsDeta_over_J_flu)
      deallocate(DzDeta_over_J_flu)
      deallocate(DsDxi_over_J_flu)
@@ -242,7 +242,7 @@ subroutine deallocate_preloop_arrays
          .and. dump_type /= 'coupling' .and. dump_type /= 'coupling_box')) then  !!! SB coupling
 
      if (.not. anel_true .and. .not. dump_snaps_glob) then
-        if (lpr) write(6,*)'  deallocating pointwise solid arrays...'
+        if (lpr) write(*,*)'  deallocating pointwise solid arrays...'
         deallocate(DsDeta_over_J_sol)
         deallocate(DzDeta_over_J_sol)
         deallocate(DsDxi_over_J_sol)
@@ -251,7 +251,7 @@ subroutine deallocate_preloop_arrays
      endif
   endif
 
-  if (lpr) write(6,*)'  Done deallocating mesh arrays.'; call flush(6)
+  if (lpr) write(*,*)'  Done deallocating mesh arrays.'; call flush(6)
 
 end subroutine deallocate_preloop_arrays
 !-----------------------------------------------------------------------------------------
@@ -381,30 +381,30 @@ end subroutine massmatrix_dble
 subroutine mesh_tests
 
   ! Checking coordinate conformity
-  if (lpr) write(6,*)'  dumping element information...'
+  if (lpr) write(*,*)'  dumping element information...'
   call dump_coarsing_element_info
 
   ! Checking coordinate conformity < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < >
-  if (lpr) write(6,*)'  checking physical coordinates...'
+  if (lpr) write(*,*)'  checking physical coordinates...'
   call check_physical_coordinates
 
   ! Axial elements & masking < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < >
-  if (lpr) write(6,*)'  Checking out axial stuff...'
+  if (lpr) write(*,*)'  Checking out axial stuff...'
   call check_axial_stuff
 
   ! Check all radii by computing surface areas < > < > < > < > < > < > < > < > < > < > < > < > < > < > < >
-  if (lpr) write(6,*)'  Computing spherical surface integrals...'
+  if (lpr) write(*,*)'  Computing spherical surface integrals...'
   call compute_spherical_surfaces
 
   ! compute the volume of the spheres/shells < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < >
-  if (lpr) write(6,*)'  Computing volumes...'
+  if (lpr) write(*,*)'  Computing volumes...'
   call compute_volume
 
   ! Solid-fluid boundary < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < >
-  if (lpr) write(6,*)'  Checking out solid-fluid boundaries...'
+  if (lpr) write(*,*)'  Checking out solid-fluid boundaries...'
   call check_solid_fluid_boundaries
 
-  if (lpr) write(6,'(/,a,/)')' >  >  > FINISHED mesh tests.'
+  if (lpr) write(*,'(/,a,/)')' >  >  > FINISHED mesh tests.'
 
 end subroutine mesh_tests
 !-----------------------------------------------------------------------------------------
@@ -517,10 +517,10 @@ subroutine check_physical_coordinates
            call compute_coordinates(s,z,r,theta,iel,ipol,jpol)
            ! test if s,z conform with r
            if ( abs(sqrt(s**2+z**2)-r) > min_distance_dim) then
-              write(6,*)
-              write(6,*)procstrg, &
+              write(*,*)
+              write(*,*)procstrg, &
                    'PROBLEM: in compute_coordinates, s,z,r are inconsistent'
-              write(6,*)procstrg,'sqrt(s^2+z^2),r [km]:',sqrt(s**2+z**2),r
+              write(*,*)procstrg,'sqrt(s^2+z^2),r [km]:',sqrt(s**2+z**2),r
               stop
            endif
 
@@ -528,10 +528,10 @@ subroutine check_physical_coordinates
               ! test if s,z conform with theta
               if ( s == zero .and. z < zero ) then ! south axis
                  if ( (theta-pi)*r > min_distance_dim) then
-                    write(6,*)
-                    write(6,*)procstrg,'PROBLEM: in compute_coordinates,', &
+                    write(*,*)
+                    write(*,*)procstrg,'PROBLEM: in compute_coordinates,', &
                          'antipode inconsistent'
-                    write(6,*)procstrg,'theta [deg],s,z [km]:', &
+                    write(*,*)procstrg,'theta [deg],s,z [km]:', &
                          theta*180.d0/pi,s,z
                     stop
                  endif
@@ -539,19 +539,19 @@ subroutine check_physical_coordinates
               else ! not south axis
                  if ( datan(s/z) >= zero) then ! north
                     if ( abs(datan(s/z)-theta)*r > min_distance_dim) then
-                       write(6,*)
-                       write(6,*)procstrg,'PROBLEM: in compute_coordinates', &
+                       write(*,*)
+                       write(*,*)procstrg,'PROBLEM: in compute_coordinates', &
                             's,z,theta inconsistent'
-                       write(6,*)procstrg,'atan(s/z),theta [deg]:', &
+                       write(*,*)procstrg,'atan(s/z),theta [deg]:', &
                             datan(s/z)*180/pi,theta*180.d0/pi
                        stop
                     endif
                  else
                     if ( abs(datan(s/z)+pi-theta)*r > min_distance_dim) then
-                       write(6,*)
-                       write(6,*)procstrg,'PROBLEM: in compute_coordinates,', &
+                       write(*,*)
+                       write(*,*)procstrg,'PROBLEM: in compute_coordinates,', &
                             's,z,theta inconsistent'
-                       write(6,*)procstrg,'atan(s/z),theta [deg]:', &
+                       write(*,*)procstrg,'atan(s/z),theta [deg]:', &
                             datan(s/z)*180.d0/pi+180.,theta*180.d0/pi
                        stop
                     endif
@@ -559,10 +559,10 @@ subroutine check_physical_coordinates
               endif
            else
               if ( abs(theta-pi/two)*r > min_distance_dim) then
-                 write(6,*)
-                 write(6,*)procstrg,'PROBLEM: equatorial coordinates: ', &
+                 write(*,*)
+                 write(*,*)procstrg,'PROBLEM: equatorial coordinates: ', &
                       'z,theta inconsistent'
-                 write(6,*)procstrg,'sqrt(s^2+z^2),r [km]:',datan(s/z),r
+                 write(*,*)procstrg,'sqrt(s^2+z^2),r [km]:',datan(s/z),r
                  stop
               endif
            endif
@@ -593,19 +593,19 @@ subroutine check_axial_stuff
   ! checking if any non-axial elements sneaked into this...
   do iel = 1,nelem
      if (axis(iel) .and. scoord(0,npol,iel) > zero) then
-        write(6,*)procstrg,'PROBLEM: Non-axial element is coined axis=true!'
-        write(6,*)procstrg,'iel,s  :',iel,scoord(0,npol,iel)
-        write(6,*)procstrg,'r,theta:',rcoord(0,npol,iel),thetacoord(0,npol,iel)
+        write(*,*)procstrg,'PROBLEM: Non-axial element is coined axis=true!'
+        write(*,*)procstrg,'iel,s  :',iel,scoord(0,npol,iel)
+        write(*,*)procstrg,'r,theta:',rcoord(0,npol,iel),thetacoord(0,npol,iel)
         stop
      endif
   enddo
   do iel = 1,nel_solid
      if (axis_solid(iel) .and. scoord(0,npol,ielsolid(iel)) > zero) then
-        write(6,*)procstrg, &
+        write(*,*)procstrg, &
                   'PROBLEM: Non-axial solid element is coined axis_solid=true!'
-        write(6,*)procstrg,'iel,iels,s:',iel,ielsolid(iel),scoord(0,npol, &
+        write(*,*)procstrg,'iel,iels,s:',iel,ielsolid(iel),scoord(0,npol, &
                                          ielsolid(iel))
-        write(6,*)procstrg,'r,theta   :',rcoord(0,npol,ielsolid(iel)), &
+        write(*,*)procstrg,'r,theta   :',rcoord(0,npol,ielsolid(iel)), &
                                          thetacoord(0,npol,ielsolid(iel))
         stop
      endif
@@ -613,11 +613,11 @@ subroutine check_axial_stuff
   if (have_fluid) then
   do iel = 1,nel_fluid
      if (axis_fluid(iel) .and. scoord(0,npol,ielfluid(iel)) > zero) then
-        write(6,*)procstrg, &
+        write(*,*)procstrg, &
                   'PROBLEM: Non-axial fluid element is coined axis_fluid=true!'
-        write(6,*)procstrg,'iel,ielf,s:',iel,ielfluid(iel),scoord(0,npol, &
+        write(*,*)procstrg,'iel,ielf,s:',iel,ielfluid(iel),scoord(0,npol, &
                   ielfluid(iel))
-        write(6,*)procstrg,'r,theta   :',rcoord(0,npol,ielfluid(iel)), &
+        write(*,*)procstrg,'r,theta   :',rcoord(0,npol,ielfluid(iel)), &
                                          thetacoord(0,npol,ielfluid(iel))
         stop
      endif
@@ -628,12 +628,12 @@ subroutine check_axial_stuff
   do iel = 1,nel_solid
      if (axis_solid(iel) .and. .not. axis(ielsolid(iel)) .or. &
          axis(ielsolid(iel)) .and. .not. axis_solid(iel)        ) then
-        write(6,*)procstrg,'PROBLEM:inconsistency between axis and axis_solid!'
-        write(6,*)procstrg,'axis,axis_solid:',axis(ielsolid(iel)), &
+        write(*,*)procstrg,'PROBLEM:inconsistency between axis and axis_solid!'
+        write(*,*)procstrg,'axis,axis_solid:',axis(ielsolid(iel)), &
                                               axis_solid(iel)
-        write(6,*)procstrg,'iel,iels,s:',iel,ielsolid(iel),scoord(0,npol, &
+        write(*,*)procstrg,'iel,iels,s:',iel,ielsolid(iel),scoord(0,npol, &
                                          ielsolid(iel))
-        write(6,*)procstrg,'r,theta   :',rcoord(0,npol,ielsolid(iel)), &
+        write(*,*)procstrg,'r,theta   :',rcoord(0,npol,ielsolid(iel)), &
                                          thetacoord(0,npol,ielsolid(iel))
         stop
      endif
@@ -642,13 +642,13 @@ subroutine check_axial_stuff
   do iel = 1,nel_fluid
      if (axis_fluid(iel) .and. .not. axis(ielfluid(iel)) .or. &
          axis(ielfluid(iel)) .and. .not. axis_fluid(iel)        ) then
-        write(6,*)procstrg, &
+        write(*,*)procstrg, &
                   'PROBLEM: inconsistency between axis and axis_fluid!'
-        write(6,*)procstrg,'axis,axis_fluid:',axis(ielfluid(iel)), &
+        write(*,*)procstrg,'axis,axis_fluid:',axis(ielfluid(iel)), &
                                               axis_fluid(iel)
-        write(6,*)procstrg,'iel,ielf,s:',iel,ielfluid(iel), &
+        write(*,*)procstrg,'iel,ielf,s:',iel,ielfluid(iel), &
                                          scoord(0,npol,ielfluid(iel))
-        write(6,*)procstrg,'r,theta   :',rcoord(0,npol,ielfluid(iel)), &
+        write(*,*)procstrg,'r,theta   :',rcoord(0,npol,ielfluid(iel)), &
                                          thetacoord(0,npol,ielfluid(iel))
         stop
      endif
@@ -662,10 +662,10 @@ subroutine check_axial_stuff
      write(13,*)iel,rcoord(0,jpol,ielsolid(ax_el_solid(iel))), &
                     scoord(0,jpol,ielsolid(ax_el_solid(iel)) )
      if (scoord(0,jpol,ielsolid(ax_el_solid(iel)) ) > zero) then
-       write(6,*)procstrg,'PROBLEM: element with axis_solid=true has s > 0'
-       write(6,*)procstrg,'iel,ielaxsol,ielglob:',iel,ax_el_solid(iel), &
+       write(*,*)procstrg,'PROBLEM: element with axis_solid=true has s > 0'
+       write(*,*)procstrg,'iel,ielaxsol,ielglob:',iel,ax_el_solid(iel), &
                                          ielsolid(ax_el_solid(iel))
-       write(6,*)procstrg,'s,r,theta:',scoord(0,jpol, &
+       write(*,*)procstrg,'s,r,theta:',scoord(0,jpol, &
                                        ielsolid(ax_el_solid(iel))), &
                                  rcoord(0,jpol,ielsolid(ax_el_solid(iel))), &
                                  thetacoord(0,jpol,ielsolid(ax_el_solid(iel)))
@@ -683,10 +683,10 @@ subroutine check_axial_stuff
         write(13,*)iel,rcoord(0,jpol,ielfluid(ax_el_fluid(iel))), &
                        scoord(0,jpol,ielfluid(ax_el_fluid(iel)) )
         if (scoord(0,jpol,ielfluid(ax_el_fluid(iel)) ) > zero) then
-          write(6,*)procstrg,'PROBLEM: element with axis_fluid=true has s > 0'
-          write(6,*)procstrg,'iel,ielaxsol,ielglob:',iel,ax_el_fluid(iel), &
+          write(*,*)procstrg,'PROBLEM: element with axis_fluid=true has s > 0'
+          write(*,*)procstrg,'iel,ielaxsol,ielglob:',iel,ax_el_fluid(iel), &
                                                      ielfluid(ax_el_fluid(iel))
-          write(6,*)procstrg,'s,r,theta:', &
+          write(*,*)procstrg,'s,r,theta:', &
                                  scoord(0,jpol,ielfluid(ax_el_fluid(iel))), &
                                  rcoord(0,jpol,ielfluid(ax_el_fluid(iel))), &
                                  thetacoord(0,jpol,ielfluid(ax_el_fluid(iel)))
@@ -710,24 +710,24 @@ subroutine check_axial_stuff
   enddo
 
   if (count_ax /= naxel_solid ) then
-     write(6,*)procstrg, &
+     write(*,*)procstrg, &
                'PROBLEM: counting solid axial elements via axis /= naxel!'
-     write(6,*)procstrg,'naxel,count axis == T:',naxel_solid,count_ax
+     write(*,*)procstrg,'naxel,count axis == T:',naxel_solid,count_ax
      stop
   endif
 
   if (count2_ax /= (npol+1)*naxel_solid ) then
-     write(6,*)procstrg, &
+     write(*,*)procstrg, &
          'PROBLEM: counting solid axial points via s-coord /= (npol+1)*naxel!'
-     write(6,*)procstrg,'naxel,count s-coorc=0:', &
+     write(*,*)procstrg,'naxel,count s-coorc=0:', &
                                (npol+1)*naxel_solid,count2_ax
      stop
   endif
 
   if (count3_ax /= naxel_solid ) then
-     write(6,*)procstrg, &
+     write(*,*)procstrg, &
                'PROBLEM: counting axial elemets via axis_solid /= naxel!'
-     write(6,*)procstrg,'naxel,count s-coorc=0:',naxel_solid,count3_ax
+     write(*,*)procstrg,'naxel,count s-coorc=0:',naxel_solid,count3_ax
      stop
   endif
 
@@ -744,24 +744,24 @@ subroutine check_axial_stuff
     enddo
 
     if (count_ax /= naxel_fluid ) then
-       write(6,*)procstrg, &
+       write(*,*)procstrg, &
                  'PROBLEM: counting fluid axial elements via axis /= naxel!'
-       write(6,*)procstrg,'naxel,count axis == T:',naxel_fluid,count_ax
+       write(*,*)procstrg,'naxel,count axis == T:',naxel_fluid,count_ax
        stop
     endif
 
     if (count2_ax /= (npol+1)*naxel_fluid ) then
-       write(6,*)procstrg, &
+       write(*,*)procstrg, &
            'PROBLEM: counting fluid axial points via s-coord /= (npol+1)*naxel!'
-       write(6,*)procstrg,'naxel,count s-coorc=0:', &
+       write(*,*)procstrg,'naxel,count s-coorc=0:', &
                  (npol+1)*naxel_fluid,count2_ax
        stop
     endif
 
     if (count3_ax /= naxel_fluid ) then
-       write(6,*)procstrg, &
+       write(*,*)procstrg, &
               'PROBLEM: counting fluid axial elemets via axis_fluid /= naxel!'
-       write(6,*)procstrg,'naxel,count s-coorc=0:',naxel_fluid,count3_ax
+       write(*,*)procstrg,'naxel,count s-coorc=0:',naxel_fluid,count3_ax
        stop
     endif
   endif
@@ -773,24 +773,24 @@ subroutine check_axial_stuff
      call apply_axis_mask_scal(tmpflufield,nel_fluid,ax_el_fluid,naxel_fluid)
 
      if ( minval(tmpflufield(1:npol,:,:)) /= one) then
-        write(6,*)procstrg, &
+        write(*,*)procstrg, &
                   'PROBLEM: Fluid one-comp masking: point with xi > 0 set to zero!'
         stop
      endif
      do iel=1,nel_fluid
      if (.not. axis(ielfluid(iel)) .and. &
           minval(tmpflufield(:,:,iel)) /= one) then
-        write(6,*)procstrg, &
+        write(*,*)procstrg, &
                   'PROBLEM: Fluid one-comp masking: non-ax element set to zero!'
-        write(6,*)procstrg, &
+        write(*,*)procstrg, &
              'el num, r,s:',iel,rcoord(int(npol/2),int(npol/2),ielfluid(iel)), &
                                     scoord(int(npol/2),int(npol/2),ielfluid(iel))
         stop
      endif
      if (axis(ielfluid(iel)) .and. maxval(tmpflufield(0,:,iel)) == one) then
-        write(6,*)procstrg, &
+        write(*,*)procstrg, &
                   'PROBLEM: Fluid one-comp masking:ax element not set to zero!'
-        write(6,*)procstrg, &
+        write(*,*)procstrg, &
              'el num, r,s:',iel,rcoord(int(npol/2),int(npol/2),ielfluid(iel)), &
                                 scoord(int(npol/2),int(npol/2),ielfluid(iel))
         stop
@@ -798,9 +798,9 @@ subroutine check_axial_stuff
      do jpol=0,npol
      if ( scoord(0,jpol,ielfluid(iel) ) < min_distance_dim .and. &
           tmpflufield(0,jpol,iel) == one) then
-        write(6,*)procstrg, &
+        write(*,*)procstrg, &
                   'PROBLEM: Fluid one-comp masking: ax element not set to zero!'
-        write(6,*)procstrg, &
+        write(*,*)procstrg, &
                   'el ,jpol r,s:',iel,jpol,rcoord(0,jpol,ielfluid(iel)), &
                                            scoord(0,jpol,ielfluid(iel))
         stop
@@ -817,9 +817,9 @@ subroutine check_axial_stuff
 
   do i=2,3
      if (minval(tmpsolfieldcomp(:,:,:,i)) /= one) then
-        write(6,*)procstrg,'PROBLEM: Solid one-comp masking: comp',i, &
+        write(*,*)procstrg,'PROBLEM: Solid one-comp masking: comp',i, &
                            '  set to zero'
-        write(6,*)procstrg,'min value, min loc:', &
+        write(*,*)procstrg,'min value, min loc:', &
                   minval(tmpsolfieldcomp(:,:,:,i)), &
                   minloc(tmpsolfieldcomp(:,:,:,i))
         stop
@@ -827,7 +827,7 @@ subroutine check_axial_stuff
   enddo
 
   if ( minval(tmpsolfieldcomp(1:npol,:,:,1)) /= one) then
-     write(6,*)procstrg, &
+     write(*,*)procstrg, &
                'PROBLEM: Solid one-comp masking: point with xi > 0 set to zero!'
      stop
   endif
@@ -835,18 +835,18 @@ subroutine check_axial_stuff
   do iel=1,nel_solid
      if (.not. axis(ielsolid(iel)) .and. &
           minval(tmpsolfieldcomp(:,:,iel,1)) /= one) then
-        write(6,*)procstrg, &
+        write(*,*)procstrg, &
                  'PROBLEM: Solid one-comp masking: non-ax element set to zero!'
-        write(6,*)procstrg, &
+        write(*,*)procstrg, &
                   'el num, r,s:', &
                   iel,rcoord(int(npol/2),int(npol/2),ielsolid(iel)), &
                       scoord(int(npol/2),int(npol/2),ielsolid(iel))
         stop
      endif
      if (axis(ielsolid(iel)) .and. maxval(tmpsolfieldcomp(0,:,iel,1)) == one) then
-        write(6,*)procstrg, &
+        write(*,*)procstrg, &
                  'PROBLEM: Solid one-comp masking:ax element not set to zero!'
-        write(6,*)procstrg, &
+        write(*,*)procstrg, &
                   'el num, r:',iel,rcoord(int(npol/2),int(npol/2),ielsolid(iel))
         stop
      endif
@@ -854,9 +854,9 @@ subroutine check_axial_stuff
      do jpol=0,npol
         if ( scoord(0,jpol,ielsolid(iel)) < min_distance_dim .and. &
              tmpsolfieldcomp(0,jpol,iel,1) == one) then
-           write(6,*)procstrg, &
+           write(*,*)procstrg, &
                      'PROBLEM: Solid one-comp masking: ax element not set to zero!'
-           write(6,*)procstrg, &
+           write(*,*)procstrg, &
                      'el,jpol, r:',iel,jpol,rcoord(0,jpol,ielsolid(iel))
            stop
         endif
@@ -868,13 +868,13 @@ subroutine check_axial_stuff
   call apply_axis_mask_twocomp(tmpsolfieldcomp,nel_solid, &
                                                 ax_el_solid, naxel_solid)
   if ( minval(tmpsolfieldcomp(:,:,:,1)) /= one ) then
-     write(6,*)procstrg, &
+     write(*,*)procstrg, &
                'PROBLEM: Solid two-comp masking: comp 1 set to zero'
      stop
   endif
 
   if ( minval(tmpsolfieldcomp(1:npol,:,:,2:3)) /= one) then
-     write(6,*)procstrg, &
+     write(*,*)procstrg, &
                'PROBLEM: Solid two-comp masking: point with xi > 0 set to zero!'
      stop
   endif
@@ -882,17 +882,17 @@ subroutine check_axial_stuff
   do iel=1,nel_solid
      if (.not. axis(ielsolid(iel)) .and. &
           minval(tmpsolfieldcomp(:,:,iel,2:3)) /= one) then
-        write(6,*)procstrg, &
+        write(*,*)procstrg, &
                   'PROBLEM: Solid two-comp masking: non-ax element set to zero!'
-        write(6,*)procstrg, &
+        write(*,*)procstrg, &
              'el num, r,s:',iel,rcoord(int(npol/2),int(npol/2),ielsolid(iel)), &
                                 scoord(int(npol/2),int(npol/2),ielsolid(iel))
         stop
      endif
      if (axis(ielsolid(iel)) .and. maxval(tmpsolfieldcomp(0,:,iel,2:3)) == one) then
-        write(6,*)procstrg, &
+        write(*,*)procstrg, &
                   'PROBLEM: Solid two-comp masking:ax element not set to zero!'
-        write(6,*)procstrg, &
+        write(*,*)procstrg, &
                   'el num, r:',iel,rcoord(int(npol/2),int(npol/2),ielsolid(iel))
         stop
      endif
@@ -900,20 +900,20 @@ subroutine check_axial_stuff
      do jpol=0,npol
         if ( scoord(0,jpol,ielsolid(iel)) < min_distance_dim .and. &
              tmpsolfieldcomp(0,jpol,iel,2) == one) then
-           write(6,*)procstrg, &
+           write(*,*)procstrg, &
                      'PROBLEM: Solid two-comp masking:', &
                      'ax element comp 2 not set to zero!'
-           write(6,*)procstrg, &
+           write(*,*)procstrg, &
                      'el,jpol, r:',iel,jpol,rcoord(0,jpol,ielsolid(iel))
            stop
         endif
 
         if ( scoord(0,jpol,ielsolid(iel)) < min_distance_dim .and. &
              tmpsolfieldcomp(0,jpol,iel,3) == one) then
-           write(6,*)procstrg, &
+           write(*,*)procstrg, &
                      'PROBLEM: Solid two-comp masking:', &
                      'ax element comp 3 not set to zero!'
-           write(6,*)procstrg, &
+           write(*,*)procstrg, &
                      'el,jpol, r:',iel,jpol,rcoord(0,jpol,ielsolid(iel))
            stop
         endif
@@ -925,7 +925,7 @@ subroutine check_axial_stuff
   call apply_axis_mask_threecomp(tmpsolfieldcomp,nel_solid, &
                                                   ax_el_solid,naxel_solid)
   if ( minval(tmpsolfieldcomp(1:npol,:,:,:)) /= one) then
-     write(6,*)procstrg, &
+     write(*,*)procstrg, &
              'PROBLEM: Solid three-comp masking: point with xi > 0 set to zero!'
      stop
   endif
@@ -933,17 +933,17 @@ subroutine check_axial_stuff
   do iel=1,nel_solid
      if (.not. axis(ielsolid(iel)) .and. &
           minval(tmpsolfieldcomp(:,:,iel,:)) /= one) then
-        write(6,*)procstrg, &
+        write(*,*)procstrg, &
                  'PROBLEM: Solid three-comp masking: non-ax element set to zero!'
-        write(6,*)procstrg,'el num, r,s:', &
+        write(*,*)procstrg,'el num, r,s:', &
                             iel,rcoord(int(npol/2),int(npol/2),ielsolid(iel)), &
                                 scoord(int(npol/2),int(npol/2),ielsolid(iel))
         stop
      endif
      if (axis(ielsolid(iel)) .and. maxval(tmpsolfieldcomp(0,:,iel,:)) == one) then
-        write(6,*)procstrg, &
+        write(*,*)procstrg, &
                 'PROBLEM: Solid three-comp masking:ax element not set to zero!'
-        write(6,*)procstrg, &
+        write(*,*)procstrg, &
                 'el num, r:',iel,rcoord(int(npol/2),int(npol/2),ielsolid(iel))
         stop
      endif
@@ -951,28 +951,28 @@ subroutine check_axial_stuff
      do jpol=0,npol
         if ( scoord(0,jpol,ielsolid(iel)) < min_distance_dim .and. &
              tmpsolfieldcomp(0,jpol,iel,1) == one) then
-           write(6,*)procstrg, &
+           write(*,*)procstrg, &
                      'PROBLEM: Solid three-comp masking:', &
                      'ax element  comp 1 not set to zero!'
-           write(6,*)procstrg, &
+           write(*,*)procstrg, &
                      'el,jpol, r:',iel,jpol,rcoord(0,jpol,ielsolid(iel))
            stop
         endif
 
         if ( scoord(0,jpol,ielsolid(iel)) < min_distance_dim .and. &
              tmpsolfieldcomp(0,jpol,iel,2) == one) then
-           write(6,*)procstrg,'PROBLEM: Solid three-comp masking:', &
+           write(*,*)procstrg,'PROBLEM: Solid three-comp masking:', &
                      'ax element  comp 2 not set to zero!'
-           write(6,*)procstrg,'el,jpol, r:',iel,jpol,rcoord(0,jpol,ielsolid(iel))
+           write(*,*)procstrg,'el,jpol, r:',iel,jpol,rcoord(0,jpol,ielsolid(iel))
            stop
         endif
 
         if ( scoord(0,jpol,ielsolid(iel)) < min_distance_dim .and. &
              tmpsolfieldcomp(0,jpol,iel,3) == one) then
-           write(6,*)procstrg, &
+           write(*,*)procstrg, &
                      'PROBLEM: Solid three-comp masking:', &
                      'ax element comp 3 not set to zero!'
-           write(6,*)procstrg,'el,jpol, r:',iel,jpol,rcoord(0,jpol,ielsolid(iel))
+           write(*,*)procstrg,'el,jpol, r:',iel,jpol,rcoord(0,jpol,ielsolid(iel))
            stop
         endif
      enddo
@@ -1025,7 +1025,7 @@ subroutine compute_spherical_surfaces
 
   ! Broadcasting these radii to all processors
   call broadcast_int(irad,0)
-  if (lpr) write(6,133) irad
+  if (lpr) write(*,133) irad
 133  format(' = => found ',i4,' appropriate radii (along northern axis)')
   allocate(radii2(irad,2),radsurf(1:irad,1:2))
   radsurf(1:irad,1:2) = zero
@@ -1144,13 +1144,13 @@ subroutine compute_spherical_surfaces
   enddo
 
   if (lpr) then
-     write(6,1234)'(below):',maxval(dabs(radsurf(1:irad,1)/two-one)), &
+     write(*,1234)'(below):',maxval(dabs(radsurf(1:irad,1)/two-one)), &
           radii2(maxloc(abs(radsurf(1:irad,1)/two-one)),1)/1.d3
-     write(6,1234)'(above):',maxval(dabs(radsurf(1:irad,2)/two-one)), &
+     write(*,1234)'(above):',maxval(dabs(radsurf(1:irad,2)/two-one)), &
           radii2(maxloc(dabs(radsurf(1:irad,2)/two-one)),2)/1.d3
 1234 format(' = => Largest global surface area error ',a8,1pe11.4, &
           ' at r=',1pe11.4,' km')
-     write(6,*)
+     write(*,*)
 
      ! write out comparison numerical/analytical surfaces
      open(unit=109,file=infopath(1:lfinfo)//'/surface_areas_all_radii.dat')
@@ -1218,8 +1218,8 @@ subroutine compute_volume
      router_fluid = 3482000.d0 ! CMB
      rinner_fluid = 1217000.d0 ! ICB
   else
-     write(6,*)'  !!WARNING!! Do not know the fluid for model',bkgrdmodel
-     write(6,*)'             ....setting outer/inner equal - > assuming no fluid'
+     write(*,*)'  !!WARNING!! Do not know the fluid for model',bkgrdmodel
+     write(*,*)'             ....setting outer/inner equal - > assuming no fluid'
      rinner_fluid= 3000.d0
      router_fluid = rinner_fluid
   endif
@@ -1277,33 +1277,33 @@ subroutine compute_volume
   vol_fluid_numass=2.d0*pi*vol_fluid_numass
 
   if (lpr) then
-     write(6,*)'  Accuracy for 3-D spheres and shells [m^3]:'
-     write(6,9)'Volume','analytical','global num','direct sum', &
+     write(*,*)'  Accuracy for 3-D spheres and shells [m^3]:'
+     write(*,9)'Volume','analytical','global num','direct sum', &
                 'ana-dirsum','ana-globnum'
-     write(6,10)'Total:',vol_glob,vol_solid_numass+vol_fluid_numass, &
+     write(*,10)'Total:',vol_glob,vol_solid_numass+vol_fluid_numass, &
                          vol_glob_num,(vol_glob-vol_glob_num)/vol_glob, &
                          (vol_glob-vol_solid_numass-vol_fluid_numass)/vol_glob
-     write(6,10)'Solid:',vol_solid,vol_solid_numass,vol_solid_num, &
+     write(*,10)'Solid:',vol_solid,vol_solid_numass,vol_solid_num, &
                          (vol_solid-vol_solid_num)/vol_solid, &
                          (vol_solid-vol_solid_numass)/vol_solid
      if (vol_fluid > zero) then
-     write(6,10)'Fluid:',vol_fluid,vol_fluid_numass,vol_fluid_num, &
+     write(*,10)'Fluid:',vol_fluid,vol_fluid_numass,vol_fluid_num, &
                          (vol_fluid-vol_fluid_num)/vol_fluid, &
                          (vol_fluid-vol_fluid_numass)/vol_fluid
      else
-     write(6,10)'Fluid:',vol_fluid,vol_fluid_numass
+     write(*,10)'Fluid:',vol_fluid,vol_fluid_numass
      endif
 
-     write(6,*)
+     write(*,*)
 9    format(a10,3(a14),2(a13))
 10   format(a10,3(1pe14.5),2(1pe13.3))
   endif
 
   if (.not. reldiff_small(real(vol_glob,kind=realkind), &
        real(vol_glob_num,kind=realkind)) ) then
-     write(6,*)''
-     write(6,*)procstrg,'PROBLEM computing global volume!!'
-     write(6,*)procstrg, &
+     print *
+     write(*,*)procstrg,'PROBLEM computing global volume!!'
+     write(*,*)procstrg, &
           '...exact and numerical volume differ by (relatively):', &
           (vol_glob-vol_glob_num)/vol_glob
      stop
@@ -1311,9 +1311,9 @@ subroutine compute_volume
 
   if (.not. reldiff_small(real(vol_solid,kind=realkind), &
        real(vol_solid_num,kind=realkind)) ) then
-     write(6,*)''
-     write(6,*)procstrg,'PROBLEM computing solid volume!!'
-     write(6,*)procstrg, &
+     print *
+     write(*,*)procstrg,'PROBLEM computing solid volume!!'
+     write(*,*)procstrg, &
           '...exact and numerical volume differ by (relatively):', &
           (vol_solid-vol_solid_num)/vol_solid
      stop
@@ -1321,9 +1321,9 @@ subroutine compute_volume
 
   if (.not. reldiff_small(real(vol_fluid,kind=realkind), &
        real(vol_fluid_num,kind=realkind)) ) then
-     write(6,*)''
-     write(6,*)procstrg,'PROBLEM computing fluid volume!!'
-     write(6,*)procstrg, &
+     print *
+     write(*,*)procstrg,'PROBLEM computing fluid volume!!'
+     write(*,*)procstrg, &
           '...exact and numerical volume differ by (relatively):', &
           (vol_fluid-vol_fluid_num)/vol_fluid
      stop
@@ -1374,7 +1374,7 @@ subroutine check_solid_fluid_boundaries
   ! Write out the radii at which the solid field takes values >1
   ! (i.e., if other than S/F boundary radii, something's wrong....)
 
-  if (lpr) write(6,*)'  Testing S/F boundary copying...'
+  if (lpr) write(*,*)'  Testing S/F boundary copying...'
   bdrycount = 0
   do iel=1,nel_solid
      do ipol=0,npol
@@ -1410,12 +1410,12 @@ subroutine check_solid_fluid_boundaries
   close(112)
 
   if (bdrycount /= nel_bdry*(npol+1) ) then
-     write(6,*)
-     write(6,*) procstrg, '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-     write(6,*) procstrg, 'E R R O R at S/F boundary copying!'
-     write(6,*) procstrg, 'expected # bdry points        :',nel_bdry*(npol+1)
-     write(6,*) procstrg, 'actually copied # bdry points :',bdrycount
-     write(6,*) procstrg, '...see file bdrytest_solflubdry.dat for details...'
+     write(*,*)
+     write(*,*) procstrg, '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+     write(*,*) procstrg, 'E R R O R at S/F boundary copying!'
+     write(*,*) procstrg, 'expected # bdry points        :',nel_bdry*(npol+1)
+     write(*,*) procstrg, 'actually copied # bdry points :',bdrycount
+     write(*,*) procstrg, '...see file bdrytest_solflubdry.dat for details...'
      stop
   endif
 

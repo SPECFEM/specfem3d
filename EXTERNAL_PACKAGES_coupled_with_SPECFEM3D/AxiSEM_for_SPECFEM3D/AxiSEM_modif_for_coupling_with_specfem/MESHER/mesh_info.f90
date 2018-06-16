@@ -82,10 +82,10 @@ subroutine define_regions
      z1 = zcom(iel)
      theta = dacos(z1 / dsqrt(z1**2 + s1**2))
      if (theta < 0) then
-        write(6,*) 'theta < 0', theta, s1, z1
+        write(*,*) 'theta < 0', theta, s1, z1
         stop
      else if (theta > pi) then
-        write(6,*) 'theta > pi', theta, s1, z1
+        write(*,*) 'theta > pi', theta, s1, z1
         stop
      endif
      thetacom(iel) = theta
@@ -100,37 +100,37 @@ subroutine define_regions
      if (region(iel) > 0 .and. region(iel) < ndisc + 2) then
         nel_region(region(iel)) = nel_region(region(iel)) + 1
      else
-        write(6,*) ' problem with assigning region to element number ', iel
-        write(6,*) scom(iel), zcom(iel)
+        write(*,*) ' problem with assigning region to element number ', iel
+        write(*,*) scom(iel), zcom(iel)
         stop
      endif
   enddo
 
   if (dump_mesh_info_screen) then
-     write(6,*)''
-     write(6,*)'NUMBER OF ELEMENTS IN EACH SUBREGION:'
+     print *
+     write(*,*)'NUMBER OF ELEMENTS IN EACH SUBREGION:'
      do i=1, ndisc-1
-        write(6,10)nel_region(i),discont(i)/1000., &
+        write(*,10)nel_region(i),discont(i)/1000., &
                   discont(i+1)/1000.
-        write(6,11)real(nel_region(i))/real(neltot)*100., &
+        write(*,11)real(nel_region(i))/real(neltot)*100., &
                    (discont(i)**2-discont(i+1)**2)/discont(1)**2*100.
-        write(6,*)''
+        print *
      enddo
-     write(6,12)nel_region(ndisc),discont(ndisc)/1000.
-     write(6,11)real(nel_region(ndisc))/real(neltot)*100., &
+     write(*,12)nel_region(ndisc),discont(ndisc)/1000.
+     write(*,11)real(nel_region(ndisc))/real(neltot)*100., &
                 discont(ndisc)**2/discont(1)**2*100.
-     write(6,*)''
-     write(6,*)'Elements summed over all regions:',sum(nel_region)
-     write(6,*)'Total # Elements:',neltot
+     print *
+     write(*,*)'Elements summed over all regions:',sum(nel_region)
+     write(*,*)'Total # Elements:',neltot
   endif
 
   if (neltot /= sum(nel_region)) then
-     write(6,*)'In subroutine define_regions: Sum of elements in all regions not equal to total number'
-     write(6,*) neltot, sum(nel_region)
+     write(*,*)'In subroutine define_regions: Sum of elements in all regions not equal to total number'
+     write(*,*) neltot, sum(nel_region)
      stop
   endif
 
-  write(6,*)''
+  print *
 
 10 format(i8,' elements between ',f6.1,' and ',f6.1)
 11 format(f7.1,' element percent ',f4.1,' area percent')
@@ -175,9 +175,9 @@ subroutine def_fluid_regions
   enddo
 
   if (dump_mesh_info_screen) then
-     write(6,*) ' FLUID ELEMENTS '
-     write(6,*) ' NUMBER OF FLUID ELEMENTS '
-     write(6,*) neltot_fluid
+     write(*,*) ' FLUID ELEMENTS '
+     write(*,*) ' NUMBER OF FLUID ELEMENTS '
+     write(*,*) neltot_fluid
   endif
 
   allocate(ielem_fluid(neltot_fluid))
@@ -211,9 +211,9 @@ subroutine def_solid_regions
   enddo
 
   if (dump_mesh_info_screen) then
-     write(6,*) ' solid ELEMENTS '
-     write(6,*) ' NUMBER OF solid ELEMENTS '
-     write(6,*) neltot_solid
+     write(*,*) ' solid ELEMENTS '
+     write(*,*) ' NUMBER OF solid ELEMENTS '
+     write(*,*) neltot_solid
   endif
   allocate(ielem_solid(neltot_solid))
   allocate(inv_ielem_solid(neltot)); inv_ielem_solid(:)=0
@@ -273,8 +273,8 @@ subroutine define_boundaries
 
      if (.not. solid_domain(ndisc)) nbcnd = nbcnd - 1
 
-     write(6,*) '..... the number of fluid boundaries is not general enough....'
-     write(6,*) '.....should insert a test on whether the fluid is indeed completely embedded!'
+     write(*,*) '..... the number of fluid boundaries is not general enough....'
+     write(*,*) '.....should insert a test on whether the fluid is indeed completely embedded!'
   else if (neltot_solid == 0) then
      nbcnd = 0
   else if (neltot_fluid == 0 ) then
@@ -286,7 +286,7 @@ subroutine define_boundaries
   ! set number of boundary elements to zero
   nbelem(:) = 0 ! careful: is a global variable!!!
 
-  write(6,*)'size idom_fluid:',size(idom_fluid),nbcnd
+  write(*,*)'size idom_fluid:',size(idom_fluid),nbcnd
 
   if (have_fluid) then
      dmax = min_distance_nondim
@@ -295,14 +295,14 @@ subroutine define_boundaries
         if (mod(j,2) /= 0) then ! upper boundary of fluid region
            rbound = discont(idom_fluid(j))/router
            if (dump_mesh_info_screen) then
-              write(6,*)'ABOVE SOLID-FLUID BOUNDARY:',j,idom_fluid(j), &
+              write(*,*)'ABOVE SOLID-FLUID BOUNDARY:',j,idom_fluid(j), &
                                                      rbound*router/1000.
               call flush(6)
            endif
         else  ! lower boundary of fluid region
            rbound = discont(idom_fluid(j-1)+1)/router
            if (dump_mesh_info_screen) then
-              write(6,*)'BELOW SOLID-FLUID BOUNDARY:',j,idom_fluid(j-1)+1, &
+              write(*,*)'BELOW SOLID-FLUID BOUNDARY:',j,idom_fluid(j-1)+1, &
                                                       rbound*router/1000.
               call flush(6)
            endif
@@ -335,7 +335,7 @@ subroutine define_boundaries
         close(6968)
      endif
 
-     write(6,*)'allocating boundary arrays....',nbelemmax; call flush(6)
+     write(*,*)'allocating boundary arrays....',nbelemmax; call flush(6)
 
      allocate(my_neighbor(nbelemmax,nbcnd))
      allocate(bdry_above_el(nbelemmax/2,nbcnd),bdry_below_el(nbelemmax/2,nbcnd))
@@ -546,7 +546,7 @@ subroutine define_my_boundary_neighbor
 
   tolerance = min_distance_nondim
   if (dump_mesh_info_screen) &
-       write(6,*) 'Tolerance to find boundary-hugging partner:', tolerance
+       write(*,*) 'Tolerance to find boundary-hugging partner:', tolerance
 
   do j=1, nbcnd
 
@@ -614,9 +614,9 @@ subroutine define_my_boundary_neighbor
          write(6565,*)'Bdry partners:',j,ibelem,my_neighbor(ibelem,j), &
                                     my_neighbor(my_neighbor(ibelem,j),j)
          if ( ibelem /= my_neighbor(my_neighbor(ibelem,j),j) ) then
-            write(6,*)'Problem in boundary-partner mapping:'
-            write(6,*)'Me:',ibelem
-            write(6,*)"My partner's partner:", &
+            write(*,*)'Problem in boundary-partner mapping:'
+            write(*,*)'Me:',ibelem
+            write(*,*)"My partner's partner:", &
                        my_neighbor(my_neighbor(ibelem,j),j)
             stop
          endif
@@ -677,7 +677,7 @@ subroutine define_my_boundary_neighbor
                 ! below the ICB. ...i.e., the jpol indices are switched for 45 < theta <
                 ! 135 deg
                 if (eltypeg(belem(my_neighbor(ibelem,j),j)) /= 'curved') then
-                   if (dump_mesh_info_screen) write(6,*)'ELTYPE:',j,abovecount, &
+                   if (dump_mesh_info_screen) write(*,*)'ELTYPE:',j,abovecount, &
                           eltypeg(belem(my_neighbor(ibelem,j),j))
                    if ( scom(belem(my_neighbor(ibelem,j),j)) >&
                         abs(zcom(belem(my_neighbor(ibelem,j),j))) ) then
@@ -801,7 +801,7 @@ subroutine define_my_boundary_neighbor
          if (dump_mesh_info_files) write(131313,30)rup,rdown,thetaup,thetadown
 
          if ( ibelem /= my_neighbor(my_neighbor(ibelem,j),j) ) then
-           write(6,*)'ibelem different from my neighbor)',ibelem,j,nbelem(j)
+           write(*,*)'ibelem different from my neighbor)',ibelem,j,nbelem(j)
            stop
          endif
 
@@ -813,7 +813,7 @@ subroutine define_my_boundary_neighbor
   close(6464)
   close(6465)
 
-  write(6,*)'Done with boundary neighbor search.'; call flush(6)
+  write(*,*)'Done with boundary neighbor search.'; call flush(6)
 
 30 format(12(1pe12.5,2x))
 
@@ -843,7 +843,7 @@ subroutine belem_count_new(dmax, j, rbound)
      enddo
      if (ibd == 1) nbelem(j) = nbelem(j) + 1
   enddo
-  if (dump_mesh_info_screen) write(6,*)nbelem(j),'boundary elements for interface',j
+  if (dump_mesh_info_screen) write(*,*)nbelem(j),'boundary elements for interface',j
 
 end subroutine belem_count_new
 !-----------------------------------------------------------------------------------------

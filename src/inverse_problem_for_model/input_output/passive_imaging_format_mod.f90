@@ -320,11 +320,11 @@ contains
     character(len=*),    intent(in) :: filename
     type(source_type),  intent(out) :: cmt
 
-    write(6,*)'Read CMT solution file ...'
+    write(*,*)'Read CMT solution file ...'
     print *,filename
     open(iunit, file=trim(adjustl(filename)), status='old',action='read', iostat=io_err)
     if (io_err /= 0) then
-       write(6,*)'CMT solution file: ',trim(adjustl(filename)),' does not exist!'
+       write(*,*)'CMT solution file: ',trim(adjustl(filename)),' does not exist!'
        stop 'CMT solution file does not exist!'
     endif
 
@@ -381,7 +381,7 @@ contains
     enddo
 
     close(iunit)
-    write(6,*)'Done!'
+    write(*,*)'Done!'
 
   end subroutine read_cmt_solution_file
   !--------------------------------------------------------------------------------
@@ -393,10 +393,10 @@ contains
     character(len=*),    intent(in) :: filename
     type(source_type),  intent(out) :: cmt
 
-    write(6,*)'Read force solution file ...'
+    write(*,*)'Read force solution file ...'
     open(iunit, file=trim(adjustl(filename)), status='old',action='read', iostat=io_err)
     if (io_err /= 0) then
-       write(6,*)'Force solution file: ',trim(adjustl(filename)),' does not exist!'
+       write(*,*)'Force solution file: ',trim(adjustl(filename)),' does not exist!'
        stop 'Force solution file does not exist!'
     endif
 
@@ -438,7 +438,7 @@ contains
     enddo
 
     close(iunit)
-    write(6,*)'Done!'
+    write(*,*)'Done!'
 
   end subroutine read_force_solution_file
   !--------------------------------------------------------------------------------
@@ -453,8 +453,8 @@ contains
     real(kind=sp),    dimension(nrec,nt)              :: datas
     real(kind=cp),    dimension(nrec,nt), intent(out) :: data
 
-    write(6,*)'Read binary data: '
-    write(6,*)'    filename, nrec, nt = ',trim(adjustl(filename)),nrec,nt
+    write(*,*)'Read binary data: '
+    write(*,*)'    filename, nrec, nt = ',trim(adjustl(filename)),nrec,nt
 
     nsize = nrec * sp
     open(iunit,file=trim(adjustl(filename)),access='direct',recl=nsize,status='old')
@@ -465,7 +465,7 @@ contains
     close(iunit)
     data = real(datas,kind=cp)
 
-    write(6,*)'Done!'
+    write(*,*)'Done!'
 
   end subroutine read_binary_data
   !--------------------------------------------------------------------------------
@@ -480,8 +480,8 @@ contains
     real(kind=sp),    dimension(nt)              :: stfs
     real(kind=cp),    dimension(nt), intent(out) :: stf
 
-    write(6,*)'Read binary source signature: '
-    write(6,*)'    filename, nt = ',trim(adjustl(filename)),nt
+    write(*,*)'Read binary source signature: '
+    write(*,*)'    filename, nt = ',trim(adjustl(filename)),nt
 
     nsize = nt * sp
 
@@ -491,7 +491,7 @@ contains
 
     stf = real(stfs,kind=cp)
 
-    write(6,*)'Done!'
+    write(*,*)'Done!'
 
   end subroutine read_binary_source_signature
   !--------------------------------------------------------------------------------
@@ -506,8 +506,8 @@ contains
     real(kind=sp),    dimension(nt)              :: stfs
     real(kind=cp),    dimension(nt), intent(in)  :: stf
 
-    write(6,*)'Write binary source signature: '
-    write(6,*)'    filename, nt = ',trim(adjustl(filename)),nt
+    write(*,*)'Write binary source signature: '
+    write(*,*)'    filename, nt = ',trim(adjustl(filename)),nt
 
     nsize = nt * sp
     stfs  = real(stf,kind=sp)
@@ -516,7 +516,7 @@ contains
     write(iunit,rec=1)stfs(:)
     close(iunit)
 
-    write(6,*)'Done!'
+    write(*,*)'Done!'
 
   end subroutine write_binary_source_signature
   !--------------------------------------------------------------------------------
@@ -530,8 +530,8 @@ contains
     integer(kind=si)                                 :: nsize, it
     real(kind=cp), dimension(nrec,nt), intent(in) :: data
 
-    write(6,*)'Write binary data: '
-    write(6,*)'    filename, nrec, nt = ',trim(adjustl(filename)),nrec,nt
+    write(*,*)'Write binary data: '
+    write(*,*)'    filename, nrec, nt = ',trim(adjustl(filename)),nrec,nt
 
     nsize = nrec * sp
     open(iunit,file=trim(adjustl(filename)),access='direct',recl=nsize,status='replace')
@@ -540,7 +540,7 @@ contains
     enddo
     close(iunit)
 
-    write(6,*)'Done!'
+    write(*,*)'Done!'
 
   end subroutine write_binary_data
   !--------------------------------------------------------------------------------

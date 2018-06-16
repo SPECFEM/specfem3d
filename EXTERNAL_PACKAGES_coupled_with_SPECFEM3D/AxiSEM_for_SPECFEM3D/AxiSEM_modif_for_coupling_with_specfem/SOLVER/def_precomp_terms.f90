@@ -59,10 +59,10 @@ subroutine read_model_compute_terms
   real(kind=dp), dimension(:,:,:),allocatable :: xi_ani, phi_ani, eta_ani
   real(kind=dp), dimension(:,:,:),allocatable :: fa_ani_theta, fa_ani_phi
 
-  if (lpr .and. verbose > 0) write(6,'(a)') &
+  if (lpr .and. verbose > 0) write(*,'(a)') &
             '  ::::::::: BACKGROUND MODEL & PRECOMPUTED MATRICES:::::::'
 
-  if (lpr .and. verbose > 1) write(6,'(a)') '    allocate elastic fields....'
+  if (lpr .and. verbose > 1) write(*,'(a)') '    allocate elastic fields....'
 
   allocate(rho(0:npol,0:npol,1:nelem),massmat_kwts2(0:npol,0:npol,1:nelem))
   allocate(lambda(0:npol,0:npol,1:nelem),mu(0:npol,0:npol,1:nelem))
@@ -85,11 +85,11 @@ subroutine read_model_compute_terms
   endif
 
   ! load velocity/density model  (velocities in m/s, density in kg/m^3 )
-  if (lpr .and. verbose > 1) write(6,*) '   define background model....'
+  if (lpr .and. verbose > 1) write(*,*) '   define background model....'
 
-  if (lpr .and. verbose > 1) write(6,*) '   model is anisotropic....'
+  if (lpr .and. verbose > 1) write(*,*) '   model is anisotropic....'
   if (anel_true) then
-    if (lpr .and. verbose > 1) write(6,*)'   ....and anelastic...'
+    if (lpr .and. verbose > 1) write(*,*)'   ....and anelastic...'
     call read_model(rho, lambda, mu, xi_ani, phi_ani, eta_ani, fa_ani_theta, &
                         fa_ani_phi, Q_mu, Q_kappa)
   else
@@ -104,36 +104,36 @@ subroutine read_model_compute_terms
   endif
   !!! SB coupling
 
-  if (lpr .and. verbose > 1) write(6,*) '   define mass matrix....'
+  if (lpr .and. verbose > 1) write(*,*) '   define mass matrix....'
   call def_mass_matrix_k(rho, lambda, mu, massmat_kwts2)
 
   if (do_mesh_tests) then
-     if (lpr .and. verbose > 1) write(6,*) '   compute mass of the earth model....'
+     if (lpr .and. verbose > 1) write(*,*) '   compute mass of the earth model....'
      call compute_mass_earth(rho)
   endif
 
-  if (lpr .and. verbose > 1) write(6,*) &
+  if (lpr .and. verbose > 1) write(*,*) &
         '   define precomputed matrices for pointwise derivatives...'
   call compute_pointwisederiv_matrices
 
   if (do_mesh_tests) then
      if (lpr .and. verbose > 1) &
-         write(6,*)'   test pointwise derivatives & Laplacian in solid....'
+         write(*,*)'   test pointwise derivatives & Laplacian in solid....'
      call test_pntwsdrvtvs_solid
      if (lpr .and. verbose > 1) &
-         write(6,*)'   test pointwise derivatives & Laplacian in fluid....'
+         write(*,*)'   test pointwise derivatives & Laplacian in fluid....'
      if (have_fluid) call test_pntwsdrvtvs_fluid
   endif
 
   if (anel_true) then
-     if (lpr .and. verbose > 1) write(6, '(/,a,/)') '    preparing ATTENUATION model'
+     if (lpr .and. verbose > 1) write(*, '(/,a,/)') '    preparing ATTENUATION model'
      ! this needs to be done before def_solid_stiffness_terms, as it calculates
      ! the unrelaxed moduli from the ones at reference frequency
      call prepare_attenuation(lambda, mu)
-     if (lpr .and. verbose > 1) write(6, '(/,a,/)') '    done preparing ATTENUATION model'
+     if (lpr .and. verbose > 1) write(*, '(/,a,/)') '    done preparing ATTENUATION model'
   endif
 
-  if (lpr .and. verbose > 1) write(6,*) '   define solid stiffness terms....'
+  if (lpr .and. verbose > 1) write(*,*) '   define solid stiffness terms....'
   call def_solid_stiffness_terms(lambda, mu, massmat_kwts2, xi_ani, phi_ani, &
                                  eta_ani, fa_ani_theta, fa_ani_phi)
 
@@ -141,20 +141,20 @@ subroutine read_model_compute_terms
   deallocate(lambda,mu)
 
   if (have_fluid) then
-     if (lpr .and. verbose > 1) write(6,*) '   define fluid stiffness terms....'
+     if (lpr .and. verbose > 1) write(*,*) '   define fluid stiffness terms....'
      call def_fluid_stiffness_terms(rho, massmat_kwts2)
 
-     if (lpr .and. verbose > 1) write(6,*) '   define solid-fluid boundary terms....'
+     if (lpr .and. verbose > 1) write(*,*) '   define solid-fluid boundary terms....'
      call def_solid_fluid_boundary_terms
   endif
 
-  if (lpr .and. verbose > 1) write(6,*) '   ...defined all precomputed arrays'
+  if (lpr .and. verbose > 1) write(*,*) '   ...defined all precomputed arrays'
   deallocate(rho, massmat_kwts2)
 
-  if (lpr .and. verbose > 1) write(6,*) '   ...deallocated unnecessary elastic arrays'
+  if (lpr .and. verbose > 1) write(*,*) '   ...deallocated unnecessary elastic arrays'
 
   if (lpr .and. verbose > 0) &
-     write(6,*) ' :::::::DONE BACKGROUND MODEL & PRECOMPUTED MATRICES:::::'
+     write(*,*) ' :::::::DONE BACKGROUND MODEL & PRECOMPUTED MATRICES:::::'
   call flush(6)
 
 end subroutine read_model_compute_terms
@@ -730,14 +730,14 @@ subroutine def_mass_matrix_k(rho,lambda,mu,massmat_kwts2)
                                         ( one+xi_k(ipol) ), &
                                        s_over_oneplusxi_axis(xi_k(ipol), &
                                         eta(jpol),local_crd_nodes,iel)) ) then
-                 write(6,*)procstrg,'PROBLEM: 2 definitions of s/(1+xi) differ'
-                 write(6,*)procstrg,'scoord/(1+xi)=',scoord(ipol,jpol,iel)/ &
+                 write(*,*)procstrg,'PROBLEM: 2 definitions of s/(1+xi) differ'
+                 write(*,*)procstrg,'scoord/(1+xi)=',scoord(ipol,jpol,iel)/ &
                                                      ( one+xi_k(ipol) )
-                 write(6,*)procstrg,'s_over_onexi=', &
+                 write(*,*)procstrg,'s_over_onexi=', &
                                      s_over_oneplusxi_axis(xi_k(ipol), &
                                      eta(jpol),local_crd_nodes,iel)
-                 write(6,*)procstrg,'iel,ipol,jpol:',iel,ipol,jpol
-                 write(6,*)procstrg,'s,r,theta:',scoord(ipol,jpol,iel), &
+                 write(*,*)procstrg,'iel,ipol,jpol:',iel,ipol,jpol
+                 write(*,*)procstrg,'s,r,theta:',scoord(ipol,jpol,iel), &
                            rcoord(ipol,jpol,iel),thetacoord(ipol,jpol,iel)
                  stop
               endif
@@ -747,7 +747,7 @@ subroutine def_mass_matrix_k(rho,lambda,mu,massmat_kwts2)
      endif ! axial?
   enddo ! iel
 
-  if (lpr .and. verbose > 1) write(6,*) '   solid mass matrix...'
+  if (lpr .and. verbose > 1) write(*,*) '   solid mass matrix...'
   ! Solid inverse mass term
   do iel=1,nel_solid
      do ipol = 0, npol
@@ -768,17 +768,17 @@ subroutine def_mass_matrix_k(rho,lambda,mu,massmat_kwts2)
 
 
   ! Exchange boundary information
-  if (lpr .and. verbose > 1) write(6,*) '   assemble solid mass matrix...'
+  if (lpr .and. verbose > 1) write(*,*) '   assemble solid mass matrix...'
   call pdistsum_solid_1D(inv_mass_rho)
 
-  if (lpr .and. verbose > 1) write(6,*) '   compute inverse solid mass matrix...'
+  if (lpr .and. verbose > 1) write(*,*) '   compute inverse solid mass matrix...'
   do iel=1,nel_solid
      do ipol = 0, npol
         do jpol = 0, npol
            if ( inv_mass_rho(ipol,jpol,iel) /= zero) then
               inv_mass_rho(ipol,jpol,iel) = one / inv_mass_rho(ipol,jpol,iel)
            else
-              write(6,*)procstrg,'WARNING: solid mass term zero!', &
+              write(*,*)procstrg,'WARNING: solid mass term zero!', &
                          ipol,jpol,iel,ielsolid(iel)
               inv_mass_rho(ipol,jpol,iel) = one / rho(ipol,jpol,ielsolid(iel))
            endif
@@ -789,18 +789,18 @@ subroutine def_mass_matrix_k(rho,lambda,mu,massmat_kwts2)
   if (src_type(1) == 'dipole') inv_mass_rho = half * inv_mass_rho
 
   ! Fluid inverse mass term
-  if (lpr .and. verbose > 1) write(6,*) '   fluid mass matrix...'
+  if (lpr .and. verbose > 1) write(*,*) '   fluid mass matrix...'
   do iel=1,nel_fluid
      ! check if fluid element is really fluid throughout
      if (maxval(mu(:,:,ielfluid(iel))) > zero) then
         call compute_coordinates(s,z,r,theta,ielfluid(iel), &
                                  int(npol/2),int(npol/2))
         fmt1 = '(A,A,4(1PE11.7))'
-        write(6,*)
-        write(6,*)procstrg,'!!!!!!!!!!!!!!!!  PROBLEM  !!!!!!!!!!!!!!!!!!!!!!!'
-        write(6,*)procstrg,'Have a non-zero mu in the fluid region!'
-        write(6,*)procstrg,'Element: ', ielfluid(iel)
-        write(6,fmt1)procstrg,' Mu, Vs, location r[km], theta[deg]:', &
+        write(*,*)
+        write(*,*)procstrg,'!!!!!!!!!!!!!!!!  PROBLEM  !!!!!!!!!!!!!!!!!!!!!!!'
+        write(*,*)procstrg,'Have a non-zero mu in the fluid region!'
+        write(*,*)procstrg,'Element: ', ielfluid(iel)
+        write(*,fmt1)procstrg,' Mu, Vs, location r[km], theta[deg]:', &
                   maxval(mu(:,:,ielfluid(iel))), &
                   maxval(sqrt(mu(:,:,ielfluid(iel))/rho(:,:,ielfluid(iel)))), &
                   r/1000., theta*180./pi
@@ -832,17 +832,17 @@ subroutine def_mass_matrix_k(rho,lambda,mu,massmat_kwts2)
 
 
   ! Exchange boundary information
-  if (lpr .and. verbose > 1) write(6,*) '   assemble fluid mass matrix...'
+  if (lpr .and. verbose > 1) write(*,*) '   assemble fluid mass matrix...'
   call pdistsum_fluid(inv_mass_fluid)
 
-  if (lpr .and. verbose > 1) write(6,*) '   compute inverse fluid mass matrix...'
+  if (lpr .and. verbose > 1) write(*,*) '   compute inverse fluid mass matrix...'
   do iel=1,nel_fluid
      do ipol = 0, npol
         do jpol = 0, npol
            if (inv_mass_fluid(ipol,jpol,iel) /= zero) then
               inv_mass_fluid(ipol,jpol,iel) = one / inv_mass_fluid(ipol,jpol,iel)
            else
-              write(6,*)procstrg,'WARNING: Fluid mass term zero!', &
+              write(*,*)procstrg,'WARNING: Fluid mass term zero!', &
                         ipol,jpol,iel,ielfluid(iel); call flush(6)
               inv_mass_fluid(ipol,jpol,iel)=lambda(ipol,jpol,ielfluid(iel))
            endif
@@ -1143,23 +1143,23 @@ subroutine compute_mass_earth(rho)
   mass_fluid_num=psum(real(mass_fluid_num,kind=realkind))
 
   if (lpr) then
-     write(6,*)'  Calculated masses for earth model: ', &
+     write(*,*)'  Calculated masses for earth model: ', &
                                           bkgrdmodel(1:lfbkgrdmodel)
-     write(6,10)'  Total mass (real,num,diff)    :',mass_glob,mass_glob_num, &
+     write(*,10)'  Total mass (real,num,diff)    :',mass_glob,mass_glob_num, &
                                          abs(mass_glob-mass_glob_num)/mass_glob
-     write(6,11)'  Sum of layers (real,num,diff) :',sum(mass_layer)
-     write(6,10)'    Solid mass (real,num,diff)    :',mass_solid, &
+     write(*,11)'  Sum of layers (real,num,diff) :',sum(mass_layer)
+     write(*,10)'    Solid mass (real,num,diff)    :',mass_solid, &
                        mass_solid_num,abs(mass_solid-mass_solid_num)/mass_solid
      if (have_fluid) then
-        write(6,10)'    Fluid mass (real,num,diff)    :',mass_fluid, &
+        write(*,10)'    Fluid mass (real,num,diff)    :',mass_fluid, &
                     mass_fluid_num,abs(mass_fluid-mass_fluid_num)/mass_fluid
      endif
-     write(6,10)'    Innercore mass (real,num,diff):',mass_sic, &
+     write(*,10)'    Innercore mass (real,num,diff):',mass_sic, &
                        mass_sic_num,abs(mass_sic-mass_sic_num)/mass_sic
-     write(6,*) '   Mass of the Earth             :   5.97 x 10^24 kg'
+     write(*,*) '   Mass of the Earth             :   5.97 x 10^24 kg'
 10   format(a35,2(1pe14.5),1pe12.2)
 11   format(a35,1pe14.5)
-     write(6,*)
+     write(*,*)
   endif
 
 ! write out total masses for each layer
@@ -1732,7 +1732,7 @@ subroutine compute_monopole_stiff_terms(ielem,jpol,local_crd_nodes, &
      ! Test for the components that should be zero:
      if (do_mesh_tests) then
         if ( ielem == 1 .and. jpol == 0 .and. ipol == 0 ) then
-           if (lpr) write(6,*) &
+           if (lpr) write(*,*) &
                 ' Test for the components of c_ijkl that should be zero in anisotropic case'
         endif
         Ctmp = zero
@@ -1754,8 +1754,8 @@ subroutine compute_monopole_stiff_terms(ielem,jpol,local_crd_nodes, &
                                       fa_ani_phil, 3, 1, 1, 2))
 
         if (Ctmp > smallval_sngl) then
-           write(6,*) procstrg, ' ERROR: some stiffness term that should be zero '
-           write(6,*) procstrg, '        is not: in compute_monopole_stiff_terms()'
+           write(*,*) procstrg, ' ERROR: some stiffness term that should be zero '
+           write(*,*) procstrg, '        is not: in compute_monopole_stiff_terms()'
            stop
         endif
      endif
@@ -1919,7 +1919,7 @@ subroutine compute_dipole_stiff_terms(ielem,jpol,local_crd_nodes, &
      ! Test for the components that should be zero:
      if (do_mesh_tests) then
         if ( ielem == 1 .and. jpol == 0 .and. ipol == 0 ) then
-           if (lpr) write(6,*) ' Test for the components of c_ijkl that should be zero in anisotropic case'
+           if (lpr) write(*,*) ' Test for the components of c_ijkl that should be zero in anisotropic case'
         endif
         Ctmp = zero
         Ctmp = Ctmp + dabs(c_ijkl_ani(lambdal, mul, xil, phil, etal, fa_ani_thetal, &
@@ -1940,8 +1940,8 @@ subroutine compute_dipole_stiff_terms(ielem,jpol,local_crd_nodes, &
                                       fa_ani_phil, 3, 1, 1, 2))
 
         if (Ctmp > smallval_sngl) then
-           write(6,*) procstrg, ' ERROR: some stiffness term that should be zero '
-           write(6,*) procstrg, '        is not: in compute_dipole_stiff_terms()'
+           write(*,*) procstrg, ' ERROR: some stiffness term that should be zero '
+           write(*,*) procstrg, '        is not: in compute_dipole_stiff_terms()'
            stop
         endif
      endif
@@ -2168,7 +2168,7 @@ subroutine compute_quadrupole_stiff_terms(ielem,jpol, &
     ! Test for the components that should be zero:
      if (do_mesh_tests) then
         if ( ielem == 1 .and. jpol == 0 .and. ipol == 0 ) then
-           if (lpr) write(6,*) &
+           if (lpr) write(*,*) &
                ' Test for the components of c_ijkl that should be zero in anisotropic case'
         endif
         Ctmp = zero
@@ -2190,8 +2190,8 @@ subroutine compute_quadrupole_stiff_terms(ielem,jpol, &
                                       fa_ani_phil, 3, 1, 1, 2))
 
         if (Ctmp > smallval_sngl) then
-           write(6,*)procstrg,' ERROR: some stiffness term that should be zero '
-           write(6,*)procstrg,'        is not: in compute_quadrupole_stiff_terms()'
+           write(*,*)procstrg,' ERROR: some stiffness term that should be zero '
+           write(*,*)procstrg,'        is not: in compute_quadrupole_stiff_terms()'
            stop
         endif
      endif
@@ -2536,13 +2536,13 @@ subroutine def_solid_fluid_boundary_terms
 
         ! test if the mapping of solid element & jpol numbers agrees for solid & fluid
         if (abs( (rf-r1) /r1 ) > 1.e-5 .or. abs((thetaf-theta1)) > 1.e-3) then
-           write(6,*)
-           write(6,*)procstrg,'Problem with boundary term mapping near axis!'
-           write(6,*)procstrg,'radius,theta solid index:',r1/1.d3,theta1/pi*180.
-           write(6,*)procstrg,'radius,theta fluid index:',rf/1.d3,thetaf/pi*180.
-           write(6,*)procstrg,'Possible reason: doubling layer directly on the solid side of'
-           write(6,*)procstrg,'                 solid/fluid boundary. Check your mesh!'
-           write(6,*)procstrg,'                 see ticket 26'
+           write(*,*)
+           write(*,*)procstrg,'Problem with boundary term mapping near axis!'
+           write(*,*)procstrg,'radius,theta solid index:',r1/1.d3,theta1/pi*180.
+           write(*,*)procstrg,'radius,theta fluid index:',rf/1.d3,thetaf/pi*180.
+           write(*,*)procstrg,'Possible reason: doubling layer directly on the solid side of'
+           write(*,*)procstrg,'                 solid/fluid boundary. Check your mesh!'
+           write(*,*)procstrg,'                 see ticket 26'
            stop
         endif
 
@@ -2553,18 +2553,18 @@ subroutine def_solid_fluid_boundary_terms
 
         ! test if the mapping of solid element & jpol numbers agrees for solid & fluid
         if (abs( (rf-r2) /r2 ) > 1.e-5 .or. abs((thetaf-theta2)) > 1.e-3) then
-           write(6,*)
-           write(6,*)procstrg,'Problem with boundary term mapping far axis!'
-           write(6,*)procstrg,'radius,theta solid index:',r2/1.d3,theta2/pi*180.
-           write(6,*)procstrg,'radius,theta fluid index:',rf/1.d3,thetaf/pi*180.
+           write(*,*)
+           write(*,*)procstrg,'Problem with boundary term mapping far axis!'
+           write(*,*)procstrg,'radius,theta solid index:',r2/1.d3,theta2/pi*180.
+           write(*,*)procstrg,'radius,theta fluid index:',rf/1.d3,thetaf/pi*180.
            stop
         endif
 
         if ( abs(r1-r2) > min_distance_dim) then
-           write(6,*)
-           write(6,*)procstrg,'Problem with S/F boundary element',ielglob
-           write(6,*)procstrg,'radii at min./max theta are not equal!'
-           write(6,*)procstrg,'r1,r2 [km],theta [deg]:', &
+           write(*,*)
+           write(*,*)procstrg,'Problem with S/F boundary element',ielglob
+           write(*,*)procstrg,'radii at min./max theta are not equal!'
+           write(*,*)procstrg,'r1,r2 [km],theta [deg]:', &
                                r1/1000.,r2/1000.,theta1*180./pi
            stop
         endif
@@ -2575,10 +2575,10 @@ subroutine def_solid_fluid_boundary_terms
         if ( axis(ielglob) ) then
 
            if (abs(sin(theta1)) * two * pi * r1 > min_distance_dim) then
-              write(6,*)
-              write(6,*)procstrg,'Problem with axial S/F boundary element',ielglob
-              write(6,*)procstrg,'Min theta is not exactly on the axis'
-              write(6,*)procstrg,'r [km],theta [deg]:',r1/1000.,theta1*180./pi
+              write(*,*)
+              write(*,*)procstrg,'Problem with axial S/F boundary element',ielglob
+              write(*,*)procstrg,'Min theta is not exactly on the axis'
+              write(*,*)procstrg,'r [km],theta [deg]:',r1/1000.,theta1*180./pi
               stop
            endif
 
@@ -2592,11 +2592,11 @@ subroutine def_solid_fluid_boundary_terms
               call compute_coordinates(s, z, r, theta, ielglob, ipol, &
                                        bdry_jpol_solid(iel))
               if (abs(r - r1) > min_distance_dim) then
-                 write(6,*)
-                 write(6,*)procstrg,'Problem with axial S/F boundary element', &
+                 write(*,*)
+                 write(*,*)procstrg,'Problem with axial S/F boundary element', &
                            ielglob
-                 write(6,*)procstrg,'radius at ipol=',ipol,'different from ipol=0'
-                 write(6,*)procstrg,'r,r1 [km],theta [deg]:',r/1000.,r1/1000., &
+                 write(*,*)procstrg,'radius at ipol=',ipol,'different from ipol=0'
+                 write(*,*)procstrg,'r,r1 [km],theta [deg]:',r/1000.,r1/1000., &
                                                               theta*180./pi
                  stop
               endif
@@ -2643,20 +2643,20 @@ subroutine def_solid_fluid_boundary_terms
            ! testing some algebra...
            if (abs(s_over_oneplusxi_axis(xi_k(0),eta(bdry_jpol_solid(iel)), &
                local_crd_nodes,ielglob)-delta_th*r) > min_distance_dim) then
-              write(6,*)
-              write(6,*)procstrg, &
+              write(*,*)
+              write(*,*)procstrg, &
                         'Problem with some axialgebra/definitions, elem:',ielglob
-              write(6,*)procstrg,'r [km],theta [deg]:',r1/1000.,theta1*180/pi
-              write(6,*)procstrg,'s_0 / (1+xi_0)  =', &
+              write(*,*)procstrg,'r [km],theta [deg]:',r1/1000.,theta1*180/pi
+              write(*,*)procstrg,'s_0 / (1+xi_0)  =', &
                                             s_over_oneplusxi_axis(xi_k(0), &
                                             eta(bdry_jpol_solid(iel)), &
                                             local_crd_nodes,ielglob)
-              write(6,*)procstrg,'1/2 theta2 r_sf =',delta_th*r
-              write(6,*)procstrg,'...are not the same :('
-              write(6,*)procstrg,'xi,eta,eltype', &
+              write(*,*)procstrg,'1/2 theta2 r_sf =',delta_th*r
+              write(*,*)procstrg,'...are not the same :('
+              write(*,*)procstrg,'xi,eta,eltype', &
                          xi_k(0),eta(bdry_jpol_solid(iel)),eltype(ielglob)
-              write(6,*)procstrg,'theta1,theta2',theta1*180/pi,theta2*180/pi
-              write(6,*)procstrg,'s,z min:', &
+              write(*,*)procstrg,'theta1,theta2',theta1*180/pi,theta2*180/pi
+              write(*,*)procstrg,'s,z min:', &
                         minval(local_crd_nodes(:,1)),minval(local_crd_nodes(:,2))
               stop
            endif
@@ -2669,11 +2669,11 @@ subroutine def_solid_fluid_boundary_terms
                                           bdry_jpol_solid(iel))
 
                  if (abs(r - r1) > min_distance_dim) then
-                    write(6,*)
-                    write(6,*)procstrg, &
+                    write(*,*)
+                    write(*,*)procstrg, &
                               'Problem with non-axial S/F boundary element',ielglob
-                    write(6,*)procstrg,'radius at ipol=',ipol,'different from ipol=0'
-                    write(6,12)procstrg,'r,r1 [km],theta [deg]:',r/1000.,r1/1000., &
+                    write(*,*)procstrg,'radius at ipol=',ipol,'different from ipol=0'
+                    write(*,12)procstrg,'r,r1 [km],theta [deg]:',r/1000.,r1/1000., &
                                                                  theta*180./pi
                     stop
                  endif
@@ -2694,13 +2694,13 @@ subroutine def_solid_fluid_boundary_terms
               ! run a check to make sure radius is either discontinuity
               if ( abs(r1-discont(idom)) > min_distance_dim .and. &
                    abs(r1-discont(idom+1)) > min_distance_dim ) then
-                 write(6,*)
-                 write(6,*)procstrg, &
+                 write(*,*)
+                 write(*,*)procstrg, &
                            'Problem: S/F boundary radius is not one of the'
-                 write(6,*)procstrg, &
+                 write(*,*)procstrg, &
                            '         two discontinuities bounding the fluid!!'
-                 write(6,*)procstrg,'   r,elem(loc,glob):',r1,iel,ielglob
-                 write(6,*)procstrg,'Upper/lower discont:', &
+                 write(*,*)procstrg,'   r,elem(loc,glob):',r1,iel,ielglob
+                 write(*,*)procstrg,'Upper/lower discont:', &
                                                   discont(idom),discont(idom+1)
                  stop
               endif
@@ -2728,14 +2728,14 @@ subroutine def_solid_fluid_boundary_terms
   ! or the same (this is the case for no coarsening layer in the fluid)
   if ((count_upper_disc /= count_lower_disc) &
         .and. mod(count_upper_disc,2*count_lower_disc) /= 0) then
-     write(6,*)procstrg, &
+     write(*,*)procstrg, &
                'Problem: Number of elements found to be at discont above fluid'
-     write(6,*)procstrg, &
+     write(*,*)procstrg, &
                '   is not an even multiple of or the same as elements found to be below fluid'
-     write(6,*)procstrg, &
+     write(*,*)procstrg, &
                '   check doubling layers'
-     write(6,*)procstrg,'# elems above fluid:',count_upper_disc
-     write(6,*)procstrg,'# elems below fluid:',count_lower_disc
+     write(*,*)procstrg,'# elems above fluid:',count_upper_disc
+     write(*,*)procstrg,'# elems below fluid:',count_lower_disc
      stop
   endif
 
@@ -2755,9 +2755,9 @@ subroutine def_solid_fluid_boundary_terms
 
   if (.not. dblreldiff_small(bdry_sum,four) ) then
      if (lpr) then
-        write(6,*)'WARNING: boundary term not all that precise!'
-        write(6,*)' Term should equal four for 2 boundaries (i.e. int (sin) )'
-        write(6,*)' Actual numerical value:',bdry_sum
+        write(*,*)'WARNING: boundary term not all that precise!'
+        write(*,*)' Term should equal four for 2 boundaries (i.e. int (sin) )'
+        write(*,*)' Actual numerical value:',bdry_sum
      endif
      ! deactivating the stop, because this prevents simulation with other then 2
      ! solid/fluid boundaries

@@ -262,9 +262,9 @@ contains
     integer,                             intent(in)       :: myrank
     character(len=MAX_LEN_STRING)                         :: acqui_file_ref
 
-    write(6,*)
-    write(6,*) '      SETUP INVERSION : ', NUMBER_OF_SIMULTANEOUS_RUNS, 'rank : ', myrank, ' group : ', mygroup
-    write(6,*)
+    write(*,*)
+    write(*,*) '      SETUP INVERSION : ', NUMBER_OF_SIMULTANEOUS_RUNS, 'rank : ', myrank, ' group : ', mygroup
+    write(*,*)
     call flush_iunit(6)
 
     if (NUMBER_OF_SIMULTANEOUS_RUNS > 1) then
@@ -272,7 +272,7 @@ contains
        inversion_param%input_acqui_file=trim(prefix_to_path)//'/DATA/inverse_problem/acqui_file.txt'
        acqui_file_ref='./DATA/inverse_problem/acqui_file.txt'
        if (myrank == 0) then
-          write(6,*) ' DISTRIBUTION OF EVENTS '
+          write(*,*) ' DISTRIBUTION OF EVENTS '
           call flush_iunit(6)
           !! only one process must do I/O (myrank=0, mygroup=0)
           if (mygroup == 0) call read_and_distribute_events_for_simultaneous_runs(NUMBER_OF_SIMULTANEOUS_RUNS, acqui_file_ref)
@@ -309,9 +309,9 @@ contains
     character(len=MAX_LEN_STRING)                         :: line, prefix_to_path_tmp
 
 
-    write(6,*)
-    write(6,*)  ' NUMBER OF SIMULTANEOUS RUNS > 0 '
-    write(6,*)
+    write(*,*)
+    write(*,*)  ' NUMBER OF SIMULTANEOUS RUNS > 0 '
+    write(*,*)
     call flush_iunit(6)
     number_of_events_in_acqui_file_ref=0
     open(666,file=trim(acqui_file_ref))
@@ -352,8 +352,8 @@ contains
        !! new event
        if (INDEX(line,'event_name') > 0) then
            ievent_global = ievent_global + 1
-           write(6,*)
-           write(6,*) '   next event ', ievent_global
+           write(*,*)
+           write(*,*) '   next event ', ievent_global
            ievent_in_group=ievent_in_group+1
 
        endif
@@ -361,14 +361,14 @@ contains
        !! write lines related to the current event
        if (ievent_in_group > nevent_in_group(igroup)) then
           igroup=igroup+1
-          write(6,*) ' group ', igroup
+          write(*,*) ' group ', igroup
           write(prefix_to_path_tmp,"('run',i4.4,'/')") igroup
           close(777)
           open(777, file=trim(prefix_to_path_tmp)//'DATA/inverse_problem/acqui_file.txt')
           ievent_in_group=1
        endif
        write(777, '(a)') trim(line)
-       write(6,*) trim(line)
+       write(*,*) trim(line)
        call flush_iunit(6)
     enddo
 999  close(666)
@@ -955,10 +955,10 @@ contains
           ncomp_inv = 0
           data_type_inv = inversion_param%inverted_data_type
           if (data_type_inv /= data_type_read) then
-             write(6,*)'CATASTROPHIC ERROR'
-             write(6,*)'requested type of inverted data is different from observed data'
-             write(6,*)'integration of differentiation of observed not implemented yet'
-             write(6,*)'NOW STOP'
+             write(*,*)'CATASTROPHIC ERROR'
+             write(*,*)'requested type of inverted data is different from observed data'
+             write(*,*)'integration of differentiation of observed not implemented yet'
+             write(*,*)'NOW STOP'
              stop
           endif
           if (data_type_inv == 'd') inversion_param%get_synthetic_displacement = .true.
@@ -1011,9 +1011,9 @@ contains
              !! Data rotation required to pass in mesh system (zen -> xyz)
              !call define_mesh_rotation_matrix(lat0,lon0,azi0)
              !call rotate_comp_glob2mesh(vz2, vn, ve, stalat, stalon, nt, nsta, vx, vy, vz)
-             write(6,*)'CATASTROPHIC ERROR'
-             write(6,*)'qtl is not implemented yet'
-             write(6,*)'NOW STOP'
+             write(*,*)'CATASTROPHIC ERROR'
+             write(*,*)'qtl is not implemented yet'
+             write(*,*)'NOW STOP'
              stop
           end select
 
@@ -1281,9 +1281,9 @@ contains
              !! Data rotation required to pass in mesh system (zen -> xyz)
              !call define_mesh_rotation_matrix(lat0,lon0,azi0)
              !call rotate_comp_glob2mesh(vz2, vn, ve, stalat, stalon, nt, nsta, vx, vy, vz)
-             write(6,*)'CATASTROPHIC ERROR'
-             write(6,*)'qtl is not implemented yet'
-             write(6,*)'NOW STOP'
+             write(*,*)'CATASTROPHIC ERROR'
+             write(*,*)'qtl is not implemented yet'
+             write(*,*)'NOW STOP'
              stop
           end select
           do idim=1,ndim

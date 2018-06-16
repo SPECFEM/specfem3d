@@ -329,9 +329,9 @@ contains
        case('qtl')
           trace_cal_2 = trace_cal_1
           trace_obs_2 = trace_obs_1
-          write(6,*)'CATASTROPHIC ERROR'
-          write(6,*)'qtl is not implemented yet'
-          write(6,*)'NOW STOP'
+          write(*,*)'CATASTROPHIC ERROR'
+          write(*,*)'qtl is not implemented yet'
+          write(*,*)'NOW STOP'
           stop
        end select
 

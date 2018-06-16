@@ -102,7 +102,7 @@ real(kind=dp)  function velocity(r0, param, idom, bkgrdmodel2, lfbkgrdmodel2)
      case('external')
         velocity = arbitr_sub_solar(r0, param, idom)
      case default
-        if (lpr) write(6,*) 'Unknown background model: ', bkgrdmodel2
+        if (lpr) write(*,*) 'Unknown background model: ', bkgrdmodel2
         stop
   end select
 
@@ -278,7 +278,7 @@ real(kind=dp) function ak135f(r0, param, idom)
     else if (param == 'Qka') then
        ak135f = Qka_ak
     else
-       if (lpr) write(6,*)'ERROR IN AK135 function:', param, 'NOT AN OPTION'
+       if (lpr) write(*,*)'ERROR IN AK135 function:', param, 'NOT AN OPTION'
        stop
     endif
 
@@ -386,7 +386,7 @@ real(kind=dp) function ak135(r0, param, idom)
   else if (param == 'Qka') then
      ak135 = Qkappa
   else
-     if (lpr) write(6,*)'ERROR IN AK135 function:', param, 'NOT AN OPTION'
+     if (lpr) write(*,*)'ERROR IN AK135 function:', param, 'NOT AN OPTION'
      stop
   endif
 
@@ -497,7 +497,7 @@ real(kind=dp) function prem_sub(r0, param, idom)
   else if (param == 'Qka') then
      prem_sub = Qkappa
   else
-     if (lpr) write(6,*)'ERROR IN PREM_SUB function:',param,'NOT AN OPTION'
+     if (lpr) write(*,*)'ERROR IN PREM_SUB function:',param,'NOT AN OPTION'
      stop
   endif
 
@@ -633,7 +633,7 @@ real(kind=dp) function prem_ani_sub(r0, param, idom)
   else if (param == 'v_s') then
      prem_ani_sub = min(vsv_prem, vsh_prem) * 1000.
   else
-     if (lpr) write(6,*)'ERROR IN PREM_ANI_SUB function:',param,' NOT AN OPTION'
+     if (lpr) write(*,*)'ERROR IN PREM_ANI_SUB function:',param,' NOT AN OPTION'
      stop
   endif
 
@@ -718,7 +718,7 @@ real(kind=dp) function prem_solid_sub(r0,param,idom)
   else if (param == 'eta') then
      prem_solid_sub = 1.
   else
-     if (lpr) write(6,*)'ERROR IN PREM_SUB function:', param, 'NOT AN OPTION'
+     if (lpr) write(*,*)'ERROR IN PREM_SUB function:', param, 'NOT AN OPTION'
      stop
   endif
 
@@ -799,7 +799,7 @@ real(kind=dp) function prem_onecrust_sub(r0, param, idom)
   else if (param == 'eta') then
      prem_onecrust_sub = 1.
   else
-     if (lpr) write(6,*)'ERROR IN PREM_SUB function:', param, 'NOT AN OPTION'
+     if (lpr) write(*,*)'ERROR IN PREM_SUB function:', param, 'NOT AN OPTION'
      stop
   endif
 
@@ -927,7 +927,7 @@ real(kind=dp) function prem_onecrust_ani_sub(r0, param, idom)
   else if (param == 'v_s') then
      prem_onecrust_ani_sub = min(vsv_prem, vsh_prem) * 1000.
   else
-     if (lpr) write(6,*)'ERROR IN PREM_ANI_SUB function:', param, ' NOT AN OPTION'
+     if (lpr) write(*,*)'ERROR IN PREM_ANI_SUB function:', param, ' NOT AN OPTION'
      stop
   endif
 
@@ -1026,7 +1026,7 @@ real(kind=dp) function prem_light_sub(r0, param, idom)
   else if (param == 'Qka') then
      prem_light_sub = Qkappa
   else
-     if (lpr) write(6,*)'ERROR IN PREM_LIGHT_SUB function:', param, 'NOT AN OPTION'
+     if (lpr) write(*,*)'ERROR IN PREM_LIGHT_SUB function:', param, 'NOT AN OPTION'
      stop
   endif
 
@@ -1146,7 +1146,7 @@ real(kind=dp) function prem_light_ani_sub(r0, param, idom)
   else if (param == 'v_s') then
      prem_light_ani_sub = min(vsv_prem, vsh_prem) * 1000.
   else
-     if (lpr) write(6,*)'ERROR IN PREM_ANI_SUB function:', param, ' NOT AN OPTION'
+     if (lpr) write(*,*)'ERROR IN PREM_ANI_SUB function:', param, ' NOT AN OPTION'
      stop
   endif
 
@@ -1223,7 +1223,7 @@ real(kind=dp) function prem_solid_light_sub(r0, param, idom)
   else if (param == 'eta') then
      prem_solid_light_sub = 1.
   else
-     if (lpr) write(6,*)'ERROR IN PREM_LIGHT_SUB function:', param, 'NOT AN OPTION'
+     if (lpr) write(*,*)'ERROR IN PREM_LIGHT_SUB function:', param, 'NOT AN OPTION'
      stop
   endif
 
@@ -1280,15 +1280,15 @@ real(kind=dp) function iasp91_sub(r0, param, idom)
      ! MvD: keeping this test for old bug [18]
      if (rho < 3.319 .or. rho > 3.372) then
         if (lpr) then
-            write(6,*) R120 / 1000., RMOHO / 1000.
-            write(6,*) r0 / 1000.
-            write(6,*) idom
-            write(6,*) x, x1, x2
-            write(6,*) x - x1
-            write(6,*) x2 - x1
-            write(6,*) (x - x1) / (x2 - x1)
-            write(6,*) 'incorrect density computed for IASP91', rho
-            write(6,*) 'known bug, use other velocity model for now'
+            write(*,*) R120 / 1000., RMOHO / 1000.
+            write(*,*) r0 / 1000.
+            write(*,*) idom
+            write(*,*) x, x1, x2
+            write(*,*) x - x1
+            write(*,*) x2 - x1
+            write(*,*) (x - x1) / (x2 - x1)
+            write(*,*) 'incorrect density computed for IASP91', rho
+            write(*,*) 'known bug, use other velocity model for now'
             call abort()
             stop 2
         endif
@@ -1342,7 +1342,7 @@ real(kind=dp) function iasp91_sub(r0, param, idom)
      Qmu = 84.6
      Qkappa = 1327.7
   else
-     if (lpr) write(6,*) 'iasp91_sub: error with domain idom=', idom
+     if (lpr) write(*,*) 'iasp91_sub: error with domain idom=', idom
      stop
   endif
 
@@ -1367,7 +1367,7 @@ real(kind=dp) function iasp91_sub(r0, param, idom)
   else if (param == 'Qka') then
      iasp91_sub = Qkappa
   else
-     if (lpr) write(6,*)'ERROR IN IASP91_SUB function:',param,'NOT AN OPTION'
+     if (lpr) write(*,*)'ERROR IN IASP91_SUB function:',param,'NOT AN OPTION'
      stop
   endif
 
@@ -1475,7 +1475,7 @@ subroutine read_ext_model(fnam_ext_model, nlayer_out, rho_layer_out, &
      inquire(file=trim(fnam_ext_model), exist=bkgrdmodelfile_exists)
 
      if (.not. bkgrdmodelfile_exists) then
-        if (lpr) write(6,*)'ERROR: File: ', trim(fnam_ext_model),' does not exist!'
+        if (lpr) write(*,*)'ERROR: File: ', trim(fnam_ext_model),' does not exist!'
         stop
      endif
 
@@ -1659,13 +1659,13 @@ subroutine read_ext_model(fnam_ext_model, nlayer_out, rho_layer_out, &
      endif
 
      fmtstring = '(A,A,A,I5,A)'
-     if (lpr) write(6,fmtstring,advance='no') ' Model in file ', trim(fnam_ext_model), &
+     if (lpr) write(*,fmtstring,advance='no') ' Model in file ', trim(fnam_ext_model), &
                                               ' has ', nlayer, ' layers'
      fmtstring = '(A)'
      if (ext_model_is_ani) then
-         if (lpr) write(6, fmtstring, advance='no') ' and is anisotropic'
+         if (lpr) write(*, fmtstring, advance='no') ' and is anisotropic'
      else
-         if (lpr) write(6, fmtstring, advance='no') ' and is isotropic'
+         if (lpr) write(*, fmtstring, advance='no') ' and is isotropic'
      endif
      if (ext_model_is_anelastic) then
          if (lpr) print *, 'and anelastic...'
@@ -2151,7 +2151,7 @@ real(kind=dp) function prem_sub_sb(r0, param, idom)
   else if (param == 'Qka') then
      prem_sub_sb = Qkappa
   else
-     write(6,*)'ERROR IN PREM_SUB function:',param,'NOT AN OPTION'
+     write(*,*)'ERROR IN PREM_SUB function:',param,'NOT AN OPTION'
      stop
   endif
 

@@ -115,8 +115,8 @@ CONTAINS
  ! Note: element ids start at 1, not 0 (see cubit2specfem3d.py)
   open(unit=101, file=filename, status='old', form='formatted', iostat = ier)
   if (ier /= 0) then
-    write(6,*) 'Fatal error: file '//filename//' not found'
-    write(6,*) 'Abort'
+    write(*,*) 'Fatal error: file '//filename//' not found'
+    write(*,*) 'Abort'
     stop
   endif
 

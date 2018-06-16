@@ -57,59 +57,59 @@ subroutine create_pdb
   integer   :: nelmax
 
   if (dump_mesh_info_screen) then
-    write(6,*)
-    write(6,*)' ||||||||||||||| CREATING THE PARALLEL DATABASE ||||||||||||||||'
-    write(6,*)
+    write(*,*)
+    write(*,*)' ||||||||||||||| CREATING THE PARALLEL DATABASE ||||||||||||||||'
+    write(*,*)
   endif
 
   deallocate(iglob)
 
-  write(6,*) '  define glocal numbering....'; call flush(6)
+  write(*,*) '  define glocal numbering....'; call flush(6)
   iclock12 = tick()
   call define_glocal_numbering ! needs sgll,zgll, creates igloc
   iclock12 = tick(id=idold12, since=iclock12)
 
   ! Solid-fluid distinction
-  write(6,*) '  define solflu coordinates....'; call flush(6)
+  write(*,*) '  define solflu coordinates....'; call flush(6)
   call define_sflocal_coordinates ! needs sgll, zgll
                                   ! creates procel_solidp     procel_fluidp
                                   !         inv_procel_solidp inv_procel_fluidp
   nelmax = maxval(nel)
 
-  write(6,*) '  define axial elems....'; call flush(6)
+  write(*,*) '  define axial elems....'; call flush(6)
   call define_axial_elem ! needs sgll, sgll_solid, sgll_fluid
 
-  write(6,*) '  define solflu numbering....'; call flush(6)
+  write(*,*) '  define solflu numbering....'; call flush(6)
   iclock13 = tick()
   call define_sflocal_numbering   ! needs sgll, zgll
                                   ! creates igloc_solid, igloc_fluid
   iclock13 = tick(id=idold13, since=iclock13)
   deallocate(sgll,zgll)
 
-  write(6,*) '  define search sflobal index....'; call flush(6)
+  write(*,*) '  define search sflobal index....'; call flush(6)
   call define_search_sflobal_index ! needs iglob_solid, iglob_fluid
 
-  write(6,*) '  partition sflobal index....'; call flush(6)
+  write(*,*) '  partition sflobal index....'; call flush(6)
   call partition_sflobal_index
 
-  write(6,*) '  define local bdry elems....'; call flush(6)
+  write(*,*) '  define local bdry elems....'; call flush(6)
   call define_local_bdry_elem
 
 
   ! For compliance with solver, we need the control points info for each process
-  write(6,*) '  generate processor serendipity....'; call flush(6)
+  write(*,*) '  generate processor serendipity....'; call flush(6)
   iclock14 = tick()
   call generate_serendipity_per_proc(sg,zg) ! needs sgp, zgp
   iclock14 = tick(id=idold14, since=iclock14)
 
-  write(6,*) '  define element type....'; call flush(6)
+  write(*,*) '  define element type....'; call flush(6)
   call define_element_type !
 
   ! Write out mesh database
-  write(6,*) '  write database....'; call flush(6)
+  write(*,*) '  write database....'; call flush(6)
   call write_db
 
-  write(6,*) ' create static header mesh_params.h ....';call flush(6)
+  write(*,*) ' create static header mesh_params.h ....';call flush(6)
   call create_static_header
 
 end subroutine create_pdb
@@ -159,7 +159,7 @@ subroutine define_sflocal_coordinates
        enddo
      enddo
 
-     write(6,*)'HAVE FLUID?',have_fluid
+     write(*,*)'HAVE FLUID?',have_fluid
 
      ! Fluid
      if (have_fluid) then
@@ -181,11 +181,11 @@ subroutine define_sflocal_coordinates
      rflu_max = sqrt(rflu_max)
      rflu_min = sqrt(rflu_min)
 
-     write(6,*)'Solid-fluid coordinates:'
+     write(*,*)'Solid-fluid coordinates:'
      if (have_solid) &
-        write(6,*)'Min/max radius solid:', rsol_max, rsol_min
+        write(*,*)'Min/max radius solid:', rsol_max, rsol_min
      if (have_fluid) &
-        write(6,*)'Min/max radius fluid:', rflu_max, rflu_min
+        write(*,*)'Min/max radius fluid:', rflu_max, rflu_min
   endif
 
   ! Define processor-specific mapping:
@@ -212,15 +212,15 @@ subroutine define_sflocal_coordinates
   do iproc=0, nproc-1
      do iel=1, nel_solid(iproc)
         if (iel /= inv_procel_solidp(procel_solidp(iel,iproc),iproc) ) then
-           write(6,*)'PROBLEM in procel_solidp vs. inv_procel_solidp!'
-           write(6,*)'iproc,iel,inv(procel_solidp(iel)):',iproc,iel, &
+           write(*,*)'PROBLEM in procel_solidp vs. inv_procel_solidp!'
+           write(*,*)'iproc,iel,inv(procel_solidp(iel)):',iproc,iel, &
                       inv_procel_solidp(procel_solidp(iel,iproc),iproc)
            stop
         endif
 
         if (.not. solid(procel( procel_solidp(iel,iproc),iproc) ) ) then
-           write(6,*)'PROBLEM with procel or procel_solidp or both!'
-           write(6,*)'slocal,glocal,global el:',iel,procel_solidp(iel,iproc), &
+           write(*,*)'PROBLEM with procel or procel_solidp or both!'
+           write(*,*)'slocal,glocal,global el:',iel,procel_solidp(iel,iproc), &
                      solid(procel(procel_solidp(iel,iproc),iproc))
            stop
         endif
@@ -231,15 +231,15 @@ subroutine define_sflocal_coordinates
   do iproc=0, nproc-1
      do iel=1,nel_fluid(iproc)
         if (iel /= inv_procel_fluidp(procel_fluidp(iel,iproc),iproc) ) then
-           write(6,*)'PROBLEM in procel_fluidp vs. inv_procel_fluidp!'
-           write(6,*)'iproc,iel,inv(procel_fluidp(iel)):',iproc,iel, &
+           write(*,*)'PROBLEM in procel_fluidp vs. inv_procel_fluidp!'
+           write(*,*)'iproc,iel,inv(procel_fluidp(iel)):',iproc,iel, &
                       inv_procel_fluidp(procel_fluidp(iel,iproc),iproc)
            stop
         endif
 
         if (.not. fluid(procel(procel_fluidp(iel,iproc),iproc)) ) then
-           write(6,*)'PROBLEM with procel or procel_fluidp or both!'
-           write(6,*)'flocal,glocal,global el:',iel,procel_fluidp(iel,iproc), &
+           write(*,*)'PROBLEM with procel or procel_fluidp or both!'
+           write(*,*)'flocal,glocal,global el:',iel,procel_fluidp(iel,iproc), &
                      fluid(procel(procel_fluidp(iel,iproc),iproc))
            stop
         endif
@@ -251,22 +251,22 @@ subroutine define_sflocal_coordinates
      do iel=1, nel(iproc)
         if (solid(procel(iel,iproc))) then
            if (iel /= procel_solidp(inv_procel_solidp(iel,iproc),iproc) ) then
-              write(6,*)'PROBLEM in procel_solidp vs. inv_procel_solidp!'
-              write(6,*)'iproc,iel,procel_solidp(inv(iel)):',iproc,iel, &
+              write(*,*)'PROBLEM in procel_solidp vs. inv_procel_solidp!'
+              write(*,*)'iproc,iel,procel_solidp(inv(iel)):',iproc,iel, &
                    procel_solidp(inv_procel_solidp(iel,iproc),iproc)
               stop
            endif
 
         else if (fluid(procel(iel,iproc))) then
            if (iel /= procel_fluidp(inv_procel_fluidp(iel,iproc),iproc) ) then
-              write(6,*)'PROBLEM in procel_fluidp vs. inv_procel_fluidp!'
-              write(6,*)'iproc,iel,procel_fluidp(inv(iel)):',iproc,iel, &
+              write(*,*)'PROBLEM in procel_fluidp vs. inv_procel_fluidp!'
+              write(*,*)'iproc,iel,procel_fluidp(inv(iel)):',iproc,iel, &
                          procel_fluidp(inv_procel_fluidp(iel,iproc),iproc)
               stop
            endif
         else
-           write(6,*) 'If not solid nor fluid, what then??'
-           write(6,*) 'iel (glocal),iproc:',iel,iproc
+           write(*,*) 'If not solid nor fluid, what then??'
+           write(*,*) 'iel (glocal),iproc:',iel,iproc
            stop
         endif
      enddo
@@ -406,11 +406,11 @@ subroutine define_glocal_numbering
      enddo
 
      if (dump_mesh_info_screen) then
-        write(6,*)
-        write(6,*) iproc, 'glocal number      :', nglobp(iproc)
-        write(6,*) iproc, 'central region only:', totvalnum_cent
-        write(6,*) iproc, 'semicurved els only:', totvalnum_semi
-        write(6,*) iproc, 'everywhere else    :', &
+        write(*,*)
+        write(*,*) iproc, 'glocal number      :', nglobp(iproc)
+        write(*,*) iproc, 'central region only:', totvalnum_cent
+        write(*,*) iproc, 'semicurved els only:', totvalnum_semi
+        write(*,*) iproc, 'everywhere else    :', &
                     nglobp(iproc) - totvalnum_cent-totvalnum_semi
         call flush(6)
      endif
@@ -420,10 +420,10 @@ subroutine define_glocal_numbering
 
   if (dump_mesh_info_screen) then
     do iproc = 0, nproc-1
-       write(6,*) 'proc.,nglob:', iproc, nglobp(iproc)
+       write(*,*) 'proc.,nglob:', iproc, nglobp(iproc)
     enddo
-    write(6,*) 'SUM = ',SUM(nglobp(0:nproc-1))
-    write(6,*)
+    write(*,*) 'SUM = ',SUM(nglobp(0:nproc-1))
+    write(*,*)
   endif
 
 end subroutine define_glocal_numbering
@@ -668,12 +668,12 @@ subroutine define_sflocal_numbering
         enddo
 
         if (dump_mesh_info_screen) then
-           write(6,*)
-           write(6,*) ' SOLID VALENCE & GLOBAL NUMBERING:'
-           write(6,*) iproc,'slocal number      :',nglobp_solid(iproc)
-           write(6,*) iproc,'scentral region only:',totvalnum_cent_solid
-           write(6,*) iproc,'ssemicurved els only:',totvalnum_semi_solid
-           write(6,*) iproc,'severywhere else    :',nglobp_solid(iproc)-&
+           write(*,*)
+           write(*,*) ' SOLID VALENCE & GLOBAL NUMBERING:'
+           write(*,*) iproc,'slocal number      :',nglobp_solid(iproc)
+           write(*,*) iproc,'scentral region only:',totvalnum_cent_solid
+           write(*,*) iproc,'ssemicurved els only:',totvalnum_semi_solid
+           write(*,*) iproc,'severywhere else    :',nglobp_solid(iproc)-&
                 totvalnum_cent_solid-totvalnum_semi_solid
         endif
      endif ! have_solid
@@ -686,10 +686,10 @@ subroutine define_sflocal_numbering
         enddo
 
         if (dump_mesh_info_screen) then
-         write(6,*) ' FLUID VALENCE & GLOBAL NUMBERING:'
-         write(6,*) iproc,'flocal number      :',nglobp_fluid(iproc)
-         write(6,*) iproc,'fluid region only  :',totvalnum_fluid
-         write(6,*) iproc,'feverywhere else   :',nglobp_fluid(iproc)-&
+         write(*,*) ' FLUID VALENCE & GLOBAL NUMBERING:'
+         write(*,*) iproc,'flocal number      :',nglobp_fluid(iproc)
+         write(*,*) iproc,'fluid region only  :',totvalnum_fluid
+         write(*,*) iproc,'feverywhere else   :',nglobp_fluid(iproc)-&
                                                  totvalnum_fluid
         endif
      endif ! have_fluid
@@ -700,21 +700,21 @@ subroutine define_sflocal_numbering
      ! here are used some arrays such as nglobp that are not needed
      ! nglobp will not be defined in subsequent versions of the mesher
      ! this whole printout is bound to be erased
-     write(6,*)
-     write(6,*)'Amount of unique grid points in each processor:'
+     write(*,*)
+     write(*,*)'Amount of unique grid points in each processor:'
      do iproc = 0, nproc-1
-      write(6,21) iproc, nglobp_solid(iproc), nglobp_fluid(iproc), nglobp(iproc), &
+      write(*,21) iproc, nglobp_solid(iproc), nglobp_fluid(iproc), nglobp(iproc), &
                   nglobp_solid(iproc) + nglobp_fluid(iproc) - nglobp(iproc)
      enddo
 
-     write(6,*)
-     write(6,*) 'SUM # grid points Solid:       ',SUM(nglobp_solid(0:nproc-1))
-     write(6,*) 'SUM # grid points Fluid:       ',SUM(nglobp_fluid(0:nproc-1))
-     write(6,*) 'SUM # grid points Total:       ',SUM(nglobp(0:nproc-1))
-     write(6,*) '    # total grid points:       ',nglobglob
-     write(6,*) 'SUM # grid points S/F Boundary:',SUM(nglobp_fluid(0:nproc-1))+ &
+     write(*,*)
+     write(*,*) 'SUM # grid points Solid:       ',SUM(nglobp_solid(0:nproc-1))
+     write(*,*) 'SUM # grid points Fluid:       ',SUM(nglobp_fluid(0:nproc-1))
+     write(*,*) 'SUM # grid points Total:       ',SUM(nglobp(0:nproc-1))
+     write(*,*) '    # total grid points:       ',nglobglob
+     write(*,*) 'SUM # grid points S/F Boundary:',SUM(nglobp_fluid(0:nproc-1))+ &
                                SUM(nglobp_solid(0:nproc-1))-SUM(nglobp(0:nproc-1))
-     write(6,*) 'Predicted S/F Boundary points :', &
+     write(*,*) 'Predicted S/F Boundary points :', &
                                  2*(npol+1)+(sum(nbelem)/2-nbcnd)*(npol)
 
   endif
@@ -727,12 +727,12 @@ subroutine define_sflocal_numbering
   !  if (have_fluid .and. 2*(npol+1)+(sum(nbelem)/2-nbcnd)*(npol) /= &
   !          SUM(nglobp_fluid(0:nproc-1))+ &
   !          SUM(nglobp_solid(0:nproc-1))-SUM(nglobp(0:nproc-1)) ) then
-  !     write(6,*)'...something wrong with global number of S/F boundary points..'
+  !     write(*,*)'...something wrong with global number of S/F boundary points..'
   !     call flush(6)
   !     stop
   !  endif
 
-  if (dump_mesh_info_screen) write(6,*)
+  if (dump_mesh_info_screen) write(*,*)
 
 21 format('Proc',i3, ' has',i9, ' solid ',i9,' fluid',i9, &
           ' total and',i6,' S/F boundary pts')
@@ -782,26 +782,26 @@ subroutine define_sflobal2sflocal(iproc, solorflu)
   integer             :: ipt, iel, ipol, jpol, ielg, iptg, igg, igp
 
   if (dump_mesh_info_screen .and. iproc == 0) then
-     write(6,*)'Info on global numbering array sizes/values:'
-     write(6,*)'MAX INV_SOL/FLU     :',maxval(inv_ielem_solid), &
+     write(*,*)'Info on global numbering array sizes/values:'
+     write(*,*)'MAX INV_SOL/FLU     :',maxval(inv_ielem_solid), &
                                       maxval(inv_ielem_fluid)
-     if (have_solid) write(6,*)'MAX/SIZE IGLOB_SOLID:', &
+     if (have_solid) write(*,*)'MAX/SIZE IGLOB_SOLID:', &
                         maxval(iglob_solid),size(iglob_solid)
      if (have_fluid) &
-         write(6,*)'MAX/SIZ IGLOB_FLUID :',maxval(iglob_fluid), size(iglob_fluid)
+         write(*,*)'MAX/SIZ IGLOB_FLUID :',maxval(iglob_fluid), size(iglob_fluid)
 
-     if (have_solid) write(6,*)'MAX/SIZE SOL IGLOC  :', &
+     if (have_solid) write(*,*)'MAX/SIZE SOL IGLOC  :', &
                         maxval(igloc_solid),size(igloc_solid)
 
      if (have_fluid) &
-        write(6,*)'MAX/SIZE FLU IGLOC  :',maxval(igloc_fluid),size(igloc_fluid)
+        write(*,*)'MAX/SIZE FLU IGLOC  :',maxval(igloc_fluid),size(igloc_fluid)
 
 
-     write(6,*)'MAX PROCEL/SOL/FLU  :',maxval(procel),maxval(procel_solid), &
+     write(*,*)'MAX PROCEL/SOL/FLU  :',maxval(procel),maxval(procel_solid), &
                                       maxval(procel_fluid)
-     write(6,*)'SIZ PROCEL/SOL/FLU  :',size(procel),size(procel_solid), &
+     write(*,*)'SIZ PROCEL/SOL/FLU  :',size(procel),size(procel_solid), &
                                       size(procel_fluid)
-     write(6,*)
+     write(*,*)
      call flush(6)
   endif
 
@@ -894,7 +894,7 @@ subroutine define_search_sflobal_index
                         cycle outer
                   nsearch = nsearch + 1
                   if (nsearch == nneighbors + 1) then
-                     write(6,*) 'ERROR: too many neighbors in solid'
+                     write(*,*) 'ERROR: too many neighbors in solid'
                      stop
                   endif
                enddo
@@ -907,7 +907,7 @@ subroutine define_search_sflobal_index
   enddo !iproc
 
   if (dump_mesh_info_screen) then
-      write(6,*) 'Maximum number of neighbors in the solid:', nprocbmax_solid
+      write(*,*) 'Maximum number of neighbors in the solid:', nprocbmax_solid
   endif
 
   allocate(lprocb_solid(nprocbmax_solid,nglobslob))
@@ -949,7 +949,7 @@ subroutine define_search_sflobal_index
                           cycle outerfl
                     nsearch = nsearch + 1
                     if (nsearch == nneighbors + 1) then
-                       write(6,*) 'ERROR: too many neighbors in fluid'
+                       write(*,*) 'ERROR: too many neighbors in fluid'
                        stop
                     endif
                  enddo
@@ -962,7 +962,7 @@ subroutine define_search_sflobal_index
      enddo
 
      if (dump_mesh_info_screen) then
-         write(6,*) 'Maximum number of neighbors in the solid:', nprocbmax_solid
+         write(*,*) 'Maximum number of neighbors in the solid:', nprocbmax_solid
      endif
      allocate(lprocb_fluid(nprocbmax_fluid,nglobflob))
 
@@ -1051,10 +1051,10 @@ subroutine partition_sflobal_index
 
 
   if (dump_mesh_info_screen) then
-     write(6,*)
-     write(6,*)'****************************************************************'
-     write(6,*)'******************* CREATING MESSAGING ARRAYS ******************'
-     write(6,*)'****************************************************************'
+     write(*,*)
+     write(*,*)'****************************************************************'
+     write(*,*)'******************* CREATING MESSAGING ARRAYS ******************'
+     write(*,*)'****************************************************************'
   endif
 
   if (nradialslices == 1) then
@@ -1063,11 +1063,11 @@ subroutine partition_sflobal_index
      nneighbors = 8
   endif
 
-  if (dump_mesh_info_screen) write(6,*) 'nneighbors', nneighbors
+  if (dump_mesh_info_screen) write(*,*) 'nneighbors', nneighbors
 
   ! SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS SOLID SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
 
-  if (dump_mesh_info_screen) write(6,*) 'Creating solid bins '
+  if (dump_mesh_info_screen) write(*,*) 'Creating solid bins '
   allocate(sizebin_solid(0:nproc-1))
 
   sizebin_solid(0:nproc-1) = 0
@@ -1082,10 +1082,10 @@ subroutine partition_sflobal_index
 
   if (dump_mesh_info_screen) then
      do iproct = 0, nproc - 1
-        write(6,*) 'proc:', iproct, 'size solid bin:', sizebin_solid(iproct)
+        write(*,*) 'proc:', iproct, 'size solid bin:', sizebin_solid(iproct)
      enddo
-     write(6,*) 'sum sizebin,slobal:', sum(sizebin_solid),nglobslob
-     write(6,*) ' sizebinmax_solid = ' , sizebinmax_solid
+     write(*,*) 'sum sizebin,slobal:', sum(sizebin_solid),nglobslob
+     write(*,*) ' sizebinmax_solid = ' , sizebinmax_solid
   endif
 
   allocate(binp_solid(sizebinmax_solid,0:nproc-1))
@@ -1122,9 +1122,9 @@ subroutine partition_sflobal_index
                         myneighbors_solid(iproct,inbr) == -1) exit
                  enddo
                  if (inbr > 8) then
-                    write(6,*) 'ERORR: having more then 8 neighbors (+myself)'
-                    write(6,*) '       check mesh decomposition in the solid)'
-                    write(6,*) '       iproct = ', iproct
+                    write(*,*) 'ERORR: having more then 8 neighbors (+myself)'
+                    write(*,*) '       check mesh decomposition in the solid)'
+                    write(*,*) '       iproct = ', iproct
                     stop
                  endif
                  if (myneighbors_solid(iproct,inbr) == -1) myneighbors_solid(iproct,inbr) = ipdes
@@ -1147,21 +1147,21 @@ subroutine partition_sflobal_index
      call mergesort_3(sort_buf(1:inbr), il=myneighbors_solid(iproct,1:inbr), &
                       il2=sizemsg_solid(iproct,1:inbr), p=1)
      if (dump_mesh_info_screen) &
-         write(6,'(100(i4))') myneighbors_solid(iproct,1:inbr)
+         write(*,'(100(i4))') myneighbors_solid(iproct,1:inbr)
   enddo
   deallocate(sort_buf)
 
   if (dump_mesh_info_screen) then
-     write(6,*) 'Size of solid messages for each proc-proc pair:'
+     write(*,*) 'Size of solid messages for each proc-proc pair:'
      do iproct = 0,  nproc-1
         ! MvD: 100 beeing the maximum number of procs??? yes, but is debuggin only
-        write(6,'(100(i4))') sizemsg_solid(iproct,:)
+        write(*,'(100(i4))') sizemsg_solid(iproct,:)
      enddo
-     write(6,*) 'Total solid messages size:',SUM(SUM(sizemsg_solid,DIM=1))
+     write(*,*) 'Total solid messages size:',SUM(SUM(sizemsg_solid,DIM=1))
   endif
 
   sizemsgmax_solid = maxval(maxval(sizemsg_solid,DIM=1))
-  if (dump_mesh_info_screen) write(6,*) 'size msg max solid is ' , sizemsgmax_solid
+  if (dump_mesh_info_screen) write(*,*) 'size msg max solid is ' , sizemsgmax_solid
 
   allocate(index_msg_solid(0:nproc-1,nneighbors))
   index_msg_solid = 0
@@ -1220,7 +1220,7 @@ subroutine partition_sflobal_index
 
   if (dump_mesh_info_screen) then
      do iproct = 0, nproc -1
-       write(6,'("Proc", i3, " receives solid stuff from", i3, " procs and sends to", i3, " procs")') &
+       write(*,'("Proc", i3, " receives solid stuff from", i3, " procs and sends to", i3, " procs")') &
             iproct, sizerecvp_solid(iproct), sizesendp_solid(iproct)
      enddo
   endif
@@ -1229,8 +1229,8 @@ subroutine partition_sflobal_index
   sizesendpmax_solid = maxval(sizesendp_solid(:))
 
   if (dump_mesh_info_screen) then
-     write(6,*)'max size recv solid:', sizerecvpmax_solid
-     write(6,*)'max size send solid:', sizesendpmax_solid
+     write(*,*)'max size recv solid:', sizerecvpmax_solid
+     write(*,*)'max size send solid:', sizesendpmax_solid
   endif
 
   ! To which processors ?
@@ -1265,10 +1265,10 @@ subroutine partition_sflobal_index
 
   if (dump_mesh_info_screen .and. nproc > 1) then
      do iproct = 0, nproc-1
-        write(6,'("Proc", i3, " will receive ", i2, " solid messages from procs ", 20(i3,1x))') &
+        write(*,'("Proc", i3, " will receive ", i2, " solid messages from procs ", 20(i3,1x))') &
               iproct, sizerecvp_solid(iproct), &
               (listrecvp_solid(ip,iproct),ip=1,sizerecvp_solid(iproct))
-        write(6,'("Proc", i3, " will send    ", i2, " solid messages to   procs ", 20(i3,1x))') &
+        write(*,'("Proc", i3, " will send    ", i2, " solid messages to   procs ", 20(i3,1x))') &
               iproct, sizesendp_solid(iproct), &
               (listsendp_solid(ip,iproct),ip=1,sizesendp_solid(iproct))
      enddo
@@ -1304,18 +1304,18 @@ subroutine partition_sflobal_index
 
   ! OUTPUT message size
   if (dump_mesh_info_screen) then
-     write(6,*)
+     write(*,*)
      do iproct = 0, nproc-1
         if (sizerecvp_solid(iproct) > 0) then
            do ip = 1, sizerecvp_solid(iproct)
-              write(6,'("Proc",i3," receiving solid message from",i3," sized",i6)') &
+              write(*,'("Proc",i3," receiving solid message from",i3," sized",i6)') &
                     iproct, listrecvp_solid(ip,iproct), sizemsgrecvp_solid(ip,iproct)
            enddo
         endif
 
         if (sizesendp_solid(iproct) > 0) then
            do ip = 1, sizesendp_solid(iproct)
-              write(6,'("Proc",i3," sending   solid message to  ",i3," sized",i6)') &
+              write(*,'("Proc",i3," sending   solid message to  ",i3," sized",i6)') &
                     iproct, listsendp_solid(ip,iproct), sizemsgsendp_solid(ip,iproct)
            enddo
         endif
@@ -1371,26 +1371,26 @@ subroutine partition_sflobal_index
   deallocate(global_index_msg_solid)
 
   if (any(glocal_index_msg_sendp_solid /= glocal_index_msg_recvp_solid)) then
-      write(6,*) 'ERROR: Index Array for send and recv should be identical in'
-      write(6,*) '       the new communication scheme, but are not!'
+      write(*,*) 'ERROR: Index Array for send and recv should be identical in'
+      write(*,*) '       the new communication scheme, but are not!'
       stop
   endif
 
   if (any(sizesendp_solid /= sizerecvp_solid)) then
-      write(6,*) 'ERROR: Messages for send and recv should have same size in'
-      write(6,*) '       the new communication scheme, but are not!'
+      write(*,*) 'ERROR: Messages for send and recv should have same size in'
+      write(*,*) '       the new communication scheme, but are not!'
       stop
   endif
 
-  write(6,*)'End of solid messaging'
-  write(6,*)
+  write(*,*)'End of solid messaging'
+  write(*,*)
   call flush(6)
 
 
   !FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF FLUID FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
 
   if (have_fluid) then
-     if (dump_mesh_info_screen) write(6,*) ' Creating fluid bins '
+     if (dump_mesh_info_screen) write(*,*) ' Creating fluid bins '
      allocate(sizebin_fluid(0:nproc-1))
      sizebin_fluid(0:nproc-1) = 0
      do ipt = 1, nglobflob
@@ -1402,15 +1402,15 @@ subroutine partition_sflobal_index
 
      if (dump_mesh_info_screen) then
         do iproct = 0, nproc - 1
-           write(6,*) 'proc:', iproct, 'size fluid bin:', sizebin_fluid(iproct)
+           write(*,*) 'proc:', iproct, 'size fluid bin:', sizebin_fluid(iproct)
         enddo
      endif
 
-     if (dump_mesh_info_screen) write(6,*) sum(sizebin_fluid),nglobflob
+     if (dump_mesh_info_screen) write(*,*) sum(sizebin_fluid),nglobflob
      sizebinmax_fluid = maxval(sizebin_fluid(:))
 
      if (dump_mesh_info_screen) &
-     write(6,*) ' sizebinmax_fluid = ' , sizebinmax_fluid
+     write(*,*) ' sizebinmax_fluid = ' , sizebinmax_fluid
 
      allocate(binp_fluid(sizebinmax_fluid,0:nproc-1))
      binp_fluid(1:sizebinmax_fluid,0:nproc-1) = 0
@@ -1446,9 +1446,9 @@ subroutine partition_sflobal_index
                            myneighbors_fluid(iproct,inbr) == -1) exit
                     enddo
                     if (inbr > 8) then
-                       write(6,*) 'ERORR: having more then 8 neighbors (+myself)'
-                       write(6,*) '       check mesh decomposition in the fluid)'
-                       write(6,*) '       iproct = ', iproct
+                       write(*,*) 'ERORR: having more then 8 neighbors (+myself)'
+                       write(*,*) '       check mesh decomposition in the fluid)'
+                       write(*,*) '       iproct = ', iproct
                        stop
                     endif
                     if (myneighbors_fluid(iproct,inbr) == -1) myneighbors_fluid(iproct,inbr) = ipdes
@@ -1471,22 +1471,22 @@ subroutine partition_sflobal_index
         call mergesort_3(sort_buf(1:inbr), il=myneighbors_fluid(iproct,1:inbr), &
                          il2=sizemsg_fluid(iproct,1:inbr), p=1)
         if (dump_mesh_info_screen) &
-           write(6,'(100(i4))') myneighbors_fluid(iproct,1:inbr)
+           write(*,'(100(i4))') myneighbors_fluid(iproct,1:inbr)
      enddo
      deallocate(sort_buf)
 
      if (dump_mesh_info_screen) then
-        write(6,*) 'Size of fluid messages for each proc-proc pair:'
+        write(*,*) 'Size of fluid messages for each proc-proc pair:'
         do iproct = 0,  nproc-1
            ! MvD: 100 beeing the maximum number of procs??? yes, but is debuggin only
-           write(6,'(100(i4))') sizemsg_fluid(iproct,:)
+           write(*,'(100(i4))') sizemsg_fluid(iproct,:)
         enddo
-        write(6,*) 'Total fluid messages size:',SUM(SUM(sizemsg_fluid,DIM=1))
+        write(*,*) 'Total fluid messages size:',SUM(SUM(sizemsg_fluid,DIM=1))
      endif
 
      sizemsgmax_fluid = maxval(maxval(sizemsg_fluid,DIM=1))
 
-     if (dump_mesh_info_screen) write(6,*) 'size msg max fluid is ' , sizemsgmax_fluid
+     if (dump_mesh_info_screen) write(*,*) 'size msg max fluid is ' , sizemsgmax_fluid
 
      allocate(index_msg_fluid(0:nproc-1,nneighbors))
      index_msg_fluid = 0
@@ -1544,7 +1544,7 @@ subroutine partition_sflobal_index
 
      if (dump_mesh_info_screen) then
         do iproct = 0, nproc -1
-           write(6,'("Proc", i3, " receives fluid stuff from",i3, &
+           write(*,'("Proc", i3, " receives fluid stuff from",i3, &
                     &" procs and sends to", i3, " procs")') &
                  iproct, sizerecvp_fluid(iproct), sizesendp_fluid(iproct)
         enddo
@@ -1555,8 +1555,8 @@ subroutine partition_sflobal_index
      sizesendpmax_fluid = maxval(sizesendp_fluid(:))
 
      if (dump_mesh_info_screen) then
-        write(6,*) 'max size recv fluid:', sizerecvpmax_fluid
-        write(6,*) 'max size send fluid:', sizesendpmax_fluid
+        write(*,*) 'max size recv fluid:', sizerecvpmax_fluid
+        write(*,*) 'max size send fluid:', sizesendpmax_fluid
      endif
 
      ! To which processor ?
@@ -1591,11 +1591,11 @@ subroutine partition_sflobal_index
 
      if (dump_mesh_info_screen .and. nproc > 1) then
         do iproct = 0, nproc-1
-           write(6,'("Proc", i2, " will receive ", i2, &
+           write(*,'("Proc", i2, " will receive ", i2, &
                     &" fluid messages from procs ", 20(i3,1x))') &
                  iproct, sizerecvp_fluid(iproct), &
                  (listrecvp_fluid(ip,iproct), ip=1,sizerecvp_fluid(iproct))
-           write(6,'("Proc", i2, " will send    ", i2, &
+           write(*,'("Proc", i2, " will send    ", i2, &
                     &" fluid messages to   procs ", 20(i3,1x))') &
                  iproct, sizesendp_fluid(iproct), &
                  (listsendp_fluid(ip,iproct), ip=1,sizesendp_fluid(iproct))
@@ -1631,18 +1631,18 @@ subroutine partition_sflobal_index
 
      ! OUTPUT message size
      if (dump_mesh_info_screen .and. nproc > 1) then
-        write(6,*)
+        write(*,*)
         do iproct = 0, nproc -1
            if (sizerecvp_fluid(iproct) > 0) then
               do ip = 1, sizerecvp_fluid(iproct)
-                 write(6,'("Proc",i3," receiving fluid message from",i3," sized",i6)') &
+                 write(*,'("Proc",i3," receiving fluid message from",i3," sized",i6)') &
                        iproct, listrecvp_fluid(ip,iproct), sizemsgrecvp_fluid(ip,iproct)
               enddo
            endif
 
            if (sizesendp_fluid(iproct) > 0) then
               do ip = 1, sizesendp_fluid(iproct)
-                 write(6,'("Proc",i3," sending   fluid message to  ",i3," sized",i6)') &
+                 write(*,'("Proc",i3," sending   fluid message to  ",i3," sized",i6)') &
                        iproct, listsendp_fluid(ip,iproct), sizemsgsendp_fluid(ip,iproct)
               enddo
            endif
@@ -1697,14 +1697,14 @@ subroutine partition_sflobal_index
      deallocate(global_index_msg_fluid)
 
      if (any(glocal_index_msg_sendp_fluid /= glocal_index_msg_recvp_fluid)) then
-         write(6,*) 'ERROR: Index Array for send and recv should be identical in'
-         write(6,*) '       the new communication scheme, but are not!'
+         write(*,*) 'ERROR: Index Array for send and recv should be identical in'
+         write(*,*) '       the new communication scheme, but are not!'
          stop
      endif
 
      if (any(sizesendp_fluid /= sizerecvp_fluid)) then
-         write(6,*) 'ERROR: Messages for send and recv should have same size in'
-         write(6,*) '       the new communication scheme, but are not!'
+         write(*,*) 'ERROR: Messages for send and recv should have same size in'
+         write(*,*) '       the new communication scheme, but are not!'
          stop
      endif
 
@@ -1713,32 +1713,32 @@ subroutine partition_sflobal_index
   if (allocated(flob2floc)) deallocate(flob2floc)
 
   if (dump_mesh_info_screen .and. nproc > 1) then
-     write(6,*)
-     write(6,*) '----------------------------------------------------------------'
-     write(6,*) 'Sum over all solid message sizes  :', SUM(SUM(sizemsg_solid,DIM=1))
-     write(6,*) 'Total global points in solid,ratio:', nglobslob, &
+     write(*,*)
+     write(*,*) '----------------------------------------------------------------'
+     write(*,*) 'Sum over all solid message sizes  :', SUM(SUM(sizemsg_solid,DIM=1))
+     write(*,*) 'Total global points in solid,ratio:', nglobslob, &
                               real(SUM(SUM(sizemsg_solid,DIM=1))) / real(nglobslob)
-     write(6,*) '----------------------------------------------------------------'
+     write(*,*) '----------------------------------------------------------------'
 
      if (have_fluid) then
-        write(6,*) '----------------------------------------------------------------'
-        write(6,*) 'Sum over all fluid message sizes  :', SUM(SUM(sizemsg_fluid,DIM=1))
-        write(6,*) 'Total global points in fluid,ratio:', nglobflob, &
+        write(*,*) '----------------------------------------------------------------'
+        write(*,*) 'Sum over all fluid message sizes  :', SUM(SUM(sizemsg_fluid,DIM=1))
+        write(*,*) 'Total global points in fluid,ratio:', nglobflob, &
                                 real(SUM(SUM(sizemsg_fluid,DIM=1))) / real(nglobflob)
-        write(6,*) '----------------------------------------------------------------'
-        write(6,*) '----------------------------------------------------------------'
-        write(6,*) 'Sum over all s/f message sizes:', SUM(SUM(sizemsg_fluid,DIM=1)) + &
+        write(*,*) '----------------------------------------------------------------'
+        write(*,*) '----------------------------------------------------------------'
+        write(*,*) 'Sum over all s/f message sizes:', SUM(SUM(sizemsg_fluid,DIM=1)) + &
                                                       SUM(SUM(sizemsg_solid,DIM=1))
-        write(6,*) 'Total global points, ratio    :', nglobglob, &
+        write(*,*) 'Total global points, ratio    :', nglobglob, &
                       real(SUM(SUM(sizemsg_fluid,DIM=1)) + &
                            SUM(SUM(sizemsg_solid,DIM=1))) / real(nglobglob)
-        write(6,*) '----------------------------------------------------------------'
+        write(*,*) '----------------------------------------------------------------'
      endif !have_fluid
 
-     write(6,*)
-     write(6,*) '****************************************************************'
-     write(6,*) '******************* END OF MESSAGING ARRAYS ********************'
-     write(6,*) '****************************************************************'
+     write(*,*)
+     write(*,*) '****************************************************************'
+     write(*,*) '******************* END OF MESSAGING ARRAYS ********************'
+     write(*,*) '****************************************************************'
   endif
 
 end subroutine partition_sflobal_index
@@ -1795,15 +1795,15 @@ subroutine define_local_bdry_elem
            herproc = el2proc(herielglob)
 
            if (herproc /= myproc) then
-              write(6,*)
-              write(6,*) 'PROBLEM: changing processors across solid/fluid boundary!'
-              write(6,*) 'This case is not implemented at this point as it requires'
-              write(6,*) 'message passing when adding the boundary term on both sides'
-              write(6,*) 'and therefore seems highly ineffective. Sorry...'
-              write(6,*) 'solid domain proc:', myproc
-              write(6,*) 'fluid domain proc:', herproc
-              write(6,*) 'boundary,global element num:',j,iel,myielglob
-              write(6,*) 'One possible reaon: NRADIAL_SLICES > 8 in inparam_mesh might lead to this problem'
+              write(*,*)
+              write(*,*) 'PROBLEM: changing processors across solid/fluid boundary!'
+              write(*,*) 'This case is not implemented at this point as it requires'
+              write(*,*) 'message passing when adding the boundary term on both sides'
+              write(*,*) 'and therefore seems highly ineffective. Sorry...'
+              write(*,*) 'solid domain proc:', myproc
+              write(*,*) 'fluid domain proc:', herproc
+              write(*,*) 'boundary,global element num:',j,iel,myielglob
+              write(*,*) 'One possible reaon: NRADIAL_SLICES > 8 in inparam_mesh might lead to this problem'
               stop
            endif
 
@@ -1849,12 +1849,12 @@ subroutine define_local_bdry_elem
      enddo
   enddo
 
-  if (dump_mesh_info_screen) write(6,*) 'ended solid-fluid boundary loop'
+  if (dump_mesh_info_screen) write(*,*) 'ended solid-fluid boundary loop'
 
   if (sum(solid_count) /= sum(fluid_count) ) then
-     write(6,*) 'Something wrong with the # solid/fluid bdry elements:'
-     write(6,*) 'Solid count:',sum(solid_count)
-     write(6,*) 'Fluid count:',sum(fluid_count)
+     write(*,*) 'Something wrong with the # solid/fluid bdry elements:'
+     write(*,*) 'Solid count:',sum(solid_count)
+     write(*,*) 'Fluid count:',sum(fluid_count)
      stop
   endif
 
@@ -1868,16 +1868,16 @@ subroutine define_local_bdry_elem
 
   do iproc=0, nproc-1
      if (minval(tmpsolid(1:nbdry_el(iproc),iproc)) < 1) then
-        write(6,*) 'Problem with bdry_solid count!'
-        write(6,*) minval(tmpsolid(1:nbdry_el(iproc),iproc))
-        write(6,*) 'Unassigned elements...'
+        write(*,*) 'Problem with bdry_solid count!'
+        write(*,*) minval(tmpsolid(1:nbdry_el(iproc),iproc))
+        write(*,*) 'Unassigned elements...'
         stop
      endif
 
      if (minval(tmpfluid(1:nbdry_el(iproc),iproc)) < 1) then
-        write(6,*) 'Problem with bdry_fluid count!'
-        write(6,*) minval(tmpfluid(1:nbdry_el(iproc),iproc))
-        write(6,*) 'Unassigned elements...'
+        write(*,*) 'Problem with bdry_fluid count!'
+        write(*,*) minval(tmpfluid(1:nbdry_el(iproc),iproc))
+        write(*,*) 'Unassigned elements...'
         stop
      endif
 
@@ -1887,20 +1887,20 @@ subroutine define_local_bdry_elem
      endif
 
      if (dump_mesh_info_screen) then
-        write(6,'("Proc", i3, " has ", i5, " S/F boundary elements (on one side)")') &
+        write(*,'("Proc", i3, " has ", i5, " S/F boundary elements (on one side)")') &
               iproc, nbdry_el(iproc)
         if (maxval(nbdry_el) >= 1) &
-            write(6,*) bdry_solid_elp(1,iproc), bdry_fluid_elp(1,iproc)
+            write(*,*) bdry_solid_elp(1,iproc), bdry_fluid_elp(1,iproc)
      endif
   enddo
 
 
 
   if (dump_mesh_info_screen) then
-     write(6,*) 'max bdry_solid_elp,max loc el:', &
+     write(*,*) 'max bdry_solid_elp,max loc el:', &
                 maxval(bdry_solid_elp),maxval(nel_solid)
      if (have_fluid) &
-        write(6,*) 'max bdry_fluid_elp,max loc el:', &
+        write(*,*) 'max bdry_fluid_elp,max loc el:', &
                     maxval(bdry_fluid_elp),maxval(nel_fluid)
   endif
 
@@ -1920,13 +1920,13 @@ subroutine define_local_bdry_elem
 
 
   if (dump_mesh_info_screen .and. have_fluid) then
-     write(6,*) 'BOUNDARY TERMS:'
+     write(*,*) 'BOUNDARY TERMS:'
      do iproc=0, nproc-1
         if (have_bdry_elemp(iproc)) then
-           write(6,*) iproc, 'minmax bdry sol:', &
+           write(*,*) iproc, 'minmax bdry sol:', &
                       minval(bdry_solid_elp(1:nbdry_el(iproc),iproc)), &
                       maxval(bdry_solid_elp(1:nbdry_el(iproc),iproc))
-           write(6,*) iproc, 'minmax bdry flu:', &
+           write(*,*) iproc, 'minmax bdry flu:', &
                       minval(bdry_fluid_elp(1:nbdry_el(iproc),iproc)), &
                       maxval(bdry_fluid_elp(1:nbdry_el(iproc),iproc))
         endif
@@ -1963,8 +1963,8 @@ subroutine define_axial_elem
   naxel_solidp = 0
 
   if (dump_mesh_info_screen) then
-    write(6,*)
-    write(6,*) 'Defining axial elements:'
+    write(*,*)
+    write(*,*) 'Defining axial elements:'
   endif
 
   do iproc=0, nproc-1
@@ -2005,7 +2005,7 @@ subroutine define_axial_elem
 
   enddo !iproc
 
-  write(6,*) 'NAXEL:', naxelp(0), naxel_fluidp(0), min_distance_nondim
+  write(*,*) 'NAXEL:', naxelp(0), naxel_fluidp(0), min_distance_nondim
 
   allocate(ax_elp(maxval(naxelp),0:nproc-1))
   allocate(ax_el_solidp(maxval(naxel_solidp),0:nproc-1))
@@ -2013,7 +2013,7 @@ subroutine define_axial_elem
 
   do iproc=0, nproc-1
      if (dump_mesh_info_screen) &
-        write(6,'(" Proc", i3, " has ", i4," total, ",i4, " solid, and ",i4, " fluid axial elements")') &
+        write(*,'(" Proc", i3, " has ", i4," total, ",i4, " solid, and ",i4, " fluid axial elements")') &
              iproc, naxelp(iproc), naxel_solidp(iproc), naxel_fluidp(iproc)
 
      ax_elp(1:naxelp(iproc),iproc) = dummyax_elp(1:naxelp(iproc),iproc)
@@ -2023,10 +2023,10 @@ subroutine define_axial_elem
                  dummyax_el_fluidp(1:naxel_fluidp(iproc),iproc)
 
      if (naxelp(iproc) /= naxel_solidp(iproc)+naxel_fluidp(iproc)) then
-        write(6,*) 'Processor', iproc, ': PROBLEM in counting axial elements:'
-        write(6,*) 'Solid axial elements:', naxel_solidp(iproc)
-        write(6,*) 'Fluid axial elements:', naxel_fluidp(iproc)
-        write(6,*) 'Total axial elements:', naxelp(iproc)
+        write(*,*) 'Processor', iproc, ': PROBLEM in counting axial elements:'
+        write(*,*) 'Solid axial elements:', naxel_solidp(iproc)
+        write(*,*) 'Fluid axial elements:', naxel_fluidp(iproc)
+        write(*,*) 'Total axial elements:', naxelp(iproc)
         stop
      endif
 
@@ -2055,9 +2055,9 @@ subroutine generate_serendipity_per_proc(sg, zg)
   logical, dimension(:), allocatable             :: wifseg
 
   if (dump_mesh_info_screen) then
-    write(6,*)
-    write(6,*) ' SERENDIPITY DB '
-    write(6,*)
+    write(*,*)
+    write(*,*) ' SERENDIPITY DB '
+    write(*,*)
   endif
 
   ncp = 8 ! exclusively using the serendipity quadrilateral element topology
@@ -2129,7 +2129,7 @@ subroutine generate_serendipity_per_proc(sg, zg)
 
      nglobmeshp(iproc) = wnglob
      if (dump_mesh_info_screen) &
-        write(6,*) ' iproc = ', iproc, ' nglobmesh = ', nglobmeshp(iproc)
+        write(*,*) ' iproc = ', iproc, ' nglobmesh = ', nglobmeshp(iproc)
      do iel = 1, nelp
         do inode = 1, 8
            iptcp = (iel - 1) * 8 + inode
@@ -2175,7 +2175,7 @@ subroutine define_element_type
   integer :: nelp, nelpmax
   integer :: iproc, iel, ielg
 
-  if (dump_mesh_info_screen) write(6,*) ' DEFINING ELEMENT TYPE ARRAY FOR EACH PROCESSOR '
+  if (dump_mesh_info_screen) write(*,*) ' DEFINING ELEMENT TYPE ARRAY FOR EACH PROCESSOR '
   nelpmax = maxval(nel)
 
   allocate(eltypep(nelpmax,0:nproc-1))
@@ -2233,7 +2233,7 @@ subroutine write_db
      call define_io_appendix(appiproc,iproc)
      dbname='meshdb.dat'//appiproc
      lfdbname=index(dbname,' ')-1
-     if (dump_mesh_info_screen) write(6,*) 'WRITING OUT DATABASE TO ',dbname(1:lfdbname)
+     if (dump_mesh_info_screen) write(*,*) 'WRITING OUT DATABASE TO ',dbname(1:lfdbname)
      open(10,file=dbname(1:lfdbname), FORM="UNFORMATTED", STATUS="REPLACE")
 
      npointotp = nel(iproc)*(npol+1)**2
@@ -2268,7 +2268,7 @@ subroutine write_db
 
      ! Coordinates of control points
      if (dump_mesh_info_screen) &
-        write(6,*)'PARALLEL DATABASE: writing coordinates/control points...',iproc
+        write(*,*)'PARALLEL DATABASE: writing coordinates/control points...',iproc
 
      ! global number of control nodes (slightly differs for each processor!)
      write(10) nglobmeshp(iproc)
@@ -2296,7 +2296,7 @@ subroutine write_db
      !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      ! Solid-Fluid distinction
      if (dump_mesh_info_screen) &
-        write(6,*)'PARALLEL DATABASE: writing solid/fluid domain info...',iproc
+        write(*,*)'PARALLEL DATABASE: writing solid/fluid domain info...',iproc
 
      ! mapping from sol/flu to global element numbers
      write(10) procel_solidp(:,iproc)
@@ -2313,7 +2313,7 @@ subroutine write_db
      !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      ! Solid-Fluid boundary
      if (dump_mesh_info_screen) &
-        write(6,*)'PARALLEL DATABASE: writing solid/fluid boundary info...',iproc
+        write(*,*)'PARALLEL DATABASE: writing solid/fluid boundary info...',iproc
      write(10) have_bdry_elemp(iproc)
 
      if (have_bdry_elemp(iproc)) then
@@ -2326,13 +2326,13 @@ subroutine write_db
      !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      ! General numerical input/output parameters
      if (dump_mesh_info_screen) &
-        write(6,*)'PARALLEL DATABASE: writing numerical parameters...',iproc
+        write(*,*)'PARALLEL DATABASE: writing numerical parameters...',iproc
      write(10)pts_wavelngth,period,courant,dt
 
      !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      ! Background model
      if (dump_mesh_info_screen) &
-        write(6,*)'PARALLEL DATABASE: writing background model info...',iproc
+        write(*,*)'PARALLEL DATABASE: writing background model info...',iproc
      write(10) bkgrdmodel(1:lfbkgrdmodel)
      write(10) override_ext_q
      write(10) router,have_fluid
@@ -2362,7 +2362,7 @@ subroutine write_db
      write(10) ax_el_fluidp(1:naxel_fluidp(iproc),iproc)
 
      !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     if (dump_mesh_info_screen) write(6,*)'PARALLEL DATABASE: writing communication info...',iproc
+     if (dump_mesh_info_screen) write(*,*)'PARALLEL DATABASE: writing communication info...',iproc
 
      ! SSSSSSSSSSSS SOLID MESSAGING SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
      ! number of processors to communicate with
@@ -2387,7 +2387,7 @@ subroutine write_db
      ! FFFFFFFFFFFFF FLUID MESSAGING FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
      ! Only written if there is a fluid!
      if (have_fluid) then
-        if (dump_mesh_info_screen) write(6,*)'writing fluid messaging'
+        if (dump_mesh_info_screen) write(*,*)'writing fluid messaging'
         ! number of processors to communicate with
         write(10) sizerecvp_fluid(iproc)
 
@@ -2410,7 +2410,7 @@ subroutine write_db
      endif ! have_fluid
 
      close(10)
-     write(6,*)'....Wrote database for processor',iproc; call flush(6)
+     write(*,*)'....Wrote database for processor',iproc; call flush(6)
 
   enddo
 
@@ -2465,7 +2465,7 @@ subroutine create_static_header
     write(97,30)
     write(97,*)''
     close(97)
-    write(6,*)'wrote parameters for static solver into ', trim(dbname)
+    write(*,*)'wrote parameters for static solver into ', trim(dbname)
 
 9 format(' integer, parameter :: ',A12,' =',i10,'  ! ',A27)
 10 format('! Proc ',i3,': Header for mesh information to run static solver')

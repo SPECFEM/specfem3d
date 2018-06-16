@@ -68,39 +68,39 @@ subroutine generate_skeleton
   ! OUTER SHELL GENERATION
   !  define reference grid
   if (dump_mesh_info_screen) then
-    write(6,*)'generating reference spherical grid....';call flush(6)
+    write(*,*)'generating reference spherical grid....';call flush(6)
   endif
   call def_reference_spherical_grid_discont
 
   ! Aspect ratio
-  write(6,*)'estimate aspect ratio...';call flush(6)
+  write(*,*)'estimate aspect ratio...';call flush(6)
   call estimate_aspect_ratio
 
   ! final outer shell w/ potential coarsening w/ depth
-  write(6,*)'define spherical shell...';call flush(6)
+  write(*,*)'define spherical shell...';call flush(6)
   call define_spherical_shell
   deallocate(crd_grds,crd_grdc)
   deallocate(z_unif,s_unif)
 
   ! CENTRAL REGION GENERATION (inner shell + central square + buffer layer)
-  write(6,*)'define central region...';call flush(6)
+  write(*,*)'define central region...';call flush(6)
   call define_central_region
 
   ! GATHER INFORMATION FROM DIFFERENT REGIONS IN GLOBAL ARRAYS
-  write(6,*)'gather skeleton...';call flush(6)
+  write(*,*)'gather skeleton...';call flush(6)
   call gather_skeleton
 
   ! must add a flag there
   if (southern) then
-   write(6,*)'generate southern hemisphere...';call flush(6)
+   write(*,*)'generate southern hemisphere...';call flush(6)
    call generate_southern_hemisphere
   else
    call donot_generate_southern_hemisphere
   endif
 
-  write(6,*)
-  write(6,"(10x,' THE TOTAL NUMBER OF ELEMENTS IS ',i10 )") neltot
-  write(6,*)
+  write(*,*)
+  write(*,"(10x,' THE TOTAL NUMBER OF ELEMENTS IS ',i10 )") neltot
+  write(*,*)
 
   call generate_serendipity(npointot, neltot, sg, zg)
 
@@ -130,7 +130,7 @@ subroutine generate_serendipity(npoin, nel, sg, zg)
 
   npoin2 = 8*npoin/4
 
-  if (dump_mesh_info_screen) write(6,*) ' NPOIN 2 is ', npoin2,nel*8
+  if (dump_mesh_info_screen) write(*,*) ' NPOIN 2 is ', npoin2,nel*8
   allocate(sg2(8,nel),zg2(8,nel))
 
   ! The even coordinate indices below are linearly interpolated, i.e. DO NOT
@@ -177,11 +177,11 @@ subroutine generate_serendipity(npoin, nel, sg, zg)
   loc_serend(:) = 0
   allocate(ifseg_serend(npoin2))
 
-  if (dump_mesh_info_screen) write(6,*) 'CALLING GLOBAL NUMBERING'
+  if (dump_mesh_info_screen) write(*,*) 'CALLING GLOBAL NUMBERING'
 
   call get_global(nel, sg2, zg2, iglob_serend, loc_serend, ifseg_serend, &
                   nglob_serend, npoin2, 8)
-  if (dump_mesh_info_screen) write(6,*) 'NGLOB SERENDIPITY IS ' , nglob_serend
+  if (dump_mesh_info_screen) write(*,*) 'NGLOB SERENDIPITY IS ' , nglob_serend
 
 
   allocate (ipt_iglob(nglob_serend),el_iglob(nglob_serend),inode_iglob(nglob_serend))
@@ -220,7 +220,7 @@ subroutine write_serendipity_meshes(nel,sg2,zg2)
   real(kind=dp)   , intent(in)  :: sg2(8,nel),zg2(8,nel)
   integer                       :: iel
 
-  write(6,*)'writing all elements....'
+  write(*,*)'writing all elements....'
   open(unit=157,file=diagpath(1:lfdiag)//'/global_skel.dat')
   do iel = 1, nel
      write(157,*) sg2(1,iel), zg2(1,iel)
@@ -236,7 +236,7 @@ subroutine write_serendipity_meshes(nel,sg2,zg2)
   enddo
   close(157)
 
-  write(6,*)'writing regions of elements...'; call flush(6)
+  write(*,*)'writing regions of elements...'; call flush(6)
   open(unit=2157,file=diagpath(1:lfdiag)//'/foc_skel.dat')
   open(unit=3157,file=diagpath(1:lfdiag)//'/smcic_skel.dat')
   open(unit=1157,file=diagpath(1:lfdiag)//'/center_skel.dat')
@@ -375,16 +375,16 @@ subroutine def_reference_spherical_grid_discont
   enddo
 
   if (dump_mesh_info_screen) then
-     write(6,*)  'ns,nz,ri,ro:', ns,nz,ri,ro
-     write(6,*)  'dz', dz(:)
-     write(6,*)  'SUM(dz):', SUM(dz)
+     write(*,*)  'ns,nz,ri,ro:', ns,nz,ri,ro
+     write(*,*)  'dz', dz(:)
+     write(*,*)  'SUM(dz):', SUM(dz)
   endif
 
   ! Total number of points (soon to be corners)  in the non-coarsened shell
   npts = (ns + 1) * (nz + 1)
 
   if (dump_mesh_info_screen) then
-     write(6,*)'CHECK PARAMS 4 ri,ro,router,nz,ns:',ri,ro,router,nz,ns
+     write(*,*)'CHECK PARAMS 4 ri,ro,router,nz,ns:',ri,ro,router,nz,ns
      call flush(6)
   endif
 
@@ -654,13 +654,13 @@ subroutine compute_nelclean(nel, nc1, iclev1, ns1, nz1)
   enddo
 
   nelregion(icc)=nel-nelabove
-  if (dump_mesh_info_screen) write(6,*) 'nel =',nel, 'instead of', nz1*ns1
+  if (dump_mesh_info_screen) write(*,*) 'nel =',nel, 'instead of', nz1*ns1
   nelregionsum=sum(nelregion)
 
   if (dump_mesh_info_screen) then
-     write(6,*) 'SUM # EL. ALL SPHERICAL REGIONS: ',nelregionsum
+     write(*,*) 'SUM # EL. ALL SPHERICAL REGIONS: ',nelregionsum
      do icc=1,nc1+1
-        write(6,*)'# EL. in REGION ',icc,' :',nelregion(icc),' (', &
+        write(*,*)'# EL. in REGION ',icc,' :',nelregion(icc),' (', &
                    real(nelregion(icc))/real(nelregionsum)*100.,' percent)'
      enddo
   endif
@@ -895,7 +895,7 @@ subroutine define_central_region
 
   ! number of latitude slices at shell - central region boundary (termed ib)
   ns_ib = ns / 2**nc
-  if (dump_mesh_info_screen) write(6,*) 'ns_ib is ', ns_ib
+  if (dump_mesh_info_screen) write(*,*) 'ns_ib is ', ns_ib
 
   ! define dimensions of central square (just one!)
   lsq = lsq_fac * ri
@@ -905,34 +905,34 @@ subroutine define_central_region
 
   if (only_suggest_ntheta) then
      ntheta_opt_buff = -1
-     write(6,*)
-     write(6,*) '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-     write(6,*) '   suggested number of theta slices for optimal mesh decomposition:'
+     write(*,*)
+     write(*,*) '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+     write(*,*) '   suggested number of theta slices for optimal mesh decomposition:'
      do nn=1, 10
          ntheta_opt = ndivs / (2 * nn)
          if (mod(ntheta_opt, 4) > 0) ntheta_opt = ntheta_opt + 4 - mod(ntheta_opt, 4)
          if (ntheta_opt > 4) then
-            if (ntheta_opt /= ntheta_opt_buff) write(6,*) ntheta_opt
+            if (ntheta_opt /= ntheta_opt_buff) write(*,*) ntheta_opt
          else
             exit
          endif
          ntheta_opt_buff = ntheta_opt
      enddo
-     write(6,*) '   1, 2 and 4 are always decomposed optimally'
-     write(6,*) '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-     write(6,*)
-     write(6,*) 'ONLY_SUGGEST_NTHETA was set, hence stopping now. Set to false to actually generate a mesh!'
+     write(*,*) '   1, 2 and 4 are always decomposed optimally'
+     write(*,*) '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+     write(*,*)
+     write(*,*) 'ONLY_SUGGEST_NTHETA was set, hence stopping now. Set to false to actually generate a mesh!'
      call exit()
   endif
 
   ! compute number of necessary extra coarsenings nex
   nex = ns_ib/(2*ndivs)-1
-  if (dump_mesh_info_screen) write(6,*) ' NEX IS ', nex
+  if (dump_mesh_info_screen) write(*,*) ' NEX IS ', nex
 
   ! compute number of radial levels from center of the earth to
   ! shell boundary (equidistant spacing)
   ! PREM CASE
-  ! dr = radius(2) - radius(1) ; write(6,*) ' DR IS ' ,dr
+  ! dr = radius(2) - radius(1) ; write(*,*) ' DR IS ' ,dr
   ! nzs = int((ri-lsq)/dr)
   ! ALEX GRE; af 2009, 4 years later, that seems sensible but I do not remember why I
   ! picked this value. Might be useful to keep what follows compatible with nzs=/1
@@ -942,27 +942,27 @@ subroutine define_central_region
   ! check
   test = (dsqrt(2.d0)*lsq) / (.9d0 *(lsq + (ri-lsq)/dble(nzs)))
   if ( test >= 1. ) then
-     write(6,*) ' STOP: failed test for generation of central region'
-     write(6,*) ' test is ',test
+     write(*,*) ' STOP: failed test for generation of central region'
+     write(*,*) ' test is ',test
      stop
   endif
 
   ! nzs = int(real(ndivs)*(ri-lsq)/lsq)
   ! nzs = 2
   nr  = ndivs + nzs  ! will come from xtoto (newdiscont_meshing)
-  if (dump_mesh_info_screen) write(6,*) 'nr is ', nr
+  if (dump_mesh_info_screen) write(*,*) 'nr is ', nr
 
   ! roc = ri ; ric = roc - real((nzs-1))*(roc-lsq)/dble(nzs)
   ! Assuming nzs = 1
   roc = ri ; ric = roc*(dble(nr-1)/dble(nr))
   if (dump_mesh_info_screen) then
-     write(6,*) 'RIC = ', RIC
-     write(6,*) 'ROC = ', ROC
-     write(6,*) 'nzs = ', nzs
+     write(*,*) 'RIC = ', RIC
+     write(*,*) 'ROC = ', ROC
+     write(*,*) 'nzs = ', nzs
   endif
 
   if ( nzs < 2 * nex + 1) then
-   write(6,*) 'incompatibility in central square between nex and nr'
+   write(*,*) 'incompatibility in central square between nex and nr'
    stop
   endif
   ! The '+1' indicates that we want the  bottommost "spherical layer" to
@@ -973,7 +973,7 @@ subroutine define_central_region
   ! we define, again, the size of the associated uniform grid.
   ! nzss is the number of purely spherical levels
   nzss = nzs - 1
-  if (dump_mesh_info_screen) write(6,*) 'nzss = ', nzss
+  if (dump_mesh_info_screen) write(*,*) 'nzss = ', nzss
 
   ! MvD: this is never true for nzs = 1 as hardcoded above
   !      nzs /= 1 however crashes
@@ -1007,7 +1007,7 @@ subroutine define_central_region
      iclevc(nex+1) = 1
      ! compute new number of elements
      call compute_nelclean(nelc,nex,iclevc,ns_ib,nzss)
-     write(6,*) 'nelc ', nelc , 'npts'
+     write(*,*) 'nelc ', nelc , 'npts'
      ! define elements topology and type
      allocate(lnodesi(4,nelc)) ; lnodesi(:,:) = 0
      allocate(eltypei(nelc),coarsingi(nelc))
@@ -1025,7 +1025,7 @@ subroutine define_central_region
         enddo
      enddo
 
-     write(6,*) 'npts = ', npts
+     write(*,*) 'npts = ', npts
 
   else
      npts = 0
@@ -1048,8 +1048,8 @@ subroutine define_central_region
   s_arr = zero
   z_arr = zero
 
-  if (dump_mesh_info_screen) write(6,*)'CENTR: ndivs,nr',ndivs,nr
-  if (dump_mesh_info_screen) write(6,*)'CENTR: ri',ri
+  if (dump_mesh_info_screen) write(*,*)'CENTR: ndivs,nr',ndivs,nr
+  if (dump_mesh_info_screen) write(*,*)'CENTR: ri',ri
 
   if (dump_mesh_info_files) then
      open(unit=46,file=diagpath(1:lfdiag)//'/fort.46')
@@ -1059,7 +1059,7 @@ subroutine define_central_region
 
   do ix=1, 2*ndivs+1
      maxy=int(min(ix,ceiling(dble(ix)/2.)+1))
-     if (dump_mesh_info_screen) write(6,*)'CENTR: ix,maxy',ix,maxy
+     if (dump_mesh_info_screen) write(*,*)'CENTR: ix,maxy',ix,maxy
      do iy=1, maxy
         rad = dble(ix) / dble(2*ndivs+1) * (ri-maxh_icb/router)
         ! linear
@@ -1171,7 +1171,7 @@ subroutine define_central_region
   ! TNM JULY 2009: Need this for gather_skeleton
   if (nelc /= 0) then
      do iel = 1, nelc
-        write(6,*) 'af iel ', iel
+        write(*,*) 'af iel ', iel
         do inode = 1, 4
            ipt = lnodesi(inode,iel)
            ipti = (iel-1)*4 + inode
@@ -1187,7 +1187,7 @@ subroutine define_central_region
 
   ! total number of elements
   nelctot = nelc + 2*ndivs + ndivs**2
-  if (dump_mesh_info_screen) write(6,*) 'nelctot ', nelctot
+  if (dump_mesh_info_screen) write(*,*) 'nelctot ', nelctot
   nelsq = ndivs**2
   allocate(lnodessq(4, nelsq))
   allocate(eltypesq(nelsq))
@@ -1293,14 +1293,14 @@ subroutine define_central_region
               ipt = lnodesbuf(inode,iel)
               iptbuf = 4*(iel-1) + inode
               sbuf(iptbuf) = so(ipt)
-              zbuf(iptbuf) = zo(ipt) !; write(6,*) zo(ipt), ipt
+              zbuf(iptbuf) = zo(ipt) !; write(*,*) zo(ipt), ipt
            enddo
         else
            do inode = 1,2
               ipt = lnodesbuf(inode,iel)
               iptbuf = 4*(iel-1) + inode
               sbuf(iptbuf) = so(ipt)
-              zbuf(iptbuf) = zo(ipt) !; write(6,*) zo(ipt), ipt
+              zbuf(iptbuf) = zo(ipt) !; write(*,*) zo(ipt), ipt
            enddo
            do inode = 3,4
               ipt = lnodesbuf(inode,iel)
@@ -1346,7 +1346,7 @@ subroutine def_ref_cart_coordinates(nst, nzt, crd, inner_shell)
      ds = 2./dble(nst)
      dz = 2./dble(nzt)
   else
-     write(6,*)'nst and nzt are ZERO!'
+     write(*,*)'nst and nzt are ZERO!'
      stop
   endif
 
@@ -1400,7 +1400,7 @@ subroutine def_ref_cart_coordinates_discont(nst, nzt, crd, dz)
   ds1 = 1.d0 / dble(nst) * axisfac
   ds2 = (1.d0 - 2**nc_init * ds1) / dble(nst - 2**nc_init)
 
-  write(6,*) ds1, ds2, nst
+  write(*,*) ds1, ds2, nst
 
   pi2 = 2.d0 * dasin(1.d0)
   allocate(theta_min_proc(0:nthetaslices-1), theta_max_proc(0:nthetaslices-1))
@@ -1427,19 +1427,19 @@ subroutine gather_skeleton
 
   integer :: ipt, inode, iel, istart, is, iz
 
-  write(6,*)
-  write(6,"(10x,'SKELETON INFORMATIONS (NORTHERN HEMISPHERE ONLY)')")
-  write(6,*)
-  write(6,"(10x,'Number of elements in the outer shell:    ',i10)")  nelo
-  write(6,"(10x,'Number of elements in the inner shell:    ',i10)")  neli
-  write(6,"(10x,'Number of elements in the buffer layer:   ',i10)")  nelbuf
-  write(6,"(10x,'Number of elements in the central square: ',i10)")  nelsq
+  write(*,*)
+  write(*,"(10x,'SKELETON INFORMATIONS (NORTHERN HEMISPHERE ONLY)')")
+  write(*,*)
+  write(*,"(10x,'Number of elements in the outer shell:    ',i10)")  nelo
+  write(*,"(10x,'Number of elements in the inner shell:    ',i10)")  neli
+  write(*,"(10x,'Number of elements in the buffer layer:   ',i10)")  nelbuf
+  write(*,"(10x,'Number of elements in the central square: ',i10)")  nelsq
 
   neltot = nelo + neli + nelsq + nelbuf
-  write(6,*)
-  write(6,"(10x,'Total num. of elements in northern skel.: ',i10)")  neltot
-  write(6,*)
-  write(6,*)
+  write(*,*)
+  write(*,"(10x,'Total num. of elements in northern skel.: ',i10)")  neltot
+  write(*,*)
+  write(*,*)
 
   npointot = 4 * neltot
   allocate(sg(npointot),zg(npointot))

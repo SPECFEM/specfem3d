@@ -52,42 +52,42 @@ program gllmesh
   call read_params ! input
   !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  write(6,*)'MAIN: creating subregions/discontinuity model..........'; call flush(6)
+  write(*,*)'MAIN: creating subregions/discontinuity model..........'; call flush(6)
   call create_subregions ! discont_meshing
 
   southern = .true.
 
-  write(6,*)'MAIN: generating skeleton..............................'; call flush(6)
+  write(*,*)'MAIN: generating skeleton..............................'; call flush(6)
   iclock02 = tick()
   call generate_skeleton ! meshgen
   iclock02 = tick(id=idold02, since=iclock02)
 
-  write(6,*)'MAIN: creating gllmesh.................................'; call flush(6)
+  write(*,*)'MAIN: creating gllmesh.................................'; call flush(6)
   iclock03 = tick()
   call create_gllmesh ! gllmeshgen
   iclock03 = tick(id=idold03, since=iclock03)
   !call test_mapping   ! gllmeshgen
 
-  write(6,*)'MAIN: glob-glob numbering..............................'; call flush(6)
+  write(*,*)'MAIN: glob-glob numbering..............................'; call flush(6)
   iclock04 = tick()
   call define_global_global_numbering ! numbering
   iclock04 = tick(id=idold04, since=iclock04)
 
-  write(6,*)'MAIN: defining regions.................................'; call flush(6)
+  write(*,*)'MAIN: defining regions.................................'; call flush(6)
   call define_regions ! mesh_info
 
-  write(6,*)'MAIN: test model.......................................'; call flush(6)
+  write(*,*)'MAIN: test model.......................................'; call flush(6)
   iclock06 = tick()
   call bkgrdmodel_testing ! test_bkgrdmodel
   iclock06 = tick(id=idold06, since=iclock06)
 
   ! Here starts the distinction between solid and fluid regions
-  write(6,*)'MAIN: define subregions................................'; call flush(6)
+  write(*,*)'MAIN: define subregions................................'; call flush(6)
   call def_fluid_regions ! mesh_info
   call def_solid_regions ! mesh_info
   call extract_fluid_solid_submeshes ! gllmeshgen
 
-  write(6,*)'MAIN: glob-slob/flob numbering.........................'; call flush(6)
+  write(*,*)'MAIN: glob-slob/flob numbering.........................'; call flush(6)
   iclock08 = tick()
   if (have_fluid) &
        call define_global_flobal_numbering  ! numbering
@@ -96,14 +96,14 @@ program gllmesh
   iclock08 = tick(id=idold08, since=iclock08)
 
   ! Boundary matrices: find corresponding element neighbors
-  write(6,*)'MAIN: boundaries.......................................'; call flush(6)
+  write(*,*)'MAIN: boundaries.......................................'; call flush(6)
   call define_boundaries  ! mesh_info
 
   ! Parallelization
-  write(6,*)'MAIN: domain decomposition.............................'; call flush(6)
+  write(*,*)'MAIN: domain decomposition.............................'; call flush(6)
   call create_domain_decomposition !parallelization
 
-  write(6,*)'MAIN: creating parallel database.......................'; call flush(6)
+  write(*,*)'MAIN: creating parallel database.......................'; call flush(6)
   iclock11 = tick()
   call create_pdb ! pdb
   iclock11 = tick(id=idold11, since=iclock11)
@@ -113,8 +113,8 @@ program gllmesh
 
   call end_clock ! clocks
 
-  write(6,*)''
-  write(6,*)'....DONE WITH MESHER !'
+  print *
+  write(*,*)'....DONE WITH MESHER !'
 
 end program gllmesh
 !=========================================================================================

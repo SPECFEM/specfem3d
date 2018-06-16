@@ -48,7 +48,7 @@ subroutine nc_open(ncid, nsim, simdir)
 #ifdef unc
   do isim = 1, nsim
       fnam = trim(simdir(isim))//'/Data/axisem_output.nc4'
-      write(6,*) 'Opening forward file ', trim(fnam)
+      write(*,*) 'Opening forward file ', trim(fnam)
       call check( nf90_open ( path=trim(fnam), mode=NF90_NOWRITE, ncid=ncid%id(isim)))
       call check( nf90_inq_grp_ncid(ncid%id(isim), "Seismograms", ncid%seis_grpid(isim)) )
       call check( nf90_inq_varid(ncid%seis_grpid(isim), 'displacement', &

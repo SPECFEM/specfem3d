@@ -86,7 +86,7 @@ open(unit=20000,file='CMTSOLUTION',POSITION='REWIND',status='old')
 close(20000)
 Mij=Mij/1.E7  ! CMTSOLUTION given in dyn-cm
 Mij=Mij/1.E20 ! simulated sources are for 1E20.
-write(6,*)'maximum Mij:',maxval(Mij)
+write(*,*)'maximum Mij:',maxval(Mij)
 
 ! >>>>> Find closest depth and model <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <
 call depths(srcdepth,model,dirname)
@@ -127,7 +127,7 @@ do it=1,nt
    t(it)=dt*real(it)
 enddo
 shift_fact = shift_fact+1.5*period
-write(6,*)'shift factor:',shift_fact
+write(*,*)'shift factor:',shift_fact
 call define_io_appendix(appidur,int(period))
 
 ! >>>>> Rotate & extract epicentral distance <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <  <
@@ -165,8 +165,8 @@ if (.not. even_spaced_theta) then ! brute force search based on monotonous guess
    else if (nrec_sim > 23) then
       nr_per_deg = int(real(nrec_sim)/11.5)
    endif
-   write(6,*)'Min/max epidist [deg]:',minval(epidist),maxval(epidist),nr_per_deg
-   write(6,*)'Min/max delta theta [deg]:',minval(deltatheta),maxval(deltatheta)
+   write(*,*)'Min/max epidist [deg]:',minval(epidist),maxval(epidist),nr_per_deg
+   write(*,*)'Min/max delta theta [deg]:',minval(deltatheta),maxval(deltatheta)
 endif
 if (interpolate_seis) allocate(mask_min(nrec_sim))
 
@@ -175,7 +175,7 @@ if (period == 0.) then
 else
    lam_deg = period*5.8/111.195
 endif
-write(6,*)'period,P-wavelength: [deg]',lam_deg
+write(*,*)'period,P-wavelength: [deg]',lam_deg
 
 if (interpolate_seis) allocate(seistmp(nt,3))
 allocate(w(num_interp))
@@ -195,20 +195,20 @@ do irec=1,nrec
       ind1 = floor(th_rec_rot(irec)*rad2deg)*nr_per_deg
       ind2 = max(min(nrec_sim,ceiling(th_rec_rot(irec)*rad2deg)*nr_per_deg),ind1+1)
       ind_rec = ind1+minloc(abs(th_rec_rot(irec)*rad2deg - epidist(ind1:ind2)),1)
-!      write(6,*)'INDICES:',ind1,ind2,ind_rec
+!      write(*,*)'INDICES:',ind1,ind2,ind_rec
       dtheta_off = th_rec_rot(irec)*rad2deg-epidist(ind_rec)
-      write(6,*)'Receiver #, desired/offered th [deg]:',irec,th_rec_rot(irec)*rad2deg,epidist(ind_rec)
+      write(*,*)'Receiver #, desired/offered th [deg]:',irec,th_rec_rot(irec)*rad2deg,epidist(ind_rec)
 
    else  ! even-spaced theta... find via distance difference - faster (?)
       ind_rec = floor(th_rec_rot(irec)*rad2deg/dtheta_rec)+1
       if (abs(th_rec_rot(irec)*rad2deg-real(ind_rec-1)*dtheta_rec) > dtheta_rec/2.) ind_rec = ind_rec+1
       dtheta_off = th_rec_rot(irec)*rad2deg-(ind_rec-1)*dtheta_rec
-      write(6,*)'desired/offered th [deg], lam-frac diff :', &
+      write(*,*)'desired/offered th [deg], lam-frac diff :', &
             th_rec_rot(irec)*rad2deg,ind_rec,(ind_rec-1)*dtheta_rec,abs(dtheta_off)/lam_deg
    endif
    if (dtheta_off > 0.) theta_discrete_smaller = .true.
    theta_over_dtheta = th_rec_rot(irec)*rad2deg/abs(dtheta_rec)
-!   write(6,*)'theta/dtheta:',theta_over_dtheta
+!   write(*,*)'theta/dtheta:',theta_over_dtheta
 
 ! >>>>> calculate moment tensor and azimuth prefactors/radiation patterns <  <  <  <  <  <  <
    call compute_radiation_prefactor(Mij,ph_rec_rot(irec),mij_phi)
@@ -225,7 +225,7 @@ do irec=1,nrec
    else ! interpolation using num_interp locations
       count_neg = max(1,ind_rec-num_interp/2)
 !      if (theta_discrete_smaller) count_neg = count_neg -1
-      write(6,*)irec,'num_interp,count neg,ind_rec:',num_interp,count_neg,ind_rec
+      write(*,*)irec,'num_interp,count neg,ind_rec:',num_interp,count_neg,ind_rec
       seis=0.; seistmp=0.
       if (trim(interp_method) == 'idw') then
          do i=1,num_interp
@@ -234,7 +234,7 @@ do irec=1,nrec
          sumw=sum(w)
       endif
       do i=1,num_interp
-         write(6,*)'loading seismogram for interpolation at theta=',real(count_neg+i-1)*dtheta_rec
+         write(*,*)'loading seismogram for interpolation at theta=',real(count_neg+i-1)*dtheta_rec
          if (usenetcdf) then
            call nc_read_seis(ncid_in, nc_disp_varid, count_neg+i, nt, seis_snglcomp)
          else
@@ -281,7 +281,7 @@ enddo ! nrec
 !--------------
 if (usenetcdf) call nc_close(ncid_in)
 
-write(6,*)' .... DONE.'
+write(*,*)' .... DONE.'
 
 !===========================
 end program find_receiver
@@ -322,7 +322,7 @@ integer                        :: it
 character(len=4)               :: ind_recchar
 
 call define_io_appendix(ind_recchar,ind_rec)!
-!write(6,*)'reading seismogram ',trim(dirname)//'/MZZ/Data/recfile_'//ind_recchar//'_disp.dat'
+!write(*,*)'reading seismogram ',trim(dirname)//'/MZZ/Data/recfile_'//ind_recchar//'_disp.dat'
 open(unit=60,file=trim(dirname)//'/MZZ/Data/recfile_'//ind_recchar//'_disp.dat')
 open(unit=61,file=trim(dirname)//'/MXX_P_MYY/Data/recfile_'//ind_recchar//'_disp.dat')
 open(unit=62,file=trim(dirname)//'/MXZ_MYZ/Data/recfile_'//ind_recchar//'_disp.dat')
@@ -441,9 +441,9 @@ real                         :: seis_tmp(nt,3),seisvec(3)
 integer                      :: i
 real, parameter              :: pi = 3.14159265
 
-!write(6,*)'ROTATIONS'
-!write(6,*)th_orig*180./pi,ph_orig*180./pi
-!write(6,*)th_rot*180./pi,ph_rot*180./pi
+!write(*,*)'ROTATIONS'
+!write(*,*)th_orig*180./pi,ph_orig*180./pi
+!write(*,*)th_rot*180./pi,ph_rot*180./pi
 
 ! Need to consider *local* spherical geometry in the first place,
 ! THEN rotate the source-receiver frame to the north pole in the solver.
@@ -506,7 +506,7 @@ else if (rec_comp_sys == 'src') then
    seis = seis_tmp ! taken from above
 
 else
-   write(6,*)'unknown component system',rec_comp_sys
+   write(*,*)'unknown component system',rec_comp_sys
    stop
 endif
 
@@ -531,10 +531,10 @@ real, parameter                :: pi = 3.14159265
 real                           :: shiftfact
 
   shiftfact =  1.5*t_0
-!  write(6,*)
-!  write(6,*)'Convolving with period=',t_0
-!  write(6,*)'convolve:',stf,maxval(seis)
-!  write(6,*)'shift factor:',shiftfact
+!  write(*,*)
+!  write(*,*)'Convolving with period=',t_0
+!  write(*,*)'convolve:',stf,maxval(seis)
+!  write(*,*)'shift factor:',shiftfact
   N_j=int(3.*t_0/dt)
   call define_io_appendix(appidur,int(t_0))
   alpha=decay/t_0
@@ -575,8 +575,8 @@ character(len=2) :: comp(3)
 character(len=200) :: fname2
 real, parameter :: pi = 3.14159265
 
-write(6,*)'writing google earth kml file for plotting earthquake and receiver locations/seismograms...'
-write(6,*)'Check it out: googleearth_src_rec_seis.kml'
+write(*,*)'writing google earth kml file for plotting earthquake and receiver locations/seismograms...'
+write(*,*)'Check it out: googleearth_src_rec_seis.kml'
 
 slat=90.-srccolat1*180./pi
 slon=srclon1*180./pi
@@ -755,16 +755,16 @@ integer                         :: dirind,ndepths_chosen
   !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   case default
-     write(6,*)'no simulation for model ',trim(model),' available'; stop
+     write(*,*)'no simulation for model ',trim(model),' available'; stop
   end select
 
-  write(6,*) 'Rundir?'
+  write(*,*) 'Rundir?'
   read(*,*) rundirtemp
   dirind = minloc(abs(srcdepth-depth(1:ndepths_chosen)),1)
   chosen_dir = '../'//trim(rundirtemp)//'/'
-  write(6,*)'Background model: ',trim(model)
-  write(6,*)'Desired, offered depth [km]:',srcdepth,depth(dirind)
-  write(6,*)'Directory name: ',trim(chosen_dir)
+  write(*,*)'Background model: ',trim(model)
+  write(*,*)'Desired, offered depth [km]:',srcdepth,depth(dirind)
+  write(*,*)'Directory name: ',trim(chosen_dir)
 
 end subroutine depths
 !--------------------------------------------------------------------------

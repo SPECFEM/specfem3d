@@ -120,7 +120,7 @@
           write(iu,"(a)") string(1:lstr)
         enddo
         write(5,"(a4,4x,e15.6)") string(1:4),MOMENT
-        write(6,"(a4,4x,e15.6)") string(1:4),0.0
+        write(*,"(a4,4x,e15.6)") string(1:4),0.0
         write(7,"(a4,4x,e15.6)") string(1:4),0.0
         write(8,"(a4,4x,e15.6)") string(1:4),0.0
         write(9,"(a4,4x,e15.6)") string(1:4),0.0
@@ -131,7 +131,7 @@
           write(iu,"(a)") string(1:lstr)
         enddo
         write(5,"(a4,4x,e15.6)") string(1:4),0.0
-        write(6,"(a4,4x,e15.6)") string(1:4),MOMENT
+        write(*,"(a4,4x,e15.6)") string(1:4),MOMENT
         write(7,"(a4,4x,e15.6)") string(1:4),0.0
         write(8,"(a4,4x,e15.6)") string(1:4),0.0
         write(9,"(a4,4x,e15.6)") string(1:4),0.0
@@ -142,7 +142,7 @@
           write(iu,"(a)") string(1:lstr)
         enddo
         write(5,"(a4,4x,e15.6)") string(1:4),0.0
-        write(6,"(a4,4x,e15.6)") string(1:4),0.0
+        write(*,"(a4,4x,e15.6)") string(1:4),0.0
         write(7,"(a4,4x,e15.6)") string(1:4),MOMENT
         write(8,"(a4,4x,e15.6)") string(1:4),0.0
         write(9,"(a4,4x,e15.6)") string(1:4),0.0
@@ -153,7 +153,7 @@
           write(iu,"(a)") string(1:lstr)
         enddo
         write(5,"(a4,4x,e15.6)") string(1:4),0.0
-        write(6,"(a4,4x,e15.6)") string(1:4),0.0
+        write(*,"(a4,4x,e15.6)") string(1:4),0.0
         write(7,"(a4,4x,e15.6)") string(1:4),0.0
         write(8,"(a4,4x,e15.6)") string(1:4),MOMENT
         write(9,"(a4,4x,e15.6)") string(1:4),0.0
@@ -164,7 +164,7 @@
           write(iu,"(a)") string(1:lstr)
         enddo
         write(5,"(a4,4x,e15.6)") string(1:4),0.0
-        write(6,"(a4,4x,e15.6)") string(1:4),0.0
+        write(*,"(a4,4x,e15.6)") string(1:4),0.0
         write(7,"(a4,4x,e15.6)") string(1:4),0.0
         write(8,"(a4,4x,e15.6)") string(1:4),0.0
         write(9,"(a4,4x,e15.6)") string(1:4),MOMENT
@@ -175,7 +175,7 @@
           write(iu,"(a)") string(1:lstr)
         enddo
         write(5,"(a4,4x,e15.6)") string(1:4),0.0
-        write(6,"(a4,4x,e15.6)") string(1:4),0.0
+        write(*,"(a4,4x,e15.6)") string(1:4),0.0
         write(7,"(a4,4x,e15.6)") string(1:4),0.0
         write(8,"(a4,4x,e15.6)") string(1:4),0.0
         write(9,"(a4,4x,e15.6)") string(1:4),0.0

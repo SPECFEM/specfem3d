@@ -106,8 +106,8 @@ subroutine readin_parameters
 
   call barrier
   if (lpr) then
-     write(6,20)
-     write(6,21) datapath, infopath, seislength_t, enforced_dt, &
+     write(*,20)
+     write(*,21) datapath, infopath, seislength_t, enforced_dt, &
                  enforced_period, trim(simtype), rec_file_type, &
                  sum_seis, sum_fields, time_scheme, seis_dt, &
                  dump_energy, dump_vtk, dump_wavefields, &
@@ -219,7 +219,7 @@ subroutine readin_parameters
    12x,'Output format (seism., wavefields): ',a6,/                          &
    08x,' ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == =')
 
-     if (verbose > 1) write(6,'(a/a)') &
+     if (verbose > 1) write(*,'(a/a)') &
            'Processor-specific output is written to: output_proc < PROC ID > .dat', &
            'All potential error messages will appear here...'
   endif !lpr
@@ -237,7 +237,7 @@ subroutine readin_parameters
   endif
 
 
-  if (lpr .and. verbose > 1) write(6,*)'     small value is:',smallval
+  if (lpr .and. verbose > 1) write(*,*)'     small value is:',smallval
 
 end subroutine readin_parameters
 !-----------------------------------------------------------------------------------------
@@ -268,7 +268,7 @@ subroutine read_inparam_basic
      keyword = ' '
      keyvalue = ' '
 
-     if (verbose > 1) write(6,'(A)', advance='no') '    Reading inparam_basic...'
+     if (verbose > 1) write(*,'(A)', advance='no') '    Reading inparam_basic...'
      open(unit=iinparam_basic, file='inparam_basic', status='old', action='read',  iostat=ioerr)
      if (ioerr /= 0) stop 'Check input file ''inparam_basic''! Is it still there?'
 
@@ -433,7 +433,7 @@ subroutine read_inparam_advanced
   keyvalue = ' '
 
   if (mynum == 0) then
-     if (verbose > 1) write(6, '(A)', advance='no') '    Reading inparam_advanced...'
+     if (verbose > 1) write(*, '(A)', advance='no') '    Reading inparam_advanced...'
      open(unit=iinparam_advanced, file='inparam_advanced', status='old', action='read', iostat=ioerr)
      if (ioerr /= 0) stop 'Check input file ''inparam_advanced''! Is it still there?'
 
@@ -489,7 +489,7 @@ subroutine read_inparam_advanced
                  trim(dump_type) /= 'coupling' .and. &                  !! SB
                  trim(dump_type) /= 'coupling_box' .and. &        !! SB
                  trim(dump_type) /= 'displ_velo') then
-                   write(6,*) dump_type
+                   write(*,*) dump_type
                    stop 'ERROR: invalid value for KERNEL_DUMPTYPE!'
              endif
 
@@ -664,11 +664,11 @@ subroutine get_runinfo
   username = 'UNKNOWN'
   git_hash = 'UNKNOWN'
 
-  if (lpr .and. verbose > 1) write(6, '(A)', advance='no') '    Reading runinfo... '
+  if (lpr .and. verbose > 1) write(*, '(A)', advance='no') '    Reading runinfo... '
   open(unit=iget_runinfo, file='runinfo', status='old', action='read',  iostat=ioerr)
   if (ioerr /= 0) then
      if (lpr .and. verbose > 1) &
-        write(6,*) 'No file ''runinfo'' found, continuing without.'
+        write(*,*) 'No file ''runinfo'' found, continuing without.'
   else
      read(iget_runinfo,*) git_hash
      read(iget_runinfo,*) username
@@ -760,15 +760,15 @@ subroutine check_basic_parameters
 
   if (enforced_dt > zero) then
      if (lpr) then
-        write(6,*)
-        write(6,14) 'maximal time step', enforced_dt
+        write(*,*)
+        write(*,14) 'maximal time step', enforced_dt
      endif
   endif
 
   if (enforced_period > zero) then
      if (lpr .and. verbose > 1) then
-        write(6,*)
-        write(6,14) 'min. source period', enforced_period
+        write(*,*)
+        write(*,14) 'min. source period', enforced_period
      endif
   endif
 
@@ -779,19 +779,19 @@ subroutine check_basic_parameters
   if (verbose > 1) then
       if (realkind == 4) then
           if (lpr) then
-              write(6,7)
-              write(6,7)'44444444444444444444444444444444444444444444444444444444444444'
-              write(6,7)'444   Running the solver time loop with SINGLE PRECISION   444'
-              write(6,7)'44444444444444444444444444444444444444444444444444444444444444'
-              write(6,7)
+              write(*,7)
+              write(*,7)'44444444444444444444444444444444444444444444444444444444444444'
+              write(*,7)'444   Running the solver time loop with SINGLE PRECISION   444'
+              write(*,7)'44444444444444444444444444444444444444444444444444444444444444'
+              write(*,7)
           endif
       else if (realkind == 8) then
           if (lpr) then
-              write(6,7)
-              write(6,7)'88888888888888888888888888888888888888888888888888888888888888'
-              write(6,7)'888   Running the solver time loop with DOUBLE PRECISION   888'
-              write(6,7)'88888888888888888888888888888888888888888888888888888888888888'
-              write(6,7)
+              write(*,7)
+              write(*,7)'88888888888888888888888888888888888888888888888888888888888888'
+              write(*,7)'888   Running the solver time loop with DOUBLE PRECISION   888'
+              write(*,7)'88888888888888888888888888888888888888888888888888888888888888'
+              write(*,7)
           endif
       endif
   endif
@@ -812,7 +812,7 @@ subroutine compute_numerical_parameters
   logical               :: found_shift
   character(len=1024)   :: errmsg
 
-  if (lpr .and. verbose > 1) write(6,'(/,a)') '  Computing numerical parameters...'
+  if (lpr .and. verbose > 1) write(*,'(/,a)') '  Computing numerical parameters...'
 
   ! Overwrite time step or source period if demanded by input
   if (enforced_dt > zero) then
@@ -828,9 +828,9 @@ subroutine compute_numerical_parameters
         call pcheck(.true., errmsg)
      else
         if (lpr .and. verbose > 1) then
-           write(6,'(/,a)')'    WARNING: Time step smaller than necessary by mesh!'
-           write(6,20) enforced_dt, deltat
-           write(6,19) 100. - enforced_dt / deltat * 100.
+           write(*,'(/,a)')'    WARNING: Time step smaller than necessary by mesh!'
+           write(*,20) enforced_dt, deltat
+           write(*,19) 100. - enforced_dt / deltat * 100.
         endif
         deltat = enforced_dt
      endif
@@ -846,7 +846,7 @@ subroutine compute_numerical_parameters
         deltat = deltat * 3.0
      end select
      if (lpr .and. verbose > 1) then
-        write(6,'(/,a)')'    Using time step precalculated by the mesher:',deltat
+        write(*,'(/,a)')'    Using time step precalculated by the mesher:',deltat
      endif
   endif
 20 format('     Chosen/maximal time step [s]:',2(f7.3))
@@ -859,21 +859,21 @@ subroutine compute_numerical_parameters
      !       Gaussian stf? (MvD)
      if (enforced_period < period) then
         if (lpr) then
-           write(6,*)
-           write(6,*) '    ERROR: Period smaller than necessary by mesh!'
-           write(6,*) '    A pulse of this (short) chosen half width will produce numerical '
-           write(6,*) '    noise on this (coarse) mesh'
-           write(6,21)'   Chosen value (in inparam file):',enforced_period
-           write(6,21)'   Minimal period for this mesh  :',period
-           write(6,*) '    Change period in input file to larger than this min.'
-           write(6,*) '    or to zero to use precalculated (recommended)'
+           write(*,*)
+           write(*,*) '    ERROR: Period smaller than necessary by mesh!'
+           write(*,*) '    A pulse of this (short) chosen half width will produce numerical '
+           write(*,*) '    noise on this (coarse) mesh'
+           write(*,21)'   Chosen value (in inparam file):',enforced_period
+           write(*,21)'   Minimal period for this mesh  :',period
+           write(*,*) '    Change period in input file to larger than this min.'
+           write(*,*) '    or to zero to use precalculated (recommended)'
            stop
         endif
      else
         if (lpr) then
-           write(6,*)
-           write(6,*) '    WARNING: Using larger period than necessary by mesh!'
-           write(6,23) enforced_period, period
+           write(*,*)
+           write(*,*) '    WARNING: Using larger period than necessary by mesh!'
+           write(*,23) enforced_period, period
         endif
         t_0 = enforced_period
      endif
@@ -882,8 +882,8 @@ subroutine compute_numerical_parameters
         !@TODO: so t_0 = period anyway, but some useless info to the output file in case
         !       of a dirac? (MvD)
         if (lpr) then
-           write(6,*)
-           write(6,*)'    Using period of the mesh:', period
+           write(*,*)
+           write(*,*)'    Using period of the mesh:', period
         endif
         t_0 = period
      else
@@ -898,16 +898,16 @@ subroutine compute_numerical_parameters
   ! Compute number of iterations in time loop
   niter = ceiling((seislength_t + smallval_dble) / deltat)
   if (lpr) then
-     write(6,*)
-     write(6,22) '    desired simulation length  :', seislength_t, ' seconds'
-     write(6,22) '    offered simulation length  :', niter * deltat, ' seconds'
-     write(6,11) '    number time loop iterations:', niter
+     write(*,*)
+     write(*,22) '    desired simulation length  :', seislength_t, ' seconds'
+     write(*,22) '    offered simulation length  :', niter * deltat, ' seconds'
+     write(*,11) '    number time loop iterations:', niter
   endif
 
   ! Compute seismogram sampling rate in time steps
   if (lpr) then
-     write(6,*)
-     write(6,22) '    desired seismogram sampling:', seis_dt, ' seconds'
+     write(*,*)
+     write(*,22) '    desired seismogram sampling:', seis_dt, ' seconds'
   endif
 
   if (seis_dt > 0.0 .and. seis_dt >= deltat ) then
@@ -930,9 +930,9 @@ subroutine compute_numerical_parameters
   check_it = niter / 20
 
   if (lpr) then
-     write(6,22)'    offered seismogram sampling:', deltat * seis_it, ' seconds'
-     write(6,13)'    ...that is, every          :', seis_it, ' timesteps'
-     write(6,11)'    number of samples          :', nseismo
+     write(*,22)'    offered seismogram sampling:', deltat * seis_it, ' seconds'
+     write(*,13)'    ...that is, every          :', seis_it, ' timesteps'
+     write(*,11)'    number of samples          :', nseismo
   endif
 22 format(a33,f9.2,a10)
 
@@ -950,10 +950,10 @@ subroutine compute_numerical_parameters
      close(2900+mynum)
 
      if (lpr) then
-        write(6,*)
-        write(6,11)'    Number of snapshots        :',nsnap
-        write(6,12)'    ...approximately every     :',snap_dt,'seconds'
-        write(6,13)'    ...that is, every          :',snap_it,'timesteps'
+        write(*,*)
+        write(*,11)'    Number of snapshots        :',nsnap
+        write(*,12)'    ...approximately every     :',snap_dt,'seconds'
+        write(*,13)'    ...that is, every          :',snap_it,'timesteps'
      endif
 11   format(a33,i8)
 12   format(a33,f8.2,a10)
@@ -963,11 +963,11 @@ subroutine compute_numerical_parameters
 
   ! Source time function
   if (lpr) then
-     write(6,*)''
-     write(6,*)'  *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-'
-     write(6,*)'  SOURCE TIME function: ',trim(stf_type)
+     print *
+     write(*,*)'  *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-'
+     write(*,*)'  SOURCE TIME function: ',trim(stf_type)
      ! TODO: discrete_dirac and discrete choice are not set when arriving here (MvD)
-     if (discrete_dirac) write(6,*)'    discrete Dirac type: ', discrete_choice
+     if (discrete_dirac) write(*,*)'    discrete Dirac type: ', discrete_choice
   endif
 
   period_vs_discrete_halfwidth = 8.
@@ -980,9 +980,9 @@ subroutine compute_numerical_parameters
      period_vs_discrete_halfwidth = period / (2. * deltat_coarse)
      if (period_vs_discrete_halfwidth < 15.) period_vs_discrete_halfwidth=15.
      if (lpr) then
-        write(6,*)'    No wavefield dump, but discrete Dirac due to seismogram downsampling'
-        write(6,*)'    Set discrete Dirac half width to [s]:', period / period_vs_discrete_halfwidth
-        write(6,*)'    ... i.e. this part in the mesh period:', period_vs_discrete_halfwidth
+        write(*,*)'    No wavefield dump, but discrete Dirac due to seismogram downsampling'
+        write(*,*)'    Set discrete Dirac half width to [s]:', period / period_vs_discrete_halfwidth
+        write(*,*)'    ... i.e. this part in the mesh period:', period_vs_discrete_halfwidth
      endif
      !@TODO: this is not very transparent to the user...
   endif
@@ -998,11 +998,11 @@ subroutine compute_numerical_parameters
 
      if (20.*seis_dt > period ) then
         if (lpr) then
-           write(6,*)'   +++++++++++++++++++ W A R N I N G +++++++++++++++++++++ '
-           write(6,*)'   The sampling period of seismograms is quite coarse given the'
-           write(6,*)'   Dirac delta source time function. We suggest to use at least'
-           write(6,*)'   20 points per period to ensure accurate results, i.e. seis_dt <= ',period/20.
-           write(6,*)'   +++++++++++++++ E N D  o f  W A R N I N G +++++++++++++ '
+           write(*,*)'   +++++++++++++++++++ W A R N I N G +++++++++++++++++++++ '
+           write(*,*)'   The sampling period of seismograms is quite coarse given the'
+           write(*,*)'   Dirac delta source time function. We suggest to use at least'
+           write(*,*)'   20 points per period to ensure accurate results, i.e. seis_dt <= ',period/20.
+           write(*,*)'   +++++++++++++++ E N D  o f  W A R N I N G +++++++++++++ '
         endif
      endif
   else
@@ -1022,32 +1022,32 @@ subroutine compute_numerical_parameters
      !@TODO: This is a mess, but this way it is at least consistent between output and the actual value
      !       WTF? was there some endif lost or so? What's happening here??? (MvD)
      if (lpr) then
-       write(6,*)'   dumping wavefields at sampling rate and deltat:', strain_samp, deltat_coarse
+       write(*,*)'   dumping wavefields at sampling rate and deltat:', strain_samp, deltat_coarse
      endif
   else
      strain_it = seis_it
   endif
 
-  if (lpr) write(6,*)'   coarsest dump every', strain_it, 'th time step, dt:', deltat_coarse
+  if (lpr) write(*,*)'   coarsest dump every', strain_it, 'th time step, dt:', deltat_coarse
 
   if (discrete_dirac) then
      discrete_dirac_halfwidth = period / period_vs_discrete_halfwidth
      t_0 = discrete_dirac_halfwidth
      if (lpr) then
-        write(6,*)
-        write(6,*)'    DISCRETE DIRAC DEFINITIONS:'
-        write(6,*)'    Period discrete Dirac, mesh, simul. [s]:', &
+        write(*,*)
+        write(*,*)'    DISCRETE DIRAC DEFINITIONS:'
+        write(*,*)'    Period discrete Dirac, mesh, simul. [s]:', &
                        real(discrete_dirac_halfwidth),real(period),real(t_0)
-        write(6,*)'    period mesh/period discrete Dirac:',real(period_vs_discrete_halfwidth)
-        write(6,*)"    deltat SEM, seis, coarse [s]:",real(deltat),real(seis_dt),real(deltat_coarse)
-        write(6,*)'    # seismogram points per mesh,Dirac period:', &
+        write(*,*)'    period mesh/period discrete Dirac:',real(period_vs_discrete_halfwidth)
+        write(*,*)"    deltat SEM, seis, coarse [s]:",real(deltat),real(seis_dt),real(deltat_coarse)
+        write(*,*)'    # seismogram points per mesh,Dirac period:', &
                        real(period/seis_dt),real(discrete_dirac_halfwidth/seis_dt)
         if (dump_wavefields) then
-           write(6,*)'    # coarse points per mesh, Dirac period (int) :',strain_samp,sampling_per_a
-           write(6,*)'    # coarse points per mesh, Dirac period (calc):', &
+           write(*,*)'    # coarse points per mesh, Dirac period (int) :',strain_samp,sampling_per_a
+           write(*,*)'    # coarse points per mesh, Dirac period (calc):', &
                 real(period/deltat_coarse),real(discrete_dirac_halfwidth/deltat_coarse)
         endif
-        write(6,*)'    # SEM points per mesh, Dirac period:', &
+        write(*,*)'    # SEM points per mesh, Dirac period:', &
                        real(period/deltat),real(discrete_dirac_halfwidth/deltat)
      endif
 
@@ -1070,15 +1070,15 @@ subroutine compute_numerical_parameters
   endif
 
   if (lpr) then
-     write(6,*)''
-     write(6,*)'  SHIFT FACTOR of source time function [s]:', shift_fact
-     write(6,*)'   # SEM, seis, coarse points per shift factor:', &
+     print *
+     write(*,*)'  SHIFT FACTOR of source time function [s]:', shift_fact
+     write(*,*)'   # SEM, seis, coarse points per shift factor:', &
         real(shift_fact / deltat), real(shift_fact / seis_dt), real(shift_fact / deltat_coarse)
-     write(6,*)'   # simul. half widths per shift factor:', real(shift_fact / t_0)
+     write(*,*)'   # simul. half widths per shift factor:', real(shift_fact / t_0)
      if (discrete_dirac) &
-        write(6,*)'   # mesh halfwidths per shift fact', real(shift_fact / period)
-     write(6,*)'  *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-'
-     write(6,*)''
+        write(*,*)'   # mesh halfwidths per shift fact', real(shift_fact / period)
+     write(*,*)'  *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-'
+     print *
   endif
 
   ! strain tensor output, convert from num of dumps per period into
@@ -1098,21 +1098,21 @@ subroutine compute_numerical_parameters
      endif
 
      if (lpr) then
-        write(6,*)
-        write(6,11)'    Number of wavefield dumps  :', nstrain
+        write(*,*)
+        write(*,11)'    Number of wavefield dumps  :', nstrain
 
-        write(6,12)'    ...approximately every     :', &
+        write(*,12)'    ...approximately every     :', &
                    t_0/real(strain_samp), &
                    'seconds'
-        write(6,13)'    ...that is, every          :',strain_it,'timestep'
+        write(*,13)'    ...that is, every          :',strain_it,'timestep'
      endif
 
      ndumppts_el = (iend - ibeg + 1) * (jend - jbeg + 1)
      if (lpr) then
-        write(6,*)'    Define limitation of GLL points in the dumped fields:'
-        write(6,*)'      ibeg=', ibeg, 'iend=', iend
-        write(6,*)'      jbeg=', jbeg, 'jend=', jend
-        write(6,*)'      # points saved within an element:', ndumppts_el
+        write(*,*)'    Define limitation of GLL points in the dumped fields:'
+        write(*,*)'      ibeg=', ibeg, 'iend=', iend
+        write(*,*)'      jbeg=', jbeg, 'jend=', jend
+        write(*,*)'      # points saved within an element:', ndumppts_el
      endif
   endif
 
@@ -1171,7 +1171,7 @@ subroutine compute_numerical_parameters
       close(3333+mynum)
   endif
 
-  if (lpr) write(6,*)
+  if (lpr) write(*,*)
 
 end subroutine compute_numerical_parameters
 !-----------------------------------------------------------------------------------------
@@ -1274,8 +1274,8 @@ subroutine write_parameters
             hminloc1(1)-1,hminloc1(2)-1)
 
     ! Checking potential issues with input parameter consistency
-    if (lpr) write(6,*)
-    if (lpr) write(6,*)'  checking input parameters for consistency...'
+    if (lpr) write(*,*)
+    if (lpr) write(*,*)'  checking input parameters for consistency...'
     call check_parameters(hmaxglob,hminglob,curvel,linel,seminoel,semisoel, &
                          curvel_solid,linel_solid,seminoel_solid,semisoel_solid, &
                          curvel_fluid,linel_fluid,seminoel_fluid,semisoel_fluid)
@@ -1289,115 +1289,115 @@ subroutine write_parameters
     ! output to stdout, only by proc nproc-1
     if (lpr) then
 
-        write(6,*)
-        write(6,*)':::::::::::::::: SIMULATION PARAMETERS::::::::::::::::::::::::'
+        write(*,*)
+        write(*,*)':::::::::::::::: SIMULATION PARAMETERS::::::::::::::::::::::::'
 
-        write(6,*)'  Code information_____________________________________'
-        write(6,12)'     svn revision      :', git_hash
-        write(6,12)'     username          :', username
-        write(6,12)'     hostname          :', hostname
-        write(6,12)'     compiler          :', compiler
-        write(6,12)'     compilerversion   :', compilerversion
-        write(6,20)'     FFLAGS            :', fflags
-        write(6,20)'     CFLAGS            :', cflags
-        write(6,20)'     LDFLAGS           :', ldflags
-        write(6,12)'     OpenMP            :', openmp
-        write(6,*)'  Global mesh information______________________________'
-        write(6,12)'     Background model  :',bkgrdmodel
-        write(6,10)'     # discontinuities :',ndisc
-        write(6,13)'     Have fluid region ?',have_fluid
-        write(6,11)'     Outer rad.     [m]:',router
-        write(6,11)'     Inner rad.     [m]:',rmin
-        write(6,10)'     Polynomial order  :',npol
-        write(6,10)'     # control nodes   :',npoin
-        write(6,10)'     Total elements    :',nelem
-        write(6,10)'     Total # points    :',npoint
-        write(6,10)'     # global numbers  :',nglob
-        write(6,10)'     # axial elements  :',naxel
-        write(6,10)'     # curved elements :',curvel
-        write(6,10)'     # linear elements :',linel
-        write(6,10)'     # mixed elements  :',seminoel+semisoel
-        write(6,11)'     Min. distance  [m]:',min_distance_dim
-        write(6,11)'     Min. distance/r0  :',min_distance_nondim
+        write(*,*)'  Code information_____________________________________'
+        write(*,12)'     svn revision      :', git_hash
+        write(*,12)'     username          :', username
+        write(*,12)'     hostname          :', hostname
+        write(*,12)'     compiler          :', compiler
+        write(*,12)'     compilerversion   :', compilerversion
+        write(*,20)'     FFLAGS            :', fflags
+        write(*,20)'     CFLAGS            :', cflags
+        write(*,20)'     LDFLAGS           :', ldflags
+        write(*,12)'     OpenMP            :', openmp
+        write(*,*)'  Global mesh information______________________________'
+        write(*,12)'     Background model  :',bkgrdmodel
+        write(*,10)'     # discontinuities :',ndisc
+        write(*,13)'     Have fluid region ?',have_fluid
+        write(*,11)'     Outer rad.     [m]:',router
+        write(*,11)'     Inner rad.     [m]:',rmin
+        write(*,10)'     Polynomial order  :',npol
+        write(*,10)'     # control nodes   :',npoin
+        write(*,10)'     Total elements    :',nelem
+        write(*,10)'     Total # points    :',npoint
+        write(*,10)'     # global numbers  :',nglob
+        write(*,10)'     # axial elements  :',naxel
+        write(*,10)'     # curved elements :',curvel
+        write(*,10)'     # linear elements :',linel
+        write(*,10)'     # mixed elements  :',seminoel+semisoel
+        write(*,11)'     Min. distance  [m]:',min_distance_dim
+        write(*,11)'     Min. distance/r0  :',min_distance_nondim
 
-        write(6,*)'  Grid spacing, velocities etc.________________________'
-        write(6,17)'     Min. (pre,comp)[m]:',hmin_glob,hminglob
-        write(6,17)'     Max. (pre,comp)[m]:',hmax_glob,hmaxglob
-        write(6,17)'     Min. vp[m/s], r[m]:',vpmin,vpminr
-        write(6,17)'     Min. vs[m/s], r[m]:',vsmin,vsminr
-        write(6,17)'     Max. vp[m/s], r[m]:',vpmax,vpmaxr
-        write(6,17)'     Max. vs[m/s], r[m]:',vsmax,vsmaxr
-        write(6,11)'     Max. lead time [s]:',char_time_max
-        write(6,17)'     r [m], theta [deg]:',char_time_max_rad*router, &
+        write(*,*)'  Grid spacing, velocities etc.________________________'
+        write(*,17)'     Min. (pre,comp)[m]:',hmin_glob,hminglob
+        write(*,17)'     Max. (pre,comp)[m]:',hmax_glob,hmaxglob
+        write(*,17)'     Min. vp[m/s], r[m]:',vpmin,vpminr
+        write(*,17)'     Min. vs[m/s], r[m]:',vsmin,vsminr
+        write(*,17)'     Max. vp[m/s], r[m]:',vpmax,vpmaxr
+        write(*,17)'     Max. vs[m/s], r[m]:',vsmax,vsmaxr
+        write(*,11)'     Max. lead time [s]:',char_time_max
+        write(*,17)'     r [m], theta [deg]:',char_time_max_rad*router, &
                                               char_time_max_theta
-        write(6,11)'     Min. lead time [s]:',char_time_min
-        write(6,17)'     r [m], theta [deg]:',char_time_min_rad*router, &
+        write(*,11)'     Min. lead time [s]:',char_time_min
+        write(*,17)'     r [m], theta [deg]:',char_time_min_rad*router, &
                                               char_time_min_theta
 
-        write(6,*)'  Solid-Fluid configuration____________________________'
-        write(6,15)'     S/F elements      :',nel_solid,nel_fluid
-        write(6,15)'     S/F # points      :',npoint_solid,npoint_fluid
-        write(6,15)'     S/F global numbers:',nglob_solid,nglob_fluid
-        write(6,15)'     S/F # axial elems :',naxel_solid,naxel_fluid
-        write(6,10)'     # S/F boundary els:',nel_bdry
-        write(6,15)'     S/F curved elems  :',curvel_solid,curvel_fluid
-        write(6,15)'     S/F linear elems  :',linel_solid,linel_fluid
-        write(6,15)'     S/F mixed elements:',seminoel_solid+semisoel_solid, &
+        write(*,*)'  Solid-Fluid configuration____________________________'
+        write(*,15)'     S/F elements      :',nel_solid,nel_fluid
+        write(*,15)'     S/F # points      :',npoint_solid,npoint_fluid
+        write(*,15)'     S/F global numbers:',nglob_solid,nglob_fluid
+        write(*,15)'     S/F # axial elems :',naxel_solid,naxel_fluid
+        write(*,10)'     # S/F boundary els:',nel_bdry
+        write(*,15)'     S/F curved elems  :',curvel_solid,curvel_fluid
+        write(*,15)'     S/F linear elems  :',linel_solid,linel_fluid
+        write(*,15)'     S/F mixed elements:',seminoel_solid+semisoel_solid, &
                                               seminoel_fluid+semisoel_fluid
 
-        write(6,*)'  Solid message passing_________________________________'
-        write(6,10)'     # processors      :',nproc
-        write(6,10)'     max. sent messages:',maxprocssend_solid
-        write(6,10)'     max. sent size    :',sizemsgsendmax_solid
-        write(6,10)'     nax. recv messages:',maxprocsrecv_solid
-        write(6,10)'     max. recv size    :',sizemsgrecvmax_solid
+        write(*,*)'  Solid message passing_________________________________'
+        write(*,10)'     # processors      :',nproc
+        write(*,10)'     max. sent messages:',maxprocssend_solid
+        write(*,10)'     max. sent size    :',sizemsgsendmax_solid
+        write(*,10)'     nax. recv messages:',maxprocsrecv_solid
+        write(*,10)'     max. recv size    :',sizemsgrecvmax_solid
 
         if (have_fluid) then
-            write(6,*)'  Fluid message passing_________________________________'
-            write(6,10)'     max. sent messages:',maxprocssend_fluid
-            write(6,10)'     max. sent size    :',sizemsgsendmax_fluid
-            write(6,10)'     nax. recv messages:',maxprocsrecv_fluid
-            write(6,10)'     max. recv size    :',sizemsgrecvmax_fluid
+            write(*,*)'  Fluid message passing_________________________________'
+            write(*,10)'     max. sent messages:',maxprocssend_fluid
+            write(*,10)'     max. sent size    :',sizemsgsendmax_fluid
+            write(*,10)'     nax. recv messages:',maxprocsrecv_fluid
+            write(*,10)'     max. recv size    :',sizemsgrecvmax_fluid
         endif
 
-        write(6,*)'  Source information___________________________________'
-        write(6,16)'     Source type       :',src_type(1),src_type(2)
-        write(6,11)'     Source depth   [m]:',zsrc
-        write(6,11)'     Source colat [deg]:',srccolat*180./pi
-        write(6,11)'     Source long  [deg]:',srclon*180./pi
-        write(6,11)'     Magnitude    [N/m]:',magnitude
-        write(6,12)'     Source time fct   :',trim(stf_type)
-        write(6,11)'     Dom. period    [s]:',t_0
-        write(6,*)'  Receiver information___________________________________'
-        write(6,12)'     Receiver file type',rec_file_type
-        write(6,19)'     Sum seismograms  :',sum_seis
-        write(6,*)'  General numerical parameters_________________________'
-        write(6,11)'     # elems/wavelength:',pts_wavelngth
-        write(6,11)'     Courant number    :',courant
-        write(6,11)'     Time step [s]     :',deltat
-        write(6,10)'     # iterations      :',niter
-        write(6,11)'     seismo length [s] :',niter*deltat
-        write(6,12)'     time extrapolation:',time_scheme
-        write(6,*)'  Input/Output information_____________________________'
-        write(6,12)'     Output data path  :',trim(datapath)
-        write(6,12)'     Output info path  :',trim(infopath)
-        write(6,19)'     Sum wavefields:', sum_fields
-        write(6,19)'     Dump energy       :',dump_energy
-        write(6,18)'     XDMF VTK          :', dump_xdmf
+        write(*,*)'  Source information___________________________________'
+        write(*,16)'     Source type       :',src_type(1),src_type(2)
+        write(*,11)'     Source depth   [m]:',zsrc
+        write(*,11)'     Source colat [deg]:',srccolat*180./pi
+        write(*,11)'     Source long  [deg]:',srclon*180./pi
+        write(*,11)'     Magnitude    [N/m]:',magnitude
+        write(*,12)'     Source time fct   :',trim(stf_type)
+        write(*,11)'     Dom. period    [s]:',t_0
+        write(*,*)'  Receiver information___________________________________'
+        write(*,12)'     Receiver file type',rec_file_type
+        write(*,19)'     Sum seismograms  :',sum_seis
+        write(*,*)'  General numerical parameters_________________________'
+        write(*,11)'     # elems/wavelength:',pts_wavelngth
+        write(*,11)'     Courant number    :',courant
+        write(*,11)'     Time step [s]     :',deltat
+        write(*,10)'     # iterations      :',niter
+        write(*,11)'     seismo length [s] :',niter*deltat
+        write(*,12)'     time extrapolation:',time_scheme
+        write(*,*)'  Input/Output information_____________________________'
+        write(*,12)'     Output data path  :',trim(datapath)
+        write(*,12)'     Output info path  :',trim(infopath)
+        write(*,19)'     Sum wavefields:', sum_fields
+        write(*,19)'     Dump energy       :',dump_energy
+        write(*,18)'     XDMF VTK          :', dump_xdmf
         if (dump_vtk .or. dump_xdmf) then
-            write(6,11)'     snap interval [s] :',snap_dt
-            write(6,10)'     # snaps           :',snap_it
+            write(*,11)'     snap interval [s] :',snap_dt
+            write(*,10)'     # snaps           :',snap_it
         endif
-        write(6,19)'     Dump wavefields   :',dump_wavefields
+        write(*,19)'     Dump wavefields   :',dump_wavefields
         if (dump_wavefields) then
-            write(6,12)'     Dumping type      :',dump_type
-            write(6,11)'     dump interval [s] :',deltat_coarse !period/real(strain_samp)
-            write(6,10)'     # wavefield dumps :',strain_it
+            write(*,12)'     Dumping type      :',dump_type
+            write(*,11)'     dump interval [s] :',deltat_coarse !period/real(strain_samp)
+            write(*,10)'     # wavefield dumps :',strain_it
         endif
-        write(6,19)'     Need fluid displ. :',need_fluid_displ
-        write(6,*)
-        write(6,*)':::::::::::::::: END SIMULATION PARAMETERS::::::::::::::::::::'
-        write(6,*)
+        write(*,19)'     Need fluid displ. :',need_fluid_displ
+        write(*,*)
+        write(*,*)':::::::::::::::: END SIMULATION PARAMETERS::::::::::::::::::::'
+        write(*,*)
         call flush(6)
 
         ! additionally write a header for the kernel software
@@ -1456,8 +1456,8 @@ subroutine write_parameters
 
         close(55) ! simulation.info
 
-        write(6,*)
-        write(6,*)'  wrote general simulation info into "simulation.info"'
+        write(*,*)
+        write(*,*)'  wrote general simulation info into "simulation.info"'
 
 21      format(f22.7,a45)
 22      format(i20,a45)
@@ -1474,7 +1474,7 @@ subroutine write_parameters
     if ((mynum == 0) .and. (use_netcdf)) then !Only proc0 has the netcdf file open at that point
 #endif
         ! write generic simulation info file
-        if (mynum == 0) write(6,*) ' Writing simulation info to netcdf file attributes'
+        if (mynum == 0) write(*,*) ' Writing simulation info to netcdf file attributes'
         call nc_write_att_int(  7,                     'file version')
         call nc_write_att_char( trim(bkgrdmodel),      'background model')
         call nc_write_att_int(  merge(1, 0, do_anel),  'attenuation') ! merge: hacky conversion of logical to int
@@ -1645,8 +1645,8 @@ subroutine write_parameters
         if ((trim(simtype) == 'moment' .and. src_type(2) == 'mrr') &
             .or. (trim(simtype) == 'single')) then
 
-           write(6,*)'  Writing post processing input file: param_post_processing'
-           write(6,*)'  ... mainly based on guessing from the current simulation, make sure to edit!'
+           write(*,*)'  Writing post processing input file: param_post_processing'
+           write(*,*)'  ... mainly based on guessing from the current simulation, make sure to edit!'
            write(9,'(a,/,a,/,a,/)') &
                     '# receiver coordinate system', &
                     '# one of: enz, sph, cyl, xyz, src', &
@@ -1712,7 +1712,7 @@ subroutine write_parameters
            close(9)
         endif
 
-        write(6,*)'    ... wrote file param_post_processing'
+        write(*,*)'    ... wrote file param_post_processing'
     endif
 
 end subroutine write_parameters
@@ -1733,66 +1733,66 @@ subroutine check_parameters(hmaxglob, hminglob, curvel, linel, seminoel, semisoe
     integer, intent(in) :: curvel_solid,linel_solid,seminoel_solid,semisoel_solid
     integer, intent(in) :: curvel_fluid,linel_fluid,seminoel_fluid,semisoel_fluid
 
-    if (verbose > 1) write(6,*) procstrg, 'Checking solid message-passing...'
+    if (verbose > 1) write(*,*) procstrg, 'Checking solid message-passing...'
     if (nproc == 1 .and. psum_int(sizesend_solid) > 0 ) then
-       write(6,*)'Problem: Have only one proc but want to send messages..'
+       write(*,*)'Problem: Have only one proc but want to send messages..'
        stop
     endif
 
     if (nproc == 1 .and. psum_int(sizerecv_solid) > 0 ) then
-       write(6,*)'Problem: Have only one proc but want to receive messages...'
+       write(*,*)'Problem: Have only one proc but want to receive messages...'
        stop
     endif
 
     if (nproc > 1 .and. psum_int(sizesend_solid) == 0 ) then
-       write(6,*)'Problem: No proc is willing to send anything....'
+       write(*,*)'Problem: No proc is willing to send anything....'
        stop
     endif
 
     if (nproc > 1 .and. psum_int(sizesend_solid) == 0 ) then
-       write(6,*)'Problem: No proc is willing to receive anything....'
+       write(*,*)'Problem: No proc is willing to receive anything....'
        stop
     endif
 
     if (psum_int(sizesend_solid) < nproc-1 ) then
-       write(6,*)'Problem: Some proc(s) not willing to send anything...'
+       write(*,*)'Problem: Some proc(s) not willing to send anything...'
        stop
     endif
 
     if (psum_int(sizerecv_solid) < nproc-1 ) then
-       write(6,*)'Problem: Some proc(s) not willing to receive anything...'
+       write(*,*)'Problem: Some proc(s) not willing to receive anything...'
        stop
     endif
 
     if (have_fluid) then
-       if (verbose > 1) write(6,*)procstrg,'Checking fluid message-passing...'
+       if (verbose > 1) write(*,*)procstrg,'Checking fluid message-passing...'
        if (nproc == 1 .and. psum_int(sizesend_fluid) > 0 ) then
-          write(6,*)'Problem: Have only one proc but want to send messages..'
+          write(*,*)'Problem: Have only one proc but want to send messages..'
           stop
        endif
 
        if (nproc == 1 .and. psum_int(sizerecv_fluid) > 0 ) then
-          write(6,*)'Problem: Have only one proc but want to receive messages...'
+          write(*,*)'Problem: Have only one proc but want to receive messages...'
           stop
        endif
 
        if (nproc > 1 .and. psum_int(sizesend_fluid) == 0 ) then
-          write(6,*)'Problem: No proc is willing to send anything....'
+          write(*,*)'Problem: No proc is willing to send anything....'
           stop
        endif
 
        if (nproc > 1 .and. psum_int(sizesend_fluid) == 0 ) then
-          write(6,*)'Problem: No proc is willing to receive anything....'
+          write(*,*)'Problem: No proc is willing to receive anything....'
           stop
        endif
 
        if (psum_int(sizesend_fluid) < nproc-1 ) then
-          write(6,*)'Problem: Some proc(s) not willing to send anything...'
+          write(*,*)'Problem: Some proc(s) not willing to send anything...'
           stop
        endif
 
        if (psum_int(sizerecv_fluid) < nproc-1 ) then
-          write(6,*)'Problem: Some proc(s) not willing to receive anything...'
+          write(*,*)'Problem: Some proc(s) not willing to receive anything...'
           stop
        endif
 
@@ -1801,47 +1801,47 @@ subroutine check_parameters(hmaxglob, hminglob, curvel, linel, seminoel, semisoe
   ! Even more tests.............
   ! stop if difference between loaded and on-the-fly mesh larger than 1 METER....
   if ( (hmin_glob-hminglob) > 1.) then
-      write(6,*)
-      write(6,*)mynum,'Problem with minimal global grid spacing!'
-      write(6,*)mynum,'Value from mesher        :',hmin_glob
-      write(6,*)mynum,'Value computed on-the-fly:',hminglob
+      write(*,*)
+      write(*,*)mynum,'Problem with minimal global grid spacing!'
+      write(*,*)mynum,'Value from mesher        :',hmin_glob
+      write(*,*)mynum,'Value computed on-the-fly:',hminglob
       stop
   endif
 
   ! stop if difference between loaded and on-the-fly mesh larger than 1 METER....
   if ((hmax_glob-hmaxglob) > 1.) then
-      write(6,*)
-      write(6,*)mynum,'Problem with maximal global grid spacing!'
-      write(6,*)mynum,'Value from mesher        :',hmax_glob
-      write(6,*)mynum,'Value computed on-the-fly:',hmaxglob
+      write(*,*)
+      write(*,*)mynum,'Problem with maximal global grid spacing!'
+      write(*,*)mynum,'Value from mesher        :',hmax_glob
+      write(*,*)mynum,'Value computed on-the-fly:',hmaxglob
       stop
   endif
 
   ! stop if sum of respective element types do not sum up to nelem
   if (curvel+linel+seminoel+semisoel /= nelem) then
-      write(6,*)
-      write(6,*)mynum,'Problem with number of assigned global element types!'
-      write(6,*)mynum,'curved,lin,semi(N),semi(S):',curvel,linel,seminoel, &
+      write(*,*)
+      write(*,*)mynum,'Problem with number of assigned global element types!'
+      write(*,*)mynum,'curved,lin,semi(N),semi(S):',curvel,linel,seminoel, &
                                                     semisoel
-      write(6,*)mynum,'Total # elements          :',nelem
+      write(*,*)mynum,'Total # elements          :',nelem
       stop
   endif
 
   if (curvel_solid+linel_solid+seminoel_solid+semisoel_solid /= nel_solid) then
-      write(6,*)
-      write(6,*)mynum,'Problem with number of assigned solid element types!'
-      write(6,*)mynum,'curved,lin,semi(N),semi(S):',curvel_solid,linel_solid, &
+      write(*,*)
+      write(*,*)mynum,'Problem with number of assigned solid element types!'
+      write(*,*)mynum,'curved,lin,semi(N),semi(S):',curvel_solid,linel_solid, &
                                                    seminoel_solid,semisoel_solid
-      write(6,*)mynum,'Total # elements          :',nel_solid
+      write(*,*)mynum,'Total # elements          :',nel_solid
       stop
   endif
 
   if (curvel_fluid+linel_fluid+seminoel_fluid+semisoel_fluid /= nel_fluid) then
-      write(6,*)
-      write(6,*)mynum,'Problem with number of assigned fluid element types!'
-      write(6,*)mynum,'curved,lin,semi(N),semi(S):',curvel_fluid,linel_fluid, &
+      write(*,*)
+      write(*,*)mynum,'Problem with number of assigned fluid element types!'
+      write(*,*)mynum,'curved,lin,semi(N),semi(S):',curvel_fluid,linel_fluid, &
                                                    seminoel_fluid,semisoel_fluid
-      write(6,*)mynum,'Total # elements          :',nel_fluid
+      write(*,*)mynum,'Total # elements          :',nel_fluid
       stop
   endif
 

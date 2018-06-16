@@ -55,17 +55,17 @@ subroutine compute_heterogeneities(rho, lambda, mu, xi_ani, phi_ani, eta_ani, &
            xi_ani_post, phi_ani_post, eta_ani_post, fa_ani_theta_post, fa_ani_phi_post
 
     if (lpr) then
-       write(6,*)
-       write(6,*) '   +++++++++++++++++++++++++++++++++++++++++++++'
-       write(6,*) '   ++++++++    Lateral Heterogeneities  ++++++++'
-       write(6,*) '   +++++++++++++++++++++++++++++++++++++++++++++'
-       write(6,*)
-       write(6,*)
-       write(6,*) 'read parameter file for heterogeneities: inparam_hetero'
-       write(6,*)
-       write(6,*) ' !!!!!!!!! W A R N I N G !!!!!!!! '
-       write(6,*) 'Gradients have not been thoroughly tested yet, are thus switched off!'
-       write(6,*)
+       write(*,*)
+       write(*,*) '   +++++++++++++++++++++++++++++++++++++++++++++'
+       write(*,*) '   ++++++++    Lateral Heterogeneities  ++++++++'
+       write(*,*) '   +++++++++++++++++++++++++++++++++++++++++++++'
+       write(*,*)
+       write(*,*)
+       write(*,*) 'read parameter file for heterogeneities: inparam_hetero'
+       write(*,*)
+       write(*,*) ' !!!!!!!!! W A R N I N G !!!!!!!! '
+       write(*,*) 'Gradients have not been thoroughly tested yet, are thus switched off!'
+       write(*,*)
     endif
 
     if (present(xi_ani) .and. present(phi_ani) .and. present(eta_ani) &
@@ -116,10 +116,10 @@ subroutine compute_heterogeneities(rho, lambda, mu, xi_ani, phi_ani, eta_ani, &
        else if (het_format(ij) == 'ica') then
           ! add inner core anisotropy
           if (.not. ani_hetero) then
-             write(6,*) ''
-             write(6,*) 'ERROR: inner core anisotropy need an anisotropic model -'
-             write(6,*) '   either choose an anisotropic background model or'
-             write(6,*) '   activate force anisotropy in inparam!'
+             print *
+             write(*,*) 'ERROR: inner core anisotropy need an anisotropic model -'
+             write(*,*) '   either choose an anisotropic background model or'
+             write(*,*) '   activate force anisotropy in inparam!'
              stop
           endif
           call load_ica(rho, lambda, mu, lambdapost, xi_ani_post, phi_ani_post, &
@@ -157,7 +157,7 @@ subroutine compute_heterogeneities(rho, lambda, mu, xi_ani, phi_ani, eta_ani, &
     endif
 
     call barrier ! for nicer output
-    if (lpr) write(6,*) 'final model done, now vtk files...'
+    if (lpr) write(*,*) 'final model done, now vtk files...'
 
     if (ani_hetero) then
        call plot_hetero_region_vtk(rho, lambda, mu, xi_ani, phi_ani, eta_ani, &
@@ -175,11 +175,11 @@ subroutine compute_heterogeneities(rho, lambda, mu, xi_ani, phi_ani, eta_ani, &
     call barrier ! for nicer output
 
     if (lpr) then
-       write(6,*)
-       write(6,*) '   ++++++++++++++++++++++++++++++++++++++++++++++++++++'
-       write(6,*) '   ++++++++ done with Lateral Heterogeneities  ++++++++'
-       write(6,*) '   ++++++++++++++++++++++++++++++++++++++++++++++++++++'
-       write(6,*)
+       write(*,*)
+       write(*,*) '   ++++++++++++++++++++++++++++++++++++++++++++++++++++'
+       write(*,*) '   ++++++++ done with Lateral Heterogeneities  ++++++++'
+       write(*,*) '   ++++++++++++++++++++++++++++++++++++++++++++++++++++'
+       write(*,*)
     endif
 
 end subroutine compute_heterogeneities
@@ -195,13 +195,13 @@ subroutine read_param_hetero
     inquire(file="inparam_hetero", EXIST=file_exists)
 
     if (.not. file_exists) then
-       write(6,*) ''
-       write(6,*) 'ERROR: lateral heterogeneity set in inparam, but'
-       write(6,*) '       inparam_hetro does not exist!'
+       print *
+       write(*,*) 'ERROR: lateral heterogeneity set in inparam, but'
+       write(*,*) '       inparam_hetro does not exist!'
        stop
     endif
 
-    if (lpr) write(6,*) ' starting to read parameters for lateral heterogeneities from inparam_hetero'
+    if (lpr) write(*,*) ' starting to read parameters for lateral heterogeneities from inparam_hetero'
     open(unit=91, file='inparam_hetero')
 
     read(91,*) num_het
@@ -282,7 +282,7 @@ subroutine read_param_hetero
 
        case default
           !else
-          write(6,*)'Unknown heterogeneity input type: ', het_format(ij)
+          write(*,*)'Unknown heterogeneity input type: ', het_format(ij)
           stop
        end select
 
@@ -301,40 +301,40 @@ subroutine read_param_hetero
 
     if (lpr) then
        do ij=1, num_het
-          write(6,*) ''
-          write(6,"('  Lateral Heterogeneity No. ', I3, ' of type ', A)") ij, het_format(ij)
-          write(6,*) ''
+          print *
+          write(*,"('  Lateral Heterogeneity No. ', I3, ' of type ', A)") ij, het_format(ij)
+          print *
           if (het_format(ij) == 'funct' .or. het_format(ij) == 'rndm') then
-             write(6,*) ''
-             write(6,*) '   Radius (lower/upper bound) [km]:', &
+             print *
+             write(*,*) '   Radius (lower/upper bound) [km]:', &
                          r_het1(ij) / 1000., r_het2(ij) / 1000.
-             write(6,*) '   Colatitude (lower/upper bound) [deg]:', &
+             write(*,*) '   Colatitude (lower/upper bound) [deg]:', &
                          th_het1(ij) * 180. / pi, th_het2(ij) * 180. / pi
-             write(6,*) '   delta rho [%]:', delta_rho(ij)
-             write(6,*) '   delta vp  [%]:', delta_vp(ij)
-             write(6,*) '   delta vs  [%]:', delta_vs(ij)
-             write(6,*) ''
+             write(*,*) '   delta rho [%]:', delta_rho(ij)
+             write(*,*) '   delta vp  [%]:', delta_vp(ij)
+             write(*,*) '   delta vs  [%]:', delta_vs(ij)
+             print *
           endif
        enddo
     endif
 
     ! need to rotate coordinates if source is not along axis (beneath the north pole)
     if (rot_src) then
-       write(6,*) 'need to rotate the heterogeneous domain with the source....'
+       write(*,*) 'need to rotate the heterogeneous domain with the source....'
 
        do i=1, num_het
           if (het_format(i) == 'rndm' .or. het_format(i) == 'funct') then
-             write(6,*)'Before rotation r th ph 1:', &
+             write(*,*)'Before rotation r th ph 1:', &
                 r_het1(i), th_het1(i) * 180. / pi
-             write(6,*)'Before rotation r th ph 2:', &
+             write(*,*)'Before rotation r th ph 2:', &
                 r_het2(i), th_het2(i) * 180. / pi
 
              call rotate_hetero(r_het1(i), th_het1(i))
              call rotate_hetero(r_het2(i), th_het2(i))
 
-             write(6,*)'After rotation r th ph 1:', &
+             write(*,*)'After rotation r th ph 1:', &
                 r_het1(i), th_het1(i) * 180. / pi
-             write(6,*)'After rotation r th ph 2:', &
+             write(*,*)'After rotation r th ph 2:', &
                 r_het2(i), th_het2(i) * 180. / pi
           endif
        enddo
@@ -346,7 +346,7 @@ subroutine read_param_hetero
     thhetmax = 0.d0
 
     call barrier ! For easier debugging
-    if (lpr) write(6,*) 'done with read_param_hetero'
+    if (lpr) write(*,*) 'done with read_param_hetero'
 
 end subroutine read_param_hetero
 !-----------------------------------------------------------------------------------------
@@ -393,8 +393,8 @@ subroutine load_ica(rho, lambda, mu, lambdapost, xi_ani_post, phi_ani_post, &
     allocate(fast_axis_src(num_slices,1:3))
 
     if (lpr) then
-        write(6,*) ''
-        write(6,*) 'Adding Inner Core Anisotropy !!!'
+        print *
+        write(*,*) 'Adding Inner Core Anisotropy !!!'
     endif
 
     do i=1, num_slices
@@ -407,12 +407,12 @@ subroutine load_ica(rho, lambda, mu, lambdapost, xi_ani_post, phi_ani_post, &
             fast_axis_src(i,:) = fast_axis_np
         !endif
         if (lpr) then
-            write(6,*) i
-            write(6,*) '  Fast Axis        :', fast_axis_np
-            write(6,*) '  Fast Axis rotated:', fast_axis_src(i,:)
-            write(6,*) '  ROTATION of fastaxis disabled for now - does not make'
-            write(6,*) '  sense if not rotating in all three euler angles!'
-            write(6,*) ''
+            write(*,*) i
+            write(*,*) '  Fast Axis        :', fast_axis_np
+            write(*,*) '  Fast Axis rotated:', fast_axis_src(i,:)
+            write(*,*) '  ROTATION of fastaxis disabled for now - does not make'
+            write(*,*) '  sense if not rotating in all three euler angles!'
+            print *
         endif
     enddo
 
@@ -510,23 +510,23 @@ subroutine load_het_discr(rho, lambda, mu, rhopost, lambdapost, mupost, hetind, 
 
     type(kdtree2), pointer          :: tree
 
-    write(6,*) mynum, 'reading discrete heterogeneity file...'
+    write(*,*) mynum, 'reading discrete heterogeneity file...'
 
     if (.not. het_ani_discr(hetind) == 'iso') then
 
         if (.not. ani_hetero) then
-           write(6,*) ''
-           write(6,*) 'ERROR: anisotropic heterogeneity needs an anisotropic model -'
-           write(6,*) '   either choose an anisotropic background model or'
-           write(6,*) '   activate force anisotropy in inparam!'
+           print *
+           write(*,*) 'ERROR: anisotropic heterogeneity needs an anisotropic model -'
+           write(*,*) '   either choose an anisotropic background model or'
+           write(*,*) '   activate force anisotropy in inparam!'
            stop
         endif
 
         if (.not. (present(xi_ani) .and. present(phi_ani) .and. present(eta_ani) .and. &
                 present(xi_ani_post) .and. present(phi_ani_post) &
                 .and.  present(eta_ani_post))) then
-           write(6,*) ''
-           write(6,*) 'ERROR: needs anisotropic parameters in function call!!'
+           print *
+           write(*,*) 'ERROR: needs anisotropic parameters in function call!!'
            stop
         endif
 
@@ -536,11 +536,11 @@ subroutine load_het_discr(rho, lambda, mu, rhopost, lambdapost, mupost, hetind, 
 
     read(92,*) num_het_pts
 
-    if (lpr) write(6,*) 'number of points', num_het_pts
+    if (lpr) write(*,*) 'number of points', num_het_pts
 
     allocate(rhet2(1:num_het_pts), thhet2(1:num_het_pts))
 
-    write(6,*) mynum, 'read coordinates & medium properties...'
+    write(*,*) mynum, 'read coordinates & medium properties...'
 
     if (het_rel_discr(hetind) == 'rel' .and. het_ani_discr(hetind) == 'iso') then
         allocate(delta_vs2(1:num_het_pts), delta_vp2(1:num_het_pts), &
@@ -550,7 +550,7 @@ subroutine load_het_discr(rho, lambda, mu, rhopost, lambdapost, mupost, hetind, 
             read(92,*) rhet2(j), thhet2(j), delta_vp2(j), delta_vs2(j), delta_rho2(j)
         enddo
 
-        !if (lpr) write(6,*) 'percent -> fraction'
+        !if (lpr) write(*,*) 'percent -> fraction'
 
         delta_vp2 = delta_vp2 / 100.
         delta_vs2 = delta_vs2 / 100.
@@ -567,7 +567,7 @@ subroutine load_het_discr(rho, lambda, mu, rhopost, lambdapost, mupost, hetind, 
                        delta_vph2(j), delta_vsh2(j), delta_rho2(j), delta_eta2(j)
         enddo
 
-        !if (lpr) write(6,*) 'percent -> fraction'
+        !if (lpr) write(*,*) 'percent -> fraction'
 
         delta_vpv2 = delta_vpv2 / 100.
         delta_vsv2 = delta_vsv2 / 100.
@@ -630,7 +630,7 @@ subroutine load_het_discr(rho, lambda, mu, rhopost, lambdapost, mupost, hetind, 
         enddo
 
     else
-        write(6,*) 'ERROR: combination', het_rel_discr(hetind), 'and ', &
+        write(*,*) 'ERROR: combination', het_rel_discr(hetind), 'and ', &
                     het_ani_discr(hetind), 'not yet implemented'
         stop
     endif
@@ -647,12 +647,12 @@ subroutine load_het_discr(rho, lambda, mu, rhopost, lambdapost, mupost, hetind, 
     thetamax = maxval(thhet2(1:num_het_pts))
 
     if (lpr) then
-        write(6,*) mynum, 'r min/max:', rmin / 1000., rmax / 1000.
-        write(6,*) mynum, 'th min/max:', thetamin / pi * 180., thetamax / pi * 180.
+        write(*,*) mynum, 'r min/max:', rmin / 1000., rmax / 1000.
+        write(*,*) mynum, 'th min/max:', thetamin / pi * 180., thetamax / pi * 180.
     endif
 
     if (rot_src) then
-       if (lpr) write(6,*) mynum, 'rotate since source is not beneath north pole'
+       if (lpr) write(*,*) mynum, 'rotate since source is not beneath north pole'
 
        do j=1, num_het_pts
           call rotate_hetero(rhet2(j), thhet2(j))
@@ -663,8 +663,8 @@ subroutine load_het_discr(rho, lambda, mu, rhopost, lambdapost, mupost, hetind, 
        thetamin = minval(thhet2)
        thetamax = maxval(thhet2)
 
-       write(6,*) mynum, 'r min/max after rotation:', rmin / 1000., rmax / 1000.
-       write(6,*) mynum, 'th min/max after rotation:', thetamin / pi * 180., &
+       write(*,*) mynum, 'r min/max after rotation:', rmin / 1000., rmax / 1000.
+       write(*,*) mynum, 'th min/max after rotation:', thetamin / pi * 180., &
                   thetamax / pi * 180.
     endif
 
@@ -716,8 +716,8 @@ subroutine load_het_discr(rho, lambda, mu, rhopost, lambdapost, mupost, hetind, 
 
 
     !if (lpr) then
-    !    write(6,*) 'r het min/max:', rhetmin / 1000., rhetmax / 1000.
-    !    write(6,*) 'th het min/max:', thhetmin / pi * 180., thhetmax / pi * 180.
+    !    write(*,*) 'r het min/max:', rhetmin / 1000., rhetmax / 1000.
+    !    write(*,*) 'th het min/max:', thhetmin / pi * 180., thhetmax / pi * 180.
     !endif
 
     ! revert to cylindrical
@@ -727,7 +727,7 @@ subroutine load_het_discr(rho, lambda, mu, rhopost, lambdapost, mupost, hetind, 
 
     tree => kdtree2_create(real(szhet), sort=.false., rearrange=.true.)
 
-    if (lpr) write(6,*) 'locate GLL points within heterogeneous regions '
+    if (lpr) write(*,*) 'locate GLL points within heterogeneous regions '
 
     goal = int(nelem / 20.)
 
@@ -862,7 +862,7 @@ subroutine load_het_discr(rho, lambda, mu, rhopost, lambdapost, mupost, hetind, 
     call kdtree2_destroy(tree)
 
     call barrier
-    if (lpr) write(6,*) 'DONE loading discrete grid'
+    if (lpr) write(*,*) 'DONE loading discrete grid'
 
     deallocate(rhet2, thhet2)
     !deallocate(shet, zhet)
@@ -1159,7 +1159,7 @@ subroutine load_random(rho,lambda,mu,rhopost,lambdapost,mupost,hetind)
 
 
     if (het_funct_type(hetind) == '2Dgll') then
-       write(6,*)'add 2D random anomalies to structure'
+       write(*,*)'add 2D random anomalies to structure'
 
        ! add randomly to each 2D point : laterally heterogeneous and same random
        !                                 number to vp,vs,rho
@@ -1190,7 +1190,7 @@ subroutine load_random(rho,lambda,mu,rhopost,lambdapost,mupost,hetind)
        enddo
 
     else if (het_funct_type(hetind) == '2Delem') then
-       write(6,*)'add 2D random anomalies to structure'
+       write(*,*)'add 2D random anomalies to structure'
 
        ! add randomly to each 2D point : laterally heterogeneous and same random
        !                                 number to vp,vs,rho
@@ -1222,7 +1222,7 @@ subroutine load_random(rho,lambda,mu,rhopost,lambdapost,mupost,hetind)
        enddo
 
     else if (het_funct_type(hetind) == '1Dgll') then
-       write(6,*)'add 1D random anomalies to structure per GLL point'
+       write(*,*)'add 1D random anomalies to structure per GLL point'
        ! go along axis to find the radial profile
        allocate(r_radtmp(naxel*(npol+1)), rand_radtmp(naxel*(npol+1)))
        if (mynum == 0) then
@@ -1242,7 +1242,7 @@ subroutine load_random(rho,lambda,mu,rhopost,lambdapost,mupost,hetind)
 
        ! broadcast the profile to all processors
        call broadcast_int(icount,0)
-       write(6,*) mynum, 'number of radii: ', icount
+       write(*,*) mynum, 'number of radii: ', icount
        allocate(r_rad(icount),rand_rad(icount))
        do i=1,icount
           call broadcast_dble(r_radtmp(i),0)
@@ -1278,7 +1278,7 @@ subroutine load_random(rho,lambda,mu,rhopost,lambdapost,mupost,hetind)
        enddo
 
     else if (het_funct_type(hetind) == '1Delem') then
-       write(6,*)'add 1D random anomalies to structure per element'
+       write(*,*)'add 1D random anomalies to structure per element'
 
        ! go along axis to find the radial profile, only per element (not GLL point)
        allocate(r_radtmp(naxel*(npol+1)), rand_radtmp(naxel*(npol+1)))
@@ -1297,7 +1297,7 @@ subroutine load_random(rho,lambda,mu,rhopost,lambdapost,mupost,hetind)
 
        ! broadcast the profile to all processors
        call broadcast_int(icount,0)
-       write(6,*) mynum, 'number of radii:', icount
+       write(*,*) mynum, 'number of radii:', icount
 
        allocate(r_rad(icount), rand_rad(icount))
        do i=1, icount
@@ -1334,7 +1334,7 @@ subroutine load_random(rho,lambda,mu,rhopost,lambdapost,mupost,hetind)
           endif
        enddo
     else
-        write(6,*) 'ERROR: bad parameter: ', het_funct_type(hetind)
+        write(*,*) 'ERROR: bad parameter: ', het_funct_type(hetind)
         stop
     endif
 
@@ -1389,9 +1389,9 @@ subroutine load_het_funct(rho, lambda, mu, rhopost, lambdapost, mupost, hetind)
        halfwidth_th = abs(th_het1(hetind) - th_het2(hetind)) * r_center_gauss
 
        if (lpr) then
-          write(6,*) hetind, 'center r,th gauss [km]:', r_center_gauss / 1000., &
+          write(*,*) hetind, 'center r,th gauss [km]:', r_center_gauss / 1000., &
                      th_center_gauss / 1000.
-          write(6,*) hetind, 'halfwidth r,th gauss [km]:', halfwidth_r / 1000., &
+          write(*,*) hetind, 'halfwidth r,th gauss [km]:', halfwidth_r / 1000., &
                      halfwidth_th / 1000.
        endif
 
@@ -1431,8 +1431,8 @@ subroutine load_het_funct(rho, lambda, mu, rhopost, lambdapost, mupost, hetind)
        thhetmin = min(minval(thhet(1:icount)), thhetmin)
        thhetmax = max(maxval(thhet(1:icount)), thhetmax)
 
-       write(6,*) mynum, 'r het min/max:', rhetmin / 1000., rhetmax / 1000.
-       write(6,*) mynum, 'th het min/max:', thhetmin * 180. / pi, thhetmax * 180. / pi
+       write(*,*) mynum, 'r het min/max:', rhetmin / 1000., rhetmax / 1000.
+       write(*,*) mynum, 'th het min/max:', thhetmin * 180. / pi, thhetmax * 180. / pi
 
        deallocate(rhet,thhet)
 
@@ -1445,7 +1445,7 @@ subroutine load_het_funct(rho, lambda, mu, rhopost, lambdapost, mupost, hetind)
        ! define width and height of structure
        ! if gradient
        if ( grad(hetind) ) then
-          write(6,*) 'gradients dont work yet, switching off...'
+          write(*,*) 'gradients dont work yet, switching off...'
           grad(hetind) = .false.
        endif
 
@@ -1457,9 +1457,9 @@ subroutine load_het_funct(rho, lambda, mu, rhopost, lambdapost, mupost, hetind)
        halfwidth_th = abs(th_het1(hetind)-th_het2(hetind)) !*r_center_gauss
 
        if (lpr) then
-          write(6,*) hetind, 'center r [km],th [deg]:', het_funct_type(hetind), &
+          write(*,*) hetind, 'center r [km],th [deg]:', het_funct_type(hetind), &
                      r_center_gauss / 1000., th_center_gauss*180./pi
-          write(6,*) hetind, 'halfwidth r [km],th [deg]:', het_funct_type(hetind), &
+          write(*,*) hetind, 'halfwidth r [km],th [deg]:', het_funct_type(hetind), &
                      halfwidth_r / 1000., th_het1(hetind) * 180. / pi, &
                      th_het2(hetind) * 180. / pi, halfwidth_th * 180. / pi
        endif
@@ -1515,7 +1515,7 @@ subroutine load_het_funct(rho, lambda, mu, rhopost, lambdapost, mupost, hetind)
                    if ( het_funct_type(hetind) == 'ghill' .or. het_funct_type(hetind) == 'shill' ) then
                       gradwidth = r_het1(hetind)-200000. !tmp use of gradwidth
                       if ( r < r_het1(hetind) .and. r > gradwidth .and. r >= radst ) then
-                            !write(6,*) r, rho(ipol,jpol,iel), lambda(ipol,jpol,iel), mu(ipol,jpol,iel)
+                            !write(*,*) r, rho(ipol,jpol,iel), lambda(ipol,jpol,iel), mu(ipol,jpol,iel)
                           rhost = rho(ipol,jpol,iel)
                           lambdast = lambda(ipol,jpol,iel)
                           must = mu(ipol,jpol,iel)
@@ -1525,7 +1525,7 @@ subroutine load_het_funct(rho, lambda, mu, rhopost, lambdapost, mupost, hetind)
                    else ! for vally and all other shapes get velocity at top of het
                       gradwidth = r_het2(hetind)+200000. !tmp use of gradwidth
                       if ( r >= r_het2(hetind) .and. r < gradwidth .and. r <= radst ) then
-                         !write(6,*) r, rho(ipol,jpol,iel), lambda(ipol,jpol,iel), mu(ipol,jpol,iel)
+                         !write(*,*) r, rho(ipol,jpol,iel), lambda(ipol,jpol,iel), mu(ipol,jpol,iel)
                          rhost = rho(ipol,jpol,iel)
                          lambdast = lambda(ipol,jpol,iel)
                          must = mu(ipol,jpol,iel)
@@ -1666,7 +1666,7 @@ subroutine load_het_funct(rho, lambda, mu, rhopost, lambdapost, mupost, hetind)
        thhetmax = max(maxval(thhet(1:icount)), thhetmax)
 
        if (.not. rdep(hetind) ) then
-          ! write(6,*) 'nordep hetind/cnt/r/rho/lambda/mu: ', hetind, foundcount, radst, rhost, lambdast, must
+          ! write(*,*) 'nordep hetind/cnt/r/rho/lambda/mu: ', hetind, foundcount, radst, rhost, lambdast, must
           ! get minimum/ maximum of
           vstmp = sqrt( must / rhost )
           vptmp = sqrt( (lambdast + 2. * must) / rhost )
@@ -1685,13 +1685,13 @@ subroutine load_het_funct(rho, lambda, mu, rhopost, lambdapost, mupost, hetind)
           deallocate(saveipol,savejpol,saveiel,saveval)
        endif !not rdep
 
-       write(6,*) mynum, 'r het min/max:', rhetmin/1000., rhetmax/1000.
-       write(6,*) mynum, 'th het min/max:', thhetmin*180./pi, thhetmax*180./pi
-       write(6,*) icount
+       write(*,*) mynum, 'r het min/max:', rhetmin/1000., rhetmax/1000.
+       write(*,*) mynum, 'th het min/max:', thhetmin*180./pi, thhetmax*180./pi
+       write(*,*) icount
        deallocate(rhet,thhet)
 
     else
-       write(6,*) 'function type ', het_funct_type(hetind), ' not implemented yet!'
+       write(*,*) 'function type ', het_funct_type(hetind), ' not implemented yet!'
        stop
     endif
 
@@ -1716,7 +1716,7 @@ subroutine plot_hetero_region_vtk(rho, lambda, mu, xi_ani, phi_ani, eta_ani, &
     real(kind=dp)                       :: s, z, r, th
     integer                             :: iel, ipol, jpol, icount
 
-    if (lpr) write(6,*) 'plotting heterogeneous region in pointwise vtk'
+    if (lpr) write(*,*) 'plotting heterogeneous region in pointwise vtk'
 
     allocate(mesh2(nelem * (npol + 1)**2,2), rho_all(nelem * (npol + 1)**2))
 
@@ -1840,7 +1840,7 @@ subroutine plot_hetero_region_vtk(rho, lambda, mu, xi_ani, phi_ani, eta_ani, &
                          eta_all, xi_all, phi_all)
            endif
        else
-           write(6,*) mynum, 'WARNING: not writing empty vtk file (icount = 0)'
+           write(*,*) mynum, 'WARNING: not writing empty vtk file (icount = 0)'
        endif
     endif
 
@@ -1925,7 +1925,7 @@ subroutine write_VTK_bin_scal_pts(u2, mesh1, rows, filename, varname)
    write(110) 'LOOKUP_TABLE default'//char(10) !color table?
    write(110) real(u1)
    close(110)
-   !write(6,*)'...saved ',trim(filename)//'.vtk'
+   !write(*,*)'...saved ',trim(filename)//'.vtk'
 
 end subroutine write_VTK_bin_scal_pts
 !-----------------------------------------------------------------------------------------

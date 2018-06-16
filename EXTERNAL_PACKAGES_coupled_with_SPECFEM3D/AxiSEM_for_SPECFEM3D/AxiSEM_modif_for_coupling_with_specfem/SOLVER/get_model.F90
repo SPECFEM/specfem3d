@@ -131,11 +131,11 @@ subroutine read_model(rho, lambda, mu, xi_ani, phi_ani, eta_ani, &
           if (diagfiles) write(65,10) iel, r1, ndisc, discont(ndisc)
       endif
       if (.not. foundit) then
-          write(6,*)'Processor', mynum, ' reports problem:'
-          write(6,*)'havent found domain for element', iel
-          write(6,*)'...of radius', r1
-          write(6,*)'Disconts are located at:'
-          write(6,11) discont(1:ndisc)
+          write(*,*)'Processor', mynum, ' reports problem:'
+          write(*,*)'havent found domain for element', iel
+          write(*,*)'...of radius', r1
+          write(*,*)'Disconts are located at:'
+          write(*,11) discont(1:ndisc)
           stop
       endif
   enddo
@@ -144,11 +144,11 @@ subroutine read_model(rho, lambda, mu, xi_ani, phi_ani, eta_ani, &
 10 format(i9,1pe15.7,i3,2(1pe11.3))
 11 format(e11.3)
   if (do_mesh_tests) then
-      if (lpr .and. verbose > 1) write(6,*)'    checking discontinuity discretization...'
+      if (lpr .and. verbose > 1) write(*,*)'    checking discontinuity discretization...'
       call check_mesh_discontinuities(ieldom,domcount)
   endif
 
-  if (lpr .and. verbose > 1) write(6,*)'   filling mesh with elastic properties...'
+  if (lpr .and. verbose > 1) write(*,*)'   filling mesh with elastic properties...'
 
   modelstring = bkgrdmodel
 
@@ -189,24 +189,24 @@ subroutine read_model(rho, lambda, mu, xi_ani, phi_ani, eta_ani, &
            ! test round-off errors for elastic parameters & velocities
            if (.not. dblreldiff_small(vphtmp,dsqrt( (lambda(ipol,jpol,iel) + &
                 two*mu(ipol,jpol,iel) )/rho(ipol,jpol,iel) ) ) ) then
-              write(6,*)
-              write(6,*)procstrg, &
+              write(*,*)
+              write(*,*)procstrg, &
                    'PROBLEM: Elastic params and p-vel conversion erroneous!'
-              write(6,*)procstrg,'r,theta,vphtmp:', &
+              write(*,*)procstrg,'r,theta,vphtmp:', &
                    r/1000.,theta*180./pi,vphtmp/1000.
-              write(6,*)procstrg,'rho,lambda,mu:',rho(ipol,jpol,iel)/1000., &
+              write(*,*)procstrg,'rho,lambda,mu:',rho(ipol,jpol,iel)/1000., &
                    lambda(ipol,jpol,iel)/1000.,mu(ipol,jpol,iel)/1000.
               stop
            endif
 
            if (.not. dblreldiff_small(vshtmp,dsqrt( mu(ipol,jpol,iel)/ &
                 rho(ipol,jpol,iel) ))) then
-              write(6,*)
-              write(6,*)procstrg, &
+              write(*,*)
+              write(*,*)procstrg, &
                    'PROBLEM: Elastic params and s-vel conversion erroneous!'
-              write(6,*)procstrg,'r,theta,vshtmp:', &
+              write(*,*)procstrg,'r,theta,vshtmp:', &
                    r/1000.,theta*180./pi,vshtmp/1000.
-              write(6,*)procstrg,'rho,lambda,mu:',rho(ipol,jpol,iel)/1000., &
+              write(*,*)procstrg,'rho,lambda,mu:',rho(ipol,jpol,iel)/1000., &
                    lambda(ipol,jpol,iel)/1000.,mu(ipol,jpol,iel)/1000.
               stop
            endif
@@ -241,7 +241,7 @@ subroutine read_model(rho, lambda, mu, xi_ani, phi_ani, eta_ani, &
       enddo
   endif
 
-  if (lpr .and. verbose > 1) write(6,*) 'done with big mesh loop to define model'
+  if (lpr .and. verbose > 1) write(*,*) 'done with big mesh loop to define model'
   if (do_mesh_tests) close(60000+mynum)
 
 14 format(5(1pe13.4))
@@ -251,7 +251,7 @@ subroutine read_model(rho, lambda, mu, xi_ani, phi_ani, eta_ani, &
 
   if (diagfiles) then
       ! plot final velocity model in vtk
-      if (lpr .and. verbose > 1) write(6,*) 'plotting vtks for the model properties....'
+      if (lpr .and. verbose > 1) write(*,*) 'plotting vtks for the model properties....'
 
       if (anel_true) then
          call plot_model_vtk(rho, lambda, mu, xi_ani, phi_ani, eta_ani, fa_ani_theta, &
@@ -289,18 +289,18 @@ subroutine read_model(rho, lambda, mu, xi_ani, phi_ani, eta_ani, &
      call barrier
 
      if (.not. add_hetero) then
-         if (lpr) write(6,*) &
+         if (lpr) write(*,*) &
             '    checking elastic properties on discontinuities...'
          call check_elastic_discontinuities(ieldom,domcount,lambda,mu,rho)
      else
-         if (lpr) write(6,*) &
+         if (lpr) write(*,*) &
             '    NOT checking elastic properties on discontinuities since we added hetero...'
      endif
 
-     if (lpr) write(6,*) '    checking the background model discretization...'
+     if (lpr) write(*,*) '    checking the background model discretization...'
      call check_background_model(lambda,mu,rho)
 
-     if (lpr) write(6,*) '    testing the mesh/background model resolution...'
+     if (lpr) write(*,*) '    testing the mesh/background model resolution...'
      call test_mesh_model_resolution(lambda,mu,rho)
   endif
 
@@ -355,8 +355,8 @@ subroutine check_mesh_discontinuities(ieldom,domcount)
               call compute_coordinates(s,z,r,theta,iel,ipol,jpol)
               if (r > zero) then
                   if ( (r-discont(iidom))/r > smallval_dble ) then
-                      write(6,*)procstrg,'PROBLEM with domains and discontinuities!'
-                      write(6,*)procstrg,'radius > associated discont.:', &
+                      write(*,*)procstrg,'PROBLEM with domains and discontinuities!'
+                      write(*,*)procstrg,'radius > associated discont.:', &
                            iidom,r,discont(iidom)
                       stop
                   endif
@@ -370,11 +370,11 @@ subroutine check_mesh_discontinuities(ieldom,domcount)
 
           ! Check number of GLL points on discontinuities
           if (dblreldiff_small(r,discont(iidom)) .and. (eldomcount /= npol)) then
-              write(6,*) procstrg, &
+              write(*,*) procstrg, &
                          'PROBLEM: not every GLL along xi is on the discont!'
-              write(6,*) procstrg, 'iel,idom,r,theta:', iel, ieldom(iel), &
+              write(*,*) procstrg, 'iel,idom,r,theta:', iel, ieldom(iel), &
                          r/1000.d0, theta*180.d0/pi
-              write(6,*) procstrg, 'ipol count, npol:', eldomcount, npol
+              write(*,*) procstrg, 'ipol count, npol:', eldomcount, npol
               stop
           endif
 
@@ -386,11 +386,11 @@ subroutine check_mesh_discontinuities(ieldom,domcount)
 
   do iidom=2, ndisc
      if (mod(domcount(1),domcount(iidom)) /= 0 ) then
-        write(6,*) ' '
-        write(6,*) procstrg, &
+        write(*,*) ' '
+        write(*,*) procstrg, &
                    'PR0BLEM: # points on discontinuity not fraction of surface '
-        write(6,*) procstrg, 'Domain, discontinuity:', iidom, discont(iidom)
-        write(6,*) procstrg, 'number of points at discont, surface:', &
+        write(*,*) procstrg, 'Domain, discontinuity:', iidom, discont(iidom)
+        write(*,*) procstrg, 'number of points at discont, surface:', &
                    domcount(iidom), domcount(1)
         stop
      endif
@@ -400,11 +400,11 @@ subroutine check_mesh_discontinuities(ieldom,domcount)
   do iidom=2,ndisc
      if (domcount(iidom-1) /= domcount(iidom)) then
         if (mod(domcount(iidom-1),2*domcount(iidom)) /= 0 ) then
-           write(6,*) ' '
-           write(6,*) procstrg, 'PR0BLEM: # points discont. not even fraction', &
+           write(*,*) ' '
+           write(*,*) procstrg, 'PR0BLEM: # points discont. not even fraction', &
                       ' of discont. above'
-           write(6,*) procstrg, 'Domain, discontinuity:', iidom, discont(iidom)
-           write(6,*) procstrg, '#points at discont above,here:', &
+           write(*,*) procstrg, 'Domain, discontinuity:', iidom, discont(iidom)
+           write(*,*) procstrg, '#points at discont above,here:', &
                       domcount(iidom-1), domcount(iidom)
            stop
         endif
@@ -551,28 +551,28 @@ subroutine check_elastic_discontinuities(ieldom,domcount,lambda,mu,rho)
 
 
   if (.not. dblreldiff_small(minvpdombelow(1),maxvpdombelow(1))) then
-     write(6,*)
-     write(6,*) procstrg, &
+     write(*,*)
+     write(*,*) procstrg, &
                 'PROBLEM: Vp at the surface is not spherically symmetric!'
-     write(6,*) procstrg, 'Min/max vp along surface:', &
+     write(*,*) procstrg, 'Min/max vp along surface:', &
                 minvpdombelow(1), maxvpdombelow(1)
      stop
   endif
 
   if (.not. dblreldiff_small(minvsdombelow(1),maxvsdombelow(1))) then
-     write(6,*)
-     write(6,*) procstrg, &
+     write(*,*)
+     write(*,*) procstrg, &
                'PROBLEM: Vs at the surface is not spherically symmetric!'
-     write(6,*) procstrg, 'Min/max vs along surface:', &
+     write(*,*) procstrg, 'Min/max vs along surface:', &
                 minvsdombelow(1), maxvsdombelow(1)
      stop
   endif
 
   if (.not. dblreldiff_small(minrodombelow(1),maxrodombelow(1))) then
-     write(6,*)
-     write(6,*) procstrg, &
+     write(*,*)
+     write(*,*) procstrg, &
                 'PROBLEM: density at the surface is not spherically symmetric!'
-     write(6,*) procstrg, &
+     write(*,*) procstrg, &
                 'Min/max rho along surface:',minrodombelow(1),maxrodombelow(1)
      stop
   endif
@@ -583,29 +583,29 @@ subroutine check_elastic_discontinuities(ieldom,domcount,lambda,mu,rho)
                   minrodomabove(iidom)/1.d3
 
      if (.not. dblreldiff_small(minvpdomabove(iidom),maxvpdomabove(iidom))) then
-        write(6,*)
-        write(6,*)procstrg,'PROBLEM: Vp not spherically symm. above discont', &
+        write(*,*)
+        write(*,*)procstrg,'PROBLEM: Vp not spherically symm. above discont', &
              discont(iidom)
-        write(6,*)procstrg,'Min/max vp along discont:',minvpdomabove(iidom), &
+        write(*,*)procstrg,'Min/max vp along discont:',minvpdomabove(iidom), &
              maxvpdomabove(iidom)
         stop
      endif
 
      if (.not. dblreldiff_small(minvsdomabove(iidom),maxvsdomabove(iidom))) then
-        write(6,*)
-        write(6,*)procstrg,'PROBLEM: Vs not spherically symm. above discont', &
+        write(*,*)
+        write(*,*)procstrg,'PROBLEM: Vs not spherically symm. above discont', &
              discont(iidom)
-        write(6,*)procstrg,'Min/max vs along discont:',minvsdomabove(iidom), &
+        write(*,*)procstrg,'Min/max vs along discont:',minvsdomabove(iidom), &
              maxvsdomabove(iidom)
         stop
      endif
 
      if (.not. dblreldiff_small(minrodomabove(iidom),maxrodomabove(iidom))) then
-        write(6,*)
-        write(6,*)procstrg, &
+        write(*,*)
+        write(*,*)procstrg, &
              'PROBLEM: density not spherically symm. above discont', &
              discont(iidom)
-        write(6,*)procstrg,'Min/max rho along discont:',minrodomabove(iidom), &
+        write(*,*)procstrg,'Min/max rho along discont:',minrodomabove(iidom), &
              maxrodomabove(iidom)
         stop
      endif
@@ -615,29 +615,29 @@ subroutine check_elastic_discontinuities(ieldom,domcount,lambda,mu,rho)
                    minrodombelow(iidom)/1.d3
 
      if (.not. dblreldiff_small(minvpdombelow(iidom),maxvpdombelow(iidom))) then
-        write(6,*)
-        write(6,*)procstrg,'PROBLEM: Vp not spherically symm. below discont', &
+        write(*,*)
+        write(*,*)procstrg,'PROBLEM: Vp not spherically symm. below discont', &
              discont(iidom)
-        write(6,*)procstrg,'Min/max vp along discont:',minvpdombelow(iidom), &
+        write(*,*)procstrg,'Min/max vp along discont:',minvpdombelow(iidom), &
              maxvpdombelow(iidom)
         stop
      endif
 
      if (.not. dblreldiff_small(minvsdombelow(iidom),maxvsdombelow(iidom))) then
-        write(6,*)
-        write(6,*)procstrg,'PROBLEM: Vs not spherically symm. below discont', &
+        write(*,*)
+        write(*,*)procstrg,'PROBLEM: Vs not spherically symm. below discont', &
              discont(iidom)
-        write(6,*)procstrg,'Min/max vs along discont:',minvsdombelow(iidom), &
+        write(*,*)procstrg,'Min/max vs along discont:',minvsdombelow(iidom), &
              maxvsdombelow(iidom)
         stop
      endif
 
      if (.not. dblreldiff_small(minrodombelow(iidom),maxrodombelow(iidom))) then
-        write(6,*)
-        write(6,*)procstrg, &
+        write(*,*)
+        write(*,*)procstrg, &
              'PROBLEM: density not spherically symmetric below discont', &
              discont(iidom)
-        write(6,*)procstrg,'Min/max rho along discont:',minrodombelow(iidom), &
+        write(*,*)procstrg,'Min/max rho along discont:',minrodombelow(iidom), &
              maxrodombelow(iidom)
         stop
      endif
@@ -670,35 +670,35 @@ subroutine check_background_model(lambda,mu,rho)
 
   ! check whether all grid points assumed non-crazy elastic properties
   if (minval(rho) < zero) then
-     write(6,*)
-     write(6,*) procstrg, 'PROBLEM: Not every grid point has a valid density!'
+     write(*,*)
+     write(*,*) procstrg, 'PROBLEM: Not every grid point has a valid density!'
      vsminloc = minloc(rho)
-     write(6,*) procstrg, 'rho=',minval(rho)
-     write(6,*) procstrg, 'r,theta:', &
+     write(*,*) procstrg, 'rho=',minval(rho)
+     write(*,*) procstrg, 'r,theta:', &
                 rcoord(vsminloc(1)-1,vsminloc(2)-1,vsminloc(3))/1000., &
                 thetacoord(vsminloc(1)-1,vsminloc(2)-1,vsminloc(3))*180./pi
      stop
   endif
 
   if (minval(mu) < zero) then
-     write(6,*)
-     write(6,*) procstrg, &
+     write(*,*)
+     write(*,*) procstrg, &
           'PROBLEM: Not every grid point has a valid mu (Lame) parameter!'
      vsminloc = minloc(mu)
-     write(6,*) procstrg, 'mu=',minval(mu)
-     write(6,*) procstrg, 'r,theta:', &
+     write(*,*) procstrg, 'mu=',minval(mu)
+     write(*,*) procstrg, 'r,theta:', &
                 rcoord(vsminloc(1)-1,vsminloc(2)-1,vsminloc(3))/1000., &
                 thetacoord(vsminloc(1)-1,vsminloc(2)-1,vsminloc(3))*180./pi
      stop
   endif
 
   if (minval(lambda) < zero) then
-     write(6,*)
-     write(6,*) procstrg, &
+     write(*,*)
+     write(*,*) procstrg, &
                'PROBLEM: Not every grid point has a valid lambda (Lame) parameter'
      vsminloc = minloc(lambda)
-     write(6,*) procstrg, 'lambda=', minval(lambda)
-     write(6,*) procstrg, 'r,theta:', &
+     write(*,*) procstrg, 'lambda=', minval(lambda)
+     write(*,*) procstrg, 'r,theta:', &
                 rcoord(vsminloc(1)-1,vsminloc(2)-1,vsminloc(3))/1000., &
                 thetacoord(vsminloc(1)-1,vsminloc(2)-1,vsminloc(3))*180./pi
      stop
@@ -716,14 +716,14 @@ subroutine check_background_model(lambda,mu,rho)
                      rho(ipol-1,jpol,iel)) .or. &
                      .not. dblreldiff_small(rho(ipol,jpol,iel), &
                      rho(ipol+1,jpol,iel))) then
-                    write(6,*)
-                    write(6,*) procstrg,'PROBLEM: lateral density inhomogeneity!'
-                    write(6,*) procstrg,' at r[km], theta[deg]:', &
+                    write(*,*)
+                    write(*,*) procstrg,'PROBLEM: lateral density inhomogeneity!'
+                    write(*,*) procstrg,' at r[km], theta[deg]:', &
                                rcoord(ipol,jpol,iel)/1000., &
                                thetacoord(ipol,jpol,iel)*180/pi
-                    write(6,*) procstrg,'Lateral ipol,theta,density:'
+                    write(*,*) procstrg,'Lateral ipol,theta,density:'
                     do i=0,npol
-                        write(6,*) procstrg, i, thetacoord(i,jpol,iel)*180./pi, &
+                        write(*,*) procstrg, i, thetacoord(i,jpol,iel)*180./pi, &
                                    rho(i,jpol,iel)
                     enddo
                     stop
@@ -733,14 +733,14 @@ subroutine check_background_model(lambda,mu,rho)
                      lambda(ipol-1,jpol,iel)) .or. &
                      .not. dblreldiff_small(lambda(ipol,jpol,iel), &
                      lambda(ipol+1,jpol,iel)) ) then
-                    write(6,*)
-                    write(6,*) procstrg, 'PROBLEM: lateral elastic inhomogeneity!'
-                    write(6,*) procstrg, 'at r[km], theta[deg]:', &
+                    write(*,*)
+                    write(*,*) procstrg, 'PROBLEM: lateral elastic inhomogeneity!'
+                    write(*,*) procstrg, 'at r[km], theta[deg]:', &
                                rcoord(ipol,jpol,iel)/1000., &
                                thetacoord(ipol,jpol,iel)*180/pi
-                    write(6,*) procstrg, 'Lateral ipol,theta,lambda:'
+                    write(*,*) procstrg, 'Lateral ipol,theta,lambda:'
                     do i=0,npol
-                        write(6,*) procstrg, i, thetacoord(i,jpol,iel)*180./pi, &
+                        write(*,*) procstrg, i, thetacoord(i,jpol,iel)*180./pi, &
                                    lambda(i,jpol,iel)
                     enddo
                     stop
@@ -750,14 +750,14 @@ subroutine check_background_model(lambda,mu,rho)
                      mu(ipol-1,jpol,iel)) .or. &
                      .not. dblreldiff_small(mu(ipol,jpol,iel), &
                      mu(ipol+1,jpol,iel)) ) then
-                    write(6,*)
-                    write(6,*) procstrg,'PROBLEM: lateral elastic inhomogeneity!'
-                    write(6,*) procstrg,'at r[km], theta[deg]:', &
+                    write(*,*)
+                    write(*,*) procstrg,'PROBLEM: lateral elastic inhomogeneity!'
+                    write(*,*) procstrg,'at r[km], theta[deg]:', &
                                rcoord(ipol,jpol,iel)/1000., &
                                thetacoord(ipol,jpol,iel)*180/pi
-                    write(6,*)'Lateral ipol,theta,mu:'
+                    write(*,*)'Lateral ipol,theta,mu:'
                     do i=0,npol
-                        write(6,*) procstrg, i, thetacoord(i,jpol,iel)*180./pi, &
+                        write(*,*) procstrg, i, thetacoord(i,jpol,iel)*180./pi, &
                                    mu(i,jpol,iel)
                     enddo
                     stop
@@ -1179,7 +1179,7 @@ subroutine write_VTK_bin_scal(x,y,z,u1,elems,filename)
   write(110) u1
 
   close(110)
-  if (verbose > 1) write(6,*)'...saved ',trim(filename)//'.vtk'
+  if (verbose > 1) write(*,*)'...saved ',trim(filename)//'.vtk'
 
 end subroutine write_VTK_bin_scal
 !=============================================================================

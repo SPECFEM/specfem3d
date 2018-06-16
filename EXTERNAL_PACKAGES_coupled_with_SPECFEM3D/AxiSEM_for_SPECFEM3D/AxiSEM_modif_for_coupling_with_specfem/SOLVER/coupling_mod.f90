@@ -71,7 +71,7 @@ contains
 
           ! Must rotate these coordinates when source is not a the pole
           if (rot_src) then
-             write(6,*) mynum, 'rotate since source is not beneath north pole'
+             write(*,*) mynum, 'rotate since source is not beneath north pole'
 
              do j=1,4
                 call rotate_box(rbox(j), thbox(j), phbox(j))
@@ -83,8 +83,8 @@ contains
              thmax = maxval(thbox)
 
              ! Check min/max values again if rotation has been applied
-             write(6,*) mynum, 'r min/max after rotation:', rmin / 1000., rmax / 1000.
-             write(6,*) mynum, 'th min/max after rotation:', thmin / pi * 180., &
+             write(*,*) mynum, 'r min/max after rotation:', rmin / 1000., rmax / 1000.
+             write(*,*) mynum, 'th min/max after rotation:', thmin / pi * 180., &
                   thmax / pi * 180.
           endif
 
@@ -151,12 +151,12 @@ contains
     thmax = maxval(thbox) !+ delta_th
 
     ! Check min/max values of r and theta before rotation
-    write(6,*) mynum, 'r min/max:', rmin / 1000., rmax / 1000.
-    write(6,*) mynum, 'th min/max:', thmin / pi * 180., thmax / pi * 180.
+    write(*,*) mynum, 'r min/max:', rmin / 1000., rmax / 1000.
+    write(*,*) mynum, 'th min/max:', thmin / pi * 180., thmax / pi * 180.
 
     !write(*,*) 'ROTATION ? ', rot_src
     if (rot_src) then
-       write(6,*) mynum, 'rotate since source is not beneath north pole'
+       write(*,*) mynum, 'rotate since source is not beneath north pole'
 
        do j=1, npt_box_file
        !   if (j==1) then
@@ -174,8 +174,8 @@ contains
        thmax = maxval(thbox)
 
        ! Check min/max values again if rotation has been applied
-       write(6,*) mynum, 'r min/max after rotation:', rmin / 1000., rmax / 1000.
-       write(6,*) mynum, 'th min/max after rotation:', thmin / pi * 180., &
+       write(*,*) mynum, 'r min/max after rotation:', rmin / 1000., rmax / 1000.
+       write(*,*) mynum, 'th min/max after rotation:', thmin / pi * 180., &
             thmax / pi * 180.
     endif
 
@@ -244,7 +244,7 @@ contains
        enddo
     enddo
 
-    write(6,*) mynum, 'locate GLL points within heterogeneous regions & '
+    write(*,*) mynum, 'locate GLL points within heterogeneous regions & '
 
 
     ! Loop over all elements to find which ones contain box's points
@@ -321,7 +321,7 @@ contains
                            !! FOR NOW ASSUME THAT WE ARE IN SOLID REGION ONLY
                            data_for_vtk(iel)=1.
 
-                           !write(6,*)'Found element : ',iel,' of coordinates : ',smin,smax,zmin,zmax,' for box point : ',szbox(1,ibox),szbox(2,ibox)
+                           !write(*,*)'Found element : ',iel,' of coordinates : ',smin,smax,zmin,zmax,' for box point : ',szbox(1,ibox),szbox(2,ibox)
                            exit
 
                         endif
@@ -356,15 +356,15 @@ contains
 
 !! VM VM just writing to check
     !if (mynum == 0) then
-    !   write(6,*) mynum
-    !   write(6,*) id_elm_to_store
-    !   write(6,*)
+    !   write(*,*) mynum
+    !   write(*,*) id_elm_to_store
+    !   write(*,*)
     !endif
 
     !if (mynum == 1) then
-    !   write(6,*) mynum
-    !   write(6,*) id_elm_to_store
-    !   write(6,*)
+    !   write(*,*) mynum
+    !   write(*,*) id_elm_to_store
+    !   write(*,*)
     !endif
 
     ! Paraview output
@@ -373,7 +373,7 @@ contains
     write(vtk_file_name,'(a10,i5.5,a4)')'Found_Elem',mynum,'.vtk'
     call  writeWTKCell(vtk_file_name ,lnodes_vtk,crd_nodes,data_for_vtk,npoin,nelem,3)
 
-    write(6,*) mynum, 'DONE loading box points'
+    write(*,*) mynum, 'DONE loading box points'
 
     !! VM VM Store information in order to reconstruct local mesh.
     write(vtk_file_name,'(a10,i5.5,a4)')'parameters_for_vtk_',mynum,'.par'
@@ -507,7 +507,7 @@ contains
     !        call nc_dump_field_fluid(pack(floc(ibeg:iend,ibeg:iend,:), .true.), &
     !                                 filename(2:))
     !    else
-    !        write(6,*) 'Neither solid nor fluid. What''s wrong here?'
+    !        write(*,*) 'Neither solid nor fluid. What''s wrong here?'
     !        stop 2
     !    endif
     !else

@@ -1128,7 +1128,7 @@ contains
     open(unit=sIIN_NUC,file='../DATA/rsf_hete_input_file.txt',status='old',iostat=ier)
     read(sIIN_NUC,*) snum_cell_str,snum_cell_dip,ssiz_str,ssiz_dip
     snum_cell_all=snum_cell_str*snum_cell_dip
-    write(6,*) snum_cell_str,snum_cell_dip,ssiz_str,ssiz_dip
+    write(*,*) snum_cell_str,snum_cell_dip,ssiz_str,ssiz_dip
 
     allocate( sloc_str(snum_cell_all) ,stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1388')
@@ -1164,11 +1164,11 @@ contains
     enddo
     close(sIIN_NUC)
     minX = minval(coord(1,:))
-    write(6,*) 'RSF_HETE nglob= ', nglob, 'num_cell_all= ', snum_cell_all
-    write(6,*) 'minX = ', minval(coord(1,:)), 'minZ = ', minval(coord(3,:))
-    write(6,*) 'maxX = ', maxval(coord(1,:)), 'maxZ = ', maxval(coord(3,:))
-    write(6,*) 'minXall = ', minval(sloc_str(:)), 'minZall = ', minval(sloc_dip(:))
-    write(6,*) 'maxXall = ', maxval(sloc_str(:)), 'maxZall = ', maxval(sloc_dip(:))
+    write(*,*) 'RSF_HETE nglob= ', nglob, 'num_cell_all= ', snum_cell_all
+    write(*,*) 'minX = ', minval(coord(1,:)), 'minZ = ', minval(coord(3,:))
+    write(*,*) 'maxX = ', maxval(coord(1,:)), 'maxZ = ', maxval(coord(3,:))
+    write(*,*) 'minXall = ', minval(sloc_str(:)), 'minZall = ', minval(sloc_dip(:))
+    write(*,*) 'maxXall = ', maxval(sloc_str(:)), 'maxZall = ', maxval(sloc_dip(:))
 
     do si=1,nglob
 
