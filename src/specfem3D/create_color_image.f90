@@ -167,10 +167,10 @@
                             xstore,ystore,zstore,myrank)
 
   ! extracts points on surface
-  allocate( xcoord(num_iglob_image_surface), &
-           zcoord(num_iglob_image_surface), &
-           iglob_coord(num_iglob_image_surface), &
-           ispec_coord(num_iglob_image_surface),stat=ier )
+  allocate(xcoord(num_iglob_image_surface))
+  allocate(zcoord(num_iglob_image_surface))
+  allocate(iglob_coord(num_iglob_image_surface))
+  allocate(ispec_coord(num_iglob_image_surface),stat=ier)
   if (ier /= 0) call exit_mpi(myrank,'error allocating xyz image coordinates')
 
   countval=0
@@ -281,8 +281,8 @@
   endif
 
   ! allocate an array for the grid point that corresponds to a given image data point
-  allocate(iglob_image_color(NX_IMAGE_color,NZ_IMAGE_color), &
-          ispec_image_color(NX_IMAGE_color,NZ_IMAGE_color),stat=ier)
+  allocate(iglob_image_color(NX_IMAGE_color,NZ_IMAGE_color))
+  allocate(ispec_image_color(NX_IMAGE_color,NZ_IMAGE_color),stat=ier)
   if (ier /= 0) call exit_mpi(myrank,'error allocating iglob_image_color')
 
   allocate(dist_pixel_image(NX_IMAGE_color,NZ_IMAGE_color),stat=ier)
@@ -425,8 +425,8 @@
   endif
 
   ! allocate an array for image data
-  allocate(image_color_data(NX_IMAGE_color,NZ_IMAGE_color), &
-          image_color_vp_display(NX_IMAGE_color,NZ_IMAGE_color),stat=ier)
+  allocate(image_color_data(NX_IMAGE_color,NZ_IMAGE_color))
+  allocate(image_color_vp_display(NX_IMAGE_color,NZ_IMAGE_color),stat=ier)
   if (ier /= 0) call exit_mpi(myrank,'error allocating image data')
 
   image_color_data(:,:) = 0._CUSTOM_REAL

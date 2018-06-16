@@ -285,10 +285,10 @@
   if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo arrays')
 
   ! allocate models parameter records
-  allocate(vp_tomography(NFILES_TOMO,nrecord_max), &
-           vs_tomography(NFILES_TOMO,nrecord_max), &
-           rho_tomography(NFILES_TOMO,nrecord_max), &
-           z_tomography(NFILES_TOMO,nrecord_max),stat=ier)
+  allocate(vp_tomography(NFILES_TOMO,nrecord_max))
+  allocate(vs_tomography(NFILES_TOMO,nrecord_max))
+  allocate(rho_tomography(NFILES_TOMO,nrecord_max))
+  allocate(z_tomography(NFILES_TOMO,nrecord_max),stat=ier)
   if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo arrays')
 
   ! allocate models entries
@@ -298,8 +298,8 @@
   if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo arrays')
 
   ! allocate models min/max statistics
-  allocate(VP_MIN(NFILES_TOMO),VS_MIN(NFILES_TOMO),RHO_MIN(NFILES_TOMO), &
-           VP_MAX(NFILES_TOMO),VS_MAX(NFILES_TOMO),RHO_MAX(NFILES_TOMO),stat=ier)
+  allocate(VP_MIN(NFILES_TOMO),VS_MIN(NFILES_TOMO),RHO_MIN(NFILES_TOMO))
+  allocate(VP_MAX(NFILES_TOMO),VS_MAX(NFILES_TOMO),RHO_MAX(NFILES_TOMO),stat=ier)
   if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo arrays')
 
   ! q values
@@ -314,8 +314,8 @@
 
   ! only allocate q arrays if needed
   if (any(tomo_has_q_values)) then
-    allocate(qp_tomography(NFILES_TOMO,nrecord_max), &
-             qs_tomography(NFILES_TOMO,nrecord_max),stat=ier)
+    allocate(qp_tomography(NFILES_TOMO,nrecord_max))
+    allocate(qs_tomography(NFILES_TOMO,nrecord_max),stat=ier)
     if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo q-value arrays')
   endif
 

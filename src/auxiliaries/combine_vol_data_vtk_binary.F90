@@ -629,8 +629,8 @@
   endif
 
   ! writes out element indices
-  allocate(mask_ibool(NGLOB_AB), &
-          num_ibool(NGLOB_AB),stat=ier)
+  allocate(mask_ibool(NGLOB_AB))
+  allocate(num_ibool(NGLOB_AB),stat=ier)
   if (ier /= 0) stop 'error allocating array mask_ibool'
 
   mask_ibool(:) = .false.
@@ -740,8 +740,8 @@
   endif
 
   ! sets numbering num_ibool respecting mask
-  allocate(mask_ibool(NGLOB_AB), &
-          num_ibool(NGLOB_AB),stat=ier)
+  allocate(mask_ibool(NGLOB_AB))
+  allocate(num_ibool(NGLOB_AB),stat=ier)
   if (ier /= 0) stop 'error allocating array mask_ibool'
 
   mask_ibool(:) = .false.

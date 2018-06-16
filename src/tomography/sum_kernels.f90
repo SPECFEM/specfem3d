@@ -224,8 +224,8 @@ subroutine sum_kernel(kernel_name,kernel_list,nker)
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: mask_source
 
   ! initializes arrays
-  allocate(kernel(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           total_kernel(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  allocate(kernel(NGLLX,NGLLY,NGLLZ,NSPEC))
+  allocate(total_kernel(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
   if (ier /= 0) stop 'Error allocating kernel arrays'
 
   if (USE_SOURCE_MASK) then

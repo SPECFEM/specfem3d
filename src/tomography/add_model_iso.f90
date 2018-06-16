@@ -123,9 +123,9 @@ program add_model
   ! computes new model values for alpha, beta and rho
   ! and stores new model files
   ! allocate new model arrays
-  allocate(model_vp_new(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_vs_new(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_rho_new(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  allocate(model_vp_new(NGLLX,NGLLY,NGLLZ,NSPEC))
+  allocate(model_vs_new(NGLLX,NGLLY,NGLLZ,NSPEC))
+  allocate(model_rho_new(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
   if (ier /= 0) stop 'Error allocating model arrays'
 
   ! initializes arrays

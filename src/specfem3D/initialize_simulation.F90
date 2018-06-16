@@ -177,45 +177,45 @@
     if (ier /= 0) stop 'error allocating ibool'
 
   if (NSPEC_IRREGULAR > 0) then
-     allocate(xix(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-              xiy(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-              xiz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-              etax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-              etay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-              etaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-              gammax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-              gammay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-              gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-              jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+     allocate(xix(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
+     allocate(xiy(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
+     allocate(xiz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
+     allocate(etax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
+     allocate(etay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
+     allocate(etaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
+     allocate(gammax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
+     allocate(gammay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
+     allocate(gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
+     allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
   else
-    allocate(xix(1,1,1,1), &
-             xiy(1,1,1,1), &
-             xiz(1,1,1,1), &
-             etax(1,1,1,1), &
-             etay(1,1,1,1), &
-             etaz(1,1,1,1), &
-             gammax(1,1,1,1), &
-             gammay(1,1,1,1), &
-             gammaz(1,1,1,1), &
-             jacobian(1,1,1,1),stat=ier)
+    allocate(xix(1,1,1,1))
+    allocate(xiy(1,1,1,1))
+    allocate(xiz(1,1,1,1))
+    allocate(etax(1,1,1,1))
+    allocate(etay(1,1,1,1))
+    allocate(etaz(1,1,1,1))
+    allocate(gammax(1,1,1,1))
+    allocate(gammay(1,1,1,1))
+    allocate(gammaz(1,1,1,1))
+    allocate(jacobian(1,1,1,1),stat=ier)
   endif
   if (ier /= 0) stop 'error allocating arrays for databases'
 
   ! mesh node locations
-  allocate(xstore(NGLOB_AB), &
-           ystore(NGLOB_AB), &
-           zstore(NGLOB_AB),stat=ier)
+  allocate(xstore(NGLOB_AB))
+  allocate(ystore(NGLOB_AB))
+  allocate(zstore(NGLOB_AB),stat=ier)
   if (ier /= 0) stop 'error allocating arrays for mesh nodes'
 
   ! material properties
-  allocate(kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  allocate(kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) stop 'error allocating arrays for material properties'
 
   ! material flags
-  allocate(ispec_is_acoustic(NSPEC_AB), &
-           ispec_is_elastic(NSPEC_AB), &
-           ispec_is_poroelastic(NSPEC_AB),stat=ier)
+  allocate(ispec_is_acoustic(NSPEC_AB))
+  allocate(ispec_is_elastic(NSPEC_AB))
+  allocate(ispec_is_poroelastic(NSPEC_AB),stat=ier)
   if (ier /= 0) stop 'error allocating arrays for material flags'
   ispec_is_acoustic(:) = .false.
   ispec_is_elastic(:) = .false.

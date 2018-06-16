@@ -179,12 +179,12 @@
   !-----------------------------------------------------
 
   ! initializes arrays
-  allocate(factor_common(N_SLS,NGLLX,NGLLY,NGLLZ,nspec), &
-           scale_factor(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  allocate(factor_common(N_SLS,NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(scale_factor(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if (ier /= 0) call exit_mpi(myrank,'error allocation attenuation arrays')
 
-  allocate(factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,nspec), &
-          scale_factor_kappa(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  allocate(factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(scale_factor_kappa(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if (ier /= 0) call exit_mpi(myrank,'error allocation attenuation arrays')
 
   factor_common(:,:,:,:,:) = 1._CUSTOM_REAL
@@ -843,8 +843,8 @@
     AM_S%Q_max = ATTENUATION_COMP_MAXIMUM
     Qtmp = AM_S%Q_resolution * AM_S%Q_max
 
-    allocate(AM_S%tau_eps_storage(N_SLS, Qtmp), &
-             AM_S%Qmu_storage(Qtmp),stat=ier)
+    allocate(AM_S%tau_eps_storage(N_SLS, Qtmp))
+    allocate(AM_S%Qmu_storage(Qtmp),stat=ier)
     if (ier /= 0) stop 'error allocating arrays for attenuation storage'
     AM_S%Qmu_storage(:) = -1
   endif
@@ -996,7 +996,6 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-
   subroutine attenuation_simplex_setup(nf_in,nsls_in,f_in,Q_in,tau_s_in)
 
 !   - Inserts necessary parameters into the module attenuation_simplex_variables
@@ -1012,8 +1011,8 @@
   double precision, dimension(nsls_in) :: tau_s_in
   integer ier
 
-  allocate(AS_V%f(nf_in), &
-           AS_V%tau_s(nsls_in),stat=ier)
+  allocate(AS_V%f(nf_in))
+  allocate(AS_V%tau_s(nsls_in),stat=ier)
   if (ier /= 0) stop 'error allocating arrays for attenuation simplex'
 
   AS_V%nf    = nf_in

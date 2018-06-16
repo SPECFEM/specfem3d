@@ -82,12 +82,12 @@
 
   if (myrank == 0) then
     ! only master gathers all
-    allocate(elevation_all(npoints,0:NPROC-1), &
-             elevation_distmin_all(npoints,0:NPROC-1),stat=ier)
+    allocate(elevation_all(npoints,0:NPROC-1))
+    allocate(elevation_distmin_all(npoints,0:NPROC-1),stat=ier)
     if (ier /= 0) stop 'Error allocating elevation gather arrays'
   else
-    allocate(elevation_all(1,1), &
-             elevation_distmin_all(1,1),stat=ier)
+    allocate(elevation_all(1,1))
+    allocate(elevation_distmin_all(1,1),stat=ier)
     if (ier /= 0) stop 'Error allocating elevation gather arrays'
   endif
 

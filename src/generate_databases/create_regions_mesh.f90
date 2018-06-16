@@ -433,37 +433,37 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
   if (ier /= 0) stop 'error allocating array wxgll etc.'
 
 ! 3D shape functions and their derivatives
-  allocate(shape3D(NGNOD,NGLLX,NGLLY,NGLLZ), &
-           dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ),stat=ier)
+  allocate(shape3D(NGNOD,NGLLX,NGLLY,NGLLZ))
+  allocate(dershape3D(NDIM,NGNOD,NGLLX,NGLLY,NGLLZ),stat=ier)
   if (ier /= 0) stop 'error allocating array shape3D etc.'
 
 ! 2D shape functions and their derivatives
-  allocate(shape2D_x(NGNOD2D,NGLLY,NGLLZ), &
-           shape2D_y(NGNOD2D,NGLLX,NGLLZ), &
-           shape2D_bottom(NGNOD2D,NGLLX,NGLLY), &
-           shape2D_top(NGNOD2D,NGLLX,NGLLY),stat=ier)
+  allocate(shape2D_x(NGNOD2D,NGLLY,NGLLZ))
+  allocate(shape2D_y(NGNOD2D,NGLLX,NGLLZ))
+  allocate(shape2D_bottom(NGNOD2D,NGLLX,NGLLY))
+  allocate(shape2D_top(NGNOD2D,NGLLX,NGLLY),stat=ier)
   if (ier /= 0) stop 'error allocating array shape2D_x etc.'
 
-  allocate(dershape2D_x(NDIM2D,NGNOD2D,NGLLY,NGLLZ), &
-           dershape2D_y(NDIM2D,NGNOD2D,NGLLX,NGLLZ), &
-           dershape2D_bottom(NDIM2D,NGNOD2D,NGLLX,NGLLY), &
-           dershape2D_top(NDIM2D,NGNOD2D,NGLLX,NGLLY),stat=ier)
+  allocate(dershape2D_x(NDIM2D,NGNOD2D,NGLLY,NGLLZ))
+  allocate(dershape2D_y(NDIM2D,NGNOD2D,NGLLX,NGLLZ))
+  allocate(dershape2D_bottom(NDIM2D,NGNOD2D,NGLLX,NGLLY))
+  allocate(dershape2D_top(NDIM2D,NGNOD2D,NGLLX,NGLLY),stat=ier)
   if (ier /= 0) stop 'error allocating array dershape2D_x etc.'
 
-  allocate(wgllwgll_xy(NGLLX,NGLLY), &
-           wgllwgll_xz(NGLLX,NGLLZ), &
-           wgllwgll_yz(NGLLY,NGLLZ),stat=ier)
+  allocate(wgllwgll_xy(NGLLX,NGLLY))
+  allocate(wgllwgll_xz(NGLLX,NGLLZ))
+  allocate(wgllwgll_yz(NGLLY,NGLLZ),stat=ier)
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! Stacey
-  allocate(rho_vp(NGLLX,NGLLY,NGLLZ,nspec), &
-           rho_vs(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  allocate(rho_vp(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(rho_vs(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! array with model density
-  allocate(rhostore(NGLLX,NGLLY,NGLLZ,nspec), &
-           kappastore(NGLLX,NGLLY,NGLLZ,nspec), &
-           mustore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  allocate(rhostore(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(kappastore(NGLLX,NGLLY,NGLLZ,nspec))
+  allocate(mustore(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 !EB EB April 2018 : we should find a way to know if there are any poroelastic
@@ -476,15 +476,15 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
 !  endif
 
 ! array with poroelastic model
-  allocate(rhoarraystore(2,NGLLX,NGLLY,NGLLZ,NSPEC_PORO), &
-           kappaarraystore(3,NGLLX,NGLLY,NGLLZ,NSPEC_PORO), &
-           etastore(NGLLX,NGLLY,NGLLZ,NSPEC_PORO), &
-           tortstore(NGLLX,NGLLY,NGLLZ,NSPEC_PORO), &
-           phistore(NGLLX,NGLLY,NGLLZ,NSPEC_PORO), &
-           rho_vpI(NGLLX,NGLLY,NGLLZ,NSPEC_PORO), &
-           rho_vpII(NGLLX,NGLLY,NGLLZ,NSPEC_PORO), &
-           rho_vsI(NGLLX,NGLLY,NGLLZ,NSPEC_PORO), &
-           permstore(6,NGLLX,NGLLY,NGLLZ,NSPEC_PORO), stat=ier)
+  allocate(rhoarraystore(2,NGLLX,NGLLY,NGLLZ,NSPEC_PORO))
+  allocate(kappaarraystore(3,NGLLX,NGLLY,NGLLZ,NSPEC_PORO))
+  allocate(etastore(NGLLX,NGLLY,NGLLZ,NSPEC_PORO))
+  allocate(tortstore(NGLLX,NGLLY,NGLLZ,NSPEC_PORO))
+  allocate(phistore(NGLLX,NGLLY,NGLLZ,NSPEC_PORO))
+  allocate(rho_vpI(NGLLX,NGLLY,NGLLZ,NSPEC_PORO))
+  allocate(rho_vpII(NGLLX,NGLLY,NGLLZ,NSPEC_PORO))
+  allocate(rho_vsI(NGLLX,NGLLY,NGLLZ,NSPEC_PORO))
+  allocate(permstore(6,NGLLX,NGLLY,NGLLZ,NSPEC_PORO), stat=ier)
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! get the number of regular and irregular elements
@@ -506,28 +506,28 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
   enddo
 
   if (nspec_irregular == 0) then
-    allocate(xixstore(1,1,1,1), &
-             xiystore(1,1,1,1), &
-             xizstore(1,1,1,1), &
-             etaxstore(1,1,1,1), &
-             etaystore(1,1,1,1), &
-             etazstore(1,1,1,1), &
-             gammaxstore(1,1,1,1), &
-             gammaystore(1,1,1,1), &
-             gammazstore(1,1,1,1), &
-             jacobianstore(1,1,1,1),stat=ier)
+    allocate(xixstore(1,1,1,1))
+    allocate(xiystore(1,1,1,1))
+    allocate(xizstore(1,1,1,1))
+    allocate(etaxstore(1,1,1,1))
+    allocate(etaystore(1,1,1,1))
+    allocate(etazstore(1,1,1,1))
+    allocate(gammaxstore(1,1,1,1))
+    allocate(gammaystore(1,1,1,1))
+    allocate(gammazstore(1,1,1,1))
+    allocate(jacobianstore(1,1,1,1),stat=ier)
     if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
   else
-    allocate(xixstore(NGLLX,NGLLY,NGLLZ,nspec_irregular), &
-             xiystore(NGLLX,NGLLY,NGLLZ,nspec_irregular), &
-             xizstore(NGLLX,NGLLY,NGLLZ,nspec_irregular), &
-             etaxstore(NGLLX,NGLLY,NGLLZ,nspec_irregular), &
-             etaystore(NGLLX,NGLLY,NGLLZ,nspec_irregular), &
-             etazstore(NGLLX,NGLLY,NGLLZ,nspec_irregular), &
-             gammaxstore(NGLLX,NGLLY,NGLLZ,nspec_irregular), &
-             gammaystore(NGLLX,NGLLY,NGLLZ,nspec_irregular), &
-             gammazstore(NGLLX,NGLLY,NGLLZ,nspec_irregular), &
-             jacobianstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
+    allocate(xixstore(NGLLX,NGLLY,NGLLZ,nspec_irregular))
+    allocate(xiystore(NGLLX,NGLLY,NGLLZ,nspec_irregular))
+    allocate(xizstore(NGLLX,NGLLY,NGLLZ,nspec_irregular))
+    allocate(etaxstore(NGLLX,NGLLY,NGLLZ,nspec_irregular))
+    allocate(etaystore(NGLLX,NGLLY,NGLLZ,nspec_irregular))
+    allocate(etazstore(NGLLX,NGLLY,NGLLZ,nspec_irregular))
+    allocate(gammaxstore(NGLLX,NGLLY,NGLLZ,nspec_irregular))
+    allocate(gammaystore(NGLLX,NGLLY,NGLLZ,nspec_irregular))
+    allocate(gammazstore(NGLLX,NGLLY,NGLLZ,nspec_irregular))
+    allocate(jacobianstore(NGLLX,NGLLY,NGLLZ,nspec_irregular),stat=ier)
    if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
   endif
 
@@ -543,10 +543,10 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
   if (BOTTOM_FREE_SURFACE)  num_abs_boundary_faces = num_abs_boundary_faces -  nspec2D_bottom
 
   ! allocates arrays to store info for each face (assumes NGLLX=NGLLY=NGLLZ)
-  allocate(abs_boundary_ispec(num_abs_boundary_faces), &
-           abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces), &
-           abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces), &
-           abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
+  allocate(abs_boundary_ispec(num_abs_boundary_faces))
+  allocate(abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces))
+  allocate(abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces))
+  allocate(abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
   ! free surface faces
@@ -558,10 +558,10 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
      if (STACEY_INSTEAD_OF_FREE_SURFACE)  num_free_surface_faces = num_free_surface_faces - nspec2D_top
   endif
   ! allocates arrays to store info for each face (assumes NGLLX=NGLLY=NGLLZ)
-  allocate( free_surface_ispec(num_free_surface_faces), &
-            free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces), &
-            free_surface_jacobian2Dw(NGLLSQUARE,num_free_surface_faces), &
-            free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces),stat=ier)
+  allocate(free_surface_ispec(num_free_surface_faces))
+  allocate(free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces))
+  allocate(free_surface_jacobian2Dw(NGLLSQUARE,num_free_surface_faces))
+  allocate(free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces),stat=ier)
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! array with anisotropy
@@ -570,33 +570,33 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
   else
     NSPEC_ANISO = 1
   endif
-  allocate(c11store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-           c12store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-           c13store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-           c14store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-           c15store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-           c16store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-           c22store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-           c23store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-           c24store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-           c25store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-           c26store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-           c33store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-           c34store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-           c35store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-           c36store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-           c44store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-           c45store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-           c46store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-           c55store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-           c56store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-           c66store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
+  allocate(c11store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+  allocate(c12store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+  allocate(c13store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+  allocate(c14store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+  allocate(c15store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+  allocate(c16store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+  allocate(c22store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+  allocate(c23store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+  allocate(c24store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+  allocate(c25store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+  allocate(c26store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+  allocate(c33store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+  allocate(c34store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+  allocate(c35store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+  allocate(c36store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+  allocate(c44store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+  allocate(c45store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+  allocate(c46store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+  allocate(c55store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+  allocate(c56store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO))
+  allocate(c66store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
   ! material flags
-  allocate(ispec_is_acoustic(nspec), &
-           ispec_is_elastic(nspec), &
-           ispec_is_poroelastic(nspec), stat=ier)
+  allocate(ispec_is_acoustic(nspec))
+  allocate(ispec_is_elastic(nspec))
+  allocate(ispec_is_poroelastic(nspec), stat=ier)
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
   ! initializes Moho surface
@@ -761,11 +761,11 @@ subroutine crm_ext_setup_indexing(ibool, &
   double precision :: x_min,x_max
 
 ! allocate memory for arrays
-  allocate(locval(npointot), &
-           ifseg(npointot), &
-           xp(npointot), &
-           yp(npointot), &
-           zp(npointot),stat=ier)
+  allocate(locval(npointot))
+  allocate(ifseg(npointot))
+  allocate(xp(npointot))
+  allocate(yp(npointot))
+  allocate(zp(npointot),stat=ier)
   if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
 ! creates temporary global point arrays
@@ -809,9 +809,9 @@ subroutine crm_ext_setup_indexing(ibool, &
 
 ! unique global point locations
   nglob_dummy = nglob
-  allocate(xstore_dummy(nglob_dummy), &
-           ystore_dummy(nglob_dummy), &
-           zstore_dummy(nglob_dummy),stat=ier)
+  allocate(xstore_dummy(nglob_dummy))
+  allocate(ystore_dummy(nglob_dummy))
+  allocate(zstore_dummy(nglob_dummy),stat=ier)
   if (ier /= 0) stop 'error in allocate'
   do ispec = 1, nspec
      do k = 1, NGLLZ
@@ -891,8 +891,8 @@ subroutine crm_ext_setup_indexing(ibool, &
              reshape( (/ 1,2,2, NGLLX,2,2, 2,1,2, 2,NGLLY,2, 2,2,1, 2,2,NGLLZ  /),(/3,6/))   ! top
 
   ! temporary arrays for passing information
-  allocate(iglob_is_surface(nglob_dummy), &
-          iglob_normals(NDIM,nglob_dummy),stat=ier)
+  allocate(iglob_is_surface(nglob_dummy))
+  allocate(iglob_normals(NDIM,nglob_dummy),stat=ier)
   if (ier /= 0) stop 'error allocating array iglob_is_surface'
 
   iglob_is_surface = 0
@@ -957,20 +957,20 @@ subroutine crm_ext_setup_indexing(ibool, &
   ! stores moho elements
   NSPEC2D_MOHO = nspec2D_moho_ext
 
-  allocate(ibelm_moho_bot(NSPEC2D_MOHO), &
-          ibelm_moho_top(NSPEC2D_MOHO), &
-          normal_moho_top(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
-          normal_moho_bot(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
-          ijk_moho_bot(3,NGLLSQUARE,NSPEC2D_MOHO), &
-          ijk_moho_top(3,NGLLSQUARE,NSPEC2D_MOHO),stat=ier)
+  allocate(ibelm_moho_bot(NSPEC2D_MOHO))
+  allocate(ibelm_moho_top(NSPEC2D_MOHO))
+  allocate(normal_moho_top(NDIM,NGLLSQUARE,NSPEC2D_MOHO))
+  allocate(normal_moho_bot(NDIM,NGLLSQUARE,NSPEC2D_MOHO))
+  allocate(ijk_moho_bot(3,NGLLSQUARE,NSPEC2D_MOHO))
+  allocate(ijk_moho_top(3,NGLLSQUARE,NSPEC2D_MOHO),stat=ier)
   if (ier /= 0) stop 'error allocating ibelm_moho_bot'
 
   ibelm_moho_bot = 0
   ibelm_moho_top = 0
 
   ! element flags
-  allocate(is_moho_top(nspec), &
-          is_moho_bot(nspec),stat=ier)
+  allocate(is_moho_top(nspec))
+  allocate(is_moho_bot(nspec),stat=ier)
   if (ier /= 0) stop 'error allocating is_moho_top'
   is_moho_top = .false.
   is_moho_bot = .false.
@@ -1407,8 +1407,8 @@ subroutine crm_ext_setup_indexing(ibool, &
   integer, dimension(:,:), allocatable :: ibool_interfaces_ext_mesh_dummy
 
   ! allocates mesh surface arrays
-  allocate(ispec_is_surface_external_mesh(NSPEC_AB), &
-           iglob_is_surface_external_mesh(NGLOB_AB),stat=ier)
+  allocate(ispec_is_surface_external_mesh(NSPEC_AB))
+  allocate(iglob_is_surface_external_mesh(NGLOB_AB),stat=ier)
   if (ier /= 0) stop 'error allocating array'
   nfaces_surface = 0
 

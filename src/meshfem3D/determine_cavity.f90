@@ -120,8 +120,12 @@
 
     ! reads in cavity dimensions
     if (ncavity > 0) then
-      allocate(cavity_x0(ncavity),cavity_x1(ncavity),cavity_y0(ncavity), &
-               cavity_y1(ncavity),cavity_z0(ncavity),cavity_z1(ncavity))
+      allocate(cavity_x0(ncavity))
+      allocate(cavity_x1(ncavity))
+      allocate(cavity_y0(ncavity))
+      allocate(cavity_y1(ncavity))
+      allocate(cavity_z0(ncavity))
+      allocate(cavity_z1(ncavity))
       cavity_x0=HUGEVAL; cavity_x1=HUGEVAL
       cavity_y0=HUGEVAL; cavity_y1=HUGEVAL
       cavity_z0=HUGEVAL; cavity_z1=HUGEVAL
@@ -484,11 +488,12 @@ cavity: do i_cavity = 1,ncavity
     if (inode_new_mesh /= nglob) call exit_MPI(myrank,'ERROR: new number of spectral elements mismatch!')
 
     ! old mesh arrays
-    allocate(nodes_coords_old(nglob_old,3), &
-             ispec_material_id_old(nspec_old), &
-             ibool_old(NGLLX_M,NGLLY_M,NGLLZ_M,nspec_old), &
-             iboun_old(6,nspec_old), &
-             iMPIcut_xi_old(2,nspec_old),iMPIcut_eta_old(2,nspec_old),stat=ier)
+    allocate(nodes_coords_old(nglob_old,3))
+    allocate(ispec_material_id_old(nspec_old))
+    allocate(ibool_old(NGLLX_M,NGLLY_M,NGLLZ_M,nspec_old))
+    allocate(iboun_old(6,nspec_old))
+    allocate(iMPIcut_xi_old(2,nspec_old))
+    allocate(iMPIcut_eta_old(2,nspec_old),stat=ier)
     if (ier /= 0 ) stop 'Error allocating old mesh arrays for cavity'
 
     nodes_coords_old(:,:) = nodes_coords(:,:)
@@ -505,11 +510,12 @@ cavity: do i_cavity = 1,ncavity
     deallocate(iMPIcut_xi,iMPIcut_eta)
 
     ! re-allocates new mesh arrays
-    allocate(nodes_coords(nglob,3), &
-             ispec_material_id(nspec), &
-             ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec), &
-             iboun(6,nspec), &
-             iMPIcut_xi(2,nspec),iMPIcut_eta(2,nspec),stat=ier)
+    allocate(nodes_coords(nglob,3))
+    allocate(ispec_material_id(nspec))
+    allocate(ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec))
+    allocate(iboun(6,nspec))
+    allocate(iMPIcut_xi(2,nspec))
+    allocate(iMPIcut_eta(2,nspec),stat=ier)
     if (ier /= 0 ) stop 'Error allocating updated mesh arrays for cavity'
 
     ! new specs

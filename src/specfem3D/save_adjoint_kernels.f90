@@ -102,12 +102,11 @@
     ! allocates temporary transversely isotropic kernels
     if (ANISOTROPIC_KL) then
       if (SAVE_TRANSVERSE_KL) then
-        allocate(alphav_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-                 alphah_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-                 betav_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-                 betah_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-                 eta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-                 stat=ier)
+        allocate(alphav_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT))
+        allocate(alphah_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT))
+        allocate(betav_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT))
+        allocate(betah_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT))
+        allocate(eta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
         if (ier /= 0) stop 'error allocating arrays alphav_kl,...'
 
         ! derived kernels

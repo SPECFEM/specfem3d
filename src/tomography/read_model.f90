@@ -40,9 +40,9 @@ subroutine read_model_iso()
   if (myrank == 0) print *,'reading model...'
 
   ! allocate arrays for storing the databases
-  allocate(model_vp(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_vs(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_rho(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  allocate(model_vp(NGLLX,NGLLY,NGLLZ,NSPEC))
+  allocate(model_vs(NGLLX,NGLLY,NGLLZ,NSPEC))
+  allocate(model_rho(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
   if (ier /= 0) stop 'Error allocating model arrays'
 
   ! initializes arrays
@@ -142,12 +142,12 @@ subroutine read_model_tiso()
   if (myrank == 0) print *,'reading model...'
 
   ! allocate arrays for storing the databases
-  allocate(model_vpv(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_vph(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_vsv(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_vsh(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_eta(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_rho(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  allocate(model_vpv(NGLLX,NGLLY,NGLLZ,NSPEC))
+  allocate(model_vph(NGLLX,NGLLY,NGLLZ,NSPEC))
+  allocate(model_vsv(NGLLX,NGLLY,NGLLZ,NSPEC))
+  allocate(model_vsh(NGLLX,NGLLY,NGLLZ,NSPEC))
+  allocate(model_eta(NGLLX,NGLLY,NGLLZ,NSPEC))
+  allocate(model_rho(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
   if (ier /= 0) stop 'Error allocating model arrays'
 
   ! initializes arrays

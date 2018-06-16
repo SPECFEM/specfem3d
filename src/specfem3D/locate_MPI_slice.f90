@@ -153,14 +153,14 @@
   double precision,  dimension(1)                                :: x_found_dummy, y_found_dummy, z_found_dummy
   integer,           dimension(1)                                :: ispec_selected_dummy, islice_selected_dummy, domain_dummy
 
-  allocate(distance_from_target_all(1,0:NPROC-1), &
-           xi_all(1,0:NPROC-1), &
-           eta_all(1,0:NPROC-1), &
-           gamma_all(1,0:NPROC-1), &
-           x_found_all(1,0:NPROC-1), &
-           y_found_all(1,0:NPROC-1), &
-           z_found_all(1,0:NPROC-1), &
-           nu_all(3,3,0:NPROC-1))
+  allocate(distance_from_target_all(1,0:NPROC-1))
+  allocate(xi_all(1,0:NPROC-1))
+  allocate(eta_all(1,0:NPROC-1))
+  allocate(gamma_all(1,0:NPROC-1))
+  allocate(x_found_all(1,0:NPROC-1))
+  allocate(y_found_all(1,0:NPROC-1))
+  allocate(z_found_all(1,0:NPROC-1))
+  allocate(nu_all(3,3,0:NPROC-1))
 
   allocate(ispec_selected_all(1,0:NPROC-1),domain_all(1,0:NPROC-1))
 

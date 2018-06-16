@@ -67,31 +67,31 @@
   npoin = npoin_elem * nfaces_m
 
   ! surface elements
-  allocate(faces_surface_ispec(nfaces_m), &
-           faces_surface_ibool(npoin_elem,nfaces_m),stat=ier)
+  allocate(faces_surface_ispec(nfaces_m))
+  allocate(faces_surface_ibool(npoin_elem,nfaces_m),stat=ier)
   if (ier /= 0) stop 'error allocating array faces_surface_ispec'
   faces_surface_ispec(:) = 0
   faces_surface_ibool(:,:) = 0
 
   ! point locations
-  allocate(store_val_x(npoin), &
-           store_val_y(npoin), &
-           store_val_z(npoin),stat=ier)
+  allocate(store_val_x(npoin))
+  allocate(store_val_y(npoin))
+  allocate(store_val_z(npoin),stat=ier)
   if (ier /= 0) stop 'error allocating location arrays for highres movie'
 
   ! surface movie data
   if (MOVIE_SURFACE) then
-    allocate(store_val_ux(npoin), &
-             store_val_uy(npoin), &
-             store_val_uz(npoin),stat=ier)
+    allocate(store_val_ux(npoin))
+    allocate(store_val_uy(npoin))
+    allocate(store_val_uz(npoin),stat=ier)
     if (ier /= 0) stop 'error allocating arrays for highres movie'
   endif
 
   ! shakemap data
   if (CREATE_SHAKEMAP) then
-    allocate(shakemap_ux(npoin), &
-             shakemap_uy(npoin), &
-             shakemap_uz(npoin),stat=ier)
+    allocate(shakemap_ux(npoin))
+    allocate(shakemap_uy(npoin))
+    allocate(shakemap_uz(npoin),stat=ier)
     if (ier /= 0) stop 'error allocating arrays for highres shakemap'
     ! initializes shakemap values
     shakemap_ux(:) = 0._CUSTOM_REAL
@@ -105,31 +105,31 @@
   ! arrays used for collected/gathered fields
   if (myrank == 0) then
     ! all point locations
-    allocate(store_val_x_all(npoin_elem*nfaces_surface_glob_ext_mesh), &
-             store_val_y_all(npoin_elem*nfaces_surface_glob_ext_mesh), &
-             store_val_z_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
+    allocate(store_val_x_all(npoin_elem*nfaces_surface_glob_ext_mesh))
+    allocate(store_val_y_all(npoin_elem*nfaces_surface_glob_ext_mesh))
+    allocate(store_val_z_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
     if (ier /= 0) stop 'error allocating arrays for highres movie'
 
     ! surface movie
     if (MOVIE_SURFACE) then
-      allocate(store_val_ux_all(npoin_elem*nfaces_surface_glob_ext_mesh), &
-               store_val_uy_all(npoin_elem*nfaces_surface_glob_ext_mesh), &
-               store_val_uz_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
+      allocate(store_val_ux_all(npoin_elem*nfaces_surface_glob_ext_mesh))
+      allocate(store_val_uy_all(npoin_elem*nfaces_surface_glob_ext_mesh))
+      allocate(store_val_uz_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
       if (ier /= 0) stop 'error allocating arrays for highres movie'
     endif
 
     ! shakemap
     if (CREATE_SHAKEMAP) then
-      allocate(shakemap_ux_all(npoin_elem*nfaces_surface_glob_ext_mesh), &
-               shakemap_uy_all(npoin_elem*nfaces_surface_glob_ext_mesh), &
-               shakemap_uz_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
+      allocate(shakemap_ux_all(npoin_elem*nfaces_surface_glob_ext_mesh))
+      allocate(shakemap_uy_all(npoin_elem*nfaces_surface_glob_ext_mesh))
+      allocate(shakemap_uz_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
       if (ier /= 0) stop 'error allocating arrays for highres movie'
     endif
   endif
 
   ! arrays for collecting movies and shakemaps
-  allocate(nfaces_perproc_surface(NPROC), &
-           faces_surface_offset(NPROC),stat=ier)
+  allocate(nfaces_perproc_surface(NPROC))
+  allocate(faces_surface_offset(NPROC),stat=ier)
   if (ier /= 0) stop 'error allocating array for movie faces'
 
   ! number of faces per slice

@@ -1357,8 +1357,11 @@
      case('NLAYER')
         read(line, *) keyword_tmp, nlayer
         allocate(al_FK(nlayer), be_FK(nlayer), mu_FK(nlayer), h_FK(nlayer))
-        allocate(rho_fk_input(nlayer), vp_fk_input(nlayer), vs_fk_input(nlayer), ztop_fk_input(nlayer+1), &
-             ilayer_fk_input(nlayer+1))
+        allocate(rho_fk_input(nlayer))
+        allocate(vp_fk_input(nlayer))
+        allocate(vs_fk_input(nlayer))
+        allocate(ztop_fk_input(nlayer+1))
+        allocate(ilayer_fk_input(nlayer+1))
         ilayer_fk_input(:)=-1
 
      case('LAYER')

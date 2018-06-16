@@ -554,8 +554,8 @@
   if (ELASTIC_SIMULATION) then
 
     ! allocate array for single elements
-    allocate(div_glob(NGLOB_AB), &
-             valence(NGLOB_AB), stat=ier)
+    allocate(div_glob(NGLOB_AB))
+    allocate(valence(NGLOB_AB), stat=ier)
     if (ier /= 0) stop 'error allocating arrays for movie div and curl'
 
     ! calculates divergence and curl of velocity field
@@ -579,8 +579,8 @@
   ! saves full snapshot data to local disk
   if (POROELASTIC_SIMULATION) then
     ! allocate array for single elements
-    allocate(div_glob(NGLOB_AB), &
-             valence(NGLOB_AB), stat=ier)
+    allocate(div_glob(NGLOB_AB))
+    allocate(valence(NGLOB_AB), stat=ier)
     if (ier /= 0) stop 'error allocating arrays for movie div and curl'
 
     ! calculates divergence and curl of velocity field

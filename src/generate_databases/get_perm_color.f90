@@ -595,8 +595,8 @@
   icolormax = ncolors
 
   ! allocates temporary arrays
-  allocate(nb_elems_in_this_color(ncolors), &
-          icolor_conflict_found(ncolors),stat=ier)
+  allocate(nb_elems_in_this_color(ncolors))
+  allocate(icolor_conflict_found(ncolors),stat=ier)
   if (ier /= 0) stop 'error allocating nb_elems_in_this_color arrays'
 
   nb_elems_in_this_color(:) = 0
@@ -759,8 +759,8 @@
   ncolors = nb_colors_outer_elements + nb_colors_inner_elements
 
   ! allocates temporary arrays
-  allocate(nb_elems_in_this_color(ncolors), &
-          icolor_conflict_found(ncolors),stat=ier)
+  allocate(nb_elems_in_this_color(ncolors))
+  allocate(icolor_conflict_found(ncolors),stat=ier)
   if (ier /= 0) stop 'error allocating nb_elems_in_this_color arrays'
 
   !! DK DK do it for outer elements

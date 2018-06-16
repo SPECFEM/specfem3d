@@ -122,12 +122,12 @@
   enddo
 
   ! allocate 1-D Lagrange interpolators and derivatives
-  allocate(hxir(NGLLX), &
-           hpxir(NGLLX), &
-           hetar(NGLLY), &
-           hpetar(NGLLY), &
-           hgammar(NGLLZ), &
-           hpgammar(NGLLZ),stat=ier)
+  allocate(hxir(NGLLX))
+  allocate(hpxir(NGLLX))
+  allocate(hetar(NGLLY))
+  allocate(hpetar(NGLLY))
+  allocate(hgammar(NGLLZ))
+  allocate(hpgammar(NGLLZ),stat=ier)
   if (ier /= 0) stop 'error allocating arrays for interpolators'
 
   ! create name of database

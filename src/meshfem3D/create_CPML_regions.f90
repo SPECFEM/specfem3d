@@ -65,8 +65,8 @@
   ! checks if anything to do
   if (.not. PML_CONDITIONS) then
     ! dummy allocation
-    allocate(CPML_to_spec(1), &
-             CPML_regions(1),stat=ier)
+    allocate(CPML_to_spec(1))
+    allocate(CPML_regions(1),stat=ier)
     if (ier /= 0) stop 'Error allocating dummy CPML arrays'
 
     ! nothing to do anymore
@@ -191,8 +191,8 @@
   endif
 
   ! allocates arrays
-  allocate(CPML_to_spec(nspec_CPML), &
-           CPML_regions(nspec_CPML),stat=ier)
+  allocate(CPML_to_spec(nspec_CPML))
+  allocate(CPML_regions(nspec_CPML),stat=ier)
   if (ier /= 0) stop 'Error allocating CPML arrays'
 
   ispec_CPML=0

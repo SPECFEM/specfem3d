@@ -164,10 +164,12 @@ program combine_surf_data
     nglob = NGLOB_AB
 
     ! allocates arrays
-    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-            mask_ibool(NGLOB_AB), &
-            num_ibool(NGLOB_AB), &
-            xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB),stat=ier)
+    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(mask_ibool(NGLOB_AB))
+    allocate(num_ibool(NGLOB_AB))
+    allocate(xstore(NGLOB_AB))
+    allocate(ystore(NGLOB_AB))
+    allocate(zstore(NGLOB_AB),stat=ier)
     if (ier /= 0) stop 'error allocating array ibool etc.'
 
     ! surface file
@@ -323,9 +325,9 @@ program combine_surf_data
     nglob = NGLOB_AB
 
     ! allocates arrays
-    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-            mask_ibool(NGLOB_AB), &
-            num_ibool(NGLOB_AB),stat=ier)
+    allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(mask_ibool(NGLOB_AB))
+    allocate(num_ibool(NGLOB_AB),stat=ier)
     if (ier /= 0) stop 'error allocating array ibool etc.'
 
 

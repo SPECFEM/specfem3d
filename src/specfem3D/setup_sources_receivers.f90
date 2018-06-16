@@ -154,36 +154,35 @@
   endif
 
   ! allocate arrays for source
-  allocate(islice_selected_source(NSOURCES), &
-           ispec_selected_source(NSOURCES), &
-           Mxx(NSOURCES), &
-           Myy(NSOURCES), &
-           Mzz(NSOURCES), &
-           Mxy(NSOURCES), &
-           Mxz(NSOURCES), &
-           Myz(NSOURCES), &
-           xi_source(NSOURCES), &
-           eta_source(NSOURCES), &
-           gamma_source(NSOURCES), &
-           tshift_src(NSOURCES), &
-           hdur(NSOURCES), &
-           hdur_Gaussian(NSOURCES), &
-           utm_x_source(NSOURCES), &
-           utm_y_source(NSOURCES), &
-           nu_source(NDIM,NDIM,NSOURCES), &
-           stat=ier)
+  allocate(islice_selected_source(NSOURCES))
+  allocate(ispec_selected_source(NSOURCES))
+  allocate(Mxx(NSOURCES))
+  allocate(Myy(NSOURCES))
+  allocate(Mzz(NSOURCES))
+  allocate(Mxy(NSOURCES))
+  allocate(Mxz(NSOURCES))
+  allocate(Myz(NSOURCES))
+  allocate(xi_source(NSOURCES))
+  allocate(eta_source(NSOURCES))
+  allocate(gamma_source(NSOURCES))
+  allocate(tshift_src(NSOURCES))
+  allocate(hdur(NSOURCES))
+  allocate(hdur_Gaussian(NSOURCES))
+  allocate(utm_x_source(NSOURCES))
+  allocate(utm_y_source(NSOURCES))
+  allocate(nu_source(NDIM,NDIM,NSOURCES),stat=ier)
   if (ier /= 0) stop 'error allocating arrays for sources'
 
   if (USE_FORCE_POINT_SOURCE) then
-    allocate(factor_force_source(NSOURCES), &
-             comp_dir_vect_source_E(NSOURCES), &
-             comp_dir_vect_source_N(NSOURCES), &
-             comp_dir_vect_source_Z_UP(NSOURCES),stat=ier)
+    allocate(factor_force_source(NSOURCES))
+    allocate(comp_dir_vect_source_E(NSOURCES))
+    allocate(comp_dir_vect_source_N(NSOURCES))
+    allocate(comp_dir_vect_source_Z_UP(NSOURCES),stat=ier)
   else
-    allocate(factor_force_source(1), &
-             comp_dir_vect_source_E(1), &
-             comp_dir_vect_source_N(1), &
-             comp_dir_vect_source_Z_UP(1),stat=ier)
+    allocate(factor_force_source(1))
+    allocate(comp_dir_vect_source_E(1))
+    allocate(comp_dir_vect_source_N(1))
+    allocate(comp_dir_vect_source_Z_UP(1),stat=ier)
   endif
   if (ier /= 0) stop 'error allocating arrays for force point sources'
 
@@ -565,15 +564,14 @@
   endif
 
   ! allocate memory for receiver arrays, i.e. stations given in STATIONS file
-  allocate(islice_selected_rec(nrec), &
-           ispec_selected_rec(nrec), &
-           xi_receiver(nrec), &
-           eta_receiver(nrec), &
-           gamma_receiver(nrec), &
-           station_name(nrec), &
-           network_name(nrec), &
-           nu(NDIM,NDIM,nrec), &
-           stat=ier)
+  allocate(islice_selected_rec(nrec))
+  allocate(ispec_selected_rec(nrec))
+  allocate(xi_receiver(nrec))
+  allocate(eta_receiver(nrec))
+  allocate(gamma_receiver(nrec))
+  allocate(station_name(nrec))
+  allocate(network_name(nrec))
+  allocate(nu(NDIM,NDIM,nrec), stat=ier)
   if (ier /= 0) stop 'error allocating arrays for receivers'
 
   ! locate receivers in the mesh
@@ -763,8 +761,8 @@
 
   ! forward simulations
   if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
-    allocate(sourcearray(NDIM,NGLLX,NGLLY,NGLLZ), &
-             sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
+    allocate(sourcearray(NDIM,NGLLX,NGLLY,NGLLZ))
+    allocate(sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
     if (ier /= 0) stop 'error allocating array sourcearray'
 
     ! compute source arrays
@@ -1103,16 +1101,16 @@
   ! stores local receivers interpolation factors
   if (nrec_local > 0) then
     ! allocate Lagrange interpolators for receivers
-    allocate(hxir_store(nrec_local,NGLLX), &
-             hetar_store(nrec_local,NGLLY), &
-             hgammar_store(nrec_local,NGLLZ),stat=ier)
+    allocate(hxir_store(nrec_local,NGLLX))
+    allocate(hetar_store(nrec_local,NGLLY))
+    allocate(hgammar_store(nrec_local,NGLLZ),stat=ier)
     if (ier /= 0) stop 'error allocating array hxir_store etc.'
 
     ! allocates derivatives
     if (SIMULATION_TYPE == 2) then
-      allocate(hpxir_store(nrec_local,NGLLX), &
-               hpetar_store(nrec_local,NGLLY), &
-               hpgammar_store(nrec_local,NGLLZ),stat=ier)
+      allocate(hpxir_store(nrec_local,NGLLX))
+      allocate(hpetar_store(nrec_local,NGLLY))
+      allocate(hpgammar_store(nrec_local,NGLLZ),stat=ier)
       if (ier /= 0) stop 'error allocating array hpxir_store'
     endif
 
@@ -1169,15 +1167,15 @@
   else
     ! VM VM need to allocate Lagrange interpolators for receivers with 0 because it is used
     ! in calling subroutines parmeters. (otherwise it can be crash at runtime).
-    allocate(hxir_store(nrec_local,NGLLX), &
-             hetar_store(nrec_local,NGLLY), &
-             hgammar_store(nrec_local,NGLLZ),stat=ier)
+    allocate(hxir_store(nrec_local,NGLLX))
+    allocate(hetar_store(nrec_local,NGLLY))
+    allocate(hgammar_store(nrec_local,NGLLZ),stat=ier)
     if (ier /= 0) stop 'error allocating array hxir_store etc.'
     ! allocates derivatives
     if (SIMULATION_TYPE == 2) then
-      allocate(hpxir_store(nrec_local,NGLLX), &
-               hpetar_store(nrec_local,NGLLY), &
-               hpgammar_store(nrec_local,NGLLZ),stat=ier)
+      allocate(hpxir_store(nrec_local,NGLLX))
+      allocate(hpetar_store(nrec_local,NGLLY))
+      allocate(hpgammar_store(nrec_local,NGLLZ),stat=ier)
       if (ier /= 0) stop 'error allocating array hpxir_store'
     endif
   endif ! nrec_local > 0

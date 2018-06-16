@@ -564,9 +564,9 @@ end module vtk_window_par
     ! global data arrays (only needed on master process)
     if (myrank == 0) then
       ! gather locations
-      allocate(free_x_all(free_np_all), &
-               free_y_all(free_np_all), &
-               free_z_all(free_np_all),stat=ier )
+      allocate(free_x_all(free_np_all))
+      allocate(free_y_all(free_np_all))
+      allocate(free_z_all(free_np_all),stat=ier)
       if (ier /= 0) stop 'Error allocating free_x_all,... arrays'
 
       free_x_all(:) = 0.0
@@ -870,9 +870,9 @@ end module vtk_window_par
       vtkdata_all(:) = 0.0
 
       ! gather locations
-      allocate(vol_x_all(vtkdata_numpoints_all), &
-               vol_y_all(vtkdata_numpoints_all), &
-               vol_z_all(vtkdata_numpoints_all),stat=ier )
+      allocate(vol_x_all(vtkdata_numpoints_all))
+      allocate(vol_y_all(vtkdata_numpoints_all))
+      allocate(vol_z_all(vtkdata_numpoints_all),stat=ier)
       if (ier /= 0) stop 'Error allocating vol_x_all,... arrays'
 
       vol_x_all(:) = 0.0

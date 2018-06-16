@@ -135,21 +135,21 @@
   endif
 
   ! allocate memory for arrays using number of stations
-  allocate(stlat(nrec), &
-           stlon(nrec), &
-           stele(nrec), &
-           stbur(nrec), &
-           stutm_x(nrec), &
-           stutm_y(nrec), &
-           elevation(nrec), &
-           x_target(nrec), &
-           y_target(nrec), &
-           z_target(nrec), &
-           x_found(nrec), &
-           y_found(nrec), &
-           z_found(nrec), &
-           final_distance(nrec), &
-           idomain(nrec),stat=ier)
+  allocate(stlat(nrec))
+  allocate(stlon(nrec))
+  allocate(stele(nrec))
+  allocate(stbur(nrec))
+  allocate(stutm_x(nrec))
+  allocate(stutm_y(nrec))
+  allocate(elevation(nrec))
+  allocate(x_target(nrec))
+  allocate(y_target(nrec))
+  allocate(z_target(nrec))
+  allocate(x_found(nrec))
+  allocate(y_found(nrec))
+  allocate(z_found(nrec))
+  allocate(final_distance(nrec))
+  allocate(idomain(nrec),stat=ier)
   if (ier /= 0) stop 'Error allocating arrays for locating receivers'
 
   ! loop on all the stations to read the file

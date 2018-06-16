@@ -168,34 +168,32 @@ subroutine read_partition_files_adios()
   allocate(mat_ext_mesh(2,nelmnts_ext_mesh),stat=ier)
   if (ier /= 0) stop 'error allocating array mat_ext_mesh'
 
-  allocate(ibelm_xmin(nspec2D_xmin), &
-           nodes_ibelm_xmin(NGNOD2D,nspec2D_xmin),stat=ier)
+  allocate(ibelm_xmin(nspec2D_xmin))
+  allocate(nodes_ibelm_xmin(NGNOD2D,nspec2D_xmin),stat=ier)
   if (ier /= 0) stop 'error allocating array ibelm_xmin etc.'
-  allocate(ibelm_xmax(nspec2D_xmax), &
-           nodes_ibelm_xmax(NGNOD2D,nspec2D_xmax),stat=ier)
+  allocate(ibelm_xmax(nspec2D_xmax))
+  allocate(nodes_ibelm_xmax(NGNOD2D,nspec2D_xmax),stat=ier)
   if (ier /= 0) stop 'error allocating array ibelm_xmax etc.'
-  allocate(ibelm_ymin(nspec2D_ymin), &
-           nodes_ibelm_ymin(NGNOD2D,nspec2D_ymin),stat=ier)
+  allocate(ibelm_ymin(nspec2D_ymin))
+  allocate(nodes_ibelm_ymin(NGNOD2D,nspec2D_ymin),stat=ier)
   if (ier /= 0) stop 'error allocating array ibelm_ymin'
-  allocate(ibelm_ymax(nspec2D_ymax), &
-           nodes_ibelm_ymax(NGNOD2D,nspec2D_ymax),stat=ier)
+  allocate(ibelm_ymax(nspec2D_ymax))
+  allocate(nodes_ibelm_ymax(NGNOD2D,nspec2D_ymax),stat=ier)
   if (ier /= 0) stop 'error allocating array ibelm_ymax etc.'
-  allocate(ibelm_bottom(nspec2D_bottom_ext), &
-           nodes_ibelm_bottom(NGNOD2D,nspec2D_bottom_ext),stat=ier)
+  allocate(ibelm_bottom(nspec2D_bottom_ext))
+  allocate(nodes_ibelm_bottom(NGNOD2D,nspec2D_bottom_ext),stat=ier)
   if (ier /= 0) stop 'error allocating array ibelm_bottom etc.'
-  allocate(ibelm_top(nspec2D_top_ext), &
-           nodes_ibelm_top(NGNOD2D,nspec2D_top_ext),stat=ier)
+  allocate(ibelm_top(nspec2D_top_ext))
+  allocate(nodes_ibelm_top(NGNOD2D,nspec2D_top_ext),stat=ier)
   if (ier /= 0) stop 'error allocating array ibelm_top etc.'
   ! allocates interfaces
   allocate(my_neighbors_ext_mesh(num_interfaces_ext_mesh),stat=ier)
   if (ier /= 0) stop 'error allocating array my_neighbors_ext_mesh'
   allocate(my_nelmnts_neighbors_ext_mesh(num_interfaces_ext_mesh),stat=ier)
   if (ier /= 0) stop 'error allocating array my_nelmnts_neighbors_ext_mesh'
-  allocate(my_interfaces_ext_mesh(6,max_interface_size_ext_mesh, &
-                                  num_interfaces_ext_mesh),stat=ier)
+  allocate(my_interfaces_ext_mesh(6,max_interface_size_ext_mesh,num_interfaces_ext_mesh),stat=ier)
   if (ier /= 0) stop 'error allocating array my_interfaces_ext_mesh'
-  allocate(ibool_interfaces_ext_mesh(NGLLX*NGLLX*max_interface_size_ext_mesh, &
-                                    num_interfaces_ext_mesh),stat=ier)
+  allocate(ibool_interfaces_ext_mesh(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh),stat=ier)
   if (ier /= 0) stop 'error allocating array ibool_interfaces_ext_mesh'
   allocate(nibool_interfaces_ext_mesh(num_interfaces_ext_mesh),stat=ier)
   if (ier /= 0) stop 'error allocating array nibool_interfaces_ext_mesh'

@@ -434,22 +434,22 @@
     endif
 
     ! note: currently, they need to be defined, as they are used in some subroutine arguments
-    allocate(R_xx_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK), &
-             R_yy_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK), &
-             R_xy_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK), &
-             R_xz_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK), &
-             R_yz_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK),stat=ier)
+    allocate(R_xx_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK))
+    allocate(R_yy_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK))
+    allocate(R_xy_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK))
+    allocate(R_xz_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK))
+    allocate(R_yz_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK),stat=ier)
     if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
 
     allocate(R_trace_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK))
     if (ier /= 0) stop 'Error allocating array R_trace_lddrk etc.'
 
     if (SIMULATION_TYPE == 3) then
-      allocate(b_R_xx_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK), &
-               b_R_yy_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK), &
-               b_R_xy_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK), &
-               b_R_xz_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK), &
-               b_R_yz_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK),stat=ier)
+      allocate(b_R_xx_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK))
+      allocate(b_R_yy_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK))
+      allocate(b_R_xy_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK))
+      allocate(b_R_xz_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK))
+      allocate(b_R_yz_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK),stat=ier)
       if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
 
       allocate(b_R_trace_lddrk(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK))
@@ -611,10 +611,13 @@
   ! moment tensor derivatives
   if (nrec_local > 0 .and. SIMULATION_TYPE == 2) then
     ! allocate Frechet derivatives array
-    allocate(Mxx_der(nrec_local),Myy_der(nrec_local), &
-             Mzz_der(nrec_local),Mxy_der(nrec_local), &
-             Mxz_der(nrec_local),Myz_der(nrec_local), &
-             sloc_der(NDIM,nrec_local),stat=ier)
+    allocate(Mxx_der(nrec_local))
+    allocate(Myy_der(nrec_local))
+    allocate(Mzz_der(nrec_local))
+    allocate(Mxy_der(nrec_local))
+    allocate(Mxz_der(nrec_local))
+    allocate(Myz_der(nrec_local))
+    allocate(sloc_der(NDIM,nrec_local),stat=ier)
     if (ier /= 0) stop 'error allocating array Mxx_der and following arrays'
     Mxx_der = 0._CUSTOM_REAL
     Myy_der = 0._CUSTOM_REAL

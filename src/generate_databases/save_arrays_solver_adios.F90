@@ -135,12 +135,10 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
   !MPI interfaces
   max_nibool_interfaces_ext_mesh = maxval(nibool_interfaces_ext_mesh(:))
 
-  allocate(ibool_interfaces_ext_mesh_dummy(max_nibool_interfaces_ext_mesh, &
-                                           num_interfaces_ext_mesh),stat=ier)
+  allocate(ibool_interfaces_ext_mesh_dummy(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
   if (ier /= 0) stop 'error allocating array'
   do i = 1, num_interfaces_ext_mesh
-     ibool_interfaces_ext_mesh_dummy(:,i) = &
-         ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,i)
+     ibool_interfaces_ext_mesh_dummy(:,i) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,i)
   enddo
 
   !-----------------------------------------------------------------.

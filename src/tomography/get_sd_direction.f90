@@ -45,9 +45,9 @@
 
   ! allocate arrays for storing gradient
   ! isotropic arrays
-  allocate(model_dbulk(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_dbeta(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_drho(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  allocate(model_dbulk(NGLLX,NGLLY,NGLLZ,NSPEC))
+  allocate(model_dbeta(NGLLX,NGLLY,NGLLZ,NSPEC))
+  allocate(model_drho(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
   if (ier /= 0) stop 'error allocating gradient arrays'
 
   ! initializes arrays
@@ -254,10 +254,10 @@
 
   ! allocate arrays for storing gradient
   ! transversely isotropic arrays
-  allocate(model_dbulk(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_dbetav(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_dbetah(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_deta(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  allocate(model_dbulk(NGLLX,NGLLY,NGLLZ,NSPEC))
+  allocate(model_dbetav(NGLLX,NGLLY,NGLLZ,NSPEC))
+  allocate(model_dbetah(NGLLX,NGLLY,NGLLZ,NSPEC))
+  allocate(model_deta(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
   if (ier /= 0) stop 'error allocating gradient arrays'
 
   ! initializes arrays

@@ -223,9 +223,9 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker)
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: total_hess,mask_source
 
   ! initializes arrays
-  allocate(kernel(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           hess(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           total_kernel(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  allocate(kernel(NGLLX,NGLLY,NGLLZ,NSPEC))
+  allocate(hess(NGLLX,NGLLY,NGLLZ,NSPEC))
+  allocate(total_kernel(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
   if (ier /= 0) stop 'Error allocating kernel arrays'
 
   if (USE_HESS_SUM) then

@@ -101,10 +101,10 @@
   if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
 
     ! allocate temporary flag array
-    allocate(iboun(6,nspec), &
-             xcoord_iboun(NGNOD2D,6,nspec), &
-             ycoord_iboun(NGNOD2D,6,nspec), &
-             zcoord_iboun(NGNOD2D,6,nspec),stat=ier)
+    allocate(iboun(6,nspec))
+    allocate(xcoord_iboun(NGNOD2D,6,nspec))
+    allocate(ycoord_iboun(NGNOD2D,6,nspec))
+    allocate(zcoord_iboun(NGNOD2D,6,nspec),stat=ier)
     if (ier /= 0) stop 'not enough memory to allocate arrays'
 
     iboun(:,:) = .false.

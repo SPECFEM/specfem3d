@@ -157,9 +157,9 @@ program model_update
   ! MODEL UPDATE
   ! allocation
   ! model and kernel variables
-  allocate(model_vp(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_vs(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_rho(NGLLX,NGLLY,NGLLZ,NSPEC))
+  allocate(model_vp(NGLLX,NGLLY,NGLLZ,NSPEC))
+  allocate(model_vs(NGLLX,NGLLY,NGLLZ,NSPEC))
+  allocate(model_rho(NGLLX,NGLLY,NGLLZ,NSPEC))
 
   allocate(total_model(NGLLX,NGLLY,NGLLZ,NSPEC))
 
@@ -330,9 +330,9 @@ program model_update
 
   ! computes new model values for alpha, beta and rho
   ! allocate new model arrays
-  allocate(model_vp_new(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_vs_new(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_rho_new(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  allocate(model_vp_new(NGLLX,NGLLY,NGLLZ,NSPEC))
+  allocate(model_vs_new(NGLLX,NGLLY,NGLLZ,NSPEC))
+  allocate(model_rho_new(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
   if (ier /= 0) stop 'Error allocating model arrays'
 
   ! initializes arrays
@@ -642,45 +642,45 @@ subroutine get_external_mesh()
   allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
 
   if (NSPEC_IRREGULAR > 0) then
-    allocate(xix(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-             xiy(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-             xiz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-             etax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-             etay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-             etaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-             gammax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-             gammay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-             gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-             jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(xix(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
+    allocate(xiy(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
+    allocate(xiz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
+    allocate(etax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
+    allocate(etay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
+    allocate(etaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
+    allocate(gammax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
+    allocate(gammay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
+    allocate(gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
+    allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
   else
-    allocate(xix(1,1,1,1), &
-             xiy(1,1,1,1), &
-             xiz(1,1,1,1), &
-             etax(1,1,1,1), &
-             etay(1,1,1,1), &
-             etaz(1,1,1,1), &
-             gammax(1,1,1,1), &
-             gammay(1,1,1,1), &
-             gammaz(1,1,1,1), &
-             jacobian(1,1,1,1),stat=ier)
+    allocate(xix(1,1,1,1))
+    allocate(xiy(1,1,1,1))
+    allocate(xiz(1,1,1,1))
+    allocate(etax(1,1,1,1))
+    allocate(etay(1,1,1,1))
+    allocate(etaz(1,1,1,1))
+    allocate(gammax(1,1,1,1))
+    allocate(gammay(1,1,1,1))
+    allocate(gammaz(1,1,1,1))
+    allocate(jacobian(1,1,1,1),stat=ier)
   endif
   if (ier /= 0) stop 'Error allocating arrays for databases'
 
   ! mesh node locations
-  allocate(xstore(NGLOB_AB), &
-           ystore(NGLOB_AB), &
-           zstore(NGLOB_AB),stat=ier)
+  allocate(xstore(NGLOB_AB))
+  allocate(ystore(NGLOB_AB))
+  allocate(zstore(NGLOB_AB),stat=ier)
   if (ier /= 0) stop 'Error allocating arrays for mesh nodes'
 
   ! material properties
-  allocate(kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  allocate(kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) stop 'Error allocating arrays for material properties'
 
   ! material flags
-  allocate(ispec_is_acoustic(NSPEC_AB), &
-           ispec_is_elastic(NSPEC_AB), &
-           ispec_is_poroelastic(NSPEC_AB),stat=ier)
+  allocate(ispec_is_acoustic(NSPEC_AB))
+  allocate(ispec_is_elastic(NSPEC_AB))
+  allocate(ispec_is_poroelastic(NSPEC_AB),stat=ier)
   if (ier /= 0) stop 'Error allocating arrays for material flags'
   ispec_is_acoustic(:) = .false.
   ispec_is_elastic(:) = .false.
@@ -814,11 +814,11 @@ subroutine save_new_databases()
   call create_name_database(prname_new,myrank,OUTPUT_MODEL_DIR)
 
   ! new variables for save_external_bin_m_up
-  allocate(kappastore_new(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           mustore_new(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           rhostore_new(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           rho_vp_new(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           rho_vs_new(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(kappastore_new(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(mustore_new(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(rhostore_new(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(rho_vp_new(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(rho_vs_new(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
 
   ! calculate NEW variables to calculate rmass and then for save_external_bin_m_up
   rhostore_new = 0._CUSTOM_REAL
@@ -918,8 +918,8 @@ subroutine save_new_databases()
 
   !-------- attenuation -------
   ! store the attenuation flag in qmu_attenuation_store
-  allocate(qmu_attenuation_store(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           qkappa_attenuation_store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(qmu_attenuation_store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(qkappa_attenuation_store(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
   qmu_attenuation_store=0._CUSTOM_REAL
   qkappa_attenuation_store=0._CUSTOM_REAL
 
@@ -946,8 +946,15 @@ subroutine save_new_databases()
 
     read(12,'(a,i12,i12)') string7, idummy2, idummy3 !text
 
-    allocate(dummy_num(NSPEC_AB),dummy_l_1(NSPEC_AB),dummy_l_2(NSPEC_AB),dummy_l_3(NSPEC_AB),dummy_l_4(NSPEC_AB), &
-             dummy_l_5(NSPEC_AB),dummy_l_6(NSPEC_AB),dummy_l_7(NSPEC_AB),dummy_l_8(NSPEC_AB),stat=ier)
+    allocate(dummy_num(NSPEC_AB))
+    allocate(dummy_l_1(NSPEC_AB))
+    allocate(dummy_l_2(NSPEC_AB))
+    allocate(dummy_l_3(NSPEC_AB))
+    allocate(dummy_l_4(NSPEC_AB))
+    allocate(dummy_l_5(NSPEC_AB))
+    allocate(dummy_l_6(NSPEC_AB))
+    allocate(dummy_l_7(NSPEC_AB))
+    allocate(dummy_l_8(NSPEC_AB),stat=ier)
     if (ier /= 0) stop 'Error allocating array dummy etc.'
 
     read(12,'(9i12)') dummy_num,dummy_l_1,dummy_l_2,dummy_l_3,dummy_l_4, &
