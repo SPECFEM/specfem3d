@@ -307,8 +307,8 @@ contains
           ! Filter
           fil_residuals(:)=0._CUSTOM_REAL
           filfil_residuals(:)=0._CUSTOM_REAL
-          fl=acqui_simu(ievent)%freqcy_to_invert(icomp,1,irec_local)
-          fh=acqui_simu(ievent)%freqcy_to_invert(icomp,2,irec_local)
+          fl=acqui_simu(ievent)%freqcy_to_invert(idim,1,irec_local)
+          fh=acqui_simu(ievent)%freqcy_to_invert(idim,2,irec_local)
           call bwfilt (raw_residuals, fil_residuals, dt_data, nstep_data, irek_filter, norder_filter, fl, fh)
           call bwfilt (fil_residuals, filfil_residuals, dt_data, nstep_data, irek_filter, norder_filter, fl, fh)
 
