@@ -160,14 +160,14 @@ $E/xdecompose_mesh_mpi: $(decompose_mesh_SHARED_OBJECTS) $(xdecompose_mesh_mpi_O
 ### Module dependencies
 ###
 
-$O/decompose_mesh.dec.o: $O/part_decompose_mesh.dec.o $O/fault_scotch.dec.o ${SCOTCH_DIR}/include/scotchf.h $O/shared_par.shared_module.o $(COND_MPI_OBJECTS)
+$O/decompose_mesh.dec.o: $O/exit_mpi.shared.o $O/part_decompose_mesh.dec.o $O/fault_scotch.dec.o ${SCOTCH_DIR}/include/scotchf.h $O/shared_par.shared_module.o $(COND_MPI_OBJECTS)
 
-$O/program_decompose_mesh.dec.o: $O/decompose_mesh.dec.o $O/shared_par.shared_module.o $(COND_MPI_OBJECTS)
-$O/program_decompose_mesh_mpi.mpidec.o: $O/shared_par.shared_module.o $O/module_mesh.dec.o $O/module_database.dec.o $O/module_partition.dec.o $(COND_MPI_OBJECTS)
+$O/program_decompose_mesh.dec.o: $O/exit_mpi.shared.o $O/decompose_mesh.dec.o $O/shared_par.shared_module.o $(COND_MPI_OBJECTS)
+$O/program_decompose_mesh_mpi.mpidec.o: $O/exit_mpi.shared.o $O/shared_par.shared_module.o $O/module_mesh.dec.o $O/module_database.dec.o $O/module_partition.dec.o $(COND_MPI_OBJECTS)
 
-$O/module_database.dec.o : $O/shared_par.shared_module.o
-$O/module_partition.dec.o : $O/shared_par.shared_module.o $O/fault_scotch.dec.o $O/module_qsort.dec.o
-$O/module_mesh.dec.o : $O/shared_par.shared_module.o $O/fault_scotch.dec.o
+$O/module_database.dec.o : $O/exit_mpi.shared.o $O/shared_par.shared_module.o
+$O/module_partition.dec.o : $O/exit_mpi.shared.o $O/shared_par.shared_module.o $O/fault_scotch.dec.o $O/module_qsort.dec.o
+$O/module_mesh.dec.o : $O/exit_mpi.shared.o $O/shared_par.shared_module.o $O/fault_scotch.dec.o
 
 #######################################
 
@@ -175,11 +175,11 @@ $O/module_mesh.dec.o : $O/shared_par.shared_module.o $O/fault_scotch.dec.o
 #### rule to build each .o file below
 ####
 
-$O/%.dec.o: $S/%.f90 $O/shared_par.shared_module.o
+$O/%.dec.o: $S/%.f90 $O/exit_mpi.shared.o $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(SCOTCH_FLAGS) -c -o $@ $<
 
-$O/%.dec.o: $S/%.F90 $O/shared_par.shared_module.o
+$O/%.dec.o: $S/%.F90 $O/exit_mpi.shared.o $O/shared_par.shared_module.o
 	${FCCOMPILE_CHECK} ${FCFLAGS_f90} $(SCOTCH_FLAGS) -c -o $@ $<
 
-$O/%.mpidec.o: $S/%.f90 $O/shared_par.shared_module.o
+$O/%.mpidec.o: $S/%.f90 $O/exit_mpi.shared.o $O/shared_par.shared_module.o
 	${MPIFCCOMPILE_CHECK} ${FCFLAGS_f90} -c -o $@ $<
