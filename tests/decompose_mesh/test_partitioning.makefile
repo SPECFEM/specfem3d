@@ -12,6 +12,7 @@ OBJECTS = \
 	$O/fault_scotch.dec.o \
 	$O/part_decompose_mesh.dec.o \
 	$O/param_reader.cc.o \
+	$O/exit_mpi.shared.o \
 	$O/shared_par.shared_module.o \
 	$O/read_parameter_file.shared.o \
 	$O/read_value_parameters.shared.o \
