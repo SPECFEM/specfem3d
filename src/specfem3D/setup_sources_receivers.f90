@@ -299,8 +299,12 @@
   double precision :: t0_acoustic
   integer :: isource,ispec
 
-  if (abs(minval(tshift_src)) > TINYVAL) &
-    call exit_MPI(myrank,'one tshift_src must be zero, others must be positive')
+  if (abs(minval(tshift_src)) > TINYVAL) then
+!! DK DK this should be a warning, not an error; I thus changed it; users can decide to do this purposely
+!! DK DK (in particular for applications outside of seismology, e.g. in imaging or in non-destructive testing)
+!   call exit_MPI(myrank,'one tshift_src must be zero, others must be positive')
+    write(IMAIN,*) 'INFORMATION: no tshift_src is equal to zero, thus the origin time is not t0, it is changed by tshift_src'
+  endif
 
   ! filter source time function by Gaussian with hdur = HDUR_MOVIE when outputing movies or shakemaps
   if (MOVIE_SURFACE .or. MOVIE_VOLUME .or. CREATE_SHAKEMAP) then
