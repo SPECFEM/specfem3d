@@ -28,9 +28,9 @@ contains
     integer,                                intent(in)     :: myrank
 
     call compute_interpolation_coeff_FD_SEM(projection_fd, myrank)
-    allocate(model_on_FD_grid(nx_fd_proj, ny_fd_proj, nz_fd_proj), &
-         diff_model_on_FD_grid(nx_fd_proj, ny_fd_proj, nz_fd_proj), &
-         diff2_model_on_FD_grid(nx_fd_proj, ny_fd_proj, nz_fd_proj))
+    allocate(model_on_FD_grid(nx_fd_proj, ny_fd_proj, nz_fd_proj))
+    allocate(diff_model_on_FD_grid(nx_fd_proj, ny_fd_proj, nz_fd_proj))
+    allocate(diff2_model_on_FD_grid(nx_fd_proj, ny_fd_proj, nz_fd_proj))
 
   end subroutine setup_FD_regularization
 !!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

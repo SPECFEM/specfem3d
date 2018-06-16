@@ -132,22 +132,19 @@ contains
     double precision,  dimension(1)                                   :: x_found_dummy, y_found_dummy, z_found_dummy
     integer,           dimension(1)                                   :: ispec_selected_dummy, islice_selected_dummy
 
-
-    allocate(distance_from_target_all(1,0:NPROC-1), &
-             xi_all(1,0:NPROC-1), &
-             eta_all(1,0:NPROC-1), &
-             gamma_all(1,0:NPROC-1), &
-             x_found_all(1,0:NPROC-1), &
-             y_found_all(1,0:NPROC-1), &
-             z_found_all(1,0:NPROC-1))
+    allocate(distance_from_target_all(1,0:NPROC-1))
+    allocate(xi_all(1,0:NPROC-1))
+    allocate(eta_all(1,0:NPROC-1))
+    allocate(gamma_all(1,0:NPROC-1))
+    allocate(x_found_all(1,0:NPROC-1))
+    allocate(y_found_all(1,0:NPROC-1))
+    allocate(z_found_all(1,0:NPROC-1))
 
     allocate(ispec_selected_all(1,0:NPROC-1))
 
-    distance_from_target = sqrt( (x_to_locate - x_found)**2&
-                                +(y_to_locate - y_found)**2&
-                                +(z_to_locate - z_found)**2)
+    distance_from_target = sqrt( (x_to_locate - x_found)**2 + (y_to_locate - y_found)**2 + (z_to_locate - z_found)**2)
 
-    !! it's just to avoid compiler error
+    !! this is just to avoid a compiler error
     distance_from_target_dummy(1)=distance_from_target
     xi_dummy(1)=xi
     eta_dummy(1)=eta
@@ -546,7 +543,9 @@ contains
 
     if (ELASTIC_SIMULATION) then
        ! returns elastic mass matrix
-       if (.not. allocated(rmass)) allocate(rmass(NGLOB_AB))
+       if (.not. allocated(rmass)) then
+         allocate(rmass(NGLOB_AB))
+       endif
        rmass(:) = 0._CUSTOM_REAL
        if (PML_CONDITIONS) then
           write(*,*) ' PML  not implemented yet '
@@ -586,8 +585,9 @@ contains
         endif
         ! acoustic domains
         if (ACOUSTIC_SIMULATION) then
-           if (.not. allocated(rmassz_acoustic)) allocate( rmassz_acoustic(nglob_ab), stat=ier)
-           !if (ier /= 0) stop 'error in allocate 22'
+           if (.not. allocated(rmassz_acoustic)) then
+             allocate(rmassz_acoustic(nglob_ab), stat=ier)
+           endif
            rmassz_acoustic(:) = 0._CUSTOM_REAL
         endif
 

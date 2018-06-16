@@ -163,7 +163,8 @@ contains
              allocate(acqui_simu(ievent)%station_name(nsta))
              allocate(acqui_simu(ievent)%network_name(nsta))
              allocate(acqui_simu(ievent)%position_station(3,nsta))
-             allocate(acqui_simu(ievent)%read_station_position(3,nsta)) !! actually geographic coord
+             !! current geographical coord
+             allocate(acqui_simu(ievent)%read_station_position(3,nsta))
              acqui_simu(ievent)%station_name(:)       = mygather(ievent)%stations(:)%name
              acqui_simu(ievent)%network_name(:)       = mygather(ievent)%stations(:)%ntwk
              acqui_simu(ievent)%position_station(1,:) = mygather(ievent)%stations(:)%x
@@ -185,8 +186,10 @@ contains
              ! Compute baz etc.
              allocate(acqui_simu(ievent)%baz(nsta))
              allocate(acqui_simu(ievent)%dist(nsta))
-             allocate(acqui_simu(ievent)%gcarc(nsta)) !! not used great circle arc not used
-             ! allocate((acqui_simu(ievent)%inc(nsta))   !! not used incidence angle
+             !! not used great circle arc not used
+             allocate(acqui_simu(ievent)%gcarc(nsta))
+             !! not used incidence angle
+             ! allocate((acqui_simu(ievent)%inc(nsta))
              select case(trim(adjustl(acqui_simu(ievent)%source_type_modeling)))
              case('pointsource') ! then local source
                 do ista = 1, nsta
@@ -229,7 +232,9 @@ contains
 
     ! master broadcasts read values
     call mpi_bcast(nevent, 1, mpi_integer, 0, my_local_mpi_comm_world, ier)
-    if (myrank > 0) allocate(acqui_simu(NEVENT))
+    if (myrank > 0) then
+      allocate(acqui_simu(NEVENT))
+    endif
     do ievent = 1, NEVENT
 
        ! broadcast integers
@@ -436,13 +441,13 @@ contains
             call flush_iunit(INVERSE_LOG_FILE)
        endif
        NSTA = acqui_simu(ievent)%nsta_tot
-       allocate(acqui_simu(ievent)%xi_rec(NSTA), &
-                acqui_simu(ievent)%eta_rec(NSTA), &
-                acqui_simu(ievent)%gamma_rec(NSTA))
+       allocate(acqui_simu(ievent)%xi_rec(NSTA))
+       allocate(acqui_simu(ievent)%eta_rec(NSTA))
+       allocate(acqui_simu(ievent)%gamma_rec(NSTA))
 
-       allocate(acqui_simu(ievent)%islice_selected_rec(NSTA), &
-                acqui_simu(ievent)%ispec_selected_rec(NSTA), &
-                acqui_simu(ievent)%number_receiver_global(NSTA))
+       allocate(acqui_simu(ievent)%islice_selected_rec(NSTA))
+       allocate(acqui_simu(ievent)%ispec_selected_rec(NSTA))
+       allocate(acqui_simu(ievent)%number_receiver_global(NSTA))
 
        acqui_simu(ievent)%number_receiver_global(:)=-1
        acqui_simu(ievent)%ispec_selected_rec(:)=-1

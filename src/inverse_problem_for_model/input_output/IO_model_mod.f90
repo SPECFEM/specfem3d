@@ -27,7 +27,7 @@ module IO_model
   implicit none
 
   !---- locals --
-  integer, private :: ierror
+  integer, private :: ier
 
 contains
 
@@ -124,8 +124,8 @@ contains
        endif
 
 
-       allocate(wks_model_cij(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), stat=ierror)
-       if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_model_cij in ReadInputSEMmodel subroutine, IO_model_mod")
+       allocate(wks_model_cij(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), stat=ier)
+       if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model_cij in ReadInputSEMmodel subroutine, IO_model_mod")
 
        path_file='OUTPUT_FILES/DATABASES_MPI/proc'
 
@@ -208,14 +208,14 @@ contains
          write(IIDD, *)
       endif
 
-       allocate(wks_model_rh(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ierror)
-       if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_model_rh in ReadInputSEMmodel subroutine, IO_model_mod")
+       allocate(wks_model_rh(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ier)
+       if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model_rh in ReadInputSEMmodel subroutine, IO_model_mod")
 
-       allocate(wks_model_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ierror)
-       if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_model_vp in ReadInputSEMmodel subroutine, IO_model_mod")
+       allocate(wks_model_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ier)
+       if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model_vp in ReadInputSEMmodel subroutine, IO_model_mod")
 
-       allocate(wks_model_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ierror)
-       if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_model_vs in ReadInputSEMmodel subroutine, IO_model_mod")
+       allocate(wks_model_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ier)
+       if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model_vs in ReadInputSEMmodel subroutine, IO_model_mod")
 
        if (mygroup <= 0) then !! only the fisrt group read model and need to bcast at all other
           !! read input model
@@ -298,11 +298,11 @@ contains
 
     else
 
-       allocate(wks_model(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ierror)
-       if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_model in ReadInputSEMpriormodel subroutine, IO_model_mod")
+       allocate(wks_model(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ier)
+       if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model in ReadInputSEMpriormodel subroutine, IO_model_mod")
 
-       allocate(inversion_param%prior_model(NGLLX,NGLLY,NGLLZ,NSPEC_AB, inversion_param%NinvPar), stat=ierror)
-       if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_model_vp in ReadInputSEMmodel subroutine, IO_model_mod")
+       allocate(inversion_param%prior_model(NGLLX,NGLLY,NGLLZ,NSPEC_AB, inversion_param%NinvPar), stat=ier)
+       if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model_vp in ReadInputSEMmodel subroutine, IO_model_mod")
 
 
 
@@ -422,14 +422,14 @@ contains
 
     else
 
-       allocate(wks_model_rh(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ierror)
-       if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_model_rh in ReadInputSEMmodel subroutine, IO_model_mod")
+       allocate(wks_model_rh(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ier)
+       if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model_rh in ReadInputSEMmodel subroutine, IO_model_mod")
 
-       allocate(wks_model_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ierror)
-       if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_model_vp in ReadInputSEMmodel subroutine, IO_model_mod")
+       allocate(wks_model_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ier)
+       if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model_vp in ReadInputSEMmodel subroutine, IO_model_mod")
 
-       allocate(wks_model_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ierror)
-       if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_model_vs in ReadInputSEMmodel subroutine, IO_model_mod")
+       allocate(wks_model_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ier)
+       if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model_vs in ReadInputSEMmodel subroutine, IO_model_mod")
 
        wks_model_rh(:,:,:,:)=0._CUSTOM_REAL
        wks_model_vp(:,:,:,:)=0._CUSTOM_REAL
@@ -653,7 +653,9 @@ contains
     call bcast_all_singlecr(hy_fd)
     call bcast_all_singlecr(hz_fd)
 
-    if (myrank > 0) allocate(vp_fd(nx_fd,ny_fd,nz_fd), rho_fd(nx_fd,ny_fd,nz_fd))
+    if (myrank > 0) then
+      allocate(vp_fd(nx_fd,ny_fd,nz_fd), rho_fd(nx_fd,ny_fd,nz_fd))
+    endif
 
     call bcast_all_cr(rho_fd,nx_fd*ny_fd*nz_fd)
     call bcast_all_cr(vp_fd,nx_fd*ny_fd*nz_fd)
@@ -776,7 +778,9 @@ contains
     call bcast_all_singlecr(hy_fd)
     call bcast_all_singlecr(hz_fd)
 
-    if (myrank > 0) allocate(vp_fd(nx_fd,ny_fd,nz_fd), vs_fd(nx_fd,ny_fd,nz_fd), rho_fd(nx_fd,ny_fd,nz_fd))
+    if (myrank > 0) then
+      allocate(vp_fd(nx_fd,ny_fd,nz_fd), vs_fd(nx_fd,ny_fd,nz_fd), rho_fd(nx_fd,ny_fd,nz_fd))
+    endif
 
     call bcast_all_cr(rho_fd,nx_fd*ny_fd*nz_fd)
     call bcast_all_cr(vp_fd,nx_fd*ny_fd*nz_fd)
@@ -921,7 +925,9 @@ contains
 
     call bcast_all_ch_array(type_model,1,MAX_STRING_LEN)
 
-    if (myrank > 0)  allocate(model_fd(nx_fd, ny_fd, nz_fd, nb_model_to_read))
+    if (myrank > 0) then
+      allocate(model_fd(nx_fd, ny_fd, nz_fd, nb_model_to_read))
+    endif
     call bcast_all_cr(model_fd,nx_fd*ny_fd*nz_fd*nb_model_to_read)
 
     if (myrank == 0) write(INVERSE_LOG_FILE, *) '     MPI Bcast full elastic tensor, size : ',nx_fd*ny_fd*nz_fd*nb_model_to_read
@@ -1097,9 +1103,15 @@ contains
     case ('FULL') !! fully anisotropic elastic tensor
 
        !! DEFINE TOMO GRID LOOKUP TABLES
-       if (.not. allocated(xcrd_fd)) allocate(xcrd_fd(nx_fd))
-       if (.not. allocated(ycrd_fd)) allocate(ycrd_fd(ny_fd))
-       if (.not. allocated(zcrd_fd)) allocate(zcrd_fd(nz_fd))
+       if (.not. allocated(xcrd_fd)) then
+         allocate(xcrd_fd(nx_fd))
+       endif
+       if (.not. allocated(ycrd_fd)) then
+         allocate(ycrd_fd(ny_fd))
+       endif
+       if (.not. allocated(zcrd_fd)) then
+         allocate(zcrd_fd(nz_fd))
+       endif
        do i=1,nx_fd
           xcrd_fd(i) = ox_fd + hx_fd * real(i-1)
        enddo
@@ -1302,23 +1314,23 @@ contains
     real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable                   :: wks_model_ep, wks_model_de, wks_model_ga
 
 
-    allocate(wks_model_rh(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ierror)
-    if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_model_rh in ReadInputSEMmodel subroutine, IO_model_mod")
+    allocate(wks_model_rh(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ier)
+    if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model_rh in ReadInputSEMmodel subroutine, IO_model_mod")
 
-    allocate(wks_model_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ierror)
-    if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_model_vp in ReadInputSEMmodel subroutine, IO_model_mod")
+    allocate(wks_model_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ier)
+    if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model_vp in ReadInputSEMmodel subroutine, IO_model_mod")
 
-    allocate(wks_model_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ierror)
-    if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_model_vs in ReadInputSEMmodel subroutine, IO_model_mod")
+    allocate(wks_model_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ier)
+    if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model_vs in ReadInputSEMmodel subroutine, IO_model_mod")
 
-    allocate(wks_model_ep(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ierror)
-    if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_model_ep in ReadInputSEMmodel subroutine, IO_model_mod")
+    allocate(wks_model_ep(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ier)
+    if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model_ep in ReadInputSEMmodel subroutine, IO_model_mod")
 
-    allocate(wks_model_de(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ierror)
-    if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_model_ge in ReadInputSEMmodel subroutine, IO_model_mod")
+    allocate(wks_model_de(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ier)
+    if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model_ge in ReadInputSEMmodel subroutine, IO_model_mod")
 
-    allocate(wks_model_ga(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ierror)
-    if (ierror /= 0) call exit_MPI(myrank,"error allocation wks_model_da in ReadInputSEMmodel subroutine, IO_model_mod")
+    allocate(wks_model_ga(NGLLX,NGLLY,NGLLZ,NSPEC_AB), stat=ier)
+    if (ier /= 0) call exit_MPI(myrank,"error allocation wks_model_da in ReadInputSEMmodel subroutine, IO_model_mod")
 
     wks_model_rh(:,:,:,:) = rhostore(:,:,:,:)
     wks_model_vp(:,:,:,:) = sqrt( c33store(:,:,:,:) / rhostore(:,:,:,:))

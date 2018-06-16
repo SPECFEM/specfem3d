@@ -97,7 +97,7 @@
 
     if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM) then
 
-      allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)) !! CD CD : cf for deallocate
+      allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
       allocate(Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
 
       if (old_DSM_coupling_from_Vadim) then
@@ -230,7 +230,12 @@
       call bcast_all_singlei(kpsv)
       call bcast_all_singlei(nlayer)
 
-      if (myrank > 0) allocate(al_FK(nlayer),be_FK(nlayer),mu_FK(nlayer),h_FK(nlayer))
+      if (myrank > 0) then
+        allocate(al_FK(nlayer))
+        allocate(be_FK(nlayer))
+        allocate(mu_FK(nlayer))
+        allocate(h_FK(nlayer))
+      endif
 
       call bcast_all_cr(al_FK, nlayer)
       call bcast_all_cr(be_FK, nlayer)

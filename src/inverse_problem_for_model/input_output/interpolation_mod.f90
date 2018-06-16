@@ -243,13 +243,26 @@ contains
     real(kind=cp), dimension(:), allocatable :: dobs2, autocorr, crosscorr, new_obs, src_one
 
 
-    !* 0. Alloctae
-    if (.not. allocated(autocorr))  allocate(autocorr(nt))
-    if (.not. allocated(crosscorr)) allocate(crosscorr(nt))
-    if (.not. allocated(src_sum))   allocate(src_sum(nt))
-    if (.not. allocated(src_one))   allocate(src_one(nt))
-    if (.not. allocated(dobs2))     allocate(dobs2(nt))
-    if (.not. allocated(new_obs))   allocate(new_obs(nt))
+    !* 0. Allocate
+    if (.not. allocated(autocorr)) then
+      allocate(autocorr(nt))
+    endif
+    if (.not. allocated(crosscorr)) then
+      allocate(crosscorr(nt))
+    endif
+    if (.not. allocated(src_sum)) then
+      allocate(src_sum(nt))
+    endif
+    if (.not. allocated(src_one)) then
+      allocate(src_one(nt))
+    endif
+    if (.not. allocated(dobs2)) then
+      allocate(dobs2(nt))
+    endif
+    if (.not. allocated(new_obs)) then
+      allocate(new_obs(nt))
+    endif
+
     src_sum = 0._cp
     src_one = 0._cp
 
@@ -318,16 +331,22 @@ contains
         else
            ind = ceiling(real(n2/2,kind=cp))
         endif
-        if (.not. allocated(conv)) allocate(conv(n2))
+        if (.not. allocated(conv)) then
+          allocate(conv(n2))
+        endif
         conv(1:n2) = convtmp(ind:ind+n2-1)
 
      else if (part == 1) then ! full convolution
 
-        if (.not. allocated(conv)) allocate(conv(n1+n2-1))
+        if (.not. allocated(conv)) then
+          allocate(conv(n1+n2-1))
+        endif
         conv(:) = convtmp(:)
 
      else if (part == 2) then !(middle irregular)
-        if (.not. allocated(conv)) allocate(conv(n2))
+        if (.not. allocated(conv)) then
+          allocate(conv(n2))
+        endif
         conv(1:n2) = convtmp(n2:n2+n2-1)
      endif
 
@@ -350,10 +369,14 @@ contains
      integer(kind=si) :: i
 
      !*** Choose size of corr
-     if (part == 0) then !(middle)
-        if (.not. allocated(corr)) allocate(corr(n2))
-     else if (part == 1) then !(full)
-        if (.not. allocated(corr)) allocate(corr(n1+n2-1))
+     if (part == 0) then ! (middle)
+        if (.not. allocated(corr)) then
+          allocate(corr(n2))
+        endif
+     else if (part == 1) then ! (full)
+        if (.not. allocated(corr)) then
+          allocate(corr(n1+n2-1))
+        endif
      endif
 
      !*** Flip second signal
@@ -386,7 +409,9 @@ contains
      real(kind=cp)    :: maxcorr
 
      !*** Take good parts define middle
-     if (.not. allocated(corr)) allocate(corr(n1))
+     if (.not. allocated(corr)) then
+       allocate(corr(n1))
+     endif
 
      if (modulo(n2,2) == 0) then
         ind = n2/2
@@ -689,9 +714,15 @@ contains
      real(kind=cp) :: alpha
      real(kind=cp),intent(in) :: sizetapx, sizetapy, sizetapz
 
-     if (.not. allocated(tapx)) allocate(tapx(ndom(1)))
-     if (.not. allocated(tapy)) allocate(tapy(ndom(2)))
-     if (.not. allocated(tapz)) allocate(tapz(ndom(3)))
+     if (.not. allocated(tapx)) then
+       allocate(tapx(ndom(1)))
+     endif
+     if (.not. allocated(tapy)) then
+       allocate(tapy(ndom(2)))
+     endif
+     if (.not. allocated(tapz)) then
+       allocate(tapz(ndom(3)))
+     endif
 
      alpha = sizetapx*2./ndom(1)
      tapx = tuckeywin(ndom(1),alpha)

@@ -367,9 +367,9 @@ contains
 !    endif
 
 
-!    allocate(xgrid(NGLLX,NGLLY,NGLLZ,nspec_recevd), &
-!             ygrid(NGLLX,NGLLY,NGLLZ,nspec_recevd), &
-!             zgrid(NGLLX,NGLLY,NGLLZ,nspec_recevd))
+!    allocate(xgrid(NGLLX,NGLLY,NGLLZ,nspec_recevd))
+!    allocate(ygrid(NGLLX,NGLLY,NGLLZ,nspec_recevd))
+!    allocate(zgrid(NGLLX,NGLLY,NGLLZ,nspec_recevd))
 
 !    allocate(iglob_store(NGLLX,NGLLY,NGLLZ,nspec_recevd))
 
@@ -393,16 +393,16 @@ contains
 
 !                      allocate(ispec_to_send(nspec_to_send))
 
-!                      allocate(iglob_to_send(NGLLX,NGLLY,NGLLZ,nspec_sended), &
-!                               iglob_to_recv(NGLLX,NGLLY,NGLLZ,nspec_recevd))
+!                      allocate(iglob_to_send(NGLLX,NGLLY,NGLLZ,nspec_sended))
+!                      allocate(iglob_to_recv(NGLLX,NGLLY,NGLLZ,nspec_recevd))
 
-!                      allocate(xgrid_to_send(NGLLX,NGLLY,NGLLZ,nspec_sended), &
-!                               ygrid_to_send(NGLLX,NGLLY,NGLLZ,nspec_sended), &
-!                               zgrid_to_send(NGLLX,NGLLY,NGLLZ,nspec_sended))
+!                      allocate(xgrid_to_send(NGLLX,NGLLY,NGLLZ,nspec_sended))
+!                      allocate(ygrid_to_send(NGLLX,NGLLY,NGLLZ,nspec_sended))
+!                      allocate(zgrid_to_send(NGLLX,NGLLY,NGLLZ,nspec_sended))
 
-!                      allocate(xgrid_to_recv(NGLLX,NGLLY,NGLLZ,nspec_recevd), &
-!                               ygrid_to_recv(NGLLX,NGLLY,NGLLZ,nspec_recevd), &
-!                               zgrid_to_recv(NGLLX,NGLLY,NGLLZ,nspec_recevd))
+!                      allocate(xgrid_to_recv(NGLLX,NGLLY,NGLLZ,nspec_recevd))
+!                      allocate(ygrid_to_recv(NGLLX,NGLLY,NGLLZ,nspec_recevd))
+!                      allocate(zgrid_to_recv(NGLLX,NGLLY,NGLLZ,nspec_recevd))
 
 !                      mem_tmp = 4*nspec_to_send + 4*NGLLX*NGLLY*NGLLZ*nspec_sended + &
 !                                4*NGLLX*NGLLY*NGLLZ*nspec_recevd + &
@@ -481,16 +481,16 @@ contains
 
 !                     allocate(ispec_to_send(nspec_to_send))
 
-!                     allocate(iglob_to_send(NGLLX,NGLLY,NGLLZ,nspec_sended), &
-!                              iglob_to_recv(NGLLX,NGLLY,NGLLZ,nspec_recevd))
+!                     allocate(iglob_to_send(NGLLX,NGLLY,NGLLZ,nspec_sended))
+!                     allocate(iglob_to_recv(NGLLX,NGLLY,NGLLZ,nspec_recevd))
 
-!                     allocate(xgrid_to_send(NGLLX,NGLLY,NGLLZ,nspec_sended), &
-!                              ygrid_to_send(NGLLX,NGLLY,NGLLZ,nspec_sended), &
-!                              zgrid_to_send(NGLLX,NGLLY,NGLLZ,nspec_sended))
+!                     allocate(xgrid_to_send(NGLLX,NGLLY,NGLLZ,nspec_sended))
+!                     allocate(ygrid_to_send(NGLLX,NGLLY,NGLLZ,nspec_sended))
+!                     allocate(zgrid_to_send(NGLLX,NGLLY,NGLLZ,nspec_sended))
 
-!                     allocate(xgrid_to_recv(NGLLX,NGLLY,NGLLZ,nspec_recevd), &
-!                              ygrid_to_recv(NGLLX,NGLLY,NGLLZ,nspec_recevd), &
-!                              zgrid_to_recv(NGLLX,NGLLY,NGLLZ,nspec_recevd))
+!                     allocate(xgrid_to_recv(NGLLX,NGLLY,NGLLZ,nspec_recevd))
+!                     allocate(ygrid_to_recv(NGLLX,NGLLY,NGLLZ,nspec_recevd))
+!                     allocate(zgrid_to_recv(NGLLX,NGLLY,NGLLZ,nspec_recevd))
 
 !                     mem_tmp = 4*nspec_to_send + 4*NGLLX*NGLLY*NGLLZ*nspec_sended + &
 !                               4*NGLLX*NGLLY*NGLLZ*nspec_recevd+&
@@ -918,7 +918,8 @@ contains
 !                call recv_i(list_of_gll_to_recv, Npts_recv_dummy(irank0), irank0, recvtag0)
 
 
-!                allocate(list_iglob_to_send(irank0)%list_of_iglob(Npts_recv_dummy(irank0)))   !! pb avec cette allocation !!!
+!! pb avec cette allocation !!!
+!                allocate(list_iglob_to_send(irank0)%list_of_iglob(Npts_recv_dummy(irank0)))
 
 !                list_iglob_to_send(irank0)%Niglob=Npts_recv_dummy(irank0)
 !                list_iglob_to_send(irank0)%list_of_iglob(:)=list_of_gll_to_recv(:)    !! irank1 recoit liste de irank0
@@ -1724,10 +1725,8 @@ contains
          elemsize_min_glob,elemsize_max_glob, &
          distance_min_glob,distance_max_glob)
 
-
-
-    allocate(field(NGLLX, NGLLY, NGLLZ, NSPEC_AB), &
-             laplacian_of_field(NGLLX, NGLLY, NGLLZ, NSPEC_AB))
+    allocate(field(NGLLX, NGLLY, NGLLZ, NSPEC_AB))
+    allocate(laplacian_of_field(NGLLX, NGLLY, NGLLZ, NSPEC_AB))
 
     if (myrank == 0) then
        write(INVERSE_LOG_FILE,*)
@@ -1960,9 +1959,10 @@ contains
     real(kind=CUSTOM_REAL),  dimension(:),   allocatable                :: Laplac_boundary, nGrad_boundary
     real(kind=CUSTOM_REAL),  dimension(:),   allocatable                :: nGrad, LapF
 
-    !! the order below is important do not change it.
-    allocate(Laplac_boundary(Nb_iglob_on_faces), nGrad_boundary(Nb_iglob_on_faces), &
-             field_to_derivate(NGLOB_AB), LapF(NGLOB_AB), nGrad(NGLOB_AB))
+    allocate(Laplac_boundary(Nb_iglob_on_faces), nGrad_boundary(Nb_iglob_on_faces))
+    allocate(field_to_derivate(NGLOB_AB), LapF(NGLOB_AB), nGrad(NGLOB_AB))
+
+    !! the order below is important, do not change it.
 
     !! 1/ compute FD derivatives
     !! NOT USE FOR NOW call compute_gradient_laplacian_FD(nGrad_boundary, Laplac_boundary, field, regularization_fd)
@@ -3943,8 +3943,8 @@ contains
 
     nline=10
 
-    allocate(valence(NDIM,NGLOB_AB),  field_to_derivate(NDIM,NGLOB_AB), &
-             field_to_send(NGLOB_AB), field_overlap(indx_recv(NPROC)), result_df(nline))
+    allocate(valence(NDIM,NGLOB_AB),  field_to_derivate(NDIM,NGLOB_AB))
+    allocate(field_to_send(NGLOB_AB), field_overlap(indx_recv(NPROC)), result_df(nline))
     valence(:,:)=1.
     field_to_derivate(:,:) = field_input(:,:)
 
@@ -4021,8 +4021,8 @@ contains
     integer                                                             :: nline, ncolu
 
     nline=10
-    allocate(valence(NDIM,NGLOB_AB),  field_to_derivate(NDIM,NGLOB_AB), &
-             field_to_send(NGLOB_AB), field_overlap(indx_recv(NPROC)), result_df(nline))
+    allocate(valence(NDIM,NGLOB_AB),  field_to_derivate(NDIM,NGLOB_AB))
+    allocate(field_to_send(NGLOB_AB), field_overlap(indx_recv(NPROC)), result_df(nline))
     valence(:,:)=1.
 
     !! need to duplicate in order to use the already build subroutine from sepcfem package : assembel_MPI..
@@ -4362,11 +4362,9 @@ subroutine compute_lapalacian_of_field(field, laplacian_of_field)
   real(kind=CUSTOM_REAL),dimension(:,:,:,:,:),    allocatable                :: derivative_of_field
   real(kind=CUSTOM_REAL),dimension(:,:,:,:,:),    allocatable                :: second_derivative_of_field
 
-
-
-  allocate(field_wkstmp(3,NGLLX, NGLLY, NGLLZ, NSPEC_AB), &
-           derivative_of_field(3,NGLLX, NGLLY, NGLLZ, NSPEC_AB), &
-           second_derivative_of_field(3,NGLLX, NGLLY, NGLLZ, NSPEC_AB) )
+  allocate(field_wkstmp(3,NGLLX, NGLLY, NGLLZ, NSPEC_AB))
+  allocate(derivative_of_field(3,NGLLX, NGLLY, NGLLZ, NSPEC_AB))
+  allocate(second_derivative_of_field(3,NGLLX, NGLLY, NGLLZ, NSPEC_AB))
 
   field_wkstmp(1,:,:,:,:) = field(:,:,:,:)
   field_wkstmp(2,:,:,:,:) = field(:,:,:,:)

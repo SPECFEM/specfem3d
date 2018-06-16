@@ -421,87 +421,219 @@
 
   implicit none
 
-  if (.not. allocated(spec_to_CPML)) allocate(spec_to_CPML(1))
-  if (.not. allocated(CPML_type)) allocate(CPML_type(1))
+  if (.not. allocated(spec_to_CPML)) then
+    allocate(spec_to_CPML(1))
+  endif
+  if (.not. allocated(CPML_type)) then
+    allocate(CPML_type(1))
+  endif
 
   if (ELASTIC_SIMULATION) then
-    if (.not. allocated(PML_displ_old)) allocate(PML_displ_old(3,1,1,1,1))
-    if (.not. allocated(PML_displ_new)) allocate(PML_displ_new(3,1,1,1,1))
+    if (.not. allocated(PML_displ_old)) then
+      allocate(PML_displ_old(3,1,1,1,1))
+    endif
+    if (.not. allocated(PML_displ_new)) then
+      allocate(PML_displ_new(3,1,1,1,1))
+    endif
 
-    if (.not. allocated(PML_dux_dxl)) allocate(PML_dux_dxl(1,1,1))
-    if (.not. allocated(PML_dux_dyl)) allocate(PML_dux_dyl(1,1,1))
-    if (.not. allocated(PML_dux_dzl)) allocate(PML_dux_dzl(1,1,1))
-    if (.not. allocated(PML_duy_dxl)) allocate(PML_duy_dxl(1,1,1))
-    if (.not. allocated(PML_duy_dyl)) allocate(PML_duy_dyl(1,1,1))
-    if (.not. allocated(PML_duy_dzl)) allocate(PML_duy_dzl(1,1,1))
-    if (.not. allocated(PML_duz_dxl)) allocate(PML_duz_dxl(1,1,1))
-    if (.not. allocated(PML_duz_dyl)) allocate(PML_duz_dyl(1,1,1))
-    if (.not. allocated(PML_duz_dzl)) allocate(PML_duz_dzl(1,1,1))
-    if (.not. allocated(PML_dux_dxl_old)) allocate(PML_dux_dxl_old(1,1,1))
-    if (.not. allocated(PML_dux_dyl_old)) allocate(PML_dux_dyl_old(1,1,1))
-    if (.not. allocated(PML_dux_dzl_old)) allocate(PML_dux_dzl_old(1,1,1))
-    if (.not. allocated(PML_duy_dxl_old)) allocate(PML_duy_dxl_old(1,1,1))
-    if (.not. allocated(PML_duy_dyl_old)) allocate(PML_duy_dyl_old(1,1,1))
-    if (.not. allocated(PML_duy_dzl_old)) allocate(PML_duy_dzl_old(1,1,1))
-    if (.not. allocated(PML_duz_dxl_old)) allocate(PML_duz_dxl_old(1,1,1))
-    if (.not. allocated(PML_duz_dyl_old)) allocate(PML_duz_dyl_old(1,1,1))
-    if (.not. allocated(PML_duz_dzl_old)) allocate(PML_duz_dzl_old(1,1,1))
-    if (.not. allocated(PML_dux_dxl_new)) allocate(PML_dux_dxl_new(1,1,1))
-    if (.not. allocated(PML_dux_dyl_new)) allocate(PML_dux_dyl_new(1,1,1))
-    if (.not. allocated(PML_dux_dzl_new)) allocate(PML_dux_dzl_new(1,1,1))
-    if (.not. allocated(PML_duy_dxl_new)) allocate(PML_duy_dxl_new(1,1,1))
-    if (.not. allocated(PML_duy_dyl_new)) allocate(PML_duy_dyl_new(1,1,1))
-    if (.not. allocated(PML_duy_dzl_new)) allocate(PML_duy_dzl_new(1,1,1))
-    if (.not. allocated(PML_duz_dxl_new)) allocate(PML_duz_dxl_new(1,1,1))
-    if (.not. allocated(PML_duz_dyl_new)) allocate(PML_duz_dyl_new(1,1,1))
-    if (.not. allocated(PML_duz_dzl_new)) allocate(PML_duz_dzl_new(1,1,1))
-    if (.not. allocated(rmemory_dux_dxl_x)) allocate(rmemory_dux_dxl_x(1,1,1,1,3))
-    if (.not. allocated(rmemory_dux_dyl_x)) allocate(rmemory_dux_dyl_x(1,1,1,1,3))
-    if (.not. allocated(rmemory_dux_dzl_x)) allocate(rmemory_dux_dzl_x(1,1,1,1,3))
-    if (.not. allocated(rmemory_duy_dxl_x)) allocate(rmemory_duy_dxl_x(1,1,1,1))
-    if (.not. allocated(rmemory_duy_dyl_x)) allocate(rmemory_duy_dyl_x(1,1,1,1))
-    if (.not. allocated(rmemory_duz_dxl_x)) allocate(rmemory_duz_dxl_x(1,1,1,1))
-    if (.not. allocated(rmemory_duz_dzl_x)) allocate(rmemory_duz_dzl_x(1,1,1,1))
-    if (.not. allocated(rmemory_dux_dxl_y)) allocate(rmemory_dux_dxl_y(1,1,1,1))
-    if (.not. allocated(rmemory_dux_dyl_y)) allocate(rmemory_dux_dyl_y(1,1,1,1))
-    if (.not. allocated(rmemory_duy_dxl_y)) allocate(rmemory_duy_dxl_y(1,1,1,1,3))
-    if (.not. allocated(rmemory_duy_dyl_y)) allocate(rmemory_duy_dyl_y(1,1,1,1,3))
-    if (.not. allocated(rmemory_duy_dzl_y)) allocate(rmemory_duy_dzl_y(1,1,1,1,3))
-    if (.not. allocated(rmemory_duz_dyl_y)) allocate(rmemory_duz_dyl_y(1,1,1,1))
-    if (.not. allocated(rmemory_duz_dzl_y)) allocate(rmemory_duz_dzl_y(1,1,1,1))
-    if (.not. allocated(rmemory_dux_dxl_z)) allocate(rmemory_dux_dxl_z(1,1,1,1))
-    if (.not. allocated(rmemory_dux_dzl_z)) allocate(rmemory_dux_dzl_z(1,1,1,1))
-    if (.not. allocated(rmemory_duy_dyl_z)) allocate(rmemory_duy_dyl_z(1,1,1,1))
-    if (.not. allocated(rmemory_duy_dzl_z)) allocate(rmemory_duy_dzl_z(1,1,1,1))
-    if (.not. allocated(rmemory_duz_dxl_z)) allocate(rmemory_duz_dxl_z(1,1,1,1,3))
-    if (.not. allocated(rmemory_duz_dyl_z)) allocate(rmemory_duz_dyl_z(1,1,1,1,3))
-    if (.not. allocated(rmemory_duz_dzl_z)) allocate(rmemory_duz_dzl_z(1,1,1,1,3))
-    if (.not. allocated(rmemory_displ_elastic)) allocate(rmemory_displ_elastic(1,1,1,1,1,3))
-    if (.not. allocated(accel_elastic_CPML)) allocate(accel_elastic_CPML(1,1,1,1))
+    if (.not. allocated(PML_dux_dxl)) then
+      allocate(PML_dux_dxl(1,1,1))
+    endif
+    if (.not. allocated(PML_dux_dyl)) then
+      allocate(PML_dux_dyl(1,1,1))
+    endif
+    if (.not. allocated(PML_dux_dzl)) then
+      allocate(PML_dux_dzl(1,1,1))
+    endif
+    if (.not. allocated(PML_duy_dxl)) then
+      allocate(PML_duy_dxl(1,1,1))
+    endif
+    if (.not. allocated(PML_duy_dyl)) then
+      allocate(PML_duy_dyl(1,1,1))
+    endif
+    if (.not. allocated(PML_duy_dzl)) then
+      allocate(PML_duy_dzl(1,1,1))
+    endif
+    if (.not. allocated(PML_duz_dxl)) then
+      allocate(PML_duz_dxl(1,1,1))
+    endif
+    if (.not. allocated(PML_duz_dyl)) then
+      allocate(PML_duz_dyl(1,1,1))
+    endif
+    if (.not. allocated(PML_duz_dzl)) then
+      allocate(PML_duz_dzl(1,1,1))
+    endif
+    if (.not. allocated(PML_dux_dxl_old)) then
+      allocate(PML_dux_dxl_old(1,1,1))
+    endif
+    if (.not. allocated(PML_dux_dyl_old)) then
+      allocate(PML_dux_dyl_old(1,1,1))
+    endif
+    if (.not. allocated(PML_dux_dzl_old)) then
+      allocate(PML_dux_dzl_old(1,1,1))
+    endif
+    if (.not. allocated(PML_duy_dxl_old)) then
+      allocate(PML_duy_dxl_old(1,1,1))
+    endif
+    if (.not. allocated(PML_duy_dyl_old)) then
+      allocate(PML_duy_dyl_old(1,1,1))
+    endif
+    if (.not. allocated(PML_duy_dzl_old)) then
+      allocate(PML_duy_dzl_old(1,1,1))
+    endif
+    if (.not. allocated(PML_duz_dxl_old)) then
+      allocate(PML_duz_dxl_old(1,1,1))
+    endif
+    if (.not. allocated(PML_duz_dyl_old)) then
+      allocate(PML_duz_dyl_old(1,1,1))
+    endif
+    if (.not. allocated(PML_duz_dzl_old)) then
+      allocate(PML_duz_dzl_old(1,1,1))
+    endif
+    if (.not. allocated(PML_dux_dxl_new)) then
+      allocate(PML_dux_dxl_new(1,1,1))
+    endif
+    if (.not. allocated(PML_dux_dyl_new)) then
+      allocate(PML_dux_dyl_new(1,1,1))
+    endif
+    if (.not. allocated(PML_dux_dzl_new)) then
+      allocate(PML_dux_dzl_new(1,1,1))
+    endif
+    if (.not. allocated(PML_duy_dxl_new)) then
+      allocate(PML_duy_dxl_new(1,1,1))
+    endif
+    if (.not. allocated(PML_duy_dyl_new)) then
+      allocate(PML_duy_dyl_new(1,1,1))
+    endif
+    if (.not. allocated(PML_duy_dzl_new)) then
+      allocate(PML_duy_dzl_new(1,1,1))
+    endif
+    if (.not. allocated(PML_duz_dxl_new)) then
+      allocate(PML_duz_dxl_new(1,1,1))
+    endif
+    if (.not. allocated(PML_duz_dyl_new)) then
+      allocate(PML_duz_dyl_new(1,1,1))
+    endif
+    if (.not. allocated(PML_duz_dzl_new)) then
+      allocate(PML_duz_dzl_new(1,1,1))
+    endif
+    if (.not. allocated(rmemory_dux_dxl_x)) then
+      allocate(rmemory_dux_dxl_x(1,1,1,1,3))
+    endif
+    if (.not. allocated(rmemory_dux_dyl_x)) then
+      allocate(rmemory_dux_dyl_x(1,1,1,1,3))
+    endif
+    if (.not. allocated(rmemory_dux_dzl_x)) then
+      allocate(rmemory_dux_dzl_x(1,1,1,1,3))
+    endif
+    if (.not. allocated(rmemory_duy_dxl_x)) then
+      allocate(rmemory_duy_dxl_x(1,1,1,1))
+    endif
+    if (.not. allocated(rmemory_duy_dyl_x)) then
+      allocate(rmemory_duy_dyl_x(1,1,1,1))
+    endif
+    if (.not. allocated(rmemory_duz_dxl_x)) then
+      allocate(rmemory_duz_dxl_x(1,1,1,1))
+    endif
+    if (.not. allocated(rmemory_duz_dzl_x)) then
+      allocate(rmemory_duz_dzl_x(1,1,1,1))
+    endif
+    if (.not. allocated(rmemory_dux_dxl_y)) then
+      allocate(rmemory_dux_dxl_y(1,1,1,1))
+    endif
+    if (.not. allocated(rmemory_dux_dyl_y)) then
+      allocate(rmemory_dux_dyl_y(1,1,1,1))
+    endif
+    if (.not. allocated(rmemory_duy_dxl_y)) then
+      allocate(rmemory_duy_dxl_y(1,1,1,1,3))
+    endif
+    if (.not. allocated(rmemory_duy_dyl_y)) then
+      allocate(rmemory_duy_dyl_y(1,1,1,1,3))
+    endif
+    if (.not. allocated(rmemory_duy_dzl_y)) then
+      allocate(rmemory_duy_dzl_y(1,1,1,1,3))
+    endif
+    if (.not. allocated(rmemory_duz_dyl_y)) then
+      allocate(rmemory_duz_dyl_y(1,1,1,1))
+    endif
+    if (.not. allocated(rmemory_duz_dzl_y)) then
+      allocate(rmemory_duz_dzl_y(1,1,1,1))
+    endif
+    if (.not. allocated(rmemory_dux_dxl_z)) then
+      allocate(rmemory_dux_dxl_z(1,1,1,1))
+    endif
+    if (.not. allocated(rmemory_dux_dzl_z)) then
+      allocate(rmemory_dux_dzl_z(1,1,1,1))
+    endif
+    if (.not. allocated(rmemory_duy_dyl_z)) then
+      allocate(rmemory_duy_dyl_z(1,1,1,1))
+    endif
+    if (.not. allocated(rmemory_duy_dzl_z)) then
+      allocate(rmemory_duy_dzl_z(1,1,1,1))
+    endif
+    if (.not. allocated(rmemory_duz_dxl_z)) then
+      allocate(rmemory_duz_dxl_z(1,1,1,1,3))
+    endif
+    if (.not. allocated(rmemory_duz_dyl_z)) then
+      allocate(rmemory_duz_dyl_z(1,1,1,1,3))
+    endif
+    if (.not. allocated(rmemory_duz_dzl_z)) then
+      allocate(rmemory_duz_dzl_z(1,1,1,1,3))
+    endif
+    if (.not. allocated(rmemory_displ_elastic)) then
+      allocate(rmemory_displ_elastic(1,1,1,1,1,3))
+    endif
+    if (.not. allocated(accel_elastic_CPML)) then
+      allocate(accel_elastic_CPML(1,1,1,1))
+    endif
 
     ! allocates wavefield
-    if (.not. allocated(b_PML_field)) allocate(b_PML_field(9,1))
+    if (.not. allocated(b_PML_field)) then
+      allocate(b_PML_field(9,1))
+    endif
   endif
 
   if (ACOUSTIC_SIMULATION) then
-    if (.not. allocated(PML_potential_acoustic_old)) allocate(PML_potential_acoustic_old(1,1,1,1))
-    if (.not. allocated(PML_potential_acoustic_new)) allocate(PML_potential_acoustic_new(1,1,1,1))
+    if (.not. allocated(PML_potential_acoustic_old)) then
+      allocate(PML_potential_acoustic_old(1,1,1,1))
+    endif
+    if (.not. allocated(PML_potential_acoustic_new)) then
+      allocate(PML_potential_acoustic_new(1,1,1,1))
+    endif
 
-    if (.not. allocated(rmemory_dpotential_dxl)) allocate(rmemory_dpotential_dxl(1,1,1,1,3))
-    if (.not. allocated(rmemory_dpotential_dyl)) allocate(rmemory_dpotential_dyl(1,1,1,1,3))
-    if (.not. allocated(rmemory_dpotential_dzl)) allocate(rmemory_dpotential_dzl(1,1,1,1,3))
-    if (.not. allocated(rmemory_potential_acoustic)) allocate(rmemory_potential_acoustic(1,1,1,1,3))
-    if (.not. allocated(potential_dot_dot_acoustic_CPML)) allocate(potential_dot_dot_acoustic_CPML(1,1,1))
+    if (.not. allocated(rmemory_dpotential_dxl)) then
+      allocate(rmemory_dpotential_dxl(1,1,1,1,3))
+    endif
+    if (.not. allocated(rmemory_dpotential_dyl)) then
+      allocate(rmemory_dpotential_dyl(1,1,1,1,3))
+    endif
+    if (.not. allocated(rmemory_dpotential_dzl)) then
+      allocate(rmemory_dpotential_dzl(1,1,1,1,3))
+    endif
+    if (.not. allocated(rmemory_potential_acoustic)) then
+      allocate(rmemory_potential_acoustic(1,1,1,1,3))
+    endif
+    if (.not. allocated(potential_dot_dot_acoustic_CPML)) then
+      allocate(potential_dot_dot_acoustic_CPML(1,1,1))
+    endif
 
     ! allocates wavefield
-    if (.not. allocated(b_PML_potential)) allocate(b_PML_potential(3,1))
+    if (.not. allocated(b_PML_potential)) then
+      allocate(b_PML_potential(3,1))
+    endif
   endif
 
   if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION) then
-    if (.not. allocated(rmemory_coupling_ac_el_displ)) allocate(rmemory_coupling_ac_el_displ(3,1,1,1,1,2))
-    if (.not. allocated(rmemory_coupling_el_ac_potential_dot_dot)) allocate(rmemory_coupling_el_ac_potential_dot_dot(3,1,1,1,1,2))
+    if (.not. allocated(rmemory_coupling_ac_el_displ)) then
+      allocate(rmemory_coupling_ac_el_displ(3,1,1,1,1,2))
+    endif
+    if (.not. allocated(rmemory_coupling_el_ac_potential_dot_dot)) then
+      allocate(rmemory_coupling_el_ac_potential_dot_dot(3,1,1,1,1,2))
+    endif
     if (SIMULATION_TYPE == 3) then
-      if (.not. allocated(rmemory_coupling_el_ac_potential)) allocate(rmemory_coupling_el_ac_potential(3,1,1,1,1,2))
+      if (.not. allocated(rmemory_coupling_el_ac_potential)) then
+        allocate(rmemory_coupling_el_ac_potential(3,1,1,1,1,2))
+      endif
     endif
   endif
 

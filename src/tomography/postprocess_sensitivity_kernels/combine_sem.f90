@@ -190,8 +190,8 @@ subroutine combine_sem_array(kernel_name,kernel_paths,output_dir,npath)
   double precision :: norm,norm_sum
   integer :: iker,ier
 
-  allocate(array(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           sum_arrays(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  allocate(array(NGLLX,NGLLY,NGLLZ,NSPEC))
+  allocate(sum_arrays(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
   if (ier /= 0) stop 'Error allocating array'
 
  ! loop over kernel paths

@@ -354,12 +354,12 @@ contains
 
        nadj_rec_local = nrec_local
 
-       allocate(hxir_store(nrec_local,NGLLX), &
-            hetar_store(nrec_local,NGLLY), &
-            hgammar_store(nrec_local,NGLLZ), &
-            hpxir_store(nrec_local,NGLLX), &
-            hpetar_store(nrec_local,NGLLY), &
-            hpgammar_store(nrec_local,NGLLZ))
+       allocate(hxir_store(nrec_local,NGLLX))
+       allocate(hetar_store(nrec_local,NGLLY))
+       allocate(hgammar_store(nrec_local,NGLLZ))
+       allocate(hpxir_store(nrec_local,NGLLX))
+       allocate(hpetar_store(nrec_local,NGLLY))
+       allocate(hpgammar_store(nrec_local,NGLLZ))
 
        allocate(number_receiver_global(nrec_local))
        number_receiver_global(:)=acqui_simu(ievent)%number_receiver_global(1:nrec_local)
@@ -405,12 +405,13 @@ contains
        if (allocated(hpgammar_store)) deallocate(hpgammar_store)
        if (allocated(number_receiver_global)) deallocate(number_receiver_global)
 
-       allocate(hxir_store(0,0), &
-            hetar_store(0,0), &
-            hgammar_store(0,0), &
-            hpxir_store(0,0), &
-            hpetar_store(0,0), &
-            hpgammar_store(0,0))
+       ! in Fortran it is legal to allocate dummy arrays with a size of zero
+       allocate(hxir_store(0,0))
+       allocate(hetar_store(0,0))
+       allocate(hgammar_store(0,0))
+       allocate(hpxir_store(0,0))
+       allocate(hpetar_store(0,0))
+       allocate(hpgammar_store(0,0))
 
        allocate(number_receiver_global(0))
 
@@ -988,11 +989,11 @@ contains
 
     ! from prepare_timerun_lddrk() -------------------------------------------------
     if (ELASTIC_SIMULATION) then
-       allocate(b_R_xx_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
-            b_R_yy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
-            b_R_xy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
-            b_R_xz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
-            b_R_yz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS),stat=ier)
+       allocate(b_R_xx_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS))
+       allocate(b_R_yy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS))
+       allocate(b_R_xy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS))
+       allocate(b_R_xz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS))
+       allocate(b_R_yz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS),stat=ier)
        if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
 
        allocate(b_R_trace_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK,N_SLS))
@@ -1139,14 +1140,16 @@ contains
        endif
 
        if (ELASTIC_SIMULATION) then
-          allocate(rho_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB),kappa_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-               mu_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+          allocate(rho_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+          allocate(kappa_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+          allocate(mu_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
           rho_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
           kappa_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
           mu_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
           if (APPROXIMATE_HESS_KL) then
-             allocate(hess_rho_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB),hess_kappa_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-                  hess_mu_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+             allocate(hess_rho_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+             allocate(hess_kappa_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+             allocate(hess_mu_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
           endif
        endif
 

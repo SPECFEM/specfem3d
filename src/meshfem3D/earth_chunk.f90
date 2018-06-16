@@ -202,7 +202,8 @@
   allocate(inum_loc(2,2,2,nspec))
   allocate(xgrid(2,2,2,nspec), ygrid(2,2,2,nspec), zgrid(2,2,2,nspec))
   allocate(lon_zmin(nlon_dsm,nlat_dsm), lat_zmin(nlon_dsm,nlat_dsm))
-  allocate(iboun(6,nspec)) ! boundary locator
+! boundary locator
+  allocate(iboun(6,nspec))
 
   iboun(:,:) = .false.
 
@@ -907,7 +908,8 @@
   allocate(inum_loc(3,3,3,nspec))
   allocate(xgrid(3,3,3,nspec), ygrid(3,3,3,nspec), zgrid(3,3,3,nspec))
   allocate(lon_zmin(nlon_dsm,nlat_dsm), lat_zmin(nlon_dsm,nlat_dsm))
-  allocate(iboun(6,nspec)) ! boundary locator
+! boundary locator
+  allocate(iboun(6,nspec))
 
   iboun(:,:) = .false.
 

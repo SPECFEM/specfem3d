@@ -111,7 +111,9 @@ program xdecompose_mesh_mpi
   endif
 
   call bcast_all_singlei(nspec_glob)
-  if (myrank > 0) allocate(ipart(nspec_glob))
+  if (myrank > 0) then
+    allocate(ipart(nspec_glob))
+  endif
   call bcast_all_i(ipart, nspec_glob)
   call send_partition_mesh_to_all(myrank, ipart, npartX*npartY*npartZ)
   call send_mesh_to_all(myrank)
@@ -205,7 +207,7 @@ subroutine send_partition_mesh_to_all(myrank, ipart, npart)
      ! compute elments by node table
      max_elmnts_by_node = maxval(nelmnts_by_node_glob)
      nelmnts_by_node_glob(:)=0
-     allocate(elmnts_by_node_glob(max_elmnts_by_node, nnodes_glob))  !!
+     allocate(elmnts_by_node_glob(max_elmnts_by_node, nnodes_glob))
      elmnts_by_node_glob(:,:)=-1
      do iE=1,nE
         do inode=1,NGNOD

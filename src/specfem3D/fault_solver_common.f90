@@ -395,7 +395,8 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
 
   allocate(dataT%iglob(dataT%npoin))
   allocate(dataT%name(dataT%npoin))
-  allocate(dist_loc(dataT%npoin)) !Surendra : for parallel fault
+! Surendra: for parallel fault
+  allocate(dist_loc(dataT%npoin))
 
   open(IIN,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'FAULT_STATIONS',status='old',action='read')
   read(IIN,*) np

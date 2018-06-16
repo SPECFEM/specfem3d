@@ -157,10 +157,17 @@ contains
 !----------------------------------------------------------------------------------------------------------------------------------
   subroutine  allocate_adjoint_source_working_arrays()
 
-    allocate(residuals(nstep_data), raw_residuals(nstep_data), fil_residuals(nstep_data), filfil_residuals(nstep_data), &
-         w_tap(nstep_data), signal(nstep_data), residuals_for_cost(nstep_data), &
-         elastic_adjoint_source(NDIM,nstep_data), elastic_misfit(NDIM,nstep_data), &
-         data_trace_to_use(nstep_data), wkstmp(nstep_data))
+    allocate(residuals(nstep_data))
+    allocate(raw_residuals(nstep_data))
+    allocate(fil_residuals(nstep_data))
+    allocate(filfil_residuals(nstep_data))
+    allocate(w_tap(nstep_data))
+    allocate(signal(nstep_data))
+    allocate(residuals_for_cost(nstep_data))
+    allocate(elastic_adjoint_source(NDIM,nstep_data))
+    allocate(elastic_misfit(NDIM,nstep_data))
+    allocate(data_trace_to_use(nstep_data))
+    allocate(wkstmp(nstep_data))
 
   end subroutine allocate_adjoint_source_working_arrays
 
@@ -219,10 +226,18 @@ contains
     case ('L2_FWI_TELESEISMIC')
 
        ! Define temporary trace vector
-       if (.not. allocated(trace_cal_1)) allocate(trace_cal_1(3,nstep_data))
-       if (.not. allocated(trace_cal_2)) allocate(trace_cal_2(3,nstep_data))
-       if (.not. allocated(trace_obs_1)) allocate(trace_obs_1(3,nstep_data))
-       if (.not. allocated(trace_obs_2)) allocate(trace_obs_2(3,nstep_data))
+       if (.not. allocated(trace_cal_1)) then
+         allocate(trace_cal_1(3,nstep_data))
+       endif
+       if (.not. allocated(trace_cal_2)) then
+         allocate(trace_cal_2(3,nstep_data))
+       endif
+       if (.not. allocated(trace_obs_1)) then
+         allocate(trace_obs_1(3,nstep_data))
+       endif
+       if (.not. allocated(trace_obs_2)) then
+         allocate(trace_obs_2(3,nstep_data))
+       endif
        lat0 = acqui_simu(ievent)%Origin_chunk_lat
        lon0 = acqui_simu(ievent)%Origin_chunk_lon
        azi0 = acqui_simu(ievent)%Origin_chunk_azi
@@ -239,7 +254,9 @@ contains
 
           ! Convolve synthetic data with wavelet
           if (inversion_param%convolution_by_wavelet) then
-             if (.not. allocated(wavelet))   allocate(wavelet(nstep_data))
+             if (.not. allocated(wavelet)) then
+               allocate(wavelet(nstep_data))
+             endif
              wavelet = acqui_simu(ievent)%user_source_time_function(1,:)
              call myconvolution(trace_cal_2(idim,:),wavelet,nstep_data,nstep_data,tmpl,0)
              trace_cal_1(idim,:) = tmpl * dt_data
@@ -322,7 +339,9 @@ contains
 
           ! Finally cross-correlate residuals with wavelet
           if (inversion_param%convolution_by_wavelet) then
-             if (.not. allocated(filfil_residuals_tmp)) allocate(filfil_residuals_tmp(nstep_data))
+             if (.not. allocated(filfil_residuals_tmp)) then
+               allocate(filfil_residuals_tmp(nstep_data))
+             endif
              filfil_residuals_tmp(:) = filfil_residuals(:)
              call mycorrelation(filfil_residuals_tmp,wavelet,nstep_data,nstep_data,tmpl,0)
              filfil_residuals = tmpl * dt_data

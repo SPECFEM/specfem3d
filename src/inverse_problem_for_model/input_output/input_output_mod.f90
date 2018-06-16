@@ -572,7 +572,8 @@ contains
               if (acqui_simu(ievent)%islice_selected_rec(irec) == irank) nsta_irank = nsta_irank + 1
            enddo
            if (nsta_irank > 0) then
-              allocate(Gather_loc(nsta_irank,Nt,NDIM))  !! data to receive
+              !! data to receive
+              allocate(Gather_loc(nsta_irank,Nt,NDIM))
               allocate(irec_global(nsta_irank))
               irec_local=0
               tag   = MPI_ANY_TAG
@@ -719,7 +720,9 @@ contains
           !! SB SB here weight_trace is allocated with nt = 1
           allocate(acqui_simu(ievent)%weight_trace(NDIM, NSTA_LOC, 1))
           acqui_simu(ievent)%weight_trace(:,:,:)=1._CUSTOM_REAL
-          if (VERBOSE_MODE .or. DEBUG_MODE)  allocate(acqui_simu(ievent)%synt_traces(NDIM, NSTA_LOC, Nt))
+          if (VERBOSE_MODE .or. DEBUG_MODE) then
+            allocate(acqui_simu(ievent)%synt_traces(NDIM, NSTA_LOC, Nt))
+          endif
 
           irec_local=0
           do irec = 1, NSTA
@@ -743,7 +746,8 @@ contains
 
              ! if there is receiver in slice irank then MPI send data
              if (nsta_irank > 0) then
-                allocate(Gather_loc(nsta_irank,Nt,NDIM))  !! data to send
+                !! data to send
+                allocate(Gather_loc(nsta_irank,Nt,NDIM))
                 irec_local=0
                 do irec = 1, NSTA
                    if (acqui_simu(ievent)%islice_selected_rec(irec) == irank) then
@@ -764,9 +768,13 @@ contains
              if (myrank == irank .and. acqui_simu(ievent)%nsta_slice > 0) then
                 NSTA_LOC=acqui_simu(ievent)%nsta_slice
                 Nt=acqui_simu(ievent)%Nt_data
-                allocate(Gather_loc(NSTA_LOC,Nt,NDIM),acqui_simu(ievent)%data_traces(NSTA_LOC,Nt,NDIM), &
-                     acqui_simu(ievent)%adjoint_sources(NDIM, NSTA_LOC, Nt), acqui_simu(ievent)%weight_trace(NDIM, NSTA_LOC,1))
-                if (VERBOSE_MODE .or. DEBUG_MODE) allocate(acqui_simu(ievent)%synt_traces(NDIM, NSTA_LOC, Nt))
+                allocate(Gather_loc(NSTA_LOC,Nt,NDIM))
+                allocate(acqui_simu(ievent)%data_traces(NSTA_LOC,Nt,NDIM))
+                allocate(acqui_simu(ievent)%adjoint_sources(NDIM, NSTA_LOC, Nt))
+                allocate(acqui_simu(ievent)%weight_trace(NDIM, NSTA_LOC,1))
+                if (VERBOSE_MODE .or. DEBUG_MODE) then
+                  allocate(acqui_simu(ievent)%synt_traces(NDIM, NSTA_LOC, Nt))
+                endif
 
                 if (DEBUG_MODE) write(IIDD,*) 'myrank ',myrank,' wait for 0 :', NSTA_LOC,Nt
                 tag   = MPI_ANY_TAG
@@ -985,7 +993,9 @@ contains
              stop
           end select
 
-          if (VERBOSE_MODE .or. DEBUG_MODE)  allocate(acqui_simu(ievent)%synt_traces(NDIM, NSTA_LOC, Nt))
+          if (VERBOSE_MODE .or. DEBUG_MODE) then
+            allocate(acqui_simu(ievent)%synt_traces(NDIM, NSTA_LOC, Nt))
+          endif
           irec_local=0
           do irec = 1, NSTA
              if (acqui_simu(ievent)%islice_selected_rec(irec) == myrank) then
@@ -1008,7 +1018,8 @@ contains
 
              ! if there is receiver in slice irank then MPI send data
              if (nsta_irank > 0) then
-                allocate(Gather_loc(nsta_irank,Nt,NDIM))  !! data to send
+                !! data to send
+                allocate(Gather_loc(nsta_irank,Nt,NDIM))
                 irec_local=0
                 do irec = 1, NSTA
                    if (acqui_simu(ievent)%islice_selected_rec(irec) == irank) then
@@ -1029,9 +1040,13 @@ contains
              if (myrank == irank .and. acqui_simu(ievent)%nsta_slice > 0) then
                 NSTA_LOC=acqui_simu(ievent)%nsta_slice
                 Nt=acqui_simu(ievent)%Nt_data
-                allocate(Gather_loc(NSTA_LOC,Nt,NDIM),acqui_simu(ievent)%data_traces(NSTA_LOC,Nt,NDIM), &
-                     acqui_simu(ievent)%adjoint_sources(NDIM, NSTA_LOC, Nt), acqui_simu(ievent)%weight_trace(NDIM, NSTA_LOC,nt))
-                if (VERBOSE_MODE .or. DEBUG_MODE) allocate(acqui_simu(ievent)%synt_traces(NDIM, NSTA_LOC, Nt))
+                allocate(Gather_loc(NSTA_LOC,Nt,NDIM))
+                allocate(acqui_simu(ievent)%data_traces(NSTA_LOC,Nt,NDIM))
+                allocate(acqui_simu(ievent)%adjoint_sources(NDIM,NSTA_LOC,Nt))
+                allocate( acqui_simu(ievent)%weight_trace(NDIM,NSTA_LOC,nt))
+                if (VERBOSE_MODE .or. DEBUG_MODE) then
+                  allocate(acqui_simu(ievent)%synt_traces(NDIM, NSTA_LOC, Nt))
+                endif
 
                 if (DEBUG_MODE) write(IIDD,*) 'myrank ',myrank,' wait for 0 :', NSTA_LOC,Nt
                 tag   = MPI_ANY_TAG
@@ -1125,7 +1140,8 @@ contains
               if (acqui_simu(ievent)%islice_selected_rec(irec) == irank) nsta_irank = nsta_irank + 1
            enddo
            if (nsta_irank > 0) then
-              allocate(Gather_loc(nsta_irank,Nt,NDIM))  !! data to receive
+              !! data to receive
+              allocate(Gather_loc(nsta_irank,Nt,NDIM))
               allocate(irec_global(nsta_irank))
               irec_local=0
               tag   = MPI_ANY_TAG
@@ -1420,7 +1436,9 @@ contains
 
     ! master broadcasts read values
     call MPI_BCAST(NEVENT,1,MPI_INTEGER,0,my_local_mpi_comm_world,ier)
-    if (myrank > 0) allocate(acqui_simu(NEVENT))
+    if (myrank > 0) then
+      allocate(acqui_simu(NEVENT))
+    endif
     do ievent = 1, NEVENT
        acqui_simu(ievent)%nevent_tot = NEVENT
        call MPI_BCAST(acqui_simu(ievent)%traction_dir,MAX_LEN_STRING,MPI_CHARACTER,0,my_local_mpi_comm_world,ier)
@@ -1776,13 +1794,13 @@ contains
        acqui_simu(ievent)%nsta_tot=nsta
        allocate(acqui_simu(ievent)%station_name(nsta),acqui_simu(ievent)%network_name(nsta))
        allocate(acqui_simu(ievent)%position_station(3,nsta))
-       allocate(acqui_simu(ievent)%xi_rec(nsta), &
-                acqui_simu(ievent)%eta_rec(nsta), &
-                acqui_simu(ievent)%gamma_rec(nsta))
-       allocate(acqui_simu(ievent)%islice_selected_rec(nsta), &
-                acqui_simu(ievent)%ispec_selected_rec(nsta), &
-                acqui_simu(ievent)%number_receiver_global(nsta), &
-                acqui_simu(ievent)%nu(NDIM,NDIM,nsta))
+       allocate(acqui_simu(ievent)%xi_rec(nsta))
+       allocate(acqui_simu(ievent)%eta_rec(nsta))
+       allocate(acqui_simu(ievent)%gamma_rec(nsta))
+       allocate(acqui_simu(ievent)%islice_selected_rec(nsta))
+       allocate(acqui_simu(ievent)%ispec_selected_rec(nsta))
+       allocate(acqui_simu(ievent)%number_receiver_global(nsta))
+       allocate(acqui_simu(ievent)%nu(NDIM,NDIM,nsta))
 
        ! reads STATIONS_FILTERED file, locates receivers in the mesh and compute Lagrange interpolators
        call locate_receivers(filtered_rec_filename,nsta,acqui_simu(ievent)%islice_selected_rec, &
@@ -1919,20 +1937,29 @@ contains
       ! 2/ Allocate the acqui_simu structure
       acqui_simu(ievent)%nsources_tot=NSOURCES
 
-      allocate(acqui_simu(ievent)%islice_selected_source(NSOURCES), &
-               acqui_simu(ievent)%ispec_selected_source(NSOURCES), &
-               acqui_simu(ievent)%tshift(NSOURCES), &
-               acqui_simu(ievent)%hdur(NSOURCES), &
-               acqui_simu(ievent)%hdur_Gaussian(NSOURCES), &
-               acqui_simu(ievent)%sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ), &
-               acqui_simu(ievent)%Xs(NSOURCES), &
-               acqui_simu(ievent)%Ys(NSOURCES), &
-               acqui_simu(ievent)%Zs(NSOURCES), &
-               stat=ier)
+      allocate(acqui_simu(ievent)%islice_selected_source(NSOURCES))
+      allocate(acqui_simu(ievent)%ispec_selected_source(NSOURCES))
+      allocate(acqui_simu(ievent)%tshift(NSOURCES))
+      allocate(acqui_simu(ievent)%hdur(NSOURCES))
+      allocate(acqui_simu(ievent)%hdur_Gaussian(NSOURCES))
+      allocate(acqui_simu(ievent)%sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ))
+      allocate(acqui_simu(ievent)%Xs(NSOURCES))
+      allocate(acqui_simu(ievent)%Ys(NSOURCES))
+      allocate(acqui_simu(ievent)%Zs(NSOURCES), stat=ier)
       if (ier /= 0) stop 'error allocating arrays for sources'
-      allocate(Mxx(NSOURCES),Myy(NSOURCES),Mzz(NSOURCES),Mxy(NSOURCES),Mxz(NSOURCES),Myz(NSOURCES), &
-               x_target_source(NSOURCES),y_target_source(NSOURCES),z_target_source(NSOURCES), &
-               xi_source(NSOURCES),eta_source(NSOURCES),gamma_source(NSOURCES),nu_source(NDIM,NDIM,NSOURCES),stat=ier)
+      allocate(Mxx(NSOURCES))
+      allocate(Myy(NSOURCES))
+      allocate(Mzz(NSOURCES))
+      allocate(Mxy(NSOURCES))
+      allocate(Mxz(NSOURCES))
+      allocate(Myz(NSOURCES))
+      allocate(x_target_source(NSOURCES))
+      allocate(y_target_source(NSOURCES))
+      allocate(z_target_source(NSOURCES))
+      allocate(xi_source(NSOURCES))
+      allocate(eta_source(NSOURCES))
+      allocate(gamma_source(NSOURCES))
+      allocate(nu_source(NDIM,NDIM,NSOURCES),stat=ier)
       if (ier /= 0) stop 'error allocating utm source arrays'
 
       if (USE_FORCE_POINT_SOURCE) then
@@ -2171,8 +2198,10 @@ contains
 
 !       call MPI_BCAST(acqui_simu(i)%external_source_wavelet, 1,MPI_LOGICAL,0,my_local_mpi_comm_world,ier)
 !       if (acqui_simu(i)%external_source_wavelet) then
-!          if (myrank > 0) allocate(acqui_simu(i)%source_wavelet(acqui_simu(i)%Nt_data,1))
-!           call MPI_BCAST(acqui_simu(i)%source_wavelet,acqui_simu(i)%Nt_data, CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
+!         if (myrank > 0) then
+!           allocate(acqui_simu(i)%source_wavelet(acqui_simu(i)%Nt_data,1))
+!         endif
+!         call MPI_BCAST(acqui_simu(i)%source_wavelet,acqui_simu(i)%Nt_data, CUSTOM_MPI_TYPE,0,my_local_mpi_comm_world,ier)
 !       endif
 
        ! stations

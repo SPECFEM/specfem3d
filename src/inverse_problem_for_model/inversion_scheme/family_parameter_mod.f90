@@ -26,7 +26,7 @@ module family_parameter
   private
 
   !---- locals --
-  integer,                private                                     :: ierror, ispec
+  integer,                private                                     :: ier, ispec
   real(kind=CUSTOM_REAL), private, dimension(:,:,:,:),   allocatable  :: wks
   real(kind=CUSTOM_REAL), private, dimension(:,:,:,:,:), allocatable  :: wks1
   real(kind=CUSTOM_REAL), private, dimension(:,:,:,:),   allocatable  :: gradient_wks
@@ -48,11 +48,11 @@ contains
     integer                                                                        :: i
 
     !! temporary array useful for MPI comm
-    allocate(wks(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT),stat=ierror)
-    if (ierror /= 0) call exit_MPI(myrank,"error allocation wks in  PrepareArraysfamilyParam subroutine, family_parameter_mod")
+    allocate(wks(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT),stat=ier)
+    if (ier /= 0) call exit_MPI(myrank,"error allocation wks in  PrepareArraysfamilyParam subroutine, family_parameter_mod")
     if (ANISOTROPIC_KL) then
-       allocate(wks1(21, NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT),stat=ierror)
-       if (ierror /= 0) call exit_MPI(myrank,"error allocation wks1 in  PrepareArraysfamilyParam subroutine, family_parameter_mod")
+       allocate(wks1(21, NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT),stat=ier)
+       if (ier /= 0) call exit_MPI(myrank,"error allocation wks1 in  PrepareArraysfamilyParam subroutine, family_parameter_mod")
     endif
 
     !! manage family parameters for inversion

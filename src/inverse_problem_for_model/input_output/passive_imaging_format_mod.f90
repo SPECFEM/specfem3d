@@ -200,7 +200,9 @@ contains
 
     !*** Now read stations
     k = 0
-    if (.not. allocated(mygather%stations)) allocate(mygather%stations(mygather%hdr%nsta))
+    if (.not. allocated(mygather%stations)) then
+      allocate(mygather%stations(mygather%hdr%nsta))
+    endif
     do
        read(iunit,fmt='(a256)',iostat=io_err) line
        if (trim(adjustl(line)) == 'ENDLIST') exit

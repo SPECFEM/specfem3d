@@ -221,9 +221,10 @@
   write(IOVTK,*) ''
 
   ! iflag field on global nodeset
-  !allocate(mask_ibool(nglob),flag_val(nglob),stat=ier)
-  if (.not. allocated(mask_ibool)) allocate(mask_ibool(nglob),flag_val(nglob),stat=ier)
-  if (ier /= 0) stop 'error allocating mask'
+  if (.not. allocated(mask_ibool)) then
+     allocate(mask_ibool(nglob),flag_val(nglob),stat=ier)
+     if (ier /= 0) stop 'error allocating mask'
+  endif
 
   mask_ibool = .false.
   do ispec=1,nspec

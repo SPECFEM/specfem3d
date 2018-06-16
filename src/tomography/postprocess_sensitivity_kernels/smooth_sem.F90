@@ -252,46 +252,46 @@ program smooth_sem
 
   if (NSPEC_IRREGULAR > 0) then
     ! allocate arrays for storing the databases
-    allocate(xix(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-             xiy(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-             xiz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-             etax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-             etay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-             etaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-             gammax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-             gammay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-             gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-             jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(xix(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
+    allocate(xiy(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
+    allocate(xiz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
+    allocate(etax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
+    allocate(etay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
+    allocate(etaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
+    allocate(gammax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
+    allocate(gammay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
+    allocate(gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR))
+    allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
    else
        ! allocate arrays for storing the databases
-    allocate(xix(1,1,1,1), &
-             xiy(1,1,1,1), &
-             xiz(1,1,1,1), &
-             etax(1,1,1,1), &
-             etay(1,1,1,1), &
-             etaz(1,1,1,1), &
-             gammax(1,1,1,1), &
-             gammay(1,1,1,1), &
-             gammaz(1,1,1,1), &
-             jacobian(1,1,1,1),stat=ier)
+    allocate(xix(1,1,1,1))
+    allocate(xiy(1,1,1,1))
+    allocate(xiz(1,1,1,1))
+    allocate(etax(1,1,1,1))
+    allocate(etay(1,1,1,1))
+    allocate(etaz(1,1,1,1))
+    allocate(gammax(1,1,1,1))
+    allocate(gammay(1,1,1,1))
+    allocate(gammaz(1,1,1,1))
+    allocate(jacobian(1,1,1,1),stat=ier)
   endif
   if (ier /= 0) stop 'Error allocating arrays for databases'
 
   ! mesh node locations
-  allocate(xstore(NGLOB_AB), &
-           ystore(NGLOB_AB), &
-           zstore(NGLOB_AB),stat=ier)
+  allocate(xstore(NGLOB_AB))
+  allocate(ystore(NGLOB_AB))
+  allocate(zstore(NGLOB_AB),stat=ier)
   if (ier /= 0) stop 'Error allocating arrays for mesh nodes'
 
   ! material properties
-  allocate(kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  allocate(kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) stop 'Error allocating arrays for material properties'
 
   ! material flags
-  allocate(ispec_is_acoustic(NSPEC_AB), &
-           ispec_is_elastic(NSPEC_AB), &
-           ispec_is_poroelastic(NSPEC_AB),stat=ier)
+  allocate(ispec_is_acoustic(NSPEC_AB))
+  allocate(ispec_is_elastic(NSPEC_AB))
+  allocate(ispec_is_poroelastic(NSPEC_AB),stat=ier)
   if (ier /= 0) stop 'Error allocating arrays for material flags'
   ispec_is_acoustic(:) = .false.
   ispec_is_elastic(:) = .false.
@@ -358,12 +358,12 @@ program smooth_sem
   ! for smoothing, we use cell centers to find and locate nearby elements
   !
   ! sets the location of the center of the elements and local points
-  allocate(xl(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           yl(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           zl(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           cx0(NSPEC_AB), &
-           cy0(NSPEC_AB), &
-           cz0(NSPEC_AB),stat=ier)
+  allocate(xl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(yl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(zl(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(cx0(NSPEC_AB))
+  allocate(cy0(NSPEC_AB))
+  allocate(cz0(NSPEC_AB),stat=ier)
   if (ier /= 0) stop 'Error allocating array xl etc.'
 
   ! sets element center location
@@ -557,8 +557,8 @@ program smooth_sem
 
   ! loops over slices
   ! each process reads in his own neighbor slices and Gaussian filters the values
-  allocate(tk(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           bk(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  allocate(tk(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+  allocate(bk(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) stop 'Error allocating array tk and bk'
 
   tk = 0.0_CUSTOM_REAL
@@ -643,12 +643,12 @@ program smooth_sem
     close(IIN)
 
     ! get the location of the center of the elements and local points
-    allocate(xx(NGLLX,NGLLY,NGLLZ,NSPEC_N), &
-             yy(NGLLX,NGLLY,NGLLZ,NSPEC_N), &
-             zz(NGLLX,NGLLY,NGLLZ,NSPEC_N), &
-             cx(NSPEC_N), &
-             cy(NSPEC_N), &
-             cz(NSPEC_N),stat=ier)
+    allocate(xx(NGLLX,NGLLY,NGLLZ,NSPEC_N))
+    allocate(yy(NGLLX,NGLLY,NGLLZ,NSPEC_N))
+    allocate(zz(NGLLX,NGLLY,NGLLZ,NSPEC_N))
+    allocate(cx(NSPEC_N))
+    allocate(cy(NSPEC_N))
+    allocate(cz(NSPEC_N),stat=ier)
     if (ier /= 0) stop 'Error allocating array xx etc.'
 
     ! sets element center location

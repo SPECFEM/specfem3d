@@ -551,15 +551,13 @@ end subroutine read_fd_grid_parameters_for_projection
     double precision,  dimension(1)                                   :: x_dummy, y_dummy, z_dummy
     integer,           dimension(1)                                   :: ispec_selected_dummy, islice_selected_dummy
 
-    !if (myrank==0)  write(INVERSE_LOG_FILE,*) ' bcast parameters to all slices  '
-
-    allocate(distance_from_target_all(1,0:NPROC-1), &
-             xi_all(1,0:NPROC-1), &
-             eta_all(1,0:NPROC-1), &
-             gamma_all(1,0:NPROC-1), &
-             x_array_found(0:NPROC-1), &
-             y_array_found(0:NPROC-1), &
-             z_array_found(0:NPROC-1))
+    allocate(distance_from_target_all(1,0:NPROC-1))
+    allocate(xi_all(1,0:NPROC-1))
+    allocate(eta_all(1,0:NPROC-1))
+    allocate(gamma_all(1,0:NPROC-1))
+    allocate(x_array_found(0:NPROC-1))
+    allocate(y_array_found(0:NPROC-1))
+    allocate(z_array_found(0:NPROC-1))
 
     allocate(ispec_selected_all(1,0:NPROC-1))
 
@@ -572,7 +570,7 @@ end subroutine read_fd_grid_parameters_for_projection
 !!$       write(IIDD, *) 'z :', z_to_locate,  z_found
 !!$    endif
 
-    !! it's just to avoid compiler error
+    !! this is just to avoid a compiler error
     distance_from_target_dummy(1)=distance_from_target
     x_dummy(1)=x_found
     y_dummy(1)=y_found
