@@ -108,8 +108,8 @@ module vti_parameters_mod
     do ipar=1, inversion_param%NfamilyPar !! loop on all parameters : rho, vp, vs, ep, gm, de
        if (is_selected(ipar)) then
           ipar_inv=ipar_inv+1
-          inversion_param%Index_Invert(ipar_inv)=ipar
-          inversion_param%param_inv_name(ipar_inv)=vti_family_name(ipar)
+          inversion_param%Index_Invert(ipar_inv) = ipar
+          inversion_param%param_inv_name(ipar_inv) = vti_family_name(ipar)
        endif
     enddo
 
