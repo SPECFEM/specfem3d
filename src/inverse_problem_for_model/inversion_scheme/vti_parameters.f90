@@ -288,7 +288,8 @@ module vti_parameters_mod
       real(kind=CUSTOM_REAL), dimension(NGLLX, NGLLY, NGLLZ)            :: w1, w2, w3, w4, w5
       real(kind=CUSTOM_REAL), dimension(NGLLX, NGLLY, NGLLZ)            :: rh_vp, rh_vs
 
-      !! finalize specfem kernel
+      !! finalize specfem kernel need to multiply by -1
+      rho_kl(:,:,:, ispec) = - rho_kl(:,:,:, ispec)
       cijkl_kl(:,:,:,:,ispec) = - cijkl_kl(:,:,:,:,ispec)
 
 
@@ -319,7 +320,7 @@ module vti_parameters_mod
       cijkl_kl(1, :,:,:, ispec) *(2.*w2(:,:,:)*rh_vp(:,:,:)) + &
       cijkl_kl(2, :,:,:, ispec) *(2.*w2(:,:,:)*rh_vp(:,:,:)) + &
       cijkl_kl(3, :,:,:, ispec) *(2. * rh_vp(:,:,:) * w4(:,:,:) / w1(:,:,:) ) + &
-      cijkl_kl(7, :,:,:, ispec) *(2.*w2(:,:,:)*vp(:,:,:)) + &
+      cijkl_kl(7, :,:,:, ispec) *(2.*w2(:,:,:)*rh_vp(:,:,:)) + &
       cijkl_kl(8, :,:,:, ispec) *(2. * rh_vp(:,:,:) * w4(:,:,:) / w1(:,:,:) ) + &
       cijkl_kl(12, :,:,:, ispec)*(2.*rh_vp(:,:,:))
 
