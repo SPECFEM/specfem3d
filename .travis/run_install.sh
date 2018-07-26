@@ -24,6 +24,10 @@ ${CC} --version
 # installs the CUDA toolkit
 if [ "$CUDA" == "true" ]; then
   echo "Installing CUDA library"
+  # note: travis could stall and time out here
+  #       one could try to add: travis_retry sudo dpgk -i ..
+  #       https://docs.travis-ci.com/user/common-build-problems/#travis_retry
+  #
   # remove old nvidia-cuda packages
   #sudo apt-get remove nvidia-cuda-* ;
   # gets packages
@@ -34,6 +38,7 @@ if [ "$CUDA" == "true" ]; then
   #wget http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1204/x86_64/cuda-repo-ubuntu1204_${CUDA_VERSION}_amd64.deb;
   #sudo dpkg -i cuda-repo-ubuntu1204_${CUDA_VERSION}_amd64.deb;
   # update
+  echo "Updating libraries"
   sudo apt-get update -qq
   dpkg -l | grep cuda
   export CUDA_APT=${CUDA_VERSION:0:3}
