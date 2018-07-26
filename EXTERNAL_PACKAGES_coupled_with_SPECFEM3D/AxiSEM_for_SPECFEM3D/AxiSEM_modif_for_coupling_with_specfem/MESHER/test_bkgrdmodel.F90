@@ -312,7 +312,7 @@ subroutine bkgrdmodel_testing
 
 
   enddo ! iel
-  !$OMP enddo
+  !$OMP ENDDO
   !$omp end parallel
 
   if (dump_mesh_vtk) then

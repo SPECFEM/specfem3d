@@ -167,7 +167,7 @@ subroutine pmerge(a, b, c, ind1, ind2, ind, p)
         !$                ind1(ia(i-1)+1:ia(i)), ind2(ib(i-1)+1:ib(i)), &
         !$                ind(diagnum(i-1)+1:diagnum(i)))
         !$ enddo
-        !$OMP enddo
+        !$OMP ENDDO
         !$omp end parallel
      !$ else
      do i=1, p
@@ -311,7 +311,7 @@ subroutine mergesort_3(a, b, il, il2, p)
      do i=1, na
         il(i) = ibuff(ind(i))
      enddo
-     !$OMP enddo
+     !$OMP ENDDO
   endif
 
   if (present(il2)) then
@@ -319,7 +319,7 @@ subroutine mergesort_3(a, b, il, il2, p)
      do i=1, na
         il2(i) = i2buff(ind(i))
      enddo
-     !$OMP enddo
+     !$OMP ENDDO
   endif
 
   if (present(b)) then
@@ -327,7 +327,7 @@ subroutine mergesort_3(a, b, il, il2, p)
      do i=1, na
         b(i) = bbuff(ind(i))
      enddo
-     !$OMP enddo
+     !$OMP ENDDO
   endif
   !$omp end parallel
 
