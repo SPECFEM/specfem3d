@@ -1648,7 +1648,7 @@
   format_to_use='('//cnlay//'i2)'                 ! Number of polynomial
   read(iunit,format_to_use) (nco(i),i=1,nlay)     ! coefficients for each layer
 
-  read(iunit,*) fref               ! reference frequency of Qs in Hertz
+  read(iunit,*) fref               ! reference frequency of Q_mu in Hertz
   read(iunit,*) ifanis             ! Transversal isotropic? 1=y, else=n
   read(iunit,'(1x/1x/)')
 

@@ -132,11 +132,10 @@ module meshfem3D_par
 ! material properties
   integer :: NMATERIALS
 ! first dimension  : material_id
-! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id
+! second dimension : #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id
   double precision , dimension(:,:), pointer :: material_properties
 
   logical :: BROADCAST_AFTER_READ
 
 end module meshfem3D_par
-
 

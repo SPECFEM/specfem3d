@@ -879,7 +879,7 @@ end subroutine init_tomography_files
   else
     ! attenuation: arbitrary value, see maximum in constants.h
     qmu_atten = ATTENUATION_COMP_MAXIMUM
-    ! Q_kappa is not implemented in this model_tomography routine yet, thus set it to dummy value
+    ! Q_Kappa is not implemented in this model_tomography routine yet, thus set it to dummy value
     qkappa_atten = ATTENUATION_COMP_MAXIMUM
   endif
 

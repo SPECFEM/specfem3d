@@ -132,16 +132,14 @@
   double precision, parameter :: Kappa_unrelaxed =  8.5806454E+09
 
 ! We use Kappa_ref and Mu_ref to compute the case without attenuation
-! They are chosen such that Kappa_ref = Kappa(2*pi*f0_ref) when there is
-! attenuation
+! They are chosen such that Kappa_ref = Kappa(2*pi*f0_ref) when there is attenuation
   double precision, parameter :: Vp_ref  = 3297.849
   double precision, parameter :: Vs_ref  = 2222.536
 
   double precision, parameter :: Mu_ref    =  rho * Vs_ref * Vs_ref
   double precision, parameter :: Kappa_ref =  rho * ( Vp_ref * Vp_ref - 4.d0/3 * Vs_ref * Vs_ref)
 
-
-! tau constants mimicking constant QKappa and KMu
+! tau constants mimicking constant QKappa and QMu
   tau_epsilon_mu    = (/ 0.281966668348107  ,  3.607809663879573E-002 , 5.638875613224542E-003/)
   tau_sigma_mu      = (/ 0.186873539567019  ,  2.491998701168405E-002 , 3.323133676931235E-003/)
   tau_epsilon_kappa = (/ 0.186973292921151  ,  2.492998179955646E-002 , 3.324907855424433E-003/)

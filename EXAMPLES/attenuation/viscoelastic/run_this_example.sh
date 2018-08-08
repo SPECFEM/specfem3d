@@ -7,16 +7,15 @@
 echo "running example: `date`"
 currentdir=`pwd`
 
-echo
-echo "(will take around half an hour)"
-echo
-
 # sets up directory structure in current example directoy
 echo
 echo "   setting up example..."
 echo
 
+rm -r -f OUTPUT_FILES
+mkdir -p OUTPUT_FILES
 mkdir -p OUTPUT_FILES/DATABASES_MPI
+
 mkdir -p DATA DATA/meshfem3D_files bin
 
 # sets up local DATA/ directory
@@ -28,10 +27,6 @@ cp ../interface1_attenuation_3D.dat ./meshfem3D_files/interface1.dat
 cp ../interfaces_attenuation_3D.dat ./meshfem3D_files/interfaces.dat
 cp ../Mesh_Par_file_attenuation_3D ./meshfem3D_files/Mesh_Par_file
 cd ../
-
-# cleans output files
-rm  OUTPUT_FILES/*
-rm -rf OUTPUT_FILES/DATABASES_MPI/*
 
 cd $currentdir
 

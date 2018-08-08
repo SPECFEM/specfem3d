@@ -244,7 +244,7 @@
 
 ! material parameter list
 
-  subroutine read_material_parameters(iunit,mat_id,rho,vp,vs,Q_flag,anisotropy_flag,domain_id, ier)
+  subroutine read_material_parameters(iunit,mat_id,rho,vp,vs,Q_Kappa,Q_mu,anisotropy_flag,domain_id, ier)
 
   use constants, only: MAX_STRING_LEN,DONT_IGNORE_JUNK
 
@@ -252,7 +252,7 @@
 
   integer :: iunit
   integer :: mat_id
-  double precision :: rho,vp,vs,Q_flag,anisotropy_flag
+  double precision :: rho,vp,vs,Q_Kappa,Q_mu,anisotropy_flag
   integer :: domain_id
   integer :: ier
   character(len=MAX_STRING_LEN) :: string_read
@@ -261,7 +261,16 @@
   call read_next_line(iunit,DONT_IGNORE_JUNK,string_read,ier)
   if (ier /= 0) return
 
-  read(string_read,*,iostat=ier) mat_id,rho,vp,vs,Q_flag,anisotropy_flag,domain_id
+  read(string_read,*,iostat=ier) mat_id,rho,vp,vs,Q_Kappa,Q_mu,anisotropy_flag,domain_id
+  if (ier /= 0) then
+    print *,'error while reading your input Mesh_Par_file in routine read_material_parameters()'
+    print *,'We recently changed the input format from mat_id,rho,vp,vs,Q_mu,anisotropy_flag,domain_id'
+    print *,'to mat_id,rho,vp,vs,Q_Kappa,Q_mu,anisotropy_flag,domain_id in order to add support for Q_Kappa.'
+    print *,'It is likely that your input file still uses the old convention and needs to be updated.'
+    print *,'If you do not know what value to add for Q_Kappa, add 9999., i.e negligible Q_Kappa attenuation'
+    print *,'and then your results will be unchanged compared to older versions of the code.'
+    stop 'error in input Mesh_Par_file in routine read_material_parameters()'
+  endif
 
   end subroutine read_material_parameters
 

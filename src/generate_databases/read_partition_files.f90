@@ -78,9 +78,8 @@
 
   do imat = 1, nmat_ext_mesh
      ! (visco)elastic or acoustic format:
-     ! #(1) rho   #(2) vp  #(3) vs  #(4) Q_mu  #(5) anisotropy_flag  #(6) material_domain_id  #(7) Q_kappa
+     ! #(1) rho   #(2) vp  #(3) vs  #(4) Q_Kappa  #(5) Q_mu  #(6) anisotropy_flag  #(7) material_domain_id
      ! and remaining entries are filled with zeros.
-     ! Q_kappa is not stored next to Q_mu for historical reasons, because it was added later.
      !
      ! poroelastic format:  rhos,rhof,phi,tort,eta,material_domain_id,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,mufr
      read(IIN) materials_ext_mesh(1,imat),  materials_ext_mesh(2,imat),  materials_ext_mesh(3,imat), &

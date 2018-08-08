@@ -76,8 +76,8 @@
   ! material properties
   integer :: NMATERIALS
   ! first dimension  : material_id
-  ! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id #material_id
-  double precision , dimension(NMATERIALS,7) ::  material_properties
+  ! second dimension : #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id  #material_id
+  double precision , dimension(NMATERIALS,NUMBER_OF_MATERIAL_PROPERTIES) :: material_properties
 
   ! CPML
   integer, intent(in) :: nspec_CPML
@@ -131,8 +131,8 @@
   ndef = 0
   nundef = 0
   do i = 1,NMATERIALS
-    ! material properties format: #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id #material_id
-    mat_id = material_properties(i,7)
+    ! material properties format: #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id  #material_id
+    mat_id = material_properties(i,8)
     if (mat_id > 0) ndef = ndef + 1
     if (mat_id < 0) nundef = nundef + 1
   enddo
@@ -159,23 +159,21 @@
 
   ! writes out defined materials
   do i = 1,NMATERIALS
-    ! material properties format: #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id #material_id
-    mat_id = material_properties(i,7)
+    ! material properties format: #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id  #material_id
+    mat_id = material_properties(i,8)
     if (mat_id > 0) then
       ! pad dummy zeros to fill up 16 entries (poroelastic medium not allowed)
       matpropl(:) = 0.d0
-      ! material properties format: #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id
-      matpropl(1:6) = material_properties(i,1:6)
-      ! fills adds arbitrary value for Q_kappa
-      matpropl(7) = 9999.0
+      ! material properties format: #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id  #material_id
+      matpropl(1:7) = material_properties(i,1:7)
       write(IIN_database) matpropl(:)
     endif
   enddo
 
   ! writes out undefined materials
   do i = 1,NMATERIALS
-    domain_id = material_properties(i,6)
-    mat_id = material_properties(i,7)
+    domain_id = material_properties(i,7)
+    mat_id = material_properties(i,8)
     if (mat_id < 0) then
       ! format:
       ! #material_id #type-keyword #domain-name #tomo-filename #tomo_id #domain_id
@@ -462,8 +460,8 @@
   ! material properties
   integer :: NMATERIALS
   ! first dimension  : material_id
-  ! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id #material_id
-  double precision , dimension(NMATERIALS,7) ::  material_properties
+  ! second dimension : #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id  #material_id
+  double precision , dimension(NMATERIALS,NUMBER_OF_MATERIAL_PROPERTIES) ::  material_properties
 
   ! local parameters
   integer :: i,ispec,iglob,ier
@@ -483,10 +481,10 @@
   endif
 
   do i = 1,NMATERIALS
-     domain_id = material_properties(i,6)
-     mat_id =  material_properties(i,7)
+     domain_id = material_properties(i,7)
+     mat_id =  material_properties(i,8)
      if ( domain_id > 0) then
-        write(IIN_database,'(2i6,5f15.5,i6)') domain_id,mat_id,material_properties(i,1:3),9999.,9999.,0
+        write(IIN_database,'(2i6,5f15.5,i6)') domain_id,mat_id,material_properties(i,1:5),0
      else
        write(*,*) 'STOP: undefined mat not yet implemented'
        stop

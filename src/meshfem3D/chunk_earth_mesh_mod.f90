@@ -117,7 +117,7 @@ contains
       integer :: ilayer, nx, ny, k, ntmp
       double precision :: dz
       integer :: i, iflag, imat, ier
-      double precision :: vp, vs, rho, Q, Aniso
+      double precision :: vp, vs, rho, Q_Kappa, Q_mu, Aniso
       double precision :: x0, x1, y0, y1, z0, z1
 
       open(27, file='DATA/meshfem3D_files/Mesh_Chunk_Par_file', action='read')
@@ -160,19 +160,29 @@ contains
              read(line(ipos0:ipos1),*) layer_doubling(:)
           case ('nb_material')
              read(line(ipos0:ipos1),*) nb_mat
-             allocate(material_prop(nb_mat, 5),stat=ier)
+             allocate(material_prop(nb_mat, 6),stat=ier)
              if (ier /= 0) call exit_MPI_without_rank('error allocating array 1241')
              allocate(flag_acoustic_elastic(nb_mat),stat=ier)
              if (ier /= 0) call exit_MPI_without_rank('error allocating array 1242')
              flag_acoustic_elastic(:)=-1
           case('material')
-             read(line(ipos0:ipos1),*) i, rho, vp, vs, Q, Aniso, iflag
+             read(line(ipos0:ipos1),*,iostat=ier) i, rho, vp, vs, Q_Kappa, Q_mu, Aniso, iflag
+             if (ier /= 0) then
+               print *,'error while reading your input file in routine chunk_earth_mesh_mod.f90'
+               print *,'We recently changed the input format from i, rho, vp, vs, Q_mu, Aniso, iflag'
+               print *,'to i, rho, vp, vs, Q_Kappa, Q_mu, Aniso, iflag in order to add support for Q_Kappa.'
+               print *,'It is likely that your input file still uses the old convention and needs to be updated.'
+               print *,'If you do not know what value to add for Q_Kappa, add 9999., i.e negligible Q_Kappa attenuation'
+               print *,'and then your results will be unchanged compared to older versions of the code.'
+               stop 'error in input file format in routine chunk_earth_mesh_mod.f90'
+             endif
              if (i <= nb_mat) then
                 material_prop(i,1) = rho
                 material_prop(i,2) = vp
                 material_prop(i,3) = vs
-                material_prop(i,4) = Q
-                material_prop(i,5) = Aniso
+                material_prop(i,4) = Q_Kappa
+                material_prop(i,5) = Q_mu
+                material_prop(i,6) = Aniso
                 flag_acoustic_elastic(i) = iflag
              else
                 write(*,*) " Warning : material number ", i, " not used "
@@ -450,7 +460,7 @@ contains
       !! write materials !!
       open(27,file=trim(MESH)//'nummaterial_velocity_file')
       do i=1, nb_mat
-         write(27,'(2i6,5f15.5,i6)') 2, Imaterial_domain(i), material_prop(i,1:3), 9999., 9999., 0
+         write(27,'(2i6,5f15.5,i6)') 2, Imaterial_domain(i), material_prop(i,1:5), 0
       enddo
       close(27)
 

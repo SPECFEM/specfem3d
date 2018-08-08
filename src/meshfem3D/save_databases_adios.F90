@@ -92,8 +92,8 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   ! material properties
   integer :: NMATERIALS
   ! first dimension  : material_id
-  ! second dimension : #rho  #vp  #vs  #Q_flag  #anisotropy_flag #domain_id #material_id
-  double precision , dimension(NMATERIALS,7) ::  material_properties
+  ! second dimension : #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id  #material_id
+  double precision , dimension(NMATERIALS,NUMBER_OF_MATERIAL_PROPERTIES) :: material_properties
 
   ! CPML
   integer, intent(in) :: nspec_CPML
@@ -176,12 +176,10 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   ndef = 0
   nundef = 0
   do i = 1,NMATERIALS
-    mat_id = material_properties(i,7)
+    mat_id = material_properties(i,8)
     if (mat_id > 0) ndef = ndef + 1
     if (mat_id < 0) nundef = nundef + 1
   enddo
-  !debug
-  !print *,'materials def/undef: ',ndef,nundef
 
   ! defined material properties
   ! pad dummy zeros to fill up 16 entries (poroelastic medium not allowed)
@@ -189,10 +187,10 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   matpropl(:,:) = 0.d0
   icount = 0
   do i = 1,NMATERIALS
-    mat_id = material_properties(i,7)
+    mat_id = material_properties(i,8)
     if (mat_id > 0) then
       icount = icount + 1
-      matpropl(1:6, icount) = material_properties(i,1:6)
+      matpropl(1:7, icount) = material_properties(i,1:7)
     endif
   enddo
   if (icount /= ndef) stop 'Error icount not equal to ndef'
@@ -202,8 +200,8 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   undef_matpropl(:) = ''
   icount = 0
   do i = 1,NMATERIALS
-    domain_id = material_properties(i,6)
-    mat_id = material_properties(i,7)
+    domain_id = material_properties(i,7)
+    mat_id = material_properties(i,8)
     if (mat_id < 0) then
       icount = icount + 1
       ! format:
@@ -241,8 +239,6 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
     endif
   enddo
   if (icount /= nundef) stop 'Error icount not equal to ndef'
-  ! debug
-  !print *,'undef_matpropl: ',trim(undef_matpropl)
 
   ! Boundaries
   call safe_alloc(nodes_ibelm_xmin, ngnod2d, nspec2d_xmin, "nodes_ibelm_xmin")
