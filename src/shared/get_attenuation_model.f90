@@ -29,16 +29,6 @@
 
   implicit none
 
-  ! model_attenuation_storage_var
-  type model_attenuation_storage_var
-    sequence
-    double precision, dimension(:,:), pointer :: tau_eps_storage
-    double precision, dimension(:), pointer :: Qmu_storage
-    integer Q_resolution
-    integer Q_max
-  end type model_attenuation_storage_var
-  type (model_attenuation_storage_var) AM_S
-
   ! attenuation_simplex_variables
   type attenuation_simplex_variables
     sequence
@@ -517,17 +507,6 @@
   ! local parameters
   double precision, dimension(N_SLS) :: tau_eps,tau_eps_kappa
 
-
-  ! determines tau_eps for Q_mu
-  call get_attenuation_tau_eps(Q_mu,tau_sigma,tau_eps, &
-                               MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
-
-  ! determines one_minus_sum_beta
-  call get_attenuation_property_values(tau_sigma,tau_eps,beta,one_minus_sum_beta)
-
-  ! determines the "scale factor"
-  call get_attenuation_scale_factor(myrank,f_c_source,tau_eps,tau_sigma,Q_mu,factor_scale,ATTENUATION_f0_REFERENCE)
-
   ! determines tau_eps for Q_kappa
   call get_attenuation_tau_eps(Q_kappa,tau_sigma,tau_eps_kappa,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
 
@@ -536,6 +515,17 @@
 
   ! determines the "scale factor"
   call get_attenuation_scale_factor(myrank,f_c_source,tau_eps_kappa,tau_sigma,Q_kappa,factor_scale_kappa,ATTENUATION_f0_REFERENCE)
+  ! print *,'for Q_Kappa,tau_eps_kappa,tau_sigma = ',Q_Kappa,tau_eps_kappa(:),tau_sigma(:)
+
+  ! determines tau_eps for Q_mu
+  call get_attenuation_tau_eps(Q_mu,tau_sigma,tau_eps,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
+
+  ! determines one_minus_sum_beta
+  call get_attenuation_property_values(tau_sigma,tau_eps,beta,one_minus_sum_beta)
+
+  ! determines the "scale factor"
+  call get_attenuation_scale_factor(myrank,f_c_source,tau_eps,tau_sigma,Q_mu,factor_scale,ATTENUATION_f0_REFERENCE)
+  ! print *,'for Q_mu,tau_eps,tau_sigma = ',Q_mu,tau_eps(:),tau_sigma(:)
 
   end subroutine get_attenuation_factors
 
@@ -620,8 +610,6 @@
   xtmp2_nu1 = ONE
 
   do i = 1,N_SLS
-  !! DK DK changed this to the pre-computed inverse     xtmp_ak_nu1 =
-  !tau_epsilon_nu1(i_sls)/tau_sigma_nu1(i_sls) - ONE
      xtmp_ak_nu1 = tau_eps(i)/tau_sigma(i) - ONE
      xtmp1_nu1 = xtmp1_nu1 + xtmp_ak_nu1/N_SLS
      xtmp2_nu1 = xtmp2_nu1 + xtmp_ak_nu1/(ONE + ONE/(TWO * PI * f_c_source * tau_sigma(i))**2)/N_SLS
@@ -796,120 +784,13 @@
 
   implicit none
 
-! model_attenuation_variables
-!...
-
   double precision :: Q_in
   double precision, dimension(N_SLS) :: tau_s, tau_eps
   double precision :: min_period,max_period
 
-  ! local parameters
-  integer :: rw
-
-  ! READ
-  rw = 1
-  call model_attenuation_storage(Q_in, tau_eps, rw)
-  if (rw > 0) return
-
   call attenuation_invert_by_simplex(min_period, max_period, N_SLS, Q_in, tau_s, tau_eps)
-  ! WRITE
-  rw = -1
-  call model_attenuation_storage(Q_in, tau_eps, rw)
+
   end subroutine get_attenuation_tau_eps
-
-!
-!-------------------------------------------------------------------------------------------------
-!
-
-  subroutine model_attenuation_storage(Qmu, tau_eps, rw)
-
-  use constants
-
-  use attenuation_model, only: AM_S
-
-  implicit none
-
-  double precision :: Qmu, Qmu_new
-  double precision, dimension(N_SLS) :: tau_eps
-  integer :: rw
-
-  integer :: Qtmp
-  integer :: ier
-
-  double precision, parameter :: ZERO_TOL = 1.e-5
-
-  integer, save :: first_time_called = 1
-
-  ! allocates arrays when first called
-  if (first_time_called == 1) then
-    first_time_called = 0
-    AM_S%Q_resolution = 10**ATTENUATION_COMP_RESOLUTION
-    AM_S%Q_max = ATTENUATION_COMP_MAXIMUM
-    Qtmp = AM_S%Q_resolution * AM_S%Q_max
-
-    allocate(AM_S%tau_eps_storage(N_SLS, Qtmp),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1186')
-    allocate(AM_S%Qmu_storage(Qtmp),stat=ier)
-    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1187')
-    if (ier /= 0) stop 'error allocating arrays for attenuation storage'
-    AM_S%Qmu_storage(:) = -1
-  endif
-
-  if (Qmu < 0.0d0 .or. Qmu > AM_S%Q_max) then
-    print *,'Error attenuation_storage()'
-    print *,'Attenuation Value out of Range: ', Qmu
-    print *,'Attenuation Value out of Range: Min, Max ', 0, AM_S%Q_max
-    stop 'Attenuation Value out of Range'
-  endif
-
-  if (rw > 0 .and. Qmu <= ZERO_TOL) then
-    Qmu = 0.0d0;
-    tau_eps(:) = 0.0d0;
-    return
-  endif
-  ! Generate index for Storage Array
-  ! and Recast Qmu using this index
-  ! Accroding to Brian, use float
-  !Qtmp = Qmu * Q_resolution
-  !Qmu = Qtmp / Q_resolution;
-
-  ! by default: resolution is Q_resolution = 10
-  ! converts Qmu to an array integer index:
-  ! e.g. Qmu = 150.31 -> Qtmp = 150.31 * 10 = int( 1503.10 ) = 1503
-  Qtmp = int(Qmu * dble(AM_S%Q_resolution))
-
-  ! rounds to corresponding double value:
-  ! e.g. Qmu_new = dble( 1503 ) / dble(10) = 150.30
-  ! but Qmu_new is not used any further...
-  Qmu_new = dble(Qtmp) / dble(AM_S%Q_resolution)
-
-  if (rw > 0) then
-    ! checks
-    if (first_time_called == 0) then
-      if (.not. associated(AM_S%Qmu_storage)) &
-        stop 'error calling model_attenuation_storage() routine without AM_S array'
-    else
-      stop 'error calling model_attenuation_storage() routine with first_time_called value invalid'
-    endif
-
-    ! READ
-    if (AM_S%Qmu_storage(Qtmp) > 0) then
-      ! READ SUCCESSFUL
-      tau_eps(:) = AM_S%tau_eps_storage(:,Qtmp)
-      Qmu = AM_S%Qmu_storage(Qtmp)
-      rw = 1
-    else
-      ! READ NOT SUCCESSFUL
-      rw = -1
-    endif
-  else
-    ! WRITE SUCCESSFUL
-    AM_S%tau_eps_storage(:,Qtmp) = tau_eps(:)
-    AM_S%Qmu_storage(Qtmp) = Qmu
-    rw = 1
-  endif
-
-  end subroutine model_attenuation_storage
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -922,13 +803,12 @@
   ! Input / Output
   double precision  t1, t2
   double precision  Q_real
-!  double precision  omega_not
   integer  n
   double precision, dimension(n)   :: tau_s, tau_eps
 
   ! Internal
   integer i, iterations, err,prnt
-  double precision f1, f2, exp1,exp2, min_value !, dexpval
+  double precision f1, f2, exp1,exp2, min_value
   integer, parameter :: nf = 100
   double precision, dimension(nf) :: f
   double precision, parameter :: PI = 3.14159265358979d0
