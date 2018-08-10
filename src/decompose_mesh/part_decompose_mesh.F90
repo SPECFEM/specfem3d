@@ -458,8 +458,7 @@ contains
     do i = 1, count_def_mat
       ! database material definition
       !
-      ! format:  #rho  #vp  #vs  #Q_mu  #anisotropy_flag #domain_id  #Q_kappa   for (visco)elastic and acoustic
-      !     (Q_kappa is not stored next to Q_mu for historical reasons, because it was added later)
+      ! format:  #rho  #vp  #vs  #Q_kappa  #Q_mu  #anisotropy_flag  #domain_id  #Q_kappa   for (visco)elastic and acoustic
       !
       ! format:  #rhos,#rhof,#phi,#tort,#kxx,#domain_id,#kxy,#kxz,#kyy,#kyz,#kzz,
       !          #kappas,#kappaf,#kappafr,#eta,#mufr for poroelastic

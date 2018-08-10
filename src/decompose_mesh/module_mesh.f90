@@ -361,10 +361,10 @@ contains
           mat_prop(1,num_mat) = rho
           mat_prop(2,num_mat) = vp
           mat_prop(3,num_mat) = vs
-          mat_prop(4,num_mat) = qmu
-          mat_prop(5,num_mat) = aniso_flag
-          mat_prop(6,num_mat) = idomain_id
-          mat_prop(7,num_mat) = qkappa  ! this one is not stored next to qmu for historical reasons, because it was added later
+          mat_prop(4,num_mat) = qkappa
+          mat_prop(5,num_mat) = qmu
+          mat_prop(6,num_mat) = aniso_flag
+          mat_prop(7,num_mat) = idomain_id
 
        else if (idomain_id == 3) then ! material is poroelastic
 
