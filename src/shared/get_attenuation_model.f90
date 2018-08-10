@@ -515,7 +515,9 @@
 
   ! determines the "scale factor"
   call get_attenuation_scale_factor(myrank,f_c_source,tau_eps_kappa,tau_sigma,Q_kappa,factor_scale_kappa,ATTENUATION_f0_REFERENCE)
-  ! print *,'for Q_Kappa,tau_eps_kappa,tau_sigma = ',Q_Kappa,tau_eps_kappa(:),tau_sigma(:)
+  ! uncomment this to print the constants to use in the 3D viscoelastic analytical code for validation purposes
+  ! if (myrank == 0) &
+  !   print *,'for Q_Kappa,tau_eps_kappa,tau_sigma,factor_scale_kappa = ',Q_Kappa,tau_eps_kappa(:),tau_sigma(:),factor_scale_kappa
 
   ! determines tau_eps for Q_mu
   call get_attenuation_tau_eps(Q_mu,tau_sigma,tau_eps,MIN_ATTENUATION_PERIOD,MAX_ATTENUATION_PERIOD)
@@ -525,7 +527,9 @@
 
   ! determines the "scale factor"
   call get_attenuation_scale_factor(myrank,f_c_source,tau_eps,tau_sigma,Q_mu,factor_scale,ATTENUATION_f0_REFERENCE)
-  ! print *,'for Q_mu,tau_eps,tau_sigma = ',Q_mu,tau_eps(:),tau_sigma(:)
+  ! uncomment this to print the constants to use in the 3D viscoelastic analytical code for validation purposes
+  ! if (myrank == 0) &
+  !   print *,'for Q_mu,tau_eps,tau_sigma,factor_scale = ',Q_mu,tau_eps(:),tau_sigma(:),factor_scale
 
   end subroutine get_attenuation_factors
 
@@ -808,7 +812,7 @@
 
   ! Internal
   integer i, iterations, err,prnt
-  double precision f1, f2, exp1,exp2, min_value
+  double precision f1, f2, exp1,exp2, min_value !, dexpval
   integer, parameter :: nf = 100
   double precision, dimension(nf) :: f
   double precision, parameter :: PI = 3.14159265358979d0

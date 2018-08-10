@@ -117,27 +117,30 @@
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
-!  Below are all the variables that need to be obtained from Specfem3D
-!  These default values match the following simulation:
+!  Below are all the variables that need to be used in Specfem3D
+!  to get the default tau_epsilon, tau_sigma and factor_scale values that are hardwired in the code below:
 !
+!  f0_ref = 18 Hz
 !  Vp(f0_ref) = 3297.849 m/s
 !  Vs(f0_ref) = 2222.536 m/s
-!  f0_ref = 18 Hz
 !  QKappa = 10
 !  QMu = 20
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  double precision, parameter :: Mu_unrelaxed    =  1.1493666d+10
-  double precision, parameter :: Kappa_unrelaxed =  8.5806454d+09
+  double precision, parameter :: factor_scale_mu = 1.07941014860970d0
+  double precision, parameter :: factor_scale_kappa = 1.16340515510165d0
 
 ! We use Kappa_ref and Mu_ref to compute the case without attenuation
 ! They are chosen such that Kappa_ref = Kappa(2*pi*f0_ref) when there is attenuation
-  double precision, parameter :: Vp_ref  = 3297.849
-  double precision, parameter :: Vs_ref  = 2222.536
+  double precision, parameter :: Vp_ref  = 3297.849d0
+  double precision, parameter :: Vs_ref  = 2222.536d0
 
   double precision, parameter :: Mu_ref    =  rho * Vs_ref * Vs_ref
-  double precision, parameter :: Kappa_ref =  rho * ( Vp_ref * Vp_ref - 4.d0/3 * Vs_ref * Vs_ref)
+  double precision, parameter :: Kappa_ref =  rho * ( Vp_ref * Vp_ref - 4.d0/3.d0 * Vs_ref * Vs_ref)
+
+  double precision, parameter :: Mu_unrelaxed    =  Mu_ref * factor_scale_mu
+  double precision, parameter :: Kappa_unrelaxed =  Kappa_ref * factor_scale_kappa
 
 ! tau constants mimicking constant QKappa and QMu
   tau_epsilon_kappa = (/ 0.281966668348107d0  ,  3.607809663879578d-002 , 5.638875613224546d-003/)
