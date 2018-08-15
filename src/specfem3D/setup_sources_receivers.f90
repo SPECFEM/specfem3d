@@ -31,8 +31,6 @@
 
   use specfem_par
 
-  use kdtree_search, only: kdtree_delete,kdtree_nodes_location,kdtree_nodes_index
-
   implicit none
 
   ! builds search tree
@@ -56,6 +54,9 @@
   ! write source and receiver VTK files for Paraview
   call setup_sources_receivers_VTKfile()
 
+  ! frees tree memory
+  if (.not. DO_BRUTE_FORCE_POINT_SEARCH) call setup_free_kdtree()
+
   ! user output
   if (myrank == 0) then
     write(IMAIN,*)
@@ -68,15 +69,6 @@
       write(IMAIN,*)
     endif
     call flush_IMAIN()
-  endif
-
-  ! frees tree memory
-  if (.not. DO_BRUTE_FORCE_POINT_SEARCH) then
-    ! deletes tree arrays
-    deallocate(kdtree_nodes_location)
-    deallocate(kdtree_nodes_index)
-    ! deletes search tree nodes
-    call kdtree_delete()
   endif
 
   ! synchronizes processes
@@ -1473,11 +1465,14 @@
 
   use specfem_par
 
-  use kdtree_search, only: kdtree_setup,kdtree_set_verbose,kdtree_delete,kdtree_find_nearest_neighbor, &
+  use kdtree_search, only: kdtree_setup,kdtree_set_verbose, &
     kdtree_num_nodes,kdtree_nodes_location,kdtree_nodes_index
 
   implicit none
   integer :: ier,ispec,iglob
+
+  ! checks if anything to do
+  if (DO_BRUTE_FORCE_POINT_SEARCH) return
 
   ! kdtree search
 
@@ -1527,3 +1522,26 @@
   call synchronize_all()
 
   end subroutine setup_search_kdtree
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine setup_free_kdtree()
+
+  use specfem_par
+  use kdtree_search, only: kdtree_delete,kdtree_nodes_location,kdtree_nodes_index
+
+  implicit none
+
+  ! checks if anything to do
+  if (DO_BRUTE_FORCE_POINT_SEARCH) return
+
+  ! deletes tree arrays
+  deallocate(kdtree_nodes_location)
+  deallocate(kdtree_nodes_index)
+
+  ! deletes search tree nodes
+  call kdtree_delete()
+
+  end subroutine setup_free_kdtree

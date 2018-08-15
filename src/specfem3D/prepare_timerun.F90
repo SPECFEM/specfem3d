@@ -43,6 +43,9 @@
   double precision :: tCPU,tstart
   double precision, external :: wtime
 
+  ! synchonizes
+  call synchronize_all()
+
   ! get MPI starting time
   tstart = wtime()
 
@@ -93,6 +96,9 @@
 
   ! prepars coupling with injection boundary
   call couple_with_injection_prepare_boundary()
+
+  ! synchronize all the processes
+  call synchronize_all()
 
   ! elapsed time since beginning of preparation
   if (myrank == 0) then
@@ -236,6 +242,12 @@
 
   implicit none
 
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) "preparing mass matrices"
+    call flush_IMAIN()
+  endif
+
   ! synchronize all the processes before assembling the mass matrix
   ! to make sure all the nodes have finished to read their databases
   call synchronize_all()
@@ -341,6 +353,9 @@
     rmass_fluid_poroelastic(:) = 1._CUSTOM_REAL / rmass_fluid_poroelastic(:)
   endif
 
+  ! synchonizes
+  call synchronize_all()
+
   end subroutine prepare_timerun_mass_matrices
 
 !
@@ -355,6 +370,11 @@
   use specfem_par
 
   implicit none
+
+  if (myrank == 0) then
+    write(IMAIN,*) "preparing constants"
+    call flush_IMAIN()
+  endif
 
   ! time scheme
   if (.not. USE_LDDRK) then
@@ -378,6 +398,9 @@
     b_deltatover2 = b_deltat/2._CUSTOM_REAL
     b_deltatsqover2 = b_deltat*b_deltat/2._CUSTOM_REAL
   endif
+
+  ! synchonizes
+  call synchronize_all()
 
   end subroutine prepare_timerun_constants
 
@@ -404,6 +427,14 @@
   else
     NGLOB_AB_LDDRK = 1
     NSPEC_ATTENUATION_AB_LDDRK = 1
+  endif
+
+  ! user output
+  if (USE_LDDRK) then
+    if (myrank == 0) then
+      write(IMAIN,*) "preparing LDDRK"
+      call flush_IMAIN()
+    endif
   endif
 
   if (ACOUSTIC_SIMULATION) then
@@ -514,6 +545,9 @@
       stop 'LDDRK has not been implemented for POROELASTIC_SIMULATION'
   endif
 
+  ! synchonizes
+  call synchronize_all()
+
   end subroutine prepare_timerun_lddrk
 
 !
@@ -522,14 +556,22 @@
 
   subroutine prepare_timerun_pml()
 
-  use pml_par
-  use specfem_par, only: myrank,SIMULATION_TYPE,GPU_MODE,UNDO_ATTENUATION_AND_OR_PML
   use constants, only: IMAIN,NGNOD_EIGHT_CORNERS
+  use specfem_par, only: myrank,SIMULATION_TYPE,GPU_MODE,UNDO_ATTENUATION_AND_OR_PML,PML_CONDITIONS
+  use pml_par
 
   implicit none
 
   ! local parameters
   integer :: ispec,ispec_CPML,NSPEC_CPML_GLOBAL
+
+  ! checks if anything to do
+  if (.not. PML_CONDITIONS) return
+
+  if (myrank == 0) then
+    write(IMAIN,*) "preparing CPML"
+    call flush_IMAIN()
+  endif
 
   ! safety stops
   if (SIMULATION_TYPE /= 1 .and. .not. UNDO_ATTENUATION_AND_OR_PML) &
@@ -603,6 +645,9 @@
 
   enddo
 
+  ! synchonizes
+  call synchronize_all()
+
   end subroutine prepare_timerun_pml
 
 !
@@ -623,6 +668,13 @@
   ! local parameters
   integer :: ier
   integer(kind=8) :: filesize
+
+  if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
+    if (myrank == 0) then
+      write(IMAIN,*) "preparing adjoint fields"
+      call flush_IMAIN()
+    endif
+  endif
 
   ! moment tensor derivatives
   if (nrec_local > 0 .and. SIMULATION_TYPE == 2) then
@@ -935,6 +987,9 @@
     endif
   endif
 
+  ! synchonizes
+  call synchronize_all()
+
   end subroutine prepare_timerun_adjoint
 
 !
@@ -957,6 +1012,11 @@
   integer :: ier
   integer :: NUM_THREADS
   integer :: OMP_GET_MAX_THREADS
+
+  if (myrank == 0) then
+    write(IMAIN,*) "preparing OpenMP"
+    call flush_IMAIN()
+  endif
 
   ! safety stop
   print *
@@ -1041,6 +1101,9 @@
     endif
 
   endif
+
+  ! synchonizes
+  call synchronize_all()
 
   end subroutine prepare_timerun_OpenMP
 #endif

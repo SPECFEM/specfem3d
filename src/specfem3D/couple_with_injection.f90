@@ -199,6 +199,11 @@
 
   if (COUPLE_WITH_INJECTION_TECHNIQUE .and. SIMULATION_TYPE == 1) then
 
+    if (myrank == 0) then
+      write(IMAIN,*) "preparing injection boundary"
+      call flush_IMAIN()
+    endif
+
     ! FK boundary
     if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_FK) then
 

@@ -49,6 +49,7 @@
   call sum_all_i(count(ispec_is_poroelastic(:)),inum)
   if (myrank == 0) then
     write(IMAIN,*) 'total poroelastic elements :',inum
+    write(IMAIN,*)
     call flush_IMAIN()
   endif
 
@@ -91,10 +92,12 @@
 
   ! user output
   if (myrank == 0) then
+    write(IMAIN,*)
     write(IMAIN,*) '******************************************'
     write(IMAIN,*) 'There is a total of ',NPROC,' slices'
     write(IMAIN,*) '******************************************'
     write(IMAIN,*)
+    call flush_IMAIN()
   endif
 
   ! set up GLL points, weights and derivation matrices for reference element (between -1,1)

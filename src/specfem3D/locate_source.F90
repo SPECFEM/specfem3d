@@ -65,13 +65,8 @@
   real(kind=CUSTOM_REAL), dimension(NSTEP_STF,NSOURCES_STF) :: user_source_time_function
 
   ! local parameters
-  integer :: isource
-  double precision :: final_distance(NSOURCES)
-  double precision, dimension(NSOURCES) :: x_target,y_target,z_target
-  ! timer MPI
-  double precision :: tstart,tCPU
-  double precision, external :: wtime
   ! sources
+  integer :: isource
   double precision :: f0,t0_ricker
   ! CMTs
   double precision, dimension(NSOURCES) :: lat,long,depth
@@ -79,13 +74,15 @@
   ! positioning
   double precision, dimension(NSOURCES) :: x_found,y_found,z_found
   double precision, dimension(NSOURCES) :: elevation
-
+  double precision, dimension(NSOURCES) :: final_distance
+  double precision, dimension(NSOURCES) :: x_target,y_target,z_target
   integer, dimension(NSOURCES) :: idomain
 
   double precision, external :: get_cmt_scalar_moment
   double precision, external :: get_cmt_moment_magnitude
 
   ! location search
+  integer :: ispec_found,idomain_found
   real(kind=CUSTOM_REAL) :: distance_min_glob,distance_max_glob
   real(kind=CUSTOM_REAL) :: elemsize_min_glob,elemsize_max_glob
   real(kind=CUSTOM_REAL) :: x_min_glob,x_max_glob
@@ -95,15 +92,18 @@
   double precision :: x,y,z,x_new,y_new,z_new
   double precision :: xi,eta,gamma,final_distance_squared
   double precision, dimension(NDIM,NDIM) :: nu_found
-  integer :: ispec_found,idomain_found
 
   ! subset arrays
+  integer :: nsources_subset_current_size,isource_in_this_subset,isources_already_done
+  integer, dimension(NSOURCES_SUBSET_MAX) :: ispec_selected_source_subset,idomain_subset
   double precision, dimension(NSOURCES_SUBSET_MAX) :: xi_source_subset,eta_source_subset,gamma_source_subset
   double precision, dimension(NSOURCES_SUBSET_MAX) :: x_found_subset,y_found_subset,z_found_subset
   double precision, dimension(NSOURCES_SUBSET_MAX) :: final_distance_subset
   double precision, dimension(NDIM,NDIM,NSOURCES_SUBSET_MAX) :: nu_subset
-  integer, dimension(NSOURCES_SUBSET_MAX) :: ispec_selected_source_subset,idomain_subset
-  integer :: nsources_subset_current_size,isource_in_this_subset,isources_already_done
+
+  ! timer MPI
+  double precision :: tstart,tCPU
+  double precision, external :: wtime
 
   !-----------------------------------------------------------------------------------
 
@@ -183,6 +183,8 @@
       write(IMAIN,*) 'using sources/receivers Z:'
       write(IMAIN,*) '  (depth) becomes directly (z) coordinate'
     endif
+    write(IMAIN,*)
+    call flush_IMAIN()
   endif
 
   ! determines target point locations (need to locate z coordinate of all sources)
@@ -195,6 +197,8 @@
   endif
   call get_elevation_and_z_coordinate_all(NSOURCES,long,lat,depth,utm_x_source,utm_y_source,elevation, &
                                           x_target,y_target,z_target)
+  !debug
+  !print*,'source elevations:',elevation
 
   !
   ! r -> z, theta -> -y, phi -> x
@@ -514,8 +518,9 @@
       endif
 
       ! checks source domain
-      if (idomain(isource) /= IDOMAIN_ACOUSTIC .and. idomain(isource) /= IDOMAIN_ELASTIC .and. &
-         idomain(isource) /= IDOMAIN_POROELASTIC) then
+      if (idomain(isource) /= IDOMAIN_ACOUSTIC .and. &
+          idomain(isource) /= IDOMAIN_ELASTIC .and. &
+          idomain(isource) /= IDOMAIN_POROELASTIC) then
         call exit_MPI(myrank,'source located in unknown domain')
       endif
 

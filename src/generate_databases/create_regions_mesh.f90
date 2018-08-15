@@ -83,6 +83,7 @@
 ! and GLL-point locations in xstore,ystore,zstore
   call synchronize_all()
   if (myrank == 0) then
+    write(IMAIN,*)
     write(IMAIN,*) '  ...setting up jacobian '
     call flush_IMAIN()
   endif
@@ -99,6 +100,7 @@
 ! creates ibool index array for projection from local to global points
   call synchronize_all()
   if (myrank == 0) then
+    write(IMAIN,*)
     write(IMAIN,*) '  ...indexing global points'
     call flush_IMAIN()
   endif
@@ -116,7 +118,8 @@
     ! recalculate *store with faults closed
     call synchronize_all()
     if (myrank == 0) then
-      write(IMAIN,*) '  ... resetting up jacobian in fault domains'
+      write(IMAIN,*)
+      write(IMAIN,*) '  ...resetting up jacobian in fault domains'
       call flush_IMAIN()
     endif
     if (ANY_FAULT_IN_THIS_PROC) then
@@ -136,6 +139,7 @@
 ! sets up MPI interfaces between partitions
   call synchronize_all()
   if (myrank == 0) then
+    write(IMAIN,*)
     write(IMAIN,*) '  ...preparing MPI interfaces '
     call flush_IMAIN()
   endif
@@ -159,6 +163,7 @@
 ! sets up absorbing/free surface boundaries
   call synchronize_all()
   if (myrank == 0) then
+    write(IMAIN,*)
     write(IMAIN,*) '  ...setting up absorbing boundaries'
     call flush_IMAIN()
   endif
@@ -173,6 +178,7 @@
 ! sets up mesh surface
   call synchronize_all()
   if (myrank == 0) then
+    write(IMAIN,*)
     write(IMAIN,*) '  ...setting up mesh surface'
     call flush_IMAIN()
   endif
@@ -182,6 +188,7 @@
   if (SAVE_MOHO_MESH) then
     call synchronize_all()
     if (myrank == 0) then
+      write(IMAIN,*)
       write(IMAIN,*) '  ...setting up Moho surface'
       call flush_IMAIN()
     endif
@@ -193,6 +200,7 @@
 ! sets material velocities
   call synchronize_all()
   if (myrank == 0) then
+    write(IMAIN,*)
     write(IMAIN,*) '  ...determining velocity model'
     call flush_IMAIN()
   endif
@@ -201,6 +209,7 @@
 ! sets up acoustic-elastic-poroelastic coupling surfaces
   call synchronize_all()
   if (myrank == 0) then
+    write(IMAIN,*)
     write(IMAIN,*) '  ...detecting acoustic-elastic-poroelastic surfaces '
     call flush_IMAIN()
   endif
@@ -213,6 +222,7 @@
 ! locates inner and outer elements
   call synchronize_all()
   if (myrank == 0) then
+    write(IMAIN,*)
     write(IMAIN,*) '  ...element inner/outer separation '
     call flush_IMAIN()
   endif
@@ -224,6 +234,7 @@
 ! colors mesh if requested
   call synchronize_all()
   if (myrank == 0) then
+    write(IMAIN,*)
     write(IMAIN,*) '  ...element mesh coloring '
     call flush_IMAIN()
   endif
@@ -232,6 +243,7 @@
 ! overwrites material parameters from external binary files
   call synchronize_all()
   if (myrank == 0) then
+    write(IMAIN,*)
     write(IMAIN,*) '  ...external binary models '
     call flush_IMAIN()
   endif
@@ -241,6 +253,7 @@
   if (PML_CONDITIONS) then
     call synchronize_all()
     if (myrank == 0) then
+      write(IMAIN,*)
       write(IMAIN,*) '  ...creating C-PML damping profiles '
       call flush_IMAIN()
     endif
@@ -250,6 +263,7 @@
 ! creates mass matrix
   call synchronize_all()
   if (myrank == 0) then
+    write(IMAIN,*)
     write(IMAIN,*) '  ...creating mass matrix '
     call flush_IMAIN()
   endif
@@ -258,6 +272,7 @@
 ! saves the binary mesh files
   call synchronize_all()
   if (myrank == 0) then
+    write(IMAIN,*)
     write(IMAIN,*) '  ...saving databases'
     call flush_IMAIN()
   endif
@@ -280,6 +295,7 @@
   if (ANY_FAULT) then
     call synchronize_all()
     if (myrank == 0) then
+      write(IMAIN,*)
       write(IMAIN,*) '  ...saving fault databases'
       call flush_IMAIN()
     endif
@@ -291,6 +307,7 @@
   if (SAVE_MOHO_MESH) then
     call synchronize_all()
     if (myrank == 0) then
+      write(IMAIN,*)
       write(IMAIN,*) '  ...saving Moho surfaces'
       call flush_IMAIN()
     endif
@@ -306,6 +323,7 @@
 ! checks the mesh, stability and resolved period
   call synchronize_all()
   if (myrank == 0) then
+    write(IMAIN,*)
     write(IMAIN,*) '  ...checking mesh resolution'
     call flush_IMAIN()
   endif
@@ -329,6 +347,7 @@
   if (ATTENUATION) then
     call synchronize_all()
     if (myrank == 0) then
+      write(IMAIN,*)
       write(IMAIN,*) '  ...saving attenuation databases'
       call flush_IMAIN()
     endif
@@ -1208,7 +1227,7 @@ subroutine crm_ext_setup_indexing(ibool, &
 
   enddo ! ispec2D
 
-  ! note: surface e.g. could be at the free-surface and have no top elements etc...
+  ! note: surface e.g. could be at the free-surface and have no top elements etc.
   ! user output
   call sum_all_i( imoho_top, imoho_top_all )
   call sum_all_i( imoho_bot, imoho_bot_all )

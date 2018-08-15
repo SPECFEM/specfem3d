@@ -44,6 +44,12 @@
   ! for noise simulations
   if (NOISE_TOMOGRAPHY /= 0) then
 
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) "preparing noise arrays"
+      call flush_IMAIN()
+    endif
+
     ! checks if free surface is defined
     if (num_free_surface_faces == 0) then
       write(*,*) myrank, " doesn't have a free_surface_face"
@@ -95,5 +101,8 @@
                                 LOCAL_PATH, &
                                 num_free_surface_faces,NSTEP)
   endif
+
+  ! synchonizes
+  call synchronize_all()
 
   end subroutine prepare_noise

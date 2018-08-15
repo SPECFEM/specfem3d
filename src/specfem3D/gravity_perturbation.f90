@@ -79,7 +79,6 @@ subroutine gravity_init()
   if (ier /= 0) then
     ! user output
     if (myrank == 0) then
-      write(IMAIN,*)
       write(IMAIN,*) '  no gravity simulation'
       write(IMAIN,*)
     endif
@@ -93,8 +92,7 @@ subroutine gravity_init()
 
   ! user output
   if (myrank == 0) then
-    write(IMAIN,*)
-    write(IMAIN,*) 'incorporating gravity simulation'
+    write(IMAIN,*) '  incorporating gravity simulation'
     write(IMAIN,*) '    gravity stations: ',nstat
     write(IMAIN,*)
   endif

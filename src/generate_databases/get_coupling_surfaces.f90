@@ -114,6 +114,8 @@
   call sum_all_i(count_poroelastic,inum)
   if (myrank == 0) then
     write(IMAIN,*) '     total poroelastic elements:',inum
+    write(IMAIN,*)
+    call flush_IMAIN()
   endif
 
   ! collects contributions from different MPI partitions

@@ -52,6 +52,9 @@
   real(kind=CUSTOM_REAL) :: xloc,yloc,loc_ele,loc_distmin
   integer :: iproc,ier
 
+  !debug
+  !print*,'get elevation: ',npoints
+
   ! determine x/y from lat/lon
   do ipoin = 1, npoints
     ! convert station location to UTM

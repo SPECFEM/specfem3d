@@ -50,6 +50,12 @@
   integer :: nspl_gravity !int_radius
   integer :: i,j,k,iglob,ier
 
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) "preparing gravity"
+    call flush_IMAIN()
+  endif
+
   ! for gravity perturbation calculations
   ! sets up arrays for gravity field
   call gravity_init()
@@ -133,6 +139,9 @@
     endif
     call compute_gravity_integrals()
   endif
+
+  ! synchonizes
+  call synchronize_all()
 
   end subroutine prepare_gravity
 

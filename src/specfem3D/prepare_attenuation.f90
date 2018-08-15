@@ -49,6 +49,12 @@
   ! checks if attenuation is on and anything to do
   if (.not. ATTENUATION) return
 
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) "preparing attenuation"
+    call flush_IMAIN()
+  endif
+
   ! if attenuation is on, shift shear moduli to center frequency of absorption period band, i.e.
   ! rescale mu to average (central) frequency for attenuation
 
@@ -160,5 +166,8 @@
     R_xz(:,:,:,:,:) = VERYSMALLVAL
     R_yz(:,:,:,:,:) = VERYSMALLVAL
   endif
+
+  ! synchonizes
+  call synchronize_all()
 
   end subroutine prepare_attenuation

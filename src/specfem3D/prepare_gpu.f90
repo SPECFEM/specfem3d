@@ -45,12 +45,13 @@
   ! checks if anything to do
   if (.not. GPU_MODE) return
 
-  ! GPU_MODE now defined in Par_file
+  ! user output
+  call synchronize_all()
   if (myrank == 0) then
-    write(IMAIN,*)
-    write(IMAIN,*) "GPU Preparing Fields and Constants on Device."
+    write(IMAIN,*) "preparing fields and constants on GPU devices"
     call flush_IMAIN()
   endif
+  call synchronize_all()
 
   ! evaluates memory required
   call memory_eval_gpu()

@@ -38,15 +38,15 @@
 
   implicit none
 
-  integer :: NSPEC_AB,NGLOB_AB
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: kappastore,mustore,rho_vp,rho_vs
-  real(kind=CUSTOM_REAL), dimension(NGLOB_AB) :: xstore,ystore,zstore
-  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB) :: ibool
-  double precision :: DT
-  real(kind=CUSTOM_REAL) :: model_speed_max,min_resolved_period
+  integer,intent(in) :: NSPEC_AB,NGLOB_AB
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: kappastore,mustore,rho_vp,rho_vs
+  real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(in) :: xstore,ystore,zstore
+  integer, dimension(NGLLX,NGLLY,NGLLZ,NSPEC_AB),intent(in) :: ibool
+  double precision,intent(in) :: DT
+  real(kind=CUSTOM_REAL),intent(inout) :: model_speed_max,min_resolved_period
 
-  character(len=MAX_STRING_LEN) :: LOCAL_PATH
-  logical :: SAVE_MESH_FILES
+  character(len=MAX_STRING_LEN),intent(in) :: LOCAL_PATH
+  logical,intent(in) :: SAVE_MESH_FILES
 
   ! local parameters
   real(kind=CUSTOM_REAL) :: vpmin,vpmax,vsmin,vsmax,vpmin_glob,vpmax_glob,vsmin_glob,vsmax_glob
@@ -88,6 +88,12 @@
   ! timing
   double precision, external :: wtime
   double precision :: time_start,tCPU
+
+! note: this routine can take a long time for large meshes...
+  if (myrank == 0) then
+    write(IMAIN,*) "Mesh resolution:"
+    call flush_IMAIN()
+  endif
 
   ! timing gets MPI starting time
   time_start = wtime()
@@ -533,6 +539,12 @@
   ! timing
   double precision, external :: wtime
   double precision :: time_start,tCPU
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) "Mesh resolution: (w/ poroelastic elements)"
+    call flush_IMAIN()
+  endif
 
   ! timing gets MPI starting time
   time_start = wtime()

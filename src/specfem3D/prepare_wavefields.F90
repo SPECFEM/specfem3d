@@ -36,6 +36,11 @@
 
   implicit none
 
+  if (myrank == 0) then
+    write(IMAIN,*) "preparing wavefields"
+    call flush_IMAIN()
+  endif
+
   ! initialize acoustic arrays to zero
   if (ACOUSTIC_SIMULATION) then
     potential_acoustic(:) = 0._CUSTOM_REAL
@@ -66,6 +71,9 @@
     if (FIX_UNDERFLOW_PROBLEM) displs_poroelastic(:,:) = VERYSMALLVAL
     if (FIX_UNDERFLOW_PROBLEM) displw_poroelastic(:,:) = VERYSMALLVAL
   endif
+
+  ! synchonizes
+  call synchronize_all()
 
   end subroutine prepare_wavefields
 
