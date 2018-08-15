@@ -198,7 +198,7 @@
   call get_elevation_and_z_coordinate_all(NSOURCES,long,lat,depth,utm_x_source,utm_y_source,elevation, &
                                           x_target,y_target,z_target)
   !debug
-  !print*,'source elevations:',elevation
+  !print *,'source elevations:',elevation
 
   !
   ! r -> z, theta -> -y, phi -> x
