@@ -49,6 +49,7 @@
   double precision,                      intent(in)     :: x_target, y_target, z_target
   logical,                               intent(in)     :: POINT_CAN_BE_BURIED
   real(kind=CUSTOM_REAL),                intent(in)     :: elemsize_max_glob
+
   double precision,                      intent(out)    :: x_found,  y_found,  z_found
   double precision,                      intent(out)    :: xi_found, eta_found, gamma_found
   integer,                               intent(out)    :: ispec_selected, domain
@@ -69,19 +70,20 @@
   double precision, dimension(NGNOD)                    :: xelm,yelm,zelm
   integer                                               :: ia,iax,iay,iaz
   integer                                               :: ix_initial_guess, iy_initial_guess, iz_initial_guess
-  integer, dimension(NGNOD)                             :: iaddx,iaddy,iaddz
   integer                                               :: imin,imax,jmin,jmax,kmin,kmax
+  integer, dimension(NGNOD)                             :: iaddx,iaddy,iaddz
 
   double precision :: final_distance_squared_this_element
 
 !! DK DK dec 2017: also loop on all the elements in contact with the initial guess element to improve accuracy of estimate
-  logical, dimension(NGLOB_AB) :: flag_topological
+  logical, dimension(:),allocatable :: flag_topological    ! making array allocatable, otherwise will crash for large meshes
   integer :: number_of_mesh_elements_for_the_initial_guess
   logical :: use_adjacent_elements_search
 
 ! dynamic array
 !  integer, dimension(:), allocatable :: array_of_all_elements_of_ispec_selected
 !  logical, parameter :: USE_SINGLE_PASS = .false.
+!
 ! static array, max size is 50 (typically found around 18 to 24 elements)
   integer, dimension(50) :: array_of_all_elements_of_ispec_selected   ! 15% faster
   logical, parameter :: USE_SINGLE_PASS = .true.
@@ -93,6 +95,9 @@
   ! search elements
   integer :: ielem,num_elem_local,ier,ispec_nearest
   logical :: use_brute_force_search
+
+  !debug
+  !print *,'locate point in mesh: ',x_target, y_target, z_target
 
   ! sets maximal element size for search
   ! use 10 times the distance as a criterion for source detection
@@ -126,9 +131,13 @@
     xyz_target(2) = y_target
     xyz_target(3) = z_target
 
+    !debug
+    !print *,'find nearest neighbor',xyz_target
+
     ! finds closest element in slice
     call kdtree_find_nearest_neighbor(xyz_target,ispec_nearest,dist_nearest)
-    ! debug
+
+    !debug
     !print *,'closest element',ispec_nearest,'distance = ',dist_nearest
 
     ! single element for first detection loop
@@ -296,6 +305,8 @@
     endif
 
     ! flagging corners
+    allocate(flag_topological(NGLOB_AB),stat=ier)
+    if (ier /= 0) stop 'Error allocating flag_topological array'
     flag_topological(:) = .false.
 
     ! mark the eight corners of the initial guess element
@@ -431,6 +442,8 @@
         kdtree_search_num_nodes = 0
       endif
     endif
+
+    deallocate(flag_topological)
 
   else
     ! no need for adjacent element, only loop within initial guess
