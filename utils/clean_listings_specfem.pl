@@ -230,6 +230,10 @@ foreach $name (@objects) {
       $line =~ s#>\s*&#>&#ogi;
       $line =~ s#<\s*&#<&#ogi;
 
+# also restore xml-formatting strings '< and >'
+      $line =~ s#\'\s*<\s*#\'<#ogi;
+      $line =~ s#\s*>\s*\'#>\'#ogi;
+
 # also restore -> and <- that may be used in comments; do this in comments only
 # otherwise comparisons with negative numbers in source code may be affected (e.g. if (a < -100.) then...)
       if($first_letter eq '!') {
