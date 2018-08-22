@@ -350,7 +350,7 @@ if (myrank == 0) then
         endif
         call mpi_bcast(tmpsngl,36*nsta_global,MPI_COMPLEX,0,MPI_COMM_WORLD,ierr)
         stresssngl(1:6,1:6,1:nsta,i)=stresssngl(1:6,1:6,1:nsta,i)+tmpsngl(1:6,1:6,istamin:istamax)
-        !write(100,*) '                suite >'
+        !write(100,*) '                suite>'
         !write(100,*) i,stresssngl(1:6,1:6,1,i)
         !close(1)
 !! VM VM only one file
