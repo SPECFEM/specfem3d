@@ -305,17 +305,12 @@
     call exit_mpi(myrank,'SIMULATION_TYPE can only be 1, 2, or 3')
 
   ! gravity only on GPU supported
-  if (.not. GPU_MODE .and. GRAVITY) &
-    stop 'GRAVITY only supported in GPU mode'
+  if (.not. GPU_MODE .and. GRAVITY) stop 'GRAVITY only supported in GPU mode'
+
+  if (NGLLX /= NGLLY .or. NGLLY /= NGLLZ) stop 'Methods that can handle unstructured meshes require NGLLX = NGLLY = NGLLZ'
 
   ! absorbing surfaces
   if (STACEY_ABSORBING_CONDITIONS) then
-    ! for arbitrary orientation of elements, which face belongs to xmin,xmax,etc... -
-    ! does it makes sense to have different NGLLX,NGLLY,NGLLZ?
-    ! there is a problem with absorbing boundaries for faces with different NGLLX,NGLLY,NGLLZ values
-    ! just to be sure for now..
-    if (NGLLX /= NGLLY .and. NGLLY /= NGLLZ) &
-      stop 'STACEY_ABSORBING_CONDITIONS must have NGLLX = NGLLY = NGLLZ'
     if (PML_CONDITIONS) then
       print *, 'please modify Par_file and recompile solver'
       stop 'STACEY_ABSORBING_CONDITIONS and PML_CONDITIONS are both set to .true.'
@@ -486,9 +481,6 @@
     write(IMAIN,*) "GPU_MODE Active."
     call flush_IMAIN()
   endif
-
-  ! check for GPU runs
-  if (NGLLX /= 5 .or. NGLLY /= 5 .or. NGLLZ /= 5) stop 'GPU mode can only be used if NGLLX == NGLLY == NGLLZ == 5'
 
   if (CUSTOM_REAL /= 4) stop 'GPU mode runs only with CUSTOM_REAL == 4'
 
