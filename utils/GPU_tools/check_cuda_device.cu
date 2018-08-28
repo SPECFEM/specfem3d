@@ -260,16 +260,19 @@ e.g., on titan enable environment CRAY_CUDA_MPS=1 to use a single GPU with multi
     printf("\n\nGPU device id: %d\n\n",i);
 
     // display device properties
-    printf("Device Name = %s\n",deviceProp.name);
+    printf("Device Name = %s\n\n",deviceProp.name);
     printf("memory:\n");
-    printf("  totalGlobalMem (in MB): %f\n",(unsigned long) deviceProp.totalGlobalMem / (1024.f * 1024.f));
-    printf("  totalGlobalMem (in GB): %f\n",(unsigned long) deviceProp.totalGlobalMem / (1024.f * 1024.f * 1024.f));
-    printf("  sharedMemPerBlock (in bytes): %lu\n",(unsigned long) deviceProp.sharedMemPerBlock);
+    printf("  totalGlobalMem (in MB, dividing by powers of 1024): %f\n",(unsigned long) deviceProp.totalGlobalMem / (1024.f * 1024.f));
+    printf("  totalGlobalMem (in GB, dividing by powers of 1024): %f\n\n",(unsigned long) deviceProp.totalGlobalMem / (1024.f * 1024.f * 1024.f));
+    printf("  totalGlobalMem (in MB, dividing by powers of 1000): %f\n",(unsigned long) deviceProp.totalGlobalMem / (1000.f * 1000.f));
+    printf("  totalGlobalMem (in GB, dividing by powers of 1000): %f\n\n",(unsigned long) deviceProp.totalGlobalMem / (1000.f * 1000.f * 1000.f));
+    printf("  sharedMemPerBlock (in bytes): %lu\n\n",(unsigned long) deviceProp.sharedMemPerBlock);
     printf("blocks:\n");
+    printf("  Maximum number of registers per block: %d\n",deviceProp.regsPerBlock);
     printf("  Maximum number of threads per block: %d\n",deviceProp.maxThreadsPerBlock);
     printf("  Maximum size of each dimension of a block: %d x %d x %d\n",
             deviceProp.maxThreadsDim[0],deviceProp.maxThreadsDim[1],deviceProp.maxThreadsDim[2]);
-    printf("  Maximum sizes of each dimension of a grid: %d x %d x %d\n",
+    printf("  Maximum sizes of each dimension of a grid: %d x %d x %d\n\n",
             deviceProp.maxGridSize[0],deviceProp.maxGridSize[1],deviceProp.maxGridSize[2]);
     printf("features:\n");
     printf("  Compute capability of the device = %d.%d\n", deviceProp.major, deviceProp.minor);
@@ -290,8 +293,10 @@ e.g., on titan enable environment CRAY_CUDA_MPS=1 to use a single GPU with multi
     // outputs initial memory infos via cudaMemGetInfo()
     double free_db,used_db,total_db;
     get_free_memory(&free_db,&used_db,&total_db);
-    printf("\n%d: GPU memory usage: used = %f MB, free = %f MB, total = %f MB\n\n",myrank,
+    printf("\n%d: GPU memory usage (dividing by powers of 1024): used = %f MB, free = %f MB, total = %f MB\n\n",myrank,
             used_db/1024.0/1024.0, free_db/1024.0/1024.0, total_db/1024.0/1024.0);
+    printf("\n%d: GPU memory usage (dividing by powers of 1000): used = %f MB, free = %f MB, total = %f MB\n\n",myrank,
+            used_db/1000.0/1000.0, free_db/1000.0/1000.0, total_db/1000.0/1000.0);
 
     // ordering mpi output
 #ifdef WITH_MPI
