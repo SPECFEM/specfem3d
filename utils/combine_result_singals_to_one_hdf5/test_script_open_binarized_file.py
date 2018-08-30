@@ -1,18 +1,18 @@
 import h5py
 
 def open_bin(fname, id_signal):
-
+        
     # read h5
     data = h5py.File(fname, 'r')['time_pressure']
-    print(data)
+    print(data) 
 
-    # time
+    # time 
     t = data[0,:,id_signal]
 
     # amplitude of first signal (the first .semp file put on the signal list file)
     amp = data[1,:,id_signal]
-
-    print("length of time array: ",len(t), "length of amplitude array: ", len(amp))
+    
+    print("length of time array: ",len(t), "length of amplitude array: ", len(amp))   
 
 def main():
 
