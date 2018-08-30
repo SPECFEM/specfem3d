@@ -1,0 +1,5 @@
+./test_signals/group_0.S0.FXP.semp
+./test_signals/group_0.S1.FXP.semp
+./test_signals/group_0.S2.FXP.semp
+./test_signals/group_0.S3.FXP.semp
+./test_signals/group_0.S4.FXP.semp
