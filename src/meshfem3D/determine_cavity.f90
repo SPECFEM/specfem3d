@@ -120,8 +120,18 @@
 
     ! reads in cavity dimensions
     if (ncavity > 0) then
-      allocate(cavity_x0(ncavity),cavity_x1(ncavity),cavity_y0(ncavity), &
-               cavity_y1(ncavity),cavity_z0(ncavity),cavity_z1(ncavity))
+      allocate(cavity_x0(ncavity),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1321')
+      allocate(cavity_x1(ncavity),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1322')
+      allocate(cavity_y0(ncavity),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1323')
+      allocate(cavity_y1(ncavity),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1324')
+      allocate(cavity_z0(ncavity),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1325')
+      allocate(cavity_z1(ncavity),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1326')
       cavity_x0=HUGEVAL; cavity_x1=HUGEVAL
       cavity_y0=HUGEVAL; cavity_y1=HUGEVAL
       cavity_z0=HUGEVAL; cavity_z1=HUGEVAL
@@ -156,6 +166,7 @@
     endif
 
     allocate(is_elmt(nspec),is_node(nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1327')
     if (ier /= 0) stop 'Error allocating is_elmt, is_node arrays'
 
     is_elmt(:) = .true.
@@ -233,6 +244,7 @@ cavity: do i_cavity = 1,ncavity
       ! note: index (0,*) == 1 indicates a boundary point
       !       and there can be 4 boundaries maximum for each element: xi-min, xi-max, eta-min, eta-max side
       allocate(cavity_boundary(0:3,4*num_cav_total),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1328')
       if (ier /= 0) stop 'Error allocating cavity_boundary arrays'
       cavity_boundary(:,:) = 0.0
 
@@ -340,9 +352,11 @@ cavity: do i_cavity = 1,ncavity
 
       ! collects on master processes
       if (myrank == 0) then
-        allocate(tmp_all(4,num_cav_total*4))
+        allocate(tmp_all(4,num_cav_total*4),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1329')
       else
-        allocate(tmp_all(1,1))
+        allocate(tmp_all(1,1),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1330')
       endif
       call sum_all_1Darray_dp(cavity_boundary,tmp_all,size(cavity_boundary))
       if (myrank == 0) then
@@ -458,6 +472,7 @@ cavity: do i_cavity = 1,ncavity
 
     ! allocates new mesh arrays
     allocate(ispec_new(nspec_old),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1331')
     if (ier /= 0) stop 'Error allocating ispec_new array'
 
     ispec_new(:) = -1
@@ -471,7 +486,8 @@ cavity: do i_cavity = 1,ncavity
     enddo
     if (ispec_new_mesh /= nspec) call exit_MPI(myrank,'ERROR: new number of spectral elements mismatch!')
 
-    allocate(inode_new(nglob_old))
+    allocate(inode_new(nglob_old),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1332')
     inode_new(:) = -1
 
     inode_new_mesh = 0
@@ -484,11 +500,18 @@ cavity: do i_cavity = 1,ncavity
     if (inode_new_mesh /= nglob) call exit_MPI(myrank,'ERROR: new number of spectral elements mismatch!')
 
     ! old mesh arrays
-    allocate(nodes_coords_old(nglob_old,3), &
-             ispec_material_id_old(nspec_old), &
-             ibool_old(NGLLX_M,NGLLY_M,NGLLZ_M,nspec_old), &
-             iboun_old(6,nspec_old), &
-             iMPIcut_xi_old(2,nspec_old),iMPIcut_eta_old(2,nspec_old),stat=ier)
+    allocate(nodes_coords_old(nglob_old,3),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1333')
+    allocate(ispec_material_id_old(nspec_old),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1334')
+    allocate(ibool_old(NGLLX_M,NGLLY_M,NGLLZ_M,nspec_old),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1335')
+    allocate(iboun_old(6,nspec_old),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1336')
+    allocate(iMPIcut_xi_old(2,nspec_old),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1337')
+    allocate(iMPIcut_eta_old(2,nspec_old),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1338')
     if (ier /= 0 ) stop 'Error allocating old mesh arrays for cavity'
 
     nodes_coords_old(:,:) = nodes_coords(:,:)
@@ -505,11 +528,18 @@ cavity: do i_cavity = 1,ncavity
     deallocate(iMPIcut_xi,iMPIcut_eta)
 
     ! re-allocates new mesh arrays
-    allocate(nodes_coords(nglob,3), &
-             ispec_material_id(nspec), &
-             ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec), &
-             iboun(6,nspec), &
-             iMPIcut_xi(2,nspec),iMPIcut_eta(2,nspec),stat=ier)
+    allocate(nodes_coords(nglob,3),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1339')
+    allocate(ispec_material_id(nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1340')
+    allocate(ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1341')
+    allocate(iboun(6,nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1342')
+    allocate(iMPIcut_xi(2,nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1343')
+    allocate(iMPIcut_eta(2,nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1344')
     if (ier /= 0 ) stop 'Error allocating updated mesh arrays for cavity'
 
     ! new specs

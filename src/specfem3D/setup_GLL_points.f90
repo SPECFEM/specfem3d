@@ -61,8 +61,10 @@
                                LOCAL_PATH,SAVE_MESH_FILES)
 
   else if (POROELASTIC_SIMULATION) then
-    allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2421')
+    allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2422')
     rho_vp = 0.0_CUSTOM_REAL
     rho_vs = 0.0_CUSTOM_REAL
     call check_mesh_resolution_poro(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
@@ -72,8 +74,10 @@
     deallocate(rho_vp,rho_vs)
   else if (ACOUSTIC_SIMULATION) then
     allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2423')
     if (ier /= 0) stop 'error allocating array rho_vp'
     allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2424')
     if (ier /= 0) stop 'error allocating array rho_vs'
     rho_vp = sqrt( kappastore / rhostore ) * rhostore
     rho_vs = 0.0_CUSTOM_REAL
@@ -122,12 +126,18 @@
   enddo
 
   ! allocate 1-D Lagrange interpolators and derivatives
-  allocate(hxir(NGLLX), &
-           hpxir(NGLLX), &
-           hetar(NGLLY), &
-           hpetar(NGLLY), &
-           hgammar(NGLLZ), &
-           hpgammar(NGLLZ),stat=ier)
+  allocate(hxir(NGLLX),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2425')
+  allocate(hpxir(NGLLX),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2426')
+  allocate(hetar(NGLLY),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2427')
+  allocate(hpetar(NGLLY),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2428')
+  allocate(hgammar(NGLLZ),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2429')
+  allocate(hpgammar(NGLLZ),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2430')
   if (ier /= 0) stop 'error allocating arrays for interpolators'
 
   ! create name of database

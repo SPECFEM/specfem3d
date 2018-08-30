@@ -164,7 +164,8 @@ contains
 
   read(IIN_BIN) nbfaults ! should be the same as in IIN_PAR
   Nfaults = nbfaults
-  allocate( faults(nbfaults) )
+  allocate( faults(nbfaults) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1361')
   dt = real(DTglobal)
   read(IIN_PAR,nml=RUPTURE_SWITCHES,end=110,iostat=ier)
   if (ier /= 0) write(*,*) 'RUPTURE_SWITCHES not found in Par_file_faults'
@@ -183,7 +184,8 @@ contains
   endif
   read(IIN_BIN) size_Kelvin_Voigt
   if (size_Kelvin_Voigt > 0) then
-    allocate(Kelvin_Voigt_eta(size_Kelvin_Voigt))
+    allocate(Kelvin_Voigt_eta(size_Kelvin_Voigt),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1362')
     read(IIN_BIN) Kelvin_Voigt_eta
   endif
   close(IIN_BIN)
@@ -237,7 +239,7 @@ contains
   integer, intent(in) :: myrank
 
   real(kind=CUSTOM_REAL) :: S1,S2,S3,Sigma(6)
-  integer :: n1,n2,n3
+  integer :: n1,n2,n3,ier
   logical :: LOAD_STRESSDROP = .false.
 
   NAMELIST / INIT_STRESS / S1,S2,S3,n1,n2,n3
@@ -247,15 +249,19 @@ contains
 
   if (bc%nspec > 0) then
 
-    allocate(bc%T(3,bc%nglob))
-    allocate(bc%D(3,bc%nglob))
-    allocate(bc%V(3,bc%nglob))
+    allocate(bc%T(3,bc%nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1363')
+    allocate(bc%D(3,bc%nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1364')
+    allocate(bc%V(3,bc%nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1365')
     bc%T = 0e0_CUSTOM_REAL
     bc%D = 0e0_CUSTOM_REAL
     bc%V = 0e0_CUSTOM_REAL
 
     ! Set initial fault stresses
-    allocate(bc%T0(3,bc%nglob))
+    allocate(bc%T0(3,bc%nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1366')
     S1 = 0e0_CUSTOM_REAL
     S2 = 0e0_CUSTOM_REAL
     S3 = 0e0_CUSTOM_REAL
@@ -286,12 +292,15 @@ contains
     !  enddo
 
     ! Set friction parameters and initialize friction variables
-    allocate(bc%MU(bc%nglob))
+    allocate(bc%MU(bc%nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1367')
     if (RATE_AND_STATE) then
-      allocate(bc%rsf)
+      allocate(bc%rsf,stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1368')
       call rsf_init(bc%rsf,bc%T0,bc%V,bc%Fload,bc%coord,IIN_PAR)
     else
-      allocate(bc%swf)
+      allocate(bc%swf,stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1369')
       call swf_init(bc%swf,bc%MU,bc%coord,IIN_PAR)
       if (TPV16) call TPV16_init() !WARNING: ad hoc, initializes T0 and swf
     endif
@@ -834,19 +843,25 @@ contains
   real(kind=CUSTOM_REAL), intent(in)  :: coord(:,:)
   integer, intent(in) :: IIN_PAR
 
-  integer :: nglob
+  integer :: nglob,ier
   real(kind=CUSTOM_REAL) :: mus,mud,dc,C,T
   integer :: nmus,nmud,ndc,nC,nForcedRup
 
   NAMELIST / SWF / mus,mud,dc,nmus,nmud,ndc,C,T,nC,nForcedRup
 
   nglob = size(mu)
-  allocate( f%mus(nglob) )
-  allocate( f%mud(nglob) )
-  allocate( f%Dc(nglob) )
-  allocate( f%theta(nglob) )
-  allocate( f%C(nglob) )
-  allocate( f%T(nglob) )
+  allocate( f%mus(nglob) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1370')
+  allocate( f%mud(nglob) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1371')
+  allocate( f%Dc(nglob) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1372')
+  allocate( f%theta(nglob) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1373')
+  allocate( f%C(nglob) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1374')
+  allocate( f%T(nglob) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1375')
 
   ! WARNING: if V_HEALING is negative we turn off healing
   f%healing = (V_HEALING > 0e0_CUSTOM_REAL)
@@ -968,7 +983,7 @@ contains
   real(kind=CUSTOM_REAL) :: Fload
   integer :: nFload
 !  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: init_vel
-  integer :: nglob
+  integer :: nglob,ier
   integer :: InputStateLaw = 1 ! By default using aging law
 
   NAMELIST / RSF / V0,f0,a,b,L,V_init,theta_init,nV0,nf0,na,nb,nL,nV_init,ntheta_init,C,T,nC,nForcedRup,Vw,fw,nVw,nfw,InputStateLaw
@@ -978,17 +993,28 @@ contains
 
   f%StateLaw = InputStateLaw
 
-  allocate( f%V0(nglob) )
-  allocate( f%f0(nglob) )
-  allocate( f%a(nglob) )
-  allocate( f%b(nglob) )
-  allocate( f%L(nglob) )
-  allocate( f%V_init(nglob) )
-  allocate( f%theta(nglob) )
-  allocate( f%C(nglob) )
-  allocate( f%T(nglob) )
-  allocate( f%fw(nglob) )
-  allocate( f%Vw(nglob) )
+  allocate( f%V0(nglob) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1376')
+  allocate( f%f0(nglob) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1377')
+  allocate( f%a(nglob) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1378')
+  allocate( f%b(nglob) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1379')
+  allocate( f%L(nglob) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1380')
+  allocate( f%V_init(nglob) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1381')
+  allocate( f%theta(nglob) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1382')
+  allocate( f%C(nglob) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1383')
+  allocate( f%T(nglob) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1384')
+  allocate( f%fw(nglob) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1385')
+  allocate( f%Vw(nglob) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1386')
 
   V0 =1.e-6_CUSTOM_REAL
   f0 =0.6_CUSTOM_REAL
@@ -1065,7 +1091,8 @@ contains
     endif
   endif
   ! WARNING : ad hoc for SCEC benchmark TPV10x
-  allocate( nucFload(nglob) )
+  allocate( nucFload(nglob) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1387')
   Fload = 0.e0_CUSTOM_REAL
   nFload = 0
   read(IIN_PAR, nml=ASP)
@@ -1101,21 +1128,34 @@ contains
     open(unit=sIIN_NUC,file='../DATA/rsf_hete_input_file.txt',status='old',iostat=ier)
     read(sIIN_NUC,*) snum_cell_str,snum_cell_dip,ssiz_str,ssiz_dip
     snum_cell_all=snum_cell_str*snum_cell_dip
-    write(6,*) snum_cell_str,snum_cell_dip,ssiz_str,ssiz_dip
+    write(*,*) snum_cell_str,snum_cell_dip,ssiz_str,ssiz_dip
 
-    allocate( sloc_str(snum_cell_all) )
-    allocate( sloc_dip(snum_cell_all) )
-    allocate( ssigma0(snum_cell_all) )
-    allocate( stau0_str(snum_cell_all) )
-    allocate( stau0_dip(snum_cell_all) )
-    allocate( sV0(snum_cell_all) )
-    allocate( sf0(snum_cell_all) )
-    allocate( sa(snum_cell_all) )
-    allocate( sb(snum_cell_all) )
-    allocate( sL(snum_cell_all) )
-    allocate( sV_init(snum_cell_all) )
-    allocate( stheta(snum_cell_all) )
-    allocate( sC(snum_cell_all) )
+    allocate( sloc_str(snum_cell_all) ,stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1388')
+    allocate( sloc_dip(snum_cell_all) ,stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1389')
+    allocate( ssigma0(snum_cell_all) ,stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1390')
+    allocate( stau0_str(snum_cell_all) ,stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1391')
+    allocate( stau0_dip(snum_cell_all) ,stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1392')
+    allocate( sV0(snum_cell_all) ,stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1393')
+    allocate( sf0(snum_cell_all) ,stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1394')
+    allocate( sa(snum_cell_all) ,stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1395')
+    allocate( sb(snum_cell_all) ,stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1396')
+    allocate( sL(snum_cell_all) ,stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1397')
+    allocate( sV_init(snum_cell_all) ,stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1398')
+    allocate( stheta(snum_cell_all) ,stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1399')
+    allocate( sC(snum_cell_all) ,stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1400')
 
     do ipar=1,snum_cell_all
       read(sIIN_NUC,*) sloc_str(ipar),sloc_dip(ipar),ssigma0(ipar),stau0_str(ipar),stau0_dip(ipar), &
@@ -1124,11 +1164,11 @@ contains
     enddo
     close(sIIN_NUC)
     minX = minval(coord(1,:))
-    write(6,*) 'RSF_HETE nglob= ', nglob, 'num_cell_all= ', snum_cell_all
-    write(6,*) 'minX = ', minval(coord(1,:)), 'minZ = ', minval(coord(3,:))
-    write(6,*) 'maxX = ', maxval(coord(1,:)), 'maxZ = ', maxval(coord(3,:))
-    write(6,*) 'minXall = ', minval(sloc_str(:)), 'minZall = ', minval(sloc_dip(:))
-    write(6,*) 'maxXall = ', maxval(sloc_str(:)), 'maxZall = ', maxval(sloc_dip(:))
+    write(*,*) 'RSF_HETE nglob= ', nglob, 'num_cell_all= ', snum_cell_all
+    write(*,*) 'minX = ', minval(coord(1,:)), 'minZ = ', minval(coord(3,:))
+    write(*,*) 'maxX = ', maxval(coord(1,:)), 'maxZ = ', maxval(coord(3,:))
+    write(*,*) 'minXall = ', minval(sloc_str(:)), 'minZall = ', minval(sloc_dip(:))
+    write(*,*) 'maxXall = ', maxval(sloc_str(:)), 'maxZall = ', maxval(sloc_dip(:))
 
     do si=1,nglob
 
@@ -1323,13 +1363,14 @@ contains
   type(dataXZ_type), intent(inout) :: dataXZ
   type(bc_dynandkinflt_type) :: bc
 
-  integer :: npoin_all,iproc
+  integer :: npoin_all,iproc,ier
 
   dataXZ%npoin = bc%nglob
 
   if (bc%nglob > 0) then
 
-    allocate(dataXZ%stg(bc%nglob))
+    allocate(dataXZ%stg(bc%nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1401')
     if (.not. RATE_AND_STATE) then
       dataXZ%sta => bc%swf%theta
     else
@@ -1345,8 +1386,10 @@ contains
     dataXZ%xcoord => bc%coord(1,:)
     dataXZ%ycoord => bc%coord(2,:)
     dataXZ%zcoord => bc%coord(3,:)
-    allocate(dataXZ%tRUP(bc%nglob))
-    allocate(dataXZ%tPZ(bc%nglob))
+    allocate(dataXZ%tRUP(bc%nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1402')
+    allocate(dataXZ%tPZ(bc%nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1403')
 
     !Percy, setting up initial rupture time null
     dataXZ%tRUP = 0e0_CUSTOM_REAL
@@ -1360,31 +1403,47 @@ contains
     call sum_all_i(bc%nglob,npoin_all)
     if (myrank == 0 .and. npoin_all > 0) then
       bc%dataXZ_all%npoin = npoin_all
-      allocate(bc%dataXZ_all%xcoord(npoin_all))
-      allocate(bc%dataXZ_all%ycoord(npoin_all))
-      allocate(bc%dataXZ_all%zcoord(npoin_all))
-      allocate(bc%dataXZ_all%t1(npoin_all))
-      allocate(bc%dataXZ_all%t2(npoin_all))
-      allocate(bc%dataXZ_all%t3(npoin_all))
-      allocate(bc%dataXZ_all%d1(npoin_all))
-      allocate(bc%dataXZ_all%d2(npoin_all))
-      allocate(bc%dataXZ_all%v1(npoin_all))
-      allocate(bc%dataXZ_all%v2(npoin_all))
-      allocate(bc%dataXZ_all%tRUP(npoin_all))
-      allocate(bc%dataXZ_all%tPZ(npoin_all))
-      allocate(bc%dataXZ_all%stg(npoin_all))
-      allocate(bc%dataXZ_all%sta(npoin_all))
+      allocate(bc%dataXZ_all%xcoord(npoin_all),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1404')
+      allocate(bc%dataXZ_all%ycoord(npoin_all),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1405')
+      allocate(bc%dataXZ_all%zcoord(npoin_all),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1406')
+      allocate(bc%dataXZ_all%t1(npoin_all),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1407')
+      allocate(bc%dataXZ_all%t2(npoin_all),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1408')
+      allocate(bc%dataXZ_all%t3(npoin_all),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1409')
+      allocate(bc%dataXZ_all%d1(npoin_all),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1410')
+      allocate(bc%dataXZ_all%d2(npoin_all),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1411')
+      allocate(bc%dataXZ_all%v1(npoin_all),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1412')
+      allocate(bc%dataXZ_all%v2(npoin_all),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1413')
+      allocate(bc%dataXZ_all%tRUP(npoin_all),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1414')
+      allocate(bc%dataXZ_all%tPZ(npoin_all),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1415')
+      allocate(bc%dataXZ_all%stg(npoin_all),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1416')
+      allocate(bc%dataXZ_all%sta(npoin_all),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1417')
     endif
 
 !note: crayftn compiler warns about possible copy which may slow down the code for dataXZ%npoin,dataXZ%xcoord,..
 !ftn-1438 crayftn: CAUTION INIT_DATAXZ, File = src/specfem3D/fault_solver_dynamic.f90, Line = 1036, Column = 45
 !  This argument produces a possible copy in and out to a temporary variable.
 
-    allocate(bc%npoin_perproc(NPROC))
+    allocate(bc%npoin_perproc(NPROC),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1418')
     bc%npoin_perproc=0
     call gather_all_singlei(dataXZ%npoin,bc%npoin_perproc,NPROC)
 
-    allocate(bc%poin_offset(NPROC))
+    allocate(bc%poin_offset(NPROC),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1419')
     bc%poin_offset(1)=0
     do iproc=2,NPROC
       bc%poin_offset(iproc) = sum(bc%npoin_perproc(1:iproc-1))

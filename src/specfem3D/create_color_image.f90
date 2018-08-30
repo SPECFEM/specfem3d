@@ -153,6 +153,7 @@
 
   ! finds global points on image surface
   allocate(ispec_is_image_surface(NSPEC_AB),iglob_is_image_surface(NGLOB_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1766')
   if (ier /= 0) call exit_mpi(myrank,'error allocating image ispec and iglob')
 
   call detect_surface_PNM_image(NPROC,NGLOB_AB,NSPEC_AB,ibool, &
@@ -167,10 +168,14 @@
                             xstore,ystore,zstore,myrank)
 
   ! extracts points on surface
-  allocate( xcoord(num_iglob_image_surface), &
-           zcoord(num_iglob_image_surface), &
-           iglob_coord(num_iglob_image_surface), &
-           ispec_coord(num_iglob_image_surface),stat=ier )
+  allocate(xcoord(num_iglob_image_surface),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1767')
+  allocate(zcoord(num_iglob_image_surface),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1768')
+  allocate(iglob_coord(num_iglob_image_surface),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1769')
+  allocate(ispec_coord(num_iglob_image_surface),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1770')
   if (ier /= 0) call exit_mpi(myrank,'error allocating xyz image coordinates')
 
   countval=0
@@ -281,11 +286,14 @@
   endif
 
   ! allocate an array for the grid point that corresponds to a given image data point
-  allocate(iglob_image_color(NX_IMAGE_color,NZ_IMAGE_color), &
-          ispec_image_color(NX_IMAGE_color,NZ_IMAGE_color),stat=ier)
+  allocate(iglob_image_color(NX_IMAGE_color,NZ_IMAGE_color),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1771')
+  allocate(ispec_image_color(NX_IMAGE_color,NZ_IMAGE_color),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1772')
   if (ier /= 0) call exit_mpi(myrank,'error allocating iglob_image_color')
 
   allocate(dist_pixel_image(NX_IMAGE_color,NZ_IMAGE_color),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1773')
   if (ier /= 0) call exit_mpi(myrank,'error allocating dist pixel image')
 
   iglob_image_color(:,:) = -1
@@ -346,6 +354,7 @@
 
   ! gather info from other processes as well
   allocate(dist_pixel_recv(NX_IMAGE_color,0:NPROC-1),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1774')
   if (ier /= 0) call exit_mpi(myrank,'error allocating dist pixel recv')
   dist_pixel_recv(:,:) = HUGEVAL
   nb_pixel_loc = 0
@@ -375,6 +384,7 @@
   ! pixel owned by the local process (useful for parallel jobs)
   if (nb_pixel_loc > 0) then
     allocate(num_pixel_loc(nb_pixel_loc),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1775')
     if (ier /= 0) stop 'error allocating array num_pixel_loc'
   endif
   nb_pixel_loc = 0
@@ -393,6 +403,7 @@
 
   ! filling array iglob_image_color, containing info on which process owns which pixels.
   allocate(nb_pixel_per_proc(0:NPROC-1),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1776')
   if (ier /= 0) stop 'error allocating array nb_pixel_per_proc'
 
   call gather_all_singlei(nb_pixel_loc,tmp_pixel_per_proc,NPROC)
@@ -401,6 +412,7 @@
   ! allocates receiving array
   if (myrank == 0) then
     allocate( num_pixel_recv(maxval(nb_pixel_per_proc(:)),0:NPROC-1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1777')
     if (ier /= 0) stop 'error allocating array num_pixel_recv'
   endif
   ! fills iglob_image_color index array
@@ -425,8 +437,10 @@
   endif
 
   ! allocate an array for image data
-  allocate(image_color_data(NX_IMAGE_color,NZ_IMAGE_color), &
-          image_color_vp_display(NX_IMAGE_color,NZ_IMAGE_color),stat=ier)
+  allocate(image_color_data(NX_IMAGE_color,NZ_IMAGE_color),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1778')
+  allocate(image_color_vp_display(NX_IMAGE_color,NZ_IMAGE_color),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1779')
   if (ier /= 0) call exit_mpi(myrank,'error allocating image data')
 
   image_color_data(:,:) = 0._CUSTOM_REAL
@@ -434,11 +448,13 @@
 
   if (myrank == 0) then
     allocate( data_pixel_recv(maxval(nb_pixel_per_proc(:))),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1780')
     if (ier /= 0) stop 'error allocating array data_pixel_recv'
     data_pixel_recv(:) = 0._CUSTOM_REAL
   endif
   if (nb_pixel_loc > 0) then
     allocate(data_pixel_send(nb_pixel_loc),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1781')
     if (ier /= 0) call exit_mpi(myrank,'error allocating image send data')
     data_pixel_send(:) = 0._CUSTOM_REAL
   endif

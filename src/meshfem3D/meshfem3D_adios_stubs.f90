@@ -48,7 +48,9 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   use adios_manager_mod
 
   implicit none
+
   include "constants_meshfem3D.h"
+
   character(len=MAX_STRING_LEN) :: LOCAL_PATH
   integer :: myrank, sizeprocs
   integer :: nspec
@@ -67,7 +69,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   integer, dimension(NSPEC2D_BOTTOM) :: ibelm_bottom
   integer, dimension(NSPEC2D_TOP) :: ibelm_top
   integer :: NMATERIALS
-  double precision, dimension(NMATERIALS,7) ::  material_properties
+  double precision, dimension(NMATERIALS,NUMBER_OF_MATERIAL_PROPERTIES) ::  material_properties
 
  ! CPML
   integer, intent(in) :: nspec_CPML

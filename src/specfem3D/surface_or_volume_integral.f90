@@ -51,6 +51,7 @@
   if (RECIPROCITY_AND_KH_INTEGRAL) then
 
     allocate(f_integrand_KH(3,NGLLSQUARE*num_abs_boundary_faces), stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1972')
 
     call integrand_for_computing_Kirchoff_Helmholtz_integral()
 
@@ -68,6 +69,7 @@
   if ( (Surf_or_vol_integral == 2) .or. (Surf_or_vol_integral == 3) ) then
 
     allocate(integral_vol(3), stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1973')
 
     ! calculates volume of all elements in mesh
     do ispec = 1, NSPEC_AB
@@ -125,6 +127,7 @@
   if ( (Surf_or_vol_integral == 1) .or. (Surf_or_vol_integral == 3) ) then
 
     allocate(integral_boun(3), stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1974')
 
     ! calculates integral on all the surface of the whole domain
 

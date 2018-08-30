@@ -198,6 +198,9 @@ void FC_FUNC_(prepare_constants_device,
   // Assuming NGLLX=5. Padded is then 128 (5^3+3)
   int size_padded = NGLL3_PADDED * (*NSPEC_IRREGULAR > 0 ? *NSPEC_IRREGULAR : 1);
 
+// DK DK August 2018: adding this test, following a suggestion by Etienne Bachmann
+  if (*h_NGLLX != NGLLX) exit_on_error("make sure that the NGLL constants are equal in the two files setup/constants.h and src/cuda/mesh_constants_cuda.h and then please re-compile; also make sure that the value of NGLL3_PADDED is consistent with the value of NGLL\n");
+
   print_CUDA_error_if_any(cudaMalloc((void**) &mp->d_xix, size_padded*sizeof(realw)),1001);
   print_CUDA_error_if_any(cudaMalloc((void**) &mp->d_xiy, size_padded*sizeof(realw)),1002);
   print_CUDA_error_if_any(cudaMalloc((void**) &mp->d_xiz, size_padded*sizeof(realw)),1003);

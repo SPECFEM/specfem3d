@@ -347,7 +347,9 @@
     write(27) ibool
     close(27)
 
-    allocate( v_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier); if (ier /= 0) stop 'error allocating array '
+    allocate(v_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1043')
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array')
 
     ! vp (for checking the mesh and model)
     !minimum = minval( abs(rho_vp) )
@@ -418,7 +420,8 @@
     ! acoustic-elastic domains
     if (ACOUSTIC_SIMULATION .and. ELASTIC_SIMULATION) then
       ! saves points on acoustic-elastic coupling interface
-      allocate( iglob_tmp(NGLLSQUARE*num_coupling_ac_el_faces))
+      allocate( iglob_tmp(NGLLSQUARE*num_coupling_ac_el_faces),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1044')
       inum = 0
       iglob_tmp(:) = 0
       do i=1,num_coupling_ac_el_faces
@@ -437,7 +440,8 @@
                         filename)
 
       ! saves acoustic/elastic flag
-      allocate(v_tmp_i(nspec))
+      allocate(v_tmp_i(nspec),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1045')
       do i=1,nspec
         if (ispec_is_acoustic(i)) then
           v_tmp_i(i) = 1

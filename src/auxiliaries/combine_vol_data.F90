@@ -172,8 +172,10 @@
 
     ! ibool and global point arrays file
     allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1141')
     if (ier /= 0) stop 'error allocating array ibool'
     allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB),stat=ier)
+    if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1142')
     if (ier /= 0) stop 'error allocating array xstore etc.'
 
     if (ADIOS_FOR_MESH) then
@@ -192,10 +194,12 @@
 
 
     allocate(data_sp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1143')
     if (ier /= 0) stop 'error allocating single precision data array'
 
     if (CUSTOM_REAL == SIZE_DOUBLE) then
       allocate(data_dp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+      if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1144')
       if (ier /= 0) stop 'error allocating double precision data array'
     endif
 
@@ -287,6 +291,7 @@
 
     ! ibool file
     allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1145')
 
     if (ADIOS_FOR_MESH) then
       call read_ibool_adios_mesh(mesh_handle, ibool_offset, &
@@ -444,6 +449,7 @@
     ! gets ibool
     if (.not. HIGH_RESOLUTION_MESH) then
       allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+      if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1146')
       if (ier /= 0) stop 'error allocating array ibool'
 
       if (ADIOS_FOR_MESH) then
@@ -472,6 +478,7 @@
 
       ! mark element corners (global AVS or DX points)
       allocate(mask_ibool(NGLOB_AB),stat=ier)
+      if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1147')
       if (ier /= 0) stop 'error allocating array mask_ibool'
       mask_ibool = .false.
       do ispec=1,NSPEC_AB
@@ -541,6 +548,7 @@
     write(IOVTK, '(a,i12,a)') 'POINTS ', npp, ' float'
     ! creates array to hold point data
     allocate(total_dat(npp),stat=ier)
+    if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1148')
     if (ier /= 0) stop 'error allocating total dat array'
     total_dat(:) = 0.0
 #else
@@ -552,6 +560,7 @@
 
   ! writes our corner point locations
   allocate(mask_ibool(NGLOB_AB),stat=ier)
+  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1149')
   if (ier /= 0) stop 'error allocating array mask_ibool'
   mask_ibool(:) = .false.
   numpoin = 0
@@ -733,6 +742,7 @@
     write(IOVTK, '(a,i12,a)') 'POINTS ', npp, ' float'
     ! creates array to hold point data
     allocate(total_dat(npp),stat=ier)
+    if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1150')
     if (ier /= 0) stop 'error allocating total dat array'
     total_dat(:) = 0.0
 #else
@@ -744,6 +754,7 @@
 
   ! writes out point locations and values
   allocate(mask_ibool(NGLOB_AB),stat=ier)
+  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1151')
   if (ier /= 0) stop 'error allocating array mask_ibool'
 
   mask_ibool(:) = .false.
@@ -811,8 +822,10 @@
   endif
 
   ! writes out element indices
-  allocate(mask_ibool(NGLOB_AB), &
-          num_ibool(NGLOB_AB),stat=ier)
+  allocate(mask_ibool(NGLOB_AB),stat=ier)
+  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1152')
+  allocate(num_ibool(NGLOB_AB),stat=ier)
+  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1153')
   if (ier /= 0) stop 'error allocating array mask_ibool'
 
   mask_ibool(:) = .false.
@@ -941,8 +954,10 @@
   endif
 
   ! sets numbering num_ibool respecting mask
-  allocate(mask_ibool(NGLOB_AB), &
-          num_ibool(NGLOB_AB),stat=ier)
+  allocate(mask_ibool(NGLOB_AB),stat=ier)
+  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1154')
+  allocate(num_ibool(NGLOB_AB),stat=ier)
+  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1155')
   if (ier /= 0) stop 'error allocating array mask_ibool'
 
   mask_ibool(:) = .false.
@@ -1009,4 +1024,24 @@
   np = np + numpoin
 
   end subroutine cvd_write_GLL_elements
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+! version without rank number printed in the error message
+
+  subroutine my_local_exit_MPI_without_rank(error_msg)
+
+  implicit none
+
+  character(len=*) error_msg
+
+! write error message to screen
+  write(*,*) error_msg(1:len(error_msg))
+  write(*,*) 'Error detected, aborting MPI...'
+
+  stop 'Fatal error'
+
+  end subroutine my_local_exit_MPI_without_rank
 

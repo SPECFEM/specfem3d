@@ -44,21 +44,29 @@
 
   asdf_container%nrec_local = nrec_local
 
-  allocate (asdf_container%receiver_name_array(nrec_local), STAT=ier)
+  allocate(asdf_container%receiver_name_array(nrec_local), STAT=ier,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2008')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate (asdf_container%network_array(nrec_local), STAT=ier)
+  allocate(asdf_container%network_array(nrec_local), STAT=ier,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2009')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate (asdf_container%component_array(total_seismos_local), STAT=ier)
+  allocate(asdf_container%component_array(total_seismos_local), STAT=ier,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2010')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate (asdf_container%receiver_lat(nrec_local), STAT=ier)
+  allocate(asdf_container%receiver_lat(nrec_local), STAT=ier,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2011')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate (asdf_container%receiver_lo(nrec_local), STAT=ier)
+  allocate(asdf_container%receiver_lo(nrec_local), STAT=ier,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2012')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate (asdf_container%receiver_el(nrec_local), STAT=ier)
+  allocate(asdf_container%receiver_el(nrec_local), STAT=ier,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2013')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate (asdf_container%receiver_dpt(nrec_local), STAT=ier)
+  allocate(asdf_container%receiver_dpt(nrec_local), STAT=ier,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2014')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
-  allocate (asdf_container%records(total_seismos_local), STAT=ier)
+  allocate(asdf_container%records(total_seismos_local), STAT=ier,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2015')
   if (ier /= 0) call exit_MPI (myrank, 'Allocate failed.')
 
   end subroutine init_asdf_data
@@ -94,6 +102,7 @@
   integer :: ier, i, index_increment
 
   allocate(x_found(nrec),y_found(nrec),z_found(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2016')
   if (ier /= 0) stop 'error allocating arrays x_found y_found z_found'
 
   ! reads in station locations from output_list file
@@ -121,7 +130,8 @@
   i = (irec_local-1)*(3) + (index_increment)
   asdf_container%component_array(i) = chn(1:3)
 
-  allocate (asdf_container%records(i)%record(NSTEP), STAT=ier)
+  allocate(asdf_container%records(i)%record(NSTEP), STAT=ier,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2017')
   if (ier /= 0) call exit_MPI (myrank, 'Allocating ASDF container failed.')
 
   asdf_container%records(i)%record(1:NSTEP) = seismogram_tmp(iorientation,1:NSTEP)
@@ -145,9 +155,9 @@
   do i = 1, asdf_container%nrec_local*3 ! 3 components
     deallocate(asdf_container%records(i)%record)
   enddo
-  deallocate (asdf_container%receiver_name_array)
-  deallocate (asdf_container%network_array)
-  deallocate (asdf_container%component_array)
+  deallocate(asdf_container%receiver_name_array)
+  deallocate(asdf_container%network_array)
+  deallocate(asdf_container%component_array)
 
   end subroutine close_asdf_data
 
@@ -274,36 +284,50 @@
     call ASDF_generate_sf_provenance_f(trim(start_time_string)//C_NULL_CHAR, &
                                    trim(end_time_string)//C_NULL_CHAR, cptr, len_prov)
     call c_f_pointer(cptr, fptr, [len_prov])
-    allocate(provenance(len_prov+1))
+    allocate(provenance(len_prov+1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2018')
     provenance(1:len_prov) = fptr(1:len_prov)
     provenance(len_prov+1) = C_NULL_CHAR
   endif
 
   allocate(networks_names(num_stations(1)), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2019')
   allocate(stations_names(num_stations(1)), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2020')
   allocate(component_names(num_stations(1)*3), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2021')
 
   !--------------------------------------------------------
   ! ASDF variables
   !--------------------------------------------------------
   ! Find how many stations are managed by each allgatheress
-  allocate(num_stations_gather(mysize))
+  allocate(num_stations_gather(mysize),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2022')
   call gather_all_all_i(num_stations(1), 1, num_stations_gather, 1, mysize)
 
   ! find the largest number of stations per allgatheress
   max_num_stations_gather = maxval(num_stations_gather)
 
-  allocate(displs(mysize))
-  allocate(rcounts(mysize))
+  allocate(displs(mysize),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2023')
+  allocate(rcounts(mysize),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2024')
 
   ! Everyone should know about each and every station name and its coordinates
-  allocate(station_names_gather(max_num_stations_gather, mysize))
-  allocate(network_names_gather(max_num_stations_gather, mysize))
-  allocate(station_lats_gather(max_num_stations_gather,mysize))
-  allocate(station_longs_gather(max_num_stations_gather,mysize))
-  allocate(station_elevs_gather(max_num_stations_gather,mysize))
-  allocate(station_depths_gather(max_num_stations_gather,mysize))
-  allocate(component_names_gather(max_num_stations_gather*3, mysize))
+  allocate(station_names_gather(max_num_stations_gather, mysize),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2025')
+  allocate(network_names_gather(max_num_stations_gather, mysize),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2026')
+  allocate(station_lats_gather(max_num_stations_gather,mysize),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2027')
+  allocate(station_longs_gather(max_num_stations_gather,mysize),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2028')
+  allocate(station_elevs_gather(max_num_stations_gather,mysize),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2029')
+  allocate(station_depths_gather(max_num_stations_gather,mysize),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2030')
+  allocate(component_names_gather(max_num_stations_gather*3, mysize),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2031')
 
 
   ! This needs to be done because asdf_data is a pointer
@@ -402,6 +426,7 @@
   deallocate(rcounts)
 
   allocate(one_seismogram(NDIM,NSTEP),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2032')
 
   !--------------------------------------------------------
   ! write ASDF

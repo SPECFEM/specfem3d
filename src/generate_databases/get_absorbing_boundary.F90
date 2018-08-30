@@ -101,10 +101,14 @@
   if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) then
 
     ! allocate temporary flag array
-    allocate(iboun(6,nspec), &
-             xcoord_iboun(NGNOD2D,6,nspec), &
-             ycoord_iboun(NGNOD2D,6,nspec), &
-             zcoord_iboun(NGNOD2D,6,nspec),stat=ier)
+    allocate(iboun(6,nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 900')
+    allocate(xcoord_iboun(NGNOD2D,6,nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 901')
+    allocate(ycoord_iboun(NGNOD2D,6,nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 902')
+    allocate(zcoord_iboun(NGNOD2D,6,nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 903')
     if (ier /= 0) stop 'not enough memory to allocate arrays'
 
     iboun(:,:) = .false.

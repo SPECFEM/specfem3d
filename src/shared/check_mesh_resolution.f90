@@ -133,7 +133,9 @@
   ! debug: for vtk output
   if (SAVE_MESH_FILES) then
     allocate(tmp1(NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1229')
     allocate(tmp2(NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1230')
     if (ier /= 0) stop 'error allocating array tmp'
     tmp1(:) = 0.0
     tmp2(:) = 0.0
@@ -568,7 +570,9 @@
   ! debug: for vtk output
   if (SAVE_MESH_FILES) then
     allocate(tmp1(NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1231')
     allocate(tmp2(NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1232')
     if (ier /= 0) stop 'error allocating array tmp'
     tmp1(:) = 0.0
     tmp2(:) = 0.0

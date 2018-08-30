@@ -612,21 +612,27 @@ subroutine read_mesh_databases_adios()
   if (ACOUSTIC_SIMULATION) then
     ! potentials
     allocate(potential_acoustic(NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1791')
     if (ier /= 0) stop 'error allocating array potential_acoustic'
     allocate(potential_dot_acoustic(NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1792')
     if (ier /= 0) stop 'error allocating array potential_dot_acoustic'
     allocate(potential_dot_dot_acoustic(NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1793')
     if (ier /= 0) stop 'error allocating array potential_dot_dot_acoustic'
     if (SIMULATION_TYPE /= 1) then
       allocate(potential_acoustic_adj_coupling(NGLOB_AB),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1794')
       if (ier /= 0) stop 'error allocating array potential_acoustic_adj_coupling'
     endif
     ! mass matrix, density
     allocate(rmass_acoustic(NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1795')
     if (ier /= 0) stop 'error allocating array rmass_acoustic'
 
     ! initializes mass matrix contribution
     allocate(rmassz_acoustic(NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1796')
     if (ier /= 0) stop 'error allocating array rmassz_acoustic'
     rmassz_acoustic(:) = 0._CUSTOM_REAL
   endif
@@ -635,6 +641,7 @@ subroutine read_mesh_databases_adios()
   ! simulations with CPML, thus we now allocate it and read it in all
   ! cases (whether the simulation is acoustic, elastic, or acoustic/elastic)
   allocate(rhostore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1797')
   if (ier /= 0) stop 'error allocating array rhostore'
 
 !TODO
@@ -645,97 +652,144 @@ subroutine read_mesh_databases_adios()
 #if 1
     ! displacement,velocity,acceleration
     allocate(displ(NDIM,NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1798')
     if (ier /= 0) stop 'error allocating array displ'
     allocate(veloc(NDIM,NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1799')
     if (ier /= 0) stop 'error allocating array veloc'
     allocate(accel(NDIM,NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1800')
     if (ier /= 0) stop 'error allocating array accel'
     if (SIMULATION_TYPE /= 1) then
       allocate(accel_adj_coupling(NDIM,NGLOB_AB),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1801')
       if (ier /= 0) stop 'error allocating array accel_adj_coupling'
     endif
 
     ! allocates mass matrix
     allocate(rmass(NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1802')
 
     if (ier /= 0) stop 'error allocating array rmass'
     ! initializes mass matrix contributions
-    allocate(rmassx(NGLOB_AB), &
-             rmassy(NGLOB_AB), &
-             rmassz(NGLOB_AB), &
-             stat=ier)
+    allocate(rmassx(NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1803')
+    allocate(rmassy(NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1804')
+    allocate(rmassz(NGLOB_AB), stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1805')
     if (ier /= 0) stop 'error allocating array rmassx,rmassy,rmassz'
     rmassx(:) = 0._CUSTOM_REAL
     rmassy(:) = 0._CUSTOM_REAL
     rmassz(:) = 0._CUSTOM_REAL
 
     allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1806')
     if (ier /= 0) stop 'error allocating array rho_vp'
     allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1807')
     if (ier /= 0) stop 'error allocating array rho_vs'
     rho_vp = 0.0_CUSTOM_REAL
     rho_vs = 0.0_CUSTOM_REAL
-    allocate(c11store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c12store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c13store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c14store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c15store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c16store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c22store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c23store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c24store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c25store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c26store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c33store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c34store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c35store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c36store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c44store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c45store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c46store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c55store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c56store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO), &
-            c66store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
+    allocate(c11store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1808')
+    allocate(c12store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1809')
+    allocate(c13store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1810')
+    allocate(c14store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1811')
+    allocate(c15store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1812')
+    allocate(c16store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1813')
+    allocate(c22store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1814')
+    allocate(c23store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1815')
+    allocate(c24store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1816')
+    allocate(c25store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1817')
+    allocate(c26store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1818')
+    allocate(c33store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1819')
+    allocate(c34store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1820')
+    allocate(c35store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1821')
+    allocate(c36store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1822')
+    allocate(c44store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1823')
+    allocate(c45store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1824')
+    allocate(c46store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1825')
+    allocate(c55store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1826')
+    allocate(c56store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1827')
+    allocate(c66store(NGLLX,NGLLY,NGLLZ,NSPEC_ANISO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1828')
     if (ier /= 0) stop 'error allocating array c11store etc.'
 
     ! note: currently, they need to be defined, as they are used in some subroutine arguments
-    allocate(R_xx(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB), &
-             R_yy(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB), &
-             R_xy(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB), &
-             R_xz(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB), &
-             R_yz(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
+    allocate(R_xx(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1829')
+    allocate(R_yy(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1830')
+    allocate(R_xy(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1831')
+    allocate(R_xz(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1832')
+    allocate(R_yz(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1833')
     if (ier /= 0) stop 'error allocating array R_xx etc.'
 
     ! needed for attenuation and/or kernel computations
-    allocate(epsilondev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
-             epsilondev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
-             epsilondev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
-             epsilondev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
-             epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY), &
-             epsilondev_trace(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),stat=ier)
+    allocate(epsilondev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1834')
+    allocate(epsilondev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1835')
+    allocate(epsilondev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1836')
+    allocate(epsilondev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1837')
+    allocate(epsilondev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1838')
+    allocate(epsilondev_trace(NGLLX,NGLLY,NGLLZ,NSPEC_STRAIN_ONLY),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1839')
     if (ier /= 0) stop 'error allocating array epsilondev_xx etc.'
 
     allocate(R_trace(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1840')
     if (ier /= 0) stop 'error allocating array R_trace etc.'
 
     ! note: needed for some subroutine arguments
     allocate(epsilon_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1841')
     if (ier /= 0) stop 'error allocating array epsilon_trace_over_3'
 
     ! needed for attenuation
     allocate(factor_common(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1842')
     if (ier /= 0) stop 'error allocating array factor_common'
 
     allocate(factor_common_kappa(N_SLS,NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1843')
     if (ier /= 0) stop 'error allocating array factor_common_kappa'
 
     if (APPROXIMATE_OCEAN_LOAD) then
       ! ocean mass matrix
       allocate(rmass_ocean_load(NGLOB_AB),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1844')
       if (ier /= 0) stop 'error allocating array rmass_ocean_load'
     else
       ! dummy allocation
       allocate(rmass_ocean_load(1),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1845')
       if (ier /= 0) stop 'error allocating dummy array rmass_ocean_load'
     endif
 ! TODO
@@ -753,55 +807,85 @@ subroutine read_mesh_databases_adios()
 
     ! displacement,velocity,acceleration for the solid (s) & fluid (w) phases
     allocate(displs_poroelastic(NDIM,NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1846')
     if (ier /= 0) stop 'error allocating array displs_poroelastic'
     allocate(velocs_poroelastic(NDIM,NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1847')
     if (ier /= 0) stop 'error allocating array velocs_poroelastic'
     allocate(accels_poroelastic(NDIM,NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1848')
     if (ier /= 0) stop 'error allocating array accels_poroelastic'
     allocate(displw_poroelastic(NDIM,NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1849')
     if (ier /= 0) stop 'error allocating array displw_poroelastic'
     allocate(velocw_poroelastic(NDIM,NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1850')
     if (ier /= 0) stop 'error allocating array velocw_poroelastic'
     allocate(accelw_poroelastic(NDIM,NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1851')
     if (ier /= 0) stop 'error allocating array accelw_poroelastic'
 
     allocate(rmass_solid_poroelastic(NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1852')
     if (ier /= 0) stop 'error allocating array rmass_solid_poroelastic'
     allocate(rmass_fluid_poroelastic(NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1853')
     if (ier /= 0) stop 'error allocating array rmass_fluid_poroelastic'
 
-    allocate(rhoarraystore(2,NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-             kappaarraystore(3,NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-             etastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-             tortstore(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-             phistore(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-             permstore(6,NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-             rho_vpI(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-             rho_vpII(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-             rho_vsI(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    allocate(rhoarraystore(2,NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1854')
+    allocate(kappaarraystore(3,NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1855')
+    allocate(etastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1856')
+    allocate(tortstore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1857')
+    allocate(phistore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1858')
+    allocate(permstore(6,NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1859')
+    allocate(rho_vpI(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1860')
+    allocate(rho_vpII(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1861')
+    allocate(rho_vsI(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1862')
     if (ier /= 0) stop 'error allocating array poroelastic properties'
 
     ! needed for kernel computations
-    allocate(epsilonsdev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-             epsilonsdev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-             epsilonsdev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-             epsilonsdev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-             epsilonsdev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-             epsilonwdev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-             epsilonwdev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-             epsilonwdev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-             epsilonwdev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-             epsilonwdev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+    allocate(epsilonsdev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1863')
+    allocate(epsilonsdev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1864')
+    allocate(epsilonsdev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1865')
+    allocate(epsilonsdev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1866')
+    allocate(epsilonsdev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1867')
+    allocate(epsilonwdev_xx(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1868')
+    allocate(epsilonwdev_yy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1869')
+    allocate(epsilonwdev_xy(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1870')
+    allocate(epsilonwdev_xz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1871')
+    allocate(epsilonwdev_yz(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1872')
     if (ier /= 0) stop 'error allocating array epsilonsdev_xx etc.'
 
-    allocate(epsilons_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-             epsilonw_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+    allocate(epsilons_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1873')
+    allocate(epsilonw_trace_over_3(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1874')
     if (ier /= 0) stop 'error allocating array epsilons_trace_over_3 etc.'
   endif
 
   ! C-PML absorbing boundary conditions
   ! we allocate this array even when PMLs are absent because we need it in logical tests in "if" statements
   allocate(is_CPML(NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1875')
   if (ier /= 0) stop 'error allocating array is_CPML'
 
   ! make sure there are no PMLs by default,
@@ -811,35 +895,48 @@ subroutine read_mesh_databases_adios()
   if (PML_CONDITIONS) then
     if (NSPEC_CPML > 0) then
       allocate(CPML_regions(NSPEC_CPML),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1876')
       if (ier /= 0) stop 'error allocating array CPML_regions'
       allocate(CPML_to_spec(NSPEC_CPML),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1877')
       if (ier /= 0) stop 'error allocating array CPML_to_spec'
       allocate(d_store_x(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1878')
       if (ier /= 0) stop 'error allocating array d_store_x'
       allocate(d_store_y(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1879')
       if (ier /= 0) stop 'error allocating array d_store_y'
       allocate(d_store_z(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1880')
       if (ier /= 0) stop 'error allocating array d_store_z'
       allocate(K_store_x(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1881')
       if (ier /= 0) stop 'error allocating array K_store_x'
       allocate(K_store_y(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1882')
       if (ier /= 0) stop 'error allocating array K_store_y'
       allocate(K_store_z(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1883')
       if (ier /= 0) stop 'error allocating array K_store_z'
       allocate(alpha_store_x(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1884')
       if (ier /= 0) stop 'error allocating array alpha_store_x'
       allocate(alpha_store_y(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1885')
       if (ier /= 0) stop 'error allocating array alpha_store_y'
       allocate(alpha_store_z(NGLLX,NGLLY,NGLLZ,NSPEC_CPML),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1886')
       if (ier /= 0) stop 'error allocating array alpha_store_z'
 
       if ((SIMULATION_TYPE == 1 .and. SAVE_FORWARD) .or. SIMULATION_TYPE == 3) then
         if (nglob_interface_PML_acoustic > 0) then
           allocate(points_interface_PML_acoustic(nglob_interface_PML_acoustic),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 1887')
           if (ier /= 0) stop 'error allocating array points_interface_PML_acoustic'
         endif
         if (nglob_interface_PML_elastic > 0) then
           allocate(points_interface_PML_elastic(nglob_interface_PML_elastic),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 1888')
           if (ier /= 0) stop 'error allocating array points_interface_PML_elastic'
         endif
       endif
@@ -847,83 +944,114 @@ subroutine read_mesh_databases_adios()
   endif
 
   ! absorbing boundary surface
-  allocate(abs_boundary_ispec(num_abs_boundary_faces), &
-           abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces), &
-           abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces), &
-           abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
+  allocate(abs_boundary_ispec(num_abs_boundary_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1889')
+  allocate(abs_boundary_ijk(3,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1890')
+  allocate(abs_boundary_jacobian2Dw(NGLLSQUARE,num_abs_boundary_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1891')
+  allocate(abs_boundary_normal(NDIM,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1892')
   if (ier /= 0) stop 'error allocating array abs_boundary_ispec etc.'
 
-  allocate(ibelm_xmin(nspec2D_xmin),ibelm_xmax(nspec2D_xmax), &
-           ibelm_ymin(nspec2D_ymin),ibelm_ymax(nspec2D_ymax), &
-           ibelm_bottom(NSPEC2D_BOTTOM),ibelm_top(NSPEC2D_TOP),stat=ier)
+  allocate(ibelm_xmin(nspec2D_xmin),ibelm_xmax(nspec2D_xmax),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1893')
+  allocate(ibelm_ymin(nspec2D_ymin),ibelm_ymax(nspec2D_ymax),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1894')
+  allocate(ibelm_bottom(NSPEC2D_BOTTOM),ibelm_top(NSPEC2D_TOP),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1895')
   if (ier /= 0) stop 'error allocating arrays ibelm_xmin,ibelm_xmax etc.'
 
   ! free surface
-  allocate(free_surface_ispec(num_free_surface_faces), &
-           free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces), &
-           free_surface_jacobian2Dw(NGLLSQUARE,num_free_surface_faces), &
-           free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces),stat=ier)
+  allocate(free_surface_ispec(num_free_surface_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1896')
+  allocate(free_surface_ijk(3,NGLLSQUARE,num_free_surface_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1897')
+  allocate(free_surface_jacobian2Dw(NGLLSQUARE,num_free_surface_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1898')
+  allocate(free_surface_normal(NDIM,NGLLSQUARE,num_free_surface_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1899')
   if (ier /= 0) stop 'error allocating arrays free_surface_ispec etc.'
 
   ! acoustic-elastic coupling surface
-  allocate(coupling_ac_el_normal(NDIM,NGLLSQUARE,num_coupling_ac_el_faces), &
-           coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces), &
-           coupling_ac_el_ijk(3,NGLLSQUARE,num_coupling_ac_el_faces), &
-           coupling_ac_el_ispec(num_coupling_ac_el_faces),stat=ier)
+  allocate(coupling_ac_el_normal(NDIM,NGLLSQUARE,num_coupling_ac_el_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1900')
+  allocate(coupling_ac_el_jacobian2Dw(NGLLSQUARE,num_coupling_ac_el_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1901')
+  allocate(coupling_ac_el_ijk(3,NGLLSQUARE,num_coupling_ac_el_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1902')
+  allocate(coupling_ac_el_ispec(num_coupling_ac_el_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1903')
   if (ier /= 0) stop 'error allocating array coupling_ac_el_normal etc.'
 
   ! acoustic-poroelastic coupling surface
-  allocate(coupling_ac_po_normal(NDIM,NGLLSQUARE,num_coupling_ac_po_faces), &
-           coupling_ac_po_jacobian2Dw(NGLLSQUARE,num_coupling_ac_po_faces), &
-           coupling_ac_po_ijk(3,NGLLSQUARE,num_coupling_ac_po_faces), &
-           coupling_ac_po_ispec(num_coupling_ac_po_faces),stat=ier)
+  allocate(coupling_ac_po_normal(NDIM,NGLLSQUARE,num_coupling_ac_po_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1904')
+  allocate(coupling_ac_po_jacobian2Dw(NGLLSQUARE,num_coupling_ac_po_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1905')
+  allocate(coupling_ac_po_ijk(3,NGLLSQUARE,num_coupling_ac_po_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1906')
+  allocate(coupling_ac_po_ispec(num_coupling_ac_po_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1907')
   if (ier /= 0) stop 'error allocating array coupling_ac_po_normal etc.'
 
   ! elastic-poroelastic coupling surface
-  allocate(coupling_el_po_normal(NDIM,NGLLSQUARE,num_coupling_el_po_faces), &
-           coupling_el_po_jacobian2Dw(NGLLSQUARE,num_coupling_el_po_faces), &
-           coupling_el_po_ijk(3,NGLLSQUARE,num_coupling_el_po_faces), &
-           coupling_po_el_ijk(3,NGLLSQUARE,num_coupling_el_po_faces), &
-           coupling_el_po_ispec(num_coupling_el_po_faces), &
-           coupling_po_el_ispec(num_coupling_el_po_faces),stat=ier)
+  allocate(coupling_el_po_normal(NDIM,NGLLSQUARE,num_coupling_el_po_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1908')
+  allocate(coupling_el_po_jacobian2Dw(NGLLSQUARE,num_coupling_el_po_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1909')
+  allocate(coupling_el_po_ijk(3,NGLLSQUARE,num_coupling_el_po_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1910')
+  allocate(coupling_po_el_ijk(3,NGLLSQUARE,num_coupling_el_po_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1911')
+  allocate(coupling_el_po_ispec(num_coupling_el_po_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1912')
+  allocate(coupling_po_el_ispec(num_coupling_el_po_faces),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1913')
   if (ier /= 0) stop 'error allocating array coupling_el_po_normal etc.'
 
   ! MPI interfaces
-  allocate(my_neighbors_ext_mesh(num_interfaces_ext_mesh), &
-           nibool_interfaces_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+  allocate(my_neighbors_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1914')
+  allocate(nibool_interfaces_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1915')
   if (ier /= 0) stop 'error allocating array my_neighbors_ext_mesh etc.'
   if (num_interfaces_ext_mesh > 0) then
-    allocate(ibool_interfaces_ext_mesh(max_nibool_interfaces_ext_mesh, &
-                                       num_interfaces_ext_mesh),stat=ier)
+    allocate(ibool_interfaces_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1916')
     if (ier /= 0) stop 'error allocating array ibool_interfaces_ext_mesh'
   else
     max_nibool_interfaces_ext_mesh = 0
     allocate(ibool_interfaces_ext_mesh(0,0),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1917')
   endif
 
   ! inner / outer elements
   allocate(ispec_is_inner(NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1918')
   if (ier /= 0) stop 'error allocating array ispec_is_inner'
 
   if (ACOUSTIC_SIMULATION) then
     if (num_phase_ispec_acoustic < 0) stop 'error acoustic simulation:' // &
                                     'num_phase_ispec_acoustic is < zero'
-    allocate( phase_ispec_inner_acoustic(num_phase_ispec_acoustic,2),stat=ier)
+    allocate(phase_ispec_inner_acoustic(num_phase_ispec_acoustic,2),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1919')
     if (ier /= 0) stop 'error allocating array phase_ispec_inner_acoustic'
   endif
 
   if (ELASTIC_SIMULATION) then
     if (num_phase_ispec_elastic < 0) stop 'error elastic simulation:' // &
                                    'num_phase_ispec_elastic is < zero'
-    allocate( phase_ispec_inner_elastic(num_phase_ispec_elastic,2),stat=ier)
+    allocate(phase_ispec_inner_elastic(num_phase_ispec_elastic,2),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1920')
     if (ier /= 0) stop 'error allocating array phase_ispec_inner_elastic'
   endif
 
   if (POROELASTIC_SIMULATION) then
     if (num_phase_ispec_poroelastic < 0) &
       stop 'error poroelastic simulation:num_phase_ispec_poroelastic is < zero'
-    allocate( phase_ispec_inner_poroelastic(num_phase_ispec_poroelastic,2), &
-              stat=ier)
+    allocate(phase_ispec_inner_poroelastic(num_phase_ispec_poroelastic,2), stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1921')
     if (ier /= 0) stop 'error allocating array phase_ispec_inner_poroelastic'
   endif
 
@@ -931,33 +1059,35 @@ subroutine read_mesh_databases_adios()
   if (USE_MESH_COLORING_GPU) then
     ! acoustic domain colors
     if (ACOUSTIC_SIMULATION) then
-      allocate(num_elem_colors_acoustic(num_colors_outer_acoustic &
-                                      + num_colors_inner_acoustic),stat=ier)
+      allocate(num_elem_colors_acoustic(num_colors_outer_acoustic + num_colors_inner_acoustic),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1922')
       if (ier /= 0) stop 'error allocating num_elem_colors_acoustic array'
     endif
     ! elastic domain colors
     if (ELASTIC_SIMULATION) then
-      allocate(num_elem_colors_elastic(num_colors_outer_elastic &
-                                     + num_colors_inner_elastic),stat=ier)
+      allocate(num_elem_colors_elastic(num_colors_outer_elastic + num_colors_inner_elastic),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1923')
       if (ier /= 0) stop 'error allocating num_elem_colors_elastic array'
     endif
   else
     ! allocates dummy arrays
     if (ACOUSTIC_SIMULATION) then
-      allocate(num_elem_colors_acoustic(num_colors_outer_acoustic &
-                                      + num_colors_inner_acoustic),stat=ier)
+      allocate(num_elem_colors_acoustic(num_colors_outer_acoustic + num_colors_inner_acoustic),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1924')
       if (ier /= 0) stop 'error allocating num_elem_colors_acoustic array'
     endif
     if (ELASTIC_SIMULATION) then
-      allocate(num_elem_colors_elastic(num_colors_outer_elastic &
-                                     + num_colors_inner_elastic),stat=ier)
+      allocate(num_elem_colors_elastic(num_colors_outer_elastic + num_colors_inner_elastic),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1925')
       if (ier /= 0) stop 'error allocating num_elem_colors_elastic array'
     endif
   endif
 
   ! for mesh surface
-  allocate(ispec_is_surface_external_mesh(NSPEC_AB), &
-           iglob_is_surface_external_mesh(NGLOB_AB),stat=ier)
+  allocate(ispec_is_surface_external_mesh(NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1926')
+  allocate(iglob_is_surface_external_mesh(NGLOB_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1927')
   if (ier /= 0) stop 'error allocating array for mesh surface'
 
   !-----------------------------------.
@@ -1623,22 +1753,38 @@ subroutine read_mesh_databases_adios()
   !endif
 
   ! MPI communications
-  allocate(buffer_send_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
-    buffer_recv_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
-    buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
-    buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
-    request_send_vector_ext_mesh(num_interfaces_ext_mesh), &
-    request_recv_vector_ext_mesh(num_interfaces_ext_mesh), &
-    request_send_scalar_ext_mesh(num_interfaces_ext_mesh), &
-    request_recv_scalar_ext_mesh(num_interfaces_ext_mesh), &
-    buffer_send_vector_ext_mesh_s(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
-    buffer_recv_vector_ext_mesh_s(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
-    buffer_send_vector_ext_mesh_w(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
-    buffer_recv_vector_ext_mesh_w(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh), &
-    request_send_vector_ext_mesh_s(num_interfaces_ext_mesh), &
-    request_recv_vector_ext_mesh_s(num_interfaces_ext_mesh), &
-    request_send_vector_ext_mesh_w(num_interfaces_ext_mesh), &
-    request_recv_vector_ext_mesh_w(num_interfaces_ext_mesh),stat=ier)
+  allocate(buffer_send_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1928')
+  allocate(buffer_recv_vector_ext_mesh(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1929')
+  allocate(buffer_send_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1930')
+  allocate(buffer_recv_scalar_ext_mesh(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1931')
+  allocate(request_send_vector_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1932')
+  allocate(request_recv_vector_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1933')
+  allocate(request_send_scalar_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1934')
+  allocate(request_recv_scalar_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1935')
+  allocate(buffer_send_vector_ext_mesh_s(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1936')
+  allocate(buffer_recv_vector_ext_mesh_s(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1937')
+  allocate(buffer_send_vector_ext_mesh_w(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1938')
+  allocate(buffer_recv_vector_ext_mesh_w(NDIM,max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1939')
+  allocate(request_send_vector_ext_mesh_s(num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1940')
+  allocate(request_recv_vector_ext_mesh_s(num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1941')
+  allocate(request_send_vector_ext_mesh_w(num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1942')
+  allocate(request_recv_vector_ext_mesh_w(num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1943')
   if (ier /= 0) stop 'error allocating array buffer_send_vector_ext_mesh etc.'
 
 end subroutine read_mesh_databases_adios
@@ -1674,6 +1820,7 @@ subroutine read_mesh_databases_moho_adios()
 
   ! always needed to be allocated for routine arguments
   allocate( is_moho_top(NSPEC_BOUN),is_moho_bot(NSPEC_BOUN),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1944')
   if (ier /= 0) stop 'Error allocating array is_moho_top etc.'
 
   ! checks if anything to do
@@ -1733,12 +1880,18 @@ subroutine read_mesh_databases_moho_adios()
     !---------------------------------------------.
     ! Allocate arrays with previously read values |
     !---------------------------------------------'
-    allocate(ibelm_moho_bot(NSPEC2D_MOHO), &
-             ibelm_moho_top(NSPEC2D_MOHO), &
-             normal_moho_top(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
-             normal_moho_bot(NDIM,NGLLSQUARE,NSPEC2D_MOHO), &
-             ijk_moho_bot(3,NGLLSQUARE,NSPEC2D_MOHO), &
-             ijk_moho_top(3,NGLLSQUARE,NSPEC2D_MOHO),stat=ier)
+    allocate(ibelm_moho_bot(NSPEC2D_MOHO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1945')
+    allocate(ibelm_moho_top(NSPEC2D_MOHO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1946')
+    allocate(normal_moho_top(NDIM,NGLLSQUARE,NSPEC2D_MOHO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1947')
+    allocate(normal_moho_bot(NDIM,NGLLSQUARE,NSPEC2D_MOHO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1948')
+    allocate(ijk_moho_bot(3,NGLLSQUARE,NSPEC2D_MOHO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1949')
+    allocate(ijk_moho_top(3,NGLLSQUARE,NSPEC2D_MOHO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1950')
     if (ier /= 0) stop 'error allocating array ibelm_moho_bot etc.'
 
     !-----------------------------------.
@@ -1820,10 +1973,14 @@ subroutine read_mesh_databases_moho_adios()
   ! moho boundary
   if (ELASTIC_SIMULATION) then
     ! always needed to be allocated for routine arguments
-    allocate(dsdx_top(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO), &
-             dsdx_bot(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO), &
-             b_dsdx_top(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO), &
-             b_dsdx_bot(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO),stat=ier)
+    allocate(dsdx_top(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1951')
+    allocate(dsdx_bot(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1952')
+    allocate(b_dsdx_top(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1953')
+    allocate(b_dsdx_bot(NDIM,NDIM,NGLLX,NGLLY,NGLLZ,NSPEC2D_MOHO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1954')
     if (ier /= 0) stop 'Error allocating array dsdx_top etc.'
   endif
 

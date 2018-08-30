@@ -361,7 +361,7 @@ subroutine pinit
   open(1000, file=trim(dbname), FORM="UNFORMATTED", &
              STATUS="OLD", POSITION="REWIND", IOSTAT=ioerr)
   if (ioerr /= 0) then
-     write(6,*) 'Could not open mesh file ', trim(dbname)
+     write(*,*) 'Could not open mesh file ', trim(dbname)
      stop
   endif
   read(1000) nproc_mesh
@@ -372,9 +372,9 @@ subroutine pinit
   if (nproc_mesh > 1) then
      call ppinit
      if (nproc_mesh /= nproc) then
-        write(6,*) mynum, 'Problem with number of processors!'
-        write(6,*) mynum, 'Mesh constructed for:', nproc_mesh
-        write(6,*) mynum, 'Job submission for:', nproc
+        write(*,*) mynum, 'Problem with number of processors!'
+        write(*,*) mynum, 'Mesh constructed for:', nproc_mesh
+        write(*,*) mynum, 'Job submission for:', nproc
         stop
      endif
   else
@@ -385,7 +385,7 @@ subroutine pinit
 
 #ifdef serial
   if (nproc_mesh /= 1) then
-        write(6,*) 'ERROR: Solver compiled with SERIAL flag, but mesh has nproc > 1: ', &
+        write(*,*) 'ERROR: Solver compiled with SERIAL flag, but mesh has nproc > 1: ', &
                     nproc_mesh
         stop
   endif
@@ -405,7 +405,7 @@ subroutine pinit
 
   procstrg = 'Proc '//appmynum(3:4)//' '
 
-  if (lpr) write(6,'(a,i5)') '    Initialized run for nproc =', nproc
+  if (lpr) write(*,'(a,i5)') '    Initialized run for nproc =', nproc
 
 end subroutine pinit
 !! End message passing interface if parallel

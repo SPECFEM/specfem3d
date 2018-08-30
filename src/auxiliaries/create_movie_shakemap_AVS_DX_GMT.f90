@@ -276,29 +276,56 @@
   npointot = NGNOD2D_FOUR_CORNERS_AVS_DX * nspectot_AVS_max
 
   ! allocate arrays for sorting routine
-  allocate(iglob(npointot),locval(npointot), &
-           ifseg(npointot), &
-           xp(npointot),yp(npointot),zp(npointot), &
-           xp_save(npointot),yp_save(npointot),zp_save(npointot), &
-           field_display(npointot), &
-           mask_point(npointot), &
-           ireorder(npointot),stat=ier)
+  allocate(iglob(npointot),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1119')
+  allocate(locval(npointot),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1120')
+  allocate(ifseg(npointot),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1121')
+  allocate(xp(npointot),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1122')
+  allocate(yp(npointot),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1123')
+  allocate(zp(npointot),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1124')
+  allocate(xp_save(npointot),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1125')
+  allocate(yp_save(npointot),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1126')
+  allocate(zp_save(npointot),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1127')
+  allocate(field_display(npointot),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1128')
+  allocate(mask_point(npointot),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1129')
+  allocate(ireorder(npointot),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1130')
   if (ier /= 0) stop 'error allocating arrays for sorting routine'
 
   ! allocates data arrays
-  allocate(store_val_x(ilocnum), &
-           store_val_y(ilocnum), &
-           store_val_z(ilocnum), &
-           store_val_ux(ilocnum), &
-           store_val_uy(ilocnum), &
-           store_val_uz(ilocnum),stat=ier)
+  allocate(store_val_x(ilocnum),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1131')
+  allocate(store_val_y(ilocnum),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1132')
+  allocate(store_val_z(ilocnum),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1133')
+  allocate(store_val_ux(ilocnum),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1134')
+  allocate(store_val_uy(ilocnum),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1135')
+  allocate(store_val_uz(ilocnum),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1136')
   if (ier /= 0) stop 'error allocating arrays for data arrays'
 
   if (USE_HIGHRES_FOR_MOVIES) then
-    allocate(x(NGLLX,NGLLY), &
-             y(NGLLX,NGLLY), &
-             z(NGLLX,NGLLY), &
-             display(NGLLX,NGLLY),stat=ier)
+    allocate(x(NGLLX,NGLLY),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1137')
+    allocate(y(NGLLX,NGLLY),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1138')
+    allocate(z(NGLLX,NGLLY),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1139')
+    allocate(display(NGLLX,NGLLY),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1140')
     if (ier /= 0) stop 'error allocating arrays for highres'
   endif
 

@@ -514,6 +514,7 @@
 
     ! allocate array for single elements
     allocate(veloc_element(NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2002')
     if (ier /= 0) stop 'error allocating arrays for movie elements'
 
     ! uses div as temporary array to store velocity on all GLL points
@@ -527,7 +528,8 @@
    enddo
 
    if (.not. ELASTIC_SIMULATION .and. .not. POROELASTIC_SIMULATION) then
-     allocate(pressure_loc(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+     allocate(pressure_loc(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2003')
 
      do ispec=1,NSPEC_AB
 
@@ -554,8 +556,10 @@
   if (ELASTIC_SIMULATION) then
 
     ! allocate array for single elements
-    allocate(div_glob(NGLOB_AB), &
-             valence(NGLOB_AB), stat=ier)
+    allocate(div_glob(NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2004')
+    allocate(valence(NGLOB_AB), stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2005')
     if (ier /= 0) stop 'error allocating arrays for movie div and curl'
 
     ! calculates divergence and curl of velocity field
@@ -579,8 +583,10 @@
   ! saves full snapshot data to local disk
   if (POROELASTIC_SIMULATION) then
     ! allocate array for single elements
-    allocate(div_glob(NGLOB_AB), &
-             valence(NGLOB_AB), stat=ier)
+    allocate(div_glob(NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2006')
+    allocate(valence(NGLOB_AB), stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2007')
     if (ier /= 0) stop 'error allocating arrays for movie div and curl'
 
     ! calculates divergence and curl of velocity field

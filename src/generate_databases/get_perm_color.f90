@@ -194,6 +194,7 @@
 
   ! allocates mask
   allocate(mask_ibool(nglob),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 578')
   if (ier /= 0) stop 'error allocating mask_ibool array'
 
   ! entry point for fail-safe mechanism when Droux 1993 fails
@@ -448,6 +449,7 @@
 
   ! allocates count array
   allocate(count_ibool(nglob),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 579')
   if (ier /= 0) stop 'error allocating count_ibool array'
 
   ! valence numbers of the mesh
@@ -595,8 +597,10 @@
   icolormax = ncolors
 
   ! allocates temporary arrays
-  allocate(nb_elems_in_this_color(ncolors), &
-          icolor_conflict_found(ncolors),stat=ier)
+  allocate(nb_elems_in_this_color(ncolors),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 580')
+  allocate(icolor_conflict_found(ncolors),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 581')
   if (ier /= 0) stop 'error allocating nb_elems_in_this_color arrays'
 
   nb_elems_in_this_color(:) = 0
@@ -759,8 +763,10 @@
   ncolors = nb_colors_outer_elements + nb_colors_inner_elements
 
   ! allocates temporary arrays
-  allocate(nb_elems_in_this_color(ncolors), &
-          icolor_conflict_found(ncolors),stat=ier)
+  allocate(nb_elems_in_this_color(ncolors),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 582')
+  allocate(icolor_conflict_found(ncolors),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 583')
   if (ier /= 0) stop 'error allocating nb_elems_in_this_color arrays'
 
   !! DK DK do it for outer elements

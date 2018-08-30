@@ -71,8 +71,10 @@
   if (GRAVITY) then
 
     ! allocates gravity arrays
-    allocate( minus_deriv_gravity(NGLOB_AB), &
-             minus_g(NGLOB_AB), stat=ier)
+    allocate(minus_deriv_gravity(NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2156')
+    allocate(minus_g(NGLOB_AB), stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2157')
     if (ier /= 0) stop 'error allocating gravity arrays'
 
     ! sets up spline table
@@ -117,6 +119,7 @@
 
     ! allocates dummy gravity arrays
     allocate( minus_deriv_gravity(0), minus_g(0), stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2158')
     if (ier /= 0) stop 'error allocating gravity arrays'
 
   endif

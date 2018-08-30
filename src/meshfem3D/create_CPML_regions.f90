@@ -56,6 +56,7 @@
 
   ! CPML allocation
   allocate(is_CPML(nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1310')
   if (ier /= 0) stop 'Error allocating is_CPML array'
 
   ! initializes CPML elements
@@ -65,8 +66,10 @@
   ! checks if anything to do
   if (.not. PML_CONDITIONS) then
     ! dummy allocation
-    allocate(CPML_to_spec(1), &
-             CPML_regions(1),stat=ier)
+    allocate(CPML_to_spec(1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1311')
+    allocate(CPML_regions(1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1312')
     if (ier /= 0) stop 'Error allocating dummy CPML arrays'
 
     ! nothing to do anymore
@@ -98,9 +101,12 @@
   call max_all_all_cr(ymax,ymax_all)
   call max_all_all_cr(zmax,zmax_all)
 
-  allocate(is_X_CPML(nspec))
-  allocate(is_Y_CPML(nspec))
-  allocate(is_Z_CPML(nspec))
+  allocate(is_X_CPML(nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1313')
+  allocate(is_Y_CPML(nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1314')
+  allocate(is_Z_CPML(nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1315')
 
   is_X_CPML(:) = .false.
   is_Y_CPML(:) = .false.
@@ -191,8 +197,10 @@
   endif
 
   ! allocates arrays
-  allocate(CPML_to_spec(nspec_CPML), &
-           CPML_regions(nspec_CPML),stat=ier)
+  allocate(CPML_to_spec(nspec_CPML),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1316')
+  allocate(CPML_regions(nspec_CPML),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1317')
   if (ier /= 0) stop 'Error allocating CPML arrays'
 
   ispec_CPML=0

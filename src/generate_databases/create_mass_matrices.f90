@@ -57,7 +57,9 @@
   ! elastic domains
   if (ELASTIC_SIMULATION) then
      ! allocates memory
-     allocate(rmass(nglob),stat=ier); if (ier /= 0) stop 'error allocating array rmass'
+     allocate(rmass(nglob),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 660')
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array rmass')
      rmass(:) = 0._CUSTOM_REAL
 
      ! returns elastic mass matrix
@@ -88,7 +90,9 @@
   ! acoustic domains
   if (ACOUSTIC_SIMULATION) then
      ! allocates memory
-     allocate(rmass_acoustic(nglob),stat=ier); if (ier /= 0) stop 'error allocating array rmass_acoustic'
+     allocate(rmass_acoustic(nglob),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 661')
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array rmass_acoustic')
      rmass_acoustic(:) = 0._CUSTOM_REAL
 
      ! returns acoustic mass matrix
@@ -120,8 +124,12 @@
   ! poroelastic domains
   if (POROELASTIC_SIMULATION) then
     ! allocates memory
-    allocate(rmass_solid_poroelastic(nglob),stat=ier); if (ier /= 0) stop 'error in allocate rmass_solid_poroelastic'
-    allocate(rmass_fluid_poroelastic(nglob),stat=ier); if (ier /= 0) stop 'error in allocate rmass_fluid_poroelastic'
+    allocate(rmass_solid_poroelastic(nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 662')
+    if (ier /= 0) call exit_MPI_without_rank('error in allocate rmass_solid_poroelastic')
+    allocate(rmass_fluid_poroelastic(nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 663')
+    if (ier /= 0) call exit_MPI_without_rank('error in allocate rmass_fluid_poroelastic')
     rmass_solid_poroelastic(:) = 0._CUSTOM_REAL
     rmass_fluid_poroelastic(:) = 0._CUSTOM_REAL
 
@@ -210,6 +218,7 @@
     ! adding ocean load mass matrix at ocean bottom
     NGLOB_OCEAN = nglob
     allocate(rmass_ocean_load(NGLOB_OCEAN),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 664')
     if (ier /= 0) stop 'error allocating array rmass_ocean_load'
 
     ! create ocean load mass matrix for degrees of freedom at ocean bottom
@@ -277,6 +286,7 @@
     ! allocate dummy array if no oceans
     NGLOB_OCEAN = 1
     allocate(rmass_ocean_load(NGLOB_OCEAN),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 665')
     if (ier /= 0) stop 'error allocating dummy array rmass_ocean_load'
 
   endif
@@ -319,6 +329,7 @@
   ! elastic domains
   if (ELASTIC_SIMULATION) then
     allocate( rmassx(nglob_xy), rmassy(nglob_xy), rmassz(nglob_xy), stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 666')
     if (ier /= 0) stop 'error in allocate 21'
     rmassx(:) = 0._CUSTOM_REAL
     rmassy(:) = 0._CUSTOM_REAL
@@ -328,6 +339,7 @@
   ! acoustic domains
   if (ACOUSTIC_SIMULATION) then
     allocate( rmassz_acoustic(nglob_xy), stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 667')
     if (ier /= 0) stop 'error in allocate 22'
     rmassz_acoustic(:) = 0._CUSTOM_REAL
   endif

@@ -102,32 +102,41 @@
     ! allocates temporary transversely isotropic kernels
     if (ANISOTROPIC_KL) then
       if (SAVE_TRANSVERSE_KL) then
-        allocate(alphav_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-                 alphah_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-                 betav_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-                 betah_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-                 eta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT), &
-                 stat=ier)
+        allocate(alphav_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2243')
+        allocate(alphah_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2244')
+        allocate(betav_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2245')
+        allocate(betah_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2246')
+        allocate(eta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2247')
         if (ier /= 0) stop 'error allocating arrays alphav_kl,...'
 
         ! derived kernels
         ! vp kernel
         allocate(alpha_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2248')
         if (ier /= 0) stop 'error allocating array alpha_kl'
         ! vs kernel
         allocate(beta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2249')
         if (ier /= 0) stop 'error allocating array beta_kl'
       endif
     else
       ! derived kernels
       ! vp kernel
       allocate(alpha_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2250')
       if (ier /= 0) stop 'error allocating array alpha_kl'
       ! vs kernel
       allocate(beta_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2251')
       if (ier /= 0) stop 'error allocating array beta_kl'
       ! density prime kernel
       allocate(rhop_kl(NGLLX,NGLLY,NGLLZ,NSPEC_ADJOINT),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2252')
       if (ier /= 0) stop 'error allocating array rhop_kl'
     endif
 
@@ -196,6 +205,7 @@ subroutine save_weights_kernel()
   real(kind=CUSTOM_REAL) :: jacobianl
 
   allocate(weights_kernel(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2253')
   if (ier /= 0) stop 'error allocating array weights_kernel'
   do ispec = 1, NSPEC_AB
     ispec_irreg = irregular_element_number(ispec)

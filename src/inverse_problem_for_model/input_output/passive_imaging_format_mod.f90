@@ -122,11 +122,13 @@ contains
     type(gather),     intent(out) :: mygather
     integer(kind=si) :: k
 
-    write(6,*)'Read PIF-file header from ',trim(adjustl(filename)),' ...'
+    integer :: ier
+
+    write(*,*)'Read PIF-file header from ',trim(adjustl(filename)),' ...'
     open(iunit, file=trim(adjustl(filename)), status='old',action='read', iostat=io_err)
 
     if (io_err /= 0) then
-       write(6,*)'PIF file: ',trim(adjustl(filename)),' does not exist!'
+       write(*,*)'PIF file: ',trim(adjustl(filename)),' does not exist!'
        stop 'PIF file does not exist!'
     endif
 
@@ -200,7 +202,10 @@ contains
 
     !*** Now read stations
     k = 0
-    if (.not. allocated(mygather%stations)) allocate(mygather%stations(mygather%hdr%nsta))
+    if (.not. allocated(mygather%stations)) then
+      allocate(mygather%stations(mygather%hdr%nsta),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 489')
+    endif
     do
        read(iunit,fmt='(a256)',iostat=io_err) line
        if (trim(adjustl(line)) == 'ENDLIST') exit
@@ -267,13 +272,13 @@ contains
 
        end select
 
-       if (debug_level > 1) write(6,*)trim(adjustl(line))
+       if (debug_level > 1) write(*,*)trim(adjustl(line))
 
     enddo
 
     if (k < mygather%hdr%nsta) stop 'Not enough stations in PIF binary file..., check number_of_station'
     close(iunit)
-    write(6,*)'Done!'
+    write(*,*)'Done!'
 
     ! Read CMT file if needed
     select case (mygather%hdr%source_type)
@@ -296,7 +301,7 @@ contains
                                   mygather%source%y, &
                                   mygather%source%z)
     case default
-       write(6,*)'WARNING : source_type undefined !'
+       write(*,*) 'WARNING : source_type undefined !'
     end select
 
 !!!! Not here.... since only header
@@ -315,11 +320,11 @@ contains
     character(len=*),    intent(in) :: filename
     type(source_type),  intent(out) :: cmt
 
-    write(6,*)'Read CMT solution file ...'
+    write(*,*)'Read CMT solution file ...'
     print *,filename
     open(iunit, file=trim(adjustl(filename)), status='old',action='read', iostat=io_err)
     if (io_err /= 0) then
-       write(6,*)'CMT solution file: ',trim(adjustl(filename)),' does not exist!'
+       write(*,*)'CMT solution file: ',trim(adjustl(filename)),' does not exist!'
        stop 'CMT solution file does not exist!'
     endif
 
@@ -376,7 +381,7 @@ contains
     enddo
 
     close(iunit)
-    write(6,*)'Done!'
+    write(*,*)'Done!'
 
   end subroutine read_cmt_solution_file
   !--------------------------------------------------------------------------------
@@ -388,10 +393,10 @@ contains
     character(len=*),    intent(in) :: filename
     type(source_type),  intent(out) :: cmt
 
-    write(6,*)'Read force solution file ...'
+    write(*,*)'Read force solution file ...'
     open(iunit, file=trim(adjustl(filename)), status='old',action='read', iostat=io_err)
     if (io_err /= 0) then
-       write(6,*)'Force solution file: ',trim(adjustl(filename)),' does not exist!'
+       write(*,*)'Force solution file: ',trim(adjustl(filename)),' does not exist!'
        stop 'Force solution file does not exist!'
     endif
 
@@ -433,7 +438,7 @@ contains
     enddo
 
     close(iunit)
-    write(6,*)'Done!'
+    write(*,*)'Done!'
 
   end subroutine read_force_solution_file
   !--------------------------------------------------------------------------------
@@ -448,8 +453,8 @@ contains
     real(kind=sp),    dimension(nrec,nt)              :: datas
     real(kind=cp),    dimension(nrec,nt), intent(out) :: data
 
-    write(6,*)'Read binary data: '
-    write(6,*)'    filename, nrec, nt = ',trim(adjustl(filename)),nrec,nt
+    write(*,*)'Read binary data: '
+    write(*,*)'    filename, nrec, nt = ',trim(adjustl(filename)),nrec,nt
 
     nsize = nrec * sp
     open(iunit,file=trim(adjustl(filename)),access='direct',recl=nsize,status='old')
@@ -460,7 +465,7 @@ contains
     close(iunit)
     data = real(datas,kind=cp)
 
-    write(6,*)'Done!'
+    write(*,*)'Done!'
 
   end subroutine read_binary_data
   !--------------------------------------------------------------------------------
@@ -475,8 +480,8 @@ contains
     real(kind=sp),    dimension(nt)              :: stfs
     real(kind=cp),    dimension(nt), intent(out) :: stf
 
-    write(6,*)'Read binary source signature: '
-    write(6,*)'    filename, nt = ',trim(adjustl(filename)),nt
+    write(*,*)'Read binary source signature: '
+    write(*,*)'    filename, nt = ',trim(adjustl(filename)),nt
 
     nsize = nt * sp
 
@@ -486,7 +491,7 @@ contains
 
     stf = real(stfs,kind=cp)
 
-    write(6,*)'Done!'
+    write(*,*)'Done!'
 
   end subroutine read_binary_source_signature
   !--------------------------------------------------------------------------------
@@ -501,8 +506,8 @@ contains
     real(kind=sp),    dimension(nt)              :: stfs
     real(kind=cp),    dimension(nt), intent(in)  :: stf
 
-    write(6,*)'Write binary source signature: '
-    write(6,*)'    filename, nt = ',trim(adjustl(filename)),nt
+    write(*,*)'Write binary source signature: '
+    write(*,*)'    filename, nt = ',trim(adjustl(filename)),nt
 
     nsize = nt * sp
     stfs  = real(stf,kind=sp)
@@ -511,7 +516,7 @@ contains
     write(iunit,rec=1)stfs(:)
     close(iunit)
 
-    write(6,*)'Done!'
+    write(*,*)'Done!'
 
   end subroutine write_binary_source_signature
   !--------------------------------------------------------------------------------
@@ -525,8 +530,8 @@ contains
     integer(kind=si)                                 :: nsize, it
     real(kind=cp), dimension(nrec,nt), intent(in) :: data
 
-    write(6,*)'Write binary data: '
-    write(6,*)'    filename, nrec, nt = ',trim(adjustl(filename)),nrec,nt
+    write(*,*)'Write binary data: '
+    write(*,*)'    filename, nrec, nt = ',trim(adjustl(filename)),nrec,nt
 
     nsize = nrec * sp
     open(iunit,file=trim(adjustl(filename)),access='direct',recl=nsize,status='replace')
@@ -535,7 +540,7 @@ contains
     enddo
     close(iunit)
 
-    write(6,*)'Done!'
+    write(*,*)'Done!'
 
   end subroutine write_binary_data
   !--------------------------------------------------------------------------------

@@ -47,6 +47,8 @@ program xdecompose_mesh_mpi
   ! number of proc in each direction
   integer             :: npartX, npartY, npartZ
 
+  integer             :: ier
+
   ! MPI initialization
   call init_mpi()
   call world_size(sizeprocs)
@@ -111,7 +113,10 @@ program xdecompose_mesh_mpi
   endif
 
   call bcast_all_singlei(nspec_glob)
-  if (myrank > 0) allocate(ipart(nspec_glob))
+  if (myrank > 0) then
+    allocate(ipart(nspec_glob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1')
+  endif
   call bcast_all_i(ipart, nspec_glob)
   call send_partition_mesh_to_all(myrank, ipart, npartX*npartY*npartZ)
   call send_mesh_to_all(myrank)
@@ -158,7 +163,7 @@ subroutine send_partition_mesh_to_all(myrank, ipart, npart)
   integer,                               intent(in) :: myrank, npart
   integer,   dimension(nspec_glob),      intent(in) :: ipart
 
-  integer                                           :: iE, kE, iE_loc
+  integer                                           :: iE, kE, iE_loc, ier
   integer                                           :: nE
   integer                                           :: irank
   integer                                           :: ivertex, inode, inode_loc
@@ -172,7 +177,7 @@ subroutine send_partition_mesh_to_all(myrank, ipart, npart)
   integer,           dimension(:),     allocatable  :: nelmnts_by_node_glob
   integer,           dimension(:,:),   allocatable  :: elmnts_by_node_glob
   logical,           dimension(:),     allocatable  :: stored_node
-   integer,           dimension(1)                  :: nE_loc_for_shut_up_compiler
+  integer,           dimension(1)                   :: nE_loc_for_shut_up_compiler
 
   ! glob dimension
   call bcast_all_singlei(nspec_glob)
@@ -193,7 +198,8 @@ subroutine send_partition_mesh_to_all(myrank, ipart, npart)
   !! ----------------------------- COMPUTE ELEMENT BY NODE CONNECTIVITY ---------------
   if (myrank == 0) then
      ! evaluate max element by node
-     allocate(nelmnts_by_node_glob(nnodes_glob))
+     allocate(nelmnts_by_node_glob(nnodes_glob),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2')
      nelmnts_by_node_glob(:)=0
      do iE=1,nE
         do inode=1,NGNOD
@@ -205,7 +211,8 @@ subroutine send_partition_mesh_to_all(myrank, ipart, npart)
      ! compute elments by node table
      max_elmnts_by_node = maxval(nelmnts_by_node_glob)
      nelmnts_by_node_glob(:)=0
-     allocate(elmnts_by_node_glob(max_elmnts_by_node, nnodes_glob))  !!
+     allocate(elmnts_by_node_glob(max_elmnts_by_node, nnodes_glob),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 3')
      elmnts_by_node_glob(:,:)=-1
      do iE=1,nE
         do inode=1,NGNOD
@@ -218,8 +225,10 @@ subroutine send_partition_mesh_to_all(myrank, ipart, npart)
   call bcast_all_singlei(max_elmnts_by_node)
 
   ! count the number of nodes in each partition
-  allocate(nnodes_in_partition(npart))
-  allocate(stored_node(npart))
+  allocate(nnodes_in_partition(npart),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 4')
+  allocate(stored_node(npart),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 5')
   nnodes_in_partition(:)=0
   if (myrank == 0 ) then
      do inode = 1, nnodes_glob
@@ -239,12 +248,15 @@ subroutine send_partition_mesh_to_all(myrank, ipart, npart)
   nnodes = nnodes_in_partition(myrank+1)
 
   ! splitted dual mesh, not really distribued because of use glob numbering
-  allocate(elmnts_by_node(max_elmnts_by_node,nnodes), nelmnts_by_node(nnodes))
+  allocate(elmnts_by_node(max_elmnts_by_node,nnodes), nelmnts_by_node(nnodes),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 6')
   elmnts_by_node(:,:)=-1
 
   ! global to local numbering
-  allocate(loc2glob_nodes(nnodes), glob2loc_nodes(nnodes_glob))
-  allocate(nodes_coords(3,nnodes))
+  allocate(loc2glob_nodes(nnodes), glob2loc_nodes(nnodes_glob),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 7')
+  allocate(nodes_coords(3,nnodes),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 8')
   nnodes_loc = nnodes
   glob2loc_nodes(:)=-1
   loc2glob_nodes(:)=-1
@@ -270,11 +282,16 @@ subroutine send_partition_mesh_to_all(myrank, ipart, npart)
 
      do irank = 1, npart - 1
 
-        allocate(buffer_to_send(max_elmnts_by_node,nnodes_in_partition(irank+1)))
-        allocate(buffer_to_send1(nnodes_in_partition(irank+1)))
-        allocate(buffer_to_send2(nnodes_in_partition(irank+1)))
-        allocate(buffer_to_send3(nnodes_glob))
-        allocate(dp_buffer_to_send(3,nnodes_in_partition(irank+1)))
+        allocate(buffer_to_send(max_elmnts_by_node,nnodes_in_partition(irank+1)),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 9')
+        allocate(buffer_to_send1(nnodes_in_partition(irank+1)),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 10')
+        allocate(buffer_to_send2(nnodes_in_partition(irank+1)),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 11')
+        allocate(buffer_to_send3(nnodes_glob),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 12')
+        allocate(dp_buffer_to_send(3,nnodes_in_partition(irank+1)),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 13')
         inode_loc = 0
         do inode = 1, nnodes_glob
            not_stored=.true.
@@ -329,7 +346,8 @@ subroutine send_partition_mesh_to_all(myrank, ipart, npart)
      endif
   enddo
 
-  allocate(loc2glob_elmnt(nE_loc), glob2loc_elmnt(nE))
+  allocate(loc2glob_elmnt(nE_loc), glob2loc_elmnt(nE),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 14')
   glob2loc_elmnt(:)=-1
 
   ! list of element in my partition
@@ -341,13 +359,15 @@ subroutine send_partition_mesh_to_all(myrank, ipart, npart)
         glob2loc_elmnt(iE) = iE_loc
      endif
   enddo
-  allocate(nE_irank(npart))
+  allocate(nE_irank(npart),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 15')
   nE_irank(:)=0
   nE_loc_for_shut_up_compiler(1) = nE_loc
   call gather_all_all_i(nE_loc_for_shut_up_compiler, 1, nE_irank, 1, npart)
 
   nspec=nE_loc !! global varailble to be saved
-  allocate(elmnts(NGNOD,nE_loc))
+  allocate(elmnts(NGNOD,nE_loc),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 16')
   if ( myrank == 0 ) then
 
      irank = 0
@@ -361,7 +381,8 @@ subroutine send_partition_mesh_to_all(myrank, ipart, npart)
      enddo
 
      do irank = 1, npart - 1
-        allocate(buffer_to_send(NGNOD, nE_irank(irank+1)))
+        allocate(buffer_to_send(NGNOD, nE_irank(irank+1)),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 17')
         iE_loc=0
         do iE = 1, nE
            if (ipart(iE) == irank +1 ) then
@@ -404,65 +425,87 @@ subroutine send_mesh_to_all(myrank)
 
   if (myrank > 0) then
      allocate(elmnts_glob(NGNOD,nspec_glob),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 18')
      if (ier /= 0) then
         write(*,*) 'Error ', myrank, NGNOD,nspec_glob
         stop 'Error allocating array elmnts'
      endif
 
      allocate(mat(2,nspec_glob),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 19')
      if (ier /= 0) stop 'Error allocating array mat'
 
      allocate(num_material(1:nspec_glob),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 20')
      if (ier /= 0) stop 'Error allocating array num_material'
 
      allocate(mat_prop(16,count_def_mat),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 21')
      if (ier /= 0) stop 'Error allocating array mat_prop'
 
      allocate(undef_mat_prop(6,count_undef_mat),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 22')
      if (ier /= 0) stop 'Error allocating array undef_mat_prop'
 
      allocate(ibelm_xmin(nspec2D_xmin),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 23')
      if (ier /= 0) stop 'Error allocating array ibelm_xmin'
      allocate(nodes_ibelm_xmin(NGNOD2D,nspec2D_xmin),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 24')
      if (ier /= 0) stop 'Error allocating array nodes_ibelm_xmin'
 
      allocate(ibelm_xmax(nspec2D_xmax),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 25')
      if (ier /= 0) stop 'Error allocating array ibelm_xmax'
      allocate(nodes_ibelm_xmax(NGNOD2D,nspec2D_xmax),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 26')
      if (ier /= 0) stop 'Error allocating array nodes_ibelm_xmax'
 
      allocate(ibelm_ymin(nspec2D_ymin),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 27')
      if (ier /= 0) stop 'Error allocating array ibelm_ymin'
      allocate(nodes_ibelm_ymin(NGNOD2D,nspec2D_ymin),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 28')
      if (ier /= 0) stop 'Error allocating array nodes_ibelm_ymin'
 
      allocate(ibelm_ymax(nspec2D_ymax),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 29')
      if (ier /= 0) stop 'Error allocating array ibelm_ymax'
      allocate(nodes_ibelm_ymax(NGNOD2D,nspec2D_ymax),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 30')
      if (ier /= 0) stop 'Error allocating array nodes_ibelm_ymax'
 
      allocate(ibelm_bottom(nspec2D_bottom),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 31')
      if (ier /= 0) stop 'Error allocating array ibelm_bottom'
      allocate(nodes_ibelm_bottom(NGNOD2D,nspec2D_bottom),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 32')
      if (ier /= 0) stop 'Error allocating array nodes_ibelm_bottom'
 
      allocate(ibelm_top(nspec2D_top),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 33')
      if (ier /= 0) stop 'Error allocating array ibelm_top'
      allocate(nodes_ibelm_top(NGNOD2D,nspec2D_top),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 34')
      if (ier /= 0) stop 'Error allocating array nodes_ibelm_top'
 
      allocate(cpml_to_spec(nspec_cpml),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 35')
      if (ier /= 0) stop 'Error allocating array CPML_to_spec'
      ! C-PML regions (see below)
      allocate(cpml_regions(nspec_cpml),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 36')
      if (ier /= 0) stop 'Error allocating array CPML_regions'
 
       allocate(is_cpml(nspec_glob),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 37')
       if (ier /= 0) stop 'Error allocating array is_CPML'
 
       allocate(ibelm_moho(nspec2D_moho),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 38')
       if (ier /= 0) stop 'Error allocating array ibelm_moho'
       allocate(nodes_ibelm_moho(NGNOD2D,nspec2D_moho),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 39')
       if (ier /= 0) stop 'Error allocating array nodes_ibelm_moho'
 
   endif

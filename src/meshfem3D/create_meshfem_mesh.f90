@@ -247,65 +247,88 @@ contains
 
     ! use dynamic allocation to allocate memory for arrays
     allocate(ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1257')
     if (ier /= 0) stop 'Error allocating array ibool'
 
     allocate(xstore(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1258')
     if (ier /= 0) stop 'Error allocating array xstore'
     allocate(ystore(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1259')
     if (ier /= 0) stop 'Error allocating array ystore'
     allocate(zstore(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1260')
     ! exit if there is not enough memory to allocate all the arrays
     if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
     ! flag indicating whether point is in the sediments
     allocate(flag_sediments(NGLLX_M,NGLLY_M,NGLLZ_M,nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1261')
     if (ier /= 0) stop 'Error allocating array flag_sediments'
     allocate(not_fully_in_bedrock(nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1262')
     if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
     ! boundary locator
     allocate(iboun(6,nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1263')
     if (ier /= 0) stop 'Error allocating array iboun'
 
     ! boundary parameters locator
     allocate(ibelm_xmin(NSPEC2DMAX_XMIN_XMAX),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1264')
     if (ier /= 0) stop 'Error allocating array ibelm_xmin'
     allocate(ibelm_xmax(NSPEC2DMAX_XMIN_XMAX),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1265')
     if (ier /= 0) stop 'Error allocating array ibelm_xmax'
     allocate(ibelm_ymin(NSPEC2DMAX_YMIN_YMAX),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1266')
     if (ier /= 0) stop 'Error allocating array ibelm_ymin'
     allocate(ibelm_ymax(NSPEC2DMAX_YMIN_YMAX),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1267')
     if (ier /= 0) stop 'Error allocating array ibelm_ymax'
     allocate(ibelm_bottom(NSPEC2D_BOTTOM),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1268')
     if (ier /= 0) stop 'Error allocating array ibelm_bottom'
     allocate(ibelm_top(NSPEC2D_TOP),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1269')
     if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
     ! MPI cut-planes parameters along xi and along eta
     allocate(iMPIcut_xi(2,nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1270')
     if (ier /= 0) stop 'Error allocating array iMPIcut_xi'
     allocate(iMPIcut_eta(2,nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1271')
     if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
     ! allocate memory for arrays
     allocate(iglob(npointot),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1272')
     if (ier /= 0) stop 'Error allocating array iglob'
     allocate(locval(npointot),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1273')
     if (ier /= 0) stop 'Error allocating array locval'
     allocate(ifseg(npointot),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1274')
     if (ier /= 0) stop 'Error allocating array ifseg'
     allocate(xp(npointot),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1275')
     if (ier /= 0) stop 'Error allocating array xp'
     allocate(yp(npointot),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1276')
     if (ier /= 0) stop 'Error allocating array yp'
     allocate(zp(npointot),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1277')
     if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
     ! allocate material ids array
     allocate(material_num(0:2*NER,0:2*NEX_PER_PROC_XI,0:2*NEX_PER_PROC_ETA),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1278')
     if (ier /= 0) call exit_MPI(myrank,'not enough memory to allocate arrays')
 
     allocate(ispec_material_id(nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1279')
     if (ier /= 0) stop 'Error allocating array ispec_material_id'
 
     ! synchronize
@@ -661,6 +684,7 @@ contains
 
     ! put in classical format
     allocate(nodes_coords(nglob,3),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1280')
     if (ier /= 0) stop 'Error allocating array nodes_coords'
 
     nodes_coords(:,:) = 0.0d0

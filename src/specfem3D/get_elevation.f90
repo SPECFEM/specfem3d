@@ -78,16 +78,21 @@
   !
   ! allocates temporary arrays
   allocate(elevation_distmin(npoints),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2184')
   if (ier /= 0) stop 'Error allocating elevation arrays'
 
   if (myrank == 0) then
     ! only master gathers all
-    allocate(elevation_all(npoints,0:NPROC-1), &
-             elevation_distmin_all(npoints,0:NPROC-1),stat=ier)
+    allocate(elevation_all(npoints,0:NPROC-1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2185')
+    allocate(elevation_distmin_all(npoints,0:NPROC-1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2186')
     if (ier /= 0) stop 'Error allocating elevation gather arrays'
   else
-    allocate(elevation_all(1,1), &
-             elevation_distmin_all(1,1),stat=ier)
+    allocate(elevation_all(1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2187')
+    allocate(elevation_distmin_all(1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2188')
     if (ier /= 0) stop 'Error allocating elevation gather arrays'
   endif
 

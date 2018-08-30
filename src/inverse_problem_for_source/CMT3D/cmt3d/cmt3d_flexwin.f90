@@ -8,7 +8,7 @@ program cmt3d_flexwin
   implicit none
 
   character(len=150) :: par_file
-  integer :: nerr, i
+  integer :: ier, i
   real*8, dimension(:,:), allocatable :: A
   real*8, dimension(:), allocatable :: b,dm
 
@@ -49,8 +49,9 @@ program cmt3d_flexwin
   call setup_data_weights
 
 ! allocate arrays
-  allocate(A(npar,npar),b(npar),dm(npar),stat=nerr)
-  if (nerr /= 0) stop 'Error allocating '
+  allocate(A(npar,npar),b(npar),dm(npar),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1093')
+  if (ier /= 0) stop 'Error allocating '
   print *, 'Set up inversion matrix ...'
   call setup_matrix(A,b,npar)
 
@@ -72,8 +73,8 @@ program cmt3d_flexwin
   call write_new_cmtsolution(cmt_file,new_cmt_file,new_cmt_par)
 
 ! deallocate arrays and close files
-  deallocate(A,b,dm,stat=nerr)
-  if (nerr /= 0) stop 'Error deallocating '
+  deallocate(A,b,dm,stat=ier)
+  if (ier /= 0) stop 'Error deallocating '
 
   print *, ' '
   print *, 'Done with cmt3d inversion'

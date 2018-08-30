@@ -68,12 +68,15 @@ subroutine model_ipati_adios(myrank,nspec,LOCAL_PATH)
 
   ! density
   allocate( rho_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 572')
   if (ier /= 0) stop 'error allocating array rho_read'
   ! vp
   allocate( vp_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 573')
   if (ier /= 0) stop 'error allocating array vp_read'
   ! vs scaled from vp
   allocate( vs_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 574')
   if (ier /= 0) stop 'error allocating array vs_read'
 
   call read_model_vp_rho_adios(myrank, nspec, LOCAL_PATH, &
@@ -126,12 +129,15 @@ subroutine model_ipati_water_adios(myrank,nspec,LOCAL_PATH)
 
   ! density
   allocate( rho_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 575')
   if (ier /= 0) stop 'error allocating array rho_read'
   ! vp
   allocate( vp_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 576')
   if (ier /= 0) stop 'error allocating array vp_read'
   ! vs scaled from vp
   allocate( vs_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 577')
   if (ier /= 0) stop 'error allocating array vs_read'
 
   call read_model_vp_rho_adios(myrank, nspec, LOCAL_PATH, &

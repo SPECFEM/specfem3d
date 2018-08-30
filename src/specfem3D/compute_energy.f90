@@ -56,7 +56,7 @@
   real(kind=CUSTOM_REAL) :: lambdal,mul,lambdalplus2mul,rhol,rho_invl
   real(kind=CUSTOM_REAL) :: kappal
 
-  real(kind=CUSTOM_REAL) :: integration_weight
+  double precision :: integration_weight
   double precision :: kinetic_energy,potential_energy
   double precision :: kinetic_energy_glob,potential_energy_glob,total_energy_glob
 
@@ -208,80 +208,84 @@
             mul = mustore(i,j,k,ispec)
             rhol = rhostore(i,j,k,ispec)
 
-          ! full anisotropic case, stress calculations
-          if (ANISOTROPY) then
-            c11 = c11store(i,j,k,ispec)
-            c12 = c12store(i,j,k,ispec)
-            c13 = c13store(i,j,k,ispec)
-            c14 = c14store(i,j,k,ispec)
-            c15 = c15store(i,j,k,ispec)
-            c16 = c16store(i,j,k,ispec)
-            c22 = c22store(i,j,k,ispec)
-            c23 = c23store(i,j,k,ispec)
-            c24 = c24store(i,j,k,ispec)
-            c25 = c25store(i,j,k,ispec)
-            c26 = c26store(i,j,k,ispec)
-            c33 = c33store(i,j,k,ispec)
-            c34 = c34store(i,j,k,ispec)
-            c35 = c35store(i,j,k,ispec)
-            c36 = c36store(i,j,k,ispec)
-            c44 = c44store(i,j,k,ispec)
-            c45 = c45store(i,j,k,ispec)
-            c46 = c46store(i,j,k,ispec)
-            c55 = c55store(i,j,k,ispec)
-            c56 = c56store(i,j,k,ispec)
-            c66 = c66store(i,j,k,ispec)
+            ! full anisotropic case, stress calculations
+            if (ANISOTROPY) then
+              c11 = c11store(i,j,k,ispec)
+              c12 = c12store(i,j,k,ispec)
+              c13 = c13store(i,j,k,ispec)
+              c14 = c14store(i,j,k,ispec)
+              c15 = c15store(i,j,k,ispec)
+              c16 = c16store(i,j,k,ispec)
+              c22 = c22store(i,j,k,ispec)
+              c23 = c23store(i,j,k,ispec)
+              c24 = c24store(i,j,k,ispec)
+              c25 = c25store(i,j,k,ispec)
+              c26 = c26store(i,j,k,ispec)
+              c33 = c33store(i,j,k,ispec)
+              c34 = c34store(i,j,k,ispec)
+              c35 = c35store(i,j,k,ispec)
+              c36 = c36store(i,j,k,ispec)
+              c44 = c44store(i,j,k,ispec)
+              c45 = c45store(i,j,k,ispec)
+              c46 = c46store(i,j,k,ispec)
+              c55 = c55store(i,j,k,ispec)
+              c56 = c56store(i,j,k,ispec)
+              c66 = c66store(i,j,k,ispec)
 
-            sigma_xx = c11 * duxdxl + c16 * duxdyl_plus_duydxl + c12 * duydyl + &
-                       c15 * duzdxl_plus_duxdzl + c14 * duzdyl_plus_duydzl + c13 * duzdzl
-            sigma_yy = c12 * duxdxl + c26 * duxdyl_plus_duydxl + c22 * duydyl + &
-                       c25 * duzdxl_plus_duxdzl + c24 * duzdyl_plus_duydzl + c23 * duzdzl
-            sigma_zz = c13 * duxdxl + c36 * duxdyl_plus_duydxl + c23 * duydyl + &
-                       c35 * duzdxl_plus_duxdzl + c34 * duzdyl_plus_duydzl + c33 * duzdzl
-            sigma_xy = c16 * duxdxl + c66 * duxdyl_plus_duydxl + c26 * duydyl + &
-                       c56 * duzdxl_plus_duxdzl + c46 * duzdyl_plus_duydzl + c36 * duzdzl
-            sigma_xz = c15 * duxdxl + c56 * duxdyl_plus_duydxl + c25 * duydyl + &
-                       c55 * duzdxl_plus_duxdzl + c45 * duzdyl_plus_duydzl + c35 * duzdzl
-            sigma_yz = c14 * duxdxl + c46 * duxdyl_plus_duydxl + c24 * duydyl + &
-                       c45 * duzdxl_plus_duxdzl + c44 * duzdyl_plus_duydzl + c34 * duzdzl
+              sigma_xx = c11 * duxdxl + c16 * duxdyl_plus_duydxl + c12 * duydyl + &
+                         c15 * duzdxl_plus_duxdzl + c14 * duzdyl_plus_duydzl + c13 * duzdzl
+              sigma_yy = c12 * duxdxl + c26 * duxdyl_plus_duydxl + c22 * duydyl + &
+                         c25 * duzdxl_plus_duxdzl + c24 * duzdyl_plus_duydzl + c23 * duzdzl
+              sigma_zz = c13 * duxdxl + c36 * duxdyl_plus_duydxl + c23 * duydyl + &
+                         c35 * duzdxl_plus_duxdzl + c34 * duzdyl_plus_duydzl + c33 * duzdzl
+              sigma_xy = c16 * duxdxl + c66 * duxdyl_plus_duydxl + c26 * duydyl + &
+                         c56 * duzdxl_plus_duxdzl + c46 * duzdyl_plus_duydzl + c36 * duzdzl
+              sigma_xz = c15 * duxdxl + c56 * duxdyl_plus_duydxl + c25 * duydyl + &
+                         c55 * duzdxl_plus_duxdzl + c45 * duzdyl_plus_duydzl + c35 * duzdzl
+              sigma_yz = c14 * duxdxl + c46 * duxdyl_plus_duydxl + c24 * duydyl + &
+                         c45 * duzdxl_plus_duxdzl + c44 * duzdyl_plus_duydzl + c34 * duzdzl
 
-          else
+            else
 
-            ! isotropic case
-            lambdalplus2mul = kappal + FOUR_THIRDS * mul
-            lambdal = lambdalplus2mul - 2._CUSTOM_REAL * mul
+              ! isotropic case
+              lambdalplus2mul = kappal + FOUR_THIRDS * mul
+              lambdal = lambdalplus2mul - 2._CUSTOM_REAL * mul
 
-            ! compute stress sigma
-            sigma_xx = lambdalplus2mul * duxdxl + lambdal * duydyl_plus_duzdzl
-            sigma_yy = lambdalplus2mul * duydyl + lambdal * duxdxl_plus_duzdzl
-            sigma_zz = lambdalplus2mul * duzdzl + lambdal * duxdxl_plus_duydyl
+              ! compute stress sigma
+              sigma_xx = lambdalplus2mul * duxdxl + lambdal * duydyl_plus_duzdzl
+              sigma_yy = lambdalplus2mul * duydyl + lambdal * duxdxl_plus_duzdzl
+              sigma_zz = lambdalplus2mul * duzdzl + lambdal * duxdxl_plus_duydyl
 
-            sigma_xy = mul * duxdyl_plus_duydxl
-            sigma_xz = mul * duzdxl_plus_duxdzl
-            sigma_yz = mul * duzdyl_plus_duydzl
+              sigma_xy = mul * duxdyl_plus_duydxl
+              sigma_xz = mul * duzdxl_plus_duxdzl
+              sigma_yz = mul * duzdyl_plus_duydzl
 
-          endif ! ANISOTROPY
+            endif ! ANISOTROPY
 
-          ! subtract memory variables if attenuation
-          if (ATTENUATION) then
-            do i_sls = 1,N_SLS
-              R_xx_val = R_xx(i_sls,i,j,k,ispec)
-              R_yy_val = R_yy(i_sls,i,j,k,ispec)
-              sigma_xx = sigma_xx - R_xx_val
-              sigma_yy = sigma_yy - R_yy_val
-              sigma_zz = sigma_zz + R_xx_val + R_yy_val
-              sigma_xy = sigma_xy - R_xy(i_sls,i,j,k,ispec)
-              sigma_xz = sigma_xz - R_xz(i_sls,i,j,k,ispec)
-              sigma_yz = sigma_yz - R_yz(i_sls,i,j,k,ispec)
-            enddo
-          endif
+            ! subtract memory variables if attenuation
+            if (ATTENUATION) then
+              do i_sls = 1,N_SLS
+                R_xx_val = R_xx(i_sls,i,j,k,ispec)
+                R_yy_val = R_yy(i_sls,i,j,k,ispec)
+                sigma_xx = sigma_xx - R_xx_val
+                sigma_yy = sigma_yy - R_yy_val
+                sigma_zz = sigma_zz + R_xx_val + R_yy_val
+                sigma_xy = sigma_xy - R_xy(i_sls,i,j,k,ispec)
+                sigma_xz = sigma_xz - R_xz(i_sls,i,j,k,ispec)
+                sigma_yz = sigma_yz - R_yz(i_sls,i,j,k,ispec)
+              enddo
+            endif
 
             integration_weight = wxgll(i)*wygll(j)*wzgll(k)*jacobianl
 
+            ! velocity
+            vx = veloc(1,iglob)
+            vy = veloc(2,iglob)
+            vz = veloc(3,iglob)
+
             ! compute kinetic energy  1/2 rho ||v||^2
             ! we will divide the total sum by 2 only once, at the end of this routine, to reduce compute time
-            kinetic_energy = kinetic_energy + integration_weight * rhol*(veloc(1,iglob)**2 + &
-                                 veloc(2,iglob)**2 + veloc(3,iglob)**2)
+            kinetic_energy = kinetic_energy + integration_weight * rhol*(vx**2 + vy**2 + vz**2)
 
             ! compute potential energy 1/2 sigma_ij epsilon_ij
             ! we will divide the total sum by 2 only once, at the end of this routine, to reduce compute time

@@ -48,7 +48,7 @@ contains
   real(kind=4), allocatable, dimension(:,:,:) :: vp_sep, vs_sep, rho_sep
   integer :: NX, NY, NZ
   real :: OX, OY, OZ, DX, DY, DZ
-  integer :: NX_alt, NY_alt, NZ_alt
+  integer :: NX_alt, NY_alt, NZ_alt,ier
   real :: OX_alt, OY_alt, OZ_alt, DX_alt, DY_alt, DZ_alt
   character(len=512) :: sep_header_name_vp, sep_header_name_vs, &
                         sep_header_name_rho
@@ -118,7 +118,8 @@ contains
   ! Read VP |
   !---------'
   ! Read available SEP files, assign default values for unfound files.
-  allocate(vp_sep(ni, nj, NZ))
+  allocate(vp_sep(ni, nj, NZ),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 625')
   call read_sep_binary_mpiio(trim(SEP_MODEL_DIRECTORY) // "/" // sep_bin_vp, &
                              NX, NY, NZ, ni, nj, NZ, &
                              imin, jmin, kmin, vp_sep)
@@ -131,7 +132,8 @@ contains
   ! Read VS |
   !---------'
   if (vs_exists) then
-    allocate(vs_sep(ni, nj, NZ))
+    allocate(vs_sep(ni, nj, NZ),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 626')
     call read_sep_binary_mpiio(trim(SEP_MODEL_DIRECTORY) // "/" // sep_bin_vs, &
                                NX, NY, NZ, ni, nj, NZ, &
                                imin, jmin, kmin, vs_sep)
@@ -143,7 +145,8 @@ contains
   ! Read RHO |
   !----------'
   if (rho_exists) then
-    allocate(rho_sep(ni, nj, NZ))
+    allocate(rho_sep(ni, nj, NZ),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 627')
     call read_sep_binary_mpiio(trim(SEP_MODEL_DIRECTORY) // "/" // sep_bin_rho, &
                                NX, NY, NZ, ni, nj, NZ, &
                                imin, jmin, kmin, rho_sep)

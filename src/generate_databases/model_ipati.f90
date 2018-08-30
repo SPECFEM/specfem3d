@@ -66,6 +66,7 @@
 
   ! density
   allocate( rho_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 609')
   if (ier /= 0) stop 'error allocating array rho_read'
 
   filename = prname_lp(1:len_trim(prname_lp))//'rho.bin'
@@ -80,6 +81,7 @@
 
   ! vp
   allocate( vp_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 610')
   if (ier /= 0) stop 'error allocating array vp_read'
 
   filename = prname_lp(1:len_trim(prname_lp))//'vp.bin'
@@ -94,6 +96,7 @@
 
   ! vs scaled from vp
   allocate( vs_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 611')
   if (ier /= 0) stop 'error allocating array vs_read'
 
   ! scaling
@@ -148,6 +151,7 @@
 
   ! density
   allocate( rho_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 612')
   if (ier /= 0) stop 'error allocating array rho_read'
 
   filename = prname_lp(1:len_trim(prname_lp))//'rho.bin'
@@ -162,6 +166,7 @@
 
   ! vp
   allocate( vp_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 613')
   if (ier /= 0) stop 'error allocating array vp_read'
 
   filename = prname_lp(1:len_trim(prname_lp))//'vp.bin'
@@ -176,6 +181,7 @@
 
   ! vs scaled from vp
   allocate( vs_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 614')
   if (ier /= 0) stop 'error allocating array vs_read'
 
   ! scaling

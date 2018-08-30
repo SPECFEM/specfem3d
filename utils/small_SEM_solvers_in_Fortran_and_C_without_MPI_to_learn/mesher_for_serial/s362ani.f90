@@ -58,7 +58,7 @@
   if (upper) then
     u=(radius+radius-rmoho-r670)/(rmoho-r670)
     u2=(radius2+radius2-rmoho-r670)/(rmoho-r670)
-!          write(6,"('upper mantle:',2f10.3)") u,u2
+!          write(*,"('upper mantle:',2f10.3)") u,u2
     call chebyfun(u,13,chebyshev)
     do i=1+nskip,nskip+nupper
       vercof(i)=chebyshev(i-nskip)
@@ -70,7 +70,7 @@
   else if (lower) then
     u=(radius+radius-r670-rcmb)/(r670-rcmb)
     u2=(radius2+radius2-r670-rcmb)/(r670-rcmb)
-!          write(6,"('lower mantle:',2f10.3)") u,u2
+!          write(*,"('lower mantle:',2f10.3)") u,u2
     call chebyfun(u,13,chebyshev)
     do i=1+nskip+nupper,nskip+nupper+nlower
       vercof(i)=chebyshev(i-nskip-nupper)
@@ -536,8 +536,8 @@
   vercof(21)=1.
   vercof(22)=1.
   else
-  write(6,"('problem 4')")
-  write(6,"(a)")string(1:len_trim(string))
+  write(*,"('problem 4')")
+  write(*,"(a)")string(1:len_trim(string))
   stop
   endif
 
@@ -663,7 +663,7 @@
   do j=1,ncoefhor(ihpakern(i))
     coe(j,i)=coef(j,i)
 !          if (j == 1) then
-!            write(6,"(e12.4)") coe(j,i)
+!            write(*,"(e12.4)") coe(j,i)
 !          endif
   enddo
   enddo
@@ -924,7 +924,7 @@
         numvar,ivarkern,varstr, &
         refmdl,kerstr,hsplfl,dskker,ierror)
   else
-    write(6,"('the model ',a,' does not exits')") modeldef(1:len_trim(modeldef))
+    write(*,"('the model ',a,' does not exits')") modeldef(1:len_trim(modeldef))
   endif
 
 !         --- check arrays
@@ -1088,7 +1088,7 @@
               xlospl(1,ihpa),radspl(1,ihpa), &
               nconpt(ihpa),iconpt(1,ihpa),conpt(1,ihpa))
       else
-        write(6,"('problem 1')")
+        write(*,"('problem 1')")
       endif
   enddo
 
@@ -1134,7 +1134,7 @@
                           *coe(iver,iker)
               enddo
             else
-              write(6,"('problem 2')")
+              write(*,"('problem 2')")
               stop
             endif ! --- itypehpa
         endif ! --- vercof(iker) /= 0.
@@ -1239,7 +1239,7 @@
               xlospl(1,ihpa),radspl(1,ihpa), &
               nconpt(ihpa),iconpt(1,ihpa),conpt(1,ihpa))
       else
-        write(6,"('problem 1')")
+        write(*,"('problem 1')")
       endif
   enddo
 
@@ -1278,7 +1278,7 @@
                 value=value+conpt(i,ihpa)*coe(iver,iker)
               enddo
             else
-              write(6,"('problem 2')")
+              write(*,"('problem 2')")
               stop
             endif ! --- itypehpa
       endif ! --- isel == 1
@@ -1331,11 +1331,11 @@
   endif
 
   if (interval == 0) then
-!        write(6,"('low value:',2f10.3)") x,xarr(1)
+!        write(*,"('low value:',2f10.3)") x,xarr(1)
   else if (interval > 0 .and. interval < np) then
-!        write(6,"('bracket:',i5,3f10.3)") interval,xarr(interval),x,xarr(interval+1)
+!        write(*,"('bracket:',i5,3f10.3)") interval,xarr(interval),x,xarr(interval+1)
   else
-!        write(6,"('high value:',2f10.3)") xarr(np),x
+!        write(*,"('high value:',2f10.3)") xarr(np),x
   endif
 
   do ib=1,np

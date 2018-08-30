@@ -161,6 +161,7 @@
 
   ! data format flag
   allocate(materials_with_q(nmaterials),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 853')
   if (ier /= 0) stop 'Error allocating array materials_with_q'
   materials_with_q(:) = .false.
 
@@ -280,30 +281,41 @@
 
   ! allocates models dimensions
   allocate(ORIG_X(NFILES_TOMO),ORIG_Y(NFILES_TOMO),ORIG_Z(NFILES_TOMO),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 854')
   if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo arrays')
   allocate(SPACING_X(NFILES_TOMO),SPACING_Y(NFILES_TOMO),SPACING_Z(NFILES_TOMO),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 855')
   if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo arrays')
 
   ! allocate models parameter records
-  allocate(vp_tomography(NFILES_TOMO,nrecord_max), &
-           vs_tomography(NFILES_TOMO,nrecord_max), &
-           rho_tomography(NFILES_TOMO,nrecord_max), &
-           z_tomography(NFILES_TOMO,nrecord_max),stat=ier)
+  allocate(vp_tomography(NFILES_TOMO,nrecord_max),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 856')
+  allocate(vs_tomography(NFILES_TOMO,nrecord_max),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 857')
+  allocate(rho_tomography(NFILES_TOMO,nrecord_max),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 858')
+  allocate(z_tomography(NFILES_TOMO,nrecord_max),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 859')
   if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo arrays')
 
   ! allocate models entries
   allocate(NX(NFILES_TOMO),NY(NFILES_TOMO),NZ(NFILES_TOMO),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 860')
   if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo arrays')
   allocate(nrecord(NFILES_TOMO),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 861')
   if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo arrays')
 
   ! allocate models min/max statistics
-  allocate(VP_MIN(NFILES_TOMO),VS_MIN(NFILES_TOMO),RHO_MIN(NFILES_TOMO), &
-           VP_MAX(NFILES_TOMO),VS_MAX(NFILES_TOMO),RHO_MAX(NFILES_TOMO),stat=ier)
+  allocate(VP_MIN(NFILES_TOMO),VS_MIN(NFILES_TOMO),RHO_MIN(NFILES_TOMO),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 862')
+  allocate(VP_MAX(NFILES_TOMO),VS_MAX(NFILES_TOMO),RHO_MAX(NFILES_TOMO),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 863')
   if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo arrays')
 
   ! q values
   allocate(tomo_has_q_values(NFILES_TOMO),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 864')
   if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo q-flag array')
   tomo_has_q_values(:) = .false.
   ! stores data format flag
@@ -314,8 +326,10 @@
 
   ! only allocate q arrays if needed
   if (any(tomo_has_q_values)) then
-    allocate(qp_tomography(NFILES_TOMO,nrecord_max), &
-             qs_tomography(NFILES_TOMO,nrecord_max),stat=ier)
+    allocate(qp_tomography(NFILES_TOMO,nrecord_max),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 865')
+    allocate(qs_tomography(NFILES_TOMO,nrecord_max),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 866')
     if (ier /= 0) call exit_MPI(myrank_tomo,'not enough memory to allocate tomo q-value arrays')
   endif
 
@@ -865,7 +879,7 @@ end subroutine init_tomography_files
   else
     ! attenuation: arbitrary value, see maximum in constants.h
     qmu_atten = ATTENUATION_COMP_MAXIMUM
-    ! Q_kappa is not implemented in this model_tomography routine yet, thus set it to dummy value
+    ! Q_Kappa is not implemented in this model_tomography routine yet, thus set it to dummy value
     qkappa_atten = ATTENUATION_COMP_MAXIMUM
   endif
 

@@ -223,12 +223,18 @@ contains
        if (allocated(hdur_Gaussian)) deallocate(hdur_Gaussian)
        if (allocated(tshift_src)) deallocate(tshift_src)
 
-       allocate(sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ))
-       allocate(islice_selected_source(NSOURCES))
-       allocate(ispec_selected_source(NSOURCES))
-       allocate(hdur(NSOURCES))
-       allocate(hdur_Gaussian(NSOURCES))
-       allocate(tshift_src(NSOURCES))
+       allocate(sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 490')
+       allocate(islice_selected_source(NSOURCES),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 491')
+       allocate(ispec_selected_source(NSOURCES),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 492')
+       allocate(hdur(NSOURCES),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 493')
+       allocate(hdur_Gaussian(NSOURCES),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 494')
+       allocate(tshift_src(NSOURCES),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 495')
        sourcearrays(:,:,:,:,:)=acqui_simu(ievent)%sourcearrays(:,:,:,:,:)
 
 
@@ -243,6 +249,7 @@ contains
        if (USE_EXTERNAL_SOURCE_FILE) then
           if (allocated(user_source_time_function)) deallocate(user_source_time_function)
           allocate(user_source_time_function(NSTEP_STF, NSOURCES_STF),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 496')
           if (ier /= 0) stop ' error in allocating user_source_time_function'
           if (inversion_param%only_forward) then
              user_source_time_function(:,:)=acqui_simu(ievent)%user_source_time_function(:,:)
@@ -250,7 +257,8 @@ contains
              !! filter the user stf
              !! EB EB Warning, filtering may be done each time we are switching events
              if (inversion_param%use_band_pass_filter) then
-                allocate(raw_stf(NSTEP), filt_stf(NSTEP))
+                allocate(raw_stf(NSTEP), filt_stf(NSTEP),stat=ier)
+                if (ier /= 0) call exit_MPI_without_rank('error allocating array 497')
                 do isrc=1,NSOURCES
                    raw_stf(:)=acqui_simu(ievent)%user_source_time_function(:,isrc)
                    call bwfilt (raw_stf, filt_stf, &
@@ -320,10 +328,14 @@ contains
     if (allocated(nu)) deallocate(nu)
 
     !! re-allocation
-    allocate(islice_selected_rec(nrec),ispec_selected_rec(nrec))
-    allocate(xi_receiver(nrec),eta_receiver(nrec),gamma_receiver(nrec))
-    allocate(station_name(nrec),network_name(nrec))
-    allocate(nu(NDIM,NDIM,nrec))
+    allocate(islice_selected_rec(nrec),ispec_selected_rec(nrec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 498')
+    allocate(xi_receiver(nrec),eta_receiver(nrec),gamma_receiver(nrec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 499')
+    allocate(station_name(nrec),network_name(nrec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 500')
+    allocate(nu(NDIM,NDIM,nrec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 501')
 
     !! store current arrays
     islice_selected_rec(:)=acqui_simu(ievent)%islice_selected_rec(:)
@@ -354,14 +366,21 @@ contains
 
        nadj_rec_local = nrec_local
 
-       allocate(hxir_store(nrec_local,NGLLX), &
-            hetar_store(nrec_local,NGLLY), &
-            hgammar_store(nrec_local,NGLLZ), &
-            hpxir_store(nrec_local,NGLLX), &
-            hpetar_store(nrec_local,NGLLY), &
-            hpgammar_store(nrec_local,NGLLZ))
+       allocate(hxir_store(nrec_local,NGLLX),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 502')
+       allocate(hetar_store(nrec_local,NGLLY),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 503')
+       allocate(hgammar_store(nrec_local,NGLLZ),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 504')
+       allocate(hpxir_store(nrec_local,NGLLX),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 505')
+       allocate(hpetar_store(nrec_local,NGLLY),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 506')
+       allocate(hpgammar_store(nrec_local,NGLLZ),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 507')
 
-       allocate(number_receiver_global(nrec_local))
+       allocate(number_receiver_global(nrec_local),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 508')
        number_receiver_global(:)=acqui_simu(ievent)%number_receiver_global(1:nrec_local)
 
        do irec=1, nrec_local
@@ -380,12 +399,16 @@ contains
 
        ! allocate seismogram array
        allocate(seismograms_d(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 509')
        if (ier /= 0) stop 'error allocating array seismograms_d'
        allocate(seismograms_v(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 510')
        if (ier /= 0) stop 'error allocating array seismograms_v'
        allocate(seismograms_a(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 511')
        if (ier /= 0) stop 'error allocating array seismograms_a'
        allocate(seismograms_p(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 512')
        if (ier /= 0) stop 'error allocating array seismograms_p'
 
        ! initialize seismograms
@@ -405,14 +428,22 @@ contains
        if (allocated(hpgammar_store)) deallocate(hpgammar_store)
        if (allocated(number_receiver_global)) deallocate(number_receiver_global)
 
-       allocate(hxir_store(0,0), &
-            hetar_store(0,0), &
-            hgammar_store(0,0), &
-            hpxir_store(0,0), &
-            hpetar_store(0,0), &
-            hpgammar_store(0,0))
+       ! in Fortran it is legal to allocate dummy arrays with a size of zero
+       allocate(hxir_store(0,0),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 513')
+       allocate(hetar_store(0,0),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 514')
+       allocate(hgammar_store(0,0),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 515')
+       allocate(hpxir_store(0,0),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 516')
+       allocate(hpetar_store(0,0),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 517')
+       allocate(hpgammar_store(0,0),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 518')
 
-       allocate(number_receiver_global(0))
+       allocate(number_receiver_global(0),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 519')
 
        if (allocated(seismograms_d)) deallocate(seismograms_d)
        if (allocated(seismograms_v)) deallocate(seismograms_v)
@@ -421,12 +452,16 @@ contains
 
        ! allocate seismogram array
        allocate(seismograms_d(NDIM,1,1),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 520')
        if (ier /= 0) stop 'error allocating array seismograms_d'
        allocate(seismograms_v(NDIM,1,1),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 521')
        if (ier /= 0) stop 'error allocating array seismograms_v'
        allocate(seismograms_a(NDIM,1,1),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 522')
        if (ier /= 0) stop 'error allocating array seismograms_a'
        allocate(seismograms_p(NDIM,1,1),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 523')
        if (ier /= 0) stop 'error allocating array seismograms_p'
 
     endif
@@ -440,6 +475,7 @@ contains
     ! initializes adjoint sources --------------------------------------------------------------------------------------------------
     if (allocated(source_adjoint)) deallocate(source_adjoint)
     allocate(source_adjoint(NDIM,nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 524')
     if (ier /= 0) stop 'error allocating array adj_sourcearrays'
     source_adjoint(:,:,:) = 0._CUSTOM_REAL
     if (SIMULATION_TYPE == 3) then
@@ -694,8 +730,10 @@ contains
                LOCAL_PATH,SAVE_MESH_FILES)
        else if (ACOUSTIC_SIMULATION) then
           allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 525')
           if (ier /= 0) stop 'error allocating array rho_vp'
           allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 526')
           if (ier /= 0) stop 'error allocating array rho_vs'
           rho_vp = sqrt( kappastore / rhostore ) * rhostore
           rho_vs = 0.0_CUSTOM_REAL
@@ -988,14 +1026,20 @@ contains
 
     ! from prepare_timerun_lddrk() -------------------------------------------------
     if (ELASTIC_SIMULATION) then
-       allocate(b_R_xx_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
-            b_R_yy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
-            b_R_xy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
-            b_R_xz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS), &
-            b_R_yz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS),stat=ier)
+       allocate(b_R_xx_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 527')
+       allocate(b_R_yy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 528')
+       allocate(b_R_xy_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 529')
+       allocate(b_R_xz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 530')
+       allocate(b_R_yz_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK ,N_SLS),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 531')
        if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
 
-       allocate(b_R_trace_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK,N_SLS))
+       allocate(b_R_trace_lddrk(NGLLX,NGLLY,NGLLZ,NSPEC_ATTENUATION_AB_LDDRK,N_SLS),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 532')
        if (ier /= 0) stop 'Error allocating array R_**_lddrk etc.'
 
        if (SIMULATION_TYPE == 3) then
@@ -1130,28 +1174,39 @@ contains
     !! allocate arrays for saving the kernel computed by GPU in CPU memory in order to perform summation over events.
     if (GPU_MODE) then
        if (ACOUSTIC_SIMULATION) then
-          allocate(rho_ac_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB), kappa_ac_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+          allocate(rho_ac_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB), kappa_ac_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 533')
           rho_ac_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
           kappa_ac_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
           if (APPROXIMATE_HESS_KL) then
-             allocate(hess_rho_ac_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB),hess_kappa_ac_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+             allocate(hess_rho_ac_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB),hess_kappa_ac_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+             if (ier /= 0) call exit_MPI_without_rank('error allocating array 534')
           endif
        endif
 
        if (ELASTIC_SIMULATION) then
-          allocate(rho_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB),kappa_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-               mu_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+          allocate(rho_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 535')
+          allocate(kappa_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 536')
+          allocate(mu_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 537')
           rho_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
           kappa_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
           mu_kl_GPU(:,:,:,:)=0._CUSTOM_REAL
           if (APPROXIMATE_HESS_KL) then
-             allocate(hess_rho_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB),hess_kappa_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-                  hess_mu_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+             allocate(hess_rho_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+             if (ier /= 0) call exit_MPI_without_rank('error allocating array 538')
+             allocate(hess_kappa_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+             if (ier /= 0) call exit_MPI_without_rank('error allocating array 539')
+             allocate(hess_mu_kl_GPU(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+             if (ier /= 0) call exit_MPI_without_rank('error allocating array 540')
           endif
        endif
 
        if (ANISOTROPIC_KL) then
-          allocate(cijkl_kl_GPU(21,NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+          allocate(cijkl_kl_GPU(21,NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+          if (ier /= 0) call exit_MPI_without_rank('error allocating array 541')
           cijkl_kl_GPU(:,:,:,:,:)=0._CUSTOM_REAL
        endif
     endif
@@ -1234,8 +1289,10 @@ contains
        ! nothing to do
     else if (ACOUSTIC_SIMULATION) then
        allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 542')
        if (ier /= 0) stop 'error allocating array rho_vp'
        allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 543')
        if (ier /= 0) stop 'error allocating array rho_vs'
        rho_vp = sqrt( kappastore / rhostore ) * rhostore
        rho_vs = 0.0_CUSTOM_REAL

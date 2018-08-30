@@ -171,8 +171,8 @@ subroutine dump_xdmf_grid()
 
   ct = 0
 
-  if (lpr) write(6,*) '   construction of mapping for xdmf plotting...'
-  if (lpr) write(6,*) '   ...fluid part...'
+  if (lpr) write(*,*) '   construction of mapping for xdmf plotting...'
+  if (lpr) write(*,*) '   ...fluid part...'
 
   do iel=1, nel_fluid
       if (.not. mask_tp_elem(iel)) cycle
@@ -195,7 +195,7 @@ subroutine dump_xdmf_grid()
       enddo
   enddo
 
-  if (lpr) write(6,*) '   ...solid part...'
+  if (lpr) write(*,*) '   ...solid part...'
 
   do iel=1, nel_solid
       if (.not. mask_tp_elem(iel + nel_fluid)) cycle
@@ -223,7 +223,7 @@ subroutine dump_xdmf_grid()
 
   allocate(points(1:2,1:npoint_plot))
 
-  if (lpr) write(6,*) '   ...collecting coordinates...'
+  if (lpr) write(*,*) '   ...collecting coordinates...'
 
   points = 0.
 
@@ -301,7 +301,7 @@ subroutine dump_xdmf_grid()
       enddo
   enddo
 
-  if (lpr) write(6,*) '   .... finished construction of mapping for xdmf plotting'
+  if (lpr) write(*,*) '   .... finished construction of mapping for xdmf plotting'
 
   if (use_netcdf) then
       call nc_make_snapfile
@@ -325,7 +325,7 @@ subroutine dump_xdmf_grid()
 
   allocate(grid(1:4, 1:nelem_plot))
 
-  if (lpr) write(6,*) '   .... constructing grid for xdmf plotting'
+  if (lpr) write(*,*) '   .... constructing grid for xdmf plotting'
 
   ct = 1
 
@@ -355,7 +355,7 @@ subroutine dump_xdmf_grid()
       enddo
   enddo
 
-  if (lpr) write(6,*) '   .... writing grid + header of xdmf to file'
+  if (lpr) write(*,*) '   .... writing grid + header of xdmf to file'
 
   if (use_netcdf) then
       call nc_dump_snap_grid(grid)
@@ -549,8 +549,8 @@ subroutine build_kwf_grid()
 
   ct = 0
 
-  if (lpr) write(6,*) '   construction of mapping for kwf output...'
-  if (lpr) write(6,*) '   ...solid part...'
+  if (lpr) write(*,*) '   construction of mapping for kwf output...'
+  if (lpr) write(*,*) '   ...solid part...'
 
   do iel=1, nel_solid
       if (.not. mask_tp_elem(iel)) cycle
@@ -589,7 +589,7 @@ subroutine build_kwf_grid()
 
   npoint_solid_kwf = ct
 
-  if (lpr) write(6,*) '   ...fluid part...'
+  if (lpr) write(*,*) '   ...fluid part...'
 
   do iel=1, nel_fluid
       if (.not. mask_tp_elem(iel + nel_solid)) cycle
@@ -633,16 +633,16 @@ subroutine build_kwf_grid()
   call set_npoints(npoint_kwf)
 
   if (lpr) then
-     write(6,*) 'local point number:        ', nelem_kwf * (iend - ibeg + 1) * (jend - jbeg + 1)
-     write(6,*) 'after removing duplicates: ', npoint_kwf
-     write(6,*) 'compression:               ', &
+     write(*,*) 'local point number:        ', nelem_kwf * (iend - ibeg + 1) * (jend - jbeg + 1)
+     write(*,*) 'after removing duplicates: ', npoint_kwf
+     write(*,*) 'compression:               ', &
                  real(npoint_kwf) / real(nelem_kwf * (npol + 1)**2)
   endif
 
   if (trim(dump_type) == 'displ_only') then
      allocate(midpoint_mesh_kwf(1:nelem_kwf))
 
-     if (lpr) write(6,*) '   .... constructing midpoint grid for kwf output'
+     if (lpr) write(*,*) '   .... constructing midpoint grid for kwf output'
 
      ct = 1
 
@@ -724,7 +724,7 @@ subroutine build_kwf_grid()
 
      allocate(fem_mesh_kwf(1:4, 1:nelem_kwf))
 
-     if (lpr) write(6,*) '   .... constructing finite element grid for kwf output'
+     if (lpr) write(*,*) '   .... constructing finite element grid for kwf output'
 
      ct = 1
 
@@ -749,7 +749,7 @@ subroutine build_kwf_grid()
 
   allocate(sem_mesh_kwf(ibeg:iend, jbeg:jend, 1:nelem_kwf))
 
-  if (lpr) write(6,*) '   .... constructing spectral element grid for kwf output'
+  if (lpr) write(*,*) '   .... constructing spectral element grid for kwf output'
 
   ct = 1
 
@@ -773,7 +773,7 @@ subroutine build_kwf_grid()
       ct = ct + 1
   enddo
 
-  if (lpr) write(6,*) '   .... finished construction of mapping for kwf output'
+  if (lpr) write(*,*) '   .... finished construction of mapping for kwf output'
 
 end subroutine build_kwf_grid
 !-----------------------------------------------------------------------------------------
@@ -788,7 +788,7 @@ subroutine dump_kwf_grid()
   real(sp), allocatable :: points(:,:)
   real(sp), allocatable :: points_mp(:,:)
 
-  if (lpr) write(6,*) '   ...collecting coordinates...'
+  if (lpr) write(*,*) '   ...collecting coordinates...'
 
   allocate(points(1:npoint_kwf, 2))
 
@@ -843,7 +843,7 @@ subroutine dump_kwf_grid()
       call nc_dump_mesh_kwf(points, npoint_solid_kwf, npoint_fluid_kwf)
       call nc_dump_mesh_mp_kwf(points_mp, nelem_kwf)
   else
-     write(6,*) 'ERROR: binary output for non-duplicate mesh not implemented'
+     write(*,*) 'ERROR: binary output for non-duplicate mesh not implemented'
      call abort()
   endif
 
@@ -1127,9 +1127,9 @@ subroutine dump_wavefields_mesh_1d
   if (dump_type == 'fullfields') then
 
      if (lpr) then
-        write(6,*)'  set strain dumping GLL boundaries to:'
-        write(6,*)'    ipol=', ibeg, iend
-        write(6,*)'    jpol=', jbeg, jend
+        write(*,*)'  set strain dumping GLL boundaries to:'
+        write(*,*)'    ipol=', ibeg, iend
+        write(*,*)'    jpol=', jbeg, jend
      endif
 
      allocate(ssol(ibeg:iend,jbeg:jend,nel_solid))
@@ -1147,9 +1147,9 @@ subroutine dump_wavefields_mesh_1d
      jbeg = 0
      jend = 4
      if (lpr) then
-        write(6,*)'  Coupling : FORCE GLL boundaries to:'
-        write(6,*)'    ipol=', ibeg, iend
-        write(6,*)'    jpol=', jbeg, jend
+        write(*,*)'  Coupling : FORCE GLL boundaries to:'
+        write(*,*)'    ipol=', ibeg, iend
+        write(*,*)'    jpol=', jbeg, jend
      endif
 
      allocate(ssol(ibeg:iend,jbeg:jend,nel_solid))
@@ -1175,7 +1175,7 @@ subroutine dump_wavefields_mesh_1d
         enddo
      enddo
 
-     if (lpr) write(6,*)'  dumping solid submesh for kernel wavefields...'
+     if (lpr) write(*,*)'  dumping solid submesh for kernel wavefields...'
      if (use_netcdf) then
          call nc_dump_mesh_sol(real(ssol(ibeg:iend,jbeg:jend,:)), &
                                real(zsol(ibeg:iend,jbeg:jend,:)))
@@ -1200,7 +1200,7 @@ subroutine dump_wavefields_mesh_1d
                  enddo
               enddo
          enddo
-         if (lpr) write(6,*)'  dumping fluid submesh for kernel wavefields...'
+         if (lpr) write(*,*)'  dumping fluid submesh for kernel wavefields...'
          if (use_netcdf) then
              call nc_dump_mesh_flu(real(sflu(ibeg:iend,jbeg:jend,:)), &
                                    real(zflu(ibeg:iend,jbeg:jend,:)))
@@ -1222,16 +1222,16 @@ subroutine dump_wavefields_mesh_1d
   select case (dump_type)
   case ('displ_only')
      if (lpr) then
-        write(6,*)'  strain dump: only elementwise displacement'
+        write(*,*)'  strain dump: only elementwise displacement'
      endif
   case ('strain_only')
      if (lpr) then
-        write(6,*)'  strain dump: only pointwise strain '
+        write(*,*)'  strain dump: only pointwise strain '
      endif
   case ('displ_velo')
      if (lpr) then
-        write(6,*)'  strain dump: only displacement/velocity, potentials'
-        write(6,*)'  ...now dumping global pointwise deriv. terms, etc....'
+        write(*,*)'  strain dump: only displacement/velocity, potentials'
+        write(*,*)'  ...now dumping global pointwise deriv. terms, etc....'
      endif
 
      ! Dump pointwise derivative matrices in solid
@@ -1266,31 +1266,31 @@ subroutine dump_wavefields_mesh_1d
      write(2600+mynum) G1T, G2T, G2
      close(2600+mynum)
 
-     write(6,*)'  ...dumped it all.'
+     write(*,*)'  ...dumped it all.'
 
   case ('fullfields') !Hardcoded choice in parameters.f90:110
      if (lpr) then
-        write(6,*)'  strain dump: Global strain tensor and velocity fields'
-        write(6,*)'  ....no need to dump anything else.'
+        write(*,*)'  strain dump: Global strain tensor and velocity fields'
+        write(*,*)'  ....no need to dump anything else.'
      endif
 
   !!! SB
   case ('coupling')
      if (lpr) then
-        write(6,*)'  strain dump: Global strain tensor and velocity fields'
-        write(6,*)'  ....no need to dump anything else.'
+        write(*,*)'  strain dump: Global strain tensor and velocity fields'
+        write(*,*)'  ....no need to dump anything else.'
      endif
 
   case ('coupling_box')
      if (lpr) then
-        write(6,*)'  strain dump: Global strain tensor and velocity fields'
-        write(6,*)'  ....no need to dump anything else.'
+        write(*,*)'  strain dump: Global strain tensor and velocity fields'
+        write(*,*)'  ....no need to dump anything else.'
      endif
   !!! END SB
   case default
      if (lpr) then
-        write(6,*)'  wavefield dumping type',dump_type,' unknown!'
-        write(6,*)'  select from 1) displ_only, 2) displ_velo, 2) fullfields'
+        write(*,*)'  wavefield dumping type',dump_type,' unknown!'
+        write(*,*)'  select from 1) displ_only, 2) displ_velo, 2) fullfields'
      endif
      stop
   end select

@@ -113,7 +113,8 @@ subroutine fault_read_input(prname,myrank)
   ANY_FAULT = (nb > 0)
   if (.not. ANY_FAULT)  return
 
-  allocate(fault_db(nb))
+  allocate(fault_db(nb),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 868')
   do i=1,nb
     read(IIN_PAR,*) fault_db(i)%eta
   enddo
@@ -137,10 +138,14 @@ subroutine fault_read_input(prname,myrank)
 
     ANY_FAULT_IN_THIS_PROC = .true.
 
-    allocate(fault_db(iflt)%ispec1(nspec))
-    allocate(fault_db(iflt)%inodes1(NGNOD2D,nspec))
-    allocate(fault_db(iflt)%ispec2(nspec))
-    allocate(fault_db(iflt)%inodes2(NGNOD2D,nspec))
+    allocate(fault_db(iflt)%ispec1(nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 869')
+    allocate(fault_db(iflt)%inodes1(NGNOD2D,nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 870')
+    allocate(fault_db(iflt)%ispec2(nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 871')
+    allocate(fault_db(iflt)%inodes2(NGNOD2D,nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 872')
 
     do i=1,nspec
       read(IIN_PAR) fault_db(iflt)%ispec1(i), fault_db(iflt)%inodes1(:,i)
@@ -161,7 +166,8 @@ subroutine fault_read_input(prname,myrank)
 
  ! read nodes coordinates of the original version of the mesh, in which faults are open
   read(IIN_PAR) nnodes_coords_open
-  allocate(nodes_coords_open(NDIM,nnodes_coords_open))
+  allocate(nodes_coords_open(NDIM,nnodes_coords_open),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 873')
   do i = 1, nnodes_coords_open
      read(IIN_PAR) dummy_node, nodes_coords_open(:,i)
   enddo
@@ -231,10 +237,12 @@ subroutine setup_iface(fdb,nnodes_ext_mesh,nodes_coords_ext_mesh,nspec,nglob,ibo
   integer, dimension(NGLLX,NGLLY,NGLLZ,nspec) :: ibool
 
   real(kind=CUSTOM_REAL), dimension(NGNOD2D) :: xcoord,ycoord,zcoord
-  integer :: icorner,e
+  integer :: icorner,e,ier
 
-  allocate(fdb%iface1(fdb%nspec))
-  allocate(fdb%iface2(fdb%nspec))
+  allocate(fdb%iface1(fdb%nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 874')
+  allocate(fdb%iface2(fdb%nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 875')
   do e=1,fdb%nspec
    ! side 1
     do icorner=1,NGNOD2D
@@ -265,11 +273,13 @@ subroutine setup_ijk(fdb)
 
   type(fault_db_type), intent(inout) :: fdb
 
-  integer :: e,i,j,igll
+  integer :: e,i,j,igll,ier
   integer :: ijk_face1(3,NGLLX,NGLLY), ijk_face2(3,NGLLX,NGLLY)
 
-  allocate(fdb%ijk1(3,NGLLX*NGLLY,fdb%nspec))
-  allocate(fdb%ijk2(3,NGLLX*NGLLY,fdb%nspec))
+  allocate(fdb%ijk1(3,NGLLX*NGLLY,fdb%nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 876')
+  allocate(fdb%ijk2(3,NGLLX*NGLLY,fdb%nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 877')
 
   do e=1,fdb%nspec
     call get_element_face_gll_indices(fdb%iface1(e),ijk_face1,NGLLX,NGLLY)
@@ -291,10 +301,12 @@ end subroutine setup_ijk
 
   type(fault_db_type), intent(in) :: fdb
   integer, intent(in) :: nspec ! number of spectral elements in each block
+  integer :: ier
 
   if (fdb%eta > 0.0_CUSTOM_REAL) then
     if (.not. allocated(Kelvin_Voigt_eta)) then
-      allocate(Kelvin_Voigt_eta(nspec))
+      allocate(Kelvin_Voigt_eta(nspec),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 878')
       Kelvin_Voigt_eta(:) = 0.0_CUSTOM_REAL
     endif
     Kelvin_Voigt_eta(fdb%ispec1) = fdb%eta
@@ -321,7 +333,7 @@ subroutine setup_ibools(fdb,xstore,ystore,zstore,nspec,npointot)
   double precision :: xp(npointot),yp(npointot),zp(npointot),xmin,xmax
   integer :: locval(npointot)
   logical :: ifseg(npointot)
-  integer :: ispec,k,igll,ie,je,ke,e
+  integer :: ispec,k,igll,ie,je,ke,e,ier
 
   xmin = minval(nodes_coords_ext_mesh(1,:))
   xmax = maxval(nodes_coords_ext_mesh(1,:))
@@ -339,7 +351,8 @@ subroutine setup_ibools(fdb,xstore,ystore,zstore,nspec,npointot)
       zp(k) = zstore(ie,je,ke,ispec)
     enddo
   enddo
-  allocate( fdb%ibool1(NGLLSQUARE,fdb%nspec) )
+  allocate( fdb%ibool1(NGLLSQUARE,fdb%nspec) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 879')
   call get_global(npointot,xp,yp,zp,fdb%ibool1,locval,ifseg,fdb%nglob,xmin,xmax)
 
 ! xp,yp,zp need to be recomputed on side 2
@@ -359,7 +372,8 @@ subroutine setup_ibools(fdb,xstore,ystore,zstore,nspec,npointot)
       zp(k) = zstore(ie,je,ke,ispec)
     enddo
   enddo
-  allocate( fdb%ibool2(NGLLSQUARE,fdb%nspec) )
+  allocate( fdb%ibool2(NGLLSQUARE,fdb%nspec) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 880')
   call get_global(npointot,xp,yp,zp,fdb%ibool2,locval,ifseg,fdb%nglob,xmin,xmax)
 
 end subroutine setup_ibools
@@ -372,10 +386,12 @@ subroutine setup_ibulks(fdb,ibool,nspec)
   type(fault_db_type), intent(inout) :: fdb
   integer, intent(in) :: nspec, ibool(NGLLX,NGLLY,NGLLZ,nspec)
 
-  integer :: e,k, K1, K2, ie,je,ke
+  integer :: e,k, K1, K2, ie,je,ke,ier
 
-  allocate( fdb%ibulk1(fdb%nglob) )
-  allocate( fdb%ibulk2(fdb%nglob) )
+  allocate( fdb%ibulk1(fdb%nglob) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 881')
+  allocate( fdb%ibulk2(fdb%nglob) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 882')
 
   do e=1, fdb%nspec
     do k=1, NGLLSQUARE
@@ -430,14 +446,20 @@ end subroutine close_fault
 
   type(fault_db_type), intent(inout) :: fdb
 
-  integer :: K1, K2, i
+  integer :: K1, K2, i, ier
 
-  allocate( fdb%xcoordbulk1(fdb%nglob) )
-  allocate( fdb%ycoordbulk1(fdb%nglob) )
-  allocate( fdb%zcoordbulk1(fdb%nglob) )
-  allocate( fdb%xcoordbulk2(fdb%nglob) )
-  allocate( fdb%ycoordbulk2(fdb%nglob) )
-  allocate( fdb%zcoordbulk2(fdb%nglob) )
+  allocate( fdb%xcoordbulk1(fdb%nglob) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 883')
+  allocate( fdb%ycoordbulk1(fdb%nglob) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 884')
+  allocate( fdb%zcoordbulk1(fdb%nglob) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 885')
+  allocate( fdb%xcoordbulk2(fdb%nglob) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 886')
+  allocate( fdb%ycoordbulk2(fdb%nglob) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 887')
+  allocate( fdb%zcoordbulk2(fdb%nglob) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 888')
 
   do i=1, fdb%nglob
       K1 =fdb%ibulk1(i)
@@ -475,11 +497,13 @@ end subroutine close_fault
   real(kind=CUSTOM_REAL) :: jacobian2Dw_face(NGLLX,NGLLY)
   real(kind=CUSTOM_REAL) :: normal_face(NDIM,NGLLX,NGLLY)
   integer,dimension(NGNOD2D) :: iglob_corners_ref
-  integer :: ispec_flt,ispec,i,j,k,igll
+  integer :: ispec_flt,ispec,i,j,k,igll,ier
   integer :: iface_ref,icorner
 
-  allocate(fdb%normal(NDIM,NGLLSQUARE,fdb%nspec))
-  allocate(fdb%jacobian2Dw(NGLLSQUARE,fdb%nspec))
+  allocate(fdb%normal(NDIM,NGLLSQUARE,fdb%nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 889')
+  allocate(fdb%jacobian2Dw(NGLLSQUARE,fdb%nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 890')
 
   do ispec_flt=1,fdb%nspec
 

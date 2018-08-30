@@ -126,24 +126,35 @@ subroutine initialize_fault (bc,IIN_BIN)
   real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: normal
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: nxyz
   integer, dimension(:,:), allocatable :: ibool1
-  integer :: ij,k,e
+  integer :: ij,k,e,ier
 
   read(IIN_BIN) bc%nspec,bc%nglob
   if (.not. PARALLEL_FAULT .and. bc%nspec == 0) return
   if (bc%nspec > 0) then
 
-    allocate(bc%ibulk1(bc%nglob))
-    allocate(bc%ibulk2(bc%nglob))
-    allocate(bc%R(3,3,bc%nglob))
-    allocate(bc%coord(3,(bc%nglob)))
-    allocate(bc%invM1(bc%nglob))
-    allocate(bc%invM2(bc%nglob))
-    allocate(bc%B(bc%nglob))
-    allocate(bc%Z(bc%nglob))
+    allocate(bc%ibulk1(bc%nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2159')
+    allocate(bc%ibulk2(bc%nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2160')
+    allocate(bc%R(3,3,bc%nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2161')
+    allocate(bc%coord(3,(bc%nglob)),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2162')
+    allocate(bc%invM1(bc%nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2163')
+    allocate(bc%invM2(bc%nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2164')
+    allocate(bc%B(bc%nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2165')
+    allocate(bc%Z(bc%nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2166')
 
-    allocate(ibool1(NGLLSQUARE,bc%nspec))
-    allocate(normal(NDIM,NGLLSQUARE,bc%nspec))
-    allocate(jacobian2Dw(NGLLSQUARE,bc%nspec))
+    allocate(ibool1(NGLLSQUARE,bc%nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2167')
+    allocate(normal(NDIM,NGLLSQUARE,bc%nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2168')
+    allocate(jacobian2Dw(NGLLSQUARE,bc%nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2169')
 
     read(IIN_BIN) ibool1
     read(IIN_BIN) jacobian2Dw
@@ -157,7 +168,8 @@ subroutine initialize_fault (bc,IIN_BIN)
     bc%dt = dt
 
     bc%B = 0e0_CUSTOM_REAL
-    allocate(nxyz(3,bc%nglob))
+    allocate(nxyz(3,bc%nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2170')
     nxyz = 0e0_CUSTOM_REAL
     do e=1,bc%nspec
       do ij = 1,NGLLSQUARE
@@ -393,9 +405,13 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
 
   if (dataT%npoin == 0) return
 
-  allocate(dataT%iglob(dataT%npoin))
-  allocate(dataT%name(dataT%npoin))
-  allocate(dist_loc(dataT%npoin)) !Surendra : for parallel fault
+  allocate(dataT%iglob(dataT%npoin),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2171')
+  allocate(dataT%name(dataT%npoin),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2172')
+! Surendra: for parallel fault
+  allocate(dist_loc(dataT%npoin),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2173')
 
   open(IIN,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'FAULT_STATIONS',status='old',action='read')
   read(IIN,*) np
@@ -425,9 +441,12 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
   if (PARALLEL_FAULT) then
 
     ! For each output point, find the processor that contains the nearest node
-    allocate(iproc(dataT%npoin))
-    allocate(iglob_all(dataT%npoin,0:NPROC-1))
-    allocate(dist_all(dataT%npoin,0:NPROC-1))
+    allocate(iproc(dataT%npoin),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2174')
+    allocate(iglob_all(dataT%npoin,0:NPROC-1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2175')
+    allocate(dist_all(dataT%npoin,0:NPROC-1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2176')
     call gather_all_i(dataT%iglob,dataT%npoin,iglob_all,dataT%npoin,NPROC)
     call gather_all_cr(dist_loc,dataT%npoin,dist_all,dataT%npoin,NPROC)
     if (myrank == 0) then
@@ -445,7 +464,8 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
 
     if (npoin_local > 0) then
       ! Make a list of output points contained in the current processor
-      allocate(glob_indx(npoin_local))
+      allocate(glob_indx(npoin_local),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2177')
       ipoin_local = 0
       do ipoin = 1,dataT%npoin
         if (myrank == iproc(ipoin)) then
@@ -454,15 +474,19 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
         endif
       enddo
       ! Consolidate the output information (remove output points outside current proc)
-      allocate(iglob_tmp(dataT%npoin))
-      allocate(name_tmp(dataT%npoin))
+      allocate(iglob_tmp(dataT%npoin),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2178')
+      allocate(name_tmp(dataT%npoin),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2179')
       iglob_tmp = dataT%iglob
       name_tmp = dataT%name
       deallocate(dataT%iglob)
       deallocate(dataT%name)
       dataT%npoin = npoin_local
-      allocate(dataT%iglob(dataT%npoin))
-      allocate(dataT%name(dataT%npoin))
+      allocate(dataT%iglob(dataT%npoin),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2180')
+      allocate(dataT%name(dataT%npoin),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2181')
       dataT%iglob = iglob_tmp(glob_indx)
       dataT%name = name_tmp(glob_indx)
       deallocate(glob_indx,iglob_tmp,name_tmp)
@@ -481,9 +505,11 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
     dataT%ndat = ndat
     dataT%nt = NT
     dataT%dt = DT
-    allocate(dataT%dat(dataT%ndat,dataT%npoin,dataT%nt))
+    allocate(dataT%dat(dataT%ndat,dataT%npoin,dataT%nt),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2182')
     dataT%dat = 0e0_CUSTOM_REAL
-    allocate(dataT%longFieldNames(dataT%ndat))
+    allocate(dataT%longFieldNames(dataT%ndat),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2183')
     dataT%longFieldNames(1) = "horizontal right-lateral slip (m)"
     dataT%longFieldNames(2) = "horizontal right-lateral slip rate (m/s)"
     dataT%longFieldNames(3) = "horizontal right-lateral shear stress (MPa)"

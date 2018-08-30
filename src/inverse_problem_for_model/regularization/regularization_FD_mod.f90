@@ -27,10 +27,15 @@ contains
     type(profd),                            intent(inout)  :: projection_fd
     integer,                                intent(in)     :: myrank
 
+    integer :: ier
+
     call compute_interpolation_coeff_FD_SEM(projection_fd, myrank)
-    allocate(model_on_FD_grid(nx_fd_proj, ny_fd_proj, nz_fd_proj), &
-         diff_model_on_FD_grid(nx_fd_proj, ny_fd_proj, nz_fd_proj), &
-         diff2_model_on_FD_grid(nx_fd_proj, ny_fd_proj, nz_fd_proj))
+    allocate(model_on_FD_grid(nx_fd_proj, ny_fd_proj, nz_fd_proj),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 218')
+    allocate(diff_model_on_FD_grid(nx_fd_proj, ny_fd_proj, nz_fd_proj),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 219')
+    allocate(diff2_model_on_FD_grid(nx_fd_proj, ny_fd_proj, nz_fd_proj),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 220')
 
   end subroutine setup_FD_regularization
 !!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -97,6 +97,7 @@ end module vtk_window_par
 
   ! mask
   allocate(vtkmask(NGLOB_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1738')
   if (ier /= 0) stop 'Error allocating arrays'
   vtkmask(:) = .false.
 
@@ -246,6 +247,7 @@ end module vtk_window_par
 
   ! array to hold receiver locations
   allocate(vtkdata_recv_x(nrec),vtkdata_recv_y(nrec),vtkdata_recv_z(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1739')
   if (ier /= 0) stop 'Error allocating receiver arrays'
   vtkdata_recv_x(:) = 0.0
   vtkdata_recv_y(:) = 0.0
@@ -393,10 +395,12 @@ end module vtk_window_par
   if (myrank == 0) write(IMAIN,*) "    loading surface points: ",free_np
 
   allocate(free_x(free_np),free_y(free_np),free_z(free_np),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1740')
   if (ier /= 0) stop 'Error allocating arrays'
 
   ! permutation array
   allocate(free_perm(NGLOB_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1741')
   if (ier /= 0) stop 'Error allocating arrays'
 
   free_perm(:) = 0
@@ -419,6 +423,7 @@ end module vtk_window_par
     free_nspec = num_free_surface_faces*(NGLLX-1)*(NGLLY-1)
 
     allocate(free_conn(4,free_nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1742')
     if (ier /= 0) stop 'Error allocating arrays'
 
     inum = 0
@@ -465,6 +470,7 @@ end module vtk_window_par
     free_nspec = num_free_surface_faces
 
     allocate(free_conn(4,free_nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1743')
     if (ier /= 0) stop 'Error allocating arrays'
 
     inum = 0
@@ -527,6 +533,7 @@ end module vtk_window_par
 
     ! gathers point infos
     allocate(free_points_all(NPROC),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1744')
     if (ier /= 0) stop 'Error allocating arrays'
 
     free_points_all(:) = 0
@@ -534,6 +541,7 @@ end module vtk_window_par
 
     ! array offsets
     allocate(free_offset_all(NPROC),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1745')
     if (ier /= 0) stop 'Error allocating arrays'
 
     free_offset_all(1) = 0
@@ -547,6 +555,7 @@ end module vtk_window_par
 
     ! freesurface elements
     allocate(free_conn_nspec_all(NPROC),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1746')
     if (ier /= 0) stop 'Error allocating arrays'
 
     free_conn_nspec_all(:) = 0
@@ -554,6 +563,7 @@ end module vtk_window_par
 
     ! array offsets
     allocate(free_conn_offset_all(NPROC),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1747')
     if (ier /= 0) stop 'Error allocating arrays'
 
     free_conn_offset_all(1) = 0
@@ -564,9 +574,12 @@ end module vtk_window_par
     ! global data arrays (only needed on master process)
     if (myrank == 0) then
       ! gather locations
-      allocate(free_x_all(free_np_all), &
-               free_y_all(free_np_all), &
-               free_z_all(free_np_all),stat=ier )
+      allocate(free_x_all(free_np_all),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1748')
+      allocate(free_y_all(free_np_all),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1749')
+      allocate(free_z_all(free_np_all),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1750')
       if (ier /= 0) stop 'Error allocating free_x_all,... arrays'
 
       free_x_all(:) = 0.0
@@ -575,6 +588,7 @@ end module vtk_window_par
 
       ! connectivity
       allocate(free_conn_all(4,free_nspec_all),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1751')
       if (ier /= 0) stop 'Error allocating free_conn_all array'
       free_conn_all(:,:) = 0
     endif
@@ -719,10 +733,12 @@ end module vtk_window_par
   if (myrank == 0) write(IMAIN,*) "    loading volume points: ",vol_np
 
   allocate(vol_x(vol_np),vol_y(vol_np),vol_z(vol_np),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1752')
   if (ier /= 0) stop 'Error allocating arrays'
 
   ! permutation array
   allocate(vol_perm(NGLOB_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1753')
   if (ier /= 0) stop 'Error allocating arrays'
 
   vol_perm(:) = 0
@@ -744,6 +760,7 @@ end module vtk_window_par
     vol_nspec = NSPEC_AB*(NGLLX-1)*(NGLLY-1)*(NGLLZ-1)
 
     allocate(vol_conn(8,vol_nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1754')
     if (ier /= 0) stop 'Error allocating arrays'
 
     inum = 0
@@ -782,6 +799,7 @@ end module vtk_window_par
     vol_nspec = NSPEC_AB
 
     allocate(vol_conn(8,vol_nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1755')
     if (ier /= 0) stop 'Error allocating arrays'
 
     vol_conn(:,:) = -1
@@ -812,6 +830,7 @@ end module vtk_window_par
 
   ! allocates local data array
   allocate(vtkdata(vol_np),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1756')
   if (ier /= 0) stop 'Error allocating arrays'
 
   vtkdata(:) = 0.0
@@ -827,6 +846,7 @@ end module vtk_window_par
 
     ! gathers point infos
     allocate(vtkdata_points_all(NPROC),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1757')
     if (ier /= 0) stop 'Error allocating arrays'
 
     vtkdata_points_all(:) = 0
@@ -834,6 +854,7 @@ end module vtk_window_par
 
     ! array offsets
     allocate(vtkdata_offset_all(NPROC),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1758')
     if (ier /= 0) stop 'Error allocating arrays'
 
     vtkdata_offset_all(1) = 0
@@ -847,6 +868,7 @@ end module vtk_window_par
 
     ! volume elements
     allocate(vol_conn_nspec_all(NPROC),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1759')
     if (ier /= 0) stop 'Error allocating arrays'
 
     vol_conn_nspec_all(:) = 0
@@ -854,6 +876,7 @@ end module vtk_window_par
 
     ! array offsets
     allocate(vol_conn_offset_all(NPROC),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1760')
     if (ier /= 0) stop 'Error allocating arrays'
 
     vol_conn_offset_all(1) = 0
@@ -865,14 +888,18 @@ end module vtk_window_par
     if (myrank == 0) then
       ! point data
       allocate(vtkdata_all(vtkdata_numpoints_all),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1761')
       if (ier /= 0) stop 'Error allocating vtkdata_all array'
 
       vtkdata_all(:) = 0.0
 
       ! gather locations
-      allocate(vol_x_all(vtkdata_numpoints_all), &
-               vol_y_all(vtkdata_numpoints_all), &
-               vol_z_all(vtkdata_numpoints_all),stat=ier )
+      allocate(vol_x_all(vtkdata_numpoints_all),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1762')
+      allocate(vol_y_all(vtkdata_numpoints_all),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1763')
+      allocate(vol_z_all(vtkdata_numpoints_all),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1764')
       if (ier /= 0) stop 'Error allocating vol_x_all,... arrays'
 
       vol_x_all(:) = 0.0
@@ -881,6 +908,7 @@ end module vtk_window_par
 
       ! connectivity
       allocate(vol_conn_all(8,vol_nspec_all),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1765')
       if (ier /= 0) stop 'Error allocating vol_conn_all array'
 
       vol_conn_all(:,:) = 0

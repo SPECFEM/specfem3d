@@ -589,11 +589,12 @@
 ! spline coefficients output by the routine
   double precision, dimension(npoint), intent(out) :: spline_coefficients
 
-  integer :: i
+  integer :: i, ier
 
   double precision, dimension(:), allocatable :: temporary_array
 
-  allocate(temporary_array(npoint))
+  allocate(temporary_array(npoint),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2431')
 
   spline_coefficients(1) = - 1.d0 / 2.d0
 

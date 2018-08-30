@@ -66,6 +66,7 @@
 
 
   allocate(vp_array(GOCAD_ST_NU,GOCAD_ST_NV,GOCAD_ST_NW),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 867')
   if (ier /= 0) call exit_mpi(myrank,'error allocating vp_array for salton')
 
   ! the variables read are declared and stored in structure

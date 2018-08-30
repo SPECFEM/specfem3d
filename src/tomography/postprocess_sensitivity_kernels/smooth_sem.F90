@@ -249,49 +249,78 @@ program smooth_sem
   call read_mesh_for_init()
 
   allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),irregular_element_number(NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 980')
 
   if (NSPEC_IRREGULAR > 0) then
     ! allocate arrays for storing the databases
-    allocate(xix(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-             xiy(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-             xiz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-             etax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-             etay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-             etaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-             gammax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-             gammay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-             gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR), &
-             jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    allocate(xix(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 981')
+    allocate(xiy(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 982')
+    allocate(xiz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 983')
+    allocate(etax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 984')
+    allocate(etay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 985')
+    allocate(etaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 986')
+    allocate(gammax(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 987')
+    allocate(gammay(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 988')
+    allocate(gammaz(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 989')
+    allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 990')
    else
        ! allocate arrays for storing the databases
-    allocate(xix(1,1,1,1), &
-             xiy(1,1,1,1), &
-             xiz(1,1,1,1), &
-             etax(1,1,1,1), &
-             etay(1,1,1,1), &
-             etaz(1,1,1,1), &
-             gammax(1,1,1,1), &
-             gammay(1,1,1,1), &
-             gammaz(1,1,1,1), &
-             jacobian(1,1,1,1),stat=ier)
+    allocate(xix(1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 991')
+    allocate(xiy(1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 992')
+    allocate(xiz(1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 993')
+    allocate(etax(1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 994')
+    allocate(etay(1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 995')
+    allocate(etaz(1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 996')
+    allocate(gammax(1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 997')
+    allocate(gammay(1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 998')
+    allocate(gammaz(1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 999')
+    allocate(jacobian(1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1000')
   endif
   if (ier /= 0) stop 'Error allocating arrays for databases'
 
   ! mesh node locations
-  allocate(xstore(NGLOB_AB), &
-           ystore(NGLOB_AB), &
-           zstore(NGLOB_AB),stat=ier)
+  allocate(xstore(NGLOB_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1001')
+  allocate(ystore(NGLOB_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1002')
+  allocate(zstore(NGLOB_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1003')
   if (ier /= 0) stop 'Error allocating arrays for mesh nodes'
 
   ! material properties
-  allocate(kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  allocate(kappastore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1004')
+  allocate(mustore(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1005')
   if (ier /= 0) stop 'Error allocating arrays for material properties'
 
   ! material flags
-  allocate(ispec_is_acoustic(NSPEC_AB), &
-           ispec_is_elastic(NSPEC_AB), &
-           ispec_is_poroelastic(NSPEC_AB),stat=ier)
+  allocate(ispec_is_acoustic(NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1006')
+  allocate(ispec_is_elastic(NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1007')
+  allocate(ispec_is_poroelastic(NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1008')
   if (ier /= 0) stop 'Error allocating arrays for material flags'
   ispec_is_acoustic(:) = .false.
   ispec_is_elastic(:) = .false.
@@ -331,8 +360,10 @@ program smooth_sem
                                LOCAL_PATH,SAVE_MESH_FILES)
 
   else if (POROELASTIC_SIMULATION) then
-    allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
-    allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB))
+    allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1009')
+    allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1010')
     rho_vp = 0.0_CUSTOM_REAL
     rho_vs = 0.0_CUSTOM_REAL
     call check_mesh_resolution_poro(myrank,NSPEC_AB,NGLOB_AB,ibool,xstore,ystore,zstore, &
@@ -342,8 +373,10 @@ program smooth_sem
     deallocate(rho_vp,rho_vs)
   else if (ACOUSTIC_SIMULATION) then
     allocate(rho_vp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1011')
     if (ier /= 0) stop 'Error allocating array rho_vp'
     allocate(rho_vs(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1012')
     if (ier /= 0) stop 'Error allocating array rho_vs'
     rho_vp = sqrt( kappastore / rhostore ) * rhostore
     rho_vs = 0.0_CUSTOM_REAL
@@ -358,12 +391,18 @@ program smooth_sem
   ! for smoothing, we use cell centers to find and locate nearby elements
   !
   ! sets the location of the center of the elements and local points
-  allocate(xl(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           yl(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           zl(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           cx0(NSPEC_AB), &
-           cy0(NSPEC_AB), &
-           cz0(NSPEC_AB),stat=ier)
+  allocate(xl(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1013')
+  allocate(yl(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1014')
+  allocate(zl(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1015')
+  allocate(cx0(NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1016')
+  allocate(cy0(NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1017')
+  allocate(cz0(NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1018')
   if (ier /= 0) stop 'Error allocating array xl etc.'
 
   ! sets element center location
@@ -465,8 +504,10 @@ program smooth_sem
 
       ! allocates mesh arrays
       allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1019')
       if (ier /= 0) stop 'Error allocating array ibool'
       allocate(xstore(NGLOB_N),ystore(NGLOB_N),zstore(NGLOB_N),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1020')
       if (ier /= 0) stop 'Error allocating array xstore etc.'
 
       ! ibool file
@@ -557,8 +598,10 @@ program smooth_sem
 
   ! loops over slices
   ! each process reads in his own neighbor slices and Gaussian filters the values
-  allocate(tk(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-           bk(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  allocate(tk(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1021')
+  allocate(bk(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1022')
   if (ier /= 0) stop 'Error allocating array tk and bk'
 
   tk = 0.0_CUSTOM_REAL
@@ -595,23 +638,30 @@ program smooth_sem
 
     ! allocates arrays
     allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1023')
     if (ier /= 0) stop 'Error allocating array ibool'
     allocate(xstore(NGLOB_N),ystore(NGLOB_N),zstore(NGLOB_N),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1024')
     if (ier /= 0) stop 'Error allocating array xstore etc.'
 
     if (USE_QUADRATURE_RULE_FOR_SMOOTHING) then
       if (NSPEC_IRREGULAR_N > 0) then
         allocate(jacobian(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR_N),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1025')
         if (ier /= 0) stop 'Error allocating array jacobian'
         allocate(dummy(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1026')
         if (ier /= 0) stop 'Error allocating array dummy'
       else
         allocate(jacobian(1,1,1,1),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1027')
         if (ier /= 0) stop 'Error allocating array jacobian'
         allocate(dummy(1,1,1,1),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1028')
         if (ier /= 0) stop 'Error allocating array dummy'
       endif
       allocate(irregular_element_number(NSPEC_N),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1029')
       if (ier /= 0) stop 'Error allocating array irregular_element_number'
     endif
 
@@ -643,12 +693,18 @@ program smooth_sem
     close(IIN)
 
     ! get the location of the center of the elements and local points
-    allocate(xx(NGLLX,NGLLY,NGLLZ,NSPEC_N), &
-             yy(NGLLX,NGLLY,NGLLZ,NSPEC_N), &
-             zz(NGLLX,NGLLY,NGLLZ,NSPEC_N), &
-             cx(NSPEC_N), &
-             cy(NSPEC_N), &
-             cz(NSPEC_N),stat=ier)
+    allocate(xx(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1030')
+    allocate(yy(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1031')
+    allocate(zz(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1032')
+    allocate(cx(NSPEC_N),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1033')
+    allocate(cy(NSPEC_N),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1034')
+    allocate(cz(NSPEC_N),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1035')
     if (ier /= 0) stop 'Error allocating array xx etc.'
 
     ! sets element center location
@@ -683,6 +739,7 @@ program smooth_sem
     endif
 
     allocate(dat(NGLLX,NGLLY,NGLLZ,NSPEC_N),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1036')
     if (ier /= 0) stop 'Error allocating dat array'
 
     read(IIN) dat
@@ -787,6 +844,7 @@ program smooth_sem
   endif
 
   allocate(dat_smooth(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1037')
   if (ier /= 0) stop 'Error allocating array dat_smooth'
 
   dat_smooth(:,:,:,:) = 0.0_CUSTOM_REAL

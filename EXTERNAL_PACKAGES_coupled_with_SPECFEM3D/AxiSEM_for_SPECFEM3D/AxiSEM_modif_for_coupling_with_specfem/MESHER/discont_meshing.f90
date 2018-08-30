@@ -96,36 +96,36 @@ subroutine create_subregions
          idom_fluid(nfluidregions) = idom
       else if ( vs(idom,1) == 0.0d0 .and. vs(idom,2) /= 0.0d0 .or. &
               vs(idom,1) /= 0.0d0 .and. vs(idom,2) == 0.0d0) then
-         write(6,*) 'ERROR in background model region:'
-         write(6,*) 'Cannot have one region with fluid and solid parts...'
-         write(6,*) 'upper radius/vs:', rdisc_top(idom), vs(idom,1)
-         write(6,*) 'lower radius/vs:', rdisc_bot(idom), vs(idom,2)
+         write(*,*) 'ERROR in background model region:'
+         write(*,*) 'Cannot have one region with fluid and solid parts...'
+         write(*,*) 'upper radius/vs:', rdisc_top(idom), vs(idom,1)
+         write(*,*) 'lower radius/vs:', rdisc_bot(idom), vs(idom,2)
       endif
 
-      write(6,*) '#######################################################################'
+      write(*,*) '#######################################################################'
       fmtstring = '("  ", A, I12, F12.2)'
-      write(6,fmtstring)'discontinuities:    ', idom,real(discont(idom))
+      write(*,fmtstring)'discontinuities:    ', idom,real(discont(idom))
       fmtstring = '("  ", A, L12, I12)'
-      write(6,fmtstring)'solid/fluid domain: ', solid_domain(idom),idom_fluid(idom)
+      write(*,fmtstring)'solid/fluid domain: ', solid_domain(idom),idom_fluid(idom)
       fmtstring = '("  ", A, F12.2, F12.2)'
-      write(6,fmtstring)'upper/lower radius: ', real(rdisc_top(idom)),real(rdisc_bot(idom))
-      write(6,fmtstring)'vs jump:            ', real(vs(idom,1)),real(vs(idom,2))
-      write(6,*) '#######################################################################'
-      write(6,*)
+      write(*,fmtstring)'upper/lower radius: ', real(rdisc_top(idom)),real(rdisc_bot(idom))
+      write(*,fmtstring)'vs jump:            ', real(vs(idom,1)),real(vs(idom,2))
+      write(*,*) '#######################################################################'
+      write(*,*)
 
    enddo
 
    if (nfluidregions == ndisc) then
-      write(6,*) 'COMPLETELY acoustic domain!'
+      write(*,*) 'COMPLETELY acoustic domain!'
       have_solid = .false.
    endif
 
-   write(6,"(10x,'Number of discontinuities/regions:     ',i3)") ndisc
-   write(6,"(10x,'Number of fluid regions:               ',i3)") nfluidregions
+   write(*,"(10x,'Number of discontinuities/regions:     ',i3)") ndisc
+   write(*,"(10x,'Number of fluid regions:               ',i3)") nfluidregions
 
-   write(6,*)''
-   write(6,*)'Constructing the mesh....'
-   write(6,*)''
+   print *
+   write(*,*)'Constructing the mesh....'
+   print *
 
   ! Loop over discontinuities/subregions
   icount_glob = 0   ! element depth levels
@@ -143,7 +143,7 @@ subroutine create_subregions
   endif
 
   if (dump_mesh_info_screen) &
-        write(6,*) 'ns_ref initial estimate from crust   :', ns_ref_surf
+        write(*,*) 'ns_ref initial estimate from crust   :', ns_ref_surf
 
   ! take ICB value as constraint on ns resolution
   if (solid_domain(ndisc)) then
@@ -155,7 +155,7 @@ subroutine create_subregions
   endif
 
   if (dump_mesh_info_screen) &
-        write(6,*) 'ns_ref initial estimate from icb     :', ns_ref_icb1
+        write(*,*) 'ns_ref initial estimate from icb     :', ns_ref_icb1
 
   ! need to resolve the crust and icb
   ns_ref = max(ns_ref_icb1, ns_ref_surf)
@@ -167,7 +167,7 @@ subroutine create_subregions
                     * (ns_ref / (2 ** nc_init * nthetaslices * 2) + 1)
 
   if (dump_mesh_info_screen) &
-        write(6,*) 'ns_ref fixed with procs & coarsenings:', ns_ref
+        write(*,*) 'ns_ref fixed with procs & coarsenings:', ns_ref
 
   ns_glob = ns_ref
 
@@ -187,10 +187,10 @@ subroutine create_subregions
   rmin = maxh_icb * (ns_ref / (2.d0 * 2**nc_init) + 1)
 
   if (dump_mesh_info_screen) &
-        write(6,*) 'actual ds at innermost discontinuity [km] :', &
+        write(*,*) 'actual ds at innermost discontinuity [km] :', &
                     0.5 * pi * rdisc_top(ndisc) / real(ns_ref) * real(2**nc_init) / 1000.
   if (dump_mesh_info_screen) &
-        write(6,*) 'maximal dz at innermost discontinuity [km]:', maxh_icb / 1000.
+        write(*,*) 'maximal dz at innermost discontinuity [km]:', maxh_icb / 1000.
 
   if (rmin > rdisc_top(ndisc) - maxh_icb * .9) then
      ! at least the ICB....
@@ -198,9 +198,9 @@ subroutine create_subregions
   endif
 
   if (dump_mesh_info_screen) then
-     write(6,*) 'CALCULATED RMIN=', rmin
-     write(6,*) 'MAXH_ICB=', maxh_icb
-     write(6,*) '# central region elements (incl. buffer, e.g. along axis):', &
+     write(*,*) 'CALCULATED RMIN=', rmin
+     write(*,*) 'MAXH_ICB=', maxh_icb
+     write(*,*) '# central region elements (incl. buffer, e.g. along axis):', &
             int(ns_ref / (2.* 2**nc_init) + 1.)
   endif
 
@@ -217,15 +217,15 @@ subroutine create_subregions
      enddo
   enddo
 
-  write(6,*)
-  write(6,"(10x,'Spherical shell part of the mesh:')")
-  write(6,"(10x,'Total number of depth levels:        ',i6)") icount_glob
-  write(6,"(10x,'Actual number of coarsening levels:     ',i3)") ic
-  write(6,"(10x,'Anticipated number of coarsening levels:',i3)") nc_init
+  write(*,*)
+  write(*,"(10x,'Spherical shell part of the mesh:')")
+  write(*,"(10x,'Total number of depth levels:        ',i6)") icount_glob
+  write(*,"(10x,'Actual number of coarsening levels:     ',i3)") ic
+  write(*,"(10x,'Anticipated number of coarsening levels:',i3)") nc_init
 
   !TODO: MvD: can't this be automatized?
   if (nc_init /= ic) then
-     write(6,*) ' a bit of rethinking is needed for nc_init!', &
+     write(*,*) ' a bit of rethinking is needed for nc_init!', &
                   'Check your calculus'
      stop
   endif
@@ -252,7 +252,7 @@ subroutine create_subregions
         ns_ref = (2**nc_init*nthetaslices*2)* ( ns_ref/(2**nc_init*nthetaslices*2) + 1 )
 
   if (dump_mesh_info_screen) &
-        write(6,*) 'ns_ref fixed with # processors/coarsenings:' , ns_ref
+        write(*,*) 'ns_ref fixed with # processors/coarsenings:' , ns_ref
 
   ns_glob = ns_ref
 
@@ -286,7 +286,7 @@ subroutine create_subregions
   dt = courant * min(minval(ds_glob/vp_arr), minval(dz_glob/vp_arr)) &
             / dble(npol) * minh/ aveh
 
-  if (dump_mesh_info_screen) write(6,*) 'TIME STEP:', dt
+  if (dump_mesh_info_screen) write(*,*) 'TIME STEP:', dt
 
   if (dump_mesh_info_files) then
      open(unit=667,file=diagpath(1:lfdiag)//'/period_courant_pts_wavelength.txt')
@@ -337,18 +337,18 @@ subroutine create_subregions
   endif
 
   if (dump_mesh_info_screen) then
-     write(6,*) ' NS_REF at ICB + from meshing ', ns_ref_icb
-     write(6,*) ' WHAT WE WANT ', ns_ref
-     write(6,*)
-     write(6,*) 'MESH EFFICIENCY: smallest/largest spacing etc. '
-     write(6,*) 'min (h_el/vp):   ', &
+     write(*,*) ' NS_REF at ICB + from meshing ', ns_ref_icb
+     write(*,*) ' WHAT WE WANT ', ns_ref
+     write(*,*)
+     write(*,*) 'MESH EFFICIENCY: smallest/largest spacing etc. '
+     write(*,*) 'min (h_el/vp):   ', &
           min(minval(ds_glob/vp_arr),minval(dz_glob/vp_arr))*minh/aveh
-     write(6,*) 'dt/courant*npol: ',dt/courant*real(npol)
-     write(6,*)
-     write(6,*) 'max (h_el/vs):         ', &
+     write(*,*) 'dt/courant*npol: ',dt/courant*real(npol)
+     write(*,*)
+     write(*,*) 'max (h_el/vs):         ', &
           max(maxval(ds_glob/vs_arr),maxval(dz_glob/vs_arr))*maxh/aveh
-     write(6,*) 'period/pts_Wavelength: ',period/pts_wavelngth
-     write(6,*)
+     write(*,*) 'period/pts_Wavelength: ',period/pts_wavelngth
+     write(*,*)
   endif
 
   if (dump_mesh_info_files) then
@@ -358,12 +358,12 @@ subroutine create_subregions
   endif
 
   if (dump_mesh_info_screen) then
-     write(6,*) 'Inner Core element sizes:'
-     write(6,*) 'r_min=', rmin
-     write(6,*) 'max h r/ns(icb):', pi * 0.5 * discont(ndisc) / real(ns_ref_icb)
-     write(6,*) 'precalculated max h:', maxh_icb
-     write(6,*) 'max h:', maxh_ic
-     write(6,*) 'min h:', minh_ic
+     write(*,*) 'Inner Core element sizes:'
+     write(*,*) 'r_min=', rmin
+     write(*,*) 'max h r/ns(icb):', pi * 0.5 * discont(ndisc) / real(ns_ref_icb)
+     write(*,*) 'precalculated max h:', maxh_icb
+     write(*,*) 'max h:', maxh_ic
+     write(*,*) 'min h:', minh_ic
   endif
 
   ! for mesh_params.h
@@ -476,24 +476,24 @@ subroutine spacing_info(npol)
   maxh = max(maxval(spacing_eta), maxval(spacing_xi))
   aveh = 1.d0 / dble(npol)
 
-  write(6,*) ' ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == '
-  write(6,*) 'GLL SPACING for polynomial order', npol
-  write(6,*) '  AVERAGE SPACING:       ', aveh
-  write(6,*) '  MINIMAL SPACING:       ', minh
-  write(6,*) '  MAXIMAL SPACING:       ', maxh
-  write(6,*) '  MIN/AVE, MAX/AVE:      ', minh / aveh, maxh / aveh
-  write(6,*) '  MIN GLL,GLJ SPACING:   ', minval(spacing_eta), minval(spacing_xi)
-  write(6,*) '  MAX GLL,GLJ SPACING:   ', maxval(spacing_eta), maxval(spacing_xi)
-  write(6,*) '  MINGLL/AVE,MINGLJ/AVE: ', minval(spacing_eta) / aveh, &
+  write(*,*) ' ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == '
+  write(*,*) 'GLL SPACING for polynomial order', npol
+  write(*,*) '  AVERAGE SPACING:       ', aveh
+  write(*,*) '  MINIMAL SPACING:       ', minh
+  write(*,*) '  MAXIMAL SPACING:       ', maxh
+  write(*,*) '  MIN/AVE, MAX/AVE:      ', minh / aveh, maxh / aveh
+  write(*,*) '  MIN GLL,GLJ SPACING:   ', minval(spacing_eta), minval(spacing_xi)
+  write(*,*) '  MAX GLL,GLJ SPACING:   ', maxval(spacing_eta), maxval(spacing_xi)
+  write(*,*) '  MINGLL/AVE,MINGLJ/AVE: ', minval(spacing_eta) / aveh, &
                                           minval(spacing_xi) / aveh
-  write(6,*) '  MAXGLL/AVE,MAXGLJ/AVE: ', maxval(spacing_eta) / aveh, &
+  write(*,*) '  MAXGLL/AVE,MAXGLJ/AVE: ', maxval(spacing_eta) / aveh, &
                                           maxval(spacing_xi) / aveh
-  write(6,*) '  VALUES GLL, GLJ in [0,1]:'
+  write(*,*) '  VALUES GLL, GLJ in [0,1]:'
 
   do i=0, npol
-     write(6,*) i, eta(i), xi_k(i)
+     write(*,*) i, eta(i), xi_k(i)
   enddo
-  write(6,*)' ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == '
+  write(*,*)' ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == '
 
 end subroutine spacing_info
 !-----------------------------------------------------------------------------------------

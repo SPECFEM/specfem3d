@@ -125,7 +125,8 @@ subroutine BC_KINFLT_init(prname,DTglobal,myrank)
   read(IIN_PAR,*) DUMMY
 
   read(IIN_BIN) nbfaults ! should be the same as in IIN_PAR
-  allocate( faults(nbfaults) )
+  allocate( faults(nbfaults) ,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1993')
   dt = real(DTglobal)
   do iflt=1,nbfaults
     read(IIN_PAR,nml=BEGIN_FAULT,end=100)
@@ -156,15 +157,20 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt)
 
   real(kind=CUSTOM_REAL) :: kindt
 
+  integer :: ier
+
   NAMELIST / KINPAR / kindt
 
   call initialize_fault(bc,IIN_BIN)
 
   if (bc%nspec > 0) then
 
-    allocate(bc%T(3,bc%nglob))
-    allocate(bc%D(3,bc%nglob))
-    allocate(bc%V(3,bc%nglob))
+    allocate(bc%T(3,bc%nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1994')
+    allocate(bc%D(3,bc%nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1995')
+    allocate(bc%V(3,bc%nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1996')
     bc%T = 0e0_CUSTOM_REAL
     bc%D = 0e0_CUSTOM_REAL
     bc%V = 0e0_CUSTOM_REAL
@@ -176,8 +182,10 @@ subroutine init_one_fault(bc,IIN_BIN,IIN_PAR,dt,NT,iflt)
     bc%kin_it=0
     ! Always have in memory the slip-rate model at two times, t1 and t2,
     ! spatially interpolated in the spectral element grid
-    allocate(bc%v_kin_t1(2,bc%nglob))
-    allocate(bc%v_kin_t2(2,bc%nglob))
+    allocate(bc%v_kin_t1(2,bc%nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1997')
+    allocate(bc%v_kin_t2(2,bc%nglob),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1998')
     bc%v_kin_t1 = 0e0_CUSTOM_REAL
     bc%v_kin_t2 = 0e0_CUSTOM_REAL
 
@@ -330,6 +338,8 @@ subroutine init_dataXZ(dataXZ,bc)
   type(dataXZ_type), intent(inout) :: dataXZ
   type(bc_dynandkinflt_type) :: bc
 
+  integer :: ier
+
  if (bc%nglob > 0) then
    dataXZ%d1 => bc%d(1,:)
    dataXZ%d2 => bc%d(2,:)
@@ -338,9 +348,12 @@ subroutine init_dataXZ(dataXZ,bc)
    dataXZ%t1 => bc%t(1,:)
    dataXZ%t2 => bc%t(2,:)
    dataXZ%t3 => bc%t(3,:)
-   allocate(dataXZ%xcoord(bc%nglob))
-   allocate(dataXZ%ycoord(bc%nglob))
-   allocate(dataXZ%zcoord(bc%nglob))
+   allocate(dataXZ%xcoord(bc%nglob),stat=ier)
+   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1999')
+   allocate(dataXZ%ycoord(bc%nglob),stat=ier)
+   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2000')
+   allocate(dataXZ%zcoord(bc%nglob),stat=ier)
+   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2001')
  endif
 
 end subroutine init_dataXZ

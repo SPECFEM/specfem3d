@@ -806,7 +806,7 @@ subroutine dump_field_1d(f, filename, appisnap, n)
           endif
 
        else
-           write(6,*) 'Neither solid nor fluid. What''s wrong here?'
+           write(*,*) 'Neither solid nor fluid. What''s wrong here?'
            stop 2
        endif
    else

@@ -73,17 +73,24 @@
   if (MOVIE_VOLUME) then
     ! acoustic
     if (ACOUSTIC_SIMULATION .or. ELASTIC_SIMULATION) then
-      allocate(velocity_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-               velocity_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-               velocity_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+      allocate(velocity_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1731')
+      allocate(velocity_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1732')
+      allocate(velocity_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1733')
       if (ier /= 0) stop 'error allocating array movie velocity_x etc.'
     endif
     ! elastic only
     if (ELASTIC_SIMULATION) then
-      allocate(div(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-               curl_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-               curl_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB), &
-               curl_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+      allocate(div(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1734')
+      allocate(curl_x(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1735')
+      allocate(curl_y(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1736')
+      allocate(curl_z(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1737')
       if (ier /= 0) stop 'error allocating array movie div and curl'
       div(:,:,:,:) = 0._CUSTOM_REAL
       curl_x(:,:,:,:) = 0._CUSTOM_REAL

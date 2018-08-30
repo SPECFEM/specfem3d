@@ -97,8 +97,10 @@
 
     if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_DSM) then
 
-      allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces)) !! CD CD : cf for deallocate
-      allocate(Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces))
+      allocate(Veloc_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2190')
+      allocate(Tract_dsm_boundary(3,Ntime_step_dsm,NGLLSQUARE,num_abs_boundary_faces),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2191')
 
       if (old_DSM_coupling_from_Vadim) then
         open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'vel.bin',status='old', &
@@ -111,8 +113,10 @@
 
     else if (INJECTION_TECHNIQUE_TYPE == INJECTION_TECHNIQUE_IS_AXISEM) then
 
-      allocate(Veloc_axisem(3,NGLLSQUARE*num_abs_boundary_faces))
-      allocate(Tract_axisem(3,NGLLSQUARE*num_abs_boundary_faces))
+      allocate(Veloc_axisem(3,NGLLSQUARE*num_abs_boundary_faces),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2192')
+      allocate(Tract_axisem(3,NGLLSQUARE*num_abs_boundary_faces),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2193')
 
       open(unit=IIN_veloc_dsm,file=dsmname(1:len_trim(dsmname))//'sol_axisem',status='old', &
            action='read',form='unformatted',iostat=ier)
@@ -121,10 +125,14 @@
       !! CD CD added this
       if (RECIPROCITY_AND_KH_INTEGRAL) then
 
-        allocate(Displ_axisem_time(3,NGLLSQUARE*num_abs_boundary_faces,NSTEP))
-        allocate(Tract_axisem_time(3,NGLLSQUARE*num_abs_boundary_faces,NSTEP))
-        allocate(Tract_specfem_time(3,NGLLSQUARE*num_abs_boundary_faces,NSTEP))
-        allocate(Displ_specfem_time(3,NGLLSQUARE*num_abs_boundary_faces,NSTEP))
+        allocate(Displ_axisem_time(3,NGLLSQUARE*num_abs_boundary_faces,NSTEP),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2194')
+        allocate(Tract_axisem_time(3,NGLLSQUARE*num_abs_boundary_faces,NSTEP),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2195')
+        allocate(Tract_specfem_time(3,NGLLSQUARE*num_abs_boundary_faces,NSTEP),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2196')
+        allocate(Displ_specfem_time(3,NGLLSQUARE*num_abs_boundary_faces,NSTEP),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2197')
 
         if (.not. SAVE_RUN_BOUN_FOR_KH_INTEGRAL) then
         !! We only read Specfem Tract and Displ, and Axisem Displ (Axisem Tract is read in compute_stacey_visco...)
@@ -148,10 +156,14 @@
 
   else
     ! dummy arrays
-    allocate(Veloc_dsm_boundary(1,1,1,1))
-    allocate(Tract_dsm_boundary(1,1,1,1))
-    allocate(Veloc_axisem(1,1))
-    allocate(Tract_axisem(1,1))
+    allocate(Veloc_dsm_boundary(1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2198')
+    allocate(Tract_dsm_boundary(1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2199')
+    allocate(Veloc_axisem(1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2200')
+    allocate(Tract_axisem(1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2201')
   endif
 
   !! CD CD add this :
@@ -215,11 +227,15 @@
 
       !! allocate memory for FK solution
       if (npt > 0) then
-        allocate(nbdglb(npt))
-        allocate(vx_FK(npt),vy_FK(npt),vz_FK(npt),tx_FK(npt),ty_FK(npt),tz_FK(npt))
+        allocate(nbdglb(npt),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2202')
+        allocate(vx_FK(npt),vy_FK(npt),vz_FK(npt),tx_FK(npt),ty_FK(npt),tz_FK(npt),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2203')
       else
-        allocate(nbdglb(1))
-        allocate(vx_FK(1),vy_FK(1),vz_FK(1),tx_FK(1),ty_FK(1),tz_FK(1))
+        allocate(nbdglb(1),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2204')
+        allocate(vx_FK(1),vy_FK(1),vz_FK(1),tx_FK(1),ty_FK(1),tz_FK(1),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2205')
       endif
 
       call FindBoundaryBox(Xmin_box, Xmax_box, Ymin_box, Ymax_box, Zmin_box, Zmax_box)
@@ -230,7 +246,16 @@
       call bcast_all_singlei(kpsv)
       call bcast_all_singlei(nlayer)
 
-      if (myrank > 0) allocate(al_FK(nlayer),be_FK(nlayer),mu_FK(nlayer),h_FK(nlayer))
+      if (myrank > 0) then
+        allocate(al_FK(nlayer),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2206')
+        allocate(be_FK(nlayer),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2207')
+        allocate(mu_FK(nlayer),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2208')
+        allocate(h_FK(nlayer),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2209')
+      endif
 
       call bcast_all_cr(al_FK, nlayer)
       call bcast_all_cr(be_FK, nlayer)
@@ -294,26 +319,32 @@
         !! arrays for storing FK solution --------------------------------------------
 
         allocate(VX_t(npt,  -NP_RESAMP:NF_FOR_STORING+NP_RESAMP),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2210')
         if (ier /= 0) stop 'error while allocating VX_t'
         VX_t(:,:)=0._CUSTOM_REAL
 
         allocate(VY_t(npt,  -NP_RESAMP:NF_FOR_STORING+NP_RESAMP),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2211')
         if (ier /= 0) stop 'error while allocating VY_t'
         VY_t(:,:)=0._CUSTOM_REAL
 
         allocate(VZ_t(npt,  -NP_RESAMP:NF_FOR_STORING+NP_RESAMP),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2212')
         if (ier /= 0) stop 'error while allocating VZ_t'
         VZ_t(:,:)=0._CUSTOM_REAL
 
         allocate(TX_t(npt,  -NP_RESAMP:NF_FOR_STORING+NP_RESAMP),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2213')
         if (ier /= 0) stop 'error while allocating TX_t'
         TX_t(:,:)=0._CUSTOM_REAL
 
         allocate(TY_t(npt,  -NP_RESAMP:NF_FOR_STORING+NP_RESAMP),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2214')
         if (ier /= 0) stop 'error while allocating TY_t'
         TY_t(:,:)=0._CUSTOM_REAL
 
         allocate(TZ_t(npt, -NP_RESAMP:NF_FOR_STORING+NP_RESAMP),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2215')
         if (ier /= 0) stop 'error while allocating TZ_t'
         TZ_t(:,:)=0._CUSTOM_REAL
 
@@ -418,13 +449,15 @@
   real(kind=CUSTOM_REAL),dimension(3,NGLLSQUARE,num_abs_boundary_faces) :: abs_boundary_normal
 
   ! local parameters
-  integer :: ispec,iglob,i,j,k,iface,igll
+  integer :: ispec,iglob,i,j,k,iface,igll,ier
 
   ! absorbs absorbing-boundary surface using Stacey condition (Clayton and Enquist)
   if (npt > 0) then
-     allocate(xx(npt),yy(npt),zz(npt),xi1(npt),xim(npt),bdlambdamu(npt),nmx(npt),nmy(npt),nmz(npt))
+     allocate(xx(npt),yy(npt),zz(npt),xi1(npt),xim(npt),bdlambdamu(npt),nmx(npt),nmy(npt),nmz(npt),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2216')
   else
-     allocate(xx(1),yy(1),zz(1),xi1(1),xim(1),bdlambdamu(1),nmx(1),nmy(1),nmz(1))
+     allocate(xx(1),yy(1),zz(1),xi1(1),xim(1),bdlambdamu(1),nmx(1),nmy(1),nmz(1),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 2217')
   endif
 
   nbdglb(:) = 0
@@ -564,28 +597,35 @@
   !!
 
   allocate(fvec(nf2),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2218')
   fvec = 0.
   do ii = 1, nf2
     fvec(ii)=(ii-1)*df
   enddo
 
   allocate(coeff(2,nf2),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2219')
   if (ier /= 0) stop 'error while allocating'
 
   allocate(field_f(nf,nvar),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2220')
   if (ier /= 0) stop 'error while allocating'
 
   allocate(field(npts2,nvar),dtmp(npts),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2221')
   if (ier /= 0) stop 'error while allocating'
 
   !! allocate debug vectors
   allocate(tmp_f1(npts2), tmp_f2(npts2), tmp_f3(npts2),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2222')
 
   if (ier /= 0) stop 'error while allocating'
   allocate(tmp_t1(npts2), tmp_t2(npts2), tmp_t3(npts2),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2223')
 
   if (ier /= 0) stop 'error while allocating'
-  allocate(tmp_it1(npoints2))
+  allocate(tmp_it1(npoints2),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2224')
 
   NPTS_STORED = npts2
   NPTS_INTERP = npoints2
@@ -1253,9 +1293,10 @@
   double precision                                                    :: error=1.d-24
   double precision                                                    :: z1, zn, sumc
   double precision, dimension(:), allocatable                         :: c
-  integer                                                             :: i, n_init
+  integer                                                             :: i, n_init, ier
 
-  allocate(c(npts))
+  allocate(c(npts),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2225')
 
   ! Compute pole value
   z1 = dsqrt(3.d0)-2.d0
@@ -1312,7 +1353,7 @@
   real(kind=CUSTOM_REAL) :: Radius_box, wave_length_at_bottom
   real(kind=CUSTOM_REAL), dimension(:), allocatable  :: rho_fk_input, vp_fk_input, vs_fk_input, ztop_fk_input
   integer,  dimension(:), allocatable  :: ilayer_fk_input
-  integer  :: ilayer
+  integer  :: ilayer,ier
   logical  :: position_of_wavefront_not_read
 
   !!--------------------------------------------------------------
@@ -1356,9 +1397,18 @@
 
      case('NLAYER')
         read(line, *) keyword_tmp, nlayer
-        allocate(al_FK(nlayer), be_FK(nlayer), mu_FK(nlayer), h_FK(nlayer))
-        allocate(rho_fk_input(nlayer), vp_fk_input(nlayer), vs_fk_input(nlayer), ztop_fk_input(nlayer+1), &
-             ilayer_fk_input(nlayer+1))
+        allocate(al_FK(nlayer), be_FK(nlayer), mu_FK(nlayer), h_FK(nlayer),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2226')
+        allocate(rho_fk_input(nlayer),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2227')
+        allocate(vp_fk_input(nlayer),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2228')
+        allocate(vs_fk_input(nlayer),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2229')
+        allocate(ztop_fk_input(nlayer+1),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2230')
+        allocate(ilayer_fk_input(nlayer+1),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 2231')
         ilayer_fk_input(:)=-1
 
      case('LAYER')

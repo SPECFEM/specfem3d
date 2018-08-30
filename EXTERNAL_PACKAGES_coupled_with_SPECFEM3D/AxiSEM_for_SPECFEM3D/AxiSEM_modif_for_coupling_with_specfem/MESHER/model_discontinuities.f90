@@ -43,46 +43,46 @@ subroutine define_discont
 
   select case(bkgrdmodel)
      case('ak135')
-        write(6,*)'Reading AK135 discontinuities...'
+        write(*,*)'Reading AK135 discontinuities...'
         call ak135_discont
      case('ak135f')
-        write(6,*)'Reading AK135f discontinuities...'
+        write(*,*)'Reading AK135f discontinuities...'
         call ak135f_discont
      case('prem_iso')
-        write(6,*)'Reading PREM discontinuities...'
+        write(*,*)'Reading PREM discontinuities...'
         call prem_discont
      case('prem_ani')
-        write(6,*)'Reading PREM_ANI discontinuities...'
+        write(*,*)'Reading PREM_ANI discontinuities...'
         call prem_ani_discont
      case('prem_iso_solid')
-        write(6,*)'Reading PREM_SOLID discontinuities...'
+        write(*,*)'Reading PREM_SOLID discontinuities...'
         call prem_solid_discont
      case('prem_iso_light')
-        write(6,*)'Reading PREM_LIGHT discontinuities...'
+        write(*,*)'Reading PREM_LIGHT discontinuities...'
         call prem_light_discont
      case('prem_ani_light')
-        write(6,*)'Reading PREM_LIGHT_ANI discontinuities...'
+        write(*,*)'Reading PREM_LIGHT_ANI discontinuities...'
         call prem_light_ani_discont
      case('prem_iso_onecrust')
-        write(6,*)'Reading PREM_ONECRUST discontinuities...'
+        write(*,*)'Reading PREM_ONECRUST discontinuities...'
         call prem_onecrust_discont
      case('prem_ani_onecrust')
-        write(6,*)'Reading PREM_ONECRUST_ANI discontinuities...'
+        write(*,*)'Reading PREM_ONECRUST_ANI discontinuities...'
         call prem_onecrust_ani_discont
      case('prem_iso_solid_light')
-        write(6,*)'Reading PREM_SOLID_LIGHT discontinuities...'
+        write(*,*)'Reading PREM_SOLID_LIGHT discontinuities...'
         call prem_solid_light_discont
      case('iasp91')
-        write(6,*)'Reading IASP91 discontinuities...'
+        write(*,*)'Reading IASP91 discontinuities...'
         call iasp91_discont
      case('prem_iso_custom')
-        write(6,*)'Reading PREM discontinuities...'
+        write(*,*)'Reading PREM discontinuities...'
         call prem_discont
      case('external')
-        write(6,*)'Reading step-wise model from file: ', trim(fnam_ext_model)
+        write(*,*)'Reading step-wise model from file: ', trim(fnam_ext_model)
         call arbitrmodel_discont
      case default
-        write(6,*) 'Unknown model' ,bkgrdmodel
+        write(*,*) 'Unknown model' ,bkgrdmodel
         stop
   end select
 

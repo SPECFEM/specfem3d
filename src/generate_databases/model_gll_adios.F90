@@ -65,12 +65,15 @@ subroutine model_gll_adios(myrank,nspec,LOCAL_PATH)
 
   ! density
   allocate( rho_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 617')
   if (ier /= 0) stop 'error allocating array rho_read'
   ! vp
   allocate( vp_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 618')
   if (ier /= 0) stop 'error allocating array vp_read'
   ! vs
   allocate( vs_read(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 619')
   if (ier /= 0) stop 'error allocating array vs_read'
 
   !-------------------------------------.

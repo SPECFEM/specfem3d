@@ -145,7 +145,7 @@
   double precision,   dimension(:,:,:), allocatable              :: nu_all
   double precision,   dimension(:,:), allocatable                :: x_found_all, y_found_all, z_found_all
   integer,            dimension(:,:), allocatable                :: ispec_selected_all, domain_all
-  integer                                                        :: iproc
+  integer                                                        :: iproc, ier
 
   !! to avoid compler error when calling gather_all*
   double precision,  dimension(1)                                :: distance_from_target_dummy
@@ -153,16 +153,25 @@
   double precision,  dimension(1)                                :: x_found_dummy, y_found_dummy, z_found_dummy
   integer,           dimension(1)                                :: ispec_selected_dummy, islice_selected_dummy, domain_dummy
 
-  allocate(distance_from_target_all(1,0:NPROC-1), &
-           xi_all(1,0:NPROC-1), &
-           eta_all(1,0:NPROC-1), &
-           gamma_all(1,0:NPROC-1), &
-           x_found_all(1,0:NPROC-1), &
-           y_found_all(1,0:NPROC-1), &
-           z_found_all(1,0:NPROC-1), &
-           nu_all(3,3,0:NPROC-1))
+  allocate(distance_from_target_all(1,0:NPROC-1),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1782')
+  allocate(xi_all(1,0:NPROC-1),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1783')
+  allocate(eta_all(1,0:NPROC-1),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1784')
+  allocate(gamma_all(1,0:NPROC-1),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1785')
+  allocate(x_found_all(1,0:NPROC-1),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1786')
+  allocate(y_found_all(1,0:NPROC-1),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1787')
+  allocate(z_found_all(1,0:NPROC-1),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1788')
+  allocate(nu_all(3,3,0:NPROC-1),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1789')
 
-  allocate(ispec_selected_all(1,0:NPROC-1),domain_all(1,0:NPROC-1))
+  allocate(ispec_selected_all(1,0:NPROC-1),domain_all(1,0:NPROC-1),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1790')
 
   distance_from_target = dsqrt( (x_to_locate - x_found)**2&
                                +(y_to_locate - y_found)**2&

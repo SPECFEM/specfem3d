@@ -35,7 +35,7 @@
     CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
     USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
     THICKNESS_OF_X_PML,THICKNESS_OF_Y_PML,THICKNESS_OF_Z_PML, &
-    myrank,sizeprocs
+    myrank,sizeprocs,NUMBER_OF_MATERIAL_PROPERTIES
 
   use constants, only: IIN,MF_IN_DATA_FILES,MAX_STRING_LEN,IMAIN, &
     IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC, &
@@ -53,7 +53,7 @@
   integer :: ix_beg_region,ix_end_region,iy_beg_region,iy_end_region
   integer :: iz_beg_region,iz_end_region,imaterial_number
 
-  double precision :: rho,vp,vs,Q_flag,anisotropy_flag
+  double precision :: rho,vp,vs,Q_Kappa,Q_mu,anisotropy_flag
 
   integer :: ireg,imat,ndef,nundef
   integer :: mat_id,domain_id
@@ -119,6 +119,7 @@
 
   ! allocate doubling array
   allocate(ner_doublings(NDOUBLINGS),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1318')
   if (ier /= 0) stop 'Error allocating ner_doublings array'
   ner_doublings(:) = 0
 
@@ -166,20 +167,22 @@
   if (ier /= 0) stop 'Error reading Mesh parameter NMATERIALS'
 
   ! read materials properties
-  allocate(material_properties(NMATERIALS,7),stat=ier)
+  allocate(material_properties(NMATERIALS,NUMBER_OF_MATERIAL_PROPERTIES),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1319')
   if (ier /= 0) stop 'Error allocation of material_properties'
   material_properties(:,:) = 0.d0
   do imat = 1,NMATERIALS
-    call read_material_parameters(IIN,mat_id,rho,vp,vs,Q_flag,anisotropy_flag,domain_id,ier)
+    call read_material_parameters(IIN,mat_id,rho,vp,vs,Q_Kappa,Q_mu,anisotropy_flag,domain_id,ier)
     if (ier /= 0) stop 'Error reading materials in Mesh_Par_file'
     ! stores material
     material_properties(imat,1) = rho
     material_properties(imat,2) = vp
     material_properties(imat,3) = vs
-    material_properties(imat,4) = Q_flag
-    material_properties(imat,5) = anisotropy_flag
-    material_properties(imat,6) = domain_id
-    material_properties(imat,7) = mat_id
+    material_properties(imat,4) = Q_Kappa
+    material_properties(imat,5) = Q_mu
+    material_properties(imat,6) = anisotropy_flag
+    material_properties(imat,7) = domain_id
+    material_properties(imat,8) = mat_id
   enddo
 
   ! read number of subregions
@@ -188,6 +191,7 @@
 
   ! read subregions properties
   allocate(subregions(NSUBREGIONS,7),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1320')
   if (ier /= 0) stop 'Error allocation of subregions'
   subregions(:,:) = 0
   do ireg = 1,NSUBREGIONS
@@ -230,8 +234,8 @@
   ndef = 0
   nundef = 0
   do imat = 1,NMATERIALS
-    mat_id = material_properties(imat,7)
-    ! checks material id (must be positiv or negative)
+    mat_id = material_properties(imat,8)
+    ! checks material id (must be positive or negative)
     if (mat_id == 0) stop 'Error incorrect material ID 0 found'
     ! counters
     if (mat_id > 0) ndef = ndef + 1
@@ -244,14 +248,16 @@
     rho = material_properties(imat,1)
     vp = material_properties(imat,2)
     vs = material_properties(imat,3)
-    Q_flag = material_properties(imat,4)
-    anisotropy_flag = material_properties(imat,5)
-    domain_id = material_properties(imat,6)
-    mat_id = material_properties(imat,7)
+    Q_Kappa = material_properties(imat,4)
+    Q_mu = material_properties(imat,5)
+    anisotropy_flag = material_properties(imat,6)
+    domain_id = material_properties(imat,7)
+    mat_id = material_properties(imat,8)
 
     ! checks material parameters
     if (rho <= 0.d0 .or. vp <= 0.d0 .or. vs < 0.d0) stop 'Error material with negative value of velocity or density found'
-    if (Q_flag < 0.d0) stop 'Error material with negative Q value found'
+    if (Q_Kappa < 0.d0) stop 'Error material with negative Q_Kappa value found'
+    if (Q_mu < 0.d0) stop 'Error material with negative Q_mu value found'
 
     ! checks domain id (1 = acoustic / 2 = elastic / 3 = poroelastic)
     select case (domain_id)
@@ -295,7 +301,7 @@
     ! searches material in given material_properties
     found = .false.
     do imat = 1,NMATERIALS
-      mat_id = material_properties(imat,7)
+      mat_id = material_properties(imat,8)
       if (imaterial_number == mat_id) then
         found = .true.
         exit

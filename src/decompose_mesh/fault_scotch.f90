@@ -77,7 +77,8 @@ CONTAINS
   ANY_FAULT = (nbfaults > 0)
   if (.not. ANY_FAULT)  return
 
-  allocate(faults(nbfaults))
+  allocate(faults(nbfaults),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 78')
  ! NOTE: asumes that the fault ids follow a contiguous numbering, starting at 1, with unit increment
  !       The user must assign that numbering during mesh generation
   do iflt = 1 , nbfaults
@@ -114,18 +115,22 @@ CONTAINS
  ! Note: element ids start at 1, not 0 (see cubit2specfem3d.py)
   open(unit=101, file=filename, status='old', form='formatted', iostat = ier)
   if (ier /= 0) then
-    write(6,*) 'Fatal error: file '//filename//' not found'
-    write(6,*) 'Abort'
+    write(*,*) 'Fatal error: file '//filename//' not found'
+    write(*,*) 'Abort'
     stop
   endif
 
   read(101,*) nspec_side1,nspec_side2
   if (nspec_side1 /= nspec_side2) stop 'Number of fault nodes at do not match.'
   f%nspec = nspec_side1
-  allocate(f%ispec1(f%nspec))
-  allocate(f%ispec2(f%nspec))
-  allocate(f%inodes1(NGNOD2D,f%nspec))
-  allocate(f%inodes2(NGNOD2D,f%nspec))
+  allocate(f%ispec1(f%nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 79')
+  allocate(f%ispec2(f%nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 80')
+  allocate(f%inodes1(NGNOD2D,f%nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 81')
+  allocate(f%inodes2(NGNOD2D,f%nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 82')
   do e=1,f%nspec
     read(101,*) f%ispec1(e),f%inodes1(:,e)
   enddo
@@ -150,8 +155,10 @@ CONTAINS
 
    integer, intent(in) :: nnodes
    double precision, dimension(3,nnodes), intent(in) :: nodes_coords
+   integer :: ier
 
-   allocate(nodes_coords_open(3,nnodes))
+   allocate(nodes_coords_open(3,nnodes),stat=ier)
+   if (ier /= 0) call exit_MPI_without_rank('error allocating array 83')
    nodes_coords_open = nodes_coords
 
    end subroutine save_nodes_coords
@@ -353,7 +360,7 @@ CONTAINS
   integer, dimension(0:nnodes-1) :: nnodes_elmnts
   integer, dimension(0:nsize*nnodes-1) :: nodes_elmnts
   integer  :: i,ipart,nproc_null,nproc_null_final
-  integer  :: k1, k2, k,e,iflt,inode
+  integer  :: k1, k2, k,e,iflt,inode,ier
   integer, dimension(:), allocatable :: elem_proc_null
 
  ! downloading processor 0
@@ -364,7 +371,8 @@ CONTAINS
 
   if (nproc_null /= 0) then
 
-    allocate(elem_proc_null(nproc_null))
+    allocate(elem_proc_null(nproc_null),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 84')
    ! Filling up proc = 0 elements
     nproc_null = 0
     do i = 0,nelmnts-1

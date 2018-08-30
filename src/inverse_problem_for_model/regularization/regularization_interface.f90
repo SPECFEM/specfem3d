@@ -19,7 +19,7 @@ contains
       type(inver),                                    intent(inout) :: inversion_param
       type(acqui),  dimension(:), allocatable,        intent(inout) :: acqui_simu
 
-
+      integer :: ier
 
       if (myrank == 0) then
          write(INVERSE_LOG_FILE,*)
@@ -36,9 +36,11 @@ contains
          endif
       endif
 
-
       if ( inversion_param%use_damping_SEM_Tikonov .or. inversion_param%use_variable_SEM_damping) then
-         if (.not. allocated(spatial_damping)) allocate(spatial_damping(NGLLX, NGLLY, NGLLZ, NSPEC_AB))
+         if (.not. allocated(spatial_damping)) then
+           allocate(spatial_damping(NGLLX, NGLLY, NGLLZ, NSPEC_AB),stat=ier)
+           if (ier /= 0) call exit_MPI_without_rank('error allocating array 211')
+         endif
          spatial_damping(:,:,:,:)=min(1._CUSTOM_REAL, inversion_param%min_damp)
       endif
 
@@ -88,13 +90,11 @@ contains
     real(kind=CUSTOM_REAL), dimension(:,:,:,:,:), allocatable, intent(inout) :: regul_penalty, gradient_regul_penalty
     real(kind=CUSTOM_REAL), dimension(:,:,:,:),   allocatable                :: model_on_sem, regul_on_sem, gradient_regul_on_sem
     real(kind=CUSTOM_REAL)                                                   :: cost_penalty
-    integer                                                                  :: ipar
+    integer                                                                  :: ipar, ier
 
     inversion_param%cost_penalty= 0._CUSTOM_REAL
     regul_penalty(:,:,:,:,:)= 0._CUSTOM_REAL
     gradient_regul_penalty(:,:,:,:,:)= 0._CUSTOM_REAL
-
-
 
     !! ----------------- SEM BASED REGULARIZATION --------
     if (inversion_param%use_regularization_SEM_Tikonov) then
@@ -107,9 +107,12 @@ contains
           write(INVERSE_LOG_FILE,*)
        endif
 
-       allocate(model_on_sem(NGLLX, NGLLY, NGLLZ, NSPEC_AB))
-       allocate(regul_on_sem(NGLLX, NGLLY, NGLLZ, NSPEC_AB))
-       allocate(gradient_regul_on_sem(NGLLX, NGLLY, NGLLZ, NSPEC_AB))
+       allocate(model_on_sem(NGLLX, NGLLY, NGLLZ, NSPEC_AB),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 212')
+       allocate(regul_on_sem(NGLLX, NGLLY, NGLLZ, NSPEC_AB),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 213')
+       allocate(gradient_regul_on_sem(NGLLX, NGLLY, NGLLZ, NSPEC_AB),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 214')
 
        do ipar = 1, inversion_param%NinvPar
 
@@ -223,9 +226,12 @@ contains
           write(INVERSE_LOG_FILE,*)
        endif
 
-       allocate(model_on_sem(NGLLX, NGLLY, NGLLZ, NSPEC_AB))
-       allocate(regul_on_sem(NGLLX, NGLLY, NGLLZ, NSPEC_AB))
-       allocate(gradient_regul_on_sem(NGLLX, NGLLY, NGLLZ, NSPEC_AB))
+       allocate(model_on_sem(NGLLX, NGLLY, NGLLZ, NSPEC_AB),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 215')
+       allocate(regul_on_sem(NGLLX, NGLLY, NGLLZ, NSPEC_AB),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 216')
+       allocate(gradient_regul_on_sem(NGLLX, NGLLY, NGLLZ, NSPEC_AB),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 217')
 
        do ipar = 1, inversion_param%NinvPar
           model_on_sem(:,:,:,:) = model(:,:,:,:,ipar)

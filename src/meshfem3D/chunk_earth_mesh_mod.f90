@@ -116,8 +116,8 @@ contains
       character(len=MAX_STRING_LEN) :: keyw
       integer :: ilayer, nx, ny, k, ntmp
       double precision :: dz
-      integer :: i, iflag, imat
-      double precision :: vp, vs, rho, Q, Aniso
+      integer :: i, iflag, imat, ier
+      double precision :: vp, vs, rho, Q_Kappa, Q_mu, Aniso
       double precision :: x0, x1, y0, y1, z0, z1
 
       open(27, file='DATA/meshfem3D_files/Mesh_Chunk_Par_file', action='read')
@@ -154,30 +154,45 @@ contains
           case('nb_doubling')
              use_doubling=.true.
              read(line(ipos0:ipos1),*) nb_doubling
-             allocate(layer_doubling(nb_doubling))
+             allocate(layer_doubling(nb_doubling),stat=ier)
+             if (ier /= 0) call exit_MPI_without_rank('error allocating array 1240')
           case('layer_doubling')
              read(line(ipos0:ipos1),*) layer_doubling(:)
           case ('nb_material')
              read(line(ipos0:ipos1),*) nb_mat
-             allocate(material_prop(nb_mat, 5))
-             allocate(flag_acoustic_elastic(nb_mat))
+             allocate(material_prop(nb_mat, 6),stat=ier)
+             if (ier /= 0) call exit_MPI_without_rank('error allocating array 1241')
+             allocate(flag_acoustic_elastic(nb_mat),stat=ier)
+             if (ier /= 0) call exit_MPI_without_rank('error allocating array 1242')
              flag_acoustic_elastic(:)=-1
           case('material')
-             read(line(ipos0:ipos1),*) i, rho, vp, vs, Q, Aniso, iflag
+             read(line(ipos0:ipos1),*,iostat=ier) i, rho, vp, vs, Q_Kappa, Q_mu, Aniso, iflag
+             if (ier /= 0) then
+               print *,'error while reading your input file in routine chunk_earth_mesh_mod.f90'
+               print *,'We recently changed the input format from i, rho, vp, vs, Q_mu, Aniso, iflag'
+               print *,'to i, rho, vp, vs, Q_Kappa, Q_mu, Aniso, iflag in order to add support for Q_Kappa.'
+               print *,'It is likely that your input file still uses the old convention and needs to be updated.'
+               print *,'If you do not know what value to add for Q_Kappa, add 9999., i.e negligible Q_Kappa attenuation'
+               print *,'and then your results will be unchanged compared to older versions of the code.'
+               stop 'error in input file format in routine chunk_earth_mesh_mod.f90'
+             endif
              if (i <= nb_mat) then
                 material_prop(i,1) = rho
                 material_prop(i,2) = vp
                 material_prop(i,3) = vs
-                material_prop(i,4) = Q
-                material_prop(i,5) = Aniso
+                material_prop(i,4) = Q_Kappa
+                material_prop(i,5) = Q_mu
+                material_prop(i,6) = Aniso
                 flag_acoustic_elastic(i) = iflag
              else
                 write(*,*) " Warning : material number ", i, " not used "
              endif
           case('nb_region')
              read(line(ipos0:ipos1),*) nb_dom
-             allocate(domain_boundary(nb_dom,6))
-             allocate(Imaterial_domain(nb_dom))
+             allocate(domain_boundary(nb_dom,6),stat=ier)
+             if (ier /= 0) call exit_MPI_without_rank('error allocating array 1243')
+             allocate(Imaterial_domain(nb_dom),stat=ier)
+             if (ier /= 0) call exit_MPI_without_rank('error allocating array 1244')
              domain_boundary(:,:)=0.
           case('region')
              read(line(ipos0:ipos1),*) i, x0, x1, y0, y1, z0, z1, imat
@@ -217,8 +232,10 @@ contains
        ny_ref =  floor((  ymax_chunk - ymin_chunk ) / dy_max ) + 1
 
        !! store the subdomain boundary
-       allocate(zlayer(nb_doubling+2))
-       allocate(nzlayer(nb_doubling+1))
+       allocate(zlayer(nb_doubling+2),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1245')
+       allocate(nzlayer(nb_doubling+1),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1246')
        k=0
        do ilayer=2, nb_doubling+1
           k=k+1
@@ -270,8 +287,10 @@ contains
        write(*,*) 'zlayer ', zlayer(:)
        write(*,*) 'nzlayer ', nzlayer(:)
        !! allocate mesh arrays
-       allocate(x_mesh_point(npoint_tot), y_mesh_point(npoint_tot), z_mesh_point(npoint_tot))
-       allocate(EtoV(8,nspec_tot), iboun(6,nspec_tot))
+       allocate(x_mesh_point(npoint_tot), y_mesh_point(npoint_tot), z_mesh_point(npoint_tot),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1247')
+       allocate(EtoV(8,nspec_tot), iboun(6,nspec_tot),stat=ier)
+       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1248')
        iboun(:,:)=.false.
        EtoV(:,:)=0
 
@@ -282,7 +301,7 @@ contains
 !!##################################################################################################################################
     subroutine mesh_metric_chunk()
 
-      integer :: nx, ny, nz, ispec, ipoint, ilayer
+      integer :: nx, ny, nz, ispec, ipoint, ilayer, ier
       double precision :: dx, dy, dz, z
       double precision, dimension(:,:), allocatable :: top_surface, bottom_surface
 
@@ -308,7 +327,8 @@ contains
          dy =  ( ymax_chunk - ymin_chunk ) / real(ny,8)
          dz =  ( zlayer(ilayer+1) - zlayer(ilayer) ) / real(nz,8)
 
-         allocate(top_surface(nx+1,ny+1), bottom_surface(nx+1,ny+1))
+         allocate(top_surface(nx+1,ny+1), bottom_surface(nx+1,ny+1),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 1249')
          top_surface(:,:) =  zlayer(ilayer+1) - dz
          bottom_surface(:,:) = zlayer(ilayer)
 
@@ -317,7 +337,8 @@ contains
 
 
          deallocate(top_surface)
-         allocate(top_surface(2*nx+1,2*ny+1))
+         allocate(top_surface(2*nx+1,2*ny+1),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 1250')
          top_surface(:,:) =  zlayer(ilayer+1)
          bottom_surface(:,:) = zlayer(ilayer+1) - dz
          call mesh_doubling_domain_Hex8(xmin_chunk, ymin_chunk, z, dx, dy, dz, nx, ny, &
@@ -335,7 +356,8 @@ contains
       dx =  ( xmax_chunk - xmin_chunk ) / real(nx,8)
       dy =  ( ymax_chunk - ymin_chunk ) / real(ny,8)
       dz =  ( zlayer(ilayer+1) - zlayer(ilayer) ) / real(nz,8)
-      allocate(top_surface(nx+1,ny+1), bottom_surface(nx+1,ny+1))
+      allocate(top_surface(nx+1,ny+1), bottom_surface(nx+1,ny+1),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1251')
       top_surface(:,:) =  zlayer(ilayer+1) - dz
       bottom_surface(:,:) = zlayer(ilayer)
       call mesh_regular_domain_Hex8(xmin_chunk, ymin_chunk, z, dx, dy, dz, nx, ny, nz, &
@@ -357,13 +379,15 @@ contains
       integer, dimension(:), allocatable :: iglob, locval
       logical, dimension(:), allocatable :: ifseg
       integer                            :: nglob
-      integer                            :: i, k, idom, IOVTK
+      integer                            :: i, k, idom, IOVTK, ier
       character(len=10)                  :: MESH
+
       MESH='./MESH/' !! VM VM harcoded directory (todo fix it)
 
-
-      allocate(iglob(npoint_tot), locval(npoint_tot))
-      allocate(ifseg(npoint_tot))
+      allocate(iglob(npoint_tot), locval(npoint_tot),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1252')
+      allocate(ifseg(npoint_tot),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1253')
       call get_global(npoint_tot, x_mesh_point, y_mesh_point, z_mesh_point, iglob, locval, ifseg, nglob, xmin_chunk, xmax_chunk)
 
 
@@ -384,7 +408,8 @@ contains
       npoint_tot=k
       write(*,*) " number of point found ", npoint_tot, nglob
       deallocate(x_mesh_point, y_mesh_point, z_mesh_point)
-      allocate(x_mesh_point(npoint_tot), y_mesh_point(npoint_tot), z_mesh_point(npoint_tot))
+      allocate(x_mesh_point(npoint_tot), y_mesh_point(npoint_tot), z_mesh_point(npoint_tot),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1254')
       open(27,file=trim(MESH)//'nodes_coords_file')
       read(27,*) k
       do i = 1, npoint_tot
@@ -435,11 +460,12 @@ contains
       !! write materials !!
       open(27,file=trim(MESH)//'nummaterial_velocity_file')
       do i=1, nb_mat
-         write(27,'(2i6,5f15.5,i6)') 2, Imaterial_domain(i), material_prop(i,1:3), 9999., 9999., 0
+         write(27,'(2i6,5f15.5,i6)') 2, Imaterial_domain(i), material_prop(i,1:5), 0
       enddo
       close(27)
 
-      allocate(Imatetrial_ispec(nspec_tot))
+      allocate(Imatetrial_ispec(nspec_tot),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1255')
       open(28,file=trim(MESH)//'/materials_file')
       do i=1, nspec_tot
          call Find_Domain(idom, i, iglob)
@@ -499,7 +525,7 @@ contains
       !! locals
       double precision, dimension(:), allocatable                    :: xgrid, ygrid, zgrid
       double precision                                               :: ztop, zbottom
-      integer                                                        :: i, j, k, ip
+      integer                                                        :: i, j, k, ip, ier
 
       !!-------------------------------------------------------------------------------------------------------
       !! in regular layer domain we have :
@@ -510,7 +536,8 @@ contains
       !!------------------------------------------------------------------------------------------------------
 
       !! creating regular Cartesian grid ---------------------------------------------------------------------
-      allocate(xgrid(nx+1), ygrid(ny+1), zgrid(nz+1))
+      allocate(xgrid(nx+1), ygrid(ny+1), zgrid(nz+1),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 1256')
 
       !! define the reference  grid
       do i = 1, nx + 1

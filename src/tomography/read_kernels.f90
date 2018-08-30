@@ -43,9 +43,12 @@ subroutine read_kernels_iso()
 
   ! allocate arrays for storing kernels and perturbations
   ! isotropic arrays
-  allocate(kernel_bulk(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           kernel_beta(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           kernel_rho(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  allocate(kernel_bulk(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 904')
+  allocate(kernel_beta(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 905')
+  allocate(kernel_rho(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 906')
   if (ier /= 0) stop 'error allocating kernel arrays'
 
   ! initializes arrays
@@ -168,10 +171,14 @@ subroutine read_kernels_tiso()
 
   ! allocate arrays for storing kernels and perturbations
   ! transversely isotropic arrays
-  allocate(kernel_bulk(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           kernel_betav(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           kernel_betah(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           kernel_eta(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  allocate(kernel_bulk(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 907')
+  allocate(kernel_betav(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 908')
+  allocate(kernel_betah(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 909')
+  allocate(kernel_eta(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 910')
   if (ier /= 0) stop 'error allocating kernel arrays'
 
   ! initializes arrays

@@ -58,8 +58,10 @@
 
 ! dynamically allocate arrays
   allocate(ninseg(npointot),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1236')
   if (ier /= 0) stop 'error allocating array ninseg'
   allocate(idummy(npointot),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1237')
   if (ier /= 0) stop 'error allocating array idummy'
 
   call sort_array_coordinates(npointot,xp,yp,zp,idummy,iglob,locval,ifseg, &
@@ -99,8 +101,12 @@
   integer:: i,j,k,ispec,ier
 
 ! copies original array
-  allocate(copy_ibool_ori(NGLLX,NGLLY,NGLLZ,nspec),stat=ier); if (ier /= 0) stop 'error in allocate'
-  allocate(mask_ibool(nglob),stat=ier); if (ier /= 0) stop 'error in allocate'
+  allocate(copy_ibool_ori(NGLLX,NGLLY,NGLLZ,nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1238')
+  if (ier /= 0) call exit_MPI_without_rank('error in allocate')
+  allocate(mask_ibool(nglob),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1239')
+  if (ier /= 0) call exit_MPI_without_rank('error in allocate')
 
   mask_ibool(:) = -1
   copy_ibool_ori(:,:,:,:) = ibool(:,:,:,:)

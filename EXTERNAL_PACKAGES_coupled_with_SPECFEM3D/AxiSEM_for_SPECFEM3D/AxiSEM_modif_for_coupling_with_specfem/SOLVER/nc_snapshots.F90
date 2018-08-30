@@ -64,7 +64,7 @@ subroutine nc_make_snapfile
     integer              :: nc_snaptime_dimid, nc_snapconnec_dimid
     character(len=120)   :: fname
 
-    if (lpr .and. verbose > 1) write(6,*) '   .... preparing xdmf nc file'
+    if (lpr .and. verbose > 1) write(*,*) '   .... preparing xdmf nc file'
 
     if (src_type(1) == 'monopole') then
         ndim_disp = 2
@@ -123,7 +123,7 @@ subroutine nc_make_snapfile
 
     call check(nf90_enddef(ncid    = ncid_out_snap))
 
-    if (lpr .and. verbose > 1) write(6,*) '   .... DONE'
+    if (lpr .and. verbose > 1) write(*,*) '   .... DONE'
 
 #endif
 

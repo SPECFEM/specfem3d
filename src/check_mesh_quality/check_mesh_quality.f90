@@ -164,15 +164,19 @@
   yigll(:) = xigll(:)
   zigll(:) = xigll(:)
 
-  allocate(dershape3D(NDIM,NGNOD,local_NGLLX_always_5,local_NGLLY_always_5,local_NGLLZ_always_5))
+  allocate(dershape3D(NDIM,NGNOD,local_NGLLX_always_5,local_NGLLY_always_5,local_NGLLZ_always_5),stat=ier)
+  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1094')
 
 ! compute the derivatives of the 3D shape functions for a 8-node or 27-node element
   call local_version_of_get_shape3D(dershape3D,xigll,yigll,zigll,NGNOD, &
                                  local_NGLLX_always_5,local_NGLLY_always_5,local_NGLLZ_always_5)
 
-  allocate(xelm(NGNOD))
-  allocate(yelm(NGNOD))
-  allocate(zelm(NGNOD))
+  allocate(xelm(NGNOD),stat=ier)
+  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1095')
+  allocate(yelm(NGNOD),stat=ier)
+  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1096')
+  allocate(zelm(NGNOD),stat=ier)
+  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1097')
 
   if (NGNOD == 8) then
     print *
@@ -191,9 +195,12 @@
   read(10,*) NGLOB
   print *,'  number of points: ',NGLOB
 
-  allocate(x(NGLOB))
-  allocate(y(NGLOB))
-  allocate(z(NGLOB))
+  allocate(x(NGLOB),stat=ier)
+  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1098')
+  allocate(y(NGLOB),stat=ier)
+  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1099')
+  allocate(z(NGLOB),stat=ier)
+  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1100')
 
   x(:) = 0.d0
   y(:) = 0.d0
@@ -237,7 +244,8 @@
   read(10,*) NSPEC
   print *,'  number of elements: ',NSPEC
 
-  allocate(ibool(NGNOD,NSPEC))
+  allocate(ibool(NGNOD,NSPEC),stat=ier)
+  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1101')
   ibool(:,:) = 0
 
   do i = 1,NSPEC
@@ -1157,4 +1165,24 @@
   enddo
 
   end subroutine local_version_of_calc_jacobian
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+! version without rank number printed in the error message
+
+  subroutine my_local_exit_MPI_without_rank(error_msg)
+
+  implicit none
+
+  character(len=*) error_msg
+
+! write error message to screen
+  write(*,*) error_msg(1:len(error_msg))
+  write(*,*) 'Error detected, aborting MPI...'
+
+  stop 'Fatal error'
+
+  end subroutine my_local_exit_MPI_without_rank
 

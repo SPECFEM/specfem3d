@@ -97,8 +97,10 @@
   read(27) NSPEC_AB
   read(27) NGLOB_AB
   allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1102')
   if (ier /= 0) stop 'error allocating array ibool'
   allocate(xstore(NGLOB_AB),ystore(NGLOB_AB),zstore(NGLOB_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1103')
   if (ier /= 0) stop 'error allocating array xstore etc.'
 
   read(27) NSPEC_IRREGULAR
@@ -113,7 +115,8 @@
   call zwgljd(yigll,wygll,NGLLY,GAUSSALPHA,GAUSSBETA)
   call zwgljd(zigll,wzgll,NGLLZ,GAUSSALPHA,GAUSSBETA)
   call compute_interpolation_coeff_FD_SEM(projection_fd, myrank)
-  allocate(model_on_FD_grid(projection_fd%nx, projection_fd%ny, projection_fd%nz))
+  allocate(model_on_FD_grid(projection_fd%nx, projection_fd%ny, projection_fd%nz),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1104')
 
   if (myrank == 0) then
     print *, 'Grid size is : ',projection_fd%nx, projection_fd%ny, projection_fd%nz
@@ -121,9 +124,11 @@
 
   ! Get data to project
   allocate(data_sp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1105')
   if (ier /= 0) stop 'error allocating single precision data array'
    if (CUSTOM_REAL == SIZE_DOUBLE) then
     allocate(data_dp(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1106')
     if (ier /= 0) stop 'error allocating double precision data array'
   endif
 

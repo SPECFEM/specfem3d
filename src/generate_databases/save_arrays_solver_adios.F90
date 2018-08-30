@@ -135,12 +135,11 @@ subroutine save_arrays_solver_ext_mesh_adios(nspec, nglob, &
   !MPI interfaces
   max_nibool_interfaces_ext_mesh = maxval(nibool_interfaces_ext_mesh(:))
 
-  allocate(ibool_interfaces_ext_mesh_dummy(max_nibool_interfaces_ext_mesh, &
-                                           num_interfaces_ext_mesh),stat=ier)
+  allocate(ibool_interfaces_ext_mesh_dummy(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 837')
   if (ier /= 0) stop 'error allocating array'
   do i = 1, num_interfaces_ext_mesh
-     ibool_interfaces_ext_mesh_dummy(:,i) = &
-         ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,i)
+     ibool_interfaces_ext_mesh_dummy(:,i) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,i)
   enddo
 
   !-----------------------------------------------------------------.
@@ -1430,9 +1429,15 @@ subroutine save_arrays_solver_files_adios(nspec,nglob,ibool, nspec_wmax, &
   !----------------------------------.
   ! Set up the model values to write |
   !----------------------------------'
-  allocate( vp_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier); if (ier /= 0) stop 'error allocating array '
-  allocate( vs_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier); if (ier /= 0) stop 'error allocating array '
-  allocate( rho_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier); if (ier /= 0) stop 'error allocating array '
+  allocate( vp_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 838')
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array')
+  allocate( vs_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 839')
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array')
+  allocate( rho_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 840')
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array')
   ! vp (for checking the mesh and model)
   !minimum = minval( abs(rho_vp) )
   !if (minimum(1) /= 0.0) then

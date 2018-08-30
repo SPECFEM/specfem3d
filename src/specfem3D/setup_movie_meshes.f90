@@ -45,6 +45,9 @@
   integer :: nfaces_m,npoin,npoin_elem
   real(kind=CUSTOM_REAL),dimension(1):: dummy
 
+  !! DK DK create a copy of the iface number to avoid an (erroneous) warning when compiling on a Cray with crayftn
+  integer :: iface_copy
+
   ! number of points per element surface
   if (USE_HIGHRES_FOR_MOVIES) then
     npoin_elem = NGLLX*NGLLY
@@ -64,31 +67,42 @@
   npoin = npoin_elem * nfaces_m
 
   ! surface elements
-  allocate(faces_surface_ispec(nfaces_m), &
-           faces_surface_ibool(npoin_elem,nfaces_m),stat=ier)
+  allocate(faces_surface_ispec(nfaces_m),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2098')
+  allocate(faces_surface_ibool(npoin_elem,nfaces_m),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2099')
   if (ier /= 0) stop 'error allocating array faces_surface_ispec'
   faces_surface_ispec(:) = 0
   faces_surface_ibool(:,:) = 0
 
   ! point locations
-  allocate(store_val_x(npoin), &
-           store_val_y(npoin), &
-           store_val_z(npoin),stat=ier)
+  allocate(store_val_x(npoin),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2100')
+  allocate(store_val_y(npoin),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2101')
+  allocate(store_val_z(npoin),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2102')
   if (ier /= 0) stop 'error allocating location arrays for highres movie'
 
   ! surface movie data
   if (MOVIE_SURFACE) then
-    allocate(store_val_ux(npoin), &
-             store_val_uy(npoin), &
-             store_val_uz(npoin),stat=ier)
+    allocate(store_val_ux(npoin),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2103')
+    allocate(store_val_uy(npoin),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2104')
+    allocate(store_val_uz(npoin),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2105')
     if (ier /= 0) stop 'error allocating arrays for highres movie'
   endif
 
   ! shakemap data
   if (CREATE_SHAKEMAP) then
-    allocate(shakemap_ux(npoin), &
-             shakemap_uy(npoin), &
-             shakemap_uz(npoin),stat=ier)
+    allocate(shakemap_ux(npoin),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2106')
+    allocate(shakemap_uy(npoin),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2107')
+    allocate(shakemap_uz(npoin),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2108')
     if (ier /= 0) stop 'error allocating arrays for highres shakemap'
     ! initializes shakemap values
     shakemap_ux(:) = 0._CUSTOM_REAL
@@ -102,31 +116,42 @@
   ! arrays used for collected/gathered fields
   if (myrank == 0) then
     ! all point locations
-    allocate(store_val_x_all(npoin_elem*nfaces_surface_glob_ext_mesh), &
-             store_val_y_all(npoin_elem*nfaces_surface_glob_ext_mesh), &
-             store_val_z_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
+    allocate(store_val_x_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2109')
+    allocate(store_val_y_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2110')
+    allocate(store_val_z_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2111')
     if (ier /= 0) stop 'error allocating arrays for highres movie'
 
     ! surface movie
     if (MOVIE_SURFACE) then
-      allocate(store_val_ux_all(npoin_elem*nfaces_surface_glob_ext_mesh), &
-               store_val_uy_all(npoin_elem*nfaces_surface_glob_ext_mesh), &
-               store_val_uz_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
+      allocate(store_val_ux_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2112')
+      allocate(store_val_uy_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2113')
+      allocate(store_val_uz_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2114')
       if (ier /= 0) stop 'error allocating arrays for highres movie'
     endif
 
     ! shakemap
     if (CREATE_SHAKEMAP) then
-      allocate(shakemap_ux_all(npoin_elem*nfaces_surface_glob_ext_mesh), &
-               shakemap_uy_all(npoin_elem*nfaces_surface_glob_ext_mesh), &
-               shakemap_uz_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
+      allocate(shakemap_ux_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2115')
+      allocate(shakemap_uy_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2116')
+      allocate(shakemap_uz_all(npoin_elem*nfaces_surface_glob_ext_mesh),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2117')
       if (ier /= 0) stop 'error allocating arrays for highres movie'
     endif
   endif
 
   ! arrays for collecting movies and shakemaps
-  allocate(nfaces_perproc_surface(NPROC), &
-           faces_surface_offset(NPROC),stat=ier)
+  allocate(nfaces_perproc_surface(NPROC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2118')
+  allocate(faces_surface_offset(NPROC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2119')
   if (ier /= 0) stop 'error allocating array for movie faces'
 
   ! number of faces per slice
@@ -198,7 +223,10 @@
     do ispec = 1, NSPEC_AB
       if (ispec_is_surface_external_mesh(ispec)) then
         ! determines indexing for all faces on a outer surface
-        call setup_movie_face_indices(ispec,iface)
+        !! DK DK create a copy of the ispec number to avoid an (erroneous) warning when compiling on a Cray with crayftn
+        iface_copy = iface
+        call setup_movie_face_indices(ispec,iface_copy)
+        iface = iface_copy !! DK DK this also only to avoid the (erroneous) warning when compiling on a Cray with crayftn
       endif
     enddo
 
@@ -323,8 +351,8 @@
 
   implicit none
 
-  integer,intent(in) :: ispec
-  integer,intent(inout) :: iface
+  integer, intent(in) :: ispec
+  integer, intent(inout) :: iface
 
   ! local parameters
   integer :: iglob,i,j,k,ipoin

@@ -565,7 +565,7 @@ contains
 
     type(inver),                                    intent(inout) :: inversion_param
     integer,                                        intent(in)    :: nevent
-    integer                                                       :: ierror, Ninvpar
+    integer                                                       :: ier, Ninvpar
 
     !! 1/ set the family parameter
     call PrepareArraysfamilyParam(inversion_param)
@@ -586,46 +586,59 @@ contains
     call AllocateArraysForInversion(inversion_param)
 
     !! allocate arrays for fwi_iteration
-    allocate(initial_model(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ierror)
-    if (ierror /= 0) call exit_MPI(myrank,"error allocation initial_model in AllocatememoryForFWI  subroutine")
+    allocate(initial_model(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 544')
+    if (ier /= 0) call exit_MPI(myrank,"error allocation initial_model in AllocatememoryForFWI  subroutine")
 
-    allocate(prior_model(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ierror)
-    if (ierror /= 0) call exit_MPI(myrank,"error allocation prior_model in AllocatememoryForFWI  subroutine")
+    allocate(prior_model(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 545')
+    if (ier /= 0) call exit_MPI(myrank,"error allocation prior_model in AllocatememoryForFWI  subroutine")
 
-    allocate(ref_model(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ierror)
-    if (ierror /= 0) call exit_MPI(myrank,"error allocation ref_model in AllocatememoryForFWI  subroutine")
+    allocate(ref_model(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 546')
+    if (ier /= 0) call exit_MPI(myrank,"error allocation ref_model in AllocatememoryForFWI  subroutine")
 
-    allocate(current_model(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ierror)
-    if (ierror /= 0) call exit_MPI(myrank,"error allocation current_model in AllocatememoryForFWI  subroutine")
+    allocate(current_model(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 547')
+    if (ier /= 0) call exit_MPI(myrank,"error allocation current_model in AllocatememoryForFWI  subroutine")
 
-    allocate(initial_gradient(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ierror)
-    if (ierror /= 0) call exit_MPI(myrank,"error allocation initial_gradient in AllocatememoryForFWI  subroutine")
+    allocate(initial_gradient(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 548')
+    if (ier /= 0) call exit_MPI(myrank,"error allocation initial_gradient in AllocatememoryForFWI  subroutine")
 
-    allocate(current_gradient(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ierror)
-    if (ierror /= 0) call exit_MPI(myrank,"error allocation current_gradient in AllocatememoryForFWI  subroutine")
+    allocate(current_gradient(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 549')
+    if (ier /= 0) call exit_MPI(myrank,"error allocation current_gradient in AllocatememoryForFWI  subroutine")
 
-    allocate(descent_direction(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ierror)
-    if (ierror /= 0) call exit_MPI(myrank,"error allocation descent_direction in AllocatememoryForFWI  subroutine")
+    allocate(descent_direction(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 550')
+    if (ier /= 0) call exit_MPI(myrank,"error allocation descent_direction in AllocatememoryForFWI  subroutine")
 
-    allocate(fwi_precond(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ierror)
-    if (ierror /= 0) call exit_MPI(myrank,"error allocation fwi_precond in AllocatememoryForFWI subroutine")
+    allocate(fwi_precond(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 551')
+    if (ier /= 0) call exit_MPI(myrank,"error allocation fwi_precond in AllocatememoryForFWI subroutine")
     fwi_precond(:,:,:,:,:) = 1._CUSTOM_REAL
 
-    allocate(hess_approxim(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ierror)
-    if (ierror /= 0) call exit_MPI(myrank,"error allocation hess_approxim in AllocatememoryForFWI subroutine")
+    allocate(hess_approxim(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 552')
+    if (ier /= 0) call exit_MPI(myrank,"error allocation hess_approxim in AllocatememoryForFWI subroutine")
     hess_approxim(:,:,:,:,:) = 1._CUSTOM_REAL
 
-    allocate(regularization_penalty(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ierror)
-    if (ierror /= 0) call exit_MPI(myrank,"error allocation regularization_penalty in AllocatememoryForFWI subroutine")
+    allocate(regularization_penalty(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 553')
+    if (ier /= 0) call exit_MPI(myrank,"error allocation regularization_penalty in AllocatememoryForFWI subroutine")
     regularization_penalty(:,:,:,:,:) = 0._CUSTOM_REAL
 
-    allocate(gradient_regularization_penalty(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ierror)
-    if (ierror /= 0) call exit_MPI(myrank,"error allocation gradient_regularization_penalty in AllocatememoryForFWI subroutine")
+    allocate(gradient_regularization_penalty(NGLLX, NGLLY, NGLLZ, NSPEC_ADJOINT, Ninvpar),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 554')
+    if (ier /= 0) call exit_MPI(myrank,"error allocation gradient_regularization_penalty in AllocatememoryForFWI subroutine")
     gradient_regularization_penalty(:,:,:,:,:) = 0._CUSTOM_REAL
 
 
-    allocate(inversion_param%current_cost_prime(NEVENT),  inversion_param%previous_cost_prime(NEVENT))
-    allocate(inversion_param%current_cost(NEVENT),  inversion_param%previous_cost(NEVENT))
+    allocate(inversion_param%current_cost_prime(NEVENT),  inversion_param%previous_cost_prime(NEVENT),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 555')
+    allocate(inversion_param%current_cost(NEVENT),  inversion_param%previous_cost(NEVENT),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 556')
 
   end subroutine AllocatememoryForFWI
 

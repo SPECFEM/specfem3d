@@ -223,18 +223,23 @@ subroutine sum_kernel_pre(kernel_name,kernel_list,nker)
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: total_hess,mask_source
 
   ! initializes arrays
-  allocate(kernel(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           hess(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           total_kernel(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  allocate(kernel(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1038')
+  allocate(hess(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1039')
+  allocate(total_kernel(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1040')
   if (ier /= 0) stop 'Error allocating kernel arrays'
 
   if (USE_HESS_SUM) then
-    allocate( total_hess(NGLLX,NGLLY,NGLLZ,NSPEC) )
+    allocate( total_hess(NGLLX,NGLLY,NGLLZ,NSPEC) ,stat=ier)
+    if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1041')
     total_hess(:,:,:,:) = 0.0_CUSTOM_REAL
   endif
 
   if (USE_SOURCE_MASK) then
-    allocate( mask_source(NGLLX,NGLLY,NGLLZ,NSPEC) )
+    allocate( mask_source(NGLLX,NGLLY,NGLLZ,NSPEC) ,stat=ier)
+    if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1042')
     mask_source(:,:,:,:) = 1.0_CUSTOM_REAL
   endif
 
@@ -433,3 +438,24 @@ subroutine invert_hess( hess_matrix )
   !hess_matrix = hess_matrix * maxh_all
 
 end subroutine invert_hess
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+! version without rank number printed in the error message
+
+  subroutine my_local_exit_MPI_without_rank(error_msg)
+
+  implicit none
+
+  character(len=*) error_msg
+
+! write error message to screen
+  write(*,*) error_msg(1:len(error_msg))
+  write(*,*) 'Error detected, aborting MPI...'
+
+  stop 'Fatal error'
+
+  end subroutine my_local_exit_MPI_without_rank
+

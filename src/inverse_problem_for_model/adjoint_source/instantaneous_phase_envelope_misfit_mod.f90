@@ -99,42 +99,104 @@ contains
 
        endif
 
-!       call MPI_allreduce(MPI_IN_PLACE,amp_wlx,1,MPI_REAL,MPI_SUM,comm%mpi_comm_1,ierr_mpi)
-!       call MPI_allreduce(MPI_IN_PLACE,amp_wly,1,MPI_REAL,MPI_SUM,comm%mpi_comm_1,ierr_mpi)
+!      call MPI_allreduce(MPI_IN_PLACE,amp_wlx,1,MPI_REAL,MPI_SUM,comm%mpi_comm_1,ierr_mpi)
+!      call MPI_allreduce(MPI_IN_PLACE,amp_wly,1,MPI_REAL,MPI_SUM,comm%mpi_comm_1,ierr_mpi)
        call MPI_allreduce(MPI_IN_PLACE,amp_wlz,1,MPI_REAL,MPI_SUM,comm%mpi_comm_1,ierr_mpi)
 
     endif
 
     if (nrecloc > 0) then
 
-       if (.not. allocated(envelo_vx)) allocate(envelo_vx(nrecloc,nt))
-       if (.not. allocated(envelo_vy)) allocate(envelo_vy(nrecloc,nt))
-       if (.not. allocated(envelo_vz)) allocate(envelo_vz(nrecloc,nt))
+       if (.not. allocated(envelo_vx)) then
+         allocate(envelo_vx(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 221')
+       endif
+       if (.not. allocated(envelo_vy)) then
+         allocate(envelo_vy(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 222')
+       endif
+       if (.not. allocated(envelo_vz)) then
+         allocate(envelo_vz(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 223')
+       endif
 
-       if (.not. allocated(envelc_vx)) allocate(envelc_vx(nrecloc,nt))
-       if (.not. allocated(envelc_vy)) allocate(envelc_vy(nrecloc,nt))
-       if (.not. allocated(envelc_vz)) allocate(envelc_vz(nrecloc,nt))
+       if (.not. allocated(envelc_vx)) then
+         allocate(envelc_vx(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 224')
+       endif
+       if (.not. allocated(envelc_vy)) then
+         allocate(envelc_vy(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 225')
+       endif
+       if (.not. allocated(envelc_vz)) then
+         allocate(envelc_vz(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 226')
+       endif
 
-       if (.not. allocated(denvel_vx)) allocate(denvel_vx(nrecloc,nt))
-       if (.not. allocated(denvel_vy)) allocate(denvel_vy(nrecloc,nt))
-       if (.not. allocated(denvel_vz)) allocate(denvel_vz(nrecloc,nt))
+       if (.not. allocated(denvel_vx)) then
+         allocate(denvel_vx(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 227')
+       endif
+       if (.not. allocated(denvel_vy)) then
+         allocate(denvel_vy(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 228')
+       endif
+       if (.not. allocated(denvel_vz)) then
+         allocate(denvel_vz(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 229')
+       endif
 
-       if (.not. allocated(dphase_vx)) allocate(dphase_vx(nrecloc,nt))
-       if (.not. allocated(dphase_vy)) allocate(dphase_vy(nrecloc,nt))
-       if (.not. allocated(dphase_vz)) allocate(dphase_vz(nrecloc,nt))
+       if (.not. allocated(dphase_vx)) then
+         allocate(dphase_vx(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 230')
+       endif
+       if (.not. allocated(dphase_vy)) then
+         allocate(dphase_vy(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 231')
+       endif
+       if (.not. allocated(dphase_vz)) then
+         allocate(dphase_vz(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 232')
+       endif
 
-       if (.not. allocated(danalytic_vx)) allocate(danalytic_vx(nrecloc,nt))
-       if (.not. allocated(danalytic_vy)) allocate(danalytic_vy(nrecloc,nt))
-       if (.not. allocated(danalytic_vz)) allocate(danalytic_vz(nrecloc,nt))
+       if (.not. allocated(danalytic_vx)) then
+         allocate(danalytic_vx(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 233')
+       endif
+       if (.not. allocated(danalytic_vy)) then
+         allocate(danalytic_vy(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 234')
+       endif
+       if (.not. allocated(danalytic_vz)) then
+         allocate(danalytic_vz(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 235')
+       endif
 
-       if (.not. allocated(an_dobs_vx)) allocate(an_dobs_vx(nrecloc,nt))
-       if (.not. allocated(an_dobs_vy)) allocate(an_dobs_vy(nrecloc,nt))
-       if (.not. allocated(an_dobs_vz)) allocate(an_dobs_vz(nrecloc,nt))
+       if (.not. allocated(an_dobs_vx)) then
+         allocate(an_dobs_vx(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 236')
+       endif
+       if (.not. allocated(an_dobs_vy)) then
+         allocate(an_dobs_vy(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 237')
+       endif
+       if (.not. allocated(an_dobs_vz)) then
+         allocate(an_dobs_vz(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 238')
+       endif
 
-       if (.not. allocated(an_dcal_vx)) allocate(an_dcal_vx(nrecloc,nt))
-       if (.not. allocated(an_dcal_vy)) allocate(an_dcal_vy(nrecloc,nt))
-       if (.not. allocated(an_dcal_vz)) allocate(an_dcal_vz(nrecloc,nt))
-
+       if (.not. allocated(an_dcal_vx)) then
+         allocate(an_dcal_vx(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 239')
+       endif
+       if (.not. allocated(an_dcal_vy)) then
+         allocate(an_dcal_vy(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 240')
+       endif
+       if (.not. allocated(an_dcal_vz)) then
+         allocate(an_dcal_vz(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 241')
+       endif
 
        !*** 2. Get their analytic signal
        call get_analytic_signal
@@ -196,25 +258,70 @@ contains
 
     if (nrecloc > 0) then
 
-       if (.not. allocated(srcterm1_vx)) allocate(srcterm1_vx(nrecloc,nt))
-       if (.not. allocated(srcterm1_vy)) allocate(srcterm1_vy(nrecloc,nt))
-       if (.not. allocated(srcterm1_vz)) allocate(srcterm1_vz(nrecloc,nt))
+       if (.not. allocated(srcterm1_vx)) then
+         allocate(srcterm1_vx(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 242')
+       endif
+       if (.not. allocated(srcterm1_vy)) then
+         allocate(srcterm1_vy(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 243')
+       endif
+       if (.not. allocated(srcterm1_vz)) then
+         allocate(srcterm1_vz(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 244')
+       endif
 
-       if (.not. allocated(srcterm2_vx)) allocate(srcterm2_vx(nrecloc,nt))
-       if (.not. allocated(srcterm2_vy)) allocate(srcterm2_vy(nrecloc,nt))
-       if (.not. allocated(srcterm2_vz)) allocate(srcterm2_vz(nrecloc,nt))
+       if (.not. allocated(srcterm2_vx)) then
+         allocate(srcterm2_vx(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 245')
+       endif
+       if (.not. allocated(srcterm2_vy)) then
+         allocate(srcterm2_vy(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 246')
+       endif
+       if (.not. allocated(srcterm2_vz)) then
+         allocate(srcterm2_vz(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 247')
+       endif
 
-       if (.not. allocated(srcterm2tmp_vx)) allocate(srcterm2tmp_vx(nrecloc,nt))
-       if (.not. allocated(srcterm2tmp_vy)) allocate(srcterm2tmp_vy(nrecloc,nt))
-       if (.not. allocated(srcterm2tmp_vz)) allocate(srcterm2tmp_vz(nrecloc,nt))
+       if (.not. allocated(srcterm2tmp_vx)) then
+         allocate(srcterm2tmp_vx(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 248')
+       endif
+       if (.not. allocated(srcterm2tmp_vy)) then
+         allocate(srcterm2tmp_vy(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 249')
+       endif
+       if (.not. allocated(srcterm2tmp_vz)) then
+         allocate(srcterm2tmp_vz(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 250')
+       endif
 
-       if (.not. allocated(ft_tmp_vx)) allocate(ft_tmp_vx(nrecloc,nt))
-       if (.not. allocated(ft_tmp_vy)) allocate(ft_tmp_vy(nrecloc,nt))
-       if (.not. allocated(ft_tmp_vz)) allocate(ft_tmp_vz(nrecloc,nt))
+       if (.not. allocated(ft_tmp_vx)) then
+         allocate(ft_tmp_vx(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 251')
+       endif
+       if (.not. allocated(ft_tmp_vy)) then
+         allocate(ft_tmp_vy(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 252')
+       endif
+       if (.not. allocated(ft_tmp_vz)) then
+         allocate(ft_tmp_vz(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 253')
+       endif
 
-       if (.not. allocated(IP_adjt_vx)) allocate(IP_adjt_vx(nrecloc,nt))
-       if (.not. allocated(IP_adjt_vy)) allocate(IP_adjt_vy(nrecloc,nt))
-       if (.not. allocated(IP_adjt_vz)) allocate(IP_adjt_vz(nrecloc,nt))
+       if (.not. allocated(IP_adjt_vx)) then
+         allocate(IP_adjt_vx(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 254')
+       endif
+       if (.not. allocated(IP_adjt_vy)) then
+         allocate(IP_adjt_vy(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 255')
+       endif
+       if (.not. allocated(IP_adjt_vz)) then
+         allocate(IP_adjt_vz(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 256')
+       endif
 
        !*** 1st term (easy...) remeber, imag(analytic_sig) = hilbert transform
        srcterm1_vx = dphase_vx * aimag(danalytic_vx) / (envelc_vx**2 + wlx**2)
@@ -323,25 +430,70 @@ contains
 
     if (nrecloc > 0) then
 
-       if (.not. allocated(srcterm1_vx)) allocate(srcterm1_vx(nrecloc,nt))
-       if (.not. allocated(srcterm1_vy)) allocate(srcterm1_vy(nrecloc,nt))
-       if (.not. allocated(srcterm1_vz)) allocate(srcterm1_vz(nrecloc,nt))
+       if (.not. allocated(srcterm1_vx)) then
+         allocate(srcterm1_vx(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 257')
+       endif
+       if (.not. allocated(srcterm1_vy)) then
+         allocate(srcterm1_vy(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 258')
+       endif
+       if (.not. allocated(srcterm1_vz)) then
+         allocate(srcterm1_vz(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 259')
+       endif
 
-       if (.not. allocated(srcterm2_vx)) allocate(srcterm2_vx(nrecloc,nt))
-       if (.not. allocated(srcterm2_vy)) allocate(srcterm2_vy(nrecloc,nt))
-       if (.not. allocated(srcterm2_vz)) allocate(srcterm2_vz(nrecloc,nt))
+       if (.not. allocated(srcterm2_vx)) then
+         allocate(srcterm2_vx(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 260')
+       endif
+       if (.not. allocated(srcterm2_vy)) then
+         allocate(srcterm2_vy(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 261')
+       endif
+       if (.not. allocated(srcterm2_vz)) then
+         allocate(srcterm2_vz(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 262')
+       endif
 
-       if (.not. allocated(srcterm2tmp_vx)) allocate(srcterm2tmp_vx(nrecloc,nt))
-       if (.not. allocated(srcterm2tmp_vy)) allocate(srcterm2tmp_vy(nrecloc,nt))
-       if (.not. allocated(srcterm2tmp_vz)) allocate(srcterm2tmp_vz(nrecloc,nt))
+       if (.not. allocated(srcterm2tmp_vx)) then
+         allocate(srcterm2tmp_vx(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 263')
+       endif
+       if (.not. allocated(srcterm2tmp_vy)) then
+         allocate(srcterm2tmp_vy(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 264')
+       endif
+       if (.not. allocated(srcterm2tmp_vz)) then
+         allocate(srcterm2tmp_vz(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 265')
+       endif
 
-       if (.not. allocated(ft_tmp_vx)) allocate(ft_tmp_vx(nrecloc,nt))
-       if (.not. allocated(ft_tmp_vy)) allocate(ft_tmp_vy(nrecloc,nt))
-       if (.not. allocated(ft_tmp_vz)) allocate(ft_tmp_vz(nrecloc,nt))
+       if (.not. allocated(ft_tmp_vx)) then
+         allocate(ft_tmp_vx(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 266')
+       endif
+       if (.not. allocated(ft_tmp_vy)) then
+         allocate(ft_tmp_vy(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 267')
+       endif
+       if (.not. allocated(ft_tmp_vz)) then
+         allocate(ft_tmp_vz(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 268')
+       endif
 
-       if (.not. allocated(EN_adjt_vx)) allocate(EN_adjt_vx(nrecloc,nt))
-       if (.not. allocated(EN_adjt_vy)) allocate(EN_adjt_vy(nrecloc,nt))
-       if (.not. allocated(EN_adjt_vz)) allocate(EN_adjt_vz(nrecloc,nt))
+       if (.not. allocated(EN_adjt_vx)) then
+         allocate(EN_adjt_vx(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 269')
+       endif
+       if (.not. allocated(EN_adjt_vy)) then
+         allocate(EN_adjt_vy(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 270')
+       endif
+       if (.not. allocated(EN_adjt_vz)) then
+         allocate(EN_adjt_vz(nrecloc,nt),stat=ier)
+         if (ier /= 0) call exit_MPI_without_rank('error allocating array 271')
+       endif
 
        !*** 1st term (easy...) remeber, imag(analytic_sig) = hilbert transform
        srcterm1_vx = denvel_vx * real(danalytic_vx) / (envelc_vx**2 + wlx**2)
@@ -445,13 +597,31 @@ contains
 
     integer(kind=si) :: ff, irec, tt
 
-    if (.not. allocated(ft_dobs_vx)) allocate(ft_dobs_vx(nrecloc,nt))
-    if (.not. allocated(ft_dobs_vy)) allocate(ft_dobs_vy(nrecloc,nt))
-    if (.not. allocated(ft_dobs_vz)) allocate(ft_dobs_vz(nrecloc,nt))
+    if (.not. allocated(ft_dobs_vx)) then
+      allocate(ft_dobs_vx(nrecloc,nt),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 272')
+    endif
+    if (.not. allocated(ft_dobs_vy)) then
+      allocate(ft_dobs_vy(nrecloc,nt),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 273')
+    endif
+    if (.not. allocated(ft_dobs_vz)) then
+      allocate(ft_dobs_vz(nrecloc,nt),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 274')
+    endif
 
-    if (.not. allocated(ft_dcal_vx)) allocate(ft_dcal_vx(nrecloc,nt))
-    if (.not. allocated(ft_dcal_vy)) allocate(ft_dcal_vy(nrecloc,nt))
-    if (.not. allocated(ft_dcal_vz)) allocate(ft_dcal_vz(nrecloc,nt))
+    if (.not. allocated(ft_dcal_vx)) then
+      allocate(ft_dcal_vx(nrecloc,nt),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 275')
+    endif
+    if (.not. allocated(ft_dcal_vy)) then
+      allocate(ft_dcal_vy(nrecloc,nt),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 276')
+    endif
+    if (.not. allocated(ft_dcal_vz)) then
+      allocate(ft_dcal_vz(nrecloc,nt),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 277')
+    endif
 
     !*** 1. Compute DFT
     !* Put to zero
@@ -488,7 +658,10 @@ contains
      enddo
 
     !*** 2. Remove negative frequencies
-    if (.not. allocated(hh)) allocate(hh(nt))
+    if (.not. allocated(hh)) then
+      allocate(hh(nt),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 278')
+    endif
     hh(1) = 1.
     hh(floor(nt/2.)+1) = 1.
 

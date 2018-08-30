@@ -71,10 +71,10 @@ subroutine getvarid(ncid, name, varid)
                              name  = name, &
                              varid = varid )
     if (status /= NF90_NOERR) then
-        write(6,100) mynum, trim(name), ncid
+        write(*,100) mynum, trim(name), ncid
         stop
     else if (verbose > 2) then
-        write(6,101) trim(name), ncid, varid
+        write(*,101) trim(name), ncid, varid
         call flush(6)
     endif
 100 format('ERROR: CPU ', I4, ' could not find variable: ''', A, ''' in NCID', I7)
@@ -97,10 +97,10 @@ subroutine getgrpid(ncid, name, grpid)
                             name     = name, &
                             grp_ncid = grpid )
     if (status /= NF90_NOERR) then
-        write(6,100) mynum, trim(name), ncid
+        write(*,100) mynum, trim(name), ncid
         stop
     else if (verbose > 2) then
-        write(6,101) trim(name), ncid, grpid
+        write(*,101) trim(name), ncid, grpid
         call flush(6)
     endif
 100 format('ERROR: CPU ', I4, ' could not find group: ''', A, ''' in NCID', I7)
@@ -387,7 +387,7 @@ subroutine putvar_real3d(ncid, varid, values, start, count)
 
    else if (verbose > 2) then
        ! Everything okay
-       write(6,200) mynum, real(product(count)) * 4. / 1048576., ncid, varid
+       write(*,200) mynum, real(product(count)) * 4. / 1048576., ncid, varid
        call flush(6)
    endif
 

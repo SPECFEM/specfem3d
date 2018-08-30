@@ -259,6 +259,7 @@
   max_nibool_interfaces_ext_mesh = maxval(nibool_interfaces_ext_mesh(:))
 
   allocate(ibool_interfaces_ext_mesh_dummy(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 650')
   if (ier /= 0) stop 'error allocating array'
   do i = 1, num_interfaces_ext_mesh
      ibool_interfaces_ext_mesh_dummy(:,i) = ibool_interfaces_ext_mesh(1:max_nibool_interfaces_ext_mesh,i)
@@ -451,7 +452,9 @@
   write(IOUT) ibool
   close(IOUT)
 
-  allocate( v_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier); if (ier /= 0) stop 'error allocating array '
+  allocate(v_tmp(NGLLX,NGLLY,NGLLZ,nspec), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 651')
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array')
 
   ! vp (for checking the mesh and model)
   !minimum = minval( abs(rho_vp) )
@@ -543,6 +546,7 @@
     if (num_free_surface_faces > 0) then
       ! saves free surface interface points
       allocate( iglob_tmp(NGLLSQUARE*num_free_surface_faces),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 652')
       if (ier /= 0) stop 'error allocating array iglob_tmp'
       inum = 0
       iglob_tmp(:) = 0
@@ -569,6 +573,7 @@
       ! saves points on acoustic-elastic coupling interface
       num_points = NGLLSQUARE*num_coupling_ac_el_faces
       allocate( iglob_tmp(num_points),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 653')
       if (ier /= 0) stop 'error allocating array iglob_tmp'
       inum = 0
       iglob_tmp(:) = 0
@@ -587,6 +592,7 @@
 
       ! saves acoustic/elastic flag
       allocate(v_tmp_i(nspec),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 654')
       if (ier /= 0) stop 'error allocating array v_tmp_i'
       do i = 1,nspec
         if (ispec_is_acoustic(i)) then
@@ -609,6 +615,7 @@
       ! saves points on acoustic-poroelastic coupling interface
       num_points = NGLLSQUARE*num_coupling_ac_po_faces
       allocate( iglob_tmp(num_points),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 655')
       if (ier /= 0) stop 'error allocating array iglob_tmp'
       inum = 0
       iglob_tmp(:) = 0
@@ -627,6 +634,7 @@
 
       ! saves acoustic/poroelastic flag
       allocate(v_tmp_i(nspec),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 656')
       if (ier /= 0) stop 'error allocating array v_tmp_i'
       do i = 1,nspec
         if (ispec_is_acoustic(i)) then
@@ -649,6 +657,7 @@
       ! saves points on elastic-poroelastic coupling interface
       num_points = NGLLSQUARE*num_coupling_el_po_faces
       allocate( iglob_tmp(num_points),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 657')
       if (ier /= 0) stop 'error allocating array iglob_tmp'
       inum = 0
       iglob_tmp(:) = 0
@@ -667,6 +676,7 @@
 
       ! saves elastic/poroelastic flag
       allocate(v_tmp_i(nspec),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 658')
       if (ier /= 0) stop 'error allocating array v_tmp_i'
       do i=1,nspec
         if (ispec_is_elastic(i)) then
@@ -689,6 +699,7 @@
       ! saves MPI interface points
       num_points = sum(nibool_interfaces_ext_mesh(1:num_interfaces_ext_mesh))
       allocate( iglob_tmp(num_points),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 659')
       if (ier /= 0) stop 'error allocating array iglob_tmp'
       inum = 0
       iglob_tmp(:) = 0

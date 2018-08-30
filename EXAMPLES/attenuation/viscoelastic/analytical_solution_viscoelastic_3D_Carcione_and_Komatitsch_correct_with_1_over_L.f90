@@ -117,35 +117,37 @@
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
-!  Below are all the variables that need to be obtained from Specfem3D
-!  These default values match the following simulation:
+!  Below are all the variables that need to be used in Specfem3D
+!  to get the default tau_epsilon, tau_sigma and factor_scale values that are hardwired in the code below:
 !
+!  f0_ref = 18 Hz
 !  Vp(f0_ref) = 3297.849 m/s
 !  Vs(f0_ref) = 2222.536 m/s
-!  f0_ref = 18 Hz
-!  QKappa = 9000
-!  QMu = 10
+!  QKappa = 10
+!  QMu = 20
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  double precision, parameter :: Mu_unrelaxed    =  1.1493666E+10
-  double precision, parameter :: Kappa_unrelaxed =  8.5806454E+09
+  double precision, parameter :: factor_scale_mu = 1.07941014860970d0
+  double precision, parameter :: factor_scale_kappa = 1.16340515510165d0
 
 ! We use Kappa_ref and Mu_ref to compute the case without attenuation
-! They are chosen such that Kappa_ref = Kappa(2*pi*f0_ref) when there is
-! attenuation
-  double precision, parameter :: Vp_ref  = 3297.849
-  double precision, parameter :: Vs_ref  = 2222.536
+! They are chosen such that Kappa_ref = Kappa(2*pi*f0_ref) when there is attenuation
+  double precision, parameter :: Vp_ref  = 3297.849d0
+  double precision, parameter :: Vs_ref  = 2222.536d0
 
   double precision, parameter :: Mu_ref    =  rho * Vs_ref * Vs_ref
-  double precision, parameter :: Kappa_ref =  rho * ( Vp_ref * Vp_ref - 4.d0/3 * Vs_ref * Vs_ref)
+  double precision, parameter :: Kappa_ref =  rho * ( Vp_ref * Vp_ref - 4.d0/3.d0 * Vs_ref * Vs_ref)
 
+  double precision, parameter :: Mu_unrelaxed    =  Mu_ref * factor_scale_mu
+  double precision, parameter :: Kappa_unrelaxed =  Kappa_ref * factor_scale_kappa
 
-! tau constants mimicking constant QKappa and KMu
-  tau_epsilon_mu    = (/ 0.281966668348107  ,  3.607809663879573E-002 , 5.638875613224542E-003/)
-  tau_sigma_mu      = (/ 0.186873539567019  ,  2.491998701168405E-002 , 3.323133676931235E-003/)
-  tau_epsilon_kappa = (/ 0.186973292921151  ,  2.492998179955646E-002 , 3.324907855424433E-003/)
-  tau_sigma_kappa   = (/ 0.186873539567019  ,  2.491998701168405E-002 , 3.323133676931235E-003/)
+! tau constants mimicking constant QKappa and QMu
+  tau_epsilon_kappa = (/ 0.281966668348107d0  ,  3.607809663879578d-002 , 5.638875613224546d-003/)
+  tau_sigma_kappa   = (/ 0.186873539567019d0  ,  2.491998701168405d-002 , 3.323133676931235d-003/)
+
+  tau_epsilon_mu    = (/ 0.233016592750913d0  ,    2.994444382282767d-002, 4.283862487455020d-003 /)
+  tau_sigma_mu      = (/ 0.186873539567019d0  ,    2.491998701168405d-002, 3.323133676931235d-003 /)
 
 ! Eq (32) of Jeroen's note, eq (2.199) of Carcione's book from 2014, third edition
   Kappa_relaxed = (Kappa_unrelaxed /(sum(tau_epsilon_kappa(:)/tau_sigma_kappa(:))/Lnu))

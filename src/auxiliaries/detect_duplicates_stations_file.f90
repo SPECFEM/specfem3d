@@ -19,11 +19,8 @@
 
 ! input station file to filter
   character(len=150), parameter :: STATIONS_FILE = '../../DATA/STATIONS'
-! character(len=150), parameter :: STATIONS_FILE = 'STATIONS_all_20June2008'
-! character(len=150), parameter :: STATIONS_FILE = 'STATIONS_SUBSET_35'
-! character(len=150), parameter :: STATIONS_FILE = 'STATIONS_FULL_758'
 
-  integer :: irec,irec2,nrec,ios
+  integer :: irec,irec2,nrec,ios,ier
 
   character(len=MAX_LENGTH_STATION_NAME), dimension(:), allocatable :: station_name
   character(len=MAX_LENGTH_NETWORK_NAME), dimension(:), allocatable :: network_name
@@ -47,13 +44,20 @@
   print *,'the input station file contains ',nrec,' stations'
   print *
 
-  allocate(stlat(nrec))
-  allocate(stlon(nrec))
-  allocate(stele(nrec))
-  allocate(stbur(nrec))
-  allocate(station_name(nrec))
-  allocate(network_name(nrec))
-  allocate(is_a_duplicate(nrec))
+  allocate(stlat(nrec),stat=ier)
+  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1174')
+  allocate(stlon(nrec),stat=ier)
+  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1175')
+  allocate(stele(nrec),stat=ier)
+  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1176')
+  allocate(stbur(nrec),stat=ier)
+  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1177')
+  allocate(station_name(nrec),stat=ier)
+  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1178')
+  allocate(network_name(nrec),stat=ier)
+  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1179')
+  allocate(is_a_duplicate(nrec),stat=ier)
+  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1180')
 
   is_a_duplicate(:) = .false.
 
@@ -114,4 +118,24 @@
   close(IOUT)
 
   end program detect_duplicates_stations_file
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+! version without rank number printed in the error message
+
+  subroutine my_local_exit_MPI_without_rank(error_msg)
+
+  implicit none
+
+  character(len=*) error_msg
+
+! write error message to screen
+  write(*,*) error_msg(1:len(error_msg))
+  write(*,*) 'Error detected, aborting MPI...'
+
+  stop 'Fatal error'
+
+  end subroutine my_local_exit_MPI_without_rank
 

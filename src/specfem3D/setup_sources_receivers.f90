@@ -154,41 +154,66 @@
   endif
 
   ! allocate arrays for source
-  allocate(islice_selected_source(NSOURCES), &
-           ispec_selected_source(NSOURCES), &
-           Mxx(NSOURCES), &
-           Myy(NSOURCES), &
-           Mzz(NSOURCES), &
-           Mxy(NSOURCES), &
-           Mxz(NSOURCES), &
-           Myz(NSOURCES), &
-           xi_source(NSOURCES), &
-           eta_source(NSOURCES), &
-           gamma_source(NSOURCES), &
-           tshift_src(NSOURCES), &
-           hdur(NSOURCES), &
-           hdur_Gaussian(NSOURCES), &
-           utm_x_source(NSOURCES), &
-           utm_y_source(NSOURCES), &
-           nu_source(NDIM,NDIM,NSOURCES), &
-           stat=ier)
+  allocate(islice_selected_source(NSOURCES),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2033')
+  allocate(ispec_selected_source(NSOURCES),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2034')
+  allocate(Mxx(NSOURCES),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2035')
+  allocate(Myy(NSOURCES),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2036')
+  allocate(Mzz(NSOURCES),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2037')
+  allocate(Mxy(NSOURCES),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2038')
+  allocate(Mxz(NSOURCES),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2039')
+  allocate(Myz(NSOURCES),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2040')
+  allocate(xi_source(NSOURCES),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2041')
+  allocate(eta_source(NSOURCES),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2042')
+  allocate(gamma_source(NSOURCES),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2043')
+  allocate(tshift_src(NSOURCES),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2044')
+  allocate(hdur(NSOURCES),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2045')
+  allocate(hdur_Gaussian(NSOURCES),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2046')
+  allocate(utm_x_source(NSOURCES),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2047')
+  allocate(utm_y_source(NSOURCES),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2048')
+  allocate(nu_source(NDIM,NDIM,NSOURCES),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2049')
   if (ier /= 0) stop 'error allocating arrays for sources'
 
   if (USE_FORCE_POINT_SOURCE) then
-    allocate(factor_force_source(NSOURCES), &
-             comp_dir_vect_source_E(NSOURCES), &
-             comp_dir_vect_source_N(NSOURCES), &
-             comp_dir_vect_source_Z_UP(NSOURCES),stat=ier)
+    allocate(factor_force_source(NSOURCES),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2050')
+    allocate(comp_dir_vect_source_E(NSOURCES),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2051')
+    allocate(comp_dir_vect_source_N(NSOURCES),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2052')
+    allocate(comp_dir_vect_source_Z_UP(NSOURCES),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2053')
   else
-    allocate(factor_force_source(1), &
-             comp_dir_vect_source_E(1), &
-             comp_dir_vect_source_N(1), &
-             comp_dir_vect_source_Z_UP(1),stat=ier)
+    allocate(factor_force_source(1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2054')
+    allocate(comp_dir_vect_source_E(1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2055')
+    allocate(comp_dir_vect_source_N(1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2056')
+    allocate(comp_dir_vect_source_Z_UP(1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2057')
   endif
   if (ier /= 0) stop 'error allocating arrays for force point sources'
 
   !! allocate the array contains the user defined source time function
   allocate(user_source_time_function(NSTEP_STF, NSOURCES_STF),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2058')
   if (ier /= 0) stop 'error allocating arrays for user sources time function'
 
   if (USE_FORCE_POINT_SOURCE) then
@@ -245,7 +270,8 @@
   character(len=MAX_STRING_LEN) :: filename,string
   integer :: ier,isource,icounter
 
-  allocate(run_number_of_the_source(NSOURCES))
+  allocate(run_number_of_the_source(NSOURCES),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2059')
 
   if (NB_RUNS_ACOUSTIC_GPU == 1) then
     run_number_of_the_source(:) = 0
@@ -300,8 +326,12 @@
   double precision :: t0_acoustic
   integer :: isource,ispec
 
-  if (abs(minval(tshift_src)) > TINYVAL) &
-    call exit_MPI(myrank,'one tshift_src must be zero, others must be positive')
+  if (abs(minval(tshift_src)) > TINYVAL) then
+!! DK DK this should be a warning, not an error; I thus changed it; users can decide to do this purposely
+!! DK DK (in particular for applications outside of seismology, e.g. in imaging or in non-destructive testing)
+!   call exit_MPI(myrank,'one tshift_src must be zero, others must be positive')
+    write(IMAIN,*) 'INFORMATION: no tshift_src is equal to zero, thus the origin time is not t0, it is changed by tshift_src'
+  endif
 
   ! filter source time function by Gaussian with hdur = HDUR_MOVIE when outputing movies or shakemaps
   if (MOVIE_SURFACE .or. MOVIE_VOLUME .or. CREATE_SHAKEMAP) then
@@ -565,15 +595,22 @@
   endif
 
   ! allocate memory for receiver arrays, i.e. stations given in STATIONS file
-  allocate(islice_selected_rec(nrec), &
-           ispec_selected_rec(nrec), &
-           xi_receiver(nrec), &
-           eta_receiver(nrec), &
-           gamma_receiver(nrec), &
-           station_name(nrec), &
-           network_name(nrec), &
-           nu(NDIM,NDIM,nrec), &
-           stat=ier)
+  allocate(islice_selected_rec(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2060')
+  allocate(ispec_selected_rec(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2061')
+  allocate(xi_receiver(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2062')
+  allocate(eta_receiver(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2063')
+  allocate(gamma_receiver(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2064')
+  allocate(station_name(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2065')
+  allocate(network_name(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2066')
+  allocate(nu(NDIM,NDIM,nrec), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2067')
   if (ier /= 0) stop 'error allocating arrays for receivers'
 
   ! locate receivers in the mesh
@@ -754,8 +791,10 @@
   ! for source encoding (acoustic sources only so far)
   if (USE_SOURCE_ENCODING) then
     allocate(pm1_source_encoding(NSOURCES),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2068')
   else
     allocate(pm1_source_encoding(1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2069')
   endif
   if (ier /= 0) stop 'error allocating arrays for sources'
   pm1_source_encoding(:) = 1._CUSTOM_REAL
@@ -763,8 +802,10 @@
 
   ! forward simulations
   if (SIMULATION_TYPE == 1 .or. SIMULATION_TYPE == 3) then
-    allocate(sourcearray(NDIM,NGLLX,NGLLY,NGLLZ), &
-             sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
+    allocate(sourcearray(NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2070')
+    allocate(sourcearrays(NSOURCES,NDIM,NGLLX,NGLLY,NGLLZ),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2071')
     if (ier /= 0) stop 'error allocating array sourcearray'
 
     ! compute source arrays
@@ -893,6 +934,7 @@
     ! SIMULATION_TYPE == 2
     ! allocate dummy array (needed for subroutine calls)
     allocate(sourcearrays(1,1,1,1,1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2072')
     if (ier /= 0) stop 'error allocating dummy sourcearrays'
   endif
 
@@ -991,6 +1033,7 @@
     ! initializes adjoint sources
 
     allocate(source_adjoint(NDIM,nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2073')
     if (ier /= 0) stop 'error allocating array source_adjoint'
 
     ! note:
@@ -1098,21 +1141,28 @@
 
   ! needs to be allocate for subroutine calls (even if nrec_local == 0)
   allocate(number_receiver_global(nrec_local),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2074')
   if (ier /= 0) stop 'error allocating array number_receiver_global'
 
   ! stores local receivers interpolation factors
   if (nrec_local > 0) then
     ! allocate Lagrange interpolators for receivers
-    allocate(hxir_store(nrec_local,NGLLX), &
-             hetar_store(nrec_local,NGLLY), &
-             hgammar_store(nrec_local,NGLLZ),stat=ier)
+    allocate(hxir_store(nrec_local,NGLLX),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2075')
+    allocate(hetar_store(nrec_local,NGLLY),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2076')
+    allocate(hgammar_store(nrec_local,NGLLZ),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2077')
     if (ier /= 0) stop 'error allocating array hxir_store etc.'
 
     ! allocates derivatives
     if (SIMULATION_TYPE == 2) then
-      allocate(hpxir_store(nrec_local,NGLLX), &
-               hpetar_store(nrec_local,NGLLY), &
-               hpgammar_store(nrec_local,NGLLZ),stat=ier)
+      allocate(hpxir_store(nrec_local,NGLLX),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2078')
+      allocate(hpetar_store(nrec_local,NGLLY),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2079')
+      allocate(hpgammar_store(nrec_local,NGLLZ),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2080')
       if (ier /= 0) stop 'error allocating array hpxir_store'
     endif
 
@@ -1169,15 +1219,21 @@
   else
     ! VM VM need to allocate Lagrange interpolators for receivers with 0 because it is used
     ! in calling subroutines parmeters. (otherwise it can be crash at runtime).
-    allocate(hxir_store(nrec_local,NGLLX), &
-             hetar_store(nrec_local,NGLLY), &
-             hgammar_store(nrec_local,NGLLZ),stat=ier)
+    allocate(hxir_store(nrec_local,NGLLX),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2081')
+    allocate(hetar_store(nrec_local,NGLLY),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2082')
+    allocate(hgammar_store(nrec_local,NGLLZ),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 2083')
     if (ier /= 0) stop 'error allocating array hxir_store etc.'
     ! allocates derivatives
     if (SIMULATION_TYPE == 2) then
-      allocate(hpxir_store(nrec_local,NGLLX), &
-               hpetar_store(nrec_local,NGLLY), &
-               hpgammar_store(nrec_local,NGLLZ),stat=ier)
+      allocate(hpxir_store(nrec_local,NGLLX),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2084')
+      allocate(hpetar_store(nrec_local,NGLLY),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2085')
+      allocate(hpgammar_store(nrec_local,NGLLZ),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2086')
       if (ier /= 0) stop 'error allocating array hpxir_store'
     endif
   endif ! nrec_local > 0
@@ -1187,30 +1243,38 @@
     ! allocate seismogram array
     if (SAVE_SEISMOGRAMS_DISPLACEMENT) then
       allocate(seismograms_d(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2087')
     else
       allocate(seismograms_d(1,1,1),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2088')
     endif
     if (ier /= 0) stop 'error allocating array seismograms_d'
 
     if (SAVE_SEISMOGRAMS_VELOCITY) then
       allocate(seismograms_v(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2089')
     else
       allocate(seismograms_v(1,1,1),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2090')
     endif
     if (ier /= 0) stop 'error allocating array seismograms_v'
 
     if (SAVE_SEISMOGRAMS_ACCELERATION) then
       allocate(seismograms_a(NDIM,nrec_local,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2091')
     else
       allocate(seismograms_a(1,1,1),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2092')
     endif
     if (ier /= 0) stop 'error allocating array seismograms_a'
 
     if (SAVE_SEISMOGRAMS_PRESSURE) then
       !NB_RUNS_ACOUSTIC_GPU is set to 1 by default in constants.h
       allocate(seismograms_p(NDIM,nrec_local*NB_RUNS_ACOUSTIC_GPU,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2093')
     else
       allocate(seismograms_p(1,1,1),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2094')
     endif
     if (ier /= 0) stop 'error allocating array seismograms_p'
 
@@ -1225,6 +1289,7 @@
   if (SIMULATION_TYPE == 2) then
     if (nrec_local > 0) then
       allocate(seismograms_eps(NDIM,NDIM,nrec_local,NSTEP),stat=ier)
+      if (ier /= 0) call exit_MPI_without_rank('error allocating array 2095')
       if (ier /= 0) stop 'error allocating array seismograms_eps'
       seismograms_eps(:,:,:,:) = 0._CUSTOM_REAL
     endif
@@ -1421,8 +1486,10 @@
 
   ! allocates tree arrays
   allocate(kdtree_nodes_location(NDIM,kdtree_num_nodes),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2096')
   if (ier /= 0) stop 'Error allocating kdtree_nodes_location arrays'
   allocate(kdtree_nodes_index(kdtree_num_nodes),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2097')
   if (ier /= 0) stop 'Error allocating kdtree_nodes_index arrays'
 
   ! tree verbosity

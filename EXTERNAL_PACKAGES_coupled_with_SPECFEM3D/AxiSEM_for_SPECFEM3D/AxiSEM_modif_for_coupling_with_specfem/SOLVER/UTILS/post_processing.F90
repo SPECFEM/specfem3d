@@ -136,8 +136,8 @@ program post_processing_seis
      reccomp(3) = 'Z'
   endif
 
-  write(6,*) 'receiver components: ', (reccomp(i),i=1,3)
-  write(6,*)
+  write(*,*) 'receiver components: ', (reccomp(i),i=1,3)
+  write(*,*)
 
   ! input seismogram names
   allocate(recname(nrec))
@@ -257,20 +257,20 @@ program post_processing_seis
   do isim=1, nsim
      if (conv_period > 0. ) then
         if (stf_type(isim) /= 'dirac_0' .and. stf_type(isim) /= 'quheavi') then
-           write(6,*) ' ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !'
-           write(6,*)'    WARNING! You want to convolve although seismograms are upon a ', &
+           write(*,*) ' ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !'
+           write(*,*)'    WARNING! You want to convolve although seismograms are upon a ', &
                     trim(stf_type(isim))
-           write(6,*) ' ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !'
+           write(*,*) ' ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !'
         endif
 
         if (conv_period < period) then
-           write(6,*) 'Cannot convolve with a period shorter than allowed by the mesh/simulation!'
-           write(6,*) 'convolution period, min. mesh period [s]:', conv_period, period
+           write(*,*) 'Cannot convolve with a period shorter than allowed by the mesh/simulation!'
+           write(*,*) 'convolution period, min. mesh period [s]:', conv_period, period
            call flush(6)
            stop 2
         endif
 
-        write(6,*)' Convolve with source period [s]:', conv_period
+        write(*,*)' Convolve with source period [s]:', conv_period
         period_final(isim) = conv_period
      else
         period_final(isim) = period
@@ -305,8 +305,8 @@ program post_processing_seis
                             //trim(recname(i))//'_'//seistype//'_post_'&
                             //trim(src_type(isim,2))
 
-        !write(6,*) 'outname: ', i, trim(outname(i,isim))
-        !write(6,*) 'outname2: ', isim, trim(outname2(i,isim))
+        !write(*,*) 'outname: ', i, trim(outname(i,isim))
+        !write(*,*) 'outname2: ', isim, trim(outname2(i,isim))
      enddo
   enddo
 
@@ -316,8 +316,8 @@ program post_processing_seis
      tshift = 0.
   endif
   ishift = int((shift_fact+tshift)/(time(2)-time(1)))
-  write(6,*) 'ishift1:', shift_fact, tshift,time(2)-time(1)
-  write(6,*) 'ishift:', (shift_fact+tshift)/(time(2)-time(1)),int((shift_fact+tshift)/(time(2)-time(1)))
+  write(*,*) 'ishift1:', shift_fact, tshift,time(2)-time(1)
+  write(*,*) 'ishift:', (shift_fact+tshift)/(time(2)-time(1)),int((shift_fact+tshift)/(time(2)-time(1)))
 
   ! ----------------- Start actual post processing -------------------------
   if (use_netcdf) then
@@ -342,7 +342,7 @@ program post_processing_seis
         else
             ! load seismograms from all directories
             open(unit=60,file = trim(simdir(isim))//'/Data/'//trim(recname(i))//'_disp.dat')
-            write(6,*) 'opened ', trim(simdir(isim))//'/Data/'//trim(recname(i))//'_disp.dat'
+            write(*,*) 'opened ', trim(simdir(isim))//'/Data/'//trim(recname(i))//'_disp.dat'
 
             if (src_type(isim,1) == 'monopole') then
                do iseis=1, nt_seis
@@ -391,7 +391,7 @@ program post_processing_seis
 
      ! convolve with a source time function
      if (conv_period > 0.) then
-        write(6,*) 'conv period:', conv_stf
+        write(*,*) 'conv period:', conv_stf
         call convolve_with_stf(conv_period, dt_seis, nt_seis, conv_stf, &
                                outdir, seis, seis_fil)
      else
@@ -412,7 +412,7 @@ program post_processing_seis
      open(unit=52, file=trim(outname(i,1))//'_'//reccomp(3)//'.dat', status='new')
      if (.not. allocated(tmp_write)) allocate(tmp_write(2, nt_seis))
      if (negative_time) then
-        write(6,*)' writing seismograms into joint directory: negative time'
+        write(*,*)' writing seismograms into joint directory: negative time'
         tmp_write(1,:) = time - shift_fact - tshift
         tmp_write(2,:) = seis_fil(:,1)
         write(50,'(2ES16.7)') tmp_write
@@ -421,7 +421,7 @@ program post_processing_seis
         tmp_write(2,:) = seis_fil(:,3)
         write(52,'(2ES16.7)') tmp_write
      else
-        write(6,*)' writing seismograms into joint directory: zero time'
+        write(*,*)' writing seismograms into joint directory: zero time'
         do it=ishift+1, nt_seis
            write(50,*) time(it-ishift-1), seis_fil(it,1)
            write(51,*) time(it-ishift-1), seis_fil(it,2)
@@ -442,7 +442,7 @@ program post_processing_seis
                              thr_orig, phr_orig, reccomp, src_type(1,1), &
                              nsim,nrec, outdir, rec_full_name(:,1))
 
-  write(6,*) 'writing matlab input files for record sections...'
+  write(*,*) 'writing matlab input files for record sections...'
 
   open(unit=99, file=trim(outdir)//'/info_matlab.dat')
   write(99,*) nrec
@@ -481,7 +481,7 @@ program post_processing_seis
   ! opening cross section (see param_snaps)
   if (load_snaps) call compute_3d_wavefields
 
-  write(6,*)' DONE with seismogram post processing!'
+  write(*,*)' DONE with seismogram post processing!'
 21 format(a100)
 
 end program post_processing_seis
@@ -509,11 +509,11 @@ subroutine read_input
   character(len=256)  :: keyword, keyvalue
 
 
-  write(6,'(A)', advance='no') '    Reading inparam_basic...'
+  write(*,'(A)', advance='no') '    Reading inparam_basic...'
   open(unit=i_param_post, file='inparam_basic', status='old', action='read', &
        iostat=ioerr)
   if (ioerr /= 0) then
-     write(6,*) 'Check input file ''inparam_basic''! Is it still there?'
+     write(*,*) 'Check input file ''inparam_basic''! Is it still there?'
      stop 2
   endif
 
@@ -539,7 +539,7 @@ subroutine read_input
           simdir(3) = "MXZ_MYZ"
           simdir(4) = "MXY_MXX_M_MYY"
        else if (keyvalue == 'force') then
-          write(6,*) 'postprocessing for "force" simulation needs work!'
+          write(*,*) 'postprocessing for "force" simulation needs work!'
           stop 2
        endif
     end select
@@ -557,11 +557,11 @@ subroutine read_input
   negative_time   = .true.
   detailed_output = .false.
 
-  write(6,'(A)', advance='no') '    Reading param_post_processing...'
+  write(*,'(A)', advance='no') '    Reading param_post_processing...'
   open(unit=i_param_post, file='param_post_processing', status='old', action='read', &
        iostat=ioerr)
   if (ioerr /= 0) then
-     write(6,*) 'Check input file ''param_post_processing''! Is it still there?'
+     write(*,*) 'Check input file ''param_post_processing''! Is it still there?'
      stop 2
   endif
 
@@ -647,24 +647,24 @@ subroutine read_input
      close(99)
 
      if (src_type(isim,2) == 'thetaforce' .or. src_type(isim,2) == 'phiforce') then
-        write(6,'(a,/,a)') 'ERROR: postprocessing for forces with dipole radiation', &
+        write(*,'(a,/,a)') 'ERROR: postprocessing for forces with dipole radiation', &
                            '       pattern not yet implemented'
         stop 2
      endif
 
-     write(6,*) 'Simulations: ',isim,trim(simdir(isim))
-     write(6,*) '  source type:',src_type(isim,1),' ',src_type(isim,2)
-     write(6,*) '  source time function:',stf_type(isim)
-     write(6,*) '  simulation  type:', simtype
-     write(6,*) '  magnitude:',magnitude(isim)
-     write(6,*) '  receivers:',nrec_tmp(isim)
-     write(6,*) '  source period:',period_tmp(isim)
-     write(6,*) '  time steps:',nt(isim)
-     write(6,*) '  rotate recs?',trim(rot_rec(isim))
-     write(6,*) '  shift factor of stf:',shift_fact_tmp(isim)
-     write(6,*) '  shift factor in samples (dt, dtseis, dtstrain):', &
+     write(*,*) 'Simulations: ',isim,trim(simdir(isim))
+     write(*,*) '  source type:',src_type(isim,1),' ',src_type(isim,2)
+     write(*,*) '  source time function:',stf_type(isim)
+     write(*,*) '  simulation  type:', simtype
+     write(*,*) '  magnitude:',magnitude(isim)
+     write(*,*) '  receivers:',nrec_tmp(isim)
+     write(*,*) '  source period:',period_tmp(isim)
+     write(*,*) '  time steps:',nt(isim)
+     write(*,*) '  rotate recs?',trim(rot_rec(isim))
+     write(*,*) '  shift factor of stf:',shift_fact_tmp(isim)
+     write(*,*) '  shift factor in samples (dt, dtseis, dtstrain):', &
                     ishift_deltat(isim), ishift_seisdt(isim), ishift_straindt(isim)
-     write(6,*) ''
+     print *
   enddo
 
   ! input parameter consistency
@@ -677,16 +677,16 @@ subroutine read_input
        .or. minval(srclon_tmp) /= maxval(srclon_tmp) &
        .or. minval(src_depth_tmp) /= maxval(src_depth_tmp) &
        .or. minval(dt_snap) /= maxval(dt_snap) .or.  minval(shift_fact_tmp) /= maxval(shift_fact_tmp)) then
-     write(6,*)'PROBLEM with simulation.info parameters in the respective directories:'
-     write(6,*)' one or more of the supposedly equal parameters differ!'
+     write(*,*)'PROBLEM with simulation.info parameters in the respective directories:'
+     write(*,*)' one or more of the supposedly equal parameters differ!'
      call flush(6)
      stop 2
   endif
 
   do isim=1, nsim
      if (trim(bkgrndmodel(isim)) /= trim(bkgrndmodel(1))) then
-        write(6,*) 'PROBLEM with simulation.info parameters in the respective directories:'
-        write(6,*) '        backgroundmodels differe: ', trim(bkgrndmodel(isim)), &
+        write(*,*) 'PROBLEM with simulation.info parameters in the respective directories:'
+        write(*,*) '        backgroundmodels differe: ', trim(bkgrndmodel(isim)), &
                    trim(bkgrndmodel(1))
         stop 2
      endif
@@ -694,7 +694,7 @@ subroutine read_input
 
   if (rec_comp_sys /= 'enz' .and. rec_comp_sys /= 'sph' .and. rec_comp_sys /= 'cyl' &
         .and. rec_comp_sys /= 'xyz' .and. rec_comp_sys /= 'src') then
-     write(6,*) 'ERROR: unknown coordinate system ', rec_comp_sys
+     write(*,*) 'ERROR: unknown coordinate system ', rec_comp_sys
      stop 2
   endif
 
@@ -767,7 +767,7 @@ subroutine compute_radiation_prefactor(mij_prefact, npts, nsim, longit)
 
   select case(simtype)
   case('moment')
-     write(6,*)'  reading CMTSOLUTION file....'
+     write(*,*)'  reading CMTSOLUTION file....'
      open(unit=20000,file='CMTSOLUTION',POSITION='REWIND',status='old')
      read(20000,*) junk
      read(20000,*) junk
@@ -823,39 +823,39 @@ subroutine compute_radiation_prefactor(mij_prefact, npts, nsim, longit)
          Mij(2) =  amplitude
          Mij(3) =  amplitude
      case default
-         write(6,*) 'unknown source type: ', src_type(1,2)
+         write(*,*) 'unknown source type: ', src_type(1,2)
      end select
 
   case default
-     write(6,*)'unknown simulation type!', simtype
+     write(*,*)'unknown simulation type!', simtype
      stop
   end select
 
   fmtstring = '(6(E12.5))'
-  write(6,*) 'Original moment tensor: (Mrr, Mtt, Mpp, Mrt, Mrp, Mtp)'
-  write(6,fmtstring) (Mij(i),i=1,6)
-  write(6,*) 'magnitudes of each run:'
-  write(6,*) (magnitude(isim),isim=1,nsim)
+  write(*,*) 'Original moment tensor: (Mrr, Mtt, Mpp, Mrt, Mrp, Mtp)'
+  write(*,fmtstring) (Mij(i),i=1,6)
+  write(*,*) 'magnitudes of each run:'
+  write(*,*) (magnitude(isim),isim=1,nsim)
 
   do isim=1, nsim
 
      Mij_scale = Mij / magnitude(isim)
 
-     write(6,*)'Mij scaled:'
-     write(6,fmtstring) Mij_scale
+     write(*,*)'Mij scaled:'
+     write(*,fmtstring) Mij_scale
 
      select case(src_type(isim,2))
      case('mrr')
        mij_prefact(:,isim,:) = Mij_scale(1)
        mij_prefact(:,isim,2) = 0.
-       write(6,*) isim, 'Simulation is mrr, prefact:', &
+       write(*,*) isim, 'Simulation is mrr, prefact:', &
                   mij_prefact(1,isim,1), mij_prefact(1,isim,2), &
                   mij_prefact(1,isim,3)
 
      case('mtt_p_mpp')
         mij_prefact(:,isim,:) = Mij_scale(2) + Mij_scale(3)
         mij_prefact(:,isim,2) = 0.
-        write(6,*) isim, 'Simulation is mpp, prefact:', &
+        write(*,*) isim, 'Simulation is mpp, prefact:', &
                    mij_prefact(1,isim,1), mij_prefact(1,isim,2), &
                    mij_prefact(1,isim,3)
 
@@ -867,7 +867,7 @@ subroutine compute_radiation_prefactor(mij_prefact, npts, nsim, longit)
         mij_prefact(:,isim,3) =   Mij_scale(4) * cos(longit) &
                                 + Mij_scale(5) * sin(longit)
 
-        write(6,*) isim, 'Simulation is mtr, prefact:', &
+        write(*,*) isim, 'Simulation is mtr, prefact:', &
                    mij_prefact(1,isim,1), mij_prefact(1,isim,2), &
                    mij_prefact(1,isim,3)
 
@@ -879,23 +879,23 @@ subroutine compute_radiation_prefactor(mij_prefact, npts, nsim, longit)
         mij_prefact(:,isim,3) = (Mij_scale(2) - Mij_scale(3)) * cos(2. * longit)  &
                                          + 2. * Mij_scale(6)  * sin(2. * longit)
 
-        write(6,*) isim, 'Simulation is mtp, prefact:', &
+        write(*,*) isim, 'Simulation is mtp, prefact:', &
                    mij_prefact(1,isim,1), mij_prefact(1,isim,2), &
                    mij_prefact(1,isim,3)
 
      case('explosion')
         mij_prefact(:,isim,:) = (Mij_scale(1) + Mij_scale(2) + Mij_scale(3)) / 3.
-        write(6,*) isim, 'Simulation is explosion, prefact:', &
+        write(*,*) isim, 'Simulation is explosion, prefact:', &
                    mij_prefact(1,isim,1), mij_prefact(1,isim,2), &
                    mij_prefact(1,isim,3)
 
      case default
-         write(6,*) 'unknown source type ', src_type(isim,2)
+         write(*,*) 'unknown source type ', src_type(isim,2)
          stop
 
      end select
 
-     write(6,*) 'Mij phi prefactor:', maxval(mij_prefact(:,isim,1)), &
+     write(*,*) 'Mij phi prefactor:', maxval(mij_prefact(:,isim,1)), &
                 maxval(mij_prefact(:,isim,2)), maxval(mij_prefact(:,isim,3))
   enddo ! isim
 end subroutine compute_radiation_prefactor
@@ -935,9 +935,9 @@ subroutine rotate_receiver_comp(isim, rec_comp_sys, srccolat, srclon, th_rot, ph
   real                  :: seis_tmp(nt,3), seisvec(3), rot(3,3)
   integer               :: i
 
-  write(6,*) 'ROTATIONS'
-  write(6,*) th_orig * 180. / pi, ph_orig * 180. / pi
-  write(6,*) th_rot * 180. / pi, ph_rot * 180. / pi
+  write(*,*) 'ROTATIONS'
+  write(*,*) th_orig * 180. / pi, ph_orig * 180. / pi
+  write(*,*) th_rot * 180. / pi, ph_rot * 180. / pi
 
   ! Need to consider *local* spherical geometry in the first place,
   ! THEN rotate the source-receiver frame to the north pole in the solver.
@@ -1002,7 +1002,7 @@ subroutine rotate_receiver_comp(isim, rec_comp_sys, srccolat, srclon, th_rot, ph
      seis = seis_tmp ! taken from above
 
   else
-     write(6,*)'unknown component system',rec_comp_sys
+     write(*,*)'unknown component system',rec_comp_sys
      stop 2
   endif
 
@@ -1029,9 +1029,9 @@ subroutine convolve_with_stf(t_0, dt, nt, stf, outdir, seis, seis_fil)
   character(len=7), intent(in)   :: stf
   character(len=4)               :: appidur, appirec
 
-  write(6,*)
-  write(6,*) 'Convolving with period=', t_0
-  write(6,*) 'convolve:', stf, stf_type(1), maxval(seis)
+  write(*,*)
+  write(*,*) 'Convolving with period=', t_0
+  write(*,*) 'convolve:', stf, stf_type(1), maxval(seis)
 
   N_j = int(2. * shift_fact1 * t_0 / dt)
   if (N_j > nt) N_j = nt
@@ -1060,7 +1060,7 @@ subroutine convolve_with_stf(t_0, dt, nt, stf, outdir, seis, seis_fil)
                            exp(-( (decay / t_0 * (tau_j - shift_fact1 * t_0))**2) )
           source = source / ( decay / t_0 * sqrt(2.) * exp(-2.) )
        else
-          write(6,*) ' other source time function not implemented yet!', stf
+          write(*,*) ' other source time function not implemented yet!', stf
           stop 2
        endif
        ! actual time domain convolution
@@ -1072,7 +1072,7 @@ subroutine convolve_with_stf(t_0, dt, nt, stf, outdir, seis, seis_fil)
 
   ! @TODO why factor pi? only for Gaussian maybe?
   seis_fil = seis_fil * pi
-  write(6,*) 'convolve:', stf, stf_type(1), maxval(seis_fil)
+  write(*,*) 'convolve:', stf, stf_type(1), maxval(seis_fil)
 
   ! Output source time function as used here
   open(unit=55, file=trim(outdir)//'/stf_'//trim(stf)//'_'//appidur//'sec.dat')
@@ -1108,8 +1108,8 @@ subroutine save_google_earth_kml(srccolat1, srclon1, srcdepth, Mij, per, rcvcola
   character(len=2)      :: comp(3)
   character(len=100)    :: fname2
 
-  write(6,*) 'writing google earth kml file for plotting earthquake and receiver locations/seismograms...'
-  write(6,*) 'Check it out: '//trim(outdir)//'/googleearth_src_rec_seis.kml'
+  write(*,*) 'writing google earth kml file for plotting earthquake and receiver locations/seismograms...'
+  write(*,*) 'Check it out: '//trim(outdir)//'/googleearth_src_rec_seis.kml'
 
   slat=90.-srccolat1*180./pi
   slon=srclon1*180./pi
@@ -1287,11 +1287,11 @@ subroutine compute_3d_wavefields
   snap2      = 1
   snapskip   = 1
 
-  write(6,'(A)', advance='no') '    Reading param_post_processing...'
+  write(*,'(A)', advance='no') '    Reading param_post_processing...'
   open(unit=i_param_post, file='param_post_processing', status='old', action='read', &
        iostat=ioerr)
   if (ioerr /= 0) then
-     write(6,*) 'Check input file ''param_post_processing''! Is it still there?'
+     write(*,*) 'Check input file ''param_post_processing''! Is it still there?'
      stop 2
   endif
 
@@ -1332,15 +1332,15 @@ subroutine compute_3d_wavefields
   enddo
   close(i_param_post)
 
-  write(6,*) 'starting azimuth/phi for cross section on the right [deg]:',phi0
-  write(6,*) 'ending azimuth/phi for cross section on the left [deg]:',dphi
-  write(6,*) 'top surface [km]:',rtop
-  write(6,*) 'bottom surface [km]:',rbot
-  write(6,*) 'colatitude of meridional cross section:',theta_meri
-  write(6,*) '1st,last snap, skipfactor:',snap1,snap2,snapskip
-  write(6,*) 'consider meridional cross section?',use_meri
-  write(6,*) 'consider top surface?',use_top
-  write(6,*) 'consider bottom surface?',use_bot
+  write(*,*) 'starting azimuth/phi for cross section on the right [deg]:',phi0
+  write(*,*) 'ending azimuth/phi for cross section on the left [deg]:',dphi
+  write(*,*) 'top surface [km]:',rtop
+  write(*,*) 'bottom surface [km]:',rbot
+  write(*,*) 'colatitude of meridional cross section:',theta_meri
+  write(*,*) '1st,last snap, skipfactor:',snap1,snap2,snapskip
+  write(*,*) 'consider meridional cross section?',use_meri
+  write(*,*) 'consider top surface?',use_top
+  write(*,*) 'consider bottom surface?',use_bot
 
   phi0 = phi0 / 180. * pi
   dphi = dphi / 180. * pi
@@ -1352,19 +1352,19 @@ subroutine compute_3d_wavefields
   npts_read = nelem * 9
 
   nptstot = npts * nproc_mesh
-  write(6,*) 'number of points per proc, total points:', npts, nptstot
+  write(*,*) 'number of points per proc, total points:', npts, nptstot
 
   ! load and construct global mesh (one semi-disk)
-  write(6,*) 'reading partitioned mesh...'
+  write(*,*) 'reading partitioned mesh...'
   allocate(coord(nptstot,2))
   smallval_north_top = rtop
   smallval_south_top = rtop
   smallval_north_bot = rbot
   smallval_south_bot = rbot
 
-  write(6,*) 'Smallest distance to rtop (North,South) BEFORE [km]:', &
+  write(*,*) 'Smallest distance to rtop (North,South) BEFORE [km]:', &
              real(smallval_north_top/1000.), real(smallval_south_top/1000.)
-  write(6,*) 'Smallest distance to rbot (North,South) BEFORE [km]:', &
+  write(*,*) 'Smallest distance to rbot (North,South) BEFORE [km]:', &
              real(smallval_north_bot/1000.), real(smallval_south_bot/1000.)
 
   do iproc=0, nproc_mesh-1
@@ -1422,9 +1422,9 @@ subroutine compute_3d_wavefields
   smallval_north_bot = smallval_north_bot * 1.001
   smallval_south_bot = smallval_south_bot * 1.001
 
-  write(6,*) 'Smallest distance to rtop (North,South) AFTER [km]:', &
+  write(*,*) 'Smallest distance to rtop (North,South) AFTER [km]:', &
        real(smallval_north_top/1000.),real(smallval_south_top/1000.)
-  write(6,*) 'Smallest distance to rbot (North,South) AFTER [km]:', &
+  write(*,*) 'Smallest distance to rbot (North,South) AFTER [km]:', &
        real(smallval_north_bot/1000.),real(smallval_south_bot/1000.)
 
   if (use_top .or. use_meri) then
@@ -1468,9 +1468,9 @@ subroutine compute_3d_wavefields
   npts_top = k1
   npts_bot = k2
 
-  write(6,*) '# points on top,bottom:', npts_top, npts_bot
+  write(*,*) '# points on top,bottom:', npts_top, npts_bot
 
-  write(6,*)'allocating index arrays for surfaces....'
+  write(*,*)'allocating index arrays for surfaces....'
   if (use_top .or. use_meri) then
      allocate(ind_proc_top(npts_top))
      allocate(ind_pts_top(npts_top))
@@ -1491,7 +1491,7 @@ subroutine compute_3d_wavefields
   ! MERIDIONAL based on rtop and rbottom
   if (use_meri) then
 
-     write(6,*)'computing meridional preparameters....'
+     write(*,*)'computing meridional preparameters....'
 
      ! find closest theta at rbot
      smallval_meri = 2.d0*pi
@@ -1507,7 +1507,7 @@ subroutine compute_3d_wavefields
            theta_bot = theta0
         endif
      enddo
-     write(6,*)'theta meri,theta closest at rbot:',theta_meri*180./pi,theta_bot*180./pi
+     write(*,*)'theta meri,theta closest at rbot:',theta_meri*180./pi,theta_bot*180./pi
      theta_meri = theta_bot
 
      ! find theta at rtop closest to theta from rbot
@@ -1526,7 +1526,7 @@ subroutine compute_3d_wavefields
      enddo
 
      smallval_meri=abs(theta_top-theta_bot)
-     write(6,*)'theta closest at rtop and smallval:',theta_top*180./pi,smallval_meri*180./pi
+     write(*,*)'theta closest at rtop and smallval:',theta_top*180./pi,smallval_meri*180./pi
      if (theta_top > theta_bot) then
         theta_meri = theta_bot+ smallval_meri/2.
      else if (theta_top < theta_bot) then
@@ -1555,7 +1555,7 @@ subroutine compute_3d_wavefields
      enddo
      npts_meri=k3
 
-     write(6,*)'# points on meridional:',npts_meri
+     write(*,*)'# points on meridional:',npts_meri
      allocate(ind_proc_meri(npts_meri),ind_pts_meri(npts_meri))
      ind_proc_meri = ind_proc_meri_tmp(1:npts_meri)
      ind_pts_meri = ind_pts_meri_tmp(1:npts_meri)
@@ -1563,19 +1563,19 @@ subroutine compute_3d_wavefields
   endif ! use_meri
 
   ! xyz coordinates-----------------------------------------------------------------------
-  write(6,*)'defining xyz...'
+  write(*,*)'defining xyz...'
   allocate(x(1:2*nptstot),y(1:2*nptstot),z(1:2*nptstot));x=0.;y=0.;z=0.
 
   ! left cross section--------------------------------------------------------------------
   call sphi2xy(x(1:nptstot),y(1:nptstot),coord(:,1),phi0,nptstot)
   z(1:nptstot)=coord(1:nptstot,2)
-  write(6,*)'max s,x,y:',maxval(coord(:,1)),maxval(x),maxval(y)
+  write(*,*)'max s,x,y:',maxval(coord(:,1)),maxval(x),maxval(y)
 
   ! right cross section-------------------------------------------------------------------
   call sphi2xy(x(nptstot+1:2*nptstot),y(nptstot+1:2*nptstot),coord(:,1),phi0+dphi,nptstot)
   z(nptstot+1:2*nptstot)=coord(1:nptstot,2)
 
-  write(6,*)'max s,x,y:',maxval(coord(:,1)),maxval(x),maxval(y)
+  write(*,*)'max s,x,y:',maxval(coord(:,1)),maxval(x),maxval(y)
 
   ! save xyz
   allocate(vp(2*nptstot))
@@ -1596,10 +1596,10 @@ subroutine compute_3d_wavefields
   ! top surface--------------------------------------------------------------------------
   if (use_top) then
      k1 = 0
-     write(6,*) 'defining top surface...'
+     write(*,*) 'defining top surface...'
 
      naang = floor(real(npts_top)/real(2.))**2*6*4
-     write(6,*)'points on top surface:',naang
+     write(*,*)'points on top surface:',naang
      allocate(xtop(1:naang),ytop(1:naang),ztop(1:naang))
      allocate(azi_phi_top(1:naang),azi_ind_top(1:naang))
      call construct_surface_cubed_sphere(npts_top,npts,dble(rtop),ind_proc_top, &
@@ -1608,11 +1608,11 @@ subroutine compute_3d_wavefields
                                          ytop,ztop,azi_phi_top,azi_ind_top)
 
      ! extract vp
-     write(6,*)'allocating vptop...',k1
+     write(*,*)'allocating vptop...',k1
      allocate(vptop(k1))
      vptop(1:k1) = vp(ind_proc_top(1)*npts+ind_pts_top(1))
 
-     write(6,*)'save into cell vtk...',size(xtop),k1
+     write(*,*)'save into cell vtk...',size(xtop),k1
      call flush(6)
      filename1=trim(outdir)//'/SNAPS/mesh_top_cell'
      call write_VTK_bin_scal_topology(real(xtop(1:k1)),real(ytop(1:k1)),real(ztop(1:k1)), &
@@ -1624,10 +1624,10 @@ subroutine compute_3d_wavefields
   ! bottom surface -----------------------------------------------------------------------
   if (use_bot) then
      k2=0
-     write(6,*)'defining bot surface...'
+     write(*,*)'defining bot surface...'
 
      naang = floor(real(npts_bot)/real(2.))**2*6*4
-     write(6,*)'points on bottom surface:',naang
+     write(*,*)'points on bottom surface:',naang
      allocate(xbot(1:naang),ybot(1:naang),zbot(1:naang))
      allocate(azi_phi_bot(1:naang),azi_ind_bot(1:naang))
 
@@ -1651,9 +1651,9 @@ subroutine compute_3d_wavefields
   ! meridional cross section -------------------------------------------------------------
   k3=0
   if (use_meri) then
-     write(6,*)'defining meridional cross section...'
+     write(*,*)'defining meridional cross section...'
      dr=(6371000.-rbot)/npts_meri
-     write(6,*)'# pts on rmeri and average spacing [km]:',npts_meri,dr/1000.
+     write(*,*)'# pts on rmeri and average spacing [km]:',npts_meri,dr/1000.
      allocate(xmeri(1:7*npts_meri**2))
      allocate(ymeri(1:7*npts_meri**2))
      allocate(zmeri(1:7*npts_meri**2))
@@ -1668,7 +1668,7 @@ subroutine compute_3d_wavefields
                     + coord(ind_proc_meri(i)*npts+ind_pts_meri(i),2)**2)
         nphi=max(floor(r0*pi/dr/1.),1)
         phi_incr = pi/nphi
-        write(6,*)i,'r0,nphi,phi_incr [km]:',r0/1000.,nphi,phi_incr*r0/1000.
+        write(*,*)i,'r0,nphi,phi_incr [km]:',r0/1000.,nphi,phi_incr*r0/1000.
         do j=1,nphi
            k3=k3+1
            phi=(j-1)*phi_incr
@@ -1680,7 +1680,7 @@ subroutine compute_3d_wavefields
      enddo
 
      ! save into AVS
-     write(6,*)'writing vtk bin file...'
+     write(*,*)'writing vtk bin file...'
      filename1=trim(outdir)//'/SNAPS/mesh_meri'
      call write_VTK_bin_scal(xmeri,ymeri,zmeri,vpmeri,k3,0,filename1)
 
@@ -1752,12 +1752,12 @@ subroutine compute_3d_wavefields
   ! FLUID REGION
   npts_fluid=nel_fluid*16
   npts_fluid_read=nel_fluid*9
-  write(6,*)'points in fluid:',npts_fluid
+  write(*,*)'points in fluid:',npts_fluid
   allocate(fluid_prefact(npts_fluid*nproc_mesh,2,nsim))
 
   do isim = 1,nsim
      ! load fluid prefactors-------------------------------------------------------------
-     write(6,*) 'loading fluid prefactors...'
+     write(*,*) 'loading fluid prefactors...'
      do iproc=0, nproc_mesh-1
         call define_io_appendix(appmynum,iproc)
         open(unit=190,file=trim(simdir(isim))//'/Data/inv_rho_s_fluid_globsnaps_'//appmynum//'.dat')
@@ -1791,7 +1791,7 @@ subroutine compute_3d_wavefields
   ! compute longitude and radiation pattern for multiple wavefields
 
   ! load snaps ===============================================================
-  write(6,*)'loading snaps...'
+  write(*,*)'loading snaps...'
   allocate(disp(2*nptstot+k1+k2+k3,3))
 
   do j=snap1,snap2,snapskip
@@ -1866,7 +1866,7 @@ subroutine compute_3d_wavefields
         if (nsim == 1) then
            filename1 = trim(outdir)//'/SNAPS/snap_cell_'&
                        //trim(src_type(isim,2))//'_'//appmynum2//'_z'
-           write(6,*)'filename out vtk :',filename1
+           write(*,*)'filename out vtk :',filename1
            call write_VTK_bin_scal_topology(xtot(1:2*nptstot+k1+k2),ytot(1:2*nptstot+k1+k2), &
                                             ztot(1:2*nptstot+k1+k2), &
                                             disp(1:2*nptstot+k1+k2,3),(2*nptstot+k1+k2)/4, &
@@ -1894,7 +1894,7 @@ subroutine compute_3d_wavefields
      if (nsim > 1) then
 
         filename1=trim(outdir)//'/SNAPS/snap_mij_cell_'//appmynum2//'_z'
-        write(6,*)'filename out vtk :',filename1
+        write(*,*)'filename out vtk :',filename1
         call write_VTK_bin_scal_topology(xtot(1:2*nptstot+k1+k2),ytot(1:2*nptstot+k1+k2), &
                                          ztot(1:2*nptstot+k1+k2), &
                                          disptot_sum(1:2*nptstot+k1+k2,3), &
@@ -1948,14 +1948,14 @@ subroutine construct_surface_cubed_sphere(npts_surf, npts, rsurf, ind_proc_surf,
     integer :: npol_cs,ii,iii,izone,nang,nelt,nr,nrpol,iel,nel_surf,jj,ipol,jpol,kpol,j,i
     double precision ::  dist,r_ref,th_ref,th,dr,r,xc,yc,zc,ph
 
-    write(6,*)'computing cubed sphere for surface at r=',rsurf
-    write(6,*)'pts surf,total:',npts_surf,npts
+    write(*,*)'computing cubed sphere for surface at r=',rsurf
+    write(*,*)'pts surf,total:',npts_surf,npts
 
     nang=floor(sqrt(real(n))/6./2.)
-    write(6,*)'naang,nang,npts_surf:',n,nang,npts_surf
+    write(*,*)'naang,nang,npts_surf:',n,nang,npts_surf
 
      nr=1 ! one radial layer only
-     write(6,*)'NANG:',nang
+     write(*,*)'NANG:',nang
      allocate(xi_el(0:nang),eta_el(0:nang),r_el(0:nr))
      xi_el = 0.d0;  eta_el = 0.d0 ; r_el = 0.d0
      re=rsurf
@@ -1998,15 +1998,15 @@ subroutine construct_surface_cubed_sphere(npts_surf, npts, rsurf, ind_proc_surf,
      xi_k(0) = -1
      xi_k(1) = 1
 
-     write(6,*)'Now define collocation points for the SEM-cubed sphere grid'
+     write(*,*)'Now define collocation points for the SEM-cubed sphere grid'
      allocate(xcol(0:npol_cs,0:npol_cs,0:nrpol,1:nelt))
      allocate(ycol(0:npol_cs,0:npol_cs,0:nrpol,1:nelt))
      allocate(zcol(0:npol_cs,0:npol_cs,0:nrpol,1:nelt))
      kpts = 0
      nel_surf = 0
 
-     write(6,*)'ZONE NANG:',nr,nang,npol_cs,nelt
-     write(6,*)'ZONE NANG 2 nel_surf:',6*nr*nang**2
+     write(*,*)'ZONE NANG:',nr,nang,npol_cs,nelt
+     write(*,*)'ZONE NANG 2 nel_surf:',6*nr*nang**2
 
      do izone=1,6         ! loop over the chunks
       do iii=0,nr-1       ! loop over r   (the global r)
@@ -2069,17 +2069,17 @@ subroutine construct_surface_cubed_sphere(npts_surf, npts, rsurf, ind_proc_surf,
      ! into account the cubed sphere topology (see the paraview.f90 module)
      !!!!! END CUBED SPHERE
 
-      write(6,*)'number of surface pts,elems,tot pts:',npts_surf,nel_surf,kpts
-      write(6,*)'max ind_proc, ind_pts:',maxval(ind_proc_surf),maxval(ind_pts_surf)
-      write(6,*)size(xsurf)
+      write(*,*)'number of surface pts,elems,tot pts:',npts_surf,nel_surf,kpts
+      write(*,*)'max ind_proc, ind_pts:',maxval(ind_proc_surf),maxval(ind_pts_surf)
+      write(*,*)size(xsurf)
       xsurf = 0
       ysurf = 0
       zsurf = 0
       iii = 0
-      write(6,*)'constructing 1d array for surface coordinates...'
+      write(*,*)'constructing 1d array for surface coordinates...'
       do iel = 1, nel_surf
          if ( mod(iel,floor(nel_surf/10.)) == 0  ) then
-            write(6,*)'percentage done:',ceiling(real(iel)/real(nel_surf)*100.)
+            write(*,*)'percentage done:',ceiling(real(iel)/real(nel_surf)*100.)
             call flush(6)
          endif
          xc = sum(xcol(:,:,0,iel)) / 4.d0
@@ -2128,9 +2128,9 @@ subroutine construct_surface_cubed_sphere(npts_surf, npts, rsurf, ind_proc_surf,
          enddo
 
          kpts=iii
-         write(6,*)'total points in surface:',kpts
+         write(*,*)'total points in surface:',kpts
 
-      write(6,*)'done with cubed sphere for r=',rsurf
+      write(*,*)'done with cubed sphere for r=',rsurf
       deallocate(xcol,ycol,zcol,x_el,y_el,z_el)
 
 end subroutine construct_surface_cubed_sphere
@@ -2173,7 +2173,7 @@ subroutine write_VTK_bin_scal(x,y,z,u1,rows,nelem_disk,filename1)
    cell_type(i)=1
   enddo
 
-   write(6,*)'computing VTK bin file ',trim(filename1)//'.vtk  ...'
+   write(*,*)'computing VTK bin file ',trim(filename1)//'.vtk  ...'
 
 #if defined(__gfortran__)
   open(100,file=trim(filename1)//'.vtk',access='stream', &
@@ -2220,7 +2220,7 @@ subroutine write_VTK_bin_scal(x,y,z,u1,rows,nelem_disk,filename1)
   write(100) u1(i)
   enddo
    close(100)
-  write(6,*)'...saved ',trim(outdir)//'/'//trim(filename1)//'.vtk'
+  write(*,*)'...saved ',trim(outdir)//'/'//trim(filename1)//'.vtk'
 end subroutine write_vtk_bin_scal
 !-----------------------------------------------------------------------------
 
@@ -2251,7 +2251,7 @@ subroutine write_VTK_bin_scal_topology(x,y,z,u1,elems,filename)
   ! cell_type(i)=9
   !enddo
   cell_type=9
-  ! write(6,*)'computing vtk file ',trim(filename),' ...'
+  ! write(*,*)'computing vtk file ',trim(filename),' ...'
 #if defined(__gfortran__)
   open(100,file=trim(filename)//'.vtk',access='stream',status='replace',convert='big_endian')
 #elif defined(__INTEL_COMPILER)
@@ -2286,7 +2286,7 @@ subroutine write_VTK_bin_scal_topology(x,y,z,u1,elems,filename)
   write(100) 'LOOKUP_TABLE default'//char(10) !color table?
   write(100) u1
    close(100)
-  write(6,*)'...saved ',trim(filename)//'.vtk'
+  write(*,*)'...saved ',trim(filename)//'.vtk'
 end subroutine write_vtk_bin_scal_topology
 !-----------------------------------------------------------------------------------------
 
@@ -2364,7 +2364,7 @@ real function prem(r0,param)
      vp_prem=11.2622-6.3640*x_prem**2
      vs_prem=3.6678-4.4475*x_prem**2
   ELSE
-     write(6,*)'wrong radius!',r
+     write(*,*)'wrong radius!',r
      stop 2
   endif
 
@@ -2375,7 +2375,7 @@ real function prem(r0,param)
   else if (param == 'v_s') then
      prem=vs_prem*1000.
   else
-     write(6,*)'ERROR IN PREM function:',param,'NOT AN OPTION'
+     write(*,*)'ERROR IN PREM function:',param,'NOT AN OPTION'
      stop 2
   endif
 

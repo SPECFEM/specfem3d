@@ -43,10 +43,14 @@ subroutine read_kernels_cg_tiso_old()
 
   ! allocate arrays for storing kernels and perturbations
   ! transversely isotropic arrays
-  allocate(kernel_bulk_old(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           kernel_betav_old(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           kernel_betah_old(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           kernel_eta_old(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  allocate(kernel_bulk_old(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1075')
+  allocate(kernel_betav_old(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1076')
+  allocate(kernel_betah_old(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1077')
+  allocate(kernel_eta_old(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1078')
   if (ier /= 0) stop 'error allocating kernel arrays'
 
   ! initializes arrays
@@ -189,10 +193,14 @@ subroutine read_kernels_cg_tiso_old()
 
     ! allocate arrays for storing old gradient
     ! transversely isotropic arrays
-    allocate(model_dbulk_old(NGLLX,NGLLY,NGLLZ,NSPEC), &
-             model_dbetav_old(NGLLX,NGLLY,NGLLZ,NSPEC), &
-             model_dbetah_old(NGLLX,NGLLY,NGLLZ,NSPEC), &
-             model_deta_old(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+    allocate(model_dbulk_old(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1079')
+    allocate(model_dbetav_old(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1080')
+    allocate(model_dbetah_old(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1081')
+    allocate(model_deta_old(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1082')
     if (ier /= 0) stop 'error allocating gradient arrays'
 
     ! initializes arrays

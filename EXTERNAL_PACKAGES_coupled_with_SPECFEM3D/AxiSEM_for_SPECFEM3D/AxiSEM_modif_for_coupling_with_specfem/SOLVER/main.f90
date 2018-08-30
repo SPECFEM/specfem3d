@@ -47,7 +47,7 @@ program axisem
   call set_ftz() ! ftz.c, set flush to zero
   call pinit ! commun
   call read_inparam_basic_verbosity ! parameters
-  if (lpr .and. verbose >= 1) write(6,'(/,a,/)') ' MAIN: Welcome to AxiSEM!'
+  if (lpr .and. verbose >= 1) write(*,'(/,a,/)') ' MAIN: Welcome to AxiSEM!'
 
   call define_io_appendix(appmynum, mynum)
   call define_io_appendix(appnproc, nproc)
@@ -56,25 +56,25 @@ program axisem
   call start_clock !clocks_wrapper_solver
 
   if (lpr .and. verbose >= 1) &
-     write(6,*) 'MAIN: Reading parameters..................................'
+     write(*,*) 'MAIN: Reading parameters..................................'
   call readin_parameters ! parameters
 
   if (lpr .and. verbose >= 1) &
-     write(6,*) 'MAIN: Reading mesh database...............................'
+     write(*,*) 'MAIN: Reading mesh database...............................'
   call read_db  ! get_mesh
 
   if (lpr .and. verbose >= 1) &
-     write(6,*) 'MAIN: Initializing grid...................................'
+     write(*,*) 'MAIN: Initializing grid...................................'
   call init_grid ! def_grid
 
   if (do_mesh_tests) then
      if (lpr .and. verbose >= 1) &
-         write(6,*) 'MAIN: Testing the mesh....................................'
+         write(*,*) 'MAIN: Testing the mesh....................................'
      call mesh_tests ! def_grid
   endif
 
   if (lpr .and. verbose >= 1) &
-     write(6,*) 'MAIN: Starting wave preparation...........................'
+     write(*,*) 'MAIN: Starting wave preparation...........................'
   call prepare_waves ! time_evol_wave
 
 
@@ -88,29 +88,29 @@ program axisem
   ! Deallocate all the large arrays that are not needed in the time loop,
   ! specifically those from data_mesh_preloop and data_pointwise
   if (lpr .and. verbose >= 1) &
-     write(6,*) 'MAIN: Deallocating arrays not needed in the time loop.....'
+     write(*,*) 'MAIN: Deallocating arrays not needed in the time loop.....'
   call deallocate_preloop_arrays ! def_grid
 
   if (use_netcdf) then
      if (lpr .and. verbose >= 1) &
-        write(6,*) 'MAIN: Finish preparation of NetCDF file...................'
+        write(*,*) 'MAIN: Finish preparation of NetCDF file...................'
      call nc_finish_prepare
   endif
 
   call barrier ! Just making sure we're all ready to rupture...
 
   if (lpr .and. verbose >= 1) &
-     write(6,*) 'MAIN: Starting wave propagation...........................'
+     write(*,*) 'MAIN: Starting wave propagation...........................'
   call time_loop ! time_evol_wave
 
   if (use_netcdf) then
      if (lpr .and. verbose >= 1) &
-        write(6,*) 'MAIN: Flush and close all netcdf files ...................'
+        write(*,*) 'MAIN: Flush and close all netcdf files ...................'
      call nc_end_output ! Dump receiver seismograms to finalize netcdf output
   endif
 
   if (dump_xdmf) then
-     if (lpr .and. verbose >= 1) write(6,*)'MAIN: Finishing xdmf xml file...'
+     if (lpr .and. verbose >= 1) write(*,*)'MAIN: Finishing xdmf xml file...'
      call finish_xdmf_xml ! meshes_io
      call nc_close_snapfile ! nc_snapshots
   endif
@@ -126,7 +126,7 @@ program axisem
 !!!! SB
 
 
-  if (lpr)         write(6,*)  ' ==  ==  ==  == =PROGRAM axisem FINISHED ==  ==  ==  ==  ==  == ='
+  if (lpr)         write(*,*)  ' ==  ==  ==  == =PROGRAM axisem FINISHED ==  ==  ==  ==  ==  == ='
   if (verbose > 1) write(69,*) ' ==  ==  ==  == =PROGRAM axisem FINISHED ==  ==  ==  ==  ==  == ='
 
 end program axisem

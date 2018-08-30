@@ -171,6 +171,7 @@ contains
 
     ! allocates local numbering array
     allocate(glob2loc_elmnts(0:nspec-1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 40')
     if (ier /= 0) stop 'error allocating array glob2loc_elmnts'
 
     ! initializes number of local elements per partition
@@ -217,6 +218,7 @@ contains
     integer :: ier
 
     allocate(glob2loc_nodes_nparts(0:nnodes),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 41')
     if (ier /= 0) stop 'error allocating array glob2loc_nodes_nparts'
 
     size_glob2loc_nodes = 0
@@ -240,8 +242,10 @@ contains
     glob2loc_nodes_nparts(nnodes) = size_glob2loc_nodes
 
     allocate(glob2loc_nodes_parts(0:glob2loc_nodes_nparts(nnodes)-1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 42')
     if (ier /= 0) stop 'error allocating array glob2loc_nodes_parts'
     allocate(glob2loc_nodes(0:glob2loc_nodes_nparts(nnodes)-1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 43')
     if (ier /= 0) stop 'error allocating array glob2loc_nodes'
 
     glob2loc_nodes(0) = 0
@@ -313,6 +317,7 @@ contains
     enddo
 
     allocate(tab_size_interfaces(0:ninterfaces),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 44')
     if (ier /= 0) stop 'error allocating array tab_size_interfaces'
     tab_size_interfaces(:) = 0
 
@@ -349,6 +354,7 @@ contains
     num_edge = 0
 
     allocate(tab_interfaces(0:(tab_size_interfaces(ninterfaces)*7-1)),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 45')
     if (ier /= 0) stop 'error allocating array tab_interfaces'
     tab_interfaces(:) = 0
 
@@ -452,8 +458,7 @@ contains
     do i = 1, count_def_mat
       ! database material definition
       !
-      ! format:  #rho  #vp  #vs  #Q_mu  #anisotropy_flag #domain_id  #Q_kappa   for (visco)elastic and acoustic
-      !     (Q_kappa is not stored next to Q_mu for historical reasons, because it was added later)
+      ! format:  #rho  #vp  #vs  #Q_kappa  #Q_mu  #anisotropy_flag  #domain_id  #Q_kappa   for (visco)elastic and acoustic
       !
       ! format:  #rhos,#rhof,#phi,#tort,#kxx,#domain_id,#kxy,#kxz,#kyy,#kyz,#kzz,
       !          #kappas,#kappaf,#kappafr,#eta,#mufr for poroelastic
@@ -1177,12 +1182,16 @@ contains
 
     ! gets neighbors by 4 common nodes (face)
     allocate(xadj(0:nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 46')
     if (ier /= 0) stop 'error allocating array xadj'
     allocate(adjncy(0:sup_neighbor*nspec-1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 47')
     if (ier /= 0) stop 'error allocating array adjncy'
     allocate(nnodes_elmnts(0:nnodes-1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 48')
     if (ier /= 0) stop 'error allocating array nnodes_elmnts'
     allocate(nodes_elmnts(0:nsize*nnodes-1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 49')
     if (ier /= 0) stop 'error allocating array nodes_elmnts'
     call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbor, &
                                 elmnts, xadj, adjncy, nnodes_elmnts, &
@@ -1206,6 +1215,7 @@ contains
 
     ! coupled elements
     allocate(faces_coupled(2,nfaces_coupled),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 50')
     if (ier /= 0) stop 'error allocating array faces_coupled'
     faces_coupled(:,:) = -1
 
@@ -1305,9 +1315,11 @@ contains
     ! temporary flag arrays
     ! element ids start from 0
     allocate( is_moho(0:nspec-1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 51')
     if (ier /= 0) stop 'error allocating array is_moho'
     ! node ids start from 0
     allocate( node_is_moho(0:nnodes-1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 52')
     if (ier /= 0) stop 'error allocating array node_is_moho'
 
     is_moho(:) = .false.
@@ -1353,13 +1365,17 @@ contains
     ! gets neighbors by 4 common nodes (face)
     ! contains number of adjacent elements (neighbors)
     allocate(xadj(0:nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 53')
     if (ier /= 0) stop 'error allocating array xadj'
     ! contains all element id indices of adjacent elements
     allocate(adjncy(0:sup_neighbor*nspec-1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 54')
     if (ier /= 0) stop 'error allocating array adjncy'
     allocate(nnodes_elmnts(0:nnodes-1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 55')
     if (ier /= 0) stop 'error allocating array nnodes_elmnts'
     allocate(nodes_elmnts(0:nsize*nnodes-1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 56')
     if (ier /= 0) stop 'error allocating array nodes_elmnts'
 
     call mesh2dual_ncommonnodes(nspec, nnodes, nsize, sup_neighbor, &
@@ -1379,6 +1395,7 @@ contains
 
     ! coupled elements
     allocate(faces_coupled(2,nfaces_coupled),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 57')
     if (ier /= 0) stop 'error allocating array faces_coupled'
     faces_coupled(:,:) = -1
 

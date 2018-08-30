@@ -47,7 +47,7 @@
   implicit none
 
   integer, intent(in) :: nmat_ext_mesh
-  double precision, dimension(16,nmat_ext_mesh),intent(in) :: materials_ext_mesh
+  double precision, dimension(16,nmat_ext_mesh), intent(in) :: materials_ext_mesh
 
   integer, intent(in) :: nundefMat_ext_mesh
   character(len=MAX_STRING_LEN), dimension(6,nundefMat_ext_mesh) :: undef_mat_prop
@@ -77,7 +77,7 @@
     ! or from nummaterial_poroelastic_file for poroelastic (too many arguments for cubit)
 
     ! material domain_id
-    idomain_id = nint(materials_ext_mesh(6,imaterial_id))
+    idomain_id = nint(materials_ext_mesh(7,imaterial_id))
 
     select case (idomain_id)
 
@@ -86,8 +86,7 @@
 
       ! density
       ! materials_ext_mesh format:
-      ! #index1 = rho #index2 = vp #index3 = vs #index4 = Q_mu #index5 = iflag_aniso   #index7 = Q_kappa
-      ! Q_kappa is not stored next to Q_mu for historical reasons, because it was added later
+      ! #index1 = rho #index2 = vp #index3 = vs #index4 = Q_Kappa #index5 = Q_mu #index6 = iflag_aniso
       rho = materials_ext_mesh(1,imaterial_id)
 
       ! isotropic values: vp, vs
@@ -95,12 +94,11 @@
       vs = materials_ext_mesh(3,imaterial_id)
 
       ! attenuation
-      ! Q_kappa is not stored next to Q_mu for historical reasons, because it was added later
-      qkappa_atten = materials_ext_mesh(7,imaterial_id)
-      qmu_atten = materials_ext_mesh(4,imaterial_id)
+      qkappa_atten = materials_ext_mesh(4,imaterial_id)
+      qmu_atten = materials_ext_mesh(5,imaterial_id)
 
       ! anisotropy
-      iflag_aniso = nint(materials_ext_mesh(5,imaterial_id))
+      iflag_aniso = nint(materials_ext_mesh(6,imaterial_id))
 
     case (IDOMAIN_POROELASTIC)
       ! poroelastic
@@ -157,12 +155,10 @@
       rho = materials_ext_mesh(1,iflag)
       vp = materials_ext_mesh(2,iflag)
       vs = materials_ext_mesh(3,iflag)
-      ! Q_kappa is not stored next to Q_mu for historical reasons, because it was added later
-      qkappa_atten = materials_ext_mesh(7,iflag)
-      qmu_atten = materials_ext_mesh(4,iflag)
-
-      iflag_aniso = nint(materials_ext_mesh(5,iflag))
-      idomain_id = nint(materials_ext_mesh(6,iflag))
+      qkappa_atten = materials_ext_mesh(4,iflag)
+      qmu_atten = materials_ext_mesh(5,iflag)
+      iflag_aniso = nint(materials_ext_mesh(6,iflag))
+      idomain_id = nint(materials_ext_mesh(7,iflag))
 
     case (2)
       ! tomography models

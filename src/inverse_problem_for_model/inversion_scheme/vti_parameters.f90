@@ -33,7 +33,7 @@ module vti_parameters_mod
   subroutine selector_vti_family(inversion_param)
     type(inver),                                                  intent(inout)      :: inversion_param
     integer :: ipar
-    integer :: ipar_inv
+    integer :: ipar_inv, ier
     logical, dimension(6) :: is_selected
     character(len=MAX_LEN_STRING), dimension(6) :: vti_family_name
 
@@ -50,7 +50,6 @@ module vti_parameters_mod
     inversion_param%param_ref_name(4)="epsillon--(ep)"
     inversion_param%param_ref_name(5)="delta--(de)"
     inversion_param%param_ref_name(6)="gamma--(gm)"
-
 
     is_selected(:)=.false.
     ipar_inv=0
@@ -103,13 +102,14 @@ module vti_parameters_mod
 
     !! set wanted parameters in inversion structure
     inversion_param%NinvPar=ipar_inv
-    allocate(inversion_param%Index_Invert(inversion_param%NinvPar))
+    allocate(inversion_param%Index_Invert(inversion_param%NinvPar),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 563')
     ipar_inv=0
     do ipar=1, inversion_param%NfamilyPar !! loop on all parameters : rho, vp, vs, ep, gm, de
        if (is_selected(ipar)) then
           ipar_inv=ipar_inv+1
-          inversion_param%Index_Invert(ipar_inv)=ipar
-          inversion_param%param_inv_name(ipar_inv)=vti_family_name(ipar)
+          inversion_param%Index_Invert(ipar_inv) = ipar
+          inversion_param%param_inv_name(ipar_inv) = vti_family_name(ipar)
        endif
     enddo
 
@@ -288,7 +288,8 @@ module vti_parameters_mod
       real(kind=CUSTOM_REAL), dimension(NGLLX, NGLLY, NGLLZ)            :: w1, w2, w3, w4, w5
       real(kind=CUSTOM_REAL), dimension(NGLLX, NGLLY, NGLLZ)            :: rh_vp, rh_vs
 
-      !! finalize specfem kernel
+      !! finalize specfem kernel need to multiply by -1
+      rho_kl(:,:,:, ispec) = - rho_kl(:,:,:, ispec)
       cijkl_kl(:,:,:,:,ispec) = - cijkl_kl(:,:,:,:,ispec)
 
 
@@ -319,7 +320,7 @@ module vti_parameters_mod
       cijkl_kl(1, :,:,:, ispec) *(2.*w2(:,:,:)*rh_vp(:,:,:)) + &
       cijkl_kl(2, :,:,:, ispec) *(2.*w2(:,:,:)*rh_vp(:,:,:)) + &
       cijkl_kl(3, :,:,:, ispec) *(2. * rh_vp(:,:,:) * w4(:,:,:) / w1(:,:,:) ) + &
-      cijkl_kl(7, :,:,:, ispec) *(2.*w2(:,:,:)*vp(:,:,:)) + &
+      cijkl_kl(7, :,:,:, ispec) *(2.*w2(:,:,:)*rh_vp(:,:,:)) + &
       cijkl_kl(8, :,:,:, ispec) *(2. * rh_vp(:,:,:) * w4(:,:,:) / w1(:,:,:) ) + &
       cijkl_kl(12, :,:,:, ispec)*(2.*rh_vp(:,:,:))
 

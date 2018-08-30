@@ -40,9 +40,12 @@ subroutine read_model_iso()
   if (myrank == 0) print *,'reading model...'
 
   ! allocate arrays for storing the databases
-  allocate(model_vp(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_vs(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_rho(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  allocate(model_vp(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1053')
+  allocate(model_vs(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1054')
+  allocate(model_rho(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1055')
   if (ier /= 0) stop 'Error allocating model arrays'
 
   ! initializes arrays
@@ -142,12 +145,18 @@ subroutine read_model_tiso()
   if (myrank == 0) print *,'reading model...'
 
   ! allocate arrays for storing the databases
-  allocate(model_vpv(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_vph(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_vsv(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_vsh(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_eta(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_rho(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  allocate(model_vpv(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1056')
+  allocate(model_vph(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1057')
+  allocate(model_vsv(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1058')
+  allocate(model_vsh(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1059')
+  allocate(model_eta(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1060')
+  allocate(model_rho(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1061')
   if (ier /= 0) stop 'Error allocating model arrays'
 
   ! initializes arrays
@@ -313,10 +322,12 @@ subroutine read_model_database()
 
   ! allocate arrays for storing the databases
   allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1062')
   if (ier /= 0) stop 'Error allocating ibool array for databases'
 
   ! mesh node locations
   allocate(x(NGLOB),y(NGLOB),z(NGLOB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1063')
   if (ier /= 0) stop 'Error allocating x/y/z arrays for mesh nodes'
 
   read(IIN) ibool(:,:,:,1:nspec)

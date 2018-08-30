@@ -39,9 +39,9 @@ contains
 subroutine def_rot_matrix
 
   if (lpr) then
-    write(6,*)
-    write(6,*) '  Need to rotate the source to the north pole!'
-    write(6,*) '  .... therefore computing rotation matrix and its transpose'
+    write(*,*)
+    write(*,*) '  Need to rotate the source to the north pole!'
+    write(*,*) '  .... therefore computing rotation matrix and its transpose'
   endif
 
   ! This is the rotation matrix of Nissen-Meyer, Dahlen, Fournier, GJI 2007.
@@ -73,7 +73,7 @@ subroutine rotate_receivers_recfile(num_rec_glob, rcvcolat, rcvlon1, receiver_na
   real(kind=dp)                   :: x_vec(3), x_vec_rot(3), r_r
   real(kind=dp)                   :: rcvlon(1:num_rec_glob)
 
-  if (lpr) write(6,*)'  Rotating receivers and source to pole-centered system...'
+  if (lpr) write(*,*)'  Rotating receivers and source to pole-centered system...'
   if (lpr) &
   call save_google_earth_kml(real(srccolat*180.0/pi),real(srclon*180.0/pi), &
                                 real(rcvcolat),real(rcvlon1),num_rec_glob,'original',receiver_name)
@@ -110,8 +110,8 @@ subroutine rotate_receivers_recfile(num_rec_glob, rcvcolat, rcvlon1, receiver_na
      endif
 
      if (dabs(r_r-1.d0) > smallval) then
-        write(6,*)procstrg,'  Problem with radius of receiver location!!'
-        write(6,*)procstrg,',  Receiver at:',rcvcolat(ircv)*180./pi,rcvlon(ircv)
+        write(*,*)procstrg,'  Problem with radius of receiver location!!'
+        write(*,*)procstrg,',  Receiver at:',rcvcolat(ircv)*180./pi,rcvlon(ircv)
      endif
 
   enddo

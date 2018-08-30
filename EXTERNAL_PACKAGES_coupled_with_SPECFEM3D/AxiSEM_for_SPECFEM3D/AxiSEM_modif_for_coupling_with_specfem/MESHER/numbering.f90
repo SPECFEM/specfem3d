@@ -53,8 +53,8 @@ subroutine define_global_global_numbering
   npointot = neltot * (npol+1)**2
 
   if (dump_mesh_info_screen) then
-   write(6,*)
-   write(6,*) 'NPOINTOT GLOBAL IS ' , npointot
+   write(*,*)
+   write(*,*) 'NPOINTOT GLOBAL IS ' , npointot
   endif
 
   allocate(sgtmp(npointot))
@@ -79,7 +79,7 @@ subroutine define_global_global_numbering
   deallocate(sgtmp)
   deallocate(zgtmp)
 
-  if (dump_mesh_info_screen) write(6,*) 'NGLOBGLOB IS ' , NGLOBGLOB
+  if (dump_mesh_info_screen) write(*,*) 'NGLOBGLOB IS ' , NGLOBGLOB
 
 end subroutine define_global_global_numbering
 !-----------------------------------------------------------------------------------------
@@ -98,8 +98,8 @@ subroutine define_global_flobal_numbering
   npointot = neltot_fluid * (npol+1)**2
 
   if (dump_mesh_info_screen) then
-     write(6,*)
-     write(6,*) 'NPOINTOT FLOBAL IS ' , npointot
+     write(*,*)
+     write(*,*) 'NPOINTOT FLOBAL IS ' , npointot
   endif
 
   allocate(sgtmp(npointot))
@@ -126,7 +126,7 @@ subroutine define_global_flobal_numbering
   deallocate(zgtmp)
   deallocate(sgtmp)
 
-  if (dump_mesh_info_screen) write(6,*) 'NGLOBFLOB IS ' , NGLOBFLOB
+  if (dump_mesh_info_screen) write(*,*) 'NGLOBFLOB IS ' , NGLOBFLOB
 
 end subroutine define_global_flobal_numbering
 !-----------------------------------------------------------------------------------------
@@ -146,8 +146,8 @@ subroutine define_global_slobal_numbering
   npointot = neltot_solid * (npol+1)**2
 
   if (dump_mesh_info_screen) then
-     write(6,*)
-     write(6,*) 'NPOINTOT SLOBAL IS ' , npointot
+     write(*,*)
+     write(*,*) 'NPOINTOT SLOBAL IS ' , npointot
   endif
 
   allocate(sgtmp(npointot))
@@ -174,7 +174,7 @@ subroutine define_global_slobal_numbering
   deallocate(zgtmp)
   deallocate(sgtmp)
 
-  if (dump_mesh_info_screen) write(6,*) 'NGLOBSLOB IS ' , NGLOBSLOB
+  if (dump_mesh_info_screen) write(*,*) 'NGLOBSLOB IS ' , NGLOBSLOB
 
 end subroutine define_global_slobal_numbering
 !-----------------------------------------------------------------------------------------

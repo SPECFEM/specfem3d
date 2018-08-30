@@ -154,7 +154,7 @@ end subroutine read_fd_grid_parameters_for_projection
     double precision,        dimension(NGLLX)              :: hxis, hpxis
     double precision,        dimension(NGLLY)              :: hetas, hpetas
     double precision,        dimension(NGLLZ)              :: hgammas, hpgammas
-    integer                                                :: nb_fd_point_loc
+    integer                                                :: nb_fd_point_loc, ier
     integer, dimension(:,:,:), allocatable                 :: point_already_found
     double precision, dimension(:,:,:), allocatable        :: xi_in_fd, eta_in_fd, gamma_in_fd
 
@@ -170,10 +170,14 @@ end subroutine read_fd_grid_parameters_for_projection
 
     nb_fd_point_loc=0
 
-    allocate(point_already_found(nx_fd_proj, ny_fd_proj, nz_fd_proj))
-    allocate(xi_in_fd(nx_fd_proj, ny_fd_proj, nz_fd_proj))
-    allocate(eta_in_fd(nx_fd_proj, ny_fd_proj, nz_fd_proj))
-    allocate(gamma_in_fd(nx_fd_proj, ny_fd_proj, nz_fd_proj))
+    allocate(point_already_found(nx_fd_proj, ny_fd_proj, nz_fd_proj),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 144')
+    allocate(xi_in_fd(nx_fd_proj, ny_fd_proj, nz_fd_proj),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 145')
+    allocate(eta_in_fd(nx_fd_proj, ny_fd_proj, nz_fd_proj),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 146')
+    allocate(gamma_in_fd(nx_fd_proj, ny_fd_proj, nz_fd_proj),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 147')
 
     point_already_found(:,:,:)=0
 
@@ -285,11 +289,16 @@ end subroutine read_fd_grid_parameters_for_projection
 
     projection_fd%nb_fd_point=nb_fd_point_loc
 
-    allocate(projection_fd%ispec_selected(nb_fd_point_loc))
-    allocate(projection_fd%index_on_fd_grid(3,nb_fd_point_loc))
-    allocate(projection_fd%hxi(NGLLX,nb_fd_point_loc))
-    allocate(projection_fd%heta(NGLLX,nb_fd_point_loc))
-    allocate(projection_fd%hgamma(NGLLX,nb_fd_point_loc))
+    allocate(projection_fd%ispec_selected(nb_fd_point_loc),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 148')
+    allocate(projection_fd%index_on_fd_grid(3,nb_fd_point_loc),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 149')
+    allocate(projection_fd%hxi(NGLLX,nb_fd_point_loc),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 150')
+    allocate(projection_fd%heta(NGLLX,nb_fd_point_loc),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 151')
+    allocate(projection_fd%hgamma(NGLLX,nb_fd_point_loc),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 152')
 
     nb_fd_point_loc=0
     do kfd = 1, nz_fd_proj
@@ -453,15 +462,18 @@ end subroutine read_fd_grid_parameters_for_projection
      real(kind=CUSTOM_REAL),   dimension(:,:,:,:), allocatable, intent(in)     :: model_on_SEM_mesh
      real(kind=CUSTOM_REAL),   dimension(:,:,:),   allocatable, intent(inout)  :: model_on_FD_grid
 
-     integer                                                                   :: igrid, ispec, iglob
+     integer                                                                   :: igrid, ispec, iglob, ier
      double precision,         dimension(NGLLX)                                :: hxis
      double precision,         dimension(NGLLY)                                :: hetas
      double precision,         dimension(NGLLZ)                                :: hgammas
      double precision                                                          :: val
 
-     allocate(valence( projection_fd%nx,projection_fd%ny, projection_fd%nz ))
-     allocate(valence_tmp( projection_fd%nx,projection_fd%ny, projection_fd%nz ))
-     allocate(model_on_FD_grid_tmp( projection_fd%nx, projection_fd%ny, projection_fd%nz ))
+     allocate(valence( projection_fd%nx,projection_fd%ny, projection_fd%nz ),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 153')
+     allocate(valence_tmp( projection_fd%nx,projection_fd%ny, projection_fd%nz ),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 154')
+     allocate(model_on_FD_grid_tmp( projection_fd%nx, projection_fd%ny, projection_fd%nz ),stat=ier)
+     if (ier /= 0) call exit_MPI_without_rank('error allocating array 155')
 
      valence_tmp(:,:,:) = 0._CUSTOM_REAL
      model_on_FD_grid_tmp(:,:,:) = 0._CUSTOM_REAL
@@ -543,7 +555,7 @@ end subroutine read_fd_grid_parameters_for_projection
     double precision,   dimension(:),   allocatable                   :: y_array_found
     double precision,   dimension(:),   allocatable                   :: z_array_found
     integer,            dimension(:,:), allocatable                   :: ispec_selected_all
-    integer                                                           :: iproc
+    integer                                                           :: iproc, ier
 
     !! to avoid compler error when calling gather_all*
     double precision,  dimension(1)                                   :: distance_from_target_dummy
@@ -551,17 +563,23 @@ end subroutine read_fd_grid_parameters_for_projection
     double precision,  dimension(1)                                   :: x_dummy, y_dummy, z_dummy
     integer,           dimension(1)                                   :: ispec_selected_dummy, islice_selected_dummy
 
-    !if (myrank==0)  write(INVERSE_LOG_FILE,*) ' bcast parameters to all slices  '
+    allocate(distance_from_target_all(1,0:NPROC-1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 156')
+    allocate(xi_all(1,0:NPROC-1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 157')
+    allocate(eta_all(1,0:NPROC-1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 158')
+    allocate(gamma_all(1,0:NPROC-1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 159')
+    allocate(x_array_found(0:NPROC-1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 160')
+    allocate(y_array_found(0:NPROC-1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 161')
+    allocate(z_array_found(0:NPROC-1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 162')
 
-    allocate(distance_from_target_all(1,0:NPROC-1), &
-             xi_all(1,0:NPROC-1), &
-             eta_all(1,0:NPROC-1), &
-             gamma_all(1,0:NPROC-1), &
-             x_array_found(0:NPROC-1), &
-             y_array_found(0:NPROC-1), &
-             z_array_found(0:NPROC-1))
-
-    allocate(ispec_selected_all(1,0:NPROC-1))
+    allocate(ispec_selected_all(1,0:NPROC-1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 163')
 
     distance_from_target = sqrt( (x_to_locate - x_found)**2&
                                 +(y_to_locate - y_found)**2&
@@ -572,7 +590,7 @@ end subroutine read_fd_grid_parameters_for_projection
 !!$       write(IIDD, *) 'z :', z_to_locate,  z_found
 !!$    endif
 
-    !! it's just to avoid compiler error
+    !! this is just to avoid a compiler error
     distance_from_target_dummy(1)=distance_from_target
     x_dummy(1)=x_found
     y_dummy(1)=y_found

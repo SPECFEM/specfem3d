@@ -220,6 +220,7 @@
     NY_TOPO = NY_TOPO_FILE
 
     allocate(itopo_bathy(NX_TOPO,NY_TOPO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 615')
     if (ier /= 0) stop 'error allocating array itopo_bathy'
 
     call read_topo_bathy_file(itopo_bathy,NX_TOPO,NY_TOPO)
@@ -234,6 +235,7 @@
     NX_TOPO = 1
     NY_TOPO = 1
     allocate(itopo_bathy(NX_TOPO,NY_TOPO),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 616')
     if (ier /= 0) stop 'error allocating dummy array itopo_bathy'
 
   endif

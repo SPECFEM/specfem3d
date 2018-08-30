@@ -110,7 +110,7 @@ if use_explicit == 1:
     cubit.cmd('block '+str(id_block)+' attribute index 3 1500')   # vs
     cubit.cmd('block '+str(id_block)+' attribute index 4 2300')   # rho
     cubit.cmd('block '+str(id_block)+' attribute index 5 9999.0')  # Qkappa
-    cubit.cmd('block '+str(id_block)+' attribute index 6 9000.0')  # Qmu
+    cubit.cmd('block '+str(id_block)+' attribute index 6 9999.0')  # Qmu
     cubit.cmd('block '+str(id_block)+' attribute index 7 0')      # anisotropy_flag
     # acoustic material
     #cubit.cmd('block '+str(id_block)+' name "acoustic 1" ')       # acoustic material region
@@ -139,7 +139,7 @@ else:
     # Define material properties
     print "#### DEFINE MATERIAL PROPERTIES #######################"
     # elastic material
-    material_cfg=[{'material region':'2','id_block':'1','vp':'2800','vs':'1500','rho':'2300','Qkappa':'9990.0','Qmu':'9000.0','anisotropy_flag':'0'}]
+    material_cfg=[{'material region':'2','id_block':'1','vp':'2800','vs':'1500','rho':'2300','Qkappa':'9999.0','Qmu':'9999.0','anisotropy_flag':'0'}]
     # modifies material file
     nummaterial_velocity_file='MESH/nummaterial_velocity_file'
     f=open(nummaterial_velocity_file,'w')

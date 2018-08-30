@@ -56,6 +56,7 @@
   character(len=1),parameter :: comp(4) = (/ 'd', 'v', 'a', 'p' /)
 
   allocate(x_found(nrec),y_found(nrec),z_found(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2189')
   if (ier /= 0) stop 'error allocating arrays x_found y_found z_found'
 
   ! reads in station locations from output_list file

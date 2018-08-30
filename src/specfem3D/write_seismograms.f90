@@ -226,6 +226,7 @@
   endif
 
   allocate(one_seismogram(NDIM,NTSTEP_BETWEEN_OUTPUT_SEISMOS),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2420')
   if (ier /= 0) stop 'error while allocating one temporary seismogram'
 
   ! write out seismograms: all processes write their local seismograms themselves

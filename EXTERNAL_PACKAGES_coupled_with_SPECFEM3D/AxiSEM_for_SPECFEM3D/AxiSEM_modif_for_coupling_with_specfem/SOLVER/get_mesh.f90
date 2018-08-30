@@ -67,11 +67,11 @@ subroutine read_db
   call barrier
   do i=0, nproc-1
      if (mynum == i) then
-        if (verbose > 1) write(6,*)'  ', procstrg, 'opening database ', trim(dbname)
+        if (verbose > 1) write(*,*)'  ', procstrg, 'opening database ', trim(dbname)
         open(1000+mynum, file=trim(dbname), FORM="UNFORMATTED", &
                              STATUS="OLD", POSITION="REWIND", IOSTAT=ioerr)
         if (ioerr /= 0) then
-           write(6,*) 'Could not open mesh file ', trim(dbname)
+           write(*,*) 'Could not open mesh file ', trim(dbname)
            stop
         endif
      endif
@@ -79,7 +79,7 @@ subroutine read_db
      call barrier
   enddo
 
-  if (lpr .and. verbose > 1) write(6,*) &
+  if (lpr .and. verbose > 1) write(*,*) &
         '  Reading databases: see processor output for details.'
 
   ! Read all the parameters formerly in mesh_params.h
@@ -111,12 +111,12 @@ subroutine read_db
   endif
 
   if (lpr) then
-     write(6,*)
-     write(6,*)'  General numerical input/output parameters ==  ==  ==  ==  ==  ==  ==  == '
-     write(6,*)'    grid pts/wavelngth =',pts_wavelngth
-     write(6,*)'    source period [s]  =',period
-     write(6,*)'    courant number     =',courant
-     write(6,*)'    time step [s]      =',deltat
+     write(*,*)
+     write(*,*)'  General numerical input/output parameters ==  ==  ==  ==  ==  ==  ==  == '
+     write(*,*)'    grid pts/wavelngth =',pts_wavelngth
+     write(*,*)'    source period [s]  =',period
+     write(*,*)'    courant number     =',courant
+     write(*,*)'    time step [s]      =',deltat
   endif
 
   ! Background model
@@ -162,11 +162,11 @@ subroutine read_db
   endif
 
   if (lpr) then
-     write(6,*)
-     write(6,*)'  Background model ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == ='
-     write(6,*)'    bkgrdmodel = ', bkgrdmodel(1:lfbkgrdmodel)
-     write(6,*)'    radius [m] = ', router
-     write(6,*)'    have_fluid = ', have_fluid
+     write(*,*)
+     write(*,*)'  Background model ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == ='
+     write(*,*)'    bkgrdmodel = ', bkgrdmodel(1:lfbkgrdmodel)
+     write(*,*)'    radius [m] = ', router
+     write(*,*)'    have_fluid = ', have_fluid
   endif
 
   ! Min/max grid spacing
@@ -187,12 +187,12 @@ subroutine read_db
 
   min_distance_dim=pmin(min_distance_dim)
   if (lpr) then
-     write(6,*)
-     write(6,*)'  Min/max grid spacing ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == ='
-     write(6,*)'    hmin (global) [m]   : ', hmin_glob
-     write(6,*)'    hmax (global) [m]   : ', hmax_glob
-     write(6,*)'    min_distance_dim [m]: ', min_distance_dim
-     write(6,*)
+     write(*,*)
+     write(*,*)'  Min/max grid spacing ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == ='
+     write(*,*)'    hmin (global) [m]   : ', hmin_glob
+     write(*,*)'    hmax (global) [m]   : ', hmax_glob
+     write(*,*)'    min_distance_dim [m]: ', min_distance_dim
+     write(*,*)
   endif
 
   ! critical ratios h/v min/max and locations
@@ -221,14 +221,14 @@ subroutine read_db
   if (verbose > 1) write(69,*) 'Axial elements (glob,sol,flu): ', &
                                 naxel, naxel_solid, naxel_fluid
 
-  if (lpr) write(6,*)'  Axialogy ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == ='
+  if (lpr) write(*,*)'  Axialogy ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == ='
 
   call barrier
   do i=0, nproc-1
      call barrier
      if (mynum == i) then
         if (verbose > 1) then
-           write(6,11) procstrg, naxel, naxel_solid, naxel_fluid
+           write(*,11) procstrg, naxel, naxel_solid, naxel_fluid
            write(69,*) '      number of total axial elements:', naxel
            write(69,*) '      number of solid axial elements:', naxel_solid
            write(69,*) '      number of fluid axial elements:', naxel_fluid
@@ -244,17 +244,17 @@ subroutine read_db
   globnaxel_fluid = int(psum(real(naxel_fluid,kind=realkind)))
 
   if (lpr) then
-     write(6,*)
-     write(6,*) '    Global total axial elements:', globnaxel
-     write(6,*) '    Global solid axial elements:', globnaxel_solid
-     write(6,*) '    Global fluid axial elements:', globnaxel_fluid
-     write(6,*)
+     write(*,*)
+     write(*,*) '    Global total axial elements:', globnaxel
+     write(*,*) '    Global solid axial elements:', globnaxel_solid
+     write(*,*) '    Global fluid axial elements:', globnaxel_fluid
+     write(*,*)
   endif
 
   call read_mesh_axel(1000+mynum)
 
   ! mask s-coordinate of axial elements identically to zero
-  if (lpr .and. verbose > 1) write(6,*)'  setting s coordinate identical to zero along axis...'
+  if (lpr .and. verbose > 1) write(*,*)'  setting s coordinate identical to zero along axis...'
   do iel=1, naxel
     crd_nodes(lnods(ax_el(iel),1),1) = zero
     crd_nodes(lnods(ax_el(iel),7),1) = zero
@@ -396,7 +396,7 @@ subroutine read_db
   do i=0, nproc-1
      call barrier
      if (mynum == i) then
-        if (verbose > 1) write(6,*) '  ', procstrg,'closing database ', trim(dbname)
+        if (verbose > 1) write(*,*) '  ', procstrg,'closing database ', trim(dbname)
         call flush(6)
         if (verbose > 1) write(69,*) 'Closed the database'
         close(1000+mynum)
@@ -404,7 +404,7 @@ subroutine read_db
      call barrier
   enddo
   call flush(6)
-  if (lpr) write(6,*)
+  if (lpr) write(*,*)
 
 end subroutine read_db
 !-----------------------------------------------------------------------------------------

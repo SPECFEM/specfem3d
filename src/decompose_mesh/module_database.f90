@@ -64,7 +64,8 @@ contains
 
     call compute_adjcy_table(myrank,  elmnts, nE)
     if (myrank == 0) write(27,*) ' COMPUTE ADJACENCY '
-    allocate(node_loc(NGNOD2D))
+    allocate(node_loc(NGNOD2D),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 58')
 
   end subroutine prepare_database
 
@@ -161,7 +162,8 @@ contains
 
     ! write element connectivity in my partition -----
     write(IIN_database) nE_loc
-    allocate(loc_elmnt(NGNOD))
+    allocate(loc_elmnt(NGNOD),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 59')
     do iE_loc = 1, nE_loc
        iE = iE_loc ! loc2glob_elmnt(iE_loc)
        do inode =1, NGNOD
@@ -233,8 +235,10 @@ contains
 
     ! write MPI interfaces  -----
     npart=maxval(ipart(:))
-    allocate(istored(npart),islice_neigh(npart))
-    allocate(num_element_in_boundary_partition(npart))
+    allocate(istored(npart),islice_neigh(npart),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 60')
+    allocate(num_element_in_boundary_partition(npart),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 61')
     istored(:)=0
     islice_neigh(:)=0
     num_element_in_boundary_partition(:)=0
@@ -260,8 +264,10 @@ contains
 
     max_element_b_partition = maxval(num_element_in_boundary_partition)
     !write(*,*) myrank, max_element_b_partition,nb_stored_slice
-    allocate( my_interfaces_ext_mesh(6,max_element_b_partition,nb_stored_slice))
-    allocate(liste_comm_nodes(NGNOD2D), ie_bnd_stored(npart))
+    allocate( my_interfaces_ext_mesh(6,max_element_b_partition,nb_stored_slice),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 62')
+    allocate(liste_comm_nodes(NGNOD2D), ie_bnd_stored(npart),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 63')
     ie_bnd_stored(:)=0
     my_interfaces_ext_mesh(:,:,:)=-99
     do iE = 1, nE  !! loop over all elements
@@ -423,8 +429,10 @@ contains
     max_element_to_store = 8 * max_elmnts_by_node  ! over estimate the number of
                                                    ! neighbors element
     ! evalute the size of the adjacency table
-    allocate(stored_elements(max_element_to_store))
-    allocate(nb_neigh(nE_loc))
+    allocate(stored_elements(max_element_to_store),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 64')
+    allocate(nb_neigh(nE_loc),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 65')
     do iE_loc=1,nE_loc !! loop on all element in partition
        iE = loc2glob_elmnt(iE_loc)
        nb_element_stored = 0
@@ -441,7 +449,8 @@ contains
     enddo
     size_adjacency = sum(nb_neigh(:))
 
-    allocate(adjcy(size_adjacency),id_adjcy(0:nE_loc))
+    allocate(adjcy(size_adjacency),id_adjcy(0:nE_loc),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 66')
     id_adjcy(0) = 0
     do iE_loc=1, nE_loc !! loop on all element in partition
        iE = loc2glob_elmnt(iE_loc)

@@ -197,6 +197,7 @@ contains
 
   ! local ordering
   allocate(points_index(kdtree_num_nodes),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1226')
   if (ier /= 0) stop 'Error allocating array points_index'
 
   ! initial point ordering
@@ -658,6 +659,7 @@ contains
 
   ! creates new node
   allocate(node,stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1227')
   if (ier /= 0) then
     print *,'Error creating node: ',numnodes
     stop 'Error allocating kd-tree node'
@@ -733,6 +735,7 @@ contains
 
   ! temporary index array for sorting
   allocate(workindex(ibound_upper - ibound_lower + 1),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1228')
   if (ier /= 0) stop 'Error allocating workindex array'
 
   ! sorts point indices

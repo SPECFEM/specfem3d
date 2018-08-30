@@ -65,6 +65,7 @@
 
 ! detecting surface points/elements (based on valence check on NGLL points) for external mesh
   allocate(valence(nglob),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1223')
   if (ier /= 0) stop 'error allocate valence array'
 
 ! initialize surface indices
@@ -293,6 +294,7 @@
 
 ! detecting surface points/elements (based on valence check on NGLL points) for external mesh
   allocate(valence(nglob),ispec_has_points(nspec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1224')
   if (ier /= 0) stop 'error allocate valence array'
 
 ! an estimation of the minimum distance between global points (for an element width)
@@ -706,6 +708,7 @@
 
 ! detecting surface points/elements (based on valence check on NGLL points) for external mesh
   allocate(valence(nglob),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1225')
   if (ier /= 0) stop 'error allocate valence array'
 
 ! initialize surface indices

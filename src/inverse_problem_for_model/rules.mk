@@ -434,6 +434,7 @@ $O/regularization_interface.inv_regularization.o: $O/regularization_SEM_mod.inv_
 $O/family_parameter_mod.inv_inversion.o: $O/input_output_mod.inv_input.o $O/iso_parameters.inv_inversion.o $O/vti_parameters.inv_inversion.o
 
 $O/fwi_iteration_mod.inv_inversion.o: \
+	$O/specfem_interface_mod.inv_specfem_interface.o \
 	$O/family_parameter_mod.inv_inversion.o \
 	$O/PrecondFWI_mod.inv_inversion.o \
 	$O/regularization_interface.inv_regularization.o

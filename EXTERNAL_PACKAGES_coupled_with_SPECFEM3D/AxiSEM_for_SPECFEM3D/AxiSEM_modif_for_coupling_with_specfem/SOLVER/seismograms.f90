@@ -53,7 +53,7 @@ subroutine prepare_seismograms
   real(kind=dp)        :: s, z, r, theta
 
   if (lpr) &
-  write(6,*)'  locating surface elements and generic receivers...'
+  write(*,*)'  locating surface elements and generic receivers...'
 
   call barrier()
 
@@ -154,7 +154,7 @@ subroutine prepare_seismograms
 
   ! make sure only one processor has each location
   if (lpr) &
-     write(6,*)'  ensuring uniqueness in generic receiver locations...'
+     write(*,*)'  ensuring uniqueness in generic receiver locations...'
 
   iel=0
   if ( psum_int(epicount) > 1 ) then
@@ -214,11 +214,11 @@ subroutine prepare_seismograms
      call barrier
      if (mynum == iel) then
         if (verbose > 1) write(69,*)'  number of surface elements:', maxind
-        if (have_epi) write(6,12)procstrg,'epicenter at', &
+        if (have_epi) write(*,12)procstrg,'epicenter at', &
                                 thetacoord(0,npol,ielsolid(ielepi))/pi*180.
-        if (have_equ) write(6,12)procstrg,'equator at', &
+        if (have_equ) write(*,12)procstrg,'equator at', &
                                 thetacoord(npol,npol,ielsolid(ielequ))/pi*180.
-        if (have_antipode) write(6,12)procstrg,'antipode at', &
+        if (have_antipode) write(*,12)procstrg,'antipode at', &
                                   thetacoord(0,0,ielsolid(ielantipode))/pi*180.
      endif
      call barrier
@@ -226,9 +226,9 @@ subroutine prepare_seismograms
 12 format('   ',a8,'has the ',a13,f9.3,' degrees.')
 
 
-  if (lpr .and. verbose > 1) write(6,*)'  communicating local numbers of surface elements...'
+  if (lpr .and. verbose > 1) write(*,*)'  communicating local numbers of surface elements...'
   call comm_elem_number(maxind, maxind_glob, ind_first, ind_last)
-  if (lpr .and. verbose > 0) write(6,*)'  global number of surface elements:',maxind_glob
+  if (lpr .and. verbose > 0) write(*,*)'  global number of surface elements:',maxind_glob
 
   ! open files for displacement and velocity traces in each surface element
 
@@ -342,10 +342,10 @@ subroutine prepare_from_recfile_seis
      ! Read receiver location file:
      ! line1: number of receivers
      ! line2 --> line(number of receivers+1): colatitudes [deg]
-     if (lpr) write(6,*)'  reading receiver colatitudes and longitudes from receivers.dat...'
+     if (lpr) write(*,*)'  reading receiver colatitudes and longitudes from receivers.dat...'
      open(unit=34, file='receivers.dat', iostat=ierror, status='old', position='rewind')
      read(34,*) num_rec_glob
-     write(6,*)'  # total receivers:',num_rec_glob; call flush(6)
+     write(*,*)'  # total receivers:',num_rec_glob; call flush(6)
      allocate( recfile_readth (1:num_rec_glob) )
      allocate( recfile_th_glob(1:num_rec_glob) )
      allocate( recfile_th_loc (1:num_rec_glob) )
@@ -369,23 +369,23 @@ subroutine prepare_from_recfile_seis
 
 
   case('database')
-     if (lpr) write(6,*)'  generating receiver colatitudes at every element edge and midpoint...'
-     if (lpr) write(6,*)'  ... which is useful for databases and sinc interpolation'
+     if (lpr) write(*,*)'  generating receiver colatitudes at every element edge and midpoint...'
+     if (lpr) write(*,*)'  ... which is useful for databases and sinc interpolation'
      dtheta_rec = abs( (thetacoord(npol,npol,ielsolid(surfelem(1))) &
                       - thetacoord(0,   npol,ielsolid(surfelem(1))) ) * 180. / pi ) / 2
      num_rec_glob = ceiling(180./dtheta_rec)+1
      if (lpr) then
-       write(6,*) 'delta theta (mid-to-edge), (edge-to-edge) [deg]:', dtheta_rec, &
+       write(*,*) 'delta theta (mid-to-edge), (edge-to-edge) [deg]:', dtheta_rec, &
                   abs( (thetacoord(npol,npol,ielsolid(surfelem(1))) &
                       - thetacoord(0,   npol,ielsolid(surfelem(1))) ) * 180. / pi )
-       write(6,*)mynum,'number of surface elements:',maxind
-       write(6,*)mynum,'number of global recs (ideal,real):',(180./dtheta_rec)+1,num_rec_glob
+       write(*,*)mynum,'number of surface elements:',maxind
+       write(*,*)mynum,'number of global recs (ideal,real):',(180./dtheta_rec)+1,num_rec_glob
      endif
      allocate(recfile_readth(num_rec_glob),recfile_readph(num_rec_glob))
      do i=1,num_rec_glob
         recfile_readth(i) = dtheta_rec*real(i-1)
      enddo
-     if (lpr) write(6,*)mynum,'min,max receiver theta [deg]:',minval(recfile_readth),maxval(recfile_readth)
+     if (lpr) write(*,*)mynum,'min,max receiver theta [deg]:',minval(recfile_readth),maxval(recfile_readth)
      call flush(6)
      recfile_readph = 0.
      allocate(recfile_th_loc(1:num_rec_glob),recfile_el_loc(1:num_rec_glob,3))
@@ -401,11 +401,11 @@ subroutine prepare_from_recfile_seis
         if (mynum == 0) write(30,*)trim(receiver_name(i)),recfile_readth(i),recfile_readph(i)
      enddo
      if (mynum == 0) close(30)
-     if (lpr) write(6,*)mynum,'done with database receiver writing.';call flush(6)
+     if (lpr) write(*,*)mynum,'done with database receiver writing.';call flush(6)
 
 
   case('stations')
-     if (lpr) write(6,*)'  reading receiver colatitudes and longitudes from STATIONS...'
+     if (lpr) write(*,*)'  reading receiver colatitudes and longitudes from STATIONS...'
      ! count number of receivers first
      open(unit=34,file='STATIONS',iostat=ierror,status='old',action='read',position='rewind')
      num_rec_glob = 0
@@ -414,7 +414,7 @@ subroutine prepare_from_recfile_seis
         if (ierror == 0) num_rec_glob = num_rec_glob + 1
      enddo
      close(34)
-     if (lpr) write(6,*)'  ...counted number of stations:', num_rec_glob
+     if (lpr) write(*,*)'  ...counted number of stations:', num_rec_glob
 
      allocate(recfile_readth(1:num_rec_glob),recfile_th_glob(1:num_rec_glob))
      allocate(recfile_th_loc(1:num_rec_glob),recfile_el_loc(1:num_rec_glob,3))
@@ -443,7 +443,7 @@ subroutine prepare_from_recfile_seis
 
 
   case default
-     write(6,*)procstrg, 'Undefined receiver file format!!'
+     write(*,*)procstrg, 'Undefined receiver file format!!'
      stop
   end select !Receiver type rec_file_type
 
@@ -452,22 +452,22 @@ subroutine prepare_from_recfile_seis
   ! check on consistency of receiver coordinates
 
   if (minval(recfile_readph) < 0.d0) then
-     if (lpr) write(6,*)' ERROR: We do not allow negative receiver longitudes....'
+     if (lpr) write(*,*)' ERROR: We do not allow negative receiver longitudes....'
      stop
   endif
 
   if (maxval(recfile_readph) > 360.001) then
-     if (lpr) write(6,*)' ERROR: We do not allow receiver longitudes larger than 360 degrees....'
+     if (lpr) write(*,*)' ERROR: We do not allow receiver longitudes larger than 360 degrees....'
      stop
   endif
 
   if (maxval(recfile_readth) < 0.d0) then
-     if (lpr) write(6,*)' ERROR: We do not allow negative receiver colatitudes....'
+     if (lpr) write(*,*)' ERROR: We do not allow negative receiver colatitudes....'
      stop
   endif
 
   if (maxval(recfile_readth) > 180.001) then
-     if (lpr) write(6,*)' ERROR: We do not allow receiver colatitudes larger than 180 degrees....'
+     if (lpr) write(*,*)' ERROR: We do not allow receiver colatitudes larger than 180 degrees....'
      stop
   endif
 
@@ -498,10 +498,10 @@ subroutine prepare_from_recfile_seis
               call compute_coordinates(s,z,r,theta,ielsolid(surfelem(iel)), &
                                        ipol,npol)
               if (z < zero ) then
-               write(6,*)'PROBLEM! north but z < 0: ', &
+               write(*,*)'PROBLEM! north but z < 0: ', &
                            north(ielsolid(surfelem(iel))),z
-                 write(6,*)'r,theta:',r/1000.,theta*180./pi
-                 write(6,*)iel,surfelem(iel),ielsolid(surfelem(iel))
+                 write(*,*)'r,theta:',r/1000.,theta*180./pi
+                 write(*,*)iel,surfelem(iel),ielsolid(surfelem(iel))
                  stop
               endif
 
@@ -509,10 +509,10 @@ subroutine prepare_from_recfile_seis
               call compute_coordinates(s,z,r,theta,ielsolid(surfelem(iel)), &
                                        ipol,0)
               if (z > zero ) then
-                 write(6,*)'PROBLEM! south but z > 0: ', &
+                 write(*,*)'PROBLEM! south but z > 0: ', &
                            north(ielsolid(surfelem(iel))),z
-                 write(6,*)'r,theta:',r/1000.,theta*180./pi
-                 write(6,*)iel,surfelem(iel),ielsolid(surfelem(iel))
+                 write(*,*)'r,theta:',r/1000.,theta*180./pi
+                 write(*,*)iel,surfelem(iel),ielsolid(surfelem(iel))
                  stop
               endif
 
@@ -572,17 +572,17 @@ subroutine prepare_from_recfile_seis
 
   ! How many receivers does each processor have, do they sum to global number?
   if ( psum_int(num_rec) /= num_rec_glob ) then
-     write(6,*)'PROBLEM: sum of local receivers is different than global!'
-     if (lpr) write(6,*)'Global number of receivers:',num_rec_glob
-     write(6,*)procstrg,'Number of receivers:',num_rec
+     write(*,*)'PROBLEM: sum of local receivers is different than global!'
+     if (lpr) write(*,*)'Global number of receivers:',num_rec_glob
+     write(*,*)procstrg,'Number of receivers:',num_rec
      stop
   endif
 
   if (verbose > 1) then
-     if (lpr) write(6,*)
+     if (lpr) write(*,*)
      do irec=0,nproc-1
         call barrier
-        if (mynum == irec) write(6,14)procstrg,num_rec,num_rec_glob
+        if (mynum == irec) write(*,14)procstrg,num_rec,num_rec_glob
         call barrier
      enddo
      write(69,14)procstrg,num_rec,num_rec_glob
@@ -618,7 +618,7 @@ subroutine prepare_from_recfile_seis
      if ( pi/180*router*abs(recfile_readth(loc2globrec(i))-recfile_th(i) ) >&
           min_distance_dim) then
         count_diff_loc=count_diff_loc+1
-        if (verbose > 1) write(6,22)procstrg, &
+        if (verbose > 1) write(*,22)procstrg, &
                   recfile_readth(loc2globrec(i)), recfile_th(i)
         if (dabs(recfile_readth(loc2globrec(i))-recfile_th(i)) > maxreclocerr) &
              maxreclocerr=dabs(recfile_readth(loc2globrec(i))-recfile_th(i))/ &
@@ -632,15 +632,15 @@ subroutine prepare_from_recfile_seis
      call compute_coordinates(s,z,r,theta,ielsolid(recfile_el(i,1)), &
           recfile_el(i,2),recfile_el(i,3))
      if (.not. dblreldiff_small(r,router)) then
-        write(6,*)''
-        write(6,*)'PROBLEM: receiver is not at the surface!'
-        write(6,*)'r [km], colat [deg]:',r/1000.,theta/pi*180.
+        print *
+        write(*,*)'PROBLEM: receiver is not at the surface!'
+        write(*,*)'r [km], colat [deg]:',r/1000.,theta/pi*180.
         stop
      endif
 
 
      if (.not. (use_netcdf)) then
-         if (verbose > 1) write(6,*)'  ',procstrg,'opening receiver file:',i,appielem
+         if (verbose > 1) write(*,*)'  ',procstrg,'opening receiver file:',i,appielem
          open(100000+i,file=datapath(1:lfdata)//'/'//trim(receiver_name(loc2globrec(i)))//'_disp.dat')
      endif
 
@@ -660,15 +660,15 @@ subroutine prepare_from_recfile_seis
 
   maxreclocerr = pmax(maxreclocerr)
   if (lpr) then
-     write(6,*)
-     write(6,*)'  maximal receiver location error [m]:',maxreclocerr
-     write(6,*)
+     write(*,*)
+     write(*,*)'  maximal receiver location error [m]:',maxreclocerr
+     write(*,*)
   endif
 
   ! define general prefactor for all cases
   allocate(recfac(num_rec,5))
 
-  if (lpr) write(6,*) &
+  if (lpr) write(*,*) &
            '  Calculating prefactors for cylindrical components...'
   recfac(:,:) = 1.d0
   recfac(:,2) = 0.d0

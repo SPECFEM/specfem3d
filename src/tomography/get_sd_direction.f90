@@ -45,9 +45,12 @@
 
   ! allocate arrays for storing gradient
   ! isotropic arrays
-  allocate(model_dbulk(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_dbeta(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_drho(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  allocate(model_dbulk(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1046')
+  allocate(model_dbeta(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1047')
+  allocate(model_drho(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1048')
   if (ier /= 0) stop 'error allocating gradient arrays'
 
   ! initializes arrays
@@ -254,10 +257,14 @@
 
   ! allocate arrays for storing gradient
   ! transversely isotropic arrays
-  allocate(model_dbulk(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_dbetav(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_dbetah(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           model_deta(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  allocate(model_dbulk(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1049')
+  allocate(model_dbetav(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1050')
+  allocate(model_dbetah(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1051')
+  allocate(model_deta(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1052')
   if (ier /= 0) stop 'error allocating gradient arrays'
 
   ! initializes arrays

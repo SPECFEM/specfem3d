@@ -224,12 +224,15 @@ subroutine sum_kernel(kernel_name,kernel_list,nker)
   real(kind=CUSTOM_REAL), dimension(:,:,:,:),allocatable :: mask_source
 
   ! initializes arrays
-  allocate(kernel(NGLLX,NGLLY,NGLLZ,NSPEC), &
-           total_kernel(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  allocate(kernel(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1086')
+  allocate(total_kernel(NGLLX,NGLLY,NGLLZ,NSPEC),stat=ier)
+  if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1087')
   if (ier /= 0) stop 'Error allocating kernel arrays'
 
   if (USE_SOURCE_MASK) then
-    allocate( mask_source(NGLLX,NGLLY,NGLLZ,NSPEC) )
+    allocate( mask_source(NGLLX,NGLLY,NGLLZ,NSPEC) ,stat=ier)
+    if (ier /= 0) call my_local_exit_MPI_without_rank('error allocating array 1088')
     mask_source(:,:,:,:) = 1.0_CUSTOM_REAL
   endif
 
@@ -305,4 +308,23 @@ subroutine sum_kernel(kernel_name,kernel_list,nker)
 
 end subroutine sum_kernel
 
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+! version without rank number printed in the error message
+
+  subroutine my_local_exit_MPI_without_rank(error_msg)
+
+  implicit none
+
+  character(len=*) error_msg
+
+! write error message to screen
+  write(*,*) error_msg(1:len(error_msg))
+  write(*,*) 'Error detected, aborting MPI...'
+
+  stop 'Fatal error'
+
+  end subroutine my_local_exit_MPI_without_rank
 

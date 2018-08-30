@@ -47,6 +47,7 @@ module specfem_par
   integer :: NSPEC_IRREGULAR
   integer, dimension(:), allocatable :: irregular_element_number
   real(kind=CUSTOM_REAL) :: xix_regular,jacobian_regular
+
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: &
         xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz,jacobian
 

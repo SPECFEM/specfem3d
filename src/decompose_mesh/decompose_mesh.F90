@@ -171,6 +171,7 @@ module decompose_mesh
 
     if (nnodes < 1) stop 'Error: nnodes < 1'
     allocate(nodes_coords(3,nnodes),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 85')
     if (ier /= 0) stop 'Error allocating array nodes_coords'
     do inode = 1, nnodes
     ! format: #id_node #x_coordinate #y_coordinate #z_coordinate
@@ -201,6 +202,7 @@ module decompose_mesh
 
     if (nspec < 1) stop 'Error: nspec < 1'
     allocate(elmnts(NGNOD,nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 86')
     if (ier /= 0) stop 'Error allocating array elmnts'
     do ispec = 1, nspec
       ! format: # element_id  #id_node1 ... #id_node8
@@ -237,6 +239,7 @@ module decompose_mesh
     if (ier /= 0) stop 'Error opening materials_file'
 
     allocate(mat(2,nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 87')
     if (ier /= 0) stop 'Error allocating array mat'
 
     mat(:,:) = 0
@@ -309,6 +312,7 @@ module decompose_mesh
       stop 'Error positive material id exceeds bounds for defined materials'
     endif
     allocate(mat_prop(16,count_def_mat),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 88')
     if (ier /= 0) stop 'Error allocating array mat_prop'
     mat_prop(:,:) = 0.d0
 
@@ -320,6 +324,7 @@ module decompose_mesh
       stop 'Error negative material id exceeds bounds for undefined materials'
     endif
     allocate(undef_mat_prop(6,count_undef_mat),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 89')
     if (ier /= 0) stop 'Error allocating array undef_mat_prop'
     undef_mat_prop(:,:) = ''
 
@@ -400,10 +405,10 @@ module decompose_mesh
          mat_prop(1,num_mat) = rho
          mat_prop(2,num_mat) = vp
          mat_prop(3,num_mat) = vs
-         mat_prop(4,num_mat) = qmu
-         mat_prop(5,num_mat) = aniso_flag
-         mat_prop(6,num_mat) = idomain_id
-         mat_prop(7,num_mat) = qkappa  ! this one is not stored next to qmu for historical reasons, because it was added later
+         mat_prop(4,num_mat) = qkappa
+         mat_prop(5,num_mat) = qmu
+         mat_prop(6,num_mat) = aniso_flag
+         mat_prop(7,num_mat) = idomain_id
 
        else if (idomain_id == 3) then ! material is poroelastic
 
@@ -586,8 +591,10 @@ module decompose_mesh
 ! thus here the idea is that if some of the absorbing files do not exist because there are no absorbing
 ! conditions for this mesh then the array is created nonetheless, but with a dummy size of 0
     allocate(ibelm_xmin(nspec2D_xmin),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 90')
     if (ier /= 0) stop 'Error allocating array ibelm_xmin'
     allocate(nodes_ibelm_xmin(NGNOD2D,nspec2D_xmin),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 91')
     if (ier /= 0) stop 'Error allocating array nodes_ibelm_xmin'
     do ispec2D = 1,nspec2D_xmin
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
@@ -613,8 +620,10 @@ module decompose_mesh
       read(98,*) nspec2D_xmax
     endif
     allocate(ibelm_xmax(nspec2D_xmax),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 92')
     if (ier /= 0) stop 'Error allocating array ibelm_xmax'
     allocate(nodes_ibelm_xmax(NGNOD2D,nspec2D_xmax),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 93')
     if (ier /= 0) stop 'Error allocating array nodes_ibelm_xmax'
     do ispec2D = 1,nspec2D_xmax
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
@@ -633,8 +642,10 @@ module decompose_mesh
       read(98,*) nspec2D_ymin
     endif
     allocate(ibelm_ymin(nspec2D_ymin),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 94')
     if (ier /= 0) stop 'Error allocating array ibelm_ymin'
     allocate(nodes_ibelm_ymin(NGNOD2D,nspec2D_ymin),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 95')
     if (ier /= 0) stop 'Error allocating array nodes_ibelm_ymin'
     do ispec2D = 1,nspec2D_ymin
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
@@ -653,8 +664,10 @@ module decompose_mesh
       read(98,*) nspec2D_ymax
     endif
     allocate(ibelm_ymax(nspec2D_ymax),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 96')
     if (ier /= 0) stop 'Error allocating array ibelm_ymax'
     allocate(nodes_ibelm_ymax(NGNOD2D,nspec2D_ymax),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 97')
     if (ier /= 0) stop 'Error allocating array nodes_ibelm_ymax'
     do ispec2D = 1,nspec2D_ymax
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
@@ -673,8 +686,10 @@ module decompose_mesh
       read(98,*) nspec2D_bottom
     endif
     allocate(ibelm_bottom(nspec2D_bottom),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 98')
     if (ier /= 0) stop 'Error allocating array ibelm_bottom'
     allocate(nodes_ibelm_bottom(NGNOD2D,nspec2D_bottom),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 99')
     if (ier /= 0) stop 'Error allocating array nodes_ibelm_bottom'
     do ispec2D = 1,nspec2D_bottom
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
@@ -724,8 +739,10 @@ module decompose_mesh
       read(98,*) nspec2D_top
     endif
     allocate(ibelm_top(nspec2D_top),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 100')
     if (ier /= 0) stop 'Error allocating array ibelm_top'
     allocate(nodes_ibelm_top(NGNOD2D,nspec2D_top),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 101')
     if (ier /= 0) stop 'Error allocating array nodes_ibelm_top'
     do ispec2D = 1,nspec2D_top
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
@@ -763,9 +780,11 @@ module decompose_mesh
 
     ! C-PML spectral elements global indexing
     allocate(CPML_to_spec(nspec_cpml),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 102')
     if (ier /= 0) stop 'Error allocating array CPML_to_spec'
     ! C-PML regions (see below)
     allocate(CPML_regions(nspec_cpml),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 103')
     if (ier /= 0) stop 'Error allocating array CPML_regions'
     do ispec_CPML=1,nspec_cpml
        ! elements are stored with #id_cpml_regions increasing order:
@@ -786,6 +805,7 @@ module decompose_mesh
 
     ! sets mask of C-PML elements for all elements in this partition
     allocate(is_CPML(nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 104')
     if (ier /= 0) stop 'Error allocating array is_CPML'
     is_CPML(:) = .false.
     do ispec_CPML=1,nspec_cpml
@@ -804,8 +824,10 @@ module decompose_mesh
       read(98,*) nspec2D_moho
     endif
     allocate(ibelm_moho(nspec2D_moho),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 105')
     if (ier /= 0) stop 'Error allocating array ibelm_moho'
     allocate(nodes_ibelm_moho(NGNOD2D,nspec2D_moho),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 106')
     if (ier /= 0) stop 'Error allocating array nodes_ibelm_moho'
     do ispec2D = 1,nspec2D_moho
       ! format: #id_(element containing the face) #id_node1_face .. #id_node4_face
@@ -832,6 +854,7 @@ module decompose_mesh
 
     ! allocate temporary array
     allocate(used_nodes_elmnts(nnodes),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 107')
     if (ier /= 0) stop 'Error allocating array used_nodes_elmnts'
 
     used_nodes_elmnts(:) = 0
@@ -886,12 +909,16 @@ module decompose_mesh
 
     ! determines maximum neighbors based on "ncommonnodes" common nodes
     allocate(xadj(1:nspec+1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 108')
     if (ier /= 0) stop 'Error allocating array xadj'
     allocate(adjncy(1:sup_neighbor*nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 109')
     if (ier /= 0) stop 'Error allocating array adjncy'
     allocate(nnodes_elmnts(1:nnodes),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 110')
     if (ier /= 0) stop 'Error allocating array nnodes_elmnts'
     allocate(nodes_elmnts(1:nsize*nnodes),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 111')
     if (ier /= 0) stop 'Error allocating array nodes_elmnts'
 
     print *, 'mesh2dual:'
@@ -909,16 +936,19 @@ module decompose_mesh
 
     ! allocates & initializes partioning of elements
     allocate(part(1:nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 112')
     if (ier /= 0) stop 'Error allocating array part'
     part(:) = -1
 
     ! initializes
     ! elements load array
     allocate(elmnts_load(1:nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 113')
     if (ier /= 0) stop 'Error allocating array elmnts_load'
 
     ! gets materials id associations
     allocate(num_material(1:nspec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 114')
     if (ier /= 0) stop 'Error allocating array num_material'
     ! note: num_material can be negative for tomographic material elements
     !       (which are counted then as elastic elements)
@@ -1099,8 +1129,10 @@ module decompose_mesh
     integer :: ier
 
     allocate(my_interfaces(0:ninterfaces-1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 115')
     if (ier /= 0) stop 'Error allocating array my_interfaces'
     allocate(my_nb_interfaces(0:ninterfaces-1),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 116')
     if (ier /= 0) stop 'Error allocating array my_nb_interfaces'
 
     if (COUPLE_WITH_INJECTION_TECHNIQUE .or. MESH_A_CHUNK_OF_THE_EARTH) open(124,file='Numglob2loc_elmn.txt')

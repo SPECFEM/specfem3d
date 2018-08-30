@@ -88,8 +88,8 @@ pure subroutine compute_partial_d_spheroid(dsdxi, dzdxi, dsdeta, dzdeta, xil, et
 
   !if ( minval(nodes_crd(:,1)) < min_distance_dim .and. dsdxi == zero .and. &
   !     minval(abs(nodes_crd(:,2))) /= zero) then
-  !   write(6,*) 'PROBLEM: dsdxi vanishes at the axis!'
-  !   write(6,*) 's,r,dsdxi:', minval(nodes_crd(:,1)), minval(r_ser), dsdxi
+  !   write(*,*) 'PROBLEM: dsdxi vanishes at the axis!'
+  !   write(*,*) 's,r,dsdxi:', minval(nodes_crd(:,1)), minval(r_ser), dsdxi
   !   stop
   !endif
 
@@ -135,11 +135,11 @@ pure subroutine compute_theta_r(theta_ser,r_ser,nodes_crd)
   ! if (minval(nodes_crd(:,2)) < zero) then
 
   !    if (minval(theta_ser) < pi/2.d0-1.d-10) then
-  !       write(6,*)
-  !       write(6,*)'PROBLEM: computing theta & r for spheroidal mapping:'
+  !       write(*,*)
+  !       write(*,*)'PROBLEM: computing theta & r for spheroidal mapping:'
   !       do i=1,8
-  !          write(6,*)'inode,s,z:',i,nodes_crd(i,1),nodes_crd(i,2)
-  !          write(6,*)'r,theta  :',r_ser(i),theta_ser(i)*180.d0/pi
+  !          write(*,*)'inode,s,z:',i,nodes_crd(i,1),nodes_crd(i,2)
+  !          write(*,*)'r,theta  :',r_ser(i),theta_ser(i)*180.d0/pi
   !       enddo
   !       stop
   !    endif

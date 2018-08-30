@@ -156,48 +156,68 @@ subroutine read_partition_files_adios()
   ! Allocate arrays with previously read values |
   !---------------------------------------------'
   allocate(nodes_coords_ext_mesh(NDIM,nnodes_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 668')
   if (ier /= 0) stop 'error allocating array nodes_coords_ext_mesh'
 
   allocate(materials_ext_mesh(16,nmat_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 669')
   if (ier /= 0) stop 'error allocating array materials_ext_mesh'
   allocate(undef_mat_prop(6,nundefMat_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 670')
   if (ier /= 0) stop 'error allocating array undef_mat_prop'
 
   allocate(elmnts_ext_mesh(NGNOD,nelmnts_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 671')
   if (ier /= 0) stop 'error allocating array elmnts_ext_mesh'
   allocate(mat_ext_mesh(2,nelmnts_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 672')
   if (ier /= 0) stop 'error allocating array mat_ext_mesh'
 
-  allocate(ibelm_xmin(nspec2D_xmin), &
-           nodes_ibelm_xmin(NGNOD2D,nspec2D_xmin),stat=ier)
+  allocate(ibelm_xmin(nspec2D_xmin),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 673')
+  allocate(nodes_ibelm_xmin(NGNOD2D,nspec2D_xmin),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 674')
   if (ier /= 0) stop 'error allocating array ibelm_xmin etc.'
-  allocate(ibelm_xmax(nspec2D_xmax), &
-           nodes_ibelm_xmax(NGNOD2D,nspec2D_xmax),stat=ier)
+  allocate(ibelm_xmax(nspec2D_xmax),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 675')
+  allocate(nodes_ibelm_xmax(NGNOD2D,nspec2D_xmax),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 676')
   if (ier /= 0) stop 'error allocating array ibelm_xmax etc.'
-  allocate(ibelm_ymin(nspec2D_ymin), &
-           nodes_ibelm_ymin(NGNOD2D,nspec2D_ymin),stat=ier)
+  allocate(ibelm_ymin(nspec2D_ymin),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 677')
+  allocate(nodes_ibelm_ymin(NGNOD2D,nspec2D_ymin),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 678')
   if (ier /= 0) stop 'error allocating array ibelm_ymin'
-  allocate(ibelm_ymax(nspec2D_ymax), &
-           nodes_ibelm_ymax(NGNOD2D,nspec2D_ymax),stat=ier)
+  allocate(ibelm_ymax(nspec2D_ymax),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 679')
+  allocate(nodes_ibelm_ymax(NGNOD2D,nspec2D_ymax),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 680')
   if (ier /= 0) stop 'error allocating array ibelm_ymax etc.'
-  allocate(ibelm_bottom(nspec2D_bottom_ext), &
-           nodes_ibelm_bottom(NGNOD2D,nspec2D_bottom_ext),stat=ier)
+  allocate(ibelm_bottom(nspec2D_bottom_ext),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 681')
+  allocate(nodes_ibelm_bottom(NGNOD2D,nspec2D_bottom_ext),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 682')
   if (ier /= 0) stop 'error allocating array ibelm_bottom etc.'
-  allocate(ibelm_top(nspec2D_top_ext), &
-           nodes_ibelm_top(NGNOD2D,nspec2D_top_ext),stat=ier)
+  allocate(ibelm_top(nspec2D_top_ext),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 683')
+  allocate(nodes_ibelm_top(NGNOD2D,nspec2D_top_ext),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 684')
   if (ier /= 0) stop 'error allocating array ibelm_top etc.'
   ! allocates interfaces
   allocate(my_neighbors_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 685')
   if (ier /= 0) stop 'error allocating array my_neighbors_ext_mesh'
   allocate(my_nelmnts_neighbors_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 686')
   if (ier /= 0) stop 'error allocating array my_nelmnts_neighbors_ext_mesh'
-  allocate(my_interfaces_ext_mesh(6,max_interface_size_ext_mesh, &
-                                  num_interfaces_ext_mesh),stat=ier)
+  allocate(my_interfaces_ext_mesh(6,max_interface_size_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 687')
   if (ier /= 0) stop 'error allocating array my_interfaces_ext_mesh'
-  allocate(ibool_interfaces_ext_mesh(NGLLX*NGLLX*max_interface_size_ext_mesh, &
-                                    num_interfaces_ext_mesh),stat=ier)
+  allocate(ibool_interfaces_ext_mesh(NGLLX*NGLLX*max_interface_size_ext_mesh,num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 688')
   if (ier /= 0) stop 'error allocating array ibool_interfaces_ext_mesh'
   allocate(nibool_interfaces_ext_mesh(num_interfaces_ext_mesh),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 689')
   if (ier /= 0) stop 'error allocating array nibool_interfaces_ext_mesh'
 
   !------------------------.

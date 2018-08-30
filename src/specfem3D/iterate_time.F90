@@ -39,7 +39,7 @@
   implicit none
 
   ! for EXACT_UNDOING_TO_DISK
-  integer :: ispec,iglob,i,j,k,counter,record_length
+  integer :: ispec,iglob,i,j,k,counter,record_length,ier
   integer, dimension(:), allocatable :: integer_mask_ibool_exact_undo
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: buffer_for_disk
   character(len=MAX_STRING_LEN) outputname
@@ -129,7 +129,8 @@
 !! DK DK determine the largest value of iglob that we need to save to disk,
 !! DK DK since we save the upper part of the mesh only in the case of surface-wave kernels
     ! crust_mantle
-    allocate(integer_mask_ibool_exact_undo(NGLOB_AB))
+    allocate(integer_mask_ibool_exact_undo(NGLOB_AB),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1359')
     integer_mask_ibool_exact_undo(:) = -1
 
     counter = 0
@@ -155,7 +156,8 @@
     enddo
 
     ! allocate the buffer used to dump a single time step
-    allocate(buffer_for_disk(counter))
+    allocate(buffer_for_disk(counter),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1360')
 
     ! open the file in which we will dump all the time steps (in a single file)
     write(outputname,"('huge_dumps/proc',i6.6,'_huge_dump_of_all_time_steps.bin')") myrank

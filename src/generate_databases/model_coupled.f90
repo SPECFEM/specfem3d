@@ -113,7 +113,8 @@
   endif
 
   read(27,*) ndeg_poly
-  allocate(smooth_vp(0:ndeg_poly),smooth_vs(0:ndeg_poly))
+  allocate(smooth_vp(0:ndeg_poly),smooth_vs(0:ndeg_poly),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 620')
   do i = ndeg_poly,0,-1
     read(27,*) aa,bb,cc
     smooth_vp(i) = aa
@@ -132,10 +133,14 @@
   endif
 
   read(27,*) nlayer,ncoeff
-  allocate(vpv_1D(nlayer,ncoeff))
-  allocate(vsv_1D(nlayer,ncoeff))
-  allocate(density_1D(nlayer,ncoeff))
-  allocate(zlayer(nlayer))
+  allocate(vpv_1D(nlayer,ncoeff),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 621')
+  allocate(vsv_1D(nlayer,ncoeff),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 622')
+  allocate(density_1D(nlayer,ncoeff),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 623')
+  allocate(zlayer(nlayer),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 624')
   do i = 1,nlayer
     read(27,*) zlayer(i)
     read(27,*) vpv_1D(i,:)

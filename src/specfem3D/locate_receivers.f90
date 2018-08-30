@@ -87,6 +87,8 @@
   double precision :: x,y,z,x_new,y_new,z_new
   double precision :: xi,eta,gamma,final_distance_squared
   double precision, dimension(NDIM,NDIM) :: nu_found
+  double precision, dimension(NDIM) :: nu_tmp ! to avoid intel compiler warning about temporary array in i/o routine
+
   integer :: ispec_found,idomain_found
 
   ! subset arrays
@@ -135,21 +137,36 @@
   endif
 
   ! allocate memory for arrays using number of stations
-  allocate(stlat(nrec), &
-           stlon(nrec), &
-           stele(nrec), &
-           stbur(nrec), &
-           stutm_x(nrec), &
-           stutm_y(nrec), &
-           elevation(nrec), &
-           x_target(nrec), &
-           y_target(nrec), &
-           z_target(nrec), &
-           x_found(nrec), &
-           y_found(nrec), &
-           z_found(nrec), &
-           final_distance(nrec), &
-           idomain(nrec),stat=ier)
+  allocate(stlat(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1955')
+  allocate(stlon(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1956')
+  allocate(stele(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1957')
+  allocate(stbur(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1958')
+  allocate(stutm_x(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1959')
+  allocate(stutm_y(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1960')
+  allocate(elevation(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1961')
+  allocate(x_target(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1962')
+  allocate(y_target(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1963')
+  allocate(z_target(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1964')
+  allocate(x_found(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1965')
+  allocate(y_found(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1966')
+  allocate(z_found(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1967')
+  allocate(final_distance(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1968')
+  allocate(idomain(nrec),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1969')
   if (ier /= 0) stop 'Error allocating arrays for locating receivers'
 
   ! loop on all the stations to read the file
@@ -170,6 +187,7 @@
     ! "append") to a file with same name. The philosophy here is to accept multiple
     ! appearances and to just add a count to the station name in this case.
     allocate(station_duplet(nrec),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 1970')
     if (ier /= 0 ) call exit_MPI(myrank,'Error allocating station_duplet array')
     station_duplet(:) = 0
     do irec = 1,nrec
@@ -356,9 +374,12 @@
         write(IMAIN,*) '     gamma = ',gamma_receiver(irec)
 
         write(IMAIN,*) '     rotation matrix: '
-        write(IMAIN,*) '     nu1 = ',nu(1,:,irec)
-        write(IMAIN,*) '     nu2 = ',nu(2,:,irec)
-        write(IMAIN,*) '     nu3 = ',nu(3,:,irec)
+        nu_tmp(:) = nu(1,:,irec)
+        write(IMAIN,*) '     nu1 = ',sngl(nu_tmp)
+        nu_tmp(:) = nu(2,:,irec)
+        write(IMAIN,*) '     nu2 = ',sngl(nu_tmp)
+        nu_tmp(:) = nu(3,:,irec)
+        write(IMAIN,*) '     nu3 = ',sngl(nu_tmp)
 
         if (SUPPRESS_UTM_PROJECTION) then
           write(IMAIN,*) '     x: ',x_found(irec)
@@ -490,7 +511,8 @@ contains
         write(IMAIN,*) 'station details from SU_stations_info.bin'
         call flush_IMAIN()
 
-        allocate(x_found(nrec),y_found(nrec),z_found(nrec))
+        allocate(x_found(nrec),y_found(nrec),z_found(nrec),stat=ier)
+        if (ier /= 0) call exit_MPI_without_rank('error allocating array 1971')
         ! reads in station infos
         read(IOUT_SU) islice_selected_rec,ispec_selected_rec
         read(IOUT_SU) xi_receiver,eta_receiver,gamma_receiver

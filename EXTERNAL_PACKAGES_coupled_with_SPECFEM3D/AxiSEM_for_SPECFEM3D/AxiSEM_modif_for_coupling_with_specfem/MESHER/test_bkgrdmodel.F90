@@ -94,14 +94,14 @@ subroutine bkgrdmodel_testing
       endif
   endif
 
-  if (dump_mesh_info_screen) write(6,*) ''
+  if (dump_mesh_info_screen) print *
 
   ! find smallest/largest grid spacing
   !$omp parallel shared(hmin2, h, npol, router, hmax, hmin, x, y, z, vp1, vs1, rho1, &
   !$omp                 Qmu, Qka, mesh2, bkgrdmodel, rho, period) &
   !$omp          private(s1, z1, r, h1, s2, z2, h2, iel, jpol, ipol, velo, velo_max, &
   !$omp                  crit, crit_max, theta, ct)
-  !$omp do
+  !$OMP DO
   do iel = 1, neltot
 
      do jpol = 0, npol-1
@@ -145,7 +145,7 @@ subroutine bkgrdmodel_testing
   enddo ! elements
   !$omp single
 
-  write(6,*)'calculate GLL spacing...'
+  write(*,*)'calculate GLL spacing...'
 
   ! global min/max spacing
   hmin_glob = minval(hmin)
@@ -156,11 +156,11 @@ subroutine bkgrdmodel_testing
   min_distance_nondim = hmin_glob * 0.1d0 / router
 
   if (dump_mesh_info_screen) then
-     write(6,*) 'Minimal spacing in global domain [m]: ',hmin_glob
-     write(6,*) 'Maximal spacing in global domain [m]: ',hmax_glob
-     write(6,*) 'Minimal distances in global domain [m]: ', &
+     write(*,*) 'Minimal spacing in global domain [m]: ',hmin_glob
+     write(*,*) 'Maximal spacing in global domain [m]: ',hmax_glob
+     write(*,*) 'Minimal distances in global domain [m]: ', &
           min_distance_dim
-     write(6,*) 'Minimal distances in global domain [non-dim]: ', &
+     write(*,*) 'Minimal distances in global domain [non-dim]: ', &
           min_distance_nondim; call flush(6)
   endif
 
@@ -173,9 +173,9 @@ subroutine bkgrdmodel_testing
   ! initialize dt with crazy value and search for minimum in this loop
   dt = 1e10
 
-  write(6,*) 'starting big loop....'
+  write(*,*) 'starting big loop....'
   !$omp end single
-  !$omp do
+  !$OMP DO
   do iel = 1, neltot
      do jpol = npol, 0, -1
         do ipol = 0,npol
@@ -312,23 +312,23 @@ subroutine bkgrdmodel_testing
 
 
   enddo ! iel
-  !$omp enddo
+  !$OMP ENDDO
   !$omp end parallel
 
   if (dump_mesh_vtk) then
-    write(6,*) 'minmax vp:', minval(vp1), maxval(vp1)
+    write(*,*) 'minmax vp:', minval(vp1), maxval(vp1)
 
     fname = trim(diagpath)//'/mesh_vp'
     call write_VTK_bin_scal(x, y, z, vp1, npts_vtk/4, fname)
     deallocate(vp1)
 
-    write(6,*) 'minmax vs:', minval(vs1), maxval(vs1)
+    write(*,*) 'minmax vs:', minval(vs1), maxval(vs1)
 
     fname = trim(diagpath)//'/mesh_vs'
     call write_VTK_bin_scal(x, y, z, vs1, npts_vtk/4, fname)
     deallocate(vs1)
 
-    write(6,*) 'minmax rho:', minval(rho1), maxval(rho1)
+    write(*,*) 'minmax rho:', minval(rho1), maxval(rho1)
 
     fname = trim(diagpath)//'/mesh_rho'
     call write_VTK_bin_scal(x, y, z, rho1, npts_vtk/4, fname)
@@ -362,7 +362,7 @@ subroutine bkgrdmodel_testing
 
 
   h_real = real(hmax / (period / (pts_wavelngth * real(npol))))
-  write(6,*) 'minmax hmax:', minval(h_real), maxval(h_real)
+  write(*,*) 'minmax hmax:', minval(h_real), maxval(h_real)
 
   if (dump_mesh_vtk) then
     fname = trim(diagpath)//'/mesh_hmax'
@@ -370,35 +370,35 @@ subroutine bkgrdmodel_testing
   endif
 
   h_real = real(hmin / (dt / courant))
-  write(6,*) 'minmax hmin:', minval(h_real), maxval(h_real)
+  write(*,*) 'minmax hmin:', minval(h_real), maxval(h_real)
   if (dump_mesh_vtk) then
     fname = trim(diagpath)//'/mesh_hmin'
     call write_VTK_bin_scal_old(h_real, mesh2, neltot, fname)
   endif
 
   h_real = real(period / hmax)
-  write(6,*) 'minmax pts wavelngth:', minval(h_real), maxval(h_real)
+  write(*,*) 'minmax pts wavelngth:', minval(h_real), maxval(h_real)
   if (dump_mesh_vtk) then
     fname = trim(diagpath)//'/mesh_pts_wavelength'
     call write_VTK_bin_scal_old(h_real, mesh2, neltot, fname)
   endif
 
   h_real = real(dt / hmin)
-  write(6,*) 'minmax courant:',minval(h_real),maxval(h_real)
+  write(*,*) 'minmax courant:',minval(h_real),maxval(h_real)
   if (dump_mesh_vtk) then
     fname=trim(diagpath)//'/mesh_courant'
     call write_VTK_bin_scal_old(h_real,mesh2,neltot,fname)
   endif
 
   h_real = real(courant * hmin)
-  write(6,*) 'minmax dt:', minval(h_real), maxval(h_real)
+  write(*,*) 'minmax dt:', minval(h_real), maxval(h_real)
   if (dump_mesh_vtk) then
     fname = trim(diagpath)//'/mesh_dt'
     call write_VTK_bin_scal_old(h_real, mesh2, neltot, fname)
   endif
 
   h_real = real(pts_wavelngth * real(npol) * hmax)
-  write(6,*)'minmax period:', minval(h_real), maxval(h_real)
+  write(*,*)'minmax period:', minval(h_real), maxval(h_real)
   if (dump_mesh_vtk) then
     fname = trim(diagpath)//'/mesh_period'
     call write_VTK_bin_scal_old(h_real, mesh2, neltot, fname)
@@ -428,7 +428,7 @@ subroutine bkgrdmodel_testing
          (zgll(npol/2,npol/2, maxloc(hmax,1)))**2 )
   char_time_max_rad = r
   char_time_max_theta = dasin(sgll(npol/2,npol/2,maxloc(hmax,1))/r)*180.d0/pi
-  write(6,*)'char max:', char_time_max_rad, char_time_max_theta, char_time_max
+  write(*,*)'char max:', char_time_max_rad, char_time_max_theta, char_time_max
 
   char_time_min = maxval(hmin)
   char_time_min_globel = maxloc(hmin,1)
@@ -436,43 +436,43 @@ subroutine bkgrdmodel_testing
          zgll(npol/2,npol/2,maxloc(hmin,1))**2)
   char_time_min_rad = r
   char_time_min_theta = dasin(sgll(npol/2,npol/2,maxloc(hmin,1))/r)*180.d0/pi
-  write(6,*)'char min:', char_time_min_rad, char_time_min_theta, char_time_min
+  write(*,*)'char min:', char_time_min_rad, char_time_min_theta, char_time_min
 
   if (dump_mesh_info_screen) then
-     write(6,*)
-     write(6,*) 'Characteristic min/max lead times (ratio h/v):'
-     write(6,*) 'Max value[sec]/el number    :  ',char_time_max, char_time_max_globel
-     write(6,*) 'Max location r[km],theta[deg]: ',char_time_max_rad*router/1000., &
+     write(*,*)
+     write(*,*) 'Characteristic min/max lead times (ratio h/v):'
+     write(*,*) 'Max value[sec]/el number    :  ',char_time_max, char_time_max_globel
+     write(*,*) 'Max location r[km],theta[deg]: ',char_time_max_rad*router/1000., &
                                                   char_time_max_theta
-     write(6,*) 'Min value[sec]/el number     : ',char_time_min, char_time_min_globel
-     write(6,*) 'Min location r[km],theta[deg]: ',char_time_min_rad*router/1000., &
+     write(*,*) 'Min value[sec]/el number     : ',char_time_min, char_time_min_globel
+     write(*,*) 'Min location r[km],theta[deg]: ',char_time_min_rad*router/1000., &
                                                  char_time_min_theta
      call flush(6)
   endif
 
   if (dump_mesh_info_screen) then
      if (ntoobig > 0) then
-        write(6,*)
-        write(6,*)'**********************************************************'
-        write(6,*)'SERIOUS WARNING:',ntoobig,'elements are too LARGE!'
-        write(6,*)'                 ...up to', &
+        write(*,*)
+        write(*,*)'**********************************************************'
+        write(*,*)'SERIOUS WARNING:',ntoobig,'elements are too LARGE!'
+        write(*,*)'                 ...up to', &
                   (maxval(hmax)/(period/(pts_wavelngth*dble(npol)))-1.d0)*100.d0, 'percent!'
-        write(6,*)'                 ...percent of total elements:',100.d0* &
+        write(*,*)'                 ...percent of total elements:',100.d0* &
                                        dble(ntoobig)/dble(neltot)
 
-        write(6,*)'**********************************************************'
+        write(*,*)'**********************************************************'
         call flush(6)
      endif
 
      if (ntoosmall > 0) then
-        write(6,*)
-        write(6,*)'**********************************************************'
-        write(6,*)'SERIOUS WARNING:',ntoosmall,'elements are too SMALL!'
-        write(6,*)'                  ...up to', &
+        write(*,*)
+        write(*,*)'**********************************************************'
+        write(*,*)'SERIOUS WARNING:',ntoosmall,'elements are too SMALL!'
+        write(*,*)'                  ...up to', &
                   ((dt/courant)/minval(hmin)-1.d0)*100.d0,'percent!'
-        write(6,*)'                 ...percent of total elements:',100.d0* &
+        write(*,*)'                 ...percent of total elements:',100.d0* &
                                        dble(ntoosmall)/dble(neltot)
-        write(6,*)'**********************************************************'
+        write(*,*)'**********************************************************'
         call flush(6)
      endif
   endif
@@ -537,7 +537,7 @@ subroutine write_VTK_bin_scal_old(u2,mesh,rows,filename)
       if (abs(u1(i)) < 1.e-25) u1(i)=0.0
   enddo
 
-  write(6,*)'computing vtk file ',trim(filename),' ...'
+  write(*,*)'computing vtk file ',trim(filename),' ...'
 
 #if defined(__gfortran__)
   open(110,file=trim(filename)//'.vtk',access='stream',status='replace', &
@@ -582,7 +582,7 @@ subroutine write_VTK_bin_scal_old(u2,mesh,rows,filename)
   write(110) 'LOOKUP_TABLE default'//char(10) !color table?
   write(110) real(u1)
   close(110)
-  write(6,*)'...saved ',trim(filename)//'.vtk'
+  write(*,*)'...saved ',trim(filename)//'.vtk'
 end subroutine write_VTK_bin_scal_old
 !-----------------------------------------------------------------------------------------
 
@@ -655,7 +655,7 @@ subroutine write_VTK_bin_scal(x,y,z,u1,elems,filename)
   write(110) 'LOOKUP_TABLE default'//char(10) !color table?
   write(110) u1
   close(110)
-  write(6,*)'...saved ',trim(filename)//'.vtk'
+  write(*,*)'...saved ',trim(filename)//'.vtk'
 end subroutine write_VTK_bin_scal
 !-----------------------------------------------------------------------------------------
 

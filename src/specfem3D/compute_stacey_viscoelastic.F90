@@ -513,6 +513,7 @@ endif
 
   integer :: it_dsm
 
+  it_dsm = 1 !! initialize dsm iterator
   if (COUPLE_WITH_INJECTION_TECHNIQUE) then
     if (old_DSM_coupling_from_Vadim) then
       if (iphase == 1) then

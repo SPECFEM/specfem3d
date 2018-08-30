@@ -76,7 +76,9 @@
   integer  :: npoin_interface_ext_mesh
 
 ! initializes
-  allocate( mask_ibool_ext_mesh(npoin), stat=ier); if (ier /= 0) stop 'error allocating array'
+  allocate(mask_ibool_ext_mesh(npoin), stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 1233')
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array')
 
   ibool_interfaces_ext_mesh(:,:) = 0
   nibool_interfaces_ext_mesh(:) = 0

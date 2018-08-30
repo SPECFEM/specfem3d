@@ -43,7 +43,7 @@ subroutine start_clock
   character(len=10)   :: mytime
 
   call date_and_time(mydate,mytime)
-  write(6,11) mydate(5:6), mydate(7:8), mydate(1:4), mytime(1:2), mytime(3:4)
+  write(*,11) mydate(5:6), mydate(7:8), mydate(1:4), mytime(1:2), mytime(3:4)
 
 11 format('     Meshing started on ', A2,'/',A2,'/',A4,' at ', A2,'h ',A2,'min',/)
 
@@ -76,9 +76,9 @@ subroutine end_clock
 
   implicit none
 
-  write(6,*)
-  write(6,"(10x,'Summary of timing measurements:')")
-  write(6,*)
+  write(*,*)
+  write(*,"(10x,'Summary of timing measurements:')")
+  write(*,*)
 
   call clocks_exit(0)
 
