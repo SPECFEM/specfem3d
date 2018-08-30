@@ -356,9 +356,9 @@
 !----------- do not modify anything below -------------
 !------------------------------------------------------
 
-! on some processors (e.g. some Intel chips) it is necessary to suppress underflows
-! by using a small initial field instead of zero
-  logical, parameter :: FIX_UNDERFLOW_PROBLEM = .true.
+!! DK DK August 2018: on modern processors this does not happen any more,
+!! DK DK August 2018: and thus no need to purposely lose accuracy to avoid underflows; thus turning it off by default
+  logical, parameter :: FIX_UNDERFLOW_PROBLEM = .false. ! .true.
 
 ! some useful constants
   double precision, parameter :: PI = 3.141592653589793d0

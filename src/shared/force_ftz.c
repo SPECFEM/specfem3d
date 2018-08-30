@@ -1,5 +1,5 @@
 /*
- !=====================================================================
+ !========================================================================
  !
  !               S p e c f e m 3 D  V e r s i o n  3 . 0
  !               ---------------------------------------
@@ -17,14 +17,16 @@
  !
  ! This program is distributed in the hope that it will be useful,
  ! but WITHOUT ANY WARRANTY; without even the implied warranty of
- ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  ! GNU General Public License for more details.
  !
  ! You should have received a copy of the GNU General Public License along
  ! with this program; if not, write to the Free Software Foundation, Inc.,
  ! 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  !
- !=====================================================================
+ ! The full text of the license is available in file "LICENSE".
+ !
+ !========================================================================
  */
 
 /* Dimitri Komatitsch, University of Toulouse, May 2011: */
@@ -69,6 +71,10 @@
 void
 FC_FUNC_(force_ftz,FORCE_FTZ)()
 {
+
+// DK DK Aug 2018: not needed anymore these days, and we had numerous portability issues with this routine, thus turning it off
+#undef FORCE_FTZ
+
 #ifdef __GNUC__
 #ifdef FORCE_FTZ
   unsigned int x;
