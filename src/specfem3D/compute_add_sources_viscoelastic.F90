@@ -193,8 +193,14 @@
                   do i = 1,NGLLX
                     iglob = ibool(i,j,k,ispec_selected_rec(irec))
 
-                    accel(:,iglob) = accel(:,iglob)  &
-                              + source_adjoint(:,irec_local,NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC)) * &
+!! DK DK Aug 2018: added this because Lei Zhang may have detected a problem
+                    if (.not. allocated(hxir_store) .or. .not. allocated(hetar_store) .or. .not. allocated(hgammar_store)) then
+                      print *,'ERROR: trying to use arrays hxir_store/hetar_store/hgammar_store with irec_local = ',irec_local, &
+                              ' as first index, but these arrays are unallocated!'
+                      call exit_MPI_without_rank('ERROR: trying to use arrays hxir_store/hetar_store/hgammar_store at line 201 &
+                                  &of file src/specfem3D/compute_add_sources_viscoelastic.F90, but these arrays are unallocated!'
+                    endif
+                    accel(:,iglob) = accel(:,iglob) + source_adjoint(:,irec_local,NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC)) * &
                                 hxir_store(irec_local,i)*hetar_store(irec_local,j)*hgammar_store(irec_local,k)
                   enddo
                 enddo
