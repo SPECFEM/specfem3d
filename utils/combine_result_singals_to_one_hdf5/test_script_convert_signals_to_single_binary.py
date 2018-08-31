@@ -10,7 +10,7 @@ def main():
     total_num_sigs      = 5                       # total number of signals (.semp files) to be combined and binarized
 
     # time window for limited extraction of timesteps
-    time_window = [0,total_timesteps-1]  
+    time_window = [0,total_timesteps-1]
 
     # binarize_signals
     cmd = './combine ' + file_of_signal_list + ' ' + output_file_name + ' ' + str(total_num_sigs) + \
@@ -19,4 +19,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()   
+    main()

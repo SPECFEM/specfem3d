@@ -10,11 +10,11 @@ program combine_signal_files_into_a_single_one
   integer, parameter :: number_of_columns = 2
 
   integer :: line_start
-  integer :: line_end  
+  integer :: line_end
 
   double precision, allocatable, dimension(:,:,:) :: big_array
   real, allocatable, dimension(:) :: xx, yy, zz
-  integer :: pos    
+  integer :: pos
 
   integer, parameter :: strlen=200
 
@@ -27,7 +27,7 @@ program combine_signal_files_into_a_single_one
   integer(HID_T) :: file_id
   integer(HID_T) :: dset_id
   integer(HID_T) :: dspace_id
-  
+
   integer(HSIZE_T), dimension(3) :: dims ! Dataset dimensions
   integer :: rank = 3                    ! Dataset rank
 
@@ -51,7 +51,7 @@ program combine_signal_files_into_a_single_one
 
 
   allocate(big_array(number_of_files,line_start:line_end,number_of_columns))
-  dims = (/number_of_files,line_end-line_start+1,number_of_columns/)   
+  dims = (/number_of_files,line_end-line_start+1,number_of_columns/)
 
 
   open(unit=24,file=list_file_name,status='old',action='read')
@@ -93,7 +93,7 @@ program combine_signal_files_into_a_single_one
   call h5dcreate_f(file_id, 'time_pressure', H5T_NATIVE_DOUBLE, dspace_id, &
                    dset_id, error, H5P_DEFAULT_F, H5P_DEFAULT_F, &
                    H5P_DEFAULT_F)
- 
+
   call h5dwrite_f(dset_id, H5T_NATIVE_DOUBLE, big_array, dims, error)
 
 
@@ -106,40 +106,40 @@ program combine_signal_files_into_a_single_one
 
   call h5close_f(error)
 
-  contains 
-  
+  contains
+
     subroutine str2int(str,int,stat)
       implicit none
       ! Arguments
       character(len=*),intent(in) :: str
       integer,intent(out)         :: int
       integer,intent(out)         :: stat
-  
+
       read(str,*,iostat=stat)  int
     end subroutine str2int
- 
+
     subroutine mygetarg(i, argc)
       implicit none
       integer, intent(in) :: i
       character(len=*), intent(out) :: argc
-      
-      call getarg(0, argc)
-      if(argc == "") then
-        call getarg(i + 1, argc)
+
+      call get_command_argument(0, argc)
+      if (argc == "") then
+        call get_command_argument(i + 1, argc)
       else
-        call getarg(i, argc)
-      end if
+        call get_command_argument(i, argc)
+      endif
     end subroutine
-    
+
     integer function myiargc() result(oresult)
       implicit none
       integer :: iargc
       character(len=8) :: argc
       oresult = iargc()
-      call getarg(0, argc)
-      if(argc == "") then
+      call get_command_argument(0, argc)
+      if (argc == "") then
         oresult = oresult - 1
-      end if
+      endif
     end function
 
 end program combine_signal_files_into_a_single_one
