@@ -278,7 +278,7 @@ NTSTEP_BETWEEN_READ_ADJSRC      = 0
 # read adjoint sources using ASDF (requires asdf-library)
 READ_ADJSRC_ASDF                = .false.
 
- this parameter must be set to .true. to compute anisotropic kernels
+# this parameter must be set to .true. to compute anisotropic kernels
 # in crust and mantle (related to the 21 Cij in geographical coordinates)
 # default is .false. to compute isotropic kernels (related to alpha and beta)
 ANISOTROPIC_KL                  = .false.

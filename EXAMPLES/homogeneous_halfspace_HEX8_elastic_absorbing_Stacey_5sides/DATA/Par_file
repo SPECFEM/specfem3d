@@ -302,7 +302,6 @@ SAVE_MOHO_MESH                  = .false.
 # Coupling with an injection technique (DSM, AxiSEM, or FK)
 #
 #-----------------------------------------------------------
-
 COUPLE_WITH_INJECTION_TECHNIQUE = .false.
 INJECTION_TECHNIQUE_TYPE        = 3   # 1 = DSM, 2 = AxiSEM, 3 = FK
 MESH_A_CHUNK_OF_THE_EARTH       = .false.

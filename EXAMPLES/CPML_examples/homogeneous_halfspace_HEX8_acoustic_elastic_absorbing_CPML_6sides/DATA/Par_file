@@ -275,7 +275,7 @@ NTSTEP_BETWEEN_OUTPUT_ENERGY    = 10
 # 0 = read the whole adjoint sources at the same time
 NTSTEP_BETWEEN_READ_ADJSRC      = 0
 
-# read adjoint sources in ASDF (requires asdf-library)
+# read adjoint sources using ASDF (requires asdf-library)
 READ_ADJSRC_ASDF                = .false.
 
 # this parameter must be set to .true. to compute anisotropic kernels

@@ -224,6 +224,9 @@ USE_BINARY_FOR_SEISMOGRAMS      = .false.
 # output seismograms in Seismic Unix format (binary with 240-byte-headers)
 SU_FORMAT                       = .false.
 
+# output seismograms in ASDF (requires asdf-library)
+ASDF_FORMAT                     = .false.
+
 # decide if master process writes all the seismograms or if all processes do it in parallel
 WRITE_SEISMOGRAMS_BY_MASTER     = .false.
 
@@ -271,6 +274,9 @@ NTSTEP_BETWEEN_OUTPUT_ENERGY    = 10
 # interval in time steps for reading adjoint traces
 # 0 = read the whole adjoint sources at the same time
 NTSTEP_BETWEEN_READ_ADJSRC      = 0
+
+# read adjoint sources using ASDF (requires asdf-library)
+READ_ADJSRC_ASDF                = .false.
 
 # this parameter must be set to .true. to compute anisotropic kernels
 # in crust and mantle (related to the 21 Cij in geographical coordinates)
