@@ -198,10 +198,11 @@
                       print *,'ERROR: trying to use arrays hxir_store/hetar_store/hgammar_store with irec_local = ',irec_local, &
                               ' as first index, but these arrays are unallocated!'
                       call exit_MPI_without_rank('ERROR: trying to use arrays hxir_store/hetar_store/hgammar_store at line 201 &
-                                  &of file src/specfem3D/compute_add_sources_viscoelastic.F90, but these arrays are unallocated!'
+                                  &of file src/specfem3D/compute_add_sources_viscoelastic.F90, but these arrays are unallocated!')
                     endif
-                    accel(:,iglob) = accel(:,iglob) + source_adjoint(:,irec_local,NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC)) * &
-                                hxir_store(irec_local,i)*hetar_store(irec_local,j)*hgammar_store(irec_local,k)
+                    accel(:,iglob) = accel(:,iglob) + &
+                            source_adjoint(:,irec_local,NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC)) * &
+                            hxir_store(irec_local,i)*hetar_store(irec_local,j)*hgammar_store(irec_local,k)
                   enddo
                 enddo
               enddo
