@@ -383,7 +383,7 @@ def mesh_3D():
     print("")
 
     # meshing
-    points, cells, point_data, cell_data, field_data = pygmsh.generate_mesh(geom,verbose=True,num_quad_lloyd_steps=0)
+    points, cells, point_data, cell_data, field_data = pygmsh.generate_mesh(geom,verbose=True)
 
     # mesh info
     print("")
