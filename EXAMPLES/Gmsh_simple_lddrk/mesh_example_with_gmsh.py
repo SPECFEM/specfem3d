@@ -408,13 +408,13 @@ def mesh_3D():
 
     # save as vtk-file
     filename = "MESH/box.vtu"
-    meshio.write(filename, points, cells)
+    mesh = meshio.Mesh(points, cells, point_data, cell_data, field_data)
+    meshio.write(filename, mesh)
     print("VTK file written to : ",filename)
 
     # saves as Gmsh-file (msh mesh format)
     filename = "MESH/box.msh"
-    meshio.write(filename, points, cells, point_data=point_data, cell_data=cell_data, field_data=field_data,
-                 file_format='gmsh-ascii')
+    meshio.write(filename, mesh, file_format='gmsh2-ascii')
     print("Gmsh file written to: ",filename)
     print("")
 
