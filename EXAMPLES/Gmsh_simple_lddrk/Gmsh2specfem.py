@@ -41,7 +41,10 @@ def read_mesh_file_msh(file):
     print("")
 
     # reads *.msh file (Gmsh Ascii-format)
-    points, cells, point_data, cell_data, field_data = meshio.read(file, file_format='gmsh-ascii')
+    mesh = meshio.read(file)
+    points, cells, point_data, cell_data, field_data = (
+        mesh.points, mesh.cells,
+        mesh.point_data, mesh.cell_data, mesh.field_data)
 
     print("mesh data:")
     print("number of points: ",len(points))
