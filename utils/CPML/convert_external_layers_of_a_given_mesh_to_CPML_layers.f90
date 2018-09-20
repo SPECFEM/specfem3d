@@ -1406,8 +1406,6 @@
     i7 = ibool(7,ispec)
     i8 = ibool(8,ispec)
 
-    if (is_Z_CPML(ispec)) then
-
       already_found_a_face = .false.
 
 ! test face 1 (bottom)
@@ -1450,8 +1448,6 @@
         count_faces_found = count_faces_found + 1
         already_found_a_face = .true.
       endif
-
-    endif
 
   enddo
 
@@ -1497,8 +1493,6 @@
       i26 = ibool(26,ispec)
       i27 = ibool(27,ispec)
     endif
-
-    if (is_Z_CPML(ispec)) then
 
 ! for the six faces below it is important to make sure we write the four points
 ! in an order for which the normal to the face points outwards
@@ -1556,8 +1550,6 @@
           write(24,"(10(i9,1x))") ispec,i3,i4,i8,i7,i11,i16,i19,i15,i24
         endif
       endif
-
-    endif
 
   enddo
 
