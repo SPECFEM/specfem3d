@@ -471,7 +471,7 @@ contains
     ! deallocate temporary arrays to save memory
     deallocate(nelmnts_by_node, stored_elements, nb_neigh, elmnts_by_node)
 
-    if (myrank == 0) write(27,*) ' END OF ADJACY TABLE COMPUTATION'
+    if (myrank == 0) write(27,*) ' END OF ADJACENCY TABLE COMPUTATION'
 
   end subroutine compute_adjcy_table
 

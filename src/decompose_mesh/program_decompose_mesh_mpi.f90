@@ -121,7 +121,7 @@ program xdecompose_mesh_mpi
   call send_partition_mesh_to_all(myrank, ipart, npartX*npartY*npartZ)
   call send_mesh_to_all(myrank)
 
-  ! 4/ write partitionned mesh in one file per proc
+  ! 4/ write partitioned mesh in one file per proc
   call prepare_database(myrank, elmnts, nspec)
   call write_database(myrank, ipart, elmnts, nodes_coords, elmnts_glob,  mat, mat_prop, undef_mat_prop, &
        count_def_mat, count_undef_mat, ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, &
@@ -410,8 +410,8 @@ end subroutine send_partition_mesh_to_all
 !
 !
 ! send whole arrays from master to other
-! (it's small arrays that not need to be distributed
-! execpt for elmnts_glob)
+! (it is small arrays that do not need to be distributed
+! except for elmnts_glob)
 !
 !
 !-------------------------------------------------------
