@@ -265,7 +265,9 @@ def detect_boundary_surfaces(points,cells,cell_data,field_data):
         #print(i,q)   # i starts at 0,1,2,..; quads[id1,id2,id3,id4] indices also start at 0
 
         # for specfem, we will need to find corresponding hexahedral element which contains this quad
-        el = [ [j,h] for j,h in enumerate(hexas) if q[0] in h and q[1] in h and q[2] in h and q[3] in h ]
+        # DK DK significantly faster way suggested by Deyu Ming
+        #el = [ [j,h] for j,h in enumerate(hexas) if q[0] in h and q[1] in h and q[2] in h and q[3] in h ]
+        el = np.where(np.count_nonzero(np.isin(hexas,q),axis=1)==4)
 
         # boundary surfaces should only associate with a single hexahedral element
         if len(el) != 1:
