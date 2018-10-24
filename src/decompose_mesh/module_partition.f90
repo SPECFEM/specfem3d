@@ -207,15 +207,15 @@ contains
        iperm_tmp(i)=i
     enddo
 
-
     call compute_criteria(cri_load_perm, elmnts_center_tmp, nE_tmp, ref_point, idir)
 
     call QsortC(cri_load_perm,  iperm_tmp)
 
     call compute_sum_load(sum_load_tmp, load_elmnts_tmp, iperm_tmp, nE_tmp)
 
-
     nEipart_tmp(:)=0
+!! DK DK Oct 2018: added this safety test
+    if (nE_tmp <= 0) stop 'Error: cannot use an array that has been declared with a size of zero'
     load_by_part = floor(sum_load_tmp(nE_tmp) / real(npart_tmp,8)) + 1
 
     write(27,*) ' Load value by partition  ', Load_by_part
@@ -296,10 +296,15 @@ contains
 
     integer                                                 :: i, k
 
-    sum_load(:)=0
-    k=iperm_tmp(1)
-    sum_load(1)=load_elmnts(k)
-    do i=2, nE_tmp
+    sum_load(:) = 0
+
+!! DK DK Oct 2018: added these two safety tests
+    if (nE_tmp < 0) stop 'error: negative nE_tmp in compute_sum_load(), this should not happen'
+    if (nE_tmp == 0) stop 'error: null nE_tmp in compute_sum_load(), this should not happen'
+
+    k = iperm_tmp(1)
+    sum_load(1) = load_elmnts(k)
+    do i = 2, nE_tmp
        k = iperm_tmp(i)
        sum_load(i) = sum_load(i-1) + load_elmnts(k)
     enddo
