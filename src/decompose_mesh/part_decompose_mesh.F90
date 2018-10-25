@@ -1066,7 +1066,7 @@ contains
 
     ! sets acoustic/elastic/poroelastic flags for defined materials
     do i = 1, count_def_mat
-       idomain_id = nint(mat_prop(6,i))
+       idomain_id = nint(mat_prop(7,i))
        ! acoustic material has idomain_id 1
        if (idomain_id == 1) then
           is_acoustic(i) = .true.
