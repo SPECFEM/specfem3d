@@ -194,8 +194,12 @@ module specfem_par
   integer, dimension(:), allocatable :: run_number_of_the_source
 
 ! arrays for elemental computations in compute_forces()
-  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: chi_elem
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: chi_elem,chi_elem_old,chi_elem_new
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: field_local
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: temp1,temp2,temp3,temp4
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: newtemp1,newtemp2,newtemp3
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: temp1_old,temp2_old,temp3_old
+  real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: temp1_new,temp2_new,temp3_new
 
 ! arrays for elemental computations in compute_forces() for PML elements
   ! derivatives of potential with respect to x, y and z

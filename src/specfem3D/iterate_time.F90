@@ -90,7 +90,7 @@
 
   ! synchronize all processes to make sure everybody is ready to start time loop
   call synchronize_all()
-  if (myrank == 0) write(IMAIN,*) 'All processes are synchronized before time loop'
+  if (myrank == 0) write(IMAIN,*) 'All processes are synchronized before the time loop'
 
 !
 !   s t a r t   t i m e   i t e r a t i o n s
