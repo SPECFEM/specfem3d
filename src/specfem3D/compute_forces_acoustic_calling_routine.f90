@@ -86,12 +86,13 @@ subroutine compute_forces_acoustic_calling()
   do iphase = 1,2
 
     ! acoustic pressure term
-    if (NGLLX == 5) then ! no need to test the two others because NGLLX == NGLLY = NGLLZ in unstructured meshes
-      call compute_forces_acoustic_NGLL5_fast(iphase, &
+    ! no need to test the two others because NGLLX == NGLLY = NGLLZ in unstructured meshes
+    if (NGLLX == 5 .or. NGLLX == 6 .or. NGLLX == 7) then
+      call compute_forces_acoustic_fast_Deville(iphase, &
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                         .false.)
     else
-      call compute_forces_acoustic_NGLLnot5_generic_slow(iphase, &
+      call compute_forces_acoustic_generic_slow(iphase, &
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                         .false.)
     endif
@@ -335,12 +336,13 @@ subroutine compute_forces_acoustic_backward_calling()
 
     ! adjoint simulations
 
-    if (NGLLX == 5) then ! no need to test the two others because NGLLX == NGLLY = NGLLZ in unstructured meshes
-      call compute_forces_acoustic_NGLL5_fast(iphase, &
+    ! no need to test the two others because NGLLX == NGLLY = NGLLZ in unstructured meshes
+    if (NGLLX == 5 .or. NGLLX == 6 .or. NGLLX == 7) then
+      call compute_forces_acoustic_fast_Deville(iphase, &
                       b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
                       .true.)
     else
-      call compute_forces_acoustic_NGLLnot5_generic_slow(iphase, &
+      call compute_forces_acoustic_generic_slow(iphase, &
                       b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic, &
                       .true.)
     endif

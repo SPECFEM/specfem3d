@@ -132,8 +132,8 @@ inverse_problem_for_model_OBJECTS += \
 	$O/compute_coupling_poroelastic_ac.spec.o \
 	$O/compute_coupling_poroelastic_el.spec.o \
 	$O/compute_forces_acoustic_calling_routine.spec.o \
-	$O/compute_forces_acoustic_NGLL5_fast.spec.o \
-	$O/compute_forces_acoustic_NGLLnot5_generic_slow.spec.o \
+	$O/compute_forces_acoustic_fast_Deville.spec.o \
+	$O/compute_forces_acoustic_generic_slow.spec.o \
 	$O/compute_forces_viscoelastic_calling_routine.spec.o \
 	$O/compute_forces_viscoelastic.spec.o \
 	$O/compute_element_att_memory.spec.o \

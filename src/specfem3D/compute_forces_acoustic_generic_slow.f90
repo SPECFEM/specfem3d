@@ -27,11 +27,14 @@
 
 ! for acoustic solver
 
-  subroutine compute_forces_acoustic_NGLL5_fast(iphase, &
+  subroutine compute_forces_acoustic_generic_slow(iphase, &
                         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
                         backward_simulation)
 
 ! computes forces for acoustic elements
+!
+! note that pressure is defined as:
+!     p = - Chi_dot_dot
 
   use specfem_par, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,chi_elem,temp1,temp2,temp3,temp4, &
                          PML_dpotential_dxl,PML_dpotential_dyl,PML_dpotential_dzl, &
@@ -48,25 +51,24 @@
   use specfem_par_acoustic, only: nspec_inner_acoustic,nspec_outer_acoustic, &
                                    phase_ispec_inner_acoustic
 
+
   use pml_par, only: is_CPML, spec_to_CPML, potential_dot_dot_acoustic_CPML,rmemory_dpotential_dxl,rmemory_dpotential_dyl, &
                      rmemory_dpotential_dzl,rmemory_potential_acoustic, &
                      PML_potential_acoustic_old,PML_potential_acoustic_new
 
   implicit none
 
-  integer, intent(in) :: iphase
-  ! acoustic potentials
   real(kind=CUSTOM_REAL), dimension(NGLOB_AB),intent(inout) :: &
         potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic
 
-  ! CPML adjoint
+  integer,intent(in) :: iphase
   logical,intent(in) :: backward_simulation
 
   ! local variables
   real(kind=CUSTOM_REAL) :: temp1l,temp2l,temp3l
   real(kind=CUSTOM_REAL) :: hp1,hp2,hp3
 
-  integer :: ispec,ispec_irreg,iglob,i,j,k,ispec_p,num_elements
+  integer :: ispec,ispec_irreg,iglob,i,j,k,l,ispec_p,num_elements
 
   ! CPML
   integer :: ispec_CPML
@@ -125,93 +127,43 @@
 
           ! derivative along x, y, z
           ! first double loop over GLL points to compute and store gradients
-          temp1l = chi_elem(1,j,k)*hprime_xx(i,1) + &
-                   chi_elem(2,j,k)*hprime_xx(i,2) + &
-                   chi_elem(3,j,k)*hprime_xx(i,3) + &
-                   chi_elem(4,j,k)*hprime_xx(i,4) + &
-                   chi_elem(5,j,k)*hprime_xx(i,5)
+          temp1l = 0._CUSTOM_REAL
+          temp2l = 0._CUSTOM_REAL
+          temp3l = 0._CUSTOM_REAL
 
-          temp2l = chi_elem(i,1,k)*hprime_yy(j,1) + &
-                   chi_elem(i,2,k)*hprime_yy(j,2) + &
-                   chi_elem(i,3,k)*hprime_yy(j,3) + &
-                   chi_elem(i,4,k)*hprime_yy(j,4) + &
-                   chi_elem(i,5,k)*hprime_yy(j,5)
+          ! we can merge the loops because NGLLX == NGLLY == NGLLZ
+          do l = 1,NGLLX
+            temp1l = temp1l + chi_elem(l,j,k)*hprime_xx(i,l)
+            temp2l = temp2l + chi_elem(i,l,k)*hprime_yy(j,l)
+            temp3l = temp3l + chi_elem(i,j,l)*hprime_zz(k,l)
+          enddo
 
-          temp3l = chi_elem(i,j,1)*hprime_zz(k,1) + &
-                   chi_elem(i,j,2)*hprime_zz(k,2) + &
-                   chi_elem(i,j,3)*hprime_zz(k,3) + &
-                   chi_elem(i,j,4)*hprime_zz(k,4) + &
-                   chi_elem(i,j,5)*hprime_zz(k,5)
+              temp1l_old = 0._CUSTOM_REAL
+              temp2l_old = 0._CUSTOM_REAL
+              temp3l_old = 0._CUSTOM_REAL
 
-              hp1 = hprime_xx(i,1)
-              temp1l_old = PML_potential_acoustic_old(1,j,k,ispec_CPML)*hp1
-              temp1l_new = PML_potential_acoustic_new(1,j,k,ispec_CPML)*hp1
+              temp1l_new = 0._CUSTOM_REAL
+              temp2l_new = 0._CUSTOM_REAL
+              temp3l_new = 0._CUSTOM_REAL
 
-              hp2 = hprime_yy(j,1)
-              temp2l_old = PML_potential_acoustic_old(i,1,k,ispec_CPML)*hp2
-              temp2l_new = PML_potential_acoustic_new(i,1,k,ispec_CPML)*hp2
+              ! we can merge these loops because NGLLX = NGLLY = NGLLZ
+              do l=1,NGLLX
+                hp1 = hprime_xx(i,l)
+                iglob = ibool(l,j,k,ispec)
+                temp1l_old = temp1l_old + PML_potential_acoustic_old(l,j,k,ispec_CPML)*hp1
+                temp1l_new = temp1l_new + PML_potential_acoustic_new(l,j,k,ispec_CPML)*hp1
 
-              hp3 = hprime_zz(k,1)
-              temp3l_old = PML_potential_acoustic_old(i,j,1,ispec_CPML)*hp3
-              temp3l_new = PML_potential_acoustic_new(i,j,1,ispec_CPML)*hp3
+                hp2 = hprime_yy(j,l)
+                iglob = ibool(i,l,k,ispec)
+                temp2l_old = temp2l_old + PML_potential_acoustic_old(i,l,k,ispec_CPML)*hp2
+                temp2l_new = temp2l_new + PML_potential_acoustic_new(i,l,k,ispec_CPML)*hp2
 
-!---
+                hp3 = hprime_zz(k,l)
+                iglob = ibool(i,j,l,ispec)
+                temp3l_old = temp3l_old + PML_potential_acoustic_old(i,j,l,ispec_CPML)*hp3
+                temp3l_new = temp3l_new + PML_potential_acoustic_new(i,j,l,ispec_CPML)*hp3
+              enddo
 
-              hp1 = hprime_xx(i,2)
-              temp1l_old = temp1l_old + PML_potential_acoustic_old(2,j,k,ispec_CPML)*hp1
-              temp1l_new = temp1l_new + PML_potential_acoustic_new(2,j,k,ispec_CPML)*hp1
-
-              hp2 = hprime_yy(j,2)
-              temp2l_old = temp2l_old + PML_potential_acoustic_old(i,2,k,ispec_CPML)*hp2
-              temp2l_new = temp2l_new + PML_potential_acoustic_new(i,2,k,ispec_CPML)*hp2
-
-              hp3 = hprime_zz(k,2)
-              temp3l_old = temp3l_old + PML_potential_acoustic_old(i,j,2,ispec_CPML)*hp3
-              temp3l_new = temp3l_new + PML_potential_acoustic_new(i,j,2,ispec_CPML)*hp3
-
-!---
-
-              hp1 = hprime_xx(i,3)
-              temp1l_old = temp1l_old + PML_potential_acoustic_old(3,j,k,ispec_CPML)*hp1
-              temp1l_new = temp1l_new + PML_potential_acoustic_new(3,j,k,ispec_CPML)*hp1
-
-              hp2 = hprime_yy(j,3)
-              temp2l_old = temp2l_old + PML_potential_acoustic_old(i,3,k,ispec_CPML)*hp2
-              temp2l_new = temp2l_new + PML_potential_acoustic_new(i,3,k,ispec_CPML)*hp2
-
-              hp3 = hprime_zz(k,3)
-              temp3l_old = temp3l_old + PML_potential_acoustic_old(i,j,3,ispec_CPML)*hp3
-              temp3l_new = temp3l_new + PML_potential_acoustic_new(i,j,3,ispec_CPML)*hp3
-
-!---
-
-              hp1 = hprime_xx(i,4)
-              temp1l_old = temp1l_old + PML_potential_acoustic_old(4,j,k,ispec_CPML)*hp1
-              temp1l_new = temp1l_new + PML_potential_acoustic_new(4,j,k,ispec_CPML)*hp1
-
-              hp2 = hprime_yy(j,4)
-              temp2l_old = temp2l_old + PML_potential_acoustic_old(i,4,k,ispec_CPML)*hp2
-              temp2l_new = temp2l_new + PML_potential_acoustic_new(i,4,k,ispec_CPML)*hp2
-
-              hp3 = hprime_zz(k,4)
-              temp3l_old = temp3l_old + PML_potential_acoustic_old(i,j,4,ispec_CPML)*hp3
-              temp3l_new = temp3l_new + PML_potential_acoustic_new(i,j,4,ispec_CPML)*hp3
-
-!---
-
-              hp1 = hprime_xx(i,5)
-              temp1l_old = temp1l_old + PML_potential_acoustic_old(5,j,k,ispec_CPML)*hp1
-              temp1l_new = temp1l_new + PML_potential_acoustic_new(5,j,k,ispec_CPML)*hp1
-
-              hp2 = hprime_yy(j,5)
-              temp2l_old = temp2l_old + PML_potential_acoustic_old(i,5,k,ispec_CPML)*hp2
-              temp2l_new = temp2l_new + PML_potential_acoustic_new(i,5,k,ispec_CPML)*hp2
-
-              hp3 = hprime_zz(k,5)
-              temp3l_old = temp3l_old + PML_potential_acoustic_old(i,j,5,ispec_CPML)*hp3
-              temp3l_new = temp3l_new + PML_potential_acoustic_new(i,j,5,ispec_CPML)*hp3
-
-              ! reciprocal of density
               rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
 
               if (ispec_irreg /= 0 ) then !irregular element
@@ -267,11 +219,10 @@
 
               endif
 
-          ! stores derivatives of ux, uy and uz with respect to x, y and z
-          PML_dpotential_dxl(i,j,k) = dpotentialdxl
-          PML_dpotential_dyl(i,j,k) = dpotentialdyl
-          PML_dpotential_dzl(i,j,k) = dpotentialdzl
-
+              ! stores derivatives of ux, uy and uz with respect to x, y and z
+              PML_dpotential_dxl(i,j,k) = dpotentialdxl
+              PML_dpotential_dyl(i,j,k) = dpotentialdyl
+              PML_dpotential_dzl(i,j,k) = dpotentialdzl
         enddo
       enddo
     enddo
@@ -290,25 +241,18 @@
 
           ! derivative along x, y, z
           ! first double loop over GLL points to compute and store gradients
-          temp1l = chi_elem(1,j,k)*hprime_xx(i,1) + &
-                   chi_elem(2,j,k)*hprime_xx(i,2) + &
-                   chi_elem(3,j,k)*hprime_xx(i,3) + &
-                   chi_elem(4,j,k)*hprime_xx(i,4) + &
-                   chi_elem(5,j,k)*hprime_xx(i,5)
+          temp1l = 0._CUSTOM_REAL
+          temp2l = 0._CUSTOM_REAL
+          temp3l = 0._CUSTOM_REAL
 
-          temp2l = chi_elem(i,1,k)*hprime_yy(j,1) + &
-                   chi_elem(i,2,k)*hprime_yy(j,2) + &
-                   chi_elem(i,3,k)*hprime_yy(j,3) + &
-                   chi_elem(i,4,k)*hprime_yy(j,4) + &
-                   chi_elem(i,5,k)*hprime_yy(j,5)
+          ! we can merge the loops because NGLLX == NGLLY == NGLLZ
+          do l = 1,NGLLX
+            temp1l = temp1l + chi_elem(l,j,k)*hprime_xx(i,l)
+            temp2l = temp2l + chi_elem(i,l,k)*hprime_yy(j,l)
+            temp3l = temp3l + chi_elem(i,j,l)*hprime_zz(k,l)
+          enddo
 
-          temp3l = chi_elem(i,j,1)*hprime_zz(k,1) + &
-                   chi_elem(i,j,2)*hprime_zz(k,2) + &
-                   chi_elem(i,j,3)*hprime_zz(k,3) + &
-                   chi_elem(i,j,4)*hprime_zz(k,4) + &
-                   chi_elem(i,j,5)*hprime_zz(k,5)
-
-          ! reciprocal of density
+          ! density (reciproc)
           rho_invl = 1.0_CUSTOM_REAL / rhostore(i,j,k,ispec)
 
           if (ispec_irreg /= 0 ) then !irregular element
@@ -377,24 +321,16 @@
     do k = 1,NGLLZ
       do j = 1,NGLLY
         do i = 1,NGLLX
+          temp1l = 0._CUSTOM_REAL
+          temp2l = 0._CUSTOM_REAL
+          temp3l = 0._CUSTOM_REAL
 
-          temp1l = temp1(1,j,k) * hprimewgll_xx(1,i) + &
-                   temp1(2,j,k) * hprimewgll_xx(2,i) + &
-                   temp1(3,j,k) * hprimewgll_xx(3,i) + &
-                   temp1(4,j,k) * hprimewgll_xx(4,i) + &
-                   temp1(5,j,k) * hprimewgll_xx(5,i)
-
-          temp2l = temp2(i,1,k) * hprimewgll_yy(1,j) + &
-                   temp2(i,2,k) * hprimewgll_yy(2,j) + &
-                   temp2(i,3,k) * hprimewgll_yy(3,j) + &
-                   temp2(i,4,k) * hprimewgll_yy(4,j) + &
-                   temp2(i,5,k) * hprimewgll_yy(5,j)
-
-          temp3l = temp3(i,j,1) * hprimewgll_zz(1,k) + &
-                   temp3(i,j,2) * hprimewgll_zz(2,k) + &
-                   temp3(i,j,3) * hprimewgll_zz(3,k) + &
-                   temp3(i,j,4) * hprimewgll_zz(4,k) + &
-                   temp3(i,j,5) * hprimewgll_zz(5,k)
+          ! we can merge these loops because NGLLX = NGLLY = NGLLZ
+          do l=1,NGLLX
+            temp1l = temp1l + temp1(l,j,k) * hprimewgll_xx(l,i)
+            temp2l = temp2l + temp2(i,l,k) * hprimewgll_yy(l,j)
+            temp3l = temp3l + temp3(i,j,l) * hprimewgll_zz(l,k)
+          enddo
 
           ! also add GLL integration weights
           temp4(i,j,k) = - ( wgllwgll_yz(j,k)*temp1l + wgllwgll_xz(i,k)*temp2l + wgllwgll_xy(i,j)*temp3l )
@@ -437,5 +373,5 @@
 
   enddo ! end of loop over all spectral elements
 
-  end subroutine compute_forces_acoustic_NGLL5_fast
+  end subroutine compute_forces_acoustic_generic_slow
 
