@@ -44,8 +44,8 @@
                          PML_dpotential_dxl_new,PML_dpotential_dyl_new,PML_dpotential_dzl_new, &
                          NGLOB_AB, &
                          xix,xiy,xiz,etax,etay,etaz,gammax,gammay,gammaz, &
-                         hprime_xx,hprime_yy,hprime_zz,hprime_xxT, &
-                         hprimewgll_xx,hprimewgll_yy,hprimewgll_zz,hprimewgll_xxT, &
+                         hprime_xx,hprime_xxT, &
+                         hprimewgll_xx,hprimewgll_xxT, &
                          wgllwgll_xy,wgllwgll_xz,wgllwgll_yz, &
                          rhostore,jacobian,ibool, &
                          irregular_element_number,xix_regular,jacobian_regular,m1,m2
