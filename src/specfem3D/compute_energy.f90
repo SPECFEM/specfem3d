@@ -32,7 +32,7 @@
   implicit none
 
     ! no need to test the two others because NGLLX == NGLLY = NGLLZ in unstructured meshes
-    if (NGLLX == 5 .or. NGLLX == 6 .or. NGLLX== 7) then
+    if (NGLLX == 5 .or. NGLLX == 6 .or. NGLLX == 7) then
       call compute_energy_fast_Deville()
     else
       call compute_energy_generic_slow()
