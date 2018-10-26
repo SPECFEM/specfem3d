@@ -700,6 +700,7 @@
   do ispec=1,NSPEC_AB
     if (.not. ispec_is(ispec)) cycle
     ispec_irreg = irregular_element_number(ispec)
+
     ! calculates divergence and curl of velocity field
     do k=1,NGLLZ
       do j=1,NGLLY
@@ -713,6 +714,32 @@
           tempz1l = 0._CUSTOM_REAL
           tempz2l = 0._CUSTOM_REAL
           tempz3l = 0._CUSTOM_REAL
+
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+
+!! DK DK Oct 2018: however this curl and div calculation routine for movies is almost never called
+!! DK DK Oct 2018: however this curl and div calculation routine for movies is almost never called
+!! DK DK Oct 2018: however this curl and div calculation routine for movies is almost never called
+!! DK DK Oct 2018: however this curl and div calculation routine for movies is almost never called
+!! DK DK Oct 2018: however this curl and div calculation routine for movies is almost never called
+!! DK DK Oct 2018: however this curl and div calculation routine for movies is almost never called
+!! DK DK Oct 2018: however this curl and div calculation routine for movies is almost never called
+!! DK DK Oct 2018: however this curl and div calculation routine for movies is almost never called
+!! DK DK Oct 2018: however this curl and div calculation routine for movies is almost never called
+!! DK DK Oct 2018: however this curl and div calculation routine for movies is almost never called
+!! DK DK Oct 2018: however this curl and div calculation routine for movies is almost never called
 
           do l=1,NGLLX
             hp1 = hprime_xx(i,l)
@@ -731,7 +758,8 @@
             tempy3l = tempy3l + veloc(2,iglob)*hp3
             tempz3l = tempz3l + veloc(3,iglob)*hp3
           enddo
-          if (ispec_irreg /= 0) then !irregular element
+
+          if (ispec_irreg /= 0) then ! irregular element
             ! get derivatives of ux, uy and uz with respect to x, y and z
             xixl = xix(i,j,k,ispec_irreg)
             xiyl = xiy(i,j,k,ispec_irreg)
@@ -755,7 +783,7 @@
             dvzdyl(i,j,k) = xiyl*tempz1l + etayl*tempz2l + gammayl*tempz3l
             dvzdzl(i,j,k) = xizl*tempz1l + etazl*tempz2l + gammazl*tempz3l
 
-          else !regular element
+          else ! regular element
 
             dvxdxl(i,j,k) = xix_regular*tempx1l
             dvxdyl(i,j,k) = xix_regular*tempx2l

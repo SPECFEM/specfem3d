@@ -612,6 +612,17 @@
              do j=1,nglly
                 do i=1,ngllx
 
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+
                    !================================================================
                    ! Compute strain related terms (adjoit strain and time der of normal strain)
                    !*** Init derivatives to 0
@@ -638,7 +649,7 @@
                    duz_dgaml = 0._CUSTOM_REAL
 
                    !*** Field derivatives wrt xi
-                   fac = hprime_xx(1,i)          ! derivative of lacal lagrange polynomials
+                   fac = hprime_xx(1,i)          ! derivative of local lagrange polynomials
                    dvx_dxil = dvx_dxil + vsem_fwd_gll(1,1,j,k) * fac
                    dvy_dxil = dvy_dxil + vsem_fwd_gll(2,1,j,k) * fac
                    dvz_dxil = dvz_dxil + vsem_fwd_gll(3,1,j,k) * fac
@@ -646,7 +657,7 @@
                    duy_dxil = duy_dxil + dsem_adj_gll(2,1,j,k) * fac
                    duz_dxil = duz_dxil + dsem_adj_gll(3,1,j,k) * fac
 
-                   fac = hprime_xx(2,i)          ! derivative of lacal lagrange polynomials
+                   fac = hprime_xx(2,i)          ! derivative of local lagrange polynomials
                    dvx_dxil = dvx_dxil + vsem_fwd_gll(1,2,j,k) * fac
                    dvy_dxil = dvy_dxil + vsem_fwd_gll(2,2,j,k) * fac
                    dvz_dxil = dvz_dxil + vsem_fwd_gll(3,2,j,k) * fac
@@ -654,7 +665,7 @@
                    duy_dxil = duy_dxil + dsem_adj_gll(2,2,j,k) * fac
                    duz_dxil = duz_dxil + dsem_adj_gll(3,2,j,k) * fac
 
-                   fac = hprime_xx(3,i)          ! derivative of lacal lagrange polynomials
+                   fac = hprime_xx(3,i)          ! derivative of local lagrange polynomials
                    dvx_dxil = dvx_dxil + vsem_fwd_gll(1,3,j,k) * fac
                    dvy_dxil = dvy_dxil + vsem_fwd_gll(2,3,j,k) * fac
                    dvz_dxil = dvz_dxil + vsem_fwd_gll(3,3,j,k) * fac
@@ -662,7 +673,7 @@
                    duy_dxil = duy_dxil + dsem_adj_gll(2,3,j,k) * fac
                    duz_dxil = duz_dxil + dsem_adj_gll(3,3,j,k) * fac
 
-                   fac = hprime_xx(4,i)          ! derivative of lacal lagrange polynomials
+                   fac = hprime_xx(4,i)          ! derivative of local lagrange polynomials
                    dvx_dxil = dvx_dxil + vsem_fwd_gll(1,4,j,k) * fac
                    dvy_dxil = dvy_dxil + vsem_fwd_gll(2,4,j,k) * fac
                    dvz_dxil = dvz_dxil + vsem_fwd_gll(3,4,j,k) * fac
@@ -670,7 +681,7 @@
                    duy_dxil = duy_dxil + dsem_adj_gll(2,4,j,k) * fac
                    duz_dxil = duz_dxil + dsem_adj_gll(3,4,j,k) * fac
 
-                   fac = hprime_xx(5,i)          ! derivative of lacal lagrange polynomials
+                   fac = hprime_xx(5,i)          ! derivative of local lagrange polynomials
                    dvx_dxil = dvx_dxil + vsem_fwd_gll(1,5,j,k) * fac
                    dvy_dxil = dvy_dxil + vsem_fwd_gll(2,5,j,k) * fac
                    dvz_dxil = dvz_dxil + vsem_fwd_gll(3,5,j,k) * fac
@@ -760,7 +771,8 @@
                    duy_dgaml = duy_dgaml + dsem_adj_gll(2,i,j,5) * fac
                    duz_dgaml = duz_dgaml + dsem_adj_gll(3,i,j,5) * fac
 
-                   if (ielem_irreg /= 0) then !irregular element
+                   if (ielem_irreg /= 0) then ! irregular element
+
                      !*** Get local derivatives of ref square coord wrt Cartesian ones (jacobian)
                      dxil_dxl  = xix(i,j,k,ielem_irreg)
                      dxil_dyl  = xiy(i,j,k,ielem_irreg)
@@ -794,8 +806,10 @@
                      duz_dxl = duz_dxil * dxil_dxl + duz_detal * detal_dxl + duz_dgaml * dgaml_dxl
                      duz_dyl = duz_dxil * dxil_dyl + duz_detal * detal_dyl + duz_dgaml * dgaml_dyl
                      duz_dzl = duz_dxil * dxil_dzl + duz_detal * detal_dzl + duz_dgaml * dgaml_dzl
-                   else !regular element
-                                          !*** Strain
+
+                   else ! regular element
+
+                     !*** Strain
                      !* Normal state normal strain
                      dvx_dxl = dvx_dxil * xix_regular
                      dvx_dyl = dvx_detal * xix_regular
@@ -818,7 +832,7 @@
                      duz_dyl = duz_detal * xix_regular
                      duz_dzl = duz_dgaml * xix_regular
 
-                   endif !element regularity
+                   endif ! element regularity
 
                    !* Normal state non normal strain
                    dvx_dyl_plus_dvy_dxl = dvx_dyl + dvy_dxl

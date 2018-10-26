@@ -169,6 +169,21 @@
           tempz2lw = 0.
           tempz3lw = 0.
 
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+
           ! first double loop over GLL points to compute and store gradients
           ! we can merge these loops because NGLLX = NGLLY = NGLLZ
           do l = 1,NGLLX

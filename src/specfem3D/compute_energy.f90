@@ -127,6 +127,33 @@
             tempz2(i,j,k) = 0._CUSTOM_REAL
             tempz3(i,j,k) = 0._CUSTOM_REAL
 
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+
+!! DK DK Oct 2018: however this energy calculation routine is never called, except when flag OUTPUT_ENERGY is on, usually for tests
+!! DK DK Oct 2018: however this energy calculation routine is never called, except when flag OUTPUT_ENERGY is on, usually for tests
+!! DK DK Oct 2018: however this energy calculation routine is never called, except when flag OUTPUT_ENERGY is on, usually for tests
+!! DK DK Oct 2018: however this energy calculation routine is never called, except when flag OUTPUT_ENERGY is on, usually for tests
+!! DK DK Oct 2018: however this energy calculation routine is never called, except when flag OUTPUT_ENERGY is on, usually for tests
+!! DK DK Oct 2018: however this energy calculation routine is never called, except when flag OUTPUT_ENERGY is on, usually for tests
+!! DK DK Oct 2018: however this energy calculation routine is never called, except when flag OUTPUT_ENERGY is on, usually for tests
+!! DK DK Oct 2018: however this energy calculation routine is never called, except when flag OUTPUT_ENERGY is on, usually for tests
+!! DK DK Oct 2018: however this energy calculation routine is never called, except when flag OUTPUT_ENERGY is on, usually for tests
+!! DK DK Oct 2018: however this energy calculation routine is never called, except when flag OUTPUT_ENERGY is on, usually for tests
+!! DK DK Oct 2018: however this energy calculation routine is never called, except when flag OUTPUT_ENERGY is on, usually for tests
+!! DK DK Oct 2018: however this energy calculation routine is never called, except when flag OUTPUT_ENERGY is on, usually for tests
+
             ! we can merge these loops because NGLLX = NGLLY = NGLLZ
             do l=1,NGLLX
               hp1 = hprime_xx(i,l)
@@ -331,6 +358,33 @@
             tempx1(i,j,k) = 0._CUSTOM_REAL
             tempx2(i,j,k) = 0._CUSTOM_REAL
             tempx3(i,j,k) = 0._CUSTOM_REAL
+
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+!! DK DK Oct 2018: we could (and should) use the Deville matrix products instead here
+
+!! DK DK Oct 2018: however this energy calculation routine is never called, except when flag OUTPUT_ENERGY is on, usually for tests
+!! DK DK Oct 2018: however this energy calculation routine is never called, except when flag OUTPUT_ENERGY is on, usually for tests
+!! DK DK Oct 2018: however this energy calculation routine is never called, except when flag OUTPUT_ENERGY is on, usually for tests
+!! DK DK Oct 2018: however this energy calculation routine is never called, except when flag OUTPUT_ENERGY is on, usually for tests
+!! DK DK Oct 2018: however this energy calculation routine is never called, except when flag OUTPUT_ENERGY is on, usually for tests
+!! DK DK Oct 2018: however this energy calculation routine is never called, except when flag OUTPUT_ENERGY is on, usually for tests
+!! DK DK Oct 2018: however this energy calculation routine is never called, except when flag OUTPUT_ENERGY is on, usually for tests
+!! DK DK Oct 2018: however this energy calculation routine is never called, except when flag OUTPUT_ENERGY is on, usually for tests
+!! DK DK Oct 2018: however this energy calculation routine is never called, except when flag OUTPUT_ENERGY is on, usually for tests
+!! DK DK Oct 2018: however this energy calculation routine is never called, except when flag OUTPUT_ENERGY is on, usually for tests
+!! DK DK Oct 2018: however this energy calculation routine is never called, except when flag OUTPUT_ENERGY is on, usually for tests
+!! DK DK Oct 2018: however this energy calculation routine is never called, except when flag OUTPUT_ENERGY is on, usually for tests
 
             ! we can merge these loops because NGLLX = NGLLY = NGLLZ
             do l=1,NGLLX
