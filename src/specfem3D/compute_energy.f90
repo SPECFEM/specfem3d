@@ -172,7 +172,7 @@
               tempz3(i,j,k) = tempz3(i,j,k) + dummyz_loc(i,j,l)*hp3
             enddo
 
-            if (ispec_irreg /= 0 ) then !irregular element
+            if (ispec_irreg /= 0 ) then ! irregular element
 
               ! get derivatives of ux, uy and uz with respect to x, y and z
               xixl = xix(i,j,k,ispec_irreg)
@@ -184,6 +184,7 @@
               gammaxl = gammax(i,j,k,ispec_irreg)
               gammayl = gammay(i,j,k,ispec_irreg)
               gammazl = gammaz(i,j,k,ispec_irreg)
+              jacobianl = jacobian(i,j,k,ispec_irreg)
 
               duxdxl = xixl*tempx1(i,j,k) + etaxl*tempx2(i,j,k) + gammaxl*tempx3(i,j,k)
               duxdyl = xiyl*tempx1(i,j,k) + etayl*tempx2(i,j,k) + gammayl*tempx3(i,j,k)
@@ -199,6 +200,8 @@
 
             else ! regular element
 
+              jacobianl = jacobian_regular
+
               duxdxl = xix_regular*tempx1(i,j,k)
               duxdyl = xix_regular*tempx2(i,j,k)
               duxdzl = xix_regular*tempx3(i,j,k)
@@ -210,8 +213,6 @@
               duzdxl = xix_regular*tempz1(i,j,k)
               duzdyl = xix_regular*tempz2(i,j,k)
               duzdzl = xix_regular*tempz3(i,j,k)
-
-              jacobianl = jacobian_regular
 
             endif
 
@@ -398,7 +399,7 @@
               tempx3(i,j,k) = tempx3(i,j,k) + dummyx_loc(i,j,l)*hp3
             enddo
 
-            if (ispec_irreg /= 0 ) then !irregular element
+            if (ispec_irreg /= 0 ) then ! irregular element
 
               ! get derivatives of ux, uy and uz with respect to x, y and z
               xixl = xix(i,j,k,ispec_irreg)
@@ -410,6 +411,7 @@
               gammaxl = gammax(i,j,k,ispec_irreg)
               gammayl = gammay(i,j,k,ispec_irreg)
               gammazl = gammaz(i,j,k,ispec_irreg)
+              jacobianl = jacobian(i,j,k,ispec_irreg)
 
               duxdxl = xixl*tempx1(i,j,k) + etaxl*tempx2(i,j,k) + gammaxl*tempx3(i,j,k)
               duxdyl = xiyl*tempx1(i,j,k) + etayl*tempx2(i,j,k) + gammayl*tempx3(i,j,k)
@@ -425,6 +427,8 @@
 
             else ! regular element
 
+              jacobianl = jacobian_regular
+
               duxdxl = xix_regular*tempx1(i,j,k)
               duxdyl = xix_regular*tempx2(i,j,k)
               duxdzl = xix_regular*tempx3(i,j,k)
@@ -436,8 +440,6 @@
               duzdxl = xix_regular*tempz1(i,j,k)
               duzdyl = xix_regular*tempz2(i,j,k)
               duzdzl = xix_regular*tempz3(i,j,k)
-
-              jacobianl = jacobian_regular
 
             endif
 

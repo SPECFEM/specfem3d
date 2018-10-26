@@ -197,7 +197,7 @@
   integer, parameter :: NSOURCES_SUBSET_MAX = 100
   integer, parameter :: NREC_SUBSET_MAX = 200
 
-! use brute-force search (loops over all elements) or search in kd-tree for locating target point in mesh
+! use brute-force search (loop over all elements) or search in kd-tree for locating target point in mesh
 ! (brute-force search will be slower but even more accurate)
   logical, parameter :: DO_BRUTE_FORCE_POINT_SEARCH = .false.
 
