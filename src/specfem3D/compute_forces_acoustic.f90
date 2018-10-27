@@ -500,29 +500,17 @@
         ! computes 2. matrix multiplication for temp2
         ! computes 3. matrix multiplication for temp3
     if (NGLLX == 5) then
-        call mxm5_single(hprime_xx,m1,chi_elem_old,temp1_old,m2)
-        call mxm5_3dmat_single(chi_elem_old,m1,hprime_xxT,m1,temp2_old,NGLLX)
-        call mxm5_single(chi_elem_old,m2,hprime_xxT,temp3_old,m1)
-
-        call mxm5_single(hprime_xx,m1,chi_elem_new,temp1_new,m2)
-        call mxm5_3dmat_single(chi_elem_new,m1,hprime_xxT,m1,temp2_new,NGLLX)
-        call mxm5_single(chi_elem_new,m2,hprime_xxT,temp3_new,m1)
+        call mxm5_single_two_arrays_at_a_time(hprime_xx,m1,chi_elem_old,temp1_old,m2,chi_elem_new,temp1_new)
+        call mxm5_3dmat_single_two_arrays_at_a_time(chi_elem_old,m1,hprime_xxT,m1,temp2_old,NGLLX,chi_elem_new,temp1_new)
+        call mxm5_single_two_arrays_at_a_time(chi_elem_old,m2,hprime_xxT,temp3_old,m1,chi_elem_new,temp1_new)
     else if (NGLLX == 6) then
-        call mxm6_single(hprime_xx,m1,chi_elem_old,temp1_old,m2)
-        call mxm6_3dmat_single(chi_elem_old,m1,hprime_xxT,m1,temp2_old,NGLLX)
-        call mxm6_single(chi_elem_old,m2,hprime_xxT,temp3_old,m1)
-
-        call mxm6_single(hprime_xx,m1,chi_elem_new,temp1_new,m2)
-        call mxm6_3dmat_single(chi_elem_new,m1,hprime_xxT,m1,temp2_new,NGLLX)
-        call mxm6_single(chi_elem_new,m2,hprime_xxT,temp3_new,m1)
+        call mxm6_single_two_arrays_at_a_time(hprime_xx,m1,chi_elem_old,temp1_old,m2,chi_elem_new,temp1_new)
+        call mxm6_3dmat_single_two_arrays_at_a_time(chi_elem_old,m1,hprime_xxT,m1,temp2_old,NGLLX,chi_elem_new,temp1_new)
+        call mxm6_single_two_arrays_at_a_time(chi_elem_old,m2,hprime_xxT,temp3_old,m1,chi_elem_new,temp1_new)
     else if (NGLLX == 7) then
-        call mxm7_single(hprime_xx,m1,chi_elem_old,temp1_old,m2)
-        call mxm7_3dmat_single(chi_elem_old,m1,hprime_xxT,m1,temp2_old,NGLLX)
-        call mxm7_single(chi_elem_old,m2,hprime_xxT,temp3_old,m1)
-
-        call mxm7_single(hprime_xx,m1,chi_elem_new,temp1_new,m2)
-        call mxm7_3dmat_single(chi_elem_new,m1,hprime_xxT,m1,temp2_new,NGLLX)
-        call mxm7_single(chi_elem_new,m2,hprime_xxT,temp3_new,m1)
+        call mxm7_single_two_arrays_at_a_time(hprime_xx,m1,chi_elem_old,temp1_old,m2,chi_elem_new,temp1_new)
+        call mxm7_3dmat_single_two_arrays_at_a_time(chi_elem_old,m1,hprime_xxT,m1,temp2_old,NGLLX,chi_elem_new,temp1_new)
+        call mxm7_single_two_arrays_at_a_time(chi_elem_old,m2,hprime_xxT,temp3_old,m1,chi_elem_new,temp1_new)
     endif
 
     if (ispec_irreg /= 0) then ! irregular element
@@ -969,6 +957,247 @@
   enddo
 
   end subroutine mxm7_3dmat_single
+
+  !-------------
+
+  subroutine mxm5_single_two_arrays_at_a_time(A,n1,B,C,n3,B2,C2)
+
+! two-dimensional arrays (25,5)/(5,25)
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,5),intent(in) :: A
+  real(kind=CUSTOM_REAL),dimension(5,n3),intent(in) :: B,B2
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C,C2
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+    do i = 1,n1
+      C(i,j) =  A(i,1) * B(1,j) &
+              + A(i,2) * B(2,j) &
+              + A(i,3) * B(3,j) &
+              + A(i,4) * B(4,j) &
+              + A(i,5) * B(5,j)
+
+      C2(i,j) =  A(i,1) * B2(1,j) &
+               + A(i,2) * B2(2,j) &
+               + A(i,3) * B2(3,j) &
+               + A(i,4) * B2(4,j) &
+               + A(i,5) * B2(5,j)
+    enddo
+  enddo
+
+  end subroutine mxm5_single_two_arrays_at_a_time
+
+  !-------------
+
+  subroutine mxm6_single_two_arrays_at_a_time(A,n1,B,C,n3,B2,C2)
+
+! two-dimensional arrays (36,6)/(6,36)
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,6),intent(in) :: A
+  real(kind=CUSTOM_REAL),dimension(6,n3),intent(in) :: B,B2
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C,C2
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+    do i = 1,n1
+      C(i,j) =  A(i,1) * B(1,j) &
+              + A(i,2) * B(2,j) &
+              + A(i,3) * B(3,j) &
+              + A(i,4) * B(4,j) &
+              + A(i,5) * B(5,j) &
+              + A(i,6) * B(6,j)
+
+      C2(i,j) =  A(i,1) * B2(1,j) &
+               + A(i,2) * B2(2,j) &
+               + A(i,3) * B2(3,j) &
+               + A(i,4) * B2(4,j) &
+               + A(i,5) * B2(5,j) &
+               + A(i,6) * B2(6,j)
+    enddo
+  enddo
+
+  end subroutine mxm6_single_two_arrays_at_a_time
+
+  !-------------
+
+  subroutine mxm7_single_two_arrays_at_a_time(A,n1,B,C,n3,B2,C2)
+
+! two-dimensional arrays (49,7)/(7,49)
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n3
+  real(kind=CUSTOM_REAL),dimension(n1,7),intent(in) :: A
+  real(kind=CUSTOM_REAL),dimension(7,n3),intent(in) :: B,B2
+  real(kind=CUSTOM_REAL),dimension(n1,n3),intent(out) :: C,C2
+
+  ! local parameters
+  integer :: i,j
+
+  ! matrix-matrix multiplication
+  do j = 1,n3
+    do i = 1,n1
+      C(i,j) =  A(i,1) * B(1,j) &
+              + A(i,2) * B(2,j) &
+              + A(i,3) * B(3,j) &
+              + A(i,4) * B(4,j) &
+              + A(i,5) * B(5,j) &
+              + A(i,6) * B(6,j) &
+              + A(i,7) * B(7,j)
+
+      C2(i,j) =  A(i,1) * B2(1,j) &
+               + A(i,2) * B2(2,j) &
+               + A(i,3) * B2(3,j) &
+               + A(i,4) * B2(4,j) &
+               + A(i,5) * B2(5,j) &
+               + A(i,6) * B2(6,j) &
+               + A(i,7) * B2(7,j)
+    enddo
+  enddo
+
+  end subroutine mxm7_single_two_arrays_at_a_time
+
+
+!--------------------------------------------------------------------------------------------
+
+  subroutine mxm5_3dmat_single_two_arrays_at_a_time(A,n1,B,n2,C,n3,A2,C2)
+
+! three-dimensional arrays (5,5,5) for A and C
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n2,n3
+  real(kind=CUSTOM_REAL),dimension(n1,5,n3),intent(in) :: A,A2
+  real(kind=CUSTOM_REAL),dimension(5,n2),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n2,n3),intent(out) :: C,C2
+
+  ! local parameters
+  integer :: i,j,k
+
+  ! matrix-matrix multiplication
+  do k = 1,n3
+    do j = 1,n2
+      do i = 1,n1
+        C(i,j,k) =  A(i,1,k) * B(1,j) &
+                  + A(i,2,k) * B(2,j) &
+                  + A(i,3,k) * B(3,j) &
+                  + A(i,4,k) * B(4,j) &
+                  + A(i,5,k) * B(5,j)
+
+        C2(i,j,k) =  A2(i,1,k) * B(1,j) &
+                   + A2(i,2,k) * B(2,j) &
+                   + A2(i,3,k) * B(3,j) &
+                   + A2(i,4,k) * B(4,j) &
+                   + A2(i,5,k) * B(5,j)
+      enddo
+    enddo
+  enddo
+
+  end subroutine mxm5_3dmat_single_two_arrays_at_a_time
+
+  !-------------
+
+  subroutine mxm6_3dmat_single_two_arrays_at_a_time(A,n1,B,n2,C,n3,A2,C2)
+
+! three-dimensional arrays (6,6,6) for A and C
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n2,n3
+  real(kind=CUSTOM_REAL),dimension(n1,6,n3),intent(in) :: A,A2
+  real(kind=CUSTOM_REAL),dimension(6,n2),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n2,n3),intent(out) :: C,C2
+
+  ! local parameters
+  integer :: i,j,k
+
+  ! matrix-matrix multiplication
+  do k = 1,n3
+    do j = 1,n2
+      do i = 1,n1
+        C(i,j,k) =  A(i,1,k) * B(1,j) &
+                  + A(i,2,k) * B(2,j) &
+                  + A(i,3,k) * B(3,j) &
+                  + A(i,4,k) * B(4,j) &
+                  + A(i,5,k) * B(5,j) &
+                  + A(i,6,k) * B(6,j)
+
+        C2(i,j,k) =  A2(i,1,k) * B(1,j) &
+                   + A2(i,2,k) * B(2,j) &
+                   + A2(i,3,k) * B(3,j) &
+                   + A2(i,4,k) * B(4,j) &
+                   + A2(i,5,k) * B(5,j) &
+                   + A2(i,6,k) * B(6,j)
+      enddo
+    enddo
+  enddo
+
+  end subroutine mxm6_3dmat_single_two_arrays_at_a_time
+
+  !-------------
+
+  subroutine mxm7_3dmat_single_two_arrays_at_a_time(A,n1,B,n2,C,n3,A2,C2)
+
+! three-dimensional arrays (7,7,7) for A and C
+
+  use constants, only: CUSTOM_REAL
+
+  implicit none
+
+  integer,intent(in) :: n1,n2,n3
+  real(kind=CUSTOM_REAL),dimension(n1,7,n3),intent(in) :: A,A2
+  real(kind=CUSTOM_REAL),dimension(7,n2),intent(in) :: B
+  real(kind=CUSTOM_REAL),dimension(n1,n2,n3),intent(out) :: C,C2
+
+  ! local parameters
+  integer :: i,j,k
+
+  ! matrix-matrix multiplication
+  do k = 1,n3
+    do j = 1,n2
+      do i = 1,n1
+        C(i,j,k) =  A(i,1,k) * B(1,j) &
+                  + A(i,2,k) * B(2,j) &
+                  + A(i,3,k) * B(3,j) &
+                  + A(i,4,k) * B(4,j) &
+                  + A(i,5,k) * B(5,j) &
+                  + A(i,6,k) * B(6,j) &
+                  + A(i,7,k) * B(7,j)
+
+        C2(i,j,k) =  A2(i,1,k) * B(1,j) &
+                   + A2(i,2,k) * B(2,j) &
+                   + A2(i,3,k) * B(3,j) &
+                   + A2(i,4,k) * B(4,j) &
+                   + A2(i,5,k) * B(5,j) &
+                   + A2(i,6,k) * B(6,j) &
+                   + A2(i,7,k) * B(7,j)
+      enddo
+    enddo
+  enddo
+
+  end subroutine mxm7_3dmat_single_two_arrays_at_a_time
 
   end subroutine compute_forces_acoustic_fast_Deville
 
