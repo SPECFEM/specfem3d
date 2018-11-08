@@ -65,6 +65,8 @@ module fault_solver_dynamic
   ! simulation
   logical, save :: TPV10X = .false.  !Boundary velocity strengthening layers for
   ! TPV10X
+  ! time weakening
+  logical, save :: TWF = .false.   ! time weakening
 
   logical, save :: RATE_AND_STATE = .false.
 
@@ -106,7 +108,7 @@ contains
   integer, parameter :: IIN_PAR =151
   integer, parameter :: IIN_BIN =170
 
-  NAMELIST / RUPTURE_SWITCHES / RATE_AND_STATE , TPV16 , TPV10X , RSF_HETE
+  NAMELIST / RUPTURE_SWITCHES / RATE_AND_STATE , TPV16 , TPV10X , RSF_HETE, TWF
   NAMELIST / BEGIN_FAULT / dummy_idfault
 
   dummy_idfault = 0
@@ -303,6 +305,10 @@ contains
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1369')
       call swf_init(bc%swf,bc%MU,bc%coord,IIN_PAR)
       if (TPV16) call TPV16_init() !WARNING: ad hoc, initializes T0 and swf
+      if (TWF)  then
+        allocate(bc%twf)
+        call twf_init(bc%twf,IIN_PAR)
+      endif
     endif
 
 !! unused
@@ -656,6 +662,7 @@ contains
     theta_old, theta_new, dc, Vf_old, Vf_new, TxExt, tmp_Vf
   real(kind=CUSTOM_REAL) :: half_dt,TLoad,DTau0,GLoad,timeval
   integer :: i
+  real(kind=CUSTOM_REAL) :: nuc_x, nuc_y, nuc_z, nuc_r, nuc_t0, nuc_v, dist, tw_r, coh_size
 
   if (bc%nspec > 0) then !Surendra : for parallel faults
 
@@ -719,7 +726,28 @@ contains
       bc%MU = swf_mu(bc%swf)
 
       ! combined with time-weakening for nucleation
-      !  if (associated(bc%twf)) bc%MU = min( bc%MU, twf_mu(bc%twf,bc%coord,timeval) )
+      if (TWF) then
+        timeval = it*bc%dt
+        nuc_x   = bc%twf%nuc_x
+        nuc_y   = bc%twf%nuc_y
+        nuc_z   = bc%twf%nuc_z
+        nuc_r   = bc%twf%nuc_r
+        nuc_t0  = bc%twf%nuc_t0
+        nuc_v   = bc%twf%nuc_v
+        do i=1,bc%nglob
+            dist = ((bc%coord(1,i)-nuc_x)**2 + (bc%coord(2,i)-nuc_y)**2 + (bc%coord(3,i)-nuc_z)**2)**0.5
+            if (dist <= nuc_r) then
+                tw_r     = timeval * nuc_v
+                coh_size = nuc_t0  * nuc_v
+                if(dist<= tw_r - coh_size) then
+                    bc%MU(i) = min(bc%MU(i), bc%swf%mud(i))
+                else if (dist> tw_r - coh_size .and. dist<= tw_r ) then
+                    bc%MU(i) = min(bc%MU(i), bc%swf%mud(i) + (dist-(tw_r-coh_size))/coh_size*(bc%swf%mus(i)-bc%swf%mud(i)))
+                endif
+            endif
+        enddo
+      endif
+
       if (TPV16) then
         where (bc%swf%T <= it*bc%dt) bc%MU = bc%swf%mud
       endif
@@ -896,6 +924,41 @@ contains
   mu = swf_mu(f)
 
   end subroutine swf_init
+
+!===============================================================
+
+  subroutine twf_init(f,IIN_PAR)
+
+  implicit none
+
+  type(twf_type), intent(out) :: f
+  integer, intent(in) :: IIN_PAR
+
+  integer :: ier
+
+  real(kind=CUSTOM_REAL) :: nuc_x, nuc_y, nuc_z, nuc_r, nuc_t0, nuc_v
+  NAMELIST / TWF / nuc_x, nuc_y, nuc_z, nuc_r,nuc_t0,nuc_v
+
+  nuc_x  = 0.0e0_CUSTOM_REAL
+  nuc_y  = 0.0e0_CUSTOM_REAL
+  nuc_z  = 0.0e0_CUSTOM_REAL
+
+  nuc_r  = 0.0e0_CUSTOM_REAL
+  nuc_t0 = 0.0e0_CUSTOM_REAL
+  nuc_v  = 0.0e0_CUSTOM_REAL
+  read(IIN_PAR, nml=TWF,iostat=ier)
+  if (ier /= 0) write(*,*) 'TWF not found in Par_file_faults.'
+
+  f%nuc_x  = nuc_x
+  f%nuc_y  = nuc_y
+  f%nuc_z  = nuc_z
+
+  f%nuc_r  = nuc_r
+  f%nuc_t0 = nuc_t0
+  f%nuc_v  = nuc_v
+
+  end subroutine twf_init
+
 
 !---------------------------------------------------------------------
 

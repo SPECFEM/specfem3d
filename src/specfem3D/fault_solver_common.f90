@@ -64,6 +64,11 @@ module fault_solver_common
                                                      theta => null(), T => null(), C => null()
   end type swf_type
 
+  type twf_type
+    real(kind=CUSTOM_REAL) ::  nuc_x, nuc_y, nuc_z, nuc_r, nuc_t0, nuc_v
+  end type twf_type
+
+
   type rsf_type
     integer :: StateLaw = 1 ! 1=ageing law, 2=slip law
     real(kind=CUSTOM_REAL), dimension(:), pointer :: V0 => null(), f0 => null(), L => null(), &
@@ -91,6 +96,7 @@ module fault_solver_common
     type(dataXZ_type)       :: dataXZ,dataXZ_all
     type(swf_type), pointer :: swf => null()
     type(rsf_type), pointer :: rsf => null()
+    type(twf_type), pointer :: twf => null()
     logical                 :: allow_opening = .false. ! default : do not allow opening
 
 !! DK DK added this in order to be able to use the type for both dynamic and kinematic faults
