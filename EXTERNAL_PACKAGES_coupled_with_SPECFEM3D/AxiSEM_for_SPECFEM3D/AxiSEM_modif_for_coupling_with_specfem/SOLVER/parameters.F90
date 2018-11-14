@@ -451,7 +451,7 @@ subroutine read_inparam_advanced
          case('SOURCE_PERIOD')
              read(keyvalue, *) enforced_period
 
-         case('SOURCE_FUNCTION')
+         case('SOURCE_function')
              read(keyvalue, *) stf_type
              stf_type = to_lower(stf_type)
 
