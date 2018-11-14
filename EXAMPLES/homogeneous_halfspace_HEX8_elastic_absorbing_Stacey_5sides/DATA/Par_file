@@ -59,9 +59,9 @@ NGNOD                           = 8
 MODEL                           = default
 
 # path for external tomographic models files
-TOMOGRAPHY_PATH                 = ./DATA/tomo_files/
+TOMOGRAPHY_PATH                 = DATA/tomo_files/
 # if you are using a SEP model (oil-industry format)
-SEP_MODEL_DIRECTORY             = ./DATA/my_SEP_model/
+SEP_MODEL_DIRECTORY             = DATA/my_SEP_model/
 
 #-----------------------------------------------------------
 
@@ -155,7 +155,7 @@ HDUR_MOVIE                      = 0.0
 SAVE_MESH_FILES                 = .true.
 
 # path to store the local database file on each node
-LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI
+LOCAL_PATH                      = OUTPUT_FILES/DATABASES_MPI
 
 # interval at which we output time step info and max of norm of displacement
 NTSTEP_BETWEEN_OUTPUT_INFO      = 500
@@ -306,7 +306,7 @@ SAVE_MOHO_MESH                  = .false.
 COUPLE_WITH_INJECTION_TECHNIQUE = .false.
 INJECTION_TECHNIQUE_TYPE        = 3   # 1 = DSM, 2 = AxiSEM, 3 = FK
 MESH_A_CHUNK_OF_THE_EARTH       = .false.
-TRACTION_PATH                   = ./DATA/AxiSEM_tractions/3/
+TRACTION_PATH                   = DATA/AxiSEM_tractions/3/
 FKMODEL_FILE                    = FKmodel
 RECIPROCITY_AND_KH_INTEGRAL     = .false.   # does not work yet
 

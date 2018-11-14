@@ -395,7 +395,7 @@
     call read_value_string(LOCAL_PATH, 'LOCAL_PATH', ier)
     if (ier /= 0) then
       some_parameters_missing_from_Par_file = .true.
-      write(*,'(a)') 'LOCAL_PATH                      = ./OUTPUT_FILES/DATABASES_MPI'
+      write(*,'(a)') 'LOCAL_PATH                      = OUTPUT_FILES/DATABASES_MPI'
       write(*,*)
     endif
 
@@ -788,6 +788,23 @@
     ! (group numbers start at zero, but directory names start at run0001, thus we add one)
     ! a negative value for "mygroup" is a convention that indicates that groups (i.e. sub-communicators, one per run) are off
     if (NUMBER_OF_SIMULTANEOUS_RUNS > 1 .and. mygroup >= 0) then
+
+!! DK DK remove leading ./ if any, Paul Cristini said it could lead to problems when NUMBER_OF_SIMULTANEOUS_RUNS > 1
+      LOCAL_PATH_new = adjustl(LOCAL_PATH)
+      if (index (LOCAL_PATH_new, './') == 1) then
+        LOCAL_PATH = LOCAL_PATH_new(3:)
+      endif
+
+      TOMOGRAPHY_PATH_new = adjustl(TOMOGRAPHY_PATH)
+      if (index (TOMOGRAPHY_PATH_new, './') == 1) then
+        TOMOGRAPHY_PATH = TOMOGRAPHY_PATH_new(3:)
+      endif
+
+      TRACTION_PATH_new = adjustl(TRACTION_PATH)
+      if (index (TRACTION_PATH_new, './') == 1) then
+        TRACTION_PATH = TRACTION_PATH_new(3:)
+      endif
+
       write(path_to_add,"('run',i4.4,'/')") mygroup + 1
       LOCAL_PATH = path_to_add(1:len_trim(path_to_add))//LOCAL_PATH(1:len_trim(LOCAL_PATH))
       TOMOGRAPHY_PATH = path_to_add(1:len_trim(path_to_add))//TOMOGRAPHY_PATH(1:len_trim(TOMOGRAPHY_PATH))

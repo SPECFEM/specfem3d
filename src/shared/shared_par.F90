@@ -89,7 +89,7 @@ end module constants
   logical :: APPROXIMATE_OCEAN_LOAD,TOPOGRAPHY,ATTENUATION,ANISOTROPY
   logical :: GRAVITY
 
-  character(len=MAX_STRING_LEN) :: TOMOGRAPHY_PATH
+  character(len=MAX_STRING_LEN) :: TOMOGRAPHY_PATH,TOMOGRAPHY_PATH_new
 
   ! attenuation
   logical :: USE_OLSEN_ATTENUATION
@@ -122,7 +122,7 @@ end module constants
 
   ! mesh
   logical :: SAVE_MESH_FILES
-  character(len=MAX_STRING_LEN) :: LOCAL_PATH
+  character(len=MAX_STRING_LEN) :: LOCAL_PATH,LOCAL_PATH_new
 
   ! seismograms
   integer :: NTSTEP_BETWEEN_OUTPUT_INFO
@@ -154,7 +154,7 @@ end module constants
   ! external code coupling (DSM, AxiSEM)
   logical :: COUPLE_WITH_INJECTION_TECHNIQUE
   integer :: INJECTION_TECHNIQUE_TYPE
-  character(len=MAX_STRING_LEN) :: TRACTION_PATH
+  character(len=MAX_STRING_LEN) :: TRACTION_PATH,TRACTION_PATH_new
   character(len=MAX_STRING_LEN) :: FKMODEL_FILE
   logical :: MESH_A_CHUNK_OF_THE_EARTH
   logical :: RECIPROCITY_AND_KH_INTEGRAL
