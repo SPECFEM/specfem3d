@@ -305,7 +305,7 @@ contains
       if (ier /= 0) call exit_MPI_without_rank('error allocating array 1369')
       call swf_init(bc%swf,bc%MU,bc%coord,IIN_PAR)
       if (TPV16) call TPV16_init() !WARNING: ad hoc, initializes T0 and swf
-      if (TWF)  then
+      if (TWF) then
         allocate(bc%twf)
         call twf_init(bc%twf,IIN_PAR)
       endif
@@ -739,9 +739,9 @@ contains
             if (dist <= nuc_r) then
                 tw_r     = timeval * nuc_v
                 coh_size = nuc_t0  * nuc_v
-                if(dist<= tw_r - coh_size) then
+                if (dist <= tw_r - coh_size) then
                     bc%MU(i) = min(bc%MU(i), bc%swf%mud(i))
-                else if (dist> tw_r - coh_size .and. dist<= tw_r ) then
+                else if (dist > tw_r - coh_size .and. dist <= tw_r ) then
                     bc%MU(i) = min(bc%MU(i), bc%swf%mud(i) + (dist-(tw_r-coh_size))/coh_size*(bc%swf%mus(i)-bc%swf%mud(i)))
                 endif
             endif
