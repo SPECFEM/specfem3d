@@ -1436,7 +1436,7 @@
       ! vtk file for receivers only
       write(system_command, &
   "('awk ',a1,'{if (NR < 5) print $0;if (NR == 5)print ',a1,'POINTS',i6,' float',a1,';if &
-      &(NR > 5+',i6,')print $0}',a1,'<',a,'>',a)")&
+      &(NR > 5+',i6,')print $0}',a1,' < ',a,' > ',a)")&
       "'",'"',nrec,'"',NSOURCES,"'",trim(filename),trim(filename_new)
 
       ! extracts source locations
@@ -1447,7 +1447,7 @@
         "'",'"',NSOURCES,'"'
 
       write(system_command2, &
-  "('if (NR > 5 && NR < 6+',i6,')print $0}END{print ',a,'}',a1,'<',a,'>',a)") &
+  "('if (NR > 5 && NR < 6+',i6,')print $0}END{print ',a,'}',a1,' < ',a,' > ',a)") &
         NSOURCES,'" "',"'",trim(filename),trim(filename_new)
 
       system_command = trim(system_command1)//trim(system_command2)

@@ -876,11 +876,11 @@ subroutine decompose_inner_cube_quadratic_fcts(central_count, attributed, ntheta
 
   if (dump_mesh_info_screen) then
      write(*,*)
-     write(*,*)'<> < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > <>'
+     write(*,*)' < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > '
      write(*,*)'CENTRAL LINEAR DOMAIN: simple decomposition!'
      write(*,*)'ndivs,nthetal:',ndivs,nthetal
      write(*,*)' = => each processor should have el=',ndivs**2/nthetal*2
-     write(*,*)'<> < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > <>'
+     write(*,*)' < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > '
      write(*,*)
   endif
 
@@ -1034,7 +1034,7 @@ subroutine decompose_inner_cube_quadratic_fcts(central_count, attributed, ntheta
 
   if (dump_mesh_info_screen) then
      write(*,*)
-     write(*,*)'<> < > < > < > Finished the central domain decomposition! < > < > < > <>'
+     write(*,*)' < > < > < > < > Finished the central domain decomposition! < > < > < > < > '
      write(*,*)
      call flush(6)
   endif
@@ -1063,7 +1063,7 @@ subroutine check_my_els(iproc, proc_central)
   else
      if (dump_mesh_info_screen) then
       write(*,*)
-      write(*,*)' >  >>', iproc,' has right amount of elements:',2*ndivs**2/nproc
+      write(*,*)' >  >  > ', iproc,' has right amount of elements:',2*ndivs**2/nproc
       call flush(6)
      endif
   endif
@@ -1111,12 +1111,12 @@ subroutine decompose_inner_cube_opt(central_count, attributed, nthetal, &
 
   if (dump_mesh_info_screen) then
       write(*,*)
-      write(*,*)'<> < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > <>'
+      write(*,*)' < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > '
       write(*,*)'CENTRAL LINEAR DOMAIN: decomposing using an '
       write(*,*)'      optimization scheme!'
       write(*,*)'ndivs,nthetal:',ndivs,nthetal
       write(*,*)' = => each processor should have el=',ndivs**2/nthetal*2
-      write(*,*)'<> < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > <>'
+      write(*,*)' < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > < > '
       write(*,*)
   endif
 
@@ -1443,7 +1443,7 @@ subroutine decompose_inner_cube_opt(central_count, attributed, nthetal, &
 
   if (dump_mesh_info_screen) then
       write(*,*)
-      write(*,*)'<> < > < > < > Finished the central domain decomposition! < > < > < > <>'
+      write(*,*)' < > < > < > < > Finished the central domain decomposition! < > < > < > < > '
       write(*,*)
       call flush(6)
   endif

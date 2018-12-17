@@ -272,310 +272,310 @@ subroutine glob_snapshot_xdmf(f_sol, chi, t, isnap)
    endif !use_netcdf
 
 734 format(&
-    '<Grid Name="', A,'" GridType="Uniform">',/&
-    '<Time Value="',F8.2,'" />',/&
-    '<Topology TopologyType="Quadrilateral" NumberOfElements="',i10,'">',/&
-    '<DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'grid', A,']" />',/&
-    '</Topology>',/&
-    '<Geometry GeometryType="XY">',/&
-    '<DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'points', A,']" />',/&
-    '</Geometry>',/&
-    '<Attribute Name="u_s" AttributeType="Scalar" Center="Node">',/&
-    '<DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab">',/&
-    '<DataItem Dimensions="3 2" Format="XML">',/&
+    ' < Grid Name="', A,'" GridType="Uniform" > ',/&
+    ' < Time Value="',F8.2,'" / > ',/&
+    ' < Topology TopologyType="Quadrilateral" NumberOfElements="',i10,'" > ',/&
+    ' < DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'grid', A,']" / > ',/&
+    ' < /Topology > ',/&
+    ' < Geometry GeometryType="XY" > ',/&
+    ' < DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'points', A,']" / > ',/&
+    ' < /Geometry > ',/&
+    ' < Attribute Name="u_s" AttributeType="Scalar" Center="Node" > ',/&
+    ' < DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab" > ',/&
+    ' < DataItem Dimensions="3 2" Format="XML" > ',/&
     '                    ', i10,'          0 ',/&
     '                             1          1 ',/&
     '                             1 ', i10,/&
-    '</DataItem>',/&
-    '<DataItem Dimensions="', i10, i10, '" NumberType="Float" Format="binary" Endian="Big">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Dimensions="', i10, i10, '" NumberType="Float" Format="binary" Endian="Big" > ',/&
     '                   ', A,/&
-    '</DataItem>',/&
-    '</DataItem>',/&
-    '</Attribute>',/&
-    '<Attribute Name="u_z" AttributeType="Scalar" Center="Node">',/&
-    '<DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab">',/&
-    '<DataItem Dimensions="3 2" Format="XML">',/&
+    ' < /DataItem > ',/&
+    ' < /DataItem > ',/&
+    ' < /Attribute > ',/&
+    ' < Attribute Name="u_z" AttributeType="Scalar" Center="Node" > ',/&
+    ' < DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab" > ',/&
+    ' < DataItem Dimensions="3 2" Format="XML" > ',/&
     '                    ', i10,'          0 ',/&
     '                             1          1 ',/&
     '                             1 ', i10,/&
-    '</DataItem>',/&
-    '<DataItem Dimensions="', i10, i10, '" NumberType="Float" Format="binary" Endian="Big">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Dimensions="', i10, i10, '" NumberType="Float" Format="binary" Endian="Big" > ',/&
     '                   ', A,/&
-    '</DataItem>',/&
-    '</DataItem>',/&
-    '</Attribute>',/&
-    '<Attribute Name="abs" AttributeType="Scalar" Center="Node">',/&
-    '<DataItem ItemType="function" function="sqrt($0 * $0 + $1 * $1)" Dimensions="', I10,'">',/&
-    '<DataItem Reference="XML">',/&
+    ' < /DataItem > ',/&
+    ' < /DataItem > ',/&
+    ' < /Attribute > ',/&
+    ' < Attribute Name="abs" AttributeType="Scalar" Center="Node" > ',/&
+    ' < DataItem ItemType="function" function="sqrt($0 * $0 + $1 * $1)" Dimensions="', I10,'" > ',/&
+    ' < DataItem Reference="XML" > ',/&
     '                    /Xdmf/Domain/Grid[@Name="CellsTime"]/Grid[@Name="', A,'"]/Attribute[@Name="u_s"]/DataItem[1]',/&
-    '</DataItem>',/&
-    '<DataItem Reference="XML">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Reference="XML" > ',/&
     '                    /Xdmf/Domain/Grid[@Name="CellsTime"]/Grid[@Name="', A,'"]/Attribute[@Name="u_z"]/DataItem[1]',/&
-    '</DataItem>',/&
-    '</DataItem>',/&
-    '</Attribute>',/&
-    '<Attribute Name="straintrace" AttributeType="Scalar" Center="Node">',/&
-    '<DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab">',/&
-    '<DataItem Dimensions="3 2" Format="XML">',/&
+    ' < /DataItem > ',/&
+    ' < /DataItem > ',/&
+    ' < /Attribute > ',/&
+    ' < Attribute Name="straintrace" AttributeType="Scalar" Center="Node" > ',/&
+    ' < DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab" > ',/&
+    ' < DataItem Dimensions="3 2" Format="XML" > ',/&
     '                    ', i10,'          0 ',/&
     '                             1          1 ',/&
     '                             1 ', i10,/&
-    '</DataItem>',/&
-    '<DataItem Dimensions="', i10, i10, '" NumberType="Float" Format="binary" Endian="Big">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Dimensions="', i10, i10, '" NumberType="Float" Format="binary" Endian="Big" > ',/&
     '                   ', A,/&
-    '</DataItem>',/&
-    '</DataItem>',/&
-    '</Attribute>',/&
-    '<Attribute Name="curlinplane" AttributeType="Scalar" Center="Node">',/&
-    '<DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab">',/&
-    '<DataItem Dimensions="3 2" Format="XML">',/&
+    ' < /DataItem > ',/&
+    ' < /DataItem > ',/&
+    ' < /Attribute > ',/&
+    ' < Attribute Name="curlinplane" AttributeType="Scalar" Center="Node" > ',/&
+    ' < DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab" > ',/&
+    ' < DataItem Dimensions="3 2" Format="XML" > ',/&
     '                    ', i10,'          0 ',/&
     '                             1          1 ',/&
     '                             1 ', i10,/&
-    '</DataItem>',/&
-    '<DataItem Dimensions="', i10, i10, '" NumberType="Float" Format="binary" Endian="Big">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Dimensions="', i10, i10, '" NumberType="Float" Format="binary" Endian="Big" > ',/&
     '                   ', A,/&
-    '</DataItem>',/&
-    '</DataItem>',/&
-    '</Attribute>',/&
-    '</Grid>',/)
+    ' < /DataItem > ',/&
+    ' < /DataItem > ',/&
+    ' < /Attribute > ',/&
+    ' < /Grid > ',/)
 
 735 format(&
-    '<Grid Name="', A,'" GridType="Uniform">',/&
-    '<Time Value="',F8.2,'" />',/&
-    '<Topology TopologyType="Quadrilateral" NumberOfElements="',i10,'">',/&
-    '<DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'grid', A,']" />',/&
-    '</Topology>',/&
-    '<Geometry GeometryType="XY">',/&
-    '<DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'points', A,']" />',/&
-    '</Geometry>',/&
-    '<Attribute Name="u_s" AttributeType="Scalar" Center="Node">',/&
-    '<DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab">',/&
-    '<DataItem Dimensions="3 2" Format="XML">',/&
+    ' < Grid Name="', A,'" GridType="Uniform" > ',/&
+    ' < Time Value="',F8.2,'" / > ',/&
+    ' < Topology TopologyType="Quadrilateral" NumberOfElements="',i10,'" > ',/&
+    ' < DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'grid', A,']" / > ',/&
+    ' < /Topology > ',/&
+    ' < Geometry GeometryType="XY" > ',/&
+    ' < DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'points', A,']" / > ',/&
+    ' < /Geometry > ',/&
+    ' < Attribute Name="u_s" AttributeType="Scalar" Center="Node" > ',/&
+    ' < DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab" > ',/&
+    ' < DataItem Dimensions="3 2" Format="XML" > ',/&
     '                    ', i10,'          0 ',/&
     '                             1          1 ',/&
     '                             1 ', i10,/&
-    '</DataItem>',/&
-    '<DataItem Dimensions="', i10, i10, '" NumberType="Float" Format="binary" Endian="Big">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Dimensions="', i10, i10, '" NumberType="Float" Format="binary" Endian="Big" > ',/&
     '                   ', A,/&
-    '</DataItem>',/&
-    '</DataItem>',/&
-    '</Attribute>',/&
-    '<Attribute Name="u_p" AttributeType="Scalar" Center="Node">',/&
-    '<DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab">',/&
-    '<DataItem Dimensions="3 2" Format="XML">',/&
+    ' < /DataItem > ',/&
+    ' < /DataItem > ',/&
+    ' < /Attribute > ',/&
+    ' < Attribute Name="u_p" AttributeType="Scalar" Center="Node" > ',/&
+    ' < DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab" > ',/&
+    ' < DataItem Dimensions="3 2" Format="XML" > ',/&
     '                    ', i10,'          0 ',/&
     '                             1          1 ',/&
     '                             1 ', i10,/&
-    '</DataItem>',/&
-    '<DataItem Dimensions="', i10, i10, '" NumberType="Float" Format="binary" Endian="Big">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Dimensions="', i10, i10, '" NumberType="Float" Format="binary" Endian="Big" > ',/&
     '                   ', A,/&
-    '</DataItem>',/&
-    '</DataItem>',/&
-    '</Attribute>',/&
-    '<Attribute Name="u_z" AttributeType="Scalar" Center="Node">',/&
-    '<DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab">',/&
-    '<DataItem Dimensions="3 2" Format="XML">',/&
+    ' < /DataItem > ',/&
+    ' < /DataItem > ',/&
+    ' < /Attribute > ',/&
+    ' < Attribute Name="u_z" AttributeType="Scalar" Center="Node" > ',/&
+    ' < DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab" > ',/&
+    ' < DataItem Dimensions="3 2" Format="XML" > ',/&
     '                    ', i10,'          0 ',/&
     '                             1          1 ',/&
     '                             1 ', i10,/&
-    '</DataItem>',/&
-    '<DataItem Dimensions="', i10, i10, '" NumberType="Float" Format="binary" Endian="Big">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Dimensions="', i10, i10, '" NumberType="Float" Format="binary" Endian="Big" > ',/&
     '                   ', A,/&
-    '</DataItem>',/&
-    '</DataItem>',/&
-    '</Attribute>',/&
-    '<Attribute Name="abs" AttributeType="Scalar" Center="Node">',/&
-    '<DataItem ItemType="function" function="sqrt($0 * $0 + $1 * $1 + $2 * $2)" Dimensions="', I10,'">',/&
-    '<DataItem Reference="XML">',/&
+    ' < /DataItem > ',/&
+    ' < /DataItem > ',/&
+    ' < /Attribute > ',/&
+    ' < Attribute Name="abs" AttributeType="Scalar" Center="Node" > ',/&
+    ' < DataItem ItemType="function" function="sqrt($0 * $0 + $1 * $1 + $2 * $2)" Dimensions="', I10,'" > ',/&
+    ' < DataItem Reference="XML" > ',/&
     '                    /Xdmf/Domain/Grid[@Name="CellsTime"]/Grid[@Name="', A,'"]/Attribute[@Name="u_s"]/DataItem[1]',/&
-    '</DataItem>',/&
-    '<DataItem Reference="XML">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Reference="XML" > ',/&
     '                    /Xdmf/Domain/Grid[@Name="CellsTime"]/Grid[@Name="', A,'"]/Attribute[@Name="u_p"]/DataItem[1]',/&
-    '</DataItem>',/&
-    '<DataItem Reference="XML">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Reference="XML" > ',/&
     '                    /Xdmf/Domain/Grid[@Name="CellsTime"]/Grid[@Name="', A,'"]/Attribute[@Name="u_z"]/DataItem[1]',/&
-    '</DataItem>',/&
-    '</DataItem>',/&
-    '</Attribute>',/&
-    '<Attribute Name="straintrace" AttributeType="Scalar" Center="Node">',/&
-    '<DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab">',/&
-    '<DataItem Dimensions="3 2" Format="XML">',/&
+    ' < /DataItem > ',/&
+    ' < /DataItem > ',/&
+    ' < /Attribute > ',/&
+    ' < Attribute Name="straintrace" AttributeType="Scalar" Center="Node" > ',/&
+    ' < DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab" > ',/&
+    ' < DataItem Dimensions="3 2" Format="XML" > ',/&
     '                    ', i10,'          0 ',/&
     '                             1          1 ',/&
     '                             1 ', i10,/&
-    '</DataItem>',/&
-    '<DataItem Dimensions="', i10, i10, '" NumberType="Float" Format="binary" Endian="Big">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Dimensions="', i10, i10, '" NumberType="Float" Format="binary" Endian="Big" > ',/&
     '                   ', A,/&
-    '</DataItem>',/&
-    '</DataItem>',/&
-    '</Attribute>',/&
-    '<Attribute Name="curlinplane" AttributeType="Scalar" Center="Node">',/&
-    '<DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab">',/&
-    '<DataItem Dimensions="3 2" Format="XML">',/&
+    ' < /DataItem > ',/&
+    ' < /DataItem > ',/&
+    ' < /Attribute > ',/&
+    ' < Attribute Name="curlinplane" AttributeType="Scalar" Center="Node" > ',/&
+    ' < DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab" > ',/&
+    ' < DataItem Dimensions="3 2" Format="XML" > ',/&
     '                    ', i10,'          0 ',/&
     '                             1          1 ',/&
     '                             1 ', i10,/&
-    '</DataItem>',/&
-    '<DataItem Dimensions="', i10, i10, '" NumberType="Float" Format="binary" Endian="Big">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Dimensions="', i10, i10, '" NumberType="Float" Format="binary" Endian="Big" > ',/&
     '                   ', A,/&
-    '</DataItem>',/&
-    '</DataItem>',/&
-    '</Attribute>',/&
-    '</Grid>',/)
+    ' < /DataItem > ',/&
+    ' < /DataItem > ',/&
+    ' < /Attribute > ',/&
+    ' < /Grid > ',/)
 
 736 format(&
-    '<Grid Name="', A,'" GridType="Uniform">',/&
-    '<Time Value="',F8.2,'" />',/&
-    '<Topology TopologyType="Quadrilateral" NumberOfElements="',i10,'">',/&
-    '<DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'grid', A,']" />',/&
-    '</Topology>',/&
-    '<Geometry GeometryType="XY">',/&
-    '<DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'points', A,']" />',/&
-    '</Geometry>',/&
-    '<Attribute Name="u_s" AttributeType="Scalar" Center="Node">',/&
-    '<DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab">',/&
-    '<DataItem Dimensions="3 3" Format="XML">',/&
+    ' < Grid Name="', A,'" GridType="Uniform" > ',/&
+    ' < Time Value="',F8.2,'" / > ',/&
+    ' < Topology TopologyType="Quadrilateral" NumberOfElements="',i10,'" > ',/&
+    ' < DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'grid', A,']" / > ',/&
+    ' < /Topology > ',/&
+    ' < Geometry GeometryType="XY" > ',/&
+    ' < DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'points', A,']" / > ',/&
+    ' < /Geometry > ',/&
+    ' < Attribute Name="u_s" AttributeType="Scalar" Center="Node" > ',/&
+    ' < DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab" > ',/&
+    ' < DataItem Dimensions="3 3" Format="XML" > ',/&
     '                      ', i10,  '         0          0',/&
     '                               1         1          1',/&
     '                               1',   i10,'          1',/&
-    '</DataItem>',/&
-    '<DataItem Dimensions="', i10, i10, ' 2" NumberType="Float" Format="hdf">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Dimensions="', i10, i10, ' 2" NumberType="Float" Format="hdf" > ',/&
     '                   ', A, ':/displacement',/&
-    '</DataItem>',/&
-    '</DataItem>',/&
-    '</Attribute>',/&
-    '<Attribute Name="u_z" AttributeType="Scalar" Center="Node">',/&
-    '<DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab">',/&
-    '<DataItem Dimensions="3 3" Format="XML">',/&
+    ' < /DataItem > ',/&
+    ' < /DataItem > ',/&
+    ' < /Attribute > ',/&
+    ' < Attribute Name="u_z" AttributeType="Scalar" Center="Node" > ',/&
+    ' < DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab" > ',/&
+    ' < DataItem Dimensions="3 3" Format="XML" > ',/&
     '                      ', i10,  '         0          1',/&
     '                               1         1          1',/&
     '                               1',   i10,'          1',/&
-    '</DataItem>',/&
-    '<DataItem Dimensions="', i10, i10, ' 2" NumberType="Float" Format="hdf">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Dimensions="', i10, i10, ' 2" NumberType="Float" Format="hdf" > ',/&
     '                   ', A, ':/displacement',/&
-    '</DataItem>',/&
-    '</DataItem>',/&
-    '</Attribute>',/&
-    '<Attribute Name="abs" AttributeType="Scalar" Center="Node">',/&
-    '<DataItem ItemType="function" function="sqrt($0 * $0 + $1 * $1)" Dimensions="', I10,'">',/&
-    '<DataItem Reference="XML">',/&
+    ' < /DataItem > ',/&
+    ' < /DataItem > ',/&
+    ' < /Attribute > ',/&
+    ' < Attribute Name="abs" AttributeType="Scalar" Center="Node" > ',/&
+    ' < DataItem ItemType="function" function="sqrt($0 * $0 + $1 * $1)" Dimensions="', I10,'" > ',/&
+    ' < DataItem Reference="XML" > ',/&
     '                    /Xdmf/Domain/Grid[@Name="CellsTime"]/Grid[@Name="', A,'"]/Attribute[@Name="u_s"]/DataItem[1]',/&
-    '</DataItem>',/&
-    '<DataItem Reference="XML">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Reference="XML" > ',/&
     '                    /Xdmf/Domain/Grid[@Name="CellsTime"]/Grid[@Name="', A,'"]/Attribute[@Name="u_z"]/DataItem[1]',/&
-    '</DataItem>',/&
-    '</DataItem>',/&
-    '</Attribute>',/&
-    '<Attribute Name="divergence(u)" AttributeType="Scalar" Center="Node">',/&
-    '<DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab">',/&
-    '<DataItem Dimensions="3 2" Format="XML">',/&
+    ' < /DataItem > ',/&
+    ' < /DataItem > ',/&
+    ' < /Attribute > ',/&
+    ' < Attribute Name="divergence(u)" AttributeType="Scalar" Center="Node" > ',/&
+    ' < DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab" > ',/&
+    ' < DataItem Dimensions="3 2" Format="XML" > ',/&
     '                      ', i10,  '         0  ',/&
     '                               1         1  ',/&
     '                               1',   i10,'  ',/&
-    '</DataItem>',/&
-    '<DataItem Dimensions="', i10, i10, '" NumberType="Float" Format="hdf">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Dimensions="', i10, i10, '" NumberType="Float" Format="hdf" > ',/&
     '                   ', A, ':/straintrace',/&
-    '</DataItem>',/&
-    '</DataItem>',/&
-    '</Attribute>',/&
-    '<Attribute Name="curl(u)" AttributeType="Scalar" Center="Node">',/&
-    '<DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab">',/&
-    '<DataItem Dimensions="3 2" Format="XML">',/&
+    ' < /DataItem > ',/&
+    ' < /DataItem > ',/&
+    ' < /Attribute > ',/&
+    ' < Attribute Name="curl(u)" AttributeType="Scalar" Center="Node" > ',/&
+    ' < DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab" > ',/&
+    ' < DataItem Dimensions="3 2" Format="XML" > ',/&
     '                      ', i10,  '         0  ',/&
     '                               1         1  ',/&
     '                               1',   i10,'  ',/&
-    '</DataItem>',/&
-    '<DataItem Dimensions="', i10, i10, '" NumberType="Float" Format="hdf">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Dimensions="', i10, i10, '" NumberType="Float" Format="hdf" > ',/&
     '                   ', A, ':/curlinplane',/&
-    '</DataItem>',/&
-    '</DataItem>',/&
-    '</Attribute>',/&
-    '</Grid>',/)
+    ' < /DataItem > ',/&
+    ' < /DataItem > ',/&
+    ' < /Attribute > ',/&
+    ' < /Grid > ',/)
 
 737 format(&
-    '<Grid Name="', A,'" GridType="Uniform">',/&
-    '<Time Value="',F8.2,'" />',/&
-    '<Topology TopologyType="Quadrilateral" NumberOfElements="',i10,'">',/&
-    '<DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'grid', A,']" />',/&
-    '</Topology>',/&
-    '<Geometry GeometryType="XY">',/&
-    '<DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'points', A,']" />',/&
-    '</Geometry>',/&
-    '<Attribute Name="u_s" AttributeType="Scalar" Center="Node">',/&
-    '<DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab">',/&
-    '<DataItem Dimensions="3 3" Format="XML">',/&
+    ' < Grid Name="', A,'" GridType="Uniform" > ',/&
+    ' < Time Value="',F8.2,'" / > ',/&
+    ' < Topology TopologyType="Quadrilateral" NumberOfElements="',i10,'" > ',/&
+    ' < DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'grid', A,']" / > ',/&
+    ' < /Topology > ',/&
+    ' < Geometry GeometryType="XY" > ',/&
+    ' < DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'points', A,']" / > ',/&
+    ' < /Geometry > ',/&
+    ' < Attribute Name="u_s" AttributeType="Scalar" Center="Node" > ',/&
+    ' < DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab" > ',/&
+    ' < DataItem Dimensions="3 3" Format="XML" > ',/&
     '                      ', i10,'         0          0',/&
     '                               1         1          1',/&
     '                               1',  i10,'          1',/&
-    '</DataItem>',/&
-    '<DataItem Dimensions="', i10, i10, ' 3" NumberType="Float" Format="hdf">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Dimensions="', i10, i10, ' 3" NumberType="Float" Format="hdf" > ',/&
     '                   ', A, ':/displacement',/&
-    '</DataItem>',/&
-    '</DataItem>',/&
-    '</Attribute>',/&
-    '<Attribute Name="u_p" AttributeType="Scalar" Center="Node">',/&
-    '<DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab">',/&
-    '<DataItem Dimensions="3 3" Format="XML">',/&
+    ' < /DataItem > ',/&
+    ' < /DataItem > ',/&
+    ' < /Attribute > ',/&
+    ' < Attribute Name="u_p" AttributeType="Scalar" Center="Node" > ',/&
+    ' < DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab" > ',/&
+    ' < DataItem Dimensions="3 3" Format="XML" > ',/&
     '                      ', i10,'         0          1',/&
     '                               1         1          1',/&
     '                               1',  i10,'          1',/&
-    '</DataItem>',/&
-    '<DataItem Dimensions="', i10, i10, ' 3" NumberType="Float" Format="hdf">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Dimensions="', i10, i10, ' 3" NumberType="Float" Format="hdf" > ',/&
     '                   ', A, ':/displacement',/&
-    '</DataItem>',/&
-    '</DataItem>',/&
-    '</Attribute>',/&
-    '<Attribute Name="u_z" AttributeType="Scalar" Center="Node">',/&
-    '<DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab">',/&
-    '<DataItem Dimensions="3 3" Format="XML">',/&
+    ' < /DataItem > ',/&
+    ' < /DataItem > ',/&
+    ' < /Attribute > ',/&
+    ' < Attribute Name="u_z" AttributeType="Scalar" Center="Node" > ',/&
+    ' < DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab" > ',/&
+    ' < DataItem Dimensions="3 3" Format="XML" > ',/&
     '                      ', i10,'         0          2',/&
     '                               1         1          1',/&
     '                               1',   i10,'          1',/&
-    '</DataItem>',/&
-    '<DataItem Dimensions="', i10, i10, ' 3" NumberType="Float" Format="hdf">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Dimensions="', i10, i10, ' 3" NumberType="Float" Format="hdf" > ',/&
     '                   ', A, ':/displacement',/&
-    '</DataItem>',/&
-    '</DataItem>',/&
-    '</Attribute>',/&
-    '<Attribute Name="abs" AttributeType="Scalar" Center="Node">',/&
-    '<DataItem ItemType="function" function="sqrt($0 * $0 + $1 * $1 + $2 * $2)" Dimensions="', I10,'">',/&
-    '<DataItem Reference="XML">',/&
+    ' < /DataItem > ',/&
+    ' < /DataItem > ',/&
+    ' < /Attribute > ',/&
+    ' < Attribute Name="abs" AttributeType="Scalar" Center="Node" > ',/&
+    ' < DataItem ItemType="function" function="sqrt($0 * $0 + $1 * $1 + $2 * $2)" Dimensions="', I10,'" > ',/&
+    ' < DataItem Reference="XML" > ',/&
     '                    /Xdmf/Domain/Grid[@Name="CellsTime"]/Grid[@Name="', A,'"]/Attribute[@Name="u_s"]/DataItem[1]',/&
-    '</DataItem>',/&
-    '<DataItem Reference="XML">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Reference="XML" > ',/&
     '                    /Xdmf/Domain/Grid[@Name="CellsTime"]/Grid[@Name="', A,'"]/Attribute[@Name="u_p"]/DataItem[1]',/&
-    '</DataItem>',/&
-    '<DataItem Reference="XML">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Reference="XML" > ',/&
     '                    /Xdmf/Domain/Grid[@Name="CellsTime"]/Grid[@Name="', A,'"]/Attribute[@Name="u_z"]/DataItem[1]',/&
-    '</DataItem>',/&
-    '</DataItem>',/&
-    '</Attribute>',/&
-    '<Attribute Name="divergence(u)" AttributeType="Scalar" Center="Node">',/&
-    '<DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab">',/&
-    '<DataItem Dimensions="3 2" Format="XML">',/&
+    ' < /DataItem > ',/&
+    ' < /DataItem > ',/&
+    ' < /Attribute > ',/&
+    ' < Attribute Name="divergence(u)" AttributeType="Scalar" Center="Node" > ',/&
+    ' < DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab" > ',/&
+    ' < DataItem Dimensions="3 2" Format="XML" > ',/&
     '                      ', i10,  '         0  ',/&
     '                               1         1  ',/&
     '                               1',   i10,'  ',/&
-    '</DataItem>',/&
-    '<DataItem Dimensions="', i10, i10, '" NumberType="Float" Format="hdf">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Dimensions="', i10, i10, '" NumberType="Float" Format="hdf" > ',/&
     '                   ', A, ':/straintrace',/&
-    '</DataItem>',/&
-    '</DataItem>',/&
-    '</Attribute>',/&
-    '<Attribute Name="curl(u)" AttributeType="Scalar" Center="Node">',/&
-    '<DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab">',/&
-    '<DataItem Dimensions="3 2" Format="XML">',/&
+    ' < /DataItem > ',/&
+    ' < /DataItem > ',/&
+    ' < /Attribute > ',/&
+    ' < Attribute Name="curl(u)" AttributeType="Scalar" Center="Node" > ',/&
+    ' < DataItem ItemType="HyperSlab" Dimensions="',i10,'" Type="HyperSlab" > ',/&
+    ' < DataItem Dimensions="3 2" Format="XML" > ',/&
     '                      ', i10,  '         0  ',/&
     '                               1         1  ',/&
     '                               1',   i10,'  ',/&
-    '</DataItem>',/&
-    '<DataItem Dimensions="', i10, i10, '" NumberType="Float" Format="hdf">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Dimensions="', i10, i10, '" NumberType="Float" Format="hdf" > ',/&
     '                   ', A, ':/curlinplane',/&
-    '</DataItem>',/&
-    '</DataItem>',/&
-    '</Attribute>',/&
-    '</Grid>',/)
+    ' < /DataItem > ',/&
+    ' < /DataItem > ',/&
+    ' < /Attribute > ',/&
+    ' < /Grid > ',/)
 
     close(110)
 

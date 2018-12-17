@@ -1122,32 +1122,32 @@ subroutine save_google_earth_kml(srccolat1, srclon1, srcdepth, Mij, per, rcvcola
   enddo
   open(unit=88,file=trim(outdir)//'/googleearth_src_rec_seis.kml')
 
-  write(88,14)'<?xml version="1.0" encoding="UTF-8"?>'
-  write(88,15)'<kml xmlns="http://earth.google.com/kml/2.0">'
-  write(88,16)'<Document>'
+  write(88,14)' < ?xml version="1.0" encoding="UTF-8"? > '
+  write(88,15)' < kml xmlns="http://earth.google.com/kml/2.0" > '
+  write(88,16)' < Document > '
 
   write(88,*)
-  write(88,*)'<name > earthquake-receiver configuration < /name>'
-  write(88,*)'<LookAt>'
-  write(88,12)'<longitude>',slon,'</longitude > < latitude>',slat,'</latitude>'
-  write(88,*)'<range > 7000000 < /range > < tilt > 0 < /tilt > < heading > 0 < /heading>'
-  write(88,*)'</LookAt>'
+  write(88,*)' < name > earthquake-receiver configuration < /name > '
+  write(88,*)' < LookAt > '
+  write(88,12)' < longitude > ',slon,' < /longitude > < latitude > ',slat,' < /latitude > '
+  write(88,*)' < range > 7000000 < /range > < tilt > 0 < /tilt > < heading > 0 < /heading > '
+  write(88,*)' < /LookAt > '
   write(88,*)
   write(88,*)'......'
-  write(88,*)'<Placemark>'
-  write(88,*)'<Style id="earthquake">'
-  write(88,*)'<IconStyle>'
-  write(88,*)'<scale > 5 < /scale>'
-  write(88,*)'<Icon>'
-  write(88,*)'<href > http://maps.google.com/mapfiles/kml/shapes/earthquake.png < /href>'
-  write(88,*)'</Icon>'
-  write(88,*)'</IconStyle>'
-  write(88,*)'<LabelStyle>'
-  write(88,*)'<scale > 5 < /scale>'
-  write(88,*)'</LabelStyle>'
-  write(88,*)'</Style>'
-  write(88,*)'<name > earthquake < /name>'
-  write(88,*) '<description > Event details:'
+  write(88,*)' < Placemark > '
+  write(88,*)' < Style id="earthquake" > '
+  write(88,*)' < IconStyle > '
+  write(88,*)' < scale > 5 < /scale > '
+  write(88,*)' < Icon > '
+  write(88,*)' < href > http://maps.google.com/mapfiles/kml/shapes/earthquake.png < /href > '
+  write(88,*)' < /Icon > '
+  write(88,*)' < /IconStyle > '
+  write(88,*)' < LabelStyle > '
+  write(88,*)' < scale > 5 < /scale > '
+  write(88,*)' < /LabelStyle > '
+  write(88,*)' < /Style > '
+  write(88,*)' < name > earthquake < /name > '
+  write(88,*) ' < description > Event details:'
   write(88,20) ' colat,lon [deg]:',srccolat1*180./pi,srclon1*180./pi
   write(88,21)' source depth [km]',srcdepth
   write(88,23)'Mrr=',Mij(1)
@@ -1157,48 +1157,48 @@ subroutine save_google_earth_kml(srccolat1, srclon1, srcdepth, Mij, per, rcvcola
   write(88,23)'Mpr=',Mij(5)
   write(88,23)'Mtp=',Mij(6)
   write(88,21)'source period [s]:',per
-  write(88,*)'</description>'
-  write(88,13)'<Point > < coordinates>',slon,',',slat,'</coordinates > < /Point>'
-  write(88,*)'</Placemark>'
+  write(88,*)' < /description > '
+  write(88,13)' < Point > < coordinates > ',slon,',',slat,' < /coordinates > < /Point > '
+  write(88,*)' < /Placemark > '
 
   do i=1,num_rec_glob
      write(88,*)
-     write(88,*) '<Placemark>'
-     write(88,*) '<Style id="cam">'
-     write(88,*) '<IconStyle>'
-   write(88,*)'<scale > 2 < /scale>'
-     write(88,*) '<Icon>'
-        write(88,*)'<href > http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png < /href>'
-     write(88,*) '</Icon>'
-     write(88,*) '</IconStyle>'
-  write(88,*)'<LabelStyle>'
-  write(88,*)'<scale > 2 < /scale>'
-  write(88,*)'</LabelStyle>'
-     write(88,*) '</Style>'
-     write(88,17) '<name>',trim(receiver_name(i)),'  # ',i,'</name>'
+     write(88,*) ' < Placemark > '
+     write(88,*) ' < Style id="cam" > '
+     write(88,*) ' < IconStyle > '
+   write(88,*)' < scale > 2 < /scale > '
+     write(88,*) ' < Icon > '
+        write(88,*)' < href > http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png < /href > '
+     write(88,*) ' < /Icon > '
+     write(88,*) ' < /IconStyle > '
+  write(88,*)' < LabelStyle > '
+  write(88,*)' < scale > 2 < /scale > '
+  write(88,*)' < /LabelStyle > '
+     write(88,*) ' < /Style > '
+     write(88,17) ' < name > ',trim(receiver_name(i)),'  # ',i,' < /name > '
      call define_io_appendix(app,i)
-     write(88,119) '<description > station ',trim(receiver_name(i))
+     write(88,119) ' < description > station ',trim(receiver_name(i))
      write(88,20) ' colat,lon [deg]:',rcvcolat(i)*180./pi,rcvlon(i)*180./pi
 
      fname2='GRAPHICS/'//trim(receiver_name(i))//'_'//reccomp(1)//'.gif'
-     write(88,*) '<img src="',trim(fname2),'" > < /img>'
+     write(88,*) ' < img src="',trim(fname2),'" > < /img > '
 
      fname2='GRAPHICS/'//trim(receiver_name(i))//'_'//reccomp(3)//'.gif'
-     write(88,*) '<img src="',trim(fname2),'" > < /img>'
+     write(88,*) ' < img src="',trim(fname2),'" > < /img > '
 
      if (nsim > 1 .or. src_type /= 'monopole') then
         fname2='GRAPHICS/'//trim(receiver_name(i))//'_'//reccomp(2)//'.gif'
-        write(88,*) '<img src="',trim(fname2),'" > < /img>'
+        write(88,*) ' < img src="',trim(fname2),'" > < /img > '
      endif
-     write(88,*) '</description>'
-     write(88,13) '<Point > < coordinates>',rlon(i),',',rlat(i),'</coordinates > < /Point>'
-     write(88,*) '</Placemark>'
+     write(88,*) ' < /description > '
+     write(88,13) ' < Point > < coordinates > ',rlon(i),',',rlat(i),' < /coordinates > < /Point > '
+     write(88,*) ' < /Placemark > '
   enddo
 
   write(88,*)'......'
   write(88,*)
-  write(88,*)'</Document>'
-  write(88,*)'</kml>'
+  write(88,*)' < /Document > '
+  write(88,*)' < /kml > '
 
   close(88)
 

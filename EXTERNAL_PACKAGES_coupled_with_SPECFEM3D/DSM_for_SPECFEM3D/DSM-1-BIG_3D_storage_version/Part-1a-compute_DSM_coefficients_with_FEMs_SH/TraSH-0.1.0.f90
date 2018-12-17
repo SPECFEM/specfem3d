@@ -442,7 +442,7 @@ endif ! only root can read file for inputing the setting parameters.
   allocate(dr(1:nnlayer+1))
   allocate(w(1:nnlayer+1))
   allocate(z(1:nnlayer+1),stat=ier)
-  if (ier /= 0) stop '<!!!error: not enough memory to allocate array > !!!!'
+  if (ier /= 0) stop ' < !!!error: not enough memory to allocate array > !!!!'
   call calstg( nzone,rrho,vsv,vsh,nnlayer,nlayer,ra,rmax,vnp,vra,rho,ecL,ecN)
   do ir0 = 1, r0_n
      call calgstg(nzone,nnlayer,spn(ir0),rrho,vsv,vsh,gra(1:3,ir0),gvra(1:3,ir0),rmax,grho(1:3,ir0),gecL(1:3,ir0),gecN(1:3,ir0),r0(ir0),mu0(ir0))

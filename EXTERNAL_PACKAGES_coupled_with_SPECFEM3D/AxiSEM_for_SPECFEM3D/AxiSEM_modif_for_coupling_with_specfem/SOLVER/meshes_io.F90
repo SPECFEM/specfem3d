@@ -386,27 +386,27 @@ subroutine dump_xdmf_grid()
   close(110)
 
 732 format(&
-    '<?xml version="1.0" ?>',/&
-    '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>',/&
-    '<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2">',/&
-    '<Domain>',/&
-    '<Grid Name="CellsTime" GridType="Collection" CollectionType="Temporal">',/&
-    '<Grid GridType="Uniform">',/&
-    '<Time Value="0.000" />',/&
-    '<Topology TopologyType="Quadrilateral" NumberOfElements="',i10,'">',/&
-    '<DataItem Dimensions="',i10,' 4" NumberType="Int" Format="',A,'" Endian="Big">',/&
+    ' < ?xml version="1.0" ? > ',/&
+    ' < !DOCTYPE Xdmf SYSTEM "Xdmf.dtd" [] > ',/&
+    ' < Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2" > ',/&
+    ' < Domain > ',/&
+    ' < Grid Name="CellsTime" GridType="Collection" CollectionType="Temporal" > ',/&
+    ' < Grid GridType="Uniform" > ',/&
+    ' < Time Value="0.000" / > ',/&
+    ' < Topology TopologyType="Quadrilateral" NumberOfElements="',i10,'" > ',/&
+    ' < DataItem Dimensions="',i10,' 4" NumberType="Int" Format="',A,'" Endian="Big" > ',/&
     '        ',A,/&
-    '</DataItem>',/&
-    '</Topology>',/&
-    '<Geometry GeometryType="XY">',/&
-    '<DataItem Dimensions="',i10,' 2" NumberType="Float" Format="',A,'" Endian="Big">',/&
+    ' < /DataItem > ',/&
+    ' < /Topology > ',/&
+    ' < Geometry GeometryType="XY" > ',/&
+    ' < DataItem Dimensions="',i10,' 2" NumberType="Float" Format="',A,'" Endian="Big" > ',/&
     '        ',A/&
-    '</DataItem>',/&
-    '</Geometry>',/&
-    '</Grid>',/&
-    '</Grid>',/&
-    '</Domain>',/&
-    '</Xdmf>')
+    ' < /DataItem > ',/&
+    ' < /Geometry > ',/&
+    ' < /Grid > ',/&
+    ' < /Grid > ',/&
+    ' < /Domain > ',/&
+    ' < /Xdmf > ')
 
 
   fname = datapath(1:lfdata) // '/xdmf_xml_' // appmynum // '.xdmf'
@@ -421,17 +421,17 @@ subroutine dump_xdmf_grid()
   close(110)
 
 733 format(&
-    '<?xml version="1.0" ?>',/&
-    '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>',/&
-    '<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2">',/&
-    '<Domain>',/,/&
-    '<DataItem Name="grid" Dimensions="',i10,' 4" NumberType="Int" Format="',A,'" Endian="Big">',/&
+    ' < ?xml version="1.0" ? > ',/&
+    ' < !DOCTYPE Xdmf SYSTEM "Xdmf.dtd" [] > ',/&
+    ' < Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2" > ',/&
+    ' < Domain > ',/,/&
+    ' < DataItem Name="grid" Dimensions="',i10,' 4" NumberType="Int" Format="',A,'" Endian="Big" > ',/&
     '  ', A,/&
-    '</DataItem>',/&
-    '<DataItem Name="points" Dimensions="',i10,' 2" NumberType="Float" Format="',A,'" Endian="Big">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Name="points" Dimensions="',i10,' 2" NumberType="Float" Format="',A,'" Endian="Big" > ',/&
     '  ', A,/&
-    '</DataItem>',/,/&
-    '<Grid Name="CellsTime" GridType="Collection" CollectionType="Temporal">',/)
+    ' < /DataItem > ',/,/&
+    ' < Grid Name="CellsTime" GridType="Collection" CollectionType="Temporal" > ',/)
 
 
 end subroutine dump_xdmf_grid
@@ -450,9 +450,9 @@ subroutine finish_xdmf_xml()
   write(110, 736)
 
 736 format(&
-    '</Grid>',/&
-    '</Domain>',/&
-    '</Xdmf>')
+    ' < /Grid > ',/&
+    ' < /Domain > ',/&
+    ' < /Xdmf > ')
 
   close(110)
   close(13100)
@@ -871,32 +871,32 @@ subroutine dump_kwf_midpoint_xdmf(filename, npoints, nelem)
   close(iinput_xdmf)
 
 733 format(&
-    '<?xml version="1.0" ?>',/&
-    '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>',/&
-    '<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2">',/&
-    '<Domain>',/,/&
-    '<DataItem Name="points" ItemType="function" function="join($0, $1)" Dimensions="', i10, ' 2">',/&
-    '<DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF">',/&
+    ' < ?xml version="1.0" ? > ',/&
+    ' < !DOCTYPE Xdmf SYSTEM "Xdmf.dtd" [] > ',/&
+    ' < Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2" > ',/&
+    ' < Domain > ',/,/&
+    ' < DataItem Name="points" ItemType="function" function="join($0, $1)" Dimensions="', i10, ' 2" > ',/&
+    ' < DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF" > ',/&
     '    ', A, ':/Mesh/mesh_S',/&
-    '</DataItem>',/&
-    '<DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF" > ',/&
     '    ', A, ':/Mesh/mesh_Z',/&
-    '</DataItem>',/&
-    '</DataItem>',/,/)
+    ' < /DataItem > ',/&
+    ' < /DataItem > ',/,/)
 
 734 format(&
-    '<Grid Name="grid" GridType="Uniform">',/&
-    '<Topology TopologyType="Polyvertex" NumberOfElements="',i10,'">',/&
-    '<DataItem ItemType="Uniform" Name="points" DataType="Int" Dimensions="', i10, '" Format="HDF">',/&
+    ' < Grid Name="grid" GridType="Uniform" > ',/&
+    ' < Topology TopologyType="Polyvertex" NumberOfElements="',i10,'" > ',/&
+    ' < DataItem ItemType="Uniform" Name="points" DataType="Int" Dimensions="', i10, '" Format="HDF" > ',/&
     '        ', A, ':/Mesh/midpoint_mesh',/&
-    '</DataItem>',/&
-    '</Topology>',/&
-    '<Geometry GeometryType="XY">',/&
-    '<DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'points', A,']" />',/&
-    '</Geometry>',/&
-    '</Grid>',/,/&
-    '</Domain>',/&
-    '</Xdmf>')
+    ' < /DataItem > ',/&
+    ' < /Topology > ',/&
+    ' < Geometry GeometryType="XY" > ',/&
+    ' < DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'points', A,']" / > ',/&
+    ' < /Geometry > ',/&
+    ' < /Grid > ',/,/&
+    ' < /Domain > ',/&
+    ' < /Xdmf > ')
 
 
   ! XML Data
@@ -908,29 +908,29 @@ subroutine dump_kwf_midpoint_xdmf(filename, npoints, nelem)
   close(iinput_xdmf)
 
 743 format(&
-    '<?xml version="1.0" ?>',/&
-    '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>',/&
-    '<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2">',/&
-    '<Domain>',/,/&
-    '<DataItem Name="points" ItemType="function" function="join($0, $1)" Dimensions="', i10, ' 2">',/&
-    '<DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF">',/&
+    ' < ?xml version="1.0" ? > ',/&
+    ' < !DOCTYPE Xdmf SYSTEM "Xdmf.dtd" [] > ',/&
+    ' < Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2" > ',/&
+    ' < Domain > ',/,/&
+    ' < DataItem Name="points" ItemType="function" function="join($0, $1)" Dimensions="', i10, ' 2" > ',/&
+    ' < DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF" > ',/&
     '    ', A, ':/Mesh/mp_mesh_S',/&
-    '</DataItem>',/&
-    '<DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF" > ',/&
     '    ', A, ':/Mesh/mp_mesh_Z',/&
-    '</DataItem>',/&
-    '</DataItem>',/,/)
+    ' < /DataItem > ',/&
+    ' < /DataItem > ',/,/)
 
 744 format(&
-    '<Grid Name="grid" GridType="Uniform">',/&
-    '<Topology TopologyType="Polyvertex" NumberOfElements="',i10,'">',/&
-    '</Topology>',/&
-    '<Geometry GeometryType="XY">',/&
-    '<DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'points', A,']" />',/&
-    '</Geometry>',/&
-    '</Grid>',/,/&
-    '</Domain>',/&
-    '</Xdmf>')
+    ' < Grid Name="grid" GridType="Uniform" > ',/&
+    ' < Topology TopologyType="Polyvertex" NumberOfElements="',i10,'" > ',/&
+    ' < /Topology > ',/&
+    ' < Geometry GeometryType="XY" > ',/&
+    ' < DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'points', A,']" / > ',/&
+    ' < /Geometry > ',/&
+    ' < /Grid > ',/,/&
+    ' < /Domain > ',/&
+    ' < /Xdmf > ')
 
 end subroutine
 !-----------------------------------------------------------------------------------------
@@ -958,42 +958,42 @@ subroutine dump_kwf_fem_xdmf(filename, npoints, nelem)
   close(iinput_xdmf)
 
 733 format(&
-    '<?xml version="1.0" ?>',/&
-    '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>',/&
-    '<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2">',/&
-    '<Domain>',/,/&
-    '<DataItem Name="points" ItemType="function" function="join($0, $1)" Dimensions="', i10, ' 2">',/&
-    '<DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF">',/&
+    ' < ?xml version="1.0" ? > ',/&
+    ' < !DOCTYPE Xdmf SYSTEM "Xdmf.dtd" [] > ',/&
+    ' < Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2" > ',/&
+    ' < Domain > ',/,/&
+    ' < DataItem Name="points" ItemType="function" function="join($0, $1)" Dimensions="', i10, ' 2" > ',/&
+    ' < DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF" > ',/&
     '    ', A, ':/Mesh/mesh_S',/&
-    '</DataItem>',/&
-    '<DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF" > ',/&
     '    ', A, ':/Mesh/mesh_Z',/&
-    '</DataItem>',/&
-    '</DataItem>',/,/)
+    ' < /DataItem > ',/&
+    ' < /DataItem > ',/,/)
 
 734 format(&
-    '<Grid Name="grid" GridType="Uniform">',/&
-    '<Topology TopologyType="Quadrilateral" NumberOfElements="', i10, '">',/&
-    '<DataItem ItemType="Uniform" Name="points" DataType="Int" Dimensions="', i10, ' 4" Format="HDF">',/&
+    ' < Grid Name="grid" GridType="Uniform" > ',/&
+    ' < Topology TopologyType="Quadrilateral" NumberOfElements="', i10, '" > ',/&
+    ' < DataItem ItemType="Uniform" Name="points" DataType="Int" Dimensions="', i10, ' 4" Format="HDF" > ',/&
     '        ', A, ':/Mesh/fem_mesh',/&
-    '</DataItem>',/&
-    '</Topology>',/&
-    '<Geometry GeometryType="XY">',/&
-    '<DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'points', A,']" />',/&
-    '</Geometry>',/&
-    '<Attribute Name="eltype" AttributeType="Scalar" Center="Cell">',/&
-    '<DataItem ItemType="Uniform" Name="points" DataType="Int" Dimensions="', i10, '" Format="HDF">',/&
+    ' < /DataItem > ',/&
+    ' < /Topology > ',/&
+    ' < Geometry GeometryType="XY" > ',/&
+    ' < DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'points', A,']" / > ',/&
+    ' < /Geometry > ',/&
+    ' < Attribute Name="eltype" AttributeType="Scalar" Center="Cell" > ',/&
+    ' < DataItem ItemType="Uniform" Name="points" DataType="Int" Dimensions="', i10, '" Format="HDF" > ',/&
     '        ', A, ':/Mesh/eltype',/&
-    '</DataItem>',/&
-    '</Attribute>',/&
-    '<Attribute Name="axis" AttributeType="Scalar" Center="Cell">',/&
-    '<DataItem ItemType="Uniform" Name="points" DataType="Int" Dimensions="', i10, '" Format="HDF">',/&
+    ' < /DataItem > ',/&
+    ' < /Attribute > ',/&
+    ' < Attribute Name="axis" AttributeType="Scalar" Center="Cell" > ',/&
+    ' < DataItem ItemType="Uniform" Name="points" DataType="Int" Dimensions="', i10, '" Format="HDF" > ',/&
     '        ', A, ':/Mesh/axis',/&
-    '</DataItem>',/&
-    '</Attribute>',/&
-    '</Grid>',/,/&
-    '</Domain>',/&
-    '</Xdmf>')
+    ' < /DataItem > ',/&
+    ' < /Attribute > ',/&
+    ' < /Grid > ',/,/&
+    ' < /Domain > ',/&
+    ' < /Xdmf > ')
 
 end subroutine
 !-----------------------------------------------------------------------------------------
@@ -1020,32 +1020,32 @@ subroutine dump_kwf_sem_xdmf(filename, npoints, nelem)
   close(iinput_xdmf)
 
 733 format(&
-    '<?xml version="1.0" ?>',/&
-    '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>',/&
-    '<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2">',/&
-    '<Domain>',/,/&
-    '<DataItem Name="points" ItemType="function" function="join($0, $1)" Dimensions="', i10, ' 2">',/&
-    '<DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF">',/&
+    ' < ?xml version="1.0" ? > ',/&
+    ' < !DOCTYPE Xdmf SYSTEM "Xdmf.dtd" [] > ',/&
+    ' < Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2" > ',/&
+    ' < Domain > ',/,/&
+    ' < DataItem Name="points" ItemType="function" function="join($0, $1)" Dimensions="', i10, ' 2" > ',/&
+    ' < DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF" > ',/&
     '    ', A, ':/Mesh/mesh_S',/&
-    '</DataItem>',/&
-    '<DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF" > ',/&
     '    ', A, ':/Mesh/mesh_Z',/&
-    '</DataItem>',/&
-    '</DataItem>',/,/)
+    ' < /DataItem > ',/&
+    ' < /DataItem > ',/,/)
 
 734 format(&
-    '<Grid Name="grid" GridType="Uniform">',/&
-    '<Topology TopologyType="Polygon" NumberOfElements="',i10,'" NodesPerElement="', i5, '">',/&
-    '<DataItem ItemType="Uniform" Name="points" DataType="Int" Dimensions="', i10, i3, i3, '" Format="HDF">',/&
+    ' < Grid Name="grid" GridType="Uniform" > ',/&
+    ' < Topology TopologyType="Polygon" NumberOfElements="',i10,'" NodesPerElement="', i5, '" > ',/&
+    ' < DataItem ItemType="Uniform" Name="points" DataType="Int" Dimensions="', i10, i3, i3, '" Format="HDF" > ',/&
     '        ', A, ':/Mesh/sem_mesh',/&
-    '</DataItem>',/&
-    '</Topology>',/&
-    '<Geometry GeometryType="XY">',/&
-    '<DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'points', A,']" />',/&
-    '</Geometry>',/&
-    '</Grid>',/,/&
-    '</Domain>',/&
-    '</Xdmf>')
+    ' < /DataItem > ',/&
+    ' < /Topology > ',/&
+    ' < Geometry GeometryType="XY" > ',/&
+    ' < DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'points', A,']" / > ',/&
+    ' < /Geometry > ',/&
+    ' < /Grid > ',/,/&
+    ' < /Domain > ',/&
+    ' < /Xdmf > ')
 
 end subroutine
 !-----------------------------------------------------------------------------------------
@@ -1071,29 +1071,29 @@ subroutine dump_kwf_gll_xdmf(filename, npoints)
   close(iinput_xdmf)
 
 733 format(&
-    '<?xml version="1.0" ?>',/&
-    '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>',/&
-    '<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2">',/&
-    '<Domain>',/,/&
-    '<DataItem Name="points" ItemType="function" function="join($0, $1)" Dimensions="', i10, ' 2">',/&
-    '<DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF">',/&
+    ' < ?xml version="1.0" ? > ',/&
+    ' < !DOCTYPE Xdmf SYSTEM "Xdmf.dtd" [] > ',/&
+    ' < Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2" > ',/&
+    ' < Domain > ',/,/&
+    ' < DataItem Name="points" ItemType="function" function="join($0, $1)" Dimensions="', i10, ' 2" > ',/&
+    ' < DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF" > ',/&
     '    ', A, ':/Mesh/mesh_S',/&
-    '</DataItem>',/&
-    '<DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF">',/&
+    ' < /DataItem > ',/&
+    ' < DataItem Name="points" DataType="Float" Precision="8" Dimensions="', i10, '" Format="HDF" > ',/&
     '    ', A, ':/Mesh/mesh_Z',/&
-    '</DataItem>',/&
-    '</DataItem>',/,/)
+    ' < /DataItem > ',/&
+    ' < /DataItem > ',/,/)
 
 734 format(&
-    '<Grid Name="grid" GridType="Uniform">',/&
-    '<Topology TopologyType="Polyvertex" NumberOfElements="',i10'">',/&
-    '</Topology>',/&
-    '<Geometry GeometryType="XY">',/&
-    '<DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'points', A,']" />',/&
-    '</Geometry>',/&
-    '</Grid>',/,/&
-    '</Domain>',/&
-    '</Xdmf>')
+    ' < Grid Name="grid" GridType="Uniform" > ',/&
+    ' < Topology TopologyType="Polyvertex" NumberOfElements="',i10'" > ',/&
+    ' < /Topology > ',/&
+    ' < Geometry GeometryType="XY" > ',/&
+    ' < DataItem Reference="/Xdmf/Domain/DataItem[@Name=', A,'points', A,']" / > ',/&
+    ' < /Geometry > ',/&
+    ' < /Grid > ',/,/&
+    ' < /Domain > ',/&
+    ' < /Xdmf > ')
 
 end subroutine
 !-----------------------------------------------------------------------------------------
