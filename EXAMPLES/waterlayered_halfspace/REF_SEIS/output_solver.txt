@@ -3,9 +3,10 @@
  **** Specfem 3-D Solver - MPI version f90 ****
  **********************************************
 
- Version: 3.0.0
+ Running Git package version of the code: 3.0.0
+ which is Git undefined in the case of old tar ball builds
+ dating undefined in the case of old tar ball builds
 
- Fixing slow underflow trapping problem using small initial field
 
  There are            4  MPI processes
  Processes are numbered from 0 to            3
@@ -24,9 +25,14 @@
 
  velocity model:   default
 
+ Reading mesh databases...
+ done
+
  total acoustic elements    :        2025
  total elastic elements     :       38475
  total poroelastic elements :           0
+
+ Mesh resolution:
 
  ********
  minimum and maximum number of elements
@@ -78,62 +84,80 @@
  *** for DT :    5.0000000000000001E-003
  *** Max stability for wave velocities =    7.29316995E-02
 
- Elapsed time for checking mesh resolution in seconds =    1.2976884841918945E-002
+ Elapsed time for checking mesh resolution in seconds =    1.8925905227661133E-002
  saving VTK files for Courant number and minimum period
+
 
  ******************************************
  There is a total of            4  slices
  ******************************************
 
 
- sources:
+ kd-tree:
+   total data points:        10120
+   theoretical   number of nodes:        20234
+                tree memory size:   0.617492676     MB
+   actual        number of nodes:        20239
+                tree memory size:   0.617645264     MB
+   maximum depth   :           15
+   creation timing :    3.74794006E-03 (s)
+
+
+ sources:           1
+
+ ********************
+  locating sources
+ ********************
+
+ reading source information from ./DATA/CMTSOLUTION file
+
  no UTM projection
 
- *************************************
-  locating source            1
- *************************************
 
- source located in slice            3
-                in element         1525
-                in acoustic domain
+ source #            1
+   source located in slice            3
+                  in element         1525
+                  in acoustic domain
 
- using moment tensor source:
-   xi coordinate of source in that element:    6.7164100792038055E-005
-   eta coordinate of source in that element:    0.0000000000000000
-   gamma coordinate of source in that element:  -0.33333333333333337
+   using moment tensor source:
+     xi coordinate of source in that element:    6.7164100792038055E-005
+     eta coordinate of source in that element:    0.0000000000000000
+     gamma coordinate of source in that element:  -0.33333333333333337
 
- source time function:
-   using Gaussian source time function
-   half duration:    2.0000000000000000       seconds
-   time shift:    0.0000000000000000       seconds
+   source time function:
+     using Gaussian source time function
+     half duration:    2.0000000000000000       seconds
+     time shift:    0.0000000000000000       seconds
 
- magnitude of the source:
-      scalar moment M0 =    1.2247448713915889E+023  dyne-cm
-   moment magnitude Mw =    4.6920306104200904
+   magnitude of the source:
+        scalar moment M0 =    1.2247448713915889E+023  dyne-cm
+     moment magnitude Mw =    4.6920306104200904
 
- original (requested) position of the source:
+   original (requested) position of the source:
 
-           latitude:    67000.000000000000
-          longitude:    66999.899999999994
+             latitude:    67000.000000000000
+            longitude:    66999.899999999994
 
-              x:    66999.899999999994
-              y:    67000.000000000000
-          depth:    1.0000000000000000       km
- topo elevation:    0.0000000000000000
+                x:    66999.900000000009
+                y:    67000.000000000000
+            depth:    1.0000000000000000       km
+   topo elevation:    0.0000000000000000
 
- position of the source that will be used:
+   position of the source that will be used:
 
-              x:    66999.900000000009
-              y:    67000.000000000000
-          depth:    1.0000000000000000       km
-              z:   -1000.0000000000000
+                x:    66999.900000000009
+                y:    67000.000000000000
+            depth:    1.0000000000000000       km
+                z:   -1000.0000000000000
 
- error in location of the source:    1.45519152E-11  m
+   error in location of the source:    1.45519152E-11  m
+
+
 
  maximum error in location of the sources:    1.45519152E-11  m
 
 
- Elapsed time for detection of sources in seconds =    3.5660266876220703E-003
+ Elapsed time for detection of sources in seconds =    1.7251968383789062E-003
 
  End of source detection - done
 
@@ -161,7 +185,7 @@
       original x:    10767.9004
       original y:    67000.0000
       original depth:    100.000000      m
-      horizontal distance:    56.232000000000006
+      horizontal distance:    56.2319984
       target x, y, z:    10767.9004       67000.0000      -100.000000
       closest estimate found:    1.81904491E-12  m away
 
@@ -173,9 +197,9 @@
       eta   =    0.0000000000000000
       gamma =  -0.93333333333333335
       rotation matrix:
-      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
-      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
-      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
       x:    10767.900000000001
       y:    67000.000000000000
       depth:    99.999999999999986       m
@@ -189,7 +213,7 @@
       original x:    22732.0996
       original y:    67000.0000
       original depth:    100.000000      m
-      horizontal distance:    44.267800000000008
+      horizontal distance:    44.2677994
       target x, y, z:    22732.0996       67000.0000      -100.000000
       closest estimate found:    2.84217094E-14  m away
 
@@ -201,9 +225,9 @@
       eta   =   -9.2594736719162741E-032
       gamma =  -0.93333333333333335
       rotation matrix:
-      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
-      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
-      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
       x:    22732.099999999999
       y:    67000.000000000000
       depth:    99.999999999999972       m
@@ -217,7 +241,7 @@
       original x:    34696.3984
       original y:    67000.0000
       original depth:    100.000000      m
-      horizontal distance:    32.303500000000007
+      horizontal distance:    32.3035011
       target x, y, z:    34696.3984       67000.0000      -100.000000
       closest estimate found:    1.62695604E-11  m away
 
@@ -229,9 +253,9 @@
       eta   =    1.5777218104420236E-030
       gamma =  -0.93333333333333335
       rotation matrix:
-      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
-      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
-      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
       x:    34696.399999999994
       y:    66999.999999999985
       depth:    99.999999999999972       m
@@ -245,7 +269,7 @@
       original x:    46660.6992
       original y:    67000.0000
       original depth:    100.000000      m
-      horizontal distance:    20.339200000000012
+      horizontal distance:    20.3391991
       target x, y, z:    46660.6992       67000.0000      -100.000000
       closest estimate found:    1.45519430E-11  m away
 
@@ -257,9 +281,9 @@
       eta   =   -8.1447191754836353E-017
       gamma =  -0.93333333333333335
       rotation matrix:
-      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
-      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
-      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
       x:    46660.699999999997
       y:    67000.000000000015
       depth:    99.999999999999972       m
@@ -273,7 +297,7 @@
       original x:    58625.0000
       original y:    67000.0000
       original depth:    100.000000      m
-      horizontal distance:    8.3749000000000091
+      horizontal distance:    8.37489986
       target x, y, z:    58625.0000       67000.0000      -100.000000
       closest estimate found:    2.05795363E-11  m away
 
@@ -285,9 +309,9 @@
       eta   =   -9.8551102023382075E-015
       gamma =  -0.93333333333333335
       rotation matrix:
-      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
-      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
-      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
       x:    58625.000000000015
       y:    66999.999999999985
       depth:    99.999999999999972       m
@@ -301,7 +325,7 @@
       original x:    67000.0000
       original y:    67000.0000
       original depth:    100.000000      m
-      horizontal distance:    9.9999999991268857E-005
+      horizontal distance:    9.99999975E-05
       target x, y, z:    67000.0000       67000.0000      -100.000000
       closest estimate found:    2.84217094E-14  m away
 
@@ -313,9 +337,9 @@
       eta   =   -9.7736630105833727E-015
       gamma =  -0.93333333333333335
       rotation matrix:
-      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
-      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
-      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
       x:    67000.000000000000
       y:    67000.000000000000
       depth:    99.999999999999972       m
@@ -329,7 +353,7 @@
       original x:    75375.0000
       original y:    67000.0000
       original depth:    100.000000      m
-      horizontal distance:    8.3750999999999909
+      horizontal distance:    8.37510014
       target x, y, z:    75375.0000       67000.0000      -100.000000
       closest estimate found:    2.84217094E-14  m away
 
@@ -341,9 +365,9 @@
       eta   =   -4.0723595877430694E-017
       gamma =  -0.93333333333333335
       rotation matrix:
-      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
-      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
-      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
       x:    75375.000000000000
       y:    67000.000000000000
       depth:    99.999999999999972       m
@@ -357,7 +381,7 @@
       original x:    87339.2969
       original y:    67000.0000
       original depth:    100.000000      m
-      horizontal distance:    20.339399999999994
+      horizontal distance:    20.3393993
       target x, y, z:    87339.2969       67000.0000      -100.000000
       closest estimate found:    1.45519430E-11  m away
 
@@ -369,9 +393,9 @@
       eta   =    9.7329394147059411E-015
       gamma =  -0.93333333333333335
       rotation matrix:
-      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
-      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
-      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
       x:    87339.300000000003
       y:    67000.000000000015
       depth:    99.999999999999972       m
@@ -385,7 +409,7 @@
       original x:    99303.6016
       original y:    67000.0000
       original depth:    100.000000      m
-      horizontal distance:    32.303699999999999
+      horizontal distance:    32.3036995
       target x, y, z:    99303.6016       67000.0000      -100.000000
       closest estimate found:    1.45519430E-11  m away
 
@@ -397,9 +421,9 @@
       eta   =    0.0000000000000000
       gamma =  -0.93333333333333335
       rotation matrix:
-      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
-      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
-      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
       x:    99303.600000000006
       y:    67000.000000000015
       depth:    99.999999999999972       m
@@ -413,7 +437,7 @@
       original x:    111270.000
       original y:    67000.0000
       original depth:    100.000000      m
-      horizontal distance:    44.270099999999992
+      horizontal distance:    44.2700996
       target x, y, z:    111270.000       67000.0000      -100.000000
       closest estimate found:    1.45519222E-11  m away
 
@@ -425,9 +449,9 @@
       eta   =   -3.1554436208840472E-030
       gamma =  -0.93333333333333335
       rotation matrix:
-      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
-      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
-      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
       x:    111270.00000000000
       y:    66999.999999999985
       depth:    99.999999999999986       m
@@ -441,7 +465,7 @@
       original x:    0.00000000
       original y:    67000.0000
       original depth:    100.000000      m
-      horizontal distance:    66.999900000000011
+      horizontal distance:    66.9999008
       target x, y, z:    0.00000000       67000.0000      -100.000000
       closest estimate found:    2.84217094E-14  m away
 
@@ -453,9 +477,9 @@
       eta   =    0.0000000000000000
       gamma =  -0.93333333333333335
       rotation matrix:
-      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
-      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
-      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
       x:    0.0000000000000000
       y:    67000.000000000000
       depth:    99.999999999999972       m
@@ -469,7 +493,7 @@
       original x:    67000.0000
       original y:    67000.0000
       original depth:    25000.0000      m
-      horizontal distance:    9.9999999991268857E-005
+      horizontal distance:    9.99999975E-05
       target x, y, z:    67000.0000       67000.0000      -25000.0000
       closest estimate found:    3.63797881E-12  m away
 
@@ -481,9 +505,9 @@
       eta   =   -1.2621774483536189E-029
       gamma =   0.33333333333333098
       rotation matrix:
-      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
-      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
-      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
       x:    67000.000000000000
       y:    67000.000000000000
       depth:    25000.000000000004       m
@@ -497,7 +521,7 @@
       original x:    134000.000
       original y:    67000.0000
       original depth:    100.000000      m
-      horizontal distance:    67.000099999999989
+      horizontal distance:    67.0000992
       target x, y, z:    134000.000       67000.0000      -100.000000
       closest estimate found:    2.84217094E-14  m away
 
@@ -509,9 +533,9 @@
       eta   =    0.0000000000000000
       gamma =  -0.93333333333333335
       rotation matrix:
-      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
-      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
-      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
       x:    134000.00000000000
       y:    67000.000000000000
       depth:    99.999999999999972       m
@@ -525,7 +549,7 @@
       original x:    67000.0000
       original y:    67000.0000
       original depth:    3500.00000      m
-      horizontal distance:    9.9999999991268857E-005
+      horizontal distance:    9.99999975E-05
       target x, y, z:    67000.0000       67000.0000      -3500.00000
       closest estimate found:    0.00000000      m away
 
@@ -537,9 +561,9 @@
       eta   =    0.0000000000000000
       gamma =    0.0000000000000000
       rotation matrix:
-      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
-      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
-      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
       x:    67000.000000000000
       y:    67000.000000000000
       depth:    3500.0000000000000       m
@@ -553,25 +577,25 @@
       original x:    67000.0000
       original y:    67000.0000
       original depth:    3000.19995      m
-      horizontal distance:    9.9999999991268857E-005
+      horizontal distance:    9.99999975E-05
       target x, y, z:    67000.0000       67000.0000      -3000.19995
-      closest estimate found:    4.54747351E-13  m away
+      closest estimate found:    0.00000000      m away
 
       receiver located in slice            3
-                       in element            6
-                       in elastic domain
+                       in element         1525
+                       in acoustic domain
       at coordinates:
-      xi    =   0.99986666666666679
+      xi    =   -2.1529500448102905E-031
       eta   =    0.0000000000000000
-      gamma =    0.0000000000000000
+      gamma =    1.0001333333333335
       rotation matrix:
-      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
-      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
-      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
       x:    67000.000000000000
       y:    67000.000000000000
-      depth:    3000.1999999999994       m
-      z:   -3000.1999999999994
+      depth:    3000.1999999999998       m
+      z:   -3000.1999999999998
 
 
 
@@ -581,7 +605,7 @@
       original x:    67000.0000
       original y:    67000.0000
       original depth:    3000.10010      m
-      horizontal distance:    9.9999999991268857E-005
+      horizontal distance:    9.99999975E-05
       target x, y, z:    67000.0000       67000.0000      -3000.10010
       closest estimate found:    0.00000000      m away
 
@@ -593,9 +617,9 @@
       eta   =    0.0000000000000000
       gamma =    0.0000000000000000
       rotation matrix:
-      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
-      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
-      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
       x:    67000.000000000000
       y:    67000.000000000000
       depth:    3000.0999999999999       m
@@ -609,21 +633,21 @@
       original x:    67000.0000
       original y:    67000.0000
       original depth:    2999.89990      m
-      horizontal distance:    9.9999999991268857E-005
+      horizontal distance:    9.99999975E-05
       target x, y, z:    67000.0000       67000.0000      -2999.89990
       closest estimate found:    0.00000000      m away
 
       receiver located in slice            3
-                       in element            6
-                       in elastic domain
+                       in element         1525
+                       in acoustic domain
       at coordinates:
-      xi    =    1.0000666666666667
+      xi    =    0.0000000000000000
       eta   =    0.0000000000000000
-      gamma =    0.0000000000000000
+      gamma =   0.99993333333333334
       rotation matrix:
-      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
-      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
-      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
       x:    67000.000000000000
       y:    67000.000000000000
       depth:    2999.9000000000001       m
@@ -637,25 +661,25 @@
       original x:    67000.0000
       original y:    67000.0000
       original depth:    2999.80005      m
-      horizontal distance:    9.9999999991268857E-005
+      horizontal distance:    9.99999975E-05
       target x, y, z:    67000.0000       67000.0000      -2999.80005
-      closest estimate found:    4.54747351E-13  m away
+      closest estimate found:    1.45519152E-11  m away
 
       receiver located in slice            3
-                       in element            6
-                       in elastic domain
+                       in element         1525
+                       in acoustic domain
       at coordinates:
-      xi    =    1.0001333333333333
-      eta   =    3.7744761639842002E-029
-      gamma =   -2.3665827156630354E-029
+      xi    =    0.0000000000000000
+      eta   =    0.0000000000000000
+      gamma =   0.99986666666666679
       rotation matrix:
-      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
-      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
-      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
       x:    67000.000000000000
-      y:    67000.000000000000
-      depth:    2999.8000000000006       m
-      z:   -2999.8000000000006
+      y:    66999.999999999985
+      depth:    2999.8000000000002       m
+      z:   -2999.8000000000002
 
 
 
@@ -665,25 +689,25 @@
       original x:    58625.0000
       original y:    67000.0000
       original depth:    2999.89990      m
-      horizontal distance:    8.3749000000000091
+      horizontal distance:    8.37489986
       target x, y, z:    58625.0000       67000.0000      -2999.89990
-      closest estimate found:    4.54747351E-13  m away
+      closest estimate found:    0.00000000      m away
 
       receiver located in slice            2
-                       in element         2001
+                       in element         1512
                        in elastic domain
       at coordinates:
-      xi    =  -0.37500049192520873
-      eta   =   -6.4392935428259316E-015
-      gamma =   0.99993333333333323
+      xi    =    1.0000666666666667
+      eta   =   0.37500049192521168
+      gamma =    0.0000000000000000
       rotation matrix:
-      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
-      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
-      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
       x:    58625.000000000000
       y:    67000.000000000000
-      depth:    2999.8999999999996       m
-      z:   -2999.8999999999996
+      depth:    2999.9000000000001       m
+      z:   -2999.9000000000001
 
 
 
@@ -693,25 +717,25 @@
       original x:    58625.0000
       original y:    67000.0000
       original depth:    3000.10010      m
-      horizontal distance:    8.3749000000000091
+      horizontal distance:    8.37489986
       target x, y, z:    58625.0000       67000.0000      -3000.10010
-      closest estimate found:    4.54747351E-13  m away
+      closest estimate found:    7.27595761E-12  m away
 
       receiver located in slice            2
-                       in element         2001
+                       in element         1512
                        in elastic domain
       at coordinates:
-      xi    =  -0.37500049192521362
-      eta   =    3.3343694677574395E-015
-      gamma =    1.0000666666666667
+      xi    =   0.99993333333333334
+      eta   =   0.37500049192521390
+      gamma =   -6.8601470271645823E-030
       rotation matrix:
-      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
-      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
-      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
-      x:    58625.000000000000
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    58624.999999999993
       y:    67000.000000000000
-      depth:    3000.1000000000004       m
-      z:   -3000.1000000000004
+      depth:    3000.0999999999999       m
+      z:   -3000.0999999999999
 
 
 
@@ -721,21 +745,21 @@
       original x:    46660.6992
       original y:    67000.0000
       original depth:    2999.89990      m
-      horizontal distance:    20.339200000000012
+      horizontal distance:    20.3391991
       target x, y, z:    46660.6992       67000.0000      -2999.89990
       closest estimate found:    0.00000000      m away
 
       receiver located in slice            2
-                       in element         1500
-                       in elastic domain
+                       in element         2005
+                       in acoustic domain
       at coordinates:
-      xi    =    1.0000666666666667
-      eta   =   0.33927544007628974
-      gamma =    0.0000000000000000
+      xi    =  -0.33927544007629473
+      eta   =    8.1447191754787119E-020
+      gamma =   0.99993333333333334
       rotation matrix:
-      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
-      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
-      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
       x:    46660.699999999997
       y:    67000.000000000000
       depth:    2999.9000000000001       m
@@ -749,32 +773,44 @@
       original x:    46660.6992
       original y:    67000.0000
       original depth:    3000.10010      m
-      horizontal distance:    20.339200000000012
+      horizontal distance:    20.3391991
       target x, y, z:    46660.6992       67000.0000      -3000.10010
-      closest estimate found:    1.62758904E-11  m away
+      closest estimate found:    4.54747351E-13  m away
 
       receiver located in slice            2
-                       in element         1500
-                       in elastic domain
+                       in element         2005
+                       in acoustic domain
       at coordinates:
-      xi    =   0.99993333333333334
-      eta   =   0.33927544007629462
-      gamma =    1.2621774483536189E-029
+      xi    =  -0.33927544007629240
+      eta   =   -1.8392042344263224E-045
+      gamma =    1.0000666666666667
       rotation matrix:
-      nu1 =    1.0000000000000000        0.0000000000000000        0.0000000000000000
-      nu2 =    0.0000000000000000        1.0000000000000000        0.0000000000000000
-      nu3 =    0.0000000000000000        0.0000000000000000        1.0000000000000000
-      x:    46660.700000000004
-      y:    67000.000000000015
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    46660.699999999997
+      y:    67000.000000000000
       depth:    3000.1000000000004       m
       z:   -3000.1000000000004
 
 
  maximum error in location of all the receivers:    2.05795363E-11  m
 
- Elapsed time for receiver detection in seconds =    6.3616991043090820E-002
+ Elapsed time for receiver detection in seconds =    1.4851808547973633E-002
 
  End of receiver detection - done
+
+ source arrays:
+   number of sources is            1
+   size of source array                 =    1.43051147E-03 MB
+                                        =    1.39698386E-06 GB
+
+ seismograms:
+   seismograms written by all processes
+   writing out seismograms at every NTSTEP_BETWEEN_OUTPUT_SEISMOS =         4500
+   maximum number of local receivers is           10  in slice            2
+   size of maximum seismogram array       =   0.514984131     MB
+                                          =    5.02914190E-04 GB
 
 
  Total number of samples for seismograms =         4500
@@ -782,32 +818,33 @@
  found a total of           22  receivers in all the slices
 
 
- no attenuation
-
- no anisotropy
-
- no oceans
-
- no gravity
+ Simulation setup:
 
  incorporating acoustic simulation
-
  incorporating elastic simulation
+   no poroelastic simulation
 
- no poroelastic simulation
-
- no movie simulation
-
-
- no dynamic faults
- no kinematic faults
-
- no gravity simulation
+   no attenuation
+   no anisotropy
+   no oceans
+   no gravity
+   no movie simulation
 
 
- Elapsed time for preparing timerun in seconds =    3.6928892135620117E-002
+ preparing mass matrices
+ preparing wavefields
+   no dynamic faults
+   no kinematic faults
+ preparing constants
+ preparing gravity
+   no gravity simulation
 
- time loop:
+
+ Elapsed time for preparing timerun in seconds =    3.3222198486328125E-002
+
+ ************
+  time loop
+ ************
                scheme:         Newmark
 
             time step:    4.99999989E-03  s
@@ -815,25 +852,25 @@
  total simulated time:    22.5000000      seconds
  start time:  -6.00000000      seconds
 
- All processes are synchronized before time loop
+ All processes are synchronized before the time loop
 
  Starting time iteration loop...
 
  Time step #            5
  Time:   -5.98000002      seconds
- Elapsed time in seconds =   0.57380795478820801
+ Elapsed time in seconds =   0.60455703735351562
  Elapsed time in hh:mm:ss =      0 h 00 m 00 s
- Mean elapsed time per time step in seconds =   0.114761591
+ Mean elapsed time per time step in seconds =   0.120911404
  Max norm displacement vector U in all slices (m) =    2.31325426E-14
  Max norm pressure P in all slices (Pa) =    1.47234401E-04
  Time steps done =            5  out of         4500
  Time steps remaining =         4495
- Estimated remaining time in seconds =    515.853333
- Estimated remaining time in hh:mm:ss =      0 h 08 m 35 s
- Estimated total run time in seconds =    516.427185
- Estimated total run time in hh:mm:ss =      0 h 08 m 36 s
+ Estimated remaining time in seconds =    543.496765
+ Estimated remaining time in hh:mm:ss =      0 h 09 m 03 s
+ Estimated total run time in seconds =    544.101318
+ Estimated total run time in hh:mm:ss =      0 h 09 m 04 s
  We have done   0.111111112     % of that
- The run will finish approximately on (in local time): Thu Jan 18, 2018 23:46
+ The run will finish approximately on (in local time): Tue Dec 18, 2018 16:02
  ************************************************************
  **** BEWARE: the above time estimates are not very reliable
  **** because fewer than 100 iterations have been performed
@@ -841,150 +878,154 @@
 
  Time step #          500
  Time:   -3.50500011      seconds
- Elapsed time in seconds =    80.437594890594482
- Elapsed time in hh:mm:ss =      0 h 01 m 20 s
- Mean elapsed time per time step in seconds =   0.160875186
- Max norm displacement vector U in all slices (m) =    3.97289455E-07
+ Elapsed time in seconds =    84.015986919403076
+ Elapsed time in hh:mm:ss =      0 h 01 m 24 s
+ Mean elapsed time per time step in seconds =   0.168031976
+ Max norm displacement vector U in all slices (m) =    3.97289426E-07
  Max norm pressure P in all slices (Pa) =    485.383820
  Time steps done =          500  out of         4500
  Time steps remaining =         4000
- Estimated remaining time in seconds =    643.500732
- Estimated remaining time in hh:mm:ss =      0 h 10 m 43 s
- Estimated total run time in seconds =    723.938354
- Estimated total run time in hh:mm:ss =      0 h 12 m 03 s
+ Estimated remaining time in seconds =    672.127869
+ Estimated remaining time in hh:mm:ss =      0 h 11 m 12 s
+ Estimated total run time in seconds =    756.143860
+ Estimated total run time in hh:mm:ss =      0 h 12 m 36 s
  We have done    11.1111107     % of that
- The run will finish approximately on (in local time): Thu Jan 18, 2018 23:49
+ The run will finish approximately on (in local time): Tue Dec 18, 2018 16:05
 
  Time step #         1000
  Time:   -1.00500000      seconds
- Elapsed time in seconds =    152.02527093887329
- Elapsed time in hh:mm:ss =      0 h 02 m 32 s
- Mean elapsed time per time step in seconds =   0.152025267
- Max norm displacement vector U in all slices (m) =    2.93187011E-04
+ Elapsed time in seconds =    167.98817491531372
+ Elapsed time in hh:mm:ss =      0 h 02 m 47 s
+ Mean elapsed time per time step in seconds =   0.167988181
+ Max norm displacement vector U in all slices (m) =    2.93186982E-04
  Max norm pressure P in all slices (Pa) =    173527.156
  Time steps done =         1000  out of         4500
  Time steps remaining =         3500
- Estimated remaining time in seconds =    532.088440
- Estimated remaining time in hh:mm:ss =      0 h 08 m 52 s
- Estimated total run time in seconds =    684.113708
- Estimated total run time in hh:mm:ss =      0 h 11 m 24 s
+ Estimated remaining time in seconds =    587.958618
+ Estimated remaining time in hh:mm:ss =      0 h 09 m 47 s
+ Estimated total run time in seconds =    755.946777
+ Estimated total run time in hh:mm:ss =      0 h 12 m 35 s
  We have done    22.2222214     % of that
- The run will finish approximately on (in local time): Thu Jan 18, 2018 23:48
+ The run will finish approximately on (in local time): Tue Dec 18, 2018 16:06
 
  Time step #         1500
  Time:    1.49500000      seconds
- Elapsed time in seconds =    225.94415092468262
- Elapsed time in hh:mm:ss =      0 h 03 m 45 s
- Mean elapsed time per time step in seconds =   0.150629431
- Max norm displacement vector U in all slices (m) =    3.52089969E-03
- Max norm pressure P in all slices (Pa) =    237710.172
+ Elapsed time in seconds =    249.32344198226929
+ Elapsed time in hh:mm:ss =      0 h 04 m 09 s
+ Mean elapsed time per time step in seconds =   0.166215628
+ Max norm displacement vector U in all slices (m) =    3.52089363E-03
+ Max norm pressure P in all slices (Pa) =    237707.703
  Time steps done =         1500  out of         4500
  Time steps remaining =         3000
- Estimated remaining time in seconds =    451.888306
- Estimated remaining time in hh:mm:ss =      0 h 07 m 31 s
- Estimated total run time in seconds =    677.832458
- Estimated total run time in hh:mm:ss =      0 h 11 m 17 s
+ Estimated remaining time in seconds =    498.646881
+ Estimated remaining time in hh:mm:ss =      0 h 08 m 18 s
+ Estimated total run time in seconds =    747.970337
+ Estimated total run time in hh:mm:ss =      0 h 12 m 27 s
  We have done    33.3333321     % of that
- The run will finish approximately on (in local time): Thu Jan 18, 2018 23:48
+ The run will finish approximately on (in local time): Tue Dec 18, 2018 16:05
 
  Time step #         2000
  Time:    3.99499989      seconds
- Elapsed time in seconds =    301.86392593383789
- Elapsed time in hh:mm:ss =      0 h 05 m 01 s
- Mean elapsed time per time step in seconds =   0.150931969
- Max norm displacement vector U in all slices (m) =    1.94814929E-03
- Max norm pressure P in all slices (Pa) =    86821.9766
+ Elapsed time in seconds =    328.22067308425903
+ Elapsed time in hh:mm:ss =      0 h 05 m 28 s
+ Mean elapsed time per time step in seconds =   0.164110333
+ Max norm displacement vector U in all slices (m) =    1.94815127E-03
+ Max norm pressure P in all slices (Pa) =    86822.0000
  Time steps done =         2000  out of         4500
  Time steps remaining =         2500
- Estimated remaining time in seconds =    377.329895
- Estimated remaining time in hh:mm:ss =      0 h 06 m 17 s
- Estimated total run time in seconds =    679.193848
- Estimated total run time in hh:mm:ss =      0 h 11 m 19 s
+ Estimated remaining time in seconds =    410.275848
+ Estimated remaining time in hh:mm:ss =      0 h 06 m 50 s
+ Estimated total run time in seconds =    738.496521
+ Estimated total run time in hh:mm:ss =      0 h 12 m 18 s
  We have done    44.4444427     % of that
- The run will finish approximately on (in local time): Thu Jan 18, 2018 23:48
+ The run will finish approximately on (in local time): Tue Dec 18, 2018 16:05
 
  Time step #         2500
  Time:    6.49499989      seconds
- Elapsed time in seconds =    383.52450895309448
- Elapsed time in hh:mm:ss =      0 h 06 m 23 s
- Mean elapsed time per time step in seconds =   0.153409809
- Max norm displacement vector U in all slices (m) =    1.48747291E-03
- Max norm pressure P in all slices (Pa) =    48046.9844
+ Elapsed time in seconds =    406.61726093292236
+ Elapsed time in hh:mm:ss =      0 h 06 m 46 s
+ Mean elapsed time per time step in seconds =   0.162646905
+ Max norm displacement vector U in all slices (m) =    1.48747314E-03
+ Max norm pressure P in all slices (Pa) =    48046.9727
  Time steps done =         2500  out of         4500
  Time steps remaining =         2000
- Estimated remaining time in seconds =    306.819611
- Estimated remaining time in hh:mm:ss =      0 h 05 m 06 s
- Estimated total run time in seconds =    690.344116
- Estimated total run time in hh:mm:ss =      0 h 11 m 30 s
+ Estimated remaining time in seconds =    325.293823
+ Estimated remaining time in hh:mm:ss =      0 h 05 m 25 s
+ Estimated total run time in seconds =    731.911072
+ Estimated total run time in hh:mm:ss =      0 h 12 m 11 s
  We have done    55.5555573     % of that
- The run will finish approximately on (in local time): Thu Jan 18, 2018 23:48
+ The run will finish approximately on (in local time): Tue Dec 18, 2018 16:05
 
  Time step #         3000
  Time:    8.99499989      seconds
- Elapsed time in seconds =    469.88067293167114
- Elapsed time in hh:mm:ss =      0 h 07 m 49 s
- Mean elapsed time per time step in seconds =   0.156626895
- Max norm displacement vector U in all slices (m) =    1.49116153E-03
- Max norm pressure P in all slices (Pa) =    52930.4922
+ Elapsed time in seconds =    489.36040496826172
+ Elapsed time in hh:mm:ss =      0 h 08 m 09 s
+ Mean elapsed time per time step in seconds =   0.163120136
+ Max norm displacement vector U in all slices (m) =    1.49115874E-03
+ Max norm pressure P in all slices (Pa) =    52930.3203
  Time steps done =         3000  out of         4500
  Time steps remaining =         1500
- Estimated remaining time in seconds =    234.940338
- Estimated remaining time in hh:mm:ss =      0 h 03 m 54 s
- Estimated total run time in seconds =    704.820984
- Estimated total run time in hh:mm:ss =      0 h 11 m 44 s
+ Estimated remaining time in seconds =    244.680206
+ Estimated remaining time in hh:mm:ss =      0 h 04 m 04 s
+ Estimated total run time in seconds =    734.040588
+ Estimated total run time in hh:mm:ss =      0 h 12 m 14 s
  We have done    66.6666641     % of that
- The run will finish approximately on (in local time): Thu Jan 18, 2018 23:48
+ The run will finish approximately on (in local time): Tue Dec 18, 2018 16:05
 
  Time step #         3500
  Time:    11.4949999      seconds
- Elapsed time in seconds =    563.43521809577942
- Elapsed time in hh:mm:ss =      0 h 09 m 23 s
- Mean elapsed time per time step in seconds =   0.160981491
- Max norm displacement vector U in all slices (m) =    9.42269515E-04
- Max norm pressure P in all slices (Pa) =    35669.2695
+ Elapsed time in seconds =    571.82554697990417
+ Elapsed time in hh:mm:ss =      0 h 09 m 31 s
+ Mean elapsed time per time step in seconds =   0.163378730
+ Max norm displacement vector U in all slices (m) =    9.42273415E-04
+ Max norm pressure P in all slices (Pa) =    35668.7812
  Time steps done =         3500  out of         4500
  Time steps remaining =         1000
- Estimated remaining time in seconds =    160.981491
- Estimated remaining time in hh:mm:ss =      0 h 02 m 40 s
- Estimated total run time in seconds =    724.416687
- Estimated total run time in hh:mm:ss =      0 h 12 m 04 s
+ Estimated remaining time in seconds =    163.378723
+ Estimated remaining time in hh:mm:ss =      0 h 02 m 43 s
+ Estimated total run time in seconds =    735.204285
+ Estimated total run time in hh:mm:ss =      0 h 12 m 15 s
  We have done    77.7777786     % of that
- The run will finish approximately on (in local time): Thu Jan 18, 2018 23:49
+ The run will finish approximately on (in local time): Tue Dec 18, 2018 16:05
 
  Time step #         4000
  Time:    13.9949999      seconds
- Elapsed time in seconds =    641.97985506057739
- Elapsed time in hh:mm:ss =      0 h 10 m 41 s
- Mean elapsed time per time step in seconds =   0.160494968
- Max norm displacement vector U in all slices (m) =    9.67542408E-04
- Max norm pressure P in all slices (Pa) =    35185.5117
+ Elapsed time in seconds =    650.59189701080322
+ Elapsed time in hh:mm:ss =      0 h 10 m 50 s
+ Mean elapsed time per time step in seconds =   0.162647977
+ Max norm displacement vector U in all slices (m) =    9.67540196E-04
+ Max norm pressure P in all slices (Pa) =    35185.7969
  Time steps done =         4000  out of         4500
  Time steps remaining =          500
- Estimated remaining time in seconds =    80.2474823
- Estimated remaining time in hh:mm:ss =      0 h 01 m 20 s
- Estimated total run time in seconds =    722.227356
- Estimated total run time in hh:mm:ss =      0 h 12 m 02 s
+ Estimated remaining time in seconds =    81.3239899
+ Estimated remaining time in hh:mm:ss =      0 h 01 m 21 s
+ Estimated total run time in seconds =    731.915894
+ Estimated total run time in hh:mm:ss =      0 h 12 m 11 s
  We have done    88.8888855     % of that
- The run will finish approximately on (in local time): Thu Jan 18, 2018 23:48
+ The run will finish approximately on (in local time): Tue Dec 18, 2018 16:05
 
  Time step #         4500
  Time:    16.4950008      seconds
- Elapsed time in seconds =    717.64118003845215
- Elapsed time in hh:mm:ss =      0 h 11 m 57 s
- Mean elapsed time per time step in seconds =   0.159475818
- Max norm displacement vector U in all slices (m) =    6.58921432E-04
- Max norm pressure P in all slices (Pa) =    29368.2520
+ Elapsed time in seconds =    730.50798296928406
+ Elapsed time in hh:mm:ss =      0 h 12 m 10 s
+ Mean elapsed time per time step in seconds =   0.162335113
+ Max norm displacement vector U in all slices (m) =    6.58922887E-04
+ Max norm pressure P in all slices (Pa) =    29367.7754
  Time steps done =         4500  out of         4500
  Time steps remaining =            0
  Estimated remaining time in seconds =    0.00000000
  Estimated remaining time in hh:mm:ss =      0 h 00 m 00 s
- Estimated total run time in seconds =    717.641174
- Estimated total run time in hh:mm:ss =      0 h 11 m 57 s
+ Estimated total run time in seconds =    730.507996
+ Estimated total run time in hh:mm:ss =      0 h 12 m 10 s
  We have done    100.000000     % of that
 
- Time-Loop Complete. Timing info:
- Total elapsed time in seconds =    717.78593301773071
- Total elapsed time in hh:mm:ss =      0 h 11 m 57 s
+
+ Total number of time steps written:         4500
+ Writing the seismograms in parallel took   0.708574057      seconds
+
+ Time loop finished. Timing info:
+ Total elapsed time in seconds =    731.37110710144043
+ Total elapsed time in hh:mm:ss =      0 h 12 m 11 s
 
  End of the simulation
 
