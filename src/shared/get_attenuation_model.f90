@@ -29,6 +29,16 @@
 
   implicit none
 
+  ! model_attenuation_storage_var
+  type model_attenuation_storage_var
+    sequence
+    double precision, dimension(:,:), pointer :: tau_eps_storage
+    double precision, dimension(:), pointer :: Q_storage
+    integer Q_resolution
+    integer Q_max
+  end type model_attenuation_storage_var
+  type (model_attenuation_storage_var) AM_S
+
   ! attenuation_simplex_variables
   type attenuation_simplex_variables
     sequence
@@ -115,8 +125,8 @@
 !
 
   subroutine get_attenuation_model(myrank,nspec,USE_OLSEN_ATTENUATION,OLSEN_ATTENUATION_RATIO, &
-                                  mustore,rho_vs,kappastore,rho_vp,qkappa_attenuation_store,qmu_attenuation_store, &
-                                  ispec_is_elastic,min_resolved_period,prname,ATTENUATION_f0_REFERENCE)
+                                   mustore,rho_vs,kappastore,rho_vp,qkappa_attenuation_store,qmu_attenuation_store, &
+                                   ispec_is_elastic,min_resolved_period,prname,ATTENUATION_f0_REFERENCE)
 
 ! precalculates attenuation arrays and stores arrays into files
 
@@ -202,24 +212,27 @@
     write(IMAIN,*)
     write(IMAIN,*) "  Approximation is performed in the following frequency band:"
     write(IMAIN,*) "  Reference frequency requested by the user (Hz):",sngl(ATTENUATION_f0_REFERENCE), &
-                                            " period (s):",sngl(1.0/ATTENUATION_f0_REFERENCE)
+                                                        " period (s):",sngl(1.0/ATTENUATION_f0_REFERENCE)
     if (COMPUTE_FREQ_BAND_AUTOMATIC) then
       write(IMAIN,*)
       write(IMAIN,*) "  The following values are computed automatically by the code"
       write(IMAIN,*) "  based on the estimated maximum frequency resolution of your mesh"
       write(IMAIN,*) "  and can thus vary from what you have requested."
     endif
+
     write(IMAIN,*)
     write(IMAIN,*) "  Frequency band        min/max (Hz):",sngl(1.0/MAX_ATTENUATION_PERIOD),sngl(1.0/MIN_ATTENUATION_PERIOD)
     write(IMAIN,*) "  Period band           min/max (s) :",sngl(MIN_ATTENUATION_PERIOD),sngl(MAX_ATTENUATION_PERIOD)
     write(IMAIN,*) "  Logarithmic central frequency (Hz):",sngl(f_c_source)," period (s):",sngl(1.0/f_c_source)
     write(IMAIN,*)
     write(IMAIN,*) "  Using full attenuation with both Q_kappa and Q_mu."
+
     if (USE_OLSEN_ATTENUATION) then
       write(IMAIN,*) "  Using Olsen scaling with attenuation ratio Qmu/vs = ",sngl(OLSEN_ATTENUATION_RATIO)
       if (USE_ANDERSON_CRITERIA) write(IMAIN,*) "  Using Anderson and Hart criteria for ratio Qs/Qp"
     endif
 
+    write(IMAIN,*)
     call flush_IMAIN()
   endif
 
@@ -371,6 +384,7 @@
     write(IMAIN,*) "  Q_mu min/max           : ",sngl(qmin_all),sngl(qmax_all)
     write(IMAIN,*) "  Q_kappa min/max        : ",sngl(qmin_kappa_all),sngl(qmax_kappa_all)
     write(IMAIN,*)
+    call flush_IMAIN()
   endif
 
   ! stores attenuation arrays into files
@@ -792,9 +806,125 @@
   double precision, dimension(N_SLS) :: tau_s, tau_eps
   double precision :: min_period,max_period
 
+  ! local parameters
+  integer :: rw
+
+  ! note: to speed up this attenuation routine, we will try to compute the attenuation factors only for new Q values.
+  !       often, Q values are given for simple Q-models, thus there is no need to recompute the same factors for every GLL point.
+  !       we use a storage table AM_S to check/retrieve and store computed tau_eps values for specific Q values.
+  !
+  ! tries first to READ from storage array
+  rw = 1
+  call model_attenuation_storage(Q_in, tau_eps, rw)
+
+  ! checks if value was found
+  if (rw > 0) return
+
+  ! new Q value, computes tau factors
   call attenuation_invert_by_simplex(min_period, max_period, N_SLS, Q_in, tau_s, tau_eps)
 
+  ! WRITE into storage array, to keep in case for next GLL points
+  rw = -1
+  call model_attenuation_storage(Q_in, tau_eps, rw)
+
   end subroutine get_attenuation_tau_eps
+
+!
+!-------------------------------------------------------------------------------------------------
+!
+
+  subroutine model_attenuation_storage(Q_in, tau_eps, rw)
+
+  use constants
+
+  use attenuation_model, only: AM_S
+
+  implicit none
+
+  double precision,intent(in) :: Q_in
+  double precision, dimension(N_SLS),intent(out) :: tau_eps
+  integer,intent(inout) :: rw
+
+  ! local parameters
+  integer :: Qtmp
+  integer :: ier
+  !double precision :: Qnew
+
+  double precision, parameter :: ZERO_TOL = 1.e-5
+
+  integer, save :: first_time_called = 1
+
+  ! allocates arrays when first called
+  if (first_time_called == 1) then
+    first_time_called = 0
+    AM_S%Q_resolution = 10**ATTENUATION_COMP_RESOLUTION
+    AM_S%Q_max = ATTENUATION_COMP_MAXIMUM
+    Qtmp = AM_S%Q_resolution * AM_S%Q_max
+
+    allocate(AM_S%tau_eps_storage(N_SLS, Qtmp), &
+             AM_S%Q_storage(Qtmp),stat=ier)
+    if (ier /= 0) stop 'error allocating arrays for attenuation storage'
+    AM_S%Q_storage(:) = -1
+  endif
+
+  if (Q_in < 0.0d0 .or. Q_in > AM_S%Q_max) then
+    print *,'Error attenuation_storage()'
+    print *,'Attenuation Value out of Range: ', Q_in
+    print *,'Attenuation Value out of Range: Min, Max ', 0, AM_S%Q_max
+    stop 'Attenuation Value out of Range'
+  endif
+
+  ! check for zero Q value
+  if (rw > 0 .and. Q_in <= ZERO_TOL) then
+    !Q_in = 0.0d0;
+    tau_eps(:) = 0.0d0;
+    return
+  endif
+
+  ! Generate index for Storage Array
+  ! and Recast Q using this index
+  ! According to Brian, use float
+  !Qtmp = Q_in * Q_resolution
+  !Q_in = Qtmp / Q_resolution;
+
+  ! by default: resolution is Q_resolution = 10
+  ! converts Q to an array integer index:
+  ! e.g. Q = 150.31 -> Qtmp = 150.31 * 10 = int( 1503.10 ) = 1503
+  Qtmp = int(Q_in * dble(AM_S%Q_resolution))
+
+  ! rounds to corresponding double value:
+  ! e.g. Qnew = dble( 1503 ) / dble(10) = 150.30
+  ! but Qnew is not used any further...
+  !Qnew = dble(Qtmp) / dble(AM_S%Q_resolution)
+
+  if (rw > 0) then
+    ! checks
+    if (first_time_called == 0) then
+      if (.not. associated(AM_S%Q_storage)) &
+        stop 'error calling model_attenuation_storage() routine without AM_S array'
+    else
+      stop 'error calling model_attenuation_storage() routine with first_time_called value invalid'
+    endif
+
+    ! READ
+    if (AM_S%Q_storage(Qtmp) > 0) then
+      ! READ SUCCESSFUL
+      tau_eps(:) = AM_S%tau_eps_storage(:,Qtmp)
+      ! corresponding Q value would be:
+      !Q_in = AM_S%Q_storage(Qtmp)
+      rw = 1
+    else
+      ! READ NOT SUCCESSFUL
+      rw = -1
+    endif
+  else
+    ! WRITE SUCCESSFUL
+    AM_S%tau_eps_storage(:,Qtmp) = tau_eps(:)
+    AM_S%Q_storage(Qtmp) = Q_in
+    rw = 1
+  endif
+
+  end subroutine model_attenuation_storage
 
 !
 !-------------------------------------------------------------------------------------------------
@@ -805,16 +935,19 @@
   implicit none
 
   ! Input / Output
-  double precision  t1, t2
-  double precision  Q_real
-  integer  n
-  double precision, dimension(n)   :: tau_s, tau_eps
+  double precision,intent(in) :: t1, t2
+  double precision,intent(in) :: Q_real
+  integer,intent(in) :: n
+  double precision, dimension(n),intent(in)  :: tau_s
+  double precision, dimension(n),intent(out) :: tau_eps
 
   ! Internal
-  integer i, iterations, err,prnt
-  double precision f1, f2, exp1,exp2, min_value !, dexpval
+  integer :: i, iterations, err,prnt
+  double precision :: f1, f2, exp1,exp2, min_value !, dexpval
+
   integer, parameter :: nf = 100
   double precision, dimension(nf) :: f
+
   double precision, parameter :: PI = 3.14159265358979d0
   double precision, external :: attenuation_eval
 
@@ -855,7 +988,7 @@
 !  enddo
 
 
-  ! Shove the paramters into the module
+  ! Shove the parameters into the module
   call attenuation_simplex_setup(nf,n,f,Q_real,tau_s)
 
   ! Set the Tau_epsilon (tau_eps) to an initial value at omega*tau = 1
@@ -895,11 +1028,13 @@
 
   implicit none
 
-  integer nf_in, nsls_in
-  double precision Q_in
-  double precision, dimension(nf_in)   :: f_in
-  double precision, dimension(nsls_in) :: tau_s_in
-  integer ier
+  integer,intent(in) :: nf_in, nsls_in
+  double precision,intent(in) :: Q_in
+  double precision, dimension(nf_in),intent(in)   :: f_in
+  double precision, dimension(nsls_in),intent(in) :: tau_s_in
+
+  ! local parameters
+  integer :: ier
 
   allocate(AS_V%f(nf_in),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1188')
@@ -947,13 +1082,14 @@
   implicit none
 
    ! Input
-  double precision, dimension(AS_V%nsls) :: Xin
-  double precision, dimension(AS_V%nsls) :: tau_eps
+  double precision, dimension(AS_V%nsls),intent(in) :: Xin
 
+  ! local parameters
+  double precision, dimension(AS_V%nsls) :: tau_eps
   double precision, dimension(AS_V%nf)   :: A, B, tan_delta
 
-  integer i
-  double precision xi, iQ2
+  integer :: i
+  double precision :: xi, iQ2
 
   tau_eps = Xin
 
@@ -1010,19 +1146,19 @@
   implicit none
 
   ! Input
-  integer nf, nsls
-  double precision, dimension(nf)   :: f
-  double precision, dimension(nsls) :: tau_s, tau_eps
+  integer,intent(in) :: nf, nsls
+  double precision, dimension(nf),intent(in)   :: f
+  double precision, dimension(nsls),intent(in) :: tau_s, tau_eps
   ! Output
-  double precision, dimension(nf)   :: A,B
+  double precision, dimension(nf),intent(out)   :: A,B
 
-  integer i,j
-  double precision w, pi, denom
-
-  PI = 3.14159265358979d0
+  integer :: i,j
+  double precision :: w, denom
+  double precision,parameter :: PI = 3.14159265358979d0
 
   A(:) = 0.0d0
   B(:) = 0.0d0
+
   do i = 1,nf
     w = 2.0d0 * PI * 10**f(i)
     do j = 1,nsls
@@ -1078,13 +1214,16 @@
   ! Input
   double precision, external :: funk
 
-  integer n
-  double precision x(n) ! Also Output
-  integer itercount, prnt, err
-  double precision tolf
+  integer,intent(in) :: n
+  double precision,intent(inout) :: x(n) ! Also Output
+  integer,intent(inout) :: itercount
+  integer,intent(in) :: prnt
+  integer,intent(out) :: err
+  double precision,intent(inout) :: tolf
 
+  ! local parameters
   !Internal
-  integer i,j, how
+  integer :: i,j, how
   integer, parameter :: none             = 0
   integer, parameter :: initial          = 1
   integer, parameter :: expand           = 2
@@ -1093,24 +1232,23 @@
   integer, parameter :: contract_inside  = 5
   integer, parameter :: shrink           = 6
 
-  integer maxiter, maxfun
-  integer func_evals
-  double precision tolx
+  integer :: maxiter, maxfun
+  integer :: func_evals
+  double precision :: tolx
 
-  double precision rho, chi, psi, sigma
-  double precision xin(n), y(n), v(n,n+1), fv(n+1)
-  double precision vtmp(n,n+1)
-  double precision usual_delta, zero_term_delta
-  double precision xbar(n), xr(n), fxr, xe(n), fxe, xc(n), fxc, fxcc, xcc(n)
-  integer place(n+1)
+  double precision :: rho, chi, psi, sigma
+  double precision :: xin(n), y(n), v(n,n+1), fv(n+1)
+  double precision :: vtmp(n,n+1)
+  double precision :: usual_delta, zero_term_delta
+  double precision :: xbar(n), xr(n), fxr, xe(n), fxe, xc(n), fxc, fxcc, xcc(n)
+  integer :: place(n+1)
 
-  double precision max_size_simplex, max_value
+  double precision :: max_size_simplex, max_value
 
   rho   = 1.0d0
   chi   = 2.0d0
   psi   = 0.5d0
   sigma = 0.5d0
-
 
   if (itercount > 0) then
      maxiter = itercount
@@ -1312,11 +1450,12 @@
 !
 
   implicit none
-  integer n
-  double precision fv(n)
+  integer,intent(in) :: n
+  double precision,intent(in) :: fv(n)
 
-  integer i
-  double precision m, z
+  ! local parameters
+  integer :: i
+  double precision :: m, z
 
   m = 0.0d0
   do i = 2,n
@@ -1348,11 +1487,12 @@
 !
 
   implicit none
-  integer n
-  double precision v(n,n+1)
+  integer,intent(in) :: n
+  double precision,intent(in) :: v(n,n+1)
 
-  integer i,j
-  double precision m, z
+  ! local parameters
+  integer :: i,j
+  double precision :: m, z
 
   m = 0.0d0
   do i = 1,n
@@ -1395,13 +1535,14 @@
 
   implicit none
 
-  integer n
-  double precision X(n)
-  integer I(n)
+  integer,intent(in) :: n
+  double precision,intent(inout) :: X(n)
+  integer,intent(out) :: I(n)
 
-  integer j,k
-  double precision rtmp
-  integer itmp
+  ! local parameters
+  integer :: j,k
+  double precision :: rtmp
+  integer :: itmp
 
   do j = 1,n
      I(j) = j

@@ -391,7 +391,15 @@
      endif
   endif
 
-end subroutine create_regions_mesh
+  ! user output
+  call synchronize_all()
+  if (myrank == 0) then
+    write(IMAIN,*)
+    write(IMAIN,*) '  done'
+    call flush_IMAIN()
+  endif
+
+  end subroutine create_regions_mesh
 
 !
 !-------------------------------------------------------------------------------------------------

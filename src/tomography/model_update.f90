@@ -973,8 +973,8 @@ subroutine save_new_databases()
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 962')
   allocate(qkappa_attenuation_store(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 963')
-  qmu_attenuation_store=0._CUSTOM_REAL
-  qkappa_attenuation_store=0._CUSTOM_REAL
+  qmu_attenuation_store(:,:,:,:) = 0._CUSTOM_REAL
+  qkappa_attenuation_store(:,:,:,:) = 0._CUSTOM_REAL
 
   if (ATTENUATION) then
     ! read the proc*attenuation.vtk for the old model in LOCAL_PATH and store qmu_attenuation_store
