@@ -412,7 +412,8 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
                         elmnts_ext_mesh,nelmnts_ext_mesh,ANY_FAULT_IN_THIS_PROC)
 
   use generate_databases_par, only: STACEY_INSTEAD_OF_FREE_SURFACE,PML_INSTEAD_OF_FREE_SURFACE, &
-    NGNOD,NGNOD2D,NDIM,NDIM2D,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,BOTTOM_FREE_SURFACE,nspec_irregular
+    NGNOD,NGNOD2D,NDIM,NDIM2D,NGLLX,NGLLY,NGLLZ,NGLLSQUARE,IMAIN, &
+    BOTTOM_FREE_SURFACE,nspec_irregular
 
   use create_regions_mesh_ext_par
 
@@ -431,12 +432,29 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
   double precision, dimension(NDIM,nnodes_ext_mesh) :: nodes_coords_ext_mesh
   integer, dimension(NGNOD,nelmnts_ext_mesh) :: elmnts_ext_mesh
 
+! separates regular/irregular shaped elements
+  logical, parameter :: DO_IRREGULAR_ELEMENT_SEPARATION = .true.
+
 
 ! local parameters
   integer :: ier,ispec,ia
   logical :: any_regular_elem
   real    :: cube_edge_size_squared
   real, dimension(NGNOD) :: xelm_real,yelm_real,zelm_real
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '    NGLLX   = ',NGLLX
+    write(IMAIN,*) '    NGLLY   = ',NGLLY
+    write(IMAIN,*) '    NGLLZ   = ',NGLLZ
+    write(IMAIN,*) '    NGNOD   = ',NGNOD
+    write(IMAIN,*) '    NGNOD2D = ',NGNOD2D
+    write(IMAIN,*)
+    write(IMAIN,*) '    master process setup: '
+    write(IMAIN,*) '    nspec           = ',nspec
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
 
   allocate(xelm(NGNOD),yelm(NGNOD),zelm(NGNOD),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 723')
@@ -550,20 +568,50 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
   any_regular_elem = .false.
   allocate(irregular_element_number(nspec),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 755')
-  irregular_element_number(:) = 0
-  nspec_irregular = nspec
 
-  do ispec = 1, nspec
-    do ia = 1,NGNOD
-      xelm_real(ia) = real(nodes_coords_ext_mesh(1,elmnts_ext_mesh(ia,ispec)))
-      yelm_real(ia) = real(nodes_coords_ext_mesh(2,elmnts_ext_mesh(ia,ispec)))
-      zelm_real(ia) = real(nodes_coords_ext_mesh(3,elmnts_ext_mesh(ia,ispec)))
+  ! distinguishes between regular and irregular elements (based on cube shape)
+  if (DO_IRREGULAR_ELEMENT_SEPARATION) then
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) '    separating regular/irregular element shapes'
+      call flush_IMAIN()
+    endif
+
+    ! checks each element shape
+    irregular_element_number(:) = 0
+    nspec_irregular = nspec
+
+    do ispec = 1, nspec
+      do ia = 1,NGNOD
+        xelm_real(ia) = real(nodes_coords_ext_mesh(1,elmnts_ext_mesh(ia,ispec)))
+        yelm_real(ia) = real(nodes_coords_ext_mesh(2,elmnts_ext_mesh(ia,ispec)))
+        zelm_real(ia) = real(nodes_coords_ext_mesh(3,elmnts_ext_mesh(ia,ispec)))
+      enddo
+
+      ! checks if element is regular (is a cube)
+      call check_element_regularity(xelm_real,yelm_real,zelm_real,any_regular_elem,cube_edge_size_squared, &
+                                    nspec_irregular,ispec,nspec,irregular_element_number,ANY_FAULT_IN_THIS_PROC)
     enddo
-
-    ! checks if element is regular (is a cube)
-    call check_element_regularity(xelm_real,yelm_real,zelm_real,any_regular_elem,cube_edge_size_squared, &
-                                  nspec_irregular,ispec,nspec,irregular_element_number,ANY_FAULT_IN_THIS_PROC)
-  enddo
+  else
+    ! default case of previous versions: don't separate and assume each element to be irregular in shape
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*) '    assuming general irregular element shapes'
+      call flush_IMAIN()
+    endif
+    ! assigns each element as being irregular (value /= 0)
+    nspec_irregular = nspec
+    do ispec = 1,nspec
+      irregular_element_number(ispec) = ispec
+    enddo
+  endif
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '    nspec regular   = ',nspec-nspec_irregular
+    write(IMAIN,*) '    nspec irregular = ',nspec_irregular
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
 
   if (nspec_irregular == 0) then
     allocate(xixstore(1,1,1,1),stat=ier)
@@ -622,6 +670,14 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
   ! subtract bottom surface from Stacey condition when free surface
   if (BOTTOM_FREE_SURFACE)  num_abs_boundary_faces = num_abs_boundary_faces -  nspec2D_bottom
 
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '    absorbing boundary faces:'
+    write(IMAIN,*) '      num_abs_boundary_faces = ',num_abs_boundary_faces
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
+
   ! allocates arrays to store info for each face (assumes NGLLX=NGLLY=NGLLZ)
   allocate(abs_boundary_ispec(num_abs_boundary_faces),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 776')
@@ -638,9 +694,18 @@ subroutine crm_ext_allocate_arrays(nspec,LOCAL_PATH,myrank, &
 
    ! add bottom surface to free surface condition
   if (BOTTOM_FREE_SURFACE) then
-     num_free_surface_faces = num_free_surface_faces + nspec2D_bottom
-     if (STACEY_INSTEAD_OF_FREE_SURFACE)  num_free_surface_faces = num_free_surface_faces - nspec2D_top
+    num_free_surface_faces = num_free_surface_faces + nspec2D_bottom
+    if (STACEY_INSTEAD_OF_FREE_SURFACE)  num_free_surface_faces = num_free_surface_faces - nspec2D_top
   endif
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '    free surface faces:'
+    write(IMAIN,*) '      num_free_surface_faces = ',num_free_surface_faces
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
+
   ! allocates arrays to store info for each face (assumes NGLLX=NGLLY=NGLLZ)
   allocate(free_surface_ispec(num_free_surface_faces),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 780')
