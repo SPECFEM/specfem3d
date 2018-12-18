@@ -56,9 +56,9 @@ implicit none
   write(command_string,'(a,i4.4,a)') 'scp lqy@'//trim(mymachine)//':'//trim(local_data_base)//'/*', &
              myrank, '*  '//trim(local_data_base)
 
-  call system('echo '//trim(command_string)//' > '//trim(scp_outfile))
+  call system('echo '//trim(command_string)//'>'//trim(scp_outfile))
 
-  call system(trim(command_string)//' >  > '//trim(scp_outfile))
+  call system(trim(command_string)//' >>'//trim(scp_outfile))
 
 ! stop all the MPI processes, and exit
   call MPI_FINALIZE(ier)
