@@ -231,8 +231,7 @@
 ! note: x,y,z coordinates must coincide with the element (outer-)faces, no planes inside elements are taken
 !         (this is only a quick & dirty cross-section implementation, no sophisticated interpolation of points considered...)
 !
-! returns: ispec_is_surface_cross_section, iglob_is_surface_cross_section
-!               and nfaces_surface
+! returns: ispec_is_surface_cross_section, iglob_is_surface_cross_section and nfaces_surface
 
   use constants
 
@@ -385,7 +384,6 @@
     enddo
 
   enddo ! nspec
-
 
 ! tries to find closest face if points are inside
   do ispec = 1,nspec
@@ -665,15 +663,15 @@
                             num_interfaces_ext_mesh,max_nibool_interfaces_ext_mesh, &
                             nibool_interfaces_ext_mesh,my_neighbors_ext_mesh, &
                             ibool_interfaces_ext_mesh, &
-                            section_xorg,section_yorg,section_zorg, &
-                            section_nx,section_ny,section_nz, &
                             xstore,ystore,zstore,myrank)
 
 ! this returns points on a cross-section surface through model
 !
 ! returns: ispec_is_image_surface, iglob_is_image_surface & num_iglob_image_surface
 
-  use constants
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ, &
+    PNM_section_xorg,PNM_section_yorg,PNM_section_zorg, &
+    PNM_section_nx,PNM_section_ny,PNM_section_nz
 
   implicit none
 
@@ -692,10 +690,6 @@
   integer,dimension(num_interfaces_ext_mesh):: nibool_interfaces_ext_mesh
   integer,dimension(max_nibool_interfaces_ext_mesh,num_interfaces_ext_mesh):: ibool_interfaces_ext_mesh
   integer,dimension(num_interfaces_ext_mesh) :: my_neighbors_ext_mesh
-
-! specified x,y,z - coordinates  of cross-section origin and normal to cross-section
-  real(kind=CUSTOM_REAL):: section_xorg,section_yorg,section_zorg
-  real(kind=CUSTOM_REAL):: section_nx,section_ny,section_nz
 
 ! mesh global point coordinates
   real(kind=CUSTOM_REAL), dimension(nglob) :: xstore,ystore,zstore
@@ -732,8 +726,9 @@
           iglob = ibool(i,j,k,ispec)
 
           ! chooses points close to cross-section
-          if (abs((xstore(iglob)-section_xorg)*section_nx + (ystore(iglob)-section_yorg)*section_ny &
-                 + (zstore(iglob)-section_zorg)*section_nz ) < distance) then
+          if (abs((xstore(iglob)-PNM_section_xorg)*PNM_section_nx &
+                + (ystore(iglob)-PNM_section_yorg)*PNM_section_ny &
+                + (zstore(iglob)-PNM_section_zorg)*PNM_section_nz ) < distance) then
             ! sets valence to 1 for points on cross-sections
             valence(iglob) = myrank+1
           endif
