@@ -28,8 +28,8 @@
 ! routine for saving vtk file holding integer flag on each spectral element
 
   subroutine write_VTK_data_elem_i(nspec,nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-                        elem_flag,prname_file)
+                                   xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                                   elem_flag,prname_file)
 
   use constants
 
@@ -96,8 +96,8 @@
 ! routine for saving vtk file holding logical flag on each spectral element
 
   subroutine write_VTK_data_elem_l(nspec,nglob, &
-                        xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
-                        elem_flag,prname_file)
+                                   xstore_dummy,ystore_dummy,zstore_dummy,ibool, &
+                                   elem_flag,prname_file)
 
   use constants
 

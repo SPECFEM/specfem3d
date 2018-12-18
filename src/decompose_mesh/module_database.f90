@@ -319,7 +319,7 @@ contains
     ! write MOHO
     ! optional moho
     loc_nspec2D_moho = 0
-    do i=1,nspec2D_moho
+    do i = 1,nspec2D_moho
        if (ipart(ibelm_moho(i)) == myrank+1) then
           loc_nspec2D_moho = loc_nspec2D_moho + 1
        endif
@@ -337,7 +337,7 @@ contains
        !          we need to have the arg of glob2loc_elmnts start at 0, and thus we use glob2loc_nodes(ibelm_** -1)
 
        ! optional moho
-       do i=1,nspec2D_moho
+       do i = 1,nspec2D_moho
           if (ipart(ibelm_moho(i)) == myrank+1) then
              do inode = 1,NGNOD2D
                 node_loc(inode) = glob2loc_nodes(nodes_ibelm_moho(inode,i))
