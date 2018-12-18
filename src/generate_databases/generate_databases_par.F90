@@ -104,7 +104,8 @@
   character(len=MAX_STRING_LEN) :: prname
 
 ! boundaries and materials
-  double precision, dimension(:,:), allocatable :: materials_ext_mesh
+  double precision, dimension(:,:), allocatable :: mat_prop
+  character(len=MAX_STRING_LEN), dimension(:,:), allocatable :: undef_mat_prop
 
   integer :: ispec2D, boundary_number
   integer :: nspec2D_xmin, nspec2D_xmax, nspec2D_ymin, nspec2D_ymax, nspec2D_bottom_ext, nspec2D_top_ext
@@ -114,7 +115,6 @@
   integer, dimension(:,:), allocatable :: nodes_ibelm_xmin,nodes_ibelm_xmax, &
               nodes_ibelm_ymin, nodes_ibelm_ymax, nodes_ibelm_bottom, nodes_ibelm_top
 
-  character(len=MAX_STRING_LEN), dimension(:,:), allocatable :: undef_mat_prop
 
 ! C-PML absorbing boundary conditions
 

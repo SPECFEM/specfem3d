@@ -33,7 +33,7 @@
     IMODEL_COUPLED, &
     IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,IDOMAIN_POROELASTIC, &
     nspec => NSPEC_AB,ibool,mat_ext_mesh, &
-    materials_ext_mesh,nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh, &
+    mat_prop,nmat_ext_mesh,undef_mat_prop,nundefMat_ext_mesh, &
     ANISOTROPY,NGLLX,NGLLY,NGLLZ,FOUR_THIRDS,TWO,IMAIN
 
   use create_regions_mesh_ext_par
@@ -48,11 +48,11 @@
   ! local parameters
   real(kind=CUSTOM_REAL) :: vp,vs,rho,qkappa_atten,qmu_atten
   real(kind=CUSTOM_REAL) :: c11,c12,c13,c14,c15,c16,c22,c23,c24,c25, &
-                        c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
+                            c26,c33,c34,c35,c36,c44,c45,c46,c55,c56,c66
   real(kind=CUSTOM_REAL) :: kappa_s,kappa_f,kappa_fr,mu_fr,rho_s,rho_f,phi,tort,eta_f, &
-                        kxx,kxy,kxz,kyy,kyz,kzz,rho_bar
+                            kxx,kxy,kxz,kyy,kyz,kzz,rho_bar
   real(kind=CUSTOM_REAL) :: cpIsquare,cpIIsquare,cssquare,H_biot,M_biot,C_biot,D_biot, &
-                        afactor,bfactor,cfactor
+                            afactor,bfactor,cfactor
 
   integer :: ispec,i,j,k
 
@@ -221,17 +221,17 @@
           imaterial_def = mat_ext_mesh(2,ispec)
 
           ! assigns material properties
-          call get_model_values(materials_ext_mesh,nmat_ext_mesh, &
-                               undef_mat_prop,nundefMat_ext_mesh, &
-                               imaterial_id,imaterial_def, &
-                               xmesh,ymesh,zmesh, &
-                               rho,vp,vs,qkappa_atten,qmu_atten,idomain_id, &
-                               rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
-                               phi,tort,kxx,kxy,kxz,kyy,kyz,kzz, &
-                               c11,c12,c13,c14,c15,c16, &
-                               c22,c23,c24,c25,c26,c33, &
-                               c34,c35,c36,c44,c45,c46,c55,c56,c66, &
-                               ANISOTROPY)
+          call get_model_values(mat_prop,nmat_ext_mesh, &
+                                undef_mat_prop,nundefMat_ext_mesh, &
+                                imaterial_id,imaterial_def, &
+                                xmesh,ymesh,zmesh, &
+                                rho,vp,vs,qkappa_atten,qmu_atten,idomain_id, &
+                                rho_s,kappa_s,rho_f,kappa_f,eta_f,kappa_fr,mu_fr, &
+                                phi,tort,kxx,kxy,kxz,kyy,kyz,kzz, &
+                                c11,c12,c13,c14,c15,c16, &
+                                c22,c23,c24,c25,c26,c33, &
+                                c34,c35,c36,c44,c45,c46,c55,c56,c66, &
+                                ANISOTROPY)
 
           ! stores velocity model
           if (idomain_id == IDOMAIN_ACOUSTIC .or. idomain_id == IDOMAIN_ELASTIC) then
@@ -399,7 +399,7 @@
 !-------------------------------------------------------------------------------------------------
 !
 
-  subroutine get_model_values(materials_ext_mesh,nmat_ext_mesh, &
+  subroutine get_model_values(mat_prop,nmat_ext_mesh, &
                               undef_mat_prop,nundefMat_ext_mesh, &
                               imaterial_id,imaterial_def, &
                               xmesh,ymesh,zmesh, &
@@ -424,7 +424,7 @@
   implicit none
 
   integer, intent(in) :: nmat_ext_mesh
-  double precision, dimension(16,nmat_ext_mesh), intent(in) :: materials_ext_mesh
+  double precision, dimension(17,nmat_ext_mesh), intent(in) :: mat_prop
 
   integer, intent(in) :: nundefMat_ext_mesh
   character(len=MAX_STRING_LEN), dimension(6,nundefMat_ext_mesh) :: undef_mat_prop
@@ -481,7 +481,7 @@
 
   case (IMODEL_DEFAULT,IMODEL_GLL,IMODEL_IPATI,IMODEL_IPATI_WATER, IMODEL_SEP)
     ! material values determined by mesh properties
-    call model_default(materials_ext_mesh,nmat_ext_mesh, &
+    call model_default(mat_prop,nmat_ext_mesh, &
                        undef_mat_prop,nundefMat_ext_mesh, &
                        imaterial_id,imaterial_def, &
                        xmesh,ymesh,zmesh, &
@@ -622,7 +622,7 @@
     !        be able to superimpose a model onto the default one:
 
     ! material values determined by mesh properties
-    call model_default(materials_ext_mesh,nmat_ext_mesh, &
+    call model_default(mat_prop,nmat_ext_mesh, &
                        undef_mat_prop,nundefMat_ext_mesh, &
                        imaterial_id,imaterial_def, &
                        xmesh,ymesh,zmesh,rho,vp,vs, &

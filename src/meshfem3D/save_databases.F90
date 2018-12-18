@@ -85,7 +85,7 @@
   logical, dimension(nspec), intent(in) :: is_CPML
   integer :: nspec_CPML_total,ispec_CPML
 
-  double precision , dimension(16) :: matpropl
+  double precision , dimension(17) :: matpropl
   integer :: i,ispec,iglob,ier
 
   ! name of the database files
@@ -162,9 +162,9 @@
     ! material properties format: #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id  #material_id
     mat_id = material_properties(i,8)
     if (mat_id > 0) then
-      ! pad dummy zeros to fill up 16 entries (poroelastic medium not allowed)
+      ! pad dummy zeros to fill up 17 entries (poroelastic medium not allowed)
       matpropl(:) = 0.d0
-      ! material properties format: #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id  #material_id
+      ! material properties format: #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id
       matpropl(1:7) = material_properties(i,1:7)
       write(IIN_database) matpropl(:)
     endif

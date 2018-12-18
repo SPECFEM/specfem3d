@@ -111,7 +111,7 @@ contains
     integer,            dimension(NGNOD2D,nspec2D_top),   intent(in)  :: nodes_ibelm_top
     integer,            dimension(NGNOD2D,nspec2D_moho),  intent(in)  :: nodes_ibelm_moho
     integer,            dimension(nspec_cpml),            intent(in)  :: cpml_to_spec, cpml_regions
-    double precision,   dimension(16,count_def_mat),      intent(in)  :: mat_prop
+    double precision,   dimension(17,count_def_mat),      intent(in)  :: mat_prop
     character(len=MSL), dimension(6,count_undef_mat),     intent(in)  :: undef_mat_prop
     double precision,   dimension(3,nnodes),              intent(in)  :: nodes_coords
     logical,            dimension(nE),                    intent(in)  :: is_cpml
@@ -154,7 +154,7 @@ contains
     ! write material properties in my partition -----
     write(IIN_database)  count_def_mat,count_undef_mat
     do i=1, count_def_mat
-       write(IIN_database) mat_prop(1:16,i)
+       write(IIN_database) mat_prop(1:17,i)
     enddo
     do i = 1, count_undef_mat
        write(IIN_database) undef_mat_prop(1:6,i)

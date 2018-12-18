@@ -58,7 +58,7 @@ module regularization
   integer,                       private, dimension(:,:),       allocatable  :: nodes_ibelm_bottom, nodes_ibelm_top
   integer,                       private, dimension(:,:,:),     allocatable  :: my_interfaces_ext_mesh
   double precision,              private, dimension(:,:),       allocatable  :: nodes_coords_ext_mesh
-  double precision,              private, dimension(:,:),       allocatable  :: materials_ext_mesh
+  double precision,              private, dimension(:,:),       allocatable  :: mat_prop
   character(len=MAX_STRING_LEN), private, dimension(:,:),       allocatable  :: undef_mat_prop
 
   !! MPI communication
@@ -1393,24 +1393,24 @@ contains
 ! added poroelastic properties and filled with 0 the last 10 entries for elastic/acoustic
   read(IIN) nmat_ext_mesh, nundefMat_ext_mesh
 
-  allocate(materials_ext_mesh(16,nmat_ext_mesh),stat=ier)
+  allocate(mat_prop(17,nmat_ext_mesh),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 165')
-  if (ier /= 0) stop 'Error allocating array materials_ext_mesh'
-  materials_ext_mesh(:,:) = 0.d0
+  if (ier /= 0) stop 'Error allocating array mat_prop'
+  mat_prop(:,:) = 0.d0
 
   do imat = 1, nmat_ext_mesh
      ! (visco)elastic or acoustic format:
-     ! #(1) rho   #(2) vp  #(3) vs  #(4) Q_mu  #(5) anisotropy_flag  #(6) material_domain_id  #(7) Q_kappa
+     ! #(1) rho   #(2) vp  #(3) vs #(4) Q_kappa  #(5) Q_mu  #(6) anisotropy_flag  #(7) material_domain_id
      ! and remaining entries are filled with zeros.
      ! Q_kappa is not stored next to Q_mu for historical reasons, because it was added later.
      !
-     ! poroelastic format:  rhos,rhof,phi,tort,eta,material_domain_id,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,mufr
-     read(IIN) materials_ext_mesh(1,imat),  materials_ext_mesh(2,imat),  materials_ext_mesh(3,imat), &
-          materials_ext_mesh(4,imat),  materials_ext_mesh(5,imat), materials_ext_mesh(6,imat), &
-          materials_ext_mesh(7,imat),  materials_ext_mesh(8,imat), materials_ext_mesh(9,imat), &
-          materials_ext_mesh(10,imat),  materials_ext_mesh(11,imat), materials_ext_mesh(12,imat), &
-          materials_ext_mesh(13,imat),  materials_ext_mesh(14,imat), materials_ext_mesh(15,imat), &
-          materials_ext_mesh(16,imat)
+     ! poroelastic format:  rhos,rhof,phi,tort,eta,0,material_domain_id,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,mufr
+     read(IIN) mat_prop(1,imat),  mat_prop(2,imat),  mat_prop(3,imat), &
+               mat_prop(4,imat),  mat_prop(5,imat),  mat_prop(6,imat), &
+               mat_prop(7,imat),  mat_prop(8,imat),  mat_prop(9,imat), &
+               mat_prop(10,imat), mat_prop(11,imat), mat_prop(12,imat), &
+               mat_prop(13,imat), mat_prop(14,imat), mat_prop(15,imat), &
+               mat_prop(16,imat), mat_prop(17,imat)
   enddo
 
   if (myrank == 0) then

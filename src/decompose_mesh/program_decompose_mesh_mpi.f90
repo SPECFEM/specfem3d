@@ -439,7 +439,7 @@ subroutine send_mesh_to_all(myrank)
      if (ier /= 0) call exit_MPI_without_rank('error allocating array 20')
      if (ier /= 0) stop 'Error allocating array num_material'
 
-     allocate(mat_prop(16,count_def_mat),stat=ier)
+     allocate(mat_prop(17,count_def_mat),stat=ier)
      if (ier /= 0) call exit_MPI_without_rank('error allocating array 21')
      if (ier /= 0) stop 'Error allocating array mat_prop'
 
@@ -510,7 +510,7 @@ subroutine send_mesh_to_all(myrank)
 
   endif
 
-  call bcast_all_dp(mat_prop,16*count_def_mat)
+  call bcast_all_dp(mat_prop,17*count_def_mat)
   call bcast_all_i(elmnts_glob, NGNOD*nspec_glob)
   call bcast_all_i(mat, 2*nspec_glob)
   call bcast_all_i(num_material, nspec_glob)

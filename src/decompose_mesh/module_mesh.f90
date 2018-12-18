@@ -92,6 +92,8 @@ contains
   !----------------------------------------------------------------------------------------------
   subroutine read_mesh_files()
 
+  ! note: this routine will be called by the parallel decompose mesher.
+  !       most of the routine is a duplicate from the routine read_mesh_files() in src/decompose_mesh/decompose_mesh.F90
 
     implicit none
 
@@ -116,13 +118,16 @@ contains
        stop 'Error opening file nodes_coords_file'
     endif
     read(98,*) nnodes_glob
-    if (nnodes_glob < 1) stop 'Error: nnodes < 1'
+
+    if (nnodes_glob < 1) stop 'Error: nnodes_glob < 1'
     allocate(nodes_coords_glob(3,nnodes_glob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 117')
     if (ier /= 0) stop 'Error allocating array nodes_coords'
     do inode = 1, nnodes_glob
        ! format: #id_node #x_coordinate #y_coordinate #z_coordinate
        read(98,*) num_node, nodes_coords_glob(1,num_node), nodes_coords_glob(2,num_node), nodes_coords_glob(3,num_node)
+
+       ! for parallel meshing
        if (mod(inode,100000) == 0) then
           write(27,'(2i10)') num_node/100000, nnodes_glob/100000
        endif
@@ -149,7 +154,7 @@ contains
     ! sets number of elements (integer 4-byte)
     nspec_glob = nspec_long
 
-    if (nspec_glob < 1) stop 'Error: nspec < 1'
+    if (nspec_glob < 1) stop 'Error: nspec_glob < 1'
     allocate(elmnts_glob(NGNOD,nspec_glob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 118')
     if (ier /= 0) stop 'Error allocating array elmnts'
@@ -176,6 +181,8 @@ contains
        endif
 
        if ((num_elmnt > nspec_glob) .or. (num_elmnt < 1))  stop "Error : Invalid mesh_file"
+
+       ! for parallel meshing
        if (mod(ispec,100000) == 0) then
           write(27,'(2i10)') ispec/100000, nspec_glob/100000
        endif
@@ -268,7 +275,7 @@ contains
        print *,'  larger than defined materials in nummaterial_velocity_file:',count_def_mat
        stop 'Error positive material id exceeds bounds for defined materials'
     endif
-    allocate(mat_prop(16,count_def_mat),stat=ier)
+    allocate(mat_prop(17,count_def_mat),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 121')
     if (ier /= 0) stop 'Error allocating array mat_prop'
     mat_prop(:,:) = 0.d0
@@ -348,7 +355,8 @@ contains
        if (num_mat < 1 .or. num_mat > count_def_mat) &
             stop "Error in nummaterial_velocity_file: material id invalid for defined materials."
 
-       if (idomain_id == 1 .or. idomain_id == 2) then ! material is elastic or acoustic
+       if (idomain_id == 1 .or. idomain_id == 2) then
+          ! material is elastic or acoustic
 
           ! check that the S-wave velocity is zero if the material is acoustic
           if (idomain_id == 1 .and. vs >= 0.0001) &
@@ -366,28 +374,35 @@ contains
           mat_prop(6,num_mat) = aniso_flag
           mat_prop(7,num_mat) = idomain_id
 
-       else if (idomain_id == 3) then ! material is poroelastic
+       else if (idomain_id == 3) then
+          ! material is poroelastic
 
           if (use_poroelastic_file .eqv. .false.) &
                stop 'Error in nummaterial_velocity_file: poroelastic material requires nummaterial_poroelastic_file'
 
-          read(97,*) rhos,rhof,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,eta,mufr
+          ! reads poroelastic file line
+          read(97,'(A)',iostat=ier) line
+          if (ier /= 0) stop 'Error reading line in nummaterial_poroelastic_file'
+
+          read(line,*) rhos,rhof,phi,tort,kxx,kxy,kxz,kyy,kyz,kzz,kappas,kappaf,kappafr,eta,mufr
+
           mat_prop(1,num_mat) = rhos
           mat_prop(2,num_mat) = rhof
           mat_prop(3,num_mat) = phi
           mat_prop(4,num_mat) = tort
           mat_prop(5,num_mat) = eta
-          mat_prop(6,num_mat) = idomain_id
-          mat_prop(7,num_mat) = kxx
-          mat_prop(8,num_mat) = kxy
-          mat_prop(9,num_mat) = kxz
-          mat_prop(10,num_mat) = kyy
-          mat_prop(11,num_mat) = kyz
-          mat_prop(12,num_mat) = kzz
-          mat_prop(13,num_mat) = kappas
-          mat_prop(14,num_mat) = kappaf
-          mat_prop(15,num_mat) = kappafr
-          mat_prop(16,num_mat) = mufr
+          mat_prop(6,num_mat) = 0     ! aniso_flag
+          mat_prop(7,num_mat) = idomain_id
+          mat_prop(8,num_mat) = kxx
+          mat_prop(9,num_mat) = kxy
+          mat_prop(10,num_mat) = kxz
+          mat_prop(11,num_mat) = kyy
+          mat_prop(12,num_mat) = kyz
+          mat_prop(13,num_mat) = kzz
+          mat_prop(14,num_mat) = kappas
+          mat_prop(15,num_mat) = kappaf
+          mat_prop(16,num_mat) = kappafr
+          mat_prop(17,num_mat) = mufr
 
        else
           stop 'Error in nummaterial_velocity_file: idomain_id must be 1, 2 or 3 for acoustic, elastic or poroelastic domains'
@@ -401,7 +416,7 @@ contains
     if (ier /= 0) stop 'Error rewinding nummaterial_velocity_file'
 
     ! reads in undefined material properties
-    do imat=1,count_undef_mat
+    do imat = 1,count_undef_mat
        !  undefined materials: have to be listed in decreasing order of material_id (start with -1, -2, etc...)
        !  format:
        !   - for interfaces

@@ -72,7 +72,7 @@ program test_partitioning
 
   count_def_mat = 1
   count_undef_mat = 0
-  allocate(mat_prop(16,count_def_mat),stat=ier)
+  allocate(mat_prop(17,count_def_mat),stat=ier)
   if (ier /= 0) stop 'error allocating array mat_prop'
   allocate(undef_mat_prop(6,count_undef_mat),stat=ier)
   if (ier /= 0) stop 'error allocating array undef_mat_prop'
@@ -83,10 +83,10 @@ program test_partitioning
   mat_prop(1,num_mat) = 2500.d0   ! rho
   mat_prop(2,num_mat) = 3200.d0   ! vp
   mat_prop(3,num_mat) = 1100.d0   ! vs
-  mat_prop(4,num_mat) = 200.d0    ! qmu
-  mat_prop(5,num_mat) = 0         ! aniso_flag
-  mat_prop(6,num_mat) = 1         ! idomain_id
-  mat_prop(7,num_mat) = 9000.d0   ! qkappa
+  mat_prop(4,num_mat) = 9000.d0   ! qkappa
+  mat_prop(5,num_mat) = 200.d0    ! qmu
+  mat_prop(6,num_mat) = 0         ! aniso_flag
+  mat_prop(7,num_mat) = 1         ! idomain_id
 
   ANY_FAULT = .false.
   nparts = 4

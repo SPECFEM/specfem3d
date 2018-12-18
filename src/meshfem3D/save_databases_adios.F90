@@ -182,8 +182,8 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   enddo
 
   ! defined material properties
-  ! pad dummy zeros to fill up 16 entries (poroelastic medium not allowed)
-  call safe_alloc(matpropl,16, ndef,"matpropl")
+  ! pad dummy zeros to fill up 17 entries (poroelastic medium not allowed)
+  call safe_alloc(matpropl,17, ndef,"matpropl")
   matpropl(:,:) = 0.d0
   icount = 0
   do i = 1,NMATERIALS
@@ -623,7 +623,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(nodes_coords))
 
   if (ndef /= 0) then
-    local_dim = 16 * ndef
+    local_dim = 17 * ndef
     call define_adios_global_array1D(group, groupsize, local_dim, '', STRINGIFY_VAR(matpropl))
   endif
 
@@ -731,7 +731,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
 
   ! materials
   if (ndef /= 0) then
-    local_dim = 16 * ndef
+    local_dim = 17 * ndef
     call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                      STRINGIFY_VAR(matpropl))
   endif
