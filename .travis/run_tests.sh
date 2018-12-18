@@ -218,7 +218,7 @@ else
   fi
 
   # seismogram comparison
-  if [ "$TESTCOV" == "0" ]; then
+  if [ "$TESTCOV" == "0" ] && [ ! "$TESTID" == "11" ]; then
     my_test
   fi
   cd $WORKDIR
