@@ -1,9 +1,14 @@
-running example: Mon Jul  4 01:29:48 AST 2016
+running example: Tue Dec 18 12:58:30 CET 2018
 
    setting up example...
 
 
   decomposing mesh...
+
+
+ **********************
+ Serial mesh decomposer
+ **********************
 
  total number of nodes: 
    nnodes =        23273
@@ -20,11 +25,13 @@ running example: Mon Jul  4 01:29:48 AST 2016
    nspec2D_ymax =          576
    nspec2D_bottom =         1296
    nspec2D_top =         1296
- Par_file_faults not found: assume no faults
+   no absorbing_cpml_file file found
+   no moho_surface_file file found
+ Par_file_faults not found: assuming that there are no faults
  node valence:  min =            1  max =            8
-   nsize =            8 sup_neighbour =           38
+   nsize =            8 sup_neighbor =           38
  mesh2dual:
-   max_neighbour =           26
+   max_neighbor =           26
  partitions: 
    num =            4
 
@@ -41,5 +48,5 @@ running example: Mon Jul  4 01:29:48 AST 2016
 see results in directory: OUTPUT_FILES/
 
 done
-Mon Jul 4 01:33:31 AST 2016
+Tue Dec 18 13:02:32 CET 2018
 

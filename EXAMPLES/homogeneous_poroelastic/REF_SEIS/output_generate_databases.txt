@@ -1,7 +1,11 @@
 
- ******************************************
- *** Specfem3D MPI Mesher - f90 version ***
- ******************************************
+ *****************************************
+ *** Specfem3D MPI database generation ***
+ *****************************************
+
+ Running Git package version of the code: 3.0.0
+ which is Git undefined in the case of old tar ball builds
+ dating undefined in the case of old tar ball builds
 
  This is process            0
  There are            4  MPI processes
@@ -31,14 +35,12 @@
  no absorbing condition
 
  using a CMTSOLUTION source
+   with a Gaussian source time function
 
 
- using a Gaussian source time function
-
-
- **************************
- creating mesh in the model
- **************************
+ ************************************
+ reading partition files in the model
+ ************************************
 
  external mesh points :        24548
  defined materials    :            1
@@ -52,47 +54,69 @@
  number of MPI partition interfaces:           12
 
    minimum memory used so far     :    18.5136795     MB per process
-   minimum total memory requested :    83.938347816467285      MB per process
+   minimum total memory requested :    83.9383469     MB per process
 
  create regions:
 
    ...allocating arrays
- File DATA/Par_file_faults not found: assume no faults
+ File DATA/Par_file_faults not found: assuming that there are no faults
+
    ...setting up jacobian
+
    ...indexing global points
+
    ...preparing MPI interfaces
       total MPI interface points:        38220
       total assembled MPI interface points:       37700
+
    ...setting up absorbing boundaries
+      boundary xmin         288
+      boundary xmax           0
+      boundary ymin         288
+      boundary ymax           0
+      boundary bottom         324
+      boundary top         324
       absorbing boundary:
       total number of free faces =         1296
       total number of faces =         3600
+
+   ...setting up mesh surface
+
    ...determining velocity model
-               10  % time remaining:   3.0391449523659020E-007 s
-               20  % time remaining:   2.6919121146810714E-007 s
-               30  % time remaining:   2.3799010535723031E-007 s
-               40  % time remaining:   2.0459527915871623E-007 s
-               50  % time remaining:   1.7085332854331788E-007 s
-               60  % time remaining:   1.3645519979514804E-007 s
-               70  % time remaining:   1.0337917511003391E-007 s
-               80  % time remaining:   6.9586972389735851E-008 s
-               90  % time remaining:   3.5045086788857826E-008 s
-              100  % time remaining:   2.6812435393548241E-010 s
+               10  % time remaining:   3.3377850966465061E-007 s
+               20  % time remaining:   2.9302601648969508E-007 s
+               30  % time remaining:   2.6040685012951488E-007 s
+               40  % time remaining:   2.2293683386658512E-007 s
+               50  % time remaining:   1.8566718041593440E-007 s
+               60  % time remaining:   1.4896187459006787E-007 s
+               70  % time remaining:   1.1152193001617351E-007 s
+               80  % time remaining:   7.4520462719620336E-008 s
+               90  % time remaining:   3.7329426614581126E-008 s
+              100  % time remaining:   2.9517170668612783E-010 s
+
    ...detecting acoustic-elastic-poroelastic surfaces
       total acoustic elements   :           0
       total elastic elements    :           0
       total poroelastic elements:       20736
+
+
    ...element inner/outer separation
       for overlapping of communications with calculations:
       percentage of   edge elements    10.8024673     %
       percentage of volume elements    89.1975327     %
+
    ...element mesh coloring
       use coloring =  F
+
    ...external binary models
       no external binary model used
+
    ...creating mass matrix
+
    ...saving databases
+
    ...checking mesh resolution
+ Mesh resolution: (w/ poroelastic elements)
 
  ********
  minimum and maximum number of elements
@@ -126,15 +150,16 @@
  *** Minimum period resolved =    1.83260369
  *** Maximum suggested time step =    8.09738189E-02
 
- Elapsed time for checking mesh resolution in seconds =    1.4514923095703125E-002
+ Elapsed time for checking mesh resolution in seconds =    1.3136148452758789E-002
 
- min and max of topography included in mesh in m is    0.0000000000000000          0.0000000000000000
+ min and max of elevation (i.e. height of the upper surface of the mesh) included in mesh in m is    0.0000000000000000          0.0000000000000000
 
 
  Repartition of elements:
  -----------------------
 
  total number of elements in mesh slice 0:         5184
+ total number of irregular elements in mesh slice 0:         5184
  total number of points in mesh slice 0:       346385
 
  total number of elements in entire mesh:        20736
@@ -148,7 +173,7 @@
  smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
 
 
- Elapsed time for mesh generation and buffer creation in seconds =   0.78576993942260742
+ Elapsed time for mesh generation and buffer creation in seconds =    1.0629758834838867
  End of mesh generation
 
  done
