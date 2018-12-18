@@ -54,6 +54,8 @@ if [ "$CUDA" == "true" ]; then
   export PATH=${CUDA_HOME}/bin:${PATH}
   echo ""
   nvcc --version
+else
+  export CUDA_HOME=""
 fi
 
 # storing updated environment parameters for following bash-script
