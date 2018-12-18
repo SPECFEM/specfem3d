@@ -45,9 +45,6 @@ module create_meshfem_par
   ! MPI cut-planes parameters along xi and along eta
   logical, dimension(:,:), allocatable :: iMPIcut_xi,iMPIcut_eta
 
-  ! name of the database file
-  character(len=MAX_STRING_LEN) :: prname
-
 end module create_meshfem_par
 
 !
@@ -57,7 +54,7 @@ end module create_meshfem_par
 
   subroutine create_meshfem_mesh()
 
-  use create_meshfem_par, only: prname,nodes_coords,ispec_material_id,iboun,iMPIcut_xi,iMPIcut_eta
+  use create_meshfem_par, only: nodes_coords,ispec_material_id,iboun,iMPIcut_xi,iMPIcut_eta
 
   use meshfem3D_par, only: NSPEC_AB,xgrid,ygrid,zgrid,ibool, &
     xstore,ystore,zstore, &
@@ -67,7 +64,7 @@ end module create_meshfem_par
     NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX,NSPEC2D_BOTTOM,NSPEC2D_TOP, &
     NPROC_XI,NPROC_ETA, &
     nsubregions,subregions,NMATERIALS,material_properties, &
-    myrank, sizeprocs, &
+    myrank, sizeprocs, prname, &
     LOCAL_PATH,UTM_X_MIN,UTM_X_MAX,UTM_Y_MIN,UTM_Y_MAX,Z_DEPTH_BLOCK,NEX_XI,NEX_ETA, &
     CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
     USE_REGULAR_MESH,NDOUBLINGS,ner_doublings, &
@@ -162,8 +159,8 @@ end module create_meshfem_par
 
   ! outputs mesh file for visualization
   call create_visual_files(CREATE_ABAQUS_FILES,CREATE_DX_FILES,CREATE_VTK_FILES, &
-                          nspec,nglob, &
-                          prname,nodes_coords,ibool,ispec_material_id)
+                           nspec,nglob, &
+                           prname,nodes_coords,ibool,ispec_material_id)
 
   ! stores boundary informations
   call store_boundaries(myrank,iboun,nspec, &
@@ -352,6 +349,9 @@ contains
     integer :: ispec,ispec_superbrick
     double precision :: x_min,x_max,y_min,y_max,z_min,z_max
     double precision :: x_min_glob,x_max_glob,y_min_glob,y_max_glob,z_min_glob,z_max_glob
+    real(kind=CUSTOM_REAL) :: elemsize_min,elemsize_max,elemsize_min_glob,elemsize_max_glob
+    real(kind=CUSTOM_REAL) :: dist,x1,y1,z1,x2,y2,z2
+    integer :: i1,i2,j1,j2,k1,k2,i,j,k
 
     ! generate the elements in all the regions of the mesh
     ispec = 0
@@ -579,6 +579,90 @@ contains
     ! check that we assign a material to each element
     if (any(ispec_material_id(:) == -1000)) stop 'Element of undefined material found'
 
+    ! element size
+    elemsize_min_glob = HUGEVAL
+    elemsize_max_glob = -HUGEVAL
+    do ispec = 1,nspec
+      elemsize_min = HUGEVAL
+      elemsize_max = -HUGEVAL
+      ! loops over the four edges that are along X
+      i1 = 1
+      i2 = NGLLX_M
+      do k = 1, NGLLZ_M, NGLLZ_M-1
+        do j = 1, NGLLY_M, NGLLY_M-1
+          x1 = xstore(i1,j,k,ispec)
+          y1 = ystore(i1,j,k,ispec)
+          z1 = zstore(i1,j,k,ispec)
+
+          x2 = xstore(i2,j,k,ispec)
+          y2 = ystore(i2,j,k,ispec)
+          z2 = zstore(i2,j,k,ispec)
+
+          dist = (x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2)
+
+          if (dist < elemsize_min) elemsize_min = dist
+          if (dist > elemsize_max) elemsize_max = dist
+        enddo
+      enddo
+      ! loops over the four edges that are along Y
+      j1 = 1
+      j2 = NGLLY_M
+      do k = 1, NGLLZ_M, NGLLZ_M-1
+        do i = 1, NGLLX_M, NGLLX_M-1
+          x1 = xstore(i,j1,k,ispec)
+          y1 = ystore(i,j1,k,ispec)
+          z1 = zstore(i,j1,k,ispec)
+
+          x2 = xstore(i,j2,k,ispec)
+          y2 = ystore(i,j2,k,ispec)
+          z2 = zstore(i,j2,k,ispec)
+
+          dist = (x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2)
+
+          if (dist < elemsize_min) elemsize_min = dist
+          if (dist > elemsize_max) elemsize_max = dist
+        enddo
+      enddo
+      ! loops over the four edges that are along Z
+      k1 = 1
+      k2 = NGLLZ_M
+      do j = 1, NGLLY_M, NGLLY_M-1
+        do i = 1, NGLLX_M, NGLLX_M-1
+          x1 = xstore(i,j,k1,ispec)
+          y1 = ystore(i,j,k1,ispec)
+          z1 = zstore(i,j,k1,ispec)
+
+          x2 = xstore(i,j,k2,ispec)
+          y2 = ystore(i,j,k2,ispec)
+          z2 = zstore(i,j,k2,ispec)
+
+          dist = (x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2)
+
+          if (dist < elemsize_min) elemsize_min = dist
+          if (dist > elemsize_max) elemsize_max = dist
+        enddo
+      enddo
+      elemsize_min = sqrt( elemsize_min )
+      elemsize_max = sqrt( elemsize_max )
+
+      elemsize_min_glob = min(elemsize_min_glob, elemsize_min)
+      elemsize_max_glob = max(elemsize_max_glob, elemsize_max)
+    enddo
+    ! element size
+    elemsize_min = elemsize_min_glob
+    elemsize_max = elemsize_max_glob
+    call min_all_cr(elemsize_min,elemsize_min_glob)
+    call max_all_cr(elemsize_max,elemsize_max_glob)
+    ! user output
+    if (myrank == 0) then
+      write(IMAIN,*)
+      write(IMAIN,*) '  Max element size = ',elemsize_max_glob,'(m)'
+      write(IMAIN,*) '  Min element size = ',elemsize_min_glob,'(m)'
+      write(IMAIN,*) '  Max/min ratio = ',elemsize_max_glob/elemsize_min_glob
+      write(IMAIN,*)
+      call flush_IMAIN()
+    endif
+
     end subroutine cmm_create_mesh_elements
 
 !
@@ -586,6 +670,8 @@ contains
 !
 
     subroutine cmm_create_addressing()
+
+    use meshfem3D_par, only: prname
 
     implicit none
     ! local parameters

@@ -1554,6 +1554,12 @@ contains
   endif
   call synchronize_all()
 
+  ! reads mask of C-PML elements for all elements in this partition
+  allocate(is_CPML(NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 177')
+  if (ier /= 0) stop 'Error allocating array is_CPML'
+  is_CPML(:) = .false.
+
   if (nspec_cpml_tot > 0) then
      ! reads number of C-PML elements in this partition
      read(IIN) nspec_cpml
@@ -1588,11 +1594,6 @@ contains
         ! format: #id_cpml_element #id_cpml_regions
         read(IIN) CPML_to_spec(i), CPML_regions(i)
      enddo
-
-     ! reads mask of C-PML elements for all elements in this partition
-     allocate(is_CPML(NSPEC_AB),stat=ier)
-     if (ier /= 0) call exit_MPI_without_rank('error allocating array 177')
-     if (ier /= 0) stop 'Error allocating array is_CPML'
 
      do i=1,NSPEC_AB
         read(IIN) is_CPML(i)

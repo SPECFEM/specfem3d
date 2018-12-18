@@ -218,6 +218,8 @@
     write(IMAIN,*) '  xmin,xmax : ',num_xmin,num_xmax
     write(IMAIN,*) '  ymin,ymax : ',num_ymin,num_ymax
     write(IMAIN,*) '  bottom,top: ',num_bottom,num_top
+    write(IMAIN,*)
+    call flush_IMAIN()
   endif
   call synchronize_all()
 
@@ -227,54 +229,66 @@
 
   read(IIN) nspec_cpml_tot
   if (myrank == 0) then
-     write(IMAIN,*) 'total number of C-PML elements in the global mesh: ',nspec_cpml_tot
+    write(IMAIN,*) '  total number of C-PML elements in the global mesh: ',nspec_cpml_tot
+    call flush_IMAIN()
   endif
   call synchronize_all()
 
+  ! PML
+  ! array is_CPML gets always allocated to be usable in "if" checks
+  allocate(is_CPML(NSPEC_AB),stat=ier)
+  if (ier /= 0) call exit_MPI_without_rank('error allocating array 597')
+  if (ier /= 0) stop 'Error allocating array is_CPML'
+  is_CPML(:) = .false.
+
   if (nspec_cpml_tot > 0) then
-     ! reads number of C-PML elements in this partition
-     read(IIN) nspec_cpml
+    ! reads number of C-PML elements in this partition
+    read(IIN) nspec_cpml
 
-     if (myrank == 0) then
-        write(IMAIN,*) '  number of C-PML spectral elements in this partition: ',nspec_cpml
-     endif
-     call synchronize_all()
+    if (myrank == 0) then
+      write(IMAIN,*) '  number of C-PML spectral elements in this partition: ',nspec_cpml
+      call flush_IMAIN()
+    endif
+    call synchronize_all()
 
-     call sum_all_i(nspec_cpml,num_cpml)
+    call sum_all_i(nspec_cpml,num_cpml)
 
-     ! checks that the sum of C-PML elements over all partitions is correct
-     if (myrank == 0 .and. nspec_cpml_tot /= num_cpml) stop 'Error while summing C-PML elements over all partitions'
+    ! checks that the sum of C-PML elements over all partitions is correct
+    if (myrank == 0 .and. nspec_cpml_tot /= num_cpml) stop 'Error while summing C-PML elements over all partitions'
 
-     ! reads C-PML regions and C-PML spectral elements global indexing
-     allocate(CPML_to_spec(nspec_cpml),stat=ier)
-     if (ier /= 0) call exit_MPI_without_rank('error allocating array 595')
-     if (ier /= 0) stop 'Error allocating array CPML_to_spec'
-     allocate(CPML_regions(nspec_cpml),stat=ier)
-     if (ier /= 0) call exit_MPI_without_rank('error allocating array 596')
-     if (ier /= 0) stop 'Error allocating array CPML_regions'
+    ! reads C-PML regions and C-PML spectral elements global indexing
+    allocate(CPML_to_spec(nspec_cpml),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 595')
+    if (ier /= 0) stop 'Error allocating array CPML_to_spec'
+    allocate(CPML_regions(nspec_cpml),stat=ier)
+    if (ier /= 0) call exit_MPI_without_rank('error allocating array 596')
+    if (ier /= 0) stop 'Error allocating array CPML_regions'
 
-     do i=1,nspec_cpml
-        ! #id_cpml_regions = 1 : X_surface C-PML
-        ! #id_cpml_regions = 2 : Y_surface C-PML
-        ! #id_cpml_regions = 3 : Z_surface C-PML
-        ! #id_cpml_regions = 4 : XY_edge C-PML
-        ! #id_cpml_regions = 5 : XZ_edge C-PML
-        ! #id_cpml_regions = 6 : YZ_edge C-PML
-        ! #id_cpml_regions = 7 : XYZ_corner C-PML
-        !
-        ! format: #id_cpml_element #id_cpml_regions
-        read(IIN) CPML_to_spec(i), CPML_regions(i)
-     enddo
+    do i = 1,nspec_cpml
+      ! #id_cpml_regions = 1 : X_surface C-PML
+      ! #id_cpml_regions = 2 : Y_surface C-PML
+      ! #id_cpml_regions = 3 : Z_surface C-PML
+      ! #id_cpml_regions = 4 : XY_edge C-PML
+      ! #id_cpml_regions = 5 : XZ_edge C-PML
+      ! #id_cpml_regions = 6 : YZ_edge C-PML
+      ! #id_cpml_regions = 7 : XYZ_corner C-PML
+      !
+      ! format: #id_cpml_element #id_cpml_regions
+      read(IIN) CPML_to_spec(i), CPML_regions(i)
+    enddo
 
-     ! reads mask of C-PML elements for all elements in this partition
-     allocate(is_CPML(NSPEC_AB),stat=ier)
-     if (ier /= 0) call exit_MPI_without_rank('error allocating array 597')
-     if (ier /= 0) stop 'Error allocating array is_CPML'
-
-     do i=1,NSPEC_AB
-        read(IIN) is_CPML(i)
-     enddo
+    ! reads mask of C-PML elements for all elements in this partition
+    do i = 1,NSPEC_AB
+      read(IIN) is_CPML(i)
+    enddo
   endif
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
+  call synchronize_all()
 
 ! MPI interfaces between different partitions
   if (NPROC > 1) then

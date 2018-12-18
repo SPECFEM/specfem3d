@@ -171,12 +171,12 @@
 
   allocate(irregular_element_number(NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2388')
-    if (ier /= 0) stop 'error allocating arrays for irregular element numbering'
+  if (ier /= 0) stop 'error allocating arrays for irregular element numbering'
 
   ! allocate arrays for storing the databases
   allocate(ibool(NGLLX,NGLLY,NGLLZ,NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 2389')
-    if (ier /= 0) stop 'error allocating ibool'
+  if (ier /= 0) stop 'error allocating ibool'
 
   if (NSPEC_IRREGULAR > 0) then
      allocate(xix(NGLLX,NGLLY,NGLLZ,NSPEC_IRREGULAR),stat=ier)
@@ -329,9 +329,9 @@
     if (STACEY_INSTEAD_OF_FREE_SURFACE) then
       print *, 'please modify Par_file and recompile solver'
       stop 'STACEY_INSTEAD_OF_FREE_SURFACE = .true. is incompatible with PML_CONDITIONS = .true.'
-    else if (.not. SUPPRESS_UTM_PROJECTION) then
-      print *, 'please modify Par_file and recompile solver'
-      stop 'SUPPRESS_UTM_PROJECTION must be activated when PML_CONDITIONS is set to .true.'
+    !else if (.not. SUPPRESS_UTM_PROJECTION) then
+    !  print *, 'please modify Par_file and recompile solver'
+    !  stop 'SUPPRESS_UTM_PROJECTION must be activated when PML_CONDITIONS is set to .true.'
     endif
   else
     if (PML_INSTEAD_OF_FREE_SURFACE) &

@@ -242,6 +242,7 @@
   ! timer MPI
   double precision, external :: wtime
   double precision :: time_start,tCPU
+  character(len=3) :: str_unit
 
 ! ************** PROGRAM STARTS HERE **************
 
@@ -271,6 +272,12 @@
     write(IMAIN,*) '******************************************'
     write(IMAIN,*) '*** Specfem3D MPI meshfem3D - f90 version ***'
     write(IMAIN,*) '******************************************'
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
+
+  if (myrank == 0) then
+    write(IMAIN,*) 'Reading parameters from ',IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file'
     write(IMAIN,*)
     call flush_IMAIN()
   endif
@@ -335,7 +342,6 @@
   endif
 
   ! read the mesh parameter file (Data/meshfem3D_files/Mesh_Par_file)
-  ! nullify(subregions,material_properties)
   call read_mesh_parameter_file()
 
   ! get interface data from external file to count the spectral elements along Z
@@ -533,11 +539,18 @@
     else
       write(IMAIN,*) 'using UTM projection in region ',UTM_PROJECTION_ZONE
     endif
-     if (PML_CONDITIONS) then
-       write(IMAIN,*)
-       write(IMAIN,*) 'PML thickness in X direction = ',THICKNESS_OF_X_PML,'m'
-       write(IMAIN,*) 'PML thickness in Y direction = ',THICKNESS_OF_Y_PML,'m'
-       write(IMAIN,*) 'PML thickness in Z direction = ',THICKNESS_OF_Z_PML,'m'
+    if (PML_CONDITIONS) then
+      if (SUPPRESS_UTM_PROJECTION) then
+        ! no UTM, thickness given in m
+        str_unit = '(m)'
+      else
+        ! UTM, thickness given in degree
+        str_unit = 'deg'
+      endif
+      write(IMAIN,*)
+      write(IMAIN,*) 'PML thickness in X direction = ',sngl(THICKNESS_OF_X_PML),str_unit
+      write(IMAIN,*) 'PML thickness in Y direction = ',sngl(THICKNESS_OF_Y_PML),str_unit
+      write(IMAIN,*) 'PML thickness in Z direction = ',sngl(THICKNESS_OF_Z_PML),str_unit
     endif
     write(IMAIN,*)
     call flush_IMAIN()

@@ -350,10 +350,11 @@
   deallocate(ibool_interfaces_ext_mesh_dummy,stat=ier)
   if (ier /= 0) stop 'error deallocating array ibool_interfaces_ext_mesh_dummy'
 
+  ! PML
+  deallocate(is_CPML,stat=ier); if (ier /= 0) stop 'error deallocating array is_CPML'
   if (nspec_cpml_tot > 0) then
      deallocate(CPML_to_spec,stat=ier); if (ier /= 0) stop 'error deallocating array CPML_to_spec'
      deallocate(CPML_regions,stat=ier); if (ier /= 0) stop 'error deallocating array CPML_regions'
-     deallocate(is_CPML,stat=ier); if (ier /= 0) stop 'error deallocating array is_CPML'
   endif
 
   if (PML_CONDITIONS) then
