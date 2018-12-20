@@ -86,6 +86,8 @@
 
   ! see: read_mesh_databases.f90 and pml_allocate_arrays.f90
   ! C-PML arrays
+  ! is_CPML
+  memory_size = memory_size + NSPEC_AB*dble(SIZE_LOGICAL)
   if (PML_CONDITIONS) then
      ! CPML_regions,CPML_to_spec,CPML_type
      memory_size = memory_size + 3.d0*nspec_cpml*dble(SIZE_INTEGER)
@@ -93,8 +95,6 @@
      ! spec_to_CPML
      memory_size = memory_size + NSPEC_AB*dble(SIZE_INTEGER)
 
-     ! is_CPML
-     memory_size = memory_size + NSPEC_AB*dble(SIZE_LOGICAL)
 
      ! d_store_x,d_store_y,d_store_z,d_store_x,d_store_y,d_store_z,alpha_store_x,alpha_store_y,alpha_store_z
      memory_size = memory_size + 9.d0*dble(NGLLX)*dble(NGLLY)*dble(NGLLZ)*nspec_cpml*dble(CUSTOM_REAL)

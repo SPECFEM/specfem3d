@@ -346,7 +346,7 @@
 
   ! use the non-dimensional time step to make the mass matrix correction
   deltat = real(DT,kind=CUSTOM_REAL)
-  deltatover2 = real(0.5d0*deltat,kind=CUSTOM_REAL)
+  deltatover2 = real(0.5d0*DT,kind=CUSTOM_REAL)
 
   ! adds contributions to mass matrix to stabilize Stacey conditions
   do iface = 1,num_abs_boundary_faces
@@ -362,9 +362,6 @@
         j = abs_boundary_ijk(2,igll,iface)
         k = abs_boundary_ijk(3,igll,iface)
 
-        ! gets velocity
-        iglob = ibool(i,j,k,ispec)
-
         ! gets associated normal
         nx = abs_boundary_normal(1,igll,iface)
         ny = abs_boundary_normal(2,igll,iface)
@@ -379,6 +376,9 @@
 
         ! gets associated, weighted jacobian
         jacobianw = abs_boundary_jacobian2Dw(igll,iface)
+
+        ! gets velocity
+        iglob = ibool(i,j,k,ispec)
 
         ! assembles mass matrix on global points
         rmassx(iglob) = rmassx(iglob) + tx*jacobianw
@@ -397,14 +397,14 @@
         j = abs_boundary_ijk(2,igll,iface)
         k = abs_boundary_ijk(3,igll,iface)
 
-        ! gets global index
-        iglob = ibool(i,j,k,ispec)
+        ! C * DT/2 contribution
+        sn = deltatover2/rho_vp(i,j,k,ispec)
 
         ! gets associated, weighted jacobian
         jacobianw = abs_boundary_jacobian2Dw(igll,iface)
 
-        ! C * DT/2 contribution
-        sn = deltatover2/rho_vp(i,j,k,ispec)
+        ! gets global index
+        iglob = ibool(i,j,k,ispec)
 
         rmassz_acoustic(iglob) = rmassz_acoustic(iglob) + jacobianw*sn
       enddo

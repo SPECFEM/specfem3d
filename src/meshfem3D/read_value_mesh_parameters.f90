@@ -279,24 +279,27 @@
 ! region parameter list
 
   subroutine read_region_parameters(iunit,ix_beg_region,ix_end_region,iy_beg_region,iy_end_region, &
-          iz_beg_region,iz_end_region,imaterial_number, ier)
+                                    iz_beg_region,iz_end_region,imaterial_number,ier)
 
   use constants, only: MAX_STRING_LEN,DONT_IGNORE_JUNK
 
   implicit none
 
-  integer :: iunit
-  integer :: ier
-  integer :: ix_beg_region,ix_end_region,iy_beg_region,iy_end_region
-  integer :: iz_beg_region,iz_end_region,imaterial_number
+  integer,intent(in) :: iunit
+  integer,intent(out) :: ix_beg_region,ix_end_region,iy_beg_region,iy_end_region
+  integer,intent(out) :: iz_beg_region,iz_end_region,imaterial_number
+  integer,intent(out) :: ier
+
+  ! local parameters
   character(len=MAX_STRING_LEN) :: string_read
 
   ier = 0
   call read_next_line(iunit,DONT_IGNORE_JUNK,string_read,ier)
   if (ier /= 0) return
 
+  ! format: #NEX_XI_BEGIN  #NEX_XI_END  #NEX_ETA_BEGIN  #NEX_ETA_END  #NZ_BEGIN #NZ_END  #material_id
   read(string_read,*,iostat=ier) ix_beg_region,ix_end_region,iy_beg_region,iy_end_region, &
-          iz_beg_region,iz_end_region,imaterial_number
+                                 iz_beg_region,iz_end_region,imaterial_number
 
   end subroutine read_region_parameters
 
@@ -316,7 +319,10 @@
   ier = 0
   do
     read(unit=iunit,fmt="(a)",iostat=ier) string_read
-    if (ier /= 0) stop 'Error while reading parameter file'
+    if (ier /= 0) then
+      print *,'Error reading parameter file Mesh_Par_file, please check file...'
+      stop 'Error while reading parameter file Mesh_Par_file'
+    endif
 
 ! suppress leading white spaces, if any
     string_read = adjustl(string_read)
@@ -327,7 +333,6 @@
 ! exit loop when we find the first line that is not a comment or a white line
     if (len_trim(string_read) == 0) cycle
     if (string_read(1:1) /= '#') exit
-
   enddo
 
 ! suppress trailing white spaces, if any
@@ -338,11 +343,12 @@
 
   if (suppress_junk) then
 ! suppress leading junk (up to the first equal sign, included)
-     index_equal_sign = index(string_read,'=')
-     if (index_equal_sign <= 1 .or. index_equal_sign == len_trim(string_read)) &
-      stop 'incorrect syntax detected in Mesh_Par_file'
-
-     string_read = string_read(index_equal_sign + 1:len_trim(string_read))
+    index_equal_sign = index(string_read,'=')
+    if (index_equal_sign <= 1 .or. index_equal_sign == len_trim(string_read)) then
+      print *,'Error reading Mesh_Par_file line: ',trim(string_read)
+      stop 'Error incorrect syntax detected in Mesh_Par_file'
+    endif
+    string_read = string_read(index_equal_sign + 1:len_trim(string_read))
   endif
 
 ! suppress leading and trailing white spaces again, if any, after having suppressed the leading junk

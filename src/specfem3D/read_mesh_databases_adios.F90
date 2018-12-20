@@ -27,8 +27,8 @@
 !
 ! United States and French Government Sponsorship Acknowledged.
 
-!==============================================================================
-subroutine read_mesh_for_init_ADIOS(nspec, nglob)
+
+  subroutine read_mesh_for_init_ADIOS(nspec, nglob)
 
   use adios_read_mod
   use specfem_par, only: myrank, LOCAL_PATH, MAX_STRING_LEN
@@ -69,10 +69,11 @@ subroutine read_mesh_for_init_ADIOS(nspec, nglob)
   call adios_read_close(handle,ier)
   call adios_read_finalize_method(ADIOS_READ_METHOD_BP, ier)
 
-end subroutine read_mesh_for_init_ADIOS
+  end subroutine read_mesh_for_init_ADIOS
 
 !==============================================================================
-subroutine read_mesh_databases_adios()
+
+  subroutine read_mesh_databases_adios()
 
   use adios_read_mod
 
@@ -887,7 +888,6 @@ subroutine read_mesh_databases_adios()
   allocate(is_CPML(NSPEC_AB),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1875')
   if (ier /= 0) stop 'error allocating array is_CPML'
-
   ! make sure there are no PMLs by default,
   ! and then below if NSPEC_CPML > 0 we will read the real flags for this mesh from the disk
   is_CPML(:) = .false.
@@ -1787,12 +1787,14 @@ subroutine read_mesh_databases_adios()
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 1943')
   if (ier /= 0) stop 'error allocating array buffer_send_vector_ext_mesh etc.'
 
-end subroutine read_mesh_databases_adios
+  end subroutine read_mesh_databases_adios
 
 
 !-------------------------------------------------------------------------------
+
 !> Reads in moho meshes
-subroutine read_mesh_databases_moho_adios()
+
+  subroutine read_mesh_databases_moho_adios()
 
   use adios_read_mod
 
@@ -1984,4 +1986,4 @@ subroutine read_mesh_databases_moho_adios()
     if (ier /= 0) stop 'Error allocating array dsdx_top etc.'
   endif
 
-end subroutine read_mesh_databases_moho_adios
+  end subroutine read_mesh_databases_moho_adios

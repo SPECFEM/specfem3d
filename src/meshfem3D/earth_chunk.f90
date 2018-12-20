@@ -2241,7 +2241,7 @@
   write(27,*) z(i),zindex(i),ziflag(i)
   close(27)
 
-end subroutine write_recdepth_dsm
+  end subroutine write_recdepth_dsm
 
 !=======================================================================================================
 !
@@ -2654,25 +2654,27 @@ end subroutine write_recdepth_dsm
 !===========================================================================!
 !
 
-subroutine Lyfnd(r,rb,n,i)
+  subroutine Lyfnd(r,rb,n,i)
 
   implicit none
+  integer :: i,n
+  double precision :: r,rb(n)
 
-  integer i,n
-  double precision r,rb(n)
-
-  i=1
+  i = 1
   do while (r > rb(i) )
      i = i + 1
   enddo
   i = i - 1
 
-end subroutine Lyfnd
+  end subroutine Lyfnd
 
-function IsNewLayer(x,r,n)
+!=====================================================================
+
+  function IsNewLayer(x,r,n)
+
   implicit none
-  integer IsNewLayer,n,i
-  double precision x,r(n)
+  integer :: IsNewLayer,n,i
+  double precision :: x,r(n)
   IsNewLayer = 0
   ! ce test fonctionne que si les mailles sont suffisament petites !! ATTENTION
   do i = 1, n-1
@@ -2681,10 +2683,11 @@ function IsNewLayer(x,r,n)
         return
      endif
   enddo
-end function IsNewLayer
+  end function IsNewLayer
 
+!=====================================================================
 
-subroutine StorePoint(z,k,zc)
+  subroutine StorePoint(z,k,zc)
 
   implicit none
 
@@ -2703,15 +2706,17 @@ subroutine StorePoint(z,k,zc)
         z(k) = zc
      endif
   endif
-end subroutine StorePoint
+  end subroutine StorePoint
 
-subroutine StorePointZ(z,k,zc,NoInter)
+!=====================================================================
+
+  subroutine StorePointZ(z,k,zc,NoInter)
 
   implicit none
 
-  integer k
-  double precision z(*),zc
-  logical NoInter
+  integer :: k
+  double precision :: z(*),zc
+  logical :: NoInter
 
   if (k == 0) then
      k = k + 1
@@ -2725,31 +2730,33 @@ subroutine StorePointZ(z,k,zc,NoInter)
         z(k) = zc
      endif
   endif
-end subroutine StorePointZ
+  end subroutine StorePointZ
 
- subroutine CalGridProf(ProfForGemini,Niveau_elm,zlayer,nlayer,NEX_GAMMA,Z_DEPTH_BLOCK)
+!=====================================================================
+
+  subroutine CalGridProf(ProfForGemini,Niveau_elm,zlayer,nlayer,NEX_GAMMA,Z_DEPTH_BLOCK)
 
   implicit none
-  integer NEX_GAMMA,nlayer,nbbloc(100000),Niveau_elm(0:NEX_GAMMA-1)
-  double precision ProfForGemini(0:NEX_GAMMA-1,3),zlayer(nlayer)
-  double precision Z_DEPTH_BLOCK,zpoint(100000),zz(100000)
-  double precision epsillon
-  integer nb, n, i,j,k,ilayer,ilay,nd,niveau
-  double precision p, pas, longeur
-  logical test
+  integer :: NEX_GAMMA,nlayer,nbbloc(100000),Niveau_elm(0:NEX_GAMMA-1)
+  double precision :: ProfForGemini(0:NEX_GAMMA-1,3),zlayer(nlayer)
+  double precision :: Z_DEPTH_BLOCK,zpoint(100000),zz(100000)
+  double precision :: epsillon
+  integer :: nb, n, i,j,k,ilayer,ilay,nd,niveau
+  double precision :: p, pas, longeur
+  logical :: test
 
-  epsillon=1d-3
-   nbbloc(:)=0
-   ! point de depart
-   zpoint(1)=zlayer(nlayer) - Z_DEPTH_BLOCK
-   write(*,*) zlayer(nlayer) ,  Z_DEPTH_BLOCK
-   !! niveau de depart
-   call FindLayer_for_earth_chunk_mesh(ilayer,zlayer,zpoint(1),nlayer)
-   write(*,*) '              INITIALISATION calcul du niveau de depart : '
-   write(*,*)
-   write(*,*) 'zlayer : ', zlayer
-   write(*,*) 'premier point : '   , zpoint(1),ilayer
-    write(*,*)
+  epsillon = 1d-3
+  nbbloc(:) = 0
+  ! point de depart
+  zpoint(1) = zlayer(nlayer) - Z_DEPTH_BLOCK
+  write(*,*) zlayer(nlayer) ,  Z_DEPTH_BLOCK
+  !! niveau de depart
+  call FindLayer_for_earth_chunk_mesh(ilayer,zlayer,zpoint(1),nlayer)
+  write(*,*) '              INITIALISATION calcul du niveau de depart : '
+  write(*,*)
+  write(*,*) 'zlayer : ', zlayer
+  write(*,*) 'premier point : '   , zpoint(1),ilayer
+  write(*,*)
 
   !! on compte le nombre d'elements par niveau
   i = 1
@@ -2765,119 +2772,122 @@ end subroutine StorePointZ
   nd = i-1
   longeur = zlayer(nlayer) - zpoint(1)
 
-
-  do i=1,nb-1
-
-     pas = zpoint(i+1) - zpoint(i)
-     p = NEX_GAMMA * pas / longeur
+  do i = 1,nb-1
+    pas = zpoint(i+1) - zpoint(i)
+    p = NEX_GAMMA * pas / longeur
 
     if (p < 0.8d0) then
-        n = 1
+      n = 1
     else
-        n = max(int(p),2)
+      n = max(int(p),2)
     endif
 
-    nbbloc(i)=n
-
+    nbbloc(i) = n
   enddo
 
-  do j=1,nb-1
+  do j = 1,nb-1
     write(*,*) j,nbbloc(j)
   enddo
 
   !! on elimine les blocs en trop
-   write(*,*) 'SUM ',sum(nbbloc)
+  write(*,*) 'SUM ',sum(nbbloc)
 
-   nb = sum(nbbloc)
+  nb = sum(nbbloc)
 
-   do while (nb > NEX_GAMMA)
-
-      k  =  1
-      test = .true.
+  do while (nb > NEX_GAMMA)
+    k  =  1
+    test = .true.
 
     do  while (test)
+      j =  maxval(nbbloc)
+      ! on cherche l'indice du max
 
-         j =  maxval(nbbloc)
-         ! on cherche l'indice du max
+      if (j == nbbloc(k)) then
+        nbbloc(k ) = nbbloc(k) -1
+        test = .false.
+      endif
 
-         if (j == nbbloc(k)) then
-            nbbloc(k ) = nbbloc(k) -1
-            test = .false.
-         endif
+      k = k + 1
 
-         k = k + 1
+    enddo
 
-      enddo
-
-      nb = sum(nbbloc)
-      write(*,*) 'nb, ',nb,NEX_GAMMA
-   enddo
-
-  longeur = zlayer(nlayer) - zpoint(1)
-  k=1
-  zz(k)=zpoint(1)
-  do i=1,nd
-     pas = (zpoint(i+1) - zpoint(i)) / nbbloc(i)
-     write(*,*) i,nbbloc(i),pas
-     do while (zz(k) < zpoint(i+1) - epsillon)
-        k = k + 1
-        zz(k) = zz(k-1) + pas
-        write(*,*) zz(k), zpoint(i+1)
-     enddo
+    nb = sum(nbbloc)
+    write(*,*) 'nb, ',nb,NEX_GAMMA
   enddo
 
-   do ilay=1,NEX_GAMMA
+  longeur = zlayer(nlayer) - zpoint(1)
+  k = 1
+  zz(k) = zpoint(1)
+  do i = 1,nd
+    pas = (zpoint(i+1) - zpoint(i)) / nbbloc(i)
+    write(*,*) i,nbbloc(i),pas
+    do while (zz(k) < zpoint(i+1) - epsillon)
+      k = k + 1
+      zz(k) = zz(k-1) + pas
+      write(*,*) zz(k), zpoint(i+1)
+    enddo
+  enddo
 
-      ProfForGemini(ilay-1,1)  =  zz(ilay)
-      ProfForGemini(ilay-1,2)  =  zz(ilay+1)
-      ProfForGemini(ilay-1,3)  = 0.5d0 * (zz(ilay) + zz(ilay+1))
+  do ilay = 1,NEX_GAMMA
 
-      call FindLayer_for_earth_chunk_mesh(niveau,zlayer, ProfForGemini(ilay-1,3),nlayer)
-      Niveau_elm(ilay-1)=niveau
-      write(*,'(i5,2f15.3,i10)') ilay,zz(ilay),zz(ilay+1),niveau
-   enddo
+    ProfForGemini(ilay-1,1)  =  zz(ilay)
+    ProfForGemini(ilay-1,2)  =  zz(ilay+1)
+    ProfForGemini(ilay-1,3)  = 0.5d0 * (zz(ilay) + zz(ilay+1))
 
- end subroutine CalGridProf
+    call FindLayer_for_earth_chunk_mesh(niveau,zlayer, ProfForGemini(ilay-1,3),nlayer)
+    Niveau_elm(ilay-1)=niveau
+    write(*,'(i5,2f15.3,i10)') ilay,zz(ilay),zz(ilay+1),niveau
+  enddo
 
- subroutine  FindLayer_for_earth_chunk_mesh(i,z,r,n)
-   implicit none
-   integer i,n
-   double precision z(n),r
+  end subroutine CalGridProf
 
-   if (r > z(n) .or. r < z(1)) then
+!=====================================================================
+
+  subroutine  FindLayer_for_earth_chunk_mesh(i,z,r,n)
+
+  implicit none
+  integer :: i,n
+  double precision :: z(n),r
+
+  if (r > z(n) .or. r < z(1)) then
     write(*,*) 'STOP :: point ouside grid'
     stop
-   endif
-   i = 1
-   do while (r > z(i))
-     i = i + 1
-   enddo
+  endif
+  i = 1
+  do while (r > z(i))
+    i = i + 1
+  enddo
+
+  end subroutine FindLayer_for_earth_chunk_mesh
 
 
- end subroutine FindLayer_for_earth_chunk_mesh
-
+!=====================================================================
 
 !! VM VM add this for Axisem coupling
 
-subroutine  find_layer_in_axisem_model(i,u,r,z,n)
+  subroutine  find_layer_in_axisem_model(i,u,r,z,n)
 
-   implicit none
+  implicit none
 
-   integer i,n,u(5)
-   double precision z(n),r(5)
+  integer,intent(out) :: i
+  integer,dimension(5),intent(out) :: u
 
-   if (r(3) > z(n) .or. r(3) < z(1)) then
-      write(*,*) 'STOP :: point ouside grid'
-      stop
-   endif
-   i = 1
-   do while (r(3) > z(i))
-      i = i + 1
-   enddo
+  double precision, dimension(5),intent(in) :: r
+  integer,intent(in) :: n
+  double precision,intent(in) :: z(n)
 
-   u(:)=0
+  if (r(3) > z(n) .or. r(3) < z(1)) then
+    write(*,*) 'STOP :: point ouside grid'
+    stop
+  endif
+  i = 1
+  do while (r(3) > z(i))
+    i = i + 1
+  enddo
 
-end subroutine find_layer_in_axisem_model
+  u(:) = 0
+
+  end subroutine find_layer_in_axisem_model
 
 
 !=====================================================================

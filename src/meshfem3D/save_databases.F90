@@ -623,6 +623,7 @@
   double precision, dimension(:,:,:), allocatable  ::  xstore, ystore, zstore
    !! Element control points
   double precision, dimension(:), allocatable :: xelm, yelm, zelm
+  double precision, dimension(NGLLZ) :: radius_Z ! for temporary copies
 
   !! 3D shape functions and their derivatives
   double precision, dimension(:,:,:,:), allocatable    :: shape3D
@@ -630,7 +631,6 @@
   !! GLL points and weights of integration
   double precision, dimension(:), allocatable  :: xigll, yigll, zigll, wxgll, wygll, wzgll
 
-  double precision  :: deg2rad
   double precision  :: ANGULAR_WIDTH_ETA_RAD, ANGULAR_WIDTH_XI_RAD
   double precision  :: lat_center_chunk, lon_center_chunk, chunk_depth, chunk_azi
   double precision  :: radius_of_box_top
@@ -641,6 +641,8 @@
 
   character(len=10)  :: line
   character(len=250) :: model1D_file
+
+  double precision,parameter  :: deg2rad = 3.141592653589793d0/180.d0
 
   ! safety check
   if (.not. COUPLE_WITH_INJECTION_TECHNIQUE) return
@@ -654,14 +656,15 @@
 
     allocate(longitud(NGLLX,NGLLY,NGLLZ), latitud(NGLLX,NGLLY,NGLLZ), radius(NGLLX,NGLLY,NGLLZ),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1347')
+
     allocate(xstore(NGLLX,NGLLY,NGLLZ), ystore(NGLLX,NGLLY,NGLLZ), zstore(NGLLX,NGLLY,NGLLZ),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1348')
+
     allocate(xelm(NGNOD), yelm(NGNOD), zelm(NGNOD),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1349')
+
     allocate(xigll(NGLLX), yigll(NGLLY), zigll(NGLLZ), wxgll(NGLLX),wygll(NGLLY), wzgll(NGLLZ),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1350')
-
-    deg2rad = 3.141592653589793d0/180.d0
 
     !
     !--- set up coordinates of the Gauss-Lobatto-Legendre points
@@ -781,8 +784,9 @@
       call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
       zstore(:,:,:) = zstore(:,:,:) + radius_of_box_top !6371000.
       call Cartesian2spheric(xstore,ystore,zstore,rotation_matrix,longitud,latitud,radius,deg2rad)
-      zstore(:,:,:) = zstore(:,:,:) -radius_of_box_top ! 6371000.
-      call find_layer_in_axisem_model(ilayer,updown,radius(3,3,:),zlayer,nlayer)
+      zstore(:,:,:) = zstore(:,:,:) - radius_of_box_top ! 6371000.
+      radius_Z(:) = radius(3,3,:) ! to avoid warning about temporary copies in routine call
+      call find_layer_in_axisem_model(ilayer,updown,radius_Z,zlayer,nlayer)
 
       imin = 1
       imax = 1
@@ -839,8 +843,9 @@
       call calc_gll_points(xelm,yelm,zelm,xstore,ystore,zstore,shape3D,NGNOD,NGLLX,NGLLY,NGLLZ)
       zstore(:,:,:) = zstore(:,:,:) + radius_of_box_top !6371000.
       call Cartesian2spheric(xstore,ystore,zstore,rotation_matrix,longitud,latitud,radius,deg2rad)
-      zstore(:,:,:) = zstore(:,:,:) -radius_of_box_top ! 6371000.
-      call find_layer_in_axisem_model(ilayer,updown,radius(3,3,:),zlayer,nlayer)
+      zstore(:,:,:) = zstore(:,:,:) - radius_of_box_top ! 6371000.
+      radius_Z(:) = radius(3,3,:) ! to avoid warning about temporary copies in routine call
+      call find_layer_in_axisem_model(ilayer,updown,radius_Z,zlayer,nlayer)
 
       imin = NGLLX
       imax = NGLLX
@@ -898,7 +903,8 @@
       zstore(:,:,:) = zstore(:,:,:) + radius_of_box_top !6371000.
       call Cartesian2spheric(xstore,ystore,zstore,rotation_matrix,longitud,latitud,radius,deg2rad)
       zstore(:,:,:) = zstore(:,:,:) - radius_of_box_top !6371000.
-      call find_layer_in_axisem_model(ilayer,updown,radius(3,3,:),zlayer,nlayer)
+      radius_Z(:) = radius(3,3,:) ! to avoid warning about temporary copies in routine call
+      call find_layer_in_axisem_model(ilayer,updown,radius_Z,zlayer,nlayer)
 
       imin = 1
       imax = NGLLX
@@ -956,7 +962,8 @@
       zstore(:,:,:) = zstore(:,:,:) + radius_of_box_top !6371000.
       call Cartesian2spheric(xstore,ystore,zstore,rotation_matrix,longitud,latitud,radius,deg2rad)
       zstore(:,:,:) = zstore(:,:,:) - radius_of_box_top !6371000.
-      call find_layer_in_axisem_model(ilayer,updown,radius(3,3,:),zlayer,nlayer)
+      radius_Z(:) = radius(3,3,:) ! to avoid warning about temporary copies in routine call
+      call find_layer_in_axisem_model(ilayer,updown,radius_Z,zlayer,nlayer)
 
       imin = 1
       imax = NGLLX
@@ -1014,7 +1021,8 @@
       zstore(:,:,:) = zstore(:,:,:) + radius_of_box_top ! 6371000.
       call Cartesian2spheric(xstore,ystore,zstore,rotation_matrix,longitud,latitud,radius,deg2rad)
       zstore(:,:,:) = zstore(:,:,:) - radius_of_box_top ! 6371000.
-      call find_layer_in_axisem_model(ilayer,updown,radius(3,3,:),zlayer,nlayer)
+      radius_Z(:) = radius(3,3,:) ! to avoid warning about temporary copies in routine call
+      call find_layer_in_axisem_model(ilayer,updown,radius_Z,zlayer,nlayer)
 
       imin = 1
       imax = NGLLX
@@ -1073,7 +1081,8 @@
          zstore(:,:,:) = zstore(:,:,:) + radius_of_box_top !6371000.
          call Cartesian2spheric(xstore,ystore,zstore,rotation_matrix,longitud,latitud,radius,deg2rad)
          zstore(:,:,:) = zstore(:,:,:) - radius_of_box_top !6371000.
-         call find_layer_in_axisem_model(ilayer,updown,radius(3,3,:),zlayer,nlayer)
+         radius_Z(:) = radius(3,3,:) ! to avoid warning about temporary copies in routine call
+         call find_layer_in_axisem_model(ilayer,updown,radius_Z,zlayer,nlayer)
 
          imin = 1
          imax = NGLLX

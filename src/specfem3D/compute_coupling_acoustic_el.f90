@@ -39,6 +39,7 @@
 ! returns the updated pressure array: potential_dot_dot_acoustic
 
   use constants, only: CUSTOM_REAL,NDIM,NGLLX,NGLLY,NGLLZ,NGLLSQUARE
+
   use pml_par, only: NSPEC_CPML,spec_to_CPML,is_CPML,rmemory_coupling_ac_el_displ
 
   implicit none

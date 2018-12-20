@@ -963,7 +963,8 @@
         if (ier /= 0) stop 'error allocating array b_absorb_fields and b_absorb_fieldw'
       endif
     endif
-  else ! STACEY_ABSORBING_CONDITIONS
+  else
+    ! STACEY_ABSORBING_CONDITIONS
     ! needs dummy array
     b_num_abs_boundary_faces = 0
     if (ELASTIC_SIMULATION) then

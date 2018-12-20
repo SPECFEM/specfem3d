@@ -75,6 +75,12 @@
   ! open parameter file Mesh_Par_file
   call open_parameter_file_mesh(filename)
 
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '  input parameters...'
+    call flush_IMAIN()
+  endif
+
   call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,LATITUDE_MIN, 'LATITUDE_MIN', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter LATITUDE_MIN'
   call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,LATITUDE_MAX, 'LATITUDE_MAX', ier)
@@ -102,6 +108,12 @@
   if (ier /= 0) stop 'Error reading Mesh parameter NPROC_XI'
   call read_value_integer_mesh(IIN,IGNORE_JUNK,NPROC_ETA, 'NPROC_ETA', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter NPROC_ETA'
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '  doubling layers...'
+    call flush_IMAIN()
+  endif
 
   call read_value_logical_mesh(IIN,IGNORE_JUNK,USE_REGULAR_MESH, 'USE_REGULAR_MESH', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter USE_REGULAR_MESH'
@@ -142,6 +154,12 @@
   !call read_value_integer_mesh(IIN,IGNORE_JUNK, ner_doublings(2), 'NZ_DOUBLING_2', ier)
   !if (ier /= 0) stop 'Error reading Mesh parameter NZ_DOUBLING_2'
 
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '  visualization...'
+    call flush_IMAIN()
+  endif
+
   ! visualization file output
   call read_value_logical_mesh(IIN,IGNORE_JUNK,CREATE_ABAQUS_FILES, 'CREATE_ABAQUS_FILES', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter CREATE_ABAQUS_FILES'
@@ -154,6 +172,12 @@
   call read_value_string_mesh(IIN,IGNORE_JUNK,LOCAL_PATH, 'LOCAL_PATH', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter LOCAL_PATH'
 
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '  CPML...'
+    call flush_IMAIN()
+  endif
+
   ! CPML thickness
   call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,THICKNESS_OF_X_PML, 'THICKNESS_OF_X_PML', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter THICKNESS_OF_X_PML'
@@ -161,6 +185,16 @@
   if (ier /= 0) stop 'Error reading Mesh parameter THICKNESS_OF_Y_PML'
   call read_value_dble_precision_mesh(IIN,IGNORE_JUNK,THICKNESS_OF_Z_PML, 'THICKNESS_OF_Z_PML', ier)
   if (ier /= 0) stop 'Error reading Mesh parameter THICKNESS_OF_Z_PML'
+
+  if (THICKNESS_OF_X_PML < 0.0) stop 'Error invalid negative value THICKNESS_OF_X_PML'
+  if (THICKNESS_OF_Y_PML < 0.0) stop 'Error invalid negative value THICKNESS_OF_Y_PML'
+  if (THICKNESS_OF_Z_PML < 0.0) stop 'Error invalid negative value THICKNESS_OF_Z_PML'
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '  domain materials...'
+    call flush_IMAIN()
+  endif
 
   ! read number of materials
   call read_value_integer_mesh(IIN,IGNORE_JUNK,NMATERIALS, 'NMATERIALS', ier)
@@ -173,7 +207,10 @@
   material_properties(:,:) = 0.d0
   do imat = 1,NMATERIALS
     call read_material_parameters(IIN,mat_id,rho,vp,vs,Q_Kappa,Q_mu,anisotropy_flag,domain_id,ier)
-    if (ier /= 0) stop 'Error reading materials in Mesh_Par_file'
+    if (ier /= 0) then
+      print *,'Error reading material ',imat,' out of ',NMATERIALS
+      stop 'Error reading materials in Mesh_Par_file'
+    endif
     ! stores material
     material_properties(imat,1) = rho
     material_properties(imat,2) = vp
@@ -184,6 +221,12 @@
     material_properties(imat,7) = domain_id
     material_properties(imat,8) = mat_id
   enddo
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '  domain regions...'
+    call flush_IMAIN()
+  endif
 
   ! read number of subregions
   call read_value_integer_mesh(IIN,IGNORE_JUNK,NSUBREGIONS, 'NSUBREGIONS', ier)
@@ -197,7 +240,10 @@
   do ireg = 1,NSUBREGIONS
     call read_region_parameters(IIN,ix_beg_region,ix_end_region,iy_beg_region,iy_end_region, &
                                 iz_beg_region,iz_end_region,imaterial_number,ier)
-    if (ier /= 0) stop 'Error reading regions in Mesh_Par_file'
+    if (ier /= 0) then
+      print *,'Error reading region ',ireg,' out of ',NSUBREGIONS
+      stop 'Error reading regions in Mesh_Par_file'
+    endif
     ! stores region
     subregions(ireg,1) = ix_beg_region
     subregions(ireg,2) = ix_end_region
@@ -210,6 +256,14 @@
 
   ! close parameter file
   call close_parameter_file_mesh()
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '  done successfully'
+    write(IMAIN,*)
+    write(IMAIN,*) '  checking mesh setup...'
+    call flush_IMAIN()
+  endif
 
   ! convert model size to UTM coordinates and depth of mesh to meters
   call utm_geo(LONGITUDE_MIN,LATITUDE_MIN,UTM_X_MIN,UTM_Y_MIN,ILONGLAT2UTM)
@@ -367,6 +421,13 @@
 
   ! make sure everybody is synchronized
   call synchronize_all()
+
+  ! user output
+  if (myrank == 0) then
+    write(IMAIN,*) '  all okay'
+    write(IMAIN,*)
+    call flush_IMAIN()
+  endif
 
   end subroutine read_mesh_parameter_file
 

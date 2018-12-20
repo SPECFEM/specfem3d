@@ -47,7 +47,8 @@ module fault_generate_databases
     real(kind=CUSTOM_REAL) :: eta
     integer, dimension(:), pointer:: ispec1, ispec2, ibulk1, ibulk2, iface1, iface2
     real(kind=CUSTOM_REAL), dimension(:), pointer :: xcoordbulk1,ycoordbulk1,zcoordbulk1,xcoordbulk2,ycoordbulk2,zcoordbulk2
-    integer, dimension(:,:), pointer :: ibool1, ibool2, inodes1, inodes2
+    integer, dimension(:,:), allocatable :: ibool1, ibool2
+    integer, dimension(:,:), pointer :: inodes1, inodes2
     integer, dimension(:,:,:), pointer :: ijk1, ijk2
     real(kind=CUSTOM_REAL), dimension(:,:), pointer:: jacobian2Dw
     real(kind=CUSTOM_REAL), dimension(:,:,:), pointer:: normal
@@ -89,7 +90,7 @@ module fault_generate_databases
 contains
 
 !=================================================================================================================
-subroutine fault_read_input(prname,myrank)
+  subroutine fault_read_input(prname,myrank)
 
   use constants, only: MAX_STRING_LEN, IN_DATA_FILES
 
@@ -99,7 +100,7 @@ subroutine fault_read_input(prname,myrank)
   integer :: nb,i,iflt,ier,nspec,dummy_node
   integer, parameter :: IIN_PAR = 100
 
- ! read fault input file
+  ! read fault input file
   nb = 0
   open(unit=IIN_PAR,file=IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'Par_file_faults',status='old',action='read',iostat=ier)
   if (ier == 0) then
@@ -120,7 +121,7 @@ subroutine fault_read_input(prname,myrank)
   enddo
   close(IIN_PAR)
 
- ! read fault database file
+  ! read fault database file
   open(unit=IIN_PAR,file=prname(1:len_trim(prname))//'Database_fault', &
        status='old',action='read',form='unformatted',iostat=ier)
   if (ier /= 0) then
@@ -174,10 +175,11 @@ subroutine fault_read_input(prname,myrank)
 
   close(IIN_PAR)
 
-end subroutine fault_read_input
+  end subroutine fault_read_input
 
 !==================================================================================================================
-subroutine fault_setup(ibool,nnodes_ext_mesh,nodes_coords_ext_mesh, &
+
+  subroutine fault_setup(ibool,nnodes_ext_mesh,nodes_coords_ext_mesh, &
                        xstore,ystore,zstore,nspec,nglob,myrank)
 
   integer, intent(in) :: nspec
@@ -220,14 +222,16 @@ subroutine fault_setup(ibool,nnodes_ext_mesh,nodes_coords_ext_mesh, &
 
   enddo
 
-end subroutine fault_setup
+  end subroutine fault_setup
 
 
 !=============================================================================================================
-    ! looks for i,j,k indices of GLL points on boundary face
-    ! determines element face by given CUBIT corners
-    ! sets face id of reference element associated with this face
-subroutine setup_iface(fdb,nnodes_ext_mesh,nodes_coords_ext_mesh,nspec,nglob,ibool)
+
+! looks for i,j,k indices of GLL points on boundary face
+! determines element face by given CUBIT corners
+! sets face id of reference element associated with this face
+
+  subroutine setup_iface(fdb,nnodes_ext_mesh,nodes_coords_ext_mesh,nspec,nglob,ibool)
 
   use create_regions_mesh_ext_par, only: xstore_dummy,ystore_dummy,zstore_dummy
 
@@ -266,10 +270,11 @@ subroutine setup_iface(fdb,nnodes_ext_mesh,nodes_coords_ext_mesh,nspec,nglob,ibo
                             fdb%iface2(e))
   enddo
 
-end subroutine setup_iface
+  end subroutine setup_iface
 
 !=============================================================================================================
-subroutine setup_ijk(fdb)
+
+  subroutine setup_ijk(fdb)
 
   type(fault_db_type), intent(inout) :: fdb
 
@@ -294,10 +299,11 @@ subroutine setup_ijk(fdb)
     enddo
   enddo
 
-end subroutine setup_ijk
+  end subroutine setup_ijk
 
 !=============================================================================================================
- subroutine setup_Kelvin_Voigt_eta(fdb,nspec)
+
+  subroutine setup_Kelvin_Voigt_eta(fdb,nspec)
 
   type(fault_db_type), intent(in) :: fdb
   integer, intent(in) :: nspec ! number of spectral elements in each block
@@ -316,12 +322,13 @@ end subroutine setup_ijk
  end subroutine
 
 !===============================================================================================================
+
 ! The lexicographic ordering of node coordinates
 ! guarantees that the fault nodes are
 ! consistently ordered on both sides of the fault,
 ! such that the K-th node of side 1 is facing the K-th node of side 2
 
-subroutine setup_ibools(fdb,xstore,ystore,zstore,nspec,npointot)
+  subroutine setup_ibools(fdb,xstore,ystore,zstore,nspec,npointot)
 
   use generate_databases_par, only: nodes_coords_ext_mesh
 
@@ -351,8 +358,10 @@ subroutine setup_ibools(fdb,xstore,ystore,zstore,nspec,npointot)
       zp(k) = zstore(ie,je,ke,ispec)
     enddo
   enddo
+
   allocate( fdb%ibool1(NGLLSQUARE,fdb%nspec) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 879')
+
   call get_global(npointot,xp,yp,zp,fdb%ibool1,locval,ifseg,fdb%nglob,xmin,xmax)
 
 ! xp,yp,zp need to be recomputed on side 2
@@ -372,16 +381,18 @@ subroutine setup_ibools(fdb,xstore,ystore,zstore,nspec,npointot)
       zp(k) = zstore(ie,je,ke,ispec)
     enddo
   enddo
+
   allocate( fdb%ibool2(NGLLSQUARE,fdb%nspec) ,stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('error allocating array 880')
+
   call get_global(npointot,xp,yp,zp,fdb%ibool2,locval,ifseg,fdb%nglob,xmin,xmax)
 
-end subroutine setup_ibools
+  end subroutine setup_ibools
 
 
 !=================================================================================
 
-subroutine setup_ibulks(fdb,ibool,nspec)
+  subroutine setup_ibulks(fdb,ibool,nspec)
 
   type(fault_db_type), intent(inout) :: fdb
   integer, intent(in) :: nspec, ibool(NGLLX,NGLLY,NGLLZ,nspec)
@@ -411,13 +422,13 @@ subroutine setup_ibulks(fdb,ibool,nspec)
     enddo
   enddo
 
-end subroutine setup_ibulks
+  end subroutine setup_ibulks
 
 !=============================================================================================================
 ! We only close *store_dummy.  *store is close already in create_regions_mesh.f90
 ! Fortunately only *store_dummy is needed to compute jacobians and normals
 
-subroutine close_fault(fdb)
+  subroutine close_fault(fdb)
 
   use create_regions_mesh_ext_par, only: xstore_dummy,ystore_dummy,zstore_dummy
 
@@ -436,11 +447,11 @@ subroutine close_fault(fdb)
     zstore_dummy(K2) = zstore_dummy(K1)
   enddo
 
-end subroutine close_fault
+  end subroutine close_fault
 
 !=================================================================================
 
- subroutine save_fault_xyzcoord_ibulk(fdb)
+  subroutine save_fault_xyzcoord_ibulk(fdb)
 
   use create_regions_mesh_ext_par, only: xstore_dummy,ystore_dummy,zstore_dummy
 
@@ -473,12 +484,12 @@ end subroutine close_fault
       fdb%zcoordbulk2(i) = zstore_dummy(K2)
   enddo
 
- end subroutine save_fault_xyzcoord_ibulk
+  end subroutine save_fault_xyzcoord_ibulk
 
 
 !=================================================================================
 
- subroutine setup_normal_jacobian(fdb,ibool,nspec,nglob,myrank)
+  subroutine setup_normal_jacobian(fdb,ibool,nspec,nglob,myrank)
 
   use create_regions_mesh_ext_par, only: xstore_dummy,ystore_dummy,zstore_dummy, &
                                          dershape2D_x,dershape2D_y,dershape2D_bottom,dershape2D_top, &
@@ -557,11 +568,13 @@ end subroutine close_fault
 
   enddo ! ispec_flt
 
-end subroutine setup_normal_jacobian
+  end subroutine setup_normal_jacobian
 
 !====================================================================================
+
 ! saves all fault data in ASCII files for verification
-subroutine fault_save_arrays_test(prname)
+
+  subroutine fault_save_arrays_test(prname)
 
   use constants, only: MAX_STRING_LEN
 
@@ -588,11 +601,11 @@ subroutine fault_save_arrays_test(prname)
   enddo
   close(IOUT)
 
-end subroutine fault_save_arrays_test
+  end subroutine fault_save_arrays_test
 
 !-------------------------------------------------------------------------------------
 
-subroutine save_one_fault_test(f,IOUT)
+  subroutine save_one_fault_test(f,IOUT)
 
   implicit none
   type(fault_db_type), intent(in) :: f
@@ -634,11 +647,13 @@ subroutine save_one_fault_test(f,IOUT)
     write(IOUT,*) f%ibulk2(k),f%xcoordbulk2(k),f%ycoordbulk2(k),f%zcoordbulk2(k)
   enddo
 
-end subroutine save_one_fault_test
+  end subroutine save_one_fault_test
 
 !=================================================================================
+
 ! saves fault data needed by the solver in binary files
-subroutine fault_save_arrays(prname)
+
+  subroutine fault_save_arrays(prname)
 
   use constants, only: MAX_STRING_LEN
 
@@ -687,11 +702,11 @@ subroutine fault_save_arrays(prname)
   close(IOUT)
 
 
-end subroutine fault_save_arrays
+  end subroutine fault_save_arrays
 
 !----------------------------------------------
 
-subroutine save_one_fault_bin(f,IOUT)
+  subroutine save_one_fault_bin(f,IOUT)
 
   implicit none
   type(fault_db_type), intent(in) :: f
@@ -708,7 +723,7 @@ subroutine save_one_fault_bin(f,IOUT)
   write(IOUT) f%ycoordbulk1
   write(IOUT) f%zcoordbulk1
 
-end subroutine save_one_fault_bin
+  end subroutine save_one_fault_bin
 
 !------------------------------------------------
 

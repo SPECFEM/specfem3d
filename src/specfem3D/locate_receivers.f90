@@ -37,6 +37,8 @@
   use specfem_par, only: USE_SOURCES_RECEIVERS_Z,ibool,myrank,NSPEC_AB,NGLOB_AB, &
                          xstore,ystore,zstore,SUPPRESS_UTM_PROJECTION,INVERSE_FWI_FULL_PROBLEM, &
                          SU_FORMAT
+  ! PML
+  use pml_par, only: is_CPML
 
   implicit none
 
@@ -56,7 +58,7 @@
   double precision, allocatable, dimension(:) :: x_target,y_target,z_target
   double precision, allocatable, dimension(:) :: x_found,y_found,z_found
 
-  integer :: irec,ier,i
+  integer :: irec,ier,i,ispec
 
   ! timer MPI
   double precision, external :: wtime
@@ -403,7 +405,6 @@
           write(IMAIN,*) '***** WARNING: receiver location estimate is poor *****'
           write(IMAIN,*) '*******************************************************'
         endif
-
         write(IMAIN,*)
       endif
 
@@ -450,6 +451,17 @@
     write(IMAIN,*)
     call flush_IMAIN()
   endif    ! end of section executed by main process only
+
+  ! warning if receiver in C-PML region
+  do irec = 1,nrec
+    if (islice_selected_rec(irec) == myrank) then
+        ispec = ispec_selected_rec(irec)
+        if (is_CPML(ispec)) then
+          print *,'Warning: rank ',myrank,' has receiver ', &
+                  irec,trim(network_name(irec))//'.'//trim(station_name(irec)),' in C-PML region'
+        endif
+    endif
+  enddo
 
   ! deallocate arrays
   deallocate(stlat)

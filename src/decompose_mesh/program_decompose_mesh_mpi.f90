@@ -126,7 +126,7 @@ program xdecompose_mesh_mpi
   call write_database(myrank, ipart, elmnts, nodes_coords, elmnts_glob,  mat, mat_prop, undef_mat_prop, &
        count_def_mat, count_undef_mat, ibelm_xmin, ibelm_xmax, ibelm_ymin, ibelm_ymax, &
        ibelm_bottom, ibelm_top, nodes_ibelm_xmin, nodes_ibelm_xmax, nodes_ibelm_ymin, nodes_ibelm_ymax, &
-       nodes_ibelm_bottom, nodes_ibelm_top, cpml_to_spec, cpml_regions, is_cpml, ibelm_moho, nodes_ibelm_moho, &
+       nodes_ibelm_bottom, nodes_ibelm_top, cpml_to_spec, cpml_regions, is_CPML, ibelm_moho, nodes_ibelm_moho, &
        nspec_glob, nnodes, nspec2D_xmin, nspec2D_xmax,nspec2D_ymin, &
        nspec2D_ymax, nspec2D_bottom, nspec2D_top, nspec_cpml, nspec2D_moho)
 
@@ -531,7 +531,7 @@ subroutine send_mesh_to_all(myrank)
   call bcast_all_i(cpml_to_spec, nspec_cpml)
   call bcast_all_i(cpml_regions, nspec_cpml)
   call bcast_all_ch_array(undef_mat_prop,6*count_undef_mat,MAX_STRING_LEN)
-  call bcast_all_l_array(is_cpml, nspec_glob)
+  call bcast_all_l_array(is_CPML, nspec_glob)
 
 
 end subroutine send_mesh_to_all

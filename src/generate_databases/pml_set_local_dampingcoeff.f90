@@ -284,24 +284,26 @@ subroutine pml_set_local_dampingcoeff(myrank,xstore,ystore,zstore)
   ! user output
   if (myrank == 0) then
     write(IMAIN,*)
-    write(IMAIN,*) 'Boundary values of X-/Y-/Z-regions'
-    write(IMAIN,*) minval(xstore(:)), maxval(xstore(:))
-    write(IMAIN,*) minval(ystore(:)), maxval(ystore(:))
-    write(IMAIN,*) minval(zstore(:)), maxval(zstore(:))
+    write(IMAIN,*) 'Boundary values of X-/Y-/Z-regions:'
+    write(IMAIN,*) '  X: ',x_min_all, x_max_all
+    write(IMAIN,*) '  Y: ',y_min_all, y_max_all
+    write(IMAIN,*) '  Z: ',z_min_all, z_max_all
     write(IMAIN,*)
-    write(IMAIN,*) 'Origins of right/left X-surface C-PML',xoriginright,xoriginleft
-    write(IMAIN,*) 'Origins of front/back Y-surface C-PML',yoriginfront,yoriginback
-    write(IMAIN,*) 'Origin of bottom Z-surface C-PML',zoriginbottom
+    write(IMAIN,*) '  Origins of left/right X-surface C-PML',xoriginleft,xoriginright
+    write(IMAIN,*) '  Origins of back/front Y-surface C-PML',yoriginback,yoriginfront
+    write(IMAIN,*) '  Origin of bottom Z-surface C-PML     ',zoriginbottom
     if (PML_INSTEAD_OF_FREE_SURFACE) then
-      write(IMAIN,*) 'Origin of top Z-surface C-PML',zorigintop
+      write(IMAIN,*) '  Origin of top Z-surface C-PML        ',zorigintop
     endif
     write(IMAIN,*)
-    write(IMAIN,*) 'CPML_width_x: ',CPML_width_x
-    write(IMAIN,*) 'CPML_width_y: ',CPML_width_y
-    write(IMAIN,*) 'CPML_width_z: ',CPML_width_z
+    write(IMAIN,*) '  CPML_width_x: ',CPML_width_x
+    write(IMAIN,*) '  CPML_width_y: ',CPML_width_y
+    write(IMAIN,*) '  CPML_width_z: ',CPML_width_z
     write(IMAIN,*)
+    write(IMAIN,*) '  maximum Vp in C-PML',vp_max_all
+    write(IMAIN,*)
+    call flush_IMAIN()
   endif
-
   call synchronize_all()
 
   ! loops over all C-PML elements

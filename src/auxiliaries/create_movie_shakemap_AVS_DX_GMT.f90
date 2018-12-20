@@ -30,6 +30,11 @@
 !---  or a ShakeMap(R) (i.e. map of the maximum absolute value of the two horizontal components
 !---  of the velocity vector) in AVS, OpenDX or GMT format
 !
+!
+! AVS UCD format descriptions:
+! https://lanl.github.io/LaGriT/pages/docs/read_avs.html
+! http://people.sc.fsu.edu/~jburkardt/data/ucd/ucd.html
+! http://www.hnware.de/rismo/dokumente/anwenderdoku/formate/avs_ucd.html
 
 !! DK DK put this because I do not know how to fix the rules.mk dependencies
   include "../shared/serial.f90"
@@ -757,6 +762,7 @@
             write(11,"(i10,1x,i10,1x,i10,1x,i10)") ireorder(ibool_number1)-1, &
               ireorder(ibool_number4)-1,ireorder(ibool_number2)-1,ireorder(ibool_number3)-1
           else
+            ! AVS UCD format
             write(11,"(i10,' 1 quad ',i10,1x,i10,1x,i10,1x,i10)") ispec,ireorder(ibool_number1), &
               ireorder(ibool_number4),ireorder(ibool_number2),ireorder(ibool_number3)
           endif
@@ -767,6 +773,7 @@
           write(11,*) 'attribute "ref" string "positions"'
           write(11,*) 'object 3 class array type float rank 0 items ',nglob,' data follows'
         else
+          ! AVS UCD format
           ! dummy text for labels
           write(11,*) '1 1'
           write(11,*) 'a, b'
@@ -787,6 +794,7 @@
                   write(11,*) sngl(field_display(ilocnum+ieoff))
                 endif
               else
+                ! AVS UCD format
                 if (plot_shaking_map) then
                   write(11,*) ireorder(ibool_number),sngl(field_display(ilocnum+ieoff))
                 else

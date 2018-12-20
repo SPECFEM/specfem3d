@@ -32,7 +32,7 @@
 
 module fault_solver_common
 
-  use constants
+  use constants, only: CUSTOM_REAL,MAX_STRING_LEN,IMAIN,IOUT,IN_DATA_FILES
 
   implicit none
 
@@ -118,11 +118,12 @@ contains
 
 !---------------------------------------------------------------------
 
-subroutine initialize_fault (bc,IIN_BIN)
+  subroutine initialize_fault (bc,IIN_BIN)
 
   use specfem_par
   use specfem_par_elastic, only: rmassx
 
+  implicit none
 !! DK DK use type(bc_dynandkinflt_type) instead of class(fault_type) for compatibility with some current compilers
   type(bc_dynandkinflt_type), intent(inout) :: bc
   integer, intent(in)                 :: IIN_BIN
@@ -228,13 +229,16 @@ subroutine initialize_fault (bc,IIN_BIN)
 
   endif
 
-end subroutine initialize_fault
+  end subroutine initialize_fault
 
 !---------------------------------------------------------------------
-subroutine normalize_3d_vector(v)
 
+  subroutine normalize_3d_vector(v)
+
+  implicit none
   real(kind=CUSTOM_REAL), intent(inout) :: v(:,:)
 
+  ! local parameters
   real(kind=CUSTOM_REAL) :: norm
   integer :: k
 
@@ -244,17 +248,19 @@ subroutine normalize_3d_vector(v)
     v(:,k) = v(:,k) / norm
   enddo
 
-end subroutine normalize_3d_vector
+  end subroutine normalize_3d_vector
 
 !---------------------------------------------------------------------
+
 ! Percy: define fault directions according to SCEC conventions
 ! Fault coordinates (s,d,n) = (1,2,3)
 !   s = strike , d = dip , n = normal
 !   1 = strike , 2 = dip , 3 = normal
 ! with dip pointing downwards
 !
-subroutine compute_R(R,nglob,n)
+  subroutine compute_R(R,nglob,n)
 
+  implicit none
   integer :: nglob
   real(kind=CUSTOM_REAL), intent(out) :: R(3,3,nglob)
   real(kind=CUSTOM_REAL), intent(in) :: n(3,nglob)
@@ -283,12 +289,14 @@ subroutine compute_R(R,nglob,n)
   R(2,:,:) = d
   R(3,:,:) = n
 
-end subroutine compute_R
+  end subroutine compute_R
 
 
 !===============================================================
-function get_jump (bc,v) result(dv)
 
+  function get_jump (bc,v) result(dv)
+
+  implicit none
 !! DK DK use type(bc_dynandkinflt_type) instead of class(fault_type) for compatibility with some current compilers
   type(bc_dynandkinflt_type), intent(in) :: bc
   real(kind=CUSTOM_REAL), intent(in) :: v(:,:)
@@ -299,11 +307,13 @@ function get_jump (bc,v) result(dv)
   dv(2,:) = v(2,bc%ibulk2)-v(2,bc%ibulk1)
   dv(3,:) = v(3,bc%ibulk2)-v(3,bc%ibulk1)
 
-end function get_jump
+  end function get_jump
 
 !---------------------------------------------------------------------
-function get_weighted_jump (bc,f) result(da)
 
+  function get_weighted_jump (bc,f) result(da)
+
+  implicit none
 !! DK DK use type(bc_dynandkinflt_type) instead of class(fault_type) for compatibility with some current compilers
   type(bc_dynandkinflt_type), intent(in) :: bc
   real(kind=CUSTOM_REAL), intent(in) :: f(:,:)
@@ -318,11 +328,13 @@ function get_weighted_jump (bc,f) result(da)
   ! NOTE: In non-split nodes at fault edges M and f are assembled across the fault.
   ! Hence, f1=f2, invM1=invM2=1/(M1+M2) instead of invMi=1/Mi, and da=0.
 
-end function get_weighted_jump
+  end function get_weighted_jump
 
 !----------------------------------------------------------------------
-function rotate(bc,v,fb) result(vr)
 
+  function rotate(bc,v,fb) result(vr)
+
+  implicit none
 !! DK DK use type(bc_dynandkinflt_type) instead of class(fault_type) for compatibility with some current compilers
   type(bc_dynandkinflt_type), intent(in) :: bc
   real(kind=CUSTOM_REAL), intent(in) :: v(3,bc%nglob)
@@ -345,12 +357,13 @@ function rotate(bc,v,fb) result(vr)
 
   endif
 
-end function rotate
+  end function rotate
 
 !----------------------------------------------------------------------
 
-subroutine add_BT(bc,MxA,T)
+  subroutine add_BT(bc,MxA,T)
 
+  implicit none
 !! DK DK use type(bc_dynandkinflt_type) instead of class(fault_type) for compatibility with some current compilers
   type(bc_dynandkinflt_type), intent(in) :: bc
   real(kind=CUSTOM_REAL), intent(inout) :: MxA(:,:)
@@ -364,16 +377,17 @@ subroutine add_BT(bc,MxA,T)
   MxA(2,bc%ibulk2) = MxA(2,bc%ibulk2) - bc%B*T(2,:)
   MxA(3,bc%ibulk2) = MxA(3,bc%ibulk2) - bc%B*T(3,:)
 
-end subroutine add_BT
+  end subroutine add_BT
 
 
 !===============================================================
 ! dataT outputs
 
-subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
+  subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
 
   use specfem_par, only: NPROC,myrank
 
+  implicit none
   integer, intent(in) :: nglob,NT,iflt,ndat
   real(kind=CUSTOM_REAL), intent(in) :: coord(3,nglob),DT
 !! DK DK use type(dataT_type) instead of class(dataT_type) for compatibility with some current compilers
@@ -526,11 +540,13 @@ subroutine init_dataT(dataT,coord,nglob,NT,DT,ndat,iflt)
     dataT%shortFieldNames = "h-slip h-slip-rate h-shear-stress v-slip v-slip-rate v-shear-stress n-stress"
   endif
 
-end subroutine init_dataT
+  end subroutine init_dataT
 
 !---------------------------------------------------------------
-subroutine store_dataT(dataT,d,v,t,itime)
 
+  subroutine store_dataT(dataT,d,v,t,itime)
+
+  implicit none
 !! DK DK use type() instead of class() for compatibility with some current compilers
   type(dataT_type), intent(inout) :: dataT
   real(kind=CUSTOM_REAL), dimension(:,:), intent(in) :: d,v,t
@@ -549,12 +565,15 @@ subroutine store_dataT(dataT,d,v,t,itime)
     dataT%dat(7,i,itime) = t(3,k)/1.0e6_CUSTOM_REAL
   enddo
 
-end subroutine store_dataT
+  end subroutine store_dataT
 
 !------------------------------------------------------------------------
-subroutine SCEC_write_dataT(dataT)
+
+  subroutine SCEC_write_dataT(dataT)
 
   use specfem_par, only: OUTPUT_FILES
+
+  implicit none
 !! DK DK use type() instead of class() for compatibility with some current compilers
   type(dataT_type), intent(in) :: dataT
 
@@ -596,6 +615,6 @@ subroutine SCEC_write_dataT(dataT)
 1000 format ( ' # Date = ', i2.2, '/', i2.2, '/', i4.4, '; time = ',i2.2, ':', i2.2, ':', i2.2 )
 1100 format ( ' # Column #', i1, ' = ',a )
 
-end subroutine SCEC_write_dataT
+  end subroutine SCEC_write_dataT
 
 end module fault_solver_common

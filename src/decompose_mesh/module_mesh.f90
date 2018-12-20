@@ -54,7 +54,7 @@ module module_mesh
   integer                                                    :: ispec_cpml
   integer                                                    :: nspec_cpml
   integer,               dimension(:),           allocatable :: cpml_to_spec, cpml_regions
-  logical,               dimension(:),           allocatable :: is_cpml
+  logical,               dimension(:),           allocatable :: is_CPML
 
   ! moho surface (optional)
   integer                                                    :: nspec2D_moho
@@ -734,13 +734,13 @@ contains
     if (nspec_cpml > 0) write(27,*)  '  nspec_cpml = ', nspec_cpml
 
     ! sets mask of C-PML elements for all elements in this partition
-    allocate(is_cpml(nspec_glob),stat=ier)
+    allocate(is_CPML(nspec_glob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 137')
     if (ier /= 0) stop 'Error allocating array is_CPML'
-    is_cpml(:) = .false.
+    is_CPML(:) = .false.
     do ispec_cpml=1,nspec_cpml
        if ((cpml_regions(ispec_cpml) >= 1) .and. (cpml_regions(ispec_cpml) <= 7)) then
-          is_cpml(cpml_to_spec(ispec_cpml)) = .true.
+          is_CPML(cpml_to_spec(ispec_cpml)) = .true.
        endif
     enddo
 

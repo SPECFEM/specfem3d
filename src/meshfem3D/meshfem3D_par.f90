@@ -127,15 +127,18 @@ module meshfem3D_par
 !  #3 #4 : ny_begining,ny_end
 !  #5 #6 : nz_begining,nz_end
 !     #7 : material number
-  integer, dimension(:,:), pointer :: subregions
+  integer, dimension(:,:), allocatable :: subregions
 
 ! material properties
   integer :: NMATERIALS
 ! first dimension  : material_id
 ! second dimension : #rho  #vp  #vs  #Q_Kappa  #Q_mu  #anisotropy_flag  #domain_id
-  double precision , dimension(:,:), pointer :: material_properties
+  double precision , dimension(:,:), allocatable :: material_properties
 
   logical :: BROADCAST_AFTER_READ
+
+  ! name of the database file
+  character(len=MAX_STRING_LEN) :: prname
 
 end module meshfem3D_par
 
