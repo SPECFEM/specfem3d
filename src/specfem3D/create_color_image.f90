@@ -536,13 +536,22 @@
     call get_iglob_veloc(iglob,ispec,val_vector)
 
     ! data type
-    if (PNM_IMAGE_TYPE == 4) then
+    select case (PNM_IMAGE_TYPE)
+    case (1)
+      ! x-velocity component
+      temp = val_vector(1)
+    case (2)
+      ! y-velocity component
+      temp = val_vector(2)
+    case (3)
+      ! z-velocity component
+      temp = val_vector(3)
+    case (4)
       ! velocity norm
       temp = sqrt( val_vector(1)**2 + val_vector(2)**2 + val_vector(3)**2)
-    else
-      ! velocity component
-      temp = val_vector(PNM_IMAGE_TYPE)
-    endif
+    case default
+      call exit_MPI(myrank,'Error invalid PNM_IMAGE_TYPE for image data selection')
+    end select
 
     ! stores data
     image_color_data(i,j) = temp
