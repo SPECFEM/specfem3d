@@ -58,6 +58,7 @@ module fault_scotch
             save_nodes_coords, nodes_coords_open, ANY_FAULT
 
 CONTAINS
+
 !==========================================================================================
 
   subroutine read_fault_files(localpath_name)

@@ -38,6 +38,7 @@ program xdecompose_mesh
   logical :: BROADCAST_AFTER_READ
   character(len=MAX_STRING_LEN) :: arg(3)
 
+! user output
   print *
   print *,'**********************'
   print *,'Serial mesh decomposer'
@@ -86,6 +87,11 @@ program xdecompose_mesh
 
 ! writes out database files
   call write_mesh_databases()
+
+! user output
+  print *
+  print *,'partitioning done successfully'
+  print *
 
 end program xdecompose_mesh
 
