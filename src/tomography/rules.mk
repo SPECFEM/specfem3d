@@ -117,7 +117,7 @@ xadd_model_OBJECTS = \
 
 xadd_model_SHARED_OBJECTS = \
 	$O/specfem3D_par.spec_module.o \
-	$O/pml_par.spec.o \
+	$O/pml_par.spec_module.o \
 	$O/read_mesh_databases.spec.o \
 	$O/shared_par.shared_module.o \
 	$O/create_name_database.shared.o \
@@ -164,7 +164,7 @@ xmodel_update_OBJECTS = \
 
 xmodel_update_SHARED_OBJECTS = \
 	$O/specfem3D_par.spec_module.o \
-	$O/pml_par.spec.o \
+	$O/pml_par.spec_module.o \
 	$O/initialize_simulation.spec.o \
 	$O/read_mesh_databases.spec.o \
 	$O/shared_par.shared_module.o \

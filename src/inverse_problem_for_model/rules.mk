@@ -171,7 +171,7 @@ inverse_problem_for_model_OBJECTS += \
 	$O/pml_output_VTKs.spec.o \
 	$O/pml_compute_accel_contribution.spec.o \
 	$O/pml_compute_memory_variables.spec.o \
-	$O/pml_par.spec.o \
+	$O/pml_par.spec_module.o \
 	$O/prepare_attenuation.spec.o \
 	$O/prepare_gpu.spec.o \
 	$O/prepare_gravity.spec.o \

@@ -147,7 +147,7 @@ xsmooth_sem_OBJECTS = \
 
 xsmooth_sem_SHARED_OBJECTS = \
 	$O/specfem3D_par.spec_module.o \
-	$O/pml_par.spec.o \
+	$O/pml_par.spec_module.o \
 	$O/read_mesh_databases.spec.o \
 	$O/shared_par.shared_module.o \
 	$O/check_mesh_resolution.shared.o \
