@@ -1,5 +1,6 @@
 #!/bin/bash
 testdir=`pwd`
+me=`basename "$0"`
 
 #checks if ROOT valid
 if [ -z "${ROOT}" ]; then export ROOT=../../ ; fi
@@ -12,7 +13,7 @@ cd $testdir/
 
 # title
 echo >> $testdir/results.log
-echo "compile default make" >> $testdir/results.log
+echo "$me in: $testdir" >> $testdir/results.log
 echo >> $testdir/results.log
 
 echo "directory: `pwd`" >> $testdir/results.log

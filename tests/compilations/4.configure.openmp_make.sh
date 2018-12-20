@@ -17,10 +17,10 @@ echo >> $testdir/results.log
 rm -rf config.log config.status
 rm -rf ./bin ./obj ./setup ./OUTPUT_FILES ./DATA
 
-# default configuration for serial version (without MPI)
+# default configuration for parallel version (with MPI)
 # (out-of-source compilation)
-echo "configuration: $srcdir/configure --without-mpi" >> $testdir/results.log
-$srcdir/configure --without-mpi >> $testdir/results.log 2>&1
+echo "configuration: $srcdir/configure --enable-openmp" >> $testdir/results.log
+$srcdir/configure --enable-openmp >> $testdir/results.log 2>&1
 
 # checks exit code
 if [[ $? -ne 0 ]]; then
