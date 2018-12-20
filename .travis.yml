@@ -117,6 +117,8 @@ env:
     # gmsh example w/ LDDRK
     - TESTID=30 TESTCOV=0 TESTDIR=23 TESTFLAGS="--with-mpi" CUDA=false
 
+    # example with openmp
+    - TESTID=31 TESTCOV=0 TESTDIR=24 TESTFLAGS="--enable-vectorization --enable-openmp" CUDA=false
 
 before_install:
   # informations on git

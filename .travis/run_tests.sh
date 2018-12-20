@@ -32,6 +32,7 @@ case "$TESTDIR" in
   21) dir=EXAMPLES/layered_halfspace/ ;;
   22) dir=EXAMPLES/homogeneous_halfspace_HEX8_elastic_no_absorbing/ ;;
   23) dir=EXAMPLES/Gmsh_simple_lddrk/ ;;
+  24) dir=EXAMPLES/decompose_mesh_MPI/ ;;
   *) dir=EXAMPLES/homogeneous_halfspace/ ;;
 esac
 
@@ -515,6 +516,17 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
 fi
 echo -en 'travis_fold:end:coverage.Gmsh\\r'
 
+echo 'Coverage...' && echo -en 'travis_fold:start:coverage.decompose_mpi\\r'
+if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "2" ]; then
+  ##
+  ## testing decompose_mesh_MPI example
+  ##
+  cd EXAMPLES/decompose_mesh_MPI/
+  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+  ./run_this_example.sh
+  cd $WORKDIR
+fi
+echo -en 'travis_fold:end:coverage.decompose_mpi\\r'
 
 
 ##
