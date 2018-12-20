@@ -247,7 +247,7 @@ fi
 echo -en 'travis_fold:end:coverage.elastic-noabs\\r'
 
 echo 'Coverage...' && echo -en 'travis_fold:start:coverage.elastic-hex27-noabs\\r'
-if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "1" ]; then
+if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   ##
   ## testing hex27 example
   ##
