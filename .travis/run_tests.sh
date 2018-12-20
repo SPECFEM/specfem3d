@@ -246,6 +246,18 @@ if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
 fi
 echo -en 'travis_fold:end:coverage.elastic-noabs\\r'
 
+echo 'Coverage...' && echo -en 'travis_fold:start:coverage.elastic-hex27-noabs\\r'
+if [ "$TESTCOV" == "1" ] && [ "$TESTMAKE" == "1" ]; then
+  ##
+  ## testing hex27 example
+  ##
+  cd EXAMPLES/homogeneous_halfspace_HEX27_elastic_no_absorbing/
+  sed -i "s:^NSTEP .*:NSTEP    = 5:" DATA/Par_file
+  ./run_this_example.sh
+  cd $WORKDIR
+fi
+echo -en 'travis_fold:end:coverage.elastic-hex27-noabs\\r'
+
 echo 'Coverage...' && echo -en 'travis_fold:start:coverage.poro\\r'
 if [ "$TESTCOV" == "1" ] && [ "$TESTID" == "1" ]; then
   ##

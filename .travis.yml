@@ -78,7 +78,7 @@ env:
     # waterlayered example
     - TESTID=17 TESTCOV=0 TESTDIR=13 TESTFLAGS="--with-mpi" CUDA=false
 
-    # elastic example, compilation w/ CUDA and MPI
+    # elastic example, hex27, compilation w/ CUDA and MPI
     - TESTID=18 TESTCOV=0 TESTDIR=14 TESTFLAGS="--with-cuda=cuda5 --with-mpi" CUDA=true CUDA_VERSION=6.5-14
 
     # acoustic example, compilation w/ CUDA
