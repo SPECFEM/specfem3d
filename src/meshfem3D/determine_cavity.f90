@@ -33,7 +33,7 @@
   use meshfem3D_par, only: ibool,xstore,ystore,zstore,nspec,NPROC_XI,NPROC_ETA,myrank,CAVITY_FILE
 
   ! create the different regions of the mesh
-  use constants, only: MF_IN_DATA_FILES,MAX_STRING_LEN,IMAIN,CUSTOM_REAL,HUGEVAL,TINYVAL
+  use constants, only: MF_IN_DATA_FILES,MAX_STRING_LEN,IMAIN,CUSTOM_REAL,HUGEVAL,TINYVAL,NDIM
 
   use constants_meshfem3D, only: NGLLCUBE_M,NGLLX_M,NGLLY_M,NGLLZ_M
 
@@ -500,7 +500,7 @@ cavity: do i_cavity = 1,ncavity
     if (inode_new_mesh /= nglob) call exit_MPI(myrank,'ERROR: new number of spectral elements mismatch!')
 
     ! old mesh arrays
-    allocate(nodes_coords_old(nglob_old,3),stat=ier)
+    allocate(nodes_coords_old(nglob_old,NDIM),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1333')
     allocate(ispec_material_id_old(nspec_old),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1334')
@@ -528,7 +528,7 @@ cavity: do i_cavity = 1,ncavity
     deallocate(iMPIcut_xi,iMPIcut_eta)
 
     ! re-allocates new mesh arrays
-    allocate(nodes_coords(nglob,3),stat=ier)
+    allocate(nodes_coords(nglob,NDIM),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1339')
     allocate(ispec_material_id(nspec),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1340')

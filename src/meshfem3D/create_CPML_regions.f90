@@ -35,7 +35,7 @@
   ! create the different regions of the mesh
   use constants, only: IMAIN,CUSTOM_REAL,SMALL_PERCENTAGE_TOLERANCE, &
     CPML_X_ONLY,CPML_Y_ONLY,CPML_Z_ONLY,CPML_XY_ONLY,CPML_XZ_ONLY,CPML_YZ_ONLY,CPML_XYZ, &
-    PI,IOVTK,MAX_STRING_LEN
+    PI,IOVTK,MAX_STRING_LEN,NDIM
 
   ! CPML
   use shared_parameters, only: PML_CONDITIONS,PML_INSTEAD_OF_FREE_SURFACE
@@ -43,7 +43,7 @@
   implicit none
 
   integer,intent(in):: nspec,nglob
-  double precision, dimension(nglob,3), intent(in) :: nodes_coords
+  double precision, dimension(nglob,NDIM), intent(in) :: nodes_coords
 
   ! local parameters
   real(kind=CUSTOM_REAL) :: xmin,xmax,ymin,ymax,zmin,zmax,limit

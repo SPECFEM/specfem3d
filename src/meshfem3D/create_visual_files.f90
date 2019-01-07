@@ -50,7 +50,7 @@
 ! arrays with the mesh
   integer :: ispec_material_id(nspec)
   integer :: ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
-  double precision :: nodes_coords(nglob,3)
+  double precision :: nodes_coords(nglob,NDIM)
   character(len=MAX_STRING_LEN) :: filename
 
 !  ---------------

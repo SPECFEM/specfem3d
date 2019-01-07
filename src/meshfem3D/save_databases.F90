@@ -35,7 +35,7 @@
                             nspec_CPML,CPML_to_spec,CPML_regions,is_CPML, &
                             xstore, ystore, zstore)
 
-  use constants, only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,SAVE_MESH_AS_CUBIT
+  use constants, only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,SAVE_MESH_AS_CUBIT,NDIM
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE
 
   implicit none
@@ -58,7 +58,7 @@
 
   ! arrays with the mesh
   integer ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
-  double precision :: nodes_coords(nglob,3)
+  double precision :: nodes_coords(nglob,NDIM)
 
   !! VM VM add all GLL points for Axisem coupling
   double precision, dimension(NGLLX_M,NGLLY_M,NGLLZ_M,nspec) :: xstore, ystore, zstore
@@ -445,7 +445,7 @@
 
   ! arrays with the mesh
   integer :: ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
-  double precision :: nodes_coords(nglob,3)
+  double precision :: nodes_coords(nglob,NDIM)
 
   integer :: ispec_material_id(nspec)
 
@@ -483,7 +483,7 @@
   do i = 1,NMATERIALS
      domain_id = material_properties(i,7)
      mat_id =  material_properties(i,8)
-     if ( domain_id > 0) then
+     if (domain_id > 0) then
         write(IIN_database,'(2i6,5f15.5,i6)') domain_id,mat_id,material_properties(i,1:5),0
      else
        write(*,*) 'STOP: undefined mat not yet implemented'
@@ -501,7 +501,7 @@
   write(IIN_database,*) nglob
   do iglob=1,nglob
      write(IIN_database,'(i14,3x,3(f20.5,1x))') iglob,nodes_coords(iglob,1),nodes_coords(iglob,2), &
-          nodes_coords(iglob,3)-z_bottom
+                                                nodes_coords(iglob,3)-z_bottom
   enddo
   close(IIN_database)
 

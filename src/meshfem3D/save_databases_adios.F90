@@ -45,7 +45,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
                                 nspec_CPML,CPML_to_spec,CPML_regions,is_CPML)
 
   use constants, only: MAX_STRING_LEN,IDOMAIN_ACOUSTIC,IDOMAIN_ELASTIC,ADIOS_TRANSPORT_METHOD, &
-    NGLLX,NGLLY,NGLLZ
+    NGLLX,NGLLY,NGLLZ,NDIM
 
   use adios_helpers_mod, only: define_adios_global_array1d,define_adios_scalar, &
     write_adios_global_1d_array,write_adios_global_string_1d_array, &
@@ -77,7 +77,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
 
   ! arrays with the mesh
   integer ibool(NGLLX_M,NGLLY_M,NGLLZ_M,nspec)
-  double precision :: nodes_coords(nglob,3)
+  double precision :: nodes_coords(nglob,NDIM)
 
   integer ispec_material_id(nspec)
 
@@ -725,7 +725,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
 
   ! NOTE: Do not put any wmax variables, it will try to access
   !       too many values in the arrays.
-  local_dim = 3 * nglob
+  local_dim = NDIM * nglob
   call write_adios_global_1d_array(handle, myrank, sizeprocs, local_dim, &
                                    "nodes_coords", transpose(nodes_coords))
 

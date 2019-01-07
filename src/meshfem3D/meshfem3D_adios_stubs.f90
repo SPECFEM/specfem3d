@@ -60,7 +60,7 @@ subroutine save_databases_adios(LOCAL_PATH, myrank, sizeprocs, &
   integer, dimension(0:NPROC_XI-1,0:NPROC_ETA-1) :: addressing
   logical, dimension(2,nspec):: iMPIcut_xi,iMPIcut_eta
   integer, dimension(NGLLX_M,NGLLY_M,NGLLZ_M,nspec) :: ibool
-  double precision, dimension(nglob,3) :: nodes_coords
+  double precision, dimension(nglob,NDIM) :: nodes_coords
   integer, dimension(nspec) :: ispec_material_id
   integer :: nspec2D_xmin,nspec2D_xmax,nspec2D_ymin,nspec2D_ymax
   integer :: NSPEC2D_BOTTOM,NSPEC2D_TOP,NSPEC2DMAX_XMIN_XMAX,NSPEC2DMAX_YMIN_YMAX

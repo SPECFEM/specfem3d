@@ -29,8 +29,6 @@
 
 module create_meshfem_par
 
-  use constants, only: MAX_STRING_LEN
-
   implicit none
 
   ! node coordinates
@@ -73,7 +71,7 @@ end module create_meshfem_par
 
   ! create the different regions of the mesh
   use constants, only: MF_IN_DATA_FILES,MAX_STRING_LEN,NGNOD_EIGHT_CORNERS, &
-    IMAIN,IOVTK,CUSTOM_REAL,HUGEVAL,TINYVAL
+    IMAIN,IOVTK,CUSTOM_REAL,HUGEVAL,TINYVAL,NDIM
 
   use constants_meshfem3D, only: NSPEC_DOUBLING_SUPERBRICK,NGLOB_DOUBLING_SUPERBRICK, &
     IFLAG_BASEMENT_TOPO,IFLAG_ONE_LAYER_TOPOGRAPHY, &
@@ -769,7 +767,7 @@ contains
     endif
 
     ! put in classical format
-    allocate(nodes_coords(nglob,3),stat=ier)
+    allocate(nodes_coords(nglob,NDIM),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 1280')
     if (ier /= 0) stop 'Error allocating array nodes_coords'
 
