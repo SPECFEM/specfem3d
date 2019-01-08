@@ -464,6 +464,23 @@ AS_IF([test x"$want_vtk" != xno], [
     CIT_PATH_VTK
 ])
 
+##
+## Git version info
+##
+AS_BOX([git version info])
+CIG_PKG_GIT(SPECFEM3D)
+AC_DEFINE_UNQUOTED([SPECFEM3D_VERSION], ["$PACKAGE_VERSION"], [Define SPECFEM3D version])
+#AC_DEFINE_UNQUOTED([SPECFEM3D_DOI], ["10.5281/zenodo.xxxxx"], [Define SPECFEM3D doi])
+AS_IF([test -d $srcdir/.git], [
+    GIT_VERSION_DEPS="$srcdir/.git/logs/HEAD"
+    AC_MSG_NOTICE([building from git repository])
+    AC_SUBST(GIT_VERSION_DEPS)
+], [
+    dnl Only substitute if not in a git repository.
+    AC_MSG_NOTICE([not a git repository])
+    AC_CONFIG_FILES([setup/version.fh])
+])
+
 ############################################################
 
 AS_BOX([setting up default simulation setup])
@@ -477,16 +494,7 @@ AC_CONFIG_FILES([
     setup/config.fh
 ])
 
-AS_IF([test -d $srcdir/.git], [
-    GIT_VERSION_DEPS="$srcdir/.git/logs/HEAD"
-    AC_MSG_NOTICE([building from git repository])
-    AC_SUBST(GIT_VERSION_DEPS)
-], [
-    dnl Only substitute if not in a git repository.
-    AC_MSG_NOTICE([not a git repository])
-    AC_CONFIG_FILES([setup/version.fh])
-])
-
+# Scotch makefile
 if test "$USE_BUNDLED_SCOTCH" = 1; then
   AC_CONFIG_FILES([
 	  ${SCOTCH_DIR}/src/Makefile.inc

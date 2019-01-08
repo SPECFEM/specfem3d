@@ -9782,16 +9782,80 @@ $as_echo "#define HAVE_VTK /**/" >>confdefs.h
 
 fi
 
-############################################################
+##
+## Git version info
+##
+$as_echo "## ---------------- ##
+## git version info ##
+## ---------------- ##"
 
-$as_echo "## ----------------------------------- ##
-## setting up default simulation setup ##
-## ----------------------------------- ##"
+pushd $srcdir > /dev/null
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for .git/config" >&5
+$as_echo_n "checking for .git/config... " >&6; }
+if ${ac_cv_file__git_config+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  test "$cross_compiling" = yes &&
+  as_fn_error $? "cannot check for file existence when cross compiling" "$LINENO" 5
+if test -r ".git/config"; then
+  ac_cv_file__git_config=yes
+else
+  ac_cv_file__git_config=no
+fi
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_file__git_config" >&5
+$as_echo "$ac_cv_file__git_config" >&6; }
+if test "x$ac_cv_file__git_config" = xyes; then :
 
-# Output results.
-ac_config_files="$ac_config_files Makefile setup/constants.h setup/constants_tomography.h setup/precision.h setup/config.fh"
+SPECFEM3D_RELEASE_VERSION=0
+eval SPECFEM3D_GIT_REVISION=`git describe`
+eval SPECFEM3D_GIT_HASH=`git log -1 --pretty=format:%H`
+eval SPECFEM3D_GIT_DATE=\"`git log -1 --pretty=format:%ci`\"
+eval SPECFEM3D_GIT_BRANCH=`git rev-parse --abbrev-ref HEAD`
+
+else
+
+SPECFEM3D_RELEASE_VERSION=1
+SPECFEM3D_GIT_REVISION="unknown"
+SPECFEM3D_GIT_HASH="unknown"
+SPECFEM3D_GIT_DATE="unknown"
+SPECFEM3D_GIT_BRANCH="unknown"
+
+fi
+
+popd > /dev/null
+
+cat >>confdefs.h <<_ACEOF
+#define SPECFEM3D_RELEASE_VERSION $SPECFEM3D_RELEASE_VERSION
+_ACEOF
 
 
+cat >>confdefs.h <<_ACEOF
+#define SPECFEM3D_GIT_REVISION "$SPECFEM3D_GIT_REVISION"
+_ACEOF
+
+
+cat >>confdefs.h <<_ACEOF
+#define SPECFEM3D_GIT_HASH "$SPECFEM3D_GIT_HASH"
+_ACEOF
+
+
+cat >>confdefs.h <<_ACEOF
+#define SPECFEM3D_GIT_DATE "$SPECFEM3D_GIT_DATE"
+_ACEOF
+
+
+cat >>confdefs.h <<_ACEOF
+#define SPECFEM3D_GIT_BRANCH "$SPECFEM3D_GIT_BRANCH"
+_ACEOF
+
+
+
+cat >>confdefs.h <<_ACEOF
+#define SPECFEM3D_VERSION "$PACKAGE_VERSION"
+_ACEOF
+
+#AC_DEFINE_UNQUOTED([SPECFEM3D_DOI], ["10.5281/zenodo.xxxxx"], [Define SPECFEM3D doi])
 if test -d $srcdir/.git; then :
 
     GIT_VERSION_DEPS="$srcdir/.git/logs/HEAD"
@@ -9808,6 +9872,17 @@ $as_echo "$as_me: not a git repository" >&6;}
 
 fi
 
+############################################################
+
+$as_echo "## ----------------------------------- ##
+## setting up default simulation setup ##
+## ----------------------------------- ##"
+
+# Output results.
+ac_config_files="$ac_config_files Makefile setup/constants.h setup/constants_tomography.h setup/precision.h setup/config.fh"
+
+
+# Scotch makefile
 if test "$USE_BUNDLED_SCOTCH" = 1; then
   ac_config_files="$ac_config_files ${SCOTCH_DIR}/src/Makefile.inc"
 
@@ -10587,12 +10662,12 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "setup/config.h") CONFIG_HEADERS="$CONFIG_HEADERS setup/config.h" ;;
+    "setup/version.fh") CONFIG_FILES="$CONFIG_FILES setup/version.fh" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "setup/constants.h") CONFIG_FILES="$CONFIG_FILES setup/constants.h" ;;
     "setup/constants_tomography.h") CONFIG_FILES="$CONFIG_FILES setup/constants_tomography.h" ;;
     "setup/precision.h") CONFIG_FILES="$CONFIG_FILES setup/precision.h" ;;
     "setup/config.fh") CONFIG_FILES="$CONFIG_FILES setup/config.fh" ;;
-    "setup/version.fh") CONFIG_FILES="$CONFIG_FILES setup/version.fh" ;;
     "${SCOTCH_DIR}/src/Makefile.inc") CONFIG_FILES="$CONFIG_FILES ${SCOTCH_DIR}/src/Makefile.inc" ;;
     "DATA/Par_file") CONFIG_FILES="$CONFIG_FILES DATA/Par_file:DATA/Par_file" ;;
     "DATA/CMTSOLUTION") CONFIG_FILES="$CONFIG_FILES DATA/CMTSOLUTION:DATA/CMTSOLUTION" ;;
