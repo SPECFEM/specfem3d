@@ -29,6 +29,13 @@ NPROC                           = 16
 NSTEP                           = 2000
 DT                              = 0.01
 
+# set to true to use local-time stepping (LTS)
+LTS_MODE                        = .false.
+
+# Partitioning algorithm for decompose_mesh
+# choose partitioner: 1==SCOTCH (default), 2==METIS, 3==PATOH, 4==ROWS_PART
+PARTITIONING_TYPE               = 1
+
 #-----------------------------------------------------------
 #
 # LDDRK time scheme
