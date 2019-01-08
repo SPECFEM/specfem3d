@@ -4,7 +4,7 @@
 
 program test_read
 
-  use decompose_mesh
+  use decompose_mesh_par
 
   implicit none
 

@@ -4,10 +4,10 @@
 
 program test_valence
 
-  use decompose_mesh
+  use decompose_mesh_par
 
   implicit none
-  integer :: i
+  integer :: i,ispec,inode,ier
 
   print *,'program: test_valence'
 
