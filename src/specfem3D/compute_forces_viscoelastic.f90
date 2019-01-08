@@ -619,8 +619,8 @@
               sigma_yx = sigma_xy
               sigma_zx = sigma_xz
               sigma_zy = sigma_yz
-              if (ispec_irreg /= 0) then ! irregular element
-
+              if (ispec_irreg /= 0) then
+                ! irregular element
                 ! form dot product with test vector, non-symmetric form (which is useful in the case of PML)
                 tempx1(i,j,k) = jacobianl * (sigma_xx * xixl + sigma_yx * xiyl + sigma_zx * xizl) ! this goes to accel_x
                 tempy1(i,j,k) = jacobianl * (sigma_xy * xixl + sigma_yy * xiyl + sigma_zy * xizl) ! this goes to accel_y
@@ -633,8 +633,9 @@
                 tempx3(i,j,k) = jacobianl * (sigma_xx * gammaxl + sigma_yx * gammayl + sigma_zx * gammazl) ! this goes to accel_x
                 tempy3(i,j,k) = jacobianl * (sigma_xy * gammaxl + sigma_yy * gammayl + sigma_zy * gammazl) ! this goes to accel_y
                 tempz3(i,j,k) = jacobianl * (sigma_xz * gammaxl + sigma_yz * gammayl + sigma_zz * gammazl) ! this goes to accel_z
-              else !regular element
-             ! form dot product with test vector, non-symmetric form (which is useful in the case of PML)
+              else
+                !regular element
+                ! form dot product with test vector, non-symmetric form (which is useful in the case of PML)
                 tempx1(i,j,k) = jacobianl * sigma_xx * xix_regular ! this goes to accel_x
                 tempy1(i,j,k) = jacobianl * sigma_xy * xix_regular ! this goes to accel_y
                 tempz1(i,j,k) = jacobianl * sigma_xz * xix_regular ! this goes to accel_z

@@ -27,7 +27,7 @@
 
 module fault_scotch
 
-  use constants, only: MAX_STRING_LEN, IN_DATA_FILES
+  use constants, only: MAX_STRING_LEN, IN_DATA_FILES, NDIM
   use shared_parameters, only: NGNOD2D
   implicit none
 
@@ -151,16 +151,18 @@ CONTAINS
 
 
 ! ---------------------------------------------------------------------------------------------------
+
 ! Saving nodes_coords to be used in the solver for ibool_fault_side1 and side2
+
    subroutine save_nodes_coords(nodes_coords,nnodes)
 
    integer, intent(in) :: nnodes
-   double precision, dimension(3,nnodes), intent(in) :: nodes_coords
+   double precision, dimension(NDIM,nnodes), intent(in) :: nodes_coords
    integer :: ier
 
-   allocate(nodes_coords_open(3,nnodes),stat=ier)
+   allocate(nodes_coords_open(NDIM,nnodes),stat=ier)
    if (ier /= 0) call exit_MPI_without_rank('error allocating array 83')
-   nodes_coords_open = nodes_coords
+   nodes_coords_open(:,:) = nodes_coords(:,:)
 
    end subroutine save_nodes_coords
 
@@ -169,11 +171,11 @@ CONTAINS
   subroutine close_faults(nodes_coords,nnodes)
 
   integer, intent(in) :: nnodes
-  double precision, dimension(3,nnodes), intent(inout) :: nodes_coords
+  double precision, dimension(NDIM,nnodes), intent(inout) :: nodes_coords
 
   integer  :: i
 
-  do i=1,size(faults)
+  do i = 1,size(faults)
     call close_fault_single(faults(i),nodes_coords,nnodes)
   enddo
 
@@ -196,9 +198,9 @@ CONTAINS
 
   type(fault_type), intent(in) :: f
   integer, intent(in)  :: nnodes
-  double precision, dimension(3,nnodes), intent(inout) :: nodes_coords
+  double precision, dimension(NDIM,nnodes), intent(inout) :: nodes_coords
 
-  double precision, dimension(3) :: xyz_1, xyz_2, xyz
+  double precision, dimension(NDIM) :: xyz_1, xyz_2, xyz
 
   double precision :: dist
   integer :: iglob1, iglob2, i, j, k1, k2
@@ -208,23 +210,23 @@ CONTAINS
     do k2=1,NGNOD2D
       iglob2 = f%inodes2(k2,i)
       found_it = .false.
-      xyz_2 = nodes_coords(:,iglob2)
+      xyz_2(:) = nodes_coords(:,iglob2)
 
       do j = 1,f%nspec
         do k1=1,NGNOD2D
           iglob1 = f%inodes1(k1,j)
-          xyz_1 = nodes_coords(:,iglob1)
-          xyz = xyz_2-xyz_1
+          xyz_1(:) = nodes_coords(:,iglob1)
+          xyz(:) = xyz_2(:) - xyz_1(:)
           dist = sqrt(xyz(1)*xyz(1) + xyz(2)*xyz(2) + xyz(3)*xyz(3))
 
-         !jpa: Closing nodes that are already closed is not a problem
-         !jpa: I process them again to leave the loop as early as possible
-         !jpa: and to test if a facing node was found (see below).
+          !jpa: Closing nodes that are already closed is not a problem
+          !jpa: I process them again to leave the loop as early as possible
+          !jpa: and to test if a facing node was found (see below).
 
           if (dist <= FAULT_GAP_TOLERANCE) then
-            xyz =  (xyz_1 + xyz_2)*0.5d0
-            nodes_coords(:,iglob2) = xyz
-            nodes_coords(:,iglob1) = xyz
+            xyz(:) =  (xyz_1(:) + xyz_2(:))*0.5d0
+            nodes_coords(:,iglob2) = xyz(:)
+            nodes_coords(:,iglob1) = xyz(:)
             found_it = .true.
             exit
           endif
@@ -248,11 +250,11 @@ CONTAINS
   subroutine reorder_fault_elements(nodes_coords,nnodes)
 
   integer, intent(in)  :: nnodes
-  double precision,dimension(3,nnodes), intent(in) :: nodes_coords
+  double precision,dimension(NDIM,nnodes), intent(in) :: nodes_coords
 
   integer :: i
 
-  do i=1,size(faults)
+  do i = 1,size(faults)
     call reorder_fault_elements_single(faults(i),nodes_coords,nnodes)
   enddo
 
@@ -263,21 +265,22 @@ CONTAINS
 
   type(fault_type), intent(inout) :: f
   integer, intent(in) :: nnodes
-  double precision, dimension(3,nnodes), intent(in) :: nodes_coords
+  double precision, dimension(NDIM,nnodes), intent(in) :: nodes_coords
 
-  double precision, dimension(3,f%nspec) :: xyz_c
+  double precision, dimension(NDIM,f%nspec) :: xyz_c
   integer :: k,e,iglob
   integer, dimension(f%nspec) :: new_index_list
 
   ! compute element-face centers for fault side 1
-  xyz_c = 0d0
-  do e=1,f%nspec
-    do k=1,4
+  xyz_c(:,:) = 0.d0
+  do e = 1,f%nspec
+    do k = 1,4
       iglob = f%inodes1(k,e)
       xyz_c(:,e) = xyz_c(:,e) + nodes_coords(:,iglob)
     enddo
   enddo
-  xyz_c = xyz_c / 4d0
+  xyz_c(:,:) = xyz_c(:,:) / 4.d0
+
   ! reorder
   call lex_order(xyz_c,new_index_list,f%nspec)
   f%ispec1 = f%ispec1(new_index_list)
@@ -285,13 +288,15 @@ CONTAINS
 
   ! repeat for fault side 2
   xyz_c = 0d0
-  do e=1,f%nspec
-    do k=1,4
+  do e = 1,f%nspec
+    do k = 1,4
       iglob = f%inodes2(k,e)
       xyz_c(:,e) = xyz_c(:,e) + nodes_coords(:,iglob)
     enddo
   enddo
-  xyz_c = xyz_c / 4d0
+  xyz_c(:,:) = xyz_c(:,:) / 4.d0
+
+  ! reorder
   call lex_order(xyz_c,new_index_list,f%nspec)
   f%ispec2 = f%ispec2(new_index_list)
   f%inodes2 = f%inodes2(:,new_index_list)
@@ -334,7 +339,7 @@ CONTAINS
   integer, intent(in) :: nnodes, nproc, esize
   integer, dimension(0:esize*nelmnts-1), intent(in) :: elmnts
   integer, dimension(0:nelmnts-1), intent(inout)    :: part
-  double precision, dimension(3,nnodes), intent(in) :: nodes_coords
+  double precision, dimension(NDIM,nnodes), intent(in) :: nodes_coords
 
   if (PARALLEL_FAULT) then
     call fault_repartition_parallel (nelmnts,part,nodes_coords,nnodes)
@@ -434,12 +439,12 @@ CONTAINS
   end subroutine fault_repartition_not_parallel
 
 ! ---------------------------------------------------------------------------------------------------
-  subroutine fault_repartition_parallel (nelmnts, part, nodes_coords,nnodes)
+  subroutine fault_repartition_parallel(nelmnts, part, nodes_coords,nnodes)
 
   integer, intent(in) :: nelmnts
   integer, dimension(0:nelmnts-1), intent(inout) :: part
   integer, intent(in) :: nnodes
-  double precision, dimension(3,nnodes), intent(in) :: nodes_coords
+  double precision, dimension(NDIM,nnodes), intent(in) :: nodes_coords
 
   integer  :: i,iflt,e,e1,e2,proc1,proc2
 

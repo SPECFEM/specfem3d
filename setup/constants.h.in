@@ -338,10 +338,28 @@
 
 !!-----------------------------------------------------------
 !!
-!! mesh coloring for GPUs (not needed any more, obsolete)
+!! mesh optimization
 !!
 !!-----------------------------------------------------------
 
+! empirical choice for distorted elements to estimate time step and period resolved:
+! Courant number for time step estimate
+  real(kind=CUSTOM_REAL),parameter :: COURANT_SUGGESTED = 0.5
+
+! number of points per minimum wavelength for minimum period estimate
+  real(kind=CUSTOM_REAL),parameter :: NPTS_PER_WAVELENGTH = 5
+
+! mesh partitioning algorithms, choices for PARTITIONING_TYPE
+  ! SCOTCH is original to program
+  integer, parameter :: SCOTCH = 1
+  ! METIS is another popular alternative currently in development
+  integer, parameter :: METIS = 2
+  ! PATOH is mostly used for LTS. It balances the p-levels across partitions as well as balancing total elements.
+  integer, parameter :: PATOH = 3
+  ! simple row partitioning
+  integer, parameter :: ROWS_PART = 4
+
+! GPU coloring
 ! add mesh coloring for the GPU + MPI implementation
 ! this is needed on NVIDIA hardware up to FERMI boards, included.
 ! Starting on KEPLER boards you can leave it off because on KEPLER hardware
@@ -379,6 +397,50 @@
 !!-----------------------------------------------------------
 
   integer, parameter :: NB_RUNS_ACOUSTIC_GPU = 1
+
+!!-----------------------------------------------------------
+!!
+!! local time stepping (LTS)
+!!
+!!-----------------------------------------------------------
+
+! decreases coarsest time step by this percentage factor
+  double precision,parameter :: LTS_SAFETY_MARGIN = 0.05d0
+
+! adds overlap elements
+  logical,parameter :: LTS_OVERLAP_REGION   = .false.
+
+! uses only 1 single p-level (for debugging)
+  logical,parameter :: LTS_SINGLE_P_LEVEL = .false.
+! uses only 2 p-levels (for debugging)
+  logical,parameter :: LTS_TWO_P_LEVEL = .false.
+
+! decreases final coarsest time step for stability
+  logical,parameter :: LTS_DECREASE_DT = .false.
+! time step margin to use for decrease
+  double precision,parameter :: LTS_STABILITY_MARGIN_DT = 0.6d0
+
+! scotch: balancing of p-levels
+  logical,parameter :: BALANCE_P_LEVELS = .true.
+! scotch balancing of p-levels using partial subsets of processes to distribute p-elements
+  logical,parameter :: BALANCE_P_LEVELS_PARTIAL = .false.
+! p-level partitions shouldn't be smaller than this
+  integer,parameter :: P_LEVEL_PARTIAL_SUBSET_MINIMUM = 200
+
+! partitioning for Local time stepping
+  ! tries to partition mesh such that p-levels are confined to an island (for METIS/PATOH)
+  logical,parameter :: PLEVEL_ISLAND = .false.
+
+  ! reorganize the partitions to try to optimize communication costs (for SCOTCH only)
+  logical,parameter :: SCOTCH_P_REMAP = .true.
+
+!!-----------------------------------------------------------
+!! MPI debugging
+!!-----------------------------------------------------------
+
+! debugging: without MPI assembly
+  logical,parameter :: ASSEMBLE_MPI_OFF = .false.
+
 
 !------------------------------------------------------
 !----------- do not modify anything below -------------

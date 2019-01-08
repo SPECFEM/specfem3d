@@ -67,16 +67,6 @@
   integer :: NGLOB_AB_global_min,NGLOB_AB_global_max,NGLOB_AB_global_sum
   integer :: ispec
 
-  !********************************************************************************
-
-  ! empirical choice for distorted elements to estimate time step and period resolved:
-  ! Courant number for time step estimate
-  real(kind=CUSTOM_REAL),parameter :: COURANT_SUGGESTED = 0.5
-  ! number of points per minimum wavelength for minimum period estimate
-  real(kind=CUSTOM_REAL),parameter :: NPTS_PER_WAVELENGTH = 5
-
-  !********************************************************************************
-
   logical :: has_vs_zero
   real(kind=CUSTOM_REAL),dimension(1) :: tmp_val
 
@@ -516,16 +506,6 @@
   integer :: NSPEC_AB_global_min,NSPEC_AB_global_max,NSPEC_AB_global_sum
   integer :: NGLOB_AB_global_min,NGLOB_AB_global_max,NGLOB_AB_global_sum
   integer :: ispec
-
-  !********************************************************************************
-
-  ! empirical choice for distorted elements to estimate time step and period resolved:
-  ! Courant number for time step estimate
-  real(kind=CUSTOM_REAL),parameter :: COURANT_SUGGESTED = 0.5
-  ! number of points per minimum wavelength for minimum period estimate
-  real(kind=CUSTOM_REAL),parameter :: NPTS_PER_WAVELENGTH = 5
-
-  !********************************************************************************
 
   logical :: has_vs_zero,has_vp2_zero
   real(kind=CUSTOM_REAL),dimension(1) :: tmp_val

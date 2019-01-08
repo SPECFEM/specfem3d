@@ -78,6 +78,12 @@ end module constants
   ! number of time step for external source time function
   integer :: NSTEP_STF
 
+  ! Local Time Stepping (LTS)
+  logical :: LTS_MODE
+
+  ! partitioning scheme
+  integer :: PARTITIONING_TYPE
+
   ! LDD Runge-Kutta time scheme
   logical :: USE_LDDRK
 

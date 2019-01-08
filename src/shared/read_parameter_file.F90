@@ -131,6 +131,20 @@
       write(*,*)
     endif
 
+    call read_value_logical(LTS_MODE, 'LTS_MODE', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'LTS_MODE                        = .false.'
+      write(*,*)
+    endif
+
+    call read_value_integer(PARTITIONING_TYPE, 'PARTITIONING_TYPE', ier)
+    if (ier /= 0) then
+      some_parameters_missing_from_Par_file = .true.
+      write(*,'(a)') 'PARTITIONING_TYPE               = 1'
+      write(*,*)
+    endif
+
     !-------------------------------------------------------
     ! LDDRK time scheme
     !-------------------------------------------------------
@@ -842,7 +856,6 @@
       stop 'Error elements should have 8 or 27 control nodes, please modify NGNOD in Par_file and recompile solver'
     endif
 
-
     ! get the name of the file describing the sources
     if (USE_FORCE_POINT_SOURCE) then
       sources_filename = IN_DATA_FILES(1:len_trim(IN_DATA_FILES))//'FORCESOLUTION'
@@ -941,6 +954,8 @@
     call bcast_all_singlel(SUPPRESS_UTM_PROJECTION)
     call bcast_all_singlei(NSTEP)
     call bcast_all_singledp(DT)
+    call bcast_all_singlel(LTS_MODE)
+    call bcast_all_singlei(PARTITIONING_TYPE)
     call bcast_all_singlel(USE_LDDRK)
     call bcast_all_singlei(NGNOD)
     call bcast_all_string(MODEL)
@@ -1099,6 +1114,20 @@
   ! external STF
   if (USE_EXTERNAL_SOURCE_FILE .and. GPU_MODE) &
     stop 'USE_EXTERNAL_SOURCE_FILE in GPU_MODE simulation not supported yet'
+
+  ! local time stepping (still in experimental implementation phase...)
+  if (LTS_MODE) then
+    if (USE_LDDRK) &
+      stop 'USE_LDDRK in LTS_MODE not supported yet'
+    if (PML_CONDITIONS) &
+      stop 'PML_CONDITIONS in LTS_MODE not supported yet'
+    if (GPU_MODE) &
+      stop 'GPU_MODE and LTS_MODE together not supported yet'
+  endif
+
+  ! PARTITIONING_TYPE
+  if (PARTITIONING_TYPE < 1 .or. PARTITIONING_TYPE > 4) &
+    stop 'PARTITIONING_TYPE must be 1,2,3 or 4 (for SCOTCH, METIS, PATOH or ROW_PARTS partitioner)'
 
   end subroutine check_simulation_parameters
 

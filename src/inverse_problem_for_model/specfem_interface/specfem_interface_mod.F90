@@ -1273,16 +1273,6 @@ contains
     integer                :: ispec, ier
     logical                :: has_vs_zero
 
-    !********************************************************************************
-
-    ! empirical choice for distorted elements to estimate time step and period resolved:
-    ! Courant number for time step estimate
-    real(kind=CUSTOM_REAL),parameter :: COURANT_SUGGESTED = 0.5
-    ! number of points per minimum wavelength for minimum period estimate
-    real(kind=CUSTOM_REAL),parameter :: NPTS_PER_WAVELENGTH = 5
-
-    !********************************************************************************
-
     !!! dummy arrays for acosutic case if needed
     !!! occurs when not purely elastic simulation
     if (ELASTIC_SIMULATION) then
@@ -1391,12 +1381,10 @@ contains
        cmax = max(vpmax,vsmax) * DT / distance_min
        cmax_glob = max(cmax_glob,cmax)
 
-
        ! suggested timestep
        vel_max = max( vpmax,vsmax )
        dt_suggested = COURANT_SUGGESTED * distance_min / vel_max
        dt_suggested_glob = min( dt_suggested_glob, dt_suggested)
-
 
     enddo
 

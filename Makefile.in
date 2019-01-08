@@ -97,13 +97,36 @@ SCOTCH_LIBDIR = @SCOTCH_LIBDIR@
 @COND_SCOTCH_TRUE@SCOTCH_LIBS = -L${SCOTCH_LIBDIR} -lscotch -lscotcherr
 @COND_SCOTCH_FALSE@SCOTCH_LIBS =
 
-@COND_SCOTCH_TRUE@SCOTCH_FLAGS = $(SCOTCH_INC) $(FC_DEFINE)USE_SCOTCH
+@COND_SCOTCH_TRUE@SCOTCH_FLAGS = $(FC_DEFINE)USE_SCOTCH $(SCOTCH_INC)
 @COND_SCOTCH_FALSE@SCOTCH_FLAGS =
 
-### added support for METIS as well, thus uncomment the line below and compile METIS if you want to use it instead of SCOTCH
-# add $(FC_DEFINE)USE_METIS_INSTEAD_OF_SCOTCH
-#@COND_SCOTCH_TRUE@SCOTCH_LIBS = -L./external_libs/metis-4.0.3 -L./metis-4.0.3 -lmetis
-#@COND_SCOTCH_TRUE@SCOTCH_FLAGS = $(FC_DEFINE)USE_METIS_INSTEAD_OF_SCOTCH
+## METIS
+## uncomment for METIS support and re-compile
+## to use it, set PARTITIONING_TYPE = 2 (in your Par_file)
+# Metis v4 (using version in folder external_libs/):
+#METIS_INC = $(FC_DEFINE)USE_METIS -I./external_libs/metis-4.0.3/Lib
+#METIS_LIBS = -lmetis -L./external_libs/metis-4.0.3
+# Metis v5 (must be installed on your system):
+#METIS_INC = $(FC_DEFINE)USE_METIS
+#METIS_LIBS = -lmetis
+
+## PaToH
+## uncomment for PATOH support and re-compile
+## to use it, set PARTITIONING_TYPE = 3 (in your Par_file)
+# PaToH v3.2 (using version in folder external_libs/):
+#PATOH_INC = $(FC_DEFINE)USE_PATOH -I./external_libs/patoh/
+#PATOH_LIBS = -L./external_libs/patoh/ -lpatoh -lconfig++ -lstdc++
+
+## compilation flag for partitioner
+# default: scotch
+PART_FLAGS = $(SCOTCH_FLAGS)
+PART_LIBS  = $(SCOTCH_LIBS)
+# metis support
+PART_FLAGS += $(METIS_INC)
+PART_LIBS  += $(METIS_LIBS)
+# patoh support
+PART_FLAGS += $(PATOH_INC)
+PART_LIBS  += $(PATOH_LIBS)
 
 #######################################
 ####

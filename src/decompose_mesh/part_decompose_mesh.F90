@@ -155,18 +155,150 @@ contains
   end subroutine mesh2dual_ncommonnodes
 
 
+  !-----------------------------------------------
+  ! Creates a hypergraph corresponding to the mesh
+  !-----------------------------------------------
+  subroutine mesh2hyp_ncommonnodes(nspec, nnodes, nsize, sup_neighbor, elmnts, &
+                                   xadj, adjncy, &
+                                   xpins, pins, &
+                                   nnodes_elmnts, nodes_elmnts, &
+                                   max_neighbor, ncommonnodes, NGNOD)
+
+  implicit none
+  integer, intent(in) :: nspec
+  integer, intent(in) :: nnodes
+  integer, intent(in) :: nsize
+  integer, intent(in) :: sup_neighbor
+  integer, intent(in) :: NGNOD
+  integer, dimension(0:NGNOD*nspec-1), intent(in)  :: elmnts
+
+  integer, dimension(0:nspec),intent(out)  :: xadj
+  integer, dimension(0:sup_neighbor*nspec-1),intent(out)  :: adjncy
+
+  integer, dimension(0:nnodes),intent(out)  :: xpins
+  integer, dimension(0:sup_neighbor*nspec),intent(out)  :: pins
+
+  integer, dimension(0:nnodes-1),intent(out)  :: nnodes_elmnts
+  integer, dimension(0:nsize*nnodes-1),intent(out)  :: nodes_elmnts
+  integer, intent(out) :: max_neighbor
+  integer, intent(in)  :: ncommonnodes
+
+  ! local parameters
+  integer :: i, j, k, l, m, nb_edges
+  logical :: is_neighbor
+  integer :: num_node, n
+  integer :: elem_base, elem_target
+  integer :: connectivity
+  integer :: atind
+
+  ! initializes
+  xpins(:) = 0
+  pins(:) = 0
+
+  xadj(:) = 0
+  adjncy(:) = 0
+
+  nnodes_elmnts(:) = 0
+  nodes_elmnts(:) = 0
+  nb_edges = 0
+
+  ! list of elements per node
+  do i = 0, NGNOD*nspec-1
+    nodes_elmnts(elmnts(i)*nsize+nnodes_elmnts(elmnts(i))) = int(i/NGNOD)
+    nnodes_elmnts(elmnts(i)) = nnodes_elmnts(elmnts(i)) + 1
+  enddo
+
+  ! nnodes_elmnts is the xpins
+  ! nodes_elmnts is the pins of hyp
+  atind = 0
+  xpins(0) = 0
+  do j = 0, nnodes - 1
+    do k = 0, nnodes_elmnts(j)-1
+      pins(atind) = nodes_elmnts(k+j*nsize)
+      atind = atind + 1
+    enddo
+    xpins(j+1) = atind
+  enddo
+
+  !BU TODO: Technically I do not need the following to partition
+  !BU but xadj and adj seem to be used in other parts of the decompose_mesh module so
+  !BU we create them as well/
+
+  ! checking which elements are neighbors ('ncommonnodes' criteria)
+  do j = 0, nnodes-1
+    do k = 0, nnodes_elmnts(j)-1
+      do l = k+1, nnodes_elmnts(j)-1
+        connectivity = 0
+        elem_base = nodes_elmnts(k+j*nsize)
+        elem_target = nodes_elmnts(l+j*nsize)
+        do n = 1, NGNOD_EIGHT_CORNERS
+          num_node = elmnts(NGNOD*elem_base+n-1)
+          do m = 0, nnodes_elmnts(num_node)-1
+            if ( nodes_elmnts(m+num_node*nsize) == elem_target ) then
+              connectivity = connectivity + 1
+            endif
+          enddo
+        enddo
+        if ( connectivity >= ncommonnodes) then
+
+          is_neighbor = .false.
+
+          do m = 0, xadj(nodes_elmnts(k+j*nsize))
+            if (.not. is_neighbor ) then
+              if ( adjncy(nodes_elmnts(k+j*nsize)*sup_neighbor+m) == nodes_elmnts(l+j*nsize) ) then
+                is_neighbor = .true.
+              endif
+            endif
+          enddo
+
+          if (.not. is_neighbor ) then
+            adjncy(nodes_elmnts(k+j*nsize)*sup_neighbor &
+              + xadj(nodes_elmnts(k+j*nsize))) = nodes_elmnts(l+j*nsize)
+
+            xadj(nodes_elmnts(k+j*nsize)) = xadj(nodes_elmnts(k+j*nsize)) + 1
+            if (xadj(nodes_elmnts(k+j*nsize)) > sup_neighbor) &
+              stop 'ERROR: too many neighbors per element, error in the mesh or in the code.'
+
+            adjncy(nodes_elmnts(l+j*nsize)*sup_neighbor &
+              + xadj(nodes_elmnts(l+j*nsize))) = nodes_elmnts(k+j*nsize)
+
+            xadj(nodes_elmnts(l+j*nsize)) = xadj(nodes_elmnts(l+j*nsize)) + 1
+            if (xadj(nodes_elmnts(l+j*nsize)) > sup_neighbor) &
+              stop 'ERROR: too many neighbors per element, error in the mesh or in the code.'
+          endif
+        endif
+      enddo
+    enddo
+  enddo
+
+  max_neighbor = maxval(xadj)
+
+  ! making adjacency arrays compact (to be used for partitioning)
+  do i = 0, nspec-1
+    k = xadj(i)
+    xadj(i) = nb_edges
+    do j = 0, k-1
+      adjncy(nb_edges) = adjncy(i*sup_neighbor+j)
+      nb_edges = nb_edges + 1
+    enddo
+  enddo
+  xadj(nspec) = nb_edges
+
+  end subroutine mesh2hyp_ncommonnodes
+
+
   !--------------------------------------------------
   ! construct local numbering for the elements in each partition
   !--------------------------------------------------
   subroutine build_glob2loc_elmnts(nspec, part, glob2loc_elmnts,nparts)
 
   implicit none
-  integer, intent(in)  :: nspec
-  integer, dimension(0:nspec-1), intent(in)  :: part
-  integer, dimension(:), pointer  :: glob2loc_elmnts
+  integer, intent(in) :: nspec
+  integer, dimension(0:nspec-1), intent(in) :: part
+  integer, dimension(:), pointer :: glob2loc_elmnts
 
   integer  :: num_glob, num_part, nparts
-  integer, dimension(0:nparts-1)  :: num_loc
+  integer, dimension(0:nparts-1) :: num_loc
   integer :: ier
 
   ! allocates local numbering array
@@ -176,16 +308,16 @@ contains
 
   ! initializes number of local elements per partition
   do num_part = 0, nparts-1
-     num_loc(num_part) = 0
+    num_loc(num_part) = 0
   enddo
 
   ! local numbering
   do num_glob = 0, nspec-1
-     ! gets partition
-     num_part = part(num_glob)
-     ! increments local numbering of elements (starting with 0,1,2,...)
-     glob2loc_elmnts(num_glob) = num_loc(num_part)
-     num_loc(num_part) = num_loc(num_part) + 1
+    ! gets partition
+    num_part = part(num_glob)
+    ! increments local numbering of elements (starting with 0,1,2,...)
+    glob2loc_elmnts(num_glob) = num_loc(num_part)
+    num_loc(num_part) = num_loc(num_part) + 1
   enddo
 
   end subroutine build_glob2loc_elmnts
@@ -199,7 +331,7 @@ contains
                                   glob2loc_nodes_nparts, glob2loc_nodes_parts, glob2loc_nodes,nparts)
 
   implicit none
-  integer, intent(in)  :: nspec
+  integer, intent(in) :: nspec
   integer, intent(in) :: nsize
   integer, intent(in) :: nnodes
   integer, dimension(0:nspec-1), intent(in)  :: part
@@ -272,8 +404,6 @@ contains
   enddo
 
   end subroutine build_glob2loc_nodes
-
-
 
   !--------------------------------------------------
   ! build interfaces between partitions.
@@ -403,12 +533,14 @@ contains
                                            nodes_coords, glob2loc_nodes_nparts, glob2loc_nodes_parts, &
                                            glob2loc_nodes, nnodes, num_phase)
 
+  use constants, only: NDIM
+
   implicit none
   integer, intent(in)  :: IIN_database
   integer, intent(in)  :: nnodes, iproc, num_phase
   integer, intent(inout)  :: npgeo
 
-  double precision, dimension(3,nnodes)  :: nodes_coords
+  double precision, dimension(NDIM,nnodes)  :: nodes_coords
   integer, dimension(:), pointer  :: glob2loc_nodes_nparts
   integer, dimension(:), pointer  :: glob2loc_nodes_parts
   integer, dimension(:), pointer  :: glob2loc_nodes

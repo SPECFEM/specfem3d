@@ -29,8 +29,7 @@ program xdecompose_mesh
 
   use constants, only: MAX_STRING_LEN
 
-  use decompose_mesh, only: nparts,localpath_name,outputpath_name,read_mesh_files,check_valence, &
-                                  scotch_partitioning,write_mesh_databases,ADIOS_FOR_DATABASES
+  use decompose_mesh_par, only: nparts,localpath_name,outputpath_name,ADIOS_FOR_DATABASES
 
   implicit none
 
@@ -82,15 +81,18 @@ program xdecompose_mesh
 ! checks valence of nodes
   call check_valence()
 
-! partitions mesh
-  call scotch_partitioning()
+! sets up elements for local time stepping
+  call lts_setup_elements()
+
+! partitions mesh (using scotch, metis, or patoh partitioners via constants.h)
+  call decompose_mesh()
 
 ! writes out database files
   call write_mesh_databases()
 
 ! user output
   print *
-  print *,'partitioning done successfully'
+  print *,'finished successfully'
   print *
 
 end program xdecompose_mesh

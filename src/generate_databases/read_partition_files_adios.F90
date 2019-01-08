@@ -257,7 +257,7 @@ subroutine read_partition_files_adios()
   ! Read arrays from Database |
   !---------------------------'
   start(1) = local_dim_nodes_coords * myrank
-  count(1) = 3 * nnodes_ext_mesh
+  count(1) = NDIM * nnodes_ext_mesh
   sel_num = sel_num+1
   sel => selections(sel_num)
   call adios_selection_boundingbox (sel , 1, start, count)

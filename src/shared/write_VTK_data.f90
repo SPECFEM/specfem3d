@@ -528,3 +528,71 @@
   close(IOVTK)
 
   end subroutine write_VTK_data_elem_cr
+
+
+!
+!------------------------------------------------------------------------------------
+!
+
+  subroutine write_VTK_data_ngnod_elem_i(nspec,nglob,NGNOD, &
+                                         xstore_dummy,ystore_dummy,zstore_dummy,elmnts, &
+                                         elem_flag,filename)
+
+  use constants, only: IOVTK,MAX_STRING_LEN
+
+  implicit none
+
+  integer :: nspec,nglob,NGNOD
+
+  ! global coordinates
+  integer, dimension(NGNOD,nspec) :: elmnts
+  double precision, dimension(nglob) :: xstore_dummy,ystore_dummy,zstore_dummy
+
+  ! element flag array
+  integer, dimension(nspec) :: elem_flag
+
+  ! file name
+  character(len=MAX_STRING_LEN) :: filename
+
+  ! local parameters
+  integer :: ispec,i
+
+  ! safety check
+  if (NGNOD < 8) stop 'Error invalid NGNOD in write_VTK_data_ngnod_elem_i routine'
+
+  ! write source and receiver VTK files for Paraview
+  open(IOVTK,file=filename(1:len_trim(filename))//'.vtk',status='unknown')
+  write(IOVTK,'(a)') '# vtk DataFile Version 3.1'
+  write(IOVTK,'(a)') 'material model VTK file'
+  write(IOVTK,'(a)') 'ASCII'
+  write(IOVTK,'(a)') 'DATASET UNSTRUCTURED_GRID'
+  write(IOVTK, '(a,i12,a)') 'POINTS ', nglob, ' float'
+  do i = 1,nglob
+    write(IOVTK,'(3e18.6)') xstore_dummy(i),ystore_dummy(i),zstore_dummy(i)
+  enddo
+  write(IOVTK,*) ""
+
+  ! note: indices for vtk start at 0
+  write(IOVTK,'(a,i12,i12)') "CELLS ",nspec,nspec*9
+  do ispec = 1,nspec
+    write(IOVTK,'(9i12)') 8,elmnts(1,ispec)-1,elmnts(2,ispec)-1,elmnts(3,ispec)-1,elmnts(4,ispec)-1, &
+                            elmnts(5,ispec)-1,elmnts(6,ispec)-1,elmnts(7,ispec)-1,elmnts(8,ispec)-1
+  enddo
+  write(IOVTK,*) ""
+
+  ! type: hexahedrons
+  write(IOVTK,'(a,i12)') "CELL_TYPES ",nspec
+  write(IOVTK,'(6i12)') (12,ispec=1,nspec)
+  write(IOVTK,*) ""
+
+  write(IOVTK,'(a,i12)') "CELL_DATA ",nspec
+  write(IOVTK,'(a)') "SCALARS elem_flag integer"
+  write(IOVTK,'(a)') "LOOKUP_TABLE default"
+  do ispec = 1,nspec
+    write(IOVTK,*) elem_flag(ispec)
+  enddo
+  write(IOVTK,*) ""
+  close(IOVTK)
+
+  end subroutine write_VTK_data_ngnod_elem_i
+

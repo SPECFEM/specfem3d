@@ -27,6 +27,7 @@
 
 module module_database
 
+  use constants, only: NDIM
   use shared_parameters, only: NGNOD, NGNOD2D, LOCAL_PATH, MSL => MAX_STRING_LEN
 
   integer                                     :: nE_loc
@@ -59,6 +60,7 @@ contains
   subroutine prepare_database(myrank,  elmnts, nE)
 
     implicit none
+
     integer,                         intent(in) :: myrank , nE
     integer,   dimension(NGNOD,nE),  intent(in) :: elmnts
 
@@ -113,7 +115,7 @@ contains
     integer,            dimension(nspec_cpml),            intent(in)  :: cpml_to_spec, cpml_regions
     double precision,   dimension(17,count_def_mat),      intent(in)  :: mat_prop
     character(len=MSL), dimension(6,count_undef_mat),     intent(in)  :: undef_mat_prop
-    double precision,   dimension(3,nnodes),              intent(in)  :: nodes_coords
+    double precision,   dimension(NDIM,nnodes),           intent(in)  :: nodes_coords
     logical,            dimension(nE),                    intent(in)  :: is_cpml
 
     character(len=20)                                                 :: prname
@@ -359,6 +361,7 @@ contains
   subroutine count_my_boundary(myrank, ipart, ibelm, nspec2D, nE, iflag)
 
     implicit none
+
     integer,                                   intent(in) :: myrank, iflag
     integer,                                   intent(in) :: nspec2D, nE
     integer,   dimension(nE),                  intent(in) :: ipart
@@ -382,6 +385,7 @@ contains
 !----------------------------------
 
   subroutine  write_my_boundary(myrank, ipart, ibelm, nodes_ibelm, nspec2D, nE)
+
     implicit none
 
     integer,                                   intent(in) :: myrank, nspec2D, nE
@@ -482,7 +486,9 @@ contains
 !----------------------------------
 
   subroutine store_new_element(new_indx, nb, indx)
+
     implicit none
+
     integer,               intent(in)    :: new_indx
     integer,               intent(inout) :: nb
     integer, dimension(:), intent(inout) :: indx

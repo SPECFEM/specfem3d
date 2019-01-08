@@ -27,6 +27,7 @@
 
 module module_partition
 
+  use constants, only: NDIM
   use shared_parameters, only: NGNOD
   use module_qsort
 
@@ -44,13 +45,13 @@ contains
   !  a given face of a computational box domain taking
   !  into account load of each element.
   !
-  subroutine decompose_mesh(elmnts, nodes_coords, load_elmnts,  nspec, nnodes, npart_1, npart_2, npart_3)
+  subroutine partition_mesh(elmnts, nodes_coords, load_elmnts,  nspec, nnodes, npart_1, npart_2, npart_3)
 
     implicit none
 
     ! input mesh
     integer,                                     intent(in) :: nspec, nnodes
-    double precision,    dimension(3,nnodes),    intent(in) :: nodes_coords
+    double precision,    dimension(NDIM,nnodes),    intent(in) :: nodes_coords
     double precision,    dimension(nspec),       intent(in) :: load_elmnts
     integer,             dimension(NGNOD,nspec), intent(in) :: elmnts
 
@@ -74,10 +75,10 @@ contains
     integer                                                 :: i, iE, idir, num_original_element, ier
     !
 
-    nE=nspec
+    nE = nspec
     allocate(ipart(nE),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 67')
-    ipart(:)=-1
+    ipart(:) = -1
 
     xmin = minval(nodes_coords(1,:))
     xmax = maxval(nodes_coords(1,:))
@@ -100,8 +101,8 @@ contains
     call compute_elmnts_center(elmnts_center, elmnts, nodes_coords, nspec, nnodes)
 
     ! partition in direction 1 on the whole mesh
-    idir=1
-    nE_1=nE
+    idir = 1
+    nE_1 = nE
     allocate(sum_load_1(nE_1),cri_load_1(nE_1),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 69')
     allocate(ipart_1(nE_1), nEipart_1(nE_1), iperm_1(nE_1),stat=ier)
@@ -110,13 +111,12 @@ contains
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 71')
     elmnts_center_1(:,:)=elmnts_center(:,:)
     load_elmnts_1(:)=load_elmnts(:)
-    do i=1,nE
-       old_num_1(i)=i
+    do i = 1,nE
+      old_num_1(i)=i
     enddo
 
-
     call compute_partition(ipart_1, nEipart_1, npart_1, sum_load_1, cri_load_1, &
-         load_elmnts_1, elmnts_center_1, iperm_1, nE_1, ref_point, idir)
+                           load_elmnts_1, elmnts_center_1, iperm_1, nE_1, ref_point, idir)
 
     write(27,*) ' made partion in 1st direction ', npart_1
 
@@ -181,13 +181,13 @@ contains
     deallocate(ipart_1, nEipart_1)
     deallocate(iperm_1, old_num_1)
 
-  end subroutine decompose_mesh
+  end subroutine partition_mesh
 
   !---------
   ! compute partition in one direction
   !---------
   subroutine compute_partition(ipart_tmp, nEipart_tmp, npart_tmp, sum_load_tmp, cri_load_perm, &
-       load_elmnts_tmp, elmnts_center_tmp, iperm_tmp, nE_tmp, ref_point, idir)
+                               load_elmnts_tmp, elmnts_center_tmp, iperm_tmp, nE_tmp, ref_point, idir)
 
     implicit none
 
@@ -203,8 +203,8 @@ contains
     double precision                                        :: Load_by_part
 
     ! initialise permutation
-    do i=1,nE_tmp
-       iperm_tmp(i)=i
+    do i = 1,nE_tmp
+      iperm_tmp(i) = i
     enddo
 
     call compute_criteria(cri_load_perm, elmnts_center_tmp, nE_tmp, ref_point, idir)
@@ -220,7 +220,7 @@ contains
 
     write(27,*) ' Load value by partition  ', Load_by_part
 
-    do i=1,nE_tmp
+    do i = 1,nE_tmp
        k = iperm_tmp(i)
        ipart_tmp(k) = int(floor(sum_load_tmp(i) / Load_by_part)) + 1  !! must have the smaller closest integer + 1
        nEipart_tmp(ipart_tmp(k)) = nEipart_tmp(ipart_tmp(k)) + 1      !! (sum_load_tmp is not sorted)
@@ -232,7 +232,7 @@ contains
   ! extract sub arrays for each partition
   !----------
   subroutine extract_partition(load_elmnts_1, elmnts_center_1, old_num_1, nE_1, &
-       ipart_0, load_elmnts_0, elmnts_center_0, old_num_0, kpart_0, nE_0)
+                               ipart_0, load_elmnts_0, elmnts_center_0, old_num_0, kpart_0, nE_0)
 
     implicit none
 
@@ -320,9 +320,9 @@ contains
 
     ! input mesh
     integer,                                     intent(in)    :: nspec, nnodes
-    double precision,    dimension(3,nnodes),    intent(in)    :: nodes_coords
+    double precision,    dimension(NDIM,nnodes),    intent(in)    :: nodes_coords
     integer,             dimension(NGNOD,nspec), intent(in)    :: elmnts
-    double precision,    dimension(3,nspec),     intent(inout) :: elmnts_center
+    double precision,    dimension(NDIM,nspec),     intent(inout) :: elmnts_center
     ! local parameters
     integer                                                    :: iE, i
 
@@ -341,7 +341,4 @@ contains
   end subroutine compute_elmnts_center
 
 end module module_partition
-
-
-
 

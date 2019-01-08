@@ -27,7 +27,8 @@
 
 module module_mesh
 
-  use shared_parameters
+  use constants, only: NDIM, MAX_STRING_LEN
+  use shared_parameters, only: NGNOD,NGNOD2D,ATTENUATION,PML_CONDITIONS
   use fault_scotch
 
   ! elements
@@ -120,7 +121,7 @@ contains
     read(98,*) nnodes_glob
 
     if (nnodes_glob < 1) stop 'Error: nnodes_glob < 1'
-    allocate(nodes_coords_glob(3,nnodes_glob),stat=ier)
+    allocate(nodes_coords_glob(NDIM,nnodes_glob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 117')
     if (ier /= 0) stop 'Error allocating array nodes_coords'
     do inode = 1, nnodes_glob
@@ -788,6 +789,7 @@ contains
 
     allocate(load_elmnts(nspec_glob),stat=ier)
     if (ier /= 0) call exit_MPI_without_rank('error allocating array 140')
+
     call  acoustic_elastic_poro_load (load_elmnts,nspec_glob,count_def_mat,count_undef_mat, &
                                     num_material,mat_prop,undef_mat_prop,ATTENUATION)
 

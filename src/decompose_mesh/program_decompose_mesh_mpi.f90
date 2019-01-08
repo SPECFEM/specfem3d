@@ -34,7 +34,9 @@
 
 program xdecompose_mesh_mpi
 
-  use constants,only: OUTPUT_FILES
+  use constants, only: OUTPUT_FILES
+  use shared_parameters, only: LTS_MODE
+
   use module_mesh
   use module_database
   use module_partition
@@ -57,6 +59,9 @@ program xdecompose_mesh_mpi
 
   ! 1/ read Par_file
   call read_parameter_file(myrank, BROADCAST_AFTER_READ)
+
+  ! safety check, won't work yet with local-time stepping
+  if (LTS_MODE) stop 'LTS_MODE not supported yet with parallel mesh decomposer!'
 
   ! 2/ read mesh
   ! user output
@@ -112,7 +117,7 @@ program xdecompose_mesh_mpi
   ! 3/ Heuristic mesh partition
   if (myrank == 0) then
      write(27,*) ' DECOMPOSING MESH '
-     call decompose_mesh(elmnts_glob, nodes_coords_glob, load_elmnts, nspec_glob, nnodes_glob, npartX, npartY, npartZ)
+     call partition_mesh(elmnts_glob, nodes_coords_glob, load_elmnts, nspec_glob, nnodes_glob, npartX, npartY, npartZ)
   endif
   call bcast_all_singlei(nspec_glob)
   if (myrank > 0) then
@@ -139,7 +144,7 @@ program xdecompose_mesh_mpi
 
     ! user output
     print *
-    print *,'partitioning done successfully'
+    print *,'finished successfully'
     print *
   endif
 
@@ -316,7 +321,7 @@ end program xdecompose_mesh_mpi
   ! global to local numbering
   allocate(loc2glob_nodes(nnodes), glob2loc_nodes(nnodes_glob),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('Error allocating array 7')
-  allocate(nodes_coords(3,nnodes),stat=ier)
+  allocate(nodes_coords(NDIM,nnodes),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('Error allocating array 8')
   nnodes_loc = nnodes
   glob2loc_nodes(:) = -1
@@ -391,7 +396,7 @@ end program xdecompose_mesh_mpi
      call recv_i(nelmnts_by_node, nnodes, 0, myrank  + 9987)
      call recv_i(loc2glob_nodes, nnodes, 0, myrank  + 9977)
      call recv_i(glob2loc_nodes, nnodes_glob, 0, myrank  + 9967)
-     call recv_dp(nodes_coords, 3*nnodes, 0, myrank + 9998)
+     call recv_dp(nodes_coords, NDIM*nnodes, 0, myrank + 9998)
 
   endif
 
@@ -429,8 +434,8 @@ end program xdecompose_mesh_mpi
   nspec = nE_loc !! global varailble to be saved
   allocate(elmnts(NGNOD,nE_loc),stat=ier)
   if (ier /= 0) call exit_MPI_without_rank('Error allocating array 16')
-  if ( myrank == 0 ) then
 
+  if (myrank == 0) then
      irank = 0
      iE_loc = 0
 
@@ -455,7 +460,6 @@ end program xdecompose_mesh_mpi
         call send_i(buffer_to_send, NGNOD*nE_irank(irank+1), irank, irank + 9999)
         deallocate(buffer_to_send)
      enddo
-
   else
      call recv_i(elmnts, NGNOD*nE_loc, 0, myrank  + 9999)
   endif
@@ -490,7 +494,7 @@ end program xdecompose_mesh_mpi
     if (ier /= 0) call exit_MPI_without_rank('Error allocating array 18')
     if (ier /= 0) then
       write(*,*) 'Error ', myrank, NGNOD,nspec_glob
-      stop 'Error allocating array elmnts'
+      stop 'Error allocating array elmnts_glob'
     endif
 
     allocate(mat(2,nspec_glob),stat=ier)
