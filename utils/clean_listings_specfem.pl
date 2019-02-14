@@ -202,7 +202,7 @@ foreach $name (@objects) {
 
 # for spaces around comparisons we exclude that file because it contains print statements that print
 # XML file lines and thus it contains many < and > characters that must not be changed
-    if($basename_obtained ne 'write_output_ASDF.f90') {
+    if($basename_obtained ne 'write_output_ASDF.f90' && $basename_obtained ne 'config.h.in') {
 
 # make sure there is one white space on each side of comparison operators
       $line =~ s#\s*<\s*=\s*# <= #ogi;
