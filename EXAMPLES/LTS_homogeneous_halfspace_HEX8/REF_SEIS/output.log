@@ -1,0 +1,159 @@
+running example: Tue Jan  8 17:09:46 CET 2019
+
+   setting up example...
+
+
+  decomposing mesh...
+
+
+ **********************
+ Serial mesh decomposer
+ **********************
+
+ total number of nodes: 
+   nnodes =         2516
+ total number of spectral elements:
+   nspec =         2212
+ materials:
+   num_mat =            1
+   defined =            1 undefined =            0
+   no poroelastic material file found
+   defined materials  :            1
+   undefined materials:            1  (interfaces/tomography models/..)
+ absorbing boundaries:
+   nspec2D_xmin =           36
+   nspec2D_xmax =           36
+   nspec2D_ymin =           36
+   nspec2D_ymax =           36
+   nspec2D_bottom =           81
+   nspec2D_top =          297
+   no absorbing_cpml_file file found
+   no moho_surface_file file found
+ Par_file_faults not found: assuming that there are no faults
+ node valence:
+   min =            1  max =           16
+ neighbors:
+   nsize =           16
+   valence: sup_neighbor =          102 max_neighbor =           54
+ local time stepping: turned ON
+   setting up elements for local time stepping
+   number of elements:        2212
+   number of nodes   :        2516
+   estimated time step min   =    3.82575616E-02  seconds
+   estimated time step max   =   0.459091365      seconds
+   estimated time step ratio =    12.0000162    
+
+   suggested minimum DT time step =    3.82575616E-02
+
+   suggested global coarsest time step       =   0.30606049299240112     
+
+   p refinement of nodes   : min/max =            1           8
+   p refinement of elements: min/max =            1           8
+
+   level           1 :  fine/coarse p refinement =            8           4 relative =            1
+   level           2 :  fine/coarse p refinement =            4           1 relative =            2
+   number of p-levels        :            3
+   p-level array             :            8           4           1
+   p-level relative array    :            2           2           1
+   p-level number of elements:         1136         944         132
+   p-level boundary elements :          121         242         121
+
+   theoretical speed-up value:    1.36164975     (without boundary contributions)
+   theoretical speed-up value:    1.17557967     (with boundary contributions)
+
+ partitioning:
+   number of partitions requested =            4
+ 
+   array size xadj  :         2213  memory:    8.44192505E-03 MB
+   array size adjncy:       119448  memory:   0.455657959     MB
+   sup_neighbor     :           54
+ 
+   mesh2dual: max_neighbor =           54
+
+ partitioning type:            1
+   running SCOTCH partitioning
+
+ SCOTCH partitioning
+   p-level partitioning: p-level =           1 p =           8 elements =        1136
+     partition            0        has          293  p-elements
+     partition            1        has          297  p-elements
+     partition            2        has          272  p-elements
+     partition            3        has          274  p-elements
+   p-level partitioning: p-level =           2 p =           4 elements =         944
+     partition            0        has          237  p-elements
+     partition            1        has          247  p-elements
+     partition            2        has          235  p-elements
+     partition            3        has          225  p-elements
+   p-level partitioning: p-level =           3 p =           1 elements =         132
+     partition            0        has           33  p-elements
+     partition            1        has           33  p-elements
+     partition            2        has           33  p-elements
+     partition            3        has           33  p-elements
+
+ finished partitioning
+
+   Saving p-values for            4 partitions
+   written file(s): OUTPUT_FILES/DATABASES_MPI/proc******_lts_p_value.vtk
+
+   written file: OUTPUT_FILES/DATABASES_MPI/part_array.vtk
+
+ element distribution:
+   partition            0        has          561  elements with p-elements =          293         235          33
+   partition            1        has          555  elements with p-elements =          297         225          33
+   partition            2        has          552  elements with p-elements =          272         247          33
+   partition            3        has          544  elements with p-elements =          274         237          33
+
+   p-level:            1  p =            8
+     elements per partition: min/max   =          272         297
+     elements per partition: imbalance =    8.41750813     %
+                             (0% being totally balanced, 100% being unbalanced)
+
+   p-level:            2  p =            4
+     elements per partition: min/max   =          225         247
+     elements per partition: imbalance =    8.90688229     %
+                             (0% being totally balanced, 100% being unbalanced)
+
+   p-level:            3  p =            1
+     elements per partition: min/max   =           33          33
+     elements per partition: imbalance =    0.00000000     %
+                             (0% being totally balanced, 100% being unbalanced)
+
+
+ load distribution:
+   element loads: min/max =           41          41
+
+   partition            0        has        23001  load units
+   partition            1        has        22755  load units
+   partition            2        has        22632  load units
+   partition            3        has        22304  load units
+   load per partition: min/max   =        22304       23001
+   load per partition: imbalance =    3.03030300     %
+                       (0% being totally balanced, 100% being unbalanced)
+
+ communication distribution (LTS):
+   p-level:            1  p =            8  communication load =        35540
+   p-level:            2  p =            4  communication load =        13900
+   p-level:            3  p =            1  communication load =          200
+   total communication load:        49640
+                vs. edgecut:         8322
+                           : ratio =    5.96491241    
+                             ( > 1  being p-level refinement driven, 1 being default)
+
+ partitions: 
+   num =            4
+
+ Databases files in directory: OUTPUT_FILES/DATABASES_MPI
+
+ finished successfully
+
+
+  running database generation on  4 processors...
+
+
+  running solver on  4 processors...
+
+
+see results in directory: OUTPUT_FILES/
+
+done
+Tue Jan 8 17:09:56 CET 2019

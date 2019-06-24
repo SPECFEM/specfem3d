@@ -65,7 +65,7 @@ end
 
 %% derived parameters
 T=(NSTEP-1)*dt;    % total simulation time
-N_mid=(NSTEP+1)/2; % (NSTEP+1)/2 is the middle of the (NSTEP-1) points
+N_mid=floor((NSTEP+1)/2); % (NSTEP+1)/2 is the middle of the (NSTEP-1) points
 fmax=1/2/dt;       % Nyquist frequency, due to sampling theory
 df=1/T;            % frequency interval
 f=[0:df:fmax -fmax:df:-df]; % discrete frequencies
@@ -144,6 +144,11 @@ for l=1:N_mid
         displ(l)=10.^(displ(l)/10);
 end
 
+%debug
+%n = size(displ,2);tmp=zeros(n,2);
+%tmp(:,1)=[1:n];tmp(:,2)=displ(:);
+%save('tmp_displ.txt','tmp','-ASCII');
+
 %% constrain the power spectrum only within the range [Tmin Tmax]
 fprintf('\n  filtering power spectrum:\n    period     min/max = %f / %f\n    frequency  min/max = %f / %f \n',Tmin,Tmax,1/Tmax,1/Tmin);
 for l=1:N_mid
@@ -159,6 +164,13 @@ for l=1:N_mid
         filter_array(l)=sin (-(f(l)-1/Tmin)/(1.5/Tmin-1/Tmin)*pi/2)+1;
     end
 end
+
+%debug
+%n=size(filter_array,2); tmp=zeros(n,2);
+%tmp(:,1)=[1:n];tmp(:,2)=filter_array(:);
+%save('tmp_filter.txt','tmp','-ASCII');
+
+
 accel=accel.*filter_array;
 veloc=veloc.*filter_array;
 displ=displ.*filter_array;
@@ -191,6 +203,12 @@ for l=N_mid+1:NSTEP
     displ(l)=conj(displ(NSTEP-l+2));
 end
 
+%debug
+%n=size(displ,2); tmp=zeros(n,2);
+%tmp(:,1)=[1:n];tmp(:,2)=displ(:);
+%save('tmp_displ2.txt','tmp','-ASCII');
+
+
 %% prepare source time function for ensemble forward source -- S_squared
 fprintf('\n  preparing source time function S_squared:\n    NSTEP = %i / dt = %f \n',NSTEP,dt);
 
@@ -201,12 +219,20 @@ S_squared=zeros(NSTEP,2); % first column: time (not used in SPECFEM3D package)
 S_squared(:,1)=([1:NSTEP]-N_mid)*dt;
 S_squared(:,2)=real(ifft(displ));
 
+%debug
+%save('tmp_S.txt','S_squared','-ASCII');
+
 % change the order of the time series
 % instead of having t=[0 T], we need t=[-T/2 T/2];
 temp=S_squared(:,2);
 temp(N_mid:NSTEP)=S_squared(1:N_mid,2);
 temp(1:N_mid-1)  =S_squared(N_mid+1:NSTEP,2);
 
+%debug
+%n=size(temp,1); tmp=zeros(n,2);
+%tmp(:,1)=[1:n];tmp(:,2)=temp(:);
+%save('tmp_temp1.txt','tmp','-ASCII');  
+  
 % tapers ends
 if taper_type==1
   fprintf('\n  tapering source time function S_squared\n');
@@ -241,6 +267,11 @@ if taper_type==1
   %  temp(l) = temp(l) * window(l);
   %end
 
+  %debug
+  %n=size(taper,2); tmp=zeros(n,2);
+  %tmp(:,1)=[1:n];tmp(:,2)=taper(:,1);
+  %save('tmp_taper.txt','tmp','-ASCII');
+
   % applies taper
   for l=1:taper_length
     % increasing branch
@@ -249,6 +280,11 @@ if taper_type==1
     k = NSTEP-taper_length+l;
     temp(k) = temp(k) * taper(taper_length+1+l);
   end
+
+  %debug
+  %n=size(temp,1); tmp=zeros(n,2);
+  %tmp(:,1)=[1:n];tmp(:,2)=temp(:);
+  %save('tmp_temp2.txt','tmp','-ASCII');  
 
   % plots figure
   if show_figures
@@ -296,7 +332,8 @@ end
 
 %% output the source time function
 fprintf('\n  saving S_squared as ASCII file\n');
-save S_squared S_squared -ASCII
+filename = 'S_squared';
+save(filename,'S_squared','-ASCII')
 
 %% user output
 DIR=pwd;

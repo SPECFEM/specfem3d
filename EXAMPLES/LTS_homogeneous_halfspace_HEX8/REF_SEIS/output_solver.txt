@@ -1,0 +1,412 @@
+
+ **********************************************
+ **** Specfem 3-D Solver - MPI version f90 ****
+ **********************************************
+
+ Running Git package version of the code: 3.0.0
+ which is Git undefined in the case of old tar ball builds
+ dating undefined in the case of old tar ball builds
+
+
+ There are            4  MPI processes
+ Processes are numbered from 0 to            3
+
+ There is a total of            4  slices
+
+  NDIM =            3
+
+  NGLLX =            5
+  NGLLY =            5
+  NGLLZ =            5
+
+ using single precision for the calculations
+
+ smallest and largest possible floating-point numbers are:    1.17549435E-38   3.40282347E+38
+
+ velocity model:   default
+
+ Reading mesh databases...
+ done
+
+ total acoustic elements    :           0
+ total elastic elements     :        2212
+ total poroelastic elements :           0
+
+ Mesh resolution:
+
+ ********
+ minimum and maximum number of elements
+ and points in the CUBIT + SCOTCH mesh:
+
+ NSPEC_global_min =          544
+ NSPEC_global_max =          561
+ NSPEC_global_max / NSPEC_global_min imbalance =    1.03125000      =    3.12500000      %
+ NSPEC_global_sum =         2212
+
+ NGLOB_global_min =        37933
+ NGLOB_global_max =        38977
+ NGLOB_global_max / NGLOB_global_min imbalance =    1.02752221      =    2.75222111      %
+ NGLOB_global_sum =       154140
+
+ If you have elements of a single type (all acoustic, all elastic, all poroelastic, and without CPML)
+ in the whole mesh, then there should be no significant imbalance in the above numbers.
+ Otherwise, it is normal to have imbalance in elements and points because the domain decomposer
+ compensates for the different cost of different elements by partitioning them unevenly among processes.
+ ********
+
+
+ ********
+ Model: P velocity min,max =    2800.00024       2800.00024
+ Model: S velocity min,max =    1500.00000       1500.00000
+
+ Model: Poisson's ratio min,max =   0.298747808      0.298747808
+ ********
+
+ *********************************************
+ *** Verification of simulation parameters ***
+ *********************************************
+
+ *** Xmin and Xmax of the model =    0.00000000       134000.000
+ *** Ymin and Ymax of the model =    0.00000000       134000.000
+ *** Zmin and Zmax of the model =   -60000.0000       0.00000000
+
+ *** Max GLL point distance =    4909.90234
+ *** Min GLL point distance =    214.242188
+ *** Max/min ratio =    22.9175320
+
+ *** Max element size =    15000.0000
+ *** Min element size =    1240.73828
+ *** Max/min ratio =    12.0895758
+
+ *** Minimum period resolved =    12.5000000
+ *** Maximum suggested time step =    3.82575318E-02
+
+ *** for DT :    4.0000000000000001E-002
+ *** Max stability for wave velocities =   0.522772908
+
+ Elapsed time for checking mesh resolution in seconds =    1.0619163513183594E-003
+ saving VTK files for Courant number and minimum period
+
+
+ ******************************************
+ There is a total of            4  slices
+ ******************************************
+
+
+ kd-tree:
+   total data points:          561
+   theoretical   number of nodes:         1118
+                tree memory size:    3.41186523E-02 MB
+   actual        number of nodes:         1121
+                tree memory size:    3.42102051E-02 MB
+   maximum depth   :           15
+   creation timing :    2.43008137E-04 (s)
+
+
+ sources:           1
+
+ ********************
+  locating sources
+ ********************
+
+ reading source information from ./DATA/CMTSOLUTION file
+
+ no UTM projection
+
+
+ source #            1
+   source located in slice            2
+                  in element          107
+                  in elastic domain
+
+   using moment tensor source:
+     xi coordinate of source in that element:    1.0000000000000000
+     eta coordinate of source in that element:   -7.8707993146940786E-007
+     gamma coordinate of source in that element:   -7.8707992560520543E-007
+
+   source time function:
+     using Gaussian source time function
+     half duration:    5.0000000000000000       seconds
+     time shift:    0.0000000000000000       seconds
+
+   magnitude of the source:
+        scalar moment M0 =    2.6266994498800193E+028  dyne-cm
+     moment magnitude Mw =    8.2462737794883481
+
+   original (requested) position of the source:
+
+             latitude:    67000.000000000000
+            longitude:    67000.000000000000
+
+                x:    67000.000000000000
+                y:    67000.000000000000
+            depth:    30.000000000000000       km
+   topo elevation:    0.0000000000000000
+
+   position of the source that will be used:
+
+                x:    67000.000000000000
+                y:    67000.000000000000
+            depth:    30.000000000000004       km
+                z:   -30000.000000000004
+
+   error in location of the source:    3.63797881E-12  m
+
+
+
+ maximum error in location of the sources:    3.63797881E-12  m
+
+
+ Elapsed time for detection of sources in seconds =    6.3204765319824219E-004
+
+ End of source detection - done
+
+
+ receivers:
+
+ there are            4  stations in file ./DATA/STATIONS
+ saving            4  stations inside the model in file ./DATA/STATIONS_FILTERED
+ excluding            0  stations located outside the model
+
+
+ Total number of receivers =            4
+
+
+ ********************
+  locating receivers
+ ********************
+
+ reading receiver information from ./DATA/STATIONS_FILTERED file
+
+
+ station #            1     DB    X20
+      original latitude:    67000.0000
+      original longitude:    22732.0996
+      original x:    22732.0996
+      original y:    67000.0000
+      original depth:    0.00000000      m
+      horizontal distance:    44.2678986
+      target x, y, z:    22732.0996       67000.0000       0.00000000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            2
+                       in element           64
+                       in elastic domain
+      at coordinates:
+      xi    =   -1.0000000000000000
+      eta   =    0.0000000000000000
+      gamma =    5.3565716149220254E-002
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    22732.099999999999
+      y:    67000.000000000000
+      depth:    0.0000000000000000       m
+      z:    0.0000000000000000
+
+
+
+ station #            2     DB    X30
+      original latitude:    67000.0000
+      original longitude:    34696.3984
+      original x:    34696.3984
+      original y:    67000.0000
+      original depth:    0.00000000      m
+      horizontal distance:    32.3036003
+      target x, y, z:    34696.3984       67000.0000       0.00000000
+      closest estimate found:    1.45519152E-11  m away
+
+      receiver located in slice            3
+                       in element          185
+                       in elastic domain
+      at coordinates:
+      xi    =   -3.0980487122006024E-007
+      eta   =   -1.0000000000000000
+      gamma =  -0.32142085804327647
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    34696.400000000001
+      y:    67000.000000000015
+      depth:    0.0000000000000000       m
+      z:    0.0000000000000000
+
+
+
+ station #            3     DB    X40
+      original latitude:    67000.0000
+      original longitude:    46660.6992
+      original x:    46660.6992
+      original y:    67000.0000
+      original depth:    0.00000000      m
+      horizontal distance:    20.3393002
+      target x, y, z:    46660.6992       67000.0000       0.00000000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            3
+                       in element           88
+                       in elastic domain
+      at coordinates:
+      xi    =   -1.0000000000000000
+      eta   =   -7.8707992560520543E-007
+      gamma =  -0.19643452513069884
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    46660.699999999997
+      y:    67000.000000000000
+      depth:    0.0000000000000000       m
+      z:    0.0000000000000000
+
+
+
+ station #            4     DB    X50
+      original latitude:    67000.0000
+      original longitude:    58625.0000
+      original x:    58625.0000
+      original y:    67000.0000
+      original depth:    0.00000000      m
+      horizontal distance:    8.37500000
+      target x, y, z:    58625.0000       67000.0000       0.00000000
+      closest estimate found:    0.00000000      m away
+
+      receiver located in slice            2
+                       in element          496
+                       in elastic domain
+      at coordinates:
+      xi    =    0.0000000000000000
+      eta   =   -1.0000000000000000
+      gamma =  -0.25000039354027259
+      rotation matrix:
+      nu1 =    1.00000000       0.00000000       0.00000000
+      nu2 =    0.00000000       1.00000000       0.00000000
+      nu3 =    0.00000000       0.00000000       1.00000000
+      x:    58625.000000000000
+      y:    67000.000000000000
+      depth:    0.0000000000000000       m
+      z:    0.0000000000000000
+
+
+ maximum error in location of all the receivers:    1.45519152E-11  m
+
+ Elapsed time for receiver detection in seconds =    3.3919811248779297E-003
+
+ End of receiver detection - done
+
+ source arrays:
+   number of sources is            1
+   size of source array                 =    1.43051147E-03 MB
+                                        =    1.39698386E-06 GB
+
+ seismograms:
+   seismograms written by all processes
+   writing out seismograms at every NTSTEP_BETWEEN_OUTPUT_SEISMOS =         1000
+   maximum number of local receivers is            2  in slice            2
+   size of maximum seismogram array       =    2.28881836E-02 MB
+                                          =    2.23517418E-05 GB
+
+
+ Total number of samples for seismograms =         1000
+
+ found a total of            4  receivers in all the slices
+
+
+ Simulation setup:
+
+   no acoustic simulation
+ incorporating elastic simulation
+   no poroelastic simulation
+
+   no attenuation
+   no anisotropy
+   no oceans
+   no gravity
+   no movie simulation
+
+
+ preparing mass matrices
+ preparing wavefields
+   no dynamic faults
+   no kinematic faults
+ preparing constants
+ preparing gravity
+   no gravity simulation
+
+
+ Elapsed time for preparing timerun in seconds =    2.3989677429199219E-003
+
+ ************
+  time loop
+ ************
+               scheme:         Newmark
+
+            time step:    3.99999991E-02  s
+ number of time steps:         1000
+ total simulated time:    40.0000000      seconds
+ start time:  -10.0000000      seconds
+
+ All processes are synchronized before the time loop
+
+ Starting time iteration loop...
+
+ Time step #            5
+ Time:   -9.84000015      seconds
+ Elapsed time in seconds =    4.8906087875366211E-002
+ Elapsed time in hh:mm:ss =      0 h 00 m 00 s
+ Mean elapsed time per time step in seconds =    9.78121720E-03
+ Max norm displacement vector U in all slices (m) =    3.36034410E-02
+ Time steps done =            5  out of         1000
+ Time steps remaining =          995
+ Estimated remaining time in seconds =    9.73231125
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 09 s
+ Estimated total run time in seconds =    9.78121758
+ Estimated total run time in hh:mm:ss =      0 h 00 m 09 s
+ We have done   0.500000000     % of that
+ The run will finish approximately on (in local time): Tue Jan 08, 2019 17:09
+ ************************************************************
+ **** BEWARE: the above time estimates are not very reliable
+ **** because fewer than 100 iterations have been performed
+ ************************************************************
+
+ Time step #          500
+ Time:    9.96000004      seconds
+ Elapsed time in seconds =    4.5890920162200928
+ Elapsed time in hh:mm:ss =      0 h 00 m 04 s
+ Mean elapsed time per time step in seconds =    9.17818397E-03
+ Max norm displacement vector U in all slices (m) =    59531.3242
+ Time steps done =          500  out of         1000
+ Time steps remaining =          500
+ Estimated remaining time in seconds =    4.58909225
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 04 s
+ Estimated total run time in seconds =    9.17818451
+ Estimated total run time in hh:mm:ss =      0 h 00 m 09 s
+ We have done    50.0000000     % of that
+ The run will finish approximately on (in local time): Tue Jan 08, 2019 17:09
+
+ Time step #         1000
+ Time:    29.9599991      seconds
+ Elapsed time in seconds =    8.2444219589233398
+ Elapsed time in hh:mm:ss =      0 h 00 m 08 s
+ Mean elapsed time per time step in seconds =    8.24442226E-03
+ Max norm displacement vector U in all slices (m) =    59503.4336
+ Time steps done =         1000  out of         1000
+ Time steps remaining =            0
+ Estimated remaining time in seconds =    0.00000000
+ Estimated remaining time in hh:mm:ss =      0 h 00 m 00 s
+ Estimated total run time in seconds =    8.24442196
+ Estimated total run time in hh:mm:ss =      0 h 00 m 08 s
+ We have done    100.000000     % of that
+
+
+ Total number of time steps written:         1000
+ Writing the seismograms in parallel took    1.13530159E-02  seconds
+
+ Time loop finished. Timing info:
+ Total elapsed time in seconds =    8.2651460170745850
+ Total elapsed time in hh:mm:ss =      0 h 00 m 08 s
+
+ End of the simulation
+
