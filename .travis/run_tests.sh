@@ -66,6 +66,7 @@ my_test(){
 # configuration
 echo 'Configure...' && echo -en 'travis_fold:start:configure\\r'
 echo "configuration:"
+
 if [ "$TESTCOV" == "1" ]; then
   echo "configuration: for coverage"
   ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TESTFLAGS} FLAGS_CHECK="-fprofile-arcs -ftest-coverage -O0" CFLAGS="-coverage -O0"
@@ -78,6 +79,7 @@ else
     ./configure FC=${FC} MPIFC=${MPIFC} CC=${CC} ${TESTFLAGS}
   fi
 fi
+
 # we output to console
 sed -i "s:IMAIN .*:IMAIN = ISTANDARD_OUTPUT:" setup/constants.h
 
@@ -85,6 +87,7 @@ sed -i "s:IMAIN .*:IMAIN = ISTANDARD_OUTPUT:" setup/constants.h
 if [ "$TESTID" == "28" ]; then
   sed -i "s:NGLLX =.*:NGLLX = 6:" setup/constants.h
 fi
+
 echo -en 'travis_fold:end:configure\\r'
 
 # compilation

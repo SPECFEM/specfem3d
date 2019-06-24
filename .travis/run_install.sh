@@ -24,6 +24,7 @@ ${CC} --version
 # installs the CUDA toolkit
 if [ "$CUDA" == "true" ]; then
   echo "Installing CUDA library"
+  echo "CUDA version: ${CUDA_VERSION}"
   # note: travis could stall and time out here
   #       one could try to add: travis_retry sudo dpgk -i ..
   #       https://docs.travis-ci.com/user/common-build-problems/#travis_retry
