@@ -97,6 +97,8 @@
         ! writes out seismogram files
         select case(SIMULATION_TYPE)
         case (1,3)
+          ! forward/kernel simulations
+          ! forward/backward wavefield
           if (.not. SU_FORMAT) then
             ! forward & kernel simulations
             if (SAVE_SEISMOGRAMS_DISPLACEMENT) &
@@ -121,6 +123,7 @@
               call write_output_SU(seismograms_p,4)
           endif
         case (2)
+          ! adjoint simulations
           ! adjoint wavefield
           if (.not. SU_FORMAT) then
             ! adjoint simulations
@@ -284,6 +287,7 @@
     if (SAVE_ALL_SEISMOS_IN_ONE_FILE) close(IOUT)
 
   else if (WRITE_SEISMOGRAMS_BY_MASTER .and. ASDF_FORMAT) then
+    ! ASDF format
     call init_asdf_data(nrec_local)
     call synchronize_all()
 
@@ -580,7 +584,7 @@
 
 ! write adjoint seismograms (strain) to text files
 
-  subroutine write_adj_seismograms2_to_file(myrank,seismograms,number_receiver_global,nrec_local,it,DT,NSTEP,t0)
+  subroutine write_adj_seismograms2_to_file(myrank,seismograms_eps,number_receiver_global,nrec_local,it,DT,NSTEP,t0)
 
   use constants, only: CUSTOM_REAL,NDIM,MAX_STRING_LEN,IOUT,OUTPUT_FILES
 
@@ -589,7 +593,7 @@
   integer :: nrec_local,NSTEP,it
   integer, dimension(nrec_local) :: number_receiver_global
   ! note: seismograms here is still an array of size *,*,*,NSTEP
-  real(kind=CUSTOM_REAL), dimension(NDIM,NDIM,nrec_local,NSTEP) :: seismograms
+  real(kind=CUSTOM_REAL), dimension(NDIM,NDIM,nrec_local,NSTEP) :: seismograms_eps
   double precision :: t0,DT
 
   ! local parameters
@@ -642,7 +646,7 @@
         ! subtract half duration of the source to make sure travel time is correct
         do isample = 1,min(it,NSTEP)
           ! distinguish between single and double precision for reals
-          write(IOUT,*) real(dble(isample-1)*DT - t0,kind=CUSTOM_REAL),' ',seismograms(jdimval,idimval,irec_local,isample)
+          write(IOUT,*) real(dble(isample-1)*DT - t0,kind=CUSTOM_REAL),' ',seismograms_eps(jdimval,idimval,irec_local,isample)
         enddo
 
         close(IOUT)

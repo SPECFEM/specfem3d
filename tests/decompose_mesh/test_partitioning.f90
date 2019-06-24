@@ -4,7 +4,7 @@
 
 program test_partitioning
 
-  use constants,only: NDIM
+  use constants, only: NDIM
   use decompose_mesh_par
 
   implicit none
@@ -101,7 +101,7 @@ program test_partitioning
       print *,'  xyz',ispec,i,nodes_coords(1,inode),nodes_coords(2,inode),nodes_coords(3,inode)
     enddo
   enddo
-  print *,''
+  print *
 
   ! initializes
   nsize = 0
@@ -153,12 +153,12 @@ program test_partitioning
   LTS_MODE = .false.
 
   print *,'LTS mode: ',LTS_MODE
-  print *,''
+  print *
 
   ! partitioning routine
-  print *,''
+  print *
   print *,'calling partitioning routine...'
-  print *,''
+  print *
   do itype = 1,2
     ! partitioner
     select case (itype)
@@ -169,7 +169,7 @@ program test_partitioning
     end select
 
     print *,'partitioning_type: ',PARTITIONING_TYPE
-    print *,''
+    print *
 
     call decompose_mesh()
 
@@ -186,7 +186,7 @@ program test_partitioning
         endif
       enddo
     enddo
-    print *,''
+    print *
 
     ! re-set values
     elmnts(:,:) = elmnts(:,:) + 1
@@ -200,9 +200,9 @@ program test_partitioning
   DT = 0.1
 
   print *,'LTS mode: ',LTS_MODE
-  print *,''
+  print *
   print *,'calling lts_setup_elements() routine...'
-  print *,''
+  print *
   call lts_setup_elements()
 
   ! checks
@@ -215,13 +215,13 @@ program test_partitioning
   endif
 
   ! partitioning routine
-  print *,''
+  print *
   print *,'calling partitioning routine...'
-  print *,''
+  print *
 
   PARTITIONING_TYPE = 1 ! SCOTCH
   print *,'partitioning_type: ',PARTITIONING_TYPE
-  print *,''
+  print *
 
   call decompose_mesh()
 
@@ -238,7 +238,7 @@ program test_partitioning
       endif
     enddo
   enddo
-  print *,''
+  print *
 
   deallocate(part)
   deallocate(nodes_coords)

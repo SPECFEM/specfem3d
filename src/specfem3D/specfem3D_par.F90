@@ -123,10 +123,11 @@ module specfem_par
   double precision, dimension(:), allocatable :: xi_source,eta_source,gamma_source
   double precision, dimension(:), allocatable :: tshift_src,hdur,hdur_Gaussian
   double precision, dimension(:), allocatable :: utm_x_source,utm_y_source
-  double precision, external :: comp_source_time_function
   double precision :: t0
+  ! SAC time
   integer :: yr,mo,da,jda,ho,mi
   double precision :: sec
+  ! source time function
   real(kind=CUSTOM_REAL) :: stf_used_total
   integer :: nsources_local
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: user_source_time_function
@@ -136,13 +137,23 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(:), allocatable :: pm1_source_encoding
 
 ! receiver information
-  character(len=MAX_STRING_LEN) :: rec_filename,filtered_rec_filename,dummystring
-  integer :: nrec,nrec_local,nrec_tot_found
+  integer :: nrec,nrec_local
+  integer :: nrec_tot_found
+  character(len=MAX_STRING_LEN) :: rec_filename,filtered_rec_filename
   integer, dimension(:), allocatable :: islice_selected_rec,ispec_selected_rec
-  integer, dimension(:), allocatable :: number_receiver_global
   double precision, dimension(:), allocatable :: xi_receiver,eta_receiver,gamma_receiver
   double precision, dimension(:,:), allocatable :: hpxir_store,hpetar_store,hpgammar_store
   double precision, dimension(:,:,:), allocatable :: nu
+
+! Lagrange interpolators at receivers
+  integer, dimension(:), allocatable, target :: number_receiver_global
+  real(kind=CUSTOM_REAL), dimension(:,:), allocatable, target :: hxir_store,hetar_store,hgammar_store
+
+! adjoint sources
+  integer :: nadj_rec_local
+  integer, dimension(:), pointer :: number_adjsources_global
+  real(kind=CUSTOM_REAL), dimension(:,:), pointer :: hxir_adjstore,hetar_adjstore,hgammar_adjstore
+  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: source_adjoint
 
 ! timing information for the stations
   character(len=MAX_LENGTH_STATION_NAME), allocatable, dimension(:) :: station_name
@@ -173,10 +184,6 @@ module specfem_par
   real(kind=CUSTOM_REAL), dimension(NGLLY,NGLLZ) :: wgllwgll_yz
 
   real(kind=CUSTOM_REAL), dimension(NGLLX,NGLLY,NGLLZ) :: wgllwgll_xy_3D,wgllwgll_xz_3D,wgllwgll_yz_3D
-
-! Lagrange interpolators at receivers
-  double precision, dimension(:), allocatable :: hxir,hetar,hpxir,hpetar,hgammar,hpgammar
-  real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: hxir_store,hetar_store,hgammar_store
 
 ! proc numbers for MPI
   integer :: myrank, sizeprocs
@@ -275,13 +282,8 @@ module specfem_par
   integer :: NSPEC_BOUN,NSPEC2D_MOHO
   logical, dimension(:),allocatable :: is_moho_top, is_moho_bot
 
-  ! adjoint sources
-  character(len=MAX_STRING_LEN) :: adj_source_file
-  real(kind=CUSTOM_REAL), dimension(:,:,:), allocatable :: source_adjoint
-  integer :: nadj_rec_local
   ! adjoint source frechet derivatives
-  real(kind=CUSTOM_REAL), dimension(:), allocatable :: Mxx_der,Myy_der, &
-    Mzz_der,Mxy_der,Mxz_der,Myz_der
+  real(kind=CUSTOM_REAL), dimension(:), allocatable :: Mxx_der,Myy_der,Mzz_der,Mxy_der,Mxz_der,Myz_der
   real(kind=CUSTOM_REAL), dimension(:,:), allocatable :: sloc_der
   real(kind=CUSTOM_REAL), dimension(:,:,:,:), allocatable :: seismograms_eps
 

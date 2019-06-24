@@ -357,7 +357,7 @@ end module user_noise_distribution
   subroutine check_parameters_noise(myrank,NOISE_TOMOGRAPHY,SIMULATION_TYPE,SAVE_FORWARD, &
                                     LOCAL_PATH,NSPEC_TOP,NSTEP)
 
-  use constants
+  use constants, only: CUSTOM_REAL,NDIM,NGLLSQUARE,MAX_STRING_LEN,IOUT_NOISE,OUTPUT_FILES
 
   implicit none
 
@@ -460,7 +460,7 @@ end module user_noise_distribution
                                          xi_noise,eta_noise,gamma_noise,nu_single,noise_sourcearray, &
                                          xigll,yigll,zigll,NSTEP)
 
-  use constants
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,MAX_STRING_LEN,IIN_NOISE,IOUT_NOISE,OUTPUT_FILES
 
   implicit none
 
@@ -478,12 +478,18 @@ end module user_noise_distribution
   real(kind=CUSTOM_REAL) :: noise_src(NSTEP),noise_src_u(NDIM,NSTEP)
   double precision, dimension(NDIM) :: nu_master       ! component direction chosen at the master receiver
   double precision :: xi_noise, eta_noise, gamma_noise ! master receiver location
-  double precision :: hxir(NGLLX), hpxir(NGLLX), hetar(NGLLY), hpetar(NGLLY), &
-        hgammar(NGLLZ), hpgammar(NGLLZ)
+
+  ! receiver Lagrange interpolators
+  double precision,dimension(NGLLX) :: hxir
+  double precision,dimension(NGLLY) :: hetar
+  double precision,dimension(NGLLZ) :: hgammar
+  double precision :: hpxir(NGLLX), hpetar(NGLLY),hpgammar(NGLLZ)
+
   character(len=MAX_STRING_LEN) :: filename
 
-
+  ! initializes
   noise_src(:) = 0._CUSTOM_REAL
+
   ! noise file (source time function)
   filename = trim(OUTPUT_FILES)//'/..//NOISE_TOMOGRAPHY/S_squared'
   open(unit=IIN_NOISE,file=trim(filename),status='old',action='read',iostat=ier)
@@ -496,7 +502,7 @@ end module user_noise_distribution
         'file '//trim(filename)//' has wrong length, please check your simulation duration')
   enddo
   close(IIN_NOISE)
-  noise_src(:)=noise_src(:)/maxval(abs(noise_src))
+  noise_src(:) = noise_src(:)/maxval(abs(noise_src))
 
 
   ! master receiver component direction, \nu_master
@@ -557,7 +563,7 @@ end module user_noise_distribution
                                 it,irec_master_noise, &
                                 NSPEC_AB_VAL,NGLOB_AB_VAL)
 
-  use constants
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM
 
   implicit none
 
@@ -610,7 +616,7 @@ end module user_noise_distribution
                     num_free_surface_faces,free_surface_ispec,free_surface_ijk, &
                     Mesh_pointer,GPU_MODE)
 
-  use constants
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,NGLLSQUARE
 
   implicit none
 
@@ -873,7 +879,7 @@ end module user_noise_distribution
 ! step 3: save noise source strength kernel
   subroutine save_kernels_strength_noise(myrank,LOCAL_PATH,sigma_kl,NSPEC_AB_VAL)
 
-  use constants
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,MAX_STRING_LEN,IOUT_NOISE
 
   implicit none
 

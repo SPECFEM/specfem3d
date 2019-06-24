@@ -30,13 +30,14 @@
   subroutine compute_add_sources_acoustic()
 
   use constants
-  use specfem_par, only: station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
-                         nsources_local,tshift_src,DT,t0,SU_FORMAT,USE_LDDRK,istage,source_adjoint, &
-                         hxir_store,hetar_store,hgammar_store,USE_EXTERNAL_SOURCE_FILE, &
+  use specfem_par, only: station_name,network_name, &
+                         nsources_local,tshift_src,DT,t0,SU_FORMAT,USE_LDDRK,istage, &
+                         hxir_adjstore,hetar_adjstore,hgammar_adjstore,source_adjoint,number_adjsources_global,nadj_rec_local, &
+                         USE_EXTERNAL_SOURCE_FILE, &
                          user_source_time_function,USE_BINARY_FOR_SEISMOGRAMS, &
                          ibool,NSOURCES,myrank,it,ispec_selected_source,islice_selected_source, &
                          sourcearrays,kappastore,SIMULATION_TYPE,NSTEP, &
-                         nrec,islice_selected_rec,ispec_selected_rec, &
+                         ispec_selected_rec, &
                          nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC, INVERSE_FWI_FULL_PROBLEM
 
   use specfem_par_acoustic, only: potential_dot_dot_acoustic,ispec_is_acoustic
@@ -44,13 +45,15 @@
   implicit none
 
 ! local parameters
-  real(kind=CUSTOM_REAL) stf_used
+  real(kind=CUSTOM_REAL) :: stf_used,hlagrange
   logical :: ibool_read_adj_arrays
   double precision :: stf,time_source_dble
   double precision,external :: get_stf_acoustic
 
   integer :: isource,iglob,ispec,i,j,k
   integer :: irec_local,irec,it_sub_adj
+
+  character(len=MAX_STRING_LEN) :: adj_source_file
 
 ! forward simulations
   if (SIMULATION_TYPE == 1 .and. nsources_local > 0) then
@@ -152,17 +155,18 @@
       if (ibool_read_adj_arrays .and. .not. INVERSE_FWI_FULL_PROBLEM) then
 
         if (.not. SU_FORMAT) then
-
+          ! ASCII format
           if (USE_BINARY_FOR_SEISMOGRAMS) stop 'Adjoint simulations not supported with .bin format, please use SU format instead'
+
           !!! read ascii adjoint sources
-          do irec_local = 1, nrec_local
-            irec = number_receiver_global(irec_local)
+          do irec_local = 1, nadj_rec_local
+            irec = number_adjsources_global(irec_local)
             ! reads in **net**.**sta**.**BH**.adj files
             adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
             call compute_arrays_adjoint_source(adj_source_file,irec)
-
           enddo
         else
+          ! SU format
           call compute_arrays_adjoint_source_SU()
         endif !if (.not. SU_FORMAT)
 
@@ -170,35 +174,32 @@
 
       if (it < NSTEP) then
         ! receivers act as sources
-        irec_local = 0
-        do irec = 1,nrec
-          ! add the source (only if this proc carries the source)
-          if (myrank == islice_selected_rec(irec)) then
-            irec_local = irec_local + 1
+        do irec_local = 1, nadj_rec_local
+          irec = number_adjsources_global(irec_local)
+          ! element index
+          ispec = ispec_selected_rec(irec)
+          if (ispec_is_acoustic(ispec)) then
+            ! adds source
+            do k = 1,NGLLZ
+              do j = 1,NGLLY
+                do i = 1,NGLLX
+                  iglob = ibool(i,j,k,ispec)
 
-            ! adds source array
-            ispec = ispec_selected_rec(irec)
-            if (ispec_is_acoustic(ispec)) then
-              do k = 1,NGLLZ
-                do j = 1,NGLLY
-                  do i = 1,NGLLX
-                    iglob = ibool(i,j,k,ispec)
-                    ! beware, for acoustic medium, a pressure source would be taking the negative
-                    ! and divide by Kappa of the fluid;
-                    ! this would have to be done when constructing the adjoint source.
-                    !
-                    ! note: we take the first component of the adj_sourcearrays
-                    !          the idea is to have e.g. a pressure source, where all 3 components would be the same
-                    potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
-                                + source_adjoint(1,irec_local,NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC)) * &
-                                hxir_store(irec_local,i)*hetar_store(irec_local,j)*hgammar_store(irec_local,k)
-                  enddo
+                  hlagrange = hxir_adjstore(i,irec_local) * hetar_adjstore(j,irec_local) * hgammar_adjstore(k,irec_local)
+
+                  ! beware, for acoustic medium, a pressure source would be taking the negative
+                  ! and divide by Kappa of the fluid;
+                  ! this would have to be done when constructing the adjoint source.
+                  !
+                  ! note: we take the first component of the adj_sourcearrays
+                  !          the idea is to have e.g. a pressure source, where all 3 components would be the same
+                  potential_dot_dot_acoustic(iglob) = potential_dot_dot_acoustic(iglob) &
+                    + source_adjoint(1,irec_local,NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC)) * hlagrange
                 enddo
               enddo
-            endif
-
+            enddo
           endif
-        enddo ! nrec
+        enddo
       endif ! it
     endif ! nadj_rec_local > 0
   endif
@@ -320,11 +321,12 @@
   subroutine compute_add_sources_acoustic_GPU()
 
   use constants
-  use specfem_par, only: station_name,network_name,adj_source_file,nrec_local,number_receiver_global, &
-                         nsources_local,tshift_src,DT,t0,SU_FORMAT,USE_LDDRK,istage,source_adjoint, &
+  use specfem_par, only: station_name,network_name, &
+                         nsources_local,tshift_src,DT,t0,SU_FORMAT,USE_LDDRK,istage, &
+                         source_adjoint,nadj_rec_local,number_adjsources_global, &
                          USE_EXTERNAL_SOURCE_FILE,user_source_time_function,USE_BINARY_FOR_SEISMOGRAMS, &
                          NSOURCES,it,SIMULATION_TYPE,NSTEP,nrec, &
-                         nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,Mesh_pointer, &
+                         NTSTEP_BETWEEN_READ_ADJSRC,Mesh_pointer, &
                          INVERSE_FWI_FULL_PROBLEM,run_number_of_the_source
 
   implicit none
@@ -340,6 +342,8 @@
 
   integer :: isource
   integer :: irec_local,irec
+
+  character(len=MAX_STRING_LEN) :: adj_source_file
 
 ! forward simulations
   if (SIMULATION_TYPE == 1 .and. nsources_local > 0) then
@@ -420,18 +424,17 @@
       if (ibool_read_adj_arrays .and. .not. INVERSE_FWI_FULL_PROBLEM) then
 
         if (.not. SU_FORMAT) then
-
+          ! ASCII format
           if (USE_BINARY_FOR_SEISMOGRAMS) stop 'Adjoint simulations not supported with .bin format, please use SU format instead'
           !!! read ascii adjoint sources
-          do irec_local = 1, nrec_local
-
-            irec = number_receiver_global(irec_local)
+          do irec_local = 1, nadj_rec_local
+            irec = number_adjsources_global(irec_local)
             ! reads in **net**.**sta**.**BH**.adj files
             adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
             call compute_arrays_adjoint_source(adj_source_file,irec)
-
           enddo
         else
+          ! SU format
           call compute_arrays_adjoint_source_SU()
         endif !if (.not. SU_FORMAT)
 

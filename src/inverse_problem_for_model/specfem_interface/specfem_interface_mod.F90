@@ -363,34 +363,48 @@ contains
        if (allocated(hpgammar_store)) deallocate(hpgammar_store)
        if (allocated(number_receiver_global)) deallocate(number_receiver_global)
 
+       nadj_rec_local = nrec_local ! assumes SIMULATION_TYPE == 3
+       if (SIMULATION_TYPE == 2) stop 'Error invalid simulation type InitSpecfemForOneRun()'
 
-       nadj_rec_local = nrec_local
-
-       allocate(hxir_store(nrec_local,NGLLX),stat=ier)
+       allocate(hxir_store(NGLLX,nrec_local),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 502')
-       allocate(hetar_store(nrec_local,NGLLY),stat=ier)
+       allocate(hetar_store(NGLLY,nrec_local),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 503')
-       allocate(hgammar_store(nrec_local,NGLLZ),stat=ier)
+       allocate(hgammar_store(NGLLZ,nrec_local),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 504')
-       allocate(hpxir_store(nrec_local,NGLLX),stat=ier)
+       allocate(hpxir_store(NGLLX,nrec_local),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 505')
-       allocate(hpetar_store(nrec_local,NGLLY),stat=ier)
+       allocate(hpetar_store(NGLLY,nrec_local),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 506')
-       allocate(hpgammar_store(nrec_local,NGLLZ),stat=ier)
+       allocate(hpgammar_store(NGLLZ,nrec_local),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 507')
+
 
        allocate(number_receiver_global(nrec_local),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 508')
        number_receiver_global(:)=acqui_simu(ievent)%number_receiver_global(1:nrec_local)
 
+       ! assumes SIMULATION_TYPE == 3
+       nullify(number_adjsources_global)
+       nullify(hxir_adjstore)
+       nullify(hetar_adjstore)
+       nullify(hgammar_adjstore)
+       number_adjsources_global => number_receiver_global
+       hxir_adjstore => hxir_store
+       hetar_adjstore => hetar_store
+       hgammar_adjstore => hgammar_store
+
        do irec=1, nrec_local
-          hxir_store(irec,:)=acqui_simu(ievent)%hxi(:,irec)
-          hetar_store(irec,:)=acqui_simu(ievent)%heta(:,irec)
-          hgammar_store(irec,:)=acqui_simu(ievent)%hgamma(:,irec)
-          hpxir_store(irec,:)=acqui_simu(ievent)%hpxi(:,irec)
-          hpetar_store(irec,:)=acqui_simu(ievent)%hpeta(:,irec)
-          hpgammar_store(irec,:)=acqui_simu(ievent)%hpgamma(:,irec)
+          hxir_store(:,irec) = acqui_simu(ievent)%hxi(:,irec)
+          hetar_store(:,irec) = acqui_simu(ievent)%heta(:,irec)
+          hgammar_store(:,irec) = acqui_simu(ievent)%hgamma(:,irec)
+          hpxir_store(:,irec) = acqui_simu(ievent)%hpxi(:,irec)
+          hpetar_store(:,irec) = acqui_simu(ievent)%hpeta(:,irec)
+          hpgammar_store(:,irec) = acqui_simu(ievent)%hpgamma(:,irec)
        enddo
+       hxir_adjstore(:,:) = hxir_store(:,:)
+       hetar_adjstore(:,:) = hetar_store(:,:)
+       hgammar_adjstore(:,:) = hgammar_store(:,:)
 
        if (allocated(seismograms_d)) deallocate(seismograms_d)
        if (allocated(seismograms_v)) deallocate(seismograms_v)
@@ -444,6 +458,16 @@ contains
 
        allocate(number_receiver_global(0),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 519')
+
+       ! assumes SIMULATION_TYPE == 3
+       nullify(number_adjsources_global)
+       nullify(hxir_adjstore)
+       nullify(hetar_adjstore)
+       nullify(hgammar_adjstore)
+       number_adjsources_global => number_receiver_global
+       hxir_adjstore => hxir_store
+       hetar_adjstore => hetar_store
+       hgammar_adjstore => hgammar_store
 
        if (allocated(seismograms_d)) deallocate(seismograms_d)
        if (allocated(seismograms_v)) deallocate(seismograms_v)

@@ -128,21 +128,6 @@
     enddo
   enddo
 
-  ! allocate 1-D Lagrange interpolators and derivatives
-  allocate(hxir(NGLLX),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2425')
-  allocate(hpxir(NGLLX),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2426')
-  allocate(hetar(NGLLY),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2427')
-  allocate(hpetar(NGLLY),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2428')
-  allocate(hgammar(NGLLZ),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2429')
-  allocate(hpgammar(NGLLZ),stat=ier)
-  if (ier /= 0) call exit_MPI_without_rank('error allocating array 2430')
-  if (ier /= 0) stop 'error allocating arrays for interpolators'
-
   ! create name of database
   call create_name_database(prname,myrank,LOCAL_PATH)
 

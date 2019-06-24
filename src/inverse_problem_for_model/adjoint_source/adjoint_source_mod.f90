@@ -80,6 +80,9 @@ contains
     !! to do define user window
 
     do irec_local = 1, nrec_local
+       ! check: assumes SIMULATION_TYPE == 3, with adjoint sources and receivers being identical
+       !        -  nrec_local ==  nadj_rec_local
+       !        -  number_receiver_global == number_adjsources_global
        irec = number_receiver_global(irec_local)
        ispec = acqui_simu(ievent)%ispec_selected_rec(irec)
        cost_function_rec=0.

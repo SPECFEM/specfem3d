@@ -222,7 +222,7 @@
   itime=0
 
   if (READ_ADJSRC_ASDF) then
-
+    ! ASDF format
     do icomp = 1, NDIM ! 3 components
 
       filename = trim(adj_source_file) // '_' // comp(icomp)
@@ -241,7 +241,7 @@
     enddo
 
   else
-
+    ! ASCII format
     ! loops over components
     do icomp = 1, NDIM
 

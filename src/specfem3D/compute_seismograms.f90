@@ -28,10 +28,26 @@
 
   subroutine compute_seismograms()
 
-  use specfem_par
-  use specfem_par_acoustic
-  use specfem_par_elastic
-  use specfem_par_poroelastic
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,ZERO
+
+  use specfem_par, only: SIMULATION_TYPE,NGLOB_AB,NSPEC_AB,ibool,NGLOB_ADJOINT, &
+    deltat,DT,t0,NSTEP,it,seismo_current, &
+    ispec_selected_source,ispec_selected_rec, &
+    hxir_store,hetar_store,hgammar_store,number_receiver_global,nrec_local, &
+    nu_source,nu,Mxx,Myy,Mzz,Mxy,Mxz,Myz,tshift_src,hdur_Gaussian, &
+    hprime_xx,hprime_yy,hprime_zz, &
+    seismograms_d,seismograms_v,seismograms_a,seismograms_p, &
+    hpxir_store,hpetar_store,hpgammar_store,seismograms_eps, &
+    Mxx_der,Myy_der,Mzz_der,Mxy_der,Mxz_der,Myz_der,sloc_der, &
+    USE_TRICK_FOR_BETTER_PRESSURE, &
+    SAVE_SEISMOGRAMS_DISPLACEMENT,SAVE_SEISMOGRAMS_VELOCITY,SAVE_SEISMOGRAMS_ACCELERATION,SAVE_SEISMOGRAMS_PRESSURE
+
+  use specfem_par_acoustic, only: ispec_is_acoustic,potential_acoustic,potential_dot_acoustic,potential_dot_dot_acoustic, &
+    b_potential_acoustic,b_potential_dot_acoustic,b_potential_dot_dot_acoustic
+  use specfem_par_elastic, only: ispec_is_elastic,displ,veloc,accel, &
+    b_displ,b_veloc,b_accel
+  use specfem_par_poroelastic, only: ispec_is_poroelastic,displs_poroelastic,velocs_poroelastic,accels_poroelastic
+
 
   implicit none
 
@@ -49,6 +65,13 @@
   real(kind=CUSTOM_REAL):: stf_deltat
   double precision :: stf
   double precision,dimension(NDIM,NDIM) :: rotation_seismo
+  ! receiver Lagrange interpolators
+  double precision,dimension(NGLLX) :: hxir
+  double precision,dimension(NGLLY) :: hetar
+  double precision,dimension(NGLLZ) :: hgammar
+  double precision :: hpxir(NGLLX),hpetar(NGLLY),hpgammar(NGLLZ)
+
+  double precision, external :: comp_source_time_function
 
   do irec_local = 1,nrec_local
 
@@ -69,9 +92,9 @@
 
     ! gets local receiver interpolators
     ! (1-D Lagrange interpolators)
-    hxir(:) = hxir_store(irec_local,:)
-    hetar(:) = hetar_store(irec_local,:)
-    hgammar(:) = hgammar_store(irec_local,:)
+    hxir(:) = hxir_store(:,irec_local)
+    hetar(:) = hetar_store(:,irec_local)
+    hgammar(:) = hgammar_store(:,irec_local)
 
     ! gets global number of that receiver
     irec = number_receiver_global(irec_local)
@@ -180,9 +203,9 @@
         enddo
 
         ! gets derivatives of local receiver interpolators
-        hpxir(:) = hpxir_store(irec_local,:)
-        hpetar(:) = hpetar_store(irec_local,:)
-        hpgammar(:) = hpgammar_store(irec_local,:)
+        hpxir(:) = hpxir_store(:,irec_local)
+        hpetar(:) = hpetar_store(:,irec_local)
+        hpgammar(:) = hpgammar_store(:,irec_local)
 
         ! computes the integrated derivatives of source parameters (M_jk and X_s)
         call compute_adj_source_frechet(ispec,displ_element,Mxx(irec),Myy(irec),Mzz(irec), &

@@ -26,7 +26,7 @@
 !=====================================================================
 
   subroutine get_cmt(CMTSOLUTION,tshift_cmt,hdur,lat,long,depth,moment_tensor, &
-                    DT,NSOURCES,min_tshift_cmt_original,user_source_time_function)
+                     DT,NSOURCES,min_tshift_cmt_original,user_source_time_function)
 
   use constants, only: IIN,IN_DATA_FILES,MAX_STRING_LEN,CUSTOM_REAL
   use shared_parameters, only: USE_EXTERNAL_SOURCE_FILE,NSTEP_STF,NSOURCES_STF
@@ -468,8 +468,12 @@
   !  for converting from scalar moment M0 to moment magnitude. (..)"
   ! see: http://earthquake.usgs.gov/aboutus/docs/020204mag_policy.php
 
-  Mw = 2.d0/3.d0 * log10( max(M0,tiny(M0)) ) - 10.7
-  ! this is to ensure M0>0.0 inorder to avoid arithmetic error.
+  if (M0 > 0.0d0) then
+    ! this is to ensure M0>0.0 inorder to avoid arithmetic error.
+    Mw = 2.d0/3.d0 * log10( max(M0,tiny(M0)) ) - 10.7
+  else
+    Mw = 0.0d0
+  endif
 
   ! return value
   get_cmt_moment_magnitude = Mw

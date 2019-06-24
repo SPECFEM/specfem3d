@@ -30,15 +30,16 @@
   subroutine compute_add_sources_viscoelastic()
 
   use constants
-  use specfem_par, only: station_name,network_name,adj_source_file,num_free_surface_faces,free_surface_ispec, &
+  use specfem_par, only: station_name,network_name,num_free_surface_faces,free_surface_ispec, &
                         free_surface_ijk,free_surface_jacobian2Dw,noise_sourcearray,irec_master_noise, &
                         normal_x_noise,normal_y_noise,normal_z_noise,mask_noise,noise_surface_movie, &
-                        nrec_local,number_receiver_global,nsources_local,tshift_src,dt,t0,SU_FORMAT, &
+                        nsources_local,tshift_src,dt,t0,SU_FORMAT, &
                         USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function, &
                         USE_BINARY_FOR_SEISMOGRAMS,NSPEC_AB,NGLOB_AB,ibool,NSOURCES,myrank,it,islice_selected_source, &
                         ispec_selected_source,sourcearrays,SIMULATION_TYPE,NSTEP,READ_ADJSRC_ASDF, &
-                        nrec,islice_selected_rec,ispec_selected_rec,nadj_rec_local, &
-                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY,hxir_store,hetar_store,hgammar_store,source_adjoint, &
+                        nrec,islice_selected_rec,ispec_selected_rec, &
+                        NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
+                        hxir_adjstore,hetar_adjstore,hgammar_adjstore,source_adjoint,number_adjsources_global,nadj_rec_local, &
                         INVERSE_FWI_FULL_PROBLEM
 
   use specfem_par_elastic, only: accel,ispec_is_elastic
@@ -48,13 +49,15 @@
   implicit none
 
 ! local parameters
-  real(kind=CUSTOM_REAL) stf_used
-  logical ibool_read_adj_arrays
+  real(kind=CUSTOM_REAL) :: stf_used,hlagrange
+  logical :: ibool_read_adj_arrays
   double precision :: stf,time_source_dble
   double precision,external :: get_stf_viscoelastic
 
   integer :: isource,iglob,i,j,k,ispec,it_sub_adj
   integer :: irec_local,irec
+
+  character(len=MAX_STRING_LEN) :: adj_source_file
 
 ! no source inside the mesh if we are coupling with DSM
 ! because the source is precisely the wavefield coming from the DSM traction file
@@ -150,65 +153,55 @@
       ! with other partitions while calculate for the inner part
       ! this must be done carefully, otherwise the adjoint sources may be added twice
       if (ibool_read_adj_arrays .and. .not. INVERSE_FWI_FULL_PROBLEM) then
-
+        ! reads adjoint source files
         if (.not. (SU_FORMAT .or. READ_ADJSRC_ASDF)) then
+          ! ASCII formant
           if (USE_BINARY_FOR_SEISMOGRAMS) stop 'Adjoint simulations not supported with .bin format, please use SU format instead'
           !!! read ascii adjoint sources
-          do irec_local = 1, nrec_local
+          do irec_local = 1, nadj_rec_local
             ! reads in **net**.**sta**.**BH**.adj files
-            irec = number_receiver_global(irec_local)
+            irec = number_adjsources_global(irec_local)
             adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
             call compute_arrays_adjoint_source(adj_source_file,irec_local)
           enddo
         else if (READ_ADJSRC_ASDF) then
-          do irec_local = 1, nrec_local
+          ! ASDF format
+          do irec_local = 1, nadj_rec_local
             ! reads in **net**.**sta**.**BH**.adj files
-            irec = number_receiver_global(irec_local)
+            irec = number_adjsources_global(irec_local)
             adj_source_file = trim(network_name(irec))//'_'//trim(station_name(irec))
             call compute_arrays_adjoint_source(adj_source_file,irec_local)
           enddo
           call compute_arrays_adjoint_source(adj_source_file, irec_local)
         else
-           call compute_arrays_adjoint_source_SU()
+          ! SU format
+          call compute_arrays_adjoint_source_SU()
         endif !if (.not. SU_FORMAT)
-
       endif ! if (ibool_read_adj_arrays)
 
-
+      ! adds source term
       if (it < NSTEP) then
         ! receivers act as sources
-        irec_local = 0
-        do irec = 1,nrec
+        do irec_local = 1, nadj_rec_local
+          irec = number_adjsources_global(irec_local)
+          ! element index
+          ispec = ispec_selected_rec(irec)
+          if (ispec_is_elastic(ispec)) then
+            ! adds source array
+            do k = 1,NGLLZ
+              do j = 1,NGLLY
+                do i = 1,NGLLX
+                  iglob = ibool(i,j,k,ispec)
 
-          ! add the source (only if this proc carries the source)
-          if (myrank == islice_selected_rec(irec)) then
-            irec_local = irec_local + 1
+                  hlagrange = hxir_adjstore(i,irec_local) * hetar_adjstore(j,irec_local) * hgammar_adjstore(k,irec_local)
 
-            ispec = ispec_selected_rec(irec)
-            if (ispec_is_elastic(ispec)) then
-
-              ! adds source array
-              do k = 1,NGLLZ
-                do j = 1,NGLLY
-                  do i = 1,NGLLX
-                    iglob = ibool(i,j,k,ispec_selected_rec(irec))
-
-!! DK DK Aug 2018: added this because Lei Zhang may have detected a problem
-                    if (.not. allocated(hxir_store) .or. .not. allocated(hetar_store) .or. .not. allocated(hgammar_store)) then
-                      print *,'ERROR: trying to use arrays hxir_store/hetar_store/hgammar_store with irec_local = ',irec_local, &
-                              ' as first index, but these arrays are unallocated!'
-                      call exit_MPI_without_rank('ERROR: trying to use arrays hxir_store/hetar_store/hgammar_store at line 201 &
-                                  &of file src/specfem3D/compute_add_sources_viscoelastic.F90, but these arrays are unallocated!')
-                    endif
-                    accel(:,iglob) = accel(:,iglob) + &
-                            source_adjoint(:,irec_local,NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC)) * &
-                            hxir_store(irec_local,i)*hetar_store(irec_local,j)*hgammar_store(irec_local,k)
-                  enddo
+                  accel(:,iglob) = accel(:,iglob) &
+                    + source_adjoint(:,irec_local,NTSTEP_BETWEEN_READ_ADJSRC - mod(it-1,NTSTEP_BETWEEN_READ_ADJSRC)) * hlagrange
                 enddo
               enddo
-            endif ! ispec_is_elastic
-          endif
-        enddo ! nrec
+            enddo
+          endif ! ispec_is_elastic
+        enddo
       endif ! it
     endif ! nadj_rec_local
   endif !adjoint
@@ -377,16 +370,17 @@
   subroutine compute_add_sources_viscoelastic_GPU()
 
   use constants
-  use specfem_par, only: station_name,network_name,adj_source_file, &
+  use specfem_par, only: station_name,network_name, &
                         num_free_surface_faces, &
                         irec_master_noise,noise_surface_movie, &
-                        nrec_local,number_receiver_global, &
                         nsources_local,tshift_src,dt,t0,SU_FORMAT, &
                         USE_LDDRK,istage,USE_EXTERNAL_SOURCE_FILE,user_source_time_function,USE_BINARY_FOR_SEISMOGRAMS, &
                         NSOURCES,it,SIMULATION_TYPE,NSTEP, &
                         nrec,islice_selected_rec, &
                         nadj_rec_local,NTSTEP_BETWEEN_READ_ADJSRC,NOISE_TOMOGRAPHY, &
-                        Mesh_pointer,source_adjoint, INVERSE_FWI_FULL_PROBLEM
+                        Mesh_pointer, &
+                        source_adjoint,nadj_rec_local,number_adjsources_global, &
+                        INVERSE_FWI_FULL_PROBLEM
 
   use shared_parameters, only: COUPLE_WITH_INJECTION_TECHNIQUE
 
@@ -401,6 +395,8 @@
 
   integer :: isource,it_sub_adj
   integer :: irec_local,irec
+
+  character(len=MAX_STRING_LEN) :: adj_source_file
 
 ! no source inside the mesh if we are coupling with DSM
 ! because the source is precisely the wavefield coming from the DSM traction file
@@ -484,15 +480,17 @@
       if (ibool_read_adj_arrays .and. .not. INVERSE_FWI_FULL_PROBLEM) then
 
         if (.not. SU_FORMAT) then
+          ! ASCII format
           if (USE_BINARY_FOR_SEISMOGRAMS) stop 'Adjoint simulations not supported with .bin format, please use SU format instead'
           !!! read ascii adjoint sources
-          do irec_local = 1, nrec_local
+          do irec_local = 1, nadj_rec_local
             ! reads in **net**.**sta**.**BH**.adj files
-            irec = number_receiver_global(irec_local)
+            irec = number_adjsources_global(irec_local)
             adj_source_file = trim(network_name(irec))//'.'//trim(station_name(irec))
             call compute_arrays_adjoint_source(adj_source_file,irec_local)
           enddo
         else
+          ! SU format
           call compute_arrays_adjoint_source_SU()
         endif !if (.not. SU_FORMAT)
 

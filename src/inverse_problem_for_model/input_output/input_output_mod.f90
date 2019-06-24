@@ -1839,7 +1839,8 @@ contains
        endif
 
        call station_filter(rec_filename,filtered_rec_filename,nsta)
-       acqui_simu(ievent)%nsta_tot=nsta
+       acqui_simu(ievent)%nsta_tot = nsta
+
        allocate(acqui_simu(ievent)%station_name(nsta),acqui_simu(ievent)%network_name(nsta),stat=ier)
        if (ier /= 0) call exit_MPI_without_rank('error allocating array 440')
        allocate(acqui_simu(ievent)%position_station(3,nsta),stat=ier)

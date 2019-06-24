@@ -48,16 +48,16 @@
   ! and also takes care of the main output
   call world_rank(myrank)
 
+  ! open main output file, only written to by process 0
+  if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
+    open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_solver.txt',status='unknown')
+
   ! read the parameter file
   BROADCAST_AFTER_READ = .true.
   call read_parameter_file(myrank,BROADCAST_AFTER_READ)
 
   ! checks flags
   call initialize_simulation_check()
-
-  ! open main output file, only written to by process 0
-  if (myrank == 0 .and. IMAIN /= ISTANDARD_OUTPUT) &
-    open(unit=IMAIN,file=trim(OUTPUT_FILES)//'/output_solver.txt',status='unknown')
 
   ! user output
   if (myrank == 0) then
@@ -298,7 +298,7 @@
   endif
 
   ! check that we have at least one source
-  if (NSOURCES < 1) call exit_MPI(myrank,'need at least one source')
+  if (NSOURCES < 1 .and. .not. HAS_FINITE_FAULT_SOURCE) call exit_MPI(myrank,'need at least one source')
 
   ! check simulation type
   if (SIMULATION_TYPE /= 1 .and. SIMULATION_TYPE /= 2 .and. SIMULATION_TYPE /= 3) &

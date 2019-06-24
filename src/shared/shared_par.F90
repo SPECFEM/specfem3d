@@ -86,9 +86,13 @@ end module constants
 
   ! LDD Runge-Kutta time scheme
   logical :: USE_LDDRK
+  logical :: INCREASE_CFL_FOR_LDDRK
+  double precision :: RATIO_BY_WHICH_TO_INCREASE_IT
 
+  ! mesh
   integer :: NGNOD
 
+  character(len=MAX_STRING_LEN) :: MODEL
   character(len=MAX_STRING_LEN) :: SEP_MODEL_DIRECTORY
 
   ! physical parameters
@@ -141,6 +145,7 @@ end module constants
   ! sources
   logical :: USE_FORCE_POINT_SOURCE
   logical :: USE_RICKER_TIME_FUNCTION,PRINT_SOURCE_TIME_FUNCTION
+  logical :: HAS_FINITE_FAULT_SOURCE
 
   ! external source time function
   logical :: USE_EXTERNAL_SOURCE_FILE

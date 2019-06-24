@@ -153,6 +153,44 @@
   deallocate(ibelm_bottom)
   deallocate(ibelm_top)
 
+  ! free arrays
+  ! sources
+  deallocate(islice_selected_source,ispec_selected_source)
+  deallocate(Mxx,Myy,Mzz,Mxy,Mxz,Myz)
+  deallocate(xi_source,eta_source,gamma_source)
+  deallocate(tshift_src,hdur,hdur_Gaussian)
+  deallocate(utm_x_source,utm_y_source)
+  deallocate(nu_source)
+  deallocate(user_source_time_function)
+  ! receivers
+  deallocate(islice_selected_rec,ispec_selected_rec)
+  deallocate(xi_receiver,eta_receiver,gamma_receiver)
+  deallocate(station_name,network_name)
+  deallocate(nu)
+  deallocate(pm1_source_encoding)
+  deallocate(sourcearrays)
+  if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) deallocate(source_adjoint)
+  ! receiver arrays
+  deallocate(number_receiver_global)
+  deallocate(hxir_store,hetar_store,hgammar_store)
+  if (SIMULATION_TYPE == 2) deallocate(hpxir_store,hpetar_store,hpgammar_store)
+  ! adjoint sources
+  if (SIMULATION_TYPE == 2 .or. SIMULATION_TYPE == 3) then
+    if (SIMULATION_TYPE == 2) then
+      deallocate(number_adjsources_global)
+      deallocate(hxir_adjstore,hetar_adjstore,hgammar_adjstore)
+    else
+      nullify(number_adjsources_global)
+      nullify(hxir_adjstore,hetar_adjstore,hgammar_adjstore)
+    endif
+  endif
+  ! seismograms
+  deallocate(seismograms_d,seismograms_v,seismograms_a,seismograms_p)
+  if (SIMULATION_TYPE == 2) deallocate(seismograms_eps)
+  ! moment tensor derivatives
+  if (nrec_local > 0 .and. SIMULATION_TYPE == 2) deallocate(Mxx_der,Myy_der,Mzz_der,Mxy_der,Mxz_der,Myz_der,sloc_der)
+
+
   ! ADIOS file i/o
   if (ADIOS_ENABLED) then
     call adios_cleanup()

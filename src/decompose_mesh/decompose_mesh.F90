@@ -80,11 +80,11 @@
  ! user output
   print *,'partitioning:'
   print *,'  number of partitions requested = ',nparts
-  print *,''
+  print *
   print *,'  array size xadj  : ', size(xadj)," memory: ",size(xadj) * 4 / 1024./1024.,"MB"
   print *,'  array size adjncy: ', size(adjncy)," memory: ",size(adjncy) * 4 / 1024./1024.,"MB"
   print *,'  sup_neighbor     : ',sup_neighbor
-  print *,''
+  print *
 
   ncommonnodes = 1
 

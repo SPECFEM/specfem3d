@@ -32,7 +32,7 @@ subroutine compute_interpolated_dva_viscoelast(displ,veloc,accel,NGLOB_AB, &
 
 ! returns displacement/velocity/acceleration (dxd,..,vxd,..,axd,.. ) at receiver location
 
-  use constants
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,ZERO
 
   implicit none
 
@@ -104,7 +104,7 @@ subroutine compute_interpolated_dva_acoust(displ_element,veloc_element,accel_ele
 ! for acoustic elements
 ! returns displacement/velocity/acceleration/pressure (dxd,..,vxd,..,axd,..,pd) at receiver location
 
-  use constants
+  use constants, only: CUSTOM_REAL,NGLLX,NGLLY,NGLLZ,NDIM,ZERO
 
   implicit none
 
