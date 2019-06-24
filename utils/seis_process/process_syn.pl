@@ -73,9 +73,11 @@ $saclst="saclst";
 $phtimes="./phtimes.csh";
 $asc2sac="ascii2sac.csh";
 
-#if (! -e $saclst)  {die(" No $saclst file\n");}
+#if (! -e $saclst)  {die("No $saclst file\n");}
 #if (! -e $phtimes) {die("No $phtimes file\n");}
 #if (! -e $asc2sac) {die("No $asc2sac file\n");}
+
+
 
 $min_hdur=1.0;
 

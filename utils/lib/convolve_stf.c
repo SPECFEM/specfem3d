@@ -25,7 +25,12 @@
 #include <errno.h>
 #include <math.h>
 #include "sacio.h"
-#include "config.h"
+
+//from: #include "config.h"
+// 64-bit
+// typedef long int sac_int_t;
+// 32-bit
+typedef int sac_int_t;
 
 
 /* defined in libsac */
